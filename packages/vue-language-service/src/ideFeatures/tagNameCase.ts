@@ -21,7 +21,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 		function getAttrNameCase(sourceFile: VueDocument): 'kebabCase' | 'camelCase' | 'unsure' {
 
-			const attrNames = sourceFile.file.getTemplateAttrNames() ?? new Set();
+			const attrNames = sourceFile.file.getTemplateCodeGens()?.attrNames ?? new Set();
 
 			let hasCamelCase = false;
 			let hasKebabCase = false;
@@ -55,7 +55,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 		function getTagNameCase(vueDocument: VueDocument): 'both' | 'kebabCase' | 'pascalCase' | 'unsure' {
 
 			const components = vueDocument.file.getTemplateData().components;
-			const tagNames = new Set(Object.keys(vueDocument.file.getTemplateTagNames() ?? {}));
+			const tagNames = new Set(Object.keys(vueDocument.file.getTemplateCodeGens()?.tagNames ?? {}));
 
 			let anyComponentUsed = false;
 			let hasPascalCase = false;

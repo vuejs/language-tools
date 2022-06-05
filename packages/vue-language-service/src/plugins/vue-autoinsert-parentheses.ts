@@ -24,7 +24,10 @@ export default function (options: {
 			if (!vueDocument)
 				return;
 
-			const templateFormatScript = vueDocument.file.getTemplateFormattingScript();
+			const templateFormatScript = vueDocument.file.getAllEmbeddeds().find(e =>
+				e.file.fileName.endsWith('.__VLS_template.format.tsx')
+				|| e.file.fileName.endsWith('.__VLS_template.format.jsx')
+			);
 			if (!templateFormatScript)
 				return;
 

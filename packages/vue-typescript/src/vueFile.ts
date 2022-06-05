@@ -1,4 +1,4 @@
-import { compileSFCTemplate, EmbeddedFileMappingData } from '@volar/vue-code-gen';
+import { compileSFCTemplate, EmbeddedFileMappingData, TextRange } from '@volar/vue-code-gen';
 import { parseRefSugarCallRanges, parseRefSugarDeclarationRanges } from '@volar/vue-code-gen/out/parsers/refSugarRanges';
 import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
 import { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
@@ -11,6 +11,9 @@ import { useSfcTemplateScript } from './use/useSfcTemplateScript';
 import { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
 import { SearchTexts } from './utils/string';
 import { untrack } from './utils/untrack';
+import * as templateGen from '@volar/vue-code-gen/out/generators/template';
+import { parseCssClassNames } from './utils/parseCssClassNames';
+import { parseCssVars } from './utils/parseCssVars';
 
 import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix TS2742
 import { Mapping } from '@volar/source-map';
@@ -155,6 +158,79 @@ export function createVueFile(
 			}
 		}
 	});
+	const cssModuleClasses = computed(() => {
+		const result: { style: typeof sfc.styles[number], index: number, classNameRanges: TextRange[]; }[] = [];
+		for (let i = 0; i < sfc.styles.length; i++) {
+			const style = sfc.styles[i];
+			if (style.module) {
+				result.push({
+					style: style,
+					index: i,
+					classNameRanges: [...parseCssClassNames(style.content)],
+				});
+			}
+		}
+		return result;
+	});
+	const cssScopedClasses = computed(() => {
+		const result: { style: typeof sfc.styles[number], index: number, classNameRanges: TextRange[]; }[] = [];
+		const setting = compilerOptions.experimentalResolveStyleCssClasses ?? 'scoped';
+		for (let i = 0; i < sfc.styles.length; i++) {
+			const style = sfc.styles[i];
+			if ((setting === 'scoped' && style.scoped) || setting === 'always') {
+				result.push({
+					style: style,
+					index: i,
+					classNameRanges: [...parseCssClassNames(style.content)],
+				});
+			}
+		}
+		return result;
+	});
+	const templateCodeGens = computed(() => {
+
+		if (!sfcTemplateCompiled.value)
+			return;
+		if (!sfcTemplateCompileResult.value?.ast)
+			return;
+
+		return templateGen.generate(
+			ts,
+			sfcTemplateCompiled.value.lang,
+			sfcTemplateCompileResult.value.ast,
+			compilerOptions.experimentalCompatMode ?? 3,
+			compilerOptions.experimentalRuntimeMode,
+			!!compilerOptions.experimentalAllowTypeNarrowingInInlineHandlers,
+			!!sfc.scriptSetup,
+			Object.values(cssScopedClasses.value).map(map => Object.keys(map)).flat(),
+			sfcTemplateCompiled.value.htmlToTemplate,
+			{
+				getEmitCompletion: SearchTexts.EmitCompletion,
+				getPropsCompletion: SearchTexts.PropsCompletion,
+			}
+		);
+	});
+	const cssVars = computed(() => {
+		const result: { style: typeof sfc.styles[number], index: number, ranges: TextRange[]; }[] = [];
+		for (let i = 0; i < sfc.styles.length; i++) {
+			const style = sfc.styles[i];
+			result.push({
+				style: style,
+				index: i,
+				ranges: [...parseCssVars(style.content)],
+			});
+		}
+		return result;
+	});
+	const cssVarTexts = computed(() => {
+		const result: string[] = [];
+		for (const { style, ranges } of cssVars.value) {
+			for (const range of ranges) {
+				result.push(style.content.substring(range.start, range.end));
+			}
+		}
+		return result;
+	});
 	const sfcTemplateCompileResult = computed(() => {
 		if (sfcTemplateCompiled.value) {
 			return compileSFCTemplate(
@@ -193,13 +269,12 @@ export function createVueFile(
 	const sfcTemplateScript = useSfcTemplateScript(
 		ts,
 		fileName,
-		computed(() => sfc.template),
-		computed(() => sfc.script),
-		computed(() => sfc.scriptSetup),
+		cssModuleClasses,
+		cssScopedClasses,
+		templateCodeGens,
+		cssVars,
+		sfc,
 		computed(() => scriptSetupRanges.value),
-		computed(() => sfc.styles),
-		sfcTemplateCompiled,
-		sfcTemplateCompileResult,
 		scriptLang,
 		compilerOptions,
 		!!compilerOptions.experimentalDisableTemplateSupport || !(tsHost?.getCompilationSettings().jsx === ts.JsxEmit.Preserve),
@@ -213,9 +288,9 @@ export function createVueFile(
 		computed(() => sfc.scriptSetup),
 		computed(() => scriptRanges.value),
 		computed(() => scriptSetupRanges.value),
-		sfcTemplateScript.templateCodeGens,
+		templateCodeGens,
 		compilerOptions,
-		sfcTemplateScript.cssVarTexts,
+		cssVarTexts,
 	);
 	const sfcScriptForScriptLs = useSfcScriptGen(
 		'script',
@@ -226,9 +301,9 @@ export function createVueFile(
 		computed(() => sfc.scriptSetup),
 		computed(() => scriptRanges.value),
 		computed(() => scriptSetupRanges.value),
-		sfcTemplateScript.templateCodeGens,
+		templateCodeGens,
 		compilerOptions,
-		sfcTemplateScript.cssVarTexts,
+		cssVarTexts,
 	);
 	const sfcRefSugarRanges = computed(() => (scriptSetupAst.value ? {
 		refs: parseRefSugarDeclarationRanges(ts, scriptSetupAst.value, ['$ref', '$computed', '$shallowRef', '$fromRefs']),
@@ -335,15 +410,13 @@ export function createVueFile(
 		getSfcTemplateLanguageCompiled: untrack(() => sfcTemplateCompiled.value),
 		getSfcVueTemplateCompiled: untrack(() => sfcTemplateCompileResult.value),
 		getVersion: untrack(() => version.value),
-		getTemplateTagNames: untrack(() => sfcTemplateScript.templateCodeGens.value?.tagNames),
-		getTemplateAttrNames: untrack(() => sfcTemplateScript.templateCodeGens.value?.attrNames),
+		getTemplateCodeGens: untrack(() => templateCodeGens.value),
 		update: untrack(update),
 		getTemplateData: untrack(getTemplateData),
 		getScriptFileName: untrack(() => fileName + '.' + scriptLang.value),
 		getDescriptor: untrack(() => unref(sfc)),
 		getScriptAst: untrack(() => scriptAst.value),
 		getScriptSetupAst: untrack(() => scriptSetupAst.value),
-		getTemplateFormattingScript: untrack(() => sfcTemplateScript.formatEmbedded.value),
 		getSfcRefSugarRanges: untrack(() => sfcRefSugarRanges.value),
 		getEmbeddeds: untrack(() => embeddeds.value),
 		getAllEmbeddeds: untrack(() => allEmbeddeds.value),
@@ -355,7 +428,6 @@ export function createVueFile(
 			content,
 			allEmbeddeds,
 			teleports,
-			sfcTemplateScript,
 		},
 	};
 

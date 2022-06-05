@@ -35,7 +35,7 @@ export default function (options: {
 					const document = vueDocument.getDocument();
 					const edits: vscode.TextEdit[] = [];
 					const components = new Set(vueDocument.file.getTemplateData().components);
-					const resolvedTags = vueDocument.file.refs.sfcTemplateScript.templateCodeGens.value?.tagNames ?? {};
+					const resolvedTags = vueDocument.file.getTemplateCodeGens()?.tagNames ?? {};
 					let i = 0;
 
 					for (const tagName in resolvedTags) {

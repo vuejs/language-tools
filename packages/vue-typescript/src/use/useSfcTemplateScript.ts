@@ -1,5 +1,4 @@
 import { CodeGen, mergeCodeGen } from '@volar/code-gen';
-import * as templateGen from '@volar/vue-code-gen/out/generators/template';
 import type { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { computed, Ref } from '@vue/reactivity';
 import { VueCompilerOptions } from '../types';
@@ -11,22 +10,20 @@ import { EmbeddedFileMappingData } from '@volar/vue-code-gen';
 import * as SourceMaps from '@volar/source-map';
 import * as path from 'path';
 import { walkInterpolationFragment } from '@volar/vue-code-gen/out/transform';
-import { parseCssVars } from '../utils/parseCssVars';
-import { parseCssClassNames } from '../utils/parseCssClassNames';
 
 export function useSfcTemplateScript(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	fileName: string,
-	template: Ref<Sfc['template']>,
-	script: Ref<Sfc['script']>,
-	scriptSetup: Ref<Sfc['scriptSetup']>,
+	// @ts-expect-error
+	cssModuleClasses,
+	// @ts-expect-error
+	cssScopedClasses,
+	// @ts-expect-error
+	templateCodeGens,
+	// @ts-expect-error
+	cssVars,
+	sfc: Sfc,
 	scriptSetupRanges: Ref<ReturnType<typeof parseScriptSetupRanges> | undefined>,
-	styles: Ref<Sfc['styles']>,
-	templateData: Ref<{
-		lang: string,
-		htmlToTemplate: (start: number, end: number) => { start: number, end: number; } | undefined,
-	} | undefined>,
-	sfcTemplateCompileResult: Ref<ReturnType<(typeof import('@volar/vue-code-gen'))['compileSFCTemplate']> | undefined>,
 	scriptLang: Ref<string>,
 	compilerOptions: VueCompilerOptions,
 	disableTemplateScript: boolean,
@@ -35,89 +32,16 @@ export function useSfcTemplateScript(
 	const scriptLeadingComment = computed(() => {
 		let comments: string[] = [];
 		if (compilerOptions.experimentalUseScriptLeadingCommentInTemplate ?? true) {
-			for (const _script of [script, scriptSetup]) {
-				if (_script.value) {
-					const commentRanges = ts.getLeadingCommentRanges(_script.value.content, 0);
+			for (const _script of [sfc.script, sfc.scriptSetup]) {
+				if (_script) {
+					const commentRanges = ts.getLeadingCommentRanges(_script.content, 0);
 					if (commentRanges) {
-						comments = commentRanges.map(range => _script.value!.content.substring(range.pos, range.end));
+						comments = commentRanges.map(range => _script!.content.substring(range.pos, range.end));
 					}
 				}
 			}
 		}
 		return comments.join('\n');
-	});
-	const cssModuleClasses = computed(() => {
-		const result: { style: typeof styles['value'][number], index: number, classNameRanges: TextRange[]; }[] = [];
-		for (let i = 0; i < styles.value.length; i++) {
-			const style = styles.value[i];
-			if (style.module) {
-				result.push({
-					style: style,
-					index: i,
-					classNameRanges: [...parseCssClassNames(style.content)],
-				});
-			}
-		}
-		return result;
-	});
-	const cssScopedClasses = computed(() => {
-		const result: { style: typeof styles['value'][number], index: number, classNameRanges: TextRange[]; }[] = [];
-		const setting = compilerOptions.experimentalResolveStyleCssClasses ?? 'scoped';
-		for (let i = 0; i < styles.value.length; i++) {
-			const style = styles.value[i];
-			if ((setting === 'scoped' && style.scoped) || setting === 'always') {
-				result.push({
-					style: style,
-					index: i,
-					classNameRanges: [...parseCssClassNames(style.content)],
-				});
-			}
-		}
-		return result;
-	});
-	const cssVars = computed(() => {
-		const result: { style: typeof styles['value'][number], index: number, ranges: TextRange[]; }[] = [];
-		for (let i = 0; i < styles.value.length; i++) {
-			const style = styles.value[i];
-			result.push({
-				style: style,
-				index: i,
-				ranges: [...parseCssVars(style.content)],
-			});
-		}
-		return result;
-	});
-	const cssVarTexts = computed(() => {
-		const result: string[] = [];
-		for (const { style, ranges } of cssVars.value) {
-			for (const range of ranges) {
-				result.push(style.content.substring(range.start, range.end));
-			}
-		}
-		return result;
-	})
-	const templateCodeGens = computed(() => {
-
-		if (!templateData.value)
-			return;
-		if (!sfcTemplateCompileResult.value?.ast)
-			return;
-
-		return templateGen.generate(
-			ts,
-			templateData.value.lang,
-			sfcTemplateCompileResult.value.ast,
-			compilerOptions.experimentalCompatMode ?? 3,
-			compilerOptions.experimentalRuntimeMode,
-			!!compilerOptions.experimentalAllowTypeNarrowingInInlineHandlers,
-			!!scriptSetup.value,
-			Object.values(cssScopedClasses.value).map(map => Object.keys(map)).flat(),
-			templateData.value.htmlToTemplate,
-			{
-				getEmitCompletion: SearchTexts.EmitCompletion,
-				getPropsCompletion: SearchTexts.PropsCompletion,
-			}
-		);
 	});
 	const tsxCodeGen = computed(() => {
 
@@ -126,7 +50,7 @@ export function useSfcTemplateScript(
 		codeGen.addText(scriptLeadingComment.value + '\n');
 		codeGen.addText(`import * as __VLS_types from './__VLS_types';\n`);
 
-		if (script.value || scriptSetup.value) {
+		if (sfc.script || sfc.scriptSetup) {
 			codeGen.addText(`import { __VLS_options, __VLS_name } from './${baseFileName}.__VLS_script';\n`);
 			codeGen.addText(`import __VLS_component from './${baseFileName}.__VLS_script';\n`);
 		}
@@ -201,10 +125,10 @@ export function useSfcTemplateScript(
 				content: string,
 			}[] = [];
 
-			if (scriptSetupRanges.value && scriptSetup.value) {
+			if (scriptSetupRanges.value && sfc.scriptSetup) {
 				bindingsArr.push({
 					typeBindings: scriptSetupRanges.value.typeBindings,
-					content: scriptSetup.value.content,
+					content: sfc.scriptSetup.content,
 				});
 			}
 			// if (scriptRanges.value && script.value) {
@@ -411,22 +335,20 @@ export function useSfcTemplateScript(
 	});
 
 	return {
-		templateCodeGens,
 		embedded,
 		file,
 		formatEmbedded,
 		inlineCssEmbedded,
-		cssVarTexts,
 	};
 
 	function parseMappingSourceRange(data: EmbeddedFileMappingData, range: SourceMaps.Range) {
 		if (data?.vueTag === 'style' && data?.vueTagIndex !== undefined) {
 			return {
-				start: styles.value[data.vueTagIndex].startTagEnd + range.start,
-				end: styles.value[data.vueTagIndex].startTagEnd + range.end,
+				start: sfc.styles[data.vueTagIndex].startTagEnd + range.start,
+				end: sfc.styles[data.vueTagIndex].startTagEnd + range.end,
 			};
 		}
-		const templateOffset = template.value?.startTagEnd ?? 0;
+		const templateOffset = sfc.template?.startTagEnd ?? 0;
 		return {
 			start: templateOffset + range.start,
 			end: templateOffset + range.end,

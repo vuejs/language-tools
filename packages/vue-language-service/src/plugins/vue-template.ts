@@ -722,14 +722,13 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		let cache = componentCompletionDataCache.get(templateData);
 		if (!cache) {
 
-			const { sfcTemplateScript } = sourceFile.file.refs;
-
 			cache = new Map<string, { item: ts.CompletionEntry | undefined, bind: ts.CompletionEntry[], on: ts.CompletionEntry[]; }>();
 
-			pauseTracking();
-			const file = sfcTemplateScript.file.value;
-			const templateTagNames = sfcTemplateScript.templateCodeGens.value ? Object.keys(sfcTemplateScript.templateCodeGens.value.tagNames) : [];
-			resetTracking();
+			const file = sourceFile.file.getAllEmbeddeds().find(e =>
+				e.file.fileName.endsWith('.__VLS_template.tsx')
+				|| e.file.fileName.endsWith('.__VLS_template.jsx')
+			)?.file;
+			const templateTagNames =  Object.keys(sourceFile.file.getTemplateCodeGens()?.tagNames ?? {});
 
 			if (file) {
 
