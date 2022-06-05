@@ -24,6 +24,6 @@
 		"@vue/reactivity": "^3.2.36"
 	},
 	"browser": {
-		"./out/plugins/pug.js": "./out/plugins/empty.js"
+		"./out/plugins/vue-template-pug.js": "./out/plugins/empty.js"
 	}
 }

@@ -4,13 +4,13 @@ export default function (): VueLanguagePlugin {
 
 	return {
 
-		compileTemplate(template, lang) {
+		compileTemplateToHtml(lang, template) {
 
 			if (lang === 'html') {
 
 				return {
 					html: template,
-					mapping: (htmlStart, htmlEnd) => ({ start: htmlStart, end: htmlEnd }),
+					mapping: htmlRange => htmlRange,
 				};
 			}
 		}

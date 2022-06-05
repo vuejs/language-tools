@@ -160,7 +160,7 @@ export function register(
 					}
 				}
 				else {
-					file = ts.createSourceFile(fileName, docText, fileName.endsWith('.vue') ? ts.ScriptTarget.JSON : ts.ScriptTarget.Latest);
+					file = ts.createSourceFile(fileName, docText, fileName.endsWith('.vue') || fileName.endsWith('.md') ? ts.ScriptTarget.JSON : ts.ScriptTarget.Latest);
 				}
 			}
 			const newDiagnostic: T = {

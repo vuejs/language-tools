@@ -65,7 +65,7 @@ export function generate(
 	allowTypeNarrowingInEventExpressions: boolean,
 	hasScriptSetup: boolean,
 	cssScopedClasses: string[] = [],
-	htmlToTemplate: (htmlStart: number, htmlEnd: number) => { start: number, end: number; } | undefined,
+	htmlToTemplate: (htmlRange: { start: number, end: number; }) => { start: number, end: number; } | undefined,
 	searchTexts: {
 		getEmitCompletion(tag: string): string,
 		getPropsCompletion(tag: string): string,
@@ -228,7 +228,7 @@ export function generate(
 		tagResolves[tagName] = {
 			component: var_rawComponent,
 			emit: var_emit,
-			offsets: tagOffsets.map(offset => htmlToTemplate(offset, offset)?.start).filter(notEmpty),
+			offsets: tagOffsets.map(offset => htmlToTemplate({ start: offset, end: offset })?.start).filter(notEmpty),
 		};
 	}
 
@@ -1182,7 +1182,7 @@ export function generate(
 					end: prop.arg.loc.start.offset + end,
 				};
 
-				const newStart = htmlToTemplate(sourceRange.start, sourceRange.end)?.start;
+				const newStart = htmlToTemplate({ start: sourceRange.start, end: sourceRange.end })?.start;
 				if (newStart === undefined) continue;
 				const offset = newStart - sourceRange.start;
 				sourceRange.start += offset;
@@ -1847,7 +1847,7 @@ export function generate(
 	function addMapping(gen: typeof tsCodeGen, mapping: SourceMaps.Mapping<EmbeddedFileMappingData>) {
 		const newMapping = { ...mapping };
 
-		const templateStart = htmlToTemplate(mapping.sourceRange.start, mapping.sourceRange.end)?.start;
+		const templateStart = htmlToTemplate(mapping.sourceRange)?.start;
 		if (templateStart === undefined) return; // not found
 		const offset = templateStart - mapping.sourceRange.start;
 		newMapping.sourceRange = {
@@ -1858,7 +1858,7 @@ export function generate(
 		if (mapping.additional) {
 			newMapping.additional = [];
 			for (const other of mapping.additional) {
-				let otherTemplateStart = htmlToTemplate(other.sourceRange.start, other.sourceRange.end)?.start;
+				let otherTemplateStart = htmlToTemplate(other.sourceRange)?.start;
 				if (otherTemplateStart === undefined) continue;
 				const otherOffset = otherTemplateStart - other.sourceRange.start;
 				newMapping.additional.push({

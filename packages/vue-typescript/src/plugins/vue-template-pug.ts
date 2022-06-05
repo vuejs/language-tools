@@ -4,7 +4,7 @@ export default function (): VueLanguagePlugin {
 
 	return {
 
-		compileTemplate(template, lang) {
+		compileTemplateToHtml(lang, template) {
 
 			if (lang === 'pug') {
 
@@ -19,15 +19,15 @@ export default function (): VueLanguagePlugin {
 				if (pugDoc) {
 					return {
 						html: pugDoc.htmlCode,
-						mapping: (htmlStart, htmlEnd) => {
-							const pugRange = pugDoc.sourceMap.getSourceRange(htmlStart, htmlEnd, data => !data?.isEmptyTagCompletion)?.[0];
+						mapping: htmlRange => {
+							const pugRange = pugDoc.sourceMap.getSourceRange(htmlRange.start, htmlRange.end, data => !data?.isEmptyTagCompletion)?.[0];
 							if (pugRange) {
 								return pugRange;
 							}
 							else {
 
-								const pugStart = pugDoc.sourceMap.getSourceRange(htmlStart, htmlStart, data => !data?.isEmptyTagCompletion)?.[0]?.start;
-								const pugEnd = pugDoc.sourceMap.getSourceRange(htmlEnd, htmlEnd, data => !data?.isEmptyTagCompletion)?.[0]?.end;
+								const pugStart = pugDoc.sourceMap.getSourceRange(htmlRange.start, htmlRange.start, data => !data?.isEmptyTagCompletion)?.[0]?.start;
+								const pugEnd = pugDoc.sourceMap.getSourceRange(htmlRange.end, htmlRange.end, data => !data?.isEmptyTagCompletion)?.[0]?.end;
 
 								if (pugStart !== undefined && pugEnd !== undefined) {
 									return { start: pugStart, end: pugEnd };

@@ -160,11 +160,11 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 							start: error.loc?.start.offset ?? 0,
 							end: error.loc?.end.offset ?? 0,
 						};
-						let sourceRange = sfcTemplateLanguageCompiled!.htmlToTemplate(templateHtmlRange.start, templateHtmlRange.end);
+						let sourceRange = sfcTemplateLanguageCompiled!.mapping(templateHtmlRange);
 						let errorMessage = error.message;
 
 						if (!sourceRange) {
-							const htmlText = sfcTemplateLanguageCompiled!.htmlText.substring(templateHtmlRange.start, templateHtmlRange.end);
+							const htmlText = sfcTemplateLanguageCompiled!.html.substring(templateHtmlRange.start, templateHtmlRange.end);
 							errorMessage += '\n```html\n' + htmlText.trim() + '\n```';
 							sourceRange = { start: 0, end: 0 };
 						}
