@@ -64,7 +64,6 @@ export default function (
 						codeActions: !sfc.script?.src,
 						inlayHints: !sfc.script?.src,
 					},
-					data: undefined,
 					isTsHostFile: true,
 				};
 			}
@@ -81,7 +80,6 @@ export default function (
 						codeActions: false,
 						inlayHints: false,
 					},
-					data: undefined,
 					isTsHostFile: true,
 				};
 			}

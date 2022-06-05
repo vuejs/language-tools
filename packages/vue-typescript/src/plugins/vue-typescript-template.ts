@@ -133,7 +133,6 @@ export default function (
 						codeActions: false,
 						inlayHints: true,
 					},
-					data: undefined,
 					isTsHostFile: true,
 				};
 
@@ -270,7 +269,6 @@ export default function (
 						codeActions: false,
 						inlayHints: false,
 					},
-					data: undefined,
 					isTsHostFile: false,
 				};
 				const sourceMap = new EmbeddedFileSourceMap(templateCodeGens.value.formatCodeGen.getMappings());
@@ -295,7 +293,6 @@ export default function (
 						documentSymbol: false,
 						inlayHints: false,
 					},
-					data: undefined,
 					isTsHostFile: false,
 				};
 				const sourceMap = new EmbeddedFileSourceMap(templateCodeGens.value.cssCodeGen.getMappings());

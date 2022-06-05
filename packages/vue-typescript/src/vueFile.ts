@@ -76,7 +76,7 @@ export interface Sfc {
 	})[];
 }
 
-export interface EmbeddedFile<T = unknown> {
+export interface EmbeddedFile {
 	fileName: string,
 	lang: string,
 	content: string,
@@ -89,7 +89,6 @@ export interface EmbeddedFile<T = unknown> {
 		codeActions: boolean,
 		inlayHints: boolean,
 	},
-	data: T,
 };
 
 export function createVueFile(
@@ -330,7 +329,7 @@ export function createVueFile(
 		}
 
 		if (remain.length) {
-			console.error('remain embeddeds', remain.map(e => ({ fileName: e.file.fileName, parent: e.parentFileName })));
+			throw 'Unable to resolve embeddeds: ' + remain[0].parentFileName + ' -> ' + remain[0].file.fileName;
 		}
 
 		return embeddeds;

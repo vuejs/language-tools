@@ -26,7 +26,6 @@ export default function (): VueLanguagePlugin {
 					codeActions: true,
 					inlayHints: true,
 				},
-				data: undefined,
 				isTsHostFile: false,
 			};
 			const sourceMap = new EmbeddedFileSourceMap();
