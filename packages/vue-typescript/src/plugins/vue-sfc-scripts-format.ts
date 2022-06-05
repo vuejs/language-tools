@@ -34,15 +34,7 @@ export default function (): VueLanguagePlugin {
 			sourceMap.mappings.push({
 				data: {
 					vueTag: script.tag,
-					capabilities: {
-						basic: true,
-						references: true,
-						definitions: true,
-						diagnostic: true,
-						rename: true,
-						completion: true,
-						semanticTokens: true,
-					},
+					capabilities: {},
 				},
 				mode: SourceMaps.Mode.Offset,
 				sourceRange: {
