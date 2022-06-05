@@ -35,19 +35,18 @@ export default function (options: {
 					const document = vueDocument.getDocument();
 					const edits: vscode.TextEdit[] = [];
 					const components = new Set(vueDocument.file.getTemplateData().components);
-					const resolvedTags = vueDocument.file.getTemplateCodeGens()?.tagNames ?? {};
+					const tagOffsets = vueDocument.getTemplateTagsAndAttrs().tags;
 					let i = 0;
 
-					for (const tagName in resolvedTags) {
-						const resolvedTag = resolvedTags[tagName];
-						if (resolvedTag?.offsets.length) {
+					for (const [tagName, offsets] of tagOffsets) {
+						if (offsets.length) {
 
 							if (context.token.isCancellationRequested)
 								return;
 
-							context.workDoneProgress.report(i++ / Object.keys(resolvedTags).length * 100, tagName);
+							context.workDoneProgress.report(i++ / Object.keys(tagOffsets).length * 100, tagName);
 
-							const offset = template.startTagEnd + resolvedTag.offsets[0];
+							const offset = template.startTagEnd + offsets[0];
 							const refs = await options.findReferences(uri, vueDocument.getDocument().positionAt(offset)) ?? [];
 
 							for (const vueLoc of refs) {

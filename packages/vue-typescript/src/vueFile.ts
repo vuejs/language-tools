@@ -135,7 +135,7 @@ export function createVueFile(
 	}).filter(notEmpty);
 
 	// use
-	const sfcTemplateCompiled = computed<undefined | {
+	const templateHtmlCompiled = computed<undefined | {
 		lang: string,
 		htmlText: string,
 		htmlToTemplate: (start: number, end: number) => { start: number, end: number; } | undefined,
@@ -151,6 +151,15 @@ export function createVueFile(
 					};
 				};
 			}
+		}
+	});
+	const templateAstCompiled = computed(() => {
+		if (templateHtmlCompiled.value) {
+			return compileSFCTemplate(
+				templateHtmlCompiled.value.htmlText,
+				compilerOptions.experimentalTemplateCompilerOptions,
+				compilerOptions.experimentalCompatMode ?? 3,
+			);
 		}
 	});
 	const cssModuleClasses = computed(() => {
@@ -184,21 +193,21 @@ export function createVueFile(
 	});
 	const templateCodeGens = computed(() => {
 
-		if (!sfcTemplateCompiled.value)
+		if (!templateHtmlCompiled.value)
 			return;
-		if (!sfcTemplateCompileResult.value?.ast)
+		if (!templateAstCompiled.value?.ast)
 			return;
 
 		return templateGen.generate(
 			ts,
-			sfcTemplateCompiled.value.lang,
-			sfcTemplateCompileResult.value.ast,
+			templateHtmlCompiled.value.lang,
+			templateAstCompiled.value.ast,
 			compilerOptions.experimentalCompatMode ?? 3,
 			compilerOptions.experimentalRuntimeMode,
 			!!compilerOptions.experimentalAllowTypeNarrowingInInlineHandlers,
 			!!sfc.scriptSetup,
 			Object.values(cssScopedClasses.value).map(map => Object.keys(map)).flat(),
-			sfcTemplateCompiled.value.htmlToTemplate,
+			templateHtmlCompiled.value.htmlToTemplate,
 			{
 				getEmitCompletion: SearchTexts.EmitCompletion,
 				getPropsCompletion: SearchTexts.PropsCompletion,
@@ -225,15 +234,6 @@ export function createVueFile(
 			}
 		}
 		return result;
-	});
-	const sfcTemplateCompileResult = computed(() => {
-		if (sfcTemplateCompiled.value) {
-			return compileSFCTemplate(
-				sfcTemplateCompiled.value.htmlText,
-				compilerOptions.experimentalTemplateCompilerOptions,
-				compilerOptions.experimentalCompatMode ?? 3,
-			);
-		}
 	});
 	const scriptAst = computed(() => {
 		if (sfc.script) {
@@ -402,10 +402,9 @@ export function createVueFile(
 	return {
 		fileName,
 		getContent: untrack(() => content.value),
-		getSfcTemplateLanguageCompiled: untrack(() => sfcTemplateCompiled.value),
-		getSfcVueTemplateCompiled: untrack(() => sfcTemplateCompileResult.value),
+		getSfcTemplateLanguageCompiled: untrack(() => templateHtmlCompiled.value),
+		getSfcVueTemplateCompiled: untrack(() => templateAstCompiled.value),
 		getVersion: untrack(() => version.value),
-		getTemplateCodeGens: untrack(() => templateCodeGens.value),
 		update: untrack(update),
 		getTemplateData: untrack(getTemplateData),
 		getScriptFileName: untrack(() => fileName + '.' + scriptLang.value),

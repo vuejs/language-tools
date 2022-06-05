@@ -728,7 +728,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				e.file.fileName.endsWith('.__VLS_template.tsx')
 				|| e.file.fileName.endsWith('.__VLS_template.jsx')
 			)?.file;
-			const templateTagNames =  Object.keys(sourceFile.file.getTemplateCodeGens()?.tagNames ?? {});
+			const templateTagNames = [...sourceFile.getTemplateTagsAndAttrs().tags.keys()];
 
 			if (file) {
 

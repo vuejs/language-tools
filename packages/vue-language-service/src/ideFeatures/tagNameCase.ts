@@ -21,7 +21,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 		function getAttrNameCase(sourceFile: VueDocument): 'kebabCase' | 'camelCase' | 'unsure' {
 
-			const attrNames = sourceFile.file.getTemplateCodeGens()?.attrNames ?? new Set();
+			const attrNames = sourceFile.getTemplateTagsAndAttrs().attrs;
 
 			let hasCamelCase = false;
 			let hasKebabCase = false;
@@ -55,7 +55,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 		function getTagNameCase(vueDocument: VueDocument): 'both' | 'kebabCase' | 'pascalCase' | 'unsure' {
 
 			const components = vueDocument.file.getTemplateData().components;
-			const tagNames = new Set(Object.keys(vueDocument.file.getTemplateCodeGens()?.tagNames ?? {}));
+			const tagNames = vueDocument.getTemplateTagsAndAttrs().tags;
 
 			let anyComponentUsed = false;
 			let hasPascalCase = false;
@@ -70,7 +70,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			if (!anyComponentUsed) {
 				return 'unsure'; // not sure component style, because do not have any component using in <template> for check
 			}
-			for (const tagName of tagNames) {
+			for (const [tagName] of tagNames) {
 				// TagName
 				if (tagName !== hyphenate(tagName)) {
 					hasPascalCase = true;
