@@ -1,4 +1,4 @@
-import { VueLanguagePlugin } from "../vueFile";
+import { VueLanguagePlugin } from '../vueFile';
 
 export default function (): VueLanguagePlugin {
 

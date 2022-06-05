@@ -1,4 +1,4 @@
-import { getSlotsPropertyName, getVueLibraryName } from "@volar/vue-code-gen";
+import { getSlotsPropertyName, getVueLibraryName } from '@volar/vue-code-gen';
 
 const camelCaseText = [
 	'type CamelCase<S extends string> = S extends `${infer First}-${infer Right}`',
