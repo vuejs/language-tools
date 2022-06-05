@@ -127,16 +127,21 @@ export function createVueFile(
 	};
 
 	// use
-	const compiledVue = computed(() => {
+	const compiledVue = computed<ReturnType<NonNullable<VueLanguagePlugin['compileFileToVue']>>>(() => {
 		for (const plugin of plugins) {
 			const compiled = plugin.compileFileToVue?.(fileName, fileContent.value);
 			if (compiled) {
 				return compiled;
 			}
 		}
+		// given dummy result to avoid language server throw
+		return {
+			vue: '<template></template>',
+			mapping: vueRange => vueRange,
+		};
 	});
-	const vueContent = computed(() => compiledVue.value?.vue ?? '');
-	const parsedSfc = computed(() => parse(vueContent.value, { sourceMap: false, ignoreEmpty: false }));
+	const vueContent = computed(() => compiledVue.value?.vue);
+	const parsedSfc = computed(() => vueContent.value !== undefined ? parse(vueContent.value, { sourceMap: false, ignoreEmpty: false }) : undefined);
 	const computedHtmlTemplate = computed<ReturnType<NonNullable<VueLanguagePlugin['compileTemplateToHtml']>>>(() => {
 		if (sfc.template) {
 			for (const plugin of plugins) {
@@ -423,6 +428,7 @@ export function createVueFile(
 	function parseMappingSourceRange(data: EmbeddedFileMappingData, range: Mapping<unknown>['sourceRange']) {
 
 		if (!compiledVue.value) throw '!compiledVue.value';
+		if (vueContent.value === undefined) throw 'vueContent.value === undefined';
 
 		if (data.vueTag === 'scriptSrc') {
 			if (!sfc.script?.src) throw '!sfc.script?.src';
@@ -484,11 +490,13 @@ export function createVueFile(
 		version.value = newVersion;
 
 		// TODO: wait for https://github.com/vuejs/core/pull/5912
-		updateTemplate(parsedSfc.value.descriptor.template);
-		updateScript(parsedSfc.value.descriptor.script);
-		updateScriptSetup(parsedSfc.value.descriptor.scriptSetup);
-		updateStyles(parsedSfc.value.descriptor.styles);
-		updateCustomBlocks(parsedSfc.value.descriptor.customBlocks);
+		if (parsedSfc.value) {
+			updateTemplate(parsedSfc.value.descriptor.template);
+			updateScript(parsedSfc.value.descriptor.script);
+			updateScriptSetup(parsedSfc.value.descriptor.scriptSetup);
+			updateStyles(parsedSfc.value.descriptor.styles);
+			updateCustomBlocks(parsedSfc.value.descriptor.customBlocks);
+		}
 
 		const newScripts: Record<string, string> = {};
 

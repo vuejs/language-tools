@@ -13,6 +13,7 @@ export function syntaxToLanguageId(syntax: string) {
 		case 'jsx': return 'javascriptreact';
 		case 'tsx': return 'typescriptreact';
 		case 'pug': return 'jade';
+		case 'md': return 'markdown';
 	}
 	return syntax;
 }
@@ -24,6 +25,7 @@ export function languageIdToSyntax(languageId: string) {
 		case 'javascriptreact': return 'jsx';
 		case 'typescriptreact': return 'tsx';
 		case 'jade': return 'pug';
+		case 'markdown': return 'md';
 	}
 	return languageId;
 }

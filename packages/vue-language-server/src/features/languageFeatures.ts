@@ -279,7 +279,7 @@ export function register(
 	});
 	connection.workspace.onWillRenameFiles(async handler => {
 
-		const hasTsFile = handler.files.some(file => file.newUri.endsWith('.vue') || file.newUri.endsWith('.ts') || file.newUri.endsWith('.tsx'));
+		const hasTsFile = handler.files.some(file => file.newUri.endsWith('.vue') || file.newUri.endsWith('.md') || file.newUri.endsWith('.ts') || file.newUri.endsWith('.tsx'));
 		const config: 'prompt' | 'always' | 'never' | null | undefined = await connection.workspace.getConfiguration(hasTsFile ? 'typescript.updateImportsOnFileMove.enabled' : 'javascript.updateImportsOnFileMove.enabled');
 
 		if (config === 'always') {

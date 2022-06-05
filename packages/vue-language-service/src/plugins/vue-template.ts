@@ -534,7 +534,10 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 		if (enabledComponentAutoImport && (descriptor.script || descriptor.scriptSetup)) {
 			for (const vueDocument of options.vueDocuments.getAll()) {
-				let baseName = path.basename(vueDocument.uri, '.vue');
+				let baseName =
+					vueDocument.uri.endsWith('.vue') ? path.basename(vueDocument.uri, '.vue')
+						: vueDocument.uri.endsWith('.md') ? path.basename(vueDocument.uri, '.md')
+							: path.basename(vueDocument.uri);
 				if (baseName.toLowerCase() === 'index') {
 					baseName = path.basename(path.dirname(vueDocument.uri));
 				}

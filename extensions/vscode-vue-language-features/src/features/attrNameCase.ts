@@ -67,7 +67,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 	};
 
 	async function onChangeDocument(newDoc: vscode.TextDocument | undefined) {
-		if (newDoc?.languageId === 'vue') {
+		if (newDoc?.languageId === 'vue' || newDoc?.languageId === 'markdown') {
 			let attrCase = attrCases.uriGet(newDoc.uri.toString());
 			if (!attrCase) {
 				const attrMode = vscode.workspace.getConfiguration('volar').get<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('completion.preferredAttrNameCase');

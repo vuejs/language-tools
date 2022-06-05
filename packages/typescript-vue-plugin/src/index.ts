@@ -19,6 +19,7 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 			info.project.getScriptKind = fileName => {
 				switch (path.extname(fileName)) {
 					case '.vue': return ts.ScriptKind.TSX; // can't use External, Unknown
+					case '.md': return ts.ScriptKind.TSX; // can't use External, Unknown
 					case '.js': return ts.ScriptKind.JS;
 					case '.jsx': return ts.ScriptKind.JSX;
 					case '.ts': return ts.ScriptKind.TS;
@@ -158,7 +159,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 	};
 
 	async function onAnyDriveFileUpdated(fileName: string) {
-		if (fileName.endsWith('.vue') && info.project.fileExists(fileName) && !vueFiles.has(fileName)) {
+		if ((fileName.endsWith('.vue') || fileName.endsWith('.md')) && info.project.fileExists(fileName) && !vueFiles.has(fileName)) {
 			onConfigUpdated();
 		}
 	}
@@ -202,7 +203,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		const parseConfigHost: ts.ParseConfigHost = {
 			useCaseSensitiveFileNames: info.project.useCaseSensitiveFileNames(),
 			readDirectory: (path, extensions, exclude, include, depth) => {
-				return info.project.readDirectory(path, ['.vue'], exclude, include, depth);
+				return info.project.readDirectory(path, ['.vue', '.md'], exclude, include, depth);
 			},
 			fileExists: fileName => info.project.fileExists(fileName),
 			readFile: fileName => info.project.readFile(fileName),

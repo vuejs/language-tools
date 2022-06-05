@@ -327,7 +327,7 @@ export function createLanguageService(
 
 				document = TextDocument.create(
 					uri,
-					uri.endsWith('.vue') ? 'vue' : 'typescript', // TODO
+					shared.syntaxToLanguageId(upath.extname(uri).slice(1)),
 					newVersion,
 					scriptSnapshot.getText(0, scriptSnapshot.getLength()),
 				);

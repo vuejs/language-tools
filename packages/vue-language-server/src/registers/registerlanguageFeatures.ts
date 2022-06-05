@@ -36,6 +36,7 @@ export function register(
 				willRename: {
 					filters: [
 						{ pattern: { glob: '**/*.vue' } },
+						{ pattern: { glob: '**/*.md' } },
 						{ pattern: { glob: '**/*.js' } },
 						{ pattern: { glob: '**/*.ts' } },
 						{ pattern: { glob: '**/*.jsx' } },
