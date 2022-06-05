@@ -75,7 +75,6 @@ export function generate(
 	const tsCodeGen = new CodeGen<EmbeddedFileMappingData>();
 	const tsFormatCodeGen = new CodeGen<EmbeddedFileMappingData>();
 	const cssCodeGen = new CodeGen<EmbeddedFileMappingData>();
-	const attrNames = new Set<string>();
 	const slots = new Map<string, {
 		varName: string,
 		loc: SourceMaps.Range,
@@ -85,16 +84,7 @@ export function generate(
 		loc: SourceMaps.Range,
 	}>();
 	const cssScopedClassesSet = new Set(cssScopedClasses);
-	const tags: Record<string, {
-		offsets: number[],
-		props: Record<string, {
-			argName: string,
-			offsets: number[],
-		}>,
-		events: Record<string, {
-			offsets: number[],
-		}>,
-	}> = {};
+	const tagOffsetsMap: Record<string, number[]> = {};
 	const tagResolves: Record<string, {
 		component: string,
 		emit: string,
@@ -109,13 +99,24 @@ export function generate(
 
 	let elementIndex = 0;
 
-	for (const childNode of templateAst.children) {
-		collectTags(childNode);
-	}
-	for (const tagName in tags) {
+	walkElementNodes(templateAst, node => {
 
-		const tag = tags[tagName];
-		const tagRanges = tag.offsets.map(offset => ({ start: offset, end: offset + tagName.length }));
+		if (!tagOffsetsMap[node.tag]) {
+			tagOffsetsMap[node.tag] = [];
+		}
+
+		const offsets = tagOffsetsMap[node.tag];
+
+		offsets.push(node.loc.start.offset + node.loc.source.indexOf(node.tag)); // start tag
+		if (!node.isSelfClosing && sourceLang === 'html') {
+			offsets.push(node.loc.start.offset + node.loc.source.lastIndexOf(node.tag)); // end tag
+		}
+	});
+
+	for (const tagName in tagOffsetsMap) {
+
+		const tagOffsets = tagOffsetsMap[tagName];
+		const tagRanges = tagOffsets.map(offset => ({ start: offset, end: offset + tagName.length }));
 		const isNamespacedTag = tagName.indexOf('.') >= 0;
 
 		const var_correctTagName = `__VLS_${elementIndex++}`;
@@ -227,7 +228,7 @@ export function generate(
 		tagResolves[tagName] = {
 			component: var_rawComponent,
 			emit: var_emit,
-			offsets: tag.offsets.map(offset => htmlToTemplate(offset, offset)?.start).filter(notEmpty),
+			offsets: tagOffsets.map(offset => htmlToTemplate(offset, offset)?.start).filter(notEmpty),
 		};
 	}
 
@@ -284,103 +285,10 @@ export function generate(
 		codeGen: tsCodeGen,
 		formatCodeGen: tsFormatCodeGen,
 		cssCodeGen: cssCodeGen,
-		tagNames: tagResolves,
-		attrNames,
+		tagNames: tagOffsetsMap,
 		identifiers,
 	};
 
-	function collectTags(node: CompilerDOM.TemplateChildNode) {
-		if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
-			const patchForNode = getPatchForSlotNode(node);
-			if (patchForNode) {
-				collectTags(patchForNode);
-				return;
-			}
-			if (!tags[node.tag]) {
-				tags[node.tag] = {
-					offsets: [],
-					props: {},
-					events: {},
-				};
-			}
-			const resolvedTag = tags[node.tag];
-			resolvedTag.offsets.push(node.loc.start.offset + node.loc.source.indexOf(node.tag)); // start tag
-			if (!node.isSelfClosing && sourceLang === 'html') {
-				resolvedTag.offsets.push(node.loc.start.offset + node.loc.source.lastIndexOf(node.tag)); // end tag
-			}
-			for (const prop of node.props) {
-				if (
-					prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-					&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-					&& prop.arg.isStatic
-				) {
-
-					let propName = prop.arg.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY
-						? prop.arg.content
-						: prop.arg.loc.source;
-
-					if (prop.modifiers.some(m => m === 'prop' || m === 'attr')) {
-						propName = propName.substring(1);
-					}
-
-					if (prop.name === 'bind' || prop.name === 'model') {
-						addProp(propName, propName, prop.arg.loc.start.offset);
-					}
-					else if (prop.name === 'on') {
-						addEvent(propName, prop.arg.loc.start.offset);
-					}
-				}
-				else if (
-					prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-					&& !prop.arg
-					&& prop.name === 'model'
-				) {
-					addProp(getModelValuePropName(node, vueVersion), 'v-model', prop.loc.start.offset);
-				}
-				else if (
-					prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
-				) {
-					addProp(prop.name, prop.name, prop.loc.start.offset);
-				}
-			}
-			for (const childNode of node.children) {
-				collectTags(childNode);
-			}
-
-			function addProp(propName: string, argName: string, offset: number) {
-				if (!resolvedTag.props[propName]) {
-					resolvedTag.props[propName] = {
-						argName,
-						offsets: [],
-					};
-				}
-				resolvedTag.props[propName].offsets.push(offset);
-			}
-			function addEvent(eventName: string, offset: number) {
-				if (!resolvedTag.events[eventName]) {
-					resolvedTag.events[eventName] = {
-						offsets: [],
-					};
-				}
-				resolvedTag.events[eventName].offsets.push(offset);
-			}
-		}
-		else if (node.type === CompilerDOM.NodeTypes.IF) {
-			// v-if / v-else-if / v-else
-			for (let i = 0; i < node.branches.length; i++) {
-				const branch = node.branches[i];
-				for (const childNode of branch.children) {
-					collectTags(childNode);
-				}
-			}
-		}
-		else if (node.type === CompilerDOM.NodeTypes.FOR) {
-			// v-for
-			for (const childNode of node.children) {
-				collectTags(childNode);
-			}
-		}
-	}
 	function visitNode(node: CompilerDOM.TemplateChildNode, parentEl: CompilerDOM.ElementNode | undefined): void {
 		if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 			visitElementNode(node, parentEl);
@@ -909,10 +817,6 @@ export function generate(
 						continue;
 				}
 
-				if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-					attrNames.add(prop.arg.content);
-				}
-
 				// camelize name
 				writePropStart(isStatic);
 				const diagStart = tsCodeGen.getText().length;
@@ -1052,8 +956,6 @@ export function generate(
 					if (index >= 1 !== forRemainStyleOrClass)
 						continue;
 				}
-
-				attrNames.add(prop.name);
 
 				// camelize name
 				writePropStart(true);
@@ -1972,6 +1874,40 @@ export function generate(
 		gen.addMapping2(newMapping);
 	}
 };
+
+export function walkElementNodes(node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode, cb: (node: CompilerDOM.ElementNode) => void) {
+	if (node.type === CompilerDOM.NodeTypes.ROOT) {
+		for (const child of node.children) {
+			walkElementNodes(child, cb);
+		}
+	}
+	else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
+		const patchForNode = getPatchForSlotNode(node);
+		if (patchForNode) {
+			walkElementNodes(patchForNode, cb);
+			return;
+		}
+		cb(node);
+		for (const child of node.children) {
+			walkElementNodes(child, cb);
+		}
+	}
+	else if (node.type === CompilerDOM.NodeTypes.IF) {
+		// v-if / v-else-if / v-else
+		for (let i = 0; i < node.branches.length; i++) {
+			const branch = node.branches[i];
+			for (const childNode of branch.children) {
+				walkElementNodes(childNode, cb);
+			}
+		}
+	}
+	else if (node.type === CompilerDOM.NodeTypes.FOR) {
+		// v-for
+		for (const child of node.children) {
+			walkElementNodes(child, cb);
+		}
+	}
+}
 
 function toUnicode(str: string) {
 	return str.split('').map(value => {

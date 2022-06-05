@@ -143,9 +143,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				const templateErrors: vscode.Diagnostic[] = [];
 				const sfcVueTemplateCompiled = vueDocument.file.getSfcVueTemplateCompiled();
 				const sfcTemplateLanguageCompiled = vueDocument.file.getSfcTemplateLanguageCompiled();
-				const sfcTemplate = vueDocument.file.getSfcTemplateDocument();
 
-				if (sfcVueTemplateCompiled && sfcTemplateLanguageCompiled && sfcTemplate) {
+				if (sfcVueTemplateCompiled && sfcTemplateLanguageCompiled) {
 
 					for (const error of sfcVueTemplateCompiled.errors) {
 						onCompilerError(error, vscode.DiagnosticSeverity.Error);
@@ -397,14 +396,13 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		return item;
 
 		async function planAInsertText() {
-			const embeddedScriptFile = vueDocument.file.getScriptTsFile();
-			const embeddedScriptDocument = vueDocument.embeddedDocumentsMap.get(embeddedScriptFile);
+			const embeddedScriptUri = shared.fsPathToUri(vueDocument.file.getScriptFileName());
 			const tsImportName = camelize(path.basename(importFile).replace(/\./g, '-'));
 			const [formatOptions, preferences] = await Promise.all([
-				options.tsSettings.getFormatOptions?.(embeddedScriptDocument) ?? {},
-				options.tsSettings.getPreferences?.(embeddedScriptDocument) ?? {},
+				options.tsSettings.getFormatOptions?.(embeddedScriptUri) ?? {},
+				options.tsSettings.getPreferences?.(embeddedScriptUri) ?? {},
 			]);
-			const tsDetail = options.tsLs.__internal__.raw.getCompletionEntryDetails(shared.uriToFsPath(embeddedScriptDocument.uri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
+			const tsDetail = options.tsLs.__internal__.raw.getCompletionEntryDetails(shared.uriToFsPath(embeddedScriptUri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
 			if (tsDetail?.codeActions) {
 				for (const action of tsDetail.codeActions) {
 					for (const change of action.changes) {
@@ -724,14 +722,13 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		let cache = componentCompletionDataCache.get(templateData);
 		if (!cache) {
 
-			const { sfcTemplateScript } = sourceFile.file.refs;
-
 			cache = new Map<string, { item: ts.CompletionEntry | undefined, bind: ts.CompletionEntry[], on: ts.CompletionEntry[]; }>();
 
-			pauseTracking();
-			const file = sfcTemplateScript.file.value;
-			const templateTagNames = sfcTemplateScript.templateCodeGens.value ? Object.keys(sfcTemplateScript.templateCodeGens.value.tagNames) : [];
-			resetTracking();
+			const file = sourceFile.file.getAllEmbeddeds().find(e =>
+				e.file.fileName.endsWith('.__VLS_template.tsx')
+				|| e.file.fileName.endsWith('.__VLS_template.jsx')
+			)?.file;
+			const templateTagNames = [...sourceFile.getTemplateTagsAndAttrs().tags.keys()];
 
 			if (file) {
 

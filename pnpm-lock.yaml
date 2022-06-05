@@ -212,6 +212,7 @@ importers:
       '@volar/vue-language-service-types': 0.36.1
       '@volar/vue-typescript': 0.36.1
       '@vscode/emmet-helper': ^2.8.4
+      '@vue/compiler-dom': ^3.2.36
       '@vue/reactivity': ^3.2.36
       '@vue/shared': ^3.2.36
       semver: ^7.3.7
@@ -234,6 +235,7 @@ importers:
       '@volar/vue-language-service-types': link:../vue-language-service-types
       '@volar/vue-typescript': link:../vue-typescript
       '@vscode/emmet-helper': 2.8.4
+      '@vue/compiler-dom': 3.2.36
       '@vue/reactivity': 3.2.36
       '@vue/shared': 3.2.36
       semver: 7.3.7

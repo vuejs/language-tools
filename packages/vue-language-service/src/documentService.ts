@@ -77,10 +77,6 @@ export function getDocumentService(
 		jsonPlugin,
 		tsPlugin,
 	].map(patchHtmlFormat);
-	const vueTsPlugins = [
-		vueTs.useHtmlPlugin(),
-		vueTs.usePugPlugin(),
-	];
 
 	const context: DocumentServiceRuntimeContext = {
 		typescript: ts,
@@ -138,7 +134,6 @@ export function getDocumentService(
 			shared.uriToFsPath(document.uri),
 			document.getText(),
 			document.version.toString(),
-			vueTsPlugins,
 			{},
 			context.typescript,
 			undefined,

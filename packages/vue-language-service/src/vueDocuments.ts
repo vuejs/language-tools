@@ -5,6 +5,8 @@ import { SourceMapBase, Mapping } from '@volar/source-map';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { EmbeddedFileMappingData, TeleportMappingData, TeleportSideData } from '@volar/vue-code-gen';
 import { untrack } from './utils/untrack';
+import { walkElementNodes } from '@volar/vue-code-gen';
+import * as CompilerDOM from '@vue/compiler-dom';
 import type * as vscode from 'vscode-languageserver-protocol';
 
 import type * as _ from '@volar/vue-typescript/node_modules/@vue/reactivity'; // fix build error
@@ -242,6 +244,53 @@ export function parseVueDocument(vueFile: VueFile) {
 			return sourceMap;
 		});
 	});
+	const templateTagsAndAttrs = computed(() => {
+		const htmlComputed = vueFile.getSfcTemplateLanguageCompiled();
+		const ast = vueFile.getSfcVueTemplateCompiled()?.ast;
+		const tags = new Map<string, number[]>();
+		const attrs = new Set<string>();
+		if (ast && htmlComputed) {
+			walkElementNodes(ast, node => {
+
+				if (!tags.has(node.tag)) {
+					tags.set(node.tag, []);
+				}
+
+				const offsets = tags.get(node.tag)!;
+
+				const startTagHtmlOffset = node.loc.start.offset + node.loc.source.indexOf(node.tag);
+				const startTagTemplateOffset = htmlComputed.htmlToTemplate(startTagHtmlOffset, startTagHtmlOffset);
+				if (startTagTemplateOffset !== undefined) {
+					offsets.push(startTagTemplateOffset.start);
+				}
+
+				const endTagHtmlOffset = node.loc.start.offset + node.loc.source.lastIndexOf(node.tag);
+				const endTagTemplateOffset = htmlComputed.htmlToTemplate(endTagHtmlOffset, endTagHtmlOffset);
+				if (endTagTemplateOffset !== undefined) {
+					offsets.push(endTagTemplateOffset.end);
+				}
+
+				for (const prop of node.props) {
+					if (
+						prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+						&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+						&& prop.arg.isStatic
+					) {
+						attrs.add(prop.arg.content);
+					}
+					else if (
+						prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
+					) {
+						attrs.add(prop.name);
+					}
+				}
+			});
+		}
+		return {
+			tags,
+			attrs,
+		};
+	});
 
 	return {
 		uri: shared.fsPathToUri(vueFile.fileName),
@@ -250,6 +299,7 @@ export function parseVueDocument(vueFile: VueFile) {
 		sourceMapsMap,
 		getSourceMaps: untrack(() => sourceMaps.value),
 		getDocument: untrack(() => document.value),
+		getTemplateTagsAndAttrs: untrack(() => templateTagsAndAttrs.value),
 
 		refs: {
 			sourceMaps,

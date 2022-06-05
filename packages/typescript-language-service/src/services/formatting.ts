@@ -16,7 +16,7 @@ export function register(
 			if (!document) return [];
 
 			const fileName = shared.uriToFsPath(document.uri);
-			const tsOptions = await settings.getFormatOptions?.(document, options) ?? options;
+			const tsOptions = await settings.getFormatOptions?.(document.uri, options) ?? options;
 
 			let scriptEdits: ReturnType<typeof languageService.getFormattingEditsForRange> | undefined;
 			try {
@@ -46,7 +46,7 @@ export function register(
 			if (!document) return [];
 
 			const fileName = shared.uriToFsPath(document.uri);
-			const tsOptions = await settings.getFormatOptions?.(document, options) ?? options;
+			const tsOptions = await settings.getFormatOptions?.(document.uri, options) ?? options;
 
 			let scriptEdits: ReturnType<typeof languageService.getFormattingEditsForRange> | undefined;
 			try {

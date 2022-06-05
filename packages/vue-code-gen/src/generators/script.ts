@@ -66,7 +66,7 @@ export function generate(
 			},
 			SourceMaps.Mode.Expand,
 			{
-				vueTag: 'sfc',
+				vueTag: undefined,
 				capabilities: {},
 			},
 		);
@@ -98,7 +98,7 @@ export function generate(
 	// fix https://github.com/johnsoncodehk/volar/issues/435
 	codeGen.addMapping2({
 		data: {
-			vueTag: 'sfc',
+			vueTag: undefined,
 			capabilities: {},
 		},
 		mode: SourceMaps.Mode.Expand,

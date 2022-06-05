@@ -1,21 +1,10 @@
-import type { TextRange } from '@volar/vue-code-gen';
-import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path';
-import useHtmlPlugin from './plugins/html';
-import usePugPlugin from './plugins/pug';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import { LanguageServiceHost } from './types';
 import * as localTypes from './utils/localTypes';
 import { injectCacheLogicToLanguageServiceHost } from './utils/ts';
 import { createVueFile, EmbeddedFile } from './vueFile';
 import { createVueFiles } from './vueFiles';
-
-export interface VueLanguagePlugin {
-
-	compileTemplate?(tmplate: string, lang: string): {
-		html: string,
-		mapping(htmlStart: number, htmlEnd: number): { start: number, end: number; } | undefined,
-	} | undefined;
-}
 
 export type TypeScriptRuntime = ReturnType<typeof createTypeScriptRuntime>;
 
@@ -30,10 +19,6 @@ export function createTypeScriptRuntime(options: {
 	const vueCompilerOptions = options.vueLsHost.getVueCompilationSettings();
 	const tsFileVersions = new Map<string, string>();
 	const vueFiles = createVueFiles();
-	const plugins = [
-		useHtmlPlugin(),
-		usePugPlugin(),
-	];
 	const tsLsHost = createTsLsHost();
 	const tsLsRaw = ts.createLanguageService(tsLsHost);
 	const localTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(vueCompilerOptions.experimentalCompatMode ?? 3));
@@ -312,7 +297,6 @@ export function createTypeScriptRuntime(options: {
 					fileName,
 					scriptText,
 					scriptVersion,
-					plugins,
 					options.vueLsHost.getVueCompilationSettings(),
 					options.typescript,
 					tsLsRaw,
