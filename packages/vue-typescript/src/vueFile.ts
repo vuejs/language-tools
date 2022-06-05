@@ -17,7 +17,7 @@ import useHtmlPlugin from './plugins/html';
 import usePugPlugin from './plugins/pug';
 import useVueSfcStyles from './plugins/vue-sfc-styles';
 import useVueSfcCustomBlocks from './plugins/vue-sfc-customblocks';
-import useVueSfcScriptsFormat from './plugins/vue-sfc-scripts-format';
+import useVueSfcScriptsFormat from './plugins/vue-sfc-scripts';
 import useVueSfcTemplate from './plugins/vue-sfc-template';
 import useVueSfcScripts from './plugins/vue-typescript-scripts';
 
