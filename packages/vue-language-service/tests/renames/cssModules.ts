@@ -9,13 +9,18 @@ const fileResult = `
 </template>
 
 <style module>
+/* .foo { } */
 .bar { }
+</style>
+
+<style module lang="scss">
+// .foo { }
 </style>
 `.trim();
 
 defineRename({
 	fileName: file,
-	position: Position.create(5, 0),
+	position: Position.create(6, 0),
 	newName: '.bar',
 	length: 5,
 }, { [file]: fileResult });

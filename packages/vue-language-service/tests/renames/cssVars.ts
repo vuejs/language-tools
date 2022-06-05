@@ -9,6 +9,7 @@ const baz = 1;
 </script>
 
 <style>
+/* .bar { color: v-bind(foo); } */
 .bar { color: v-bind(baz); }
 .bar { color: v-bind('baz'); }
 .bar { color: v-bind("baz"); }
@@ -16,6 +17,10 @@ const baz = 1;
 .bar { color: v-bind('baz + baz'); }
 .bar { color: v-bind("baz + baz"); }
 .bar { color: v-bind(); }
+</style>
+
+<style lang="scss">
+// .bar { color: v-bind(foo); }
 </style>
 `.trim();
 
@@ -28,7 +33,7 @@ defineRename({
 
 defineRename({
 	fileName: file,
-	position: Position.create(5, 21),
+	position: Position.create(6, 21),
 	newName: 'baz',
 	length: 4,
 }, { [file]: fileResult });
