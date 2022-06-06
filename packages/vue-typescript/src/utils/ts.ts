@@ -12,7 +12,7 @@ export function injectCacheLogicToLanguageServiceHost(
 	const versionNums = ts.version.split('.').map(s => Number(s));
 	const greaterThan47 = versionNums[0] > 4 || (versionNums[0] === 4 && versionNums[1] >= 7);
 	if (!greaterThan47) {
-		console.log('TypeScript auto-import cache only working for TypeScript version < 4.7 on v0.35.0 later, please downgrade to v0.34.17 or lower for TypeScript version:', ts.version);
+		console.warn('TypeScript auto-import cache only working for TypeScript version < 4.7 on v0.35.0 later, please downgrade to v0.34.17 or lower for TypeScript version:', ts.version);
 		return;
 	}
 
