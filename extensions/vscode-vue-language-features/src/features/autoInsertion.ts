@@ -6,6 +6,7 @@ export async function activate(context: vscode.ExtensionContext, htmlClient: Bas
 
 	const supportedLanguages: Record<string, boolean> = {
 		vue: true,
+		markdown: true,
 		javascript: true,
 		typescript: true,
 		javascriptreact: true,

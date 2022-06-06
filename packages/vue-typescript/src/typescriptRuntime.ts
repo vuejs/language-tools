@@ -59,8 +59,8 @@ export function createTypeScriptRuntime(options: {
 			lastProjectVersion = newProjectVersion;
 
 			const fileNames = options.vueLsHost.getScriptFileNames();
-			const vueFileNames = new Set(fileNames.filter(file => file.endsWith('.vue')));
-			const tsFileNames = new Set(fileNames.filter(file => !file.endsWith('.vue')));
+			const vueFileNames = new Set(fileNames.filter(file => file.endsWith('.vue') || file.endsWith('.md')));
+			const tsFileNames = new Set(fileNames.filter(file => !file.endsWith('.vue') && !file.endsWith('.md')));
 			const fileNamesToRemove: string[] = [];
 			const fileNamesToCreate: string[] = [];
 			const fileNamesToUpdate: string[] = [];
@@ -140,7 +140,7 @@ export function createTypeScriptRuntime(options: {
 					// .vue.d.ts (never)
 					const fileNameTrim = fileName.substring(0, fileName.lastIndexOf('.'));
 
-					if (fileNameTrim.endsWith('.vue')) {
+					if (fileNameTrim.endsWith('.vue') || fileNameTrim.endsWith('.md')) {
 						const vueFile = vueFiles.get(fileNameTrim);
 						if (!vueFile) {
 							const fileExists = !!options.vueLsHost.fileExists?.(fileNameTrim);
@@ -182,6 +182,7 @@ export function createTypeScriptRuntime(options: {
 			getScriptKind(fileName) {
 				switch (path.extname(fileName)) {
 					case '.vue': return ts.ScriptKind.TSX; // can't use External, Unknown
+					case '.md': return ts.ScriptKind.TSX; // can't use External, Unknown
 					case '.js': return ts.ScriptKind.JS;
 					case '.jsx': return ts.ScriptKind.JSX;
 					case '.ts': return ts.ScriptKind.TS;
@@ -214,7 +215,7 @@ export function createTypeScriptRuntime(options: {
 				if (options.isTsPlugin) {
 					tsFileNames.push(fileName); // .vue + .ts
 				}
-				else if (!fileName.endsWith('.vue')) {
+				else if (!fileName.endsWith('.vue') && !fileName.endsWith('.md')) {
 					tsFileNames.push(fileName); // .ts
 				}
 			}

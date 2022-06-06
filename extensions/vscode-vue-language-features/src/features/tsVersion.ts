@@ -87,6 +87,7 @@ export async function activate(context: vscode.ExtensionContext, clients: BaseLa
 	function updateStatusBar() {
 		if (
 			vscode.window.activeTextEditor?.document.languageId !== 'vue'
+			&& vscode.window.activeTextEditor?.document.languageId !== 'markdown'
 			&& !(
 				takeOverModeEnabled()
 				&& vscode.window.activeTextEditor

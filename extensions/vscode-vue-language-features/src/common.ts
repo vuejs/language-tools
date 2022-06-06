@@ -45,7 +45,7 @@ export async function activate(context: vscode.ExtensionContext, createLc: Creat
 		}
 
 		const currentlangId = vscode.window.activeTextEditor.document.languageId;
-		if (currentlangId === 'vue') {
+		if (currentlangId === 'vue' || currentlangId === 'markdown') {
 			doActivate(context, createLc);
 			stopCheck.dispose();
 		}
@@ -66,6 +66,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	const languageFeaturesDocumentSelector: lsp.DocumentSelector = takeOverMode ?
 		[
 			{ scheme: 'file', language: 'vue' },
+			{ scheme: 'file', language: 'markdown' },
 			{ scheme: 'file', language: 'javascript' },
 			{ scheme: 'file', language: 'typescript' },
 			{ scheme: 'file', language: 'javascriptreact' },
@@ -73,16 +74,19 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			{ scheme: 'file', language: 'json' },
 		] : [
 			{ scheme: 'file', language: 'vue' },
+			{ scheme: 'file', language: 'markdown' },
 		];
 	const documentFeaturesDocumentSelector: lsp.DocumentSelector = takeOverMode ?
 		[
 			{ language: 'vue' },
+			{ language: 'markdown' },
 			{ language: 'javascript' },
 			{ language: 'typescript' },
 			{ language: 'javascriptreact' },
 			{ language: 'typescriptreact' },
 		] : [
 			{ language: 'vue' },
+			{ language: 'markdown' },
 		];
 	const _useSecondServer = useSecondServer();
 	const _serverMaxOldSpaceSize = serverMaxOldSpaceSize();

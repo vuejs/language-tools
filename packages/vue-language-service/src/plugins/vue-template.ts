@@ -2,7 +2,6 @@ import * as shared from '@volar/shared';
 import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
 import { SearchTexts, TypeScriptRuntime, VueFile } from '@volar/vue-typescript';
 import { VueDocument, VueDocuments } from '../vueDocuments';
-import { pauseTracking, resetTracking } from '@vue/reactivity';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import { isIntrinsicElement } from '@volar/vue-code-gen';
 import * as path from 'upath';
@@ -160,11 +159,11 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 							start: error.loc?.start.offset ?? 0,
 							end: error.loc?.end.offset ?? 0,
 						};
-						let sourceRange = sfcTemplateLanguageCompiled!.htmlToTemplate(templateHtmlRange.start, templateHtmlRange.end);
+						let sourceRange = sfcTemplateLanguageCompiled!.mapping(templateHtmlRange);
 						let errorMessage = error.message;
 
 						if (!sourceRange) {
-							const htmlText = sfcTemplateLanguageCompiled!.htmlText.substring(templateHtmlRange.start, templateHtmlRange.end);
+							const htmlText = sfcTemplateLanguageCompiled!.html.substring(templateHtmlRange.start, templateHtmlRange.end);
 							errorMessage += '\n```html\n' + htmlText.trim() + '\n```';
 							sourceRange = { start: 0, end: 0 };
 						}
@@ -317,6 +316,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		const scriptSetupImport = scriptSetupAst ? getLastImportNode(scriptSetupAst) : undefined;
 		const componentName = capitalize(camelize(item.label.replace(/\./g, '-')));
 		const textDoc = vueDocument.getDocument();
+		const compiledVue = vueDocument.file.getCompiledVue()!;
 		let insertText = '';
 		const planAResult = await planAInsertText();
 		if (planAResult) {
@@ -328,68 +328,74 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			item.detail = `Auto import from '${importPath}'\n\n${rPath}`;
 		}
 		if (descriptor.scriptSetup) {
-			const editPosition = textDoc.positionAt(descriptor.scriptSetup.startTagEnd + (scriptSetupImport ? scriptSetupImport.end : 0));
-			autoImportPositions.add(editPosition);
-			item.additionalTextEdits = [
-				vscode.TextEdit.insert(
-					editPosition,
-					'\n' + insertText,
-				),
-			];
+			const startTagEnd = compiledVue.mapping({ start: descriptor.scriptSetup.startTagEnd, end: descriptor.scriptSetup.startTagEnd })?.start;
+			if (startTagEnd !== undefined) {
+				const editPosition = textDoc.positionAt(startTagEnd + (scriptSetupImport ? scriptSetupImport.end : 0));
+				autoImportPositions.add(editPosition);
+				item.additionalTextEdits = [
+					vscode.TextEdit.insert(
+						editPosition,
+						'\n' + insertText,
+					),
+				];
+			}
 		}
 		else if (descriptor.script && scriptAst) {
-			const editPosition = textDoc.positionAt(descriptor.script.startTagEnd + (scriptImport ? scriptImport.end : 0));
-			autoImportPositions.add(editPosition);
-			item.additionalTextEdits = [
-				vscode.TextEdit.insert(
-					editPosition,
-					'\n' + insertText,
-				),
-			];
-			const scriptRanges = parseScriptRanges(options.ts, scriptAst, !!descriptor.scriptSetup, true, true);
-			const exportDefault = scriptRanges.exportDefault;
-			if (exportDefault) {
-				// https://github.com/microsoft/TypeScript/issues/36174
-				const printer = options.ts.createPrinter();
-				if (exportDefault.componentsOption && exportDefault.componentsOptionNode) {
-					const newNode: typeof exportDefault.componentsOptionNode = {
-						...exportDefault.componentsOptionNode,
-						properties: [
-							...exportDefault.componentsOptionNode.properties,
-							options.ts.factory.createShorthandPropertyAssignment(componentName),
-						] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
-					};
-					const printText = printer.printNode(options.ts.EmitHint.Expression, newNode, scriptAst);
-					const editRange = vscode.Range.create(
-						textDoc.positionAt(descriptor.script.startTagEnd + exportDefault.componentsOption.start),
-						textDoc.positionAt(descriptor.script.startTagEnd + exportDefault.componentsOption.end),
-					);
-					autoImportPositions.add(editRange.start);
-					autoImportPositions.add(editRange.end);
-					item.additionalTextEdits.push(vscode.TextEdit.replace(
-						editRange,
-						unescape(printText.replace(/\\u/g, '%u')),
-					));
-				}
-				else if (exportDefault.args && exportDefault.argsNode) {
-					const newNode: typeof exportDefault.argsNode = {
-						...exportDefault.argsNode,
-						properties: [
-							...exportDefault.argsNode.properties,
-							options.ts.factory.createShorthandPropertyAssignment(`components: { ${componentName} }`),
-						] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
-					};
-					const printText = printer.printNode(options.ts.EmitHint.Expression, newNode, scriptAst);
-					const editRange = vscode.Range.create(
-						textDoc.positionAt(descriptor.script.startTagEnd + exportDefault.args.start),
-						textDoc.positionAt(descriptor.script.startTagEnd + exportDefault.args.end),
-					);
-					autoImportPositions.add(editRange.start);
-					autoImportPositions.add(editRange.end);
-					item.additionalTextEdits.push(vscode.TextEdit.replace(
-						editRange,
-						unescape(printText.replace(/\\u/g, '%u')),
-					));
+			const startTagEnd = compiledVue.mapping({ start: descriptor.script.startTagEnd, end: descriptor.script.startTagEnd })?.start;
+			if (startTagEnd !== undefined) {
+				const editPosition = textDoc.positionAt(startTagEnd + (scriptImport ? scriptImport.end : 0));
+				autoImportPositions.add(editPosition);
+				item.additionalTextEdits = [
+					vscode.TextEdit.insert(
+						editPosition,
+						'\n' + insertText,
+					),
+				];
+				const scriptRanges = parseScriptRanges(options.ts, scriptAst, !!descriptor.scriptSetup, true, true);
+				const exportDefault = scriptRanges.exportDefault;
+				if (exportDefault) {
+					// https://github.com/microsoft/TypeScript/issues/36174
+					const printer = options.ts.createPrinter();
+					if (exportDefault.componentsOption && exportDefault.componentsOptionNode) {
+						const newNode: typeof exportDefault.componentsOptionNode = {
+							...exportDefault.componentsOptionNode,
+							properties: [
+								...exportDefault.componentsOptionNode.properties,
+								options.ts.factory.createShorthandPropertyAssignment(componentName),
+							] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
+						};
+						const printText = printer.printNode(options.ts.EmitHint.Expression, newNode, scriptAst);
+						const editRange = vscode.Range.create(
+							textDoc.positionAt(startTagEnd + exportDefault.componentsOption.start),
+							textDoc.positionAt(startTagEnd + exportDefault.componentsOption.end),
+						);
+						autoImportPositions.add(editRange.start);
+						autoImportPositions.add(editRange.end);
+						item.additionalTextEdits.push(vscode.TextEdit.replace(
+							editRange,
+							unescape(printText.replace(/\\u/g, '%u')),
+						));
+					}
+					else if (exportDefault.args && exportDefault.argsNode) {
+						const newNode: typeof exportDefault.argsNode = {
+							...exportDefault.argsNode,
+							properties: [
+								...exportDefault.argsNode.properties,
+								options.ts.factory.createShorthandPropertyAssignment(`components: { ${componentName} }`),
+							] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
+						};
+						const printText = printer.printNode(options.ts.EmitHint.Expression, newNode, scriptAst);
+						const editRange = vscode.Range.create(
+							textDoc.positionAt(startTagEnd + exportDefault.args.start),
+							textDoc.positionAt(startTagEnd + exportDefault.args.end),
+						);
+						autoImportPositions.add(editRange.start);
+						autoImportPositions.add(editRange.end);
+						item.additionalTextEdits.push(vscode.TextEdit.replace(
+							editRange,
+							unescape(printText.replace(/\\u/g, '%u')),
+						));
+					}
 				}
 			}
 		}
@@ -534,7 +540,10 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 		if (enabledComponentAutoImport && (descriptor.script || descriptor.scriptSetup)) {
 			for (const vueDocument of options.vueDocuments.getAll()) {
-				let baseName = path.basename(vueDocument.uri, '.vue');
+				let baseName =
+					vueDocument.uri.endsWith('.vue') ? path.basename(vueDocument.uri, '.vue')
+						: vueDocument.uri.endsWith('.md') ? path.basename(vueDocument.uri, '.md')
+							: path.basename(vueDocument.uri);
 				if (baseName.toLowerCase() === 'index') {
 					baseName = path.basename(path.dirname(vueDocument.uri));
 				}

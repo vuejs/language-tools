@@ -97,7 +97,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 	};
 
 	async function onChangeDocument(newDoc: vscode.TextDocument | undefined) {
-		if (newDoc?.languageId === 'vue') {
+		if (newDoc?.languageId === 'vue' || newDoc?.languageId === 'markdown') {
 			let tagCase = tagCases.uriGet(newDoc.uri.toString());
 			if (!tagCase) {
 				const tagMode = vscode.workspace.getConfiguration('volar').get<'auto' | 'both' | 'kebab' | 'pascal'>('completion.preferredTagNameCase');

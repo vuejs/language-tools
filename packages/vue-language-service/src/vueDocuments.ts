@@ -229,7 +229,7 @@ export function parseVueDocument(vueFile: VueFile) {
 	});
 
 	// reactivity
-	const document = computed(() => TextDocument.create(shared.fsPathToUri(vueFile.fileName), 'vue', documentVersion++, vueFile.refs.content.value));
+	const document = computed(() => TextDocument.create(shared.fsPathToUri(vueFile.fileName), vueFile.fileName.endsWith('.md') ? 'markdown' : 'vue', documentVersion++, vueFile.refs.content.value));
 	const sourceMaps = computed(() => {
 		return vueFile.refs.allEmbeddeds.value.map(embedded => sourceMapsMap.get(embedded));
 	});
@@ -259,13 +259,13 @@ export function parseVueDocument(vueFile: VueFile) {
 				const offsets = tags.get(node.tag)!;
 
 				const startTagHtmlOffset = node.loc.start.offset + node.loc.source.indexOf(node.tag);
-				const startTagTemplateOffset = htmlComputed.htmlToTemplate(startTagHtmlOffset, startTagHtmlOffset);
+				const startTagTemplateOffset = htmlComputed.mapping({ start: startTagHtmlOffset, end: startTagHtmlOffset });
 				if (startTagTemplateOffset !== undefined) {
 					offsets.push(startTagTemplateOffset.start);
 				}
 
 				const endTagHtmlOffset = node.loc.start.offset + node.loc.source.lastIndexOf(node.tag);
-				const endTagTemplateOffset = htmlComputed.htmlToTemplate(endTagHtmlOffset, endTagHtmlOffset);
+				const endTagTemplateOffset = htmlComputed.mapping({ start: endTagHtmlOffset, end: endTagHtmlOffset });
 				if (endTagTemplateOffset !== undefined) {
 					offsets.push(endTagTemplateOffset.end);
 				}
