@@ -117,7 +117,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 		if (codeActions) {
 
-			codeActions = codeActions.filter(codeAction => codeAction.title.indexOf('__VLS_') !== 0);
+			codeActions = codeActions.filter(codeAction => codeAction.title.indexOf('__VLS_') === -1);
 
 			return dedupe.withCodeAction(codeActions);
 		}
