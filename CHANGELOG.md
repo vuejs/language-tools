@@ -1,16 +1,46 @@
 # Changelog
 
-## 0.36.1 (2022/6/4)
+## 0.37.0 (2022/6/6)
 
-- feat: add `vueCompilerOptions.experimentalSuppressUnknownJsxPropertyErrors` option for unkonwn props reporting
-- fix: template slots types missing when use export default in `<script>` with `<script setup>` ([#1389](https://github.com/johnsoncodehk/volar/issues/1389))
-- fix: fixed false positive `__VLS_radioBinding` on radio input tag. ([#1390](https://github.com/johnsoncodehk/volar/issues/1390))
+- feat: VitePress support ([#1399](https://github.com/johnsoncodehk/volar/issues/1399))
+- feat: support `html.autoCreateQuotes` for pug
+- feat: enabled references codeLens for slots when use script setup
+- feat: detect missing component import ([#1203](https://github.com/johnsoncodehk/volar/issues/1203))
+- feat: support `--generateTrace` for vue-tsc ([#1375](https://github.com/johnsoncodehk/volar/issues/1375))
+- fix: dynamic slot name breaks template type checking ([#1392](https://github.com/johnsoncodehk/volar/issues/1392))
+- fix: don't report property does not exist error for `data-*` and `aria-*`
+- fix: html selection highlight ranges incorrect ([#1393](https://github.com/johnsoncodehk/volar/issues/1393))
+- fix: avoid `DefineComponent` type loss when use script setup ([#1391](https://github.com/johnsoncodehk/volar/issues/1391))
+- fix: css module `$style` inconsistent between vue-tsc and vscode ([#1089](https://github.com/johnsoncodehk/volar/issues/1089))
+- fix: css class name and v-bind should not active in style comments
+- fix: unused `console.log` to adapt vim-lsp ([#1391](https://github.com/johnsoncodehk/volar/issues/1391))
+- fix: language server stuck on incomplete style variable injection expression ([#1359](https://github.com/johnsoncodehk/volar/issues/1359))
+- fix: remove `__VLS_` result from code actions
+
+**Breaking changes**
+
+- `vueCompilerOptions.experimentalCompatMode` is renamed to `vueCompilerOptions.target`.
+
+	```diff
+	{
+		"vueCompilerOptions": {
+	-		"experimentalCompatMode": 2
+	+		"target": 2
+		},
+	}
+	```
 
 ### Our Sponsors
 
 <a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
 	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
 </a>
+
+## 0.36.1 (2022/6/4)
+
+- feat: add `vueCompilerOptions.experimentalSuppressUnknownJsxPropertyErrors` option for unkonwn props reporting
+- fix: template slots types missing when use export default in `<script>` with `<script setup>` ([#1389](https://github.com/johnsoncodehk/volar/issues/1389))
+- fix: fixed false positive `__VLS_radioBinding` on radio input tag. ([#1390](https://github.com/johnsoncodehk/volar/issues/1390))
 
 ## 0.36.0 (2022/6/3)
 
