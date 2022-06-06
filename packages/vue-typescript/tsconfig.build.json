@@ -13,16 +13,19 @@
 	],
 	"references": [
 		{
+			"path": "../code-gen/tsconfig.build.json"
+		},
+		{
+			"path": "../pug-language-service/tsconfig.build.json"
+		},
+		{
 			"path": "../shared/tsconfig.build.json"
 		},
 		{
 			"path": "../source-map/tsconfig.build.json"
 		},
 		{
-			"path": "../code-gen/tsconfig.build.json"
-		},
-		{
-			"path": "../pug-language-service/tsconfig.build.json"
+			"path": "../typescript-faster/tsconfig.build.json"
 		},
 		{
 			"path": "../typescript-language-service/tsconfig.build.json"

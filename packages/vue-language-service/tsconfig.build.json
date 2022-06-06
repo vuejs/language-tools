@@ -13,6 +13,9 @@
 	],
 	"references": [
 		{
+			"path": "../pug-language-service/tsconfig.build.json"
+		},
+		{
 			"path": "../shared/tsconfig.build.json"
 		},
 		{
@@ -20,9 +23,6 @@
 		},
 		{
 			"path": "../transforms/tsconfig.build.json"
-		},
-		{
-			"path": "../pug-language-service/tsconfig.build.json"
 		},
 		{
 			"path": "../typescript-language-service/tsconfig.build.json"
