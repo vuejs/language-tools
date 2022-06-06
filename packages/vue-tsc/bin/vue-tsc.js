@@ -32,6 +32,18 @@ fs.readFileSync = (...args) => {
             `function createProgram(rootNamesOrOptions, _options, _host, _oldProgram, _configFileParsingDiagnostics) {`,
             `function createProgram(rootNamesOrOptions, _options, _host, _oldProgram, _configFileParsingDiagnostics) { return require(${JSON.stringify(proxyPath)}).createProgramProxy(...arguments);`,
         );
+
+        // proxy tracing
+        tsc = tsc.replace(
+            `ts.startTracing = tracingEnabled.startTracing;`,
+            `ts.startTracing = require(${JSON.stringify(proxyPath)}).loadTsLib().startTracing;`,
+        );
+
+        tsc = tsc.replace(
+            `ts.dumpTracingLegend = tracingEnabled.dumpLegend;`,
+            `ts.dumpTracingLegend = require(${JSON.stringify(proxyPath)}).loadTsLib().dumpTracingLegend;`,
+        );
+
         return tsc;
     }
     return readFileSync(...args);
