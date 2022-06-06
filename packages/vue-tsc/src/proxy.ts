@@ -119,6 +119,10 @@ export function createProgramProxy(
 	}
 }
 
+export function loadTsLib() {
+	return ts;
+}
+
 function doThrow(msg: string) {
 	console.error(msg);
 	throw msg;
