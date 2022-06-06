@@ -107,6 +107,8 @@ flowchart LR
     TS[typescript]
     VSC_TS[vscode.typescript-language-features]
 	VUE_REPL["@vue/repl"]
+	VITE_PLUGIN_CHECKER[fi3ework/vite-plugin-checker]
+	COMPILE_VUE_SFC[leonzalion/compile-vue-sfc]
 
     click HTML_SERVICE "https://github.com/microsoft/vscode-html-languageservice"
     click CSS_SERVICE "https://github.com/microsoft/vscode-css-languageservice"
@@ -114,6 +116,8 @@ flowchart LR
     click TS "https://github.com/microsoft/TypeScript"
     click VSC_TS "https://github.com/microsoft/vscode/tree/main/extensions/typescript-language-features"
     click VUE_REPL "https://github.com/vuejs/repl"
+    click VITE_PLUGIN_CHECKER "https://github.com/fi3ework/vite-plugin-checker"
+    click COMPILE_VUE_SFC "https://github.com/leonzalion/compile-vue-sfc"
 
     subgraph VUE_CLIENTS[Language Clients]
       direction LR
@@ -164,6 +168,8 @@ flowchart LR
     VOLAR_VUE_SERVER --> VOLAR_VUE_SERVICE
     VUE_REPL --> VOLAR_VUE_SERVICE
     VUE_TSC --> VOLAR_VUE_TS
+	COMPILE_VUE_SFC --> VUE_TSC
+	VITE_PLUGIN_CHECKER --> VUE_TSC
     TS_VUE_PLUGIN --> VOLAR_VUE_TS
 
     VOLAR_VUE_SERVICE --> VOLAR_VUE_TS
