@@ -4,6 +4,6 @@
 	"version": "0.36.1",
 	"license": "MIT",
 	"devDependencies": {
-		"vue": "^3.2.36"
+		"vue": "^3.2.37"
 	}
 }

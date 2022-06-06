@@ -20,7 +20,7 @@
 		"@volar/shared": "0.36.1",
 		"@volar/vue-language-service": "0.36.1",
 		"@volar/vue-typescript": "0.36.1",
-		"@vue/shared": "^3.2.36",
+		"@vue/shared": "^3.2.37",
 		"request-light": "^0.5.8",
 		"upath": "^2.0.1",
 		"vscode-html-languageservice": "^5.0.0",

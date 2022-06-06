@@ -21,8 +21,8 @@
 		"@volar/code-gen": "0.36.1",
 		"@volar/source-map": "0.36.1",
 		"@volar/vue-code-gen": "0.36.1",
-		"@vue/compiler-sfc": "^3.2.36",
-		"@vue/reactivity": "^3.2.36",
+		"@vue/compiler-sfc": "^3.2.37",
+		"@vue/reactivity": "^3.2.37",
 		"markdown-it": "^13.0.1",
 		"markdown-it-ast": "^0.0.1"
 	},

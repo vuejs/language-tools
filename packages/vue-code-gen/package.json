@@ -18,8 +18,8 @@
 	"dependencies": {
 		"@volar/code-gen": "0.36.1",
 		"@volar/source-map": "0.36.1",
-		"@vue/compiler-core": "^3.2.36",
-		"@vue/compiler-dom": "^3.2.36",
-		"@vue/shared": "^3.2.36"
+		"@vue/compiler-core": "^3.2.37",
+		"@vue/compiler-dom": "^3.2.37",
+		"@vue/shared": "^3.2.37"
 	}
 }
