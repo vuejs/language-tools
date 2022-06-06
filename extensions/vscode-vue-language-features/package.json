@@ -121,15 +121,15 @@
 				"configuration": "./languages/vue-language-configuration.json"
 			},
 			{
+				"id": "markdown",
+				"configuration": "./languages/markdown-language-configuration.json"
+			},
+			{
 				"id": "html",
 				"configuration": "./languages/sfc-template-language-configuration.json"
 			},
 			{
 				"id": "jade",
-				"configuration": "./languages/sfc-template-language-configuration.json"
-			},
-			{
-				"id": "markdown",
 				"configuration": "./languages/sfc-template-language-configuration.json"
 			},
 			{
