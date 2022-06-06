@@ -90,6 +90,7 @@ export default function (): VueLanguagePlugin {
 							Mode.Offset,
 							undefined,
 						);
+						codeGen.addText('\n');
 					}
 					codeGen.addText('\n</template>\n');
 				}

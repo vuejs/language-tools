@@ -460,6 +460,7 @@ export function createVueFile(
 	return {
 		fileName,
 		getContent: untrack(() => fileContent.value),
+		getCompiledVue: untrack(() => compiledVue.value),
 		getSfcTemplateLanguageCompiled: untrack(() => computedHtmlTemplate.value),
 		getSfcVueTemplateCompiled: untrack(() => templateAstCompiled.value),
 		getVersion: untrack(() => version.value),

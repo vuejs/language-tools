@@ -49,19 +49,23 @@ export default function (options: {
 					const result: vscode.CodeLens[] = [];
 					const descriptor = vueDocument.file.getDescriptor();
 					const ranges = vueDocument.file.getSfcRefSugarRanges();
+					const compiledVue = vueDocument.file.getCompiledVue()!;
 
 					if (descriptor.scriptSetup && ranges) {
-						result.push({
-							range: {
-								start: document.positionAt(descriptor.scriptSetup.startTagEnd),
-								end: document.positionAt(descriptor.scriptSetup.startTagEnd + descriptor.scriptSetup.content.length),
-							},
-							command: {
-								title: 'ref sugar ' + (ranges.refs.length ? '☑' : '☐'),
-								command: ranges.refs.length ? Commands.UNUSE_REF_SUGAR : Commands.USE_REF_SUGAR,
-								arguments: [document.uri],
-							},
-						});
+						const startTagEnd = compiledVue.mapping({ start: descriptor.scriptSetup.startTagEnd, end: descriptor.scriptSetup.startTagEnd })?.start;
+						if (startTagEnd) {
+							result.push({
+								range: {
+									start: document.positionAt(startTagEnd),
+									end: document.positionAt(startTagEnd + descriptor.scriptSetup.content.length),
+								},
+								command: {
+									title: 'ref sugar ' + (ranges.refs.length ? '☑' : '☐'),
+									command: ranges.refs.length ? Commands.UNUSE_REF_SUGAR : Commands.USE_REF_SUGAR,
+									arguments: [document.uri],
+								},
+							});
+						}
 					}
 
 					return result;
@@ -135,6 +139,12 @@ async function useRefSugar(
 		_scriptSetupAst: NonNullable<typeof scriptSetupAst>,
 	) {
 
+		const compiledVue = _vueDocument.file.getCompiledVue()!;
+		const startTagEnd = compiledVue.mapping({ start: _scriptSetup.startTagEnd, end: _scriptSetup.startTagEnd })?.start;
+
+		if (startTagEnd === undefined)
+			return;
+
 		const ranges = parseDeclarationRanges(ts, _scriptSetupAst);
 		const dotValueRanges = parseDotValueRanges(ts, _scriptSetupAst);
 		const document = _vueDocument.getDocument();
@@ -146,7 +156,7 @@ async function useRefSugar(
 
 			for (const binding of declaration.leftBindings) {
 
-				const definitions = await findTypeDefinition(document.uri, document.positionAt(_scriptSetup.startTagEnd + binding.end)) ?? [];
+				const definitions = await findTypeDefinition(document.uri, document.positionAt(startTagEnd + binding.end)) ?? [];
 				const _isRefType = isRefType(definitions, scriptTsLs);
 
 				if (!_isRefType)
@@ -154,7 +164,7 @@ async function useRefSugar(
 
 				isRefDeclaration = true;
 
-				let references = await findReferences(document.uri, document.positionAt(_scriptSetup.startTagEnd + binding.end)) ?? [];
+				let references = await findReferences(document.uri, document.positionAt(startTagEnd + binding.end)) ?? [];
 
 				references = references.filter(reference => {
 
@@ -164,13 +174,13 @@ async function useRefSugar(
 					const start = document.offsetAt(reference.range.start);
 					const end = document.offsetAt(reference.range.end);
 
-					if (start >= (_scriptSetup.startTagEnd + binding.start) && end <= (_scriptSetup.startTagEnd + binding.end))
+					if (start >= (startTagEnd + binding.start) && end <= (startTagEnd + binding.end))
 						return false;
 
-					if (end < _scriptSetup.startTagEnd || start > _scriptSetup.startTagEnd + _scriptSetup.content.length)
+					if (end < startTagEnd || start > startTagEnd + _scriptSetup.content.length)
 						return false;
 
-					if (isBlacklistNode(ts, _scriptSetupAst, start - _scriptSetup.startTagEnd))
+					if (isBlacklistNode(ts, _scriptSetupAst, start - startTagEnd))
 						return false;
 
 					return true;
@@ -180,8 +190,8 @@ async function useRefSugar(
 
 					const sfcStart = document.offsetAt(reference.range.start);
 					const sfcEnd = document.offsetAt(reference.range.end);
-					const setupStart = sfcStart - _scriptSetup.startTagEnd;
-					const setupEnd = sfcEnd - _scriptSetup.startTagEnd;
+					const setupStart = sfcStart - startTagEnd;
+					const setupEnd = sfcEnd - startTagEnd;
 					const dotValue = dotValueRanges.find(dot => dot.beforeDot === setupEnd);
 
 					if (!dotValue) {
@@ -224,8 +234,8 @@ async function useRefSugar(
 
 			edits.push(vscode.TextEdit.replace(
 				{
-					start: document.positionAt(_scriptSetup.startTagEnd + start),
-					end: document.positionAt(_scriptSetup.startTagEnd + end),
+					start: document.positionAt(startTagEnd! + start),
+					end: document.positionAt(startTagEnd! + end),
 				},
 				text
 			));
@@ -308,6 +318,12 @@ async function unuseRefSugar(
 		_scriptSetupAst: NonNullable<typeof scriptSetupAst>,
 	) {
 
+		const compiledVue = _vueDocument.file.getCompiledVue()!;
+		const startTagEnd = compiledVue.mapping({ start: _scriptSetup.startTagEnd, end: _scriptSetup.startTagEnd })?.start;
+
+		if (startTagEnd === undefined)
+			return;
+
 		const ranges = _vueDocument.file.getSfcRefSugarRanges();
 		const document = _vueDocument.getDocument();
 		const edits: vscode.TextEdit[] = [];
@@ -347,7 +363,7 @@ async function unuseRefSugar(
 				await shared.sleep(0);
 
 				const bindingName = _scriptSetup.content.substring(binding.start, binding.end);
-				const renames = await doRename(_vueDocument.uri, document.positionAt(_scriptSetup.startTagEnd + binding.end), bindingName + '.value');
+				const renames = await doRename(_vueDocument.uri, document.positionAt(startTagEnd + binding.end), bindingName + '.value');
 
 				if (renames?.changes) {
 					const edits_2 = renames.changes[_vueDocument.uri];
@@ -359,10 +375,10 @@ async function unuseRefSugar(
 								end: document.offsetAt(edit.range.end),
 							};
 
-							if (editRange.start >= (_scriptSetup.startTagEnd + binding.start) && editRange.end <= (_scriptSetup.startTagEnd + binding.end))
+							if (editRange.start >= (startTagEnd + binding.start) && editRange.end <= (startTagEnd + binding.end))
 								continue;
 
-							if (editRange.end < _scriptSetup.startTagEnd || editRange.start > _scriptSetup.startTagEnd + _scriptSetup.content.length)
+							if (editRange.end < startTagEnd || editRange.start > startTagEnd + _scriptSetup.content.length)
 								continue;
 
 							if (inRawCall(editRange.start, editRange.end))
@@ -385,7 +401,7 @@ async function unuseRefSugar(
 		function inRawCall(start: number, end: number) {
 			if (ranges) {
 				for (const rawRange of ranges.raws) {
-					if (start >= (_scriptSetup.startTagEnd + rawRange.argsRange.start) && end <= (_scriptSetup.startTagEnd + rawRange.argsRange.end)) {
+					if (start >= (startTagEnd! + rawRange.argsRange.start) && end <= (startTagEnd! + rawRange.argsRange.end)) {
 						return true;
 					}
 				}
@@ -399,8 +415,8 @@ async function unuseRefSugar(
 
 			edits.push(vscode.TextEdit.replace(
 				{
-					start: document.positionAt(_scriptSetup.startTagEnd + start),
-					end: document.positionAt(_scriptSetup.startTagEnd + end),
+					start: document.positionAt(startTagEnd! + start),
+					end: document.positionAt(startTagEnd! + end),
 				},
 				text
 			));
