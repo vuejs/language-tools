@@ -82,7 +82,13 @@ export default function (): VueLanguagePlugin {
 						const rangeCode = rangeLines.join('\n');
 						const start = lineOffsets[_templateLines[0]];
 						codeGen.addCode(
-							rangeCode,
+							rangeCode
+								// inline code block
+								.replace(/\`([\s\S]*?)\`/g, match => `\`${' '.repeat(match.length - 2)}\``)
+								// # \<script setup>
+								.replace(/\\\<([\s\S]*?)\n/g, match => ' '.repeat(match.length))
+								// markdown line
+								.replace(/\[([\s\S]*?)\]\(([\s\S]*?)\)/g, match => ' '.repeat(match.length)),
 							{
 								start: start,
 								end: start + rangeCode.length,
