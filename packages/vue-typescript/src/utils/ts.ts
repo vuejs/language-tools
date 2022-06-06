@@ -2,6 +2,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import { createModuleSpecifierCache } from './moduleSpecifierCache';
 import { createPackageJsonCache, PackageJsonInfo, Ternary } from './packageJsonCache';
 import * as path from 'path';
+import type { VueCompilerOptions } from '../types';
 
 export function injectCacheLogicToLanguageServiceHost(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -93,11 +94,7 @@ export function createParsedCommandLine(
 	tsConfig: string,
 	extendsSet = new Set<string>(),
 ): ts.ParsedCommandLine & {
-	vueOptions: {
-		experimentalCompatMode?: 2 | 3;
-		experimentalTemplateCompilerOptions?: any;
-		experimentalTemplateCompilerOptionsRequirePath?: string;
-	};
+	vueOptions: VueCompilerOptions;
 } {
 
 	const tsConfigPath = ts.sys.resolvePath(tsConfig);

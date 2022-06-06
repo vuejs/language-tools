@@ -21,7 +21,7 @@ export function createTypeScriptRuntime(options: {
 	const vueFiles = createVueFiles();
 	const tsLsHost = createTsLsHost();
 	const tsLsRaw = ts.createLanguageService(tsLsHost);
-	const localTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(vueCompilerOptions.experimentalCompatMode ?? 3));
+	const localTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(vueCompilerOptions.target ?? 3));
 
 	let lastProjectVersion: string | undefined;
 	let tsProjectVersion = 0;
@@ -41,7 +41,7 @@ export function createTypeScriptRuntime(options: {
 		},
 		getLocalTypesFiles: () => {
 			const fileNames = getLocalTypesFiles();
-			const code = localTypes.getTypesCode(vueCompilerOptions.experimentalCompatMode ?? 3);
+			const code = localTypes.getTypesCode(vueCompilerOptions.target ?? 3);
 			return {
 				fileNames,
 				code,

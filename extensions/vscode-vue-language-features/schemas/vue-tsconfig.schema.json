@@ -3,7 +3,7 @@
 		"vueCompilerOptions": {
 			"type": "object",
 			"properties": {
-				"experimentalCompatMode": {
+				"target": {
 					"type": "number",
 					"default": 3,
 					"anyOf": [
@@ -15,7 +15,7 @@
 							]
 						}
 					],
-					"markdownDescription": "https://github.com/johnsoncodehk/volar/pull/351"
+					"markdownDescription": "Target version of Vue."
 				},
 				"experimentalRuntimeMode": {
 					"type": "string",

@@ -54,7 +54,7 @@ Note that you can use `defineComponent` even for components that are using the `
 
 3. Support for Vue 2 template
 
-Volar preferentially supports Vue 3. Vue 3 and Vue 2 templates have some differences. You need to set the `experimentalCompatMode` option to support the Vue 2 templates.
+Volar preferentially supports Vue 3. Vue 3 and Vue 2 templates have some differences. You need to set the `target` option to support the Vue 2 templates.
 
 ```jsonc
 // tsconfig.json
@@ -63,10 +63,8 @@ Volar preferentially supports Vue 3. Vue 3 and Vue 2 templates have some differe
     // ...
   },
   "vueCompilerOptions": {
-    "experimentalCompatMode": 2,
-    "experimentalTemplateCompilerOptions": {
-      "compatConfig": { "MODE": 2 } // optional
-    }
+    "target": 2.7,
+    // "target": 2, // For Vue version <= 2.6.14
   }
 }
 ```

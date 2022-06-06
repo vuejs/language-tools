@@ -61,7 +61,7 @@ export default function (
 				else {
 					tsxCodeGen.addText(`var __VLS_name = undefined;\n`);
 					tsxCodeGen.addText(`var __VLS_options = {};\n`);
-					tsxCodeGen.addText(`var __VLS_component = (await import('${getVueLibraryName(compilerOptions.experimentalCompatMode ?? 3)}')).defineComponent({});\n`);
+					tsxCodeGen.addText(`var __VLS_component = (await import('${getVueLibraryName(compilerOptions.target ?? 3)}')).defineComponent({});\n`);
 				}
 
 				writeImportTypes();
@@ -88,7 +88,7 @@ export default function (
 				/* Components */
 				tsxCodeGen.addText('/* Components */\n');
 				tsxCodeGen.addText('declare var __VLS_otherComponents: NonNullable<typeof __VLS_component extends { components: infer C } ? C : {}> & __VLS_types.GlobalComponents & typeof __VLS_vmUnwrap.components & typeof __VLS_ctx;\n');
-				tsxCodeGen.addText(`declare var __VLS_selfComponent: __VLS_types.SelfComponent<typeof __VLS_name, typeof __VLS_component & (new () => { ${getSlotsPropertyName(compilerOptions.experimentalCompatMode ?? 3)}: typeof __VLS_slots })>;\n`);
+				tsxCodeGen.addText(`declare var __VLS_selfComponent: __VLS_types.SelfComponent<typeof __VLS_name, typeof __VLS_component & (new () => { ${getSlotsPropertyName(compilerOptions.target ?? 3)}: typeof __VLS_slots })>;\n`);
 				tsxCodeGen.addText('declare var __VLS_components: typeof __VLS_otherComponents & Omit<typeof __VLS_selfComponent, keyof typeof __VLS_otherComponents>;\n');
 
 				tsxCodeGen.addText(`__VLS_components.${SearchTexts.Components};\n`);

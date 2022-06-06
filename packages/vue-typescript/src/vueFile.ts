@@ -158,7 +158,7 @@ export function createVueFile(
 			return compileSFCTemplate(
 				computedHtmlTemplate.value.html,
 				compilerOptions.experimentalTemplateCompilerOptions,
-				compilerOptions.experimentalCompatMode ?? 3,
+				compilerOptions.target ?? 3,
 			);
 		}
 	});
@@ -175,7 +175,7 @@ export function createVueFile(
 			ts,
 			sfc.template?.lang ?? 'html',
 			templateAstCompiled.value.ast,
-			compilerOptions.experimentalCompatMode ?? 3,
+			compilerOptions.target ?? 3,
 			compilerOptions.experimentalRuntimeMode,
 			!!compilerOptions.experimentalAllowTypeNarrowingInInlineHandlers,
 			!!sfc.scriptSetup,

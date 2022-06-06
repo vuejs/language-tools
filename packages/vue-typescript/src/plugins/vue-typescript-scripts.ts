@@ -46,7 +46,7 @@ export default function (
 				(compilerOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup ?? 'onlyJs') === 'onlyJs'
 					? lang.value === 'js' || lang.value === 'jsx'
 					: !!compilerOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup,
-				compilerOptions.experimentalCompatMode ?? 3,
+				compilerOptions.target ?? 3,
 			);
 
 			let file: EmbeddedFile | undefined;
