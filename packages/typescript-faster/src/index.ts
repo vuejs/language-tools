@@ -1,6 +1,7 @@
 import * as semver from 'semver';
 import _47 from './4_7';
 import _44 from './4_4';
+import _40 from './4_0';
 
 export function decorate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -14,6 +15,10 @@ export function decorate(
 	}
 	else if (semver.gte(ts.version, '4.4.0')) {
 		_44(ts, host, service);
+		return true;
+	}
+	else if (semver.gte(ts.version, '4.0.0')) {
+		_40(ts, host, service);
 		return true;
 	}
 
