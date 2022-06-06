@@ -1,0 +1,22 @@
+{
+	"name": "@volar/typescript-faster",
+	"version": "0.37.0",
+	"main": "out/index.js",
+	"license": "MIT",
+	"files": [
+		"out/**/*.js",
+		"out/**/*.d.ts"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/johnsoncodehk/volar.git",
+		"directory": "packages/typescript-faster"
+	},
+	"devDependencies": {
+		"@types/semver": "^7.3.9",
+		"typescript": "latest"
+	},
+	"dependencies": {
+		"semver": "^7.3.7"
+	}
+}

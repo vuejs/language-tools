@@ -15,7 +15,7 @@ importers:
       '@types/node': 17.0.40
       '@vscode/test-web': 0.0.24
       typescript: 4.7.3
-      vite: 2.9.9
+      vite: 2.9.10
       vitest: 0.14.1
 
   extensions/vscode-typescript-vue-plugin:
@@ -126,6 +126,17 @@ importers:
     dependencies:
       '@volar/shared': link:../shared
       vscode-languageserver-types: 3.17.1
+
+  packages/typescript-faster:
+    specifiers:
+      '@types/semver': ^7.3.9
+      semver: ^7.3.7
+      typescript: latest
+    dependencies:
+      semver: 7.3.7
+    devDependencies:
+      '@types/semver': 7.3.9
+      typescript: 4.7.3
 
   packages/typescript-language-service:
     specifiers:
@@ -277,6 +288,7 @@ importers:
       '@volar/code-gen': 0.37.0
       '@volar/pug-language-service': 0.37.0
       '@volar/source-map': 0.37.0
+      '@volar/typescript-faster': 0.37.0
       '@volar/vue-code-gen': 0.37.0
       '@vue/compiler-sfc': ^3.2.37
       '@vue/reactivity': ^3.2.37
@@ -286,6 +298,7 @@ importers:
     dependencies:
       '@volar/code-gen': link:../code-gen
       '@volar/source-map': link:../source-map
+      '@volar/typescript-faster': link:../typescript-faster
       '@volar/vue-code-gen': link:../vue-code-gen
       '@vue/compiler-sfc': 3.2.37
       '@vue/reactivity': 3.2.37
@@ -5133,8 +5146,8 @@ packages:
     engines: {node: '>= 0.8'}
     dev: true
 
-  /vite/2.9.9:
-    resolution: {integrity: sha512-ffaam+NgHfbEmfw/Vuh6BHKKlI/XIAhxE5QSS7gFLIngxg171mg1P3a4LSRME0z2ZU1ScxoKzphkipcYwSD5Ew==}
+  /vite/2.9.10:
+    resolution: {integrity: sha512-TwZRuSMYjpTurLqXspct+HZE7ONiW9d+wSWgvADGxhDPPyoIcNywY+RX4ng+QpK30DCa1l/oZgi2PLZDibhzbQ==}
     engines: {node: '>=12.2.0'}
     hasBin: true
     peerDependencies:
@@ -5183,7 +5196,7 @@ packages:
       local-pkg: 0.4.1
       tinypool: 0.1.3
       tinyspy: 0.3.2
-      vite: 2.9.9
+      vite: 2.9.10
     transitivePeerDependencies:
       - less
       - sass
