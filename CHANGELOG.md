@@ -64,7 +64,7 @@
 - feat: add tsc problemMatchers settings ([#1277](https://github.com/johnsoncodehk/volar/issues/1277))
 - fix: cannot watch external .d.ts file changes ([#1343](https://github.com/johnsoncodehk/volar/issues/1343))
 - fix: incorrect typescript error report with hgroup in template ([#1340](https://github.com/johnsoncodehk/volar/issues/1340))
-- fix: style variable injection syntax highlight not working for style languages other then `css` ([#1365](https://github.csom/johnsoncodehk/volar/issues/1365))
+- fix: style variable injection syntax highlight not working for style languages other then `css` ([#1365](https://github.com/johnsoncodehk/volar/issues/1365))
 - fix: false positive type check for method arguments with `defineExpose` ([#1364](https://github.com/johnsoncodehk/volar/issues/1364))
 - fix: avoid html emmet active in style block ([#1358](https://github.com/johnsoncodehk/volar/issues/1358))
 - fix: unable to recognize the type of parameters as alongside `<script setup>` ([#1324](https://github.com/johnsoncodehk/volar/issues/1324))
