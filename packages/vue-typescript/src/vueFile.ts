@@ -427,8 +427,12 @@ export function createVueFile(
 			}
 		}
 
-		if (remain.length) {
-			throw 'Unable to resolve embeddeds: ' + remain[0].parentFileName + ' -> ' + remain[0].file.fileName;
+		for (const e of remain) {
+			embeddeds.push({
+				self: e,
+				embeddeds: [],
+			});
+			// 	throw 'Unable to resolve embeddeds: ' + remain[0].parentFileName + ' -> ' + remain[0].file.fileName;
 		}
 
 		return embeddeds;
