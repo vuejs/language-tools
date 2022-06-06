@@ -58,11 +58,14 @@ export function isIntrinsicElement(runtimeMode: 'runtime-dom' | 'runtime-uni-app
 
 export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
+	compilerOptions: {
+		target: number,
+		experimentalRuntimeMode: 'runtime-dom' | 'runtime-uni-app' | undefined,
+		experimentalAllowTypeNarrowingInInlineHandlers: boolean,
+		experimentalSuppressInvalidJsxElementTypeErrors: boolean,
+	},
 	sourceLang: string,
 	templateAst: CompilerDOM.RootNode,
-	vueVersion: number,
-	experimentalRuntimeMode: 'runtime-dom' | 'runtime-uni-app' | undefined,
-	allowTypeNarrowingInEventExpressions: boolean,
 	hasScriptSetup: boolean,
 	cssScopedClasses: string[] = [],
 	htmlToTemplate: (htmlRange: { start: number, end: number; }) => { start: number, end: number; } | undefined,
@@ -146,18 +149,20 @@ export function generate(
 		}
 		else {
 			tsCodeGen.addText(`declare const ${var_correctTagName}: __VLS_types.GetComponentName<typeof __VLS_components, '${tagName}'>;\n`);
-			tsCodeGen.addText(`declare const ${var_rawComponent}: __VLS_types.GetProperty<typeof __VLS_components, typeof ${var_correctTagName}, unknown>;\n`);
+			tsCodeGen.addText(`declare const ${var_rawComponent}: ${compilerOptions.experimentalSuppressInvalidJsxElementTypeErrors ? '__VLS_types.ConvertInvalidJsxElement<' : ''
+				}__VLS_types.GetProperty<typeof __VLS_components, typeof ${var_correctTagName}, unknown>${compilerOptions.experimentalSuppressInvalidJsxElementTypeErrors ? '>' : ''
+				};\n`);
 		}
 		tsCodeGen.addText(`declare const ${var_emit}: __VLS_types.ExtractEmit2<typeof ${var_rawComponent}>;\n`);
 
 		const name1 = tagName; // hello-world
-		const name2 = isIntrinsicElement(experimentalRuntimeMode, tagName) ? tagName : camelize(tagName); // helloWorld
-		const name3 = isIntrinsicElement(experimentalRuntimeMode, tagName) ? tagName : capitalize(name2); // HelloWorld
+		const name2 = isIntrinsicElement(compilerOptions.experimentalRuntimeMode, tagName) ? tagName : camelize(tagName); // helloWorld
+		const name3 = isIntrinsicElement(compilerOptions.experimentalRuntimeMode, tagName) ? tagName : capitalize(name2); // HelloWorld
 		const componentNames = new Set([name1, name2, name3]);
 
 		if (!isNamespacedTag) {
 			// split tagRanges to fix end tag definition original select range mapping to start tag
-			if (isIntrinsicElement(experimentalRuntimeMode, tagName)) {
+			if (isIntrinsicElement(compilerOptions.experimentalRuntimeMode, tagName)) {
 				for (const tagRange of tagRanges) {
 					tsCodeGen.addText(`(<`);
 					writeObjectProperty2(
@@ -222,7 +227,7 @@ export function generate(
 		tsCodeGen.addText('/* Completion: Props */\n');
 		for (const name of componentNames) {
 			tsCodeGen.addText('// @ts-ignore\n');
-			tsCodeGen.addText(`(<${isIntrinsicElement(experimentalRuntimeMode, tagName) ? tagName : var_rawComponent} ${searchTexts.getPropsCompletion(name)}/>);\n`);
+			tsCodeGen.addText(`(<${isIntrinsicElement(compilerOptions.experimentalRuntimeMode, tagName) ? tagName : var_rawComponent} ${searchTexts.getPropsCompletion(name)}/>);\n`);
 		}
 
 		tagResolves[tagName] = {
@@ -364,7 +369,7 @@ export function generate(
 						formatBrackets.round,
 					);
 
-					if (allowTypeNarrowingInEventExpressions) {
+					if (compilerOptions.experimentalAllowTypeNarrowingInInlineHandlers) {
 						blockConditions.push(branch.condition.content);
 						addedBlockCondition = true;
 					}
@@ -467,7 +472,7 @@ export function generate(
 		tsCodeGen.addText(`{\n`);
 		{
 
-			const tagText = isIntrinsicElement(experimentalRuntimeMode, node.tag) ? node.tag : tagResolves[node.tag].component;
+			const tagText = isIntrinsicElement(compilerOptions.experimentalRuntimeMode, node.tag) ? node.tag : tagResolves[node.tag].component;
 			const fullTagStart = tsCodeGen.getText().length;
 
 			tsCodeGen.addText(`<`);
@@ -798,7 +803,7 @@ export function generate(
 						? prop.arg.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY
 							? prop.arg.content
 							: prop.arg.loc.source
-						: getModelValuePropName(node, vueVersion);
+						: getModelValuePropName(node, compilerOptions.target);
 
 				if (prop.modifiers.some(m => m === 'prop' || m === 'attr')) {
 					propName_1 = propName_1.substring(1);

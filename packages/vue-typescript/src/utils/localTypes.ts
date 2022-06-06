@@ -64,9 +64,10 @@ type GetComponentName_CapitalCase<T, K, O> = K extends keyof T ? K : O;
 export type FillingEventArg_ParametersLength<E extends (...args: any) => any> = IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];
 export type FillingEventArg<E> = E extends (...args: any) => any ? FillingEventArg_ParametersLength<E> extends 0 ? ($event?: undefined) => ReturnType<E> : E : E;
 export type GetProperty<T, K, N = any> = K extends keyof T ? T[K] : N;
-export type ComponentContext<T> = T extends new (...args: any) => any ? InstanceType<T> : T extends (...args: any) => any ? ReturnType<T> : T;
-export type OptionsProps<T> = T extends { props: infer R } ? R : {};
-export type SelectComponent<T1, T2> = T1 extends (new (...args: any) => any) ? T1 : T1 extends ((...args: any) => any) ? T1 : T2;
+export type ConvertInvalidJsxElement<T> =
+	T extends (...args: any) => JSX.Element ? T
+	: T extends new (...args: any) => JSX.ElementClass ? T
+	: any;
 
 export type ExtractEmit2<T> =
 	T extends FunctionalComponent<infer _, infer E> ? SetupContext<E>['emit']

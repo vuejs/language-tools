@@ -173,11 +173,14 @@ export function createVueFile(
 
 		return templateGen.generate(
 			ts,
+			{
+				target: compilerOptions.target ?? 3,
+				experimentalRuntimeMode: compilerOptions.experimentalRuntimeMode,
+				experimentalAllowTypeNarrowingInInlineHandlers: compilerOptions.experimentalAllowTypeNarrowingInInlineHandlers ?? false,
+				experimentalSuppressInvalidJsxElementTypeErrors: compilerOptions.experimentalSuppressInvalidJsxElementTypeErrors ?? false,
+			},
 			sfc.template?.lang ?? 'html',
 			templateAstCompiled.value.ast,
-			compilerOptions.target ?? 3,
-			compilerOptions.experimentalRuntimeMode,
-			!!compilerOptions.experimentalAllowTypeNarrowingInInlineHandlers,
 			!!sfc.scriptSetup,
 			Object.values(cssScopedClasses.value).map(map => Object.keys(map)).flat(),
 			computedHtmlTemplate.value.mapping,

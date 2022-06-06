@@ -21,5 +21,6 @@ export interface VueCompilerOptions {
 	experimentalResolveStyleCssClasses?: 'scoped' | 'always' | 'never';
 	experimentalAllowTypeNarrowingInInlineHandlers?: boolean;
 	experimentalSuppressUnknownJsxPropertyErrors?: boolean;
+	experimentalSuppressInvalidJsxElementTypeErrors?: boolean;
 	experimentalUseScriptLeadingCommentInTemplate?: boolean;
 }
