@@ -65,6 +65,10 @@ require('esbuild').build({
                 const path = require.resolve('../node_modules/path-browserify', { paths: [__dirname] })
                 return { path: path }
             })
+            build.onResolve({ filter: /^punycode$/ }, args => {
+                const path = require.resolve('../node_modules/punycode', { paths: [__dirname] })
+                return { path: path }
+            })
         },
     }],
 }).catch(() => process.exit(1))
