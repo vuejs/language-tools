@@ -1,3 +1,5 @@
 # @volar/typescript-faster
 
-TypeScript LanguageService Completion API is slow, this package make it faster.
+TypeScript Language Service Completion API is slow when calculate auto-import.
+
+This package make it faster by ported tsserver auto-import caching logic.
