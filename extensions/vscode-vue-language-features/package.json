@@ -46,6 +46,11 @@
 		}
 	},
 	"contributes": {
+		"configurationDefaults": {
+			"[markdown]": {
+				"editor.quickSuggestions": true
+			}
+		},
 		"jsonValidation": [
 			{
 				"fileMatch": "tsconfig.json",

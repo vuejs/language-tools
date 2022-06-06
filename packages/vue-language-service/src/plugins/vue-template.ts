@@ -2,7 +2,6 @@ import * as shared from '@volar/shared';
 import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
 import { SearchTexts, TypeScriptRuntime, VueFile } from '@volar/vue-typescript';
 import { VueDocument, VueDocuments } from '../vueDocuments';
-import { pauseTracking, resetTracking } from '@vue/reactivity';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import { isIntrinsicElement } from '@volar/vue-code-gen';
 import * as path from 'upath';
