@@ -15,8 +15,10 @@ export default function (): VueLanguagePlugin {
 
 				let validTemplateBlock: [number, number] | undefined;
 				let validScriptBlock: [number, number] | undefined;
+				let validStyleBlock: [number, number] | undefined;
 
 				const scriptLines: [number, number][] = [];
+				const styleLines: [number, number][] = [];
 				const templateLines: [number, number][] = [];
 
 				const tokens = MarkdownIt().parse(content, {});
@@ -42,10 +44,36 @@ export default function (): VueLanguagePlugin {
 						validScriptBlock[1] = node.children[0].map[1];
 						scriptLines.push(validScriptBlock);
 						validScriptBlock = undefined;
+						continue;
 					}
-					else if (!validScriptBlock) {
-						walkNode(node);
+					if (validScriptBlock) {
+						continue;
 					}
+					// <style> block start tag
+					if (
+						node.nodeType === 'paragraph'
+						&& node.children.length
+						&& node.children[0].type === 'inline' && (node.children[0].content.startsWith('<style ') || node.children[0].content.startsWith('<style>'))
+					) {
+						breakTemplateBlock();
+						validStyleBlock = node.children[0].map;
+					}
+					// <style> block end tag
+					if (
+						validStyleBlock
+						&& node.nodeType === 'paragraph'
+						&& node.children.length
+						&& node.children[0].type === 'inline' && node.children[0].content.indexOf('</style>') >= 0
+					) {
+						validStyleBlock[1] = node.children[0].map[1];
+						styleLines.push(validStyleBlock);
+						validStyleBlock = undefined;
+						continue;
+					}
+					if (validStyleBlock) {
+						continue;
+					}
+					walkNode(node);
 				}
 
 				breakTemplateBlock();
@@ -60,10 +88,25 @@ export default function (): VueLanguagePlugin {
 					lineOffset += line.length + 1;
 				}
 
-				for (const _scriptLines of scriptLines) {
-					const rangeLines = lines.slice(_scriptLines[0], _scriptLines[1]);
+				for (const _lines of scriptLines) {
+					const rangeLines = lines.slice(_lines[0], _lines[1]);
 					const rangeCode = rangeLines.join('\n');
-					const start = lineOffsets[_scriptLines[0]];
+					const start = lineOffsets[_lines[0]];
+					codeGen.addCode(
+						rangeCode,
+						{
+							start: start,
+							end: start + rangeCode.length,
+						},
+						Mode.Offset,
+						undefined,
+					);
+				}
+
+				for (const _lines of styleLines) {
+					const rangeLines = lines.slice(_lines[0], _lines[1]);
+					const rangeCode = rangeLines.join('\n');
+					const start = lineOffsets[_lines[0]];
 					codeGen.addCode(
 						rangeCode,
 						{
@@ -77,10 +120,10 @@ export default function (): VueLanguagePlugin {
 
 				if (templateLines.length) {
 					codeGen.addText('\n<template>\n');
-					for (const _templateLines of templateLines) {
-						const rangeLines = lines.slice(_templateLines[0], _templateLines[1]);
+					for (const _lines of templateLines) {
+						const rangeLines = lines.slice(_lines[0], _lines[1]);
 						const rangeCode = rangeLines.join('\n');
-						const start = lineOffsets[_templateLines[0]];
+						const start = lineOffsets[_lines[0]];
 						codeGen.addCode(
 							rangeCode
 								// inline code block

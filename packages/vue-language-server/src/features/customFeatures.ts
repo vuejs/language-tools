@@ -35,7 +35,7 @@ export function register(
 				for (const vueDocument of context.vueDocuments.getAll()) {
 					for (const sourceMap of vueDocument.getSourceMaps()) {
 
-						if (!sourceMap.embeddedFile.isTsHostFile && !sourceMap.embeddedFile.fileName.endsWith('.html'))
+						if (!sourceMap.embeddedFile.isTsHostFile)
 							continue;
 
 						fs.writeFile(sourceMap.embeddedFile.fileName, sourceMap.mappedDocument.getText(), () => { });
