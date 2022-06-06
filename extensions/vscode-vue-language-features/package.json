@@ -455,6 +455,38 @@
 						"support.class.component.vue"
 					]
 				}
+			},
+			{
+				"language": "markdown",
+				"scopes": {
+					"property": [
+						"variable.other.property.vue"
+					],
+					"property.readonly": [
+						"variable.other.constant.property.vue"
+					],
+					"variable": [
+						"variable.other.readwrite.vue"
+					],
+					"variable.readonly": [
+						"variable.other.constant.object.vue"
+					],
+					"function": [
+						"entity.name.function.vue"
+					],
+					"namespace": [
+						"entity.name.type.module.vue"
+					],
+					"variable.defaultLibrary": [
+						"support.variable.vue"
+					],
+					"function.defaultLibrary": [
+						"support.function.vue"
+					],
+					"componentTag": [
+						"support.class.component.vue"
+					]
+				}
 			}
 		],
 		"commands": [
