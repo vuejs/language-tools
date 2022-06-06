@@ -77,7 +77,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 	>();
 	const autoImportPositions = new WeakSet<vscode.Position>();
 	const tokenTypes = new Map(options.getSemanticTokenLegend().tokenTypes.map((t, i) => [t, i]));
-	const runtimeMode = options.tsRuntime.vueLsHost.getVueCompilationSettings().experimentalRuntimeMode;
+	const runtimeMode = options.vueLsHost.getVueCompilationSettings().experimentalRuntimeMode;
 
 	return {
 

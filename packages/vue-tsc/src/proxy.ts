@@ -58,7 +58,7 @@ export function createProgramProxy(
 	});
 	tsRuntime.update(); // must update before getProgram() to update virtual scripts
 
-	const proxyApis = apis.register(ts, tsRuntime);
+	const proxyApis = apis.register(ts, tsRuntime, vueLsHost);
 	const program = new Proxy<ts.Program>({} as ts.Program, {
 		get: (_, property: keyof ts.Program) => {
 			tsRuntime.update();

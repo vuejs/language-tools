@@ -31,7 +31,6 @@ export function createTypeScriptRuntime(options: {
 	}
 
 	return {
-		vueLsHost: options.vueLsHost,
 		vueFiles,
 		getTsLs: () => tsLsRaw,
 		getTsLsHost: () => tsLsHost,

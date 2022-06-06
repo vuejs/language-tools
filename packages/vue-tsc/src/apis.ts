@@ -1,9 +1,10 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import type { TypeScriptRuntime } from '@volar/vue-typescript';
+import type { TypeScriptRuntime, LanguageServiceHost } from '@volar/vue-typescript';
 
 export function register(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	context: TypeScriptRuntime,
+	vueLsHost: LanguageServiceHost,
 ) {
 
 	return {
@@ -61,7 +62,7 @@ export function register(
 		return transformDiagnostics(getProgram().getGlobalDiagnostics(cancellationToken) ?? []);
 	}
 	function emit(targetSourceFile?: ts.SourceFile, _writeFile?: ts.WriteFileCallback, cancellationToken?: ts.CancellationToken, emitOnlyDtsFiles?: boolean, customTransformers?: ts.CustomTransformers): ts.EmitResult {
-		const scriptResult = getProgram().emit(targetSourceFile, (context.vueLsHost.writeFile ?? ts.sys.writeFile), cancellationToken, emitOnlyDtsFiles, customTransformers);
+		const scriptResult = getProgram().emit(targetSourceFile, (vueLsHost.writeFile ?? ts.sys.writeFile), cancellationToken, emitOnlyDtsFiles, customTransformers);
 		return {
 			emitSkipped: scriptResult.emitSkipped,
 			emittedFiles: scriptResult.emittedFiles,
@@ -92,7 +93,7 @@ export function register(
 					data => !!data.capabilities.diagnostic,
 				)) {
 
-					if (!context.vueLsHost.fileExists?.(tsOrVueLoc.fileName))
+					if (!vueLsHost.fileExists?.(tsOrVueLoc.fileName))
 						continue;
 
 					onMapping(diagnostic, tsOrVueLoc.fileName, tsOrVueLoc.range.start, tsOrVueLoc.range.end, tsOrVueLoc.mapped?.vueFile.getContent());
@@ -110,7 +111,7 @@ export function register(
 						data => !!data.capabilities.diagnostic,
 					)) {
 
-						if (!context.vueLsHost.fileExists?.(start.fileName))
+						if (!vueLsHost.fileExists?.(start.fileName))
 							continue;
 
 						for (const end of context.vueFiles.fromEmbeddedLocation(
@@ -120,7 +121,7 @@ export function register(
 							data => !!data.capabilities.diagnostic,
 						)) {
 
-							if (!context.vueLsHost.fileExists?.(end.fileName))
+							if (!vueLsHost.fileExists?.(end.fileName))
 								continue;
 
 							if (start.fileName !== end.fileName)
@@ -154,7 +155,7 @@ export function register(
 			if (!file) {
 
 				if (docText === undefined) {
-					const snapshot = context.vueLsHost.getScriptSnapshot(fileName);
+					const snapshot = vueLsHost.getScriptSnapshot(fileName);
 					if (snapshot) {
 						docText = snapshot.getText(0, snapshot.getLength());
 					}
