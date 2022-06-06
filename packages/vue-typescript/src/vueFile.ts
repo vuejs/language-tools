@@ -24,7 +24,7 @@ import useVueTsScripts from './plugins/vue-typescript-scripts';
 import useVueTsTemplate from './plugins/vue-typescript-template';
 
 import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix TS2742
-import { Mapping, MappingBase, SourceMapBase } from '@volar/source-map';
+import { Mapping, MappingBase, Mode, SourceMapBase } from '@volar/source-map';
 
 export interface VueLanguagePlugin {
 
@@ -254,7 +254,7 @@ export function createVueFile(
 			scriptSetupRanges,
 			scriptLang,
 			compilerOptions,
-			!!compilerOptions.experimentalDisableTemplateSupport || !(tsHost?.getCompilationSettings().jsx === ts.JsxEmit.Preserve),
+			!!compilerOptions.experimentalDisableTemplateSupport || (tsHost?.getCompilationSettings().jsx ?? ts.JsxEmit.Preserve) !== ts.JsxEmit.Preserve,
 		),
 	];
 
@@ -275,32 +275,46 @@ export function createVueFile(
 						const sourceMap = raw.value.sourceMap;
 						const newMappings: typeof sourceMap.mappings = [];
 						for (const mapping of sourceMap.mappings) {
-							const sourceRange = parseMappingSourceRange(mapping.data, mapping.sourceRange);
-							if (sourceRange) {
+							const vueRange = embeddedRangeToVueRange(mapping.data, mapping.sourceRange);
+							const fileRange = compiledVue.value!.mapping(vueRange);
+							if (fileRange) {
 								let additional: MappingBase[] | undefined;
 								if (mapping.additional) {
 									additional = [];
 									for (const add of mapping.additional) {
-										const addSourceRange = parseMappingSourceRange(mapping.data, add.sourceRange);
-										if (addSourceRange) {
+										const addVueRange = embeddedRangeToVueRange(mapping.data, add.sourceRange);
+										const addFileRange = compiledVue.value!.mapping(addVueRange);
+										if (addFileRange) {
 											additional.push({
 												...add,
-												sourceRange: addSourceRange,
+												sourceRange: addFileRange,
 											});
 										}
 									}
 								}
 								newMappings.push({
 									...mapping,
-									sourceRange,
+									sourceRange: fileRange,
 									additional,
 								});
+							}
+							else if (compiledVue.value?.sourceMap && mapping.mode === Mode.Offset) {
+								// fix markdown template mapping failed
+								const inRangeMappings = compiledVue.value.sourceMap.mappings.filter(mapping => mapping.mappedRange.start >= vueRange.start && mapping.mappedRange.end <= vueRange.end);
+								for (const inRangeMapping of inRangeMappings) {
+									const _vueRange = inRangeMapping.mappedRange;
+									const embedded = vueRangeToEmbeddedRange(mapping.data, _vueRange);
+									newMappings.push({
+										...mapping,
+										sourceRange: inRangeMapping.sourceRange, // file range
+										mappedRange: embedded,
+									});
+								}
 							}
 						}
 						const newSourceMap = new EmbeddedFileSourceMap(newMappings);
 						const newEmbedded: Embedded = {
-							file: raw.value.file,
-							teleport: raw.value.teleport,
+							...raw.value,
 							sourceMap: newSourceMap,
 						};
 						return newEmbedded;
@@ -474,7 +488,7 @@ export function createVueFile(
 		getEmbeddeds: untrack(() => embeddeds.value),
 		getAllEmbeddeds: untrack(() => allEmbeddeds.value),
 		getScriptSetupRanges: untrack(() => scriptSetupRanges.value),
-		isJsxMissing: () => !compilerOptions.experimentalDisableTemplateSupport && !(tsHost?.getCompilationSettings().jsx === ts.JsxEmit.Preserve),
+		isJsxMissing: () => !compilerOptions.experimentalDisableTemplateSupport && (tsHost?.getCompilationSettings().jsx ?? ts.JsxEmit.Preserve) !== ts.JsxEmit.Preserve,
 
 		refs: {
 			content: fileContent,
@@ -483,56 +497,96 @@ export function createVueFile(
 		},
 	};
 
-	function parseMappingSourceRange(data: EmbeddedFileMappingData, range: Mapping<unknown>['sourceRange']) {
+	function embeddedRangeToVueRange(data: EmbeddedFileMappingData, range: Mapping<unknown>['sourceRange']) {
 
-		if (!compiledVue.value) throw '!compiledVue.value';
 		if (vueContent.value === undefined) throw 'vueContent.value === undefined';
 
 		if (data.vueTag === 'scriptSrc') {
 			if (!sfc.script?.src) throw '!sfc.script?.src';
 			const vueStart = vueContent.value.substring(0, sfc.script.startTagEnd).lastIndexOf(sfc.script.src);
 			const vueEnd = vueStart + sfc.script.src.length;
-			return compiledVue.value.mapping({
+			return {
 				start: vueStart - 1,
 				end: vueEnd + 1,
-			});
+			};
 		}
 		else if (data.vueTag === 'script') {
 			if (!sfc.script) throw '!sfc.script';
-			return compiledVue.value.mapping({
-				start: sfc.script.startTagEnd + range.start,
-				end: sfc.script.startTagEnd + range.end,
-			});
+			return {
+				start: range.start + sfc.script.startTagEnd,
+				end: range.end + sfc.script.startTagEnd,
+			};
 		}
 		else if (data.vueTag === 'scriptSetup') {
 			if (!sfc.scriptSetup) throw '!sfc.scriptSetup';
-			return compiledVue.value.mapping({
-				start: sfc.scriptSetup.startTagEnd + range.start,
-				end: sfc.scriptSetup.startTagEnd + range.end,
-			});
+			return {
+				start: range.start + sfc.scriptSetup.startTagEnd,
+				end: range.end + sfc.scriptSetup.startTagEnd,
+			};
 		}
 		else if (data.vueTag === 'template') {
 			if (!sfc.template) throw '!sfc.template';
-			return compiledVue.value.mapping({
-				start: sfc.template.startTagEnd + range.start,
-				end: sfc.template.startTagEnd + range.end,
-			});
+			return {
+				start: range.start + sfc.template.startTagEnd,
+				end: range.end + sfc.template.startTagEnd,
+			};
 		}
 		else if (data.vueTag === 'style') {
 			if (data.vueTagIndex === undefined) throw 'data.vueTagIndex === undefined';
-			return compiledVue.value.mapping({
-				start: sfc.styles[data.vueTagIndex].startTagEnd + range.start,
-				end: sfc.styles[data.vueTagIndex].startTagEnd + range.end,
-			});
+			return {
+				start: range.start + sfc.styles[data.vueTagIndex].startTagEnd,
+				end: range.end + sfc.styles[data.vueTagIndex].startTagEnd,
+			};
 		}
 		else if (data.vueTag === 'customBlock') {
 			if (data.vueTagIndex === undefined) throw 'data.vueTagIndex === undefined';
-			return compiledVue.value.mapping({
-				start: sfc.customBlocks[data.vueTagIndex].startTagEnd + range.start,
-				end: sfc.customBlocks[data.vueTagIndex].startTagEnd + range.end,
-			});
+			return {
+				start: range.start + sfc.customBlocks[data.vueTagIndex].startTagEnd,
+				end: range.end + sfc.customBlocks[data.vueTagIndex].startTagEnd,
+			};
 		}
-		return compiledVue.value.mapping(range);
+		return range;
+	}
+	function vueRangeToEmbeddedRange(data: EmbeddedFileMappingData, range: Mapping<unknown>['sourceRange']) {
+
+		if (vueContent.value === undefined) throw 'vueContent.value === undefined';
+
+		if (data.vueTag === 'script') {
+			if (!sfc.script) throw '!sfc.script';
+			return {
+				start: range.start - sfc.script.startTagEnd,
+				end: range.end - sfc.script.startTagEnd,
+			};
+		}
+		else if (data.vueTag === 'scriptSetup') {
+			if (!sfc.scriptSetup) throw '!sfc.scriptSetup';
+			return {
+				start: range.start - sfc.scriptSetup.startTagEnd,
+				end: range.end - sfc.scriptSetup.startTagEnd,
+			};
+		}
+		else if (data.vueTag === 'template') {
+			if (!sfc.template) throw '!sfc.template';
+			return {
+				start: range.start - sfc.template.startTagEnd,
+				end: range.end - sfc.template.startTagEnd,
+			};
+		}
+		else if (data.vueTag === 'style') {
+			if (data.vueTagIndex === undefined) throw 'data.vueTagIndex === undefined';
+			return {
+				start: range.start - sfc.styles[data.vueTagIndex].startTagEnd,
+				end: range.end - sfc.styles[data.vueTagIndex].startTagEnd,
+			};
+		}
+		else if (data.vueTag === 'customBlock') {
+			if (data.vueTagIndex === undefined) throw 'data.vueTagIndex === undefined';
+			return {
+				start: range.start - sfc.customBlocks[data.vueTagIndex].startTagEnd,
+				end: range.end - sfc.customBlocks[data.vueTagIndex].startTagEnd,
+			};
+		}
+		return range;
 	}
 	function update(newContent: string, newVersion: string) {
 
