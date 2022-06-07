@@ -176,24 +176,7 @@ export function generate(
 
 		if (!isNamespacedTag) {
 			// split tagRanges to fix end tag definition original select range mapping to start tag
-			if (isIntrinsicElement(compilerOptions.experimentalRuntimeMode, tagName)) {
-				for (const tagRange of tagRanges) {
-					tsCodeGen.addText(`(<`);
-					writeObjectProperty2(
-						tagName,
-						[tagRange],
-						{
-							vueTag: 'template',
-							capabilities: {
-								...capabilitiesSet.tagHover,
-								...capabilitiesSet.tagReference,
-							},
-						},
-					);
-					tsCodeGen.addText(` />);\n`);
-				}
-			}
-			else {
+			if (!isIntrinsicElement(compilerOptions.experimentalRuntimeMode, tagName)) {
 				for (const tagRange of tagRanges) {
 					tsCodeGen.addText(`// @ts-ignore\n`);
 					tsCodeGen.addText(`({ `);
@@ -486,8 +469,17 @@ export function generate(
 		tsCodeGen.addText(`{\n`);
 		{
 
+			const _isIntrinsicElement = isIntrinsicElement(compilerOptions.experimentalRuntimeMode, node.tag);
 			const tagText = isIntrinsicElement(compilerOptions.experimentalRuntimeMode, node.tag) ? node.tag : tagResolves[node.tag].component;
 			const fullTagStart = tsCodeGen.getText().length;
+			const tagCapabilities = {
+				...capabilitiesSet.diagnosticOnly,
+				...(_isIntrinsicElement ? {
+					...capabilitiesSet.tagHover,
+					...capabilitiesSet.tagReference,
+				} : {})
+			};
+			const endTagOffset = !node.isSelfClosing && sourceLang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
 
 			tsCodeGen.addText(`<`);
 			writeCode(
@@ -496,15 +488,34 @@ export function generate(
 					start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
 					end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
 				},
-				SourceMaps.Mode.Totally,
+				tagText === node.tag ? SourceMaps.Mode.Offset : SourceMaps.Mode.Totally,
 				{
 					vueTag: 'template',
-					capabilities: capabilitiesSet.diagnosticOnly,
+					capabilities: tagCapabilities,
 				},
 			);
 			tsCodeGen.addText(` `);
 			const { hasRemainStyleOrClass } = writeProps(node, false, 'props');
-			tsCodeGen.addText(`/>`);
+
+			if (endTagOffset === undefined) {
+				tsCodeGen.addText(`/>`);
+			}
+			else {
+				tsCodeGen.addText(`></`);
+				writeCode(
+					tagText,
+					{
+						start: endTagOffset,
+						end: endTagOffset + node.tag.length,
+					},
+					tagText === node.tag ? SourceMaps.Mode.Offset : SourceMaps.Mode.Totally,
+					{
+						vueTag: 'template',
+						capabilities: tagCapabilities,
+					},
+				);
+				tsCodeGen.addText(`>`);
+			}
 
 			// fix https://github.com/johnsoncodehk/volar/issues/705#issuecomment-974773353
 			let startTagEnd: number;
