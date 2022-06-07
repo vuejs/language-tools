@@ -22,7 +22,7 @@ importers:
     specifiers:
       '@volar/typescript-plugin-forward': file:typescript-plugin-forward
       esbuild: latest
-      typescript-vue-plugin: 0.37.1
+      typescript-vue-plugin: 0.37.2
       vsce: latest
     dependencies:
       '@volar/typescript-plugin-forward': file:extensions/vscode-typescript-vue-plugin/typescript-plugin-forward
@@ -34,9 +34,9 @@ importers:
   extensions/vscode-vue-language-features:
     specifiers:
       '@types/vscode': 1.67.0
-      '@volar/preview': 0.37.1
-      '@volar/shared': 0.37.1
-      '@volar/vue-language-server': 0.37.1
+      '@volar/preview': 0.37.2
+      '@volar/shared': 0.37.2
+      '@volar/vue-language-server': 0.37.2
       '@vue/compiler-dom': ^3.2.37
       '@vue/compiler-sfc': ^3.2.37
       '@vue/reactivity': ^3.2.37
@@ -65,7 +65,7 @@ importers:
 
   packages/code-gen:
     specifiers:
-      '@volar/source-map': 0.37.1
+      '@volar/source-map': 0.37.2
     dependencies:
       '@volar/source-map': link:../source-map
 
@@ -80,10 +80,10 @@ importers:
 
   packages/pug-language-service:
     specifiers:
-      '@volar/code-gen': 0.37.1
-      '@volar/shared': 0.37.1
-      '@volar/source-map': 0.37.1
-      '@volar/transforms': 0.37.1
+      '@volar/code-gen': 0.37.2
+      '@volar/shared': 0.37.2
+      '@volar/source-map': 0.37.2
+      '@volar/transforms': 0.37.2
       pug-lexer: ^5.0.1
       pug-parser: ^6.0.0
       vscode-html-languageservice: ^5.0.0
@@ -121,7 +121,7 @@ importers:
 
   packages/transforms:
     specifiers:
-      '@volar/shared': 0.37.1
+      '@volar/shared': 0.37.2
       vscode-languageserver-types: ^3.17.1
     dependencies:
       '@volar/shared': link:../shared
@@ -141,7 +141,7 @@ importers:
   packages/typescript-language-service:
     specifiers:
       '@types/semver': ^7.3.9
-      '@volar/shared': 0.37.1
+      '@volar/shared': 0.37.2
       semver: ^7.3.7
       typescript: latest
       upath: ^2.0.1
@@ -161,7 +161,7 @@ importers:
 
   packages/typescript-vue-plugin:
     specifiers:
-      '@volar/vue-typescript': 0.37.1
+      '@volar/vue-typescript': 0.37.2
       typescript: latest
     dependencies:
       '@volar/vue-typescript': link:../vue-typescript
@@ -170,8 +170,8 @@ importers:
 
   packages/vue-code-gen:
     specifiers:
-      '@volar/code-gen': 0.37.1
-      '@volar/source-map': 0.37.1
+      '@volar/code-gen': 0.37.2
+      '@volar/source-map': 0.37.2
       '@vue/compiler-core': ^3.2.37
       '@vue/compiler-dom': ^3.2.37
       '@vue/shared': ^3.2.37
@@ -187,9 +187,9 @@ importers:
 
   packages/vue-language-server:
     specifiers:
-      '@volar/shared': 0.37.1
-      '@volar/vue-language-service': 0.37.1
-      '@volar/vue-typescript': 0.37.1
+      '@volar/shared': 0.37.2
+      '@volar/vue-language-service': 0.37.2
+      '@volar/vue-typescript': 0.37.2
       '@vue/shared': ^3.2.37
       request-light: ^0.5.8
       upath: ^2.0.1
@@ -216,14 +216,14 @@ importers:
       '@johnsoncodehk/html2pug': ^1.0.0
       '@johnsoncodehk/pug-beautify': ^0.2.2
       '@types/semver': ^7.3.9
-      '@volar/pug-language-service': 0.37.1
-      '@volar/shared': 0.37.1
-      '@volar/source-map': 0.37.1
-      '@volar/transforms': 0.37.1
-      '@volar/typescript-language-service': 0.37.1
-      '@volar/vue-code-gen': 0.37.1
-      '@volar/vue-language-service-types': 0.37.1
-      '@volar/vue-typescript': 0.37.1
+      '@volar/pug-language-service': 0.37.2
+      '@volar/shared': 0.37.2
+      '@volar/source-map': 0.37.2
+      '@volar/transforms': 0.37.2
+      '@volar/typescript-language-service': 0.37.2
+      '@volar/vue-code-gen': 0.37.2
+      '@volar/vue-language-service-types': 0.37.2
+      '@volar/vue-typescript': 0.37.2
       '@vscode/emmet-helper': ^2.8.4
       '@vue/compiler-dom': ^3.2.37
       '@vue/reactivity': ^3.2.37
@@ -278,18 +278,18 @@ importers:
 
   packages/vue-tsc:
     specifiers:
-      '@volar/vue-typescript': 0.37.1
+      '@volar/vue-typescript': 0.37.2
     dependencies:
       '@volar/vue-typescript': link:../vue-typescript
 
   packages/vue-typescript:
     specifiers:
       '@types/markdown-it': ^12.2.3
-      '@volar/code-gen': 0.37.1
-      '@volar/pug-language-service': 0.37.1
-      '@volar/source-map': 0.37.1
-      '@volar/typescript-faster': 0.37.1
-      '@volar/vue-code-gen': 0.37.1
+      '@volar/code-gen': 0.37.2
+      '@volar/pug-language-service': 0.37.2
+      '@volar/source-map': 0.37.2
+      '@volar/typescript-faster': 0.37.2
+      '@volar/vue-code-gen': 0.37.2
       '@vue/compiler-sfc': ^3.2.37
       '@vue/reactivity': ^3.2.37
       markdown-it: ^13.0.1
@@ -4350,7 +4350,7 @@ packages:
     dev: true
 
   /read-pkg-up/3.0.0:
-    resolution: {integrity: sha1-PtSWaF26D4/hGNBpHcUfSh/5bwc=}
+    resolution: {integrity: sha512-YFzFrVvpC6frF1sz8psoHDBGF7fLPc+llq/8NB43oagqWkx8ar5zYtsTORtOjw9W2RHLpWP+zTWwBvf1bCmcSw==}
     engines: {node: '>=4'}
     dependencies:
       find-up: 2.1.0
@@ -4367,7 +4367,7 @@ packages:
     dev: true
 
   /read-pkg/3.0.0:
-    resolution: {integrity: sha1-nLxoaXj+5l0WwA4rGcI3/Pbjg4k=}
+    resolution: {integrity: sha512-BLq/cCO9two+lBgiTYNqD6GdtK8s4NpaWrl6/rCO9w0TUS8oJl7cmToOZfRYllKTISY6nt1U7jQ53brmKqY6BA==}
     engines: {node: '>=4'}
     dependencies:
       load-json-file: 4.0.0
@@ -4386,7 +4386,7 @@ packages:
     dev: true
 
   /read/1.0.7:
-    resolution: {integrity: sha1-s9oZvQUkMal2cdRKQmNK33ELQMQ=}
+    resolution: {integrity: sha512-rSOKNYUmaxy0om1BNjMN4ezNT6VKK+2xF4GBhc81mkH7L60i6dp8qPYrkndNLT3QPphoII3maL9PVC9XmhHwVQ==}
     engines: {node: '>=0.8'}
     dependencies:
       mute-stream: 0.0.8
@@ -4426,7 +4426,7 @@ packages:
     dev: false
 
   /require-directory/2.1.1:
-    resolution: {integrity: sha1-jGStX9MNqxyXbiNE/+f3kqam30I=}
+    resolution: {integrity: sha512-fGxEI7+wsG9xrvdjsrlmL22OMTTiHRwAMroiEeMgq8gzoLC/PQr7RsRDSTLUg/bZAZtF+TVIkHc6/4RIKrui+Q==}
     engines: {node: '>=0.10.0'}
     dev: true
 
@@ -4448,7 +4448,7 @@ packages:
     dev: true
 
   /resolve-path/1.4.0:
-    resolution: {integrity: sha1-xL2p9e+y/OZSR4c6s2u02DT+Fvc=}
+    resolution: {integrity: sha512-i1xevIst/Qa+nA9olDxLWnLk8YZbi8R/7JPbCMcgyWaFR6bKWaexgJgEB5oc2PKMjYdrHynyz0NY+if+H98t1w==}
     engines: {node: '>= 0.8'}
     dependencies:
       http-errors: 1.6.3
@@ -4472,7 +4472,7 @@ packages:
     dev: true
 
   /retry/0.12.0:
-    resolution: {integrity: sha1-G0KmJmoh8HQh0bC1S33BZ7AcATs=}
+    resolution: {integrity: sha512-9LkiTwjUh6rT555DtE9rTX+BKByPfrMzEAtnlEtdEwr3Nkffwiihqe2bWADg+OQRjt9gl6ICdmB/ZFDCGAtSow==}
     engines: {node: '>= 4'}
     dev: true
 
