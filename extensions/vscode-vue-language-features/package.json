@@ -585,6 +585,11 @@
 				"command": "volar.selectTypeScriptVersion",
 				"title": "Select TypeScript Version...",
 				"category": "Volar"
+			},
+			{
+			  "command": "vue.findAllFileReferences",
+			  "title": "Vue: Find File References",
+			  "category": "Volar"
 			}
 		],
 		"menus": {
@@ -684,6 +689,38 @@
 					"command": "workbench.action.webview.reloadWebviewAction",
 					"when": "activeEditor == WebviewEditor",
 					"group": "navigation"
+				}
+			],
+			"explorer/context": [
+				{
+					"command": "vue.findAllFileReferences",
+					"when": "resourceLangId == typescript",
+					"group": "4_search"
+				},
+				{
+					"command": "vue.findAllFileReferences",
+					"when": "resourceLangId == typescriptreact",
+					"group": "4_search"
+				},
+				{
+					"command": "vue.findAllFileReferences",
+					"when": "resourceLangId == javascript",
+					"group": "4_search"
+				},
+				{
+					"command": "vue.findAllFileReferences",
+					"when": "resourceLangId == javascriptreact",
+					"group": "4_search"
+				},
+				{
+					"command": "vue.findAllFileReferences",
+					"when": "resourceLangId == vue",
+					"group": "4_search"
+				},
+				{
+					"command": "vue.findAllFileReferences",
+					"when": "resourceLangId == markdown",
+					"group": "4_search"
 				}
 			]
 		},

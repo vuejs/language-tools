@@ -32,6 +32,7 @@ import * as executeCommand from './languageFeatures/executeCommand';
 import * as fileRename from './languageFeatures/fileRename';
 import * as hover from './languageFeatures/hover';
 import * as references from './languageFeatures/references';
+import * as fileReferences from './languageFeatures/fileReferences';
 import * as rename from './languageFeatures/rename';
 import * as renamePrepare from './languageFeatures/renamePrepare';
 import * as signatureHelp from './languageFeatures/signatureHelp';
@@ -225,6 +226,7 @@ export function createLanguageService(
 	return {
 		doValidation: defineApi(diagnostics.register(context), false),
 		findReferences: defineApi(references.register(context)),
+		findFileReferences: defineApi(fileReferences.register(context)),
 		findDefinition: defineApi(definition.register(context, 'findDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions)),
 		findTypeDefinition: defineApi(definition.register(context, 'findTypeDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions)),
 		findImplementations: defineApi(definition.register(context, 'findImplementations', data => !!data.capabilities.references, data => false)),

@@ -17,6 +17,7 @@ import * as verifyAll from './features/verifyAll';
 import * as virtualFiles from './features/virtualFiles';
 import * as tsconfig from './features/tsconfig';
 import * as doctor from './features/doctor';
+import * as fileReferences from './features/fileReferences';
 
 let apiClient: lsp.BaseLanguageClient;
 let docClient: lsp.BaseLanguageClient | undefined;
@@ -132,6 +133,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	tsVersion.activate(context, [apiClient, docClient].filter(shared.notEmpty));
 	tsconfig.activate(context, docClient ?? apiClient);
 	doctor.activate(context);
+	fileReferences.activate(context, apiClient);
 
 	async function requestReloadVscode() {
 		const reload = await vscode.window.showInformationMessage(

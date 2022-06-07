@@ -46,6 +46,15 @@ export namespace GetEditorSelectionRequest {
 	export const type = new vscode.RequestType0<ResponseType, ErrorType>('vue/activeSelection');
 }
 
+export namespace FindFileReferenceRequest {
+	export type ParamsType = {
+		textDocument: vscode.TextDocumentIdentifier;
+	};
+	export type ResponseType = vscode.Location[] | null | undefined;
+	export type ErrorType = never;
+	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('vue/findFileReference');
+}
+
 /**
  * Server Requests
  */

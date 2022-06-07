@@ -185,6 +185,12 @@ export default function (options: {
 			}
 		},
 
+		findFileReferences(document) {
+			if (isTsDocument(document) || isJsonDocument(document)) {
+				return options.getTsLs().findFileReferences(document.uri);
+			}
+		},
+
 		findDocumentHighlights(document, position) {
 			if (isTsDocument(document)) {
 				return options.getTsLs().findDocumentHighlights(document.uri, position);

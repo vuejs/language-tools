@@ -6,6 +6,7 @@ import * as completionResolve from './services/completions/resolve';
 import * as definitions from './services/definition';
 import * as typeDefinitions from './services/typeDefinition';
 import * as references from './services/references';
+import * as fileReferences from './services/fileReferences';
 import * as prepareRename from './services/prepareRename';
 import * as rename from './services/rename';
 import * as fileRename from './services/fileRename';
@@ -50,6 +51,7 @@ export function createLanguageService(
 		findDefinition: definitions.register(languageService, getValidTextDocument, getTextDocument),
 		findTypeDefinition: typeDefinitions.register(languageService, getValidTextDocument, getTextDocument),
 		findReferences: references.register(languageService, getValidTextDocument, getTextDocument),
+		findFileReferences: fileReferences.register(languageService, getValidTextDocument, getTextDocument),
 		findImplementations: implementation.register(languageService, getValidTextDocument, getTextDocument),
 		prepareRename: prepareRename.register(languageService, getValidTextDocument),
 		doRename: rename.register(languageService, getValidTextDocument, settings),

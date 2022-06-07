@@ -171,6 +171,11 @@ export function register(
 			return vueLs.findReferences(handler.textDocument.uri, handler.position);
 		});
 	});
+	connection.onRequest(shared.FindFileReferenceRequest.type, async handler => {
+		return worker(handler.textDocument.uri, vueLs => {
+			return vueLs.findFileReferences(handler.textDocument.uri);
+		});
+	});
 	connection.onImplementation(async handler => {
 		return worker(handler.textDocument.uri, vueLs => {
 			return vueLs.findImplementations(handler.textDocument.uri, handler.position);
