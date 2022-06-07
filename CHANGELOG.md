@@ -75,7 +75,7 @@
 
 **Breaking changes**
 
-- feat: report error for unkonwn props ([#1077](https://github.com/johnsoncodehk/volar/issues/1077))
+- ~~feat: report error for unkonwn props ([#1077](https://github.com/johnsoncodehk/volar/issues/1077))~~ (Disabled by default in v0.36.1) 
 
 ## 0.35.2 (2022/5/30)
 
