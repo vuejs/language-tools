@@ -18,7 +18,7 @@ const enum PreviewType {
 	ComponentPreview = 'volar-component-preview',
 }
 
-export async function activate(context: vscode.ExtensionContext) {
+export async function register(context: vscode.ExtensionContext) {
 
 	const panels = new Set<vscode.WebviewPanel>();
 	let externalBrowserPanel: vscode.WebviewPanel | undefined;

@@ -123,17 +123,17 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	registerRestartRequest();
 	registerClientRequests();
 
-	splitEditors.activate(context);
-	preview.activate(context);
-	createWorkspaceSnippets.activate(context);
-	callGraph.activate(context, apiClient);
-	verifyAll.activate(context, docClient ?? apiClient);
-	virtualFiles.activate(context, docClient ?? apiClient);
-	autoInsertion.activate(context, htmlClient, apiClient);
-	tsVersion.activate(context, [apiClient, docClient].filter(shared.notEmpty));
-	tsconfig.activate(context, docClient ?? apiClient);
-	doctor.activate(context);
-	fileReferences.activate(context, apiClient);
+	splitEditors.register(context);
+	preview.register(context);
+	createWorkspaceSnippets.register(context);
+	callGraph.register(context, apiClient);
+	verifyAll.register(context, docClient ?? apiClient);
+	virtualFiles.register(context, docClient ?? apiClient);
+	autoInsertion.register(context, htmlClient, apiClient);
+	tsVersion.register(context, [apiClient, docClient].filter(shared.notEmpty));
+	tsconfig.register(context, docClient ?? apiClient);
+	doctor.register(context);
+	fileReferences.register(context, apiClient);
 
 	async function requestReloadVscode() {
 		const reload = await vscode.window.showInformationMessage(

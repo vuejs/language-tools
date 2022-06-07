@@ -4,7 +4,7 @@ import * as shared from '@volar/shared';
 import { takeOverModeEnabled } from '../common';
 import * as fs from '../utils/fs';
 
-export async function activate(context: vscode.ExtensionContext) {
+export async function register(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.doctor', async () => {
 
 		// TODO: tsconfig infos

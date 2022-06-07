@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { ref, computed } from '@vue/reactivity';
 import { parse, SFCBlock } from '@vue/compiler-sfc';
 
-export function activate(context: vscode.ExtensionContext) {
+export function register(context: vscode.ExtensionContext) {
 
 	const getDocDescriptor = useDocDescriptor();
 

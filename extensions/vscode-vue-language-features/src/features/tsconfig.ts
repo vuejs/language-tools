@@ -4,7 +4,7 @@ import * as shared from '@volar/shared';
 import * as path from 'path';
 import { takeOverModeEnabled } from '../common';
 
-export async function activate(context: vscode.ExtensionContext, languageClient: BaseLanguageClient) {
+export async function register(context: vscode.ExtensionContext, languageClient: BaseLanguageClient) {
 
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	let currentTsconfig = '';

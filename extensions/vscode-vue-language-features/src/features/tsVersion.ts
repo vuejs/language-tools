@@ -6,7 +6,7 @@ import { takeOverModeEnabled } from '../common';
 
 const defaultTsdk = 'node_modules/typescript/lib';
 
-export async function activate(context: vscode.ExtensionContext, clients: BaseLanguageClient[]) {
+export async function register(context: vscode.ExtensionContext, clients: BaseLanguageClient[]) {
 
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	statusBar.command = 'volar.selectTypeScriptVersion';
