@@ -11,12 +11,12 @@ export default function (): VueLanguagePlugin {
 			if (fileName.endsWith('.md')) {
 
 				content = content
-					// inline code block
+					// code block
 					.replace(/```[\s\S]*?```/g, match => '```' + ' '.repeat(match.length - 6) + '```')
 					// inline code block
 					.replace(/`[\s\S]*?`/g, match => `\`${' '.repeat(match.length - 2)}\``)
 					// # \<script setup>
-					.replace(/\\<[\s\S]*?\n?/g, match => ' '.repeat(match.length));
+					.replace(/\\\<[\s\S]*?\>\n?/g, match => ' '.repeat(match.length));
 
 				const scriptBlockReg = /\<script[\s\S]*?\>([\s\S]*?)\<\/script\>/g;
 				const styleBlockReg = /\<style[\s\S]*?\>([\s\S]*?)\<\/style\>/g;
