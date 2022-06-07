@@ -1,16 +1,21 @@
 # Changelog
 
-## 0.37.1 (2022/6/7)
+## 0.37.2 (2022/6/7)
 
-- feat: add `experimentalSuppressInvalidJsxElementTypeErrors` option to ignore missing component import error ([#1404](https://github.com/johnsoncodehk/volar/issues/1404))
-- perf: support auto-import cache even TS version \< 4.7 ([#1406](https://github.com/johnsoncodehk/volar/issues/1406))
-- perf: simplify template generated tsx code
+- feat: show deprecation message for `experimentalCompatMode`
+- fix: kebab case component type broken in vue 2 ([#1405](https://github.com/johnsoncodehk/volar/issues/1405))
 
 ### Our Sponsors
 
 <a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
 	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
 </a>
+
+## 0.37.1 (2022/6/7)
+
+- feat: add `experimentalSuppressInvalidJsxElementTypeErrors` option to ignore missing component import error ([#1404](https://github.com/johnsoncodehk/volar/issues/1404))
+- perf: support auto-import cache even TS version \< 4.7 ([#1406](https://github.com/johnsoncodehk/volar/issues/1406))
+- perf: simplify template generated tsx code
 
 ## 0.37.0 (2022/6/6)
 
