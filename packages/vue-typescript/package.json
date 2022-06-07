@@ -13,7 +13,6 @@
 		"directory": "packages/vue-typescript"
 	},
 	"devDependencies": {
-		"@types/markdown-it": "^12.2.3",
 		"@volar/pug-language-service": "0.37.2",
 		"typescript": "latest"
 	},
@@ -23,9 +22,7 @@
 		"@volar/typescript-faster": "0.37.2",
 		"@volar/vue-code-gen": "0.37.2",
 		"@vue/compiler-sfc": "^3.2.37",
-		"@vue/reactivity": "^3.2.37",
-		"markdown-it": "^13.0.1",
-		"markdown-it-ast": "^0.0.1"
+		"@vue/reactivity": "^3.2.37"
 	},
 	"browser": {
 		"./out/plugins/vue-template-pug.js": "./out/plugins/empty.js"
