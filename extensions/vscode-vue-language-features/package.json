@@ -726,39 +726,6 @@
 		},
 		"problemMatchers": [
 			{
-				"name": "tsc",
-				"label": "%typescript.problemMatchers.tsc.label%",
-				"owner": "typescript",
-				"source": "ts",
-				"applyTo": "closedDocuments",
-				"fileLocation": [
-					"relative",
-					"${cwd}"
-				],
-				"pattern": "$tsc"
-			},
-			{
-				"name": "tsc-watch",
-				"label": "%typescript.problemMatchers.tscWatch.label%",
-				"owner": "typescript",
-				"source": "ts",
-				"applyTo": "closedDocuments",
-				"fileLocation": [
-					"relative",
-					"${cwd}"
-				],
-				"pattern": "$tsc",
-				"background": {
-					"activeOnStart": true,
-					"beginsPattern": {
-						"regexp": "^\\s*(?:message TS6032:|\\[?\\D*.{1,2}[:.].{1,2}[:.].{1,2}\\D*(├\\D*\\d{1,2}\\D+┤)?(?:\\]| -)) File change detected\\. Starting incremental compilation\\.\\.\\."
-					},
-					"endsPattern": {
-						"regexp": "^\\s*(?:message TS6042:|\\[?\\D*.{1,2}[:.].{1,2}[:.].{1,2}\\D*(├\\D*\\d{1,2}\\D+┤)?(?:\\]| -)) (?:Compilation complete\\.|Found \\d+ errors?\\.) Watching for file changes\\."
-					}
-				}
-			},
-			{
 				"name": "vite",
 				"label": "Vite problems",
 				"pattern": {
