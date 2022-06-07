@@ -129,7 +129,7 @@ export default function (): VueLanguagePlugin {
 								// inline code block
 								.replace(/\`([\s\S]*?)\`/g, match => `\`${' '.repeat(match.length - 2)}\``)
 								// # \<script setup>
-								.replace(/\\\<([\s\S]*?)\n/g, match => ' '.repeat(match.length))
+								.replace(/\\\<([\s\S]*?)\n?/g, match => ' '.repeat(match.length))
 								// markdown line
 								.replace(/\[([\s\S]*?)\]\(([\s\S]*?)\)/g, match => ' '.repeat(match.length)),
 							{
