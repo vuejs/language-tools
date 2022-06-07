@@ -17,6 +17,10 @@
 					],
 					"markdownDescription": "Target version of Vue."
 				},
+				"experimentalCompatMode": {
+					"type": "number",
+					"deprecationMessage": "This property is deprecated at v0.37.0, please use `target` property instead of."
+				},
 				"experimentalRuntimeMode": {
 					"type": "string",
 					"default": "runtime-dom",
