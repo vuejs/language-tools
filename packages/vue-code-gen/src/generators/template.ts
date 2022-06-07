@@ -150,41 +150,50 @@ export function generate(
 			}
 		}
 		else {
+
 			const names = new Set([
 				tagName,
 				camelize(tagName),
 				capitalize(camelize(tagName)),
 			]);
 
-			for (let i = 0; i < tagRanges.length; i++) {
+			tsCodeGen.addText(`declare const ${var_componentVar}: `);
 
-				const tagRange = tagRanges[i];
+			if (compilerOptions.experimentalSuppressInvalidJsxElementTypeErrors)
+				tsCodeGen.addText(`__VLS_types.ConvertInvalidJsxElement<`);
 
-				tsCodeGen.addText(`declare const ${var_componentVar + (i === 0 ? '' : '_')}: `);
+			for (const name of names) {
+				tsCodeGen.addText(`\n'${name}' extends keyof typeof __VLS_components ? typeof __VLS_components['${name}'] : `);
+			}
+			for (const name of names) {
+				tsCodeGen.addText(`\n'${name}' extends keyof typeof __VLS_ctx ? typeof __VLS_ctx['${name}'] : `);
+			}
 
-				if (compilerOptions.experimentalSuppressInvalidJsxElementTypeErrors)
-					tsCodeGen.addText(`__VLS_types.ConvertInvalidJsxElement<`);
+			tsCodeGen.addText(`unknown`);
 
-				for (const name of names) {
-					tsCodeGen.addText(`\n'${name}' extends keyof typeof __VLS_components ? typeof __VLS_components`);
-					writePropertyAccess2(
-						name,
-						[tagRange],
-						{
-							vueTag: 'template',
-							capabilities: capabilitiesSet.tagReference,
-							normalizeNewName: tagName === name ? undefined : unHyphenatComponentName,
-							applyNewName: keepHyphenateName,
-						},
-					);
-					tsCodeGen.addText(` : `);
+			if (compilerOptions.experimentalSuppressInvalidJsxElementTypeErrors)
+				tsCodeGen.addText(`>`);
+
+			tsCodeGen.addText(`;\n`);
+
+			for (const vlsVar of ['__VLS_components', '__VLS_ctx']) {
+				for (const tagRange of tagRanges) {
+					for (const name of names) {
+						tsCodeGen.addText(vlsVar);
+						writePropertyAccess2(
+							name,
+							[tagRange],
+							{
+								vueTag: 'template',
+								capabilities: capabilitiesSet.tagReference,
+								normalizeNewName: tagName === name ? undefined : unHyphenatComponentName,
+								applyNewName: keepHyphenateName,
+							},
+						);
+						tsCodeGen.addText(';');
+					}
+					tsCodeGen.addText('\n');
 				}
-				tsCodeGen.addText(`unknown`);
-
-				if (compilerOptions.experimentalSuppressInvalidJsxElementTypeErrors)
-					tsCodeGen.addText(`>`);
-
-				tsCodeGen.addText(`;\n`);
 			}
 		}
 		tsCodeGen.addText(`declare const ${var_emit}: __VLS_types.ExtractEmit2<typeof ${var_componentVar}>;\n`);

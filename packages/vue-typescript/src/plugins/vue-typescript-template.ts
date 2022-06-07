@@ -87,7 +87,7 @@ export default function (
 
 				/* Components */
 				tsxCodeGen.addText('/* Components */\n');
-				tsxCodeGen.addText('declare var __VLS_otherComponents: NonNullable<typeof __VLS_component extends { components: infer C } ? C : {}> & __VLS_types.GlobalComponents & typeof __VLS_vmUnwrap.components & typeof __VLS_ctx;\n');
+				tsxCodeGen.addText('declare var __VLS_otherComponents: NonNullable<typeof __VLS_component extends { components: infer C } ? C : {}> & __VLS_types.GlobalComponents & typeof __VLS_vmUnwrap.components & __VLS_types.PickComponents<typeof __VLS_ctx>;\n');
 				tsxCodeGen.addText(`declare var __VLS_selfComponent: __VLS_types.SelfComponent<typeof __VLS_name, typeof __VLS_component & (new () => { ${getSlotsPropertyName(compilerOptions.target ?? 3)}: typeof __VLS_slots })>;\n`);
 				tsxCodeGen.addText('declare var __VLS_components: typeof __VLS_otherComponents & Omit<typeof __VLS_selfComponent, keyof typeof __VLS_otherComponents>;\n');
 
