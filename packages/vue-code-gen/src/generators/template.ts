@@ -146,26 +146,43 @@ export function generate(
 				tsCodeGen.addText(`;\n`);
 			}
 		}
-		else {
+		else if (!isIntrinsicElement(compilerOptions.experimentalRuntimeMode, tagName)) {
 			const names = new Set([
 				tagName,
 				camelize(tagName),
 				capitalize(camelize(tagName)),
 			]);
-			tsCodeGen.addText(`declare const ${var_componentVar}: `);
 
-			if (compilerOptions.experimentalSuppressInvalidJsxElementTypeErrors)
-				tsCodeGen.addText(`__VLS_types.ConvertInvalidJsxElement<`);
+			for (let i = 0; i < tagRanges.length; i++) {
 
-			for (const name of names) {
-				tsCodeGen.addText(`\n'${name}' extends keyof typeof __VLS_components ? typeof __VLS_components['${name}'] : `);
+				const tagRange = tagRanges[i];
+
+				tsCodeGen.addText(`declare const ${var_componentVar + (i === 0 ? '' : '_')}: `);
+
+				if (compilerOptions.experimentalSuppressInvalidJsxElementTypeErrors)
+					tsCodeGen.addText(`__VLS_types.ConvertInvalidJsxElement<`);
+
+				for (const name of names) {
+					tsCodeGen.addText(`\n'${name}' extends keyof typeof __VLS_components ? typeof __VLS_components`);
+					writePropertyAccess2(
+						name,
+						[tagRange],
+						{
+							vueTag: 'template',
+							capabilities: capabilitiesSet.tagReference,
+							normalizeNewName: tagName === name ? undefined : unHyphenatComponentName,
+							applyNewName: keepHyphenateName,
+						},
+					);
+					tsCodeGen.addText(` : `);
+				}
+				tsCodeGen.addText(`unknown`);
+
+				if (compilerOptions.experimentalSuppressInvalidJsxElementTypeErrors)
+					tsCodeGen.addText(`>`);
+
+				tsCodeGen.addText(`;\n`);
 			}
-			tsCodeGen.addText(`unknown`);
-
-			if (compilerOptions.experimentalSuppressInvalidJsxElementTypeErrors)
-				tsCodeGen.addText(`>`);
-
-			tsCodeGen.addText(`;\n`);
 		}
 		tsCodeGen.addText(`declare const ${var_emit}: __VLS_types.ExtractEmit2<typeof ${var_componentVar}>;\n`);
 
@@ -173,47 +190,6 @@ export function generate(
 		const name2 = isIntrinsicElement(compilerOptions.experimentalRuntimeMode, tagName) ? tagName : camelize(tagName); // helloWorld
 		const name3 = isIntrinsicElement(compilerOptions.experimentalRuntimeMode, tagName) ? tagName : capitalize(name2); // HelloWorld
 		const componentNames = new Set([name1, name2, name3]);
-
-		if (!isNamespacedTag) {
-			// split tagRanges to fix end tag definition original select range mapping to start tag
-			if (!isIntrinsicElement(compilerOptions.experimentalRuntimeMode, tagName)) {
-				for (const tagRange of tagRanges) {
-					tsCodeGen.addText(`// @ts-ignore\n`);
-					tsCodeGen.addText(`({ `);
-					writeObjectProperty2(
-						tagName,
-						[tagRange],
-						{
-							vueTag: 'template',
-							capabilities: capabilitiesSet.tagHover,
-						},
-					);
-					tsCodeGen.addText(`: {} as `);
-					tsCodeGen.addText(`__VLS_types.PickNotAny<`.repeat(componentNames.size - 1));
-					const names = [...componentNames];
-					for (let i = 0; i < names.length; i++) {
-						if (i > 0) {
-							tsCodeGen.addText(', ');
-						}
-						tsCodeGen.addText(`typeof __VLS_components`);
-						writePropertyAccess2(
-							names[i],
-							[tagRange],
-							{
-								vueTag: 'template',
-								capabilities: capabilitiesSet.tagReference,
-								normalizeNewName: tagName === names[i] ? undefined : unHyphenatComponentName,
-								applyNewName: keepHyphenateName,
-							},
-						);
-						if (i > 0) {
-							tsCodeGen.addText('>');
-						}
-					}
-					tsCodeGen.addText(` });\n`);
-				}
-			}
-		}
 
 		/* Completion */
 		tsCodeGen.addText('/* Completion: Emits */\n');
@@ -474,8 +450,8 @@ export function generate(
 			const fullTagStart = tsCodeGen.getText().length;
 			const tagCapabilities = {
 				...capabilitiesSet.diagnosticOnly,
+				...capabilitiesSet.tagHover,
 				...(_isIntrinsicElement ? {
-					...capabilitiesSet.tagHover,
 					...capabilitiesSet.tagReference,
 				} : {})
 			};
@@ -488,7 +464,7 @@ export function generate(
 					start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
 					end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
 				},
-				tagText === node.tag ? SourceMaps.Mode.Offset : SourceMaps.Mode.Totally,
+				SourceMaps.Mode.Offset,
 				{
 					vueTag: 'template',
 					capabilities: tagCapabilities,
@@ -508,7 +484,7 @@ export function generate(
 						start: endTagOffset,
 						end: endTagOffset + node.tag.length,
 					},
-					tagText === node.tag ? SourceMaps.Mode.Offset : SourceMaps.Mode.Totally,
+					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
 						capabilities: tagCapabilities,
