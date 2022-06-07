@@ -10,8 +10,6 @@ export default function (): VueLanguagePlugin {
 
 			if (fileName.endsWith('.md')) {
 
-				const _content = content;
-
 				content = content
 					// inline code block
 					.replace(/```[\s\S]*?```/g, match => '```' + ' '.repeat(match.length - 6) + '```')
@@ -22,21 +20,24 @@ export default function (): VueLanguagePlugin {
 
 				const scriptBlockReg = /\<script[\s\S]*?\>([\s\S]*?)\<\/script\>/g;
 				const styleBlockReg = /\<style[\s\S]*?\>([\s\S]*?)\<\/style\>/g;
+				const codeGen = new CodeGen();
 
-				const scriptBlocks: [number, number][] = [];
-				const styleBlocks: [number, number][] = [];
-
-				for (const match of content.matchAll(scriptBlockReg)) {
+				for (const match of [
+					...content.matchAll(scriptBlockReg),
+					...content.matchAll(styleBlockReg),
+				]) {
 					if (match.index !== undefined) {
 						const matchText = match[0];
-						scriptBlocks.push([match.index, match.index + matchText.length]);
-					}
-				}
-
-				for (const match of content.matchAll(styleBlockReg)) {
-					if (match.index !== undefined) {
-						const matchText = match[0];
-						styleBlocks.push([match.index, match.index + matchText.length]);
+						codeGen.addCode(
+							content.substring(match.index, match.index + matchText.length),
+							{
+								start: match.index,
+								end: match.index + matchText.length,
+							},
+							Mode.Offset,
+							undefined,
+						);
+						codeGen.addText('\n\n');
 					}
 				}
 
@@ -48,24 +49,6 @@ export default function (): VueLanguagePlugin {
 					// [foo](http://foo.com)
 					.replace(/\[[\s\S]*?\]\([\s\S]*?\)/g, match => ' '.repeat(match.length));
 
-				const codeGen = new CodeGen();
-
-				for (const block of [
-					...scriptBlocks,
-					...styleBlocks,
-				]) {
-					codeGen.addCode(
-						_content.substring(block[0], block[1]),
-						{
-							start: block[0],
-							end: block[1],
-						},
-						Mode.Offset,
-						undefined,
-					);
-					codeGen.addText('\n\n');
-				}
-
 				codeGen.addText('<template>\n');
 				codeGen.addCode(
 					content,
@@ -76,8 +59,7 @@ export default function (): VueLanguagePlugin {
 					Mode.Offset,
 					undefined,
 				);
-				codeGen.addText('\n');
-				codeGen.addText('\n</template>\n');
+				codeGen.addText('\n</template>');
 
 				const sourceMap = new SourceMapBase(codeGen.getMappings());
 
