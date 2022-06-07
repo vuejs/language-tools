@@ -76,7 +76,7 @@
 				},
 				"experimentalSuppressInvalidJsxElementTypeErrors": {
 					"type": "boolean",
-					"markdownDescription": "Suppress invalid JSX element type errors in template. (Default false)"
+					"markdownDescription": "Suppress invalid JSX element type errors in template. (Default true)"
 				},
 				"experimentalResolveStyleCssClasses": {
 					"enum": [

@@ -177,7 +177,7 @@ export function createVueFile(
 				target: compilerOptions.target ?? 3,
 				experimentalRuntimeMode: compilerOptions.experimentalRuntimeMode,
 				experimentalAllowTypeNarrowingInInlineHandlers: compilerOptions.experimentalAllowTypeNarrowingInInlineHandlers ?? false,
-				experimentalSuppressInvalidJsxElementTypeErrors: compilerOptions.experimentalSuppressInvalidJsxElementTypeErrors ?? false,
+				experimentalSuppressInvalidJsxElementTypeErrors: compilerOptions.experimentalSuppressInvalidJsxElementTypeErrors ?? true,
 			},
 			sfc.template?.lang ?? 'html',
 			templateAstCompiled.value.ast,
