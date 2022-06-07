@@ -16,7 +16,6 @@ export default function (): VueLanguagePlugin {
 			const style = sfc.styles[i];
 			const file: EmbeddedFile = {
 				fileName: fileName + '.' + i + '.' + style.lang,
-				lang: style.lang,
 				content: style.content,
 				capabilities: {
 					diagnostics: true,

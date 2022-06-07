@@ -54,7 +54,6 @@ export default function (
 			if (i === 0) {
 				file = {
 					fileName: fileName + '.' + lang.value,
-					lang: lang.value,
 					content: codeGen.codeGen.getText(),
 					capabilities: {
 						diagnostics: !sfc.script?.src,
@@ -70,7 +69,6 @@ export default function (
 			else if (sfc.script || sfc.scriptSetup) {
 				file = {
 					fileName: fileName + '.__VLS_script.' + lang.value,
-					lang: lang.value,
 					content: codeGen.codeGen.getText(),
 					capabilities: {
 						diagnostics: false,

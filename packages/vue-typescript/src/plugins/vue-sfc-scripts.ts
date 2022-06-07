@@ -19,7 +19,6 @@ export default function (): VueLanguagePlugin {
 
 			const file: EmbeddedFile = {
 				fileName: fileName + '.__VLS_script.format.' + script.lang,
-				lang: script.lang,
 				content: script.content,
 				capabilities: {
 					diagnostics: false,

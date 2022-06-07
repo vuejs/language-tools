@@ -16,7 +16,6 @@ export default function (): VueLanguagePlugin {
 			const template = sfc.template!;
 			const file: EmbeddedFile = {
 				fileName: fileName + '.' + template.lang,
-				lang: template.lang,
 				content: template.content,
 				capabilities: {
 					diagnostics: true,

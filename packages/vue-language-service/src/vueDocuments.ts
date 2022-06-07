@@ -214,7 +214,7 @@ export function parseVueDocument(vueFile: VueFile) {
 
 		return TextDocument.create(
 			uri,
-			shared.syntaxToLanguageId(embeddedFile.lang),
+			shared.syntaxToLanguageId(embeddedFile.fileName.split('.').pop()!),
 			newVersion,
 			embeddedFile.content,
 		);

@@ -88,7 +88,6 @@ export interface Sfc {
 
 export interface EmbeddedFile {
 	fileName: string,
-	lang: string,
 	content: string,
 	isTsHostFile: boolean,
 	capabilities: {
@@ -353,7 +352,6 @@ export function createVueFile(
 			}
 			const embeddedFile: EmbeddedFile = {
 				fileName: fileName + '.vue',
-				lang: 'vue',
 				content: compiledVue.value.vue,
 				capabilities: {
 					diagnostics: true,

@@ -16,7 +16,6 @@ export default function (): VueLanguagePlugin {
 			const customBlock = sfc.customBlocks[i];
 			const file: EmbeddedFile = {
 				fileName: fileName + '.' + i + '.' + customBlock.lang,
-				lang: customBlock.lang,
 				content: customBlock.content,
 				capabilities: {
 					diagnostics: true,

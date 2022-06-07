@@ -123,7 +123,6 @@ export default function (
 				const lang = scriptLang.value === 'js' ? 'jsx' : scriptLang.value === 'ts' ? 'tsx' : scriptLang.value;
 				const embeddedFile: EmbeddedFile = {
 					fileName: fileName + '.__VLS_template.' + lang,
-					lang: lang,
 					content: tsxCodeGen.getText(),
 					capabilities: {
 						diagnostics: true,
@@ -259,7 +258,6 @@ export default function (
 				const lang = scriptLang.value === 'js' ? 'jsx' : scriptLang.value === 'ts' ? 'tsx' : scriptLang.value;
 				const embeddedFile: EmbeddedFile = {
 					fileName: fileName + '.__VLS_template.format.' + lang,
-					lang: lang,
 					content: templateCodeGens.value.formatCodeGen.getText(),
 					capabilities: {
 						diagnostics: false,
@@ -283,7 +281,6 @@ export default function (
 
 				const file: EmbeddedFile = {
 					fileName: fileName + '.template.css',
-					lang: 'css',
 					content: templateCodeGens.value.cssCodeGen.getText(),
 					capabilities: {
 						diagnostics: false,
