@@ -1,15 +1,22 @@
 # Changelog
 
-## 0.37.2 (2022/6/7)
+## 0.37.3 (2022/6/8)
 
-- feat: show deprecation message for `experimentalCompatMode`
-- fix: kebab case component type broken in vue 2 ([#1405](https://github.com/johnsoncodehk/volar/issues/1405))
+- feat: support find file references
+- feat: improve vitepress markdown parse reliability ([#1410](https://github.com/johnsoncodehk/volar/issues/1410))
+- feat: `vueCompilerOptions.experimentalSuppressInvalidJsxElementTypeErrors` default true ([#1405](https://github.com/johnsoncodehk/volar/issues/1405))
+- fix: fixed TS error with props beginning with data* ([#1413](https://github.com/johnsoncodehk/volar/issues/1413))
 
 ### Our Sponsors
 
 <a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
 	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
 </a>
+
+## 0.37.2 (2022/6/7)
+
+- feat: show deprecation message for `experimentalCompatMode`
+- fix: kebab case component type broken in vue 2 ([#1405](https://github.com/johnsoncodehk/volar/issues/1405))
 
 ## 0.37.1 (2022/6/7)
 
