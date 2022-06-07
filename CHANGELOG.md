@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.37.1 (2022/6/7)
+
+- feat: add `experimentalSuppressInvalidJsxElementTypeErrors` option to ignore missing component import error ([#1404](https://github.com/johnsoncodehk/volar/issues/1404))
+- perf: support auto-import cache even TS version \< 4.7 ([#1406](https://github.com/johnsoncodehk/volar/issues/1406))
+- perf: simplify template generated tsx code
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
+
 ## 0.37.0 (2022/6/6)
 
 - feat: VitePress support ([#1399](https://github.com/johnsoncodehk/volar/issues/1399))
@@ -29,12 +41,6 @@
 		},
 	}
 	```
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 0.36.1 (2022/6/4)
 
@@ -355,7 +361,7 @@
 - fix: slots references always 0 ([#932](https://github.com/johnsoncodehk/volar/issues/932))
 - fix: `source.organizeImports` not working in `editor.codeActionsOnSave` ([#906](https://github.com/johnsoncodehk/volar/issues/906))
 - fix: component type incorrect if duplicate name with current `<script setup>` file name ([#944](https://github.com/johnsoncodehk/volar/issues/944))
-- fix: language server broken if TS version < 4.4 ([#962](https://github.com/johnsoncodehk/volar/issues/962))
+- fix: language server broken if TS version \< 4.4 ([#962](https://github.com/johnsoncodehk/volar/issues/962))
 - fix: pug outline element level incorrect ([#969](https://github.com/johnsoncodehk/volar/issues/969))
 - fix: document symbols confusion between `<script>` and `<script setup>` ([#994](https://github.com/johnsoncodehk/volar/issues/994))
 - fix: vite icon do not show with first editor
@@ -742,7 +748,7 @@ do not force config `compatConfig: { Mode: 2 }` to template compiler with `"expe
 
 - feat: support renaming for `ref="xxx"` ([#472](https://github.com/johnsoncodehk/volar/issues/472))
 - feat: support bracket pair colorization
-- fix: request failed when typing `import |` if TS version < 4.3 ([#468](https://github.com/johnsoncodehk/volar/issues/468))
+- fix: request failed when typing `import |` if TS version \< 4.3 ([#468](https://github.com/johnsoncodehk/volar/issues/468))
 - fix: `ref` attribute type incorrect ([#473](https://github.com/johnsoncodehk/volar/issues/473))
 - fix: `v-bind` + single quote parse failed ([#474](https://github.com/johnsoncodehk/volar/issues/474))
 - fix: tag name conversion not working ([#475](https://github.com/johnsoncodehk/volar/issues/475))
