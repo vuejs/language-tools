@@ -1,13 +1,5 @@
 import { getSlotsPropertyName, getVueLibraryName } from '@volar/vue-code-gen';
 
-const camelCaseText = [
-	'type CamelCase<S extends string> = S extends `${infer First}-${infer Right}`',
-	'? Capitalize<Right> extends Right',
-	'? `${First}-${CamelCase<Capitalize<Right>>}`',
-	': `${First}${CamelCase<Capitalize<Right>>}`',
-	': S',
-].join('\n');
-
 export const typesFileName = '__VLS_types.ts';
 
 export function getTypesCode(vueVersion: number) {
@@ -32,7 +24,6 @@ type ForableSource<T> = [
 	typeof Symbol.iterator extends keyof T ? number : T extends T ? keyof T : never, // key
 	typeof Symbol.iterator extends keyof T ? undefined : number, // index
 ][];
-${camelCaseText};
 
 export type GlobalComponents =
 	PickNotAny<import('vue').GlobalComponents, {}>
@@ -57,13 +48,8 @@ export type ExtractComponentSlots<T> =
 	: T extends { ${slots}?: infer S } ? { [K in keyof S]-?: S[K] extends ((obj: infer O) => any) | undefined ? O : S[K] }
 	: Record<string, any>;
 
-export type GetComponentName<T, K extends string> = K extends keyof T ? IsAny<T[K]> extends false ? K : GetComponentName_CamelCase<T, CamelCase<K>> : GetComponentName_CamelCase<T, CamelCase<K>>;
-type GetComponentName_CamelCase<T, K extends string> = K extends keyof T ? IsAny<T[K]> extends false ? K : GetComponentName_CapitalCase<T, Capitalize<K>, K> : GetComponentName_CapitalCase<T, Capitalize<K>, K>;
-type GetComponentName_CapitalCase<T, K, O> = K extends keyof T ? K : O;
-
 export type FillingEventArg_ParametersLength<E extends (...args: any) => any> = IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];
 export type FillingEventArg<E> = E extends (...args: any) => any ? FillingEventArg_ParametersLength<E> extends 0 ? ($event?: undefined) => ReturnType<E> : E : E;
-export type GetProperty<T, K, N = any> = K extends keyof T ? T[K] : N;
 export type ConvertInvalidJsxElement<T> =
 	T extends (...args: any) => JSX.Element ? T
 	: T extends new (...args: any) => JSX.ElementClass ? T

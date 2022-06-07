@@ -122,15 +122,14 @@ export function generate(
 		const tagRanges = tagOffsets.map(offset => ({ start: offset, end: offset + tagName.length }));
 		const isNamespacedTag = tagName.indexOf('.') >= 0;
 
-		const var_correctTagName = `__VLS_${elementIndex++}`;
-		const var_rawComponent = capitalize(camelize(tagName));
+		const var_componentVar = capitalize(camelize(tagName));
 		const var_emit = `__VLS_${elementIndex++}`;
 
 		if (isNamespacedTag) {
 			for (let i = 0; i < tagRanges.length; i++) {
 				const tagRange = tagRanges[i];
 				if (i === 0) {
-					tsCodeGen.addText(`declare const ${var_rawComponent}: typeof __VLS_ctx.`);
+					tsCodeGen.addText(`declare const ${var_componentVar}: typeof __VLS_ctx.`);
 				}
 				else {
 					tsCodeGen.addText(`declare const __VLS_${elementIndex++}: typeof __VLS_ctx.`);
@@ -148,12 +147,27 @@ export function generate(
 			}
 		}
 		else {
-			tsCodeGen.addText(`declare const ${var_correctTagName}: __VLS_types.GetComponentName<typeof __VLS_components, '${tagName}'>;\n`);
-			tsCodeGen.addText(`declare const ${var_rawComponent}: ${compilerOptions.experimentalSuppressInvalidJsxElementTypeErrors ? '__VLS_types.ConvertInvalidJsxElement<' : ''
-				}__VLS_types.GetProperty<typeof __VLS_components, typeof ${var_correctTagName}, unknown>${compilerOptions.experimentalSuppressInvalidJsxElementTypeErrors ? '>' : ''
-				};\n`);
+			const names = new Set([
+				tagName,
+				camelize(tagName),
+				capitalize(camelize(tagName)),
+			]);
+			tsCodeGen.addText(`declare const ${var_componentVar}: `);
+
+			if (compilerOptions.experimentalSuppressInvalidJsxElementTypeErrors)
+				tsCodeGen.addText(`__VLS_types.ConvertInvalidJsxElement<`);
+
+			for (const name of names) {
+				tsCodeGen.addText(`\n'${name}' extends keyof typeof __VLS_components ? typeof __VLS_components['${name}'] : `);
+			}
+			tsCodeGen.addText(`unknown`);
+
+			if (compilerOptions.experimentalSuppressInvalidJsxElementTypeErrors)
+				tsCodeGen.addText(`>`);
+
+			tsCodeGen.addText(`;\n`);
 		}
-		tsCodeGen.addText(`declare const ${var_emit}: __VLS_types.ExtractEmit2<typeof ${var_rawComponent}>;\n`);
+		tsCodeGen.addText(`declare const ${var_emit}: __VLS_types.ExtractEmit2<typeof ${var_componentVar}>;\n`);
 
 		const name1 = tagName; // hello-world
 		const name2 = isIntrinsicElement(compilerOptions.experimentalRuntimeMode, tagName) ? tagName : camelize(tagName); // helloWorld
@@ -227,11 +241,11 @@ export function generate(
 		tsCodeGen.addText('/* Completion: Props */\n');
 		for (const name of componentNames) {
 			tsCodeGen.addText('// @ts-ignore\n');
-			tsCodeGen.addText(`(<${isIntrinsicElement(compilerOptions.experimentalRuntimeMode, tagName) ? tagName : var_rawComponent} ${searchTexts.getPropsCompletion(name)}/>);\n`);
+			tsCodeGen.addText(`(<${isIntrinsicElement(compilerOptions.experimentalRuntimeMode, tagName) ? tagName : var_componentVar} ${searchTexts.getPropsCompletion(name)}/>);\n`);
 		}
 
 		tagResolves[tagName] = {
-			component: var_rawComponent,
+			component: var_componentVar,
 			emit: var_emit,
 			offsets: tagOffsets.map(offset => htmlToTemplate({ start: offset, end: offset })?.start).filter(notEmpty),
 		};
