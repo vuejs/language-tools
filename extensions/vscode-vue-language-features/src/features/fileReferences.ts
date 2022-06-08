@@ -6,13 +6,20 @@ import * as nls from 'vscode-nls';
 const localize = nls.loadMessageBundle();
 
 export async function register(context: vscode.ExtensionContext, client: BaseLanguageClient) {
-	vscode.commands.registerCommand('vue.findAllFileReferences', async (uri: vscode.Uri) => {
+	vscode.commands.registerCommand('vue.findAllFileReferences', async (uri?: vscode.Uri) => {
 
 		// https://github.com/microsoft/vscode/blob/main/extensions/typescript-language-features/src/languageFeatures/fileReferences.ts
 		await vscode.window.withProgress({
 			location: vscode.ProgressLocation.Window,
 			title: localize('progress.title', "Finding file references")
 		}, async (_progress, token) => {
+
+      			if (!uri) {
+      			  const editor = vscode.window.activeTextEditor;
+      			  if (!editor) return;
+
+      			  uri = editor.document.uri;
+      			}
 
 			const response = await client.sendRequest(shared.FindFileReferenceRequest.type, { textDocument: { uri: uri.toString() } });
 			if (!response) {
