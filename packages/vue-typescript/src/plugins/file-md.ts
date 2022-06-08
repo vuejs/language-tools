@@ -38,12 +38,11 @@ export default function (): VueLanguagePlugin {
 							undefined,
 						);
 						codeGen.addText('\n\n');
+						content = content.substring(0, match.index) + ' '.repeat(matchText.length) + content.substring(match.index + matchText.length);
 					}
 				}
 
 				content = content
-					.replace(scriptBlockReg, match => ' '.repeat(match.length))
-					.replace(styleBlockReg, match => ' '.repeat(match.length))
 					// angle bracket: <http://foo.com>
 					.replace(/\<\S*\:\S*\>/g, match => ' '.repeat(match.length))
 					// [foo](http://foo.com)
