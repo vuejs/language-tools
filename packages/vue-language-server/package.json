@@ -3,8 +3,6 @@
 	"version": "0.37.3",
 	"license": "MIT",
 	"files": [
-		"*.js",
-		"*.d.ts",
 		"out/**/*.js",
 		"out/**/*.d.ts"
 	],
