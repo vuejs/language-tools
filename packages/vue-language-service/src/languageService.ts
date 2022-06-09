@@ -292,7 +292,7 @@ export function createLanguageService(
 						dirs.add(upath.dirname(path));
 					}
 					if (path.endsWith('.d.ts')) {
-						path = upath.removeExt(upath.removeExt(path, '.ts'), '.d');
+						path = path.substring(0, path.length - '.d.ts'.length);
 					}
 					else {
 						continue;

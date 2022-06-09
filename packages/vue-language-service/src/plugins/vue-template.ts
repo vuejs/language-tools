@@ -592,7 +592,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			if (isEvent && hasModifier) {
 
 				const modifiers = replacement.text.split('.').slice(1);
-				const textWithoutModifier = path.trimExt(replacement.text, [], 999);
+				const textWithoutModifier = replacement.text.split('.')[0];
 
 				for (const modifier in eventModifiers) {
 
