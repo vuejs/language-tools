@@ -86,6 +86,7 @@ flowchart LR
 	VOLAR_VUE_SERVICE["@volar/vue-language-service"]
 	VOLAR_PUG_SERVICE["@volar/pug-language-service"]
 	VOLAR_TS_SERVICE["@volar/typescript-language-service"]
+	VOLAR_TS_FASTER["@volar/typescript-faster"]
 	VOLAR_PREVIEW["@volar/preview"]
 	VUE_TSC[vue-tsc]
 	TS_VUE_PLUGIN[typescript-vue-plugin]
@@ -96,6 +97,7 @@ flowchart LR
 	click VOLAR_VUE_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-language-service"
 	click VOLAR_PUG_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/pug-language-service"
 	click VOLAR_TS_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/typescript-language-service"
+	click VOLAR_TS_FASTER "https://github.com/johnsoncodehk/volar/tree/master/packages/typescript-faster"
 	click VOLAR_PREVIEW "https://github.com/johnsoncodehk/volar/tree/master/packages/preview"
 	click VUE_TSC "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-tsc"
 	click TS_VUE_PLUGIN "https://github.com/johnsoncodehk/volar/tree/master/packages/typescript-vue-plugin"
@@ -171,6 +173,9 @@ flowchart LR
 	VITE_PLUGIN_CHECKER --> VUE_TSC
 	COMPILE_VUE_SFC --> VUE_TSC
 	TS_VUE_PLUGIN --> VOLAR_VUE_TS
+
+	TS_VUE_PLUGIN --> VOLAR_TS_FASTER
+	VOLAR_VUE_SERVICE --> VOLAR_TS_FASTER
 
 	VOLAR_VUE_SERVICE --> VOLAR_VUE_TS
 	VOLAR_VUE_SERVICE --> VOLAR_TS_SERVICE
