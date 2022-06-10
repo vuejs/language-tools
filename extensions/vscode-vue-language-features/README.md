@@ -48,7 +48,7 @@ Here is a compatibility table for different ways of writing the script blocks:
 | `export default Vue.extend({ ... })` with JS | Not supported                             | Not supported                               | Not supported                       |
 | `export default Vue.extend({ ... })` with TS | Limited (supports `data` types but not `props` types) | Limited                         | Not supported                       |
 | `export default defineComponent({ ... })` | Supported                                    | Supported                                   | Supported                           |
-| Class component                          | Supported                                     | Supported with additional code ([#21](https://github.com/johnsoncodehk/volar/issues/21)) |  Supported with additional code     |
+| Class component                          | Supported                                     | Supported with additional code ([#21](https://github.com/johnsoncodehk/volar/issues/21)) |  Supported with [additional code](https://github.com/johnsoncodehk/volar/pull/750#issuecomment-1023947885)     |
 
 Note that you can use `defineComponent` even for components that are using the `Options API`.
 
