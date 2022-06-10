@@ -1,4 +1,5 @@
 import * as shared from '@volar/shared';
+import * as tsFaster from '@volar/typescript-faster';
 import * as ts2 from '@volar/typescript-language-service';
 import { ConfigurationHost, EmbeddedLanguageServicePlugin, setCurrentConfigurationHost } from '@volar/vue-language-service-types';
 import { createTypeScriptRuntime } from '@volar/vue-typescript';
@@ -9,12 +10,6 @@ import type * as html from 'vscode-html-languageservice';
 import * as json from 'vscode-json-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import useCssPlugin from './plugins/css';
-import useEmmetPlugin from './plugins/emmet';
-import useHtmlPlugin from './plugins/html';
-import useJsonPlugin from './plugins/json';
-import usePugPlugin from './plugins/pug';
-import useTsPlugin from './plugins/typescript';
 import * as tagNameCase from './ideFeatures/tagNameCase';
 import * as autoInsert from './languageFeatures/autoInsert';
 import * as callHierarchy from './languageFeatures/callHierarchy';
@@ -29,27 +24,33 @@ import * as documentHighlight from './languageFeatures/documentHighlights';
 import * as documentLink from './languageFeatures/documentLinks';
 import * as semanticTokens from './languageFeatures/documentSemanticTokens';
 import * as executeCommand from './languageFeatures/executeCommand';
+import * as fileReferences from './languageFeatures/fileReferences';
 import * as fileRename from './languageFeatures/fileRename';
 import * as hover from './languageFeatures/hover';
+import * as inlayHints from './languageFeatures/inlayHints';
 import * as references from './languageFeatures/references';
-import * as fileReferences from './languageFeatures/fileReferences';
 import * as rename from './languageFeatures/rename';
 import * as renamePrepare from './languageFeatures/renamePrepare';
 import * as signatureHelp from './languageFeatures/signatureHelp';
 import * as diagnostics from './languageFeatures/validation';
 import * as workspaceSymbol from './languageFeatures/workspaceSymbols';
-import * as inlayHints from './languageFeatures/inlayHints';
-import { getTsSettings } from './tsConfigs';
-import { LanguageServiceHost, LanguageServiceRuntimeContext } from './types';
-import { parseVueDocuments } from './vueDocuments';
+import useCssPlugin from './plugins/css';
+import useEmmetPlugin from './plugins/emmet';
+import useHtmlPlugin from './plugins/html';
+import useJsonPlugin from './plugins/json';
+import usePugPlugin from './plugins/pug';
+import useTsPlugin from './plugins/typescript';
+import useVuePlugin from './plugins/vue';
 import useAutoDotValuePlugin from './plugins/vue-autoinsert-dotvalue';
-import useHtmlPugConversionsPlugin from './plugins/vue-convert-htmlpug';
 import useReferencesCodeLensPlugin from './plugins/vue-codelens-references';
+import useHtmlPugConversionsPlugin from './plugins/vue-convert-htmlpug';
 import useRefSugarConversionsPlugin from './plugins/vue-convert-refsugar';
 import useScriptSetupConversionsPlugin from './plugins/vue-convert-scriptsetup';
 import useTagNameCasingConversionsPlugin from './plugins/vue-convert-tagcasing';
-import useVuePlugin from './plugins/vue';
 import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemanticTokenTypes } from './plugins/vue-template';
+import { getTsSettings } from './tsConfigs';
+import { LanguageServiceHost, LanguageServiceRuntimeContext } from './types';
+import { parseVueDocuments } from './vueDocuments';
 // import * as d3 from './ideFeatures/d3';
 
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
@@ -89,6 +90,7 @@ export function createLanguageService(
 		vueLsHost: vueLsHost,
 		isTsPlugin: false,
 	});
+	tsFaster.decorate(ts, tsRuntime.getTsLsHost(), tsRuntime.getTsLs());
 	const vueDocuments = parseVueDocuments(tsRuntime.vueFiles);
 	const tsSettings = getTsSettings(configurationHost);
 	const documentContext = getDocumentContext();

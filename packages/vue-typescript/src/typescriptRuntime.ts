@@ -2,7 +2,6 @@ import * as path from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { LanguageServiceHost } from './types';
 import * as localTypes from './utils/localTypes';
-import * as tsFaster from '@volar/typescript-faster';
 import { createVueFile, EmbeddedFile } from './vueFile';
 import { createVueFiles } from './vueFiles';
 
@@ -25,10 +24,6 @@ export function createTypeScriptRuntime(options: {
 
 	let lastProjectVersion: string | undefined;
 	let tsProjectVersion = 0;
-
-	if (!options.isVueTsc) { // not really needed disable this for vue-tsc
-		tsFaster.decorate(ts, tsLsHost, tsLsRaw);
-	}
 
 	return {
 		vueFiles,

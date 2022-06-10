@@ -161,9 +161,11 @@ importers:
 
   packages/typescript-vue-plugin:
     specifiers:
+      '@volar/typescript-faster': 0.37.3
       '@volar/vue-typescript': 0.37.3
       typescript: latest
     dependencies:
+      '@volar/typescript-faster': link:../typescript-faster
       '@volar/vue-typescript': link:../vue-typescript
     devDependencies:
       typescript: 4.7.3
@@ -220,6 +222,7 @@ importers:
       '@volar/shared': 0.37.3
       '@volar/source-map': 0.37.3
       '@volar/transforms': 0.37.3
+      '@volar/typescript-faster': 0.37.3
       '@volar/typescript-language-service': 0.37.3
       '@volar/vue-code-gen': 0.37.3
       '@volar/vue-language-service-types': 0.37.3
@@ -243,6 +246,7 @@ importers:
       '@volar/shared': link:../shared
       '@volar/source-map': link:../source-map
       '@volar/transforms': link:../transforms
+      '@volar/typescript-faster': link:../typescript-faster
       '@volar/typescript-language-service': link:../typescript-language-service
       '@volar/vue-code-gen': link:../vue-code-gen
       '@volar/vue-language-service-types': link:../vue-language-service-types
@@ -287,7 +291,6 @@ importers:
       '@volar/code-gen': 0.37.3
       '@volar/pug-language-service': 0.37.3
       '@volar/source-map': 0.37.3
-      '@volar/typescript-faster': 0.37.3
       '@volar/vue-code-gen': 0.37.3
       '@vue/compiler-sfc': ^3.2.37
       '@vue/reactivity': ^3.2.37
@@ -295,7 +298,6 @@ importers:
     dependencies:
       '@volar/code-gen': link:../code-gen
       '@volar/source-map': link:../source-map
-      '@volar/typescript-faster': link:../typescript-faster
       '@volar/vue-code-gen': link:../vue-code-gen
       '@vue/compiler-sfc': 3.2.37
       '@vue/reactivity': 3.2.37
@@ -4662,12 +4664,12 @@ packages:
     dev: true
 
   /statuses/1.5.0:
-    resolution: {integrity: sha1-Fhx9rBd2Wf2YEfQ3cfqZOBR4Yow=}
+    resolution: {integrity: sha512-OpZ3zP+jT1PI7I8nemJX4AKmAX070ZkYPVWV/AaKTJl+tXCTGyVdC1a4SL8RUQYEwk/f34ZX8UTykN68FwrqAA==}
     engines: {node: '>= 0.6'}
     dev: true
 
   /strict-uri-encode/2.0.0:
-    resolution: {integrity: sha1-ucczDHBChi9rFC3CdLvMWGbONUY=}
+    resolution: {integrity: sha512-QwiXZgpRcKkhTj2Scnn++4PKtWsH0kpzZ62L2R6c/LUVYv7hVnZqcg2+sMuT6R7Jusu1vviK/MFsu6kNJfWlEQ==}
     engines: {node: '>=4'}
     dev: true
 
@@ -4700,7 +4702,7 @@ packages:
     dev: true
 
   /strip-bom/3.0.0:
-    resolution: {integrity: sha1-IzTBjpx1n3vdVv3vfprj1YjmjtM=}
+    resolution: {integrity: sha512-vavAMRXOgBVNF6nyEEmL3DBK19iRpDcoIwW+swQ+CbGiu7lju6t+JklA1MHweoWtadgt4ISVUsXLyDq34ddcwA==}
     engines: {node: '>=4'}
     dev: true
 
@@ -4728,7 +4730,7 @@ packages:
     dev: true
 
   /strip-json-comments/2.0.1:
-    resolution: {integrity: sha1-PFMZQukIwml8DsNEhYwobHygpgo=}
+    resolution: {integrity: sha512-4gB8na07fecVVkOI6Rs4e7T6NOTki5EmL7TUduTs6bu3EdnSycntVJ4re8kgZA+wx9IueI2Y11bfbgwtzuE0KQ==}
     engines: {node: '>=0.10.0'}
     dev: true
 
@@ -4806,7 +4808,7 @@ packages:
     dev: true
 
   /temp-dir/1.0.0:
-    resolution: {integrity: sha1-CnwOom06Oa+n4OvqnB/AvE2qAR0=}
+    resolution: {integrity: sha512-xZFXEGbG7SNC3itwBzI3RYjq/cEhBkx2hJuKGIUOcEULmkQExXiHat2z/qkISYsuR+IKumhEfKKbV5qXmhICFQ==}
     engines: {node: '>=4'}
     dev: true
 
@@ -4816,7 +4818,7 @@ packages:
     dev: true
 
   /through/2.3.8:
-    resolution: {integrity: sha1-DdTJ/6q8NXlgsbckEV1+Doai4fU=}
+    resolution: {integrity: sha512-w89qg7PI8wAdvX60bMDP+bFoD5Dvhm9oLheFp5O4a2QF0cSBGsBX4qZmadPMvVqlLJBBci+WqGGOAPvcDeNSVg==}
     dev: true
 
   /through2/2.0.5:

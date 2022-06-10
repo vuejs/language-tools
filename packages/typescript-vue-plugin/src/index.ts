@@ -1,7 +1,8 @@
+import * as tsFaster from '@volar/typescript-faster';
 import * as vue from '@volar/vue-typescript';
+import { tsShared } from '@volar/vue-typescript';
 import * as path from 'path';
 import * as apis from './apis';
-import { tsShared } from '@volar/vue-typescript';
 
 const init: ts.server.PluginModuleFactory = (modules) => {
 	const { typescript: ts } = modules;
@@ -34,6 +35,7 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 				vueLsHost: proxyHost.host,
 				isTsPlugin: true
 			});
+			tsFaster.decorate(ts, tsRuntime.getTsLsHost(), tsRuntime.getTsLs());
 			const _tsPluginApis = apis.register(tsRuntime);
 			const tsPluginProxy: Partial<ts.LanguageService> = {
 				getSemanticDiagnostics: apiHook(tsRuntime.getTsLs().getSemanticDiagnostics),

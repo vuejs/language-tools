@@ -23,6 +23,7 @@
 		"@volar/shared": "0.37.3",
 		"@volar/source-map": "0.37.3",
 		"@volar/transforms": "0.37.3",
+		"@volar/typescript-faster": "0.37.3",
 		"@volar/typescript-language-service": "0.37.3",
 		"@volar/vue-code-gen": "0.37.3",
 		"@volar/vue-language-service-types": "0.37.3",

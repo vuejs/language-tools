@@ -19,7 +19,6 @@
 	"dependencies": {
 		"@volar/code-gen": "0.37.3",
 		"@volar/source-map": "0.37.3",
-		"@volar/typescript-faster": "0.37.3",
 		"@volar/vue-code-gen": "0.37.3",
 		"@vue/compiler-sfc": "^3.2.37",
 		"@vue/reactivity": "^3.2.37"
