@@ -18,18 +18,14 @@ export default function (): VueLanguagePlugin {
 					// # \<script setup>
 					.replace(/\\\<[\s\S]*?\>\n?/g, match => ' '.repeat(match.length));
 
-				const scriptBlockReg = /\<script[\s\S]*?\>([\s\S]*?)\<\/script\>/g;
-				const styleBlockReg = /\<style[\s\S]*?\>([\s\S]*?)\<\/style\>/g;
+				const sfcBlockReg = /\<(script|style)[\s\S]*?\>([\s\S]*?)\<\/\1\>/g;
 				const codeGen = new CodeGen();
 
-				for (const match of [
-					...content.matchAll(scriptBlockReg),
-					...content.matchAll(styleBlockReg),
-				]) {
+				for (const match of content.matchAll(sfcBlockReg)) {
 					if (match.index !== undefined) {
 						const matchText = match[0];
 						codeGen.addCode(
-							content.substring(match.index, match.index + matchText.length),
+							matchText,
 							{
 								start: match.index,
 								end: match.index + matchText.length,
