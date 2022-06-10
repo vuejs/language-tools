@@ -24,7 +24,7 @@ VueLF is a Language Support plugin built specifically for Vue 3. It's based on [
 
 This extension requires Vue 3 types from the `@vue/runtime-dom`.
 
-Vue 3 itself includes the `@vue/runtime-dom` package. For Vue 2 you will have to install it yourself:
+Vue 3 and Vue 2.7 has built-in JSX types. For Vue version \<= 2.6.14 you need to add JSX types by install `@vue/runtime-dom`:
 
 ```jsonc
 // package.json
