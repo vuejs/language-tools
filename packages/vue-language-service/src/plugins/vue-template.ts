@@ -758,7 +758,9 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 						if (offset >= 0) {
 							offset += searchText.length;
 							try {
-								bind = (await options.tsLs.doComplete(document.uri, document.positionAt(offset)))?.items.filter(entry => entry.kind !== vscode.CompletionItemKind.Text) ?? [];
+								bind = (await options.tsLs.doComplete(document.uri, document.positionAt(offset)))?.items
+									.map(entry => { entry.label = entry.label.replace('?', ''); return entry; })
+									.filter(entry => entry.kind !== vscode.CompletionItemKind.Text) ?? [];
 							} catch { }
 						}
 					}
@@ -768,7 +770,9 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 						if (offset >= 0) {
 							offset += searchText.length;
 							try {
-								on = (await options.tsLs.doComplete(document.uri, document.positionAt(offset)))?.items.filter(entry => entry.kind !== vscode.CompletionItemKind.Text) ?? [];
+								on = (await options.tsLs.doComplete(document.uri, document.positionAt(offset)))?.items
+									.map(entry => { entry.label = entry.label.replace('?', ''); return entry; })
+									.filter(entry => entry.kind !== vscode.CompletionItemKind.Text) ?? [];
 							} catch { }
 						}
 					}
@@ -776,7 +780,9 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				}
 				try {
 					const offset = file.content.indexOf(SearchTexts.GlobalAttrs);
-					const globalBind = (await options.tsLs.doComplete(document.uri, document.positionAt(offset)))?.items.filter(entry => entry.kind !== vscode.CompletionItemKind.Text) ?? [];
+					const globalBind = (await options.tsLs.doComplete(document.uri, document.positionAt(offset)))?.items
+						.map(entry => { entry.label = entry.label.replace('?', ''); return entry; })
+						.filter(entry => entry.kind !== vscode.CompletionItemKind.Text) ?? [];
 					cache.set('*', { item: undefined, bind: globalBind, on: [] });
 				} catch { }
 			}
