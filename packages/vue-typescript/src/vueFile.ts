@@ -107,16 +107,14 @@ export interface EmbeddedFile {
 export function createVueFile(
 	fileName: string,
 	_content: string,
-	_version: string,
 	compilerOptions: VueCompilerOptions,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	tsLs: ts.LanguageService | undefined,
+	getTsLs: () => ts.LanguageService | undefined,
 	tsHost: ts.LanguageServiceHost | undefined,
 ) {
 
 	// refs
 	const fileContent = ref('');
-	const version = ref('');
 	const sfc = reactive<Sfc>({
 		template: null,
 		script: null,
@@ -286,7 +284,9 @@ export function createVueFile(
 				const computeds: ComputedRef<Embedded | undefined>[] = [];
 				for (let i = 0; i < embeddedsCount.value; i++) {
 					const _i = i;
-					const raw = computed(() => plugin.getEmbeddedFile!(fileName, sfc, _i));
+					const raw = computed(() => {
+						return plugin.getEmbeddedFile!(fileName, sfc, _i);
+					});
 					const transformed = computed(() => {
 
 						if (!raw.value)
@@ -508,16 +508,20 @@ export function createVueFile(
 		}
 	});
 
-	update(_content, _version);
+	update(_content);
 
 	return {
 		fileName,
+		get text() {
+			return fileContent.value;
+		},
+		set text(value) {
+			update(value);
+		},
 		getContent: untrack(() => fileContent.value),
 		getCompiledVue: untrack(() => file2VueSourceMap.value),
 		getSfcTemplateLanguageCompiled: untrack(() => computedHtmlTemplate.value),
 		getSfcVueTemplateCompiled: untrack(() => templateAstCompiled.value),
-		getVersion: untrack(() => version.value),
-		update: untrack(update),
 		getTemplateData: untrack(getTemplateData),
 		getScriptFileName: untrack(() => fileName + '.' + scriptLang.value),
 		getDescriptor: untrack(() => unref(sfc)),
@@ -525,12 +529,12 @@ export function createVueFile(
 		getScriptSetupAst: untrack(() => scriptSetupAst.value),
 		getSfcRefSugarRanges: untrack(() => sfcRefSugarRanges.value),
 		getEmbeddeds: untrack(() => embeddeds.value),
-		getAllEmbeddeds: untrack(() => allEmbeddeds.value),
 		getScriptSetupRanges: untrack(() => scriptSetupRanges.value),
 		isJsxMissing: () => !compilerOptions.experimentalDisableTemplateSupport && (tsHost?.getCompilationSettings().jsx ?? ts.JsxEmit.Preserve) !== ts.JsxEmit.Preserve,
 
+		getAllEmbeddeds: () => allEmbeddeds.value,
+
 		refs: {
-			content: fileContent,
 			allEmbeddeds,
 			teleports,
 		},
@@ -627,18 +631,12 @@ export function createVueFile(
 		}
 		return range;
 	}
-	function update(newContent: string, newVersion: string) {
+	function update(newContent: string) {
 
-		const oldScripts: Record<string, string> = {};
-
-		for (const embedded of allEmbeddeds.value) {
-			if (embedded.file.isTsHostFile) {
-				oldScripts[embedded.file.fileName] = embedded.file.content;
-			}
-		}
+		if (fileContent.value === newContent)
+			return;
 
 		fileContent.value = newContent;
-		version.value = newVersion;
 
 		// TODO: wait for https://github.com/vuejs/core/pull/5912
 		if (parsedSfc.value) {
@@ -648,19 +646,6 @@ export function createVueFile(
 			updateStyles(parsedSfc.value.descriptor.styles);
 			updateCustomBlocks(parsedSfc.value.descriptor.customBlocks);
 		}
-
-		const newScripts: Record<string, string> = {};
-
-		for (const embedded of allEmbeddeds.value) {
-			if (embedded.file.isTsHostFile) {
-				newScripts[embedded.file.fileName] = embedded.file.content;
-			}
-		}
-
-		return {
-			scriptUpdated: Object.keys(oldScripts).length !== Object.keys(newScripts).length
-				|| Object.keys(oldScripts).some(fileName => oldScripts[fileName] !== newScripts[fileName]),
-		};
 
 		function updateTemplate(block: SFCTemplateBlock | null) {
 
@@ -784,6 +769,7 @@ export function createVueFile(
 		if (!tsHost)
 			return templateScriptData;
 
+		const tsLs = getTsLs();
 		if (!tsLs)
 			return templateScriptData;
 

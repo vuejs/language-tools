@@ -154,8 +154,8 @@ export function register(context: DocumentServiceRuntimeContext) {
 		return [textEdit];
 
 		function tryUpdateVueDocument() {
-			if (vueDocument?.getDocument().getText() !== document.getText()) {
-				vueDocument?.file.update(document.getText(), document.version.toString());
+			if (vueDocument) {
+				vueDocument.file.text = document.getText();
 			}
 		}
 

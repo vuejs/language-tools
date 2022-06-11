@@ -8,27 +8,34 @@ import type { Embedded, EmbeddedFile, VueFile } from './vueFile';
 
 export interface VueFiles extends ReturnType<typeof createVueFiles> { }
 
+export interface EmbeddedLangaugeSourceFile {
+	fileName: string,
+	text: string,
+	getAllEmbeddeds(): Embedded[],
+}
+
 export function createVueFiles() {
+	return createEmbeddedLangaugeSourceFiles<VueFile>();
+}
 
-	const vueFiles = shallowReactive<Record<string, VueFile>>({});
-	const all = computed(() => Object.values(vueFiles));
-	const fileNames = computed(() => all.value.map(sourceFile => sourceFile.fileName));
+function createEmbeddedLangaugeSourceFiles<T extends EmbeddedLangaugeSourceFile>() {
+
+	const files = shallowReactive<Record<string, T>>({});
+	const arr = computed(() => Object.values(files));
+	const fileNames = computed(() => arr.value.map(sourceFile => sourceFile.fileName));
 	const embeddedDocumentsMap = computed(() => {
-
-		const map = new WeakMap<EmbeddedFile, VueFile>();
-
-		for (const sourceFile of all.value) {
-			for (const embedded of sourceFile.refs.allEmbeddeds.value) {
+		const map = new WeakMap<EmbeddedFile, T>();
+		for (const sourceFile of arr.value) {
+			for (const embedded of sourceFile.getAllEmbeddeds()) {
 				map.set(embedded.file, sourceFile);
 			}
 		}
-
 		return map;
 	});
 	const sourceMapsByFileName = computed(() => {
-		const map = new Map<string, { vueFile: VueFile, embedded: Embedded; }>();
-		for (const sourceFile of all.value) {
-			for (const embedded of sourceFile.refs.allEmbeddeds.value) {
+		const map = new Map<string, { vueFile: T, embedded: Embedded; }>();
+		for (const sourceFile of arr.value) {
+			for (const embedded of sourceFile.getAllEmbeddeds()) {
 				map.set(embedded.file.fileName.toLowerCase(), { vueFile: sourceFile, embedded });
 			}
 		}
@@ -36,10 +43,12 @@ export function createVueFiles() {
 	});
 	const teleports = computed(() => {
 		const map = new Map<string, Teleport>();
-		for (const key in vueFiles) {
-			const sourceFile = vueFiles[key]!;
-			for (const { file, teleport } of sourceFile.refs.teleports.value) {
-				map.set(file.fileName.toLowerCase(), teleport);
+		for (const key in files) {
+			const sourceFile = files[key]!;
+			for (const embedded of sourceFile.getAllEmbeddeds()) {
+				if (embedded.teleport) {
+					map.set(embedded.file.fileName.toLowerCase(), embedded.teleport);
+				}
 			}
 		}
 		return map;
@@ -47,17 +56,17 @@ export function createVueFiles() {
 	const dirs = computed(() => [...new Set(fileNames.value.map(path.dirname))]);
 
 	return {
-		get: untrack((fileName: string) => vueFiles[fileName.toLowerCase()]),
-		delete: untrack((fileName: string) => delete vueFiles[fileName.toLowerCase()]),
-		has: untrack((fileName: string) => !!vueFiles[fileName.toLowerCase()]),
-		set: untrack((fileName: string, vueFile: VueFile) => vueFiles[fileName.toLowerCase()] = vueFile),
+		get: untrack((fileName: string) => files[fileName.toLowerCase()]),
+		delete: untrack((fileName: string) => delete files[fileName.toLowerCase()]),
+		has: untrack((fileName: string) => !!files[fileName.toLowerCase()]),
+		set: untrack((fileName: string, vueFile: T) => files[fileName.toLowerCase()] = vueFile),
 
 		getFileNames: untrack(() => fileNames.value),
 		getDirs: untrack(() => dirs.value),
-		getAll: untrack(() => all.value),
+		getAll: untrack(() => arr.value),
 
 		getTeleport: untrack((fileName: string) => teleports.value.get(fileName.toLowerCase())),
-		getEmbeddeds: untrack(function* () {
+		getAllEmbeddeds: untrack(function* () {
 			for (const sourceMap of sourceMapsByFileName.value) {
 				yield sourceMap[1];
 			}

@@ -229,7 +229,7 @@ export function parseVueDocument(vueFile: VueFile) {
 	});
 
 	// reactivity
-	const document = computed(() => TextDocument.create(shared.fsPathToUri(vueFile.fileName), vueFile.fileName.endsWith('.md') ? 'markdown' : 'vue', documentVersion++, vueFile.refs.content.value));
+	const document = computed(() => TextDocument.create(shared.fsPathToUri(vueFile.fileName), vueFile.fileName.endsWith('.md') ? 'markdown' : 'vue', documentVersion++, vueFile.text));
 	const sourceMaps = computed(() => {
 		return vueFile.refs.allEmbeddeds.value.map(embedded => sourceMapsMap.get(embedded));
 	});

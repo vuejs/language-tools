@@ -218,12 +218,12 @@ export function createLanguageService(
 		getPluginById: id => allPlugins[id],
 	};
 	const _callHierarchy = callHierarchy.register(context);
-	const findReferences_internal = defineInternalApi(references.register(context));
-	const doCodeActions_internal = defineInternalApi(codeActions.register(context));
-	const doCodeActionResolve_internal = defineInternalApi(codeActionResolve.register(context));
-	const doValidation_internal = defineInternalApi(diagnostics.register(context));
-	const doRename_internal = defineInternalApi(rename.register(context));
-	const findTypeDefinition_internal = defineInternalApi(definition.register(context, 'findTypeDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions));
+	const findReferences_internal = references.register(context);
+	const doCodeActions_internal = codeActions.register(context);
+	const doCodeActionResolve_internal = codeActionResolve.register(context);
+	const doValidation_internal = diagnostics.register(context);
+	const doRename_internal = rename.register(context);
+	const findTypeDefinition_internal = definition.register(context, 'findTypeDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions);
 
 	return {
 		doValidation: defineApi(diagnostics.register(context), false),
@@ -410,24 +410,12 @@ export function createLanguageService(
 				for (const runningRequest of blockingRequests) {
 					await runningRequest;
 				}
-				tsRuntime.update();
 				const runner = target.apply(thisArg, argumentsList);
 				if (blockNewRequest && runner instanceof Promise) {
 					blockingRequests.add(runner);
 					runner.then(() => blockingRequests.delete(runner));
 				}
 				return runner;
-			}
-		};
-		return new Proxy<T>(api, handler);
-	}
-	function defineInternalApi<T extends (...args: any) => any>(
-		api: T,
-	): (...args: Parameters<T>) => Promise<ReturnType<T>> {
-		const handler = {
-			async apply(target: (...args: any) => any, thisArg: any, argumentsList: Parameters<T>) {
-				tsRuntime.update();
-				return target.apply(thisArg, argumentsList);
 			}
 		};
 		return new Proxy<T>(api, handler);

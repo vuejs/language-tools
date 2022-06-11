@@ -38,35 +38,35 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 			tsFaster.decorate(ts, tsRuntime.getTsLsHost(), tsRuntime.getTsLs());
 			const _tsPluginApis = apis.register(tsRuntime);
 			const tsPluginProxy: Partial<ts.LanguageService> = {
-				getSemanticDiagnostics: apiHook(tsRuntime.getTsLs().getSemanticDiagnostics),
-				getEncodedSemanticClassifications: apiHook(tsRuntime.getTsLs().getEncodedSemanticClassifications),
-				getCompletionsAtPosition: apiHook(_tsPluginApis.getCompletionsAtPosition),
-				getCompletionEntryDetails: apiHook(tsRuntime.getTsLs().getCompletionEntryDetails),
-				getCompletionEntrySymbol: apiHook(tsRuntime.getTsLs().getCompletionEntrySymbol),
-				getQuickInfoAtPosition: apiHook(tsRuntime.getTsLs().getQuickInfoAtPosition),
-				getSignatureHelpItems: apiHook(tsRuntime.getTsLs().getSignatureHelpItems),
-				getRenameInfo: apiHook(tsRuntime.getTsLs().getRenameInfo),
+				getSemanticDiagnostics: tsRuntime.getTsLs().getSemanticDiagnostics,
+				getEncodedSemanticClassifications: tsRuntime.getTsLs().getEncodedSemanticClassifications,
+				getCompletionsAtPosition: _tsPluginApis.getCompletionsAtPosition,
+				getCompletionEntryDetails: tsRuntime.getTsLs().getCompletionEntryDetails,
+				getCompletionEntrySymbol: tsRuntime.getTsLs().getCompletionEntrySymbol,
+				getQuickInfoAtPosition: tsRuntime.getTsLs().getQuickInfoAtPosition,
+				getSignatureHelpItems: tsRuntime.getTsLs().getSignatureHelpItems,
+				getRenameInfo: tsRuntime.getTsLs().getRenameInfo,
 
-				findRenameLocations: apiHook(_tsPluginApis.findRenameLocations),
-				getDefinitionAtPosition: apiHook(_tsPluginApis.getDefinitionAtPosition),
-				getDefinitionAndBoundSpan: apiHook(_tsPluginApis.getDefinitionAndBoundSpan),
-				getTypeDefinitionAtPosition: apiHook(_tsPluginApis.getTypeDefinitionAtPosition),
-				getImplementationAtPosition: apiHook(_tsPluginApis.getImplementationAtPosition),
-				getReferencesAtPosition: apiHook(_tsPluginApis.getReferencesAtPosition),
-				findReferences: apiHook(_tsPluginApis.findReferences),
+				findRenameLocations: _tsPluginApis.findRenameLocations,
+				getDefinitionAtPosition: _tsPluginApis.getDefinitionAtPosition,
+				getDefinitionAndBoundSpan: _tsPluginApis.getDefinitionAndBoundSpan,
+				getTypeDefinitionAtPosition: _tsPluginApis.getTypeDefinitionAtPosition,
+				getImplementationAtPosition: _tsPluginApis.getImplementationAtPosition,
+				getReferencesAtPosition: _tsPluginApis.getReferencesAtPosition,
+				findReferences: _tsPluginApis.findReferences,
 
 				// TODO: now is handled by vue server
-				// prepareCallHierarchy: apiHook(tsLanguageService.rawLs.prepareCallHierarchy, false),
-				// provideCallHierarchyIncomingCalls: apiHook(tsLanguageService.rawLs.provideCallHierarchyIncomingCalls, false),
-				// provideCallHierarchyOutgoingCalls: apiHook(tsLanguageService.rawLs.provideCallHierarchyOutgoingCalls, false),
-				// getEditsForFileRename: apiHook(tsLanguageService.rawLs.getEditsForFileRename, false),
+				// prepareCallHierarchy: tsLanguageService.rawLs.prepareCallHierarchy,
+				// provideCallHierarchyIncomingCalls: tsLanguageService.rawLs.provideCallHierarchyIncomingCalls,
+				// provideCallHierarchyOutgoingCalls: tsLanguageService.rawLs.provideCallHierarchyOutgoingCalls,
+				// getEditsForFileRename: tsLanguageService.rawLs.getEditsForFileRename,
 
 				// TODO
-				// getCodeFixesAtPosition: apiHook(tsLanguageService.rawLs.getCodeFixesAtPosition, false),
-				// getCombinedCodeFix: apiHook(tsLanguageService.rawLs.getCombinedCodeFix, false),
-				// applyCodeActionCommand: apiHook(tsLanguageService.rawLs.applyCodeActionCommand, false),
-				// getApplicableRefactors: apiHook(tsLanguageService.rawLs.getApplicableRefactors, false),
-				// getEditsForRefactor: apiHook(tsLanguageService.rawLs.getEditsForRefactor, false),
+				// getCodeFixesAtPosition: tsLanguageService.rawLs.getCodeFixesAtPosition,
+				// getCombinedCodeFix: tsLanguageService.rawLs.getCombinedCodeFix,
+				// applyCodeActionCommand: tsLanguageService.rawLs.applyCodeActionCommand,
+				// getApplicableRefactors: tsLanguageService.rawLs.getApplicableRefactors,
+				// getEditsForRefactor: tsLanguageService.rawLs.getEditsForRefactor,
 			};
 
 			vueFilesGetter.set(info.project, proxyHost.getVueFiles);
@@ -76,18 +76,6 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 					return tsPluginProxy[property] || target[property];
 				},
 			});
-
-			function apiHook<T extends (...args: any) => any>(
-				api: T,
-			) {
-				const handler = {
-					apply(target: (...args: any) => any, thisArg: any, argumentsList: Parameters<T>) {
-						tsRuntime.update();
-						return target.apply(thisArg, argumentsList);
-					}
-				};
-				return new Proxy<T>(api, handler);
-			}
 		},
 		getExternalFiles(project) {
 			const getVueFiles = vueFilesGetter.get(project);

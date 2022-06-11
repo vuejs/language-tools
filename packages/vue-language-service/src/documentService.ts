@@ -123,9 +123,7 @@ export function getDocumentService(
 
 		if (vueDoc) {
 
-			if (vueDoc.file.getVersion() !== document.version.toString()) {
-				vueDoc.file.update(document.getText(), document.version.toString());
-			}
+			vueDoc.file.text = document.getText();
 
 			return vueDoc;
 		}
@@ -133,10 +131,9 @@ export function getDocumentService(
 		const vueFile = vueTs.createVueFile(
 			shared.uriToFsPath(document.uri),
 			document.getText(),
-			document.version.toString(),
 			{},
 			context.typescript,
-			undefined,
+			() => undefined,
 			undefined,
 		);
 		vueDoc = parseVueDocument(vueFile);
