@@ -328,7 +328,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			item.detail = `Auto import from '${importPath}'\n\n${rPath}`;
 		}
 		if (descriptor.scriptSetup) {
-			const startTagEnd = compiledVue.mapping({ start: descriptor.scriptSetup.startTagEnd, end: descriptor.scriptSetup.startTagEnd })?.start;
+			const startTagEnd = compiledVue.getSourceRange(descriptor.scriptSetup.startTagEnd)?.[0].start;
 			if (startTagEnd !== undefined) {
 				const editPosition = textDoc.positionAt(startTagEnd + (scriptSetupImport ? scriptSetupImport.end : 0));
 				autoImportPositions.add(editPosition);
@@ -341,7 +341,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			}
 		}
 		else if (descriptor.script && scriptAst) {
-			const startTagEnd = compiledVue.mapping({ start: descriptor.script.startTagEnd, end: descriptor.script.startTagEnd })?.start;
+			const startTagEnd = compiledVue.getSourceRange(descriptor.script.startTagEnd)?.[0].start;
 			if (startTagEnd !== undefined) {
 				const editPosition = textDoc.positionAt(startTagEnd + (scriptImport ? scriptImport.end : 0));
 				autoImportPositions.add(editPosition);

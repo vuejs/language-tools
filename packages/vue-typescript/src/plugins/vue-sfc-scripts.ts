@@ -1,7 +1,5 @@
-import { VueLanguagePlugin } from '../vueFile';
 import * as SourceMaps from '@volar/source-map';
-import { Embedded, EmbeddedFile } from '../vueFile';
-import { EmbeddedFileSourceMap } from '../utils/sourceMaps';
+import { EmbeddedFile, VueLanguagePlugin } from '../vueFile';
 
 export default function (): VueLanguagePlugin {
 
@@ -29,10 +27,10 @@ export default function (): VueLanguagePlugin {
 					inlayHints: false,
 				},
 				isTsHostFile: false,
+				mappings: [],
 			};
-			const sourceMap = new EmbeddedFileSourceMap();
 
-			sourceMap.mappings.push({
+			file.mappings.push({
 				data: {
 					vueTag: script.tag,
 					capabilities: {},
@@ -48,12 +46,7 @@ export default function (): VueLanguagePlugin {
 				},
 			});
 
-			const embedded: Embedded = {
-				file,
-				sourceMap,
-			};
-
-			return embedded;
+			return file;
 		},
 	};
 }

@@ -1,6 +1,6 @@
-import { VueLanguagePlugin } from '../vueFile';
-import { SourceMapBase, Mode } from '@volar/source-map';
 import { CodeGen } from '@volar/code-gen';
+import { Mode } from '@volar/source-map';
+import { VueLanguagePlugin } from '../vueFile';
 
 export default function (): VueLanguagePlugin {
 
@@ -24,15 +24,7 @@ export default function (): VueLanguagePlugin {
 				for (const match of content.matchAll(sfcBlockReg)) {
 					if (match.index !== undefined) {
 						const matchText = match[0];
-						codeGen.addCode(
-							matchText,
-							{
-								start: match.index,
-								end: match.index + matchText.length,
-							},
-							Mode.Offset,
-							undefined,
-						);
+						codeGen.addCode2(matchText, match.index, undefined);
 						codeGen.addText('\n\n');
 						content = content.substring(0, match.index) + ' '.repeat(matchText.length) + content.substring(match.index + matchText.length);
 					}
@@ -56,12 +48,13 @@ export default function (): VueLanguagePlugin {
 				);
 				codeGen.addText('\n</template>');
 
-				const sourceMap = new SourceMapBase(codeGen.getMappings());
-
 				return {
 					vue: codeGen.getText(),
-					mapping: vueRange => sourceMap.getSourceRange(vueRange.start, vueRange.end)?.[0],
-					sourceMap, // for create virtual embedded vue file
+					mappings: codeGen.getMappings().map(mapping => ({
+						fileOffset: mapping.sourceRange.start,
+						vueOffset: mapping.mappedRange.start,
+						length: mapping.mappedRange.end - mapping.mappedRange.start,
+					})),
 				};
 			};
 		}

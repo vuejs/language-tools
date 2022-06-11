@@ -52,7 +52,7 @@ export default function (options: {
 					const compiledVue = vueDocument.file.getCompiledVue()!;
 
 					if (descriptor.scriptSetup && ranges) {
-						const startTagEnd = compiledVue.mapping({ start: descriptor.scriptSetup.startTagEnd, end: descriptor.scriptSetup.startTagEnd })?.start;
+						const startTagEnd = compiledVue.getSourceRange(descriptor.scriptSetup.startTagEnd)?.[0].start;
 						if (startTagEnd) {
 							result.push({
 								range: {
@@ -140,7 +140,7 @@ async function useRefSugar(
 	) {
 
 		const compiledVue = _vueDocument.file.getCompiledVue()!;
-		const startTagEnd = compiledVue.mapping({ start: _scriptSetup.startTagEnd, end: _scriptSetup.startTagEnd })?.start;
+		const startTagEnd = compiledVue.getSourceRange(_scriptSetup.startTagEnd)?.[0].start;
 
 		if (startTagEnd === undefined)
 			return;
@@ -319,7 +319,7 @@ async function unuseRefSugar(
 	) {
 
 		const compiledVue = _vueDocument.file.getCompiledVue()!;
-		const startTagEnd = compiledVue.mapping({ start: _scriptSetup.startTagEnd, end: _scriptSetup.startTagEnd })?.start;
+		const startTagEnd = compiledVue.getSourceRange(_scriptSetup.startTagEnd)?.[0].start;
 
 		if (startTagEnd === undefined)
 			return;

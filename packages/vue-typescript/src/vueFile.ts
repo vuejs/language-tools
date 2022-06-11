@@ -1,4 +1,4 @@
-import { compileSFCTemplate, EmbeddedFileMappingData, TextRange } from '@volar/vue-code-gen';
+import { compileSFCTemplate, EmbeddedFileMappingData, TeleportMappingData, TextRange } from '@volar/vue-code-gen';
 import { parseRefSugarCallRanges, parseRefSugarDeclarationRanges } from '@volar/vue-code-gen/out/parsers/refSugarRanges';
 import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
 import { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
@@ -30,8 +30,11 @@ export interface VueLanguagePlugin {
 
 	compileFileToVue?(fileName: string, content: string): {
 		vue: string,
-		mapping(vueRange: { start: number, end: number; }): { start: number, end: number; } | undefined,
-		sourceMap?: SourceMapBase,
+		mappings: {
+			fileOffset: number,
+			vueOffset: number,
+			length: number,
+		}[],
 	} | undefined;
 
 	compileTemplateToHtml?(lang: string, tmplate: string): {
@@ -43,7 +46,7 @@ export interface VueLanguagePlugin {
 
 	getEmbeddedFilesCount?(sfc: Sfc): number;
 
-	getEmbeddedFile?(fileName: string, sfc: Sfc, i: number): Embedded | undefined;
+	getEmbeddedFile?(fileName: string, sfc: Sfc, i: number): EmbeddedFile | undefined;
 }
 
 export interface VueFile extends ReturnType<typeof createVueFile> { }
@@ -55,10 +58,9 @@ export interface EmbeddedStructure {
 }
 
 export interface Embedded {
-	parentFileName?: string,
 	file: EmbeddedFile,
 	sourceMap: EmbeddedFileSourceMap,
-	teleport?: Teleport,
+	teleport: Teleport | undefined,
 }
 
 export interface SfcBlock {
@@ -87,6 +89,7 @@ export interface Sfc {
 }
 
 export interface EmbeddedFile {
+	parentFileName?: string,
 	fileName: string,
 	content: string,
 	isTsHostFile: boolean,
@@ -98,6 +101,8 @@ export interface EmbeddedFile {
 		codeActions: boolean,
 		inlayHints: boolean,
 	},
+	mappings: Mapping<EmbeddedFileMappingData>[],
+	teleportMappings?: Mapping<TeleportMappingData>[],
 };
 
 export function createVueFile(
@@ -137,7 +142,7 @@ export function createVueFile(
 		// given dummy result to avoid language server throw
 		return {
 			vue: '<template></template>',
-			mapping: vueRange => vueRange,
+			mappings: [],
 		};
 	});
 	const vueContent = computed(() => compiledVue.value?.vue);
@@ -261,6 +266,20 @@ export function createVueFile(
 	];
 
 	// computeds
+	const file2VueSourceMap = computed(() => {
+		return new SourceMapBase((compiledVue.value?.mappings ?? []).map(mapping => ({
+			data: undefined,
+			mode: Mode.Offset,
+			sourceRange: {
+				start: mapping.fileOffset,
+				end: mapping.fileOffset + mapping.length,
+			},
+			mappedRange: {
+				start: mapping.vueOffset,
+				end: mapping.vueOffset + mapping.length,
+			},
+		})));
+	});
 	const pluginEmbeddeds = plugins.map(plugin => {
 		if (plugin.getEmbeddedFilesCount && plugin.getEmbeddedFile) {
 			const embeddedsCount = computed(() => plugin.getEmbeddedFilesCount!(sfc));
@@ -274,18 +293,18 @@ export function createVueFile(
 						if (!raw.value)
 							return;
 
-						const sourceMap = raw.value.sourceMap;
-						const newMappings: typeof sourceMap.mappings = [];
-						for (const mapping of sourceMap.mappings) {
+						const newMappings: typeof raw.value.mappings = [];
+
+						for (const mapping of raw.value.mappings) {
 							const vueRange = embeddedRangeToVueRange(mapping.data, mapping.sourceRange);
-							const fileRange = compiledVue.value!.mapping(vueRange);
+							const fileRange = file2VueSourceMap.value.getSourceRange(vueRange.start, vueRange.end)?.[0];
 							if (fileRange) {
 								let additional: MappingBase[] | undefined;
 								if (mapping.additional) {
 									additional = [];
 									for (const add of mapping.additional) {
 										const addVueRange = embeddedRangeToVueRange(mapping.data, add.sourceRange);
-										const addFileRange = compiledVue.value!.mapping(addVueRange);
+										const addFileRange = file2VueSourceMap.value.getSourceRange(addVueRange.start, addVueRange.end)?.[0];
 										if (addFileRange) {
 											additional.push({
 												...add,
@@ -300,15 +319,22 @@ export function createVueFile(
 									additional,
 								});
 							}
-							else if (compiledVue.value?.sourceMap && mapping.mode === Mode.Offset) {
+							else if (compiledVue.value) {
 								// fix markdown template mapping failed
-								const inRangeMappings = compiledVue.value.sourceMap.mappings.filter(mapping => mapping.mappedRange.start >= vueRange.start && mapping.mappedRange.end <= vueRange.end);
+								const inRangeMappings = compiledVue.value.mappings.filter(mapping => mapping.vueOffset >= vueRange.start && (mapping.vueOffset + mapping.length) <= vueRange.end);
 								for (const inRangeMapping of inRangeMappings) {
-									const _vueRange = inRangeMapping.mappedRange;
+									const _vueRange = {
+										start: inRangeMapping.vueOffset,
+										end: inRangeMapping.vueOffset + inRangeMapping.length,
+									};
+									const _fileRange = {
+										start: inRangeMapping.fileOffset,
+										end: inRangeMapping.fileOffset + inRangeMapping.length,
+									};
 									const embedded = vueRangeToEmbeddedRange(mapping.data, _vueRange);
 									newMappings.push({
 										...mapping,
-										sourceRange: inRangeMapping.sourceRange, // file range
+										sourceRange: _fileRange, // file range
 										mappedRange: embedded,
 									});
 								}
@@ -316,8 +342,9 @@ export function createVueFile(
 						}
 						const newSourceMap = new EmbeddedFileSourceMap(newMappings);
 						const newEmbedded: Embedded = {
-							...raw.value,
+							file: raw.value,
 							sourceMap: newSourceMap,
+							teleport: new Teleport(raw.value.teleportMappings),
 						};
 						return newEmbedded;
 					});
@@ -329,11 +356,20 @@ export function createVueFile(
 		}
 	}).filter(notEmpty);
 	const embeddedVue = computed(() => {
-		if (!fileName.endsWith('.vue') && compiledVue.value?.sourceMap) {
-			const newSourceMap = new EmbeddedFileSourceMap();
-			for (const mapping of compiledVue.value.sourceMap.mappings) {
-				newSourceMap.mappings.push({
-					...mapping,
+		if (!fileName.endsWith('.vue') && compiledVue.value) {
+			const embeddedFile: EmbeddedFile = {
+				fileName: fileName + '.vue',
+				content: compiledVue.value.vue,
+				capabilities: {
+					diagnostics: true,
+					foldingRanges: false,
+					formatting: false,
+					documentSymbol: false,
+					codeActions: true,
+					inlayHints: true,
+				},
+				isTsHostFile: false,
+				mappings: compiledVue.value.mappings.map(mapping => ({
 					data: {
 						vueTag: undefined,
 						capabilities: {
@@ -348,24 +384,21 @@ export function createVueFile(
 							displayWithLink: false,
 						},
 					},
-				});
-			}
-			const embeddedFile: EmbeddedFile = {
-				fileName: fileName + '.vue',
-				content: compiledVue.value.vue,
-				capabilities: {
-					diagnostics: true,
-					foldingRanges: false,
-					formatting: false,
-					documentSymbol: false,
-					codeActions: true,
-					inlayHints: true,
-				},
-				isTsHostFile: false,
+					mode: Mode.Offset,
+					sourceRange: {
+						start: mapping.fileOffset,
+						end: mapping.fileOffset + mapping.length,
+					},
+					mappedRange: {
+						start: mapping.vueOffset,
+						end: mapping.vueOffset + mapping.length,
+					},
+				})),
 			};
 			const embedded: Embedded = {
 				file: embeddedFile,
-				sourceMap: newSourceMap,
+				sourceMap: new EmbeddedFileSourceMap(embeddedFile.mappings),
+				teleport: undefined,
 			};
 			return embedded;
 		}
@@ -382,10 +415,13 @@ export function createVueFile(
 		for (const getEmbeddeds of pluginEmbeddeds) {
 			for (const embedded of getEmbeddeds.value) {
 				if (embedded.value) {
-					if (embeddedVue.value && !embedded.value.parentFileName) {
+					if (embeddedVue.value && !embedded.value.file.parentFileName) {
 						all.push({
 							...embedded.value,
-							parentFileName: embeddedVue.value.file.fileName,
+							file: {
+								...embedded.value.file,
+								parentFileName: embeddedVue.value.file.fileName,
+							},
 						});
 					}
 					else {
@@ -441,7 +477,7 @@ export function createVueFile(
 		function consumeRemain() {
 			for (let i = remain.length - 1; i >= 0; i--) {
 				const embedded = remain[i];
-				if (!embedded.parentFileName) {
+				if (!embedded.file.parentFileName) {
 					embeddeds.push({
 						self: embedded,
 						embeddeds: [],
@@ -449,7 +485,7 @@ export function createVueFile(
 					remain.splice(i, 1);
 				}
 				else {
-					const parent = findParentStructure(embedded.parentFileName, embeddeds);
+					const parent = findParentStructure(embedded.file.parentFileName, embeddeds);
 					if (parent) {
 						parent.embeddeds.push({
 							self: embedded,
@@ -479,7 +515,7 @@ export function createVueFile(
 	return {
 		fileName,
 		getContent: untrack(() => fileContent.value),
-		getCompiledVue: untrack(() => compiledVue.value),
+		getCompiledVue: untrack(() => file2VueSourceMap.value),
 		getSfcTemplateLanguageCompiled: untrack(() => computedHtmlTemplate.value),
 		getSfcVueTemplateCompiled: untrack(() => templateAstCompiled.value),
 		getVersion: untrack(() => version.value),

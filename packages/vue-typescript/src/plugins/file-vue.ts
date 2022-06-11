@@ -10,7 +10,11 @@ export default function (): VueLanguagePlugin {
 
 				return {
 					vue: content,
-					mapping: vueRange => vueRange,
+					mappings: [{
+						fileOffset: 0,
+						vueOffset: 0,
+						length: content.length,
+					}],
 				}
 			}
 		}

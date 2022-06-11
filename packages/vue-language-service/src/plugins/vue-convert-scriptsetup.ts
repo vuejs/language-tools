@@ -41,7 +41,7 @@ export default function (options: {
 					const compiledVue = vueDocument.file.getCompiledVue()!;
 
 					if (descriptor.scriptSetup) {
-						const startTagEnd = compiledVue.mapping({ start: descriptor.scriptSetup.startTagEnd, end: descriptor.scriptSetup.startTagEnd })?.start;
+						const startTagEnd = compiledVue.getSourceRange(descriptor.scriptSetup.startTagEnd)?.[0].start;
 						if (startTagEnd) {
 							result.push({
 								range: {
@@ -57,7 +57,7 @@ export default function (options: {
 						}
 					}
 					else if (descriptor.script) {
-						const startTagEnd = compiledVue.mapping({ start: descriptor.script.startTagEnd, end: descriptor.script.startTagEnd })?.start;
+						const startTagEnd = compiledVue.getSourceRange(descriptor.script.startTagEnd)?.[0].start;
 						if (startTagEnd) {
 							result.push({
 								range: {
@@ -149,7 +149,7 @@ async function useSetupSugar(
 		const ranges = parseUseScriptSetupRanges(ts, _scriptAst);
 		const document = _vueDocument.getDocument();
 		const compiledVue = _vueDocument.file.getCompiledVue()!;
-		const startTagEnd = compiledVue.mapping({ start: _script.startTagEnd, end: _script.startTagEnd })?.start;
+		const startTagEnd = compiledVue.getSourceRange(_script.startTagEnd)?.[0].start;
 
 		if (startTagEnd === undefined)
 			return;
@@ -349,7 +349,7 @@ async function unuseSetupSugar(
 		const ranges = parseUnuseScriptSetupRanges(ts, _scriptSetupAst);
 		const scriptRanges = _scriptAst ? parseUseScriptSetupRanges(ts, _scriptAst) : undefined;
 		const compiledVue = _vueDocument.file.getCompiledVue()!;
-		const startTagEnd = compiledVue.mapping({ start: _scriptSetup.startTagEnd, end: _scriptSetup.startTagEnd })?.start;
+		const startTagEnd = compiledVue.getSourceRange(_scriptSetup.startTagEnd)?.[0].start;
 
 		if (startTagEnd === undefined)
 			return;

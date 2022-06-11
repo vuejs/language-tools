@@ -1,12 +1,10 @@
-import { Embedded, EmbeddedFile } from '../vueFile';
 import { generate as genScript } from '@volar/vue-code-gen/out/generators/script';
 import type * as templateGen from '@volar/vue-code-gen/out/generators/template';
 import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
 import { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { Ref } from '@vue/reactivity';
 import { VueCompilerOptions } from '../types';
-import { VueLanguagePlugin } from '../vueFile';
-import { EmbeddedFileSourceMap, Teleport } from '../utils/sourceMaps';
+import { EmbeddedFile, VueLanguagePlugin } from '../vueFile';
 
 export default function (
 	lang: Ref<string>,
@@ -64,6 +62,8 @@ export default function (
 						inlayHints: !sfc.script?.src,
 					},
 					isTsHostFile: true,
+					mappings: codeGen.codeGen.getMappings(),
+					teleportMappings: codeGen.teleports,
 				};
 			}
 			else if (sfc.script || sfc.scriptSetup) {
@@ -79,19 +79,12 @@ export default function (
 						inlayHints: false,
 					},
 					isTsHostFile: true,
+					mappings: codeGen.codeGen.getMappings(),
+					teleportMappings: codeGen.teleports,
 				};
 			}
 
-			if (!file)
-				return;
-
-			const embedded: Embedded = {
-				file,
-				sourceMap: new EmbeddedFileSourceMap(codeGen.codeGen.getMappings()),
-				teleport: new Teleport(codeGen.teleports),
-			};
-
-			return embedded;
+			return file;
 		},
 	};
 }

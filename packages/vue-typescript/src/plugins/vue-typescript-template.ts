@@ -1,16 +1,14 @@
 import { CodeGen, mergeCodeGen } from '@volar/code-gen';
 import * as SourceMaps from '@volar/source-map';
 import { EmbeddedFileMappingData, getSlotsPropertyName, getVueLibraryName, TextRange } from '@volar/vue-code-gen';
+import * as templateGen from '@volar/vue-code-gen/out/generators/template';
 import type { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { walkInterpolationFragment } from '@volar/vue-code-gen/out/transform';
-import { useCssModuleClasses, useCssScopedClasses, useCssVars } from '../vueFile';
 import { ComputedRef } from '@vue/reactivity';
 import * as path from 'path';
 import { VueCompilerOptions } from '../types';
-import { EmbeddedFileSourceMap } from '../utils/sourceMaps';
 import { SearchTexts } from '../utils/string';
-import { Embedded, EmbeddedFile, VueLanguagePlugin } from '../vueFile';
-import * as templateGen from '@volar/vue-code-gen/out/generators/template';
+import { EmbeddedFile, useCssModuleClasses, useCssScopedClasses, useCssVars, VueLanguagePlugin } from '../vueFile';
 
 export default function (
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -122,6 +120,7 @@ export default function (
 
 				const lang = scriptLang.value === 'js' ? 'jsx' : scriptLang.value === 'ts' ? 'tsx' : scriptLang.value;
 				const embeddedFile: EmbeddedFile = {
+					parentFileName: fileName + '.' + sfc.template?.lang,
 					fileName: fileName + '.__VLS_template.' + lang,
 					content: tsxCodeGen.getText(),
 					capabilities: {
@@ -133,16 +132,10 @@ export default function (
 						inlayHints: true,
 					},
 					isTsHostFile: true,
+					mappings: tsxCodeGen.getMappings(),
 				};
 
-				const sourceMap = new SourceMaps.SourceMapBase<EmbeddedFileMappingData>(tsxCodeGen.getMappings());
-				const embedded: Embedded = {
-					parentFileName: fileName + '.' + sfc.template?.lang,
-					file: embeddedFile,
-					sourceMap,
-				};
-
-				return embedded;
+				return embeddedFile;
 
 				function writeImportTypes() {
 
@@ -257,6 +250,7 @@ export default function (
 
 				const lang = scriptLang.value === 'js' ? 'jsx' : scriptLang.value === 'ts' ? 'tsx' : scriptLang.value;
 				const embeddedFile: EmbeddedFile = {
+					parentFileName: fileName + '.' + sfc.template?.lang,
 					fileName: fileName + '.__VLS_template.format.' + lang,
 					content: templateCodeGens.value.formatCodeGen.getText(),
 					capabilities: {
@@ -268,18 +262,15 @@ export default function (
 						inlayHints: false,
 					},
 					isTsHostFile: false,
+					mappings: templateCodeGens.value.formatCodeGen.getMappings(),
 				};
-				const sourceMap = new EmbeddedFileSourceMap(templateCodeGens.value.formatCodeGen.getMappings());
 
-				return {
-					parentFileName: fileName + '.' + sfc.template?.lang,
-					file: embeddedFile,
-					sourceMap,
-				};
+				return embeddedFile;
 			}
 			else if (i === 2 && templateCodeGens.value) {
 
 				const file: EmbeddedFile = {
+					parentFileName: fileName + '.' + sfc.template?.lang,
 					fileName: fileName + '.template.css',
 					content: templateCodeGens.value.cssCodeGen.getText(),
 					capabilities: {
@@ -291,14 +282,10 @@ export default function (
 						inlayHints: false,
 					},
 					isTsHostFile: false,
+					mappings: templateCodeGens.value.cssCodeGen.getMappings(),
 				};
-				const sourceMap = new EmbeddedFileSourceMap(templateCodeGens.value.cssCodeGen.getMappings());
 
-				return {
-					parentFileName: fileName + '.' + sfc.template?.lang,
-					file,
-					sourceMap,
-				};
+				return file;
 			}
 		},
 	};
