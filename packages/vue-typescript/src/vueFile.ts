@@ -54,7 +54,6 @@ export interface VueFile extends ReturnType<typeof createVueFile> { }
 export interface EmbeddedStructure {
 	self: Embedded | undefined,
 	embeddeds: EmbeddedStructure[],
-	inheritParentIndent?: boolean,
 }
 
 export interface Embedded {
@@ -489,7 +488,6 @@ export function createVueFile(
 					if (parent) {
 						parent.embeddeds.push({
 							self: embedded,
-							inheritParentIndent: true,
 							embeddeds: [],
 						});
 						remain.splice(i, 1);

@@ -97,10 +97,9 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 					if (embeddedRange) {
 
-						if (embedded.inheritParentIndent)
-							toPatchIndent = {
-								sourceMapEmbeddedDocumentUri: sourceMap.mappedDocument.uri,
-							};
+						toPatchIndent = {
+							sourceMapEmbeddedDocumentUri: sourceMap.mappedDocument.uri,
+						};
 
 						_edits = await tryFormat(sourceMap.mappedDocument, embeddedRange);
 					}
