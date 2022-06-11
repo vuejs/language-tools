@@ -1,6 +1,6 @@
 import { CodeGen } from '@volar/code-gen';
 import { Mode } from '@volar/source-map';
-import { VueLanguagePlugin } from '../vueFile';
+import { VueLanguagePlugin } from '../sourceFile';
 
 export default function (): VueLanguagePlugin {
 

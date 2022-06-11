@@ -2,7 +2,7 @@ import * as shared from '@volar/shared';
 import * as tsFaster from '@volar/typescript-faster';
 import * as ts2 from '@volar/typescript-language-service';
 import { ConfigurationHost, EmbeddedLanguageServicePlugin, setCurrentConfigurationHost } from '@volar/vue-language-service-types';
-import { createTypeScriptRuntime } from '@volar/vue-typescript';
+import * as vueTs from '@volar/vue-typescript';
 import { isGloballyWhitelisted } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as upath from 'upath';
@@ -49,7 +49,7 @@ import useScriptSetupConversionsPlugin from './plugins/vue-convert-scriptsetup';
 import useTagNameCasingConversionsPlugin from './plugins/vue-convert-tagcasing';
 import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemanticTokenTypes } from './plugins/vue-template';
 import { getTsSettings } from './tsConfigs';
-import { LanguageServiceHost, LanguageServiceRuntimeContext } from './types';
+import { LanguageServiceRuntimeContext } from './types';
 import { parseVueDocuments } from './vueDocuments';
 // import * as d3 from './ideFeatures/d3';
 
@@ -72,7 +72,7 @@ export function getSemanticTokenLegend() {
 
 export function createLanguageService(
 	{ typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary'); },
-	vueLsHost: LanguageServiceHost,
+	vueLsHost: vueTs.LanguageServiceHost,
 	fileSystemProvider: html.FileSystemProvider | undefined,
 	schemaRequestService: json.SchemaRequestService | undefined,
 	configurationHost: ConfigurationHost | undefined,
@@ -85,15 +85,11 @@ export function createLanguageService(
 
 	setCurrentConfigurationHost(configurationHost); // TODO
 
-	const tsRuntime = createTypeScriptRuntime({
-		typescript: ts,
-		vueLsHost: vueLsHost,
-		isTsPlugin: false,
-	});
-	tsFaster.decorate(ts, tsRuntime.getTsLsHost(), tsRuntime.getTsLs());
+	const vueLsCtx = vueTs.createLanguageServiceContext(ts, vueLsHost);
+	tsFaster.decorate(ts, vueLsCtx.typescriptLanguageServiceHost, vueLsCtx.typescriptLanguageService);
 	const tsSettings = getTsSettings(configurationHost);
-	const tsLs = ts2.createLanguageService(ts, tsRuntime.getTsLsHost(), tsRuntime.getTsLs(), tsSettings);
-	const vueDocuments = parseVueDocuments(tsRuntime.vueFiles, tsLs);
+	const tsLs = ts2.createLanguageService(ts, vueLsCtx.typescriptLanguageServiceHost, vueLsCtx.typescriptLanguageService, tsSettings);
+	const vueDocuments = parseVueDocuments(vueLsCtx, tsLs);
 	const documentContext = getDocumentContext();
 
 	const blockingRequests = new Set<Promise<any>>();
@@ -256,11 +252,11 @@ export function createLanguageService(
 			getOutgoingCalls: defineApi(_callHierarchy.getOutgoingCalls),
 		},
 		dispose: () => {
-			tsRuntime.dispose();
+			vueLsCtx.typescriptLanguageService.dispose();
 		},
 
 		__internal__: {
-			tsRuntime,
+			vueRuntimeContext: vueLsCtx,
 			rootPath: vueLsHost.getCurrentDirectory(),
 			context,
 			getContext: defineApi(() => context),
@@ -363,7 +359,6 @@ export function createLanguageService(
 			vueLsHost,
 			vueDocuments,
 			tsSettings,
-			tsRuntime,
 		});
 	}
 	function useTsPlugins(tsLs: ts2.LanguageService, isTemplatePlugin: boolean, getBaseCompletionOptions: (uri: string) => ts.GetCompletionsAtPositionOptions) {

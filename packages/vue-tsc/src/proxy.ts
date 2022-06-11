@@ -1,8 +1,7 @@
 import * as ts from 'typescript/lib/tsserverlibrary';
 import * as vue from '@volar/vue-typescript';
 import * as apis from './apis';
-import { createTypeScriptRuntime, TypeScriptRuntime } from '@volar/vue-typescript';
-import { tsShared } from '@volar/vue-typescript';
+import * as vueTs from '@volar/vue-typescript';
 
 let projectVersion = 0;
 
@@ -49,25 +48,24 @@ export function createProgramProxy(
 			return projectVersion.toString();
 		},
 		getProjectReferences: () => options.projectReferences,
+
+		isTsc: true,
 	};
 
-	const tsRuntime: TypeScriptRuntime = (options.oldProgram as any)?.__VLS_tsRuntime ?? createTypeScriptRuntime({
-		typescript: ts,
-		vueLsHost: vueLsHost,
-		isVueTsc: true,
-	});
+	const vueLsCtx: vueTs.LanguageServiceContext = (options.oldProgram as any)?.__VLS_vueCtx
+		?? vueTs.createLanguageServiceContext(ts, vueLsHost);
 
-	const proxyApis = apis.register(ts, tsRuntime, vueLsHost);
+	const proxyApis = apis.register(ts, vueLsCtx);
 	const program = new Proxy<ts.Program>({} as ts.Program, {
 		get: (_, property: keyof ts.Program) => {
 			if (property in proxyApis) {
 				return proxyApis[property as keyof typeof proxyApis];
 			}
-			return tsRuntime.getTsLs().getProgram()![property];
+			return vueLsCtx.typescriptLanguageService.getProgram()![property];
 		},
 	});
 
-	(program as any).__VLS_tsRuntime = tsRuntime;
+	(program as any).__VLS_vueCtx = vueLsCtx;
 
 	for (const rootName of options.rootNames) {
 		// register file watchers
@@ -79,7 +77,7 @@ export function createProgramProxy(
 	function getVueCompilerOptions(): vue.VueCompilerOptions {
 		const tsConfig = options.options.configFilePath;
 		if (typeof tsConfig === 'string') {
-			return tsShared.createParsedCommandLine(ts, ts.sys, tsConfig).vueOptions;
+			return vueTs.tsShared.createParsedCommandLine(ts, ts.sys, tsConfig).vueOptions;
 		}
 		return {};
 	}

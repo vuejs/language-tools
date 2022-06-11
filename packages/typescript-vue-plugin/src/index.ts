@@ -1,5 +1,5 @@
 import * as tsFaster from '@volar/typescript-faster';
-import * as vue from '@volar/vue-typescript';
+import * as vueTs from '@volar/vue-typescript';
 import { tsShared } from '@volar/vue-typescript';
 import * as path from 'path';
 import * as apis from './apis';
@@ -30,22 +30,19 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 				}
 			};
 
-			const tsRuntime = vue.createTypeScriptRuntime({
-				typescript: ts,
-				vueLsHost: proxyHost.host,
-				isTsPlugin: true
-			});
-			tsFaster.decorate(ts, tsRuntime.getTsLsHost(), tsRuntime.getTsLs());
-			const _tsPluginApis = apis.register(tsRuntime);
+			const vueLsCtx = vueTs.createLanguageServiceContext(ts, proxyHost.host);
+			tsFaster.decorate(ts, vueLsCtx.typescriptLanguageServiceHost, vueLsCtx.typescriptLanguageService);
+
+			const _tsPluginApis = apis.register(vueLsCtx, vueLsCtx.typescriptLanguageService);
 			const tsPluginProxy: Partial<ts.LanguageService> = {
-				getSemanticDiagnostics: tsRuntime.getTsLs().getSemanticDiagnostics,
-				getEncodedSemanticClassifications: tsRuntime.getTsLs().getEncodedSemanticClassifications,
+				getSemanticDiagnostics: vueLsCtx.typescriptLanguageService.getSemanticDiagnostics,
+				getEncodedSemanticClassifications: vueLsCtx.typescriptLanguageService.getEncodedSemanticClassifications,
 				getCompletionsAtPosition: _tsPluginApis.getCompletionsAtPosition,
-				getCompletionEntryDetails: tsRuntime.getTsLs().getCompletionEntryDetails,
-				getCompletionEntrySymbol: tsRuntime.getTsLs().getCompletionEntrySymbol,
-				getQuickInfoAtPosition: tsRuntime.getTsLs().getQuickInfoAtPosition,
-				getSignatureHelpItems: tsRuntime.getTsLs().getSignatureHelpItems,
-				getRenameInfo: tsRuntime.getTsLs().getRenameInfo,
+				getCompletionEntryDetails: vueLsCtx.typescriptLanguageService.getCompletionEntryDetails,
+				getCompletionEntrySymbol: vueLsCtx.typescriptLanguageService.getCompletionEntrySymbol,
+				getQuickInfoAtPosition: vueLsCtx.typescriptLanguageService.getQuickInfoAtPosition,
+				getSignatureHelpItems: vueLsCtx.typescriptLanguageService.getSignatureHelpItems,
+				getRenameInfo: vueLsCtx.typescriptLanguageService.getRenameInfo,
 
 				findRenameLocations: _tsPluginApis.findRenameLocations,
 				getDefinitionAtPosition: _tsPluginApis.getDefinitionAtPosition,
@@ -103,7 +100,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		snapshots: ts.IScriptSnapshot | undefined,
 		snapshotsVersion: string | undefined,
 	}>();
-	const host: vue.LanguageServiceHost = {
+	const host: vueTs.LanguageServiceHost = {
 		getNewLine: () => info.project.getNewLine(),
 		useCaseSensitiveFileNames: () => info.project.useCaseSensitiveFileNames(),
 		readFile: path => info.project.readFile(path),
@@ -124,6 +121,8 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		getScriptFileNames,
 		getScriptVersion,
 		getScriptSnapshot,
+
+		isTsPlugin: true,
 	};
 
 	update();

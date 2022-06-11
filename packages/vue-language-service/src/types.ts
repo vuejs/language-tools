@@ -3,8 +3,6 @@ import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { VueDocument, VueDocuments } from './vueDocuments';
 
-export { LanguageServiceHost } from '@volar/vue-typescript';
-
 export type DocumentServiceRuntimeContext = {
 	typescript: typeof import('typescript/lib/tsserverlibrary'),
 	getVueDocument(document: TextDocument): VueDocument | undefined,

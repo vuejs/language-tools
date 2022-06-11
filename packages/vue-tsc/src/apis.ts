@@ -1,10 +1,9 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import type { TypeScriptRuntime, LanguageServiceHost } from '@volar/vue-typescript';
+import type * as vueTs from '@volar/vue-typescript';
 
 export function register(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	context: TypeScriptRuntime,
-	vueLsHost: LanguageServiceHost,
+	vueLsCtx: vueTs.LanguageServiceContext,
 ) {
 
 	return {
@@ -17,7 +16,7 @@ export function register(
 	};
 
 	function getRootFileNames() {
-		return getProgram().getRootFileNames().filter(fileName => context.getTsLsHost().fileExists?.(fileName));
+		return getProgram().getRootFileNames().filter(fileName => vueLsCtx.typescriptLanguageServiceHost.fileExists?.(fileName));
 	}
 
 	// for vue-tsc --noEmit --watch
@@ -41,7 +40,7 @@ export function register(
 
 		if (sourceFile) {
 
-			const mapped = context.vueFiles.fromEmbeddedFileName(sourceFile.fileName);
+			const mapped = vueLsCtx.sourceFiles.fromEmbeddedFileName(sourceFile.fileName);
 
 			if (mapped) {
 
@@ -62,7 +61,7 @@ export function register(
 		return transformDiagnostics(getProgram().getGlobalDiagnostics(cancellationToken) ?? []);
 	}
 	function emit(targetSourceFile?: ts.SourceFile, _writeFile?: ts.WriteFileCallback, cancellationToken?: ts.CancellationToken, emitOnlyDtsFiles?: boolean, customTransformers?: ts.CustomTransformers): ts.EmitResult {
-		const scriptResult = getProgram().emit(targetSourceFile, (vueLsHost.writeFile ?? ts.sys.writeFile), cancellationToken, emitOnlyDtsFiles, customTransformers);
+		const scriptResult = getProgram().emit(targetSourceFile, (vueLsCtx.typescriptLanguageServiceHost.writeFile ?? ts.sys.writeFile), cancellationToken, emitOnlyDtsFiles, customTransformers);
 		return {
 			emitSkipped: scriptResult.emitSkipped,
 			emittedFiles: scriptResult.emittedFiles,
@@ -70,7 +69,7 @@ export function register(
 		};
 	}
 	function getProgram() {
-		return context.getTsLs().getProgram()!;
+		return vueLsCtx.typescriptLanguageService.getProgram()!;
 	}
 
 	// transform
@@ -86,17 +85,17 @@ export function register(
 
 				let founded = false;
 
-				for (const tsOrVueLoc of context.vueFiles.fromEmbeddedLocation(
+				for (const tsOrVueLoc of vueLsCtx.sourceFiles.fromEmbeddedLocation(
 					diagnostic.file.fileName,
 					diagnostic.start,
 					diagnostic.start + diagnostic.length,
 					data => !!data.capabilities.diagnostic,
 				)) {
 
-					if (!vueLsHost.fileExists?.(tsOrVueLoc.fileName))
+					if (!vueLsCtx.typescriptLanguageServiceHost.fileExists?.(tsOrVueLoc.fileName))
 						continue;
 
-					onMapping(diagnostic, tsOrVueLoc.fileName, tsOrVueLoc.range.start, tsOrVueLoc.range.end, tsOrVueLoc.mapped?.vueFile.getContent());
+					onMapping(diagnostic, tsOrVueLoc.fileName, tsOrVueLoc.range.start, tsOrVueLoc.range.end, tsOrVueLoc.mapped?.vueFile.text);
 
 					founded = true;
 					break;
@@ -104,30 +103,30 @@ export function register(
 
 				// fix https://github.com/johnsoncodehk/volar/issues/1372
 				if (!founded) {
-					for (const start of context.vueFiles.fromEmbeddedLocation(
+					for (const start of vueLsCtx.sourceFiles.fromEmbeddedLocation(
 						diagnostic.file.fileName,
 						diagnostic.start,
 						diagnostic.start,
 						data => !!data.capabilities.diagnostic,
 					)) {
 
-						if (!vueLsHost.fileExists?.(start.fileName))
+						if (!vueLsCtx.typescriptLanguageServiceHost.fileExists?.(start.fileName))
 							continue;
 
-						for (const end of context.vueFiles.fromEmbeddedLocation(
+						for (const end of vueLsCtx.sourceFiles.fromEmbeddedLocation(
 							diagnostic.file.fileName,
 							diagnostic.start + diagnostic.length,
 							diagnostic.start + diagnostic.length,
 							data => !!data.capabilities.diagnostic,
 						)) {
 
-							if (!vueLsHost.fileExists?.(end.fileName))
+							if (!vueLsCtx.typescriptLanguageServiceHost.fileExists?.(end.fileName))
 								continue;
 
 							if (start.fileName !== end.fileName)
 								continue;
 
-							onMapping(diagnostic, start.fileName, start.range.start, end.range.end, start.mapped?.vueFile.getContent());
+							onMapping(diagnostic, start.fileName, start.range.start, end.range.end, start.mapped?.vueFile.text);
 
 							founded = true;
 							break;
@@ -155,7 +154,7 @@ export function register(
 			if (!file) {
 
 				if (docText === undefined) {
-					const snapshot = vueLsHost.getScriptSnapshot(fileName);
+					const snapshot = vueLsCtx.typescriptLanguageServiceHost.getScriptSnapshot(fileName);
 					if (snapshot) {
 						docText = snapshot.getText(0, snapshot.getLength());
 					}

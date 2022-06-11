@@ -1,7 +1,10 @@
-import type { TypeScriptRuntime } from '@volar/vue-typescript';
+import type * as vueTs from '@volar/vue-typescript';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
-export function register(context: TypeScriptRuntime) {
+export function register(
+	vueLsCtx: vueTs.LanguageServiceContext,
+	vueTsLs: ts.LanguageService,
+) {
 
 	return {
 		getCompletionsAtPosition,
@@ -16,7 +19,7 @@ export function register(context: TypeScriptRuntime) {
 
 	// apis
 	function getCompletionsAtPosition(fileName: string, position: number, options: ts.GetCompletionsAtPositionOptions | undefined): ReturnType<ts.LanguageService['getCompletionsAtPosition']> {
-		const finalResult = context.getTsLs().getCompletionsAtPosition(fileName, position, options);
+		const finalResult = vueTsLs.getCompletionsAtPosition(fileName, position, options);
 		if (finalResult) {
 			finalResult.entries = finalResult.entries.filter(entry => entry.name.indexOf('__VLS_') === -1);
 		}
@@ -46,7 +49,7 @@ export function register(context: TypeScriptRuntime) {
 		providePrefixAndSuffixTextForRename?: boolean
 	) {
 
-		const tsLs = context.getTsLs();
+		const tsLs = vueTsLs;
 		const loopChecker = new Set<string>();
 		let symbols: (ts.DefinitionInfo | ts.ReferenceEntry | ts.ImplementationLocation | ts.RenameLocation)[] = [];
 
@@ -69,7 +72,7 @@ export function register(context: TypeScriptRuntime) {
 			symbols = symbols.concat(_symbols);
 			for (const ref of _symbols) {
 				loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
-				const teleport = context.vueFiles.getTeleport(ref.fileName);
+				const teleport = vueLsCtx.sourceFiles.getTeleport(ref.fileName);
 
 				if (!teleport)
 					continue;
@@ -96,7 +99,7 @@ export function register(context: TypeScriptRuntime) {
 	}
 	function getDefinitionAndBoundSpan(fileName: string, position: number): ReturnType<ts.LanguageService['getDefinitionAndBoundSpan']> {
 
-		const tsLs = context.getTsLs();
+		const tsLs = vueTsLs;
 		const loopChecker = new Set<string>();
 		let textSpan: ts.TextSpan | undefined;
 		let symbols: ts.DefinitionInfo[] = [];
@@ -125,7 +128,7 @@ export function register(context: TypeScriptRuntime) {
 
 				loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
 
-				const teleport = context.vueFiles.getTeleport(ref.fileName);
+				const teleport = vueLsCtx.sourceFiles.getTeleport(ref.fileName);
 				if (!teleport)
 					continue;
 
@@ -143,7 +146,7 @@ export function register(context: TypeScriptRuntime) {
 	}
 	function findReferences(fileName: string, position: number): ReturnType<ts.LanguageService['findReferences']> {
 
-		const tsLs = context.getTsLs();
+		const tsLs = vueTsLs;
 		const loopChecker = new Set<string>();
 		let symbols: ts.ReferencedSymbol[] = [];
 
@@ -164,7 +167,7 @@ export function register(context: TypeScriptRuntime) {
 
 					loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
 
-					const teleport = context.vueFiles.getTeleport(ref.fileName);
+					const teleport = vueLsCtx.sourceFiles.getTeleport(ref.fileName);
 					if (!teleport)
 						continue;
 
@@ -222,7 +225,7 @@ export function register(context: TypeScriptRuntime) {
 	function transformSpan(fileName: string | undefined, textSpan: ts.TextSpan | undefined) {
 		if (!fileName) return;
 		if (!textSpan) return;
-		for (const vueLoc of context.vueFiles.fromEmbeddedLocation(fileName, textSpan.start, textSpan.start + textSpan.length)) {
+		for (const vueLoc of vueLsCtx.sourceFiles.fromEmbeddedLocation(fileName, textSpan.start, textSpan.start + textSpan.length)) {
 			return {
 				fileName: vueLoc.fileName,
 				textSpan: {

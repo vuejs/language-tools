@@ -1,8 +1,8 @@
 export * from './utils/sourceMaps';
 export * from './utils/string';
-export * from './vueFile';
-export * from './vueFiles';
+export * from './sourceFile';
+export * from './documentRegistry';
 export * from './types';
-export * from './typescriptRuntime';
+export * from './lsContext';
 export * as localTypes from './utils/localTypes';
 export * as tsShared from './utils/ts';

@@ -1,5 +1,5 @@
 import * as SourceMaps from '@volar/source-map';
-import { EmbeddedFile, VueLanguagePlugin } from '../vueFile';
+import { EmbeddedFile, VueLanguagePlugin } from '../sourceFile';
 
 export default function (): VueLanguagePlugin {
 

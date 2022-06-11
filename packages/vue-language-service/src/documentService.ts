@@ -128,12 +128,12 @@ export function getDocumentService(
 			return vueDoc;
 		}
 
-		const vueFile = vueTs.createVueFile(
+		const vueFile = vueTs.createSourceFile(
 			shared.uriToFsPath(document.uri),
 			document.getText(),
 			{},
+			{},
 			context.typescript,
-			undefined,
 		);
 		vueDoc = parseVueDocument(vueFile, undefined);
 

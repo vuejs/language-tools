@@ -2,6 +2,8 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 
 export type LanguageServiceHost = ts.LanguageServiceHost & {
 	getVueCompilationSettings(): VueCompilerOptions,
+	isTsPlugin?: boolean,
+	isTsc?: boolean,
 };
 
 export interface VueCompilerOptions {

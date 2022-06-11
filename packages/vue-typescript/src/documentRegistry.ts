@@ -4,9 +4,9 @@ import * as path from 'path';
 import * as localTypes from './utils/localTypes';
 import type { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
 import { untrack } from './utils/untrack';
-import type { Embedded, EmbeddedFile, VueFile } from './vueFile';
+import type { Embedded, EmbeddedFile, SourceFile } from './sourceFile';
 
-export interface VueFiles extends ReturnType<typeof createVueFiles> { }
+export interface DocumentRegistry extends ReturnType<typeof createDocumentRegistry> { }
 
 export interface EmbeddedLangaugeSourceFile {
 	fileName: string,
@@ -14,11 +14,11 @@ export interface EmbeddedLangaugeSourceFile {
 	getAllEmbeddeds(): Embedded[],
 }
 
-export function createVueFiles() {
-	return createEmbeddedLangaugeSourceFiles<VueFile>();
+export function createDocumentRegistry() {
+	return createDocumentRegistryBase<SourceFile>();
 }
 
-function createEmbeddedLangaugeSourceFiles<T extends EmbeddedLangaugeSourceFile>() {
+function createDocumentRegistryBase<T extends EmbeddedLangaugeSourceFile>() {
 
 	const files = shallowReactive<Record<string, T>>({});
 	const arr = computed(() => Object.values(files));

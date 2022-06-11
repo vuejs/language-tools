@@ -49,7 +49,7 @@ export interface VueLanguagePlugin {
 	getEmbeddedFile?(fileName: string, sfc: Sfc, i: number): EmbeddedFile | undefined;
 }
 
-export interface VueFile extends ReturnType<typeof createVueFile> { }
+export interface SourceFile extends ReturnType<typeof createSourceFile> { }
 
 export interface EmbeddedStructure {
 	self: Embedded | undefined,
@@ -104,12 +104,12 @@ export interface EmbeddedFile {
 	teleportMappings?: Mapping<TeleportMappingData>[],
 };
 
-export function createVueFile(
+export function createSourceFile(
 	fileName: string,
 	_content: string,
-	compilerOptions: VueCompilerOptions,
+	compilerOptions: ts.CompilerOptions,
+	vueCompilerOptions: VueCompilerOptions,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	tsHost: ts.LanguageServiceHost | undefined,
 ) {
 
 	// refs
@@ -152,13 +152,13 @@ export function createVueFile(
 		if (computedHtmlTemplate.value) {
 			return compileSFCTemplate(
 				computedHtmlTemplate.value.html,
-				compilerOptions.experimentalTemplateCompilerOptions,
-				compilerOptions.target ?? 3,
+				vueCompilerOptions.experimentalTemplateCompilerOptions,
+				vueCompilerOptions.target ?? 3,
 			);
 		}
 	});
 	const cssModuleClasses = useCssModuleClasses(sfc);
-	const cssScopedClasses = useCssScopedClasses(sfc, compilerOptions);
+	const cssScopedClasses = useCssScopedClasses(sfc, vueCompilerOptions);
 	const templateCodeGens = computed(() => {
 
 		if (!computedHtmlTemplate.value)
@@ -169,10 +169,10 @@ export function createVueFile(
 		return templateGen.generate(
 			ts,
 			{
-				target: compilerOptions.target ?? 3,
-				experimentalRuntimeMode: compilerOptions.experimentalRuntimeMode,
-				experimentalAllowTypeNarrowingInInlineHandlers: compilerOptions.experimentalAllowTypeNarrowingInInlineHandlers ?? false,
-				experimentalSuppressInvalidJsxElementTypeErrors: compilerOptions.experimentalSuppressInvalidJsxElementTypeErrors ?? true,
+				target: vueCompilerOptions.target ?? 3,
+				experimentalRuntimeMode: vueCompilerOptions.experimentalRuntimeMode,
+				experimentalAllowTypeNarrowingInInlineHandlers: vueCompilerOptions.experimentalAllowTypeNarrowingInInlineHandlers ?? false,
+				experimentalSuppressInvalidJsxElementTypeErrors: vueCompilerOptions.experimentalSuppressInvalidJsxElementTypeErrors ?? true,
 			},
 			sfc.template?.lang ?? 'html',
 			templateAstCompiled.value.ast,
@@ -240,7 +240,7 @@ export function createVueFile(
 			scriptRanges,
 			scriptSetupRanges,
 			templateCodeGens,
-			compilerOptions,
+			vueCompilerOptions,
 			cssVarTexts,
 		),
 		useVueTsTemplate(
@@ -251,8 +251,8 @@ export function createVueFile(
 			cssVars,
 			scriptSetupRanges,
 			scriptLang,
-			compilerOptions,
-			!!compilerOptions.experimentalDisableTemplateSupport || (tsHost?.getCompilationSettings().jsx ?? ts.JsxEmit.Preserve) !== ts.JsxEmit.Preserve,
+			vueCompilerOptions,
+			!!vueCompilerOptions.experimentalDisableTemplateSupport || (compilerOptions.jsx ?? ts.JsxEmit.Preserve) !== ts.JsxEmit.Preserve,
 		),
 	];
 
@@ -512,7 +512,6 @@ export function createVueFile(
 		set text(value) {
 			update(value);
 		},
-		getContent: untrack(() => fileContent.value),
 		getCompiledVue: untrack(() => file2VueSourceMap.value),
 		getSfcTemplateLanguageCompiled: untrack(() => computedHtmlTemplate.value),
 		getSfcVueTemplateCompiled: untrack(() => templateAstCompiled.value),
@@ -523,14 +522,10 @@ export function createVueFile(
 		getSfcRefSugarRanges: untrack(() => sfcRefSugarRanges.value),
 		getEmbeddeds: untrack(() => embeddeds.value),
 		getScriptSetupRanges: untrack(() => scriptSetupRanges.value),
-		isJsxMissing: () => !compilerOptions.experimentalDisableTemplateSupport && (tsHost?.getCompilationSettings().jsx ?? ts.JsxEmit.Preserve) !== ts.JsxEmit.Preserve,
+		isJsxMissing: () => !vueCompilerOptions.experimentalDisableTemplateSupport && (compilerOptions.jsx ?? ts.JsxEmit.Preserve) !== ts.JsxEmit.Preserve,
 
 		getAllEmbeddeds: () => allEmbeddeds.value,
-
-		refs: {
-			allEmbeddeds,
-			teleports,
-		},
+		getTeleports: () => teleports.value,
 	};
 
 	function embeddedRangeToVueRange(data: EmbeddedFileMappingData, range: Mapping<unknown>['sourceRange']) {

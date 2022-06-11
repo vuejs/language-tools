@@ -8,7 +8,7 @@ import { ComputedRef } from '@vue/reactivity';
 import * as path from 'path';
 import { VueCompilerOptions } from '../types';
 import { SearchTexts } from '../utils/string';
-import { EmbeddedFile, useCssModuleClasses, useCssScopedClasses, useCssVars, VueLanguagePlugin } from '../vueFile';
+import { EmbeddedFile, useCssModuleClasses, useCssScopedClasses, useCssVars, VueLanguagePlugin } from '../sourceFile';
 
 export default function (
 	ts: typeof import('typescript/lib/tsserverlibrary'),

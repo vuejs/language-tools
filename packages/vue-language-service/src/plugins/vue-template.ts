@@ -3,14 +3,14 @@ import type * as ts2 from '@volar/typescript-language-service';
 import { isIntrinsicElement } from '@volar/vue-code-gen';
 import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
 import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
-import { SearchTexts, TypeScriptRuntime } from '@volar/vue-typescript';
+import { SearchTexts } from '@volar/vue-typescript';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import type { LanguageServiceHost } from '../types';
+import type * as vueTs from '@volar/vue-typescript';
 import { VueDocument, VueDocuments } from '../vueDocuments';
 import useHtmlPlugin from './html';
 
@@ -65,10 +65,9 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		tag: 'both' | 'kebabCase' | 'pascalCase',
 		attr: 'kebabCase' | 'camelCase',
 	}>,
-	vueLsHost: LanguageServiceHost,
+	vueLsHost: vueTs.LanguageServiceHost,
 	vueDocuments: VueDocuments,
 	tsSettings: ts2.Settings,
-	tsRuntime: TypeScriptRuntime,
 }): EmbeddedLanguageServicePlugin & T {
 
 	const componentCompletionDataCache = new WeakMap<

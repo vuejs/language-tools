@@ -4,7 +4,7 @@ import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges'
 import { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { Ref } from '@vue/reactivity';
 import { VueCompilerOptions } from '../types';
-import { EmbeddedFile, VueLanguagePlugin } from '../vueFile';
+import { EmbeddedFile, VueLanguagePlugin } from '../sourceFile';
 
 export default function (
 	lang: Ref<string>,
