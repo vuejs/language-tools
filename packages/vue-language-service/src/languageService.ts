@@ -91,11 +91,11 @@ export function createLanguageService(
 		isTsPlugin: false,
 	});
 	tsFaster.decorate(ts, tsRuntime.getTsLsHost(), tsRuntime.getTsLs());
-	const vueDocuments = parseVueDocuments(tsRuntime.vueFiles);
 	const tsSettings = getTsSettings(configurationHost);
+	const tsLs = ts2.createLanguageService(ts, tsRuntime.getTsLsHost(), tsRuntime.getTsLs(), tsSettings);
+	const vueDocuments = parseVueDocuments(tsRuntime.vueFiles, tsLs);
 	const documentContext = getDocumentContext();
 
-	const tsLs = ts2.createLanguageService(ts, tsRuntime.getTsLsHost(), tsRuntime.getTsLs(), tsSettings);
 	const blockingRequests = new Set<Promise<any>>();
 	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
 	const documentVersions = new Map<string, number>();

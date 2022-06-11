@@ -3,10 +3,10 @@ import { hyphenate } from '@vue/shared';
 import { VueDocument } from '../vueDocuments';
 
 export function register(context: LanguageServiceRuntimeContext) {
-	return (uri: string): {
+	return async (uri: string): Promise<{
 		tag: 'both' | 'kebabCase' | 'pascalCase' | 'unsure',
 		attr: 'kebabCase' | 'camelCase' | 'unsure',
-	} => {
+	}> => {
 
 		const vueDocument = context.vueDocuments.get(uri);
 		if (!vueDocument) return {
@@ -15,7 +15,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 		};
 
 		return {
-			tag: getTagNameCase(vueDocument),
+			tag: await getTagNameCase(vueDocument),
 			attr: getAttrNameCase(vueDocument),
 		};
 
@@ -52,9 +52,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 			}
 			return 'unsure';
 		}
-		function getTagNameCase(vueDocument: VueDocument): 'both' | 'kebabCase' | 'pascalCase' | 'unsure' {
+		async function getTagNameCase(vueDocument: VueDocument): Promise<'both' | 'kebabCase' | 'pascalCase' | 'unsure'> {
 
-			const components = vueDocument.file.getTemplateData().components;
+			const components = (await vueDocument.getTemplateData()).components;
 			const tagNames = vueDocument.getTemplateTagsAndAttrs().tags;
 
 			let anyComponentUsed = false;

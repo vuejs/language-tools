@@ -1,4 +1,4 @@
-import { VueFiles, VueFile, EmbeddedFile, EmbeddedFileSourceMap, Teleport, Embedded, localTypes } from '@volar/vue-typescript';
+import { VueFiles, VueFile, EmbeddedFile, EmbeddedFileSourceMap, Teleport, Embedded, localTypes, SearchTexts } from '@volar/vue-typescript';
 import * as shared from '@volar/shared';
 import { computed } from '@vue/reactivity';
 import { SourceMapBase, Mapping } from '@volar/source-map';
@@ -7,12 +7,18 @@ import { EmbeddedFileMappingData, TeleportMappingData, TeleportSideData } from '
 import { untrack } from './utils/untrack';
 import { walkElementNodes } from '@volar/vue-code-gen';
 import * as CompilerDOM from '@vue/compiler-dom';
-import type * as vscode from 'vscode-languageserver-protocol';
+import * as vscode from 'vscode-languageserver-protocol';
+import type * as ts2 from '@volar/typescript-language-service';
 
 import type * as _ from '@volar/vue-typescript/node_modules/@vue/reactivity'; // fix build error
 
 export type VueDocuments = ReturnType<typeof parseVueDocuments>;
 export type VueDocument = ReturnType<typeof parseVueDocument>;
+
+export interface ITemplateScriptData {
+	components: string[];
+	componentItems: vscode.CompletionItem[];
+}
 
 export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
 
@@ -97,11 +103,14 @@ export class TeleportSourceMap extends SourceMap<TeleportMappingData> {
 	}
 }
 
-export function parseVueDocuments(vueFiles: VueFiles) {
+export function parseVueDocuments(
+	vueFiles: VueFiles,
+	tsLs: ts2.LanguageService,
+) {
 
 	// cache map
 	const vueDocuments = useCacheMap<VueFile, VueDocument>(vueFile => {
-		return parseVueDocument(vueFile);
+		return parseVueDocument(vueFile, tsLs);
 	});
 
 	// reactivity
@@ -200,7 +209,10 @@ export function parseVueDocuments(vueFiles: VueFiles) {
 	}
 }
 
-export function parseVueDocument(vueFile: VueFile) {
+export function parseVueDocument(
+	vueFile: VueFile,
+	tsLs: ts2.LanguageService | undefined,
+) {
 
 	// cache map
 	let documentVersion = 0;
@@ -227,6 +239,10 @@ export function parseVueDocument(vueFile: VueFile) {
 			embedded.sourceMap,
 		);
 	});
+	let templateScriptData: ITemplateScriptData = {
+		components: [],
+		componentItems: [],
+	};
 
 	// reactivity
 	const document = computed(() => TextDocument.create(shared.fsPathToUri(vueFile.fileName), vueFile.fileName.endsWith('.md') ? 'markdown' : 'vue', documentVersion++, vueFile.text));
@@ -297,6 +313,7 @@ export function parseVueDocument(vueFile: VueFile) {
 		file: vueFile,
 		embeddedDocumentsMap,
 		sourceMapsMap,
+		getTemplateData: untrack(getTemplateData),
 		getSourceMaps: untrack(() => sourceMaps.value),
 		getDocument: untrack(() => document.value),
 		getTemplateTagsAndAttrs: untrack(() => templateTagsAndAttrs.value),
@@ -306,6 +323,41 @@ export function parseVueDocument(vueFile: VueFile) {
 			teleports,
 		},
 	};
+
+
+	async function getTemplateData() {
+
+		const options: ts.GetCompletionsAtPositionOptions = {
+			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
+		};
+
+		const file = vueFile.getAllEmbeddeds().find(e => e.file.fileName.indexOf('.__VLS_template.') >= 0)?.file;
+		if (file && file.content.indexOf(SearchTexts.Components) >= 0) {
+			const document = embeddedDocumentsMap.get(file);
+
+			let components = await tsLs?.doComplete(
+				shared.fsPathToUri(file!.fileName),
+				document.positionAt(file!.content.indexOf(SearchTexts.Components)),
+				options
+			);
+
+			if (components) {
+
+				const items = components.items
+					.filter(entry => entry.kind !== vscode.CompletionItemKind.Text)
+					.filter(entry => entry.label.indexOf('$') === -1 && !entry.label.startsWith('_'));
+
+				const componentNames = items.map(entry => entry.label);
+
+				templateScriptData = {
+					components: componentNames,
+					componentItems: items,
+				};
+			}
+		}
+
+		return templateScriptData;
+	}
 }
 
 export function useCacheMap<T extends object, K>(

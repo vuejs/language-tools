@@ -4,7 +4,7 @@ import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges'
 import { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { parse, SFCBlock, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
 import { computed, ComputedRef, reactive, ref, unref } from '@vue/reactivity';
-import { ITemplateScriptData, VueCompilerOptions } from './types';
+import { VueCompilerOptions } from './types';
 import { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
 import { SearchTexts } from './utils/string';
 import { untrack } from './utils/untrack';
@@ -109,7 +109,6 @@ export function createVueFile(
 	_content: string,
 	compilerOptions: VueCompilerOptions,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	getTsLs: () => ts.LanguageService | undefined,
 	tsHost: ts.LanguageServiceHost | undefined,
 ) {
 
@@ -122,11 +121,6 @@ export function createVueFile(
 		styles: [],
 		customBlocks: [],
 	}) as Sfc /* avoid Sfc unwrap in .d.ts by reactive */;
-	let templateScriptData: ITemplateScriptData = {
-		projectVersion: undefined,
-		components: [],
-		componentItems: [],
-	};
 
 	// use
 	const compiledVue = computed<ReturnType<NonNullable<VueLanguagePlugin['compileFileToVue']>>>(() => {
@@ -522,7 +516,6 @@ export function createVueFile(
 		getCompiledVue: untrack(() => file2VueSourceMap.value),
 		getSfcTemplateLanguageCompiled: untrack(() => computedHtmlTemplate.value),
 		getSfcVueTemplateCompiled: untrack(() => templateAstCompiled.value),
-		getTemplateData: untrack(getTemplateData),
 		getScriptFileName: untrack(() => fileName + '.' + scriptLang.value),
 		getDescriptor: untrack(() => unref(sfc)),
 		getScriptAst: untrack(() => scriptAst.value),
@@ -763,47 +756,6 @@ export function createVueFile(
 				oldBlock[key] = newBlock[key];
 			}
 		}
-	}
-	function getTemplateData() {
-
-		if (!tsHost)
-			return templateScriptData;
-
-		const tsLs = getTsLs();
-		if (!tsLs)
-			return templateScriptData;
-
-		const newVersion = tsHost.getProjectVersion?.();
-		if (templateScriptData.projectVersion === newVersion) {
-			return templateScriptData;
-		}
-		templateScriptData.projectVersion = newVersion;
-
-		const options: ts.GetCompletionsAtPositionOptions = {
-			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
-		};
-
-		const file = allEmbeddeds.value.find(e => e.file.fileName.indexOf('.__VLS_template.') >= 0)?.file;
-		const hasFile = file &&
-			file.content.indexOf(SearchTexts.Components) >= 0 &&
-			// getSourceFile return undefined for lang=js with allowJs=false;
-			!!tsLs.getProgram()?.getSourceFile(file.fileName);
-
-		let components = hasFile ? tsLs.getCompletionsAtPosition(file!.fileName, file!.content.indexOf(SearchTexts.Components), options)?.entries.filter(entry => entry.kind !== ts.ScriptElementKind.warning) ?? [] : [];
-
-		components = components.filter(entry => {
-			return entry.name.indexOf('$') === -1 && !entry.name.startsWith('_');
-		});
-
-		const componentNames = components.map(entry => entry.name);
-
-		templateScriptData = {
-			projectVersion: newVersion,
-			components: componentNames,
-			componentItems: components,
-		};
-
-		return templateScriptData;
 	}
 }
 

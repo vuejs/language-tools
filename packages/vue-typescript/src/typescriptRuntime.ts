@@ -144,7 +144,6 @@ export function createTypeScriptRuntime(options: {
 					scriptText,
 					options.vueLsHost.getVueCompilationSettings(),
 					options.typescript,
-					() => tsLs,
 					tsLsHost,
 				));
 				tsFileUpdated = true;
@@ -210,7 +209,6 @@ export function createTypeScriptRuntime(options: {
 										scriptSnapshot.getText(0, scriptSnapshot.getLength()),
 										options.vueLsHost.getVueCompilationSettings(),
 										options.typescript,
-										() => tsLs,
 										tsLsHost,
 									));
 								}

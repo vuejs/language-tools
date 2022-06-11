@@ -133,10 +133,9 @@ export function getDocumentService(
 			document.getText(),
 			{},
 			context.typescript,
-			() => undefined,
 			undefined,
 		);
-		vueDoc = parseVueDocument(vueFile);
+		vueDoc = parseVueDocument(vueFile, undefined);
 
 		vueDocuments.set(document, vueDoc);
 

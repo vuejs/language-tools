@@ -4,12 +4,6 @@ export type LanguageServiceHost = ts.LanguageServiceHost & {
 	getVueCompilationSettings(): VueCompilerOptions,
 };
 
-export interface ITemplateScriptData {
-	projectVersion: string | undefined;
-	components: string[];
-	componentItems: ts.CompletionEntry[];
-}
-
 export interface VueCompilerOptions {
 	target?: 2 | 2.7 | 3;
 	experimentalRuntimeMode?: 'runtime-dom' | 'runtime-uni-app';

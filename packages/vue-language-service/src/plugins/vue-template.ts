@@ -1,17 +1,17 @@
 import * as shared from '@volar/shared';
-import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
-import { SearchTexts, TypeScriptRuntime, VueFile } from '@volar/vue-typescript';
-import { VueDocument, VueDocuments } from '../vueDocuments';
-import { camelize, capitalize, hyphenate } from '@vue/shared';
+import type * as ts2 from '@volar/typescript-language-service';
 import { isIntrinsicElement } from '@volar/vue-code-gen';
+import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
+import { SearchTexts, TypeScriptRuntime } from '@volar/vue-typescript';
+import { camelize, capitalize, hyphenate } from '@vue/shared';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import type * as ts from 'typescript/lib/tsserverlibrary';
-import type * as ts2 from '@volar/typescript-language-service';
 import type { LanguageServiceHost } from '../types';
-import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
+import { VueDocument, VueDocuments } from '../vueDocuments';
 import useHtmlPlugin from './html';
 
 export const semanticTokenTypes = [
@@ -45,7 +45,7 @@ const vueGlobalDirectiveProvider = html.newHTMLDataProvider('vueGlobalDirective'
 
 interface HtmlCompletionData {
 	mode: 'html',
-	tsItem: ts.CompletionEntry | undefined,
+	tsItem: vscode.CompletionItem | undefined,
 }
 
 interface AutoImportCompletionData {
@@ -72,8 +72,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 }): EmbeddedLanguageServicePlugin & T {
 
 	const componentCompletionDataCache = new WeakMap<
-		ReturnType<VueFile['getTemplateData']>,
-		Map<string, { item: ts.CompletionEntry | undefined, bind: ts.CompletionEntry[], on: ts.CompletionEntry[]; }>
+		Awaited<ReturnType<VueDocument['getTemplateData']>>,
+		Map<string, { item: vscode.CompletionItem | undefined, bind: vscode.CompletionItem[], on: vscode.CompletionItem[]; }>
 	>();
 	const autoImportPositions = new WeakSet<vscode.Position>();
 	const tokenTypes = new Map(options.getSemanticTokenLegend().tokenTypes.map((t, i) => [t, i]));
@@ -198,7 +198,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			const scanner = options.getScanner(document);
 
 			if (vueDocument && scanner) {
-				const templateScriptData = vueDocument.file.getTemplateData();
+				const templateScriptData = await vueDocument.getTemplateData();
 				const components = new Set([
 					...templateScriptData.components,
 					...templateScriptData.components.map(hyphenate).filter(name => !isIntrinsicElement(runtimeMode, name)),
@@ -248,37 +248,33 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		},
 	};
 
-	// not supported for now
 	async function resolveHtmlItem(item: vscode.CompletionItem, data: HtmlCompletionData) {
 
-		// let tsItem = data.tsItem;
+		let tsItem = data.tsItem;
 
-		// if (!tsItem)
-		//     return item;
+		if (!tsItem)
+			return item;
 
-		// if (!host.templateTsLs)
-		//     return item;
+		tsItem = await options.tsLs.doCompletionResolve(tsItem);
+		item.tags = [...item.tags ?? [], ...tsItem.tags ?? []];
 
-		// tsItem = await host.templateTsLs.doCompletionResolve(tsItem);
-		// item.tags = [...item.tags ?? [], ...tsItem.tags ?? []];
+		const details: string[] = [];
+		const documentations: string[] = [];
 
-		// const details: string[] = [];
-		// const documentations: string[] = [];
+		if (item.detail) details.push(item.detail);
+		if (tsItem.detail) details.push(tsItem.detail);
+		if (details.length) {
+			item.detail = details.join('\n\n');
+		}
 
-		// if (item.detail) details.push(item.detail);
-		// if (tsItem.detail) details.push(tsItem.detail);
-		// if (details.length) {
-		//     item.detail = details.join('\n\n');
-		// }
-
-		// if (item.documentation) documentations.push(typeof item.documentation === 'string' ? item.documentation : item.documentation.value);
-		// if (tsItem.documentation) documentations.push(typeof tsItem.documentation === 'string' ? tsItem.documentation : tsItem.documentation.value);
-		// if (documentations.length) {
-		//     item.documentation = {
-		//         kind: vscode.MarkupKind.Markdown,
-		//         value: documentations.join('\n\n'),
-		//     };
-		// }
+		if (item.documentation) documentations.push(typeof item.documentation === 'string' ? item.documentation : item.documentation.value);
+		if (tsItem.documentation) documentations.push(typeof tsItem.documentation === 'string' ? tsItem.documentation : tsItem.documentation.value);
+		if (documentations.length) {
+			item.documentation = {
+				kind: vscode.MarkupKind.Markdown,
+				value: documentations.join('\n\n'),
+			};
+		}
 
 		return item;
 	}
@@ -442,9 +438,9 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			tag: 'both',
 			attr: 'kebabCase',
 		};
-		const componentCompletion = getComponentCompletionData(vueDocument);
+		const componentCompletion = await getComponentCompletionData(vueDocument);
 		const tags: html.ITagData[] = [];
-		const tsItems = new Map<string, ts.CompletionEntry>();
+		const tsItems = new Map<string, vscode.CompletionItem>();
 		const globalAttributes: html.IAttributeData[] = [];
 
 		for (const [_componentName, { item, bind, on }] of componentCompletion) {
@@ -460,7 +456,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 				for (const prop of bind) {
 
-					const name = nameCases.attr === 'camelCase' ? prop.name : hyphenate(prop.name);
+					const name = nameCases.attr === 'camelCase' ? prop.label : hyphenate(prop.label);
 
 					if (hyphenate(name).startsWith('on-')) {
 
@@ -505,7 +501,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				}
 				for (const event of on) {
 
-					const name = nameCases.attr === 'camelCase' ? event.name : hyphenate(event.name);
+					const name = nameCases.attr === 'camelCase' ? event.label : hyphenate(event.label);
 					const propKey = createInternalItemId('componentEvent', [componentName, name]);
 
 					attributes.push({
@@ -580,7 +576,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		return tsItems;
 	}
 
-	function afterHtmlCompletion(completionList: vscode.CompletionList, vueDocument: VueDocument, tsItems: Map<string, ts.CompletionEntry>) {
+	function afterHtmlCompletion(completionList: vscode.CompletionList, vueDocument: VueDocument, tsItems: Map<string, vscode.CompletionItem>) {
 
 		const replacement = getReplacement(completionList, vueDocument.getDocument());
 
@@ -724,25 +720,26 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		} : undefined;
 	}
 
-	function getComponentCompletionData(sourceFile: VueDocument) {
+	async function getComponentCompletionData(sourceFile: VueDocument) {
 
-		const templateData = sourceFile.file.getTemplateData();
+		const templateData = await sourceFile.getTemplateData();
 
 		let cache = componentCompletionDataCache.get(templateData);
 		if (!cache) {
 
-			cache = new Map<string, { item: ts.CompletionEntry | undefined, bind: ts.CompletionEntry[], on: ts.CompletionEntry[]; }>();
+			cache = new Map<string, { item: vscode.CompletionItem | undefined, bind: vscode.CompletionItem[], on: vscode.CompletionItem[]; }>();
 
 			const file = sourceFile.file.getAllEmbeddeds().find(e =>
 				e.file.fileName.endsWith('.__VLS_template.tsx')
 				|| e.file.fileName.endsWith('.__VLS_template.jsx')
 			)?.file;
+			const document = file ? sourceFile.embeddedDocumentsMap.get(file) : undefined;
 			const templateTagNames = [...sourceFile.getTemplateTagsAndAttrs().tags.keys()];
 
-			if (file) {
+			if (file && document) {
 
 				const tags_1 = templateData.componentItems.map(item => {
-					return { item, name: item.name };
+					return { item, name: item.label };
 				});
 				const tags_2 = templateTagNames
 					.filter(tag => tag.indexOf('.') >= 0)
@@ -753,15 +750,15 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					if (cache.has(tag.name))
 						continue;
 
-					let bind: ts.CompletionEntry[] = [];
-					let on: ts.CompletionEntry[] = [];
+					let bind: vscode.CompletionItem[] = [];
+					let on: vscode.CompletionItem[] = [];
 					{
 						const searchText = SearchTexts.PropsCompletion(tag.name);
 						let offset = file.content.indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
 							try {
-								bind = options.tsRuntime.getTsLs().getCompletionsAtPosition(file.fileName, offset, undefined)?.entries.filter(entry => entry.kind !== 'warning') ?? [];
+								bind = (await options.tsLs.doComplete(document.uri, document.positionAt(offset)))?.items.filter(entry => entry.kind !== vscode.CompletionItemKind.Text) ?? [];
 							} catch { }
 						}
 					}
@@ -771,14 +768,15 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 						if (offset >= 0) {
 							offset += searchText.length;
 							try {
-								on = options.tsRuntime.getTsLs().getCompletionsAtPosition(file.fileName, offset, undefined)?.entries.filter(entry => entry.kind !== 'warning') ?? [];
+								on = (await options.tsLs.doComplete(document.uri, document.positionAt(offset)))?.items.filter(entry => entry.kind !== vscode.CompletionItemKind.Text) ?? [];
 							} catch { }
 						}
 					}
 					cache.set(tag.name, { item: tag.item, bind, on });
 				}
 				try {
-					const globalBind = options.tsRuntime.getTsLs().getCompletionsAtPosition(file.fileName, file.content.indexOf(SearchTexts.GlobalAttrs), undefined)?.entries.filter(entry => entry.kind !== 'warning') ?? [];
+					const offset = file.content.indexOf(SearchTexts.GlobalAttrs);
+					const globalBind = (await options.tsLs.doComplete(document.uri, document.positionAt(offset)))?.items.filter(entry => entry.kind !== vscode.CompletionItemKind.Text) ?? [];
 					cache.set('*', { item: undefined, bind: globalBind, on: [] });
 				} catch { }
 			}
