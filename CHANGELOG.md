@@ -1,17 +1,32 @@
 # Changelog
 
-## 0.37.3 (2022/6/8)
+## 0.37.5 (2022/6/13)
 
-- feat: support find file references
-- feat: improve vitepress markdown parse reliability ([#1410](https://github.com/johnsoncodehk/volar/issues/1410))
-- feat: `vueCompilerOptions.experimentalSuppressInvalidJsxElementTypeErrors` default true ([#1405](https://github.com/johnsoncodehk/volar/issues/1405))
-- fix: fixed TS error with props beginning with data* ([#1413](https://github.com/johnsoncodehk/volar/issues/1413))
+- feat: support petite-vue
+- fix: don't active VitePress intellisense for `.md` if file path in not include by tsconfig ([#1430](https://github.com/johnsoncodehk/volar/issues/1430))
+- fix: cannot direct execution of fileReferences command ([#1419](https://github.com/johnsoncodehk/volar/issues/1419))
+- fix: avoid "`" auto close break markdown code block input ([#1428](https://github.com/johnsoncodehk/volar/issues/1428))
+- fix: component props completion info box missing in template
+- fix: directives syntax highlight incorrect if `=` sign missing ([#1423](https://github.com/johnsoncodehk/volar/issues/1423))
+- fix: false positive props type error when JS component usage in TS component ([#1426](https://github.com/johnsoncodehk/volar/issues/1426))
+- fix: cannot recognize component properties in type reference in template ([#1422](https://github.com/johnsoncodehk/volar/issues/1422))
+- fix: slot binding type annotation not working if parent component is `<component :is>` ([#1425](https://github.com/johnsoncodehk/volar/issues/1425))
+- fix: patch invalid `:` character in tag name ([#1435](https://github.com/johnsoncodehk/volar/issues/1435))
+- fix: auto closing pairs not working in template expressions ([#1437](https://github.com/johnsoncodehk/volar/issues/1437))
+- perf: faster markdown content parsing for vitepress
 
 ### Our Sponsors
 
 <a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
 	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
 </a>
+
+## 0.37.3 (2022/6/8)
+
+- feat: support find file references
+- feat: improve vitepress markdown parse reliability ([#1410](https://github.com/johnsoncodehk/volar/issues/1410))
+- feat: `vueCompilerOptions.experimentalSuppressInvalidJsxElementTypeErrors` default true ([#1405](https://github.com/johnsoncodehk/volar/issues/1405))
+- fix: fixed TS error with props beginning with data* ([#1413](https://github.com/johnsoncodehk/volar/issues/1413))
 
 ## 0.37.2 (2022/6/7)
 
