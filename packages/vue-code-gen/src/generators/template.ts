@@ -125,7 +125,7 @@ export function generate(
 		const tagRanges = tagOffsets.map(offset => ({ start: offset, end: offset + tagName.length }));
 		const isNamespacedTag = tagName.indexOf('.') >= 0;
 
-		const var_componentVar = capitalize(camelize(tagName));
+		const var_componentVar = capitalize(camelize(tagName.replace(/:/g, '-')));
 		const var_emit = `__VLS_${elementIndex++}`;
 
 		if (isNamespacedTag) {
