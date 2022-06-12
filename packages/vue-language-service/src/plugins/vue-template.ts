@@ -128,6 +128,17 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			},
 		},
 
+		doHover(document, position) {
+			const vueDocument = options.vueDocuments.fromEmbeddedDocument(document);
+			if (vueDocument) {
+				options.templateLanguagePlugin.htmlLs.setDataProviders(
+					useDefaultDataProvider(vueDocument.uri),
+					options.templateLanguagePlugin.getHtmlDataProviders(),
+				);
+			}
+			return options.templateLanguagePlugin.doHover?.(document, position);
+		},
+
 		async doValidation(document, options_2) {
 
 			if (!options.isSupportedDocument(document))
@@ -538,7 +549,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				let baseName =
 					vueDocument.uri.endsWith('.vue') ? path.basename(vueDocument.uri, '.vue')
 						: vueDocument.uri.endsWith('.md') ? path.basename(vueDocument.uri, '.md')
-							: path.basename(vueDocument.uri);
+							: vueDocument.uri.endsWith('.html') ? path.basename(vueDocument.uri, '.html')
+								: path.basename(vueDocument.uri);
 				if (baseName.toLowerCase() === 'index') {
 					baseName = path.basename(path.dirname(vueDocument.uri));
 				}
@@ -566,13 +578,23 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			globalAttributes,
 		});
 
-		options.templateLanguagePlugin.htmlLs.setDataProviders(true, [
-			...options.templateLanguagePlugin.getHtmlDataProviders(),
-			vueGlobalDirectiveProvider,
-			dataProvider,
-		]);
+		options.templateLanguagePlugin.htmlLs.setDataProviders(
+			useDefaultDataProvider(vueDocument.uri),
+			[
+				...options.templateLanguagePlugin.getHtmlDataProviders(),
+				vueGlobalDirectiveProvider,
+				dataProvider,
+			],
+		);
 
 		return tsItems;
+	}
+
+	function useDefaultDataProvider(uri: string) {
+		if (uri.endsWith('.html')) {
+			return false; // petite-vue
+		}
+		return true;
 	}
 
 	function afterHtmlCompletion(completionList: vscode.CompletionList, vueDocument: VueDocument, tsItems: Map<string, vscode.CompletionItem>) {
@@ -703,7 +725,10 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			completionList.items = [...temp.values()];
 		}
 
-		options.templateLanguagePlugin.htmlLs.setDataProviders(true, options.templateLanguagePlugin.getHtmlDataProviders());
+		options.templateLanguagePlugin.htmlLs.setDataProviders(
+			useDefaultDataProvider(vueDocument.uri),
+			options.templateLanguagePlugin.getHtmlDataProviders(),
+		);
 	}
 
 	function getLastImportNode(ast: ts.SourceFile) {

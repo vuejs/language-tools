@@ -116,7 +116,11 @@ export function getDocumentService(
 
 	function getVueDocument(document: TextDocument) {
 
-		if (document.languageId !== 'vue' && document.languageId !== 'markdown')
+		if (
+			document.languageId !== 'vue'
+			&& document.languageId !== 'markdown'
+			&& document.languageId !== 'html'
+		)
 			return;
 
 		let vueDoc = vueDocuments.get(document);

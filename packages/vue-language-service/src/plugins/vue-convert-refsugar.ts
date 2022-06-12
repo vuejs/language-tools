@@ -41,6 +41,9 @@ export default function (options: {
 			on(document) {
 				return worker(document.uri, async (vueDocument) => {
 
+					if (document.uri.endsWith('.html')) // petite-vue
+						return;
+
 					const isEnabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.codeLens.scriptSetupTools') ?? true;
 
 					if (!isEnabled)

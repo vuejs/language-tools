@@ -37,6 +37,7 @@ export function register(
 					filters: [
 						{ pattern: { glob: '**/*.vue' } },
 						{ pattern: { glob: '**/*.md' } },
+						{ pattern: { glob: '**/*.html' } },
 						{ pattern: { glob: '**/*.js' } },
 						{ pattern: { glob: '**/*.ts' } },
 						{ pattern: { glob: '**/*.jsx' } },

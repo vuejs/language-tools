@@ -30,7 +30,7 @@ export function createLanguageServiceContext(
 				// .vue.d.ts (never)
 				const fileNameTrim = fileName.substring(0, fileName.lastIndexOf('.'));
 
-				if (fileNameTrim.endsWith('.vue') || fileNameTrim.endsWith('.md')) {
+				if (fileNameTrim.endsWith('.vue') || fileNameTrim.endsWith('.md') || fileNameTrim.endsWith('.html')) {
 					const vueFile = documentRegistry.get(fileNameTrim);
 					if (!vueFile) {
 						const fileExists = !!host.fileExists?.(fileNameTrim);
@@ -83,6 +83,7 @@ export function createLanguageServiceContext(
 			switch (path.extname(fileName)) {
 				case '.vue': return ts.ScriptKind.TSX; // can't use External, Unknown
 				case '.md': return ts.ScriptKind.TSX; // can't use External, Unknown
+				case '.html': return ts.ScriptKind.TSX; // can't use External, Unknown
 				case '.js': return ts.ScriptKind.JS;
 				case '.jsx': return ts.ScriptKind.JSX;
 				case '.ts': return ts.ScriptKind.TS;
@@ -119,8 +120,8 @@ export function createLanguageServiceContext(
 		lastProjectVersion = newProjectVersion;
 
 		const fileNames = host.getScriptFileNames();
-		const vueFileNames = new Set(fileNames.filter(file => file.endsWith('.vue') || file.endsWith('.md')));
-		const tsFileNames = new Set(fileNames.filter(file => !file.endsWith('.vue') && !file.endsWith('.md')));
+		const vueFileNames = new Set(fileNames.filter(file => file.endsWith('.vue') || file.endsWith('.md') || file.endsWith('.html')));
+		const tsFileNames = new Set(fileNames.filter(file => !file.endsWith('.vue') && !file.endsWith('.md') && !file.endsWith('.html')));
 		const fileNamesToRemove: string[] = [];
 		const fileNamesToCreate: string[] = [];
 		const fileNamesToUpdate: string[] = [];
@@ -253,7 +254,7 @@ export function createLanguageServiceContext(
 			if (host.isTsPlugin) {
 				tsFileNames.push(fileName); // .vue + .ts
 			}
-			else if (!fileName.endsWith('.vue') && !fileName.endsWith('.md')) {
+			else if (!fileName.endsWith('.vue') && !fileName.endsWith('.md') && !fileName.endsWith('.html')) {
 				tsFileNames.push(fileName); // .ts
 			}
 		}

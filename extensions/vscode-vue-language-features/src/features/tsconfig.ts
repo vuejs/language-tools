@@ -21,6 +21,7 @@ export async function register(context: vscode.ExtensionContext, languageClient:
 		if (
 			vscode.window.activeTextEditor?.document.languageId !== 'vue'
 			&& vscode.window.activeTextEditor?.document.languageId !== 'markdown'
+			&& vscode.window.activeTextEditor?.document.languageId !== 'html'
 			&& !(
 				takeOverModeEnabled()
 				&& vscode.window.activeTextEditor

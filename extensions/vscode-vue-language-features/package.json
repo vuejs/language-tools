@@ -29,6 +29,7 @@
 	"activationEvents": [
 		"onLanguage:vue",
 		"onLanguage:markdown",
+		"onLanguage:html",
 		"onLanguage:javascript",
 		"onLanguage:typescript",
 		"onLanguage:javascriptreact",

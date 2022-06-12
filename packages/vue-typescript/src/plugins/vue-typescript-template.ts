@@ -20,6 +20,7 @@ export default function (
 	scriptLang: ComputedRef<string>,
 	compilerOptions: VueCompilerOptions,
 	disableTemplateScript: boolean,
+	useGlobalThisTypeInCtx: boolean,
 ): VueLanguagePlugin {
 
 	return {
@@ -64,7 +65,7 @@ export default function (
 
 				writeImportTypes();
 
-				tsxCodeGen.addText(`declare var __VLS_ctx: InstanceType<typeof __VLS_component> & {\n`);
+				tsxCodeGen.addText(`declare var __VLS_ctx: ${useGlobalThisTypeInCtx ? 'typeof globalThis &' : ''} InstanceType<typeof __VLS_component> & {\n`);
 				/* CSS Module */
 				for (const cssModule of cssModuleClasses.value) {
 					tsxCodeGen.addText(`${cssModule.style.module}: Record<string, string>`);

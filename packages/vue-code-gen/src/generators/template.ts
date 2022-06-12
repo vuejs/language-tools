@@ -550,6 +550,28 @@ export function generate(
 				for (const varName of slotBlockVars)
 					localVars[varName] = (localVars[varName] ?? 0) + 1;
 			}
+
+			const vScope = node.props.find(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'scope');
+			let inScope = false;
+
+			if (vScope?.type === CompilerDOM.NodeTypes.DIRECTIVE && vScope.exp) {
+				tsCodeGen.addText(`if (__VLS_types.withScope(__VLS_ctx, `);
+				writeCode(
+					vScope.exp.loc.source,
+					{
+						start: vScope.exp.loc.start.offset,
+						end: vScope.exp.loc.end.offset,
+					},
+					SourceMaps.Mode.Offset,
+					{
+						vueTag: 'template',
+						capabilities: capabilitiesSet.all,
+					},
+				);
+				inScope = true;
+				tsCodeGen.addText(')) {\n');
+			}
+
 			writeDirectives(node);
 			writeElReferences(node); // <el ref="foo" />
 			if (cssScopedClasses.length) writeClassScopeds(node);
@@ -563,6 +585,10 @@ export function generate(
 			if (slotBlockVars) {
 				for (const varName of slotBlockVars)
 					localVars[varName]--;
+			}
+
+			if (inScope) {
+				tsCodeGen.addText('}\n');
 			}
 		}
 		tsCodeGen.addText(`}\n`);
@@ -1381,6 +1407,7 @@ export function generate(
 				&& prop.name !== 'on'
 				&& prop.name !== 'model'
 				&& prop.name !== 'bind'
+				&& prop.name !== 'scope'
 			) {
 
 				const diagStart = tsCodeGen.getText().length;

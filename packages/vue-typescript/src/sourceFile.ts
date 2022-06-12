@@ -14,6 +14,7 @@ import { parseCssVars } from './utils/parseCssVars';
 
 import useVueFilePlugin from './plugins/file-vue';
 import useMdFilePlugin from './plugins/file-md';
+import useHtmlFilePlugin from './plugins/file-html';
 import useHtmlPlugin from './plugins/vue-template-html';
 import usePugPlugin from './plugins/vue-template-pug';
 import useVueSfcStyles from './plugins/vue-sfc-styles';
@@ -229,6 +230,7 @@ export function createSourceFile(
 	const plugins: VueLanguagePlugin[] = [
 		useVueFilePlugin(),
 		useMdFilePlugin(),
+		useHtmlFilePlugin(),
 		useHtmlPlugin(),
 		usePugPlugin(),
 		useVueSfcStyles(),
@@ -253,6 +255,7 @@ export function createSourceFile(
 			scriptLang,
 			vueCompilerOptions,
 			!!vueCompilerOptions.experimentalDisableTemplateSupport || (compilerOptions.jsx ?? ts.JsxEmit.Preserve) !== ts.JsxEmit.Preserve,
+			fileName.endsWith('.html') // petite-vue
 		),
 	];
 

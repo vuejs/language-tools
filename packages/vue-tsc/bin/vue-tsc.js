@@ -12,15 +12,15 @@ fs.readFileSync = (...args) => {
         // add *.vue files to allow extensions
         tsc = tsc.replace(
             `ts.supportedTSExtensions = [[".ts", ".tsx", ".d.ts"], [".cts", ".d.cts"], [".mts", ".d.mts"]];`,
-            `ts.supportedTSExtensions = [[".ts", ".tsx", ".d.ts"], [".cts", ".d.cts"], [".mts", ".d.mts"], [".vue", ".md"]];`,
+            `ts.supportedTSExtensions = [[".ts", ".tsx", ".d.ts"], [".cts", ".d.cts"], [".mts", ".d.mts"], [".vue", ".md", ".html"]];`,
         );
         tsc = tsc.replace(
             `ts.supportedJSExtensions = [[".js", ".jsx"], [".mjs"], [".cjs"]];`,
-            `ts.supportedJSExtensions = [[".js", ".jsx"], [".mjs"], [".cjs"], [".vue", ".md"]];`,
+            `ts.supportedJSExtensions = [[".js", ".jsx"], [".mjs"], [".cjs"], [".vue", ".md", ".html"]];`,
         );
         tsc = tsc.replace(
             `var allSupportedExtensions = [[".ts", ".tsx", ".d.ts", ".js", ".jsx"], [".cts", ".d.cts", ".cjs"], [".mts", ".d.mts", ".mjs"]];`,
-            `var allSupportedExtensions = [[".ts", ".tsx", ".d.ts", ".js", ".jsx"], [".cts", ".d.cts", ".cjs"], [".mts", ".d.mts", ".mjs"], [".vue", ".md"]];`,
+            `var allSupportedExtensions = [[".ts", ".tsx", ".d.ts", ".js", ".jsx"], [".cts", ".d.cts", ".cjs"], [".mts", ".d.mts", ".mjs"], [".vue", ".md", ".html"]];`,
         );
 
         // proxy createProgram apis

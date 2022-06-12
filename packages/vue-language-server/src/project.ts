@@ -243,7 +243,7 @@ export async function createProject(
 		const parseConfigHost: ts.ParseConfigHost = {
 			useCaseSensitiveFileNames: projectSys.useCaseSensitiveFileNames,
 			readDirectory: (path, extensions, exclude, include, depth) => {
-				return projectSys.readDirectory(path, [...extensions, '.vue', '.md'], exclude, include, depth);
+				return projectSys.readDirectory(path, [...extensions, '.vue', '.md', '.html'], exclude, include, depth);
 			},
 			fileExists: projectSys.fileExists,
 			readFile: projectSys.readFile,
