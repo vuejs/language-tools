@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.37.6 (2022/6/13)
+
+- fix: SFC syntax highlight broken if directives missing `=` sign
+
 ## 0.37.5 (2022/6/13)
 
 - feat: support petite-vue
@@ -7,7 +11,6 @@
 - fix: cannot direct execution of fileReferences command ([#1419](https://github.com/johnsoncodehk/volar/issues/1419))
 - fix: avoid "`" auto close break markdown code block input ([#1428](https://github.com/johnsoncodehk/volar/issues/1428))
 - fix: component props completion info box missing in template
-- fix: directives syntax highlight incorrect if `=` sign missing ([#1423](https://github.com/johnsoncodehk/volar/issues/1423))
 - fix: false positive props type error when JS component usage in TS component ([#1426](https://github.com/johnsoncodehk/volar/issues/1426))
 - fix: cannot recognize component properties in type reference in template ([#1422](https://github.com/johnsoncodehk/volar/issues/1422))
 - fix: slot binding type annotation not working if parent component is `<component :is>` ([#1425](https://github.com/johnsoncodehk/volar/issues/1425))
