@@ -542,14 +542,12 @@ export function generate(
 			let slotBlockVars: string[] | undefined;
 
 			writeInlineCss(node);
-			if (parentEl) {
 
-				slotBlockVars = [];
-				writeImportSlots(node, parentEl, slotBlockVars);
+			slotBlockVars = [];
+			writeImportSlots(node, parentEl, slotBlockVars);
 
-				for (const varName of slotBlockVars)
-					localVars[varName] = (localVars[varName] ?? 0) + 1;
-			}
+			for (const varName of slotBlockVars)
+				localVars[varName] = (localVars[varName] ?? 0) + 1;
 
 			const vScope = node.props.find(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'scope');
 			let inScope = false;
@@ -1265,13 +1263,9 @@ export function generate(
 			}
 		}
 	}
-	function writeImportSlots(node: CompilerDOM.ElementNode, parentEl: CompilerDOM.ElementNode, slotBlockVars: string[]) {
+	function writeImportSlots(node: CompilerDOM.ElementNode, parentEl: CompilerDOM.ElementNode | undefined, slotBlockVars: string[]) {
 
-		const tag = tagResolves[parentEl.tag];
-
-		if (!tag)
-			return;
-
+		const tag = parentEl ? tagResolves[parentEl.tag] : undefined;
 
 		for (const prop of node.props) {
 			if (
@@ -1282,10 +1276,12 @@ export function generate(
 				const varComponentInstance = `__VLS_${elementIndex++}`;
 				const varSlots = `__VLS_${elementIndex++}`;
 
-				tsCodeGen.addText(`const ${varComponentInstance} = new ${tag.component}({ `);
-				writeProps(parentEl, false, 'slots');
-				tsCodeGen.addText(`});\n`);
-				tsCodeGen.addText(`declare const ${varSlots}: __VLS_types.ExtractComponentSlots<typeof ${varComponentInstance}>;\n`);
+				if (tag && parentEl) {
+					tsCodeGen.addText(`const ${varComponentInstance} = new ${tag.component}({ `);
+					writeProps(parentEl, false, 'slots');
+					tsCodeGen.addText(`});\n`);
+					tsCodeGen.addText(`declare const ${varSlots}: __VLS_types.ExtractComponentSlots<typeof ${varComponentInstance}>;\n`);
+				}
 
 				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					tsCodeGen.addText(`const `);
@@ -1313,6 +1309,13 @@ export function generate(
 
 					tsCodeGen.addText(` = `);
 				}
+
+				if (!tag || !parentEl) {
+					// fix https://github.com/johnsoncodehk/volar/issues/1425
+					tsCodeGen.addText(`{} as any;\n`);
+					continue;
+				}
+
 				let slotName = 'default';
 				let isStatic = true;
 				if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.content !== '') {
