@@ -421,15 +421,15 @@ export function generate(
 				// fill $props
 				if (scriptSetupRanges.propsTypeArg) {
 					// NOTE: defineProps is inaccurate for $props
-					codeGen.addText(`$props: defineProps<`);
+					codeGen.addText(`$props: (await import('./__VLS_types')).makeOptional(defineProps<`);
 					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
-					codeGen.addText(`>(),\n`);
+					codeGen.addText(`>()),\n`);
 				}
 				else if (scriptSetupRanges.propsRuntimeArg) {
 					// NOTE: defineProps is inaccurate for $props
-					codeGen.addText(`$props: defineProps(`);
+					codeGen.addText(`$props: (await import('./__VLS_types')).makeOptional(defineProps(`);
 					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
-					codeGen.addText(`),\n`);
+					codeGen.addText(`)),\n`);
 				}
 				// fill $emit
 				if (scriptSetupRanges.emitsAssignName) {

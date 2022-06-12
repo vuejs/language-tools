@@ -43,6 +43,7 @@ export declare function directiveFunction<T>(dir: T):
 	: T extends FunctionDirective<infer E, infer V> ? undefined extends V ? (value?: V) => void : (value: V) => void
 	: T;
 export declare function withScope<T, K>(ctx: T, scope: K): ctx is T & K;
+export declare function makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
 
 export type ExtractComponentSlots<T> =
 	IsAny<T> extends true ? Record<string, any>
