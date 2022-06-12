@@ -313,7 +313,7 @@ export function createLanguageService(
 	function getTextDocument(uri: string) {
 
 		const fileName = shared.uriToFsPath(uri);
-		const scriptSnapshot = vueLsHost.getScriptSnapshot(fileName);
+		const scriptSnapshot = vueLsHost.getScriptFileNames().includes(fileName) ? vueLsHost.getScriptSnapshot(fileName) : undefined;
 
 		if (scriptSnapshot) {
 

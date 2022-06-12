@@ -240,10 +240,11 @@ export async function createProject(
 		scripts.clear();
 	}
 	function createParsedCommandLine(): ReturnType<typeof tsShared.createParsedCommandLine> {
+		const extraExts = typeof tsConfig === 'string' ? ['.vue', '.md', '.html'] : ['.vue'];
 		const parseConfigHost: ts.ParseConfigHost = {
 			useCaseSensitiveFileNames: projectSys.useCaseSensitiveFileNames,
 			readDirectory: (path, extensions, exclude, include, depth) => {
-				return projectSys.readDirectory(path, [...extensions, '.vue', '.md', '.html'], exclude, include, depth);
+				return projectSys.readDirectory(path, [...extensions, ...extraExts], exclude, include, depth);
 			},
 			fileExists: projectSys.fileExists,
 			readFile: projectSys.readFile,
