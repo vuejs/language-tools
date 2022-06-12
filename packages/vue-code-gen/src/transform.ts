@@ -142,7 +142,8 @@ function walkIdentifiers(
 		}
 	}
 	else if (ts.isTypeReferenceNode(node)) {
-		// ignore
+		// fix https://github.com/johnsoncodehk/volar/issues/1422
+		node.forEachChild(node => walkIdentifiersInTypeReference(ts, node, cb));
 	}
 	else {
 		node.forEachChild(node => walkIdentifiers(ts, node, cb, localVars));
@@ -150,6 +151,19 @@ function walkIdentifiers(
 
 	for (const varName of blockVars)
 		localVars[varName]--;
+}
+
+function walkIdentifiersInTypeReference(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	node: ts.Node,
+	cb: (varNode: ts.Identifier, isShorthand: boolean) => void,
+) {
+	if (ts.isTypeQueryNode(node) && ts.isIdentifier(node.exprName)) {
+		cb(node.exprName, false);
+	}
+	else {
+		node.forEachChild(node => walkIdentifiersInTypeReference(ts, node, cb));
+	}
 }
 
 export function colletVars(
