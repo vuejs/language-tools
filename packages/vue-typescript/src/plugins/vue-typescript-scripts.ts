@@ -17,8 +17,8 @@ export default function (
 
 	return {
 
-		getEmbeddedFilesCount(sfc) {
-			return 2;
+		getEmbeddedFilesCount(fileName, sfc) {
+			return fileName.endsWith('.html') ? 0 : 2;
 		},
 
 		getEmbeddedFile(fileName, sfc, i) {

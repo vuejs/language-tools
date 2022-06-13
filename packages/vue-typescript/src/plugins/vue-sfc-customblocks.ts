@@ -5,7 +5,7 @@ export default function (): VueLanguagePlugin {
 
 	return {
 
-		getEmbeddedFilesCount(sfc) {
+		getEmbeddedFilesCount(fileName, sfc) {
 			return sfc.customBlocks.length;
 		},
 

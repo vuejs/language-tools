@@ -20,11 +20,7 @@ export default function (): VueLanguagePlugin {
 						// style block intellisense support by vscode-html-language-features
 						if (matchText.startsWith('<script') && matchText.indexOf('src=') === -1) {
 							// monkey fix replace `<script type="module">` to `<script setup>`
-							codeGen.addCode2(matchText
-								.replace('type="module"', 'setup        ')
-								.replace('type=\'module\'', 'setup        ')
-								.replace('type=module', 'setup      ')
-								, match.index, undefined);
+							codeGen.addCode2(matchText, match.index, undefined);
 						}
 						codeGen.addText('\n\n');
 						content = content.substring(0, match.index) + ' '.repeat(matchText.length) + content.substring(match.index + matchText.length);

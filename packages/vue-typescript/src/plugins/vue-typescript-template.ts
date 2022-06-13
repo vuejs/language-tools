@@ -25,7 +25,7 @@ export default function (
 
 	return {
 
-		getEmbeddedFilesCount(sfc) {
+		getEmbeddedFilesCount(fileName, sfc) {
 			return 3;
 		},
 

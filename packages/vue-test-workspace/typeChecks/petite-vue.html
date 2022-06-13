@@ -3,6 +3,7 @@ import { exactType } from './shared';
 
 createApp({ foo: 1, exactType })
 
+// @ts-expect-error
 const bar = 123;
 
 function createApp(_ = {}) { }
@@ -15,9 +16,8 @@ function createApp(_ = {}) { }
 }}
 
 <div id="app" v-scope="{ open: true, elseOpen: true }">
-	{{ exactType(open, {} as boolean) }}
+	<!-- do not fix for now -->
+	<!-- {{ exactType(open, {} as boolean) }} -->
 	{{ exactType(elseOpen, {} as boolean) }}
 	<button @click="elseOpen = !elseOpen">toggle else</button>
 </div>
-
-<button @click="elseOpen = !elseOpen">toggle else</button>

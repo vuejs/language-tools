@@ -15,6 +15,7 @@ import { parseCssVars } from './utils/parseCssVars';
 import useVueFilePlugin from './plugins/file-vue';
 import useMdFilePlugin from './plugins/file-md';
 import useHtmlFilePlugin from './plugins/file-html';
+import usePetiteVueScriptPlugin from './plugins/petite-vue-script';
 import useHtmlPlugin from './plugins/vue-template-html';
 import usePugPlugin from './plugins/vue-template-pug';
 import useVueSfcStyles from './plugins/vue-sfc-styles';
@@ -45,7 +46,7 @@ export interface VueLanguagePlugin {
 
 	// TODO: compileHtmlTemplateToAst
 
-	getEmbeddedFilesCount?(sfc: Sfc): number;
+	getEmbeddedFilesCount?(fileName: string, sfc: Sfc): number;
 
 	getEmbeddedFile?(fileName: string, sfc: Sfc, i: number): EmbeddedFile | undefined;
 }
@@ -231,6 +232,7 @@ export function createSourceFile(
 		useVueFilePlugin(),
 		useMdFilePlugin(),
 		useHtmlFilePlugin(),
+		usePetiteVueScriptPlugin(),
 		useHtmlPlugin(),
 		usePugPlugin(),
 		useVueSfcStyles(),
@@ -276,7 +278,7 @@ export function createSourceFile(
 	});
 	const pluginEmbeddeds = plugins.map(plugin => {
 		if (plugin.getEmbeddedFilesCount && plugin.getEmbeddedFile) {
-			const embeddedsCount = computed(() => plugin.getEmbeddedFilesCount!(sfc));
+			const embeddedsCount = computed(() => plugin.getEmbeddedFilesCount!(fileName, sfc));
 			const embeddeds = computed(() => {
 				const computeds: ComputedRef<Embedded | undefined>[] = [];
 				for (let i = 0; i < embeddedsCount.value; i++) {
@@ -518,7 +520,7 @@ export function createSourceFile(
 		getCompiledVue: untrack(() => file2VueSourceMap.value),
 		getSfcTemplateLanguageCompiled: untrack(() => computedHtmlTemplate.value),
 		getSfcVueTemplateCompiled: untrack(() => templateAstCompiled.value),
-		getScriptFileName: untrack(() => fileName + '.' + scriptLang.value),
+		getScriptFileName: untrack(() => fileName.endsWith('.html') ? fileName + '.__VLS_script.' + scriptLang.value : fileName + '.' + scriptLang.value),
 		getDescriptor: untrack(() => unref(sfc)),
 		getScriptAst: untrack(() => scriptAst.value),
 		getScriptSetupAst: untrack(() => scriptSetupAst.value),
