@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.37.7 (2022/6/13)
+
+- fix: cannot resolve external vue file path ([#1445](https://github.com/johnsoncodehk/volar/issues/1445))
+- fix: petite-vue v-scope data type loss in inline handlers ([#1442](https://github.com/johnsoncodehk/volar/issues/1442))
+- fix: petite-vue createApp() initialData type missing in template ([#1444](https://github.com/johnsoncodehk/volar/issues/1444))
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
+
 ## 0.37.6 (2022/6/13)
 
 - fix: SFC syntax highlight broken if directives missing `=` sign
@@ -17,12 +29,6 @@
 - fix: patch invalid `:` character in tag name ([#1435](https://github.com/johnsoncodehk/volar/issues/1435))
 - fix: auto closing pairs not working in template expressions ([#1437](https://github.com/johnsoncodehk/volar/issues/1437))
 - perf: faster markdown content parsing for vitepress
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 0.37.3 (2022/6/8)
 
