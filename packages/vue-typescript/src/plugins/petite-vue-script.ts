@@ -32,7 +32,7 @@ export default function (): VueLanguagePlugin {
 
 				codeGen.addText('\n\n');
 				codeGen.addText(`const __VLS_scope = `);
-				if (createVueArg && createVueArg.index !== undefined) {
+				if (createVueArg && createVueArg[1] && createVueArg.index !== undefined) {
 					codeGen.addCode2(createVueArg[1], createVueArg.index + createVueArg[0].indexOf(createVueArg[1]), {
 						vueTag: 'script',
 						capabilities: {
