@@ -28,18 +28,18 @@ export function createLanguageServiceContext(
 				// .vue.js -> .vue
 				// .vue.ts -> .vue
 				// .vue.d.ts (never)
-				const fileNameTrim = fileName.substring(0, fileName.lastIndexOf('.'));
+				const vueFileName = fileName.substring(0, fileName.lastIndexOf('.'));
 
-				if (fileNameTrim.endsWith('.vue') || fileNameTrim.endsWith('.md') || fileNameTrim.endsWith('.html')) {
-					const vueFile = documentRegistry.get(fileNameTrim);
+				if (vueFileName.endsWith('.vue') || vueFileName.endsWith('.md') || vueFileName.endsWith('.html')) {
+					const vueFile = documentRegistry.get(vueFileName);
 					if (!vueFile) {
-						const fileExists = !!host.fileExists?.(fileNameTrim);
+						const fileExists = !!host.fileExists?.(vueFileName);
 						if (fileExists) {
 							// create virtual files
-							const scriptSnapshot = host.getScriptSnapshot(fileName);
+							const scriptSnapshot = host.getScriptSnapshot(vueFileName);
 							if (scriptSnapshot) {
-								documentRegistry.set(fileName, createSourceFile(
-									fileName,
+								documentRegistry.set(vueFileName, createSourceFile(
+									vueFileName,
 									scriptSnapshot.getText(0, scriptSnapshot.getLength()),
 									compilerOptions,
 									vueCompilerOptions,
