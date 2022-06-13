@@ -22,7 +22,7 @@ importers:
     specifiers:
       '@volar/typescript-plugin-forward': file:typescript-plugin-forward
       esbuild: latest
-      typescript-vue-plugin: 0.37.5
+      typescript-vue-plugin: 0.37.7
       vsce: latest
     dependencies:
       '@volar/typescript-plugin-forward': file:extensions/vscode-typescript-vue-plugin/typescript-plugin-forward
@@ -34,9 +34,9 @@ importers:
   extensions/vscode-vue-language-features:
     specifiers:
       '@types/vscode': 1.67.0
-      '@volar/preview': 0.37.5
-      '@volar/shared': 0.37.5
-      '@volar/vue-language-server': 0.37.5
+      '@volar/preview': 0.37.7
+      '@volar/shared': 0.37.7
+      '@volar/vue-language-server': 0.37.7
       '@vue/compiler-dom': ^3.2.37
       '@vue/compiler-sfc': ^3.2.37
       '@vue/reactivity': ^3.2.37
@@ -65,7 +65,7 @@ importers:
 
   packages/code-gen:
     specifiers:
-      '@volar/source-map': 0.37.5
+      '@volar/source-map': 0.37.7
     dependencies:
       '@volar/source-map': link:../source-map
 
@@ -80,10 +80,10 @@ importers:
 
   packages/pug-language-service:
     specifiers:
-      '@volar/code-gen': 0.37.5
-      '@volar/shared': 0.37.5
-      '@volar/source-map': 0.37.5
-      '@volar/transforms': 0.37.5
+      '@volar/code-gen': 0.37.7
+      '@volar/shared': 0.37.7
+      '@volar/source-map': 0.37.7
+      '@volar/transforms': 0.37.7
       pug-lexer: ^5.0.1
       pug-parser: ^6.0.0
       vscode-html-languageservice: ^5.0.0
@@ -121,7 +121,7 @@ importers:
 
   packages/transforms:
     specifiers:
-      '@volar/shared': 0.37.5
+      '@volar/shared': 0.37.7
       vscode-languageserver-types: ^3.17.1
     dependencies:
       '@volar/shared': link:../shared
@@ -141,7 +141,7 @@ importers:
   packages/typescript-language-service:
     specifiers:
       '@types/semver': ^7.3.9
-      '@volar/shared': 0.37.5
+      '@volar/shared': 0.37.7
       semver: ^7.3.7
       typescript: latest
       upath: ^2.0.1
@@ -161,8 +161,8 @@ importers:
 
   packages/typescript-vue-plugin:
     specifiers:
-      '@volar/typescript-faster': 0.37.5
-      '@volar/vue-typescript': 0.37.5
+      '@volar/typescript-faster': 0.37.7
+      '@volar/vue-typescript': 0.37.7
       typescript: latest
     dependencies:
       '@volar/typescript-faster': link:../typescript-faster
@@ -172,8 +172,8 @@ importers:
 
   packages/vue-code-gen:
     specifiers:
-      '@volar/code-gen': 0.37.5
-      '@volar/source-map': 0.37.5
+      '@volar/code-gen': 0.37.7
+      '@volar/source-map': 0.37.7
       '@vue/compiler-core': ^3.2.37
       '@vue/compiler-dom': ^3.2.37
       '@vue/shared': ^3.2.37
@@ -189,9 +189,9 @@ importers:
 
   packages/vue-language-server:
     specifiers:
-      '@volar/shared': 0.37.5
-      '@volar/vue-language-service': 0.37.5
-      '@volar/vue-typescript': 0.37.5
+      '@volar/shared': 0.37.7
+      '@volar/vue-language-service': 0.37.7
+      '@volar/vue-typescript': 0.37.7
       '@vue/shared': ^3.2.37
       request-light: ^0.5.8
       upath: ^2.0.1
@@ -218,15 +218,15 @@ importers:
       '@johnsoncodehk/html2pug': ^1.0.0
       '@johnsoncodehk/pug-beautify': ^0.2.2
       '@types/semver': ^7.3.9
-      '@volar/pug-language-service': 0.37.5
-      '@volar/shared': 0.37.5
-      '@volar/source-map': 0.37.5
-      '@volar/transforms': 0.37.5
-      '@volar/typescript-faster': 0.37.5
-      '@volar/typescript-language-service': 0.37.5
-      '@volar/vue-code-gen': 0.37.5
-      '@volar/vue-language-service-types': 0.37.5
-      '@volar/vue-typescript': 0.37.5
+      '@volar/pug-language-service': 0.37.7
+      '@volar/shared': 0.37.7
+      '@volar/source-map': 0.37.7
+      '@volar/transforms': 0.37.7
+      '@volar/typescript-faster': 0.37.7
+      '@volar/typescript-language-service': 0.37.7
+      '@volar/vue-code-gen': 0.37.7
+      '@volar/vue-language-service-types': 0.37.7
+      '@volar/vue-typescript': 0.37.7
       '@vscode/emmet-helper': ^2.8.4
       '@vue/compiler-dom': ^3.2.37
       '@vue/reactivity': ^3.2.37
@@ -282,16 +282,16 @@ importers:
 
   packages/vue-tsc:
     specifiers:
-      '@volar/vue-typescript': 0.37.5
+      '@volar/vue-typescript': 0.37.7
     dependencies:
       '@volar/vue-typescript': link:../vue-typescript
 
   packages/vue-typescript:
     specifiers:
-      '@volar/code-gen': 0.37.5
-      '@volar/pug-language-service': 0.37.5
-      '@volar/source-map': 0.37.5
-      '@volar/vue-code-gen': 0.37.5
+      '@volar/code-gen': 0.37.7
+      '@volar/pug-language-service': 0.37.7
+      '@volar/source-map': 0.37.7
+      '@volar/vue-code-gen': 0.37.7
       '@vue/compiler-sfc': ^3.2.37
       '@vue/reactivity': ^3.2.37
       typescript: latest

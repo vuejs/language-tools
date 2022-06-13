@@ -1,6 +1,6 @@
 {
 	"name": "@volar/shared",
-	"version": "0.37.5",
+	"version": "0.37.7",
 	"main": "out/node.js",
 	"browser": "./out/browser.js",
 	"license": "MIT",
