@@ -551,9 +551,14 @@ export function generate(
 
 			const vScope = node.props.find(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'scope');
 			let inScope = false;
+			let originalConditionsNum = blockConditions.length;
 
 			if (vScope?.type === CompilerDOM.NodeTypes.DIRECTIVE && vScope.exp) {
-				tsCodeGen.addText(`if (__VLS_types.withScope(__VLS_ctx, `);
+
+				const scopeVar = `__VLS_${elementIndex++}`;
+				const condition = `__VLS_types.withScope(__VLS_ctx, ${scopeVar})`;
+
+				tsCodeGen.addText(`const ${scopeVar} = `);
 				writeCode(
 					vScope.exp.loc.source,
 					{
@@ -566,8 +571,10 @@ export function generate(
 						capabilities: capabilitiesSet.all,
 					},
 				);
+				tsCodeGen.addText(';\n');
+				tsCodeGen.addText(`if (${condition}) {\n`);
+				blockConditions.push(condition);
 				inScope = true;
-				tsCodeGen.addText(')) {\n');
 			}
 
 			writeDirectives(node);
@@ -587,6 +594,7 @@ export function generate(
 
 			if (inScope) {
 				tsCodeGen.addText('}\n');
+				blockConditions.length = originalConditionsNum;
 			}
 		}
 		tsCodeGen.addText(`}\n`);

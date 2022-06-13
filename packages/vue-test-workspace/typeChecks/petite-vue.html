@@ -1,0 +1,23 @@
+<script type="module" lang="ts">
+import { exactType } from './shared';
+
+createApp({ foo: 1, exactType })
+
+const bar = 123;
+
+function createApp(_ = {}) { }
+</script>
+
+{{ exactType(foo, {} as number) }}
+{{
+	// @ts-expect-error
+	bar
+}}
+
+<div id="app" v-scope="{ open: true, elseOpen: true }">
+	{{ exactType(open, {} as boolean) }}
+	{{ exactType(elseOpen, {} as boolean) }}
+	<button @click="elseOpen = !elseOpen">toggle else</button>
+</div>
+
+<button @click="elseOpen = !elseOpen">toggle else</button>

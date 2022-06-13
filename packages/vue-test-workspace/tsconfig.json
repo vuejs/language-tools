@@ -6,6 +6,7 @@
 		],
 		"strict": true,
 		"allowJs": true,
+		"checkJs": true,
 		"noUncheckedIndexedAccess": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
