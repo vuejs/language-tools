@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.37.8 (2022/6/14)
+
+- feat: create [a new extension](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.alpine-language-features) for support Alpine.js via reuse petite-vue works
+- fix: petite-vue createApp arg range inaccurate
+- fix: vue component context properties missing in petite-vue template
+
 ## 0.37.7 (2022/6/13)
 
 - fix: cannot resolve external vue file path ([#1445](https://github.com/johnsoncodehk/volar/issues/1445))
