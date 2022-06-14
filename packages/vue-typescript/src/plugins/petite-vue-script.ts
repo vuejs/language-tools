@@ -19,19 +19,7 @@ export default function (
 				const ast = ts.createSourceFile(fileName, sfc.script.content, ts.ScriptTarget.Latest);
 				let createAppArgRange: [number, number] | undefined;
 
-				ast.forEachChild(child => {
-					if (ts.isExpressionStatement(child)) {
-						if (ts.isCallExpression(child.expression)) {
-							const call = child.expression;
-							if (ts.isIdentifier(call.expression) && call.expression.text === 'createApp') {
-								if (call.arguments.length) {
-									const arg0 = call.arguments[0];
-									createAppArgRange = [arg0.getStart(ast), arg0.getEnd()];
-								}
-							}
-						}
-					}
-				});
+				ast.forEachChild(child => walkNode(child));
 
 				const codeGen = new CodeGen<EmbeddedFileMappingData>();
 
@@ -70,7 +58,8 @@ export default function (
 					codeGen.addText('{}');
 				}
 				codeGen.addText(';\n');
-				codeGen.addText('declare const __VLS_export: new () => typeof __VLS_scope;\n');
+				codeGen.addText(`const __VLS_ctx = (await import('vue')).defineComponent({});\n`);
+				codeGen.addText(`declare const __VLS_export: new () => typeof __VLS_scope & import('./__VLS_types').PickNotAny<InstanceType<typeof __VLS_ctx>, {}>;\n`);
 				codeGen.addText('export default __VLS_export;\n');
 
 				const file: EmbeddedFile = {
@@ -89,6 +78,18 @@ export default function (
 				};
 
 				return file;
+
+				function walkNode(node: ts.Node) {
+					if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'createApp') {
+						if (node.arguments.length) {
+							const arg0 = node.arguments[0];
+							createAppArgRange = [arg0.getStart(ast), arg0.getEnd()];
+						}
+					}
+					else {
+						node.forEachChild(child => walkNode(child));
+					}
+				}
 			}
 		},
 	};
