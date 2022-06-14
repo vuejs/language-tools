@@ -4,14 +4,14 @@
 
 - [Vue Language Features](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features) \
 *Vue language support extension for VSCode*
+- [Alpine Language Features](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-alpine-language-features) (Experimental) \
+*Alpine language support extension for VSCode*
 - [TypeScript Vue Plugin](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-typescript-vue-plugin) \
 *VSCode extension to support Vue in TS server*
 - [vue-tsc](https://github.com/johnsoncodehk/volar/tree/master/packages/vue-tsc) \
 *Type-check and dts build command line tool*
 - [volar-plugins](https://github.com/johnsoncodehk/volar-plugins) \
-*Common plugins to changes IDE behavior with Volar language server*
-- [Alpine Language Features](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-alpine-language-features) (Experimental) \
-*Alpine language support extension for VSCode*
+*Common plugins to changes language featrues behavior for `Vue Language Features` and `Alpine Language Features` extensions*
 
 Discord: https://discord.gg/5bnSSSSBbK
 
