@@ -18,6 +18,28 @@ importers:
       vite: 2.9.12
       vitest: 0.14.2
 
+  extensions/vscode-alpine-language-features:
+    specifiers:
+      '@types/vscode': 1.67.0
+      '@volar/alpine-language-server': 0.37.7
+      '@volar/shared': 0.37.7
+      esbuild: latest
+      path-browserify: ^1.0.1
+      punycode: ^2.1.1
+      vsce: latest
+      vscode-languageclient: ^8.0.1
+      vscode-nls: ^5.0.1
+    devDependencies:
+      '@types/vscode': 1.67.0
+      '@volar/alpine-language-server': link:../../packages/alpine-language-server
+      '@volar/shared': link:../../packages/shared
+      esbuild: 0.14.43
+      path-browserify: 1.0.1
+      punycode: 2.1.1
+      vsce: 2.9.1
+      vscode-languageclient: 8.0.1
+      vscode-nls: 5.0.1
+
   extensions/vscode-typescript-vue-plugin:
     specifiers:
       '@volar/typescript-plugin-forward': file:typescript-plugin-forward
@@ -62,6 +84,42 @@ importers:
       vsce: 2.9.1
       vscode-languageclient: 8.0.1
       vscode-nls: 5.0.1
+
+  packages/alpine-language-server:
+    specifiers:
+      '@volar/alpine-language-service': 0.37.7
+      '@volar/vue-language-server': 0.37.7
+      upath: ^2.0.1
+      vscode-languageserver: ^8.0.1
+    dependencies:
+      '@volar/alpine-language-service': link:../alpine-language-service
+      '@volar/vue-language-server': link:../vue-language-server
+      upath: 2.0.1
+      vscode-languageserver: 8.0.1
+
+  packages/alpine-language-service:
+    specifiers:
+      '@types/semver': ^7.3.9
+      '@volar/alpine-typescript': 0.37.7
+      '@volar/vue-language-service': 0.37.7
+      '@volar/vue-language-service-types': 0.37.7
+      typescript: latest
+    dependencies:
+      '@volar/alpine-typescript': link:../alpine-typescript
+      '@volar/vue-language-service': link:../vue-language-service
+      '@volar/vue-language-service-types': link:../vue-language-service-types
+    devDependencies:
+      '@types/semver': 7.3.9
+      typescript: 4.7.3
+
+  packages/alpine-typescript:
+    specifiers:
+      '@volar/vue-typescript': 0.37.7
+      typescript: latest
+    dependencies:
+      '@volar/vue-typescript': link:../vue-typescript
+    devDependencies:
+      typescript: 4.7.3
 
   packages/code-gen:
     specifiers:

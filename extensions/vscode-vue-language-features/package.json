@@ -623,7 +623,7 @@
 				"category": "Volar"
 			},
 			{
-				"command": "vue.findAllFileReferences",
+				"command": "volar.vue.findAllFileReferences",
 				"title": "Vue: Find File References",
 				"category": "Volar"
 			}
@@ -729,33 +729,33 @@
 			],
 			"explorer/context": [
 				{
-					"command": "vue.findAllFileReferences",
+					"command": "volar.vue.findAllFileReferences",
 					"when": "resourceLangId == typescript",
 					"group": "4_search"
 				},
 				{
-					"command": "vue.findAllFileReferences",
+					"command": "volar.vue.findAllFileReferences",
 					"when": "resourceLangId == typescriptreact",
 					"group": "4_search"
 				},
 				{
-					"command": "vue.findAllFileReferences",
+					"command": "volar.vue.findAllFileReferences",
 					"when": "resourceLangId == javascript",
 					"group": "4_search"
 				},
 				{
-					"command": "vue.findAllFileReferences",
+					"command": "volar.vue.findAllFileReferences",
 					"when": "resourceLangId == javascriptreact",
 					"group": "4_search"
 				},
 				{
-					"command": "vue.findAllFileReferences",
+					"command": "volar.vue.findAllFileReferences",
 					"when": "resourceLangId == vue",
 					"group": "4_search"
 				},
 				{
-					"command": "vue.findAllFileReferences",
-					"when": "resourceLangId == markdown",
+					"command": "volar.vue.findAllFileReferences",
+					"when": "resourceLangId == html",
 					"group": "4_search"
 				}
 			]

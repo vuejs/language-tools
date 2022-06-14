@@ -16,7 +16,23 @@ export interface RuntimeEnvironment {
 	fileSystemProvide: FileSystemProvider | undefined,
 }
 
-export function createLanguageServer(connection: vscode.Connection, runtimeEnv: RuntimeEnvironment) {
+export interface LanguageConfigs {
+	projectExts: string[],
+	inferProjectExts: string[],
+	getDocumentService: typeof vue.getDocumentService,
+	createLanguageService: typeof vue.createLanguageService,
+}
+
+export function createLanguageServer(
+	connection: vscode.Connection,
+	runtimeEnv: RuntimeEnvironment,
+	languageConfigs: LanguageConfigs = {
+		projectExts: ['.vue', '.md', '.html'],
+		inferProjectExts: ['.vue'],
+		getDocumentService: vue.getDocumentService,
+		createLanguageService: vue.createLanguageService,
+	},
+) {
 
 	let clientCapabilities: vscode.ClientCapabilities;
 
@@ -51,7 +67,7 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 
 		if (options.documentFeatures) {
 
-			const documentService = vue.getDocumentService(
+			const documentService = languageConfigs.getDocumentService(
 				{ typescript: ts },
 				configHost,
 				runtimeEnv.fileSystemProvide,
@@ -67,6 +83,7 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 			const tsLocalized = runtimeEnv.loadTypescriptLocalized(options);
 			const projects = createProjects(
 				runtimeEnv,
+				languageConfigs,
 				folders,
 				ts,
 				tsLocalized,
@@ -78,8 +95,8 @@ export function createLanguageServer(connection: vscode.Connection, runtimeEnv: 
 			);
 
 			(await import('./features/customFeatures')).register(connection, documents, projects);
-			(await import('./features/languageFeatures')).register(ts, connection, documents, projects, options.languageFeatures, params);
-			(await import('./registers/registerlanguageFeatures')).register(options.languageFeatures!, vue.getSemanticTokenLegend(), result.capabilities);
+			(await import('./features/languageFeatures')).register(ts, connection, documents, projects, options.languageFeatures, params, languageConfigs);
+			(await import('./registers/registerlanguageFeatures')).register(options.languageFeatures!, vue.getSemanticTokenLegend(), result.capabilities, languageConfigs);
 		}
 
 		return result;

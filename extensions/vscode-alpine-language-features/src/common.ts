@@ -1,23 +1,12 @@
 import * as shared from '@volar/shared';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient';
-import * as activeSelection from './features/activeSelection';
-import * as attrNameCase from './features/attrNameCase';
-import * as callGraph from './features/callGraph';
-import * as createWorkspaceSnippets from './features/createWorkspaceSnippets';
-import * as documentVersion from './features/documentVersion';
-import * as documentContent from './features/documentContent';
-import * as preview from './features/preview';
-import * as showReferences from './features/showReferences';
-import * as splitEditors from './features/splitEditors';
-import * as autoInsertion from './features/autoInsertion';
-import * as tagNameCase from './features/tagNameCase';
-import * as tsVersion from './features/tsVersion';
-import * as verifyAll from './features/verifyAll';
-import * as virtualFiles from './features/virtualFiles';
-import * as tsconfig from './features/tsconfig';
-import * as doctor from './features/doctor';
-import * as fileReferences from './features/fileReferences';
+import * as documentVersion from '../../vscode-vue-language-features/out/features/documentVersion';
+import * as activeSelection from '../../vscode-vue-language-features/out/features/activeSelection';
+import * as tsVersion from '../../vscode-vue-language-features/out/features/tsVersion';
+import * as virtualFiles from '../../vscode-vue-language-features/out/features/virtualFiles';
+import * as tsconfig from '../../vscode-vue-language-features/out/features/tsconfig';
+import * as fileReferences from '../../vscode-vue-language-features/out/features/fileReferences';
 
 let apiClient: lsp.BaseLanguageClient;
 let docClient: lsp.BaseLanguageClient | undefined;
@@ -38,15 +27,8 @@ export async function activate(context: vscode.ExtensionContext, createLc: Creat
 
 	function tryActivate() {
 
-		if (!vscode.window.activeTextEditor) {
-			// onWebviewPanel:preview
-			doActivate(context, createLc);
-			stopCheck.dispose();
-			return;
-		}
-
-		const currentlangId = vscode.window.activeTextEditor.document.languageId;
-		if (currentlangId === 'vue' || currentlangId === 'markdown' || currentlangId === 'html') {
+		const currentlangId = vscode.window.activeTextEditor?.document.languageId ?? '';
+		if (currentlangId === 'html') {
 			doActivate(context, createLc);
 			stopCheck.dispose();
 		}
@@ -61,13 +43,11 @@ export async function activate(context: vscode.ExtensionContext, createLc: Creat
 
 async function doActivate(context: vscode.ExtensionContext, createLc: CreateLanguageClient) {
 
-	vscode.commands.executeCommand('setContext', 'volar.activated', true);
+	vscode.commands.executeCommand('setContext', 'volar.alpine.activated', true);
 
 	const takeOverMode = takeOverModeEnabled();
 	const languageFeaturesDocumentSelector: lsp.DocumentSelector = takeOverMode ?
 		[
-			{ scheme: 'file', language: 'vue' },
-			{ scheme: 'file', language: 'markdown' },
 			{ scheme: 'file', language: 'html' },
 			{ scheme: 'file', language: 'javascript' },
 			{ scheme: 'file', language: 'typescript' },
@@ -75,22 +55,16 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			{ scheme: 'file', language: 'typescriptreact' },
 			{ scheme: 'file', language: 'json' },
 		] : [
-			{ scheme: 'file', language: 'vue' },
-			{ scheme: 'file', language: 'markdown' },
 			{ scheme: 'file', language: 'html' },
 		];
 	const documentFeaturesDocumentSelector: lsp.DocumentSelector = takeOverMode ?
 		[
-			{ language: 'vue' },
-			{ language: 'markdown' },
 			{ language: 'html' },
 			{ language: 'javascript' },
 			{ language: 'typescript' },
 			{ language: 'javascriptreact' },
 			{ language: 'typescriptreact' },
 		] : [
-			{ language: 'vue' },
-			{ language: 'markdown' },
 			{ language: 'html' },
 		];
 	const _useSecondServer = useSecondServer();
@@ -98,25 +72,25 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 	[apiClient, docClient, htmlClient] = await Promise.all([
 		createLc(
-			'volar-language-features',
-			'Volar - Language Features Server',
+			'volar-alpine-language-features',
+			'Volar-Alpine - Language Features Server',
 			languageFeaturesDocumentSelector,
 			getInitializationOptions(context, 'main-language-features', _useSecondServer),
-			6009,
+			6109,
 		),
 		_useSecondServer ? createLc(
-			'volar-language-features-2',
-			'Volar - Second Language Features Server',
+			'volar-alpine-language-features-2',
+			'Volar-Alpine - Second Language Features Server',
 			languageFeaturesDocumentSelector,
 			getInitializationOptions(context, 'second-language-features', _useSecondServer),
-			6010,
+			6110,
 		) : undefined,
 		createLc(
-			'volar-document-features',
-			'Volar - Document Features Server',
+			'volar-alpine-document-features',
+			'Volar-Alpine - Document Features Server',
 			documentFeaturesDocumentSelector,
 			getInitializationOptions(context, 'document-features', _useSecondServer),
-			6011,
+			6111,
 		),
 	]);
 
@@ -127,17 +101,10 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	registerRestartRequest();
 	registerClientRequests();
 
-	splitEditors.register(context);
-	preview.register(context);
-	createWorkspaceSnippets.register(context);
-	callGraph.register(context, apiClient);
-	verifyAll.register(context, docClient ?? apiClient);
-	autoInsertion.register(context, htmlClient, apiClient);
-	doctor.register(context);
-	virtualFiles.register('volar.action.writeVirtualFiles', context, docClient ?? apiClient);
-	tsVersion.register('volar.selectTypeScriptVersion', context, [apiClient, docClient].filter(shared.notEmpty));
-	tsconfig.register('volar.openTsconfig', context, docClient ?? apiClient);
-	fileReferences.register('volar.vue.findAllFileReferences', apiClient);
+	virtualFiles.register('volar.alpine.action.writeVirtualFiles', context, docClient ?? apiClient);
+	tsVersion.register('volar.alpine.selectTypeScriptVersion', context, [apiClient, docClient].filter(shared.notEmpty));
+	tsconfig.register('volar.alpine.openTsconfig', context, docClient ?? apiClient);
+	fileReferences.register('volar.alpine.findAllFileReferences', apiClient);
 
 	async function requestReloadVscode() {
 		const reload = await vscode.window.showInformationMessage(
@@ -167,30 +134,17 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 		// await Promise.all(clients.map(client => client.onReady()));
 
-		context.subscriptions.push(vscode.commands.registerCommand('volar.action.restartServer', async () => {
+		context.subscriptions.push(vscode.commands.registerCommand('volar.alpine.action.restartServer', async () => {
 			await Promise.all(clients.map(client => client.stop()));
 			await Promise.all(clients.map(client => client.start()));
 			registerClientRequests();
 		}));
 	}
 	function registerClientRequests() {
-
 		for (const client of clients) {
-			showReferences.activate(context, client);
 			documentVersion.activate(context, client);
-			documentContent.activate(context, client);
 			activeSelection.activate(context, client);
 		}
-
-		(async () => {
-			const getTagNameCase = await tagNameCase.activate(context, apiClient);
-			const getAttrNameCase = await attrNameCase.activate(context, apiClient);
-
-			apiClient.onRequest(shared.GetDocumentNameCasesRequest.type, async handler => ({
-				tagNameCase: getTagNameCase(handler.uri),
-				attrNameCase: getAttrNameCase(handler.uri),
-			}));
-		})();
 	}
 }
 
@@ -203,19 +157,15 @@ export function deactivate(): Thenable<any> | undefined {
 }
 
 export function takeOverModeEnabled() {
-	const status = vscode.workspace.getConfiguration('volar').get<boolean | 'auto'>('takeOverMode.enabled');
-	if (status === 'auto') {
-		return !vscode.extensions.getExtension('vscode.typescript-language-features');
-	}
-	return status;
+	return vscode.workspace.getConfiguration('volar').get<boolean>('alpine.takeOverMode.enabled');
 }
 
 function useSecondServer() {
-	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.useSecondServer');
+	return !!vscode.workspace.getConfiguration('volar').get<boolean>('alpineserver.useSecondServer');
 }
 
 function serverMaxOldSpaceSize() {
-	return vscode.workspace.getConfiguration('volar').get<number | null>('vueserver.maxOldSpaceSize');
+	return vscode.workspace.getConfiguration('volar').get<number | null>('alpineserver.maxOldSpaceSize');
 }
 
 function getInitializationOptions(
@@ -241,19 +191,24 @@ function getInitializationOptions(
 				completion: {
 					defaultTagNameCase: 'both',
 					defaultAttrNameCase: 'kebabCase',
-					getDocumentNameCasesRequest: true,
-					getDocumentSelectionRequest: true,
+					// getDocumentNameCasesRequest: true,
+					// getDocumentSelectionRequest: true,
+					getDocumentNameCasesRequest: false,
+					getDocumentSelectionRequest: false,
 				},
-				schemaRequestService: { getDocumentContentRequest: true },
+				// schemaRequestService: { getDocumentContentRequest: true },
+				schemaRequestService: false,
 			} : {}),
 			...((mode === 'second-language-features' || (mode === 'main-language-features' && !useSecondServer)) ? {
 				documentHighlight: true,
 				documentLink: true,
-				codeLens: { showReferencesNotification: true },
+				// codeLens: { showReferencesNotification: true },
+				codeLens: { showReferencesNotification: false },
 				semanticTokens: true,
 				inlayHints: true,
 				diagnostics: { getDocumentVersionRequest: true },
-				schemaRequestService: { getDocumentContentRequest: true },
+				// schemaRequestService: { getDocumentContentRequest: true },
+				schemaRequestService: false,
 			} : {}),
 		} : undefined,
 		documentFeatures: mode === 'document-features' ? {

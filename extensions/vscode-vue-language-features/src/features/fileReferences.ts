@@ -5,8 +5,8 @@ import * as nls from 'vscode-nls';
 
 const localize = nls.loadMessageBundle();
 
-export async function register(context: vscode.ExtensionContext, client: BaseLanguageClient) {
-	vscode.commands.registerCommand('vue.findAllFileReferences', async (uri?: vscode.Uri) => {
+export async function register(cmd: string, client: BaseLanguageClient) {
+	vscode.commands.registerCommand(cmd, async (uri?: vscode.Uri) => {
 
 		// https://github.com/microsoft/vscode/blob/main/extensions/typescript-language-features/src/languageFeatures/fileReferences.ts
 		await vscode.window.withProgress({

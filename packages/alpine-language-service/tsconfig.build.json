@@ -1,0 +1,25 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"outDir": "out",
+		"rootDir": "src",
+	},
+	"include": [
+		"src"
+	],
+	"exclude": [
+		"node_modules",
+		".vscode-test"
+	],
+	"references": [
+		{
+			"path": "../alpine-typescript/tsconfig.build.json"
+		},
+		{
+			"path": "../vue-language-service/tsconfig.build.json"
+		},
+		{
+			"path": "../vue-language-service-types/tsconfig.build.json"
+		},
+	],
+}

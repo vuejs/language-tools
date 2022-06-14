@@ -4,7 +4,7 @@ import * as shared from '@volar/shared';
 import * as path from 'path';
 import { takeOverModeEnabled } from '../common';
 
-export async function register(context: vscode.ExtensionContext, languageClient: BaseLanguageClient) {
+export async function register(cmd: string, context: vscode.ExtensionContext, languageClient: BaseLanguageClient) {
 
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	let currentTsconfig = '';
@@ -12,7 +12,7 @@ export async function register(context: vscode.ExtensionContext, languageClient:
 	updateStatusBar();
 
 	vscode.window.onDidChangeActiveTextEditor(updateStatusBar, undefined, context.subscriptions);
-	vscode.commands.registerCommand('volar.openTsconfig', async () => {
+	vscode.commands.registerCommand(cmd, async () => {
 		const document = await vscode.workspace.openTextDocument(currentTsconfig);
 		await vscode.window.showTextDocument(document);
 	});
@@ -37,7 +37,7 @@ export async function register(context: vscode.ExtensionContext, languageClient:
 			);
 			if (tsconfig) {
 				statusBar.text = path.relative(vscode.workspace.rootPath!, tsconfig);
-				statusBar.command = 'volar.openTsconfig';
+				statusBar.command = cmd;
 				currentTsconfig = tsconfig;
 			}
 			else {

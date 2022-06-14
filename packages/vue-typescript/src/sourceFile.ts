@@ -219,7 +219,7 @@ export function createSourceFile(
 			: undefined
 	);
 	const scriptLang = computed(() => {
-		return !sfc.script && !sfc.scriptSetup ? 'ts'
+		return !sfc.script && !sfc.scriptSetup ? 'js'
 			: sfc.scriptSetup && sfc.scriptSetup.lang !== 'js' ? sfc.scriptSetup.lang
 				: sfc.script && sfc.script.lang !== 'js' ? sfc.script.lang
 					: 'js';

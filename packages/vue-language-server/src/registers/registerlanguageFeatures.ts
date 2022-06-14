@@ -1,11 +1,13 @@
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-service';
+import { LanguageConfigs } from '../common';
 import * as vscode from 'vscode-languageserver';
 
 export function register(
 	features: NonNullable<shared.ServerInitializationOptions['languageFeatures']>,
 	legend: vscode.SemanticTokensLegend,
 	server: vscode.ServerCapabilities,
+	languageConfigs: LanguageConfigs,
 ) {
 	if (features.references) {
 		server.referencesProvider = true;
@@ -35,9 +37,7 @@ export function register(
 			fileOperations: {
 				willRename: {
 					filters: [
-						{ pattern: { glob: '**/*.vue' } },
-						{ pattern: { glob: '**/*.md' } },
-						{ pattern: { glob: '**/*.html' } },
+						...languageConfigs.inferProjectExts.map(ext => ({ pattern: { glob: `**/*${ext}` } })),
 						{ pattern: { glob: '**/*.js' } },
 						{ pattern: { glob: '**/*.ts' } },
 						{ pattern: { glob: '**/*.jsx' } },

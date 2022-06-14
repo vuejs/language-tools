@@ -81,11 +81,12 @@ export function createLanguageService(
 		tag: 'both' | 'kebabCase' | 'pascalCase',
 		attr: 'kebabCase' | 'camelCase',
 	}>,
+	createLanguageServiceContext = () => vueTs.createLanguageServiceContext(ts, vueLsHost),
 ) {
 
 	setCurrentConfigurationHost(configurationHost); // TODO
 
-	const vueLsCtx = vueTs.createLanguageServiceContext(ts, vueLsHost);
+	const vueLsCtx = createLanguageServiceContext();
 	tsFaster.decorate(ts, vueLsCtx.typescriptLanguageServiceHost, vueLsCtx.typescriptLanguageService);
 	const tsSettings = getTsSettings(configurationHost);
 	const tsLs = ts2.createLanguageService(ts, vueLsCtx.typescriptLanguageServiceHost, vueLsCtx.typescriptLanguageService, tsSettings);

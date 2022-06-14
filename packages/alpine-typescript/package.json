@@ -1,0 +1,21 @@
+{
+	"name": "@volar/alpine-typescript",
+	"version": "0.37.7",
+	"main": "out/index.js",
+	"license": "MIT",
+	"files": [
+		"out/**/*.js",
+		"out/**/*.d.ts"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/johnsoncodehk/volar.git",
+		"directory": "packages/alpine-typescript"
+	},
+	"devDependencies": {
+		"typescript": "latest"
+	},
+	"dependencies": {
+		"@volar/vue-typescript": "0.37.7"
+	}
+}

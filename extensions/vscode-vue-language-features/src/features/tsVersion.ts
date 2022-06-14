@@ -6,12 +6,12 @@ import { takeOverModeEnabled } from '../common';
 
 const defaultTsdk = 'node_modules/typescript/lib';
 
-export async function register(context: vscode.ExtensionContext, clients: BaseLanguageClient[]) {
+export async function register(cmd: string, context: vscode.ExtensionContext, clients: BaseLanguageClient[]) {
 
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
-	statusBar.command = 'volar.selectTypeScriptVersion';
+	statusBar.command = cmd;
 
-	const subscription = vscode.commands.registerCommand('volar.selectTypeScriptVersion', async () => {
+	const subscription = vscode.commands.registerCommand(cmd, async () => {
 
 		const useWorkspaceTsdk = getCurrentTsPaths(context).isWorkspacePath;
 		const workspaceTsPaths = getWorkspaceTsPaths();

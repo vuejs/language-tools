@@ -6,7 +6,7 @@ import * as vscode from 'vscode-languageserver';
 import type { createLsConfigs } from './configHost';
 import * as path from 'upath';
 import { getDocumentSafely } from './utils';
-import { loadCustomPlugins, RuntimeEnvironment } from './common';
+import { LanguageConfigs, loadCustomPlugins, RuntimeEnvironment } from './common';
 import { tsShared } from '@volar/vue-typescript';
 
 export interface Project extends ReturnType<typeof createProject> { }
@@ -15,6 +15,7 @@ export const renameFileContentCache = new Map<string, string>();
 
 export async function createProject(
 	runtimeEnv: RuntimeEnvironment,
+	languageConfigs: LanguageConfigs,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	options: shared.ServerInitializationOptions,
 	rootPath: string,
@@ -83,7 +84,7 @@ export async function createProject(
 	}
 	function getLanguageService() {
 		if (!vueLs) {
-			vueLs = vue.createLanguageService(
+			vueLs = languageConfigs.createLanguageService(
 				{ typescript: ts },
 				languageServiceHost,
 				runtimeEnv.fileSystemProvide,
@@ -240,7 +241,7 @@ export async function createProject(
 		scripts.clear();
 	}
 	function createParsedCommandLine(): ReturnType<typeof tsShared.createParsedCommandLine> {
-		const extraExts = typeof tsConfig === 'string' ? ['.vue', '.md', '.html'] : ['.vue'];
+		const extraExts = typeof tsConfig === 'string' ? languageConfigs.projectExts : languageConfigs.inferProjectExts;
 		const parseConfigHost: ts.ParseConfigHost = {
 			useCaseSensitiveFileNames: projectSys.useCaseSensitiveFileNames,
 			readDirectory: (path, extensions, exclude, include, depth) => {

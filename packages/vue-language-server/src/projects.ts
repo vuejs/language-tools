@@ -6,7 +6,7 @@ import * as vscode from 'vscode-languageserver';
 import { createProject, Project } from './project';
 import type { createLsConfigs } from './configHost';
 import { getDocumentSafely } from './utils';
-import { RuntimeEnvironment } from './common';
+import { LanguageConfigs, RuntimeEnvironment } from './common';
 
 export interface Projects extends ReturnType<typeof createProjects> { }
 
@@ -14,6 +14,7 @@ const rootTsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 
 export function createProjects(
 	runtimeEnv: RuntimeEnvironment,
+	languageConfigs: LanguageConfigs,
 	rootPaths: string[],
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLocalized: ts.MapLike<string> | undefined,
@@ -37,6 +38,7 @@ export function createProjects(
 	for (const rootPath of rootPaths) {
 		workspaces.set(rootPath, createWorkspace(
 			runtimeEnv,
+			languageConfigs,
 			rootPath,
 			ts,
 			tsLocalized,
@@ -269,6 +271,7 @@ export function createProjects(
 
 function createWorkspace(
 	runtimeEnv: RuntimeEnvironment,
+	languageConfigs: LanguageConfigs,
 	rootPath: string,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLocalized: ts.MapLike<string> | undefined,
@@ -309,6 +312,7 @@ function createWorkspace(
 		if (!inferredProject) {
 			inferredProject = createProject(
 				runtimeEnv,
+				languageConfigs,
 				ts,
 				options,
 				rootPath,
@@ -435,6 +439,7 @@ function createWorkspace(
 		if (!project) {
 			project = createProject(
 				runtimeEnv,
+				languageConfigs,
 				ts,
 				options,
 				path.dirname(tsConfig),

@@ -454,6 +454,23 @@ export function generate(
 			parentEl = node;
 		}
 
+		if (node.tag === 'vls-sr') {
+			const embeddedCode = node.loc.source.replace('<vls-sr>', '').replace('</vls-sr>', '');
+			writeCode(
+				embeddedCode,
+				{
+					start: node.loc.start.offset + '<vls-sr>'.length,
+					end: node.loc.start.offset + '<vls-sr>'.length + embeddedCode.length,
+				},
+				SourceMaps.Mode.Offset,
+				{
+					vueTag: 'template',
+					capabilities: capabilitiesSet.all,
+				},
+			);
+			return;
+		}
+
 		tsCodeGen.addText(`{\n`);
 		{
 
@@ -549,7 +566,7 @@ export function generate(
 			for (const varName of slotBlockVars)
 				localVars[varName] = (localVars[varName] ?? 0) + 1;
 
-			const vScope = node.props.find(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'scope');
+			const vScope = node.props.find(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && (prop.name === 'scope' || prop.name === 'data'));
 			let inScope = false;
 			let originalConditionsNum = blockConditions.length;
 
@@ -1418,7 +1435,7 @@ export function generate(
 				&& prop.name !== 'on'
 				&& prop.name !== 'model'
 				&& prop.name !== 'bind'
-				&& prop.name !== 'scope'
+				&& (prop.name !== 'scope' && prop.name !== 'data')
 			) {
 
 				const diagStart = tsCodeGen.getText().length;

@@ -1,0 +1,24 @@
+{
+	"name": "@volar/alpine-language-service",
+	"version": "0.37.7",
+	"main": "out/index.js",
+	"license": "MIT",
+	"files": [
+		"out/**/*.js",
+		"out/**/*.d.ts"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/johnsoncodehk/volar.git",
+		"directory": "packages/alpine-language-service"
+	},
+	"devDependencies": {
+		"@types/semver": "^7.3.9",
+		"typescript": "latest"
+	},
+	"dependencies": {
+		"@volar/alpine-typescript": "0.37.7",
+		"@volar/vue-language-service": "0.37.7",
+		"@volar/vue-language-service-types": "0.37.7"
+	}
+}

@@ -2,7 +2,7 @@ import * as path from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { LanguageServiceHost } from './types';
 import * as localTypes from './utils/localTypes';
-import { createSourceFile, EmbeddedFile } from './sourceFile';
+import { createSourceFile, EmbeddedFile, VueLanguagePlugin } from './sourceFile';
 import { createDocumentRegistry } from './documentRegistry';
 
 export type LanguageServiceContext = ReturnType<typeof createLanguageServiceContext>;
@@ -10,6 +10,8 @@ export type LanguageServiceContext = ReturnType<typeof createLanguageServiceCont
 export function createLanguageServiceContext(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	host: LanguageServiceHost,
+	extraPlugins: VueLanguagePlugin[] = [],
+	exts = ['.vue', '.md', '.html'],
 ) {
 
 	let lastProjectVersion: string | undefined;
@@ -30,7 +32,7 @@ export function createLanguageServiceContext(
 				// .vue.d.ts (never)
 				const vueFileName = fileName.substring(0, fileName.lastIndexOf('.'));
 
-				if (vueFileName.endsWith('.vue') || vueFileName.endsWith('.md') || vueFileName.endsWith('.html')) {
+				if (exts.some(ext => vueFileName.endsWith(ext))) {
 					const vueFile = documentRegistry.get(vueFileName);
 					if (!vueFile) {
 						const fileExists = !!host.fileExists?.(vueFileName);
@@ -44,6 +46,7 @@ export function createLanguageServiceContext(
 									compilerOptions,
 									vueCompilerOptions,
 									ts,
+									extraPlugins,
 								));
 							}
 						}
@@ -80,10 +83,11 @@ export function createLanguageServiceContext(
 			return result;
 		},
 		getScriptKind(fileName) {
+
+			if (exts.some(ext => fileName.endsWith(ext)))
+				return ts.ScriptKind.TSX; // can't use External, Unknown
+
 			switch (path.extname(fileName)) {
-				case '.vue': return ts.ScriptKind.TSX; // can't use External, Unknown
-				case '.md': return ts.ScriptKind.TSX; // can't use External, Unknown
-				case '.html': return ts.ScriptKind.TSX; // can't use External, Unknown
 				case '.js': return ts.ScriptKind.JS;
 				case '.jsx': return ts.ScriptKind.JSX;
 				case '.ts': return ts.ScriptKind.TS;
@@ -120,8 +124,8 @@ export function createLanguageServiceContext(
 		lastProjectVersion = newProjectVersion;
 
 		const fileNames = host.getScriptFileNames();
-		const vueFileNames = new Set(fileNames.filter(file => file.endsWith('.vue') || file.endsWith('.md') || file.endsWith('.html')));
-		const tsFileNames = new Set(fileNames.filter(file => !file.endsWith('.vue') && !file.endsWith('.md') && !file.endsWith('.html')));
+		const vueFileNames = new Set(fileNames.filter(file => exts.some(ext => file.endsWith(ext))));
+		const tsFileNames = new Set(fileNames.filter(file => !exts.some(ext => file.endsWith(ext))));
 		const fileNamesToRemove: string[] = [];
 		const fileNamesToCreate: string[] = [];
 		const fileNamesToUpdate: string[] = [];
@@ -201,6 +205,7 @@ export function createLanguageServiceContext(
 					compilerOptions,
 					vueCompilerOptions,
 					ts,
+					extraPlugins,
 				));
 				tsFileUpdated = true;
 			}
@@ -254,7 +259,7 @@ export function createLanguageServiceContext(
 			if (host.isTsPlugin) {
 				tsFileNames.push(fileName); // .vue + .ts
 			}
-			else if (!fileName.endsWith('.vue') && !fileName.endsWith('.md') && !fileName.endsWith('.html')) {
+			else if (!exts.some(ext => fileName.endsWith(ext))) {
 				tsFileNames.push(fileName); // .ts
 			}
 		}

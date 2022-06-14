@@ -5,6 +5,7 @@ import * as vscode from 'vscode-languageserver';
 import type { Projects } from '../projects';
 import { fileRenamings, renameFileContentCache, getScriptText } from '../project';
 import { getDocumentSafely } from '../utils';
+import { LanguageConfigs } from '../common';
 
 export function register(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -13,6 +14,7 @@ export function register(
 	projects: Projects,
 	features: NonNullable<shared.ServerInitializationOptions['languageFeatures']>,
 	params: vscode.InitializeParams,
+	languageConfigs: LanguageConfigs,
 ) {
 	connection.onCompletion(async handler => {
 		return worker(handler.textDocument.uri, async vueLs => {
@@ -285,9 +287,7 @@ export function register(
 	connection.workspace.onWillRenameFiles(async handler => {
 
 		const hasTsFile = handler.files.some(file =>
-			file.newUri.endsWith('.vue')
-			|| file.newUri.endsWith('.md')
-			|| file.newUri.endsWith('.html')
+			languageConfigs.projectExts.some(ext => file.oldUri.endsWith(ext))
 			|| file.newUri.endsWith('.ts')
 			|| file.newUri.endsWith('.tsx')
 		);
