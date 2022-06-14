@@ -1,7 +1,7 @@
 <script type="module" lang="ts">
 import { exactType } from './shared';
 
-createApp({ foo: 1, exactType })
+createApp({ foo: 1, exactType, baz() { return 'baz'; } });
 
 // @ts-expect-error
 const bar = 123;

@@ -2,7 +2,9 @@ import { CodeGen } from '@volar/code-gen';
 import { EmbeddedFileMappingData } from '@volar/vue-code-gen';
 import { EmbeddedFile, VueLanguagePlugin } from '../sourceFile';
 
-export default function (): VueLanguagePlugin {
+export default function (
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+): VueLanguagePlugin {
 
 	return {
 
@@ -14,7 +16,23 @@ export default function (): VueLanguagePlugin {
 
 			if (sfc.script) {
 
-				const createVueArg = sfc.script.content.match(/createApp\s*\(([\s\S]*?)\)/);
+				const ast = ts.createSourceFile(fileName, sfc.script.content, ts.ScriptTarget.Latest);
+				let createAppArgRange: [number, number] | undefined;
+
+				ast.forEachChild(child => {
+					if (ts.isExpressionStatement(child)) {
+						if (ts.isCallExpression(child.expression)) {
+							const call = child.expression;
+							if (ts.isIdentifier(call.expression) && call.expression.text === 'createApp') {
+								if (call.arguments.length) {
+									const arg0 = call.arguments[0];
+									createAppArgRange = [arg0.getStart(ast), arg0.getEnd()];
+								}
+							}
+						}
+					}
+				});
+
 				const codeGen = new CodeGen<EmbeddedFileMappingData>();
 
 				codeGen.addCode2(sfc.script.content, 0, {
@@ -32,15 +50,21 @@ export default function (): VueLanguagePlugin {
 
 				codeGen.addText('\n\n');
 				codeGen.addText(`const __VLS_scope = `);
-				if (createVueArg && createVueArg[1] && createVueArg.index !== undefined) {
-					codeGen.addCode2(createVueArg[1], createVueArg.index + createVueArg[0].indexOf(createVueArg[1]), {
-						vueTag: 'script',
-						capabilities: {
-							references: true,
-							definitions: true,
-							rename: true,
-						},
-					});
+				if (createAppArgRange) {
+					const createAppArgText = sfc.script.content.slice(createAppArgRange[0], createAppArgRange[1]);
+					if (createAppArgText.trim()) {
+						codeGen.addCode2(createAppArgText, createAppArgRange[0], {
+							vueTag: 'script',
+							capabilities: {
+								references: true,
+								definitions: true,
+								rename: true,
+							},
+						});
+					}
+					else {
+						codeGen.addText('{}');
+					}
 				}
 				else {
 					codeGen.addText('{}');

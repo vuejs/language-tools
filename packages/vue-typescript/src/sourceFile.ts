@@ -112,6 +112,7 @@ export function createSourceFile(
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
+	extraPlugins: VueLanguagePlugin[] = [],
 ) {
 
 	// refs
@@ -229,10 +230,11 @@ export function createSourceFile(
 	} : undefined));
 
 	const plugins: VueLanguagePlugin[] = [
+		...extraPlugins,
 		useVueFilePlugin(),
 		useMdFilePlugin(),
 		useHtmlFilePlugin(),
-		usePetiteVueScriptPlugin(),
+		usePetiteVueScriptPlugin(ts),
 		useHtmlPlugin(),
 		usePugPlugin(),
 		useVueSfcStyles(),
