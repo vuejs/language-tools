@@ -2,21 +2,21 @@
 
 ## 0.37.8 (2022/6/14)
 
-- feat: create [a new extension](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.alpine-language-features) for support Alpine.js via reuse petite-vue works
+- feat: create [alpine-language-features](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.alpine-language-features) extension for support Alpine.js via reuse petite-vue language support works
 - fix: petite-vue createApp arg range inaccurate
 - fix: vue component context properties missing in petite-vue template
-
-## 0.37.7 (2022/6/13)
-
-- fix: cannot resolve external vue file path ([#1445](https://github.com/johnsoncodehk/volar/issues/1445))
-- fix: petite-vue v-scope data type loss in inline handlers ([#1442](https://github.com/johnsoncodehk/volar/issues/1442))
-- fix: petite-vue createApp() initialData type missing in template ([#1444](https://github.com/johnsoncodehk/volar/issues/1444))
 
 ### Our Sponsors
 
 <a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
 	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
 </a>
+
+## 0.37.7 (2022/6/13)
+
+- fix: cannot resolve external vue file path ([#1445](https://github.com/johnsoncodehk/volar/issues/1445))
+- fix: petite-vue v-scope data type loss in inline handlers ([#1442](https://github.com/johnsoncodehk/volar/issues/1442))
+- fix: petite-vue createApp() initialData type missing in template ([#1444](https://github.com/johnsoncodehk/volar/issues/1444))
 
 ## 0.37.6 (2022/6/13)
 
