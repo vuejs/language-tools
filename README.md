@@ -2,20 +2,30 @@
 
 > ⚡ Explore high-performance tooling for Vue
 
+### Vue.js
+
 - [Vue Language Features](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features) \
 *Vue language support extension for VSCode*
-- [Alpine Language Features](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-alpine-language-features) (Experimental) \
-*Alpine.js language support extension for VSCode*
 - [TypeScript Vue Plugin](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-typescript-vue-plugin) \
 *VSCode extension to support Vue in TS server*
 - [vue-tsc](https://github.com/johnsoncodehk/volar/tree/master/packages/vue-tsc) \
 *Type-check and dts build command line tool*
+
+### Alpine.js
+
+- [Alpine Language Features](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-alpine-language-features) (Experimental) \
+*Alpine.js language support extension for VSCode*
+
+### Common
+
 - [volar-plugins](https://github.com/johnsoncodehk/volar-plugins) \
 *Common plugins to changes language featrues behavior for `Vue Language Features` and `Alpine Language Features` extensions*
 
 Discord: https://discord.gg/5bnSSSSBbK
 
 ## IDE Supports by Community
+
+### Vue.js
 
 [yaegassy/coc-volar](https://github.com/yaegassy/coc-volar) ⚡ 🤝 🅿️ \
 *Vue language client for coc.nvim*
@@ -42,9 +52,9 @@ Discord: https://discord.gg/5bnSSSSBbK
 [Kingwl/monaco-volar](https://github.com/Kingwl/monaco-volar) \
 *Vue language support for Monaco on Browser*
 
----
+### Alpine.js
 
-[yaegassy/coc-volar-alpinejs](https://github.com/yaegassy/coc-volar-alpinejs) ⚡ 🤝 🅿️ \
+[yaegassy/coc-volar-alpinejs](https://github.com/yaegassy/coc-volar-alpinejs) ⚡ 🤝 \
 *Alpine.js language client for coc.nvim*
 
 \* ⚡ support [multiple servers](https://github.com/johnsoncodehk/volar/discussions/393#discussioncomment-1213736) \
