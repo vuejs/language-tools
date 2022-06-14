@@ -31,7 +31,6 @@
 		"onLanguage:typescriptreact"
 	],
 	"main": "client",
-	"browser": "dist/browser/client",
 	"capabilities": {
 		"untrustedWorkspaces": {
 			"supported": "limited",
@@ -273,8 +272,8 @@
 		"watch": "npm run build -- --watch",
 		"build": "node scripts/build-node",
 		"prepack": "npm run prebuild && npm run build -- --minify",
-		"pack": "npm run prepack:node && vsce package",
-		"release": "npm run prepack:node && vsce publish"
+		"pack": "npm run prepack && vsce package",
+		"release": "npm run prepack && vsce publish"
 	},
 	"devDependencies": {
 		"@types/vscode": "1.67.0",
