@@ -2,6 +2,8 @@
 
 JavaScript intellisense support for Alpine.js.
 
+[Plugin's page on Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.alpine-language-features)
+
 ## Usage
 
 1. Create `jsconfig.json` or `tsconfig.json` to your Alpine project, and than adding below content.

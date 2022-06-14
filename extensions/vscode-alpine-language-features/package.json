@@ -1,5 +1,6 @@
 {
 	"private": true,
+	"preview": true,
 	"name": "alpine-language-features",
 	"version": "0.37.8",
 	"repository": {
