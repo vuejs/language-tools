@@ -10,6 +10,8 @@
 *Type-check and dts build command line tool*
 - [volar-plugins](https://github.com/johnsoncodehk/volar-plugins) \
 *Common plugins to changes IDE behavior with Volar language server*
+- [Alpine Language Features](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-alpine-language-features) (Experimental) \
+*Alpine language support extension for VSCode*
 
 Discord: https://discord.gg/5bnSSSSBbK
 
