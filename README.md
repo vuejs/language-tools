@@ -5,7 +5,7 @@
 - [Vue Language Features](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features) \
 *Vue language support extension for VSCode*
 - [Alpine Language Features](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-alpine-language-features) (Experimental) \
-*Alpine language support extension for VSCode*
+*Alpine.js language support extension for VSCode*
 - [TypeScript Vue Plugin](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-typescript-vue-plugin) \
 *VSCode extension to support Vue in TS server*
 - [vue-tsc](https://github.com/johnsoncodehk/volar/tree/master/packages/vue-tsc) \
@@ -38,6 +38,14 @@ Discord: https://discord.gg/5bnSSSSBbK
 
 [tommasongr/nova-vue](https://github.com/tommasongr/nova-vue) \
 *Vue language client for Nova*
+
+[Kingwl/monaco-volar](https://github.com/Kingwl/monaco-volar) \
+*Vue language support for Monaco on Browser*
+
+---
+
+[yaegassy/coc-volar-alpinejs](https://github.com/yaegassy/coc-volar-alpinejs) ⚡ 🤝 🅿️ \
+*Alpine.js language client for coc.nvim*
 
 \* ⚡ support [multiple servers](https://github.com/johnsoncodehk/volar/discussions/393#discussioncomment-1213736) \
 \* 🤝 support [take over mode](https://github.com/johnsoncodehk/volar/discussions/471) \
