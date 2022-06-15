@@ -5,7 +5,7 @@
 ### Vue.js
 
 - [Vue Language Features](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features) \
-*Vue language support extension for VSCode*
+*Vue, Vitepress, petite-vue language support extension for VSCode*
 - [TypeScript Vue Plugin](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-typescript-vue-plugin) \
 *VSCode extension to support Vue in TS server*
 - [vue-tsc](https://github.com/johnsoncodehk/volar/tree/master/packages/vue-tsc) \

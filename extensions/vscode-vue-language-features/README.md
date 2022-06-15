@@ -4,7 +4,7 @@
 
 [Plugin's page on Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
 
-VueLF is a Language Support plugin built specifically for Vue 3. It's based on [`@vue/reactivity`](https://www.npmjs.com/package/@vue/reactivity) to calculate everything on-demand, to implement native TypeScript language service level performance.
+Vue Language Features is a language support extension built for Vue, Vitepress and petite-vue. this is based on [`@vue/reactivity`](https://www.npmjs.com/package/@vue/reactivity) to calculate everything on-demand, to implement native TypeScript language service level performance.
 
 [[Tips](https://github.com/johnsoncodehk/volar/issues/53)]
 
