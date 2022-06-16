@@ -17,8 +17,8 @@ export interface RuntimeEnvironment {
 }
 
 export interface LanguageConfigs {
-	projectExts: string[],
-	inferProjectExts: string[],
+	definitelyExts: string[],
+	indeterminateExts: string[],
 	getDocumentService: typeof vue.getDocumentService,
 	createLanguageService: typeof vue.createLanguageService,
 }
@@ -27,8 +27,8 @@ export function createLanguageServer(
 	connection: vscode.Connection,
 	runtimeEnv: RuntimeEnvironment,
 	languageConfigs: LanguageConfigs = {
-		projectExts: ['.vue', '.md', '.html'],
-		inferProjectExts: ['.vue'],
+		definitelyExts: ['.vue'],
+		indeterminateExts: ['.md', '.html'],
 		getDocumentService: vue.getDocumentService,
 		createLanguageService: vue.createLanguageService,
 	},

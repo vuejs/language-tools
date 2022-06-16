@@ -37,7 +37,7 @@ export function register(
 			fileOperations: {
 				willRename: {
 					filters: [
-						...languageConfigs.inferProjectExts.map(ext => ({ pattern: { glob: `**/*${ext}` } })),
+						...[...languageConfigs.definitelyExts, ...languageConfigs.indeterminateExts].map(ext => ({ pattern: { glob: `**/*${ext}` } })),
 						{ pattern: { glob: '**/*.js' } },
 						{ pattern: { glob: '**/*.ts' } },
 						{ pattern: { glob: '**/*.jsx' } },

@@ -290,7 +290,7 @@ export function register(
 	connection.workspace.onWillRenameFiles(async handler => {
 
 		const hasTsFile = handler.files.some(file =>
-			languageConfigs.projectExts.some(ext => file.oldUri.endsWith(ext))
+			languageConfigs.definitelyExts.some(ext => file.oldUri.endsWith(ext))
 			|| file.newUri.endsWith('.ts')
 			|| file.newUri.endsWith('.tsx')
 		);

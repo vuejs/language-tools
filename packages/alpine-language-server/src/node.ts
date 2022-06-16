@@ -20,8 +20,8 @@ createLanguageServer(connection, {
 	onDidChangeConfiguration(settings) { },
 	fileSystemProvide: undefined,
 }, {
-	projectExts: ['.html'],
-	inferProjectExts: [],
+	definitelyExts: ['.html'],
+	indeterminateExts: [],
 	getDocumentService: (mods, configHost, _, plugins) => alpine.getDocumentService(mods, configHost, plugins),
 	createLanguageService: (mods, lsHost, _1, _2, configHost, plugins) => alpine.createLanguageService(mods, lsHost, configHost, plugins),
 });

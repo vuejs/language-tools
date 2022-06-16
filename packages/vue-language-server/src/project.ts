@@ -241,17 +241,24 @@ export async function createProject(
 		scripts.clear();
 	}
 	function createParsedCommandLine(): ReturnType<typeof tsShared.createParsedCommandLine> {
-		const extraExts = typeof tsConfig === 'string' ? languageConfigs.projectExts : languageConfigs.inferProjectExts;
 		const parseConfigHost: ts.ParseConfigHost = {
 			useCaseSensitiveFileNames: projectSys.useCaseSensitiveFileNames,
 			readDirectory: (path, extensions, exclude, include, depth) => {
-				return projectSys.readDirectory(path, [...extensions, ...extraExts], exclude, include, depth);
+				const exts = [...extensions, ...languageConfigs.definitelyExts];
+				for (const passiveExt of languageConfigs.indeterminateExts) {
+					if (include.some(i => i.endsWith(passiveExt))) {
+						exts.push(passiveExt);
+					}
+				}
+				return projectSys.readDirectory(path, exts, exclude, include, depth);
 			},
 			fileExists: projectSys.fileExists,
 			readFile: projectSys.readFile,
 		};
 		if (typeof tsConfig === 'string') {
-			return tsShared.createParsedCommandLine(ts, parseConfigHost, tsConfig);
+			const r = tsShared.createParsedCommandLine(ts, parseConfigHost, tsConfig);
+			console.log(r.fileNames);
+			return r;
 		}
 		else {
 			const content = ts.parseJsonConfigFileContent({}, parseConfigHost, rootPath, tsConfig, 'tsconfig.json');
