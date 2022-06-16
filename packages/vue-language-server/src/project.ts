@@ -256,9 +256,7 @@ export async function createProject(
 			readFile: projectSys.readFile,
 		};
 		if (typeof tsConfig === 'string') {
-			const r = tsShared.createParsedCommandLine(ts, parseConfigHost, tsConfig);
-			console.log(r.fileNames);
-			return r;
+			return tsShared.createParsedCommandLine(ts, parseConfigHost, tsConfig);
 		}
 		else {
 			const content = ts.parseJsonConfigFileContent({}, parseConfigHost, rootPath, tsConfig, 'tsconfig.json');

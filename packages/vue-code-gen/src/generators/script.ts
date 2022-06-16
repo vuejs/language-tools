@@ -328,7 +328,7 @@ export function generate(
 
 		if (scriptSetupRanges.propsTypeArg && scriptSetupRanges?.withDefaultsArg) {
 			// fix https://github.com/johnsoncodehk/volar/issues/1187
-			codeGen.addText(`const __VLS_withDefaultsArg = (<T>(t: T) => t)(`);
+			codeGen.addText(`const __VLS_withDefaultsArg = (function <T>(t: T) { return t })(`);
 			addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.withDefaultsArg.start, scriptSetupRanges.withDefaultsArg.end);
 			codeGen.addText(`);\n`);
 		}
