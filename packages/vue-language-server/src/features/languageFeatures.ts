@@ -145,7 +145,7 @@ export function register(
 	});
 	connection.onCodeAction(async handler => {
 		return worker(handler.textDocument.uri, async vueLs => {
-			const codeActions = await vueLs.doCodeActions(handler.textDocument.uri, handler.range, handler.context) ?? [];
+			let codeActions = await vueLs.doCodeActions(handler.textDocument.uri, handler.range, handler.context) ?? [];
 			for (const codeAction of codeActions) {
 				if (codeAction.data && typeof codeAction.data === 'object') {
 					(codeAction.data as any).uri = handler.textDocument.uri;
@@ -153,6 +153,9 @@ export function register(
 				else {
 					codeAction.data = { uri: handler.textDocument.uri };
 				}
+			}
+			if (!params.capabilities.textDocument?.codeAction?.disabledSupport) {
+				codeActions = codeActions.filter(codeAction => !codeAction.disabled);
 			}
 			return codeActions;
 		});
