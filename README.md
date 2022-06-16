@@ -106,8 +106,8 @@ flowchart LR
 	VOLAR_VUE_SERVICE["@volar/vue-language-service"]
 	VOLAR_PUG_SERVICE["@volar/pug-language-service"]
 	VOLAR_TS_SERVICE["@volar/typescript-language-service"]
-	VOLAR_TS_FASTER["@volar/typescript-faster"]
-	VOLAR_PREVIEW["@volar/preview"]
+	%% VOLAR_TS_FASTER["@volar/typescript-faster"]
+	%% VOLAR_PREVIEW["@volar/preview"]
 	VUE_TSC[vue-tsc]
 	TS_VUE_PLUGIN[typescript-vue-plugin]
 
@@ -129,6 +129,7 @@ flowchart LR
 	TS[typescript]
 	VSC_TS[vscode.typescript-language-features]
 	VUE_REPL["@vue/repl"]
+	MONACO_VOLAR[Kingwl/monaco-volar]
 	VITE_PLUGIN_CHECKER[fi3ework/vite-plugin-checker]
 	COMPILE_VUE_SFC[leonzalion/compile-vue-sfc]
 
@@ -138,6 +139,7 @@ flowchart LR
 	click TS "https://github.com/microsoft/TypeScript"
 	click VSC_TS "https://github.com/microsoft/vscode/tree/main/extensions/typescript-language-features"
 	click VUE_REPL "https://github.com/vuejs/repl"
+	click MONACO_VOLAR "https://github.com/Kingwl/monaco-volar"
 	click VITE_PLUGIN_CHECKER "https://github.com/fi3ework/vite-plugin-checker"
 	click COMPILE_VUE_SFC "https://github.com/leonzalion/compile-vue-sfc"
 
@@ -179,8 +181,8 @@ flowchart LR
 	NOVA_VUE --> VUE_CLIENTS
 	VIM_VUE --> VUE_CLIENTS
 
-	VSC_VUE --> VOLAR_PREVIEW
-	COC_VUE --> VOLAR_PREVIEW
+	%% VSC_VUE --> VOLAR_PREVIEW
+	%% COC_VUE --> VOLAR_PREVIEW
 
 	VUE_CLIENTS -- Language Server Protocol --> VOLAR_VUE_SERVER
 
@@ -188,14 +190,16 @@ flowchart LR
 	VSC_TS --> VSC_TSVP
 	VSC_TSVP --> TS_VUE_PLUGIN
 	VOLAR_VUE_SERVER --> VOLAR_VUE_SERVICE
-	VUE_REPL --> VOLAR_VUE_SERVICE
 	VUE_TSC --> VOLAR_VUE_TS
 	VITE_PLUGIN_CHECKER --> VUE_TSC
 	COMPILE_VUE_SFC --> VUE_TSC
 	TS_VUE_PLUGIN --> VOLAR_VUE_TS
 
-	TS_VUE_PLUGIN --> VOLAR_TS_FASTER
-	VOLAR_VUE_SERVICE --> VOLAR_TS_FASTER
+	VUE_REPL --> MONACO_VOLAR
+	MONACO_VOLAR --> VOLAR_VUE_SERVICE
+
+	%% TS_VUE_PLUGIN --> VOLAR_TS_FASTER
+	%% VOLAR_VUE_SERVICE --> VOLAR_TS_FASTER
 
 	VOLAR_VUE_SERVICE --> VOLAR_VUE_TS
 	VOLAR_VUE_SERVICE --> VOLAR_TS_SERVICE
