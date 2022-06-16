@@ -323,15 +323,9 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		const componentName = capitalize(camelize(item.label.replace(/\./g, '-')));
 		const textDoc = vueDocument.getDocument();
 		const compiledVue = vueDocument.file.getCompiledVue()!;
-		let insertText = '';
-		const planAResult = await planAInsertText();
-		if (planAResult) {
-			insertText = planAResult.insertText;
-			item.detail = planAResult.description + '\n\n' + rPath;
-		}
-		else {
-			insertText = planBInsertText();
-			item.detail = `Auto import from '${importPath}'\n\n${rPath}`;
+		const insert = await getInsert();
+		if (insert) {
+			item.detail = insert.description + '\n\n' + rPath;
 		}
 		if (descriptor.scriptSetup) {
 			const startTagEnd = compiledVue.getSourceRange(descriptor.scriptSetup.startTagEnd)?.[0].start;
@@ -341,7 +335,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				item.additionalTextEdits = [
 					vscode.TextEdit.insert(
 						editPosition,
-						'\n' + insertText,
+						'\n' + insert?.insertText,
 					),
 				];
 			}
@@ -354,7 +348,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				item.additionalTextEdits = [
 					vscode.TextEdit.insert(
 						editPosition,
-						'\n' + insertText,
+						'\n' + insert?.insertText,
 					),
 				];
 				const scriptRanges = parseScriptRanges(options.ts, scriptAst, !!descriptor.scriptSetup, true, true);
@@ -407,7 +401,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		}
 		return item;
 
-		async function planAInsertText() {
+		async function getInsert() {
 			const embeddedScriptUri = shared.fsPathToUri(vueDocument.file.getScriptFileName());
 			const tsImportName = camelize(path.basename(importFile).replace(/\./g, '-'));
 			const [formatOptions, preferences] = await Promise.all([
@@ -429,16 +423,6 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					}
 				}
 			}
-		}
-		function planBInsertText() {
-			const anyImport = scriptSetupImport ?? scriptImport;
-			let withSemicolon = true;
-			let quote = '"';
-			if (anyImport) {
-				withSemicolon = anyImport.text.endsWith(';');
-				quote = anyImport.text.includes("'") ? "'" : '"';
-			}
-			return `import ${componentName} from ${quote}${importPath}${quote}${withSemicolon ? ';' : ''}`;
 		}
 	}
 
@@ -546,7 +530,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 		if (enabledComponentAutoImport && (descriptor.script || descriptor.scriptSetup)) {
 			for (const vueDocument of options.vueDocuments.getAll()) {
-				let baseName = path.basename(vueDocument.uri);
+				let baseName = path.removeExt(path.basename(vueDocument.uri), '.vue');
 				if (baseName.toLowerCase() === 'index') {
 					baseName = path.basename(path.dirname(vueDocument.uri));
 				}

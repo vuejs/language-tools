@@ -9,7 +9,7 @@ import { colletVars, walkInterpolationFragment } from '../transform';
 const capabilitiesSet = {
 	all: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
 	noDiagnostic: { basic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
-	diagnosticOnly: { diagnostic: true, completion: true },
+	diagnosticOnly: { diagnostic: true },
 	tagHover: { basic: true },
 	event: { basic: true, diagnostic: true },
 	tagReference: { references: true, definitions: true, rename: { in: false, out: true } },
