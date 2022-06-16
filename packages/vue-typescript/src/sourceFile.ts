@@ -160,8 +160,11 @@ export function createSourceFile(
 			);
 		}
 	});
-	const cssModuleClasses = useCssModuleClasses(sfc);
-	const cssScopedClasses = useCssScopedClasses(sfc, vueCompilerOptions);
+	const cssModuleClasses = useStyleCssClasses(sfc, style => !!style.module);
+	const cssScopedClasses = useStyleCssClasses(sfc, style => {
+		const setting = compilerOptions.experimentalResolveStyleCssClasses ?? 'scoped';
+		return (setting === 'scoped' && style.scoped) || setting === 'always';
+	});
 	const templateCodeGens = computed(() => {
 
 		if (!computedHtmlTemplate.value)
@@ -180,7 +183,7 @@ export function createSourceFile(
 			sfc.template?.lang ?? 'html',
 			templateAstCompiled.value.ast,
 			!!sfc.scriptSetup,
-			Object.values(cssScopedClasses.value).map(map => Object.keys(map)).flat(),
+			Object.values(cssScopedClasses.value).map(style => style.classNames).flat(),
 			computedHtmlTemplate.value.mapping,
 			{
 				getEmitCompletion: SearchTexts.EmitCompletion,
@@ -761,34 +764,23 @@ export function createSourceFile(
 	}
 }
 
-export function useCssModuleClasses(sfc: Sfc) {
+export function useStyleCssClasses(sfc: Sfc, condition: (style: Sfc['styles'][number]) => boolean) {
 	return computed(() => {
-		const result: { style: typeof sfc.styles[number], index: number, classNameRanges: TextRange[]; }[] = [];
+		const result: {
+			style: typeof sfc.styles[number],
+			index: number,
+			classNameRanges: TextRange[],
+			classNames: string[],
+		}[] = [];
 		for (let i = 0; i < sfc.styles.length; i++) {
 			const style = sfc.styles[i];
-			if (style.module) {
+			if (condition(style)) {
+				const classNameRanges = [...parseCssClassNames(style.content)];
 				result.push({
 					style: style,
 					index: i,
-					classNameRanges: [...parseCssClassNames(style.content)],
-				});
-			}
-		}
-		return result;
-	});
-}
-
-export function useCssScopedClasses(sfc: Sfc, compilerOptions: VueCompilerOptions) {
-	return computed(() => {
-		const result: { style: typeof sfc.styles[number], index: number, classNameRanges: TextRange[]; }[] = [];
-		const setting = compilerOptions.experimentalResolveStyleCssClasses ?? 'scoped';
-		for (let i = 0; i < sfc.styles.length; i++) {
-			const style = sfc.styles[i];
-			if ((setting === 'scoped' && style.scoped) || setting === 'always') {
-				result.push({
-					style: style,
-					index: i,
-					classNameRanges: [...parseCssClassNames(style.content)],
+					classNameRanges: classNameRanges,
+					classNames: classNameRanges.map(range => style.content.substring(range.start + 1, range.end)),
 				});
 			}
 		}

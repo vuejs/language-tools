@@ -8,12 +8,12 @@ import { ComputedRef } from '@vue/reactivity';
 import * as path from 'path';
 import { VueCompilerOptions } from '../types';
 import { SearchTexts } from '../utils/string';
-import { EmbeddedFile, useCssModuleClasses, useCssScopedClasses, useCssVars, VueLanguagePlugin } from '../sourceFile';
+import { EmbeddedFile, useStyleCssClasses, useCssVars, VueLanguagePlugin } from '../sourceFile';
 
 export default function (
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	cssModuleClasses: ReturnType<typeof useCssModuleClasses>,
-	cssScopedClasses: ReturnType<typeof useCssScopedClasses>,
+	cssModuleClasses: ReturnType<typeof useStyleCssClasses>,
+	cssScopedClasses: ReturnType<typeof useStyleCssClasses>,
 	templateCodeGens: ComputedRef<ReturnType<typeof templateGen['generate']> | undefined>,
 	cssVars: ReturnType<typeof useCssVars>,
 	scriptSetupRanges: ComputedRef<ReturnType<typeof parseScriptSetupRanges> | undefined>,
