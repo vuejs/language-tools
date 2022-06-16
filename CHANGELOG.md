@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.37.9 (2022/6/16)
+
+- perf: only support VitePress, petite-vue when `*.md`, `*.html` explicitly added in tsconfig include property ([#1463](https://github.com/johnsoncodehk/volar/issues/1463))
+- fix: respect `codeAction.disabledSupport` capability ([#1454](https://github.com/johnsoncodehk/volar/issues/1454))
+- fix: auto import component tag name including "Vue" on import ([#1461](https://github.com/johnsoncodehk/volar/issues/1461))
+- fix: don't recognize components without script blocks as js languages ([#1452](https://github.com/johnsoncodehk/volar/issues/1452)) ([#1455](https://github.com/johnsoncodehk/volar/issues/1455))
+- fix: scope class name doesn't show underline ([#1447](https://github.com/johnsoncodehk/volar/issues/1447))
+- fix: withDefaults syntax break in `lang="tsx"` ([#1458](https://github.com/johnsoncodehk/volar/issues/1458))
+- fix: alpine-language-server bin script name incorrect ([#1460](https://github.com/johnsoncodehk/volar/issues/1460))
+
 ## 0.37.8 (2022/6/14)
 
 - feat: create [alpine-language-features](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.alpine-language-features) extension for support Alpine.js via reuse petite-vue language support works
