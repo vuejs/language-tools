@@ -10,17 +10,17 @@
 - fix: withDefaults syntax break in `lang="tsx"` ([#1458](https://github.com/johnsoncodehk/volar/issues/1458))
 - fix: alpine-language-server bin script name incorrect ([#1460](https://github.com/johnsoncodehk/volar/issues/1460))
 
-## 0.37.8 (2022/6/14)
-
-- feat: create [alpine-language-features](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.alpine-language-features) extension for support Alpine.js via reuse petite-vue language support works
-- fix: petite-vue createApp arg range inaccurate
-- fix: vue component context properties missing in petite-vue template
-
 ### Our Sponsors
 
 <a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
 	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
 </a>
+
+## 0.37.8 (2022/6/14)
+
+- feat: create [alpine-language-features](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.alpine-language-features) extension for support Alpine.js via reuse petite-vue language support works
+- fix: petite-vue createApp arg range inaccurate
+- fix: vue component context properties missing in petite-vue template
 
 ## 0.37.7 (2022/6/13)
 
