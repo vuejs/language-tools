@@ -115,7 +115,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 			async resolve(item) {
 
-				const data: HtmlCompletionData | AutoImportCompletionData | undefined = item.data as any;
+				const data: HtmlCompletionData | AutoImportCompletionData | undefined = item.data;
 
 				if (data?.mode === 'html') {
 					return await resolveHtmlItem(item, data);
@@ -653,7 +653,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				item.detail = rPath;
 				item.kind = vscode.CompletionItemKind.File;
 				item.sortText = '\u0003' + (item.sortText ?? item.label);
-				item.data = data as any;
+				item.data = data;
 			}
 			else if (itemIdKey && itemId) {
 
@@ -698,7 +698,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					tsItem: tsItem,
 				};
 
-				item.data = data as any;
+				item.data = data;
 			}
 		}
 
@@ -707,7 +707,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 			for (const item of completionList.items) {
 
-				const data: HtmlCompletionData | AutoImportCompletionData | undefined = item.data as any;
+				const data: HtmlCompletionData | AutoImportCompletionData | undefined = item.data;
 
 				if (data?.mode === 'autoImport' && data.importUri === vueDocument.uri) { // don't import itself
 					continue;

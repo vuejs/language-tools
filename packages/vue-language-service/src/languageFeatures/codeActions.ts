@@ -89,7 +89,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					return <vscode.CodeAction>{
 						..._codeAction,
-						data: data as any,
+						data: data,
 					};
 				});
 			},

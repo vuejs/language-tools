@@ -7,7 +7,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 	return async (item: vscode.CompletionItem, newPosition?: vscode.Position) => {
 
-		const data: PluginCompletionData | undefined = item.data as any;
+		const data: PluginCompletionData | undefined = item.data;
 
 		if (data) {
 

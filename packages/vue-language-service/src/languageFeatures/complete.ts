@@ -79,7 +79,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 										item,
 										embeddedRange => sourceMap.getSourceRange(embeddedRange.start, embeddedRange.end)?.[0],
 									),
-									data: data as any,
+									data: data,
 								};
 							}),
 						};
@@ -108,7 +108,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 							};
 							return {
 								...item,
-								data: data as any,
+								data: data,
 							};
 						})
 					};
@@ -181,7 +181,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 											item,
 											embeddedRange => sourceMap.getSourceRange(embeddedRange.start, embeddedRange.end)?.[0],
 										),
-										data: data as any,
+										data: data,
 									};
 								}),
 							};
@@ -247,7 +247,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 								};
 								return {
 									...item,
-									data: data as any,
+									data: data,
 								};
 							})
 						},

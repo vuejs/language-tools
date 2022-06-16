@@ -7,7 +7,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 	return async (item: vscode.CodeLens) => {
 
-		const data: PluginCodeLensData = item.data as any;
+		const data: PluginCodeLensData = item.data;
 
 		if (data) {
 

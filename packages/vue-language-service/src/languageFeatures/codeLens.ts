@@ -38,7 +38,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 								command: executePluginCommand,
 								arguments: commandArgs as any,
 							} : undefined,
-							data: data as any,
+							data: data,
 						};
 						return codeLens;
 					});

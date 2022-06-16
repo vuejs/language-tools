@@ -133,7 +133,7 @@ export function register(
 
 				return {
 					...item,
-					data: data as any,
+					data: data,
 				};
 			});
 

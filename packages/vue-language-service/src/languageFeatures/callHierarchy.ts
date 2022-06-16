@@ -50,7 +50,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 						return <vscode.CallHierarchyItem>{
 							...item,
-							data: data as any,
+							data: data,
 						};
 					});
 				},
@@ -63,7 +63,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 		async getIncomingCalls(item: vscode.CallHierarchyItem) {
 
-			const data: PluginCallHierarchyData | undefined = item.data as any;
+			const data: PluginCallHierarchyData | undefined = item.data;
 			let incomingItems: vscode.CallHierarchyIncomingCall[] = [];
 
 			if (data) {
@@ -124,7 +124,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 		async getOutgoingCalls(item: vscode.CallHierarchyItem) {
 
-			const data: PluginCallHierarchyData | undefined = item.data as any;
+			const data: PluginCallHierarchyData | undefined = item.data;
 			let items: vscode.CallHierarchyOutgoingCall[] = [];
 
 			if (data) {
