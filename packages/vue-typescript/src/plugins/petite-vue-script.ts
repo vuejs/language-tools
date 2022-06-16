@@ -58,8 +58,8 @@ export default function (
 					codeGen.addText('{}');
 				}
 				codeGen.addText(';\n');
-				codeGen.addText(`const __VLS_ctx = (await import('vue')).defineComponent({});\n`);
-				codeGen.addText(`declare const __VLS_export: new () => typeof __VLS_scope & import('./__VLS_types').PickNotAny<InstanceType<typeof __VLS_ctx>, {}>;\n`);
+				codeGen.addText(`const __VLS_component = (await import('vue')).defineComponent({});\n`);
+				codeGen.addText(`declare const __VLS_export: new () => typeof __VLS_scope & import('./__VLS_types').PickNotAny<InstanceType<typeof __VLS_component>, {}>;\n`);
 				codeGen.addText('export default __VLS_export;\n');
 
 				const file: EmbeddedFile = {

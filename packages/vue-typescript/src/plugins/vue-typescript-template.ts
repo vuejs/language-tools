@@ -65,7 +65,7 @@ export default function (
 
 				writeImportTypes();
 
-				tsxCodeGen.addText(`declare var __VLS_ctx: ${useGlobalThisTypeInCtx ? 'typeof globalThis &' : ''} __VLS_types.PickNotAny<InstanceType<typeof __VLS_component>, {}> & {\n`);
+				tsxCodeGen.addText(`declare var __VLS_ctx: ${useGlobalThisTypeInCtx ? 'typeof globalThis &' : ''} InstanceType<__VLS_types.PickNotAny<typeof __VLS_component, new () => {}>> & {\n`);
 				/* CSS Module */
 				for (const cssModule of cssModuleClasses.value) {
 					tsxCodeGen.addText(`${cssModule.style.module}: Record<string, string>`);
