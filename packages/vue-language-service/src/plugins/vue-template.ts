@@ -323,8 +323,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		const componentName = capitalize(camelize(item.label.replace(/\./g, '-')));
 		const textDoc = vueDocument.getDocument();
 		const compiledVue = vueDocument.file.getCompiledVue()!;
-		const insert = await getInsert();
-		if (insert) {
+		const insert = await getTypeScriptInsert() ?? getMonkeyInsert();
+		if (insert.description) {
 			item.detail = insert.description + '\n\n' + rPath;
 		}
 		if (descriptor.scriptSetup) {
@@ -335,7 +335,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				item.additionalTextEdits = [
 					vscode.TextEdit.insert(
 						editPosition,
-						'\n' + insert?.insertText,
+						'\n' + insert.insertText,
 					),
 				];
 			}
@@ -348,7 +348,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				item.additionalTextEdits = [
 					vscode.TextEdit.insert(
 						editPosition,
-						'\n' + insert?.insertText,
+						'\n' + insert.insertText,
 					),
 				];
 				const scriptRanges = parseScriptRanges(options.ts, scriptAst, !!descriptor.scriptSetup, true, true);
@@ -401,7 +401,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		}
 		return item;
 
-		async function getInsert() {
+		async function getTypeScriptInsert() {
 			const embeddedScriptUri = shared.fsPathToUri(vueDocument.file.getScriptFileName());
 			const tsImportName = camelize(path.basename(importFile).replace(/\./g, '-'));
 			const [formatOptions, preferences] = await Promise.all([
@@ -423,6 +423,19 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					}
 				}
 			}
+		}
+		function getMonkeyInsert() {
+			const anyImport = scriptSetupImport ?? scriptImport;
+			let withSemicolon = true;
+			let quote = '"';
+			if (anyImport) {
+				withSemicolon = anyImport.text.endsWith(';');
+				quote = anyImport.text.includes("'") ? "'" : '"';
+			}
+			return {
+				insertText: `import ${componentName} from ${quote}${importPath}${quote}${withSemicolon ? ';' : ''}`,
+				description: '',
+			};
 		}
 	}
 
