@@ -27,7 +27,7 @@ type ForableSource<T> = [
 
 export type GlobalComponents =
 	PickNotAny<import('vue').GlobalComponents, {}>
-	& PickNotAny<import('@vue/runtime-dom').GlobalComponents, {}>
+	& PickNotAny<import('@vue/runtime-core').GlobalComponents, {}>
 	& Pick<typeof vue,
 		'Transition'
 		| 'TransitionGroup'
