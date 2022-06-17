@@ -141,17 +141,15 @@ export function isRefType(typeDefs: vscode.LocationLink[], tsLs: ts2.LanguageSer
 	for (const typeDefine of typeDefs) {
 		const uri = vscode.Location.is(typeDefine) ? typeDefine.uri : typeDefine.targetUri;
 		const range = vscode.Location.is(typeDefine) ? typeDefine.range : typeDefine.targetSelectionRange;
-		if (uri.endsWith('reactivity.d.ts')) {
-			const defineDoc = tsLs.__internal__.getTextDocument(uri);
-			if (!defineDoc)
-				continue;
-			const typeName = defineDoc.getText(range);
-			switch (typeName) {
-				case 'Ref':
-				case 'ComputedRef':
-				case 'WritableComputedRef':
-					return true;
-			}
+		const defineDoc = tsLs.__internal__.getTextDocument(uri);
+		if (!defineDoc)
+			continue;
+		const typeName = defineDoc.getText(range);
+		switch (typeName) {
+			case 'Ref':
+			case 'ComputedRef':
+			case 'WritableComputedRef':
+				return true;
 		}
 	}
 	return false;
