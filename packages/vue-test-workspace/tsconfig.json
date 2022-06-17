@@ -10,5 +10,10 @@
 		"noUnusedParameters": true,
 		"skipLibCheck": true,
 		"jsx": "preserve",
-	}
+	},
+	"include": [
+		"renames/**/*",
+		"typeChecks/**/*",
+		"typeChecks/**/*.html",
+	]
 }
