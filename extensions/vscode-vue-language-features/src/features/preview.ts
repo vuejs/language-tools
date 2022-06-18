@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { compile, NodeTypes } from '@vue/compiler-dom';
 import * as path from 'path';
 import * as fs from '../utils/fs';
 import * as shared from '@volar/shared';

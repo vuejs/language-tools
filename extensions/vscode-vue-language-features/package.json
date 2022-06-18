@@ -794,7 +794,6 @@
 		"@volar/preview": "0.37.9",
 		"@volar/shared": "0.37.9",
 		"@volar/vue-language-server": "0.37.9",
-		"@vue/compiler-dom": "^3.2.37",
 		"@vue/compiler-sfc": "^3.2.37",
 		"@vue/reactivity": "^3.2.37",
 		"esbuild": "latest",
