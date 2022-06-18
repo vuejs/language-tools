@@ -21,36 +21,46 @@ export async function register(context: vscode.ExtensionContext) {
 
 	const panels = new Set<vscode.WebviewPanel>();
 	let externalBrowserPanel: vscode.WebviewPanel | undefined;
+	let avoidUpdateOnDidChangeActiveTextEditor = false;
+	let updateComponentPreview: Function | undefined;
 
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	statusBar.command = 'volar.inputWebviewUrl';
 	statusBar.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
 	context.subscriptions.push(statusBar);
 
-	let ws: ReturnType<typeof preview.createPreviewWebSocket> | undefined;
+	let connection: ReturnType<typeof preview.createPreviewConnection> | undefined;
 	let highlightDomElements = true;
 	const onDidChangeCodeLensesEmmiter = new vscode.EventEmitter<void>();
 
 	if (vscode.window.terminals.some(terminal => terminal.name.startsWith('volar-preview:'))) {
-		ws = preview.createPreviewWebSocket({
-			goToCode: handleGoToCode,
-			getOpenFileUrl: (fileName, range) => 'vscode://files:/' + fileName,
+		connection = preview.createPreviewConnection({
+			onGotoCode: handleGoToCode,
+			getFileHref: (fileName, range) => {
+				avoidUpdateOnDidChangeActiveTextEditor = false;
+				updateComponentPreview?.();
+				return 'vscode://files:/' + fileName;
+			},
 		});
 		onDidChangeCodeLensesEmmiter.fire();
 	}
 	vscode.window.onDidOpenTerminal(e => {
 		if (e.name.startsWith('volar-preview:')) {
-			ws = preview.createPreviewWebSocket({
-				goToCode: handleGoToCode,
-				getOpenFileUrl: (fileName, range) => 'vscode://files:/' + fileName,
+			connection = preview.createPreviewConnection({
+				onGotoCode: handleGoToCode,
+				getFileHref: (fileName, range) => {
+					avoidUpdateOnDidChangeActiveTextEditor = false;
+					updateComponentPreview?.();
+					return 'vscode://files:/' + fileName;
+				},
 			});
 			onDidChangeCodeLensesEmmiter.fire();
 		}
 	});
 	vscode.window.onDidCloseTerminal(e => {
 		if (e.name.startsWith('volar-preview:')) {
-			ws?.stop();
-			ws = undefined;
+			connection?.stop();
+			connection = undefined;
 			onDidChangeCodeLensesEmmiter.fire();
 		}
 	});
@@ -68,8 +78,14 @@ export async function register(context: vscode.ExtensionContext) {
 				enableScripts: true,
 			};
 			updateWebView();
+			updateComponentPreview = updateWebView;
 
-			vscode.window.onDidChangeActiveTextEditor(updateWebView);
+			vscode.window.onDidChangeActiveTextEditor(() => {
+				if (avoidUpdateOnDidChangeActiveTextEditor) {
+					return;
+				}
+				updateWebView();
+			});
 			vscode.workspace.onDidChangeConfiguration(updateWebView);
 			vscode.workspace.onDidSaveTextDocument(updateWebView);
 
@@ -221,7 +237,7 @@ export async function register(context: vscode.ExtensionContext) {
 
 		class HighlightDomElementsStatusCodeLens implements vscode.CodeLensProvider {
 			provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.CodeLens[]> {
-				if (ws) {
+				if (connection) {
 					return [{
 						isResolved: true,
 						range: new vscode.Range(
@@ -281,7 +297,7 @@ export async function register(context: vscode.ExtensionContext) {
 		if (textEditor.document.languageId === 'vue' && highlightDomElements) {
 			const sfc = getSfc(textEditor.document);
 			const offset = sfc.descriptor.template?.loc.start.offset ?? 0;
-			ws?.highlight(
+			connection?.highlight(
 				textEditor.document.fileName,
 				textEditor.selections.map(selection => ({
 					start: textEditor.document.offsetAt(selection.start) - offset,
@@ -291,7 +307,7 @@ export async function register(context: vscode.ExtensionContext) {
 			);
 		}
 		else {
-			ws?.unhighlight();
+			connection?.unhighlight();
 		}
 	}
 
@@ -408,6 +424,8 @@ export async function register(context: vscode.ExtensionContext) {
 
 	async function handleGoToCode(fileName: string, range: [number, number], cancleToken: { readonly isCancelled: boolean; }) {
 
+		avoidUpdateOnDidChangeActiveTextEditor = true;
+
 		const doc = await vscode.workspace.openTextDocument(fileName);
 
 		if (cancleToken.isCancelled)
@@ -475,14 +493,6 @@ export async function register(context: vscode.ExtensionContext) {
 			dir = upperDir;
 		}
 		return configFile;
-	}
-
-	function updatePreviewPanel(previewPanel: vscode.WebviewPanel, fileName: string, port: number, mode: 'vite' | 'nuxt') {
-		const bgPath = vscode.Uri.file(path.join(context.extensionPath, 'images', 'preview-bg.png'));
-		const bgSrc = previewPanel.webview.asWebviewUri(bgPath);
-		const url = `http://localhost:${port}/__preview#${fileName}`;
-		previewPanel.title = 'Preview ' + path.basename(fileName);
-		previewPanel.webview.html = getWebviewContent(url, { fileName, mode }, bgSrc.toString());
 	}
 
 	function getWebviewContent(url: string, state?: PreviewState, bg?: string, openExternalOnLoaded?: boolean) {
