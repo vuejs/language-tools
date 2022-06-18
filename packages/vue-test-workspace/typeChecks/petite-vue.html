@@ -3,17 +3,18 @@ import { exactType } from './shared';
 
 createApp({ foo: 1, exactType, baz() { return 'baz'; } });
 
-// @ts-expect-error
 const bar = 123;
+
+export let baz: string;
 
 function createApp(_ = {}) { }
 </script>
 
-{{ exactType(foo, {} as number) }}
 {{
 	// @ts-expect-error
-	bar
+	exactType(foo, {} as number)
 }}
+{{ bar }}
 
 <div id="app" v-scope="{ open: true, elseOpen: true }">
 	<!-- do not fix for now -->

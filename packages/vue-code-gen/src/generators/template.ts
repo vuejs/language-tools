@@ -5,6 +5,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import * as CompilerCore from '@vue/compiler-core';
 import { EmbeddedFileMappingData } from '../types';
 import { colletVars, walkInterpolationFragment } from '../transform';
+import { parseBindingRanges } from '../parsers/scriptSetupRanges';
 
 const capabilitiesSet = {
 	all: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
@@ -223,9 +224,7 @@ export function generate(
 	}
 
 	for (const childNode of templateAst.children) {
-		tsCodeGen.addText(`{\n`);
 		visitNode(childNode, undefined);
-		tsCodeGen.addText(`}\n`);
 	}
 
 	tsCodeGen.addText(`if (typeof __VLS_styleScopedClasses === 'object' && !Array.isArray(__VLS_styleScopedClasses)) {\n`);
@@ -455,12 +454,22 @@ export function generate(
 		}
 
 		if (node.tag === 'vls-sr') {
-			const embeddedCode = node.loc.source.replace('<vls-sr>', '').replace('</vls-sr>', '');
+
+			const startTagEnd = node.loc.source.indexOf('>') + 1;
+			const endTagStart = node.loc.source.lastIndexOf('</');
+			const scriptCode = node.loc.source.substring(startTagEnd, endTagStart);
+			const collentAst = ts.createSourceFile('/foo.ts', scriptCode, ts.ScriptTarget.ESNext);
+			const bindings = parseBindingRanges(ts, collentAst, false);
+			const scriptVars = bindings.map(binding => scriptCode.substring(binding.start, binding.end));
+
+			for (const varName of scriptVars)
+				localVars[varName] = (localVars[varName] ?? 0) + 1;
+
 			writeCode(
-				embeddedCode,
+				scriptCode,
 				{
-					start: node.loc.start.offset + '<vls-sr>'.length,
-					end: node.loc.start.offset + '<vls-sr>'.length + embeddedCode.length,
+					start: node.loc.start.offset + startTagEnd,
+					end: node.loc.start.offset + startTagEnd + scriptCode.length,
 				},
 				SourceMaps.Mode.Offset,
 				{

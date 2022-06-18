@@ -10,34 +10,44 @@ export default function (): VueLanguagePlugin {
 
 			if (fileName.endsWith('.html')) {
 
+				let newContent = content;
+				let isTs = false;
+
 				const sfcBlockReg = /\<(script|style)[\s\S]*?\>([\s\S]*?)\<\/\1\>/g;
 				const codeGen = new CodeGen();
 
 				for (const match of content.matchAll(sfcBlockReg)) {
 					if (match.index !== undefined) {
 						const matchText = match[0];
-						// only access script block, ignore style block and `<script src="...">`
-						// style block intellisense support by vscode-html-language-features
-						if (matchText.startsWith('<script') && matchText.indexOf('src=') === -1) {
-							// monkey fix replace `<script type="module">` to `<script setup>`
-							codeGen.addCode2(matchText, match.index, undefined);
+						// ignore `<script src="...">`
+						if (matchText.startsWith('<script') && matchText.indexOf('src=') >= 0) {
+							newContent = newContent.substring(0, match.index) + ' '.repeat(matchText.length) + newContent.substring(match.index + matchText.length);
 						}
-						codeGen.addText('\n\n');
-						content = content.substring(0, match.index) + ' '.repeat(matchText.length) + content.substring(match.index + matchText.length);
+						else if (matchText.startsWith('<style')) {
+							codeGen.addCode2(matchText, match.index, undefined);
+							codeGen.addText('\n\n');
+							newContent = newContent.substring(0, match.index) + ' '.repeat(matchText.length) + newContent.substring(match.index + matchText.length);
+						}
+
+						if (matchText.startsWith('<script') && (
+							matchText.indexOf('lang="ts"') >= 0 ||
+							matchText.indexOf('lang="tsx"') >= 0
+						)) {
+							isTs = true;
+						}
 					}
 				}
 
+				newContent = newContent.replace(/<script[\s\S]*?>/g, str => `<vls-sr${' '.repeat(str.length - '<script>'.length)}>`);
+				newContent = newContent.replace(/<\/script>/g, '</vls-sr>');
+
 				codeGen.addText('<template>\n');
-				codeGen.addCode(
-					content,
-					{
-						start: 0,
-						end: content.length,
-					},
-					Mode.Offset,
-					undefined,
-				);
+				codeGen.addCode2(newContent, 0, undefined);
 				codeGen.addText('\n</template>');
+
+				if (isTs) {
+					codeGen.addText('\n<script setup lang="ts"></script>');
+				}
 
 				return {
 					vue: codeGen.getText(),

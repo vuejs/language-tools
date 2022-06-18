@@ -15,7 +15,6 @@ import { parseCssVars } from './utils/parseCssVars';
 import useVueFilePlugin from './plugins/file-vue';
 import useMdFilePlugin from './plugins/file-md';
 import useHtmlFilePlugin from './plugins/file-html';
-import usePetiteVueScriptPlugin from './plugins/petite-vue-script';
 import useHtmlPlugin from './plugins/vue-template-html';
 import usePugPlugin from './plugins/vue-template-pug';
 import useVueSfcStyles from './plugins/vue-sfc-styles';
@@ -237,7 +236,6 @@ export function createSourceFile(
 		useVueFilePlugin(),
 		useMdFilePlugin(),
 		useHtmlFilePlugin(),
-		usePetiteVueScriptPlugin(ts),
 		useHtmlPlugin(),
 		usePugPlugin(),
 		useVueSfcStyles(),
