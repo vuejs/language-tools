@@ -255,7 +255,7 @@ export function embeddedEditToSourceEdit(
 						[],
 					);
 					for (const tsEdit of tsDocEdit.edits) {
-						for (const [vueRange, data] of sourceMap.getSourceRanges(
+						for (const [vueRange] of sourceMap.getSourceRanges(
 							tsEdit.range.start,
 							tsEdit.range.end,
 							data => typeof data.capabilities.rename === 'object' ? data.capabilities.rename.out : !!data.capabilities.rename, // fix https://github.com/johnsoncodehk/volar/issues/1091

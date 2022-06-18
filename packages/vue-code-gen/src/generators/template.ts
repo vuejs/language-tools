@@ -1721,46 +1721,6 @@ export function generate(
 			}
 		}
 	}
-	function writeObjectProperty2(mapCode: string, sourceRanges: SourceMaps.Range[], data: EmbeddedFileMappingData) {
-		const sourceRange = sourceRanges[0];
-		const mode = writeObjectProperty(mapCode, sourceRange, SourceMaps.Mode.Offset, data);
-
-		for (let i = 1; i < sourceRanges.length; i++) {
-			const sourceRange = sourceRanges[i];
-			if (mode === 1) {
-				addMapping(tsCodeGen, {
-					sourceRange,
-					mappedRange: {
-						start: tsCodeGen.getText().length - mapCode.length,
-						end: tsCodeGen.getText().length,
-					},
-					mode: SourceMaps.Mode.Offset,
-					data,
-				});
-			}
-			else if (mode === 2) {
-				addMapping(tsCodeGen, {
-					sourceRange,
-					mappedRange: {
-						start: tsCodeGen.getText().length - `'${mapCode}'`.length,
-						end: tsCodeGen.getText().length - `'`.length,
-					},
-					mode: SourceMaps.Mode.Offset,
-					additional: [
-						{
-							sourceRange,
-							mappedRange: {
-								start: tsCodeGen.getText().length - `'${mapCode}'`.length,
-								end: tsCodeGen.getText().length,
-							},
-							mode: SourceMaps.Mode.Totally,
-						}
-					],
-					data,
-				});
-			}
-		}
-	}
 	function writeObjectProperty(mapCode: string, sourceRange: SourceMaps.Range, mapMode: SourceMaps.Mode, data: EmbeddedFileMappingData) {
 		if (validTsVar.test(mapCode)) {
 			writeCode(mapCode, sourceRange, mapMode, data);

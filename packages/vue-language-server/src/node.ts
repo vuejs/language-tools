@@ -7,7 +7,6 @@ import * as path from 'upath';
 import * as html from 'vscode-html-languageservice';
 import * as fs from 'fs';
 import * as shared from '@volar/shared';
-import * as vue from '@volar/vue-language-service';
 
 const connection = vscode.createConnection(vscode.ProposedFeatures.all);
 

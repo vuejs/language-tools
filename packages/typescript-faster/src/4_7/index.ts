@@ -59,7 +59,7 @@ export default function (
 					return processDirectory(directory);
 				// Check package.json
 				case Ternary.True:
-					const packageJsonFileName = _combinePaths(directory, "package.json");
+					// const packageJsonFileName = _combinePaths(directory, "package.json");
 					// this.watchPackageJsonFile(packageJsonFileName as ts.Path); // TODO
 					const info = packageJsonCache.getInDirectory(directory);
 					if (info) result.push(info);

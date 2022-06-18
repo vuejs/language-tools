@@ -1,5 +1,9 @@
 import { generate as generateScript, getSlotsPropertyName, getVueLibraryName } from './generators/script';
-import { generate as generateTemplateScript, isIntrinsicElement, walkElementNodes } from './generators/template';
+import {
+	// generate as generateTemplateScript,
+	isIntrinsicElement,
+	walkElementNodes,
+} from './generators/template';
 import { parseScriptRanges } from './parsers/scriptRanges';
 import { parseScriptSetupRanges } from './parsers/scriptSetupRanges';
 import * as CompilerDOM from '@vue/compiler-dom';
