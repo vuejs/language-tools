@@ -55,6 +55,16 @@
 				"editor.quickSuggestions": true
 			}
 		},
+		"views": {
+			"explorer": [
+				{
+					"id": "vueComponentPreview",
+					"name": "Vue Component Preview",
+					"type": "webview",
+					"when": "volar.foundViteDir"
+				}
+			]
+		},
 		"jsonValidation": [
 			{
 				"fileMatch": "tsconfig.json",
@@ -407,12 +417,12 @@
 				},
 				"volar.preview.backgroundColor": {
 					"type": "string",
-					"default": "#fff",
+					"default": "transparent",
 					"description": "Component preview background color."
 				},
 				"volar.preview.transparentGrid": {
 					"type": "boolean",
-					"default": true,
+					"default": false,
 					"description": "Component preview background style."
 				},
 				"volar.splitEditors.layout.left": {
