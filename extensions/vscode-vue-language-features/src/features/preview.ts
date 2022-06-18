@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { compile, NodeTypes } from '@vue/compiler-dom';
 import * as path from 'path';
 import * as fs from '../utils/fs';
 import * as shared from '@volar/shared';
@@ -58,6 +57,59 @@ export async function register(context: vscode.ExtensionContext) {
 
 	const sfcs = new WeakMap<vscode.TextDocument, { version: number, sfc: SFCParseResult; }>();
 
+	class VueComponentPreview implements vscode.WebviewViewProvider {
+
+		public resolveWebviewView(
+			webviewView: vscode.WebviewView,
+			_context: vscode.WebviewViewResolveContext,
+			_token: vscode.CancellationToken,
+		) {
+			webviewView.webview.options = {
+				enableScripts: true,
+			};
+			updateWebView();
+
+			vscode.window.onDidChangeActiveTextEditor(updateWebView);
+			vscode.workspace.onDidChangeConfiguration(updateWebView);
+			vscode.workspace.onDidSaveTextDocument(updateWebView);
+
+			async function updateWebView() {
+
+				if (!webviewView.visible)
+					return;
+
+				if (vscode.window.activeTextEditor?.document.languageId !== 'vue')
+					return;
+
+				const fileName = vscode.window.activeTextEditor.document.fileName;
+				let terminal = vscode.window.terminals.find(terminal => terminal.name.startsWith('volar-preview:'));
+				let port: number;
+
+				if (terminal) {
+					port = Number(terminal.name.split(':')[1]);
+				}
+				else {
+
+					const configFile = await getConfigFile(fileName, 'vite');
+					if (!configFile)
+						return;
+
+					const configDir = path.dirname(configFile);
+					const server = await startPreviewServer(configDir, 'vite');
+					terminal = server.terminal;
+					port = server.port;
+				}
+
+				const bgPath = vscode.Uri.file(path.join(context.extensionPath, 'images', 'preview-bg.png'));
+				const bgSrc = webviewView.webview.asWebviewUri(bgPath);
+				const url = `http://localhost:${port}/__preview#${fileName}`;
+
+				webviewView.webview.html = '';
+				webviewView.webview.html = getWebviewContent(url, undefined, bgSrc.toString());
+			}
+		}
+	}
+
 	class FinderPanelSerializer implements vscode.WebviewPanelSerializer {
 		async deserializeWebviewPanel(panel: vscode.WebviewPanel, state: PreviewState) {
 
@@ -66,7 +118,7 @@ export async function register(context: vscode.ExtensionContext) {
 				return; // don't create server because maybe user closed it intentionally
 			}
 
-			const port = await openPreview(PreviewType.Webview, state.fileName, '', state.mode, panel);
+			const port = await openPreview(PreviewType.Webview, state.fileName, state.mode, panel);
 
 			panel.webview.html = getWebviewContent(`http://localhost:${port}`, state);
 		}
@@ -83,14 +135,18 @@ export async function register(context: vscode.ExtensionContext) {
 				return; // don't create server because maybe user closed it intentionally
 			}
 
-			const port = await openPreview(PreviewType.ComponentPreview, editor.document.fileName, editor.document.getText(), state.mode, panel);
+			const port = await openPreview(PreviewType.ComponentPreview, editor.document.fileName, state.mode, panel);
 
 			if (port !== undefined) {
-				const previewQuery = createQuery(editor.document);
-				updatePreviewPanel(panel, state.fileName, previewQuery, port, state.mode);
+				updatePreviewPanel(panel, state.fileName, port, state.mode);
 			}
 		}
 	}
+
+	vscode.window.registerWebviewViewProvider(
+		'vueComponentPreview',
+		new VueComponentPreview(),
+	);
 
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.vite', async () => {
 
@@ -118,7 +174,7 @@ export async function register(context: vscode.ExtensionContext) {
 		if (select === undefined)
 			return; // cancel
 
-		openPreview(select as PreviewType, editor.document.fileName, editor.document.getText(), 'vite');
+		openPreview(select as PreviewType, editor.document.fileName, 'vite');
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.nuxt', async () => {
 
@@ -141,7 +197,7 @@ export async function register(context: vscode.ExtensionContext) {
 		if (select === undefined)
 			return; // cancel
 
-		openPreview(select as PreviewType, editor.document.fileName, editor.document.getText(), 'nuxt');
+		openPreview(select as PreviewType, editor.document.fileName, 'nuxt');
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.selectElement', () => {
 		const panel = [...panels].find(panel => panel.active);
@@ -260,7 +316,7 @@ export async function register(context: vscode.ExtensionContext) {
 		}
 	}
 
-	async function openPreview(previewType: PreviewType, fileName: string, fileText: string, mode: 'vite' | 'nuxt', _panel?: vscode.WebviewPanel) {
+	async function openPreview(previewType: PreviewType, fileName: string, mode: 'vite' | 'nuxt', _panel?: vscode.WebviewPanel) {
 
 		const configFile = await getConfigFile(fileName, mode);
 		if (!configFile)
@@ -329,42 +385,14 @@ export async function register(context: vscode.ExtensionContext) {
 		}
 		else if (previewType === PreviewType.ComponentPreview) {
 
-			// const disposable_1 = vscode.window.onDidChangeActiveTextEditor(async e => {
-			// 	if (e && e.document.languageId === 'vue' && e.document.fileName !== lastPreviewFile) {
-			// 		_panel.dispose();
-			// 		vscode.commands.executeCommand('volar.action.preview');
-
-			// 		// TODO: not working
-			// 		// const newQuery = createQuery(e.document.getText());
-			// 		// const url = `http://localhost:${port}/__preview${newQuery}#${e.document.fileName}`;
-			// 		// previewPanel?.webview.postMessage({ sender: 'volar', command: 'updateUrl', data: url });
-
-			// 		// lastPreviewFile = e.document.fileName;
-			// 		// lastPreviewQuery = newQuery;
-			// 	}
-			// });
-			let previewQuery = createQuery({
-				getText: () => fileText,
-				fileName,
-				version: -1,
-			} as vscode.TextDocument);
-
-			panelContext.push(vscode.workspace.onDidChangeTextDocument(e => {
-				if (e.document.fileName === fileName) {
-					const newPreviewQuery = createQuery(e.document);
-					if (newPreviewQuery !== previewQuery) {
-						const url = `http://localhost:${port}/__preview${newPreviewQuery}#${e.document.fileName}`;
-						panel.webview.postMessage({ sender: 'volar', command: 'updateUrl', data: url });
-
-						previewQuery = newPreviewQuery;
-					}
-				}
+			panelContext.push(vscode.workspace.onDidSaveTextDocument(e => {
+				vscode.commands.executeCommand('workbench.action.webview.reloadWebviewAction');
 			}));
 			panelContext.push(vscode.workspace.onDidChangeConfiguration(() => {
-				updatePreviewPanel(panel, fileName, previewQuery, port, mode);
+				updatePreviewPanel(panel, fileName, port, mode);
 			}));
 
-			updatePreviewPanel(panel, fileName, previewQuery, port, mode);
+			updatePreviewPanel(panel, fileName, port, mode);
 		}
 
 		return port;
@@ -475,59 +503,10 @@ export async function register(context: vscode.ExtensionContext) {
 		return configFile;
 	}
 
-	function createQuery(document: vscode.TextDocument) {
-
-		const sfc = getSfc(document);
-		let query = '';
-		let fileName = document.fileName;
-
-		for (const customBlock of sfc.descriptor.customBlocks) {
-			if (customBlock.type === 'preview') {
-				const previewTagStart = document.getText().substring(0, customBlock.loc.start.offset).lastIndexOf('<preview');
-				const previewTag = document.getText().substring(previewTagStart, customBlock.loc.start.offset);
-				const previewGen = compile(previewTag + '</preview>').ast;
-				const props: Record<string, string> = {};
-				for (const previewNode of previewGen.children) {
-					if (previewNode.type === NodeTypes.ELEMENT) {
-						for (const prop of previewNode.props) {
-							if (prop.type === NodeTypes.ATTRIBUTE) {
-								if (prop.value) {
-									props[prop.name] = JSON.stringify(prop.value.content);
-								}
-								else {
-									props[prop.name] = JSON.stringify(true);
-								}
-							}
-							else if (prop.type === NodeTypes.DIRECTIVE) {
-								if (prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION && prop.exp?.type == NodeTypes.SIMPLE_EXPRESSION) {
-									props[prop.arg.content] = prop.exp.content;
-								}
-							}
-						}
-					}
-				}
-				const keys = Object.keys(props);
-				for (let i = 0; i < keys.length; i++) {
-					query += i === 0 ? '?' : '&';
-					const key = keys[i];
-					const value = props[key];
-					query += key;
-					query += '=';
-					query += encodeURIComponent(value);
-				}
-			}
-			else if (customBlock.type === 'preview-target' && typeof customBlock.attrs.path === 'string') {
-				fileName = path.resolve(path.dirname(fileName), customBlock.attrs.path);
-			}
-		}
-
-		return query;
-	}
-
-	function updatePreviewPanel(previewPanel: vscode.WebviewPanel, fileName: string, query: string, port: number, mode: 'vite' | 'nuxt') {
+	function updatePreviewPanel(previewPanel: vscode.WebviewPanel, fileName: string, port: number, mode: 'vite' | 'nuxt') {
 		const bgPath = vscode.Uri.file(path.join(context.extensionPath, 'images', 'preview-bg.png'));
 		const bgSrc = previewPanel.webview.asWebviewUri(bgPath);
-		const url = `http://localhost:${port}/__preview${query}#${fileName}`;
+		const url = `http://localhost:${port}/__preview#${fileName}`;
 		previewPanel.title = 'Preview ' + path.basename(fileName);
 		previewPanel.webview.html = getWebviewContent(url, { fileName, mode }, bgSrc.toString());
 	}
