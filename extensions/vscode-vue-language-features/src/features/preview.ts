@@ -86,8 +86,7 @@ export async function register(context: vscode.ExtensionContext) {
 			const port = await openPreview(PreviewType.ComponentPreview, editor.document.fileName, editor.document.getText(), state.mode, panel);
 
 			if (port !== undefined) {
-				const previewQuery = createQuery(editor.document);
-				updatePreviewPanel(panel, state.fileName, previewQuery, port, state.mode);
+				updatePreviewPanel(panel, state.fileName, port, state.mode);
 			}
 		}
 	}
@@ -329,42 +328,14 @@ export async function register(context: vscode.ExtensionContext) {
 		}
 		else if (previewType === PreviewType.ComponentPreview) {
 
-			// const disposable_1 = vscode.window.onDidChangeActiveTextEditor(async e => {
-			// 	if (e && e.document.languageId === 'vue' && e.document.fileName !== lastPreviewFile) {
-			// 		_panel.dispose();
-			// 		vscode.commands.executeCommand('volar.action.preview');
-
-			// 		// TODO: not working
-			// 		// const newQuery = createQuery(e.document.getText());
-			// 		// const url = `http://localhost:${port}/__preview${newQuery}#${e.document.fileName}`;
-			// 		// previewPanel?.webview.postMessage({ sender: 'volar', command: 'updateUrl', data: url });
-
-			// 		// lastPreviewFile = e.document.fileName;
-			// 		// lastPreviewQuery = newQuery;
-			// 	}
-			// });
-			let previewQuery = createQuery({
-				getText: () => fileText,
-				fileName,
-				version: -1,
-			} as vscode.TextDocument);
-
-			panelContext.push(vscode.workspace.onDidChangeTextDocument(e => {
-				if (e.document.fileName === fileName) {
-					const newPreviewQuery = createQuery(e.document);
-					if (newPreviewQuery !== previewQuery) {
-						const url = `http://localhost:${port}/__preview${newPreviewQuery}#${e.document.fileName}`;
-						panel.webview.postMessage({ sender: 'volar', command: 'updateUrl', data: url });
-
-						previewQuery = newPreviewQuery;
-					}
-				}
+			panelContext.push(vscode.workspace.onDidSaveTextDocument(e => {
+				vscode.commands.executeCommand('workbench.action.webview.reloadWebviewAction');
 			}));
 			panelContext.push(vscode.workspace.onDidChangeConfiguration(() => {
-				updatePreviewPanel(panel, fileName, previewQuery, port, mode);
+				updatePreviewPanel(panel, fileName, port, mode);
 			}));
 
-			updatePreviewPanel(panel, fileName, previewQuery, port, mode);
+			updatePreviewPanel(panel, fileName, port, mode);
 		}
 
 		return port;
@@ -475,59 +446,10 @@ export async function register(context: vscode.ExtensionContext) {
 		return configFile;
 	}
 
-	function createQuery(document: vscode.TextDocument) {
-
-		const sfc = getSfc(document);
-		let query = '';
-		let fileName = document.fileName;
-
-		for (const customBlock of sfc.descriptor.customBlocks) {
-			if (customBlock.type === 'preview') {
-				const previewTagStart = document.getText().substring(0, customBlock.loc.start.offset).lastIndexOf('<preview');
-				const previewTag = document.getText().substring(previewTagStart, customBlock.loc.start.offset);
-				const previewGen = compile(previewTag + '</preview>').ast;
-				const props: Record<string, string> = {};
-				for (const previewNode of previewGen.children) {
-					if (previewNode.type === NodeTypes.ELEMENT) {
-						for (const prop of previewNode.props) {
-							if (prop.type === NodeTypes.ATTRIBUTE) {
-								if (prop.value) {
-									props[prop.name] = JSON.stringify(prop.value.content);
-								}
-								else {
-									props[prop.name] = JSON.stringify(true);
-								}
-							}
-							else if (prop.type === NodeTypes.DIRECTIVE) {
-								if (prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION && prop.exp?.type == NodeTypes.SIMPLE_EXPRESSION) {
-									props[prop.arg.content] = prop.exp.content;
-								}
-							}
-						}
-					}
-				}
-				const keys = Object.keys(props);
-				for (let i = 0; i < keys.length; i++) {
-					query += i === 0 ? '?' : '&';
-					const key = keys[i];
-					const value = props[key];
-					query += key;
-					query += '=';
-					query += encodeURIComponent(value);
-				}
-			}
-			else if (customBlock.type === 'preview-target' && typeof customBlock.attrs.path === 'string') {
-				fileName = path.resolve(path.dirname(fileName), customBlock.attrs.path);
-			}
-		}
-
-		return query;
-	}
-
-	function updatePreviewPanel(previewPanel: vscode.WebviewPanel, fileName: string, query: string, port: number, mode: 'vite' | 'nuxt') {
+	function updatePreviewPanel(previewPanel: vscode.WebviewPanel, fileName: string, port: number, mode: 'vite' | 'nuxt') {
 		const bgPath = vscode.Uri.file(path.join(context.extensionPath, 'images', 'preview-bg.png'));
 		const bgSrc = previewPanel.webview.asWebviewUri(bgPath);
-		const url = `http://localhost:${port}/__preview${query}#${fileName}`;
+		const url = `http://localhost:${port}/__preview#${fileName}`;
 		previewPanel.title = 'Preview ' + path.basename(fileName);
 		previewPanel.webview.html = getWebviewContent(url, { fileName, mode }, bgSrc.toString());
 	}

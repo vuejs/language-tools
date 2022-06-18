@@ -12,7 +12,6 @@ const installCode = `
 function __createAppProxy(...args) {
 
     const app = createApp(...args);
-    app.use(installPreview);
 
     const ws = new WebSocket('ws://localhost:56789');
     const finderApis = installGoToCode();
@@ -316,59 +315,6 @@ function __createAppProxy(...args) {
             }
         }
     }
-    function installPreview(app) {
-        if (location.pathname === '/__preview') {
-            var preview = defineComponent({
-                setup: function () {
-                    window.addEventListener('message', function (event) {
-                        var _a;
-                        if (((_a = event.data) === null || _a === void 0 ? void 0 : _a.command) === 'updateUrl') {
-                            url.value = new URL(event.data.data);
-                            _file.value = url.value.hash.slice(1);
-                        }
-                    });
-                    var url = ref(new URL(location.href));
-                    var _file = ref(url.value.hash.slice(1));
-                    var file = computed(function () {
-                        // fix windows path for vite
-                        var path = _file.value.replace(/\\\\\\\\/g, '/');
-                        if (path.indexOf(':') >= 0) {
-                            path = path.split(':')[1];
-                        }
-                        return path;
-                    });
-                    var target = computed(function () { return defineAsyncComponent(function () { return import(file.value); }); }); // TODO: responsive not working
-                    var props = computed(function () {
-                        var _props = {};
-                        url.value.searchParams.forEach(function (value, key) {
-                            eval('_props[key] = ' + value);
-                        });
-                        return _props;
-                    });
-                    return function () { return h(Suspense, undefined, [
-                        h(target.value, props.value)
-                    ]); };
-                },
-            });
-            // TODO: fix preview not working is preview component is root component
-            app._component.setup = preview.setup;
-            app.config.warnHandler = function (msg) {
-                window.parent.postMessage({
-                    command: 'warn',
-                    data: msg,
-                }, '*');
-                console.warn(msg);
-            };
-            app.config.errorHandler = function (msg) {
-                window.parent.postMessage({
-                    command: 'error',
-                    data: msg,
-                }, '*');
-                console.error(msg);
-            };
-            // TODO: post emit
-        }
-    }
 }
 `;
 const replaceCode = `async function doTransform(...args) {
@@ -412,7 +358,6 @@ function __proxyExport(rawOptions = {}) {
   });
 
   return __originalExport(rawOptions);
-
 
     function addEvent(node, name, exp) {
         node.props.push({
