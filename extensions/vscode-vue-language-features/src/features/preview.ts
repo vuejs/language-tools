@@ -14,7 +14,7 @@ interface PreviewState {
 const enum PreviewType {
 	Webview = 'volar-webview',
 	ExternalBrowser = 'volar-start-server',
-	ComponentPreview = 'volar-component-preview',
+	ExternalBrowser_Component = 'volar-component-preview',
 }
 
 export async function register(context: vscode.ExtensionContext) {
@@ -124,25 +124,6 @@ export async function register(context: vscode.ExtensionContext) {
 		}
 	}
 
-	class PreviewPanelSerializer implements vscode.WebviewPanelSerializer {
-		async deserializeWebviewPanel(panel: vscode.WebviewPanel, state: PreviewState) {
-
-			const editor = vscode.window.visibleTextEditors.find(document => document.document.fileName === state.fileName);
-			if (!editor) return;
-
-			const terminal = vscode.window.terminals.find(terminal => terminal.name.startsWith('volar-preview:'));
-			if (!terminal) {
-				return; // don't create server because maybe user closed it intentionally
-			}
-
-			const port = await openPreview(PreviewType.ComponentPreview, editor.document.fileName, state.mode, panel);
-
-			if (port !== undefined) {
-				updatePreviewPanel(panel, state.fileName, port, state.mode);
-			}
-		}
-	}
-
 	vscode.window.registerWebviewViewProvider(
 		'vueComponentPreview',
 		new VueComponentPreview(),
@@ -165,9 +146,8 @@ export async function register(context: vscode.ExtensionContext) {
 				detail: vscode.workspace.rootPath && viteConfigFile ? path.relative(vscode.workspace.rootPath, viteConfigFile) : viteConfigFile,
 				description: 'Press `Alt` to use go to code in Browser',
 			},
-			[PreviewType.ComponentPreview]: {
-				label: `Preview Component with Vite`,
-				description: '(WIP)',
+			[PreviewType.ExternalBrowser_Component]: {
+				label: `Preview Component in External Browser`,
 				detail: vscode.workspace.rootPath ? path.relative(vscode.workspace.rootPath, editor.document.fileName) : editor.document.fileName,
 			},
 		});
@@ -232,7 +212,6 @@ export async function register(context: vscode.ExtensionContext) {
 	}));
 
 	context.subscriptions.push(vscode.window.registerWebviewPanelSerializer(PreviewType.Webview, new FinderPanelSerializer()));
-	context.subscriptions.push(vscode.window.registerWebviewPanelSerializer(PreviewType.ComponentPreview, new PreviewPanelSerializer()));
 	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(updatePreviewIconStatus));
 
 	updatePreviewIconStatus();
@@ -366,6 +345,12 @@ export async function register(context: vscode.ExtensionContext) {
 			externalBrowserPanel = panel;
 			return;
 		}
+		else if (previewType === PreviewType.ExternalBrowser_Component) {
+			terminal.show();
+			panel.webview.html = getWebviewContent(`http://localhost:${port}/__preview#${fileName}`, undefined, undefined, true);
+			externalBrowserPanel = panel;
+			return;
+		}
 
 		panels.add(panel);
 
@@ -382,17 +367,6 @@ export async function register(context: vscode.ExtensionContext) {
 				else
 					statusBar.hide();
 			});
-		}
-		else if (previewType === PreviewType.ComponentPreview) {
-
-			panelContext.push(vscode.workspace.onDidSaveTextDocument(e => {
-				vscode.commands.executeCommand('workbench.action.webview.reloadWebviewAction');
-			}));
-			panelContext.push(vscode.workspace.onDidChangeConfiguration(() => {
-				updatePreviewPanel(panel, fileName, port, mode);
-			}));
-
-			updatePreviewPanel(panel, fileName, port, mode);
 		}
 
 		return port;
