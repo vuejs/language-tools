@@ -61,6 +61,26 @@ Discord: https://discord.gg/5bnSSSSBbK
 \* 🤝 support [take over mode](https://github.com/johnsoncodehk/volar/discussions/471) \
 \* 🅿️ support [extra preview features](https://twitter.com/johnsoncodehk/status/1507024137901916161)
 
+## Contribution Guide
+
+If you want to work on the volar extension follow these commands to setup your local development environment. 
+
+🔎 Note that you will need pnpm - you can download it here: https://pnpm.io/installation.
+
+```bash
+git clone https://github.com/johnsoncodehk/volar.git
+cd volar
+pnpm install
+pnpm run build
+```
+
+The recommended way to develop the volar extension is to use the [Debug Tools](https://code.visualstudio.com/Docs/editor/debugging) provided by VSCode.
+Alternatively you can run one of the scripts defined in the [package.json](https://github.com/johnsoncodehk/volar/blob/master/package.json) file.
+
+❗ You should always use the debug launch configs or package.json scripts defined in the root of the project.
+
+Additional info for contributing to open source projects is here: https://docs.github.com/en/get-started/quickstart/contributing-to-projects
+
 ## High Level System Overview
 
 ```mermaid
