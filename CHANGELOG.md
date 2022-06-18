@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.38.0 (2022/6/19)
+
+- feat: support component preview for Vite + Vue 3 ([#1476](https://github.com/johnsoncodehk/volar/issues/1476)) \
+you need to install [vite-plugin-vue-component-preview](https://github.com/johnsoncodehk/vite-plugin-vue-component-preview)  manually to support this feature
+- feat: support auto insert `.value` for vue 2 ([#1466](https://github.com/johnsoncodehk/volar/issues/1466))
+- fix: cannot define global components types with `@vue/runtime-core` in Vue 2 ([#1469](https://github.com/johnsoncodehk/volar/issues/1469))
+- fix: cannot emit declaration with script setup on vue-tsc ([#1459](https://github.com/johnsoncodehk/volar/issues/1459))
+- fix: component auto import unreliable ([#1470](https://github.com/johnsoncodehk/volar/issues/1470))
+- fix: camel case scope css class name intellisense not working ([#1447](https://github.com/johnsoncodehk/volar/issues/1447))
+- fix(petite-vue): cannot access script tag local variables ([#1471](https://github.com/johnsoncodehk/volar/issues/1471))
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
+
 ## 0.37.9 (2022/6/16)
 
 - perf: only support VitePress, petite-vue when `*.md`, `*.html` explicitly added in tsconfig include property ([#1463](https://github.com/johnsoncodehk/volar/issues/1463))
@@ -9,12 +26,6 @@
 - fix: scope class name doesn't show underline ([#1447](https://github.com/johnsoncodehk/volar/issues/1447))
 - fix: withDefaults syntax break in `lang="tsx"` ([#1458](https://github.com/johnsoncodehk/volar/issues/1458))
 - fix: alpine-language-server bin script name incorrect ([#1460](https://github.com/johnsoncodehk/volar/issues/1460))
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 0.37.8 (2022/6/14)
 
