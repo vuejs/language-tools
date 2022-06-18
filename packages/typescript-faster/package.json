@@ -1,6 +1,6 @@
 {
 	"name": "@volar/typescript-faster",
-	"version": "0.37.9",
+	"version": "0.38.0",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
