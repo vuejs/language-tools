@@ -1,6 +1,6 @@
 {
 	"name": "@volar/alpine-typescript",
-	"version": "0.38.0",
+	"version": "0.38.1",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -16,6 +16,6 @@
 		"typescript": "latest"
 	},
 	"dependencies": {
-		"@volar/vue-typescript": "0.38.0"
+		"@volar/vue-typescript": "0.38.1"
 	}
 }
