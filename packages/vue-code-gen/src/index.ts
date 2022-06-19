@@ -1,6 +1,5 @@
 import { generate as generateScript, getSlotsPropertyName, getVueLibraryName } from './generators/script';
 import {
-	// generate as generateTemplateScript,
 	isIntrinsicElement,
 	walkElementNodes,
 } from './generators/template';
