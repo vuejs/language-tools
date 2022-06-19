@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.38.1 (2022/6/19)
+
+- fix: fixed isIntrinsicElement is not a function error ([#1478](https://github.com/johnsoncodehk/volar/issues/1478))
+
 ## 0.38.0 (2022/6/19)
 
 - feat: support component preview for Vite + Vue 3 ([#1476](https://github.com/johnsoncodehk/volar/issues/1476)) \
