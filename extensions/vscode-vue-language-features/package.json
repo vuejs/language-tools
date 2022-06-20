@@ -417,7 +417,7 @@
 				},
 				"volar.preview.backgroundColor": {
 					"type": "string",
-					"default": "transparent",
+					"default": "#f0f0f0",
 					"description": "Component preview background color."
 				},
 				"volar.preview.transparentGrid": {
