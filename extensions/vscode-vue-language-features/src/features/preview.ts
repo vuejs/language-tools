@@ -77,19 +77,18 @@ export async function register(context: vscode.ExtensionContext) {
 			webviewView.webview.options = {
 				enableScripts: true,
 			};
-			updateWebView();
+			updateWebView(true);
 			updateComponentPreview = updateWebView;
 
 			vscode.window.onDidChangeActiveTextEditor(() => {
 				if (avoidUpdateOnDidChangeActiveTextEditor) {
 					return;
 				}
-				updateWebView();
+				updateWebView(false);
 			});
-			vscode.workspace.onDidChangeConfiguration(updateWebView);
-			vscode.workspace.onDidSaveTextDocument(updateWebView);
+			vscode.workspace.onDidChangeConfiguration(() => updateWebView(true));
 
-			async function updateWebView() {
+			async function updateWebView(refresh: boolean) {
 
 				if (!webviewView.visible)
 					return;
@@ -116,12 +115,23 @@ export async function register(context: vscode.ExtensionContext) {
 					port = server.port;
 				}
 
-				const bgPath = vscode.Uri.file(path.join(context.extensionPath, 'images', 'preview-bg.png'));
-				const bgSrc = webviewView.webview.asWebviewUri(bgPath);
 				const url = `http://localhost:${port}/__preview#${fileName}`;
 
-				webviewView.webview.html = '';
-				webviewView.webview.html = getWebviewContent(url, undefined, bgSrc.toString());
+				if (refresh) {
+
+					const bgPath = vscode.Uri.file(path.join(context.extensionPath, 'images', 'preview-bg.png'));
+					const bgSrc = webviewView.webview.asWebviewUri(bgPath);
+
+					webviewView.webview.html = '';
+					webviewView.webview.html = getWebviewContent(url, undefined, bgSrc.toString());
+				}
+				else {
+					webviewView.webview.postMessage({
+						sender: 'volar',
+						command: 'updateUrl',
+						data: url,
+					});
+				}
 			}
 		}
 	}
@@ -517,7 +527,12 @@ export async function register(context: vscode.ExtensionContext) {
 
 			window.addEventListener('message', e => {
 				if (e.data.sender === 'volar') {
-					preview.contentWindow.postMessage(e.data, '*');
+					if (e.data.command === 'updateUrl') {
+						preview.src = e.data.data;
+					}
+					else {
+						preview.contentWindow.postMessage(e.data, '*');
+					}
 				}
 				else {
 					vscode.postMessage(e.data);
@@ -546,6 +561,7 @@ export async function register(context: vscode.ExtensionContext) {
 			})();
 
 			function previewFrameLoaded() {
+				preview.onload = undefined;
 				${openExternalOnLoaded ? `
 					vscode.postMessage({ command: 'openUrl', data: '${url}' });
 					vscode.postMessage({ command: 'closeExternalBrowserPanel' });
