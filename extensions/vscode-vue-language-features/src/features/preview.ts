@@ -84,7 +84,7 @@ export async function register(context: vscode.ExtensionContext) {
 				if (avoidUpdateOnDidChangeActiveTextEditor) {
 					return;
 				}
-				updateWebView(false);
+				updateWebView(true);
 			});
 			vscode.workspace.onDidChangeConfiguration(() => updateWebView(true));
 
@@ -100,14 +100,14 @@ export async function register(context: vscode.ExtensionContext) {
 				let terminal = vscode.window.terminals.find(terminal => terminal.name.startsWith('volar-preview:'));
 				let port: number;
 
+				const configFile = await getConfigFile(fileName, 'vite');
+				if (!configFile)
+					return;
+
 				if (terminal) {
 					port = Number(terminal.name.split(':')[1]);
 				}
 				else {
-
-					const configFile = await getConfigFile(fileName, 'vite');
-					if (!configFile)
-						return;
 
 					const configDir = path.dirname(configFile);
 					const server = await startPreviewServer(configDir, 'vite');
@@ -115,7 +115,8 @@ export async function register(context: vscode.ExtensionContext) {
 					port = server.port;
 				}
 
-				const url = `http://localhost:${port}/__preview#${fileName}`;
+				const relativePath = path.relative(path.dirname(configFile), fileName);
+				const url = `http://localhost:${port}/__preview#/${relativePath}`;
 
 				if (refresh) {
 
@@ -373,7 +374,8 @@ export async function register(context: vscode.ExtensionContext) {
 		}
 		else if (previewType === PreviewType.ExternalBrowser_Component) {
 			terminal.show();
-			panel.webview.html = getWebviewContent(`http://localhost:${port}/__preview#${fileName}`, undefined, undefined, true);
+			const relativePath = path.relative(path.dirname(configFile), fileName);
+			panel.webview.html = getWebviewContent(`http://localhost:${port}/__preview#/${relativePath}`, undefined, undefined, true);
 			externalBrowserPanel = panel;
 			return;
 		}
