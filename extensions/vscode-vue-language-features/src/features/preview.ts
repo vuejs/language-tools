@@ -86,6 +86,7 @@ export async function register(context: vscode.ExtensionContext) {
 				}
 				updateWebView(true);
 			});
+			vscode.workspace.onDidChangeTextDocument(() => updateWebView(false));
 			vscode.workspace.onDidChangeConfiguration(() => updateWebView(true));
 
 			async function updateWebView(refresh: boolean) {
@@ -116,7 +117,11 @@ export async function register(context: vscode.ExtensionContext) {
 				}
 
 				const relativePath = path.relative(path.dirname(configFile), fileName).replace(/\\\\\\\\/g, '/');
-				const url = `http://localhost:${port}/__preview/${relativePath}`;
+				let url = `http://localhost:${port}/__preview/${relativePath}#`;
+
+				if (vscode.window.activeTextEditor.document.isDirty) {
+					url += btoa(vscode.window.activeTextEditor.document.getText());
+				}
 
 				if (refresh) {
 
