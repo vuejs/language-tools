@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.38.2 (2022/6/26)
+
+- feat: update support for vite-plugin-vue-component-preview v0.2
+- feat: improve component preview UX
+- feat: add --version flag for vue-language-server ([#1510](https://github.com/johnsoncodehk/volar/issues/1510))
+- fix: css class name codeLens range inaccurate ([#1485](https://github.com/johnsoncodehk/volar/issues/1485))
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
+
 ## 0.38.1 (2022/6/19)
 
 - fix: fixed isIntrinsicElement is not a function error ([#1478](https://github.com/johnsoncodehk/volar/issues/1478))
@@ -14,12 +27,6 @@ you need to install [vite-plugin-vue-component-preview](https://github.com/johns
 - fix: component auto import unreliable ([#1470](https://github.com/johnsoncodehk/volar/issues/1470))
 - fix: camel case scope css class name intellisense not working ([#1447](https://github.com/johnsoncodehk/volar/issues/1447))
 - fix(petite-vue): cannot access script tag local variables ([#1471](https://github.com/johnsoncodehk/volar/issues/1471))
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 0.37.9 (2022/6/16)
 
