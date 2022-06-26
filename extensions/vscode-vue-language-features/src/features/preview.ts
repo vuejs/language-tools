@@ -74,6 +74,9 @@ export async function register(context: vscode.ExtensionContext) {
 			_context: vscode.WebviewViewResolveContext,
 			_token: vscode.CancellationToken,
 		) {
+
+			let lastPreviewDocument: vscode.TextDocument | undefined;
+
 			webviewView.webview.options = {
 				enableScripts: true,
 			};
@@ -81,23 +84,29 @@ export async function register(context: vscode.ExtensionContext) {
 			updateComponentPreview = updateWebView;
 
 			vscode.window.onDidChangeActiveTextEditor(() => {
-				if (avoidUpdateOnDidChangeActiveTextEditor) {
+				if (avoidUpdateOnDidChangeActiveTextEditor)
 					return;
-				}
-				updateWebView(true);
+				if (!vscode.window.activeTextEditor || lastPreviewDocument === vscode.window.activeTextEditor.document)
+					return;
+				updateWebView(false);
 			});
 			vscode.workspace.onDidChangeTextDocument(() => updateWebView(false));
 			vscode.workspace.onDidChangeConfiguration(() => updateWebView(true));
+
+			webviewView.onDidChangeVisibility(() => updateWebView(false));
 
 			async function updateWebView(refresh: boolean) {
 
 				if (!webviewView.visible)
 					return;
 
-				if (vscode.window.activeTextEditor?.document.languageId !== 'vue')
+				if (vscode.window.activeTextEditor?.document.languageId === 'vue')
+					lastPreviewDocument = vscode.window.activeTextEditor.document;
+
+				if (!lastPreviewDocument)
 					return;
 
-				const fileName = vscode.window.activeTextEditor.document.fileName;
+				const fileName = lastPreviewDocument.fileName;
 				let terminal = vscode.window.terminals.find(terminal => terminal.name.startsWith('volar-preview:'));
 				let port: number;
 
@@ -119,8 +128,8 @@ export async function register(context: vscode.ExtensionContext) {
 				const relativePath = path.relative(path.dirname(configFile), fileName).replace(/\\\\\\\\/g, '/');
 				let url = `http://localhost:${port}/__preview/${relativePath}#`;
 
-				if (vscode.window.activeTextEditor.document.isDirty) {
-					url += btoa(vscode.window.activeTextEditor.document.getText());
+				if (lastPreviewDocument.isDirty) {
+					url += btoa(lastPreviewDocument.getText());
 				}
 
 				if (refresh) {
