@@ -60,7 +60,7 @@ Note that you can use `defineComponent` even for components that are using the `
 
 ### Edit `tsconfig.json`
 
-In order to support Vue 2 tempates you need to edit your `tsconfig.json` file
+In order to support Vue 2 templates you need to edit your `tsconfig.json` file
 
 ```jsonc{6}
 {

@@ -71,7 +71,7 @@ export default defineConfig({
   description: 'Volar - Explore high-performance tooling for Vue',
   lastUpdated: true,
   themeConfig: {
-    logo: './assets/logo.png',
+    logo: '/logo.png',
     nav,
     sidebar,
     socialLinks: [
@@ -79,7 +79,7 @@ export default defineConfig({
       { icon: 'discord', link: 'https://discord.com/invite/5bnSSSSBbK' },
     ],
     editLink: {
-      pattern: 'vuejs/docs',
+      pattern: 'https://github.com/johnsoncodehk/volar/blob/master/docs/:path',
       text: 'Edit this page on GitHub',
     },
   },
