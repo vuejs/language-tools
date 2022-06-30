@@ -159,7 +159,7 @@ export function parseBindingRanges(ts: typeof import('typescript/lib/tsserverlib
 
 		if (ts.isImportDeclaration(node)) {
 			if (node.importClause && (isType || !node.importClause.isTypeOnly)) {
-				if (node.importClause.name && !isType) {
+				if (node.importClause.name) {
 					bindings.push(_getStartEnd(node.importClause.name));
 				}
 				if (node.importClause.namedBindings) {
