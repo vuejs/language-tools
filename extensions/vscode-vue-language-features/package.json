@@ -800,7 +800,6 @@
 		"release": "npm run release:node && npm run release:browser"
 	},
 	"devDependencies": {
-		"@types/semver": "^7.3.9",
 		"@types/vscode": "1.67.0",
 		"@volar/preview": "0.38.2",
 		"@volar/shared": "0.38.2",
@@ -811,7 +810,6 @@
 		"esbuild-plugin-copy": "latest",
 		"path-browserify": "^1.0.1",
 		"punycode": "^2.1.1",
-		"semver": "^7.3.7",
 		"vsce": "latest",
 		"vscode-languageclient": "^8.0.1",
 		"vscode-nls": "^5.0.1"
