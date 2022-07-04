@@ -307,7 +307,12 @@ export function createLanguageServiceContext(
 		}
 		let tsScript = host.getScriptSnapshot(fileName);
 		if (tsScript) {
-			if ((vueCompilerOptions.experimentalSuppressUnknownJsxPropertyErrors ?? true) && basename === 'runtime-dom.d.ts') {
+			if ((vueCompilerOptions.experimentalSuppressUnknownJsxPropertyErrors ?? true) && (
+				// for vue 2.6 and vue 3
+				basename === 'runtime-dom.d.ts' ||
+				// for vue 2.7
+				basename === 'jsx.d.ts'
+			)) {
 				// allow arbitrary attributes
 				let tsScriptText = tsScript.getText(0, tsScript.getLength());
 				tsScriptText = tsScriptText.replace(
