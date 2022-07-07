@@ -6,7 +6,7 @@ export default function (): VueLanguagePlugin {
 	return {
 
 		getEmbeddedFilesCount(fileName, sfc) {
-			return fileName.endsWith('.html') ? 0 : sfc.styles.length;
+			return sfc.styles.length;
 		},
 
 		getEmbeddedFile(fileName, sfc, i) {

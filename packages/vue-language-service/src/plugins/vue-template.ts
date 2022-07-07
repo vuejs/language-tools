@@ -129,6 +129,10 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		},
 
 		doHover(document, position) {
+
+			if (!options.isSupportedDocument(document))
+				return;
+
 			const vueDocument = options.vueDocuments.fromEmbeddedDocument(document);
 			if (vueDocument) {
 				options.templateLanguagePlugin.htmlLs.setDataProviders(
@@ -584,9 +588,10 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 	}
 
 	function useDefaultDataProvider(uri: string) {
-		if (uri.endsWith('.html')) {
-			return false; // petite-vue
-		}
+		// commented for https://github.com/johnsoncodehk/volar/issues/1471#issuecomment-1159691270
+		// if (uri.endsWith('.html')) {
+		// 	return false; // petite-vue
+		// }
 		return true;
 	}
 

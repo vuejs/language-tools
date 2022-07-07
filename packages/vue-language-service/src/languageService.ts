@@ -355,7 +355,9 @@ export function createLanguageService(
 				}
 			},
 			tsLs,
-			isSupportedDocument: (document) => document.languageId === languageId,
+			isSupportedDocument: (document) =>
+				document.languageId === languageId
+				&& !vueDocuments.get(document.uri) /* not petite-vue source file */,
 			getNameCases,
 			vueLsHost,
 			vueDocuments,
