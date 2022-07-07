@@ -3,5 +3,14 @@
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,
 	"typescript.tsdk": "node_modules/typescript/lib",
-	"editor.defaultFormatter": "vscode.typescript-language-features"
+	"editor.defaultFormatter": "vscode.typescript-language-features",
+	"[typescript]": {
+		"editor.defaultFormatter": "vscode.typescript-language-features"
+	},
+	"[jsonc]": {
+		"editor.defaultFormatter": "vscode.json-language-features"
+	},
+	"[javascript]": {
+		"editor.defaultFormatter": "vscode.typescript-language-features"
+	}
 }
