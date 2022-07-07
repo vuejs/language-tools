@@ -1,6 +1,6 @@
 {
 	"name": "typescript-vue-plugin",
-	"version": "0.38.2",
+	"version": "0.38.3",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -16,7 +16,7 @@
 		"typescript": "latest"
 	},
 	"dependencies": {
-		"@volar/typescript-faster": "0.38.2",
-		"@volar/vue-typescript": "0.38.2"
+		"@volar/typescript-faster": "0.38.3",
+		"@volar/vue-typescript": "0.38.3"
 	}
 }
