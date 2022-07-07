@@ -266,7 +266,7 @@ export function generate(
 				},
 			},
 		);
-		tsCodeGen.addText(`: typeof ${slot.varName},\n`);
+		tsCodeGen.addText(`: (_: typeof ${slot.varName}) => any,\n`);
 	}
 	tsCodeGen.addText(`};\n`);
 
