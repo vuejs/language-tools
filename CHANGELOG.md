@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.38.3 (2022/7/7)
+
+- feat: support html, css intellisense for petite-vue ([#1471](https://github.com/johnsoncodehk/volar/issues/1471))
+- fix: avoid unknown jsx property error for vue 2.7 ([#1533](https://github.com/johnsoncodehk/volar/issues/1533))
+- fix: fixed `GlobalComponents` interface not working edge case ([#1489](https://github.com/johnsoncodehk/volar/issues/1489))
+- fix: stricter slots type extracting ([#1522](https://github.com/johnsoncodehk/volar/issues/1522))
+- fix: nuxt app preview not working
+
 ## 0.38.2 (2022/6/26)
 
 - feat: update support for vite-plugin-vue-component-preview v0.2
