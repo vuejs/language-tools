@@ -476,7 +476,7 @@ export async function register(context: vscode.ExtensionContext) {
 	async function startPreviewServer(viteDir: string, type: 'vite' | 'nuxt') {
 
 		const port = await shared.getLocalHostAvaliablePort(vscode.workspace.getConfiguration('volar').get('preview.port') ?? 3333);
-		let script = await vscode.workspace.getConfiguration('volar').get<string>('preview.script.' + type) ?? '';
+		let script = await vscode.workspace.getConfiguration('volar').get<string>('preview.script.' + (type === 'nuxt' ? 'nuxi' : 'vite')) ?? '';
 
 		if (script.indexOf('{VITE_BIN}') >= 0) {
 			script = script.replace('{VITE_BIN}', JSON.stringify(require.resolve('./dist/preview-bin/vite', { paths: [context.extensionPath] })));
