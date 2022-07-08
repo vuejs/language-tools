@@ -51,11 +51,11 @@ export default function (
 				const tsxCodeGen = new CodeGen<EmbeddedFileMappingData>();
 
 				tsxCodeGen.addText(scriptLeadingComment + '\n');
-				tsxCodeGen.addText(`import * as __VLS_types from './__VLS_types';\n`);
+				tsxCodeGen.addText(`import * as __VLS_types from './__VLS_types.js';\n`);
 
 				if (sfc.script || sfc.scriptSetup) {
-					tsxCodeGen.addText(`import { __VLS_options, __VLS_name } from './${baseFileName}.__VLS_script';\n`);
-					tsxCodeGen.addText(`import __VLS_component from './${baseFileName}.__VLS_script';\n`);
+					tsxCodeGen.addText(`import { __VLS_options, __VLS_name } from './${baseFileName}.__VLS_script.js';\n`);
+					tsxCodeGen.addText(`import __VLS_component from './${baseFileName}.__VLS_script.js';\n`);
 				}
 				else {
 					tsxCodeGen.addText(`var __VLS_name = undefined;\n`);
@@ -165,7 +165,7 @@ export default function (
 							tsxCodeGen.addText(`__VLS_types_${text} as ${text},\n`);
 						}
 					}
-					tsxCodeGen.addText(`} from './${baseFileName}.__VLS_script';\n`);
+					tsxCodeGen.addText(`} from './${baseFileName}.__VLS_script.js';\n`);
 				}
 				function writeCssClassProperty(styleIndex: number, className: string, classRange: TextRange, propertyType: string, optional: boolean) {
 					tsxCodeGen.addText(`\n & { `);

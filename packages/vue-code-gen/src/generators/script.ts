@@ -170,7 +170,9 @@ export function generate(
 
 		if (src.endsWith('.d.ts')) src = src.substring(0, src.length - '.d.ts'.length);
 		else if (src.endsWith('.ts')) src = src.substring(0, src.length - '.ts'.length);
-		else if (src.endsWith('.tsx')) src = src.substring(0, src.length - '.tsx'.length);
+		else if (src.endsWith('.tsx')) src = src.substring(0, src.length - '.tsx'.length) + '.jsx';
+
+		if (!src.endsWith('.js') && !src.endsWith('.jsx')) src = src + '.js'
 
 		codeGen.addText(`export * from `);
 		codeGen.addCode(
@@ -426,13 +428,13 @@ export function generate(
 				// fill $props
 				if (scriptSetupRanges.propsTypeArg) {
 					// NOTE: defineProps is inaccurate for $props
-					codeGen.addText(`$props: (await import('./__VLS_types')).makeOptional(defineProps<`);
+					codeGen.addText(`$props: (await import('./__VLS_types.js')).makeOptional(defineProps<`);
 					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
 					codeGen.addText(`>()),\n`);
 				}
 				else if (scriptSetupRanges.propsRuntimeArg) {
 					// NOTE: defineProps is inaccurate for $props
-					codeGen.addText(`$props: (await import('./__VLS_types')).makeOptional(defineProps(`);
+					codeGen.addText(`$props: (await import('./__VLS_types.js')).makeOptional(defineProps(`);
 					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
 					codeGen.addText(`)),\n`);
 				}
@@ -530,7 +532,7 @@ export function generate(
 			codeGen.addText(`return __VLS_Component;\n`);
 		}
 		else {
-			codeGen.addText(`const __VLS_slots = (await import('./${path.basename(fileName)}.__VLS_template')).default;\n`)
+			codeGen.addText(`const __VLS_slots = (await import('./${path.basename(fileName)}.__VLS_template.jsx')).default;\n`)
 			codeGen.addText(`return {} as typeof __VLS_Component & (new () => { ${getSlotsPropertyName(vueVersion)}: typeof __VLS_slots });\n`);
 		}
 		codeGen.addText(`})();`);
@@ -657,7 +659,7 @@ export function generate(
 		codeGen.addText(`\n`);
 		if (script && scriptRanges?.exportDefault?.args) {
 			const args = scriptRanges.exportDefault.args;
-			codeGen.addText(`export const __VLS_name = (await import('./__VLS_types')).getNameOption(`);
+			codeGen.addText(`export const __VLS_name = (await import('./__VLS_types.js')).getNameOption(`);
 			codeGen.addText(`${script.content.substring(args.start, args.end)} as const`);
 			codeGen.addText(`);\n`);
 		}
