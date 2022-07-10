@@ -44,7 +44,7 @@ export function getDocumentService(
 
 	// language support plugins
 	const vuePlugin = useVuePlugin({
-		getVueDocument,
+		getVueDocument: doc => vueDocuments.get(doc),
 		tsLs: undefined,
 	});
 	const htmlPlugin = useHtmlPlugin({
@@ -64,7 +64,7 @@ export function getDocumentService(
 	});
 	const autoWrapParenthesesPlugin = useAutoWrapParenthesesPlugin({
 		ts,
-		getVueDocument,
+		getVueDocument: doc => vueDocuments.get(doc),
 	});
 
 	// formatter plugins
