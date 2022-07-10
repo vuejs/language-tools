@@ -48,7 +48,7 @@ export declare function makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
 
 export type ExtractComponentSlots<T> =
 	IsAny<T> extends true ? Record<string, any>
-	: T extends { ${slots}?: infer S } ? { [K in keyof S]-?: S[K] extends ((obj: infer O) => any) | undefined ? O : unknown }
+	: T extends { ${slots}?: infer S } ? { [K in keyof S]-?: S[K] extends ((obj: infer O) => any) | undefined ? O : any }
 	: Record<string, any>;
 
 export type FillingEventArg_ParametersLength<E extends (...args: any) => any> = IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];
