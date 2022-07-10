@@ -1,15 +1,5 @@
 {
 	"autoClosingPairs": [
-		// markdown
-		// fix https://github.com/johnsoncodehk/volar/issues/1428
-		{
-			"open": "```",
-			"close": "\n\n```",
-			"notIn": [
-				"string",
-				"comment"
-			]
-		},
 		// html
 		{
 			"open": "{",
@@ -40,14 +30,15 @@
 			]
 		},
 		// javascript
-		{
-			"open": "`",
-			"close": "`",
-			"notIn": [
-				"string",
-				"comment"
-			]
-		},
+		// commented to fix https://github.com/johnsoncodehk/volar/issues/1428
+		// {
+		// 	"open": "`",
+		// 	"close": "`",
+		// 	"notIn": [
+		// 		"string",
+		// 		"comment"
+		// 	]
+		// },
 		{
 			"open": "/**",
 			"close": " */",
