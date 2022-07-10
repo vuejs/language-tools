@@ -307,7 +307,7 @@ export function createLanguageServiceContext(
 		}
 		let tsScript = host.getScriptSnapshot(fileName);
 		if (tsScript) {
-			if ((vueCompilerOptions.experimentalSuppressUnknownJsxPropertyErrors ?? true) && (
+			if (!(vueCompilerOptions.strictTemplates ?? false) && (
 				// for vue 2.6 and vue 3
 				basename === 'runtime-dom.d.ts' ||
 				// for vue 2.7

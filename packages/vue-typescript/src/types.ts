@@ -8,6 +8,9 @@ export type LanguageServiceHost = ts.LanguageServiceHost & {
 
 export interface VueCompilerOptions {
 	target?: 2 | 2.7 | 3;
+	strictTemplates?: boolean;
+
+	// experimental
 	experimentalRuntimeMode?: 'runtime-dom' | 'runtime-uni-app';
 	experimentalImplicitWrapComponentOptionsWithDefineComponent?: boolean | 'onlyJs';
 	experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup?: boolean | 'onlyJs';
@@ -16,7 +19,5 @@ export interface VueCompilerOptions {
 	experimentalDisableTemplateSupport?: boolean;
 	experimentalResolveStyleCssClasses?: 'scoped' | 'always' | 'never';
 	experimentalAllowTypeNarrowingInInlineHandlers?: boolean;
-	experimentalSuppressUnknownJsxPropertyErrors?: boolean;
-	experimentalSuppressInvalidJsxElementTypeErrors?: boolean;
 	experimentalUseScriptLeadingCommentInTemplate?: boolean;
 }

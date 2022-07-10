@@ -5,7 +5,7 @@
 			"properties": {
 				"target": {
 					"type": "number",
-					"default": 2.7,
+					"default": 3,
 					"anyOf": [
 						{
 							"enum": [
@@ -17,9 +17,10 @@
 					],
 					"markdownDescription": "Target version of Vue."
 				},
-				"experimentalCompatMode": {
-					"type": "number",
-					"deprecationMessage": "This property is deprecated at v0.37.0, please use `target` property instead of."
+				"strictTemplates": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Strict props, component type-checking in templates."
 				},
 				"experimentalRuntimeMode": {
 					"type": "string",
@@ -69,14 +70,6 @@
 				"experimentalUseScriptLeadingCommentInTemplate": {
 					"type": "boolean",
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1369"
-				},
-				"experimentalSuppressUnknownJsxPropertyErrors": {
-					"type": "boolean",
-					"markdownDescription": "Suppress unknown property errors in JSX and template. (Default true)"
-				},
-				"experimentalSuppressInvalidJsxElementTypeErrors": {
-					"type": "boolean",
-					"markdownDescription": "Suppress invalid JSX element type errors in template. (Default true)"
 				},
 				"experimentalResolveStyleCssClasses": {
 					"enum": [

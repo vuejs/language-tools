@@ -175,9 +175,9 @@ export function createSourceFile(
 			ts,
 			{
 				target: vueCompilerOptions.target ?? 3,
+				strictTemplates: vueCompilerOptions.strictTemplates ?? false,
 				experimentalRuntimeMode: vueCompilerOptions.experimentalRuntimeMode,
 				experimentalAllowTypeNarrowingInInlineHandlers: vueCompilerOptions.experimentalAllowTypeNarrowingInInlineHandlers ?? false,
-				experimentalSuppressInvalidJsxElementTypeErrors: vueCompilerOptions.experimentalSuppressInvalidJsxElementTypeErrors ?? true,
 			},
 			sfc.template?.lang ?? 'html',
 			templateAstCompiled.value.ast,

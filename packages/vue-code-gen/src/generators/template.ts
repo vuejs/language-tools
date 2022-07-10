@@ -61,9 +61,9 @@ export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	compilerOptions: {
 		target: number,
+		strictTemplates: boolean,
 		experimentalRuntimeMode: 'runtime-dom' | 'runtime-uni-app' | undefined,
 		experimentalAllowTypeNarrowingInInlineHandlers: boolean,
-		experimentalSuppressInvalidJsxElementTypeErrors: boolean,
 	},
 	sourceLang: string,
 	templateAst: CompilerDOM.RootNode,
@@ -160,7 +160,7 @@ export function generate(
 
 			tsCodeGen.addText(`declare const ${var_componentVar}: `);
 
-			if (compilerOptions.experimentalSuppressInvalidJsxElementTypeErrors)
+			if (!compilerOptions.strictTemplates)
 				tsCodeGen.addText(`__VLS_types.ConvertInvalidJsxElement<`);
 
 			for (const name of names) {
@@ -172,7 +172,7 @@ export function generate(
 
 			tsCodeGen.addText(`unknown`);
 
-			if (compilerOptions.experimentalSuppressInvalidJsxElementTypeErrors)
+			if (!compilerOptions.strictTemplates)
 				tsCodeGen.addText(`>`);
 
 			tsCodeGen.addText(`;\n`);
@@ -895,6 +895,10 @@ export function generate(
 
 				const propName_2 = !isStatic ? propName_1 : hyphenate(propName_1) === propName_1 ? camelize(propName_1) : propName_1;
 
+				if (compilerOptions.strictTemplates) {
+					propName_1 = propName_2;
+				}
+
 				if (forRemainStyleOrClass && propName_2 !== 'style' && propName_2 !== 'class')
 					continue;
 
@@ -1033,7 +1037,11 @@ export function generate(
 			) {
 
 				const propName = hyphenate(prop.name) === prop.name ? camelize(prop.name) : prop.name;
-				const propName2 = prop.name;
+				let propName2 = prop.name;
+
+				if (compilerOptions.strictTemplates) {
+					propName2 = propName;
+				}
 
 				if (forRemainStyleOrClass && propName !== 'style' && propName !== 'class')
 					continue;
