@@ -133,7 +133,7 @@ export function getDocumentService(
 		}
 
 		const vueFile = vueTs.createSourceFile(
-			shared.uriToFsPath(document.uri),
+			'/untitled.' + shared.languageIdToSyntax(document.languageId),
 			document.getText(),
 			{},
 			{},
