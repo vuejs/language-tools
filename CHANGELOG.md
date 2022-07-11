@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.38.5 (2022/7/11)
+
+- fix: file path resolve incorrect on windows (#1554, #1555, #1556, #1557, #1558, #1559)
+
 ## 0.38.4 (2022/7/11)
 
 - feat: add `vueCompilerOptions.strictTemplates` ([#1418](https://github.com/johnsoncodehk/volar/issues/1418))
