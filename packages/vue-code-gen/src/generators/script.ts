@@ -1,7 +1,7 @@
 import { CodeGen } from '@volar/code-gen';
 import * as SourceMaps from '@volar/source-map';
 import { hyphenate } from '@vue/shared';
-import * as path from 'path';
+import { posix as path } from 'path';
 import type * as templateGen from '../generators/template';
 import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';

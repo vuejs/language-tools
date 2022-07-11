@@ -1,4 +1,4 @@
-import * as path from 'path';
+import { posix as path } from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { LanguageServiceHost } from './types';
 import * as localTypes from './utils/localTypes';
