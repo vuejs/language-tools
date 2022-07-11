@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { BaseLanguageClient } from 'vscode-languageclient';
 import * as shared from '@volar/shared';
-import { posix as path } from 'path';
+import * as path from 'path';
 import { takeOverModeEnabled } from '../common';
 
 export async function register(cmd: string, context: vscode.ExtensionContext, languageClient: BaseLanguageClient) {

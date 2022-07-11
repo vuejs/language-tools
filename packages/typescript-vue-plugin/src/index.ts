@@ -1,7 +1,7 @@
 import * as tsFaster from '@volar/typescript-faster';
 import * as vueTs from '@volar/vue-typescript';
 import { tsShared } from '@volar/vue-typescript';
-import { posix as path } from 'path';
+import * as path from 'path';
 import * as apis from './apis';
 
 const init: ts.server.PluginModuleFactory = (modules) => {

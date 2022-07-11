@@ -5,7 +5,7 @@ import * as templateGen from '@volar/vue-code-gen/out/generators/template';
 import type { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { walkInterpolationFragment } from '@volar/vue-code-gen/out/transform';
 import { ComputedRef } from '@vue/reactivity';
-import { posix as path } from 'path';
+import * as path from 'path';
 import { VueCompilerOptions } from '../types';
 import { SearchTexts } from '../utils/string';
 import { EmbeddedFile, useStyleCssClasses, useCssVars, VueLanguagePlugin } from '../sourceFile';

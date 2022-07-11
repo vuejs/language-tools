@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { posix as path } from 'path';
+import * as path from 'path';
 import * as fs from '../utils/fs';
 import * as shared from '@volar/shared';
 import { userPick } from './splitEditors';

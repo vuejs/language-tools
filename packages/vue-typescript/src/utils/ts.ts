@@ -1,5 +1,5 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { posix as path } from 'path';
+import * as path from 'path';
 import type { VueCompilerOptions } from '../types';
 
 export function createParsedCommandLine(
