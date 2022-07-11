@@ -251,7 +251,11 @@ export function embeddedEditToSourceEdit(
 				const sourceMap = vueDocuments.sourceMapFromEmbeddedDocumentUri(tsDocEdit.textDocument.uri);
 				if (sourceMap) {
 					vueDocEdit = vscode.TextDocumentEdit.create(
-						{ uri: sourceMap.sourceDocument.uri, version: sourceMap.sourceDocument.version },
+						{
+							uri: sourceMap.sourceDocument.uri,
+							// version: sourceMap.sourceDocument.version,
+							version: null, // fix https://github.com/johnsoncodehk/volar/issues/1490
+						},
 						[],
 					);
 					for (const tsEdit of tsDocEdit.edits) {
