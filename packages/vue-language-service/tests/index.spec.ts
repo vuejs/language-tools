@@ -1,6 +1,8 @@
 import * as path from 'upath';
 import { defineTypeCheck } from './utils/defineTypeCheck';
 
+import './completions/import_path';
+
 import './renames/prop';
 import './renames/typeProp';
 import './renames/cssModules';

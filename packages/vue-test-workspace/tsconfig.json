@@ -12,6 +12,7 @@
 		"jsx": "preserve",
 	},
 	"include": [
+		"completions/**/*",
 		"renames/**/*",
 		"typeChecks/**/*",
 		"typeChecks/**/*.html",
