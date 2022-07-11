@@ -10,7 +10,7 @@ import * as fileReferences from '../../vscode-vue-language-features/out/features
 
 let apiClient: lsp.BaseLanguageClient;
 let docClient: lsp.BaseLanguageClient | undefined;
-let htmlClient: lsp.BaseLanguageClient;
+let htmlClient: lsp.BaseLanguageClient | undefined;
 
 type CreateLanguageClient = (
 	id: string,
@@ -85,13 +85,13 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			getInitializationOptions(context, 'second-language-features', _useSecondServer),
 			6110,
 		) : undefined,
-		createLc(
+		enabledDocumentFeaturesInHtml() ? createLc(
 			'volar-alpine-document-features',
 			'Volar-Alpine - Document Features Server',
 			documentFeaturesDocumentSelector,
 			getInitializationOptions(context, 'document-features', _useSecondServer),
 			6111,
-		),
+		) : undefined,
 	]);
 
 	const clients = [apiClient, docClient, htmlClient].filter(shared.notEmpty);
@@ -160,6 +160,10 @@ export function takeOverModeEnabled() {
 	return vscode.workspace.getConfiguration('volar').get<boolean>('alpine.takeOverMode.enabled');
 }
 
+function enabledDocumentFeaturesInHtml() {
+	return !vscode.extensions.getExtension('vscode.html-language-features');
+}
+
 function useSecondServer() {
 	return !!vscode.workspace.getConfiguration('volar').get<boolean>('alpineserver.useSecondServer');
 }
@@ -212,6 +216,7 @@ function getInitializationOptions(
 			} : {}),
 		} : undefined,
 		documentFeatures: mode === 'document-features' ? {
+			allowedLanguageIds: ['html'],
 			selectionRange: true,
 			foldingRange: true,
 			linkedEditingRange: true,

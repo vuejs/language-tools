@@ -7,6 +7,7 @@ export function register(
 	connection: vscode.Connection,
 	documents: vscode.TextDocuments<TextDocument>,
 	vueDs: vue.DocumentService,
+	allowedLanguageIds: string[] = ['vue'],
 ) {
 	connection.onDocumentFormatting(handler => {
 		return worker(handler.textDocument.uri, document => {
@@ -61,7 +62,7 @@ export function register(
 
 	function worker<T>(uri: string, cb: (document: TextDocument) => T) {
 		const document = documents.get(uri);
-		if (document) {
+		if (document && allowedLanguageIds.includes(document.languageId)) {
 			return cb(document);
 		}
 	}

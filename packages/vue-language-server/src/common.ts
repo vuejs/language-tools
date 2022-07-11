@@ -74,7 +74,7 @@ export function createLanguageServer(
 				loadCustomPlugins(folders[0]),
 			);
 
-			(await import('./features/documentFeatures')).register(connection, documents, documentService);
+			(await import('./features/documentFeatures')).register(connection, documents, documentService, options.documentFeatures.allowedLanguageIds);
 			(await import('./registers/registerDocumentFeatures')).register(options.documentFeatures, result.capabilities);
 		}
 

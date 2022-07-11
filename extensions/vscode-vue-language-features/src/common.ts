@@ -210,6 +210,10 @@ export function takeOverModeEnabled() {
 	return status;
 }
 
+function enabledDocumentFeaturesInHtml() {
+	return !vscode.extensions.getExtension('vscode.html-language-features');
+}
+
 function useSecondServer() {
 	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.useSecondServer');
 }
@@ -257,6 +261,7 @@ function getInitializationOptions(
 			} : {}),
 		} : undefined,
 		documentFeatures: mode === 'document-features' ? {
+			allowedLanguageIds: ['vue', enabledDocumentFeaturesInHtml() ? 'html' : undefined].filter(shared.notEmpty),
 			selectionRange: true,
 			foldingRange: true,
 			linkedEditingRange: true,
