@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.38.4 (2022/7/11)
+
+- feat: add `vueCompilerOptions.strictTemplates` ([#1418](https://github.com/johnsoncodehk/volar/issues/1418))
+- fix: don't auto close ``` ([#1428](https://github.com/johnsoncodehk/volar/issues/1428))
+- fix: change unknown slot type from `unknown` to `any` ([#1541](https://github.com/johnsoncodehk/volar/issues/1541))
+- fix: SFC templates outline incorrect ([#1531](https://github.com/johnsoncodehk/volar/issues/1531))
+- fix: slot shorthand highlighting incorrect if have not `=` ([#1423](https://github.com/johnsoncodehk/volar/issues/1423))
+- fix: vue file import path auto-complete not working on windows ([#1304](https://github.com/johnsoncodehk/volar/issues/1304))
+- fix: avoid duplicate result in html ([#1552](https://github.com/johnsoncodehk/volar/issues/1552)) ([#1530](https://github.com/johnsoncodehk/volar/issues/1530))
+- fix: code action document edit version incorrect ([#1490](https://github.com/johnsoncodehk/volar/issues/1490))
+
+**Breaking changes**
+
+- `experimentalSuppressUnknownJsxPropertyErrors`, `experimentalSuppressInvalidJsxElementTypeErrors` is replaced by `strictTemplates`.
+
+	```diff
+	{
+		"vueCompilerOptions": {
+	-		"experimentalSuppressUnknownJsxPropertyErrors": false,
+	-		"experimentalSuppressInvalidJsxElementTypeErrors": false,
+	+		"strictTemplates": true
+		},
+	}
+	```
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
+
 ## 0.38.3 (2022/7/7)
 
 - feat: support html, css intellisense for petite-vue ([#1471](https://github.com/johnsoncodehk/volar/issues/1471))
@@ -14,12 +45,6 @@
 - feat: improve component preview UX
 - feat: add --version flag for vue-language-server ([#1510](https://github.com/johnsoncodehk/volar/issues/1510))
 - fix: css class name codeLens range inaccurate ([#1485](https://github.com/johnsoncodehk/volar/issues/1485))
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 0.38.1 (2022/6/19)
 
