@@ -17,7 +17,7 @@ export function parseScriptImportRanges(ts: typeof import('typescript/lib/tsserv
 		visitNode(node);
 	});
 
-	return calls;
+	return calls.sort((a, b) => a.code.start - b.code.start);
 
 	function visitNode(node: ts.Node) {
 		if (ts.isImportDeclaration(node)) {
