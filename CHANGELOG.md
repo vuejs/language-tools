@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.38.6 (2022/7/16)
+
+- fix: template syntax highlight broken (#1553, #1567, #1569, #1564, #1491)
+
 ## 0.38.5 (2022/7/11)
 
 - fix: file path resolve incorrect on windows (#1554, #1555, #1556, #1557, #1558, #1559)
