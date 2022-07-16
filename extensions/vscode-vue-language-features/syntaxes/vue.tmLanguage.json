@@ -23,7 +23,7 @@
 			},
 			"patterns": [
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*['\"]md['\"])",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"])md\\2)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -49,7 +49,7 @@
 					]
 				},
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*['\"]html['\"])",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"])html\\2)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -75,7 +75,7 @@
 					]
 				},
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*['\"]pug['\"])",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"])pug\\2)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -101,7 +101,7 @@
 					]
 				},
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*['\"]stylus['\"])",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"])stylus\\2)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -127,7 +127,7 @@
 					]
 				},
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*['\"]postcss['\"])",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"])postcss\\2)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -153,7 +153,7 @@
 					]
 				},
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*['\"]sass['\"])",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"])sass\\2)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -179,7 +179,7 @@
 					]
 				},
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*['\"]css['\"])",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"])css\\2)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -205,7 +205,7 @@
 					]
 				},
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*['\"]scss['\"])",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"])scss\\2)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -231,7 +231,7 @@
 					]
 				},
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*['\"]less['\"])",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"])less\\2)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -257,7 +257,7 @@
 					]
 				},
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*['\"]js['\"])",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"])js\\2)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -283,7 +283,7 @@
 					]
 				},
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*['\"]ts['\"])",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"])ts\\2)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -309,7 +309,7 @@
 					]
 				},
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*['\"]jsx['\"])",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"])jsx\\2)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -335,7 +335,7 @@
 					]
 				},
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*['\"]tsx['\"])",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"])tsx\\2)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -361,7 +361,7 @@
 					]
 				},
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*['\"]json['\"])",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"])json\\2)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -387,7 +387,7 @@
 					]
 				},
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*['\"]jsonc['\"])",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"])jsonc\\2)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -413,7 +413,7 @@
 					]
 				},
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*['\"]yaml['\"])",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"])yaml\\2)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -439,7 +439,7 @@
 					]
 				},
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*['\"]toml['\"])",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"])toml\\2)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -465,7 +465,7 @@
 					]
 				},
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*['\"](gql|graphql)['\"])",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"])(gql|graphql)\\2)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
