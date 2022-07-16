@@ -3,7 +3,6 @@ import { computed, shallowReactive } from '@vue/reactivity';
 import { posix as path } from 'path';
 import * as localTypes from './utils/localTypes';
 import type { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
-import { untrack } from './utils/untrack';
 import type { Embedded, EmbeddedFile, SourceFile } from './sourceFile';
 
 export interface DocumentRegistry extends ReturnType<typeof createDocumentRegistry> { }
@@ -21,11 +20,11 @@ export function createDocumentRegistry() {
 function createDocumentRegistryBase<T extends EmbeddedLangaugeSourceFile>() {
 
 	const files = shallowReactive<Record<string, T>>({});
-	const arr = computed(() => Object.values(files));
-	const fileNames = computed(() => arr.value.map(sourceFile => sourceFile.fileName));
+	const all = computed(() => Object.values(files));
+	const fileNames = computed(() => all.value.map(sourceFile => sourceFile.fileName));
 	const embeddedDocumentsMap = computed(() => {
 		const map = new WeakMap<EmbeddedFile, T>();
-		for (const sourceFile of arr.value) {
+		for (const sourceFile of all.value) {
 			for (const embedded of sourceFile.getAllEmbeddeds()) {
 				map.set(embedded.file, sourceFile);
 			}
@@ -34,7 +33,7 @@ function createDocumentRegistryBase<T extends EmbeddedLangaugeSourceFile>() {
 	});
 	const sourceMapsByFileName = computed(() => {
 		const map = new Map<string, { vueFile: T, embedded: Embedded; }>();
-		for (const sourceFile of arr.value) {
+		for (const sourceFile of all.value) {
 			for (const embedded of sourceFile.getAllEmbeddeds()) {
 				map.set(embedded.file.fileName.toLowerCase(), { vueFile: sourceFile, embedded });
 			}
@@ -56,23 +55,23 @@ function createDocumentRegistryBase<T extends EmbeddedLangaugeSourceFile>() {
 	const dirs = computed(() => [...new Set(fileNames.value.map(path.dirname))]);
 
 	return {
-		get: untrack((fileName: string) => files[fileName.toLowerCase()]),
-		delete: untrack((fileName: string) => delete files[fileName.toLowerCase()]),
-		has: untrack((fileName: string) => !!files[fileName.toLowerCase()]),
-		set: untrack((fileName: string, vueFile: T) => files[fileName.toLowerCase()] = vueFile),
+		get: (fileName: string) => files[fileName.toLowerCase()],
+		delete: (fileName: string) => delete files[fileName.toLowerCase()],
+		has: (fileName: string) => !!files[fileName.toLowerCase()],
+		set: (fileName: string, vueFile: T) => files[fileName.toLowerCase()] = vueFile,
 
-		getFileNames: untrack(() => fileNames.value),
-		getDirs: untrack(() => dirs.value),
-		getAll: untrack(() => arr.value),
+		getFileNames: () => fileNames.value,
+		getDirs: () => dirs.value,
+		getAll: () => all.value,
 
-		getTeleport: untrack((fileName: string) => teleports.value.get(fileName.toLowerCase())),
-		getAllEmbeddeds: untrack(function* () {
+		getTeleport: (fileName: string) => teleports.value.get(fileName.toLowerCase()),
+		getAllEmbeddeds: function* () {
 			for (const sourceMap of sourceMapsByFileName.value) {
 				yield sourceMap[1];
 			}
-		}),
+		},
 
-		fromEmbeddedLocation: untrack(function* (
+		fromEmbeddedLocation: function* (
 			fileName: string,
 			start: number,
 			end?: number,
@@ -111,16 +110,16 @@ function createDocumentRegistryBase<T extends EmbeddedLangaugeSourceFile>() {
 					},
 				};
 			}
-		}),
-		fromEmbeddedFile: untrack(function (
+		},
+		fromEmbeddedFile: function (
 			file: EmbeddedFile,
 		) {
 			return embeddedDocumentsMap.value.get(file);
-		}),
-		fromEmbeddedFileName: untrack(function (
+		},
+		fromEmbeddedFileName: function (
 			fileName: string,
 		) {
 			return sourceMapsByFileName.value.get(fileName.toLowerCase());
-		}),
+		},
 	};
 }

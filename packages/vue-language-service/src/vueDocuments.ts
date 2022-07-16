@@ -4,7 +4,6 @@ import { computed } from '@vue/reactivity';
 import { SourceMapBase, Mapping } from '@volar/source-map';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { EmbeddedFileMappingData, TeleportMappingData, TeleportSideData } from '@volar/vue-code-gen';
-import { untrack } from './utils/untrack';
 import { walkElementNodes } from '@volar/vue-code-gen';
 import * as CompilerDOM from '@vue/compiler-dom';
 import * as vscode from 'vscode-languageserver-protocol';
@@ -117,7 +116,7 @@ export function parseVueDocuments(
 	const embeddedDocumentsMap = computed(() => {
 		const map = new Map<TextDocument, VueDocument>();
 		for (const vueDocument of getAll()) {
-			for (const sourceMap of vueDocument.refs.sourceMaps.value) {
+			for (const sourceMap of vueDocument.getSourceMaps()) {
 				map.set(sourceMap.mappedDocument, vueDocument);
 			}
 		}
@@ -126,7 +125,7 @@ export function parseVueDocuments(
 	const embeddedDocumentsMapLsType = computed(() => {
 		const map = new Map<string, EmbeddedDocumentSourceMap>();
 		for (const vueDocument of getAll()) {
-			for (const sourceMap of vueDocument.refs.sourceMaps.value) {
+			for (const sourceMap of vueDocument.getSourceMaps()) {
 				map.set(sourceMap.mappedDocument.uri, sourceMap);
 			}
 		}
@@ -135,7 +134,7 @@ export function parseVueDocuments(
 	const teleportsMapLsType = computed(() => {
 		const map = new Map<string, TeleportSourceMap>();
 		for (const vueDocument of getAll()) {
-			for (const teleport of vueDocument.refs.teleports.value) {
+			for (const teleport of vueDocument.getTeleports()) {
 				map.set(teleport.mappedDocument.uri, teleport);
 			}
 		}
@@ -143,8 +142,8 @@ export function parseVueDocuments(
 	});
 
 	return {
-		getAll: untrack(getAll),
-		get: untrack((uri: string) => {
+		getAll: getAll,
+		get: (uri: string) => {
 
 			const fileName = shared.uriToFsPath(uri);
 			const vueFile = vueLsCtx.sourceFiles.get(fileName);
@@ -152,17 +151,17 @@ export function parseVueDocuments(
 			if (vueFile) {
 				return vueDocuments.get(vueFile);
 			}
-		}),
-		fromEmbeddedDocument: untrack((document: TextDocument) => {
+		},
+		fromEmbeddedDocument: (document: TextDocument) => {
 			return embeddedDocumentsMap.value.get(document);
-		}),
-		sourceMapFromEmbeddedDocumentUri: untrack((uri: string) => {
+		},
+		sourceMapFromEmbeddedDocumentUri: (uri: string) => {
 			return embeddedDocumentsMapLsType.value.get(uri);
-		}),
-		teleportfromEmbeddedDocumentUri: untrack((uri: string) => {
+		},
+		teleportfromEmbeddedDocumentUri: (uri: string) => {
 			return teleportsMapLsType.value.get(uri);
-		}),
-		fromEmbeddedLocation: untrack(function* (
+		},
+		fromEmbeddedLocation: function* (
 			uri: string,
 			start: vscode.Position,
 			end?: vscode.Position,
@@ -201,7 +200,7 @@ export function parseVueDocuments(
 					},
 				};
 			}
-		}),
+		},
 	};
 
 	function getAll() {
@@ -313,15 +312,11 @@ export function parseVueDocument(
 		file: vueFile,
 		embeddedDocumentsMap,
 		sourceMapsMap,
-		getTemplateData: untrack(getTemplateData),
-		getSourceMaps: untrack(() => sourceMaps.value),
-		getDocument: untrack(() => document.value),
-		getTemplateTagsAndAttrs: untrack(() => templateTagsAndAttrs.value),
-
-		refs: {
-			sourceMaps,
-			teleports,
-		},
+		getTemplateData: getTemplateData,
+		getSourceMaps: () => sourceMaps.value,
+		getTeleports: () => teleports.value,
+		getDocument: () => document.value,
+		getTemplateTagsAndAttrs: () => templateTagsAndAttrs.value,
 	};
 
 

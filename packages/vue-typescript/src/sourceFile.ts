@@ -7,7 +7,6 @@ import { computed, ComputedRef, reactive, ref, unref } from '@vue/reactivity';
 import { VueCompilerOptions } from './types';
 import { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
 import { SearchTexts } from './utils/string';
-import { untrack } from './utils/untrack';
 import * as templateGen from '@volar/vue-code-gen/out/generators/template';
 import { parseCssClassNames } from './utils/parseCssClassNames';
 import { parseCssVars } from './utils/parseCssVars';
@@ -520,16 +519,16 @@ export function createSourceFile(
 		set text(value) {
 			update(value);
 		},
-		getCompiledVue: untrack(() => file2VueSourceMap.value),
-		getSfcTemplateLanguageCompiled: untrack(() => computedHtmlTemplate.value),
-		getSfcVueTemplateCompiled: untrack(() => templateAstCompiled.value),
-		getScriptFileName: untrack(() => fileName.endsWith('.html') ? fileName + '.__VLS_script.' + scriptLang.value : fileName + '.' + scriptLang.value),
-		getDescriptor: untrack(() => unref(sfc)),
-		getScriptAst: untrack(() => scriptAst.value),
-		getScriptSetupAst: untrack(() => scriptSetupAst.value),
-		getSfcRefSugarRanges: untrack(() => sfcRefSugarRanges.value),
-		getEmbeddeds: untrack(() => embeddeds.value),
-		getScriptSetupRanges: untrack(() => scriptSetupRanges.value),
+		getCompiledVue: () => file2VueSourceMap.value,
+		getSfcTemplateLanguageCompiled: () => computedHtmlTemplate.value,
+		getSfcVueTemplateCompiled: () => templateAstCompiled.value,
+		getScriptFileName: () => fileName.endsWith('.html') ? fileName + '.__VLS_script.' + scriptLang.value : fileName + '.' + scriptLang.value,
+		getDescriptor: () => unref(sfc),
+		getScriptAst: () => scriptAst.value,
+		getScriptSetupAst: () => scriptSetupAst.value,
+		getSfcRefSugarRanges: () => sfcRefSugarRanges.value,
+		getEmbeddeds: () => embeddeds.value,
+		getScriptSetupRanges: () => scriptSetupRanges.value,
 		isJsxMissing: () => !vueCompilerOptions.experimentalDisableTemplateSupport && (compilerOptions.jsx ?? ts.JsxEmit.Preserve) !== ts.JsxEmit.Preserve,
 
 		getAllEmbeddeds: () => allEmbeddeds.value,
