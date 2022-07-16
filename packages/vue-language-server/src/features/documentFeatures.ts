@@ -7,7 +7,13 @@ export function register(
 	connection: vscode.Connection,
 	documents: vscode.TextDocuments<TextDocument>,
 	vueDs: vue.DocumentService,
-	allowedLanguageIds: string[] = ['vue'],
+	allowedLanguageIds: string[] = [
+		'vue',
+		'javascript',
+		'typescript',
+		'javascriptreact',
+		'typescriptreact',
+	],
 ) {
 	connection.onDocumentFormatting(handler => {
 		return worker(handler.textDocument.uri, document => {

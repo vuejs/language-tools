@@ -261,7 +261,14 @@ function getInitializationOptions(
 			} : {}),
 		} : undefined,
 		documentFeatures: mode === 'document-features' ? {
-			allowedLanguageIds: ['vue', enabledDocumentFeaturesInHtml() ? 'html' : undefined].filter(shared.notEmpty),
+			allowedLanguageIds: [
+				'vue',
+				'javascript',
+				'typescript',
+				'javascriptreact',
+				'typescriptreact',
+				enabledDocumentFeaturesInHtml() ? 'html' : undefined,
+			].filter(shared.notEmpty),
 			selectionRange: true,
 			foldingRange: true,
 			linkedEditingRange: true,
