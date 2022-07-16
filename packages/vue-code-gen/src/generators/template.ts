@@ -417,7 +417,7 @@ export function generate(
 				writeFormatCode(
 					source.content,
 					source.loc.start.offset,
-					formatBrackets.round,
+					formatBrackets.empty,
 				);
 			}
 			tsCodeGen.addText(`) {\n`);
