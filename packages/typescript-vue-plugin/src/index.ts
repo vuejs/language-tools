@@ -10,6 +10,11 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 	const pluginModule: ts.server.PluginModule = {
 		create(info) {
 
+			// fix: https://github.com/johnsoncodehk/volar/issues/1146
+			if (info.project.projectKind === ts.server.ProjectKind.Inferred) {
+				return info.languageService;
+			}
+
 			const proxyHost = createProxyHost(ts, info);
 
 			if (proxyHost.getVueFiles().length === 0) {
