@@ -78,9 +78,13 @@ export async function createProject(
 
 	function resolveAbsolutePath(_path: string) {
 		const relativePath = path.relative(ts.sys.getCurrentDirectory(), rootPath);
-		if (relativePath === '') return _path;
-		if (_path === '') return relativePath;
-		return !path.isAbsolute(_path) ? relativePath + '/' + _path : _path;
+		if (relativePath === '') {
+			return _path;
+		}
+		if (_path === '') {
+			return relativePath;
+		}
+		return _path;
 	}
 	function getLanguageService() {
 		if (!vueLs) {
