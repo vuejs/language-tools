@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.38.7 (2022/7/17)
+
+- feat: add `volar.updateImportsOnFileMove.enabled` option to disable file move refactoring ([#1181](https://github.com/johnsoncodehk/volar/issues/1181))
+- feat: add `volar.diagnostics.delay` option for reduce CPU usage ([#1295](https://github.com/johnsoncodehk/volar/issues/1295))
+- feat: add `vueCompilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend` to support wrap component options by `Vue.extend` ([#1337](https://github.com/johnsoncodehk/volar/issues/1337))
+- feat: support takeover mode for .cjs and .mjs ([#1578](https://github.com/johnsoncodehk/volar/issues/1578))
+- fix: template syntax highlight broken if quotes missing ([#761](https://github.com/johnsoncodehk/volar/issues/761))
+- fix: self closing tag syntax highlight incorrect ([#948](https://github.com/johnsoncodehk/volar/issues/948))
+- fix: re-fix vue file import path auto-complete not working on windows ([#1304](https://github.com/johnsoncodehk/volar/issues/1304))
+- fix: ts plugin stuck on empty project ([#1146](https://github.com/johnsoncodehk/volar/issues/1146))
+- fix: tsconfig picking inaccurate ([#1193](https://github.com/johnsoncodehk/volar/issues/1193))
+- fix: cannot resolve modules from extend tsconfg `types` option ([#1262](https://github.com/johnsoncodehk/volar/issues/1262))
+- fix: file move refactoring unpredictable ([#1273](https://github.com/johnsoncodehk/volar/issues/1273))
+- fix: avoid duplicate class attribute in pug ([#1525](https://github.com/johnsoncodehk/volar/issues/1525))
+- fix: intellisense incorrect in new file ([#1548](https://github.com/johnsoncodehk/volar/issues/1548))
+- fix: `insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis` break v-for format ([#1398](https://github.com/johnsoncodehk/volar/issues/1398))
+- fix: document features not working in *.ts on takeover mode ([#1563](https://github.com/johnsoncodehk/volar/issues/1563))
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
+
 ## 0.38.6 (2022/7/16)
 
 - fix: template syntax highlight broken (#1553, #1567, #1569, #1564, #1491)
@@ -32,12 +56,6 @@
 		},
 	}
 	```
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 0.38.3 (2022/7/7)
 
