@@ -31,7 +31,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
 export { getSemanticTokenLegend } from './services/semanticTokens';
-import * as path from 'path';
+import { posix as path } from 'path';
 
 export interface Settings {
 	getFormatOptions?(uri: string, options?: vscode.FormattingOptions): Promise<ts.FormatCodeSettings>;
