@@ -9,6 +9,8 @@ export function sleep(ms: number) {
 export function syntaxToLanguageId(syntax: string) {
 	switch (syntax) {
 		case 'js': return 'javascript';
+		case 'cjs': return 'javascript';
+		case 'mjs': return 'javascript';
 		case 'ts': return 'typescript';
 		case 'jsx': return 'javascriptreact';
 		case 'tsx': return 'typescriptreact';
