@@ -143,8 +143,11 @@ export function baseParse(pugCode: string) {
 		const noTitleAttrs = node.attrs.filter(attr => !attr.mustEscape && attr.name !== 'class');
 		const noTitleClassAttrs = node.attrs.filter(attr => !attr.mustEscape && attr.name === 'class');
 		const attrsBlock = attrsBlocks.get(getDocOffset(node.line, node.column)); // support attr auto-complete in spaces
+		const hasClassAttr = attrsBlock && attrsBlock.text.match(/\bclass\b\s*=/i);
 
-		addClassesOrStyles(noTitleClassAttrs, 'class');
+		if (!hasClassAttr) {
+			addClassesOrStyles(noTitleClassAttrs, 'class');
+		}
 
 		for (const attr of noTitleAttrs) {
 			codeGen.addText(' ');
