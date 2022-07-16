@@ -10,9 +10,16 @@
 		"noUnusedParameters": true,
 		"skipLibCheck": true,
 		"jsx": "preserve",
+		"baseUrl": ".",
+		"paths": {
+			"@/": [
+				"./*"
+			]
+		}
 	},
 	"include": [
 		"completions/**/*",
+		"definitions/**/*",
 		"renames/**/*",
 		"typeChecks/**/*",
 		"typeChecks/**/*.html",
