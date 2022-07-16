@@ -93,7 +93,6 @@ export function createLanguageService(
 	const vueDocuments = parseVueDocuments(vueLsCtx, tsLs);
 	const documentContext = getDocumentContext();
 
-	const blockingRequests = new Set<Promise<any>>();
 	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
 	const documentVersions = new Map<string, number>();
 
@@ -223,34 +222,34 @@ export function createLanguageService(
 	const findTypeDefinition_internal = definition.register(context, 'findTypeDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions);
 
 	return {
-		doValidation: defineApi(diagnostics.register(context), false),
-		findReferences: defineApi(references.register(context)),
-		findFileReferences: defineApi(fileReferences.register(context)),
-		findDefinition: defineApi(definition.register(context, 'findDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions)),
-		findTypeDefinition: defineApi(definition.register(context, 'findTypeDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions)),
-		findImplementations: defineApi(definition.register(context, 'findImplementations', data => !!data.capabilities.references, data => false)),
-		prepareRename: defineApi(renamePrepare.register(context)),
-		doRename: defineApi(rename.register(context)),
-		getEditsForFileRename: defineApi(fileRename.register(context)),
-		getSemanticTokens: defineApi(semanticTokens.register(context)),
-		doHover: defineApi(hover.register(context)),
-		doComplete: defineApi(completions.register(context)),
-		doCodeActions: defineApi(codeActions.register(context)),
-		doCodeActionResolve: defineApi(codeActionResolve.register(context)),
-		doCompletionResolve: defineApi(completionResolve.register(context)),
-		getSignatureHelp: defineApi(signatureHelp.register(context)),
-		doCodeLens: defineApi(codeLens.register(context)),
-		doCodeLensResolve: defineApi(codeLensResolve.register(context)),
-		findDocumentHighlights: defineApi(documentHighlight.register(context)),
-		findDocumentLinks: defineApi(documentLink.register(context)),
-		findWorkspaceSymbols: defineApi(workspaceSymbol.register(context)),
-		doAutoInsert: defineApi(autoInsert.register(context)),
-		doExecuteCommand: defineApi(executeCommand.register(context)),
-		getInlayHints: defineApi(inlayHints.register(context)),
+		doValidation: diagnostics.register(context),
+		findReferences: references.register(context),
+		findFileReferences: fileReferences.register(context),
+		findDefinition: definition.register(context, 'findDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions),
+		findTypeDefinition: definition.register(context, 'findTypeDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions),
+		findImplementations: definition.register(context, 'findImplementations', data => !!data.capabilities.references, data => false),
+		prepareRename: renamePrepare.register(context),
+		doRename: rename.register(context),
+		getEditsForFileRename: fileRename.register(context),
+		getSemanticTokens: semanticTokens.register(context),
+		doHover: hover.register(context),
+		doComplete: completions.register(context),
+		doCodeActions: codeActions.register(context),
+		doCodeActionResolve: codeActionResolve.register(context),
+		doCompletionResolve: completionResolve.register(context),
+		getSignatureHelp: signatureHelp.register(context),
+		doCodeLens: codeLens.register(context),
+		doCodeLensResolve: codeLensResolve.register(context),
+		findDocumentHighlights: documentHighlight.register(context),
+		findDocumentLinks: documentLink.register(context),
+		findWorkspaceSymbols: workspaceSymbol.register(context),
+		doAutoInsert: autoInsert.register(context),
+		doExecuteCommand: executeCommand.register(context),
+		getInlayHints: inlayHints.register(context),
 		callHierarchy: {
-			doPrepare: defineApi(_callHierarchy.doPrepare),
-			getIncomingCalls: defineApi(_callHierarchy.getIncomingCalls),
-			getOutgoingCalls: defineApi(_callHierarchy.getOutgoingCalls),
+			doPrepare: _callHierarchy.doPrepare,
+			getIncomingCalls: _callHierarchy.getIncomingCalls,
+			getOutgoingCalls: _callHierarchy.getOutgoingCalls,
 		},
 		dispose: () => {
 			vueLsCtx.typescriptLanguageService.dispose();
@@ -260,9 +259,9 @@ export function createLanguageService(
 			vueRuntimeContext: vueLsCtx,
 			rootPath: vueLsHost.getCurrentDirectory(),
 			context,
-			getContext: defineApi(() => context),
-			// getD3: defineApi(d3.register(context), true), // unused for now
-			detectTagNameCase: defineApi(tagNameCase.register(context)),
+			getContext: () => context,
+			// getD3: d3.register(context), true), // unused for nw
+			detectTagNameCase: tagNameCase.register(context),
 		},
 	};
 
@@ -398,24 +397,5 @@ export function createLanguageService(
 			},
 		} : _languageSupportPlugin;
 		return languageSupportPlugin;
-	}
-	function defineApi<T extends (...args: any) => any>(
-		api: T,
-		blockNewRequest = true,
-	): (...args: Parameters<T>) => Promise<ReturnType<T>> {
-		const handler = {
-			async apply(target: (...args: any) => any, thisArg: any, argumentsList: Parameters<T>) {
-				for (const runningRequest of blockingRequests) {
-					await runningRequest;
-				}
-				const runner = target.apply(thisArg, argumentsList);
-				if (blockNewRequest && runner instanceof Promise) {
-					blockingRequests.add(runner);
-					runner.then(() => blockingRequests.delete(runner));
-				}
-				return runner;
-			}
-		};
-		return new Proxy<T>(api, handler);
 	}
 }

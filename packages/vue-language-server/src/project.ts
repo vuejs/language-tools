@@ -10,8 +10,6 @@ import { LanguageConfigs, loadCustomPlugins, RuntimeEnvironment } from './common
 import { tsShared } from '@volar/vue-typescript';
 
 export interface Project extends ReturnType<typeof createProject> { }
-export const fileRenamings = new Set<Promise<void>>();
-export const renameFileContentCache = new Map<string, string>();
 
 export async function createProject(
 	runtimeEnv: RuntimeEnvironment,
@@ -25,8 +23,6 @@ export async function createProject(
 	connection: vscode.Connection,
 	lsConfigs: ReturnType<typeof createLsConfigs> | undefined,
 ) {
-
-	await Promise.all([...fileRenamings]);
 
 	const projectSys: typeof ts.sys = {
 		...ts.sys,
@@ -135,8 +131,6 @@ export async function createProject(
 	}
 	async function onWorkspaceFilesChanged(changes: vscode.FileEvent[]) {
 
-		await Promise.all([...fileRenamings]);
-
 		for (const change of changes) {
 
 			const script = scripts.uriGet(change.uri);
@@ -165,8 +159,6 @@ export async function createProject(
 		}
 	}
 	async function onDocumentUpdated(document: TextDocument) {
-
-		await Promise.all([...fileRenamings]);
 
 		const script = scripts.uriGet(document.uri);
 		if (script) {
@@ -284,5 +276,4 @@ export function getScriptText(
 	if (sys.fileExists(fileName)) {
 		return sys.readFile(fileName, 'utf8');
 	}
-	return renameFileContentCache.get(shared.fsPathToUri(fileName));
 }

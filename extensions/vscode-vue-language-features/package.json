@@ -439,6 +439,11 @@
 						"template",
 						"customBlocks"
 					]
+				},
+				"volar.updateImportsOnFileMove.enabled": {
+					"type": "boolean",
+					"default": true,
+					"description": "Enabled update imports on file move."
 				}
 			}
 		},
