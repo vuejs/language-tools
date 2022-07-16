@@ -444,6 +444,11 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Enabled update imports on file move."
+				},
+				"volar.diagnostics.delay": {
+					"type": "number",
+					"default": 200,
+					"description": "Delay time for diagnostics."
 				}
 			}
 		},

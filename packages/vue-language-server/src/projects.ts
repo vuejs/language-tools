@@ -116,8 +116,6 @@ export function createProjects(
 		}
 	});
 
-	updateDiagnostics(undefined);
-
 	return {
 		workspaces,
 		getProject,
@@ -128,8 +126,6 @@ export function createProjects(
 		const req = ++semanticTokensReq;
 
 		await updateDiagnostics(driveFileName ? shared.fsPathToUri(driveFileName) : undefined);
-
-		await shared.sleep(100);
 
 		if (req === semanticTokensReq) {
 			if (options.languageFeatures?.semanticTokens) {
@@ -150,8 +146,9 @@ export function createProjects(
 		}
 
 		const req = ++documentUpdatedReq;
+		const delay = await lsConfigs?.getConfiguration<number>('volar.diagnostics.delay');
 
-		await shared.sleep(100);
+		await shared.sleep(delay ?? 200);
 
 		if (req !== documentUpdatedReq)
 			return;
@@ -180,6 +177,8 @@ export function createProjects(
 		}
 
 		for (const doc of otherDocs) {
+
+			await shared.sleep(delay ?? 200);
 
 			if (req !== documentUpdatedReq)
 				return;
