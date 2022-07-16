@@ -14,10 +14,10 @@ importers:
       vue: ^3.2.37
     devDependencies:
       '@lerna-lite/cli': 1.6.0
-      '@types/node': 18.0.3
+      '@types/node': 18.0.5
       '@vscode/test-web': 0.0.27
       typescript: 4.7.4
-      vite: 2.9.14
+      vite: 3.0.0
       vitepress: 1.0.0-alpha.4
       vitest: 0.18.0
       vue: 3.2.37
@@ -40,22 +40,22 @@ importers:
       esbuild: 0.14.49
       path-browserify: 1.0.1
       punycode: 2.1.1
-      vsce: 2.9.2
+      vsce: 2.9.3
       vscode-languageclient: 8.0.1
       vscode-nls: 5.0.1
 
   extensions/vscode-typescript-vue-plugin:
     specifiers:
-      '@volar/typescript-plugin-forward': file:typescript-plugin-forward
       esbuild: latest
       typescript-vue-plugin: 0.38.5
+      typescript-vue-plugin-forward: file:typescript-vue-plugin-forward
       vsce: latest
     dependencies:
-      '@volar/typescript-plugin-forward': file:extensions/vscode-typescript-vue-plugin/typescript-plugin-forward
+      typescript-vue-plugin-forward: file:extensions/vscode-typescript-vue-plugin/typescript-vue-plugin-forward
     devDependencies:
       esbuild: 0.14.49
       typescript-vue-plugin: link:../../packages/typescript-vue-plugin
-      vsce: 2.9.2
+      vsce: 2.9.3
 
   extensions/vscode-vue-language-features:
     specifiers:
@@ -87,7 +87,7 @@ importers:
       path-browserify: 1.0.1
       punycode: 2.1.1
       semver: 7.3.7
-      vsce: 2.9.2
+      vsce: 2.9.3
       vscode-languageclient: 8.0.1
       vscode-nls: 5.0.1
 
@@ -994,8 +994,8 @@ packages:
     resolution: {integrity: sha512-xA6drNNeqb5YyV5fO3OAEsnXLfO7uF0whiOfPTz5AeDo8KeZFmODKnvwPymMNO8qE/an8pVY/O50tig2SQCrGw==}
     dev: true
 
-  /@types/node/18.0.3:
-    resolution: {integrity: sha512-HzNRZtp4eepNitP+BD6k2L6DROIDG4Q0fm4x+dwfsr6LGmROENnok75VGw40628xf+iR24WeMFcHuuBDUAzzsQ==}
+  /@types/node/18.0.5:
+    resolution: {integrity: sha512-En7tneq+j0qAiVwysBD79y86MT3ModuoIJbe7JXp+sb5UAjInSShmK3nXXMioBzfF7rXC12hv12d4IyCVwN4dA==}
     dev: true
 
   /@types/normalize-package-data/2.4.1:
@@ -3751,7 +3751,7 @@ packages:
     resolution: {integrity: sha512-/5CMN3T0R4XTj4DcGaexo+roZSdSFW/0AOOTROrjxzCG1wrWXEsGbRKevjlIL+ZDE4sZlJr5ED4YW0yqmkK+eA==}
     dependencies:
       hosted-git-info: 2.8.9
-      resolve: 1.22.0
+      resolve: 1.22.1
       semver: 5.7.1
       validate-npm-package-license: 3.0.4
     dev: true
@@ -4575,6 +4575,15 @@ packages:
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
 
+  /resolve/1.22.1:
+    resolution: {integrity: sha512-nBpuuYuY5jFsli/JIs1oldw6fOQCBioohqWZg/2hiaOybXOft4lonv85uDOKXdf8rhyK159cxU5cDcK/NKk8zw==}
+    hasBin: true
+    dependencies:
+      is-core-module: 2.9.0
+      path-parse: 1.0.7
+      supports-preserve-symlinks-flag: 1.0.0
+    dev: true
+
   /restore-cursor/3.1.0:
     resolution: {integrity: sha512-l+sSefzHpj5qimhFSE5a8nufZYAM3sBSVMAPtYkmC+4EH2anSGaEMXSD0izRQbu9nfyQ9y5JrVmp7E8oZrUjvA==}
     engines: {node: '>=8'}
@@ -5256,6 +5265,33 @@ packages:
       fsevents: 2.3.2
     dev: true
 
+  /vite/3.0.0:
+    resolution: {integrity: sha512-M7phQhY3+fRZa0H+1WzI6N+/onruwPTBTMvaj7TzgZ0v2TE+N2sdLKxJOfOv9CckDWt5C4HmyQP81xB4dwRKzA==}
+    engines: {node: '>=14.18.0'}
+    hasBin: true
+    peerDependencies:
+      less: '*'
+      sass: '*'
+      stylus: '*'
+      terser: ^5.4.0
+    peerDependenciesMeta:
+      less:
+        optional: true
+      sass:
+        optional: true
+      stylus:
+        optional: true
+      terser:
+        optional: true
+    dependencies:
+      esbuild: 0.14.49
+      postcss: 8.4.14
+      resolve: 1.22.1
+      rollup: 2.75.6
+    optionalDependencies:
+      fsevents: 2.3.2
+    dev: true
+
   /vitepress/1.0.0-alpha.4:
     resolution: {integrity: sha512-bOAA4KW6vYGlkbcrPLZLTKWTgXVroObU+o9xj9EENyEl6yg26WWvfN7DGA4BftjdM5O8nR93Z5khPQ3W/tFE7Q==}
     engines: {node: '>=14.6.0'}
@@ -5304,18 +5340,19 @@ packages:
     dependencies:
       '@types/chai': 4.3.1
       '@types/chai-subset': 1.3.3
-      '@types/node': 18.0.3
+      '@types/node': 18.0.5
       chai: 4.3.6
       debug: 4.3.4
       local-pkg: 0.4.1
       tinypool: 0.2.1
       tinyspy: 0.3.3
-      vite: 2.9.14
+      vite: 3.0.0
     transitivePeerDependencies:
       - less
       - sass
       - stylus
       - supports-color
+      - terser
     dev: true
 
   /void-elements/3.1.0:
@@ -5323,8 +5360,8 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: false
 
-  /vsce/2.9.2:
-    resolution: {integrity: sha512-xyLqL4U82BilUX1t6Ym2opQEa2tLGWYjbgB7+ETeNVXlIJz5sWBJjQJSYJVFOKJSpiOtQclolu88cj7oY6vvPQ==}
+  /vsce/2.9.3:
+    resolution: {integrity: sha512-hOLsxbev7Khho+bzDV/TV3jeTClzt8gFfkJvE1c5HidrgFsyE5aEg+e7XssaEU7LYLXDnWnpMt298UP7P/4Ycw==}
     engines: {node: '>= 14'}
     hasBin: true
     dependencies:
@@ -5679,8 +5716,8 @@ packages:
     engines: {node: '>= 4.0.0'}
     dev: true
 
-  file:extensions/vscode-typescript-vue-plugin/typescript-plugin-forward:
-    resolution: {directory: extensions/vscode-typescript-vue-plugin/typescript-plugin-forward, type: directory}
-    name: '@volar/typescript-plugin-forward'
+  file:extensions/vscode-typescript-vue-plugin/typescript-vue-plugin-forward:
+    resolution: {directory: extensions/vscode-typescript-vue-plugin/typescript-vue-plugin-forward, type: directory}
+    name: typescript-vue-plugin-forward
     version: 0.0.0
     dev: false

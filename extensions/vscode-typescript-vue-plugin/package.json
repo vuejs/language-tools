@@ -17,7 +17,7 @@
 	"contributes": {
 		"typescriptServerPlugins": [
 			{
-				"name": "@volar/typescript-plugin-forward",
+				"name": "typescript-vue-plugin-forward",
 				"enableForWorkspaceTypeScriptVersions": true
 			}
 		]
