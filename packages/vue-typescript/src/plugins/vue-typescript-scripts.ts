@@ -23,6 +23,31 @@ export default function (
 
 		getEmbeddedFile(fileName, sfc, i) {
 
+			let shimComponentOptionsMode: 'defineComponent' | 'Vue.extend' | false = false;
+
+			if (
+				(compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent ?? 'onlyJs') === 'onlyJs'
+					? lang.value === 'js' || lang.value === 'jsx'
+					: !!compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent
+			) {
+				shimComponentOptionsMode = 'defineComponent';
+			}
+			if (
+				(compilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend ?? 'onlyJs') === 'onlyJs'
+					? lang.value === 'js' || lang.value === 'jsx'
+					: !!compilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend
+			) {
+				shimComponentOptionsMode = 'Vue.extend';
+			}
+
+			// true override 'onlyJs'
+			if (compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent === true) {
+				shimComponentOptionsMode = 'defineComponent';
+			}
+			if (compilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend === true) {
+				shimComponentOptionsMode = 'Vue.extend';
+			}
+
 			const codeGen = genScript(
 				i === 0 ? 'script' : 'template',
 				fileName,
@@ -38,9 +63,7 @@ export default function (
 					}
 					return bindTexts;
 				},
-				(compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent ?? 'onlyJs') === 'onlyJs'
-					? lang.value === 'js' || lang.value === 'jsx'
-					: !!compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent,
+				shimComponentOptionsMode,
 				(compilerOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup ?? 'onlyJs') === 'onlyJs'
 					? lang.value === 'js' || lang.value === 'jsx'
 					: !!compilerOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup,

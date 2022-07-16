@@ -22,7 +22,7 @@ export function generateSFCScriptTypeCheckCode(
 	scriptLang: 'js' | 'jsx' | 'ts' | 'tsx',
 	scriptCode: string | undefined,
 	scriptSetupCode: string | undefined,
-	shimComponentOptions: boolean,
+	shimComponentOptions: 'defineComponent' | 'Vue.extend' | false,
 	downgradePropsAndEmitsToSetupReturnOnScriptSetup: boolean,
 	vueVersion: number,
 	templateAst?: CompilerDOM.RootNode,

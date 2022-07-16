@@ -41,7 +41,17 @@
 						false,
 						"onlyJs"
 					],
+					"default": "onlyJs",
 					"markdownDescription": "Implicit wrap object literal component options export with `defineComponent()`."
+				},
+				"experimentalImplicitWrapComponentOptionsWithVue2Extend": {
+					"enum": [
+						true,
+						false,
+						"onlyJs"
+					],
+					"default": false,
+					"markdownDescription": "Implicit wrap object literal component options export with `Vue.extend()`."
 				},
 				"experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup": {
 					"enum": [

@@ -29,7 +29,7 @@ export function generate(
 	scriptSetupRanges: ScriptSetupRanges | undefined,
 	getHtmlGen: () => ReturnType<typeof templateGen['generate']> | undefined,
 	getStyleBindTexts: () => string[],
-	shimComponentOptions: boolean,
+	shimComponentOptions: 'defineComponent' | 'Vue.extend' | false,
 	downgradePropsAndEmitsToSetupReturnOnScriptSetup: boolean,
 	vueVersion: number,
 ) {
@@ -208,7 +208,12 @@ export function generate(
 			}
 			if (isExportRawObject && shimComponentOptions && scriptRanges?.exportDefault) {
 				addVirtualCode('script', 0, scriptRanges.exportDefault.expression.start);
-				codeGen.addText(`(await import('${vueLibName}')).defineComponent(`);
+				if (shimComponentOptions === 'defineComponent') {
+					codeGen.addText(`(await import('${vueLibName}')).defineComponent(`);
+				}
+				else {
+					codeGen.addText(`(await import('vue')).default.extend(`);
+				}
 				addVirtualCode('script', scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end);
 				codeGen.addText(`)`);
 				addVirtualCode('script', scriptRanges.exportDefault.expression.end, script.content.length);

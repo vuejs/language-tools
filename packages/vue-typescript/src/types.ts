@@ -13,6 +13,7 @@ export interface VueCompilerOptions {
 	// experimental
 	experimentalRuntimeMode?: 'runtime-dom' | 'runtime-uni-app';
 	experimentalImplicitWrapComponentOptionsWithDefineComponent?: boolean | 'onlyJs';
+	experimentalImplicitWrapComponentOptionsWithVue2Extend?: boolean | 'onlyJs';
 	experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup?: boolean | 'onlyJs';
 	experimentalTemplateCompilerOptions?: any;
 	experimentalTemplateCompilerOptionsRequirePath?: string;
