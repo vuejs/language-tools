@@ -605,7 +605,13 @@
 					"name": "entity.name.tag.$2.html.vue"
 				}
 			},
-			"end": "(?<=/>)",
+			"end": "(/>)",
+			"endCaptures": {
+				"1": {
+					"name": "punctuation.definition.tag.end.html.vue"
+				}
+			},
+			"name": "self-closing-tag",
 			"patterns": [
 				{
 					"include": "#tag-stuff"
