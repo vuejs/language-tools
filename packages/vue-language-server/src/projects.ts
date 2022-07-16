@@ -237,7 +237,7 @@ export function createProjects(
 		const fileName = shared.uriToFsPath(uri);
 		const rootPaths = [...workspaces.keys()]
 			.filter(rootPath => shared.isFileInDir(fileName, rootPath))
-			.sort(sortPaths);
+			.sort((a, b) => sortPaths(a, b, fileName));
 
 		for (const rootPath of rootPaths) {
 			const workspace = workspaces.get(rootPath);
@@ -342,7 +342,7 @@ function createWorkspace(
 				}
 			}
 
-			matches = matches.sort(sortPaths);
+			matches = matches.sort((a, b) => sortPaths(fileName, a, b));
 
 			if (matches.length) {
 				getParsedCommandLine(matches[0]);
@@ -367,7 +367,7 @@ function createWorkspace(
 
 			const checked = new Set<string>();
 
-			for (const rootTsConfig of rootTsConfigs.sort(sortPaths)) {
+			for (const rootTsConfig of rootTsConfigs.sort((a, b) => sortPaths(fileName, a, b))) {
 				const project = await projects.fsPathGet(rootTsConfig);
 				if (project) {
 
@@ -455,7 +455,16 @@ function createWorkspace(
 	}
 }
 
-function sortPaths(a: string, b: string) {
+function sortPaths(fileName: string, a: string, b: string) {
+
+	const inA = shared.isFileInDir(fileName, path.dirname(a));
+	const inB = shared.isFileInDir(fileName, path.dirname(b));
+
+	if (inA !== inB) {
+		const aWeight = inA ? 1 : 0;
+		const bWeight = inB ? 1 : 0;
+		return bWeight - aWeight;
+	}
 
 	const aLength = a.split('/').length;
 	const bLength = b.split('/').length;

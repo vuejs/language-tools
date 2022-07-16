@@ -20,5 +20,5 @@ export function normalizeUri(uri: string) {
 
 export function isFileInDir(fileName: string, dir: string) {
 	const relative = upath.relative(dir, fileName);
-	return relative && !relative.startsWith('..') && !upath.isAbsolute(relative);
+	return !!relative && !relative.startsWith('..') && !upath.isAbsolute(relative);
 }
