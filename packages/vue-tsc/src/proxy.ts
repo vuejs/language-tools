@@ -3,8 +3,6 @@ import * as vue from '@volar/vue-typescript';
 import * as apis from './apis';
 import * as vueTs from '@volar/vue-typescript';
 
-let projectVersion = 0;
-
 export function createProgramProxy(
 	options: ts.CreateProgramOptions, // rootNamesOrOptions: readonly string[] | CreateProgramOptions,
 	_options?: ts.CompilerOptions,
@@ -19,100 +17,114 @@ export function createProgramProxy(
 	if (!options.host)
 		return doThrow('!options.host');
 
-	projectVersion++;
+	let program = options.oldProgram as any;
 
-	const host = options.host;
-	const vueCompilerOptions = getVueCompilerOptions();
-	const scripts = new Map<string, {
-		projectVersion: number,
-		modifiedTime: number,
-		scriptSnapshot: ts.IScriptSnapshot,
-		version: string,
-	}>();
-	const vueLsHost: vue.LanguageServiceHost = {
-		...host,
-		resolveModuleNames: undefined, // avoid failed with tsc built-in fileExists
-		writeFile: (fileName, content) => {
-			if (fileName.indexOf('__VLS_') === -1) {
-				host.writeFile(fileName, content, false);
+	if (!program) {
+
+		const ctx = {
+			projectVersion: 0,
+			options: options,
+		};
+		const vueCompilerOptions = getVueCompilerOptions();
+		const scripts = new Map<string, {
+			projectVersion: number,
+			modifiedTime: number,
+			scriptSnapshot: ts.IScriptSnapshot,
+			version: string,
+		}>();
+		const vueLsHost = new Proxy({
+			resolveModuleNames: undefined, // avoid failed with tsc built-in fileExists
+			writeFile: (fileName, content) => {
+				if (fileName.indexOf('__VLS_') === -1) {
+					ctx.options.host!.writeFile(fileName, content, false);
+				}
+			},
+			getCompilationSettings: () => ctx.options.options,
+			getVueCompilationSettings: () => vueCompilerOptions,
+			getScriptFileNames: () => {
+				return ctx.options.rootNames as string[];
+			},
+			getScriptVersion,
+			getScriptSnapshot,
+			getProjectVersion: () => {
+				return ctx.projectVersion.toString();
+			},
+			getProjectReferences: () => ctx.options.projectReferences,
+
+			isTsc: true,
+		} as vue.LanguageServiceHost, {
+			get: (target, property) => {
+				if (property in target) {
+					return target[property as keyof vue.LanguageServiceHost];
+				}
+				return ctx.options.host![property as keyof ts.CompilerHost];
+			},
+		});
+		const vueLsCtx: vueTs.LanguageServiceContext = vueTs.createLanguageServiceContext(ts, vueLsHost);
+		const proxyApis = apis.register(ts, vueLsCtx);
+
+		program = new Proxy({} as ts.Program, {
+			get: (target, property: keyof ts.Program) => {
+				if (property in proxyApis) {
+					return proxyApis[property as keyof typeof proxyApis];
+				}
+				return vueLsCtx.typescriptLanguageService.getProgram()![property] ?? target[property];
+			},
+		});
+
+		program.__VLS_ctx = ctx;
+
+		function getVueCompilerOptions(): vue.VueCompilerOptions {
+			const tsConfig = ctx.options.options.configFilePath;
+			if (typeof tsConfig === 'string') {
+				return vueTs.tsShared.createParsedCommandLine(ts, ts.sys, tsConfig).vueOptions;
 			}
-		},
-		getCompilationSettings: () => options.options,
-		getVueCompilationSettings: () => vueCompilerOptions,
-		getScriptFileNames: () => {
-			return options.rootNames as string[];
-		},
-		getScriptVersion,
-		getScriptSnapshot,
-		getProjectVersion: () => {
-			return projectVersion.toString();
-		},
-		getProjectReferences: () => options.projectReferences,
+			return {};
+		}
+		function getScriptVersion(fileName: string) {
+			return getScript(fileName)?.version ?? '';
+		}
+		function getScriptSnapshot(fileName: string) {
+			return getScript(fileName)?.scriptSnapshot;
+		}
+		function getScript(fileName: string) {
 
-		isTsc: true,
-	};
-
-	const vueLsCtx: vueTs.LanguageServiceContext = (options.oldProgram as any)?.__VLS_vueCtx
-		?? vueTs.createLanguageServiceContext(ts, vueLsHost);
-
-	const proxyApis = apis.register(ts, vueLsCtx);
-	const program = new Proxy<ts.Program>({} as ts.Program, {
-		get: (_, property: keyof ts.Program) => {
-			if (property in proxyApis) {
-				return proxyApis[property as keyof typeof proxyApis];
+			const script = scripts.get(fileName);
+			if (script?.projectVersion === ctx.projectVersion) {
+				return script;
 			}
-			return vueLsCtx.typescriptLanguageService.getProgram()![property];
-		},
-	});
 
-	(program as any).__VLS_vueCtx = vueLsCtx;
+			const modifiedTime = ts.sys.getModifiedTime?.(fileName)?.valueOf() ?? 0;
+			if (script?.modifiedTime === modifiedTime) {
+				return script;
+			}
+
+			if (ctx.options.host!.fileExists(fileName)) {
+				const fileContent = ctx.options.host!.readFile(fileName);
+				if (fileContent !== undefined) {
+					const script = {
+						projectVersion: ctx.projectVersion,
+						modifiedTime,
+						scriptSnapshot: ts.ScriptSnapshot.fromString(fileContent),
+						version: ctx.options.host!.createHash?.(fileContent) ?? fileContent,
+					};
+					scripts.set(fileName, script);
+					return script;
+				}
+			}
+		}
+	}
+	else {
+		program.__VLS_ctx.options = options;
+		program.__VLS_ctx.projectVersion++;
+	}
 
 	for (const rootName of options.rootNames) {
 		// register file watchers
-		host.getSourceFile(rootName, ts.ScriptTarget.ESNext);
+		options.host.getSourceFile(rootName, ts.ScriptTarget.ESNext);
 	}
 
 	return program;
-
-	function getVueCompilerOptions(): vue.VueCompilerOptions {
-		const tsConfig = options.options.configFilePath;
-		if (typeof tsConfig === 'string') {
-			return vueTs.tsShared.createParsedCommandLine(ts, ts.sys, tsConfig).vueOptions;
-		}
-		return {};
-	}
-	function getScriptVersion(fileName: string) {
-		return getScript(fileName)?.version ?? '';
-	}
-	function getScriptSnapshot(fileName: string) {
-		return getScript(fileName)?.scriptSnapshot;
-	}
-	function getScript(fileName: string) {
-
-		const script = scripts.get(fileName);
-		if (script?.projectVersion === projectVersion) {
-			return script;
-		}
-
-		const modifiedTime = ts.sys.getModifiedTime?.(fileName)?.valueOf() ?? 0;
-		if (script?.modifiedTime === modifiedTime) {
-			return script;
-		}
-
-		if (host.fileExists(fileName)) {
-			const fileContent = host.readFile(fileName);
-			if (fileContent !== undefined) {
-				const script = {
-					projectVersion,
-					modifiedTime,
-					scriptSnapshot: ts.ScriptSnapshot.fromString(fileContent),
-					version: host.createHash?.(fileContent) ?? fileContent,
-				};
-				scripts.set(fileName, script);
-				return script;
-			}
-		}
-	}
 }
 
 export function loadTsLib() {

@@ -133,14 +133,14 @@ export function createLanguageServiceContext(
 
 		// .vue
 		for (const vueFile of documentRegistry.getAll()) {
-			if (!vueFileNames.has(vueFile.fileName) && !host.fileExists?.(vueFile.fileName)) {
+			const newSnapshot = host.getScriptSnapshot(vueFile.fileName);
+			if (!newSnapshot) {
 				// delete
 				fileNamesToRemove.push(vueFile.fileName);
 			}
 			else {
 				// update
-				const newSnapshot = host.getScriptSnapshot(vueFile.fileName);
-				if (vueFile.text !== newSnapshot?.getText(0, newSnapshot.getLength())) {
+				if (vueFile.text !== newSnapshot.getText(0, newSnapshot.getLength())) {
 					fileNamesToUpdate.push(vueFile.fileName);
 				}
 			}
