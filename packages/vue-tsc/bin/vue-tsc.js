@@ -25,10 +25,6 @@ fs.readFileSync = (...args) => {
 
         // proxy createProgram apis
         tsc = tsc.replace(
-            `function createIncrementalProgram(_a) {`,
-            `function createIncrementalProgram(_a) { console.error('incremental mode is not yet supported'); throw 'incremental mode is not yet supported';`,
-        );
-        tsc = tsc.replace(
             `function createProgram(rootNamesOrOptions, _options, _host, _oldProgram, _configFileParsingDiagnostics) {`,
             `function createProgram(rootNamesOrOptions, _options, _host, _oldProgram, _configFileParsingDiagnostics) { return require(${JSON.stringify(proxyPath)}).createProgramProxy(...arguments);`,
         );
