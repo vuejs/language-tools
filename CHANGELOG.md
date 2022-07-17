@@ -4,7 +4,7 @@
 
 - feat: support for TS 4.8 ([#1507](https://github.com/johnsoncodehk/volar/issues/1507))
 - feat: support `--incremental` flag for vue-tsc ([#787](https://github.com/johnsoncodehk/volar/issues/787))
-- fix: vue-tsc watch memory leak ([#1423](https://github.com/johnsoncodehk/volar/issues/1423))
+- fix: vue-tsc watch memory leak ([#1106](https://github.com/johnsoncodehk/volar/issues/1106))
 - fix: re-fix template directives syntax highlight incorrect edge cases ([#1423](https://github.com/johnsoncodehk/volar/issues/1423))
 
 ### Our Sponsors
