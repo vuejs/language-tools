@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.38.8 (2022/7/17)
+
+- feat: support for TS 4.8 ([#1507](https://github.com/johnsoncodehk/volar/issues/1507))
+- feat: support `--incremental` flag for vue-tsc ([#787](https://github.com/johnsoncodehk/volar/issues/787))
+- fix: vue-tsc watch memory leak ([#1423](https://github.com/johnsoncodehk/volar/issues/1423))
+- fix: re-fix template directives syntax highlight incorrect edge cases ([#1423](https://github.com/johnsoncodehk/volar/issues/1423))
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
+
 ## 0.38.7 (2022/7/17)
 
 - feat: add `volar.updateImportsOnFileMove.enabled` option to disable file move refactoring ([#1181](https://github.com/johnsoncodehk/volar/issues/1181))
@@ -17,12 +30,6 @@
 - fix: intellisense incorrect in new file ([#1548](https://github.com/johnsoncodehk/volar/issues/1548))
 - fix: `insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis` break v-for format ([#1398](https://github.com/johnsoncodehk/volar/issues/1398))
 - fix: document features not working in *.ts on takeover mode ([#1563](https://github.com/johnsoncodehk/volar/issues/1563))
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 0.38.6 (2022/7/16)
 
