@@ -755,7 +755,7 @@
 			]
 		},
 		"vue-directives-original": {
-			"begin": "(?:\\b(v-)|(:|@|#))(\\[?)([\\w\\-]*)(\\]?)(?:\\.([\\w\\-]*))*\\s*(?==)",
+			"begin": "(?:\\b(v-)|(:|@|#))(\\[?)([\\w\\-]*)(\\]?)(?:\\.([\\w\\-]*))*",
 			"beginCaptures": {
 				"1": {
 					"name": "entity.other.attribute-name.html.vue"
@@ -785,7 +785,7 @@
 					"name": "punctuation.definition.string.end.html.vue"
 				}
 			},
-			"name": "meta.directive.vue",
+			"name": "meta.attribute.directive.vue",
 			"patterns": [
 				{
 					"include": "#vue-directives-expression"
@@ -803,7 +803,7 @@
 				}
 			},
 			"end": "(?=\\s*+[^=\\s])",
-			"name": "meta.directive.control.vue",
+			"name": "meta.attribute.directive.control.vue",
 			"patterns": [
 				{
 					"include": "#vue-directives-expression"
@@ -813,7 +813,7 @@
 		"vue-directives-expression": {
 			"patterns": [
 				{
-					"begin": "(=)\\s*('|\")",
+					"begin": "(=)\\s*('|\"|`)",
 					"beginCaptures": {
 						"1": {
 							"name": "punctuation.separator.key-value.html.vue"
@@ -828,10 +828,9 @@
 							"name": "punctuation.definition.string.end.html.vue"
 						}
 					},
-					"name": "xxx",
 					"patterns": [
 						{
-							"begin": "(?<=('|\"))",
+							"begin": "(?<=('|\"|`))",
 							"end": "(?=\\1)",
 							"name": "source.ts.embedded.html.vue",
 							"patterns": [
@@ -843,17 +842,16 @@
 					]
 				},
 				{
-					"begin": "(=)\\s*(?=[^'\"])",
+					"begin": "(=)\\s*(?=[^'\"`])",
 					"beginCaptures": {
 						"1": {
 							"name": "punctuation.separator.key-value.html.vue"
 						}
 					},
 					"end": "(?=(\\s|>|\\/>))",
-					"name": "yyy",
 					"patterns": [
 						{
-							"begin": "[^'\"]",
+							"begin": "(?=[^'\"`])",
 							"end": "(?=(\\s|>|\\/>))",
 							"name": "source.ts.embedded.html.vue",
 							"patterns": [
@@ -877,7 +875,7 @@
 				}
 			},
 			"end": "(?<='|\")",
-			"name": "meta.directive.vue",
+			"name": "meta.attribute.style.vue",
 			"patterns": [
 				{
 					"comment": "Copy from source.css#rule-list-innards",

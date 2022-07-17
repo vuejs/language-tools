@@ -49,7 +49,7 @@
 				}
 			},
 			"end": "(?<='|\")",
-			"name": "meta.directive.alpine",
+			"name": "meta.attribute.directive.alpine",
 			"patterns": [
 				{
 					"begin": "('|\")",
@@ -84,7 +84,7 @@
 				}
 			},
 			"end": "(?=\\s*+[^=\\s])",
-			"name": "meta.directive.alpine",
+			"name": "meta.attribute.directive.alpine",
 			"patterns": [
 				{
 					"begin": "=",
