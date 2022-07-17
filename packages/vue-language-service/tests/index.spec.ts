@@ -5,15 +5,7 @@ import './completions/import_path';
 
 import './definitions/alias_path';
 
-import './renames/prop';
-import './renames/typeProp';
-import './renames/cssModules';
-import './renames/cssScoped';
-import './renames/cssVars';
-import './renames/dynamicProp';
-import './renames/scriptSetup_component';
-import './renames/scriptSetup_element';
-import './renames/scriptSetup';
+import './rename';
 
 defineTypeCheck(path.resolve(__dirname, '../../vue-test-workspace/typeChecks/events.vue'));
 defineTypeCheck(path.resolve(__dirname, '../../vue-test-workspace/typeChecks/scriptSetup_scope.vue'));

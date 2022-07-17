@@ -18,10 +18,7 @@
 		}
 	},
 	"include": [
-		"completions/**/*",
-		"definitions/**/*",
-		"renames/**/*",
-		"typeChecks/**/*",
-		"typeChecks/**/*.html",
+		"**/*.vue",
+		"**/*.html",
 	]
 }
