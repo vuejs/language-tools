@@ -1,10 +1,11 @@
 <script type="module" lang="ts">
-import { exactType } from './shared';
+import { exactType } from '../shared';
 
 createApp({ foo: 1, exactType, baz() { return 'baz'; } });
 
 const bar = 123;
 
+// The "Type annotations can only be used in TypeScript files.javascript" error is not from Volar
 export let baz: string;
 
 function createApp(_ = {}) { }

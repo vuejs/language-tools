@@ -30,5 +30,5 @@ declare const Comp: new <T>(props: { value: T; }) => {
 
 <script lang="ts" setup>
 import { VNode } from 'vue';
-import { exactType } from './shared';
+import { exactType } from '../shared';
 </script>

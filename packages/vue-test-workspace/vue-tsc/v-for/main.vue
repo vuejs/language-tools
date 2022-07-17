@@ -51,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-import { exactType, isNotAnyOrUndefined } from './shared';
+import { exactType, isNotAnyOrUndefined } from '../shared';
 
 const arr = ['a', 'b'] as const;
 const map = new Map<string, number>();
