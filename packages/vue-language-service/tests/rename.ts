@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as path from 'path';
 import { tester } from './utils/createTester';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import * as shared from '@volar/shared';
 import * as fs from 'fs';
 
 const baseDir = path.resolve(__dirname, '../../vue-test-workspace/rename');
@@ -19,9 +20,9 @@ for (const dirName of testDirs) {
 		for (const file in inputFiles) {
 
 			const filePath = path.join(dir, 'input', file);
-			const uri = `file://${filePath}`;
+			const uri = shared.fsPathToUri(filePath);
 			const fileText = inputFiles[file];
-			const document = TextDocument.create(`file://${file}`, 'vue', 0, fileText);
+			const document = TextDocument.create('', '', 0, fileText);
 			const actions = findRenameActions(fileText);
 
 			for (const action of actions) {
