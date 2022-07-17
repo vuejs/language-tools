@@ -27,6 +27,12 @@ export function createLanguageServiceContext(
 	const _tsHost: Partial<ts.LanguageServiceHost> = {
 		fileExists: host.fileExists
 			? fileName => {
+
+				const basename = path.basename(fileName);
+				if (basename === localTypes.typesFileName) {
+					return true;
+				}
+
 				// .vue.js -> .vue
 				// .vue.ts -> .vue
 				// .vue.d.ts (never)
