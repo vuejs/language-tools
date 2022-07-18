@@ -17,8 +17,6 @@ function createTester(root: string) {
 	const realTsConfig = path.join(root, 'tsconfig.json');
 	const config = ts.readJsonConfigFile(realTsConfig, ts.sys.readFile);
 	const parsedCommandLine = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(realTsConfig), {}, path.basename(realTsConfig));
-
-	let projectVersion = 0;
 	const scriptVersions = new Map<string, string>();
 	const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
 	const host: LanguageServiceHost = {
@@ -34,7 +32,7 @@ function createTester(root: string) {
 		realpath: ts.sys.realpath,
 		// custom
 		getDefaultLibFileName: options => ts.getDefaultLibFilePath(options),
-		getProjectVersion: () => projectVersion.toString(),
+		getProjectVersion: () => '0',
 		getScriptFileNames: () => parsedCommandLine.fileNames,
 		getCurrentDirectory: () => root,
 		getCompilationSettings: () => parsedCommandLine.options,

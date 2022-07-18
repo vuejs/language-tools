@@ -135,10 +135,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 			const vueDocument = options.vueDocuments.fromEmbeddedDocument(document);
 			if (vueDocument) {
-				options.templateLanguagePlugin.htmlLs.setDataProviders(
-					useDefaultDataProvider(vueDocument.uri),
-					options.templateLanguagePlugin.getHtmlDataProviders(),
-				);
+				options.templateLanguagePlugin.updateCustomData([]);
 			}
 			return options.templateLanguagePlugin.doHover?.(document, position);
 		},
@@ -575,24 +572,12 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			globalAttributes,
 		});
 
-		options.templateLanguagePlugin.htmlLs.setDataProviders(
-			useDefaultDataProvider(vueDocument.uri),
-			[
-				...options.templateLanguagePlugin.getHtmlDataProviders(),
-				vueGlobalDirectiveProvider,
-				dataProvider,
-			],
-		);
+		options.templateLanguagePlugin.updateCustomData([
+			vueGlobalDirectiveProvider,
+			dataProvider,
+		]);
 
 		return tsItems;
-	}
-
-	function useDefaultDataProvider(uri: string) {
-		// commented for https://github.com/johnsoncodehk/volar/issues/1471#issuecomment-1159691270
-		// if (uri.endsWith('.html')) {
-		// 	return false; // petite-vue
-		// }
-		return true;
 	}
 
 	function afterHtmlCompletion(completionList: vscode.CompletionList, vueDocument: VueDocument, tsItems: Map<string, vscode.CompletionItem>) {
@@ -723,10 +708,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			completionList.items = [...temp.values()];
 		}
 
-		options.templateLanguagePlugin.htmlLs.setDataProviders(
-			useDefaultDataProvider(vueDocument.uri),
-			options.templateLanguagePlugin.getHtmlDataProviders(),
-		);
+		options.templateLanguagePlugin.updateCustomData([]);
 	}
 
 	function getLastImportNode(ast: ts.SourceFile) {

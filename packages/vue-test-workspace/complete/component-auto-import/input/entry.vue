@@ -2,6 +2,6 @@
 </script>
 
 <template>
-    <ComponentForA></ComponentForA>
+    <ComponentForA />
              <!-- ^complete: ComponentForAutoImport -->
 </template>

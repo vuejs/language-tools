@@ -44,12 +44,6 @@ for (const dirName of testDirs) {
 
 					let item = complete.items.find(item => item.label === action.label)!;
 
-					console.log(action.label);
-
-					for (const item of complete.items) {
-						console.log(item.label);
-					}
-
 					expect(item).toBeDefined();
 
 					item = await tester.languageService.doCompletionResolve(item);
