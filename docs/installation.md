@@ -65,6 +65,7 @@ In order to support Vue 2 templates you need to edit your `tsconfig.json` file
 ```jsonc{6}
 {
   "compilerOptions": {
+    "jsx": "preserve",
     // ...
   },
   "vueCompilerOptions": {
