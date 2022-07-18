@@ -62,6 +62,9 @@ for (const dirName of testDirs) {
 							edits.push(item.textEdit);
 						}
 					}
+					else {
+						edits.push(vscode.TextEdit.insert(position, item.insertText ?? item.label));
+					}
 
 					if (item.additionalTextEdits) {
 						edits = edits.concat(item.additionalTextEdits);
