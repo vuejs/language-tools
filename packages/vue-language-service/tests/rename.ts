@@ -7,7 +7,6 @@ import * as fs from 'fs';
 
 const baseDir = path.resolve(__dirname, '../../vue-test-workspace/rename');
 const testDirs = fs.readdirSync(baseDir);
-const renameRegex = /(\^*)rename:\s*([\S]*)/g;
 
 for (const dirName of testDirs) {
 
@@ -83,7 +82,7 @@ function readFiles(dir: string) {
 
 function findRenameActions(text: string) {
 
-	return [...text.matchAll(renameRegex)].map(flag => {
+	return [...text.matchAll(/(\^*)rename:\s*([\S]*)/g)].map(flag => {
 
 		const start = flag.index!;
 		const end = start + flag[1].length;
