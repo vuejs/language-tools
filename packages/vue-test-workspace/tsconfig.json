@@ -12,8 +12,8 @@
 		"jsx": "preserve",
 		"baseUrl": ".",
 		"paths": {
-			"@/": [
-				"./*"
+			"__COMPLETE_ROOT__/*": [
+				"./complete/*"
 			]
 		}
 	},
