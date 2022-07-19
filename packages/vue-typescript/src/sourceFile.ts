@@ -258,7 +258,7 @@ export function createSourceFile(
 			scriptSetupRanges,
 			scriptLang,
 			vueCompilerOptions,
-			!!vueCompilerOptions.experimentalDisableTemplateSupport || (compilerOptions.jsx ?? ts.JsxEmit.Preserve) !== ts.JsxEmit.Preserve,
+			!!vueCompilerOptions.experimentalDisableTemplateSupport || compilerOptions.jsx !== ts.JsxEmit.Preserve,
 			fileName.endsWith('.html') // petite-vue
 		),
 	];
@@ -529,7 +529,7 @@ export function createSourceFile(
 		getSfcRefSugarRanges: () => sfcRefSugarRanges.value,
 		getEmbeddeds: () => embeddeds.value,
 		getScriptSetupRanges: () => scriptSetupRanges.value,
-		isJsxMissing: () => !vueCompilerOptions.experimentalDisableTemplateSupport && (compilerOptions.jsx ?? ts.JsxEmit.Preserve) !== ts.JsxEmit.Preserve,
+		isJsxMissing: () => !vueCompilerOptions.experimentalDisableTemplateSupport && compilerOptions.jsx !== ts.JsxEmit.Preserve,
 
 		getAllEmbeddeds: () => allEmbeddeds.value,
 		getTeleports: () => teleports.value,
