@@ -1,6 +1,7 @@
 import type { LanguageServiceRuntimeContext } from '../types';
 import { embeddedEditToSourceEdit } from './rename';
 import type * as _ from 'vscode-languageserver-protocol';
+import * as dedupe from '../utils/dedupe';
 
 export function register(context: LanguageServiceRuntimeContext) {
 
@@ -23,10 +24,17 @@ export function register(context: LanguageServiceRuntimeContext) {
 			const workspaceEdit = await plugin.doFileRename(oldUri, newUri);
 
 			if (workspaceEdit) {
-				return embeddedEditToSourceEdit(
+
+				const result = embeddedEditToSourceEdit(
 					workspaceEdit,
 					context.vueDocuments,
 				);
+
+				if (result?.documentChanges) {
+					result.documentChanges = dedupe.withDocumentChanges(result.documentChanges);
+				}
+
+				return result;
 			}
 		}
 	};

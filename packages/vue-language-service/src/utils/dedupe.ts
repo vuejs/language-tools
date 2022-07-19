@@ -43,6 +43,9 @@ export function withTextEdits<T extends vscode.TextEdit>(items: T[]): T[] {
 		item.newText,
 	].join(':'));
 }
+export function withDocumentChanges(items: NonNullable<vscode.WorkspaceEdit['documentChanges']>) {
+	return dedupe(items, item => JSON.stringify(item)); // TODO: improve this
+}
 export function withDiagnostics<T extends vscode.Diagnostic>(items: T[]): T[] {
 	return dedupe(items, item => [
 		item.range.start.line,
