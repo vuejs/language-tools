@@ -1,17 +1,25 @@
 # Changelog
 
-## 0.38.8 (2022/7/17)
+## 0.38.9 (2022/7/20)
 
-- feat: support for TS 4.8 ([#1507](https://github.com/johnsoncodehk/volar/issues/1507))
-- feat: support `--incremental` flag for vue-tsc ([#787](https://github.com/johnsoncodehk/volar/issues/787))
-- fix: vue-tsc watch memory leak ([#1106](https://github.com/johnsoncodehk/volar/issues/1106))
-- fix: re-fix template directives syntax highlight incorrect edge cases ([#1423](https://github.com/johnsoncodehk/volar/issues/1423))
+- fix: path resolution incorrect in multi root workspaces on windows ([#1585](https://github.com/johnsoncodehk/volar/issues/1585))
+- fix: goto definition not working for import path on windows ([#1591](https://github.com/johnsoncodehk/volar/issues/1591)) ([#1593](https://github.com/johnsoncodehk/volar/issues/1593))
+- fix: update imports on file move not working ([#1599](https://github.com/johnsoncodehk/volar/issues/1599))
+- fix: wrong check for whether jsx option is set ([#1595](https://github.com/johnsoncodehk/volar/issues/1595))
+- fix: renaming .vue files breaks resolving import paths ([#1125](https://github.com/johnsoncodehk/volar/issues/1125))
 
 ### Our Sponsors
 
 <a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
 	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
 </a>
+
+## 0.38.8 (2022/7/17)
+
+- feat: support for TS 4.8 ([#1507](https://github.com/johnsoncodehk/volar/issues/1507))
+- feat: support `--incremental` flag for vue-tsc ([#787](https://github.com/johnsoncodehk/volar/issues/787))
+- fix: vue-tsc watch memory leak ([#1106](https://github.com/johnsoncodehk/volar/issues/1106))
+- fix: re-fix template directives syntax highlight incorrect edge cases ([#1423](https://github.com/johnsoncodehk/volar/issues/1423))
 
 ## 0.38.7 (2022/7/17)
 
