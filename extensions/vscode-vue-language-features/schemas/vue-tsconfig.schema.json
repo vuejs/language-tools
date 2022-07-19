@@ -50,7 +50,7 @@
 						false,
 						"onlyJs"
 					],
-					"default": false,
+					"default": "onlyJs",
 					"markdownDescription": "Implicit wrap object literal component options export with `Vue.extend()`."
 				},
 				"experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup": {
