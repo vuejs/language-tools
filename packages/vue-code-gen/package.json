@@ -1,6 +1,6 @@
 {
 	"name": "@volar/vue-code-gen",
-	"version": "0.38.8",
+	"version": "0.38.9",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -16,8 +16,8 @@
 		"typescript": "latest"
 	},
 	"dependencies": {
-		"@volar/code-gen": "0.38.8",
-		"@volar/source-map": "0.38.8",
+		"@volar/code-gen": "0.38.9",
+		"@volar/source-map": "0.38.9",
 		"@vue/compiler-core": "^3.2.37",
 		"@vue/compiler-dom": "^3.2.37",
 		"@vue/shared": "^3.2.37"
