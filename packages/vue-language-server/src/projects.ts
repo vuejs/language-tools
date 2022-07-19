@@ -285,6 +285,25 @@ function createWorkspace(
 	const projects = shared.createPathMap<Project>();
 	let inferredProject: Project | undefined;
 
+	const getRootPath = () => rootPath;
+	const workspaceSys = ts.sys.getCurrentDirectory() === rootPath ? ts.sys : new Proxy(ts.sys, {
+		get(target, prop) {
+			const fn = target[prop as keyof typeof target];
+			if (typeof fn === 'function') {
+				return new Proxy(fn, {
+					apply(target, thisArg, args) {
+						const cwd = process.cwd;
+						process.cwd = getRootPath;
+						const result = (target as any).apply(thisArg, args);
+						process.cwd = cwd;
+						return result;
+					}
+				});
+			}
+			return fn;
+		},
+	});
+
 	return {
 		projects,
 		getProject,
@@ -313,6 +332,7 @@ function createWorkspace(
 				runtimeEnv,
 				languageConfigs,
 				ts,
+				workspaceSys,
 				options,
 				rootPath,
 				await getInferredCompilerOptions(),
@@ -440,6 +460,7 @@ function createWorkspace(
 				runtimeEnv,
 				languageConfigs,
 				ts,
+				workspaceSys,
 				options,
 				path.dirname(tsConfig),
 				tsConfig,

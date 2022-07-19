@@ -4,7 +4,6 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
 import type { createLsConfigs } from './configHost';
-import * as path from 'upath';
 import { getDocumentSafely } from './utils';
 import { LanguageConfigs, loadCustomPlugins, RuntimeEnvironment } from './common';
 import { tsShared } from '@volar/vue-typescript';
@@ -15,6 +14,7 @@ export async function createProject(
 	runtimeEnv: RuntimeEnvironment,
 	languageConfigs: LanguageConfigs,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
+	projectSys: ts.System,
 	options: shared.ServerInitializationOptions,
 	rootPath: string,
 	tsConfig: string | ts.CompilerOptions,
@@ -23,32 +23,6 @@ export async function createProject(
 	connection: vscode.Connection,
 	lsConfigs: ReturnType<typeof createLsConfigs> | undefined,
 ) {
-
-	const projectSys: typeof ts.sys = {
-		...ts.sys,
-		readFile: (path, encoding) => ts.sys.readFile(resolveAbsolutePath(path), encoding),
-		writeFile: (path, content) => ts.sys.writeFile(resolveAbsolutePath(path), content),
-		directoryExists: path => {
-			if (path === '') {
-				// fix https://github.com/johnsoncodehk/volar/issues/679
-				return ts.sys.directoryExists(path);
-			}
-			return ts.sys.directoryExists(resolveAbsolutePath(path));
-		},
-		getDirectories: path => ts.sys.getDirectories(resolveAbsolutePath(path)),
-		readDirectory: (path, extensions, exclude, include, depth) => ts.sys.readDirectory(resolveAbsolutePath(path), extensions, exclude, include, depth),
-		realpath: ts.sys.realpath ? path => {
-			const resolvedPath = resolveAbsolutePath(path);
-			const realPath = ts.sys.realpath!(resolvedPath);
-			if (realPath === resolvedPath) {
-				// rollback if failed
-				return path;
-			}
-			return realPath;
-		} : undefined,
-		fileExists: path => ts.sys.fileExists(resolveAbsolutePath(path)),
-		getCurrentDirectory: () => rootPath,
-	};
 
 	let typeRootVersion = 0;
 	let projectVersion = 0;
@@ -72,16 +46,6 @@ export async function createProject(
 		dispose,
 	};
 
-	function resolveAbsolutePath(_path: string) {
-		const relativePath = path.relative(ts.sys.getCurrentDirectory(), rootPath);
-		if (relativePath === '') {
-			return _path;
-		}
-		if (_path === '') {
-			return relativePath;
-		}
-		return _path;
-	}
 	function getLanguageService() {
 		if (!vueLs) {
 			vueLs = languageConfigs.createLanguageService(
@@ -180,7 +144,7 @@ export async function createProject(
 			readDirectory: projectSys.readDirectory,
 			realpath: projectSys.realpath,
 			fileExists: projectSys.fileExists,
-			getCurrentDirectory: projectSys.getCurrentDirectory,
+			getCurrentDirectory: () => rootPath,
 			getProjectReferences: () => parsedCommandLine.projectReferences, // if circular, broken with provide `getParsedCommandLine: () => parsedCommandLine`
 			// custom
 			getDefaultLibFileName: options => ts.getDefaultLibFilePath(options), // TODO: vscode option for ts lib
