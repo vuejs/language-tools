@@ -1,6 +1,7 @@
 import { createLanguageService, LanguageServiceHost } from '../..';
 import * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';
+import * as shared from '@volar/shared';
 
 const testRoot = path.resolve(__dirname, '../../../vue-test-workspace');
 export const tester = createTester(testRoot);
@@ -14,9 +15,10 @@ function createTester(root: string) {
 		},
 	};
 
-	const realTsConfig = path.join(root, 'tsconfig.json');
+	const realTsConfig = shared.normalizeFileName(path.join(root, 'tsconfig.json'));
 	const config = ts.readJsonConfigFile(realTsConfig, ts.sys.readFile);
 	const parsedCommandLine = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(realTsConfig), {}, path.basename(realTsConfig));
+	parsedCommandLine.fileNames = parsedCommandLine.fileNames.map(shared.normalizeFileName);
 	const scriptVersions = new Map<string, string>();
 	const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
 	const host: LanguageServiceHost = {
