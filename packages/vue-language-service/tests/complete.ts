@@ -72,7 +72,7 @@ for (const dirName of testDirs) {
 
 					const result = TextDocument.applyEdits(TextDocument.create('', '', 0, fileText), edits);
 
-					expect(result).toBe(expectedFileText);
+					expect(result.replace(/\r\n/g, '\n')).toBe(expectedFileText.replace(/\r\n/g, '\n'));
 				});
 			}
 
