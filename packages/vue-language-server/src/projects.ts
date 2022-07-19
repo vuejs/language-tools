@@ -370,8 +370,9 @@ function createWorkspace(
 		function findDirectIncludeTsconfig() {
 			return findTsconfig(async tsconfig => {
 				const parsedCommandLine = await getParsedCommandLine(tsconfig);
-				const fileNames = new Set(parsedCommandLine.fileNames);
-				return fileNames.has(fileName);
+				// use toLowerCase to fix https://github.com/johnsoncodehk/volar/issues/1125
+				const fileNames = new Set(parsedCommandLine.fileNames.map(fileName => fileName.toLowerCase()));
+				return fileNames.has(fileName.toLowerCase());
 			});
 		}
 		function findIndirectReferenceTsconfig() {
