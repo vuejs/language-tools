@@ -1,5 +1,5 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { posix as path } from 'path';
+import * as path from 'path';
 import type { VueCompilerOptions } from '../types';
 
 export function createParsedCommandLine(
@@ -17,7 +17,7 @@ export function createParsedCommandLine(
 	content.options.outDir = undefined; // TODO: patching ts server broke with outDir + rootDir + composite/incremental
 
 	let baseVueOptions = {};
-	const folder = path.dirname(tsConfig);
+	const folder = path.dirname(tsConfigPath);
 
 	extendsSet.add(tsConfig);
 
