@@ -40,7 +40,36 @@ function createTester(root: string) {
 		getScriptSnapshot,
 		getVueCompilationSettings: () => ({}),
 	};
-	const languageService = createLanguageService({ typescript: ts }, host, undefined, undefined, undefined, []);
+	const vscodeSettings: any = {
+		typescript: {
+			preferences: {
+				quoteStyle: 'single',
+			},
+		},
+		javascript: {
+			preferences: {
+				quoteStyle: 'single',
+			},
+		},
+	};
+	const languageService = createLanguageService({ typescript: ts }, host, undefined, undefined, {
+		async getConfiguration<T>(section: string) {
+			const keys = section.split('.');
+			let settings = vscodeSettings;
+			for (const key of keys) {
+				if (key in settings) {
+					settings = settings[key];
+				}
+				else {
+					settings = undefined;
+					break;
+				}
+			}
+			return settings;
+		},
+		onDidChangeConfiguration() { },
+		rootUris: [],
+	}, []);
 
 	return {
 		host,

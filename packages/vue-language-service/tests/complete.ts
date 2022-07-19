@@ -75,7 +75,6 @@ for (const dirName of testDirs) {
 					expect(result.replace(/\r\n/g, '\n')).toBe(expectedFileText.replace(/\r\n/g, '\n'));
 				});
 			}
-
 		}
 	});
 }
