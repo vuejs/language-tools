@@ -258,7 +258,7 @@ export function createSourceFile(
 			scriptSetupRanges,
 			scriptLang,
 			vueCompilerOptions,
-			!!vueCompilerOptions.experimentalDisableTemplateSupport || (compilerOptions.jsx ?? ts.JsxEmit.Preserve) !== ts.JsxEmit.Preserve,
+			!!vueCompilerOptions.experimentalDisableTemplateSupport || compilerOptions.jsx !== ts.JsxEmit.Preserve,
 			fileName.endsWith('.html') // petite-vue
 		),
 	];
