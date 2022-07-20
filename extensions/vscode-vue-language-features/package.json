@@ -793,7 +793,7 @@
 				"background": {
 					"activeOnStart": true,
 					"beginsPattern": "restarting server...$",
-					"endsPattern": "^\\s*ready in"
+					"endsPattern": "\\s*ready in"
 				}
 			}
 		]
