@@ -41,7 +41,7 @@
 	"capabilities": {
 		"untrustedWorkspaces": {
 			"supported": "limited",
-			"description": "%workspaceTrust%",
+			"description": "%volar.workspaceTrust.description%",
 			"restrictedConfigurations": [
 				"typescript.tsdk",
 				"typescript.tsserver.pluginPaths",
