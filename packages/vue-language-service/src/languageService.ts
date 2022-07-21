@@ -96,6 +96,69 @@ export function createLanguageService(
 	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
 	const documentVersions = new Map<string, number>();
 
+	const context: LanguageServiceRuntimeContext = {
+		vueDocuments,
+		getTsLs: () => tsLs,
+		getTextDocument,
+		getPlugins: () => [
+			...customPlugins,
+			vuePlugin,
+			cssPlugin,
+			vueTemplateHtmlPlugin,
+			vueTemplatePugPlugin,
+			jsonPlugin,
+			referencesCodeLensPlugin,
+			htmlPugConversionsPlugin,
+			scriptSetupConversionsPlugin,
+			refSugarConversionsPlugin,
+			tagNameCasingConversionsPlugin,
+			scriptTsPlugin,
+			autoDotValuePlugin,
+			// put emmet plugin last to fix https://github.com/johnsoncodehk/volar/issues/1088
+			emmetPlugin,
+		],
+		getPluginId: plugin => allPlugins.indexOf(plugin),
+		getPluginById: id => allPlugins[id],
+	};
+	const apis = {
+		doValidation: diagnostics.register(context),
+		findReferences: references.register(context),
+		findFileReferences: fileReferences.register(context),
+		findDefinition: definition.register(context, 'findDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions),
+		findTypeDefinition: definition.register(context, 'findTypeDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions),
+		findImplementations: definition.register(context, 'findImplementations', data => !!data.capabilities.references, data => false),
+		prepareRename: renamePrepare.register(context),
+		doRename: rename.register(context),
+		getEditsForFileRename: fileRename.register(context),
+		getSemanticTokens: semanticTokens.register(context),
+		doHover: hover.register(context),
+		doComplete: completions.register(context),
+		doCodeActions: codeActions.register(context),
+		doCodeActionResolve: codeActionResolve.register(context),
+		doCompletionResolve: completionResolve.register(context),
+		getSignatureHelp: signatureHelp.register(context),
+		doCodeLens: codeLens.register(context),
+		doCodeLensResolve: codeLensResolve.register(context),
+		findDocumentHighlights: documentHighlight.register(context),
+		findDocumentLinks: documentLink.register(context),
+		findWorkspaceSymbols: workspaceSymbol.register(context),
+		doAutoInsert: autoInsert.register(context),
+		doExecuteCommand: executeCommand.register(context),
+		getInlayHints: inlayHints.register(context),
+		callHierarchy: callHierarchy.register(context),
+		dispose: () => {
+			vueLsCtx.typescriptLanguageService.dispose();
+		},
+
+		__internal__: {
+			vueRuntimeContext: vueLsCtx,
+			rootPath: vueLsHost.getCurrentDirectory(),
+			context,
+			getContext: () => context,
+			// getD3: d3.register(context), true), // unused for nw
+			detectTagNameCase: tagNameCase.register(context),
+		},
+	};
 	// plugins
 	const vuePlugin = useVuePlugin({
 		getVueDocument: (document) => vueDocuments.get(document.uri),
@@ -145,7 +208,7 @@ export function createLanguageService(
 	});
 	const referencesCodeLensPlugin = useReferencesCodeLensPlugin({
 		getVueDocument: (uri) => vueDocuments.get(uri),
-		findReference: async (...args) => findReferences_internal(...args),
+		findReference: apis.findReferences,
 	});
 	const htmlPugConversionsPlugin = useHtmlPugConversionsPlugin({
 		getVueDocument: (uri) => vueDocuments.get(uri),
@@ -153,23 +216,23 @@ export function createLanguageService(
 	const scriptSetupConversionsPlugin = useScriptSetupConversionsPlugin({
 		ts,
 		getVueDocument: (uri) => vueDocuments.get(uri),
-		doCodeActions: async (...args) => doCodeActions_internal(...args),
-		doCodeActionResolve: async (...args) => doCodeActionResolve_internal(...args),
+		doCodeActions: apis.doCodeActions,
+		doCodeActionResolve: apis.doCodeActionResolve,
 	});
 	const refSugarConversionsPlugin = useRefSugarConversionsPlugin({
 		ts,
 		getVueDocument: (uri) => vueDocuments.get(uri),
-		doCodeActions: async (...args) => doCodeActions_internal(...args),
-		doCodeActionResolve: async (...args) => doCodeActionResolve_internal(...args),
-		findReferences: async (...args) => findReferences_internal(...args),
-		doValidation: async (...args) => doValidation_internal(...args),
-		doRename: async (...args) => doRename_internal(...args),
-		findTypeDefinition: async (...args) => findTypeDefinition_internal(...args),
+		doCodeActions: apis.doCodeActions,
+		doCodeActionResolve: apis.doCodeActionResolve,
+		findReferences: apis.findReferences,
+		doValidation: apis.doValidation,
+		doRename: apis.doRename,
+		findTypeDefinition: apis.findTypeDefinition,
 		scriptTsLs: tsLs,
 	});
 	const tagNameCasingConversionsPlugin = useTagNameCasingConversionsPlugin({
 		getVueDocument: (uri) => vueDocuments.get(uri),
-		findReferences: async (...args) => findReferences_internal(...args),
+		findReferences: apis.findReferences,
 	});
 
 	const allPlugins = [
@@ -189,81 +252,7 @@ export function createLanguageService(
 		scriptTsPlugin,
 	];
 
-	const context: LanguageServiceRuntimeContext = {
-		vueDocuments,
-		getTsLs: () => tsLs,
-		getTextDocument,
-		getPlugins: () => [
-			...customPlugins,
-			vuePlugin,
-			cssPlugin,
-			vueTemplateHtmlPlugin,
-			vueTemplatePugPlugin,
-			jsonPlugin,
-			referencesCodeLensPlugin,
-			htmlPugConversionsPlugin,
-			scriptSetupConversionsPlugin,
-			refSugarConversionsPlugin,
-			tagNameCasingConversionsPlugin,
-			scriptTsPlugin,
-			autoDotValuePlugin,
-			// put emmet plugin last to fix https://github.com/johnsoncodehk/volar/issues/1088
-			emmetPlugin,
-		],
-		getPluginId: plugin => allPlugins.indexOf(plugin),
-		getPluginById: id => allPlugins[id],
-	};
-	const _callHierarchy = callHierarchy.register(context);
-	const findReferences_internal = references.register(context);
-	const doCodeActions_internal = codeActions.register(context);
-	const doCodeActionResolve_internal = codeActionResolve.register(context);
-	const doValidation_internal = diagnostics.register(context);
-	const doRename_internal = rename.register(context);
-	const findTypeDefinition_internal = definition.register(context, 'findTypeDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions);
-
-	return {
-		doValidation: diagnostics.register(context),
-		findReferences: references.register(context),
-		findFileReferences: fileReferences.register(context),
-		findDefinition: definition.register(context, 'findDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions),
-		findTypeDefinition: definition.register(context, 'findTypeDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions),
-		findImplementations: definition.register(context, 'findImplementations', data => !!data.capabilities.references, data => false),
-		prepareRename: renamePrepare.register(context),
-		doRename: rename.register(context),
-		getEditsForFileRename: fileRename.register(context),
-		getSemanticTokens: semanticTokens.register(context),
-		doHover: hover.register(context),
-		doComplete: completions.register(context),
-		doCodeActions: codeActions.register(context),
-		doCodeActionResolve: codeActionResolve.register(context),
-		doCompletionResolve: completionResolve.register(context),
-		getSignatureHelp: signatureHelp.register(context),
-		doCodeLens: codeLens.register(context),
-		doCodeLensResolve: codeLensResolve.register(context),
-		findDocumentHighlights: documentHighlight.register(context),
-		findDocumentLinks: documentLink.register(context),
-		findWorkspaceSymbols: workspaceSymbol.register(context),
-		doAutoInsert: autoInsert.register(context),
-		doExecuteCommand: executeCommand.register(context),
-		getInlayHints: inlayHints.register(context),
-		callHierarchy: {
-			doPrepare: _callHierarchy.doPrepare,
-			getIncomingCalls: _callHierarchy.getIncomingCalls,
-			getOutgoingCalls: _callHierarchy.getOutgoingCalls,
-		},
-		dispose: () => {
-			vueLsCtx.typescriptLanguageService.dispose();
-		},
-
-		__internal__: {
-			vueRuntimeContext: vueLsCtx,
-			rootPath: vueLsHost.getCurrentDirectory(),
-			context,
-			getContext: () => context,
-			// getD3: d3.register(context), true), // unused for nw
-			detectTagNameCase: tagNameCase.register(context),
-		},
-	};
+	return apis;
 
 	function getDocumentContext() {
 		const compilerHost = ts.createCompilerHost(vueLsHost.getCompilationSettings());
