@@ -5,9 +5,11 @@ const fs = require('fs');
 const readFileSync = fs.readFileSync;
 
 const workspace = process.cwd();
-const viteBinPath = require.resolve('vite/bin/vite.js', { paths: [workspace] });
-const viteDir = path.dirname(require.resolve('vite/package.json', { paths: [workspace] }));
+const vitePkgPath = require.resolve('vite/package.json', { paths: [workspace] });
+const viteDir = path.dirname(vitePkgPath);
+const viteBinPath = require.resolve('./bin/vite.js', { paths: [viteDir] });
 const vuePluginPath = require.resolve('@vitejs/plugin-vue', { paths: [workspace] });
+const viteVersion = require(vitePkgPath).version;
 const installCode = `
 function __createAppProxy(...args) {
 
@@ -404,4 +406,9 @@ fs.readFileSync = (...args) => {
 	return readFileSync(...args);
 };
 
-require(viteBinPath);
+if (viteVersion.startsWith('3.')) {
+    import('file://' + viteBinPath);
+}
+else {
+    require(viteBinPath);
+}
