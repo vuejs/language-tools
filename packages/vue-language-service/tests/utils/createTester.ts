@@ -55,7 +55,7 @@ function createTester(root: string) {
 			},
 		},
 	};
-	const languageService = createLanguageService({ typescript: ts }, host, undefined, undefined, {
+	const languageService = createLanguageService(host, undefined, undefined, {
 		async getConfiguration<T>(section: string) {
 			const keys = section.split('.');
 			let settings = vscodeSettings;

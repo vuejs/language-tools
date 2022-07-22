@@ -71,7 +71,6 @@ export function getSemanticTokenLegend() {
 }
 
 export function createLanguageService(
-	{ typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary'); },
 	vueLsHost: vue.LanguageServiceHost,
 	fileSystemProvider: html.FileSystemProvider | undefined,
 	schemaRequestService: json.SchemaRequestService | undefined,
@@ -86,6 +85,7 @@ export function createLanguageService(
 
 	setCurrentConfigurationHost(configurationHost); // TODO
 
+	const ts = vueLsHost.getTypeScriptModule();
 	const core = createLanguageServiceContext();
 	const vueTsLs = ts.createLanguageService(core.typescriptLanguageServiceHost);
 	tsFaster.decorate(ts, core.typescriptLanguageServiceHost, vueTsLs);

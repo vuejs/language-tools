@@ -49,7 +49,6 @@ export async function createProject(
 	function getLanguageService() {
 		if (!vueLs) {
 			vueLs = languageConfigs.createLanguageService(
-				{ typescript: ts },
 				languageServiceHost,
 				runtimeEnv.fileSystemProvide,
 				(uri) => {
