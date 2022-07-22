@@ -40,5 +40,13 @@ require('esbuild').build({
             },
             keepStructure: true,
         }),
+        require('esbuild-plugin-copy').copy({
+            resolveFrom: 'cwd',
+            assets: {
+                from: ['./node_modules/@volar/vue-language-core/schemas/**/*'],
+                to: ['./dist/schemas'],
+            },
+            keepStructure: true,
+        }),
     ],
 }).catch(() => process.exit(1))

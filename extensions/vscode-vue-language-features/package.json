@@ -108,27 +108,27 @@
 			},
 			{
 				"fileMatch": "tsconfig.json",
-				"url": "./schemas/vue-tsconfig.schema.json"
+				"url": "./dist/schemas/vue-tsconfig.schema.json"
 			},
 			{
 				"fileMatch": "tsconfig-*.json",
-				"url": "./schemas/vue-tsconfig.schema.json"
+				"url": "./dist/schemas/vue-tsconfig.schema.json"
 			},
 			{
 				"fileMatch": "tsconfig.*.json",
-				"url": "./schemas/vue-tsconfig.schema.json"
+				"url": "./dist/schemas/vue-tsconfig.schema.json"
 			},
 			{
 				"fileMatch": "jsconfig.json",
-				"url": "./schemas/vue-tsconfig.schema.json"
+				"url": "./dist/schemas/vue-tsconfig.schema.json"
 			},
 			{
 				"fileMatch": "jsconfig-*.json",
-				"url": "./schemas/vue-tsconfig.schema.json"
+				"url": "./dist/schemas/vue-tsconfig.schema.json"
 			},
 			{
 				"fileMatch": "jsconfig.*.json",
-				"url": "./schemas/vue-tsconfig.schema.json"
+				"url": "./dist/schemas/vue-tsconfig.schema.json"
 			}
 		],
 		"languages": [
@@ -817,6 +817,7 @@
 		"@types/vscode": "1.67.0",
 		"@volar/preview": "0.38.9",
 		"@volar/shared": "0.38.9",
+		"@volar/vue-language-core": "0.38.9",
 		"@volar/vue-language-server": "0.38.9",
 		"@vue/compiler-sfc": "^3.2.37",
 		"@vue/reactivity": "^3.2.37",

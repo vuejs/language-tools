@@ -63,6 +63,7 @@ importers:
       '@types/vscode': 1.67.0
       '@volar/preview': 0.38.9
       '@volar/shared': 0.38.9
+      '@volar/vue-language-core': 0.38.9
       '@volar/vue-language-server': 0.38.9
       '@vue/compiler-sfc': ^3.2.37
       '@vue/reactivity': ^3.2.37
@@ -79,6 +80,7 @@ importers:
       '@types/vscode': 1.67.0
       '@volar/preview': link:../../packages/preview
       '@volar/shared': link:../../packages/shared
+      '@volar/vue-language-core': link:../../packages/vue-language-core
       '@volar/vue-language-server': link:../../packages/vue-language-server
       '@vue/compiler-sfc': 3.2.37
       '@vue/reactivity': 3.2.37
