@@ -203,11 +203,11 @@ export function deactivate(): Thenable<any> | undefined {
 }
 
 export function takeOverModeEnabled() {
-	const status = vscode.workspace.getConfiguration('volar').get<boolean | 'auto'>('takeOverMode.enabled');
+	const status = vscode.workspace.getConfiguration('volar').get<false | 'auto'>('takeOverMode.enabled');
 	if (status === 'auto') {
 		return !vscode.extensions.getExtension('vscode.typescript-language-features');
 	}
-	return status;
+	return false;
 }
 
 function enabledDocumentFeaturesInHtml() {
