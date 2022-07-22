@@ -1,5 +1,5 @@
 import { VueLanguagePlugin } from '@volar/vue-language-core';
-import useVueHtmlFilePlugin from '@volar/vue-typescript/out/plugins/file-html';
+import useVueHtmlFilePlugin from '@volar/vue-language-core/out/plugins/file-html';
 
 export default function (): VueLanguagePlugin {
 

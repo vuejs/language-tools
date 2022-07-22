@@ -136,6 +136,7 @@ flowchart LR
 
 	click VOLAR_VUE_SERVER "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-language-server"
 	click VOLAR_VUE_TS "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-typescript"
+	click VOLAR_VUE_CORE "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-language-core"
 	click VOLAR_VUE_CG "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-code-gen"
 	click VOLAR_VUE_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-language-service"
 	click VOLAR_PUG_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/pug-language-service"
