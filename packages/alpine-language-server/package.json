@@ -18,6 +18,6 @@
 		"@volar/alpine-language-service": "0.38.9",
 		"@volar/vue-language-server": "0.38.9",
 		"upath": "^2.0.1",
-		"vscode-languageserver": "^8.0.1"
+		"vscode-languageserver": "^8.0.2"
 	}
 }

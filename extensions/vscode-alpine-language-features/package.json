@@ -284,7 +284,7 @@
 		"path-browserify": "^1.0.1",
 		"punycode": "^2.1.1",
 		"vsce": "latest",
-		"vscode-languageclient": "^8.0.1",
+		"vscode-languageclient": "^8.0.2",
 		"vscode-nls": "^5.0.1"
 	}
 }
