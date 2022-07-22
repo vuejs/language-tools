@@ -5,7 +5,7 @@ import { getProgram } from './getProgram';
 export function createLanguageService(...params: Parameters<typeof vue.createLanguageContext>) {
 
 	const core = vue.createLanguageContext(...params);
-	const ts = params[0].loadTypeScriptModule();
+	const ts = params[0].getTypeScriptModule();
 	const ls = ts.createLanguageService(core.typescriptLanguageServiceHost);
 
 	tsFaster.decorate(ts, core.typescriptLanguageServiceHost, ls);

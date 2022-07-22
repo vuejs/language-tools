@@ -16,7 +16,7 @@ export function createLanguageContext(
 	let lastProjectVersion: string | undefined;
 	let tsProjectVersion = 0;
 
-	const ts = host.loadTypeScriptModule();
+	const ts = host.getTypeScriptModule();
 	const documentRegistry = createDocumentRegistry();
 	const compilerOptions = host.getCompilationSettings();
 	const vueCompilerOptions = host.getVueCompilationSettings();

@@ -161,7 +161,7 @@ export async function createProject(
 			getVueCompilationSettings: () => parsedCommandLine.vueOptions,
 			getScriptVersion,
 			getScriptSnapshot,
-			loadTypeScriptModule: () => ts,
+			getTypeScriptModule: () => ts,
 		};
 
 		if (tsLocalized) {

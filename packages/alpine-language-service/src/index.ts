@@ -13,7 +13,7 @@ export function createLanguageService(
 		mods,
 		{
 			...alpineLsHost,
-			loadTypeScriptModule: () => mods.typescript,
+			getTypeScriptModule: () => mods.typescript,
 			getVueCompilationSettings: () => ({}),
 		},
 		undefined,

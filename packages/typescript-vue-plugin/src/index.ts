@@ -95,7 +95,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		getScriptVersion,
 		getScriptSnapshot,
 
-		loadTypeScriptModule: () => ts,
+		getTypeScriptModule: () => ts,
 		isTsPlugin: true,
 	};
 
