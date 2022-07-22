@@ -1,4 +1,4 @@
-import * as alpineTs from '@volar/alpine-typescript';
+import * as alpineTs from '@volar/alpine-language-core';
 import * as vueLs from '@volar/vue-language-service';
 import { ConfigurationHost, EmbeddedLanguageServicePlugin, setCurrentConfigurationHost } from '@volar/vue-language-service-types';
 
@@ -13,6 +13,7 @@ export function createLanguageService(
 		mods,
 		{
 			...alpineLsHost,
+			loadTypeScriptModule: () => mods.typescript,
 			getVueCompilationSettings: () => ({}),
 		},
 		undefined,
@@ -20,7 +21,7 @@ export function createLanguageService(
 		configurationHost,
 		customPlugins,
 		undefined,
-		() => alpineTs.createLanguageServiceContext(mods.typescript, alpineLsHost),
+		() => alpineTs.createLanguageContext(alpineLsHost),
 	);
 }
 

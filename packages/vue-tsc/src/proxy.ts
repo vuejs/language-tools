@@ -1,6 +1,5 @@
 import * as ts from 'typescript/lib/tsserverlibrary';
-import * as vue from '@volar/vue-typescript';
-import * as apis from './apis';
+import * as vue from '@volar/vue-language-core';
 import * as vueTs from '@volar/vue-typescript';
 
 export function createProgramProxy(
@@ -32,7 +31,7 @@ export function createProgramProxy(
 			scriptSnapshot: ts.IScriptSnapshot,
 			version: string,
 		}>();
-		const vueLsHost = new Proxy({
+		const vueLsHost = new Proxy(<vue.LanguageServiceHost>{
 			resolveModuleNames: undefined, // avoid failed with tsc built-in fileExists
 			writeFile: (fileName, content) => {
 				if (fileName.indexOf('__VLS_') === -1) {
@@ -51,8 +50,9 @@ export function createProgramProxy(
 			},
 			getProjectReferences: () => ctx.options.projectReferences,
 
+			loadTypeScriptModule: () => ts,
 			isTsc: true,
-		} as vue.LanguageServiceHost, {
+		}, {
 			get: (target, property) => {
 				if (property in target) {
 					return target[property as keyof vue.LanguageServiceHost];
@@ -60,24 +60,15 @@ export function createProgramProxy(
 				return ctx.options.host![property as keyof ts.CompilerHost];
 			},
 		});
-		const vueLsCtx: vueTs.LanguageServiceContext = vueTs.createLanguageServiceContext(ts, vueLsHost);
-		const proxyApis = apis.register(ts, vueLsCtx);
+		const vueTsLs = vueTs.createLanguageService(vueLsHost);
 
-		program = new Proxy({} as ts.Program, {
-			get: (target, property: keyof ts.Program) => {
-				if (property in proxyApis) {
-					return proxyApis[property as keyof typeof proxyApis];
-				}
-				return vueLsCtx.typescriptLanguageService.getProgram()![property] ?? target[property];
-			},
-		});
-
+		program = vueTsLs.getProgram();
 		program.__VLS_ctx = ctx;
 
 		function getVueCompilerOptions(): vue.VueCompilerOptions {
 			const tsConfig = ctx.options.options.configFilePath;
 			if (typeof tsConfig === 'string') {
-				return vueTs.tsShared.createParsedCommandLine(ts, ts.sys, tsConfig).vueOptions;
+				return vue.tsShared.createParsedCommandLine(ts, ts.sys, tsConfig).vueOptions;
 			}
 			return {};
 		}

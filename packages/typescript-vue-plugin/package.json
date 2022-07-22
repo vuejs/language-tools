@@ -16,7 +16,7 @@
 		"typescript": "latest"
 	},
 	"dependencies": {
-		"@volar/typescript-faster": "0.38.9",
+		"@volar/vue-language-core": "0.38.9",
 		"@volar/vue-typescript": "0.38.9"
 	}
 }

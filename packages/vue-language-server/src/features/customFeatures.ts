@@ -3,7 +3,7 @@ import * as path from 'upath';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
 import type { Projects } from '../projects';
-import * as vueTs from '@volar/vue-typescript';
+import * as vue from '@volar/vue-language-core';
 
 export function register(
 	connection: vscode.Connection,
@@ -28,7 +28,7 @@ export function register(
 			for (const project of [...workspace.projects.values(), workspace.getInferredProjectDontCreate()].filter(shared.notEmpty)) {
 				const ls = await (await project).getLanguageServiceDontCreate();
 				if (!ls) continue;
-				const localTypesFiles = ls.__internal__.vueRuntimeContext.typescriptLanguageServiceHost.getScriptFileNames().filter(fileName => fileName.endsWith(vueTs.localTypes.typesFileName));
+				const localTypesFiles = ls.__internal__.vueRuntimeContext.typescriptLanguageServiceHost.getScriptFileNames().filter(fileName => fileName.endsWith(vue.localTypes.typesFileName));
 				for (const fileName of localTypesFiles) {
 					const script = ls.__internal__.vueRuntimeContext.typescriptLanguageServiceHost.getScriptSnapshot(fileName);
 					if (script) {

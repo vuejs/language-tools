@@ -13,7 +13,7 @@
 	],
 	"references": [
 		{
-			"path": "../vue-typescript/tsconfig.build.json"
+			"path": "../vue-language-core/tsconfig.build.json"
 		},
 	],
 }

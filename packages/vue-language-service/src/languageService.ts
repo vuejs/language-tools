@@ -2,7 +2,7 @@ import * as shared from '@volar/shared';
 import * as tsFaster from '@volar/typescript-faster';
 import * as ts2 from '@volar/typescript-language-service';
 import { ConfigurationHost, EmbeddedLanguageServicePlugin, setCurrentConfigurationHost } from '@volar/vue-language-service-types';
-import * as vueTs from '@volar/vue-typescript';
+import * as vue from '@volar/vue-language-core';
 import { isGloballyWhitelisted } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as upath from 'upath';
@@ -72,7 +72,7 @@ export function getSemanticTokenLegend() {
 
 export function createLanguageService(
 	{ typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary'); },
-	vueLsHost: vueTs.LanguageServiceHost,
+	vueLsHost: vue.LanguageServiceHost,
 	fileSystemProvider: html.FileSystemProvider | undefined,
 	schemaRequestService: json.SchemaRequestService | undefined,
 	configurationHost: ConfigurationHost | undefined,
@@ -81,16 +81,17 @@ export function createLanguageService(
 		tag: 'both' | 'kebabCase' | 'pascalCase',
 		attr: 'kebabCase' | 'camelCase',
 	}>,
-	createLanguageServiceContext = () => vueTs.createLanguageServiceContext(ts, vueLsHost),
+	createLanguageServiceContext = () => vue.createLanguageContext(vueLsHost),
 ) {
 
 	setCurrentConfigurationHost(configurationHost); // TODO
 
-	const vueLsCtx = createLanguageServiceContext();
-	tsFaster.decorate(ts, vueLsCtx.typescriptLanguageServiceHost, vueLsCtx.typescriptLanguageService);
+	const core = createLanguageServiceContext();
+	const vueTsLs = ts.createLanguageService(core.typescriptLanguageServiceHost);
+	tsFaster.decorate(ts, core.typescriptLanguageServiceHost, vueTsLs);
 	const tsSettings = getTsSettings(configurationHost);
-	const tsLs = ts2.createLanguageService(ts, vueLsCtx.typescriptLanguageServiceHost, vueLsCtx.typescriptLanguageService, tsSettings);
-	const vueDocuments = parseVueDocuments(vueLsCtx, tsLs);
+	const tsLs = ts2.createLanguageService(ts, core.typescriptLanguageServiceHost, vueTsLs, tsSettings);
+	const vueDocuments = parseVueDocuments(core, tsLs);
 	const documentContext = getDocumentContext();
 
 	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
@@ -147,11 +148,11 @@ export function createLanguageService(
 		getInlayHints: inlayHints.register(context),
 		callHierarchy: callHierarchy.register(context),
 		dispose: () => {
-			vueLsCtx.typescriptLanguageService.dispose();
+			vueTsLs.dispose();
 		},
 
 		__internal__: {
-			vueRuntimeContext: vueLsCtx,
+			vueRuntimeContext: core,
 			rootPath: vueLsHost.getCurrentDirectory(),
 			context,
 			getContext: () => context,

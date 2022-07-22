@@ -26,6 +26,7 @@
 		"@volar/typescript-faster": "0.38.9",
 		"@volar/typescript-language-service": "0.38.9",
 		"@volar/vue-code-gen": "0.38.9",
+		"@volar/vue-language-core": "0.38.9",
 		"@volar/vue-language-service-types": "0.38.9",
 		"@volar/vue-typescript": "0.38.9",
 		"@vscode/emmet-helper": "^2.8.4",

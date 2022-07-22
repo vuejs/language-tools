@@ -5,10 +5,9 @@ import * as localTypes from './utils/localTypes';
 import { createSourceFile, EmbeddedFile, VueLanguagePlugin } from './sourceFile';
 import { createDocumentRegistry } from './documentRegistry';
 
-export type LanguageServiceContext = ReturnType<typeof createLanguageServiceContext>;
+export type LanguageContext = ReturnType<typeof createLanguageContext>;
 
-export function createLanguageServiceContext(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+export function createLanguageContext(
 	host: LanguageServiceHost,
 	extraPlugins: VueLanguagePlugin[] = [],
 	exts = ['.vue', '.md', '.html'],
@@ -17,6 +16,7 @@ export function createLanguageServiceContext(
 	let lastProjectVersion: string | undefined;
 	let tsProjectVersion = 0;
 
+	const ts = host.loadTypeScriptModule();
 	const documentRegistry = createDocumentRegistry();
 	const compilerOptions = host.getCompilationSettings();
 	const vueCompilerOptions = host.getVueCompilationSettings();
@@ -103,20 +103,20 @@ export function createLanguageServiceContext(
 			}
 		},
 	};
-	const tsHost = new Proxy<ts.LanguageServiceHost>(_tsHost as ts.LanguageServiceHost, {
-		get: (target, property: keyof ts.LanguageServiceHost) => {
-			update();
-			return target[property] || host[property];
-		},
-	});
 
 	return {
-		typescriptLanguageServiceHost: tsHost,
-		typescriptLanguageService: ts.createLanguageService(tsHost),
-		get sourceFiles() {
-			update();
-			return documentRegistry;
-		},
+		typescriptLanguageServiceHost: new Proxy(_tsHost as ts.LanguageServiceHost, {
+			get: (target, property: keyof ts.LanguageServiceHost) => {
+				update();
+				return target[property] || host[property];
+			},
+		}),
+		mapper: new Proxy(documentRegistry, {
+			get: (target, property: keyof typeof documentRegistry) => {
+				update();
+				return target[property];
+			},
+		}),
 	};
 
 	function update() {

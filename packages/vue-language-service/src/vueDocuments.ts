@@ -1,4 +1,4 @@
-import * as vueTs from '@volar/vue-typescript';
+import * as vue from '@volar/vue-language-core';
 import * as shared from '@volar/shared';
 import { computed } from '@vue/reactivity';
 import { SourceMapBase, Mapping } from '@volar/source-map';
@@ -9,7 +9,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import * as vscode from 'vscode-languageserver-protocol';
 import type * as ts2 from '@volar/typescript-language-service';
 
-import type * as _ from '@volar/vue-typescript/node_modules/@vue/reactivity'; // fix build error
+import type * as _ from '@volar/vue-language-core/node_modules/@vue/reactivity'; // fix build error
 
 export type VueDocuments = ReturnType<typeof parseVueDocuments>;
 export type VueDocument = ReturnType<typeof parseVueDocument>;
@@ -75,10 +75,10 @@ export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
 export class EmbeddedDocumentSourceMap extends SourceMap<EmbeddedFileMappingData> {
 
 	constructor(
-		public embeddedFile: vueTs.EmbeddedFile,
+		public embeddedFile: vue.EmbeddedFile,
 		public sourceDocument: TextDocument,
 		public mappedDocument: TextDocument,
-		_sourceMap: vueTs.EmbeddedFileSourceMap,
+		_sourceMap: vue.EmbeddedFileSourceMap,
 	) {
 		super(sourceDocument, mappedDocument, _sourceMap.mappings);
 	}
@@ -86,9 +86,9 @@ export class EmbeddedDocumentSourceMap extends SourceMap<EmbeddedFileMappingData
 
 export class TeleportSourceMap extends SourceMap<TeleportMappingData> {
 	constructor(
-		public embeddedFile: vueTs.EmbeddedFile,
+		public embeddedFile: vue.EmbeddedFile,
 		public document: TextDocument,
-		teleport: vueTs.Teleport,
+		teleport: vue.Teleport,
 	) {
 		super(document, document, teleport.mappings);
 	}
@@ -103,12 +103,12 @@ export class TeleportSourceMap extends SourceMap<TeleportMappingData> {
 }
 
 export function parseVueDocuments(
-	vueLsCtx: vueTs.LanguageServiceContext,
+	vueLsCtx: vue.LanguageContext,
 	tsLs: ts2.LanguageService,
 ) {
 
 	// cache map
-	const vueDocuments = useCacheMap<vueTs.SourceFile, VueDocument>(vueFile => {
+	const vueDocuments = useCacheMap<vue.SourceFile, VueDocument>(vueFile => {
 		return parseVueDocument(vueFile, tsLs);
 	});
 
@@ -146,7 +146,7 @@ export function parseVueDocuments(
 		get: (uri: string) => {
 
 			const fileName = shared.uriToFsPath(uri);
-			const vueFile = vueLsCtx.sourceFiles.get(fileName);
+			const vueFile = vueLsCtx.mapper.get(fileName);
 
 			if (vueFile) {
 				return vueDocuments.get(vueFile);
@@ -166,10 +166,10 @@ export function parseVueDocuments(
 			start: vscode.Position,
 			end?: vscode.Position,
 			filter?: (data: EmbeddedFileMappingData) => boolean,
-			sourceMapFilter?: (sourceMap: vueTs.EmbeddedFileSourceMap) => boolean,
+			sourceMapFilter?: (sourceMap: vue.EmbeddedFileSourceMap) => boolean,
 		) {
 
-			if (uri.endsWith(`/${vueTs.localTypes.typesFileName}`))
+			if (uri.endsWith(`/${vue.localTypes.typesFileName}`))
 				return;
 
 			if (end === undefined)
@@ -204,19 +204,19 @@ export function parseVueDocuments(
 	};
 
 	function getAll() {
-		return vueLsCtx.sourceFiles.getAll().map(vueFile => vueDocuments.get(vueFile));
+		return vueLsCtx.mapper.getAll().map(vueFile => vueDocuments.get(vueFile));
 	}
 }
 
 export function parseVueDocument(
-	vueFile: vueTs.SourceFile,
+	vueFile: vue.SourceFile,
 	tsLs: ts2.LanguageService | undefined,
 ) {
 
 	// cache map
 	let documentVersion = 0;
 	const embeddedDocumentVersions = new Map<string, number>();
-	const embeddedDocumentsMap = useCacheMap<vueTs.EmbeddedFile, TextDocument>(embeddedFile => {
+	const embeddedDocumentsMap = useCacheMap<vue.EmbeddedFile, TextDocument>(embeddedFile => {
 
 		const uri = shared.fsPathToUri(embeddedFile.fileName);
 		const newVersion = (embeddedDocumentVersions.get(uri.toLowerCase()) ?? 0) + 1;
@@ -230,7 +230,7 @@ export function parseVueDocument(
 			embeddedFile.content,
 		);
 	});
-	const sourceMapsMap = useCacheMap<vueTs.Embedded, EmbeddedDocumentSourceMap>(embedded => {
+	const sourceMapsMap = useCacheMap<vue.Embedded, EmbeddedDocumentSourceMap>(embedded => {
 		return new EmbeddedDocumentSourceMap(
 			embedded.file,
 			document.value,
@@ -327,12 +327,12 @@ export function parseVueDocument(
 		};
 
 		const file = vueFile.getAllEmbeddeds().find(e => e.file.fileName.indexOf('.__VLS_template.') >= 0)?.file;
-		if (file && file.content.indexOf(vueTs.SearchTexts.Components) >= 0) {
+		if (file && file.content.indexOf(vue.SearchTexts.Components) >= 0) {
 			const document = embeddedDocumentsMap.get(file);
 
 			let components = await tsLs?.doComplete(
 				shared.fsPathToUri(file!.fileName),
-				document.positionAt(file!.content.indexOf(vueTs.SearchTexts.Components)),
+				document.positionAt(file!.content.indexOf(vue.SearchTexts.Components)),
 				options
 			);
 

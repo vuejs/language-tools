@@ -16,8 +16,8 @@
 	},
 	"dependencies": {
 		"@volar/shared": "0.38.9",
+		"@volar/vue-language-core": "0.38.9",
 		"@volar/vue-language-service": "0.38.9",
-		"@volar/vue-typescript": "0.38.9",
 		"@vue/shared": "^3.2.37",
 		"request-light": "^0.5.8",
 		"upath": "^2.0.1",

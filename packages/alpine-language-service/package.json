@@ -17,7 +17,7 @@
 		"typescript": "latest"
 	},
 	"dependencies": {
-		"@volar/alpine-typescript": "0.38.9",
+		"@volar/alpine-language-core": "0.38.9",
 		"@volar/vue-language-service": "0.38.9",
 		"@volar/vue-language-service-types": "0.38.9"
 	}

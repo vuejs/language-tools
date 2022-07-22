@@ -1,7 +1,7 @@
 import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
 import { ConfigurationHost, EmbeddedLanguageServicePlugin, setCurrentConfigurationHost } from '@volar/vue-language-service-types';
-import * as vueTs from '@volar/vue-typescript';
+import * as vue from '@volar/vue-language-core';
 import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import useCssPlugin from './plugins/css';
@@ -125,7 +125,7 @@ export function getDocumentService(
 			return vueDoc;
 		}
 
-		const vueFile = vueTs.createSourceFile(
+		const vueFile = vue.createSourceFile(
 			'/untitled.' + shared.languageIdToSyntax(document.languageId),
 			document.getText(),
 			{},

@@ -1,8 +1,6 @@
-import * as tsFaster from '@volar/typescript-faster';
 import * as vueTs from '@volar/vue-typescript';
-import { tsShared } from '@volar/vue-typescript';
+import * as vue from '@volar/vue-language-core';
 import * as path from 'path';
-import * as apis from './apis';
 
 const init: ts.server.PluginModuleFactory = (modules) => {
 	const { typescript: ts } = modules;
@@ -36,47 +34,16 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 				}
 			};
 
-			const vueLsCtx = vueTs.createLanguageServiceContext(ts, proxyHost.host);
-			tsFaster.decorate(ts, vueLsCtx.typescriptLanguageServiceHost, vueLsCtx.typescriptLanguageService);
-
-			const _tsPluginApis = apis.register(vueLsCtx, vueLsCtx.typescriptLanguageService);
-			const tsPluginProxy: Partial<ts.LanguageService> = {
-				getSemanticDiagnostics: vueLsCtx.typescriptLanguageService.getSemanticDiagnostics,
-				getEncodedSemanticClassifications: vueLsCtx.typescriptLanguageService.getEncodedSemanticClassifications,
-				getCompletionsAtPosition: _tsPluginApis.getCompletionsAtPosition,
-				getCompletionEntryDetails: vueLsCtx.typescriptLanguageService.getCompletionEntryDetails,
-				getCompletionEntrySymbol: vueLsCtx.typescriptLanguageService.getCompletionEntrySymbol,
-				getQuickInfoAtPosition: vueLsCtx.typescriptLanguageService.getQuickInfoAtPosition,
-				getSignatureHelpItems: vueLsCtx.typescriptLanguageService.getSignatureHelpItems,
-				getRenameInfo: vueLsCtx.typescriptLanguageService.getRenameInfo,
-
-				findRenameLocations: _tsPluginApis.findRenameLocations,
-				getDefinitionAtPosition: _tsPluginApis.getDefinitionAtPosition,
-				getDefinitionAndBoundSpan: _tsPluginApis.getDefinitionAndBoundSpan,
-				getTypeDefinitionAtPosition: _tsPluginApis.getTypeDefinitionAtPosition,
-				getImplementationAtPosition: _tsPluginApis.getImplementationAtPosition,
-				getReferencesAtPosition: _tsPluginApis.getReferencesAtPosition,
-				findReferences: _tsPluginApis.findReferences,
-
-				// TODO: now is handled by vue server
-				// prepareCallHierarchy: tsLanguageService.rawLs.prepareCallHierarchy,
-				// provideCallHierarchyIncomingCalls: tsLanguageService.rawLs.provideCallHierarchyIncomingCalls,
-				// provideCallHierarchyOutgoingCalls: tsLanguageService.rawLs.provideCallHierarchyOutgoingCalls,
-				// getEditsForFileRename: tsLanguageService.rawLs.getEditsForFileRename,
-
-				// TODO
-				// getCodeFixesAtPosition: tsLanguageService.rawLs.getCodeFixesAtPosition,
-				// getCombinedCodeFix: tsLanguageService.rawLs.getCombinedCodeFix,
-				// applyCodeActionCommand: tsLanguageService.rawLs.applyCodeActionCommand,
-				// getApplicableRefactors: tsLanguageService.rawLs.getApplicableRefactors,
-				// getEditsForRefactor: tsLanguageService.rawLs.getEditsForRefactor,
-			};
+			const ls = vueTs.createLanguageService(proxyHost.host);
 
 			vueFilesGetter.set(info.project, proxyHost.getVueFiles);
 
 			return new Proxy(info.languageService, {
 				get: (target: any, property: keyof ts.LanguageService) => {
-					return tsPluginProxy[property] || target[property];
+					if (property in ls) {
+						return ls[property];
+					}
+					return target[property];
 				},
 			});
 		},
@@ -106,7 +73,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		snapshots: ts.IScriptSnapshot | undefined,
 		snapshotsVersion: string | undefined,
 	}>();
-	const host: vueTs.LanguageServiceHost = {
+	const host: vue.LanguageServiceHost = {
 		getNewLine: () => info.project.getNewLine(),
 		useCaseSensitiveFileNames: () => info.project.useCaseSensitiveFileNames(),
 		readFile: path => info.project.readFile(path),
@@ -128,6 +95,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		getScriptVersion,
 		getScriptSnapshot,
 
+		loadTypeScriptModule: () => ts,
 		isTsPlugin: true,
 	};
 
@@ -140,11 +108,11 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		? info.serverHost.watchFile(projectName, () => {
 			onConfigUpdated();
 			onProjectUpdated();
-			parsedCommandLine = tsShared.createParsedCommandLine(ts, ts.sys, projectName);
+			parsedCommandLine = vue.tsShared.createParsedCommandLine(ts, ts.sys, projectName);
 		})
 		: undefined;
 	let parsedCommandLine = tsconfigWatcher // reuse fileExists result
-		? tsShared.createParsedCommandLine(ts, ts.sys, projectName)
+		? vue.tsShared.createParsedCommandLine(ts, ts.sys, projectName)
 		: undefined;
 
 	return {

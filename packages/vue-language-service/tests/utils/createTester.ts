@@ -41,6 +41,7 @@ function createTester(root: string) {
 		getScriptVersion,
 		getScriptSnapshot,
 		getVueCompilationSettings: () => ({}),
+		loadTypeScriptModule: () => ts,
 	};
 	const vscodeSettings: any = {
 		typescript: {

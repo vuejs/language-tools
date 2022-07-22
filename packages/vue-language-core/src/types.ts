@@ -1,6 +1,7 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
 export type LanguageServiceHost = ts.LanguageServiceHost & {
+	loadTypeScriptModule(): typeof import('typescript/lib/tsserverlibrary');
 	getVueCompilationSettings(): VueCompilerOptions,
 	isTsPlugin?: boolean,
 	isTsc?: boolean,

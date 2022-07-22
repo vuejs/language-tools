@@ -6,7 +6,7 @@ import * as vscode from 'vscode-languageserver';
 import type { createLsConfigs } from './configHost';
 import { getDocumentSafely } from './utils';
 import { LanguageConfigs, loadCustomPlugins, RuntimeEnvironment } from './common';
-import { tsShared } from '@volar/vue-typescript';
+import { tsShared } from '@volar/vue-language-core';
 
 export interface Project extends ReturnType<typeof createProject> { }
 
@@ -161,6 +161,7 @@ export async function createProject(
 			getVueCompilationSettings: () => parsedCommandLine.vueOptions,
 			getScriptVersion,
 			getScriptSnapshot,
+			loadTypeScriptModule: () => ts,
 		};
 
 		if (tsLocalized) {

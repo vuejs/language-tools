@@ -2,15 +2,14 @@ import * as shared from '@volar/shared';
 import type * as ts2 from '@volar/typescript-language-service';
 import { isIntrinsicElement } from '@volar/vue-code-gen';
 import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
+import * as vue from '@volar/vue-language-core';
 import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
-import { SearchTexts } from '@volar/vue-typescript';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import type * as vueTs from '@volar/vue-typescript';
 import { VueDocument, VueDocuments } from '../vueDocuments';
 import useHtmlPlugin from './html';
 
@@ -65,7 +64,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		tag: 'both' | 'kebabCase' | 'pascalCase',
 		attr: 'kebabCase' | 'camelCase',
 	}>,
-	vueLsHost: vueTs.LanguageServiceHost,
+	vueLsHost: vue.LanguageServiceHost,
 	vueDocuments: VueDocuments,
 	tsSettings: ts2.Settings,
 }): EmbeddedLanguageServicePlugin & T {
@@ -757,7 +756,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					let bind: vscode.CompletionItem[] = [];
 					let on: vscode.CompletionItem[] = [];
 					{
-						const searchText = SearchTexts.PropsCompletion(tag.name);
+						const searchText = vue.SearchTexts.PropsCompletion(tag.name);
 						let offset = file.content.indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
@@ -769,7 +768,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 						}
 					}
 					{
-						const searchText = SearchTexts.EmitCompletion(tag.name);
+						const searchText = vue.SearchTexts.EmitCompletion(tag.name);
 						let offset = file.content.indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
@@ -783,7 +782,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					cache.set(tag.name, { item: tag.item, bind, on });
 				}
 				try {
-					const offset = file.content.indexOf(SearchTexts.GlobalAttrs);
+					const offset = file.content.indexOf(vue.SearchTexts.GlobalAttrs);
 					const globalBind = (await options.tsLs.doComplete(document.uri, document.positionAt(offset)))?.items
 						.map(entry => { entry.label = entry.label.replace('?', ''); return entry; })
 						.filter(entry => entry.kind !== vscode.CompletionItemKind.Text) ?? [];

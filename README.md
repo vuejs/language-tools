@@ -124,6 +124,7 @@ flowchart LR
 	%% Volar - Packages
 	VOLAR_VUE_SERVER["@volar/vue-language-server"]
 	VOLAR_VUE_TS["@volar/vue-typescript"]
+	VOLAR_VUE_CORE["@volar/vue-language-core"]
 	VOLAR_VUE_CG["@volar/vue-code-gen"]
 	VOLAR_VUE_SERVICE["@volar/vue-language-service"]
 	VOLAR_PUG_SERVICE["@volar/pug-language-service"]
@@ -148,12 +149,12 @@ flowchart LR
 	HTML_SERVICE[vscode-html-languageservice]
 	CSS_SERVICE[vscode-css-languageservice]
 	JSON_SERVICE[vscode-json-languageservice]
-	TS[typescript]
+	%% TS[typescript]
 	VSC_TS[vscode.typescript-language-features]
 	VUE_REPL["@vue/repl"]
 	MONACO_VOLAR[Kingwl/monaco-volar]
-	VITE_PLUGIN_CHECKER[fi3ework/vite-plugin-checker]
-	COMPILE_VUE_SFC[leonzalion/compile-vue-sfc]
+	%% VITE_PLUGIN_CHECKER[fi3ework/vite-plugin-checker]
+	%% COMPILE_VUE_SFC[leonzalion/compile-vue-sfc]
 
 	click HTML_SERVICE "https://github.com/microsoft/vscode-html-languageservice"
 	click CSS_SERVICE "https://github.com/microsoft/vscode-css-languageservice"
@@ -162,8 +163,8 @@ flowchart LR
 	click VSC_TS "https://github.com/microsoft/vscode/tree/main/extensions/typescript-language-features"
 	click VUE_REPL "https://github.com/vuejs/repl"
 	click MONACO_VOLAR "https://github.com/Kingwl/monaco-volar"
-	click VITE_PLUGIN_CHECKER "https://github.com/fi3ework/vite-plugin-checker"
-	click COMPILE_VUE_SFC "https://github.com/leonzalion/compile-vue-sfc"
+	%% click VITE_PLUGIN_CHECKER "https://github.com/fi3ework/vite-plugin-checker"
+	%% click COMPILE_VUE_SFC "https://github.com/leonzalion/compile-vue-sfc"
 
 	subgraph VUE_CLIENTS[Language Clients]
 	  direction LR
@@ -213,8 +214,8 @@ flowchart LR
 	VSC_TSVP --> TS_VUE_PLUGIN
 	VOLAR_VUE_SERVER --> VOLAR_VUE_SERVICE
 	VUE_TSC --> VOLAR_VUE_TS
-	VITE_PLUGIN_CHECKER --> VUE_TSC
-	COMPILE_VUE_SFC --> VUE_TSC
+	%% VITE_PLUGIN_CHECKER --> VUE_TSC
+	%% COMPILE_VUE_SFC --> VUE_TSC
 	TS_VUE_PLUGIN --> VOLAR_VUE_TS
 
 	VUE_REPL --> MONACO_VOLAR
@@ -223,15 +224,17 @@ flowchart LR
 	%% TS_VUE_PLUGIN --> VOLAR_TS_FASTER
 	%% VOLAR_VUE_SERVICE --> VOLAR_TS_FASTER
 
-	VOLAR_VUE_SERVICE --> VOLAR_VUE_TS
+	%% VOLAR_VUE_TS --> TS
+	VOLAR_VUE_TS --> VOLAR_VUE_CORE
+
+	VOLAR_VUE_SERVICE --> VOLAR_VUE_CORE
 	VOLAR_VUE_SERVICE --> VOLAR_TS_SERVICE
 	VOLAR_VUE_SERVICE --> VOLAR_PUG_SERVICE
 	VOLAR_VUE_SERVICE --> HTML_SERVICE
 	VOLAR_VUE_SERVICE --> CSS_SERVICE
 	VOLAR_VUE_SERVICE --> JSON_SERVICE
 
-	VOLAR_VUE_TS --> TS
-	VOLAR_VUE_TS --> VOLAR_VUE_CG
+	VOLAR_VUE_CORE --> VOLAR_VUE_CG
 ```
 
 ## Sponsors

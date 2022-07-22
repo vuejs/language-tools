@@ -1,0 +1,29 @@
+{
+	"name": "@volar/vue-language-core",
+	"version": "0.38.9",
+	"main": "out/index.js",
+	"license": "MIT",
+	"files": [
+		"out/**/*.js",
+		"out/**/*.d.ts"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/johnsoncodehk/volar.git",
+		"directory": "packages/vue-language-core"
+	},
+	"devDependencies": {
+		"@volar/pug-language-service": "0.38.9",
+		"typescript": "latest"
+	},
+	"dependencies": {
+		"@volar/code-gen": "0.38.9",
+		"@volar/source-map": "0.38.9",
+		"@volar/vue-code-gen": "0.38.9",
+		"@vue/compiler-sfc": "^3.2.37",
+		"@vue/reactivity": "^3.2.37"
+	},
+	"browser": {
+		"./out/plugins/vue-template-pug.js": "./out/plugins/empty.js"
+	}
+}
