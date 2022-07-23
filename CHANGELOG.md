@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.39.1 (2022/7/23)
+
+- fix: typescript-vue-plugin break TS server ([#1624](https://github.com/johnsoncodehk/volar/issues/1624))
+
 ## 0.39.0 (2022/7/23)
 
 - feat: updated vite problemMatcher ([#1606](https://github.com/johnsoncodehk/volar/issues/1606))
