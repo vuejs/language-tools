@@ -3,6 +3,7 @@
 ## 0.39.1 (2022/7/23)
 
 - fix: typescript-vue-plugin break TS server ([#1624](https://github.com/johnsoncodehk/volar/issues/1624))
+- fix: make `takeOverMode.enabled: true` behavior same with `takeOverMode.enabled: 'auto'`
 
 ## 0.39.0 (2022/7/23)
 
