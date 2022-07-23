@@ -161,17 +161,12 @@ export function createProjects(
 			if (req !== documentUpdatedReq)
 				return;
 
-			let _isCancel = false;
-			const isDocCancel = getCancelChecker(changeDoc.uri, changeDoc.version);
-			const isCancel = async () => {
-				const result = req !== documentUpdatedReq || await isDocCancel();
-				_isCancel = result;
-				return result;
-			};
+			const isDocUpdated = checkDocUpdate(changeDoc);
+			const isCancel = async () => req !== documentUpdatedReq || await isDocUpdated();
 
 			await sendDocumentDiagnostics(changeDoc.uri, isCancel);
 
-			if (!_isCancel) {
+			if (!await isCancel()) {
 				updatedUris.delete(changeDoc.uri);
 			}
 		}
@@ -184,16 +179,14 @@ export function createProjects(
 				return;
 
 			const changeDoc = docUri ? getDocumentSafely(documents, docUri) : undefined;
-			const isDocCancel = changeDoc ? getCancelChecker(changeDoc.uri, changeDoc.version) : async () => {
-				await shared.sleep(0);
-				return false;
-			};
-			const isCancel = async () => req !== documentUpdatedReq || await isDocCancel();
+			const isDocCancel = changeDoc ? checkDocUpdate(changeDoc) : undefined;
+			const isCancel = async () => req !== documentUpdatedReq || (await isDocCancel?.() ?? false);
 
 			await sendDocumentDiagnostics(doc.uri, isCancel);
 		}
 
-		function getCancelChecker(uri: string, version: number) {
+		function checkDocUpdate(doc: TextDocument) {
+			const startVersion = doc.version;
 			let _isCancel = false;
 			let lastResultAt = Date.now();
 			return async () => {
@@ -202,12 +195,12 @@ export function createProjects(
 				}
 				if (
 					typeof options.languageFeatures?.diagnostics === 'object'
-					&& options.languageFeatures.diagnostics.getDocumentVersionRequest
-					&& Date.now() - lastResultAt >= 1 // 1ms
+					&& Date.now() - lastResultAt >= 5 // 1ms
 				) {
-					const clientDocVersion = await connection.sendRequest(shared.GetDocumentVersionRequest.type, { uri });
-					if (clientDocVersion !== null && clientDocVersion !== undefined && version !== clientDocVersion) {
+					await shared.sleep(5); // wait for LSP update document version with user input
+					if (doc.version !== startVersion) {
 						_isCancel = true;
+						console.log(`[volar] Canceled diagnostics for ${doc.uri}`);
 					}
 					lastResultAt = Date.now();
 				}

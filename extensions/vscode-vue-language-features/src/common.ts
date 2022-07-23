@@ -5,7 +5,6 @@ import * as activeSelection from './features/activeSelection';
 import * as attrNameCase from './features/attrNameCase';
 import * as callGraph from './features/callGraph';
 import * as createWorkspaceSnippets from './features/createWorkspaceSnippets';
-import * as documentVersion from './features/documentVersion';
 import * as documentContent from './features/documentContent';
 import * as preview from './features/preview';
 import * as showReferences from './features/showReferences';
@@ -177,7 +176,6 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 		for (const client of clients) {
 			showReferences.activate(context, client);
-			documentVersion.activate(context, client);
 			documentContent.activate(context, client);
 			activeSelection.activate(context, client);
 		}
@@ -256,7 +254,7 @@ function getInitializationOptions(
 				codeLens: { showReferencesNotification: true },
 				semanticTokens: true,
 				inlayHints: true,
-				diagnostics: { getDocumentVersionRequest: true },
+				diagnostics: true,
 				schemaRequestService: { getDocumentContentRequest: true },
 			} : {}),
 		} : undefined,

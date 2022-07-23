@@ -11,13 +11,6 @@ export namespace GetDocumentContentRequest {
 	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('vscode/content');
 }
 
-export namespace GetDocumentVersionRequest {
-	export type ParamsType = vscode.TextDocumentIdentifier;
-	export type ResponseType = number | null | undefined;
-	export type ErrorType = never;
-	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('vue/docVersion');
-}
-
 export namespace ShowReferencesNotification {
 	export type ResponseType = vscode.TextDocumentPositionParams & { references: vscode.Location[]; };
 	export const type = new vscode.NotificationType<ResponseType>('vue.findReferences');

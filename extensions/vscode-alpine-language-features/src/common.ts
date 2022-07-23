@@ -1,7 +1,6 @@
 import * as shared from '@volar/shared';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient';
-import * as documentVersion from '../../vscode-vue-language-features/out/features/documentVersion';
 import * as activeSelection from '../../vscode-vue-language-features/out/features/activeSelection';
 import * as tsVersion from '../../vscode-vue-language-features/out/features/tsVersion';
 import * as virtualFiles from '../../vscode-vue-language-features/out/features/virtualFiles';
@@ -142,7 +141,6 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	}
 	function registerClientRequests() {
 		for (const client of clients) {
-			documentVersion.activate(context, client);
 			activeSelection.activate(context, client);
 		}
 	}
@@ -210,7 +208,7 @@ function getInitializationOptions(
 				codeLens: { showReferencesNotification: false },
 				semanticTokens: true,
 				inlayHints: true,
-				diagnostics: { getDocumentVersionRequest: true },
+				diagnostics: true,
 				// schemaRequestService: { getDocumentContentRequest: true },
 				schemaRequestService: false,
 			} : {}),
