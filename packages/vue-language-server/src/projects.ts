@@ -32,7 +32,6 @@ export function createProjects(
 		time: number,
 	} | undefined;
 
-	const updatedUris = new Set<string>();
 	const workspaces = new Map<string, ReturnType<typeof createWorkspace>>();
 
 	for (const rootPath of rootPaths) {
@@ -58,6 +57,8 @@ export function createProjects(
 	});
 	documents.onDidChangeContent(async change => {
 
+		const req = ++documentUpdatedReq;
+
 		await waitForOnDidChangeWatchedFiles(change.document.uri);
 
 		for (const workspace of workspaces.values()) {
@@ -67,7 +68,9 @@ export function createProjects(
 			}
 		}
 
-		updateDiagnostics(change.document.uri);
+		if (req === documentUpdatedReq) {
+			updateDiagnostics(change.document.uri);
+		}
 	});
 	documents.onDidClose(change => {
 		connection.sendDiagnostics({ uri: change.document.uri, diagnostics: [] });
@@ -141,72 +144,36 @@ export function createProjects(
 		if (!options.languageFeatures?.diagnostics)
 			return;
 
-		if (docUri) {
-			updatedUris.add(docUri);
-		}
-
 		const req = ++documentUpdatedReq;
 		const delay = await lsConfigs?.getConfiguration<number>('volar.diagnostics.delay');
+		const isCancel = async () => {
+			await shared.sleep(0); // wait for onDidChangeContent polling
+			return req !== documentUpdatedReq;
+		};
 
-		await shared.sleep(delay ?? 200);
-
-		if (req !== documentUpdatedReq)
-			return;
-
-		const changeDocs = [...updatedUris].map(uri => getDocumentSafely(documents, uri)).filter(shared.notEmpty);
-		const otherDocs = documents.all().filter(doc => !updatedUris.has(doc.uri));
+		const changeDocs = docUri ? [getDocumentSafely(documents, docUri)].filter(shared.notEmpty) : [];
+		const otherDocs = documents.all().filter(doc => doc.uri !== docUri);
 
 		for (const changeDoc of changeDocs) {
 
-			if (req !== documentUpdatedReq)
+			await shared.sleep(delay ?? 200);
+
+			if (await isCancel())
 				return;
 
-			const isDocUpdated = checkDocUpdate(changeDoc);
-			const isCancel = async () => req !== documentUpdatedReq || await isDocUpdated();
-
 			await sendDocumentDiagnostics(changeDoc.uri, isCancel);
-
-			if (!await isCancel()) {
-				updatedUris.delete(changeDoc.uri);
-			}
 		}
 
 		for (const doc of otherDocs) {
 
 			await shared.sleep(delay ?? 200);
 
-			if (req !== documentUpdatedReq)
+			if (await isCancel())
 				return;
-
-			const changeDoc = docUri ? getDocumentSafely(documents, docUri) : undefined;
-			const isDocCancel = changeDoc ? checkDocUpdate(changeDoc) : undefined;
-			const isCancel = async () => req !== documentUpdatedReq || (await isDocCancel?.() ?? false);
 
 			await sendDocumentDiagnostics(doc.uri, isCancel);
 		}
 
-		function checkDocUpdate(doc: TextDocument) {
-			const startVersion = doc.version;
-			let _isCancel = false;
-			let lastResultAt = Date.now();
-			return async () => {
-				if (_isCancel) {
-					return true;
-				}
-				if (
-					typeof options.languageFeatures?.diagnostics === 'object'
-					&& Date.now() - lastResultAt >= 5 // 1ms
-				) {
-					await shared.sleep(5); // wait for LSP update document version with user input
-					if (doc.version !== startVersion) {
-						_isCancel = true;
-						console.log(`[volar] Canceled diagnostics for ${doc.uri}`);
-					}
-					lastResultAt = Date.now();
-				}
-				return _isCancel;
-			};
-		}
 		async function sendDocumentDiagnostics(uri: string, isCancel?: () => Promise<boolean>) {
 
 			const project = (await getProject(uri))?.project;
@@ -217,7 +184,7 @@ export function createProjects(
 				connection.sendDiagnostics({ uri: uri, diagnostics: result });
 			}, isCancel);
 
-			if (errors) {
+			if (!await isCancel?.()) {
 				connection.sendDiagnostics({ uri: uri, diagnostics: errors });
 			}
 		}
