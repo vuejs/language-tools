@@ -202,7 +202,7 @@ export function deactivate(): Thenable<any> | undefined {
 
 export function takeOverModeEnabled() {
 	const status = vscode.workspace.getConfiguration('volar').get<false | 'auto'>('takeOverMode.enabled');
-	if (status === 'auto') {
+	if (status /* true | 'auto' */) {
 		return !vscode.extensions.getExtension('vscode.typescript-language-features');
 	}
 	return false;
