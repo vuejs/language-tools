@@ -104,7 +104,7 @@ export type ConvertInvalidJsxElement<T> = IsComponent<T> extends true ? T : any;
 type IsComponent<T> =
 	T extends (...args: any) => JSX.Element ? true
 	: T extends new (...args: any) => JSX.ElementClass ? true
-	: false;
+	: IsAny<T>
 type ComponentKeys<T> = keyof { [K in keyof T as IsComponent<T[K]> extends true ? K : never]: any };
 `;
 }
