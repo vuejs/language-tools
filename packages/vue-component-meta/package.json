@@ -1,0 +1,21 @@
+{
+	"name": "vue-component-meta",
+	"version": "0.39.0",
+	"main": "out/index.js",
+	"license": "MIT",
+	"files": [
+		"out/**/*.js",
+		"out/**/*.d.ts"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/johnsoncodehk/volar.git",
+		"directory": "packages/vue-component-meta"
+	},
+	"dependencies": {
+		"@volar/vue-language-core": "0.39.0"
+	},
+	"peerDependencies": {
+		"typescript": "*"
+	}
+}

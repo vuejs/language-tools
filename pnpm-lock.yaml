@@ -19,7 +19,7 @@ importers:
       typescript: 4.7.4
       vite: 3.0.2
       vitepress: 1.0.0-alpha.4
-      vitest: 0.18.1
+      vitest: 0.19.0
       vue: 3.2.37
 
   extensions/vscode-alpine-language-features:
@@ -252,6 +252,12 @@ importers:
       '@vue/shared': 3.2.37
     devDependencies:
       typescript: 4.7.4
+
+  packages/vue-component-meta:
+    specifiers:
+      '@volar/vue-language-core': 0.39.0
+    dependencies:
+      '@volar/vue-language-core': link:../vue-language-core
 
   packages/vue-language-core:
     specifiers:
@@ -5311,18 +5317,21 @@ packages:
       - stylus
     dev: true
 
-  /vitest/0.18.1:
-    resolution: {integrity: sha512-4F/1K/Vn4AvJwe7i2YblR02PT5vMKcw9KN4unDq2KD0YcSxX0B/6D6Qu9PJaXwVuxXMFTQ5ovd4+CQaW3bwofA==}
+  /vitest/0.19.0:
+    resolution: {integrity: sha512-nU80Gm95tMchigHpAMukxv1LoWbBGgknX/1MqrXCOoJoJL7/wfq4h2aow61o2jwf5szQrahoNqBqaGb+fYdYrQ==}
     engines: {node: '>=v14.16.0'}
     hasBin: true
     peerDependencies:
       '@edge-runtime/vm': '*'
+      '@vitest/browser': '*'
       '@vitest/ui': '*'
       c8: '*'
       happy-dom: '*'
       jsdom: '*'
     peerDependenciesMeta:
       '@edge-runtime/vm':
+        optional: true
+      '@vitest/browser':
         optional: true
       '@vitest/ui':
         optional: true
