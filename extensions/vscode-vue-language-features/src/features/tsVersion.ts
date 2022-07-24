@@ -1,3 +1,4 @@
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { BaseLanguageClient } from 'vscode-languageclient';
 import * as shared from '@volar/shared';
@@ -21,6 +22,8 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 		const tsdk = getTsdk();
 		const defaultTsServer = shared.getWorkspaceTypescriptPath(defaultTsdk, (vscode.workspace.workspaceFolders ?? []).map(folder => folder.uri.fsPath));
 		const defaultTsVersion = defaultTsServer ? shared.getTypeScriptVersion(defaultTsServer) : undefined;
+		const latestTsPaths = getLatestTsPaths();
+		const latestTsVersion = latestTsPaths ? shared.getTypeScriptVersion(latestTsPaths.serverPath) : undefined;
 
 		const options: Record<string, vscode.QuickPickItem> = {};
 		options[0] = {
@@ -41,8 +44,15 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 				detail: defaultTsdk,
 			};
 		}
-		if (takeOverModeEnabled()) {
+		if (latestTsVersion) {
 			options[3] = {
+				label: 'Use Latest Version',
+				description: latestTsVersion,
+				detail: latestTsPaths!.serverPath
+			};
+		}
+		if (takeOverModeEnabled()) {
+			options[4] = {
 				label: 'What is Takeover Mode?',
 			};
 		}
@@ -51,7 +61,7 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 		if (select === undefined)
 			return; // cancel
 
-		if (select === '3') {
+		if (select === '4') {
 			vscode.env.openExternal(vscode.Uri.parse('https://vuejs.org/guide/typescript/overview.html#takeover-mode'));
 			return;
 		}
@@ -162,4 +172,23 @@ function getTsdk() {
 
 function isUseWorkspaceTsdk(context: vscode.ExtensionContext) {
 	return context.workspaceState.get('typescript.useWorkspaceTsdk', false);
+}
+
+function getLatestTsPaths() {
+	try {
+		const extension = vscode.extensions.getExtension('ms-vscode.vscode-typescript-next');
+		if (extension) {
+			const tsLibPath = path.join(extension.extensionPath, 'node_modules/typescript/lib');
+			const serverPath = shared.findTypescriptModulePathInLib(tsLibPath);
+			if (serverPath) {
+				return {
+					serverPath,
+					localizedPath: shared.findTypescriptLocalizedPathInLib(tsLibPath, vscode.env.language)
+				};
+			}
+		}
+	} catch {
+		// noop
+	}
+	return undefined;
 }
