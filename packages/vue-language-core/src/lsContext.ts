@@ -161,7 +161,7 @@ export function createLanguageContext(
 
 		// .ts / .js / .d.ts / .json ...
 		for (const tsFileVersion of tsFileVersions) {
-			if (!vueFileNames.has(tsFileVersion[0]) && !host.fileExists?.(tsFileVersion[0])) {
+			if (!tsFileNames.has(tsFileVersion[0]) && !host.getScriptSnapshot(tsFileVersion[0])) {
 				// delete
 				tsFileVersions.delete(tsFileVersion[0]);
 				tsFileUpdated = true;
