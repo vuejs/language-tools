@@ -56,8 +56,8 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 	}
 
 	function getComponentMeta(componentPath: string) {
-
-		const sourceFile = program?.getSourceFile(componentPath + '.meta.ts');
+		
+		const sourceFile = program?.getSourceFile(/.vue$/.test(componentPath) ? componentPath + '.meta.ts' : componentPath);
 		if (!sourceFile) {
 			throw 'Could not find main source file';
 		}
@@ -69,33 +69,32 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 
 		const exportedSymbols = typeChecker.getExportsOfModule(moduleSymbol);
 
-		let symbolNode: ts.Expression | undefined;
-
-		for (const symbol of exportedSymbols) {
-
+		const metaList = exportedSymbols.map((symbol) => {
 			const [declaration] = symbol.getDeclarations() ?? [];
+			const name = symbol.escapedName.toString();
+			return { declaration, name };
+		}).filter((symbol): symbol is { declaration: ts.ExportAssignment, name: string; } => ts.isExportAssignment(symbol.declaration))
+			.map(({ declaration, name }) => {
+				const symbolNode = declaration.expression;
+				const symbolType = typeChecker.getTypeAtLocation(symbolNode);
+				const symbolProperties = symbolType.getProperties();
 
-			if (ts.isExportAssignment(declaration)) {
-				symbolNode = declaration.expression;
-			}
+				return {
+					name,
+					props: getProps(symbolNode, symbolProperties),
+					events: getEvents(symbolNode, symbolProperties),
+					slots: getSlots(symbolNode, symbolProperties),
+				};
+			});
+
+		if (metaList.length === 0) {
+			throw 'Could not find a component in this file';
 		}
 
-		if (!symbolNode) {
-			throw 'Could not find symbol node';
-		}
 
-		const symbolType = typeChecker.getTypeAtLocation(symbolNode);
-		const symbolProperties = symbolType.getProperties();
+		return metaList;
 
-		return [{
-			name: 'default',
-			props: getProps(),
-			events: getEvents(),
-			slots: getSlots(),
-		}];
-
-		function getProps() {
-
+		function getProps(symbolNode: ts.Expression, symbolProperties: ts.Symbol[]) {
 			const $props = symbolProperties.find(prop => prop.escapedName === '$props');
 
 			if ($props) {
@@ -112,7 +111,8 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 
 			return [];
 		}
-		function getEvents() {
+
+		function getEvents(symbolNode: ts.Expression, symbolProperties: ts.Symbol[]) {
 
 			const $emit = symbolProperties.find(prop => prop.escapedName === '$emit');
 
@@ -135,7 +135,7 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 
 			return [];
 		}
-		function getSlots() {
+		function getSlots(symbolNode: ts.Expression, symbolProperties: ts.Symbol[]) {
 
 			const propertyName = (parsedCommandLine.vueOptions.target ?? 3) < 3 ? '$scopedSlots' : '$slots';
 			const $slots = symbolProperties.find(prop => prop.escapedName === propertyName);

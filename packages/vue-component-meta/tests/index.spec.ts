@@ -1,13 +1,13 @@
 import * as path from 'path';
-import { describe, expect, it } from 'vitest';
-import * as metaChecker from '..';
+import { describe, expect, test } from 'vitest';
+import * as metaChecker from '../src/index';
 
 describe(`vue-component-meta`, () => {
 
 	const tsconfigPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/tsconfig.json');
 	const checker = metaChecker.createComponentMetaChecker(tsconfigPath);
 
-	it('reference-type-props', () => {
+	test('reference-type-props', () => {
 
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-props/component.vue');
 		const metaList = checker.getComponentMeta(componentPath);
@@ -33,7 +33,7 @@ describe(`vue-component-meta`, () => {
 		expect(b).toBeDefined();
 	});
 
-	it('reference-type-events', () => {
+	test('reference-type-events', () => {
 
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-events/component.vue');
 		const metaList = checker.getComponentMeta(componentPath);
@@ -72,7 +72,7 @@ describe(`vue-component-meta`, () => {
 		expect(c).toBeDefined();
 	});
 
-	it('template-slots', () => {
+	test('template-slots', () => {
 
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/template-slots/component.vue');
 		const metaList = checker.getComponentMeta(componentPath);
@@ -99,7 +99,7 @@ describe(`vue-component-meta`, () => {
 		expect(c).toBeDefined();
 	});
 
-	it('class-slots', () => {
+	test('class-slots', () => {
 
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/class-slots/component.vue');
 		const metaList = checker.getComponentMeta(componentPath);
@@ -115,6 +115,32 @@ describe(`vue-component-meta`, () => {
 		const b = meta.slots.find(slot =>
 			slot.name === 'foo'
 			&& slot.propsType === '{ str: string; }'
+		);
+
+		expect(a).toBeDefined();
+		expect(b).toBeDefined();
+	});
+
+	test('ts-component', () => {
+
+		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/ts-component/component.ts');
+		const metaList = checker.getComponentMeta(componentPath);
+
+		expect(metaList).toEqual(expect.arrayContaining([]));
+
+		const meta = metaList.find(m => m.name === 'default') || { props: [] };
+
+		const a = meta.props.find(prop =>
+			prop.name === 'foo'
+			&& prop.isOptional === false
+			&& prop.type === 'string'
+			&& prop.documentationComment === 'string foo'
+		);
+		const b = meta.props.find(prop =>
+			prop.name === 'bar'
+			&& prop.isOptional === true
+			&& prop.type === 'number | undefined'
+			&& prop.documentationComment === 'optional number bar'
 		);
 
 		expect(a).toBeDefined();
