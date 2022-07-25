@@ -87,11 +87,12 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 		const symbolType = typeChecker.getTypeAtLocation(symbolNode);
 		const symbolProperties = symbolType.getProperties();
 
-		return {
+		return [{
+			name: 'default',
 			props: getProps(),
 			events: getEvents(),
 			slots: getSlots(),
-		};
+		}];
 
 		function getProps() {
 

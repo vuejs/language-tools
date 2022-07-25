@@ -10,7 +10,11 @@ describe(`vue-component-meta`, () => {
 	it('reference-type-props', () => {
 
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-props/component.vue');
-		const meta = checker.getComponentMeta(componentPath);
+		const metaList = checker.getComponentMeta(componentPath);
+
+		expect(metaList).toEqual(expect.arrayContaining([]));
+
+		const meta = metaList.find(m => m.name === 'default') || { props: [] };
 
 		const a = meta.props.find(prop =>
 			prop.name === 'foo'
@@ -32,7 +36,11 @@ describe(`vue-component-meta`, () => {
 	it('reference-type-events', () => {
 
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-events/component.vue');
-		const meta = checker.getComponentMeta(componentPath);
+		const metaList = checker.getComponentMeta(componentPath);
+
+		expect(metaList).toEqual(expect.arrayContaining([]));
+
+		const meta = metaList.find(m => m.name === 'default') || { events: [] };
 
 		const a = meta.events.find(event =>
 			event.name === 'foo'
@@ -67,7 +75,11 @@ describe(`vue-component-meta`, () => {
 	it('template-slots', () => {
 
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/template-slots/component.vue');
-		const meta = checker.getComponentMeta(componentPath);
+		const metaList = checker.getComponentMeta(componentPath);
+
+		expect(metaList).toEqual(expect.arrayContaining([]));
+
+		const meta = metaList.find(m => m.name === 'default') || { slots: [] };
 
 		const a = meta.slots.find(slot =>
 			slot.name === 'default'
@@ -90,7 +102,11 @@ describe(`vue-component-meta`, () => {
 	it('class-slots', () => {
 
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/class-slots/component.vue');
-		const meta = checker.getComponentMeta(componentPath);
+		const metaList = checker.getComponentMeta(componentPath);
+
+		expect(metaList).toEqual(expect.arrayContaining([]));
+
+		const meta = metaList.find(m => m.name === 'default') || { slots: [] };
 
 		const a = meta.slots.find(slot =>
 			slot.name === 'default'
