@@ -23,6 +23,7 @@ export function createProjects(
 	connection: vscode.Connection,
 	lsConfigs: ReturnType<typeof createLsConfigs> | undefined,
 	getInferredCompilerOptions: () => Promise<ts.CompilerOptions>,
+	capabilities: vscode.ClientCapabilities,
 ) {
 
 	let semanticTokensReq = 0;
@@ -33,21 +34,23 @@ export function createProjects(
 	} | undefined;
 	const fileExistsCache = shared.createPathMap<boolean>();
 	const directoryExistsCache = shared.createPathMap<boolean>();
-	const sys: ts.System = {
-		...ts.sys,
-		fileExists(path: string) {
-			if (!fileExistsCache.fsPathHas(path)) {
-				fileExistsCache.fsPathSet(path, ts.sys.fileExists(path));
-			}
-			return fileExistsCache.fsPathGet(path)!;
-		},
-		directoryExists(path: string) {
-			if (!directoryExistsCache.fsPathHas(path)) {
-				directoryExistsCache.fsPathSet(path, ts.sys.directoryExists(path));
-			}
-			return directoryExistsCache.fsPathGet(path)!;
-		},
-	};
+	const sys: ts.System = capabilities.workspace?.didChangeWatchedFiles // don't cache fs result if client not supports file watcher
+		? {
+			...ts.sys,
+			fileExists(path: string) {
+				if (!fileExistsCache.fsPathHas(path)) {
+					fileExistsCache.fsPathSet(path, ts.sys.fileExists(path));
+				}
+				return fileExistsCache.fsPathGet(path)!;
+			},
+			directoryExists(path: string) {
+				if (!directoryExistsCache.fsPathHas(path)) {
+					directoryExistsCache.fsPathSet(path, ts.sys.directoryExists(path));
+				}
+				return directoryExistsCache.fsPathGet(path)!;
+			},
+		}
+		: ts.sys;
 
 	const workspaces = new Map<string, ReturnType<typeof createWorkspace>>();
 

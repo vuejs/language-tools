@@ -92,6 +92,7 @@ export function createLanguageServer(
 				connection,
 				configHost,
 				() => getInferredCompilerOptions(ts, configuration),
+				params.capabilities,
 			);
 
 			(await import('./features/customFeatures')).register(connection, documents, projects);
