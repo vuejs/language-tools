@@ -14,6 +14,33 @@ export type PropertyMetaSchema = string
 	| { kind: 'array', type: string, schema: PropertyMetaSchema[] } 
 	| { kind: 'object', type: string, schema: Record<string, PropertyMeta> }
 
+/**
+ * Helper array to map internal properties added by vue to any components
+ * 
+ * @example
+ * ```ts
+ * import { createComponentMetaChecker, ComponentInternalProperties } from 'vue-component-meta'
+ * 
+ * const checker = createComponentMetaChecker('path/to/tsconfig.json')
+ * const meta = checker.getComponentMeta('path/to/component.vue')
+ * const props = meta.props.filter(prop => !ComponentInternalProperties.includes(prop.name))
+ * ```
+ */
+export const ComponentInternalProperties = [
+	'ref',
+	'key',
+	'ref_for',
+	'ref_key',
+	'onVnodeBeforeMount',
+	'onVnodeMounted',
+	'onVnodeBeforeUpdate',
+	'onVnodeBeforeUnmount',
+	'onVnodeUpdated',
+	'onVnodeUnmounted',
+	'class',
+	'style',
+] as const
+
 export function createComponentMetaChecker(tsconfigPath: string) {
 
 	const parsedCommandLine = vue.tsShared.createParsedCommandLine(ts, {
