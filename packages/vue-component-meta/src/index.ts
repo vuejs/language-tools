@@ -39,7 +39,7 @@ export const ComponentInternalProperties = [
 	'onVnodeUnmounted',
 	'class',
 	'style',
-] as const
+]
 
 export function createComponentMetaChecker(tsconfigPath: string) {
 
