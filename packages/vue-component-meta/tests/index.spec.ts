@@ -12,21 +12,225 @@ describe(`vue-component-meta`, () => {
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-props/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
 
-		const a = meta.props.find(prop =>
+		const foo = meta.props.find(prop =>
 			prop.name === 'foo'
-			&& prop.isOptional === false
+			&& prop.required === true
 			&& prop.type === 'string'
-			&& prop.documentationComment === 'string foo'
+			&& prop.description === 'string foo'
 		);
-		const b = meta.props.find(prop =>
+		const bar = meta.props.find(prop =>
 			prop.name === 'bar'
-			&& prop.isOptional === true
+			&& prop.required === false
 			&& prop.type === 'number | undefined'
-			&& prop.documentationComment === 'optional number bar'
+			&& prop.description === 'optional number bar'
+		);
+		const union = meta.props.find(prop =>
+			prop.name === 'union'
+			&& prop.required === true
+			&& prop.type === 'string | number'
+			&& prop.description === 'required union type'
+		);
+		const unionOptional = meta.props.find(prop =>
+			prop.name === 'unionOptional'
+			&& prop.required === false
+			&& prop.type === 'string | number | undefined'
+			&& prop.description === 'optional union type'
+		);
+		const nested = meta.props.find(prop =>
+			prop.name === 'nested'
+			&& prop.required === true
+			&& prop.type === 'MyNestedProps'
+			&& prop.description === 'required nested object'
+		);
+		const nestedIntersection = meta.props.find(prop =>
+			prop.name === 'nestedIntersection'
+			&& prop.required === true
+			&& prop.type === 'MyNestedProps & { additionalProp: string; }'
+			&& prop.description === 'required nested object with intersection'
+		);
+		const nestedOptional = meta.props.find(prop =>
+			prop.name === 'nestedOptional'
+			&& prop.required === false
+			&& prop.type === 'MyNestedProps | undefined'
+			&& prop.description === 'optional nested object'
+		);
+		const array = meta.props.find(prop =>
+			prop.name === 'array'
+			&& prop.required === true
+			&& prop.type === 'MyNestedProps[]'
+			&& prop.description === 'required array object'
+		);
+		const arrayOptional = meta.props.find(prop =>
+			prop.name === 'arrayOptional'
+			&& prop.required === false
+			&& prop.type === 'MyNestedProps[] | undefined'
+			&& prop.description === 'optional array object'
+		);
+		const enumValue = meta.props.find(prop =>
+			prop.name === 'enumValue'
+			&& prop.required === true
+			&& prop.type === 'MyEnum'
+			&& prop.description === 'enum value'
+		);
+		const literalFromContext = meta.props.find(prop =>
+			prop.name === 'literalFromContext'
+			&& prop.required === true
+			&& prop.type === '"Uncategorized" | "Content" | "Interaction" | "Display" | "Forms" | "Addons"'
+			&& prop.description === 'literal type alias that require context'
 		);
 
-		expect(a).toBeDefined();
-		expect(b).toBeDefined();
+		expect(foo).toBeDefined();
+		expect(foo.schema).toEqual('string')
+
+		expect(bar).toBeDefined();
+		expect(bar.schema).toEqual({ 
+			kind: 'enum',
+			type: 'number | undefined',
+			schema: ['undefined', 'number']
+		})
+
+		expect(union).toBeDefined();
+		expect(union.schema).toEqual({ 
+			kind: 'enum',
+			type: 'string | number',
+			schema: ['string', 'number']
+		})
+
+		expect(unionOptional).toBeDefined();
+		expect(unionOptional.schema).toEqual({ 
+			kind: 'enum',
+			type: 'string | number | undefined',
+			schema: ['undefined', 'string', 'number']
+		})
+
+		expect(nested).toBeDefined();
+		expect(nested.schema).toEqual({ 
+			kind: 'object',
+			type: 'MyNestedProps',
+			schema: {
+				nestedProp: {
+          name: 'nestedProp',
+          description: 'nested prop documentation',
+          required: true,
+          type: 'string',
+          schema: 'string'
+        }
+			}
+		})
+
+		expect(nestedIntersection).toBeDefined();
+		expect(nestedIntersection.schema).toEqual({ 
+			kind: 'object',
+			type: 'MyNestedProps & { additionalProp: string; }',
+			schema: {
+				nestedProp: {
+          name: 'nestedProp',
+          description: 'nested prop documentation',
+          required: true,
+          type: 'string',
+          schema: 'string'
+        },
+        additionalProp: {
+          name: 'additionalProp',
+          description: 'required additional property',
+          required: true,
+          type: 'string',
+          schema: 'string'
+        }
+			}
+		})
+
+		expect(nestedOptional).toBeDefined();
+		expect(nestedOptional.schema).toEqual({ 
+			kind: 'enum',
+			type: 'MyNestedProps | undefined',
+			schema: [
+        'undefined',
+				{
+					kind: 'object',
+					type: 'MyNestedProps',
+					schema: {
+						nestedProp: {
+							name: 'nestedProp',
+							description: 'nested prop documentation',
+							required: true,
+							type: 'string',
+							schema: 'string'
+						}
+					}
+				}
+			]
+		})
+
+		expect(array).toBeDefined();
+		expect(array.schema).toEqual({ 
+			kind: 'array',
+      type: 'MyNestedProps[]',
+      schema: [
+        {
+          kind: 'object',
+          type: 'MyNestedProps',
+          schema: {
+            nestedProp: {
+              name: 'nestedProp',
+              description: 'nested prop documentation',
+              required: true,
+              type: 'string',
+              schema: 'string'
+            }
+          }
+        }
+      ]
+		})
+
+		expect(arrayOptional).toBeDefined();
+		expect(arrayOptional.schema).toEqual({ 
+			kind: 'enum',
+			type: 'MyNestedProps[] | undefined',
+			schema: [
+        'undefined',
+				{
+					kind: 'array',
+					type: 'MyNestedProps[]',
+					schema: [
+						{
+							kind: 'object',
+							type: 'MyNestedProps',
+							schema: {
+								nestedProp: {
+									name: 'nestedProp',
+									description: 'nested prop documentation',
+									required: true,
+									type: 'string',
+									schema: 'string'
+								}
+							}
+						}
+					]
+				}
+			]
+		})
+
+		expect(enumValue).toBeDefined();
+		expect(enumValue.schema).toEqual({ 
+			kind: 'enum',
+      type: 'MyEnum',
+      schema: [ 'MyEnum.Small', 'MyEnum.Medium', 'MyEnum.Large' ]
+		})
+
+		expect(literalFromContext).toBeDefined();
+		expect(literalFromContext.schema).toEqual({ 
+			kind: 'enum',
+      type: '"Uncategorized" | "Content" | "Interaction" | "Display" | "Forms" | "Addons"',
+      schema: [
+        '"Uncategorized"',
+        '"Content"',
+        '"Interaction"',
+        '"Display"',
+        '"Forms"',
+        '"Addons"'
+      ]
+		})
 	});
 
 	it('reference-type-events', () => {
