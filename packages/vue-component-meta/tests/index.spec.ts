@@ -24,6 +24,12 @@ describe(`vue-component-meta`, () => {
 			&& prop.type === 'number | undefined'
 			&& prop.description === 'optional number bar'
 		);
+		const baz = meta.props.find(prop =>
+			prop.name === 'baz'
+			&& prop.required === true
+			&& prop.type === 'string[]'
+			&& prop.description === 'string array baz'
+		);
 		const union = meta.props.find(prop =>
 			prop.name === 'union'
 			&& prop.required === true
@@ -87,6 +93,13 @@ describe(`vue-component-meta`, () => {
 			kind: 'enum',
 			type: 'number | undefined',
 			schema: ['undefined', 'number']
+		})
+
+		expect(baz).toBeDefined();
+		expect(baz.schema).toEqual({ 
+			kind: 'array',
+      type: 'string[]',
+      schema: ['string']
 		})
 
 		expect(union).toBeDefined();

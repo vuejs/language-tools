@@ -32,6 +32,10 @@ export interface MyProps {
 	 */
 	bar?: number,
 	/**
+	 * string array baz
+	 */
+	baz: string[],
+	/**
 	 * required union type
 	 */
 	union: string | number,
