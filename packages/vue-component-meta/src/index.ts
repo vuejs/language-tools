@@ -143,7 +143,7 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 					return {
 						name: prop.escapedName,
 						description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
-						isOptional: !!prop.declarations?.[0]?.questionToken,
+						required: !prop.declarations?.[0]?.questionToken,
 						type: typeChecker.typeToString(subtype),
 						schema: resolveSchema(subtype),
 					}
@@ -169,7 +169,7 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 					parameters: typeChecker.getTypeArguments(typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode!)).map(arg => ({
 						name: 'TODO',
 						type: typeChecker.typeToString(arg),
-						isOptional: 'TODO',
+						required: 'TODO',
 					})),
 					description: ts.displayPartsToString(call.getDocumentationComment(typeChecker)),
 				}));
