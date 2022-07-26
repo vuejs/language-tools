@@ -16,12 +16,14 @@ describe(`vue-component-meta`, () => {
 			prop.name === 'foo'
 			&& prop.isOptional === false
 			&& prop.type === 'string'
+			&& prop.defaultValue === '"sample"'
 			&& prop.documentationComment === 'string foo'
 		);
 		const b = meta.props.find(prop =>
 			prop.name === 'bar'
 			&& prop.isOptional === true
 			&& prop.type === 'number | undefined'
+			&& prop.defaultValue === '1'
 			&& prop.documentationComment === 'optional number bar'
 		);
 
