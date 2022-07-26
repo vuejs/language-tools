@@ -86,38 +86,38 @@ describe(`vue-component-meta`, () => {
 		);
 
 		expect(foo).toBeDefined();
-		expect(foo.schema).toEqual('string')
+		expect(foo?.schema).toEqual('string')
 
 		expect(bar).toBeDefined();
-		expect(bar.schema).toEqual({ 
+		expect(bar?.schema).toEqual({ 
 			kind: 'enum',
 			type: 'number | undefined',
 			schema: ['undefined', 'number']
 		})
 
 		expect(baz).toBeDefined();
-		expect(baz.schema).toEqual({ 
+		expect(baz?.schema).toEqual({ 
 			kind: 'array',
       type: 'string[]',
       schema: ['string']
 		})
 
 		expect(union).toBeDefined();
-		expect(union.schema).toEqual({ 
+		expect(union?.schema).toEqual({ 
 			kind: 'enum',
 			type: 'string | number',
 			schema: ['string', 'number']
 		})
 
 		expect(unionOptional).toBeDefined();
-		expect(unionOptional.schema).toEqual({ 
+		expect(unionOptional?.schema).toEqual({ 
 			kind: 'enum',
 			type: 'string | number | undefined',
 			schema: ['undefined', 'string', 'number']
 		})
 
 		expect(nested).toBeDefined();
-		expect(nested.schema).toEqual({ 
+		expect(nested?.schema).toEqual({ 
 			kind: 'object',
 			type: 'MyNestedProps',
 			schema: {
@@ -132,7 +132,7 @@ describe(`vue-component-meta`, () => {
 		})
 
 		expect(nestedIntersection).toBeDefined();
-		expect(nestedIntersection.schema).toEqual({ 
+		expect(nestedIntersection?.schema).toEqual({ 
 			kind: 'object',
 			type: 'MyNestedProps & { additionalProp: string; }',
 			schema: {
@@ -154,7 +154,7 @@ describe(`vue-component-meta`, () => {
 		})
 
 		expect(nestedOptional).toBeDefined();
-		expect(nestedOptional.schema).toEqual({ 
+		expect(nestedOptional?.schema).toEqual({ 
 			kind: 'enum',
 			type: 'MyNestedProps | undefined',
 			schema: [
@@ -176,7 +176,7 @@ describe(`vue-component-meta`, () => {
 		})
 
 		expect(array).toBeDefined();
-		expect(array.schema).toEqual({ 
+		expect(array?.schema).toEqual({ 
 			kind: 'array',
       type: 'MyNestedProps[]',
       schema: [
@@ -197,7 +197,7 @@ describe(`vue-component-meta`, () => {
 		})
 
 		expect(arrayOptional).toBeDefined();
-		expect(arrayOptional.schema).toEqual({ 
+		expect(arrayOptional?.schema).toEqual({ 
 			kind: 'enum',
 			type: 'MyNestedProps[] | undefined',
 			schema: [
@@ -225,14 +225,14 @@ describe(`vue-component-meta`, () => {
 		})
 
 		expect(enumValue).toBeDefined();
-		expect(enumValue.schema).toEqual({ 
+		expect(enumValue?.schema).toEqual({ 
 			kind: 'enum',
       type: 'MyEnum',
       schema: [ 'MyEnum.Small', 'MyEnum.Medium', 'MyEnum.Large' ]
 		})
 
 		expect(literalFromContext).toBeDefined();
-		expect(literalFromContext.schema).toEqual({ 
+		expect(literalFromContext?.schema).toEqual({ 
 			kind: 'enum',
       type: '"Uncategorized" | "Content" | "Interaction" | "Display" | "Forms" | "Addons"',
       schema: [
