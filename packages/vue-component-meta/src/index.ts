@@ -128,7 +128,7 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 					  : typeChecker.typeToString(subtype)
 				}
 				function resolveArraySchema (subtype: ts.Type): PropertyMetaSchema {
-					// @ts-ignore - typescript dts bug, isArrayType exists
+					// @ts-ignore - typescript internal, isArrayType exists
 					return typeChecker.isArrayType(subtype)
 						? {
 							kind: 'array',
