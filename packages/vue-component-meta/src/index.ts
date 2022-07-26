@@ -99,14 +99,43 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 
 			if ($props) {
 				const type = typeChecker.getTypeOfSymbolAtLocation($props, symbolNode!);
-				const properties = type.getProperties();
-				return properties.map(prop => ({
-					name: prop.escapedName as string,
-					// @ts-ignore
-					isOptional: !!prop.declarations?.[0]?.questionToken,
-					type: typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!)),
-					documentationComment: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
-				}));
+				const properties = type.getApparentProperties();
+
+				function reducer (acc: any, cur: any) {
+					acc[cur.name] = cur
+					return acc
+				}
+				function resolveNestedSchema (subtype: ts.Type) {
+						return (subtype.isClassOrInterface() || subtype.isIntersection())
+								? typeChecker.getBaseTypes(subtype as any).map(extractor).reduce(reducer, {})
+								: typeChecker.typeToString(subtype)
+				}
+				function resolveArraySchema (subtype: ts.Type): any {
+						// @ts-ignore - typescript dts bug, isArrayType exists
+						return typeChecker.isArrayType(subtype)
+								? { type: 'array', value: typeChecker.getTypeArguments(subtype as ts.TypeReference).map(resolveSchema) }
+								: resolveNestedSchema(subtype)
+						
+				}
+				function resolveSchema (subtype: ts.Type) {
+						return subtype.isUnion() 
+								? { type: 'enum', value: subtype.types.map(resolveArraySchema) }
+								: resolveArraySchema(subtype)
+				}
+
+				const extractor = (prop: any): any => {
+					const subtype = typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!)
+					typeChecker.getDefaultFromTypeParameter(subtype);
+
+					return {
+						name: prop.escapedName,
+						documentationComment: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
+						isOptional: !!prop.declarations?.[0]?.questionToken,
+						type: typeChecker.typeToString(subtype),
+						schema: resolveSchema(subtype),
+					}
+				}
+				return properties.map(extractor);
 			}
 
 			return [];
