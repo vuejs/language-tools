@@ -24,7 +24,17 @@ type MyCategories = typeof categories[number]
 
 export interface MyProps {
 	/**
-	 * string foo
+   * string foo
+   *
+   * @default "rounded"
+   * @since v1.0.0
+   * @see https://vuejs.org/
+   * @example
+   * ```vue
+   * <template>
+   *   <component foo="straight" />
+   * </template>
+   * ```
 	 */
 	foo: string,
 	/**

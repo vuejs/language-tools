@@ -12,6 +12,7 @@ export type PropertyMeta = {
 export type PropertyMetaSchema = string 
 	| { kind: 'enum', type: string, schema: PropertyMetaSchema[] } 
 	| { kind: 'array', type: string, schema: PropertyMetaSchema[] } 
+	| { kind: 'event', type: string, schema: PropertyMetaSchema[] } 
 	| { kind: 'object', type: string, schema: Record<string, PropertyMeta> }
 
 /**
@@ -145,6 +146,18 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 					acc[cur.name] = cur
 					return acc
 				}
+				function resolveCallbackSchema (signature: ts.Signature): PropertyMetaSchema {
+					return {
+						kind: 'event',
+						type: typeChecker.signatureToString(signature),
+						schema: typeChecker.getTypeArguments(typeChecker.getTypeOfSymbolAtLocation(signature.parameters[0], symbolNode!) as ts.TypeReference).map(resolveSchema)
+					}
+				}
+				function resolveEventSchema (subtype: ts.Type): PropertyMetaSchema {
+					return (subtype.getCallSignatures().length === 1)
+						? resolveCallbackSchema(subtype.getCallSignatures()[0])
+					  : typeChecker.typeToString(subtype)
+				}
 				function resolveNestedSchema (subtype: ts.Type): PropertyMetaSchema {
 					return (subtype.isClassOrInterface() || subtype.isIntersection())
 						? {
@@ -152,11 +165,11 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 							type: typeChecker.typeToString(subtype),
 							schema: subtype.getApparentProperties().map(resolver).reduce(reducer, {})
 						}
-					  : typeChecker.typeToString(subtype)
+					  : resolveEventSchema(subtype)
 				}
 				function resolveArraySchema (subtype: ts.Type): PropertyMetaSchema {
 					// @ts-ignore - typescript internal, isArrayType exists
-					return typeChecker.isArrayType(subtype)
+					return typeChecker.isArrayLikeType(subtype)
 						? {
 							kind: 'array',
 							type: typeChecker.typeToString(subtype),
@@ -174,14 +187,18 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 						: resolveArraySchema(subtype)
 				}
 
-				const resolver = (prop: any): any => {
+				const resolver = (prop: ts.Symbol): any => {
 					const subtype = typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!)
 					typeChecker.getDefaultFromTypeParameter(subtype);
 
 					return {
 						name: prop.escapedName,
 						description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
-						required: !prop.declarations?.[0]?.questionToken,
+						tags: prop.getJsDocTags(typeChecker).map(tag => ({
+							name: tag.name,
+							text: tag.text?.map(part => part.text).join(''),
+						})),
+						required: !Boolean((prop.declarations?.[0] as ts.ParameterDeclaration)?.questionToken ?? false),
 						type: typeChecker.typeToString(subtype),
 						schema: resolveSchema(subtype),
 					}
@@ -210,6 +227,8 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 						required: 'TODO',
 					})),
 					description: ts.displayPartsToString(call.getDocumentationComment(typeChecker)),
+					type: typeChecker.typeToString(type),
+					signature: typeChecker.signatureToString(call),
 				}));
 			}
 
