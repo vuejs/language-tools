@@ -1,7 +1,18 @@
 import * as vue from '@volar/vue-language-core';
 import * as ts from 'typescript/lib/tsserverlibrary';
 
-export type PropertyMetaSchema = string | { kind: 'enum', type: string, schema: any[] } | { kind: 'array', type: string, schema: any[] } | { kind: 'object', type: string, schema: Record<string, any> }
+export type PropertyMeta = {
+	name: string;
+	description: string;
+	required: boolean;
+	type: string;
+	schema: PropertyMetaSchema;
+}
+
+export type PropertyMetaSchema = string 
+	| { kind: 'enum', type: string, schema: PropertyMetaSchema[] } 
+	| { kind: 'array', type: string, schema: PropertyMetaSchema[] } 
+	| { kind: 'object', type: string, schema: Record<string, PropertyMeta> }
 
 export function createComponentMetaChecker(tsconfigPath: string) {
 
@@ -95,7 +106,7 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 			slots: getSlots(),
 		};
 
-		function getProps() {
+		function getProps(): PropertyMeta[] {
 
 			const $props = symbolProperties.find(prop => prop.escapedName === '$props');
 
