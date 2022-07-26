@@ -1,6 +1,8 @@
 import * as vue from '@volar/vue-language-core';
 import * as ts from 'typescript/lib/tsserverlibrary';
 
+export type PropertyMetaSchema = string | { kind: 'enum', type: string, schema: any[] } | { kind: 'array', type: string, schema: any[] } | { kind: 'object', type: string, schema: Record<string, any> }
+
 export function createComponentMetaChecker(tsconfigPath: string) {
 
 	const parsedCommandLine = vue.tsShared.createParsedCommandLine(ts, {
@@ -105,25 +107,36 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 					acc[cur.name] = cur
 					return acc
 				}
-				function resolveNestedSchema (subtype: ts.Type) {
-						return (subtype.isClassOrInterface() || subtype.isIntersection())
-								? typeChecker.getBaseTypes(subtype as any).map(extractor).reduce(reducer, {})
-								: typeChecker.typeToString(subtype)
+				function resolveNestedSchema (subtype: ts.Type): PropertyMetaSchema {
+					return (subtype.isClassOrInterface() || subtype.isIntersection())
+						? {
+							kind: 'object',
+							type: typeChecker.typeToString(subtype),
+							schema: subtype.getApparentProperties().map(resolver).reduce(reducer, {})
+						}
+					  : typeChecker.typeToString(subtype)
 				}
-				function resolveArraySchema (subtype: ts.Type): any {
-						// @ts-ignore - typescript dts bug, isArrayType exists
-						return typeChecker.isArrayType(subtype)
-								? { type: 'array', value: typeChecker.getTypeArguments(subtype as ts.TypeReference).map(resolveSchema) }
-								: resolveNestedSchema(subtype)
-						
+				function resolveArraySchema (subtype: ts.Type): PropertyMetaSchema {
+					// @ts-ignore - typescript dts bug, isArrayType exists
+					return typeChecker.isArrayType(subtype)
+						? {
+							kind: 'array',
+							type: typeChecker.typeToString(subtype),
+							schema: typeChecker.getTypeArguments(subtype as ts.TypeReference).map(resolveSchema)
+						}
+						: resolveNestedSchema(subtype)
 				}
-				function resolveSchema (subtype: ts.Type) {
-						return subtype.isUnion() 
-								? { type: 'enum', value: subtype.types.map(resolveArraySchema) }
-								: resolveArraySchema(subtype)
+				function resolveSchema (subtype: ts.Type): PropertyMetaSchema {
+					return subtype.isUnion()
+						? {
+							kind: 'enum',
+							type: typeChecker.typeToString(subtype),
+							schema: subtype.types.map(resolveArraySchema)
+						}
+						: resolveArraySchema(subtype)
 				}
 
-				const extractor = (prop: any): any => {
+				const resolver = (prop: any): any => {
 					const subtype = typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!)
 					typeChecker.getDefaultFromTypeParameter(subtype);
 
@@ -135,7 +148,8 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 						schema: resolveSchema(subtype),
 					}
 				}
-				return properties.map(extractor);
+
+				return properties.map(resolver);
 			}
 
 			return [];
