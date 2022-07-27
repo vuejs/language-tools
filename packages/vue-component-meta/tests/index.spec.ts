@@ -367,28 +367,6 @@ describe(`vue-component-meta`, () => {
 		expect(b).toBeDefined();
 	});
 
-	test('ts-component', () => {
-
-		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/ts-component/component.ts');
-		const meta = checker.getComponentMeta(componentPath);
-
-		const a = meta.props.find(prop =>
-			prop.name === 'foo'
-			&& prop.required === true
-			&& prop.type === 'string'
-			&& prop.description === 'string foo'
-		);
-		const b = meta.props.find(prop =>
-			prop.name === 'bar'
-			&& prop.required === false
-			&& prop.type === 'number | undefined'
-			&& prop.description === 'optional number bar'
-		);
-
-		expect(a).toBeDefined();
-		expect(b).toBeDefined();
-	});
-
 	test('exposed', () => {
 
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-exposed/component.vue');
@@ -401,5 +379,26 @@ describe(`vue-component-meta`, () => {
 		);
 
 		expect(counter).toBeDefined();
+	});
+
+	test('ts-named-exports', () => {
+
+		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/ts-named-export/component.ts');
+		const Foo = checker.getComponentMeta(componentPath, 'Foo');
+		const Bar = checker.getComponentMeta(componentPath, 'Bar');
+
+		const a = Foo.props.find(prop =>
+			prop.name === 'foo'
+			&& prop.required === true
+			&& prop.type === 'string'
+		);
+		const b = Bar.props.find(prop =>
+			prop.name === 'bar'
+			&& prop.required === false
+			&& prop.type === 'number | undefined'
+		);
+
+		expect(a).toBeDefined();
+		expect(b).toBeDefined();
 	});
 });

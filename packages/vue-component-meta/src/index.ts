@@ -166,12 +166,12 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 
 	function getMetaScriptContent(fileName: string) {
 		return `
-			import Component from '${fileName.substring(0, fileName.length - '.meta.ts'.length)}';
-			export default new Component();
+			import * as Components from '${fileName.substring(0, fileName.length - '.meta.ts'.length)}';
+			export default {} as { [K in keyof typeof Components]: InstanceType<typeof Components[K]>; };;
 		`;
 	}
 
-	function getComponentMeta(componentPath: string) {
+	function getComponentMeta(componentPath: string, exportName = 'default') {
 
 		const sourceFile = program?.getSourceFile(getMetaFileName(componentPath));
 		if (!sourceFile) {
@@ -200,8 +200,16 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 			throw 'Could not find symbol node';
 		}
 
-		const symbolType = typeChecker.getTypeAtLocation(symbolNode);
-		const symbolProperties = symbolType.getProperties();
+		const exportDefaultType = typeChecker.getTypeAtLocation(symbolNode);
+		const exports = exportDefaultType.getProperties();
+		const _export = exports.find((property) => property.getName() === exportName);
+
+		if (!_export) {
+			throw `Could not find export ${exportName}`;
+		}
+
+		const componentType = typeChecker.getTypeOfSymbolAtLocation(_export, symbolNode!);
+		const symbolProperties = componentType.getProperties() ?? [];
 
 		return {
 			props: getProps(),
@@ -252,7 +260,7 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 				const type = typeChecker.getTypeOfSymbolAtLocation($slots, symbolNode!);
 				const properties = type.getProperties();
 				return properties.map(prop => ({
-					name: prop.escapedName as string,
+					name: prop.getName(),
 					propsType: typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!).getCallSignatures()[0].parameters[0], symbolNode!)),
 					// props: {}, // TODO
 					description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
@@ -271,7 +279,7 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 
 			if (exposed.length) {
 				return exposed.map(expose => ({
-					name: expose.escapedName as string,
+					name: expose.getName(),
 					type: typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(expose, symbolNode!)),
 					description: ts.displayPartsToString(expose.getDocumentationComment(typeChecker)),
 				}));
