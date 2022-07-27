@@ -2,7 +2,7 @@ import * as path from 'path';
 import { describe, expect, it } from 'vitest';
 import * as metaChecker from '..';
 
-describe.only(`vue-component-meta`, () => {
+describe(`vue-component-meta`, () => {
 
 	const tsconfigPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/tsconfig.json');
 	const checker = metaChecker.createComponentMetaChecker(tsconfigPath);
