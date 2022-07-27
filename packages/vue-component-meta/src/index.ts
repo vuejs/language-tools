@@ -272,7 +272,7 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 				return exposed.map(expose => ({
 					name: expose.escapedName as string,
 					type: typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(expose, symbolNode!)),
-					documentationComment: ts.displayPartsToString(expose.getDocumentationComment(typeChecker)),
+					description: ts.displayPartsToString(expose.getDocumentationComment(typeChecker)),
 				}));
 			}
 
