@@ -375,7 +375,7 @@ describe(`vue-component-meta`, () => {
 		const counter = meta.exposed.find(exposed =>
 			exposed.name === 'counter'
 			&& exposed.type === 'string'
-			&& exposed.documentationComment === 'a counter string'
+			&& exposed.description === 'a counter string'
 		);
 
 		expect(counter).toBeDefined();
