@@ -157,6 +157,7 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 	const typeChecker = program.getTypeChecker();
 
 	return {
+		getExportNames,
 		getComponentMeta,
 	};
 
@@ -171,37 +172,13 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 		`;
 	}
 
+	function getExportNames(componentPath: string) {
+		return _getExports(componentPath).exports.map(e => e.getName());
+	}
+
 	function getComponentMeta(componentPath: string, exportName = 'default') {
 
-		const sourceFile = program?.getSourceFile(getMetaFileName(componentPath));
-		if (!sourceFile) {
-			throw 'Could not find main source file';
-		}
-
-		const moduleSymbol = typeChecker.getSymbolAtLocation(sourceFile);
-		if (!moduleSymbol) {
-			throw 'Could not find module symbol';
-		}
-
-		const exportedSymbols = typeChecker.getExportsOfModule(moduleSymbol);
-
-		let symbolNode: ts.Expression | undefined;
-
-		for (const symbol of exportedSymbols) {
-
-			const [declaration] = symbol.getDeclarations() ?? [];
-
-			if (ts.isExportAssignment(declaration)) {
-				symbolNode = declaration.expression;
-			}
-		}
-
-		if (!symbolNode) {
-			throw 'Could not find symbol node';
-		}
-
-		const exportDefaultType = typeChecker.getTypeAtLocation(symbolNode);
-		const exports = exportDefaultType.getProperties();
+		const { symbolNode, exports } = _getExports(componentPath);
 		const _export = exports.find((property) => property.getName() === exportName);
 
 		if (!_export) {
@@ -232,6 +209,7 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 
 			return [];
 		}
+
 		function getEvents() {
 
 			const $emit = symbolProperties.find(prop => prop.escapedName === '$emit');
@@ -251,6 +229,7 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 
 			return [];
 		}
+
 		function getSlots() {
 
 			const propertyName = (parsedCommandLine.vueOptions.target ?? 3) < 3 ? '$scopedSlots' : '$slots';
@@ -287,5 +266,43 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 
 			return [];
 		}
+	}
+
+	function _getExports(componentPath: string) {
+
+		const sourceFile = program?.getSourceFile(getMetaFileName(componentPath));
+		if (!sourceFile) {
+			throw 'Could not find main source file';
+		}
+
+		const moduleSymbol = typeChecker.getSymbolAtLocation(sourceFile);
+		if (!moduleSymbol) {
+			throw 'Could not find module symbol';
+		}
+
+		const exportedSymbols = typeChecker.getExportsOfModule(moduleSymbol);
+
+		let symbolNode: ts.Expression | undefined;
+
+		for (const symbol of exportedSymbols) {
+
+			const [declaration] = symbol.getDeclarations() ?? [];
+
+			if (ts.isExportAssignment(declaration)) {
+				symbolNode = declaration.expression;
+			}
+		}
+
+		if (!symbolNode) {
+			throw 'Could not find symbol node';
+		}
+
+		const exportDefaultType = typeChecker.getTypeAtLocation(symbolNode);
+		const exports = exportDefaultType.getProperties();
+
+		return {
+			symbolNode,
+			exports,
+		};
 	}
 }

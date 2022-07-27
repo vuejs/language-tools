@@ -384,8 +384,11 @@ describe(`vue-component-meta`, () => {
 	test('ts-named-exports', () => {
 
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/ts-named-export/component.ts');
+		const exportNames = checker.getExportNames(componentPath);
 		const Foo = checker.getComponentMeta(componentPath, 'Foo');
 		const Bar = checker.getComponentMeta(componentPath, 'Bar');
+
+		expect(exportNames).toEqual(['Foo', 'Bar']);
 
 		const a = Foo.props.find(prop =>
 			prop.name === 'foo'
