@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { describe, expect, it, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import * as metaChecker from '..';
 
 describe(`vue-component-meta`, () => {
@@ -7,7 +7,7 @@ describe(`vue-component-meta`, () => {
 	const tsconfigPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/tsconfig.json');
 	const checker = metaChecker.createComponentMetaChecker(tsconfigPath);
 
-	it('reference-type-props', () => {
+	test('reference-type-props', () => {
 
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-props/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
@@ -290,7 +290,7 @@ describe(`vue-component-meta`, () => {
 		});
 	});
 
-	it('reference-type-events', () => {
+	test('reference-type-events', () => {
 
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-events/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
@@ -326,7 +326,7 @@ describe(`vue-component-meta`, () => {
 		expect(onBaz?.schema).toEqual([]);
 	});
 
-	it('template-slots', () => {
+	test('template-slots', () => {
 
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/template-slots/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
@@ -349,7 +349,7 @@ describe(`vue-component-meta`, () => {
 		expect(c).toBeDefined();
 	});
 
-	it('class-slots', () => {
+	test('class-slots', () => {
 
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/class-slots/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
@@ -379,5 +379,29 @@ describe(`vue-component-meta`, () => {
 		);
 
 		expect(counter).toBeDefined();
+	});
+
+	test('ts-named-exports', () => {
+
+		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/ts-named-export/component.ts');
+		const exportNames = checker.getExportNames(componentPath);
+		const Foo = checker.getComponentMeta(componentPath, 'Foo');
+		const Bar = checker.getComponentMeta(componentPath, 'Bar');
+
+		expect(exportNames).toEqual(['Foo', 'Bar']);
+
+		const a = Foo.props.find(prop =>
+			prop.name === 'foo'
+			&& prop.required === true
+			&& prop.type === 'string'
+		);
+		const b = Bar.props.find(prop =>
+			prop.name === 'bar'
+			&& prop.required === false
+			&& prop.type === 'number | undefined'
+		);
+
+		expect(a).toBeDefined();
+		expect(b).toBeDefined();
 	});
 });

@@ -133,13 +133,10 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 		useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,
 		getCompilationSettings: () => parsedCommandLine.options,
 		getScriptFileNames: () => {
-			const result = [...parsedCommandLine.fileNames];
-			for (const fileName of parsedCommandLine.fileNames) {
-				if (fileName.endsWith('.vue')) {
-					result.push(fileName + '.meta.ts');
-				}
-			}
-			return result;
+			return [
+				...parsedCommandLine.fileNames,
+				...parsedCommandLine.fileNames.map(getMetaFileName),
+			];
 		},
 		getProjectReferences: () => parsedCommandLine.projectReferences,
 		getScriptVersion: (fileName) => '0',
@@ -160,19 +157,120 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 	const typeChecker = program.getTypeChecker();
 
 	return {
+		getExportNames,
 		getComponentMeta,
 	};
 
+	function getMetaFileName(fileName: string) {
+		return (fileName.endsWith('.vue') ? fileName : fileName.substring(0, fileName.lastIndexOf('.'))) + '.meta.ts';
+	}
+
 	function getMetaScriptContent(fileName: string) {
 		return `
-			import Component from '${fileName.substring(0, fileName.length - '.meta.ts'.length)}';
-			export default new Component();
+			import * as Components from '${fileName.substring(0, fileName.length - '.meta.ts'.length)}';
+			export default {} as { [K in keyof typeof Components]: InstanceType<typeof Components[K]>; };;
 		`;
 	}
 
-	function getComponentMeta(componentPath: string) {
+	function getExportNames(componentPath: string) {
+		return _getExports(componentPath).exports.map(e => e.getName());
+	}
 
-		const sourceFile = program?.getSourceFile(componentPath + '.meta.ts');
+	function getComponentMeta(componentPath: string, exportName = 'default') {
+
+		const { symbolNode, exports } = _getExports(componentPath);
+		const _export = exports.find((property) => property.getName() === exportName);
+
+		if (!_export) {
+			throw `Could not find export ${exportName}`;
+		}
+
+		const componentType = typeChecker.getTypeOfSymbolAtLocation(_export, symbolNode!);
+		const symbolProperties = componentType.getProperties() ?? [];
+
+		return {
+			props: getProps(),
+			events: getEvents(),
+			slots: getSlots(),
+			exposed: getExposed(),
+		};
+
+		function getProps() {
+
+			const $props = symbolProperties.find(prop => prop.escapedName === '$props');
+
+			if ($props) {
+				const type = typeChecker.getTypeOfSymbolAtLocation($props, symbolNode!);
+				const properties = type.getApparentProperties();
+				const { resolveSymbolSchema } = createSchemaResolvers(typeChecker, symbolNode!);
+
+				return properties.map(resolveSymbolSchema);
+			}
+
+			return [];
+		}
+
+		function getEvents() {
+
+			const $emit = symbolProperties.find(prop => prop.escapedName === '$emit');
+
+			if ($emit) {
+				const type = typeChecker.getTypeOfSymbolAtLocation($emit, symbolNode!);
+				const calls = type.getCallSignatures();
+				const { resolveSchema } = createSchemaResolvers(typeChecker, symbolNode!);
+
+				return calls.map(call => ({
+					name: (typeChecker.getTypeOfSymbolAtLocation(call.parameters[0], symbolNode!) as ts.StringLiteralType).value,
+					type: typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode!)),
+					signature: typeChecker.signatureToString(call),
+					schema: typeChecker.getTypeArguments(typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode!) as ts.TypeReference).map(resolveSchema),
+				}));
+			}
+
+			return [];
+		}
+
+		function getSlots() {
+
+			const propertyName = (parsedCommandLine.vueOptions.target ?? 3) < 3 ? '$scopedSlots' : '$slots';
+			const $slots = symbolProperties.find(prop => prop.escapedName === propertyName);
+
+			if ($slots) {
+				const type = typeChecker.getTypeOfSymbolAtLocation($slots, symbolNode!);
+				const properties = type.getProperties();
+				return properties.map(prop => ({
+					name: prop.getName(),
+					propsType: typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!).getCallSignatures()[0].parameters[0], symbolNode!)),
+					// props: {}, // TODO
+					description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
+				}));
+			}
+
+			return [];
+		}
+
+		function getExposed() {
+
+			const exposed = symbolProperties.filter(prop =>
+				// only exposed props will have a syntheticOrigin
+				Boolean((prop as any).syntheticOrigin)
+			);
+
+			if (exposed.length) {
+				return exposed.map(expose => ({
+					name: expose.getName(),
+					type: typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(expose, symbolNode!)),
+					description: ts.displayPartsToString(expose.getDocumentationComment(typeChecker)),
+				}));
+			}
+
+			return [];
+		}
+	}
+
+	function _getExports(componentPath: string) {
+
+		const sourceFile = program?.getSourceFile(getMetaFileName(componentPath));
 		if (!sourceFile) {
 			throw 'Could not find main source file';
 		}
@@ -199,84 +297,12 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 			throw 'Could not find symbol node';
 		}
 
-		const symbolType = typeChecker.getTypeAtLocation(symbolNode);
-		const symbolProperties = symbolType.getProperties();
+		const exportDefaultType = typeChecker.getTypeAtLocation(symbolNode);
+		const exports = exportDefaultType.getProperties();
 
 		return {
-			props: getProps(),
-			events: getEvents(),
-			slots: getSlots(),
-			exposed: getExposed(),
+			symbolNode,
+			exports,
 		};
-
-		function getProps() {
-
-			const $props = symbolProperties.find(prop => prop.escapedName === '$props');
-
-			if ($props) {
-				const type = typeChecker.getTypeOfSymbolAtLocation($props, symbolNode!);
-				const properties = type.getApparentProperties();
-				const { resolveSymbolSchema } = createSchemaResolvers(typeChecker, symbolNode!);
-
-				return properties.map(resolveSymbolSchema);
-			}
-
-			return [];
-		}
-		function getEvents() {
-
-			const $emit = symbolProperties.find(prop => prop.escapedName === '$emit');
-
-			if ($emit) {
-				const type = typeChecker.getTypeOfSymbolAtLocation($emit, symbolNode!);
-				const calls = type.getCallSignatures();
-				const { resolveSchema } = createSchemaResolvers(typeChecker, symbolNode!);
-
-				return calls.map(call => ({
-					name: (typeChecker.getTypeOfSymbolAtLocation(call.parameters[0], symbolNode!) as ts.StringLiteralType).value,
-					type: typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode!)),
-					signature: typeChecker.signatureToString(call),
-					schema: typeChecker.getTypeArguments(typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode!) as ts.TypeReference).map(resolveSchema),
-				}));
-			}
-
-			return [];
-		}
-		function getSlots() {
-
-			const propertyName = (parsedCommandLine.vueOptions.target ?? 3) < 3 ? '$scopedSlots' : '$slots';
-			const $slots = symbolProperties.find(prop => prop.escapedName === propertyName);
-
-			if ($slots) {
-				const type = typeChecker.getTypeOfSymbolAtLocation($slots, symbolNode!);
-				const properties = type.getProperties();
-				return properties.map(prop => ({
-					name: prop.escapedName as string,
-					propsType: typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!).getCallSignatures()[0].parameters[0], symbolNode!)),
-					// props: {}, // TODO
-					description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
-				}));
-			}
-
-			return [];
-		}
-
-		function getExposed() {
-
-			const exposed = symbolProperties.filter(prop =>
-				// only exposed props will have a syntheticOrigin
-				Boolean((prop as any).syntheticOrigin)
-			);
-
-			if (exposed.length) {
-				return exposed.map(expose => ({
-					name: expose.escapedName as string,
-					type: typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(expose, symbolNode!)),
-					description: ts.displayPartsToString(expose.getDocumentationComment(typeChecker)),
-				}));
-			}
-
-			return [];
-		}
 	}
 }
