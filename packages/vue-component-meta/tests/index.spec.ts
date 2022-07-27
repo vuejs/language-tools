@@ -368,7 +368,7 @@ describe(`vue-component-meta`, () => {
 	});
 
 	test('exposed', () => {
-		
+
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-exposed/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
 
@@ -379,5 +379,5 @@ describe(`vue-component-meta`, () => {
 		);
 
 		expect(counter).toBeDefined();
-	})
+	});
 });

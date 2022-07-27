@@ -262,12 +262,12 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 		}
 
 		function getExposed() {
-	
-			const exposed = symbolProperties.filter(prop => 
+
+			const exposed = symbolProperties.filter(prop =>
 				// only exposed props will have a syntheticOrigin
 				Boolean((prop as any).syntheticOrigin)
-			)
-	
+			);
+
 			if (exposed.length) {
 				return exposed.map(expose => ({
 					name: expose.escapedName as string,
@@ -275,7 +275,7 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 					documentationComment: ts.displayPartsToString(expose.getDocumentationComment(typeChecker)),
 				}));
 			}
-	
+
 			return [];
 		}
 	}
