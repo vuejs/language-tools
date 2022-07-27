@@ -6,6 +6,7 @@ export type PropertyMeta = {
 	description: string;
 	required: boolean;
 	type: string;
+	tags: { name: string, text?: string }[];
 	schema: PropertyMetaSchema;
 }
 
@@ -41,6 +42,79 @@ export const ComponentInternalProperties = [
 	'class',
 	'style',
 ]
+
+function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expression) {
+	function reducer (acc: any, cur: any) {
+		acc[cur.name] = cur
+		return acc
+	}
+	function resolveSymbolSchema (prop: ts.Symbol): PropertyMeta {
+		const subtype = typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!)
+		typeChecker.getDefaultFromTypeParameter(subtype);
+
+		return {
+			name: prop.getEscapedName().toString(),
+			description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
+			tags: prop.getJsDocTags(typeChecker).map(tag => ({
+				name: tag.name,
+				text: tag.text?.map(part => part.text).join(''),
+			})),
+			required: !Boolean((prop.declarations?.[0] as ts.ParameterDeclaration)?.questionToken ?? false),
+			type: typeChecker.typeToString(subtype),
+			schema: resolveSchema(subtype),
+		}
+	}
+	function resolveCallbackSchema (signature: ts.Signature): PropertyMetaSchema {
+		return {
+			kind: 'event',
+			type: typeChecker.signatureToString(signature),
+			schema: typeChecker.getTypeArguments(typeChecker.getTypeOfSymbolAtLocation(signature.parameters[0], symbolNode) as ts.TypeReference).map(resolveSchema)
+		}
+	}
+	function resolveEventSchema (subtype: ts.Type): PropertyMetaSchema {
+		return (subtype.getCallSignatures().length === 1)
+			? resolveCallbackSchema(subtype.getCallSignatures()[0])
+			: typeChecker.typeToString(subtype)
+	}
+	function resolveNestedSchema (subtype: ts.Type): PropertyMetaSchema {
+		// !!(subtype.flags & ts.TypeFlags.Object)
+		return (subtype.isClassOrInterface() || subtype.isIntersection())
+			? {
+				kind: 'object',
+				type: typeChecker.typeToString(subtype),
+				schema: subtype.getProperties().map(resolveSymbolSchema).reduce(reducer, {})
+			}
+			: resolveEventSchema(subtype)
+	}
+	function resolveArraySchema (subtype: ts.Type): PropertyMetaSchema {
+		// @ts-ignore - typescript internal, isArrayLikeType exists
+		return typeChecker.isArrayLikeType(subtype)
+			? {
+				kind: 'array',
+				type: typeChecker.typeToString(subtype),
+				schema: typeChecker.getTypeArguments(subtype as ts.TypeReference).map(resolveSchema)
+			}
+			: resolveNestedSchema(subtype)
+	}
+	function resolveSchema (subtype: ts.Type): PropertyMetaSchema {
+		return subtype.isUnion()
+			? {
+				kind: 'enum',
+				type: typeChecker.typeToString(subtype),
+				schema: subtype.types.map(resolveArraySchema)
+			}
+			: resolveArraySchema(subtype)
+	}
+
+	return {
+		resolveSymbolSchema,
+		resolveCallbackSchema,
+		resolveEventSchema,
+		resolveNestedSchema,
+		resolveArraySchema,
+		resolveSchema,
+	}
+}
 
 export function createComponentMetaChecker(tsconfigPath: string) {
 
@@ -134,77 +208,16 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 			slots: getSlots(),
 		};
 
-		function getProps(): PropertyMeta[] {
+		function getProps() {
 
 			const $props = symbolProperties.find(prop => prop.escapedName === '$props');
 
 			if ($props) {
 				const type = typeChecker.getTypeOfSymbolAtLocation($props, symbolNode!);
 				const properties = type.getApparentProperties();
+				const { resolveSymbolSchema } = createSchemaResolvers(typeChecker, symbolNode!);
 
-				function reducer (acc: any, cur: any) {
-					acc[cur.name] = cur
-					return acc
-				}
-				function resolveCallbackSchema (signature: ts.Signature): PropertyMetaSchema {
-					return {
-						kind: 'event',
-						type: typeChecker.signatureToString(signature),
-						schema: typeChecker.getTypeArguments(typeChecker.getTypeOfSymbolAtLocation(signature.parameters[0], symbolNode!) as ts.TypeReference).map(resolveSchema)
-					}
-				}
-				function resolveEventSchema (subtype: ts.Type): PropertyMetaSchema {
-					return (subtype.getCallSignatures().length === 1)
-						? resolveCallbackSchema(subtype.getCallSignatures()[0])
-					  : typeChecker.typeToString(subtype)
-				}
-				function resolveNestedSchema (subtype: ts.Type): PropertyMetaSchema {
-					return (subtype.isClassOrInterface() || subtype.isIntersection())
-						? {
-							kind: 'object',
-							type: typeChecker.typeToString(subtype),
-							schema: subtype.getApparentProperties().map(resolver).reduce(reducer, {})
-						}
-					  : resolveEventSchema(subtype)
-				}
-				function resolveArraySchema (subtype: ts.Type): PropertyMetaSchema {
-					// @ts-ignore - typescript internal, isArrayType exists
-					return typeChecker.isArrayLikeType(subtype)
-						? {
-							kind: 'array',
-							type: typeChecker.typeToString(subtype),
-							schema: typeChecker.getTypeArguments(subtype as ts.TypeReference).map(resolveSchema)
-						}
-						: resolveNestedSchema(subtype)
-				}
-				function resolveSchema (subtype: ts.Type): PropertyMetaSchema {
-					return subtype.isUnion()
-						? {
-							kind: 'enum',
-							type: typeChecker.typeToString(subtype),
-							schema: subtype.types.map(resolveArraySchema)
-						}
-						: resolveArraySchema(subtype)
-				}
-
-				const resolver = (prop: ts.Symbol): any => {
-					const subtype = typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!)
-					typeChecker.getDefaultFromTypeParameter(subtype);
-
-					return {
-						name: prop.escapedName,
-						description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
-						tags: prop.getJsDocTags(typeChecker).map(tag => ({
-							name: tag.name,
-							text: tag.text?.map(part => part.text).join(''),
-						})),
-						required: !Boolean((prop.declarations?.[0] as ts.ParameterDeclaration)?.questionToken ?? false),
-						type: typeChecker.typeToString(subtype),
-						schema: resolveSchema(subtype),
-					}
-				}
-
-				return properties.map(resolver);
+				return properties.map(resolveSymbolSchema);
 			}
 
 			return [];
@@ -216,19 +229,13 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 			if ($emit) {
 				const type = typeChecker.getTypeOfSymbolAtLocation($emit, symbolNode!);
 				const calls = type.getCallSignatures();
+				const { resolveSchema } = createSchemaResolvers(typeChecker, symbolNode!);
+
 				return calls.map(call => ({
-					// @ts-ignore
-					name: typeChecker.getTypeOfSymbolAtLocation(call.parameters[0], symbolNode!).value,
-					parametersType: typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode!)),
-					// @ts-ignore
-					parameters: typeChecker.getTypeArguments(typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode!)).map(arg => ({
-						name: 'TODO',
-						type: typeChecker.typeToString(arg),
-						required: 'TODO',
-					})),
-					description: ts.displayPartsToString(call.getDocumentationComment(typeChecker)),
-					type: typeChecker.typeToString(type),
+					name: (typeChecker.getTypeOfSymbolAtLocation(call.parameters[0], symbolNode!) as ts.StringLiteralType).value,
+					type: typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode!)),
 					signature: typeChecker.signatureToString(call),
+					schema: typeChecker.getTypeArguments(typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode!) as ts.TypeReference).map(resolveSchema),
 				}));
 			}
 

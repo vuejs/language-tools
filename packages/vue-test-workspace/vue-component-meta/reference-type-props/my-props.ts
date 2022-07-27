@@ -85,5 +85,6 @@ export interface MyProps {
 	/**
 	 * literal type alias that require context
 	 */
-	 literalFromContext: MyCategories,
+	literalFromContext: MyCategories,
+	literal: { foo: string },
 }

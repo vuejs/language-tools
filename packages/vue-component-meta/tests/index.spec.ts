@@ -24,6 +24,7 @@ describe.only(`vue-component-meta`, () => {
 		const arrayOptional = meta.props.find(prop => prop.name === 'arrayOptional');
 		const enumValue = meta.props.find(prop => prop.name === 'enumValue');
 		const literalFromContext = meta.props.find(prop => prop.name === 'literalFromContext');
+		const literal = meta.props.find(prop => prop.name === 'literal');
 		const onEvent = meta.props.find(prop => prop.name === 'onEvent');
 
 		expect(foo).toBeDefined();
@@ -229,6 +230,26 @@ describe.only(`vue-component-meta`, () => {
       schema: [ 'MyEnum.Small', 'MyEnum.Medium', 'MyEnum.Large' ]
 		})
 
+		expect(literal).toBeDefined();
+		expect(literal?.required).toBeTruthy()
+		expect(literal?.type).toEqual('{ foo: string; }')
+
+		// todo: this should be resolved to a type alias
+		// expect(literal?.schema).toEqual({ 
+		// 	kind: 'object',
+    //   type: '{ foo: string; }',
+    //   schema: {
+		// 		foo: {
+		// 			name: 'foo',
+		// 			description: '',
+		// 			tags: [],
+		// 			required: true,
+		// 			type: 'string',
+		// 			schema: 'string'
+		// 		}
+		// 	}
+		// })
+
 		expect(literalFromContext).toBeDefined();
 		expect(literalFromContext?.required).toBeTruthy()
 		expect(literalFromContext?.type).toEqual('"Uncategorized" | "Content" | "Interaction" | "Display" | "Forms" | "Addons"')
@@ -274,34 +295,35 @@ describe.only(`vue-component-meta`, () => {
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-events/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
 
-		const a = meta.events.find(event =>
-			event.name === 'foo'
-			&& event.parametersType === '[data: { foo: string; }]'
-			&& event.parameters.length === 1
-			&& event.parameters[0].type === '{ foo: string; }'
-			// && event.parameters[0].name === 'data'
-			// && event.parameters[0].isOptional === false
-		);
-		const b = meta.events.find(event =>
-			event.name === 'bar'
-			&& event.parametersType === '[arg1: number, arg2?: any]'
-			&& event.parameters.length === 2
-			&& event.parameters[0].type === 'number'
-			// && event.parameters[0].name === 'arg1'
-			// && event.parameters[0].isOptional === false
-			&& event.parameters[1].type === 'any'
-			// && event.parameters[1].name === 'arg2'
-			// && event.parameters[1].isOptional === true
-		);
-		const c = meta.events.find(event =>
-			event.name === 'baz'
-			&& event.parametersType === '[]'
-			&& event.parameters.length === 0
-		);
+		const onFoo = meta.events.find(event => event.name === 'foo');
+		const onBar = meta.events.find(event => event.name === 'bar');
+		const onBaz = meta.events.find(event => event.name === 'baz');
 
-		expect(a).toBeDefined();
-		expect(b).toBeDefined();
-		expect(c).toBeDefined();
+		expect(onFoo).toBeDefined();
+		expect(onFoo?.type).toEqual('[data?: { foo: string; } | undefined]');
+		expect(onFoo?.signature).toEqual('(event: "foo", data?: { foo: string; } | undefined): void');
+		expect(onFoo?.schema).toEqual([
+			{
+				kind: 'enum',
+				type: '{ foo: string; } | undefined',
+				schema: [
+					'undefined',
+					'{ foo: string; }' // todo: this should be resolved to a type alias
+				],
+			}
+		]);
+
+		expect(onBar).toBeDefined();
+		expect(onBar?.type).toEqual('[value: { arg1: number; arg2?: any; }]');
+		expect(onBar?.signature).toEqual('(event: "bar", value: { arg1: number; arg2?: any; }): void');
+		expect(onBar?.schema).toEqual([
+			'{ arg1: number; arg2?: any; }' // todo: this should be resolved to a type alias
+		]);
+
+		expect(onBaz).toBeDefined();
+		expect(onBaz?.type).toEqual('[]');
+		expect(onBaz?.signature).toEqual('(event: "baz"): void');
+		expect(onBaz?.schema).toEqual([]);
 	});
 
 	it('template-slots', () => {
