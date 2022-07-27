@@ -370,23 +370,19 @@ describe(`vue-component-meta`, () => {
 	test('ts-component', () => {
 
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/ts-component/component.ts');
-		const metaList = checker.getComponentMeta(componentPath);
-
-		expect(metaList).toEqual(expect.arrayContaining([]));
-
-		const meta = metaList.find(m => m.name === 'default') || { props: [] };
+		const meta = checker.getComponentMeta(componentPath);
 
 		const a = meta.props.find(prop =>
 			prop.name === 'foo'
-			&& prop.isOptional === false
+			&& prop.required === true
 			&& prop.type === 'string'
-			&& prop.documentationComment === 'string foo'
+			&& prop.description === 'string foo'
 		);
 		const b = meta.props.find(prop =>
 			prop.name === 'bar'
-			&& prop.isOptional === true
+			&& prop.required === false
 			&& prop.type === 'number | undefined'
-			&& prop.documentationComment === 'optional number bar'
+			&& prop.description === 'optional number bar'
 		);
 
 		expect(a).toBeDefined();

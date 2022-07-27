@@ -133,13 +133,10 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 		useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,
 		getCompilationSettings: () => parsedCommandLine.options,
 		getScriptFileNames: () => {
-			const result = [...parsedCommandLine.fileNames];
-			for (const fileName of parsedCommandLine.fileNames) {
-				if (fileName.endsWith('.vue')) {
-					result.push(fileName + '.meta.ts');
-				}
-			}
-			return result;
+			return [
+				...parsedCommandLine.fileNames,
+				...parsedCommandLine.fileNames.map(getMetaFileName),
+			];
 		},
 		getProjectReferences: () => parsedCommandLine.projectReferences,
 		getScriptVersion: (fileName) => '0',
@@ -163,6 +160,10 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 		getComponentMeta,
 	};
 
+	function getMetaFileName(fileName: string) {
+		return (fileName.endsWith('.vue') ? fileName : fileName.substring(0, fileName.lastIndexOf('.'))) + '.meta.ts';
+	}
+
 	function getMetaScriptContent(fileName: string) {
 		return `
 			import Component from '${fileName.substring(0, fileName.length - '.meta.ts'.length)}';
@@ -172,7 +173,7 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 
 	function getComponentMeta(componentPath: string) {
 
-		const sourceFile = program?.getSourceFile(componentPath + '.meta.ts');
+		const sourceFile = program?.getSourceFile(getMetaFileName(componentPath));
 		if (!sourceFile) {
 			throw 'Could not find main source file';
 		}
