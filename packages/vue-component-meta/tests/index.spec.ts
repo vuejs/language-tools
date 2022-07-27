@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, test } from 'vitest';
 import * as metaChecker from '..';
 
 describe(`vue-component-meta`, () => {
@@ -365,5 +365,19 @@ describe(`vue-component-meta`, () => {
 
 		expect(a).toBeDefined();
 		expect(b).toBeDefined();
+	});
+
+	test('exposed', () => {
+
+		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-exposed/component.vue');
+		const meta = checker.getComponentMeta(componentPath);
+
+		const counter = meta.exposed.find(exposed =>
+			exposed.name === 'counter'
+			&& exposed.type === 'string'
+			&& exposed.description === 'a counter string'
+		);
+
+		expect(counter).toBeDefined();
 	});
 });

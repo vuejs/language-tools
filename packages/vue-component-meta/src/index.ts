@@ -206,6 +206,7 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 			props: getProps(),
 			events: getEvents(),
 			slots: getSlots(),
+			exposed: getExposed(),
 		};
 
 		function getProps() {
@@ -254,6 +255,24 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 					propsType: typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!).getCallSignatures()[0].parameters[0], symbolNode!)),
 					// props: {}, // TODO
 					description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
+				}));
+			}
+
+			return [];
+		}
+
+		function getExposed() {
+
+			const exposed = symbolProperties.filter(prop =>
+				// only exposed props will have a syntheticOrigin
+				Boolean((prop as any).syntheticOrigin)
+			);
+
+			if (exposed.length) {
+				return exposed.map(expose => ({
+					name: expose.escapedName as string,
+					type: typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(expose, symbolNode!)),
+					description: ts.displayPartsToString(expose.getDocumentationComment(typeChecker)),
 				}));
 			}
 
