@@ -210,11 +210,13 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 			}
 
 			// fill defaults
-			const defaults = findCmponentDefaultProps(componentPath);
-			for (const propName in defaults) {
-				const prop = result.find(p => p.name === propName);
-				if (prop) {
-					prop.default = defaults[propName];
+			if (componentPath.endsWith('.vue') && exportName === 'default') {
+				const defaults = findCmponentDefaultProps(componentPath);
+				for (const propName in defaults) {
+					const prop = result.find(p => p.name === propName);
+					if (prop) {
+						prop.default = defaults[propName];
+					}
 				}
 			}
 
