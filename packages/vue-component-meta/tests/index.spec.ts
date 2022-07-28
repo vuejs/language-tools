@@ -7,6 +7,26 @@ describe(`vue-component-meta`, () => {
 	const tsconfigPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/tsconfig.json');
 	const checker = metaChecker.createComponentMetaChecker(tsconfigPath);
 
+	test('global-props', () => {
+
+		const globalProps = checker.getGlobalPropNames();
+
+		expect(globalProps).toEqual([
+			'key',
+			'ref',
+			'ref_for',
+			'ref_key',
+			'onVnodeBeforeMount',
+			'onVnodeMounted',
+			'onVnodeBeforeUpdate',
+			'onVnodeUpdated',
+			'onVnodeBeforeUnmount',
+			'onVnodeUnmounted',
+			'class',
+			'style',
+		]);
+	});
+
 	test('reference-type-props', () => {
 
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-props/component.vue');

@@ -17,33 +17,6 @@ export type PropertyMetaSchema = string
 	| { kind: 'event', type: string, schema: PropertyMetaSchema[]; }
 	| { kind: 'object', type: string, schema: Record<string, PropertyMeta>; };
 
-/**
- * Helper array to map internal properties added by vue to any components
- * 
- * @example
- * ```ts
- * import { createComponentMetaChecker, ComponentInternalProperties } from 'vue-component-meta'
- * 
- * const checker = createComponentMetaChecker('path/to/tsconfig.json')
- * const meta = checker.getComponentMeta('path/to/component.vue')
- * const props = meta.props.filter(prop => !ComponentInternalProperties.includes(prop.name))
- * ```
- */
-export const ComponentInternalProperties = [
-	'ref',
-	'key',
-	'ref_for',
-	'ref_key',
-	'onVnodeBeforeMount',
-	'onVnodeMounted',
-	'onVnodeBeforeUpdate',
-	'onVnodeBeforeUnmount',
-	'onVnodeUpdated',
-	'onVnodeUnmounted',
-	'class',
-	'style',
-];
-
 function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expression) {
 	function reducer(acc: any, cur: any) {
 		acc[cur.name] = cur;
@@ -128,6 +101,7 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 		readFile: ts.sys.readFile,
 	}, tsconfigPath);
 	const scriptSnapshot: Record<string, ts.IScriptSnapshot> = {};
+	const globalComponentName = tsconfigPath.replace(/\\/g, '/') + '.global.ts';
 	const core = vue.createLanguageContext({
 		...ts.sys,
 		getDefaultLibFileName: (options) => ts.getDefaultLibFilePath(options), // should use ts.getDefaultLibFilePath not ts.getDefaultLibFileName
@@ -137,13 +111,27 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 			return [
 				...parsedCommandLine.fileNames,
 				...parsedCommandLine.fileNames.map(getMetaFileName),
+				globalComponentName,
+				getMetaFileName(globalComponentName),
 			];
 		},
 		getProjectReferences: () => parsedCommandLine.projectReferences,
 		getScriptVersion: (fileName) => '0',
 		getScriptSnapshot: (fileName) => {
 			if (!scriptSnapshot[fileName]) {
-				const fileText = fileName.endsWith('.meta.ts') ? getMetaScriptContent(fileName) : ts.sys.readFile(fileName);
+				let fileText: string | undefined;
+				if (fileName.endsWith('.meta.ts')) {
+					fileText = getMetaScriptContent(fileName);
+				}
+				else if (fileName === globalComponentName) {
+					fileText = `
+						import { defineComponent } from 'vue';
+						export default defineComponent({});
+					`;
+				}
+				else {
+					fileText = ts.sys.readFile(fileName);
+				}
 				if (fileText !== undefined) {
 					scriptSnapshot[fileName] = ts.ScriptSnapshot.fromString(fileText);
 				}
@@ -158,9 +146,28 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 	const typeChecker = program.getTypeChecker();
 
 	return {
+		getGlobalPropNames,
 		getExportNames,
 		getComponentMeta,
 	};
+
+	/**
+	 * Get helper array to map internal properties added by vue to any components
+	 * 
+	 * @example
+	 * ```ts
+	 * import { createComponentMetaChecker } from 'vue-component-meta'
+	 * 
+	 * const checker = createComponentMetaChecker('path/to/tsconfig.json')
+	 * const meta = checker.getComponentMeta('path/to/component.vue')
+	 * const globalPropNames = checker.getGlobalPropNames();
+	 * const props = meta.props.filter(prop => !globalPropNames.includes(prop.name))
+	 * ```
+	 */
+	function getGlobalPropNames() {
+		const meta = getComponentMeta(globalComponentName);
+		return meta.props.map(prop => prop.name);
+	}
 
 	function getMetaFileName(fileName: string) {
 		return (fileName.endsWith('.vue') ? fileName : fileName.substring(0, fileName.lastIndexOf('.'))) + '.meta.ts';
