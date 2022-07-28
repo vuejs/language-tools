@@ -253,8 +253,7 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 				const properties = type.getProperties();
 				return properties.map(prop => ({
 					name: prop.getName(),
-					propsType: typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!).getCallSignatures()[0].parameters[0], symbolNode!)),
-					// props: {}, // TODO
+					type: typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!).getCallSignatures()[0].parameters[0], symbolNode!)),
 					description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
 				}));
 			}

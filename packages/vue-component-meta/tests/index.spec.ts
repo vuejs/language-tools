@@ -336,15 +336,15 @@ describe(`vue-component-meta`, () => {
 
 		const a = meta.slots.find(slot =>
 			slot.name === 'default'
-			&& slot.propsType === '{ num: number; }'
+			&& slot.type === '{ num: number; }'
 		);
 		const b = meta.slots.find(slot =>
 			slot.name === 'named-slot'
-			&& slot.propsType === '{ str: string; }'
+			&& slot.type === '{ str: string; }'
 		);
 		const c = meta.slots.find(slot =>
 			slot.name === 'vbind'
-			&& slot.propsType === '{ num: number; str: string; }'
+			&& slot.type === '{ num: number; str: string; }'
 		);
 
 		expect(a).toBeDefined();
@@ -359,11 +359,11 @@ describe(`vue-component-meta`, () => {
 
 		const a = meta.slots.find(slot =>
 			slot.name === 'default'
-			&& slot.propsType === '{ num: number; }'
+			&& slot.type === '{ num: number; }'
 		);
 		const b = meta.slots.find(slot =>
 			slot.name === 'foo'
-			&& slot.propsType === '{ str: string; }'
+			&& slot.type === '{ str: string; }'
 		);
 
 		expect(a).toBeDefined();
@@ -382,6 +382,26 @@ describe(`vue-component-meta`, () => {
 		);
 
 		expect(counter).toBeDefined();
+	});
+
+	test('ts-component', () => {
+
+		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/ts-component/component.ts');
+		const meta = checker.getComponentMeta(componentPath);
+
+		const a = meta.props.find(prop =>
+			prop.name === 'foo'
+			&& prop.required === true
+			&& prop.type === 'string'
+		);
+		const b = meta.props.find(prop =>
+			prop.name === 'bar'
+			&& prop.required === false
+			&& prop.type === 'number | undefined'
+		);
+
+		expect(a).toBeDefined();
+		expect(b).toBeDefined();
 	});
 
 	test('ts-named-exports', () => {
