@@ -102,7 +102,7 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 	}, tsconfigPath);
 	const scriptSnapshot: Record<string, ts.IScriptSnapshot> = {};
 	const globalComponentName = tsconfigPath.replace(/\\/g, '/') + '.global.ts';
-	const core = vue.createLanguageContext({
+	const host: vue.LanguageServiceHost = {
 		...ts.sys,
 		getDefaultLibFileName: (options) => ts.getDefaultLibFilePath(options), // should use ts.getDefaultLibFilePath not ts.getDefaultLibFileName
 		useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,
@@ -140,7 +140,8 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 		},
 		getTypeScriptModule: () => ts,
 		getVueCompilationSettings: () => parsedCommandLine.vueOptions,
-	});
+	};
+	const core = vue.createLanguageContext(host);
 	const tsLs = ts.createLanguageService(core.typescriptLanguageServiceHost);
 	const program = tsLs.getProgram()!;
 	const typeChecker = program.getTypeChecker();
@@ -218,7 +219,8 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 
 			// fill defaults
 			if (componentPath.endsWith('.vue') && exportName === 'default') {
-				const defaults = findCmponentDefaultProps(componentPath);
+				const snapshot = host.getScriptSnapshot(componentPath)!;
+				const defaults = readCmponentDefaultProps(snapshot.getText(0, snapshot.getLength()));
 				for (const propName in defaults) {
 					const prop = result.find(p => p.name === propName);
 					if (prop) {
@@ -326,14 +328,9 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 	}
 }
 
-export function findCmponentDefaultProps(componentPath: string) {
+function readCmponentDefaultProps(fileText: string) {
 
-	const fileText = ts.sys.readFile(componentPath);
-	if (fileText === undefined) {
-		throw new Error(`${componentPath} not found`);
-	}
-
-	const vueSourceFile = vue.createSourceFile(componentPath, fileText, {}, {}, ts);
+	const vueSourceFile = vue.createSourceFile('/tmp.vue', fileText, {}, {}, ts);
 	const descriptor = vueSourceFile.getDescriptor();
 	const scriptSetupRanges = vueSourceFile.getScriptSetupRanges();
 	const result: Record<string, string> = {};
