@@ -2,7 +2,6 @@
 import { MyProps } from './my-props';
 
 withDefaults(defineProps<MyProps>(), {
-	foo:'sample',
-	bar:1,
+	bar: 1,
 });
 </script>

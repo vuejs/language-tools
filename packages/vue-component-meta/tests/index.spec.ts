@@ -25,7 +25,7 @@ describe(`vue-component-meta`, () => {
 		const enumValue = meta.props.find(prop => prop.name === 'enumValue');
 		const literalFromContext = meta.props.find(prop => prop.name === 'literalFromContext');
 		const literal = meta.props.find(prop => prop.name === 'literal');
-		const onEvent = meta.props.find(prop => prop.name === 'onEvent');
+		// const onEvent = meta.props.find(prop => prop.name === 'onEvent');
 
 		expect(foo).toBeDefined();
 		expect(foo?.required).toBeTruthy();
@@ -52,6 +52,7 @@ describe(`vue-component-meta`, () => {
 		]);
 
 		expect(bar).toBeDefined();
+		expect(bar?.default).toEqual('1');
 		expect(bar?.required).toBeFalsy();
 		expect(bar?.type).toEqual('number | undefined');
 		expect(bar?.description).toEqual('optional number bar');
@@ -267,27 +268,27 @@ describe(`vue-component-meta`, () => {
 			]
 		});
 
-		expect(onEvent).toBeDefined();
-		// expect(onEvent?.required).toBeFalsy()
-		expect(onEvent?.type).toEqual('((...args: any[]) => any) | undefined');
-		expect(onEvent?.schema).toEqual({
-			kind: 'enum',
-			type: '((...args: any[]) => any) | undefined',
-			schema: [
-				'undefined',
-				{
-					kind: 'event',
-					type: '(...args: any[]): any',
-					schema: [
-						{
-							kind: 'array',
-							type: 'any',
-							schema: [],
-						}
-					]
-				}
-			]
-		});
+		// expect(onEvent).toBeDefined();
+		// // expect(onEvent?.required).toBeFalsy()
+		// expect(onEvent?.type).toEqual('((...args: any[]) => any) | undefined');
+		// expect(onEvent?.schema).toEqual({
+		// 	kind: 'enum',
+		// 	type: '((...args: any[]) => any) | undefined',
+		// 	schema: [
+		// 		'undefined',
+		// 		{
+		// 			kind: 'event',
+		// 			type: '(...args: any[]): any',
+		// 			schema: [
+		// 				{
+		// 					kind: 'array',
+		// 					type: 'any',
+		// 					schema: [],
+		// 				}
+		// 			]
+		// 		}
+		// 	]
+		// });
 	});
 
 	test('reference-type-events', () => {
