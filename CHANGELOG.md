@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.39.2 (2022/7/28)
+
+- feat: vue-component-meta ([#1627](https://github.com/johnsoncodehk/volar/issues/1627))
+- feat: support for "JavaScript and TypeScript Nightly" ([#1332](https://github.com/johnsoncodehk/volar/issues/1332))
+- fix: tsx, jsx syntax break by vue directives syntax inject ([#1617](https://github.com/johnsoncodehk/volar/issues/1617))
+- fix: any type components missing in template when use script setup ([#1608](https://github.com/johnsoncodehk/volar/issues/1608))
+- fix: ignore X_V_IF_SAME_KEY error in vue 2 ([#1638](https://github.com/johnsoncodehk/volar/issues/1638))
+- perf: fix `fileExists` is always calculate for .ts on each time update (https://github.com/johnsoncodehk/volar/commit/07f3bd55b6bdf3875a60796f7c9eb9a838eed463)
+- perf: cache `fileExists`, `directoryExists` result in language server (https://github.com/johnsoncodehk/volar/commit/34a4435284311c88248a44222f49c017a6b408a9)
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
+
 ## 0.39.1 (2022/7/23)
 
 - fix: typescript-vue-plugin break TS server ([#1624](https://github.com/johnsoncodehk/volar/issues/1624))
@@ -17,12 +33,6 @@
 **Breaking changes**
 
 - `@volar/vue-typescript`, `@volar/vue-language-service` apis refactored
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 0.38.9 (2022/7/20)
 

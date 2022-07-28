@@ -10,7 +10,7 @@
 *VSCode extension to support Vue in TS server*
 - [vue-tsc](https://github.com/johnsoncodehk/volar/tree/master/packages/vue-tsc) \
 *Type-check and dts build command line tool*
-- [vue-component-meta](https://github.com/johnsoncodehk/volar/tree/master/packages/vue-component-meta) (Experimental) \
+- [vue-component-meta](https://github.com/johnsoncodehk/volar/tree/master/packages/vue-component-meta) \
 *Component props, events, slots types information extract tool*
 - [vite-plugin-vue-component-preview](https://github.com/johnsoncodehk/vite-plugin-vue-component-preview) \
 *Vite plugin for support Vue component preview view with `Vue Language Features`*
