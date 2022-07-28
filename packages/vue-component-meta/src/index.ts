@@ -3,6 +3,7 @@ import * as ts from 'typescript/lib/tsserverlibrary';
 
 export type PropertyMeta = {
 	name: string;
+	default?: string;
 	description: string;
 	required: boolean;
 	type: string;
@@ -198,16 +199,26 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 		function getProps() {
 
 			const $props = symbolProperties.find(prop => prop.escapedName === '$props');
+			let result: PropertyMeta[] = [];
 
 			if ($props) {
 				const type = typeChecker.getTypeOfSymbolAtLocation($props, symbolNode!);
 				const properties = type.getApparentProperties();
 				const { resolveSymbolSchema } = createSchemaResolvers(typeChecker, symbolNode!);
 
-				return properties.map(resolveSymbolSchema);
+				result = properties.map(resolveSymbolSchema);
 			}
 
-			return [];
+			// fill defaults
+			const defaults = findCmponentDefaultProps(componentPath);
+			for (const propName in defaults) {
+				const prop = result.find(p => p.name === propName);
+				if (prop) {
+					prop.default = defaults[propName];
+				}
+			}
+
+			return result;
 		}
 
 		function getEvents() {
@@ -305,4 +316,49 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 			exports,
 		};
 	}
+}
+
+export function findCmponentDefaultProps(componentPath: string) {
+
+	const fileText = ts.sys.readFile(componentPath);
+	if (fileText === undefined) {
+		throw new Error(`${componentPath} not found`);
+	}
+
+	const vueSourceFile = vue.createSourceFile(componentPath, fileText, {}, {}, ts);
+	const descriptor = vueSourceFile.getDescriptor();
+	const scriptSetupRanges = vueSourceFile.getScriptSetupRanges();
+	const result: Record<string, string> = {};
+
+	if (descriptor.scriptSetup && scriptSetupRanges?.withDefaultsArg) {
+
+		const defaultsText = descriptor.scriptSetup.content.substring(scriptSetupRanges.withDefaultsArg.start, scriptSetupRanges.withDefaultsArg.end);
+		const ast = ts.createSourceFile('/tmp.' + descriptor.scriptSetup.lang, '(' + defaultsText + ')', ts.ScriptTarget.Latest);
+		const obj = findObjectLiteralExpression(ast);
+
+		if (obj) {
+			for (const prop of obj.properties) {
+				if (ts.isPropertyAssignment(prop)) {
+					const name = prop.name.getText(ast);
+					const exp = prop.initializer.getText(ast);
+					result[name] = exp;
+				}
+			}
+		}
+
+		function findObjectLiteralExpression(node: ts.Node) {
+			if (ts.isObjectLiteralExpression(node)) {
+				return node;
+			}
+			let result: ts.ObjectLiteralExpression | undefined;
+			node.forEachChild(child => {
+				if (!result) {
+					result = findObjectLiteralExpression(child);
+				}
+			});
+			return result;
+		}
+	}
+
+	return result;
 }
