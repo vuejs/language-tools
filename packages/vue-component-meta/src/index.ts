@@ -1,7 +1,13 @@
 import * as vue from '@volar/vue-language-core';
 import * as ts from 'typescript/lib/tsserverlibrary';
 
-export type PropertyMeta = {
+export interface ComponentMeta {
+	props: PropertyMeta[]
+	events: EventMeta[]
+	slots: SlotMeta[]
+	exposed: ExposeMeta[]
+}
+export interface PropertyMeta {
 	name: string;
 	default?: string;
 	description: string;
@@ -10,6 +16,22 @@ export type PropertyMeta = {
 	tags: { name: string, text?: string; }[];
 	schema: PropertyMetaSchema;
 };
+export interface EventMeta {
+	name: string;
+	type: string;
+	signature: string;
+	schema: PropertyMetaSchema[];
+}
+export interface SlotMeta {
+	name: string;
+	type: string;
+	description: string;
+}
+export interface ExposeMeta {
+	name: string;
+	type: string;
+	description: string;
+}
 
 export type PropertyMetaSchema = string
 	| { kind: 'enum', type: string, schema: PropertyMetaSchema[]; }
@@ -185,7 +207,7 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 		return _getExports(componentPath).exports.map(e => e.getName());
 	}
 
-	function getComponentMeta(componentPath: string, exportName = 'default') {
+	function getComponentMeta(componentPath: string, exportName = 'default'): ComponentMeta {
 
 		const { symbolNode, exports } = _getExports(componentPath);
 		const _export = exports.find((property) => property.getName() === exportName);
@@ -246,7 +268,7 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 					type: typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode!)),
 					signature: typeChecker.signatureToString(call),
 					schema: typeChecker.getTypeArguments(typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode!) as ts.TypeReference).map(resolveSchema),
-				}));
+				} as EventMeta));
 			}
 
 			return [];
@@ -264,7 +286,7 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 					name: prop.getName(),
 					type: typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!).getCallSignatures()[0].parameters[0], symbolNode!)),
 					description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
-				}));
+				} as SlotMeta));
 			}
 
 			return [];
@@ -282,7 +304,7 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 					name: expose.getName(),
 					type: typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(expose, symbolNode!)),
 					description: ts.displayPartsToString(expose.getDocumentationComment(typeChecker)),
-				}));
+				} as ExposeMeta));
 			}
 
 			return [];
