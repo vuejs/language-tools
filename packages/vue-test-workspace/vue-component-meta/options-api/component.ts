@@ -1,10 +1,4 @@
-import { defineComponent, h } from "vue"
-
-const logger = {
-  mounted() {
-    console.log('mounted')
-  },
-}
+import { defineComponent } from "vue"
 
 interface SubmitPayload{
 	/**
@@ -17,12 +11,6 @@ interface SubmitPayload{
 	password: string
 }
 
-/**
- * The only true button.
- * @example ../../../docs/Button.md
- * @example ../../../docs/ButtonConclusion.md
- * @displayName Best Button
- */
 export default defineComponent({
 	emits: {
 		// Validate submit event
@@ -37,14 +25,14 @@ export default defineComponent({
 	},
   props: {
 		/**
-     * A test for default number
+     * Default number
      */
 		numberDefault: {
       type: Number,
       default: 42
     },
     /**
-     * A test for default function Object
+     * Default function Object
      */
     objectDefault: {
       type: Object,
@@ -53,19 +41,19 @@ export default defineComponent({
 			})
     },
     /**
-     * A test for default function Array
+     * Default function Array
      */
     arrayDefault: {
       type: Array,
       default: () => [1, 2, 3]
     },
     /**
-     * A test for default function more complex
+     * Default function more complex
      */
     complexDefault: {
       type: Array,
-      default: () => {
-        if (typeof logger.mounted === 'function') {
+      default: (props: any) => {
+        if (props.arrayDefault.length > props.numberDefault) {
           return []
         } else {
           return undefined
@@ -73,12 +61,4 @@ export default defineComponent({
       }
     },
   },
-  methods: {
-    onMyClick() {
-      console.log('clicked')
-    }
-  },
-	render(){
-		return h('div', this.complexDefault.toString())
-	}
 })

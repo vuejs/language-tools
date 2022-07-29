@@ -220,7 +220,7 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 			// fill defaults
 			if (componentPath.endsWith('.vue') && exportName === 'default') {
 				const snapshot = host.getScriptSnapshot(componentPath)!;
-				const defaults = readCmponentDefaultProps(snapshot.getText(0, snapshot.getLength()));
+				const defaults = readComponentDefaultProps(snapshot.getText(0, snapshot.getLength()));
 				for (const propName in defaults) {
 					const prop = result.find(p => p.name === propName);
 					if (prop) {
@@ -328,7 +328,7 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 	}
 }
 
-function readCmponentDefaultProps(fileText: string) {
+function readComponentDefaultProps(fileText: string) {
 
 	const vueSourceFile = vue.createSourceFile('/tmp.vue', fileText, {}, {}, ts);
 	const descriptor = vueSourceFile.getDescriptor();
