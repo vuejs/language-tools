@@ -44,7 +44,7 @@ export interface MyProps {
 	/**
 	 * string array baz
 	 */
-	baz: string[],
+	baz?: string[],
 	/**
 	 * required union type
 	 */

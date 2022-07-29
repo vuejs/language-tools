@@ -85,7 +85,12 @@ describe(`vue-component-meta`, () => {
 		});
 
 		expect(baz).toBeDefined();
-		expect(baz?.required).toBeTruthy();
+		// When initializing an array, users have to do it in a function to avoid
+		// referencing always the same instance for every component
+		// if no params are given to the function and it is simply an Array,
+		// the array is the default value and should be given instead of the function
+		expect(baz?.default).toEqual(['foo', 'bar']);
+		expect(baz?.required).toBeFalsy();
 		expect(baz?.type).toEqual('string[]');
 		expect(baz?.description).toEqual('string array baz');
 		expect(baz?.schema).toEqual({
@@ -446,5 +451,39 @@ describe(`vue-component-meta`, () => {
 
 		expect(a).toBeDefined();
 		expect(b).toBeDefined();
+	});
+
+	test('options-api', () => {
+
+		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/options-api/component.ts');
+		const meta = checker.getComponentMeta(componentPath);
+
+		const submitEvent = meta.events.find(evt => evt.name === 'submit');
+
+		expect(submitEvent).toBeDefined();
+		expect(submitEvent?.schema).toEqual(expect.arrayContaining([{
+			kind: 'object',
+			schema: {
+				email: {
+					description: 'email of user',
+					name: 'email',
+					required: true,
+					schema: 'string',
+					tags: [],
+					type: 'string'
+				},
+				password: {
+					description: 'password of same user',
+					name: 'password',
+					required: true,
+					schema: 'string',
+					tags: [],
+					type: 'string'
+				}
+			},
+			type: 'SubmitPayload'
+		}]));
+
+		const 
 	});
 });
