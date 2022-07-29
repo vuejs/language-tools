@@ -18,12 +18,12 @@ export function getProgram(
 		getBindAndCheckDiagnostics,
 	};
 
-	return new Proxy(program, {
+	return new Proxy({}, {
 		get: (target: any, property: keyof ts.Program) => {
 			if (property in proxy) {
 				return proxy[property];
 			}
-			return target[property];
+			return vueTsLs.getProgram()![property] || target[property];
 		},
 	});
 
@@ -59,7 +59,7 @@ export function getProgram(
 				if (!mapped.embedded.file.capabilities.diagnostics)
 					return [] as any;
 
-				const errors = transformDiagnostics(program?.[api](sourceFile, cancellationToken) ?? []);
+				const errors = transformDiagnostics(vueTsLs.getProgram()?.[api](sourceFile, cancellationToken) ?? []);
 
 				return errors as any;
 			}
