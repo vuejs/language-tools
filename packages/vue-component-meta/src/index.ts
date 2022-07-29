@@ -226,7 +226,7 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 			exposed: getExposed(),
 		};
 
-		function getProps() {
+		function getProps(): PropertyMeta[] {
 
 			const $props = symbolProperties.find(prop => prop.escapedName === '$props');
 			let result: PropertyMeta[] = [];
@@ -254,7 +254,7 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 			return result;
 		}
 
-		function getEvents() {
+		function getEvents(): EventMeta[] {
 
 			const $emit = symbolProperties.find(prop => prop.escapedName === '$emit');
 
@@ -268,13 +268,13 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 					type: typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode!)),
 					signature: typeChecker.signatureToString(call),
 					schema: typeChecker.getTypeArguments(typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode!) as ts.TypeReference).map(resolveSchema),
-				} as EventMeta));
+				}));
 			}
 
 			return [];
 		}
 
-		function getSlots() {
+		function getSlots(): SlotMeta[] {
 
 			const propertyName = (parsedCommandLine.vueOptions.target ?? 3) < 3 ? '$scopedSlots' : '$slots';
 			const $slots = symbolProperties.find(prop => prop.escapedName === propertyName);
@@ -286,13 +286,13 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 					name: prop.getName(),
 					type: typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!).getCallSignatures()[0].parameters[0], symbolNode!)),
 					description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
-				} as SlotMeta));
+				}));
 			}
 
 			return [];
 		}
 
-		function getExposed() {
+		function getExposed(): ExposeMeta[] {
 
 			const exposed = symbolProperties.filter(prop =>
 				// only exposed props will have a syntheticOrigin
@@ -304,7 +304,7 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 					name: expose.getName(),
 					type: typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(expose, symbolNode!)),
 					description: ts.displayPartsToString(expose.getDocumentationComment(typeChecker)),
-				} as ExposeMeta));
+				}));
 			}
 
 			return [];
