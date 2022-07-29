@@ -89,7 +89,7 @@ describe(`vue-component-meta`, () => {
 		// referencing always the same instance for every component
 		// if no params are given to the function and it is simply an Array,
 		// the array is the default value and should be given instead of the function
-		expect(baz?.default).toEqual(['foo', 'bar']);
+		expect(baz?.default).toEqual(`['foo', 'bar']`);
 		expect(baz?.required).toBeFalsy();
 		expect(baz?.type).toEqual('string[]');
 		expect(baz?.description).toEqual('string array baz');
@@ -484,6 +484,27 @@ describe(`vue-component-meta`, () => {
 			type: 'SubmitPayload'
 		}]));
 
-		const 
+		const propNumberDefault = meta.props.find(prop => prop.name === 'numberDefault');
+
+		expect(propNumberDefault).toBeDefined();
+		expect(propNumberDefault?.type).toEqual('number | undefined');
+		expect(propNumberDefault?.schema).toEqual({
+			kind: 'enum',
+			schema: ['undefined', 'number'],
+			type: 'number | undefined'
+		});
+		expect(propNumberDefault?.default).toEqual(`42`);
+
+		const propObjectDefault = meta.props.find(prop => prop.name === 'objectDefault');
+
+		expect(propObjectDefault).toBeDefined();
+		expect(propObjectDefault?.default).toEqual(`{ 
+			foo: 'bar'
+		}`);
+
+		const propArrayDefault = meta.props.find(prop => prop.name === 'arrayDefault');
+
+		expect(propArrayDefault).toBeDefined();
+		expect(propArrayDefault?.default).toEqual(`[1, 2, 3]`);
 	});
 });

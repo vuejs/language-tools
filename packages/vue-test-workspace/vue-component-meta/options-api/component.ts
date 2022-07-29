@@ -39,28 +39,30 @@ export default defineComponent({
 		/**
      * A test for default number
      */
-		propNumberDefault: {
+		numberDefault: {
       type: Number,
-      default: 4
+      default: 42
     },
     /**
      * A test for default function Object
      */
-    propObjectDefault: {
+    objectDefault: {
       type: Object,
-      default: () => ({})
+      default: () => ({
+				foo: 'bar'
+			})
     },
     /**
      * A test for default function Array
      */
-    propArrayDefault: {
+    arrayDefault: {
       type: Array,
       default: () => [1, 2, 3]
     },
     /**
      * A test for default function more complex
      */
-    propComplexDefault: {
+    complexDefault: {
       type: Array,
       default: () => {
         if (typeof logger.mounted === 'function') {
@@ -77,6 +79,6 @@ export default defineComponent({
     }
   },
 	render(){
-		return h('div', this.propComplexDefault.toString())
+		return h('div', this.complexDefault.toString())
 	}
 })
