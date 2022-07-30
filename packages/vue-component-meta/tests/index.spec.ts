@@ -5,7 +5,12 @@ import * as metaChecker from '..';
 describe(`vue-component-meta`, () => {
 
 	const tsconfigPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/tsconfig.json');
-	const checker = metaChecker.createComponentMetaChecker(tsconfigPath);
+	const checker = metaChecker.createComponentMetaChecker(tsconfigPath, {
+		schema: {
+			enabled: true,
+			ignore: ['MyIgnoredNestedProps', 'VNode', 'VNodeMountHook', 'RendererNode', 'RendererElement']
+		}
+	});
 
 	test('global-props', () => {
 
@@ -44,7 +49,7 @@ describe(`vue-component-meta`, () => {
 		const arrayOptional = meta.props.find(prop => prop.name === 'arrayOptional');
 		const enumValue = meta.props.find(prop => prop.name === 'enumValue');
 		const literalFromContext = meta.props.find(prop => prop.name === 'literalFromContext');
-		const literal = meta.props.find(prop => prop.name === 'literal');
+		const inlined = meta.props.find(prop => prop.name === 'inlined');
 		// const onEvent = meta.props.find(prop => prop.name === 'onEvent');
 
 		expect(foo).toBeDefined();
@@ -162,11 +167,11 @@ describe(`vue-component-meta`, () => {
 
 		expect(nestedOptional).toBeDefined();
 		expect(nestedOptional?.required).toBeFalsy();
-		expect(nestedOptional?.type).toEqual('MyNestedProps | undefined');
+		expect(nestedOptional?.type).toEqual('MyNestedProps | MyIgnoredNestedProps | undefined');
 		expect(nestedOptional?.description).toEqual('optional nested object');
 		expect(nestedOptional?.schema).toEqual({
 			kind: 'enum',
-			type: 'MyNestedProps | undefined',
+			type: 'MyNestedProps | MyIgnoredNestedProps | undefined',
 			schema: [
 				'undefined',
 				{
@@ -182,7 +187,8 @@ describe(`vue-component-meta`, () => {
 							schema: 'string'
 						}
 					}
-				}
+				},
+				'MyIgnoredNestedProps',
 			]
 		});
 
@@ -253,25 +259,22 @@ describe(`vue-component-meta`, () => {
 			schema: ['MyEnum.Small', 'MyEnum.Medium', 'MyEnum.Large']
 		});
 
-		expect(literal).toBeDefined();
-		expect(literal?.required).toBeTruthy();
-		expect(literal?.type).toEqual('{ foo: string; }');
-
-		// todo: this should be resolved to a type alias
-		// expect(literal?.schema).toEqual({ 
-		// 	kind: 'object',
-		//   type: '{ foo: string; }',
-		//   schema: {
-		// 		foo: {
-		// 			name: 'foo',
-		// 			description: '',
-		// 			tags: [],
-		// 			required: true,
-		// 			type: 'string',
-		// 			schema: 'string'
-		// 		}
-		// 	}
-		// })
+		expect(inlined).toBeDefined();
+		expect(inlined?.required).toBeTruthy();
+		expect(inlined?.schema).toEqual({ 
+			kind: 'object',
+		  type: '{ foo: string; }',
+		  schema: {
+				foo: {
+					name: 'foo',
+					description: '',
+					tags: [],
+					required: true,
+					type: 'string',
+					schema: 'string'
+				}
+			}
+		})
 
 		expect(literalFromContext).toBeDefined();
 		expect(literalFromContext?.required).toBeTruthy();
@@ -331,7 +334,20 @@ describe(`vue-component-meta`, () => {
 				type: '{ foo: string; } | undefined',
 				schema: [
 					'undefined',
-					'{ foo: string; }' // todo: this should be resolved to a type alias
+					{
+						kind: 'object',
+						type: '{ foo: string; }',
+						schema: {
+							foo: {
+								name: 'foo',
+								description: '',
+								tags: [],
+								required: true,
+								type: 'string',
+								schema: 'string'
+							}
+						}
+					}
 				],
 			}
 		]);
@@ -340,7 +356,28 @@ describe(`vue-component-meta`, () => {
 		expect(onBar?.type).toEqual('[value: { arg1: number; arg2?: any; }]');
 		expect(onBar?.signature).toEqual('(event: "bar", value: { arg1: number; arg2?: any; }): void');
 		expect(onBar?.schema).toEqual([
-			'{ arg1: number; arg2?: any; }' // todo: this should be resolved to a type alias
+			{
+				kind: 'object',
+				type: '{ arg1: number; arg2?: any; }',
+				schema: {
+					arg1: {
+						name: 'arg1',
+						description: '',
+						tags: [],
+						required: true,
+						type: 'number',
+						schema: 'number'
+					},
+					arg2: {
+						name: 'arg2',
+						description: '',
+						tags: [],
+						required: false,
+						type: 'any',
+						schema: 'any'
+					},
+				}
+			}
 		]);
 
 		expect(onBaz).toBeDefined();
