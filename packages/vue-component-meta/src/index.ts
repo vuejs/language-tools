@@ -264,12 +264,16 @@ function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expre
 	const enabled = options.enabled ?? false;
 
 	function shouldIgnore(subtype: ts.Type) {
+		const type = typeChecker.typeToString(subtype);
+		if (type === 'any') {
+			return true
+		}
+		
 		if (ignore.length === 0) {
 			return false
 		}
 
-		const type = typeChecker.typeToString(subtype);
-		return type === 'any' || ignore.includes(type)
+		return ignore.includes(type)
 	}
 	
 	function reducer(acc: any, cur: any) {

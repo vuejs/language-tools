@@ -5,15 +5,10 @@ import * as metaChecker from '..';
 describe(`vue-component-meta`, () => {
 
 	const tsconfigPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/tsconfig.json');
-	const checker = metaChecker.createComponentMetaChecker(tsconfigPath, {
-		schema: {
-			enabled: true,
-			ignore: ['MyIgnoredNestedProps', 'VNode', 'VNodeMountHook', 'RendererNode', 'RendererElement']
-		}
-	});
 
 	test('global-props', () => {
 
+		const checker = metaChecker.createComponentMetaChecker(tsconfigPath);
 		const globalProps = checker.getGlobalPropNames();
 
 		expect(globalProps).toEqual([
@@ -27,6 +22,7 @@ describe(`vue-component-meta`, () => {
 	});
 
 	test('empty-component', () => {
+		const checker = metaChecker.createComponentMetaChecker(tsconfigPath);
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/empty-component/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
 		const globalPropNames = checker.getGlobalPropNames();
@@ -42,6 +38,12 @@ describe(`vue-component-meta`, () => {
 	});
 
 	test('reference-type-props', () => {
+		const checker = metaChecker.createComponentMetaChecker(tsconfigPath, {
+			schema: {
+				enabled: true,
+				ignore: ['MyIgnoredNestedProps']
+			}
+		});
 
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-props/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
@@ -326,16 +328,21 @@ describe(`vue-component-meta`, () => {
 	});
 
 	test('reference-type-props-js', () => {
+		const checker = metaChecker.createComponentMetaChecker(tsconfigPath);
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-props/component-js.vue');
 		const meta = checker.getComponentMeta(componentPath);
 
 		const foo = meta.props.find(prop => prop.name === 'foo');
 		expect(foo).toBeDefined();
 		expect(foo?.required).toBeTruthy();
-		expect(foo?.schema).toEqual('string');
 	})
 
 	test('reference-type-events', () => {
+		const checker = metaChecker.createComponentMetaChecker(tsconfigPath, {
+			schema: {
+				enabled: true,
+			}
+		});
 
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-events/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
@@ -406,7 +413,7 @@ describe(`vue-component-meta`, () => {
 	});
 
 	test('template-slots', () => {
-
+		const checker = metaChecker.createComponentMetaChecker(tsconfigPath);
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/template-slots/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
 
@@ -429,7 +436,7 @@ describe(`vue-component-meta`, () => {
 	});
 
 	test('class-slots', () => {
-
+		const checker = metaChecker.createComponentMetaChecker(tsconfigPath);
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/class-slots/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
 
@@ -447,7 +454,7 @@ describe(`vue-component-meta`, () => {
 	});
 
 	test('exposed', () => {
-
+		const checker = metaChecker.createComponentMetaChecker(tsconfigPath);
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-exposed/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
 
@@ -461,7 +468,7 @@ describe(`vue-component-meta`, () => {
 	});
 
 	test('ts-component', () => {
-
+		const checker = metaChecker.createComponentMetaChecker(tsconfigPath);
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/ts-component/component.ts');
 		const meta = checker.getComponentMeta(componentPath);
 
@@ -481,7 +488,7 @@ describe(`vue-component-meta`, () => {
 	});
 
 	test('ts-named-exports', () => {
-
+		const checker = metaChecker.createComponentMetaChecker(tsconfigPath);
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/ts-named-export/component.ts');
 		const exportNames = checker.getExportNames(componentPath);
 		const Foo = checker.getComponentMeta(componentPath, 'Foo');
