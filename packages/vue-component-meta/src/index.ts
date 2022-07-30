@@ -186,7 +186,7 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 			return [];
 		}
 
-		function getSlots(): SlotMeta[] {
+		function getSlots() {
 
 			const propertyName = (parsedCommandLine.vueOptions.target ?? 3) < 3 ? '$scopedSlots' : '$slots';
 			const $slots = symbolProperties.find(prop => prop.escapedName === propertyName);
@@ -201,7 +201,7 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 			return [];
 		}
 
-		function getExposed(): ExposeMeta[] {
+		function getExposed() {
 			const exposed = symbolProperties.filter(prop =>
 				// only exposed props will have a syntheticOrigin
 				Boolean((prop as any).syntheticOrigin)
