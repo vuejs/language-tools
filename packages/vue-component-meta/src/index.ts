@@ -311,23 +311,21 @@ function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expre
 		}
 	}
 	function resolveEventSignature(call: ts.Signature): EventMeta {
+		const subtype = typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode!)
 		const schema = enabled
-			? resolveSchema(
-					typeChecker
-						.getTypeArguments(typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode!) as ts.TypeReference)[0]
-				)
-			: undefined
+				? typeChecker.getTypeArguments(subtype as ts.TypeReference).map(resolveSchema)
+				: undefined
 		
 		return {
 			name: (typeChecker.getTypeOfSymbolAtLocation(call.parameters[0], symbolNode!) as ts.StringLiteralType).value,
-			type: typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode!)),
+			type: typeChecker.typeToString(subtype),
 			signature: typeChecker.signatureToString(call),
 			schema,
 		}
 	}
 
 	function resolveCallbackSchema(signature: ts.Signature): PropertyMetaSchema {
-		const schema = enabled 
+		const schema = enabled && signature.parameters.length > 0
 			? typeChecker
 				.getTypeArguments(typeChecker.getTypeOfSymbolAtLocation(signature.parameters[0], symbolNode) as ts.TypeReference)
 				.map(resolveSchema)

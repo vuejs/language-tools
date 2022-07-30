@@ -19,7 +19,7 @@ export interface EventMeta {
 	name: string;
 	type: string;
 	signature: string;
-	schema?: PropertyMetaSchema;
+	schema?: PropertyMetaSchema[];
 }
 export interface SlotMeta {
 	name: string;

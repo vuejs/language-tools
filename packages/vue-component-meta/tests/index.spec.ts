@@ -21,12 +21,6 @@ describe(`vue-component-meta`, () => {
 			'ref',
 			'ref_for',
 			'ref_key',
-			'onVnodeBeforeMount',
-			'onVnodeMounted',
-			'onVnodeBeforeUpdate',
-			'onVnodeUpdated',
-			'onVnodeBeforeUnmount',
-			'onVnodeUnmounted',
 			'class',
 			'style',
 		]);
