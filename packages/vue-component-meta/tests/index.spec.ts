@@ -325,6 +325,16 @@ describe(`vue-component-meta`, () => {
 		// });
 	});
 
+	test('reference-type-props-js', () => {
+		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-props/component-js.vue');
+		const meta = checker.getComponentMeta(componentPath);
+
+		const foo = meta.props.find(prop => prop.name === 'foo');
+		expect(foo).toBeDefined();
+		expect(foo?.required).toBeTruthy();
+		expect(foo?.schema).toEqual('string');
+	})
+
 	test('reference-type-events', () => {
 
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-events/component.vue');

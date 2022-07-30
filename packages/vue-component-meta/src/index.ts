@@ -65,6 +65,11 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 					fileText = ts.sys.readFile(fileName);
 				}
 				if (fileText !== undefined) {
+					// force typescript to parse the file
+					if (fileName.endsWith('.vue') && fileText.includes('<script') && !fileText.includes('lang="ts"')) {
+						fileText = fileText.replace(/<script/g, '<script lang="ts"');
+					}
+
 					scriptSnapshot[fileName] = ts.ScriptSnapshot.fromString(fileText);
 				}
 			}
