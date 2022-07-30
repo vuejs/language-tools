@@ -26,6 +26,21 @@ describe(`vue-component-meta`, () => {
 		]);
 	});
 
+	test('empty-component', () => {
+		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/empty-component/component.vue');
+		const meta = checker.getComponentMeta(componentPath);
+		const globalPropNames = checker.getGlobalPropNames();
+
+		meta.props = meta.props.filter(prop => !globalPropNames.includes(prop.name))
+
+		expect(meta).toEqual({
+			props: [],
+			events: [],
+			slots: [],
+			exposed: [],
+		})
+	});
+
 	test('reference-type-props', () => {
 
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-props/component.vue');
