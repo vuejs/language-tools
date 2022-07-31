@@ -5,7 +5,6 @@ import { posix as path } from 'path';
 import type * as templateGen from '../generators/template';
 import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
-import type { ScriptImportRanges } from '../parsers/scriptImportRanges';
 import type { TeleportMappingData, EmbeddedFileMappingData } from '../types';
 
 export function getSlotsPropertyName(vueVersion: number) {
@@ -54,7 +53,7 @@ export function generate(
 	writeScriptSrc();
 	writeScriptSetupImports();
 	writeScriptImports();
-	writeScriptBeforeExportDefaultAfterImports();
+	writeScriptBeforeExportDefault();
 	writeScriptSetup();
 	writeScriptSetupTypes();
 	writeScriptAfterExportDefault();
@@ -197,22 +196,29 @@ export function generate(
 		codeGen.addText(`;\n`);
 		codeGen.addText(`export { default } from '${src}';\n`);
 	}
-	function writeScriptBeforeExportDefaultAfterImports() {
+	function writeScriptBeforeExportDefault() {
 		if (!script)
 			return;
 
-		function writeScriptAfterImportRanges (end: number) {
+		function writeScriptRemoveImportRanges (end: number) {
 			if (scriptRanges?.imports.length) {
-				const lastRemoteTextRange = scriptRanges?.imports[scriptRanges?.imports.length - 1];
-				if (!lastRemoteTextRange || lastRemoteTextRange.code.end >= end) return;
-				addVirtualCode('script', lastRemoteTextRange.code.end, end);
+				const removeTextRanges = scriptRanges?.imports?.map((r) => r.code).sort((a, b) => a.start - b.start);
+
+				removeTextRanges.forEach((range, index) => {
+					const prevRangeEnd = (index !== 0) ? removeTextRanges[index - 1].end : 0;
+					if (prevRangeEnd >= range.start) return
+					addVirtualCode('script', prevRangeEnd, range.start);
+				})
+				const lastRemoteTextRange = removeTextRanges[removeTextRanges.length - 1]
+				if (!lastRemoteTextRange || lastRemoteTextRange.end >= end) return
+				addVirtualCode('script', lastRemoteTextRange.end, end);
 			} else {
 				addVirtualCode('script', 0, end);
 			}
 		}
 
 		if (!!scriptSetup && scriptRanges?.exportDefault) {
-			writeScriptAfterImportRanges(scriptRanges.exportDefault.expression.start);
+			writeScriptRemoveImportRanges(scriptRanges.exportDefault.expression.start);
 			exportdefaultStart = codeGen.getText().length - (scriptRanges.exportDefault.expression.start - scriptRanges.exportDefault.start);
 		}
 		else {
@@ -221,7 +227,7 @@ export function generate(
 				isExportRawObject = script.content.substring(scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end).startsWith('{');
 			}
 			if (isExportRawObject && shimComponentOptions && scriptRanges?.exportDefault) {
-				writeScriptAfterImportRanges(scriptRanges.exportDefault.expression.start);
+				writeScriptRemoveImportRanges(scriptRanges.exportDefault.expression.start);
 				if (shimComponentOptions === 'defineComponent') {
 					codeGen.addText(`(await import('${vueLibName}')).defineComponent(`);
 				}
@@ -233,7 +239,7 @@ export function generate(
 				addVirtualCode('script', scriptRanges.exportDefault.expression.end, script.content.length);
 			}
 			else {
-				writeScriptAfterImportRanges(script.content.length);
+				writeScriptRemoveImportRanges(script.content.length);
 			}
 		}
 	}
@@ -279,58 +285,6 @@ export function generate(
 			},
 		);
 	}
-	function writeNewImport (vueTag: 'script' | 'scriptSetup', importRange: ScriptImportRanges[number]) {
-		const content = vueTag === 'script' ? script?.content : scriptSetup?.content;
-		if (!content) return;
-		const moduleName = content.substring(importRange.moduleSpecifier.start, importRange.moduleSpecifier.end);
-		if (moduleName.endsWith('.vue\'') || moduleName.endsWith('.vue\"')) {
-			codeGen.addCode(
-				content.substring(importRange.code.start, importRange.moduleSpecifier.start),
-				{
-					start: importRange.code.start,
-					end: importRange.moduleSpecifier.start,
-				},
-				SourceMaps.Mode.Offset,
-				{
-					vueTag,
-					capabilities: {
-						basic: lsType === 'script',
-						references: true,
-						definitions: lsType === 'script',
-						diagnostic: lsType === 'script',
-						rename: true,
-						completion: lsType === 'script',
-						semanticTokens: lsType === 'script',
-					},
-				},
-			);
-			const newModuleName = moduleName.replace(/\.vue(['"])$/, '.vue.js$1');
-			codeGen.addCode(
-				newModuleName,
-				{
-					start: importRange.moduleSpecifier.start,
-					end: importRange.moduleSpecifier.end,
-				},
-				SourceMaps.Mode.Expand,
-				{
-					vueTag,
-					capabilities: {
-						basic: lsType === 'script',
-						references: true,
-						definitions: lsType === 'script',
-						diagnostic: lsType === 'script',
-						rename: true,
-						completion: lsType === 'script',
-						semanticTokens: lsType === 'script',
-					},
-				},
-			);
-			addVirtualCode(vueTag, importRange.moduleSpecifier.end, importRange.code.end);
-		} else {
-			addVirtualCode(vueTag, importRange.code.start, importRange.code.end);
-		}
-		codeGen.addText(`\n`);
-	}
 	function writeScriptSetupImports() {
 
 		if (!scriptSetup)
@@ -339,12 +293,56 @@ export function generate(
 		if (!scriptSetupRanges?.imports.length)
 			return;
 
-		scriptSetupRanges.imports.forEach((importRange, index) => {
-			const prevRangeEnd = (index !== 0) ? scriptSetupRanges.imports[index - 1].code.end : 0;
-			if (prevRangeEnd >= importRange.code.start) return;
-			addVirtualCode('scriptSetup', prevRangeEnd, importRange.code.start);
-			writeNewImport('scriptSetup', importRange);
-		})
+		for (const importRange of scriptSetupRanges.imports) {
+			const moduleName = scriptSetup.content.substring(importRange.moduleSpecifier.start, importRange.moduleSpecifier.end)
+			if (moduleName.endsWith('.vue\'') || moduleName.endsWith('.vue\"')) {
+				codeGen.addCode(
+					scriptSetup.content.substring(importRange.code.start, importRange.moduleSpecifier.start),
+					{
+						start: importRange.code.start,
+						end: importRange.moduleSpecifier.start,
+					},
+					SourceMaps.Mode.Offset,
+					{
+						vueTag: 'scriptSetup',
+						capabilities: {
+							basic: lsType === 'script',
+							references: true,
+							definitions: lsType === 'script',
+							diagnostic: lsType === 'script',
+							rename: true,
+							completion: lsType === 'script',
+							semanticTokens: lsType === 'script',
+						},
+					},
+				)
+				const newModuleName = moduleName.replace(/\.vue(['"])$/, '.vue.js$1')
+				codeGen.addCode(
+					newModuleName,
+					{
+						start: importRange.moduleSpecifier.start,
+						end: importRange.moduleSpecifier.end,
+					},
+					SourceMaps.Mode.Expand,
+					{
+						vueTag: 'scriptSetup',
+						capabilities: {
+							basic: lsType === 'script',
+							references: true,
+							definitions: lsType === 'script',
+							diagnostic: lsType === 'script',
+							rename: true,
+							completion: lsType === 'script',
+							semanticTokens: lsType === 'script',
+						},
+					},
+				)
+				addVirtualCode('scriptSetup', importRange.moduleSpecifier.end, importRange.code.end)
+			} else {
+				addVirtualCode('scriptSetup', importRange.code.start, importRange.code.end)
+			}
+			codeGen.addText(`\n`);
+		}
 	}
 	function writeScriptImports() {
 
@@ -354,12 +352,56 @@ export function generate(
 		if (!scriptRanges?.imports.length)
 			return;
 
-		scriptRanges.imports.forEach((importRange, index) => {
-			const prevRangeEnd = (index !== 0) ? scriptRanges.imports[index - 1].code.end : 0;
-			if (prevRangeEnd >= importRange.code.start) return;
-			addVirtualCode('script', prevRangeEnd, importRange.code.start);
-			writeNewImport('script', importRange);
-		})
+		for (const importRange of scriptRanges.imports) {
+			const moduleName = script.content.substring(importRange.moduleSpecifier.start, importRange.moduleSpecifier.end)
+			if (moduleName.endsWith('.vue\'') || moduleName.endsWith('.vue\"')) {
+				codeGen.addCode(
+					script.content.substring(importRange.code.start, importRange.moduleSpecifier.start),
+					{
+						start: importRange.code.start,
+						end: importRange.moduleSpecifier.start,
+					},
+					SourceMaps.Mode.Offset,
+					{
+						vueTag: 'script',
+						capabilities: {
+							basic: lsType === 'script',
+							references: true,
+							definitions: lsType === 'script',
+							diagnostic: lsType === 'script',
+							rename: true,
+							completion: lsType === 'script',
+							semanticTokens: lsType === 'script',
+						},
+					},
+				)
+				const newModuleName = moduleName.replace(/.vue(['"])$/, '.vue.js$1')
+				codeGen.addCode(
+					newModuleName,
+					{
+						start: importRange.moduleSpecifier.start,
+						end: importRange.moduleSpecifier.end,
+					},
+					SourceMaps.Mode.Expand,
+					{
+						vueTag: 'script',
+						capabilities: {
+							basic: lsType === 'script',
+							references: true,
+							definitions: lsType === 'script',
+							diagnostic: lsType === 'script',
+							rename: true,
+							completion: lsType === 'script',
+							semanticTokens: lsType === 'script',
+						},
+					},
+				)
+				addVirtualCode('script', importRange.moduleSpecifier.end, importRange.code.end)
+			} else {
+				addVirtualCode('script', importRange.code.start, importRange.code.end)
+			}
+			codeGen.addText(`\n`);
+		}
 	}
 	function writeScriptSetup() {
 
