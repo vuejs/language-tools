@@ -96,30 +96,13 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 	const tsLs = ts.createLanguageService(proxyHost);
 	const program = tsLs.getProgram()!;
 	const typeChecker = program.getTypeChecker();
+	let globalPropNames: string[] = [];
+	globalPropNames = getComponentMeta(globalComponentName).props.map(prop => prop.name);
 
 	return {
-		getGlobalPropNames,
 		getExportNames,
 		getComponentMeta,
 	};
-
-	/**
-	 * Get helper array to map internal properties added by vue to any components
-	 * 
-	 * @example
-	 * ```ts
-	 * import { createComponentMetaChecker } from 'vue-component-meta'
-	 * 
-	 * const checker = createComponentMetaChecker('path/to/tsconfig.json')
-	 * const meta = checker.getComponentMeta('path/to/component.vue')
-	 * const globalPropNames = checker.getGlobalPropNames();
-	 * const props = meta.props.filter(prop => !globalPropNames.includes(prop.name))
-	 * ```
-	 */
-	function getGlobalPropNames() {
-		const meta = getComponentMeta(globalComponentName);
-		return meta.props.map(prop => prop.name);
-	}
 
 	function getMetaFileName(fileName: string) {
 		return (fileName.endsWith('.vue') ? fileName : fileName.substring(0, fileName.lastIndexOf('.'))) + '.meta.ts';
@@ -174,6 +157,11 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 				result = properties
 					.map(resolveNestedProperties)
 					.filter((prop) => !prop.name.match(propEventRegex));
+			}
+
+			// fill global
+			for (const prop of result) {
+				prop.global = globalPropNames.includes(prop.name);
 			}
 
 			// fill defaults
@@ -282,7 +270,7 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 	}
 }
 
-function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expression, options: MetaCheckerSchemaOptions = {}) {
+function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expression, options: MetaCheckerSchemaOptions = false) {
 	const enabled = !!options;
 	const ignore = typeof options === 'object' ? options.ignore ?? [] : [];
 
@@ -310,6 +298,7 @@ function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expre
 
 		return {
 			name: prop.getEscapedName().toString(),
+			global: false,
 			description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
 			tags: prop.getJsDocTags(typeChecker).map(tag => ({
 				name: tag.name,

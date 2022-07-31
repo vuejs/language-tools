@@ -10,6 +10,7 @@ export interface PropertyMeta {
 	name: string;
 	default?: string;
 	description: string;
+	global: boolean;
 	required: boolean;
 	type: string;
 	tags: { name: string, text?: string; }[];

@@ -7,25 +7,20 @@ describe(`vue-component-meta`, () => {
 	const tsconfigPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/tsconfig.json');
 	const checker = createComponentMetaChecker(tsconfigPath, {
 		forceUseTs: true,
-		printer: {
-			newLine: 1,
-		},
+		printer: { newLine: 1 },
 	});
 	const checker_schema = createComponentMetaChecker(tsconfigPath, {
 		schema: {
-			enabled: true,
 			ignore: ['MyIgnoredNestedProps'],
 		},
-		printer: {
-			newLine: 1,
-		},
+		printer: { newLine: 1 },
 	});
 
-	test('global-props', () => {
+	test('empty-component', () => {
+		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/empty-component/component.vue');
+		const meta = checker.getComponentMeta(componentPath);
 
-		const globalProps = checker.getGlobalPropNames();
-
-		expect(globalProps).toEqual([
+		expect(meta.props.map(prop => prop.name)).toEqual([
 			'key',
 			'ref',
 			'ref_for',
@@ -33,14 +28,8 @@ describe(`vue-component-meta`, () => {
 			'class',
 			'style',
 		]);
-	});
 
-	test('empty-component', () => {
-		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/empty-component/component.vue');
-		const meta = checker.getComponentMeta(componentPath);
-		const globalPropNames = checker.getGlobalPropNames();
-
-		meta.props = meta.props.filter(prop => !globalPropNames.includes(prop.name));
+		meta.props = meta.props.filter(prop => !prop.global);
 
 		expect(meta).toEqual({
 			props: [],
@@ -57,7 +46,6 @@ describe(`vue-component-meta`, () => {
 		const foo = meta.props.find(prop => prop.name === 'foo');
 		const bar = meta.props.find(prop => prop.name === 'bar');
 		const baz = meta.props.find(prop => prop.name === 'baz');
-		const bazWithDefault = meta.props.find(prop => prop.name === 'bazWithDefault');
 		const union = meta.props.find(prop => prop.name === 'union');
 		const unionOptional = meta.props.find(prop => prop.name === 'unionOptional');
 		const nested = meta.props.find(prop => prop.name === 'nested');
@@ -154,6 +142,7 @@ describe(`vue-component-meta`, () => {
 					name: 'nestedProp',
 					description: 'nested prop documentation',
 					tags: [],
+					global: false,
 					required: true,
 					type: 'string',
 					schema: 'string'
@@ -173,6 +162,7 @@ describe(`vue-component-meta`, () => {
 					name: 'nestedProp',
 					description: 'nested prop documentation',
 					tags: [],
+					global: false,
 					required: true,
 					type: 'string',
 					schema: 'string'
@@ -181,6 +171,7 @@ describe(`vue-component-meta`, () => {
 					name: 'additionalProp',
 					description: 'required additional property',
 					tags: [],
+					global: false,
 					required: true,
 					type: 'string',
 					schema: 'string'
@@ -205,6 +196,7 @@ describe(`vue-component-meta`, () => {
 							name: 'nestedProp',
 							description: 'nested prop documentation',
 							tags: [],
+							global: false,
 							required: true,
 							type: 'string',
 							schema: 'string'
@@ -231,6 +223,7 @@ describe(`vue-component-meta`, () => {
 							name: 'nestedProp',
 							description: 'nested prop documentation',
 							tags: [],
+							global: false,
 							required: true,
 							type: 'string',
 							schema: 'string'
@@ -261,6 +254,7 @@ describe(`vue-component-meta`, () => {
 									name: 'nestedProp',
 									description: 'nested prop documentation',
 									tags: [],
+									global: false,
 									required: true,
 									type: 'string',
 									schema: 'string'
@@ -292,6 +286,7 @@ describe(`vue-component-meta`, () => {
 					name: 'foo',
 					description: '',
 					tags: [],
+					global: false,
 					required: true,
 					type: 'string',
 					schema: 'string'
@@ -373,6 +368,7 @@ describe(`vue-component-meta`, () => {
 								name: 'foo',
 								description: '',
 								tags: [],
+								global: false,
 								required: true,
 								type: 'string',
 								schema: 'string'
@@ -395,6 +391,7 @@ describe(`vue-component-meta`, () => {
 						name: 'arg1',
 						description: '',
 						tags: [],
+						global: false,
 						required: true,
 						type: 'number',
 						schema: 'number'
@@ -403,6 +400,7 @@ describe(`vue-component-meta`, () => {
 						name: 'arg2',
 						description: '',
 						tags: [],
+						global: false,
 						required: false,
 						type: 'any',
 						schema: 'any'
