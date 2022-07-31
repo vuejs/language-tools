@@ -404,10 +404,13 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		async function getTypeScriptInsert() {
 			const embeddedScriptUri = shared.fsPathToUri(vueDocument.file.getScriptFileName());
 			const tsImportName = camelize(path.basename(importFile).replace(/\./g, '-'));
-			const [formatOptions, preferences] = await Promise.all([
-				options.tsSettings.getFormatOptions?.(embeddedScriptUri) ?? {},
-				options.tsSettings.getPreferences?.(embeddedScriptUri) ?? {},
+			let [formatOptions, preferences] = await Promise.all([
+				options.tsSettings.getFormatOptions?.(embeddedScriptUri),
+				options.tsSettings.getPreferences?.(embeddedScriptUri),
 			]);
+			formatOptions = formatOptions ?? {};
+			preferences = preferences ?? {};
+			(preferences as any).importModuleSpecifierEnding = 'minimal';
 			const tsDetail = options.tsLs.__internal__.raw.getCompletionEntryDetails(shared.uriToFsPath(embeddedScriptUri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
 			if (tsDetail?.codeActions) {
 				for (const action of tsDetail.codeActions) {
