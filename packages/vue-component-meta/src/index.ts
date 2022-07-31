@@ -283,8 +283,8 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 }
 
 function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expression, options: MetaCheckerSchemaOptions = {}) {
-	const ignore = options.ignore ?? [];
-	const enabled = options.enabled ?? false;
+	const enabled = !!options;
+	const ignore = typeof options === 'object' ? options.ignore ?? [] : [];
 
 	function shouldIgnore(subtype: ts.Type) {
 		const type = typeChecker.typeToString(subtype);
