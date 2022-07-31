@@ -1,11 +1,19 @@
 import * as path from 'path';
 import { describe, expect, test } from 'vitest';
-import * as metaChecker from '..';
+import { createComponentMetaChecker } from '..';
 
 describe(`vue-component-meta`, () => {
 
 	const tsconfigPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/tsconfig.json');
-	const checker = metaChecker.createComponentMetaChecker(tsconfigPath);
+	const checker = createComponentMetaChecker(tsconfigPath, {
+		forceUseTs: true,
+	});
+	const checker_schema = createComponentMetaChecker(tsconfigPath, {
+		schema: {
+			enabled: true,
+			ignore: ['MyIgnoredNestedProps'],
+		}
+	});
 
 	test('global-props', () => {
 
@@ -16,21 +24,29 @@ describe(`vue-component-meta`, () => {
 			'ref',
 			'ref_for',
 			'ref_key',
-			'onVnodeBeforeMount',
-			'onVnodeMounted',
-			'onVnodeBeforeUpdate',
-			'onVnodeUpdated',
-			'onVnodeBeforeUnmount',
-			'onVnodeUnmounted',
 			'class',
 			'style',
 		]);
 	});
 
-	test('reference-type-props', () => {
-
-		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-props/component.vue');
+	test('empty-component', () => {
+		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/empty-component/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
+		const globalPropNames = checker.getGlobalPropNames();
+
+		meta.props = meta.props.filter(prop => !globalPropNames.includes(prop.name));
+
+		expect(meta).toEqual({
+			props: [],
+			events: [],
+			slots: [],
+			exposed: [],
+		});
+	});
+
+	test('reference-type-props', () => {
+		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-props/component.vue');
+		const meta = checker_schema.getComponentMeta(componentPath);
 
 		const foo = meta.props.find(prop => prop.name === 'foo');
 		const bar = meta.props.find(prop => prop.name === 'bar');
@@ -44,7 +60,7 @@ describe(`vue-component-meta`, () => {
 		const arrayOptional = meta.props.find(prop => prop.name === 'arrayOptional');
 		const enumValue = meta.props.find(prop => prop.name === 'enumValue');
 		const literalFromContext = meta.props.find(prop => prop.name === 'literalFromContext');
-		const literal = meta.props.find(prop => prop.name === 'literal');
+		const inlined = meta.props.find(prop => prop.name === 'inlined');
 		// const onEvent = meta.props.find(prop => prop.name === 'onEvent');
 
 		expect(foo).toBeDefined();
@@ -167,11 +183,11 @@ describe(`vue-component-meta`, () => {
 
 		expect(nestedOptional).toBeDefined();
 		expect(nestedOptional?.required).toBeFalsy();
-		expect(nestedOptional?.type).toEqual('MyNestedProps | undefined');
+		expect(nestedOptional?.type).toEqual('MyNestedProps | MyIgnoredNestedProps | undefined');
 		expect(nestedOptional?.description).toEqual('optional nested object');
 		expect(nestedOptional?.schema).toEqual({
 			kind: 'enum',
-			type: 'MyNestedProps | undefined',
+			type: 'MyNestedProps | MyIgnoredNestedProps | undefined',
 			schema: [
 				'undefined',
 				{
@@ -187,7 +203,8 @@ describe(`vue-component-meta`, () => {
 							schema: 'string'
 						}
 					}
-				}
+				},
+				'MyIgnoredNestedProps',
 			]
 		});
 
@@ -258,25 +275,22 @@ describe(`vue-component-meta`, () => {
 			schema: ['MyEnum.Small', 'MyEnum.Medium', 'MyEnum.Large']
 		});
 
-		expect(literal).toBeDefined();
-		expect(literal?.required).toBeTruthy();
-		expect(literal?.type).toEqual('{ foo: string; }');
-
-		// todo: this should be resolved to a type alias
-		// expect(literal?.schema).toEqual({ 
-		// 	kind: 'object',
-		//   type: '{ foo: string; }',
-		//   schema: {
-		// 		foo: {
-		// 			name: 'foo',
-		// 			description: '',
-		// 			tags: [],
-		// 			required: true,
-		// 			type: 'string',
-		// 			schema: 'string'
-		// 		}
-		// 	}
-		// })
+		expect(inlined).toBeDefined();
+		expect(inlined?.required).toBeTruthy();
+		expect(inlined?.schema).toEqual({
+			kind: 'object',
+			type: '{ foo: string; }',
+			schema: {
+				foo: {
+					name: 'foo',
+					description: '',
+					tags: [],
+					required: true,
+					type: 'string',
+					schema: 'string'
+				}
+			}
+		});
 
 		expect(literalFromContext).toBeDefined();
 		expect(literalFromContext?.required).toBeTruthy();
@@ -318,10 +332,18 @@ describe(`vue-component-meta`, () => {
 		// });
 	});
 
-	test('reference-type-events', () => {
-
-		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-events/component.vue');
+	test('reference-type-props-js', () => {
+		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-props/component-js.vue');
 		const meta = checker.getComponentMeta(componentPath);
+
+		const foo = meta.props.find(prop => prop.name === 'foo');
+		expect(foo).toBeDefined();
+		expect(foo?.required).toBeTruthy();
+	});
+
+	test('reference-type-events', () => {
+		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-events/component.vue');
+		const meta = checker_schema.getComponentMeta(componentPath);
 
 		const onFoo = meta.events.find(event => event.name === 'foo');
 		const onBar = meta.events.find(event => event.name === 'bar');
@@ -336,7 +358,20 @@ describe(`vue-component-meta`, () => {
 				type: '{ foo: string; } | undefined',
 				schema: [
 					'undefined',
-					'{ foo: string; }' // todo: this should be resolved to a type alias
+					{
+						kind: 'object',
+						type: '{ foo: string; }',
+						schema: {
+							foo: {
+								name: 'foo',
+								description: '',
+								tags: [],
+								required: true,
+								type: 'string',
+								schema: 'string'
+							}
+						}
+					}
 				],
 			}
 		]);
@@ -345,7 +380,28 @@ describe(`vue-component-meta`, () => {
 		expect(onBar?.type).toEqual('[value: { arg1: number; arg2?: any; }]');
 		expect(onBar?.signature).toEqual('(event: "bar", value: { arg1: number; arg2?: any; }): void');
 		expect(onBar?.schema).toEqual([
-			'{ arg1: number; arg2?: any; }' // todo: this should be resolved to a type alias
+			{
+				kind: 'object',
+				type: '{ arg1: number; arg2?: any; }',
+				schema: {
+					arg1: {
+						name: 'arg1',
+						description: '',
+						tags: [],
+						required: true,
+						type: 'number',
+						schema: 'number'
+					},
+					arg2: {
+						name: 'arg2',
+						description: '',
+						tags: [],
+						required: false,
+						type: 'any',
+						schema: 'any'
+					},
+				}
+			}
 		]);
 
 		expect(onBaz).toBeDefined();
@@ -355,7 +411,6 @@ describe(`vue-component-meta`, () => {
 	});
 
 	test('template-slots', () => {
-
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/template-slots/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
 
@@ -378,7 +433,6 @@ describe(`vue-component-meta`, () => {
 	});
 
 	test('class-slots', () => {
-
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/class-slots/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
 
@@ -396,7 +450,6 @@ describe(`vue-component-meta`, () => {
 	});
 
 	test('exposed', () => {
-
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-exposed/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
 
@@ -410,7 +463,6 @@ describe(`vue-component-meta`, () => {
 	});
 
 	test('ts-component', () => {
-
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/ts-component/component.ts');
 		const meta = checker.getComponentMeta(componentPath);
 
@@ -430,7 +482,6 @@ describe(`vue-component-meta`, () => {
 	});
 
 	test('ts-named-exports', () => {
-
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/ts-named-export/component.ts');
 		const exportNames = checker.getExportNames(componentPath);
 		const Foo = checker.getComponentMeta(componentPath, 'Foo');

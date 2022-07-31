@@ -1,97 +1,29 @@
 import * as vue from '@volar/vue-language-core';
 import * as ts from 'typescript/lib/tsserverlibrary';
 
-export type PropertyMeta = {
-	name: string;
-	default?: string;
-	description: string;
-	required: boolean;
-	type: string;
-	tags: { name: string, text?: string; }[];
-	schema: PropertyMetaSchema;
+import type {
+	MetaCheckerOptions,
+	ComponentMeta,
+	EventMeta,
+	ExposeMeta,
+	MetaCheckerSchemaOptions,
+	PropertyMeta,
+	PropertyMetaSchema,
+	SlotMeta
+} from './types';
+
+export type {
+	MetaCheckerOptions,
+	ComponentMeta,
+	EventMeta,
+	ExposeMeta,
+	MetaCheckerSchemaOptions,
+	PropertyMeta,
+	PropertyMetaSchema,
+	SlotMeta
 };
 
-export type PropertyMetaSchema = string
-	| { kind: 'enum', type: string, schema: PropertyMetaSchema[]; }
-	| { kind: 'array', type: string, schema: PropertyMetaSchema[]; }
-	| { kind: 'event', type: string, schema: PropertyMetaSchema[]; }
-	| { kind: 'object', type: string, schema: Record<string, PropertyMeta>; };
-
-function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expression) {
-	function reducer(acc: any, cur: any) {
-		acc[cur.name] = cur;
-		return acc;
-	}
-	function resolveSymbolSchema(prop: ts.Symbol): PropertyMeta {
-		const subtype = typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!);
-		typeChecker.getDefaultFromTypeParameter(subtype);
-
-		return {
-			name: prop.getEscapedName().toString(),
-			description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
-			tags: prop.getJsDocTags(typeChecker).map(tag => ({
-				name: tag.name,
-				text: tag.text?.map(part => part.text).join(''),
-			})),
-			required: !Boolean((prop.declarations?.[0] as ts.ParameterDeclaration)?.questionToken ?? false),
-			type: typeChecker.typeToString(subtype),
-			schema: resolveSchema(subtype),
-		};
-	}
-	function resolveCallbackSchema(signature: ts.Signature): PropertyMetaSchema {
-		return {
-			kind: 'event',
-			type: typeChecker.signatureToString(signature),
-			schema: typeChecker.getTypeArguments(typeChecker.getTypeOfSymbolAtLocation(signature.parameters[0], symbolNode) as ts.TypeReference).map(resolveSchema)
-		};
-	}
-	function resolveEventSchema(subtype: ts.Type): PropertyMetaSchema {
-		return (subtype.getCallSignatures().length === 1)
-			? resolveCallbackSchema(subtype.getCallSignatures()[0])
-			: typeChecker.typeToString(subtype);
-	}
-	function resolveNestedSchema(subtype: ts.Type): PropertyMetaSchema {
-		// !!(subtype.flags & ts.TypeFlags.Object)
-		return (subtype.isClassOrInterface() || subtype.isIntersection())
-			? {
-				kind: 'object',
-				type: typeChecker.typeToString(subtype),
-				schema: subtype.getProperties().map(resolveSymbolSchema).reduce(reducer, {})
-			}
-			: resolveEventSchema(subtype);
-	}
-	function resolveArraySchema(subtype: ts.Type): PropertyMetaSchema {
-		// @ts-ignore - typescript internal, isArrayLikeType exists
-		return typeChecker.isArrayLikeType(subtype)
-			? {
-				kind: 'array',
-				type: typeChecker.typeToString(subtype),
-				schema: typeChecker.getTypeArguments(subtype as ts.TypeReference).map(resolveSchema)
-			}
-			: resolveNestedSchema(subtype);
-	}
-	function resolveSchema(subtype: ts.Type): PropertyMetaSchema {
-		return subtype.isUnion()
-			? {
-				kind: 'enum',
-				type: typeChecker.typeToString(subtype),
-				schema: subtype.types.map(resolveArraySchema)
-			}
-			: resolveArraySchema(subtype);
-	}
-
-	return {
-		resolveSymbolSchema,
-		resolveCallbackSchema,
-		resolveEventSchema,
-		resolveNestedSchema,
-		resolveArraySchema,
-		resolveSchema,
-	};
-}
-
-export function createComponentMetaChecker(tsconfigPath: string) {
-
+export function createComponentMetaChecker(tsconfigPath: string, checkerOptions: MetaCheckerOptions = {}) {
 	const parsedCommandLine = vue.tsShared.createParsedCommandLine(ts, {
 		useCaseSensitiveFileNames: ts.sys.useCaseSensitiveFileNames,
 		readDirectory: (path, extensions, exclude, include, depth) => {
@@ -142,7 +74,26 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 		getVueCompilationSettings: () => parsedCommandLine.vueOptions,
 	};
 	const core = vue.createLanguageContext(host);
-	const tsLs = ts.createLanguageService(core.typescriptLanguageServiceHost);
+	const proxyApis: Partial<ts.LanguageServiceHost> = checkerOptions.forceUseTs ? {
+		getScriptKind: (fileName) => {
+			if (fileName.endsWith('.vue.js')) {
+				return ts.ScriptKind.TS;
+			}
+			if (fileName.endsWith('.vue.jsx')) {
+				return ts.ScriptKind.TSX;
+			}
+			return core.typescriptLanguageServiceHost.getScriptKind!(fileName);
+		},
+	} : {};
+	const proxyHost = new Proxy(core.typescriptLanguageServiceHost, {
+		get(target, propKey: keyof ts.LanguageServiceHost) {
+			if (propKey in proxyApis) {
+				return proxyApis[propKey];
+			}
+			return target[propKey];
+		}
+	});
+	const tsLs = ts.createLanguageService(proxyHost);
 	const program = tsLs.getProgram()!;
 	const typeChecker = program.getTypeChecker();
 
@@ -185,7 +136,7 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 		return _getExports(componentPath).exports.map(e => e.getName());
 	}
 
-	function getComponentMeta(componentPath: string, exportName = 'default') {
+	function getComponentMeta(componentPath: string, exportName = 'default'): ComponentMeta {
 
 		const { symbolNode, exports } = _getExports(componentPath);
 		const _export = exports.find((property) => property.getName() === exportName);
@@ -196,6 +147,12 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 
 		const componentType = typeChecker.getTypeOfSymbolAtLocation(_export, symbolNode!);
 		const symbolProperties = componentType.getProperties() ?? [];
+		const {
+			resolveNestedProperties,
+			resolveEventSignature,
+			resolveExposedProperties,
+			resolveSlotProperties,
+		} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions.schema);
 
 		return {
 			props: getProps(),
@@ -207,14 +164,16 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 		function getProps() {
 
 			const $props = symbolProperties.find(prop => prop.escapedName === '$props');
+			const propEventRegex = /^(on[A-Z])/;
 			let result: PropertyMeta[] = [];
 
 			if ($props) {
 				const type = typeChecker.getTypeOfSymbolAtLocation($props, symbolNode!);
 				const properties = type.getApparentProperties();
-				const { resolveSymbolSchema } = createSchemaResolvers(typeChecker, symbolNode!);
 
-				result = properties.map(resolveSymbolSchema);
+				result = properties
+					.map(resolveNestedProperties)
+					.filter((prop) => !prop.name.match(propEventRegex));
 			}
 
 			// fill defaults
@@ -239,14 +198,8 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 			if ($emit) {
 				const type = typeChecker.getTypeOfSymbolAtLocation($emit, symbolNode!);
 				const calls = type.getCallSignatures();
-				const { resolveSchema } = createSchemaResolvers(typeChecker, symbolNode!);
 
-				return calls.map(call => ({
-					name: (typeChecker.getTypeOfSymbolAtLocation(call.parameters[0], symbolNode!) as ts.StringLiteralType).value,
-					type: typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode!)),
-					signature: typeChecker.signatureToString(call),
-					schema: typeChecker.getTypeArguments(typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode!) as ts.TypeReference).map(resolveSchema),
-				}));
+				return calls.map(resolveEventSignature).filter(event => event.name);
 			}
 
 			return [];
@@ -260,29 +213,21 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 			if ($slots) {
 				const type = typeChecker.getTypeOfSymbolAtLocation($slots, symbolNode!);
 				const properties = type.getProperties();
-				return properties.map(prop => ({
-					name: prop.getName(),
-					type: typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!).getCallSignatures()[0].parameters[0], symbolNode!)),
-					description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
-				}));
+
+				return properties.map(resolveSlotProperties);
 			}
 
 			return [];
 		}
 
 		function getExposed() {
-
 			const exposed = symbolProperties.filter(prop =>
 				// only exposed props will have a syntheticOrigin
 				Boolean((prop as any).syntheticOrigin)
 			);
 
 			if (exposed.length) {
-				return exposed.map(expose => ({
-					name: expose.getName(),
-					type: typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(expose, symbolNode!)),
-					description: ts.displayPartsToString(expose.getDocumentationComment(typeChecker)),
-				}));
+				return exposed.map(resolveExposedProperties);
 			}
 
 			return [];
@@ -326,6 +271,154 @@ export function createComponentMetaChecker(tsconfigPath: string) {
 			exports,
 		};
 	}
+}
+
+function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expression, options: MetaCheckerSchemaOptions = {}) {
+	const ignore = options.ignore ?? [];
+	const enabled = options.enabled ?? false;
+
+	function shouldIgnore(subtype: ts.Type) {
+		const type = typeChecker.typeToString(subtype);
+		if (type === 'any') {
+			return true;
+		}
+
+		if (ignore.length === 0) {
+			return false;
+		}
+
+		return ignore.includes(type);
+	}
+
+	function reducer(acc: any, cur: any) {
+		acc[cur.name] = cur;
+		return acc;
+	}
+
+	function resolveNestedProperties(prop: ts.Symbol): PropertyMeta {
+		const subtype = typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!);
+		const schema = enabled ? resolveSchema(subtype) : undefined;
+
+		return {
+			name: prop.getEscapedName().toString(),
+			description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
+			tags: prop.getJsDocTags(typeChecker).map(tag => ({
+				name: tag.name,
+				text: tag.text?.map(part => part.text).join(''),
+			})),
+			required: !Boolean((prop.declarations?.[0] as ts.ParameterDeclaration)?.questionToken ?? false),
+			type: typeChecker.typeToString(subtype),
+			schema,
+		};
+	}
+	function resolveSlotProperties(prop: ts.Symbol): SlotMeta {
+		const subtype = typeChecker.getTypeOfSymbolAtLocation(typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!).getCallSignatures()[0].parameters[0], symbolNode!);
+		const schema = enabled ? resolveSchema(subtype) : undefined;
+
+		return {
+			name: prop.getName(),
+			type: typeChecker.typeToString(subtype),
+			description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
+			schema,
+		};
+	}
+	function resolveExposedProperties(expose: ts.Symbol): ExposeMeta {
+		const subtype = typeChecker.getTypeOfSymbolAtLocation(expose, symbolNode!);
+		const schema = enabled ? resolveSchema(subtype) : undefined;
+
+		return {
+			name: expose.getName(),
+			type: typeChecker.typeToString(subtype),
+			description: ts.displayPartsToString(expose.getDocumentationComment(typeChecker)),
+			schema,
+		};
+	}
+	function resolveEventSignature(call: ts.Signature): EventMeta {
+		const subtype = typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode!);
+		const schema = enabled
+			? typeChecker.getTypeArguments(subtype as ts.TypeReference).map(resolveSchema)
+			: undefined;
+
+		return {
+			name: (typeChecker.getTypeOfSymbolAtLocation(call.parameters[0], symbolNode!) as ts.StringLiteralType).value,
+			type: typeChecker.typeToString(subtype),
+			signature: typeChecker.signatureToString(call),
+			schema,
+		};
+	}
+
+	function resolveCallbackSchema(signature: ts.Signature): PropertyMetaSchema {
+		const schema = enabled && signature.parameters.length > 0
+			? typeChecker
+				.getTypeArguments(typeChecker.getTypeOfSymbolAtLocation(signature.parameters[0], symbolNode) as ts.TypeReference)
+				.map(resolveSchema)
+			: undefined;
+
+		return {
+			kind: 'event',
+			type: typeChecker.signatureToString(signature),
+			schema,
+		};
+	}
+	function resolveEventSchema(subtype: ts.Type): PropertyMetaSchema {
+		return (subtype.getCallSignatures().length === 1)
+			? resolveCallbackSchema(subtype.getCallSignatures()[0])
+			: typeChecker.typeToString(subtype);
+	}
+	function resolveNestedSchema(subtype: ts.Type): PropertyMetaSchema {
+		if (
+			subtype.getCallSignatures().length === 0 &&
+			(subtype.isClassOrInterface() || subtype.isIntersection() || (subtype as ts.ObjectType).objectFlags & ts.ObjectFlags.Anonymous)
+		) {
+			if (shouldIgnore(subtype)) {
+				return typeChecker.typeToString(subtype);
+			}
+
+			return {
+				kind: 'object',
+				type: typeChecker.typeToString(subtype),
+				schema: subtype.getProperties().map(resolveNestedProperties).reduce(reducer, {})
+			};
+		}
+		return resolveEventSchema(subtype);
+	}
+	function resolveArraySchema(subtype: ts.Type): PropertyMetaSchema {
+		// @ts-ignore - typescript internal, isArrayLikeType exists
+		if (typeChecker.isArrayLikeType(subtype)) {
+			if (shouldIgnore(subtype)) {
+				return typeChecker.typeToString(subtype);
+			}
+
+			return {
+				kind: 'array',
+				type: typeChecker.typeToString(subtype),
+				schema: typeChecker.getTypeArguments(subtype as ts.TypeReference).map(resolveSchema)
+			};
+		}
+
+		return resolveNestedSchema(subtype);
+	}
+	function resolveSchema(subtype: ts.Type): PropertyMetaSchema {
+		return subtype.isUnion()
+			? {
+				kind: 'enum',
+				type: typeChecker.typeToString(subtype),
+				schema: subtype.types.map(resolveArraySchema)
+			}
+			: resolveArraySchema(subtype);
+	}
+
+	return {
+		resolveNestedProperties,
+		resolveSlotProperties,
+		resolveEventSignature,
+		resolveExposedProperties,
+		resolveCallbackSchema,
+		resolveEventSchema,
+		resolveNestedSchema,
+		resolveArraySchema,
+		resolveSchema,
+	};
 }
 
 function readComponentDefaultProps(fileText: string) {

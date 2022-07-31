@@ -5,6 +5,10 @@ export interface MyNestedProps {
 	nestedProp: string;
 }
 
+export interface MyIgnoredNestedProps {
+	nestedProp: string;
+}
+
 enum MyEnum {
   Small,
   Medium,
@@ -69,7 +73,7 @@ export interface MyProps {
 	/**
 	 * optional nested object
 	 */
-	nestedOptional?: MyNestedProps,
+	nestedOptional?: MyNestedProps | MyIgnoredNestedProps,
 	/**
 	 * required array object
 	 */
@@ -86,5 +90,5 @@ export interface MyProps {
 	 * literal type alias that require context
 	 */
 	literalFromContext: MyCategories,
-	literal: { foo: string },
+	inlined: { foo: string },
 }

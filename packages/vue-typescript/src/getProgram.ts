@@ -7,7 +7,6 @@ export function getProgram(
 	vueTsLs: ts.LanguageService,
 ) {
 
-	const program = vueTsLs.getProgram()!;
 	const proxy: Partial<ts.Program> = {
 		getRootFileNames,
 		emit,
@@ -18,17 +17,25 @@ export function getProgram(
 		getBindAndCheckDiagnostics,
 	};
 
-	return new Proxy(program, {
+	return new Proxy({}, {
 		get: (target: any, property: keyof ts.Program) => {
 			if (property in proxy) {
 				return proxy[property];
+			}
+			const program = getProgram();
+			if (property in program) {
+				return program[property];
 			}
 			return target[property];
 		},
 	});
 
+	function getProgram() {
+		return vueTsLs.getProgram()!;
+	}
+
 	function getRootFileNames() {
-		return program.getRootFileNames().filter(fileName => core.typescriptLanguageServiceHost.fileExists?.(fileName));
+		return getProgram().getRootFileNames().filter(fileName => core.typescriptLanguageServiceHost.fileExists?.(fileName));
 	}
 
 	// for vue-tsc --noEmit --watch
@@ -59,20 +66,20 @@ export function getProgram(
 				if (!mapped.embedded.file.capabilities.diagnostics)
 					return [] as any;
 
-				const errors = transformDiagnostics(program?.[api](sourceFile, cancellationToken) ?? []);
+				const errors = transformDiagnostics(vueTsLs.getProgram()?.[api](sourceFile, cancellationToken) ?? []);
 
 				return errors as any;
 			}
 		}
 
-		return transformDiagnostics(program[api](sourceFile, cancellationToken) ?? []) as any;
+		return transformDiagnostics(getProgram()[api](sourceFile, cancellationToken) ?? []) as any;
 	}
 
 	function getGlobalDiagnostics(cancellationToken?: ts.CancellationToken): readonly ts.Diagnostic[] {
-		return transformDiagnostics(program.getGlobalDiagnostics(cancellationToken) ?? []);
+		return transformDiagnostics(getProgram().getGlobalDiagnostics(cancellationToken) ?? []);
 	}
 	function emit(targetSourceFile?: ts.SourceFile, _writeFile?: ts.WriteFileCallback, cancellationToken?: ts.CancellationToken, emitOnlyDtsFiles?: boolean, customTransformers?: ts.CustomTransformers): ts.EmitResult {
-		const scriptResult = program.emit(targetSourceFile, (core.typescriptLanguageServiceHost.writeFile ?? ts.sys.writeFile), cancellationToken, emitOnlyDtsFiles, customTransformers);
+		const scriptResult = getProgram().emit(targetSourceFile, (core.typescriptLanguageServiceHost.writeFile ?? ts.sys.writeFile), cancellationToken, emitOnlyDtsFiles, customTransformers);
 		return {
 			emitSkipped: scriptResult.emitSkipped,
 			emittedFiles: scriptResult.emittedFiles,
