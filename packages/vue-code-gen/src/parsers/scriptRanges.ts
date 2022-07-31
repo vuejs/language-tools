@@ -1,6 +1,5 @@
 import { getStartEnd, parseBindingRanges } from './scriptSetupRanges';
 import type { TextRange } from '../types';
-import { parseScriptImportRanges } from './scriptImportRanges';
 
 export interface ScriptRanges extends ReturnType<typeof parseScriptRanges> { }
 
@@ -52,7 +51,6 @@ export function parseScriptRanges(ts: typeof import('typescript/lib/tsserverlibr
 	});
 
 	return {
-		imports: parseScriptImportRanges(ts, ast, ast.getEnd()),
 		exportDefault,
 		bindings,
 	};

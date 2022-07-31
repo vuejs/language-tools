@@ -1,4 +1,3 @@
-import { parseScriptImportRanges } from './scriptImportRanges';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { TextRange } from '../types';
 
@@ -43,7 +42,6 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 	ast.forEachChild(child => visitNode(child, ast));
 
 	return {
-		imports: parseScriptImportRanges(ts, ast, importSectionEndOffset),
 		importSectionEndOffset,
 		notOnTopTypeExports,
 		bindings,
