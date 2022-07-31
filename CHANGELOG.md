@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.39.4 (2022/7/31)
+
+- feat: support ESM project ([#1543](https://github.com/johnsoncodehk/volar/issues/1543))
+- fix: "Volar: Reload Project" command cannot detect node_modules change
+- fix: preview features not working on vite 3
+- fix: webview buttons show to unrelated extensions ([#1611](https://github.com/johnsoncodehk/volar/issues/1611))
+
 ## 0.39.3 (2022/7/31)
 
 - feat(vue-component-meta): component schema improves ([#1656](https://github.com/johnsoncodehk/volar/issues/1656))
