@@ -4,8 +4,13 @@
 
 - feat: support ESM project ([#1543](https://github.com/johnsoncodehk/volar/issues/1543))
 - fix: "Volar: Reload Project" command cannot detect node_modules change
-- fix: preview features not working on vite 3
 - fix: webview buttons show to unrelated extensions ([#1611](https://github.com/johnsoncodehk/volar/issues/1611))
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
 
 ## 0.39.3 (2022/7/31)
 
@@ -23,12 +28,6 @@
 - fix: ignore X_V_IF_SAME_KEY error in vue 2 ([#1638](https://github.com/johnsoncodehk/volar/issues/1638))
 - perf: fix `fileExists` is always calculate for .ts on each time update (https://github.com/johnsoncodehk/volar/commit/07f3bd55b6bdf3875a60796f7c9eb9a838eed463)
 - perf: cache `fileExists`, `directoryExists` result in language server (https://github.com/johnsoncodehk/volar/commit/34a4435284311c88248a44222f49c017a6b408a9)
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 0.39.1 (2022/7/23)
 
