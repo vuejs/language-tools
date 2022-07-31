@@ -21,7 +21,7 @@ export type {
 	PropertyMeta,
 	PropertyMetaSchema,
 	SlotMeta
-}
+};
 
 export function createComponentMetaChecker(tsconfigPath: string, checkerOptions: MetaCheckerOptions = {}) {
 	const parsedCommandLine = vue.tsShared.createParsedCommandLine(ts, {
@@ -133,7 +133,7 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 
 		const componentType = typeChecker.getTypeOfSymbolAtLocation(_export, symbolNode!);
 		const symbolProperties = componentType.getProperties() ?? [];
-		const { 
+		const {
 			resolveNestedProperties,
 			resolveEventSignature,
 			resolveExposedProperties,
@@ -211,7 +211,7 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 				// only exposed props will have a syntheticOrigin
 				Boolean((prop as any).syntheticOrigin)
 			);
-			
+
 			if (exposed.length) {
 				return exposed.map(resolveExposedProperties);
 			}
@@ -266,16 +266,16 @@ function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expre
 	function shouldIgnore(subtype: ts.Type) {
 		const type = typeChecker.typeToString(subtype);
 		if (type === 'any') {
-			return true
-		}
-		
-		if (ignore.length === 0) {
-			return false
+			return true;
 		}
 
-		return ignore.includes(type)
+		if (ignore.length === 0) {
+			return false;
+		}
+
+		return ignore.includes(type);
 	}
-	
+
 	function reducer(acc: any, cur: any) {
 		acc[cur.name] = cur;
 		return acc;
@@ -283,7 +283,7 @@ function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expre
 
 	function resolveNestedProperties(prop: ts.Symbol): PropertyMeta {
 		const subtype = typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!);
-		const schema = enabled ? resolveSchema(subtype) : undefined
+		const schema = enabled ? resolveSchema(subtype) : undefined;
 
 		return {
 			name: prop.getEscapedName().toString(),
@@ -298,39 +298,39 @@ function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expre
 		};
 	}
 	function resolveSlotProperties(prop: ts.Symbol): SlotMeta {
-		const subtype = typeChecker.getTypeOfSymbolAtLocation(typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!).getCallSignatures()[0].parameters[0], symbolNode!)
-		const schema = enabled ? resolveSchema(subtype) : undefined
+		const subtype = typeChecker.getTypeOfSymbolAtLocation(typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!).getCallSignatures()[0].parameters[0], symbolNode!);
+		const schema = enabled ? resolveSchema(subtype) : undefined;
 
 		return {
 			name: prop.getName(),
 			type: typeChecker.typeToString(subtype),
 			description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
 			schema,
-		}
+		};
 	}
 	function resolveExposedProperties(expose: ts.Symbol): ExposeMeta {
-		const subtype = typeChecker.getTypeOfSymbolAtLocation(expose, symbolNode!)
-		const schema = enabled ? resolveSchema(subtype) : undefined
+		const subtype = typeChecker.getTypeOfSymbolAtLocation(expose, symbolNode!);
+		const schema = enabled ? resolveSchema(subtype) : undefined;
 
 		return {
 			name: expose.getName(),
 			type: typeChecker.typeToString(subtype),
 			description: ts.displayPartsToString(expose.getDocumentationComment(typeChecker)),
 			schema,
-		}
+		};
 	}
 	function resolveEventSignature(call: ts.Signature): EventMeta {
-		const subtype = typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode!)
+		const subtype = typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode!);
 		const schema = enabled
-				? typeChecker.getTypeArguments(subtype as ts.TypeReference).map(resolveSchema)
-				: undefined
-		
+			? typeChecker.getTypeArguments(subtype as ts.TypeReference).map(resolveSchema)
+			: undefined;
+
 		return {
 			name: (typeChecker.getTypeOfSymbolAtLocation(call.parameters[0], symbolNode!) as ts.StringLiteralType).value,
 			type: typeChecker.typeToString(subtype),
 			signature: typeChecker.signatureToString(call),
 			schema,
-		}
+		};
 	}
 
 	function resolveCallbackSchema(signature: ts.Signature): PropertyMetaSchema {
@@ -338,8 +338,8 @@ function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expre
 			? typeChecker
 				.getTypeArguments(typeChecker.getTypeOfSymbolAtLocation(signature.parameters[0], symbolNode) as ts.TypeReference)
 				.map(resolveSchema)
-			: undefined
-		
+			: undefined;
+
 		return {
 			kind: 'event',
 			type: typeChecker.signatureToString(signature),
@@ -357,29 +357,29 @@ function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expre
 			(subtype.isClassOrInterface() || subtype.isIntersection() || (subtype as ts.ObjectType).objectFlags & ts.ObjectFlags.Anonymous)
 		) {
 			if (shouldIgnore(subtype)) {
-				return typeChecker.typeToString(subtype)
+				return typeChecker.typeToString(subtype);
 			}
 
 			return {
 				kind: 'object',
 				type: typeChecker.typeToString(subtype),
 				schema: subtype.getProperties().map(resolveNestedProperties).reduce(reducer, {})
-			}
+			};
 		}
- 		return resolveEventSchema(subtype);
+		return resolveEventSchema(subtype);
 	}
 	function resolveArraySchema(subtype: ts.Type): PropertyMetaSchema {
 		// @ts-ignore - typescript internal, isArrayLikeType exists
 		if (typeChecker.isArrayLikeType(subtype)) {
 			if (shouldIgnore(subtype)) {
-				return typeChecker.typeToString(subtype)
+				return typeChecker.typeToString(subtype);
 			}
 
 			return {
 				kind: 'array',
 				type: typeChecker.typeToString(subtype),
 				schema: typeChecker.getTypeArguments(subtype as ts.TypeReference).map(resolveSchema)
-			}
+			};
 		}
 
 		return resolveNestedSchema(subtype);

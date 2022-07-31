@@ -1,10 +1,10 @@
 
 
 export interface ComponentMeta {
-	props: PropertyMeta[]
-	events: EventMeta[]
-	slots: SlotMeta[]
-	exposed: ExposeMeta[]
+	props: PropertyMeta[];
+	events: EventMeta[];
+	slots: SlotMeta[];
+	exposed: ExposeMeta[];
 }
 export interface PropertyMeta {
 	name: string;
@@ -39,11 +39,11 @@ export type PropertyMetaSchema = string
 	| { kind: 'array', type: string, schema?: PropertyMetaSchema[]; }
 	| { kind: 'event', type: string, schema?: PropertyMetaSchema[]; }
 	| { kind: 'object', type: string, schema?: Record<string, PropertyMeta>; };
-	
+
 export interface MetaCheckerSchemaOptions {
 	enabled?: boolean;
 	ignore?: string[];
 }
 export interface MetaCheckerOptions {
-	schema?: MetaCheckerSchemaOptions
+	schema?: MetaCheckerSchemaOptions;
 }

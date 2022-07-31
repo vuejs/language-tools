@@ -27,14 +27,14 @@ describe(`vue-component-meta`, () => {
 		const meta = checker.getComponentMeta(componentPath);
 		const globalPropNames = checker.getGlobalPropNames();
 
-		meta.props = meta.props.filter(prop => !globalPropNames.includes(prop.name))
+		meta.props = meta.props.filter(prop => !globalPropNames.includes(prop.name));
 
 		expect(meta).toEqual({
 			props: [],
 			events: [],
 			slots: [],
 			exposed: [],
-		})
+		});
 	});
 
 	test('reference-type-props', () => {
@@ -272,10 +272,10 @@ describe(`vue-component-meta`, () => {
 
 		expect(inlined).toBeDefined();
 		expect(inlined?.required).toBeTruthy();
-		expect(inlined?.schema).toEqual({ 
+		expect(inlined?.schema).toEqual({
 			kind: 'object',
-		  type: '{ foo: string; }',
-		  schema: {
+			type: '{ foo: string; }',
+			schema: {
 				foo: {
 					name: 'foo',
 					description: '',
@@ -285,7 +285,7 @@ describe(`vue-component-meta`, () => {
 					schema: 'string'
 				}
 			}
-		})
+		});
 
 		expect(literalFromContext).toBeDefined();
 		expect(literalFromContext?.required).toBeTruthy();
@@ -335,7 +335,7 @@ describe(`vue-component-meta`, () => {
 		const foo = meta.props.find(prop => prop.name === 'foo');
 		expect(foo).toBeDefined();
 		expect(foo?.required).toBeTruthy();
-	})
+	});
 
 	test('reference-type-events', () => {
 		const checker = metaChecker.createComponentMetaChecker(tsconfigPath, {
