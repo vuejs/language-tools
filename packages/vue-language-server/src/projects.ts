@@ -106,6 +106,9 @@ export function createProjects(
 
 	async function reloadProject(uri: string) {
 
+		fileExistsCache.clear();
+		directoryExistsCache.clear();
+
 		const configs: string[] = [];
 
 		for (const [_, workspace] of workspaces) {
