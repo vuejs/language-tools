@@ -74,16 +74,15 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 		getVueCompilationSettings: () => parsedCommandLine.vueOptions,
 	};
 	const core = vue.createLanguageContext(host);
-	const fileNameMap: Record<string, string> = {};
 	const proxyApis: Partial<ts.LanguageServiceHost> = checkerOptions.forceUseTs ? {
-		getScriptFileNames: () => core.typescriptLanguageServiceHost.getScriptFileNames().map(vueCoreFileNameToTsLsFileName),
-		getScriptVersion: (fileName) => {
-			fileName = tsLsFileNameToVueCoreFileName(fileName);
-			return core.typescriptLanguageServiceHost.getScriptVersion(fileName);
-		},
-		getScriptSnapshot: (fileName) => {
-			fileName = tsLsFileNameToVueCoreFileName(fileName);
-			return core.typescriptLanguageServiceHost.getScriptSnapshot(fileName);
+		getScriptKind: (fileName) => {
+			if (fileName.endsWith('.vue.js')) {
+				return ts.ScriptKind.TS;
+			}
+			if (fileName.endsWith('.vue.jsx')) {
+				return ts.ScriptKind.TSX;
+			}
+			return core.typescriptLanguageServiceHost.getScriptKind!(fileName);
 		},
 	} : {};
 	const proxyHost = new Proxy(core.typescriptLanguageServiceHost, {
@@ -103,23 +102,6 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 		getExportNames,
 		getComponentMeta,
 	};
-
-	function vueCoreFileNameToTsLsFileName(fileName: string) {
-		let newFileName = fileName;
-		if (fileName.endsWith('.vue.js')) {
-			newFileName = fileName.substring(0, fileName.length - '.js'.length) + '.ts';
-			fileNameMap[newFileName] = fileName;
-		}
-		else if (fileName.endsWith('.vue.jsx')) {
-			newFileName = fileName.substring(0, fileName.length - '.jsx'.length) + '.tsx';
-			fileNameMap[newFileName] = fileName;
-		}
-		return newFileName;
-	}
-
-	function tsLsFileNameToVueCoreFileName(fileName: string) {
-		return fileNameMap[fileName] ?? fileName;
-	}
 
 	/**
 	 * Get helper array to map internal properties added by vue to any components

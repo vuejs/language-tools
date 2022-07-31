@@ -9,6 +9,7 @@
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
 		"skipLibCheck": true,
+		"allowJs": true,
 		"jsx": "preserve",
 		"baseUrl": ".",
 		"paths": {
