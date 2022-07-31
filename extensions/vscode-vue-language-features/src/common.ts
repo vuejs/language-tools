@@ -17,6 +17,7 @@ import * as virtualFiles from './features/virtualFiles';
 import * as tsconfig from './features/tsconfig';
 import * as doctor from './features/doctor';
 import * as fileReferences from './features/fileReferences';
+import * as reloadProject from './features/reloadProject';
 
 let apiClient: lsp.BaseLanguageClient;
 let docClient: lsp.BaseLanguageClient | undefined;
@@ -137,6 +138,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	tsVersion.register('volar.selectTypeScriptVersion', context, [apiClient, docClient].filter(shared.notEmpty));
 	tsconfig.register('volar.openTsconfig', context, docClient ?? apiClient);
 	fileReferences.register('volar.vue.findAllFileReferences', apiClient);
+	reloadProject.register('volar.action.reloadProject', context, [apiClient, docClient].filter(shared.notEmpty));
 
 	async function requestReloadVscode() {
 		const reload = await vscode.window.showInformationMessage(

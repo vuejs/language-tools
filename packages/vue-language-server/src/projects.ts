@@ -96,7 +96,29 @@ export function createProjects(
 	documents.onDidClose(change => {
 		connection.sendDiagnostics({ uri: change.document.uri, diagnostics: [] });
 	});
-	connection.onDidChangeWatchedFiles(async handler => {
+	connection.onDidChangeWatchedFiles(onDidChangeWatchedFiles);
+
+	return {
+		workspaces,
+		getProject,
+		reloadProject,
+	};
+
+	async function reloadProject(uri: string) {
+
+		const configs: string[] = [];
+
+		for (const [_, workspace] of workspaces) {
+			const config = await workspace.findMatchConfigs(uri);
+			if (config) {
+				configs.push(config);
+			}
+		}
+
+		onDidChangeWatchedFiles({ changes: configs.map(c => ({ uri: c, type: vscode.FileChangeType.Changed })) });
+	}
+
+	async function onDidChangeWatchedFiles(handler: vscode.DidChangeWatchedFilesParams) {
 
 		for (const change of handler.changes) {
 			if (change.type === vscode.FileChangeType.Created) {
@@ -147,12 +169,7 @@ export function createProjects(
 
 			onDriveFileUpdated(undefined);
 		}
-	});
-
-	return {
-		workspaces,
-		getProject,
-	};
+	}
 
 	async function onDriveFileUpdated(driveFileName: string | undefined) {
 
@@ -297,16 +314,13 @@ function createWorkspace(
 
 	return {
 		projects,
-		getProject,
+		findMatchConfigs,
 		getProjectAndTsConfig,
 		getProjectByCreate,
 		getInferredProject,
 		getInferredProjectDontCreate: () => inferredProject,
 	};
 
-	async function getProject(uri: string) {
-		return (await getProjectAndTsConfig(uri))?.project;
-	}
 	async function getProjectAndTsConfig(uri: string) {
 		const tsconfig = await findMatchConfigs(uri);
 		if (tsconfig) {

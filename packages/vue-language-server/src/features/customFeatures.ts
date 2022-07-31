@@ -20,6 +20,9 @@ export function register(
 	connection.onRequest(shared.GetMatchTsConfigRequest.type, async handler => {
 		return (await projects.getProject(handler.uri))?.tsconfig;
 	});
+	connection.onNotification(shared.ReloadProjectNotification.type, async handler => {
+		projects.reloadProject(handler.uri);
+	});
 	connection.onNotification(shared.WriteVirtualFilesNotification.type, async () => {
 
 		const fs = await import('fs');
