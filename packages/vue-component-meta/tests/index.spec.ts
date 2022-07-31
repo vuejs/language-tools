@@ -7,12 +7,18 @@ describe(`vue-component-meta`, () => {
 	const tsconfigPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/tsconfig.json');
 	const checker = createComponentMetaChecker(tsconfigPath, {
 		forceUseTs: true,
+		printer: {
+			newLine: 1,
+		},
 	});
 	const checker_schema = createComponentMetaChecker(tsconfigPath, {
 		schema: {
 			enabled: true,
 			ignore: ['MyIgnoredNestedProps'],
-		}
+		},
+		printer: {
+			newLine: 1,
+		},
 	});
 
 	test('global-props', () => {

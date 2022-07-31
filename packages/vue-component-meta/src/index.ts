@@ -177,7 +177,7 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 			}
 
 			// fill defaults
-			const printer = ts.createPrinter(checkerOptions.printerOptions);
+			const printer = ts.createPrinter(checkerOptions.printer);
 			const snapshot = host.getScriptSnapshot(componentPath)!;
 			const vueDefaults = componentPath.endsWith('.vue') && exportName === 'default' ? readVueComponentDefaultProps(snapshot.getText(0, snapshot.getLength()), printer) : {};
 			const tsDefaults = !componentPath.endsWith('.vue') ? readTsComponentDefaultProps(
