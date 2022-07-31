@@ -5,7 +5,9 @@ import { createComponentMetaChecker } from '..';
 describe(`vue-component-meta`, () => {
 
 	const tsconfigPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/tsconfig.json');
-	const checker = createComponentMetaChecker(tsconfigPath);
+	const checker = createComponentMetaChecker(tsconfigPath, {
+		forceUseTs: true,
+	});
 	const checker_schema = createComponentMetaChecker(tsconfigPath, {
 		schema: {
 			enabled: true,

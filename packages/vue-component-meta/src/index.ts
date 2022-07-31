@@ -65,11 +65,6 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 					fileText = ts.sys.readFile(fileName);
 				}
 				if (fileText !== undefined) {
-					// force typescript to parse the file
-					if (fileName.endsWith('.vue') && fileText.includes('<script') && !fileText.includes('lang="ts"')) {
-						fileText = fileText.replace(/<script/g, '<script lang="ts"');
-					}
-
 					scriptSnapshot[fileName] = ts.ScriptSnapshot.fromString(fileText);
 				}
 			}
@@ -79,7 +74,27 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 		getVueCompilationSettings: () => parsedCommandLine.vueOptions,
 	};
 	const core = vue.createLanguageContext(host);
-	const tsLs = ts.createLanguageService(core.typescriptLanguageServiceHost);
+	const fileNameMap: Record<string, string> = {};
+	const proxyApis: Partial<ts.LanguageServiceHost> = checkerOptions.forceUseTs ? {
+		getScriptFileNames: () => core.typescriptLanguageServiceHost.getScriptFileNames().map(vueCoreFileNameToTsLsFileName),
+		getScriptVersion: (fileName) => {
+			fileName = tsLsFileNameToVueCoreFileName(fileName);
+			return core.typescriptLanguageServiceHost.getScriptVersion(fileName);
+		},
+		getScriptSnapshot: (fileName) => {
+			fileName = tsLsFileNameToVueCoreFileName(fileName);
+			return core.typescriptLanguageServiceHost.getScriptSnapshot(fileName);
+		},
+	} : {};
+	const proxyHost = new Proxy(core.typescriptLanguageServiceHost, {
+		get(target, propKey: keyof ts.LanguageServiceHost) {
+			if (propKey in proxyApis) {
+				return proxyApis[propKey];
+			}
+			return target[propKey];
+		}
+	});
+	const tsLs = ts.createLanguageService(proxyHost);
 	const program = tsLs.getProgram()!;
 	const typeChecker = program.getTypeChecker();
 
@@ -88,6 +103,23 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 		getExportNames,
 		getComponentMeta,
 	};
+
+	function vueCoreFileNameToTsLsFileName(fileName: string) {
+		let newFileName = fileName;
+		if (fileName.endsWith('.vue.js')) {
+			newFileName = fileName.substring(0, fileName.length - '.js'.length) + '.ts';
+			fileNameMap[newFileName] = fileName;
+		}
+		else if (fileName.endsWith('.vue.jsx')) {
+			newFileName = fileName.substring(0, fileName.length - '.jsx'.length) + '.tsx';
+			fileNameMap[newFileName] = fileName;
+		}
+		return newFileName;
+	}
+
+	function tsLsFileNameToVueCoreFileName(fileName: string) {
+		return fileNameMap[fileName] ?? fileName;
+	}
 
 	/**
 	 * Get helper array to map internal properties added by vue to any components

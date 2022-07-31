@@ -46,4 +46,5 @@ export interface MetaCheckerSchemaOptions {
 }
 export interface MetaCheckerOptions {
 	schema?: MetaCheckerSchemaOptions;
+	forceUseTs?: boolean;
 }
