@@ -17,6 +17,19 @@ export function createLanguageContext(
 	let tsProjectVersion = 0;
 
 	const ts = host.getTypeScriptModule();
+
+	// from https://github.com/johnsoncodehk/volar/pull/1543
+	if (!((ts as any).__VLS_pitched_resolveModuleNames)) {
+		(ts as any).__VLS_pitched_resolveModuleNames = true;
+		const resolveModuleNames = ts.resolveModuleName;
+		ts.resolveModuleName = (...args) => {
+			if (args[0].endsWith('.vue') && args[6] === ts.ModuleKind.ESNext) {
+				args[6] = ts.ModuleKind.CommonJS;
+			}
+			return resolveModuleNames(...args);
+		};
+	}
+
 	const documentRegistry = createDocumentRegistry();
 	const compilerOptions = host.getCompilationSettings();
 	const vueCompilerOptions = host.getVueCompilationSettings();
