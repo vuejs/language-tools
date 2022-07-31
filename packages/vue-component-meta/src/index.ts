@@ -177,14 +177,23 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 			}
 
 			// fill defaults
-			if (componentPath.endsWith('.vue') && exportName === 'default') {
-				const snapshot = host.getScriptSnapshot(componentPath)!;
-				const defaults = readCmponentDefaultProps(snapshot.getText(0, snapshot.getLength()));
-				for (const propName in defaults) {
-					const prop = result.find(p => p.name === propName);
-					if (prop) {
-						prop.default = defaults[propName];
-					}
+			const printer = ts.createPrinter(checkerOptions.printer);
+			const snapshot = host.getScriptSnapshot(componentPath)!;
+			const vueDefaults = componentPath.endsWith('.vue') && exportName === 'default' ? readVueComponentDefaultProps(snapshot.getText(0, snapshot.getLength()), printer) : {};
+			const tsDefaults = !componentPath.endsWith('.vue') ? readTsComponentDefaultProps(
+				componentPath.substring(componentPath.lastIndexOf('.') + 1), // ts | js | tsx | jsx
+				snapshot.getText(0, snapshot.getLength()),
+				exportName,
+				printer,
+			) : {};
+
+			for (const [propName, defaultExp] of Object.entries({
+				...vueDefaults,
+				...tsDefaults,
+			})) {
+				const prop = result.find(p => p.name === propName);
+				if (prop) {
+					prop.default = defaultExp;
 				}
 			}
 
@@ -274,8 +283,8 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 }
 
 function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expression, options: MetaCheckerSchemaOptions = {}) {
-	const ignore = options.ignore ?? [];
-	const enabled = options.enabled ?? false;
+	const enabled = !!options;
+	const ignore = typeof options === 'object' ? options.ignore ?? [] : [];
 
 	function shouldIgnore(subtype: ts.Type) {
 		const type = typeChecker.typeToString(subtype);
@@ -421,42 +430,166 @@ function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expre
 	};
 }
 
-function readCmponentDefaultProps(fileText: string) {
+function readVueComponentDefaultProps(vueFileText: string, printer: ts.Printer) {
 
-	const vueSourceFile = vue.createSourceFile('/tmp.vue', fileText, {}, {}, ts);
-	const descriptor = vueSourceFile.getDescriptor();
-	const scriptSetupRanges = vueSourceFile.getScriptSetupRanges();
 	const result: Record<string, string> = {};
 
-	if (descriptor.scriptSetup && scriptSetupRanges?.withDefaultsArg) {
+	scriptSetupWorker();
+	sciptWorker();
 
-		const defaultsText = descriptor.scriptSetup.content.substring(scriptSetupRanges.withDefaultsArg.start, scriptSetupRanges.withDefaultsArg.end);
-		const ast = ts.createSourceFile('/tmp.' + descriptor.scriptSetup.lang, '(' + defaultsText + ')', ts.ScriptTarget.Latest);
-		const obj = findObjectLiteralExpression(ast);
+	return result;
 
-		if (obj) {
-			for (const prop of obj.properties) {
-				if (ts.isPropertyAssignment(prop)) {
-					const name = prop.name.getText(ast);
-					const exp = prop.initializer.getText(ast);
-					result[name] = exp;
+	function scriptSetupWorker() {
+
+		const vueSourceFile = vue.createSourceFile('/tmp.vue', vueFileText, {}, {}, ts);
+		const descriptor = vueSourceFile.getDescriptor();
+		const scriptSetupRanges = vueSourceFile.getScriptSetupRanges();
+
+		if (descriptor.scriptSetup && scriptSetupRanges?.withDefaultsArg) {
+
+			const defaultsText = descriptor.scriptSetup.content.substring(scriptSetupRanges.withDefaultsArg.start, scriptSetupRanges.withDefaultsArg.end);
+			const ast = ts.createSourceFile('/tmp.' + descriptor.scriptSetup.lang, '(' + defaultsText + ')', ts.ScriptTarget.Latest);
+			const obj = findObjectLiteralExpression(ast);
+
+			if (obj) {
+				for (const prop of obj.properties) {
+					if (ts.isPropertyAssignment(prop)) {
+						const name = prop.name.getText(ast);
+						const exp = printer.printNode(ts.EmitHint.Expression, resolveDefaultOptionExpression(prop.initializer), ast);;
+						result[name] = exp;
+					}
 				}
+			}
+
+			function findObjectLiteralExpression(node: ts.Node) {
+				if (ts.isObjectLiteralExpression(node)) {
+					return node;
+				}
+				let result: ts.ObjectLiteralExpression | undefined;
+				node.forEachChild(child => {
+					if (!result) {
+						result = findObjectLiteralExpression(child);
+					}
+				});
+				return result;
 			}
 		}
+	}
 
-		function findObjectLiteralExpression(node: ts.Node) {
-			if (ts.isObjectLiteralExpression(node)) {
-				return node;
+	function sciptWorker() {
+
+		const vueSourceFile = vue.createSourceFile('/tmp.vue', vueFileText, {}, {}, ts);
+		const descriptor = vueSourceFile.getDescriptor();
+
+		if (descriptor.script) {
+			const scriptResult = readTsComponentDefaultProps(descriptor.script.lang, descriptor.script.content, 'default', printer);
+			for (const [key, value] of Object.entries(scriptResult)) {
+				result[key] = value;
 			}
-			let result: ts.ObjectLiteralExpression | undefined;
-			node.forEachChild(child => {
-				if (!result) {
-					result = findObjectLiteralExpression(child);
+		}
+	}
+}
+
+function readTsComponentDefaultProps(lang: string, tsFileText: string, exportName: string, printer: ts.Printer) {
+
+	const result: Record<string, string> = {};
+	const ast = ts.createSourceFile('/tmp.' + lang, tsFileText, ts.ScriptTarget.Latest);
+	const props = getPropsNode();
+
+	if (props) {
+		for (const prop of props.properties) {
+			if (ts.isPropertyAssignment(prop)) {
+				const name = prop.name?.getText(ast);
+				if (ts.isObjectLiteralExpression(prop.initializer)) {
+					for (const propOption of prop.initializer.properties) {
+						if (ts.isPropertyAssignment(propOption)) {
+							if (propOption.name?.getText(ast) === 'default') {
+								const _default = propOption.initializer;
+								result[name] = printer.printNode(ts.EmitHint.Expression, resolveDefaultOptionExpression(_default), ast);
+							}
+						}
+					}
 				}
-			});
-			return result;
+			}
 		}
 	}
 
 	return result;
+
+	function getComponentNode() {
+
+		let result: ts.Node | undefined;
+
+		if (exportName === 'default') {
+			ast.forEachChild(child => {
+				if (ts.isExportAssignment(child)) {
+					result = child.expression;
+				}
+			});
+		}
+		else {
+			ast.forEachChild(child => {
+				if (
+					ts.isVariableStatement(child)
+					&& child.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword)
+				) {
+					for (const dec of child.declarationList.declarations) {
+						if (dec.name.getText(ast) === exportName) {
+							result = dec.initializer;
+						}
+					}
+				}
+			});
+		}
+
+		return result;
+	}
+
+	function getComponentOptionsNode() {
+
+		const component = getComponentNode();
+
+		if (component) {
+
+			// export default { ... }
+			if (ts.isObjectLiteralExpression(component)) {
+				return component;
+			}
+			// export default defineComponent({ ... })
+			// export default Vue.extend({ ... })
+			else if (ts.isCallExpression(component)) {
+				if (component.arguments.length) {
+					const arg = component.arguments[0];
+					if (ts.isObjectLiteralExpression(arg)) {
+						return arg;
+					}
+				}
+			}
+		}
+	}
+
+	function getPropsNode() {
+		const options = getComponentOptionsNode();
+		const props = options?.properties.find(prop => prop.name?.getText(ast) === 'props');
+		if (props && ts.isPropertyAssignment(props)) {
+			if (ts.isObjectLiteralExpression(props.initializer)) {
+				return props.initializer;
+			}
+		}
+	}
+}
+
+function resolveDefaultOptionExpression(_default: ts.Expression) {
+	if (ts.isArrowFunction(_default)) {
+		if (ts.isBlock(_default.body)) {
+			return _default; // TODO
+		}
+		else if (ts.isParenthesizedExpression(_default.body)) {
+			return _default.body.expression;
+		}
+		else {
+			return _default.body;
+		}
+	}
+	return _default;
 }

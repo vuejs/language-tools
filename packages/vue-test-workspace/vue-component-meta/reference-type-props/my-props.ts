@@ -10,21 +10,21 @@ export interface MyIgnoredNestedProps {
 }
 
 enum MyEnum {
-  Small,
-  Medium,
-  Large,
+	Small,
+	Medium,
+	Large,
 }
 
 const categories = [
-  'Uncategorized',
-  'Content',
-  'Interaction',
-  'Display',
-  'Forms',
-  'Addons',
-] as const
+	'Uncategorized',
+	'Content',
+	'Interaction',
+	'Display',
+	'Forms',
+	'Addons',
+] as const;
 
-type MyCategories = typeof categories[number]
+type MyCategories = typeof categories[number];
 
 export interface MyProps {
 	/**
@@ -48,7 +48,7 @@ export interface MyProps {
 	/**
 	 * string array baz
 	 */
-	baz: string[],
+	baz?: string[],
 	/**
 	 * required union type
 	 */
@@ -90,5 +90,5 @@ export interface MyProps {
 	 * literal type alias that require context
 	 */
 	literalFromContext: MyCategories,
-	inlined: { foo: string },
+	inlined: { foo: string; },
 }

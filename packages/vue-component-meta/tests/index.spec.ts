@@ -7,12 +7,18 @@ describe(`vue-component-meta`, () => {
 	const tsconfigPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/tsconfig.json');
 	const checker = createComponentMetaChecker(tsconfigPath, {
 		forceUseTs: true,
+		printer: {
+			newLine: 1,
+		},
 	});
 	const checker_schema = createComponentMetaChecker(tsconfigPath, {
 		schema: {
 			enabled: true,
 			ignore: ['MyIgnoredNestedProps'],
-		}
+		},
+		printer: {
+			newLine: 1,
+		},
 	});
 
 	test('global-props', () => {
@@ -51,6 +57,7 @@ describe(`vue-component-meta`, () => {
 		const foo = meta.props.find(prop => prop.name === 'foo');
 		const bar = meta.props.find(prop => prop.name === 'bar');
 		const baz = meta.props.find(prop => prop.name === 'baz');
+		const bazWithDefault = meta.props.find(prop => prop.name === 'bazWithDefault');
 		const union = meta.props.find(prop => prop.name === 'union');
 		const unionOptional = meta.props.find(prop => prop.name === 'unionOptional');
 		const nested = meta.props.find(prop => prop.name === 'nested');
@@ -101,14 +108,19 @@ describe(`vue-component-meta`, () => {
 		});
 
 		expect(baz).toBeDefined();
-		expect(baz?.required).toBeTruthy();
-		expect(baz?.type).toEqual('string[]');
+		// When initializing an array, users have to do it in a function to avoid
+		// referencing always the same instance for every component
+		// if no params are given to the function and it is simply an Array,
+		// the array is the default value and should be given instead of the function
+		expect(baz?.default).toEqual(`["foo", "bar"]`);
+		expect(baz?.required).toBeFalsy();
+		expect(baz?.type).toEqual('string[] | undefined');
 		expect(baz?.description).toEqual('string array baz');
-		expect(baz?.schema).toEqual({
-			kind: 'array',
-			type: 'string[]',
-			schema: ['string']
-		});
+		// expect(baz?.schema).toEqual({
+		// 	kind: 'array',
+		// 	type: 'string[]',
+		// 	schema: ['string']
+		// });
 
 		expect(union).toBeDefined();
 		expect(union?.required).toBeTruthy();
@@ -497,5 +509,58 @@ describe(`vue-component-meta`, () => {
 
 		expect(a).toBeDefined();
 		expect(b).toBeDefined();
+	});
+
+	test('options-api', () => {
+
+		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/options-api/component.ts');
+		const meta = checker.getComponentMeta(componentPath);
+
+		// const submitEvent = meta.events.find(evt => evt.name === 'submit');
+
+		// expect(submitEvent).toBeDefined();
+		// expect(submitEvent?.schema).toEqual(expect.arrayContaining([{
+		// 	kind: 'object',
+		// 	schema: {
+		// 		email: {
+		// 			description: 'email of user',
+		// 			name: 'email',
+		// 			required: true,
+		// 			schema: 'string',
+		// 			tags: [],
+		// 			type: 'string'
+		// 		},
+		// 		password: {
+		// 			description: 'password of same user',
+		// 			name: 'password',
+		// 			required: true,
+		// 			schema: 'string',
+		// 			tags: [],
+		// 			type: 'string'
+		// 		}
+		// 	},
+		// 	type: 'SubmitPayload'
+		// }]));
+
+		const propNumberDefault = meta.props.find(prop => prop.name === 'numberDefault');
+
+		// expect(propNumberDefault).toBeDefined();
+		// expect(propNumberDefault?.type).toEqual('number | undefined');
+		// expect(propNumberDefault?.schema).toEqual({
+		// 	kind: 'enum',
+		// 	schema: ['undefined', 'number'],
+		// 	type: 'number | undefined'
+		// });
+		expect(propNumberDefault?.default).toEqual(`42`);
+
+		const propObjectDefault = meta.props.find(prop => prop.name === 'objectDefault');
+
+		expect(propObjectDefault).toBeDefined();
+		expect(propObjectDefault?.default).toEqual(`{\n    foo: "bar"\n}`);
+
+		const propArrayDefault = meta.props.find(prop => prop.name === 'arrayDefault');
+
+		expect(propArrayDefault).toBeDefined();
+		expect(propArrayDefault?.default).toEqual(`[1, 2, 3]`);
 	});
 });

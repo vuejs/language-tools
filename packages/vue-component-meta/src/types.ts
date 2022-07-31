@@ -40,11 +40,11 @@ export type PropertyMetaSchema = string
 	| { kind: 'event', type: string, schema?: PropertyMetaSchema[]; }
 	| { kind: 'object', type: string, schema?: Record<string, PropertyMeta>; };
 
-export interface MetaCheckerSchemaOptions {
-	enabled?: boolean;
+export type MetaCheckerSchemaOptions = boolean | {
 	ignore?: string[];
 }
 export interface MetaCheckerOptions {
 	schema?: MetaCheckerSchemaOptions;
 	forceUseTs?: boolean;
+	printer?: import('typescript').PrinterOptions;
 }
