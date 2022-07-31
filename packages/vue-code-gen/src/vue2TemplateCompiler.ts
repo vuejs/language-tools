@@ -8,12 +8,18 @@ export function compile(
 
 	const onError = options.onError;
 	options.onError = (error) => {
-		if (error.code === CompilerCore.ErrorCodes.X_V_FOR_TEMPLATE_KEY_PLACEMENT)
-			return; // :key binding allowed in v-for template child in vue 2
-		if (onError)
+		if (
+			error.code === CompilerCore.ErrorCodes.X_V_FOR_TEMPLATE_KEY_PLACEMENT // :key binding allowed in v-for template child in vue 2
+			|| error.code === CompilerCore.ErrorCodes.X_V_IF_SAME_KEY // fix https://github.com/johnsoncodehk/volar/issues/1638
+		) {
+			return;
+		}
+		if (onError) {
 			onError(error);
-		else
+		}
+		else {
 			throw error;
+		}
 	};
 
 	return baseCompile(

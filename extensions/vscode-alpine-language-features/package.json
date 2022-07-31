@@ -2,7 +2,7 @@
 	"private": true,
 	"preview": true,
 	"name": "alpine-language-features",
-	"version": "0.38.9",
+	"version": "0.39.3",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
@@ -278,13 +278,13 @@
 	},
 	"devDependencies": {
 		"@types/vscode": "1.67.0",
-		"@volar/alpine-language-server": "0.38.9",
-		"@volar/shared": "0.38.9",
+		"@volar/alpine-language-server": "0.39.3",
+		"@volar/shared": "0.39.3",
 		"esbuild": "latest",
 		"path-browserify": "^1.0.1",
 		"punycode": "^2.1.1",
 		"vsce": "latest",
-		"vscode-languageclient": "^8.0.1",
+		"vscode-languageclient": "^8.0.2",
 		"vscode-nls": "^5.0.1"
 	}
 }

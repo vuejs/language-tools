@@ -50,7 +50,7 @@ export function createProgramProxy(
 			},
 			getProjectReferences: () => ctx.options.projectReferences,
 
-			loadTypeScriptModule: () => ts,
+			getTypeScriptModule: () => ts,
 			isTsc: true,
 		}, {
 			get: (target, property) => {

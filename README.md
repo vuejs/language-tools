@@ -10,6 +10,8 @@
 *VSCode extension to support Vue in TS server*
 - [vue-tsc](https://github.com/johnsoncodehk/volar/tree/master/packages/vue-tsc) \
 *Type-check and dts build command line tool*
+- [vue-component-meta](https://github.com/johnsoncodehk/volar/tree/master/packages/vue-component-meta) \
+*Component props, events, slots types information extract tool*
 - [vite-plugin-vue-component-preview](https://github.com/johnsoncodehk/vite-plugin-vue-component-preview) \
 *Vite plugin for support Vue component preview view with `Vue Language Features`*
 
@@ -132,6 +134,7 @@ flowchart LR
 	%% VOLAR_TS_FASTER["@volar/typescript-faster"]
 	%% VOLAR_PREVIEW["@volar/preview"]
 	VUE_TSC[vue-tsc]
+	VUE_COMPONENT_META[vue-component-meta]
 	TS_VUE_PLUGIN[typescript-vue-plugin]
 
 	click VOLAR_VUE_SERVER "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-language-server"
@@ -144,6 +147,7 @@ flowchart LR
 	click VOLAR_TS_FASTER "https://github.com/johnsoncodehk/volar/tree/master/packages/typescript-faster"
 	click VOLAR_PREVIEW "https://github.com/johnsoncodehk/volar/tree/master/packages/preview"
 	click VUE_TSC "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-tsc"
+	click VUE_COMPONENT_META "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-component-meta"
 	click TS_VUE_PLUGIN "https://github.com/johnsoncodehk/volar/tree/master/packages/typescript-vue-plugin"
 
 	%% Extrnal Packages
@@ -226,6 +230,7 @@ flowchart LR
 	%% VOLAR_VUE_SERVICE --> VOLAR_TS_FASTER
 
 	%% VOLAR_VUE_TS --> TS
+	VUE_COMPONENT_META --> VOLAR_VUE_CORE
 	VOLAR_VUE_TS --> VOLAR_VUE_CORE
 
 	VOLAR_VUE_SERVICE --> VOLAR_VUE_CORE

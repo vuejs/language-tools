@@ -68,7 +68,7 @@ export function createLanguageServer(
 		if (options.documentFeatures) {
 
 			const documentService = languageConfigs.getDocumentService(
-				{ typescript: ts },
+				ts,
 				configHost,
 				runtimeEnv.fileSystemProvide,
 				loadCustomPlugins(folders[0]),
@@ -92,6 +92,7 @@ export function createLanguageServer(
 				connection,
 				configHost,
 				() => getInferredCompilerOptions(ts, configuration),
+				params.capabilities,
 			);
 
 			(await import('./features/customFeatures')).register(connection, documents, projects);

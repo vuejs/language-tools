@@ -11,13 +11,6 @@ export namespace GetDocumentContentRequest {
 	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('vscode/content');
 }
 
-export namespace GetDocumentVersionRequest {
-	export type ParamsType = vscode.TextDocumentIdentifier;
-	export type ResponseType = number | null | undefined;
-	export type ErrorType = never;
-	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('vue/docVersion');
-}
-
 export namespace ShowReferencesNotification {
 	export type ResponseType = vscode.TextDocumentPositionParams & { references: vscode.Location[]; };
 	export const type = new vscode.NotificationType<ResponseType>('vue.findReferences');
@@ -59,12 +52,6 @@ export namespace FindFileReferenceRequest {
  * Server Requests
  */
 
-export namespace InitDoneRequest {
-	export type ResponseType = null | undefined;
-	export type ErrorType = never;
-	export const type = new vscode.RequestType0<ResponseType, ErrorType>('volar/init');
-}
-
 export namespace GetMatchTsConfigRequest {
 	export type ParamsType = vscode.TextDocumentIdentifier;
 	export type ResponseType = string | null | undefined;
@@ -101,6 +88,10 @@ export namespace VerifyAllScriptsNotification {
 
 export namespace WriteVirtualFilesNotification {
 	export const type = new vscode.NotificationType0('volar.action.writeVirtualFiles');
+}
+
+export namespace ReloadProjectNotification {
+	export const type = new vscode.NotificationType<vscode.TextDocumentIdentifier>('volar.action.reloadProject');
 }
 
 export namespace DetectDocumentNameCasesRequest {

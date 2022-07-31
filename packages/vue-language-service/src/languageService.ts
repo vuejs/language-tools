@@ -71,7 +71,6 @@ export function getSemanticTokenLegend() {
 }
 
 export function createLanguageService(
-	{ typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary'); },
 	vueLsHost: vue.LanguageServiceHost,
 	fileSystemProvider: html.FileSystemProvider | undefined,
 	schemaRequestService: json.SchemaRequestService | undefined,
@@ -86,6 +85,7 @@ export function createLanguageService(
 
 	setCurrentConfigurationHost(configurationHost); // TODO
 
+	const ts = vueLsHost.getTypeScriptModule();
 	const core = createLanguageServiceContext();
 	const vueTsLs = ts.createLanguageService(core.typescriptLanguageServiceHost);
 	tsFaster.decorate(ts, core.typescriptLanguageServiceHost, vueTsLs);
@@ -270,9 +270,6 @@ export function createLanguageService(
 				const failedLookupLocations: string[] = (resolveResult as any).failedLookupLocations;
 				const dirs = new Set<string>();
 
-				const fileExists = vueLsHost.fileExists ?? ts.sys.fileExists;
-				const directoryExists = vueLsHost.directoryExists ?? ts.sys.directoryExists;
-
 				for (const failed of failedLookupLocations) {
 					let path = failed;
 					const fileName = upath.basename(path);
@@ -285,12 +282,12 @@ export function createLanguageService(
 					else {
 						continue;
 					}
-					if (fileExists(path)) {
+					if (vueLsHost.fileExists(path)) {
 						return isUri ? shared.fsPathToUri(path) : path;
 					}
 				}
 				for (const dir of dirs) {
-					if (directoryExists(dir)) {
+					if (vueLsHost.directoryExists?.(dir) ?? true) {
 						return isUri ? shared.fsPathToUri(dir) : dir;
 					}
 				}

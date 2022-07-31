@@ -58,12 +58,7 @@ export interface ServerInitializationOptions {
 		semanticTokens?: boolean;
 		codeAction?: boolean;
 		inlayHints?: boolean;
-		diagnostics?: boolean | {
-			/**
-			 * {@link __requests.GetDocumentVersionRequest}
-			 * */
-			getDocumentVersionRequest: boolean,
-		};
+		diagnostics?: boolean;
 		schemaRequestService?: boolean | {
 			/**
 			 * {@link __requests.GetDocumentContentRequest}

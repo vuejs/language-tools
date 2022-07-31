@@ -23,6 +23,7 @@ export function createProjects(
 	connection: vscode.Connection,
 	lsConfigs: ReturnType<typeof createLsConfigs> | undefined,
 	getInferredCompilerOptions: () => Promise<ts.CompilerOptions>,
+	capabilities: vscode.ClientCapabilities,
 ) {
 
 	let semanticTokensReq = 0;
@@ -31,8 +32,26 @@ export function createProjects(
 		uri: string,
 		time: number,
 	} | undefined;
+	const fileExistsCache = shared.createPathMap<boolean>();
+	const directoryExistsCache = shared.createPathMap<boolean>();
+	const sys: ts.System = capabilities.workspace?.didChangeWatchedFiles // don't cache fs result if client not supports file watcher
+		? {
+			...ts.sys,
+			fileExists(path: string) {
+				if (!fileExistsCache.fsPathHas(path)) {
+					fileExistsCache.fsPathSet(path, ts.sys.fileExists(path));
+				}
+				return fileExistsCache.fsPathGet(path)!;
+			},
+			directoryExists(path: string) {
+				if (!directoryExistsCache.fsPathHas(path)) {
+					directoryExistsCache.fsPathSet(path, ts.sys.directoryExists(path));
+				}
+				return directoryExistsCache.fsPathGet(path)!;
+			},
+		}
+		: ts.sys;
 
-	const updatedUris = new Set<string>();
 	const workspaces = new Map<string, ReturnType<typeof createWorkspace>>();
 
 	for (const rootPath of rootPaths) {
@@ -41,6 +60,7 @@ export function createProjects(
 			languageConfigs,
 			rootPath,
 			ts,
+			sys,
 			tsLocalized,
 			options,
 			documents,
@@ -58,6 +78,8 @@ export function createProjects(
 	});
 	documents.onDidChangeContent(async change => {
 
+		const req = ++documentUpdatedReq;
+
 		await waitForOnDidChangeWatchedFiles(change.document.uri);
 
 		for (const workspace of workspaces.values()) {
@@ -67,12 +89,48 @@ export function createProjects(
 			}
 		}
 
-		updateDiagnostics(change.document.uri);
+		if (req === documentUpdatedReq) {
+			updateDiagnostics(change.document.uri);
+		}
 	});
 	documents.onDidClose(change => {
 		connection.sendDiagnostics({ uri: change.document.uri, diagnostics: [] });
 	});
-	connection.onDidChangeWatchedFiles(async handler => {
+	connection.onDidChangeWatchedFiles(onDidChangeWatchedFiles);
+
+	return {
+		workspaces,
+		getProject,
+		reloadProject,
+	};
+
+	async function reloadProject(uri: string) {
+
+		fileExistsCache.clear();
+		directoryExistsCache.clear();
+
+		const configs: string[] = [];
+
+		for (const [_, workspace] of workspaces) {
+			const config = await workspace.findMatchConfigs(uri);
+			if (config) {
+				configs.push(config);
+			}
+		}
+
+		onDidChangeWatchedFiles({ changes: configs.map(c => ({ uri: c, type: vscode.FileChangeType.Changed })) });
+	}
+
+	async function onDidChangeWatchedFiles(handler: vscode.DidChangeWatchedFilesParams) {
+
+		for (const change of handler.changes) {
+			if (change.type === vscode.FileChangeType.Created) {
+				fileExistsCache.uriSet(change.uri, true);
+			}
+			else if (change.type === vscode.FileChangeType.Deleted) {
+				fileExistsCache.uriSet(change.uri, false);
+			}
+		}
 
 		const tsConfigChanges: vscode.FileEvent[] = [];
 		const scriptChanges: vscode.FileEvent[] = [];
@@ -114,12 +172,7 @@ export function createProjects(
 
 			onDriveFileUpdated(undefined);
 		}
-	});
-
-	return {
-		workspaces,
-		getProject,
-	};
+	}
 
 	async function onDriveFileUpdated(driveFileName: string | undefined) {
 
@@ -141,79 +194,36 @@ export function createProjects(
 		if (!options.languageFeatures?.diagnostics)
 			return;
 
-		if (docUri) {
-			updatedUris.add(docUri);
-		}
-
 		const req = ++documentUpdatedReq;
 		const delay = await lsConfigs?.getConfiguration<number>('volar.diagnostics.delay');
+		const isCancel = async () => {
+			await shared.sleep(0); // wait for onDidChangeContent polling
+			return req !== documentUpdatedReq;
+		};
 
-		await shared.sleep(delay ?? 200);
-
-		if (req !== documentUpdatedReq)
-			return;
-
-		const changeDocs = [...updatedUris].map(uri => getDocumentSafely(documents, uri)).filter(shared.notEmpty);
-		const otherDocs = documents.all().filter(doc => !updatedUris.has(doc.uri));
+		const changeDocs = docUri ? [getDocumentSafely(documents, docUri)].filter(shared.notEmpty) : [];
+		const otherDocs = documents.all().filter(doc => doc.uri !== docUri);
 
 		for (const changeDoc of changeDocs) {
 
-			if (req !== documentUpdatedReq)
+			await shared.sleep(delay ?? 200);
+
+			if (await isCancel())
 				return;
 
-			let _isCancel = false;
-			const isDocCancel = getCancelChecker(changeDoc.uri, changeDoc.version);
-			const isCancel = async () => {
-				const result = req !== documentUpdatedReq || await isDocCancel();
-				_isCancel = result;
-				return result;
-			};
-
 			await sendDocumentDiagnostics(changeDoc.uri, isCancel);
-
-			if (!_isCancel) {
-				updatedUris.delete(changeDoc.uri);
-			}
 		}
 
 		for (const doc of otherDocs) {
 
 			await shared.sleep(delay ?? 200);
 
-			if (req !== documentUpdatedReq)
+			if (await isCancel())
 				return;
-
-			const changeDoc = docUri ? getDocumentSafely(documents, docUri) : undefined;
-			const isDocCancel = changeDoc ? getCancelChecker(changeDoc.uri, changeDoc.version) : async () => {
-				await shared.sleep(0);
-				return false;
-			};
-			const isCancel = async () => req !== documentUpdatedReq || await isDocCancel();
 
 			await sendDocumentDiagnostics(doc.uri, isCancel);
 		}
 
-		function getCancelChecker(uri: string, version: number) {
-			let _isCancel = false;
-			let lastResultAt = Date.now();
-			return async () => {
-				if (_isCancel) {
-					return true;
-				}
-				if (
-					typeof options.languageFeatures?.diagnostics === 'object'
-					&& options.languageFeatures.diagnostics.getDocumentVersionRequest
-					&& Date.now() - lastResultAt >= 1 // 1ms
-				) {
-					const clientDocVersion = await connection.sendRequest(shared.GetDocumentVersionRequest.type, { uri });
-					if (clientDocVersion !== null && clientDocVersion !== undefined && version !== clientDocVersion) {
-						_isCancel = true;
-					}
-					lastResultAt = Date.now();
-				}
-				return _isCancel;
-			};
-		}
 		async function sendDocumentDiagnostics(uri: string, isCancel?: () => Promise<boolean>) {
 
 			const project = (await getProject(uri))?.project;
@@ -224,7 +234,7 @@ export function createProjects(
 				connection.sendDiagnostics({ uri: uri, diagnostics: result });
 			}, isCancel);
 
-			if (errors) {
+			if (!await isCancel?.()) {
 				connection.sendDiagnostics({ uri: uri, diagnostics: errors });
 			}
 		}
@@ -273,6 +283,7 @@ function createWorkspace(
 	languageConfigs: LanguageConfigs,
 	rootPath: string,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
+	sys: ts.System,
 	tsLocalized: ts.MapLike<string> | undefined,
 	options: shared.ServerInitializationOptions,
 	documents: vscode.TextDocuments<TextDocument>,
@@ -281,12 +292,12 @@ function createWorkspace(
 	getInferredCompilerOptions: () => Promise<ts.CompilerOptions>,
 ) {
 
-	const rootTsConfigs = ts.sys.readDirectory(rootPath, rootTsConfigNames, undefined, ['**/*']);
+	const rootTsConfigs = sys.readDirectory(rootPath, rootTsConfigNames, undefined, ['**/*']);
 	const projects = shared.createPathMap<Project>();
 	let inferredProject: Project | undefined;
 
 	const getRootPath = () => rootPath;
-	const workspaceSys = ts.sys.getCurrentDirectory() === rootPath ? ts.sys : new Proxy(ts.sys, {
+	const workspaceSys = sys.getCurrentDirectory() === rootPath ? sys : new Proxy(sys, {
 		get(target, prop) {
 			const fn = target[prop as keyof typeof target];
 			if (typeof fn === 'function') {
@@ -306,16 +317,13 @@ function createWorkspace(
 
 	return {
 		projects,
-		getProject,
+		findMatchConfigs,
 		getProjectAndTsConfig,
 		getProjectByCreate,
 		getInferredProject,
 		getInferredProjectDontCreate: () => inferredProject,
 	};
 
-	async function getProject(uri: string) {
-		return (await getProjectAndTsConfig(uri))?.project;
-	}
 	async function getProjectAndTsConfig(uri: string) {
 		const tsconfig = await findMatchConfigs(uri);
 		if (tsconfig) {
@@ -420,13 +428,13 @@ function createWorkspace(
 					let tsConfigPath = projectReference.path;
 
 					// fix https://github.com/johnsoncodehk/volar/issues/712
-					if (!ts.sys.fileExists(tsConfigPath) && ts.sys.directoryExists(tsConfigPath)) {
+					if (!sys.fileExists(tsConfigPath) && sys.directoryExists(tsConfigPath)) {
 						const newTsConfigPath = path.join(tsConfigPath, 'tsconfig.json');
 						const newJsConfigPath = path.join(tsConfigPath, 'jsconfig.json');
-						if (ts.sys.fileExists(newTsConfigPath)) {
+						if (sys.fileExists(newTsConfigPath)) {
 							tsConfigPath = newTsConfigPath;
 						}
-						else if (ts.sys.fileExists(newJsConfigPath)) {
+						else if (sys.fileExists(newJsConfigPath)) {
 							tsConfigPath = newJsConfigPath;
 						}
 					}

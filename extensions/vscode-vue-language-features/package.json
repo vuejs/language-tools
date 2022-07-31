@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "0.38.9",
+	"version": "0.39.3",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
@@ -108,27 +108,27 @@
 			},
 			{
 				"fileMatch": "tsconfig.json",
-				"url": "./schemas/vue-tsconfig.schema.json"
+				"url": "./dist/schemas/vue-tsconfig.schema.json"
 			},
 			{
 				"fileMatch": "tsconfig-*.json",
-				"url": "./schemas/vue-tsconfig.schema.json"
+				"url": "./dist/schemas/vue-tsconfig.schema.json"
 			},
 			{
 				"fileMatch": "tsconfig.*.json",
-				"url": "./schemas/vue-tsconfig.schema.json"
+				"url": "./dist/schemas/vue-tsconfig.schema.json"
 			},
 			{
 				"fileMatch": "jsconfig.json",
-				"url": "./schemas/vue-tsconfig.schema.json"
+				"url": "./dist/schemas/vue-tsconfig.schema.json"
 			},
 			{
 				"fileMatch": "jsconfig-*.json",
-				"url": "./schemas/vue-tsconfig.schema.json"
+				"url": "./dist/schemas/vue-tsconfig.schema.json"
 			},
 			{
 				"fileMatch": "jsconfig.*.json",
-				"url": "./schemas/vue-tsconfig.schema.json"
+				"url": "./dist/schemas/vue-tsconfig.schema.json"
 			}
 		],
 		"languages": [
@@ -355,12 +355,10 @@
 					],
 					"enum": [
 						"auto",
-						true,
 						false
 					],
 					"enumDescriptions": [
 						"Auto enable take over mode when built-in TS extension disabled.",
-						"Alway enable take over mode.",
 						"Never enable take over mode."
 					],
 					"default": "auto",
@@ -560,6 +558,11 @@
 				"category": "Volar"
 			},
 			{
+				"command": "volar.action.reloadProject",
+				"title": "Reload Project",
+				"category": "Volar"
+			},
+			{
 				"command": "volar.action.doctor",
 				"title": "Show doctor panel (WIP)",
 				"category": "Volar"
@@ -655,6 +658,10 @@
 			"commandPalette": [
 				{
 					"command": "volar.action.restartServer",
+					"when": "volar.activated"
+				},
+				{
+					"command": "volar.action.reloadProject",
 					"when": "volar.activated"
 				},
 				{
@@ -813,11 +820,12 @@
 		"release": "npm run release:node && npm run release:browser"
 	},
 	"devDependencies": {
-		"@types/semver": "^7.3.9",
+		"@types/semver": "^7.3.10",
 		"@types/vscode": "1.67.0",
-		"@volar/preview": "0.38.9",
-		"@volar/shared": "0.38.9",
-		"@volar/vue-language-server": "0.38.9",
+		"@volar/preview": "0.39.3",
+		"@volar/shared": "0.39.3",
+		"@volar/vue-language-core": "0.39.3",
+		"@volar/vue-language-server": "0.39.3",
 		"@vue/compiler-sfc": "^3.2.37",
 		"@vue/reactivity": "^3.2.37",
 		"esbuild": "latest",
@@ -826,7 +834,7 @@
 		"punycode": "^2.1.1",
 		"semver": "^7.3.7",
 		"vsce": "latest",
-		"vscode-languageclient": "^8.0.1",
+		"vscode-languageclient": "^8.0.2",
 		"vscode-nls": "^5.0.1"
 	}
 }

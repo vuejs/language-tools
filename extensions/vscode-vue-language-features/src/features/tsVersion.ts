@@ -1,3 +1,4 @@
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { BaseLanguageClient } from 'vscode-languageclient';
 import * as shared from '@volar/shared';
@@ -148,6 +149,17 @@ function getWorkspaceTsPaths(useDefault = false) {
 }
 
 function getVscodeTsPaths() {
+	const nightly = vscode.extensions.getExtension('ms-vscode.vscode-typescript-next');
+	if (nightly) {
+		const tsLibPath = path.join(nightly.extensionPath, 'node_modules/typescript/lib');
+		const serverPath = shared.findTypescriptModulePathInLib(tsLibPath);
+		if (serverPath) {
+			return {
+				serverPath,
+				localizedPath: shared.findTypescriptLocalizedPathInLib(tsLibPath, vscode.env.language)
+			};
+		}
+	}
 	return {
 		serverPath: shared.getVscodeTypescriptPath(vscode.env.appRoot),
 		localizedPath: shared.getVscodeTypescriptLocalizedPath(vscode.env.appRoot, vscode.env.language),

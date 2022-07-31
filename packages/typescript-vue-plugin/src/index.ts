@@ -40,7 +40,23 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 
 			return new Proxy(info.languageService, {
 				get: (target: any, property: keyof ts.LanguageService) => {
-					if (property in ls) {
+					if (
+						property === 'getSemanticDiagnostics'
+						|| property === 'getEncodedSemanticClassifications'
+						|| property === 'getCompletionsAtPosition'
+						|| property === 'getCompletionEntryDetails'
+						|| property === 'getCompletionEntrySymbol'
+						|| property === 'getQuickInfoAtPosition'
+						|| property === 'getSignatureHelpItems'
+						|| property === 'getRenameInfo'
+						|| property === 'findRenameLocations'
+						|| property === 'getDefinitionAtPosition'
+						|| property === 'getDefinitionAndBoundSpan'
+						|| property === 'getTypeDefinitionAtPosition'
+						|| property === 'getImplementationAtPosition'
+						|| property === 'getReferencesAtPosition'
+						|| property === 'findReferences'
+					) {
 						return ls[property];
 					}
 					return target[property];
@@ -95,7 +111,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		getScriptVersion,
 		getScriptSnapshot,
 
-		loadTypeScriptModule: () => ts,
+		getTypeScriptModule: () => ts,
 		isTsPlugin: true,
 	};
 

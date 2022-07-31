@@ -1,6 +1,6 @@
 {
 	"name": "@volar/typescript-faster",
-	"version": "0.38.9",
+	"version": "0.39.3",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -13,7 +13,7 @@
 		"directory": "packages/typescript-faster"
 	},
 	"devDependencies": {
-		"@types/semver": "^7.3.9",
+		"@types/semver": "^7.3.10",
 		"typescript": "latest"
 	},
 	"dependencies": {

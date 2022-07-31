@@ -1,5 +1,46 @@
 # Changelog
 
+## 0.39.3 (2022/7/31)
+
+- feat(vue-component-meta): component schema improves ([#1656](https://github.com/johnsoncodehk/volar/issues/1656))
+- feat(vue-component-meta): support options api props default ([#1649](https://github.com/johnsoncodehk/volar/issues/1649))
+- feat: add "Volar: Reload Project" command ([#1605](https://github.com/johnsoncodehk/volar/issues/1605))
+- fix: vue-tsc watch not working ([#1647](https://github.com/johnsoncodehk/volar/issues/1647))
+
+## 0.39.2 (2022/7/28)
+
+- feat: vue-component-meta ([#1627](https://github.com/johnsoncodehk/volar/issues/1627))
+- feat: support for "JavaScript and TypeScript Nightly" ([#1332](https://github.com/johnsoncodehk/volar/issues/1332))
+- fix: tsx, jsx syntax break by vue directives syntax inject ([#1617](https://github.com/johnsoncodehk/volar/issues/1617))
+- fix: any type components missing in template when use script setup ([#1608](https://github.com/johnsoncodehk/volar/issues/1608))
+- fix: ignore X_V_IF_SAME_KEY error in vue 2 ([#1638](https://github.com/johnsoncodehk/volar/issues/1638))
+- perf: fix `fileExists` is always calculate for .ts on each time update (https://github.com/johnsoncodehk/volar/commit/07f3bd55b6bdf3875a60796f7c9eb9a838eed463)
+- perf: cache `fileExists`, `directoryExists` result in language server (https://github.com/johnsoncodehk/volar/commit/34a4435284311c88248a44222f49c017a6b408a9)
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
+
+## 0.39.1 (2022/7/23)
+
+- fix: typescript-vue-plugin break TS server ([#1624](https://github.com/johnsoncodehk/volar/issues/1624))
+- fix: make `takeOverMode.enabled: true` behavior same with `takeOverMode.enabled: 'auto'`
+
+## 0.39.0 (2022/7/23)
+
+- feat: updated vite problemMatcher ([#1606](https://github.com/johnsoncodehk/volar/issues/1606))
+- feat: support Vite app preview for Vite v3 ([#1616](https://github.com/johnsoncodehk/volar/issues/1616))
+- feat: support organizeImports in vue-typescript for prettier-plugin-organize-imports ([#1480](https://github.com/johnsoncodehk/volar/issues/1480)) ([#1577](https://github.com/johnsoncodehk/volar/issues/1577))
+- feat: avoid takeover enabled with built-in TS extension do not disabled ([#1622](https://github.com/johnsoncodehk/volar/issues/1622))
+- feat: expose vue-tsconfig.schema.json from `@volar/vue-language-core`
+- fix: fix workspaceTrust description ([#1610](https://github.com/johnsoncodehk/volar/issues/1610))
+
+**Breaking changes**
+
+- `@volar/vue-typescript`, `@volar/vue-language-service` apis refactored
+
 ## 0.38.9 (2022/7/20)
 
 - fix: path resolution incorrect in multi root workspaces on windows ([#1585](https://github.com/johnsoncodehk/volar/issues/1585))
@@ -7,12 +48,6 @@
 - fix: update imports on file move not working ([#1599](https://github.com/johnsoncodehk/volar/issues/1599))
 - fix: wrong check for whether jsx option is set ([#1595](https://github.com/johnsoncodehk/volar/issues/1595))
 - fix: renaming .vue files breaks resolving import paths ([#1125](https://github.com/johnsoncodehk/volar/issues/1125))
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 0.38.8 (2022/7/17)
 

@@ -5,12 +5,15 @@ import { getProgram } from './getProgram';
 export function createLanguageService(...params: Parameters<typeof vue.createLanguageContext>) {
 
 	const core = vue.createLanguageContext(...params);
-	const ts = params[0].loadTypeScriptModule();
+	const ts = params[0].getTypeScriptModule();
 	const ls = ts.createLanguageService(core.typescriptLanguageServiceHost);
 
 	tsFaster.decorate(ts, core.typescriptLanguageServiceHost, ls);
 
 	const proxy: Partial<ts.LanguageService> = {
+		organizeImports,
+
+		// only support for .ts for now, not support for .vue
 		getCompletionsAtPosition,
 		getDefinitionAtPosition,
 		getDefinitionAndBoundSpan,
@@ -46,6 +49,25 @@ export function createLanguageService(...params: Parameters<typeof vue.createLan
 	});
 
 	// apis
+	function organizeImports(args: ts.OrganizeImportsArgs, formatOptions: ts.FormatCodeSettings, preferences: ts.UserPreferences | undefined): ReturnType<ts.LanguageService['organizeImports']> {
+		const sourceFile = core.mapper.get(args.fileName);
+		let edits: readonly ts.FileTextChanges[] = [];
+		if (sourceFile) {
+			const embeddeds = sourceFile.getAllEmbeddeds();
+			for (const embedded of embeddeds) {
+				if (embedded.file.isTsHostFile && embedded.file.capabilities.codeActions) {
+					edits = edits.concat(ls.organizeImports({
+						...args,
+						fileName: embedded.file.fileName,
+					}, formatOptions, preferences));
+				}
+			}
+		}
+		else {
+			return ls.organizeImports(args, formatOptions, preferences);
+		}
+		return edits.map(transformFileTextChanges).filter(notEmpty);
+	}
 	function getCompletionsAtPosition(fileName: string, position: number, options: ts.GetCompletionsAtPositionOptions | undefined): ReturnType<ts.LanguageService['getCompletionsAtPosition']> {
 		const finalResult = ls.getCompletionsAtPosition(fileName, position, options);
 		if (finalResult) {
@@ -77,24 +99,22 @@ export function createLanguageService(...params: Parameters<typeof vue.createLan
 		providePrefixAndSuffixTextForRename?: boolean
 	) {
 
-		const tsLs = ls;
 		const loopChecker = new Set<string>();
 		let symbols: (ts.DefinitionInfo | ts.ReferenceEntry | ts.ImplementationLocation | ts.RenameLocation)[] = [];
 
-		if (tsLs)
-			withTeleports(fileName, position, tsLs);
+		withTeleports(fileName, position);
 
 		return symbols.map(s => transformDocumentSpanLike(s)).filter(notEmpty);
 
-		function withTeleports(fileName: string, position: number, tsLs: ts.LanguageService) {
+		function withTeleports(fileName: string, position: number) {
 			if (loopChecker.has(fileName + ':' + position))
 				return;
 			loopChecker.add(fileName + ':' + position);
-			const _symbols = mode === 'definition' ? tsLs.getDefinitionAtPosition(fileName, position)
-				: mode === 'typeDefinition' ? tsLs.getTypeDefinitionAtPosition(fileName, position)
-					: mode === 'references' ? tsLs.getReferencesAtPosition(fileName, position)
-						: mode === 'implementation' ? tsLs.getImplementationAtPosition(fileName, position)
-							: mode === 'rename' ? tsLs.findRenameLocations(fileName, position, findInStrings, findInComments, providePrefixAndSuffixTextForRename)
+			const _symbols = mode === 'definition' ? ls.getDefinitionAtPosition(fileName, position)
+				: mode === 'typeDefinition' ? ls.getTypeDefinitionAtPosition(fileName, position)
+					: mode === 'references' ? ls.getReferencesAtPosition(fileName, position)
+						: mode === 'implementation' ? ls.getImplementationAtPosition(fileName, position)
+							: mode === 'rename' ? ls.findRenameLocations(fileName, position, findInStrings, findInComments, providePrefixAndSuffixTextForRename)
 								: undefined;
 			if (!_symbols) return;
 			symbols = symbols.concat(_symbols);
@@ -120,7 +140,7 @@ export function createLanguageService(...params: Parameters<typeof vue.createLan
 				)) {
 					if (loopChecker.has(ref.fileName + ':' + teleRange.start))
 						continue;
-					withTeleports(ref.fileName, teleRange.start, tsLs);
+					withTeleports(ref.fileName, teleRange.start);
 				}
 			}
 		}
@@ -131,7 +151,7 @@ export function createLanguageService(...params: Parameters<typeof vue.createLan
 		let textSpan: ts.TextSpan | undefined;
 		let symbols: ts.DefinitionInfo[] = [];
 
-		withTeleports(fileName, position, ls);
+		withTeleports(fileName, position);
 
 		if (!textSpan) return;
 		return {
@@ -139,11 +159,11 @@ export function createLanguageService(...params: Parameters<typeof vue.createLan
 			definitions: symbols?.map(s => transformDocumentSpanLike(s)).filter(notEmpty),
 		};
 
-		function withTeleports(fileName: string, position: number, tsLs: ts.LanguageService) {
+		function withTeleports(fileName: string, position: number) {
 			if (loopChecker.has(fileName + ':' + position))
 				return;
 			loopChecker.add(fileName + ':' + position);
-			const _symbols = tsLs.getDefinitionAndBoundSpan(fileName, position);
+			const _symbols = ls.getDefinitionAndBoundSpan(fileName, position);
 			if (!_symbols) return;
 			if (!textSpan) {
 				textSpan = _symbols.textSpan;
@@ -165,27 +185,25 @@ export function createLanguageService(...params: Parameters<typeof vue.createLan
 				)) {
 					if (loopChecker.has(ref.fileName + ':' + teleRange.start))
 						continue;
-					withTeleports(ref.fileName, teleRange.start, tsLs);
+					withTeleports(ref.fileName, teleRange.start);
 				}
 			}
 		}
 	}
 	function findReferences(fileName: string, position: number): ReturnType<ts.LanguageService['findReferences']> {
 
-		const tsLs = ls;
 		const loopChecker = new Set<string>();
 		let symbols: ts.ReferencedSymbol[] = [];
 
-		if (tsLs)
-			withTeleports(fileName, position, tsLs);
+		withTeleports(fileName, position);
 
 		return symbols.map(s => transformReferencedSymbol(s)).filter(notEmpty);
 
-		function withTeleports(fileName: string, position: number, tsLs: ts.LanguageService) {
+		function withTeleports(fileName: string, position: number) {
 			if (loopChecker.has(fileName + ':' + position))
 				return;
 			loopChecker.add(fileName + ':' + position);
-			const _symbols = tsLs.findReferences(fileName, position);
+			const _symbols = ls.findReferences(fileName, position);
 			if (!_symbols) return;
 			symbols = symbols.concat(_symbols);
 			for (const symbol of _symbols) {
@@ -204,7 +222,7 @@ export function createLanguageService(...params: Parameters<typeof vue.createLan
 					)) {
 						if (loopChecker.has(ref.fileName + ':' + teleRange.start))
 							continue;
-						withTeleports(ref.fileName, teleRange.start, tsLs);
+						withTeleports(ref.fileName, teleRange.start);
 					}
 				}
 			}
@@ -212,6 +230,27 @@ export function createLanguageService(...params: Parameters<typeof vue.createLan
 	}
 
 	// transforms
+	function transformFileTextChanges(changes: ts.FileTextChanges): ts.FileTextChanges | undefined {
+		const sourceFile = core.mapper.fromEmbeddedFileName(changes.fileName);
+		if (sourceFile) {
+			return {
+				...changes,
+				fileName: sourceFile.vueFile.fileName,
+				textChanges: changes.textChanges.map(c => {
+					const span = transformSpan(changes.fileName, c.span);
+					if (span) {
+						return {
+							...c,
+							span: span.textSpan,
+						};
+					}
+				}).filter(notEmpty),
+			};
+		}
+		else {
+			return changes;
+		}
+	}
 	function transformReferencedSymbol(symbol: ts.ReferencedSymbol): ts.ReferencedSymbol | undefined {
 		const definition = transformDocumentSpanLike(symbol.definition);
 		const references = symbol.references.map(r => transformDocumentSpanLike(r)).filter(notEmpty);

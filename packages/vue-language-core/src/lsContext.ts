@@ -16,7 +16,7 @@ export function createLanguageContext(
 	let lastProjectVersion: string | undefined;
 	let tsProjectVersion = 0;
 
-	const ts = host.loadTypeScriptModule();
+	const ts = host.getTypeScriptModule();
 	const documentRegistry = createDocumentRegistry();
 	const compilerOptions = host.getCompilationSettings();
 	const vueCompilerOptions = host.getVueCompilationSettings();
@@ -161,7 +161,7 @@ export function createLanguageContext(
 
 		// .ts / .js / .d.ts / .json ...
 		for (const tsFileVersion of tsFileVersions) {
-			if (!vueFileNames.has(tsFileVersion[0]) && !host.fileExists?.(tsFileVersion[0])) {
+			if (!tsFileNames.has(tsFileVersion[0]) && !host.getScriptSnapshot(tsFileVersion[0])) {
 				// delete
 				tsFileVersions.delete(tsFileVersion[0]);
 				tsFileUpdated = true;

@@ -5,7 +5,6 @@ import * as activeSelection from './features/activeSelection';
 import * as attrNameCase from './features/attrNameCase';
 import * as callGraph from './features/callGraph';
 import * as createWorkspaceSnippets from './features/createWorkspaceSnippets';
-import * as documentVersion from './features/documentVersion';
 import * as documentContent from './features/documentContent';
 import * as preview from './features/preview';
 import * as showReferences from './features/showReferences';
@@ -18,6 +17,7 @@ import * as virtualFiles from './features/virtualFiles';
 import * as tsconfig from './features/tsconfig';
 import * as doctor from './features/doctor';
 import * as fileReferences from './features/fileReferences';
+import * as reloadProject from './features/reloadProject';
 
 let apiClient: lsp.BaseLanguageClient;
 let docClient: lsp.BaseLanguageClient | undefined;
@@ -138,6 +138,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	tsVersion.register('volar.selectTypeScriptVersion', context, [apiClient, docClient].filter(shared.notEmpty));
 	tsconfig.register('volar.openTsconfig', context, docClient ?? apiClient);
 	fileReferences.register('volar.vue.findAllFileReferences', apiClient);
+	reloadProject.register('volar.action.reloadProject', context, [apiClient, docClient].filter(shared.notEmpty));
 
 	async function requestReloadVscode() {
 		const reload = await vscode.window.showInformationMessage(
@@ -177,7 +178,6 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 		for (const client of clients) {
 			showReferences.activate(context, client);
-			documentVersion.activate(context, client);
 			documentContent.activate(context, client);
 			activeSelection.activate(context, client);
 		}
@@ -203,11 +203,11 @@ export function deactivate(): Thenable<any> | undefined {
 }
 
 export function takeOverModeEnabled() {
-	const status = vscode.workspace.getConfiguration('volar').get<boolean | 'auto'>('takeOverMode.enabled');
-	if (status === 'auto') {
+	const status = vscode.workspace.getConfiguration('volar').get<false | 'auto'>('takeOverMode.enabled');
+	if (status /* true | 'auto' */) {
 		return !vscode.extensions.getExtension('vscode.typescript-language-features');
 	}
-	return status;
+	return false;
 }
 
 function enabledDocumentFeaturesInHtml() {
@@ -256,7 +256,7 @@ function getInitializationOptions(
 				codeLens: { showReferencesNotification: true },
 				semanticTokens: true,
 				inlayHints: true,
-				diagnostics: { getDocumentVersionRequest: true },
+				diagnostics: true,
 				schemaRequestService: { getDocumentContentRequest: true },
 			} : {}),
 		} : undefined,
