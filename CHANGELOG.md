@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.39.3 (2022/7/31)
+
+- feat(vue-component-meta): component schema improves ([#1656](https://github.com/johnsoncodehk/volar/issues/1656))
+- feat(vue-component-meta): support options api props default ([#1649](https://github.com/johnsoncodehk/volar/issues/1649))
+- feat: add "Volar: Reload Project" command ([#1605](https://github.com/johnsoncodehk/volar/issues/1605))
+- fix: vue-tsc watch not working ([#1647](https://github.com/johnsoncodehk/volar/issues/1647))
+
 ## 0.39.2 (2022/7/28)
 
 - feat: vue-component-meta ([#1627](https://github.com/johnsoncodehk/volar/issues/1627))
