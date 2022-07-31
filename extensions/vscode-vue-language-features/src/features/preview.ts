@@ -20,6 +20,7 @@ const enum PreviewType {
 export async function register(context: vscode.ExtensionContext) {
 
 	const panels = new Set<vscode.WebviewPanel>();
+	let _activePreview: vscode.WebviewPanel | undefined;
 	let externalBrowserPanel: vscode.WebviewPanel | undefined;
 	let avoidUpdateOnDidChangeActiveTextEditor = false;
 	let updateComponentPreview: Function | undefined;
@@ -365,6 +366,7 @@ export async function register(context: vscode.ExtensionContext) {
 				enableFindWidget: true,
 			},
 		);
+		trackActive();
 
 		const panelContext: vscode.Disposable[] = [];
 
@@ -412,6 +414,24 @@ export async function register(context: vscode.ExtensionContext) {
 		}
 
 		return port;
+
+		function trackActive(): void {
+			panel.onDidChangeViewState(({ webviewPanel }) => {
+				setPreviewActiveContext(webviewPanel.active);
+				_activePreview = webviewPanel.active ? panel : undefined;
+			});
+
+			panel.onDidDispose(() => {
+				if (_activePreview === panel) {
+					setPreviewActiveContext(false);
+					_activePreview = undefined;
+				}
+			});
+		}
+
+		function setPreviewActiveContext(value: boolean) {
+			vscode.commands.executeCommand('setContext', 'volarPreviewFocus', value);
+		}
 	}
 
 	async function webviewEventHandler(message: any) {

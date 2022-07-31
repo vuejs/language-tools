@@ -714,11 +714,11 @@
 				},
 				{
 					"command": "volar.action.selectElement",
-					"when": "activeEditor == WebviewEditor"
+					"when": "volarPreviewFocus"
 				},
 				{
 					"command": "volar.action.openInBrowser",
-					"when": "activeEditor == WebviewEditor"
+					"when": "volarPreviewFocus"
 				},
 				{
 					"command": "volar.selectTypeScriptVersion",
@@ -743,17 +743,17 @@
 				},
 				{
 					"command": "volar.action.selectElement",
-					"when": "activeEditor == WebviewEditor",
+					"when": "volarPreviewFocus",
 					"group": "navigation"
 				},
 				{
 					"command": "volar.action.openInBrowser",
-					"when": "activeEditor == WebviewEditor",
+					"when": "volarPreviewFocus",
 					"group": "navigation"
 				},
 				{
 					"command": "workbench.action.webview.reloadWebviewAction",
-					"when": "activeEditor == WebviewEditor",
+					"when": "volarPreviewFocus",
 					"group": "navigation"
 				}
 			],
