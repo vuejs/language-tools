@@ -9,6 +9,10 @@ export interface MyIgnoredNestedProps {
 	nestedProp: string;
 }
 
+export interface MyNestedRecursiveProps {
+	recursive: MyNestedRecursiveProps
+}
+
 enum MyEnum {
 	Small,
 	Medium,
@@ -91,4 +95,5 @@ export interface MyProps {
 	 */
 	literalFromContext: MyCategories,
 	inlined: { foo: string; },
+	recursive: MyNestedRecursiveProps
 }
