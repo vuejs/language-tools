@@ -56,7 +56,7 @@ describe(`vue-component-meta`, () => {
 		const enumValue = meta.props.find(prop => prop.name === 'enumValue');
 		const literalFromContext = meta.props.find(prop => prop.name === 'literalFromContext');
 		const inlined = meta.props.find(prop => prop.name === 'inlined');
-		// const onEvent = meta.props.find(prop => prop.name === 'onEvent');
+		const recursive = meta.props.find(prop => prop.name === 'recursive');
 
 		expect(foo).toBeDefined();
 		expect(foo?.required).toBeTruthy();
@@ -311,27 +311,24 @@ describe(`vue-component-meta`, () => {
 			]
 		});
 
-		// expect(onEvent).toBeDefined();
-		// // expect(onEvent?.required).toBeFalsy()
-		// expect(onEvent?.type).toEqual('((...args: any[]) => any) | undefined');
-		// expect(onEvent?.schema).toEqual({
-		// 	kind: 'enum',
-		// 	type: '((...args: any[]) => any) | undefined',
-		// 	schema: [
-		// 		'undefined',
-		// 		{
-		// 			kind: 'event',
-		// 			type: '(...args: any[]): any',
-		// 			schema: [
-		// 				{
-		// 					kind: 'array',
-		// 					type: 'any',
-		// 					schema: [],
-		// 				}
-		// 			]
-		// 		}
-		// 	]
-		// });
+		expect(recursive).toBeDefined();
+		expect(recursive?.required).toBeTruthy();
+		expect(recursive?.type).toEqual('MyNestedRecursiveProps');
+		expect(recursive?.schema).toEqual({
+			kind: 'object',
+			type: 'MyNestedRecursiveProps',
+			schema: {
+				recursive: {
+					name: 'recursive',
+					description: '',
+					tags: [],
+					global: false,
+					required: true,
+					type: 'MyNestedRecursiveProps',
+					schema: 'MyNestedRecursiveProps'
+				}
+			}
+		});
 	});
 
 	test('reference-type-props-js', () => {

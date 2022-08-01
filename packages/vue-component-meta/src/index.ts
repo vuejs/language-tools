@@ -130,12 +130,6 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 
 		const componentType = typeChecker.getTypeOfSymbolAtLocation(_export, symbolNode!);
 		const symbolProperties = componentType.getProperties() ?? [];
-		const {
-			resolveNestedProperties,
-			resolveEventSignature,
-			resolveExposedProperties,
-			resolveSlotProperties,
-		} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions.schema);
 
 		return {
 			props: getProps(),
@@ -155,7 +149,13 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 				const properties = type.getApparentProperties();
 
 				result = properties
-					.map(resolveNestedProperties)
+					.map((prop) => {
+						const {
+							resolveNestedProperties,
+						} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions.schema);
+
+						return resolveNestedProperties(prop);
+					})
 					.filter((prop) => !prop.name.match(propEventRegex));
 			}
 
@@ -189,14 +189,20 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 		}
 
 		function getEvents() {
-
 			const $emit = symbolProperties.find(prop => prop.escapedName === '$emit');
 
 			if ($emit) {
 				const type = typeChecker.getTypeOfSymbolAtLocation($emit, symbolNode!);
 				const calls = type.getCallSignatures();
 
-				return calls.map(resolveEventSignature).filter(event => event.name);
+				return calls.map((call) => {
+
+					const {
+						resolveEventSignature,
+					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions.schema);
+					
+					return resolveEventSignature(call);
+				}).filter(event => event.name);
 			}
 
 			return [];
@@ -211,20 +217,33 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 				const type = typeChecker.getTypeOfSymbolAtLocation($slots, symbolNode!);
 				const properties = type.getProperties();
 
-				return properties.map(resolveSlotProperties);
+				return properties.map((prop) => {
+					const {
+						resolveSlotProperties,
+					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions.schema);
+
+					return resolveSlotProperties(prop);
+				});
 			}
 
 			return [];
 		}
 
 		function getExposed() {
+
 			const exposed = symbolProperties.filter(prop =>
 				// only exposed props will have a syntheticOrigin
 				Boolean((prop as any).syntheticOrigin)
 			);
 
 			if (exposed.length) {
-				return exposed.map(resolveExposedProperties);
+				return exposed.map((prop) => {
+					const {
+						resolveExposedProperties,
+					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions.schema);
+
+					return resolveExposedProperties(prop);
+				});
 			}
 
 			return [];
@@ -272,7 +291,7 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 
 function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expression, options: MetaCheckerSchemaOptions = false) {
 	const enabled = !!options;
-	const ignore = typeof options === 'object' ? options.ignore ?? [] : [];
+	const ignore = typeof options === 'object' ? [...options?.ignore ?? []] : [];
 
 	function shouldIgnore(subtype: ts.Type) {
 		const type = typeChecker.typeToString(subtype);
@@ -285,6 +304,11 @@ function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expre
 		}
 
 		return ignore.includes(type);
+	}
+
+	function setVisited(subtype: ts.Type) {
+		const type = typeChecker.typeToString(subtype);
+		ignore.push(type);
 	}
 
 	function reducer(acc: any, cur: any) {
@@ -358,52 +382,50 @@ function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expre
 			schema,
 		};
 	}
-	function resolveEventSchema(subtype: ts.Type): PropertyMetaSchema {
-		return (subtype.getCallSignatures().length === 1)
-			? resolveCallbackSchema(subtype.getCallSignatures()[0])
-			: typeChecker.typeToString(subtype);
-	}
-	function resolveNestedSchema(subtype: ts.Type): PropertyMetaSchema {
-		if (
-			subtype.getCallSignatures().length === 0 &&
-			(subtype.isClassOrInterface() || subtype.isIntersection() || (subtype as ts.ObjectType).objectFlags & ts.ObjectFlags.Anonymous)
-		) {
-			if (shouldIgnore(subtype)) {
-				return typeChecker.typeToString(subtype);
-			}
+	function resolveSchema(subtype: ts.Type): PropertyMetaSchema {
+		const type = typeChecker.typeToString(subtype);
+		let schema: PropertyMetaSchema = type;
 
-			return {
-				kind: 'object',
-				type: typeChecker.typeToString(subtype),
-				schema: subtype.getProperties().map(resolveNestedProperties).reduce(reducer, {})
+		if (shouldIgnore(subtype)) {
+			return type;
+		}
+
+		setVisited(subtype);
+
+		if (subtype.isUnion()) {
+			schema = {
+				kind: 'enum',
+				type,
+				schema: subtype.types.map(resolveSchema)
 			};
 		}
-		return resolveEventSchema(subtype);
-	}
-	function resolveArraySchema(subtype: ts.Type): PropertyMetaSchema {
-		// @ts-ignore - typescript internal, isArrayLikeType exists
-		if (typeChecker.isArrayLikeType(subtype)) {
-			if (shouldIgnore(subtype)) {
-				return typeChecker.typeToString(subtype);
-			}
 
-			return {
+		// @ts-ignore - typescript internal, isArrayLikeType exists
+		else if (typeChecker.isArrayLikeType(subtype)) {
+			schema = {
 				kind: 'array',
-				type: typeChecker.typeToString(subtype),
+				type,
 				schema: typeChecker.getTypeArguments(subtype as ts.TypeReference).map(resolveSchema)
 			};
 		}
 
-		return resolveNestedSchema(subtype);
-	}
-	function resolveSchema(subtype: ts.Type): PropertyMetaSchema {
-		return subtype.isUnion()
-			? {
-				kind: 'enum',
-				type: typeChecker.typeToString(subtype),
-				schema: subtype.types.map(resolveArraySchema)
-			}
-			: resolveArraySchema(subtype);
+		else if (
+			subtype.getCallSignatures().length === 0 &&
+			(subtype.isClassOrInterface() || subtype.isIntersection() || (subtype as ts.ObjectType).objectFlags & ts.ObjectFlags.Anonymous)
+		) {
+			// setVisited(subtype);
+			schema = {
+				kind: 'object',
+				type,
+				schema: subtype.getProperties().map(resolveNestedProperties).reduce(reducer, {})
+			};
+		}
+
+		else if (subtype.getCallSignatures().length === 1) {
+			schema = resolveCallbackSchema(subtype.getCallSignatures()[0]);
+		}
+
+		return schema;
 	}
 
 	return {
@@ -411,10 +433,6 @@ function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expre
 		resolveSlotProperties,
 		resolveEventSignature,
 		resolveExposedProperties,
-		resolveCallbackSchema,
-		resolveEventSchema,
-		resolveNestedSchema,
-		resolveArraySchema,
 		resolveSchema,
 	};
 }
