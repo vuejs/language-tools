@@ -7,9 +7,8 @@ describe(`vue-component-meta`, () => {
 	const tsconfigPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/tsconfig.json');
 	const checker = createComponentMetaChecker(tsconfigPath, {
 		forceUseTs: true,
-		schema: {
-			ignore: ['MyIgnoredNestedProps'],
-		},
+		schema: { ignore: ['MyIgnoredNestedProps'] },
+		printer: { newLine: 1 },
 	});
 
 	test('empty-component', () => {

@@ -111,7 +111,7 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 	function getMetaScriptContent(fileName: string) {
 		return `
 			import * as Components from '${fileName.substring(0, fileName.length - '.meta.ts'.length)}';
-			export default {} as { [K in keyof typeof Components]: InstanceType<typeof Components[K]>; };;
+			export default {} as { [K in keyof typeof Components]: InstanceType<typeof Components[K]>; };
 		`;
 	}
 
@@ -165,11 +165,11 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 			}
 
 			// fill defaults
-			const printer = ts.createPrinter(checkerOptions.printer);
+			const printer = checkerOptions.printer ? ts.createPrinter(checkerOptions.printer) : undefined;
 			const snapshot = host.getScriptSnapshot(componentPath)!;
 
 			const vueDefaults = componentPath.endsWith('.vue') && exportName === 'default'
-				? readVueComponentDefaultProps(snapshot.getText(0, snapshot.getLength()), printer, typeChecker)
+				? readVueComponentDefaultProps(snapshot.getText(0, snapshot.getLength()), printer)
 				: {};
 			const tsDefaults = !componentPath.endsWith('.vue') ? readTsComponentDefaultProps(
 				componentPath.substring(componentPath.lastIndexOf('.') + 1), // ts | js | tsx | jsx
@@ -186,11 +186,11 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 				if (prop) {
 					prop.default = defaultExp.default;
 
-					if (typeof defaultExp.required !== 'undefined') {
+					if (defaultExp.required !== undefined) {
 						prop.required = defaultExp.required;
 					}
 
-					if (typeof prop.default !== 'undefined') {
+					if (prop.default !== undefined) {
 						prop.required = false; // props with default are always optional
 					}
 				}
@@ -448,8 +448,8 @@ function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expre
 	};
 }
 
-function readVueComponentDefaultProps(vueFileText: string, printer: ts.Printer, typeChecker: ts.TypeChecker) {
-	const result: Record<string, { default?: string, required?: boolean; }> = {};
+function readVueComponentDefaultProps(vueFileText: string, printer: ts.Printer | undefined) {
+	let result: Record<string, { default?: string, required?: boolean; }> = {};
 
 	scriptSetupWorker();
 	scriptWorker();
@@ -472,10 +472,11 @@ function readVueComponentDefaultProps(vueFileText: string, printer: ts.Printer, 
 				for (const prop of obj.properties) {
 					if (ts.isPropertyAssignment(prop)) {
 						const name = prop.name.getText(ast);
-						const exp = printer.printNode(ts.EmitHint.Expression, resolveDefaultOptionExpression(prop.initializer), ast);;
+						const expNode = resolveDefaultOptionExpression(prop.initializer);
+						const expText = printer?.printNode(ts.EmitHint.Expression, expNode, ast) ?? expNode.getText(ast);
 
 						result[name] = {
-							default: exp,
+							default: expText,
 						};
 					}
 				}
@@ -486,30 +487,10 @@ function readVueComponentDefaultProps(vueFileText: string, printer: ts.Printer, 
 			const obj = findObjectLiteralExpression(ast);
 
 			if (obj) {
-				for (const prop of obj.properties) {
-					if (ts.isPropertyAssignment(prop)) {
-						const name = prop.name.getText(ast);
-						const resolved = resolveDefaultOptionExpression(prop.initializer);
-
-						result[name] = {
-							required: false,
-						};
-
-						if (ts.isObjectLiteralExpression(resolved)) {
-							const defaultProp = resolved.properties.find(p => ts.isPropertyAssignment(p) && p.name.getText(ast) === 'default') as ts.PropertyAssignment | undefined;
-							const requiredProp = resolved.properties.find(p => ts.isPropertyAssignment(p) && p.name.getText(ast) === 'required') as ts.PropertyAssignment | undefined;
-
-							if (requiredProp) {
-								const exp = printer.printNode(ts.EmitHint.Unspecified, requiredProp.initializer, ast);
-								result[name].required = exp === 'true';
-							}
-							if (defaultProp) {
-								const exp = printer.printNode(ts.EmitHint.Expression, resolveDefaultOptionExpression((defaultProp as any).initializer), ast);
-								result[name].default = exp;
-							}
-						}
-					}
-				}
+				result = {
+					...result,
+					...resolvePropsOption(ast, obj, printer),
+				};
 			}
 		}
 
@@ -541,33 +522,16 @@ function readVueComponentDefaultProps(vueFileText: string, printer: ts.Printer, 
 	}
 }
 
-function readTsComponentDefaultProps(lang: string, tsFileText: string, exportName: string, printer: ts.Printer) {
+function readTsComponentDefaultProps(lang: string, tsFileText: string, exportName: string, printer: ts.Printer | undefined) {
 
-	const result: Record<string, { default?: string, required?: boolean; }> = {};
 	const ast = ts.createSourceFile('/tmp.' + lang, tsFileText, ts.ScriptTarget.Latest);
 	const props = getPropsNode();
 
 	if (props) {
-		for (const prop of props.properties) {
-			if (ts.isPropertyAssignment(prop)) {
-				const name = prop.name?.getText(ast);
-				if (ts.isObjectLiteralExpression(prop.initializer)) {
-					for (const propOption of prop.initializer.properties) {
-						if (ts.isPropertyAssignment(propOption)) {
-							if (propOption.name?.getText(ast) === 'default') {
-								const _default = propOption.initializer;
-								result[name] = {
-									default: printer.printNode(ts.EmitHint.Expression, resolveDefaultOptionExpression(_default), ast)
-								};
-							}
-						}
-					}
-				}
-			}
-		}
+		return resolvePropsOption(ast, props, printer);
 	}
 
-	return result;
+	return {};
 
 	function getComponentNode() {
 
@@ -630,6 +594,36 @@ function readTsComponentDefaultProps(lang: string, tsFileText: string, exportNam
 			}
 		}
 	}
+}
+
+function resolvePropsOption(ast: ts.SourceFile, props: ts.ObjectLiteralExpression, printer: ts.Printer | undefined) {
+
+	const result: Record<string, { default?: string, required?: boolean; }> = {};
+
+	for (const prop of props.properties) {
+		if (ts.isPropertyAssignment(prop)) {
+			const name = prop.name?.getText(ast);
+			if (ts.isObjectLiteralExpression(prop.initializer)) {
+
+				const defaultProp = prop.initializer.properties.find(p => ts.isPropertyAssignment(p) && p.name.getText(ast) === 'default') as ts.PropertyAssignment | undefined;
+				const requiredProp = prop.initializer.properties.find(p => ts.isPropertyAssignment(p) && p.name.getText(ast) === 'required') as ts.PropertyAssignment | undefined;
+
+				result[name] = {};
+
+				if (requiredProp) {
+					const exp = requiredProp.initializer.getText(ast);
+					result[name].required = exp === 'true';
+				}
+				if (defaultProp) {
+					const expNode = resolveDefaultOptionExpression((defaultProp as any).initializer);
+					const expText = printer?.printNode(ts.EmitHint.Expression, expNode, ast) ?? expNode.getText(ast);
+					result[name].default = expText;
+				}
+			}
+		}
+	}
+
+	return result;
 }
 
 function resolveDefaultOptionExpression(_default: ts.Expression) {
