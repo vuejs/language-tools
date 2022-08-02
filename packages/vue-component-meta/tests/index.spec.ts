@@ -7,13 +7,9 @@ describe(`vue-component-meta`, () => {
 	const tsconfigPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/tsconfig.json');
 	const checker = createComponentMetaChecker(tsconfigPath, {
 		forceUseTs: true,
-		printer: { newLine: 1 },
-	});
-	const checker_schema = createComponentMetaChecker(tsconfigPath, {
 		schema: {
 			ignore: ['MyIgnoredNestedProps'],
 		},
-		printer: { newLine: 1 },
 	});
 
 	test('empty-component', () => {
@@ -41,7 +37,7 @@ describe(`vue-component-meta`, () => {
 
 	test('reference-type-props', () => {
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-props/component.vue');
-		const meta = checker_schema.getComponentMeta(componentPath);
+		const meta = checker.getComponentMeta(componentPath);
 
 		const foo = meta.props.find(prop => prop.name === 'foo');
 		const bar = meta.props.find(prop => prop.name === 'bar');
@@ -104,13 +100,21 @@ describe(`vue-component-meta`, () => {
 		expect(baz?.required).toBeFalsy();
 		expect(baz?.type).toEqual('string[] | undefined');
 		expect(baz?.description).toEqual('string array baz');
-		// expect(baz?.schema).toEqual({
-		// 	kind: 'array',
-		// 	type: 'string[]',
-		// 	schema: ['string']
-		// });
+		expect(baz?.schema).toEqual({
+			kind: 'enum',
+			type: 'string[] | undefined',
+			schema: [
+				'undefined',
+				{
+					kind: 'array',
+					type: 'string[]',
+					schema: ['string']
+				}
+			]
+		});
 
 		expect(union).toBeDefined();
+		expect(union?.default).toBeUndefined();
 		expect(union?.required).toBeTruthy();
 		expect(union?.type).toEqual('string | number');
 		expect(union?.description).toEqual('required union type');
@@ -121,6 +125,7 @@ describe(`vue-component-meta`, () => {
 		});
 
 		expect(unionOptional).toBeDefined();
+		expect(unionOptional?.default).toBeUndefined();
 		expect(unionOptional?.required).toBeFalsy();
 		expect(unionOptional?.type).toEqual('string | number | undefined');
 		expect(unionOptional?.description).toEqual('optional union type');
@@ -131,6 +136,7 @@ describe(`vue-component-meta`, () => {
 		});
 
 		expect(nested).toBeDefined();
+		expect(nested?.default).toBeUndefined();
 		expect(nested?.required).toBeTruthy();
 		expect(nested?.type).toEqual('MyNestedProps');
 		expect(nested?.description).toEqual('required nested object');
@@ -151,6 +157,7 @@ describe(`vue-component-meta`, () => {
 		});
 
 		expect(nestedIntersection).toBeDefined();
+		expect(nestedIntersection?.default).toBeUndefined();
 		expect(nestedIntersection?.required).toBeTruthy();
 		expect(nestedIntersection?.type).toEqual('MyNestedProps & { additionalProp: string; }');
 		expect(nestedIntersection?.description).toEqual('required nested object with intersection');
@@ -180,6 +187,7 @@ describe(`vue-component-meta`, () => {
 		});
 
 		expect(nestedOptional).toBeDefined();
+		expect(nestedOptional?.default).toBeUndefined();
 		expect(nestedOptional?.required).toBeFalsy();
 		expect(nestedOptional?.type).toEqual('MyNestedProps | MyIgnoredNestedProps | undefined');
 		expect(nestedOptional?.description).toEqual('optional nested object');
@@ -208,6 +216,7 @@ describe(`vue-component-meta`, () => {
 		});
 
 		expect(array).toBeDefined();
+		expect(array?.default).toBeUndefined();
 		expect(array?.required).toBeTruthy();
 		expect(array?.type).toEqual('MyNestedProps[]');
 		expect(array?.description).toEqual('required array object');
@@ -234,6 +243,7 @@ describe(`vue-component-meta`, () => {
 		});
 
 		expect(arrayOptional).toBeDefined();
+		expect(arrayOptional?.default).toBeUndefined();
 		expect(arrayOptional?.required).toBeFalsy();
 		expect(arrayOptional?.type).toEqual('MyNestedProps[] | undefined');
 		expect(arrayOptional?.description).toEqual('optional array object');
@@ -267,6 +277,7 @@ describe(`vue-component-meta`, () => {
 		});
 
 		expect(enumValue).toBeDefined();
+		expect(enumValue?.default).toBeUndefined();
 		expect(enumValue?.required).toBeTruthy();
 		expect(enumValue?.type).toEqual('MyEnum');
 		expect(enumValue?.description).toEqual('enum value');
@@ -277,6 +288,7 @@ describe(`vue-component-meta`, () => {
 		});
 
 		expect(inlined).toBeDefined();
+		expect(inlined?.default).toBeUndefined();
 		expect(inlined?.required).toBeTruthy();
 		expect(inlined?.schema).toEqual({
 			kind: 'object',
@@ -295,6 +307,7 @@ describe(`vue-component-meta`, () => {
 		});
 
 		expect(literalFromContext).toBeDefined();
+		expect(literalFromContext?.default).toBeUndefined();
 		expect(literalFromContext?.required).toBeTruthy();
 		expect(literalFromContext?.type).toEqual('"Uncategorized" | "Content" | "Interaction" | "Display" | "Forms" | "Addons"');
 		expect(literalFromContext?.description).toEqual('literal type alias that require context');
@@ -312,6 +325,7 @@ describe(`vue-component-meta`, () => {
 		});
 
 		expect(recursive).toBeDefined();
+		expect(recursive?.default).toBeUndefined();
 		expect(recursive?.required).toBeTruthy();
 		expect(recursive?.type).toEqual('MyNestedRecursiveProps');
 		expect(recursive?.schema).toEqual({
@@ -337,12 +351,55 @@ describe(`vue-component-meta`, () => {
 
 		const foo = meta.props.find(prop => prop.name === 'foo');
 		expect(foo).toBeDefined();
+		expect(foo?.default).toBeUndefined();
 		expect(foo?.required).toBeTruthy();
+		expect(foo?.type).toEqual('string');
+	});
+
+	test('reference-type-props-js-setup', () => {
+		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-props/component-js-setup.vue');
+		const meta = checker.getComponentMeta(componentPath);
+
+		const foo = meta.props.find(prop => prop.name === 'foo');
+		const hello = meta.props.find(prop => prop.name === 'hello');
+		const numberOrStringProp = meta.props.find(prop => prop.name === 'numberOrStringProp');
+		const arrayProps = meta.props.find(prop => prop.name === 'arrayProps');
+
+		expect(foo).toBeDefined();
+		expect(foo?.default).toBeUndefined();
+		expect(foo?.required).toBeTruthy();
+		// expect(foo?.type).toEqual('string | undefined'); // @todo should be 'string'
+
+		expect(hello).toBeDefined();
+		expect(hello?.default).toEqual('"Hello"');
+		expect(hello?.type).toEqual('string | undefined');
+		expect(hello?.required).toBeFalsy();
+
+		expect(numberOrStringProp).toBeDefined();
+		expect(numberOrStringProp?.default).toEqual('42');
+		expect(numberOrStringProp?.type).toEqual('string | number | undefined');
+		expect(numberOrStringProp?.required).toBeFalsy();
+
+		expect(arrayProps).toBeDefined();
+		// expect(arrayProps?.type).toEqual('unknown[] | undefined'); // @todo should be number[]
+		expect(arrayProps?.required).toBeFalsy();
+		// expect(arrayProps?.schema).toEqual({
+		// 	kind: 'enum',
+		// 	type: 'unknown[] | undefined',   // @todo should be number[]
+		// 	schema: [
+		// 		'undefined',
+		// 		{
+		// 			kind: 'array',
+		// 			type: 'unknown[]',  // @todo should be number[]
+		// 			schema: ['unknown'] // @todo should be number[]
+		// 		}
+		// 	]
+		// });
 	});
 
 	test('reference-type-events', () => {
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-events/component.vue');
-		const meta = checker_schema.getComponentMeta(componentPath);
+		const meta = checker.getComponentMeta(componentPath);
 
 		const onFoo = meta.events.find(event => event.name === 'foo');
 		const onBar = meta.events.find(event => event.name === 'bar');
