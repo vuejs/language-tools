@@ -26,10 +26,14 @@ type ForableSource<T> = [
 ][];
 
 export type GlobalComponents =
+	// @ts-ignore
 	PickNotAny<import('vue').GlobalComponents, {}>
+	// @ts-ignore
 	& PickNotAny<import('@vue/runtime-core').GlobalComponents, {}>
+	// @ts-ignore
 	& PickNotAny<import('@vue/runtime-dom').GlobalComponents, {}>
 	& Pick<typeof vue,
+		// @ts-ignore
 		'Transition'
 		| 'TransitionGroup'
 		| 'KeepAlive'
