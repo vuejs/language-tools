@@ -100,6 +100,9 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 	globalPropNames = getComponentMeta(globalComponentName).props.map(prop => prop.name);
 
 	return {
+		program,
+		tsLs,
+		typeChecker,
 		getExportNames,
 		getComponentMeta,
 	};
@@ -152,7 +155,7 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 					.map((prop) => {
 						const {
 							resolveNestedProperties,
-						} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions.schema);
+						} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions);
 
 						return resolveNestedProperties(prop);
 					})
@@ -210,7 +213,7 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 
 					const {
 						resolveEventSignature,
-					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions.schema);
+					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions);
 
 					return resolveEventSignature(call);
 				}).filter(event => event.name);
@@ -231,7 +234,7 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 				return properties.map((prop) => {
 					const {
 						resolveSlotProperties,
-					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions.schema);
+					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions);
 
 					return resolveSlotProperties(prop);
 				});
@@ -251,7 +254,7 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 				return exposed.map((prop) => {
 					const {
 						resolveExposedProperties,
-					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions.schema);
+					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions);
 
 					return resolveExposedProperties(prop);
 				});
@@ -300,7 +303,7 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 	}
 }
 
-function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expression, options: MetaCheckerSchemaOptions = false) {
+function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expression, { rawType, schema: options }: MetaCheckerOptions) {
 	const enabled = !!options;
 	const ignore = typeof options === 'object' ? [...options?.ignore ?? []] : [];
 
@@ -341,6 +344,7 @@ function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expre
 			})),
 			required: !Boolean((prop.declarations?.[0] as ts.ParameterDeclaration)?.questionToken ?? false),
 			type: typeChecker.typeToString(subtype),
+			rawType: rawType ? subtype : undefined,
 			schema,
 		};
 	}
@@ -351,6 +355,7 @@ function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expre
 		return {
 			name: prop.getName(),
 			type: typeChecker.typeToString(subtype),
+			rawType: rawType ? subtype : undefined,
 			description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
 			schema,
 		};
@@ -362,6 +367,7 @@ function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expre
 		return {
 			name: expose.getName(),
 			type: typeChecker.typeToString(subtype),
+			rawType: rawType ? subtype : undefined,
 			description: ts.displayPartsToString(expose.getDocumentationComment(typeChecker)),
 			schema,
 		};
@@ -375,6 +381,7 @@ function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expre
 		return {
 			name: (typeChecker.getTypeOfSymbolAtLocation(call.parameters[0], symbolNode!) as ts.StringLiteralType).value,
 			type: typeChecker.typeToString(subtype),
+			rawType: rawType ? subtype : undefined,
 			signature: typeChecker.signatureToString(call),
 			schema,
 		};
