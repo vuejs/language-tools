@@ -14,6 +14,7 @@
 	<div v-if="true" v-else-if="true" v-else></div>
 	<div :foo="':foo=123'"></div>
 	<div :foo="[{ bar: []}]"></div>
+	<div style="width: 100%; height: auto;"></div>
 </template>
 
 <template lang="pug">
@@ -32,6 +33,7 @@ div(v-for="n in []")
 div(v-if="true" v-else-if="true" v-else)
 div(:foo="':foo=123'")
 div(:foo="[{ bar: []}]")
+div(style="width: 100%; height: auto;")
 </template>
 
 <!-- TODO -->
@@ -51,4 +53,5 @@ div(:foo="[{ bar: []}]")
 	<div v-if="true" v-else-if="true" v-else></div>
 	<div :foo="':foo=123'"></div>
 	<div :foo="[{ bar: []}]"></div>
+	<div style="width: 100%; height: auto;"></div>
 </template>
