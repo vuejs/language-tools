@@ -38,13 +38,19 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "text.html.markdown",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
 						},
 						{
-							"include": "text.html.markdown"
+							"begin": "(?<=>)",
+							"end": "(?=<\\/)",
+							"name": "text.html.markdown",
+							"patterns": [
+								{
+									"include": "text.html.markdown"
+								}
+							]
 						}
 					]
 				},
@@ -64,13 +70,19 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "text.html.derivative",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
 						},
 						{
-							"include": "#html-stuff"
+							"begin": "(?<=>)",
+							"end": "(?=<\\/)",
+							"name": "text.html.derivative",
+							"patterns": [
+								{
+									"include": "#html-stuff"
+								}
+							]
 						}
 					]
 				},
@@ -90,13 +102,19 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "text.pug",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
 						},
 						{
-							"include": "text.pug"
+							"begin": "(?<=>)",
+							"end": "(?=<\\/)",
+							"name": "text.pug",
+							"patterns": [
+								{
+									"include": "text.pug"
+								}
+							]
 						}
 					]
 				},
@@ -116,13 +134,19 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.stylus",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
 						},
 						{
-							"include": "source.stylus"
+							"begin": "(?<=>)",
+							"end": "(?=<\\/)",
+							"name": "source.stylus",
+							"patterns": [
+								{
+									"include": "source.stylus"
+								}
+							]
 						}
 					]
 				},
@@ -142,13 +166,19 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.postcss",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
 						},
 						{
-							"include": "source.postcss"
+							"begin": "(?<=>)",
+							"end": "(?=<\\/)",
+							"name": "source.postcss",
+							"patterns": [
+								{
+									"include": "source.postcss"
+								}
+							]
 						}
 					]
 				},
@@ -168,13 +198,19 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.sass",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
 						},
 						{
-							"include": "source.sass"
+							"begin": "(?<=>)",
+							"end": "(?=<\\/)",
+							"name": "source.sass",
+							"patterns": [
+								{
+									"include": "source.sass"
+								}
+							]
 						}
 					]
 				},
@@ -194,13 +230,19 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.css",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
 						},
 						{
-							"include": "source.css"
+							"begin": "(?<=>)",
+							"end": "(?=<\\/)",
+							"name": "source.css",
+							"patterns": [
+								{
+									"include": "source.css"
+								}
+							]
 						}
 					]
 				},
@@ -220,13 +262,19 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.css.scss",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
 						},
 						{
-							"include": "source.css.scss"
+							"begin": "(?<=>)",
+							"end": "(?=<\\/)",
+							"name": "source.css.scss",
+							"patterns": [
+								{
+									"include": "source.css.scss"
+								}
+							]
 						}
 					]
 				},
@@ -246,13 +294,19 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.css.less",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
 						},
 						{
-							"include": "source.css.less"
+							"begin": "(?<=>)",
+							"end": "(?=<\\/)",
+							"name": "source.css.less",
+							"patterns": [
+								{
+									"include": "source.css.less"
+								}
+							]
 						}
 					]
 				},
@@ -272,13 +326,19 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.js",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
 						},
 						{
-							"include": "source.js"
+							"begin": "(?<=>)",
+							"end": "(?=<\\/)",
+							"name": "source.js",
+							"patterns": [
+								{
+									"include": "source.js"
+								}
+							]
 						}
 					]
 				},
@@ -298,13 +358,19 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.ts",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
 						},
 						{
-							"include": "source.ts"
+							"begin": "(?<=>)",
+							"end": "(?=<\\/)",
+							"name": "source.ts",
+							"patterns": [
+								{
+									"include": "source.ts"
+								}
+							]
 						}
 					]
 				},
@@ -324,13 +390,19 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.js.jsx",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
 						},
 						{
-							"include": "source.js.jsx"
+							"begin": "(?<=>)",
+							"end": "(?=<\\/)",
+							"name": "source.js.jsx",
+							"patterns": [
+								{
+									"include": "source.js.jsx"
+								}
+							]
 						}
 					]
 				},
@@ -350,13 +422,19 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.tsx",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
 						},
 						{
-							"include": "source.tsx"
+							"begin": "(?<=>)",
+							"end": "(?=<\\/)",
+							"name": "source.tsx",
+							"patterns": [
+								{
+									"include": "source.tsx"
+								}
+							]
 						}
 					]
 				},
@@ -376,13 +454,19 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.json",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
 						},
 						{
-							"include": "source.json"
+							"begin": "(?<=>)",
+							"end": "(?=<\\/)",
+							"name": "source.json",
+							"patterns": [
+								{
+									"include": "source.json"
+								}
+							]
 						}
 					]
 				},
@@ -402,13 +486,19 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.json.comments",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
 						},
 						{
-							"include": "source.json.comments"
+							"begin": "(?<=>)",
+							"end": "(?=<\\/)",
+							"name": "source.json.comments",
+							"patterns": [
+								{
+									"include": "source.json.comments"
+								}
+							]
 						}
 					]
 				},
@@ -428,13 +518,19 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.yaml",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
 						},
 						{
-							"include": "source.yaml"
+							"begin": "(?<=>)",
+							"end": "(?=<\\/)",
+							"name": "source.yaml",
+							"patterns": [
+								{
+									"include": "source.yaml"
+								}
+							]
 						}
 					]
 				},
@@ -454,13 +550,19 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.toml",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
 						},
 						{
-							"include": "source.toml"
+							"begin": "(?<=>)",
+							"end": "(?=<\\/)",
+							"name": "source.toml",
+							"patterns": [
+								{
+									"include": "source.toml"
+								}
+							]
 						}
 					]
 				},
@@ -480,13 +582,19 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.graphql",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
 						},
 						{
-							"include": "source.graphql"
+							"begin": "(?<=>)",
+							"end": "(?=<\\/)",
+							"name": "source.graphql",
+							"patterns": [
+								{
+									"include": "source.graphql"
+								}
+							]
 						}
 					]
 				},
@@ -506,13 +614,19 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "text.html.derivative",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
 						},
 						{
-							"include": "#html-stuff"
+							"begin": "(?<=>)",
+							"end": "(?=<\\/template\\b)",
+							"name": "text.html.derivative",
+							"patterns": [
+								{
+									"include": "#html-stuff"
+								}
+							]
 						}
 					]
 				},
@@ -532,13 +646,19 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.js",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
 						},
 						{
-							"include": "source.js"
+							"begin": "(?<=>)",
+							"end": "(?=<\\/script\\b)",
+							"name": "source.js",
+							"patterns": [
+								{
+									"include": "source.js"
+								}
+							]
 						}
 					]
 				},
@@ -558,13 +678,19 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "source.css",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
 						},
 						{
-							"include": "source.css"
+							"begin": "(?<=>)",
+							"end": "(?=<\\/style\\b)",
+							"name": "source.css",
+							"patterns": [
+								{
+									"include": "source.css"
+								}
+							]
 						}
 					]
 				},
@@ -584,10 +710,14 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
-					"name": "text",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
+						},
+						{
+							"begin": "(?<=>)",
+							"end": "(?=<\\/)",
+							"name": "text"
 						}
 					]
 				}
