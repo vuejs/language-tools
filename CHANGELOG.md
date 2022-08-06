@@ -1,16 +1,29 @@
 # Changelog
 
-## 0.39.4 (2022/7/31)
+## 0.39.5 (2022/8/6)
 
-- feat: support ESM project ([#1543](https://github.com/johnsoncodehk/volar/issues/1543))
-- fix: "Volar: Reload Project" command cannot detect node_modules change
-- fix: webview buttons show to unrelated extensions ([#1611](https://github.com/johnsoncodehk/volar/issues/1611))
+- feat(vue-component-meta): add option to expose raw type ([#1674](https://github.com/johnsoncodehk/volar/issues/1674))
+- fix(vue-component-meta): recursive schema parsing ([#1660](https://github.com/johnsoncodehk/volar/issues/1660))
+- fix(vue-component-meta): parse defineProps in script setup with option ([#1665](https://github.com/johnsoncodehk/volar/issues/1665))
+- fix: SFC syntax broken in vscode v1.70.0 ([#1566](https://github.com/johnsoncodehk/volar/issues/1566)) ([#1675](https://github.com/johnsoncodehk/volar/issues/1675))
+- fix: vite app preview not working ([#1668](https://github.com/johnsoncodehk/volar/issues/1668))
+- fix: diagnosis is slow on windows after v0.39.2 ([#1663](https://github.com/johnsoncodehk/volar/issues/1663))
+- fix: `compilerOptions.types` not working since v0.39.2 ([#1650](https://github.com/johnsoncodehk/volar/issues/1650))
+- fix: avoid auto-import path append `.js` ([#1667](https://github.com/johnsoncodehk/volar/issues/1667))
+- fix: avoid variables defined after export default report TS_2454
+- perf: cache semver result on auto-complete
 
 ### Our Sponsors
 
 <a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
 	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
 </a>
+
+## 0.39.4 (2022/7/31)
+
+- feat: support ESM project ([#1543](https://github.com/johnsoncodehk/volar/issues/1543))
+- fix: "Volar: Reload Project" command cannot detect node_modules change
+- fix: webview buttons show to unrelated extensions ([#1611](https://github.com/johnsoncodehk/volar/issues/1611))
 
 ## 0.39.3 (2022/7/31)
 
