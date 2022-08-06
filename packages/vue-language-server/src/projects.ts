@@ -32,22 +32,22 @@ export function createProjects(
 		uri: string,
 		time: number,
 	} | undefined;
-	const fileExistsCache = shared.createPathMap<boolean>();
-	const directoryExistsCache = shared.createPathMap<boolean>();
+	const fileExistsCache = new Map<string, boolean>();
+	const directoryExistsCache = new Map<string, boolean>();
 	const sys: ts.System = capabilities.workspace?.didChangeWatchedFiles // don't cache fs result if client not supports file watcher
 		? {
 			...ts.sys,
 			fileExists(path: string) {
-				if (!fileExistsCache.fsPathHas(path)) {
-					fileExistsCache.fsPathSet(path, ts.sys.fileExists(path));
+				if (!fileExistsCache.has(path)) {
+					fileExistsCache.set(path, ts.sys.fileExists(path));
 				}
-				return fileExistsCache.fsPathGet(path)!;
+				return fileExistsCache.get(path)!;
 			},
 			directoryExists(path: string) {
-				if (!directoryExistsCache.fsPathHas(path)) {
-					directoryExistsCache.fsPathSet(path, ts.sys.directoryExists(path));
+				if (!directoryExistsCache.has(path)) {
+					directoryExistsCache.set(path, ts.sys.directoryExists(path));
 				}
-				return directoryExistsCache.fsPathGet(path)!;
+				return directoryExistsCache.get(path)!;
 			},
 		}
 		: ts.sys;
@@ -123,13 +123,9 @@ export function createProjects(
 
 	async function onDidChangeWatchedFiles(handler: vscode.DidChangeWatchedFilesParams) {
 
-		for (const change of handler.changes) {
-			if (change.type === vscode.FileChangeType.Created) {
-				fileExistsCache.uriSet(change.uri, true);
-			}
-			else if (change.type === vscode.FileChangeType.Deleted) {
-				fileExistsCache.uriSet(change.uri, false);
-			}
+		if (handler.changes.some(change => change.type === vscode.FileChangeType.Created || change.type === vscode.FileChangeType.Deleted)) {
+			fileExistsCache.clear();
+			directoryExistsCache.clear();
 		}
 
 		const tsConfigChanges: vscode.FileEvent[] = [];
