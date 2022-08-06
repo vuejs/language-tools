@@ -32,25 +32,6 @@ export function createProjects(
 		uri: string,
 		time: number,
 	} | undefined;
-	const fileExistsCache = new Map<string, boolean>();
-	const directoryExistsCache = new Map<string, boolean>();
-	const sys: ts.System = capabilities.workspace?.didChangeWatchedFiles // don't cache fs result if client not supports file watcher
-		? {
-			...ts.sys,
-			fileExists(path: string) {
-				if (!fileExistsCache.has(path)) {
-					fileExistsCache.set(path, ts.sys.fileExists(path));
-				}
-				return fileExistsCache.get(path)!;
-			},
-			directoryExists(path: string) {
-				if (!directoryExistsCache.has(path)) {
-					directoryExistsCache.set(path, ts.sys.directoryExists(path));
-				}
-				return directoryExistsCache.get(path)!;
-			},
-		}
-		: ts.sys;
 
 	const workspaces = new Map<string, ReturnType<typeof createWorkspace>>();
 
@@ -60,13 +41,13 @@ export function createProjects(
 			languageConfigs,
 			rootPath,
 			ts,
-			sys,
 			tsLocalized,
 			options,
 			documents,
 			connection,
 			lsConfigs,
 			getInferredCompilerOptions,
+			capabilities,
 		));
 	}
 
@@ -106,8 +87,9 @@ export function createProjects(
 
 	async function reloadProject(uri: string) {
 
-		fileExistsCache.clear();
-		directoryExistsCache.clear();
+		for (const [_, workspace] of workspaces) {
+			workspace.clearFsCache();
+		}
 
 		const configs: string[] = [];
 
@@ -124,8 +106,9 @@ export function createProjects(
 	async function onDidChangeWatchedFiles(handler: vscode.DidChangeWatchedFilesParams) {
 
 		if (handler.changes.some(change => change.type === vscode.FileChangeType.Created || change.type === vscode.FileChangeType.Deleted)) {
-			fileExistsCache.clear();
-			directoryExistsCache.clear();
+			for (const [_, workspace] of workspaces) {
+				workspace.clearFsCache();
+			}
 		}
 
 		const tsConfigChanges: vscode.FileEvent[] = [];
@@ -286,21 +269,21 @@ function createWorkspace(
 	languageConfigs: LanguageConfigs,
 	rootPath: string,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	sys: ts.System,
 	tsLocalized: ts.MapLike<string> | undefined,
 	options: shared.ServerInitializationOptions,
 	documents: vscode.TextDocuments<TextDocument>,
 	connection: vscode.Connection,
 	lsConfigs: ReturnType<typeof createLsConfigs> | undefined,
 	getInferredCompilerOptions: () => Promise<ts.CompilerOptions>,
+	capabilities: vscode.ClientCapabilities,
 ) {
 
-	const rootTsConfigs = sys.readDirectory(rootPath, rootTsConfigNames, undefined, ['**/*']);
+	const rootTsConfigs = ts.sys.readDirectory(rootPath, rootTsConfigNames, undefined, ['**/*']);
 	const projects = shared.createPathMap<Project>();
 	let inferredProject: Project | undefined;
 
 	const getRootPath = () => rootPath;
-	const workspaceSys = sys.getCurrentDirectory() === rootPath ? sys : new Proxy(sys, {
+	const _workspaceSys = ts.sys.getCurrentDirectory() === rootPath ? ts.sys : new Proxy(ts.sys, {
 		get(target, prop) {
 			const fn = target[prop as keyof typeof target];
 			if (typeof fn === 'function') {
@@ -318,6 +301,33 @@ function createWorkspace(
 		},
 	});
 
+	const fileExistsCache = new Map<string, boolean>();
+	const directoryExistsCache = new Map<string, boolean>();
+	const sysWithCache: Partial<typeof ts.sys> = {
+		fileExists(path: string) {
+			if (!fileExistsCache.has(path)) {
+				fileExistsCache.set(path, ts.sys.fileExists(path));
+			}
+			return fileExistsCache.get(path)!;
+		},
+		directoryExists(path: string) {
+			if (!directoryExistsCache.has(path)) {
+				directoryExistsCache.set(path, ts.sys.directoryExists(path));
+			}
+			return directoryExistsCache.get(path)!;
+		},
+	};
+	const sys: ts.System = capabilities.workspace?.didChangeWatchedFiles // don't cache fs result if client not supports file watcher
+		? new Proxy(_workspaceSys, {
+			get(target, prop) {
+				if (prop in sysWithCache) {
+					return sysWithCache[prop as keyof typeof sysWithCache];
+				}
+				return target[prop as keyof typeof target];
+			},
+		})
+		: ts.sys;
+
 	return {
 		projects,
 		findMatchConfigs,
@@ -325,6 +335,10 @@ function createWorkspace(
 		getProjectByCreate,
 		getInferredProject,
 		getInferredProjectDontCreate: () => inferredProject,
+		clearFsCache: () => {
+			fileExistsCache.clear();
+			directoryExistsCache.clear();
+		},
 	};
 
 	async function getProjectAndTsConfig(uri: string) {
@@ -343,7 +357,7 @@ function createWorkspace(
 				runtimeEnv,
 				languageConfigs,
 				ts,
-				workspaceSys,
+				sys,
 				options,
 				rootPath,
 				await getInferredCompilerOptions(),
@@ -472,7 +486,7 @@ function createWorkspace(
 				runtimeEnv,
 				languageConfigs,
 				ts,
-				workspaceSys,
+				sys,
 				options,
 				path.dirname(tsConfig),
 				tsConfig,
