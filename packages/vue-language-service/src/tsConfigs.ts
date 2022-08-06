@@ -112,7 +112,8 @@ function getImportModuleSpecifierEndingPreference(config: any) {
 		case 'minimal': return 'minimal';
 		case 'index': return 'index';
 		case 'js': return 'js';
-		default: return 'auto';
+		default: return 'minimal'; // fix https://github.com/johnsoncodehk/volar/issues/1667
+		// default: return 'auto';
 	}
 }
 
