@@ -413,7 +413,7 @@
 				},
 				"volar.preview.port": {
 					"type": "number",
-					"default": 3334,
+					"default": 3333,
 					"description": "Default port for component preview server."
 				},
 				"volar.preview.backgroundColor": {
