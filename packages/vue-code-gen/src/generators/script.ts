@@ -312,6 +312,8 @@ export function generate(
 			codeGen.addText('export default await (async () => {\n');
 		}
 
+		codeGen.addText('const __VLS_setup = async () => {\n');
+
 		codeGen.addCode(
 			scriptSetup.content.substring(scriptSetupRanges.importSectionEndOffset),
 			{
@@ -535,6 +537,8 @@ export function generate(
 			codeGen.addText(`const __VLS_slots = (await import('./${path.basename(fileName)}.__VLS_template.jsx')).default;\n`)
 			codeGen.addText(`return {} as typeof __VLS_Component & (new () => { ${getSlotsPropertyName(vueVersion)}: typeof __VLS_slots });\n`);
 		}
+		codeGen.addText(`};\n`);
+		codeGen.addText(`return await __VLS_setup();\n`);
 		codeGen.addText(`})();`);
 		exportdefaultEnd = codeGen.getText().length;
 
