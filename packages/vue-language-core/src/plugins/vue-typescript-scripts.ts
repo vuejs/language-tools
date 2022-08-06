@@ -26,26 +26,26 @@ export default function (
 			let shimComponentOptionsMode: 'defineComponent' | 'Vue.extend' | false = false;
 
 			if (
-				(compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent ?? 'onlyJs') === 'onlyJs'
-					? lang.value === 'js' || lang.value === 'jsx'
-					: !!compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent
-			) {
-				shimComponentOptionsMode = 'defineComponent';
-			}
-			if (
 				(compilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend ?? 'onlyJs') === 'onlyJs'
 					? lang.value === 'js' || lang.value === 'jsx'
 					: !!compilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend
 			) {
 				shimComponentOptionsMode = 'Vue.extend';
 			}
-
-			// true override 'onlyJs'
-			if (compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent === true) {
+			if (
+				(compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent ?? 'onlyJs') === 'onlyJs'
+					? lang.value === 'js' || lang.value === 'jsx'
+					: !!compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent
+			) {
 				shimComponentOptionsMode = 'defineComponent';
 			}
+
+			// true override 'onlyJs'
 			if (compilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend === true) {
 				shimComponentOptionsMode = 'Vue.extend';
+			}
+			if (compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent === true) {
+				shimComponentOptionsMode = 'defineComponent';
 			}
 
 			const codeGen = genScript(
