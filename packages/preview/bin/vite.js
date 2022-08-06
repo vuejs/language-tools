@@ -2,15 +2,12 @@
 
 const path = require('path');
 const fs = require('fs');
-const readFileSync = fs.readFileSync;
 
 const workspace = process.cwd();
 const vitePkgPath = require.resolve('vite/package.json', { paths: [workspace] });
 const viteDir = path.dirname(vitePkgPath);
 const viteBinPath = require.resolve('./bin/vite.js', { paths: [viteDir] });
 const vuePluginPath = require.resolve('@vitejs/plugin-vue', { paths: [workspace] });
-const jsConfigPath = path.resolve(workspace, 'vite.config.js');
-const tsConfigPath = path.resolve(workspace, 'vite.config.ts');
 const viteVersion = require(vitePkgPath).version;
 const viteExtraCode = `
 function __proxyExport(rawOptions = {}) {
@@ -68,20 +65,29 @@ const __originalExport = module.exports;
 module.exports = __proxyExport;
 `;
 
+const readFileSync = fs.readFileSync;
 fs.readFileSync = (...args) => {
 	if (args[0] === vuePluginPath) {
 		return readFileSync(...args) + viteExtraCode;
 	}
-    if (args[0] === jsConfigPath || args[0] === tsConfigPath) {
-        const configExtraContent = readFileSync(path.resolve(__dirname, 'vite', 'configExtraContent.ts'), { encoding: 'utf8' });
-        return readFileSync(...args) + configExtraContent;
-    }
 	return readFileSync(...args);
 };
+
+createViteConfig();
 
 if (viteVersion.startsWith('3.')) {
 	import('file://' + viteBinPath);
 }
 else {
 	require(viteBinPath);
+}
+
+function createViteConfig() {
+	let proxyConfigContent = readFileSync(path.resolve(__dirname, 'vite', 'config.ts'), { encoding: 'utf8' });
+	proxyConfigContent = proxyConfigContent.replace('{CONFIG_PATH}', path.resolve(workspace, 'vite.config'));
+
+	const proxyConfigPath = path.resolve(workspace, 'node_modules', '.vite', 'volar-vite.config.ts');
+	fs.writeFileSync(proxyConfigPath, proxyConfigContent);
+
+	process.argv.push('--config', proxyConfigPath);
 }

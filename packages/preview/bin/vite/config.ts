@@ -1,9 +1,8 @@
+// @ts-nocheck
+import config from '{CONFIG_PATH}';
 
-if (!module.exports.default)
-	module.exports.default = {};
-
-if (!module.exports.default.plugins)
-	module.exports.default.plugins = [];
+if (!config.plugins)
+	config.plugins = [];
 
 const installCode = `
 function __createAppProxy(...args) {
@@ -315,7 +314,7 @@ function __createAppProxy(...args) {
 }
 `;
 
-module.exports.default.plugins.push({
+config.plugins.push({
 	name: '__volar_preview',
 	transform(this, code, id, options?) {
 		const createAppText = 'createApp,';
@@ -330,3 +329,5 @@ module.exports.default.plugins.push({
 		return code;
 	},
 });
+
+export default config;
