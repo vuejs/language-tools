@@ -196,9 +196,16 @@ export function createProjects(
 
 		const req = ++documentUpdatedReq;
 		const delay = await lsConfigs?.getConfiguration<number>('volar.diagnostics.delay');
+
+		let lastCheckCancelAt = 0;
+		let _isCancel = false;
 		const isCancel = async () => {
-			await shared.sleep(0); // wait for onDidChangeContent polling
-			return req !== documentUpdatedReq;
+			if (Date.now() - lastCheckCancelAt >= 5) {
+				await shared.sleep(5); // wait for onDidChangeContent polling
+				_isCancel = req !== documentUpdatedReq;
+				lastCheckCancelAt = Date.now();
+			}
+			return _isCancel;
 		};
 
 		const changeDocs = docUri ? [getDocumentSafely(documents, docUri)].filter(shared.notEmpty) : [];
