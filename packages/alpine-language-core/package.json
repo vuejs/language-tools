@@ -1,6 +1,6 @@
 {
 	"name": "@volar/alpine-language-core",
-	"version": "0.39.4",
+	"version": "0.39.5",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -16,6 +16,6 @@
 		"typescript": "latest"
 	},
 	"dependencies": {
-		"@volar/vue-language-core": "0.39.4"
+		"@volar/vue-language-core": "0.39.5"
 	}
 }
