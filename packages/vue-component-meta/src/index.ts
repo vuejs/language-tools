@@ -100,11 +100,13 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 	globalPropNames = getComponentMeta(globalComponentName).props.map(prop => prop.name);
 
 	return {
-		program,
-		tsLs,
-		typeChecker,
 		getExportNames,
 		getComponentMeta,
+		__internal__: {
+			program,
+			tsLs,
+			typeChecker,
+		},
 	};
 
 	function getMetaFileName(fileName: string) {
