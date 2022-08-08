@@ -1,57 +1,50 @@
 import * as SourceMaps from '@volar/source-map';
-import { EmbeddedFile, VueLanguagePlugin } from '../sourceFile';
+import { VueLanguagePlugin } from '../sourceFile';
 
 export default function (): VueLanguagePlugin {
 
 	return {
 
-		getEmbeddedFilesCount(fileName, sfc) {
-			return sfc.template ? 1 : 0;
+		getEmbeddedFileNames(fileName, sfc) {
+			if (sfc.template) {
+				return [fileName + '.template.' + sfc.template.lang];
+			}
+			return [];
 		},
 
-		getEmbeddedFile(fileName, sfc, i) {
-
-			const template = sfc.template!;
-			const file: EmbeddedFile = {
-				fileName: fileName + '.' + template.lang,
-				content: template.content,
-				capabilities: {
+		resolveEmbeddedFile(fileName, sfc, embeddedFile) {
+			const match = embeddedFile.fileName.match(/^(.*)\.template\.([^.]+)$/);
+			if (match && sfc.template) {
+				embeddedFile.capabilities = {
 					diagnostics: true,
 					foldingRanges: true,
 					formatting: true,
 					documentSymbol: true,
 					codeActions: true,
 					inlayHints: true,
-				},
-				isTsHostFile: false,
-				mappings: [],
-			};
-
-			file.mappings.push({
-				data: {
-					vueTag: template.tag,
-					capabilities: {
-						basic: true,
-						references: true,
-						definitions: true,
-						diagnostic: true,
-						rename: true,
-						completion: true,
-						semanticTokens: true,
+				};
+				embeddedFile.isTsHostFile = false;
+				embeddedFile.codeGen.addCode(
+					sfc.template.content,
+					{
+						start: 0,
+						end: sfc.template.content.length,
 					},
-				},
-				mode: SourceMaps.Mode.Offset,
-				sourceRange: {
-					start: 0,
-					end: template.content.length,
-				},
-				mappedRange: {
-					start: 0,
-					end: template.content.length,
-				},
-			});
-
-			return file;
+					SourceMaps.Mode.Offset,
+					{
+						vueTag: sfc.template.tag,
+						capabilities: {
+							basic: true,
+							references: true,
+							definitions: true,
+							diagnostic: true,
+							rename: true,
+							completion: true,
+							semanticTokens: true,
+						},
+					},
+				);
+			}
 		},
 	};
 }

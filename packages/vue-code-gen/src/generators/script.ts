@@ -32,11 +32,11 @@ export function generate(
 	shimComponentOptions: 'defineComponent' | 'Vue.extend' | false,
 	downgradePropsAndEmitsToSetupReturnOnScriptSetup: boolean,
 	vueVersion: number,
+	codeGen = new CodeGen<EmbeddedFileMappingData>(),
+	teleports: SourceMaps.Mapping<TeleportMappingData>[] = [],
 ) {
 
 	const vueLibName = getVueLibraryName(vueVersion);
-	const codeGen = new CodeGen<EmbeddedFileMappingData>();
-	const teleports: SourceMaps.Mapping<TeleportMappingData>[] = [];
 	const usedTypes = {
 		DefinePropsToOptions: false,
 		mergePropDefaults: false,
@@ -172,7 +172,7 @@ export function generate(
 		else if (src.endsWith('.ts')) src = src.substring(0, src.length - '.ts'.length);
 		else if (src.endsWith('.tsx')) src = src.substring(0, src.length - '.tsx'.length) + '.jsx';
 
-		if (!src.endsWith('.js') && !src.endsWith('.jsx')) src = src + '.js'
+		if (!src.endsWith('.js') && !src.endsWith('.jsx')) src = src + '.js';
 
 		codeGen.addText(`export * from `);
 		codeGen.addCode(
@@ -534,7 +534,7 @@ export function generate(
 			codeGen.addText(`return __VLS_Component;\n`);
 		}
 		else {
-			codeGen.addText(`const __VLS_slots = (await import('./${path.basename(fileName)}.__VLS_template.jsx')).default;\n`)
+			codeGen.addText(`const __VLS_slots = (await import('./${path.basename(fileName)}.__VLS_template.jsx')).default;\n`);
 			codeGen.addText(`return {} as typeof __VLS_Component & (new () => { ${getSlotsPropertyName(vueVersion)}: typeof __VLS_slots });\n`);
 		}
 		codeGen.addText(`};\n`);

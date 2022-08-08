@@ -25,6 +25,7 @@ import useVueTsTemplate from './plugins/vue-typescript-template';
 
 import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix TS2742
 import { Mapping, MappingBase, Mode, SourceMapBase } from '@volar/source-map';
+import { CodeGen } from '@volar/code-gen';
 
 export interface VueLanguagePlugin {
 
@@ -44,9 +45,9 @@ export interface VueLanguagePlugin {
 
 	// TODO: compileHtmlTemplateToAst
 
-	getEmbeddedFilesCount?(fileName: string, sfc: Sfc): number;
+	getEmbeddedFileNames?(fileName: string, sfc: Sfc): string[];
 
-	getEmbeddedFile?(fileName: string, sfc: Sfc, i: number): EmbeddedFile | undefined;
+	resolveEmbeddedFile?(fileName: string, sfc: Sfc, embeddedFile: EmbeddedFile): void;
 }
 
 export interface SourceFile extends ReturnType<typeof createSourceFile> { }
@@ -90,7 +91,6 @@ export interface Sfc {
 export interface EmbeddedFile {
 	parentFileName?: string,
 	fileName: string,
-	content: string,
 	isTsHostFile: boolean,
 	capabilities: {
 		diagnostics: boolean,
@@ -100,8 +100,8 @@ export interface EmbeddedFile {
 		codeActions: boolean,
 		inlayHints: boolean,
 	},
-	mappings: Mapping<EmbeddedFileMappingData>[],
-	teleportMappings?: Mapping<TeleportMappingData>[],
+	codeGen: CodeGen<EmbeddedFileMappingData>,
+	teleportMappings: Mapping<TeleportMappingData>[],
 };
 
 export function createSourceFile(
@@ -278,88 +278,134 @@ export function createSourceFile(
 			},
 		})));
 	});
-	const pluginEmbeddeds = plugins.map(plugin => {
-		if (plugin.getEmbeddedFilesCount && plugin.getEmbeddedFile) {
-			const embeddedsCount = computed(() => plugin.getEmbeddedFilesCount!(fileName, sfc));
-			const embeddeds = computed(() => {
-				const computeds: ComputedRef<Embedded | undefined>[] = [];
-				for (let i = 0; i < embeddedsCount.value; i++) {
-					const _i = i;
-					const raw = computed(() => {
-						return plugin.getEmbeddedFile!(fileName, sfc, _i);
-					});
-					const transformed = computed(() => {
-
-						if (!raw.value)
-							return;
-
-						const newMappings: typeof raw.value.mappings = [];
-
-						for (const mapping of raw.value.mappings) {
-							const vueRange = embeddedRangeToVueRange(mapping.data, mapping.sourceRange);
-							const fileRange = file2VueSourceMap.value.getSourceRange(vueRange.start, vueRange.end)?.[0];
-							if (fileRange) {
-								let additional: MappingBase[] | undefined;
-								if (mapping.additional) {
-									additional = [];
-									for (const add of mapping.additional) {
-										const addVueRange = embeddedRangeToVueRange(mapping.data, add.sourceRange);
-										const addFileRange = file2VueSourceMap.value.getSourceRange(addVueRange.start, addVueRange.end)?.[0];
-										if (addFileRange) {
-											additional.push({
-												...add,
-												sourceRange: addFileRange,
-											});
-										}
-									}
+	const pluginEmbeddedFiles = plugins.map(plugin => {
+		const embeddedFiles: Record<string, ComputedRef<EmbeddedFile>> = {};
+		const files = computed(() => {
+			if (plugin.getEmbeddedFileNames) {
+				const embeddedFileNames = plugin.getEmbeddedFileNames(fileName, sfc);
+				for (const oldFileName of Object.keys(embeddedFiles)) {
+					if (!embeddedFileNames.includes(oldFileName)) {
+						delete embeddedFiles[oldFileName];
+					}
+				}
+				for (const embeddedFileName of embeddedFileNames) {
+					if (!embeddedFiles[embeddedFileName]) {
+						embeddedFiles[embeddedFileName] = computed(() => {
+							const file: EmbeddedFile = {
+								fileName: embeddedFileName,
+								capabilities: {
+									diagnostics: false,
+									foldingRanges: false,
+									formatting: false,
+									documentSymbol: false,
+									codeActions: false,
+									inlayHints: false,
+								},
+								isTsHostFile: false,
+								codeGen: new CodeGen(),
+								teleportMappings: [],
+							};
+							for (const plugin of plugins) {
+								if (plugin.resolveEmbeddedFile) {
+									plugin.resolveEmbeddedFile(fileName, sfc, file);
 								}
-								newMappings.push({
-									...mapping,
-									sourceRange: fileRange,
-									additional,
-								});
 							}
-							else if (compiledVue.value) {
-								// fix markdown template mapping failed
-								const inRangeMappings = compiledVue.value.mappings.filter(mapping => mapping.vueOffset >= vueRange.start && (mapping.vueOffset + mapping.length) <= vueRange.end);
-								for (const inRangeMapping of inRangeMappings) {
-									const _vueRange = {
-										start: inRangeMapping.vueOffset,
-										end: inRangeMapping.vueOffset + inRangeMapping.length,
-									};
-									const _fileRange = {
-										start: inRangeMapping.fileOffset,
-										end: inRangeMapping.fileOffset + inRangeMapping.length,
-									};
-									const embedded = vueRangeToEmbeddedRange(mapping.data, _vueRange);
-									newMappings.push({
-										...mapping,
-										sourceRange: _fileRange, // file range
-										mappedRange: embedded,
+							return file;
+						});
+					}
+				}
+			}
+			return Object.values(embeddedFiles);
+		});
+		return computed(() => {
+			return files.value.map(_file => {
+				const file = _file.value;
+				const sourceMap = new EmbeddedFileSourceMap();
+				for (const mapping of file.codeGen.mappings) {
+					const vueRange = embeddedRangeToVueRange(mapping.data, mapping.sourceRange);
+					const fileRange = file2VueSourceMap.value.getSourceRange(vueRange.start, vueRange.end)?.[0];
+					if (fileRange) {
+						let additional: MappingBase[] | undefined;
+						if (mapping.additional) {
+							additional = [];
+							for (const add of mapping.additional) {
+								const addVueRange = embeddedRangeToVueRange(mapping.data, add.sourceRange);
+								const addFileRange = file2VueSourceMap.value.getSourceRange(addVueRange.start, addVueRange.end)?.[0];
+								if (addFileRange) {
+									additional.push({
+										...add,
+										sourceRange: addFileRange,
 									});
 								}
 							}
 						}
-						const newSourceMap = new EmbeddedFileSourceMap(newMappings);
-						const newEmbedded: Embedded = {
-							file: raw.value,
-							sourceMap: newSourceMap,
-							teleport: new Teleport(raw.value.teleportMappings),
-						};
-						return newEmbedded;
-					});
-					computeds.push(transformed);
+						sourceMap.mappings.push({
+							...mapping,
+							sourceRange: fileRange,
+							additional,
+						});
+					}
+					else if (compiledVue.value) {
+						// fix markdown template mapping failed
+						const inRangeMappings = compiledVue.value.mappings.filter(mapping => mapping.vueOffset >= vueRange.start && (mapping.vueOffset + mapping.length) <= vueRange.end);
+						for (const inRangeMapping of inRangeMappings) {
+							const _vueRange = {
+								start: inRangeMapping.vueOffset,
+								end: inRangeMapping.vueOffset + inRangeMapping.length,
+							};
+							const _fileRange = {
+								start: inRangeMapping.fileOffset,
+								end: inRangeMapping.fileOffset + inRangeMapping.length,
+							};
+							const embedded = vueRangeToEmbeddedRange(mapping.data, _vueRange);
+							sourceMap.mappings.push({
+								...mapping,
+								sourceRange: _fileRange, // file range
+								mappedRange: embedded,
+							});
+						}
+					}
 				}
-				return computeds;
+				const embedded: Embedded = {
+					file,
+					sourceMap,
+					teleport: new Teleport(file.teleportMappings),
+				};
+				return embedded;
 			});
-			return embeddeds;
-		}
-	}).filter(notEmpty);
+		});
+	});
 	const embeddedVue = computed(() => {
 		if (!fileName.endsWith('.vue') && compiledVue.value) {
+			const codeGen = new CodeGen<EmbeddedFileMappingData>();
+			codeGen.addText(compiledVue.value.vue);
+			codeGen.mappings = compiledVue.value.mappings.map(mapping => ({
+				data: {
+					vueTag: undefined,
+					capabilities: {
+						basic: true,
+						references: true,
+						definitions: true,
+						diagnostic: true,
+						rename: true,
+						completion: true,
+						semanticTokens: true,
+						referencesCodeLens: false,
+						displayWithLink: false,
+					},
+				},
+				mode: Mode.Offset,
+				sourceRange: {
+					start: mapping.fileOffset,
+					end: mapping.fileOffset + mapping.length,
+				},
+				mappedRange: {
+					start: mapping.vueOffset,
+					end: mapping.vueOffset + mapping.length,
+				},
+			}));
 			const embeddedFile: EmbeddedFile = {
 				fileName: fileName + '.vue',
-				content: compiledVue.value.vue,
 				capabilities: {
 					diagnostics: true,
 					foldingRanges: false,
@@ -369,35 +415,12 @@ export function createSourceFile(
 					inlayHints: true,
 				},
 				isTsHostFile: false,
-				mappings: compiledVue.value.mappings.map(mapping => ({
-					data: {
-						vueTag: undefined,
-						capabilities: {
-							basic: true,
-							references: true,
-							definitions: true,
-							diagnostic: true,
-							rename: true,
-							completion: true,
-							semanticTokens: true,
-							referencesCodeLens: false,
-							displayWithLink: false,
-						},
-					},
-					mode: Mode.Offset,
-					sourceRange: {
-						start: mapping.fileOffset,
-						end: mapping.fileOffset + mapping.length,
-					},
-					mappedRange: {
-						start: mapping.vueOffset,
-						end: mapping.vueOffset + mapping.length,
-					},
-				})),
+				codeGen,
+				teleportMappings: [],
 			};
 			const embedded: Embedded = {
 				file: embeddedFile,
-				sourceMap: new EmbeddedFileSourceMap(embeddedFile.mappings),
+				sourceMap: new EmbeddedFileSourceMap(embeddedFile.codeGen.mappings),
 				teleport: undefined,
 			};
 			return embedded;
@@ -412,20 +435,20 @@ export function createSourceFile(
 			all.push(embeddedVue.value);
 		}
 
-		for (const getEmbeddeds of pluginEmbeddeds) {
-			for (const embedded of getEmbeddeds.value) {
-				if (embedded.value) {
-					if (embeddedVue.value && !embedded.value.file.parentFileName) {
+		for (const embeddedFiles of pluginEmbeddedFiles) {
+			for (const embedded of embeddedFiles.value) {
+				if (embedded) {
+					if (embeddedVue.value && !embedded.file.parentFileName) {
 						all.push({
-							...embedded.value,
+							...embedded,
 							file: {
-								...embedded.value.file,
+								...embedded.file,
 								parentFileName: embeddedVue.value.file.fileName,
 							},
 						});
 					}
 					else {
-						all.push(embedded.value);
+						all.push(embedded);
 					}
 				}
 			}
@@ -809,8 +832,4 @@ function getValidScriptSyntax(syntax: string): ValidScriptSyntax {
 		return syntax as ValidScriptSyntax;
 	}
 	return 'js';
-}
-
-function notEmpty<T>(value: T | null | undefined): value is T {
-	return value !== null && value !== undefined;
 }

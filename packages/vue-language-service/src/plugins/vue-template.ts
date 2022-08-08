@@ -760,7 +760,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					let on: vscode.CompletionItem[] = [];
 					{
 						const searchText = vue.SearchTexts.PropsCompletion(tag.name);
-						let offset = file.content.indexOf(searchText);
+						let offset = file.codeGen.getText().indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
 							try {
@@ -772,7 +772,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					}
 					{
 						const searchText = vue.SearchTexts.EmitCompletion(tag.name);
-						let offset = file.content.indexOf(searchText);
+						let offset = file.codeGen.getText().indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
 							try {
@@ -785,7 +785,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					cache.set(tag.name, { item: tag.item, bind, on });
 				}
 				try {
-					const offset = file.content.indexOf(vue.SearchTexts.GlobalAttrs);
+					const offset = file.codeGen.getText().indexOf(vue.SearchTexts.GlobalAttrs);
 					const globalBind = (await options.tsLs.doComplete(document.uri, document.positionAt(offset)))?.items
 						.map(entry => { entry.label = entry.label.replace('?', ''); return entry; })
 						.filter(entry => entry.kind !== vscode.CompletionItemKind.Text) ?? [];

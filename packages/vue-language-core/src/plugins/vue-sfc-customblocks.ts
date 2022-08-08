@@ -1,58 +1,56 @@
 import * as SourceMaps from '@volar/source-map';
-import { EmbeddedFile, VueLanguagePlugin } from '../sourceFile';
+import { VueLanguagePlugin } from '../sourceFile';
 
 export default function (): VueLanguagePlugin {
 
 	return {
 
-		getEmbeddedFilesCount(fileName, sfc) {
-			return sfc.customBlocks.length;
+		getEmbeddedFileNames(fileName, sfc) {
+			const names: string[] = [];
+			for (let i = 0; i < sfc.customBlocks.length; i++) {
+				const customBlock = sfc.customBlocks[i];
+				names.push(fileName + '.customBlock_' + customBlock.type + '_' + i + '.' + customBlock.lang);
+			}
+			return names;
 		},
 
-		getEmbeddedFile(fileName, sfc, i) {
+		resolveEmbeddedFile(fileName, sfc, embeddedFile) {
+			const match = embeddedFile.fileName.match(/^(.*)\.customBlock_([^_]+)_(\d+)\.([^.]+)$/);
+			if (match) {
+				const index = parseInt(match[3]);
+				const customBlock = sfc.customBlocks[index];
 
-			const customBlock = sfc.customBlocks[i];
-			const file: EmbeddedFile = {
-				fileName: fileName + '.' + i + '.' + customBlock.lang,
-				content: customBlock.content,
-				capabilities: {
+				embeddedFile.capabilities = {
 					diagnostics: true,
 					foldingRanges: true,
 					formatting: true,
 					documentSymbol: true,
 					codeActions: true,
 					inlayHints: true,
-				},
-				isTsHostFile: false,
-				mappings: [],
-			};
-
-			file.mappings.push({
-				data: {
-					vueTag: customBlock.tag,
-					vueTagIndex: i,
-					capabilities: {
-						basic: true,
-						references: true,
-						definitions: true,
-						diagnostic: true,
-						rename: true,
-						completion: true,
-						semanticTokens: true,
+				};
+				embeddedFile.isTsHostFile = false;
+				embeddedFile.codeGen.addCode(
+					customBlock.content,
+					{
+						start: 0,
+						end: customBlock.content.length,
 					},
-				},
-				mode: SourceMaps.Mode.Offset,
-				sourceRange: {
-					start: 0,
-					end: customBlock.content.length,
-				},
-				mappedRange: {
-					start: 0,
-					end: customBlock.content.length,
-				},
-			});
-
-			return file;
+					SourceMaps.Mode.Offset,
+					{
+						vueTag: customBlock.tag,
+						vueTagIndex: index,
+						capabilities: {
+							basic: true,
+							references: true,
+							definitions: true,
+							diagnostic: true,
+							rename: true,
+							completion: true,
+							semanticTokens: true,
+						},
+					},
+				);
+			}
 		},
 	};
 }

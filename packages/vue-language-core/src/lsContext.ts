@@ -236,7 +236,7 @@ export function createLanguageContext(
 				if (!tsFileUpdated) {
 					for (const embedded of sourceFile.getAllEmbeddeds()) {
 						if (embedded.file.isTsHostFile) {
-							oldScripts[embedded.file.fileName] = embedded.file.content;
+							oldScripts[embedded.file.fileName] = embedded.file.codeGen.getText();
 						}
 					}
 				}
@@ -246,7 +246,7 @@ export function createLanguageContext(
 				if (!tsFileUpdated) {
 					for (const embedded of sourceFile.getAllEmbeddeds()) {
 						if (embedded.file.isTsHostFile) {
-							newScripts[embedded.file.fileName] = embedded.file.content;
+							newScripts[embedded.file.fileName] = embedded.file.codeGen.getText();
 						}
 					}
 				}
@@ -296,7 +296,7 @@ export function createLanguageContext(
 				return fileVersions.get(mapped.embedded.file)!;
 			}
 			else {
-				let version = ts.sys.createHash?.(mapped.embedded.file.content) ?? mapped.embedded.file.content;
+				let version = ts.sys.createHash?.(mapped.embedded.file.codeGen.getText()) ?? mapped.embedded.file.codeGen.getText();
 				if (host.isTsc) {
 					// fix https://github.com/johnsoncodehk/volar/issues/1082
 					version = host.getScriptVersion(mapped.vueFile.fileName) + ':' + version;
@@ -319,7 +319,7 @@ export function createLanguageContext(
 		}
 		const mapped = documentRegistry.fromEmbeddedFileName(fileName);
 		if (mapped) {
-			const text = mapped.embedded.file.content;
+			const text = mapped.embedded.file.codeGen.getText();
 			const snapshot = ts.ScriptSnapshot.fromString(text);
 			scriptSnapshots.set(fileName.toLowerCase(), [version, snapshot]);
 			return snapshot;

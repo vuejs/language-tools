@@ -227,7 +227,7 @@ export function parseVueDocument(
 			uri,
 			shared.syntaxToLanguageId(embeddedFile.fileName.split('.').pop()!),
 			newVersion,
-			embeddedFile.content,
+			embeddedFile.codeGen.getText(),
 		);
 	});
 	const sourceMapsMap = useCacheMap<vue.Embedded, EmbeddedDocumentSourceMap>(embedded => {
@@ -327,12 +327,12 @@ export function parseVueDocument(
 		};
 
 		const file = vueFile.getAllEmbeddeds().find(e => e.file.fileName.indexOf('.__VLS_template.') >= 0)?.file;
-		if (file && file.content.indexOf(vue.SearchTexts.Components) >= 0) {
+		if (file && file.codeGen.getText().indexOf(vue.SearchTexts.Components) >= 0) {
 			const document = embeddedDocumentsMap.get(file);
 
 			let components = await tsLs?.doComplete(
 				shared.fsPathToUri(file!.fileName),
-				document.positionAt(file!.content.indexOf(vue.SearchTexts.Components)),
+				document.positionAt(file!.codeGen.getText().indexOf(vue.SearchTexts.Components)),
 				options
 			);
 

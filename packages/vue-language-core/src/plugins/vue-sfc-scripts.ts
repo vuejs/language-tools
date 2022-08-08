@@ -1,52 +1,48 @@
 import * as SourceMaps from '@volar/source-map';
-import { EmbeddedFile, VueLanguagePlugin } from '../sourceFile';
+import { VueLanguagePlugin } from '../sourceFile';
 
 export default function (): VueLanguagePlugin {
 
 	return {
 
-		getEmbeddedFilesCount(fileName, sfc) {
-			return 2;
+		getEmbeddedFileNames(fileName, sfc) {
+			const names: string[] = [];
+			if (sfc.script) {
+				names.push(fileName + '.script_format.' + sfc.script.lang);
+			}
+			if (sfc.scriptSetup) {
+				names.push(fileName + '.scriptSetup_format.' + sfc.scriptSetup.lang);
+			}
+			return names;
 		},
 
-		getEmbeddedFile(fileName, sfc, i) {
-
-			const script = i === 0 ? sfc.script : sfc.scriptSetup;
-			if (!script)
-				return;
-
-			const file: EmbeddedFile = {
-				fileName: fileName + '.__VLS_script.format.' + script.lang,
-				content: script.content,
-				capabilities: {
+		resolveEmbeddedFile(fileName, sfc, embeddedFile) {
+			const scriptMatch = embeddedFile.fileName.match(/^(.*)\.script_format\.([^.]+)$/);
+			const scriptSetupMatch = embeddedFile.fileName.match(/^(.*)\.scriptSetup_format\.([^.]+)$/);
+			const script = scriptMatch ? sfc.script : scriptSetupMatch ? sfc.scriptSetup : undefined;
+			if (script) {
+				embeddedFile.capabilities = {
 					diagnostics: false,
 					foldingRanges: true,
 					formatting: true,
 					documentSymbol: true,
 					codeActions: false,
 					inlayHints: false,
-				},
-				isTsHostFile: false,
-				mappings: [],
-			};
-
-			file.mappings.push({
-				data: {
-					vueTag: script.tag,
-					capabilities: {},
-				},
-				mode: SourceMaps.Mode.Offset,
-				sourceRange: {
-					start: 0,
-					end: script.content.length,
-				},
-				mappedRange: {
-					start: 0,
-					end: script.content.length,
-				},
-			});
-
-			return file;
+				};
+				embeddedFile.isTsHostFile = false;
+				embeddedFile.codeGen.addCode(
+					script.content,
+					{
+						start: 0,
+						end: script.content.length,
+					},
+					SourceMaps.Mode.Offset,
+					{
+						vueTag: script.tag,
+						capabilities: {},
+					},
+				);
+			}
 		},
 	};
 }

@@ -3,7 +3,7 @@ import { Mapping, Mode, Range } from '@volar/source-map';
 export class CodeGen<T = undefined> {
 
 	private text = '';
-	private mappings: Mapping<T>[] = [];
+	public mappings: Mapping<T>[] = [];
 
 	public getText() {
 		return this.text;

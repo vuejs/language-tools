@@ -1,14 +1,14 @@
-import { CodeGen, mergeCodeGen } from '@volar/code-gen';
+import { mergeCodeGen } from '@volar/code-gen';
 import * as SourceMaps from '@volar/source-map';
-import { EmbeddedFileMappingData, getSlotsPropertyName, getVueLibraryName, TextRange } from '@volar/vue-code-gen';
+import { getSlotsPropertyName, getVueLibraryName, TextRange } from '@volar/vue-code-gen';
 import * as templateGen from '@volar/vue-code-gen/out/generators/template';
 import type { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
 import { walkInterpolationFragment } from '@volar/vue-code-gen/out/transform';
 import { ComputedRef } from '@vue/reactivity';
 import { posix as path } from 'path';
+import { useCssVars, useStyleCssClasses, VueLanguagePlugin } from '../sourceFile';
 import { VueCompilerOptions } from '../types';
 import { SearchTexts } from '../utils/string';
-import { EmbeddedFile, useStyleCssClasses, useCssVars, VueLanguagePlugin } from '../sourceFile';
 
 export default function (
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -25,15 +25,35 @@ export default function (
 
 	return {
 
-		getEmbeddedFilesCount(fileName, sfc) {
-			return 3;
+		getEmbeddedFileNames(fileName, sfc) {
+			const fileNames: string[] = [];
+			const lang = scriptLang.value === 'js' ? 'jsx' : scriptLang.value === 'ts' ? 'tsx' : scriptLang.value;
+			if (!disableTemplateScript) {
+				fileNames.push(fileName + '.__VLS_template.' + lang);
+			}
+			if (templateCodeGens.value) {
+				fileNames.push(fileName + '.__VLS_template_format.' + lang);
+				fileNames.push(fileName + '.__VLS_template.css');
+			}
+			return fileNames;
 		},
 
-		getEmbeddedFile(fileName, sfc, i) {
+		resolveEmbeddedFile(fileName, sfc, embeddedFile) {
+			const suffix = embeddedFile.fileName.replace(fileName, '');
 
-			const baseFileName = path.basename(fileName);
+			if (suffix.match(/^\.__VLS_template\.(jsx|tsx)$/)) {
 
-			if (i === 0 && !disableTemplateScript) {
+				const baseFileName = path.basename(fileName);
+				embeddedFile.parentFileName = fileName + '.' + sfc.template?.lang;
+				embeddedFile.capabilities = {
+					diagnostics: true,
+					foldingRanges: false,
+					formatting: false,
+					documentSymbol: false,
+					codeActions: false,
+					inlayHints: true,
+				};
+				embeddedFile.isTsHostFile = true;
 
 				let scriptLeadingComments: string[] = [];
 				if (compilerOptions.experimentalUseScriptLeadingCommentInTemplate ?? true) {
@@ -47,8 +67,7 @@ export default function (
 					}
 				}
 				const scriptLeadingComment = scriptLeadingComments.join('\n');
-
-				const tsxCodeGen = new CodeGen<EmbeddedFileMappingData>();
+				const tsxCodeGen = embeddedFile.codeGen;
 
 				tsxCodeGen.addText(scriptLeadingComment + '\n');
 				tsxCodeGen.addText(`import * as __VLS_types from './__VLS_types.js';\n`);
@@ -118,25 +137,6 @@ export default function (
 				}
 
 				tsxCodeGen.addText(`export default __VLS_slots;\n`);
-
-				const lang = scriptLang.value === 'js' ? 'jsx' : scriptLang.value === 'ts' ? 'tsx' : scriptLang.value;
-				const embeddedFile: EmbeddedFile = {
-					parentFileName: fileName + '.' + sfc.template?.lang,
-					fileName: fileName + '.__VLS_template.' + lang,
-					content: tsxCodeGen.getText(),
-					capabilities: {
-						diagnostics: true,
-						foldingRanges: false,
-						formatting: false,
-						documentSymbol: false,
-						codeActions: false,
-						inlayHints: true,
-					},
-					isTsHostFile: true,
-					mappings: tsxCodeGen.getMappings(),
-				};
-
-				return embeddedFile;
 
 				function writeImportTypes() {
 
@@ -247,46 +247,24 @@ export default function (
 					}
 				}
 			}
-			else if (i === 1 && templateCodeGens.value) {
+			else if (suffix.match(/^\.__VLS_template_format\.[^\.]+$/)) {
 
-				const lang = scriptLang.value === 'js' ? 'jsx' : scriptLang.value === 'ts' ? 'tsx' : scriptLang.value;
-				const embeddedFile: EmbeddedFile = {
-					parentFileName: fileName + '.' + sfc.template?.lang,
-					fileName: fileName + '.__VLS_template.format.' + lang,
-					content: templateCodeGens.value.formatCodeGen.getText(),
-					capabilities: {
-						diagnostics: false,
-						foldingRanges: false,
-						formatting: true,
-						documentSymbol: true,
-						codeActions: false,
-						inlayHints: false,
-					},
-					isTsHostFile: false,
-					mappings: templateCodeGens.value.formatCodeGen.getMappings(),
+				embeddedFile.parentFileName = fileName + '.' + sfc.template?.lang;
+				embeddedFile.capabilities = {
+					diagnostics: false,
+					foldingRanges: false,
+					formatting: true,
+					documentSymbol: true,
+					codeActions: false,
+					inlayHints: false,
 				};
-
-				return embeddedFile;
+				embeddedFile.isTsHostFile = false;
+				embeddedFile.codeGen = templateCodeGens.value!.formatCodeGen;
 			}
-			else if (i === 2 && templateCodeGens.value) {
+			else if (suffix.match(/^\.__VLS_template\.css$/)) {
 
-				const file: EmbeddedFile = {
-					parentFileName: fileName + '.' + sfc.template?.lang,
-					fileName: fileName + '.template.css',
-					content: templateCodeGens.value.cssCodeGen.getText(),
-					capabilities: {
-						diagnostics: false,
-						foldingRanges: false,
-						formatting: false,
-						codeActions: false,
-						documentSymbol: false,
-						inlayHints: false,
-					},
-					isTsHostFile: false,
-					mappings: templateCodeGens.value.cssCodeGen.getMappings(),
-				};
-
-				return file;
+				embeddedFile.parentFileName = fileName + '.' + sfc.template?.lang;
+				embeddedFile.codeGen = templateCodeGens.value!.cssCodeGen;
 			}
 		},
 	};
