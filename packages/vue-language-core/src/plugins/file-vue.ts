@@ -1,21 +1,15 @@
 import { VueLanguagePlugin } from '../sourceFile';
+import { parse } from '@vue/compiler-sfc';
 
 export default function (): VueLanguagePlugin {
 
 	return {
 
-		compileFileToVue(fileName, content) {
-			
+		parseSfc(fileName, content) {
+
 			if (fileName.endsWith('.vue')) {
 
-				return {
-					vue: content,
-					mappings: [{
-						fileOffset: 0,
-						vueOffset: 0,
-						length: content.length,
-					}],
-				}
+				return parse(content, { sourceMap: false, ignoreEmpty: false });
 			}
 		}
 	};

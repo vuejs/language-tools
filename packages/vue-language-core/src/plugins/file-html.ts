@@ -1,11 +1,13 @@
 import { CodeGen } from '@volar/code-gen';
+import { SourceMapBase } from '@volar/source-map';
+import { parse, SFCBlock } from '@vue/compiler-sfc';
 import { VueLanguagePlugin } from '../sourceFile';
 
 export default function (): VueLanguagePlugin {
 
 	return {
 
-		compileFileToVue(fileName, content) {
+		parseSfc(fileName, content) {
 
 			if (fileName.endsWith('.html')) {
 
@@ -48,14 +50,38 @@ export default function (): VueLanguagePlugin {
 					codeGen.addText('\n<script setup lang="ts"></script>');
 				}
 
-				return {
-					vue: codeGen.getText(),
-					mappings: codeGen.getMappings().map(mapping => ({
-						fileOffset: mapping.sourceRange.start,
-						vueOffset: mapping.mappedRange.start,
-						length: mapping.mappedRange.end - mapping.mappedRange.start,
-					})),
-				};
+				const file2VueSourceMap = new SourceMapBase(codeGen.mappings);
+				const sfc = parse(codeGen.getText(), { sourceMap: false, ignoreEmpty: false });
+
+				if (sfc.descriptor.template) {
+					transformRange(sfc.descriptor.template);
+				}
+				if (sfc.descriptor.script) {
+					transformRange(sfc.descriptor.script);
+				}
+				if (sfc.descriptor.scriptSetup) {
+					transformRange(sfc.descriptor.scriptSetup);
+				}
+				for (const style of sfc.descriptor.styles) {
+					transformRange(style);
+				}
+				for (const customBlock of sfc.descriptor.customBlocks) {
+					transformRange(customBlock);
+				}
+
+				return sfc;
+
+				function transformRange(block: SFCBlock) {
+					const fileRange = file2VueSourceMap.getSourceRange(block.loc.start.offset, block.loc.end.offset)?.[0];
+					if (fileRange) {
+						block.loc.start.offset = fileRange.start;
+						block.loc.end.offset = fileRange.end;
+					}
+					else {
+						block.loc.start.offset = -1;
+						block.loc.end.offset = -1;
+					}
+				}
 			};
 		}
 	};

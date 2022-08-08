@@ -41,39 +41,32 @@ export default function (options: {
 
 					const result: vscode.CodeLens[] = [];
 					const descriptor = vueDocument.file.getDescriptor();
-					const compiledVue = vueDocument.file.getCompiledVue()!;
 
 					if (descriptor.scriptSetup) {
-						const startTagEnd = compiledVue.getSourceRange(descriptor.scriptSetup.startTagEnd)?.[0].start;
-						if (startTagEnd) {
-							result.push({
-								range: {
-									start: document.positionAt(startTagEnd),
-									end: document.positionAt(startTagEnd + descriptor.scriptSetup.content.length),
-								},
-								command: {
-									title: 'setup sugar ☑',
-									command: Commands.UNUSE_SETUP_SUGAR,
-									arguments: <CommandArgs>[document.uri],
-								},
-							});
-						}
+						result.push({
+							range: {
+								start: document.positionAt(descriptor.scriptSetup.startTagEnd),
+								end: document.positionAt(descriptor.scriptSetup.startTagEnd + descriptor.scriptSetup.content.length),
+							},
+							command: {
+								title: 'setup sugar ☑',
+								command: Commands.UNUSE_SETUP_SUGAR,
+								arguments: <CommandArgs>[document.uri],
+							},
+						});
 					}
 					else if (descriptor.script) {
-						const startTagEnd = compiledVue.getSourceRange(descriptor.script.startTagEnd)?.[0].start;
-						if (startTagEnd) {
-							result.push({
-								range: {
-									start: document.positionAt(startTagEnd),
-									end: document.positionAt(startTagEnd + descriptor.script.content.length),
-								},
-								command: {
-									title: 'setup sugar ☐',
-									command: Commands.USE_SETUP_SUGAR,
-									arguments: <CommandArgs>[document.uri],
-								},
-							});
-						}
+						result.push({
+							range: {
+								start: document.positionAt(descriptor.script.startTagEnd),
+								end: document.positionAt(descriptor.script.startTagEnd + descriptor.script.content.length),
+							},
+							command: {
+								title: 'setup sugar ☐',
+								command: Commands.USE_SETUP_SUGAR,
+								arguments: <CommandArgs>[document.uri],
+							},
+						});
 					}
 					return result;
 				});
@@ -151,14 +144,9 @@ async function useSetupSugar(
 
 		const ranges = parseUseScriptSetupRanges(ts, _scriptAst);
 		const document = _vueDocument.getDocument();
-		const compiledVue = _vueDocument.file.getCompiledVue()!;
-		const startTagEnd = compiledVue.getSourceRange(_script.startTagEnd)?.[0].start;
-
-		if (startTagEnd === undefined)
-			return;
 
 		const edits: vscode.TextEdit[] = [];
-		const scriptStartPos = document.positionAt(startTagEnd);
+		const scriptStartPos = document.positionAt(_script.startTagEnd);
 		const startTagText = document.getText({
 			start: {
 				line: scriptStartPos.line,
@@ -277,8 +265,8 @@ async function useSetupSugar(
 		function addReplace(start: number, end: number, text: string) {
 			edits.push(vscode.TextEdit.replace(
 				{
-					start: document.positionAt(startTagEnd! + start),
-					end: document.positionAt(startTagEnd! + end),
+					start: document.positionAt(_script.startTagEnd! + start),
+					end: document.positionAt(_script.startTagEnd! + end),
 				},
 				text
 			));
@@ -351,18 +339,13 @@ async function unuseSetupSugar(
 
 		const ranges = parseUnuseScriptSetupRanges(ts, _scriptSetupAst);
 		const scriptRanges = _scriptAst ? parseUseScriptSetupRanges(ts, _scriptAst) : undefined;
-		const compiledVue = _vueDocument.file.getCompiledVue()!;
-		const startTagEnd = compiledVue.getSourceRange(_scriptSetup.startTagEnd)?.[0].start;
-
-		if (startTagEnd === undefined)
-			return;
 
 		const document = _vueDocument.getDocument();
 		const edits: vscode.TextEdit[] = [];
 		const removeSetupTextRanges: TextRange[] = [...ranges.imports];
 
 		const sfcCode = document.getText();
-		const setupAttr = sfcCode.substring(0, startTagEnd).lastIndexOf(' setup');
+		const setupAttr = sfcCode.substring(0, _scriptSetup.startTagEnd).lastIndexOf(' setup');
 
 		edits.push(vscode.TextEdit.replace(
 			{
@@ -575,8 +558,8 @@ async function unuseSetupSugar(
 
 			edits.push(vscode.TextEdit.replace(
 				{
-					start: document.positionAt(startTagEnd! + start),
-					end: document.positionAt(startTagEnd! + end),
+					start: document.positionAt(_scriptSetup.startTagEnd! + start),
+					end: document.positionAt(_scriptSetup.startTagEnd! + end),
 				},
 				text
 			));

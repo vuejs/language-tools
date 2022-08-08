@@ -7,7 +7,7 @@ export default function (): VueLanguagePlugin {
 
 	return {
 
-		compileFileToVue(fileName, content) {
+		parseSfc(fileName, content) {
 
 			if (fileName.endsWith('.html')) {
 
@@ -29,7 +29,7 @@ export default function (): VueLanguagePlugin {
 					}
 				}
 
-				return vueHtmlFilePlugin.compileFileToVue?.(fileName, newContent);
+				return vueHtmlFilePlugin.parseSfc?.(fileName, newContent);
 			};
 		}
 	};
