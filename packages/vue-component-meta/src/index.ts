@@ -1,4 +1,5 @@
 import * as vue from '@volar/vue-language-core';
+import { parseScriptSetupRanges } from '@volar/vue-language-core';
 import * as ts from 'typescript/lib/tsserverlibrary';
 
 import type {
@@ -468,8 +469,8 @@ function readVueComponentDefaultProps(vueFileText: string, printer: ts.Printer |
 	function scriptSetupWorker() {
 
 		const vueSourceFile = vue.createSourceFile('/tmp.vue', vueFileText, {}, {}, ts);
-		const descriptor = vueSourceFile.getDescriptor();
-		const scriptSetupRanges = vueSourceFile.getScriptSetupRanges();
+		const descriptor = vueSourceFile.sfc;
+		const scriptSetupRanges = descriptor.scriptSetupAst ? parseScriptSetupRanges(ts, descriptor.scriptSetupAst) : undefined;
 
 		if (descriptor.scriptSetup && scriptSetupRanges?.withDefaultsArg) {
 
@@ -520,7 +521,7 @@ function readVueComponentDefaultProps(vueFileText: string, printer: ts.Printer |
 	function scriptWorker() {
 
 		const vueSourceFile = vue.createSourceFile('/tmp.vue', vueFileText, {}, {}, ts);
-		const descriptor = vueSourceFile.getDescriptor();
+		const descriptor = vueSourceFile.sfc;
 
 		if (descriptor.script) {
 			const scriptResult = readTsComponentDefaultProps(descriptor.script.lang, descriptor.script.content, 'default', printer);

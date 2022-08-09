@@ -234,7 +234,7 @@ export function createLanguageContext(
 				const newScripts: Record<string, string> = {};
 
 				if (!tsFileUpdated) {
-					for (const embedded of sourceFile.getAllEmbeddeds()) {
+					for (const embedded of sourceFile.allEmbeddeds) {
 						if (embedded.file.isTsHostFile) {
 							oldScripts[embedded.file.fileName] = embedded.file.codeGen.getText();
 						}
@@ -244,7 +244,7 @@ export function createLanguageContext(
 				sourceFile.text = scriptText;
 
 				if (!tsFileUpdated) {
-					for (const embedded of sourceFile.getAllEmbeddeds()) {
+					for (const embedded of sourceFile.allEmbeddeds) {
 						if (embedded.file.isTsHostFile) {
 							newScripts[embedded.file.fileName] = embedded.file.codeGen.getText();
 						}

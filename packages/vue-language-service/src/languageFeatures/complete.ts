@@ -130,7 +130,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 			if (vueDocument) {
 
-				const embeddeds = vueDocument.file.getEmbeddeds();
+				const embeddeds = vueDocument.file.embeddeds;
 
 				await visitEmbedded(vueDocument, embeddeds, async sourceMap => {
 

@@ -162,8 +162,10 @@ export function createLanguageService(
 	};
 	// plugins
 	const vuePlugin = useVuePlugin({
+		ts,
 		getVueDocument: (document) => vueDocuments.get(document.uri),
 		tsLs,
+		isJsxMissing: !vueLsHost.getVueCompilationSettings().experimentalDisableTemplateSupport && vueLsHost.getCompilationSettings().jsx !== ts.JsxEmit.Preserve,
 	});
 	const vueTemplateHtmlPlugin = _useVueTemplateLanguagePlugin(
 		'html',

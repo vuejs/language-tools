@@ -25,7 +25,7 @@ export default function (options: {
 
 				return worker(uri, async vueDocument => {
 
-					const desc = vueDocument.file.getDescriptor();
+					const desc = vueDocument.file.sfc;
 					if (!desc.template)
 						return;
 

@@ -40,7 +40,7 @@
 
 // 		if (vueDocument) {
 
-// 			const template = vueDocument.vueFile.getDescriptor().template;
+// 			const template = vueDocument.vueFile.sfc.template;
 // 			if (template) {
 // 				funcs.push({
 // 					type: 'func',

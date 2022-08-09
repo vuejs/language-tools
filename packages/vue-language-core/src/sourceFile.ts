@@ -1,34 +1,31 @@
-import { EmbeddedFileMappingData, TeleportMappingData, TextRange, VueCompilerOptions, _VueCompilerOptions } from './types';
-import { parseRefSugarCallRanges, parseRefSugarDeclarationRanges } from './parsers/refSugarRanges';
-import { parseScriptRanges } from './parsers/scriptRanges';
-import { parseScriptSetupRanges } from './parsers/scriptSetupRanges';
 import { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
-import { computed, ComputedRef, reactive, ref, unref } from '@vue/reactivity';
-import { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
-import { SearchTexts } from './utils/string';
-import * as templateGen from './generators/template';
+import { computed, ComputedRef, reactive, ref } from '@vue/reactivity';
+import { EmbeddedFileMappingData, TeleportMappingData, TextRange, VueCompilerOptions, _VueCompilerOptions } from './types';
 import { parseCssClassNames } from './utils/parseCssClassNames';
 import { parseCssVars } from './utils/parseCssVars';
+import { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
 
-import useVueFilePlugin from './plugins/file-vue';
-import useMdFilePlugin from './plugins/file-md';
 import useHtmlFilePlugin from './plugins/file-html';
-import useHtmlPlugin from './plugins/vue-template-html';
-import usePugPlugin from './plugins/vue-template-pug';
-import useVueSfcStyles from './plugins/vue-sfc-styles';
+import useMdFilePlugin from './plugins/file-md';
+import useVueFilePlugin from './plugins/file-vue';
 import useVueSfcCustomBlocks from './plugins/vue-sfc-customblocks';
 import useVueSfcScriptsFormat from './plugins/vue-sfc-scripts';
+import useVueSfcStyles from './plugins/vue-sfc-styles';
 import useVueSfcTemplate from './plugins/vue-sfc-template';
+import useHtmlPlugin from './plugins/vue-template-html';
+import usePugPlugin from './plugins/vue-template-pug';
 import useVueTsx from './plugins/vue-tsx';
 
-import type * as ts from 'typescript/lib/tsserverlibrary'; // fix TS2742
-import { Mapping, MappingBase } from '@volar/source-map';
 import { CodeGen } from '@volar/code-gen';
+import { Mapping, MappingBase } from '@volar/source-map';
 import * as CompilerDom from '@vue/compiler-dom';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import { getVueCompilerOptions } from './utils/ts';
 
 export type VueLanguagePlugin = (ctx: {
-	ts: typeof ts,
+	modules: {
+		typescript: typeof ts,
+	},
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: _VueCompilerOptions,
 }) => {
@@ -78,6 +75,11 @@ export interface Sfc {
 	customBlocks: (SfcBlock & {
 		type: string;
 	})[];
+
+	// ast
+	templateAst: CompilerDom.RootNode | undefined;
+	scriptAst: ts.SourceFile | undefined;
+	scriptSetupAst: ts.SourceFile | undefined;
 }
 
 export interface EmbeddedFile {
@@ -113,9 +115,28 @@ export function createSourceFile(
 		scriptSetup: null,
 		styles: [],
 		customBlocks: [],
+		get templateAst() {
+			return compiledSFCTemplate.value?.ast;
+		},
+		get scriptAst() {
+			return scriptAst.value;
+		},
+		get scriptSetupAst() {
+			return scriptSetupAst.value;
+		},
 	}) as Sfc /* avoid Sfc unwrap in .d.ts by reactive */;
 
 	// use
+	const scriptAst = computed(() => {
+		if (sfc.script) {
+			return ts.createSourceFile(fileName + '.' + sfc.script.lang, sfc.script.content, ts.ScriptTarget.Latest);
+		}
+	});
+	const scriptSetupAst = computed(() => {
+		if (sfc.scriptSetup) {
+			return ts.createSourceFile(fileName + '.' + sfc.scriptSetup.lang, sfc.scriptSetup.content, ts.ScriptTarget.Latest);
+		}
+	});
 	const parsedSfc = computed(() => {
 		for (const plugin of plugins) {
 			const sfc = plugin.parseSFC?.(fileName, fileContent.value);
@@ -124,7 +145,7 @@ export function createSourceFile(
 			}
 		}
 	});
-	const templateAstCompiled = computed(() => {
+	const compiledSFCTemplate = computed(() => {
 		if (sfc.template) {
 			for (const plugin of plugins) {
 
@@ -156,59 +177,6 @@ export function createSourceFile(
 			}
 		}
 	});
-	const cssModuleClasses = useStyleCssClasses(sfc, style => !!style.module);
-	const cssScopedClasses = useStyleCssClasses(sfc, style => {
-		const setting = compilerOptions.experimentalResolveStyleCssClasses ?? 'scoped';
-		return (setting === 'scoped' && style.scoped) || setting === 'always';
-	});
-	const templateCodeGens = computed(() => {
-
-		if (!templateAstCompiled.value?.ast)
-			return;
-
-		return templateGen.generate(
-			ts,
-			{
-				target: vueCompilerOptions.target ?? 3,
-				strictTemplates: vueCompilerOptions.strictTemplates ?? false,
-				experimentalRuntimeMode: vueCompilerOptions.experimentalRuntimeMode,
-				experimentalAllowTypeNarrowingInInlineHandlers: vueCompilerOptions.experimentalAllowTypeNarrowingInInlineHandlers ?? false,
-			},
-			sfc.template?.lang ?? 'html',
-			templateAstCompiled.value.ast,
-			!!sfc.scriptSetup,
-			Object.values(cssScopedClasses.value).map(style => style.classNames).flat(),
-			{
-				getEmitCompletion: SearchTexts.EmitCompletion,
-				getPropsCompletion: SearchTexts.PropsCompletion,
-			}
-		);
-	});
-	const cssVars = useCssVars(sfc);
-	const scriptAst = computed(() => {
-		if (sfc.script) {
-			return ts.createSourceFile(fileName + '.' + sfc.script.lang, sfc.script.content, ts.ScriptTarget.Latest);
-		}
-	});
-	const scriptSetupAst = computed(() => {
-		if (sfc.scriptSetup) {
-			return ts.createSourceFile(fileName + '.' + sfc.scriptSetup.lang, sfc.scriptSetup.content, ts.ScriptTarget.Latest);
-		}
-	});
-	const scriptRanges = computed(() =>
-		scriptAst.value
-			? parseScriptRanges(ts, scriptAst.value, !!sfc.scriptSetup, false, false)
-			: undefined
-	);
-	const scriptSetupRanges = computed(() =>
-		scriptSetupAst.value
-			? parseScriptSetupRanges(ts, scriptSetupAst.value)
-			: undefined
-	);
-	const sfcRefSugarRanges = computed(() => (scriptSetupAst.value ? {
-		refs: parseRefSugarDeclarationRanges(ts, scriptSetupAst.value, ['$ref', '$computed', '$shallowRef', '$fromRefs']),
-		raws: parseRefSugarCallRanges(ts, scriptSetupAst.value, ['$raw', '$fromRefs']),
-	} : undefined));
 
 	const _plugins: VueLanguagePlugin[] = [
 		...extraPlugins,
@@ -221,20 +189,12 @@ export function createSourceFile(
 		useVueSfcCustomBlocks,
 		useVueSfcScriptsFormat,
 		useVueSfcTemplate,
-		useVueTsx(
-			ts,
-			scriptRanges,
-			scriptSetupRanges,
-			templateCodeGens,
-			vueCompilerOptions,
-			cssVars,
-			cssModuleClasses,
-			cssScopedClasses,
-			!!vueCompilerOptions.experimentalDisableTemplateSupport || compilerOptions.jsx !== ts.JsxEmit.Preserve,
-		),
+		useVueTsx,
 	];
 	const pluginCtx: Parameters<VueLanguagePlugin>[0] = {
-		ts,
+		modules: {
+			typescript: ts,
+		},
 		compilerOptions,
 		vueCompilerOptions: getVueCompilerOptions(vueCompilerOptions),
 	};
@@ -410,18 +370,24 @@ export function createSourceFile(
 		set text(value) {
 			update(value);
 		},
-		getSfcVueTemplateCompiled: () => templateAstCompiled.value,
-		getScriptFileName: () => allEmbeddeds.value.find(e => e.file.fileName.replace(fileName, '').match(/^\.(js|ts)x?$/))?.file.fileName,
-		getDescriptor: () => unref(sfc),
-		getScriptAst: () => scriptAst.value,
-		getScriptSetupAst: () => scriptSetupAst.value,
-		getSfcRefSugarRanges: () => sfcRefSugarRanges.value,
-		getEmbeddeds: () => embeddeds.value,
-		getScriptSetupRanges: () => scriptSetupRanges.value,
-		isJsxMissing: () => !vueCompilerOptions.experimentalDisableTemplateSupport && compilerOptions.jsx !== ts.JsxEmit.Preserve,
-
-		getAllEmbeddeds: () => allEmbeddeds.value,
-		getTeleports: () => teleports.value,
+		get compiledSFCTemplate() {
+			return compiledSFCTemplate.value;
+		},
+		get tsFileName() {
+			return allEmbeddeds.value.find(e => e.file.fileName.replace(fileName, '').match(/^\.(js|ts)x?$/))?.file.fileName ?? '';
+		},
+		get sfc() {
+			return sfc;
+		},
+		get embeddeds() {
+			return embeddeds.value;
+		},
+		get allEmbeddeds() {
+			return allEmbeddeds.value;
+		},
+		get teleports() {
+			return teleports.value;
+		},
 	};
 
 	function embeddedRangeToVueRange(data: EmbeddedFileMappingData, range: Mapping<unknown>['sourceRange']) {

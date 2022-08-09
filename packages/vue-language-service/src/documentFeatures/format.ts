@@ -161,7 +161,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 		function getEmbeddedsByLevel(vueDocument: VueDocument, level: number) {
 
-			const embeddeds = vueDocument.file.getEmbeddeds();
+			const embeddeds = vueDocument.file.embeddeds;
 			const embeddedsLevels: EmbeddedStructure[][] = [embeddeds];
 
 			while (true) {

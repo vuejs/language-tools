@@ -46,6 +46,8 @@ export function createParsedCommandLine(
 
 export function getVueCompilerOptions(vueOptions: VueCompilerOptions): _VueCompilerOptions {
 	return {
+		...vueOptions,
+
 		target: vueOptions.target ?? 3,
 		strictTemplates: vueOptions.strictTemplates ?? false,
 

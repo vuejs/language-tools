@@ -28,7 +28,7 @@ export default function (options: {
 					if (!isEnabled)
 						return;
 
-					const descriptor = vueDocument.file.getDescriptor();
+					const descriptor = vueDocument.file.sfc;
 
 					if (descriptor.template && (descriptor.template.lang === 'html' || descriptor.template.lang === 'pug')) {
 
@@ -57,7 +57,7 @@ export default function (options: {
 				return worker(uri, vueDocument => {
 
 					const document = vueDocument.getDocument();
-					const desc = vueDocument.file.getDescriptor();
+					const desc = vueDocument.file.sfc;
 					if (!desc.template)
 						return;
 

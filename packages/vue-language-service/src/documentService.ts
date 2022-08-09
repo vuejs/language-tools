@@ -44,8 +44,10 @@ export function getDocumentService(
 
 	// language support plugins
 	const vuePlugin = useVuePlugin({
+		ts,
 		getVueDocument: doc => vueDocuments.get(doc),
 		tsLs: undefined,
+		isJsxMissing: false,
 	});
 	const htmlPlugin = useHtmlPlugin({
 		fileSystemProvider,

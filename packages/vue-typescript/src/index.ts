@@ -53,7 +53,7 @@ export function createLanguageService(...params: Parameters<typeof vue.createLan
 		const sourceFile = core.mapper.get(args.fileName);
 		let edits: readonly ts.FileTextChanges[] = [];
 		if (sourceFile) {
-			const embeddeds = sourceFile.getAllEmbeddeds();
+			const embeddeds = sourceFile.allEmbeddeds;
 			for (const embedded of embeddeds) {
 				if (embedded.file.isTsHostFile && embedded.file.capabilities.codeActions) {
 					edits = edits.concat(ls.organizeImports({
