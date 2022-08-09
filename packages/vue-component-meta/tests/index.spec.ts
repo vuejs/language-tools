@@ -41,6 +41,7 @@ describe(`vue-component-meta`, () => {
 		const foo = meta.props.find(prop => prop.name === 'foo');
 		const bar = meta.props.find(prop => prop.name === 'bar');
 		const baz = meta.props.find(prop => prop.name === 'baz');
+
 		const union = meta.props.find(prop => prop.name === 'union');
 		const unionOptional = meta.props.find(prop => prop.name === 'unionOptional');
 		const nested = meta.props.find(prop => prop.name === 'nested');
@@ -349,10 +350,23 @@ describe(`vue-component-meta`, () => {
 		const meta = checker.getComponentMeta(componentPath);
 
 		const foo = meta.props.find(prop => prop.name === 'foo');
+		const bar = meta.props.find(prop => prop.name === 'bar');
+		const baz = meta.props.find(prop => prop.name === 'baz');
+
 		expect(foo).toBeDefined();
 		expect(foo?.default).toBeUndefined();
 		expect(foo?.required).toBeTruthy();
 		expect(foo?.type).toEqual('string');
+
+		expect(bar).toBeDefined();
+		expect(bar?.default).toBe('"BAR"');
+		expect(bar?.required).toBeFalsy();
+		expect(bar?.type).toEqual('string | undefined');
+
+		expect(baz).toBeDefined();
+		expect(baz?.default).toBeUndefined();
+		// expect(baz?.required).toBeFalsy(); // @todo should not be required
+		expect(baz?.type).toEqual('string | undefined');
 	});
 
 	test('reference-type-props-js-setup', () => {
@@ -360,14 +374,27 @@ describe(`vue-component-meta`, () => {
 		const meta = checker.getComponentMeta(componentPath);
 
 		const foo = meta.props.find(prop => prop.name === 'foo');
+		const bar = meta.props.find(prop => prop.name === 'bar');
+		const baz = meta.props.find(prop => prop.name === 'baz');
+
 		const hello = meta.props.find(prop => prop.name === 'hello');
 		const numberOrStringProp = meta.props.find(prop => prop.name === 'numberOrStringProp');
 		const arrayProps = meta.props.find(prop => prop.name === 'arrayProps');
 
 		expect(foo).toBeDefined();
 		expect(foo?.default).toBeUndefined();
+		expect(foo?.type).toEqual('string'); 
 		expect(foo?.required).toBeTruthy();
-		// expect(foo?.type).toEqual('string | undefined'); // @todo should be 'string'
+
+		expect(bar).toBeDefined();
+		expect(bar?.default).toBe('"BAR"');
+		expect(bar?.type).toEqual('string | undefined');
+		expect(bar?.required).toBeFalsy();
+
+		expect(baz).toBeDefined();
+		expect(baz?.default).toBeUndefined();
+		expect(baz?.type).toEqual('string | undefined');
+		// expect(baz?.required).toBeFalsy(); // @todo should not be required
 
 		expect(hello).toBeDefined();
 		expect(hello?.default).toEqual('"Hello"');

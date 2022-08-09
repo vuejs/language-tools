@@ -1,11 +1,16 @@
-<script setup>
+<script lang="ts" setup>
+
 defineProps({
-  /**
-   * Required foo property
-   */
   foo: {
     type: String,
-		required: true,
+    required: true
+  },
+  bar: {
+    type: String,
+    default: 'BAR'
+  },
+  baz: {
+    type: String
   },
   /**
    * The hello property.
