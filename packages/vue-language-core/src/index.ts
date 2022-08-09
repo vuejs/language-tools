@@ -9,5 +9,5 @@ export * as scriptRanges from './parsers/scriptRanges';
 export * as scriptSetupConvertRanges from './parsers/scriptSetupConvertRanges';
 export * as scriptSetupRanges from './parsers/scriptSetupRanges';
 export * as localTypes from './utils/localTypes';
-export * as tsShared from './utils/ts';
+export * from './utils/ts';
 export * from './generators/template';

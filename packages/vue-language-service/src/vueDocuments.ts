@@ -260,11 +260,10 @@ export function parseVueDocument(
 		});
 	});
 	const templateTagsAndAttrs = computed(() => {
-		const htmlComputed = vueFile.getSfcTemplateLanguageCompiled();
 		const ast = vueFile.getSfcVueTemplateCompiled()?.ast;
 		const tags = new Map<string, number[]>();
 		const attrs = new Set<string>();
-		if (ast && htmlComputed) {
+		if (ast) {
 			walkElementNodes(ast, node => {
 
 				if (!tags.has(node.tag)) {
@@ -272,18 +271,11 @@ export function parseVueDocument(
 				}
 
 				const offsets = tags.get(node.tag)!;
-
 				const startTagHtmlOffset = node.loc.start.offset + node.loc.source.indexOf(node.tag);
-				const startTagTemplateOffset = htmlComputed.mapping({ start: startTagHtmlOffset, end: startTagHtmlOffset });
-				if (startTagTemplateOffset !== undefined) {
-					offsets.push(startTagTemplateOffset.start);
-				}
-
 				const endTagHtmlOffset = node.loc.start.offset + node.loc.source.lastIndexOf(node.tag);
-				const endTagTemplateOffset = htmlComputed.mapping({ start: endTagHtmlOffset, end: endTagHtmlOffset });
-				if (endTagTemplateOffset !== undefined) {
-					offsets.push(endTagTemplateOffset.end);
-				}
+
+				offsets.push(startTagHtmlOffset);
+				offsets.push(endTagHtmlOffset);
 
 				for (const prop of node.props) {
 					if (

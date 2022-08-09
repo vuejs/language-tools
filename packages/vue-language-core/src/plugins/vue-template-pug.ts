@@ -1,10 +1,12 @@
 import { VueLanguagePlugin } from '../sourceFile';
+import * as CompilerDom from '@vue/compiler-dom';
+import * as CompilerVue2 from '../utils/vue2TemplateCompiler';
 
-export default function (): VueLanguagePlugin {
+const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 
 	return {
 
-		compileTemplateToHtml(lang, template) {
+		compileSFCTemplate(lang, template, options) {
 
 			if (lang === 'pug') {
 
@@ -17,26 +19,39 @@ export default function (): VueLanguagePlugin {
 				const pugDoc = pug?.baseParse(template);
 
 				if (pugDoc) {
-					return {
-						html: pugDoc.htmlCode,
-						mapping: htmlRange => {
-							const pugRange = pugDoc.sourceMap.getSourceRange(htmlRange.start, htmlRange.end, data => !data?.isEmptyTagCompletion)?.[0];
-							if (pugRange) {
-								return pugRange;
-							}
-							else {
 
-								const pugStart = pugDoc.sourceMap.getSourceRange(htmlRange.start, htmlRange.start, data => !data?.isEmptyTagCompletion)?.[0]?.start;
-								const pugEnd = pugDoc.sourceMap.getSourceRange(htmlRange.end, htmlRange.end, data => !data?.isEmptyTagCompletion)?.[0]?.end;
-
-								if (pugStart !== undefined && pugEnd !== undefined) {
-									return { start: pugStart, end: pugEnd };
-								}
-							}
+					const compiler = vueCompilerOptions.target < 3 ? CompilerVue2 : CompilerDom;
+					const completed = compiler.compile(pugDoc.htmlCode, {
+						...options,
+						onWarn(warning) {
+							options?.onWarn?.(createProxyObject(warning));
 						},
-					};
+						onError(error) {
+							options?.onError?.(createProxyObject(error));
+						},
+					});
+
+					return createProxyObject(completed);
+
+					function createProxyObject(target: any): any {
+						return new Proxy(target, {
+							get(target, prop) {
+								if (prop === 'offset') {
+									const htmlOffset = target.offset;
+									const pugOffset = pugDoc!.sourceMap.getSourceRange(htmlOffset, htmlOffset, data => !data?.isEmptyTagCompletion)?.[0]?.start;
+									return pugOffset ?? -1;
+								}
+								const value = target[prop];
+								if (typeof value === 'object') {
+									return createProxyObject(target[prop]);
+								}
+								return value;
+							}
+						});
+					}
 				}
 			}
-		}
+		},
 	};
-}
+};
+export default plugin;

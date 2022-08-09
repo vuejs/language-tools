@@ -68,7 +68,7 @@ export function createProgramProxy(
 		function getVueCompilerOptions(): vue.VueCompilerOptions {
 			const tsConfig = ctx.options.options.configFilePath;
 			if (typeof tsConfig === 'string') {
-				return vue.tsShared.createParsedCommandLine(ts, ts.sys, tsConfig).vueOptions;
+				return vue.createParsedCommandLine(ts, ts.sys, tsConfig).vueOptions;
 			}
 			return {};
 		}

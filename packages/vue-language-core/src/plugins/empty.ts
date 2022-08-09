@@ -1,5 +1,6 @@
 import { VueLanguagePlugin } from '../sourceFile';
 
-export default function (): VueLanguagePlugin {
+const plugin: VueLanguagePlugin = () => {
 	return {};
-}
+};
+export default plugin;

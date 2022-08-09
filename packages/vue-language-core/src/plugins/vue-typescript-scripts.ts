@@ -1,8 +1,8 @@
+import { Ref } from '@vue/reactivity';
 import { generate as genScript } from '../generators/script';
 import type * as templateGen from '../generators/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
-import { Ref } from '@vue/reactivity';
 import { useCssVars, useStyleCssClasses, VueLanguagePlugin } from '../sourceFile';
 import { VueCompilerOptions } from '../types';
 
@@ -16,9 +16,9 @@ export default function (
 	cssModuleClasses: ReturnType<typeof useStyleCssClasses>,
 	cssScopedClasses: ReturnType<typeof useStyleCssClasses>,
 	disableTemplateScript: boolean,
-): VueLanguagePlugin {
+) {
 
-	return {
+	const plugin: VueLanguagePlugin = () => ({
 
 		getEmbeddedFileNames(fileName, sfc) {
 
@@ -102,5 +102,7 @@ export default function (
 				}
 			}
 		},
-	};
+	});
+
+	return plugin;
 }

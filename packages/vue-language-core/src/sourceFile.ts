@@ -1,10 +1,9 @@
-import { EmbeddedFileMappingData, TeleportMappingData, TextRange } from './types';
+import { EmbeddedFileMappingData, TeleportMappingData, TextRange, VueCompilerOptions, _VueCompilerOptions } from './types';
 import { parseRefSugarCallRanges, parseRefSugarDeclarationRanges } from './parsers/refSugarRanges';
 import { parseScriptRanges } from './parsers/scriptRanges';
 import { parseScriptSetupRanges } from './parsers/scriptSetupRanges';
 import { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
 import { computed, ComputedRef, reactive, ref, unref } from '@vue/reactivity';
-import { VueCompilerOptions } from './types';
 import { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
 import { SearchTexts } from './utils/string';
 import * as templateGen from './generators/template';
@@ -22,26 +21,26 @@ import useVueSfcScriptsFormat from './plugins/vue-sfc-scripts';
 import useVueSfcTemplate from './plugins/vue-sfc-template';
 import useVueTsScripts from './plugins/vue-typescript-scripts';
 
-import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix TS2742
+import type * as ts from 'typescript/lib/tsserverlibrary'; // fix TS2742
 import { Mapping, MappingBase } from '@volar/source-map';
 import { CodeGen } from '@volar/code-gen';
-import { compileSFCTemplate } from './utils/compileSFCTemplate';
+import * as CompilerDom from '@vue/compiler-dom';
+import { getVueCompilerOptions } from './utils/ts';
 
-export interface VueLanguagePlugin {
+export type VueLanguagePlugin = (ctx: {
+	ts: typeof ts,
+	compilerOptions: ts.CompilerOptions,
+	vueCompilerOptions: _VueCompilerOptions,
+}) => {
 
-	parseSfc?(fileName: string, content: string): SFCParseResult | undefined;
+	parseSFC?(fileName: string, content: string): SFCParseResult | undefined;
 
-	compileTemplateToHtml?(lang: string, tmplate: string): {
-		html: string,
-		mapping(htmlRange: { start: number, end: number; }): { start: number, end: number; } | undefined,
-	} | undefined;
-
-	// TODO: compileHtmlTemplateToAst
+	compileSFCTemplate?(lang: string, template: string, options?: CompilerDom.CompilerOptions): CompilerDom.CodegenResult | undefined;
 
 	getEmbeddedFileNames?(fileName: string, sfc: Sfc): string[];
 
 	resolveEmbeddedFile?(fileName: string, sfc: Sfc, embeddedFile: EmbeddedFile): void;
-}
+};
 
 export interface SourceFile extends ReturnType<typeof createSourceFile> { }
 
@@ -119,29 +118,42 @@ export function createSourceFile(
 	// use
 	const parsedSfc = computed(() => {
 		for (const plugin of plugins) {
-			const sfc = plugin.parseSfc?.(fileName, fileContent.value);
+			const sfc = plugin.parseSFC?.(fileName, fileContent.value);
 			if (sfc) {
 				return sfc;
 			}
 		}
 	});
-	const computedHtmlTemplate = computed<ReturnType<NonNullable<VueLanguagePlugin['compileTemplateToHtml']>>>(() => {
+	const templateAstCompiled = computed(() => {
 		if (sfc.template) {
 			for (const plugin of plugins) {
-				const compiledHtml = plugin.compileTemplateToHtml?.(sfc.template.lang, sfc.template.content);
-				if (compiledHtml) {
-					return compiledHtml;
-				};
+
+				const errors: CompilerDom.CompilerError[] = [];
+				const warnings: CompilerDom.CompilerError[] = [];
+				let ast: CompilerDom.RootNode | undefined;
+
+				try {
+					ast = plugin.compileSFCTemplate?.(sfc.template.lang, sfc.template.content, {
+						onError: (err: CompilerDom.CompilerError) => errors.push(err),
+						onWarn: (err: CompilerDom.CompilerError) => warnings.push(err),
+						expressionPlugins: ['typescript'],
+						...vueCompilerOptions.experimentalTemplateCompilerOptions,
+					})?.ast;
+				}
+				catch (e) {
+					const err = e as CompilerDom.CompilerError;
+					errors.push(err);
+				}
+
+
+				if (ast || errors.length) {
+					return {
+						errors,
+						warnings,
+						ast,
+					};
+				}
 			}
-		}
-	});
-	const templateAstCompiled = computed(() => {
-		if (computedHtmlTemplate.value) {
-			return compileSFCTemplate(
-				computedHtmlTemplate.value.html,
-				vueCompilerOptions.experimentalTemplateCompilerOptions,
-				vueCompilerOptions.target ?? 3,
-			);
 		}
 	});
 	const cssModuleClasses = useStyleCssClasses(sfc, style => !!style.module);
@@ -151,8 +163,6 @@ export function createSourceFile(
 	});
 	const templateCodeGens = computed(() => {
 
-		if (!computedHtmlTemplate.value)
-			return;
 		if (!templateAstCompiled.value?.ast)
 			return;
 
@@ -168,7 +178,6 @@ export function createSourceFile(
 			templateAstCompiled.value.ast,
 			!!sfc.scriptSetup,
 			Object.values(cssScopedClasses.value).map(style => style.classNames).flat(),
-			computedHtmlTemplate.value.mapping,
 			{
 				getEmitCompletion: SearchTexts.EmitCompletion,
 				getPropsCompletion: SearchTexts.PropsCompletion,
@@ -201,17 +210,17 @@ export function createSourceFile(
 		raws: parseRefSugarCallRanges(ts, scriptSetupAst.value, ['$raw', '$fromRefs']),
 	} : undefined));
 
-	const plugins: VueLanguagePlugin[] = [
+	const _plugins: VueLanguagePlugin[] = [
 		...extraPlugins,
-		useVueFilePlugin(),
-		useMdFilePlugin(),
-		useHtmlFilePlugin(),
-		useHtmlPlugin(),
-		usePugPlugin(),
-		useVueSfcStyles(),
-		useVueSfcCustomBlocks(),
-		useVueSfcScriptsFormat(),
-		useVueSfcTemplate(),
+		useVueFilePlugin,
+		useMdFilePlugin,
+		useHtmlFilePlugin,
+		useHtmlPlugin,
+		usePugPlugin,
+		useVueSfcStyles,
+		useVueSfcCustomBlocks,
+		useVueSfcScriptsFormat,
+		useVueSfcTemplate,
 		useVueTsScripts(
 			ts,
 			scriptRanges,
@@ -224,6 +233,12 @@ export function createSourceFile(
 			!!vueCompilerOptions.experimentalDisableTemplateSupport || compilerOptions.jsx !== ts.JsxEmit.Preserve,
 		),
 	];
+	const pluginCtx: Parameters<VueLanguagePlugin>[0] = {
+		ts,
+		compilerOptions,
+		vueCompilerOptions: getVueCompilerOptions(vueCompilerOptions),
+	};
+	const plugins = _plugins.map(plugin => plugin(pluginCtx));
 
 	// computeds
 	const pluginEmbeddedFiles = plugins.map(plugin => {
@@ -395,7 +410,6 @@ export function createSourceFile(
 		set text(value) {
 			update(value);
 		},
-		getSfcTemplateLanguageCompiled: () => computedHtmlTemplate.value,
 		getSfcVueTemplateCompiled: () => templateAstCompiled.value,
 		getScriptFileName: () => allEmbeddeds.value.find(e => e.file.fileName.replace(fileName, '').match(/^\.(js|ts)x?$/))?.file.fileName,
 		getDescriptor: () => unref(sfc),

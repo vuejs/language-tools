@@ -1,13 +1,12 @@
 import { VueLanguagePlugin } from '@volar/vue-language-core';
 import useVueHtmlFilePlugin from '@volar/vue-language-core/out/plugins/file-html';
 
-export default function (): VueLanguagePlugin {
+const plugin: VueLanguagePlugin = (ctx) => {
 
-	const vueHtmlFilePlugin = useVueHtmlFilePlugin();
+	const vueHtmlFilePlugin = useVueHtmlFilePlugin(ctx);
 
 	return {
-
-		parseSfc(fileName, content) {
+		parseSFC(fileName, content) {
 
 			if (fileName.endsWith('.html')) {
 
@@ -29,8 +28,9 @@ export default function (): VueLanguagePlugin {
 					}
 				}
 
-				return vueHtmlFilePlugin.parseSfc?.(fileName, newContent);
+				return vueHtmlFilePlugin.parseSFC?.(fileName, newContent);
 			};
 		}
 	};
-}
+};
+export default plugin;

@@ -1,6 +1,8 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path';
-import type { VueCompilerOptions } from '../types';
+import type { VueCompilerOptions, _VueCompilerOptions } from '../types';
+
+export type ParsedCommandLine = ReturnType<typeof createParsedCommandLine>;
 
 export function createParsedCommandLine(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -39,6 +41,24 @@ export function createParsedCommandLine(
 			...baseVueOptions,
 			...resolveVueCompilerOptions(content.raw.vueCompilerOptions ?? {}, folder),
 		},
+	};
+}
+
+export function getVueCompilerOptions(vueOptions: VueCompilerOptions): _VueCompilerOptions {
+	return {
+		target: vueOptions.target ?? 3,
+		strictTemplates: vueOptions.strictTemplates ?? false,
+
+		// experimental
+		experimentalRuntimeMode: vueOptions.experimentalRuntimeMode ?? 'runtime-dom',
+		experimentalImplicitWrapComponentOptionsWithDefineComponent: vueOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent ?? 'onlyJs',
+		experimentalImplicitWrapComponentOptionsWithVue2Extend: vueOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend ?? 'onlyJs',
+		experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup: vueOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup ?? 'onlyJs',
+		experimentalTemplateCompilerOptions: vueOptions.experimentalTemplateCompilerOptions ?? undefined,
+		experimentalTemplateCompilerOptionsRequirePath: vueOptions.experimentalTemplateCompilerOptionsRequirePath ?? undefined,
+		experimentalDisableTemplateSupport: vueOptions.experimentalDisableTemplateSupport ?? false,
+		experimentalResolveStyleCssClasses: vueOptions.experimentalResolveStyleCssClasses ?? 'scoped',
+		experimentalAllowTypeNarrowingInInlineHandlers: vueOptions.experimentalAllowTypeNarrowingInInlineHandlers ?? false,
 	};
 }
 

@@ -24,7 +24,7 @@ export type {
 };
 
 export function createComponentMetaChecker(tsconfigPath: string, checkerOptions: MetaCheckerOptions = {}) {
-	const parsedCommandLine = vue.tsShared.createParsedCommandLine(ts, {
+	const parsedCommandLine = vue.createParsedCommandLine(ts, {
 		useCaseSensitiveFileNames: ts.sys.useCaseSensitiveFileNames,
 		readDirectory: (path, extensions, exclude, include, depth) => {
 			return ts.sys.readDirectory(path, [...extensions, '.vue'], exclude, include, depth);

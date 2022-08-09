@@ -151,9 +151,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 				const templateErrors: vscode.Diagnostic[] = [];
 				const sfcVueTemplateCompiled = vueDocument.file.getSfcVueTemplateCompiled();
-				const sfcTemplateLanguageCompiled = vueDocument.file.getSfcTemplateLanguageCompiled();
 
-				if (sfcVueTemplateCompiled && sfcTemplateLanguageCompiled) {
+				if (sfcVueTemplateCompiled) {
 
 					for (const error of sfcVueTemplateCompiled.errors) {
 						onCompilerError(error, vscode.DiagnosticSeverity.Error);
@@ -169,19 +168,12 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 							start: error.loc?.start.offset ?? 0,
 							end: error.loc?.end.offset ?? 0,
 						};
-						let sourceRange = sfcTemplateLanguageCompiled!.mapping(templateHtmlRange);
 						let errorMessage = error.message;
-
-						if (!sourceRange) {
-							const htmlText = sfcTemplateLanguageCompiled!.html.substring(templateHtmlRange.start, templateHtmlRange.end);
-							errorMessage += '\n```html\n' + htmlText.trim() + '\n```';
-							sourceRange = { start: 0, end: 0 };
-						}
 
 						templateErrors.push({
 							range: {
-								start: document.positionAt(sourceRange.start),
-								end: document.positionAt(sourceRange.end),
+								start: document.positionAt(templateHtmlRange.start),
+								end: document.positionAt(templateHtmlRange.end),
 							},
 							severity,
 							code: error.code,
