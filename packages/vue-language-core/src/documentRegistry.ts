@@ -1,4 +1,4 @@
-import type { EmbeddedFileMappingData } from '@volar/vue-code-gen';
+import type { EmbeddedFileMappingData } from './types';
 import { computed, shallowReactive } from '@vue/reactivity';
 import { posix as path } from 'path';
 import * as localTypes from './utils/localTypes';

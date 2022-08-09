@@ -1,5 +1,5 @@
 import * as SourceMaps from '@volar/source-map';
-import { EmbeddedFileMappingData, TeleportMappingData, TeleportSideData } from '@volar/vue-code-gen/out/types';
+import { EmbeddedFileMappingData, TeleportMappingData, TeleportSideData } from '../types';
 
 export class EmbeddedFileSourceMap extends SourceMaps.SourceMapBase<EmbeddedFileMappingData> { }
 

@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
-import { parseUnuseScriptSetupRanges, parseUseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupConvertRanges';
-import type { TextRange } from '@volar/vue-code-gen/out/types';
+import { scriptSetupConvertRanges } from '@volar/vue-language-core';
+import type { TextRange } from '@volar/vue-language-core';
 import * as vscode from 'vscode-languageserver-protocol';
 import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, useConfigurationHost } from '@volar/vue-language-service-types';
 import { VueDocument } from '../vueDocuments';
@@ -142,7 +142,7 @@ async function useSetupSugar(
 		_scriptAst: NonNullable<typeof scriptAst>,
 	) {
 
-		const ranges = parseUseScriptSetupRanges(ts, _scriptAst);
+		const ranges = scriptSetupConvertRanges.parseUseScriptSetupRanges(ts, _scriptAst);
 		const document = _vueDocument.getDocument();
 
 		const edits: vscode.TextEdit[] = [];
@@ -337,8 +337,8 @@ async function unuseSetupSugar(
 		_scriptSetupAst: NonNullable<typeof scriptSetupAst>,
 	) {
 
-		const ranges = parseUnuseScriptSetupRanges(ts, _scriptSetupAst);
-		const scriptRanges = _scriptAst ? parseUseScriptSetupRanges(ts, _scriptAst) : undefined;
+		const ranges = scriptSetupConvertRanges.parseUnuseScriptSetupRanges(ts, _scriptSetupAst);
+		const scriptRanges = _scriptAst ? scriptSetupConvertRanges.parseUseScriptSetupRanges(ts, _scriptAst) : undefined;
 
 		const document = _vueDocument.getDocument();
 		const edits: vscode.TextEdit[] = [];

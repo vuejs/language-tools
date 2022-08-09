@@ -1,13 +1,13 @@
-import { compileSFCTemplate, EmbeddedFileMappingData, TeleportMappingData, TextRange } from '@volar/vue-code-gen';
-import { parseRefSugarCallRanges, parseRefSugarDeclarationRanges } from '@volar/vue-code-gen/out/parsers/refSugarRanges';
-import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
-import { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
+import { EmbeddedFileMappingData, TeleportMappingData, TextRange } from './types';
+import { parseRefSugarCallRanges, parseRefSugarDeclarationRanges } from './parsers/refSugarRanges';
+import { parseScriptRanges } from './parsers/scriptRanges';
+import { parseScriptSetupRanges } from './parsers/scriptSetupRanges';
 import { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
 import { computed, ComputedRef, reactive, ref, unref } from '@vue/reactivity';
 import { VueCompilerOptions } from './types';
 import { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
 import { SearchTexts } from './utils/string';
-import * as templateGen from '@volar/vue-code-gen/out/generators/template';
+import * as templateGen from './generators/template';
 import { parseCssClassNames } from './utils/parseCssClassNames';
 import { parseCssVars } from './utils/parseCssVars';
 
@@ -21,11 +21,11 @@ import useVueSfcCustomBlocks from './plugins/vue-sfc-customblocks';
 import useVueSfcScriptsFormat from './plugins/vue-sfc-scripts';
 import useVueSfcTemplate from './plugins/vue-sfc-template';
 import useVueTsScripts from './plugins/vue-typescript-scripts';
-import useVueTsTemplate from './plugins/vue-typescript-template';
 
 import type * as _0 from 'typescript/lib/tsserverlibrary'; // fix TS2742
 import { Mapping, MappingBase } from '@volar/source-map';
 import { CodeGen } from '@volar/code-gen';
+import { compileSFCTemplate } from './utils/compileSFCTemplate';
 
 export interface VueLanguagePlugin {
 
@@ -176,15 +176,6 @@ export function createSourceFile(
 		);
 	});
 	const cssVars = useCssVars(sfc);
-	const cssVarTexts = computed(() => {
-		const result: string[] = [];
-		for (const { style, ranges } of cssVars.value) {
-			for (const range of ranges) {
-				result.push(style.content.substring(range.start, range.end));
-			}
-		}
-		return result;
-	});
 	const scriptAst = computed(() => {
 		if (sfc.script) {
 			return ts.createSourceFile(fileName + '.' + sfc.script.lang, sfc.script.content, ts.ScriptTarget.Latest);
@@ -205,12 +196,6 @@ export function createSourceFile(
 			? parseScriptSetupRanges(ts, scriptSetupAst.value)
 			: undefined
 	);
-	const scriptLang = computed(() => {
-		return !sfc.script && !sfc.scriptSetup ? 'ts'
-			: sfc.scriptSetup && sfc.scriptSetup.lang !== 'js' ? sfc.scriptSetup.lang
-				: sfc.script && sfc.script.lang !== 'js' ? sfc.script.lang
-					: 'js';
-	});
 	const sfcRefSugarRanges = computed(() => (scriptSetupAst.value ? {
 		refs: parseRefSugarDeclarationRanges(ts, scriptSetupAst.value, ['$ref', '$computed', '$shallowRef', '$fromRefs']),
 		raws: parseRefSugarCallRanges(ts, scriptSetupAst.value, ['$raw', '$fromRefs']),
@@ -228,24 +213,15 @@ export function createSourceFile(
 		useVueSfcScriptsFormat(),
 		useVueSfcTemplate(),
 		useVueTsScripts(
-			scriptLang,
+			ts,
 			scriptRanges,
 			scriptSetupRanges,
 			templateCodeGens,
 			vueCompilerOptions,
-			cssVarTexts,
-		),
-		useVueTsTemplate(
-			ts,
+			cssVars,
 			cssModuleClasses,
 			cssScopedClasses,
-			templateCodeGens,
-			cssVars,
-			scriptSetupRanges,
-			scriptLang,
-			vueCompilerOptions,
 			!!vueCompilerOptions.experimentalDisableTemplateSupport || compilerOptions.jsx !== ts.JsxEmit.Preserve,
-			fileName.endsWith('.html') // petite-vue
 		),
 	];
 
@@ -421,7 +397,7 @@ export function createSourceFile(
 		},
 		getSfcTemplateLanguageCompiled: () => computedHtmlTemplate.value,
 		getSfcVueTemplateCompiled: () => templateAstCompiled.value,
-		getScriptFileName: () => fileName.endsWith('.html') ? fileName + '.__VLS_script.' + scriptLang.value : fileName + '.' + scriptLang.value,
+		getScriptFileName: () => allEmbeddeds.value.find(e => e.file.fileName.replace(fileName, '').match(/^\.(js|ts)x?$/))?.file.fileName,
 		getDescriptor: () => unref(sfc),
 		getScriptAst: () => scriptAst.value,
 		getScriptSetupAst: () => scriptSetupAst.value,

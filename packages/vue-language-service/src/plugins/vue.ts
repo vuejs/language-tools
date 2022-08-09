@@ -129,7 +129,7 @@ export default function (options: {
 					}
 				}
 
-				if (options.tsLs && !options.tsLs.__internal__.isValidFile(vueDocument.file.getScriptFileName())) {
+				if (options.tsLs && !options.tsLs.__internal__.isValidFile(vueDocument.file.getScriptFileName() ?? '')) {
 					for (const script of [sfc.script, sfc.scriptSetup]) {
 
 						if (!script || script.content === '')

@@ -4,6 +4,6 @@
 </template>
 
 <script lang="ts" setup>
-import CcDd from './entry.vue';
+import CcDd from './component.vue';
     // ^^^^rename: CcDd
 </script>

@@ -1,4 +1,4 @@
-import { getSlotsPropertyName, getVueLibraryName } from '@volar/vue-code-gen';
+import { getSlotsPropertyName, getVueLibraryName } from './shared';
 
 export const typesFileName = '__VLS_types.ts';
 

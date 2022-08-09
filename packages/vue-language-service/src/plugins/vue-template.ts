@@ -1,7 +1,7 @@
 import * as shared from '@volar/shared';
 import type * as ts2 from '@volar/typescript-language-service';
-import { isIntrinsicElement } from '@volar/vue-code-gen';
-import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
+import { isIntrinsicElement } from '@volar/vue-language-core';
+import { scriptRanges } from '@volar/vue-language-core';
 import * as vue from '@volar/vue-language-core';
 import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
@@ -345,8 +345,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					'\n' + insert.insertText,
 				),
 			];
-			const scriptRanges = parseScriptRanges(options.ts, scriptAst, !!descriptor.scriptSetup, true, true);
-			const exportDefault = scriptRanges.exportDefault;
+			const _scriptRanges = scriptRanges.parseScriptRanges(options.ts, scriptAst, !!descriptor.scriptSetup, true, true);
+			const exportDefault = _scriptRanges.exportDefault;
 			if (exportDefault) {
 				// https://github.com/microsoft/TypeScript/issues/36174
 				const printer = options.ts.createPrinter();
@@ -395,7 +395,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		return item;
 
 		async function getTypeScriptInsert() {
-			const embeddedScriptUri = shared.fsPathToUri(vueDocument.file.getScriptFileName());
+			const embeddedScriptUri = shared.fsPathToUri(vueDocument.file.getScriptFileName() ?? '');
 			const tsImportName = camelize(path.basename(importFile).replace(/\./g, '-'));
 			let [formatOptions, preferences] = await Promise.all([
 				options.tsSettings.getFormatOptions?.(embeddedScriptUri),

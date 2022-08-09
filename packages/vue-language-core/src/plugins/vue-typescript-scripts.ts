@@ -1,105 +1,106 @@
-import { generate as genScript } from '@volar/vue-code-gen/out/generators/script';
-import type * as templateGen from '@volar/vue-code-gen/out/generators/template';
-import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
-import { parseScriptSetupRanges } from '@volar/vue-code-gen/out/parsers/scriptSetupRanges';
+import { generate as genScript } from '../generators/script';
+import type * as templateGen from '../generators/template';
+import { parseScriptRanges } from '../parsers/scriptRanges';
+import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { Ref } from '@vue/reactivity';
+import { useCssVars, useStyleCssClasses, VueLanguagePlugin } from '../sourceFile';
 import { VueCompilerOptions } from '../types';
-import { VueLanguagePlugin } from '../sourceFile';
 
 export default function (
-	lang: Ref<string>,
+	ts: typeof import('typescript/lib/tsserverlibrary'),
 	scriptRanges: Ref<ReturnType<typeof parseScriptRanges> | undefined>,
 	scriptSetupRanges: Ref<ReturnType<typeof parseScriptSetupRanges> | undefined>,
 	htmlGen: Ref<ReturnType<typeof templateGen.generate> | undefined>,
 	compilerOptions: VueCompilerOptions,
-	cssVars: Ref<string[]>,
+	cssVars: ReturnType<typeof useCssVars>,
+	cssModuleClasses: ReturnType<typeof useStyleCssClasses>,
+	cssScopedClasses: ReturnType<typeof useStyleCssClasses>,
+	disableTemplateScript: boolean,
 ): VueLanguagePlugin {
 
 	return {
 
 		getEmbeddedFileNames(fileName, sfc) {
+
+			const fileNames: string[] = [];
+
 			if (!fileName.endsWith('.html')) {
-				return [
-					fileName + '.' + lang.value,
-					fileName + '.__VLS_script.' + lang.value,
-				];
+				let lang = !sfc.script && !sfc.scriptSetup ? 'ts'
+					: sfc.scriptSetup && sfc.scriptSetup.lang !== 'js' ? sfc.scriptSetup.lang
+						: sfc.script && sfc.script.lang !== 'js' ? sfc.script.lang
+							: 'js';
+				if (!disableTemplateScript) {
+					if (lang === 'js') {
+						lang = 'jsx';
+					}
+					else if (lang === 'ts') {
+						lang = 'tsx';
+					}
+				}
+				fileNames.push(fileName + '.' + lang);
 			}
-			return [];
+			if (sfc.template) {
+				fileNames.push(fileName + '.__VLS_template_format.tsx');
+				fileNames.push(fileName + '.__VLS_template.css');
+			}
+
+			return fileNames;
 		},
 
 		resolveEmbeddedFile(fileName, sfc, embeddedFile) {
-			const match = embeddedFile.fileName.replace(fileName, '').match(/^(\.__VLS_script)?\.(js|ts)x?$/);
+			const suffix = embeddedFile.fileName.replace(fileName, '');
+			const match = suffix.match(/^\.(js|ts|jsx|tsx)?$/);
 			if (match) {
+				const lang = match[1];
 				embeddedFile.isTsHostFile = true;
-				embeddedFile.capabilities = !match[1] ? {
-					diagnostics: !sfc.script?.src,
+				embeddedFile.capabilities = {
+					diagnostics: true,
 					foldingRanges: false,
 					formatting: false,
 					documentSymbol: false,
-					codeActions: !sfc.script?.src,
-					inlayHints: !sfc.script?.src,
-				} : {
-					diagnostics: false,
-					foldingRanges: false,
-					formatting: false,
-					documentSymbol: false,
-					codeActions: false,
-					inlayHints: false,
+					codeActions: true,
+					inlayHints: true,
 				};
 				genScript(
-					!match[1] ? 'script' : 'template',
+					ts,
 					fileName,
+					lang,
 					sfc.script ?? undefined,
 					sfc.scriptSetup ?? undefined,
 					scriptRanges.value,
 					scriptSetupRanges.value,
-					() => htmlGen.value,
-					() => {
-						const bindTexts: string[] = [];
-						for (const cssVar of cssVars.value) {
-							bindTexts.push(cssVar);
-						}
-						return bindTexts;
-					},
-					getShimComponentOptionsMode(),
-					(compilerOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup ?? 'onlyJs') === 'onlyJs'
-						? lang.value === 'js' || lang.value === 'jsx'
-						: !!compilerOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup,
-					compilerOptions.target ?? 3,
+					cssVars.value,
+					cssModuleClasses.value,
+					cssScopedClasses.value,
+					htmlGen.value,
+					compilerOptions,
 					embeddedFile.codeGen,
 					embeddedFile.teleportMappings,
 				);
 			}
+			else if (suffix.match(/^\.__VLS_template_format\.tsx$/)) {
+
+				embeddedFile.parentFileName = fileName + '.' + sfc.template?.lang;
+				embeddedFile.capabilities = {
+					diagnostics: false,
+					foldingRanges: false,
+					formatting: true,
+					documentSymbol: true,
+					codeActions: false,
+					inlayHints: false,
+				};
+				embeddedFile.isTsHostFile = false;
+				if (htmlGen.value) {
+					embeddedFile.codeGen = htmlGen.value.formatCodeGen;
+				}
+			}
+			else if (suffix.match(/^\.__VLS_template\.css$/)) {
+
+				embeddedFile.parentFileName = fileName + '.' + sfc.template?.lang;
+				if (htmlGen.value) {
+					embeddedFile.codeGen = htmlGen.value.cssCodeGen;
+				}
+			}
 		},
 	};
-
-	function getShimComponentOptionsMode() {
-
-		let shimComponentOptionsMode: 'defineComponent' | 'Vue.extend' | false = false;
-
-		if (
-			(compilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend ?? 'onlyJs') === 'onlyJs'
-				? lang.value === 'js' || lang.value === 'jsx'
-				: !!compilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend
-		) {
-			shimComponentOptionsMode = 'Vue.extend';
-		}
-		if (
-			(compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent ?? 'onlyJs') === 'onlyJs'
-				? lang.value === 'js' || lang.value === 'jsx'
-				: !!compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent
-		) {
-			shimComponentOptionsMode = 'defineComponent';
-		}
-
-		// true override 'onlyJs'
-		if (compilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend === true) {
-			shimComponentOptionsMode = 'Vue.extend';
-		}
-		if (compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent === true) {
-			shimComponentOptionsMode = 'defineComponent';
-		}
-
-		return shimComponentOptionsMode;
-	}
 }

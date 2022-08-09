@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
-import { parseDeclarationRanges, parseDotValueRanges } from '@volar/vue-code-gen/out/parsers/refSugarRanges';
+import { refSugarRanges } from '@volar/vue-language-core';
 import * as vscode from 'vscode-languageserver-protocol';
 import { mergeWorkspaceEdits } from '../languageFeatures/rename';
 import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, useConfigurationHost } from '@volar/vue-language-service-types';
@@ -138,8 +138,8 @@ async function useRefSugar(
 		_scriptSetupAst: NonNullable<typeof scriptSetupAst>,
 	) {
 
-		const ranges = parseDeclarationRanges(ts, _scriptSetupAst);
-		const dotValueRanges = parseDotValueRanges(ts, _scriptSetupAst);
+		const ranges = refSugarRanges.parseDeclarationRanges(ts, _scriptSetupAst);
+		const dotValueRanges = refSugarRanges.parseDotValueRanges(ts, _scriptSetupAst);
 		const document = _vueDocument.getDocument();
 		const edits: vscode.TextEdit[] = [];
 

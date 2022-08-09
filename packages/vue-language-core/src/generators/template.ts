@@ -4,7 +4,7 @@ import { camelize, hyphenate, capitalize, isHTMLTag, isSVGTag } from '@vue/share
 import * as CompilerDOM from '@vue/compiler-dom';
 import * as CompilerCore from '@vue/compiler-core';
 import { EmbeddedFileMappingData } from '../types';
-import { colletVars, walkInterpolationFragment } from '../transform';
+import { colletVars, walkInterpolationFragment } from '../utils/transform';
 import { parseBindingRanges } from '../parsers/scriptSetupRanges';
 
 const capabilitiesSet = {
