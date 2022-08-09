@@ -19,7 +19,7 @@ import useVueSfcStyles from './plugins/vue-sfc-styles';
 import useVueSfcCustomBlocks from './plugins/vue-sfc-customblocks';
 import useVueSfcScriptsFormat from './plugins/vue-sfc-scripts';
 import useVueSfcTemplate from './plugins/vue-sfc-template';
-import useVueTsScripts from './plugins/vue-typescript-scripts';
+import useVueTsx from './plugins/vue-tsx';
 
 import type * as ts from 'typescript/lib/tsserverlibrary'; // fix TS2742
 import { Mapping, MappingBase } from '@volar/source-map';
@@ -221,7 +221,7 @@ export function createSourceFile(
 		useVueSfcCustomBlocks,
 		useVueSfcScriptsFormat,
 		useVueSfcTemplate,
-		useVueTsScripts(
+		useVueTsx(
 			ts,
 			scriptRanges,
 			scriptSetupRanges,
