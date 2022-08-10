@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.40.0 (2022/8/10)
+
+- feat: support document highlights cross `<script>`, `<template>` ([#462](https://github.com/johnsoncodehk/volar/issues/462))
+- feat: support reference types from script setup in template ([#891](https://github.com/johnsoncodehk/volar/issues/891))
+- feat: support auto import in template ([#823](https://github.com/johnsoncodehk/volar/issues/823))
+- feat: support plugin api ([#185](https://github.com/johnsoncodehk/volar/issues/185)) ([#1687](https://github.com/johnsoncodehk/volar/issues/1687))
+- fix: template scope variables completion missing ([#1284](https://github.com/johnsoncodehk/volar/issues/1284))
+- fix: prefer `defineComponent` instead of `Vue.extend` to wrap component options by default ([#1584](https://github.com/johnsoncodehk/volar/issues/1584))
+- fix: bracket pair colorization in VSCode v1.70 ([#1677](https://github.com/johnsoncodehk/volar/issues/1677))
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
+
 ## 0.39.5 (2022/8/6)
 
 - feat(vue-component-meta): add option to expose raw type ([#1674](https://github.com/johnsoncodehk/volar/issues/1674))
@@ -12,12 +28,6 @@
 - fix: avoid auto-import path append `.js` ([#1667](https://github.com/johnsoncodehk/volar/issues/1667))
 - fix: avoid variables defined after export default report TS_2454
 - perf: cache semver result on auto-complete
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 0.39.4 (2022/7/31)
 
