@@ -5,7 +5,8 @@ import { posix as path } from 'path';
 import type * as templateGen from '../generators/template';
 import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
-import { useCssVars, useStyleCssClasses } from '../sourceFile';
+import { useCssVars, useStyleCssClasses } from '../plugins/vue-tsx';
+import { Sfc } from '../sourceFile';
 import type { EmbeddedFileMappingData, TeleportMappingData } from '../types';
 import { TextRange, VueCompilerOptions } from '../types';
 import { getSlotsPropertyName, getVueLibraryName } from '../utils/shared';
@@ -18,14 +19,8 @@ import { walkInterpolationFragment } from '../utils/transform';
 export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	fileName: string,
+	sfc: Sfc,
 	lang: string,
-	script: undefined | {
-		src?: string,
-		content: string,
-	},
-	scriptSetup: undefined | {
-		content: string,
-	},
 	scriptRanges: ScriptRanges | undefined,
 	scriptSetupRanges: ScriptSetupRanges | undefined,
 	cssVars: ReturnType<typeof useCssVars>['value'],
@@ -59,7 +54,7 @@ export function generate(
 	writeScriptContentAfterExportDefault();
 	writeTemplateIfNoScriptSetup();
 
-	if (!script && !scriptSetup) {
+	if (!sfc.script && !sfc.scriptSetup) {
 		codeGen.addCode(
 			'export default {} as any',
 			{
@@ -74,13 +69,13 @@ export function generate(
 		);
 	}
 
-	if (scriptSetup) {
+	if (sfc.scriptSetup) {
 		// for code action edits
 		codeGen.addCode(
 			'',
 			{
-				start: scriptSetup.content.length,
-				end: scriptSetup.content.length,
+				start: sfc.scriptSetup.content.length,
+				end: sfc.scriptSetup.content.length,
 			},
 			SourceMaps.Mode.Offset,
 			{
@@ -109,7 +104,7 @@ export function generate(
 	});
 
 	// fix https://github.com/johnsoncodehk/volar/issues/1127
-	if (scriptSetup && exportdefaultStart !== undefined && exportdefaultEnd !== undefined) {
+	if (sfc.scriptSetup && exportdefaultStart !== undefined && exportdefaultEnd !== undefined) {
 		codeGen.addMapping2({
 			data: {
 				vueTag: 'scriptSetup',
@@ -124,7 +119,7 @@ export function generate(
 			},
 			sourceRange: {
 				start: 0,
-				end: scriptSetup.content.length,
+				end: sfc.scriptSetup.content.length,
 			},
 		});
 	}
@@ -161,10 +156,10 @@ export function generate(
 		}
 	}
 	function writeScriptSrc() {
-		if (!script?.src)
+		if (!sfc.script?.src)
 			return;
 
-		let src = script.src;
+		let src = sfc.script.src;
 
 		if (src.endsWith('.d.ts')) src = src.substring(0, src.length - '.d.ts'.length);
 		else if (src.endsWith('.ts')) src = src.substring(0, src.length - '.ts'.length);
@@ -194,17 +189,17 @@ export function generate(
 		codeGen.addText(`export { default } from '${src}';\n`);
 	}
 	function writeScriptContentBeforeExportDefault() {
-		if (!script)
+		if (!sfc.script)
 			return;
 
-		if (!!scriptSetup && scriptRanges?.exportDefault) {
+		if (!!sfc.scriptSetup && scriptRanges?.exportDefault) {
 			addVirtualCode('script', 0, scriptRanges.exportDefault.expression.start);
 			exportdefaultStart = codeGen.getText().length - (scriptRanges.exportDefault.expression.start - scriptRanges.exportDefault.start);
 		}
 		else {
 			let isExportRawObject = false;
 			if (scriptRanges?.exportDefault) {
-				isExportRawObject = script.content.substring(scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end).startsWith('{');
+				isExportRawObject = sfc.script.content.substring(scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end).startsWith('{');
 			}
 			const wrapMode = getImplicitWrapComponentOptionsMode(lang);
 			if (isExportRawObject && wrapMode && scriptRanges?.exportDefault) {
@@ -217,24 +212,24 @@ export function generate(
 				}
 				addVirtualCode('script', scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end);
 				codeGen.addText(`)`);
-				addVirtualCode('script', scriptRanges.exportDefault.expression.end, script.content.length);
+				addVirtualCode('script', scriptRanges.exportDefault.expression.end, sfc.script.content.length);
 			}
 			else {
-				addVirtualCode('script', 0, script.content.length);
+				addVirtualCode('script', 0, sfc.script.content.length);
 			}
 		}
 	}
 	function writeScriptContentAfterExportDefault() {
-		if (!script)
+		if (!sfc.script)
 			return;
 
-		if (!!scriptSetup && scriptRanges?.exportDefault) {
-			addVirtualCode('script', scriptRanges.exportDefault.end, script.content.length);
+		if (!!sfc.scriptSetup && scriptRanges?.exportDefault) {
+			addVirtualCode('script', scriptRanges.exportDefault.end, sfc.script.content.length);
 		}
 	}
 	function addVirtualCode(vueTag: 'script' | 'scriptSetup', start: number, end: number) {
 		codeGen.addCode(
-			(vueTag === 'script' ? script : scriptSetup)!.content.substring(start, end),
+			(vueTag === 'script' ? sfc.script : sfc.scriptSetup)!.content.substring(start, end),
 			{ start, end },
 			SourceMaps.Mode.Offset,
 			{
@@ -253,7 +248,7 @@ export function generate(
 	}
 	function addExtraReferenceVirtualCode(vueTag: 'script' | 'scriptSetup', start: number, end: number) {
 		codeGen.addCode(
-			(vueTag === 'scriptSetup' ? scriptSetup : script)!.content.substring(start, end),
+			(vueTag === 'scriptSetup' ? sfc.scriptSetup : sfc.script)!.content.substring(start, end),
 			{ start, end },
 			SourceMaps.Mode.Offset,
 			{
@@ -268,14 +263,14 @@ export function generate(
 	}
 	function writeScriptSetupImportsSegment() {
 
-		if (!scriptSetup)
+		if (!sfc.scriptSetup)
 			return;
 
 		if (!scriptSetupRanges)
 			return;
 
 		codeGen.addCode(
-			scriptSetup.content.substring(0, scriptSetupRanges.importSectionEndOffset),
+			sfc.scriptSetup.content.substring(0, scriptSetupRanges.importSectionEndOffset),
 			{
 				start: 0,
 				end: scriptSetupRanges.importSectionEndOffset,
@@ -297,13 +292,13 @@ export function generate(
 	}
 	function writeTemplateIfNoScriptSetup() {
 
-		if (!scriptSetup) {
+		if (!sfc.scriptSetup) {
 			writeTemplate();
 		}
 	}
 	function writeScriptSetupAndTemplate() {
 
-		if (scriptSetup && scriptSetupRanges) {
+		if (sfc.scriptSetup && scriptSetupRanges) {
 
 			if (scriptRanges?.exportDefault) {
 				codeGen.addText('await (async () => {\n');
@@ -316,10 +311,10 @@ export function generate(
 			codeGen.addText('const __VLS_setup = async () => {\n');
 
 			codeGen.addCode(
-				scriptSetup.content.substring(scriptSetupRanges.importSectionEndOffset),
+				sfc.scriptSetup.content.substring(scriptSetupRanges.importSectionEndOffset),
 				{
 					start: scriptSetupRanges.importSectionEndOffset,
-					end: scriptSetup.content.length,
+					end: sfc.scriptSetup.content.length,
 				},
 				SourceMaps.Mode.Offset,
 				{
@@ -440,7 +435,7 @@ export function generate(
 			codeGen.addText(`};\n`);
 			codeGen.addText(`},\n`);
 
-			if (script && scriptRanges?.exportDefault?.args) {
+			if (sfc.script && scriptRanges?.exportDefault?.args) {
 				addVirtualCode('script', scriptRanges.exportDefault.args.start + 1, scriptRanges.exportDefault.args.end - 1);
 			}
 
@@ -476,7 +471,7 @@ export function generate(
 	}
 	function writeComponentForTemplateUsage(cssIds: Set<string>) {
 
-		if (scriptSetup && scriptSetupRanges) {
+		if (sfc.scriptSetup && scriptSetupRanges) {
 
 			codeGen.addText(`const __VLS_component = (await import('${vueLibName}')).defineComponent({\n`);
 			codeGen.addText(`setup() {\n`);
@@ -507,13 +502,13 @@ export function generate(
 			}[] = [];
 			bindingsArr.push({
 				bindings: scriptSetupRanges.bindings,
-				content: scriptSetup.content,
+				content: sfc.scriptSetup.content,
 				vueTag: 'scriptSetup',
 			});
-			if (scriptRanges && script) {
+			if (scriptRanges && sfc.script) {
 				bindingsArr.push({
 					bindings: scriptRanges.bindings,
-					content: script.content,
+					content: sfc.script.content,
 					vueTag: 'script',
 				});
 			}
@@ -563,11 +558,11 @@ export function generate(
 	function writeExportOptions() {
 		codeGen.addText(`\n`);
 		codeGen.addText(`const __VLS_options = {\n`);
-		if (script && scriptRanges?.exportDefault?.args) {
+		if (sfc.script && scriptRanges?.exportDefault?.args) {
 			const args = scriptRanges.exportDefault.args;
 			codeGen.addText(`...(`);
 			codeGen.addCode(
-				script.content.substring(args.start, args.end),
+				sfc.script.content.substring(args.start, args.end),
 				args,
 				SourceMaps.Mode.Offset,
 				{
@@ -584,13 +579,13 @@ export function generate(
 	}
 	function writeConstNameOption() {
 		codeGen.addText(`\n`);
-		if (script && scriptRanges?.exportDefault?.args) {
+		if (sfc.script && scriptRanges?.exportDefault?.args) {
 			const args = scriptRanges.exportDefault.args;
 			codeGen.addText(`const __VLS_name = (await import('./__VLS_types.js')).getNameOption(`);
-			codeGen.addText(`${script.content.substring(args.start, args.end)} as const`);
+			codeGen.addText(`${sfc.script.content.substring(args.start, args.end)} as const`);
 			codeGen.addText(`);\n`);
 		}
-		else if (scriptSetup) {
+		else if (sfc.scriptSetup) {
 			codeGen.addText(`let __VLS_name!: '${path.basename(fileName.substring(0, fileName.lastIndexOf('.')))}';\n`);
 		}
 		else {
@@ -602,7 +597,7 @@ export function generate(
 		const useGlobalThisTypeInCtx = fileName.endsWith('.html');
 
 		codeGen.addText(`let __VLS_ctx!: ${useGlobalThisTypeInCtx ? 'typeof globalThis &' : ''}`);
-		if (scriptSetup) {
+		if (sfc.scriptSetup) {
 			codeGen.addText(`InstanceType<__VLS_types.PickNotAny<typeof __VLS_Component, new () => {}>> & `);
 		}
 		codeGen.addText(`InstanceType<__VLS_types.PickNotAny<typeof __VLS_component, new () => {}>> & {\n`);
@@ -757,10 +752,10 @@ export function generate(
 			let bindingNames: string[] = [];
 
 			if (scriptSetupRanges) {
-				bindingNames = bindingNames.concat(scriptSetupRanges.bindings.map(range => scriptSetup?.content.substring(range.start, range.end) ?? ''));
+				bindingNames = bindingNames.concat(scriptSetupRanges.bindings.map(range => sfc.scriptSetup?.content.substring(range.start, range.end) ?? ''));
 			}
 			if (scriptRanges) {
-				bindingNames = bindingNames.concat(scriptRanges.bindings.map(range => script?.content.substring(range.start, range.end) ?? ''));
+				bindingNames = bindingNames.concat(scriptRanges.bindings.map(range => sfc.script?.content.substring(range.start, range.end) ?? ''));
 			}
 
 			// fix import components unused report

@@ -3,7 +3,10 @@ import { generate as genScript } from '../generators/script';
 import * as templateGen from '../generators/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
-import { Sfc, useCssVars, useStyleCssClasses, VueLanguagePlugin } from '../sourceFile';
+import { Sfc, VueLanguagePlugin } from '../sourceFile';
+import { TextRange } from '../types';
+import { parseCssClassNames } from '../utils/parseCssClassNames';
+import { parseCssVars } from '../utils/parseCssVars';
 import { SearchTexts } from '../utils/string';
 
 const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOptions }) => {
@@ -143,9 +146,8 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 		const tsxGen = computed(() => genScript(
 			ts,
 			fileName,
+			sfc,
 			lang.value,
-			sfc.script ?? undefined,
-			sfc.scriptSetup ?? undefined,
 			scriptRanges.value,
 			scriptSetupRanges.value,
 			cssVars.value,
@@ -163,3 +165,42 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 	}
 };
 export default plugin;
+
+export function useStyleCssClasses(sfc: Sfc, condition: (style: Sfc['styles'][number]) => boolean) {
+	return computed(() => {
+		const result: {
+			style: typeof sfc.styles[number],
+			index: number,
+			classNameRanges: TextRange[],
+			classNames: string[],
+		}[] = [];
+		for (let i = 0; i < sfc.styles.length; i++) {
+			const style = sfc.styles[i];
+			if (condition(style)) {
+				const classNameRanges = [...parseCssClassNames(style.content)];
+				result.push({
+					style: style,
+					index: i,
+					classNameRanges: classNameRanges,
+					classNames: classNameRanges.map(range => style.content.substring(range.start + 1, range.end)),
+				});
+			}
+		}
+		return result;
+	});
+}
+
+export function useCssVars(sfc: Sfc) {
+	return computed(() => {
+		const result: { style: typeof sfc.styles[number], styleIndex: number, ranges: TextRange[]; }[] = [];
+		for (let i = 0; i < sfc.styles.length; i++) {
+			const style = sfc.styles[i];
+			result.push({
+				style: style,
+				styleIndex: i,
+				ranges: [...parseCssVars(style.content)],
+			});
+		}
+		return result;
+	});
+}

@@ -1,8 +1,6 @@
 import { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
 import { computed, ComputedRef, reactive, ref } from '@vue/reactivity';
-import { EmbeddedFileMappingData, TeleportMappingData, TextRange, VueCompilerOptions, _VueCompilerOptions } from './types';
-import { parseCssClassNames } from './utils/parseCssClassNames';
-import { parseCssVars } from './utils/parseCssVars';
+import { EmbeddedFileMappingData, TeleportMappingData, VueCompilerOptions, _VueCompilerOptions } from './types';
 import { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
 
 import { CodeGen } from '@volar/code-gen';
@@ -17,13 +15,9 @@ export type VueLanguagePlugin = (ctx: {
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: _VueCompilerOptions,
 }) => {
-
 	parseSFC?(fileName: string, content: string): SFCParseResult | undefined;
-
 	compileSFCTemplate?(lang: string, template: string, options?: CompilerDom.CompilerOptions): CompilerDom.CodegenResult | undefined;
-
 	getEmbeddedFileNames?(fileName: string, sfc: Sfc): string[];
-
 	resolveEmbeddedFile?(fileName: string, sfc: Sfc, embeddedFile: EmbeddedFile): void;
 };
 
@@ -536,45 +530,6 @@ export function createSourceFile(
 			}
 		}
 	}
-}
-
-export function useStyleCssClasses(sfc: Sfc, condition: (style: Sfc['styles'][number]) => boolean) {
-	return computed(() => {
-		const result: {
-			style: typeof sfc.styles[number],
-			index: number,
-			classNameRanges: TextRange[],
-			classNames: string[],
-		}[] = [];
-		for (let i = 0; i < sfc.styles.length; i++) {
-			const style = sfc.styles[i];
-			if (condition(style)) {
-				const classNameRanges = [...parseCssClassNames(style.content)];
-				result.push({
-					style: style,
-					index: i,
-					classNameRanges: classNameRanges,
-					classNames: classNameRanges.map(range => style.content.substring(range.start + 1, range.end)),
-				});
-			}
-		}
-		return result;
-	});
-}
-
-export function useCssVars(sfc: Sfc) {
-	return computed(() => {
-		const result: { style: typeof sfc.styles[number], styleIndex: number, ranges: TextRange[]; }[] = [];
-		for (let i = 0; i < sfc.styles.length; i++) {
-			const style = sfc.styles[i];
-			result.push({
-				style: style,
-				styleIndex: i,
-				ranges: [...parseCssVars(style.content)],
-			});
-		}
-		return result;
-	});
 }
 
 const validScriptSyntaxs = ['js', 'jsx', 'ts', 'tsx'] as const;
