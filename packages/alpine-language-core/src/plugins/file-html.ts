@@ -1,5 +1,5 @@
 import { VueLanguagePlugin } from '@volar/vue-language-core';
-import useVueHtmlFilePlugin from '@volar/vue-language-core/out/plugins/file-html';
+import * as useVueHtmlFilePlugin from '@volar/vue-language-core/out/plugins/file-html';
 
 const plugin: VueLanguagePlugin = (ctx) => {
 
@@ -33,4 +33,4 @@ const plugin: VueLanguagePlugin = (ctx) => {
 		}
 	};
 };
-export default plugin;
+export = plugin;

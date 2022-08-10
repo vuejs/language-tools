@@ -50,6 +50,7 @@ export function getVueCompilerOptions(vueOptions: VueCompilerOptions): _VueCompi
 
 		target: vueOptions.target ?? 3,
 		strictTemplates: vueOptions.strictTemplates ?? false,
+		plugins: vueOptions.plugins ?? [],
 
 		// experimental
 		experimentalRuntimeMode: vueOptions.experimentalRuntimeMode ?? 'runtime-dom',

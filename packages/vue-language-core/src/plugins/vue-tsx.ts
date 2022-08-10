@@ -46,8 +46,9 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				};
 				const tsx = _gen?.tsxGen.value;
 				if (tsx) {
-					embeddedFile.codeGen = tsx.codeGen;
-					embeddedFile.teleportMappings = tsx.teleports;
+					embeddedFile.codeGen.addText(tsx.codeGen.getText());
+					embeddedFile.codeGen.mappings = [...tsx.codeGen.mappings];
+					embeddedFile.teleportMappings = [...tsx.teleports];
 				}
 			}
 			else if (suffix.match(/^\.__VLS_template_format\.tsx$/)) {
@@ -64,7 +65,8 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				embeddedFile.isTsHostFile = false;
 
 				if (_gen?.htmlGen.value) {
-					embeddedFile.codeGen = _gen.htmlGen.value.formatCodeGen;
+					embeddedFile.codeGen.addText(_gen.htmlGen.value.formatCodeGen.getText());
+					embeddedFile.codeGen.mappings = [..._gen.htmlGen.value.formatCodeGen.mappings];
 				}
 			}
 			else if (suffix.match(/^\.__VLS_template\.css$/)) {
@@ -72,7 +74,8 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				embeddedFile.parentFileName = fileName + '.' + sfc.template?.lang;
 
 				if (_gen?.htmlGen.value) {
-					embeddedFile.codeGen = _gen.htmlGen.value.cssCodeGen;
+					embeddedFile.codeGen.addText(_gen.htmlGen.value.cssCodeGen.getText());
+					embeddedFile.codeGen.mappings = [..._gen.htmlGen.value.cssCodeGen.mappings];
 				}
 			}
 		},

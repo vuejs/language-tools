@@ -12,6 +12,7 @@ export type VueCompilerOptions = Partial<_VueCompilerOptions>;
 export interface _VueCompilerOptions {
 	target: 2 | 2.7 | 3;
 	strictTemplates: boolean;
+	plugins: string[];
 
 	// experimental
 	experimentalRuntimeMode: 'runtime-dom' | 'runtime-uni-app';

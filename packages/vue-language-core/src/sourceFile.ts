@@ -10,7 +10,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 
 export type VueLanguagePlugin = (ctx: {
 	modules: {
-		typescript: typeof ts,
+		typescript: typeof import('typescript/lib/tsserverlibrary');
 	},
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: _VueCompilerOptions,
