@@ -5,22 +5,10 @@ import { parseCssClassNames } from './utils/parseCssClassNames';
 import { parseCssVars } from './utils/parseCssVars';
 import { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
 
-import useHtmlFilePlugin from './plugins/file-html';
-import useMdFilePlugin from './plugins/file-md';
-import useVueFilePlugin from './plugins/file-vue';
-import useVueSfcCustomBlocks from './plugins/vue-sfc-customblocks';
-import useVueSfcScriptsFormat from './plugins/vue-sfc-scripts';
-import useVueSfcStyles from './plugins/vue-sfc-styles';
-import useVueSfcTemplate from './plugins/vue-sfc-template';
-import useHtmlPlugin from './plugins/vue-template-html';
-import usePugPlugin from './plugins/vue-template-pug';
-import useVueTsx from './plugins/vue-tsx';
-
 import { CodeGen } from '@volar/code-gen';
 import { Mapping, MappingBase } from '@volar/source-map';
 import * as CompilerDom from '@vue/compiler-dom';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { getVueCompilerOptions } from './utils/ts';
 
 export type VueLanguagePlugin = (ctx: {
 	modules: {
@@ -101,10 +89,9 @@ export interface EmbeddedFile {
 export function createSourceFile(
 	fileName: string,
 	_content: string,
-	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	extraPlugins: VueLanguagePlugin[] = [],
+	plugins: ReturnType<VueLanguagePlugin>[],
 ) {
 
 	// refs
@@ -177,28 +164,6 @@ export function createSourceFile(
 			}
 		}
 	});
-
-	const _plugins: VueLanguagePlugin[] = [
-		...extraPlugins,
-		useVueFilePlugin,
-		useMdFilePlugin,
-		useHtmlFilePlugin,
-		useHtmlPlugin,
-		usePugPlugin,
-		useVueSfcStyles,
-		useVueSfcCustomBlocks,
-		useVueSfcScriptsFormat,
-		useVueSfcTemplate,
-		useVueTsx,
-	];
-	const pluginCtx: Parameters<VueLanguagePlugin>[0] = {
-		modules: {
-			typescript: ts,
-		},
-		compilerOptions,
-		vueCompilerOptions: getVueCompilerOptions(vueCompilerOptions),
-	};
-	const plugins = _plugins.map(plugin => plugin(pluginCtx));
 
 	// computeds
 	const pluginEmbeddedFiles = plugins.map(plugin => {

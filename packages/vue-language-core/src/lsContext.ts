@@ -1,11 +1,55 @@
 import { posix as path } from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { LanguageServiceHost } from './types';
+import { LanguageServiceHost, VueCompilerOptions } from './types';
 import * as localTypes from './utils/localTypes';
 import { createSourceFile, EmbeddedFile, VueLanguagePlugin } from './sourceFile';
 import { createDocumentRegistry } from './documentRegistry';
 
+import useHtmlFilePlugin from './plugins/file-html';
+import useMdFilePlugin from './plugins/file-md';
+import useVueFilePlugin from './plugins/file-vue';
+import useVueSfcCustomBlocks from './plugins/vue-sfc-customblocks';
+import useVueSfcScriptsFormat from './plugins/vue-sfc-scripts';
+import useVueSfcStyles from './plugins/vue-sfc-styles';
+import useVueSfcTemplate from './plugins/vue-sfc-template';
+import useHtmlPlugin from './plugins/vue-template-html';
+import usePugPlugin from './plugins/vue-template-pug';
+import useVueTsx from './plugins/vue-tsx';
+import { getVueCompilerOptions } from './utils/ts';
+
 export type LanguageContext = ReturnType<typeof createLanguageContext>;
+
+export function getPlugins(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	compilerOptions: ts.CompilerOptions,
+	vueCompilerOptions: VueCompilerOptions,
+	extraPlugins: VueLanguagePlugin[] = [],
+) {
+
+	const _plugins: VueLanguagePlugin[] = [
+		...extraPlugins,
+		useVueFilePlugin,
+		useMdFilePlugin,
+		useHtmlFilePlugin,
+		useHtmlPlugin,
+		usePugPlugin,
+		useVueSfcStyles,
+		useVueSfcCustomBlocks,
+		useVueSfcScriptsFormat,
+		useVueSfcTemplate,
+		useVueTsx,
+	];
+	const pluginCtx: Parameters<VueLanguagePlugin>[0] = {
+		modules: {
+			typescript: ts,
+		},
+		compilerOptions,
+		vueCompilerOptions: getVueCompilerOptions(vueCompilerOptions),
+	};
+	const plugins = _plugins.map(plugin => plugin(pluginCtx));
+
+	return plugins;
+}
 
 export function createLanguageContext(
 	host: LanguageServiceHost,
@@ -62,10 +106,9 @@ export function createLanguageContext(
 								documentRegistry.set(vueFileName, createSourceFile(
 									vueFileName,
 									scriptSnapshot.getText(0, scriptSnapshot.getLength()),
-									compilerOptions,
 									vueCompilerOptions,
 									ts,
-									extraPlugins,
+									plugins,
 								));
 							}
 						}
@@ -116,6 +159,7 @@ export function createLanguageContext(
 			}
 		},
 	};
+	const plugins = getPlugins(ts, compilerOptions, vueCompilerOptions, extraPlugins);
 
 	return {
 		typescriptLanguageServiceHost: new Proxy(_tsHost as ts.LanguageServiceHost, {
@@ -130,6 +174,7 @@ export function createLanguageContext(
 				return target[property];
 			},
 		}),
+		plugins,
 	};
 
 	function update() {
@@ -221,10 +266,9 @@ export function createLanguageContext(
 				documentRegistry.set(fileName, createSourceFile(
 					fileName,
 					scriptText,
-					compilerOptions,
 					vueCompilerOptions,
 					ts,
-					extraPlugins,
+					plugins,
 				));
 				tsFileUpdated = true;
 			}
