@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "@volar/vue-test-workspace",
-	"version": "0.39.5",
+	"version": "0.40.0",
 	"license": "MIT",
 	"devDependencies": {
 		"vue": "^3.2.37"
