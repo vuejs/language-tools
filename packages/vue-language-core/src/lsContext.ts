@@ -5,15 +5,15 @@ import * as localTypes from './utils/localTypes';
 import { createSourceFile, EmbeddedFile, VueLanguagePlugin } from './sourceFile';
 import { createDocumentRegistry } from './documentRegistry';
 
-import useHtmlFilePlugin from './plugins/file-html';
-import useMdFilePlugin from './plugins/file-md';
-import useVueFilePlugin from './plugins/file-vue';
-import useVueSfcCustomBlocks from './plugins/vue-sfc-customblocks';
-import useVueSfcScriptsFormat from './plugins/vue-sfc-scripts';
-import useVueSfcStyles from './plugins/vue-sfc-styles';
-import useVueSfcTemplate from './plugins/vue-sfc-template';
-import useHtmlPlugin from './plugins/vue-template-html';
-import usePugPlugin from './plugins/vue-template-pug';
+import * as useHtmlFilePlugin from './plugins/file-html';
+import * as  useMdFilePlugin from './plugins/file-md';
+import * as  useVueFilePlugin from './plugins/file-vue';
+import * as  useVueSfcCustomBlocks from './plugins/vue-sfc-customblocks';
+import * as  useVueSfcScriptsFormat from './plugins/vue-sfc-scripts';
+import * as  useVueSfcStyles from './plugins/vue-sfc-styles';
+import * as  useVueSfcTemplate from './plugins/vue-sfc-template';
+import * as  useHtmlPlugin from './plugins/vue-template-html';
+import * as  usePugPlugin from './plugins/vue-template-pug';
 import useVueTsx from './plugins/vue-tsx';
 import { getVueCompilerOptions } from './utils/ts';
 
@@ -21,13 +21,13 @@ export type LanguageContext = ReturnType<typeof createLanguageContext>;
 
 export function getPlugins(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
+	rootDir: string,
 	compilerOptions: ts.CompilerOptions,
-	vueCompilerOptions: VueCompilerOptions,
+	_vueCompilerOptions: VueCompilerOptions,
 	extraPlugins: VueLanguagePlugin[] = [],
 ) {
 
 	const _plugins: VueLanguagePlugin[] = [
-		...extraPlugins,
 		useVueFilePlugin,
 		useMdFilePlugin,
 		useHtmlFilePlugin,
@@ -38,13 +38,25 @@ export function getPlugins(
 		useVueSfcScriptsFormat,
 		useVueSfcTemplate,
 		useVueTsx,
+		...extraPlugins,
 	];
+	const vueCompilerOptions = getVueCompilerOptions(_vueCompilerOptions);
+	for (const pluginPath of vueCompilerOptions.plugins) {
+		try {
+			const importPath = require.resolve(pluginPath, { paths: [rootDir] });
+			const plugin = require(importPath);
+			_plugins.push(plugin);
+		}
+		catch (error) {
+			console.error(error);
+		}
+	}
 	const pluginCtx: Parameters<VueLanguagePlugin>[0] = {
 		modules: {
 			typescript: ts,
 		},
 		compilerOptions,
-		vueCompilerOptions: getVueCompilerOptions(vueCompilerOptions),
+		vueCompilerOptions: vueCompilerOptions,
 	};
 	const plugins = _plugins.map(plugin => plugin(pluginCtx));
 
@@ -76,9 +88,9 @@ export function createLanguageContext(
 
 	const documentRegistry = createDocumentRegistry();
 	const compilerOptions = host.getCompilationSettings();
-	const vueCompilerOptions = host.getVueCompilationSettings();
+	const vueCompilerOptions = getVueCompilerOptions(host.getVueCompilationSettings());
 	const tsFileVersions = new Map<string, string>();
-	const sharedTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(vueCompilerOptions.target ?? 3));
+	const sharedTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(vueCompilerOptions.target));
 	const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
 	const fileVersions = new WeakMap<EmbeddedFile, string>();
 	const _tsHost: Partial<ts.LanguageServiceHost> = {
@@ -159,7 +171,7 @@ export function createLanguageContext(
 			}
 		},
 	};
-	const plugins = getPlugins(ts, compilerOptions, vueCompilerOptions, extraPlugins);
+	const plugins = getPlugins(ts, host.getCurrentDirectory(), compilerOptions, vueCompilerOptions, extraPlugins);
 
 	return {
 		typescriptLanguageServiceHost: new Proxy(_tsHost as ts.LanguageServiceHost, {

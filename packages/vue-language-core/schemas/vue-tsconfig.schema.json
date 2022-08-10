@@ -22,6 +22,11 @@
 					"default": false,
 					"markdownDescription": "Strict props, component type-checking in templates."
 				},
+				"plugins": {
+					"type": "array",
+					"default": [],
+					"markdownDescription": "Plugins to be used in the SFC compiler."
+				},
 				"experimentalRuntimeMode": {
 					"type": "string",
 					"default": "runtime-dom",
