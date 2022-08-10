@@ -441,7 +441,7 @@ export function createSourceFile(
 				startTagEnd: block.loc.start.offset,
 				endTagStart: block.loc.end.offset,
 				content: block.content,
-				lang: getValidScriptSyntax(block.lang ?? 'js'),
+				lang: block.lang ?? 'js',
 				src: block.src,
 			} : null;
 
@@ -461,7 +461,7 @@ export function createSourceFile(
 				startTagEnd: block.loc.start.offset,
 				endTagStart: block.loc.end.offset,
 				content: block.content,
-				lang: getValidScriptSyntax(block.lang ?? 'js'),
+				lang: block.lang ?? 'js',
 			} : null;
 
 			if (sfc.scriptSetup && newData) {
@@ -530,15 +530,4 @@ export function createSourceFile(
 			}
 		}
 	}
-}
-
-const validScriptSyntaxs = ['js', 'jsx', 'ts', 'tsx'] as const;
-
-type ValidScriptSyntax = typeof validScriptSyntaxs[number];
-
-function getValidScriptSyntax(syntax: string): ValidScriptSyntax {
-	if (validScriptSyntaxs.includes(syntax as ValidScriptSyntax)) {
-		return syntax as ValidScriptSyntax;
-	}
-	return 'js';
 }

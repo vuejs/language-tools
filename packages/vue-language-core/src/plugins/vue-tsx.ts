@@ -21,7 +21,9 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 
 			if (!fileName.endsWith('.html')) {
 				const _gen = useGen(fileName, sfc);
-				fileNames.push(fileName + '.' + _gen?.lang.value);
+				if (_gen?.lang.value && ['js', 'ts', 'jsx', 'tsx'].includes(_gen.lang.value)) {
+					fileNames.push(fileName + '.' + _gen.lang.value);
+				}
 			}
 			if (sfc.template) {
 				fileNames.push(fileName + '.__VLS_template_format.tsx');
