@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import type * as ts2 from '@volar/typescript-language-service';
-import { isIntrinsicElement } from '@volar/vue-language-core';
+import { getVueCompilerOptions, isIntrinsicElement } from '@volar/vue-language-core';
 import { scriptRanges } from '@volar/vue-language-core';
 import * as vue from '@volar/vue-language-core';
 import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
@@ -75,7 +75,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 	>();
 	const autoImportPositions = new WeakSet<vscode.Position>();
 	const tokenTypes = new Map(options.getSemanticTokenLegend().tokenTypes.map((t, i) => [t, i]));
-	const runtimeMode = options.vueLsHost.getVueCompilationSettings().experimentalRuntimeMode;
+	const runtimeMode = getVueCompilerOptions(options.vueLsHost.getVueCompilationSettings()).experimentalRuntimeMode;
 
 	return {
 

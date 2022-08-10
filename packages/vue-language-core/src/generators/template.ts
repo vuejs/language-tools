@@ -3,7 +3,7 @@ import { CodeGen } from '@volar/code-gen';
 import { camelize, hyphenate, capitalize, isHTMLTag, isSVGTag } from '@vue/shared';
 import * as CompilerDOM from '@vue/compiler-dom';
 import * as CompilerCore from '@vue/compiler-core';
-import { EmbeddedFileMappingData } from '../types';
+import { EmbeddedFileMappingData, _VueCompilerOptions } from '../types';
 import { colletVars, walkInterpolationFragment } from '../utils/transform';
 import { parseBindingRanges } from '../parsers/scriptSetupRanges';
 
@@ -53,18 +53,13 @@ function _isHTMLTag(tag: string) {
 		|| tag === 'component';
 }
 
-export function isIntrinsicElement(runtimeMode: 'runtime-dom' | 'runtime-uni-app' = 'runtime-dom', tag: string) {
+export function isIntrinsicElement(runtimeMode: 'runtime-dom' | 'runtime-uni-app', tag: string) {
 	return runtimeMode === 'runtime-dom' ? (_isHTMLTag(tag) || isSVGTag(tag)) : ['block', 'component', 'template', 'slot'].includes(tag);
 }
 
 export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	compilerOptions: {
-		target: number,
-		strictTemplates: boolean,
-		experimentalRuntimeMode: 'runtime-dom' | 'runtime-uni-app' | undefined,
-		experimentalAllowTypeNarrowingInInlineHandlers: boolean,
-	},
+	vueCompilerOptions: _VueCompilerOptions,
 	sourceLang: string,
 	templateAst: CompilerDOM.RootNode,
 	hasScriptSetup: boolean,
@@ -118,7 +113,7 @@ export function generate(
 
 	for (const tagName in tagOffsetsMap) {
 
-		if (isIntrinsicElement(compilerOptions.experimentalRuntimeMode, tagName))
+		if (isIntrinsicElement(vueCompilerOptions.experimentalRuntimeMode, tagName))
 			continue;
 
 		const tagOffsets = tagOffsetsMap[tagName];
@@ -159,7 +154,7 @@ export function generate(
 
 			tsCodeGen.addText(`declare const ${var_componentVar}: `);
 
-			if (!compilerOptions.strictTemplates)
+			if (!vueCompilerOptions.strictTemplates)
 				tsCodeGen.addText(`__VLS_types.ConvertInvalidJsxElement<`);
 
 			for (const name of names) {
@@ -171,7 +166,7 @@ export function generate(
 
 			tsCodeGen.addText(`unknown`);
 
-			if (!compilerOptions.strictTemplates)
+			if (!vueCompilerOptions.strictTemplates)
 				tsCodeGen.addText(`>`);
 
 			tsCodeGen.addText(`;\n`);
@@ -199,8 +194,8 @@ export function generate(
 		tsCodeGen.addText(`declare const ${var_emit}: __VLS_types.ExtractEmit2<typeof ${var_componentVar}>;\n`);
 
 		const name1 = tagName; // hello-world
-		const name2 = isIntrinsicElement(compilerOptions.experimentalRuntimeMode, tagName) ? tagName : camelize(tagName); // helloWorld
-		const name3 = isIntrinsicElement(compilerOptions.experimentalRuntimeMode, tagName) ? tagName : capitalize(name2); // HelloWorld
+		const name2 = isIntrinsicElement(vueCompilerOptions.experimentalRuntimeMode, tagName) ? tagName : camelize(tagName); // helloWorld
+		const name3 = isIntrinsicElement(vueCompilerOptions.experimentalRuntimeMode, tagName) ? tagName : capitalize(name2); // HelloWorld
 		const componentNames = new Set([name1, name2, name3]);
 
 		/* Completion */
@@ -212,7 +207,7 @@ export function generate(
 		tsCodeGen.addText('/* Completion: Props */\n');
 		for (const name of componentNames) {
 			tsCodeGen.addText('// @ts-ignore\n');
-			tsCodeGen.addText(`(<${isIntrinsicElement(compilerOptions.experimentalRuntimeMode, tagName) ? tagName : var_componentVar} ${searchTexts.getPropsCompletion(name)}/>);\n`);
+			tsCodeGen.addText(`(<${isIntrinsicElement(vueCompilerOptions.experimentalRuntimeMode, tagName) ? tagName : var_componentVar} ${searchTexts.getPropsCompletion(name)}/>);\n`);
 		}
 
 		tagResolves[tagName] = {
@@ -352,7 +347,7 @@ export function generate(
 						formatBrackets.round,
 					);
 
-					if (compilerOptions.experimentalAllowTypeNarrowingInInlineHandlers) {
+					if (vueCompilerOptions.experimentalAllowTypeNarrowingInInlineHandlers) {
 						blockConditions.push(branch.condition.content);
 						addedBlockCondition = true;
 					}
@@ -482,7 +477,7 @@ export function generate(
 		tsCodeGen.addText(`{\n`);
 		{
 
-			const _isIntrinsicElement = isIntrinsicElement(compilerOptions.experimentalRuntimeMode, node.tag);
+			const _isIntrinsicElement = isIntrinsicElement(vueCompilerOptions.experimentalRuntimeMode, node.tag);
 			const tagText = tagResolves[node.tag]?.component ?? node.tag;
 			const fullTagStart = tsCodeGen.getText().length;
 			const tagCapabilities = {
@@ -886,7 +881,7 @@ export function generate(
 						? prop.arg.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY
 							? prop.arg.content
 							: prop.arg.loc.source
-						: getModelValuePropName(node, compilerOptions.target);
+						: getModelValuePropName(node, vueCompilerOptions.target);
 
 				if (prop.modifiers.some(m => m === 'prop' || m === 'attr')) {
 					propName_1 = propName_1.substring(1);
@@ -894,7 +889,7 @@ export function generate(
 
 				const propName_2 = !isStatic ? propName_1 : hyphenate(propName_1) === propName_1 ? camelize(propName_1) : propName_1;
 
-				if (compilerOptions.strictTemplates) {
+				if (vueCompilerOptions.strictTemplates) {
 					propName_1 = propName_2;
 				}
 
@@ -1038,7 +1033,7 @@ export function generate(
 				const propName = hyphenate(prop.name) === prop.name ? camelize(prop.name) : prop.name;
 				let propName2 = prop.name;
 
-				if (compilerOptions.strictTemplates) {
+				if (vueCompilerOptions.strictTemplates) {
 					propName2 = propName;
 				}
 

@@ -56,7 +56,7 @@ export function getVueCompilerOptions(vueOptions: VueCompilerOptions): _VueCompi
 		experimentalImplicitWrapComponentOptionsWithDefineComponent: vueOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent ?? 'onlyJs',
 		experimentalImplicitWrapComponentOptionsWithVue2Extend: vueOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend ?? 'onlyJs',
 		experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup: vueOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup ?? 'onlyJs',
-		experimentalTemplateCompilerOptions: vueOptions.experimentalTemplateCompilerOptions ?? undefined,
+		experimentalTemplateCompilerOptions: vueOptions.experimentalTemplateCompilerOptions ?? {},
 		experimentalTemplateCompilerOptionsRequirePath: vueOptions.experimentalTemplateCompilerOptionsRequirePath ?? undefined,
 		experimentalDisableTemplateSupport: vueOptions.experimentalDisableTemplateSupport ?? false,
 		experimentalResolveStyleCssClasses: vueOptions.experimentalResolveStyleCssClasses ?? 'scoped',

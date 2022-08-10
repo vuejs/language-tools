@@ -32,7 +32,7 @@ export function generate(
 	teleports: SourceMaps.Mapping<TeleportMappingData>[] = [],
 ) {
 
-	const downgradePropsAndEmitsToSetupReturnOnScriptSetup = (compilerOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup ?? 'onlyJs') === 'onlyJs'
+	const downgradePropsAndEmitsToSetupReturnOnScriptSetup = compilerOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup === 'onlyJs'
 		? lang === 'js' || lang === 'jsx'
 		: !!compilerOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup;
 	const vueVersion = compilerOptions.target ?? 3;
@@ -781,14 +781,14 @@ export function generate(
 		let shimComponentOptionsMode: 'defineComponent' | 'Vue.extend' | false = false;
 
 		if (
-			(compilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend ?? 'onlyJs') === 'onlyJs'
+			compilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend === 'onlyJs'
 				? lang === 'js' || lang === 'jsx'
 				: !!compilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend
 		) {
 			shimComponentOptionsMode = 'Vue.extend';
 		}
 		if (
-			(compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent ?? 'onlyJs') === 'onlyJs'
+			compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent === 'onlyJs'
 				? lang === 'js' || lang === 'jsx'
 				: !!compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent
 		) {
