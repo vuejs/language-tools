@@ -25,8 +25,8 @@ export default function (options: {
 				return;
 
 			const templateFormatScript = vueDocument.file.allEmbeddeds.find(e =>
-				e.file.fileName.endsWith('.__VLS_template.format.tsx')
-				|| e.file.fileName.endsWith('.__VLS_template.format.jsx')
+				e.file.fileName.endsWith('.__VLS_template_format.tsx')
+				|| e.file.fileName.endsWith('.__VLS_template_format.jsx')
 			);
 			if (!templateFormatScript)
 				return;

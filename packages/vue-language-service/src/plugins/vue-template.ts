@@ -718,10 +718,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 			cache = new Map<string, { item: vscode.CompletionItem | undefined, bind: vscode.CompletionItem[], on: vscode.CompletionItem[]; }>();
 
-			const file = sourceFile.file.allEmbeddeds.find(e =>
-				e.file.fileName.endsWith('.__VLS_template.tsx')
-				|| e.file.fileName.endsWith('.__VLS_template.jsx')
-			)?.file;
+			const file = sourceFile.file.allEmbeddeds.find(e => e.file.fileName === sourceFile.file.tsFileName)?.file;
 			const document = file ? sourceFile.embeddedDocumentsMap.get(file) : undefined;
 			const templateTagNames = [...sourceFile.getTemplateTagsAndAttrs().tags.keys()];
 

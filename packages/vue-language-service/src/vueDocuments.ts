@@ -318,7 +318,7 @@ export function parseVueDocument(
 			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
 		};
 
-		const file = vueFile.allEmbeddeds.find(e => e.file.fileName.indexOf('.__VLS_template.') >= 0)?.file;
+		const file = vueFile.allEmbeddeds.find(e => e.file.fileName === vueFile.tsFileName)?.file;
 		if (file && file.codeGen.getText().indexOf(vue.SearchTexts.Components) >= 0) {
 			const document = embeddedDocumentsMap.get(file);
 

@@ -26,7 +26,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 			}
 			if (sfc.template) {
 				fileNames.push(fileName + '.__VLS_template_format.tsx');
-				fileNames.push(fileName + '.__VLS_template.css');
+				fileNames.push(fileName + '.__VLS_template_style.css');
 			}
 
 			return fileNames;
