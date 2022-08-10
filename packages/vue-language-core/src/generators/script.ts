@@ -5,7 +5,7 @@ import { posix as path } from 'path';
 import type * as templateGen from '../generators/template';
 import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
-import { useCssVars, useStyleCssClasses } from '../plugins/vue-tsx';
+import { collectCssVars, collectStyleCssClasses } from '../plugins/vue-tsx';
 import { Sfc } from '../sourceFile';
 import type { EmbeddedFileMappingData, TeleportMappingData } from '../types';
 import { TextRange, VueCompilerOptions } from '../types';
@@ -23,9 +23,9 @@ export function generate(
 	lang: string,
 	scriptRanges: ScriptRanges | undefined,
 	scriptSetupRanges: ScriptSetupRanges | undefined,
-	cssVars: ReturnType<typeof useCssVars>['value'],
-	cssModuleClasses: ReturnType<typeof useStyleCssClasses>['value'],
-	cssScopedClasses: ReturnType<typeof useStyleCssClasses>['value'],
+	cssVars: ReturnType<typeof collectCssVars>,
+	cssModuleClasses: ReturnType<typeof collectStyleCssClasses>,
+	cssScopedClasses: ReturnType<typeof collectStyleCssClasses>,
 	htmlGen: ReturnType<typeof templateGen['generate']> | undefined,
 	compilerOptions: VueCompilerOptions,
 	codeGen = new CodeGen<EmbeddedFileMappingData>(),

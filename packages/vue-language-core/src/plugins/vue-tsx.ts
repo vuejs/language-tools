@@ -108,7 +108,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 			}
 			return lang;
 		});
-		const cssVars = useCssVars(sfc);
+		const cssVars = computed(() => collectCssVars(sfc));
 		const scriptRanges = computed(() =>
 			sfc.scriptAst
 				? parseScriptRanges(ts, sfc.scriptAst, !!sfc.scriptSetup, false, false)
@@ -119,11 +119,11 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				? parseScriptSetupRanges(ts, sfc.scriptSetupAst)
 				: undefined
 		);
-		const cssModuleClasses = useStyleCssClasses(sfc, style => !!style.module);
-		const cssScopedClasses = useStyleCssClasses(sfc, style => {
+		const cssModuleClasses = computed(() => collectStyleCssClasses(sfc, style => !!style.module));
+		const cssScopedClasses = computed(() => collectStyleCssClasses(sfc, style => {
 			const setting = vueCompilerOptions.experimentalResolveStyleCssClasses;
 			return (setting === 'scoped' && style.scoped) || setting === 'always';
-		});
+		}));
 		const htmlGen = computed(() => {
 
 			if (!sfc.templateAst)
@@ -161,41 +161,37 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 };
 export default plugin;
 
-export function useStyleCssClasses(sfc: Sfc, condition: (style: Sfc['styles'][number]) => boolean) {
-	return computed(() => {
-		const result: {
-			style: typeof sfc.styles[number],
-			index: number,
-			classNameRanges: TextRange[],
-			classNames: string[],
-		}[] = [];
-		for (let i = 0; i < sfc.styles.length; i++) {
-			const style = sfc.styles[i];
-			if (condition(style)) {
-				const classNameRanges = [...parseCssClassNames(style.content)];
-				result.push({
-					style: style,
-					index: i,
-					classNameRanges: classNameRanges,
-					classNames: classNameRanges.map(range => style.content.substring(range.start + 1, range.end)),
-				});
-			}
-		}
-		return result;
-	});
-}
-
-export function useCssVars(sfc: Sfc) {
-	return computed(() => {
-		const result: { style: typeof sfc.styles[number], styleIndex: number, ranges: TextRange[]; }[] = [];
-		for (let i = 0; i < sfc.styles.length; i++) {
-			const style = sfc.styles[i];
+export function collectStyleCssClasses(sfc: Sfc, condition: (style: Sfc['styles'][number]) => boolean) {
+	const result: {
+		style: typeof sfc.styles[number],
+		index: number,
+		classNameRanges: TextRange[],
+		classNames: string[],
+	}[] = [];
+	for (let i = 0; i < sfc.styles.length; i++) {
+		const style = sfc.styles[i];
+		if (condition(style)) {
+			const classNameRanges = [...parseCssClassNames(style.content)];
 			result.push({
 				style: style,
-				styleIndex: i,
-				ranges: [...parseCssVars(style.content)],
+				index: i,
+				classNameRanges: classNameRanges,
+				classNames: classNameRanges.map(range => style.content.substring(range.start + 1, range.end)),
 			});
 		}
-		return result;
-	});
+	}
+	return result;
+}
+
+export function collectCssVars(sfc: Sfc) {
+	const result: { style: typeof sfc.styles[number], styleIndex: number, ranges: TextRange[]; }[] = [];
+	for (let i = 0; i < sfc.styles.length; i++) {
+		const style = sfc.styles[i];
+		result.push({
+			style: style,
+			styleIndex: i,
+			ranges: [...parseCssVars(style.content)],
+		});
+	}
+	return result;
 }
