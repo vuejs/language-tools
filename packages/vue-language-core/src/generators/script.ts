@@ -551,8 +551,11 @@ export function generate(
 			codeGen.addText(`},\n`); // setup() {
 			codeGen.addText(`});\n`); // defineComponent({
 		}
+		else if (sfc.script) {
+			codeGen.addText(`let __VLS_component!: typeof import('./${path.basename(fileName)}')['default'];\n`);
+		}
 		else {
-			codeGen.addText(`let __VLS_component!: typeof import('./${path.basename(fileName)}')['default'];`);
+			codeGen.addText(`const __VLS_component = (await import('${vueLibName}')).defineComponent({});\n`);
 		}
 	}
 	function writeExportOptions() {
