@@ -71,7 +71,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 					embeddedFile.codeGen.mappings = [..._gen.htmlGen.value.formatCodeGen.mappings];
 				}
 			}
-			else if (suffix.match(/^\.__VLS_template\.css$/)) {
+			else if (suffix.match(/^\.__VLS_template_style\.css$/)) {
 
 				embeddedFile.parentFileName = fileName + '.' + sfc.template?.lang;
 
