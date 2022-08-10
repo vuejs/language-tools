@@ -6,6 +6,7 @@ import * as CompilerCore from '@vue/compiler-core';
 import { EmbeddedFileMappingData, _VueCompilerOptions } from '../types';
 import { colletVars, walkInterpolationFragment } from '../utils/transform';
 import { parseBindingRanges } from '../parsers/scriptSetupRanges';
+import { SearchTexts } from '../utils/string';
 
 const capabilitiesSet = {
 	all: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
@@ -64,10 +65,6 @@ export function generate(
 	templateAst: CompilerDOM.RootNode,
 	hasScriptSetup: boolean,
 	cssScopedClasses: string[] = [],
-	searchTexts: {
-		getEmitCompletion(tag: string): string,
-		getPropsCompletion(tag: string): string,
-	},
 ) {
 
 	const tsCodeGen = new CodeGen<EmbeddedFileMappingData>();
@@ -89,6 +86,7 @@ export function generate(
 		offsets: number[],
 	} | undefined> = {};
 	const localVars: Record<string, number> = {};
+	const tempVars: ReturnType<typeof walkInterpolationFragment>[] = [];
 	const identifiers = new Set<string>();
 	const scopedClasses: { className: string, offset: number; }[] = [];
 	const blockConditions: string[] = [];
@@ -202,12 +200,12 @@ export function generate(
 		tsCodeGen.addText('/* Completion: Emits */\n');
 		for (const name of componentNames) {
 			tsCodeGen.addText('// @ts-ignore\n');
-			tsCodeGen.addText(`${var_emit}('${searchTexts.getEmitCompletion(name)}');\n`);
+			tsCodeGen.addText(`${var_emit}('${SearchTexts.EmitCompletion(name)}');\n`);
 		}
 		tsCodeGen.addText('/* Completion: Props */\n');
 		for (const name of componentNames) {
 			tsCodeGen.addText('// @ts-ignore\n');
-			tsCodeGen.addText(`(<${isIntrinsicElement(vueCompilerOptions.experimentalRuntimeMode, tagName) ? tagName : var_componentVar} ${searchTexts.getPropsCompletion(name)}/>);\n`);
+			tsCodeGen.addText(`(<${isIntrinsicElement(vueCompilerOptions.experimentalRuntimeMode, tagName) ? tagName : var_componentVar} ${SearchTexts.PropsCompletion(name)}/>);\n`);
 		}
 
 		tagResolves[tagName] = {
@@ -264,6 +262,8 @@ export function generate(
 	}
 	tsCodeGen.addText(`};\n`);
 
+	writeInterpolationVarsExtraCompletion();
+
 	return {
 		codeGen: tsCodeGen,
 		formatCodeGen: tsFormatCodeGen,
@@ -293,7 +293,6 @@ export function generate(
 			const context = node.loc.source.substring(2, node.loc.source.length - 2);
 			let start = node.loc.start.offset + 2;
 
-			tsCodeGen.addText(`(`);
 			writeInterpolation(
 				context,
 				start,
@@ -301,15 +300,15 @@ export function generate(
 					vueTag: 'template',
 					capabilities: capabilitiesSet.all,
 				},
-				'',
-				'',
+				'(',
+				');\n',
 			);
+			writeInterpolationVarsExtraCompletion();
 			writeFormatCode(
 				context,
 				start,
 				formatBrackets.curly,
 			);
-			tsCodeGen.addText(`);\n`);
 		}
 		else if (node.type === CompilerDOM.NodeTypes.IF) {
 			// v-if / v-else-if / v-else
@@ -351,12 +350,14 @@ export function generate(
 						blockConditions.push(branch.condition.content);
 						addedBlockCondition = true;
 					}
+
+					tsCodeGen.addText(` {\n`);
+					writeInterpolationVarsExtraCompletion();
+					for (const childNode of branch.children) {
+						visitNode(childNode, parentEl);
+					}
+					tsCodeGen.addText('}\n');
 				}
-				tsCodeGen.addText(` {\n`);
-				for (const childNode of branch.children) {
-					visitNode(childNode, parentEl);
-				}
-				tsCodeGen.addText('}\n');
 
 				if (addedBlockCondition) {
 					blockConditions[blockConditions.length - 1] = `!(${blockConditions[blockConditions.length - 1]})`;
@@ -413,14 +414,17 @@ export function generate(
 					source.loc.start.offset,
 					formatBrackets.empty,
 				);
-			}
-			tsCodeGen.addText(`) {\n`);
 
-			for (const childNode of node.children) {
-				visitNode(childNode, parentEl);
-			}
+				tsCodeGen.addText(`) {\n`);
 
-			tsCodeGen.addText('}\n');
+				writeInterpolationVarsExtraCompletion();
+
+				for (const childNode of node.children) {
+					visitNode(childNode, parentEl);
+				}
+
+				tsCodeGen.addText('}\n');
+			}
 
 			for (const varName of forBlockVars)
 				localVars[varName]--;
@@ -758,6 +762,7 @@ export function generate(
 							appendExpressionNode(prop, prop_2.value);
 						}
 						tsCodeGen.addText(`};\n`);
+						writeInterpolationVarsExtraCompletion();
 					}
 				}
 				else if (
@@ -830,7 +835,7 @@ export function generate(
 									capabilities: capabilitiesSet.all,
 								},
 								prefix,
-								suffix,
+								suffix
 							);
 							writeFormatCode(
 								expNode.content,
@@ -844,6 +849,8 @@ export function generate(
 					}
 				}
 			}
+
+			writeInterpolationVarsExtraCompletion();
 
 			function tryWriteInstance() {
 
@@ -1310,6 +1317,7 @@ export function generate(
 					tsCodeGen.addText(`const ${varComponentInstance} = new ${tag.component}({ `);
 					writeProps(parentEl, false, 'slots');
 					tsCodeGen.addText(`});\n`);
+					writeInterpolationVarsExtraCompletion();
 					tsCodeGen.addText(`declare const ${varSlots}: __VLS_types.ExtractComponentSlots<typeof ${varComponentInstance}>;\n`);
 				}
 
@@ -1389,6 +1397,7 @@ export function generate(
 						'',
 					);
 					tsCodeGen.addText(`]`);
+					writeInterpolationVarsExtraCompletion();
 				}
 				const diagEnd = tsCodeGen.getText().length;
 				tsCodeGen.addMapping2({
@@ -1495,6 +1504,7 @@ export function generate(
 					},
 				});
 				tsCodeGen.addText(`;\n`);
+				writeInterpolationVarsExtraCompletion();
 			}
 		}
 	}
@@ -1517,6 +1527,7 @@ export function generate(
 					')',
 				);
 				tsCodeGen.addText(`;\n`);
+				writeInterpolationVarsExtraCompletion();
 			}
 		}
 	}
@@ -1599,6 +1610,7 @@ export function generate(
 					')',
 				);
 				tsCodeGen.addText(`;\n`);
+				writeInterpolationVarsExtraCompletion();
 				break;
 			}
 		}
@@ -1663,6 +1675,8 @@ export function generate(
 			}
 		}
 		tsCodeGen.addText(`};\n`);
+
+		writeInterpolationVarsExtraCompletion();
 
 		if (hasDefaultBind) {
 			tsCodeGen.addText(`var ${varSlot}!: typeof ${varDefaultBind} & typeof ${varBinds};\n`);
@@ -1831,7 +1845,7 @@ export function generate(
 		prefix: string,
 		suffix: string,
 	) {
-		walkInterpolationFragment(ts, prefix + mapCode + suffix, (frag, fragOffset, isJustForErrorMapping) => {
+		const vars = walkInterpolationFragment(ts, prefix + mapCode + suffix, (frag, fragOffset, isJustForErrorMapping) => {
 			if (fragOffset === undefined) {
 				tsCodeGen.addText(frag);
 			}
@@ -1872,6 +1886,36 @@ export function generate(
 				tsCodeGen.addText(addSubfix);
 			}
 		}, localVars, identifiers);
+		if (sourceOffset !== undefined) {
+			for (const v of vars) {
+				v.offset = sourceOffset + v.offset - prefix.length;
+			}
+			if (vars.length) {
+				tempVars.push(vars);
+			}
+		}
+	}
+	function writeInterpolationVarsExtraCompletion() {
+
+		if (!tempVars.length)
+			return;
+
+		tsCodeGen.addText('[');
+		for (const _vars of tempVars) {
+			for (const v of _vars) {
+				tsCodeGen.addCode2(v.text, v.offset, {
+					vueTag: 'template',
+					capabilities: {
+						completion: {
+							additional: true,
+						},
+					},
+				});
+				tsCodeGen.addText(',');
+			}
+		}
+		tsCodeGen.addText('];\n');
+		tempVars.length = 0;
 	}
 	function writeFormatCode(mapCode: string, sourceOffset: number, formatWrapper: [string, string]) {
 		tsFormatCodeGen.addText(formatWrapper[0]);

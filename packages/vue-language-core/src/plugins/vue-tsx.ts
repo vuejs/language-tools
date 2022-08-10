@@ -7,7 +7,6 @@ import { Sfc, VueLanguagePlugin } from '../sourceFile';
 import { TextRange } from '../types';
 import { parseCssClassNames } from '../utils/parseCssClassNames';
 import { parseCssVars } from '../utils/parseCssVars';
-import { SearchTexts } from '../utils/string';
 
 const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOptions }) => {
 
@@ -132,10 +131,6 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				sfc.templateAst,
 				!!sfc.scriptSetup,
 				Object.values(cssScopedClasses.value).map(style => style.classNames).flat(),
-				{
-					getEmitCompletion: SearchTexts.EmitCompletion,
-					getPropsCompletion: SearchTexts.PropsCompletion,
-				}
 			);
 		});
 		const tsxGen = computed(() => genScript(

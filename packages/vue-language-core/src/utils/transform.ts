@@ -14,7 +14,6 @@ export function walkInterpolationFragment(
 		isShorthand: boolean,
 		offset: number,
 	}[] = [];
-	// let localVarOffsets: number[] = [];
 
 	const ast = ts.createSourceFile('/foo.ts', code, ts.ScriptTarget.ESNext);
 	const varCb = (id: ts.Identifier, isShorthand: boolean) => {
@@ -39,7 +38,6 @@ export function walkInterpolationFragment(
 	ast.forEachChild(node => walkIdentifiers(ts, node, varCb, localVars));
 
 	ctxVars = ctxVars.sort((a, b) => a.offset - b.offset);
-	// localVarOffsets = localVarOffsets.sort((a, b) => a - b);
 
 	if (ctxVars.length) {
 
@@ -73,6 +71,8 @@ export function walkInterpolationFragment(
 	else {
 		cb(code, 0);
 	}
+
+	return ctxVars;
 }
 
 function walkIdentifiers(

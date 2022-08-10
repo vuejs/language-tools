@@ -39,7 +39,9 @@ export interface EmbeddedFileMappingData {
 			in: boolean,
 			out: boolean,
 		},
-		completion?: boolean,
+		completion?: boolean | {
+			additional: boolean,
+		},
 		semanticTokens?: boolean,
 		referencesCodeLens?: boolean,
 		displayWithLink?: boolean,

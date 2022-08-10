@@ -1,6 +1,6 @@
 <template>
    {{ f }}
-  <!-- ^complete_todo: foo -->
+  <!-- ^complete: foo -->
 </template>
 
 <script lang="ts" setup>

@@ -136,7 +136,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					const plugins = context.getPlugins().sort(sortPlugins);
 
-					for (const [embeddedRange] of sourceMap.getMappedRanges(position, position, data => !!data.capabilities.completion)) {
+					for (const [embeddedRange, data] of sourceMap.getMappedRanges(position, position, data => !!data.capabilities.completion)) {
 
 						for (const plugin of plugins) {
 
@@ -149,7 +149,8 @@ export function register(context: LanguageServiceRuntimeContext) {
 							if (completionContext?.triggerCharacter && !plugin.complete.triggerCharacters?.includes(completionContext.triggerCharacter))
 								continue;
 
-							if (cache!.mainCompletion && (!plugin.complete.isAdditional || cache?.mainCompletion.documentUri !== sourceMap.mappedDocument.uri))
+							const isAdditionalMapping = typeof data.capabilities.completion === 'object' && data.capabilities.completion.additional;
+							if (cache!.mainCompletion && ((!plugin.complete.isAdditional && !isAdditionalMapping) || cache?.mainCompletion.documentUri !== sourceMap.mappedDocument.uri))
 								continue;
 
 							// avoid duplicate items with .vue and .vue.html
