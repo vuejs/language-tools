@@ -279,7 +279,9 @@ export function createSourceFile(
 				self: e,
 				embeddeds: [],
 			});
-			// 	throw 'Unable to resolve embeddeds: ' + remain[0].parentFileName + ' -> ' + remain[0].file.fileName;
+			if (e.file.parentFileName) {
+				console.error('Unable to resolve embedded: ' + e.file.parentFileName + ' -> ' + e.file.fileName);
+			}
 		}
 
 		return embeddeds;

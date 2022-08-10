@@ -55,7 +55,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 			}
 			else if (suffix.match(/^\.__VLS_template_format\.tsx$/)) {
 
-				embeddedFile.parentFileName = fileName + '.' + sfc.template?.lang;
+				embeddedFile.parentFileName = fileName + '.template.' + sfc.template?.lang;
 				embeddedFile.capabilities = {
 					diagnostics: false,
 					foldingRanges: false,
@@ -73,7 +73,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 			}
 			else if (suffix.match(/^\.__VLS_template_style\.css$/)) {
 
-				embeddedFile.parentFileName = fileName + '.' + sfc.template?.lang;
+				embeddedFile.parentFileName = fileName + '.template.' + sfc.template?.lang;
 
 				if (_gen?.htmlGen.value) {
 					embeddedFile.codeGen.addText(_gen.htmlGen.value.cssCodeGen.getText());
