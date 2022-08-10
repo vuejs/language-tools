@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.40.1 (2022/8/11)
+
+- fix: component context types missing in template if no script block ([#1688](https://github.com/johnsoncodehk/volar/issues/1688))
+- fix: organize imports added invalid code ([#1692](https://github.com/johnsoncodehk/volar/issues/1692))
+- fix: v-else template interpolation missing in virtual code ([#1694](https://github.com/johnsoncodehk/volar/issues/1694))
+- fix: template interpolation formatting broken ([#1697](https://github.com/johnsoncodehk/volar/issues/1697))
+- fix: inline css intellisense not working
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
+
 ## 0.40.0 (2022/8/10)
 
 - feat: support document highlights cross `<script>`, `<template>` ([#462](https://github.com/johnsoncodehk/volar/issues/462))
@@ -9,12 +23,6 @@
 - fix: template scope variables completion missing ([#1284](https://github.com/johnsoncodehk/volar/issues/1284))
 - fix: prefer `defineComponent` instead of `Vue.extend` to wrap component options by default ([#1584](https://github.com/johnsoncodehk/volar/issues/1584))
 - fix: bracket pair colorization in VSCode v1.70 ([#1677](https://github.com/johnsoncodehk/volar/issues/1677))
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 0.39.5 (2022/8/6)
 
