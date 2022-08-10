@@ -1,4 +1,3 @@
-import * as SourceMaps from '@volar/source-map';
 import { VueLanguagePlugin } from '../sourceFile';
 
 const plugin: VueLanguagePlugin = () => {
@@ -29,13 +28,9 @@ const plugin: VueLanguagePlugin = () => {
 					inlayHints: true,
 				};
 				embeddedFile.isTsHostFile = false;
-				embeddedFile.codeGen.addCode(
+				embeddedFile.codeGen.addCode2(
 					customBlock.content,
-					{
-						start: 0,
-						end: customBlock.content.length,
-					},
-					SourceMaps.Mode.Offset,
+					0,
 					{
 						vueTag: customBlock.tag,
 						vueTagIndex: index,

@@ -1,7 +1,7 @@
 import { CodeGen } from '@volar/code-gen';
-import { Mode, SourceMapBase } from '@volar/source-map';
-import { VueLanguagePlugin } from '../sourceFile';
+import { SourceMapBase } from '@volar/source-map';
 import { parse, SFCBlock } from '@vue/compiler-sfc';
+import { VueLanguagePlugin } from '../sourceFile';
 
 const plugin: VueLanguagePlugin = () => {
 
@@ -38,13 +38,9 @@ const plugin: VueLanguagePlugin = () => {
 					.replace(/\[[\s\S]*?\]\([\s\S]*?\)/g, match => ' '.repeat(match.length));
 
 				codeGen.addText('<template>\n');
-				codeGen.addCode(
+				codeGen.addCode2(
 					content,
-					{
-						start: 0,
-						end: content.length,
-					},
-					Mode.Offset,
+					0,
 					undefined,
 				);
 				codeGen.addText('\n</template>');

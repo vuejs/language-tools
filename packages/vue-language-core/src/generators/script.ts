@@ -228,10 +228,9 @@ export function generate(
 		}
 	}
 	function addVirtualCode(vueTag: 'script' | 'scriptSetup', start: number, end: number) {
-		codeGen.addCode(
+		codeGen.addCode2(
 			(vueTag === 'script' ? sfc.script : sfc.scriptSetup)!.content.substring(start, end),
-			{ start, end },
-			SourceMaps.Mode.Offset,
+			start,
 			{
 				vueTag: vueTag,
 				capabilities: {
@@ -247,10 +246,9 @@ export function generate(
 		);
 	}
 	function addExtraReferenceVirtualCode(vueTag: 'script' | 'scriptSetup', start: number, end: number) {
-		codeGen.addCode(
+		codeGen.addCode2(
 			(vueTag === 'scriptSetup' ? sfc.scriptSetup : sfc.script)!.content.substring(start, end),
-			{ start, end },
-			SourceMaps.Mode.Offset,
+			start,
 			{
 				vueTag,
 				capabilities: {
@@ -269,13 +267,9 @@ export function generate(
 		if (!scriptSetupRanges)
 			return;
 
-		codeGen.addCode(
+		codeGen.addCode2(
 			sfc.scriptSetup.content.substring(0, scriptSetupRanges.importSectionEndOffset),
-			{
-				start: 0,
-				end: scriptSetupRanges.importSectionEndOffset,
-			},
-			SourceMaps.Mode.Offset,
+			0,
 			{
 				vueTag: 'scriptSetup',
 				capabilities: {
@@ -310,13 +304,9 @@ export function generate(
 
 			codeGen.addText('const __VLS_setup = async () => {\n');
 
-			codeGen.addCode(
+			codeGen.addCode2(
 				sfc.scriptSetup.content.substring(scriptSetupRanges.importSectionEndOffset),
-				{
-					start: scriptSetupRanges.importSectionEndOffset,
-					end: sfc.scriptSetup.content.length,
-				},
-				SourceMaps.Mode.Offset,
+				scriptSetupRanges.importSectionEndOffset,
 				{
 					vueTag: 'scriptSetup',
 					capabilities: {
@@ -564,10 +554,9 @@ export function generate(
 		if (sfc.script && scriptRanges?.exportDefault?.args) {
 			const args = scriptRanges.exportDefault.args;
 			codeGen.addText(`...(`);
-			codeGen.addCode(
+			codeGen.addCode2(
 				sfc.script.content.substring(args.start, args.end),
-				args,
-				SourceMaps.Mode.Offset,
+				args.start,
 				{
 					vueTag: 'script',
 					capabilities: {
@@ -712,13 +701,9 @@ export function generate(
 								codeGen.addText(frag);
 							}
 							else {
-								codeGen.addCode(
+								codeGen.addCode2(
 									frag,
-									{
-										start: cssBind.start + fragOffset,
-										end: cssBind.start + fragOffset + frag.length,
-									},
-									SourceMaps.Mode.Offset,
+									cssBind.start + fragOffset,
 									{
 										vueTag: 'style',
 										vueTagIndex: cssVar.styleIndex,

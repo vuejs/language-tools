@@ -1273,16 +1273,11 @@ export function generate(
 				const start = prop.arg.loc.source.indexOf(endCrt) + 1;
 				const end = prop.arg.loc.source.lastIndexOf(endCrt);
 				const content = prop.arg.loc.source.substring(start, end);
-				const sourceRange = {
-					start: prop.arg.loc.start.offset + start,
-					end: prop.arg.loc.start.offset + end,
-				};
 
 				cssCodeGen.addText(`${node.tag} { `);
-				cssCodeGen.addCode(
+				cssCodeGen.addCode2(
 					content,
-					sourceRange,
-					SourceMaps.Mode.Offset,
+					prop.arg.loc.start.offset + start,
 					{
 						vueTag: 'template',
 						capabilities: {
