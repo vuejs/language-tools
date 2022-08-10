@@ -77,10 +77,6 @@
 					"type": "boolean",
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1249"
 				},
-				"experimentalUseScriptLeadingCommentInTemplate": {
-					"type": "boolean",
-					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1369"
-				},
 				"experimentalResolveStyleCssClasses": {
 					"enum": [
 						"scoped",
