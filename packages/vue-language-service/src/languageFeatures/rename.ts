@@ -74,7 +74,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 									for (const [teleRange, sideData] of teleport.findTeleports(
 										textEdit.range.start,
 										textEdit.range.end,
-										sideData => !!sideData.capabilities.references,
+										sideData => !!sideData.capabilities.rename,
 									)) {
 
 										if (recursiveChecker.has({ uri: teleport.document.uri, range: { start: teleRange.start, end: teleRange.start } }))

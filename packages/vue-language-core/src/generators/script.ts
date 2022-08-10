@@ -125,7 +125,7 @@ export function generate(
 	}
 
 	return {
-		codeGen: codeGen,
+		codeGen,
 		teleports,
 	};
 
