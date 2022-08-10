@@ -130,8 +130,6 @@ export function generate(
 	};
 
 	function writeScriptSetupTypes() {
-		codeGen.addText(`// __VLS_dont_organize_me\n`);
-		codeGen.addText(`import * as __VLS_types from './__VLS_types.js';\n`);
 		if (usedTypes.DefinePropsToOptions) {
 			codeGen.addText(`type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;\n`);
 			codeGen.addText(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueLibName}').PropType<__VLS_NonUndefinedable<T[K]>> } : { type: import('${vueLibName}').PropType<T[K]>, required: true } };\n`);
@@ -448,9 +446,14 @@ export function generate(
 		if (lang === 'jsx' || lang === 'tsx') {
 
 			codeGen.addText(`function __VLS_template() {\n`);
+
+			codeGen.addText(`import * as __VLS_types from './__VLS_types.js';\n`);
+			codeGen.addText(`const __VLS_types: typeof import('./__VLS_types.js');\n`);
+
 			writeExportOptions();
 			writeConstNameOption();
 			const templateGened = writeTemplateContext();
+
 			codeGen.addText(`}\n`);
 
 			writeComponentForTemplateUsage(templateGened.cssIds);
