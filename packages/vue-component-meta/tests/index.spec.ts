@@ -374,7 +374,7 @@ describe(`vue-component-meta`, () => {
 		expect(xfoo).toBeDefined();
 		expect(xfoo?.default).toBeUndefined();
 		expect(xfoo?.required).toBeTruthy();
-		// expect(xfoo?.type).toEqual('string'); // @todo should be `string` (#1695)
+		expect(xfoo?.type).toEqual('string'); 
 
 		expect(xbar).toBeDefined();
 		// expect(xbar?.default).toBe('""'); // @toto should be empty string
@@ -419,7 +419,7 @@ describe(`vue-component-meta`, () => {
 
 		expect(xfoo).toBeDefined();
 		expect(xfoo?.default).toBeUndefined();
-		// expect(xfoo?.type).toEqual('string'); // @todo should be 'string' (#1695)
+		expect(xfoo?.type).toEqual('string');
 		expect(xfoo?.required).toBeTruthy();
 
 		expect(xbar).toBeDefined();

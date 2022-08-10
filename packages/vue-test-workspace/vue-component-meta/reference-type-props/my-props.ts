@@ -101,13 +101,13 @@ export interface MyProps {
 export const StringRequired = {
 	type: String,
 	required: true,
-}
+} as const
 
 export const StringEmpty = {
 	type: String,
 	value: '',
-}
+} as const
 
 export const StringUndefined = {
 	type: String,
-}
+} as const
