@@ -194,7 +194,14 @@
 					"source.yaml": "yaml",
 					"source.toml": "toml",
 					"source.graphql": "graphql"
-				}
+				},
+				"unbalancedBracketScopes": [
+					"keyword.operator.relational",
+					"storage.type.function.arrow",
+					"keyword.operator.bitwise.shift",
+					"meta.brace.angle",
+					"punctuation.definition.tag"
+				]
 			},
 			{
 				"language": "vue-injection-markdown",
