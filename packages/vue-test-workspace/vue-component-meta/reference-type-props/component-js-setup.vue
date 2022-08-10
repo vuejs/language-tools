@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { StringEmpty, StringRequired, StringUndefined } from './my-props';
 
 defineProps({
   foo: {
@@ -12,6 +13,9 @@ defineProps({
   baz: {
     type: String
   },
+  xfoo: StringRequired,
+  xbar: StringEmpty,
+  xbaz: StringUndefined,
   /**
    * The hello property.
    *

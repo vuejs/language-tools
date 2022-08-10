@@ -97,3 +97,17 @@ export interface MyProps {
 	inlined: { foo: string; },
 	recursive: MyNestedRecursiveProps
 }
+
+export const StringRequired = {
+	type: String,
+	required: true,
+}
+
+export const StringEmpty = {
+	type: String,
+	value: '',
+}
+
+export const StringUndefined = {
+	type: String,
+}
