@@ -350,14 +350,14 @@ export function generate(
 						blockConditions.push(branch.condition.content);
 						addedBlockCondition = true;
 					}
-
-					tsCodeGen.addText(` {\n`);
-					writeInterpolationVarsExtraCompletion();
-					for (const childNode of branch.children) {
-						visitNode(childNode, parentEl);
-					}
-					tsCodeGen.addText('}\n');
 				}
+
+				tsCodeGen.addText(` {\n`);
+				writeInterpolationVarsExtraCompletion();
+				for (const childNode of branch.children) {
+					visitNode(childNode, parentEl);
+				}
+				tsCodeGen.addText('}\n');
 
 				if (addedBlockCondition) {
 					blockConditions[blockConditions.length - 1] = `!(${blockConditions[blockConditions.length - 1]})`;
