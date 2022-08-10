@@ -19,9 +19,11 @@
 	"dependencies": {
 		"@volar/code-gen": "0.39.5",
 		"@volar/source-map": "0.39.5",
-		"@volar/vue-code-gen": "0.39.5",
+		"@vue/compiler-core": "^3.2.37",
+		"@vue/compiler-dom": "^3.2.37",
 		"@vue/compiler-sfc": "^3.2.37",
-		"@vue/reactivity": "^3.2.37"
+		"@vue/reactivity": "^3.2.37",
+		"@vue/shared": "^3.2.37"
 	},
 	"browser": {
 		"./out/plugins/vue-template-pug.js": "./out/plugins/empty.js"

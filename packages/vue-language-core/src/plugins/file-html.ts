@@ -3,11 +3,11 @@ import { SourceMapBase } from '@volar/source-map';
 import { parse, SFCBlock } from '@vue/compiler-sfc';
 import { VueLanguagePlugin } from '../sourceFile';
 
-export default function (): VueLanguagePlugin {
+const plugin: VueLanguagePlugin = () => {
 
 	return {
 
-		parseSfc(fileName, content) {
+		parseSFC(fileName, content) {
 
 			if (fileName.endsWith('.html')) {
 
@@ -86,3 +86,4 @@ export default function (): VueLanguagePlugin {
 		}
 	};
 }
+export default plugin;

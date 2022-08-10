@@ -127,7 +127,6 @@ flowchart LR
 	VOLAR_VUE_SERVER["@volar/vue-language-server"]
 	VOLAR_VUE_TS["@volar/vue-typescript"]
 	VOLAR_VUE_CORE["@volar/vue-language-core"]
-	VOLAR_VUE_CG["@volar/vue-code-gen"]
 	VOLAR_VUE_SERVICE["@volar/vue-language-service"]
 	VOLAR_PUG_SERVICE["@volar/pug-language-service"]
 	VOLAR_TS_SERVICE["@volar/typescript-language-service"]
@@ -140,7 +139,6 @@ flowchart LR
 	click VOLAR_VUE_SERVER "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-language-server"
 	click VOLAR_VUE_TS "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-typescript"
 	click VOLAR_VUE_CORE "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-language-core"
-	click VOLAR_VUE_CG "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-code-gen"
 	click VOLAR_VUE_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-language-service"
 	click VOLAR_PUG_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/pug-language-service"
 	click VOLAR_TS_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/typescript-language-service"
@@ -239,8 +237,6 @@ flowchart LR
 	VOLAR_VUE_SERVICE --> HTML_SERVICE
 	VOLAR_VUE_SERVICE --> CSS_SERVICE
 	VOLAR_VUE_SERVICE --> JSON_SERVICE
-
-	VOLAR_VUE_CORE --> VOLAR_VUE_CG
 ```
 
 ## Sponsors

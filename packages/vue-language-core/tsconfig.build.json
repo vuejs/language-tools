@@ -30,8 +30,5 @@
 		{
 			"path": "../typescript-language-service/tsconfig.build.json"
 		},
-		{
-			"path": "../vue-code-gen/tsconfig.build.json"
-		},
 	],
 }

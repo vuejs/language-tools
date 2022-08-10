@@ -1,18 +1,20 @@
 import { VueLanguagePlugin } from '../sourceFile';
+import * as CompilerDom from '@vue/compiler-dom';
+import * as CompilerVue2 from '../utils/vue2TemplateCompiler';
 
-export default function (): VueLanguagePlugin {
+const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 
 	return {
 
-		compileTemplateToHtml(lang, template) {
+		compileSFCTemplate(lang, template, options) {
 
 			if (lang === 'html') {
 
-				return {
-					html: template,
-					mapping: htmlRange => htmlRange,
-				};
+				const compiler = vueCompilerOptions.target < 3 ? CompilerVue2 : CompilerDom;
+
+				return compiler.compile(template, options);
 			}
-		}
+		},
 	};
-}
+};
+export default plugin;

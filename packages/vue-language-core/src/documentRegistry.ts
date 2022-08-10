@@ -1,4 +1,4 @@
-import type { EmbeddedFileMappingData } from '@volar/vue-code-gen';
+import type { EmbeddedFileMappingData } from './types';
 import { computed, shallowReactive } from '@vue/reactivity';
 import { posix as path } from 'path';
 import * as localTypes from './utils/localTypes';
@@ -10,7 +10,7 @@ export interface DocumentRegistry extends ReturnType<typeof createDocumentRegist
 export interface EmbeddedLangaugeSourceFile {
 	fileName: string,
 	text: string,
-	getAllEmbeddeds(): Embedded[],
+	allEmbeddeds: Embedded[],
 }
 
 export function createDocumentRegistry() {
@@ -25,7 +25,7 @@ function createDocumentRegistryBase<T extends EmbeddedLangaugeSourceFile>() {
 	const embeddedDocumentsMap = computed(() => {
 		const map = new WeakMap<EmbeddedFile, T>();
 		for (const sourceFile of all.value) {
-			for (const embedded of sourceFile.getAllEmbeddeds()) {
+			for (const embedded of sourceFile.allEmbeddeds) {
 				map.set(embedded.file, sourceFile);
 			}
 		}
@@ -34,7 +34,7 @@ function createDocumentRegistryBase<T extends EmbeddedLangaugeSourceFile>() {
 	const sourceMapsByFileName = computed(() => {
 		const map = new Map<string, { vueFile: T, embedded: Embedded; }>();
 		for (const sourceFile of all.value) {
-			for (const embedded of sourceFile.getAllEmbeddeds()) {
+			for (const embedded of sourceFile.allEmbeddeds) {
 				map.set(embedded.file.fileName.toLowerCase(), { vueFile: sourceFile, embedded });
 			}
 		}
@@ -44,7 +44,7 @@ function createDocumentRegistryBase<T extends EmbeddedLangaugeSourceFile>() {
 		const map = new Map<string, Teleport>();
 		for (const key in files) {
 			const sourceFile = files[key]!;
-			for (const embedded of sourceFile.getAllEmbeddeds()) {
+			for (const embedded of sourceFile.allEmbeddeds) {
 				if (embedded.teleport) {
 					map.set(embedded.file.fileName.toLowerCase(), embedded.teleport);
 				}

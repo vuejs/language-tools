@@ -4,5 +4,5 @@ import useHtmlFilePlugin from './plugins/file-html';
 export type LanguageServiceHost = vue.LanguageServiceHost;
 
 export function createLanguageContext(host: vue.LanguageServiceHost): vue.LanguageContext {
-	return vue.createLanguageContext(host, [useHtmlFilePlugin()], ['.html']);
+	return vue.createLanguageContext(host, [useHtmlFilePlugin], ['.html']);
 }

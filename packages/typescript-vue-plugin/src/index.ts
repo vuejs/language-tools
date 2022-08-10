@@ -124,11 +124,11 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		? info.serverHost.watchFile(projectName, () => {
 			onConfigUpdated();
 			onProjectUpdated();
-			parsedCommandLine = vue.tsShared.createParsedCommandLine(ts, ts.sys, projectName);
+			parsedCommandLine = vue.createParsedCommandLine(ts, ts.sys, projectName);
 		})
 		: undefined;
 	let parsedCommandLine = tsconfigWatcher // reuse fileExists result
-		? vue.tsShared.createParsedCommandLine(ts, ts.sys, projectName)
+		? vue.createParsedCommandLine(ts, ts.sys, projectName)
 		: undefined;
 
 	return {

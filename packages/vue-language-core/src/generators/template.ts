@@ -4,7 +4,7 @@ import { camelize, hyphenate, capitalize, isHTMLTag, isSVGTag } from '@vue/share
 import * as CompilerDOM from '@vue/compiler-dom';
 import * as CompilerCore from '@vue/compiler-core';
 import { EmbeddedFileMappingData } from '../types';
-import { colletVars, walkInterpolationFragment } from '../transform';
+import { colletVars, walkInterpolationFragment } from '../utils/transform';
 import { parseBindingRanges } from '../parsers/scriptSetupRanges';
 
 const capabilitiesSet = {
@@ -69,7 +69,6 @@ export function generate(
 	templateAst: CompilerDOM.RootNode,
 	hasScriptSetup: boolean,
 	cssScopedClasses: string[] = [],
-	htmlToTemplate: (htmlRange: { start: number, end: number; }) => { start: number, end: number; } | undefined,
 	searchTexts: {
 		getEmitCompletion(tag: string): string,
 		getPropsCompletion(tag: string): string,
@@ -219,7 +218,7 @@ export function generate(
 		tagResolves[tagName] = {
 			component: var_componentVar,
 			emit: var_emit,
-			offsets: tagOffsets.map(offset => htmlToTemplate({ start: offset, end: offset })?.start).filter(notEmpty),
+			offsets: tagOffsets,
 		};
 	}
 
@@ -542,7 +541,7 @@ export function generate(
 			else {
 				startTagEnd = node.loc.start.offset + node.loc.source.substring(0, node.loc.source.lastIndexOf('</')).lastIndexOf('>') + 1;
 			}
-			addMapping(tsCodeGen, {
+			tsCodeGen.addMapping2({
 				sourceRange: {
 					start: node.loc.start.offset,
 					end: startTagEnd,
@@ -982,7 +981,7 @@ export function generate(
 					tsCodeGen.addText('undefined');
 				}
 				writePropValueSuffix(isStatic);
-				addMapping(tsCodeGen, {
+				tsCodeGen.addMapping2({
 					sourceRange: {
 						start: prop.loc.start.offset,
 						end: prop.loc.end.offset,
@@ -1079,7 +1078,7 @@ export function generate(
 				writePropValueSuffix(true);
 				writePropEnd(true);
 				const diagEnd = tsCodeGen.getText().length;
-				addMapping(tsCodeGen, {
+				tsCodeGen.addMapping2({
 					sourceRange: {
 						start: prop.loc.start.offset,
 						end: prop.loc.end.offset,
@@ -1277,12 +1276,6 @@ export function generate(
 					end: prop.arg.loc.start.offset + end,
 				};
 
-				const newStart = htmlToTemplate({ start: sourceRange.start, end: sourceRange.end })?.start;
-				if (newStart === undefined) continue;
-				const offset = newStart - sourceRange.start;
-				sourceRange.start += offset;
-				sourceRange.end += offset;
-
 				cssCodeGen.addText(`${node.tag} { `);
 				cssCodeGen.addCode(
 					content,
@@ -1403,7 +1396,7 @@ export function generate(
 					tsCodeGen.addText(`]`);
 				}
 				const diagEnd = tsCodeGen.getText().length;
-				addMapping(tsCodeGen, {
+				tsCodeGen.addMapping2({
 					mappedRange: {
 						start: diagStart,
 						end: diagEnd,
@@ -1491,7 +1484,7 @@ export function generate(
 					);
 				}
 				tsCodeGen.addText(`)`);
-				addMapping(tsCodeGen, {
+				tsCodeGen.addMapping2({
 					sourceRange: {
 						start: prop.loc.start.offset,
 						end: prop.loc.end.offset,
@@ -1756,7 +1749,7 @@ export function generate(
 		for (let i = 1; i < sourceRanges.length; i++) {
 			const sourceRange = sourceRanges[i];
 			if (mode === 1 || mode === 2) {
-				addMapping(tsCodeGen, {
+				tsCodeGen.addMapping2({
 					sourceRange,
 					mappedRange: {
 						start: tsCodeGen.getText().length - mapCode.length,
@@ -1767,7 +1760,7 @@ export function generate(
 				});
 			}
 			else if (mode === 3) {
-				addMapping(tsCodeGen, {
+				tsCodeGen.addMapping2({
 					sourceRange,
 					mappedRange: {
 						start: tsCodeGen.getText().length - `['${mapCode}']`.length,
@@ -1814,7 +1807,7 @@ export function generate(
 	function writeCodeWithQuotes(mapCode: string, sourceRanges: SourceMaps.Range | SourceMaps.Range[], data: EmbeddedFileMappingData) {
 		const addText = `'${mapCode}'`;
 		for (const sourceRange of 'length' in sourceRanges ? sourceRanges : [sourceRanges]) {
-			addMapping(tsCodeGen, {
+			tsCodeGen.addMapping2({
 				sourceRange,
 				mappedRange: {
 					start: tsCodeGen.getText().length + 1,
@@ -1888,7 +1881,7 @@ export function generate(
 	function writeFormatCode(mapCode: string, sourceOffset: number, formatWrapper: [string, string]) {
 		tsFormatCodeGen.addText(formatWrapper[0]);
 		const targetRange = tsFormatCodeGen.addText(mapCode);
-		addMapping(tsFormatCodeGen, {
+		tsFormatCodeGen.addMapping2({
 			mappedRange: targetRange,
 			sourceRange: {
 				start: sourceOffset,
@@ -1905,41 +1898,12 @@ export function generate(
 	}
 	function writeCode(mapCode: string, sourceRange: SourceMaps.Range, mode: SourceMaps.Mode, data: EmbeddedFileMappingData) {
 		const targetRange = tsCodeGen.addText(mapCode);
-		addMapping(tsCodeGen, {
+		tsCodeGen.addMapping2({
 			sourceRange,
 			mappedRange: targetRange,
 			mode,
 			data,
 		});
-	}
-	function addMapping(gen: typeof tsCodeGen, mapping: SourceMaps.Mapping<EmbeddedFileMappingData>) {
-		const newMapping = { ...mapping };
-
-		const templateStart = htmlToTemplate(mapping.sourceRange)?.start;
-		if (templateStart === undefined) return; // not found
-		const offset = templateStart - mapping.sourceRange.start;
-		newMapping.sourceRange = {
-			start: mapping.sourceRange.start + offset,
-			end: mapping.sourceRange.end + offset,
-		};
-
-		if (mapping.additional) {
-			newMapping.additional = [];
-			for (const other of mapping.additional) {
-				let otherTemplateStart = htmlToTemplate(other.sourceRange)?.start;
-				if (otherTemplateStart === undefined) continue;
-				const otherOffset = otherTemplateStart - other.sourceRange.start;
-				newMapping.additional.push({
-					...other,
-					sourceRange: {
-						start: other.sourceRange.start + otherOffset,
-						end: other.sourceRange.end + otherOffset,
-					},
-				});
-			}
-		}
-
-		gen.addMapping2(newMapping);
 	}
 };
 
@@ -2037,8 +2001,4 @@ export function getPatchForSlotNode(node: CompilerDOM.ElementNode) {
 			return forNode;
 		}
 	}
-}
-
-function notEmpty<T>(value: T | null | undefined): value is T {
-	return value !== null && value !== undefined;
 }

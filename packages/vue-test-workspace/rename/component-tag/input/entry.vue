@@ -4,6 +4,6 @@
 </template>
 
 <script lang="ts" setup>
-import AaBb from './entry.vue';
+import AaBb from './component.vue';
     // ^^^^rename: CcDd
 </script>

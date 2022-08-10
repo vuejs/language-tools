@@ -1,4 +1,5 @@
 import * as vue from '@volar/vue-language-core';
+import { parseScriptSetupRanges } from '@volar/vue-language-core';
 import * as ts from 'typescript/lib/tsserverlibrary';
 
 import type {
@@ -24,7 +25,7 @@ export type {
 };
 
 export function createComponentMetaChecker(tsconfigPath: string, checkerOptions: MetaCheckerOptions = {}) {
-	const parsedCommandLine = vue.tsShared.createParsedCommandLine(ts, {
+	const parsedCommandLine = vue.createParsedCommandLine(ts, {
 		useCaseSensitiveFileNames: ts.sys.useCaseSensitiveFileNames,
 		readDirectory: (path, extensions, exclude, include, depth) => {
 			return ts.sys.readDirectory(path, [...extensions, '.vue'], exclude, include, depth);
@@ -174,7 +175,7 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 			const snapshot = host.getScriptSnapshot(componentPath)!;
 
 			const vueDefaults = componentPath.endsWith('.vue') && exportName === 'default'
-				? readVueComponentDefaultProps(snapshot.getText(0, snapshot.getLength()), printer)
+				? readVueComponentDefaultProps(core, snapshot.getText(0, snapshot.getLength()), printer)
 				: {};
 			const tsDefaults = !componentPath.endsWith('.vue') ? readTsComponentDefaultProps(
 				componentPath.substring(componentPath.lastIndexOf('.') + 1), // ts | js | tsx | jsx
@@ -457,7 +458,7 @@ function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expre
 	};
 }
 
-function readVueComponentDefaultProps(vueFileText: string, printer: ts.Printer | undefined) {
+function readVueComponentDefaultProps(core: vue.LanguageContext, vueFileText: string, printer: ts.Printer | undefined) {
 	let result: Record<string, { default?: string, required?: boolean; }> = {};
 
 	scriptSetupWorker();
@@ -467,9 +468,9 @@ function readVueComponentDefaultProps(vueFileText: string, printer: ts.Printer |
 
 	function scriptSetupWorker() {
 
-		const vueSourceFile = vue.createSourceFile('/tmp.vue', vueFileText, {}, {}, ts);
-		const descriptor = vueSourceFile.getDescriptor();
-		const scriptSetupRanges = vueSourceFile.getScriptSetupRanges();
+		const vueSourceFile = vue.createSourceFile('/tmp.vue', vueFileText, {}, ts, core.plugins);
+		const descriptor = vueSourceFile.sfc;
+		const scriptSetupRanges = descriptor.scriptSetupAst ? parseScriptSetupRanges(ts, descriptor.scriptSetupAst) : undefined;
 
 		if (descriptor.scriptSetup && scriptSetupRanges?.withDefaultsArg) {
 
@@ -519,8 +520,8 @@ function readVueComponentDefaultProps(vueFileText: string, printer: ts.Printer |
 
 	function scriptWorker() {
 
-		const vueSourceFile = vue.createSourceFile('/tmp.vue', vueFileText, {}, {}, ts);
-		const descriptor = vueSourceFile.getDescriptor();
+		const vueSourceFile = vue.createSourceFile('/tmp.vue', vueFileText, {}, ts, core.plugins);
+		const descriptor = vueSourceFile.sfc;
 
 		if (descriptor.script) {
 			const scriptResult = readTsComponentDefaultProps(descriptor.script.lang, descriptor.script.content, 'default', printer);

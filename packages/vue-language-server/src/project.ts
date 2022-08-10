@@ -6,7 +6,6 @@ import * as vscode from 'vscode-languageserver';
 import type { createLsConfigs } from './configHost';
 import { getDocumentSafely } from './utils';
 import { LanguageConfigs, loadCustomPlugins, RuntimeEnvironment } from './common';
-import { tsShared } from '@volar/vue-language-core';
 
 export interface Project extends ReturnType<typeof createProject> { }
 
@@ -200,7 +199,7 @@ export async function createProject(
 		vueLs?.dispose();
 		scripts.clear();
 	}
-	function createParsedCommandLine(): ReturnType<typeof tsShared.createParsedCommandLine> {
+	function createParsedCommandLine(): ReturnType<typeof vue.createParsedCommandLine> {
 		const parseConfigHost: ts.ParseConfigHost = {
 			useCaseSensitiveFileNames: projectSys.useCaseSensitiveFileNames,
 			readDirectory: (path, extensions, exclude, include, depth) => {
@@ -216,7 +215,7 @@ export async function createProject(
 			readFile: projectSys.readFile,
 		};
 		if (typeof tsConfig === 'string') {
-			return tsShared.createParsedCommandLine(ts, parseConfigHost, tsConfig);
+			return vue.createParsedCommandLine(ts, parseConfigHost, tsConfig);
 		}
 		else {
 			const content = ts.parseJsonConfigFileContent({}, parseConfigHost, rootPath, tsConfig, 'tsconfig.json');

@@ -41,7 +41,7 @@ export async function documentArgFeatureWorker<T, K>(
 
 	if (vueDocument) {
 
-		const embeddeds = vueDocument.file.getEmbeddeds();
+		const embeddeds = vueDocument.file.embeddeds;
 
 		await visitEmbedded(vueDocument, embeddeds, async sourceMap => {
 
@@ -128,7 +128,7 @@ export async function languageFeatureWorker<T, K>(
 
 	if (vueDocument) {
 
-		const embeddeds = vueDocument.file.getEmbeddeds();
+		const embeddeds = vueDocument.file.embeddeds;
 
 		await visitEmbedded(vueDocument, embeddeds, async sourceMap => {
 

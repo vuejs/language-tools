@@ -1,11 +1,11 @@
 import { VueLanguagePlugin } from '../sourceFile';
 import { parse } from '@vue/compiler-sfc';
 
-export default function (): VueLanguagePlugin {
+const plugin: VueLanguagePlugin = () => {
 
 	return {
 
-		parseSfc(fileName, content) {
+		parseSFC(fileName, content) {
 
 			if (fileName.endsWith('.vue')) {
 
@@ -14,3 +14,4 @@ export default function (): VueLanguagePlugin {
 		}
 	};
 }
+export default plugin;

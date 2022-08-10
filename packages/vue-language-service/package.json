@@ -25,7 +25,6 @@
 		"@volar/transforms": "0.39.5",
 		"@volar/typescript-faster": "0.39.5",
 		"@volar/typescript-language-service": "0.39.5",
-		"@volar/vue-code-gen": "0.39.5",
 		"@volar/vue-language-core": "0.39.5",
 		"@volar/vue-language-service-types": "0.39.5",
 		"@volar/vue-typescript": "0.39.5",

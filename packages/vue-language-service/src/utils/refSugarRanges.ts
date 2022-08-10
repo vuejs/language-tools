@@ -1,6 +1,6 @@
+import { TextRange } from '@volar/vue-language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { getStartEnd, findBindingVars } from './scriptSetupRanges';
-import type { TextRange } from '../types';
+import { getStartEnd, findBindingVars } from '@volar/vue-language-core';
 
 export interface RefSugarDeclarationRanges extends ReturnType<typeof parseRefSugarDeclarationRanges> { }
 

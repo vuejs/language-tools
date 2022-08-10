@@ -3,8 +3,8 @@ import * as shared from '@volar/shared';
 import { computed } from '@vue/reactivity';
 import { SourceMapBase, Mapping } from '@volar/source-map';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { EmbeddedFileMappingData, TeleportMappingData, TeleportSideData } from '@volar/vue-code-gen';
-import { walkElementNodes } from '@volar/vue-code-gen';
+import { EmbeddedFileMappingData, TeleportMappingData, TeleportSideData } from '@volar/vue-language-core';
+import { walkElementNodes } from '@volar/vue-language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import * as vscode from 'vscode-languageserver-protocol';
 import type * as ts2 from '@volar/typescript-language-service';
@@ -246,10 +246,10 @@ export function parseVueDocument(
 	// reactivity
 	const document = computed(() => TextDocument.create(shared.fsPathToUri(vueFile.fileName), vueFile.fileName.endsWith('.md') ? 'markdown' : 'vue', documentVersion++, vueFile.text));
 	const sourceMaps = computed(() => {
-		return vueFile.getAllEmbeddeds().map(embedded => sourceMapsMap.get(embedded));
+		return vueFile.allEmbeddeds.map(embedded => sourceMapsMap.get(embedded));
 	});
 	const teleports = computed(() => {
-		return vueFile.getTeleports().map(teleportAndFile => {
+		return vueFile.teleports.map(teleportAndFile => {
 			const embeddedDocument = embeddedDocumentsMap.get(teleportAndFile.file);
 			const sourceMap = new TeleportSourceMap(
 				teleportAndFile.file,
@@ -260,11 +260,10 @@ export function parseVueDocument(
 		});
 	});
 	const templateTagsAndAttrs = computed(() => {
-		const htmlComputed = vueFile.getSfcTemplateLanguageCompiled();
-		const ast = vueFile.getSfcVueTemplateCompiled()?.ast;
+		const ast = vueFile.compiledSFCTemplate?.ast;
 		const tags = new Map<string, number[]>();
 		const attrs = new Set<string>();
-		if (ast && htmlComputed) {
+		if (ast) {
 			walkElementNodes(ast, node => {
 
 				if (!tags.has(node.tag)) {
@@ -272,18 +271,11 @@ export function parseVueDocument(
 				}
 
 				const offsets = tags.get(node.tag)!;
-
 				const startTagHtmlOffset = node.loc.start.offset + node.loc.source.indexOf(node.tag);
-				const startTagTemplateOffset = htmlComputed.mapping({ start: startTagHtmlOffset, end: startTagHtmlOffset });
-				if (startTagTemplateOffset !== undefined) {
-					offsets.push(startTagTemplateOffset.start);
-				}
-
 				const endTagHtmlOffset = node.loc.start.offset + node.loc.source.lastIndexOf(node.tag);
-				const endTagTemplateOffset = htmlComputed.mapping({ start: endTagHtmlOffset, end: endTagHtmlOffset });
-				if (endTagTemplateOffset !== undefined) {
-					offsets.push(endTagTemplateOffset.end);
-				}
+
+				offsets.push(startTagHtmlOffset);
+				offsets.push(endTagHtmlOffset);
 
 				for (const prop of node.props) {
 					if (
@@ -326,7 +318,7 @@ export function parseVueDocument(
 			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
 		};
 
-		const file = vueFile.getAllEmbeddeds().find(e => e.file.fileName.indexOf('.__VLS_template.') >= 0)?.file;
+		const file = vueFile.allEmbeddeds.find(e => e.file.fileName === vueFile.tsFileName)?.file;
 		if (file && file.codeGen.getText().indexOf(vue.SearchTexts.Components) >= 0) {
 			const document = embeddedDocumentsMap.get(file);
 

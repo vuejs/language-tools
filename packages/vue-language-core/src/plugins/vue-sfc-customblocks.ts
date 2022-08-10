@@ -1,7 +1,7 @@
 import * as SourceMaps from '@volar/source-map';
 import { VueLanguagePlugin } from '../sourceFile';
 
-export default function (): VueLanguagePlugin {
+const plugin: VueLanguagePlugin = () => {
 
 	return {
 
@@ -54,3 +54,4 @@ export default function (): VueLanguagePlugin {
 		},
 	};
 }
+export default plugin;
