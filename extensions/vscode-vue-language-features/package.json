@@ -575,6 +575,11 @@
 				"category": "Volar"
 			},
 			{
+				"command": "volar.action.extractComponent",
+				"title": "Extract component",
+				"category": "Volar"
+			},
+			{
 				"command": "volar.action.verifyAllScripts",
 				"title": "Verify All Scripts",
 				"category": "Volar"
@@ -676,6 +681,10 @@
 					"when": "volar.activated"
 				},
 				{
+					"command": "volar.action.extractComponent",
+					"when": "volar.activated"
+				},
+				{
 					"command": "volar.action.verifyAllScripts",
 					"when": "volar.activated"
 				},
@@ -762,6 +771,13 @@
 					"command": "workbench.action.webview.reloadWebviewAction",
 					"when": "volarPreviewFocus",
 					"group": "navigation"
+				}
+			],
+			"editor/context": [
+				{
+					"command": "volar.action.extractComponent",
+					"when": "resourceLangId == vue",
+					"group": "4_search"
 				}
 			],
 			"explorer/context": [

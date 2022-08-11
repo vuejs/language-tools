@@ -7,6 +7,15 @@
 While you are adding a new component or calling an external function, Volar will try to find that specific asset and automatically it
 import for you. You just have to hit `↩ Enter` to confirm the import.
 
+## Extract component
+
+After you select some code inside your template you can press `F1` and type `Volar: Extract Component` inside the text field.
+After hitting `↩ Enter` you can provide a component name and Volar will extract your selected code into a new component.
+
+You can also run the command by pressing right click and select `Extract Component` inside the context menu.
+
+![Example Video](./assets/extract-component.gif)
+
 ## Global Components 
 
 Local components, Built-in components, native HTML elements Type-Checking is available with no configuration.

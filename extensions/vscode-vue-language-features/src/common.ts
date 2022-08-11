@@ -16,6 +16,7 @@ import * as verifyAll from './features/verifyAll';
 import * as virtualFiles from './features/virtualFiles';
 import * as tsconfig from './features/tsconfig';
 import * as doctor from './features/doctor';
+import * as extractComponent from './features/extractComponent';
 import * as fileReferences from './features/fileReferences';
 import * as reloadProject from './features/reloadProject';
 
@@ -133,6 +134,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	callGraph.register(context, apiClient);
 	verifyAll.register(context, docClient ?? apiClient);
 	autoInsertion.register(context, htmlClient, apiClient);
+	extractComponent.register(context);
 	doctor.register(context);
 	virtualFiles.register('volar.action.writeVirtualFiles', context, docClient ?? apiClient);
 	tsVersion.register('volar.selectTypeScriptVersion', context, [apiClient, docClient].filter(shared.notEmpty));
