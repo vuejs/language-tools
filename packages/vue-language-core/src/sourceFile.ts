@@ -82,11 +82,13 @@ export interface EmbeddedFile {
 
 export function createSourceFile(
 	fileName: string,
-	_content: string,
+	scriptSnapshot: ts.IScriptSnapshot,
 	vueCompilerOptions: VueCompilerOptions,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	plugins: ReturnType<VueLanguagePlugin>[],
 ) {
+
+	let lastScriptSnapshot: ts.IScriptSnapshot | undefined;
 
 	// refs
 	const fileContent = ref('');
@@ -146,7 +148,6 @@ export function createSourceFile(
 					const err = e as CompilerDom.CompilerError;
 					errors.push(err);
 				}
-
 
 				if (ast || errors.length) {
 					return {
@@ -321,16 +322,14 @@ export function createSourceFile(
 		}
 	});
 
-	update(_content);
+	update(scriptSnapshot);
 
 	return {
 		fileName,
 		get text() {
 			return fileContent.value;
 		},
-		set text(value) {
-			update(value);
-		},
+		update,
 		get compiledSFCTemplate() {
 			return compiledSFCTemplate.value;
 		},
@@ -399,12 +398,16 @@ export function createSourceFile(
 		}
 		return range;
 	}
-	function update(newContent: string) {
+	function update(newScriptSnapshot: ts.IScriptSnapshot) {
 
-		if (fileContent.value === newContent)
-			return;
+		const change = lastScriptSnapshot ? newScriptSnapshot.getChangeRange(lastScriptSnapshot) : undefined;
+		lastScriptSnapshot = newScriptSnapshot;
 
-		fileContent.value = newContent;
+		if (change) {
+			// TODO
+		}
+
+		fileContent.value = newScriptSnapshot.getText(0, newScriptSnapshot.getLength());
 
 		// TODO: wait for https://github.com/vuejs/core/pull/5912
 		if (parsedSfc.value) {
@@ -419,8 +422,8 @@ export function createSourceFile(
 
 			const newData: Sfc['template'] | null = block ? {
 				tag: 'template',
-				start: newContent.substring(0, block.loc.start.offset).lastIndexOf('<'),
-				end: block.loc.end.offset + newContent.substring(block.loc.end.offset).indexOf('>') + 1,
+				start: fileContent.value.substring(0, block.loc.start.offset).lastIndexOf('<'),
+				end: block.loc.end.offset + fileContent.value.substring(block.loc.end.offset).indexOf('>') + 1,
 				startTagEnd: block.loc.start.offset,
 				endTagStart: block.loc.end.offset,
 				content: block.content,
@@ -438,8 +441,8 @@ export function createSourceFile(
 
 			const newData: Sfc['script'] | null = block ? {
 				tag: 'script',
-				start: newContent.substring(0, block.loc.start.offset).lastIndexOf('<'),
-				end: block.loc.end.offset + newContent.substring(block.loc.end.offset).indexOf('>') + 1,
+				start: fileContent.value.substring(0, block.loc.start.offset).lastIndexOf('<'),
+				end: block.loc.end.offset + fileContent.value.substring(block.loc.end.offset).indexOf('>') + 1,
 				startTagEnd: block.loc.start.offset,
 				endTagStart: block.loc.end.offset,
 				content: block.content,
@@ -458,8 +461,8 @@ export function createSourceFile(
 
 			const newData: Sfc['scriptSetup'] | null = block ? {
 				tag: 'scriptSetup',
-				start: newContent.substring(0, block.loc.start.offset).lastIndexOf('<'),
-				end: block.loc.end.offset + newContent.substring(block.loc.end.offset).indexOf('>') + 1,
+				start: fileContent.value.substring(0, block.loc.start.offset).lastIndexOf('<'),
+				end: block.loc.end.offset + fileContent.value.substring(block.loc.end.offset).indexOf('>') + 1,
 				startTagEnd: block.loc.start.offset,
 				endTagStart: block.loc.end.offset,
 				content: block.content,
@@ -479,8 +482,8 @@ export function createSourceFile(
 				const block = blocks[i];
 				const newData: Sfc['styles'][number] = {
 					tag: 'style',
-					start: newContent.substring(0, block.loc.start.offset).lastIndexOf('<'),
-					end: block.loc.end.offset + newContent.substring(block.loc.end.offset).indexOf('>') + 1,
+					start: fileContent.value.substring(0, block.loc.start.offset).lastIndexOf('<'),
+					end: block.loc.end.offset + fileContent.value.substring(block.loc.end.offset).indexOf('>') + 1,
 					startTagEnd: block.loc.start.offset,
 					endTagStart: block.loc.end.offset,
 					content: block.content,
@@ -506,8 +509,8 @@ export function createSourceFile(
 				const block = blocks[i];
 				const newData: Sfc['customBlocks'][number] = {
 					tag: 'customBlock',
-					start: newContent.substring(0, block.loc.start.offset).lastIndexOf('<'),
-					end: block.loc.end.offset + newContent.substring(block.loc.end.offset).indexOf('>') + 1,
+					start: fileContent.value.substring(0, block.loc.start.offset).lastIndexOf('<'),
+					end: block.loc.end.offset + fileContent.value.substring(block.loc.end.offset).indexOf('>') + 1,
 					startTagEnd: block.loc.start.offset,
 					endTagStart: block.loc.end.offset,
 					content: block.content,

@@ -123,14 +123,14 @@ export function getDocumentService(
 
 		if (vueDoc) {
 
-			vueDoc.file.text = document.getText();
+			vueDoc.file.update(ts.ScriptSnapshot.fromString(document.getText()));
 
 			return vueDoc;
 		}
 
 		const vueFile = vue.createSourceFile(
 			'/untitled.' + shared.languageIdToSyntax(document.languageId),
-			document.getText(),
+			ts.ScriptSnapshot.fromString(document.getText()),
 			{},
 			context.typescript,
 			vuePlugins,

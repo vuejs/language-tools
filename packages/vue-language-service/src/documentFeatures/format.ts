@@ -6,6 +6,8 @@ import { EmbeddedDocumentSourceMap, VueDocument } from '../vueDocuments';
 
 export function register(context: DocumentServiceRuntimeContext) {
 
+	const ts = context.typescript;
+
 	return async (
 		document: TextDocument,
 		options: vscode.FormattingOptions,
@@ -155,7 +157,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 		function tryUpdateVueDocument() {
 			if (vueDocument) {
-				vueDocument.file.text = document.getText();
+				vueDocument.file.update(ts.ScriptSnapshot.fromString(document.getText()));
 			}
 		}
 

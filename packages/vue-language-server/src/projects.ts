@@ -1,12 +1,11 @@
 import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
 import { createProject, Project } from './project';
 import type { createLsConfigs } from './configHost';
-import { getDocumentSafely } from './utils';
 import { LanguageConfigs, RuntimeEnvironment } from './common';
+import { createSnapshots } from './snapshots';
 
 export interface Projects extends ReturnType<typeof createProjects> { }
 
@@ -19,7 +18,7 @@ export function createProjects(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLocalized: ts.MapLike<string> | undefined,
 	options: shared.ServerInitializationOptions,
-	documents: vscode.TextDocuments<TextDocument>,
+	documents: ReturnType<typeof createSnapshots>,
 	connection: vscode.Connection,
 	lsConfigs: ReturnType<typeof createLsConfigs> | undefined,
 	getInferredCompilerOptions: () => Promise<ts.CompilerOptions>,
@@ -51,31 +50,31 @@ export function createProjects(
 		));
 	}
 
-	documents.onDidOpen(async change => {
+	documents.onDidOpen(params => {
 		lastOpenDoc = {
-			uri: change.document.uri,
+			uri: params.textDocument.uri,
 			time: Date.now(),
 		};
 	});
-	documents.onDidChangeContent(async change => {
+	documents.onDidChangeContent(async params => {
 
 		const req = ++documentUpdatedReq;
 
-		await waitForOnDidChangeWatchedFiles(change.document.uri);
+		await waitForOnDidChangeWatchedFiles(params.textDocument.uri);
 
 		for (const workspace of workspaces.values()) {
 			const projects = [...workspace.projects.values(), workspace.getInferredProjectDontCreate()].filter(shared.notEmpty);
 			for (const project of projects) {
-				(await project).onDocumentUpdated(change.document);
+				(await project).onDocumentUpdated();
 			}
 		}
 
 		if (req === documentUpdatedReq) {
-			updateDiagnostics(change.document.uri);
+			updateDiagnostics(params.textDocument.uri);
 		}
 	});
-	documents.onDidClose(change => {
-		connection.sendDiagnostics({ uri: change.document.uri, diagnostics: [] });
+	documents.onDidClose(params => {
+		connection.sendDiagnostics({ uri: params.textDocument.uri, diagnostics: [] });
 	});
 	connection.onDidChangeWatchedFiles(onDidChangeWatchedFiles);
 
@@ -187,10 +186,10 @@ export function createProjects(
 			return _isCancel;
 		};
 
-		const changeDocs = docUri ? [getDocumentSafely(documents, docUri)].filter(shared.notEmpty) : [];
-		const otherDocs = documents.all().filter(doc => doc.uri !== docUri);
+		const changeDoc = docUri ? documents.data.uriGet(docUri) : undefined;
+		const otherDocs = [...documents.data.values()].filter(doc => doc !== changeDoc);
 
-		for (const changeDoc of changeDocs) {
+		if (changeDoc) {
 
 			await shared.sleep(delay ?? 200);
 
@@ -258,7 +257,7 @@ export function createProjects(
 		}
 	}
 	function clearDiagnostics() {
-		for (const doc of documents.all()) {
+		for (const doc of documents.data.values()) {
 			connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] });
 		}
 	}
@@ -271,7 +270,7 @@ function createWorkspace(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLocalized: ts.MapLike<string> | undefined,
 	options: shared.ServerInitializationOptions,
-	documents: vscode.TextDocuments<TextDocument>,
+	documents: ReturnType<typeof createSnapshots>,
 	connection: vscode.Connection,
 	lsConfigs: ReturnType<typeof createLsConfigs> | undefined,
 	getInferredCompilerOptions: () => Promise<ts.CompilerOptions>,

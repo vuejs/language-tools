@@ -2,10 +2,11 @@ import * as shared from '@volar/shared';
 import type * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vue from '@volar/vue-language-service';
+import { createSnapshots } from '../snapshots';
 
 export function register(
 	connection: vscode.Connection,
-	documents: vscode.TextDocuments<TextDocument>,
+	documents: ReturnType<typeof createSnapshots>,
 	vueDs: vue.DocumentService,
 	allowedLanguageIds: string[] = [
 		'vue',
@@ -67,7 +68,7 @@ export function register(
 	});
 
 	function worker<T>(uri: string, cb: (document: TextDocument) => T) {
-		const document = documents.get(uri);
+		const document = documents.data.uriGet(uri)?.getDocument();
 		if (document && allowedLanguageIds.includes(document.languageId)) {
 			return cb(document);
 		}
