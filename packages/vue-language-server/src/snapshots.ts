@@ -63,7 +63,7 @@ class IncrementalScriptSnapshot {
 							const end = this.versions.indexOf(lastChange) + 1;
 							if (start >= 0 && end >= 0) {
 								const changeRanges = this.versions.slice(start, end).map(change => change.changeRange!);
-								const result = combineContinuousChangeRanges(changeRanges);
+								const result = combineContinuousChangeRanges.apply(changeRanges);
 								cache.set(oldSnapshot, result);
 							}
 							else {
@@ -127,7 +127,7 @@ class IncrementalScriptSnapshot {
 					},
 					newLength: edit.text.length,
 				}));
-				change.changeRange = combineMultiLineChangeRanges(changeRanges);
+				change.changeRange = combineMultiLineChangeRanges.apply(changeRanges);
 				TextDocument.update(this.document, change.contentChanges, change.version);
 			}
 			removeEnd = i + 1;
@@ -138,7 +138,7 @@ class IncrementalScriptSnapshot {
 	}
 }
 
-function combineContinuousChangeRanges(changeRanges: ts.TextChangeRange[]) {
+export function combineContinuousChangeRanges(...changeRanges: ts.TextChangeRange[]) {
 	if (changeRanges.length === 1) {
 		return changeRanges[0];
 	}
@@ -162,7 +162,7 @@ function combineContinuousChangeRanges(changeRanges: ts.TextChangeRange[]) {
 	return changeRange;
 }
 
-function combineMultiLineChangeRanges(changeRanges: ts.TextChangeRange[]) {
+export function combineMultiLineChangeRanges(...changeRanges: ts.TextChangeRange[]) {
 	if (changeRanges.length === 1) {
 		return changeRanges[0];
 	}
@@ -170,10 +170,7 @@ function combineMultiLineChangeRanges(changeRanges: ts.TextChangeRange[]) {
 	const lastChangeRange = changeRanges.sort((a, b) => b.span.start - a.span.start)[0];
 	const fullStart = firstChangeRange.span.start;
 	const fullEnd = lastChangeRange.span.start + lastChangeRange.span.length;
-	let newLength = fullEnd - fullStart;
-	for (const changeRange of changeRanges) {
-		newLength = newLength - changeRange.span.length + changeRange.newLength;
-	}
+	const newLength = fullEnd - fullStart + (lastChangeRange.newLength - lastChangeRange.span.length);
 	const lastChange: ts.TextChangeRange = {
 		span: {
 			start: firstChangeRange.span.start,
