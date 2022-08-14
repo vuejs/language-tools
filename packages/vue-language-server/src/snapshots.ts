@@ -63,7 +63,7 @@ class IncrementalScriptSnapshot {
 							const end = this.versions.indexOf(lastChange) + 1;
 							if (start >= 0 && end >= 0) {
 								const changeRanges = this.versions.slice(start, end).map(change => change.changeRange!);
-								const result = combineContinuousChangeRanges.apply(changeRanges);
+								const result = combineContinuousChangeRanges.apply(null, changeRanges);
 								cache.set(oldSnapshot, result);
 							}
 							else {
@@ -127,7 +127,7 @@ class IncrementalScriptSnapshot {
 					},
 					newLength: edit.text.length,
 				}));
-				change.changeRange = combineMultiLineChangeRanges.apply(changeRanges);
+				change.changeRange = combineMultiLineChangeRanges.apply(null, changeRanges);
 				TextDocument.update(this.document, change.contentChanges, change.version);
 			}
 			removeEnd = i + 1;
@@ -142,24 +142,29 @@ export function combineContinuousChangeRanges(...changeRanges: ts.TextChangeRang
 	if (changeRanges.length === 1) {
 		return changeRanges[0];
 	}
-	const changeRange: ts.TextChangeRange = {
-		span: {
-			start: changeRanges[0].span.start,
-			length: changeRanges[0].span.length,
-		},
-		newLength: changeRanges[0].newLength,
-	};
+	let changeRange: ts.TextChangeRange = changeRanges[0];
 	for (let i = 1; i < changeRanges.length; i++) {
 		const nextChangeRange = changeRanges[i];
-		if (nextChangeRange.span.start === changeRange.span.start + changeRange.newLength) { // is continuous input
-			changeRange.span.length += nextChangeRange.span.length;
-			changeRange.newLength += nextChangeRange.newLength;
-		}
-		else {
-			return;
-		}
+		changeRange = _combineContinuousChangeRanges(changeRange, nextChangeRange);
 	}
 	return changeRange;
+}
+
+// https://tsplay.dev/w6Paym - @browsnet
+function _combineContinuousChangeRanges(a: ts.TextChangeRange, b: ts.TextChangeRange): ts.TextChangeRange {
+	const aStart = a.span.start;
+	const aEnd = a.span.start + a.span.length;
+	const aDiff = a.newLength - a.span.length;
+	const changeBegin = aStart + Math.min(a.span.length, a.newLength);
+	const rollback = (start: number) => start > changeBegin ? start - aDiff : start;
+	const bStart = rollback(b.span.start);
+	const bEnd = rollback(b.span.start + b.span.length);
+	const bDiff = b.newLength - b.span.length;
+	const start = Math.min(aStart, bStart);
+	const end = Math.max(aEnd, bEnd);
+	const length = end - start;
+	const newLength = aDiff + bDiff + length;
+	return { span: { start, length }, newLength };
 }
 
 export function combineMultiLineChangeRanges(...changeRanges: ts.TextChangeRange[]) {
