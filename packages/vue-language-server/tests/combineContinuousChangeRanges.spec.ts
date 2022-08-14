@@ -77,13 +77,13 @@ describe(`Test combineContinuousChangeRanges()`, () => {
 		expect(combineContinuousChangeRanges(
 			{ span: { start: 0, length: 0, }, newLength: 1 },
 			{ span: { start: 2, length: 0, }, newLength: 1 },
-		)).toBeUndefined();
+		)).toEqual({ span: { start: 0, length: 1, }, newLength: 3 });
 	});
 
 	it(`12345 -> 12a345 -> b2a345`, () => {
 		expect(combineContinuousChangeRanges(
 			{ span: { start: 2, length: 0, }, newLength: 1 },
 			{ span: { start: 0, length: 1, }, newLength: 1 },
-		)).toBeUndefined();
+		)).toEqual({ span: { start: 0, length: 2, }, newLength: 3 });
 	});
 });
