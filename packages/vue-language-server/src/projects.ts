@@ -55,23 +55,10 @@ export function createProjects(
 			uri: params.textDocument.uri,
 			time: Date.now(),
 		};
+		onDidChangeContent(params.textDocument.uri);
 	});
 	documents.onDidChangeContent(async params => {
-
-		const req = ++documentUpdatedReq;
-
-		await waitForOnDidChangeWatchedFiles(params.textDocument.uri);
-
-		for (const workspace of workspaces.values()) {
-			const projects = [...workspace.projects.values(), workspace.getInferredProjectDontCreate()].filter(shared.notEmpty);
-			for (const project of projects) {
-				(await project).onDocumentUpdated();
-			}
-		}
-
-		if (req === documentUpdatedReq) {
-			updateDiagnostics(params.textDocument.uri);
-		}
+		onDidChangeContent(params.textDocument.uri);
 	});
 	documents.onDidClose(params => {
 		connection.sendDiagnostics({ uri: params.textDocument.uri, diagnostics: [] });
@@ -83,6 +70,24 @@ export function createProjects(
 		getProject,
 		reloadProject,
 	};
+
+	async function onDidChangeContent(uri: string) {
+
+		const req = ++documentUpdatedReq;
+
+		await waitForOnDidChangeWatchedFiles(uri);
+
+		for (const workspace of workspaces.values()) {
+			const projects = [...workspace.projects.values(), workspace.getInferredProjectDontCreate()].filter(shared.notEmpty);
+			for (const project of projects) {
+				(await project).onDocumentUpdated();
+			}
+		}
+
+		if (req === documentUpdatedReq) {
+			updateDiagnostics(uri);
+		}
+	}
 
 	async function reloadProject(uri: string) {
 
