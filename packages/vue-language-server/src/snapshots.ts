@@ -17,19 +17,26 @@ interface IncrementalScriptSnapshotVersion {
 class IncrementalScriptSnapshot {
 
 	private document: TextDocument;
-	private snapshot: ts.IScriptSnapshot;
 	uri: string;
 	versions: IncrementalScriptSnapshotVersion[];
 
 	constructor(uri: string, languageId: string, version: number, text: string) {
 		this.uri = uri;
-		this.document = TextDocument.create(uri, languageId, version, text);
-		this.snapshot = {
-			getLength: () => text.length,
-			getText: (start, end) => text.substring(start, end),
-			getChangeRange: () => undefined,
-		};
-		this.versions = [];
+		this.document = TextDocument.create(uri, languageId, version - 1, '');
+		this.versions = [
+			{
+				changeRange: undefined,
+				version,
+				contentChanges: [{
+					range: {
+						start: { line: 0, character: 0 },
+						end: { line: 0, character: 0 },
+					},
+					text,
+				}],
+				snapshot: undefined,
+			}
+		];
 	}
 
 	get version() {
@@ -46,51 +53,45 @@ class IncrementalScriptSnapshot {
 
 	getSnapshot() {
 
-		if (this.versions.length) {
-			this.clearUnReferenceVersions();
+		this.clearUnReferenceVersions();
 
-			const lastChange = this.versions[this.versions.length - 1];
-			if (!lastChange.snapshot) {
-				this.applyVersionToRootDocument(lastChange.version, false);
-				const text = this.document.getText();
-				const cache = new WeakMap<ts.IScriptSnapshot, ts.TextChangeRange | undefined>();
-				const snapshot: ts.IScriptSnapshot = {
-					getText: (start, end) => text.substring(start, end),
-					getLength: () => text.length,
-					getChangeRange: (oldSnapshot) => {
-						if (!cache.has(oldSnapshot)) {
-							const start = oldSnapshot === this.snapshot ? 0 : (this.versions.findIndex(change => change.snapshot?.deref() === oldSnapshot) + 1);
-							const end = this.versions.indexOf(lastChange) + 1;
-							if (start >= 0 && end >= 0) {
-								const changeRanges = this.versions.slice(start, end).map(change => change.changeRange!);
-								const result = combineContinuousChangeRanges.apply(null, changeRanges);
-								cache.set(oldSnapshot, result);
-							}
-							else {
-								cache.set(oldSnapshot, undefined);
-							}
+		const lastChange = this.versions[this.versions.length - 1];
+		if (!lastChange.snapshot) {
+			this.applyVersionToRootDocument(lastChange.version, false);
+			const text = this.document.getText();
+			const cache = new WeakMap<ts.IScriptSnapshot, ts.TextChangeRange | undefined>();
+			const snapshot: ts.IScriptSnapshot = {
+				getText: (start, end) => text.substring(start, end),
+				getLength: () => text.length,
+				getChangeRange: (oldSnapshot) => {
+					if (!cache.has(oldSnapshot)) {
+						const start = this.versions.findIndex(change => change.snapshot?.deref() === oldSnapshot) + 1;
+						const end = this.versions.indexOf(lastChange) + 1;
+						if (start >= 0 && end >= 0) {
+							const changeRanges = this.versions.slice(start, end).map(change => change.changeRange!);
+							const result = combineContinuousChangeRanges.apply(null, changeRanges);
+							cache.set(oldSnapshot, result);
 						}
-						return cache.get(oldSnapshot);
-					},
-				};
-				lastChange.snapshot = new WeakRef(snapshot);
-			}
-
-			return lastChange.snapshot.deref()!;
+						else {
+							cache.set(oldSnapshot, undefined);
+						}
+					}
+					return cache.get(oldSnapshot);
+				},
+			};
+			lastChange.snapshot = new WeakRef(snapshot);
 		}
 
-		return this.snapshot;
+		return lastChange.snapshot.deref()!;
 	}
 
 	getDocument() {
 
-		if (this.versions.length) {
-			this.clearUnReferenceVersions();
+		this.clearUnReferenceVersions();
 
-			const lastChange = this.versions[this.versions.length - 1];
-			if (!lastChange.changeRange) {
-				this.applyVersionToRootDocument(lastChange.version, false);
-			}
+		const lastChange = this.versions[this.versions.length - 1];
+		if (!lastChange.changeRange) {
+			this.applyVersionToRootDocument(lastChange.version, false);
 		}
 
 		return this.document;
