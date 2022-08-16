@@ -220,14 +220,20 @@ export function createProjects(
 			if (!project) return;
 
 			const languageService = project.getLanguageService();
-			const errors = await languageService.doValidation(uri, async result => {
-				if (!await isCancel?.()) {
-					connection.sendDiagnostics({ uri: uri, diagnostics: result, version });
-				}
+			const errors = await languageService.doValidation(uri, result => {
+				connection.sendDiagnostics({ uri: uri, diagnostics: result.map(addVersion), version });
 			}, isCancel);
 
-			if (!await isCancel?.()) {
-				connection.sendDiagnostics({ uri: uri, diagnostics: errors, version });
+			connection.sendDiagnostics({ uri: uri, diagnostics: errors.map(addVersion), version });
+
+			function addVersion(error: vscode.Diagnostic) {
+				if (error.data === undefined) {
+					error.data = { version };
+				}
+				else if (typeof error.data === 'object') {
+					error.data.version = version;
+				}
+				return error;
 			}
 		}
 	}

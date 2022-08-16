@@ -155,7 +155,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 		return getErrors();
 
-		async function doResponse() {
+		function doResponse() {
 			if (shouldSend) {
 				response?.(getErrors());
 				shouldSend = false;
