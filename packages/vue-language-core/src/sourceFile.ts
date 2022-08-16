@@ -322,7 +322,7 @@ export function createSourceFile(
 		}
 	});
 
-	update(scriptSnapshot);
+	update(scriptSnapshot, true);
 
 	return {
 		fileName,
@@ -398,7 +398,11 @@ export function createSourceFile(
 		}
 		return range;
 	}
-	function update(newScriptSnapshot: ts.IScriptSnapshot) {
+	function update(newScriptSnapshot: ts.IScriptSnapshot, init = false) {
+
+		if (newScriptSnapshot === snapshot.value && !init) {
+			return;
+		}
 
 		const change = newScriptSnapshot.getChangeRange(snapshot.value);
 		snapshot.value = newScriptSnapshot;
