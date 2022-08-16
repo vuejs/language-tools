@@ -97,15 +97,15 @@ export function createSourceFile(
 		scriptSetup: null,
 		styles: [],
 		customBlocks: [],
-		get templateAst() {
+		templateAst: computed(() => {
 			return compiledSFCTemplate.value?.ast;
-		},
-		get scriptAst() {
+		}) as unknown as Sfc['templateAst'],
+		scriptAst: computed(() => {
 			return scriptAst.value;
-		},
-		get scriptSetupAst() {
+		}) as unknown as Sfc['scriptAst'],
+		scriptSetupAst: computed(() => {
 			return scriptSetupAst.value;
-		},
+		}) as unknown as Sfc['scriptSetupAst'],
 	}) as Sfc /* avoid Sfc unwrap in .d.ts by reactive */;
 
 	// use
@@ -325,9 +325,6 @@ export function createSourceFile(
 
 	return {
 		fileName,
-		get snapshot() {
-			return snapshot.value;
-		},
 		get text() {
 			return fileContent.value;
 		},
