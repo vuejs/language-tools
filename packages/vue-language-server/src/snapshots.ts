@@ -4,13 +4,13 @@ import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
 interface IncrementalScriptSnapshotVersion {
-	// if set, it mean this change is applyed to document
+	applyed: boolean,
 	changeRange: ts.TextChangeRange | undefined,
 	version: number,
 	contentChanges: {
 		range: vscode.Range;
 		text: string;
-	}[],
+	}[] | undefined,
 	snapshot: WeakRef<ts.IScriptSnapshot> | undefined,
 }
 
@@ -22,18 +22,13 @@ class IncrementalScriptSnapshot {
 
 	constructor(uri: string, languageId: string, version: number, text: string) {
 		this.uri = uri;
-		this.document = TextDocument.create(uri, languageId, version - 1, '');
+		this.document = TextDocument.create(uri, languageId, version, text);
 		this.versions = [
 			{
+				applyed: true,
 				changeRange: undefined,
 				version,
-				contentChanges: [{
-					range: {
-						start: { line: 0, character: 0 },
-						end: { line: 0, character: 0 },
-					},
-					text,
-				}],
+				contentChanges: undefined,
 				snapshot: undefined,
 			}
 		];
@@ -48,7 +43,15 @@ class IncrementalScriptSnapshot {
 
 	update(params: vscode.DidChangeTextDocumentParams) {
 		TextDocument.update(this.document, params.contentChanges, params.textDocument.version);
-		this.versions.length = 0;
+		this.versions = [
+			{
+				applyed: true,
+				changeRange: undefined,
+				version: params.textDocument.version,
+				contentChanges: undefined,
+				snapshot: undefined,
+			}
+		];
 	}
 
 	getSnapshot() {
@@ -68,7 +71,7 @@ class IncrementalScriptSnapshot {
 						const start = this.versions.findIndex(change => change.snapshot?.deref() === oldSnapshot) + 1;
 						const end = this.versions.indexOf(lastChange) + 1;
 						if (start >= 0 && end >= 0) {
-							const changeRanges = this.versions.slice(start, end).map(change => change.changeRange!);
+							const changeRanges = this.versions.slice(start, end).map(change => change.changeRange).filter(shared.notEmpty);
 							const result = combineContinuousChangeRanges.apply(null, changeRanges);
 							cache.set(oldSnapshot, result);
 						}
@@ -90,7 +93,7 @@ class IncrementalScriptSnapshot {
 		this.clearUnReferenceVersions();
 
 		const lastChange = this.versions[this.versions.length - 1];
-		if (!lastChange.changeRange) {
+		if (!lastChange.applyed) {
 			this.applyVersionToRootDocument(lastChange.version, false);
 		}
 
@@ -120,16 +123,19 @@ class IncrementalScriptSnapshot {
 			if (change.version > version) {
 				break;
 			}
-			if (!change.changeRange) {
-				const changeRanges: ts.TextChangeRange[] = change.contentChanges.map(edit => ({
-					span: {
-						start: this.document.offsetAt(edit.range.start),
-						length: this.document.offsetAt(edit.range.end) - this.document.offsetAt(edit.range.start),
-					},
-					newLength: edit.text.length,
-				}));
-				change.changeRange = combineMultiLineChangeRanges.apply(null, changeRanges);
-				TextDocument.update(this.document, change.contentChanges, change.version);
+			if (!change.applyed) {
+				if (change.contentChanges) {
+					const changeRanges: ts.TextChangeRange[] = change.contentChanges.map(edit => ({
+						span: {
+							start: this.document.offsetAt(edit.range.start),
+							length: this.document.offsetAt(edit.range.end) - this.document.offsetAt(edit.range.start),
+						},
+						newLength: edit.text.length,
+					}));
+					change.changeRange = combineMultiLineChangeRanges.apply(null, changeRanges);
+					TextDocument.update(this.document, change.contentChanges, change.version);
+				}
+				change.applyed = true;
 			}
 			removeEnd = i + 1;
 		}
@@ -172,17 +178,19 @@ export function combineMultiLineChangeRanges(...changeRanges: ts.TextChangeRange
 	if (changeRanges.length === 1) {
 		return changeRanges[0];
 	}
-	const firstChangeRange = changeRanges.sort((a, b) => a.span.start - b.span.start)[0];
+	const starts = changeRanges.map(change => change.span.start);
+	const ends = changeRanges.map(change => change.span.start + change.span.length);
+	const start = Math.min(...starts);
+	const end = Math.max(...ends);
+	const lengthDiff = changeRanges.map(change => change.newLength - change.span.length).reduce((a, b) => a + b, 0);
 	const lastChangeRange = changeRanges.sort((a, b) => b.span.start - a.span.start)[0];
-	const fullStart = firstChangeRange.span.start;
-	const fullEnd = lastChangeRange.span.start + lastChangeRange.span.length;
-	const newLength = fullEnd - fullStart + (lastChangeRange.newLength - lastChangeRange.span.length);
+	const newEnd = lastChangeRange.span.start + lastChangeRange.span.length + lengthDiff;
 	const lastChange: ts.TextChangeRange = {
 		span: {
-			start: firstChangeRange.span.start,
-			length: lastChangeRange.span.start + lastChangeRange.span.length - firstChangeRange.span.start,
+			start,
+			length: end - start,
 		},
-		newLength,
+		newLength: newEnd - start,
 	};
 	return lastChange;
 }
@@ -210,6 +218,7 @@ export function createSnapshots(connection: vscode.Connection) {
 		if (incrementalSnapshot) {
 			if (params.contentChanges.every(vscode.TextDocumentContentChangeEvent.isIncremental)) {
 				incrementalSnapshot.versions.push({
+					applyed: false,
 					changeRange: undefined,
 					contentChanges: params.contentChanges,
 					version: params.textDocument.version,
