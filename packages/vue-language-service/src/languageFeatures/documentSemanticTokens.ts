@@ -30,6 +30,11 @@ export function register(context: LanguageServiceRuntimeContext) {
 				if (cancleToken?.isCancellationRequested)
 					return;
 
+				let range: {
+					start: number,
+					end: number,
+				} | undefined;
+
 				for (const mapping of sourceMap.mappings) {
 
 					if (cancleToken?.isCancellationRequested)
@@ -40,8 +45,18 @@ export function register(context: LanguageServiceRuntimeContext) {
 						&& mapping.sourceRange.end > offsetRange.start
 						&& mapping.sourceRange.start < offsetRange.end
 					) {
-						yield mapping.mappedRange;
+						if (!range) {
+							range = { ...mapping.mappedRange };
+						}
+						else {
+							range.start = Math.min(range.start, mapping.mappedRange.start);
+							range.end = Math.max(range.end, mapping.mappedRange.end);
+						}
 					}
+				}
+
+				if (range) {
+					yield range;
 				}
 			},
 			(plugin, document, offsetRange) => plugin.findDocumentSemanticTokens?.(
