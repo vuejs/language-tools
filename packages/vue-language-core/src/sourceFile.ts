@@ -15,6 +15,7 @@ export type VueLanguagePlugin = (ctx: {
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: _VueCompilerOptions,
 }) => {
+	order?: number;
 	parseSFC?(fileName: string, content: string): SFCParseResult | undefined;
 	compileSFCTemplate?(lang: string, template: string, options?: CompilerDom.CompilerOptions): CompilerDom.CodegenResult | undefined;
 	getEmbeddedFileNames?(fileName: string, sfc: Sfc): string[];

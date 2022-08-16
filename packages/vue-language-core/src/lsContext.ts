@@ -58,7 +58,11 @@ export function getPlugins(
 		compilerOptions,
 		vueCompilerOptions: vueCompilerOptions,
 	};
-	const plugins = _plugins.map(plugin => plugin(pluginCtx));
+	const plugins = _plugins.map(plugin => plugin(pluginCtx)).sort((a, b) => {
+		const aOrder = a.order ?? 0;
+		const bOrder = b.order ?? 0;
+		return aOrder - bOrder;
+	});
 
 	return plugins;
 }

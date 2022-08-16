@@ -6,6 +6,9 @@ const plugin: VueLanguagePlugin = (ctx) => {
 	const vueHtmlFilePlugin = useVueHtmlFilePlugin(ctx);
 
 	return {
+
+		order: -1,
+
 		parseSFC(fileName, content) {
 
 			if (fileName.endsWith('.html')) {
