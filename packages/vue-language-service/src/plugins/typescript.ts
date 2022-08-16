@@ -161,7 +161,12 @@ export default function (options: {
 			},
 		},
 
-		doValidation(document, options_2) {
+		doValidation(document, options_2 = {
+			semantic: true,
+			syntactic: true,
+			suggestion: true,
+			declaration: true,
+		}) {
 			if (isTsDocument(document)) {
 				return options.getTsLs().doValidation(document.uri, options_2);
 			}

@@ -1,12 +1,11 @@
 import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
 import { createProject, Project } from './project';
 import type { createLsConfigs } from './configHost';
-import { getDocumentSafely } from './utils';
 import { LanguageConfigs, RuntimeEnvironment } from './common';
+import { createSnapshots } from './snapshots';
 
 export interface Projects extends ReturnType<typeof createProjects> { }
 
@@ -19,7 +18,7 @@ export function createProjects(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLocalized: ts.MapLike<string> | undefined,
 	options: shared.ServerInitializationOptions,
-	documents: vscode.TextDocuments<TextDocument>,
+	documents: ReturnType<typeof createSnapshots>,
 	connection: vscode.Connection,
 	lsConfigs: ReturnType<typeof createLsConfigs> | undefined,
 	getInferredCompilerOptions: () => Promise<ts.CompilerOptions>,
@@ -51,31 +50,18 @@ export function createProjects(
 		));
 	}
 
-	documents.onDidOpen(async change => {
+	documents.onDidOpen(params => {
 		lastOpenDoc = {
-			uri: change.document.uri,
+			uri: params.textDocument.uri,
 			time: Date.now(),
 		};
+		onDidChangeContent(params.textDocument.uri);
 	});
-	documents.onDidChangeContent(async change => {
-
-		const req = ++documentUpdatedReq;
-
-		await waitForOnDidChangeWatchedFiles(change.document.uri);
-
-		for (const workspace of workspaces.values()) {
-			const projects = [...workspace.projects.values(), workspace.getInferredProjectDontCreate()].filter(shared.notEmpty);
-			for (const project of projects) {
-				(await project).onDocumentUpdated(change.document);
-			}
-		}
-
-		if (req === documentUpdatedReq) {
-			updateDiagnostics(change.document.uri);
-		}
+	documents.onDidChangeContent(async params => {
+		onDidChangeContent(params.textDocument.uri);
 	});
-	documents.onDidClose(change => {
-		connection.sendDiagnostics({ uri: change.document.uri, diagnostics: [] });
+	documents.onDidClose(params => {
+		connection.sendDiagnostics({ uri: params.textDocument.uri, diagnostics: [] });
 	});
 	connection.onDidChangeWatchedFiles(onDidChangeWatchedFiles);
 
@@ -84,6 +70,24 @@ export function createProjects(
 		getProject,
 		reloadProject,
 	};
+
+	async function onDidChangeContent(uri: string) {
+
+		const req = ++documentUpdatedReq;
+
+		await waitForOnDidChangeWatchedFiles(uri);
+
+		for (const workspace of workspaces.values()) {
+			const projects = [...workspace.projects.values(), workspace.getInferredProjectDontCreate()].filter(shared.notEmpty);
+			for (const project of projects) {
+				(await project).onDocumentUpdated();
+			}
+		}
+
+		if (req === documentUpdatedReq) {
+			updateDiagnostics(uri);
+		}
+	}
 
 	async function reloadProject(uri: string) {
 
@@ -187,17 +191,17 @@ export function createProjects(
 			return _isCancel;
 		};
 
-		const changeDocs = docUri ? [getDocumentSafely(documents, docUri)].filter(shared.notEmpty) : [];
-		const otherDocs = documents.all().filter(doc => doc.uri !== docUri);
+		const changeDoc = docUri ? documents.data.uriGet(docUri) : undefined;
+		const otherDocs = [...documents.data.values()].filter(doc => doc !== changeDoc);
 
-		for (const changeDoc of changeDocs) {
+		if (changeDoc) {
 
 			await shared.sleep(delay ?? 200);
 
 			if (await isCancel())
 				return;
 
-			await sendDocumentDiagnostics(changeDoc.uri, isCancel);
+			await sendDocumentDiagnostics(changeDoc.uri, changeDoc.version, isCancel);
 		}
 
 		for (const doc of otherDocs) {
@@ -207,21 +211,29 @@ export function createProjects(
 			if (await isCancel())
 				return;
 
-			await sendDocumentDiagnostics(doc.uri, isCancel);
+			await sendDocumentDiagnostics(doc.uri, doc.version, isCancel);
 		}
 
-		async function sendDocumentDiagnostics(uri: string, isCancel?: () => Promise<boolean>) {
+		async function sendDocumentDiagnostics(uri: string, version: number, isCancel?: () => Promise<boolean>) {
 
 			const project = (await getProject(uri))?.project;
 			if (!project) return;
 
 			const languageService = project.getLanguageService();
-			const errors = await languageService.doValidation(uri, async result => {
-				connection.sendDiagnostics({ uri: uri, diagnostics: result });
+			const errors = await languageService.doValidation(uri, result => {
+				connection.sendDiagnostics({ uri: uri, diagnostics: result.map(addVersion), version });
 			}, isCancel);
 
-			if (!await isCancel?.()) {
-				connection.sendDiagnostics({ uri: uri, diagnostics: errors });
+			connection.sendDiagnostics({ uri: uri, diagnostics: errors.map(addVersion), version });
+
+			function addVersion(error: vscode.Diagnostic) {
+				if (error.data === undefined) {
+					error.data = { version };
+				}
+				else if (typeof error.data === 'object') {
+					error.data.version = version;
+				}
+				return error;
 			}
 		}
 	}
@@ -258,7 +270,7 @@ export function createProjects(
 		}
 	}
 	function clearDiagnostics() {
-		for (const doc of documents.all()) {
+		for (const doc of documents.data.values()) {
 			connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] });
 		}
 	}
@@ -271,7 +283,7 @@ function createWorkspace(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLocalized: ts.MapLike<string> | undefined,
 	options: shared.ServerInitializationOptions,
-	documents: vscode.TextDocuments<TextDocument>,
+	documents: ReturnType<typeof createSnapshots>,
 	connection: vscode.Connection,
 	lsConfigs: ReturnType<typeof createLsConfigs> | undefined,
 	getInferredCompilerOptions: () => Promise<ts.CompilerOptions>,

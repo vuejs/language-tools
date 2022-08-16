@@ -90,21 +90,17 @@ export class SourceMapBase<Data = undefined> {
 
 			const mapped = this.getRange(startOffset, endOffset, sourceToTarget, mapping.mode, mapping.sourceRange, mapping.mappedRange, mapping.data);
 			if (mapped) {
-				yield getMapped(mapped);
+				yield mapped;
 			}
 			else if (mapping.additional) {
 				for (const other of mapping.additional) {
 					const mapped = this.getRange(startOffset, endOffset, sourceToTarget, other.mode, other.sourceRange, other.mappedRange, mapping.data);
 					if (mapped) {
-						yield getMapped(mapped);
+						yield mapped;
 						break; // only return first match additional range
 					}
 				}
 			}
-		}
-
-		function getMapped(mapped: [{ start: number, end: number; }, Data]) {
-			return mapped;
 		}
 	}
 

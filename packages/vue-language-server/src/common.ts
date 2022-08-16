@@ -1,5 +1,4 @@
 import * as shared from '@volar/shared';
-import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import * as vue from '@volar/vue-language-service';
@@ -7,6 +6,7 @@ import { createLsConfigs } from './configHost';
 import { getInferredCompilerOptions } from './inferredCompilerOptions';
 import { createProjects } from './projects';
 import type { FileSystemProvider } from 'vscode-html-languageservice';
+import { createSnapshots } from './snapshots';
 
 export interface RuntimeEnvironment {
 	loadTypescript: (initOptions: shared.ServerInitializationOptions) => typeof import('typescript/lib/tsserverlibrary'),
@@ -95,7 +95,7 @@ export function createLanguageServer(
 				params.capabilities,
 			);
 
-			(await import('./features/customFeatures')).register(connection, documents, projects);
+			(await import('./features/customFeatures')).register(connection, projects);
 			(await import('./features/languageFeatures')).register(connection, projects, options.languageFeatures, params);
 			(await import('./registers/registerlanguageFeatures')).register(options.languageFeatures!, vue.getSemanticTokenLegend(), result.capabilities, languageConfigs);
 		}
@@ -109,8 +109,7 @@ export function createLanguageServer(
 	});
 	connection.listen();
 
-	const documents = new vscode.TextDocuments(TextDocument);
-	documents.listen(connection);
+	const documents = createSnapshots(connection);
 }
 
 export function loadCustomPlugins(dir: string) {

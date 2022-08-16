@@ -98,6 +98,7 @@ export function createLanguageService(
 	const documentVersions = new Map<string, number>();
 
 	const context: LanguageServiceRuntimeContext = {
+		host: vueLsHost,
 		vueDocuments,
 		getTsLs: () => tsLs,
 		getTextDocument,
