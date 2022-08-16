@@ -1,5 +1,5 @@
 import { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
-import { computed, ComputedRef, reactive, ref } from '@vue/reactivity';
+import { computed, ComputedRef, reactive, shallowRef as ref } from '@vue/reactivity';
 import { EmbeddedFileMappingData, TeleportMappingData, VueCompilerOptions, _VueCompilerOptions } from './types';
 import { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
 
@@ -88,10 +88,9 @@ export function createSourceFile(
 	plugins: ReturnType<VueLanguagePlugin>[],
 ) {
 
-	let lastScriptSnapshot: ts.IScriptSnapshot | undefined;
-
 	// refs
-	const fileContent = ref('');
+	const snapshot = ref(scriptSnapshot);
+	const fileContent = computed(() => snapshot.value.getText(0, snapshot.value.getLength()));
 	const sfc = reactive<Sfc>({
 		template: null,
 		script: null,
@@ -326,6 +325,9 @@ export function createSourceFile(
 
 	return {
 		fileName,
+		get snapshot() {
+			return snapshot.value;
+		},
 		get text() {
 			return fileContent.value;
 		},
@@ -400,14 +402,12 @@ export function createSourceFile(
 	}
 	function update(newScriptSnapshot: ts.IScriptSnapshot) {
 
-		const change = lastScriptSnapshot ? newScriptSnapshot.getChangeRange(lastScriptSnapshot) : undefined;
-		lastScriptSnapshot = newScriptSnapshot;
+		const change = newScriptSnapshot.getChangeRange(snapshot.value);
+		snapshot.value = newScriptSnapshot;
 
 		if (change) {
 			// TODO
 		}
-
-		fileContent.value = newScriptSnapshot.getText(0, newScriptSnapshot.getLength());
 
 		// TODO: wait for https://github.com/vuejs/core/pull/5912
 		if (parsedSfc.value) {

@@ -201,7 +201,7 @@ export function createProjects(
 			if (await isCancel())
 				return;
 
-			await sendDocumentDiagnostics(changeDoc.uri, isCancel);
+			await sendDocumentDiagnostics(changeDoc.uri, changeDoc.version, isCancel);
 		}
 
 		for (const doc of otherDocs) {
@@ -211,21 +211,23 @@ export function createProjects(
 			if (await isCancel())
 				return;
 
-			await sendDocumentDiagnostics(doc.uri, isCancel);
+			await sendDocumentDiagnostics(doc.uri, doc.version, isCancel);
 		}
 
-		async function sendDocumentDiagnostics(uri: string, isCancel?: () => Promise<boolean>) {
+		async function sendDocumentDiagnostics(uri: string, version: number, isCancel?: () => Promise<boolean>) {
 
 			const project = (await getProject(uri))?.project;
 			if (!project) return;
 
 			const languageService = project.getLanguageService();
 			const errors = await languageService.doValidation(uri, async result => {
-				connection.sendDiagnostics({ uri: uri, diagnostics: result });
+				if (!await isCancel?.()) {
+					connection.sendDiagnostics({ uri: uri, diagnostics: result, version });
+				}
 			}, isCancel);
 
 			if (!await isCancel?.()) {
-				connection.sendDiagnostics({ uri: uri, diagnostics: errors });
+				connection.sendDiagnostics({ uri: uri, diagnostics: errors, version });
 			}
 		}
 	}

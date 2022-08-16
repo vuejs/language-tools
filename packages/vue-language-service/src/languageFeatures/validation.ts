@@ -1,21 +1,95 @@
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver-protocol';
 import { isTsDocument } from '../plugins/typescript';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import { languageFeatureWorker } from '../utils/featureWorkers';
 import { EmbeddedDocumentSourceMap } from '../vueDocuments';
+import * as shared from '@volar/shared';
+
+export function updateRange(
+	range: vscode.Range,
+	change: {
+		range: vscode.Range,
+		newEnd: vscode.Position;
+	},
+) {
+	updatePosition(range.start, change, false);
+	updatePosition(range.end, change, true);
+	if (range.end.line === range.start.line && range.end.character <= range.start.character) {
+		range.end.character++;
+	}
+	return range;
+}
+
+function updatePosition(
+	position: vscode.Position,
+	change: {
+		range: vscode.Range,
+		newEnd: vscode.Position;
+	},
+	isEnd: boolean,
+) {
+	if (change.range.end.line > position.line) {
+		if (change.newEnd.line > position.line) {
+			// No change
+		}
+		else if (change.newEnd.line === position.line) {
+			position.character = Math.min(position.character, change.newEnd.character);
+		}
+		else if (change.newEnd.line < position.line) {
+			position.line = change.newEnd.line;
+			position.character = change.newEnd.character;
+		}
+	}
+	else if (change.range.end.line === position.line) {
+		const characterDiff = change.newEnd.character - change.range.end.character;
+		if (position.character >= change.range.end.character) {
+			if (change.newEnd.line !== change.range.end.line) {
+				position.line = change.newEnd.line;
+				position.character = change.newEnd.character + position.character - change.range.end.character;
+			}
+			else {
+				if (isEnd ? change.range.end.character < position.character : change.range.end.character <= position.character) {
+					position.character += characterDiff;
+				}
+				else {
+					const offset = change.range.end.character - position.character;
+					if (-characterDiff > offset) {
+						position.character += characterDiff + offset;
+					}
+				}
+			}
+		}
+		else {
+			if (change.newEnd.line !== change.range.end.line) {
+				if (change.newEnd.line < change.range.end.line) {
+					position.line = change.newEnd.line;
+					position.character = change.newEnd.character;
+				}
+			}
+			else {
+				const offset = change.range.end.character - position.character;
+				if (-characterDiff > offset) {
+					position.character += characterDiff + offset;
+				}
+			}
+		}
+	}
+	else if (change.range.end.line < position.line) {
+		position.line += change.newEnd.line - change.range.end.line;
+	}
+}
 
 export function register(context: LanguageServiceRuntimeContext) {
 
+	interface Cache {
+		snapshot: ts.IScriptSnapshot | undefined;
+		errors: vscode.Diagnostic[];
+	}
 	const responseCache = new Map<
 		string,
-		{
-			nonTs: vscode.Diagnostic[],
-			tsSemantic: vscode.Diagnostic[],
-			tsDeclaration: vscode.Diagnostic[],
-			tsSyntactic: vscode.Diagnostic[],
-			tsSuggestion: vscode.Diagnostic[],
-		}
+		{ [key in 'nonTs' | 'tsSemantic' | 'tsDeclaration' | 'tsSyntactic' | 'tsSuggestion']: Cache }
 	>();
 	const nonTsCache = new Map<
 		number,
@@ -36,46 +110,60 @@ export function register(context: LanguageServiceRuntimeContext) {
 	return async (uri: string, response?: (result: vscode.Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
 
 		const cache = responseCache.get(uri) ?? responseCache.set(uri, {
-			nonTs: [],
-			tsSemantic: [],
-			tsDeclaration: [],
-			tsSuggestion: [],
-			tsSyntactic: [],
+			nonTs: { snapshot: undefined, errors: [] },
+			tsSemantic: { snapshot: undefined, errors: [] },
+			tsDeclaration: { snapshot: undefined, errors: [] },
+			tsSuggestion: { snapshot: undefined, errors: [] },
+			tsSyntactic: { snapshot: undefined, errors: [] },
 		}).get(uri)!;
+		const newSnapshot = context.host.getScriptSnapshot(shared.uriToFsPath(uri));
+		const newDocument = newSnapshot ? TextDocument.create('file://a.txt', 'txt', 0, newSnapshot.getText(0, newSnapshot.getLength())) : undefined;
 
-		let errorsDirty = false; // avoid cache error range jitter
+		for (const _cache of Object.values(cache)) {
 
-		await worker(false, {
-			declaration: true,
-			semantic: true,
-			suggestion: true,
-			syntactic: true,
-		}, nonTsCache, errors => cache.nonTs = errors ?? []);
+			const oldSnapshot = _cache.snapshot;
+			const change = oldSnapshot ? newSnapshot?.getChangeRange(oldSnapshot) : undefined;
+
+			_cache.snapshot = newSnapshot;
+
+			if (newDocument && oldSnapshot && newSnapshot && change) {
+				const oldDocument = TextDocument.create('file://a.txt', 'txt', 0, oldSnapshot.getText(0, oldSnapshot.getLength()));
+				const changeRange = {
+					range: {
+						start: oldDocument.positionAt(change.span.start),
+						end: oldDocument.positionAt(change.span.start + change.span.length),
+					},
+					newEnd: newDocument.positionAt(change.span.start + change.newLength),
+				};
+				for (const error of _cache.errors) {
+					updateRange(error.range, changeRange);
+				}
+			}
+		}
+
+		let shouldSend = false;
+
+		await worker(false, undefined, nonTsCache, cache.nonTs);
 		doResponse();
-		await worker(true, { syntactic: true }, scriptTsCache_syntactic, errors => cache.tsSyntactic = errors ?? []);
-		await worker(true, { suggestion: true }, scriptTsCache_suggestion, errors => cache.tsSuggestion = errors ?? []);
+		await worker(true, { syntactic: true }, scriptTsCache_syntactic, cache.tsSyntactic);
 		doResponse();
-		await worker(true, { semantic: true }, scriptTsCache_semantic, errors => cache.tsSemantic = errors ?? []);
+		await worker(true, { suggestion: true }, scriptTsCache_suggestion, cache.tsSuggestion);
 		doResponse();
-		await worker(true, { declaration: true }, scriptTsCache_declaration, errors => cache.tsDeclaration = errors ?? []);
+		await worker(true, { semantic: true }, scriptTsCache_semantic, cache.tsSemantic);
+		doResponse();
+		await worker(true, { declaration: true }, scriptTsCache_declaration, cache.tsDeclaration);
 
 		return getErrors();
 
-		function doResponse() {
-			if (errorsDirty) {
+		async function doResponse() {
+			if (shouldSend) {
 				response?.(getErrors());
-				errorsDirty = false;
+				shouldSend = false;
 			}
 		}
 
 		function getErrors() {
-			return [
-				...cache.nonTs,
-				...cache.tsSyntactic,
-				...cache.tsSuggestion,
-				...cache.tsSemantic,
-				...cache.tsDeclaration,
-			];
+			return Object.values(cache).flatMap(({ errors }) => errors);
 		}
 
 		async function worker(
@@ -85,9 +173,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 				semantic?: boolean,
 				suggestion?: boolean,
 				syntactic?: boolean,
-			},
+			} | undefined,
 			cacheMap: typeof nonTsCache,
-			response: (result: vscode.Diagnostic[] | undefined) => void,
+			cache: Cache,
 		) {
 			const result = await languageFeatureWorker(
 				context,
@@ -100,11 +188,11 @@ export function register(context: LanguageServiceRuntimeContext) {
 				},
 				async (plugin, document, arg, sourceMap) => {
 
-					// avoid duplicate errors from vue plugin & typescript plugin
-					if (isTsDocument(document) !== isTs)
+					if (await isCancel?.())
 						return;
 
-					if (await isCancel?.())
+					// avoid duplicate errors from vue plugin & typescript plugin
+					if (isTsDocument(document) !== isTs)
 						return;
 
 					const pluginId = context.getPluginId(plugin);
@@ -118,7 +206,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 						}
 					}
 					else {
-						if (options.declaration || options.semantic) {
+						if (!options || options.declaration || options.semantic) {
 							if (cache && cache.documentVersion === document.version && cache.tsProjectVersion === tsProjectVersion) {
 								return cache.errors;
 							}
@@ -132,7 +220,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					const errors = await plugin.doValidation?.(document, options);
 
-					errorsDirty = true;
+					shouldSend = true;
 
 					pluginCache.set(document.uri, {
 						documentVersion: document.version,
@@ -145,8 +233,11 @@ export function register(context: LanguageServiceRuntimeContext) {
 				(errors, sourceMap) => transformErrorRange(sourceMap, errors),
 				arr => dedupe.withDiagnostics(arr.flat()),
 			);
-			if (!await isCancel?.())
-				response(result);
+
+			if (result) {
+				cache.errors = result;
+				cache.snapshot = newSnapshot;
+			}
 		}
 	};
 

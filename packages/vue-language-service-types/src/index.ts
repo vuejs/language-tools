@@ -35,7 +35,7 @@ export interface ExecuteCommandContext {
 
 export type EmbeddedLanguageServicePlugin = {
 
-	doValidation?(document: TextDocument, options: {
+	doValidation?(document: TextDocument, __options?: {
 		semantic?: boolean;
 		syntactic?: boolean;
 		suggestion?: boolean;
