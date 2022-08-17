@@ -119,9 +119,14 @@ export function baseParse(pugCode: string) {
 		}
 	}
 	function addStartTag(node: TagNode, selfClosing: boolean) {
+		const _range = getDocRange(node.line, node.column, 0);
 		codeGen.addCode(
 			'',
-			getDocRange(node.line, node.column, 0),
+			{
+				// -1 for monkey fix https://github.com/johnsoncodehk/volar/issues/1723
+				start: _range.start - 1,
+				end: _range.end - 1,
+			},
 			SourceMap.Mode.Totally,
 			undefined,
 		);
