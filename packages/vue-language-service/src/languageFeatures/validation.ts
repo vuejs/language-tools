@@ -107,7 +107,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 	const scriptTsCache_syntactic: typeof nonTsCache = new Map();
 	const scriptTsCache_suggestion: typeof nonTsCache = new Map();
 
-	return async (uri: string, response?: (result: vscode.Diagnostic[]) => void, isCancel?: () => Promise<boolean>) => {
+	return async (uri: string, response?: (result: vscode.Diagnostic[]) => void, cancellationToken?: vscode.CancellationToken) => {
 
 		const cache = responseCache.get(uri) ?? responseCache.set(uri, {
 			nonTs: { snapshot: undefined, errors: [] },
@@ -142,6 +142,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 		}
 
 		let shouldSend = false;
+		let lastCheckCancelAt = 0;
 
 		await worker(false, undefined, nonTsCache, cache.nonTs);
 		doResponse();
@@ -188,8 +189,16 @@ export function register(context: LanguageServiceRuntimeContext) {
 				},
 				async (plugin, document, arg, sourceMap) => {
 
-					if (await isCancel?.())
-						return;
+					if (cancellationToken) {
+
+						if (Date.now() - lastCheckCancelAt >= 5) {
+							await shared.sleep(5); // wait for LSP event polling
+							lastCheckCancelAt = Date.now();
+						}
+
+						if (cancellationToken.isCancellationRequested)
+							return;
+					}
 
 					// avoid duplicate errors from vue plugin & typescript plugin
 					if (isTsDocument(document) !== isTs)

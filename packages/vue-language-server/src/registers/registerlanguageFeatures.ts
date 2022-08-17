@@ -114,4 +114,16 @@ export function register(
 	if (features.inlayHints) {
 		server.inlayHintProvider = true;
 	}
+	// buggy
+	// if (features.diagnostics) {
+	// 	server.diagnosticProvider = {
+	// 		documentSelector: [
+	// 			...languageConfigs.definitelyExts.map(ext => ({ pattern: `**/*${ext}` })),
+	// 			...languageConfigs.indeterminateExts.map(ext => ({ pattern: `**/*${ext}` })),
+	// 			{ pattern: '**/*.{ts,js,tsx,jsx}' },
+	// 		],
+	// 		interFileDependencies: true,
+	// 		workspaceDiagnostics: false,
+	// 	};
+	// }
 }

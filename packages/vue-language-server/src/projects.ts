@@ -179,16 +179,12 @@ export function createProjects(
 
 		const req = ++documentUpdatedReq;
 		const delay = await lsConfigs?.getConfiguration<number>('volar.diagnostics.delay');
-
-		let lastCheckCancelAt = 0;
-		let _isCancel = false;
-		const isCancel = async () => {
-			if (Date.now() - lastCheckCancelAt >= 5) {
-				await shared.sleep(5); // wait for onDidChangeContent polling
-				_isCancel = req !== documentUpdatedReq;
-				lastCheckCancelAt = Date.now();
-			}
-			return _isCancel;
+		const cancel: vscode.CancellationToken = {
+			get isCancellationRequested() {
+				return req !== documentUpdatedReq;
+			},
+			// @ts-ignore
+			onCancellationRequested: undefined,
 		};
 
 		const changeDoc = docUri ? documents.data.uriGet(docUri) : undefined;
@@ -198,23 +194,21 @@ export function createProjects(
 
 			await shared.sleep(delay ?? 200);
 
-			if (await isCancel())
-				return;
-
-			await sendDocumentDiagnostics(changeDoc.uri, changeDoc.version, isCancel);
+			await sendDocumentDiagnostics(changeDoc.uri, changeDoc.version, cancel);
 		}
 
 		for (const doc of otherDocs) {
 
 			await shared.sleep(delay ?? 200);
 
-			if (await isCancel())
-				return;
+			await sendDocumentDiagnostics(doc.uri, doc.version, cancel);
 
-			await sendDocumentDiagnostics(doc.uri, doc.version, isCancel);
+			if (cancel.isCancellationRequested) {
+				break;
+			}
 		}
 
-		async function sendDocumentDiagnostics(uri: string, version: number, isCancel?: () => Promise<boolean>) {
+		async function sendDocumentDiagnostics(uri: string, version: number, cancel?: vscode.CancellationToken) {
 
 			const project = (await getProject(uri))?.project;
 			if (!project) return;
@@ -222,7 +216,7 @@ export function createProjects(
 			const languageService = project.getLanguageService();
 			const errors = await languageService.doValidation(uri, result => {
 				connection.sendDiagnostics({ uri: uri, diagnostics: result.map(addVersion), version });
-			}, isCancel);
+			}, cancel);
 
 			connection.sendDiagnostics({ uri: uri, diagnostics: errors.map(addVersion), version });
 
