@@ -980,7 +980,7 @@ export function generate(
 					}
 				}
 				else {
-					tsCodeGen.addText('undefined');
+					tsCodeGen.addText('""');
 				}
 				writePropValueSuffix(isStatic);
 				tsCodeGen.addMapping2({
