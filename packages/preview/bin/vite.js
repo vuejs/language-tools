@@ -84,7 +84,7 @@ else {
 
 function createViteConfig() {
 	let proxyConfigContent = readFileSync(path.resolve(__dirname, 'vite', 'config.ts'), { encoding: 'utf8' });
-	proxyConfigContent = proxyConfigContent.replace('{CONFIG_PATH}', path.resolve(workspace, 'vite.config'));
+	proxyConfigContent = proxyConfigContent.replace('{CONFIG_PATH}', JSON.stringify(path.resolve(workspace, 'vite.config')));
 
 	const proxyConfigPath = path.resolve(workspace, 'node_modules', '.vite', 'volar-vite.config.ts');
 	fs.writeFileSync(proxyConfigPath, proxyConfigContent);

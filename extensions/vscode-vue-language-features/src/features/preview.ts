@@ -26,7 +26,7 @@ export async function register(context: vscode.ExtensionContext) {
 	let avoidUpdateOnDidChangeActiveTextEditor = false;
 	let updateComponentPreview: Function | undefined;
 
-	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
+	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, -1);
 	statusBar.command = 'volar.previewMenu';
 	statusBar.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
 	context.subscriptions.push(statusBar);

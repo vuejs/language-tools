@@ -1,5 +1,5 @@
 // @ts-nocheck
-import config from '{CONFIG_PATH}';
+import config from {CONFIG_PATH};
 
 if (!config.plugins)
 	config.plugins = [];
