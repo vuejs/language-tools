@@ -275,6 +275,25 @@ export function register(
 			return buildTokens(result);
 		}) ?? buildTokens([]);
 	});
+	connection.languages.diagnostics.on(async (params, cancellationToken, workDoneProgressReporter, resultProgressReporter) => {
+		const result = await worker(params.textDocument.uri, vueLs => {
+			return vueLs.doValidation(params.textDocument.uri, errors => {
+				// resultProgressReporter is undefined in vscode
+				resultProgressReporter?.report({
+					relatedDocuments: {
+						[params.textDocument.uri]: {
+							kind: vscode.DocumentDiagnosticReportKind.Full,
+							items: errors,
+						},
+					},
+				});
+			}, cancellationToken);
+		});
+		return {
+			kind: vscode.DocumentDiagnosticReportKind.Full,
+			items: result ?? [],
+		};
+	});
 	connection.languages.inlayHint.on(async handler => {
 		return worker(handler.textDocument.uri, vueLs => {
 			return vueLs.getInlayHints(handler.textDocument.uri, handler.range);

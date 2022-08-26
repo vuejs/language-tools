@@ -2,7 +2,7 @@ import { posix as path } from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { LanguageServiceHost, VueCompilerOptions } from './types';
 import * as localTypes from './utils/localTypes';
-import { createSourceFile, EmbeddedFile, VueLanguagePlugin } from './sourceFile';
+import { createSourceFile, EmbeddedFile, SourceFile, VueLanguagePlugin } from './sourceFile';
 import { createDocumentRegistry } from './documentRegistry';
 
 import * as useHtmlFilePlugin from './plugins/file-html';
@@ -58,7 +58,11 @@ export function getPlugins(
 		compilerOptions,
 		vueCompilerOptions: vueCompilerOptions,
 	};
-	const plugins = _plugins.map(plugin => plugin(pluginCtx));
+	const plugins = _plugins.map(plugin => plugin(pluginCtx)).sort((a, b) => {
+		const aOrder = a.order ?? 0;
+		const bOrder = b.order ?? 0;
+		return aOrder - bOrder;
+	});
 
 	return plugins;
 }
@@ -93,6 +97,7 @@ export function createLanguageContext(
 	const sharedTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(vueCompilerOptions.target));
 	const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
 	const fileVersions = new WeakMap<EmbeddedFile, string>();
+	const vueFileVersions = new WeakMap<SourceFile, string>();
 	const _tsHost: Partial<ts.LanguageServiceHost> = {
 		fileExists: host.fileExists
 			? fileName => {
@@ -117,7 +122,7 @@ export function createLanguageContext(
 							if (scriptSnapshot) {
 								documentRegistry.set(vueFileName, createSourceFile(
 									vueFileName,
-									scriptSnapshot.getText(0, scriptSnapshot.getLength()),
+									scriptSnapshot,
 									vueCompilerOptions,
 									ts,
 									plugins,
@@ -209,15 +214,16 @@ export function createLanguageContext(
 
 		// .vue
 		for (const vueFile of documentRegistry.getAll()) {
-			const newSnapshot = host.getScriptSnapshot(vueFile.fileName);
-			if (!newSnapshot) {
-				// delete
-				fileNamesToRemove.push(vueFile.fileName);
-			}
-			else {
-				// update
-				if (vueFile.text !== newSnapshot.getText(0, newSnapshot.getLength())) {
+			const newVersion = host.getScriptVersion(vueFile.fileName);
+			if (vueFileVersions.get(vueFile) !== newVersion) {
+				vueFileVersions.set(vueFile, newVersion);
+				if (host.getScriptSnapshot(vueFile.fileName)) {
+					// update
 					fileNamesToUpdate.push(vueFile.fileName);
+				}
+				else {
+					// delete
+					fileNamesToRemove.push(vueFile.fileName);
 				}
 			}
 		}
@@ -230,19 +236,18 @@ export function createLanguageContext(
 		}
 
 		// .ts / .js / .d.ts / .json ...
-		for (const tsFileVersion of tsFileVersions) {
-			if (!tsFileNames.has(tsFileVersion[0]) && !host.getScriptSnapshot(tsFileVersion[0])) {
-				// delete
-				tsFileVersions.delete(tsFileVersion[0]);
-				tsFileUpdated = true;
-			}
-			else {
-				// update
-				const newVersion = host.getScriptVersion(tsFileVersion[0]);
-				if (tsFileVersion[1] !== newVersion) {
-					tsFileVersions.set(tsFileVersion[0], newVersion);
-					tsFileUpdated = true;
+		for (const [oldTsFileName, oldTsFileVersion] of [...tsFileVersions]) {
+			const newVersion = host.getScriptVersion(oldTsFileName);
+			if (oldTsFileVersion !== newVersion) {
+				if (!tsFileNames.has(oldTsFileName) && !host.getScriptSnapshot(oldTsFileName)) {
+					// delete
+					tsFileVersions.delete(oldTsFileName);
 				}
+				else {
+					// update
+					tsFileVersions.set(oldTsFileName, newVersion);
+				}
+				tsFileUpdated = true;
 			}
 		}
 
@@ -272,12 +277,11 @@ export function createLanguageContext(
 			}
 
 			const sourceFile = documentRegistry.get(fileName);
-			const scriptText = scriptSnapshot.getText(0, scriptSnapshot.getLength());
 
 			if (!sourceFile) {
 				documentRegistry.set(fileName, createSourceFile(
 					fileName,
-					scriptText,
+					scriptSnapshot,
 					vueCompilerOptions,
 					ts,
 					plugins,
@@ -297,7 +301,7 @@ export function createLanguageContext(
 					}
 				}
 
-				sourceFile.text = scriptText;
+				sourceFile.update(scriptSnapshot);
 
 				if (!tsFileUpdated) {
 					for (const embedded of sourceFile.allEmbeddeds) {

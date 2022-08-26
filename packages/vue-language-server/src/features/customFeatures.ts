@@ -1,13 +1,11 @@
 import * as shared from '@volar/shared';
 import * as path from 'upath';
-import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
 import type { Projects } from '../projects';
 import * as vue from '@volar/vue-language-core';
 
 export function register(
 	connection: vscode.Connection,
-	documents: vscode.TextDocuments<TextDocument>,
 	projects: Projects,
 ) {
 	connection.onRequest(shared.D3Request.type, async handler => {

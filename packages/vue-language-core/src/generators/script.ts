@@ -446,9 +446,7 @@ export function generate(
 		if (lang === 'jsx' || lang === 'tsx') {
 
 			codeGen.addText(`function __VLS_template() {\n`);
-
-			codeGen.addText(`import * as __VLS_types from './__VLS_types.js';\n`);
-			codeGen.addText(`const __VLS_types: typeof import('./__VLS_types.js');\n`);
+			codeGen.addText(`import * as __VLS_types from './__VLS_types.js'; import('./__VLS_types.js');\n`);
 
 			writeExportOptions();
 			writeConstNameOption();

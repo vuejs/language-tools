@@ -1,11 +1,10 @@
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
 import type { createLsConfigs } from './configHost';
-import { getDocumentSafely } from './utils';
 import { LanguageConfigs, loadCustomPlugins, RuntimeEnvironment } from './common';
+import { createSnapshots } from './snapshots';
 
 export interface Project extends ReturnType<typeof createProject> { }
 
@@ -18,7 +17,7 @@ export async function createProject(
 	rootPath: string,
 	tsConfig: string | ts.CompilerOptions,
 	tsLocalized: ts.MapLike<string> | undefined,
-	documents: vscode.TextDocuments<TextDocument>,
+	documents: ReturnType<typeof createSnapshots>,
 	connection: vscode.Connection,
 	lsConfigs: ReturnType<typeof createLsConfigs> | undefined,
 ) {
@@ -120,13 +119,7 @@ export async function createProject(
 			typeRootVersion++; // TODO: check changed in node_modules?
 		}
 	}
-	async function onDocumentUpdated(document: TextDocument) {
-
-		const script = scripts.uriGet(document.uri);
-		if (script) {
-			script.version = document.version;
-		}
-
+	async function onDocumentUpdated() {
 		projectVersion++;
 	}
 	function createLanguageServiceHost() {
@@ -169,29 +162,44 @@ export async function createProject(
 		return host;
 
 		function getScriptVersion(fileName: string) {
+
+			const doc = documents.data.fsPathGet(fileName);
+			if (doc) {
+				return doc.version.toString();
+			}
+
 			return scripts.fsPathGet(fileName)?.version.toString() ?? '';
 		}
 		function getScriptSnapshot(fileName: string) {
+
+			const doc = documents.data.fsPathGet(fileName);
+			if (doc) {
+				return doc.getSnapshot();
+			}
+
 			const script = scripts.fsPathGet(fileName);
 			if (script && script.snapshotVersion === script.version) {
 				return script.snapshot;
 			}
-			const text = getScriptText(documents, fileName, projectSys);
-			if (text !== undefined) {
-				const snapshot = ts.ScriptSnapshot.fromString(text);
-				if (script) {
-					script.snapshot = snapshot;
-					script.snapshotVersion = script.version;
+
+			if (projectSys.fileExists(fileName)) {
+				const text = projectSys.readFile(fileName, 'utf8');
+				if (text !== undefined) {
+					const snapshot = ts.ScriptSnapshot.fromString(text);
+					if (script) {
+						script.snapshot = snapshot;
+						script.snapshotVersion = script.version;
+					}
+					else {
+						scripts.fsPathSet(fileName, {
+							version: -1,
+							fileName: fileName,
+							snapshot: snapshot,
+							snapshotVersion: -1,
+						});
+					}
+					return snapshot;
 				}
-				else {
-					scripts.fsPathSet(fileName, {
-						version: -1,
-						fileName: fileName,
-						snapshot: snapshot,
-						snapshotVersion: -1,
-					});
-				}
-				return snapshot;
 			}
 		}
 	}
@@ -223,20 +231,5 @@ export async function createProject(
 			content.fileNames = content.fileNames.map(shared.normalizeFileName);
 			return { ...content, vueOptions: {} };
 		}
-	}
-}
-
-export function getScriptText(
-	documents: vscode.TextDocuments<TextDocument>,
-	fileName: string,
-	sys: typeof import('typescript/lib/tsserverlibrary')['sys'],
-) {
-	const uri = shared.fsPathToUri(fileName);
-	const doc = getDocumentSafely(documents, uri);
-	if (doc) {
-		return doc.getText();
-	}
-	if (sys.fileExists(fileName)) {
-		return sys.readFile(fileName, 'utf8');
 	}
 }

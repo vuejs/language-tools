@@ -20,13 +20,14 @@ const enum PreviewType {
 export async function register(context: vscode.ExtensionContext) {
 
 	const panels = new Set<vscode.WebviewPanel>();
+	const panelUrl = new Map<vscode.WebviewPanel, string>();
 	let _activePreview: vscode.WebviewPanel | undefined;
 	let externalBrowserPanel: vscode.WebviewPanel | undefined;
 	let avoidUpdateOnDidChangeActiveTextEditor = false;
 	let updateComponentPreview: Function | undefined;
 
-	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
-	statusBar.command = 'volar.inputWebviewUrl';
+	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, -1);
+	statusBar.command = 'volar.previewMenu';
 	statusBar.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
 	context.subscriptions.push(statusBar);
 
@@ -34,7 +35,8 @@ export async function register(context: vscode.ExtensionContext) {
 	let highlightDomElements = true;
 	const onDidChangeCodeLensesEmmiter = new vscode.EventEmitter<void>();
 
-	if (vscode.window.terminals.some(terminal => terminal.name.startsWith('volar-preview:'))) {
+	const previewTerminal = vscode.window.terminals.find(terminal => terminal.name.startsWith('volar-preview:'));
+	if (previewTerminal) {
 		connection = preview.createPreviewConnection({
 			onGotoCode: handleGoToCode,
 			getFileHref: (fileName, range) => {
@@ -44,6 +46,8 @@ export async function register(context: vscode.ExtensionContext) {
 			},
 		});
 		onDidChangeCodeLensesEmmiter.fire();
+		statusBar.text = 'Preview Port: ' + previewTerminal.name.split(':')[1];
+		statusBar.show();
 	}
 	vscode.window.onDidOpenTerminal(e => {
 		if (e.name.startsWith('volar-preview:')) {
@@ -56,6 +60,8 @@ export async function register(context: vscode.ExtensionContext) {
 				},
 			});
 			onDidChangeCodeLensesEmmiter.fire();
+			statusBar.text = 'Preview Port: ' + e.name.split(':')[1];
+			statusBar.show();
 		}
 	});
 	vscode.window.onDidCloseTerminal(e => {
@@ -63,6 +69,7 @@ export async function register(context: vscode.ExtensionContext) {
 			connection?.stop();
 			connection = undefined;
 			onDidChangeCodeLensesEmmiter.fire();
+			statusBar.hide();
 		}
 	});
 
@@ -171,6 +178,61 @@ export async function register(context: vscode.ExtensionContext) {
 		new VueComponentPreview(),
 	);
 
+	context.subscriptions.push(vscode.commands.registerCommand('volar.previewMenu', async () => {
+
+		const baseOptions: Record<string, vscode.QuickPickItem> = {};
+		const urlOptions: Record<string, vscode.QuickPickItem> = {};
+		const highlight: Record<string, vscode.QuickPickItem> = {};
+
+		baseOptions['kill'] = { label: 'Kill Preview Server' };
+		baseOptions['browser'] = { label: 'Open in Browser' };
+
+		for (const panel of panels) {
+			urlOptions['url::' + panelUrl.get(panel)] = { label: 'Input WebView URL', detail: panelUrl.get(panel) };
+		}
+
+		highlight['highlight-on'] = { label: (highlightDomElements ? '• ' : '') + 'Highlight DOM Elements' };
+		highlight['highlight-off'] = { label: (!highlightDomElements ? '• ' : '') + `Don't Highlight DOM Elements` };
+
+		const key = await userPick([baseOptions, urlOptions, highlight]);
+
+		if (key?.startsWith('url::')) {
+			const url = key.split('::')[1];
+			const input = await vscode.window.showInputBox({ value: url });
+			for (const panel of panels) {
+				if (panelUrl.get(panel) === url) {
+					if (input !== undefined && input !== statusBar.text) {
+						panel.webview.html = getWebviewContent(input);
+					}
+				}
+			}
+		}
+		if (key === 'kill') {
+			for (const terminal of vscode.window.terminals) {
+				if (terminal.name.startsWith('volar-preview:')) {
+					terminal.dispose();
+				}
+				for (const panel of panels) {
+					panel.dispose();
+				}
+			}
+		}
+		if (key === 'browser') {
+			vscode.env.openExternal(vscode.Uri.parse('http://localhost:' + statusBar.text.split(':')[1].trim()));
+		}
+		if (key === 'highlight-on') {
+			highlightDomElements = true;
+			if (vscode.window.activeTextEditor) {
+				updateSelectionHighlights(vscode.window.activeTextEditor);
+			}
+		}
+		if (key === 'highlight-off') {
+			highlightDomElements = false;
+			if (vscode.window.activeTextEditor) {
+				updateSelectionHighlights(vscode.window.activeTextEditor);
+			}
+		}
+	}));
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.vite', async () => {
 
 		const editor = vscode.window.activeTextEditor;
@@ -228,15 +290,8 @@ export async function register(context: vscode.ExtensionContext) {
 		}
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.openInBrowser', () => {
-		vscode.env.openExternal(vscode.Uri.parse(statusBar.text));
-	}));
-	context.subscriptions.push(vscode.commands.registerCommand('volar.inputWebviewUrl', async () => {
-		const panel = [...panels].find(panel => panel.active);
-		if (panel) {
-			const input = await vscode.window.showInputBox({ value: statusBar.text });
-			if (input !== undefined && input !== statusBar.text) {
-				panel.webview.html = getWebviewContent(input);
-			}
+		for (const panel of panels) {
+			vscode.env.openExternal(vscode.Uri.parse(panelUrl.get(panel)!));
 		}
 	}));
 	context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(e => {
@@ -257,44 +312,6 @@ export async function register(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(updatePreviewIconStatus));
 
 	updatePreviewIconStatus();
-	useHighlightDomElements();
-
-	function useHighlightDomElements() {
-
-		class HighlightDomElementsStatusCodeLens implements vscode.CodeLensProvider {
-			provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.CodeLens[]> {
-				if (connection) {
-					return [{
-						isResolved: true,
-						range: new vscode.Range(
-							document.positionAt(0),
-							document.positionAt(0),
-						),
-						command: {
-							title: 'highlight dom elements ' + (highlightDomElements ? '☑' : '☐'),
-							command: 'volar.toggleHighlightDomElementsStatus',
-						},
-					}];
-				}
-			};
-			onDidChangeCodeLenses = onDidChangeCodeLensesEmmiter.event;
-		}
-
-		const codeLens = new HighlightDomElementsStatusCodeLens();
-
-		vscode.languages.registerCodeLensProvider(
-			{ scheme: 'file', language: 'vue' },
-			codeLens,
-		);
-
-		vscode.commands.registerCommand('volar.toggleHighlightDomElementsStatus', () => {
-			highlightDomElements = !highlightDomElements;
-			if (vscode.window.activeTextEditor) {
-				updateSelectionHighlights(vscode.window.activeTextEditor);
-			}
-			onDidChangeCodeLensesEmmiter.fire();
-		});
-	}
 
 	function getSfc(document: vscode.TextDocument) {
 		let cache = sfcs.get(document);
@@ -404,13 +421,6 @@ export async function register(context: vscode.ExtensionContext) {
 				panel.webview.html = getWebviewContent(`http://localhost:${port}`, { fileName, mode });
 			}));
 			panel.webview.html = getWebviewContent(`http://localhost:${port}`, { fileName, mode });
-
-			panel.onDidChangeViewState(() => {
-				if (panel.active)
-					statusBar.show();
-				else
-					statusBar.hide();
-			});
 		}
 
 		return port;
@@ -432,38 +442,38 @@ export async function register(context: vscode.ExtensionContext) {
 		function setPreviewActiveContext(value: boolean) {
 			vscode.commands.executeCommand('setContext', 'volarPreviewFocus', value);
 		}
-	}
 
-	async function webviewEventHandler(message: any) {
-		switch (message.command) {
-			case 'openUrl': {
-				const url = message.data;
-				vscode.env.openExternal(vscode.Uri.parse(url));
-				break;
-			}
-			case 'closeExternalBrowserPanel': {
-				externalBrowserPanel?.dispose();
-				break;
-			}
-			case 'urlChanged': {
-				const url = message.data;
-				statusBar.text = url;
-				break;
-			}
-			case 'log': {
-				const text = message.data;
-				vscode.window.showInformationMessage(text);
-				break;
-			}
-			case 'warn': {
-				const text = message.data;
-				vscode.window.showWarningMessage(text);
-				break;
-			}
-			case 'error': {
-				const text = message.data;
-				vscode.window.showErrorMessage(text);
-				break;
+		async function webviewEventHandler(message: any) {
+			switch (message.command) {
+				case 'openUrl': {
+					const url = message.data;
+					vscode.env.openExternal(vscode.Uri.parse(url));
+					break;
+				}
+				case 'closeExternalBrowserPanel': {
+					externalBrowserPanel?.dispose();
+					break;
+				}
+				case 'urlChanged': {
+					const url = message.data;
+					panelUrl.set(panel, url);
+					break;
+				}
+				case 'log': {
+					const text = message.data;
+					vscode.window.showInformationMessage(text);
+					break;
+				}
+				case 'warn': {
+					const text = message.data;
+					vscode.window.showWarningMessage(text);
+					break;
+				}
+				case 'error': {
+					const text = message.data;
+					vscode.window.showErrorMessage(text);
+					break;
+				}
 			}
 		}
 	}

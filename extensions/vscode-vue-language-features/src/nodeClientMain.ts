@@ -31,6 +31,27 @@ export function activate(context: vscode.ExtensionContext) {
 			},
 		};
 		const clientOptions: lsp.LanguageClientOptions = {
+			middleware: {
+				handleDiagnostics: (uri, diagnostics, next) => {
+					const document = vscode.workspace.textDocuments.find(d => d.uri.toString() === uri.toString());
+					if (document) {
+						let outdated = false;
+						for (const diagnostic of diagnostics) {
+							const data = (diagnostic as any).data;
+							if (typeof data === 'object' && 'version' in data) {
+								if (document.version !== data.version) {
+									outdated = true;
+									break;
+								}
+							}
+						}
+						if (outdated) {
+							return;
+						}
+					}
+					next(uri, diagnostics);
+				},
+			},
 			documentSelector,
 			initializationOptions: initOptions,
 			progressOnInitialization: true,

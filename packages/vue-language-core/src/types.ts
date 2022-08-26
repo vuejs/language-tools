@@ -50,7 +50,6 @@ export interface EmbeddedFileMappingData {
 }
 
 export interface TeleportSideData {
-	transformNewName?: (newName: string) => string,
 	capabilities: {
 		references?: boolean,
 		definitions?: boolean,
@@ -59,7 +58,6 @@ export interface TeleportSideData {
 }
 
 export interface TeleportMappingData {
-	isAdditionalReference?: boolean;
 	toSource: TeleportSideData,
 	toTarget: TeleportSideData,
 }

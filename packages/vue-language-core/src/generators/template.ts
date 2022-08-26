@@ -635,89 +635,32 @@ export function generate(
 					&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 				) {
 
-					const transformResult = CompilerDOM.transformOn(prop, node, transformContext);
+					tryWriteInstance();
 
-					for (const prop_2 of transformResult.props) {
+					const tag = tagResolves[node.tag];
+					const varInstanceProps = `__VLS_${elementIndex++}`;
 
-						tryWriteInstance();
+					if (tag) {
+						tsCodeGen.addText(`type ${varInstanceProps} = typeof ${varComponentInstance} extends { $props: infer Props } ? Props & Record<string, unknown> : typeof ${tag.component} & Record<string, unknown>;\n`);
+					}
 
-						const tag = tagResolves[node.tag];
-						const varInstanceProps = `__VLS_${elementIndex++}`;
+					tsCodeGen.addText(`const __VLS_${elementIndex++}: {\n`);
+					tsCodeGen.addText(`'${prop.arg.loc.source}': __VLS_types.FillingEventArg<\n`);
+					{
+
+						const key_2 = camelize('on-' + prop.arg.loc.source); // onClickOutside
+						const key_3 = 'on' + capitalize(prop.arg.loc.source); // onClick-outside
 
 						if (tag) {
-							tsCodeGen.addText(`type ${varInstanceProps} = typeof ${varComponentInstance} extends { $props: infer Props } ? Props & Record<string, unknown> : typeof ${tag.component} & Record<string, unknown>;\n`);
-						}
 
-						tsCodeGen.addText(`const __VLS_${elementIndex++}: {\n`);
-						tsCodeGen.addText(`'${prop.arg.loc.source}': __VLS_types.FillingEventArg<\n`);
-						{
+							tsCodeGen.addText(`__VLS_types.FirstFunction<\n`);
 
-							const key_2 = camelize('on-' + prop.arg.loc.source); // onClickOutside
-							const key_3 = 'on' + capitalize(prop.arg.loc.source); // onClick-outside
-
-							if (tag) {
-
-								tsCodeGen.addText(`__VLS_types.FirstFunction<\n`);
-
-								{
-									tsCodeGen.addText(`__VLS_types.EmitEvent<typeof ${tag.component}, '${prop.arg.loc.source}'>,\n`);
-								}
-
-								{
-									tsCodeGen.addText(`${varInstanceProps}[`);
-									writeCodeWithQuotes(
-										key_2,
-										[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
-										{
-											vueTag: 'template',
-											capabilities: capabilitiesSet.attrReference,
-											normalizeNewName(newName) {
-												return camelize('on-' + newName);
-											},
-											applyNewName(oldName, newName) {
-												const hName = hyphenate(newName);
-												if (hyphenate(newName).startsWith('on-')) {
-													return camelize(hName.slice('on-'.length));
-												}
-												return newName;
-											},
-										},
-									);
-									tsCodeGen.addText(`],\n`);
-								}
-
-								{
-									if (key_3 !== key_2) {
-										tsCodeGen.addText(`${varInstanceProps}[`);
-										writeCodeWithQuotes(
-											key_3,
-											[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
-											{
-												vueTag: 'template',
-												capabilities: capabilitiesSet.attrReference,
-												normalizeNewName(newName) {
-													return 'on' + capitalize(newName);
-												},
-												applyNewName(oldName, newName) {
-													const hName = hyphenate(newName);
-													if (hyphenate(newName).startsWith('on-')) {
-														return camelize(hName.slice('on-'.length));
-													}
-													return newName;
-												},
-											},
-										);
-										tsCodeGen.addText(`],\n`);
-									}
-								}
-
-								{
-									tsCodeGen.addText(`typeof ${varComponentInstance} extends { $emit: infer Emit } ? __VLS_types.EmitEvent2<Emit, '${prop.arg.loc.source}'> : unknown,\n`);
-								}
+							{
+								tsCodeGen.addText(`__VLS_types.EmitEvent<typeof ${tag.component}, '${prop.arg.loc.source}'>,\n`);
 							}
 
 							{
-								tsCodeGen.addText(`__VLS_types.GlobalAttrs[`);
+								tsCodeGen.addText(`${varInstanceProps}[`);
 								writeCodeWithQuotes(
 									key_2,
 									[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
@@ -739,31 +682,83 @@ export function generate(
 								tsCodeGen.addText(`],\n`);
 							}
 
-							if (tag) {
-								tsCodeGen.addText(`>\n`);
+							{
+								if (key_3 !== key_2) {
+									tsCodeGen.addText(`${varInstanceProps}[`);
+									writeCodeWithQuotes(
+										key_3,
+										[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
+										{
+											vueTag: 'template',
+											capabilities: capabilitiesSet.attrReference,
+											normalizeNewName(newName) {
+												return 'on' + capitalize(newName);
+											},
+											applyNewName(oldName, newName) {
+												const hName = hyphenate(newName);
+												if (hyphenate(newName).startsWith('on-')) {
+													return camelize(hName.slice('on-'.length));
+												}
+												return newName;
+											},
+										},
+									);
+									tsCodeGen.addText(`],\n`);
+								}
+							}
+
+							{
+								tsCodeGen.addText(`typeof ${varComponentInstance} extends { $emit: infer Emit } ? __VLS_types.EmitEvent2<Emit, '${prop.arg.loc.source}'> : unknown,\n`);
 							}
 						}
-						tsCodeGen.addText(`>\n`);
-						tsCodeGen.addText(`} = {\n`);
+
 						{
-							writeObjectProperty(
-								prop.arg.loc.source,
-								{
-									start: prop.arg.loc.start.offset,
-									end: prop.arg.loc.end.offset,
-								},
-								SourceMaps.Mode.Offset,
+							tsCodeGen.addText(`__VLS_types.GlobalAttrs[`);
+							writeCodeWithQuotes(
+								key_2,
+								[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
 								{
 									vueTag: 'template',
-									capabilities: capabilitiesSet.event,
+									capabilities: capabilitiesSet.attrReference,
+									normalizeNewName(newName) {
+										return camelize('on-' + newName);
+									},
+									applyNewName(oldName, newName) {
+										const hName = hyphenate(newName);
+										if (hyphenate(newName).startsWith('on-')) {
+											return camelize(hName.slice('on-'.length));
+										}
+										return newName;
+									},
 								},
 							);
-							tsCodeGen.addText(`: `);
-							appendExpressionNode(prop, prop_2.value);
+							tsCodeGen.addText(`],\n`);
 						}
-						tsCodeGen.addText(`};\n`);
-						writeInterpolationVarsExtraCompletion();
+
+						if (tag) {
+							tsCodeGen.addText(`>\n`);
+						}
 					}
+					tsCodeGen.addText(`>\n`);
+					tsCodeGen.addText(`} = {\n`);
+					{
+						writeObjectProperty(
+							prop.arg.loc.source,
+							{
+								start: prop.arg.loc.start.offset,
+								end: prop.arg.loc.end.offset,
+							},
+							SourceMaps.Mode.Offset,
+							{
+								vueTag: 'template',
+								capabilities: capabilitiesSet.event,
+							},
+						);
+						tsCodeGen.addText(`: `);
+						appendExpressionNode(prop);
+					}
+					tsCodeGen.addText(`};\n`);
+					writeInterpolationVarsExtraCompletion();
 				}
 				else if (
 					prop.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -790,59 +785,59 @@ export function generate(
 					tsCodeGen.addText(`;\n`);
 				}
 
-				function appendExpressionNode(prop: CompilerDOM.DirectiveNode, jsChildNode: CompilerDOM.JSChildNode) {
+				function appendExpressionNode(prop: CompilerDOM.DirectiveNode) {
 					if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-						if (jsChildNode.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 
-							writeInterpolation(
-								prop.exp.content,
-								prop.exp.loc.start.offset,
-								{
-									vueTag: 'template',
-									capabilities: capabilitiesSet.all,
-								},
-								'(',
-								')',
-							);
-							writeFormatCode(
-								prop.exp.content,
-								prop.exp.loc.start.offset,
-								formatBrackets.round,
-							);
+						const ast = ts.createSourceFile('/foo.ts', prop.exp.content, ts.ScriptTarget.ESNext);
+						let isCompoundExpession = true;
+
+						if (ast.getChildCount() === 2) { // with EOF 
+							ast.forEachChild(child_1 => {
+								if (ts.isExpressionStatement(child_1)) {
+									child_1.forEachChild(child_2 => {
+										if (ts.isArrowFunction(child_2)) {
+											isCompoundExpession = false;
+										}
+										else if (ts.isIdentifier(child_2)) {
+											isCompoundExpession = false;
+										}
+									});
+								}
+								else if (ts.isFunctionDeclaration(child_1)) {
+									isCompoundExpession = false;
+								}
+							});
 						}
-						else if (jsChildNode.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
 
-							const _exp = prop.exp;
-							const expIndex = jsChildNode.children.findIndex(child => typeof child === 'object' && child.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && child.content === _exp.content);
-							const expNode = jsChildNode.children[expIndex] as CompilerDOM.SimpleExpressionNode;
-							let prefix = jsChildNode.children.filter((child, i) => typeof child === 'string' && i < expIndex).map(child => child as string).join('');
-							let suffix = jsChildNode.children.filter((child, i) => typeof child === 'string' && i > expIndex).map(child => child as string).join('');
+						let prefix = '(';
+						let suffix = ')';
 
-							if (prefix && blockConditions.length) {
-								prefix = prefix.replace('(', '{ ');
-								suffix = suffix.replace(')', '} ');
-								prefix += '\n';
+						if (isCompoundExpession) {
+
+							prefix = '$event => {\n';
+							if (blockConditions.length) {
 								for (const blockCondition of blockConditions) {
 									prefix += `if (!(${blockCondition})) return;\n`;
 								}
 							}
-
-							writeInterpolation(
-								expNode.content,
-								expNode.loc.start.offset,
-								{
-									vueTag: 'template',
-									capabilities: capabilitiesSet.all,
-								},
-								prefix,
-								suffix
-							);
-							writeFormatCode(
-								expNode.content,
-								expNode.loc.start.offset,
-								formatBrackets.round,
-							);
+							suffix = '\n}';
 						}
+
+						writeInterpolation(
+							prop.exp.content,
+							prop.exp.loc.start.offset,
+							{
+								vueTag: 'template',
+								capabilities: capabilitiesSet.all,
+							},
+							prefix,
+							suffix
+						);
+						writeFormatCode(
+							prop.exp.content,
+							prop.exp.loc.start.offset,
+							formatBrackets.round,
+						);
 					}
 					else {
 						tsCodeGen.addText(`undefined`);

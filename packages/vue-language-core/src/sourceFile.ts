@@ -1,5 +1,5 @@
 import { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
-import { computed, ComputedRef, reactive, ref } from '@vue/reactivity';
+import { computed, ComputedRef, reactive, shallowRef as ref } from '@vue/reactivity';
 import { EmbeddedFileMappingData, TeleportMappingData, VueCompilerOptions, _VueCompilerOptions } from './types';
 import { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
 
@@ -15,6 +15,7 @@ export type VueLanguagePlugin = (ctx: {
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: _VueCompilerOptions,
 }) => {
+	order?: number;
 	parseSFC?(fileName: string, content: string): SFCParseResult | undefined;
 	compileSFCTemplate?(lang: string, template: string, options?: CompilerDom.CompilerOptions): CompilerDom.CodegenResult | undefined;
 	getEmbeddedFileNames?(fileName: string, sfc: Sfc): string[];
@@ -82,29 +83,30 @@ export interface EmbeddedFile {
 
 export function createSourceFile(
 	fileName: string,
-	_content: string,
+	scriptSnapshot: ts.IScriptSnapshot,
 	vueCompilerOptions: VueCompilerOptions,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	plugins: ReturnType<VueLanguagePlugin>[],
 ) {
 
 	// refs
-	const fileContent = ref('');
+	const snapshot = ref(scriptSnapshot);
+	const fileContent = computed(() => snapshot.value.getText(0, snapshot.value.getLength()));
 	const sfc = reactive<Sfc>({
 		template: null,
 		script: null,
 		scriptSetup: null,
 		styles: [],
 		customBlocks: [],
-		get templateAst() {
+		templateAst: computed(() => {
 			return compiledSFCTemplate.value?.ast;
-		},
-		get scriptAst() {
+		}) as unknown as Sfc['templateAst'],
+		scriptAst: computed(() => {
 			return scriptAst.value;
-		},
-		get scriptSetupAst() {
+		}) as unknown as Sfc['scriptAst'],
+		scriptSetupAst: computed(() => {
 			return scriptSetupAst.value;
-		},
+		}) as unknown as Sfc['scriptSetupAst'],
 	}) as Sfc /* avoid Sfc unwrap in .d.ts by reactive */;
 
 	// use
@@ -146,7 +148,6 @@ export function createSourceFile(
 					const err = e as CompilerDom.CompilerError;
 					errors.push(err);
 				}
-
 
 				if (ast || errors.length) {
 					return {
@@ -321,16 +322,14 @@ export function createSourceFile(
 		}
 	});
 
-	update(_content);
+	update(scriptSnapshot, true);
 
 	return {
 		fileName,
 		get text() {
 			return fileContent.value;
 		},
-		set text(value) {
-			update(value);
-		},
+		update,
 		get compiledSFCTemplate() {
 			return compiledSFCTemplate.value;
 		},
@@ -399,12 +398,18 @@ export function createSourceFile(
 		}
 		return range;
 	}
-	function update(newContent: string) {
+	function update(newScriptSnapshot: ts.IScriptSnapshot, init = false) {
 
-		if (fileContent.value === newContent)
+		if (newScriptSnapshot === snapshot.value && !init) {
 			return;
+		}
 
-		fileContent.value = newContent;
+		const change = newScriptSnapshot.getChangeRange(snapshot.value);
+		snapshot.value = newScriptSnapshot;
+
+		if (change) {
+			// TODO
+		}
 
 		// TODO: wait for https://github.com/vuejs/core/pull/5912
 		if (parsedSfc.value) {
@@ -419,8 +424,8 @@ export function createSourceFile(
 
 			const newData: Sfc['template'] | null = block ? {
 				tag: 'template',
-				start: newContent.substring(0, block.loc.start.offset).lastIndexOf('<'),
-				end: block.loc.end.offset + newContent.substring(block.loc.end.offset).indexOf('>') + 1,
+				start: fileContent.value.substring(0, block.loc.start.offset).lastIndexOf('<'),
+				end: block.loc.end.offset + fileContent.value.substring(block.loc.end.offset).indexOf('>') + 1,
 				startTagEnd: block.loc.start.offset,
 				endTagStart: block.loc.end.offset,
 				content: block.content,
@@ -438,8 +443,8 @@ export function createSourceFile(
 
 			const newData: Sfc['script'] | null = block ? {
 				tag: 'script',
-				start: newContent.substring(0, block.loc.start.offset).lastIndexOf('<'),
-				end: block.loc.end.offset + newContent.substring(block.loc.end.offset).indexOf('>') + 1,
+				start: fileContent.value.substring(0, block.loc.start.offset).lastIndexOf('<'),
+				end: block.loc.end.offset + fileContent.value.substring(block.loc.end.offset).indexOf('>') + 1,
 				startTagEnd: block.loc.start.offset,
 				endTagStart: block.loc.end.offset,
 				content: block.content,
@@ -458,8 +463,8 @@ export function createSourceFile(
 
 			const newData: Sfc['scriptSetup'] | null = block ? {
 				tag: 'scriptSetup',
-				start: newContent.substring(0, block.loc.start.offset).lastIndexOf('<'),
-				end: block.loc.end.offset + newContent.substring(block.loc.end.offset).indexOf('>') + 1,
+				start: fileContent.value.substring(0, block.loc.start.offset).lastIndexOf('<'),
+				end: block.loc.end.offset + fileContent.value.substring(block.loc.end.offset).indexOf('>') + 1,
 				startTagEnd: block.loc.start.offset,
 				endTagStart: block.loc.end.offset,
 				content: block.content,
@@ -479,8 +484,8 @@ export function createSourceFile(
 				const block = blocks[i];
 				const newData: Sfc['styles'][number] = {
 					tag: 'style',
-					start: newContent.substring(0, block.loc.start.offset).lastIndexOf('<'),
-					end: block.loc.end.offset + newContent.substring(block.loc.end.offset).indexOf('>') + 1,
+					start: fileContent.value.substring(0, block.loc.start.offset).lastIndexOf('<'),
+					end: block.loc.end.offset + fileContent.value.substring(block.loc.end.offset).indexOf('>') + 1,
 					startTagEnd: block.loc.start.offset,
 					endTagStart: block.loc.end.offset,
 					content: block.content,
@@ -506,8 +511,8 @@ export function createSourceFile(
 				const block = blocks[i];
 				const newData: Sfc['customBlocks'][number] = {
 					tag: 'customBlock',
-					start: newContent.substring(0, block.loc.start.offset).lastIndexOf('<'),
-					end: block.loc.end.offset + newContent.substring(block.loc.end.offset).indexOf('>') + 1,
+					start: fileContent.value.substring(0, block.loc.start.offset).lastIndexOf('<'),
+					end: block.loc.end.offset + fileContent.value.substring(block.loc.end.offset).indexOf('>') + 1,
 					startTagEnd: block.loc.start.offset,
 					endTagStart: block.loc.end.offset,
 					content: block.content,

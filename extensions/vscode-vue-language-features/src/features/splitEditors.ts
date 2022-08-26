@@ -94,19 +94,33 @@ function useDocDescriptor() {
 	}
 }
 
-export function userPick(options: Record<string, vscode.QuickPickItem>, placeholder?: string) {
+export function userPick(groups: Record<string, vscode.QuickPickItem> | Record<string, vscode.QuickPickItem>[], placeholder?: string) {
 	return new Promise<string | undefined>(resolve => {
 		const quickPick = vscode.window.createQuickPick();
-		quickPick.items = Object.values(options);
+		const items: vscode.QuickPickItem[] = [];
+		for (const group of Array.isArray(groups) ? groups : [groups]) {
+			const groupItems = Object.values(group);
+			if (groupItems.length) {
+				if (items.length) {
+					items.push({ label: '', kind: vscode.QuickPickItemKind.Separator });
+				}
+				for (const item of groupItems) {
+					items.push(item);
+				}
+			}
+		}
+		quickPick.items = items;
 		quickPick.placeholder = placeholder;
 		quickPick.onDidChangeSelection(selection => {
 			if (selection[0]) {
-				for (let key in options) {
-					const option = options[key];
-					if (selection[0] === option) {
-						resolve(key);
-						quickPick.hide();
-						break;
+				for (const options of Array.isArray(groups) ? groups : [groups]) {
+					for (let key in options) {
+						const option = options[key];
+						if (selection[0] === option) {
+							resolve(key);
+							quickPick.hide();
+							break;
+						}
 					}
 				}
 			}

@@ -71,7 +71,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 								if (teleport) {
 
-									for (const [teleRange, sideData] of teleport.findTeleports(
+									for (const [teleRange] of teleport.findTeleports(
 										textEdit.range.start,
 										textEdit.range.end,
 										sideData => !!sideData.capabilities.rename,
@@ -82,11 +82,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 										foundTeleport = true;
 
-										const newName_2 = sideData.transformNewName
-											? sideData.transformNewName(newName)
-											: newName;
-
-										await withTeleports(teleport.document, teleRange.start, newName_2);
+										await withTeleports(teleport.document, teleRange.start, newName);
 									}
 								}
 
