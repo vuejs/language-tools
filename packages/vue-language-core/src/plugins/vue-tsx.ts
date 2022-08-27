@@ -18,13 +18,12 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 		getEmbeddedFileNames(fileName, sfc) {
 
 			const fileNames: string[] = [];
+			const _gen = useGen(fileName, sfc);
 
-			if (!fileName.endsWith('.html')) {
-				const _gen = useGen(fileName, sfc);
-				if (_gen?.lang.value && ['js', 'ts', 'jsx', 'tsx'].includes(_gen.lang.value)) {
-					fileNames.push(fileName + '.' + _gen.lang.value);
-				}
+			if (_gen?.lang.value && ['js', 'ts', 'jsx', 'tsx'].includes(_gen.lang.value)) {
+				fileNames.push(fileName + '.' + _gen.lang.value);
 			}
+
 			if (sfc.template) {
 				fileNames.push(fileName + '.__VLS_template_format.tsx');
 				fileNames.push(fileName + '.__VLS_template_style.css');
