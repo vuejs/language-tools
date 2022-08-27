@@ -631,8 +631,8 @@ export function generate(
 		codeGen.addText(`let __VLS_selfComponent!: __VLS_types.SelfComponent<typeof __VLS_name, typeof __VLS_component & (new () => { ${getSlotsPropertyName(compilerOptions.target ?? 3)}: typeof __VLS_slots })>;\n`);
 		codeGen.addText('let __VLS_components!: typeof __VLS_otherComponents & Omit<typeof __VLS_selfComponent, keyof typeof __VLS_otherComponents>;\n');
 
-		codeGen.addText(`__VLS_components.${SearchTexts.Components};\n`);
-		codeGen.addText(`({} as __VLS_types.GlobalAttrs).${SearchTexts.GlobalAttrs};\n`);
+		codeGen.addText(`__VLS_components['${SearchTexts.Components}'];\n`);
+		codeGen.addText(`({} as __VLS_types.GlobalAttrs)['${SearchTexts.GlobalAttrs}'];\n`);
 
 		/* Style Scoped */
 		codeGen.addText('/* Style Scoped */\n');
