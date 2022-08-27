@@ -270,6 +270,8 @@ export function createProjects(
 	}
 }
 
+let currentCwd = '';
+
 function createWorkspace(
 	runtimeEnv: RuntimeEnvironment,
 	languageConfigs: LanguageConfigs,
@@ -288,18 +290,17 @@ function createWorkspace(
 	const projects = shared.createPathMap<Project>();
 	let inferredProject: Project | undefined;
 
-	const getRootPath = () => rootPath;
-	const _workspaceSys = ts.sys.getCurrentDirectory() === rootPath ? ts.sys : new Proxy(ts.sys, {
+	const _workspaceSys = new Proxy(ts.sys, {
 		get(target, prop) {
 			const fn = target[prop as keyof typeof target];
 			if (typeof fn === 'function') {
 				return new Proxy(fn, {
 					apply(target, thisArg, args) {
-						const cwd = process.cwd;
-						process.cwd = getRootPath;
-						const result = (target as any).apply(thisArg, args);
-						process.cwd = cwd;
-						return result;
+						if (currentCwd !== rootPath) {
+							process.chdir(rootPath);
+							currentCwd = rootPath;
+						}
+						return (target as any).apply(thisArg, args);
 					}
 				});
 			}
