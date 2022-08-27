@@ -652,6 +652,7 @@ export function generate(
 
 		codeGen.addText(`/* CSS variable injection */\n`);
 		const cssIds = writeCssVars();
+		codeGen.addText(`/* CSS variable injection end */\n`);
 
 		if (htmlGen) {
 			mergeCodeGen(codeGen, htmlGen.codeGen);

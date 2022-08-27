@@ -82,6 +82,7 @@ export function generate(
 	const tagOffsetsMap: Record<string, number[]> = {};
 	const tagResolves: Record<string, {
 		component: string,
+		isNamespacedTag: boolean,
 		emit: string,
 		offsets: number[],
 	} | undefined> = {};
@@ -119,18 +120,16 @@ export function generate(
 		const tagRanges = tagOffsets.map(offset => ({ start: offset, end: offset + tagName.length }));
 		const isNamespacedTag = tagName.indexOf('.') >= 0;
 
-		const var_componentVar = capitalize(camelize(tagName.replace(/:/g, '-')));
+		const var_componentVar = isNamespacedTag ? `__VLS_ctx.${tagName}` : capitalize(camelize(tagName.replace(/:/g, '-')));
 		const var_emit = `__VLS_${elementIndex++}`;
 
 		if (isNamespacedTag) {
+
+			identifiers.add(tagName.split('.')[0]);
+
 			for (let i = 0; i < tagRanges.length; i++) {
 				const tagRange = tagRanges[i];
-				if (i === 0) {
-					tsCodeGen.addText(`declare const ${var_componentVar}: typeof __VLS_ctx.`);
-				}
-				else {
-					tsCodeGen.addText(`declare const __VLS_${elementIndex++}: typeof __VLS_ctx.`);
-				}
+				tsCodeGen.addText(`declare const __VLS_${elementIndex++}: typeof __VLS_ctx.`);
 				writeCode(
 					tagName,
 					tagRange,
@@ -211,6 +210,7 @@ export function generate(
 
 		tagResolves[tagName] = {
 			component: var_componentVar,
+			isNamespacedTag,
 			emit: var_emit,
 			offsets: tagOffsets,
 		};
@@ -489,10 +489,8 @@ export function generate(
 			const fullTagStart = tsCodeGen.getText().length;
 			const tagCapabilities = {
 				...capabilitiesSet.diagnosticOnly,
-				...capabilitiesSet.tagHover,
-				...(_isIntrinsicElement ? {
-					...capabilitiesSet.tagReference,
-				} : {})
+				...(tagResolves[node.tag]?.isNamespacedTag ? {} : capabilitiesSet.tagHover),
+				...(_isIntrinsicElement ? capabilitiesSet.tagReference : {})
 			};
 			const endTagOffset = !node.isSelfClosing && sourceLang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
 
