@@ -19,7 +19,7 @@ import * as doctor from './features/doctor';
 import * as fileReferences from './features/fileReferences';
 import * as reloadProject from './features/reloadProject';
 
-let apiClient: lsp.BaseLanguageClient;
+let apiClient: lsp.BaseLanguageClient | undefined;
 let docClient: lsp.BaseLanguageClient | undefined;
 let htmlClient: lsp.BaseLanguageClient;
 
@@ -31,7 +31,7 @@ type CreateLanguageClient = (
 	port: number,
 ) => Promise<lsp.BaseLanguageClient>;
 
-export async function activate(context: vscode.ExtensionContext, createLc: CreateLanguageClient) {
+export async function activate(context: vscode.ExtensionContext, createLc: CreateLanguageClient, env: 'node' | 'browser') {
 
 	const stopCheck = vscode.window.onDidChangeActiveTextEditor(tryActivate);
 	tryActivate();
@@ -40,26 +40,26 @@ export async function activate(context: vscode.ExtensionContext, createLc: Creat
 
 		if (!vscode.window.activeTextEditor) {
 			// onWebviewPanel:preview
-			doActivate(context, createLc);
+			doActivate(context, createLc, env);
 			stopCheck.dispose();
 			return;
 		}
 
 		const currentlangId = vscode.window.activeTextEditor.document.languageId;
 		if (currentlangId === 'vue' || currentlangId === 'markdown' || currentlangId === 'html') {
-			doActivate(context, createLc);
+			doActivate(context, createLc, env);
 			stopCheck.dispose();
 		}
 
 		const takeOverMode = takeOverModeEnabled();
 		if (takeOverMode && ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(currentlangId)) {
-			doActivate(context, createLc);
+			doActivate(context, createLc, env);
 			stopCheck.dispose();
 		}
 	}
 }
 
-async function doActivate(context: vscode.ExtensionContext, createLc: CreateLanguageClient) {
+async function doActivate(context: vscode.ExtensionContext, createLc: CreateLanguageClient, env: 'node' | 'browser') {
 
 	vscode.commands.executeCommand('setContext', 'volar.activated', true);
 
@@ -97,14 +97,14 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	const _serverMaxOldSpaceSize = serverMaxOldSpaceSize();
 
 	[apiClient, docClient, htmlClient] = await Promise.all([
-		createLc(
+		env === 'node' ? createLc(
 			'volar-language-features',
 			'Volar - Language Features Server',
 			languageFeaturesDocumentSelector,
 			getInitializationOptions(context, 'main-language-features', _useSecondServer),
 			6009,
-		),
-		_useSecondServer ? createLc(
+		) : undefined,
+		env === 'node' && _useSecondServer ? createLc(
 			'volar-language-features-2',
 			'Volar - Second Language Features Server',
 			languageFeaturesDocumentSelector,
@@ -130,15 +130,18 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	splitEditors.register(context);
 	preview.register(context);
 	createWorkspaceSnippets.register(context);
-	callGraph.register(context, apiClient);
-	verifyAll.register(context, docClient ?? apiClient);
-	autoInsertion.register(context, htmlClient, apiClient);
 	doctor.register(context);
-	virtualFiles.register('volar.action.writeVirtualFiles', context, docClient ?? apiClient);
 	tsVersion.register('volar.selectTypeScriptVersion', context, [apiClient, docClient].filter(shared.notEmpty));
-	tsconfig.register('volar.openTsconfig', context, docClient ?? apiClient);
-	fileReferences.register('volar.vue.findAllFileReferences', apiClient);
 	reloadProject.register('volar.action.reloadProject', context, [apiClient, docClient].filter(shared.notEmpty));
+
+	if (apiClient) {
+		tsconfig.register('volar.openTsconfig', context, docClient ?? apiClient);
+		fileReferences.register('volar.vue.findAllFileReferences', apiClient);
+		callGraph.register(context, apiClient);
+		verifyAll.register(context, docClient ?? apiClient);
+		autoInsertion.register(context, htmlClient, apiClient);
+		virtualFiles.register('volar.action.writeVirtualFiles', context, docClient ?? apiClient);
+	}
 
 	async function requestReloadVscode() {
 		const reload = await vscode.window.showInformationMessage(
@@ -183,13 +186,16 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		}
 
 		(async () => {
-			const getTagNameCase = await tagNameCase.activate(context, apiClient);
-			const getAttrNameCase = await attrNameCase.activate(context, apiClient);
+			if (apiClient) {
 
-			apiClient.onRequest(shared.GetDocumentNameCasesRequest.type, async handler => ({
-				tagNameCase: getTagNameCase(handler.uri),
-				attrNameCase: getAttrNameCase(handler.uri),
-			}));
+				const getTagNameCase = await tagNameCase.activate(context, apiClient);
+				const getAttrNameCase = await attrNameCase.activate(context, apiClient);
+
+				apiClient.onRequest(shared.GetDocumentNameCasesRequest.type, async handler => ({
+					tagNameCase: getTagNameCase(handler.uri),
+					attrNameCase: getAttrNameCase(handler.uri),
+				}));
+			}
 		})();
 	}
 }

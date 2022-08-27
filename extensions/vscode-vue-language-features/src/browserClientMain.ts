@@ -29,7 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
 		await client.start();
 
 		return client;
-	});
+	}, 'browser');
 }
 
 export function deactivate(): Thenable<any> | undefined {
