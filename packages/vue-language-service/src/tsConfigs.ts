@@ -58,7 +58,7 @@ export async function getPreferences(
 	config = config ?? {};
 	preferencesConfig = preferencesConfig ?? {};
 
-	const preferences: ts.UserPreferences & { displayPartsForJSDoc: true; } = {
+	const preferences: ts.UserPreferences = {
 		quotePreference: getQuoteStylePreference(preferencesConfig),
 		importModuleSpecifierPreference: getImportModuleSpecifierPreference(preferencesConfig),
 		importModuleSpecifierEnding: getImportModuleSpecifierEndingPreference(preferencesConfig),
@@ -68,10 +68,11 @@ export async function getPreferences(
 		allowRenameOfImportPath: true,
 		includeAutomaticOptionalChainCompletions: config.suggest?.includeAutomaticOptionalChainCompletions ?? true,
 		provideRefactorNotApplicableReason: true,
-		generateReturnInDocTemplate: config.suggest?.jsdoc?.generateReturns ?? true,
+		// @ts-ignore
 		includeCompletionsForImportStatements: config.suggest?.includeCompletionsForImportStatements ?? true,
 		includeCompletionsWithSnippetText: config.suggest?.includeCompletionsWithSnippetText ?? true,
 		allowIncompleteCompletions: true,
+		// @ts-ignore
 		displayPartsForJSDoc: true,
 
 		// inlay hints
