@@ -90,6 +90,7 @@ export function generate(
 	const identifiers = new Set<string>();
 	const scopedClasses: { className: string, offset: number; }[] = [];
 	const blockConditions: string[] = [];
+	let slotsNum = 0;
 
 	tsFormatCodeGen.addText('export { };\n');
 
@@ -246,6 +247,7 @@ export function generate(
 	}
 	tsCodeGen.addText(`{\n`);
 	for (const [name, slot] of slots) {
+		slotsNum++;
 		writeObjectProperty(
 			name,
 			slot.loc,
@@ -270,6 +272,7 @@ export function generate(
 		cssCodeGen: cssCodeGen,
 		tagNames: tagOffsetsMap,
 		identifiers,
+		slotsNum,
 	};
 
 	function visitNode(node: CompilerDOM.TemplateChildNode, parentEl: CompilerDOM.ElementNode | undefined): void {

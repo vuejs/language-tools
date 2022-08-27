@@ -431,7 +431,12 @@ export function generate(
 
 			writeTemplate();
 
-			codeGen.addText(`return {} as typeof __VLS_Component & (new () => { ${getSlotsPropertyName(vueVersion)}: ReturnType<typeof __VLS_template> });\n`);
+			if (htmlGen?.slotsNum) {
+				codeGen.addText(`return {} as typeof __VLS_Component & (new () => { ${getSlotsPropertyName(vueVersion)}: ReturnType<typeof __VLS_template> });\n`);
+			}
+			else {
+				codeGen.addText(`return {} as typeof __VLS_Component;\n`);
+			}
 
 			codeGen.addText(`};\n`);
 			codeGen.addText(`return await __VLS_setup();\n`);
