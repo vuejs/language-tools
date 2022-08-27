@@ -457,7 +457,12 @@ export function generate(
 			writeComponentForTemplateUsage(templateGened.cssIds);
 		}
 		else {
-			codeGen.addText(`const __VLS_template = () => ({});\n`);
+			codeGen.addText(`function __VLS_template() {\n`);
+			const templateUsageVars = [...getTemplateUsageVars()];
+			codeGen.addText(`// @ts-ignore\n`);
+			codeGen.addText(`[${templateUsageVars.join(', ')}]\n`);
+			codeGen.addText(`return {};\n`);
+			codeGen.addText(`}\n`);
 		}
 	}
 	function writeComponentForTemplateUsage(cssIds: Set<string>) {
