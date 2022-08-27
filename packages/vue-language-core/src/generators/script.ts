@@ -450,11 +450,12 @@ export function generate(
 
 		if (lang === 'jsx' || lang === 'tsx') {
 
+			writeExportOptions();
+			writeConstNameOption();
+
 			codeGen.addText(`function __VLS_template() {\n`);
 			codeGen.addText(`import * as __VLS_types from './__VLS_types.js'; import('./__VLS_types.js');\n`);
 
-			writeExportOptions();
-			writeConstNameOption();
 			const templateGened = writeTemplateContext();
 
 			codeGen.addText(`}\n`);
