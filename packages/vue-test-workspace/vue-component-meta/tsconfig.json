@@ -3,5 +3,4 @@
 	"include": [
 		"**/*",
 	],
-	"allowJs": true,
 }

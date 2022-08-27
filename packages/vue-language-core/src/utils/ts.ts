@@ -2,26 +2,50 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path';
 import type { VueCompilerOptions, _VueCompilerOptions } from '../types';
 
-export type ParsedCommandLine = ReturnType<typeof createParsedCommandLine>;
+export type ParsedCommandLine = ts.ParsedCommandLine & {
+	vueOptions: VueCompilerOptions;
+};
+
+export function createParsedCommandLineByJson(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	parseConfigHost: ts.ParseConfigHost,
+	rootDir: string,
+	json: any,
+): ParsedCommandLine {
+
+	const rootDirPath = ts.sys.resolvePath(rootDir);
+	const tsConfigPath = ts.sys.resolvePath(path.join(rootDir, 'jsconfig.json'));
+	const content = ts.parseJsonConfigFileContent(json, parseConfigHost, rootDirPath, {}, tsConfigPath);
+
+	return createParsedCommandLineBase(ts, parseConfigHost, content, tsConfigPath, new Set());
+}
 
 export function createParsedCommandLine(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	parseConfigHost: ts.ParseConfigHost,
 	tsConfig: string,
 	extendsSet = new Set<string>(),
-): ts.ParsedCommandLine & {
-	vueOptions: VueCompilerOptions;
-} {
+): ParsedCommandLine {
 
 	const tsConfigPath = ts.sys.resolvePath(tsConfig);
 	const config = ts.readJsonConfigFile(tsConfigPath, ts.sys.readFile);
 	const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(tsConfigPath), {}, path.basename(tsConfigPath));
-	content.options.outDir = undefined; // TODO: patching ts server broke with outDir + rootDir + composite/incremental
+
+	return createParsedCommandLineBase(ts, parseConfigHost, content, tsConfigPath, extendsSet);
+}
+
+function createParsedCommandLineBase(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	parseConfigHost: ts.ParseConfigHost,
+	content: ts.ParsedCommandLine,
+	tsConfigPath: string,
+	extendsSet: Set<string>,
+): ParsedCommandLine {
 
 	let baseVueOptions = {};
 	const folder = path.dirname(tsConfigPath);
 
-	extendsSet.add(tsConfig);
+	extendsSet.add(tsConfigPath);
 
 	if (content.raw.extends) {
 		try {

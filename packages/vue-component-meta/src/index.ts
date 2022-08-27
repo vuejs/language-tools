@@ -24,15 +24,41 @@ export type {
 	SlotMeta
 };
 
+const parseConfigHost: ts.ParseConfigHost = {
+	useCaseSensitiveFileNames: ts.sys.useCaseSensitiveFileNames,
+	readDirectory: (path, extensions, exclude, include, depth) => {
+		return ts.sys.readDirectory(path, [...extensions, '.vue'], exclude, include, depth);
+	},
+	fileExists: ts.sys.fileExists,
+	readFile: ts.sys.readFile,
+};
+
+export type ComponentMetaChecker = ReturnType<typeof createComponentMetaCheckerBase>;
+
+export function createComponentMetaCheckerByJsonConfig(root: string, json: any, checkerOptions: MetaCheckerOptions = {}) {
+
+	const parsedCommandLine = vue.createParsedCommandLineByJson(ts, parseConfigHost, root, json);
+
+	for (const error of parsedCommandLine.errors) {
+		console.error(error);
+	}
+
+	return createComponentMetaCheckerBase(root + '/jsconfig.json', parsedCommandLine, checkerOptions);
+}
+
 export function createComponentMetaChecker(tsconfigPath: string, checkerOptions: MetaCheckerOptions = {}) {
-	const parsedCommandLine = vue.createParsedCommandLine(ts, {
-		useCaseSensitiveFileNames: ts.sys.useCaseSensitiveFileNames,
-		readDirectory: (path, extensions, exclude, include, depth) => {
-			return ts.sys.readDirectory(path, [...extensions, '.vue'], exclude, include, depth);
-		},
-		fileExists: ts.sys.fileExists,
-		readFile: ts.sys.readFile,
-	}, tsconfigPath);
+
+	const parsedCommandLine = vue.createParsedCommandLine(ts, parseConfigHost, tsconfigPath);
+
+	for (const error of parsedCommandLine.errors) {
+		console.error(error);
+	}
+
+	return createComponentMetaCheckerBase(tsconfigPath, parsedCommandLine, checkerOptions);
+}
+
+function createComponentMetaCheckerBase(tsconfigPath: string, parsedCommandLine: vue.ParsedCommandLine, checkerOptions: MetaCheckerOptions) {
+
 	const scriptSnapshot: Record<string, ts.IScriptSnapshot> = {};
 	const globalComponentName = tsconfigPath.replace(/\\/g, '/') + '.global.ts';
 	const host: vue.LanguageServiceHost = {
@@ -53,7 +79,7 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 		getScriptSnapshot: (fileName) => {
 			if (!scriptSnapshot[fileName]) {
 				let fileText: string | undefined;
-				if (fileName.endsWith('.meta.ts')) {
+				if (isMetaFileName(fileName)) {
 					fileText = getMetaScriptContent(fileName);
 				}
 				else if (fileName === globalComponentName) {
@@ -109,6 +135,10 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 			typeChecker,
 		},
 	};
+
+	function isMetaFileName(fileName: string) {
+		return fileName.endsWith('.meta.ts');
+	}
 
 	function getMetaFileName(fileName: string) {
 		return (fileName.endsWith('.vue') ? fileName : fileName.substring(0, fileName.lastIndexOf('.'))) + '.meta.ts';
