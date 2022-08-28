@@ -1,5 +1,5 @@
 import { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
-import { computed, ComputedRef, reactive, shallowRef as ref } from '@vue/reactivity';
+import { computed, ComputedRef, reactive, shallowRef as ref, pauseTracking, resetTracking } from '@vue/reactivity';
 import { EmbeddedFileMappingData, TeleportMappingData, VueCompilerOptions, _VueCompilerOptions } from './types';
 import { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
 
@@ -169,18 +169,29 @@ export function createSourceFile(
 
 		if (sfc.template) {
 
+			pauseTracking();
+			// don't tracking
+			const newSnapshot = snapshot.value;
+			const templateOffset = sfc.template.startTagEnd;
+			resetTracking();
+
+			// tracking
+			sfc.template.content;
+
 			// incremental update
 			if (compiledSFCTemplateCache?.plugin.updateSFCTemplate) {
-				const change = snapshot.value.getChangeRange(compiledSFCTemplateCache.snapshot);
+
+				const change = newSnapshot.getChangeRange(compiledSFCTemplateCache.snapshot);
+
 				if (change) {
-					const newText = snapshot.value.getText(change.span.start, change.span.start + change.newLength);
+					const newText = newSnapshot.getText(change.span.start, change.span.start + change.newLength);
 					const newResult = compiledSFCTemplateCache.plugin.updateSFCTemplate(compiledSFCTemplateCache.result, {
-						start: change.span.start - sfc.template.startTagEnd,
-						end: change.span.start + change.span.length - sfc.template.startTagEnd,
+						start: change.span.start - templateOffset,
+						end: change.span.start + change.span.length - templateOffset,
 						newText,
 					});
 					if (newResult) {
-						compiledSFCTemplateCache.snapshot = snapshot.value;
+						compiledSFCTemplateCache.snapshot = newSnapshot;
 						compiledSFCTemplateCache.result = newResult;
 						return {
 							errors: [],
@@ -214,7 +225,7 @@ export function createSourceFile(
 
 					if (result && !errors.length && !warnings.length) {
 						compiledSFCTemplateCache = {
-							snapshot: snapshot.value,
+							snapshot: newSnapshot,
 							result: result,
 							plugin,
 						};
