@@ -102,10 +102,14 @@ export default function (options: {
 		async format(document, range, options) {
 			return worker(document, async (htmlDocument) => {
 
-				const formatConfiguration = await useConfigurationHost()?.getConfiguration<html.HTMLFormatConfiguration>('html.format', document.uri);
+				const options_2 = await useConfigurationHost()?.getConfiguration<html.HTMLFormatConfiguration & { enable: boolean; }>('html.format', document.uri);
+
+				if (options_2?.enable === false) {
+					return;
+				}
 
 				return htmlLs.format(document, range, {
-					...formatConfiguration,
+					...options_2,
 					...options,
 				});
 			});

@@ -190,7 +190,12 @@ export default function (options: {
 		async format(document, range, options) {
 			return worker(document, async (stylesheet, cssLs) => {
 
-				const options_2 = await useConfigurationHost()?.getConfiguration<css.CSSFormatConfiguration>('css.format', document.uri);
+				const options_2 = await useConfigurationHost()?.getConfiguration<css.CSSFormatConfiguration & { enable: boolean; }>(document.languageId + '.format', document.uri);
+
+				if (options_2?.enable === false) {
+					return;
+				}
+
 				const edits = cssLs.format(document, range, {
 					...options_2,
 					...options,

@@ -1,5 +1,5 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as ts2 from '@volar/typescript-language-service';
 import * as semver from 'semver';
@@ -240,8 +240,15 @@ export default function (options: {
 			}
 		},
 
-		format(document, range, options_2) {
+		async format(document, range, options_2) {
 			if (isTsDocument(document)) {
+
+				const enable = await useConfigurationHost()?.getConfiguration<boolean>(getConfigTitle(document) + '.format.enable', document.uri);
+
+				if (enable === false) {
+					return;
+				}
+
 				return options.getTsLs().doFormatting.onRange(document.uri, options_2, range);
 			}
 		},
@@ -252,6 +259,16 @@ export default function (options: {
 			}
 		},
 	};
+}
+
+function getConfigTitle(document: TextDocument) {
+	if (document.languageId === 'javascriptreact') {
+		return 'javascript';
+	}
+	if (document.languageId === 'typescriptreact') {
+		return 'typescript';
+	}
+	return document.languageId;
 }
 
 export function isTsDocument(document: TextDocument) {
