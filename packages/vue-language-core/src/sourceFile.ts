@@ -19,6 +19,7 @@ export type VueLanguagePlugin = (ctx: {
 	parseSFC?(fileName: string, content: string): SFCParseResult | undefined;
 	updateSFC?(oldResult: SFCParseResult, textChange: { start: number, end: number, newText: string; }): SFCParseResult | undefined;
 	compileSFCTemplate?(lang: string, template: string, options?: CompilerDom.CompilerOptions): CompilerDom.CodegenResult | undefined;
+	updateSFCTemplate?(oldResult: CompilerDom.CodegenResult, textChange: { start: number, end: number, newText: string; }): CompilerDom.CodegenResult | undefined;
 	getEmbeddedFileNames?(fileName: string, sfc: Sfc): string[];
 	resolveEmbeddedFile?(fileName: string, sfc: Sfc, embeddedFile: EmbeddedFile): void;
 };
@@ -116,6 +117,11 @@ export function createSourceFile(
 		sfc: SFCParseResult,
 		plugin: ReturnType<VueLanguagePlugin>,
 	} | undefined;
+	let compiledSFCTemplateCache: {
+		snapshot: ts.IScriptSnapshot,
+		result: CompilerDom.CodegenResult,
+		plugin: ReturnType<VueLanguagePlugin>,
+	} | undefined;
 
 	// use
 	const scriptAst = computed(() => {
@@ -150,37 +156,74 @@ export function createSourceFile(
 		for (const plugin of plugins) {
 			const sfc = plugin.parseSFC?.(fileName, fileContent.value);
 			if (sfc) {
-				parsedSfcCache = { snapshot: snapshot.value, sfc, plugin };
+				parsedSfcCache = {
+					snapshot: snapshot.value,
+					sfc,
+					plugin,
+				};
 				return sfc;
 			}
 		}
 	});
 	const compiledSFCTemplate = computed(() => {
+
 		if (sfc.template) {
+
+			// incremental update
+			if (compiledSFCTemplateCache?.plugin.updateSFCTemplate) {
+				const change = snapshot.value.getChangeRange(compiledSFCTemplateCache.snapshot);
+				if (change) {
+					const newText = snapshot.value.getText(change.span.start, change.span.start + change.newLength);
+					const newResult = compiledSFCTemplateCache.plugin.updateSFCTemplate(compiledSFCTemplateCache.result, {
+						start: change.span.start - sfc.template.startTagEnd,
+						end: change.span.start + change.span.length - sfc.template.startTagEnd,
+						newText,
+					});
+					if (newResult) {
+						compiledSFCTemplateCache.snapshot = snapshot.value;
+						compiledSFCTemplateCache.result = newResult;
+						return {
+							errors: [],
+							warnings: [],
+							ast: newResult.ast,
+						};
+					}
+				}
+			}
+
 			for (const plugin of plugins) {
 
 				const errors: CompilerDom.CompilerError[] = [];
 				const warnings: CompilerDom.CompilerError[] = [];
-				let ast: CompilerDom.RootNode | undefined;
+				let result: CompilerDom.CodegenResult | undefined;
 
 				try {
-					ast = plugin.compileSFCTemplate?.(sfc.template.lang, sfc.template.content, {
+					result = plugin.compileSFCTemplate?.(sfc.template.lang, sfc.template.content, {
 						onError: (err: CompilerDom.CompilerError) => errors.push(err),
 						onWarn: (err: CompilerDom.CompilerError) => warnings.push(err),
 						expressionPlugins: ['typescript'],
 						...vueCompilerOptions.experimentalTemplateCompilerOptions,
-					})?.ast;
+					});
 				}
 				catch (e) {
 					const err = e as CompilerDom.CompilerError;
 					errors.push(err);
 				}
 
-				if (ast || errors.length) {
+				if (result || errors.length) {
+
+					if (result && !errors.length && !warnings.length) {
+						compiledSFCTemplateCache = {
+							snapshot: snapshot.value,
+							result: result,
+							plugin,
+						};
+					}
+
 					return {
 						errors,
 						warnings,
-						ast,
+						ast: result?.ast,
 					};
 				}
 			}
