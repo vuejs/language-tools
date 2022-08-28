@@ -293,12 +293,9 @@ export function generate(
 		}
 		else if (node.type === CompilerDOM.NodeTypes.INTERPOLATION) {
 			// {{ ... }}
-			const context = node.loc.source.substring(2, node.loc.source.length - 2);
-			let start = node.loc.start.offset + 2;
-
 			writeInterpolation(
-				context,
-				start,
+				node.content.loc.source,
+				node.content.loc.start.offset,
 				{
 					vueTag: 'template',
 					capabilities: capabilitiesSet.all,
@@ -308,8 +305,8 @@ export function generate(
 			);
 			writeInterpolationVarsExtraCompletion();
 			writeFormatCode(
-				context,
-				start,
+				node.content.loc.source,
+				node.content.loc.start.offset,
 				formatBrackets.curly,
 			);
 		}
