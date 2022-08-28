@@ -17,6 +17,7 @@ export type VueLanguagePlugin = (ctx: {
 }) => {
 	order?: number;
 	parseSFC?(fileName: string, content: string): SFCParseResult | undefined;
+	updateSFC?(oldResult: SFCParseResult, textChange: { start: number, end: number, newText: string; }): SFCParseResult | undefined;
 	compileSFCTemplate?(lang: string, template: string, options?: CompilerDom.CompilerOptions): CompilerDom.CodegenResult | undefined;
 	getEmbeddedFileNames?(fileName: string, sfc: Sfc): string[];
 	resolveEmbeddedFile?(fileName: string, sfc: Sfc, embeddedFile: EmbeddedFile): void;
@@ -109,6 +110,13 @@ export function createSourceFile(
 		}) as unknown as Sfc['scriptSetupAst'],
 	}) as Sfc /* avoid Sfc unwrap in .d.ts by reactive */;
 
+	// cache
+	let parsedSfcCache: {
+		snapshot: ts.IScriptSnapshot,
+		sfc: SFCParseResult,
+		plugin: ReturnType<VueLanguagePlugin>,
+	} | undefined;
+
 	// use
 	const scriptAst = computed(() => {
 		if (sfc.script) {
@@ -121,9 +129,28 @@ export function createSourceFile(
 		}
 	});
 	const parsedSfc = computed(() => {
+
+		// incremental update
+		if (parsedSfcCache?.plugin.updateSFC) {
+			const change = snapshot.value.getChangeRange(parsedSfcCache.snapshot);
+			if (change) {
+				const newSfc = parsedSfcCache.plugin.updateSFC(parsedSfcCache.sfc, {
+					start: change.span.start,
+					end: change.span.start + change.span.length,
+					newText: snapshot.value.getText(change.span.start, change.span.start + change.newLength),
+				});
+				if (newSfc) {
+					parsedSfcCache.snapshot = snapshot.value;
+					parsedSfcCache.sfc = newSfc;
+					return newSfc;
+				}
+			}
+		}
+
 		for (const plugin of plugins) {
 			const sfc = plugin.parseSFC?.(fileName, fileContent.value);
 			if (sfc) {
+				parsedSfcCache = { snapshot: snapshot.value, sfc, plugin };
 				return sfc;
 			}
 		}
@@ -404,12 +431,7 @@ export function createSourceFile(
 			return;
 		}
 
-		const change = newScriptSnapshot.getChangeRange(snapshot.value);
 		snapshot.value = newScriptSnapshot;
-
-		if (change) {
-			// TODO
-		}
 
 		// TODO: wait for https://github.com/vuejs/core/pull/5912
 		if (parsedSfc.value) {
@@ -418,6 +440,13 @@ export function createSourceFile(
 			updateScriptSetup(parsedSfc.value.descriptor.scriptSetup);
 			updateStyles(parsedSfc.value.descriptor.styles);
 			updateCustomBlocks(parsedSfc.value.descriptor.customBlocks);
+		}
+		else {
+			updateTemplate(null);
+			updateScript(null);
+			updateScriptSetup(null);
+			updateStyles([]);
+			updateCustomBlocks([]);
 		}
 
 		function updateTemplate(block: SFCTemplateBlock | null) {
