@@ -56,7 +56,18 @@ export function register(
 	}
 	if (features.completion) {
 		server.completionProvider = {
-			triggerCharacters: '!@#$%^&*()_+-=`~{}|[]\:";\'<>?,./ '.split(''), // all symbols on keyboard
+			// triggerCharacters: '!@#$%^&*()_+-=`~{}|[]\:";\'<>?,./ '.split(''), // all symbols on keyboard
+			// hardcode to fix https://github.com/sublimelsp/LSP-volar/issues/114
+			triggerCharacters: [...new Set([
+				'/', '-', ':', // css
+				...'>+^*()#.[]$@-{}'.split(''), // emmet
+				'.', ':', '<', '"', '=', '/', // html, vue
+				'@', // vue-event
+				'"', ':', // json
+				'.', '"', '\'', '`', '/', '<', '@', '#', ' ', // typescript
+				'*', // typescript-jsdoc
+				'@', // typescript-comment
+			])],
 			resolveProvider: true,
 		};
 		server.executeCommandProvider = {
