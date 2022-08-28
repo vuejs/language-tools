@@ -60,7 +60,7 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 function createComponentMetaCheckerBase(tsconfigPath: string, parsedCommandLine: vue.ParsedCommandLine, checkerOptions: MetaCheckerOptions) {
 
 	const scriptSnapshot: Record<string, ts.IScriptSnapshot> = {};
-	const globalComponentName = tsconfigPath.replace(/\\/g, '/') + '.global.ts';
+	const globalComponentName = tsconfigPath.replace(/\\/g, '/') + '.global.vue';
 	const host: vue.LanguageServiceHost = {
 		...ts.sys,
 		getDefaultLibFileName: (options) => ts.getDefaultLibFilePath(options), // should use ts.getDefaultLibFilePath not ts.getDefaultLibFileName
@@ -83,10 +83,7 @@ function createComponentMetaCheckerBase(tsconfigPath: string, parsedCommandLine:
 					fileText = getMetaScriptContent(fileName);
 				}
 				else if (fileName === globalComponentName) {
-					fileText = `
-						import { defineComponent } from 'vue';
-						export default defineComponent({});
-					`;
+					fileText = `<script setup lang="ts"></script>`;
 				}
 				else {
 					fileText = ts.sys.readFile(fileName);
