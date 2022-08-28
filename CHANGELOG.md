@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.40.3 (2022/8/29)
+
+- perf: incremental update SFC blocks without full parse SFC and mitigate memory leak
+- perf: incremental update html template interpolation without recompile template
+- perf: cache `ts.createSourceFile` for tsx code gen
+- fix(vue-component-meta): cannot create checker with TS 4.8.2
+- fix: document features not working on Web IDE ([#1479](https://github.com/johnsoncodehk/volar/issues/1479))
+- fix: avoid auto complete triggers too aggressive in Sublime (https://github.com/sublimelsp/LSP-volar/issues/114)
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
+
 ## 0.40.2 (2022/8/28)
 
 - feat(vue-component-meta): add `createComponentMetaCheckerByJsonConfig` API to support create checker without tsconfig
@@ -10,7 +25,6 @@
 - fix: pug template tag mapping range incorrect ([#1723](https://github.com/johnsoncodehk/volar/issues/1723))
 - fix: vite plugin import path incorrect on windows ([#1772](https://github.com/johnsoncodehk/volar/issues/1772))
 - fix: false positive error on style attr when enabled `compilerOptions.exactOptionalPropertyTypes` ([#1560](https://github.com/johnsoncodehk/volar/issues/1560))
-- fix: document features not working on Web IDE ([#1479](https://github.com/johnsoncodehk/volar/issues/1479))
 - fix: .html intellisense of petite-vue not working
 - fix: .html intellisense of alpie not working
 - fix: intellisense not working for node_modules files with takeover mode on windows ([#1641](https://github.com/johnsoncodehk/volar/issues/1641))
@@ -22,12 +36,6 @@
 - fix: template components types break by regular SFC `components` option ([#1731](https://github.com/johnsoncodehk/volar/issues/1731))
 - fix: indentation behavior incorrect ([#1762](https://github.com/johnsoncodehk/volar/issues/1762))
 - fix: TS1308 'async' error missing when use script setup ([#1753](https://github.com/johnsoncodehk/volar/issues/1753))
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 0.40.1 (2022/8/11)
 
