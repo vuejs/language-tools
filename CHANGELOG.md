@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.40.4 (2022/8/29)
+
+- feat: respect VSCode `*.format.enable` settings
+- fix: template should not compile if content no change
+- fix: component preview not working on windows ([#1737](https://github.com/johnsoncodehk/volar/issues/1737))
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
+
 ## 0.40.3 (2022/8/29)
 
 - perf: incremental update SFC blocks without full parse SFC and mitigate memory leak
@@ -8,12 +20,6 @@
 - fix(vue-component-meta): cannot create checker with TS 4.8.2
 - fix: document features not working on Web IDE ([#1479](https://github.com/johnsoncodehk/volar/issues/1479))
 - fix: avoid auto complete triggers too aggressive in Sublime (https://github.com/sublimelsp/LSP-volar/issues/114)
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 0.40.2 (2022/8/28)
 
