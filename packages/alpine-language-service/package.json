@@ -1,6 +1,6 @@
 {
 	"name": "@volar/alpine-language-service",
-	"version": "0.40.2",
+	"version": "0.40.3",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -17,8 +17,8 @@
 		"typescript": "latest"
 	},
 	"dependencies": {
-		"@volar/alpine-language-core": "0.40.2",
-		"@volar/vue-language-service": "0.40.2",
-		"@volar/vue-language-service-types": "0.40.2"
+		"@volar/alpine-language-core": "0.40.3",
+		"@volar/vue-language-service": "0.40.3",
+		"@volar/vue-language-service-types": "0.40.3"
 	}
 }
