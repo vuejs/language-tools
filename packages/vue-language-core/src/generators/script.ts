@@ -706,9 +706,11 @@ export function generate(
 
 			for (const cssVar of cssVars) {
 				for (const cssBind of cssVar.ranges) {
+					const code = cssVar.style.content.substring(cssBind.start, cssBind.end);
 					walkInterpolationFragment(
 						ts,
-						cssVar.style.content.substring(cssBind.start, cssBind.end),
+						code,
+						ts.createSourceFile('/a.txt', code, ts.ScriptTarget.ESNext),
 						(frag, fragOffset, isJustForErrorMapping) => {
 							if (fragOffset === undefined) {
 								codeGen.addText(frag);
