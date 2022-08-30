@@ -1024,7 +1024,7 @@ export function generate(
 					}
 				}
 				else {
-					tsCodeGen.addText('""');
+					tsCodeGen.addText('{}');
 				}
 				writePropValueSuffix(isStatic);
 				tsCodeGen.addMapping2({
