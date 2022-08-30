@@ -98,10 +98,25 @@ export default function (options: {
 					return;
 				}
 
-				return await jsonLs.format(document, range, {
+				const edits = jsonLs.format(document, range, {
 					...options_2,
 					...options,
+					insertFinalNewline: true,
 				});
+
+				if (!edits.length) {
+					return edits;
+				}
+
+				const newText = TextDocument.applyEdits(document, edits);
+				
+				return [{
+					newText: '\n' + newText.trim() + '\n',
+					range: {
+						start: document.positionAt(0),
+						end: document.positionAt(document.getText().length),
+					},
+				}]
 			});
 		},
 	};
