@@ -43,7 +43,7 @@ const plugin: VueLanguagePlugin = () => {
 			const lengthDiff = change.newText.length - (change.end - change.start);
 
 			for (const block of blocks) {
-				if (block.loc.start.offset >= change.end) {
+				if (block.loc.start.offset > change.end) {
 					block.loc.start.offset += lengthDiff;
 				}
 				if (block.loc.end.offset >= change.end) {
