@@ -302,9 +302,24 @@ export function generate(
 		}
 		else if (node.type === CompilerDOM.NodeTypes.INTERPOLATION) {
 			// {{ ... }}
+
+			let content = node.content.loc.source;
+			let start = node.content.loc.start.offset;
+			let leftCharacter: string;
+			let rightCharacter: string;
+
+			// fix https://github.com/johnsoncodehk/volar/issues/1787
+			while ((leftCharacter = templateAst.loc.source.substring(start - 1, start)).trim() === '' && leftCharacter.length) {
+				start--;
+				content = leftCharacter + content;
+			}
+			while ((rightCharacter = templateAst.loc.source.substring(start + content.length, start + content.length + 1)).trim() === '' && rightCharacter.length) {
+				content = content + rightCharacter;
+			}
+
 			writeInterpolation(
-				node.content.loc.source,
-				node.content.loc.start.offset,
+				content,
+				start,
 				{
 					vueTag: 'template',
 					capabilities: capabilitiesSet.all,
@@ -315,8 +330,8 @@ export function generate(
 			);
 			writeInterpolationVarsExtraCompletion();
 			writeFormatCode(
-				node.content.loc.source,
-				node.content.loc.start.offset,
+				content,
+				start,
 				formatBrackets.curly,
 			);
 		}
