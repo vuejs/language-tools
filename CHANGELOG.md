@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.40.5 (2022/8/31)
+
+- feat: suppor add or switch workspaces without restart server ([#1574](https://github.com/johnsoncodehk/volar/issues/1574))
+- fix: sfc offset incremental update broken when input at block start
+- fix: document incremental update break document content on Sublime LSP (https://github.com/sublimelsp/LSP-volar/issues/120)
+- fix: unexpected prop types behavior with `compilerOptions.exactOptionalPropertyTypes` (https://github.com/vuejs/core/issues/6532)
+- fix: false positive error on `<input typeof="radio" value="...">` ([#1775](https://github.com/johnsoncodehk/volar/issues/1775))
+- fix: false positive style attribute inconsistent string type error ([#1781](https://github.com/johnsoncodehk/volar/issues/1781))
+- fix: langauge server broken with `outDir` + `rootDir` + `composite/incremental` tsconfig options ([#1782](https://github.com/johnsoncodehk/volar/issues/1782))
+- fix: json format should not trim first / end new line
+- fix: interpolation format adding redundant spaces ([#1784](https://github.com/johnsoncodehk/volar/issues/1784))
+
 ## 0.40.4 (2022/8/29)
 
 - feat: respect VSCode `*.format.enable` settings
