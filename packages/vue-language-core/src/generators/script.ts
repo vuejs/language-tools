@@ -27,15 +27,16 @@ export function generate(
 	cssModuleClasses: ReturnType<typeof collectStyleCssClasses>,
 	cssScopedClasses: ReturnType<typeof collectStyleCssClasses>,
 	htmlGen: ReturnType<typeof templateGen['generate']> | undefined,
-	compilerOptions: VueCompilerOptions,
+	compilerOptions: ts.CompilerOptions,
+	vueCompilerOptions: VueCompilerOptions,
 	codeGen = new CodeGen<EmbeddedFileMappingData>(),
 	teleports: SourceMaps.Mapping<TeleportMappingData>[] = [],
 ) {
 
-	const downgradePropsAndEmitsToSetupReturnOnScriptSetup = compilerOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup === 'onlyJs'
+	const downgradePropsAndEmitsToSetupReturnOnScriptSetup = vueCompilerOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup === 'onlyJs'
 		? lang === 'js' || lang === 'jsx'
-		: !!compilerOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup;
-	const vueVersion = compilerOptions.target ?? 3;
+		: !!vueCompilerOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup;
+	const vueVersion = vueCompilerOptions.target ?? 3;
 	const vueLibName = getVueLibraryName(vueVersion);
 	const usedTypes = {
 		DefinePropsToOptions: false,
@@ -131,8 +132,13 @@ export function generate(
 
 	function writeScriptSetupTypes() {
 		if (usedTypes.DefinePropsToOptions) {
-			codeGen.addText(`type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;\n`);
-			codeGen.addText(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueLibName}').PropType<__VLS_NonUndefinedable<T[K]>> } : { type: import('${vueLibName}').PropType<T[K]>, required: true } };\n`);
+			if (compilerOptions.exactOptionalPropertyTypes) {
+				codeGen.addText(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueLibName}').PropType<T[K]> } : { type: import('${vueLibName}').PropType<T[K]>, required: true } };\n`);
+			}
+			else {
+				codeGen.addText(`type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;\n`);
+				codeGen.addText(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueLibName}').PropType<__VLS_NonUndefinedable<T[K]>> } : { type: import('${vueLibName}').PropType<T[K]>, required: true } };\n`);
+			}
 		}
 		if (usedTypes.mergePropDefaults) {
 			codeGen.addText(`type __VLS_WithDefaults<P, D> = {
@@ -628,7 +634,7 @@ export function generate(
 		/* Components */
 		codeGen.addText('/* Components */\n');
 		codeGen.addText('let __VLS_otherComponents!: NonNullable<typeof __VLS_component extends { components: infer C } ? C : {}> & __VLS_types.GlobalComponents & typeof __VLS_vmUnwrap.components & __VLS_types.PickComponents<typeof __VLS_ctx>;\n');
-		codeGen.addText(`let __VLS_selfComponent!: __VLS_types.SelfComponent<typeof __VLS_name, typeof __VLS_component & (new () => { ${getSlotsPropertyName(compilerOptions.target ?? 3)}: typeof __VLS_slots })>;\n`);
+		codeGen.addText(`let __VLS_selfComponent!: __VLS_types.SelfComponent<typeof __VLS_name, typeof __VLS_component & (new () => { ${getSlotsPropertyName(vueCompilerOptions.target ?? 3)}: typeof __VLS_slots })>;\n`);
 		codeGen.addText('let __VLS_components!: typeof __VLS_otherComponents & Omit<typeof __VLS_selfComponent, keyof typeof __VLS_otherComponents>;\n');
 
 		codeGen.addText(`__VLS_components['${SearchTexts.Components}'];\n`);
@@ -785,25 +791,25 @@ export function generate(
 		let shimComponentOptionsMode: 'defineComponent' | 'Vue.extend' | false = false;
 
 		if (
-			compilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend === 'onlyJs'
+			vueCompilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend === 'onlyJs'
 				? lang === 'js' || lang === 'jsx'
-				: !!compilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend
+				: !!vueCompilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend
 		) {
 			shimComponentOptionsMode = 'Vue.extend';
 		}
 		if (
-			compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent === 'onlyJs'
+			vueCompilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent === 'onlyJs'
 				? lang === 'js' || lang === 'jsx'
-				: !!compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent
+				: !!vueCompilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent
 		) {
 			shimComponentOptionsMode = 'defineComponent';
 		}
 
 		// true override 'onlyJs'
-		if (compilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend === true) {
+		if (vueCompilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend === true) {
 			shimComponentOptionsMode = 'Vue.extend';
 		}
-		if (compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent === true) {
+		if (vueCompilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent === true) {
 			shimComponentOptionsMode = 'defineComponent';
 		}
 

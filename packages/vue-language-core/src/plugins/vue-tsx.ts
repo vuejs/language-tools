@@ -148,6 +148,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 			cssModuleClasses.value,
 			cssScopedClasses.value,
 			htmlGen.value,
+			compilerOptions,
 			vueCompilerOptions,
 		));
 
