@@ -517,7 +517,7 @@ export function generate(
 				},
 			);
 			tsCodeGen.addText(` `);
-			const { hasRemainStyleOrClass } = writeProps(node, false, 'props');
+			const { hasRemainStyleOrClass, failedExps } = writeProps(node, false, 'props');
 
 			if (endTagOffset === undefined) {
 				tsCodeGen.addText(`/>`);
@@ -536,7 +536,31 @@ export function generate(
 						capabilities: tagCapabilities,
 					},
 				);
-				tsCodeGen.addText(`>`);
+				tsCodeGen.addText(`>;\n`);
+			}
+
+			// fix https://github.com/johnsoncodehk/volar/issues/1775
+			for (const failedExp of failedExps) {
+				writeInterpolation(
+					failedExp.loc.source,
+					failedExp.loc.start.offset,
+					{
+						vueTag: 'template',
+						capabilities: capabilitiesSet.all,
+					},
+					'(',
+					')',
+					failedExp.loc,
+				);
+				const fb = formatBrackets.round;
+				if (fb) {
+					writeFormatCode(
+						failedExp.loc.source,
+						failedExp.loc.start.offset,
+						fb,
+					);
+				}
+				tsCodeGen.addText(';\n');
 			}
 
 			// fix https://github.com/johnsoncodehk/volar/issues/705#issuecomment-974773353
@@ -881,6 +905,7 @@ export function generate(
 
 		let styleCount = 0;
 		let classCount = 0;
+		const failedExps: CompilerDOM.SimpleExpressionNode[] = [];
 
 		for (const prop of node.props) {
 			if (
@@ -897,6 +922,13 @@ export function generate(
 							? prop.arg.content
 							: prop.arg.loc.source
 						: getModelValuePropName(node, vueCompilerOptions.target);
+
+				if (propName_1 === undefined) {
+					if (prop.exp) {
+						failedExps.push(prop.exp);
+					}
+					continue;
+				}
 
 				if (prop.modifiers.some(m => m === 'prop' || m === 'attr')) {
 					propName_1 = propName_1.substring(1);
@@ -1185,7 +1217,10 @@ export function generate(
 			}
 		}
 
-		return { hasRemainStyleOrClass: styleCount >= 2 || classCount >= 2 };
+		return {
+			hasRemainStyleOrClass: styleCount >= 2 || classCount >= 2,
+			failedExps,
+		};
 
 		function writePropName(name: string, isStatic: boolean, sourceRange: SourceMaps.Range, data: EmbeddedFileMappingData, cacheOn: any) {
 			if (mode === 'props' && isStatic) {
@@ -2032,6 +2067,9 @@ function getModelValuePropName(node: CompilerDOM.ElementNode, vueVersion: number
 
 	if (tag === 'input' && type === 'checkbox')
 		return 'checked';
+
+	if (tag === 'input' && type === 'radio')
+		return undefined;
 
 	if (
 		tag === 'input' ||
