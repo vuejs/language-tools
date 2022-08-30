@@ -14,7 +14,6 @@ const rootTsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 export function createProjects(
 	runtimeEnv: RuntimeEnvironment,
 	languageConfigs: LanguageConfigs,
-	rootPaths: string[],
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLocalized: ts.MapLike<string> | undefined,
 	options: shared.ServerInitializationOptions,
@@ -33,22 +32,6 @@ export function createProjects(
 	} | undefined;
 
 	const workspaces = new Map<string, ReturnType<typeof createWorkspace>>();
-
-	for (const rootPath of rootPaths) {
-		workspaces.set(rootPath, createWorkspace(
-			runtimeEnv,
-			languageConfigs,
-			rootPath,
-			ts,
-			tsLocalized,
-			options,
-			documents,
-			connection,
-			lsConfigs,
-			getInferredCompilerOptions,
-			capabilities,
-		));
-	}
 
 	documents.onDidOpen(params => {
 		lastOpenDoc = {
@@ -69,6 +52,24 @@ export function createProjects(
 		workspaces,
 		getProject,
 		reloadProject,
+		addRoot: (rootPath: string) => {
+			workspaces.set(rootPath, createWorkspace(
+				runtimeEnv,
+				languageConfigs,
+				rootPath,
+				ts,
+				tsLocalized,
+				options,
+				documents,
+				connection,
+				lsConfigs,
+				getInferredCompilerOptions,
+				capabilities,
+			));
+		},
+		removeRoot: (rootPath: string) => {
+			workspaces.delete(rootPath);
+		},
 	};
 
 	async function onDidChangeContent(uri: string) {

@@ -35,6 +35,7 @@ export function createLanguageServer(
 ) {
 
 	let clientCapabilities: vscode.ClientCapabilities;
+	let projects: ReturnType<typeof createProjects>;
 
 	connection.onInitialize(async params => {
 
@@ -81,10 +82,9 @@ export function createLanguageServer(
 		if (options.languageFeatures) {
 
 			const tsLocalized = runtimeEnv.loadTypescriptLocalized(options);
-			const projects = createProjects(
+			projects = createProjects(
 				runtimeEnv,
 				languageConfigs,
-				folders,
 				ts,
 				tsLocalized,
 				options,
@@ -95,6 +95,10 @@ export function createLanguageServer(
 				params.capabilities,
 			);
 
+			for (const root of folders) {
+				projects.addRoot(root);
+			}
+
 			(await import('./features/customFeatures')).register(connection, projects);
 			(await import('./features/languageFeatures')).register(connection, projects, options.languageFeatures, params);
 			(await import('./registers/registerlanguageFeatures')).register(options.languageFeatures!, vue.getSemanticTokenLegend(), result.capabilities, languageConfigs);
@@ -103,9 +107,23 @@ export function createLanguageServer(
 		return result;
 	});
 	connection.onInitialized(() => {
+
 		if (clientCapabilities.workspace?.didChangeConfiguration?.dynamicRegistration) { // TODO
 			connection.client.register(vscode.DidChangeConfigurationNotification.type);
 		}
+
+		connection.workspace.onDidChangeWorkspaceFolders(e => {
+
+			const added = e.added.map(folder => URI.parse(folder.uri)).filter(uri => uri.scheme === 'file').map(uri => uri.fsPath);
+			const removed = e.removed.map(folder => URI.parse(folder.uri)).filter(uri => uri.scheme === 'file').map(uri => uri.fsPath);
+
+			for (const folder of added) {
+				projects.addRoot(folder);
+			}
+			for (const folder of removed) {
+				projects.removeRoot(folder);
+			}
+		});
 	});
 	connection.listen();
 
