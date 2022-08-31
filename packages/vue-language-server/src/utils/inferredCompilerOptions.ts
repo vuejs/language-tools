@@ -1,15 +1,15 @@
+import { ConfigurationHost } from '@volar/vue-language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import type { Configuration } from 'vscode-languageserver/lib/common/configuration';
 
 export async function getInferredCompilerOptions(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	configuration: Configuration | undefined,
+	configurationHost: ConfigurationHost | undefined,
 ) {
 
-	let [implicitProjectConfig_1, implicitProjectConfig_2] = await configuration?.getConfiguration([
-		{ section: 'js/ts.implicitProjectConfig' },
-		{ section: 'javascript.implicitProjectConfig' },
-	]) ?? [undefined, undefined];
+	let [implicitProjectConfig_1, implicitProjectConfig_2] = await Promise.all([
+		configurationHost?.getConfiguration<any>('js/ts.implicitProjectConfig'),
+		configurationHost?.getConfiguration<any>('javascript.implicitProjectConfig'),
+	]);
 
 	implicitProjectConfig_1 = implicitProjectConfig_1 ?? {};
 	implicitProjectConfig_2 = implicitProjectConfig_2 ?? {};

@@ -3,8 +3,7 @@ import * as vue from '@volar/vue-language-service';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import { LanguageConfigs, RuntimeEnvironment } from './types';
-import { createLsConfigs } from './utils/configHost';
-import { getInferredCompilerOptions } from './utils/inferredCompilerOptions';
+import { createConfigurationHost } from './utils/configurationHost';
 import { createSnapshots } from './utils/snapshots';
 import { createWorkspaces } from './utils/workspaces';
 
@@ -47,9 +46,8 @@ export function createLanguageServer(
 				textDocumentSync: vscode.TextDocumentSyncKind.Incremental,
 			},
 		};
-		const configuration = params.capabilities.workspace?.configuration ? connection.workspace : undefined;
 		const ts = runtimeEnv.loadTypescript(options);
-		const configHost = params.capabilities.workspace?.configuration ? createLsConfigs(folders, connection) : undefined;
+		const configHost = params.capabilities.workspace?.configuration ? createConfigurationHost(folders, connection) : undefined;
 
 		if (options.documentFeatures) {
 
@@ -76,7 +74,6 @@ export function createLanguageServer(
 				documents,
 				connection,
 				configHost,
-				() => getInferredCompilerOptions(ts, configuration),
 				params.capabilities,
 			);
 

@@ -2,7 +2,7 @@ import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';
 import * as vscode from 'vscode-languageserver';
-import type { createLsConfigs } from './configHost';
+import type { createConfigurationHost } from './configurationHost';
 import { LanguageConfigs, RuntimeEnvironment } from '../types';
 import { createSnapshots } from './snapshots';
 import { createWorkspaceProjects, sortPaths } from './workspaceProjects';
@@ -19,8 +19,7 @@ export function createWorkspaces(
 	options: shared.ServerInitializationOptions,
 	documents: ReturnType<typeof createSnapshots>,
 	connection: vscode.Connection,
-	lsConfigs: ReturnType<typeof createLsConfigs> | undefined,
-	getInferredCompilerOptions: () => Promise<ts.CompilerOptions>,
+	configurationHost: ReturnType<typeof createConfigurationHost> | undefined,
 	capabilities: vscode.ClientCapabilities,
 ) {
 
@@ -62,8 +61,7 @@ export function createWorkspaces(
 				options,
 				documents,
 				connection,
-				lsConfigs,
-				getInferredCompilerOptions,
+				configurationHost,
 				capabilities,
 			));
 		},
@@ -179,7 +177,7 @@ export function createWorkspaces(
 			return;
 
 		const req = ++documentUpdatedReq;
-		const delay = await lsConfigs?.getConfiguration<number>('volar.diagnostics.delay');
+		const delay = await configurationHost?.getConfiguration<number>('volar.diagnostics.delay');
 		const cancel: vscode.CancellationToken = {
 			get isCancellationRequested() {
 				return req !== documentUpdatedReq;

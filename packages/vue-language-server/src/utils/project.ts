@@ -2,7 +2,7 @@ import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
-import type { createLsConfigs } from './configHost';
+import type { createConfigurationHost } from './configurationHost';
 import { loadCustomPlugins } from '../common';
 import { createSnapshots } from './snapshots';
 import { LanguageConfigs, RuntimeEnvironment } from '../types';
@@ -20,7 +20,7 @@ export async function createProject(
 	tsLocalized: ts.MapLike<string> | undefined,
 	documents: ReturnType<typeof createSnapshots>,
 	connection: vscode.Connection,
-	lsConfigs: ReturnType<typeof createLsConfigs> | undefined,
+	configHost: ReturnType<typeof createConfigurationHost> | undefined,
 ) {
 
 	let typeRootVersion = 0;
@@ -70,7 +70,7 @@ export async function createProject(
 						return Promise.reject('clientHandledGetDocumentContentRequest is false');
 					}
 				},
-				lsConfigs,
+				configHost,
 				loadCustomPlugins(languageServiceHost.getCurrentDirectory()),
 				options.languageFeatures?.completion ? async (uri) => {
 

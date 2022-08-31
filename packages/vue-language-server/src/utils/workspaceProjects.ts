@@ -3,9 +3,10 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';
 import * as vscode from 'vscode-languageserver';
 import { createProject, Project } from './project';
-import type { createLsConfigs } from './configHost';
+import type { createConfigurationHost } from './configurationHost';
 import { LanguageConfigs, RuntimeEnvironment } from '../types';
 import { createSnapshots } from './snapshots';
+import { getInferredCompilerOptions } from './inferredCompilerOptions';
 
 const rootTsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 
@@ -20,8 +21,7 @@ export function createWorkspaceProjects(
 	options: shared.ServerInitializationOptions,
 	documents: ReturnType<typeof createSnapshots>,
 	connection: vscode.Connection,
-	lsConfigs: ReturnType<typeof createLsConfigs> | undefined,
-	getInferredCompilerOptions: () => Promise<ts.CompilerOptions>,
+	configHost: ReturnType<typeof createConfigurationHost> | undefined,
 	capabilities: vscode.ClientCapabilities,
 ) {
 
@@ -72,7 +72,7 @@ export function createWorkspaceProjects(
 				return target[prop as keyof typeof target];
 			},
 		})
-		: ts.sys;
+		: _workspaceSys;
 
 	return {
 		projects,
@@ -106,11 +106,11 @@ export function createWorkspaceProjects(
 				sys,
 				options,
 				rootPath,
-				await getInferredCompilerOptions(),
+				await getInferredCompilerOptions(ts, configHost),
 				tsLocalized,
 				documents,
 				connection,
-				lsConfigs,
+				configHost,
 			);
 		}
 		return inferredProject;
@@ -239,7 +239,7 @@ export function createWorkspaceProjects(
 				tsLocalized,
 				documents,
 				connection,
-				lsConfigs,
+				configHost,
 			);
 			projects.fsPathSet(tsConfig, project);
 		}
