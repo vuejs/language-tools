@@ -131,7 +131,6 @@ export function getDocumentService(
 		const vueFile = vue.createSourceFile(
 			'/untitled.' + shared.languageIdToSyntax(document.languageId),
 			ts.ScriptSnapshot.fromString(document.getText()),
-			{},
 			context.typescript,
 			vuePlugins,
 		);

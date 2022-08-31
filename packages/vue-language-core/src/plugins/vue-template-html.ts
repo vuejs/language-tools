@@ -23,7 +23,10 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 
 				const compiler = vueCompilerOptions.target < 3 ? CompilerVue2 : CompilerDOM;
 
-				return compiler.compile(template, options);
+				return compiler.compile(template, {
+					...options,
+					...vueCompilerOptions.experimentalTemplateCompilerOptions,
+				});
 			}
 		},
 

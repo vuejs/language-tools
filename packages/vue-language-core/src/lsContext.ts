@@ -123,7 +123,6 @@ export function createLanguageContext(
 								documentRegistry.set(vueFileName, createSourceFile(
 									vueFileName,
 									scriptSnapshot,
-									vueCompilerOptions,
 									ts,
 									plugins,
 								));
@@ -282,7 +281,6 @@ export function createLanguageContext(
 				documentRegistry.set(fileName, createSourceFile(
 					fileName,
 					scriptSnapshot,
-					vueCompilerOptions,
 					ts,
 					plugins,
 				));

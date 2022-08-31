@@ -23,6 +23,7 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 					const compiler = vueCompilerOptions.target < 3 ? CompilerVue2 : CompilerDom;
 					const completed = compiler.compile(pugDoc.htmlCode, {
 						...options,
+						...vueCompilerOptions.experimentalTemplateCompilerOptions,
 						onWarn(warning) {
 							options?.onWarn?.(createProxyObject(warning));
 						},

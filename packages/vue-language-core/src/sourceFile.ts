@@ -1,6 +1,6 @@
 import { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
 import { computed, ComputedRef, reactive, shallowRef as ref, pauseTracking, resetTracking } from '@vue/reactivity';
-import { EmbeddedFileMappingData, TeleportMappingData, VueCompilerOptions, _VueCompilerOptions } from './types';
+import { EmbeddedFileMappingData, TeleportMappingData, _VueCompilerOptions } from './types';
 import { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
 
 import { CodeGen } from '@volar/code-gen';
@@ -86,7 +86,6 @@ export interface EmbeddedFile {
 export function createSourceFile(
 	fileName: string,
 	scriptSnapshot: ts.IScriptSnapshot,
-	vueCompilerOptions: VueCompilerOptions,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	plugins: ReturnType<VueLanguagePlugin>[],
 ) {
@@ -207,7 +206,6 @@ export function createSourceFile(
 						onError: (err: CompilerDom.CompilerError) => errors.push(err),
 						onWarn: (err: CompilerDom.CompilerError) => warnings.push(err),
 						expressionPlugins: ['typescript'],
-						...vueCompilerOptions.experimentalTemplateCompilerOptions,
 					});
 				}
 				catch (e) {

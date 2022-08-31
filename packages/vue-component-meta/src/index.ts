@@ -495,7 +495,7 @@ function readVueComponentDefaultProps(core: vue.LanguageContext, vueFileScript: 
 
 	function scriptSetupWorker() {
 
-		const vueSourceFile = vue.createSourceFile('/tmp.vue', vueFileScript, {}, ts, core.plugins);
+		const vueSourceFile = vue.createSourceFile('/tmp.vue', vueFileScript, ts, core.plugins);
 		const descriptor = vueSourceFile.sfc;
 		const scriptSetupRanges = descriptor.scriptSetupAst ? parseScriptSetupRanges(ts, descriptor.scriptSetupAst) : undefined;
 
@@ -547,7 +547,7 @@ function readVueComponentDefaultProps(core: vue.LanguageContext, vueFileScript: 
 
 	function scriptWorker() {
 
-		const vueSourceFile = vue.createSourceFile('/tmp.vue', vueFileScript, {}, ts, core.plugins);
+		const vueSourceFile = vue.createSourceFile('/tmp.vue', vueFileScript, ts, core.plugins);
 		const descriptor = vueSourceFile.sfc;
 
 		if (descriptor.script) {
