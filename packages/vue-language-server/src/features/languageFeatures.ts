@@ -1,11 +1,11 @@
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-service';
 import * as vscode from 'vscode-languageserver';
-import type { Projects } from '../projects';
+import type { Workspaces } from '../utils/workspaces';
 
 export function register(
 	connection: vscode.Connection,
-	projects: Projects,
+	projects: Workspaces,
 	features: NonNullable<shared.ServerInitializationOptions['languageFeatures']>,
 	params: vscode.InitializeParams,
 ) {

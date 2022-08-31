@@ -1,27 +1,12 @@
 import * as shared from '@volar/shared';
+import * as vue from '@volar/vue-language-service';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
-import * as vue from '@volar/vue-language-service';
-import { createLsConfigs } from './configHost';
-import { getInferredCompilerOptions } from './inferredCompilerOptions';
-import { createProjects } from './projects';
-import type { FileSystemProvider } from 'vscode-html-languageservice';
-import { createSnapshots } from './snapshots';
-
-export interface RuntimeEnvironment {
-	loadTypescript: (initOptions: shared.ServerInitializationOptions) => typeof import('typescript/lib/tsserverlibrary'),
-	loadTypescriptLocalized: (initOptions: shared.ServerInitializationOptions) => any,
-	schemaRequestHandlers: { [schema: string]: (uri: string, encoding?: BufferEncoding) => Promise<string>; },
-	onDidChangeConfiguration?: (settings: any) => void,
-	fileSystemProvide: FileSystemProvider | undefined,
-}
-
-export interface LanguageConfigs {
-	definitelyExts: string[],
-	indeterminateExts: string[],
-	getDocumentService: typeof vue.getDocumentService,
-	createLanguageService: typeof vue.createLanguageService,
-}
+import { LanguageConfigs, RuntimeEnvironment } from './types';
+import { createLsConfigs } from './utils/configHost';
+import { getInferredCompilerOptions } from './utils/inferredCompilerOptions';
+import { createSnapshots } from './utils/snapshots';
+import { createWorkspaces } from './utils/workspaces';
 
 export function createLanguageServer(
 	connection: vscode.Connection,
@@ -35,7 +20,7 @@ export function createLanguageServer(
 ) {
 
 	let clientCapabilities: vscode.ClientCapabilities;
-	let projects: ReturnType<typeof createProjects>;
+	let projects: ReturnType<typeof createWorkspaces>;
 
 	connection.onInitialize(async params => {
 
@@ -82,7 +67,7 @@ export function createLanguageServer(
 		if (options.languageFeatures) {
 
 			const tsLocalized = runtimeEnv.loadTypescriptLocalized(options);
-			projects = createProjects(
+			projects = createWorkspaces(
 				runtimeEnv,
 				languageConfigs,
 				ts,
@@ -96,7 +81,7 @@ export function createLanguageServer(
 			);
 
 			for (const root of folders) {
-				projects.addRoot(root);
+				projects.add(root);
 			}
 
 			(await import('./features/customFeatures')).register(connection, projects);
@@ -118,10 +103,10 @@ export function createLanguageServer(
 			const removed = e.removed.map(folder => URI.parse(folder.uri)).filter(uri => uri.scheme === 'file').map(uri => uri.fsPath);
 
 			for (const folder of added) {
-				projects.addRoot(folder);
+				projects.add(folder);
 			}
 			for (const folder of removed) {
-				projects.removeRoot(folder);
+				projects.remove(folder);
 			}
 		});
 	});

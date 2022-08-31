@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-service';
-import { LanguageConfigs } from '../common';
+import { LanguageConfigs } from '../types';
 import * as vscode from 'vscode-languageserver';
 
 export function register(

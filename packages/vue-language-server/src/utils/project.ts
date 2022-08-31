@@ -3,8 +3,9 @@ import * as vue from '@volar/vue-language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
 import type { createLsConfigs } from './configHost';
-import { LanguageConfigs, loadCustomPlugins, RuntimeEnvironment } from './common';
+import { loadCustomPlugins } from '../common';
 import { createSnapshots } from './snapshots';
+import { LanguageConfigs, RuntimeEnvironment } from '../types';
 
 export interface Project extends ReturnType<typeof createProject> { }
 
@@ -226,7 +227,7 @@ export async function createProject(
 			return vue.createParsedCommandLine(ts, parseConfigHost, tsConfig);
 		}
 		else {
-			const content = ts.parseJsonConfigFileContent({}, parseConfigHost, rootPath, tsConfig, 'tsconfig.json');
+			const content = ts.parseJsonConfigFileContent({}, parseConfigHost, rootPath, tsConfig, 'jsconfig.json');
 			content.options.outDir = undefined; // TODO: patching ts server broke with outDir + rootDir + composite/incremental
 			content.fileNames = content.fileNames.map(shared.normalizeFileName);
 			return { ...content, vueOptions: {} };

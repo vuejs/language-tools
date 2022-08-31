@@ -2,7 +2,7 @@ import * as shared from '@volar/shared';
 import type * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vue from '@volar/vue-language-service';
-import { createSnapshots } from '../snapshots';
+import { createSnapshots } from '../utils/snapshots';
 
 export function register(
 	connection: vscode.Connection,

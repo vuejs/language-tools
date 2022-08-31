@@ -1,12 +1,12 @@
 import * as shared from '@volar/shared';
 import * as path from 'upath';
 import * as vscode from 'vscode-languageserver';
-import type { Projects } from '../projects';
+import type { Workspaces } from '../utils/workspaces';
 import * as vue from '@volar/vue-language-core';
 
 export function register(
 	connection: vscode.Connection,
-	projects: Projects,
+	projects: Workspaces,
 ) {
 	connection.onRequest(shared.D3Request.type, async handler => {
 		// const document = documents.get(handler.uri);

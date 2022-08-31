@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { combineContinuousChangeRanges } from '../out/snapshots';
+import { combineContinuousChangeRanges } from '../out/utils/snapshots';
 
 describe(`Test combineContinuousChangeRanges()`, () => {
 
