@@ -104,10 +104,14 @@ export function createSourceFile(
 			return compiledSFCTemplate.value?.ast;
 		}) as unknown as Sfc['templateAst'],
 		scriptAst: computed(() => {
-			return scriptAst.value;
+			if (sfc.script) {
+				return ts.createSourceFile(fileName + '.' + sfc.script.lang, sfc.script.content, ts.ScriptTarget.Latest);
+			}
 		}) as unknown as Sfc['scriptAst'],
 		scriptSetupAst: computed(() => {
-			return scriptSetupAst.value;
+			if (sfc.scriptSetup) {
+				return ts.createSourceFile(fileName + '.' + sfc.scriptSetup.lang, sfc.scriptSetup.content, ts.ScriptTarget.Latest);
+			}
 		}) as unknown as Sfc['scriptSetupAst'],
 	}) as Sfc /* avoid Sfc unwrap in .d.ts by reactive */;
 
@@ -123,17 +127,7 @@ export function createSourceFile(
 		plugin: ReturnType<VueLanguagePlugin>,
 	} | undefined;
 
-	// use
-	const scriptAst = computed(() => {
-		if (sfc.script) {
-			return ts.createSourceFile(fileName + '.' + sfc.script.lang, sfc.script.content, ts.ScriptTarget.Latest);
-		}
-	});
-	const scriptSetupAst = computed(() => {
-		if (sfc.scriptSetup) {
-			return ts.createSourceFile(fileName + '.' + sfc.scriptSetup.lang, sfc.scriptSetup.content, ts.ScriptTarget.Latest);
-		}
-	});
+	// computeds
 	const parsedSfc = computed(() => {
 
 		// incremental update
@@ -240,8 +234,6 @@ export function createSourceFile(
 			}
 		}
 	});
-
-	// computeds
 	const pluginEmbeddedFiles = plugins.map(plugin => {
 		const embeddedFiles: Record<string, ComputedRef<EmbeddedFile>> = {};
 		const files = computed(() => {
