@@ -837,7 +837,7 @@
 		"@vue/reactivity": "^3.2.37",
 		"esbuild": "latest",
 		"esbuild-plugin-copy": "latest",
-		"ovsx": "^0.3.0",
+		"ovsx": "^0.5.1",
 		"path-browserify": "^1.0.1",
 		"punycode": "^2.1.1",
 		"semver": "^7.3.7",
