@@ -2,15 +2,33 @@ import * as shared from '@volar/shared';
 import type * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vue from '@volar/vue-language-service';
+import { createSnapshots } from '../utils/snapshots';
 
 export function register(
 	connection: vscode.Connection,
-	documents: vscode.TextDocuments<TextDocument>,
+	documents: ReturnType<typeof createSnapshots>,
 	vueDs: vue.DocumentService,
+	allowedLanguageIds: string[] = [
+		'vue',
+		'javascript',
+		'typescript',
+		'javascriptreact',
+		'typescriptreact',
+	],
 ) {
 	connection.onDocumentFormatting(handler => {
 		return worker(handler.textDocument.uri, document => {
 			return vueDs.format(document, handler.options);
+		});
+	});
+	connection.onDocumentRangeFormatting(handler => {
+		return worker(handler.textDocument.uri, document => {
+			return vueDs.format(document, handler.options, handler.range);
+		});
+	});
+	connection.onDocumentOnTypeFormatting(handler => {
+		return worker(handler.textDocument.uri, document => {
+			return vueDs.format(document, handler.options, undefined, handler);
 		});
 	});
 	connection.onSelectionRanges(handler => {
@@ -50,8 +68,8 @@ export function register(
 	});
 
 	function worker<T>(uri: string, cb: (document: TextDocument) => T) {
-		const document = documents.get(uri);
-		if (document) {
+		const document = documents.data.uriGet(uri)?.getDocument();
+		if (document && allowedLanguageIds.includes(document.languageId)) {
 			return cb(document);
 		}
 	}

@@ -28,29 +28,22 @@ export default function (options: {
 					if (!isEnabled)
 						return;
 
-					const result: vscode.CodeLens[] = [];
-					const embeddedTemplate = vueDocument.file.getEmbeddedTemplate();
+					const descriptor = vueDocument.file.sfc;
 
-					if (embeddedTemplate && (embeddedTemplate.file.lang === 'html' || embeddedTemplate.file.lang === 'pug')) {
+					if (descriptor.template && (descriptor.template.lang === 'html' || descriptor.template.lang === 'pug')) {
 
-						const sourceMap = vueDocument.sourceMapsMap.get(embeddedTemplate);
-
-						for (const mapped of sourceMap.mappings) {
-							return [{
-								range: {
-									start: sourceMap.sourceDocument.positionAt(mapped.sourceRange.start),
-									end: sourceMap.sourceDocument.positionAt(mapped.sourceRange.start),
-								},
-								command: {
-									title: 'pug ' + (embeddedTemplate.file.lang === 'pug' ? '☑' : '☐'),
-									command: toggleConvertCommand,
-									arguments: <CommandArgs>[document.uri],
-								},
-							}];
-						}
+						return [{
+							range: {
+								start: document.positionAt(descriptor.template.start),
+								end: document.positionAt(descriptor.template.startTagEnd),
+							},
+							command: {
+								title: 'pug ' + (descriptor.template.lang === 'pug' ? '☑' : '☐'),
+								command: toggleConvertCommand,
+								arguments: <CommandArgs>[document.uri],
+							},
+						}];
 					}
-
-					return result;
 				});
 			},
 		},
@@ -64,7 +57,7 @@ export default function (options: {
 				return worker(uri, vueDocument => {
 
 					const document = vueDocument.getDocument();
-					const desc = vueDocument.file.getDescriptor();
+					const desc = vueDocument.file.sfc;
 					if (!desc.template)
 						return;
 
@@ -102,7 +95,7 @@ export default function (options: {
 	function worker<T>(uri: string, callback: (vueDocument: VueDocument) => T) {
 
 		const vueDocument = options.getVueDocument(uri);
-		if (!vueDocument)
+		if (!vueDocument || vueDocument.file.fileName.endsWith('.md') || vueDocument.file.fileName.endsWith('.html'))
 			return;
 
 		return callback(vueDocument);

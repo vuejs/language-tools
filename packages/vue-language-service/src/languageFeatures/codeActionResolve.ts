@@ -6,7 +6,7 @@ import { embeddedEditToSourceEdit } from './rename';
 export function register(context: LanguageServiceRuntimeContext) {
 	return async (item: CodeAction) => {
 
-		const data: PluginCodeActionData = item.data as any;
+		const data: PluginCodeActionData = item.data;
 
 		if (data) {
 

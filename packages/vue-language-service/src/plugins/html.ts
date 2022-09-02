@@ -11,7 +11,7 @@ export default function (options: {
 }): EmbeddedLanguageServicePlugin & {
 	htmlLs: html.LanguageService,
 	getHtmlDocument(document: TextDocument): html.HTMLDocument | undefined,
-	getHtmlDataProviders(): html.IHTMLDataProvider[],
+	updateCustomData(extraData: html.IHTMLDataProvider[]): void,
 } {
 
 	const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
@@ -19,12 +19,13 @@ export default function (options: {
 
 	let inited = false;
 	let customData: html.IHTMLDataProvider[] = [];
+	let extraData: html.IHTMLDataProvider[] = [];
 
 	return {
 
 		htmlLs,
 		getHtmlDocument,
-		getHtmlDataProviders: () => customData,
+		updateCustomData,
 
 		complete: {
 
@@ -101,10 +102,14 @@ export default function (options: {
 		async format(document, range, options) {
 			return worker(document, async (htmlDocument) => {
 
-				const formatConfiguration = await useConfigurationHost()?.getConfiguration<html.HTMLFormatConfiguration>('html.format', document.uri);
+				const options_2 = await useConfigurationHost()?.getConfiguration<html.HTMLFormatConfiguration & { enable: boolean; }>('html.format', document.uri);
+
+				if (options_2?.enable === false) {
+					return;
+				}
 
 				return htmlLs.format(document, range, {
-					...formatConfiguration,
+					...options_2,
 					...options,
 				});
 			});
@@ -161,15 +166,21 @@ export default function (options: {
 	async function initCustomData() {
 		if (!inited && !options.disableCustomData) {
 
+			inited = true;
+
 			useConfigurationHost()?.onDidChangeConfiguration(async () => {
 				customData = await getCustomData();
-				htmlLs.setDataProviders(true, customData);
+				htmlLs.setDataProviders(true, [...customData, ...extraData]);
 			});
-			customData = await getCustomData();
-			htmlLs.setDataProviders(true, customData);
 
-			inited = true;
+			customData = await getCustomData();
+			htmlLs.setDataProviders(true, [...customData, ...extraData]);
 		}
+	}
+
+	function updateCustomData(data: html.IHTMLDataProvider[]) {
+		extraData = data;
+		htmlLs.setDataProviders(true, [...customData, ...extraData]);
 	}
 
 	async function getCustomData() {

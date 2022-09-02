@@ -21,11 +21,30 @@
 			}
 		},
 		{
+			"name": "Launch Alpine Language Features",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"--disable-extensions",
+				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode-alpine-language-features"
+			],
+			"outFiles": [
+				"${workspaceRoot}/extensions/*/out/**/*.js",
+				"${workspaceRoot}/packages/*/out/**/*.js"
+			],
+			"preLaunchTask": {
+				"type": "npm",
+				"script": "watch"
+			}
+		},
+		{
 			"type": "extensionHost",
 			"request": "launch",
 			"name": "Launch TypeScript Vue Plugin",
 			"runtimeExecutable": "${execPath}",
 			"args": [
+				"--disable-extensions",
 				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode-typescript-vue-plugin"
 			],
 			"outFiles": [
@@ -81,6 +100,36 @@
 			"type": "node",
 			"request": "attach",
 			"port": 6011,
+			"restart": true,
+			"outFiles": [
+				"${workspaceRoot}/packages/*/out/**/*.js"
+			]
+		},
+		{
+			"name": "Attach to Alpine Langauge Features Server",
+			"type": "node",
+			"request": "attach",
+			"port": 6109,
+			"restart": true,
+			"outFiles": [
+				"${workspaceRoot}/packages/*/out/**/*.js"
+			]
+		},
+		{
+			"name": "Attach to Alpine Second Language Features Server",
+			"type": "node",
+			"request": "attach",
+			"port": 6110,
+			"restart": true,
+			"outFiles": [
+				"${workspaceRoot}/packages/*/out/**/*.js"
+			]
+		},
+		{
+			"name": "Attach to Alpine Document Features Server",
+			"type": "node",
+			"request": "attach",
+			"port": 6111,
 			"restart": true,
 			"outFiles": [
 				"${workspaceRoot}/packages/*/out/**/*.js"

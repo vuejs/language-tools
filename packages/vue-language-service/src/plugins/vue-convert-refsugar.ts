@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
-import { parseDeclarationRanges, parseDotValueRanges } from '@volar/vue-code-gen/out/parsers/refSugarRanges';
+import * as refSugarRanges from '../utils/refSugarRanges';
 import * as vscode from 'vscode-languageserver-protocol';
 import { mergeWorkspaceEdits } from '../languageFeatures/rename';
 import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, useConfigurationHost } from '@volar/vue-language-service-types';
@@ -41,20 +41,25 @@ export default function (options: {
 			on(document) {
 				return worker(document.uri, async (vueDocument) => {
 
+					if (document.uri.endsWith('.html')) // petite-vue
+						return;
+
 					const isEnabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.codeLens.scriptSetupTools') ?? true;
 
 					if (!isEnabled)
 						return;
 
 					const result: vscode.CodeLens[] = [];
-					const descriptor = vueDocument.file.getDescriptor();
-					const ranges = vueDocument.file.getSfcRefSugarRanges();
+					const sfc = vueDocument.file.sfc;
 
-					if (descriptor.scriptSetup && ranges) {
+					if (sfc.scriptSetup && sfc.scriptSetupAst) {
+
+						const ranges = getRanges(options.ts, sfc.scriptSetupAst);
+
 						result.push({
 							range: {
-								start: document.positionAt(descriptor.scriptSetup.startTagEnd),
-								end: document.positionAt(descriptor.scriptSetup.startTagEnd + descriptor.scriptSetup.content.length),
+								start: document.positionAt(sfc.scriptSetup.startTagEnd),
+								end: document.positionAt(sfc.scriptSetup.startTagEnd + sfc.scriptSetup.content.length),
 							},
 							command: {
 								title: 'ref sugar ' + (ranges.refs.length ? '☑' : '☐'),
@@ -85,7 +90,7 @@ export default function (options: {
 				const [uri] = args as CommandArgs;
 
 				return worker(uri, vueDocument => {
-					return unuseRefSugar(vueDocument, context, options.doCodeActions, options.doCodeActionResolve, options.doRename, options.doValidation);
+					return unuseRefSugar(options.ts, vueDocument, context, options.doCodeActions, options.doCodeActionResolve, options.doRename, options.doValidation);
 				});
 			}
 		},
@@ -110,15 +115,13 @@ async function useRefSugar(
 	scriptTsLs: ts2.LanguageService,
 ) {
 
-	const descriptor = vueDocument.file.getDescriptor();
-	if (!descriptor.scriptSetup) return;
-
-	const scriptSetupAst = vueDocument.file.getScriptSetupAst();
-	if (!scriptSetupAst) return;
+	const sfc = vueDocument.file.sfc;
+	if (!sfc.scriptSetup) return;
+	if (!sfc.scriptSetupAst) return;
 
 	context.workDoneProgress.begin('Unuse Ref Sugar', 0, '', true);
 
-	const edits = await getUseRefSugarEdits(vueDocument, descriptor.scriptSetup, scriptSetupAst);
+	const edits = await getUseRefSugarEdits(vueDocument, sfc.scriptSetup, sfc.scriptSetupAst);
 
 	if (context.token.isCancellationRequested)
 		return;
@@ -131,12 +134,12 @@ async function useRefSugar(
 
 	async function getUseRefSugarEdits(
 		_vueDocument: VueDocument,
-		_scriptSetup: NonNullable<typeof descriptor['scriptSetup']>,
-		_scriptSetupAst: NonNullable<typeof scriptSetupAst>,
+		_scriptSetup: NonNullable<typeof sfc['scriptSetup']>,
+		_scriptSetupAst: ts.SourceFile,
 	) {
 
-		const ranges = parseDeclarationRanges(ts, _scriptSetupAst);
-		const dotValueRanges = parseDotValueRanges(ts, _scriptSetupAst);
+		const ranges = refSugarRanges.parseDeclarationRanges(ts, _scriptSetupAst);
+		const dotValueRanges = refSugarRanges.parseDotValueRanges(ts, _scriptSetupAst);
 		const document = _vueDocument.getDocument();
 		const edits: vscode.TextEdit[] = [];
 
@@ -234,6 +237,7 @@ async function useRefSugar(
 }
 
 async function unuseRefSugar(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
 	vueDocument: VueDocument,
 	context: ExecuteCommandContext,
 	doCodeActions: (uri: string, range: vscode.Range, codeActionContext: vscode.CodeActionContext) => Promise<vscode.CodeAction[] | undefined>,
@@ -242,15 +246,13 @@ async function unuseRefSugar(
 	doValidation: (uri: string) => Promise<vscode.Diagnostic[] | undefined>,
 ) {
 
-	const descriptor = vueDocument.file.getDescriptor();
-	if (!descriptor.scriptSetup) return;
-
-	const scriptSetupAst = vueDocument.file.getScriptSetupAst();
-	if (!scriptSetupAst) return;
+	const sfc = vueDocument.file.sfc;
+	if (!sfc.scriptSetup) return;
+	if (!sfc.scriptSetupAst) return;
 
 	context.workDoneProgress.begin('Unuse Ref Sugar', 0, '', true);
 
-	const edits = await getUnRefSugarEdits(vueDocument, descriptor.scriptSetup, scriptSetupAst);
+	const edits = await getUnRefSugarEdits(vueDocument, sfc.scriptSetup, sfc.scriptSetupAst);
 
 	if (context.token.isCancellationRequested)
 		return;
@@ -304,11 +306,11 @@ async function unuseRefSugar(
 	}
 	async function getUnRefSugarEdits(
 		_vueDocument: VueDocument,
-		_scriptSetup: NonNullable<typeof descriptor['scriptSetup']>,
-		_scriptSetupAst: NonNullable<typeof scriptSetupAst>,
+		_scriptSetup: NonNullable<typeof sfc['scriptSetup']>,
+		_scriptSetupAst: ts.SourceFile,
 	) {
 
-		const ranges = _vueDocument.file.getSfcRefSugarRanges();
+		const ranges = getRanges(ts, _scriptSetupAst);
 		const document = _vueDocument.getDocument();
 		const edits: vscode.TextEdit[] = [];
 
@@ -406,4 +408,14 @@ async function unuseRefSugar(
 			));
 		}
 	}
+}
+
+function getRanges(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	scriptSetupAst: ts.SourceFile,
+) {
+	return {
+		refs: refSugarRanges.parseRefSugarDeclarationRanges(ts, scriptSetupAst, ['$ref', '$computed', '$shallowRef', '$fromRefs']),
+		raws: refSugarRanges.parseRefSugarCallRanges(ts, scriptSetupAst, ['$raw', '$fromRefs']),
+	};
 }

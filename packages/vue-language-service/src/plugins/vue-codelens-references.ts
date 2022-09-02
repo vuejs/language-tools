@@ -51,7 +51,7 @@ export default function (options: {
 									start: document.positionAt(mapping.sourceRange.start),
 									end: document.positionAt(mapping.sourceRange.end),
 								},
-								data: data as any,
+								data: data,
 							});
 						}
 					}
@@ -62,7 +62,7 @@ export default function (options: {
 
 			async resolve(codeLens) {
 
-				const data: ReferencesCodeLensData = codeLens.data as any;
+				const data: ReferencesCodeLensData = codeLens.data;
 				const vueDocument = options.getVueDocument(data.uri);
 
 				if (!vueDocument)

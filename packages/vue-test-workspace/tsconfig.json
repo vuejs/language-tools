@@ -5,11 +5,23 @@
 			"dom"
 		],
 		"strict": true,
-		"allowJs": true,
 		"noUncheckedIndexedAccess": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
 		"skipLibCheck": true,
+		"allowJs": true,
 		"jsx": "preserve",
-	}
+		"baseUrl": ".",
+		"paths": {
+			"__COMPLETE_ROOT__/*": [
+				"./complete/*"
+			],
+			"__FIND_DEFINITION_ROOT__/*": [
+				"./find-definition/*"
+			],
+		}
+	},
+	"include": [
+		"**/*.vue",
+	]
 }

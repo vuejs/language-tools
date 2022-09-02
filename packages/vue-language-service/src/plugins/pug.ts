@@ -1,4 +1,4 @@
-import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
 import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as pug from '@volar/pug-language-service';
@@ -97,6 +97,27 @@ export default function (options: {
 		getSelectionRanges(document, positions) {
 			return worker(document, (pugDocument) => {
 				return pugLs.getSelectionRanges(pugDocument, positions);
+			});
+		},
+
+		async doAutoInsert(document, position, context) {
+			return worker(document, async (pugDocument) => {
+
+				const lastCharacter = context.lastChange.text[context.lastChange.text.length - 1];
+
+				if (context.lastChange.rangeLength === 0 && lastCharacter === '=') {
+
+					const enabled = (await useConfigurationHost()?.getConfiguration<boolean>('html.autoCreateQuotes')) ?? true;
+
+					if (enabled) {
+
+						const text = pugLs.doQuoteComplete(pugDocument, position, await useConfigurationHost()?.getConfiguration<html.CompletionConfiguration>('html.completion', document.uri));
+
+						if (text) {
+							return text;
+						}
+					}
+				}
 			});
 		},
 	};

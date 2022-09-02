@@ -1,18 +1,16 @@
 import * as shared from '@volar/shared';
-import { parseScriptRanges } from '@volar/vue-code-gen/out/parsers/scriptRanges';
-import { SearchTexts, TypeScriptRuntime, VueFile } from '@volar/vue-typescript';
-import { VueDocument, VueDocuments } from '../vueDocuments';
-import { pauseTracking, resetTracking } from '@vue/reactivity';
+import type * as ts2 from '@volar/typescript-language-service';
+import { getVueCompilerOptions, isIntrinsicElement } from '@volar/vue-language-core';
+import { scriptRanges } from '@volar/vue-language-core';
+import * as vue from '@volar/vue-language-core';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
-import { isIntrinsicElement } from '@volar/vue-code-gen';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import type * as ts from 'typescript/lib/tsserverlibrary';
-import type * as ts2 from '@volar/typescript-language-service';
-import type { LanguageServiceHost } from '../types';
-import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
+import { VueDocument, VueDocuments } from '../vueDocuments';
 import useHtmlPlugin from './html';
 
 export const semanticTokenTypes = [
@@ -46,7 +44,7 @@ const vueGlobalDirectiveProvider = html.newHTMLDataProvider('vueGlobalDirective'
 
 interface HtmlCompletionData {
 	mode: 'html',
-	tsItem: ts.CompletionEntry | undefined,
+	tsItem: vscode.CompletionItem | undefined,
 }
 
 interface AutoImportCompletionData {
@@ -66,19 +64,18 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		tag: 'both' | 'kebabCase' | 'pascalCase',
 		attr: 'kebabCase' | 'camelCase',
 	}>,
-	vueLsHost: LanguageServiceHost,
+	vueLsHost: vue.LanguageServiceHost,
 	vueDocuments: VueDocuments,
 	tsSettings: ts2.Settings,
-	tsRuntime: TypeScriptRuntime,
 }): EmbeddedLanguageServicePlugin & T {
 
 	const componentCompletionDataCache = new WeakMap<
-		ReturnType<VueFile['getTemplateData']>,
-		Map<string, { item: ts.CompletionEntry | undefined, bind: ts.CompletionEntry[], on: ts.CompletionEntry[]; }>
+		Awaited<ReturnType<VueDocument['getTemplateData']>>,
+		Map<string, { item: vscode.CompletionItem | undefined, bind: vscode.CompletionItem[], on: vscode.CompletionItem[]; }>
 	>();
 	const autoImportPositions = new WeakSet<vscode.Position>();
 	const tokenTypes = new Map(options.getSemanticTokenLegend().tokenTypes.map((t, i) => [t, i]));
-	const runtimeMode = options.tsRuntime.vueLsHost.getVueCompilationSettings().experimentalRuntimeMode;
+	const runtimeMode = getVueCompilerOptions(options.vueLsHost.getVueCompilationSettings()).experimentalRuntimeMode;
 
 	return {
 
@@ -117,7 +114,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 			async resolve(item) {
 
-				const data: HtmlCompletionData | AutoImportCompletionData | undefined = item.data as any;
+				const data: HtmlCompletionData | AutoImportCompletionData | undefined = item.data;
 
 				if (data?.mode === 'html') {
 					return await resolveHtmlItem(item, data);
@@ -128,6 +125,18 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 				return item;
 			},
+		},
+
+		doHover(document, position) {
+
+			if (!options.isSupportedDocument(document))
+				return;
+
+			const vueDocument = options.vueDocuments.fromEmbeddedDocument(document);
+			if (vueDocument) {
+				options.templateLanguagePlugin.updateCustomData([]);
+			}
+			return options.templateLanguagePlugin.doHover?.(document, position);
 		},
 
 		async doValidation(document, options_2) {
@@ -141,11 +150,9 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			if (vueDocument) {
 
 				const templateErrors: vscode.Diagnostic[] = [];
-				const sfcVueTemplateCompiled = vueDocument.file.getSfcVueTemplateCompiled();
-				const sfcTemplateLanguageCompiled = vueDocument.file.getSfcTemplateLanguageCompiled();
-				const sfcTemplate = vueDocument.file.getSfcTemplateDocument();
+				const sfcVueTemplateCompiled = vueDocument.file.compiledSFCTemplate;
 
-				if (sfcVueTemplateCompiled && sfcTemplateLanguageCompiled && sfcTemplate) {
+				if (sfcVueTemplateCompiled) {
 
 					for (const error of sfcVueTemplateCompiled.errors) {
 						onCompilerError(error, vscode.DiagnosticSeverity.Error);
@@ -161,19 +168,12 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 							start: error.loc?.start.offset ?? 0,
 							end: error.loc?.end.offset ?? 0,
 						};
-						let sourceRange = sfcTemplateLanguageCompiled!.htmlToTemplate(templateHtmlRange.start, templateHtmlRange.end);
 						let errorMessage = error.message;
-
-						if (!sourceRange) {
-							const htmlText = sfcTemplateLanguageCompiled!.htmlText.substring(templateHtmlRange.start, templateHtmlRange.end);
-							errorMessage += '\n```html\n' + htmlText.trim() + '\n```';
-							sourceRange = { start: 0, end: 0 };
-						}
 
 						templateErrors.push({
 							range: {
-								start: document.positionAt(sourceRange.start),
-								end: document.positionAt(sourceRange.end),
+								start: document.positionAt(templateHtmlRange.start),
+								end: document.positionAt(templateHtmlRange.end),
 							},
 							severity,
 							code: error.code,
@@ -200,7 +200,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			const scanner = options.getScanner(document);
 
 			if (vueDocument && scanner) {
-				const templateScriptData = vueDocument.file.getTemplateData();
+				const templateScriptData = await vueDocument.getTemplateData();
 				const components = new Set([
 					...templateScriptData.components,
 					...templateScriptData.components.map(hyphenate).filter(name => !isIntrinsicElement(runtimeMode, name)),
@@ -250,37 +250,33 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		},
 	};
 
-	// not supported for now
 	async function resolveHtmlItem(item: vscode.CompletionItem, data: HtmlCompletionData) {
 
-		// let tsItem = data.tsItem;
+		let tsItem = data.tsItem;
 
-		// if (!tsItem)
-		//     return item;
+		if (!tsItem)
+			return item;
 
-		// if (!host.templateTsLs)
-		//     return item;
+		tsItem = await options.tsLs.doCompletionResolve(tsItem);
+		item.tags = [...item.tags ?? [], ...tsItem.tags ?? []];
 
-		// tsItem = await host.templateTsLs.doCompletionResolve(tsItem);
-		// item.tags = [...item.tags ?? [], ...tsItem.tags ?? []];
+		const details: string[] = [];
+		const documentations: string[] = [];
 
-		// const details: string[] = [];
-		// const documentations: string[] = [];
+		if (item.detail) details.push(item.detail);
+		if (tsItem.detail) details.push(tsItem.detail);
+		if (details.length) {
+			item.detail = details.join('\n\n');
+		}
 
-		// if (item.detail) details.push(item.detail);
-		// if (tsItem.detail) details.push(tsItem.detail);
-		// if (details.length) {
-		//     item.detail = details.join('\n\n');
-		// }
-
-		// if (item.documentation) documentations.push(typeof item.documentation === 'string' ? item.documentation : item.documentation.value);
-		// if (tsItem.documentation) documentations.push(typeof tsItem.documentation === 'string' ? tsItem.documentation : tsItem.documentation.value);
-		// if (documentations.length) {
-		//     item.documentation = {
-		//         kind: vscode.MarkupKind.Markdown,
-		//         value: documentations.join('\n\n'),
-		//     };
-		// }
+		if (item.documentation) documentations.push(typeof item.documentation === 'string' ? item.documentation : item.documentation.value);
+		if (tsItem.documentation) documentations.push(typeof tsItem.documentation === 'string' ? tsItem.documentation : tsItem.documentation.value);
+		if (documentations.length) {
+			item.documentation = {
+				kind: vscode.MarkupKind.Markdown,
+				value: documentations.join('\n\n'),
+			};
+		}
 
 		return item;
 	}
@@ -294,16 +290,14 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		const vueDocument = _vueDocument;
 		const importFile = shared.uriToFsPath(data.importUri);
 		const rPath = path.relative(options.vueLsHost.getCurrentDirectory(), importFile);
-		const descriptor = vueDocument.file.getDescriptor();
-		const scriptAst = vueDocument.file.getScriptAst();
-		const scriptSetupAst = vueDocument.file.getScriptSetupAst();
+		const sfc = vueDocument.file.sfc;
 
 		let importPath = path.relative(path.dirname(data.vueDocumentUri), data.importUri);
 		if (!importPath.startsWith('.')) {
 			importPath = './' + importPath;
 		}
 
-		if (!descriptor.scriptSetup && !descriptor.script) {
+		if (!sfc.scriptSetup && !sfc.script) {
 			item.detail = `Auto import from '${importPath}'\n\n${rPath}`;
 			item.documentation = {
 				kind: vscode.MarkupKind.Markdown,
@@ -314,41 +308,35 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 		item.labelDetails = { description: rPath };
 
-		const scriptImport = scriptAst ? getLastImportNode(scriptAst) : undefined;
-		const scriptSetupImport = scriptSetupAst ? getLastImportNode(scriptSetupAst) : undefined;
+		const scriptImport = sfc.scriptAst ? getLastImportNode(sfc.scriptAst) : undefined;
+		const scriptSetupImport = sfc.scriptSetupAst ? getLastImportNode(sfc.scriptSetupAst) : undefined;
 		const componentName = capitalize(camelize(item.label.replace(/\./g, '-')));
 		const textDoc = vueDocument.getDocument();
-		let insertText = '';
-		const planAResult = await planAInsertText();
-		if (planAResult) {
-			insertText = planAResult.insertText;
-			item.detail = planAResult.description + '\n\n' + rPath;
+		const insert = await getTypeScriptInsert() ?? getMonkeyInsert();
+		if (insert.description) {
+			item.detail = insert.description + '\n\n' + rPath;
 		}
-		else {
-			insertText = planBInsertText();
-			item.detail = `Auto import from '${importPath}'\n\n${rPath}`;
-		}
-		if (descriptor.scriptSetup) {
-			const editPosition = textDoc.positionAt(descriptor.scriptSetup.startTagEnd + (scriptSetupImport ? scriptSetupImport.end : 0));
+		if (sfc.scriptSetup) {
+			const editPosition = textDoc.positionAt(sfc.scriptSetup.startTagEnd + (scriptSetupImport ? scriptSetupImport.end : 0));
 			autoImportPositions.add(editPosition);
 			item.additionalTextEdits = [
 				vscode.TextEdit.insert(
 					editPosition,
-					'\n' + insertText,
+					'\n' + insert.insertText,
 				),
 			];
 		}
-		else if (descriptor.script && scriptAst) {
-			const editPosition = textDoc.positionAt(descriptor.script.startTagEnd + (scriptImport ? scriptImport.end : 0));
+		else if (sfc.script && sfc.scriptAst) {
+			const editPosition = textDoc.positionAt(sfc.script.startTagEnd + (scriptImport ? scriptImport.end : 0));
 			autoImportPositions.add(editPosition);
 			item.additionalTextEdits = [
 				vscode.TextEdit.insert(
 					editPosition,
-					'\n' + insertText,
+					'\n' + insert.insertText,
 				),
 			];
-			const scriptRanges = parseScriptRanges(options.ts, scriptAst, !!descriptor.scriptSetup, true, true);
-			const exportDefault = scriptRanges.exportDefault;
+			const _scriptRanges = scriptRanges.parseScriptRanges(options.ts, sfc.scriptAst, !!sfc.scriptSetup, true, true);
+			const exportDefault = _scriptRanges.exportDefault;
 			if (exportDefault) {
 				// https://github.com/microsoft/TypeScript/issues/36174
 				const printer = options.ts.createPrinter();
@@ -360,10 +348,10 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 							options.ts.factory.createShorthandPropertyAssignment(componentName),
 						] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
 					};
-					const printText = printer.printNode(options.ts.EmitHint.Expression, newNode, scriptAst);
+					const printText = printer.printNode(options.ts.EmitHint.Expression, newNode, sfc.scriptAst);
 					const editRange = vscode.Range.create(
-						textDoc.positionAt(descriptor.script.startTagEnd + exportDefault.componentsOption.start),
-						textDoc.positionAt(descriptor.script.startTagEnd + exportDefault.componentsOption.end),
+						textDoc.positionAt(sfc.script.startTagEnd + exportDefault.componentsOption.start),
+						textDoc.positionAt(sfc.script.startTagEnd + exportDefault.componentsOption.end),
 					);
 					autoImportPositions.add(editRange.start);
 					autoImportPositions.add(editRange.end);
@@ -380,10 +368,10 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 							options.ts.factory.createShorthandPropertyAssignment(`components: { ${componentName} }`),
 						] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
 					};
-					const printText = printer.printNode(options.ts.EmitHint.Expression, newNode, scriptAst);
+					const printText = printer.printNode(options.ts.EmitHint.Expression, newNode, sfc.scriptAst);
 					const editRange = vscode.Range.create(
-						textDoc.positionAt(descriptor.script.startTagEnd + exportDefault.args.start),
-						textDoc.positionAt(descriptor.script.startTagEnd + exportDefault.args.end),
+						textDoc.positionAt(sfc.script.startTagEnd + exportDefault.args.start),
+						textDoc.positionAt(sfc.script.startTagEnd + exportDefault.args.end),
 					);
 					autoImportPositions.add(editRange.start);
 					autoImportPositions.add(editRange.end);
@@ -396,15 +384,17 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		}
 		return item;
 
-		async function planAInsertText() {
-			const embeddedScriptFile = vueDocument.file.getScriptTsFile();
-			const embeddedScriptDocument = vueDocument.embeddedDocumentsMap.get(embeddedScriptFile);
+		async function getTypeScriptInsert() {
+			const embeddedScriptUri = shared.fsPathToUri(vueDocument.file.tsFileName);
 			const tsImportName = camelize(path.basename(importFile).replace(/\./g, '-'));
-			const [formatOptions, preferences] = await Promise.all([
-				options.tsSettings.getFormatOptions?.(embeddedScriptDocument) ?? {},
-				options.tsSettings.getPreferences?.(embeddedScriptDocument) ?? {},
+			let [formatOptions, preferences] = await Promise.all([
+				options.tsSettings.getFormatOptions?.(embeddedScriptUri),
+				options.tsSettings.getPreferences?.(embeddedScriptUri),
 			]);
-			const tsDetail = options.tsLs.__internal__.raw.getCompletionEntryDetails(shared.uriToFsPath(embeddedScriptDocument.uri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
+			formatOptions = formatOptions ?? {};
+			preferences = preferences ?? {};
+			(preferences as any).importModuleSpecifierEnding = 'minimal';
+			const tsDetail = options.tsLs.__internal__.raw.getCompletionEntryDetails(shared.uriToFsPath(embeddedScriptUri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
 			if (tsDetail?.codeActions) {
 				for (const action of tsDetail.codeActions) {
 					for (const change of action.changes) {
@@ -420,7 +410,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				}
 			}
 		}
-		function planBInsertText() {
+		function getMonkeyInsert() {
 			const anyImport = scriptSetupImport ?? scriptImport;
 			let withSemicolon = true;
 			let quote = '"';
@@ -428,7 +418,10 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				withSemicolon = anyImport.text.endsWith(';');
 				quote = anyImport.text.includes("'") ? "'" : '"';
 			}
-			return `import ${componentName} from ${quote}${importPath}${quote}${withSemicolon ? ';' : ''}`;
+			return {
+				insertText: `import ${componentName} from ${quote}${importPath}${quote}${withSemicolon ? ';' : ''}`,
+				description: '',
+			};
 		}
 	}
 
@@ -438,9 +431,9 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			tag: 'both',
 			attr: 'kebabCase',
 		};
-		const componentCompletion = getComponentCompletionData(vueDocument);
+		const componentCompletion = await getComponentCompletionData(vueDocument);
 		const tags: html.ITagData[] = [];
-		const tsItems = new Map<string, ts.CompletionEntry>();
+		const tsItems = new Map<string, vscode.CompletionItem>();
 		const globalAttributes: html.IAttributeData[] = [];
 
 		for (const [_componentName, { item, bind, on }] of componentCompletion) {
@@ -456,7 +449,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 				for (const prop of bind) {
 
-					const name = nameCases.attr === 'camelCase' ? prop.name : hyphenate(prop.name);
+					const name = nameCases.attr === 'camelCase' ? prop.label : hyphenate(prop.label);
 
 					if (hyphenate(name).startsWith('on-')) {
 
@@ -501,7 +494,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				}
 				for (const event of on) {
 
-					const name = nameCases.attr === 'camelCase' ? event.name : hyphenate(event.name);
+					const name = nameCases.attr === 'camelCase' ? event.label : hyphenate(event.label);
 					const propKey = createInternalItemId('componentEvent', [componentName, name]);
 
 					attributes.push({
@@ -531,12 +524,12 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			}
 		}
 
-		const descriptor = vueDocument.file.getDescriptor();
+		const descriptor = vueDocument.file.sfc;
 		const enabledComponentAutoImport = await useConfigurationHost()?.getConfiguration<boolean>('volar.completion.autoImportComponent') ?? true;
 
 		if (enabledComponentAutoImport && (descriptor.script || descriptor.scriptSetup)) {
 			for (const vueDocument of options.vueDocuments.getAll()) {
-				let baseName = path.basename(vueDocument.uri, '.vue');
+				let baseName = path.removeExt(path.basename(vueDocument.uri), '.vue');
 				if (baseName.toLowerCase() === 'index') {
 					baseName = path.basename(path.dirname(vueDocument.uri));
 				}
@@ -564,8 +557,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			globalAttributes,
 		});
 
-		options.templateLanguagePlugin.htmlLs.setDataProviders(true, [
-			...options.templateLanguagePlugin.getHtmlDataProviders(),
+		options.templateLanguagePlugin.updateCustomData([
 			vueGlobalDirectiveProvider,
 			dataProvider,
 		]);
@@ -573,7 +565,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		return tsItems;
 	}
 
-	function afterHtmlCompletion(completionList: vscode.CompletionList, vueDocument: VueDocument, tsItems: Map<string, ts.CompletionEntry>) {
+	function afterHtmlCompletion(completionList: vscode.CompletionList, vueDocument: VueDocument, tsItems: Map<string, vscode.CompletionItem>) {
 
 		const replacement = getReplacement(completionList, vueDocument.getDocument());
 
@@ -585,7 +577,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			if (isEvent && hasModifier) {
 
 				const modifiers = replacement.text.split('.').slice(1);
-				const textWithoutModifier = path.trimExt(replacement.text, [], 999);
+				const textWithoutModifier = replacement.text.split('.')[0];
 
 				for (const modifier in eventModifiers) {
 
@@ -633,7 +625,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				item.detail = rPath;
 				item.kind = vscode.CompletionItemKind.File;
 				item.sortText = '\u0003' + (item.sortText ?? item.label);
-				item.data = data as any;
+				item.data = data;
 			}
 			else if (itemIdKey && itemId) {
 
@@ -678,7 +670,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					tsItem: tsItem,
 				};
 
-				item.data = data as any;
+				item.data = data;
 			}
 		}
 
@@ -687,7 +679,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 			for (const item of completionList.items) {
 
-				const data: HtmlCompletionData | AutoImportCompletionData | undefined = item.data as any;
+				const data: HtmlCompletionData | AutoImportCompletionData | undefined = item.data;
 
 				if (data?.mode === 'autoImport' && data.importUri === vueDocument.uri) { // don't import itself
 					continue;
@@ -701,7 +693,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			completionList.items = [...temp.values()];
 		}
 
-		options.templateLanguagePlugin.htmlLs.setDataProviders(true, options.templateLanguagePlugin.getHtmlDataProviders());
+		options.templateLanguagePlugin.updateCustomData([]);
 	}
 
 	function getLastImportNode(ast: ts.SourceFile) {
@@ -717,26 +709,23 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		} : undefined;
 	}
 
-	function getComponentCompletionData(sourceFile: VueDocument) {
+	async function getComponentCompletionData(sourceFile: VueDocument) {
 
-		const templateData = sourceFile.file.getTemplateData();
+		const templateData = await sourceFile.getTemplateData();
 
 		let cache = componentCompletionDataCache.get(templateData);
 		if (!cache) {
 
-			const { sfcTemplateScript } = sourceFile.file.refs;
+			cache = new Map<string, { item: vscode.CompletionItem | undefined, bind: vscode.CompletionItem[], on: vscode.CompletionItem[]; }>();
 
-			cache = new Map<string, { item: ts.CompletionEntry | undefined, bind: ts.CompletionEntry[], on: ts.CompletionEntry[]; }>();
+			const file = sourceFile.file.allEmbeddeds.find(e => e.file.fileName === sourceFile.file.tsFileName)?.file;
+			const document = file ? sourceFile.embeddedDocumentsMap.get(file) : undefined;
+			const templateTagNames = [...sourceFile.getTemplateTagsAndAttrs().tags.keys()];
 
-			pauseTracking();
-			const file = sfcTemplateScript.file.value;
-			const templateTagNames = sfcTemplateScript.templateCodeGens.value ? Object.keys(sfcTemplateScript.templateCodeGens.value.tagNames) : [];
-			resetTracking();
-
-			if (file) {
+			if (file && document) {
 
 				const tags_1 = templateData.componentItems.map(item => {
-					return { item, name: item.name };
+					return { item, name: item.label };
 				});
 				const tags_2 = templateTagNames
 					.filter(tag => tag.indexOf('.') >= 0)
@@ -747,32 +736,39 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					if (cache.has(tag.name))
 						continue;
 
-					let bind: ts.CompletionEntry[] = [];
-					let on: ts.CompletionEntry[] = [];
+					let bind: vscode.CompletionItem[] = [];
+					let on: vscode.CompletionItem[] = [];
 					{
-						const searchText = SearchTexts.PropsCompletion(tag.name);
-						let offset = file.content.indexOf(searchText);
+						const searchText = vue.SearchTexts.PropsCompletion(tag.name);
+						let offset = file.codeGen.getText().indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
 							try {
-								bind = options.tsRuntime.getTsLs().getCompletionsAtPosition(file.fileName, offset, undefined)?.entries.filter(entry => entry.kind !== 'warning') ?? [];
+								bind = (await options.tsLs.doComplete(document.uri, document.positionAt(offset)))?.items
+									.map(entry => { entry.label = entry.label.replace('?', ''); return entry; })
+									.filter(entry => entry.kind !== vscode.CompletionItemKind.Text) ?? [];
 							} catch { }
 						}
 					}
 					{
-						const searchText = SearchTexts.EmitCompletion(tag.name);
-						let offset = file.content.indexOf(searchText);
+						const searchText = vue.SearchTexts.EmitCompletion(tag.name);
+						let offset = file.codeGen.getText().indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
 							try {
-								on = options.tsRuntime.getTsLs().getCompletionsAtPosition(file.fileName, offset, undefined)?.entries.filter(entry => entry.kind !== 'warning') ?? [];
+								on = (await options.tsLs.doComplete(document.uri, document.positionAt(offset)))?.items
+									.map(entry => { entry.label = entry.label.replace('?', ''); return entry; })
+									.filter(entry => entry.kind !== vscode.CompletionItemKind.Text) ?? [];
 							} catch { }
 						}
 					}
 					cache.set(tag.name, { item: tag.item, bind, on });
 				}
 				try {
-					const globalBind = options.tsRuntime.getTsLs().getCompletionsAtPosition(file.fileName, file.content.indexOf(SearchTexts.GlobalAttrs), undefined)?.entries.filter(entry => entry.kind !== 'warning') ?? [];
+					const offset = file.codeGen.getText().indexOf(vue.SearchTexts.GlobalAttrs);
+					const globalBind = (await options.tsLs.doComplete(document.uri, document.positionAt(offset)))?.items
+						.map(entry => { entry.label = entry.label.replace('?', ''); return entry; })
+						.filter(entry => entry.kind !== vscode.CompletionItemKind.Text) ?? [];
 					cache.set('*', { item: undefined, bind: globalBind, on: [] });
 				} catch { }
 			}

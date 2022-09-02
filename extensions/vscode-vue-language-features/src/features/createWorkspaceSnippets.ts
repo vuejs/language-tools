@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from '../utils/fs';
 
-export async function activate(context: vscode.ExtensionContext) {
+export async function register(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.createWorkspaceSnippets', async () => {
 		if (vscode.workspace.workspaceFolders) {
 			for (const rootPath of vscode.workspace.workspaceFolders) {

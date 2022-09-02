@@ -58,12 +58,7 @@ export interface ServerInitializationOptions {
 		semanticTokens?: boolean;
 		codeAction?: boolean;
 		inlayHints?: boolean;
-		diagnostics?: boolean | {
-			/**
-			 * {@link __requests.GetDocumentVersionRequest}
-			 * */
-			getDocumentVersionRequest: boolean,
-		};
+		diagnostics?: boolean;
 		schemaRequestService?: boolean | {
 			/**
 			 * {@link __requests.GetDocumentContentRequest}
@@ -75,6 +70,7 @@ export interface ServerInitializationOptions {
 	 * html language service will be create in server if this option is not null
 	 */
 	documentFeatures?: {
+		allowedLanguageIds?: string[];
 		selectionRange?: boolean;
 		foldingRange?: boolean;
 		linkedEditingRange?: boolean;

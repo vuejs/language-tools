@@ -1,8 +1,8 @@
 import * as WebSocket from 'ws';
 
-export function createPreviewWebSocket(options: {
-	goToCode: (fileName: string, range: [number, number], cancleToken: { readonly isCancelled: boolean; }) => void,
-	getOpenFileUrl: (fileName: string, range: [number, number]) => string,
+export function createPreviewConnection(options: {
+	onGotoCode: (fileName: string, range: [number, number], cancleToken: { readonly isCancelled: boolean; }) => void,
+	getFileHref: (fileName: string, range: [number, number]) => string,
 }) {
 
 	const wsList: WebSocket.WebSocket[] = [];
@@ -31,7 +31,7 @@ export function createPreviewWebSocket(options: {
 					}
 				};
 
-				options.goToCode(data.fileName, data.range, token);
+				options.onGotoCode(data.fileName, data.range, token);
 			}
 
 			if (message.command === 'requestOpenFile') {
@@ -40,7 +40,7 @@ export function createPreviewWebSocket(options: {
 					fileName: string,
 					range: [number, number],
 				};
-				const url = options.getOpenFileUrl(data.fileName, data.range);
+				const url = options.getFileHref(data.fileName, data.range);
 
 				ws.send(JSON.stringify({
 					command: 'openFile',

@@ -1,5 +1,5 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as ts2 from '@volar/typescript-language-service';
 import * as semver from 'semver';
@@ -161,7 +161,12 @@ export default function (options: {
 			},
 		},
 
-		doValidation(document, options_2) {
+		doValidation(document, options_2 = {
+			semantic: true,
+			syntactic: true,
+			suggestion: true,
+			declaration: true,
+		}) {
 			if (isTsDocument(document)) {
 				return options.getTsLs().doValidation(document.uri, options_2);
 			}
@@ -182,6 +187,12 @@ export default function (options: {
 		findReferences(document, position) {
 			if (isTsDocument(document) || isJsonDocument(document)) {
 				return options.getTsLs().findReferences(document.uri, position);
+			}
+		},
+
+		findFileReferences(document) {
+			if (isTsDocument(document) || isJsonDocument(document)) {
+				return options.getTsLs().findFileReferences(document.uri);
 			}
 		},
 
@@ -229,12 +240,35 @@ export default function (options: {
 			}
 		},
 
-		format(document, range, options_2) {
+		async format(document, range, options_2) {
 			if (isTsDocument(document)) {
-				return options.getTsLs().doFormatting(document.uri, options_2, range);
+
+				const enable = await useConfigurationHost()?.getConfiguration<boolean>(getConfigTitle(document) + '.format.enable', document.uri);
+
+				if (enable === false) {
+					return;
+				}
+
+				return options.getTsLs().doFormatting.onRange(document.uri, options_2, range);
+			}
+		},
+
+		formatOnType(document, position, key, options_2) {
+			if (isTsDocument(document)) {
+				return options.getTsLs().doFormatting.onType(document.uri, options_2, position, key);
 			}
 		},
 	};
+}
+
+function getConfigTitle(document: TextDocument) {
+	if (document.languageId === 'javascriptreact') {
+		return 'javascript';
+	}
+	if (document.languageId === 'typescriptreact') {
+		return 'typescript';
+	}
+	return document.languageId;
 }
 
 export function isTsDocument(document: TextDocument) {

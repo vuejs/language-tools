@@ -17,7 +17,7 @@ export function activate(context: vscode.ExtensionContext) {
 			initializationOptions: initOptions,
 			progressOnInitialization: true,
 			synchronize: {
-				fileEvents: vscode.workspace.createFileSystemWatcher('{**/*.vue,**/*.js,**/*.jsx,**/*.ts,**/*.tsx,**/*.json}')
+				fileEvents: vscode.workspace.createFileSystemWatcher('{**/*.vue,**/*.md,**/*.html,**/*.js,**/*.jsx,**/*.ts,**/*.tsx,**/*.json}')
 			}
 		};
 		const client = new lsp.LanguageClient(
@@ -29,7 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
 		await client.start();
 
 		return client;
-	});
+	}, 'browser');
 }
 
 export function deactivate(): Thenable<any> | undefined {

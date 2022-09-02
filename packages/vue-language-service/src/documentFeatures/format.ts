@@ -1,15 +1,31 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver-protocol';
-import type { EmbeddedStructure } from '@volar/vue-typescript';
+import type { EmbeddedStructure } from '@volar/vue-language-core';
 import type { DocumentServiceRuntimeContext } from '../types';
 import { EmbeddedDocumentSourceMap, VueDocument } from '../vueDocuments';
 
 export function register(context: DocumentServiceRuntimeContext) {
 
-	return async (document: TextDocument, options: vscode.FormattingOptions) => {
+	const ts = context.typescript;
+
+	return async (
+		document: TextDocument,
+		options: vscode.FormattingOptions,
+		range?: vscode.Range,
+		onTypeParams?: {
+			ch: string,
+			position: vscode.Position,
+		},
+	) => {
+
+		if (!range) {
+			range = vscode.Range.create(document.positionAt(0), document.positionAt(document.getText().length));
+		}
 
 		const originalDocument = document;
-		const rootEdits = await tryFormat(document);
+		const rootEdits = onTypeParams
+			? await tryFormatOnType(document, onTypeParams.position, onTypeParams.ch)
+			: await tryFormat(document, range);
 		const vueDocument = context.getVueDocument(document);
 
 		if (!vueDocument)
@@ -42,12 +58,54 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 				const sourceMap = vueDocument.sourceMapsMap.get(embedded.self);
 
-				if (embedded.inheritParentIndent)
-					toPatchIndent = {
-						sourceMapEmbeddedDocumentUri: sourceMap.mappedDocument.uri,
-					};
+				let _edits: vscode.TextEdit[] | undefined;
 
-				const _edits = await tryFormat(sourceMap.mappedDocument);
+				if (onTypeParams) {
+
+					const embeddedPosition = sourceMap.getMappedRange(onTypeParams.position)?.[0].start;
+
+					if (embeddedPosition) {
+						_edits = await tryFormatOnType(sourceMap.mappedDocument, embeddedPosition, onTypeParams.ch);
+					}
+				}
+
+				else {
+
+					let embeddedRange = sourceMap.getMappedRange(range.start, range.end)?.[0];
+
+					if (!embeddedRange) {
+
+						let start = sourceMap.getMappedRange(range.start)?.[0].start;
+						let end = sourceMap.getMappedRange(range.end)?.[0].end;
+
+						if (!start) {
+							const minSourceStart = Math.min(...sourceMap.mappings.map(m => m.sourceRange.start));
+							if (document.offsetAt(range.start) <= minSourceStart) {
+								start = range.start;
+							}
+						}
+
+						if (!end) {
+							const maxSourceEnd = Math.max(...sourceMap.mappings.map(m => m.sourceRange.end));
+							if (document.offsetAt(range.end) >= maxSourceEnd) {
+								end = range.end;
+							}
+						}
+
+						if (start && end) {
+							embeddedRange = { start, end };
+						}
+					}
+
+					if (embeddedRange) {
+
+						toPatchIndent = {
+							sourceMapEmbeddedDocumentUri: sourceMap.mappedDocument.uri,
+						};
+
+						_edits = await tryFormat(sourceMap.mappedDocument, embeddedRange);
+					}
+				}
 
 				if (!_edits)
 					continue;
@@ -98,14 +156,14 @@ export function register(context: DocumentServiceRuntimeContext) {
 		return [textEdit];
 
 		function tryUpdateVueDocument() {
-			if (vueDocument?.getDocument().getText() !== document.getText()) {
-				vueDocument?.file.update(document.getText(), document.version.toString());
+			if (vueDocument) {
+				vueDocument.file.update(ts.ScriptSnapshot.fromString(document.getText()));
 			}
 		}
 
 		function getEmbeddedsByLevel(vueDocument: VueDocument, level: number) {
 
-			const embeddeds = vueDocument.file.getEmbeddeds();
+			const embeddeds = vueDocument.file.embeddeds;
 			const embeddedsLevels: EmbeddedStructure[][] = [embeddeds];
 
 			while (true) {
@@ -124,13 +182,9 @@ export function register(context: DocumentServiceRuntimeContext) {
 			}
 		}
 
-		async function tryFormat(document: TextDocument) {
+		async function tryFormat(document: TextDocument, range: vscode.Range) {
 
 			const plugins = context.getFormatPlugins();
-			const range: vscode.Range = {
-				start: document.positionAt(0),
-				end: document.positionAt(document.getText().length),
-			};
 
 			context.updateTsLs(document);
 
@@ -143,6 +197,33 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 				try {
 					edits = await plugin.format(document, range, options);
+				}
+				catch (err) {
+					console.error(err);
+				}
+
+				if (!edits)
+					continue;
+
+				return edits;
+			}
+		}
+
+		async function tryFormatOnType(document: TextDocument, position: vscode.Position, ch: string) {
+
+			const plugins = context.getFormatPlugins();
+
+			context.updateTsLs(document);
+
+			for (const plugin of plugins) {
+
+				if (!plugin.formatOnType)
+					continue;
+
+				let edits: vscode.TextEdit[] | null | undefined;
+
+				try {
+					edits = await plugin.formatOnType(document, position, ch, options);
 				}
 				catch (err) {
 					console.error(err);

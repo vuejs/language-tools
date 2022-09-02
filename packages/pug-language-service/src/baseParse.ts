@@ -111,28 +111,31 @@ export function baseParse(pugCode: string) {
 			});
 		}
 		else if (node.type === 'Text') {
-			codeGen.addCode(
+			codeGen.addCode2(
 				node.val,
-				getDocRange(node.line, node.column, node.val.length),
-				SourceMap.Mode.Offset,
+				getDocOffset(node.line, node.column),
 				undefined,
 			);
 		}
 	}
 	function addStartTag(node: TagNode, selfClosing: boolean) {
+		const _range = getDocRange(node.line, node.column, 0);
 		codeGen.addCode(
 			'',
-			getDocRange(node.line, node.column, 0),
+			{
+				// -1 for monkey fix https://github.com/johnsoncodehk/volar/issues/1723
+				start: _range.start - 1,
+				end: _range.end - 1,
+			},
 			SourceMap.Mode.Totally,
 			undefined,
 		);
 		codeGen.addText('<');
 		const tagRange = getDocRange(node.line, node.column, node.name.length);
 		if (pugCode.substring(tagRange.start, tagRange.end) === node.name) {
-			codeGen.addCode(
+			codeGen.addCode2(
 				node.name,
-				tagRange,
-				SourceMap.Mode.Offset,
+				tagRange.start,
 				undefined,
 			);
 		}
@@ -142,19 +145,21 @@ export function baseParse(pugCode: string) {
 
 		const noTitleAttrs = node.attrs.filter(attr => !attr.mustEscape && attr.name !== 'class');
 		const noTitleClassAttrs = node.attrs.filter(attr => !attr.mustEscape && attr.name === 'class');
-		const attrsBlock = attrsBlocks.get(getDocOffset(node.line, node.column)); // support attr auto-complete in empty space
+		const attrsBlock = attrsBlocks.get(getDocOffset(node.line, node.column)); // support attr auto-complete in spaces
+		const hasClassAttr = attrsBlock && attrsBlock.text.match(/\bclass\b\s*=/i);
 
-		addClassesOrStyles(noTitleClassAttrs, 'class');
+		if (!hasClassAttr) {
+			addClassesOrStyles(noTitleClassAttrs, 'class');
+		}
 
 		for (const attr of noTitleAttrs) {
 			codeGen.addText(' ');
 			codeGen.addText(attr.name);
 			if (typeof attr.val !== 'boolean') {
 				codeGen.addText('=');
-				codeGen.addCode(
+				codeGen.addCode2(
 					attr.val,
-					getDocRange(attr.line, attr.column, attr.val.length),
-					SourceMap.Mode.Offset,
+					getDocOffset(attr.line, attr.column),
 					undefined
 				);
 			}
@@ -162,10 +167,9 @@ export function baseParse(pugCode: string) {
 
 		if (attrsBlock) {
 			codeGen.addText(' ');
-			codeGen.addCode(
+			codeGen.addCode2(
 				attrsBlock.text,
-				{ start: attrsBlock.offset, end: attrsBlock.offset + attrsBlock.text.length },
-				SourceMap.Mode.Offset,
+				attrsBlock.offset,
 				undefined,
 			);
 		}
@@ -213,10 +217,9 @@ export function baseParse(pugCode: string) {
 		for (const attr of attrs) {
 			if (typeof attr.val !== 'boolean') {
 				codeGen.addText(' ');
-				codeGen.addCode(
+				codeGen.addCode2(
 					attr.val.slice(1, -1), // remove "
-					getDocRange(attr.line, attr.column + 1, attr.val.length - 2),
-					SourceMap.Mode.Offset,
+					getDocOffset(attr.line, attr.column + 1),
 					undefined
 				);
 			}
@@ -320,7 +323,7 @@ export function baseParse(pugCode: string) {
 		return pugTextDocument.offsetAt({ line: pugLine - 1, character: pugColumn - 1 });
 	}
 	function getDocRange(pugLine: number, pugColumn: number, length: number) {
-		const start = pugTextDocument.offsetAt({ line: pugLine - 1, character: pugColumn - 1 });
+		const start = getDocOffset(pugLine, pugColumn);
 		const end = start + length;
 		return {
 			start,

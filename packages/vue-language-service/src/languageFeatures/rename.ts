@@ -71,10 +71,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 								if (teleport) {
 
-									for (const [teleRange, sideData] of teleport.findTeleports(
+									for (const [teleRange] of teleport.findTeleports(
 										textEdit.range.start,
 										textEdit.range.end,
-										sideData => !!sideData.capabilities.references,
+										sideData => !!sideData.capabilities.rename,
 									)) {
 
 										if (recursiveChecker.has({ uri: teleport.document.uri, range: { start: teleRange.start, end: teleRange.start } }))
@@ -82,11 +82,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 										foundTeleport = true;
 
-										const newName_2 = sideData.transformNewName
-											? sideData.transformNewName(newName)
-											: newName;
-
-										await withTeleports(teleport.document, teleRange.start, newName_2);
+										await withTeleports(teleport.document, teleRange.start, newName);
 									}
 								}
 
@@ -251,11 +247,15 @@ export function embeddedEditToSourceEdit(
 				const sourceMap = vueDocuments.sourceMapFromEmbeddedDocumentUri(tsDocEdit.textDocument.uri);
 				if (sourceMap) {
 					vueDocEdit = vscode.TextDocumentEdit.create(
-						{ uri: sourceMap.sourceDocument.uri, version: sourceMap.sourceDocument.version },
+						{
+							uri: sourceMap.sourceDocument.uri,
+							// version: sourceMap.sourceDocument.version,
+							version: null, // fix https://github.com/johnsoncodehk/volar/issues/1490
+						},
 						[],
 					);
 					for (const tsEdit of tsDocEdit.edits) {
-						for (const [vueRange, data] of sourceMap.getSourceRanges(
+						for (const [vueRange] of sourceMap.getSourceRanges(
 							tsEdit.range.start,
 							tsEdit.range.end,
 							data => typeof data.capabilities.rename === 'object' ? data.capabilities.rename.out : !!data.capabilities.rename, // fix https://github.com/johnsoncodehk/volar/issues/1091

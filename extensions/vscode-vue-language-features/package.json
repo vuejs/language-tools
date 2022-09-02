@@ -1,11 +1,14 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "0.35.2",
+	"version": "0.40.5",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
 		"directory": "extensions/vscode-vue-language-features"
+	},
+	"sponsor": {
+		"url": "https://github.com/sponsors/johnsoncodehk"
 	},
 	"icon": "images/icon.png",
 	"displayName": "Vue Language Features (Volar)",
@@ -13,7 +16,7 @@
 	"author": "johnsoncodehk",
 	"publisher": "Vue",
 	"engines": {
-		"vscode": "^1.63.0"
+		"vscode": "^1.67.0"
 	},
 	"keywords": [
 		"volar",
@@ -25,6 +28,8 @@
 	],
 	"activationEvents": [
 		"onLanguage:vue",
+		"onLanguage:markdown",
+		"onLanguage:html",
 		"onLanguage:javascript",
 		"onLanguage:typescript",
 		"onLanguage:javascriptreact",
@@ -36,7 +41,7 @@
 	"capabilities": {
 		"untrustedWorkspaces": {
 			"supported": "limited",
-			"description": "%workspaceTrust%",
+			"description": "%volar.workspaceTrust.description%",
 			"restrictedConfigurations": [
 				"typescript.tsdk",
 				"typescript.tsserver.pluginPaths",
@@ -45,6 +50,21 @@
 		}
 	},
 	"contributes": {
+		"configurationDefaults": {
+			"[markdown]": {
+				"editor.quickSuggestions": true
+			}
+		},
+		"views": {
+			"explorer": [
+				{
+					"id": "vueComponentPreview",
+					"name": "Vue Component Preview",
+					"type": "webview",
+					"when": "volar.foundViteDir"
+				}
+			]
+		},
 		"jsonValidation": [
 			{
 				"fileMatch": "tsconfig.json",
@@ -88,27 +108,27 @@
 			},
 			{
 				"fileMatch": "tsconfig.json",
-				"url": "./schemas/vue-tsconfig.schema.json"
+				"url": "./dist/schemas/vue-tsconfig.schema.json"
 			},
 			{
 				"fileMatch": "tsconfig-*.json",
-				"url": "./schemas/vue-tsconfig.schema.json"
+				"url": "./dist/schemas/vue-tsconfig.schema.json"
 			},
 			{
 				"fileMatch": "tsconfig.*.json",
-				"url": "./schemas/vue-tsconfig.schema.json"
+				"url": "./dist/schemas/vue-tsconfig.schema.json"
 			},
 			{
 				"fileMatch": "jsconfig.json",
-				"url": "./schemas/vue-tsconfig.schema.json"
+				"url": "./dist/schemas/vue-tsconfig.schema.json"
 			},
 			{
 				"fileMatch": "jsconfig-*.json",
-				"url": "./schemas/vue-tsconfig.schema.json"
+				"url": "./dist/schemas/vue-tsconfig.schema.json"
 			},
 			{
 				"fileMatch": "jsconfig.*.json",
-				"url": "./schemas/vue-tsconfig.schema.json"
+				"url": "./dist/schemas/vue-tsconfig.schema.json"
 			}
 		],
 		"languages": [
@@ -118,6 +138,10 @@
 					".vue"
 				],
 				"configuration": "./languages/vue-language-configuration.json"
+			},
+			{
+				"id": "markdown",
+				"configuration": "./languages/markdown-language-configuration.json"
 			},
 			{
 				"id": "html",
@@ -163,14 +187,21 @@
 					"source.postcss": "postcss",
 					"source.js": "javascript",
 					"source.ts": "typescript",
-					"source.jsx": "javascriptreact",
+					"source.js.jsx": "javascriptreact",
 					"source.tsx": "typescriptreact",
 					"source.json": "json",
 					"source.json.comments": "jsonc",
 					"source.yaml": "yaml",
 					"source.toml": "toml",
 					"source.graphql": "graphql"
-				}
+				},
+				"unbalancedBracketScopes": [
+					"keyword.operator.relational",
+					"storage.type.function.arrow",
+					"keyword.operator.bitwise.shift",
+					"meta.brace.angle",
+					"punctuation.definition.tag"
+				]
 			},
 			{
 				"language": "vue-injection-markdown",
@@ -194,7 +225,7 @@
 					"source.postcss": "postcss",
 					"source.js": "javascript",
 					"source.ts": "typescript",
-					"source.jsx": "javascriptreact",
+					"source.js.jsx": "javascriptreact",
 					"source.tsx": "typescriptreact",
 					"source.json": "json",
 					"source.json.comments": "jsonc",
@@ -325,15 +356,16 @@
 					"description": "Auto-complete Ref value with `.value`."
 				},
 				"volar.takeOverMode.enabled": {
-					"type": "boolean",
+					"type": [
+						"boolean",
+						"string"
+					],
 					"enum": [
 						"auto",
-						true,
 						false
 					],
 					"enumDescriptions": [
 						"Auto enable take over mode when built-in TS extension disabled.",
-						"Alway enable take over mode.",
 						"Never enable take over mode."
 					],
 					"default": "auto",
@@ -393,12 +425,12 @@
 				},
 				"volar.preview.backgroundColor": {
 					"type": "string",
-					"default": "#fff",
+					"default": "#f0f0f0",
 					"description": "Component preview background color."
 				},
 				"volar.preview.transparentGrid": {
 					"type": "boolean",
-					"default": true,
+					"default": false,
 					"description": "Component preview background style."
 				},
 				"volar.splitEditors.layout.left": {
@@ -415,6 +447,16 @@
 						"template",
 						"customBlocks"
 					]
+				},
+				"volar.updateImportsOnFileMove.enabled": {
+					"type": "boolean",
+					"default": true,
+					"description": "Enabled update imports on file move."
+				},
+				"volar.diagnostics.delay": {
+					"type": "number",
+					"default": 200,
+					"description": "Delay time for diagnostics."
 				}
 			}
 		},
@@ -450,12 +492,81 @@
 						"support.class.component.vue"
 					]
 				}
+			},
+			{
+				"language": "markdown",
+				"scopes": {
+					"property": [
+						"variable.other.property.vue"
+					],
+					"property.readonly": [
+						"variable.other.constant.property.vue"
+					],
+					"variable": [
+						"variable.other.readwrite.vue"
+					],
+					"variable.readonly": [
+						"variable.other.constant.object.vue"
+					],
+					"function": [
+						"entity.name.function.vue"
+					],
+					"namespace": [
+						"entity.name.type.module.vue"
+					],
+					"variable.defaultLibrary": [
+						"support.variable.vue"
+					],
+					"function.defaultLibrary": [
+						"support.function.vue"
+					],
+					"componentTag": [
+						"support.class.component.vue"
+					]
+				}
+			},
+			{
+				"language": "html",
+				"scopes": {
+					"property": [
+						"variable.other.property.vue"
+					],
+					"property.readonly": [
+						"variable.other.constant.property.vue"
+					],
+					"variable": [
+						"variable.other.readwrite.vue"
+					],
+					"variable.readonly": [
+						"variable.other.constant.object.vue"
+					],
+					"function": [
+						"entity.name.function.vue"
+					],
+					"namespace": [
+						"entity.name.type.module.vue"
+					],
+					"variable.defaultLibrary": [
+						"support.variable.vue"
+					],
+					"function.defaultLibrary": [
+						"support.function.vue"
+					],
+					"componentTag": [
+						"support.class.component.vue"
+					]
+				}
 			}
 		],
 		"commands": [
 			{
 				"command": "volar.action.restartServer",
 				"title": "Restart Vue server",
+				"category": "Volar"
+			},
+			{
+				"command": "volar.action.reloadProject",
+				"title": "Reload Project",
 				"category": "Volar"
 			},
 			{
@@ -543,12 +654,21 @@
 				"command": "volar.selectTypeScriptVersion",
 				"title": "Select TypeScript Version...",
 				"category": "Volar"
+			},
+			{
+				"command": "volar.vue.findAllFileReferences",
+				"title": "Vue: Find File References",
+				"category": "Volar"
 			}
 		],
 		"menus": {
 			"commandPalette": [
 				{
 					"command": "volar.action.restartServer",
+					"when": "volar.activated"
+				},
+				{
+					"command": "volar.action.reloadProject",
 					"when": "volar.activated"
 				},
 				{
@@ -601,11 +721,11 @@
 				},
 				{
 					"command": "volar.action.selectElement",
-					"when": "activeEditor == WebviewEditor"
+					"when": "volarPreviewFocus"
 				},
 				{
 					"command": "volar.action.openInBrowser",
-					"when": "activeEditor == WebviewEditor"
+					"when": "volarPreviewFocus"
 				},
 				{
 					"command": "volar.selectTypeScriptVersion",
@@ -630,55 +750,54 @@
 				},
 				{
 					"command": "volar.action.selectElement",
-					"when": "activeEditor == WebviewEditor",
+					"when": "volarPreviewFocus",
 					"group": "navigation"
 				},
 				{
 					"command": "volar.action.openInBrowser",
-					"when": "activeEditor == WebviewEditor",
+					"when": "volarPreviewFocus",
 					"group": "navigation"
 				},
 				{
 					"command": "workbench.action.webview.reloadWebviewAction",
-					"when": "activeEditor == WebviewEditor",
+					"when": "volarPreviewFocus",
 					"group": "navigation"
+				}
+			],
+			"explorer/context": [
+				{
+					"command": "volar.vue.findAllFileReferences",
+					"when": "resourceLangId == typescript",
+					"group": "4_search"
+				},
+				{
+					"command": "volar.vue.findAllFileReferences",
+					"when": "resourceLangId == typescriptreact",
+					"group": "4_search"
+				},
+				{
+					"command": "volar.vue.findAllFileReferences",
+					"when": "resourceLangId == javascript",
+					"group": "4_search"
+				},
+				{
+					"command": "volar.vue.findAllFileReferences",
+					"when": "resourceLangId == javascriptreact",
+					"group": "4_search"
+				},
+				{
+					"command": "volar.vue.findAllFileReferences",
+					"when": "resourceLangId == vue",
+					"group": "4_search"
+				},
+				{
+					"command": "volar.vue.findAllFileReferences",
+					"when": "resourceLangId == html",
+					"group": "4_search"
 				}
 			]
 		},
 		"problemMatchers": [
-			{
-				"name": "tsc",
-				"label": "%typescript.problemMatchers.tsc.label%",
-				"owner": "typescript",
-				"source": "ts",
-				"applyTo": "closedDocuments",
-				"fileLocation": [
-					"relative",
-					"${cwd}"
-				],
-				"pattern": "$tsc"
-			},
-			{
-				"name": "tsc-watch",
-				"label": "%typescript.problemMatchers.tscWatch.label%",
-				"owner": "typescript",
-				"source": "ts",
-				"applyTo": "closedDocuments",
-				"fileLocation": [
-					"relative",
-					"${cwd}"
-				],
-				"pattern": "$tsc",
-				"background": {
-					"activeOnStart": true,
-					"beginsPattern": {
-						"regexp": "^\\s*(?:message TS6032:|\\[?\\D*.{1,2}[:.].{1,2}[:.].{1,2}\\D*(├\\D*\\d{1,2}\\D+┤)?(?:\\]| -)) File change detected\\. Starting incremental compilation\\.\\.\\."
-					},
-					"endsPattern": {
-						"regexp": "^\\s*(?:message TS6042:|\\[?\\D*.{1,2}[:.].{1,2}[:.].{1,2}\\D*(├\\D*\\d{1,2}\\D+┤)?(?:\\]| -)) (?:Compilation complete\\.|Found \\d+ errors?\\.) Watching for file changes\\."
-					}
-				}
-			},
 			{
 				"name": "vite",
 				"label": "Vite problems",
@@ -688,7 +807,7 @@
 				"background": {
 					"activeOnStart": true,
 					"beginsPattern": "restarting server...$",
-					"endsPattern": "^\\s*ready in"
+					"endsPattern": "\\s*ready in|server restarted."
 				}
 			}
 		]
@@ -708,19 +827,22 @@
 		"release": "npm run release:node && npm run release:browser"
 	},
 	"devDependencies": {
-		"@types/vscode": "1.63.0",
-		"@volar/preview": "0.35.2",
-		"@volar/shared": "0.35.2",
-		"@volar/vue-language-server": "0.35.2",
-		"@vue/compiler-dom": "^3.2.36",
-		"@vue/compiler-sfc": "^3.2.36",
-		"@vue/reactivity": "^3.2.36",
+		"@types/semver": "^7.3.10",
+		"@types/vscode": "1.67.0",
+		"@volar/preview": "0.40.5",
+		"@volar/shared": "0.40.5",
+		"@volar/vue-language-core": "0.40.5",
+		"@volar/vue-language-server": "0.40.5",
+		"@vue/compiler-sfc": "^3.2.37",
+		"@vue/reactivity": "^3.2.37",
 		"esbuild": "latest",
 		"esbuild-plugin-copy": "latest",
 		"ovsx": "^0.3.0",
 		"path-browserify": "^1.0.1",
+		"punycode": "^2.1.1",
+		"semver": "^7.3.7",
 		"vsce": "latest",
-		"vscode-languageclient": "^8.0.1",
+		"vscode-languageclient": "^8.0.2",
 		"vscode-nls": "^5.0.1"
 	}
 }

@@ -1,11 +1,13 @@
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-service';
+import { LanguageConfigs } from '../types';
 import * as vscode from 'vscode-languageserver';
 
 export function register(
 	features: NonNullable<shared.ServerInitializationOptions['languageFeatures']>,
 	legend: vscode.SemanticTokensLegend,
 	server: vscode.ServerCapabilities,
+	languageConfigs: LanguageConfigs,
 ) {
 	if (features.references) {
 		server.referencesProvider = true;
@@ -35,7 +37,7 @@ export function register(
 			fileOperations: {
 				willRename: {
 					filters: [
-						{ pattern: { glob: '**/*.vue' } },
+						...[...languageConfigs.definitelyExts, ...languageConfigs.indeterminateExts].map(ext => ({ pattern: { glob: `**/*${ext}` } })),
 						{ pattern: { glob: '**/*.js' } },
 						{ pattern: { glob: '**/*.ts' } },
 						{ pattern: { glob: '**/*.jsx' } },
@@ -54,7 +56,18 @@ export function register(
 	}
 	if (features.completion) {
 		server.completionProvider = {
-			triggerCharacters: '!@#$%^&*()_+-=`~{}|[]\:";\'<>?,./ '.split(''), // all symbols on keyboard
+			// triggerCharacters: '!@#$%^&*()_+-=`~{}|[]\:";\'<>?,./ '.split(''), // all symbols on keyboard
+			// hardcode to fix https://github.com/sublimelsp/LSP-volar/issues/114
+			triggerCharacters: [...new Set([
+				'/', '-', ':', // css
+				...'>+^*()#.[]$@-{}'.split(''), // emmet
+				'.', ':', '<', '"', '=', '/', // html, vue
+				'@', // vue-event
+				'"', ':', // json
+				'.', '"', '\'', '`', '/', '<', '@', '#', ' ', // typescript
+				'*', // typescript-jsdoc
+				'@', // typescript-comment
+			])],
 			resolveProvider: true,
 		};
 		server.executeCommandProvider = {
@@ -112,4 +125,16 @@ export function register(
 	if (features.inlayHints) {
 		server.inlayHintProvider = true;
 	}
+	// buggy
+	// if (features.diagnostics) {
+	// 	server.diagnosticProvider = {
+	// 		documentSelector: [
+	// 			...languageConfigs.definitelyExts.map(ext => ({ pattern: `**/*${ext}` })),
+	// 			...languageConfigs.indeterminateExts.map(ext => ({ pattern: `**/*${ext}` })),
+	// 			{ pattern: '**/*.{ts,js,tsx,jsx}' },
+	// 		],
+	// 		interFileDependencies: true,
+	// 		workspaceDiagnostics: false,
+	// 	};
+	// }
 }

@@ -1,6 +1,7 @@
 import { createLanguageService, LanguageServiceHost } from '../..';
 import * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';
+import * as shared from '@volar/shared';
 
 const testRoot = path.resolve(__dirname, '../../../vue-test-workspace');
 export const tester = createTester(testRoot);
@@ -14,11 +15,10 @@ function createTester(root: string) {
 		},
 	};
 
-	const realTsConfig = path.join(root, 'tsconfig.json');
+	const realTsConfig = shared.normalizeFileName(path.join(root, 'tsconfig.json'));
 	const config = ts.readJsonConfigFile(realTsConfig, ts.sys.readFile);
 	const parsedCommandLine = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(realTsConfig), {}, path.basename(realTsConfig));
-
-	let projectVersion = 0;
+	parsedCommandLine.fileNames = parsedCommandLine.fileNames.map(shared.normalizeFileName);
 	const scriptVersions = new Map<string, string>();
 	const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
 	const host: LanguageServiceHost = {
@@ -34,15 +34,45 @@ function createTester(root: string) {
 		realpath: ts.sys.realpath,
 		// custom
 		getDefaultLibFileName: options => ts.getDefaultLibFilePath(options),
-		getProjectVersion: () => projectVersion.toString(),
+		getProjectVersion: () => '0',
 		getScriptFileNames: () => parsedCommandLine.fileNames,
 		getCurrentDirectory: () => root,
 		getCompilationSettings: () => parsedCommandLine.options,
 		getScriptVersion,
 		getScriptSnapshot,
 		getVueCompilationSettings: () => ({}),
+		getTypeScriptModule: () => ts,
 	};
-	const languageService = createLanguageService({ typescript: ts }, host, undefined, undefined, undefined, []);
+	const vscodeSettings: any = {
+		typescript: {
+			preferences: {
+				quoteStyle: 'single',
+			},
+		},
+		javascript: {
+			preferences: {
+				quoteStyle: 'single',
+			},
+		},
+	};
+	const languageService = createLanguageService(host, undefined, undefined, {
+		async getConfiguration<T>(section: string) {
+			const keys = section.split('.');
+			let settings = vscodeSettings;
+			for (const key of keys) {
+				if (key in settings) {
+					settings = settings[key];
+				}
+				else {
+					settings = undefined;
+					break;
+				}
+			}
+			return settings;
+		},
+		onDidChangeConfiguration() { },
+		rootUris: [],
+	}, []);
 
 	return {
 		host,

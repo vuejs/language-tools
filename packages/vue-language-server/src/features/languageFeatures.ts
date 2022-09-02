@@ -1,16 +1,11 @@
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-service';
-import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
-import type { Projects } from '../projects';
-import { fileRenamings, renameFileContentCache, getScriptText } from '../project';
-import { getDocumentSafely } from '../utils';
+import type { Workspaces } from '../utils/workspaces';
 
 export function register(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
 	connection: vscode.Connection,
-	documents: vscode.TextDocuments<TextDocument>,
-	projects: Projects,
+	projects: Workspaces,
 	features: NonNullable<shared.ServerInitializationOptions['languageFeatures']>,
 	params: vscode.InitializeParams,
 ) {
@@ -44,9 +39,18 @@ export function register(
 			: undefined;
 		const newPosition = activeSel?.textDocument.uri.toLowerCase() === uri.toLowerCase() ? activeSel.position : undefined;
 
-		return await worker(uri, async vueLs => {
+		const result = await worker(uri, async vueLs => {
 			return vueLs.doCompletionResolve(item, newPosition) ?? item;
 		}) ?? item;
+
+		const insertReplaceSupport = params.capabilities.textDocument?.completion?.completionItem?.insertReplaceSupport ?? false;
+		if (!insertReplaceSupport) {
+			if (result.textEdit && vscode.InsertReplaceEdit.is(result.textEdit)) {
+				result.textEdit = vscode.TextEdit.replace(result.textEdit.insert, result.textEdit.newText);
+			}
+		}
+
+		return result;
 	});
 	connection.onHover(async handler => {
 		return worker(handler.textDocument.uri, vueLs => {
@@ -134,7 +138,7 @@ export function register(
 	});
 	connection.onCodeAction(async handler => {
 		return worker(handler.textDocument.uri, async vueLs => {
-			const codeActions = await vueLs.doCodeActions(handler.textDocument.uri, handler.range, handler.context) ?? [];
+			let codeActions = await vueLs.doCodeActions(handler.textDocument.uri, handler.range, handler.context) ?? [];
 			for (const codeAction of codeActions) {
 				if (codeAction.data && typeof codeAction.data === 'object') {
 					(codeAction.data as any).uri = handler.textDocument.uri;
@@ -142,6 +146,9 @@ export function register(
 				else {
 					codeAction.data = { uri: handler.textDocument.uri };
 				}
+			}
+			if (!params.capabilities.textDocument?.codeAction?.disabledSupport) {
+				codeActions = codeActions.filter(codeAction => !codeAction.disabled);
 			}
 			return codeActions;
 		});
@@ -160,6 +167,11 @@ export function register(
 	connection.onReferences(async handler => {
 		return worker(handler.textDocument.uri, vueLs => {
 			return vueLs.findReferences(handler.textDocument.uri, handler.position);
+		});
+	});
+	connection.onRequest(shared.FindFileReferenceRequest.type, async handler => {
+		return worker(handler.textDocument.uri, vueLs => {
+			return vueLs.findFileReferences(handler.textDocument.uri);
 		});
 	});
 	connection.onImplementation(async handler => {
@@ -263,6 +275,25 @@ export function register(
 			return buildTokens(result);
 		}) ?? buildTokens([]);
 	});
+	connection.languages.diagnostics.on(async (params, cancellationToken, workDoneProgressReporter, resultProgressReporter) => {
+		const result = await worker(params.textDocument.uri, vueLs => {
+			return vueLs.doValidation(params.textDocument.uri, errors => {
+				// resultProgressReporter is undefined in vscode
+				resultProgressReporter?.report({
+					relatedDocuments: {
+						[params.textDocument.uri]: {
+							kind: vscode.DocumentDiagnosticReportKind.Full,
+							items: errors,
+						},
+					},
+				});
+			}, cancellationToken);
+		});
+		return {
+			kind: vscode.DocumentDiagnosticReportKind.Full,
+			items: result ?? [],
+		};
+	});
 	connection.languages.inlayHint.on(async handler => {
 		return worker(handler.textDocument.uri, vueLs => {
 			return vueLs.getInlayHints(handler.textDocument.uri, handler.range);
@@ -270,62 +301,20 @@ export function register(
 	});
 	connection.workspace.onWillRenameFiles(async handler => {
 
-		const hasTsFile = handler.files.some(file => file.newUri.endsWith('.vue') || file.newUri.endsWith('.ts') || file.newUri.endsWith('.tsx'));
-		const config: 'prompt' | 'always' | 'never' | null | undefined = await connection.workspace.getConfiguration(hasTsFile ? 'typescript.updateImportsOnFileMove.enabled' : 'javascript.updateImportsOnFileMove.enabled');
-
-		if (config === 'always') {
-			const renaming = new Promise<void>(async resolve => {
-				for (const file of handler.files) {
-					const renameFileContent = getScriptText(documents, shared.uriToFsPath(file.oldUri), ts.sys);
-					if (renameFileContent) {
-						renameFileContentCache.set(file.oldUri, renameFileContent);
-					}
-				}
-				await shared.sleep(0);
-				const edit = await worker();
-				if (edit) {
-					if (edit.documentChanges) {
-						for (const change of edit.documentChanges) {
-							if (vscode.TextDocumentEdit.is(change)) {
-								for (const file of handler.files) {
-									if (change.textDocument.uri === file.oldUri) {
-										change.textDocument.uri = file.newUri;
-										change.textDocument.version = getDocumentSafely(documents, file.newUri)?.version ?? change.textDocument.version;
-									}
-								}
-							}
-						}
-					}
-					connection.workspace.applyEdit(edit);
-				}
-				resolve();
-			});
-			fileRenamings.add(renaming);
-			(async () => {
-				await renaming;
-				fileRenamings.delete(renaming);
-				renameFileContentCache.clear();
-			})();
-		}
-
-		if (config === 'prompt')
-			return await worker();
-
-		return null;
-
-		async function worker() {
-			const edits = (await Promise.all(handler.files
-				.map(async file => {
-					const vueLs = await getLanguageService(file.oldUri);
-					return vueLs?.getEditsForFileRename(file.oldUri, file.newUri);
-				}))).filter(shared.notEmpty);
-			if (edits.length) {
-				const result = edits[0];
-				vue.mergeWorkspaceEdits(result, ...edits.slice(1));
-				return result;
-			}
+		const config = await connection.workspace.getConfiguration('volar.updateImportsOnFileMove.enabled');
+		if (!config) {
 			return null;
 		}
+
+		if (handler.files.length !== 1) {
+			return null;
+		}
+
+		const file = handler.files[0];
+
+		return await worker(file.oldUri, vueLs => {
+			return vueLs.getEditsForFileRename(file.oldUri, file.newUri) ?? null;
+		}) ?? null;
 	});
 	connection.onRequest(shared.AutoInsertRequest.type, async handler => {
 		return worker(handler.textDocument.uri, vueLs => {

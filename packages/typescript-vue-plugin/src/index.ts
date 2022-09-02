@@ -1,13 +1,17 @@
-import * as vue from '@volar/vue-typescript';
+import * as vueTs from '@volar/vue-typescript';
+import * as vue from '@volar/vue-language-core';
 import * as path from 'path';
-import * as apis from './apis';
-import { tsShared } from '@volar/vue-typescript';
 
 const init: ts.server.PluginModuleFactory = (modules) => {
 	const { typescript: ts } = modules;
 	const vueFilesGetter = new WeakMap<ts.server.Project, () => string[]>();
 	const pluginModule: ts.server.PluginModule = {
 		create(info) {
+
+			// fix: https://github.com/johnsoncodehk/volar/issues/1146
+			if (info.project.projectKind === ts.server.ProjectKind.Inferred) {
+				return info.languageService;
+			}
 
 			const proxyHost = createProxyHost(ts, info);
 
@@ -19,6 +23,8 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 			info.project.getScriptKind = fileName => {
 				switch (path.extname(fileName)) {
 					case '.vue': return ts.ScriptKind.TSX; // can't use External, Unknown
+					case '.md': return ts.ScriptKind.TSX; // can't use External, Unknown
+					case '.html': return ts.ScriptKind.TSX; // can't use External, Unknown
 					case '.js': return ts.ScriptKind.JS;
 					case '.jsx': return ts.ScriptKind.JSX;
 					case '.ts': return ts.ScriptKind.TS;
@@ -28,65 +34,34 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 				}
 			};
 
-			const tsRuntime = vue.createTypeScriptRuntime({
-				typescript: ts,
-				baseCssModuleType: 'any',
-				getCssClasses: () => ({}),
-				vueLsHost: proxyHost.host,
-				isTsPlugin: true
-			});
-			const _tsPluginApis = apis.register(tsRuntime);
-			const tsPluginProxy: Partial<ts.LanguageService> = {
-				getSemanticDiagnostics: apiHook(tsRuntime.getTsLs().getSemanticDiagnostics),
-				getEncodedSemanticClassifications: apiHook(tsRuntime.getTsLs().getEncodedSemanticClassifications),
-				getCompletionsAtPosition: apiHook(_tsPluginApis.getCompletionsAtPosition),
-				getCompletionEntryDetails: apiHook(tsRuntime.getTsLs().getCompletionEntryDetails),
-				getCompletionEntrySymbol: apiHook(tsRuntime.getTsLs().getCompletionEntrySymbol),
-				getQuickInfoAtPosition: apiHook(tsRuntime.getTsLs().getQuickInfoAtPosition),
-				getSignatureHelpItems: apiHook(tsRuntime.getTsLs().getSignatureHelpItems),
-				getRenameInfo: apiHook(tsRuntime.getTsLs().getRenameInfo),
-
-				findRenameLocations: apiHook(_tsPluginApis.findRenameLocations),
-				getDefinitionAtPosition: apiHook(_tsPluginApis.getDefinitionAtPosition),
-				getDefinitionAndBoundSpan: apiHook(_tsPluginApis.getDefinitionAndBoundSpan),
-				getTypeDefinitionAtPosition: apiHook(_tsPluginApis.getTypeDefinitionAtPosition),
-				getImplementationAtPosition: apiHook(_tsPluginApis.getImplementationAtPosition),
-				getReferencesAtPosition: apiHook(_tsPluginApis.getReferencesAtPosition),
-				findReferences: apiHook(_tsPluginApis.findReferences),
-
-				// TODO: now is handled by vue server
-				// prepareCallHierarchy: apiHook(tsLanguageService.rawLs.prepareCallHierarchy, false),
-				// provideCallHierarchyIncomingCalls: apiHook(tsLanguageService.rawLs.provideCallHierarchyIncomingCalls, false),
-				// provideCallHierarchyOutgoingCalls: apiHook(tsLanguageService.rawLs.provideCallHierarchyOutgoingCalls, false),
-				// getEditsForFileRename: apiHook(tsLanguageService.rawLs.getEditsForFileRename, false),
-
-				// TODO
-				// getCodeFixesAtPosition: apiHook(tsLanguageService.rawLs.getCodeFixesAtPosition, false),
-				// getCombinedCodeFix: apiHook(tsLanguageService.rawLs.getCombinedCodeFix, false),
-				// applyCodeActionCommand: apiHook(tsLanguageService.rawLs.applyCodeActionCommand, false),
-				// getApplicableRefactors: apiHook(tsLanguageService.rawLs.getApplicableRefactors, false),
-				// getEditsForRefactor: apiHook(tsLanguageService.rawLs.getEditsForRefactor, false),
-			};
+			const ls = vueTs.createLanguageService(proxyHost.host);
 
 			vueFilesGetter.set(info.project, proxyHost.getVueFiles);
 
 			return new Proxy(info.languageService, {
 				get: (target: any, property: keyof ts.LanguageService) => {
-					return tsPluginProxy[property] || target[property];
+					if (
+						property === 'getSemanticDiagnostics'
+						|| property === 'getEncodedSemanticClassifications'
+						|| property === 'getCompletionsAtPosition'
+						|| property === 'getCompletionEntryDetails'
+						|| property === 'getCompletionEntrySymbol'
+						|| property === 'getQuickInfoAtPosition'
+						|| property === 'getSignatureHelpItems'
+						|| property === 'getRenameInfo'
+						|| property === 'findRenameLocations'
+						|| property === 'getDefinitionAtPosition'
+						|| property === 'getDefinitionAndBoundSpan'
+						|| property === 'getTypeDefinitionAtPosition'
+						|| property === 'getImplementationAtPosition'
+						|| property === 'getReferencesAtPosition'
+						|| property === 'findReferences'
+					) {
+						return ls[property];
+					}
+					return target[property];
 				},
 			});
-
-			function apiHook<T extends (...args: any) => any>(
-				api: T,
-			) {
-				const handler = {
-					apply(target: (...args: any) => any, thisArg: any, argumentsList: Parameters<T>) {
-						tsRuntime.update();
-						return target.apply(thisArg, argumentsList);
-					}
-				};
-				return new Proxy<T>(api, handler);
-			}
 		},
 		getExternalFiles(project) {
 			const getVueFiles = vueFilesGetter.get(project);
@@ -135,6 +110,9 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		getScriptFileNames,
 		getScriptVersion,
 		getScriptSnapshot,
+
+		getTypeScriptModule: () => ts,
+		isTsPlugin: true,
 	};
 
 	update();
@@ -146,11 +124,11 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		? info.serverHost.watchFile(projectName, () => {
 			onConfigUpdated();
 			onProjectUpdated();
-			parsedCommandLine = tsShared.createParsedCommandLine(ts, ts.sys, projectName);
+			parsedCommandLine = vue.createParsedCommandLine(ts, ts.sys, projectName);
 		})
 		: undefined;
 	let parsedCommandLine = tsconfigWatcher // reuse fileExists result
-		? tsShared.createParsedCommandLine(ts, ts.sys, projectName)
+		? vue.createParsedCommandLine(ts, ts.sys, projectName)
 		: undefined;
 
 	return {
@@ -160,7 +138,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 	};
 
 	async function onAnyDriveFileUpdated(fileName: string) {
-		if (fileName.endsWith('.vue') && info.project.fileExists(fileName) && !vueFiles.has(fileName)) {
+		if ((fileName.endsWith('.vue') || fileName.endsWith('.md') || fileName.endsWith('.html')) && info.project.fileExists(fileName) && !vueFiles.has(fileName)) {
 			onConfigUpdated();
 		}
 	}

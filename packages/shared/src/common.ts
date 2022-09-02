@@ -9,10 +9,13 @@ export function sleep(ms: number) {
 export function syntaxToLanguageId(syntax: string) {
 	switch (syntax) {
 		case 'js': return 'javascript';
+		case 'cjs': return 'javascript';
+		case 'mjs': return 'javascript';
 		case 'ts': return 'typescript';
 		case 'jsx': return 'javascriptreact';
 		case 'tsx': return 'typescriptreact';
 		case 'pug': return 'jade';
+		case 'md': return 'markdown';
 	}
 	return syntax;
 }
@@ -24,6 +27,7 @@ export function languageIdToSyntax(languageId: string) {
 		case 'javascriptreact': return 'jsx';
 		case 'typescriptreact': return 'tsx';
 		case 'jade': return 'pug';
+		case 'markdown': return 'md';
 	}
 	return languageId;
 }

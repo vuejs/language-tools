@@ -11,7 +11,7 @@ describe(`vue-tsc`, () => {
 			['--noEmit'],
 			{
 				silent: true,
-				cwd: path.resolve(__dirname, '../../vue-test-workspace')
+				cwd: path.resolve(__dirname, '../../vue-test-workspace/vue-tsc')
 			},
 		);
 

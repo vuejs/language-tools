@@ -17,7 +17,7 @@ export default function (options: {
 
 	return {
 
-		doExecuteCommand(command, args, context) {
+		async doExecuteCommand(command, args, context) {
 
 			if (command === convertTagNameCasingCommand) {
 
@@ -25,7 +25,7 @@ export default function (options: {
 
 				return worker(uri, async vueDocument => {
 
-					const desc = vueDocument.file.getDescriptor();
+					const desc = vueDocument.file.sfc;
 					if (!desc.template)
 						return;
 
@@ -34,20 +34,19 @@ export default function (options: {
 					const template = desc.template;
 					const document = vueDocument.getDocument();
 					const edits: vscode.TextEdit[] = [];
-					const components = new Set(vueDocument.file.getTemplateData().components);
-					const resolvedTags = vueDocument.file.refs.sfcTemplateScript.templateCodeGens.value?.tagNames ?? {};
+					const components = new Set((await vueDocument.getTemplateData()).components);
+					const tagOffsets = vueDocument.getTemplateTagsAndAttrs().tags;
 					let i = 0;
 
-					for (const tagName in resolvedTags) {
-						const resolvedTag = resolvedTags[tagName];
-						if (resolvedTag?.offsets.length) {
+					for (const [tagName, offsets] of tagOffsets) {
+						if (offsets.length) {
 
 							if (context.token.isCancellationRequested)
 								return;
 
-							context.workDoneProgress.report(i++ / Object.keys(resolvedTags).length * 100, tagName);
+							context.workDoneProgress.report(i++ / Object.keys(tagOffsets).length * 100, tagName);
 
-							const offset = template.startTagEnd + resolvedTag.offsets[0];
+							const offset = template.startTagEnd + offsets[0];
 							const refs = await options.findReferences(uri, vueDocument.getDocument().positionAt(offset)) ?? [];
 
 							for (const vueLoc of refs) {

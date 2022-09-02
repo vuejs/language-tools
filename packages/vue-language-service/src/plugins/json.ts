@@ -1,6 +1,6 @@
 import * as json from 'vscode-json-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
 import * as vscode from 'vscode-languageserver-protocol';
 
 export default function (options: {
@@ -91,7 +91,32 @@ export default function (options: {
 
 		format(document, range, options) {
 			return worker(document, async (jsonDocument) => {
-				return await jsonLs.format(document, range, options);
+
+				const options_2 = await useConfigurationHost()?.getConfiguration<json.FormattingOptions & { enable: boolean; }>('json.format', document.uri);
+
+				if (options_2?.enable === false) {
+					return;
+				}
+
+				const edits = jsonLs.format(document, range, {
+					...options_2,
+					...options,
+					insertFinalNewline: true,
+				});
+
+				if (!edits.length) {
+					return edits;
+				}
+
+				const newText = TextDocument.applyEdits(document, edits);
+				
+				return [{
+					newText: '\n' + newText.trim() + '\n',
+					range: {
+						start: document.positionAt(0),
+						end: document.positionAt(document.getText().length),
+					},
+				}]
 			});
 		},
 	};

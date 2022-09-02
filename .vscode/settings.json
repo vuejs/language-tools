@@ -2,5 +2,17 @@
 	"typescript.format.semicolons": "insert",
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,
-	"typescript.tsdk": "node_modules/typescript/lib"
+	"typescript.tsdk": "node_modules/typescript/lib",
+	"[typescript]": {
+		"editor.defaultFormatter": "vscode.typescript-language-features"
+	},
+	"[javascript]": {
+		"editor.defaultFormatter": "vscode.typescript-language-features"
+	},
+	"[json]": {
+		"editor.defaultFormatter": "vscode.json-language-features"
+	},
+	"[jsonc]": {
+		"editor.defaultFormatter": "vscode.json-language-features"
+	}
 }

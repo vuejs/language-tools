@@ -1,6 +1,6 @@
 {
 	"name": "@volar/source-map",
-	"version": "0.35.2",
+	"version": "0.40.5",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -11,5 +11,8 @@
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
 		"directory": "packages/source-map"
+	},
+	"dependencies": {
+		"@vue/reactivity": "3.2.37"
 	}
 }

@@ -1,9 +1,9 @@
-import type { Mapping, Mode, Range } from '@volar/source-map';
+import { Mapping, Mode, Range } from '@volar/source-map';
 
 export class CodeGen<T = undefined> {
 
 	private text = '';
-	private mappings: Mapping<T>[] = [];
+	public mappings: Mapping<T>[] = [];
 
 	public getText() {
 		return this.text;
@@ -35,6 +35,19 @@ export class CodeGen<T = undefined> {
 				mode,
 				sourceRange: extraSourceRange,
 			})) : undefined,
+		});
+		return targetRange;
+	}
+	public addCode2(str: string, sourceOffset: number, data: T) {
+		const targetRange = this.addText(str);
+		this.addMapping2({
+			mappedRange: targetRange,
+			sourceRange: {
+				start: sourceOffset,
+				end: sourceOffset + str.length,
+			},
+			mode: Mode.Offset,
+			data,
 		});
 		return targetRange;
 	}

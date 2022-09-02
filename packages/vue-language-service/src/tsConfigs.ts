@@ -1,4 +1,3 @@
-import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type * as vscode from 'vscode-languageserver-protocol';
 import * as ts2 from '@volar/typescript-language-service';
@@ -6,19 +5,19 @@ import { ConfigurationHost } from '@volar/vue-language-service-types';
 
 export function getTsSettings(configurationHost: ConfigurationHost | undefined) {
 	const tsSettings: ts2.Settings = {
-		getFormatOptions: (document, options) => getFormatOptions(configurationHost, document, options),
-		getPreferences: (document) => getPreferences(configurationHost, document),
+		getFormatOptions: (uri, options) => getFormatOptions(configurationHost, uri, options),
+		getPreferences: (uri) => getPreferences(configurationHost, uri),
 	};
 	return tsSettings;
 }
 
 export async function getFormatOptions(
 	configurationHost: ConfigurationHost | undefined,
-	document: TextDocument,
+	uri: string,
 	options?: vscode.FormattingOptions
 ): Promise<ts.FormatCodeSettings> {
 
-	let config = await configurationHost?.getConfiguration<any>(isTypeScriptDocument(document) ? 'typescript.format' : 'javascript.format', document.uri);
+	let config = await configurationHost?.getConfiguration<any>(isTypeScriptDocument(uri) ? 'typescript.format' : 'javascript.format', uri);
 
 	config = config ?? {};
 
@@ -50,29 +49,30 @@ export async function getFormatOptions(
 
 export async function getPreferences(
 	configurationHost: ConfigurationHost | undefined,
-	document: TextDocument
+	uri: string
 ): Promise<ts.UserPreferences> {
 
-	let config = await configurationHost?.getConfiguration<any>(isTypeScriptDocument(document) ? 'typescript' : 'javascript', document.uri);
-	let preferencesConfig = await configurationHost?.getConfiguration<any>(isTypeScriptDocument(document) ? 'typescript.preferences' : 'javascript.preferences', document.uri);
+	let config = await configurationHost?.getConfiguration<any>(isTypeScriptDocument(uri) ? 'typescript' : 'javascript', uri);
+	let preferencesConfig = await configurationHost?.getConfiguration<any>(isTypeScriptDocument(uri) ? 'typescript.preferences' : 'javascript.preferences', uri);
 
 	config = config ?? {};
 	preferencesConfig = preferencesConfig ?? {};
 
-	const preferences: ts.UserPreferences & { displayPartsForJSDoc: true; } = {
+	const preferences: ts.UserPreferences = {
 		quotePreference: getQuoteStylePreference(preferencesConfig),
 		importModuleSpecifierPreference: getImportModuleSpecifierPreference(preferencesConfig),
 		importModuleSpecifierEnding: getImportModuleSpecifierEndingPreference(preferencesConfig),
-		allowTextChangesInNewFiles: document.uri.startsWith('file://'),
+		allowTextChangesInNewFiles: uri.startsWith('file://'),
 		providePrefixAndSuffixTextForRename: (preferencesConfig.renameShorthandProperties ?? true) === false ? false : (preferencesConfig.useAliasesForRenames ?? true),
 		// @ts-ignore
 		allowRenameOfImportPath: true,
 		includeAutomaticOptionalChainCompletions: config.suggest?.includeAutomaticOptionalChainCompletions ?? true,
 		provideRefactorNotApplicableReason: true,
-		generateReturnInDocTemplate: config.suggest?.jsdoc?.generateReturns ?? true,
+		// @ts-ignore
 		includeCompletionsForImportStatements: config.suggest?.includeCompletionsForImportStatements ?? true,
 		includeCompletionsWithSnippetText: config.suggest?.includeCompletionsWithSnippetText ?? true,
 		allowIncompleteCompletions: true,
+		// @ts-ignore
 		displayPartsForJSDoc: true,
 
 		// inlay hints
@@ -113,12 +113,13 @@ function getImportModuleSpecifierEndingPreference(config: any) {
 		case 'minimal': return 'minimal';
 		case 'index': return 'index';
 		case 'js': return 'js';
-		default: return 'auto';
+		default: return 'minimal'; // fix https://github.com/johnsoncodehk/volar/issues/1667
+		// default: return 'auto';
 	}
 }
 
-function isTypeScriptDocument(doc: TextDocument) {
-	return ['typescript', 'typescriptreact'].includes(doc.languageId);
+function isTypeScriptDocument(uri: string) {
+	return uri.endsWith('.ts') || uri.endsWith('.tsx');
 }
 
 function getInlayParameterNameHintsPreference(config: any) {

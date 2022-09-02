@@ -15,7 +15,7 @@ Roadmap:
 - [x] dts emit support
 - [x] Watch mode support
 
-## Using
+## Usage
 
 Type check:
 

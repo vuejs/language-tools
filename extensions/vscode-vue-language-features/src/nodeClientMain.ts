@@ -31,11 +31,32 @@ export function activate(context: vscode.ExtensionContext) {
 			},
 		};
 		const clientOptions: lsp.LanguageClientOptions = {
+			middleware: {
+				handleDiagnostics: (uri, diagnostics, next) => {
+					const document = vscode.workspace.textDocuments.find(d => d.uri.toString() === uri.toString());
+					if (document) {
+						let outdated = false;
+						for (const diagnostic of diagnostics) {
+							const data = (diagnostic as any).data;
+							if (typeof data === 'object' && 'version' in data) {
+								if (document.version !== data.version) {
+									outdated = true;
+									break;
+								}
+							}
+						}
+						if (outdated) {
+							return;
+						}
+					}
+					next(uri, diagnostics);
+				},
+			},
 			documentSelector,
 			initializationOptions: initOptions,
 			progressOnInitialization: true,
 			synchronize: {
-				fileEvents: vscode.workspace.createFileSystemWatcher('{**/*.vue,**/*.js,**/*.jsx,**/*.ts,**/*.tsx,**/*.json}')
+				fileEvents: vscode.workspace.createFileSystemWatcher('{**/*.vue,**/*.md,**/*.html,**/*.js,**/*.jsx,**/*.ts,**/*.tsx,**/*.json}')
 			}
 		};
 		const client = new lsp.LanguageClient(
@@ -47,7 +68,7 @@ export function activate(context: vscode.ExtensionContext) {
 		await client.start();
 
 		return client;
-	});
+	}, 'node');
 }
 
 export function deactivate(): Thenable<any> | undefined {

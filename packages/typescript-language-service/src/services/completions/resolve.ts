@@ -16,7 +16,7 @@ export function register(
 ) {
 	return async (item: vscode.CompletionItem, newPosition?: vscode.Position): Promise<vscode.CompletionItem> => {
 
-		const data: Data | undefined = item.data as any;
+		const data: Data | undefined = item.data;
 
 		if (!data)
 			return item;
@@ -30,8 +30,8 @@ export function register(
 		}
 
 		const [formatOptions, preferences] = document ? await Promise.all([
-			settings.getFormatOptions?.(document) ?? {},
-			settings.getPreferences?.(document) ?? {},
+			settings.getFormatOptions?.(document.uri) ?? {},
+			settings.getPreferences?.(document.uri) ?? {},
 		]) : [{}, {}];
 
 		let details: ts.CompletionEntryDetails | undefined;

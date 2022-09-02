@@ -1,13 +1,12 @@
 import * as shared from '@volar/shared';
 import * as path from 'upath';
-import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
-import type { Projects } from '../projects';
+import type { Workspaces } from '../utils/workspaces';
+import * as vue from '@volar/vue-language-core';
 
 export function register(
 	connection: vscode.Connection,
-	documents: vscode.TextDocuments<TextDocument>,
-	projects: Projects,
+	projects: Workspaces,
 ) {
 	connection.onRequest(shared.D3Request.type, async handler => {
 		// const document = documents.get(handler.uri);
@@ -19,6 +18,9 @@ export function register(
 	connection.onRequest(shared.GetMatchTsConfigRequest.type, async handler => {
 		return (await projects.getProject(handler.uri))?.tsconfig;
 	});
+	connection.onNotification(shared.ReloadProjectNotification.type, async handler => {
+		projects.reloadProject(handler.uri);
+	});
 	connection.onNotification(shared.WriteVirtualFilesNotification.type, async () => {
 
 		const fs = await import('fs');
@@ -27,9 +29,12 @@ export function register(
 			for (const project of [...workspace.projects.values(), workspace.getInferredProjectDontCreate()].filter(shared.notEmpty)) {
 				const ls = await (await project).getLanguageServiceDontCreate();
 				if (!ls) continue;
-				const localTypes = ls.__internal__.tsRuntime.getLocalTypesFiles();
-				for (const fileName of localTypes.fileNames) {
-					fs.writeFile(fileName, localTypes.code, () => { });
+				const localTypesFiles = ls.__internal__.vueRuntimeContext.typescriptLanguageServiceHost.getScriptFileNames().filter(fileName => fileName.endsWith(vue.localTypes.typesFileName));
+				for (const fileName of localTypesFiles) {
+					const script = ls.__internal__.vueRuntimeContext.typescriptLanguageServiceHost.getScriptSnapshot(fileName);
+					if (script) {
+						fs.writeFile(fileName, script.getText(0, script.getLength()), () => { });
+					}
 				}
 				const context = await ls.__internal__.getContext();
 				for (const vueDocument of context.vueDocuments.getAll()) {

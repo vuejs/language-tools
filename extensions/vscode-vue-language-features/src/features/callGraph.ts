@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as shared from '@volar/shared';
 import type { BaseLanguageClient } from 'vscode-languageclient';
 
-export async function activate(context: vscode.ExtensionContext, languageClient: BaseLanguageClient) {
+export async function register(context: vscode.ExtensionContext, languageClient: BaseLanguageClient) {
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.showCallGraph', async () => {
 		const document = vscode.window.activeTextEditor?.document;
 		if (!document) return;

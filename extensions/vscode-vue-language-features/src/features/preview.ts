@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { compile, NodeTypes } from '@vue/compiler-dom';
 import * as path from 'path';
 import * as fs from '../utils/fs';
 import * as shared from '@volar/shared';
@@ -15,48 +14,150 @@ interface PreviewState {
 const enum PreviewType {
 	Webview = 'volar-webview',
 	ExternalBrowser = 'volar-start-server',
-	ComponentPreview = 'volar-component-preview',
+	ExternalBrowser_Component = 'volar-component-preview',
 }
 
-export async function activate(context: vscode.ExtensionContext) {
+export async function register(context: vscode.ExtensionContext) {
 
 	const panels = new Set<vscode.WebviewPanel>();
+	const panelUrl = new Map<vscode.WebviewPanel, string>();
+	let _activePreview: vscode.WebviewPanel | undefined;
 	let externalBrowserPanel: vscode.WebviewPanel | undefined;
+	let avoidUpdateOnDidChangeActiveTextEditor = false;
+	let updateComponentPreview: Function | undefined;
 
-	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
-	statusBar.command = 'volar.inputWebviewUrl';
+	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, -1);
+	statusBar.command = 'volar.previewMenu';
 	statusBar.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
 	context.subscriptions.push(statusBar);
 
-	let ws: ReturnType<typeof preview.createPreviewWebSocket> | undefined;
+	let connection: ReturnType<typeof preview.createPreviewConnection> | undefined;
 	let highlightDomElements = true;
 	const onDidChangeCodeLensesEmmiter = new vscode.EventEmitter<void>();
 
-	if (vscode.window.terminals.some(terminal => terminal.name.startsWith('volar-preview:'))) {
-		ws = preview.createPreviewWebSocket({
-			goToCode: handleGoToCode,
-			getOpenFileUrl: (fileName, range) => 'vscode://files:/' + fileName,
+	const previewTerminal = vscode.window.terminals.find(terminal => terminal.name.startsWith('volar-preview:'));
+	if (previewTerminal) {
+		connection = preview.createPreviewConnection({
+			onGotoCode: handleGoToCode,
+			getFileHref: (fileName, range) => {
+				avoidUpdateOnDidChangeActiveTextEditor = false;
+				updateComponentPreview?.();
+				return 'vscode://files:/' + fileName;
+			},
 		});
 		onDidChangeCodeLensesEmmiter.fire();
+		statusBar.text = 'Preview Port: ' + previewTerminal.name.split(':')[1];
+		statusBar.show();
 	}
 	vscode.window.onDidOpenTerminal(e => {
 		if (e.name.startsWith('volar-preview:')) {
-			ws = preview.createPreviewWebSocket({
-				goToCode: handleGoToCode,
-				getOpenFileUrl: (fileName, range) => 'vscode://files:/' + fileName,
+			connection = preview.createPreviewConnection({
+				onGotoCode: handleGoToCode,
+				getFileHref: (fileName, range) => {
+					avoidUpdateOnDidChangeActiveTextEditor = false;
+					updateComponentPreview?.();
+					return 'vscode://files:/' + fileName;
+				},
 			});
 			onDidChangeCodeLensesEmmiter.fire();
+			statusBar.text = 'Preview Port: ' + e.name.split(':')[1];
+			statusBar.show();
 		}
 	});
 	vscode.window.onDidCloseTerminal(e => {
 		if (e.name.startsWith('volar-preview:')) {
-			ws?.stop();
-			ws = undefined;
+			connection?.stop();
+			connection = undefined;
 			onDidChangeCodeLensesEmmiter.fire();
+			statusBar.hide();
 		}
 	});
 
 	const sfcs = new WeakMap<vscode.TextDocument, { version: number, sfc: SFCParseResult; }>();
+
+	class VueComponentPreview implements vscode.WebviewViewProvider {
+
+		public resolveWebviewView(
+			webviewView: vscode.WebviewView,
+			_context: vscode.WebviewViewResolveContext,
+			_token: vscode.CancellationToken,
+		) {
+
+			let lastPreviewDocument: vscode.TextDocument | undefined;
+
+			webviewView.webview.options = {
+				enableScripts: true,
+			};
+			updateWebView(true);
+			updateComponentPreview = updateWebView;
+
+			vscode.window.onDidChangeActiveTextEditor(() => {
+				if (avoidUpdateOnDidChangeActiveTextEditor)
+					return;
+				if (!vscode.window.activeTextEditor || lastPreviewDocument === vscode.window.activeTextEditor.document)
+					return;
+				updateWebView(false);
+			});
+			vscode.workspace.onDidChangeTextDocument(() => updateWebView(false));
+			vscode.workspace.onDidChangeConfiguration(() => updateWebView(true));
+
+			webviewView.onDidChangeVisibility(() => updateWebView(false));
+
+			async function updateWebView(refresh: boolean) {
+
+				if (!webviewView.visible)
+					return;
+
+				if (vscode.window.activeTextEditor?.document.languageId === 'vue')
+					lastPreviewDocument = vscode.window.activeTextEditor.document;
+
+				if (!lastPreviewDocument)
+					return;
+
+				const fileName = lastPreviewDocument.fileName;
+				let terminal = vscode.window.terminals.find(terminal => terminal.name.startsWith('volar-preview:'));
+				let port: number;
+
+				const configFile = await getConfigFile(fileName, 'vite');
+				if (!configFile)
+					return;
+
+				if (terminal) {
+					port = Number(terminal.name.split(':')[1]);
+				}
+				else {
+
+					const configDir = path.dirname(configFile);
+					const server = await startPreviewServer(configDir, 'vite');
+					terminal = server.terminal;
+					port = server.port;
+				}
+
+				const relativePath = shared.normalizeFileName(path.relative(path.dirname(configFile), fileName));
+				let url = `http://localhost:${port}/__preview${relativePath}#`;
+
+				if (lastPreviewDocument.isDirty) {
+					url += btoa(lastPreviewDocument.getText());
+				}
+
+				if (refresh) {
+
+					const bgPath = vscode.Uri.file(path.join(context.extensionPath, 'images', 'preview-bg.png'));
+					const bgSrc = webviewView.webview.asWebviewUri(bgPath);
+
+					webviewView.webview.html = '';
+					webviewView.webview.html = getWebviewContent(url, undefined, bgSrc.toString());
+				}
+				else {
+					webviewView.webview.postMessage({
+						sender: 'volar',
+						command: 'updateUrl',
+						data: url,
+					});
+				}
+			}
+		}
+	}
 
 	class FinderPanelSerializer implements vscode.WebviewPanelSerializer {
 		async deserializeWebviewPanel(panel: vscode.WebviewPanel, state: PreviewState) {
@@ -66,32 +167,72 @@ export async function activate(context: vscode.ExtensionContext) {
 				return; // don't create server because maybe user closed it intentionally
 			}
 
-			const port = await openPreview(PreviewType.Webview, state.fileName, '', state.mode, panel);
+			const port = await openPreview(PreviewType.Webview, state.fileName, state.mode, panel);
 
 			panel.webview.html = getWebviewContent(`http://localhost:${port}`, state);
 		}
 	}
 
-	class PreviewPanelSerializer implements vscode.WebviewPanelSerializer {
-		async deserializeWebviewPanel(panel: vscode.WebviewPanel, state: PreviewState) {
+	vscode.window.registerWebviewViewProvider(
+		'vueComponentPreview',
+		new VueComponentPreview(),
+	);
 
-			const editor = vscode.window.visibleTextEditors.find(document => document.document.fileName === state.fileName);
-			if (!editor) return;
+	context.subscriptions.push(vscode.commands.registerCommand('volar.previewMenu', async () => {
 
-			const terminal = vscode.window.terminals.find(terminal => terminal.name.startsWith('volar-preview:'));
-			if (!terminal) {
-				return; // don't create server because maybe user closed it intentionally
-			}
+		const baseOptions: Record<string, vscode.QuickPickItem> = {};
+		const urlOptions: Record<string, vscode.QuickPickItem> = {};
+		const highlight: Record<string, vscode.QuickPickItem> = {};
 
-			const port = await openPreview(PreviewType.ComponentPreview, editor.document.fileName, editor.document.getText(), state.mode, panel);
+		baseOptions['kill'] = { label: 'Kill Preview Server' };
+		baseOptions['browser'] = { label: 'Open in Browser' };
 
-			if (port !== undefined) {
-				const previewQuery = createQuery(editor.document);
-				updatePreviewPanel(panel, state.fileName, previewQuery, port, state.mode);
+		for (const panel of panels) {
+			urlOptions['url::' + panelUrl.get(panel)] = { label: 'Input WebView URL', detail: panelUrl.get(panel) };
+		}
+
+		highlight['highlight-on'] = { label: (highlightDomElements ? '• ' : '') + 'Highlight DOM Elements' };
+		highlight['highlight-off'] = { label: (!highlightDomElements ? '• ' : '') + `Don't Highlight DOM Elements` };
+
+		const key = await userPick([baseOptions, urlOptions, highlight]);
+
+		if (key?.startsWith('url::')) {
+			const url = key.split('::')[1];
+			const input = await vscode.window.showInputBox({ value: url });
+			for (const panel of panels) {
+				if (panelUrl.get(panel) === url) {
+					if (input !== undefined && input !== statusBar.text) {
+						panel.webview.html = getWebviewContent(input);
+					}
+				}
 			}
 		}
-	}
-
+		if (key === 'kill') {
+			for (const terminal of vscode.window.terminals) {
+				if (terminal.name.startsWith('volar-preview:')) {
+					terminal.dispose();
+				}
+				for (const panel of panels) {
+					panel.dispose();
+				}
+			}
+		}
+		if (key === 'browser') {
+			vscode.env.openExternal(vscode.Uri.parse('http://localhost:' + statusBar.text.split(':')[1].trim()));
+		}
+		if (key === 'highlight-on') {
+			highlightDomElements = true;
+			if (vscode.window.activeTextEditor) {
+				updateSelectionHighlights(vscode.window.activeTextEditor);
+			}
+		}
+		if (key === 'highlight-off') {
+			highlightDomElements = false;
+			if (vscode.window.activeTextEditor) {
+				updateSelectionHighlights(vscode.window.activeTextEditor);
+			}
+		}
+	}));
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.vite', async () => {
 
 		const editor = vscode.window.activeTextEditor;
@@ -109,16 +250,15 @@ export async function activate(context: vscode.ExtensionContext) {
 				detail: vscode.workspace.rootPath && viteConfigFile ? path.relative(vscode.workspace.rootPath, viteConfigFile) : viteConfigFile,
 				description: 'Press `Alt` to use go to code in Browser',
 			},
-			[PreviewType.ComponentPreview]: {
-				label: `Preview Component with Vite`,
-				description: '(WIP)',
+			[PreviewType.ExternalBrowser_Component]: {
+				label: `Preview Component in External Browser`,
 				detail: vscode.workspace.rootPath ? path.relative(vscode.workspace.rootPath, editor.document.fileName) : editor.document.fileName,
 			},
 		});
 		if (select === undefined)
 			return; // cancel
 
-		openPreview(select as PreviewType, editor.document.fileName, editor.document.getText(), 'vite');
+		openPreview(select as PreviewType, editor.document.fileName, 'vite');
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.nuxt', async () => {
 
@@ -141,7 +281,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		if (select === undefined)
 			return; // cancel
 
-		openPreview(select as PreviewType, editor.document.fileName, editor.document.getText(), 'nuxt');
+		openPreview(select as PreviewType, editor.document.fileName, 'nuxt');
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.selectElement', () => {
 		const panel = [...panels].find(panel => panel.active);
@@ -150,15 +290,8 @@ export async function activate(context: vscode.ExtensionContext) {
 		}
 	}));
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.openInBrowser', () => {
-		vscode.env.openExternal(vscode.Uri.parse(statusBar.text));
-	}));
-	context.subscriptions.push(vscode.commands.registerCommand('volar.inputWebviewUrl', async () => {
-		const panel = [...panels].find(panel => panel.active);
-		if (panel) {
-			const input = await vscode.window.showInputBox({ value: statusBar.text });
-			if (input !== undefined && input !== statusBar.text) {
-				panel.webview.html = getWebviewContent(input);
-			}
+		for (const panel of panels) {
+			vscode.env.openExternal(vscode.Uri.parse(panelUrl.get(panel)!));
 		}
 	}));
 	context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(e => {
@@ -176,48 +309,9 @@ export async function activate(context: vscode.ExtensionContext) {
 	}));
 
 	context.subscriptions.push(vscode.window.registerWebviewPanelSerializer(PreviewType.Webview, new FinderPanelSerializer()));
-	context.subscriptions.push(vscode.window.registerWebviewPanelSerializer(PreviewType.ComponentPreview, new PreviewPanelSerializer()));
 	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(updatePreviewIconStatus));
 
 	updatePreviewIconStatus();
-	useHighlightDomElements();
-
-	function useHighlightDomElements() {
-
-		class HighlightDomElementsStatusCodeLens implements vscode.CodeLensProvider {
-			provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.CodeLens[]> {
-				if (ws) {
-					return [{
-						isResolved: true,
-						range: new vscode.Range(
-							document.positionAt(0),
-							document.positionAt(0),
-						),
-						command: {
-							title: 'highlight dom elements ' + (highlightDomElements ? '☑' : '☐'),
-							command: 'volar.toggleHighlightDomElementsStatus',
-						},
-					}];
-				}
-			};
-			onDidChangeCodeLenses = onDidChangeCodeLensesEmmiter.event;
-		}
-
-		const codeLens = new HighlightDomElementsStatusCodeLens();
-
-		vscode.languages.registerCodeLensProvider(
-			{ scheme: 'file', language: 'vue' },
-			codeLens,
-		);
-
-		vscode.commands.registerCommand('volar.toggleHighlightDomElementsStatus', () => {
-			highlightDomElements = !highlightDomElements;
-			if (vscode.window.activeTextEditor) {
-				updateSelectionHighlights(vscode.window.activeTextEditor);
-			}
-			onDidChangeCodeLensesEmmiter.fire();
-		});
-	}
 
 	function getSfc(document: vscode.TextDocument) {
 		let cache = sfcs.get(document);
@@ -246,7 +340,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		if (textEditor.document.languageId === 'vue' && highlightDomElements) {
 			const sfc = getSfc(textEditor.document);
 			const offset = sfc.descriptor.template?.loc.start.offset ?? 0;
-			ws?.highlight(
+			connection?.highlight(
 				textEditor.document.fileName,
 				textEditor.selections.map(selection => ({
 					start: textEditor.document.offsetAt(selection.start) - offset,
@@ -256,11 +350,11 @@ export async function activate(context: vscode.ExtensionContext) {
 			);
 		}
 		else {
-			ws?.unhighlight();
+			connection?.unhighlight();
 		}
 	}
 
-	async function openPreview(previewType: PreviewType, fileName: string, fileText: string, mode: 'vite' | 'nuxt', _panel?: vscode.WebviewPanel) {
+	async function openPreview(previewType: PreviewType, fileName: string, mode: 'vite' | 'nuxt', _panel?: vscode.WebviewPanel) {
 
 		const configFile = await getConfigFile(fileName, mode);
 		if (!configFile)
@@ -289,6 +383,7 @@ export async function activate(context: vscode.ExtensionContext) {
 				enableFindWidget: true,
 			},
 		);
+		trackActive();
 
 		const panelContext: vscode.Disposable[] = [];
 
@@ -310,6 +405,13 @@ export async function activate(context: vscode.ExtensionContext) {
 			externalBrowserPanel = panel;
 			return;
 		}
+		else if (previewType === PreviewType.ExternalBrowser_Component) {
+			terminal.show();
+			const relativePath = shared.normalizeFileName(path.relative(path.dirname(configFile), fileName));
+			panel.webview.html = getWebviewContent(`http://localhost:${port}/__preview${relativePath}`, undefined, undefined, true);
+			externalBrowserPanel = panel;
+			return;
+		}
 
 		panels.add(panel);
 
@@ -319,92 +421,66 @@ export async function activate(context: vscode.ExtensionContext) {
 				panel.webview.html = getWebviewContent(`http://localhost:${port}`, { fileName, mode });
 			}));
 			panel.webview.html = getWebviewContent(`http://localhost:${port}`, { fileName, mode });
-
-			panel.onDidChangeViewState(() => {
-				if (panel.active)
-					statusBar.show();
-				else
-					statusBar.hide();
-			});
-		}
-		else if (previewType === PreviewType.ComponentPreview) {
-
-			// const disposable_1 = vscode.window.onDidChangeActiveTextEditor(async e => {
-			// 	if (e && e.document.languageId === 'vue' && e.document.fileName !== lastPreviewFile) {
-			// 		_panel.dispose();
-			// 		vscode.commands.executeCommand('volar.action.preview');
-
-			// 		// TODO: not working
-			// 		// const newQuery = createQuery(e.document.getText());
-			// 		// const url = `http://localhost:${port}/__preview${newQuery}#${e.document.fileName}`;
-			// 		// previewPanel?.webview.postMessage({ sender: 'volar', command: 'updateUrl', data: url });
-
-			// 		// lastPreviewFile = e.document.fileName;
-			// 		// lastPreviewQuery = newQuery;
-			// 	}
-			// });
-			let previewQuery = createQuery({
-				getText: () => fileText,
-				fileName,
-				version: -1,
-			} as vscode.TextDocument);
-
-			panelContext.push(vscode.workspace.onDidChangeTextDocument(e => {
-				if (e.document.fileName === fileName) {
-					const newPreviewQuery = createQuery(e.document);
-					if (newPreviewQuery !== previewQuery) {
-						const url = `http://localhost:${port}/__preview${newPreviewQuery}#${e.document.fileName}`;
-						panel.webview.postMessage({ sender: 'volar', command: 'updateUrl', data: url });
-
-						previewQuery = newPreviewQuery;
-					}
-				}
-			}));
-			panelContext.push(vscode.workspace.onDidChangeConfiguration(() => {
-				updatePreviewPanel(panel, fileName, previewQuery, port, mode);
-			}));
-
-			updatePreviewPanel(panel, fileName, previewQuery, port, mode);
 		}
 
 		return port;
-	}
 
-	async function webviewEventHandler(message: any) {
-		switch (message.command) {
-			case 'openUrl': {
-				const url = message.data;
-				vscode.env.openExternal(vscode.Uri.parse(url));
-				break;
-			}
-			case 'closeExternalBrowserPanel': {
-				externalBrowserPanel?.dispose();
-				break;
-			}
-			case 'urlChanged': {
-				const url = message.data;
-				statusBar.text = url;
-				break;
-			}
-			case 'log': {
-				const text = message.data;
-				vscode.window.showInformationMessage(text);
-				break;
-			}
-			case 'warn': {
-				const text = message.data;
-				vscode.window.showWarningMessage(text);
-				break;
-			}
-			case 'error': {
-				const text = message.data;
-				vscode.window.showErrorMessage(text);
-				break;
+		function trackActive(): void {
+			panel.onDidChangeViewState(({ webviewPanel }) => {
+				setPreviewActiveContext(webviewPanel.active);
+				_activePreview = webviewPanel.active ? panel : undefined;
+			});
+
+			panel.onDidDispose(() => {
+				if (_activePreview === panel) {
+					setPreviewActiveContext(false);
+					_activePreview = undefined;
+				}
+			});
+		}
+
+		function setPreviewActiveContext(value: boolean) {
+			vscode.commands.executeCommand('setContext', 'volarPreviewFocus', value);
+		}
+
+		async function webviewEventHandler(message: any) {
+			switch (message.command) {
+				case 'openUrl': {
+					const url = message.data;
+					vscode.env.openExternal(vscode.Uri.parse(url));
+					break;
+				}
+				case 'closeExternalBrowserPanel': {
+					externalBrowserPanel?.dispose();
+					break;
+				}
+				case 'urlChanged': {
+					const url = message.data;
+					panelUrl.set(panel, url);
+					break;
+				}
+				case 'log': {
+					const text = message.data;
+					vscode.window.showInformationMessage(text);
+					break;
+				}
+				case 'warn': {
+					const text = message.data;
+					vscode.window.showWarningMessage(text);
+					break;
+				}
+				case 'error': {
+					const text = message.data;
+					vscode.window.showErrorMessage(text);
+					break;
+				}
 			}
 		}
 	}
 
 	async function handleGoToCode(fileName: string, range: [number, number], cancleToken: { readonly isCancelled: boolean; }) {
+
+		avoidUpdateOnDidChangeActiveTextEditor = true;
 
 		const doc = await vscode.workspace.openTextDocument(fileName);
 
@@ -429,8 +505,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	async function startPreviewServer(viteDir: string, type: 'vite' | 'nuxt') {
 
-		const port = await shared.getLocalHostAvaliablePort(vscode.workspace.getConfiguration('volar').get('preview.port') ?? 3333);
-		let script = await vscode.workspace.getConfiguration('volar').get<string>('preview.script.' + type) ?? '';
+		const port = await shared.getLocalHostAvaliablePort(vscode.workspace.getConfiguration('volar').get('preview.port')!);
+		let script = await vscode.workspace.getConfiguration('volar').get<string>('preview.script.' + (type === 'nuxt' ? 'nuxi' : 'vite')) ?? '';
 
 		if (script.indexOf('{VITE_BIN}') >= 0) {
 			script = script.replace('{VITE_BIN}', JSON.stringify(require.resolve('./dist/preview-bin/vite', { paths: [context.extensionPath] })));
@@ -475,63 +551,6 @@ export async function activate(context: vscode.ExtensionContext) {
 		return configFile;
 	}
 
-	function createQuery(document: vscode.TextDocument) {
-
-		const sfc = getSfc(document);
-		let query = '';
-		let fileName = document.fileName;
-
-		for (const customBlock of sfc.descriptor.customBlocks) {
-			if (customBlock.type === 'preview') {
-				const previewTagStart = document.getText().substring(0, customBlock.loc.start.offset).lastIndexOf('<preview');
-				const previewTag = document.getText().substring(previewTagStart, customBlock.loc.start.offset);
-				const previewGen = compile(previewTag + '</preview>').ast;
-				const props: Record<string, string> = {};
-				for (const previewNode of previewGen.children) {
-					if (previewNode.type === NodeTypes.ELEMENT) {
-						for (const prop of previewNode.props) {
-							if (prop.type === NodeTypes.ATTRIBUTE) {
-								if (prop.value) {
-									props[prop.name] = JSON.stringify(prop.value.content);
-								}
-								else {
-									props[prop.name] = JSON.stringify(true);
-								}
-							}
-							else if (prop.type === NodeTypes.DIRECTIVE) {
-								if (prop.arg?.type === NodeTypes.SIMPLE_EXPRESSION && prop.exp?.type == NodeTypes.SIMPLE_EXPRESSION) {
-									props[prop.arg.content] = prop.exp.content;
-								}
-							}
-						}
-					}
-				}
-				const keys = Object.keys(props);
-				for (let i = 0; i < keys.length; i++) {
-					query += i === 0 ? '?' : '&';
-					const key = keys[i];
-					const value = props[key];
-					query += key;
-					query += '=';
-					query += encodeURIComponent(value);
-				}
-			}
-			else if (customBlock.type === 'preview-target' && typeof customBlock.attrs.path === 'string') {
-				fileName = path.resolve(path.dirname(fileName), customBlock.attrs.path);
-			}
-		}
-
-		return query;
-	}
-
-	function updatePreviewPanel(previewPanel: vscode.WebviewPanel, fileName: string, query: string, port: number, mode: 'vite' | 'nuxt') {
-		const bgPath = vscode.Uri.file(path.join(context.extensionPath, 'images', 'preview-bg.png'));
-		const bgSrc = previewPanel.webview.asWebviewUri(bgPath);
-		const url = `http://localhost:${port}/__preview${query}#${fileName}`;
-		previewPanel.title = 'Preview ' + path.basename(fileName);
-		previewPanel.webview.html = getWebviewContent(url, { fileName, mode }, bgSrc.toString());
-	}
-
 	function getWebviewContent(url: string, state?: PreviewState, bg?: string, openExternalOnLoaded?: boolean) {
 
 		const configs = vscode.workspace.getConfiguration('volar');
@@ -554,7 +573,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
 			window.addEventListener('message', e => {
 				if (e.data.sender === 'volar') {
-					preview.contentWindow.postMessage(e.data, '*');
+					if (e.data.command === 'updateUrl') {
+						preview.src = e.data.data;
+					}
+					else {
+						preview.contentWindow.postMessage(e.data, '*');
+					}
 				}
 				else {
 					vscode.postMessage(e.data);
@@ -583,6 +607,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			})();
 
 			function previewFrameLoaded() {
+				preview.onload = undefined;
 				${openExternalOnLoaded ? `
 					vscode.postMessage({ command: 'openUrl', data: '${url}' });
 					vscode.postMessage({ command: 'closeExternalBrowserPanel' });
@@ -609,45 +634,6 @@ export async function activate(context: vscode.ExtensionContext) {
 					<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company/sponsors.svg" target="_top">
 						<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company/sponsors.svg?time=${Math.round(Date.now() / 1000 / 3600)}" />
 					</a>
-
-					<table>
-						<thead>
-							<tr>
-								<th>Date</th>
-								<th>Event</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr>
-								<td>2022.05.25</td>
-								<td><a target="_top" href="https://www.vuemeetup.com/vue-contributor-day-may-2022">Vue Contributor Day May 2022</a></td>
-							</tr>
-							<tr>
-								<td>2022.05.25</td>
-								<td><a target="_top" href="https://events.geekle.us/vuejs/">Vue.js Global Summit'22</a></td>
-							</tr>
-							<tr>
-								<td>2022.06.02</td>
-								<td><a target="_top" href="https://vuejs.amsterdam/">Vuejs Amsterdam</a></td>
-							</tr>
-							<tr>
-								<td>2022.06.08</td>
-								<td><a target="_top" href="https://us.vuejs.org/">VueConf US</a></td>
-							</tr>
-							<tr>
-								<td>2022.09.22</td>
-								<td><a target="_top" href="https://conf.vuejs.de/">vuejs.de Conf 2022</a></td>
-							</tr>
-							<tr>
-								<td>2022.10.16</td>
-								<td><a target="_top" href="https://vuefes.jp/2022/">Vue Fes Japan Online 2022</a></td>
-							</tr>
-							<tr>
-								<td>2022.10</td>
-								<td><a target="_top" href="https://vuejslive.com/">Vue.js London 2022</a></td>
-							</tr>
-						</tbody>
-					</table>
 
 					<div style="height: 35px; width: 116px; display: flex;">
 						<a

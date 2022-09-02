@@ -1,10 +1,9 @@
 import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
 import { ConfigurationHost, EmbeddedLanguageServicePlugin, setCurrentConfigurationHost } from '@volar/vue-language-service-types';
-import * as vueTs from '@volar/vue-typescript';
+import * as vue from '@volar/vue-language-core';
 import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { createStylesheetExtra } from './stylesheetExtra';
 import useCssPlugin from './plugins/css';
 import useHtmlPlugin from './plugins/html';
 import useJsonPlugin from './plugins/json';
@@ -30,7 +29,7 @@ import type * as _ from 'vscode-languageserver-protocol';
 export interface DocumentService extends ReturnType<typeof getDocumentService> { }
 
 export function getDocumentService(
-	{ typescript: ts }: { typescript: typeof import('typescript/lib/tsserverlibrary'); },
+	ts: typeof import('typescript/lib/tsserverlibrary'),
 	configurationHost: ConfigurationHost | undefined,
 	fileSystemProvider: html.FileSystemProvider | undefined,
 	customPlugins: EmbeddedLanguageServicePlugin[],
@@ -45,8 +44,10 @@ export function getDocumentService(
 
 	// language support plugins
 	const vuePlugin = useVuePlugin({
-		getVueDocument,
+		ts,
+		getVueDocument: doc => vueDocuments.get(doc),
 		tsLs: undefined,
+		isJsxMissing: false,
 	});
 	const htmlPlugin = useHtmlPlugin({
 		fileSystemProvider,
@@ -65,7 +66,7 @@ export function getDocumentService(
 	});
 	const autoWrapParenthesesPlugin = useAutoWrapParenthesesPlugin({
 		ts,
-		getVueDocument,
+		getVueDocument: doc => vueDocuments.get(doc),
 	});
 
 	// formatter plugins
@@ -78,12 +79,7 @@ export function getDocumentService(
 		jsonPlugin,
 		tsPlugin,
 	].map(patchHtmlFormat);
-	const vueTsPlugins = [
-		vueTs.useHtmlPlugin(),
-		vueTs.usePugPlugin(),
-	];
 
-	const stylesheetExtra = createStylesheetExtra(cssPlugin);
 	const context: DocumentServiceRuntimeContext = {
 		typescript: ts,
 		getVueDocument,
@@ -108,6 +104,7 @@ export function getDocumentService(
 			}
 		},
 	};
+	const vuePlugins = vue.getPlugins(ts, '', {}, {}, []);
 
 	return {
 		format: format.register(context),
@@ -122,33 +119,22 @@ export function getDocumentService(
 
 	function getVueDocument(document: TextDocument) {
 
-		if (document.languageId !== 'vue')
-			return;
-
 		let vueDoc = vueDocuments.get(document);
 
 		if (vueDoc) {
 
-			if (vueDoc.file.getVersion() !== document.version.toString()) {
-				vueDoc.file.update(document.getText(), document.version.toString());
-			}
+			vueDoc.file.update(ts.ScriptSnapshot.fromString(document.getText()));
 
 			return vueDoc;
 		}
 
-		const vueFile = vueTs.createVueFile(
-			shared.uriToFsPath(document.uri),
-			document.getText(),
-			document.version.toString(),
-			vueTsPlugins,
-			{},
+		const vueFile = vue.createSourceFile(
+			'/untitled.' + shared.languageIdToSyntax(document.languageId),
+			ts.ScriptSnapshot.fromString(document.getText()),
 			context.typescript,
-			'Record<string, string>',
-			stylesheetExtra.getCssClasses,
-			undefined,
-			undefined,
+			vuePlugins,
 		);
-		vueDoc = parseVueDocument(vueFile);
+		vueDoc = parseVueDocument(vueFile, undefined);
 
 		vueDocuments.set(document, vueDoc);
 

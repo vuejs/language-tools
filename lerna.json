@@ -1,7 +1,8 @@
 {
+	"npmClient": "pnpm",
 	"packages": [
 		"extensions/*",
 		"packages/*"
 	],
-	"version": "0.35.2"
+	"version": "0.40.5"
 }

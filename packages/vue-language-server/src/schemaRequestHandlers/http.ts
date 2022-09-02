@@ -1,4 +1,4 @@
-import { xhr, XHRResponse, configure as configureHttpRequests, getErrorStatusDescription } from 'request-light';
+import { xhr, XHRResponse, getErrorStatusDescription } from 'request-light';
 
 export default function handler(uri: string) {
 	const headers = { 'Accept-Encoding': 'gzip, deflate' };

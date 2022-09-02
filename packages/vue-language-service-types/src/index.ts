@@ -35,7 +35,7 @@ export interface ExecuteCommandContext {
 
 export type EmbeddedLanguageServicePlugin = {
 
-	doValidation?(document: TextDocument, options: {
+	doValidation?(document: TextDocument, __options?: {
 		semantic?: boolean;
 		syntactic?: boolean;
 		suggestion?: boolean;
@@ -44,6 +44,7 @@ export type EmbeddedLanguageServicePlugin = {
 	doHover?(document: TextDocument, position: vscode.Position): NullableResult<vscode.Hover>,
 	findImplementations?(document: TextDocument, position: vscode.Position): NullableResult<vscode.LocationLink[]>;
 	findReferences?(document: TextDocument, position: vscode.Position): NullableResult<vscode.Location[]>;
+	findFileReferences?(document: TextDocument): NullableResult<vscode.Location[]>;
 	findDocumentHighlights?(document: TextDocument, position: vscode.Position): NullableResult<vscode.DocumentHighlight[]>;
 	findDocumentLinks?(document: TextDocument): NullableResult<vscode.DocumentLink[]>;
 	findDocumentSymbols?(document: TextDocument): NullableResult<vscode.SymbolInformation[]>;
@@ -57,6 +58,7 @@ export type EmbeddedLanguageServicePlugin = {
 	getSelectionRanges?(document: TextDocument, positions: vscode.Position[]): NullableResult<vscode.SelectionRange[]>;
 	getSignatureHelp?(document: TextDocument, position: vscode.Position, context?: vscode.SignatureHelpContext): NullableResult<vscode.SignatureHelp>;
 	format?(document: TextDocument, range: vscode.Range, options: vscode.FormattingOptions): NullableResult<vscode.TextEdit[]>;
+	formatOnType?(document: TextDocument, position: vscode.Position, key: string, options: vscode.FormattingOptions): NullableResult<vscode.TextEdit[]>;
 
 	definition?: {
 		on?(document: TextDocument, position: vscode.Position): NullableResult<vscode.LocationLink[]>;

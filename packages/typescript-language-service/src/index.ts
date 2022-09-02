@@ -6,6 +6,7 @@ import * as completionResolve from './services/completions/resolve';
 import * as definitions from './services/definition';
 import * as typeDefinitions from './services/typeDefinition';
 import * as references from './services/references';
+import * as fileReferences from './services/fileReferences';
 import * as prepareRename from './services/prepareRename';
 import * as rename from './services/rename';
 import * as fileRename from './services/fileRename';
@@ -30,11 +31,11 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
 export { getSemanticTokenLegend } from './services/semanticTokens';
-import * as path from 'path';
+import { posix as path } from 'path';
 
 export interface Settings {
-	getFormatOptions?(document: TextDocument, options?: vscode.FormattingOptions): Promise<ts.FormatCodeSettings>;
-	getPreferences?(document: TextDocument): Promise<ts.UserPreferences>;
+	getFormatOptions?(uri: string, options?: vscode.FormattingOptions): Promise<ts.FormatCodeSettings>;
+	getPreferences?(uri: string): Promise<ts.UserPreferences>;
 }
 
 export function createLanguageService(
@@ -50,6 +51,7 @@ export function createLanguageService(
 		findDefinition: definitions.register(languageService, getValidTextDocument, getTextDocument),
 		findTypeDefinition: typeDefinitions.register(languageService, getValidTextDocument, getTextDocument),
 		findReferences: references.register(languageService, getValidTextDocument, getTextDocument),
+		findFileReferences: fileReferences.register(languageService, getValidTextDocument, getTextDocument),
 		findImplementations: implementation.register(languageService, getValidTextDocument, getTextDocument),
 		prepareRename: prepareRename.register(languageService, getValidTextDocument),
 		doRename: rename.register(languageService, getValidTextDocument, settings),

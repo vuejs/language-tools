@@ -3,6 +3,9 @@
 	"include": [],
 	"references": [
 		{
+			"path": "./extensions/vscode-alpine-language-features/tsconfig.build.json"
+		},
+		{
 			"path": "./extensions/vscode-vue-language-features/tsconfig.build.json"
 		},
 		{
@@ -10,6 +13,9 @@
 		},
 		{
 			"path": "./packages/vue-tsc/tsconfig.build.json"
+		},
+		{
+			"path": "./packages/vue-component-meta/tsconfig.build.json"
 		},
 	]
 }

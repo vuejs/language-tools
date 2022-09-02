@@ -1,0 +1,34 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"outDir": "out",
+		"rootDir": "src",
+	},
+	"include": [
+		"src"
+	],
+	"exclude": [
+		"node_modules",
+		".vscode-test"
+	],
+	"references": [
+		{
+			"path": "../code-gen/tsconfig.build.json"
+		},
+		{
+			"path": "../pug-language-service/tsconfig.build.json"
+		},
+		{
+			"path": "../shared/tsconfig.build.json"
+		},
+		{
+			"path": "../source-map/tsconfig.build.json"
+		},
+		{
+			"path": "../typescript-faster/tsconfig.build.json"
+		},
+		{
+			"path": "../typescript-language-service/tsconfig.build.json"
+		},
+	],
+}

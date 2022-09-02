@@ -79,7 +79,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 										item,
 										embeddedRange => sourceMap.getSourceRange(embeddedRange.start, embeddedRange.end)?.[0],
 									),
-									data: data as any,
+									data: data,
 								};
 							}),
 						};
@@ -108,7 +108,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 							};
 							return {
 								...item,
-								data: data as any,
+								data: data,
 							};
 						})
 					};
@@ -130,13 +130,13 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 			if (vueDocument) {
 
-				const embeddeds = vueDocument.file.getEmbeddeds();
+				const embeddeds = vueDocument.file.embeddeds;
 
 				await visitEmbedded(vueDocument, embeddeds, async sourceMap => {
 
 					const plugins = context.getPlugins().sort(sortPlugins);
 
-					for (const [embeddedRange] of sourceMap.getMappedRanges(position, position, data => !!data.capabilities.completion)) {
+					for (const [embeddedRange, data] of sourceMap.getMappedRanges(position, position, data => !!data.capabilities.completion)) {
 
 						for (const plugin of plugins) {
 
@@ -149,7 +149,8 @@ export function register(context: LanguageServiceRuntimeContext) {
 							if (completionContext?.triggerCharacter && !plugin.complete.triggerCharacters?.includes(completionContext.triggerCharacter))
 								continue;
 
-							if (cache!.mainCompletion && (!plugin.complete.isAdditional || cache?.mainCompletion.documentUri !== sourceMap.mappedDocument.uri))
+							const isAdditionalMapping = typeof data.capabilities.completion === 'object' && data.capabilities.completion.additional;
+							if (cache!.mainCompletion && ((!plugin.complete.isAdditional && !isAdditionalMapping) || cache?.mainCompletion.documentUri !== sourceMap.mappedDocument.uri))
 								continue;
 
 							// avoid duplicate items with .vue and .vue.html
@@ -181,7 +182,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 											item,
 											embeddedRange => sourceMap.getSourceRange(embeddedRange.start, embeddedRange.end)?.[0],
 										),
-										data: data as any,
+										data: data,
 									};
 								}),
 							};
@@ -247,7 +248,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 								};
 								return {
 									...item,
-									data: data as any,
+									data: data,
 								};
 							})
 						},

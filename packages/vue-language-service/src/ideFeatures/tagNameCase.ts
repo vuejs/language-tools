@@ -3,10 +3,10 @@ import { hyphenate } from '@vue/shared';
 import { VueDocument } from '../vueDocuments';
 
 export function register(context: LanguageServiceRuntimeContext) {
-	return (uri: string): {
+	return async (uri: string): Promise<{
 		tag: 'both' | 'kebabCase' | 'pascalCase' | 'unsure',
 		attr: 'kebabCase' | 'camelCase' | 'unsure',
-	} => {
+	}> => {
 
 		const vueDocument = context.vueDocuments.get(uri);
 		if (!vueDocument) return {
@@ -15,13 +15,13 @@ export function register(context: LanguageServiceRuntimeContext) {
 		};
 
 		return {
-			tag: getTagNameCase(vueDocument),
+			tag: await getTagNameCase(vueDocument),
 			attr: getAttrNameCase(vueDocument),
 		};
 
 		function getAttrNameCase(sourceFile: VueDocument): 'kebabCase' | 'camelCase' | 'unsure' {
 
-			const attrNames = sourceFile.file.getTemplateAttrNames() ?? new Set();
+			const attrNames = sourceFile.getTemplateTagsAndAttrs().attrs;
 
 			let hasCamelCase = false;
 			let hasKebabCase = false;
@@ -52,10 +52,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 			}
 			return 'unsure';
 		}
-		function getTagNameCase(vueDocument: VueDocument): 'both' | 'kebabCase' | 'pascalCase' | 'unsure' {
+		async function getTagNameCase(vueDocument: VueDocument): Promise<'both' | 'kebabCase' | 'pascalCase' | 'unsure'> {
 
-			const components = vueDocument.file.getTemplateData().components;
-			const tagNames = new Set(Object.keys(vueDocument.file.getTemplateTagNames() ?? {}));
+			const components = (await vueDocument.getTemplateData()).components;
+			const tagNames = vueDocument.getTemplateTagsAndAttrs().tags;
 
 			let anyComponentUsed = false;
 			let hasPascalCase = false;
@@ -70,7 +70,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			if (!anyComponentUsed) {
 				return 'unsure'; // not sure component style, because do not have any component using in <template> for check
 			}
-			for (const tagName of tagNames) {
+			for (const [tagName] of tagNames) {
 				// TagName
 				if (tagName !== hyphenate(tagName)) {
 					hasPascalCase = true;

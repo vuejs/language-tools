@@ -21,13 +21,16 @@ export function register(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {
 
+	const lt_320 = semver.lt(ts.version, '3.2.0');
+	const gte_300 = semver.gte(ts.version, '3.0.0');
+
 	return async (uri: string, position: vscode.Position, options?: ts.GetCompletionsAtPositionOptions): Promise<vscode.CompletionList | undefined> => {
 
 		const document = getTextDocument(uri);
 		if (!document)
 			return;
 
-		const preferences = await settings.getPreferences?.(document) ?? {};
+		const preferences = await settings.getPreferences?.(document.uri) ?? {};
 		const fileName = shared.uriToFsPath(document.uri);
 		const offset = document.offsetAt(position);
 
@@ -83,7 +86,7 @@ export function register(
 				let range: vscode.Range | ReturnType<typeof getRangeFromReplacementSpan> = getRangeFromReplacementSpan(tsEntry, document);
 				item.commitCharacters = getCommitCharacters(tsEntry, {
 					isNewIdentifierLocation: completionContext!.isNewIdentifierLocation,
-					isInValidCommitCharacterContext: isInValidCommitCharacterContext(document, position, ts.version),
+					isInValidCommitCharacterContext: isInValidCommitCharacterContext(document, position),
 					enableCallCompletions: true, // TODO: suggest.completeFunctionCalls
 				});
 				item.insertText = tsEntry.insertText;
@@ -133,7 +136,7 @@ export function register(
 
 				return {
 					...item,
-					data: data as any,
+					data: data,
 				};
 			});
 
@@ -148,7 +151,7 @@ export function register(
 				text: string;
 			} | undefined;
 
-			if (semver.gte(tsVersion, '3.0.0')) {
+			if (gte_300) {
 
 				if (!completionContext)
 					return;
@@ -316,9 +319,8 @@ export function register(
 		function isInValidCommitCharacterContext(
 			document: TextDocument,
 			position: vscode.Position,
-			tsVersion: string,
 		): boolean {
-			if (semver.lt(tsVersion, '3.2.0')) {
+			if (lt_320) {
 				// Workaround for https://github.com/microsoft/TypeScript/issues/27742
 				// Only enable dot completions when the previous character is not a dot preceded by whitespace.
 				// Prevents incorrectly completing while typing spread operators.

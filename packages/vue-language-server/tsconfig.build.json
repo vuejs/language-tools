@@ -16,7 +16,7 @@
 			"path": "../shared/tsconfig.build.json"
 		},
 		{
-			"path": "../vue-code-gen/tsconfig.build.json"
+			"path": "../vue-language-core/tsconfig.build.json"
 		},
 		{
 			"path": "../vue-language-service/tsconfig.build.json"

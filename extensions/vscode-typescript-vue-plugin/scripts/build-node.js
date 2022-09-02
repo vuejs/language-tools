@@ -1,7 +1,7 @@
 require('esbuild').build({
     entryPoints: ['./node_modules/typescript-vue-plugin/out/index.js'],
     bundle: true,
-    outfile: './out/index.js',
+    outfile: './dist/index.js',
     external: ['vscode'],
     format: 'cjs',
     platform: 'node',

@@ -1,3 +1,4 @@
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { BaseLanguageClient } from 'vscode-languageclient';
 import * as shared from '@volar/shared';
@@ -6,12 +7,12 @@ import { takeOverModeEnabled } from '../common';
 
 const defaultTsdk = 'node_modules/typescript/lib';
 
-export async function activate(context: vscode.ExtensionContext, clients: BaseLanguageClient[]) {
+export async function register(cmd: string, context: vscode.ExtensionContext, clients: BaseLanguageClient[]) {
 
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
-	statusBar.command = 'volar.selectTypeScriptVersion';
+	statusBar.command = cmd;
 
-	const subscription = vscode.commands.registerCommand('volar.selectTypeScriptVersion', async () => {
+	const subscription = vscode.commands.registerCommand(cmd, async () => {
 
 		const useWorkspaceTsdk = getCurrentTsPaths(context).isWorkspacePath;
 		const workspaceTsPaths = getWorkspaceTsPaths();
@@ -87,6 +88,8 @@ export async function activate(context: vscode.ExtensionContext, clients: BaseLa
 	function updateStatusBar() {
 		if (
 			vscode.window.activeTextEditor?.document.languageId !== 'vue'
+			&& vscode.window.activeTextEditor?.document.languageId !== 'markdown'
+			&& vscode.window.activeTextEditor?.document.languageId !== 'html'
 			&& !(
 				takeOverModeEnabled()
 				&& vscode.window.activeTextEditor
@@ -146,6 +149,17 @@ function getWorkspaceTsPaths(useDefault = false) {
 }
 
 function getVscodeTsPaths() {
+	const nightly = vscode.extensions.getExtension('ms-vscode.vscode-typescript-next');
+	if (nightly) {
+		const tsLibPath = path.join(nightly.extensionPath, 'node_modules/typescript/lib');
+		const serverPath = shared.findTypescriptModulePathInLib(tsLibPath);
+		if (serverPath) {
+			return {
+				serverPath,
+				localizedPath: shared.findTypescriptLocalizedPathInLib(tsLibPath, vscode.env.language)
+			};
+		}
+	}
 	return {
 		serverPath: shared.getVscodeTypescriptPath(vscode.env.appRoot),
 		localizedPath: shared.getVscodeTypescriptLocalizedPath(vscode.env.appRoot, vscode.env.language),

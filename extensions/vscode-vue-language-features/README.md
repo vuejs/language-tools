@@ -4,7 +4,7 @@
 
 [Plugin's page on Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
 
-VueLF is a Language Support plugin built specifically for Vue 3. It's based on [`@vue/reactivity`](https://www.npmjs.com/package/@vue/reactivity) to calculate everything on-demand, to implement native TypeScript language service level performance.
+Vue Language Features is a language support extension built for Vue, Vitepress and petite-vue. this is based on [`@vue/reactivity`](https://www.npmjs.com/package/@vue/reactivity) to calculate everything on-demand, to implement native TypeScript language service level performance.
 
 [[Tips](https://github.com/johnsoncodehk/volar/issues/53)]
 
@@ -24,7 +24,7 @@ VueLF is a Language Support plugin built specifically for Vue 3. It's based on [
 
 This extension requires Vue 3 types from the `@vue/runtime-dom`.
 
-Vue 3 itself includes the `@vue/runtime-dom` package. For Vue 2 you will have to install it yourself:
+Vue 3 and Vue 2.7 has built-in JSX types. For Vue version \<= 2.6.14 you need to add JSX types by install `@vue/runtime-dom`:
 
 ```jsonc
 // package.json
@@ -48,13 +48,13 @@ Here is a compatibility table for different ways of writing the script blocks:
 | `export default Vue.extend({ ... })` with JS | Not supported                             | Not supported                               | Not supported                       |
 | `export default Vue.extend({ ... })` with TS | Limited (supports `data` types but not `props` types) | Limited                         | Not supported                       |
 | `export default defineComponent({ ... })` | Supported                                    | Supported                                   | Supported                           |
-| Class component                          | Supported                                     | Supported with additional code ([#21](https://github.com/johnsoncodehk/volar/issues/21)) |  Supported with additional code     |
+| Class component                          | Supported                                     | Supported with additional code ([#21](https://github.com/johnsoncodehk/volar/issues/21)) |  Supported with [additional code](https://github.com/johnsoncodehk/volar/pull/750#issuecomment-1023947885)     |
 
 Note that you can use `defineComponent` even for components that are using the `Options API`.
 
 3. Support for Vue 2 template
 
-Volar preferentially supports Vue 3. Vue 3 and Vue 2 templates have some differences. You need to set the `experimentalCompatMode` option to support the Vue 2 templates.
+Volar preferentially supports Vue 3. Vue 3 and Vue 2 templates have some differences. You need to set the `target` option to support the Vue 2 templates.
 
 ```jsonc
 // tsconfig.json
@@ -63,10 +63,8 @@ Volar preferentially supports Vue 3. Vue 3 and Vue 2 templates have some differe
     // ...
   },
   "vueCompilerOptions": {
-    "experimentalCompatMode": 2,
-    "experimentalTemplateCompilerOptions": {
-      "compatConfig": { "MODE": 2 } // optional
-    }
+    "target": 2.7,
+    // "target": 2, // For Vue version <= 2.6.14
   }
 }
 ```
@@ -92,7 +90,9 @@ For Global components, you need to define `GlobalComponents` interface, for exam
 
 ```typescript
 // components.d.ts
-declare module '@vue/runtime-core' {
+declare module '@vue/runtime-core' {  // Vue 3
+// declare module 'vue' {   // Vue 2.7
+// declare module '@vue/runtime-dom' {  // Vue <= 2.6.14
   export interface GlobalComponents {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
