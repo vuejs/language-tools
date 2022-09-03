@@ -1,6 +1,6 @@
 {
 	"name": "@volar/typescript-language-service",
-	"version": "0.40.5",
+	"version": "0.40.6",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -17,7 +17,7 @@
 		"typescript": "latest"
 	},
 	"dependencies": {
-		"@volar/shared": "0.40.5",
+		"@volar/shared": "0.40.6",
 		"semver": "^7.3.7",
 		"upath": "^2.0.1",
 		"vscode-languageserver-protocol": "^3.17.2",
