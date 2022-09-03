@@ -12,6 +12,7 @@ import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { VueDocument, VueDocuments } from '../vueDocuments';
 import useHtmlPlugin from './html';
+import { URI } from 'vscode-uri';
 
 export const semanticTokenTypes = [
 	'componentTag',
@@ -54,6 +55,7 @@ interface AutoImportCompletionData {
 }
 
 export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof useHtmlPlugin>>(options: {
+	rootUri: URI,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	getSemanticTokenLegend(): vscode.SemanticTokensLegend,
 	getScanner(document: TextDocument): html.Scanner | undefined,
@@ -288,7 +290,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			return item;
 
 		const vueDocument = _vueDocument;
-		const importFile = shared.uriToFsPath(data.importUri);
+		const importFile = shared.getPathOfUri(data.importUri);
 		const rPath = path.relative(options.vueLsHost.getCurrentDirectory(), importFile);
 		const sfc = vueDocument.file.sfc;
 
@@ -385,7 +387,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		return item;
 
 		async function getTypeScriptInsert() {
-			const embeddedScriptUri = shared.fsPathToUri(vueDocument.file.tsFileName);
+			const embeddedScriptUri = shared.getUriByPath(options.rootUri, vueDocument.file.tsFileName);
 			const tsImportName = camelize(path.basename(importFile).replace(/\./g, '-'));
 			let [formatOptions, preferences] = await Promise.all([
 				options.tsSettings.getFormatOptions?.(embeddedScriptUri),
@@ -394,7 +396,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			formatOptions = formatOptions ?? {};
 			preferences = preferences ?? {};
 			(preferences as any).importModuleSpecifierEnding = 'minimal';
-			const tsDetail = options.tsLs.__internal__.raw.getCompletionEntryDetails(shared.uriToFsPath(embeddedScriptUri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
+			const tsDetail = options.tsLs.__internal__.raw.getCompletionEntryDetails(shared.getPathOfUri(embeddedScriptUri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
 			if (tsDetail?.codeActions) {
 				for (const action of tsDetail.codeActions) {
 					for (const change of action.changes) {
@@ -613,7 +615,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			if (itemId?.type === 'importFile') {
 
 				const [fileUri] = itemId.args;
-				const filePath = shared.uriToFsPath(fileUri);
+				const filePath = shared.getPathOfUri(fileUri);
 				const rPath = path.relative(options.vueLsHost.getCurrentDirectory(), filePath);
 				const data: AutoImportCompletionData = {
 					mode: 'autoImport',

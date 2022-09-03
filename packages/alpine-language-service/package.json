@@ -19,6 +19,7 @@
 	"dependencies": {
 		"@volar/alpine-language-core": "0.40.5",
 		"@volar/vue-language-service": "0.40.5",
-		"@volar/vue-language-service-types": "0.40.5"
+		"@volar/vue-language-service-types": "0.40.5",
+		"vscode-uri": "^3.0.3"
 	}
 }

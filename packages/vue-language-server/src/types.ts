@@ -3,13 +3,14 @@ import type { FileSystemProvider } from 'vscode-html-languageservice';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
 import type * as Requests from './requests';
+import { URI } from 'vscode-uri';
 
 export declare let __requests: typeof Requests; // keep this code for jsdoc link
 
 export type FileSystemHost = {
 	init?(): Promise<any> | any,
 	clearCache(): void,
-	getWorkspaceFileSystem(rootPath: string): FileSystem,
+	getWorkspaceFileSystem(rootUri: URI): FileSystem,
 	onDidChangeWatchedFiles(cb: (params: vscode.DidChangeWatchedFilesParams) => void): () => void,
 };
 

@@ -2,6 +2,7 @@ import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
+import { URI } from 'vscode-uri';
 import { loadCustomPlugins } from '../common';
 import { GetDocumentContentRequest, GetDocumentNameCasesRequest } from '../requests';
 import { FileSystem, FileSystemHost, LanguageConfigs, RuntimeEnvironment, ServerInitializationOptions } from '../types';
@@ -17,6 +18,7 @@ export async function createProject(
 	sys: FileSystem,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	options: ServerInitializationOptions,
+	rootUri: URI,
 	rootPath: string,
 	tsConfig: string | ts.CompilerOptions,
 	tsLocalized: ts.MapLike<string> | undefined,
@@ -42,12 +44,12 @@ export async function createProject(
 		};
 	}
 
-	const scripts = shared.createPathMap<{
+	const scripts = shared.createUriAndPathMap<{
 		version: number,
 		fileName: string,
 		snapshot: ts.IScriptSnapshot | undefined,
 		snapshotVersion: number | undefined,
-	}>();
+	}>(rootUri);
 	const languageServiceHost = createLanguageServiceHost();
 
 	const disposeWatchEvent = fsHost.onDidChangeWatchedFiles(params => {
@@ -91,6 +93,7 @@ export async function createProject(
 				},
 				configHost,
 				loadCustomPlugins(languageServiceHost.getCurrentDirectory()),
+				rootUri,
 				options.languageFeatures?.completion ? async (uri) => {
 
 					if (options.languageFeatures?.completion?.getDocumentNameCasesRequest) {
@@ -188,21 +191,21 @@ export async function createProject(
 
 		function getScriptVersion(fileName: string) {
 
-			const doc = documents.data.fsPathGet(fileName);
+			const doc = documents.data.uriGet(shared.getUriByPath(rootUri, fileName));
 			if (doc) {
 				return doc.version.toString();
 			}
 
-			return scripts.fsPathGet(fileName)?.version.toString() ?? '';
+			return scripts.pathGet(fileName)?.version.toString() ?? '';
 		}
 		function getScriptSnapshot(fileName: string) {
 
-			const doc = documents.data.fsPathGet(fileName);
+			const doc = documents.data.uriGet(shared.getUriByPath(rootUri, fileName));
 			if (doc) {
 				return doc.getSnapshot();
 			}
 
-			const script = scripts.fsPathGet(fileName);
+			const script = scripts.pathGet(fileName);
 			if (script && script.snapshotVersion === script.version) {
 				return script.snapshot;
 			}
@@ -216,7 +219,7 @@ export async function createProject(
 						script.snapshotVersion = script.version;
 					}
 					else {
-						scripts.fsPathSet(fileName, {
+						scripts.pathSet(fileName, {
 							version: -1,
 							fileName: fileName,
 							snapshot: snapshot,

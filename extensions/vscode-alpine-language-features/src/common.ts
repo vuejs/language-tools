@@ -48,14 +48,14 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	const takeOverMode = takeOverModeEnabled();
 	const languageFeaturesDocumentSelector: lsp.DocumentSelector = takeOverMode ?
 		[
-			{ scheme: 'file', language: 'html' },
-			{ scheme: 'file', language: 'javascript' },
-			{ scheme: 'file', language: 'typescript' },
-			{ scheme: 'file', language: 'javascriptreact' },
-			{ scheme: 'file', language: 'typescriptreact' },
-			{ scheme: 'file', language: 'json' },
+			{ /* scheme: 'file', */ language: 'html' },
+			{ /* scheme: 'file', */ language: 'javascript' },
+			{ /* scheme: 'file', */ language: 'typescript' },
+			{ /* scheme: 'file', */ language: 'javascriptreact' },
+			{ /* scheme: 'file', */ language: 'typescriptreact' },
+			{ /* scheme: 'file', */ language: 'json' },
 		] : [
-			{ scheme: 'file', language: 'html' },
+			{ /* scheme: 'file', */ language: 'html' },
 		];
 	const documentFeaturesDocumentSelector: lsp.DocumentSelector = takeOverMode ?
 		[

@@ -121,10 +121,12 @@ importers:
       '@volar/vue-language-service': 0.40.5
       '@volar/vue-language-service-types': 0.40.5
       typescript: latest
+      vscode-uri: ^3.0.3
     dependencies:
       '@volar/alpine-language-core': link:../alpine-language-core
       '@volar/vue-language-service': link:../vue-language-service
       '@volar/vue-language-service-types': link:../vue-language-service-types
+      vscode-uri: 3.0.3
     devDependencies:
       '@types/semver': 7.3.12
       typescript: 4.8.2
@@ -217,6 +219,7 @@ importers:
       vscode-languageserver-protocol: ^3.17.2
       vscode-languageserver-textdocument: ^1.0.5
       vscode-nls: ^5.0.1
+      vscode-uri: ^3.0.3
     dependencies:
       '@volar/shared': link:../shared
       semver: 7.3.7
@@ -224,6 +227,7 @@ importers:
       vscode-languageserver-protocol: 3.17.2
       vscode-languageserver-textdocument: 1.0.5
       vscode-nls: 5.1.0
+      vscode-uri: 3.0.3
     devDependencies:
       '@types/semver': 7.3.12
       typescript: 4.8.2
@@ -320,6 +324,7 @@ importers:
       vscode-json-languageservice: ^5.1.0
       vscode-languageserver-protocol: ^3.17.2
       vscode-languageserver-textdocument: ^1.0.5
+      vscode-uri: ^3.0.3
     dependencies:
       '@johnsoncodehk/html2pug': 1.0.0
       '@johnsoncodehk/pug-beautify': 0.2.2
@@ -343,6 +348,7 @@ importers:
       vscode-json-languageservice: 5.1.0
       vscode-languageserver-protocol: 3.17.2
       vscode-languageserver-textdocument: 1.0.5
+      vscode-uri: 3.0.3
     devDependencies:
       '@types/semver': 7.3.12
       typescript: 4.8.2

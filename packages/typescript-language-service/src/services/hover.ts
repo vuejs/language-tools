@@ -3,8 +3,10 @@ import * as vscode from 'vscode-languageserver-protocol';
 import * as previewer from '../utils/previewer';
 import * as shared from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
+import { URI } from 'vscode-uri';
 
 export function register(
+	rootUri: URI,
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
 	getTextDocument2: (uri: string) => TextDocument | undefined,
@@ -14,7 +16,7 @@ export function register(
 		const document = getTextDocument(uri);
 		if (!document) return;
 
-		const fileName = shared.uriToFsPath(document.uri);
+		const fileName = shared.getPathOfUri(document.uri);
 		const offset = document.offsetAt(position);
 
 		let info: ReturnType<typeof languageService.getQuickInfoAtPosition> | undefined;
@@ -23,7 +25,7 @@ export function register(
 
 		const parts: string[] = [];
 		const displayString = ts.displayPartsToString(info.displayParts);
-		const documentation = previewer.markdownDocumentation(info.documentation ?? [], info.tags, { toResource: shared.fsPathToUri }, getTextDocument2);
+		const documentation = previewer.markdownDocumentation(info.documentation ?? [], info.tags, { toResource }, getTextDocument2);
 
 		if (displayString && !documentOnly) {
 			parts.push(['```typescript', displayString, '```'].join('\n'));
@@ -44,5 +46,9 @@ export function register(
 				document.positionAt(info.textSpan.start + info.textSpan.length),
 			),
 		};
+
+		function toResource(path: string) {
+			return shared.getUriByPath(rootUri, path);
+		}
 	};
 }

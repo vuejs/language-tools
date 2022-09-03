@@ -7,6 +7,7 @@ import type { createConfigurationHost } from './configurationHost';
 import { LanguageConfigs, RuntimeEnvironment, FileSystemHost, ServerInitializationOptions } from '../types';
 import { createSnapshots } from './snapshots';
 import { getInferredCompilerOptions } from './inferredCompilerOptions';
+import { URI } from 'vscode-uri';
 
 export const rootTsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 
@@ -14,7 +15,7 @@ export async function createWorkspaceProjects(
 	runtimeEnv: RuntimeEnvironment,
 	languageConfigs: LanguageConfigs,
 	fsHost: FileSystemHost,
-	rootPath: string,
+	rootUri: URI,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLocalized: ts.MapLike<string> | undefined,
 	options: ServerInitializationOptions,
@@ -25,39 +26,38 @@ export async function createWorkspaceProjects(
 
 	let inferredProject: Project | undefined;
 
-	const sys = fsHost.getWorkspaceFileSystem(rootPath);
+	const sys = fsHost.getWorkspaceFileSystem(rootUri);
 	const inferOptions = await getInferredCompilerOptions(ts, configHost);
-	const projects = shared.createPathMap<Project>();
-
-	let rootTsConfigs = sys.readDirectory(rootPath, rootTsConfigNames, undefined, ['**/*']);
+	const projects = shared.createUriAndPathMap<Project>(rootUri);
+	const rootTsConfigs = new Set(sys.readDirectory(rootUri.path, rootTsConfigNames, undefined, ['**/*']));
 
 	const disposeWatch = fsHost.onDidChangeWatchedFiles(async params => {
-
-		let shouldUpdateTsconfigs = false;
-
+		const disposes: Promise<any>[] = [];
 		for (const change of params.changes) {
-			const fileName = shared.uriToFsPath(change.uri);
-			if (rootTsConfigNames.includes(path.basename(fileName))) {
+			if (rootTsConfigNames.includes(path.basename(change.uri))) {
 				if (change.type === vscode.FileChangeType.Created) {
-					shouldUpdateTsconfigs = true;
+					if (change.uri.toLowerCase().startsWith(rootUri.toString().toLowerCase())) {
+						rootTsConfigs.add(URI.parse(change.uri).path);
+					}
 				}
-				else if ((change.type === vscode.FileChangeType.Changed || change.type === vscode.FileChangeType.Deleted) && projects.fsPathHas(fileName)) {
-					(await projects.fsPathGet(fileName))?.dispose();
-					projects.fsPathDelete(fileName);
+				else if ((change.type === vscode.FileChangeType.Changed || change.type === vscode.FileChangeType.Deleted) && projects.uriHas(change.uri)) {
+					if (change.type === vscode.FileChangeType.Deleted) {
+						rootTsConfigs.delete(change.uri);
+					}
+					const _project = projects.uriGet(change.uri);
+					projects.uriDelete(change.uri);
+					disposes.push((async () => {
+						(await _project)?.dispose();
+					})());
 				}
 			}
 		}
-
-		if (shouldUpdateTsconfigs) {
-			rootTsConfigs = sys.readDirectory(rootPath, rootTsConfigNames, undefined, ['**/*']);
-		}
+		return Promise.all(disposes);
 	});
 
 	return {
 		projects,
-		findMatchConfigs,
 		getProjectAndTsConfig,
-		getProjectByCreate,
 		getInferredProject,
 		async reload() {
 			(await inferredProject)?.dispose();
@@ -79,7 +79,7 @@ export async function createWorkspaceProjects(
 	};
 
 	async function getProjectAndTsConfig(uri: string) {
-		const tsconfig = await findMatchConfigs(uri);
+		const tsconfig = await findMatchConfigs(URI.parse(uri));
 		if (tsconfig) {
 			const project = await getProjectByCreate(tsconfig);
 			return {
@@ -97,7 +97,8 @@ export async function createWorkspaceProjects(
 				sys,
 				ts,
 				options,
-				rootPath,
+				rootUri,
+				rootUri.path,
 				inferOptions,
 				tsLocalized,
 				documents,
@@ -107,27 +108,26 @@ export async function createWorkspaceProjects(
 		}
 		return inferredProject;
 	}
-	async function findMatchConfigs(uri: string) {
+	async function findMatchConfigs(uri: URI) {
 
-		const fileName = shared.uriToFsPath(uri);
+		await prepareClosestootParsedCommandLine();
 
-		prepareClosestootParsedCommandLine();
 		return await findDirectIncludeTsconfig() ?? await findIndirectReferenceTsconfig();
 
-		function prepareClosestootParsedCommandLine() {
+		async function prepareClosestootParsedCommandLine() {
 
 			let matches: string[] = [];
 
 			for (const rootTsConfig of rootTsConfigs) {
-				if (shared.isFileInDir(shared.uriToFsPath(uri), path.dirname(rootTsConfig))) {
+				if (uri.path.toLowerCase().startsWith(path.dirname(rootTsConfig).toLowerCase())) {
 					matches.push(rootTsConfig);
 				}
 			}
 
-			matches = matches.sort((a, b) => sortPaths(fileName, a, b));
+			matches = matches.sort((a, b) => sortTsConfigs(uri.path, a, b));
 
 			if (matches.length) {
-				getParsedCommandLine(matches[0]);
+				await getParsedCommandLine(matches[0]);
 			}
 		}
 		function findDirectIncludeTsconfig() {
@@ -135,14 +135,14 @@ export async function createWorkspaceProjects(
 				const parsedCommandLine = await getParsedCommandLine(tsconfig);
 				// use toLowerCase to fix https://github.com/johnsoncodehk/volar/issues/1125
 				const fileNames = new Set(parsedCommandLine.fileNames.map(fileName => fileName.toLowerCase()));
-				return fileNames.has(fileName.toLowerCase());
+				return fileNames.has(uri.path.toLowerCase());
 			});
 		}
 		function findIndirectReferenceTsconfig() {
 			return findTsconfig(async tsconfig => {
-				const project = await projects.fsPathGet(tsconfig);
+				const project = await projects.pathGet(tsconfig);
 				const ls = await project?.getLanguageServiceDontCreate();
-				const validDoc = ls?.__internal__.context.getTsLs().__internal__.getValidTextDocument(uri);
+				const validDoc = ls?.__internal__.context.getTsLs().__internal__.getValidTextDocument(uri.toString());
 				return !!validDoc;
 			});
 		}
@@ -150,8 +150,8 @@ export async function createWorkspaceProjects(
 
 			const checked = new Set<string>();
 
-			for (const rootTsConfig of rootTsConfigs.sort((a, b) => sortPaths(fileName, a, b))) {
-				const project = await projects.fsPathGet(rootTsConfig);
+			for (const rootTsConfig of [...rootTsConfigs].sort((a, b) => sortTsConfigs(uri.path, a, b))) {
+				const project = await projects.pathGet(rootTsConfig);
 				if (project) {
 
 					const chains = await getReferencesChains(project.getParsedCommandLine(), rootTsConfig, []);
@@ -218,7 +218,7 @@ export async function createWorkspaceProjects(
 		}
 	}
 	function getProjectByCreate(tsConfig: string) {
-		let project = projects.fsPathGet(tsConfig);
+		let project = projects.pathGet(tsConfig);
 		if (!project) {
 			project = createProject(
 				runtimeEnv,
@@ -227,6 +227,7 @@ export async function createWorkspaceProjects(
 				sys,
 				ts,
 				options,
+				rootUri,
 				path.dirname(tsConfig),
 				tsConfig,
 				tsLocalized,
@@ -234,16 +235,16 @@ export async function createWorkspaceProjects(
 				connection,
 				configHost,
 			);
-			projects.fsPathSet(tsConfig, project);
+			projects.pathSet(tsConfig, project);
 		}
 		return project;
 	}
 }
 
-export function sortPaths(fileName: string, a: string, b: string) {
+export function sortTsConfigs(uri: string, a: string, b: string) {
 
-	const inA = shared.isFileInDir(fileName, path.dirname(a));
-	const inB = shared.isFileInDir(fileName, path.dirname(b));
+	const inA = uri.toLowerCase().startsWith(path.dirname(a).toLowerCase());
+	const inB = uri.toLowerCase().startsWith(path.dirname(b).toLowerCase());
 
 	if (inA !== inB) {
 		const aWeight = inA ? 1 : 0;

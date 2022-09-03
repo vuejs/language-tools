@@ -1,4 +1,5 @@
 import * as vscode from 'vscode-languageserver';
+import { URI } from 'vscode-uri';
 import { FileSystemHost } from '../types';
 import { IterableWeakSet } from './iterableWeakSet';
 
@@ -13,14 +14,16 @@ export function createNodeFileSystemHost(
 	const onDidChangeWatchedFilesCb = new Set<(params: vscode.DidChangeWatchedFilesParams) => void>();
 	const caches = new IterableWeakSet<Map<string, boolean>>();
 
-	connection.onDidChangeWatchedFiles(params => {
+	connection.onDidChangeWatchedFiles(async params => {
 		if (params.changes.some(change => change.type === vscode.FileChangeType.Created || change.type === vscode.FileChangeType.Deleted)) {
 			caches.forEach(cache => {
 				cache.clear();
 			});
 		}
-		for (const cb of onDidChangeWatchedFilesCb) {
-			cb(params);
+		for (const cb of [...onDidChangeWatchedFilesCb]) {
+			if (onDidChangeWatchedFilesCb.has(cb)) {
+				await cb(params);
+			}
 		}
 	});
 
@@ -30,7 +33,7 @@ export function createNodeFileSystemHost(
 				cache.clear();
 			});
 		},
-		getWorkspaceFileSystem(rootPath: string) {
+		getWorkspaceFileSystem(rootUri: URI) {
 
 			const workspaceSys = new Proxy(ts.sys, {
 				get(target, prop) {
@@ -38,9 +41,9 @@ export function createNodeFileSystemHost(
 					if (typeof fn === 'function') {
 						return new Proxy(fn, {
 							apply(target, thisArg, args) {
-								if (currentCwd !== rootPath) {
-									process.chdir(rootPath);
-									currentCwd = rootPath;
+								if (currentCwd !== rootUri.fsPath) {
+									process.chdir(rootUri.fsPath);
+									currentCwd = rootUri.fsPath;
 								}
 								return (target as any).apply(thisArg, args);
 							}

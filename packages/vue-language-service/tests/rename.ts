@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import * as path from 'path';
-import { tester } from './utils/createTester';
+import { rootUri, tester } from './utils/createTester';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import * as fs from 'fs';
@@ -19,7 +19,7 @@ for (const dirName of testDirs) {
 		for (const file in inputFiles) {
 
 			const filePath = path.join(dir, 'input', file);
-			const uri = shared.fsPathToUri(filePath);
+			const uri = shared.getUriByPath(rootUri, filePath);
 			const fileText = inputFiles[file];
 			const document = TextDocument.create('', '', 0, fileText);
 			const actions = findRenameActions(fileText);

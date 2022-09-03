@@ -145,7 +145,7 @@ function convertLinkTags(
 							fileName: string,
 							textSpan: { start: number, length: number; },
 						};
-						const fileDoc = getTextDocument(shared.uriToFsPath(_target.fileName));
+						const fileDoc = getTextDocument(shared.getPathOfUri(_target.fileName));
 						if (fileDoc) {
 							const start = fileDoc.positionAt(_target.textSpan.start);
 							const end = fileDoc.positionAt(_target.textSpan.start + _target.textSpan.length);

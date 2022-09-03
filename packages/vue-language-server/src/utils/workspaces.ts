@@ -2,9 +2,10 @@ import * as shared from '@volar/shared';
 import { ConfigurationHost } from '@volar/vue-language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
+import { URI } from 'vscode-uri';
 import { FileSystemHost, LanguageConfigs, RuntimeEnvironment, ServerInitializationOptions } from '../types';
 import { createSnapshots } from './snapshots';
-import { createWorkspaceProjects, rootTsConfigNames, sortPaths } from './workspaceProjects';
+import { createWorkspaceProjects, rootTsConfigNames, sortTsConfigs } from './workspaceProjects';
 
 export interface Workspaces extends ReturnType<typeof createWorkspaces> { }
 
@@ -43,22 +44,22 @@ export function createWorkspaces(
 			}
 		}
 
-		onDriveFileUpdated(undefined);
+		onDriveFileUpdated();
 	});
 	runtimeEnv.onDidChangeConfiguration?.(async () => {
-		onDriveFileUpdated(undefined);
+		onDriveFileUpdated();
 	});
 
 	return {
 		workspaces,
 		getProject,
 		reloadProject,
-		add: (rootPath: string) => {
-			workspaces.set(rootPath, createWorkspaceProjects(
+		add: (rootUri: URI) => {
+			workspaces.set(rootUri.toString(), createWorkspaceProjects(
 				runtimeEnv,
 				languageConfigs,
 				fsHost,
-				rootPath,
+				rootUri,
 				ts,
 				tsLocalized,
 				options,
@@ -67,9 +68,9 @@ export function createWorkspaces(
 				configurationHost,
 			));
 		},
-		remove: (rootPath: string) => {
-			const _workspace = workspaces.get(rootPath);
-			workspaces.delete(rootPath);
+		remove: (rootUri: URI) => {
+			const _workspace = workspaces.get(rootUri.toString());
+			workspaces.delete(rootUri.toString());
 			(async () => {
 				(await _workspace)?.dispose();
 			})();
@@ -85,11 +86,11 @@ export function createWorkspaces(
 		}
 	}
 
-	async function onDriveFileUpdated(driveFileName: string | undefined) {
+	async function onDriveFileUpdated() {
 
 		const req = ++semanticTokensReq;
 
-		await updateDiagnostics(driveFileName ? shared.fsPathToUri(driveFileName) : undefined);
+		await updateDiagnostics();
 
 		if (req === semanticTokensReq) {
 			if (options.languageFeatures?.semanticTokens) {
@@ -161,23 +162,22 @@ export function createWorkspaces(
 	}
 	async function getProject(uri: string) {
 
-		const fileName = shared.uriToFsPath(uri);
-		const rootPaths = [...workspaces.keys()]
-			.filter(rootPath => shared.isFileInDir(fileName, rootPath))
-			.sort((a, b) => sortPaths(a, b, fileName));
+		const rootUris = [...workspaces.keys()]
+			.filter(rootUri => uri.toLowerCase().startsWith(rootUri.toLowerCase()))
+			.sort((a, b) => sortTsConfigs(uri, a, b));
 
-		for (const rootPath of rootPaths) {
-			const workspace = await workspaces.get(rootPath);
+		for (const rootUri of rootUris) {
+			const workspace = await workspaces.get(rootUri);
 			const project = await workspace?.getProjectAndTsConfig(uri);
 			if (project) {
 				return project;
 			}
 		}
 
-		if (rootPaths.length) {
+		if (rootUris.length) {
 			return {
 				tsconfig: undefined,
-				project: await (await workspaces.get(rootPaths[0]))?.getInferredProject(),
+				project: await (await workspaces.get(rootUris[0]))?.getInferredProject(),
 			};
 		}
 	}

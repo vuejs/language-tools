@@ -42,7 +42,7 @@ export default function (options: {
 	function getAst(tsDoc: TextDocument) {
 		let ast = asts.get(tsDoc);
 		if (!ast) {
-			ast = options.ts.createSourceFile(shared.uriToFsPath(tsDoc.uri), tsDoc.getText(), options.ts.ScriptTarget.Latest);
+			ast = options.ts.createSourceFile(shared.getPathOfUri(tsDoc.uri), tsDoc.getText(), options.ts.ScriptTarget.Latest);
 			asts.set(tsDoc, ast);
 		}
 		return ast;

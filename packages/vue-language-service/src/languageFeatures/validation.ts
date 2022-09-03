@@ -116,7 +116,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			tsSuggestion: { snapshot: undefined, errors: [] },
 			tsSyntactic: { snapshot: undefined, errors: [] },
 		}).get(uri)!;
-		const newSnapshot = context.host.getScriptSnapshot(shared.uriToFsPath(uri));
+		const newSnapshot = context.host.getScriptSnapshot(shared.getPathOfUri(uri));
 		const newDocument = newSnapshot ? TextDocument.create('file://a.txt', 'txt', 0, newSnapshot.getText(0, newSnapshot.getLength())) : undefined;
 
 		for (const _cache of Object.values(cache)) {

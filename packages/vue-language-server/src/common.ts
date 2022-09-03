@@ -19,26 +19,22 @@ export function createLanguageServer(
 
 	let params: vscode.InitializeParams;
 	let options: ServerInitializationOptions;
-	let folders: string[] = [];
+	let roots: URI[] = [];
 	let fsHost: FileSystemHost;
 
 	connection.onInitialize(async _params => {
 
 		params = _params;
 		options = params.initializationOptions as any;
-		let rootUri: URI;
 
 		if (params.capabilities.workspace?.workspaceFolders && params.workspaceFolders) {
-			folders = params.workspaceFolders
-				.map(folder => URI.parse(folder.uri))
-				.filter(uri => uri.scheme === 'file')
-				.map(uri => uri.fsPath);
+			roots = params.workspaceFolders.map(folder => URI.parse(folder.uri));
 		}
-		else if (params.rootUri && (rootUri = URI.parse(params.rootUri)).scheme === 'file') {
-			folders = [rootUri.fsPath];
+		else if (params.rootUri) {
+			roots = [URI.parse(params.rootUri)];
 		}
 		else if (params.rootPath) {
-			folders = [params.rootPath];
+			roots = [URI.file(params.rootPath)];
 		}
 
 		const result: vscode.InitializeResult = {
@@ -62,7 +58,7 @@ export function createLanguageServer(
 	});
 	connection.onInitialized(async () => {
 
-		const configHost = params.capabilities.workspace?.configuration ? createConfigurationHost(folders, connection) : undefined;
+		const configHost = params.capabilities.workspace?.configuration ? createConfigurationHost(roots, connection) : undefined;
 		const ts = runtimeEnv.loadTypescript(options);
 
 		if (options.documentFeatures) {
@@ -71,7 +67,8 @@ export function createLanguageServer(
 				ts,
 				configHost,
 				runtimeEnv.fileSystemProvide,
-				loadCustomPlugins(folders[0]),
+				loadCustomPlugins(roots[0].path), // TODO: handle multiple roots
+				roots[0],
 			);
 
 			(await import('./features/documentFeatures')).register(connection, documents, documentService, options.documentFeatures.allowedLanguageIds);
@@ -92,7 +89,7 @@ export function createLanguageServer(
 				connection,
 			);
 
-			for (const root of folders) {
+			for (const root of roots) {
 				projects.add(root);
 			}
 
@@ -101,14 +98,11 @@ export function createLanguageServer(
 
 			connection.workspace.onDidChangeWorkspaceFolders(e => {
 
-				const added = e.added.map(folder => URI.parse(folder.uri)).filter(uri => uri.scheme === 'file').map(uri => uri.fsPath);
-				const removed = e.removed.map(folder => URI.parse(folder.uri)).filter(uri => uri.scheme === 'file').map(uri => uri.fsPath);
-
-				for (const folder of added) {
-					projects.add(folder);
+				for (const folder of e.added) {
+					projects.add(URI.parse(folder.uri));
 				}
-				for (const folder of removed) {
-					projects.remove(folder);
+				for (const folder of e.removed) {
+					projects.remove(URI.parse(folder.uri));
 				}
 			});
 		}

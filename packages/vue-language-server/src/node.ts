@@ -34,7 +34,7 @@ createLanguageServer(connection, {
 	fileSystemProvide: {
 		stat: (uri) => {
 			return new Promise<html.FileStat>((resolve, reject) => {
-				fs.stat(shared.uriToFsPath(uri), (err, stats) => {
+				fs.stat(shared.getPathOfUri(uri), (err, stats) => {
 					if (stats) {
 						resolve({
 							type: stats.isFile() ? html.FileType.File
@@ -54,7 +54,7 @@ createLanguageServer(connection, {
 		},
 		readDirectory: (uri) => {
 			return new Promise<[string, html.FileType][]>((resolve, reject) => {
-				fs.readdir(shared.uriToFsPath(uri), (err, files) => {
+				fs.readdir(shared.getPathOfUri(uri), (err, files) => {
 					if (files) {
 						resolve(files.map(file => [file, html.FileType.File]));
 					}

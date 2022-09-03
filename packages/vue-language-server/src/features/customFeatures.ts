@@ -66,7 +66,7 @@ export function register(
 				const allVueDocuments = context.vueDocuments.getAll();
 				let i = 0;
 				for (const vueFile of allVueDocuments) {
-					progress.report(i++ / allVueDocuments.length * 100, path.relative(ls.__internal__.rootPath, shared.uriToFsPath(vueFile.uri)));
+					progress.report(i++ / allVueDocuments.length * 100, path.relative(ls.__internal__.rootPath, shared.getPathOfUri(vueFile.uri)));
 					if (progress.token.isCancellationRequested) {
 						continue;
 					}

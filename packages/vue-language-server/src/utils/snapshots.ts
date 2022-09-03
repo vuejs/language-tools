@@ -173,7 +173,7 @@ function _combineContinuousChangeRanges(a: ts.TextChangeRange, b: ts.TextChangeR
 
 export function createSnapshots(connection: vscode.Connection) {
 
-	const snapshots = shared.createPathMap<IncrementalScriptSnapshot>();
+	const snapshots = shared.createUriMap<IncrementalScriptSnapshot>();
 	const onDidOpens = new Set<(params: vscode.DidOpenTextDocumentParams) => void>();
 	const onDidChangeContents = new Set<(params: vscode.DidChangeTextDocumentParams) => void>();
 	const onDidCloses = new Set<(params: vscode.DidCloseTextDocumentParams) => void>();

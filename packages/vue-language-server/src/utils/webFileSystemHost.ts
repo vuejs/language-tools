@@ -111,7 +111,7 @@ export function createWebFileSystemHost(
 
 	connection.onDidChangeWatchedFiles(params => {
 		for (const change of params.changes) {
-			const fileName = URI.parse(change.uri).fsPath;
+			const fileName = URI.parse(change.uri).path;
 			const dir = getDir(path.dirname(fileName));
 			const name = path.basename(fileName);
 			if (change.type === vscode.FileChangeType.Created) {
@@ -125,9 +125,7 @@ export function createWebFileSystemHost(
 				dir.fileTexts.delete(name);
 			}
 		}
-		for (const cb of onDidChangeWatchedFilesCb) {
-			cb(params);
-		}
+		fireChanges(params);
 	});
 
 	return {
@@ -146,12 +144,12 @@ export function createWebFileSystemHost(
 			root.fileTypes.clear();
 			root.searched = false;
 		},
-		getWorkspaceFileSystem(rootPath) {
+		getWorkspaceFileSystem(rootUri) {
 
 			return {
 				newLine: '\n',
 				useCaseSensitiveFileNames: false,
-				getCurrentDirectory: () => rootPath,
+				getCurrentDirectory: () => rootUri.path,
 				fileExists,
 				readFile,
 				readDirectory,
@@ -160,9 +158,9 @@ export function createWebFileSystemHost(
 			};
 
 			function resolvePath(fileName: string) {
-				if (currentCwd !== rootPath) {
-					process.chdir(rootPath);
-					currentCwd = rootPath;
+				if (currentCwd !== rootUri.path) {
+					process.chdir(rootUri.path);
+					currentCwd = rootUri.path;
 				}
 				return path.resolve(fileName);
 			}
@@ -204,7 +202,7 @@ export function createWebFileSystemHost(
 					exclude,
 					include,
 					false,
-					rootPath,
+					rootUri.path,
 					depth,
 					dirPath => {
 
@@ -241,39 +239,47 @@ export function createWebFileSystemHost(
 				return files.filter(file => file[1] === FileType.Directory).map(file => file[0]);
 			}
 
+			function getFilePathUri(path: string) {
+				return URI.from({
+					scheme: rootUri.scheme,
+					authority: rootUri.authority,
+					path: path,
+				});
+			}
+
 			async function statAsync(fileName: string, dir: Dir) {
-				const result = await connection.sendRequest(FsStatRequest.type, URI.file(fileName).toString());
+				const uri = getFilePathUri(fileName);
+				const result = await connection.sendRequest(FsStatRequest.type, uri.toString());
 				if (result?.type === FileType.File || result?.type === FileType.SymbolicLink) {
 					const name = path.basename(fileName);
 					dir.fileTypes.set(name, result.type);
 					changes.push({
-						uri: URI.file(fileName).toString(),
+						uri: uri.toString(),
 						type: vscode.FileChangeType.Created,
 					});
 				}
 			}
 
 			async function readFileAsync(fileName: string, dir: Dir) {
-				const text = await connection.sendRequest(FsReadFileRequest.type, URI.file(fileName).toString());
+				const uri = getFilePathUri(fileName);
+				const text = await connection.sendRequest(FsReadFileRequest.type, uri.toString());
 				if (text) {
 					const name = path.basename(fileName);
 					dir.fileTexts.set(name, text);
 					changes.push({
-						uri: URI.file(fileName).toString(),
+						uri: uri.toString(),
 						type: vscode.FileChangeType.Changed,
 					});
 				}
 			}
 
-			async function readDirectoryAsync(
-				dirPath: string,
-				dir: Dir,
-			) {
-				const result = await connection.sendRequest(FsReadDirectoryRequest.type, URI.file(dirPath).toString());
+			async function readDirectoryAsync(dirPath: string, dir: Dir) {
+				const uri = getFilePathUri(dirPath);
+				const result = await connection.sendRequest(FsReadDirectoryRequest.type, uri.toString());
 				for (const [name, fileType] of result) {
 					if (dir.fileTypes.get(name) !== fileType && (fileType === FileType.File || fileType === FileType.SymbolicLink)) {
 						changes.push({
-							uri: URI.file(path.join(dirPath, name)).toString(),
+							uri: getFilePathUri(path.join(dirPath, name)).toString(),
 							type: vscode.FileChangeType.Created,
 						});
 					}
@@ -299,12 +305,18 @@ export function createWebFileSystemHost(
 				await Promise.all(_pendings);
 			}
 			if (changes.length) {
-				for (const cb of onDidChangeWatchedFilesCb) {
-					cb({ changes });
-				}
+				fireChanges({ changes: [...changes] });
 				changes.length = 0;
 			}
 			checking = false;
+		}
+	}
+
+	async function fireChanges(params: vscode.DidChangeWatchedFilesParams) {
+		for (const cb of [...onDidChangeWatchedFilesCb]) {
+			if (onDidChangeWatchedFilesCb.has(cb)) {
+				await cb(params);
+			}
 		}
 	}
 

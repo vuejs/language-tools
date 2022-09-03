@@ -24,6 +24,6 @@ createLanguageServer(connection, {
 }, {
 	definitelyExts: ['.html'],
 	indeterminateExts: [],
-	getDocumentService: (ts, configHost, _, plugins) => alpine.getDocumentService(ts, configHost, plugins),
-	createLanguageService: (lsHost, _1, _2, configHost, plugins) => alpine.createLanguageService(lsHost, configHost, plugins),
+	getDocumentService: (ts, configHost, _, plugins, rootUri) => alpine.getDocumentService(ts, configHost, plugins, rootUri),
+	createLanguageService: (lsHost, _1, _2, configHost, plugins, rootUri) => alpine.createLanguageService(lsHost, configHost, plugins, rootUri),
 });

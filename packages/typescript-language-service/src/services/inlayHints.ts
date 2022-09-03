@@ -16,7 +16,7 @@ export function register(
 		if (!document) return;
 
 		const preferences = await settings.getPreferences?.(document.uri) ?? {};
-		const fileName = shared.uriToFsPath(document.uri);
+		const fileName = shared.getPathOfUri(document.uri);
 		const start = document.offsetAt(range.start);
 		const end = document.offsetAt(range.end);
 		const inlayHints = 'provideInlayHints' in languageService ? languageService.provideInlayHints(fileName, { start, length: end - start }, preferences) : [];

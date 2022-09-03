@@ -6,7 +6,7 @@ import { DetectDocumentNameCasesRequest } from '@volar/vue-language-server';
 
 export async function activate(context: vscode.ExtensionContext, languageClient: BaseLanguageClient) {
 
-	const tagCases = shared.createPathMap<'both' | 'kebabCase' | 'pascalCase' | 'unsure'>();
+	const tagCases = shared.createUriMap<'both' | 'kebabCase' | 'pascalCase' | 'unsure'>();
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	statusBar.command = 'volar.action.tagNameCase';
 
