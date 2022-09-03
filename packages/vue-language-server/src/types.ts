@@ -45,6 +45,7 @@ export interface LanguageConfigs {
 }
 
 export interface ServerInitializationOptions {
+	textDocumentSync?: vscode.TextDocumentSyncKind | number;
 	typescript: {
 		/**
 		 * Path to tsserverlibrary.js / tsserver.js / typescript.js

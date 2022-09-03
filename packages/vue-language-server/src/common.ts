@@ -38,7 +38,7 @@ export function createLanguageServer(
 
 		const result: vscode.InitializeResult = {
 			capabilities: {
-				textDocumentSync: vscode.TextDocumentSyncKind.Incremental,
+				textDocumentSync: (options.textDocumentSync as vscode.TextDocumentSyncKind) ?? vscode.TextDocumentSyncKind.Incremental,
 			},
 		};
 

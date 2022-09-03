@@ -236,7 +236,13 @@ function getInitializationOptions(
 	mode: 'main-language-features' | 'second-language-features' | 'document-features',
 	useSecondServer: boolean,
 ) {
+	const textDocumentSync = vscode.workspace.getConfiguration('volar').get<'incremental' | 'full' | 'none'>('vueserver.textDocumentSync');
 	const initializationOptions: ServerInitializationOptions = {
+		textDocumentSync: textDocumentSync ? {
+			incremental: lsp.TextDocumentSyncKind.Incremental,
+			full: lsp.TextDocumentSyncKind.Full,
+			none: lsp.TextDocumentSyncKind.None,
+		}[textDocumentSync] : lsp.TextDocumentSyncKind.Incremental,
 		typescript: tsVersion.getCurrentTsPaths(context),
 		languageFeatures: (mode === 'main-language-features' || mode === 'second-language-features') ? {
 			...(mode === 'main-language-features' ? {
