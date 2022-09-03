@@ -1,7 +1,7 @@
 import * as vue from '@volar/vue-language-service';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
-import { FileSystemHost, LanguageConfigs, RuntimeEnvironment, ServerInitializationOptions } from './types';
+import { LanguageConfigs, RuntimeEnvironment, ServerInitializationOptions } from './types';
 import { createConfigurationHost } from './utils/configurationHost';
 import { createSnapshots } from './utils/snapshots';
 import { createWorkspaces } from './utils/workspaces';
@@ -20,7 +20,6 @@ export function createLanguageServer(
 	let params: vscode.InitializeParams;
 	let options: ServerInitializationOptions;
 	let roots: URI[] = [];
-	let fsHost: FileSystemHost;
 
 	connection.onInitialize(async _params => {
 
@@ -48,10 +47,6 @@ export function createLanguageServer(
 		}
 		if (options.languageFeatures) {
 			(await import('./registers/registerlanguageFeatures')).register(options.languageFeatures!, vue.getSemanticTokenLegend(), result.capabilities, languageConfigs);
-
-			const ts = runtimeEnv.loadTypescript(options);
-			fsHost = runtimeEnv.createFileSystemHost(ts, connection, params.capabilities);
-			await fsHost.init?.();
 		}
 
 		return result;
@@ -76,6 +71,7 @@ export function createLanguageServer(
 
 		if (options.languageFeatures) {
 
+			const fsHost = runtimeEnv.createFileSystemHost(ts, connection, params.capabilities);
 			const tsLocalized = runtimeEnv.loadTypescriptLocalized(options);
 			const projects = createWorkspaces(
 				runtimeEnv,

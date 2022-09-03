@@ -164,7 +164,7 @@ export async function createProject(
 				try {
 					return ts.getDefaultLibFilePath(options);
 				} catch {
-					return '/__DefaultLibFilePath__/' + ts.getDefaultLibFileName(options); // web
+					return sys.resolvePath('node_modules/typescript/lib/' + ts.getDefaultLibFileName(options)); // web
 				}
 			},
 			getProjectVersion: () => projectVersion.toString(),

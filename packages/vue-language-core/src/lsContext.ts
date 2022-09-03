@@ -41,15 +41,20 @@ export function getPlugins(
 		...extraPlugins,
 	];
 	const vueCompilerOptions = getVueCompilerOptions(_vueCompilerOptions);
-	for (const pluginPath of vueCompilerOptions.plugins) {
-		try {
-			const importPath = require.resolve(pluginPath, { paths: [rootDir] });
-			const plugin = require(importPath);
-			_plugins.push(plugin);
+	if (typeof require?.resolve === 'function') {
+		for (const pluginPath of vueCompilerOptions.plugins) {
+			try {
+				const importPath = require.resolve(pluginPath, { paths: [rootDir] });
+				const plugin = require(importPath);
+				_plugins.push(plugin);
+			}
+			catch (error) {
+				console.log('Load plugin failed', pluginPath, error);
+			}
 		}
-		catch (error) {
-			console.info('Load plugin failed', pluginPath, error);
-		}
+	}
+	else {
+		console.log('vueCompilerOptions.plugins is not available in Web.')
 	}
 	const pluginCtx: Parameters<VueLanguagePlugin>[0] = {
 		modules: {
