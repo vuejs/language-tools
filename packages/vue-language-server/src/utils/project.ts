@@ -93,7 +93,6 @@ export async function createProject(
 				},
 				configHost,
 				loadCustomPlugins(languageServiceHost.getCurrentDirectory()),
-				rootUri,
 				options.languageFeatures?.completion ? async (uri) => {
 
 					if (options.languageFeatures?.completion?.getDocumentNameCasesRequest) {
@@ -109,6 +108,8 @@ export async function createProject(
 						attr: options.languageFeatures!.completion!.defaultAttrNameCase,
 					};
 				} : undefined,
+				undefined,
+				rootUri,
 			);
 		}
 		return vueLs;

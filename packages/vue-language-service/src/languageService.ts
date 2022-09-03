@@ -77,12 +77,12 @@ export function createLanguageService(
 	schemaRequestService: json.SchemaRequestService | undefined,
 	configurationHost: ConfigurationHost | undefined,
 	customPlugins: EmbeddedLanguageServicePlugin[],
-	rootUri: URI,
 	getNameCases?: (uri: string) => Promise<{
 		tag: 'both' | 'kebabCase' | 'pascalCase',
 		attr: 'kebabCase' | 'camelCase',
 	}>,
 	createLanguageServiceContext = () => vue.createLanguageContext(vueLsHost),
+	rootUri = URI.file(vueLsHost.getCurrentDirectory()),
 ) {
 
 	setCurrentConfigurationHost(configurationHost); // TODO

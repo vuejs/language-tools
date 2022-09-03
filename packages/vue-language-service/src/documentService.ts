@@ -34,7 +34,7 @@ export function getDocumentService(
 	configurationHost: ConfigurationHost | undefined,
 	fileSystemProvider: html.FileSystemProvider | undefined,
 	customPlugins: EmbeddedLanguageServicePlugin[],
-	rootUri: URI,
+	rootUri = URI.file(ts.sys.getCurrentDirectory()),
 ) {
 
 	setCurrentConfigurationHost(configurationHost); // TODO

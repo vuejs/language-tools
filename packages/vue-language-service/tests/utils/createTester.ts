@@ -74,7 +74,7 @@ function createTester(root: string) {
 		},
 		onDidChangeConfiguration() { },
 		rootUris: [rootUri.toString()],
-	}, [], rootUri);
+	}, [], undefined, undefined, rootUri);
 
 	return {
 		host,

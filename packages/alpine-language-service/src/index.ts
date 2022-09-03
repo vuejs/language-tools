@@ -7,7 +7,7 @@ export function createLanguageService(
 	alpineLsHost: alpineTs.LanguageServiceHost,
 	configurationHost: ConfigurationHost | undefined,
 	customPlugins: EmbeddedLanguageServicePlugin[],
-	rootUri: URI,
+	rootUri = URI.file(alpineLsHost.getCurrentDirectory()),
 ): ReturnType<typeof vueLs['createLanguageService']> {
 	setCurrentConfigurationHost(configurationHost);
 	return vueLs.createLanguageService(
@@ -19,9 +19,9 @@ export function createLanguageService(
 		undefined,
 		configurationHost,
 		customPlugins,
-		rootUri,
 		undefined,
 		() => alpineTs.createLanguageContext(alpineLsHost),
+		rootUri,
 	);
 }
 
@@ -29,7 +29,7 @@ export function getDocumentService(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	configurationHost: ConfigurationHost | undefined,
 	customPlugins: EmbeddedLanguageServicePlugin[],
-	rootUri: URI,
+	rootUri = URI.file(ts.sys.getCurrentDirectory()),
 ): ReturnType<typeof vueLs['getDocumentService']> {
 	setCurrentConfigurationHost(configurationHost);
 	return vueLs.getDocumentService(
