@@ -925,10 +925,10 @@
 		"vue-directives-control": {
 			"begin": "(v-for)|(v-if|v-else-if|v-else)",
 			"captures": {
-				"0": {
+				"1": {
 					"name": "keyword.control.loop.vue"
 				},
-				"1": {
+				"2": {
 					"name": "keyword.control.conditional.vue"
 				}
 			},
