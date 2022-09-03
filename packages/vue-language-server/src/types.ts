@@ -11,7 +11,7 @@ export type FileSystemHost = {
 	init?(): Promise<any> | any,
 	clearCache(): void,
 	getWorkspaceFileSystem(rootUri: URI): FileSystem,
-	onDidChangeWatchedFiles(cb: (params: vscode.DidChangeWatchedFilesParams) => void): () => void,
+	onDidChangeWatchedFiles(cb: (params: vscode.DidChangeWatchedFilesParams, reason: 'lsp' | 'web-cache-updated') => void): () => void,
 };
 
 export type FileSystem = Pick<ts.System,

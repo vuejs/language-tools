@@ -98,7 +98,7 @@ export function createWebFileSystemHost(
 	capabilities: vscode.ClientCapabilities,
 ): FileSystemHost {
 
-	const onDidChangeWatchedFilesCb = new Set<(params: vscode.DidChangeWatchedFilesParams) => void>();
+	const onDidChangeWatchedFilesCb = new Set<(params: vscode.DidChangeWatchedFilesParams, reason: 'lsp' | 'web-cache-updated') => void>();
 	const root: Dir = {
 		dirs: new Map(),
 		fileTexts: new Map(),
@@ -125,7 +125,7 @@ export function createWebFileSystemHost(
 				dir.fileTexts.delete(name);
 			}
 		}
-		fireChanges(params);
+		fireChanges(params, 'lsp');
 	});
 
 	return {
@@ -305,17 +305,17 @@ export function createWebFileSystemHost(
 				await Promise.all(_pendings);
 			}
 			if (changes.length) {
-				fireChanges({ changes: [...changes] });
+				fireChanges({ changes: [...changes] }, 'web-cache-updated');
 				changes.length = 0;
 			}
 			checking = false;
 		}
 	}
 
-	async function fireChanges(params: vscode.DidChangeWatchedFilesParams) {
+	async function fireChanges(params: vscode.DidChangeWatchedFilesParams, reason: 'lsp' | 'web-cache-updated') {
 		for (const cb of [...onDidChangeWatchedFilesCb]) {
 			if (onDidChangeWatchedFilesCb.has(cb)) {
-				await cb(params);
+				await cb(params, reason);
 			}
 		}
 	}

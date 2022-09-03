@@ -11,7 +11,7 @@ export function createNodeFileSystemHost(
 	capabilities: vscode.ClientCapabilities,
 ): FileSystemHost {
 
-	const onDidChangeWatchedFilesCb = new Set<(params: vscode.DidChangeWatchedFilesParams) => void>();
+	const onDidChangeWatchedFilesCb = new Set<(params: vscode.DidChangeWatchedFilesParams, reason: 'lsp' | 'web-cache-updated') => void>();
 	const caches = new IterableWeakSet<Map<string, boolean>>();
 
 	connection.onDidChangeWatchedFiles(async params => {
@@ -22,7 +22,7 @@ export function createNodeFileSystemHost(
 		}
 		for (const cb of [...onDidChangeWatchedFilesCb]) {
 			if (onDidChangeWatchedFilesCb.has(cb)) {
-				await cb(params);
+				await cb(params, 'lsp');
 			}
 		}
 	});

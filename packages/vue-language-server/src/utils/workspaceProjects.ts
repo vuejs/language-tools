@@ -31,7 +31,7 @@ export async function createWorkspaceProjects(
 	const projects = shared.createUriAndPathMap<Project>(rootUri);
 	const rootTsConfigs = new Set(sys.readDirectory(rootUri.path, rootTsConfigNames, undefined, ['**/*']));
 
-	const disposeWatch = fsHost.onDidChangeWatchedFiles(async params => {
+	const disposeWatch = fsHost.onDidChangeWatchedFiles(async (params, reason) => {
 		const disposes: Promise<any>[] = [];
 		for (const change of params.changes) {
 			if (rootTsConfigNames.includes(path.basename(change.uri))) {
@@ -52,6 +52,9 @@ export async function createWorkspaceProjects(
 				}
 			}
 		}
+		if (reason === 'web-cache-updated' && params.changes.some(change => change.uri.indexOf('/node_modules/') >= 0)) {
+			clearProjects();
+		}
 		return Promise.all(disposes);
 	});
 
@@ -59,24 +62,24 @@ export async function createWorkspaceProjects(
 		projects,
 		getProjectAndTsConfig,
 		getInferredProject,
-		async reload() {
-			(await inferredProject)?.dispose();
-			inferredProject = undefined;
-			for (const project of projects.values()) {
-				(await project).dispose();
-			}
-			projects.clear();
-		},
-		async dispose() {
-			(await inferredProject)?.dispose();
-			inferredProject = undefined;
-			for (const project of projects.values()) {
-				(await project).dispose();
-			}
-			projects.clear();
+		reload: clearProjects,
+		dispose() {
+			clearProjects();
 			disposeWatch();
 		},
 	};
+
+	function clearProjects() {
+		const _projects = [
+			inferredProject,
+			...projects.values(),
+		];
+		_projects.forEach(async project => {
+			(await project)?.dispose();
+		});
+		inferredProject = undefined;
+		projects.clear();
+	}
 
 	async function getProjectAndTsConfig(uri: string) {
 		const tsconfig = await findMatchConfigs(URI.parse(uri));
