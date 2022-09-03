@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.40.6 (2022/9/4)
+
+- feat: support language features for Web IDE ([#612](https://github.com/johnsoncodehk/volar/issues/612))
+- feat: update vite problemMatcher ([#1801](https://github.com/johnsoncodehk/volar/issues/1801))
+- feat: add `volar.vueserver.textDocumentSync` option to disable incremental update ([#1807](https://github.com/johnsoncodehk/volar/issues/1807))
+- fix: `v-for`, `v-if` textmate scopes incorrect ([#1810](https://github.com/johnsoncodehk/volar/issues/1810))
+
 ## 0.40.5 (2022/8/31)
 
 - feat: suppor add or switch workspaces without restart server ([#1574](https://github.com/johnsoncodehk/volar/issues/1574))
