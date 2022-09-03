@@ -154,6 +154,7 @@ export function createWebFileSystemHost(
 				readFile,
 				readDirectory,
 				getDirectories,
+				resolvePath,
 				realpath: path => path, // TODO: cannot implement with vscode
 			};
 

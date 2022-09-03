@@ -22,6 +22,7 @@ export type FileSystem = Pick<ts.System,
 	| 'readDirectory'
 	| 'getCurrentDirectory'
 	| 'realpath'
+	| 'resolvePath'
 > & Partial<ts.System>;
 
 export interface RuntimeEnvironment {

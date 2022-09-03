@@ -17,7 +17,7 @@
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:serve": "vitepress serve docs",
-    "chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=./extensions/vscode-vue-language-features ./packages/vue-test-workspace"
+    "chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=./extensions/vscode-vue-language-features ../volar-starter"
   },
   "devDependencies": {
     "@lerna-lite/cli": "latest",

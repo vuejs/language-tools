@@ -191,6 +191,8 @@ export async function createProject(
 
 		function getScriptVersion(fileName: string) {
 
+			fileName = sys.resolvePath(fileName);
+
 			const doc = documents.data.uriGet(shared.getUriByPath(rootUri, fileName));
 			if (doc) {
 				return doc.version.toString();
@@ -199,6 +201,8 @@ export async function createProject(
 			return scripts.pathGet(fileName)?.version.toString() ?? '';
 		}
 		function getScriptSnapshot(fileName: string) {
+
+			fileName = sys.resolvePath(fileName);
 
 			const doc = documents.data.uriGet(shared.getUriByPath(rootUri, fileName));
 			if (doc) {

@@ -48,7 +48,7 @@ export function getPlugins(
 			_plugins.push(plugin);
 		}
 		catch (error) {
-			console.error(error);
+			console.info('Load plugin failed', pluginPath, error);
 		}
 	}
 	const pluginCtx: Parameters<VueLanguagePlugin>[0] = {
