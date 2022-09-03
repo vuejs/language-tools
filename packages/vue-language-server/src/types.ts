@@ -7,6 +7,7 @@ import type * as Requests from './requests';
 export declare let __requests: typeof Requests; // keep this code for jsdoc link
 
 export type FileSystemHost = {
+	init?(): Promise<any> | any,
 	clearCache(): void,
 	getWorkspaceFileSystem(rootPath: string): FileSystem,
 	onDidChangeWatchedFiles(cb: (params: vscode.DidChangeWatchedFilesParams) => void): () => void,

@@ -161,7 +161,7 @@ export async function createProject(
 				try {
 					return ts.getDefaultLibFilePath(options);
 				} catch {
-					return ''; // TODO: crash in web
+					return '/__DefaultLibFilePath__/' + ts.getDefaultLibFileName(options); // web
 				}
 			},
 			getProjectVersion: () => projectVersion.toString(),
