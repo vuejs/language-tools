@@ -354,7 +354,7 @@ export function createLanguageContext(
 				return fileVersions.get(mapped.embedded.file)!;
 			}
 			else {
-				let version = ts.sys.createHash?.(mapped.embedded.file.codeGen.getText()) ?? mapped.embedded.file.codeGen.getText();
+				let version = ts.sys?.createHash?.(mapped.embedded.file.codeGen.getText()) ?? mapped.embedded.file.codeGen.getText();
 				if (host.isTsc) {
 					// fix https://github.com/johnsoncodehk/volar/issues/1082
 					version = host.getScriptVersion(mapped.vueFile.fileName) + ':' + version;

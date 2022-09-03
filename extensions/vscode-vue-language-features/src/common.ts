@@ -18,6 +18,8 @@ import * as tsconfig from './features/tsconfig';
 import * as doctor from './features/doctor';
 import * as fileReferences from './features/fileReferences';
 import * as reloadProject from './features/reloadProject';
+import * as serverSys from './features/serverSys';
+import { GetDocumentNameCasesRequest, ServerInitializationOptions } from '@volar/vue-language-server';
 
 let apiClient: lsp.BaseLanguageClient | undefined;
 let docClient: lsp.BaseLanguageClient | undefined;
@@ -27,11 +29,11 @@ type CreateLanguageClient = (
 	id: string,
 	name: string,
 	documentSelector: lsp.DocumentSelector,
-	initOptions: shared.ServerInitializationOptions,
+	initOptions: ServerInitializationOptions,
 	port: number,
 ) => Promise<lsp.BaseLanguageClient>;
 
-export async function activate(context: vscode.ExtensionContext, createLc: CreateLanguageClient, env: 'node' | 'browser') {
+export async function activate(context: vscode.ExtensionContext, createLc: CreateLanguageClient) {
 
 	const stopCheck = vscode.window.onDidChangeActiveTextEditor(tryActivate);
 	tryActivate();
@@ -40,26 +42,26 @@ export async function activate(context: vscode.ExtensionContext, createLc: Creat
 
 		if (!vscode.window.activeTextEditor) {
 			// onWebviewPanel:preview
-			doActivate(context, createLc, env);
+			doActivate(context, createLc);
 			stopCheck.dispose();
 			return;
 		}
 
 		const currentlangId = vscode.window.activeTextEditor.document.languageId;
 		if (currentlangId === 'vue' || currentlangId === 'markdown' || currentlangId === 'html') {
-			doActivate(context, createLc, env);
+			doActivate(context, createLc);
 			stopCheck.dispose();
 		}
 
 		const takeOverMode = takeOverModeEnabled();
 		if (takeOverMode && ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(currentlangId)) {
-			doActivate(context, createLc, env);
+			doActivate(context, createLc);
 			stopCheck.dispose();
 		}
 	}
 }
 
-async function doActivate(context: vscode.ExtensionContext, createLc: CreateLanguageClient, env: 'node' | 'browser') {
+async function doActivate(context: vscode.ExtensionContext, createLc: CreateLanguageClient) {
 
 	vscode.commands.executeCommand('setContext', 'volar.activated', true);
 
@@ -97,14 +99,14 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	const _serverMaxOldSpaceSize = serverMaxOldSpaceSize();
 
 	[apiClient, docClient, htmlClient] = await Promise.all([
-		env === 'node' ? createLc(
+		createLc(
 			'volar-language-features',
 			'Volar - Language Features Server',
 			languageFeaturesDocumentSelector,
 			getInitializationOptions(context, 'main-language-features', _useSecondServer),
 			6009,
-		) : undefined,
-		env === 'node' && _useSecondServer ? createLc(
+		),
+		_useSecondServer ? createLc(
 			'volar-language-features-2',
 			'Volar - Second Language Features Server',
 			languageFeaturesDocumentSelector,
@@ -183,6 +185,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			showReferences.activate(context, client);
 			documentContent.activate(context, client);
 			activeSelection.activate(context, client);
+			serverSys.activate(context, client);
 		}
 
 		(async () => {
@@ -191,7 +194,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 				const getTagNameCase = await tagNameCase.activate(context, apiClient);
 				const getAttrNameCase = await attrNameCase.activate(context, apiClient);
 
-				apiClient.onRequest(shared.GetDocumentNameCasesRequest.type, async handler => ({
+				apiClient.onRequest(GetDocumentNameCasesRequest.type, async handler => ({
 					tagNameCase: getTagNameCase(handler.uri),
 					attrNameCase: getAttrNameCase(handler.uri),
 				}));
@@ -233,7 +236,7 @@ function getInitializationOptions(
 	mode: 'main-language-features' | 'second-language-features' | 'document-features',
 	useSecondServer: boolean,
 ) {
-	const initializationOptions: shared.ServerInitializationOptions = {
+	const initializationOptions: ServerInitializationOptions = {
 		typescript: tsVersion.getCurrentTsPaths(context),
 		languageFeatures: (mode === 'main-language-features' || mode === 'second-language-features') ? {
 			...(mode === 'main-language-features' ? {

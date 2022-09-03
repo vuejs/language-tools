@@ -31,7 +31,6 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
 export { getSemanticTokenLegend } from './services/semanticTokens';
-import { posix as path } from 'path';
 
 export interface Settings {
 	getFormatOptions?(uri: string, options?: vscode.FormattingOptions): Promise<ts.FormatCodeSettings>;
@@ -108,7 +107,7 @@ export function createLanguageService(
 			const scriptSnapshot = host.getScriptSnapshot(fileName);
 			if (scriptSnapshot) {
 				const scriptText = scriptSnapshot.getText(0, scriptSnapshot.getLength());
-				const document = TextDocument.create(uri, shared.syntaxToLanguageId(path.extname(uri).slice(1)), oldDoc ? oldDoc[1].version + 1 : 0, scriptText);
+				const document = TextDocument.create(uri, shared.syntaxToLanguageId(uri.substring(uri.lastIndexOf('.') + 1)), oldDoc ? oldDoc[1].version + 1 : 0, scriptText);
 				documents.uriSet(uri, [version, document]);
 			}
 		}

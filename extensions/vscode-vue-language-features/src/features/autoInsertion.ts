@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import * as shared from '@volar/shared';
 import type { BaseLanguageClient } from 'vscode-languageclient';
+import { AutoInsertRequest } from '@volar/vue-language-server';
 
 export async function register(context: vscode.ExtensionContext, htmlClient: BaseLanguageClient, tsClient: BaseLanguageClient) {
 
@@ -62,8 +62,8 @@ export async function register(context: vscode.ExtensionContext, htmlClient: Bas
 				},
 			};
 
-			const result = await htmlClient.sendRequest(shared.AutoInsertRequest.type, params)
-				?? await tsClient.sendRequest(shared.AutoInsertRequest.type, params);
+			const result = await htmlClient.sendRequest(AutoInsertRequest.type, params)
+				?? await tsClient.sendRequest(AutoInsertRequest.type, params);
 
 			if (typeof result === 'string') {
 				return result;

@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
-import * as shared from '@volar/shared';
 import type { BaseLanguageClient } from 'vscode-languageclient';
+import { D3Request } from '@volar/vue-language-server';
 
 export async function register(context: vscode.ExtensionContext, languageClient: BaseLanguageClient) {
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.showCallGraph', async () => {
 		const document = vscode.window.activeTextEditor?.document;
 		if (!document) return;
 		let param = languageClient.code2ProtocolConverter.asTextDocumentIdentifier(document);
-		const d3 = await languageClient.sendRequest(shared.D3Request.type, param);
+		const d3 = await languageClient.sendRequest(D3Request.type, param);
 
 		const panel = vscode.window.createWebviewPanel(
 			'vueCallGraph',

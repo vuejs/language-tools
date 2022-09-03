@@ -1,12 +1,13 @@
-import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-service';
 import * as vscode from 'vscode-languageserver';
+import { AutoInsertRequest, FindFileReferenceRequest, GetEditorSelectionRequest, ShowReferencesNotification } from '../requests';
+import { ServerInitializationOptions } from '../types';
 import type { Workspaces } from '../utils/workspaces';
 
 export function register(
 	connection: vscode.Connection,
 	projects: Workspaces,
-	features: NonNullable<shared.ServerInitializationOptions['languageFeatures']>,
+	features: NonNullable<ServerInitializationOptions['languageFeatures']>,
 	params: vscode.InitializeParams,
 ) {
 	connection.onCompletion(async handler => {
@@ -35,7 +36,7 @@ export function register(
 		}
 
 		const activeSel = features.completion?.getDocumentSelectionRequest
-			? await connection.sendRequest(shared.GetEditorSelectionRequest.type)
+			? await connection.sendRequest(GetEditorSelectionRequest.type)
 			: undefined;
 		const newPosition = activeSel?.textDocument.uri.toLowerCase() === uri.toLowerCase() ? activeSel.position : undefined;
 
@@ -102,7 +103,7 @@ export function register(
 					token,
 					workDoneProgress,
 					applyEdit: (paramOrEdit) => connection.workspace.applyEdit(paramOrEdit),
-					sendNotification: (type, params) => connection.sendNotification(type, params),
+					showReferences: (params) => connection.sendNotification(ShowReferencesNotification.type, params),
 				});
 			});
 		}
@@ -131,7 +132,7 @@ export function register(
 					token,
 					workDoneProgress,
 					applyEdit: (paramOrEdit) => connection.workspace.applyEdit(paramOrEdit),
-					sendNotification: (type, params) => connection.sendNotification(type, params),
+					showReferences: (params) => connection.sendNotification(ShowReferencesNotification.type, params),
 				});
 			});
 		}
@@ -169,7 +170,7 @@ export function register(
 			return vueLs.findReferences(handler.textDocument.uri, handler.position);
 		});
 	});
-	connection.onRequest(shared.FindFileReferenceRequest.type, async handler => {
+	connection.onRequest(FindFileReferenceRequest.type, async handler => {
 		return worker(handler.textDocument.uri, vueLs => {
 			return vueLs.findFileReferences(handler.textDocument.uri);
 		});
@@ -203,7 +204,8 @@ export function register(
 
 		let results: vscode.SymbolInformation[] = [];
 
-		for (const workspace of projects.workspaces.values()) {
+		for (const _workspace of projects.workspaces.values()) {
+			const workspace = await _workspace;
 			let projects = [...workspace.projects.values()];
 			projects = projects.length ? projects : [workspace.getInferredProject()];
 			for (const project of projects) {
@@ -316,7 +318,7 @@ export function register(
 			return vueLs.getEditsForFileRename(file.oldUri, file.newUri) ?? null;
 		}) ?? null;
 	});
-	connection.onRequest(shared.AutoInsertRequest.type, async handler => {
+	connection.onRequest(AutoInsertRequest.type, async handler => {
 		return worker(handler.textDocument.uri, vueLs => {
 			return vueLs.doAutoInsert(handler.textDocument.uri, handler.position, handler.options);
 		});

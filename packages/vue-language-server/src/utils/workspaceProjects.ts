@@ -4,75 +4,54 @@ import * as path from 'upath';
 import * as vscode from 'vscode-languageserver';
 import { createProject, Project } from './project';
 import type { createConfigurationHost } from './configurationHost';
-import { LanguageConfigs, RuntimeEnvironment } from '../types';
+import { LanguageConfigs, RuntimeEnvironment, FileSystemHost, ServerInitializationOptions } from '../types';
 import { createSnapshots } from './snapshots';
 import { getInferredCompilerOptions } from './inferredCompilerOptions';
 
-const rootTsConfigNames = ['tsconfig.json', 'jsconfig.json'];
+export const rootTsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 
-let currentCwd = '';
-
-export function createWorkspaceProjects(
+export async function createWorkspaceProjects(
 	runtimeEnv: RuntimeEnvironment,
 	languageConfigs: LanguageConfigs,
+	fsHost: FileSystemHost,
 	rootPath: string,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLocalized: ts.MapLike<string> | undefined,
-	options: shared.ServerInitializationOptions,
+	options: ServerInitializationOptions,
 	documents: ReturnType<typeof createSnapshots>,
 	connection: vscode.Connection,
 	configHost: ReturnType<typeof createConfigurationHost> | undefined,
-	capabilities: vscode.ClientCapabilities,
 ) {
 
-	const rootTsConfigs = ts.sys.readDirectory(rootPath, rootTsConfigNames, undefined, ['**/*']);
-	const projects = shared.createPathMap<Project>();
 	let inferredProject: Project | undefined;
 
-	const _workspaceSys = new Proxy(ts.sys, {
-		get(target, prop) {
-			const fn = target[prop as keyof typeof target];
-			if (typeof fn === 'function') {
-				return new Proxy(fn, {
-					apply(target, thisArg, args) {
-						if (currentCwd !== rootPath) {
-							process.chdir(rootPath);
-							currentCwd = rootPath;
-						}
-						return (target as any).apply(thisArg, args);
-					}
-				});
-			}
-			return fn;
-		},
-	});
+	const sys = fsHost.getWorkspaceFileSystem(rootPath);
+	const inferOptions = await getInferredCompilerOptions(ts, configHost);
+	const projects = shared.createPathMap<Project>();
 
-	const fileExistsCache = new Map<string, boolean>();
-	const directoryExistsCache = new Map<string, boolean>();
-	const sysWithCache: Partial<typeof ts.sys> = {
-		fileExists(path: string) {
-			if (!fileExistsCache.has(path)) {
-				fileExistsCache.set(path, ts.sys.fileExists(path));
-			}
-			return fileExistsCache.get(path)!;
-		},
-		directoryExists(path: string) {
-			if (!directoryExistsCache.has(path)) {
-				directoryExistsCache.set(path, ts.sys.directoryExists(path));
-			}
-			return directoryExistsCache.get(path)!;
-		},
-	};
-	const sys: ts.System = capabilities.workspace?.didChangeWatchedFiles // don't cache fs result if client not supports file watcher
-		? new Proxy(_workspaceSys, {
-			get(target, prop) {
-				if (prop in sysWithCache) {
-					return sysWithCache[prop as keyof typeof sysWithCache];
+	let rootTsConfigs = sys.readDirectory(rootPath, rootTsConfigNames, undefined, ['**/*']);
+
+	const disposeWatch = fsHost.onDidChangeWatchedFiles(async params => {
+
+		let shouldUpdateTsconfigs = false;
+
+		for (const change of params.changes) {
+			const fileName = shared.uriToFsPath(change.uri);
+			if (rootTsConfigNames.includes(path.basename(fileName))) {
+				if (change.type === vscode.FileChangeType.Created) {
+					shouldUpdateTsconfigs = true;
 				}
-				return target[prop as keyof typeof target];
-			},
-		})
-		: _workspaceSys;
+				else if ((change.type === vscode.FileChangeType.Changed || change.type === vscode.FileChangeType.Deleted) && projects.fsPathHas(fileName)) {
+					(await projects.fsPathGet(fileName))?.dispose();
+					projects.fsPathDelete(fileName);
+				}
+			}
+		}
+
+		if (shouldUpdateTsconfigs) {
+			rootTsConfigs = sys.readDirectory(rootPath, rootTsConfigNames, undefined, ['**/*']);
+		}
+	});
 
 	return {
 		projects,
@@ -80,10 +59,22 @@ export function createWorkspaceProjects(
 		getProjectAndTsConfig,
 		getProjectByCreate,
 		getInferredProject,
-		getInferredProjectDontCreate: () => inferredProject,
-		clearFsCache: () => {
-			fileExistsCache.clear();
-			directoryExistsCache.clear();
+		async reload() {
+			(await inferredProject)?.dispose();
+			inferredProject = undefined;
+			for (const project of projects.values()) {
+				(await project).dispose();
+			}
+			projects.clear();
+		},
+		async dispose() {
+			(await inferredProject)?.dispose();
+			inferredProject = undefined;
+			for (const project of projects.values()) {
+				(await project).dispose();
+			}
+			projects.clear();
+			disposeWatch();
 		},
 	};
 
@@ -97,16 +88,17 @@ export function createWorkspaceProjects(
 			};
 		}
 	}
-	async function getInferredProject() {
+	function getInferredProject() {
 		if (!inferredProject) {
 			inferredProject = createProject(
 				runtimeEnv,
 				languageConfigs,
-				ts,
+				fsHost,
 				sys,
+				ts,
 				options,
 				rootPath,
-				await getInferredCompilerOptions(ts, configHost),
+				inferOptions,
 				tsLocalized,
 				documents,
 				connection,
@@ -191,7 +183,7 @@ export function createWorkspaceProjects(
 					let tsConfigPath = projectReference.path;
 
 					// fix https://github.com/johnsoncodehk/volar/issues/712
-					if (!sys.fileExists(tsConfigPath) && sys.directoryExists(tsConfigPath)) {
+					if (!sys.fileExists(tsConfigPath)) {
 						const newTsConfigPath = path.join(tsConfigPath, 'tsconfig.json');
 						const newJsConfigPath = path.join(tsConfigPath, 'jsconfig.json');
 						if (sys.fileExists(newTsConfigPath)) {
@@ -231,8 +223,9 @@ export function createWorkspaceProjects(
 			project = createProject(
 				runtimeEnv,
 				languageConfigs,
-				ts,
+				fsHost,
 				sys,
+				ts,
 				options,
 				path.dirname(tsConfig),
 				tsConfig,

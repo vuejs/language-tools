@@ -2,7 +2,6 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import * as vscode from 'vscode-languageserver-protocol';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { posix as path } from 'path';
 import * as PConst from '../protocol.const';
 import { parseKindModifier } from '../utils/modifiers';
 import * as typeConverters from '../utils/typeConverters';
@@ -69,8 +68,8 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const rootPath = languageService.getProgram()?.getCompilerOptions().rootDir ?? '';
 		const document = getTextDocument(shared.fsPathToUri(item.file))!; // TODO
 		const useFileName = isSourceFileItem(item);
-		const name = useFileName ? path.basename(item.file) : item.name;
-		const detail = useFileName ? upath.relative(rootPath, path.dirname(item.file)) : item.containerName ?? '';
+		const name = useFileName ? upath.basename(item.file) : item.name;
+		const detail = useFileName ? upath.relative(rootPath, upath.dirname(item.file)) : item.containerName ?? '';
 		const result: vscode.CallHierarchyItem = {
 			kind: typeConverters.SymbolKind.fromProtocolScriptElementKind(item.kind),
 			name,

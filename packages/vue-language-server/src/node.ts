@@ -1,12 +1,13 @@
-import * as vscode from 'vscode-languageserver/node';
-import { createLanguageServer } from './common';
+import * as shared from '@volar/shared';
+import * as fs from 'fs';
 import { configure as configureHttpRequests } from 'request-light';
-import fileSchemaRequestHandler from './schemaRequestHandlers/file';
-import httpSchemaRequestHandler from './schemaRequestHandlers/http';
 import * as path from 'upath';
 import * as html from 'vscode-html-languageservice';
-import * as fs from 'fs';
-import * as shared from '@volar/shared';
+import * as vscode from 'vscode-languageserver/node';
+import { createLanguageServer } from './common';
+import fileSchemaRequestHandler from './schemaRequestHandlers/file';
+import httpSchemaRequestHandler from './schemaRequestHandlers/http';
+import { createNodeFileSystemHost } from './utils/nodeFileSystemHost';
 
 const connection = vscode.createConnection(vscode.ProposedFeatures.all);
 
@@ -29,6 +30,7 @@ createLanguageServer(connection, {
 	onDidChangeConfiguration(settings) {
 		configureHttpRequests(settings.http && settings.http.proxy, settings.http && settings.http.proxyStrictSSL);
 	},
+	createFileSystemHost: createNodeFileSystemHost,
 	fileSystemProvide: {
 		stat: (uri) => {
 			return new Promise<html.FileStat>((resolve, reject) => {

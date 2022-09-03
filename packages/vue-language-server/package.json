@@ -1,6 +1,7 @@
 {
 	"name": "@volar/vue-language-server",
 	"version": "0.40.5",
+	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
 		"out/**/*.js",

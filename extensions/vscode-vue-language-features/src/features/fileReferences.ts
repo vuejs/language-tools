@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { BaseLanguageClient } from 'vscode-languageclient';
-import * as shared from '@volar/shared';
 import * as nls from 'vscode-nls';
+import { FindFileReferenceRequest } from '@volar/vue-language-server';
 
 const localize = nls.loadMessageBundle();
 
@@ -21,7 +21,7 @@ export async function register(cmd: string, client: BaseLanguageClient) {
       			  uri = editor.document.uri;
       			}
 
-			const response = await client.sendRequest(shared.FindFileReferenceRequest.type, { textDocument: { uri: uri.toString() } });
+			const response = await client.sendRequest(FindFileReferenceRequest.type, { textDocument: { uri: uri.toString() } });
 			if (!response) {
 				return;
 			}

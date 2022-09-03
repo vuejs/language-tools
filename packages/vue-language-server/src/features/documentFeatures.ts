@@ -1,8 +1,8 @@
-import * as shared from '@volar/shared';
 import type * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vue from '@volar/vue-language-service';
 import { createSnapshots } from '../utils/snapshots';
+import { AutoInsertRequest } from '../requests';
 
 export function register(
 	connection: vscode.Connection,
@@ -61,7 +61,7 @@ export function register(
 			return vueDs.getColorPresentations(document, handler.color, handler.range);
 		});
 	});
-	connection.onRequest(shared.AutoInsertRequest.type, async handler => {
+	connection.onRequest(AutoInsertRequest.type, async handler => {
 		return worker(handler.textDocument.uri, document => {
 			return vueDs.doAutoInsert(document, handler.position, handler.options);
 		});

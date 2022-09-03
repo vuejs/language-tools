@@ -1,6 +1,5 @@
 import * as vscode from 'vscode-languageserver-protocol';
 import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
-import * as shared from '@volar/shared';
 import { VueDocument } from '../vueDocuments';
 
 const showReferencesCommand = 'volar.show-references';
@@ -92,7 +91,7 @@ export default function (options: {
 
 				const [uri, position, references] = args as CommandArgs;
 
-				context.sendNotification(shared.ShowReferencesNotification.type, {
+				context.showReferences({
 					textDocument: { uri },
 					position,
 					references,

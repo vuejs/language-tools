@@ -259,7 +259,6 @@ export function createLanguageService(
 	return apis;
 
 	function getDocumentContext() {
-		const compilerHost = ts.createCompilerHost(vueLsHost.getCompilationSettings());
 		const documentContext: html.DocumentContext = {
 			resolveReference(ref: string, base: string) {
 
@@ -268,7 +267,7 @@ export function createLanguageService(
 					ref,
 					isUri ? shared.uriToFsPath(base) : base,
 					vueLsHost.getCompilationSettings(),
-					compilerHost,
+					vueLsHost,
 				);
 				const failedLookupLocations: string[] = (resolveResult as any).failedLookupLocations;
 				const dirs = new Set<string>();

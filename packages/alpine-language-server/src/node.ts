@@ -1,5 +1,6 @@
 import * as vscode from 'vscode-languageserver/node';
 import { createLanguageServer } from '@volar/vue-language-server/out/common';
+import { createNodeFileSystemHost } from '@volar/vue-language-server/out/utils/nodeFileSystemHost';
 import * as alpine from '@volar/alpine-language-service';
 import * as path from 'upath';
 
@@ -19,6 +20,7 @@ createLanguageServer(connection, {
 	schemaRequestHandlers: {},
 	onDidChangeConfiguration(settings) { },
 	fileSystemProvide: undefined,
+	createFileSystemHost: createNodeFileSystemHost,
 }, {
 	definitelyExts: ['.html'],
 	indeterminateExts: [],

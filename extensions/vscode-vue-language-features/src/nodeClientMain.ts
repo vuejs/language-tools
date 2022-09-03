@@ -68,7 +68,7 @@ export function activate(context: vscode.ExtensionContext) {
 		await client.start();
 
 		return client;
-	}, 'node');
+	});
 }
 
 export function deactivate(): Thenable<any> | undefined {

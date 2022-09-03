@@ -25,11 +25,11 @@ require('esbuild').build({
 					return { path: path }
 				})
 				build.onResolve({ filter: /\/tsVersion$/ }, args => {
-					const path = require.resolve(args.path.replace('/tsVersion', '/tsVersionEmpty'), { paths: [args.resolveDir] })
+					const path = require.resolve(args.path.replace('/tsVersion', '/empty'), { paths: [args.resolveDir] })
 					return { path: path }
 				})
 				build.onResolve({ filter: /\/preview$/ }, args => {
-					const path = require.resolve(args.path.replace('/preview', '/tsVersionEmpty'), { paths: [args.resolveDir] })
+					const path = require.resolve(args.path.replace('/preview', '/empty'), { paths: [args.resolveDir] })
 					return { path: path }
 				})
 			},
@@ -56,6 +56,7 @@ require('esbuild').build({
 	external: ['fs'],
 	format: 'iife',
 	tsconfig: '../../tsconfig.build.json',
+	inject: ['./scripts/process-shim.js'],
 	minify: process.argv.includes('--minify'),
 	watch: process.argv.includes('--watch'),
 	plugins: [

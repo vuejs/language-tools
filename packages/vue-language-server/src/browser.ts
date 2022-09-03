@@ -1,8 +1,9 @@
+import { configure as configureHttpRequests } from 'request-light';
+import * as ts from 'typescript/lib/tsserverlibrary'; // bundle typescript lib in web
 import * as vscode from 'vscode-languageserver/browser';
 import { createLanguageServer } from './common';
-import { configure as configureHttpRequests } from 'request-light';
 import httpSchemaRequestHandler from './schemaRequestHandlers/http';
-import * as ts from 'typescript/lib/tsserverlibrary'; // bundle typescript lib in web
+import { createWebFileSystemHost } from './utils/webFileSystemHost';
 
 const messageReader = new vscode.BrowserMessageReader(self);
 const messageWriter = new vscode.BrowserMessageWriter(self);
@@ -23,4 +24,5 @@ createLanguageServer(connection, {
 		configureHttpRequests(settings.http && settings.http.proxy, settings.http && settings.http.proxyStrictSSL);
 	},
 	fileSystemProvide: undefined, // TODO
+	createFileSystemHost: createWebFileSystemHost,
 });

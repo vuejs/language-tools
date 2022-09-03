@@ -29,7 +29,11 @@ export interface ExecuteCommandContext {
 		report(percentage: number, message: string): void;
 		done(): void;
 	};
-	sendNotification<P>(type: vscode.NotificationType<P>, params: P): Promise<void>;
+	showReferences(params: {
+		textDocument: vscode.TextDocumentIdentifier,
+		position: vscode.Position,
+		references: vscode.Location[],
+	}): Promise<void>;
 	applyEdit(paramOrEdit: vscode.ApplyWorkspaceEditParams | vscode.WorkspaceEdit): Promise<vscode.ApplyWorkspaceEditResult>;
 }
 

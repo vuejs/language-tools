@@ -1,4 +1,5 @@
 import * as vscode from 'vscode-languageserver-protocol';
+import type * as html from 'vscode-html-languageservice';
 
 /**
  * Client Requests
@@ -83,11 +84,11 @@ export namespace AutoInsertRequest {
 }
 
 export namespace VerifyAllScriptsNotification {
-	export const type = new vscode.NotificationType0('volar.action.verifyAllScripts');
+	export const type = new vscode.NotificationType<vscode.TextDocumentIdentifier>('volar.action.verifyAllScripts');
 }
 
 export namespace WriteVirtualFilesNotification {
-	export const type = new vscode.NotificationType0('volar.action.writeVirtualFiles');
+	export const type = new vscode.NotificationType<vscode.TextDocumentIdentifier>('volar.action.writeVirtualFiles');
 }
 
 export namespace ReloadProjectNotification {
@@ -102,4 +103,20 @@ export namespace DetectDocumentNameCasesRequest {
 	} | null | undefined;
 	export type ErrorType = never;
 	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('volar/getTagNameCaseServer');
+}
+
+/**
+ * FS request for browser
+ */
+
+export namespace FsStatRequest {
+	export const type = new vscode.RequestType<vscode.DocumentUri, html.FileStat | undefined, unknown>('fs/stat');
+}
+
+export namespace FsReadFileRequest {
+	export const type = new vscode.RequestType<vscode.DocumentUri, string | undefined, unknown>('fs/readFile');
+}
+
+export namespace FsReadDirectoryRequest {
+	export const type = new vscode.RequestType<vscode.DocumentUri, [string, html.FileType][], unknown>('fs/readDirectory');
 }

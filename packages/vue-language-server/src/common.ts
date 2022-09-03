@@ -1,8 +1,7 @@
-import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-service';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
-import { LanguageConfigs, RuntimeEnvironment } from './types';
+import { LanguageConfigs, RuntimeEnvironment, ServerInitializationOptions } from './types';
 import { createConfigurationHost } from './utils/configurationHost';
 import { createSnapshots } from './utils/snapshots';
 import { createWorkspaces } from './utils/workspaces';
@@ -18,14 +17,14 @@ export function createLanguageServer(
 	},
 ) {
 
-	let clientCapabilities: vscode.ClientCapabilities;
-	let projects: ReturnType<typeof createWorkspaces>;
+	let params: vscode.InitializeParams;
+	let options: ServerInitializationOptions;
+	let folders: string[] = [];
 
-	connection.onInitialize(async params => {
+	connection.onInitialize(async _params => {
 
-		const options: shared.ServerInitializationOptions = params.initializationOptions as any;
-		clientCapabilities = params.capabilities;
-		let folders: string[] = [];
+		params = _params;
+		options = params.initializationOptions as any;
 		let rootUri: URI;
 
 		if (params.capabilities.workspace?.workspaceFolders && params.workspaceFolders) {
@@ -46,6 +45,18 @@ export function createLanguageServer(
 				textDocumentSync: vscode.TextDocumentSyncKind.Incremental,
 			},
 		};
+
+		if (options.documentFeatures) {
+			(await import('./registers/registerDocumentFeatures')).register(options.documentFeatures, result.capabilities);
+		}
+		if (options.languageFeatures) {
+			(await import('./registers/registerlanguageFeatures')).register(options.languageFeatures!, vue.getSemanticTokenLegend(), result.capabilities, languageConfigs);
+		}
+
+		return result;
+	});
+	connection.onInitialized(async () => {
+
 		const ts = runtimeEnv.loadTypescript(options);
 		const configHost = params.capabilities.workspace?.configuration ? createConfigurationHost(folders, connection) : undefined;
 
@@ -59,22 +70,22 @@ export function createLanguageServer(
 			);
 
 			(await import('./features/documentFeatures')).register(connection, documents, documentService, options.documentFeatures.allowedLanguageIds);
-			(await import('./registers/registerDocumentFeatures')).register(options.documentFeatures, result.capabilities);
 		}
 
 		if (options.languageFeatures) {
 
 			const tsLocalized = runtimeEnv.loadTypescriptLocalized(options);
-			projects = createWorkspaces(
+			const fsHost = runtimeEnv.createFileSystemHost(ts, connection, params.capabilities);
+			const projects = createWorkspaces(
 				runtimeEnv,
 				languageConfigs,
+				fsHost,
+				configHost,
 				ts,
 				tsLocalized,
 				options,
 				documents,
 				connection,
-				configHost,
-				params.capabilities,
 			);
 
 			for (const root of folders) {
@@ -83,29 +94,24 @@ export function createLanguageServer(
 
 			(await import('./features/customFeatures')).register(connection, projects);
 			(await import('./features/languageFeatures')).register(connection, projects, options.languageFeatures, params);
-			(await import('./registers/registerlanguageFeatures')).register(options.languageFeatures!, vue.getSemanticTokenLegend(), result.capabilities, languageConfigs);
+
+			connection.workspace.onDidChangeWorkspaceFolders(e => {
+
+				const added = e.added.map(folder => URI.parse(folder.uri)).filter(uri => uri.scheme === 'file').map(uri => uri.fsPath);
+				const removed = e.removed.map(folder => URI.parse(folder.uri)).filter(uri => uri.scheme === 'file').map(uri => uri.fsPath);
+
+				for (const folder of added) {
+					projects.add(folder);
+				}
+				for (const folder of removed) {
+					projects.remove(folder);
+				}
+			});
 		}
 
-		return result;
-	});
-	connection.onInitialized(() => {
-
-		if (clientCapabilities.workspace?.didChangeConfiguration?.dynamicRegistration) { // TODO
+		if (params.capabilities.workspace?.didChangeConfiguration?.dynamicRegistration) { // TODO
 			connection.client.register(vscode.DidChangeConfigurationNotification.type);
 		}
-
-		connection.workspace.onDidChangeWorkspaceFolders(e => {
-
-			const added = e.added.map(folder => URI.parse(folder.uri)).filter(uri => uri.scheme === 'file').map(uri => uri.fsPath);
-			const removed = e.removed.map(folder => URI.parse(folder.uri)).filter(uri => uri.scheme === 'file').map(uri => uri.fsPath);
-
-			for (const folder of added) {
-				projects.add(folder);
-			}
-			for (const folder of removed) {
-				projects.remove(folder);
-			}
-		});
 	});
 	connection.listen();
 

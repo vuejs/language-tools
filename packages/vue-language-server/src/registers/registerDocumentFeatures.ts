@@ -1,8 +1,8 @@
-import * as shared from '@volar/shared';
 import * as vscode from 'vscode-languageserver';
+import { ServerInitializationOptions } from '../types';
 
 export function register(
-	features: NonNullable<shared.ServerInitializationOptions['documentFeatures']>,
+	features: NonNullable<ServerInitializationOptions['documentFeatures']>,
 	server: vscode.ServerCapabilities,
 ) {
 	if (features.selectionRange) {
