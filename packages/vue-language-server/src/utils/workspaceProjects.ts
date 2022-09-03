@@ -29,20 +29,20 @@ export async function createWorkspaceProjects(
 	const sys = fsHost.getWorkspaceFileSystem(rootUri);
 	const inferOptions = await getInferredCompilerOptions(ts, configHost);
 	const projects = shared.createUriAndPathMap<Project>(rootUri);
-	const rootTsConfigs = new Set(sys.readDirectory(rootUri.path, rootTsConfigNames, undefined, ['**/*']));
+	const rootTsConfigs = new Set(sys.readDirectory(rootUri.fsPath, rootTsConfigNames, undefined, ['**/*']));
 
 	const disposeWatch = fsHost.onDidChangeWatchedFiles(async (params, reason) => {
 		const disposes: Promise<any>[] = [];
 		for (const change of params.changes) {
 			if (rootTsConfigNames.includes(path.basename(change.uri))) {
 				if (change.type === vscode.FileChangeType.Created) {
-					if (change.uri.toLowerCase().startsWith(rootUri.toString().toLowerCase())) {
-						rootTsConfigs.add(URI.parse(change.uri).path);
+					if (shared.isFileInDir(URI.parse(change.uri).fsPath, rootUri.fsPath)) {
+						rootTsConfigs.add(URI.parse(change.uri).fsPath);
 					}
 				}
 				else if ((change.type === vscode.FileChangeType.Changed || change.type === vscode.FileChangeType.Deleted) && projects.uriHas(change.uri)) {
 					if (change.type === vscode.FileChangeType.Deleted) {
-						rootTsConfigs.delete(change.uri);
+						rootTsConfigs.delete(URI.parse(change.uri).fsPath);
 					}
 					const _project = projects.uriGet(change.uri);
 					projects.uriDelete(change.uri);
@@ -101,7 +101,7 @@ export async function createWorkspaceProjects(
 				ts,
 				options,
 				rootUri,
-				rootUri.path,
+				rootUri.fsPath,
 				inferOptions,
 				tsLocalized,
 				documents,
@@ -122,12 +122,12 @@ export async function createWorkspaceProjects(
 			let matches: string[] = [];
 
 			for (const rootTsConfig of rootTsConfigs) {
-				if (uri.path.toLowerCase().startsWith(path.dirname(rootTsConfig).toLowerCase())) {
+				if (shared.isFileInDir(uri.fsPath, path.dirname(rootTsConfig))) {
 					matches.push(rootTsConfig);
 				}
 			}
 
-			matches = matches.sort((a, b) => sortTsConfigs(uri.path, a, b));
+			matches = matches.sort((a, b) => sortTsConfigs(uri.fsPath, a, b));
 
 			if (matches.length) {
 				await getParsedCommandLine(matches[0]);
@@ -137,8 +137,8 @@ export async function createWorkspaceProjects(
 			return findTsconfig(async tsconfig => {
 				const parsedCommandLine = await getParsedCommandLine(tsconfig);
 				// use toLowerCase to fix https://github.com/johnsoncodehk/volar/issues/1125
-				const fileNames = new Set(parsedCommandLine.fileNames.map(fileName => fileName.toLowerCase()));
-				return fileNames.has(uri.path.toLowerCase());
+				const fileNames = new Set(parsedCommandLine.fileNames.map(fileName => shared.normalizeFileName(fileName.toLowerCase())));
+				return fileNames.has(shared.normalizeFileName(uri.fsPath.toLowerCase()));
 			});
 		}
 		function findIndirectReferenceTsconfig() {
@@ -153,7 +153,7 @@ export async function createWorkspaceProjects(
 
 			const checked = new Set<string>();
 
-			for (const rootTsConfig of [...rootTsConfigs].sort((a, b) => sortTsConfigs(uri.path, a, b))) {
+			for (const rootTsConfig of [...rootTsConfigs].sort((a, b) => sortTsConfigs(uri.fsPath, a, b))) {
 				const project = await projects.pathGet(rootTsConfig);
 				if (project) {
 
@@ -244,10 +244,10 @@ export async function createWorkspaceProjects(
 	}
 }
 
-export function sortTsConfigs(uri: string, a: string, b: string) {
+export function sortTsConfigs(fsPath: string, a: string, b: string) {
 
-	const inA = uri.toLowerCase().startsWith(path.dirname(a).toLowerCase());
-	const inB = uri.toLowerCase().startsWith(path.dirname(b).toLowerCase());
+	const inA = shared.isFileInDir(fsPath, path.dirname(a));
+	const inB = shared.isFileInDir(fsPath, path.dirname(b));
 
 	if (inA !== inB) {
 		const aWeight = inA ? 1 : 0;

@@ -34,9 +34,9 @@ export function createWebFileSystemHost(
 
 	connection.onDidChangeWatchedFiles(params => {
 		for (const change of params.changes) {
-			const fileName = URI.parse(change.uri).path;
-			const dir = getDir(path.dirname(fileName));
-			const name = path.basename(fileName);
+			const fsPath = URI.parse(change.uri).fsPath;
+			const dir = getDir(path.dirname(fsPath));
+			const name = path.basename(fsPath);
 			if (change.type === vscode.FileChangeType.Created) {
 				dir.fileTypes.set(name, FileType.File);
 			}
@@ -63,7 +63,7 @@ export function createWebFileSystemHost(
 			return {
 				newLine: '\n',
 				useCaseSensitiveFileNames: false,
-				getCurrentDirectory: () => rootUri.path,
+				getCurrentDirectory: () => rootUri.fsPath,
 				fileExists,
 				readFile,
 				readDirectory,
@@ -72,52 +72,53 @@ export function createWebFileSystemHost(
 				realpath: path => path, // TODO: cannot implement with vscode
 			};
 
-			function resolvePath(fileName: string) {
-				if (currentCwd !== rootUri.path) {
-					process.chdir(rootUri.path);
-					currentCwd = rootUri.path;
+			function resolvePath(fsPath: string) {
+				if (currentCwd !== rootUri.fsPath) {
+					process.chdir(rootUri.fsPath);
+					currentCwd = rootUri.fsPath;
 				}
-				return path.resolve(fileName);
+				return path.resolve(fsPath);
 			}
 
-			function fileExists(fileName: string): boolean {
-				fileName = resolvePath(fileName);
-				const dir = getDir(path.dirname(fileName));
-				const name = path.basename(fileName);
+			function fileExists(fsPath: string): boolean {
+				fsPath = resolvePath(fsPath);
+				const dir = getDir(path.dirname(fsPath));
+				const name = path.basename(fsPath);
 				if (dir.fileTypes.has(name)) {
 					return dir.fileTypes.get(name) === FileType.File || dir.fileTypes.get(name) === FileType.SymbolicLink;
 				}
 				dir.fileTypes.set(name, undefined);
-				addPending(statAsync(fileName, dir));
+				addPending(statAsync(fsPath, dir));
 				return false;
 			}
 
-			function readFile(fileName: string) {
-				fileName = resolvePath(fileName);
-				const dir = getDir(path.dirname(fileName));
-				const name = path.basename(fileName);
+			function readFile(fsPath: string) {
+				fsPath = resolvePath(fsPath);
+				const dir = getDir(path.dirname(fsPath));
+				const name = path.basename(fsPath);
 				if (dir.fileTexts.has(name)) {
 					return dir.fileTexts.get(name);
 				}
 				dir.fileTexts.set(name, '');
-				addPending(readFileAsync(fileName, dir));
+				addPending(readFileAsync(fsPath, dir));
 				return '';
 			}
 
 			function readDirectory(
-				dirPath: string,
+				fsPath: string,
 				extensions?: readonly string[],
 				exclude?: readonly string[],
 				include?: readonly string[],
 				depth?: number,
 			) {
+				fsPath = resolvePath(fsPath);
 				return matchFiles(
-					dirPath,
+					fsPath,
 					extensions,
 					exclude,
 					include,
 					false,
-					rootUri.path,
+					rootUri.fsPath,
 					depth,
 					dirPath => {
 
@@ -140,33 +141,33 @@ export function createWebFileSystemHost(
 			}
 
 			// for import path completion
-			function getDirectories(dirPath: string) {
+			function getDirectories(fsPath: string) {
 
-				dirPath = resolvePath(dirPath);
-				const dir = getDir(dirPath);
+				fsPath = resolvePath(fsPath);
+
+				const dir = getDir(fsPath);
 				const files = [...dir.fileTypes];
 
 				if (!dir.searched) {
 					dir.searched = true;
-					addPending(readDirectoryAsync(dirPath, dir));
+					addPending(readDirectoryAsync(fsPath, dir));
 				}
 
 				return files.filter(file => file[1] === FileType.Directory).map(file => file[0]);
 			}
 
-			function getFilePathUri(path: string) {
-				return URI.from({
+			function getFsPathUri(fsPath: string) {
+				return URI.file(fsPath).with({
 					scheme: rootUri.scheme,
 					authority: rootUri.authority,
-					path: path,
 				});
 			}
 
-			async function statAsync(fileName: string, dir: Dir) {
-				const uri = getFilePathUri(fileName);
+			async function statAsync(fsPath: string, dir: Dir) {
+				const uri = getFsPathUri(fsPath);
 				const result = await connection.sendRequest(FsStatRequest.type, uri.toString());
 				if (result?.type === FileType.File || result?.type === FileType.SymbolicLink) {
-					const name = path.basename(fileName);
+					const name = path.basename(fsPath);
 					dir.fileTypes.set(name, result.type);
 					changes.push({
 						uri: uri.toString(),
@@ -175,11 +176,11 @@ export function createWebFileSystemHost(
 				}
 			}
 
-			async function readFileAsync(fileName: string, dir: Dir) {
-				const uri = getFilePathUri(fileName);
+			async function readFileAsync(fsPath: string, dir: Dir) {
+				const uri = getFsPathUri(fsPath);
 				const text = await connection.sendRequest(FsReadFileRequest.type, uri.toString());
 				if (text) {
-					const name = path.basename(fileName);
+					const name = path.basename(fsPath);
 					dir.fileTexts.set(name, text);
 					changes.push({
 						uri: uri.toString(),
@@ -188,13 +189,13 @@ export function createWebFileSystemHost(
 				}
 			}
 
-			async function readDirectoryAsync(dirPath: string, dir: Dir) {
-				const uri = getFilePathUri(dirPath);
+			async function readDirectoryAsync(fsPath: string, dir: Dir) {
+				const uri = getFsPathUri(fsPath);
 				const result = await connection.sendRequest(FsReadDirectoryRequest.type, uri.toString());
 				for (const [name, fileType] of result) {
 					if (dir.fileTypes.get(name) !== fileType && (fileType === FileType.File || fileType === FileType.SymbolicLink)) {
 						changes.push({
-							uri: getFilePathUri(path.join(dirPath, name)).toString(),
+							uri: getFsPathUri(path.join(fsPath, name)).toString(),
 							type: vscode.FileChangeType.Created,
 						});
 					}

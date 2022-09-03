@@ -163,8 +163,8 @@ export function createWorkspaces(
 	async function getProject(uri: string) {
 
 		const rootUris = [...workspaces.keys()]
-			.filter(rootUri => uri.toLowerCase().startsWith(rootUri.toLowerCase()))
-			.sort((a, b) => sortTsConfigs(uri, a, b));
+			.filter(rootUri => shared.isFileInDir(URI.parse(uri).fsPath, URI.parse(rootUri).fsPath))
+			.sort((a, b) => sortTsConfigs(URI.parse(uri).fsPath, URI.parse(a).fsPath, URI.parse(b).fsPath));
 
 		for (const rootUri of rootUris) {
 			const workspace = await workspaces.get(rootUri);

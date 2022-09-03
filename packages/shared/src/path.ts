@@ -3,7 +3,7 @@ import * as upath from 'upath';
 import type { DocumentUri } from 'vscode-languageserver-textdocument';
 
 export function getPathOfUri(uri: DocumentUri) {
-	return URI.parse(uri).path;
+	return upath.toUnix(URI.parse(uri).fsPath);
 }
 
 export function normalizeFileName(fsPath: string) {
@@ -15,9 +15,13 @@ export function normalizeUri(uri: string) {
 }
 
 export function getUriByPath(rootUri: URI, path: string) {
-	return URI.from({
+	return URI.file(path).with({
 		scheme: rootUri.scheme,
 		authority: rootUri.authority,
-		path,
 	}).toString();
+}
+
+export function isFileInDir(fileName: string, dir: string) {
+	const relative = upath.relative(dir, fileName);
+	return !!relative && !relative.startsWith('..') && !upath.isAbsolute(relative);
 }

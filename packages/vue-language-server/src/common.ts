@@ -62,7 +62,7 @@ export function createLanguageServer(
 				ts,
 				configHost,
 				runtimeEnv.fileSystemProvide,
-				loadCustomPlugins(roots[0].path), // TODO: handle multiple roots
+				loadCustomPlugins(roots[0].fsPath), // TODO: handle multiple roots
 				roots[0],
 			);
 
