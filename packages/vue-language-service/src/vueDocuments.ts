@@ -1,7 +1,7 @@
 import * as vue from '@volar/vue-language-core';
 import * as shared from '@volar/shared';
-import { computed } from '@vue/reactivity';
-import { SourceMapBase, Mapping } from '@volar/source-map';
+import { computed, ComputedRef } from '@vue/reactivity';
+import { SourceMapBase } from '@volar/source-map';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { EmbeddedFileMappingData, TeleportMappingData, TeleportSideData } from '@volar/vue-language-core';
 import { walkElementNodes } from '@volar/vue-language-core';
@@ -20,14 +20,13 @@ export interface ITemplateScriptData {
 	componentItems: vscode.CompletionItem[];
 }
 
-export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
+export class SourceMap<Data = undefined> {
 
 	constructor(
 		public sourceDocument: TextDocument,
 		public mappedDocument: TextDocument,
-		public _mappings?: Mapping<Data>[],
+		public base: SourceMapBase<Data> = new SourceMapBase(),
 	) {
-		super(_mappings);
 	}
 
 	public getSourceRange<T extends number | vscode.Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
@@ -57,7 +56,7 @@ export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
 		const startOffset = startIsNumber ? start : fromDoc.offsetAt(start);
 		const endOffset = endIsNumber ? end : fromDoc.offsetAt(end);
 
-		for (const mapped of super.getRanges(startOffset, endOffset, sourceToTarget, filter)) {
+		for (const mapped of this.base.getRanges(startOffset, endOffset, sourceToTarget, filter)) {
 			yield getMapped(mapped);
 		}
 
@@ -81,7 +80,7 @@ export class EmbeddedDocumentSourceMap extends SourceMap<EmbeddedFileMappingData
 		public mappedDocument: TextDocument,
 		_sourceMap: vue.EmbeddedFileSourceMap,
 	) {
-		super(sourceDocument, mappedDocument, _sourceMap.mappings);
+		super(sourceDocument, mappedDocument, _sourceMap);
 	}
 }
 
@@ -91,7 +90,7 @@ export class TeleportSourceMap extends SourceMap<TeleportMappingData> {
 		public document: TextDocument,
 		teleport: vue.Teleport,
 	) {
-		super(document, document, teleport.mappings);
+		super(document, document, teleport);
 	}
 	*findTeleports(start: vscode.Position, end?: vscode.Position, filter?: (data: TeleportSideData) => boolean) {
 		for (const [teleRange, data] of this.getMappedRanges(start, end, filter ? data => filter(data.toTarget) : undefined)) {
@@ -181,7 +180,7 @@ export function parseVueDocuments(
 
 			if (sourceMap) {
 
-				if (sourceMapFilter && !sourceMapFilter(sourceMap))
+				if (sourceMapFilter && !sourceMapFilter(sourceMap.base))
 					return;
 
 				for (const vueRange of sourceMap.getSourceRanges(start, end, filter)) {
@@ -216,9 +215,14 @@ export function parseVueDocument(
 	tsLs: ts2.LanguageService | undefined,
 ) {
 
-	// cache map
 	let documentVersion = 0;
+	let templateScriptData: ITemplateScriptData = {
+		components: [],
+		componentItems: [],
+	};
 	const embeddedDocumentVersions = new Map<string, number>();
+
+	// cache map
 	const embeddedDocumentsMap = useCacheMap<vue.EmbeddedFile, TextDocument>(embeddedFile => {
 
 		const uri = shared.getUriByPath(rootUri, embeddedFile.fileName);
@@ -241,12 +245,8 @@ export function parseVueDocument(
 			embedded.sourceMap,
 		);
 	});
-	let templateScriptData: ITemplateScriptData = {
-		components: [],
-		componentItems: [],
-	};
 
-	// reactivity
+	// computed
 	const document = computed(() => TextDocument.create(
 		shared.getUriByPath(rootUri, vueFile.fileName),
 		vueFile.fileName.endsWith('.md') ? 'markdown' : 'vue',
@@ -254,7 +254,12 @@ export function parseVueDocument(
 		vueFile.text,
 	));
 	const sourceMaps = computed(() => {
-		return vueFile.allEmbeddeds.map(embedded => sourceMapsMap.get(embedded));
+		return vueFile.allEmbeddeds.map(embedded => new EmbeddedDocumentSourceMap(
+			embedded.file,
+			document.value,
+			embeddedDocumentsMap.get(embedded.file),
+			embedded.sourceMap,
+		));
 	});
 	const teleports = computed(() => {
 		return vueFile.teleports.map(teleportAndFile => {
@@ -319,7 +324,6 @@ export function parseVueDocument(
 		getTemplateTagsAndAttrs: () => templateTagsAndAttrs.value,
 	};
 
-
 	async function getTemplateData() {
 
 		const options: ts.GetCompletionsAtPositionOptions = {
@@ -355,11 +359,9 @@ export function parseVueDocument(
 	}
 }
 
-export function useCacheMap<T extends object, K>(
-	parse: (t: T) => K,
-) {
+export function useCacheMap<T extends object, K>(parse: (t: T) => K) {
 
-	const cache = new WeakMap<T, K>();
+	const cache = new WeakMap<T, ComputedRef<K>>();
 
 	return {
 		get,
@@ -371,10 +373,10 @@ export function useCacheMap<T extends object, K>(
 
 		if (!result) {
 
-			result = parse(source);
+			result = computed(() => parse(source));
 			cache.set(source, result);
 		}
 
-		return result;
+		return result.value;
 	}
 }

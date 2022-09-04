@@ -34,7 +34,7 @@ export default function (options: {
 					const result: vscode.CodeLens[] = [];
 
 					for (const sourceMap of vueDocument.getSourceMaps()) {
-						for (const mapping of sourceMap.mappings) {
+						for (const mapping of sourceMap.base.mappings) {
 
 							if (!mapping.data.capabilities.referencesCodeLens)
 								continue;

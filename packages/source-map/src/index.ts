@@ -165,7 +165,7 @@ export class SourceMapBase<Data = undefined> {
 		return this.getRanges(start, end ?? start, true, filter);
 	}
 
-	protected * getRanges(startOffset: number, endOffset: number, sourceToTarget: boolean, filter?: (data: Data) => boolean) {
+	public * getRanges(startOffset: number, endOffset: number, sourceToTarget: boolean, filter?: (data: Data) => boolean) {
 
 		const memo = this.__memo.value;
 		const _memo = sourceToTarget ? memo.source : memo.mapped;

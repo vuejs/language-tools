@@ -197,15 +197,9 @@ export function createLanguageService(
 	const scriptTsPlugin = useTsPlugins(
 		tsLs,
 		false,
-		uri => (uri.indexOf('.__VLS_template') === -1 ? {
+		uri => ({
 			// includeCompletionsForModuleExports: true, // set in server/src/tsConfigs.ts
 			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
-		} : {
-			// includeCompletionsForModuleExports: true, // set in server/src/tsConfigs.ts
-			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
-			quotePreference: 'single',
-			includeCompletionsForModuleExports: false,
-			includeCompletionsForImportStatements: false,
 		}),
 	);
 	const autoDotValuePlugin = useAutoDotValuePlugin({

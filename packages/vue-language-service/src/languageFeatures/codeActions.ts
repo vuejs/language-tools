@@ -49,7 +49,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				let minStart: number | undefined;
 				let maxEnd: number | undefined;
 
-				for (const mapping of sourceMap.mappings) {
+				for (const mapping of sourceMap.base.mappings) {
 					const overlapRange = shared.getOverlapRange2(offsetRange, mapping.sourceRange);
 					if (overlapRange) {
 						const embeddedRange = sourceMap.getMappedRange(overlapRange.start, overlapRange.end)?.[0];

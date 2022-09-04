@@ -79,14 +79,14 @@ export function register(context: DocumentServiceRuntimeContext) {
 						let end = sourceMap.getMappedRange(range.end)?.[0].end;
 
 						if (!start) {
-							const minSourceStart = Math.min(...sourceMap.mappings.map(m => m.sourceRange.start));
+							const minSourceStart = Math.min(...sourceMap.base.mappings.map(m => m.sourceRange.start));
 							if (document.offsetAt(range.start) <= minSourceStart) {
 								start = range.start;
 							}
 						}
 
 						if (!end) {
-							const maxSourceEnd = Math.max(...sourceMap.mappings.map(m => m.sourceRange.end));
+							const maxSourceEnd = Math.max(...sourceMap.base.mappings.map(m => m.sourceRange.end));
 							if (document.offsetAt(range.end) >= maxSourceEnd) {
 								end = range.end;
 							}
@@ -252,7 +252,7 @@ function patchInterpolationIndent(vueDocument: VueDocument, sourceMap: EmbeddedD
 	const indentTextEdits: vscode.TextEdit[] = [];
 	const document = vueDocument.getDocument();
 
-	for (const mapped of sourceMap.mappings) {
+	for (const mapped of sourceMap.base.mappings) {
 
 		const textRange = {
 			start: document.positionAt(mapped.sourceRange.start),

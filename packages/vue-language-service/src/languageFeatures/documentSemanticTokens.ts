@@ -35,7 +35,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					end: number,
 				} | undefined;
 
-				for (const mapping of sourceMap.mappings) {
+				for (const mapping of sourceMap.base.mappings) {
 
 					if (cancleToken?.isCancellationRequested)
 						return;

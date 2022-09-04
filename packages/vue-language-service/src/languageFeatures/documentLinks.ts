@@ -44,7 +44,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 			for (const sourceMap of vueDocument.getSourceMaps()) {
 
-				for (const mapped of sourceMap.mappings) {
+				for (const mapped of sourceMap.base.mappings) {
 
 					if (!mapped.data.capabilities.displayWithLink)
 						continue;
