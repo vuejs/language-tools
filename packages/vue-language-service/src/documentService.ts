@@ -20,7 +20,7 @@ import * as linkedEditingRanges from './documentFeatures/linkedEditingRanges';
 import * as selectionRanges from './documentFeatures/selectionRanges';
 import { getTsSettings } from './tsConfigs';
 import { DocumentServiceRuntimeContext } from './types';
-import * as sharedServices from './utils/sharedLs';
+import { getSingleFileTypeScriptService } from './utils/singleFileTypeScriptService';
 import { parseVueDocument, VueDocument } from './vueDocuments';
 import useAutoWrapParenthesesPlugin from './plugins/vue-autoinsert-parentheses';
 import useVuePlugin from './plugins/vue';
@@ -102,7 +102,7 @@ export function getDocumentService(
 		},
 		updateTsLs(document) {
 			if (isTsDocument(document)) {
-				tsLs = sharedServices.getDummyTsLs(context.typescript, ts2, document, tsSettings);
+				tsLs = getSingleFileTypeScriptService(context.typescript, ts2, document, tsSettings);
 			}
 		},
 	};

@@ -79,16 +79,16 @@ export function register(context: DocumentServiceRuntimeContext) {
 						let end = sourceMap.getMappedRange(range.end)?.[0].end;
 
 						if (!start) {
-							const minSourceStart = Math.min(...sourceMap.base.mappings.map(m => m.sourceRange.start));
-							if (document.offsetAt(range.start) <= minSourceStart) {
-								start = range.start;
+							const firstMapping = sourceMap.base.mappings.sort((a, b) => a.sourceRange.start - b.sourceRange.start)[0];
+							if (document.offsetAt(range.start) < firstMapping.sourceRange.start) {
+								start = sourceMap.mappedDocument.positionAt(firstMapping.mappedRange.start);
 							}
 						}
 
 						if (!end) {
-							const maxSourceEnd = Math.max(...sourceMap.base.mappings.map(m => m.sourceRange.end));
-							if (document.offsetAt(range.end) >= maxSourceEnd) {
-								end = range.end;
+							const lastMapping = sourceMap.base.mappings.sort((a, b) => b.sourceRange.start - a.sourceRange.start)[0];
+							if (document.offsetAt(range.end) > lastMapping.sourceRange.end) {
+								end = sourceMap.mappedDocument.positionAt(lastMapping.mappedRange.end);
 							}
 						}
 
