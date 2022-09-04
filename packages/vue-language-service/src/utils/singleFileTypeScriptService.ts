@@ -5,19 +5,19 @@ import * as shared from '@volar/shared';
 
 let projectVersion = 0;
 let doc: TextDocument;
-let fileName: string;
+let scriptFileName: string;
 let scriptSnapshot: ts.IScriptSnapshot;
 let service: ts2.LanguageService | undefined;
 
 const host: ts.LanguageServiceHost = {
 	readFile: () => undefined,
-	fileExists: fileName => fileName === fileName,
+	fileExists: fileName => fileName === scriptFileName,
 	getProjectVersion: () => projectVersion.toString(),
 	getScriptVersion: () => projectVersion.toString(),
 	getCompilationSettings: () => ({ allowJs: true, jsx: 1 }),
-	getScriptFileNames: () => [fileName],
+	getScriptFileNames: () => [scriptFileName],
 	getScriptSnapshot: fileName => {
-		if (fileName === fileName) {
+		if (fileName === scriptFileName) {
 			return scriptSnapshot;
 		}
 	},
@@ -42,7 +42,7 @@ export function getSingleFileTypeScriptService(
 	}
 	projectVersion++;
 	doc = _doc;
-	fileName = shared.getPathOfUri(_doc.uri);
+	scriptFileName = shared.getPathOfUri(_doc.uri);
 	scriptSnapshot = ts.ScriptSnapshot.fromString(doc.getText());
 	return service;
 }
