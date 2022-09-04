@@ -1,6 +1,6 @@
 {
 	"name": "@volar/alpine-language-server",
-	"version": "0.40.5",
+	"version": "0.40.6",
 	"license": "MIT",
 	"files": [
 		"out/**/*.js",
@@ -15,8 +15,8 @@
 		"directory": "packages/alpine-language-server"
 	},
 	"dependencies": {
-		"@volar/alpine-language-service": "0.40.5",
-		"@volar/vue-language-server": "0.40.5",
+		"@volar/alpine-language-service": "0.40.6",
+		"@volar/vue-language-server": "0.40.6",
 		"upath": "^2.0.1",
 		"vscode-languageserver": "^8.0.2"
 	}

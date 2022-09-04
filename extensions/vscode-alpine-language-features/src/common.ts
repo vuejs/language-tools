@@ -6,6 +6,7 @@ import * as tsVersion from '../../vscode-vue-language-features/out/features/tsVe
 import * as virtualFiles from '../../vscode-vue-language-features/out/features/virtualFiles';
 import * as tsconfig from '../../vscode-vue-language-features/out/features/tsconfig';
 import * as fileReferences from '../../vscode-vue-language-features/out/features/fileReferences';
+import { ServerInitializationOptions } from '@volar/vue-language-server';
 
 let apiClient: lsp.BaseLanguageClient;
 let docClient: lsp.BaseLanguageClient | undefined;
@@ -15,7 +16,7 @@ type CreateLanguageClient = (
 	id: string,
 	name: string,
 	documentSelector: lsp.DocumentSelector,
-	initOptions: shared.ServerInitializationOptions,
+	initOptions: ServerInitializationOptions,
 	port: number,
 ) => Promise<lsp.BaseLanguageClient>;
 
@@ -47,14 +48,14 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	const takeOverMode = takeOverModeEnabled();
 	const languageFeaturesDocumentSelector: lsp.DocumentSelector = takeOverMode ?
 		[
-			{ scheme: 'file', language: 'html' },
-			{ scheme: 'file', language: 'javascript' },
-			{ scheme: 'file', language: 'typescript' },
-			{ scheme: 'file', language: 'javascriptreact' },
-			{ scheme: 'file', language: 'typescriptreact' },
-			{ scheme: 'file', language: 'json' },
+			{ /* scheme: 'file', */ language: 'html' },
+			{ /* scheme: 'file', */ language: 'javascript' },
+			{ /* scheme: 'file', */ language: 'typescript' },
+			{ /* scheme: 'file', */ language: 'javascriptreact' },
+			{ /* scheme: 'file', */ language: 'typescriptreact' },
+			{ /* scheme: 'file', */ language: 'json' },
 		] : [
-			{ scheme: 'file', language: 'html' },
+			{ /* scheme: 'file', */ language: 'html' },
 		];
 	const documentFeaturesDocumentSelector: lsp.DocumentSelector = takeOverMode ?
 		[
@@ -175,7 +176,7 @@ function getInitializationOptions(
 	mode: 'main-language-features' | 'second-language-features' | 'document-features',
 	useSecondServer: boolean,
 ) {
-	const initializationOptions: shared.ServerInitializationOptions = {
+	const initializationOptions: ServerInitializationOptions = {
 		typescript: tsVersion.getCurrentTsPaths(context),
 		languageFeatures: (mode === 'main-language-features' || mode === 'second-language-features') ? {
 			...(mode === 'main-language-features' ? {

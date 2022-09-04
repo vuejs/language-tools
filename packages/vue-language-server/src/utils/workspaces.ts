@@ -1,166 +1,96 @@
 import * as shared from '@volar/shared';
+import { ConfigurationHost } from '@volar/vue-language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import * as path from 'upath';
 import * as vscode from 'vscode-languageserver';
-import type { createConfigurationHost } from './configurationHost';
-import { LanguageConfigs, RuntimeEnvironment } from '../types';
+import { URI } from 'vscode-uri';
+import { FileSystemHost, LanguageConfigs, RuntimeEnvironment, ServerInitializationOptions } from '../types';
 import { createSnapshots } from './snapshots';
-import { createWorkspaceProjects, sortPaths } from './workspaceProjects';
+import { createWorkspaceProjects, rootTsConfigNames, sortTsConfigs } from './workspaceProjects';
 
 export interface Workspaces extends ReturnType<typeof createWorkspaces> { }
-
-const rootTsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 
 export function createWorkspaces(
 	runtimeEnv: RuntimeEnvironment,
 	languageConfigs: LanguageConfigs,
+	fsHost: FileSystemHost,
+	configurationHost: ConfigurationHost | undefined,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLocalized: ts.MapLike<string> | undefined,
-	options: shared.ServerInitializationOptions,
+	options: ServerInitializationOptions,
 	documents: ReturnType<typeof createSnapshots>,
 	connection: vscode.Connection,
-	configurationHost: ReturnType<typeof createConfigurationHost> | undefined,
-	capabilities: vscode.ClientCapabilities,
 ) {
 
 	let semanticTokensReq = 0;
 	let documentUpdatedReq = 0;
-	let lastOpenDoc: {
-		uri: string,
-		time: number,
-	} | undefined;
 
 	const workspaces = new Map<string, ReturnType<typeof createWorkspaceProjects>>();
 
 	documents.onDidOpen(params => {
-		lastOpenDoc = {
-			uri: params.textDocument.uri,
-			time: Date.now(),
-		};
-		onDidChangeContent(params.textDocument.uri);
+		updateDiagnostics(params.textDocument.uri);
 	});
 	documents.onDidChangeContent(async params => {
-		onDidChangeContent(params.textDocument.uri);
+		updateDiagnostics(params.textDocument.uri);
 	});
 	documents.onDidClose(params => {
 		connection.sendDiagnostics({ uri: params.textDocument.uri, diagnostics: [] });
 	});
-	connection.onDidChangeWatchedFiles(onDidChangeWatchedFiles);
+	fsHost.onDidChangeWatchedFiles(params => {
+
+		const tsConfigChanges = params.changes.filter(change => rootTsConfigNames.includes(change.uri.substring(change.uri.lastIndexOf('/') + 1)));
+		if (tsConfigChanges.length) {
+			for (const doc of documents.data.values()) {
+				connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] });
+			}
+		}
+
+		onDriveFileUpdated();
+	});
+	runtimeEnv.onDidChangeConfiguration?.(async () => {
+		onDriveFileUpdated();
+	});
 
 	return {
 		workspaces,
 		getProject,
 		reloadProject,
-		add: (rootPath: string) => {
-			workspaces.set(rootPath, createWorkspaceProjects(
+		add: (rootUri: URI) => {
+			workspaces.set(rootUri.toString(), createWorkspaceProjects(
 				runtimeEnv,
 				languageConfigs,
-				rootPath,
+				fsHost,
+				rootUri,
 				ts,
 				tsLocalized,
 				options,
 				documents,
 				connection,
 				configurationHost,
-				capabilities,
 			));
 		},
-		remove: (rootPath: string) => {
-			workspaces.delete(rootPath);
+		remove: (rootUri: URI) => {
+			const _workspace = workspaces.get(rootUri.toString());
+			workspaces.delete(rootUri.toString());
+			(async () => {
+				(await _workspace)?.dispose();
+			})();
 		},
 	};
 
-	async function onDidChangeContent(uri: string) {
+	async function reloadProject() {
 
-		const req = ++documentUpdatedReq;
-
-		await waitForOnDidChangeWatchedFiles(uri);
-
-		for (const workspace of workspaces.values()) {
-			const projects = [...workspace.projects.values(), workspace.getInferredProjectDontCreate()].filter(shared.notEmpty);
-			for (const project of projects) {
-				(await project).onDocumentUpdated();
-			}
-		}
-
-		if (req === documentUpdatedReq) {
-			updateDiagnostics(uri);
-		}
-	}
-
-	async function reloadProject(uri: string) {
+		fsHost.clearCache();
 
 		for (const [_, workspace] of workspaces) {
-			workspace.clearFsCache();
-		}
-
-		const configs: string[] = [];
-
-		for (const [_, workspace] of workspaces) {
-			const config = await workspace.findMatchConfigs(uri);
-			if (config) {
-				configs.push(config);
-			}
-		}
-
-		onDidChangeWatchedFiles({ changes: configs.map(c => ({ uri: c, type: vscode.FileChangeType.Changed })) });
-	}
-
-	async function onDidChangeWatchedFiles(handler: vscode.DidChangeWatchedFilesParams) {
-
-		if (handler.changes.some(change => change.type === vscode.FileChangeType.Created || change.type === vscode.FileChangeType.Deleted)) {
-			for (const [_, workspace] of workspaces) {
-				workspace.clearFsCache();
-			}
-		}
-
-		const tsConfigChanges: vscode.FileEvent[] = [];
-		const scriptChanges: vscode.FileEvent[] = [];
-
-		for (const workspace of workspaces.values()) {
-
-			for (const change of handler.changes) {
-				const fileName = shared.uriToFsPath(change.uri);
-				if (rootTsConfigNames.includes(path.basename(fileName)) || workspace.projects.fsPathHas(fileName)) {
-					tsConfigChanges.push(change);
-				}
-				else {
-					scriptChanges.push(change);
-				}
-			}
-
-			if (tsConfigChanges.length) {
-
-				clearDiagnostics();
-
-				for (const tsConfigChange of tsConfigChanges) {
-					const tsConfig = shared.uriToFsPath(tsConfigChange.uri);
-					if (workspace.projects.fsPathHas(tsConfig)) {
-						workspace.projects.fsPathDelete(tsConfig);
-						(async () => (await workspace.projects.fsPathGet(tsConfig))?.dispose())();
-					}
-					if (tsConfigChange.type !== vscode.FileChangeType.Deleted) {
-						workspace.getProjectByCreate(tsConfig); // create new project
-					}
-				}
-			}
-
-			if (scriptChanges.length) {
-				const projects = [...workspace.projects.values(), workspace.getInferredProjectDontCreate()].filter(shared.notEmpty);
-				for (const project of projects) {
-					await (await project).onWorkspaceFilesChanged(scriptChanges);
-				}
-			}
-
-			onDriveFileUpdated(undefined);
+			(await workspace).reload();
 		}
 	}
 
-	async function onDriveFileUpdated(driveFileName: string | undefined) {
+	async function onDriveFileUpdated() {
 
 		const req = ++semanticTokensReq;
 
-		await updateDiagnostics(driveFileName ? shared.fsPathToUri(driveFileName) : undefined);
+		await updateDiagnostics();
 
 		if (req === semanticTokensReq) {
 			if (options.languageFeatures?.semanticTokens) {
@@ -232,39 +162,23 @@ export function createWorkspaces(
 	}
 	async function getProject(uri: string) {
 
-		await waitForOnDidChangeWatchedFiles(uri);
+		const rootUris = [...workspaces.keys()]
+			.filter(rootUri => shared.isFileInDir(URI.parse(uri).fsPath, URI.parse(rootUri).fsPath))
+			.sort((a, b) => sortTsConfigs(URI.parse(uri).fsPath, URI.parse(a).fsPath, URI.parse(b).fsPath));
 
-		const fileName = shared.uriToFsPath(uri);
-		const rootPaths = [...workspaces.keys()]
-			.filter(rootPath => shared.isFileInDir(fileName, rootPath))
-			.sort((a, b) => sortPaths(a, b, fileName));
-
-		for (const rootPath of rootPaths) {
-			const workspace = workspaces.get(rootPath);
+		for (const rootUri of rootUris) {
+			const workspace = await workspaces.get(rootUri);
 			const project = await workspace?.getProjectAndTsConfig(uri);
 			if (project) {
 				return project;
 			}
 		}
 
-		if (rootPaths.length) {
+		if (rootUris.length) {
 			return {
 				tsconfig: undefined,
-				project: await workspaces.get(rootPaths[0])?.getInferredProject(),
+				project: await (await workspaces.get(rootUris[0]))?.getInferredProject(),
 			};
-		}
-	}
-	async function waitForOnDidChangeWatchedFiles(uri: string) {
-		if (lastOpenDoc?.uri === uri) {
-			const dt = lastOpenDoc.time + 2000 - Date.now();
-			if (dt > 0) {
-				await shared.sleep(dt);
-			}
-		}
-	}
-	function clearDiagnostics() {
-		for (const doc of documents.data.values()) {
-			connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] });
 		}
 	}
 }

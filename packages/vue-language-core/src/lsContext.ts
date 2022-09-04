@@ -41,15 +41,20 @@ export function getPlugins(
 		...extraPlugins,
 	];
 	const vueCompilerOptions = getVueCompilerOptions(_vueCompilerOptions);
-	for (const pluginPath of vueCompilerOptions.plugins) {
-		try {
-			const importPath = require.resolve(pluginPath, { paths: [rootDir] });
-			const plugin = require(importPath);
-			_plugins.push(plugin);
+	if (typeof require?.resolve === 'function') {
+		for (const pluginPath of vueCompilerOptions.plugins) {
+			try {
+				const importPath = require.resolve(pluginPath, { paths: [rootDir] });
+				const plugin = require(importPath);
+				_plugins.push(plugin);
+			}
+			catch (error) {
+				console.log('Load plugin failed', pluginPath, error);
+			}
 		}
-		catch (error) {
-			console.error(error);
-		}
+	}
+	else {
+		console.log('vueCompilerOptions.plugins is not available in Web.')
 	}
 	const pluginCtx: Parameters<VueLanguagePlugin>[0] = {
 		modules: {
@@ -354,7 +359,7 @@ export function createLanguageContext(
 				return fileVersions.get(mapped.embedded.file)!;
 			}
 			else {
-				let version = ts.sys.createHash?.(mapped.embedded.file.codeGen.getText()) ?? mapped.embedded.file.codeGen.getText();
+				let version = ts.sys?.createHash?.(mapped.embedded.file.codeGen.getText()) ?? mapped.embedded.file.codeGen.getText();
 				if (host.isTsc) {
 					// fix https://github.com/johnsoncodehk/volar/issues/1082
 					version = host.getScriptVersion(mapped.vueFile.fileName) + ':' + version;

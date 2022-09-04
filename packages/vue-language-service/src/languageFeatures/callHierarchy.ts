@@ -206,7 +206,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 		const vueRanges = tsRanges.map(tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end)?.[0]).filter(shared.notEmpty);
 		const vueItem: vscode.CallHierarchyItem = {
 			...tsItem,
-			name: tsItem.name === upath.basename(shared.uriToFsPath(sourceMap.mappedDocument.uri)) ? upath.basename(shared.uriToFsPath(sourceMap.sourceDocument.uri)) : tsItem.name,
+			name: tsItem.name === upath.basename(shared.getPathOfUri(sourceMap.mappedDocument.uri)) ? upath.basename(shared.getPathOfUri(sourceMap.sourceDocument.uri)) : tsItem.name,
 			uri: sourceMap.sourceDocument.uri,
 			range: vueRange,
 			selectionRange: vueSelectionRange,

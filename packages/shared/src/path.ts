@@ -2,12 +2,8 @@ import { URI } from 'vscode-uri';
 import * as upath from 'upath';
 import type { DocumentUri } from 'vscode-languageserver-textdocument';
 
-export function uriToFsPath(uri: DocumentUri) {
+export function getPathOfUri(uri: DocumentUri) {
 	return upath.toUnix(URI.parse(uri).fsPath);
-}
-
-export function fsPathToUri(fsPath: string): DocumentUri {
-	return URI.file(fsPath).toString();
 }
 
 export function normalizeFileName(fsPath: string) {
@@ -16,6 +12,13 @@ export function normalizeFileName(fsPath: string) {
 
 export function normalizeUri(uri: string) {
 	return URI.parse(uri).toString();
+}
+
+export function getUriByPath(rootUri: URI, path: string) {
+	return URI.file(path).with({
+		scheme: rootUri.scheme,
+		authority: rootUri.authority,
+	}).toString();
 }
 
 export function isFileInDir(fileName: string, dir: string) {

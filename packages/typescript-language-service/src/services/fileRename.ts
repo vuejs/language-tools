@@ -4,8 +4,10 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import { fileTextChangesToWorkspaceEdit } from './rename';
 import type { Settings } from '../';
+import { URI } from 'vscode-uri';
 
 export function register(
+	rootUri: URI,
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
 	settings: Settings,
@@ -18,14 +20,14 @@ export function register(
 			settings.getPreferences?.(document.uri) ?? {},
 		]) : [{}, {}];
 
-		const fileToRename = shared.uriToFsPath(oldUri);
-		const newFilePath = shared.uriToFsPath(newUri);
+		const fileToRename = shared.getPathOfUri(oldUri);
+		const newFilePath = shared.getPathOfUri(newUri);
 
 		let response: ReturnType<typeof languageService.getEditsForFileRename> | undefined;
 		try { response = languageService.getEditsForFileRename(fileToRename, newFilePath, formatOptions, preferences); } catch { }
 		if (!response?.length) return;
 
-		const edits = fileTextChangesToWorkspaceEdit(response, getTextDocument);
+		const edits = fileTextChangesToWorkspaceEdit(rootUri, response, getTextDocument);
 		return edits;
 	};
 }

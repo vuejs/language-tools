@@ -1,6 +1,6 @@
 try {
-    module.exports = require('./out/nodeClientMain');
+	module.exports = require('./out/nodeClientMain');
 }
 catch {
-    module.exports = require('./dist/node/client');
+	module.exports = require('./dist/node/client');
 }

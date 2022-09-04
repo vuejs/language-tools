@@ -173,10 +173,10 @@ function _combineContinuousChangeRanges(a: ts.TextChangeRange, b: ts.TextChangeR
 
 export function createSnapshots(connection: vscode.Connection) {
 
-	const snapshots = shared.createPathMap<IncrementalScriptSnapshot>();
-	const onDidOpens: ((params: vscode.DidOpenTextDocumentParams) => void)[] = [];
-	const onDidChangeContents: ((params: vscode.DidChangeTextDocumentParams) => void)[] = [];
-	const onDidCloses: ((params: vscode.DidCloseTextDocumentParams) => void)[] = [];
+	const snapshots = shared.createUriMap<IncrementalScriptSnapshot>();
+	const onDidOpens = new Set<(params: vscode.DidOpenTextDocumentParams) => void>();
+	const onDidChangeContents = new Set<(params: vscode.DidChangeTextDocumentParams) => void>();
+	const onDidCloses = new Set<(params: vscode.DidCloseTextDocumentParams) => void>();
 
 	connection.onDidOpenTextDocument(params => {
 		snapshots.uriSet(params.textDocument.uri, new IncrementalScriptSnapshot(
@@ -220,8 +220,17 @@ export function createSnapshots(connection: vscode.Connection) {
 
 	return {
 		data: snapshots,
-		onDidOpen: (cb: typeof onDidOpens[number]) => onDidOpens.push(cb),
-		onDidChangeContent: (cb: typeof onDidChangeContents[number]) => onDidChangeContents.push(cb),
-		onDidClose: (cb: typeof onDidCloses[number]) => onDidCloses.push(cb),
+		onDidOpen: (cb: (params: vscode.DidOpenTextDocumentParams) => void) => {
+			onDidOpens.add(cb);
+			return () => onDidOpens.delete(cb);
+		},
+		onDidChangeContent: (cb: (params: vscode.DidChangeTextDocumentParams) => void) => {
+			onDidChangeContents.add(cb);
+			return () => onDidChangeContents.delete(cb);
+		},
+		onDidClose: (cb: (params: vscode.DidCloseTextDocumentParams) => void) => {
+			onDidCloses.add(cb);
+			return () => onDidCloses.delete(cb);
+		},
 	};
 }

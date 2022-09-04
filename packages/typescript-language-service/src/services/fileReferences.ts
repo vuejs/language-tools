@@ -3,8 +3,10 @@ import * as vscode from 'vscode-languageserver-protocol';
 import { entriesToLocations } from '../utils/transforms';
 import * as shared from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
+import { URI } from 'vscode-uri';
 
 export function register(
+	rootUri: URI,
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
 	getTextDocument2: (uri: string) => TextDocument | undefined,
@@ -13,12 +15,12 @@ export function register(
 		const document = getTextDocument(uri);
 		if (!document) return [];
 
-		const fileName = shared.uriToFsPath(document.uri);
+		const fileName = shared.getPathOfUri(document.uri);
 
 		let entries: ReturnType<typeof languageService.getFileReferences> | undefined;
 		try { entries = languageService.getFileReferences(fileName); } catch { }
 		if (!entries) return [];
 
-		return entriesToLocations([...entries], getTextDocument2);
+		return entriesToLocations(rootUri, [...entries], getTextDocument2);
 	};
 }

@@ -3,32 +3,33 @@ import * as path from 'upath';
 import * as vscode from 'vscode-languageserver';
 import type { Workspaces } from '../utils/workspaces';
 import * as vue from '@volar/vue-language-core';
+import { D3Request, DetectDocumentNameCasesRequest, GetMatchTsConfigRequest, ReloadProjectNotification, VerifyAllScriptsNotification, WriteVirtualFilesNotification } from '../requests';
 
 export function register(
 	connection: vscode.Connection,
 	projects: Workspaces,
 ) {
-	connection.onRequest(shared.D3Request.type, async handler => {
+	connection.onRequest(D3Request.type, async handler => {
 		// const document = documents.get(handler.uri);
 		// if (!document) return;
 		// const languageService = await getLanguageService(document.uri);
 		// return languageService?.__internal__.getD3(document);
 		return undefined; // disable for now
 	});
-	connection.onRequest(shared.GetMatchTsConfigRequest.type, async handler => {
+	connection.onRequest(GetMatchTsConfigRequest.type, async handler => {
 		return (await projects.getProject(handler.uri))?.tsconfig;
 	});
-	connection.onNotification(shared.ReloadProjectNotification.type, async handler => {
-		projects.reloadProject(handler.uri);
+	connection.onNotification(ReloadProjectNotification.type, async handler => {
+		projects.reloadProject();
 	});
-	connection.onNotification(shared.WriteVirtualFilesNotification.type, async () => {
+	connection.onNotification(WriteVirtualFilesNotification.type, async (params) => {
 
 		const fs = await import('fs');
 
-		for (const workspace of projects.workspaces.values()) {
-			for (const project of [...workspace.projects.values(), workspace.getInferredProjectDontCreate()].filter(shared.notEmpty)) {
-				const ls = await (await project).getLanguageServiceDontCreate();
-				if (!ls) continue;
+		const project = await projects.getProject(params.uri);
+		if (project) {
+			const ls = await (await project.project)?.getLanguageServiceDontCreate();
+			if (ls) {
 				const localTypesFiles = ls.__internal__.vueRuntimeContext.typescriptLanguageServiceHost.getScriptFileNames().filter(fileName => fileName.endsWith(vue.localTypes.typesFileName));
 				for (const fileName of localTypesFiles) {
 					const script = ls.__internal__.vueRuntimeContext.typescriptLanguageServiceHost.getScriptSnapshot(fileName);
@@ -49,7 +50,7 @@ export function register(
 			}
 		}
 	});
-	connection.onNotification(shared.VerifyAllScriptsNotification.type, async () => {
+	connection.onNotification(VerifyAllScriptsNotification.type, async (params) => {
 
 		let errors = 0;
 		let warnings = 0;
@@ -57,15 +58,15 @@ export function register(
 		const progress = await connection.window.createWorkDoneProgress();
 		progress.begin('Verify', 0, '', true);
 
-		for (const workspace of projects.workspaces.values()) {
-			for (const project of [...workspace.projects.values(), workspace.getInferredProjectDontCreate()].filter(shared.notEmpty)) {
-				const ls = await (await project).getLanguageServiceDontCreate();
-				if (!ls) continue;
+		const project = await projects.getProject(params.uri);
+		if (project) {
+			const ls = await (await project.project)?.getLanguageServiceDontCreate();
+			if (ls) {
 				const context = await ls.__internal__.getContext();
 				const allVueDocuments = context.vueDocuments.getAll();
 				let i = 0;
 				for (const vueFile of allVueDocuments) {
-					progress.report(i++ / allVueDocuments.length * 100, path.relative(ls.__internal__.rootPath, shared.uriToFsPath(vueFile.uri)));
+					progress.report(i++ / allVueDocuments.length * 100, path.relative(ls.__internal__.rootPath, shared.getPathOfUri(vueFile.uri)));
 					if (progress.token.isCancellationRequested) {
 						continue;
 					}
@@ -81,7 +82,7 @@ export function register(
 
 		connection.window.showInformationMessage(`Verification complete. Found ${errors} errors and ${warnings} warnings.`);
 	});
-	connection.onRequest(shared.DetectDocumentNameCasesRequest.type, async handler => {
+	connection.onRequest(DetectDocumentNameCasesRequest.type, async handler => {
 		const languageService = await getLanguageService(handler.uri);
 		return languageService?.__internal__.detectTagNameCase(handler.uri);
 	});

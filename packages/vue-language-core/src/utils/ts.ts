@@ -1,5 +1,5 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import * as path from 'path';
+import { posix as path } from 'path';
 import type { VueCompilerOptions, _VueCompilerOptions } from '../types';
 
 export type ParsedCommandLine = ts.ParsedCommandLine & {
@@ -13,9 +13,8 @@ export function createParsedCommandLineByJson(
 	json: any,
 ): ParsedCommandLine {
 
-	const rootDirPath = ts.sys.resolvePath(rootDir);
-	const tsConfigPath = ts.sys.resolvePath(path.join(rootDir, 'jsconfig.json'));
-	const content = ts.parseJsonConfigFileContent(json, parseConfigHost, rootDirPath, {}, tsConfigPath);
+	const tsConfigPath = path.join(rootDir, 'jsconfig.json');
+	const content = ts.parseJsonConfigFileContent(json, parseConfigHost, rootDir, {}, tsConfigPath);
 
 	return createParsedCommandLineBase(ts, parseConfigHost, content, tsConfigPath, new Set());
 }
@@ -23,12 +22,11 @@ export function createParsedCommandLineByJson(
 export function createParsedCommandLine(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	parseConfigHost: ts.ParseConfigHost,
-	tsConfig: string,
+	tsConfigPath: string,
 	extendsSet = new Set<string>(),
 ): ParsedCommandLine {
 
-	const tsConfigPath = ts.sys.resolvePath(tsConfig);
-	const config = ts.readJsonConfigFile(tsConfigPath, ts.sys.readFile);
+	const config = ts.readJsonConfigFile(tsConfigPath, parseConfigHost.readFile);
 	const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(tsConfigPath), {}, path.basename(tsConfigPath));
 	// fix https://github.com/johnsoncodehk/volar/issues/1786
 	// https://github.com/microsoft/TypeScript/issues/30457

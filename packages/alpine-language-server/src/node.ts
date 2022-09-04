@@ -1,5 +1,6 @@
 import * as vscode from 'vscode-languageserver/node';
 import { createLanguageServer } from '@volar/vue-language-server/out/common';
+import { createNodeFileSystemHost } from '@volar/vue-language-server/out/utils/nodeFileSystemHost';
 import * as alpine from '@volar/alpine-language-service';
 import * as path from 'upath';
 
@@ -19,9 +20,10 @@ createLanguageServer(connection, {
 	schemaRequestHandlers: {},
 	onDidChangeConfiguration(settings) { },
 	fileSystemProvide: undefined,
+	createFileSystemHost: createNodeFileSystemHost,
 }, {
 	definitelyExts: ['.html'],
 	indeterminateExts: [],
-	getDocumentService: (ts, configHost, _, plugins) => alpine.getDocumentService(ts, configHost, plugins),
-	createLanguageService: (lsHost, _1, _2, configHost, plugins) => alpine.createLanguageService(lsHost, configHost, plugins),
+	getDocumentService: (ts, configHost, _, plugins, rootUri) => alpine.getDocumentService(ts, configHost, plugins, rootUri),
+	createLanguageService: (lsHost, _1, _2, configHost, plugins, _3, _4, rootUri) => alpine.createLanguageService(lsHost, configHost, plugins, rootUri),
 });

@@ -1,6 +1,6 @@
 {
 	"name": "@volar/vue-language-service",
-	"version": "0.40.5",
+	"version": "0.40.6",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -19,15 +19,15 @@
 	"dependencies": {
 		"@johnsoncodehk/html2pug": "^1.0.0",
 		"@johnsoncodehk/pug-beautify": "^0.2.2",
-		"@volar/pug-language-service": "0.40.5",
-		"@volar/shared": "0.40.5",
-		"@volar/source-map": "0.40.5",
-		"@volar/transforms": "0.40.5",
-		"@volar/typescript-faster": "0.40.5",
-		"@volar/typescript-language-service": "0.40.5",
-		"@volar/vue-language-core": "0.40.5",
-		"@volar/vue-language-service-types": "0.40.5",
-		"@volar/vue-typescript": "0.40.5",
+		"@volar/pug-language-service": "0.40.6",
+		"@volar/shared": "0.40.6",
+		"@volar/source-map": "0.40.6",
+		"@volar/transforms": "0.40.6",
+		"@volar/typescript-faster": "0.40.6",
+		"@volar/typescript-language-service": "0.40.6",
+		"@volar/vue-language-core": "0.40.6",
+		"@volar/vue-language-service-types": "0.40.6",
+		"@volar/vue-typescript": "0.40.6",
 		"@vscode/emmet-helper": "^2.8.4",
 		"@vue/compiler-dom": "^3.2.37",
 		"@vue/reactivity": "^3.2.37",
@@ -38,7 +38,8 @@
 		"vscode-html-languageservice": "^5.0.1",
 		"vscode-json-languageservice": "^5.1.0",
 		"vscode-languageserver-protocol": "^3.17.2",
-		"vscode-languageserver-textdocument": "^1.0.5"
+		"vscode-languageserver-textdocument": "^1.0.5",
+		"vscode-uri": "^3.0.3"
 	},
 	"browser": {
 		"./out/plugins/emmet.js": "./out/plugins/empty.js",

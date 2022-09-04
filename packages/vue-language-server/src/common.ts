@@ -1,8 +1,7 @@
-import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-service';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
-import { LanguageConfigs, RuntimeEnvironment } from './types';
+import { LanguageConfigs, RuntimeEnvironment, ServerInitializationOptions } from './types';
 import { createConfigurationHost } from './utils/configurationHost';
 import { createSnapshots } from './utils/snapshots';
 import { createWorkspaces } from './utils/workspaces';
@@ -18,36 +17,44 @@ export function createLanguageServer(
 	},
 ) {
 
-	let clientCapabilities: vscode.ClientCapabilities;
-	let projects: ReturnType<typeof createWorkspaces>;
+	let params: vscode.InitializeParams;
+	let options: ServerInitializationOptions;
+	let roots: URI[] = [];
 
-	connection.onInitialize(async params => {
+	connection.onInitialize(async _params => {
 
-		const options: shared.ServerInitializationOptions = params.initializationOptions as any;
-		clientCapabilities = params.capabilities;
-		let folders: string[] = [];
-		let rootUri: URI;
+		params = _params;
+		options = params.initializationOptions as any;
 
 		if (params.capabilities.workspace?.workspaceFolders && params.workspaceFolders) {
-			folders = params.workspaceFolders
-				.map(folder => URI.parse(folder.uri))
-				.filter(uri => uri.scheme === 'file')
-				.map(uri => uri.fsPath);
+			roots = params.workspaceFolders.map(folder => URI.parse(folder.uri));
 		}
-		else if (params.rootUri && (rootUri = URI.parse(params.rootUri)).scheme === 'file') {
-			folders = [rootUri.fsPath];
+		else if (params.rootUri) {
+			roots = [URI.parse(params.rootUri)];
 		}
 		else if (params.rootPath) {
-			folders = [params.rootPath];
+			roots = [URI.file(params.rootPath)];
 		}
 
 		const result: vscode.InitializeResult = {
 			capabilities: {
-				textDocumentSync: vscode.TextDocumentSyncKind.Incremental,
+				textDocumentSync: (options.textDocumentSync as vscode.TextDocumentSyncKind) ?? vscode.TextDocumentSyncKind.Incremental,
 			},
 		};
+
+		if (options.documentFeatures) {
+			(await import('./registers/registerDocumentFeatures')).register(options.documentFeatures, result.capabilities);
+		}
+		if (options.languageFeatures) {
+			(await import('./registers/registerlanguageFeatures')).register(options.languageFeatures!, vue.getSemanticTokenLegend(), result.capabilities, languageConfigs);
+		}
+
+		return result;
+	});
+	connection.onInitialized(async () => {
+
+		const configHost = params.capabilities.workspace?.configuration ? createConfigurationHost(roots, connection) : undefined;
 		const ts = runtimeEnv.loadTypescript(options);
-		const configHost = params.capabilities.workspace?.configuration ? createConfigurationHost(folders, connection) : undefined;
 
 		if (options.documentFeatures) {
 
@@ -55,57 +62,50 @@ export function createLanguageServer(
 				ts,
 				configHost,
 				runtimeEnv.fileSystemProvide,
-				loadCustomPlugins(folders[0]),
+				loadCustomPlugins(roots[0].fsPath), // TODO: handle multiple roots
+				roots[0],
 			);
 
 			(await import('./features/documentFeatures')).register(connection, documents, documentService, options.documentFeatures.allowedLanguageIds);
-			(await import('./registers/registerDocumentFeatures')).register(options.documentFeatures, result.capabilities);
 		}
 
 		if (options.languageFeatures) {
 
+			const fsHost = runtimeEnv.createFileSystemHost(ts, connection, params.capabilities);
 			const tsLocalized = runtimeEnv.loadTypescriptLocalized(options);
-			projects = createWorkspaces(
+			const projects = createWorkspaces(
 				runtimeEnv,
 				languageConfigs,
+				fsHost,
+				configHost,
 				ts,
 				tsLocalized,
 				options,
 				documents,
 				connection,
-				configHost,
-				params.capabilities,
 			);
 
-			for (const root of folders) {
+			for (const root of roots) {
 				projects.add(root);
 			}
 
 			(await import('./features/customFeatures')).register(connection, projects);
 			(await import('./features/languageFeatures')).register(connection, projects, options.languageFeatures, params);
-			(await import('./registers/registerlanguageFeatures')).register(options.languageFeatures!, vue.getSemanticTokenLegend(), result.capabilities, languageConfigs);
+
+			connection.workspace.onDidChangeWorkspaceFolders(e => {
+
+				for (const folder of e.added) {
+					projects.add(URI.parse(folder.uri));
+				}
+				for (const folder of e.removed) {
+					projects.remove(URI.parse(folder.uri));
+				}
+			});
 		}
 
-		return result;
-	});
-	connection.onInitialized(() => {
-
-		if (clientCapabilities.workspace?.didChangeConfiguration?.dynamicRegistration) { // TODO
+		if (params.capabilities.workspace?.didChangeConfiguration?.dynamicRegistration) { // TODO
 			connection.client.register(vscode.DidChangeConfigurationNotification.type);
 		}
-
-		connection.workspace.onDidChangeWorkspaceFolders(e => {
-
-			const added = e.added.map(folder => URI.parse(folder.uri)).filter(uri => uri.scheme === 'file').map(uri => uri.fsPath);
-			const removed = e.removed.map(folder => URI.parse(folder.uri)).filter(uri => uri.scheme === 'file').map(uri => uri.fsPath);
-
-			for (const folder of added) {
-				projects.add(folder);
-			}
-			for (const folder of removed) {
-				projects.remove(folder);
-			}
-		});
 	});
 	connection.listen();
 

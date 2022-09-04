@@ -25,6 +25,7 @@ import { parseVueDocument, VueDocument } from './vueDocuments';
 import useAutoWrapParenthesesPlugin from './plugins/vue-autoinsert-parentheses';
 import useVuePlugin from './plugins/vue';
 import type * as _ from 'vscode-languageserver-protocol';
+import { URI } from 'vscode-uri';
 
 export interface DocumentService extends ReturnType<typeof getDocumentService> { }
 
@@ -33,6 +34,7 @@ export function getDocumentService(
 	configurationHost: ConfigurationHost | undefined,
 	fileSystemProvider: html.FileSystemProvider | undefined,
 	customPlugins: EmbeddedLanguageServicePlugin[],
+	rootUri = URI.file(ts.sys.getCurrentDirectory()),
 ) {
 
 	setCurrentConfigurationHost(configurationHost); // TODO
@@ -134,7 +136,7 @@ export function getDocumentService(
 			context.typescript,
 			vuePlugins,
 		);
-		vueDoc = parseVueDocument(vueFile, undefined);
+		vueDoc = parseVueDocument(rootUri, vueFile, undefined);
 
 		vueDocuments.set(document, vueDoc);
 

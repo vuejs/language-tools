@@ -51,6 +51,7 @@ import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemantic
 import { getTsSettings } from './tsConfigs';
 import { LanguageServiceRuntimeContext } from './types';
 import { parseVueDocuments } from './vueDocuments';
+import { URI } from 'vscode-uri';
 // import * as d3 from './ideFeatures/d3';
 
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
@@ -81,6 +82,7 @@ export function createLanguageService(
 		attr: 'kebabCase' | 'camelCase',
 	}>,
 	createLanguageServiceContext = () => vue.createLanguageContext(vueLsHost),
+	rootUri = URI.file(vueLsHost.getCurrentDirectory()),
 ) {
 
 	setCurrentConfigurationHost(configurationHost); // TODO
@@ -90,8 +92,8 @@ export function createLanguageService(
 	const vueTsLs = ts.createLanguageService(core.typescriptLanguageServiceHost);
 	tsFaster.decorate(ts, core.typescriptLanguageServiceHost, vueTsLs);
 	const tsSettings = getTsSettings(configurationHost);
-	const tsLs = ts2.createLanguageService(ts, core.typescriptLanguageServiceHost, vueTsLs, tsSettings);
-	const vueDocuments = parseVueDocuments(core, tsLs);
+	const tsLs = ts2.createLanguageService(ts, core.typescriptLanguageServiceHost, vueTsLs, tsSettings, rootUri);
+	const vueDocuments = parseVueDocuments(rootUri, core, tsLs);
 	const documentContext = getDocumentContext();
 
 	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
@@ -259,16 +261,15 @@ export function createLanguageService(
 	return apis;
 
 	function getDocumentContext() {
-		const compilerHost = ts.createCompilerHost(vueLsHost.getCompilationSettings());
 		const documentContext: html.DocumentContext = {
 			resolveReference(ref: string, base: string) {
 
 				const isUri = base.indexOf('://') >= 0;
 				const resolveResult = ts.resolveModuleName(
 					ref,
-					isUri ? shared.uriToFsPath(base) : base,
+					isUri ? shared.getPathOfUri(base) : base,
 					vueLsHost.getCompilationSettings(),
-					compilerHost,
+					vueLsHost,
 				);
 				const failedLookupLocations: string[] = (resolveResult as any).failedLookupLocations;
 				const dirs = new Set<string>();
@@ -286,12 +287,12 @@ export function createLanguageService(
 						continue;
 					}
 					if (vueLsHost.fileExists(path)) {
-						return isUri ? shared.fsPathToUri(path) : path;
+						return isUri ? shared.getUriByPath(URI.parse(base), path) : path;
 					}
 				}
 				for (const dir of dirs) {
 					if (vueLsHost.directoryExists?.(dir) ?? true) {
-						return isUri ? shared.fsPathToUri(dir) : dir;
+						return isUri ? shared.getUriByPath(URI.parse(base), dir) : dir;
 					}
 				}
 
@@ -302,7 +303,7 @@ export function createLanguageService(
 	}
 	function getTextDocument(uri: string) {
 
-		const fileName = shared.uriToFsPath(uri);
+		const fileName = shared.getPathOfUri(uri);
 		const scriptSnapshot = vueLsHost.getScriptSnapshot(fileName);
 
 		if (scriptSnapshot) {
@@ -329,6 +330,7 @@ export function createLanguageService(
 	}
 	function _useVueTemplateLanguagePlugin<T extends ReturnType<typeof useHtmlPlugin> | ReturnType<typeof usePugPlugin>>(languageId: string, templateLanguagePlugin: T) {
 		return useVueTemplateLanguagePlugin({
+			rootUri,
 			ts,
 			templateLanguagePlugin,
 			getSemanticTokenLegend,

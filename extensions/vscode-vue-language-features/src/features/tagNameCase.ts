@@ -2,10 +2,11 @@ import * as vscode from 'vscode';
 import { userPick } from './splitEditors';
 import { BaseLanguageClient, State } from 'vscode-languageclient';
 import * as shared from '@volar/shared';
+import { DetectDocumentNameCasesRequest } from '@volar/vue-language-server';
 
 export async function activate(context: vscode.ExtensionContext, languageClient: BaseLanguageClient) {
 
-	const tagCases = shared.createPathMap<'both' | 'kebabCase' | 'pascalCase' | 'unsure'>();
+	const tagCases = shared.createUriMap<'both' | 'kebabCase' | 'pascalCase' | 'unsure'>();
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	statusBar.command = 'volar.action.tagNameCase';
 
@@ -49,7 +50,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 			updateStatusBarText('pascalCase');
 		}
 		if (select === '3') {
-			const detects = await languageClient.sendRequest(shared.DetectDocumentNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(crtDoc));
+			const detects = await languageClient.sendRequest(DetectDocumentNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(crtDoc));
 			if (detects) {
 				tagCases.uriSet(crtDoc.uri.toString(), detects.tag);
 				updateStatusBarText(detects.tag);
@@ -115,7 +116,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 					tagCase = 'pascalCase';
 				}
 				else {
-					const templateCases = await languageClient.sendRequest(shared.DetectDocumentNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(newDoc));
+					const templateCases = await languageClient.sendRequest(DetectDocumentNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(newDoc));
 					tagCase = templateCases?.tag;
 				}
 			}

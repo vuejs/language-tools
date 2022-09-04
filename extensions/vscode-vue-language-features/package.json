@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "0.40.5",
+	"version": "0.40.6",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
@@ -306,6 +306,21 @@
 					],
 					"default": "off",
 					"description": "Traces the communication between VS Code and the language server."
+				},
+				"volar.vueserver.textDocumentSync": {
+					"type": "string",
+					"default": "incremental",
+					"enum": [
+						"incremental",
+						"full",
+						"none"
+					],
+					"enumDescriptions": [
+						"Documents are synced by sending the full content on open. After that only incremental updates to the document are send.",
+						"Documents are synced by always sending the full content of the document.",
+						"Documents should not be synced at all."
+					],
+					"description": "Defines how the host (editor) should sync document changes to the language server. SFC incremental parser only working when config \"incremental\"."
 				},
 				"volar.vueserver.useSecondServer": {
 					"type": "boolean",
@@ -829,10 +844,10 @@
 	"devDependencies": {
 		"@types/semver": "^7.3.10",
 		"@types/vscode": "1.67.0",
-		"@volar/preview": "0.40.5",
-		"@volar/shared": "0.40.5",
-		"@volar/vue-language-core": "0.40.5",
-		"@volar/vue-language-server": "0.40.5",
+		"@volar/preview": "0.40.6",
+		"@volar/shared": "0.40.6",
+		"@volar/vue-language-core": "0.40.6",
+		"@volar/vue-language-server": "0.40.6",
 		"@vue/compiler-sfc": "^3.2.37",
 		"@vue/reactivity": "^3.2.37",
 		"esbuild": "latest",

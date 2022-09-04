@@ -10,6 +10,7 @@ import * as vscode from 'vscode-languageserver-protocol';
 import type * as ts2 from '@volar/typescript-language-service';
 
 import type * as _ from '@volar/vue-language-core/node_modules/@vue/reactivity'; // fix build error
+import { URI } from 'vscode-uri';
 
 export type VueDocuments = ReturnType<typeof parseVueDocuments>;
 export type VueDocument = ReturnType<typeof parseVueDocument>;
@@ -103,13 +104,14 @@ export class TeleportSourceMap extends SourceMap<TeleportMappingData> {
 }
 
 export function parseVueDocuments(
+	rootUri: URI,
 	vueLsCtx: vue.LanguageContext,
 	tsLs: ts2.LanguageService,
 ) {
 
 	// cache map
 	const vueDocuments = useCacheMap<vue.SourceFile, VueDocument>(vueFile => {
-		return parseVueDocument(vueFile, tsLs);
+		return parseVueDocument(rootUri, vueFile, tsLs);
 	});
 
 	// reactivity
@@ -145,7 +147,7 @@ export function parseVueDocuments(
 		getAll: getAll,
 		get: (uri: string) => {
 
-			const fileName = shared.uriToFsPath(uri);
+			const fileName = shared.getPathOfUri(uri);
 			const vueFile = vueLsCtx.mapper.get(fileName);
 
 			if (vueFile) {
@@ -209,6 +211,7 @@ export function parseVueDocuments(
 }
 
 export function parseVueDocument(
+	rootUri: URI,
 	vueFile: vue.SourceFile,
 	tsLs: ts2.LanguageService | undefined,
 ) {
@@ -218,7 +221,7 @@ export function parseVueDocument(
 	const embeddedDocumentVersions = new Map<string, number>();
 	const embeddedDocumentsMap = useCacheMap<vue.EmbeddedFile, TextDocument>(embeddedFile => {
 
-		const uri = shared.fsPathToUri(embeddedFile.fileName);
+		const uri = shared.getUriByPath(rootUri, embeddedFile.fileName);
 		const newVersion = (embeddedDocumentVersions.get(uri.toLowerCase()) ?? 0) + 1;
 
 		embeddedDocumentVersions.set(uri.toLowerCase(), newVersion);
@@ -244,7 +247,12 @@ export function parseVueDocument(
 	};
 
 	// reactivity
-	const document = computed(() => TextDocument.create(shared.fsPathToUri(vueFile.fileName), vueFile.fileName.endsWith('.md') ? 'markdown' : 'vue', documentVersion++, vueFile.text));
+	const document = computed(() => TextDocument.create(
+		shared.getUriByPath(rootUri, vueFile.fileName),
+		vueFile.fileName.endsWith('.md') ? 'markdown' : 'vue',
+		documentVersion++,
+		vueFile.text,
+	));
 	const sourceMaps = computed(() => {
 		return vueFile.allEmbeddeds.map(embedded => sourceMapsMap.get(embedded));
 	});
@@ -300,7 +308,7 @@ export function parseVueDocument(
 	});
 
 	return {
-		uri: shared.fsPathToUri(vueFile.fileName),
+		uri: shared.getUriByPath(rootUri, vueFile.fileName),
 		file: vueFile,
 		embeddedDocumentsMap,
 		sourceMapsMap,
@@ -323,7 +331,7 @@ export function parseVueDocument(
 			const document = embeddedDocumentsMap.get(file);
 
 			let components = await tsLs?.doComplete(
-				shared.fsPathToUri(file!.fileName),
+				shared.getUriByPath(rootUri, file!.fileName),
 				document.positionAt(file!.codeGen.getText().indexOf(vue.SearchTexts.Components)),
 				options
 			);

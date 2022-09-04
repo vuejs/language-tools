@@ -4,6 +4,7 @@ import { BaseLanguageClient } from 'vscode-languageclient';
 import * as shared from '@volar/shared';
 import { userPick } from './splitEditors';
 import { takeOverModeEnabled } from '../common';
+import { ServerInitializationOptions } from 'packages/vue-language-server/src/types';
 
 const defaultTsdk = 'node_modules/typescript/lib';
 
@@ -111,7 +112,7 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 	async function reloadServers() {
 		const tsPaths = getCurrentTsPaths(context);
 		for (const client of clients) {
-			const newInitOptions: shared.ServerInitializationOptions = {
+			const newInitOptions: ServerInitializationOptions = {
 				...client.clientOptions.initializationOptions,
 				typescript: tsPaths,
 			};

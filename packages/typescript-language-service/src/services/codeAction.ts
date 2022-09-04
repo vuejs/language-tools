@@ -5,6 +5,7 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { fileTextChangesToWorkspaceEdit } from './rename';
 import * as fixNames from '../utils/fixNames';
 import type { Settings } from '../';
+import { URI } from 'vscode-uri';
 
 export interface FixAllData {
 	type: 'fixAll',
@@ -30,6 +31,7 @@ export interface OrganizeImportsData {
 export type Data = FixAllData | RefactorData | OrganizeImportsData;
 
 export function register(
+	rootUri: URI,
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
 	settings: Settings,
@@ -44,7 +46,7 @@ export function register(
 			settings.getPreferences?.(document.uri) ?? {},
 		]);
 
-		const fileName = shared.uriToFsPath(document.uri);
+		const fileName = shared.getPathOfUri(document.uri);
 		const start = document.offsetAt(range.start);
 		const end = document.offsetAt(range.end);
 		let result: vscode.CodeAction[] = [];
@@ -184,7 +186,7 @@ export function register(
 			}
 		}
 		function transformCodeFix(codeFix: ts.CodeFixAction, diagnostics: vscode.Diagnostic[], kind: vscode.CodeActionKind) {
-			const edit = fileTextChangesToWorkspaceEdit(codeFix.changes, getTextDocument);
+			const edit = fileTextChangesToWorkspaceEdit(rootUri, codeFix.changes, getTextDocument);
 			const codeActions: vscode.CodeAction[] = [];
 			const fix = vscode.CodeAction.create(
 				codeFix.description,

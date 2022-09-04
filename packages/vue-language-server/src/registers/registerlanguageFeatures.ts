@@ -1,10 +1,9 @@
-import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-service';
-import { LanguageConfigs } from '../types';
+import { LanguageConfigs, ServerInitializationOptions } from '../types';
 import * as vscode from 'vscode-languageserver';
 
 export function register(
-	features: NonNullable<shared.ServerInitializationOptions['languageFeatures']>,
+	features: NonNullable<ServerInitializationOptions['languageFeatures']>,
 	legend: vscode.SemanticTokensLegend,
 	server: vscode.ServerCapabilities,
 	languageConfigs: LanguageConfigs,

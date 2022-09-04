@@ -191,7 +191,7 @@ export default function (options: {
 
 			const paths = new Set<string>();
 			const customData: string[] = await configHost.getConfiguration('html.customData') ?? [];
-			const rootPaths = configHost.rootUris.map(shared.uriToFsPath);
+			const rootPaths = configHost.rootUris.map(shared.getPathOfUri);
 
 			for (const customDataPath of customData) {
 				try {

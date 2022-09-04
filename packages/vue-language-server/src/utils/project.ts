@@ -2,19 +2,23 @@ import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
-import type { createConfigurationHost } from './configurationHost';
+import { URI } from 'vscode-uri';
 import { loadCustomPlugins } from '../common';
+import { GetDocumentContentRequest, GetDocumentNameCasesRequest } from '../requests';
+import { FileSystem, FileSystemHost, LanguageConfigs, RuntimeEnvironment, ServerInitializationOptions } from '../types';
+import type { createConfigurationHost } from './configurationHost';
 import { createSnapshots } from './snapshots';
-import { LanguageConfigs, RuntimeEnvironment } from '../types';
 
 export interface Project extends ReturnType<typeof createProject> { }
 
 export async function createProject(
 	runtimeEnv: RuntimeEnvironment,
 	languageConfigs: LanguageConfigs,
+	fsHost: FileSystemHost,
+	sys: FileSystem,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	projectSys: ts.System,
-	options: shared.ServerInitializationOptions,
+	options: ServerInitializationOptions,
+	rootUri: URI,
 	rootPath: string,
 	tsConfig: string | ts.CompilerOptions,
 	tsLocalized: ts.MapLike<string> | undefined,
@@ -26,19 +30,36 @@ export async function createProject(
 	let typeRootVersion = 0;
 	let projectVersion = 0;
 	let vueLs: vue.LanguageService | undefined;
-	let parsedCommandLine = createParsedCommandLine();
+	let parsedCommandLine: vue.ParsedCommandLine;
 
-	const scripts = shared.createPathMap<{
+	try {
+		// will be failed if web fs host first result not ready
+		parsedCommandLine = createParsedCommandLine();
+	} catch {
+		parsedCommandLine = {
+			errors: [],
+			fileNames: [],
+			options: {},
+			vueOptions: {},
+		};
+	}
+
+	const scripts = shared.createUriAndPathMap<{
 		version: number,
 		fileName: string,
 		snapshot: ts.IScriptSnapshot | undefined,
 		snapshotVersion: number | undefined,
-	}>();
+	}>(rootUri);
 	const languageServiceHost = createLanguageServiceHost();
 
+	const disposeWatchEvent = fsHost.onDidChangeWatchedFiles(params => {
+		onWorkspaceFilesChanged(params.changes);
+	});
+	const disposeDocChange = documents.onDidChangeContent(params => {
+		projectVersion++;
+	});
+
 	return {
-		onWorkspaceFilesChanged,
-		onDocumentUpdated,
 		getLanguageService,
 		getLanguageServiceDontCreate: () => vueLs,
 		getParsedCommandLine: () => parsedCommandLine,
@@ -60,7 +81,7 @@ export async function createProject(
 					}
 
 					if (typeof options === 'object' && options.languageFeatures?.schemaRequestService) {
-						return connection.sendRequest(shared.GetDocumentContentRequest.type, { uri }).then(responseText => {
+						return connection.sendRequest(GetDocumentContentRequest.type, { uri }).then(responseText => {
 							return responseText;
 						}, error => {
 							return Promise.reject(error.message);
@@ -75,7 +96,7 @@ export async function createProject(
 				options.languageFeatures?.completion ? async (uri) => {
 
 					if (options.languageFeatures?.completion?.getDocumentNameCasesRequest) {
-						const res = await connection.sendRequest(shared.GetDocumentNameCasesRequest.type, { uri });
+						const res = await connection.sendRequest(GetDocumentNameCasesRequest.type, { uri });
 						return {
 							tag: res.tagNameCase,
 							attr: res.attrNameCase,
@@ -87,6 +108,8 @@ export async function createProject(
 						attr: options.languageFeatures!.completion!.defaultAttrNameCase,
 					};
 				} : undefined,
+				undefined,
+				rootUri,
 			);
 		}
 		return vueLs;
@@ -109,7 +132,10 @@ export async function createProject(
 				scripts.uriDelete(change.uri);
 			}
 
-			projectVersion++;
+			if (script) {
+				projectVersion++;
+				typeRootVersion++;
+			}
 		}
 
 		const creates = changes.filter(change => change.type === vscode.FileChangeType.Created);
@@ -117,29 +143,31 @@ export async function createProject(
 
 		if (creates.length || deletes.length) {
 			parsedCommandLine = createParsedCommandLine();
-			typeRootVersion++; // TODO: check changed in node_modules?
 		}
-	}
-	async function onDocumentUpdated() {
-		projectVersion++;
 	}
 	function createLanguageServiceHost() {
 
 		const host: vue.LanguageServiceHost = {
 			// ts
-			getNewLine: () => projectSys.newLine,
-			useCaseSensitiveFileNames: () => projectSys.useCaseSensitiveFileNames,
-			readFile: projectSys.readFile,
-			writeFile: projectSys.writeFile,
-			directoryExists: projectSys.directoryExists,
-			getDirectories: projectSys.getDirectories,
-			readDirectory: projectSys.readDirectory,
-			realpath: projectSys.realpath,
-			fileExists: projectSys.fileExists,
+			getNewLine: () => sys.newLine,
+			useCaseSensitiveFileNames: () => sys.useCaseSensitiveFileNames,
+			readFile: sys.readFile,
+			writeFile: sys.writeFile,
+			directoryExists: sys.directoryExists,
+			getDirectories: sys.getDirectories,
+			readDirectory: sys.readDirectory,
+			realpath: sys.realpath,
+			fileExists: sys.fileExists,
 			getCurrentDirectory: () => rootPath,
 			getProjectReferences: () => parsedCommandLine.projectReferences, // if circular, broken with provide `getParsedCommandLine: () => parsedCommandLine`
 			// custom
-			getDefaultLibFileName: options => ts.getDefaultLibFilePath(options), // TODO: vscode option for ts lib
+			getDefaultLibFileName: options => {
+				try {
+					return ts.getDefaultLibFilePath(options);
+				} catch {
+					return sys.resolvePath('node_modules/typescript/lib/' + ts.getDefaultLibFileName(options)); // web
+				}
+			},
 			getProjectVersion: () => projectVersion.toString(),
 			getTypeRootsVersion: () => typeRootVersion,
 			getScriptFileNames: () => {
@@ -164,27 +192,31 @@ export async function createProject(
 
 		function getScriptVersion(fileName: string) {
 
-			const doc = documents.data.fsPathGet(fileName);
+			fileName = sys.resolvePath(fileName);
+
+			const doc = documents.data.uriGet(shared.getUriByPath(rootUri, fileName));
 			if (doc) {
 				return doc.version.toString();
 			}
 
-			return scripts.fsPathGet(fileName)?.version.toString() ?? '';
+			return scripts.pathGet(fileName)?.version.toString() ?? '';
 		}
 		function getScriptSnapshot(fileName: string) {
 
-			const doc = documents.data.fsPathGet(fileName);
+			fileName = sys.resolvePath(fileName);
+
+			const doc = documents.data.uriGet(shared.getUriByPath(rootUri, fileName));
 			if (doc) {
 				return doc.getSnapshot();
 			}
 
-			const script = scripts.fsPathGet(fileName);
+			const script = scripts.pathGet(fileName);
 			if (script && script.snapshotVersion === script.version) {
 				return script.snapshot;
 			}
 
-			if (projectSys.fileExists(fileName)) {
-				const text = projectSys.readFile(fileName, 'utf8');
+			if (sys.fileExists(fileName)) {
+				const text = sys.readFile(fileName, 'utf8');
 				if (text !== undefined) {
 					const snapshot = ts.ScriptSnapshot.fromString(text);
 					if (script) {
@@ -192,7 +224,7 @@ export async function createProject(
 						script.snapshotVersion = script.version;
 					}
 					else {
-						scripts.fsPathSet(fileName, {
+						scripts.pathSet(fileName, {
 							version: -1,
 							fileName: fileName,
 							snapshot: snapshot,
@@ -207,10 +239,12 @@ export async function createProject(
 	function dispose() {
 		vueLs?.dispose();
 		scripts.clear();
+		disposeWatchEvent();
+		disposeDocChange();
 	}
 	function createParsedCommandLine(): ReturnType<typeof vue.createParsedCommandLine> {
 		const parseConfigHost: ts.ParseConfigHost = {
-			useCaseSensitiveFileNames: projectSys.useCaseSensitiveFileNames,
+			useCaseSensitiveFileNames: sys.useCaseSensitiveFileNames,
 			readDirectory: (path, extensions, exclude, include, depth) => {
 				const exts = [...extensions, ...languageConfigs.definitelyExts];
 				for (const passiveExt of languageConfigs.indeterminateExts) {
@@ -218,10 +252,10 @@ export async function createProject(
 						exts.push(passiveExt);
 					}
 				}
-				return projectSys.readDirectory(path, exts, exclude, include, depth);
+				return sys.readDirectory(path, exts, exclude, include, depth);
 			},
-			fileExists: projectSys.fileExists,
-			readFile: projectSys.readFile,
+			fileExists: sys.fileExists,
+			readFile: sys.readFile,
 		};
 		if (typeof tsConfig === 'string') {
 			return vue.createParsedCommandLine(ts, parseConfigHost, tsConfig);

@@ -28,10 +28,10 @@ import * as inlayHints from './services/inlayHints';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
+import { URI } from 'vscode-uri';
 
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
 export { getSemanticTokenLegend } from './services/semanticTokens';
-import { posix as path } from 'path';
 
 export interface Settings {
 	getFormatOptions?(uri: string, options?: vscode.FormattingOptions): Promise<ts.FormatCodeSettings>;
@@ -43,38 +43,39 @@ export function createLanguageService(
 	host: ts.LanguageServiceHost,
 	languageService: ts.LanguageService,
 	settings: Settings,
+	rootUri: URI,
 ) {
 
-	const documents = shared.createPathMap<[string, TextDocument]>();
+	const documents = shared.createUriMap<[string, TextDocument]>();
 
 	return {
-		findDefinition: definitions.register(languageService, getValidTextDocument, getTextDocument),
-		findTypeDefinition: typeDefinitions.register(languageService, getValidTextDocument, getTextDocument),
-		findReferences: references.register(languageService, getValidTextDocument, getTextDocument),
-		findFileReferences: fileReferences.register(languageService, getValidTextDocument, getTextDocument),
-		findImplementations: implementation.register(languageService, getValidTextDocument, getTextDocument),
+		findDefinition: definitions.register(rootUri, languageService, getValidTextDocument, getTextDocument),
+		findTypeDefinition: typeDefinitions.register(rootUri, languageService, getValidTextDocument, getTextDocument),
+		findReferences: references.register(rootUri, languageService, getValidTextDocument, getTextDocument),
+		findFileReferences: fileReferences.register(rootUri, languageService, getValidTextDocument, getTextDocument),
+		findImplementations: implementation.register(rootUri, languageService, getValidTextDocument, getTextDocument),
 		prepareRename: prepareRename.register(languageService, getValidTextDocument),
-		doRename: rename.register(languageService, getValidTextDocument, settings),
-		getEditsForFileRename: fileRename.register(languageService, getValidTextDocument, settings),
-		getCodeActions: codeActions.register(languageService, getValidTextDocument, settings),
-		doCodeActionResolve: codeActionResolve.register(languageService, getValidTextDocument, settings),
+		doRename: rename.register(rootUri, languageService, getValidTextDocument, settings),
+		getEditsForFileRename: fileRename.register(rootUri, languageService, getValidTextDocument, settings),
+		getCodeActions: codeActions.register(rootUri, languageService, getValidTextDocument, settings),
+		doCodeActionResolve: codeActionResolve.register(rootUri, languageService, getValidTextDocument, settings),
 		getInlayHints: inlayHints.register(languageService, getValidTextDocument, settings, ts),
 
 		findDocumentHighlights: documentHighlight.register(languageService, getValidTextDocument, ts),
 		findDocumentSymbols: documentSymbol.register(languageService, getValidTextDocument),
-		findWorkspaceSymbols: workspaceSymbols.register(languageService, getTextDocument),
+		findWorkspaceSymbols: workspaceSymbols.register(rootUri, languageService, getTextDocument),
 		doComplete: completions.register(languageService, getValidTextDocument, settings, ts),
-		doCompletionResolve: completionResolve.register(languageService, getValidTextDocument, getTextDocument, settings),
+		doCompletionResolve: completionResolve.register(rootUri, languageService, getValidTextDocument, getTextDocument, settings),
 		doDirectiveCommentComplete: directiveCommentCompletions.register(getValidTextDocument),
 		doJsDocComplete: jsDocCompletions.register(languageService, getValidTextDocument),
-		doHover: hover.register(languageService, getValidTextDocument, getTextDocument, ts),
+		doHover: hover.register(rootUri, languageService, getValidTextDocument, getTextDocument, ts),
 		doFormatting: formatting.register(languageService, getValidTextDocument, settings),
 		getSignatureHelp: signatureHelp.register(languageService, getValidTextDocument, ts),
 		getSelectionRanges: selectionRanges.register(languageService, getValidTextDocument),
-		doValidation: diagnostics.register(languageService, getValidTextDocument, ts),
+		doValidation: diagnostics.register(rootUri, languageService, getValidTextDocument, ts),
 		getFoldingRanges: foldingRanges.register(languageService, getValidTextDocument, ts),
 		getDocumentSemanticTokens: semanticTokens.register(languageService, getValidTextDocument, ts),
-		callHierarchy: callHierarchy.register(languageService, getValidTextDocument),
+		callHierarchy: callHierarchy.register(rootUri, languageService, getValidTextDocument),
 
 		dispose,
 
@@ -88,7 +89,7 @@ export function createLanguageService(
 	};
 
 	function getValidTextDocument(uri: string) {
-		const fileName = shared.uriToFsPath(uri);
+		const fileName = shared.getPathOfUri(uri);
 		if (!isValidFile(fileName)) {
 			return;
 		}
@@ -101,14 +102,14 @@ export function createLanguageService(
 		return true;
 	}
 	function getTextDocument(uri: string) {
-		const fileName = shared.uriToFsPath(uri);
+		const fileName = shared.getPathOfUri(uri);
 		const version = host.getScriptVersion(fileName);
 		const oldDoc = documents.uriGet(uri);
 		if (!oldDoc || oldDoc[0] !== version) {
 			const scriptSnapshot = host.getScriptSnapshot(fileName);
 			if (scriptSnapshot) {
 				const scriptText = scriptSnapshot.getText(0, scriptSnapshot.getLength());
-				const document = TextDocument.create(uri, shared.syntaxToLanguageId(path.extname(uri).slice(1)), oldDoc ? oldDoc[1].version + 1 : 0, scriptText);
+				const document = TextDocument.create(uri, shared.syntaxToLanguageId(uri.substring(uri.lastIndexOf('.') + 1)), oldDoc ? oldDoc[1].version + 1 : 0, scriptText);
 				documents.uriSet(uri, [version, document]);
 			}
 		}

@@ -1,5 +1,5 @@
 import { URI } from 'vscode-uri';
-import { fsPathToUri } from './path';
+import { getUriByPath as _getUriByPath } from './path';
 
 interface Options<T> {
 	delete(key: string): boolean;
@@ -10,10 +10,9 @@ interface Options<T> {
 	values(): IterableIterator<T>;
 }
 
-export function createPathMap<T>(map: Options<T> = new Map<string, T>()) {
+export function createUriMap<T>(map: Options<T> = new Map<string, T>()) {
 
 	const uriToUriKeys: Record<string, string> = {};
-	const fsPathToUriKeys: Record<string, string> = {};
 
 	return {
 		clear,
@@ -22,21 +21,12 @@ export function createPathMap<T>(map: Options<T> = new Map<string, T>()) {
 		uriGet,
 		uriHas,
 		uriSet,
-		fsPathDelete,
-		fsPathGet,
-		fsPathHas,
-		fsPathSet,
 	};
 
 	function getUriByUri(uri: string) {
 		if (uriToUriKeys[uri] === undefined)
 			uriToUriKeys[uri] = normalizeUri(uri).toLowerCase();
 		return uriToUriKeys[uri];
-	}
-	function getUriByFsPath(fsPath: string) {
-		if (fsPathToUriKeys[fsPath] === undefined)
-			fsPathToUriKeys[fsPath] = fsPathToUri(fsPath).toLowerCase();
-		return fsPathToUriKeys[fsPath];
 	}
 
 	function clear() {
@@ -58,18 +48,38 @@ export function createPathMap<T>(map: Options<T> = new Map<string, T>()) {
 	function uriSet(_uri: string, item: T) {
 		return map.set(getUriByUri(_uri), item);
 	}
+}
 
-	function fsPathDelete(_fsPath: string) {
-		return map.delete(getUriByFsPath(_fsPath));
+export function createUriAndPathMap<T>(rootUri: URI, map: Options<T> = new Map<string, T>()) {
+
+	const base = createUriMap(map);
+	const pathToUriKeys: Record<string, string> = {};
+
+	return {
+		...base,
+		pathDelete,
+		pathGet,
+		pathHas,
+		pathSet,
+	};
+
+	function getUriByPath(path: string) {
+		if (pathToUriKeys[path] === undefined)
+			pathToUriKeys[path] = _getUriByPath(rootUri, path).toLowerCase();
+		return pathToUriKeys[path];
 	}
-	function fsPathGet(_fsPath: string) {
-		return map.get(getUriByFsPath(_fsPath));
+
+	function pathDelete(path: string) {
+		return map.delete(getUriByPath(path));
 	}
-	function fsPathHas(_fsPath: string) {
-		return map.has(getUriByFsPath(_fsPath));
+	function pathGet(path: string) {
+		return map.get(getUriByPath(path));
 	}
-	function fsPathSet(_fsPath: string, item: T) {
-		return map.set(getUriByFsPath(_fsPath), item);
+	function pathHas(path: string) {
+		return map.has(getUriByPath(path));
+	}
+	function pathSet(path: string, item: T) {
+		return map.set(getUriByPath(path), item);
 	}
 }
 
