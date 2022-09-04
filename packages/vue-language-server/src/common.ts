@@ -3,6 +3,7 @@ import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import { LanguageConfigs, RuntimeEnvironment, ServerInitializationOptions } from './types';
 import { createConfigurationHost } from './utils/configurationHost';
+import { createDocumentServiceHost } from './utils/documentServiceHost';
 import { createSnapshots } from './utils/snapshots';
 import { createWorkspaces } from './utils/workspaces';
 
@@ -56,24 +57,30 @@ export function createLanguageServer(
 		const configHost = params.capabilities.workspace?.configuration ? createConfigurationHost(roots, connection) : undefined;
 		const ts = runtimeEnv.loadTypescript(options);
 
+		let projects: ReturnType<typeof createWorkspaces> | undefined;
+		let documentServiceHost: ReturnType<typeof createDocumentServiceHost> | undefined;
+
 		if (options.documentFeatures) {
 
-			const documentService = languageConfigs.getDocumentService(
+			documentServiceHost = createDocumentServiceHost(
+				runtimeEnv,
+				languageConfigs,
 				ts,
 				configHost,
-				runtimeEnv.fileSystemProvide,
-				loadCustomPlugins(roots[0].fsPath), // TODO: handle multiple roots
-				roots[0],
 			);
 
-			(await import('./features/documentFeatures')).register(connection, documents, documentService, options.documentFeatures.allowedLanguageIds);
+			for (const root of roots) {
+				documentServiceHost.add(root.toString());
+			}
+
+			(await import('./features/documentFeatures')).register(connection, documents, documentServiceHost, options.documentFeatures.allowedLanguageIds);
 		}
 
 		if (options.languageFeatures) {
 
 			const fsHost = runtimeEnv.createFileSystemHost(ts, connection, params.capabilities);
 			const tsLocalized = runtimeEnv.loadTypescriptLocalized(options);
-			const projects = createWorkspaces(
+			projects = createWorkspaces(
 				runtimeEnv,
 				languageConfigs,
 				fsHost,
@@ -91,17 +98,20 @@ export function createLanguageServer(
 
 			(await import('./features/customFeatures')).register(connection, projects);
 			(await import('./features/languageFeatures')).register(connection, projects, options.languageFeatures, params);
-
-			connection.workspace.onDidChangeWorkspaceFolders(e => {
-
-				for (const folder of e.added) {
-					projects.add(URI.parse(folder.uri));
-				}
-				for (const folder of e.removed) {
-					projects.remove(URI.parse(folder.uri));
-				}
-			});
 		}
+
+		connection.workspace.onDidChangeWorkspaceFolders(e => {
+
+			for (const folder of e.added) {
+				documentServiceHost?.add(folder.uri);
+				projects?.add(URI.parse(folder.uri));
+			}
+
+			for (const folder of e.removed) {
+				documentServiceHost?.remove(folder.uri);
+				projects?.remove(URI.parse(folder.uri));
+			}
+		});
 
 		if (params.capabilities.workspace?.didChangeConfiguration?.dynamicRegistration) { // TODO
 			connection.client.register(vscode.DidChangeConfigurationNotification.type);
