@@ -72,6 +72,7 @@
 	],
 	"autoCloseBefore": ";:.,=}])><`'\" \n\t",
 	"surroundingPairs": [
+		// html
 		{
 			"open": "'",
 			"close": "'"
@@ -95,7 +96,12 @@
 		{
 			"open": "<",
 			"close": ">"
-		}
+		},
+		// javascript
+		[
+			"`",
+			"`"
+		],
 	],
 	"colorizedBracketPairs": [],
 	"folding": {
