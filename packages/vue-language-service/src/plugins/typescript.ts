@@ -253,8 +253,15 @@ export default function (options: {
 			}
 		},
 
-		formatOnType(document, position, key, options_2) {
+		async formatOnType(document, position, key, options_2) {
 			if (isTsDocument(document)) {
+
+				const enable = await useConfigurationHost()?.getConfiguration<boolean>(getConfigTitle(document) + '.format.enable', document.uri);
+
+				if (enable === false) {
+					return;
+				}
+
 				return options.getTsLs().doFormatting.onType(document.uri, options_2, position, key);
 			}
 		},
