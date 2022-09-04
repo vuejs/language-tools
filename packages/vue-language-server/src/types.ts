@@ -88,6 +88,8 @@ export interface ServerInitializationOptions {
 			 * {@link __requests.GetDocumentSelectionRequest}
 			 * */
 			getDocumentSelectionRequest?: boolean,
+			// for resolve https://github.com/sublimelsp/LSP-volar/issues/114
+			ignoreTriggerCharacters?: string,
 		};
 		documentHighlight?: boolean;
 		documentLink?: boolean;

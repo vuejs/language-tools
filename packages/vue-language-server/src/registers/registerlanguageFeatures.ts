@@ -69,6 +69,10 @@ export function register(
 			])],
 			resolveProvider: true,
 		};
+		if (features.completion.ignoreTriggerCharacters) {
+			server.completionProvider.triggerCharacters = server.completionProvider.triggerCharacters
+				?.filter(c => !features.completion!.ignoreTriggerCharacters?.includes(c));
+		}
 		server.executeCommandProvider = {
 			commands: [
 				...(server.executeCommandProvider?.commands ?? []),
