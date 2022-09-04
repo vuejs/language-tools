@@ -131,6 +131,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 			return templateGen.generate(
 				ts,
 				vueCompilerOptions,
+				sfc.template?.content ?? '',
 				sfc.template?.lang ?? 'html',
 				sfc.templateAst,
 				!!sfc.scriptSetup,

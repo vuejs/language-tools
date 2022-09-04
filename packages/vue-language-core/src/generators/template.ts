@@ -61,6 +61,7 @@ export function isIntrinsicElement(runtimeMode: 'runtime-dom' | 'runtime-uni-app
 export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	vueCompilerOptions: _VueCompilerOptions,
+	sourceTemplate: string,
 	sourceLang: string,
 	templateAst: CompilerDOM.RootNode,
 	hasScriptSetup: boolean,
@@ -309,11 +310,11 @@ export function generate(
 			let rightCharacter: string;
 
 			// fix https://github.com/johnsoncodehk/volar/issues/1787
-			while ((leftCharacter = templateAst.loc.source.substring(start - 1, start)).trim() === '' && leftCharacter.length) {
+			while ((leftCharacter = sourceTemplate.substring(start - 1, start)).trim() === '' && leftCharacter.length) {
 				start--;
 				content = leftCharacter + content;
 			}
-			while ((rightCharacter = templateAst.loc.source.substring(start + content.length, start + content.length + 1)).trim() === '' && rightCharacter.length) {
+			while ((rightCharacter = sourceTemplate.substring(start + content.length, start + content.length + 1)).trim() === '' && rightCharacter.length) {
 				content = content + rightCharacter;
 			}
 
