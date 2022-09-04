@@ -7,27 +7,27 @@ let currentCwd = '';
 
 export function createNodeFileSystemHost(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	connection: vscode.Connection,
 	capabilities: vscode.ClientCapabilities,
 ): FileSystemHost {
 
 	const onDidChangeWatchedFilesCb = new Set<(params: vscode.DidChangeWatchedFilesParams, reason: 'lsp' | 'web-cache-updated') => void>();
 	const caches = new IterableWeakSet<Map<string, boolean>>();
 
-	connection.onDidChangeWatchedFiles(async params => {
-		if (params.changes.some(change => change.type === vscode.FileChangeType.Created || change.type === vscode.FileChangeType.Deleted)) {
-			caches.forEach(cache => {
-				cache.clear();
-			});
-		}
-		for (const cb of [...onDidChangeWatchedFilesCb]) {
-			if (onDidChangeWatchedFilesCb.has(cb)) {
-				await cb(params, 'lsp');
-			}
-		}
-	});
-
 	return {
+		ready(connection) {
+			connection.onDidChangeWatchedFiles(async params => {
+				if (params.changes.some(change => change.type === vscode.FileChangeType.Created || change.type === vscode.FileChangeType.Deleted)) {
+					caches.forEach(cache => {
+						cache.clear();
+					});
+				}
+				for (const cb of [...onDidChangeWatchedFilesCb]) {
+					if (onDidChangeWatchedFilesCb.has(cb)) {
+						await cb(params, 'lsp');
+					}
+				}
+			});
+		},
 		clearCache() {
 			caches.forEach(cache => {
 				cache.clear();

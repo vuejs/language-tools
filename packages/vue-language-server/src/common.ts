@@ -1,7 +1,7 @@
 import * as vue from '@volar/vue-language-service';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
-import { LanguageConfigs, RuntimeEnvironment, ServerInitializationOptions } from './types';
+import { FileSystemHost, LanguageConfigs, RuntimeEnvironment, ServerInitializationOptions } from './types';
 import { createConfigurationHost } from './utils/configurationHost';
 import { createDocumentServiceHost } from './utils/documentServiceHost';
 import { createSnapshots } from './utils/snapshots';
@@ -21,6 +21,11 @@ export function createLanguageServer(
 	let params: vscode.InitializeParams;
 	let options: ServerInitializationOptions;
 	let roots: URI[] = [];
+	let fsHost: FileSystemHost | undefined;
+	let projects: ReturnType<typeof createWorkspaces> | undefined;
+	let documentServiceHost: ReturnType<typeof createDocumentServiceHost> | undefined;
+
+	const documents = createSnapshots(connection);
 
 	connection.onInitialize(async _params => {
 
@@ -42,25 +47,12 @@ export function createLanguageServer(
 				textDocumentSync: (options.textDocumentSync as vscode.TextDocumentSyncKind) ?? vscode.TextDocumentSyncKind.Incremental,
 			},
 		};
-
-		if (options.documentFeatures) {
-			(await import('./registers/registerDocumentFeatures')).register(options.documentFeatures, result.capabilities);
-		}
-		if (options.languageFeatures) {
-			(await import('./registers/registerlanguageFeatures')).register(options.languageFeatures!, vue.getSemanticTokenLegend(), result.capabilities, languageConfigs);
-		}
-
-		return result;
-	});
-	connection.onInitialized(async () => {
-
 		const configHost = params.capabilities.workspace?.configuration ? createConfigurationHost(roots, connection) : undefined;
 		const ts = runtimeEnv.loadTypescript(options);
 
-		let projects: ReturnType<typeof createWorkspaces> | undefined;
-		let documentServiceHost: ReturnType<typeof createDocumentServiceHost> | undefined;
-
 		if (options.documentFeatures) {
+
+			(await import('./registers/registerDocumentFeatures')).register(options.documentFeatures, result.capabilities);
 
 			documentServiceHost = createDocumentServiceHost(
 				runtimeEnv,
@@ -75,11 +67,13 @@ export function createLanguageServer(
 
 			(await import('./features/documentFeatures')).register(connection, documents, documentServiceHost, options.documentFeatures.allowedLanguageIds);
 		}
-
 		if (options.languageFeatures) {
+			(await import('./registers/registerlanguageFeatures')).register(options.languageFeatures!, vue.getSemanticTokenLegend(), result.capabilities, languageConfigs);
 
-			const fsHost = runtimeEnv.createFileSystemHost(ts, connection, params.capabilities);
+			fsHost = runtimeEnv.createFileSystemHost(ts, params.capabilities);
+
 			const tsLocalized = runtimeEnv.loadTypescriptLocalized(options);
+
 			projects = createWorkspaces(
 				runtimeEnv,
 				languageConfigs,
@@ -100,6 +94,12 @@ export function createLanguageServer(
 			(await import('./features/languageFeatures')).register(connection, projects, options.languageFeatures, params);
 		}
 
+		return result;
+	});
+	connection.onInitialized(async () => {
+
+		fsHost?.ready(connection);
+
 		connection.workspace.onDidChangeWorkspaceFolders(e => {
 
 			for (const folder of e.added) {
@@ -118,8 +118,6 @@ export function createLanguageServer(
 		}
 	});
 	connection.listen();
-
-	const documents = createSnapshots(connection);
 }
 
 export function loadCustomPlugins(dir: string) {

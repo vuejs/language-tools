@@ -15,11 +15,7 @@ interface Dir {
 	searched: boolean,
 }
 
-export function createWebFileSystemHost(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
-	connection: vscode.Connection,
-	capabilities: vscode.ClientCapabilities,
-): FileSystemHost {
+export function createWebFileSystemHost(): FileSystemHost {
 
 	const onDidChangeWatchedFilesCb = new Set<(params: vscode.DidChangeWatchedFilesParams, reason: 'lsp' | 'web-cache-updated') => void>();
 	const root: Dir = {
@@ -30,28 +26,37 @@ export function createWebFileSystemHost(
 	};
 	const pendings = new Set<Promise<void>>();
 	const changes: vscode.FileEvent[] = [];
-	let checking = false;
+	const onReadys: ((connection: vscode.Connection) => void)[] = [];
 
-	connection.onDidChangeWatchedFiles(params => {
-		for (const change of params.changes) {
-			const fsPath = URI.parse(change.uri).fsPath;
-			const dir = getDir(path.dirname(fsPath));
-			const name = path.basename(fsPath);
-			if (change.type === vscode.FileChangeType.Created) {
-				dir.fileTypes.set(name, FileType.File);
-			}
-			else if (change.type === vscode.FileChangeType.Changed) {
-				dir.fileTexts.delete(name);
-			}
-			else {
-				dir.fileTypes.delete(name);
-				dir.fileTexts.delete(name);
-			}
-		}
-		fireChanges(params, 'lsp');
-	});
+	let checking = false;
+	let connection: vscode.Connection | undefined;
 
 	return {
+		ready(_connection) {
+			connection = _connection;
+			connection.onDidChangeWatchedFiles(params => {
+				for (const change of params.changes) {
+					const fsPath = URI.parse(change.uri).fsPath;
+					const dir = getDir(path.dirname(fsPath));
+					const name = path.basename(fsPath);
+					if (change.type === vscode.FileChangeType.Created) {
+						dir.fileTypes.set(name, FileType.File);
+					}
+					else if (change.type === vscode.FileChangeType.Changed) {
+						dir.fileTexts.delete(name);
+					}
+					else {
+						dir.fileTypes.delete(name);
+						dir.fileTexts.delete(name);
+					}
+				}
+				fireChanges(params, 'lsp');
+			});
+			for (const cb of onReadys) {
+				cb(connection);
+			}
+			onReadys.length = 0;
+		},
 		clearCache() {
 			root.dirs.clear();
 			root.fileTexts.clear();
@@ -88,7 +93,12 @@ export function createWebFileSystemHost(
 					return dir.fileTypes.get(name) === FileType.File || dir.fileTypes.get(name) === FileType.SymbolicLink;
 				}
 				dir.fileTypes.set(name, undefined);
-				addPending(statAsync(fsPath, dir));
+				if (connection) {
+					addPending(statAsync(connection, fsPath, dir));
+				}
+				else {
+					onReadys.push((connection) => addPending(statAsync(connection, fsPath, dir)));
+				}
 				return false;
 			}
 
@@ -100,7 +110,12 @@ export function createWebFileSystemHost(
 					return dir.fileTexts.get(name);
 				}
 				dir.fileTexts.set(name, '');
-				addPending(readFileAsync(fsPath, dir));
+				if (connection) {
+					addPending(readFileAsync(connection, fsPath, dir));
+				}
+				else {
+					onReadys.push((connection) => addPending(readFileAsync(connection, fsPath, dir)));
+				}
 				return '';
 			}
 
@@ -128,7 +143,12 @@ export function createWebFileSystemHost(
 
 						if (!dir.searched) {
 							dir.searched = true;
-							addPending(readDirectoryAsync(dirPath, dir));
+							if (connection) {
+								addPending(readDirectoryAsync(connection, dirPath, dir));
+							}
+							else {
+								onReadys.push((connection) => addPending(readDirectoryAsync(connection, dirPath, dir)));
+							}
 						}
 
 						return {
@@ -150,7 +170,12 @@ export function createWebFileSystemHost(
 
 				if (!dir.searched) {
 					dir.searched = true;
-					addPending(readDirectoryAsync(fsPath, dir));
+					if (connection) {
+						addPending(readDirectoryAsync(connection, fsPath, dir));
+					}
+					else {
+						onReadys.push((connection) => addPending(readDirectoryAsync(connection, fsPath, dir)));
+					}
 				}
 
 				return files.filter(file => file[1] === FileType.Directory).map(file => file[0]);
@@ -163,7 +188,7 @@ export function createWebFileSystemHost(
 				});
 			}
 
-			async function statAsync(fsPath: string, dir: Dir) {
+			async function statAsync(connection: vscode.Connection, fsPath: string, dir: Dir) {
 				const uri = getFsPathUri(fsPath);
 				const result = await connection.sendRequest(FsStatRequest.type, uri.toString());
 				if (result?.type === FileType.File || result?.type === FileType.SymbolicLink) {
@@ -176,7 +201,7 @@ export function createWebFileSystemHost(
 				}
 			}
 
-			async function readFileAsync(fsPath: string, dir: Dir) {
+			async function readFileAsync(connection: vscode.Connection, fsPath: string, dir: Dir) {
 				const uri = getFsPathUri(fsPath);
 				const text = await connection.sendRequest(FsReadFileRequest.type, uri.toString());
 				if (text) {
@@ -189,7 +214,7 @@ export function createWebFileSystemHost(
 				}
 			}
 
-			async function readDirectoryAsync(fsPath: string, dir: Dir) {
+			async function readDirectoryAsync(connection: vscode.Connection, fsPath: string, dir: Dir) {
 				const uri = getFsPathUri(fsPath);
 				const result = await connection.sendRequest(FsReadDirectoryRequest.type, uri.toString());
 				for (const [name, fileType] of result) {

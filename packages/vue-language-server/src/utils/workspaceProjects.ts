@@ -27,7 +27,6 @@ export async function createWorkspaceProjects(
 	let inferredProject: Project | undefined;
 
 	const sys = fsHost.getWorkspaceFileSystem(rootUri);
-	const inferOptions = await getInferredCompilerOptions(ts, configHost);
 	const projects = shared.createUriAndPathMap<Project>(rootUri);
 	const rootTsConfigs = new Set(sys.readDirectory(rootUri.fsPath, rootTsConfigNames, undefined, ['**/*']));
 
@@ -93,21 +92,24 @@ export async function createWorkspaceProjects(
 	}
 	function getInferredProject() {
 		if (!inferredProject) {
-			inferredProject = createProject(
-				runtimeEnv,
-				languageConfigs,
-				fsHost,
-				sys,
-				ts,
-				options,
-				rootUri,
-				rootUri.fsPath,
-				inferOptions,
-				tsLocalized,
-				documents,
-				connection,
-				configHost,
-			);
+			inferredProject = (async () => {
+				const inferOptions = await getInferredCompilerOptions(ts, configHost);
+				return createProject(
+					runtimeEnv,
+					languageConfigs,
+					fsHost,
+					sys,
+					ts,
+					options,
+					rootUri,
+					rootUri.fsPath,
+					inferOptions,
+					tsLocalized,
+					documents,
+					connection,
+					configHost,
+				);
+			})();
 		}
 		return inferredProject;
 	}
