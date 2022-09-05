@@ -38,7 +38,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 		let level = 0;
 
-		const initialIndentLanguageId = await useConfigurationHost()?.getConfiguration<Record<string, boolean>>('volar.initialIndent') ?? { html: true };
+		const initialIndentLanguageId = await useConfigurationHost()?.getConfiguration<Record<string, boolean>>('volar.format.initialIndent') ?? { html: true };
 
 		while (true) {
 

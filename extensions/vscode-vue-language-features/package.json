@@ -370,7 +370,7 @@
 					"default": false,
 					"description": "Auto-complete Ref value with `.value`."
 				},
-				"volar.initialIndent": {
+				"volar.format.initialIndent": {
 					"type": "object",
 					"description": "Whether to have initial indent.",
 					"default": {
