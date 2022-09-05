@@ -151,11 +151,13 @@ export function createSourceFile(
 		for (const plugin of plugins) {
 			const sfc = plugin.parseSFC?.(fileName, fileContent.value);
 			if (sfc) {
-				parsedSfcCache = {
-					snapshot: snapshot.value,
-					sfc,
-					plugin,
-				};
+				if (!sfc.errors.length) {
+					parsedSfcCache = {
+						snapshot: snapshot.value,
+						sfc,
+						plugin,
+					};
+				}
 				return sfc;
 			}
 		}
