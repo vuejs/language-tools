@@ -70,17 +70,7 @@ export function getDocumentService(
 		ts,
 		getVueDocument: doc => vueDocuments.get(doc),
 	});
-
-	// formatter plugins
 	const pugFormatPlugin = usePugFormatPlugin();
-	const formatPlugns = [
-		...customPlugins,
-		cssPlugin,
-		htmlPlugin,
-		pugFormatPlugin,
-		jsonPlugin,
-		tsPlugin,
-	].map(patchHtmlFormat);
 
 	const context: DocumentServiceRuntimeContext = {
 		typescript: ts,
@@ -91,14 +81,12 @@ export function getDocumentService(
 				vuePlugin,
 				htmlPlugin,
 				pugPlugin,
+				pugFormatPlugin,
 				cssPlugin,
 				jsonPlugin,
 				tsPlugin,
 				autoWrapParenthesesPlugin,
 			];
-		},
-		getFormatPlugins() {
-			return formatPlugns;
 		},
 		updateTsLs(document) {
 			if (isTsDocument(document)) {
@@ -142,46 +130,4 @@ export function getDocumentService(
 
 		return vueDoc;
 	}
-}
-
-function patchHtmlFormat<T extends EmbeddedLanguageServicePlugin>(htmlPlugin: T) {
-
-	const originalFormat = htmlPlugin.format;
-
-	if (originalFormat) {
-
-		htmlPlugin.format = async (document, range, options) => {
-
-			if (document.languageId === 'html') {
-
-				const prefixes = '<template>';
-				const suffixes = '</template>';
-
-				const patchDocument = TextDocument.create(document.uri, document.languageId, document.version, prefixes + document.getText() + suffixes);
-				const result = await originalFormat?.(patchDocument, {
-					start: patchDocument.positionAt(0),
-					end: patchDocument.positionAt(patchDocument.getText().length),
-				}, options);
-
-				if (!result?.length)
-					return result;
-
-				let newText = TextDocument.applyEdits(patchDocument, result);
-				newText = newText.trim();
-				newText = newText.substring(prefixes.length, newText.length - suffixes.length);
-
-				return [{
-					newText,
-					range: {
-						start: document.positionAt(0),
-						end: document.positionAt(document.getText().length),
-					}
-				}];
-			}
-
-			return originalFormat?.(document, range, options);
-		};
-	}
-
-	return htmlPlugin;
 }

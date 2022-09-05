@@ -108,10 +108,20 @@ export default function (options: {
 					return;
 				}
 
-				return htmlLs.format(document, range, {
+				const edits = htmlLs.format(document, range, {
 					...options_2,
 					...options,
 				});
+
+				const newText = TextDocument.applyEdits(document, edits);
+				
+				return [{
+					newText: '\n' + newText.trim() + '\n',
+					range: {
+						start: document.positionAt(0),
+						end: document.positionAt(document.getText().length),
+					},
+				}]
 			});
 		},
 

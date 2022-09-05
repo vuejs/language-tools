@@ -1,5 +1,10 @@
 import { VueLanguagePlugin } from '../sourceFile';
 
+const presetInitialIndentBrackets: Record<string, [string, string] | undefined> = {
+	html: ['<template>', '</template>'],
+	pug: ['div', '\n'],
+};
+
 const plugin: VueLanguagePlugin = () => {
 
 	return {
@@ -17,7 +22,9 @@ const plugin: VueLanguagePlugin = () => {
 				embeddedFile.capabilities = {
 					diagnostics: true,
 					foldingRanges: true,
-					formatting: true,
+					formatting: {
+						initialIndentBracket: presetInitialIndentBrackets[sfc.template.lang],
+					},
 					documentSymbol: true,
 					codeActions: true,
 					inlayHints: true,

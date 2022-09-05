@@ -14,7 +14,7 @@ export function getTsSettings(configurationHost: ConfigurationHost | undefined) 
 export async function getFormatOptions(
 	configurationHost: ConfigurationHost | undefined,
 	uri: string,
-	options?: vscode.FormattingOptions
+	options?: vscode.FormattingOptions & ts.FormatCodeSettings,
 ): Promise<ts.FormatCodeSettings> {
 
 	let config = await configurationHost?.getConfiguration<any>(isTypeScriptDocument(uri) ? 'typescript.format' : 'javascript.format', uri);
@@ -22,8 +22,7 @@ export async function getFormatOptions(
 	config = config ?? {};
 
 	return {
-		tabSize: options?.tabSize,
-		indentSize: options?.tabSize,
+		...options,
 		convertTabsToSpaces: options?.insertSpaces,
 		// We can use \n here since the editor normalizes later on to its line endings.
 		newLineCharacter: '\n',
