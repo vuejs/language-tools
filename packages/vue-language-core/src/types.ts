@@ -15,9 +15,9 @@ export interface _VueCompilerOptions {
 	plugins: string[];
 
 	// experimental
+	experimentalComponentOptionsWrapper: [string, string];
+	experimentalComponentOptionsWrapperEnable: boolean | 'onlyJs';
 	experimentalRuntimeMode: 'runtime-dom' | 'runtime-uni-app';
-	experimentalImplicitWrapComponentOptionsWithDefineComponent: boolean | 'onlyJs';
-	experimentalImplicitWrapComponentOptionsWithVue2Extend: boolean | 'onlyJs';
 	experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup: boolean | 'onlyJs';
 	experimentalTemplateCompilerOptions: any;
 	experimentalTemplateCompilerOptionsRequirePath: string | undefined;

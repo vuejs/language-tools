@@ -71,17 +71,22 @@ function createParsedCommandLineBase(
 }
 
 export function getVueCompilerOptions(vueOptions: VueCompilerOptions): _VueCompilerOptions {
+	const target = vueOptions.target ?? 3;
 	return {
 		...vueOptions,
 
-		target: vueOptions.target ?? 3,
+		target,
 		strictTemplates: vueOptions.strictTemplates ?? false,
 		plugins: vueOptions.plugins ?? [],
 
 		// experimental
+		experimentalComponentOptionsWrapper: vueOptions.experimentalComponentOptionsWrapper ?? (
+			target >= 2.7
+				? [`(await import('vue')).defineComponent(`, `)`]
+				: [`(await import('vue')).default.extend(`, `)`]
+		),
+		experimentalComponentOptionsWrapperEnable: vueOptions.experimentalComponentOptionsWrapperEnable ?? 'onlyJs',
 		experimentalRuntimeMode: vueOptions.experimentalRuntimeMode ?? 'runtime-dom',
-		experimentalImplicitWrapComponentOptionsWithDefineComponent: vueOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent ?? 'onlyJs',
-		experimentalImplicitWrapComponentOptionsWithVue2Extend: vueOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend ?? 'onlyJs',
 		experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup: vueOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup ?? 'onlyJs',
 		experimentalTemplateCompilerOptions: vueOptions.experimentalTemplateCompilerOptions ?? {},
 		experimentalTemplateCompilerOptionsRequirePath: vueOptions.experimentalTemplateCompilerOptionsRequirePath ?? undefined,

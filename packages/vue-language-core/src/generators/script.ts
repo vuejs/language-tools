@@ -7,8 +7,7 @@ import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { collectCssVars, collectStyleCssClasses } from '../plugins/vue-tsx';
 import { Sfc } from '../sourceFile';
-import type { EmbeddedFileMappingData, TeleportMappingData } from '../types';
-import { TextRange, VueCompilerOptions } from '../types';
+import type { EmbeddedFileMappingData, TeleportMappingData, TextRange, _VueCompilerOptions } from '../types';
 import { getSlotsPropertyName, getVueLibraryName } from '../utils/shared';
 import { SearchTexts } from '../utils/string';
 import { walkInterpolationFragment } from '../utils/transform';
@@ -28,7 +27,7 @@ export function generate(
 	cssScopedClasses: ReturnType<typeof collectStyleCssClasses>,
 	htmlGen: ReturnType<typeof templateGen['generate']> | undefined,
 	compilerOptions: ts.CompilerOptions,
-	vueCompilerOptions: VueCompilerOptions,
+	vueCompilerOptions: _VueCompilerOptions,
 	codeGen = new CodeGen<EmbeddedFileMappingData>(),
 	teleports: SourceMaps.Mapping<TeleportMappingData>[] = [],
 ) {
@@ -205,17 +204,13 @@ export function generate(
 			if (scriptRanges?.exportDefault) {
 				isExportRawObject = sfc.script.content.substring(scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end).startsWith('{');
 			}
-			const wrapMode = getImplicitWrapComponentOptionsMode(lang);
-			if (isExportRawObject && wrapMode && scriptRanges?.exportDefault) {
+			const warpperEnabled = vueCompilerOptions.experimentalComponentOptionsWrapperEnable === true
+				|| (vueCompilerOptions.experimentalComponentOptionsWrapperEnable === 'onlyJs' && (lang === 'js' || lang === 'jsx'));
+			if (isExportRawObject && warpperEnabled && scriptRanges?.exportDefault) {
 				addVirtualCode('script', 0, scriptRanges.exportDefault.expression.start);
-				if (wrapMode === 'defineComponent') {
-					codeGen.addText(`(await import('${vueLibName}')).defineComponent(`);
-				}
-				else {
-					codeGen.addText(`(await import('vue')).default.extend(`);
-				}
+				codeGen.addText(vueCompilerOptions.experimentalComponentOptionsWrapper[0]);
 				addVirtualCode('script', scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end);
-				codeGen.addText(`)`);
+				codeGen.addText(vueCompilerOptions.experimentalComponentOptionsWrapper[1]);
 				addVirtualCode('script', scriptRanges.exportDefault.expression.end, sfc.script.content.length);
 			}
 			else {
@@ -785,35 +780,6 @@ export function generate(
 		}
 
 		return usageVars;
-	}
-	function getImplicitWrapComponentOptionsMode(lang: string) {
-
-		let shimComponentOptionsMode: 'defineComponent' | 'Vue.extend' | false = false;
-
-		if (
-			vueCompilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend === 'onlyJs'
-				? lang === 'js' || lang === 'jsx'
-				: !!vueCompilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend
-		) {
-			shimComponentOptionsMode = 'Vue.extend';
-		}
-		if (
-			vueCompilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent === 'onlyJs'
-				? lang === 'js' || lang === 'jsx'
-				: !!vueCompilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent
-		) {
-			shimComponentOptionsMode = 'defineComponent';
-		}
-
-		// true override 'onlyJs'
-		if (vueCompilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend === true) {
-			shimComponentOptionsMode = 'Vue.extend';
-		}
-		if (vueCompilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent === true) {
-			shimComponentOptionsMode = 'defineComponent';
-		}
-
-		return shimComponentOptionsMode;
 	}
 }
 
