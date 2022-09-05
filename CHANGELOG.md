@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.40.7 (2022/9/5)
+
+- feat: support multiple workspaces for document features
+- feat: add `initializationOptions.completion.ignoreTriggerCharacters` for LSP-Volar (https://github.com/sublimelsp/LSP-volar/issues/114)
+- feat: add `vueCompilerOptions.experimentalComponentOptionsWrapper` option for custom component options warpper ([#1517](https://github.com/johnsoncodehk/volar/issues/1517))
+- fix: add missing surrounding pair "`" ([#1659](https://github.com/johnsoncodehk/volar/issues/1659))
+- fix: formatting edit range incorrect edge case ([#1814](https://github.com/johnsoncodehk/volar/issues/1814))
+- fix: typescript onType format do not respect `typescript.format.enable`
+- fix: document features stop working for script block ([#1813](https://github.com/johnsoncodehk/volar/issues/1813))
+- fix: pug formatter extra spaces in `{{ }}` ([#1784](https://github.com/johnsoncodehk/volar/issues/1784))
+- fix: template incremental parser broken when typing slot name
+
+**Breaking changes**
+
+- vueCompilerOptions properties `experimentalImplicitWrapComponentOptionsWithDefineComponent`, `experimentalImplicitWrapComponentOptionsWithVue2Extend` replaced by `experimentalComponentOptionsWrapper`.
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
+
 ## 0.40.6 (2022/9/4)
 
 - feat: support language features for Web IDE ([#612](https://github.com/johnsoncodehk/volar/issues/612))
@@ -24,12 +46,6 @@
 - feat: respect VSCode `*.format.enable` settings
 - fix: template should not compile if content no change
 - fix: component preview not working on windows ([#1737](https://github.com/johnsoncodehk/volar/issues/1737))
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 0.40.3 (2022/8/29)
 
