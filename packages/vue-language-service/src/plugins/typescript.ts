@@ -244,12 +244,13 @@ export default function (options: {
 			if (isTsDocument(document)) {
 
 				const enable = await useConfigurationHost()?.getConfiguration<boolean>(getConfigTitle(document) + '.format.enable', document.uri);
+				const initialIndent = await useConfigurationHost()?.getConfiguration<boolean>('volar.initialIndent') ?? false;
 
 				if (enable === false) {
 					return;
 				}
 
-				return options.getTsLs().doFormatting.onRange(document.uri, options_2, range);
+				return options.getTsLs().doFormatting.onRange(document.uri, options_2, range, initialIndent ? 1 : undefined);
 			}
 		},
 

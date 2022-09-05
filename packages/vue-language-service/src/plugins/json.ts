@@ -93,12 +93,19 @@ export default function (options: {
 			return worker(document, async (jsonDocument) => {
 
 				const options_2 = await useConfigurationHost()?.getConfiguration<json.FormattingOptions & { enable: boolean; }>('json.format', document.uri);
+				const initialIndent = await useConfigurationHost()?.getConfiguration<boolean>('volar.initialIndent') ?? false;
 
 				if (options_2?.enable === false) {
 					return;
 				}
 
-				const edits = jsonLs.format(document, range, {
+				let indentedDocument = document;
+				if (initialIndent) {
+					const newText = `{${document.getText()}}`;
+					indentedDocument = TextDocument.create(document.uri, document.languageId, document.version + 1, newText);
+				}
+
+				const edits = jsonLs.format(indentedDocument, range, {
 					...options_2,
 					...options,
 					insertFinalNewline: true,
@@ -108,13 +115,17 @@ export default function (options: {
 					return edits;
 				}
 
-				const newText = TextDocument.applyEdits(document, edits);
-				
+				let newText = TextDocument.applyEdits(indentedDocument, edits);
+				if (initialIndent) {
+					newText = newText.trim().substring(1, newText.length - 2);
+					newText = newText.replace(/\A[\r\n]+|[\r\n]+/m, '').trimEnd();
+				}
+
 				return [{
-					newText: '\n' + newText.trim() + '\n',
+					newText: '\n' + (initialIndent ? newText : newText.trim()) + '\n',
 					range: {
-						start: document.positionAt(0),
-						end: document.positionAt(document.getText().length),
+						start: indentedDocument.positionAt(0),
+						end: indentedDocument.positionAt(indentedDocument.getText().length),
 					},
 				}]
 			});

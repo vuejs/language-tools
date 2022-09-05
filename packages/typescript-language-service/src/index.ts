@@ -34,7 +34,7 @@ export interface LanguageService extends ReturnType<typeof createLanguageService
 export { getSemanticTokenLegend } from './services/semanticTokens';
 
 export interface Settings {
-	getFormatOptions?(uri: string, options?: vscode.FormattingOptions): Promise<ts.FormatCodeSettings>;
+	getFormatOptions?(uri: string, options?: vscode.FormattingOptions, baseTabSize?: number): Promise<ts.FormatCodeSettings>;
 	getPreferences?(uri: string): Promise<ts.UserPreferences>;
 }
 
