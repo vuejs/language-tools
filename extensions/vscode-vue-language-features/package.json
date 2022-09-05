@@ -381,10 +381,6 @@
 							"type": "boolean",
 							"default": true
 						},
-						"pug": {
-							"type": "boolean",
-							"default": false
-						},
 						"typescript": {
 							"type": "boolean",
 							"default": false

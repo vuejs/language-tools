@@ -2,7 +2,6 @@ import { VueLanguagePlugin } from '../sourceFile';
 
 const presetInitialIndentBrackets: Record<string, [string, string] | undefined> = {
 	html: ['<template>', '</template>'],
-	pug: ['div', '\n'],
 };
 
 const plugin: VueLanguagePlugin = () => {
