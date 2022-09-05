@@ -5,7 +5,7 @@ import { ConfigurationHost } from '@volar/vue-language-service-types';
 
 export function getTsSettings(configurationHost: ConfigurationHost | undefined) {
 	const tsSettings: ts2.Settings = {
-		getFormatOptions: (uri, options, baseTabSize) => getFormatOptions(configurationHost, uri, options, baseTabSize),
+		getFormatOptions: (uri, options) => getFormatOptions(configurationHost, uri, options),
 		getPreferences: (uri) => getPreferences(configurationHost, uri),
 	};
 	return tsSettings;
@@ -14,8 +14,7 @@ export function getTsSettings(configurationHost: ConfigurationHost | undefined) 
 export async function getFormatOptions(
 	configurationHost: ConfigurationHost | undefined,
 	uri: string,
-	options?: vscode.FormattingOptions,
-	baseTabSize?: number
+	options?: vscode.FormattingOptions & ts.FormatCodeSettings,
 ): Promise<ts.FormatCodeSettings> {
 
 	let config = await configurationHost?.getConfiguration<any>(isTypeScriptDocument(uri) ? 'typescript.format' : 'javascript.format', uri);
@@ -23,9 +22,7 @@ export async function getFormatOptions(
 	config = config ?? {};
 
 	return {
-		tabSize: options?.tabSize,
-		indentSize: options?.tabSize,
-		baseIndentSize: baseTabSize,
+		...options,
 		convertTabsToSpaces: options?.insertSpaces,
 		// We can use \n here since the editor normalizes later on to its line endings.
 		newLineCharacter: '\n',

@@ -10,7 +10,7 @@ export function register(
 	settings: Settings
 ) {
 	return {
-		onRange: async (uri: string, options: vscode.FormattingOptions, range?: vscode.Range, baseIndentLevel?: number): Promise<vscode.TextEdit[]> => {
+		onRange: async (uri: string, options: vscode.FormattingOptions, range?: vscode.Range): Promise<vscode.TextEdit[]> => {
 
 			const document = getTextDocument(uri);
 			if (!document) return [];
@@ -19,9 +19,6 @@ export function register(
 			const tsOptions = await settings.getFormatOptions?.(document.uri, options) ?? options;
 			if (typeof(tsOptions.indentSize) === "boolean" || typeof(tsOptions.indentSize) === "string") {
 				tsOptions.indentSize = undefined;
-			}
-			if (baseIndentLevel && tsOptions.indentSize) {
-				tsOptions.baseIndentSize = (tsOptions.indentSize * baseIndentLevel);
 			}
 
 			let scriptEdits: ReturnType<typeof languageService.getFormattingEditsForRange> | undefined;
