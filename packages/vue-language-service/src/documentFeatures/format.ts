@@ -211,10 +211,15 @@ export function register(context: DocumentServiceRuntimeContext) {
 					document.version,
 					initialIndentBracket[0] + document.getText() + initialIndentBracket[1],
 				);
-				formatRange = {
-					start: formatDocument.positionAt(0),
-					end: formatDocument.positionAt(formatDocument.getText().length),
-				};
+				if (vscode.Position.is(range)) {
+					formatRange = formatDocument.positionAt(document.offsetAt(range) + initialIndentBracket[0].length);
+				}
+				else {
+					formatRange = {
+						start: formatDocument.positionAt(0),
+						end: formatDocument.positionAt(formatDocument.getText().length),
+					};
+				}
 			}
 
 			context.updateTsLs(formatDocument);
@@ -224,12 +229,10 @@ export function register(context: DocumentServiceRuntimeContext) {
 				let edits: vscode.TextEdit[] | null | undefined;
 
 				try {
-					if (vscode.Position.is(formatRange)) {
-						if (ch !== undefined) {
-							edits = await plugin.formatOnType?.(formatDocument, formatRange, ch, options);
-						}
+					if (ch !== undefined && vscode.Position.is(formatRange)) {
+						edits = await plugin.formatOnType?.(formatDocument, formatRange, ch, options);
 					}
-					else {
+					else if (ch === undefined && vscode.Range.is(formatRange)) {
 						edits = await plugin.format?.(formatDocument, formatRange, options);
 					}
 				}
