@@ -62,7 +62,7 @@ export function createLanguageServer(
 			);
 
 			for (const root of roots) {
-				documentServiceHost.add(root.toString());
+				documentServiceHost.add(root);
 			}
 
 			(await import('./features/documentFeatures')).register(connection, documents, documentServiceHost, options.documentFeatures.allowedLanguageIds);
@@ -103,12 +103,12 @@ export function createLanguageServer(
 		connection.workspace.onDidChangeWorkspaceFolders(e => {
 
 			for (const folder of e.added) {
-				documentServiceHost?.add(folder.uri);
+				documentServiceHost?.add(URI.parse(folder.uri));
 				projects?.add(URI.parse(folder.uri));
 			}
 
 			for (const folder of e.removed) {
-				documentServiceHost?.remove(folder.uri);
+				documentServiceHost?.remove(URI.parse(folder.uri));
 				projects?.remove(URI.parse(folder.uri));
 			}
 		});

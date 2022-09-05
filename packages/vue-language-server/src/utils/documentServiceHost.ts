@@ -26,17 +26,17 @@ export function createDocumentServiceHost(
 		get,
 	};
 
-	function add(rootUri: string) {
-		workspaceServices.set(rootUri, languageConfigs.getDocumentService(
+	function add(rootUri: URI) {
+		workspaceServices.set(rootUri.toString(), languageConfigs.getDocumentService(
 			ts,
 			configHost,
 			runtimeEnv.fileSystemProvide,
-			loadCustomPlugins(rootUri),
-			URI.parse(rootUri),
+			loadCustomPlugins(rootUri.fsPath),
+			rootUri,
 		));
 	}
-	function remove(rootUri: string) {
-		workspaceServices.delete(rootUri);
+	function remove(rootUri: URI) {
+		workspaceServices.delete(rootUri.toString());
 	}
 	function get(documentUri: string) {
 		for (const [rootUri, service] of workspaceServices) {
