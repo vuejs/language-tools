@@ -370,6 +370,11 @@
 					"default": false,
 					"description": "Auto-complete Ref value with `.value`."
 				},
+				"volar.initialIndent": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to have initial indent for non-<template> regions."
+				},
 				"volar.takeOverMode.enabled": {
 					"type": [
 						"boolean",

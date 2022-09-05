@@ -191,16 +191,26 @@ export default function (options: {
 			return worker(document, async (stylesheet, cssLs) => {
 
 				const options_2 = await useConfigurationHost()?.getConfiguration<css.CSSFormatConfiguration & { enable: boolean; }>(document.languageId + '.format', document.uri);
+				const initialIndent = await useConfigurationHost()?.getConfiguration<boolean>('volar.initialIndent') ?? false;
 
 				if (options_2?.enable === false) {
 					return;
 				}
 
-				const edits = cssLs.format(document, range, {
+				let indentedDocument = document;
+				if (initialIndent && range.start.line === 0) {
+					const newText =
+						document
+						.getText()
+						.replace(/^[^\S\r\n]*/, options.insertSpaces ? ' '.repeat(options.tabSize) : '\t');
+					indentedDocument = TextDocument.create(document.uri, document.languageId, document.version + 1, newText);
+				}
+
+				const edits = cssLs.format(indentedDocument, range, {
 					...options_2,
 					...options,
 				});
-				let newText = TextDocument.applyEdits(document, edits);
+				let newText = TextDocument.applyEdits(indentedDocument, edits);
 
 				// fix https://github.com/johnsoncodehk/volar/issues/1155
 				if (!newText.startsWith('\n'))
@@ -209,12 +219,12 @@ export default function (options: {
 				if (!newText.endsWith('\n'))
 					newText = newText + '\n';
 
-				if (newText === document.getText())
+				if (newText === indentedDocument.getText())
 					return [];
 
 				return [vscode.TextEdit.replace({
-					start: document.positionAt(0),
-					end: document.positionAt(document.getText().length),
+					start: indentedDocument.positionAt(0),
+					end: indentedDocument.positionAt(indentedDocument.getText().length),
 				}, newText)];
 			});
 		},
