@@ -1,5 +1,12 @@
 import { VueLanguagePlugin } from '../sourceFile';
 
+const presetInitialIndentBrackets: Record<string, [string, string] | undefined> = {
+	json: ['{', '}'],
+	jsonc: ['{', '}'],
+	html: ['<template>', '</template>'],
+	markdown: ['<template>', '</template>'],
+};
+
 const plugin: VueLanguagePlugin = () => {
 
 	return {
@@ -22,7 +29,9 @@ const plugin: VueLanguagePlugin = () => {
 				embeddedFile.capabilities = {
 					diagnostics: true,
 					foldingRanges: true,
-					formatting: true,
+					formatting: {
+						initialIndentBracket: presetInitialIndentBrackets[customBlock.lang],
+					},
 					documentSymbol: true,
 					codeActions: true,
 					inlayHints: true,

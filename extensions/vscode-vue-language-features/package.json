@@ -371,9 +371,53 @@
 					"description": "Auto-complete Ref value with `.value`."
 				},
 				"volar.initialIndent": {
-					"type": "boolean",
-					"default": false,
-					"description": "Whether to have initial indent for non-<template> regions."
+					"type": "object",
+					"description": "Whether to have initial indent.",
+					"default": {
+						"html": true
+					},
+					"properties": {
+						"html": {
+							"type": "boolean",
+							"default": true
+						},
+						"pug": {
+							"type": "boolean",
+							"default": false
+						},
+						"typescript": {
+							"type": "boolean",
+							"default": false
+						},
+						"javascript": {
+							"type": "boolean",
+							"default": false
+						},
+						"typescriptreact": {
+							"type": "boolean",
+							"default": false
+						},
+						"javascriptreact": {
+							"type": "boolean",
+							"default": false
+						},
+						"css": {
+							"type": "boolean",
+							"default": false
+						},
+						"scss": {
+							"type": "boolean",
+							"default": false
+						},
+						"json": {
+							"type": "boolean",
+							"default": false
+						},
+						"jsonc": {
+							"type": "boolean",
+							"default": false
+						}
+					}
 				},
 				"volar.takeOverMode.enabled": {
 					"type": [

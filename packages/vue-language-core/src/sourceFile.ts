@@ -74,7 +74,9 @@ export interface EmbeddedFile {
 	capabilities: {
 		diagnostics: boolean,
 		foldingRanges: boolean,
-		formatting: boolean,
+		formatting: boolean | {
+			initialIndentBracket?: [string, string],
+		},
 		documentSymbol: boolean,
 		codeActions: boolean,
 		inlayHints: boolean,

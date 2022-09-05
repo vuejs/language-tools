@@ -3,6 +3,7 @@ import * as vscode from 'vscode-languageserver-protocol';
 import type { EmbeddedStructure } from '@volar/vue-language-core';
 import type { DocumentServiceRuntimeContext } from '../types';
 import { EmbeddedDocumentSourceMap, VueDocument } from '../vueDocuments';
+import { useConfigurationHost } from '@volar/vue-language-service-types';
 
 export function register(context: DocumentServiceRuntimeContext) {
 
@@ -24,8 +25,8 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 		const originalDocument = document;
 		const rootEdits = onTypeParams
-			? await tryFormatOnType(document, onTypeParams.position, onTypeParams.ch)
-			: await tryFormat(document, range);
+			? await tryFormat(document, onTypeParams.position, undefined, onTypeParams.ch)
+			: await tryFormat(document, range, undefined);
 		const vueDocument = context.getVueDocument(document);
 
 		if (!vueDocument)
@@ -36,6 +37,8 @@ export function register(context: DocumentServiceRuntimeContext) {
 		}
 
 		let level = 0;
+
+		const initialIndentLanguageId = await useConfigurationHost()?.getConfiguration<Record<string, boolean>>('volar.initialIndent') ?? { html: true };
 
 		while (true) {
 
@@ -57,6 +60,9 @@ export function register(context: DocumentServiceRuntimeContext) {
 					continue;
 
 				const sourceMap = vueDocument.sourceMapsMap.get(embedded.self);
+				const initialIndentBracket = typeof embedded.self.file.capabilities.formatting === 'object' && initialIndentLanguageId[sourceMap.mappedDocument.languageId]
+					? embedded.self.file.capabilities.formatting.initialIndentBracket
+					: undefined;
 
 				let _edits: vscode.TextEdit[] | undefined;
 
@@ -65,7 +71,12 @@ export function register(context: DocumentServiceRuntimeContext) {
 					const embeddedPosition = sourceMap.getMappedRange(onTypeParams.position)?.[0].start;
 
 					if (embeddedPosition) {
-						_edits = await tryFormatOnType(sourceMap.mappedDocument, embeddedPosition, onTypeParams.ch);
+						_edits = await tryFormat(
+							sourceMap.mappedDocument,
+							embeddedPosition,
+							initialIndentBracket,
+							onTypeParams.ch,
+						);
 					}
 				}
 
@@ -103,7 +114,11 @@ export function register(context: DocumentServiceRuntimeContext) {
 							sourceMapEmbeddedDocumentUri: sourceMap.mappedDocument.uri,
 						};
 
-						_edits = await tryFormat(sourceMap.mappedDocument, embeddedRange);
+						_edits = await tryFormat(
+							sourceMap.mappedDocument,
+							embeddedRange,
+							initialIndentBracket,
+						);
 					}
 				}
 
@@ -182,48 +197,41 @@ export function register(context: DocumentServiceRuntimeContext) {
 			}
 		}
 
-		async function tryFormat(document: TextDocument, range: vscode.Range) {
+		async function tryFormat(document: TextDocument, range: vscode.Range | vscode.Position, initialIndentBracket: [string, string] | undefined, ch?: string) {
 
-			const plugins = context.getFormatPlugins();
+			const plugins = context.getPlugins();
 
-			context.updateTsLs(document);
+			let formatDocument = document;
+			let formatRange = range;
 
-			for (const plugin of plugins) {
-
-				if (!plugin.format)
-					continue;
-
-				let edits: vscode.TextEdit[] | null | undefined;
-
-				try {
-					edits = await plugin.format(document, range, options);
-				}
-				catch (err) {
-					console.error(err);
-				}
-
-				if (!edits)
-					continue;
-
-				return edits;
+			if (initialIndentBracket) {
+				formatDocument = TextDocument.create(
+					document.uri,
+					document.languageId,
+					document.version,
+					initialIndentBracket[0] + document.getText() + initialIndentBracket[1],
+				);
+				formatRange = {
+					start: formatDocument.positionAt(0),
+					end: formatDocument.positionAt(formatDocument.getText().length),
+				};
 			}
-		}
 
-		async function tryFormatOnType(document: TextDocument, position: vscode.Position, ch: string) {
-
-			const plugins = context.getFormatPlugins();
-
-			context.updateTsLs(document);
+			context.updateTsLs(formatDocument);
 
 			for (const plugin of plugins) {
-
-				if (!plugin.formatOnType)
-					continue;
 
 				let edits: vscode.TextEdit[] | null | undefined;
 
 				try {
-					edits = await plugin.formatOnType(document, position, ch, options);
+					if (vscode.Position.is(formatRange)) {
+						if (ch !== undefined) {
+							edits = await plugin.formatOnType?.(formatDocument, formatRange, ch, options);
+						}
+					}
+					else {
+						edits = await plugin.format?.(formatDocument, formatRange, options);
+					}
 				}
 				catch (err) {
 					console.error(err);
@@ -232,7 +240,25 @@ export function register(context: DocumentServiceRuntimeContext) {
 				if (!edits)
 					continue;
 
-				return edits;
+				if (!edits.length)
+					return edits;
+
+				let newText = TextDocument.applyEdits(formatDocument, edits);
+
+				if (initialIndentBracket) {
+					newText = newText.substring(
+						newText.indexOf(initialIndentBracket[0]) + initialIndentBracket[0].length,
+						newText.lastIndexOf(initialIndentBracket[1]),
+					);
+				}
+
+				return [{
+					range: {
+						start: document.positionAt(0),
+						end: document.positionAt(document.getText().length),
+					},
+					newText,
+				}];
 			}
 		}
 
