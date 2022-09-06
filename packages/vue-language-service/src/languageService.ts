@@ -3,7 +3,6 @@ import * as tsFaster from '@volar/typescript-faster';
 import * as ts2 from '@volar/typescript-language-service';
 import { ConfigurationHost, EmbeddedLanguageServicePlugin, setContextStore } from '@volar/common-language-service';
 import * as vue from '@volar/vue-language-core';
-import { isGloballyWhitelisted } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as upath from 'upath';
 import type * as html from 'vscode-html-languageservice';
@@ -102,13 +101,8 @@ export function createLanguageService(
 		schemaRequestService,
 	});
 
-	const scriptTsPlugin = useTsPlugins(
-		false,
-		uri => ({
-			// includeCompletionsForModuleExports: true, // set in server/src/tsConfigs.ts
-			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
-		}),
-	);
+	const scriptTsPlugin = useTsPlugin();
+
 	const tsLs = scriptTsPlugin.languageService;
 	const vueDocuments = parseVueDocuments(rootUri, core, tsLs);
 
@@ -337,38 +331,5 @@ export function createLanguageService(
 			vueLsHost,
 			vueDocuments,
 		});
-	}
-	function useTsPlugins(isTemplatePlugin: boolean, getBaseCompletionOptions: (uri: string) => ts.GetCompletionsAtPositionOptions) {
-		const _languageSupportPlugin = useTsPlugin({
-			getBaseCompletionOptions,
-		});
-		const languageSupportPlugin: ReturnType<typeof useTsPlugin> = isTemplatePlugin ? {
-			..._languageSupportPlugin,
-			complete: {
-				..._languageSupportPlugin.complete,
-				async on(textDocument, position, context) {
-
-					const tsComplete = await _languageSupportPlugin.complete?.on?.(textDocument, position, context);
-
-					if (tsComplete) {
-						const sortTexts = shared.getTsCompletions(ts)?.SortText;
-						if (sortTexts) {
-							tsComplete.items = tsComplete.items.filter(tsItem => {
-								if (
-									(sortTexts.GlobalsOrKeywords !== undefined && tsItem.sortText === sortTexts.GlobalsOrKeywords)
-									|| (sortTexts.DeprecatedGlobalsOrKeywords !== undefined && tsItem.sortText === sortTexts.DeprecatedGlobalsOrKeywords)
-								) {
-									return isGloballyWhitelisted(tsItem.label);
-								}
-								return true;
-							});
-						}
-					}
-
-					return tsComplete;
-				},
-			},
-		} : _languageSupportPlugin;
-		return languageSupportPlugin;
 	}
 }

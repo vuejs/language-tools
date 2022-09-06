@@ -59,7 +59,7 @@ export function getDocumentService(
 	const pugPlugin = usePugPlugin();
 	const cssPlugin = useCssPlugin();
 	const jsonPlugin = useJsonPlugin();
-	const tsPlugin = useTsPlugin({});
+	const tsPlugin = useTsPlugin();
 	const autoWrapParenthesesPlugin = useAutoWrapParenthesesPlugin({
 		getVueDocument: doc => vueDocuments.get(doc),
 	});

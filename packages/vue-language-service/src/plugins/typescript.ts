@@ -26,9 +26,7 @@ function getBasicTriggerCharacters(tsVersion: string) {
 const jsDocTriggerCharacters = ['*'];
 const directiveCommentTriggerCharacters = ['@'];
 
-export default function (options: {
-	getBaseCompletionOptions?: (uri: string) => ts.GetCompletionsAtPositionOptions,
-}): EmbeddedLanguageServicePlugin & {
+export default function (): EmbeddedLanguageServicePlugin & {
 	languageService: ts2.LanguageService,
 } {
 
@@ -69,9 +67,8 @@ export default function (options: {
 
 					if (!context || context.triggerKind !== vscode.CompletionTriggerKind.TriggerCharacter || (context.triggerCharacter && basicTriggerCharacters.includes(context.triggerCharacter))) {
 
-						const baseCompletionOptions = options.getBaseCompletionOptions?.(document.uri) ?? [];
 						const completeOptions: ts.GetCompletionsAtPositionOptions = {
-							...baseCompletionOptions,
+							includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
 							triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
 							triggerKind: context?.triggerKind,
 						};
