@@ -4,9 +4,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as pug from '@volar/pug-language-service';
 import useHtmlPlugin from './html';
 
-export default function (options: {
-	htmlPlugin: ReturnType<typeof useHtmlPlugin>,
-}): EmbeddedLanguageServicePlugin & ReturnType<typeof useHtmlPlugin> & {
+export default function (): EmbeddedLanguageServicePlugin & ReturnType<typeof useHtmlPlugin> & {
 	htmlLs: html.LanguageService,
 	pugLs: pug.LanguageService,
 	getPugDocument: (document: TextDocument) => pug.PugDocument | undefined,
@@ -14,12 +12,13 @@ export default function (options: {
 
 	const documentContext = useDocumentContext();
 
-	const pugLs = pug.getLanguageService(options.htmlPlugin.htmlLs);
+	const htmlPlugin = useHtmlPlugin({});
+	const pugLs = pug.getLanguageService(htmlPlugin.htmlLs);
 	const pugDocuments = new WeakMap<TextDocument, [number, pug.PugDocument]>();
 
 	return {
 
-		...options.htmlPlugin,
+		...htmlPlugin,
 		pugLs,
 		getPugDocument,
 

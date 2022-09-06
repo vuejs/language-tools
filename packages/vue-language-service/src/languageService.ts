@@ -179,9 +179,7 @@ export function createLanguageService(
 	);
 	const vueTemplatePugPlugin = _useVueTemplateLanguagePlugin(
 		'jade',
-		usePugPlugin({
-			htmlPlugin: vueTemplateHtmlPlugin,
-		}),
+		usePugPlugin(),
 	);
 	const cssPlugin = useCssPlugin();
 	const jsonPlugin = useJsonPlugin();
