@@ -125,7 +125,7 @@ importers:
     dependencies:
       '@volar/alpine-language-core': link:../alpine-language-core
       '@volar/vue-language-service': link:../vue-language-service
-      '@volar/vue-language-service-types': link:../vue-language-service-types
+      '@volar/vue-language-service-types': 0.40.10
       vscode-uri: 3.0.3
     devDependencies:
       '@types/semver': 7.3.12
@@ -136,6 +136,18 @@ importers:
       '@volar/source-map': 0.40.10
     dependencies:
       '@volar/source-map': link:../source-map
+
+  packages/common-language-service:
+    specifiers:
+      vscode-html-languageservice: ^5.0.1
+      vscode-json-languageservice: ^5.1.0
+      vscode-languageserver-protocol: ^3.17.2
+      vscode-languageserver-textdocument: ^1.0.7
+    dependencies:
+      vscode-html-languageservice: 5.0.1
+      vscode-json-languageservice: 5.1.0
+      vscode-languageserver-protocol: 3.17.2
+      vscode-languageserver-textdocument: 1.0.7
 
   packages/preview:
     specifiers:
@@ -335,7 +347,7 @@ importers:
       '@volar/typescript-faster': link:../typescript-faster
       '@volar/typescript-language-service': link:../typescript-language-service
       '@volar/vue-language-core': link:../vue-language-core
-      '@volar/vue-language-service-types': link:../vue-language-service-types
+      '@volar/vue-language-service-types': 0.40.10
       '@volar/vue-typescript': link:../vue-typescript
       '@vscode/emmet-helper': 2.8.4
       '@vue/compiler-dom': 3.2.38
@@ -352,18 +364,6 @@ importers:
     devDependencies:
       '@types/semver': 7.3.12
       typescript: 4.8.2
-
-  packages/vue-language-service-types:
-    specifiers:
-      vscode-html-languageservice: ^5.0.1
-      vscode-json-languageservice: ^5.1.0
-      vscode-languageserver-protocol: ^3.17.2
-      vscode-languageserver-textdocument: ^1.0.7
-    dependencies:
-      vscode-html-languageservice: 5.0.1
-      vscode-json-languageservice: 5.1.0
-      vscode-languageserver-protocol: 3.17.2
-      vscode-languageserver-textdocument: 1.0.7
 
   packages/vue-test-workspace:
     specifiers:
@@ -1103,6 +1103,13 @@ packages:
       vite: 3.1.0
       vue: 3.2.38
     dev: true
+
+  /@volar/vue-language-service-types/0.40.10:
+    resolution: {integrity: sha512-6bbC+z8O8jIBfHxzGpRny6e29BhgNkKr6/0AP6qlgNBhrT/l0ugDcmatC86Q3WoyW96kg15qKfQGMoFOFH3y9Q==}
+    dependencies:
+      vscode-languageserver-protocol: 3.17.2
+      vscode-languageserver-textdocument: 1.0.7
+    dev: false
 
   /@vscode/emmet-helper/2.8.4:
     resolution: {integrity: sha512-lUki5QLS47bz/U8IlG9VQ+1lfxMtxMZENmU5nu4Z71eOD5j9FK0SmYGL5NiVJg9WBWeAU0VxRADMY2Qpq7BfVg==}

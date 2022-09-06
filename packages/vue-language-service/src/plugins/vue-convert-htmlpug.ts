@@ -1,5 +1,5 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/common-language-service';
 import { htmlToPug, pugToHtml } from '@johnsoncodehk/html2pug';
 import { VueDocument } from '../vueDocuments';
 

@@ -1,5 +1,5 @@
 {
-	"name": "@volar/vue-language-service-types",
+	"name": "@volar/common-language-service",
 	"version": "0.40.10",
 	"main": "out/index.js",
 	"license": "MIT",
@@ -10,7 +10,7 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
-		"directory": "packages/vue-language-service-types"
+		"directory": "packages/common-language-service"
 	},
 	"dependencies": {
 		"vscode-html-languageservice": "^5.0.1",

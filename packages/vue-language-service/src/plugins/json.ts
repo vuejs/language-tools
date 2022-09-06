@@ -1,6 +1,6 @@
 import * as json from 'vscode-json-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { EmbeddedLanguageServicePlugin, useConfigurationHost, useSchemaRequestService } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost, useSchemaRequestService } from '@volar/common-language-service';
 import * as vscode from 'vscode-languageserver-protocol';
 
 export default function (): EmbeddedLanguageServicePlugin {

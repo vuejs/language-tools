@@ -1,4 +1,4 @@
-import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin } from '@volar/common-language-service';
 
 export default function (): EmbeddedLanguageServicePlugin {
 	return {};

@@ -1,6 +1,6 @@
 import * as alpineTs from '@volar/alpine-language-core';
 import * as vueLs from '@volar/vue-language-service';
-import { ConfigurationHost, EmbeddedLanguageServicePlugin, setContextStore } from '@volar/vue-language-service-types';
+import { ConfigurationHost, EmbeddedLanguageServicePlugin, setContextStore } from '@volar/common-language-service';
 import { URI } from 'vscode-uri';
 
 export function createLanguageService(

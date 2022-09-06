@@ -1,5 +1,5 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin } from '@volar/common-language-service';
 import { hyphenate } from '@vue/shared';
 import { VueDocument } from '../vueDocuments';
 

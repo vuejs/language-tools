@@ -3,7 +3,7 @@ import * as ts2 from '@volar/typescript-language-service';
 import { getVueCompilerOptions, isIntrinsicElement } from '@volar/vue-language-core';
 import { scriptRanges } from '@volar/vue-language-core';
 import * as vue from '@volar/vue-language-core';
-import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/common-language-service';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';

@@ -1,4 +1,4 @@
-import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/common-language-service';
 import * as emmet from '@vscode/emmet-helper';
 
 export default function (): EmbeddedLanguageServicePlugin {

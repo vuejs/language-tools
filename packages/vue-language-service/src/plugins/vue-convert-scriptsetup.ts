@@ -2,7 +2,7 @@ import * as shared from '@volar/shared';
 import { scriptSetupConvertRanges } from '@volar/vue-language-core';
 import type { TextRange } from '@volar/vue-language-core';
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, useConfigurationHost } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, useConfigurationHost } from '@volar/common-language-service';
 import { VueDocument } from '../vueDocuments';
 
 enum Commands {
