@@ -5,11 +5,6 @@ import * as pug from '@volar/pug-language-service';
 import useHtmlPlugin from './html';
 
 export default function (options: {
-	configurationHost: {
-		getConfiguration: (<T> (section: string, scopeUri?: string) => Promise<T | undefined>),
-		onDidChangeConfiguration: (cb: () => void) => void,
-		rootUris: string[],
-	} | undefined,
 	documentContext?: html.DocumentContext,
 	htmlPlugin: ReturnType<typeof useHtmlPlugin>,
 }): EmbeddedLanguageServicePlugin & ReturnType<typeof useHtmlPlugin> & {
@@ -60,7 +55,7 @@ export default function (options: {
 		doHover(document, position) {
 			return worker(document, async (pugDocument) => {
 
-				const hoverSettings = await options.configurationHost?.getConfiguration<html.HoverSettings>('html.hover', document.uri);
+				const hoverSettings = await useConfigurationHost()?.getConfiguration<html.HoverSettings>('html.hover', document.uri);
 
 				return pugLs.doHover(pugDocument, position, hoverSettings);
 			});

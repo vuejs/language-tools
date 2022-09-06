@@ -1,8 +1,7 @@
 import * as vscode from 'vscode-languageserver';
 import { ConfigurationHost } from '@volar/vue-language-service';
-import { URI } from 'vscode-uri';
 
-export function createConfigurationHost(params: vscode.InitializeParams, rootUris: URI[], connection: vscode.Connection): ConfigurationHost & { ready(): void; } {
+export function createConfigurationHost(params: vscode.InitializeParams, connection: vscode.Connection): ConfigurationHost & { ready(): void; } {
 
 	let settings: Record<string, Record<string, Promise<any>>> = {};
 	let watchingChange = false;
@@ -36,6 +35,5 @@ export function createConfigurationHost(params: vscode.InitializeParams, rootUri
 		onDidChangeConfiguration(cb) {
 			callbacks.push(cb);
 		},
-		rootUris: rootUris.map(uri => uri.toString()),
 	};
 }

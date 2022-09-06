@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
-import { ConfigurationHost, EmbeddedLanguageServicePlugin, setCurrentConfigurationHost } from '@volar/vue-language-service-types';
+import { ConfigurationHost, EmbeddedLanguageServicePlugin, setContextStore } from '@volar/vue-language-service-types';
 import * as vue from '@volar/vue-language-core';
 import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -36,7 +36,10 @@ export function getDocumentService(
 	rootUri = URI.file(ts.sys.getCurrentDirectory()),
 ) {
 
-	setCurrentConfigurationHost(configurationHost); // TODO
+	setContextStore({
+		rootUri: rootUri.toString(),
+		configurationHost,
+	});
 
 	const vueDocuments = new WeakMap<TextDocument, VueDocument>();
 
@@ -53,7 +56,6 @@ export function getDocumentService(
 		fileSystemProvider,
 	});
 	const pugPlugin = usePugPlugin({
-		configurationHost,
 		htmlPlugin,
 	});
 	const cssPlugin = useCssPlugin({

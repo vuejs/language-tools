@@ -1,4 +1,4 @@
-import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost, useRootUri } from '@volar/vue-language-service-types';
 import * as css from 'vscode-css-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
@@ -240,11 +240,11 @@ export default function (options: {
 
 			const paths = new Set<string>();
 			const customData: string[] = await configHost.getConfiguration('css.customData') ?? [];
-			const rootPaths = configHost.rootUris.map(shared.getPathOfUri);
+			const rootPath = shared.getPathOfUri(useRootUri());
 
 			for (const customDataPath of customData) {
 				try {
-					const jsonPath = require.resolve(customDataPath, { paths: rootPaths });
+					const jsonPath = require.resolve(customDataPath, { paths: [rootPath] });
 					paths.add(jsonPath);
 				}
 				catch (error) {

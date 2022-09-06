@@ -50,7 +50,7 @@ export function createLanguageServer(
 		};
 		const ts = runtimeEnv.loadTypescript(options);
 
-		configHost = params.capabilities.workspace?.configuration ? createConfigurationHost(params, roots, connection) : undefined;
+		configHost = params.capabilities.workspace?.configuration ? createConfigurationHost(params, connection) : undefined;
 
 		if (options.documentFeatures) {
 

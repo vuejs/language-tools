@@ -1,7 +1,7 @@
 import * as shared from '@volar/shared';
 import * as tsFaster from '@volar/typescript-faster';
 import * as ts2 from '@volar/typescript-language-service';
-import { ConfigurationHost, EmbeddedLanguageServicePlugin, setCurrentConfigurationHost } from '@volar/vue-language-service-types';
+import { ConfigurationHost, EmbeddedLanguageServicePlugin, setContextStore } from '@volar/vue-language-service-types';
 import * as vue from '@volar/vue-language-core';
 import { isGloballyWhitelisted } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -84,7 +84,10 @@ export function createLanguageService(
 	rootUri = URI.file(vueLsHost.getCurrentDirectory()),
 ) {
 
-	setCurrentConfigurationHost(configurationHost); // TODO
+	setContextStore({
+		rootUri: rootUri.toString(),
+		configurationHost,
+	});
 
 	const ts = vueLsHost.getTypeScriptModule();
 	const core = createLanguageServiceContext();
@@ -178,7 +181,6 @@ export function createLanguageService(
 	const vueTemplatePugPlugin = _useVueTemplateLanguagePlugin(
 		'jade',
 		usePugPlugin({
-			configurationHost,
 			htmlPlugin: vueTemplateHtmlPlugin,
 			documentContext,
 		}),
