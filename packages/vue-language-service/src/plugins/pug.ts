@@ -1,17 +1,18 @@
-import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost, useDocumentContext } from '@volar/vue-language-service-types';
 import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as pug from '@volar/pug-language-service';
 import useHtmlPlugin from './html';
 
 export default function (options: {
-	documentContext?: html.DocumentContext,
 	htmlPlugin: ReturnType<typeof useHtmlPlugin>,
 }): EmbeddedLanguageServicePlugin & ReturnType<typeof useHtmlPlugin> & {
 	htmlLs: html.LanguageService,
 	pugLs: pug.LanguageService,
 	getPugDocument: (document: TextDocument) => pug.PugDocument | undefined,
 } {
+
+	const documentContext = useDocumentContext();
 
 	const pugLs = pug.getLanguageService(options.htmlPlugin.htmlLs);
 	const pugDocuments = new WeakMap<TextDocument, [number, pug.PugDocument]>();
@@ -27,10 +28,10 @@ export default function (options: {
 			on(document, position, context) {
 				return worker(document, (pugDocument) => {
 
-					if (!options.documentContext)
+					if (!documentContext)
 						return;
 
-					return pugLs.doComplete(pugDocument, position, options.documentContext, /** TODO: CompletionConfiguration */);
+					return pugLs.doComplete(pugDocument, position, documentContext, /** TODO: CompletionConfiguration */);
 				});
 			},
 		},
@@ -70,10 +71,10 @@ export default function (options: {
 		findDocumentLinks(document) {
 			return worker(document, (pugDocument) => {
 
-				if (!options.documentContext)
+				if (!documentContext)
 					return;
 
-				return pugLs.findDocumentLinks(pugDocument, options.documentContext);
+				return pugLs.findDocumentLinks(pugDocument, documentContext);
 			});
 		},
 

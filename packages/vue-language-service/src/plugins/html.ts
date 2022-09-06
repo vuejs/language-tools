@@ -1,12 +1,10 @@
-import { EmbeddedLanguageServicePlugin, useConfigurationHost, useRootUri } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost, useDocumentContext, useFileSystemProvider, useRootUri } from '@volar/vue-language-service-types';
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import * as vscode from 'vscode-languageserver-protocol';
 
 export default function (options: {
-	documentContext?: html.DocumentContext,
-	fileSystemProvider?: html.FileSystemProvider,
 	validLang?: string,
 	disableCustomData?: boolean,
 }): EmbeddedLanguageServicePlugin & {
@@ -15,8 +13,11 @@ export default function (options: {
 	updateCustomData(extraData: html.IHTMLDataProvider[]): void,
 } {
 
+	const fileSystemProvider = useFileSystemProvider();
+	const documentContext = useDocumentContext();
+
 	const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
-	const htmlLs = html.getLanguageService({ fileSystemProvider: options.fileSystemProvider });
+	const htmlLs = html.getLanguageService({ fileSystemProvider });
 
 	let inited = false;
 	let customData: html.IHTMLDataProvider[] = [];
@@ -38,8 +39,8 @@ export default function (options: {
 
 					const configs = await useConfigurationHost()?.getConfiguration<html.CompletionConfiguration>('html.completion', document.uri);
 
-					if (options.documentContext) {
-						return htmlLs.doComplete2(document, position, htmlDocument, options.documentContext, configs);
+					if (documentContext) {
+						return htmlLs.doComplete2(document, position, htmlDocument, documentContext, configs);
 					}
 					else {
 						return htmlLs.doComplete(document, position, htmlDocument, configs);
@@ -75,10 +76,10 @@ export default function (options: {
 		findDocumentLinks(document) {
 			return worker(document, (htmlDocument) => {
 
-				if (!options.documentContext)
+				if (!documentContext)
 					return;
 
-				return htmlLs.findDocumentLinks(document, options.documentContext);
+				return htmlLs.findDocumentLinks(document, documentContext);
 			});
 		},
 

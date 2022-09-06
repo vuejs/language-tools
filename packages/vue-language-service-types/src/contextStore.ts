@@ -1,6 +1,15 @@
+import type { DocumentContext, FileSystemProvider } from 'vscode-html-languageservice';
+
 interface ContextStore {
 	rootUri: string,
 	configurationHost?: ConfigurationHost;
+	documentContext?: DocumentContext;
+	fileSystemProvider?: FileSystemProvider,
+}
+
+export interface ConfigurationHost {
+	getConfiguration: (<T> (section: string, scopeUri?: string) => Promise<T | undefined>),
+	onDidChangeConfiguration: (cb: () => void) => void,
 }
 
 export function setContextStore(store: ContextStore) {
@@ -22,7 +31,10 @@ export function useConfigurationHost() {
 	return getContextStore().configurationHost;
 }
 
-export interface ConfigurationHost {
-	getConfiguration: (<T> (section: string, scopeUri?: string) => Promise<T | undefined>),
-	onDidChangeConfiguration: (cb: () => void) => void,
+export function useDocumentContext() {
+	return getContextStore().documentContext;
+}
+
+export function useFileSystemProvider() {
+	return getContextStore().fileSystemProvider;
 }

@@ -1,4 +1,4 @@
-import { EmbeddedLanguageServicePlugin, useConfigurationHost, useRootUri } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost, useDocumentContext, useFileSystemProvider, useRootUri } from '@volar/vue-language-service-types';
 import * as css from 'vscode-css-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
@@ -11,17 +11,17 @@ const wordPatterns: { [lang: string]: RegExp; } = {
 	postcss: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@$#.!])?[\w-?]+%?|[@#!$.])/g, // scss
 };
 
-export default function (options: {
-	documentContext?: css.DocumentContext,
-	fileSystemProvider?: css.FileSystemProvider,
-}): EmbeddedLanguageServicePlugin & {
+export default function (): EmbeddedLanguageServicePlugin & {
 	getStylesheet?: (document: TextDocument) => css.Stylesheet | undefined;
 	getCssLs?(lang: string): css.LanguageService | undefined;
 } {
 
-	const cssLs = css.getCSSLanguageService({ fileSystemProvider: options.fileSystemProvider });
-	const scssLs = css.getSCSSLanguageService({ fileSystemProvider: options.fileSystemProvider });
-	const lessLs = css.getLESSLanguageService({ fileSystemProvider: options.fileSystemProvider });
+	const fileSystemProvider = useFileSystemProvider();
+	const documentContext = useDocumentContext();
+
+	const cssLs = css.getCSSLanguageService({ fileSystemProvider });
+	const scssLs = css.getSCSSLanguageService({ fileSystemProvider });
+	const lessLs = css.getLESSLanguageService({ fileSystemProvider });
 	const postcssLs: css.LanguageService = {
 		...scssLs,
 		doValidation: (document, stylesheet, documentSettings) => {
@@ -49,14 +49,14 @@ export default function (options: {
 			async on(document, position, context) {
 				return worker(document, async (stylesheet, cssLs) => {
 
-					if (!options.documentContext)
+					if (!documentContext)
 						return;
 
 					const wordPattern = wordPatterns[document.languageId] ?? wordPatterns.css;
 					const wordStart = shared.getWordRange(wordPattern, position, document)?.start; // TODO: use end?
 					const wordRange = vscode.Range.create(wordStart ?? position, position);
 					const settings = await useConfigurationHost()?.getConfiguration<css.LanguageSettings>(document.languageId, document.uri);
-					const cssResult = await cssLs.doComplete2(document, position, stylesheet, options.documentContext, settings?.completion);
+					const cssResult = await cssLs.doComplete2(document, position, stylesheet, documentContext, settings?.completion);
 
 					if (cssResult) {
 						for (const item of cssResult.items) {
@@ -150,10 +150,10 @@ export default function (options: {
 		findDocumentLinks(document) {
 			return worker(document, (stylesheet, cssLs) => {
 
-				if (!options.documentContext)
+				if (!documentContext)
 					return;
 
-				return cssLs.findDocumentLinks(document, stylesheet, options.documentContext);
+				return cssLs.findDocumentLinks(document, stylesheet, documentContext);
 			});
 		},
 

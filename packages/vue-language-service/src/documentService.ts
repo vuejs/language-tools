@@ -39,6 +39,8 @@ export function getDocumentService(
 	setContextStore({
 		rootUri: rootUri.toString(),
 		configurationHost,
+		fileSystemProvider,
+		documentContext: undefined,
 	});
 
 	const vueDocuments = new WeakMap<TextDocument, VueDocument>();
@@ -52,15 +54,11 @@ export function getDocumentService(
 		tsLs: undefined,
 		isJsxMissing: false,
 	});
-	const htmlPlugin = useHtmlPlugin({
-		fileSystemProvider,
-	});
+	const htmlPlugin = useHtmlPlugin({});
 	const pugPlugin = usePugPlugin({
 		htmlPlugin,
 	});
-	const cssPlugin = useCssPlugin({
-		fileSystemProvider,
-	});
+	const cssPlugin = useCssPlugin();
 	const jsonPlugin = useJsonPlugin({});
 	const tsPlugin = useTsPlugin({
 		tsVersion: ts.version,

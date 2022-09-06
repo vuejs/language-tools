@@ -355,9 +355,11 @@ importers:
 
   packages/vue-language-service-types:
     specifiers:
+      vscode-html-languageservice: ^5.0.1
       vscode-languageserver-protocol: ^3.17.2
       vscode-languageserver-textdocument: ^1.0.7
     dependencies:
+      vscode-html-languageservice: 5.0.1
       vscode-languageserver-protocol: 3.17.2
       vscode-languageserver-textdocument: 1.0.7
 
@@ -5415,7 +5417,7 @@ packages:
     dependencies:
       vscode-languageserver-textdocument: 1.0.7
       vscode-languageserver-types: 3.17.2
-      vscode-nls: 5.1.0
+      vscode-nls: 5.2.0
       vscode-uri: 3.0.3
 
   /vscode-json-languageservice/5.1.0:
@@ -5462,6 +5464,7 @@ packages:
 
   /vscode-nls/5.1.0:
     resolution: {integrity: sha512-37Ha44QrLFwR2IfSSYdOArzUvOyoWbOYTwQC+wS0NfqKjhW7s0WQ1lMy5oJXgSZy9sAiZS5ifELhbpXodeMR8w==}
+    dev: false
 
   /vscode-nls/5.2.0:
     resolution: {integrity: sha512-RAaHx7B14ZU04EU31pT+rKz2/zSl7xMsfIZuo8pd+KZO6PXtQmpevpq3vxvWNcrGbdmhM/rr5Uw5Mz+NBfhVng==}

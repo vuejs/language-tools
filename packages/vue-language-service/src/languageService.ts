@@ -87,6 +87,8 @@ export function createLanguageService(
 	setContextStore({
 		rootUri: rootUri.toString(),
 		configurationHost,
+		documentContext: getDocumentContext(),
+		fileSystemProvider,
 	});
 
 	const ts = vueLsHost.getTypeScriptModule();
@@ -95,7 +97,6 @@ export function createLanguageService(
 	tsFaster.decorate(ts, core.typescriptLanguageServiceHost, vueTsLs);
 	const tsLs = ts2.createLanguageService(ts, core.typescriptLanguageServiceHost, vueTsLs, (section, scopeUri) => configurationHost?.getConfiguration(section, scopeUri) as any, rootUri);
 	const vueDocuments = parseVueDocuments(rootUri, core, tsLs);
-	const documentContext = getDocumentContext();
 
 	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
 	const documentVersions = new Map<string, number>();
@@ -173,22 +174,15 @@ export function createLanguageService(
 	});
 	const vueTemplateHtmlPlugin = _useVueTemplateLanguagePlugin(
 		'html',
-		useHtmlPlugin({
-			documentContext,
-			fileSystemProvider,
-		}),
+		useHtmlPlugin({}),
 	);
 	const vueTemplatePugPlugin = _useVueTemplateLanguagePlugin(
 		'jade',
 		usePugPlugin({
 			htmlPlugin: vueTemplateHtmlPlugin,
-			documentContext,
 		}),
 	);
-	const cssPlugin = useCssPlugin({
-		documentContext,
-		fileSystemProvider,
-	});
+	const cssPlugin = useCssPlugin();
 	const jsonPlugin = useJsonPlugin({
 		schema: undefined, // TODO
 		schemaRequestService,
