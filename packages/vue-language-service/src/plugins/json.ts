@@ -1,15 +1,14 @@
 import * as json from 'vscode-json-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost, useSchemaRequestService } from '@volar/vue-language-service-types';
 import * as vscode from 'vscode-languageserver-protocol';
 
-export default function (options: {
-	schema?: json.JSONSchema,
-	schemaRequestService?: json.SchemaRequestService,
-}): EmbeddedLanguageServicePlugin {
+export default function (): EmbeddedLanguageServicePlugin {
+
+	const schemaRequestService = useSchemaRequestService();
 
 	const jsonDocuments = new WeakMap<TextDocument, [number, json.JSONDocument]>();
-	const jsonLs = json.getLanguageService({ schemaRequestService: options.schemaRequestService });
+	const jsonLs = json.getLanguageService({ schemaRequestService });
 
 	return {
 
@@ -43,7 +42,12 @@ export default function (options: {
 
 				const documentLanguageSettings = undefined; // await getSettings(); // TODO
 
-				return await jsonLs.doValidation(document, jsonDocument, documentLanguageSettings, options.schema) as vscode.Diagnostic[];
+				return await jsonLs.doValidation(
+					document,
+					jsonDocument,
+					documentLanguageSettings,
+					undefined, // TODO
+				) as vscode.Diagnostic[];
 			});
 		},
 
@@ -109,14 +113,14 @@ export default function (options: {
 				}
 
 				const newText = TextDocument.applyEdits(document, edits);
-				
+
 				return [{
 					newText: '\n' + newText.trim() + '\n',
 					range: {
 						start: document.positionAt(0),
 						end: document.positionAt(document.getText().length),
 					},
-				}]
+				}];
 			});
 		},
 	};

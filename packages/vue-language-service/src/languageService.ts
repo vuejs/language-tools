@@ -89,6 +89,7 @@ export function createLanguageService(
 		configurationHost,
 		documentContext: getDocumentContext(),
 		fileSystemProvider,
+		schemaRequestService,
 	});
 
 	const ts = vueLsHost.getTypeScriptModule();
@@ -183,10 +184,7 @@ export function createLanguageService(
 		}),
 	);
 	const cssPlugin = useCssPlugin();
-	const jsonPlugin = useJsonPlugin({
-		schema: undefined, // TODO
-		schemaRequestService,
-	});
+	const jsonPlugin = useJsonPlugin();
 	const emmetPlugin = useEmmetPlugin();
 	const scriptTsPlugin = useTsPlugins(
 		tsLs,

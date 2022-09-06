@@ -59,7 +59,7 @@ export function getDocumentService(
 		htmlPlugin,
 	});
 	const cssPlugin = useCssPlugin();
-	const jsonPlugin = useJsonPlugin({});
+	const jsonPlugin = useJsonPlugin();
 	const tsPlugin = useTsPlugin({
 		tsVersion: ts.version,
 		getTsLs: () => tsLs,

@@ -1,10 +1,12 @@
 import type { DocumentContext, FileSystemProvider } from 'vscode-html-languageservice';
+import type { SchemaRequestService } from 'vscode-json-languageservice';
 
 interface ContextStore {
-	rootUri: string,
+	rootUri: string;
 	configurationHost?: ConfigurationHost;
 	documentContext?: DocumentContext;
-	fileSystemProvider?: FileSystemProvider,
+	fileSystemProvider?: FileSystemProvider;
+	schemaRequestService?: SchemaRequestService;
 }
 
 export interface ConfigurationHost {
@@ -37,4 +39,8 @@ export function useDocumentContext() {
 
 export function useFileSystemProvider() {
 	return getContextStore().fileSystemProvider;
+}
+
+export function useSchemaRequestService() {
+	return getContextStore().schemaRequestService;
 }
