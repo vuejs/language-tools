@@ -4,7 +4,7 @@ import { configure as configureHttpRequests } from 'request-light';
 import * as path from 'upath';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver/node';
-import { createLanguageServer } from './common';
+import { createLanguageServer } from './commonServer';
 import fileSchemaRequestHandler from './schemaRequestHandlers/file';
 import httpSchemaRequestHandler from './schemaRequestHandlers/http';
 import { createNodeFileSystemHost } from './utils/nodeFileSystemHost';

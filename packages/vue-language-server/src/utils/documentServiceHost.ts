@@ -2,7 +2,7 @@ import { LanguageConfigs, RuntimeEnvironment } from '../types';
 import * as vue from '@volar/vue-language-service';
 import { ConfigurationHost } from '@volar/vue-language-service';
 import { URI } from 'vscode-uri';
-import { loadCustomPlugins } from '../common';
+import { loadCustomPlugins } from './config';
 
 export function createDocumentServiceHost(
 	runtimeEnv: RuntimeEnvironment,

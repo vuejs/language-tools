@@ -1,5 +1,5 @@
 import * as vscode from 'vscode-languageserver/node';
-import { createLanguageServer } from '@volar/vue-language-server/out/common';
+import { createLanguageServer } from '@volar/vue-language-server/out/commonServer';
 import { createNodeFileSystemHost } from '@volar/vue-language-server/out/utils/nodeFileSystemHost';
 import * as alpine from '@volar/alpine-language-service';
 import * as path from 'upath';

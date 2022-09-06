@@ -3,7 +3,7 @@ import * as vue from '@volar/vue-language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
-import { loadCustomPlugins } from '../common';
+import { loadCustomPlugins } from './config';
 import { GetDocumentContentRequest, GetDocumentNameCasesRequest } from '../requests';
 import { FileSystem, FileSystemHost, LanguageConfigs, RuntimeEnvironment, ServerInitializationOptions } from '../types';
 import type { createConfigurationHost } from './configurationHost';
