@@ -4,8 +4,10 @@ import * as shared from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { fileTextChangesToWorkspaceEdit } from './rename';
 import * as fixNames from '../utils/fixNames';
-import type { Settings } from '../';
+import type { GetConfiguration } from '../';
 import { URI } from 'vscode-uri';
+import { getFormatCodeSettings } from '../configs/getFormatCodeSettings';
+import { getUserPreferences } from '../configs/getUserPreferences';
 
 export interface FixAllData {
 	type: 'fixAll',
@@ -34,7 +36,7 @@ export function register(
 	rootUri: URI,
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
-	settings: Settings,
+	getConfiguration: GetConfiguration,
 ) {
 	return async (uri: string, range: vscode.Range, context: vscode.CodeActionContext) => {
 
@@ -42,8 +44,8 @@ export function register(
 		if (!document) return;
 
 		const [formatOptions, preferences] = await Promise.all([
-			settings.getFormatOptions?.(document.uri) ?? {},
-			settings.getPreferences?.(document.uri) ?? {},
+			getFormatCodeSettings(getConfiguration, document.uri),
+			getUserPreferences(getConfiguration, document.uri),
 		]);
 
 		const fileName = shared.getPathOfUri(document.uri);

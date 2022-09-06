@@ -29,14 +29,14 @@ export function getSingleFileTypeScriptService(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	ts2: typeof import('@volar/typescript-language-service'),
 	_doc: TextDocument,
-	settings: ts2.Settings,
+	getConfiguration: (section: string) => Promise<any>,
 ): ts2.LanguageService {
 	if (!service) {
 		service = ts2.createLanguageService(
 			ts,
 			host,
 			ts.createLanguageService(host),
-			settings,
+			getConfiguration,
 			URI.file('/'),
 		);
 	}

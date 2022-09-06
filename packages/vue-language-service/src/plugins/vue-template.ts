@@ -1,5 +1,5 @@
 import * as shared from '@volar/shared';
-import type * as ts2 from '@volar/typescript-language-service';
+import * as ts2 from '@volar/typescript-language-service';
 import { getVueCompilerOptions, isIntrinsicElement } from '@volar/vue-language-core';
 import { scriptRanges } from '@volar/vue-language-core';
 import * as vue from '@volar/vue-language-core';
@@ -68,7 +68,6 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 	}>,
 	vueLsHost: vue.LanguageServiceHost,
 	vueDocuments: VueDocuments,
-	tsSettings: ts2.Settings,
 }): EmbeddedLanguageServicePlugin & T {
 
 	const componentCompletionDataCache = new WeakMap<
@@ -389,12 +388,11 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		async function getTypeScriptInsert() {
 			const embeddedScriptUri = shared.getUriByPath(options.rootUri, vueDocument.file.tsFileName);
 			const tsImportName = camelize(path.basename(importFile).replace(/\./g, '-'));
-			let [formatOptions, preferences] = await Promise.all([
-				options.tsSettings.getFormatOptions?.(embeddedScriptUri),
-				options.tsSettings.getPreferences?.(embeddedScriptUri),
+			const confitHost = useConfigurationHost();
+			const [formatOptions, preferences] = await Promise.all([
+				ts2.getFormatCodeSettings(section => confitHost?.getConfiguration(section) as any, embeddedScriptUri),
+				ts2.getUserPreferences(section => confitHost?.getConfiguration(section) as any, embeddedScriptUri),
 			]);
-			formatOptions = formatOptions ?? {};
-			preferences = preferences ?? {};
 			(preferences as any).importModuleSpecifierEnding = 'minimal';
 			const tsDetail = options.tsLs.__internal__.raw.getCompletionEntryDetails(shared.getPathOfUri(embeddedScriptUri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
 			if (tsDetail?.codeActions) {

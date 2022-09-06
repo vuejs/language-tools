@@ -6,15 +6,17 @@ import { handleKindModifiers } from './basic';
 import type { Data } from './basic';
 import * as previewer from '../../utils/previewer';
 import * as shared from '@volar/shared';
-import type { Settings } from '../..';
+import type { GetConfiguration } from '../..';
 import { URI } from 'vscode-uri';
+import { getFormatCodeSettings } from '../../configs/getFormatCodeSettings';
+import { getUserPreferences } from '../../configs/getUserPreferences';
 
 export function register(
 	rootUri: URI,
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
 	getTextDocument2: (uri: string) => TextDocument | undefined,
-	settings: Settings,
+	getConfiguration: GetConfiguration,
 ) {
 	return async (item: vscode.CompletionItem, newPosition?: vscode.Position): Promise<vscode.CompletionItem> => {
 
@@ -32,8 +34,8 @@ export function register(
 		}
 
 		const [formatOptions, preferences] = document ? await Promise.all([
-			settings.getFormatOptions?.(document.uri) ?? {},
-			settings.getPreferences?.(document.uri) ?? {},
+			getFormatCodeSettings(getConfiguration, document.uri),
+			getUserPreferences(getConfiguration, document.uri),
 		]) : [{}, {}];
 
 		let details: ts.CompletionEntryDetails | undefined;

@@ -18,7 +18,6 @@ import * as foldingRanges from './documentFeatures/foldingRanges';
 import * as format from './documentFeatures/format';
 import * as linkedEditingRanges from './documentFeatures/linkedEditingRanges';
 import * as selectionRanges from './documentFeatures/selectionRanges';
-import { getTsSettings } from './tsConfigs';
 import { DocumentServiceRuntimeContext } from './types';
 import { getSingleFileTypeScriptService } from './utils/singleFileTypeScriptService';
 import { parseVueDocument, VueDocument } from './vueDocuments';
@@ -40,7 +39,6 @@ export function getDocumentService(
 	setCurrentConfigurationHost(configurationHost); // TODO
 
 	const vueDocuments = new WeakMap<TextDocument, [number, VueDocument]>();
-	const tsSettings = getTsSettings(configurationHost);
 
 	let tsLs: ts2.LanguageService;
 
@@ -90,7 +88,7 @@ export function getDocumentService(
 		},
 		updateTsLs(document) {
 			if (isTsDocument(document)) {
-				tsLs = getSingleFileTypeScriptService(context.typescript, ts2, document, tsSettings);
+				tsLs = getSingleFileTypeScriptService(context.typescript, ts2, document, section => configurationHost?.getConfiguration(section) as any);
 			}
 		},
 	};

@@ -1,4 +1,3 @@
-import * as vscode from 'vscode-languageserver-protocol';
 import * as completions from './services/completions/basic';
 import * as directiveCommentCompletions from './services/completions/directiveComment';
 import * as jsDocCompletions from './services/completions/jsDoc';
@@ -29,20 +28,22 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { URI } from 'vscode-uri';
+import * as _ from 'vscode-languageserver-protocol';
 
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
 export { getSemanticTokenLegend } from './services/semanticTokens';
+export * from './configs/getFormatCodeSettings';
+export * from './configs/getUserPreferences';
 
-export interface Settings {
-	getFormatOptions?(uri: string, options?: vscode.FormattingOptions): Promise<ts.FormatCodeSettings>;
-	getPreferences?(uri: string): Promise<ts.UserPreferences>;
-}
+export interface GetConfiguration {
+	(section: string): Promise<any>;
+};
 
 export function createLanguageService(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	host: ts.LanguageServiceHost,
 	languageService: ts.LanguageService,
-	settings: Settings,
+	getConfiguration: GetConfiguration,
 	rootUri: URI,
 ) {
 
@@ -55,21 +56,21 @@ export function createLanguageService(
 		findFileReferences: fileReferences.register(rootUri, languageService, getValidTextDocument, getTextDocument),
 		findImplementations: implementation.register(rootUri, languageService, getValidTextDocument, getTextDocument),
 		prepareRename: prepareRename.register(languageService, getValidTextDocument),
-		doRename: rename.register(rootUri, languageService, getValidTextDocument, settings),
-		getEditsForFileRename: fileRename.register(rootUri, languageService, getValidTextDocument, settings),
-		getCodeActions: codeActions.register(rootUri, languageService, getValidTextDocument, settings),
-		doCodeActionResolve: codeActionResolve.register(rootUri, languageService, getValidTextDocument, settings),
-		getInlayHints: inlayHints.register(languageService, getValidTextDocument, settings, ts),
+		doRename: rename.register(rootUri, languageService, getValidTextDocument, getConfiguration),
+		getEditsForFileRename: fileRename.register(rootUri, languageService, getValidTextDocument, getConfiguration),
+		getCodeActions: codeActions.register(rootUri, languageService, getValidTextDocument, getConfiguration),
+		doCodeActionResolve: codeActionResolve.register(rootUri, languageService, getValidTextDocument, getConfiguration),
+		getInlayHints: inlayHints.register(languageService, getValidTextDocument, getConfiguration, ts),
 
 		findDocumentHighlights: documentHighlight.register(languageService, getValidTextDocument, ts),
 		findDocumentSymbols: documentSymbol.register(languageService, getValidTextDocument),
 		findWorkspaceSymbols: workspaceSymbols.register(rootUri, languageService, getTextDocument),
-		doComplete: completions.register(languageService, getValidTextDocument, settings, ts),
-		doCompletionResolve: completionResolve.register(rootUri, languageService, getValidTextDocument, getTextDocument, settings),
+		doComplete: completions.register(languageService, getValidTextDocument, getConfiguration, ts),
+		doCompletionResolve: completionResolve.register(rootUri, languageService, getValidTextDocument, getTextDocument, getConfiguration),
 		doDirectiveCommentComplete: directiveCommentCompletions.register(getValidTextDocument),
 		doJsDocComplete: jsDocCompletions.register(languageService, getValidTextDocument),
 		doHover: hover.register(rootUri, languageService, getValidTextDocument, getTextDocument, ts),
-		doFormatting: formatting.register(languageService, getValidTextDocument, settings),
+		doFormatting: formatting.register(languageService, getValidTextDocument, getConfiguration),
 		getSignatureHelp: signatureHelp.register(languageService, getValidTextDocument, ts),
 		getSelectionRanges: selectionRanges.register(languageService, getValidTextDocument),
 		doValidation: diagnostics.register(rootUri, languageService, getValidTextDocument, ts),

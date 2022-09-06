@@ -48,7 +48,6 @@ import useRefSugarConversionsPlugin from './plugins/vue-convert-refsugar';
 import useScriptSetupConversionsPlugin from './plugins/vue-convert-scriptsetup';
 import useTagNameCasingConversionsPlugin from './plugins/vue-convert-tagcasing';
 import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemanticTokenTypes } from './plugins/vue-template';
-import { getTsSettings } from './tsConfigs';
 import { LanguageServiceRuntimeContext } from './types';
 import { parseVueDocuments } from './vueDocuments';
 import { URI } from 'vscode-uri';
@@ -91,8 +90,7 @@ export function createLanguageService(
 	const core = createLanguageServiceContext();
 	const vueTsLs = ts.createLanguageService(core.typescriptLanguageServiceHost);
 	tsFaster.decorate(ts, core.typescriptLanguageServiceHost, vueTsLs);
-	const tsSettings = getTsSettings(configurationHost);
-	const tsLs = ts2.createLanguageService(ts, core.typescriptLanguageServiceHost, vueTsLs, tsSettings, rootUri);
+	const tsLs = ts2.createLanguageService(ts, core.typescriptLanguageServiceHost, vueTsLs, section => configurationHost?.getConfiguration(section) as any, rootUri);
 	const vueDocuments = parseVueDocuments(rootUri, core, tsLs);
 	const documentContext = getDocumentContext();
 
@@ -346,7 +344,6 @@ export function createLanguageService(
 			getNameCases,
 			vueLsHost,
 			vueDocuments,
-			tsSettings,
 		});
 	}
 	function useTsPlugins(tsLs: ts2.LanguageService, isTemplatePlugin: boolean, getBaseCompletionOptions: (uri: string) => ts.GetCompletionsAtPositionOptions) {

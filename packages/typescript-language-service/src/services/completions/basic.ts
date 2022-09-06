@@ -5,7 +5,8 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import * as semver from 'semver';
 import { parseKindModifier } from '../../utils/modifiers';
-import { Settings } from '../..';
+import { GetConfiguration } from '../..';
+import { getUserPreferences } from '../../configs/getUserPreferences';
 
 export interface Data {
 	uri: string,
@@ -17,7 +18,7 @@ export interface Data {
 export function register(
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
-	settings: Settings,
+	getConfiguration: GetConfiguration,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {
 
@@ -30,7 +31,7 @@ export function register(
 		if (!document)
 			return;
 
-		const preferences = await settings.getPreferences?.(document.uri) ?? {};
+		const preferences = await getUserPreferences(getConfiguration, document.uri);
 		const fileName = shared.getPathOfUri(document.uri);
 		const offset = document.offsetAt(position);
 
