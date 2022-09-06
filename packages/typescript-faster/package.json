@@ -13,7 +13,7 @@
 		"directory": "packages/typescript-faster"
 	},
 	"devDependencies": {
-		"@types/semver": "^7.3.10",
+		"@types/semver": "^7.3.12",
 		"typescript": "latest"
 	},
 	"dependencies": {

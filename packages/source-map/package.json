@@ -13,6 +13,6 @@
 		"directory": "packages/source-map"
 	},
 	"dependencies": {
-		"@vue/reactivity": "3.2.37"
+		"@vue/reactivity": "3.2.38"
 	}
 }
