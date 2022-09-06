@@ -1,8 +1,6 @@
 import * as vscode from 'vscode-languageserver-protocol';
 import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
 
-const pugBeautify = require('@johnsoncodehk/pug-beautify');
-
 export default function (): EmbeddedLanguageServicePlugin {
 
 	return {
@@ -18,6 +16,7 @@ export default function (): EmbeddedLanguageServicePlugin {
 			if (pugCode.trim() === '')
 				return;
 
+			const pugBeautify = require('@johnsoncodehk/pug-beautify');
 			const prefixesLength = pugCode.length - pugCode.trimStart().length;
 			const suffixesLength = pugCode.length - pugCode.trimEnd().length;
 			const prefixes = pugCode.slice(0, prefixesLength);
