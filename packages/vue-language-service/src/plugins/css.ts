@@ -200,22 +200,16 @@ export default function (options: {
 					...options_2,
 					...options,
 				});
-				let newText = TextDocument.applyEdits(document, edits);
 
-				// fix https://github.com/johnsoncodehk/volar/issues/1155
-				if (!newText.startsWith('\n'))
-					newText = '\n' + newText;
+				const newText = TextDocument.applyEdits(document, edits);
 
-				if (!newText.endsWith('\n'))
-					newText = newText + '\n';
-
-				if (newText === document.getText())
-					return [];
-
-				return [vscode.TextEdit.replace({
-					start: document.positionAt(0),
-					end: document.positionAt(document.getText().length),
-				}, newText)];
+				return [{
+					newText: '\n' + newText.trim() + '\n',
+					range: {
+						start: document.positionAt(0),
+						end: document.positionAt(document.getText().length),
+					},
+				}];
 			});
 		},
 	};
