@@ -1,6 +1,6 @@
 {
 	"name": "@volar/vue-language-service-types",
-	"version": "0.40.9",
+	"version": "0.40.10",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
