@@ -39,7 +39,7 @@ export function getDocumentService(
 
 	setCurrentConfigurationHost(configurationHost); // TODO
 
-	const vueDocuments = new WeakMap<TextDocument, VueDocument>();
+	const vueDocuments = new WeakMap<TextDocument, [number, VueDocument]>();
 	const tsSettings = getTsSettings(configurationHost);
 
 	let tsLs: ts2.LanguageService;
@@ -47,7 +47,7 @@ export function getDocumentService(
 	// language support plugins
 	const vuePlugin = useVuePlugin({
 		ts,
-		getVueDocument: doc => vueDocuments.get(doc),
+		getVueDocument: doc => vueDocuments.get(doc)?.[1],
 		tsLs: undefined,
 		isJsxMissing: false,
 	});
@@ -68,7 +68,7 @@ export function getDocumentService(
 	});
 	const autoWrapParenthesesPlugin = useAutoWrapParenthesesPlugin({
 		ts,
-		getVueDocument: doc => vueDocuments.get(doc),
+		getVueDocument: doc => vueDocuments.get(doc)?.[1],
 	});
 	const pugFormatPlugin = usePugFormatPlugin();
 
@@ -109,13 +109,16 @@ export function getDocumentService(
 
 	function getVueDocument(document: TextDocument) {
 
-		let vueDoc = vueDocuments.get(document);
+		let vueDocCache = vueDocuments.get(document);
 
-		if (vueDoc) {
+		if (vueDocCache) {
 
-			vueDoc.file.update(ts.ScriptSnapshot.fromString(document.getText()));
+			if (vueDocCache[0] !== document.version) {
+				vueDocCache[1].file.update(ts.ScriptSnapshot.fromString(document.getText()));
+				vueDocCache[0] = document.version;
+			}
 
-			return vueDoc;
+			return vueDocCache[1];
 		}
 
 		const vueFile = vue.createSourceFile(
@@ -124,10 +127,10 @@ export function getDocumentService(
 			context.typescript,
 			vuePlugins,
 		);
-		vueDoc = parseVueDocument(rootUri, vueFile, undefined);
+		vueDocCache = [document.version, parseVueDocument(rootUri, vueFile, undefined)];
 
-		vueDocuments.set(document, vueDoc);
+		vueDocuments.set(document, vueDocCache);
 
-		return vueDoc;
+		return vueDocCache[1];
 	}
 }
