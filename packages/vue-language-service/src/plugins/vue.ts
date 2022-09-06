@@ -251,7 +251,39 @@ export default function (options: {
 			});
 		},
 
-		format: undefined,
+		format(document) {
+			return worker(document, (vueDocument) => {
+
+				const blocks = [
+					vueDocument.file.sfc.script,
+					vueDocument.file.sfc.scriptSetup,
+					vueDocument.file.sfc.template,
+					...vueDocument.file.sfc.styles,
+					...vueDocument.file.sfc.customBlocks,
+				].filter((block): block is NonNullable<typeof block> => !!block)
+					.sort((a, b) => b.start - a.start);
+
+				const edits: vscode.TextEdit[] = [];
+
+				for (const block of blocks) {
+					const startPos = document.positionAt(block.start);
+					if (startPos.character !== 0) {
+						edits.push({
+							range: {
+								start: {
+									line: startPos.line,
+									character: 0,
+								},
+								end: startPos,
+							},
+							newText: '',
+						});
+					}
+				}
+
+				return edits;
+			});
+		},
 	};
 
 	function worker<T>(document: TextDocument, callback: (vueDocument: VueDocument) => T) {
