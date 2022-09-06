@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.40.10 (2022/9/7)
+
+- feat: improve "Format Selection" for html content
+- feat: uniquely scope attribute shorthands ([#1812](https://github.com/johnsoncodehk/volar/issues/1812))
+- feat: add server name, version infos to LSP initialize response
+- fix: "Format Selection" should not format whole language block ([#1833](https://github.com/johnsoncodehk/volar/issues/1833))
+- fix: formatting break document content randomly ([#1827](https://github.com/johnsoncodehk/volar/issues/1827)) ([#1832](https://github.com/johnsoncodehk/volar/issues/1832))
+- fix: pug syntax highlighting confuses element id with interpolation ([#1826](https://github.com/johnsoncodehk/volar/issues/1826))
+- fix: don't cache IDE settings if IDE do not support config change notification
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
+
 ## 0.40.9 (2022/9/6)
 
 - feat: improve vue document formatting
@@ -11,12 +27,6 @@
 - perf: cache `ts.ScriptSnapshot.fromString` result on formatting
 - fix: volar.config.js not working since v0.40.7 ([#1819](https://github.com/johnsoncodehk/volar/issues/1819))
 - fix: should not incremental update if SFC parse failed (https://github.com/johnsoncodehk/volar/issues/1807#issuecomment-1236857296)
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 0.40.7 (2022/9/5)
 
