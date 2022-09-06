@@ -19,8 +19,6 @@ export function register(context: DocumentServiceRuntimeContext) {
 		},
 	) => {
 
-		let documentDirty = false;
-
 		if (!range) {
 			range = vscode.Range.create(document.positionAt(0), document.positionAt(document.getText().length));
 		}
@@ -173,9 +171,8 @@ export function register(context: DocumentServiceRuntimeContext) {
 		return [textEdit];
 
 		function tryUpdateVueDocument() {
-			if (vueDocument && documentDirty) {
+			if (vueDocument && vueDocument.file.text !== document.getText()) {
 				vueDocument.file.update(ts.ScriptSnapshot.fromString(document.getText()));
-				documentDirty = false;
 			}
 		}
 
@@ -290,7 +287,6 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 			if (newText !== document.getText()) {
 				document = TextDocument.create(document.uri, document.languageId, document.version + 1, newText);
-				documentDirty = true;
 			}
 		}
 	};
