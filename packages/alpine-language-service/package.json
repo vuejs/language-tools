@@ -18,8 +18,8 @@
 	},
 	"dependencies": {
 		"@volar/alpine-language-core": "0.40.10",
+		"@volar/common-language-service": "0.40.10",
 		"@volar/vue-language-service": "0.40.10",
-		"@volar/vue-language-service-types": "0.40.10",
 		"vscode-uri": "^3.0.3"
 	}
 }

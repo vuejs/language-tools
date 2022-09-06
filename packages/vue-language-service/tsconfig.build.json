@@ -13,6 +13,9 @@
 	],
 	"references": [
 		{
+			"path": "../common-language-service/tsconfig.build.json"
+		},
+		{
 			"path": "../pug-language-service/tsconfig.build.json"
 		},
 		{
@@ -29,9 +32,6 @@
 		},
 		{
 			"path": "../vue-language-core/tsconfig.build.json"
-		},
-		{
-			"path": "../vue-language-service-types/tsconfig.build.json"
 		},
 		{
 			"path": "../vue-typescript/tsconfig.build.json"

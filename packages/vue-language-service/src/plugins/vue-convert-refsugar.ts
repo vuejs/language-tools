@@ -3,7 +3,7 @@ import * as ts2 from '@volar/typescript-language-service';
 import * as refSugarRanges from '../utils/refSugarRanges';
 import * as vscode from 'vscode-languageserver-protocol';
 import { mergeWorkspaceEdits } from '../languageFeatures/rename';
-import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, useConfigurationHost } from '@volar/common-language-service';
+import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, useConfigurationHost, useTypeScriptModule } from '@volar/common-language-service';
 import { isBlacklistNode, isRefType } from './vue-autoinsert-dotvalue';
 import { getAddMissingImportsEdits } from './vue-convert-scriptsetup';
 import { VueDocument } from '../vueDocuments';
@@ -23,7 +23,6 @@ type CommandArgs = [string];
 export default function (options: {
 	getVueDocument(uri: string): VueDocument | undefined,
 	// for use ref sugar
-	ts: typeof import('typescript/lib/tsserverlibrary'),
 	findReferences: (uri: string, position: vscode.Position) => Promise<vscode.Location[] | undefined>,
 	findTypeDefinition: (uri: string, position: vscode.Position) => Promise<vscode.LocationLink[] | undefined>,
 	scriptTsLs: ts2.LanguageService,
@@ -33,6 +32,8 @@ export default function (options: {
 	doRename: (uri: string, position: vscode.Position, newName: string) => Promise<vscode.WorkspaceEdit | undefined>,
 	doValidation: (uri: string) => Promise<vscode.Diagnostic[] | undefined>,
 }): EmbeddedLanguageServicePlugin {
+
+	const ts = useTypeScriptModule();
 
 	return {
 
@@ -54,7 +55,7 @@ export default function (options: {
 
 					if (sfc.scriptSetup && sfc.scriptSetupAst) {
 
-						const ranges = getRanges(options.ts, sfc.scriptSetupAst);
+						const ranges = getRanges(ts, sfc.scriptSetupAst);
 
 						result.push({
 							range: {
@@ -81,7 +82,7 @@ export default function (options: {
 				const [uri] = args as CommandArgs;
 
 				return worker(uri, vueDocument => {
-					return useRefSugar(options.ts, vueDocument, context, options.findReferences, options.findTypeDefinition, options.scriptTsLs);
+					return useRefSugar(ts, vueDocument, context, options.findReferences, options.findTypeDefinition, options.scriptTsLs);
 				});
 			}
 
@@ -90,7 +91,7 @@ export default function (options: {
 				const [uri] = args as CommandArgs;
 
 				return worker(uri, vueDocument => {
-					return unuseRefSugar(options.ts, vueDocument, context, options.doCodeActions, options.doCodeActionResolve, options.doRename, options.doValidation);
+					return unuseRefSugar(ts, vueDocument, context, options.doCodeActions, options.doCodeActionResolve, options.doRename, options.doValidation);
 				});
 			}
 		},

@@ -3,7 +3,7 @@ import * as ts2 from '@volar/typescript-language-service';
 import { getVueCompilerOptions, isIntrinsicElement } from '@volar/vue-language-core';
 import { scriptRanges } from '@volar/vue-language-core';
 import * as vue from '@volar/vue-language-core';
-import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/common-language-service';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost, useTypeScriptModule } from '@volar/common-language-service';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';
@@ -56,7 +56,6 @@ interface AutoImportCompletionData {
 
 export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof useHtmlPlugin>>(options: {
 	rootUri: URI,
-	ts: typeof import('typescript/lib/tsserverlibrary'),
 	getSemanticTokenLegend(): vscode.SemanticTokensLegend,
 	getScanner(document: TextDocument): html.Scanner | undefined,
 	tsLs: ts2.LanguageService,
@@ -69,6 +68,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 	vueLsHost: vue.LanguageServiceHost,
 	vueDocuments: VueDocuments,
 }): EmbeddedLanguageServicePlugin & T {
+
+	const ts = useTypeScriptModule();
 
 	const componentCompletionDataCache = new WeakMap<
 		Awaited<ReturnType<VueDocument['getTemplateData']>>,
@@ -336,20 +337,20 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					'\n' + insert.insertText,
 				),
 			];
-			const _scriptRanges = scriptRanges.parseScriptRanges(options.ts, sfc.scriptAst, !!sfc.scriptSetup, true, true);
+			const _scriptRanges = scriptRanges.parseScriptRanges(ts, sfc.scriptAst, !!sfc.scriptSetup, true, true);
 			const exportDefault = _scriptRanges.exportDefault;
 			if (exportDefault) {
 				// https://github.com/microsoft/TypeScript/issues/36174
-				const printer = options.ts.createPrinter();
+				const printer = ts.createPrinter();
 				if (exportDefault.componentsOption && exportDefault.componentsOptionNode) {
 					const newNode: typeof exportDefault.componentsOptionNode = {
 						...exportDefault.componentsOptionNode,
 						properties: [
 							...exportDefault.componentsOptionNode.properties,
-							options.ts.factory.createShorthandPropertyAssignment(componentName),
+							ts.factory.createShorthandPropertyAssignment(componentName),
 						] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
 					};
-					const printText = printer.printNode(options.ts.EmitHint.Expression, newNode, sfc.scriptAst);
+					const printText = printer.printNode(ts.EmitHint.Expression, newNode, sfc.scriptAst);
 					const editRange = vscode.Range.create(
 						textDoc.positionAt(sfc.script.startTagEnd + exportDefault.componentsOption.start),
 						textDoc.positionAt(sfc.script.startTagEnd + exportDefault.componentsOption.end),
@@ -366,10 +367,10 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 						...exportDefault.argsNode,
 						properties: [
 							...exportDefault.argsNode.properties,
-							options.ts.factory.createShorthandPropertyAssignment(`components: { ${componentName} }`),
+							ts.factory.createShorthandPropertyAssignment(`components: { ${componentName} }`),
 						] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
 					};
-					const printText = printer.printNode(options.ts.EmitHint.Expression, newNode, sfc.scriptAst);
+					const printText = printer.printNode(ts.EmitHint.Expression, newNode, sfc.scriptAst);
 					const editRange = vscode.Range.create(
 						textDoc.positionAt(sfc.script.startTagEnd + exportDefault.args.start),
 						textDoc.positionAt(sfc.script.startTagEnd + exportDefault.args.end),
@@ -699,7 +700,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 	function getLastImportNode(ast: ts.SourceFile) {
 		let importNode: ts.ImportDeclaration | undefined;
 		ast.forEachChild(node => {
-			if (options.ts.isImportDeclaration(node)) {
+			if (ts.isImportDeclaration(node)) {
 				importNode = node;
 			}
 		});

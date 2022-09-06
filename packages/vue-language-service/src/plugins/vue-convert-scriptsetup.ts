@@ -2,7 +2,7 @@ import * as shared from '@volar/shared';
 import { scriptSetupConvertRanges } from '@volar/vue-language-core';
 import type { TextRange } from '@volar/vue-language-core';
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, useConfigurationHost } from '@volar/common-language-service';
+import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, useConfigurationHost, useTypeScriptModule } from '@volar/common-language-service';
 import { VueDocument } from '../vueDocuments';
 
 enum Commands {
@@ -18,11 +18,12 @@ export interface ReferencesCodeLensData {
 type CommandArgs = [string];
 
 export default function (options: {
-	ts: typeof import('typescript/lib/tsserverlibrary'),
 	getVueDocument(uri: string): VueDocument | undefined,
 	doCodeActions: (uri: string, range: vscode.Range, codeActionContext: vscode.CodeActionContext) => Promise<vscode.CodeAction[] | undefined>,
 	doCodeActionResolve: (item: vscode.CodeAction) => Promise<vscode.CodeAction>,
 }): EmbeddedLanguageServicePlugin {
+
+	const ts = useTypeScriptModule();
 
 	return {
 
@@ -80,7 +81,7 @@ export default function (options: {
 				const [uri] = args as CommandArgs;
 
 				return worker(uri, vueDocument => {
-					return useSetupSugar(options.ts, vueDocument, context, options.doCodeActions, options.doCodeActionResolve);
+					return useSetupSugar(ts, vueDocument, context, options.doCodeActions, options.doCodeActionResolve);
 				});
 			}
 
@@ -89,7 +90,7 @@ export default function (options: {
 				const [uri] = args as CommandArgs;
 
 				return worker(uri, vueDocument => {
-					return unuseSetupSugar(options.ts, vueDocument, context, options.doCodeActions, options.doCodeActionResolve);
+					return unuseSetupSugar(ts, vueDocument, context, options.doCodeActions, options.doCodeActionResolve);
 				});
 			}
 		},

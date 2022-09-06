@@ -1,13 +1,14 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/common-language-service';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost, useTypeScriptModule } from '@volar/common-language-service';
 import { isCharacterTyping } from './vue-autoinsert-dotvalue';
 import { VueDocument } from '../vueDocuments';
 
 export default function (options: {
-	ts: typeof import('typescript/lib/tsserverlibrary'),
 	getVueDocument: (document: TextDocument) => VueDocument | undefined,
 }): EmbeddedLanguageServicePlugin {
+
+	const ts = useTypeScriptModule();
 
 	return {
 
@@ -36,14 +37,14 @@ export default function (options: {
 			for (const mappedRange of templateFormatScript.sourceMap.mappings) {
 				if (mappedRange.sourceRange.end === offset) {
 					const text = document.getText().substring(mappedRange.sourceRange.start, mappedRange.sourceRange.end);
-					const ast = options.ts.createSourceFile(templateFormatScript.file.fileName, text, options.ts.ScriptTarget.Latest);
+					const ast = ts.createSourceFile(templateFormatScript.file.fileName, text, ts.ScriptTarget.Latest);
 					if (ast.statements.length === 1) {
 						const statement = ast.statements[0];
 						if (
-							options.ts.isExpressionStatement(statement)
-							&& options.ts.isAsExpression(statement.expression)
-							&& options.ts.isTypeReferenceNode(statement.expression.type)
-							&& options.ts.isIdentifier(statement.expression.type.typeName)
+							ts.isExpressionStatement(statement)
+							&& ts.isAsExpression(statement.expression)
+							&& ts.isTypeReferenceNode(statement.expression.type)
+							&& ts.isIdentifier(statement.expression.type.typeName)
 							&& statement.expression.type.typeName.text
 						) {
 							return vscode.TextEdit.replace(

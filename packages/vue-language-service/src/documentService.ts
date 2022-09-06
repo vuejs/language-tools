@@ -38,6 +38,9 @@ export function getDocumentService(
 
 	setContextStore({
 		rootUri: rootUri.toString(),
+		modules: {
+			typescript: ts,
+		},
 		configurationHost,
 		fileSystemProvider,
 		documentContext: undefined,
@@ -49,7 +52,6 @@ export function getDocumentService(
 
 	// language support plugins
 	const vuePlugin = useVuePlugin({
-		ts,
 		getVueDocument: doc => vueDocuments.get(doc),
 		tsLs: undefined,
 		isJsxMissing: false,
@@ -63,7 +65,6 @@ export function getDocumentService(
 		getTsLs: () => tsLs,
 	});
 	const autoWrapParenthesesPlugin = useAutoWrapParenthesesPlugin({
-		ts,
 		getVueDocument: doc => vueDocuments.get(doc),
 	});
 	const pugFormatPlugin = usePugFormatPlugin();

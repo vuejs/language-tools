@@ -5,13 +5,13 @@ import * as ts2 from '@volar/typescript-language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { hyphenate } from '@vue/shared';
 import { isTsDocument } from './typescript';
-import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/common-language-service';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost, useTypeScriptModule } from '@volar/common-language-service';
 
 export default function (options: {
-	ts: typeof import('typescript/lib/tsserverlibrary'),
 	getTsLs: () => ts2.LanguageService,
 }): EmbeddedLanguageServicePlugin {
 
+	const ts = useTypeScriptModule();
 	const asts = new WeakMap<TextDocument, ts.SourceFile>();
 
 	return {
@@ -29,7 +29,7 @@ export default function (options: {
 				return;
 
 			const sourceFile = getAst(document);
-			if (isBlacklistNode(options.ts, sourceFile, document.offsetAt(position)))
+			if (isBlacklistNode(ts, sourceFile, document.offsetAt(position)))
 				return;
 
 			const typeDefs = options.getTsLs().findTypeDefinition(document.uri, position);
@@ -42,7 +42,7 @@ export default function (options: {
 	function getAst(tsDoc: TextDocument) {
 		let ast = asts.get(tsDoc);
 		if (!ast) {
-			ast = options.ts.createSourceFile(shared.getPathOfUri(tsDoc.uri), tsDoc.getText(), options.ts.ScriptTarget.Latest);
+			ast = ts.createSourceFile(shared.getPathOfUri(tsDoc.uri), tsDoc.getText(), ts.ScriptTarget.Latest);
 			asts.set(tsDoc, ast);
 		}
 		return ast;

@@ -12,6 +12,9 @@ export function createLanguageService(
 
 	setContextStore({
 		rootUri: rootUri.toString(),
+		modules: {
+			typescript: alpineLsHost.getTypeScriptModule(),
+		},
 		configurationHost,
 	});
 
@@ -39,6 +42,9 @@ export function getDocumentService(
 
 	setContextStore({
 		rootUri: rootUri.toString(),
+		modules: {
+			typescript: ts,
+		},
 		configurationHost,
 	});
 

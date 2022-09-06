@@ -86,6 +86,9 @@ export function createLanguageService(
 
 	setContextStore({
 		rootUri: rootUri.toString(),
+		modules: {
+			typescript: vueLsHost.getTypeScriptModule(),
+		},
 		configurationHost,
 		documentContext: getDocumentContext(),
 		fileSystemProvider,
@@ -168,7 +171,6 @@ export function createLanguageService(
 	};
 	// plugins
 	const vuePlugin = useVuePlugin({
-		ts,
 		getVueDocument: (document) => vueDocuments.get(document.uri),
 		tsLs,
 		isJsxMissing: !vueLsHost.getVueCompilationSettings().experimentalDisableTemplateSupport && vueLsHost.getCompilationSettings().jsx !== ts.JsxEmit.Preserve,
@@ -193,7 +195,6 @@ export function createLanguageService(
 		}),
 	);
 	const autoDotValuePlugin = useAutoDotValuePlugin({
-		ts,
 		getTsLs: () => tsLs,
 	});
 	const referencesCodeLensPlugin = useReferencesCodeLensPlugin({
@@ -204,13 +205,11 @@ export function createLanguageService(
 		getVueDocument: (uri) => vueDocuments.get(uri),
 	});
 	const scriptSetupConversionsPlugin = useScriptSetupConversionsPlugin({
-		ts,
 		getVueDocument: (uri) => vueDocuments.get(uri),
 		doCodeActions: apis.doCodeActions,
 		doCodeActionResolve: apis.doCodeActionResolve,
 	});
 	const refSugarConversionsPlugin = useRefSugarConversionsPlugin({
-		ts,
 		getVueDocument: (uri) => vueDocuments.get(uri),
 		doCodeActions: apis.doCodeActions,
 		doCodeActionResolve: apis.doCodeActionResolve,
@@ -315,7 +314,6 @@ export function createLanguageService(
 	function _useVueTemplateLanguagePlugin<T extends ReturnType<typeof useHtmlPlugin> | ReturnType<typeof usePugPlugin>>(languageId: string, templateLanguagePlugin: T) {
 		return useVueTemplateLanguagePlugin({
 			rootUri,
-			ts,
 			templateLanguagePlugin,
 			getSemanticTokenLegend,
 			getScanner: (document): html.Scanner | undefined => {

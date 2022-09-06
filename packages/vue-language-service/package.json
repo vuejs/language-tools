@@ -19,6 +19,7 @@
 	"dependencies": {
 		"@johnsoncodehk/html2pug": "^1.0.0",
 		"@johnsoncodehk/pug-beautify": "^0.2.2",
+		"@volar/common-language-service": "0.40.10",
 		"@volar/pug-language-service": "0.40.10",
 		"@volar/shared": "0.40.10",
 		"@volar/source-map": "0.40.10",
@@ -26,7 +27,6 @@
 		"@volar/typescript-faster": "0.40.10",
 		"@volar/typescript-language-service": "0.40.10",
 		"@volar/vue-language-core": "0.40.10",
-		"@volar/vue-language-service-types": "0.40.10",
 		"@volar/vue-typescript": "0.40.10",
 		"@vscode/emmet-helper": "^2.8.4",
 		"@vue/compiler-dom": "^3.2.38",
