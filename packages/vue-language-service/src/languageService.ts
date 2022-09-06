@@ -181,7 +181,7 @@ export function createLanguageService(
 	});
 	const vueTemplateHtmlPlugin = _useVueTemplateLanguagePlugin(
 		'html',
-		useHtmlPlugin({}),
+		useHtmlPlugin(),
 	);
 	const vueTemplatePugPlugin = _useVueTemplateLanguagePlugin(
 		'jade',

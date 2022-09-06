@@ -7,7 +7,7 @@ import * as vscode from 'vscode-languageserver-protocol';
 export default function (options: {
 	validLang?: string,
 	disableCustomData?: boolean,
-}): EmbeddedLanguageServicePlugin & {
+} = {}): EmbeddedLanguageServicePlugin & {
 	htmlLs: html.LanguageService,
 	getHtmlDocument(document: TextDocument): html.HTMLDocument | undefined,
 	updateCustomData(extraData: html.IHTMLDataProvider[]): void,

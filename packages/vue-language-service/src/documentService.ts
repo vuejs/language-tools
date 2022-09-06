@@ -55,7 +55,7 @@ export function getDocumentService(
 		tsLs: undefined,
 		isJsxMissing: false,
 	});
-	const htmlPlugin = useHtmlPlugin({});
+	const htmlPlugin = useHtmlPlugin();
 	const pugPlugin = usePugPlugin();
 	const cssPlugin = useCssPlugin();
 	const jsonPlugin = useJsonPlugin();
