@@ -2,6 +2,7 @@ import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-
 import * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
+import * as vscode from 'vscode-languageserver-protocol';
 
 export default function (options: {
 	documentContext?: html.DocumentContext,
@@ -99,7 +100,7 @@ export default function (options: {
 			});
 		},
 
-		async format(document, range, options) {
+		async format(document, formatRange, options) {
 			return worker(document, async (htmlDocument) => {
 
 				const options_2 = await useConfigurationHost()?.getConfiguration<html.HTMLFormatConfiguration & { enable: boolean; }>('html.format', document.uri);
@@ -108,20 +109,34 @@ export default function (options: {
 					return;
 				}
 
-				const edits = htmlLs.format(document, range, {
+				{ // https://github.com/microsoft/vscode/blob/dce493cb6e36346ef2714e82c42ce14fc461b15c/extensions/html-language-features/server/src/modes/formatting.ts#L13-L23
+					const endPos = formatRange.end;
+					let endOffset = document.offsetAt(endPos);
+					const content = document.getText();
+					if (endPos.character === 0 && endPos.line > 0 && endOffset !== content.length) {
+						// if selection ends after a new line, exclude that new line
+						const prevLineStart = document.offsetAt(vscode.Position.create(endPos.line - 1, 0));
+						while (isEOL(content, endOffset - 1) && endOffset > prevLineStart) {
+							endOffset--;
+						}
+						formatRange = vscode.Range.create(formatRange.start, document.positionAt(endOffset));
+					}
+				}
+
+				const edits = htmlLs.format(document, formatRange, {
 					...options_2,
 					...options,
 				});
 
 				const newText = TextDocument.applyEdits(document, edits);
-				
+
 				return [{
 					newText: '\n' + newText.trim() + '\n',
 					range: {
 						start: document.positionAt(0),
 						end: document.positionAt(document.getText().length),
 					},
-				}]
+				}];
 			});
 		},
 
@@ -259,4 +274,14 @@ export default function (options: {
 
 		return doc;
 	}
+}
+
+function isEOL(content: string, offset: number) {
+	return isNewlineCharacter(content.charCodeAt(offset));
+}
+
+const CR = '\r'.charCodeAt(0);
+const NL = '\n'.charCodeAt(0);
+export function isNewlineCharacter(charCode: number) {
+	return charCode === CR || charCode === NL;
 }

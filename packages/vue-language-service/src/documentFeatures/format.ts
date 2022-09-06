@@ -218,10 +218,22 @@ export function register(context: DocumentServiceRuntimeContext) {
 					formatRange = formatDocument.positionAt(document.offsetAt(range) + initialIndentBracket[0].length);
 				}
 				else {
-					formatRange = {
-						start: formatDocument.positionAt(0),
-						end: formatDocument.positionAt(formatDocument.getText().length),
-					};
+					const startOffset = document.offsetAt(range.start);
+					const endOffset = document.offsetAt(range.end);
+					if (startOffset === 0 && endOffset === document.getText().length) {
+						// full format
+						formatRange = {
+							start: formatDocument.positionAt(0),
+							end: formatDocument.positionAt(formatDocument.getText().length),
+						};
+					}
+					else {
+						// range format
+						formatRange = {
+							start: formatDocument.positionAt(startOffset + initialIndentBracket[1].length),
+							end: formatDocument.positionAt(endOffset + initialIndentBracket[1].length),
+						};
+					}
 				}
 			}
 
