@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.40.8 (2022/9/6)
+
+- feat: add `volar.format.initialIndent` option for format `<style>`, `<script>` with initial indent ([#1806](https://github.com/johnsoncodehk/volar/issues/1806))
+- perf: cache `ts.ScriptSnapshot.fromString` result on formatting
+- fix: volar.config.js not working since v0.40.7 ([#1819](https://github.com/johnsoncodehk/volar/issues/1819))
+- fix: should not incremental update if SFC parse failed (https://github.com/johnsoncodehk/volar/issues/1807#issuecomment-1236857296)
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
+
 ## 0.40.7 (2022/9/5)
 
 - feat: support multiple workspaces for document features
@@ -15,12 +28,6 @@
 **Breaking changes**
 
 - vueCompilerOptions properties `experimentalImplicitWrapComponentOptionsWithDefineComponent`, `experimentalImplicitWrapComponentOptionsWithVue2Extend` replaced by `experimentalComponentOptionsWrapper`.
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 0.40.6 (2022/9/4)
 
