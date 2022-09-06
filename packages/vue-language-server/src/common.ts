@@ -94,6 +94,15 @@ export function createLanguageServer(
 			(await import('./features/languageFeatures')).register(connection, projects, options.languageFeatures, params);
 		}
 
+		try {
+			// show version on LSP logs
+			const packageJson = require('../package.json');
+			result.serverInfo = {
+				name: packageJson.name,
+				version: packageJson.version,
+			};
+		} catch { }
+
 		return result;
 	});
 	connection.onInitialized(async () => {
