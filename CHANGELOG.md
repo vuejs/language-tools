@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.40.9 (2022/9/6)
+
+- feat: improve vue document formatting
+- fix: script format loss indent ([#1823](https://github.com/johnsoncodehk/volar/issues/1823))
+
 ## 0.40.8 (2022/9/6)
 
 - feat: add `volar.format.initialIndent` option for format `<style>`, `<script>` with initial indent ([#1806](https://github.com/johnsoncodehk/volar/issues/1806))
