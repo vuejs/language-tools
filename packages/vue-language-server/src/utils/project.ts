@@ -6,8 +6,8 @@ import { URI } from 'vscode-uri';
 import { loadCustomPlugins } from './config';
 import { GetDocumentContentRequest, GetDocumentNameCasesRequest } from '../requests';
 import { FileSystem, FileSystemHost, LanguageConfigs, RuntimeEnvironment, ServerInitializationOptions } from '../types';
-import type { createConfigurationHost } from './configurationHost';
 import { createSnapshots } from './snapshots';
+import { ConfigurationHost } from '@volar/vue-language-service';
 
 export interface Project extends ReturnType<typeof createProject> { }
 
@@ -24,7 +24,7 @@ export async function createProject(
 	tsLocalized: ts.MapLike<string> | undefined,
 	documents: ReturnType<typeof createSnapshots>,
 	connection: vscode.Connection,
-	configHost: ReturnType<typeof createConfigurationHost> | undefined,
+	configHost: ConfigurationHost | undefined,
 ) {
 
 	let typeRootVersion = 0;

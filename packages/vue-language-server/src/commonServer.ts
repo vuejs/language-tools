@@ -24,6 +24,7 @@ export function createLanguageServer(
 	let fsHost: FileSystemHost | undefined;
 	let projects: ReturnType<typeof createWorkspaces> | undefined;
 	let documentServiceHost: ReturnType<typeof createDocumentServiceHost> | undefined;
+	let configHost: ReturnType<typeof createConfigurationHost> | undefined;
 
 	const documents = createSnapshots(connection);
 
@@ -47,8 +48,9 @@ export function createLanguageServer(
 				textDocumentSync: (options.textDocumentSync as vscode.TextDocumentSyncKind) ?? vscode.TextDocumentSyncKind.Incremental,
 			},
 		};
-		const configHost = params.capabilities.workspace?.configuration ? createConfigurationHost(roots, connection) : undefined;
 		const ts = runtimeEnv.loadTypescript(options);
+
+		configHost = params.capabilities.workspace?.configuration ? createConfigurationHost(params, roots, connection) : undefined;
 
 		if (options.documentFeatures) {
 
@@ -108,6 +110,7 @@ export function createLanguageServer(
 	connection.onInitialized(async () => {
 
 		fsHost?.ready(connection);
+		configHost?.ready();
 
 		connection.workspace.onDidChangeWorkspaceFolders(e => {
 
@@ -121,10 +124,6 @@ export function createLanguageServer(
 				projects?.remove(URI.parse(folder.uri));
 			}
 		});
-
-		if (params.capabilities.workspace?.didChangeConfiguration?.dynamicRegistration) { // TODO
-			connection.client.register(vscode.DidChangeConfigurationNotification.type);
-		}
 	});
 	connection.listen();
 }

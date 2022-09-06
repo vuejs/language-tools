@@ -3,11 +3,11 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';
 import * as vscode from 'vscode-languageserver';
 import { createProject, Project } from './project';
-import type { createConfigurationHost } from './configurationHost';
 import { LanguageConfigs, RuntimeEnvironment, FileSystemHost, ServerInitializationOptions } from '../types';
 import { createSnapshots } from './snapshots';
 import { getInferredCompilerOptions } from './inferredCompilerOptions';
 import { URI } from 'vscode-uri';
+import { ConfigurationHost } from '@volar/vue-language-service';
 
 export const rootTsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 
@@ -21,7 +21,7 @@ export async function createWorkspaceProjects(
 	options: ServerInitializationOptions,
 	documents: ReturnType<typeof createSnapshots>,
 	connection: vscode.Connection,
-	configHost: ReturnType<typeof createConfigurationHost> | undefined,
+	configHost: ConfigurationHost | undefined,
 ) {
 
 	let inferredProject: Project | undefined;
