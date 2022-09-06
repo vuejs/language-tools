@@ -1,13 +1,14 @@
 import * as vscode from 'vscode-languageserver-protocol';
+import { GetConfiguration } from '..';
 import { isTypeScriptDocument } from './shared';
 
 export async function getFormatCodeSettings(
-	getConfiguration: (section: string) => Promise<any>,
+	getConfiguration: GetConfiguration,
 	uri: string,
 	options?: vscode.FormattingOptions,
 ): Promise<ts.FormatCodeSettings> {
 
-	let config = await getConfiguration(isTypeScriptDocument(uri) ? 'typescript.format' : 'javascript.format');
+	let config = await getConfiguration(isTypeScriptDocument(uri) ? 'typescript.format' : 'javascript.format', uri);
 
 	config = config ?? {};
 

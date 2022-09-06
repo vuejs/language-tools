@@ -90,7 +90,7 @@ export function createLanguageService(
 	const core = createLanguageServiceContext();
 	const vueTsLs = ts.createLanguageService(core.typescriptLanguageServiceHost);
 	tsFaster.decorate(ts, core.typescriptLanguageServiceHost, vueTsLs);
-	const tsLs = ts2.createLanguageService(ts, core.typescriptLanguageServiceHost, vueTsLs, section => configurationHost?.getConfiguration(section) as any, rootUri);
+	const tsLs = ts2.createLanguageService(ts, core.typescriptLanguageServiceHost, vueTsLs, (section, scopeUri) => configurationHost?.getConfiguration(section, scopeUri) as any, rootUri);
 	const vueDocuments = parseVueDocuments(rootUri, core, tsLs);
 	const documentContext = getDocumentContext();
 

@@ -88,7 +88,7 @@ export function getDocumentService(
 		},
 		updateTsLs(document) {
 			if (isTsDocument(document)) {
-				tsLs = getSingleFileTypeScriptService(context.typescript, ts2, document, section => configurationHost?.getConfiguration(section) as any);
+				tsLs = getSingleFileTypeScriptService(context.typescript, ts2, document, (section, scopeUri) => configurationHost?.getConfiguration(section, scopeUri) as any);
 			}
 		},
 	};

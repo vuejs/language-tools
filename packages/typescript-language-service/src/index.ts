@@ -36,7 +36,7 @@ export * from './configs/getFormatCodeSettings';
 export * from './configs/getUserPreferences';
 
 export interface GetConfiguration {
-	(section: string): Promise<any>;
+	(section: string, scopeUri: string): Promise<any>;
 };
 
 export function createLanguageService(

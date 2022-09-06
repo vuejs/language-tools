@@ -390,8 +390,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			const tsImportName = camelize(path.basename(importFile).replace(/\./g, '-'));
 			const confitHost = useConfigurationHost();
 			const [formatOptions, preferences] = await Promise.all([
-				ts2.getFormatCodeSettings(section => confitHost?.getConfiguration(section) as any, embeddedScriptUri),
-				ts2.getUserPreferences(section => confitHost?.getConfiguration(section) as any, embeddedScriptUri),
+				ts2.getFormatCodeSettings((section, scopeUri) => confitHost?.getConfiguration(section, scopeUri) as any, embeddedScriptUri),
+				ts2.getUserPreferences((section, scopeUri) => confitHost?.getConfiguration(section, scopeUri) as any, embeddedScriptUri),
 			]);
 			(preferences as any).importModuleSpecifierEnding = 'minimal';
 			const tsDetail = options.tsLs.__internal__.raw.getCompletionEntryDetails(shared.getPathOfUri(embeddedScriptUri), 0, tsImportName, formatOptions, importFile, preferences, undefined);

@@ -1,12 +1,13 @@
+import { GetConfiguration } from '..';
 import { isTypeScriptDocument } from './shared';
 
 export async function getUserPreferences(
-	getConfiguration: (section: string) => Promise<any>,
-	uri: string
+	getConfiguration: GetConfiguration,
+	uri: string,
 ): Promise<ts.UserPreferences> {
 
-	let config = await getConfiguration(isTypeScriptDocument(uri) ? 'typescript' : 'javascript');
-	let preferencesConfig = await getConfiguration(isTypeScriptDocument(uri) ? 'typescript.preferences' : 'javascript.preferences');
+	let config = await getConfiguration(isTypeScriptDocument(uri) ? 'typescript' : 'javascript', uri);
+	let preferencesConfig = await getConfiguration(isTypeScriptDocument(uri) ? 'typescript.preferences' : 'javascript.preferences', uri);
 
 	config = config ?? {};
 	preferencesConfig = preferencesConfig ?? {};
