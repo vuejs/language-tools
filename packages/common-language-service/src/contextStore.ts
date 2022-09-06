@@ -1,10 +1,13 @@
 import type { DocumentContext, FileSystemProvider } from 'vscode-html-languageservice';
 import type { SchemaRequestService } from 'vscode-json-languageservice';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 
 interface ContextStore {
 	rootUri: string;
-	modules: {
-		typescript: typeof import('typescript/lib/tsserverlibrary');
+	typescript: {
+		module: typeof import('typescript/lib/tsserverlibrary');
+		languageServiceHost: ts.LanguageServiceHost;
+		languageService: ts.LanguageService;
 	},
 	configurationHost?: ConfigurationHost;
 	documentContext?: DocumentContext;
@@ -49,5 +52,13 @@ export function useSchemaRequestService() {
 }
 
 export function useTypeScriptModule() {
-	return getContextStore().modules.typescript;
+	return getContextStore().typescript.module;
+}
+
+export function useTypeScriptLanguageService() {
+	return getContextStore().typescript.languageService;
+}
+
+export function useTypeScriptLanguageServiceHost() {
+	return getContextStore().typescript.languageServiceHost;
 }

@@ -84,10 +84,17 @@ export function createLanguageService(
 	rootUri = URI.file(vueLsHost.getCurrentDirectory()),
 ) {
 
+	const ts = vueLsHost.getTypeScriptModule();
+	const core = createLanguageServiceContext();
+	const vueTsLs = ts.createLanguageService(core.typescriptLanguageServiceHost);
+	tsFaster.decorate(ts, core.typescriptLanguageServiceHost, vueTsLs);
+
 	setContextStore({
 		rootUri: rootUri.toString(),
-		modules: {
-			typescript: vueLsHost.getTypeScriptModule(),
+		typescript: {
+			module: ts,
+			languageServiceHost: core.typescriptLanguageServiceHost,
+			languageService: vueTsLs,
 		},
 		configurationHost,
 		documentContext: getDocumentContext(),
@@ -95,11 +102,14 @@ export function createLanguageService(
 		schemaRequestService,
 	});
 
-	const ts = vueLsHost.getTypeScriptModule();
-	const core = createLanguageServiceContext();
-	const vueTsLs = ts.createLanguageService(core.typescriptLanguageServiceHost);
-	tsFaster.decorate(ts, core.typescriptLanguageServiceHost, vueTsLs);
-	const tsLs = ts2.createLanguageService(ts, core.typescriptLanguageServiceHost, vueTsLs, (section, scopeUri) => configurationHost?.getConfiguration(section, scopeUri) as any, rootUri);
+	const scriptTsPlugin = useTsPlugins(
+		false,
+		uri => ({
+			// includeCompletionsForModuleExports: true, // set in server/src/tsConfigs.ts
+			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
+		}),
+	);
+	const tsLs = scriptTsPlugin.languageService;
 	const vueDocuments = parseVueDocuments(rootUri, core, tsLs);
 
 	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
@@ -186,14 +196,6 @@ export function createLanguageService(
 	const cssPlugin = useCssPlugin();
 	const jsonPlugin = useJsonPlugin();
 	const emmetPlugin = useEmmetPlugin();
-	const scriptTsPlugin = useTsPlugins(
-		tsLs,
-		false,
-		uri => ({
-			// includeCompletionsForModuleExports: true, // set in server/src/tsConfigs.ts
-			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
-		}),
-	);
 	const autoDotValuePlugin = useAutoDotValuePlugin({
 		getTsLs: () => tsLs,
 	});
@@ -336,13 +338,11 @@ export function createLanguageService(
 			vueDocuments,
 		});
 	}
-	function useTsPlugins(tsLs: ts2.LanguageService, isTemplatePlugin: boolean, getBaseCompletionOptions: (uri: string) => ts.GetCompletionsAtPositionOptions) {
+	function useTsPlugins(isTemplatePlugin: boolean, getBaseCompletionOptions: (uri: string) => ts.GetCompletionsAtPositionOptions) {
 		const _languageSupportPlugin = useTsPlugin({
-			tsVersion: ts.version,
-			getTsLs: () => tsLs,
 			getBaseCompletionOptions,
 		});
-		const languageSupportPlugin: EmbeddedLanguageServicePlugin = isTemplatePlugin ? {
+		const languageSupportPlugin: ReturnType<typeof useTsPlugin> = isTemplatePlugin ? {
 			..._languageSupportPlugin,
 			complete: {
 				..._languageSupportPlugin.complete,

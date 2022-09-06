@@ -1,6 +1,6 @@
 import * as alpineTs from '@volar/alpine-language-core';
 import * as vueLs from '@volar/vue-language-service';
-import { ConfigurationHost, EmbeddedLanguageServicePlugin, setContextStore } from '@volar/common-language-service';
+import { ConfigurationHost, EmbeddedLanguageServicePlugin } from '@volar/common-language-service';
 import { URI } from 'vscode-uri';
 
 export function createLanguageService(
@@ -9,15 +9,6 @@ export function createLanguageService(
 	customPlugins: EmbeddedLanguageServicePlugin[],
 	rootUri = URI.file(alpineLsHost.getCurrentDirectory()),
 ): ReturnType<typeof vueLs['createLanguageService']> {
-
-	setContextStore({
-		rootUri: rootUri.toString(),
-		modules: {
-			typescript: alpineLsHost.getTypeScriptModule(),
-		},
-		configurationHost,
-	});
-
 	return vueLs.createLanguageService(
 		{
 			...alpineLsHost,
@@ -39,15 +30,6 @@ export function getDocumentService(
 	customPlugins: EmbeddedLanguageServicePlugin[],
 	rootUri = URI.file(ts.sys.getCurrentDirectory()),
 ): ReturnType<typeof vueLs['getDocumentService']> {
-
-	setContextStore({
-		rootUri: rootUri.toString(),
-		modules: {
-			typescript: ts,
-		},
-		configurationHost,
-	});
-
 	return vueLs.getDocumentService(
 		ts,
 		configurationHost,

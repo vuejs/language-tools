@@ -1,15 +1,12 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type * as ts2 from '@volar/typescript-language-service';
-import { URI } from 'vscode-uri';
 import * as shared from '@volar/shared';
 
 let projectVersion = 0;
 let doc: TextDocument;
 let scriptFileName: string;
 let scriptSnapshot: ts.IScriptSnapshot;
-let service: ts2.LanguageService | undefined;
 
-const host: ts.LanguageServiceHost = {
+export const singleFileTypeScriptServiceHost: ts.LanguageServiceHost = {
 	readFile: () => undefined,
 	fileExists: fileName => fileName === scriptFileName,
 	getProjectVersion: () => projectVersion.toString(),
@@ -25,24 +22,12 @@ const host: ts.LanguageServiceHost = {
 	getDefaultLibFileName: () => '',
 };
 
-export function getSingleFileTypeScriptService(
+export function updateSingleFileTypeScriptServiceHost(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	ts2: typeof import('@volar/typescript-language-service'),
 	_doc: TextDocument,
-	getConfiguration: ts2.GetConfiguration,
-): ts2.LanguageService {
-	if (!service) {
-		service = ts2.createLanguageService(
-			ts,
-			host,
-			ts.createLanguageService(host),
-			getConfiguration,
-			URI.file('/'),
-		);
-	}
+) {
 	projectVersion++;
 	doc = _doc;
 	scriptFileName = shared.getPathOfUri(_doc.uri);
 	scriptSnapshot = ts.ScriptSnapshot.fromString(doc.getText());
-	return service;
 }

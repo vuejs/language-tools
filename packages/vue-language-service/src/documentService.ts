@@ -1,5 +1,4 @@
 import * as shared from '@volar/shared';
-import * as ts2 from '@volar/typescript-language-service';
 import { ConfigurationHost, EmbeddedLanguageServicePlugin, setContextStore } from '@volar/common-language-service';
 import * as vue from '@volar/vue-language-core';
 import type * as html from 'vscode-html-languageservice';
@@ -19,7 +18,7 @@ import * as format from './documentFeatures/format';
 import * as linkedEditingRanges from './documentFeatures/linkedEditingRanges';
 import * as selectionRanges from './documentFeatures/selectionRanges';
 import { DocumentServiceRuntimeContext } from './types';
-import { getSingleFileTypeScriptService } from './utils/singleFileTypeScriptService';
+import { singleFileTypeScriptServiceHost, updateSingleFileTypeScriptServiceHost } from './utils/singleFileTypeScriptService';
 import { parseVueDocument, VueDocument } from './vueDocuments';
 import useAutoWrapParenthesesPlugin from './plugins/vue-autoinsert-parentheses';
 import useVuePlugin from './plugins/vue';
@@ -38,8 +37,10 @@ export function getDocumentService(
 
 	setContextStore({
 		rootUri: rootUri.toString(),
-		modules: {
-			typescript: ts,
+		typescript: {
+			module: ts,
+			languageServiceHost: singleFileTypeScriptServiceHost,
+			languageService: ts.createLanguageService(singleFileTypeScriptServiceHost),
 		},
 		configurationHost,
 		fileSystemProvider,
@@ -47,8 +48,6 @@ export function getDocumentService(
 	});
 
 	const vueDocuments = new WeakMap<TextDocument, VueDocument>();
-
-	let tsLs: ts2.LanguageService;
 
 	// language support plugins
 	const vuePlugin = useVuePlugin({
@@ -60,10 +59,7 @@ export function getDocumentService(
 	const pugPlugin = usePugPlugin();
 	const cssPlugin = useCssPlugin();
 	const jsonPlugin = useJsonPlugin();
-	const tsPlugin = useTsPlugin({
-		tsVersion: ts.version,
-		getTsLs: () => tsLs,
-	});
+	const tsPlugin = useTsPlugin({});
 	const autoWrapParenthesesPlugin = useAutoWrapParenthesesPlugin({
 		getVueDocument: doc => vueDocuments.get(doc),
 	});
@@ -87,7 +83,7 @@ export function getDocumentService(
 		},
 		updateTsLs(document) {
 			if (isTsDocument(document)) {
-				tsLs = getSingleFileTypeScriptService(context.typescript, ts2, document, (section, scopeUri) => configurationHost?.getConfiguration(section, scopeUri) as any);
+				updateSingleFileTypeScriptServiceHost(context.typescript, document);
 			}
 		},
 	};
