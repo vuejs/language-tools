@@ -3,6 +3,7 @@ import * as vscode from 'vscode-languageserver-protocol';
 import { EmbeddedLanguageServicePlugin, useConfigurationHost, useTypeScriptModule } from '@volar/embedded-language-service';
 import { isCharacterTyping } from './vue-autoinsert-dotvalue';
 import { VueDocument } from '../vueDocuments';
+import * as vue from '@volar/vue-language-core';
 
 export default function (options: {
 	getVueDocument: (document: TextDocument) => VueDocument | undefined,
@@ -25,10 +26,16 @@ export default function (options: {
 			if (!vueDocument)
 				return;
 
-			const templateFormatScript = vueDocument.file.allEmbeddeds.find(e =>
-				e.file.fileName.endsWith('.__VLS_template_format.tsx')
-				|| e.file.fileName.endsWith('.__VLS_template_format.jsx')
-			);
+
+			let templateFormatScript: vue.Embedded | undefined;
+
+			vue.forEachEmbeddeds(vueDocument.file.embeddeds, embedded => {
+				if (embedded.file.fileName.endsWith('.__VLS_template_format.tsx')
+					|| embedded.file.fileName.endsWith('.__VLS_template_format.jsx')) {
+					templateFormatScript = embedded;
+				}
+			});
+
 			if (!templateFormatScript)
 				return;
 

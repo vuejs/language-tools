@@ -3,7 +3,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import { LanguageServiceHost, VueCompilerOptions } from './types';
 import * as localTypes from './utils/localTypes';
 import { createSourceFile, EmbeddedFile, SourceFile, VueLanguagePlugin } from './sourceFile';
-import { createDocumentRegistry } from './documentRegistry';
+import { createDocumentRegistry, forEachEmbeddeds } from './documentRegistry';
 
 import * as useHtmlFilePlugin from './plugins/file-html';
 import * as  useMdFilePlugin from './plugins/file-md';
@@ -54,7 +54,7 @@ export function getPlugins(
 		}
 	}
 	else {
-		console.log('vueCompilerOptions.plugins is not available in Web.')
+		console.log('vueCompilerOptions.plugins is not available in Web.');
 	}
 	const pluginCtx: Parameters<VueLanguagePlugin>[0] = {
 		modules: {
@@ -297,21 +297,21 @@ export function createLanguageContext(
 				const newScripts: Record<string, string> = {};
 
 				if (!tsFileUpdated) {
-					for (const embedded of sourceFile.allEmbeddeds) {
+					forEachEmbeddeds(sourceFile.embeddeds, embedded => {
 						if (embedded.file.isTsHostFile) {
 							oldScripts[embedded.file.fileName] = embedded.file.codeGen.getText();
 						}
-					}
+					});
 				}
 
 				sourceFile.update(scriptSnapshot);
 
 				if (!tsFileUpdated) {
-					for (const embedded of sourceFile.allEmbeddeds) {
+					forEachEmbeddeds(sourceFile.embeddeds, embedded => {
 						if (embedded.file.isTsHostFile) {
 							newScripts[embedded.file.fileName] = embedded.file.codeGen.getText();
 						}
-					}
+					});
 				}
 
 				if (

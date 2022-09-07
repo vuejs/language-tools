@@ -319,24 +319,6 @@ export function createSourceFile(
 
 		return all;
 	});
-	const teleports = computed(() => {
-
-		const _all: {
-			file: EmbeddedFile,
-			teleport: Teleport,
-		}[] = [];
-
-		for (const embedded of allEmbeddeds.value) {
-			if (embedded.teleport) {
-				_all.push({
-					file: embedded.file,
-					teleport: embedded.teleport,
-				});
-			}
-		}
-
-		return _all;
-	});
 	const embeddeds = computed(() => {
 
 		const embeddeds: EmbeddedStructure[] = [];
@@ -416,12 +398,6 @@ export function createSourceFile(
 		},
 		get embeddeds() {
 			return embeddeds.value;
-		},
-		get allEmbeddeds() {
-			return allEmbeddeds.value;
-		},
-		get teleports() {
-			return teleports.value;
 		},
 	};
 

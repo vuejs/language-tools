@@ -11,6 +11,7 @@ export * from './parsers/scriptSetupRanges';
 export * as localTypes from './utils/localTypes';
 export * from './utils/ts';
 export * from './generators/template';
+export * from './documentRegistry';
 
 // fix build
 export * as _0 from '@vue/compiler-sfc';
