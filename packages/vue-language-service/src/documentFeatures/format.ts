@@ -227,8 +227,8 @@ export function register(context: DocumentServiceRuntimeContext) {
 					else {
 						// range format
 						formatRange = {
-							start: formatDocument.positionAt(startOffset + initialIndentBracket[1].length),
-							end: formatDocument.positionAt(endOffset + initialIndentBracket[1].length),
+							start: formatDocument.positionAt(startOffset + initialIndentBracket[0].length),
+							end: formatDocument.positionAt(endOffset + initialIndentBracket[0].length),
 						};
 					}
 				}
