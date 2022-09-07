@@ -3,7 +3,7 @@ import { ConfigurationHost, EmbeddedLanguageServicePlugin, setContextStore } fro
 import * as vue from '@volar/vue-language-core';
 import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import useCssPlugin from './plugins/css';
+import useCssPlugin from '@volar-plugins/css';
 import useHtmlPlugin from './plugins/html';
 import useJsonPlugin from './plugins/json';
 import usePugPlugin from './plugins/pug';

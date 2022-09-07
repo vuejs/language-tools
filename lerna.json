@@ -2,7 +2,8 @@
 	"npmClient": "pnpm",
 	"packages": [
 		"extensions/*",
-		"packages/*"
+		"packages/*",
+		"plugins/*"
 	],
 	"version": "0.40.10"
 }

@@ -13,6 +13,9 @@
 	],
 	"references": [
 		{
+			"path": "../../../plugins/tsconfig.build.json"
+		},
+		{
 			"path": "../common-language-service/tsconfig.build.json"
 		},
 		{

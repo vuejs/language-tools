@@ -315,6 +315,7 @@ importers:
       '@johnsoncodehk/html2pug': ^1.0.0
       '@johnsoncodehk/pug-beautify': ^0.2.2
       '@types/semver': ^7.3.12
+      '@volar-plugins/css': 0.40.10
       '@volar/common-language-service': 0.40.10
       '@volar/pug-language-service': 0.40.10
       '@volar/shared': 0.40.10
@@ -340,6 +341,7 @@ importers:
     dependencies:
       '@johnsoncodehk/html2pug': 1.0.0
       '@johnsoncodehk/pug-beautify': 0.2.2
+      '@volar-plugins/css': link:../../plugins/css
       '@volar/common-language-service': link:../common-language-service
       '@volar/pug-language-service': link:../pug-language-service
       '@volar/shared': link:../shared
@@ -391,6 +393,20 @@ importers:
       '@volar/vue-language-core': link:../vue-language-core
     devDependencies:
       typescript: 4.8.2
+
+  plugins/css:
+    specifiers:
+      '@volar/common-language-service': 0.40.10
+      '@volar/shared': 0.40.10
+      vscode-css-languageservice: ^6.1.0
+      vscode-languageserver-protocol: ^3.17.2
+      vscode-languageserver-textdocument: ^1.0.7
+    dependencies:
+      '@volar/common-language-service': link:../../packages/common-language-service
+      '@volar/shared': link:../../packages/shared
+      vscode-css-languageservice: 6.1.0
+      vscode-languageserver-protocol: 3.17.2
+      vscode-languageserver-textdocument: 1.0.7
 
 packages:
 

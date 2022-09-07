@@ -33,7 +33,7 @@ import * as renamePrepare from './languageFeatures/renamePrepare';
 import * as signatureHelp from './languageFeatures/signatureHelp';
 import * as diagnostics from './languageFeatures/validation';
 import * as workspaceSymbol from './languageFeatures/workspaceSymbols';
-import useCssPlugin from './plugins/css';
+import useCssPlugin from '@volar-plugins/css';
 import useEmmetPlugin from './plugins/emmet';
 import useHtmlPlugin from './plugins/html';
 import useJsonPlugin from './plugins/json';
