@@ -21,6 +21,7 @@
 		"@johnsoncodehk/pug-beautify": "^0.2.2",
 		"@volar-plugins/css": "0.40.10",
 		"@volar-plugins/html": "0.40.10",
+		"@volar-plugins/json": "0.40.10",
 		"@volar/common-language-service": "0.40.10",
 		"@volar/pug-language-service": "0.40.10",
 		"@volar/shared": "0.40.10",

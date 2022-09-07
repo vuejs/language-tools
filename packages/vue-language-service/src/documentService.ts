@@ -5,7 +5,7 @@ import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import useCssPlugin from '@volar-plugins/css';
 import useHtmlPlugin from '@volar-plugins/html';
-import useJsonPlugin from './plugins/json';
+import useJsonPlugin from '@volar-plugins/json';
 import usePugPlugin from './plugins/pug';
 import usePugFormatPlugin from './plugins/pug-beautify';
 import useTsPlugin, { isTsDocument } from './plugins/typescript';

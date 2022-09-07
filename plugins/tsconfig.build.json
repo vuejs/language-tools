@@ -8,5 +8,8 @@
 		{
 			"path": "./html/tsconfig.build.json"
 		},
+		{
+			"path": "./json/tsconfig.build.json"
+		},
 	]
 }

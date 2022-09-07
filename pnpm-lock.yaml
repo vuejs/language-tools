@@ -317,6 +317,7 @@ importers:
       '@types/semver': ^7.3.12
       '@volar-plugins/css': 0.40.10
       '@volar-plugins/html': 0.40.10
+      '@volar-plugins/json': 0.40.10
       '@volar/common-language-service': 0.40.10
       '@volar/pug-language-service': 0.40.10
       '@volar/shared': 0.40.10
@@ -344,6 +345,7 @@ importers:
       '@johnsoncodehk/pug-beautify': 0.2.2
       '@volar-plugins/css': link:../../plugins/css
       '@volar-plugins/html': link:../../plugins/html
+      '@volar-plugins/json': link:../../plugins/json
       '@volar/common-language-service': link:../common-language-service
       '@volar/pug-language-service': link:../pug-language-service
       '@volar/shared': link:../shared
@@ -421,6 +423,18 @@ importers:
       '@volar/common-language-service': link:../../packages/common-language-service
       '@volar/shared': link:../../packages/shared
       vscode-html-languageservice: 5.0.1
+      vscode-languageserver-protocol: 3.17.2
+      vscode-languageserver-textdocument: 1.0.7
+
+  plugins/json:
+    specifiers:
+      '@volar/common-language-service': 0.40.10
+      vscode-json-languageservice: ^5.1.0
+      vscode-languageserver-protocol: ^3.17.2
+      vscode-languageserver-textdocument: ^1.0.7
+    dependencies:
+      '@volar/common-language-service': link:../../packages/common-language-service
+      vscode-json-languageservice: 5.1.0
       vscode-languageserver-protocol: 3.17.2
       vscode-languageserver-textdocument: 1.0.7
 
