@@ -25,8 +25,8 @@ export async function getUserPreferences(
 		// @ts-ignore
 		includeCompletionsForImportStatements: config.suggest?.includeCompletionsForImportStatements ?? true,
 		includeCompletionsWithSnippetText: config.suggest?.includeCompletionsWithSnippetText ?? true,
-		includeCompletionsWithClassMemberSnippets: config.suggest?.classMemberSnippets.enabled ?? true,
-		includeCompletionsWithObjectLiteralMethodSnippets: config.suggest?.objectLiteralMethodSnippets.enabled ?? true,
+		includeCompletionsWithClassMemberSnippets: config.suggest?.classMemberSnippets?.enabled ?? true,
+		includeCompletionsWithObjectLiteralMethodSnippets: config.suggest?.objectLiteralMethodSnippets?.enabled ?? true,
 		allowIncompleteCompletions: true,
 		// @ts-ignore
 		displayPartsForJSDoc: true,
