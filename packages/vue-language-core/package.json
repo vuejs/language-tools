@@ -1,6 +1,6 @@
 {
 	"name": "@volar/vue-language-core",
-	"version": "0.40.10",
+	"version": "0.40.11",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -13,12 +13,12 @@
 		"directory": "packages/vue-language-core"
 	},
 	"devDependencies": {
-		"@volar/pug-language-service": "0.40.10",
+		"@volar/pug-language-service": "0.40.11",
 		"typescript": "latest"
 	},
 	"dependencies": {
-		"@volar/code-gen": "0.40.10",
-		"@volar/source-map": "0.40.10",
+		"@volar/code-gen": "0.40.11",
+		"@volar/source-map": "0.40.11",
 		"@vue/compiler-core": "^3.2.38",
 		"@vue/compiler-dom": "^3.2.38",
 		"@vue/compiler-sfc": "^3.2.38",

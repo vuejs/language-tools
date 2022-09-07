@@ -35,7 +35,7 @@ export async function documentArgFeatureWorker<T, K>(
 	combineResult?: (results: NonNullable<Awaited<T>>[]) => NonNullable<Awaited<T>>,
 ) {
 
-	const vueDocument = context.getVueDocument(document);
+	const vueDocument = context.getAndUpdateVueDocument(document);
 
 	let results: NonNullable<Awaited<T>>[] = [];
 

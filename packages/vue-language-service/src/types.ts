@@ -6,7 +6,7 @@ import { VueDocument, VueDocuments } from './vueDocuments';
 
 export interface DocumentServiceRuntimeContext {
 	typescript: typeof import('typescript/lib/tsserverlibrary');
-	getVueDocument(document: TextDocument): VueDocument | undefined;
+	getAndUpdateVueDocument(document: TextDocument): VueDocument | undefined;
 	getPlugins(): EmbeddedLanguageServicePlugin[];
 	updateTsLs(document: TextDocument): void;
 };

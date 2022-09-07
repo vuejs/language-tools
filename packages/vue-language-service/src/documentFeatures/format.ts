@@ -23,11 +23,11 @@ export function register(context: DocumentServiceRuntimeContext) {
 			range = vscode.Range.create(document.positionAt(0), document.positionAt(document.getText().length));
 		}
 
+		const vueDocument = context.getAndUpdateVueDocument(document);
 		const originalDocument = document;
 		const rootEdits = onTypeParams
 			? await tryFormat(document, onTypeParams.position, undefined, onTypeParams.ch)
 			: await tryFormat(document, range, undefined);
-		const vueDocument = context.getVueDocument(document);
 
 		if (!vueDocument)
 			return rootEdits;
