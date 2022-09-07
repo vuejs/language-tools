@@ -27,7 +27,7 @@ export async function createWorkspaceProjects(
 	let inferredProject: Project | undefined;
 
 	const sys = fsHost.getWorkspaceFileSystem(rootUri);
-	const projects = shared.createUriAndPathMap<Project>(rootUri);
+	const projects = shared.createUriMap<Project>();
 	const rootTsConfigs = new Set(sys.readDirectory(rootUri.fsPath, rootTsConfigNames, undefined, ['**/*']));
 
 	const disposeWatch = fsHost.onDidChangeWatchedFiles(async (params, reason) => {
@@ -145,7 +145,7 @@ export async function createWorkspaceProjects(
 		}
 		function findIndirectReferenceTsconfig() {
 			return findTsconfig(async tsconfig => {
-				const project = await projects.pathGet(tsconfig);
+				const project = await projects.pathGet(rootUri, tsconfig);
 				const ls = await project?.getLanguageServiceDontCreate();
 				const validDoc = ls?.__internal__.context.getTsLs().__internal__.getValidTextDocument(uri.toString());
 				return !!validDoc;
@@ -156,7 +156,7 @@ export async function createWorkspaceProjects(
 			const checked = new Set<string>();
 
 			for (const rootTsConfig of [...rootTsConfigs].sort((a, b) => sortTsConfigs(uri.fsPath, a, b))) {
-				const project = await projects.pathGet(rootTsConfig);
+				const project = await projects.pathGet(rootUri, rootTsConfig);
 				if (project) {
 
 					const chains = await getReferencesChains(project.getParsedCommandLine(), rootTsConfig, []);
@@ -223,7 +223,7 @@ export async function createWorkspaceProjects(
 		}
 	}
 	function getProjectByCreate(tsConfig: string) {
-		let project = projects.pathGet(tsConfig);
+		let project = projects.pathGet(rootUri, tsConfig);
 		if (!project) {
 			project = createProject(
 				runtimeEnv,
@@ -240,7 +240,7 @@ export async function createWorkspaceProjects(
 				connection,
 				configHost,
 			);
-			projects.pathSet(tsConfig, project);
+			projects.pathSet(rootUri, tsConfig, project);
 		}
 		return project;
 	}
