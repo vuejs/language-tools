@@ -2,10 +2,12 @@ import type { LanguageServiceRuntimeContext } from '../types';
 import * as shared from '@volar/shared';
 import { languageFeatureWorker } from '../utils/featureWorkers';
 import * as dedupe from '../utils/dedupe';
+import * as vscode from 'vscode-languageserver-protocol';
+import { NullableResult } from '@volar/common-language-service';
 
 export function register(context: LanguageServiceRuntimeContext) {
 
-	return (uri: string) => {
+	return (uri: string): NullableResult<vscode.Location[]> => {
 
 		return languageFeatureWorker(
 			context,

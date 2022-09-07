@@ -2,7 +2,7 @@ import { EmbeddedLanguageServicePlugin, useConfigurationHost, useDocumentContext
 import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as pug from '@volar/pug-language-service';
-import useHtmlPlugin from './html';
+import useHtmlPlugin from '@volar-plugins/html';
 
 export default function (): EmbeddedLanguageServicePlugin & ReturnType<typeof useHtmlPlugin> & {
 	htmlLs: html.LanguageService,

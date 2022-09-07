@@ -1,8 +1,8 @@
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 
-type NotNullableResult<T> = T | Thenable<T>;
-type NullableResult<T> = NotNullableResult<T | undefined | null>;
+export type NotNullableResult<T> = T | Thenable<T>;
+export type NullableResult<T> = NotNullableResult<T | undefined | null>;
 
 export type SemanticToken = [number, number, number, number, number];
 

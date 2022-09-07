@@ -6,7 +6,7 @@ import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { VueDocument } from '../vueDocuments';
-import useHtmlPlugin from './html';
+import useHtmlPlugin from '@volar-plugins/html';
 
 const dataProvider = html.newHTMLDataProvider('vue', {
 	version: 1.1,

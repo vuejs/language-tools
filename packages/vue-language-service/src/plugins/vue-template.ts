@@ -11,7 +11,7 @@ import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { VueDocument, VueDocuments } from '../vueDocuments';
-import useHtmlPlugin from './html';
+import useHtmlPlugin from '@volar-plugins/html';
 import { URI } from 'vscode-uri';
 
 export const semanticTokenTypes = [
