@@ -1,4 +1,4 @@
-import * as vscode from 'vscode-languageserver-protocol';
+import * as vscode from 'vscode-languageserver-types';
 import { EmbeddedLanguageServicePlugin } from '@volar/common-language-service';
 
 export default function (): EmbeddedLanguageServicePlugin {

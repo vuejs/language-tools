@@ -1,0 +1,20 @@
+{
+	"name": "@volar-plugins/pug-beautify",
+	"version": "0.40.10",
+	"main": "out/index.js",
+	"license": "MIT",
+	"files": [
+		"out/**/*.js",
+		"out/**/*.d.ts"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/johnsoncodehk/volar.git",
+		"directory": "plugins/pug-beautify"
+	},
+	"dependencies": {
+		"@johnsoncodehk/pug-beautify": "^0.2.2",
+		"@volar/common-language-service": "0.40.10",
+		"vscode-languageserver-types": "^3.17.2"
+	}
+}
