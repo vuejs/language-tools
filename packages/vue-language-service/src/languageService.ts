@@ -34,7 +34,7 @@ import * as signatureHelp from './languageFeatures/signatureHelp';
 import * as diagnostics from './languageFeatures/validation';
 import * as workspaceSymbol from './languageFeatures/workspaceSymbols';
 import useCssPlugin from '@volar-plugins/css';
-import useEmmetPlugin from './plugins/emmet';
+import useEmmetPlugin from '@volar-plugins/emmet';
 import useHtmlPlugin from '@volar-plugins/html';
 import useJsonPlugin from '@volar-plugins/json';
 import usePugPlugin from './plugins/pug';

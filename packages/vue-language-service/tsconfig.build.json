@@ -12,9 +12,20 @@
 		".vscode-test"
 	],
 	"references": [
+		// plugins
 		{
-			"path": "../../../plugins/tsconfig.build.json"
+			"path": "../../../plugins/css/tsconfig.build.json"
 		},
+		{
+			"path": "../../../plugins/emmet/tsconfig.build.json"
+		},
+		{
+			"path": "../../../plugins/html/tsconfig.build.json"
+		},
+		{
+			"path": "../../../plugins/json/tsconfig.build.json"
+		},
+		// packages
 		{
 			"path": "../common-language-service/tsconfig.build.json"
 		},
