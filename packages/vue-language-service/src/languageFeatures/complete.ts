@@ -1,5 +1,5 @@
 import { transformCompletionItem } from '@volar/transforms';
-import type { EmbeddedLanguageServicePlugin } from '@volar/common-language-service';
+import type { EmbeddedLanguageServicePlugin } from '@volar/embedded-language-service';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { LanguageServiceRuntimeContext } from '../types';

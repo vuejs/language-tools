@@ -3,7 +3,7 @@ import * as shared from '@volar/shared';
 import { languageFeatureWorker } from '../utils/featureWorkers';
 import * as dedupe from '../utils/dedupe';
 import * as vscode from 'vscode-languageserver-protocol';
-import { NullableResult } from '@volar/common-language-service';
+import { NullableResult } from '@volar/embedded-language-service';
 
 export function register(context: LanguageServiceRuntimeContext) {
 

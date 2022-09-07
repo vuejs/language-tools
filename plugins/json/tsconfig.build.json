@@ -9,7 +9,7 @@
 	],
 	"references": [
 		{
-			"path": "../../packages/common-language-service/tsconfig.build.json"
+			"path": "../../packages/embedded-language-service/tsconfig.build.json"
 		},
 	],
 }

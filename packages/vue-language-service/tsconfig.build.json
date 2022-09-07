@@ -36,7 +36,7 @@
 		},
 		// packages
 		{
-			"path": "../common-language-service/tsconfig.build.json"
+			"path": "../embedded-language-service/tsconfig.build.json"
 		},
 		{
 			"path": "../pug-language-service/tsconfig.build.json"

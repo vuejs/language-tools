@@ -1,7 +1,7 @@
 import * as shared from '@volar/shared';
 import type * as ts2 from '@volar/typescript-language-service';
 import { parseScriptSetupRanges } from '@volar/vue-language-core';
-import { EmbeddedLanguageServicePlugin, useTypeScriptModule } from '@volar/common-language-service';
+import { EmbeddedLanguageServicePlugin, useTypeScriptModule } from '@volar/embedded-language-service';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';

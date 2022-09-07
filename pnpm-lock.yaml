@@ -118,13 +118,13 @@ importers:
     specifiers:
       '@types/semver': ^7.3.12
       '@volar/alpine-language-core': 0.40.10
-      '@volar/common-language-service': 0.40.10
+      '@volar/embedded-language-service': 0.40.10
       '@volar/vue-language-service': 0.40.10
       typescript: latest
       vscode-uri: ^3.0.3
     dependencies:
       '@volar/alpine-language-core': link:../alpine-language-core
-      '@volar/common-language-service': link:../common-language-service
+      '@volar/embedded-language-service': link:../embedded-language-service
       '@volar/vue-language-service': link:../vue-language-service
       vscode-uri: 3.0.3
     devDependencies:
@@ -137,7 +137,7 @@ importers:
     dependencies:
       '@volar/source-map': link:../source-map
 
-  packages/common-language-service:
+  packages/embedded-language-service:
     specifiers:
       vscode-html-languageservice: ^5.0.1
       vscode-json-languageservice: ^5.1.0
@@ -320,7 +320,7 @@ importers:
       '@volar-plugins/pug': 0.40.10
       '@volar-plugins/pug-beautify': 0.40.10
       '@volar-plugins/typescript': 0.40.10
-      '@volar/common-language-service': 0.40.10
+      '@volar/embedded-language-service': 0.40.10
       '@volar/shared': 0.40.10
       '@volar/source-map': 0.40.10
       '@volar/transforms': 0.40.10
@@ -346,7 +346,7 @@ importers:
       '@volar-plugins/pug': link:../../plugins/pug
       '@volar-plugins/pug-beautify': link:../../plugins/pug-beautify
       '@volar-plugins/typescript': link:../../plugins/typescript
-      '@volar/common-language-service': link:../common-language-service
+      '@volar/embedded-language-service': link:../embedded-language-service
       '@volar/shared': link:../shared
       '@volar/source-map': link:../source-map
       '@volar/transforms': link:../transforms
@@ -394,13 +394,13 @@ importers:
 
   plugins/css:
     specifiers:
-      '@volar/common-language-service': 0.40.10
+      '@volar/embedded-language-service': 0.40.10
       '@volar/shared': 0.40.10
       vscode-css-languageservice: ^6.1.0
       vscode-languageserver-protocol: ^3.17.2
       vscode-languageserver-textdocument: ^1.0.7
     dependencies:
-      '@volar/common-language-service': link:../../packages/common-language-service
+      '@volar/embedded-language-service': link:../../packages/embedded-language-service
       '@volar/shared': link:../../packages/shared
       vscode-css-languageservice: 6.1.0
       vscode-languageserver-protocol: 3.17.2
@@ -408,21 +408,21 @@ importers:
 
   plugins/emmet:
     specifiers:
-      '@volar/common-language-service': 0.40.10
+      '@volar/embedded-language-service': 0.40.10
       '@vscode/emmet-helper': ^2.8.4
     dependencies:
-      '@volar/common-language-service': link:../../packages/common-language-service
+      '@volar/embedded-language-service': link:../../packages/embedded-language-service
       '@vscode/emmet-helper': 2.8.4
 
   plugins/html:
     specifiers:
-      '@volar/common-language-service': 0.40.10
+      '@volar/embedded-language-service': 0.40.10
       '@volar/shared': 0.40.10
       vscode-html-languageservice: ^5.0.1
       vscode-languageserver-protocol: ^3.17.2
       vscode-languageserver-textdocument: ^1.0.7
     dependencies:
-      '@volar/common-language-service': link:../../packages/common-language-service
+      '@volar/embedded-language-service': link:../../packages/embedded-language-service
       '@volar/shared': link:../../packages/shared
       vscode-html-languageservice: 5.0.1
       vscode-languageserver-protocol: 3.17.2
@@ -430,12 +430,12 @@ importers:
 
   plugins/json:
     specifiers:
-      '@volar/common-language-service': 0.40.10
+      '@volar/embedded-language-service': 0.40.10
       vscode-json-languageservice: ^5.1.0
       vscode-languageserver-protocol: ^3.17.2
       vscode-languageserver-textdocument: ^1.0.7
     dependencies:
-      '@volar/common-language-service': link:../../packages/common-language-service
+      '@volar/embedded-language-service': link:../../packages/embedded-language-service
       vscode-json-languageservice: 5.1.0
       vscode-languageserver-protocol: 3.17.2
       vscode-languageserver-textdocument: 1.0.7
@@ -443,13 +443,13 @@ importers:
   plugins/pug:
     specifiers:
       '@volar-plugins/html': 0.40.10
-      '@volar/common-language-service': 0.40.10
+      '@volar/embedded-language-service': 0.40.10
       '@volar/pug-language-service': 0.40.10
       vscode-html-languageservice: ^5.0.1
       vscode-languageserver-textdocument: ^1.0.7
     dependencies:
       '@volar-plugins/html': link:../html
-      '@volar/common-language-service': link:../../packages/common-language-service
+      '@volar/embedded-language-service': link:../../packages/embedded-language-service
       '@volar/pug-language-service': link:../../packages/pug-language-service
       vscode-html-languageservice: 5.0.1
       vscode-languageserver-textdocument: 1.0.7
@@ -457,24 +457,24 @@ importers:
   plugins/pug-beautify:
     specifiers:
       '@johnsoncodehk/pug-beautify': ^0.2.2
-      '@volar/common-language-service': 0.40.10
+      '@volar/embedded-language-service': 0.40.10
       vscode-languageserver-types: ^3.17.2
     dependencies:
       '@johnsoncodehk/pug-beautify': 0.2.2
-      '@volar/common-language-service': link:../../packages/common-language-service
+      '@volar/embedded-language-service': link:../../packages/embedded-language-service
       vscode-languageserver-types: 3.17.2
 
   plugins/typescript:
     specifiers:
       '@types/semver': ^7.3.12
-      '@volar/common-language-service': 0.40.10
+      '@volar/embedded-language-service': 0.40.10
       '@volar/shared': 0.40.10
       '@volar/typescript-language-service': workspace:0.40.10
       semver: ^7.3.7
       vscode-languageserver-protocol: ^3.17.2
       vscode-languageserver-textdocument: ^1.0.7
     dependencies:
-      '@volar/common-language-service': link:../../packages/common-language-service
+      '@volar/embedded-language-service': link:../../packages/embedded-language-service
       '@volar/shared': link:../../packages/shared
       '@volar/typescript-language-service': link:../../packages/typescript-language-service
       semver: 7.3.7

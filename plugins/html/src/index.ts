@@ -1,4 +1,4 @@
-import { EmbeddedLanguageServicePlugin, useConfigurationHost, useDocumentContext, useFileSystemProvider, useRootUri } from '@volar/common-language-service';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost, useDocumentContext, useFileSystemProvider, useRootUri } from '@volar/embedded-language-service';
 import * as shared from '@volar/shared';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';

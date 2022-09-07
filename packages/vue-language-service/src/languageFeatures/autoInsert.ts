@@ -1,7 +1,7 @@
 import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
 import { languageFeatureWorker } from '../utils/featureWorkers';
-import { EmbeddedLanguageServicePlugin } from '@volar/common-language-service';
+import { EmbeddedLanguageServicePlugin } from '@volar/embedded-language-service';
 
 export function register(context: LanguageServiceRuntimeContext) {
 

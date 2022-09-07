@@ -1,4 +1,4 @@
-export * from '@volar/common-language-service';
+export * from '@volar/embedded-language-service';
 export * from '@volar/vue-language-core';
 export * from './documentService';
 export { executePluginCommand, ExecutePluginCommandArgs } from './languageFeatures/executeCommand';

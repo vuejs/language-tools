@@ -3,7 +3,7 @@ import * as ts2 from '@volar/typescript-language-service';
 import { getVueCompilerOptions, isIntrinsicElement } from '@volar/vue-language-core';
 import { scriptRanges } from '@volar/vue-language-core';
 import * as vue from '@volar/vue-language-core';
-import { EmbeddedLanguageServicePlugin, useConfigurationHost, useTypeScriptModule } from '@volar/common-language-service';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost, useRootUri, useTypeScriptModule } from '@volar/embedded-language-service';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';
@@ -55,7 +55,6 @@ interface AutoImportCompletionData {
 }
 
 export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof useHtmlPlugin>>(options: {
-	rootUri: URI,
 	getSemanticTokenLegend(): vscode.SemanticTokensLegend,
 	getScanner(document: TextDocument): html.Scanner | undefined,
 	tsLs: ts2.LanguageService,
@@ -69,6 +68,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 	vueDocuments: VueDocuments,
 }): EmbeddedLanguageServicePlugin & T {
 
+	const rootUri = URI.parse(useRootUri());
 	const ts = useTypeScriptModule();
 
 	const componentCompletionDataCache = new WeakMap<
@@ -387,7 +387,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		return item;
 
 		async function getTypeScriptInsert() {
-			const embeddedScriptUri = shared.getUriByPath(options.rootUri, vueDocument.file.tsFileName);
+			const embeddedScriptUri = shared.getUriByPath(rootUri, vueDocument.file.tsFileName);
 			const tsImportName = camelize(path.basename(importFile).replace(/\./g, '-'));
 			const confitHost = useConfigurationHost();
 			const [formatOptions, preferences] = await Promise.all([

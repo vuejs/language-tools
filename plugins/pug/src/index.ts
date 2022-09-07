@@ -1,4 +1,4 @@
-import { EmbeddedLanguageServicePlugin, useConfigurationHost, useDocumentContext } from '@volar/common-language-service';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost, useDocumentContext } from '@volar/embedded-language-service';
 import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as pug from '@volar/pug-language-service';

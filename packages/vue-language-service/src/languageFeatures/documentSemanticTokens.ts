@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import * as vscode from 'vscode-languageserver-protocol';
-import { SemanticToken } from '@volar/common-language-service';
+import { SemanticToken } from '@volar/embedded-language-service';
 import type { LanguageServiceRuntimeContext } from '../types';
 import { languageFeatureWorker } from '../utils/featureWorkers';
 

@@ -1,4 +1,4 @@
-import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/common-language-service';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/embedded-language-service';
 import * as emmet from '@vscode/emmet-helper';
 
 export default function (): EmbeddedLanguageServicePlugin {

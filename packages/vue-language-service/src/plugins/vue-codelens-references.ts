@@ -1,5 +1,5 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/common-language-service';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/embedded-language-service';
 import { VueDocument } from '../vueDocuments';
 
 const showReferencesCommand = 'volar.show-references';

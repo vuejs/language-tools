@@ -3,7 +3,7 @@ import * as ts2 from '@volar/typescript-language-service';
 import * as refSugarRanges from '../utils/refSugarRanges';
 import * as vscode from 'vscode-languageserver-protocol';
 import { mergeWorkspaceEdits } from '../languageFeatures/rename';
-import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, useConfigurationHost, useTypeScriptModule } from '@volar/common-language-service';
+import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, useConfigurationHost, useTypeScriptModule } from '@volar/embedded-language-service';
 import { isBlacklistNode, isRefType } from './vue-autoinsert-dotvalue';
 import { getAddMissingImportsEdits } from './vue-convert-scriptsetup';
 import { VueDocument } from '../vueDocuments';

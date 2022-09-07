@@ -1,4 +1,4 @@
-import { EmbeddedLanguageServicePlugin, useConfigurationHost, useSchemaRequestService } from '@volar/common-language-service';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost, useSchemaRequestService } from '@volar/embedded-language-service';
 import * as json from 'vscode-json-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';

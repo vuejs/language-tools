@@ -1,7 +1,7 @@
 import * as shared from '@volar/shared';
 import * as tsFaster from '@volar/typescript-faster';
 import * as ts2 from '@volar/typescript-language-service';
-import { ConfigurationHost, EmbeddedLanguageServicePlugin, setContextStore } from '@volar/common-language-service';
+import { ConfigurationHost, EmbeddedLanguageServicePlugin, setContextStore } from '@volar/embedded-language-service';
 import * as vue from '@volar/vue-language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as upath from 'upath';
@@ -309,7 +309,6 @@ export function createLanguageService(
 	}
 	function _useVueTemplateLanguagePlugin<T extends ReturnType<typeof useHtmlPlugin> | ReturnType<typeof usePugPlugin>>(languageId: string, templateLanguagePlugin: T) {
 		return useVueTemplateLanguagePlugin({
-			rootUri,
 			templateLanguagePlugin,
 			getSemanticTokenLegend,
 			getScanner: (document): html.Scanner | undefined => {

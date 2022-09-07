@@ -1,4 +1,4 @@
-import { EmbeddedLanguageServicePlugin, useConfigurationHost, useRootUri, useTypeScriptLanguageService, useTypeScriptLanguageServiceHost, useTypeScriptModule } from '@volar/common-language-service';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost, useRootUri, useTypeScriptLanguageService, useTypeScriptLanguageServiceHost, useTypeScriptModule } from '@volar/embedded-language-service';
 import * as ts2 from '@volar/typescript-language-service';
 import * as semver from 'semver';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -68,7 +68,6 @@ export default function (): EmbeddedLanguageServicePlugin & {
 					if (!context || context.triggerKind !== vscode.CompletionTriggerKind.TriggerCharacter || (context.triggerCharacter && basicTriggerCharacters.includes(context.triggerCharacter))) {
 
 						const completeOptions: ts.GetCompletionsAtPositionOptions = {
-							includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
 							triggerCharacter: context?.triggerCharacter as ts.CompletionsTriggerCharacter,
 							triggerKind: context?.triggerKind,
 						};

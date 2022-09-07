@@ -1,6 +1,6 @@
 import type * as ts2 from '@volar/typescript-language-service';
 import { LanguageServiceHost } from '@volar/vue-language-core';
-import { EmbeddedLanguageServicePlugin } from '@volar/common-language-service';
+import { EmbeddedLanguageServicePlugin } from '@volar/embedded-language-service';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { VueDocument, VueDocuments } from './vueDocuments';
 
