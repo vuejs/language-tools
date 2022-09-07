@@ -112,18 +112,20 @@ export function createLanguageServer(
 		fsHost?.ready(connection);
 		configHost?.ready();
 
-		connection.workspace.onDidChangeWorkspaceFolders(e => {
+		if (params.capabilities.workspace?.workspaceFolders) {
+			connection.workspace.onDidChangeWorkspaceFolders(e => {
 
-			for (const folder of e.added) {
-				documentServiceHost?.add(URI.parse(folder.uri));
-				projects?.add(URI.parse(folder.uri));
-			}
+				for (const folder of e.added) {
+					documentServiceHost?.add(URI.parse(folder.uri));
+					projects?.add(URI.parse(folder.uri));
+				}
 
-			for (const folder of e.removed) {
-				documentServiceHost?.remove(URI.parse(folder.uri));
-				projects?.remove(URI.parse(folder.uri));
-			}
-		});
+				for (const folder of e.removed) {
+					documentServiceHost?.remove(URI.parse(folder.uri));
+					projects?.remove(URI.parse(folder.uri));
+				}
+			});
+		}
 	});
 	connection.listen();
 }
