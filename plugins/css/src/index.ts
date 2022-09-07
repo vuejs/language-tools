@@ -1,8 +1,8 @@
 import { EmbeddedLanguageServicePlugin, useConfigurationHost, useDocumentContext, useFileSystemProvider, useRootUri } from '@volar/common-language-service';
-import * as css from 'vscode-css-languageservice';
-import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
+import * as css from 'vscode-css-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 
 const wordPatterns: { [lang: string]: RegExp; } = {
 	css: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@#.!])?[\w-?]+%?|[@#!.])/g,

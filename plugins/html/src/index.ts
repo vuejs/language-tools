@@ -1,8 +1,8 @@
 import { EmbeddedLanguageServicePlugin, useConfigurationHost, useDocumentContext, useFileSystemProvider, useRootUri } from '@volar/common-language-service';
-import * as html from 'vscode-html-languageservice';
-import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
+import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 
 export default function (options: {
 	validLang?: string,
@@ -283,6 +283,6 @@ function isEOL(content: string, offset: number) {
 
 const CR = '\r'.charCodeAt(0);
 const NL = '\n'.charCodeAt(0);
-export function isNewlineCharacter(charCode: number) {
+function isNewlineCharacter(charCode: number) {
 	return charCode === CR || charCode === NL;
 }
