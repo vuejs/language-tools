@@ -8,7 +8,7 @@ import useHtmlPlugin from '@volar-plugins/html';
 import useJsonPlugin from '@volar-plugins/json';
 import usePugPlugin from '@volar-plugins/pug';
 import usePugFormatPlugin from '@volar-plugins/pug-beautify';
-import useTsPlugin, { isTsDocument } from './plugins/typescript';
+import useTsPlugin, { isTsDocument } from '@volar-plugins/typescript';
 import * as autoInsert from './documentFeatures/autoInsert';
 import * as colorPresentations from './documentFeatures/colorPresentations';
 import * as documentColors from './documentFeatures/documentColors';

@@ -1,9 +1,9 @@
-import { TextDocument } from 'vscode-languageserver-textdocument';
 import { EmbeddedLanguageServicePlugin, useConfigurationHost, useRootUri, useTypeScriptLanguageService, useTypeScriptLanguageServiceHost, useTypeScriptModule } from '@volar/common-language-service';
-import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as ts2 from '@volar/typescript-language-service';
 import * as semver from 'semver';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 
 function getBasicTriggerCharacters(tsVersion: string) {
 
