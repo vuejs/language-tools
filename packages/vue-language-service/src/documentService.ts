@@ -6,7 +6,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import useCssPlugin from '@volar-plugins/css';
 import useHtmlPlugin from '@volar-plugins/html';
 import useJsonPlugin from '@volar-plugins/json';
-import usePugPlugin from './plugins/pug';
+import usePugPlugin from '@volar-plugins/pug';
 import usePugFormatPlugin from './plugins/pug-beautify';
 import useTsPlugin, { isTsDocument } from './plugins/typescript';
 import * as autoInsert from './documentFeatures/autoInsert';

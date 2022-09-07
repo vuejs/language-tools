@@ -25,6 +25,9 @@
 		{
 			"path": "../../plugins/json/tsconfig.build.json"
 		},
+		{
+			"path": "../../plugins/pug/tsconfig.build.json"
+		},
 		// packages
 		{
 			"path": "../common-language-service/tsconfig.build.json"

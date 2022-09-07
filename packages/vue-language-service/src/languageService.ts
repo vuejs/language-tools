@@ -37,7 +37,7 @@ import useCssPlugin from '@volar-plugins/css';
 import useEmmetPlugin from '@volar-plugins/emmet';
 import useHtmlPlugin from '@volar-plugins/html';
 import useJsonPlugin from '@volar-plugins/json';
-import usePugPlugin from './plugins/pug';
+import usePugPlugin from '@volar-plugins/pug';
 import useTsPlugin from './plugins/typescript';
 import useVuePlugin from './plugins/vue';
 import useAutoDotValuePlugin from './plugins/vue-autoinsert-dotvalue';
