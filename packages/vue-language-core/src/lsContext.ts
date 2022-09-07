@@ -6,14 +6,14 @@ import { createSourceFile, EmbeddedFile, SourceFile, VueLanguagePlugin } from '.
 import { createDocumentRegistry, forEachEmbeddeds } from './documentRegistry';
 
 import * as useHtmlFilePlugin from './plugins/file-html';
-import * as  useMdFilePlugin from './plugins/file-md';
-import * as  useVueFilePlugin from './plugins/file-vue';
-import * as  useVueSfcCustomBlocks from './plugins/vue-sfc-customblocks';
-import * as  useVueSfcScriptsFormat from './plugins/vue-sfc-scripts';
-import * as  useVueSfcStyles from './plugins/vue-sfc-styles';
-import * as  useVueSfcTemplate from './plugins/vue-sfc-template';
-import * as  useHtmlPlugin from './plugins/vue-template-html';
-import * as  usePugPlugin from './plugins/vue-template-pug';
+import * as useMdFilePlugin from './plugins/file-md';
+import * as useVueFilePlugin from './plugins/file-vue';
+import * as useVueSfcCustomBlocks from './plugins/vue-sfc-customblocks';
+import * as useVueSfcScriptsFormat from './plugins/vue-sfc-scripts';
+import * as useVueSfcStyles from './plugins/vue-sfc-styles';
+import * as useVueSfcTemplate from './plugins/vue-sfc-template';
+import * as useHtmlPlugin from './plugins/vue-template-html';
+import * as usePugPlugin from './plugins/vue-template-pug';
 import useVueTsx from './plugins/vue-tsx';
 import { getVueCompilerOptions } from './utils/ts';
 
