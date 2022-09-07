@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.40.11 (2022/9/8)
+
+- feat: support for typescript class/object literal method completions ([#1835](https://github.com/johnsoncodehk/volar/issues/1835))
+- fix: langauge server crash if client did not support `onDidChangeWorkspaceFolders` ([#1834](https://github.com/johnsoncodehk/volar/issues/1834))
+- fix: "Format Selection" embedded range incorrect with initialIndentBracket
+- fix: formatting break document with `editor.formatOnPaste` enabled ([#1840](https://github.com/johnsoncodehk/volar/issues/1840)) ([#1841](https://github.com/johnsoncodehk/volar/issues/1841)) ([#1842](https://github.com/johnsoncodehk/volar/issues/1842)) ([#1843](https://github.com/johnsoncodehk/volar/issues/1843)) ([#1835](https://github.com/johnsoncodehk/volar/issues/1835))
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
+
 ## 0.40.10 (2022/9/7)
 
 - feat: improve "Format Selection" for html content
@@ -9,12 +22,6 @@
 - fix: formatting break document content randomly ([#1827](https://github.com/johnsoncodehk/volar/issues/1827)) ([#1832](https://github.com/johnsoncodehk/volar/issues/1832))
 - fix: pug syntax highlighting confuses element id with interpolation ([#1826](https://github.com/johnsoncodehk/volar/issues/1826))
 - fix: don't cache IDE settings if IDE do not support config change notification
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 0.40.9 (2022/9/6)
 
