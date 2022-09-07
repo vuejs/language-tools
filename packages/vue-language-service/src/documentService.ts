@@ -72,7 +72,7 @@ export function getDocumentService(
 
 	const context: DocumentServiceRuntimeContext = {
 		typescript: ts,
-		getVueDocument,
+		getAndUpdateVueDocument,
 		getPlugins() {
 			return [
 				...customPlugins,
@@ -105,7 +105,7 @@ export function getDocumentService(
 		doAutoInsert: autoInsert.register(context),
 	};
 
-	function getVueDocument(document: TextDocument) {
+	function getAndUpdateVueDocument(document: TextDocument) {
 
 		let vueDoc = vueDocuments.get(document);
 
