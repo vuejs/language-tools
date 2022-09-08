@@ -111,5 +111,6 @@ export function createVueLanguageContext(
 			},
 		}),
 		vueLanguageModule,
+		plugins,
 	};
 }
