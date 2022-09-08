@@ -1,8 +1,7 @@
+import { createDocumentRegistry, EmbeddedFile, EmbeddedLangaugeSourceFile, EmbeddedLanguageModule, forEachEmbeddeds } from '@volar/embedded-language-core';
 import { posix as path } from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { EmbeddedLangaugeSourceFile, EmbeddedLanguageModule, LanguageServiceHost } from './types';
-import { EmbeddedFile } from './types';
-import { createDocumentRegistry, forEachEmbeddeds } from './documentRegistry';
+import { LanguageServiceHost } from './types';
 
 export type LanguageContext = ReturnType<typeof createLanguageContext>;
 

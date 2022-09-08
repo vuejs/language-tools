@@ -1,6 +1,4 @@
-export * from './sourceMaps';
-export * from './documentRegistry';
-export * from './types';
-export * from './documentRegistry';
-export * from './types';
+export * from '@volar/embedded-language-core';
 export * from './languageContext';
+export * from './types';
+

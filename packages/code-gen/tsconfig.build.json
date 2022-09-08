@@ -13,9 +13,6 @@
 	],
 	"references": [
 		{
-			"path": "../shared/tsconfig.build.json"
-		},
-		{
 			"path": "../source-map/tsconfig.build.json"
 		},
 	],

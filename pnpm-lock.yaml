@@ -137,6 +137,16 @@ importers:
     dependencies:
       '@volar/source-map': link:../source-map
 
+  packages/embedded-language-core:
+    specifiers:
+      '@volar/code-gen': 0.40.13
+      '@volar/source-map': 0.40.13
+      '@vue/reactivity': ^3.2.38
+    dependencies:
+      '@volar/code-gen': link:../code-gen
+      '@volar/source-map': link:../source-map
+      '@vue/reactivity': 3.2.38
+
   packages/embedded-language-service:
     specifiers:
       vscode-html-languageservice: ^5.0.1
@@ -152,11 +162,13 @@ importers:
   packages/embedded-typescript-language-core:
     specifiers:
       '@volar/code-gen': 0.40.13
+      '@volar/embedded-language-core': 0.40.13
       '@volar/source-map': 0.40.13
       '@vue/reactivity': ^3.2.38
       typescript: latest
     dependencies:
       '@volar/code-gen': link:../code-gen
+      '@volar/embedded-language-core': link:../embedded-language-core
       '@volar/source-map': link:../source-map
       '@vue/reactivity': 3.2.38
     devDependencies:
