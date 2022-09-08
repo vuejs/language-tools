@@ -540,10 +540,14 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 			slot.name === 'vbind'
 			&& slot.type === '{ num: number; str: string; }'
 		);
+		const d = meta.slots.find(slot =>
+			slot.name === 'no-bind'
+		);
 
 		expect(a).toBeDefined();
 		expect(b).toBeDefined();
 		expect(c).toBeDefined();
+		expect(d).toBeDefined();
 	});
 
 	test('class-slots', () => {
