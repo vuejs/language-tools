@@ -1,6 +1,6 @@
 {
 	"name": "@volar-plugins/pug-beautify",
-	"version": "0.40.11",
+	"version": "0.40.13",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -14,7 +14,7 @@
 	},
 	"dependencies": {
 		"@johnsoncodehk/pug-beautify": "^0.2.2",
-		"@volar/embedded-language-service": "0.40.11",
+		"@volar/embedded-language-service": "0.40.13",
 		"vscode-languageserver-types": "^3.17.2"
 	}
 }
