@@ -9,7 +9,7 @@ export * from './parsers/scriptSetupRanges';
 export * as localTypes from './utils/localTypes';
 export * from './utils/ts';
 export * from './generators/template';
-export * from './languageModules/vue';
+export * from './plugins';
 export * from '@volar/embedded-typescript-language-core';
 
 // fix build

@@ -4,9 +4,9 @@ export type VueLanguageServiceHost = base.LanguageServiceHost & {
 	getVueCompilationSettings(): VueCompilerOptions,
 };
 
-export type VueCompilerOptions = Partial<_VueCompilerOptions>;
+export type VueCompilerOptions = Partial<ResolvedVueCompilerOptions>;
 
-export interface _VueCompilerOptions {
+export interface ResolvedVueCompilerOptions {
 	target: 2 | 2.7 | 3;
 	strictTemplates: boolean;
 	plugins: string[];

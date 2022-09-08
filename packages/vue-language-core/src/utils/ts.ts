@@ -1,6 +1,6 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { posix as path } from 'path';
-import type { VueCompilerOptions, _VueCompilerOptions } from '../types';
+import type { VueCompilerOptions, ResolvedVueCompilerOptions } from '../types';
 
 export type ParsedCommandLine = ts.ParsedCommandLine & {
 	vueOptions: VueCompilerOptions;
@@ -70,7 +70,7 @@ function createParsedCommandLineBase(
 	};
 }
 
-export function getVueCompilerOptions(vueOptions: VueCompilerOptions): _VueCompilerOptions {
+export function getVueCompilerOptions(vueOptions: VueCompilerOptions): ResolvedVueCompilerOptions {
 	const target = vueOptions.target ?? 3;
 	return {
 		...vueOptions,

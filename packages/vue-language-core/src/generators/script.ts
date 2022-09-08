@@ -8,7 +8,7 @@ import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { collectCssVars, collectStyleCssClasses } from '../plugins/vue-tsx';
 import { Sfc } from '../sourceFile';
 import type { EmbeddedFileMappingData, TeleportMappingData, TextRange } from '@volar/embedded-typescript-language-core';
-import type { _VueCompilerOptions } from '../types';
+import type { ResolvedVueCompilerOptions } from '../types';
 import { getSlotsPropertyName, getVueLibraryName } from '../utils/shared';
 import { SearchTexts } from '../utils/string';
 import { walkInterpolationFragment } from '../utils/transform';
@@ -28,7 +28,7 @@ export function generate(
 	cssScopedClasses: ReturnType<typeof collectStyleCssClasses>,
 	htmlGen: ReturnType<typeof templateGen['generate']> | undefined,
 	compilerOptions: ts.CompilerOptions,
-	vueCompilerOptions: _VueCompilerOptions,
+	vueCompilerOptions: ResolvedVueCompilerOptions,
 	codeGen = new CodeGen<EmbeddedFileMappingData>(),
 	teleports: SourceMaps.Mapping<TeleportMappingData>[] = [],
 ) {

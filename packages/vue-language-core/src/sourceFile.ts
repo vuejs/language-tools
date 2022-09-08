@@ -1,6 +1,6 @@
 import { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
 import { computed, ComputedRef, reactive, shallowRef as ref, pauseTracking, resetTracking } from '@vue/reactivity';
-import { _VueCompilerOptions } from './types';
+import { ResolvedVueCompilerOptions } from './types';
 import { EmbeddedFileSourceMap, Teleport, EmbeddedFile, EmbeddedFileMappingData, Embedded, EmbeddedStructure } from '@volar/embedded-typescript-language-core';
 
 import { CodeGen } from '@volar/code-gen';
@@ -13,7 +13,7 @@ export type VueLanguagePlugin = (ctx: {
 		typescript: typeof import('typescript/lib/tsserverlibrary');
 	},
 	compilerOptions: ts.CompilerOptions,
-	vueCompilerOptions: _VueCompilerOptions,
+	vueCompilerOptions: ResolvedVueCompilerOptions,
 }) => {
 	order?: number;
 	parseSFC?(fileName: string, content: string): SFCParseResult | undefined;

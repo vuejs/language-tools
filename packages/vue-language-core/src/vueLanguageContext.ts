@@ -1,9 +1,9 @@
 import { posix as path } from 'path';
-import { SourceFile, VueLanguagePlugin } from './sourceFile';
+import { createSourceFile, SourceFile, VueLanguagePlugin } from './sourceFile';
 import { VueLanguageServiceHost } from './types';
 import * as localTypes from './utils/localTypes';
-import { createLanguageContext, createDocumentRegistry } from '@volar/embedded-typescript-language-core';
-import { createVueLanguageModule } from './languageModules/vue';
+import { createLanguageContext, createDocumentRegistry, EmbeddedLanguageModule } from '@volar/embedded-typescript-language-core';
+import { getDefaultVueLanguagePlugins } from './plugins';
 import { getVueCompilerOptions } from './utils/ts';
 import type * as _ from 'typescript/lib/tsserverlibrary';
 
@@ -33,7 +33,17 @@ export function createVueLanguageContext(
 	const compilerOptions = host.getCompilationSettings();
 	const vueCompilerOptions = getVueCompilerOptions(host.getVueCompilationSettings());
 	const sharedTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(vueCompilerOptions.target));
-	const vueLanguageModule = createVueLanguageModule(ts, host.getCurrentDirectory(), compilerOptions, vueCompilerOptions, extraPlugins);
+	const plugins = getDefaultVueLanguagePlugins(ts, host.getCurrentDirectory(), compilerOptions, vueCompilerOptions, extraPlugins);
+	const vueLanguageModule: EmbeddedLanguageModule = {
+		createSourceFile(fileName, snapshot) {
+			if (fileName.endsWith('.vue')) {
+				return createSourceFile(fileName, snapshot, ts, plugins);
+			}
+		},
+		updateSourceFile(sourceFile: SourceFile, snapshot) {
+			sourceFile.update(snapshot);
+		},
+	};
 	const host_2: Partial<VueLanguageServiceHost> = {
 		fileExists(fileName) {
 
@@ -94,6 +104,6 @@ export function createVueLanguageContext(
 	return {
 		...createLanguageContext(proxyHost, [vueLanguageModule], documentRegistry as any),
 		mapper: documentRegistry,
-		vueLanguageModule,
+		plugins,
 	};
 }

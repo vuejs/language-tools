@@ -4,7 +4,7 @@ import { camelize, hyphenate, capitalize, isHTMLTag, isSVGTag } from '@vue/share
 import * as CompilerDOM from '@vue/compiler-dom';
 import * as CompilerCore from '@vue/compiler-core';
 import { EmbeddedFileMappingData } from '@volar/embedded-typescript-language-core';
-import { _VueCompilerOptions } from '../types';
+import { ResolvedVueCompilerOptions } from '../types';
 import { colletVars, walkInterpolationFragment } from '../utils/transform';
 import { parseBindingRanges } from '../parsers/scriptSetupRanges';
 import { SearchTexts } from '../utils/string';
@@ -61,7 +61,7 @@ export function isIntrinsicElement(runtimeMode: 'runtime-dom' | 'runtime-uni-app
 
 export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	vueCompilerOptions: _VueCompilerOptions,
+	vueCompilerOptions: ResolvedVueCompilerOptions,
 	sourceTemplate: string,
 	sourceLang: string,
 	templateAst: CompilerDOM.RootNode,
