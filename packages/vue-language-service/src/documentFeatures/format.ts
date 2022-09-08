@@ -59,7 +59,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 				if (!embedded.self?.file.capabilities.formatting)
 					continue;
 
-				const sourceMap = vueDocument.sourceMapsMap.get(embedded.self);
+				const sourceMap = vueDocument.getSourceMap(embedded.self);
 				const initialIndentBracket = typeof embedded.self.file.capabilities.formatting === 'object' && initialIndentLanguageId[sourceMap.mappedDocument.languageId]
 					? embedded.self.file.capabilities.formatting.initialIndentBracket
 					: undefined;
