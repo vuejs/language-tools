@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.40.13 (2022/9/8)
+
+- fix: cycle reactive reference lead to memory leak
+
 ## 0.40.12 (2022/9/8)
 
 - perf: fix incremental template compile not working
