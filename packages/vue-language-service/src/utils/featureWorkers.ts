@@ -2,7 +2,7 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { visitEmbedded } from './definePlugin';
 import type { DocumentServiceRuntimeContext, LanguageServiceRuntimeContext } from '../types';
 import { EmbeddedLanguageServicePlugin } from '@volar/embedded-language-service';
-import { EmbeddedDocumentSourceMap, VueDocument } from '../vueDocuments';
+import { EmbeddedDocumentSourceMap, SourceFileDocument } from '../vueDocuments';
 
 export async function documentFeatureWorker<T>(
 	context: DocumentServiceRuntimeContext,
@@ -41,9 +41,9 @@ export async function documentArgFeatureWorker<T, K>(
 
 	if (vueDocument) {
 
-		const embeddeds = vueDocument.file.embeddeds;
+		const embeddeds = vueDocument[0].file.embeddeds;
 
-		await visitEmbedded(vueDocument, embeddeds, async sourceMap => {
+		await visitEmbedded(vueDocument[0], embeddeds, async sourceMap => {
 
 			if (!isValidSourceMap(sourceMap))
 				return true;
@@ -111,7 +111,7 @@ export async function languageFeatureWorker<T, K>(
 	uri: string,
 	arg: K,
 	transformArg: (arg: K, sourceMap: EmbeddedDocumentSourceMap) => Generator<K> | K[],
-	worker: (plugin: EmbeddedLanguageServicePlugin, document: TextDocument, arg: K, sourceMap: EmbeddedDocumentSourceMap | undefined, vueDocument: VueDocument | undefined) => T,
+	worker: (plugin: EmbeddedLanguageServicePlugin, document: TextDocument, arg: K, sourceMap: EmbeddedDocumentSourceMap | undefined, vueDocument: SourceFileDocument | undefined) => T,
 	transform: (result: NonNullable<Awaited<T>>, sourceMap: EmbeddedDocumentSourceMap | undefined) => Awaited<T> | undefined,
 	combineResult?: (results: NonNullable<Awaited<T>>[]) => NonNullable<Awaited<T>>,
 	reportProgress?: (result: NonNullable<Awaited<T>>) => void,

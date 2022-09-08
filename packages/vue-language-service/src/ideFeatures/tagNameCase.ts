@@ -1,6 +1,6 @@
 import type { LanguageServiceRuntimeContext } from '../types';
 import { hyphenate } from '@vue/shared';
-import { VueDocument } from '../vueDocuments';
+import { checkTemplateData, getTemplateTagsAndAttrs, SourceFileDocument } from '../vueDocuments';
 
 export function register(context: LanguageServiceRuntimeContext) {
 	return async (uri: string): Promise<{
@@ -19,9 +19,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 			attr: getAttrNameCase(vueDocument),
 		};
 
-		function getAttrNameCase(sourceFile: VueDocument): 'kebabCase' | 'camelCase' | 'unsure' {
+		function getAttrNameCase(sourceFile: SourceFileDocument): 'kebabCase' | 'camelCase' | 'unsure' {
 
-			const attrNames = sourceFile.getTemplateTagsAndAttrs().attrs;
+			const attrNames = getTemplateTagsAndAttrs(sourceFile.file).attrs;
 
 			let hasCamelCase = false;
 			let hasKebabCase = false;
@@ -52,10 +52,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 			}
 			return 'unsure';
 		}
-		async function getTagNameCase(vueDocument: VueDocument): Promise<'both' | 'kebabCase' | 'pascalCase' | 'unsure'> {
+		async function getTagNameCase(vueDocument: SourceFileDocument): Promise<'both' | 'kebabCase' | 'pascalCase' | 'unsure'> {
 
-			const components = (await vueDocument.getTemplateData()).components;
-			const tagNames = vueDocument.getTemplateTagsAndAttrs().tags;
+			const components = checkTemplateData(vueDocument.file, context.getTsLs().__internal__.raw).components;
+			const tagNames = getTemplateTagsAndAttrs(vueDocument.file).tags;
 
 			let anyComponentUsed = false;
 			let hasPascalCase = false;

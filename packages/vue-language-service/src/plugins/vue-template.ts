@@ -10,7 +10,7 @@ import * as path from 'upath';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { VueDocument, VueDocuments } from '../vueDocuments';
+import { checkTemplateData, getTemplateTagsAndAttrs, SourceFileDocument, SourceFileDocuments } from '../vueDocuments';
 import useHtmlPlugin from '@volar-plugins/html';
 import { URI } from 'vscode-uri';
 
@@ -45,7 +45,7 @@ const vueGlobalDirectiveProvider = html.newHTMLDataProvider('vueGlobalDirective'
 
 interface HtmlCompletionData {
 	mode: 'html',
-	tsItem: vscode.CompletionItem | undefined,
+	tsItem: ts.CompletionEntry | undefined,
 }
 
 interface AutoImportCompletionData {
@@ -65,15 +65,15 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		attr: 'kebabCase' | 'camelCase',
 	}>,
 	vueLsHost: vue.VueLanguageServiceHost,
-	vueDocuments: VueDocuments,
+	vueDocuments: SourceFileDocuments,
 }): EmbeddedLanguageServicePlugin & T {
 
 	const rootUri = URI.parse(useRootUri());
 	const ts = useTypeScriptModule();
 
 	const componentCompletionDataCache = new WeakMap<
-		Awaited<ReturnType<VueDocument['getTemplateData']>>,
-		Map<string, { item: vscode.CompletionItem | undefined, bind: vscode.CompletionItem[], on: vscode.CompletionItem[]; }>
+		Awaited<ReturnType<typeof checkTemplateData>>,
+		Map<string, { item: ts.CompletionEntry | undefined, bind: ts.CompletionEntry[], on: ts.CompletionEntry[]; }>
 	>();
 	const autoImportPositions = new WeakSet<vscode.Position>();
 	const tokenTypes = new Map(options.getSemanticTokenLegend().tokenTypes.map((t, i) => [t, i]));
@@ -151,6 +151,9 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 			if (vueDocument) {
 
+				if (!vue.isSourceFile(vueDocument?.file))
+					return;
+
 				const templateErrors: vscode.Diagnostic[] = [];
 				const sfcVueTemplateCompiled = vueDocument.file.compiledSFCTemplate;
 
@@ -202,7 +205,11 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			const scanner = options.getScanner(document);
 
 			if (vueDocument && scanner) {
-				const templateScriptData = await vueDocument.getTemplateData();
+
+				if (!vue.isSourceFile(vueDocument.file))
+					return;
+
+				const templateScriptData = checkTemplateData(vueDocument.file, options.tsLs.__internal__.raw);
 				const components = new Set([
 					...templateScriptData.components,
 					...templateScriptData.components.map(hyphenate).filter(name => !isIntrinsicElement(runtimeMode, name)),
@@ -254,31 +261,31 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 	async function resolveHtmlItem(item: vscode.CompletionItem, data: HtmlCompletionData) {
 
-		let tsItem = data.tsItem;
+		// let tsItem = data.tsItem;
 
-		if (!tsItem)
-			return item;
+		// if (!tsItem)
+		// 	return item;
 
-		tsItem = await options.tsLs.doCompletionResolve(tsItem);
-		item.tags = [...item.tags ?? [], ...tsItem.tags ?? []];
+		// tsItem = await options.tsLs.doCompletionResolve(tsItem);
+		// item.tags = [...item.tags ?? [], ...tsItem.tags ?? []];
 
-		const details: string[] = [];
-		const documentations: string[] = [];
+		// const details: string[] = [];
+		// const documentations: string[] = [];
 
-		if (item.detail) details.push(item.detail);
-		if (tsItem.detail) details.push(tsItem.detail);
-		if (details.length) {
-			item.detail = details.join('\n\n');
-		}
+		// if (item.detail) details.push(item.detail);
+		// if (tsItem.detail) details.push(tsItem.detail);
+		// if (details.length) {
+		// 	item.detail = details.join('\n\n');
+		// }
 
-		if (item.documentation) documentations.push(typeof item.documentation === 'string' ? item.documentation : item.documentation.value);
-		if (tsItem.documentation) documentations.push(typeof tsItem.documentation === 'string' ? tsItem.documentation : tsItem.documentation.value);
-		if (documentations.length) {
-			item.documentation = {
-				kind: vscode.MarkupKind.Markdown,
-				value: documentations.join('\n\n'),
-			};
-		}
+		// if (item.documentation) documentations.push(typeof item.documentation === 'string' ? item.documentation : item.documentation.value);
+		// if (tsItem.documentation) documentations.push(typeof tsItem.documentation === 'string' ? tsItem.documentation : tsItem.documentation.value);
+		// if (documentations.length) {
+		// 	item.documentation = {
+		// 		kind: vscode.MarkupKind.Markdown,
+		// 		value: documentations.join('\n\n'),
+		// 	};
+		// }
 
 		return item;
 	}
@@ -289,10 +296,14 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		if (!_vueDocument)
 			return item;
 
+		if (!vue.isSourceFile(_vueDocument.file))
+			return item;
+
+		const vueSourceFile = _vueDocument.file;
 		const vueDocument = _vueDocument;
 		const importFile = shared.getPathOfUri(data.importUri);
 		const rPath = path.relative(options.vueLsHost.getCurrentDirectory(), importFile);
-		const sfc = vueDocument.file.sfc;
+		const sfc = vueSourceFile.sfc;
 
 		let importPath = path.relative(path.dirname(data.vueDocumentUri), data.importUri);
 		if (!importPath.startsWith('.')) {
@@ -387,7 +398,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		return item;
 
 		async function getTypeScriptInsert() {
-			const embeddedScriptUri = shared.getUriByPath(rootUri, vueDocument.file.tsFileName);
+			const embeddedScriptUri = shared.getUriByPath(rootUri, vueSourceFile.tsFileName);
 			const tsImportName = camelize(path.basename(importFile).replace(/\./g, '-'));
 			const confitHost = useConfigurationHost();
 			const [formatOptions, preferences] = await Promise.all([
@@ -426,15 +437,22 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		}
 	}
 
-	async function provideHtmlData(vueDocument: VueDocument) {
+	async function provideHtmlData(vueDocument: SourceFileDocument) {
 
+		if (!vue.isSourceFile(vueDocument.file))
+			return;
+		
+		const vueSourceFile = vueDocument.file;
 		const nameCases = await options.getNameCases?.(vueDocument.uri) ?? {
 			tag: 'both',
 			attr: 'kebabCase',
 		};
 		const componentCompletion = await getComponentCompletionData(vueDocument);
+		if (!componentCompletion)
+			return;
+
 		const tags: html.ITagData[] = [];
-		const tsItems = new Map<string, vscode.CompletionItem>();
+		const tsItems = new Map<string, ts.CompletionEntry>();
 		const globalAttributes: html.IAttributeData[] = [];
 
 		for (const [_componentName, { item, bind, on }] of componentCompletion) {
@@ -450,7 +468,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 				for (const prop of bind) {
 
-					const name = nameCases.attr === 'camelCase' ? prop.label : hyphenate(prop.label);
+					const name = nameCases.attr === 'camelCase' ? prop.name : hyphenate(prop.name);
 
 					if (hyphenate(name).startsWith('on-')) {
 
@@ -495,7 +513,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				}
 				for (const event of on) {
 
-					const name = nameCases.attr === 'camelCase' ? event.label : hyphenate(event.label);
+					const name = nameCases.attr === 'camelCase' ? event.name : hyphenate(event.name);
 					const propKey = createInternalItemId('componentEvent', [componentName, name]);
 
 					attributes.push({
@@ -525,7 +543,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			}
 		}
 
-		const descriptor = vueDocument.file.sfc;
+		const descriptor = vueSourceFile.sfc;
 		const enabledComponentAutoImport = await useConfigurationHost()?.getConfiguration<boolean>('volar.completion.autoImportComponent') ?? true;
 
 		if (enabledComponentAutoImport && (descriptor.script || descriptor.scriptSetup)) {
@@ -566,7 +584,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		return tsItems;
 	}
 
-	function afterHtmlCompletion(completionList: vscode.CompletionList, vueDocument: VueDocument, tsItems: Map<string, vscode.CompletionItem>) {
+	function afterHtmlCompletion(completionList: vscode.CompletionList, vueDocument: SourceFileDocument, tsItems: Map<string, ts.CompletionEntry>) {
 
 		const replacement = getReplacement(completionList, vueDocument.getDocument());
 
@@ -710,29 +728,35 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		} : undefined;
 	}
 
-	async function getComponentCompletionData(sourceFile: VueDocument) {
+	async function getComponentCompletionData(sourceDocument: SourceFileDocument) {
 
-		const templateData = await sourceFile.getTemplateData();
+		if (!vue.isSourceFile(sourceDocument.file))
+			return;
+
+		const vueSourceFile = sourceDocument.file;
+		const templateData = checkTemplateData(vueSourceFile, options.tsLs.__internal__.raw);
 
 		let cache = componentCompletionDataCache.get(templateData);
 		if (!cache) {
 
-			cache = new Map<string, { item: vscode.CompletionItem | undefined, bind: vscode.CompletionItem[], on: vscode.CompletionItem[]; }>();
+			cache = new Map();
 
 			let file: vue.EmbeddedFile | undefined;
-			vue.forEachEmbeddeds(sourceFile.file.embeddeds, embedded => {
-				if (embedded.file.fileName === sourceFile.file.tsFileName) {
+			vue.forEachEmbeddeds(sourceDocument.file.embeddeds, embedded => {
+				if (embedded.file.fileName === vueSourceFile.tsFileName) {
 					file = embedded.file;
 				}
 			});
 
-			const document = file ? sourceFile.getEmbeddedDocument(file) : undefined;
-			const templateTagNames = [...sourceFile.getTemplateTagsAndAttrs().tags.keys()];
+			const templateTagNames = [...getTemplateTagsAndAttrs(sourceDocument.file).tags.keys()];
+			const completionOptions: ts.GetCompletionsAtPositionOptions = {
+				includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
+			};
 
-			if (file && document) {
+			if (file) {
 
 				const tags_1 = templateData.componentItems.map(item => {
-					return { item, name: item.label };
+					return { item, name: item.name };
 				});
 				const tags_2 = templateTagNames
 					.filter(tag => tag.indexOf('.') >= 0)
@@ -743,17 +767,16 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					if (cache.has(tag.name))
 						continue;
 
-					let bind: vscode.CompletionItem[] = [];
-					let on: vscode.CompletionItem[] = [];
+					let bind: ts.CompletionEntry[] = [];
+					let on: ts.CompletionEntry[] = [];
 					{
 						const searchText = vue.SearchTexts.PropsCompletion(tag.name);
 						let offset = file.codeGen.getText().indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
 							try {
-								bind = (await options.tsLs.doComplete(document.uri, document.positionAt(offset)))?.items
-									.map(entry => { entry.label = entry.label.replace('?', ''); return entry; })
-									.filter(entry => entry.kind !== vscode.CompletionItemKind.Text) ?? [];
+								bind = (await options.tsLs.__internal__.raw.getCompletionsAtPosition(file.fileName, offset, completionOptions))?.entries
+									.filter(entry => entry.kind !== 'warning') ?? [];
 							} catch { }
 						}
 					}
@@ -763,9 +786,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 						if (offset >= 0) {
 							offset += searchText.length;
 							try {
-								on = (await options.tsLs.doComplete(document.uri, document.positionAt(offset)))?.items
-									.map(entry => { entry.label = entry.label.replace('?', ''); return entry; })
-									.filter(entry => entry.kind !== vscode.CompletionItemKind.Text) ?? [];
+								on = (await options.tsLs.__internal__.raw.getCompletionsAtPosition(file.fileName, offset, completionOptions))?.entries
+									.filter(entry => entry.kind !== 'warning') ?? [];
 							} catch { }
 						}
 					}
@@ -773,9 +795,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				}
 				try {
 					const offset = file.codeGen.getText().indexOf(vue.SearchTexts.GlobalAttrs);
-					const globalBind = (await options.tsLs.doComplete(document.uri, document.positionAt(offset)))?.items
-						.map(entry => { entry.label = entry.label.replace('?', ''); return entry; })
-						.filter(entry => entry.kind !== vscode.CompletionItemKind.Text) ?? [];
+					const globalBind = (await options.tsLs.__internal__.raw.getCompletionsAtPosition(file.fileName, offset, completionOptions))?.entries
+						.filter(entry => entry.kind !== 'warning') ?? [];
 					cache.set('*', { item: undefined, bind: globalBind, on: [] });
 				} catch { }
 			}

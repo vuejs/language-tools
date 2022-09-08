@@ -8,12 +8,12 @@ export type LanguageContext = ReturnType<typeof createLanguageContext>;
 export function createLanguageContext(
 	host: EmbeddedTypeScriptLanguageServiceHost,
 	languageModules: EmbeddedLanguageModule[],
-	documentRegistry: ReturnType<typeof createDocumentRegistry>,
 ) {
 
 	let lastProjectVersion: string | undefined;
 	let tsProjectVersion = 0;
 
+	const documentRegistry = createDocumentRegistry();
 	const ts = host.getTypeScriptModule();
 	const tsFileVersions = new Map<string, string>();
 	const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
@@ -94,7 +94,16 @@ export function createLanguageContext(
 				return target[property] || host[property];
 			},
 		}),
-		update,
+		mapper: new Proxy(documentRegistry, {
+			get: (target, property) => {
+				update();
+				return target[property as keyof typeof documentRegistry];
+			},
+		}),
+		__internal__: {
+			typescriptLanguageServiceHost: _tsHost,
+			mapper: documentRegistry,
+		},
 	};
 
 	function update() {

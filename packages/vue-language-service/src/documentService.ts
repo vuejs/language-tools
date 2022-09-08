@@ -19,7 +19,7 @@ import * as linkedEditingRanges from './documentFeatures/linkedEditingRanges';
 import * as selectionRanges from './documentFeatures/selectionRanges';
 import { DocumentServiceRuntimeContext } from './types';
 import { singleFileTypeScriptServiceHost, updateSingleFileTypeScriptServiceHost } from './utils/singleFileTypeScriptService';
-import { parseVueDocument, VueDocument } from './vueDocuments';
+import { parseSourceFileDocument, SourceFileDocument } from './vueDocuments';
 import useAutoWrapParenthesesPlugin from './plugins/vue-autoinsert-parentheses';
 import useVuePlugin from './plugins/vue';
 import type * as _ from 'vscode-languageserver-protocol';
@@ -47,7 +47,16 @@ export function getDocumentService(
 		documentContext: undefined,
 	});
 
-	const vueDocuments = new WeakMap<TextDocument, VueDocument>();
+	const vueDocuments = new WeakMap<TextDocument, SourceFileDocument>();
+	const vuePlugins = vue.getDefaultVueLanguagePlugins(ts, shared.getPathOfUri(rootUri.toString()), {}, {}, []);
+	const vueLanguageModule: vue.EmbeddedLanguageModule = {
+		createSourceFile(fileName, snapshot) {
+			return vue.createSourceFile(fileName, snapshot, ts, vuePlugins);
+		},
+		updateSourceFile(sourceFile: vue.SourceFile, snapshot) {
+			sourceFile.update(snapshot);
+		},
+	};
 
 	// language support plugins
 	const vuePlugin = useVuePlugin({
@@ -78,14 +87,34 @@ export function getDocumentService(
 			tsPlugin,
 			autoWrapParenthesesPlugin,
 		],
-		getAndUpdateVueDocument,
+		getAndUpdateVueDocument(document) {
+
+			let vueDoc = vueDocuments.get(document);
+
+			if (vueDoc && vueDoc.file.text !== document.getText()) {
+				vueLanguageModule.updateSourceFile(vueDoc.file, ts.ScriptSnapshot.fromString(document.getText()));
+				return [vueDoc, vueLanguageModule];
+			}
+
+			const vueFile = vueLanguageModule.createSourceFile(
+				'/untitled.' + shared.languageIdToSyntax(document.languageId),
+				ts.ScriptSnapshot.fromString(document.getText()),
+			);
+			if (!vueFile)
+				return;
+
+			vueDoc = parseSourceFileDocument(rootUri, vueFile);
+
+			vueDocuments.set(document, vueDoc);
+
+			return [vueDoc, vueLanguageModule];
+		},
 		updateTsLs(document) {
 			if (isTsDocument(document)) {
 				updateSingleFileTypeScriptServiceHost(context.typescript, document);
 			}
 		},
 	};
-	const vuePlugins = vue.getDefaultVueLanguagePlugins(ts, '', {}, {}, []);
 
 	return {
 		format: format.register(context),
@@ -97,30 +126,4 @@ export function getDocumentService(
 		getColorPresentations: colorPresentations.register(context),
 		doAutoInsert: autoInsert.register(context),
 	};
-
-	function getAndUpdateVueDocument(document: TextDocument) {
-
-		let vueDoc = vueDocuments.get(document);
-
-		if (vueDoc) {
-
-			if (vueDoc.file.text !== document.getText()) {
-				vueDoc.file.update(ts.ScriptSnapshot.fromString(document.getText()));
-			}
-
-			return vueDoc;
-		}
-
-		const vueFile = vue.createSourceFile(
-			'/untitled.' + shared.languageIdToSyntax(document.languageId),
-			ts.ScriptSnapshot.fromString(document.getText()),
-			context.typescript,
-			vuePlugins,
-		);
-		vueDoc = parseVueDocument(rootUri, vueFile, undefined);
-
-		vueDocuments.set(document, vueDoc);
-
-		return vueDoc;
-	}
 }

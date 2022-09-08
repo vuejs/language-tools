@@ -13,13 +13,13 @@ export function forEachEmbeddeds(input: EmbeddedStructure[], cb: (embedded: Embe
 	}
 }
 
-export function createDocumentRegistry<T extends EmbeddedLangaugeSourceFile>() {
+export function createDocumentRegistry() {
 
-	const files = shallowReactive<Record<string, [T, EmbeddedLanguageModule]>>({});
+	const files = shallowReactive<Record<string, [EmbeddedLangaugeSourceFile, EmbeddedLanguageModule]>>({});
 	const all = computed(() => Object.values(files));
 	const fileNames = computed(() => all.value.map(sourceFile => sourceFile?.[0].fileName));
 	const embeddedDocumentsMap = computed(() => {
-		const map = new WeakMap<EmbeddedFile, T>();
+		const map = new WeakMap<EmbeddedFile, EmbeddedLangaugeSourceFile>();
 		for (const [sourceFile] of all.value) {
 			forEachEmbeddeds(sourceFile.embeddeds, embedded => {
 				map.set(embedded.file, sourceFile);
@@ -28,7 +28,7 @@ export function createDocumentRegistry<T extends EmbeddedLangaugeSourceFile>() {
 		return map;
 	});
 	const sourceMapsByFileName = computed(() => {
-		const map = new Map<string, { vueFile: T, embedded: Embedded; }>();
+		const map = new Map<string, { vueFile: EmbeddedLangaugeSourceFile, embedded: Embedded; }>();
 		for (const [sourceFile] of all.value) {
 			forEachEmbeddeds(sourceFile.embeddeds, embedded => {
 				map.set(embedded.file.fileName.toLowerCase(), { vueFile: sourceFile, embedded });
@@ -51,10 +51,10 @@ export function createDocumentRegistry<T extends EmbeddedLangaugeSourceFile>() {
 	const dirs = computed(() => [...new Set(fileNames.value.map(path.dirname))]);
 
 	return {
-		get: (fileName: string): [T, EmbeddedLanguageModule] | undefined => files[fileName.toLowerCase()],
+		get: (fileName: string): [EmbeddedLangaugeSourceFile, EmbeddedLanguageModule] | undefined => files[fileName.toLowerCase()],
 		delete: (fileName: string) => delete files[fileName.toLowerCase()],
 		has: (fileName: string) => !!files[fileName.toLowerCase()],
-		set: (fileName: string, vueFile: T, languageModule: EmbeddedLanguageModule) => files[fileName.toLowerCase()] = [vueFile, languageModule],
+		set: (fileName: string, vueFile: EmbeddedLangaugeSourceFile, languageModule: EmbeddedLanguageModule) => files[fileName.toLowerCase()] = [vueFile, languageModule],
 
 		getFileNames: () => fileNames.value,
 		getDirs: () => dirs.value,

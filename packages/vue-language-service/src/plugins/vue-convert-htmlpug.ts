@@ -1,7 +1,8 @@
 import * as vscode from 'vscode-languageserver-protocol';
 import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/embedded-language-service';
 import { htmlToPug, pugToHtml } from '@johnsoncodehk/html2pug';
-import { VueDocument } from '../vueDocuments';
+import { SourceFileDocument } from '../vueDocuments';
+import * as vue from '@volar/vue-language-core';
 
 const toggleConvertCommand = 'htmlPugConversions.toggle';
 
@@ -13,7 +14,7 @@ export interface ReferencesCodeLensData {
 type CommandArgs = [string];
 
 export default function (options: {
-	getVueDocument(uri: string): VueDocument | undefined,
+	getVueDocument(uri: string): SourceFileDocument | undefined,
 }): EmbeddedLanguageServicePlugin {
 
 	return {
@@ -21,14 +22,14 @@ export default function (options: {
 		codeLens: {
 
 			on(document) {
-				return worker(document.uri, async (vueDocument) => {
+				return worker(document.uri, async (vueDocument, vueSourceFile) => {
 
 					const isEnabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.codeLens.pugTools') ?? true;
 
 					if (!isEnabled)
 						return;
 
-					const descriptor = vueDocument.file.sfc;
+					const descriptor = vueSourceFile.sfc;
 
 					if (descriptor.template && (descriptor.template.lang === 'html' || descriptor.template.lang === 'pug')) {
 
@@ -54,10 +55,10 @@ export default function (options: {
 
 				const [uri] = args as CommandArgs;
 
-				return worker(uri, vueDocument => {
+				return worker(uri, (vueDocument, vueSourceFile) => {
 
 					const document = vueDocument.getDocument();
-					const desc = vueDocument.file.sfc;
+					const desc = vueSourceFile.sfc;
 					if (!desc.template)
 						return;
 
@@ -92,12 +93,15 @@ export default function (options: {
 		},
 	};
 
-	function worker<T>(uri: string, callback: (vueDocument: VueDocument) => T) {
+	function worker<T>(uri: string, callback: (vueDocument: SourceFileDocument, vueSourceFile: vue.SourceFile) => T) {
 
 		const vueDocument = options.getVueDocument(uri);
 		if (!vueDocument || vueDocument.file.fileName.endsWith('.md') || vueDocument.file.fileName.endsWith('.html'))
 			return;
+		
+		if (!vue.isSourceFile(vueDocument.file))
+			return;
 
-		return callback(vueDocument);
+		return callback(vueDocument, vueDocument.file);
 	}
 }

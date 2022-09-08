@@ -48,7 +48,7 @@ import useScriptSetupConversionsPlugin from './plugins/vue-convert-scriptsetup';
 import useTagNameCasingConversionsPlugin from './plugins/vue-convert-tagcasing';
 import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemanticTokenTypes } from './plugins/vue-template';
 import { LanguageServiceRuntimeContext } from './types';
-import { parseVueDocuments } from './vueDocuments';
+import { parseSourceFileDocuments } from './vueDocuments';
 import { URI } from 'vscode-uri';
 // import * as d3 from './ideFeatures/d3';
 
@@ -104,7 +104,7 @@ export function createLanguageService(
 	const scriptTsPlugin = useTsPlugin();
 
 	const tsLs = scriptTsPlugin.languageService;
-	const vueDocuments = parseVueDocuments(rootUri, core, tsLs);
+	const vueDocuments = parseSourceFileDocuments(rootUri, core);
 
 	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
 	const documentVersions = new Map<string, number>();
@@ -202,6 +202,7 @@ export function createLanguageService(
 	const tagNameCasingConversionsPlugin = useTagNameCasingConversionsPlugin({
 		getVueDocument: (uri) => vueDocuments.get(uri),
 		findReferences: apis.findReferences,
+		getTsLs: () => tsLs,
 	});
 
 	const allPlugins = [

@@ -2,7 +2,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { EmbeddedStructure } from '@volar/vue-language-core';
 import type { DocumentServiceRuntimeContext } from '../types';
-import { EmbeddedDocumentSourceMap, VueDocument } from '../vueDocuments';
+import { EmbeddedDocumentSourceMap, SourceFileDocument } from '../vueDocuments';
 import { useConfigurationHost } from '@volar/embedded-language-service';
 
 export function register(context: DocumentServiceRuntimeContext) {
@@ -44,7 +44,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 			tryUpdateVueDocument();
 
-			const embeddeds = getEmbeddedsByLevel(vueDocument, level++);
+			const embeddeds = getEmbeddedsByLevel(vueDocument[0], level++);
 
 			if (embeddeds.length === 0)
 				break;
@@ -59,7 +59,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 				if (!embedded.self?.file.capabilities.formatting)
 					continue;
 
-				const sourceMap = vueDocument.getSourceMap(embedded.self);
+				const sourceMap = vueDocument[0].getSourceMap(embedded.self);
 				const initialIndentBracket = typeof embedded.self.file.capabilities.formatting === 'object' && initialIndentLanguageId[sourceMap.mappedDocument.languageId]
 					? embedded.self.file.capabilities.formatting.initialIndentBracket
 					: undefined;
@@ -146,11 +146,11 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 				tryUpdateVueDocument();
 
-				const sourceMap = vueDocument.getSourceMaps().find(sourceMap => sourceMap.mappedDocument.uri === toPatchIndent?.sourceMapEmbeddedDocumentUri);
+				const sourceMap = vueDocument[0].getSourceMaps().find(sourceMap => sourceMap.mappedDocument.uri === toPatchIndent?.sourceMapEmbeddedDocumentUri);
 
 				if (sourceMap) {
 
-					const indentEdits = patchInterpolationIndent(vueDocument, sourceMap);
+					const indentEdits = patchInterpolationIndent(vueDocument[0], sourceMap);
 
 					if (indentEdits.length > 0) {
 						applyEdits(indentEdits);
@@ -171,12 +171,12 @@ export function register(context: DocumentServiceRuntimeContext) {
 		return [textEdit];
 
 		function tryUpdateVueDocument() {
-			if (vueDocument && vueDocument.file.text !== document.getText()) {
-				vueDocument.file.update(ts.ScriptSnapshot.fromString(document.getText()));
+			if (vueDocument && vueDocument[0].file.text !== document.getText()) {
+				vueDocument[1].updateSourceFile(vueDocument[0].file, ts.ScriptSnapshot.fromString(document.getText()));
 			}
 		}
 
-		function getEmbeddedsByLevel(vueDocument: VueDocument, level: number) {
+		function getEmbeddedsByLevel(vueDocument: SourceFileDocument, level: number) {
 
 			const embeddeds = vueDocument.file.embeddeds;
 			const embeddedsLevels: EmbeddedStructure[][] = [embeddeds];
@@ -290,7 +290,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 	};
 }
 
-function patchInterpolationIndent(vueDocument: VueDocument, sourceMap: EmbeddedDocumentSourceMap) {
+function patchInterpolationIndent(vueDocument: SourceFileDocument, sourceMap: EmbeddedDocumentSourceMap) {
 
 	const indentTextEdits: vscode.TextEdit[] = [];
 	const document = vueDocument.getDocument();

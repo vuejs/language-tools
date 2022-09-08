@@ -1,7 +1,9 @@
 import * as vscode from 'vscode-languageserver-protocol';
 import { EmbeddedLanguageServicePlugin } from '@volar/embedded-language-service';
 import { hyphenate } from '@vue/shared';
-import { VueDocument } from '../vueDocuments';
+import { checkTemplateData, getTemplateTagsAndAttrs, SourceFileDocument } from '../vueDocuments';
+import * as ts2 from '@volar/typescript-language-service';
+import * as vue from '@volar/vue-language-core';
 
 export const convertTagNameCasingCommand = 'tagNameCasingConversions';
 
@@ -11,8 +13,9 @@ export type ConvertTagNameCasingCommandArgs = [
 ];
 
 export default function (options: {
-	getVueDocument(uri: string): VueDocument | undefined,
+	getVueDocument(uri: string): SourceFileDocument | undefined,
 	findReferences: (uri: string, position: vscode.Position) => Promise<vscode.Location[] | undefined>,
+	getTsLs: () => ts2.LanguageService,
 }): EmbeddedLanguageServicePlugin {
 
 	return {
@@ -25,6 +28,9 @@ export default function (options: {
 
 				return worker(uri, async vueDocument => {
 
+					if (!vue.isSourceFile(vueDocument.file))
+						return;
+
 					const desc = vueDocument.file.sfc;
 					if (!desc.template)
 						return;
@@ -34,8 +40,8 @@ export default function (options: {
 					const template = desc.template;
 					const document = vueDocument.getDocument();
 					const edits: vscode.TextEdit[] = [];
-					const components = new Set((await vueDocument.getTemplateData()).components);
-					const tagOffsets = vueDocument.getTemplateTagsAndAttrs().tags;
+					const components = new Set(checkTemplateData(vueDocument.file, options.getTsLs().__internal__.raw).components);
+					const tagOffsets = getTemplateTagsAndAttrs(vueDocument.file).tags;
 					let i = 0;
 
 					for (const [tagName, offsets] of tagOffsets) {
@@ -78,7 +84,7 @@ export default function (options: {
 		},
 	};
 
-	function worker<T>(uri: string, callback: (vueDocument: VueDocument) => T) {
+	function worker<T>(uri: string, callback: (vueDocument: SourceFileDocument) => T) {
 
 		const vueDocument = options.getVueDocument(uri);
 		if (!vueDocument)

@@ -2,7 +2,7 @@ import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as shared from '@volar/shared';
 import { languageFeatureWorker } from '../utils/featureWorkers';
-import { VueDocument } from '../vueDocuments';
+import { SourceFileDocument } from '../vueDocuments';
 
 export function register(context: LanguageServiceRuntimeContext) {
 
@@ -37,7 +37,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			...fictitiousLinks,
 		];
 
-		function getFictitiousLinks(vueDocument: VueDocument) {
+		function getFictitiousLinks(vueDocument: SourceFileDocument) {
 
 			const result: vscode.DocumentLink[] = [];
 			const document = vueDocument.getDocument();

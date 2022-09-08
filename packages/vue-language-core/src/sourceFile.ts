@@ -1,7 +1,7 @@
 import { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
 import { computed, ComputedRef, reactive, shallowRef as ref, pauseTracking, resetTracking } from '@vue/reactivity';
 import { ResolvedVueCompilerOptions } from './types';
-import { EmbeddedFileSourceMap, Teleport, EmbeddedFile, EmbeddedFileMappingData, Embedded, EmbeddedStructure } from '@volar/embedded-typescript-language-core';
+import { EmbeddedFileSourceMap, Teleport, EmbeddedFile, EmbeddedFileMappingData, Embedded, EmbeddedStructure, EmbeddedLangaugeSourceFile } from '@volar/embedded-typescript-language-core';
 
 import { CodeGen } from '@volar/code-gen';
 import { Mapping, MappingBase } from '@volar/source-map';
@@ -25,6 +25,11 @@ export type VueLanguagePlugin = (ctx: {
 };
 
 export interface SourceFile extends ReturnType<typeof createSourceFile> { }
+
+export function isSourceFile(sourceFile: EmbeddedLangaugeSourceFile): sourceFile is SourceFile {
+	throw 'TODO';
+	return true;
+}
 
 export interface SfcBlock {
 	tag: 'script' | 'scriptSetup' | 'template' | 'style' | 'customBlock',

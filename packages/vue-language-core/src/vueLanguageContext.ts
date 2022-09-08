@@ -2,7 +2,7 @@ import { posix as path } from 'path';
 import { createSourceFile, SourceFile, VueLanguagePlugin } from './sourceFile';
 import { VueLanguageServiceHost } from './types';
 import * as localTypes from './utils/localTypes';
-import { createLanguageContext, createDocumentRegistry, EmbeddedLanguageModule } from '@volar/embedded-typescript-language-core';
+import { createLanguageContext, EmbeddedLanguageModule } from '@volar/embedded-typescript-language-core';
 import { getDefaultVueLanguagePlugins } from './plugins';
 import { getVueCompilerOptions } from './utils/ts';
 import type * as _ from 'typescript/lib/tsserverlibrary';
@@ -29,14 +29,13 @@ export function createVueLanguageContext(
 		};
 	}
 
-	const documentRegistry = createDocumentRegistry<SourceFile>();
 	const compilerOptions = host.getCompilationSettings();
 	const vueCompilerOptions = getVueCompilerOptions(host.getVueCompilationSettings());
 	const sharedTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(vueCompilerOptions.target));
 	const plugins = getDefaultVueLanguagePlugins(ts, host.getCurrentDirectory(), compilerOptions, vueCompilerOptions, extraPlugins);
 	const vueLanguageModule: EmbeddedLanguageModule = {
 		createSourceFile(fileName, snapshot) {
-			if (fileName.endsWith('.vue')) {
+			if (exts.some(ext => fileName.endsWith(ext))) {
 				return createSourceFile(fileName, snapshot, ts, plugins);
 			}
 		},
@@ -56,7 +55,7 @@ export function createVueLanguageContext(
 		},
 		getScriptFileNames() {
 			return [
-				...documentRegistry.getDirs().map(dir => path.join(dir, localTypes.typesFileName)),
+				...core.__internal__.mapper.getDirs().map(dir => path.join(dir, localTypes.typesFileName)),
 				...host.getScriptFileNames(),
 			];
 		},
@@ -100,17 +99,10 @@ export function createVueLanguageContext(
 			return target[p];
 		}
 	});
-	const core = createLanguageContext(proxyHost, [vueLanguageModule], documentRegistry as unknown as ReturnType<typeof createDocumentRegistry>);
+	const core = createLanguageContext(proxyHost, [vueLanguageModule]);
 
 	return {
 		...core,
-		mapper: new Proxy(documentRegistry, {
-			get: (target, property) => {
-				core.update();
-				return target[property as keyof typeof documentRegistry];
-			},
-		}),
-		vueLanguageModule,
 		plugins,
 	};
 }

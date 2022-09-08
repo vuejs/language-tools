@@ -5,8 +5,9 @@ import { EmbeddedLanguageServicePlugin, useTypeScriptModule } from '@volar/embed
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { VueDocument } from '../vueDocuments';
+import { SourceFileDocument } from '../vueDocuments';
 import useHtmlPlugin from '@volar-plugins/html';
+import * as vue from '@volar/vue-language-core';
 
 const dataProvider = html.newHTMLDataProvider('vue', {
 	version: 1.1,
@@ -94,7 +95,7 @@ const dataProvider = html.newHTMLDataProvider('vue', {
 });
 
 export default function (options: {
-	getVueDocument(document: TextDocument): VueDocument | undefined,
+	getVueDocument(document: TextDocument): SourceFileDocument | undefined,
 	tsLs: ts2.LanguageService | undefined,
 	isJsxMissing: boolean,
 }): EmbeddedLanguageServicePlugin {
@@ -112,10 +113,10 @@ export default function (options: {
 		...htmlPlugin,
 
 		doValidation(document) {
-			return worker(document, (vueDocument) => {
+			return worker(document, (vueDocument, vueSourceFile) => {
 
 				const result: vscode.Diagnostic[] = [];
-				const sfc = vueDocument.file.sfc;
+				const sfc = vueSourceFile.sfc;
 
 				if (sfc.scriptSetup && sfc.scriptSetupAst) {
 					const scriptSetupRanges = parseScriptSetupRanges(ts, sfc.scriptSetupAst);
@@ -133,7 +134,7 @@ export default function (options: {
 					}
 				}
 
-				if (options.tsLs && !options.tsLs.__internal__.isValidFile(vueDocument.file.tsFileName)) {
+				if (options.tsLs && !options.tsLs.__internal__.isValidFile(vueSourceFile.tsFileName)) {
 					for (const script of [sfc.script, sfc.scriptSetup]) {
 
 						if (!script || script.content === '')
@@ -172,10 +173,10 @@ export default function (options: {
 		},
 
 		findDocumentSymbols(document) {
-			return worker(document, (vueDocument) => {
+			return worker(document, (vueDocument, vueSourceFile) => {
 
 				const result: vscode.SymbolInformation[] = [];
-				const descriptor = vueDocument.file.sfc;
+				const descriptor = vueSourceFile.sfc;
 
 				if (descriptor.template) {
 					result.push({
@@ -233,9 +234,9 @@ export default function (options: {
 		},
 
 		getFoldingRanges(document) {
-			return worker(document, (vueDocument) => {
+			return worker(document, (vueDocument, vueSourceFile) => {
 
-				const sfcWithEmptyBlocks = getSfcCodeWithEmptyBlocks(vueDocument, document.getText());
+				const sfcWithEmptyBlocks = getSfcCodeWithEmptyBlocks(vueSourceFile, document.getText());
 				const sfcWithEmptyBlocksDocument = TextDocument.create(document.uri, document.languageId, document.version, sfcWithEmptyBlocks);
 
 				return htmlPlugin.htmlLs.getFoldingRanges(sfcWithEmptyBlocksDocument);
@@ -243,9 +244,9 @@ export default function (options: {
 		},
 
 		getSelectionRanges(document, positions) {
-			return worker(document, (vueDocument) => {
+			return worker(document, (vueDocument, vueSourceFile) => {
 
-				const sfcWithEmptyBlocks = getSfcCodeWithEmptyBlocks(vueDocument, document.getText());
+				const sfcWithEmptyBlocks = getSfcCodeWithEmptyBlocks(vueSourceFile, document.getText());
 				const sfcWithEmptyBlocksDocument = TextDocument.create(document.uri, document.languageId, document.version, sfcWithEmptyBlocks);
 
 				return htmlPlugin.htmlLs.getSelectionRanges(sfcWithEmptyBlocksDocument, positions);
@@ -253,14 +254,14 @@ export default function (options: {
 		},
 
 		format(document) {
-			return worker(document, (vueDocument) => {
+			return worker(document, (vueDocument, vueSourceFile) => {
 
 				const blocks = [
-					vueDocument.file.sfc.script,
-					vueDocument.file.sfc.scriptSetup,
-					vueDocument.file.sfc.template,
-					...vueDocument.file.sfc.styles,
-					...vueDocument.file.sfc.customBlocks,
+					vueSourceFile.sfc.script,
+					vueSourceFile.sfc.scriptSetup,
+					vueSourceFile.sfc.template,
+					...vueSourceFile.sfc.styles,
+					...vueSourceFile.sfc.customBlocks,
 				].filter((block): block is NonNullable<typeof block> => !!block)
 					.sort((a, b) => b.start - a.start);
 
@@ -287,19 +288,22 @@ export default function (options: {
 		},
 	};
 
-	function worker<T>(document: TextDocument, callback: (vueDocument: VueDocument) => T) {
+	function worker<T>(document: TextDocument, callback: (vueDocument: SourceFileDocument, vueSourceFile: vue.SourceFile) => T) {
 
 		const vueDocument = options.getVueDocument(document);
 		if (!vueDocument)
 			return;
 
-		return callback(vueDocument);
+		if (!vue.isSourceFile(vueDocument.file))
+			return;
+
+		return callback(vueDocument, vueDocument.file);
 	}
 }
 
-function getSfcCodeWithEmptyBlocks(vueDocument: VueDocument, sfcCode: string) {
+function getSfcCodeWithEmptyBlocks(vueSourceFile: vue.SourceFile, sfcCode: string) {
 
-	const descriptor = vueDocument.file.sfc;
+	const descriptor = vueSourceFile.sfc;
 	const blocks = [
 		descriptor.template, // relate to below
 		descriptor.script,

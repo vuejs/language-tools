@@ -1,7 +1,7 @@
 import { EmbeddedStructure } from '@volar/embedded-language-core';
-import { EmbeddedDocumentSourceMap, VueDocument } from '../vueDocuments';
+import { EmbeddedDocumentSourceMap, SourceFileDocument } from '../vueDocuments';
 
-export async function visitEmbedded(vueDocument: VueDocument, embeddeds: EmbeddedStructure[], cb: (sourceMap: EmbeddedDocumentSourceMap) => Promise<boolean>) {
+export async function visitEmbedded(vueDocument: SourceFileDocument, embeddeds: EmbeddedStructure[], cb: (sourceMap: EmbeddedDocumentSourceMap) => Promise<boolean>) {
 
 	for (const embedded of embeddeds) {
 

@@ -3,7 +3,7 @@ import type { LanguageServiceRuntimeContext } from '../types';
 import { languageFeatureWorker } from '../utils/featureWorkers';
 import * as dedupe from '../utils/dedupe';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { VueDocuments } from '../vueDocuments';
+import { SourceFileDocuments } from '../vueDocuments';
 
 export function register(context: LanguageServiceRuntimeContext) {
 
@@ -189,7 +189,7 @@ export function mergeWorkspaceEdits(original: vscode.WorkspaceEdit, ...others: v
  */
 export function embeddedEditToSourceEdit(
 	tsResult: vscode.WorkspaceEdit,
-	vueDocuments: VueDocuments,
+	vueDocuments: SourceFileDocuments,
 ) {
 
 	const vueResult: vscode.WorkspaceEdit = {};
