@@ -1,6 +1,6 @@
 import * as vue from '@volar/vue-language-core';
 import * as shared from '@volar/shared';
-import { computed, ComputedRef } from '@vue/reactivity';
+import { computed } from '@vue/reactivity';
 import { SourceMapBase } from '@volar/source-map';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { walkElementNodes } from '@volar/vue-language-core';
@@ -8,7 +8,6 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import * as vscode from 'vscode-languageserver-protocol';
 import type * as ts2 from '@volar/typescript-language-service';
 
-import type * as _ from '@volar/vue-language-core/node_modules/@vue/reactivity'; // fix build error
 import { URI } from 'vscode-uri';
 
 export type VueDocuments = ReturnType<typeof parseVueDocuments>;
@@ -107,10 +106,7 @@ export function parseVueDocuments(
 	tsLs: ts2.LanguageService,
 ) {
 
-	// cache map
-	const vueDocuments = useCacheMap<vue.SourceFile, VueDocument>(vueFile => {
-		return parseVueDocument(rootUri, vueFile, tsLs);
-	});
+	const _vueDocuments = new WeakMap<vue.SourceFile, VueDocument>();
 
 	// reactivity
 	const embeddedDocumentsMap = computed(() => {
@@ -149,7 +145,7 @@ export function parseVueDocuments(
 			const vueFile = vueLsCtx.mapper.get(fileName);
 
 			if (vueFile) {
-				return vueDocuments.get(vueFile);
+				return get(vueFile);
 			}
 		},
 		fromEmbeddedDocument: (document: TextDocument) => {
@@ -203,8 +199,16 @@ export function parseVueDocuments(
 		},
 	};
 
+	function get(vueFile: vue.SourceFile) {
+		let vueDocument = _vueDocuments.get(vueFile);
+		if (!vueDocument) {
+			vueDocument = parseVueDocument(rootUri, vueFile, tsLs);
+			_vueDocuments.set(vueFile, vueDocument);
+		}
+		return vueDocument;
+	}
 	function getAll() {
-		return vueLsCtx.mapper.getAll().map(vueFile => vueDocuments.get(vueFile));
+		return vueLsCtx.mapper.getAll().map(get);
 	}
 }
 
@@ -220,30 +224,8 @@ export function parseVueDocument(
 		componentItems: [],
 	};
 	const embeddedDocumentVersions = new Map<string, number>();
-
-	// cache map
-	const embeddedDocumentsMap = useCacheMap<vue.EmbeddedFile, TextDocument>(embeddedFile => {
-
-		const uri = shared.getUriByPath(rootUri, embeddedFile.fileName);
-		const newVersion = (embeddedDocumentVersions.get(uri.toLowerCase()) ?? 0) + 1;
-
-		embeddedDocumentVersions.set(uri.toLowerCase(), newVersion);
-
-		return TextDocument.create(
-			uri,
-			shared.syntaxToLanguageId(embeddedFile.fileName.split('.').pop()!),
-			newVersion,
-			embeddedFile.codeGen.getText(),
-		);
-	});
-	const sourceMapsMap = useCacheMap<vue.Embedded, EmbeddedDocumentSourceMap>(embedded => {
-		return new EmbeddedDocumentSourceMap(
-			embedded.file,
-			document.value,
-			embeddedDocumentsMap.get(embedded.file),
-			embedded.sourceMap,
-		);
-	});
+	const embeddedDocuments = new WeakMap<vue.EmbeddedFile, TextDocument>();
+	const sourceMaps = new WeakMap<vue.Embedded, [number, EmbeddedDocumentSourceMap]>();
 
 	// computed
 	const document = computed(() => TextDocument.create(
@@ -252,15 +234,10 @@ export function parseVueDocument(
 		documentVersion++,
 		vueFile.text,
 	));
-	const sourceMaps = computed(() => {
+	const allSourceMaps = computed(() => {
 		const result: EmbeddedDocumentSourceMap[] = [];
 		vue.forEachEmbeddeds(vueFile.embeddeds, embedded => {
-			result.push(new EmbeddedDocumentSourceMap(
-				embedded.file,
-				document.value,
-				embeddedDocumentsMap.get(embedded.file),
-				embedded.sourceMap,
-			));
+			result.push(getSourceMap(embedded));
 		});
 		return result;
 	});
@@ -268,11 +245,13 @@ export function parseVueDocument(
 		const result: TeleportSourceMap[] = [];
 		vue.forEachEmbeddeds(vueFile.embeddeds, embedded => {
 			if (embedded.teleport) {
-				result.push(new TeleportSourceMap(
+				const embeddedDocument = getEmbeddedDocument(embedded.file)!;
+				const sourceMap = new TeleportSourceMap(
 					embedded.file,
-					embeddedDocumentsMap.get(embedded.file),
+					embeddedDocument,
 					embedded.teleport,
-				));
+				);
+				result.push(sourceMap);
 			}
 		});
 		return result;
@@ -320,14 +299,58 @@ export function parseVueDocument(
 	return {
 		uri: shared.getUriByPath(rootUri, vueFile.fileName),
 		file: vueFile,
-		embeddedDocumentsMap,
-		sourceMapsMap,
-		getTemplateData: getTemplateData,
-		getSourceMaps: () => sourceMaps.value,
+		getSourceMap,
+		getEmbeddedDocument,
+		getTemplateData,
+		getSourceMaps: () => allSourceMaps.value,
 		getTeleports: () => teleports.value,
 		getDocument: () => document.value,
 		getTemplateTagsAndAttrs: () => templateTagsAndAttrs.value,
 	};
+
+	function getSourceMap(embedded: vue.Embedded) {
+
+		let cache = sourceMaps.get(embedded);
+
+		if (!cache || cache[0] !== document.value.version) {
+
+			cache = [
+				document.value.version,
+				new EmbeddedDocumentSourceMap(
+					embedded.file,
+					document.value,
+					getEmbeddedDocument(embedded.file),
+					embedded.sourceMap,
+				)
+			];
+			sourceMaps.set(embedded, cache);
+		}
+
+		return cache[1];
+	}
+
+	function getEmbeddedDocument(embeddedFile: vue.EmbeddedFile) {
+
+		let document = embeddedDocuments.get(embeddedFile);
+
+		if (!document) {
+
+			const uri = shared.getUriByPath(rootUri, embeddedFile.fileName);
+			const newVersion = (embeddedDocumentVersions.get(uri.toLowerCase()) ?? 0) + 1;
+
+			embeddedDocumentVersions.set(uri.toLowerCase(), newVersion);
+
+			document = TextDocument.create(
+				uri,
+				shared.syntaxToLanguageId(embeddedFile.fileName.split('.').pop()!),
+				newVersion,
+				embeddedFile.codeGen.getText(),
+			);
+			embeddedDocuments.set(embeddedFile, document);
+		}
+
+		return document;
+	}
 
 	async function getTemplateData() {
 
@@ -343,7 +366,7 @@ export function parseVueDocument(
 		});
 
 		if (file && file.codeGen.getText().indexOf(vue.SearchTexts.Components) >= 0) {
-			const document = embeddedDocumentsMap.get(file);
+			const document = getEmbeddedDocument(file);
 
 			let components = await tsLs?.doComplete(
 				shared.getUriByPath(rootUri, file!.fileName),
@@ -367,27 +390,5 @@ export function parseVueDocument(
 		}
 
 		return templateScriptData;
-	}
-}
-
-export function useCacheMap<T extends object, K>(parse: (t: T) => K) {
-
-	const cache = new WeakMap<T, ComputedRef<K>>();
-
-	return {
-		get,
-	};
-
-	function get(source: T) {
-
-		let result = cache.get(source);
-
-		if (!result) {
-
-			result = computed(() => parse(source));
-			cache.set(source, result);
-		}
-
-		return result.value;
 	}
 }

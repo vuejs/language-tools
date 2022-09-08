@@ -726,7 +726,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				}
 			});
 
-			const document = file ? sourceFile.embeddedDocumentsMap.get(file) : undefined;
+			const document = file ? sourceFile.getEmbeddedDocument(file) : undefined;
 			const templateTagNames = [...sourceFile.getTemplateTagsAndAttrs().tags.keys()];
 
 			if (file && document) {

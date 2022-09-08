@@ -1,6 +1,8 @@
 import { URI } from 'vscode-uri';
 import { getUriByPath as _getUriByPath } from './path';
 
+export * as _ from 'vscode-uri';
+
 interface Options<T> {
 	delete(key: string): boolean;
 	get(key: string): T | undefined;
@@ -12,7 +14,8 @@ interface Options<T> {
 
 export function createUriMap<T>(map: Options<T> = new Map<string, T>()) {
 
-	const uriToUriKeys: Record<string, string> = {};
+	const uriToUriKeys: Map<string, string> = new Map();
+	const pathToUriKeys: WeakMap<URI, Map<string, string>> = new WeakMap();
 
 	return {
 		clear,
@@ -21,12 +24,27 @@ export function createUriMap<T>(map: Options<T> = new Map<string, T>()) {
 		uriGet,
 		uriHas,
 		uriSet,
+		pathDelete,
+		pathGet,
+		pathHas,
+		pathSet,
 	};
 
 	function getUriByUri(uri: string) {
-		if (uriToUriKeys[uri] === undefined)
-			uriToUriKeys[uri] = normalizeUri(uri).toLowerCase();
-		return uriToUriKeys[uri];
+		if (!uriToUriKeys.has(uri))
+			uriToUriKeys.set(uri, normalizeUri(uri).toLowerCase());
+		return uriToUriKeys.get(uri)!;
+	}
+	function getUriByPath(rootUri: URI, path: string) {
+		let map = pathToUriKeys.get(rootUri);
+		if (!map) {
+			map = new Map();
+			pathToUriKeys.set(rootUri, map);
+		}
+		if (!map.has(path)) {
+			map.set(path, _getUriByPath(rootUri, path).toLowerCase());
+		}
+		return map.get(path)!;
 	}
 
 	function clear() {
@@ -48,38 +66,18 @@ export function createUriMap<T>(map: Options<T> = new Map<string, T>()) {
 	function uriSet(_uri: string, item: T) {
 		return map.set(getUriByUri(_uri), item);
 	}
-}
 
-export function createUriAndPathMap<T>(rootUri: URI, map: Options<T> = new Map<string, T>()) {
-
-	const base = createUriMap(map);
-	const pathToUriKeys: Record<string, string> = {};
-
-	return {
-		...base,
-		pathDelete,
-		pathGet,
-		pathHas,
-		pathSet,
-	};
-
-	function getUriByPath(path: string) {
-		if (pathToUriKeys[path] === undefined)
-			pathToUriKeys[path] = _getUriByPath(rootUri, path).toLowerCase();
-		return pathToUriKeys[path];
+	function pathDelete(rootUri: URI, path: string) {
+		return uriDelete(getUriByPath(rootUri, path));
 	}
-
-	function pathDelete(path: string) {
-		return map.delete(getUriByPath(path));
+	function pathGet(rootUri: URI, path: string) {
+		return uriGet(getUriByPath(rootUri, path));
 	}
-	function pathGet(path: string) {
-		return map.get(getUriByPath(path));
+	function pathHas(rootUri: URI, path: string) {
+		return uriGet(getUriByPath(rootUri, path));
 	}
-	function pathHas(path: string) {
-		return map.has(getUriByPath(path));
-	}
-	function pathSet(path: string, item: T) {
-		return map.set(getUriByPath(path), item);
+	function pathSet(rootUri: URI, path: string, item: T) {
+		return uriSet(getUriByPath(rootUri, path), item);
 	}
 }
 

@@ -44,12 +44,12 @@ export async function createProject(
 		};
 	}
 
-	const scripts = shared.createUriAndPathMap<{
+	const scripts = shared.createUriMap<{
 		version: number,
 		fileName: string,
 		snapshot: ts.IScriptSnapshot | undefined,
 		snapshotVersion: number | undefined,
-	}>(rootUri);
+	}>();
 	const languageServiceHost = createLanguageServiceHost();
 
 	const disposeWatchEvent = fsHost.onDidChangeWatchedFiles(params => {
@@ -192,25 +192,21 @@ export async function createProject(
 
 		function getScriptVersion(fileName: string) {
 
-			fileName = sys.resolvePath(fileName);
-
-			const doc = documents.data.uriGet(shared.getUriByPath(rootUri, fileName));
+			const doc = documents.data.pathGet(rootUri, fileName);
 			if (doc) {
 				return doc.version.toString();
 			}
 
-			return scripts.pathGet(fileName)?.version.toString() ?? '';
+			return scripts.pathGet(rootUri, fileName)?.version.toString() ?? '';
 		}
 		function getScriptSnapshot(fileName: string) {
 
-			fileName = sys.resolvePath(fileName);
-
-			const doc = documents.data.uriGet(shared.getUriByPath(rootUri, fileName));
+			const doc = documents.data.pathGet(rootUri, fileName);
 			if (doc) {
 				return doc.getSnapshot();
 			}
 
-			const script = scripts.pathGet(fileName);
+			const script = scripts.pathGet(rootUri, fileName);
 			if (script && script.snapshotVersion === script.version) {
 				return script.snapshot;
 			}
@@ -224,7 +220,7 @@ export async function createProject(
 						script.snapshotVersion = script.version;
 					}
 					else {
-						scripts.pathSet(fileName, {
+						scripts.pathSet(rootUri, fileName, {
 							version: -1,
 							fileName: fileName,
 							snapshot: snapshot,

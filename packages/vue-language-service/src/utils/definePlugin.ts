@@ -11,7 +11,7 @@ export async function visitEmbedded(vueDocument: VueDocument, embeddeds: Embedde
 
 		if (embedded.self) {
 
-			const sourceMap = vueDocument.sourceMapsMap.get(embedded.self);
+			const sourceMap = vueDocument.getSourceMap(embedded.self);
 
 			if (!await cb(sourceMap)) {
 				return false;

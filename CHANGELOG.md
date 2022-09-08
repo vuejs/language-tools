@@ -1,17 +1,27 @@
 # Changelog
 
-## 0.40.11 (2022/9/8)
+## 0.40.13 (2022/9/8)
 
-- feat: support for typescript class/object literal method completions ([#1835](https://github.com/johnsoncodehk/volar/issues/1835))
-- fix: langauge server crash if client did not support `onDidChangeWorkspaceFolders` ([#1834](https://github.com/johnsoncodehk/volar/issues/1834))
-- fix: "Format Selection" embedded range incorrect with initialIndentBracket
-- fix: formatting break document with `editor.formatOnPaste` enabled ([#1840](https://github.com/johnsoncodehk/volar/issues/1840)) ([#1841](https://github.com/johnsoncodehk/volar/issues/1841)) ([#1842](https://github.com/johnsoncodehk/volar/issues/1842)) ([#1843](https://github.com/johnsoncodehk/volar/issues/1843)) ([#1835](https://github.com/johnsoncodehk/volar/issues/1835))
+- fix: cycle reactive reference lead to memory leak
+
+## 0.40.12 (2022/9/8)
+
+- perf: fix incremental template compile not working
+- perf: cache path resolve result on `getScriptVersion`
+- perf: faster code mapping range transform
 
 ### Our Sponsors
 
 <a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
 	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
 </a>
+
+## 0.40.11 (2022/9/8)
+
+- feat: support for typescript class/object literal method completions ([#1835](https://github.com/johnsoncodehk/volar/issues/1835))
+- fix: langauge server crash if client did not support `onDidChangeWorkspaceFolders` ([#1834](https://github.com/johnsoncodehk/volar/issues/1834))
+- fix: "Format Selection" embedded range incorrect with initialIndentBracket
+- fix: formatting break document with `editor.formatOnPaste` enabled ([#1840](https://github.com/johnsoncodehk/volar/issues/1840)) ([#1841](https://github.com/johnsoncodehk/volar/issues/1841)) ([#1842](https://github.com/johnsoncodehk/volar/issues/1842)) ([#1843](https://github.com/johnsoncodehk/volar/issues/1843)) ([#1835](https://github.com/johnsoncodehk/volar/issues/1835))
 
 ## 0.40.10 (2022/9/7)
 

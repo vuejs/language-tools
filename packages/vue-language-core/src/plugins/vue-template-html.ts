@@ -164,7 +164,7 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 						}
 					}
 					else if (node.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-						if (node.isStatic) { // slot name
+						if (withinChangeRange(node.loc) && node.isStatic) { // slot name
 							return false;
 						}
 						node.content = node.loc.source;

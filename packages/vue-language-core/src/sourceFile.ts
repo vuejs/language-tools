@@ -276,6 +276,9 @@ export function createSourceFile(
 			return Object.values(embeddedFiles);
 		});
 		return computed(() => {
+
+			const baseOffsetMap = new Map<string, number>();
+
 			return files.value.map(_file => {
 				const file = _file.value;
 				const sourceMap = new EmbeddedFileSourceMap();
@@ -305,6 +308,56 @@ export function createSourceFile(
 				};
 				return embedded;
 			});
+
+			function embeddedRangeToVueRange(data: EmbeddedFileMappingData, range: Mapping<unknown>['sourceRange']) {
+
+				if (data.vueTag) {
+
+					const key = data.vueTag + '-' + data.vueTagIndex;
+					let baseOffset = baseOffsetMap.get(key);
+
+					if (baseOffset === undefined) {
+
+						if (data.vueTag === 'script' && sfc.script) {
+							baseOffset = sfc.script.startTagEnd;
+						}
+						else if (data.vueTag === 'scriptSetup' && sfc.scriptSetup) {
+							baseOffset = sfc.scriptSetup.startTagEnd;
+						}
+						else if (data.vueTag === 'template' && sfc.template) {
+							baseOffset = sfc.template.startTagEnd;
+						}
+						else if (data.vueTag === 'style') {
+							baseOffset = sfc.styles[data.vueTagIndex!].startTagEnd;
+						}
+						else if (data.vueTag === 'customBlock') {
+							baseOffset = sfc.customBlocks[data.vueTagIndex!].startTagEnd;
+						}
+
+						if (baseOffset !== undefined) {
+							baseOffsetMap.set(key, baseOffset);
+						}
+					}
+
+					if (baseOffset !== undefined) {
+						return {
+							start: baseOffset + range.start,
+							end: baseOffset + range.end,
+						};
+					}
+				}
+
+				if (data.vueTag === 'scriptSrc' && sfc.script?.src) {
+					const vueStart = fileContent.value.substring(0, sfc.script.startTagEnd).lastIndexOf(sfc.script.src);
+					const vueEnd = vueStart + sfc.script.src.length;
+					return {
+						start: vueStart - 1,
+						end: vueEnd + 1,
+					};
+				}
+
+				return range;
+			}
 		});
 	});
 	const allEmbeddeds = computed(() => {
@@ -401,54 +454,6 @@ export function createSourceFile(
 		},
 	};
 
-	function embeddedRangeToVueRange(data: EmbeddedFileMappingData, range: Mapping<unknown>['sourceRange']) {
-
-		if (data.vueTag === 'scriptSrc') {
-			if (!sfc.script?.src) throw '!sfc.script?.src';
-			const vueStart = fileContent.value.substring(0, sfc.script.startTagEnd).lastIndexOf(sfc.script.src);
-			const vueEnd = vueStart + sfc.script.src.length;
-			return {
-				start: vueStart - 1,
-				end: vueEnd + 1,
-			};
-		}
-		else if (data.vueTag === 'script') {
-			if (!sfc.script) throw '!sfc.script';
-			return {
-				start: range.start + sfc.script.startTagEnd,
-				end: range.end + sfc.script.startTagEnd,
-			};
-		}
-		else if (data.vueTag === 'scriptSetup') {
-			if (!sfc.scriptSetup) throw '!sfc.scriptSetup';
-			return {
-				start: range.start + sfc.scriptSetup.startTagEnd,
-				end: range.end + sfc.scriptSetup.startTagEnd,
-			};
-		}
-		else if (data.vueTag === 'template') {
-			if (!sfc.template) throw '!sfc.template';
-			return {
-				start: range.start + sfc.template.startTagEnd,
-				end: range.end + sfc.template.startTagEnd,
-			};
-		}
-		else if (data.vueTag === 'style') {
-			if (data.vueTagIndex === undefined) throw 'data.vueTagIndex === undefined';
-			return {
-				start: range.start + sfc.styles[data.vueTagIndex].startTagEnd,
-				end: range.end + sfc.styles[data.vueTagIndex].startTagEnd,
-			};
-		}
-		else if (data.vueTag === 'customBlock') {
-			if (data.vueTagIndex === undefined) throw 'data.vueTagIndex === undefined';
-			return {
-				start: range.start + sfc.customBlocks[data.vueTagIndex].startTagEnd,
-				end: range.end + sfc.customBlocks[data.vueTagIndex].startTagEnd,
-			};
-		}
-		return range;
-	}
 	function update(newScriptSnapshot: ts.IScriptSnapshot, init = false) {
 
 		if (newScriptSnapshot === snapshot.value && !init) {
