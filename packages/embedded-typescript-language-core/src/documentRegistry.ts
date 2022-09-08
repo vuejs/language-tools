@@ -77,6 +77,10 @@ export function createDocumentRegistry<T extends EmbeddedLangaugeSourceFile>() {
 			sourceMapFilter?: (sourceMap: EmbeddedFileSourceMap) => boolean,
 		) {
 
+			if (fileName.endsWith('/__VLS_types.ts')) { // TODO: monkey fix
+				return;
+			}
+
 			if (end === undefined)
 				end = start;
 
