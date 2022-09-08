@@ -100,10 +100,16 @@ export function createVueLanguageContext(
 			return target[p];
 		}
 	});
+	const core = createLanguageContext(proxyHost, [vueLanguageModule], documentRegistry as any);
 
 	return {
-		...createLanguageContext(proxyHost, [vueLanguageModule], documentRegistry as any),
-		mapper: documentRegistry,
-		plugins,
+		...core,
+		mapper: new Proxy(documentRegistry, {
+			get: (target, property) => {
+				core.update();
+				return target[property as keyof typeof documentRegistry];
+			},
+		}),
+		vueLanguageModule,
 	};
 }

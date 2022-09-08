@@ -94,12 +94,7 @@ export function createLanguageContext<T extends EmbeddedLangaugeSourceFile>(
 				return target[property] || host[property];
 			},
 		}),
-		mapper: new Proxy(documentRegistry, {
-			get: (target, property: keyof typeof documentRegistry) => {
-				update();
-				return target[property];
-			},
-		}),
+		update,
 	};
 
 	function update() {
