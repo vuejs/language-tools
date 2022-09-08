@@ -87,7 +87,7 @@ export function getDocumentService(
 			}
 		},
 	};
-	const vuePlugins = vue.getPlugins(ts, '', {}, {}, []);
+	const vuePlugins = vue.getDefaultVueLanguagePlugins(ts, '', {}, {}, []);
 
 	return {
 		format: format.register(context),

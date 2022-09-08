@@ -102,7 +102,7 @@ export class TeleportSourceMap extends SourceMap<vue.TeleportMappingData> {
 
 export function parseVueDocuments(
 	rootUri: URI,
-	vueLsCtx: vue.LanguageContext,
+	vueLsCtx: vue.VueLanguageContext,
 	tsLs: ts2.LanguageService,
 ) {
 
@@ -145,7 +145,7 @@ export function parseVueDocuments(
 			const vueFile = vueLsCtx.mapper.get(fileName);
 
 			if (vueFile) {
-				return get(vueFile);
+				return get(vueFile[0]);
 			}
 		},
 		fromEmbeddedDocument: (document: TextDocument) => {
@@ -208,7 +208,7 @@ export function parseVueDocuments(
 		return vueDocument;
 	}
 	function getAll() {
-		return vueLsCtx.mapper.getAll().map(get);
+		return vueLsCtx.mapper.getAll().map(file => get(file[0]));
 	}
 }
 

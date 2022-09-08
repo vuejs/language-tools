@@ -1,4 +1,5 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
+import { EmbeddedStructure } from './sourceFile';
 
 export type LanguageServiceHost = ts.LanguageServiceHost & {
 	getTypeScriptModule(): typeof import('typescript/lib/tsserverlibrary');
@@ -65,4 +66,15 @@ export interface TeleportMappingData {
 export interface TextRange {
 	start: number,
 	end: number,
+}
+
+export interface EmbeddedLangaugeSourceFile {
+	fileName: string,
+	text: string,
+	embeddeds: EmbeddedStructure[],
+}
+
+export interface EmbeddedLanguageModule {
+	createSourceFile(fileName: string, snapshot: ts.IScriptSnapshot): EmbeddedLangaugeSourceFile | undefined;
+	updateSourceFile(sourceFile: EmbeddedLangaugeSourceFile, snapshot: ts.IScriptSnapshot): void;
 }
