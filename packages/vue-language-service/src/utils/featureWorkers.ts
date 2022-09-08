@@ -132,11 +132,9 @@ export async function languageFeatureWorker<T, K>(
 
 		await visitEmbedded(vueDocument, embeddeds, async sourceMap => {
 
-			const plugins = context.getPlugins();
-
 			for (const mappedArg of transformArg(arg, sourceMap)) {
 
-				for (const plugin of plugins) {
+				for (const plugin of context.plugins) {
 
 					const embeddedResult = await worker(plugin, sourceMap.mappedDocument, mappedArg, sourceMap, vueDocument);
 
@@ -167,9 +165,7 @@ export async function languageFeatureWorker<T, K>(
 
 	if (document && (results.length === 0 || !!combineResult)) {
 
-		const plugins = context.getPlugins();
-
-		for (const plugin of plugins) {
+		for (const plugin of context.plugins) {
 
 			const embeddedResult = await worker(plugin, document, arg, undefined, undefined);
 

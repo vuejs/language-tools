@@ -114,25 +114,9 @@ export function createLanguageService(
 		vueDocuments,
 		getTsLs: () => tsLs,
 		getTextDocument,
-		getPlugins: () => [
-			...customPlugins,
-			vuePlugin,
-			cssPlugin,
-			vueTemplateHtmlPlugin,
-			vueTemplatePugPlugin,
-			jsonPlugin,
-			referencesCodeLensPlugin,
-			htmlPugConversionsPlugin,
-			scriptSetupConversionsPlugin,
-			refSugarConversionsPlugin,
-			tagNameCasingConversionsPlugin,
-			scriptTsPlugin,
-			autoDotValuePlugin,
-			// put emmet plugin last to fix https://github.com/johnsoncodehk/volar/issues/1088
-			emmetPlugin,
-		],
-		getPluginId: plugin => allPlugins.indexOf(plugin),
-		getPluginById: id => allPlugins[id],
+		get plugins() {
+			return allPlugins;
+		},
 	};
 	const apis = {
 		doValidation: diagnostics.register(context),
@@ -227,14 +211,15 @@ export function createLanguageService(
 		vueTemplateHtmlPlugin,
 		vueTemplatePugPlugin,
 		jsonPlugin,
-		emmetPlugin,
-		autoDotValuePlugin,
 		referencesCodeLensPlugin,
 		htmlPugConversionsPlugin,
 		scriptSetupConversionsPlugin,
 		refSugarConversionsPlugin,
 		tagNameCasingConversionsPlugin,
 		scriptTsPlugin,
+		autoDotValuePlugin,
+		// put emmet plugin last to fix https://github.com/johnsoncodehk/volar/issues/1088
+		emmetPlugin,
 	];
 
 	return apis;

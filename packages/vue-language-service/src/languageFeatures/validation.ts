@@ -204,7 +204,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					if (isTsDocument(document) !== isTs)
 						return;
 
-					const pluginId = context.getPluginId(plugin);
+					const pluginId = context.plugins.indexOf(plugin);
 					const pluginCache = cacheMap.get(pluginId) ?? cacheMap.set(pluginId, new Map()).get(pluginId)!;
 					const cache = pluginCache.get(document.uri);
 					const tsProjectVersion = isTs ? context.getTsLs().__internal__.host.getProjectVersion?.() : undefined;

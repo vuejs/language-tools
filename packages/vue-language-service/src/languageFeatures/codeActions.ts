@@ -81,7 +81,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					const data: PluginCodeActionData = {
 						uri,
 						originalItem: _codeAction,
-						pluginId: context.getPluginId(plugin),
+						pluginId: context.plugins.indexOf(plugin),
 						sourceMap: sourceMap ? {
 							embeddedDocumentUri: sourceMap.mappedDocument.uri,
 						} : undefined,

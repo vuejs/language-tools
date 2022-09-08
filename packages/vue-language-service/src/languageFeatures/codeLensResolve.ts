@@ -11,7 +11,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 		if (data) {
 
-			const plugin = context.getPluginById(data.pluginId);
+			const plugin = context.plugins[data.pluginId];
 
 			if (!plugin)
 				return item;
@@ -26,7 +26,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				command: resolvedOriginalItem.command ? {
 					...resolvedOriginalItem.command,
 					command: executePluginCommand,
-					arguments: <ExecutePluginCommandArgs>[data.uri, context.getPluginId(plugin), resolvedOriginalItem.command],
+					arguments: <ExecutePluginCommandArgs>[data.uri, context.plugins.indexOf(plugin), resolvedOriginalItem.command],
 				} : undefined,
 				range: item.range, // range already transformed in codeLens request
 			};

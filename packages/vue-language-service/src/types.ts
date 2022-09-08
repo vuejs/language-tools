@@ -14,9 +14,7 @@ export interface DocumentServiceRuntimeContext {
 export interface LanguageServiceRuntimeContext {
 	host: VueLanguageServiceHost;
 	vueDocuments: VueDocuments;
+	plugins: EmbeddedLanguageServicePlugin[];
 	getTextDocument(uri: string): TextDocument | undefined;
-	getPlugins(): EmbeddedLanguageServicePlugin[];
-	getPluginId(plugin: EmbeddedLanguageServicePlugin): number;
-	getPluginById(id: number): EmbeddedLanguageServicePlugin | undefined;
 	getTsLs(): ts2.LanguageService;
 };

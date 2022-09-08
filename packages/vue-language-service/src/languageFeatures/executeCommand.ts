@@ -20,13 +20,13 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 			if (pluginId !== undefined) {
 
-				const plugin = context.getPluginById(pluginId);
+				const plugin = context.plugins[pluginId];
 
 				await plugin?.doExecuteCommand?.(originalCommand.command, originalCommand.arguments as any, executeCommandContext);
 			}
 			else {
 
-				for (const plugin of context.getPlugins()) {
+				for (const plugin of context.plugins) {
 
 					await plugin.doExecuteCommand?.(originalCommand.command, originalCommand.arguments as any, executeCommandContext);
 				}

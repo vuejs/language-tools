@@ -69,7 +69,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 								const data: PluginCompletionData = {
 									uri,
 									originalItem: item,
-									pluginId: context.getPluginId(cacheData.plugin),
+									pluginId: context.plugins.indexOf(cacheData.plugin),
 									sourceMap: {
 										embeddedDocumentUri: sourceMap.mappedDocument.uri,
 									},
@@ -103,7 +103,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 							const data: PluginCompletionData = {
 								uri,
 								originalItem: item,
-								pluginId: context.getPluginId(cacheData.plugin),
+								pluginId: context.plugins.indexOf(cacheData.plugin),
 								sourceMap: undefined,
 							};
 							return {
@@ -134,7 +134,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				await visitEmbedded(vueDocument, embeddeds, async sourceMap => {
 
-					const plugins = context.getPlugins().sort(sortPlugins);
+					const plugins = context.plugins.sort(sortPlugins);
 
 					for (const [embeddedRange, data] of sourceMap.getMappedRanges(position, position, data => !!data.capabilities.completion)) {
 
@@ -172,7 +172,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 									const data: PluginCompletionData = {
 										uri,
 										originalItem: item,
-										pluginId: context.getPluginId(plugin),
+										pluginId: context.plugins.indexOf(plugin),
 										sourceMap: {
 											embeddedDocumentUri: sourceMap.mappedDocument.uri,
 										}
@@ -205,7 +205,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 			if (document = context.getTextDocument(uri)) {
 
-				const plugins = context.getPlugins().sort(sortPlugins);
+				const plugins = context.plugins.sort(sortPlugins);
 
 				for (const plugin of plugins) {
 
@@ -243,7 +243,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 								const data: PluginCompletionData = {
 									uri,
 									originalItem: item,
-									pluginId: context.getPluginId(plugin),
+									pluginId: context.plugins.indexOf(plugin),
 									sourceMap: undefined,
 								};
 								return {

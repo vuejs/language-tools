@@ -28,9 +28,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 						const data: PluginCodeLensData = {
 							uri,
 							originalItem: item,
-							pluginId: context.getPluginId(plugin),
+							pluginId: context.plugins.indexOf(plugin),
 						};
-						const commandArgs: ExecutePluginCommandArgs | undefined = item.command ? [uri, context.getPluginId(plugin), item.command] : undefined;
+						const commandArgs: ExecutePluginCommandArgs | undefined = item.command ? [uri, context.plugins.indexOf(plugin), item.command] : undefined;
 						const codeLens: vscode.CodeLens = {
 							...item,
 							command: item.command && commandArgs ? {

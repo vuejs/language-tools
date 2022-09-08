@@ -11,7 +11,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 		if (data) {
 
-			const plugin = context.getPluginById(data.pluginId);
+			const plugin = context.plugins[data.pluginId];
 
 			if (!plugin)
 				return item;

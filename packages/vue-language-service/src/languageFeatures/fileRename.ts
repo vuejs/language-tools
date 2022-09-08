@@ -14,9 +14,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			newUri += '.ts';
 		}
 
-		const plugins = context.getPlugins();
-
-		for (const plugin of plugins) {
+		for (const plugin of context.plugins) {
 
 			if (!plugin.doFileRename)
 				continue;

@@ -42,7 +42,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 						const data: PluginCallHierarchyData = {
 							uri,
 							originalItem: item,
-							pluginId: context.getPluginId(plugin),
+							pluginId: context.plugins.indexOf(plugin),
 							sourceMap: sourceMap ? {
 								embeddedDocumentUri: sourceMap.mappedDocument.uri,
 							} : undefined,
@@ -68,7 +68,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 			if (data) {
 
-				const plugin = context.getPluginById(data.pluginId);
+				const plugin = context.plugins[data.pluginId];
 
 				if (!plugin)
 					return incomingItems;
@@ -129,7 +129,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 			if (data) {
 
-				const plugin = context.getPluginById(data.pluginId);
+				const plugin = context.plugins[data.pluginId];
 
 				if (!plugin)
 					return items;
