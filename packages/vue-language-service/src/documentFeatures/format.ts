@@ -199,8 +199,6 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 		async function tryFormat(document: TextDocument, range: vscode.Range | vscode.Position, initialIndentBracket: [string, string] | undefined, ch?: string) {
 
-			const plugins = context.getPlugins();
-
 			let formatDocument = document;
 			let formatRange = range;
 
@@ -236,7 +234,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 			context.updateTsLs(formatDocument);
 
-			for (const plugin of plugins) {
+			for (const plugin of context.plugins) {
 
 				let edits: vscode.TextEdit[] | null | undefined;
 

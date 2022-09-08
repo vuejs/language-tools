@@ -67,20 +67,18 @@ export function getDocumentService(
 
 	const context: DocumentServiceRuntimeContext = {
 		typescript: ts,
+		plugins: [
+			...customPlugins,
+			vuePlugin,
+			htmlPlugin,
+			pugPlugin,
+			pugFormatPlugin,
+			cssPlugin,
+			jsonPlugin,
+			tsPlugin,
+			autoWrapParenthesesPlugin,
+		],
 		getAndUpdateVueDocument,
-		getPlugins() {
-			return [
-				...customPlugins,
-				vuePlugin,
-				htmlPlugin,
-				pugPlugin,
-				pugFormatPlugin,
-				cssPlugin,
-				jsonPlugin,
-				tsPlugin,
-				autoWrapParenthesesPlugin,
-			];
-		},
 		updateTsLs(document) {
 			if (isTsDocument(document)) {
 				updateSingleFileTypeScriptServiceHost(context.typescript, document);

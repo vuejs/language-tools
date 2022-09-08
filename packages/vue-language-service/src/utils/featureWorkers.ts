@@ -48,13 +48,11 @@ export async function documentArgFeatureWorker<T, K>(
 			if (!isValidSourceMap(sourceMap))
 				return true;
 
-			const plugins = context.getPlugins();
-
 			context.updateTsLs(sourceMap.mappedDocument);
 
 			for (const mappedArg of transformArg(arg, sourceMap)) {
 
-				for (const plugin of plugins) {
+				for (const plugin of context.plugins) {
 
 					const embeddedResult = await worker(plugin, sourceMap.mappedDocument, mappedArg);
 
@@ -79,11 +77,9 @@ export async function documentArgFeatureWorker<T, K>(
 
 	if (results.length === 0 || !!combineResult) {
 
-		const plugins = context.getPlugins();
-
 		context.updateTsLs(document);
 
-		for (const plugin of plugins) {
+		for (const plugin of context.plugins) {
 
 			const embeddedResult = await worker(plugin, document, arg);
 
