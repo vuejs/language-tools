@@ -1,7 +1,7 @@
 import { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
 import { computed, ComputedRef, reactive, shallowRef as ref, pauseTracking, resetTracking } from '@vue/reactivity';
-import { EmbeddedFileMappingData, TeleportMappingData, _VueCompilerOptions } from './types';
-import { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
+import { _VueCompilerOptions } from './types';
+import { EmbeddedFileSourceMap, Teleport, EmbeddedFile, EmbeddedFileMappingData, Embedded, EmbeddedStructure } from '@volar/embedded-typescript-language-core';
 
 import { CodeGen } from '@volar/code-gen';
 import { Mapping, MappingBase } from '@volar/source-map';
@@ -25,17 +25,6 @@ export type VueLanguagePlugin = (ctx: {
 };
 
 export interface SourceFile extends ReturnType<typeof createSourceFile> { }
-
-export interface EmbeddedStructure {
-	self: Embedded | undefined,
-	embeddeds: EmbeddedStructure[],
-}
-
-export interface Embedded {
-	file: EmbeddedFile,
-	sourceMap: EmbeddedFileSourceMap,
-	teleport: Teleport | undefined,
-}
 
 export interface SfcBlock {
 	tag: 'script' | 'scriptSetup' | 'template' | 'style' | 'customBlock',
@@ -66,24 +55,6 @@ export interface Sfc {
 	scriptAst: ts.SourceFile | undefined;
 	scriptSetupAst: ts.SourceFile | undefined;
 }
-
-export interface EmbeddedFile {
-	parentFileName?: string,
-	fileName: string,
-	isTsHostFile: boolean,
-	capabilities: {
-		diagnostics: boolean,
-		foldingRanges: boolean,
-		formatting: boolean | {
-			initialIndentBracket?: [string, string],
-		},
-		documentSymbol: boolean,
-		codeActions: boolean,
-		inlayHints: boolean,
-	},
-	codeGen: CodeGen<EmbeddedFileMappingData>,
-	teleportMappings: Mapping<TeleportMappingData>[],
-};
 
 export function createSourceFile(
 	fileName: string,

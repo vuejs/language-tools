@@ -1,17 +1,16 @@
 import { posix as path } from 'path';
 import { SourceFile, VueLanguagePlugin } from './sourceFile';
-import { LanguageServiceHost } from './types';
+import { VueLanguageServiceHost } from './types';
 import * as localTypes from './utils/localTypes';
-import { createLanguageContext } from './commonLanguageContext';
+import { createLanguageContext, createDocumentRegistry } from '@volar/embedded-typescript-language-core';
 import { createVueLanguageModule } from './languageModules/vue';
 import { getVueCompilerOptions } from './utils/ts';
-import { createDocumentRegistry } from './documentRegistry';
 import type * as _ from 'typescript/lib/tsserverlibrary';
 
 export type VueLanguageContext = ReturnType<typeof createVueLanguageContext>;
 
 export function createVueLanguageContext(
-	host: LanguageServiceHost,
+	host: VueLanguageServiceHost,
 	extraPlugins: VueLanguagePlugin[] = [],
 	exts: string[] = ['.vue', '.html', '.md'],
 ) {
@@ -35,7 +34,7 @@ export function createVueLanguageContext(
 	const vueCompilerOptions = getVueCompilerOptions(host.getVueCompilationSettings());
 	const sharedTypesScript = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(vueCompilerOptions.target));
 	const vueLanguageModule = createVueLanguageModule(ts, host.getCurrentDirectory(), compilerOptions, vueCompilerOptions, extraPlugins);
-	const host_2: Partial<LanguageServiceHost> = {
+	const host_2: Partial<VueLanguageServiceHost> = {
 		fileExists(fileName) {
 
 			const basename = path.basename(fileName);
@@ -84,7 +83,7 @@ export function createVueLanguageContext(
 		},
 	};
 	const proxyHost = new Proxy(host, {
-		get(target, p: keyof LanguageServiceHost) {
+		get(target, p: keyof VueLanguageServiceHost) {
 			if (p in host_2) {
 				return host_2[p];
 			}

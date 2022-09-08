@@ -1,7 +1,5 @@
-export * from './utils/sourceMaps';
 export * from './utils/string';
 export * from './sourceFile';
-export * from './documentRegistry';
 export * from './types';
 export * from './vueLanguageContext';
 export * from './parsers/scriptSetupRanges';
@@ -11,8 +9,8 @@ export * from './parsers/scriptSetupRanges';
 export * as localTypes from './utils/localTypes';
 export * from './utils/ts';
 export * from './generators/template';
-export * from './documentRegistry';
 export * from './languageModules/vue';
+export * from '@volar/embedded-typescript-language-core';
 
 // fix build
 export * as _0 from '@vue/compiler-sfc';

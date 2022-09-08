@@ -31,7 +31,7 @@ export function createProgramProxy(
 			scriptSnapshot: ts.IScriptSnapshot,
 			version: string,
 		}>();
-		const vueLsHost = new Proxy(<vue.LanguageServiceHost>{
+		const vueLsHost = new Proxy(<vue.VueLanguageServiceHost>{
 			resolveModuleNames: undefined, // avoid failed with tsc built-in fileExists
 			writeFile: (fileName, content) => {
 				if (fileName.indexOf('__VLS_') === -1) {
@@ -55,7 +55,7 @@ export function createProgramProxy(
 		}, {
 			get: (target, property) => {
 				if (property in target) {
-					return target[property as keyof vue.LanguageServiceHost];
+					return target[property as keyof vue.VueLanguageServiceHost];
 				}
 				return ctx.options.host![property as keyof ts.CompilerHost];
 			},

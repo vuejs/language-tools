@@ -64,7 +64,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		tag: 'both' | 'kebabCase' | 'pascalCase',
 		attr: 'kebabCase' | 'camelCase',
 	}>,
-	vueLsHost: vue.LanguageServiceHost,
+	vueLsHost: vue.VueLanguageServiceHost,
 	vueDocuments: VueDocuments,
 }): EmbeddedLanguageServicePlugin & T {
 

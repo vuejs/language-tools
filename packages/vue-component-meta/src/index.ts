@@ -61,7 +61,7 @@ function createComponentMetaCheckerBase(tsconfigPath: string, parsedCommandLine:
 
 	const scriptSnapshot: Record<string, ts.IScriptSnapshot> = {};
 	const globalComponentName = tsconfigPath.replace(/\\/g, '/') + '.global.vue';
-	const host: vue.LanguageServiceHost = {
+	const host: vue.VueLanguageServiceHost = {
 		...ts.sys,
 		getDefaultLibFileName: (options) => ts.getDefaultLibFilePath(options), // should use ts.getDefaultLibFilePath not ts.getDefaultLibFileName
 		useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,

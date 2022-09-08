@@ -149,6 +149,19 @@ importers:
       vscode-languageserver-protocol: 3.17.2
       vscode-languageserver-textdocument: 1.0.7
 
+  packages/embedded-typescript-language-core:
+    specifiers:
+      '@volar/code-gen': 0.40.13
+      '@volar/source-map': 0.40.13
+      '@vue/reactivity': ^3.2.38
+      typescript: latest
+    dependencies:
+      '@volar/code-gen': link:../code-gen
+      '@volar/source-map': link:../source-map
+      '@vue/reactivity': 3.2.38
+    devDependencies:
+      typescript: 4.8.2
+
   packages/preview:
     specifiers:
       '@types/ws': ^8.5.3
@@ -264,6 +277,7 @@ importers:
   packages/vue-language-core:
     specifiers:
       '@volar/code-gen': 0.40.13
+      '@volar/embedded-typescript-language-core': 0.40.13
       '@volar/pug-language-service': 0.40.13
       '@volar/source-map': 0.40.13
       '@vue/compiler-core': ^3.2.38
@@ -274,6 +288,7 @@ importers:
       typescript: latest
     dependencies:
       '@volar/code-gen': link:../code-gen
+      '@volar/embedded-typescript-language-core': link:../embedded-typescript-language-core
       '@volar/source-map': link:../source-map
       '@vue/compiler-core': 3.2.38
       '@vue/compiler-dom': 3.2.38

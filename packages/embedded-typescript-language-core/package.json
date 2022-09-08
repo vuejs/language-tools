@@ -1,0 +1,23 @@
+{
+	"name": "@volar/embedded-typescript-language-core",
+	"version": "0.40.13",
+	"main": "out/index.js",
+	"license": "MIT",
+	"files": [
+		"out/**/*.js",
+		"out/**/*.d.ts"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/johnsoncodehk/volar.git",
+		"directory": "packages/embedded-typescript-language-core"
+	},
+	"devDependencies": {
+		"typescript": "latest"
+	},
+	"dependencies": {
+		"@volar/code-gen": "0.40.13",
+		"@volar/source-map": "0.40.13",
+		"@vue/reactivity": "^3.2.38"
+	}
+}

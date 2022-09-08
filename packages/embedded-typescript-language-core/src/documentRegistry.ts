@@ -1,9 +1,8 @@
 import type { EmbeddedFileMappingData, EmbeddedLangaugeSourceFile, EmbeddedLanguageModule } from './types';
 import { computed, shallowReactive } from '@vue/reactivity';
 import { posix as path } from 'path';
-import * as localTypes from './utils/localTypes';
-import type { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
-import type { Embedded, EmbeddedFile, EmbeddedStructure } from './sourceFile';
+import type { EmbeddedFileSourceMap, Teleport } from './sourceMaps';
+import type { Embedded, EmbeddedFile, EmbeddedStructure } from './types';
 
 export interface DocumentRegistry extends ReturnType<typeof createDocumentRegistry> { }
 
@@ -77,9 +76,6 @@ export function createDocumentRegistry<T extends EmbeddedLangaugeSourceFile>() {
 			filter?: (data: EmbeddedFileMappingData) => boolean,
 			sourceMapFilter?: (sourceMap: EmbeddedFileSourceMap) => boolean,
 		) {
-
-			if (fileName.endsWith(`/${localTypes.typesFileName}`))
-				return;
 
 			if (end === undefined)
 				end = start;

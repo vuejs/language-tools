@@ -89,7 +89,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		snapshots: ts.IScriptSnapshot | undefined,
 		snapshotsVersion: string | undefined,
 	}>();
-	const host: vue.LanguageServiceHost = {
+	const host: vue.VueLanguageServiceHost = {
 		getNewLine: () => info.project.getNewLine(),
 		useCaseSensitiveFileNames: () => info.project.useCaseSensitiveFileNames(),
 		readFile: path => info.project.readFile(path),

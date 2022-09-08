@@ -1,3 +1,4 @@
+import { EmbeddedLanguageModule } from '@volar/embedded-typescript-language-core';
 import * as useHtmlFilePlugin from '../plugins/file-html';
 import * as useMdFilePlugin from '../plugins/file-md';
 import * as useVueFilePlugin from '../plugins/file-vue';
@@ -9,7 +10,7 @@ import * as useHtmlPlugin from '../plugins/vue-template-html';
 import * as usePugPlugin from '../plugins/vue-template-pug';
 import useVueTsx from '../plugins/vue-tsx';
 import { createSourceFile, SourceFile, VueLanguagePlugin } from '../sourceFile';
-import { EmbeddedLanguageModule, VueCompilerOptions } from '../types';
+import { VueCompilerOptions } from '../types';
 import { getVueCompilerOptions } from '../utils/ts';
 
 export function getDefaultVueLanguagePlugins(

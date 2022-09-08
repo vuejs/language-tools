@@ -70,7 +70,7 @@ export function getSemanticTokenLegend() {
 }
 
 export function createLanguageService(
-	vueLsHost: vue.LanguageServiceHost,
+	vueLsHost: vue.VueLanguageServiceHost,
 	fileSystemProvider: html.FileSystemProvider | undefined,
 	schemaRequestService: json.SchemaRequestService | undefined,
 	configurationHost: ConfigurationHost | undefined,

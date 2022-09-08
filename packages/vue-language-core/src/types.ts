@@ -1,11 +1,7 @@
-import type * as ts from 'typescript/lib/tsserverlibrary';
-import { EmbeddedStructure } from './sourceFile';
+import * as base from '@volar/embedded-typescript-language-core';
 
-export type LanguageServiceHost = ts.LanguageServiceHost & {
-	getTypeScriptModule(): typeof import('typescript/lib/tsserverlibrary');
+export type VueLanguageServiceHost = base.LanguageServiceHost & {
 	getVueCompilationSettings(): VueCompilerOptions,
-	isTsPlugin?: boolean,
-	isTsc?: boolean,
 };
 
 export type VueCompilerOptions = Partial<_VueCompilerOptions>;
@@ -25,56 +21,4 @@ export interface _VueCompilerOptions {
 	experimentalDisableTemplateSupport: boolean;
 	experimentalResolveStyleCssClasses: 'scoped' | 'always' | 'never';
 	experimentalAllowTypeNarrowingInInlineHandlers: boolean;
-}
-
-export interface EmbeddedFileMappingData {
-	vueTag: 'template' | 'script' | 'scriptSetup' | 'scriptSrc' | 'style' | 'customBlock' | undefined,
-	vueTagIndex?: number,
-	normalizeNewName?: (newName: string) => string,
-	applyNewName?: (oldName: string, newName: string) => string,
-	capabilities: {
-		basic?: boolean,
-		references?: boolean,
-		definitions?: boolean,
-		diagnostic?: boolean,
-		rename?: boolean | {
-			in: boolean,
-			out: boolean,
-		},
-		completion?: boolean | {
-			additional: boolean,
-		},
-		semanticTokens?: boolean,
-		referencesCodeLens?: boolean,
-		displayWithLink?: boolean,
-	},
-}
-
-export interface TeleportSideData {
-	capabilities: {
-		references?: boolean,
-		definitions?: boolean,
-		rename?: boolean,
-	},
-}
-
-export interface TeleportMappingData {
-	toSource: TeleportSideData,
-	toTarget: TeleportSideData,
-}
-
-export interface TextRange {
-	start: number,
-	end: number,
-}
-
-export interface EmbeddedLangaugeSourceFile {
-	fileName: string,
-	text: string,
-	embeddeds: EmbeddedStructure[],
-}
-
-export interface EmbeddedLanguageModule {
-	createSourceFile(fileName: string, snapshot: ts.IScriptSnapshot): EmbeddedLangaugeSourceFile | undefined;
-	updateSourceFile(sourceFile: EmbeddedLangaugeSourceFile, snapshot: ts.IScriptSnapshot): void;
 }
