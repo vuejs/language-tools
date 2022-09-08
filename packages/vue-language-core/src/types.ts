@@ -1,6 +1,6 @@
 import * as base from '@volar/embedded-typescript-language-core';
 
-export type VueLanguageServiceHost = base.LanguageServiceHost & {
+export type VueLanguageServiceHost = base.EmbeddedTypeScriptLanguageServiceHost & {
 	getVueCompilationSettings(): VueCompilerOptions,
 };
 
