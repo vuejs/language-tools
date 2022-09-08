@@ -5,7 +5,7 @@ import { EmbeddedTypeScriptLanguageServiceHost } from './types';
 
 export type LanguageContext = ReturnType<typeof createLanguageContext>;
 
-export function createLanguageContext<T extends EmbeddedLangaugeSourceFile>(
+export function createLanguageContext(
 	host: EmbeddedTypeScriptLanguageServiceHost,
 	languageModules: EmbeddedLanguageModule[],
 	documentRegistry: ReturnType<typeof createDocumentRegistry>,

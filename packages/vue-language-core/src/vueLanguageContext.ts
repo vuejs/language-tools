@@ -100,7 +100,7 @@ export function createVueLanguageContext(
 			return target[p];
 		}
 	});
-	const core = createLanguageContext(proxyHost, [vueLanguageModule], documentRegistry as any);
+	const core = createLanguageContext(proxyHost, [vueLanguageModule], documentRegistry as unknown as ReturnType<typeof createDocumentRegistry>);
 
 	return {
 		...core,

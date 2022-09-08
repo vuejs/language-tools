@@ -4,8 +4,6 @@ import { posix as path } from 'path';
 import type { EmbeddedFileSourceMap, Teleport } from './sourceMaps';
 import type { Embedded, EmbeddedFile, EmbeddedStructure } from './types';
 
-export interface DocumentRegistry extends ReturnType<typeof createDocumentRegistry> { }
-
 export function forEachEmbeddeds(input: EmbeddedStructure[], cb: (embedded: Embedded) => void) {
 	for (const child of input) {
 		if (child.self) {
