@@ -53,7 +53,7 @@ export function createLanguageService(
 		tag: 'both' | 'kebabCase' | 'pascalCase',
 		attr: 'kebabCase' | 'camelCase',
 	}>,
-	createLanguageServiceContext = () => vue.createVueLanguageContext(host),
+	createLanguageServiceContext = () => vue.createPresetLanguageContext(host).languageContext,
 	rootUri = URI.file(host.getCurrentDirectory()),
 ) {
 

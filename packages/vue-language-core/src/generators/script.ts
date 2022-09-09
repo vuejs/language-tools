@@ -8,7 +8,7 @@ import type * as templateGen from '../generators/template';
 import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { collectCssVars, collectStyleCssClasses } from '../plugins/vue-tsx';
-import { Sfc } from '../sourceFile';
+import { Sfc } from '../types';
 import type { ResolvedVueCompilerOptions } from '../types';
 import { getSlotsPropertyName, getVueLibraryName } from '../utils/shared';
 import { SearchTexts } from '../utils/string';

@@ -9,7 +9,7 @@ import * as useVueSfcTemplate from './plugins/vue-sfc-template';
 import * as useHtmlPlugin from './plugins/vue-template-html';
 import * as usePugPlugin from './plugins/vue-template-pug';
 import useVueTsx from './plugins/vue-tsx';
-import { VueLanguagePlugin } from './sourceFile';
+import { VueLanguagePlugin } from './types';
 import { VueCompilerOptions } from './types';
 import { getVueCompilerOptions } from './utils/ts';
 

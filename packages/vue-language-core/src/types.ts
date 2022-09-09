@@ -1,6 +1,10 @@
-import { EmbeddedTypeScriptLanguageServiceHost } from '@volar/embedded-language-core';
+import { EmbeddedFile, EmbeddedLanguageServiceHost } from '@volar/embedded-language-core';
+import { SFCParseResult } from '@vue/compiler-sfc';
 
-export type VueLanguageServiceHost = EmbeddedTypeScriptLanguageServiceHost & {
+import * as CompilerDom from '@vue/compiler-dom';
+import type * as ts from 'typescript/lib/tsserverlibrary';
+
+export type VueLanguageServiceHost = EmbeddedLanguageServiceHost & {
 	getVueCompilationSettings(): VueCompilerOptions,
 };
 
@@ -21,4 +25,50 @@ export interface ResolvedVueCompilerOptions {
 	experimentalDisableTemplateSupport: boolean;
 	experimentalResolveStyleCssClasses: 'scoped' | 'always' | 'never';
 	experimentalAllowTypeNarrowingInInlineHandlers: boolean;
+}
+
+export type VueLanguagePlugin = (ctx: {
+	modules: {
+		typescript: typeof import('typescript/lib/tsserverlibrary');
+	},
+	compilerOptions: ts.CompilerOptions,
+	vueCompilerOptions: ResolvedVueCompilerOptions,
+}) => {
+	order?: number;
+	parseSFC?(fileName: string, content: string): SFCParseResult | undefined;
+	updateSFC?(oldResult: SFCParseResult, textChange: { start: number, end: number, newText: string; }): SFCParseResult | undefined;
+	compileSFCTemplate?(lang: string, template: string, options?: CompilerDom.CompilerOptions): CompilerDom.CodegenResult | undefined;
+	updateSFCTemplate?(oldResult: CompilerDom.CodegenResult, textChange: { start: number, end: number, newText: string; }): CompilerDom.CodegenResult | undefined;
+	getEmbeddedFileNames?(fileName: string, sfc: Sfc): string[];
+	resolveEmbeddedFile?(fileName: string, sfc: Sfc, embeddedFile: EmbeddedFile): void;
+};
+
+export interface SfcBlock {
+	tag: 'script' | 'scriptSetup' | 'template' | 'style' | 'customBlock',
+	start: number;
+	end: number;
+	startTagEnd: number;
+	endTagStart: number;
+	lang: string;
+	content: string;
+}
+
+export interface Sfc {
+	template: SfcBlock | null;
+	script: (SfcBlock & {
+		src: string | undefined;
+	}) | null;
+	scriptSetup: SfcBlock | null;
+	styles: (SfcBlock & {
+		module: string | undefined;
+		scoped: boolean;
+	})[];
+	customBlocks: (SfcBlock & {
+		type: string;
+	})[];
+
+	// ast
+	templateAst: CompilerDom.RootNode | undefined;
+	scriptAst: ts.SourceFile | undefined;
+	scriptSetupAst: ts.SourceFile | undefined;
 }

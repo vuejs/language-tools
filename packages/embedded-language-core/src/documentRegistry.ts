@@ -1,6 +1,5 @@
 import type { EmbeddedFileMappingData, EmbeddedLangaugeSourceFile, EmbeddedLanguageModule } from './types';
 import { computed, shallowReactive } from '@vue/reactivity';
-import { posix as path } from 'path';
 import type { EmbeddedFileSourceMap, Teleport } from './sourceMaps';
 import type { Embedded, EmbeddedFile, EmbeddedStructure } from './types';
 
@@ -50,7 +49,6 @@ export function createDocumentRegistry() {
 		}
 		return map;
 	});
-	const dirs = computed(() => [...new Set(fileNames.value.map(path.dirname))]);
 
 	return {
 		get: (fileName: string): [EmbeddedLangaugeSourceFile, EmbeddedLanguageModule] | undefined => files[fileName.toLowerCase()],
@@ -59,7 +57,6 @@ export function createDocumentRegistry() {
 		set: (fileName: string, vueFile: EmbeddedLangaugeSourceFile, languageModule: EmbeddedLanguageModule) => files[fileName.toLowerCase()] = [vueFile, languageModule],
 
 		getFileNames: () => fileNames.value,
-		getDirs: () => dirs.value,
 		getAll: () => all.value,
 
 		getTeleport: (fileName: string) => teleports.value.get(fileName.toLowerCase()),

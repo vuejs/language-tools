@@ -1,4 +1,4 @@
-import { VueLanguagePlugin } from '../sourceFile';
+import { VueLanguagePlugin } from '../types';
 import * as CompilerDom from '@vue/compiler-dom';
 import * as CompilerVue2 from '../utils/vue2TemplateCompiler';
 

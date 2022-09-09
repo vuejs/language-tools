@@ -1,4 +1,4 @@
-import { VueLanguagePlugin } from '../sourceFile';
+import { VueLanguagePlugin } from '../types';
 
 const presetInitialIndentBrackets: Record<string, [string, string] | undefined> = {
 	css: ['{', '}'],

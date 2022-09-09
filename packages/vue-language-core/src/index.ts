@@ -1,7 +1,7 @@
 export * from './utils/string';
 export * from './sourceFile';
 export * from './types';
-export * from './vueLanguageContext';
+export * from './languageModule';
 export * from './parsers/scriptSetupRanges';
 export * as scriptRanges from './parsers/scriptRanges';
 export * as scriptSetupConvertRanges from './parsers/scriptSetupConvertRanges';

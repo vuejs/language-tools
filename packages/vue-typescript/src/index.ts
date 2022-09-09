@@ -3,10 +3,10 @@ import * as vue from '@volar/vue-language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { getProgram } from './getProgram';
 
-export function createLanguageService(...params: Parameters<typeof vue.createVueLanguageContext>) {
+export function createLanguageService(host: vue.VueLanguageServiceHost) {
 
-	const core = vue.createVueLanguageContext(...params);
-	const ts = params[0].getTypeScriptModule();
+	const core = vue.createPresetLanguageContext(host).languageContext;
+	const ts = host.getTypeScriptModule();
 	const ls = ts.createLanguageService(core.typescriptLanguageServiceHost);
 
 	tsFaster.decorate(ts, core.typescriptLanguageServiceHost, ls);

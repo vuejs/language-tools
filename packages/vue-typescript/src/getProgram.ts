@@ -3,7 +3,7 @@ import type * as vue from '@volar/vue-language-core';
 
 export function getProgram(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	core: vue.VueLanguageContext,
+	core: vue.EmbeddedLanguageContext,
 	vueTsLs: ts.LanguageService,
 ) {
 

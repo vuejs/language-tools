@@ -1,14 +1,28 @@
 import { posix as path } from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { createDocumentRegistry, forEachEmbeddeds } from './documentRegistry';
-import { EmbeddedFile, EmbeddedLangaugeSourceFile, EmbeddedLanguageModule, EmbeddedTypeScriptLanguageServiceHost } from './types';
+import { EmbeddedFile, EmbeddedLangaugeSourceFile, EmbeddedLanguageModule, EmbeddedLanguageServiceHost } from './types';
 
-export type LanguageContext = ReturnType<typeof createLanguageContext>;
+export type EmbeddedLanguageContext = ReturnType<typeof createLanguageContext>;
 
 export function createLanguageContext(
-	host: EmbeddedTypeScriptLanguageServiceHost,
+	host: EmbeddedLanguageServiceHost,
 	languageModules: EmbeddedLanguageModule[],
 ) {
+
+	for (const languageModule of languageModules.reverse()) {
+		if (languageModule.proxyLanguageServiceHost) {
+			const proxyApis = languageModule.proxyLanguageServiceHost(host);
+			host = new Proxy(host, {
+				get(target, key: keyof ts.LanguageServiceHost) {
+					if (key in proxyApis) {
+						return proxyApis[key];
+					}
+					return target[key];
+				},
+			});
+		}
+	}
 
 	let lastProjectVersion: string | undefined;
 	let tsProjectVersion = 0;
@@ -100,10 +114,6 @@ export function createLanguageContext(
 				return target[property as keyof typeof documentRegistry];
 			},
 		}),
-		__internal__: {
-			typescriptLanguageServiceHost: _tsHost,
-			mapper: documentRegistry,
-		},
 	};
 
 	function update() {

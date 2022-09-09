@@ -97,7 +97,7 @@ function createComponentMetaCheckerBase(tsconfigPath: string, parsedCommandLine:
 		getTypeScriptModule: () => ts,
 		getVueCompilationSettings: () => parsedCommandLine.vueOptions,
 	};
-	const core = vue.createVueLanguageContext(host);
+	const { languageContext: core, plugins } = vue.createPresetLanguageContext(host);
 	const proxyApis: Partial<ts.LanguageServiceHost> = checkerOptions.forceUseTs ? {
 		getScriptKind: (fileName) => {
 			if (fileName.endsWith('.vue.js')) {
@@ -202,7 +202,7 @@ function createComponentMetaCheckerBase(tsconfigPath: string, parsedCommandLine:
 			const snapshot = host.getScriptSnapshot(componentPath)!;
 
 			const vueDefaults = componentPath.endsWith('.vue') && exportName === 'default'
-				? readVueComponentDefaultProps(core, snapshot, printer)
+				? readVueComponentDefaultProps(core, plugins, snapshot, printer)
 				: {};
 			const tsDefaults = !componentPath.endsWith('.vue') ? readTsComponentDefaultProps(
 				componentPath.substring(componentPath.lastIndexOf('.') + 1), // ts | js | tsx | jsx
@@ -485,7 +485,7 @@ function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expre
 	};
 }
 
-function readVueComponentDefaultProps(core: vue.VueLanguageContext, vueFileScript: ts.IScriptSnapshot, printer: ts.Printer | undefined) {
+function readVueComponentDefaultProps(core: vue.EmbeddedLanguageContext, plugins: ReturnType<vue.VueLanguagePlugin>[], vueFileScript: ts.IScriptSnapshot, printer: ts.Printer | undefined) {
 	let result: Record<string, { default?: string, required?: boolean; }> = {};
 
 	scriptSetupWorker();
@@ -495,7 +495,7 @@ function readVueComponentDefaultProps(core: vue.VueLanguageContext, vueFileScrip
 
 	function scriptSetupWorker() {
 
-		const vueSourceFile = new vue.VueSourceFile('/tmp.vue', vueFileScript, ts, core.plugins);
+		const vueSourceFile = new vue.VueSourceFile('/tmp.vue', vueFileScript, ts, plugins);
 		const descriptor = vueSourceFile.sfc;
 		const scriptSetupRanges = descriptor.scriptSetupAst ? parseScriptSetupRanges(ts, descriptor.scriptSetupAst) : undefined;
 
@@ -547,7 +547,7 @@ function readVueComponentDefaultProps(core: vue.VueLanguageContext, vueFileScrip
 
 	function scriptWorker() {
 
-		const vueSourceFile = new vue.VueSourceFile('/tmp.vue', vueFileScript, ts, core.plugins);
+		const vueSourceFile = new vue.VueSourceFile('/tmp.vue', vueFileScript, ts, plugins);
 		const descriptor = vueSourceFile.sfc;
 
 		if (descriptor.script) {
