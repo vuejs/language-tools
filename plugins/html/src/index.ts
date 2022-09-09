@@ -9,7 +9,6 @@ export default function (options: {
 	disableCustomData?: boolean,
 } = {}): EmbeddedLanguageServicePlugin & {
 	htmlLs: html.LanguageService,
-	getHtmlDocument(document: TextDocument): html.HTMLDocument | undefined,
 	updateCustomData(extraData: html.IHTMLDataProvider[]): void,
 } {
 
@@ -26,7 +25,6 @@ export default function (options: {
 	return {
 
 		htmlLs,
-		getHtmlDocument,
 		updateCustomData,
 
 		complete: {

@@ -3,7 +3,6 @@ import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient';
 import * as activeSelection from './features/activeSelection';
 import * as attrNameCase from './features/attrNameCase';
-import * as callGraph from './features/callGraph';
 import * as createWorkspaceSnippets from './features/createWorkspaceSnippets';
 import * as documentContent from './features/documentContent';
 import * as preview from './features/preview';
@@ -140,7 +139,6 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	if (apiClient) {
 		tsconfig.register('volar.openTsconfig', context, docClient ?? apiClient);
 		fileReferences.register('volar.vue.findAllFileReferences', apiClient);
-		callGraph.register(context, apiClient);
 		verifyAll.register(context, docClient ?? apiClient);
 		autoInsertion.register(context, htmlClient, apiClient);
 		virtualFiles.register('volar.action.writeVirtualFiles', context, docClient ?? apiClient);

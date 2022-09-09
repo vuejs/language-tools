@@ -25,7 +25,6 @@ import useRefSugarConversionsPlugin from './plugins/vue-convert-refsugar';
 import useScriptSetupConversionsPlugin from './plugins/vue-convert-scriptsetup';
 import useTagNameCasingConversionsPlugin from './plugins/vue-convert-tagcasing';
 import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemanticTokenTypes } from './plugins/vue-template';
-// import * as d3 from './ideFeatures/d3';
 
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
 
@@ -168,7 +167,6 @@ export function createLanguageService(
 			vueRuntimeContext: core,
 			rootPath: host.getCurrentDirectory(),
 			context,
-			// getD3: d3.register(context), true), // unused for nw
 			detectTagNameCase: tagNameCase.register(context),
 		},
 	};

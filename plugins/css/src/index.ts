@@ -11,10 +11,7 @@ const wordPatterns: { [lang: string]: RegExp; } = {
 	postcss: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@$#.!])?[\w-?]+%?|[@#!$.])/g, // scss
 };
 
-export default function (): EmbeddedLanguageServicePlugin & {
-	getStylesheet?: (document: TextDocument) => css.Stylesheet | undefined;
-	getCssLs?(lang: string): css.LanguageService | undefined;
-} {
+export default function (): EmbeddedLanguageServicePlugin {
 
 	const fileSystemProvider = useFileSystemProvider();
 	const documentContext = useDocumentContext();
@@ -37,9 +34,6 @@ export default function (): EmbeddedLanguageServicePlugin & {
 	let inited = false;
 
 	return {
-
-		getStylesheet,
-		getCssLs,
 
 		complete: {
 

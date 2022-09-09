@@ -2,7 +2,7 @@ import * as vscode from 'vscode-languageserver-protocol';
 import type * as html from 'vscode-html-languageservice';
 
 /**
- * Client Requests
+ * Server request client
  */
 
 export namespace GetDocumentContentRequest {
@@ -50,7 +50,7 @@ export namespace FindFileReferenceRequest {
 }
 
 /**
- * Server Requests
+ * Client request server
  */
 
 export namespace GetMatchTsConfigRequest {
@@ -58,13 +58,6 @@ export namespace GetMatchTsConfigRequest {
 	export type ResponseType = string | null | undefined;
 	export type ErrorType = never;
 	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('volar/tsconfig');
-}
-
-export namespace D3Request {
-	export type ParamsType = vscode.TextDocumentIdentifier;
-	export type ResponseType = string | null | undefined;
-	export type ErrorType = never;
-	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('volar/d3');
 }
 
 export namespace AutoInsertRequest {

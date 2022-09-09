@@ -3,19 +3,12 @@ import * as path from 'upath';
 import * as vscode from 'vscode-languageserver';
 import type { Workspaces } from '../utils/workspaces';
 import * as vue from '@volar/vue-language-core';
-import { D3Request, DetectDocumentNameCasesRequest, GetMatchTsConfigRequest, ReloadProjectNotification, VerifyAllScriptsNotification, WriteVirtualFilesNotification } from '../requests';
+import { DetectDocumentNameCasesRequest, GetMatchTsConfigRequest, ReloadProjectNotification, VerifyAllScriptsNotification, WriteVirtualFilesNotification } from '../requests';
 
 export function register(
 	connection: vscode.Connection,
 	projects: Workspaces,
 ) {
-	connection.onRequest(D3Request.type, async handler => {
-		// const document = documents.get(handler.uri);
-		// if (!document) return;
-		// const languageService = await getLanguageService(document.uri);
-		// return languageService?.__internal__.getD3(document);
-		return undefined; // disable for now
-	});
 	connection.onRequest(GetMatchTsConfigRequest.type, async handler => {
 		return (await projects.getProject(handler.uri))?.tsconfig;
 	});
