@@ -2,7 +2,7 @@ import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as shared from '@volar/shared';
 import { languageFeatureWorker } from '../utils/featureWorkers';
-import { SourceFileDocument } from '../vueDocuments';
+import { SourceFileDocument } from '../documents';
 
 export function register(context: LanguageServiceRuntimeContext) {
 

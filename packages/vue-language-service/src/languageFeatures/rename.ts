@@ -3,7 +3,7 @@ import type { LanguageServiceRuntimeContext } from '../types';
 import { languageFeatureWorker } from '../utils/featureWorkers';
 import * as dedupe from '../utils/dedupe';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { SourceFileDocuments } from '../vueDocuments';
+import { SourceFileDocuments } from '../documents';
 
 export function register(context: LanguageServiceRuntimeContext) {
 

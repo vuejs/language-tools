@@ -1,23 +1,14 @@
-import * as vue from '@volar/vue-language-core';
 import * as shared from '@volar/shared';
-import { computed, ComputedRef } from '@vue/reactivity';
 import { SourceMapBase } from '@volar/source-map';
-import { TextDocument } from 'vscode-languageserver-textdocument';
-import { EmbeddedLangaugeSourceFile, walkElementNodes } from '@volar/vue-language-core';
-import * as CompilerDOM from '@vue/compiler-dom';
+import { Embedded, EmbeddedFile, EmbeddedFileMappingData, EmbeddedFileSourceMap, EmbeddedLangaugeSourceFile, forEachEmbeddeds, Teleport, TeleportMappingData, TeleportSideData, VueLanguageContext } from '@volar/vue-language-core';
+import { computed } from '@vue/reactivity';
 import * as vscode from 'vscode-languageserver-protocol';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 
 import { URI } from 'vscode-uri';
 
-import type * as ts from 'typescript/lib/tsserverlibrary';
-
 export type SourceFileDocuments = ReturnType<typeof parseSourceFileDocuments>;
 export type SourceFileDocument = ReturnType<typeof parseSourceFileDocument>;
-
-export interface ITemplateScriptData {
-	components: string[];
-	componentItems: vscode.CompletionItem[];
-}
 
 export class SourceMap<Data = undefined> {
 
@@ -71,27 +62,27 @@ export class SourceMap<Data = undefined> {
 	}
 }
 
-export class EmbeddedDocumentSourceMap extends SourceMap<vue.EmbeddedFileMappingData> {
+export class EmbeddedDocumentSourceMap extends SourceMap<EmbeddedFileMappingData> {
 
 	constructor(
-		public embeddedFile: vue.EmbeddedFile,
+		public embeddedFile: EmbeddedFile,
 		public sourceDocument: TextDocument,
 		public mappedDocument: TextDocument,
-		_sourceMap: vue.EmbeddedFileSourceMap,
+		_sourceMap: EmbeddedFileSourceMap,
 	) {
 		super(sourceDocument, mappedDocument, _sourceMap);
 	}
 }
 
-export class TeleportSourceMap extends SourceMap<vue.TeleportMappingData> {
+export class TeleportSourceMap extends SourceMap<TeleportMappingData> {
 	constructor(
-		public embeddedFile: vue.EmbeddedFile,
+		public embeddedFile: EmbeddedFile,
 		public document: TextDocument,
-		teleport: vue.Teleport,
+		teleport: Teleport,
 	) {
 		super(document, document, teleport);
 	}
-	*findTeleports(start: vscode.Position, end?: vscode.Position, filter?: (data: vue.TeleportSideData) => boolean) {
+	*findTeleports(start: vscode.Position, end?: vscode.Position, filter?: (data: TeleportSideData) => boolean) {
 		for (const [teleRange, data] of this.getMappedRanges(start, end, filter ? data => filter(data.toTarget) : undefined)) {
 			yield [teleRange, data.toTarget] as const;
 		}
@@ -103,7 +94,7 @@ export class TeleportSourceMap extends SourceMap<vue.TeleportMappingData> {
 
 export function parseSourceFileDocuments(
 	rootUri: URI,
-	vueLsCtx: vue.VueLanguageContext,
+	vueLsCtx: VueLanguageContext,
 ) {
 
 	const _sourceFiles = new WeakMap<EmbeddedLangaugeSourceFile, SourceFileDocument>();
@@ -161,12 +152,13 @@ export function parseSourceFileDocuments(
 			uri: string,
 			start: vscode.Position,
 			end?: vscode.Position,
-			filter?: (data: vue.EmbeddedFileMappingData) => boolean,
-			sourceMapFilter?: (sourceMap: vue.EmbeddedFileSourceMap) => boolean,
+			filter?: (data: EmbeddedFileMappingData) => boolean,
+			sourceMapFilter?: (sourceMap: EmbeddedFileSourceMap) => boolean,
 		) {
 
-			if (uri.endsWith(`/${vue.localTypes.typesFileName}`))
+			if (uri.endsWith('/__VLS_types.ts')) { // TODO: monkey fix
 				return;
+			}
 
 			if (end === undefined)
 				end = start;
@@ -219,8 +211,8 @@ export function parseSourceFileDocument(
 
 	let documentVersion = 0;
 	const embeddedDocumentVersions = new Map<string, number>();
-	const embeddedDocuments = new WeakMap<vue.EmbeddedFile, TextDocument>();
-	const sourceMaps = new WeakMap<vue.Embedded, [number, EmbeddedDocumentSourceMap]>();
+	const embeddedDocuments = new WeakMap<EmbeddedFile, TextDocument>();
+	const sourceMaps = new WeakMap<Embedded, [number, EmbeddedDocumentSourceMap]>();
 
 	// computed
 	const document = computed(() => TextDocument.create(
@@ -231,14 +223,14 @@ export function parseSourceFileDocument(
 	));
 	const allSourceMaps = computed(() => {
 		const result: EmbeddedDocumentSourceMap[] = [];
-		vue.forEachEmbeddeds(sourceFile.embeddeds, embedded => {
+		forEachEmbeddeds(sourceFile.embeddeds, embedded => {
 			result.push(getSourceMap(embedded));
 		});
 		return result;
 	});
 	const teleports = computed(() => {
 		const result: TeleportSourceMap[] = [];
-		vue.forEachEmbeddeds(sourceFile.embeddeds, embedded => {
+		forEachEmbeddeds(sourceFile.embeddeds, embedded => {
 			if (embedded.teleport) {
 				const embeddedDocument = getEmbeddedDocument(embedded.file)!;
 				const sourceMap = new TeleportSourceMap(
@@ -262,7 +254,7 @@ export function parseSourceFileDocument(
 		getDocument: () => document.value,
 	};
 
-	function getSourceMap(embedded: vue.Embedded) {
+	function getSourceMap(embedded: Embedded) {
 
 		let cache = sourceMaps.get(embedded);
 
@@ -283,7 +275,7 @@ export function parseSourceFileDocument(
 		return cache[1];
 	}
 
-	function getEmbeddedDocument(embeddedFile: vue.EmbeddedFile) {
+	function getEmbeddedDocument(embeddedFile: EmbeddedFile) {
 
 		let document = embeddedDocuments.get(embeddedFile);
 
@@ -305,108 +297,4 @@ export function parseSourceFileDocument(
 
 		return document;
 	}
-}
-
-export function checkTemplateData(
-	sourceFile: EmbeddedLangaugeSourceFile,
-	tsLs: ts.LanguageService,
-) {
-
-	if (!(sourceFile instanceof vue.VueSourceFile)) {
-		return {
-			components: [],
-			componentItems: [],
-		};
-	}
-
-	const options: ts.GetCompletionsAtPositionOptions = {
-		includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
-	};
-
-	let file: vue.EmbeddedFile | undefined;
-	vue.forEachEmbeddeds(sourceFile.embeddeds, embedded => {
-		if (embedded.file.fileName === sourceFile.tsFileName) {
-			file = embedded.file;
-		}
-	});
-
-	if (file && file.codeGen.getText().indexOf(vue.SearchTexts.Components) >= 0) {
-
-		const components = tsLs.getCompletionsAtPosition(
-			file.fileName,
-			file.codeGen.getText().indexOf(vue.SearchTexts.Components),
-			options
-		);
-
-		if (components) {
-
-			const items = components.entries
-				.filter(entry => entry.kind !== 'warning')
-				.filter(entry => entry.name.indexOf('$') === -1 && !entry.name.startsWith('_'));
-
-			const componentNames = items.map(entry => entry.name);
-
-			return {
-				components: componentNames,
-				componentItems: items,
-			};
-		}
-	}
-
-	return {
-		components: [],
-		componentItems: [],
-	};
-}
-
-const map = new WeakMap<EmbeddedLangaugeSourceFile, ComputedRef>();
-
-export function getTemplateTagsAndAttrs(sourceFile: EmbeddedLangaugeSourceFile) {
-
-	if (!map.has(sourceFile)) {
-		const getter = computed(() => {
-			if (!(sourceFile instanceof vue.VueSourceFile))
-				return;
-			const ast = sourceFile.compiledSFCTemplate?.ast;
-			const tags = new Map<string, number[]>();
-			const attrs = new Set<string>();
-			if (ast) {
-				walkElementNodes(ast, node => {
-
-					if (!tags.has(node.tag)) {
-						tags.set(node.tag, []);
-					}
-
-					const offsets = tags.get(node.tag)!;
-					const startTagHtmlOffset = node.loc.start.offset + node.loc.source.indexOf(node.tag);
-					const endTagHtmlOffset = node.loc.start.offset + node.loc.source.lastIndexOf(node.tag);
-
-					offsets.push(startTagHtmlOffset);
-					offsets.push(endTagHtmlOffset);
-
-					for (const prop of node.props) {
-						if (
-							prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-							&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-							&& prop.arg.isStatic
-						) {
-							attrs.add(prop.arg.content);
-						}
-						else if (
-							prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
-						) {
-							attrs.add(prop.name);
-						}
-					}
-				});
-			}
-			return {
-				tags,
-				attrs,
-			};
-		});
-		map.set(sourceFile, getter);
-	}
-
-	return map.get(sourceFile)!.value;
 }

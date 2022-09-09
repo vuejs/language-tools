@@ -48,7 +48,7 @@ import useScriptSetupConversionsPlugin from './plugins/vue-convert-scriptsetup';
 import useTagNameCasingConversionsPlugin from './plugins/vue-convert-tagcasing';
 import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemanticTokenTypes } from './plugins/vue-template';
 import { LanguageServiceRuntimeContext } from './types';
-import { parseSourceFileDocuments } from './vueDocuments';
+import { parseSourceFileDocuments } from './documents';
 import { URI } from 'vscode-uri';
 // import * as d3 from './ideFeatures/d3';
 

@@ -4,7 +4,7 @@ import { isTsDocument } from '@volar-plugins/typescript';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import { languageFeatureWorker } from '../utils/featureWorkers';
-import { EmbeddedDocumentSourceMap } from '../vueDocuments';
+import { EmbeddedDocumentSourceMap } from '../documents';
 import * as shared from '@volar/shared';
 
 export function updateRange(

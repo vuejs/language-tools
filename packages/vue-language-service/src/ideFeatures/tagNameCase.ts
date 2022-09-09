@@ -1,6 +1,7 @@
 import type { LanguageServiceRuntimeContext } from '../types';
 import { hyphenate } from '@vue/shared';
-import { checkTemplateData, getTemplateTagsAndAttrs, SourceFileDocument } from '../vueDocuments';
+import { SourceFileDocument } from '../documents';
+import { checkTemplateData, getTemplateTagsAndAttrs } from '../helpers';
 
 export function register(context: LanguageServiceRuntimeContext) {
 	return async (uri: string): Promise<{

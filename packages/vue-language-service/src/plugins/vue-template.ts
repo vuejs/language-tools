@@ -10,9 +10,10 @@ import * as path from 'upath';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { checkTemplateData, getTemplateTagsAndAttrs, SourceFileDocument, SourceFileDocuments } from '../vueDocuments';
+import { SourceFileDocument, SourceFileDocuments } from '../documents';
 import useHtmlPlugin from '@volar-plugins/html';
 import { URI } from 'vscode-uri';
+import { checkTemplateData, getTemplateTagsAndAttrs } from '../helpers';
 
 export const semanticTokenTypes = [
 	'componentTag',
@@ -441,7 +442,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 		if (!(vueDocument.file instanceof vue.VueSourceFile))
 			return;
-		
+
 		const vueSourceFile = vueDocument.file;
 		const nameCases = await options.getNameCases?.(vueDocument.uri) ?? {
 			tag: 'both',

@@ -19,7 +19,7 @@ import * as linkedEditingRanges from './documentFeatures/linkedEditingRanges';
 import * as selectionRanges from './documentFeatures/selectionRanges';
 import { DocumentServiceRuntimeContext } from './types';
 import { singleFileTypeScriptServiceHost, updateSingleFileTypeScriptServiceHost } from './utils/singleFileTypeScriptService';
-import { parseSourceFileDocument, SourceFileDocument } from './vueDocuments';
+import { parseSourceFileDocument, SourceFileDocument } from './documents';
 import useAutoWrapParenthesesPlugin from './plugins/vue-autoinsert-parentheses';
 import useVuePlugin from './plugins/vue';
 import type * as _ from 'vscode-languageserver-protocol';

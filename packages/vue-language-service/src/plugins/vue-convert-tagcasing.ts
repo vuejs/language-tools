@@ -1,9 +1,10 @@
 import * as vscode from 'vscode-languageserver-protocol';
 import { EmbeddedLanguageServicePlugin } from '@volar/embedded-language-service';
 import { hyphenate } from '@vue/shared';
-import { checkTemplateData, getTemplateTagsAndAttrs, SourceFileDocument } from '../vueDocuments';
+import { SourceFileDocument } from '../documents';
 import * as ts2 from '@volar/typescript-language-service';
 import * as vue from '@volar/vue-language-core';
+import { checkTemplateData, getTemplateTagsAndAttrs } from '../helpers';
 
 export const convertTagNameCasingCommand = 'tagNameCasingConversions';
 

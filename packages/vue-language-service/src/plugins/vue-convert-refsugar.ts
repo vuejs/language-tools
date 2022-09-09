@@ -6,7 +6,7 @@ import { mergeWorkspaceEdits } from '../languageFeatures/rename';
 import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, useConfigurationHost, useTypeScriptModule } from '@volar/embedded-language-service';
 import { isBlacklistNode, isRefType } from './vue-autoinsert-dotvalue';
 import { getAddMissingImportsEdits } from './vue-convert-scriptsetup';
-import { SourceFileDocument } from '../vueDocuments';
+import { SourceFileDocument } from '../documents';
 import * as vue from '@volar/vue-language-core';
 
 enum Commands {

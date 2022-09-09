@@ -5,7 +5,7 @@ import { EmbeddedLanguageServicePlugin, useTypeScriptModule } from '@volar/embed
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { SourceFileDocument } from '../vueDocuments';
+import { SourceFileDocument } from '../documents';
 import useHtmlPlugin from '@volar-plugins/html';
 import * as vue from '@volar/vue-language-core';
 

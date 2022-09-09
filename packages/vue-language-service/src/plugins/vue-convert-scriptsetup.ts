@@ -3,7 +3,7 @@ import { scriptSetupConvertRanges } from '@volar/vue-language-core';
 import type { TextRange } from '@volar/vue-language-core';
 import * as vscode from 'vscode-languageserver-protocol';
 import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, useConfigurationHost, useTypeScriptModule } from '@volar/embedded-language-service';
-import { SourceFileDocument } from '../vueDocuments';
+import { SourceFileDocument } from '../documents';
 import * as vue from '@volar/vue-language-core';
 
 enum Commands {

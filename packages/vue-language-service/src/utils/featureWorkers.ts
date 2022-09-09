@@ -2,7 +2,7 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { visitEmbedded } from './definePlugin';
 import type { DocumentServiceRuntimeContext, LanguageServiceRuntimeContext } from '../types';
 import { EmbeddedLanguageServicePlugin } from '@volar/embedded-language-service';
-import { EmbeddedDocumentSourceMap, SourceFileDocument } from '../vueDocuments';
+import { EmbeddedDocumentSourceMap, SourceFileDocument } from '../documents';
 
 export async function documentFeatureWorker<T>(
 	context: DocumentServiceRuntimeContext,
