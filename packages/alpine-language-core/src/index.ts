@@ -1,8 +1,8 @@
 import * as vue from '@volar/vue-language-core';
 import * as useHtmlFilePlugin from './plugins/file-html';
 
-export type LanguageServiceHost = vue.VueLanguageServiceHost;
+export * from '@volar/vue-language-core';
 
-export function createLanguageContext(host: vue.VueLanguageServiceHost): vue.EmbeddedLanguageContext {
-	return vue.createPresetLanguageContext(host, [useHtmlFilePlugin], ['.html']).languageContext;
+export function createEmbeddedLanguageModule(host: vue.LanguageServiceHost) {
+	return vue.createEmbeddedLanguageModule(host, [useHtmlFilePlugin], ['.html']);
 }

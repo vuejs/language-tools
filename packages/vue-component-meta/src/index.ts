@@ -61,7 +61,7 @@ function createComponentMetaCheckerBase(tsconfigPath: string, parsedCommandLine:
 
 	const scriptSnapshot: Record<string, ts.IScriptSnapshot> = {};
 	const globalComponentName = tsconfigPath.replace(/\\/g, '/') + '.global.vue';
-	const host: vue.VueLanguageServiceHost = {
+	const host: vue.LanguageServiceHost = {
 		...ts.sys,
 		getDefaultLibFileName: (options) => ts.getDefaultLibFilePath(options), // should use ts.getDefaultLibFilePath not ts.getDefaultLibFileName
 		useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,
@@ -97,7 +97,8 @@ function createComponentMetaCheckerBase(tsconfigPath: string, parsedCommandLine:
 		getTypeScriptModule: () => ts,
 		getVueCompilationSettings: () => parsedCommandLine.vueOptions,
 	};
-	const { languageContext: core, plugins } = vue.createPresetLanguageContext(host);
+	const mods = [vue.createEmbeddedLanguageModule(host)];
+	const core = vue.createLanguageContext(host, mods);
 	const proxyApis: Partial<ts.LanguageServiceHost> = checkerOptions.forceUseTs ? {
 		getScriptKind: (fileName) => {
 			if (fileName.endsWith('.vue.js')) {
@@ -198,13 +199,14 @@ function createComponentMetaCheckerBase(tsconfigPath: string, parsedCommandLine:
 			}
 
 			// fill defaults
-			const printer = checkerOptions.printer ? ts.createPrinter(checkerOptions.printer) : undefined;
+			const printer = ts.createPrinter(checkerOptions.printer);
 			const snapshot = host.getScriptSnapshot(componentPath)!;
 
-			const vueDefaults = componentPath.endsWith('.vue') && exportName === 'default'
-				? readVueComponentDefaultProps(core, plugins, snapshot, printer)
+			const vueSourceFile = core.mapper.get(componentPath)?.[0];
+			const vueDefaults = vueSourceFile && exportName === 'default'
+				? (vueSourceFile instanceof vue.VueSourceFile ? readVueComponentDefaultProps(vueSourceFile, printer) : {})
 				: {};
-			const tsDefaults = !componentPath.endsWith('.vue') ? readTsComponentDefaultProps(
+			const tsDefaults = !vueSourceFile ? readTsComponentDefaultProps(
 				componentPath.substring(componentPath.lastIndexOf('.') + 1), // ts | js | tsx | jsx
 				snapshot.getText(0, snapshot.getLength()),
 				exportName,
@@ -485,7 +487,7 @@ function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expre
 	};
 }
 
-function readVueComponentDefaultProps(core: vue.EmbeddedLanguageContext, plugins: ReturnType<vue.VueLanguagePlugin>[], vueFileScript: ts.IScriptSnapshot, printer: ts.Printer | undefined) {
+function readVueComponentDefaultProps(vueSourceFile: vue.VueSourceFile, printer: ts.Printer | undefined) {
 	let result: Record<string, { default?: string, required?: boolean; }> = {};
 
 	scriptSetupWorker();
@@ -495,7 +497,6 @@ function readVueComponentDefaultProps(core: vue.EmbeddedLanguageContext, plugins
 
 	function scriptSetupWorker() {
 
-		const vueSourceFile = new vue.VueSourceFile('/tmp.vue', vueFileScript, ts, plugins);
 		const descriptor = vueSourceFile.sfc;
 		const scriptSetupRanges = descriptor.scriptSetupAst ? parseScriptSetupRanges(ts, descriptor.scriptSetupAst) : undefined;
 
@@ -547,7 +548,6 @@ function readVueComponentDefaultProps(core: vue.EmbeddedLanguageContext, plugins
 
 	function scriptWorker() {
 
-		const vueSourceFile = new vue.VueSourceFile('/tmp.vue', vueFileScript, ts, plugins);
 		const descriptor = vueSourceFile.sfc;
 
 		if (descriptor.script) {

@@ -1,40 +1,24 @@
+import type { EmbeddedLanguageModule, EmbeddedLanguageServiceHost } from '@volar/embedded-language-core';
 import { posix as path } from 'path';
-import { VueSourceFile } from './sourceFile';
-import { VueLanguagePlugin, VueLanguageServiceHost } from './types';
-import * as localTypes from './utils/localTypes';
-import { createLanguageContext, EmbeddedLanguageModule, EmbeddedLanguageServiceHost } from '@volar/embedded-language-core';
-import { getVueCompilerOptions } from './utils/ts';
-import type * as _ from 'typescript/lib/tsserverlibrary';
 import { getDefaultVueLanguagePlugins } from './plugins';
+import { VueSourceFile } from './sourceFile';
+import { VueLanguagePlugin, LanguageServiceHost } from './types';
+import * as localTypes from './utils/localTypes';
+import { getVueCompilerOptions } from './utils/ts';
 
-export function createPresetLanguageContext(
-	host: VueLanguageServiceHost,
+export function createEmbeddedLanguageModule(
+	host: LanguageServiceHost,
 	extraPlugins: VueLanguagePlugin[] = [],
 	exts: string[] = ['.vue', '.html', '.md'],
-) {
+): EmbeddedLanguageModule {
 
-	const plugins = getDefaultVueLanguagePlugins(
+	const vueLanguagePlugin = getDefaultVueLanguagePlugins(
 		host.getTypeScriptModule(),
 		host.getCurrentDirectory(),
 		host.getCompilationSettings(),
 		host.getVueCompilationSettings(),
 		extraPlugins,
 	);
-	const languageModule = createLanguageModule(host, plugins, exts);
-
-	return {
-		languageContext: createLanguageContext(host, [languageModule]),
-		plugins,
-		languageModule,
-	};
-}
-
-export function createLanguageModule(
-	host: VueLanguageServiceHost,
-	plugins: ReturnType<VueLanguagePlugin>[] = [],
-	exts: string[] = ['.vue', '.html', '.md'],
-): EmbeddedLanguageModule {
-
 	const ts = host.getTypeScriptModule();
 
 	// from https://github.com/johnsoncodehk/volar/pull/1543
@@ -55,7 +39,7 @@ export function createLanguageModule(
 	return {
 		createSourceFile(fileName, snapshot) {
 			if (exts.some(ext => fileName.endsWith(ext))) {
-				return new VueSourceFile(fileName, snapshot, ts, plugins);
+				return new VueSourceFile(fileName, snapshot, ts, vueLanguagePlugin);
 			}
 		},
 		updateSourceFile(sourceFile: VueSourceFile, snapshot) {
@@ -109,7 +93,7 @@ export function createLanguageModule(
 					return snapshot;
 				},
 			};
-		}
+		},
 	};
 
 	function getDirs(fileNames: string[]) {

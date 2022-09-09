@@ -132,7 +132,7 @@ export async function createProject(
 	}
 	function createLanguageServiceHost() {
 
-		const host: vue.VueLanguageServiceHost = {
+		const host: vue.LanguageServiceHost = {
 			// ts
 			getNewLine: () => sys.newLine,
 			useCaseSensitiveFileNames: () => sys.useCaseSensitiveFileNames,

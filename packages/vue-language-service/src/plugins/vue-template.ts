@@ -60,7 +60,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 	tsLs: ts2.LanguageService,
 	templateLanguagePlugin: T,
 	isSupportedDocument: (document: TextDocument) => boolean,
-	vueLsHost: vue.VueLanguageServiceHost,
+	vueLsHost: vue.LanguageServiceHost,
 	vueDocuments: SourceFileDocuments,
 	detect(uri: string): Promise<{
 		tag: 'both' | 'kebabCase' | 'pascalCase' | 'unsure',

@@ -44,12 +44,12 @@ export function getSemanticTokenLegend() {
 }
 
 export function createLanguageService(
-	host: vue.VueLanguageServiceHost,
+	host: vue.LanguageServiceHost,
 	fileSystemProvider: html.FileSystemProvider | undefined,
 	schemaRequestService: json.SchemaRequestService | undefined,
 	configurationHost: embedded.ConfigurationHost | undefined,
 	customPlugins: embedded.EmbeddedLanguageServicePlugin[],
-	createLanguageServiceContext = () => vue.createPresetLanguageContext(host).languageContext,
+	createLanguageServiceContext = () => vue.createLanguageContext(host, [vue.createEmbeddedLanguageModule(host)]),
 	rootUri = URI.file(host.getCurrentDirectory()),
 ) {
 

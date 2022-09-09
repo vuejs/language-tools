@@ -3,9 +3,10 @@ import * as vue from '@volar/vue-language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { getProgram } from './getProgram';
 
-export function createLanguageService(host: vue.VueLanguageServiceHost) {
+export function createLanguageService(host: vue.LanguageServiceHost) {
 
-	const core = vue.createPresetLanguageContext(host).languageContext;
+	const mods = [vue.createEmbeddedLanguageModule(host)];
+	const core = vue.createLanguageContext(host, mods);
 	const ts = host.getTypeScriptModule();
 	const ls = ts.createLanguageService(core.typescriptLanguageServiceHost);
 
