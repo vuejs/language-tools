@@ -8,13 +8,6 @@ export function register(
 	connection: vscode.Connection,
 	documents: ReturnType<typeof createSnapshots>,
 	documentServiceHost: ReturnType<typeof createDocumentServiceHost>,
-	allowedLanguageIds: string[] = [
-		'vue',
-		'javascript',
-		'typescript',
-		'javascriptreact',
-		'typescriptreact',
-	],
 ) {
 	connection.onDocumentFormatting(handler => {
 		return worker(handler.textDocument.uri, document => {
@@ -69,7 +62,7 @@ export function register(
 
 	function worker<T>(uri: string, cb: (document: TextDocument) => T) {
 		const document = documents.data.uriGet(uri)?.getDocument();
-		if (document && allowedLanguageIds.includes(document.languageId)) {
+		if (document) {
 			return cb(document);
 		}
 	}

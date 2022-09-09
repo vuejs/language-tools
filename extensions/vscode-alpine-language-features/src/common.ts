@@ -215,7 +215,6 @@ function getInitializationOptions(
 			} : {}),
 		} : undefined,
 		documentFeatures: mode === 'document-features' ? {
-			allowedLanguageIds: ['html'],
 			selectionRange: true,
 			foldingRange: true,
 			linkedEditingRange: true,
