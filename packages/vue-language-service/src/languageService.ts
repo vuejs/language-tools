@@ -49,10 +49,6 @@ export function createLanguageService(
 	schemaRequestService: json.SchemaRequestService | undefined,
 	configurationHost: embedded.ConfigurationHost | undefined,
 	customPlugins: embedded.EmbeddedLanguageServicePlugin[],
-	getNameCases?: (uri: string) => Promise<{
-		tag: 'both' | 'kebabCase' | 'pascalCase',
-		attr: 'kebabCase' | 'camelCase',
-	}>,
 	createLanguageServiceContext = () => vue.createPresetLanguageContext(host).languageContext,
 	rootUri = URI.file(host.getCurrentDirectory()),
 ) {
@@ -62,7 +58,7 @@ export function createLanguageService(
 	const tsLs = ts.createLanguageService(core.typescriptLanguageServiceHost);
 	tsFaster.decorate(ts, core.typescriptLanguageServiceHost, tsLs);
 
-	embedded.setContextStore({
+	embedded.setPluginContext({
 		rootUri: rootUri.toString(),
 		typescript: {
 			module: ts,
@@ -90,6 +86,7 @@ export function createLanguageService(
 		},
 	};
 	const apis = embedded.createLanguageService(context);
+	const detectTagNameCase = tagNameCase.register(context);
 
 	// plugins
 	const scriptTsPlugin = useTsPlugin();
@@ -167,7 +164,7 @@ export function createLanguageService(
 			vueRuntimeContext: core,
 			rootPath: host.getCurrentDirectory(),
 			context,
-			detectTagNameCase: tagNameCase.register(context),
+			detectTagNameCase,
 		},
 	};
 
@@ -258,9 +255,9 @@ export function createLanguageService(
 			isSupportedDocument: (document) =>
 				document.languageId === languageId
 				&& !vueDocuments.get(document.uri) /* not petite-vue source file */,
-			getNameCases,
 			vueLsHost: host,
 			vueDocuments,
+			detect: detectTagNameCase,
 		});
 	}
 }

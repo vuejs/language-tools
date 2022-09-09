@@ -4,9 +4,10 @@ import { BaseLanguageClient, State } from 'vscode-languageclient';
 import * as shared from '@volar/shared';
 import { DetectDocumentNameCasesRequest } from '@volar/vue-language-server';
 
+export const tagCases = shared.createUriMap<'both' | 'kebabCase' | 'pascalCase' | 'unsure'>();
+
 export async function activate(context: vscode.ExtensionContext, languageClient: BaseLanguageClient) {
 
-	const tagCases = shared.createUriMap<'both' | 'kebabCase' | 'pascalCase' | 'unsure'>();
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	statusBar.command = 'volar.action.tagNameCase';
 
@@ -88,14 +89,6 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 			statusBar.dispose();
 		}
 	});
-
-	return (uri: string) => {
-		let tagCase = tagCases.uriGet(uri);
-		if (uri.toLowerCase() === vscode.window.activeTextEditor?.document.uri.toString().toLowerCase()) {
-			updateStatusBarText(tagCase);
-		}
-		return !tagCase || tagCase === 'unsure' ? 'both' : tagCase;
-	};
 
 	async function onChangeDocument(newDoc: vscode.TextDocument | undefined) {
 		if (

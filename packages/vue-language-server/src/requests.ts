@@ -17,16 +17,6 @@ export namespace ShowReferencesNotification {
 	export const type = new vscode.NotificationType<ResponseType>('vue.findReferences');
 }
 
-export namespace GetDocumentNameCasesRequest {
-	export type ParamsType = vscode.TextDocumentIdentifier;
-	export type ResponseType = {
-		tagNameCase: 'both' | 'kebabCase' | 'pascalCase',
-		attrNameCase: 'kebabCase' | 'camelCase',
-	};
-	export type ErrorType = never;
-	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('volar/getAttrNameCaseClient');
-}
-
 export namespace GetDocumentPrintWidthRequest {
 	export type ParamsType = vscode.TextDocumentIdentifier;
 	export type ResponseType = number | undefined;

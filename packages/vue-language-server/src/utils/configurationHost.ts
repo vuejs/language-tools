@@ -3,13 +3,9 @@ import { ConfigurationHost } from '@volar/vue-language-service';
 
 export function createConfigurationHost(params: vscode.InitializeParams, connection: vscode.Connection): ConfigurationHost & { ready(): void; } {
 
-	let settings: Record<string, Record<string, Promise<any>>> = {};
-	let watchingChange = false;
-
 	const callbacks: Function[] = [];
 
 	connection.onDidChangeConfiguration(async () => {
-		settings = {};
 		for (const cb of callbacks) {
 			cb();
 		}
@@ -19,18 +15,10 @@ export function createConfigurationHost(params: vscode.InitializeParams, connect
 		ready() {
 			if (params.capabilities.workspace?.didChangeConfiguration?.dynamicRegistration) {
 				connection.client.register(vscode.DidChangeConfigurationNotification.type);
-				watchingChange = true;
 			}
 		},
 		async getConfiguration(section, scopeUri) {
-			if (!settings[section]) {
-				settings[section] = {};
-			}
-			const uri = scopeUri ?? '';
-			if (!settings[section][uri] || !watchingChange) {
-				settings[section][uri] = (async () => await connection.workspace.getConfiguration({ scopeUri, section }) ?? undefined)();
-			}
-			return settings[section][uri];
+			return await connection.workspace.getConfiguration({ scopeUri, section });
 		},
 		onDidChangeConfiguration(cb) {
 			callbacks.push(cb);

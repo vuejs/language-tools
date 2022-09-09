@@ -18,7 +18,6 @@ export function createLanguageService(
 		undefined,
 		configurationHost,
 		customPlugins,
-		undefined,
 		() => alpineTs.createLanguageContext(alpineLsHost),
 		rootUri,
 	);

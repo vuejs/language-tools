@@ -2,7 +2,7 @@ import type { DocumentContext, FileSystemProvider } from 'vscode-html-languagese
 import type { SchemaRequestService } from 'vscode-json-languageservice';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
-interface ContextStore {
+interface PluginContext {
 	rootUri: string;
 	typescript: {
 		module: typeof import('typescript/lib/tsserverlibrary');
@@ -20,15 +20,11 @@ export interface ConfigurationHost {
 	onDidChangeConfiguration: (cb: () => void) => void,
 }
 
-export function setContextStore(store: ContextStore) {
-	(globalThis as any)['volar'] = store;
-}
-
-function getContextStore(): ContextStore {
-	if (!('volar' in globalThis)) {
-		throw `!('volar' in globalThis)`;
-	}
-	return (globalThis as any)['volar'];
+/**
+ * TODO: remove these APIs
+ */
+export function setPluginContext(ctx: PluginContext) {
+	(globalThis as any)['volar'] = ctx;
 }
 
 export function useRootUri() {
@@ -61,4 +57,11 @@ export function useTypeScriptLanguageService() {
 
 export function useTypeScriptLanguageServiceHost() {
 	return getContextStore().typescript.languageServiceHost;
+}
+
+function getContextStore(): PluginContext {
+	if (!('volar' in globalThis)) {
+		throw `!('volar' in globalThis)`;
+	}
+	return (globalThis as any)['volar'];
 }

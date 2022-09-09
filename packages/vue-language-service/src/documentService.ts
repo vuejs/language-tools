@@ -27,7 +27,7 @@ export function getDocumentService(
 	rootUri = URI.file(ts.sys.getCurrentDirectory()),
 ) {
 
-	embedded.setContextStore({
+	embedded.setPluginContext({
 		rootUri: rootUri.toString(),
 		typescript: {
 			module: ts,

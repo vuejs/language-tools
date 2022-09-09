@@ -60,12 +60,12 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 	tsLs: ts2.LanguageService,
 	templateLanguagePlugin: T,
 	isSupportedDocument: (document: TextDocument) => boolean,
-	getNameCases?: (uri: string) => Promise<{
-		tag: 'both' | 'kebabCase' | 'pascalCase',
-		attr: 'kebabCase' | 'camelCase',
-	}>,
 	vueLsHost: vue.VueLanguageServiceHost,
 	vueDocuments: SourceFileDocuments,
+	detect(uri: string): Promise<{
+		tag: 'both' | 'kebabCase' | 'pascalCase' | 'unsure',
+		attr: 'kebabCase' | 'camelCase' | 'unsure',
+	}>,
 }): EmbeddedLanguageServicePlugin & T {
 
 	const rootUri = URI.parse(useRootUri());
@@ -443,9 +443,14 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			return;
 
 		const vueSourceFile = vueDocument.file;
-		const nameCases = await options.getNameCases?.(vueDocument.uri) ?? {
-			tag: 'both',
-			attr: 'kebabCase',
+		const detected = await options.detect(vueDocument.uri);
+		const [attr, tag] = await Promise.all([
+			useConfigurationHost()?.getConfiguration<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('volar.completion.preferredAttrNameCase', vueDocument.uri),
+			useConfigurationHost()?.getConfiguration<'auto' | 'both' | 'kebab' | 'pascal'>('volar.completion.preferredTagNameCase', vueDocument.uri),
+		]);
+		const nameCases = {
+			tag: tag === 'auto' && detected.tag !== 'unsure' ? detected.tag : (tag === 'kebab' ? 'kebabCase' : tag === 'pascal' ? 'pascalCase' : 'both'),
+			attr: detected.attr !== 'unsure' && (attr === 'auto-camel' || attr === 'auto-kebab') ? detected.attr : (attr === 'auto-camel' || attr === 'camel') ? 'camelCase' : 'kebabCase',
 		};
 		const componentCompletion = await getComponentCompletionData(vueDocument);
 		if (!componentCompletion)

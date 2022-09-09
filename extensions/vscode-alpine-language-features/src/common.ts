@@ -192,11 +192,7 @@ function getInitializationOptions(
 				codeAction: true,
 				workspaceSymbol: true,
 				completion: {
-					defaultTagNameCase: 'both',
-					defaultAttrNameCase: 'kebabCase',
-					// getDocumentNameCasesRequest: true,
 					// getDocumentSelectionRequest: true,
-					getDocumentNameCasesRequest: false,
 					getDocumentSelectionRequest: false,
 				},
 				// schemaRequestService: { getDocumentContentRequest: true },

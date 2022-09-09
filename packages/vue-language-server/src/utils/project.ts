@@ -4,7 +4,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import { loadCustomPlugins } from './config';
-import { GetDocumentContentRequest, GetDocumentNameCasesRequest } from '../requests';
+import { GetDocumentContentRequest } from '../requests';
 import { FileSystem, FileSystemHost, LanguageConfigs, RuntimeEnvironment, ServerInitializationOptions } from '../types';
 import { createSnapshots } from './snapshots';
 import { ConfigurationHost } from '@volar/vue-language-service';
@@ -93,21 +93,6 @@ export async function createProject(
 				},
 				configHost,
 				loadCustomPlugins(languageServiceHost.getCurrentDirectory()),
-				options.languageFeatures?.completion ? async (uri) => {
-
-					if (options.languageFeatures?.completion?.getDocumentNameCasesRequest) {
-						const res = await connection.sendRequest(GetDocumentNameCasesRequest.type, { uri });
-						return {
-							tag: res.tagNameCase,
-							attr: res.attrNameCase,
-						};
-					}
-
-					return {
-						tag: options.languageFeatures!.completion!.defaultTagNameCase,
-						attr: options.languageFeatures!.completion!.defaultAttrNameCase,
-					};
-				} : undefined,
 				undefined,
 				rootUri,
 			);

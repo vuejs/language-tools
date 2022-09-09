@@ -78,12 +78,6 @@ export interface ServerInitializationOptions {
 		renameFileRefactoring?: boolean;
 		signatureHelp?: boolean;
 		completion?: {
-			defaultTagNameCase: 'both' | 'kebabCase' | 'pascalCase',
-			defaultAttrNameCase: 'kebabCase' | 'camelCase',
-			/**
-			 * {@link __requests.GetDocumentNameCasesRequest}
-			 */
-			getDocumentNameCasesRequest?: boolean,
 			/**
 			 * {@link __requests.GetDocumentSelectionRequest}
 			 * */

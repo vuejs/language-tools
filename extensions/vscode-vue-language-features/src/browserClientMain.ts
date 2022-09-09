@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient/browser';
 import { activate as commonActivate, deactivate as commonDeactivate } from './common';
+import { middleware } from './middleware';
 
 export function activate(context: vscode.ExtensionContext) {
 	return commonActivate(context, async (
@@ -18,7 +19,8 @@ export function activate(context: vscode.ExtensionContext) {
 			progressOnInitialization: true,
 			synchronize: {
 				fileEvents: vscode.workspace.createFileSystemWatcher('{**/*.vue,**/*.md,**/*.html,**/*.js,**/*.jsx,**/*.ts,**/*.tsx,**/*.json}')
-			}
+			},
+			middleware,
 		};
 		const client = new lsp.LanguageClient(
 			id,
