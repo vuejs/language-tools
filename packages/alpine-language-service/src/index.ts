@@ -1,23 +1,18 @@
 import * as alpineTs from '@volar/alpine-language-core';
 import * as vueLs from '@volar/vue-language-service';
-import { ConfigurationHost, EmbeddedLanguageServicePlugin } from '@volar/embedded-language-service';
-import { URI } from 'vscode-uri';
+import { EmbeddedLanguageServicePlugin, PluginContext } from '@volar/embedded-language-service';
 
 export function createLanguageService(
 	alpineLsHost: alpineTs.LanguageServiceHost,
-	configurationHost: ConfigurationHost | undefined,
+	env: PluginContext['env'],
 	customPlugins: EmbeddedLanguageServicePlugin[],
-	rootUri = URI.file(alpineLsHost.getCurrentDirectory()),
 ): ReturnType<typeof vueLs['createLanguageService']> {
 	return vueLs.createLanguageService(
 		{
 			...alpineLsHost,
 			getVueCompilationSettings: () => ({}),
 		},
-		{
-			rootUri,
-			configurationHost,
-		},
+		env,
 		customPlugins,
 		[alpineTs.createEmbeddedLanguageModule(alpineLsHost)],
 	);
@@ -25,15 +20,12 @@ export function createLanguageService(
 
 export function getDocumentService(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	configurationHost: ConfigurationHost | undefined,
-	customPlugins: EmbeddedLanguageServicePlugin[],
-	rootUri = URI.file(ts.sys.getCurrentDirectory()),
+	env: PluginContext['env'],
+	customPlugins: EmbeddedLanguageServicePlugin[] = [],
 ): ReturnType<typeof vueLs['getDocumentService']> {
 	return vueLs.getDocumentService(
 		ts,
-		configurationHost,
-		undefined,
+		env,
 		customPlugins,
-		rootUri,
 	);
 }

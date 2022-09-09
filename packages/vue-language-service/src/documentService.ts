@@ -8,11 +8,10 @@ import * as embeddedLS from '@volar/embedded-language-service';
 import * as embedded from '@volar/embedded-language-core';
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-core';
-import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { URI } from 'vscode-uri';
 import useVuePlugin from './plugins/vue';
 import useAutoWrapParenthesesPlugin from './plugins/vue-autoinsert-parentheses';
+import { PluginContext } from '@volar/embedded-language-service';
 
 // fix build
 import type * as _0 from 'vscode-languageserver-protocol';
@@ -21,21 +20,15 @@ export interface DocumentService extends ReturnType<typeof getDocumentService> {
 
 export function getDocumentService(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	configurationHost: embeddedLS.ConfigurationHost | undefined,
-	fileSystemProvider: html.FileSystemProvider | undefined,
+	env: PluginContext['env'],
 	customPlugins: embeddedLS.EmbeddedLanguageServicePlugin[] = [],
-	rootUri = URI.file(ts.sys.getCurrentDirectory()),
 ) {
 
 	const vueDocuments = new WeakMap<TextDocument, [embeddedLS.SourceFileDocument, embedded.EmbeddedLanguageModule]>();
-	const vueLanguagePlugins = vue.getDefaultVueLanguagePlugins(ts, shared.getPathOfUri(rootUri.toString()), {}, {}, []);
+	const vueLanguagePlugins = vue.getDefaultVueLanguagePlugins(ts, shared.getPathOfUri(env.rootUri.toString()), {}, {}, []);
 	const documentServiceContext = embeddedLS.getDocumentServiceContext({
 		ts,
-		env: {
-			rootUri,
-			configurationHost,
-			fileSystemProvider,
-		},
+		env,
 		getLanguageModules() {
 			const vueLanguageModule: embedded.EmbeddedLanguageModule = {
 				createSourceFile(fileName, snapshot) {

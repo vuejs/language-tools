@@ -14,10 +14,12 @@ export function createDocumentServiceHost(
 	const workspaceServices = new Map<string, vue.DocumentService>();
 	const untitledService = languageConfigs.getDocumentService(
 		ts,
-		configHost,
-		runtimeEnv.fileSystemProvide,
+		{
+			rootUri: URI.from({ scheme: 'untitled' }),
+			configurationHost: configHost,
+			fileSystemProvider: runtimeEnv.fileSystemProvide,
+		},
 		[],
-		URI.from({ scheme: 'untitled' }),
 	);
 
 	return {
@@ -29,10 +31,12 @@ export function createDocumentServiceHost(
 	function add(rootUri: URI) {
 		workspaceServices.set(rootUri.toString(), languageConfigs.getDocumentService(
 			ts,
-			configHost,
-			runtimeEnv.fileSystemProvide,
+			{
+				rootUri,
+				configurationHost: configHost,
+				fileSystemProvider: runtimeEnv.fileSystemProvide,
+			},
 			loadCustomPlugins(rootUri.fsPath),
-			rootUri,
 		));
 	}
 	function remove(rootUri: URI) {
