@@ -1,29 +1,24 @@
-import * as shared from '@volar/shared';
-import { ConfigurationHost, EmbeddedLanguageServicePlugin, setContextStore } from '@volar/embedded-language-service';
-import * as vue from '@volar/vue-language-core';
-import type * as html from 'vscode-html-languageservice';
-import { TextDocument } from 'vscode-languageserver-textdocument';
 import useCssPlugin from '@volar-plugins/css';
 import useHtmlPlugin from '@volar-plugins/html';
 import useJsonPlugin from '@volar-plugins/json';
 import usePugPlugin from '@volar-plugins/pug';
 import usePugFormatPlugin from '@volar-plugins/pug-beautify';
 import useTsPlugin, { isTsDocument } from '@volar-plugins/typescript';
-import * as autoInsert from './documentFeatures/autoInsert';
-import * as colorPresentations from './documentFeatures/colorPresentations';
-import * as documentColors from './documentFeatures/documentColors';
-import * as documentSymbols from './documentFeatures/documentSymbols';
-import * as foldingRanges from './documentFeatures/foldingRanges';
-import * as format from './documentFeatures/format';
-import * as linkedEditingRanges from './documentFeatures/linkedEditingRanges';
-import * as selectionRanges from './documentFeatures/selectionRanges';
+import { ConfigurationHost, EmbeddedLanguageServicePlugin, setContextStore } from '@volar/embedded-language-service';
+import * as shared from '@volar/shared';
+import * as vue from '@volar/vue-language-core';
+import type * as html from 'vscode-html-languageservice';
+import { TextDocument } from 'vscode-languageserver-textdocument';
+import { URI } from 'vscode-uri';
+import { getEmbeddedTypeScriptDocumentService } from './baseDocumentService';
+import { parseSourceFileDocument, SourceFileDocument } from './documents';
+import useVuePlugin from './plugins/vue';
+import useAutoWrapParenthesesPlugin from './plugins/vue-autoinsert-parentheses';
 import { DocumentServiceRuntimeContext } from './types';
 import { singleFileTypeScriptServiceHost, updateSingleFileTypeScriptServiceHost } from './utils/singleFileTypeScriptService';
-import { parseSourceFileDocument, SourceFileDocument } from './documents';
-import useAutoWrapParenthesesPlugin from './plugins/vue-autoinsert-parentheses';
-import useVuePlugin from './plugins/vue';
-import type * as _ from 'vscode-languageserver-protocol';
-import { URI } from 'vscode-uri';
+
+// fix build
+import type * as _0 from 'vscode-languageserver-protocol';
 
 export interface DocumentService extends ReturnType<typeof getDocumentService> { }
 
@@ -116,14 +111,5 @@ export function getDocumentService(
 		},
 	};
 
-	return {
-		format: format.register(context),
-		getFoldingRanges: foldingRanges.register(context),
-		getSelectionRanges: selectionRanges.register(context),
-		findLinkedEditingRanges: linkedEditingRanges.register(context),
-		findDocumentSymbols: documentSymbols.register(context),
-		findDocumentColors: documentColors.register(context),
-		getColorPresentations: colorPresentations.register(context),
-		doAutoInsert: autoInsert.register(context),
-	};
+	return getEmbeddedTypeScriptDocumentService(context);
 }
