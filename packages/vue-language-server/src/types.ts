@@ -115,7 +115,6 @@ export interface ServerInitializationOptions {
 	 * html language service will be create in server if this option is not null
 	 */
 	documentFeatures?: {
-		allowedLanguageIds?: string[];
 		selectionRange?: boolean;
 		foldingRange?: boolean;
 		linkedEditingRange?: boolean;

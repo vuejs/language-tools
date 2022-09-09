@@ -67,7 +67,7 @@ export function createLanguageServer(
 				documentServiceHost.add(root);
 			}
 
-			(await import('./features/documentFeatures')).register(connection, documents, documentServiceHost, options.documentFeatures.allowedLanguageIds);
+			(await import('./features/documentFeatures')).register(connection, documents, documentServiceHost);
 		}
 		if (options.languageFeatures) {
 			(await import('./registers/registerlanguageFeatures')).register(options.languageFeatures!, vue.getSemanticTokenLegend(), result.capabilities, languageConfigs);

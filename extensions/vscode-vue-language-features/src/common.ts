@@ -84,17 +84,18 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	const documentFeaturesDocumentSelector: lsp.DocumentSelector = takeOverMode ?
 		[
 			{ language: 'vue' },
-			{ language: 'markdown' },
-			{ language: 'html' },
 			{ language: 'javascript' },
 			{ language: 'typescript' },
 			{ language: 'javascriptreact' },
 			{ language: 'typescriptreact' },
 		] : [
 			{ language: 'vue' },
-			{ language: 'markdown' },
-			{ language: 'html' },
 		];
+
+	if (enabledDocumentFeaturesInHtml()) {
+		documentFeaturesDocumentSelector.push({ language: 'html' });
+	}
+
 	const _useSecondServer = useSecondServer();
 	const _serverMaxOldSpaceSize = serverMaxOldSpaceSize();
 
@@ -276,14 +277,6 @@ function getInitializationOptions(
 			} : {}),
 		} : undefined,
 		documentFeatures: mode === 'document-features' ? {
-			allowedLanguageIds: [
-				'vue',
-				'javascript',
-				'typescript',
-				'javascriptreact',
-				'typescriptreact',
-				enabledDocumentFeaturesInHtml() ? 'html' : undefined,
-			].filter(shared.notEmpty),
 			selectionRange: true,
 			foldingRange: true,
 			linkedEditingRange: true,
