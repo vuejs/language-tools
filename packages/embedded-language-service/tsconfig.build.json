@@ -24,5 +24,8 @@
 		{
 			"path": "../transforms/tsconfig.build.json"
 		},
+		{
+			"path": "../typescript-faster/tsconfig.build.json"
+		},
 	],
 }

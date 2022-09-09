@@ -1,6 +1,6 @@
-import { TextRange } from '@volar/vue-language-core';
+import { TextRange } from '@volar/embedded-language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { getStartEnd, findBindingVars } from '@volar/vue-language-core';
+import * as vue from '@volar/vue-language-core';
 
 export interface RefSugarDeclarationRanges extends ReturnType<typeof parseRefSugarDeclarationRanges> { }
 
@@ -19,7 +19,7 @@ export function parseRefSugarDeclarationRanges(ts: typeof import('typescript/lib
 	return calls;
 
 	function _getStartEnd(node: ts.Node) {
-		return getStartEnd(node, ast);
+		return vue.getStartEnd(node, ast);
 	}
 	function visitNode(node: ts.Node) {
 		if (ts.isVariableDeclarationList(node) && node.declarations.length === 1) {
@@ -43,7 +43,7 @@ export function parseRefSugarDeclarationRanges(ts: typeof import('typescript/lib
 						start: flagStart,
 						end: flagStart + (node.flags === ts.NodeFlags.Const ? 'count'.length : 'let'.length),
 					};
-					const bindings = findBindingVars(ts, left, ast);
+					const bindings = vue.findBindingVars(ts, left, ast);
 					const fnRange = _getStartEnd(right.expression);
 
 					calls.push({
@@ -72,7 +72,7 @@ export function parseRefSugarCallRanges(ts: typeof import('typescript/lib/tsserv
 	return calls;
 
 	function _getStartEnd(node: ts.Node) {
-		return getStartEnd(node, ast);
+		return vue.getStartEnd(node, ast);
 	}
 	function visitNode(node: ts.Node) {
 		if (
@@ -118,7 +118,7 @@ export function parseDeclarationRanges(ts: typeof import('typescript/lib/tsserve
 	return declarations;
 
 	function _getStartEnd(node: ts.Node) {
-		return getStartEnd(node, ast);
+		return vue.getStartEnd(node, ast);
 	}
 	function visitNode(node: ts.Node) {
 		if (ts.isVariableDeclarationList(node) && node.declarations.length === 1) {
@@ -134,7 +134,7 @@ export function parseDeclarationRanges(ts: typeof import('typescript/lib/tsserve
 					start: flagStart,
 					end: flagStart + (node.flags === ts.NodeFlags.Const ? 'count'.length : 'let'.length),
 				};
-				const bindings = findBindingVars(ts, left, ast);
+				const bindings = vue.findBindingVars(ts, left, ast);
 				let rightFn: TextRange | undefined;
 
 				if (ts.isCallExpression(right) && ts.isIdentifier(right.expression)) {
@@ -168,7 +168,7 @@ export function parseDotValueRanges(ts: typeof import('typescript/lib/tsserverli
 	return dotValues;
 
 	function _getStartEnd(node: ts.Node) {
-		return getStartEnd(node, ast);
+		return vue.getStartEnd(node, ast);
 	}
 	function visitNode(node: ts.Node) {
 		if (

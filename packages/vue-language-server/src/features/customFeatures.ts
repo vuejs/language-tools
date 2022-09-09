@@ -23,9 +23,9 @@ export function register(
 		if (project) {
 			const ls = await (await project.project)?.getLanguageServiceDontCreate();
 			if (ls) {
-				const localTypesFiles = ls.__internal__.vueRuntimeContext.typescriptLanguageServiceHost.getScriptFileNames().filter(fileName => fileName.endsWith(vue.localTypes.typesFileName));
+				const localTypesFiles = ls.__internal__.context.core.typescriptLanguageServiceHost.getScriptFileNames().filter(fileName => fileName.endsWith(vue.localTypes.typesFileName));
 				for (const fileName of localTypesFiles) {
-					const script = ls.__internal__.vueRuntimeContext.typescriptLanguageServiceHost.getScriptSnapshot(fileName);
+					const script = ls.__internal__.context.core.typescriptLanguageServiceHost.getScriptSnapshot(fileName);
 					if (script) {
 						fs.writeFile(fileName, script.getText(0, script.getLength()), () => { });
 					}
@@ -59,7 +59,7 @@ export function register(
 				const allVueDocuments = context.documents.getAll();
 				let i = 0;
 				for (const vueFile of allVueDocuments) {
-					progress.report(i++ / allVueDocuments.length * 100, path.relative(ls.__internal__.rootPath, shared.getPathOfUri(vueFile.uri)));
+					progress.report(i++ / allVueDocuments.length * 100, path.relative(ls.__internal__.context.host.getCurrentDirectory(), shared.getPathOfUri(vueFile.uri)));
 					if (progress.token.isCancellationRequested) {
 						continue;
 					}

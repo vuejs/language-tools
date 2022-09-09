@@ -1,5 +1,5 @@
 import { EmbeddedLanguageServicePlugin } from '@volar/embedded-language-service';
-import { EmbeddedLanguageModule, EmbeddedLanguageServiceHost, EmbeddedLanguageContext } from '@volar/embedded-language-core';
+import { EmbeddedLanguageModule, LanguageServiceHost, EmbeddedLanguageContext } from '@volar/embedded-language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { SourceFileDocument, SourceFileDocuments } from './documents';
@@ -12,7 +12,7 @@ export interface DocumentServiceRuntimeContext {
 };
 
 export interface LanguageServiceRuntimeContext {
-	host: EmbeddedLanguageServiceHost;
+	host: LanguageServiceHost;
 	core: EmbeddedLanguageContext;
 	typescriptLanguageService: ts.LanguageService;
 	documents: SourceFileDocuments;

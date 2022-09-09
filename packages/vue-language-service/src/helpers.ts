@@ -1,12 +1,12 @@
 import * as vue from '@volar/vue-language-core';
-import { EmbeddedLangaugeSourceFile, walkElementNodes } from '@volar/vue-language-core';
+import * as embedded from '@volar/embedded-language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { computed, ComputedRef } from '@vue/reactivity';
 
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
 export function checkTemplateData(
-	sourceFile: EmbeddedLangaugeSourceFile,
+	sourceFile: embedded.EmbeddedLangaugeSourceFile,
 	tsLs: ts.LanguageService,
 ) {
 
@@ -21,8 +21,8 @@ export function checkTemplateData(
 		includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
 	};
 
-	let file: vue.EmbeddedFile | undefined;
-	vue.forEachEmbeddeds(sourceFile.embeddeds, embedded => {
+	let file: embedded.EmbeddedFile | undefined;
+	embedded.forEachEmbeddeds(sourceFile.embeddeds, embedded => {
 		if (embedded.file.fileName === sourceFile.tsFileName) {
 			file = embedded.file;
 		}
@@ -57,9 +57,9 @@ export function checkTemplateData(
 	};
 }
 
-const map = new WeakMap<EmbeddedLangaugeSourceFile, ComputedRef>();
+const map = new WeakMap<embedded.EmbeddedLangaugeSourceFile, ComputedRef>();
 
-export function getTemplateTagsAndAttrs(sourceFile: EmbeddedLangaugeSourceFile) {
+export function getTemplateTagsAndAttrs(sourceFile: embedded.EmbeddedLangaugeSourceFile) {
 
 	if (!map.has(sourceFile)) {
 		const getter = computed(() => {
@@ -69,7 +69,7 @@ export function getTemplateTagsAndAttrs(sourceFile: EmbeddedLangaugeSourceFile) 
 			const tags = new Map<string, number[]>();
 			const attrs = new Set<string>();
 			if (ast) {
-				walkElementNodes(ast, node => {
+				vue.walkElementNodes(ast, node => {
 
 					if (!tags.has(node.tag)) {
 						tags.set(node.tag, []);

@@ -8,6 +8,8 @@ import { GetDocumentContentRequest } from '../requests';
 import { FileSystem, FileSystemHost, LanguageConfigs, RuntimeEnvironment, ServerInitializationOptions } from '../types';
 import { createSnapshots } from './snapshots';
 import { ConfigurationHost } from '@volar/vue-language-service';
+import * as upath from 'upath';
+import * as html from 'vscode-html-languageservice';
 
 export interface Project extends ReturnType<typeof createProject> { }
 
@@ -70,31 +72,32 @@ export async function createProject(
 		if (!vueLs) {
 			vueLs = languageConfigs.createLanguageService(
 				languageServiceHost,
-				runtimeEnv.fileSystemProvide,
-				(uri) => {
+				{
+					rootUri,
+					configurationHost: configHost,
+					fileSystemProvider: runtimeEnv.fileSystemProvide,
+					documentContext: getHTMLDocumentContext(languageServiceHost),
+					schemaRequestService: uri => {
+						const protocol = uri.substring(0, uri.indexOf(':'));
 
-					const protocol = uri.substring(0, uri.indexOf(':'));
+						const builtInHandler = runtimeEnv.schemaRequestHandlers[protocol];
+						if (builtInHandler) {
+							return builtInHandler(uri);
+						}
 
-					const builtInHandler = runtimeEnv.schemaRequestHandlers[protocol];
-					if (builtInHandler) {
-						return builtInHandler(uri);
-					}
-
-					if (typeof options === 'object' && options.languageFeatures?.schemaRequestService) {
-						return connection.sendRequest(GetDocumentContentRequest.type, { uri }).then(responseText => {
-							return responseText;
-						}, error => {
-							return Promise.reject(error.message);
-						});
-					}
-					else {
-						return Promise.reject('clientHandledGetDocumentContentRequest is false');
-					}
+						if (typeof options === 'object' && options.languageFeatures?.schemaRequestService) {
+							return connection.sendRequest(GetDocumentContentRequest.type, { uri }).then(responseText => {
+								return responseText;
+							}, error => {
+								return Promise.reject(error.message);
+							});
+						}
+						else {
+							return Promise.reject('clientHandledGetDocumentContentRequest is false');
+						}
+					},
 				},
-				configHost,
 				loadCustomPlugins(languageServiceHost.getCurrentDirectory()),
-				undefined,
-				rootUri,
 			);
 		}
 		return vueLs;
@@ -248,4 +251,47 @@ export async function createProject(
 			return { ...content, vueOptions: {} };
 		}
 	}
+}
+
+function getHTMLDocumentContext(host: vue.LanguageServiceHost) {
+	const ts = host.getTypeScriptModule();
+	const documentContext: html.DocumentContext = {
+		resolveReference(ref: string, base: string) {
+
+			const isUri = base.indexOf('://') >= 0;
+			const resolveResult = ts.resolveModuleName(
+				ref,
+				isUri ? shared.getPathOfUri(base) : base,
+				host.getCompilationSettings(),
+				host,
+			);
+			const failedLookupLocations: string[] = (resolveResult as any).failedLookupLocations;
+			const dirs = new Set<string>();
+
+			for (const failed of failedLookupLocations) {
+				let path = failed;
+				const fileName = upath.basename(path);
+				if (fileName === 'index.d.ts' || fileName === '*.d.ts') {
+					dirs.add(upath.dirname(path));
+				}
+				if (path.endsWith('.d.ts')) {
+					path = path.substring(0, path.length - '.d.ts'.length);
+				}
+				else {
+					continue;
+				}
+				if (host.fileExists(path)) {
+					return isUri ? shared.getUriByPath(URI.parse(base), path) : path;
+				}
+			}
+			for (const dir of dirs) {
+				if (host.directoryExists?.(dir) ?? true) {
+					return isUri ? shared.getUriByPath(URI.parse(base), dir) : dir;
+				}
+			}
+
+			return undefined;
+		},
+	};
+	return documentContext;
 }

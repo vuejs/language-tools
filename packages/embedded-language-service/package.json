@@ -20,6 +20,7 @@
 		"@volar/shared": "0.40.13",
 		"@volar/source-map": "0.40.13",
 		"@volar/transforms": "0.40.13",
+		"@volar/typescript-faster": "0.40.13",
 		"@vue/reactivity": "^3.2.38",
 		"upath": "^2.0.1",
 		"vscode-html-languageservice": "^5.0.1",

@@ -1,12 +1,12 @@
 import { posix as path } from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { createDocumentRegistry, forEachEmbeddeds } from './documentRegistry';
-import { EmbeddedFile, EmbeddedLangaugeSourceFile, EmbeddedLanguageModule, EmbeddedLanguageServiceHost } from './types';
+import { EmbeddedFile, EmbeddedLangaugeSourceFile, EmbeddedLanguageModule, LanguageServiceHost } from './types';
 
-export type EmbeddedLanguageContext = ReturnType<typeof createLanguageContext>;
+export type EmbeddedLanguageContext = ReturnType<typeof createEmbeddedLanguageServiceHost>;
 
-export function createLanguageContext(
-	host: EmbeddedLanguageServiceHost,
+export function createEmbeddedLanguageServiceHost(
+	host: LanguageServiceHost,
 	languageModules: EmbeddedLanguageModule[],
 ) {
 

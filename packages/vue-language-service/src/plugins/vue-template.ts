@@ -1,16 +1,15 @@
+import useHtmlPlugin from '@volar-plugins/html';
+import { EmbeddedLanguageServicePlugin, SourceFileDocument, SourceFileDocuments, useConfigurationHost, useRootUri, useTypeScriptModule } from '@volar/embedded-language-service';
 import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
-import { getVueCompilerOptions, isIntrinsicElement } from '@volar/vue-language-core';
-import { scriptRanges } from '@volar/vue-language-core';
+import * as embedded from '@volar/embedded-language-core';
 import * as vue from '@volar/vue-language-core';
-import { EmbeddedLanguageServicePlugin, useConfigurationHost, useRootUri, useTypeScriptModule, SourceFileDocument, SourceFileDocuments } from '@volar/embedded-language-service';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import useHtmlPlugin from '@volar-plugins/html';
 import { URI } from 'vscode-uri';
 import { checkTemplateData, getTemplateTagsAndAttrs } from '../helpers';
 
@@ -77,7 +76,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 	>();
 	const autoImportPositions = new WeakSet<vscode.Position>();
 	const tokenTypes = new Map(options.getSemanticTokenLegend().tokenTypes.map((t, i) => [t, i]));
-	const runtimeMode = getVueCompilerOptions(options.vueLsHost.getVueCompilationSettings()).experimentalRuntimeMode;
+	const runtimeMode = vue.getVueCompilerOptions(options.vueLsHost.getVueCompilationSettings()).experimentalRuntimeMode;
 
 	return {
 
@@ -212,7 +211,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				const templateScriptData = checkTemplateData(vueDocument.file, options.tsLs.__internal__.raw);
 				const components = new Set([
 					...templateScriptData.components,
-					...templateScriptData.components.map(hyphenate).filter(name => !isIntrinsicElement(runtimeMode, name)),
+					...templateScriptData.components.map(hyphenate).filter(name => !vue.isIntrinsicElement(runtimeMode, name)),
 				]);
 				const offsetRange = range ? {
 					start: document.offsetAt(range.start),
@@ -348,7 +347,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					'\n' + insert.insertText,
 				),
 			];
-			const _scriptRanges = scriptRanges.parseScriptRanges(ts, sfc.scriptAst, !!sfc.scriptSetup, true, true);
+			const _scriptRanges = vue.scriptRanges.parseScriptRanges(ts, sfc.scriptAst, !!sfc.scriptSetup, true, true);
 			const exportDefault = _scriptRanges.exportDefault;
 			if (exportDefault) {
 				// https://github.com/microsoft/TypeScript/issues/36174
@@ -746,8 +745,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 			cache = new Map();
 
-			let file: vue.EmbeddedFile | undefined;
-			vue.forEachEmbeddeds(sourceDocument.file.embeddeds, embedded => {
+			let file: embedded.EmbeddedFile | undefined;
+			embedded.forEachEmbeddeds(sourceDocument.file.embeddeds, embedded => {
 				if (embedded.file.fileName === vueSourceFile.tsFileName) {
 					file = embedded.file;
 				}

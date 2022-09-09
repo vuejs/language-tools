@@ -1,4 +1,4 @@
-import type { EmbeddedLanguageModule, EmbeddedLanguageServiceHost } from '@volar/embedded-language-core';
+import type * as embedded from '@volar/embedded-language-core';
 import { posix as path } from 'path';
 import { getDefaultVueLanguagePlugins } from './plugins';
 import { VueSourceFile } from './sourceFile';
@@ -10,7 +10,7 @@ export function createEmbeddedLanguageModule(
 	host: LanguageServiceHost,
 	extraPlugins: VueLanguagePlugin[] = [],
 	exts: string[] = ['.vue', '.html', '.md'],
-): EmbeddedLanguageModule {
+): embedded.EmbeddedLanguageModule {
 
 	const vueLanguagePlugin = getDefaultVueLanguagePlugins(
 		host.getTypeScriptModule(),
@@ -35,8 +35,7 @@ export function createEmbeddedLanguageModule(
 
 	const vueCompilerOptions = getVueCompilerOptions(host.getVueCompilationSettings());
 	const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(vueCompilerOptions.target));
-
-	return {
+	const languageModule: embedded.EmbeddedLanguageModule = {
 		createSourceFile(fileName, snapshot) {
 			if (exts.some(ext => fileName.endsWith(ext))) {
 				return new VueSourceFile(fileName, snapshot, ts, vueLanguagePlugin);
@@ -45,7 +44,7 @@ export function createEmbeddedLanguageModule(
 		updateSourceFile(sourceFile: VueSourceFile, snapshot) {
 			sourceFile.update(snapshot);
 		},
-		proxyLanguageServiceHost(host: EmbeddedLanguageServiceHost) {
+		proxyLanguageServiceHost(host) {
 			return {
 				fileExists(fileName) {
 					const basename = path.basename(fileName);
@@ -95,6 +94,8 @@ export function createEmbeddedLanguageModule(
 			};
 		},
 	};
+
+	return languageModule;
 
 	function getDirs(fileNames: string[]) {
 		return [...new Set(fileNames.map(path.dirname))];

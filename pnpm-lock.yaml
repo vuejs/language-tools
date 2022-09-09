@@ -153,6 +153,7 @@ importers:
       '@volar/shared': 0.40.13
       '@volar/source-map': 0.40.13
       '@volar/transforms': 0.40.13
+      '@volar/typescript-faster': 0.40.13
       '@vue/reactivity': ^3.2.38
       typescript: latest
       upath: ^2.0.1
@@ -166,6 +167,7 @@ importers:
       '@volar/shared': link:../shared
       '@volar/source-map': link:../source-map
       '@volar/transforms': link:../transforms
+      '@volar/typescript-faster': link:../typescript-faster
       '@vue/reactivity': 3.2.38
       upath: 2.0.1
       vscode-html-languageservice: 5.0.1
@@ -349,11 +351,11 @@ importers:
       '@volar-plugins/pug': 0.40.13
       '@volar-plugins/pug-beautify': 0.40.13
       '@volar-plugins/typescript': 0.40.13
+      '@volar/embedded-language-core': 0.40.13
       '@volar/embedded-language-service': 0.40.13
       '@volar/shared': 0.40.13
       '@volar/source-map': 0.40.13
       '@volar/transforms': 0.40.13
-      '@volar/typescript-faster': 0.40.13
       '@volar/typescript-language-service': 0.40.13
       '@volar/vue-language-core': 0.40.13
       '@vue/compiler-dom': ^3.2.38
@@ -375,11 +377,11 @@ importers:
       '@volar-plugins/pug': link:../../plugins/pug
       '@volar-plugins/pug-beautify': link:../../plugins/pug-beautify
       '@volar-plugins/typescript': link:../../plugins/typescript
+      '@volar/embedded-language-core': link:../embedded-language-core
       '@volar/embedded-language-service': link:../embedded-language-service
       '@volar/shared': link:../shared
       '@volar/source-map': link:../source-map
       '@volar/transforms': link:../transforms
-      '@volar/typescript-faster': link:../typescript-faster
       '@volar/typescript-language-service': link:../typescript-language-service
       '@volar/vue-language-core': link:../vue-language-core
       '@vue/compiler-dom': 3.2.38
@@ -411,11 +413,13 @@ importers:
   packages/vue-typescript:
     specifiers:
       '@volar/code-gen': 0.40.13
+      '@volar/embedded-language-core': workspace:0.40.13
       '@volar/typescript-faster': 0.40.13
       '@volar/vue-language-core': 0.40.13
       typescript: latest
     dependencies:
       '@volar/code-gen': link:../code-gen
+      '@volar/embedded-language-core': link:../embedded-language-core
       '@volar/typescript-faster': link:../typescript-faster
       '@volar/vue-language-core': link:../vue-language-core
     devDependencies:

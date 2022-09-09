@@ -1,3 +1,4 @@
+import { createEmbeddedLanguageServiceHost, LanguageServiceHost } from '@volar/embedded-language-core';
 import * as autoInsert from './languageFeatures/autoInsert';
 import * as callHierarchy from './languageFeatures/callHierarchy';
 import * as codeActionResolve from './languageFeatures/codeActionResolve';
@@ -21,12 +22,88 @@ import * as renamePrepare from './languageFeatures/renamePrepare';
 import * as signatureHelp from './languageFeatures/signatureHelp';
 import * as diagnostics from './languageFeatures/validation';
 import * as workspaceSymbol from './languageFeatures/workspaceSymbols';
-import { LanguageServiceRuntimeContext } from './types';
+import { EmbeddedLanguageServicePlugin } from './plugin';
+import { LanguageServiceRuntimeContext as LanguageServiceContext } from './types';
+import * as tsFaster from '@volar/typescript-faster';
+import * as shared from '@volar/shared';
+import { TextDocument } from 'vscode-languageserver-textdocument';
+import { parseSourceFileDocuments } from './documents';
+import { PluginContext, setPluginContext } from './contextStore';
 
 // fix build
 import type * as _0 from 'vscode-languageserver-protocol';
 
-export function createLanguageService(context: LanguageServiceRuntimeContext) {
+export function createLanguageServiceContext(options: {
+	host: LanguageServiceHost,
+	languageContext: ReturnType<typeof createEmbeddedLanguageServiceHost>,
+	getPlugins(): EmbeddedLanguageServicePlugin[],
+	env: PluginContext['env'];
+}) {
+
+	const ts = options.host.getTypeScriptModule();
+	const tsLs = ts.createLanguageService(options.languageContext.typescriptLanguageServiceHost);
+	tsFaster.decorate(ts, options.languageContext.typescriptLanguageServiceHost, tsLs);
+
+	setPluginContext({
+		env: options.env,
+		typescript: {
+			module: options.host.getTypeScriptModule(),
+			languageServiceHost: options.languageContext.typescriptLanguageServiceHost,
+			languageService: tsLs,
+		},
+	});
+
+	let plugins: EmbeddedLanguageServicePlugin[];
+
+	const textDocumentMapper = parseSourceFileDocuments(options.env.rootUri, options.languageContext.mapper);
+	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
+	const documentVersions = new Map<string, number>();
+	const context: LanguageServiceContext = {
+		host: options.host,
+		core: options.languageContext,
+		get plugins() {
+			if (!plugins) {
+				plugins = options.getPlugins();
+			}
+			return plugins;
+		},
+		typescriptLanguageService: tsLs,
+		documents: textDocumentMapper,
+		getTextDocument,
+	};
+
+	return context;
+
+	function getTextDocument(uri: string) {
+
+		const fileName = shared.getPathOfUri(uri);
+		const scriptSnapshot = options.host.getScriptSnapshot(fileName);
+
+		if (scriptSnapshot) {
+
+			let document = documents.get(scriptSnapshot);
+
+			if (!document) {
+
+				const newVersion = (documentVersions.get(uri.toLowerCase()) ?? 0) + 1;
+
+				documentVersions.set(uri.toLowerCase(), newVersion);
+
+				document = TextDocument.create(
+					uri,
+					shared.syntaxToLanguageId(uri.substring(uri.lastIndexOf('.') + 1)),
+					newVersion,
+					scriptSnapshot.getText(0, scriptSnapshot.getLength()),
+				);
+				documents.set(scriptSnapshot, document);
+			}
+
+			return document;
+		}
+	}
+}
+
+export function createLanguageService(context: LanguageServiceContext) {
 
 	return {
 		doValidation: diagnostics.register(context),
@@ -54,5 +131,6 @@ export function createLanguageService(context: LanguageServiceRuntimeContext) {
 		doExecuteCommand: executeCommand.register(context),
 		getInlayHints: inlayHints.register(context),
 		callHierarchy: callHierarchy.register(context),
+		dispose: () => context.typescriptLanguageService.dispose(),
 	};
 }

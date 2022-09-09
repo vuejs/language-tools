@@ -10,7 +10,6 @@ export * as localTypes from './utils/localTypes';
 export * from './utils/ts';
 export * from './generators/template';
 export * from './plugins';
-export * from '@volar/embedded-language-core';
 
 // fix build
 export * as _0 from '@vue/compiler-sfc';

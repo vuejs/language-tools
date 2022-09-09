@@ -14,12 +14,12 @@ export function createLanguageService(
 			...alpineLsHost,
 			getVueCompilationSettings: () => ({}),
 		},
-		undefined,
-		undefined,
-		configurationHost,
+		{
+			rootUri,
+			configurationHost,
+		},
 		customPlugins,
-		() => alpineTs.createLanguageContext(alpineLsHost, [alpineTs.createEmbeddedLanguageModule(alpineLsHost)]),
-		rootUri,
+		[alpineTs.createEmbeddedLanguageModule(alpineLsHost)],
 	);
 }
 

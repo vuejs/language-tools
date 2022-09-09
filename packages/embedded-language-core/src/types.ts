@@ -82,10 +82,10 @@ export interface EmbeddedLangaugeSourceFile {
 export interface EmbeddedLanguageModule {
 	createSourceFile(fileName: string, snapshot: ts.IScriptSnapshot): EmbeddedLangaugeSourceFile | undefined;
 	updateSourceFile(sourceFile: EmbeddedLangaugeSourceFile, snapshot: ts.IScriptSnapshot): void;
-	proxyLanguageServiceHost?(host: EmbeddedLanguageServiceHost): Partial<EmbeddedLanguageServiceHost>;
+	proxyLanguageServiceHost?(host: LanguageServiceHost): Partial<LanguageServiceHost>;
 }
 
-export type EmbeddedLanguageServiceHost = ts.LanguageServiceHost & {
+export type LanguageServiceHost = ts.LanguageServiceHost & {
 	getTypeScriptModule(): typeof import('typescript/lib/tsserverlibrary');
 	isTsPlugin?: boolean,
 	isTsc?: boolean,

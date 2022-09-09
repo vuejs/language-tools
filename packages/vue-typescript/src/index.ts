@@ -2,11 +2,12 @@ import * as tsFaster from '@volar/typescript-faster';
 import * as vue from '@volar/vue-language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { getProgram } from './getProgram';
+import * as embedded from '@volar/embedded-language-core';
 
 export function createLanguageService(host: vue.LanguageServiceHost) {
 
 	const mods = [vue.createEmbeddedLanguageModule(host)];
-	const core = vue.createLanguageContext(host, mods);
+	const core = embedded.createEmbeddedLanguageServiceHost(host, mods);
 	const ts = host.getTypeScriptModule();
 	const ls = ts.createLanguageService(core.typescriptLanguageServiceHost);
 
@@ -55,7 +56,7 @@ export function createLanguageService(host: vue.LanguageServiceHost) {
 		const file = core.mapper.get(args.fileName);
 		let edits: readonly ts.FileTextChanges[] = [];
 		if (file) {
-			vue.forEachEmbeddeds(file[0].embeddeds, embedded => {
+			embedded.forEachEmbeddeds(file[0].embeddeds, embedded => {
 				if (embedded.file.isTsHostFile && embedded.file.capabilities.codeActions) {
 					edits = edits.concat(ls.organizeImports({
 						...args,

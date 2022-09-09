@@ -1,5 +1,5 @@
 import * as vue from '@volar/vue-language-core';
-import { parseScriptSetupRanges } from '@volar/vue-language-core';
+import * as embedded from '@volar/embedded-language-core';
 import * as ts from 'typescript/lib/tsserverlibrary';
 
 import type {
@@ -98,7 +98,7 @@ function createComponentMetaCheckerBase(tsconfigPath: string, parsedCommandLine:
 		getVueCompilationSettings: () => parsedCommandLine.vueOptions,
 	};
 	const mods = [vue.createEmbeddedLanguageModule(host)];
-	const core = vue.createLanguageContext(host, mods);
+	const core = embedded.createEmbeddedLanguageServiceHost(host, mods);
 	const proxyApis: Partial<ts.LanguageServiceHost> = checkerOptions.forceUseTs ? {
 		getScriptKind: (fileName) => {
 			if (fileName.endsWith('.vue.js')) {
@@ -498,7 +498,7 @@ function readVueComponentDefaultProps(vueSourceFile: vue.VueSourceFile, printer:
 	function scriptSetupWorker() {
 
 		const descriptor = vueSourceFile.sfc;
-		const scriptSetupRanges = descriptor.scriptSetupAst ? parseScriptSetupRanges(ts, descriptor.scriptSetupAst) : undefined;
+		const scriptSetupRanges = descriptor.scriptSetupAst ? vue.parseScriptSetupRanges(ts, descriptor.scriptSetupAst) : undefined;
 
 		if (descriptor.scriptSetup && scriptSetupRanges?.withDefaultsArg) {
 

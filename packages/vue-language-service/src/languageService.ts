@@ -4,18 +4,13 @@ import useHtmlPlugin from '@volar-plugins/html';
 import useJsonPlugin from '@volar-plugins/json';
 import usePugPlugin from '@volar-plugins/pug';
 import useTsPlugin from '@volar-plugins/typescript';
-import * as embedded from '@volar/embedded-language-service';
-import * as shared from '@volar/shared';
-import * as tsFaster from '@volar/typescript-faster';
+import * as embeddedLS from '@volar/embedded-language-service';
+import * as embedded from '@volar/embedded-language-core';
+import { PluginContext } from '@volar/embedded-language-service';
 import * as ts2 from '@volar/typescript-language-service';
 import * as vue from '@volar/vue-language-core';
-import type * as ts from 'typescript/lib/tsserverlibrary';
-import * as upath from 'upath';
 import type * as html from 'vscode-html-languageservice';
-import * as json from 'vscode-json-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
-import { TextDocument } from 'vscode-languageserver-textdocument';
-import { URI } from 'vscode-uri';
 import * as tagNameCase from './ideFeatures/tagNameCase';
 import useVuePlugin from './plugins/vue';
 import useAutoDotValuePlugin from './plugins/vue-autoinsert-dotvalue';
@@ -45,48 +40,48 @@ export function getSemanticTokenLegend() {
 
 export function createLanguageService(
 	host: vue.LanguageServiceHost,
-	fileSystemProvider: html.FileSystemProvider | undefined,
-	schemaRequestService: json.SchemaRequestService | undefined,
-	configurationHost: embedded.ConfigurationHost | undefined,
-	customPlugins: embedded.EmbeddedLanguageServicePlugin[],
-	createLanguageServiceContext = () => vue.createLanguageContext(host, [vue.createEmbeddedLanguageModule(host)]),
-	rootUri = URI.file(host.getCurrentDirectory()),
+	env: PluginContext['env'],
+	customPlugins: embeddedLS.EmbeddedLanguageServicePlugin[] = [],
+	languageModules = [vue.createEmbeddedLanguageModule(host)],
+) {
+
+	const languageContext = embedded.createEmbeddedLanguageServiceHost(host, languageModules);
+	const languageServiceContext = embeddedLS.createLanguageServiceContext({
+		host,
+		languageContext,
+		getPlugins() {
+			return [
+				...customPlugins,
+				...getLanguageServicePlugins(
+					host,
+					languageServiceContext.documents,
+					languageService,
+					detectTagNameCase,
+				),
+			];
+		},
+		env,
+	});
+	const languageService = embeddedLS.createLanguageService(languageServiceContext);
+	const detectTagNameCase = tagNameCase.register(languageServiceContext);
+
+	return {
+		...languageService,
+		__internal__: {
+			context: languageServiceContext,
+			detectTagNameCase,
+		},
+	};
+}
+
+function getLanguageServicePlugins(
+	host: vue.LanguageServiceHost,
+	vueDocuments: ReturnType<typeof embeddedLS.parseSourceFileDocuments>,
+	apis: ReturnType<typeof embeddedLS.createLanguageService>,
+	detectTagNameCase: ReturnType<typeof tagNameCase.register>,
 ) {
 
 	const ts = host.getTypeScriptModule();
-	const core = createLanguageServiceContext();
-	const tsLs = ts.createLanguageService(core.typescriptLanguageServiceHost);
-	tsFaster.decorate(ts, core.typescriptLanguageServiceHost, tsLs);
-
-	embedded.setPluginContext({
-		rootUri: rootUri.toString(),
-		typescript: {
-			module: ts,
-			languageServiceHost: core.typescriptLanguageServiceHost,
-			languageService: tsLs,
-		},
-		configurationHost,
-		documentContext: getDocumentContext(),
-		fileSystemProvider,
-		schemaRequestService,
-	});
-
-	const vueDocuments = embedded.parseSourceFileDocuments(rootUri, core.mapper);
-	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
-	const documentVersions = new Map<string, number>();
-
-	const context: embedded.LanguageServiceRuntimeContext = {
-		host,
-		core,
-		typescriptLanguageService: tsLs,
-		documents: vueDocuments,
-		getTextDocument,
-		get plugins() {
-			return allPlugins;
-		},
-	};
-	const apis = embedded.createLanguageService(context);
-	const detectTagNameCase = tagNameCase.register(context);
 
 	// plugins
 	const scriptTsPlugin = useTsPlugin();
@@ -137,8 +132,7 @@ export function createLanguageService(
 		getTsLs: () => scriptTsPlugin.languageService,
 	});
 
-	const allPlugins = [
-		...customPlugins,
+	return [
 		vuePlugin,
 		cssPlugin,
 		vueTemplateHtmlPlugin,
@@ -155,87 +149,6 @@ export function createLanguageService(
 		emmetPlugin,
 	];
 
-	return {
-		...apis,
-		dispose: () => {
-			tsLs.dispose();
-		},
-		__internal__: {
-			vueRuntimeContext: core,
-			rootPath: host.getCurrentDirectory(),
-			context,
-			detectTagNameCase,
-		},
-	};
-
-	function getDocumentContext() {
-		const documentContext: html.DocumentContext = {
-			resolveReference(ref: string, base: string) {
-
-				const isUri = base.indexOf('://') >= 0;
-				const resolveResult = ts.resolveModuleName(
-					ref,
-					isUri ? shared.getPathOfUri(base) : base,
-					context.host.getCompilationSettings(),
-					context.host,
-				);
-				const failedLookupLocations: string[] = (resolveResult as any).failedLookupLocations;
-				const dirs = new Set<string>();
-
-				for (const failed of failedLookupLocations) {
-					let path = failed;
-					const fileName = upath.basename(path);
-					if (fileName === 'index.d.ts' || fileName === '*.d.ts') {
-						dirs.add(upath.dirname(path));
-					}
-					if (path.endsWith('.d.ts')) {
-						path = path.substring(0, path.length - '.d.ts'.length);
-					}
-					else {
-						continue;
-					}
-					if (host.fileExists(path)) {
-						return isUri ? shared.getUriByPath(URI.parse(base), path) : path;
-					}
-				}
-				for (const dir of dirs) {
-					if (host.directoryExists?.(dir) ?? true) {
-						return isUri ? shared.getUriByPath(URI.parse(base), dir) : dir;
-					}
-				}
-
-				return undefined;
-			},
-		};
-		return documentContext;
-	}
-	function getTextDocument(uri: string) {
-
-		const fileName = shared.getPathOfUri(uri);
-		const scriptSnapshot = host.getScriptSnapshot(fileName);
-
-		if (scriptSnapshot) {
-
-			let document = documents.get(scriptSnapshot);
-
-			if (!document) {
-
-				const newVersion = (documentVersions.get(uri.toLowerCase()) ?? 0) + 1;
-
-				documentVersions.set(uri.toLowerCase(), newVersion);
-
-				document = TextDocument.create(
-					uri,
-					shared.syntaxToLanguageId(upath.extname(uri).slice(1)),
-					newVersion,
-					scriptSnapshot.getText(0, scriptSnapshot.getLength()),
-				);
-				documents.set(scriptSnapshot, document);
-			}
-
-			return document;
-		}
-	}
 	function _useVueTemplateLanguagePlugin<T extends ReturnType<typeof useHtmlPlugin> | ReturnType<typeof usePugPlugin>>(languageId: string, templateLanguagePlugin: T) {
 		return useVueTemplateLanguagePlugin({
 			templateLanguagePlugin,

@@ -1,18 +1,21 @@
 import type { DocumentContext, FileSystemProvider } from 'vscode-html-languageservice';
 import type { SchemaRequestService } from 'vscode-json-languageservice';
 import type * as ts from 'typescript/lib/tsserverlibrary';
+import { URI } from 'vscode-uri';
 
-interface PluginContext {
-	rootUri: string;
+export interface PluginContext {
 	typescript: {
 		module: typeof import('typescript/lib/tsserverlibrary');
 		languageServiceHost: ts.LanguageServiceHost;
 		languageService: ts.LanguageService;
 	},
-	configurationHost?: ConfigurationHost;
-	documentContext?: DocumentContext;
-	fileSystemProvider?: FileSystemProvider;
-	schemaRequestService?: SchemaRequestService;
+	env: {
+		rootUri: URI;
+		configurationHost?: ConfigurationHost;
+		documentContext?: DocumentContext;
+		fileSystemProvider?: FileSystemProvider;
+		schemaRequestService?: SchemaRequestService;
+	},
 }
 
 export interface ConfigurationHost {
@@ -28,23 +31,23 @@ export function setPluginContext(ctx: PluginContext) {
 }
 
 export function useRootUri() {
-	return getContextStore().rootUri;
+	return getContextStore().env.rootUri.toString();
 }
 
 export function useConfigurationHost() {
-	return getContextStore().configurationHost;
+	return getContextStore().env.configurationHost;
 }
 
 export function useDocumentContext() {
-	return getContextStore().documentContext;
+	return getContextStore().env.documentContext;
 }
 
 export function useFileSystemProvider() {
-	return getContextStore().fileSystemProvider;
+	return getContextStore().env.fileSystemProvider;
 }
 
 export function useSchemaRequestService() {
-	return getContextStore().schemaRequestService;
+	return getContextStore().env.schemaRequestService;
 }
 
 export function useTypeScriptModule() {

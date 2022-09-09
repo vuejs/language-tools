@@ -57,24 +57,28 @@ function createTester(root: string) {
 			},
 		},
 	};
-	const languageService = createLanguageService(host, undefined, undefined, {
-		async getConfiguration<T>(section: string) {
-			const keys = section.split('.');
-			let settings = vscodeSettings;
-			for (const key of keys) {
-				if (key in settings) {
-					settings = settings[key];
-				}
-				else {
-					settings = undefined;
-					break;
-				}
+	const languageService = createLanguageService(
+		host,
+		{
+			rootUri,
+			configurationHost: {
+				async getConfiguration<T>(section: string) {
+					const keys = section.split('.');
+					let settings = vscodeSettings;
+					for (const key of keys) {
+						if (key in settings) {
+							settings = settings[key];
+						}
+						else {
+							settings = undefined;
+							break;
+						}
+					}
+					return settings;
+				},
+				onDidChangeConfiguration() { },
 			}
-			return settings;
-		},
-		onDidChangeConfiguration() { },
-		rootUris: [rootUri.toString()],
-	}, [], undefined, undefined, rootUri);
+		});
 
 	return {
 		host,

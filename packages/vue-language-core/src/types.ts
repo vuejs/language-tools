@@ -1,10 +1,10 @@
-import { EmbeddedFile, EmbeddedLanguageServiceHost } from '@volar/embedded-language-core';
+import * as embedded from '@volar/embedded-language-core';
 import { SFCParseResult } from '@vue/compiler-sfc';
 
 import * as CompilerDom from '@vue/compiler-dom';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
-export type LanguageServiceHost = EmbeddedLanguageServiceHost & {
+export type LanguageServiceHost = embedded.LanguageServiceHost & {
 	getVueCompilationSettings(): VueCompilerOptions,
 };
 
@@ -40,7 +40,7 @@ export type VueLanguagePlugin = (ctx: {
 	compileSFCTemplate?(lang: string, template: string, options?: CompilerDom.CompilerOptions): CompilerDom.CodegenResult | undefined;
 	updateSFCTemplate?(oldResult: CompilerDom.CodegenResult, textChange: { start: number, end: number, newText: string; }): CompilerDom.CodegenResult | undefined;
 	getEmbeddedFileNames?(fileName: string, sfc: Sfc): string[];
-	resolveEmbeddedFile?(fileName: string, sfc: Sfc, embeddedFile: EmbeddedFile): void;
+	resolveEmbeddedFile?(fileName: string, sfc: Sfc, embeddedFile: embedded.EmbeddedFile): void;
 };
 
 export interface SfcBlock {

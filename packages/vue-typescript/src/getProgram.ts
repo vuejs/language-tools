@@ -1,9 +1,9 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import type * as vue from '@volar/vue-language-core';
+import type * as embedded from '@volar/embedded-language-core';
 
 export function getProgram(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	core: vue.EmbeddedLanguageContext,
+	core: embedded.EmbeddedLanguageContext,
 	vueTsLs: ts.LanguageService,
 ) {
 
