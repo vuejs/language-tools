@@ -111,8 +111,9 @@ export function createLanguageService(
 
 	const context: LanguageServiceRuntimeContext = {
 		host: vueLsHost,
-		vueDocuments,
-		getTsLs: () => tsLs,
+		core,
+		typescriptLanguageService: tsLs.__internal__.raw,
+		documents: vueDocuments,
 		getTextDocument,
 		get plugins() {
 			return allPlugins;

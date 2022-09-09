@@ -60,7 +60,7 @@ export function register(
 
 						recursiveChecker.add({ uri: definition.targetUri, range: { start: definition.targetRange.start, end: definition.targetRange.start } });
 
-						const teleport = context.vueDocuments.teleportfromEmbeddedDocumentUri(definition.targetUri);
+						const teleport = context.documents.teleportfromEmbeddedDocumentUri(definition.targetUri);
 
 						if (teleport) {
 
@@ -105,7 +105,7 @@ export function register(
 					link.originSelectionRange = originSelectionRange;
 				}
 
-				const targetSourceMap = context.vueDocuments.sourceMapFromEmbeddedDocumentUri(link.targetUri);
+				const targetSourceMap = context.documents.sourceMapFromEmbeddedDocumentUri(link.targetUri);
 
 				if (targetSourceMap) {
 

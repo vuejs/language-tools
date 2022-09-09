@@ -7,7 +7,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 	return async (oldUri: string, newUri: string) => {
 
-		const vueDocument = context.vueDocuments.get(oldUri);
+		const vueDocument = context.documents.get(oldUri);
 
 		if (vueDocument) {
 			oldUri += '.ts';
@@ -25,7 +25,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				const result = embeddedEditToSourceEdit(
 					workspaceEdit,
-					context.vueDocuments,
+					context.documents,
 				);
 
 				if (result?.documentChanges) {

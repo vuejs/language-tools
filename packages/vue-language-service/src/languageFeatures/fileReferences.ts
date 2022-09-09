@@ -21,7 +21,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			},
 			(data, sourceMap) => data.map(reference => {
 
-				const referenceSourceMap = context.vueDocuments.sourceMapFromEmbeddedDocumentUri(reference.uri);
+				const referenceSourceMap = context.documents.sourceMapFromEmbeddedDocumentUri(reference.uri);
 
 				if (referenceSourceMap) {
 

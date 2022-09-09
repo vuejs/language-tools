@@ -1,13 +1,14 @@
-import * as SourceMaps from '@volar/source-map';
 import { CodeGen } from '@volar/code-gen';
-import { camelize, hyphenate, capitalize, isHTMLTag, isSVGTag } from '@vue/shared';
-import * as CompilerDOM from '@vue/compiler-dom';
-import * as CompilerCore from '@vue/compiler-core';
 import { EmbeddedFileMappingData } from '@volar/embedded-typescript-language-core';
-import { ResolvedVueCompilerOptions } from '../types';
-import { colletVars, walkInterpolationFragment } from '../utils/transform';
+import * as SourceMaps from '@volar/source-map';
+import * as CompilerCore from '@vue/compiler-core';
+import * as CompilerDOM from '@vue/compiler-dom';
+import { camelize, capitalize, hyphenate, isHTMLTag, isSVGTag } from '@vue/shared';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import { parseBindingRanges } from '../parsers/scriptSetupRanges';
+import { ResolvedVueCompilerOptions } from '../types';
 import { SearchTexts } from '../utils/string';
+import { colletVars, walkInterpolationFragment } from '../utils/transform';
 
 const capabilitiesSet = {
 	all: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },

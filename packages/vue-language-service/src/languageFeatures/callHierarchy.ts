@@ -80,7 +80,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				if (data.sourceMap) {
 
-					const sourceMap = context.vueDocuments.sourceMapFromEmbeddedDocumentUri(data.sourceMap.embeddedDocumentUri);
+					const sourceMap = context.documents.sourceMapFromEmbeddedDocumentUri(data.sourceMap.embeddedDocumentUri);
 
 					if (sourceMap) {
 
@@ -141,7 +141,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				if (data.sourceMap) {
 
-					const sourceMap = context.vueDocuments.sourceMapFromEmbeddedDocumentUri(data.sourceMap.embeddedDocumentUri);
+					const sourceMap = context.documents.sourceMapFromEmbeddedDocumentUri(data.sourceMap.embeddedDocumentUri);
 
 					if (sourceMap) {
 
@@ -186,7 +186,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 	function transformCallHierarchyItem(tsItem: vscode.CallHierarchyItem, tsRanges: vscode.Range[]): [vscode.CallHierarchyItem, vscode.Range[]] | undefined {
 
-		const sourceMap = context.vueDocuments.sourceMapFromEmbeddedDocumentUri(tsItem.uri);
+		const sourceMap = context.documents.sourceMapFromEmbeddedDocumentUri(tsItem.uri);
 		if (!sourceMap)
 			return [tsItem, tsRanges]; // not virtual file
 

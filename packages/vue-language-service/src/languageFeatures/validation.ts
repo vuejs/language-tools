@@ -1,11 +1,12 @@
-import { TextDocument } from 'vscode-languageserver-textdocument';
-import * as vscode from 'vscode-languageserver-protocol';
 import { isTsDocument } from '@volar-plugins/typescript';
+import * as shared from '@volar/shared';
+import type * as ts from 'typescript/lib/tsserverlibrary';
+import * as vscode from 'vscode-languageserver-protocol';
+import { TextDocument } from 'vscode-languageserver-textdocument';
+import { EmbeddedDocumentSourceMap } from '../documents';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import { languageFeatureWorker } from '../utils/featureWorkers';
-import { EmbeddedDocumentSourceMap } from '../documents';
-import * as shared from '@volar/shared';
 
 export function updateRange(
 	range: vscode.Range,
@@ -207,7 +208,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					const pluginId = context.plugins.indexOf(plugin);
 					const pluginCache = cacheMap.get(pluginId) ?? cacheMap.set(pluginId, new Map()).get(pluginId)!;
 					const cache = pluginCache.get(document.uri);
-					const tsProjectVersion = isTs ? context.getTsLs().__internal__.host.getProjectVersion?.() : undefined;
+					const tsProjectVersion = isTs ? context.core.typescriptLanguageServiceHost.getProjectVersion?.() : undefined;
 
 					if (!isTs) {
 						if (cache && cache.documentVersion === document.version) {
@@ -295,7 +296,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				const relatedInfos: vscode.DiagnosticRelatedInformation[] = [];
 
 				for (const info of _error.relatedInformation) {
-					for (const sourceLoc of context.vueDocuments.fromEmbeddedLocation(
+					for (const sourceLoc of context.documents.fromEmbeddedLocation(
 						info.location.uri,
 						info.location.range.start,
 						info.location.range.end,

@@ -1,5 +1,6 @@
-import { getStartEnd, parseBindingRanges } from './scriptSetupRanges';
 import type { TextRange } from '@volar/embedded-typescript-language-core';
+import type * as ts from 'typescript/lib/tsserverlibrary';
+import { getStartEnd, parseBindingRanges } from './scriptSetupRanges';
 
 export interface ScriptRanges extends ReturnType<typeof parseScriptRanges> { }
 

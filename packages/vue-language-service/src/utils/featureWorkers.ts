@@ -35,7 +35,7 @@ export async function documentArgFeatureWorker<T, K>(
 	combineResult?: (results: NonNullable<Awaited<T>>[]) => NonNullable<Awaited<T>>,
 ) {
 
-	const vueDocument = context.getAndUpdateVueDocument(document);
+	const vueDocument = context.getAndUpdateDocument(document);
 
 	let results: NonNullable<Awaited<T>>[] = [];
 
@@ -48,7 +48,7 @@ export async function documentArgFeatureWorker<T, K>(
 			if (!isValidSourceMap(sourceMap))
 				return true;
 
-			context.updateTsLs(sourceMap.mappedDocument);
+			context.prepareLanguageServices(sourceMap.mappedDocument);
 
 			for (const mappedArg of transformArg(arg, sourceMap)) {
 
@@ -77,7 +77,7 @@ export async function documentArgFeatureWorker<T, K>(
 
 	if (results.length === 0 || !!combineResult) {
 
-		context.updateTsLs(document);
+		context.prepareLanguageServices(document);
 
 		for (const plugin of context.plugins) {
 
@@ -118,7 +118,7 @@ export async function languageFeatureWorker<T, K>(
 ) {
 
 	const document = context.getTextDocument(uri);
-	const vueDocument = context.vueDocuments.get(uri);
+	const vueDocument = context.documents.get(uri);
 
 	let results: NonNullable<Awaited<T>>[] = [];
 

@@ -87,7 +87,7 @@ export function getDocumentService(
 			tsPlugin,
 			autoWrapParenthesesPlugin,
 		],
-		getAndUpdateVueDocument(document) {
+		getAndUpdateDocument(document) {
 
 			let vueDoc = vueDocuments.get(document);
 
@@ -109,7 +109,7 @@ export function getDocumentService(
 
 			return [vueDoc, vueLanguageModule];
 		},
-		updateTsLs(document) {
+		prepareLanguageServices(document) {
 			if (isTsDocument(document)) {
 				updateSingleFileTypeScriptServiceHost(context.typescript, document);
 			}

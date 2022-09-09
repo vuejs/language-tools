@@ -67,7 +67,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 								recursiveChecker.add({ uri: editUri, range: { start: textEdit.range.start, end: textEdit.range.start } });
 
-								const teleport = context.vueDocuments.teleportfromEmbeddedDocumentUri(editUri);
+								const teleport = context.documents.teleportfromEmbeddedDocumentUri(editUri);
 
 								if (teleport) {
 
@@ -123,7 +123,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			(data, sourceMap) => {
 				return embeddedEditToSourceEdit(
 					data,
-					context.vueDocuments,
+					context.documents,
 				);
 			},
 			(workspaceEdits) => {

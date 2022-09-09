@@ -1,5 +1,6 @@
-import * as vue from '@volar/vue-language-core';
 import * as tsFaster from '@volar/typescript-faster';
+import * as vue from '@volar/vue-language-core';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import { getProgram } from './getProgram';
 
 export function createLanguageService(...params: Parameters<typeof vue.createVueLanguageContext>) {

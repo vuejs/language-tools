@@ -1,3 +1,4 @@
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as useHtmlFilePlugin from './plugins/file-html';
 import * as useMdFilePlugin from './plugins/file-md';
 import * as useVueFilePlugin from './plugins/file-vue';

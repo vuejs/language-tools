@@ -46,7 +46,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				if (cacheData.sourceMap) {
 
-					const sourceMap = context.vueDocuments.sourceMapFromEmbeddedDocumentUri(cacheData.sourceMap.embeddedDocumentUri);
+					const sourceMap = context.documents.sourceMapFromEmbeddedDocumentUri(cacheData.sourceMap.embeddedDocumentUri);
 
 					if (!sourceMap)
 						continue;
@@ -117,7 +117,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 		}
 		else {
 
-			const vueDocument = context.vueDocuments.get(uri);
+			const vueDocument = context.documents.get(uri);
 
 			cache = {
 				uri,

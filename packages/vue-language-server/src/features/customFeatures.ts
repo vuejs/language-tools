@@ -38,7 +38,7 @@ export function register(
 					}
 				}
 				const context = await ls.__internal__.getContext();
-				for (const vueDocument of context.vueDocuments.getAll()) {
+				for (const vueDocument of context.documents.getAll()) {
 					for (const sourceMap of vueDocument.getSourceMaps()) {
 
 						if (!sourceMap.embeddedFile.isTsHostFile)
@@ -63,7 +63,7 @@ export function register(
 			const ls = await (await project.project)?.getLanguageServiceDontCreate();
 			if (ls) {
 				const context = await ls.__internal__.getContext();
-				const allVueDocuments = context.vueDocuments.getAll();
+				const allVueDocuments = context.documents.getAll();
 				let i = 0;
 				for (const vueFile of allVueDocuments) {
 					progress.report(i++ / allVueDocuments.length * 100, path.relative(ls.__internal__.rootPath, shared.getPathOfUri(vueFile.uri)));

@@ -49,7 +49,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 						recursiveChecker.add({ uri: reference.uri, range: { start: reference.range.start, end: reference.range.start } });
 
-						const teleport = context.vueDocuments.teleportfromEmbeddedDocumentUri(reference.uri);
+						const teleport = context.documents.teleportfromEmbeddedDocumentUri(reference.uri);
 
 						if (teleport) {
 
@@ -76,7 +76,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			},
 			(data, sourceMap) => data.map(reference => {
 
-				const referenceSourceMap = context.vueDocuments.sourceMapFromEmbeddedDocumentUri(reference.uri);
+				const referenceSourceMap = context.documents.sourceMapFromEmbeddedDocumentUri(reference.uri);
 
 				if (referenceSourceMap) {
 

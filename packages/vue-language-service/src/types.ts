@@ -1,20 +1,21 @@
-import type * as ts2 from '@volar/typescript-language-service';
-import { EmbeddedLanguageModule, VueLanguageServiceHost } from '@volar/vue-language-core';
 import { EmbeddedLanguageServicePlugin } from '@volar/embedded-language-service';
+import { EmbeddedLanguageModule, EmbeddedTypeScriptLanguageServiceHost, LanguageContext } from '@volar/vue-language-core';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { SourceFileDocument, SourceFileDocuments } from './documents';
 
 export interface DocumentServiceRuntimeContext {
 	typescript: typeof import('typescript/lib/tsserverlibrary');
 	plugins: EmbeddedLanguageServicePlugin[];
-	getAndUpdateVueDocument(document: TextDocument): [SourceFileDocument, EmbeddedLanguageModule] | undefined;
-	updateTsLs(document: TextDocument): void;
+	getAndUpdateDocument(document: TextDocument): [SourceFileDocument, EmbeddedLanguageModule] | undefined;
+	prepareLanguageServices(document: TextDocument): void;
 };
 
 export interface LanguageServiceRuntimeContext {
-	host: VueLanguageServiceHost;
-	vueDocuments: SourceFileDocuments;
+	host: EmbeddedTypeScriptLanguageServiceHost;
+	core: LanguageContext;
+	typescriptLanguageService: ts.LanguageService;
+	documents: SourceFileDocuments;
 	plugins: EmbeddedLanguageServicePlugin[];
 	getTextDocument(uri: string): TextDocument | undefined;
-	getTsLs(): ts2.LanguageService;
 };

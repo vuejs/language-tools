@@ -101,7 +101,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				if (_codeAction.edit) {
 					const edit = embeddedEditToSourceEdit(
 						_codeAction.edit,
-						context.vueDocuments,
+						context.documents,
 					);
 					if (edit) {
 						_codeAction.edit = edit;

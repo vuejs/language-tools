@@ -1,13 +1,14 @@
 import { CodeGen, mergeCodeGen } from '@volar/code-gen';
+import type { EmbeddedFileMappingData, TeleportMappingData, TextRange } from '@volar/embedded-typescript-language-core';
 import * as SourceMaps from '@volar/source-map';
 import { hyphenate } from '@vue/shared';
 import { posix as path } from 'path';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import type * as templateGen from '../generators/template';
 import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { collectCssVars, collectStyleCssClasses } from '../plugins/vue-tsx';
 import { Sfc } from '../sourceFile';
-import type { EmbeddedFileMappingData, TeleportMappingData, TextRange } from '@volar/embedded-typescript-language-core';
 import type { ResolvedVueCompilerOptions } from '../types';
 import { getSlotsPropertyName, getVueLibraryName } from '../utils/shared';
 import { SearchTexts } from '../utils/string';

@@ -49,7 +49,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 						recursiveChecker.add({ uri: document.uri, range: { start: reference.range.start, end: reference.range.start } });
 
-						const teleport = context.vueDocuments.teleportfromEmbeddedDocumentUri(document.uri);
+						const teleport = context.documents.teleportfromEmbeddedDocumentUri(document.uri);
 
 						if (teleport) {
 

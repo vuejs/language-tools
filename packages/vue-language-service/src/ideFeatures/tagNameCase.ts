@@ -9,7 +9,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 		attr: 'kebabCase' | 'camelCase' | 'unsure',
 	}> => {
 
-		const vueDocument = context.vueDocuments.get(uri);
+		const vueDocument = context.documents.get(uri);
 		if (!vueDocument) return {
 			tag: 'unsure',
 			attr: 'unsure',
@@ -55,7 +55,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 		}
 		async function getTagNameCase(vueDocument: SourceFileDocument): Promise<'both' | 'kebabCase' | 'pascalCase' | 'unsure'> {
 
-			const components = checkTemplateData(vueDocument.file, context.getTsLs().__internal__.raw).components;
+			const components = checkTemplateData(vueDocument.file, context.typescriptLanguageService).components;
 			const tagNames = getTemplateTagsAndAttrs(vueDocument.file).tags;
 
 			let anyComponentUsed = false;
