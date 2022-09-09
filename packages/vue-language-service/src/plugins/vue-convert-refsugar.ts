@@ -98,13 +98,13 @@ export default function (options: {
 		},
 	};
 
-	function worker<T>(uri: string, callback: (vueDocument: SourceFileDocument, vueSourceFile: vue.SourceFile) => T) {
+	function worker<T>(uri: string, callback: (vueDocument: SourceFileDocument, vueSourceFile: vue.VueSourceFile) => T) {
 
 		const vueDocument = options.getVueDocument(uri);
 		if (!vueDocument)
 			return;
 
-		if (!vue.isSourceFile(vueDocument.file))
+		if (!(vueDocument.file instanceof vue.VueSourceFile))
 			return;
 
 		return callback(vueDocument, vueDocument.file);
@@ -114,7 +114,7 @@ export default function (options: {
 async function useRefSugar(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	vueDocument: SourceFileDocument,
-	vueSourceFile: vue.SourceFile,
+	vueSourceFile: vue.VueSourceFile,
 	context: ExecuteCommandContext,
 	findReferences: (uri: string, position: vscode.Position) => Promise<vscode.Location[] | undefined>,
 	findTypeDefinition: (uri: string, position: vscode.Position) => Promise<vscode.LocationLink[] | undefined>,
@@ -245,7 +245,7 @@ async function useRefSugar(
 async function unuseRefSugar(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	vueDocument: SourceFileDocument,
-	vueSourceFile: vue.SourceFile,
+	vueSourceFile: vue.VueSourceFile,
 	context: ExecuteCommandContext,
 	doCodeActions: (uri: string, range: vscode.Range, codeActionContext: vscode.CodeActionContext) => Promise<vscode.CodeAction[] | undefined>,
 	doCodeActionResolve: (item: vscode.CodeAction) => Promise<vscode.CodeAction>,

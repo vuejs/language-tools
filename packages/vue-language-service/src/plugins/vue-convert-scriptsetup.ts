@@ -97,13 +97,13 @@ export default function (options: {
 		},
 	};
 
-	function worker<T>(uri: string, callback: (vueDocument: SourceFileDocument, vueSourceFile: vue.SourceFile) => T) {
+	function worker<T>(uri: string, callback: (vueDocument: SourceFileDocument, vueSourceFile: vue.VueSourceFile) => T) {
 
 		const vueDocument = options.getVueDocument(uri);
 		if (!vueDocument)
 			return;
 
-		if (!vue.isSourceFile(vueDocument.file))
+		if (!(vueDocument.file instanceof vue.VueSourceFile))
 			return;
 
 		return callback(vueDocument, vueDocument.file);
@@ -113,7 +113,7 @@ export default function (options: {
 async function useSetupSugar(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	vueDocument: SourceFileDocument,
-	vueSourceFile: vue.SourceFile,
+	vueSourceFile: vue.VueSourceFile,
 	context: ExecuteCommandContext,
 	doCodeActions: (uri: string, range: vscode.Range, codeActionContext: vscode.CodeActionContext) => Promise<vscode.CodeAction[] | undefined>,
 	doCodeActionResolve: (item: vscode.CodeAction) => Promise<vscode.CodeAction>,
@@ -282,7 +282,7 @@ async function useSetupSugar(
 async function unuseSetupSugar(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	vueDocument: SourceFileDocument,
-	vueSourceFile: vue.SourceFile,
+	vueSourceFile: vue.VueSourceFile,
 	context: ExecuteCommandContext,
 	doCodeActions: (uri: string, range: vscode.Range, codeActionContext: vscode.CodeActionContext) => Promise<vscode.CodeAction[] | undefined>,
 	doCodeActionResolve: (item: vscode.CodeAction) => Promise<vscode.CodeAction>,

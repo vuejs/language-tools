@@ -51,9 +51,9 @@ export function getDocumentService(
 	const vuePlugins = vue.getDefaultVueLanguagePlugins(ts, shared.getPathOfUri(rootUri.toString()), {}, {}, []);
 	const vueLanguageModule: vue.EmbeddedLanguageModule = {
 		createSourceFile(fileName, snapshot) {
-			return vue.createSourceFile(fileName, snapshot, ts, vuePlugins);
+			return new vue.VueSourceFile(fileName, snapshot, ts, vuePlugins);
 		},
-		updateSourceFile(sourceFile: vue.SourceFile, snapshot) {
+		updateSourceFile(sourceFile: vue.VueSourceFile, snapshot) {
 			sourceFile.update(snapshot);
 		},
 	};

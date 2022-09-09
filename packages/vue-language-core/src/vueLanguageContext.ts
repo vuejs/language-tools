@@ -1,5 +1,5 @@
 import { posix as path } from 'path';
-import { createSourceFile, SourceFile, VueLanguagePlugin } from './sourceFile';
+import { VueSourceFile, VueLanguagePlugin } from './sourceFile';
 import { VueLanguageServiceHost } from './types';
 import * as localTypes from './utils/localTypes';
 import { createLanguageContext, EmbeddedLanguageModule } from '@volar/embedded-typescript-language-core';
@@ -36,10 +36,10 @@ export function createVueLanguageContext(
 	const vueLanguageModule: EmbeddedLanguageModule = {
 		createSourceFile(fileName, snapshot) {
 			if (exts.some(ext => fileName.endsWith(ext))) {
-				return createSourceFile(fileName, snapshot, ts, plugins);
+				return new VueSourceFile(fileName, snapshot, ts, plugins);
 			}
 		},
-		updateSourceFile(sourceFile: SourceFile, snapshot) {
+		updateSourceFile(sourceFile: VueSourceFile, snapshot) {
 			sourceFile.update(snapshot);
 		},
 	};

@@ -312,7 +312,7 @@ export function checkTemplateData(
 	tsLs: ts.LanguageService,
 ) {
 
-	if (!vue.isSourceFile(sourceFile)) {
+	if (!(sourceFile instanceof vue.VueSourceFile)) {
 		return {
 			components: [],
 			componentItems: [],
@@ -365,7 +365,7 @@ export function getTemplateTagsAndAttrs(sourceFile: EmbeddedLangaugeSourceFile) 
 
 	if (!map.has(sourceFile)) {
 		const getter = computed(() => {
-			if (!vue.isSourceFile(sourceFile))
+			if (!(sourceFile instanceof vue.VueSourceFile))
 				return;
 			const ast = sourceFile.compiledSFCTemplate?.ast;
 			const tags = new Map<string, number[]>();

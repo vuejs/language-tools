@@ -93,13 +93,13 @@ export default function (options: {
 		},
 	};
 
-	function worker<T>(uri: string, callback: (vueDocument: SourceFileDocument, vueSourceFile: vue.SourceFile) => T) {
+	function worker<T>(uri: string, callback: (vueDocument: SourceFileDocument, vueSourceFile: vue.VueSourceFile) => T) {
 
 		const vueDocument = options.getVueDocument(uri);
 		if (!vueDocument || vueDocument.file.fileName.endsWith('.md') || vueDocument.file.fileName.endsWith('.html'))
 			return;
 		
-		if (!vue.isSourceFile(vueDocument.file))
+		if (!(vueDocument.file instanceof vue.VueSourceFile))
 			return;
 
 		return callback(vueDocument, vueDocument.file);

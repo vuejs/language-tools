@@ -28,7 +28,7 @@ export default function (options: {
 
 				return worker(uri, async vueDocument => {
 
-					if (!vue.isSourceFile(vueDocument.file))
+					if (!(vueDocument.file instanceof vue.VueSourceFile))
 						return;
 
 					const desc = vueDocument.file.sfc;

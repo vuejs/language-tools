@@ -151,7 +151,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 			if (vueDocument) {
 
-				if (!vue.isSourceFile(vueDocument?.file))
+				if (!(vueDocument?.file instanceof vue.VueSourceFile))
 					return;
 
 				const templateErrors: vscode.Diagnostic[] = [];
@@ -206,7 +206,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 			if (vueDocument && scanner) {
 
-				if (!vue.isSourceFile(vueDocument.file))
+				if (!(vueDocument.file instanceof vue.VueSourceFile))
 					return;
 
 				const templateScriptData = checkTemplateData(vueDocument.file, options.tsLs.__internal__.raw);
@@ -296,7 +296,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		if (!_vueDocument)
 			return item;
 
-		if (!vue.isSourceFile(_vueDocument.file))
+		if (!(_vueDocument.file instanceof vue.VueSourceFile))
 			return item;
 
 		const vueSourceFile = _vueDocument.file;
@@ -439,7 +439,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 	async function provideHtmlData(vueDocument: SourceFileDocument) {
 
-		if (!vue.isSourceFile(vueDocument.file))
+		if (!(vueDocument.file instanceof vue.VueSourceFile))
 			return;
 		
 		const vueSourceFile = vueDocument.file;
@@ -730,7 +730,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 	async function getComponentCompletionData(sourceDocument: SourceFileDocument) {
 
-		if (!vue.isSourceFile(sourceDocument.file))
+		if (!(sourceDocument.file instanceof vue.VueSourceFile))
 			return;
 
 		const vueSourceFile = sourceDocument.file;

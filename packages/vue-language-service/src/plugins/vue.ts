@@ -288,20 +288,20 @@ export default function (options: {
 		},
 	};
 
-	function worker<T>(document: TextDocument, callback: (vueDocument: SourceFileDocument, vueSourceFile: vue.SourceFile) => T) {
+	function worker<T>(document: TextDocument, callback: (vueDocument: SourceFileDocument, vueSourceFile: vue.VueSourceFile) => T) {
 
 		const vueDocument = options.getVueDocument(document);
 		if (!vueDocument)
 			return;
 
-		if (!vue.isSourceFile(vueDocument.file))
+		if (!(vueDocument.file instanceof vue.VueSourceFile))
 			return;
 
 		return callback(vueDocument, vueDocument.file);
 	}
 }
 
-function getSfcCodeWithEmptyBlocks(vueSourceFile: vue.SourceFile, sfcCode: string) {
+function getSfcCodeWithEmptyBlocks(vueSourceFile: vue.VueSourceFile, sfcCode: string) {
 
 	const descriptor = vueSourceFile.sfc;
 	const blocks = [
