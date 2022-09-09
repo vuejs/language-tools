@@ -26,7 +26,7 @@ import { LanguageServiceRuntimeContext } from './types';
 // fix build
 import type * as _0 from 'vscode-languageserver-protocol';
 
-export function createEmbedddedTypeScriptLanguageService(context: LanguageServiceRuntimeContext) {
+export function createLanguageService(context: LanguageServiceRuntimeContext) {
 
 	return {
 		doValidation: diagnostics.register(context),

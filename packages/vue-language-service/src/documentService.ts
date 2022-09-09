@@ -4,7 +4,7 @@ import useJsonPlugin from '@volar-plugins/json';
 import usePugPlugin from '@volar-plugins/pug';
 import usePugFormatPlugin from '@volar-plugins/pug-beautify';
 import useTsPlugin, { isTsDocument } from '@volar-plugins/typescript';
-import { ConfigurationHost, EmbeddedLanguageServicePlugin, setContextStore, DocumentServiceRuntimeContext, getEmbeddedTypeScriptDocumentService, parseSourceFileDocument, SourceFileDocument } from '@volar/embedded-language-service';
+import * as embedded from '@volar/embedded-language-service';
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-core';
 import type * as html from 'vscode-html-languageservice';
@@ -21,13 +21,13 @@ export interface DocumentService extends ReturnType<typeof getDocumentService> {
 
 export function getDocumentService(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	configurationHost: ConfigurationHost | undefined,
+	configurationHost: embedded.ConfigurationHost | undefined,
 	fileSystemProvider: html.FileSystemProvider | undefined,
-	customPlugins: EmbeddedLanguageServicePlugin[],
+	customPlugins: embedded.EmbeddedLanguageServicePlugin[],
 	rootUri = URI.file(ts.sys.getCurrentDirectory()),
 ) {
 
-	setContextStore({
+	embedded.setContextStore({
 		rootUri: rootUri.toString(),
 		typescript: {
 			module: ts,
@@ -39,7 +39,7 @@ export function getDocumentService(
 		documentContext: undefined,
 	});
 
-	const vueDocuments = new WeakMap<TextDocument, SourceFileDocument>();
+	const vueDocuments = new WeakMap<TextDocument, embedded.SourceFileDocument>();
 	const vuePlugins = vue.getDefaultVueLanguagePlugins(ts, shared.getPathOfUri(rootUri.toString()), {}, {}, []);
 	const vueLanguageModule: vue.EmbeddedLanguageModule = {
 		createSourceFile(fileName, snapshot) {
@@ -66,7 +66,7 @@ export function getDocumentService(
 	});
 	const pugFormatPlugin = usePugFormatPlugin();
 
-	const context: DocumentServiceRuntimeContext = {
+	const context: embedded.DocumentServiceRuntimeContext = {
 		typescript: ts,
 		plugins: [
 			...customPlugins,
@@ -95,7 +95,7 @@ export function getDocumentService(
 			if (!vueFile)
 				return;
 
-			vueDoc = parseSourceFileDocument(rootUri, vueFile);
+			vueDoc = embedded.parseSourceFileDocument(rootUri, vueFile);
 
 			vueDocuments.set(document, vueDoc);
 
@@ -108,5 +108,5 @@ export function getDocumentService(
 		},
 	};
 
-	return getEmbeddedTypeScriptDocumentService(context);
+	return embedded.getDocumentService(context);
 }

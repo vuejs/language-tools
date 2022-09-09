@@ -4,7 +4,7 @@ import useHtmlPlugin from '@volar-plugins/html';
 import useJsonPlugin from '@volar-plugins/json';
 import usePugPlugin from '@volar-plugins/pug';
 import useTsPlugin from '@volar-plugins/typescript';
-import { ConfigurationHost, EmbeddedLanguageServicePlugin, setContextStore, createEmbedddedTypeScriptLanguageService, LanguageServiceRuntimeContext, parseSourceFileDocuments } from '@volar/embedded-language-service';
+import * as embedded from '@volar/embedded-language-service';
 import * as shared from '@volar/shared';
 import * as tsFaster from '@volar/typescript-faster';
 import * as ts2 from '@volar/typescript-language-service';
@@ -48,8 +48,8 @@ export function createLanguageService(
 	host: vue.VueLanguageServiceHost,
 	fileSystemProvider: html.FileSystemProvider | undefined,
 	schemaRequestService: json.SchemaRequestService | undefined,
-	configurationHost: ConfigurationHost | undefined,
-	customPlugins: EmbeddedLanguageServicePlugin[],
+	configurationHost: embedded.ConfigurationHost | undefined,
+	customPlugins: embedded.EmbeddedLanguageServicePlugin[],
 	getNameCases?: (uri: string) => Promise<{
 		tag: 'both' | 'kebabCase' | 'pascalCase',
 		attr: 'kebabCase' | 'camelCase',
@@ -63,7 +63,7 @@ export function createLanguageService(
 	const tsLs = ts.createLanguageService(core.typescriptLanguageServiceHost);
 	tsFaster.decorate(ts, core.typescriptLanguageServiceHost, tsLs);
 
-	setContextStore({
+	embedded.setContextStore({
 		rootUri: rootUri.toString(),
 		typescript: {
 			module: ts,
@@ -76,11 +76,11 @@ export function createLanguageService(
 		schemaRequestService,
 	});
 
-	const vueDocuments = parseSourceFileDocuments(rootUri, core.mapper);
+	const vueDocuments = embedded.parseSourceFileDocuments(rootUri, core.mapper);
 	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
 	const documentVersions = new Map<string, number>();
 
-	const context: LanguageServiceRuntimeContext = {
+	const context: embedded.LanguageServiceRuntimeContext = {
 		host,
 		core,
 		typescriptLanguageService: tsLs,
@@ -90,7 +90,7 @@ export function createLanguageService(
 			return allPlugins;
 		},
 	};
-	const apis = createEmbedddedTypeScriptLanguageService(context);
+	const apis = embedded.createLanguageService(context);
 
 	// plugins
 	const scriptTsPlugin = useTsPlugin();

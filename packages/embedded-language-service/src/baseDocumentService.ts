@@ -12,7 +12,7 @@ import { DocumentServiceRuntimeContext } from './types';
 import type * as _0 from 'vscode-languageserver-protocol';
 import type * as _1 from 'vscode-languageserver-textdocument';
 
-export function getEmbeddedTypeScriptDocumentService(context: DocumentServiceRuntimeContext) {
+export function getDocumentService(context: DocumentServiceRuntimeContext) {
 
 	return {
 		format: format.register(context),
