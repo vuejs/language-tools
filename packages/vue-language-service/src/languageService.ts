@@ -70,7 +70,7 @@ export function getSemanticTokenLegend() {
 }
 
 export function createLanguageService(
-	vueLsHost: vue.VueLanguageServiceHost,
+	host: vue.VueLanguageServiceHost,
 	fileSystemProvider: html.FileSystemProvider | undefined,
 	schemaRequestService: json.SchemaRequestService | undefined,
 	configurationHost: ConfigurationHost | undefined,
@@ -79,21 +79,21 @@ export function createLanguageService(
 		tag: 'both' | 'kebabCase' | 'pascalCase',
 		attr: 'kebabCase' | 'camelCase',
 	}>,
-	createLanguageServiceContext = () => vue.createVueLanguageContext(vueLsHost),
-	rootUri = URI.file(vueLsHost.getCurrentDirectory()),
+	createLanguageServiceContext = () => vue.createVueLanguageContext(host),
+	rootUri = URI.file(host.getCurrentDirectory()),
 ) {
 
-	const ts = vueLsHost.getTypeScriptModule();
+	const ts = host.getTypeScriptModule();
 	const core = createLanguageServiceContext();
-	const vueTsLs = ts.createLanguageService(core.typescriptLanguageServiceHost);
-	tsFaster.decorate(ts, core.typescriptLanguageServiceHost, vueTsLs);
+	const tsLs = ts.createLanguageService(core.typescriptLanguageServiceHost);
+	tsFaster.decorate(ts, core.typescriptLanguageServiceHost, tsLs);
 
 	setContextStore({
 		rootUri: rootUri.toString(),
 		typescript: {
 			module: ts,
 			languageServiceHost: core.typescriptLanguageServiceHost,
-			languageService: vueTsLs,
+			languageService: tsLs,
 		},
 		configurationHost,
 		documentContext: getDocumentContext(),
@@ -101,68 +101,28 @@ export function createLanguageService(
 		schemaRequestService,
 	});
 
-	const scriptTsPlugin = useTsPlugin();
-
-	const tsLs = scriptTsPlugin.languageService;
 	const vueDocuments = parseSourceFileDocuments(rootUri, core);
-
 	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
 	const documentVersions = new Map<string, number>();
 
 	const context: LanguageServiceRuntimeContext = {
-		host: vueLsHost,
+		host,
 		core,
-		typescriptLanguageService: tsLs.__internal__.raw,
+		typescriptLanguageService: tsLs,
 		documents: vueDocuments,
 		getTextDocument,
 		get plugins() {
 			return allPlugins;
 		},
 	};
-	const apis = {
-		doValidation: diagnostics.register(context),
-		findReferences: references.register(context),
-		findFileReferences: fileReferences.register(context),
-		findDefinition: definition.register(context, 'findDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions),
-		findTypeDefinition: definition.register(context, 'findTypeDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions),
-		findImplementations: definition.register(context, 'findImplementations', data => !!data.capabilities.references, data => false),
-		prepareRename: renamePrepare.register(context),
-		doRename: rename.register(context),
-		getEditsForFileRename: fileRename.register(context),
-		getSemanticTokens: semanticTokens.register(context),
-		doHover: hover.register(context),
-		doComplete: completions.register(context),
-		doCodeActions: codeActions.register(context),
-		doCodeActionResolve: codeActionResolve.register(context),
-		doCompletionResolve: completionResolve.register(context),
-		getSignatureHelp: signatureHelp.register(context),
-		doCodeLens: codeLens.register(context),
-		doCodeLensResolve: codeLensResolve.register(context),
-		findDocumentHighlights: documentHighlight.register(context),
-		findDocumentLinks: documentLink.register(context),
-		findWorkspaceSymbols: workspaceSymbol.register(context),
-		doAutoInsert: autoInsert.register(context),
-		doExecuteCommand: executeCommand.register(context),
-		getInlayHints: inlayHints.register(context),
-		callHierarchy: callHierarchy.register(context),
-		dispose: () => {
-			vueTsLs.dispose();
-		},
+	const apis = createEmbedddedTypeScriptLanguageService(context);
 
-		__internal__: {
-			vueRuntimeContext: core,
-			rootPath: vueLsHost.getCurrentDirectory(),
-			context,
-			getContext: () => context,
-			// getD3: d3.register(context), true), // unused for nw
-			detectTagNameCase: tagNameCase.register(context),
-		},
-	};
 	// plugins
+	const scriptTsPlugin = useTsPlugin();
 	const vuePlugin = useVuePlugin({
 		getVueDocument: (document) => vueDocuments.get(document.uri),
-		tsLs,
-		isJsxMissing: !vueLsHost.getVueCompilationSettings().experimentalDisableTemplateSupport && vueLsHost.getCompilationSettings().jsx !== ts.JsxEmit.Preserve,
+		tsLs: scriptTsPlugin.languageService,
+		isJsxMissing: !host.getVueCompilationSettings().experimentalDisableTemplateSupport && host.getCompilationSettings().jsx !== ts.JsxEmit.Preserve,
 	});
 	const vueTemplateHtmlPlugin = _useVueTemplateLanguagePlugin(
 		'html',
@@ -176,7 +136,7 @@ export function createLanguageService(
 	const jsonPlugin = useJsonPlugin();
 	const emmetPlugin = useEmmetPlugin();
 	const autoDotValuePlugin = useAutoDotValuePlugin({
-		getTsLs: () => tsLs,
+		getTsLs: () => scriptTsPlugin.languageService,
 	});
 	const referencesCodeLensPlugin = useReferencesCodeLensPlugin({
 		getVueDocument: (uri) => vueDocuments.get(uri),
@@ -198,12 +158,12 @@ export function createLanguageService(
 		doValidation: apis.doValidation,
 		doRename: apis.doRename,
 		findTypeDefinition: apis.findTypeDefinition,
-		scriptTsLs: tsLs,
+		scriptTsLs: scriptTsPlugin.languageService,
 	});
 	const tagNameCasingConversionsPlugin = useTagNameCasingConversionsPlugin({
 		getVueDocument: (uri) => vueDocuments.get(uri),
 		findReferences: apis.findReferences,
-		getTsLs: () => tsLs,
+		getTsLs: () => scriptTsPlugin.languageService,
 	});
 
 	const allPlugins = [
@@ -224,7 +184,19 @@ export function createLanguageService(
 		emmetPlugin,
 	];
 
-	return apis;
+	return {
+		...apis,
+		dispose: () => {
+			tsLs.dispose();
+		},
+		__internal__: {
+			vueRuntimeContext: core,
+			rootPath: host.getCurrentDirectory(),
+			context,
+			// getD3: d3.register(context), true), // unused for nw
+			detectTagNameCase: tagNameCase.register(context),
+		},
+	};
 
 	function getDocumentContext() {
 		const documentContext: html.DocumentContext = {
@@ -234,8 +206,8 @@ export function createLanguageService(
 				const resolveResult = ts.resolveModuleName(
 					ref,
 					isUri ? shared.getPathOfUri(base) : base,
-					vueLsHost.getCompilationSettings(),
-					vueLsHost,
+					context.host.getCompilationSettings(),
+					context.host,
 				);
 				const failedLookupLocations: string[] = (resolveResult as any).failedLookupLocations;
 				const dirs = new Set<string>();
@@ -252,12 +224,12 @@ export function createLanguageService(
 					else {
 						continue;
 					}
-					if (vueLsHost.fileExists(path)) {
+					if (host.fileExists(path)) {
 						return isUri ? shared.getUriByPath(URI.parse(base), path) : path;
 					}
 				}
 				for (const dir of dirs) {
-					if (vueLsHost.directoryExists?.(dir) ?? true) {
+					if (host.directoryExists?.(dir) ?? true) {
 						return isUri ? shared.getUriByPath(URI.parse(base), dir) : dir;
 					}
 				}
@@ -270,7 +242,7 @@ export function createLanguageService(
 	function getTextDocument(uri: string) {
 
 		const fileName = shared.getPathOfUri(uri);
-		const scriptSnapshot = vueLsHost.getScriptSnapshot(fileName);
+		const scriptSnapshot = host.getScriptSnapshot(fileName);
 
 		if (scriptSnapshot) {
 
@@ -309,13 +281,44 @@ export function createLanguageService(
 					}
 				}
 			},
-			tsLs,
+			tsLs: scriptTsPlugin.languageService,
 			isSupportedDocument: (document) =>
 				document.languageId === languageId
 				&& !vueDocuments.get(document.uri) /* not petite-vue source file */,
 			getNameCases,
-			vueLsHost,
+			vueLsHost: host,
 			vueDocuments,
 		});
 	}
+}
+
+export function createEmbedddedTypeScriptLanguageService(context: LanguageServiceRuntimeContext) {
+
+	return {
+		doValidation: diagnostics.register(context),
+		findReferences: references.register(context),
+		findFileReferences: fileReferences.register(context),
+		findDefinition: definition.register(context, 'findDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions),
+		findTypeDefinition: definition.register(context, 'findTypeDefinition', data => !!data.capabilities.definitions, data => !!data.capabilities.definitions),
+		findImplementations: definition.register(context, 'findImplementations', data => !!data.capabilities.references, data => false),
+		prepareRename: renamePrepare.register(context),
+		doRename: rename.register(context),
+		getEditsForFileRename: fileRename.register(context),
+		getSemanticTokens: semanticTokens.register(context),
+		doHover: hover.register(context),
+		doComplete: completions.register(context),
+		doCodeActions: codeActions.register(context),
+		doCodeActionResolve: codeActionResolve.register(context),
+		doCompletionResolve: completionResolve.register(context),
+		getSignatureHelp: signatureHelp.register(context),
+		doCodeLens: codeLens.register(context),
+		doCodeLensResolve: codeLensResolve.register(context),
+		findDocumentHighlights: documentHighlight.register(context),
+		findDocumentLinks: documentLink.register(context),
+		findWorkspaceSymbols: workspaceSymbol.register(context),
+		doAutoInsert: autoInsert.register(context),
+		doExecuteCommand: executeCommand.register(context),
+		getInlayHints: inlayHints.register(context),
+		callHierarchy: callHierarchy.register(context),
+	};
 }

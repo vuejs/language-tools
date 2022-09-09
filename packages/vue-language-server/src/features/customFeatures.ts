@@ -37,7 +37,7 @@ export function register(
 						fs.writeFile(fileName, script.getText(0, script.getLength()), () => { });
 					}
 				}
-				const context = await ls.__internal__.getContext();
+				const context = ls.__internal__.context;
 				for (const vueDocument of context.documents.getAll()) {
 					for (const sourceMap of vueDocument.getSourceMaps()) {
 
@@ -62,7 +62,7 @@ export function register(
 		if (project) {
 			const ls = await (await project.project)?.getLanguageServiceDontCreate();
 			if (ls) {
-				const context = await ls.__internal__.getContext();
+				const context = ls.__internal__.context;
 				const allVueDocuments = context.documents.getAll();
 				let i = 0;
 				for (const vueFile of allVueDocuments) {

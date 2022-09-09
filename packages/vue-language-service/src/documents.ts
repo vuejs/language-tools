@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import { SourceMapBase } from '@volar/source-map';
-import { Embedded, EmbeddedFile, EmbeddedFileMappingData, EmbeddedFileSourceMap, EmbeddedLangaugeSourceFile, forEachEmbeddeds, Teleport, TeleportMappingData, TeleportSideData, VueLanguageContext } from '@volar/vue-language-core';
+import { Embedded, EmbeddedFile, EmbeddedFileMappingData, EmbeddedFileSourceMap, EmbeddedLangaugeSourceFile, forEachEmbeddeds, LanguageContext, Teleport, TeleportMappingData, TeleportSideData } from '@volar/vue-language-core';
 import { computed } from '@vue/reactivity';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -94,7 +94,7 @@ export class TeleportSourceMap extends SourceMap<TeleportMappingData> {
 
 export function parseSourceFileDocuments(
 	rootUri: URI,
-	vueLsCtx: VueLanguageContext,
+	vueLsCtx: LanguageContext,
 ) {
 
 	const _sourceFiles = new WeakMap<EmbeddedLangaugeSourceFile, SourceFileDocument>();
