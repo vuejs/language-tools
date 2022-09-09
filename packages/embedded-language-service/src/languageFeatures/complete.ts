@@ -130,9 +130,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 			if (vueDocument) {
 
-				const embeddeds = vueDocument.file.embeddeds;
-
-				await visitEmbedded(vueDocument, embeddeds, async sourceMap => {
+				await visitEmbedded(vueDocument, async sourceMap => {
 
 					const plugins = context.plugins.sort(sortPlugins);
 

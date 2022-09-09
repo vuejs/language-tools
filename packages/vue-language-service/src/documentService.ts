@@ -16,6 +16,7 @@ import { singleFileTypeScriptServiceHost, updateSingleFileTypeScriptServiceHost 
 
 // fix build
 import type * as _0 from 'vscode-languageserver-protocol';
+import { EmbeddedLanguageModule } from '@volar/vue-language-core';
 
 export interface DocumentService extends ReturnType<typeof getDocumentService> { }
 
@@ -39,20 +40,20 @@ export function getDocumentService(
 		documentContext: undefined,
 	});
 
-	const vueDocuments = new WeakMap<TextDocument, embedded.SourceFileDocument>();
+	const vueDocuments = new WeakMap<TextDocument, [embedded.SourceFileDocument, EmbeddedLanguageModule]>();
 	const vuePlugins = vue.getDefaultVueLanguagePlugins(ts, shared.getPathOfUri(rootUri.toString()), {}, {}, []);
-	const vueLanguageModule: vue.EmbeddedLanguageModule = {
+	const languageModules: vue.EmbeddedLanguageModule[] = [{
 		createSourceFile(fileName, snapshot) {
 			return new vue.VueSourceFile(fileName, snapshot, ts, vuePlugins);
 		},
 		updateSourceFile(sourceFile: vue.VueSourceFile, snapshot) {
 			sourceFile.update(snapshot);
 		},
-	};
+	}];
 
 	// language support plugins
 	const vuePlugin = useVuePlugin({
-		getVueDocument: doc => vueDocuments.get(doc),
+		getVueDocument: doc => vueDocuments.get(doc)?.[0],
 		tsLs: undefined,
 		isJsxMissing: false,
 	});
@@ -62,7 +63,7 @@ export function getDocumentService(
 	const jsonPlugin = useJsonPlugin();
 	const tsPlugin = useTsPlugin();
 	const autoWrapParenthesesPlugin = useAutoWrapParenthesesPlugin({
-		getVueDocument: doc => vueDocuments.get(doc),
+		getVueDocument: doc => vueDocuments.get(doc)?.[0],
 	});
 	const pugFormatPlugin = usePugFormatPlugin();
 
@@ -79,31 +80,33 @@ export function getDocumentService(
 			tsPlugin,
 			autoWrapParenthesesPlugin,
 		],
-		getAndUpdateDocument(document) {
+		getSourceFileDocument(document) {
 
-			let vueDoc = vueDocuments.get(document);
+			let cache = vueDocuments.get(document);
 
-			if (vueDoc && vueDoc.file.text !== document.getText()) {
-				vueLanguageModule.updateSourceFile(vueDoc.file, ts.ScriptSnapshot.fromString(document.getText()));
-				return [vueDoc, vueLanguageModule];
+			if (cache && cache[0].file.text !== document.getText()) {
+				cache[1].updateSourceFile(cache[0].file, ts.ScriptSnapshot.fromString(document.getText()));
+				return cache;
 			}
 
-			const vueFile = vueLanguageModule.createSourceFile(
-				'/untitled.' + shared.languageIdToSyntax(document.languageId),
-				ts.ScriptSnapshot.fromString(document.getText()),
-			);
-			if (!vueFile)
-				return;
+			for (const languageModule of languageModules) {
+				const sourceFile = languageModule.createSourceFile(
+					'/untitled.' + shared.languageIdToSyntax(document.languageId),
+					ts.ScriptSnapshot.fromString(document.getText()),
+				);
+				if (sourceFile) {
+					const sourceFileDoc = embedded.parseSourceFileDocument(rootUri, sourceFile);
+					cache = [sourceFileDoc, languageModule];
+					vueDocuments.set(document, cache);
+					break;
+				}
+			}
 
-			vueDoc = embedded.parseSourceFileDocument(rootUri, vueFile);
-
-			vueDocuments.set(document, vueDoc);
-
-			return [vueDoc, vueLanguageModule];
+			return cache;
 		},
 		prepareLanguageServices(document) {
 			if (isTsDocument(document)) {
-				updateSingleFileTypeScriptServiceHost(context.typescript, document);
+				updateSingleFileTypeScriptServiceHost(ts, document);
 			}
 		},
 	};

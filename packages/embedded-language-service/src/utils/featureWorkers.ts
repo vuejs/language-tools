@@ -35,15 +35,13 @@ export async function documentArgFeatureWorker<T, K>(
 	combineResult?: (results: NonNullable<Awaited<T>>[]) => NonNullable<Awaited<T>>,
 ) {
 
-	const vueDocument = context.getAndUpdateDocument(document);
+	const vueDocument = context.getSourceFileDocument(document);
 
 	let results: NonNullable<Awaited<T>>[] = [];
 
 	if (vueDocument) {
 
-		const embeddeds = vueDocument[0].file.embeddeds;
-
-		await visitEmbedded(vueDocument[0], embeddeds, async sourceMap => {
+		await visitEmbedded(vueDocument[0], async sourceMap => {
 
 			if (!isValidSourceMap(sourceMap))
 				return true;
@@ -124,9 +122,7 @@ export async function languageFeatureWorker<T, K>(
 
 	if (vueDocument) {
 
-		const embeddeds = vueDocument.file.embeddeds;
-
-		await visitEmbedded(vueDocument, embeddeds, async sourceMap => {
+		await visitEmbedded(vueDocument, async sourceMap => {
 
 			for (const mappedArg of transformArg(arg, sourceMap)) {
 

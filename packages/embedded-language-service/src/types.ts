@@ -7,7 +7,7 @@ import { SourceFileDocument, SourceFileDocuments } from './documents';
 export interface DocumentServiceRuntimeContext {
 	typescript: typeof import('typescript/lib/tsserverlibrary');
 	plugins: EmbeddedLanguageServicePlugin[];
-	getAndUpdateDocument(document: TextDocument): [SourceFileDocument, EmbeddedLanguageModule] | undefined;
+	getSourceFileDocument(document: TextDocument): [SourceFileDocument, EmbeddedLanguageModule] | undefined;
 	prepareLanguageServices(document: TextDocument): void;
 };
 
