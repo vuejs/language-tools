@@ -97,8 +97,13 @@ function createComponentMetaCheckerBase(tsconfigPath: string, parsedCommandLine:
 		getTypeScriptModule: () => ts,
 		getVueCompilationSettings: () => parsedCommandLine.vueOptions,
 	};
-	const mods = [vue.createEmbeddedLanguageModule(host)];
-	const core = embedded.createEmbeddedLanguageServiceHost(host, mods);
+	const vueLanguageModule = vue.createEmbeddedLanguageModule(
+		host.getTypeScriptModule(),
+		host.getCurrentDirectory(),
+		host.getCompilationSettings(),
+		host.getVueCompilationSettings(),
+	);
+	const core = embedded.createEmbeddedLanguageServiceHost(host, [vueLanguageModule]);
 	const proxyApis: Partial<ts.LanguageServiceHost> = checkerOptions.forceUseTs ? {
 		getScriptKind: (fileName) => {
 			if (fileName.endsWith('.vue.js')) {

@@ -65,12 +65,12 @@ function createParsedCommandLineBase(
 		...content,
 		vueOptions: {
 			...baseVueOptions,
-			...resolveVueCompilerOptions(content.raw.vueCompilerOptions ?? {}, folder),
+			...resolveVueCompilerOptionsWorker(content.raw.vueCompilerOptions ?? {}, folder),
 		},
 	};
 }
 
-export function getVueCompilerOptions(vueOptions: VueCompilerOptions): ResolvedVueCompilerOptions {
+export function resolveVueCompilerOptions(vueOptions: VueCompilerOptions): ResolvedVueCompilerOptions {
 	const target = vueOptions.target ?? 3;
 	return {
 		...vueOptions,
@@ -96,7 +96,7 @@ export function getVueCompilerOptions(vueOptions: VueCompilerOptions): ResolvedV
 	};
 }
 
-function resolveVueCompilerOptions(rawOptions: {
+function resolveVueCompilerOptionsWorker(rawOptions: {
 	[key: string]: any,
 	experimentalTemplateCompilerOptionsRequirePath?: string,
 }, rootPath: string) {

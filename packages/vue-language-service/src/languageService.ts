@@ -42,7 +42,14 @@ export function createLanguageService(
 	host: vue.LanguageServiceHost,
 	env: PluginContext['env'],
 	customPlugins: embeddedLS.EmbeddedLanguageServicePlugin[] = [],
-	languageModules = [vue.createEmbeddedLanguageModule(host)],
+	languageModules = [
+		vue.createEmbeddedLanguageModule(
+			host.getTypeScriptModule(),
+			host.getCurrentDirectory(),
+			host.getCompilationSettings(),
+			host.getVueCompilationSettings(),
+		),
+	],
 ) {
 
 	const languageContext = embedded.createEmbeddedLanguageServiceHost(host, languageModules);

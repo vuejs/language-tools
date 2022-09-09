@@ -11,7 +11,7 @@ import * as usePugPlugin from './plugins/vue-template-pug';
 import useVueTsx from './plugins/vue-tsx';
 import { VueLanguagePlugin } from './types';
 import { VueCompilerOptions } from './types';
-import { getVueCompilerOptions } from './utils/ts';
+import { resolveVueCompilerOptions } from './utils/ts';
 
 export function getDefaultVueLanguagePlugins(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -34,7 +34,7 @@ export function getDefaultVueLanguagePlugins(
 		useVueTsx,
 		...extraPlugins,
 	];
-	const vueCompilerOptions = getVueCompilerOptions(_vueCompilerOptions);
+	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);
 	if (typeof require?.resolve === 'function') {
 		for (const pluginPath of vueCompilerOptions.plugins) {
 			try {

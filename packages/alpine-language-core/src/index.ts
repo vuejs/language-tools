@@ -4,5 +4,12 @@ import * as useHtmlFilePlugin from './plugins/file-html';
 export * from '@volar/vue-language-core';
 
 export function createEmbeddedLanguageModule(host: vue.LanguageServiceHost) {
-	return vue.createEmbeddedLanguageModule(host, [useHtmlFilePlugin], ['.html']);
+	return vue.createEmbeddedLanguageModule(
+		host.getTypeScriptModule(),
+		host.getCurrentDirectory(),
+		host.getCompilationSettings(),
+		host.getVueCompilationSettings(),
+		[useHtmlFilePlugin],
+		['.html'],
+	);
 }

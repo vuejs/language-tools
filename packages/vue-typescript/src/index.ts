@@ -6,7 +6,12 @@ import * as embedded from '@volar/embedded-language-core';
 
 export function createLanguageService(host: vue.LanguageServiceHost) {
 
-	const mods = [vue.createEmbeddedLanguageModule(host)];
+	const mods = [vue.createEmbeddedLanguageModule(
+		host.getTypeScriptModule(),
+		host.getCurrentDirectory(),
+		host.getCompilationSettings(),
+		host.getVueCompilationSettings(),
+	)];
 	const core = embedded.createEmbeddedLanguageServiceHost(host, mods);
 	const ts = host.getTypeScriptModule();
 	const ls = ts.createLanguageService(core.typescriptLanguageServiceHost);

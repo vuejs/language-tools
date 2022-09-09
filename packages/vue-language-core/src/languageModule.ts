@@ -2,24 +2,26 @@ import type * as embedded from '@volar/embedded-language-core';
 import { posix as path } from 'path';
 import { getDefaultVueLanguagePlugins } from './plugins';
 import { VueSourceFile } from './sourceFile';
-import { VueLanguagePlugin, LanguageServiceHost } from './types';
+import { VueLanguagePlugin, VueCompilerOptions } from './types';
 import * as localTypes from './utils/localTypes';
-import { getVueCompilerOptions } from './utils/ts';
+import { resolveVueCompilerOptions } from './utils/ts';
 
 export function createEmbeddedLanguageModule(
-	host: LanguageServiceHost,
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	rootDir: string,
+	compilerOptions: ts.CompilerOptions,
+	_vueCompilerOptions: VueCompilerOptions,
 	extraPlugins: VueLanguagePlugin[] = [],
 	exts: string[] = ['.vue', '.html', '.md'],
 ): embedded.EmbeddedLanguageModule {
 
 	const vueLanguagePlugin = getDefaultVueLanguagePlugins(
-		host.getTypeScriptModule(),
-		host.getCurrentDirectory(),
-		host.getCompilationSettings(),
-		host.getVueCompilationSettings(),
+		ts,
+		rootDir,
+		compilerOptions,
+		_vueCompilerOptions,
 		extraPlugins,
 	);
-	const ts = host.getTypeScriptModule();
 
 	// from https://github.com/johnsoncodehk/volar/pull/1543
 	if (!((ts as any).__VLS_pitched_resolveModuleNames)) {
@@ -33,7 +35,7 @@ export function createEmbeddedLanguageModule(
 		};
 	}
 
-	const vueCompilerOptions = getVueCompilerOptions(host.getVueCompilationSettings());
+	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);
 	const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(vueCompilerOptions.target));
 	const languageModule: embedded.EmbeddedLanguageModule = {
 		createSourceFile(fileName, snapshot) {
