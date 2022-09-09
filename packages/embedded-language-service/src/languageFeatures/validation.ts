@@ -1,4 +1,3 @@
-import { isTsDocument } from '@volar-plugins/typescript';
 import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
@@ -7,6 +6,13 @@ import { EmbeddedDocumentSourceMap } from '../documents';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import { languageFeatureWorker } from '../utils/featureWorkers';
+
+function isTsDocument(document: TextDocument) {
+	return document.languageId === 'javascript' ||
+		document.languageId === 'typescript' ||
+		document.languageId === 'javascriptreact' ||
+		document.languageId === 'typescriptreact';
+}
 
 export function updateRange(
 	range: vscode.Range,

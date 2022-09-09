@@ -1,6 +1,5 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/embedded-language-service';
-import { SourceFileDocument } from '../documents';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost, SourceFileDocument } from '@volar/embedded-language-service';
 
 const showReferencesCommand = 'volar.show-references';
 

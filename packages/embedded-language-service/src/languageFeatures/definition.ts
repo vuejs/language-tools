@@ -4,7 +4,7 @@ import * as shared from '@volar/shared';
 import { languageFeatureWorker } from '../utils/featureWorkers';
 import * as dedupe from '../utils/dedupe';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { EmbeddedFileMappingData, TeleportSideData } from '@volar/vue-language-core';
+import { EmbeddedFileMappingData, TeleportSideData } from '@volar/embedded-language-core';
 
 export function register(
 	context: LanguageServiceRuntimeContext,

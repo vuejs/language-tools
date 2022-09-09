@@ -1,8 +1,7 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguageServicePlugin, useConfigurationHost, useTypeScriptModule } from '@volar/embedded-language-service';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost, useTypeScriptModule, SourceFileDocument } from '@volar/embedded-language-service';
 import { isCharacterTyping } from './vue-autoinsert-dotvalue';
-import { SourceFileDocument } from '../documents';
 import * as vue from '@volar/vue-language-core';
 
 export default function (options: {

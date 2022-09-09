@@ -4,17 +4,14 @@ import useJsonPlugin from '@volar-plugins/json';
 import usePugPlugin from '@volar-plugins/pug';
 import usePugFormatPlugin from '@volar-plugins/pug-beautify';
 import useTsPlugin, { isTsDocument } from '@volar-plugins/typescript';
-import { ConfigurationHost, EmbeddedLanguageServicePlugin, setContextStore } from '@volar/embedded-language-service';
+import { ConfigurationHost, EmbeddedLanguageServicePlugin, setContextStore, DocumentServiceRuntimeContext, getEmbeddedTypeScriptDocumentService, parseSourceFileDocument, SourceFileDocument } from '@volar/embedded-language-service';
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-core';
 import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
-import { getEmbeddedTypeScriptDocumentService } from './baseDocumentService';
-import { parseSourceFileDocument, SourceFileDocument } from './documents';
 import useVuePlugin from './plugins/vue';
 import useAutoWrapParenthesesPlugin from './plugins/vue-autoinsert-parentheses';
-import { DocumentServiceRuntimeContext } from './types';
 import { singleFileTypeScriptServiceHost, updateSingleFileTypeScriptServiceHost } from './utils/singleFileTypeScriptService';
 
 // fix build

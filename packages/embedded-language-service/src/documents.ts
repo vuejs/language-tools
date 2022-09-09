@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import { SourceMapBase } from '@volar/source-map';
-import { Embedded, EmbeddedFile, EmbeddedFileMappingData, EmbeddedFileSourceMap, EmbeddedLangaugeSourceFile, forEachEmbeddeds, LanguageContext, Teleport, TeleportMappingData, TeleportSideData } from '@volar/vue-language-core';
+import { Embedded, EmbeddedFile, EmbeddedFileMappingData, EmbeddedFileSourceMap, EmbeddedLangaugeSourceFile, forEachEmbeddeds, Teleport, TeleportMappingData, TeleportSideData, DocumentRegistry } from '@volar/embedded-language-core';
 import { computed } from '@vue/reactivity';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -94,7 +94,7 @@ export class TeleportSourceMap extends SourceMap<TeleportMappingData> {
 
 export function parseSourceFileDocuments(
 	rootUri: URI,
-	vueLsCtx: LanguageContext,
+	mapper: DocumentRegistry,
 ) {
 
 	const _sourceFiles = new WeakMap<EmbeddedLangaugeSourceFile, SourceFileDocument>();
@@ -133,7 +133,7 @@ export function parseSourceFileDocuments(
 		get: (uri: string) => {
 
 			const fileName = shared.getPathOfUri(uri);
-			const vueFile = vueLsCtx.mapper.get(fileName);
+			const vueFile = mapper.get(fileName);
 
 			if (vueFile) {
 				return get(vueFile[0]);
@@ -200,7 +200,7 @@ export function parseSourceFileDocuments(
 		return vueDocument;
 	}
 	function getAll() {
-		return vueLsCtx.mapper.getAll().map(file => get(file[0]));
+		return mapper.getAll().map(file => get(file[0]));
 	}
 }
 

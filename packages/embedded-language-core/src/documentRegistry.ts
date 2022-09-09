@@ -13,6 +13,8 @@ export function forEachEmbeddeds(input: EmbeddedStructure[], cb: (embedded: Embe
 	}
 }
 
+export type DocumentRegistry = ReturnType<typeof createDocumentRegistry>;
+
 export function createDocumentRegistry() {
 
 	const files = shallowReactive<Record<string, [EmbeddedLangaugeSourceFile, EmbeddedLanguageModule]>>({});

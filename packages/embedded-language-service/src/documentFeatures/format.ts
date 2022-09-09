@@ -1,6 +1,6 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver-protocol';
-import type { EmbeddedStructure } from '@volar/vue-language-core';
+import type { EmbeddedStructure } from '@volar/embedded-language-core';
 import type { DocumentServiceRuntimeContext } from '../types';
 import { EmbeddedDocumentSourceMap, SourceFileDocument } from '../documents';
 import { useConfigurationHost } from '@volar/embedded-language-service';

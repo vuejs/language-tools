@@ -1,6 +1,5 @@
-import type { LanguageServiceRuntimeContext } from '../types';
 import { hyphenate } from '@vue/shared';
-import { SourceFileDocument } from '../documents';
+import { SourceFileDocument, LanguageServiceRuntimeContext } from '@volar/embedded-language-service';
 import { checkTemplateData, getTemplateTagsAndAttrs } from '../helpers';
 
 export function register(context: LanguageServiceRuntimeContext) {

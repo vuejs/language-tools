@@ -83,3 +83,9 @@ export interface EmbeddedLanguageModule {
 	createSourceFile(fileName: string, snapshot: ts.IScriptSnapshot): EmbeddedLangaugeSourceFile | undefined;
 	updateSourceFile(sourceFile: EmbeddedLangaugeSourceFile, snapshot: ts.IScriptSnapshot): void;
 }
+
+export type EmbeddedTypeScriptLanguageServiceHost = ts.LanguageServiceHost & {
+	getTypeScriptModule(): typeof import('typescript/lib/tsserverlibrary');
+	isTsPlugin?: boolean,
+	isTsc?: boolean,
+};

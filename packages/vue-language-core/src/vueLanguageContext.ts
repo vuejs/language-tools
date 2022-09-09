@@ -2,7 +2,7 @@ import { posix as path } from 'path';
 import { VueSourceFile, VueLanguagePlugin } from './sourceFile';
 import { VueLanguageServiceHost } from './types';
 import * as localTypes from './utils/localTypes';
-import { createLanguageContext, EmbeddedLanguageModule } from '@volar/embedded-typescript-language-core';
+import { createLanguageContext, EmbeddedLanguageModule } from '@volar/embedded-language-core';
 import { getDefaultVueLanguagePlugins } from './plugins';
 import { getVueCompilerOptions } from './utils/ts';
 import type * as _ from 'typescript/lib/tsserverlibrary';

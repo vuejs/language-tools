@@ -4,7 +4,7 @@ import * as templateGen from '../generators/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { Sfc, VueLanguagePlugin } from '../sourceFile';
-import { TextRange } from '@volar/embedded-typescript-language-core';
+import { TextRange } from '@volar/embedded-language-core';
 import { parseCssClassNames } from '../utils/parseCssClassNames';
 import { parseCssVars } from '../utils/parseCssVars';
 

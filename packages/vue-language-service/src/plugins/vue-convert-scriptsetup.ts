@@ -1,11 +1,10 @@
-import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, useConfigurationHost, useTypeScriptModule } from '@volar/embedded-language-service';
+import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, useConfigurationHost, useTypeScriptModule, SourceFileDocument } from '@volar/embedded-language-service';
 import * as shared from '@volar/shared';
 import type { TextRange } from '@volar/vue-language-core';
 import * as vue from '@volar/vue-language-core';
 import { scriptSetupConvertRanges } from '@volar/vue-language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
-import { SourceFileDocument } from '../documents';
 
 enum Commands {
 	USE_SETUP_SUGAR = 'scriptSetupConversions.use',

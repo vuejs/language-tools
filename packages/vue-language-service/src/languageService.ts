@@ -4,7 +4,7 @@ import useHtmlPlugin from '@volar-plugins/html';
 import useJsonPlugin from '@volar-plugins/json';
 import usePugPlugin from '@volar-plugins/pug';
 import useTsPlugin from '@volar-plugins/typescript';
-import { ConfigurationHost, EmbeddedLanguageServicePlugin, setContextStore } from '@volar/embedded-language-service';
+import { ConfigurationHost, EmbeddedLanguageServicePlugin, setContextStore, createEmbedddedTypeScriptLanguageService, LanguageServiceRuntimeContext, parseSourceFileDocuments } from '@volar/embedded-language-service';
 import * as shared from '@volar/shared';
 import * as tsFaster from '@volar/typescript-faster';
 import * as ts2 from '@volar/typescript-language-service';
@@ -16,8 +16,6 @@ import * as json from 'vscode-json-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
-import { createEmbedddedTypeScriptLanguageService } from './baseLanguageService';
-import { parseSourceFileDocuments } from './documents';
 import * as tagNameCase from './ideFeatures/tagNameCase';
 import useVuePlugin from './plugins/vue';
 import useAutoDotValuePlugin from './plugins/vue-autoinsert-dotvalue';
@@ -27,7 +25,6 @@ import useRefSugarConversionsPlugin from './plugins/vue-convert-refsugar';
 import useScriptSetupConversionsPlugin from './plugins/vue-convert-scriptsetup';
 import useTagNameCasingConversionsPlugin from './plugins/vue-convert-tagcasing';
 import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemanticTokenTypes } from './plugins/vue-template';
-import { LanguageServiceRuntimeContext } from './types';
 // import * as d3 from './ideFeatures/d3';
 
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
@@ -79,7 +76,7 @@ export function createLanguageService(
 		schemaRequestService,
 	});
 
-	const vueDocuments = parseSourceFileDocuments(rootUri, core);
+	const vueDocuments = parseSourceFileDocuments(rootUri, core.mapper);
 	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
 	const documentVersions = new Map<string, number>();
 

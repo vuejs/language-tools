@@ -1,11 +1,9 @@
-import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, useConfigurationHost, useTypeScriptModule } from '@volar/embedded-language-service';
+import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, useConfigurationHost, useTypeScriptModule, SourceFileDocument, mergeWorkspaceEdits } from '@volar/embedded-language-service';
 import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
 import * as vue from '@volar/vue-language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
-import { SourceFileDocument } from '../documents';
-import { mergeWorkspaceEdits } from '../languageFeatures/rename';
 import * as refSugarRanges from '../utils/refSugarRanges';
 import { isBlacklistNode, isRefType } from './vue-autoinsert-dotvalue';
 import { getAddMissingImportsEdits } from './vue-convert-scriptsetup';

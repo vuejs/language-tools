@@ -1,5 +1,5 @@
 import { CodeGen } from '@volar/code-gen';
-import { EmbeddedFileMappingData } from '@volar/embedded-typescript-language-core';
+import { EmbeddedFileMappingData } from '@volar/embedded-language-core';
 import * as SourceMaps from '@volar/source-map';
 import * as CompilerCore from '@vue/compiler-core';
 import * as CompilerDOM from '@vue/compiler-dom';

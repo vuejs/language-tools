@@ -16,7 +16,7 @@ importers:
       '@lerna-lite/cli': 1.11.2
       '@types/node': 18.7.16
       '@vscode/test-web': 0.0.30
-      typescript: 4.8.2
+      typescript: 4.8.3
       vite: 3.1.0
       vitepress: 1.0.0-alpha.13
       vitest: 0.23.1
@@ -100,7 +100,7 @@ importers:
     dependencies:
       '@volar/vue-language-core': link:../vue-language-core
     devDependencies:
-      typescript: 4.8.2
+      typescript: 4.8.3
 
   packages/alpine-language-server:
     specifiers:
@@ -129,7 +129,7 @@ importers:
       vscode-uri: 3.0.3
     devDependencies:
       '@types/semver': 7.3.12
-      typescript: 4.8.2
+      typescript: 4.8.3
 
   packages/code-gen:
     specifiers:
@@ -149,30 +149,32 @@ importers:
 
   packages/embedded-language-service:
     specifiers:
+      '@volar/embedded-language-core': 0.40.13
+      '@volar/shared': 0.40.13
+      '@volar/source-map': 0.40.13
+      '@volar/transforms': 0.40.13
+      '@vue/reactivity': ^3.2.38
+      typescript: latest
+      upath: ^2.0.1
       vscode-html-languageservice: ^5.0.1
       vscode-json-languageservice: ^5.1.0
       vscode-languageserver-protocol: ^3.17.2
       vscode-languageserver-textdocument: ^1.0.7
+      vscode-uri: ^3.0.3
     dependencies:
+      '@volar/embedded-language-core': link:../embedded-language-core
+      '@volar/shared': link:../shared
+      '@volar/source-map': link:../source-map
+      '@volar/transforms': link:../transforms
+      '@vue/reactivity': 3.2.38
+      upath: 2.0.1
       vscode-html-languageservice: 5.0.1
       vscode-json-languageservice: 5.1.0
       vscode-languageserver-protocol: 3.17.2
       vscode-languageserver-textdocument: 1.0.7
-
-  packages/embedded-typescript-language-core:
-    specifiers:
-      '@volar/code-gen': 0.40.13
-      '@volar/embedded-language-core': 0.40.13
-      '@volar/source-map': 0.40.13
-      '@vue/reactivity': ^3.2.38
-      typescript: latest
-    dependencies:
-      '@volar/code-gen': link:../code-gen
-      '@volar/embedded-language-core': link:../embedded-language-core
-      '@volar/source-map': link:../source-map
-      '@vue/reactivity': 3.2.38
+      vscode-uri: 3.0.3
     devDependencies:
-      typescript: 4.8.2
+      typescript: 4.8.3
 
   packages/preview:
     specifiers:
@@ -219,7 +221,7 @@ importers:
       vscode-languageserver-textdocument: 1.0.7
       vscode-uri: 3.0.3
     devDependencies:
-      typescript: 4.8.2
+      typescript: 4.8.3
 
   packages/source-map:
     specifiers:
@@ -244,7 +246,7 @@ importers:
       semver: 7.3.7
     devDependencies:
       '@types/semver': 7.3.12
-      typescript: 4.8.2
+      typescript: 4.8.3
 
   packages/typescript-language-service:
     specifiers:
@@ -267,7 +269,7 @@ importers:
       vscode-uri: 3.0.3
     devDependencies:
       '@types/semver': 7.3.12
-      typescript: 4.8.2
+      typescript: 4.8.3
 
   packages/typescript-vue-plugin:
     specifiers:
@@ -278,7 +280,7 @@ importers:
       '@volar/vue-language-core': link:../vue-language-core
       '@volar/vue-typescript': link:../vue-typescript
     devDependencies:
-      typescript: 4.8.2
+      typescript: 4.8.3
 
   packages/vue-component-meta:
     specifiers:
@@ -289,7 +291,7 @@ importers:
   packages/vue-language-core:
     specifiers:
       '@volar/code-gen': 0.40.13
-      '@volar/embedded-typescript-language-core': 0.40.13
+      '@volar/embedded-language-core': 0.40.13
       '@volar/pug-language-service': 0.40.13
       '@volar/source-map': 0.40.13
       '@vue/compiler-core': ^3.2.38
@@ -300,7 +302,7 @@ importers:
       typescript: latest
     dependencies:
       '@volar/code-gen': link:../code-gen
-      '@volar/embedded-typescript-language-core': link:../embedded-typescript-language-core
+      '@volar/embedded-language-core': link:../embedded-language-core
       '@volar/source-map': link:../source-map
       '@vue/compiler-core': 3.2.38
       '@vue/compiler-dom': 3.2.38
@@ -309,7 +311,7 @@ importers:
       '@vue/shared': 3.2.38
     devDependencies:
       '@volar/pug-language-service': link:../pug-language-service
-      typescript: 4.8.2
+      typescript: 4.8.3
 
   packages/vue-language-server:
     specifiers:
@@ -390,7 +392,7 @@ importers:
       vscode-languageserver-textdocument: 1.0.7
       vscode-uri: 3.0.3
     devDependencies:
-      typescript: 4.8.2
+      typescript: 4.8.3
 
   packages/vue-test-workspace:
     specifiers:
@@ -417,7 +419,7 @@ importers:
       '@volar/typescript-faster': link:../typescript-faster
       '@volar/vue-language-core': link:../vue-language-core
     devDependencies:
-      typescript: 4.8.2
+      typescript: 4.8.3
 
   plugins/css:
     specifiers:
@@ -5310,8 +5312,8 @@ packages:
     resolution: {integrity: sha512-/aCDEGatGvZ2BIk+HmLf4ifCJFwvKFNb9/JeZPMulfgFracn9QFcAf5GO8B/mweUjSoblS5In0cWhqpfs/5PQA==}
     dev: true
 
-  /typescript/4.8.2:
-    resolution: {integrity: sha512-C0I1UsrrDHo2fYI5oaCGbSejwX4ch+9Y5jTQELvovfmFkK3HHSZJB8MSJcWLmCUBzQBchCrZ9rMRV6GuNrvGtw==}
+  /typescript/4.8.3:
+    resolution: {integrity: sha512-goMHfm00nWPa8UvR/CPSvykqf6dVV8x/dp0c5mFTMTIu0u0FlGWRioyy7Nn0PGAdHxpJZnuO/ut+PpQ8UiHAig==}
     engines: {node: '>=4.2.0'}
     hasBin: true
     dev: true
