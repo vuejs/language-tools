@@ -1,2 +1,3 @@
+export * from '@volar/embedded-language-server';
 export * from './requests';
-export * from './types';
+

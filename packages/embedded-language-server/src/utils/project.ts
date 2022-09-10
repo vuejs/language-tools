@@ -225,6 +225,9 @@ function createParsedCommandLine(
 	tsConfig: string | ts.CompilerOptions,
 	languageConfigs: LanguageConfigs,
 ): ts.ParsedCommandLine {
+	if (languageConfigs.createParsedCommandLine) {
+		return languageConfigs.createParsedCommandLine(ts, sys, rootPath, tsConfig);
+	}
 	try {
 		const parseConfigHost: ts.ParseConfigHost = {
 			useCaseSensitiveFileNames: sys.useCaseSensitiveFileNames,

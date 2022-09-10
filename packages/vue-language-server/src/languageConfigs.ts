@@ -1,7 +1,7 @@
+import { LanguageConfigs } from '@volar/embedded-language-server';
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-service';
 import { DetectTagCasingRequest, GetConvertTagCasingEditsRequest } from './requests';
-import { LanguageConfigs } from './types';
 
 export const languageConfigs: LanguageConfigs<vue.ParsedCommandLine, vue.LanguageService> = {
 	definitelyExts: ['.vue'],
