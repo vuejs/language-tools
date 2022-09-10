@@ -95,35 +95,6 @@ export function register(
 				});
 			});
 		}
-
-		if (params.command === 'volar.server.convertTagNameCasing') {
-
-			const args = params.arguments as [string, 'kebab' | 'pascal'] | undefined;
-			if (!args) {
-				return;
-			}
-
-			return worker(args[0], vueLs => {
-				return vueLs.doExecuteCommand(
-					vue.executePluginCommand,
-					[
-						args[0],
-						undefined,
-						vscode.Command.create(
-							'',
-							vue.convertTagNameCasingCommand,
-							...<vue.ConvertTagNameCasingCommandArgs>[
-								args[0],
-								args[1],
-							]),
-					], {
-					token,
-					workDoneProgress,
-					applyEdit: (paramOrEdit) => connection.workspace.applyEdit(paramOrEdit),
-					showReferences: (params) => connection.sendNotification(ShowReferencesNotification.type, params),
-				});
-			});
-		}
 	});
 	connection.onCodeAction(async params => {
 		return worker(params.textDocument.uri, async vueLs => {

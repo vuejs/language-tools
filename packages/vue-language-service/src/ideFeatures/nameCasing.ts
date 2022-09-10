@@ -1,12 +1,73 @@
 import { hyphenate } from '@vue/shared';
 import { SourceFileDocument, LanguageServiceRuntimeContext } from '@volar/embedded-language-service';
 import { checkTemplateData, getTemplateTagsAndAttrs } from '../helpers';
+import * as vue from '@volar/vue-language-core';
+import * as vscode from 'vscode-languageserver-protocol';
 
-export function register(context: LanguageServiceRuntimeContext) {
-	return async (uri: string): Promise<{
+export function register(
+	context: LanguageServiceRuntimeContext,
+	findReferences: (uri: string, position: vscode.Position) => Promise<vscode.Location[] | undefined>,
+) {
+
+	return {
+		convert,
+		detect,
+	};
+
+	async function convert(uri: string, mode: 'kebab' | 'pascal') {
+
+		const vueDocument = context.documents.get(uri);
+		if (!vueDocument)
+			return;
+
+		if (!(vueDocument.file instanceof vue.VueSourceFile))
+			return;
+
+		const desc = vueDocument.file.sfc;
+		if (!desc.template)
+			return;
+
+		const template = desc.template;
+		const document = vueDocument.getDocument();
+		const edits: vscode.TextEdit[] = [];
+		const components = new Set(checkTemplateData(vueDocument.file, context.typescriptLanguageService).components);
+		const tagOffsets = getTemplateTagsAndAttrs(vueDocument.file).tags;
+
+		for (const [_, offsets] of tagOffsets) {
+			if (offsets.length) {
+
+				const offset = template.startTagEnd + offsets[0];
+				const refs = await findReferences(uri, vueDocument.getDocument().positionAt(offset)) ?? [];
+
+				for (const vueLoc of refs) {
+					if (
+						vueLoc.uri === vueDocument.uri
+						&& document.offsetAt(vueLoc.range.start) >= template.startTagEnd
+						&& document.offsetAt(vueLoc.range.end) <= template.startTagEnd + template.content.length
+					) {
+						const referenceText = document.getText(vueLoc.range);
+						for (const component of components) {
+							if (component === referenceText || hyphenate(component) === referenceText) {
+								if (mode === 'kebab' && referenceText !== hyphenate(component)) {
+									edits.push(vscode.TextEdit.replace(vueLoc.range, hyphenate(component)));
+								}
+								if (mode === 'pascal' && referenceText !== component) {
+									edits.push(vscode.TextEdit.replace(vueLoc.range, component));
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		return edits;
+	}
+
+	async function detect(uri: string): Promise<{
 		tag: 'both' | 'kebabCase' | 'pascalCase' | 'unsure',
 		attr: 'kebabCase' | 'camelCase' | 'unsure',
-	}> => {
+	}> {
 
 		const vueDocument = context.documents.get(uri);
 		if (!vueDocument) return {
@@ -97,5 +158,5 @@ export function register(context: LanguageServiceRuntimeContext) {
 			}
 			return 'unsure';
 		}
-	};
+	}
 }

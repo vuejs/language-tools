@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { userPick } from './splitEditors';
 import { BaseLanguageClient, State } from 'vscode-languageclient';
 import * as shared from '@volar/shared';
-import { DetectDocumentNameCasesRequest } from '@volar/vue-language-server';
+import { DetectTagCasingRequest } from '@volar/vue-language-server';
 
 export const attrCases = shared.createUriMap<'kebabCase' | 'camelCase'>();
 
@@ -43,7 +43,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 			updateStatusBarText('camelCase');
 		}
 		if (select === '6') {
-			const detects = await languageClient.sendRequest(DetectDocumentNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(crtDoc));
+			const detects = await languageClient.sendRequest(DetectTagCasingRequest.type, { textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(crtDoc) });
 			if (detects) {
 				attrCases.uriSet(crtDoc.uri.toString(), getValidAttrCase(detects.attr));
 				updateStatusBarText(getValidAttrCase(detects.attr));
@@ -76,7 +76,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 					attrCase = 'camelCase';
 				}
 				else {
-					const templateCases = await languageClient.sendRequest(DetectDocumentNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(newDoc));
+					const templateCases = await languageClient.sendRequest(DetectTagCasingRequest.type, { textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(newDoc) });
 					if (templateCases) {
 						attrCase = getValidAttrCase(templateCases.attr);
 						if (templateCases.attr === 'both') {

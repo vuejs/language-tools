@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { userPick } from './splitEditors';
 import { BaseLanguageClient, State } from 'vscode-languageclient';
 import * as shared from '@volar/shared';
-import { DetectDocumentNameCasesRequest } from '@volar/vue-language-server';
+import { DetectTagCasingRequest, GetConvertTagCasingEditsRequest } from '@volar/vue-language-server';
 
 export const tagCases = shared.createUriMap<'both' | 'kebabCase' | 'pascalCase' | 'unsure'>();
 
@@ -51,7 +51,9 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 			updateStatusBarText('pascalCase');
 		}
 		if (select === '3') {
-			const detects = await languageClient.sendRequest(DetectDocumentNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(crtDoc));
+			const detects = await languageClient.sendRequest(DetectTagCasingRequest.type, {
+				textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(crtDoc),
+			});
 			if (detects) {
 				tagCases.uriSet(crtDoc.uri.toString(), detects.tag);
 				updateStatusBarText(detects.tag);
@@ -66,14 +68,42 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 	});
 	const d_4 = vscode.commands.registerCommand('volar.action.tagNameCase.convertToKebabCase', async () => {
 		if (vscode.window.activeTextEditor) {
-			await vscode.commands.executeCommand('volar.server.convertTagNameCasing', vscode.window.activeTextEditor.document.uri.toString(), 'kebab');
+
+			const _edits = await languageClient.sendRequest(GetConvertTagCasingEditsRequest.type, {
+				textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(vscode.window.activeTextEditor.document),
+				casing: 'kebab',
+			});
+			const edits = await languageClient.protocol2CodeConverter.asTextEdits(_edits);
+
+			if (edits) {
+				vscode.window.activeTextEditor.edit(editBuilder => {
+					for (const edit of edits) {
+						editBuilder.replace(edit.range, edit.newText);
+					}
+				});
+			}
+
 			tagCases.uriSet(vscode.window.activeTextEditor.document.uri.toString(), 'kebabCase');
 			updateStatusBarText('kebabCase');
 		}
 	});
 	const d_5 = vscode.commands.registerCommand('volar.action.tagNameCase.convertToPascalCase', async () => {
 		if (vscode.window.activeTextEditor) {
-			await vscode.commands.executeCommand('volar.server.convertTagNameCasing', vscode.window.activeTextEditor.document.uri.toString(), 'pascal');
+
+			const _edits = await languageClient.sendRequest(GetConvertTagCasingEditsRequest.type, {
+				textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(vscode.window.activeTextEditor.document),
+				casing: 'pascal',
+			});
+			const edits = await languageClient.protocol2CodeConverter.asTextEdits(_edits);
+
+			if (edits) {
+				vscode.window.activeTextEditor.edit(editBuilder => {
+					for (const edit of edits) {
+						editBuilder.replace(edit.range, edit.newText);
+					}
+				});
+			}
+
 			tagCases.uriSet(vscode.window.activeTextEditor.document.uri.toString(), 'pascalCase');
 			updateStatusBarText('pascalCase');
 		}
@@ -109,7 +139,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 					tagCase = 'pascalCase';
 				}
 				else {
-					const templateCases = await languageClient.sendRequest(DetectDocumentNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(newDoc));
+					const templateCases = await languageClient.sendRequest(DetectTagCasingRequest.type, { textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(newDoc) });
 					tagCase = templateCases?.tag;
 				}
 			}

@@ -3,7 +3,7 @@ import * as path from 'upath';
 import * as vscode from 'vscode-languageserver';
 import type { Workspaces } from '../utils/workspaces';
 import * as vue from '@volar/vue-language-core';
-import { DetectDocumentNameCasesRequest, GetMatchTsConfigRequest, ReloadProjectNotification, VerifyAllScriptsNotification, WriteVirtualFilesNotification } from '../requests';
+import { DetectTagCasingRequest, GetConvertTagCasingEditsRequest, GetMatchTsConfigRequest, ReloadProjectNotification, VerifyAllScriptsNotification, WriteVirtualFilesNotification } from '../requests';
 
 export function register(
 	connection: vscode.Connection,
@@ -75,9 +75,13 @@ export function register(
 
 		connection.window.showInformationMessage(`Verification complete. Found ${errors} errors and ${warnings} warnings.`);
 	});
-	connection.onRequest(DetectDocumentNameCasesRequest.type, async params => {
-		const languageService = await getLanguageService(params.uri);
-		return languageService?.__internal__.detectTagNameCase(params.uri);
+	connection.onRequest(DetectTagCasingRequest.type, async params => {
+		const languageService = await getLanguageService(params.textDocument.uri);
+		return languageService?.__internal__.detectTagNameCasing(params.textDocument.uri);
+	});
+	connection.onRequest(GetConvertTagCasingEditsRequest.type, async params => {
+		const languageService = await getLanguageService(params.textDocument.uri);
+		return languageService?.__internal__.getConvertTagCasingEdits(params.textDocument.uri, params.casing);
 	});
 
 	async function getLanguageService(uri: string) {

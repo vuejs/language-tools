@@ -11,14 +11,13 @@ import * as ts2 from '@volar/typescript-language-service';
 import * as vue from '@volar/vue-language-core';
 import type * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
-import * as tagNameCase from './ideFeatures/tagNameCase';
+import * as nameCasing from './ideFeatures/nameCasing';
 import useVuePlugin from './plugins/vue';
 import useAutoDotValuePlugin from './plugins/vue-autoinsert-dotvalue';
 import useReferencesCodeLensPlugin from './plugins/vue-codelens-references';
 import useHtmlPugConversionsPlugin from './plugins/vue-convert-htmlpug';
 import useRefSugarConversionsPlugin from './plugins/vue-convert-refsugar';
 import useScriptSetupConversionsPlugin from './plugins/vue-convert-scriptsetup';
-import useTagNameCasingConversionsPlugin from './plugins/vue-convert-tagcasing';
 import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemanticTokenTypes } from './plugins/vue-template';
 
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
@@ -63,20 +62,21 @@ export function createLanguageService(
 					host,
 					languageServiceContext.documents,
 					languageService,
-					detectTagNameCase,
+					nameCasingApis.detect,
 				),
 			];
 		},
 		env,
 	});
 	const languageService = embeddedLS.createLanguageService(languageServiceContext);
-	const detectTagNameCase = tagNameCase.register(languageServiceContext);
+	const nameCasingApis = nameCasing.register(languageServiceContext, languageService.findReferences);
 
 	return {
 		...languageService,
 		__internal__: {
 			context: languageServiceContext,
-			detectTagNameCase,
+			getConvertTagCasingEdits: nameCasingApis.convert,
+			detectTagNameCasing: nameCasingApis.detect,
 		},
 	};
 }
@@ -85,7 +85,7 @@ function getLanguageServicePlugins(
 	host: vue.LanguageServiceHost,
 	vueDocuments: ReturnType<typeof embeddedLS.parseSourceFileDocuments>,
 	apis: ReturnType<typeof embeddedLS.createLanguageService>,
-	detectTagNameCase: ReturnType<typeof tagNameCase.register>,
+	detectTagNameCase: ReturnType<typeof nameCasing.register>['detect'],
 ) {
 
 	const ts = host.getTypeScriptModule();
@@ -133,11 +133,6 @@ function getLanguageServicePlugins(
 		findTypeDefinition: apis.findTypeDefinition,
 		scriptTsLs: scriptTsPlugin.languageService,
 	});
-	const tagNameCasingConversionsPlugin = useTagNameCasingConversionsPlugin({
-		getVueDocument: (uri) => vueDocuments.get(uri),
-		findReferences: apis.findReferences,
-		getTsLs: () => scriptTsPlugin.languageService,
-	});
 
 	return [
 		vuePlugin,
@@ -149,7 +144,6 @@ function getLanguageServicePlugins(
 		htmlPugConversionsPlugin,
 		scriptSetupConversionsPlugin,
 		refSugarConversionsPlugin,
-		tagNameCasingConversionsPlugin,
 		scriptTsPlugin,
 		autoDotValuePlugin,
 		// put emmet plugin last to fix https://github.com/johnsoncodehk/volar/issues/1088

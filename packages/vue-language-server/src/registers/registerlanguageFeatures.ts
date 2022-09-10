@@ -73,12 +73,6 @@ export function register(
 			server.completionProvider.triggerCharacters = server.completionProvider.triggerCharacters
 				?.filter(c => !features.completion!.ignoreTriggerCharacters?.includes(c));
 		}
-		server.executeCommandProvider = {
-			commands: [
-				...(server.executeCommandProvider?.commands ?? []),
-				'volar.server.convertTagNameCasing',
-			]
-		};
 	}
 	if (features.documentHighlight) {
 		server.documentHighlightProvider = true;
