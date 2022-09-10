@@ -59,12 +59,19 @@ export async function createProject(
 
 	function getLanguageService() {
 		if (!vueLs) {
-			vueLs = languageConfigs.createLanguageService(
-				ts,
-				sys,
-				tsConfig,
-				languageServiceHost,
-				{
+
+			const languageModules = languageConfigs.languageService?.getLanguageModules?.(languageServiceHost) ?? [];
+			const languageContext = embedded.createEmbeddedLanguageServiceHost(languageServiceHost, languageModules);
+			const languageServiceContext = embeddedLS.createLanguageServiceContext({
+				host: languageServiceHost,
+				languageContext,
+				getPlugins() {
+					return [
+						...loadCustomPlugins(languageServiceHost.getCurrentDirectory()),
+						...languageConfigs.languageService?.getLanguageServicePlugins?.(languageServiceHost, vueLs!) ?? [],
+					];
+				},
+				env: {
 					rootUri,
 					configurationHost: configHost,
 					fileSystemProvider: runtimeEnv.fileSystemProvide,
@@ -89,8 +96,8 @@ export async function createProject(
 						}
 					},
 				},
-				loadCustomPlugins(languageServiceHost.getCurrentDirectory()),
-			);
+			});
+			vueLs = embeddedLS.createLanguageService(languageServiceContext);
 		}
 		return vueLs;
 	}

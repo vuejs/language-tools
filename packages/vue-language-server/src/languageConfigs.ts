@@ -2,25 +2,53 @@ import { LanguageConfigs } from '@volar/embedded-language-server';
 import * as vue from '@volar/vue-language-service';
 import { DetectTagCasingRequest, GetConvertTagCasingEditsRequest } from './requests';
 import * as nameCasing from '@volar/vue-language-service/out/ideFeatures/nameCasing';
+import * as embedded from '@volar/embedded-language-core';
+import * as shared from '@volar/shared';
 
-export const languageConfigs: LanguageConfigs<vue.ParsedCommandLine, vue.LanguageService> = {
+export const languageConfigs: LanguageConfigs<vue.LanguageServiceHost> = {
 	definitelyExts: ['.vue'],
 	indeterminateExts: ['.md', '.html'],
 	semanticTokenLegend: vue.getSemanticTokenLegend(),
-	getDocumentService: vue.getDocumentService,
-	createLanguageService: (ts, sys, tsConfig, host, env, customPlugins) => {
+	resolveLanguageServiceHost(ts, sys, tsConfig, host) {
 		let vueOptions: vue.VueCompilerOptions = {};
 		if (typeof tsConfig === 'string') {
 			vueOptions = vue.createParsedCommandLine(ts, sys, tsConfig).vueOptions;
 		}
-		return vue.createLanguageService(
-			{
-				...host,
-				getVueCompilationSettings: () => vueOptions,
-			},
-			env,
-			customPlugins,
-		);
+		return {
+			...host,
+			getVueCompilationSettings: () => vueOptions,
+		};
+	},
+	languageService: {
+		getLanguageModules(host) {
+			const vueLanguageModule = vue.createEmbeddedLanguageModule(
+				host.getTypeScriptModule(),
+				host.getCurrentDirectory(),
+				host.getCompilationSettings(),
+				host.getVueCompilationSettings(),
+			);
+			return [vueLanguageModule];
+		},
+		getLanguageServicePlugins(host, service) {
+			return vue.getLanguageServicePlugins(host, service);
+		},
+	},
+	documentService: {
+		getLanguageModules(ts, env) {
+			const vueLanguagePlugins = vue.getDefaultVueLanguagePlugins(ts, shared.getPathOfUri(env.rootUri.toString()), {}, {}, []);
+			const vueLanguageModule: embedded.EmbeddedLanguageModule = {
+				createSourceFile(fileName, snapshot) {
+					return new vue.VueSourceFile(fileName, snapshot, ts, vueLanguagePlugins);
+				},
+				updateSourceFile(sourceFile: vue.VueSourceFile, snapshot) {
+					sourceFile.update(snapshot);
+				},
+			};
+			return [vueLanguageModule];
+		},
+		getLanguageServicePlugins(context) {
+			return vue.getDocumentServicePlugins(context);
+		},
 	},
 	handleLanguageFeature: (connection, getService) => {
 

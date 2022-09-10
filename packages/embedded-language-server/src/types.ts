@@ -38,7 +38,7 @@ export interface RuntimeEnvironment {
 	) => FileSystemHost,
 }
 
-export type LanguageConfigs<A = ts.ParsedCommandLine, B = embeddedLS.LanguageService> = {
+export type LanguageConfigs<A extends embedded.LanguageServiceHost = embedded.LanguageServiceHost, B = embeddedLS.LanguageService> = {
 
 	definitelyExts: string[],
 
@@ -46,20 +46,34 @@ export type LanguageConfigs<A = ts.ParsedCommandLine, B = embeddedLS.LanguageSer
 
 	semanticTokenLegend: vscode.SemanticTokensLegend,
 
-	createLanguageService(
+	resolveLanguageServiceHost(
 		ts: typeof import('typescript/lib/tsserverlibrary'),
 		sys: FileSystem,
 		tsConfig: string | ts.CompilerOptions,
 		host: embedded.LanguageServiceHost,
-		env: embeddedLS.PluginContext['env'],
-		customPlugins: embeddedLS.EmbeddedLanguageServicePlugin[],
-	): B,
+	): A,
 
-	getDocumentService(
-		ts: typeof import('typescript/lib/tsserverlibrary'),
-		env: embeddedLS.PluginContext['env'],
-		customPlugins: embeddedLS.EmbeddedLanguageServicePlugin[],
-	): embeddedLS.DocumentService,
+	languageService?: {
+
+		getLanguageModules?(host: A): embedded.EmbeddedLanguageModule[],
+
+		getLanguageServicePlugins?(
+			host: A,
+			service: embeddedLS.LanguageService,
+		): embeddedLS.EmbeddedLanguageServicePlugin[],
+	},
+
+	documentService?: {
+
+		getLanguageModules?(
+			ts: typeof import('typescript/lib/tsserverlibrary'),
+			env: embeddedLS.PluginContext['env'],
+		): embedded.EmbeddedLanguageModule[],
+
+		getLanguageServicePlugins?(
+			context: embeddedLS.DocumentServiceRuntimeContext,
+		): embeddedLS.EmbeddedLanguageServicePlugin[],
+	};
 
 	handleLanguageFeature?(
 		connection: vscode.Connection,

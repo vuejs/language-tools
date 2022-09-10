@@ -102,5 +102,6 @@ export function getDocumentService(context: DocumentServiceRuntimeContext) {
 		findDocumentColors: documentColors.register(context),
 		getColorPresentations: colorPresentations.register(context),
 		doAutoInsert: autoInsert.register(context),
+		context,
 	};
 }

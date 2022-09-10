@@ -5,8 +5,6 @@ import useJsonPlugin from '@volar-plugins/json';
 import usePugPlugin from '@volar-plugins/pug';
 import useTsPlugin from '@volar-plugins/typescript';
 import * as embeddedLS from '@volar/embedded-language-service';
-import * as embedded from '@volar/embedded-language-core';
-import { LanguageServiceRuntimeContext, PluginContext } from '@volar/embedded-language-service';
 import * as ts2 from '@volar/typescript-language-service';
 import * as vue from '@volar/vue-language-core';
 import type * as html from 'vscode-html-languageservice';
@@ -18,8 +16,6 @@ import useHtmlPugConversionsPlugin from './plugins/vue-convert-htmlpug';
 import useRefSugarConversionsPlugin from './plugins/vue-convert-refsugar';
 import useScriptSetupConversionsPlugin from './plugins/vue-convert-scriptsetup';
 import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemanticTokenTypes } from './plugins/vue-template';
-
-export interface LanguageService extends ReturnType<typeof createLanguageService> { }
 
 export function getSemanticTokenLegend() {
 
@@ -36,45 +32,9 @@ export function getSemanticTokenLegend() {
 	return semanticTokenLegend;
 }
 
-export function createLanguageService(
+export function getLanguageServicePlugins(
 	host: vue.LanguageServiceHost,
-	env: PluginContext['env'],
-	customPlugins: embeddedLS.EmbeddedLanguageServicePlugin[] = [],
-	languageModules = [
-		vue.createEmbeddedLanguageModule(
-			host.getTypeScriptModule(),
-			host.getCurrentDirectory(),
-			host.getCompilationSettings(),
-			host.getVueCompilationSettings(),
-		),
-	],
-) {
-
-	const languageContext = embedded.createEmbeddedLanguageServiceHost(host, languageModules);
-	const languageServiceContext = embeddedLS.createLanguageServiceContext({
-		host,
-		languageContext,
-		getPlugins() {
-			return [
-				...customPlugins,
-				...getLanguageServicePlugins(
-					host,
-					languageServiceContext,
-					languageService,
-				),
-			];
-		},
-		env,
-	});
-	const languageService = embeddedLS.createLanguageService(languageServiceContext);
-
-	return languageService;
-}
-
-function getLanguageServicePlugins(
-	host: vue.LanguageServiceHost,
-	context: LanguageServiceRuntimeContext,
-	apis: ReturnType<typeof embeddedLS.createLanguageService>,
+	apis: embeddedLS.LanguageService,
 ) {
 
 	const ts = host.getTypeScriptModule();
@@ -82,7 +42,7 @@ function getLanguageServicePlugins(
 	// plugins
 	const scriptTsPlugin = useTsPlugin();
 	const vuePlugin = useVuePlugin({
-		getVueDocument: (document) => context.documents.get(document.uri),
+		getVueDocument: (document) => apis.context.documents.get(document.uri),
 		tsLs: scriptTsPlugin.languageService,
 		isJsxMissing: !host.getVueCompilationSettings().experimentalDisableTemplateSupport && host.getCompilationSettings().jsx !== ts.JsxEmit.Preserve,
 	});
@@ -101,19 +61,19 @@ function getLanguageServicePlugins(
 		getTsLs: () => scriptTsPlugin.languageService,
 	});
 	const referencesCodeLensPlugin = useReferencesCodeLensPlugin({
-		getVueDocument: (uri) => context.documents.get(uri),
+		getVueDocument: (uri) => apis.context.documents.get(uri),
 		findReference: apis.findReferences,
 	});
 	const htmlPugConversionsPlugin = useHtmlPugConversionsPlugin({
-		getVueDocument: (uri) => context.documents.get(uri),
+		getVueDocument: (uri) => apis.context.documents.get(uri),
 	});
 	const scriptSetupConversionsPlugin = useScriptSetupConversionsPlugin({
-		getVueDocument: (uri) => context.documents.get(uri),
+		getVueDocument: (uri) => apis.context.documents.get(uri),
 		doCodeActions: apis.doCodeActions,
 		doCodeActionResolve: apis.doCodeActionResolve,
 	});
 	const refSugarConversionsPlugin = useRefSugarConversionsPlugin({
-		getVueDocument: (uri) => context.documents.get(uri),
+		getVueDocument: (uri) => apis.context.documents.get(uri),
 		doCodeActions: apis.doCodeActions,
 		doCodeActionResolve: apis.doCodeActionResolve,
 		findReferences: apis.findReferences,
@@ -157,9 +117,9 @@ function getLanguageServicePlugins(
 			tsLs: scriptTsPlugin.languageService,
 			isSupportedDocument: (document) =>
 				document.languageId === languageId
-				&& !context.documents.get(document.uri) /* not petite-vue source file */,
+				&& !apis.context.documents.get(document.uri) /* not petite-vue source file */,
 			vueLsHost: host,
-			context,
+			context: apis.context,
 		});
 	}
 }

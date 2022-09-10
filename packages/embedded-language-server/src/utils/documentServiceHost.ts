@@ -1,5 +1,5 @@
 import { LanguageConfigs, RuntimeEnvironment } from '../types';
-import * as vue from '@volar/vue-language-service';
+import * as embedded from '@volar/embedded-language-service';
 import { ConfigurationHost } from '@volar/vue-language-service';
 import { URI } from 'vscode-uri';
 import { loadCustomPlugins } from './config';
@@ -14,16 +14,8 @@ export function createDocumentServiceHost(
 	configHost: ConfigurationHost | undefined,
 ) {
 
-	const workspaceServices = new Map<string, vue.DocumentService>();
-	const untitledService = languageConfigs.getDocumentService(
-		ts,
-		{
-			rootUri: URI.from({ scheme: 'untitled' }),
-			configurationHost: configHost,
-			fileSystemProvider: runtimeEnv.fileSystemProvide,
-		},
-		[],
-	);
+	const workspaceServices = new Map<string, embedded.DocumentService>();
+	const untitledService = create(URI.from({ scheme: 'untitled' }));
 
 	return {
 		add,
@@ -32,19 +24,13 @@ export function createDocumentServiceHost(
 	};
 
 	function add(rootUri: URI) {
-		workspaceServices.set(rootUri.toString(), languageConfigs.getDocumentService(
-			ts,
-			{
-				rootUri,
-				configurationHost: configHost,
-				fileSystemProvider: runtimeEnv.fileSystemProvide,
-			},
-			loadCustomPlugins(rootUri.fsPath),
-		));
+		workspaceServices.set(rootUri.toString(), create(rootUri));
 	}
+
 	function remove(rootUri: URI) {
 		workspaceServices.delete(rootUri.toString());
 	}
+
 	function get(documentUri: string) {
 		for (const [rootUri, service] of workspaceServices) {
 			if (documentUri.startsWith(rootUri)) {
@@ -52,5 +38,27 @@ export function createDocumentServiceHost(
 			}
 		}
 		return untitledService;
+	}
+
+	function create(rootUri: URI) {
+		const env: embedded.PluginContext['env'] = {
+			rootUri,
+			configurationHost: configHost,
+			fileSystemProvider: runtimeEnv.fileSystemProvide,
+		};
+		const serviceContext = embedded.getDocumentServiceContext({
+			ts,
+			env,
+			getLanguageModules() {
+				return languageConfigs.documentService?.getLanguageModules?.(ts, env) ?? [];
+			},
+			getPlugins() {
+				return [
+					...loadCustomPlugins(rootUri.fsPath),
+					...languageConfigs.documentService?.getLanguageServicePlugins?.(serviceContext) ?? []
+				];
+			},
+		});
+		return embedded.getDocumentService(serviceContext);
 	}
 }
