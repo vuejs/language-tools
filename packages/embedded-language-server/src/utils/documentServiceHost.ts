@@ -4,6 +4,9 @@ import { ConfigurationHost } from '@volar/vue-language-service';
 import { URI } from 'vscode-uri';
 import { loadCustomPlugins } from './config';
 
+// fix build
+import type * as _ from 'vscode-languageserver-textdocument';
+
 export function createDocumentServiceHost(
 	runtimeEnv: RuntimeEnvironment,
 	languageConfigs: LanguageConfigs,

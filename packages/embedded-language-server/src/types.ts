@@ -42,7 +42,7 @@ export type LanguageConfigs<A = ts.ParsedCommandLine, B = embeddedLS.LanguageSer
 	definitelyExts: string[],
 	indeterminateExts: string[],
 
-	createParsedCommandLine(
+	createParsedCommandLine?(
 		ts: typeof import('typescript/lib/tsserverlibrary'),
 		sys: FileSystem,
 		rootPath: string,
@@ -62,7 +62,7 @@ export type LanguageConfigs<A = ts.ParsedCommandLine, B = embeddedLS.LanguageSer
 		customPlugins: embeddedLS.EmbeddedLanguageServicePlugin[],
 	): embeddedLS.DocumentService,
 
-	handleLanguageFeature(
+	handleLanguageFeature?(
 		connection: vscode.Connection,
 		getLangaugeService: (uri: string) => Promise<B>,
 	): void,
