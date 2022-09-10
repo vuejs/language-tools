@@ -1,4 +1,4 @@
-import type * as embedded from '@volar/embedded-language-core';
+import type * as embedded from '@volar/language-core';
 import { posix as path } from 'path';
 import { getDefaultVueLanguagePlugins } from './plugins';
 import { VueSourceFile } from './sourceFile';

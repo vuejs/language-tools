@@ -12,7 +12,7 @@
 			"path": "../html/tsconfig.build.json"
 		},
 		{
-			"path": "../../packages/embedded-language-service/tsconfig.build.json"
+			"path": "../../packages/language-service/tsconfig.build.json"
 		},
 		{
 			"path": "../../packages/pug-language-service/tsconfig.build.json"

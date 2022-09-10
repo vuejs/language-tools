@@ -1,5 +1,5 @@
 // import * as alpine from '@volar/alpine-language-service';
-// import { createNodeServer } from '@volar/embedded-language-server/out/nodeServer';
+// import { createNodeServer } from '@volar/language-server/out/nodeServer';
 
 // createNodeServer({
 // 	definitelyExts: ['.html'],

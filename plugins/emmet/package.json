@@ -13,7 +13,7 @@
 		"directory": "plugins/emmet"
 	},
 	"dependencies": {
-		"@volar/embedded-language-service": "0.40.13",
+		"@volar/language-service": "0.40.13",
 		"@vscode/emmet-helper": "^2.8.4"
 	},
 	"browser": {

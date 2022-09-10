@@ -13,7 +13,7 @@
 	],
 	"references": [
 		{
-			"path": "../embedded-language-server/tsconfig.build.json"
+			"path": "../language-server/tsconfig.build.json"
 		},
 		{
 			"path": "../shared/tsconfig.build.json"

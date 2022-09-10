@@ -1,5 +1,5 @@
-import type { TextRange } from '@volar/embedded-language-core';
-import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, SourceFileDocument, useConfigurationHost, useTypeScriptModule } from '@volar/embedded-language-service';
+import type { TextRange } from '@volar/language-core';
+import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, SourceFileDocument, useConfigurationHost, useTypeScriptModule } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-core';
 import { scriptSetupConvertRanges } from '@volar/vue-language-core';

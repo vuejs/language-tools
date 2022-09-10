@@ -16,7 +16,7 @@
 			"path": "../alpine-language-service/tsconfig.build.json"
 		},
 		{
-			"path": "../embedded-language-server/tsconfig.build.json"
+			"path": "../language-server/tsconfig.build.json"
 		},
 	]
 }

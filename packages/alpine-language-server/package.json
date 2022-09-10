@@ -16,6 +16,6 @@
 	},
 	"dependencies": {
 		"@volar/alpine-language-service": "0.40.13",
-		"@volar/embedded-language-server": "0.40.13"
+		"@volar/language-server": "0.40.13"
 	}
 }

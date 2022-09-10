@@ -1,5 +1,5 @@
 import { hyphenate } from '@vue/shared';
-import { SourceFileDocument, LanguageServiceRuntimeContext } from '@volar/embedded-language-service';
+import { SourceFileDocument, LanguageServiceRuntimeContext } from '@volar/language-service';
 import { checkTemplateData, getTemplateTagsAndAttrs } from '../helpers';
 import * as vue from '@volar/vue-language-core';
 import * as vscode from 'vscode-languageserver-protocol';

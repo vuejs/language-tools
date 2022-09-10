@@ -1,5 +1,5 @@
 import * as vue from '@volar/vue-language-core';
-import * as embedded from '@volar/embedded-language-core';
+import * as embedded from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { computed, ComputedRef } from '@vue/reactivity';
 

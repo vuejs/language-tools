@@ -1,4 +1,4 @@
-import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, useConfigurationHost, useTypeScriptModule, SourceFileDocument, mergeWorkspaceEdits } from '@volar/embedded-language-service';
+import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, useConfigurationHost, useTypeScriptModule, SourceFileDocument, mergeWorkspaceEdits } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
 import * as vue from '@volar/vue-language-core';

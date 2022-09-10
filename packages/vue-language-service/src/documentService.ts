@@ -4,7 +4,7 @@ import useJsonPlugin from '@volar-plugins/json';
 import usePugPlugin from '@volar-plugins/pug';
 import usePugFormatPlugin from '@volar-plugins/pug-beautify';
 import useTsPlugin from '@volar-plugins/typescript';
-import { DocumentServiceRuntimeContext } from '@volar/embedded-language-service';
+import { DocumentServiceRuntimeContext } from '@volar/language-service';
 import useVuePlugin from './plugins/vue';
 import useAutoWrapParenthesesPlugin from './plugins/vue-autoinsert-parentheses';
 

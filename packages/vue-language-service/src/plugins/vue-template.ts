@@ -1,8 +1,8 @@
 import useHtmlPlugin from '@volar-plugins/html';
-import { EmbeddedLanguageServicePlugin, LanguageServiceRuntimeContext, SourceFileDocument, useConfigurationHost, useRootUri, useTypeScriptModule } from '@volar/embedded-language-service';
+import { EmbeddedLanguageServicePlugin, LanguageServiceRuntimeContext, SourceFileDocument, useConfigurationHost, useRootUri, useTypeScriptModule } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
-import * as embedded from '@volar/embedded-language-core';
+import * as embedded from '@volar/language-core';
 import * as vue from '@volar/vue-language-core';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';

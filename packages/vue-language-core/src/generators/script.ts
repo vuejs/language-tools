@@ -1,5 +1,5 @@
 import { CodeGen, mergeCodeGen } from '@volar/code-gen';
-import type { EmbeddedFileMappingData, TeleportMappingData, TextRange } from '@volar/embedded-language-core';
+import type { EmbeddedFileMappingData, TeleportMappingData, TextRange } from '@volar/language-core';
 import * as SourceMaps from '@volar/source-map';
 import { hyphenate } from '@vue/shared';
 import { posix as path } from 'path';

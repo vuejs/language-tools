@@ -2,7 +2,7 @@ import * as tsFaster from '@volar/typescript-faster';
 import * as vue from '@volar/vue-language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { getProgram } from './getProgram';
-import * as embedded from '@volar/embedded-language-core';
+import * as embedded from '@volar/language-core';
 
 export function createLanguageService(host: vue.LanguageServiceHost) {
 

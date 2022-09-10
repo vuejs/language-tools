@@ -1,7 +1,7 @@
 import { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
 import { computed, ComputedRef, reactive, shallowRef as ref, Ref, pauseTracking, resetTracking } from '@vue/reactivity';
 import { Sfc, VueLanguagePlugin } from './types';
-import { EmbeddedFileSourceMap, Teleport, EmbeddedFile, EmbeddedFileMappingData, Embedded, EmbeddedStructure, EmbeddedLangaugeSourceFile } from '@volar/embedded-language-core';
+import { EmbeddedFileSourceMap, Teleport, EmbeddedFile, EmbeddedFileMappingData, Embedded, EmbeddedStructure, EmbeddedLangaugeSourceFile } from '@volar/language-core';
 
 import { CodeGen } from '@volar/code-gen';
 import { Mapping, MappingBase } from '@volar/source-map';

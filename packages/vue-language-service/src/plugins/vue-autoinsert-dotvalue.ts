@@ -5,7 +5,7 @@ import * as ts2 from '@volar/typescript-language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { hyphenate } from '@vue/shared';
 import { isTsDocument } from '@volar-plugins/typescript';
-import { EmbeddedLanguageServicePlugin, useConfigurationHost, useTypeScriptModule } from '@volar/embedded-language-service';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost, useTypeScriptModule } from '@volar/language-service';
 
 export default function (options: {
 	getTsLs: () => ts2.LanguageService,

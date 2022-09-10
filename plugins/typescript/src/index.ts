@@ -1,4 +1,4 @@
-import { EmbeddedLanguageServicePlugin, useConfigurationHost, useRootUri, useTypeScriptLanguageService, useTypeScriptLanguageServiceHost, useTypeScriptModule } from '@volar/embedded-language-service';
+import { EmbeddedLanguageServicePlugin, useConfigurationHost, useRootUri, useTypeScriptLanguageService, useTypeScriptLanguageServiceHost, useTypeScriptModule } from '@volar/language-service';
 import * as ts2 from '@volar/typescript-language-service';
 import * as semver from 'semver';
 import type * as ts from 'typescript/lib/tsserverlibrary';

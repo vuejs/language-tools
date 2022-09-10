@@ -1,5 +1,5 @@
 import * as vue from '@volar/vue-language-core';
-import * as embedded from '@volar/embedded-language-core';
+import * as embedded from '@volar/language-core';
 import * as ts from 'typescript/lib/tsserverlibrary';
 
 import type {

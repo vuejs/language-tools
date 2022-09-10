@@ -1,4 +1,4 @@
-import { TextRange } from '@volar/embedded-language-core';
+import { TextRange } from '@volar/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vue from '@volar/vue-language-core';
 

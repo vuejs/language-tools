@@ -1,4 +1,4 @@
-import type { EmbeddedLanguageServicePlugin } from '@volar/embedded-language-service';
+import type { EmbeddedLanguageServicePlugin } from '@volar/language-service';
 
 export default function (): EmbeddedLanguageServicePlugin {
 	return {};

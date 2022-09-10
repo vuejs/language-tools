@@ -14,7 +14,7 @@
 	},
 	"dependencies": {
 		"@volar-plugins/html": "0.40.13",
-		"@volar/embedded-language-service": "0.40.13",
+		"@volar/language-service": "0.40.13",
 		"@volar/pug-language-service": "0.40.13",
 		"vscode-html-languageservice": "^5.0.1",
 		"vscode-languageserver-textdocument": "^1.0.7"

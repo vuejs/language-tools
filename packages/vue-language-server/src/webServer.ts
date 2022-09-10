@@ -1,4 +1,4 @@
-import { createWebServer } from '@volar/embedded-language-server/out/webServer';
-import { languageConfigs } from './languageConfigs';
+import { createWebServer } from '@volar/language-server/out/webServer';
+import * as plugin from './plugin';
 
-createWebServer([languageConfigs]);
+createWebServer([plugin]);

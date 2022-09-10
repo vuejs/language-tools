@@ -13,7 +13,7 @@
 		"directory": "plugins/typescript"
 	},
 	"dependencies": {
-		"@volar/embedded-language-service": "0.40.13",
+		"@volar/language-service": "0.40.13",
 		"@volar/shared": "0.40.13",
 		"@volar/typescript-language-service": "workspace:0.40.13",
 		"semver": "^7.3.7",

@@ -1,5 +1,5 @@
 // import * as vueLs from '@volar/vue-language-service';
-// import { EmbeddedLanguageServicePlugin, PluginContext } from '@volar/embedded-language-service';
+// import { EmbeddedLanguageServicePlugin, PluginContext } from '@volar/language-service';
 
 // export * from '@volar/vue-language-service';
 

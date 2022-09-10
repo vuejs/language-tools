@@ -1,4 +1,4 @@
-import { createNodeServer } from '@volar/embedded-language-server/out/nodeServer';
-import { languageConfigs } from './languageConfigs';
+import { createNodeServer } from '@volar/language-server/out/nodeServer';
+import * as plugin from './plugin';
 
-createNodeServer([languageConfigs]);
+createNodeServer([plugin]);

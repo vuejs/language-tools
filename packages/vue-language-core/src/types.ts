@@ -1,4 +1,4 @@
-import * as embedded from '@volar/embedded-language-core';
+import * as embedded from '@volar/language-core';
 import { SFCParseResult } from '@vue/compiler-sfc';
 
 import * as CompilerDom from '@vue/compiler-dom';
