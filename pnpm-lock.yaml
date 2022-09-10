@@ -339,11 +339,13 @@ importers:
 
   packages/vue-language-server:
     specifiers:
+      '@volar/language-core': 0.40.13
       '@volar/language-server': 0.40.13
       '@volar/shared': 0.40.13
       '@volar/vue-language-service': 0.40.13
       vscode-languageserver-protocol: ^3.17.2
     dependencies:
+      '@volar/language-core': link:../language-core
       '@volar/language-server': link:../language-server
       '@volar/shared': link:../shared
       '@volar/vue-language-service': link:../vue-language-service

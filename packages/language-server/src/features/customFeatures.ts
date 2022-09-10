@@ -69,7 +69,7 @@ export function register(
 	});
 
 	for (const plugin of plugins) {
-		plugin.handleLanguageFeature?.(connection, getLanguageService as any);
+		plugin.languageService?.onInitialize?.(connection, getLanguageService as any);
 	}
 
 	async function getLanguageService(uri: string) {

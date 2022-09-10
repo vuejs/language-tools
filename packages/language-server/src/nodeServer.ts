@@ -10,9 +10,10 @@ import httpSchemaRequestHandler from './schemaRequestHandlers/http';
 import { createNodeFileSystemHost } from './utils/nodeFileSystemHost';
 import { LanguageServerPlugin } from './types';
 
-const connection = vscode.createConnection(vscode.ProposedFeatures.all);
-
 export function createNodeServer(plugins: LanguageServerPlugin[]) {
+
+	const connection = vscode.createConnection(vscode.ProposedFeatures.all);
+
 	createLanguageServer(connection, {
 		loadTypescript(options) {
 			return require(path.toUnix(options.typescript.serverPath));

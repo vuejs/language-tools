@@ -11,6 +11,7 @@ import { createSnapshots } from './snapshots';
 import { ConfigurationHost } from '@volar/vue-language-service';
 import * as upath from 'upath';
 import * as html from 'vscode-html-languageservice';
+import { posix as path } from 'path';
 
 export interface Project extends ReturnType<typeof createProject> { }
 
@@ -134,7 +135,7 @@ export async function createProject(
 	}
 	function createLanguageServiceHost() {
 
-		const host: embedded.LanguageServiceHost = {
+		let host: embedded.LanguageServiceHost = {
 			// ts
 			getNewLine: () => sys.newLine,
 			useCaseSensitiveFileNames: () => sys.useCaseSensitiveFileNames,
@@ -172,6 +173,12 @@ export async function createProject(
 
 		if (tsLocalized) {
 			host.getLocalizedDiagnosticMessages = () => tsLocalized;
+		}
+
+		for (const plugin of plugins) {
+			if (plugin.languageService?.resolveLanguageServiceHost) {
+				host = plugin.languageService.resolveLanguageServiceHost(ts, sys, tsConfig, host);
+			}
 		}
 
 		return host;
@@ -243,15 +250,20 @@ function createParsedCommandLine(
 			fileExists: sys.fileExists,
 			readFile: sys.readFile,
 		};
+		let content: ts.ParsedCommandLine;
 		if (typeof tsConfig === 'string') {
-			return ts.parseJsonConfigFileContent(ts, parseConfigHost, tsConfig);
+			const config = ts.readJsonConfigFile(tsConfig, parseConfigHost.readFile);
+			content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(tsConfig), {}, path.basename(tsConfig));
 		}
 		else {
-			const content = ts.parseJsonConfigFileContent({}, parseConfigHost, rootPath, tsConfig, 'jsconfig.json');
-			content.options.outDir = undefined; // TODO: patching ts server broke with outDir + rootDir + composite/incremental
-			content.fileNames = content.fileNames.map(shared.normalizeFileName);
-			return content;
+			content = ts.parseJsonConfigFileContent({}, parseConfigHost, rootPath, tsConfig, 'jsconfig.json');
 		}
+		// fix https://github.com/johnsoncodehk/volar/issues/1786
+		// https://github.com/microsoft/TypeScript/issues/30457
+		// patching ts server broke with outDir + rootDir + composite/incremental
+		content.options.outDir = undefined;
+		content.fileNames = content.fileNames.map(shared.normalizeFileName);
+		return content;
 	}
 	catch {
 		// will be failed if web fs host first result not ready

@@ -44,14 +44,14 @@ export type LanguageServerPlugin<A extends embedded.LanguageServiceHost = embedd
 
 	semanticTokenLegend?: vscode.SemanticTokensLegend,
 
-	resolveLanguageServiceHost(
-		ts: typeof import('typescript/lib/tsserverlibrary'),
-		sys: FileSystem,
-		tsConfig: string | ts.CompilerOptions,
-		host: embedded.LanguageServiceHost,
-	): A,
-
 	languageService?: {
+
+		resolveLanguageServiceHost?(
+			ts: typeof import('typescript/lib/tsserverlibrary'),
+			sys: FileSystem,
+			tsConfig: string | ts.CompilerOptions,
+			host: embedded.LanguageServiceHost,
+		): A,
 
 		getLanguageModules?(host: A): embedded.EmbeddedLanguageModule[],
 
@@ -59,6 +59,11 @@ export type LanguageServerPlugin<A extends embedded.LanguageServiceHost = embedd
 			host: A,
 			service: embeddedLS.LanguageService,
 		): embeddedLS.EmbeddedLanguageServicePlugin[],
+
+		onInitialize?(
+			connection: vscode.Connection,
+			getLangaugeService: (uri: string) => Promise<B>,
+		): void,
 	},
 
 	documentService?: {
@@ -72,11 +77,6 @@ export type LanguageServerPlugin<A extends embedded.LanguageServiceHost = embedd
 			context: embeddedLS.DocumentServiceRuntimeContext,
 		): embeddedLS.EmbeddedLanguageServicePlugin[],
 	};
-
-	handleLanguageFeature?(
-		connection: vscode.Connection,
-		getLangaugeService: (uri: string) => Promise<B>,
-	): void,
 };
 
 export interface ServerInitializationOptions {

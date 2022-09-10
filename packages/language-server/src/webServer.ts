@@ -6,11 +6,12 @@ import { LanguageServerPlugin } from './types';
 import httpSchemaRequestHandler from './schemaRequestHandlers/http';
 import { createWebFileSystemHost } from './utils/webFileSystemHost';
 
-const messageReader = new vscode.BrowserMessageReader(self);
-const messageWriter = new vscode.BrowserMessageWriter(self);
-const connection = vscode.createConnection(messageReader, messageWriter);
-
 export function createWebServer(plugins: LanguageServerPlugin[]) {
+
+	const messageReader = new vscode.BrowserMessageReader(self);
+	const messageWriter = new vscode.BrowserMessageWriter(self);
+	const connection = vscode.createConnection(messageReader, messageWriter);
+
 	createLanguageServer(connection, {
 		loadTypescript(options) {
 			return ts; // not support load by user config in web
