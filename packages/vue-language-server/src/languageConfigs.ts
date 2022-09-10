@@ -6,6 +6,7 @@ import { DetectTagCasingRequest, GetConvertTagCasingEditsRequest } from './reque
 export const languageConfigs: LanguageConfigs<vue.ParsedCommandLine, vue.LanguageService> = {
 	definitelyExts: ['.vue'],
 	indeterminateExts: ['.md', '.html'],
+	semanticTokenLegend: vue.getSemanticTokenLegend(),
 	getDocumentService: vue.getDocumentService,
 	createParsedCommandLine: (ts, sys, rootPath, tsConfig) => {
 		try {

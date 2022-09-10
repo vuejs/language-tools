@@ -2,7 +2,6 @@ import * as shared from '@volar/shared';
 import * as path from 'upath';
 import * as vscode from 'vscode-languageserver';
 import type { Workspaces } from '../utils/workspaces';
-import * as vue from '@volar/vue-language-core';
 import { GetMatchTsConfigRequest, ReloadProjectNotification, VerifyAllScriptsNotification, WriteVirtualFilesNotification } from '../requests';
 import { LanguageConfigs } from '../types';
 
@@ -20,25 +19,18 @@ export function register(
 	connection.onNotification(WriteVirtualFilesNotification.type, async params => {
 
 		const fs = await import('fs');
-
 		const project = await projects.getProject(params.uri);
+
 		if (project) {
-			const ls = await (await project.project)?.getLanguageServiceDontCreate();
+			const ls = (await project.project)?.getLanguageServiceDontCreate();
 			if (ls) {
-				const localTypesFiles = ls.context.core.typescriptLanguageServiceHost.getScriptFileNames().filter(fileName => fileName.endsWith(vue.localTypes.typesFileName));
-				for (const fileName of localTypesFiles) {
-					const script = ls.context.core.typescriptLanguageServiceHost.getScriptSnapshot(fileName);
-					if (script) {
-						fs.writeFile(fileName, script.getText(0, script.getLength()), () => { });
-					}
-				}
-				for (const vueDocument of ls.context.documents.getAll()) {
-					for (const sourceMap of vueDocument.getSourceMaps()) {
-
-						if (!sourceMap.embeddedFile.isTsHostFile)
-							continue;
-
-						fs.writeFile(sourceMap.embeddedFile.fileName, sourceMap.mappedDocument.getText(), () => { });
+				const sourceFiles = new Set(ls.context.host.getScriptFileNames());
+				for (const virtualFile of ls.context.core.typescriptLanguageServiceHost.getScriptFileNames()) {
+					if (virtualFile.startsWith(ls.context.host.getCurrentDirectory()) && !sourceFiles.has(virtualFile)) {
+						const snapshot = ls.context.core.typescriptLanguageServiceHost.getScriptSnapshot(virtualFile);
+						if (snapshot) {
+							fs.writeFile(virtualFile, snapshot.getText(0, snapshot.getLength()), () => { });
+						}
 					}
 				}
 			}
@@ -54,7 +46,7 @@ export function register(
 
 		const project = await projects.getProject(params.uri);
 		if (project) {
-			const ls = await (await project.project)?.getLanguageServiceDontCreate();
+			const ls = (await project.project)?.getLanguageServiceDontCreate();
 			if (ls) {
 				const allVueDocuments = ls.context.documents.getAll();
 				let i = 0;

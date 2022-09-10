@@ -1,4 +1,4 @@
-import * as vue from '@volar/vue-language-service';
+import * as embedded from '@volar/embedded-language-service';
 import { LanguageConfigs, ServerInitializationOptions } from '../types';
 import * as vscode from 'vscode-languageserver';
 
@@ -92,7 +92,7 @@ export function register(
 		server.executeCommandProvider = {
 			commands: [
 				...(server.executeCommandProvider?.commands ?? []),
-				vue.executePluginCommand,
+				embedded.executePluginCommand,
 			]
 		};
 	}

@@ -2,6 +2,8 @@ import * as alpineTs from '@volar/alpine-language-core';
 import * as vueLs from '@volar/vue-language-service';
 import { EmbeddedLanguageServicePlugin, PluginContext } from '@volar/embedded-language-service';
 
+export * from '@volar/vue-language-service';
+
 export function createLanguageService(
 	alpineLsHost: alpineTs.LanguageServiceHost,
 	env: PluginContext['env'],

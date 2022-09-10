@@ -146,7 +146,7 @@ export async function createWorkspaceProjects(
 		function findIndirectReferenceTsconfig() {
 			return findTsconfig(async tsconfig => {
 				const project = await projects.pathGet(rootUri, tsconfig);
-				const ls = await project?.getLanguageServiceDontCreate();
+				const ls = project?.getLanguageServiceDontCreate();
 				const validDoc = ls?.context.typescriptLanguageService.getProgram()?.getSourceFile(shared.getPathOfUri(uri.toString()));
 				return !!validDoc;
 			});

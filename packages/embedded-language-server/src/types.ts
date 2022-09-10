@@ -39,8 +39,12 @@ export interface RuntimeEnvironment {
 }
 
 export type LanguageConfigs<A = ts.ParsedCommandLine, B = embeddedLS.LanguageService> = {
+
 	definitelyExts: string[],
+
 	indeterminateExts: string[],
+
+	semanticTokenLegend: vscode.SemanticTokensLegend,
 
 	createParsedCommandLine?(
 		ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -48,6 +52,7 @@ export type LanguageConfigs<A = ts.ParsedCommandLine, B = embeddedLS.LanguageSer
 		rootPath: string,
 		tsConfig: string | ts.CompilerOptions,
 	): A,
+
 	createLanguageService(
 		ts: typeof import('typescript/lib/tsserverlibrary'),
 		parsedCommandLine: A,

@@ -1,4 +1,3 @@
-import * as vue from '@volar/vue-language-service';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import { FileSystemHost, LanguageConfigs, RuntimeEnvironment, ServerInitializationOptions } from './types';
@@ -65,7 +64,7 @@ export function createLanguageServer(
 			(await import('./features/documentFeatures')).register(connection, documents, documentServiceHost);
 		}
 		if (options.languageFeatures) {
-			(await import('./registers/registerlanguageFeatures')).register(options.languageFeatures!, vue.getSemanticTokenLegend(), result.capabilities, languageConfigs);
+			(await import('./registers/registerlanguageFeatures')).register(options.languageFeatures!, languageConfigs.semanticTokenLegend, result.capabilities, languageConfigs);
 
 			fsHost = runtimeEnv.createFileSystemHost(ts, params.capabilities);
 
