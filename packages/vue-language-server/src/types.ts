@@ -1,4 +1,5 @@
-import * as vue from '@volar/vue-language-service';
+import * as embeddedLS from '@volar/embedded-language-service';
+import * as embedded from '@volar/embedded-language-core';
 import type { FileSystemProvider } from 'vscode-html-languageservice';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
@@ -37,12 +38,35 @@ export interface RuntimeEnvironment {
 	) => FileSystemHost,
 }
 
-export interface LanguageConfigs {
+export type LanguageConfigs<A = ts.ParsedCommandLine, B = embeddedLS.LanguageService> = {
 	definitelyExts: string[],
 	indeterminateExts: string[],
-	getDocumentService: typeof vue.getDocumentService,
-	createLanguageService: typeof vue.createLanguageService,
-}
+
+	createParsedCommandLine(
+		ts: typeof import('typescript/lib/tsserverlibrary'),
+		sys: FileSystem,
+		rootPath: string,
+		tsConfig: string | ts.CompilerOptions,
+	): A,
+	createLanguageService(
+		ts: typeof import('typescript/lib/tsserverlibrary'),
+		parsedCommandLine: A,
+		host: embedded.LanguageServiceHost,
+		env: embeddedLS.PluginContext['env'],
+		customPlugins: embeddedLS.EmbeddedLanguageServicePlugin[],
+	): B,
+
+	getDocumentService(
+		ts: typeof import('typescript/lib/tsserverlibrary'),
+		env: embeddedLS.PluginContext['env'],
+		customPlugins: embeddedLS.EmbeddedLanguageServicePlugin[],
+	): embeddedLS.DocumentService,
+
+	handleLanguageFeature(
+		connection: vscode.Connection,
+		getLangaugeService: (uri: string) => Promise<B>,
+	): void,
+};
 
 export interface ServerInitializationOptions {
 	textDocumentSync?: vscode.TextDocumentSyncKind | number;

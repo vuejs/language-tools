@@ -74,7 +74,6 @@ export function createLanguageService(
 	return {
 		...languageService,
 		__internal__: {
-			context: languageServiceContext,
 			getConvertTagCasingEdits: nameCasingApis.convert,
 			detectTagNameCasing: nameCasingApis.detect,
 		},

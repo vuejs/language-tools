@@ -18,6 +18,8 @@ import { PluginContext, setPluginContext } from './contextStore';
 // fix build
 import type * as _0 from 'vscode-languageserver-protocol';
 
+export type DocumentService = ReturnType<typeof getDocumentService>;
+
 export function getDocumentServiceContext(options: {
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	getLanguageModules(): EmbeddedLanguageModule[],

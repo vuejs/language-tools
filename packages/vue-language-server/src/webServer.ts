@@ -2,6 +2,7 @@ import { configure as configureHttpRequests } from 'request-light';
 import * as ts from 'typescript/lib/tsserverlibrary'; // bundle typescript lib in web
 import * as vscode from 'vscode-languageserver/browser';
 import { createLanguageServer } from './commonServer';
+import { languageConfigs } from './languageConfigs';
 import httpSchemaRequestHandler from './schemaRequestHandlers/http';
 import { createWebFileSystemHost } from './utils/webFileSystemHost';
 
@@ -25,4 +26,4 @@ createLanguageServer(connection, {
 	},
 	fileSystemProvide: undefined, // TODO
 	createFileSystemHost: createWebFileSystemHost,
-});
+}, languageConfigs);

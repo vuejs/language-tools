@@ -147,7 +147,7 @@ export async function createWorkspaceProjects(
 			return findTsconfig(async tsconfig => {
 				const project = await projects.pathGet(rootUri, tsconfig);
 				const ls = await project?.getLanguageServiceDontCreate();
-				const validDoc = ls?.__internal__.context.typescriptLanguageService.getProgram()?.getSourceFile(shared.getPathOfUri(uri.toString()));
+				const validDoc = ls?.context.typescriptLanguageService.getProgram()?.getSourceFile(shared.getPathOfUri(uri.toString()));
 				return !!validDoc;
 			});
 		}

@@ -8,6 +8,7 @@ import { createLanguageServer } from './commonServer';
 import fileSchemaRequestHandler from './schemaRequestHandlers/file';
 import httpSchemaRequestHandler from './schemaRequestHandlers/http';
 import { createNodeFileSystemHost } from './utils/nodeFileSystemHost';
+import { languageConfigs } from './languageConfigs';
 
 const connection = vscode.createConnection(vscode.ProposedFeatures.all);
 
@@ -65,4 +66,4 @@ createLanguageServer(connection, {
 			});
 		},
 	},
-});
+}, languageConfigs);

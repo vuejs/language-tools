@@ -10,12 +10,7 @@ import { createWorkspaces } from './utils/workspaces';
 export function createLanguageServer(
 	connection: vscode.Connection,
 	runtimeEnv: RuntimeEnvironment,
-	languageConfigs: LanguageConfigs = {
-		definitelyExts: ['.vue'],
-		indeterminateExts: ['.md', '.html'],
-		getDocumentService: vue.getDocumentService,
-		createLanguageService: vue.createLanguageService,
-	},
+	languageConfigs: LanguageConfigs,
 ) {
 
 	let params: vscode.InitializeParams;
@@ -92,7 +87,7 @@ export function createLanguageServer(
 				projects.add(root);
 			}
 
-			(await import('./features/customFeatures')).register(connection, projects);
+			(await import('./features/customFeatures')).register(connection, projects, languageConfigs);
 			(await import('./features/languageFeatures')).register(connection, projects, options.languageFeatures, params);
 		}
 

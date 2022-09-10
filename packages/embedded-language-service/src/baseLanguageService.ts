@@ -33,6 +33,8 @@ import { PluginContext, setPluginContext } from './contextStore';
 // fix build
 import type * as _0 from 'vscode-languageserver-protocol';
 
+export type LanguageService = ReturnType<typeof createLanguageService>;
+
 export function createLanguageServiceContext(options: {
 	host: LanguageServiceHost,
 	languageContext: ReturnType<typeof createEmbeddedLanguageServiceHost>,
@@ -132,5 +134,6 @@ export function createLanguageService(context: LanguageServiceContext) {
 		getInlayHints: inlayHints.register(context),
 		callHierarchy: callHierarchy.register(context),
 		dispose: () => context.typescriptLanguageService.dispose(),
+		context,
 	};
 }

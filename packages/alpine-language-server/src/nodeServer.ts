@@ -25,5 +25,14 @@ createLanguageServer(connection, {
 	definitelyExts: ['.html'],
 	indeterminateExts: [],
 	getDocumentService: alpine.getDocumentService,
-	createLanguageService: (lsHost, env, customPlugins) => alpine.createLanguageService(lsHost, env, customPlugins ?? []),
+	createLanguageService: (ts, parsedCommandLine, host, env, customPlugins) => {
+		return alpine.createLanguageService(
+			{
+				...host,
+				getVueCompilationSettings: () => ({}),
+			},
+			env,
+			customPlugins ?? [],
+		);
+	},
 });

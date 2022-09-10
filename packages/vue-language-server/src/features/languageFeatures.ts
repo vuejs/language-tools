@@ -1,4 +1,4 @@
-import * as vue from '@volar/vue-language-service';
+import * as embedded from '@volar/embedded-language-service';
 import * as vscode from 'vscode-languageserver';
 import { AutoInsertRequest, FindFileReferenceRequest, GetEditorSelectionRequest, ShowReferencesNotification } from '../requests';
 import { ServerInitializationOptions } from '../types';
@@ -12,10 +12,10 @@ export function register(
 ) {
 
 	let lastCompleteUri: string;
-	let lastCompleteLs: vue.LanguageService;
-	let lastCodeLensLs: vue.LanguageService;
-	let lastCodeActionLs: vue.LanguageService;
-	let lastCallHierarchyLs: vue.LanguageService;
+	let lastCompleteLs: embedded.LanguageService;
+	let lastCodeLensLs: embedded.LanguageService;
+	let lastCodeActionLs: embedded.LanguageService;
+	let lastCallHierarchyLs: embedded.LanguageService;
 
 	connection.onCompletion(async params => {
 		return worker(params.textDocument.uri, async vueLs => {
@@ -79,9 +79,9 @@ export function register(
 	});
 	connection.onExecuteCommand(async (params, token, workDoneProgress) => {
 
-		if (params.command === vue.executePluginCommand) {
+		if (params.command === embedded.executePluginCommand) {
 
-			const args = params.arguments as vue.ExecutePluginCommandArgs | undefined;
+			const args = params.arguments as embedded.ExecutePluginCommandArgs | undefined;
 			if (!args) {
 				return;
 			}
@@ -259,13 +259,13 @@ export function register(
 		});
 	});
 
-	async function worker<T>(uri: string, cb: (vueLs: vue.LanguageService) => T) {
+	async function worker<T>(uri: string, cb: (vueLs: embedded.LanguageService) => T) {
 		const vueLs = await getLanguageService(uri);
 		if (vueLs) {
 			return cb(vueLs);
 		}
 	}
-	function buildTokens(tokens: vue.SemanticToken[]) {
+	function buildTokens(tokens: embedded.SemanticToken[]) {
 		const builder = new vscode.SemanticTokensBuilder();
 		const sortedTokens = tokens.sort((a, b) => a[0] - b[0] === 0 ? a[1] - b[1] : a[0] - b[0]);
 		for (const token of sortedTokens) {

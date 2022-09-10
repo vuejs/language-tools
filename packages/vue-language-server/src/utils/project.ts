@@ -1,5 +1,6 @@
 import * as shared from '@volar/shared';
-import * as vue from '@volar/vue-language-service';
+import * as embeddedLS from '@volar/embedded-language-service';
+import * as embedded from '@volar/embedded-language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
@@ -31,20 +32,8 @@ export async function createProject(
 
 	let typeRootVersion = 0;
 	let projectVersion = 0;
-	let vueLs: vue.LanguageService | undefined;
-	let parsedCommandLine: vue.ParsedCommandLine;
-
-	try {
-		// will be failed if web fs host first result not ready
-		parsedCommandLine = createParsedCommandLine();
-	} catch {
-		parsedCommandLine = {
-			errors: [],
-			fileNames: [],
-			options: {},
-			vueOptions: {},
-		};
-	}
+	let vueLs: embeddedLS.LanguageService | undefined;
+	let parsedCommandLine = createParsedCommandLine(ts, sys, rootPath, tsConfig, languageConfigs);
 
 	const scripts = shared.createUriMap<{
 		version: number,
@@ -71,12 +60,14 @@ export async function createProject(
 	function getLanguageService() {
 		if (!vueLs) {
 			vueLs = languageConfigs.createLanguageService(
+				ts,
+				parsedCommandLine,
 				languageServiceHost,
 				{
 					rootUri,
 					configurationHost: configHost,
 					fileSystemProvider: runtimeEnv.fileSystemProvide,
-					documentContext: getHTMLDocumentContext(languageServiceHost),
+					documentContext: getHTMLDocumentContext(ts, languageServiceHost),
 					schemaRequestService: uri => {
 						const protocol = uri.substring(0, uri.indexOf(':'));
 
@@ -130,12 +121,12 @@ export async function createProject(
 		const deletes = changes.filter(change => change.type === vscode.FileChangeType.Deleted);
 
 		if (creates.length || deletes.length) {
-			parsedCommandLine = createParsedCommandLine();
+			parsedCommandLine = createParsedCommandLine(ts, sys, rootPath, tsConfig, languageConfigs);
 		}
 	}
 	function createLanguageServiceHost() {
 
-		const host: vue.LanguageServiceHost = {
+		const host: embedded.LanguageServiceHost = {
 			// ts
 			getNewLine: () => sys.newLine,
 			useCaseSensitiveFileNames: () => sys.useCaseSensitiveFileNames,
@@ -166,7 +157,6 @@ export async function createProject(
 				return [...fileNames];
 			},
 			getCompilationSettings: () => parsedCommandLine.options,
-			getVueCompilationSettings: () => parsedCommandLine.vueOptions,
 			getScriptVersion,
 			getScriptSnapshot,
 			getTypeScriptModule: () => ts,
@@ -226,7 +216,16 @@ export async function createProject(
 		disposeWatchEvent();
 		disposeDocChange();
 	}
-	function createParsedCommandLine(): ReturnType<typeof vue.createParsedCommandLine> {
+}
+
+function createParsedCommandLine(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	sys: FileSystem,
+	rootPath: string,
+	tsConfig: string | ts.CompilerOptions,
+	languageConfigs: LanguageConfigs,
+): ts.ParsedCommandLine {
+	try {
 		const parseConfigHost: ts.ParseConfigHost = {
 			useCaseSensitiveFileNames: sys.useCaseSensitiveFileNames,
 			readDirectory: (path, extensions, exclude, include, depth) => {
@@ -242,19 +241,29 @@ export async function createProject(
 			readFile: sys.readFile,
 		};
 		if (typeof tsConfig === 'string') {
-			return vue.createParsedCommandLine(ts, parseConfigHost, tsConfig);
+			return ts.parseJsonConfigFileContent(ts, parseConfigHost, tsConfig);
 		}
 		else {
 			const content = ts.parseJsonConfigFileContent({}, parseConfigHost, rootPath, tsConfig, 'jsconfig.json');
 			content.options.outDir = undefined; // TODO: patching ts server broke with outDir + rootDir + composite/incremental
 			content.fileNames = content.fileNames.map(shared.normalizeFileName);
-			return { ...content, vueOptions: {} };
+			return content;
 		}
+	}
+	catch {
+		// will be failed if web fs host first result not ready
+		return {
+			errors: [],
+			fileNames: [],
+			options: {},
+		};
 	}
 }
 
-function getHTMLDocumentContext(host: vue.LanguageServiceHost) {
-	const ts = host.getTypeScriptModule();
+function getHTMLDocumentContext(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	host: ts.LanguageServiceHost,
+) {
 	const documentContext: html.DocumentContext = {
 		resolveReference(ref: string, base: string) {
 

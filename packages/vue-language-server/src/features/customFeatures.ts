@@ -3,11 +3,13 @@ import * as path from 'upath';
 import * as vscode from 'vscode-languageserver';
 import type { Workspaces } from '../utils/workspaces';
 import * as vue from '@volar/vue-language-core';
-import { DetectTagCasingRequest, GetConvertTagCasingEditsRequest, GetMatchTsConfigRequest, ReloadProjectNotification, VerifyAllScriptsNotification, WriteVirtualFilesNotification } from '../requests';
+import { GetMatchTsConfigRequest, ReloadProjectNotification, VerifyAllScriptsNotification, WriteVirtualFilesNotification } from '../requests';
+import { LanguageConfigs } from '../types';
 
 export function register(
 	connection: vscode.Connection,
 	projects: Workspaces,
+	languageConfigs: LanguageConfigs,
 ) {
 	connection.onRequest(GetMatchTsConfigRequest.type, async params => {
 		return (await projects.getProject(params.uri))?.tsconfig;
@@ -23,15 +25,14 @@ export function register(
 		if (project) {
 			const ls = await (await project.project)?.getLanguageServiceDontCreate();
 			if (ls) {
-				const localTypesFiles = ls.__internal__.context.core.typescriptLanguageServiceHost.getScriptFileNames().filter(fileName => fileName.endsWith(vue.localTypes.typesFileName));
+				const localTypesFiles = ls.context.core.typescriptLanguageServiceHost.getScriptFileNames().filter(fileName => fileName.endsWith(vue.localTypes.typesFileName));
 				for (const fileName of localTypesFiles) {
-					const script = ls.__internal__.context.core.typescriptLanguageServiceHost.getScriptSnapshot(fileName);
+					const script = ls.context.core.typescriptLanguageServiceHost.getScriptSnapshot(fileName);
 					if (script) {
 						fs.writeFile(fileName, script.getText(0, script.getLength()), () => { });
 					}
 				}
-				const context = ls.__internal__.context;
-				for (const vueDocument of context.documents.getAll()) {
+				for (const vueDocument of ls.context.documents.getAll()) {
 					for (const sourceMap of vueDocument.getSourceMaps()) {
 
 						if (!sourceMap.embeddedFile.isTsHostFile)
@@ -55,11 +56,10 @@ export function register(
 		if (project) {
 			const ls = await (await project.project)?.getLanguageServiceDontCreate();
 			if (ls) {
-				const context = ls.__internal__.context;
-				const allVueDocuments = context.documents.getAll();
+				const allVueDocuments = ls.context.documents.getAll();
 				let i = 0;
 				for (const vueFile of allVueDocuments) {
-					progress.report(i++ / allVueDocuments.length * 100, path.relative(ls.__internal__.context.host.getCurrentDirectory(), shared.getPathOfUri(vueFile.uri)));
+					progress.report(i++ / allVueDocuments.length * 100, path.relative(ls.context.host.getCurrentDirectory(), shared.getPathOfUri(vueFile.uri)));
 					if (progress.token.isCancellationRequested) {
 						continue;
 					}
@@ -75,14 +75,9 @@ export function register(
 
 		connection.window.showInformationMessage(`Verification complete. Found ${errors} errors and ${warnings} warnings.`);
 	});
-	connection.onRequest(DetectTagCasingRequest.type, async params => {
-		const languageService = await getLanguageService(params.textDocument.uri);
-		return languageService?.__internal__.detectTagNameCasing(params.textDocument.uri);
-	});
-	connection.onRequest(GetConvertTagCasingEditsRequest.type, async params => {
-		const languageService = await getLanguageService(params.textDocument.uri);
-		return languageService?.__internal__.getConvertTagCasingEdits(params.textDocument.uri, params.casing);
-	});
+
+	// @ts-expect-error
+	languageConfigs.handleLanguageFeature(connection, getLanguageService);
 
 	async function getLanguageService(uri: string) {
 		const project = (await projects.getProject(uri))?.project;
