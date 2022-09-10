@@ -306,8 +306,10 @@ importers:
 
   packages/vue-component-meta:
     specifiers:
+      '@volar/embedded-language-core': 0.40.13
       '@volar/vue-language-core': 0.40.13
     dependencies:
+      '@volar/embedded-language-core': link:../embedded-language-core
       '@volar/vue-language-core': link:../vue-language-core
 
   packages/vue-language-core:

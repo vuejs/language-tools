@@ -13,6 +13,9 @@
 	],
 	"references": [
 		{
+			"path": "../embedded-language-core/tsconfig.build.json"
+		},
+		{
 			"path": "../vue-language-core/tsconfig.build.json"
 		},
 		{
