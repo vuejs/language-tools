@@ -10,48 +10,43 @@ export function register(
 	features: NonNullable<ServerInitializationOptions['languageFeatures']>,
 	params: vscode.InitializeParams,
 ) {
+
+	let lastCompleteUri: string;
+	let lastCompleteLs: vue.LanguageService;
+	let lastCodeLensLs: vue.LanguageService;
+	let lastCodeActionLs: vue.LanguageService;
+	let lastCallHierarchyLs: vue.LanguageService;
+
 	connection.onCompletion(async handler => {
 		return worker(handler.textDocument.uri, async vueLs => {
+			lastCompleteUri = handler.textDocument.uri;
+			lastCompleteLs = vueLs;
 			const list = await vueLs.doComplete(
 				handler.textDocument.uri,
 				handler.position,
 				handler.context,
 			);
-			const insertReplaceSupport = params.capabilities.textDocument?.completion?.completionItem?.insertReplaceSupport ?? false;
-			if (!insertReplaceSupport && list) {
+			if (list) {
 				for (const item of list.items) {
-					if (item.textEdit && vscode.InsertReplaceEdit.is(item.textEdit)) {
-						item.textEdit = vscode.TextEdit.replace(item.textEdit.insert, item.textEdit.newText);
-					}
+					fixTextEdit(item);
 				}
 			}
 			return list;
 		});
 	});
 	connection.onCompletionResolve(async item => {
+		if (lastCompleteUri && lastCompleteLs) {
 
-		const uri = (item.data as { uri?: string; } | undefined)?.uri;
-		if (!uri) {
-			return item;
+			const activeSel = features.completion?.getDocumentSelectionRequest
+				? await connection.sendRequest(GetEditorSelectionRequest.type)
+				: undefined;
+			const newPosition = activeSel?.textDocument.uri.toLowerCase() === lastCompleteUri.toLowerCase() ? activeSel.position : undefined;
+
+			item = await lastCompleteLs.doCompletionResolve(item, newPosition);
+
+			fixTextEdit(item);
 		}
-
-		const activeSel = features.completion?.getDocumentSelectionRequest
-			? await connection.sendRequest(GetEditorSelectionRequest.type)
-			: undefined;
-		const newPosition = activeSel?.textDocument.uri.toLowerCase() === uri.toLowerCase() ? activeSel.position : undefined;
-
-		const result = await worker(uri, async vueLs => {
-			return vueLs.doCompletionResolve(item, newPosition) ?? item;
-		}) ?? item;
-
-		const insertReplaceSupport = params.capabilities.textDocument?.completion?.completionItem?.insertReplaceSupport ?? false;
-		if (!insertReplaceSupport) {
-			if (result.textEdit && vscode.InsertReplaceEdit.is(result.textEdit)) {
-				result.textEdit = vscode.TextEdit.replace(result.textEdit.insert, result.textEdit.newText);
-			}
-		}
-
-		return result;
+		return item;
 	});
 	connection.onHover(async handler => {
 		return worker(handler.textDocument.uri, vueLs => {
@@ -74,20 +69,13 @@ export function register(
 		});
 	});
 	connection.onCodeLens(async handler => {
-		return worker(handler.textDocument.uri, vueLs => {
+		return worker(handler.textDocument.uri, async vueLs => {
+			lastCodeLensLs = vueLs;
 			return vueLs.doCodeLens(handler.textDocument.uri);
 		});
 	});
 	connection.onCodeLensResolve(async codeLens => {
-
-		const uri = (codeLens.data as any)?.uri as string | undefined; // TODO
-		if (!uri) {
-			return codeLens;
-		}
-
-		return await worker(uri, vueLs => {
-			return vueLs.doCodeLensResolve(codeLens) ?? codeLens;
-		}) ?? codeLens;
+		return await lastCodeLensLs?.doCodeLensResolve(codeLens) ?? codeLens;
 	});
 	connection.onExecuteCommand(async (handler, token, workDoneProgress) => {
 
@@ -139,6 +127,7 @@ export function register(
 	});
 	connection.onCodeAction(async handler => {
 		return worker(handler.textDocument.uri, async vueLs => {
+			lastCodeActionLs = vueLs;
 			let codeActions = await vueLs.doCodeActions(handler.textDocument.uri, handler.range, handler.context) ?? [];
 			for (const codeAction of codeActions) {
 				if (codeAction.data && typeof codeAction.data === 'object') {
@@ -155,15 +144,7 @@ export function register(
 		});
 	});
 	connection.onCodeActionResolve(async codeAction => {
-
-		const uri: string | undefined = (codeAction.data as any)?.uri;
-		if (!uri) {
-			return codeAction;
-		}
-
-		return await worker(uri, vueLs => {
-			return vueLs.doCodeActionResolve(codeAction);
-		}) ?? codeAction;
+		return await lastCodeActionLs.doCodeActionResolve(codeAction) ?? codeAction;
 	});
 	connection.onReferences(async handler => {
 		return worker(handler.textDocument.uri, vueLs => {
@@ -223,33 +204,15 @@ export function register(
 	});
 	connection.languages.callHierarchy.onPrepare(async handler => {
 		return await worker(handler.textDocument.uri, async vueLs => {
-			const items = await vueLs.callHierarchy.doPrepare(handler.textDocument.uri, handler.position);
-			if (items) {
-				for (const item of items) {
-					if (typeof item.data !== 'object') item.data = {};
-					(item.data as any).__uri = handler.textDocument.uri;
-				}
-			}
-			return items?.length ? items : null;
+			lastCallHierarchyLs = vueLs;
+			return vueLs.callHierarchy.doPrepare(handler.textDocument.uri, handler.position);
 		}) ?? [];
 	});
 	connection.languages.callHierarchy.onIncomingCalls(async handler => {
-
-		const data = handler.item.data as { __uri?: string; } | undefined;
-		const uri = data?.__uri ?? handler.item.uri;
-
-		return await worker(uri, vueLs => {
-			return vueLs.callHierarchy.getIncomingCalls(handler.item);
-		}) ?? [];
+		return await lastCallHierarchyLs?.callHierarchy.getIncomingCalls(handler.item) ?? [];
 	});
 	connection.languages.callHierarchy.onOutgoingCalls(async handler => {
-
-		const data = handler.item.data as { __uri?: string; } | undefined;
-		const uri = data?.__uri ?? handler.item.uri;
-
-		return await worker(uri, vueLs => {
-			return vueLs.callHierarchy.getOutgoingCalls(handler.item);
-		}) ?? [];
+		return await lastCallHierarchyLs?.callHierarchy.getOutgoingCalls(handler.item) ?? [];
 	});
 	connection.languages.semanticTokens.on(async (handler, token, _, resultProgress) => {
 		return await worker(handler.textDocument.uri, async vueLs => {
@@ -301,6 +264,7 @@ export function register(
 			return vueLs.getInlayHints(handler.textDocument.uri, handler.range);
 		});
 	});
+	// TODO: connection.languages.inlayHint.resolve
 	connection.workspace.onWillRenameFiles(async handler => {
 
 		const config = await connection.workspace.getConfiguration('volar.updateImportsOnFileMove.enabled');
@@ -341,5 +305,13 @@ export function register(
 	async function getLanguageService(uri: string) {
 		const project = (await projects.getProject(uri))?.project;
 		return project?.getLanguageService();
+	}
+	function fixTextEdit(item: vscode.CompletionItem) {
+		const insertReplaceSupport = params.capabilities.textDocument?.completion?.completionItem?.insertReplaceSupport ?? false;
+		if (!insertReplaceSupport) {
+			if (item.textEdit && vscode.InsertReplaceEdit.is(item.textEdit)) {
+				item.textEdit = vscode.TextEdit.replace(item.textEdit.insert, item.textEdit.newText);
+			}
+		}
 	}
 }
