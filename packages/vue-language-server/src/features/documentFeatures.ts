@@ -9,54 +9,54 @@ export function register(
 	documents: ReturnType<typeof createSnapshots>,
 	documentServiceHost: ReturnType<typeof createDocumentServiceHost>,
 ) {
-	connection.onDocumentFormatting(handler => {
-		return worker(handler.textDocument.uri, document => {
-			return documentServiceHost.get(document.uri).format(document, handler.options);
+	connection.onDocumentFormatting(params => {
+		return worker(params.textDocument.uri, document => {
+			return documentServiceHost.get(document.uri).format(document, params.options);
 		});
 	});
-	connection.onDocumentRangeFormatting(handler => {
-		return worker(handler.textDocument.uri, document => {
-			return documentServiceHost.get(document.uri).format(document, handler.options, handler.range);
+	connection.onDocumentRangeFormatting(params => {
+		return worker(params.textDocument.uri, document => {
+			return documentServiceHost.get(document.uri).format(document, params.options, params.range);
 		});
 	});
-	connection.onDocumentOnTypeFormatting(handler => {
-		return worker(handler.textDocument.uri, document => {
-			return documentServiceHost.get(document.uri).format(document, handler.options, undefined, handler);
+	connection.onDocumentOnTypeFormatting(params => {
+		return worker(params.textDocument.uri, document => {
+			return documentServiceHost.get(document.uri).format(document, params.options, undefined, params);
 		});
 	});
-	connection.onSelectionRanges(handler => {
-		return worker(handler.textDocument.uri, document => {
-			return documentServiceHost.get(document.uri).getSelectionRanges(document, handler.positions);
+	connection.onSelectionRanges(params => {
+		return worker(params.textDocument.uri, document => {
+			return documentServiceHost.get(document.uri).getSelectionRanges(document, params.positions);
 		});
 	});
-	connection.onFoldingRanges(handler => {
-		return worker(handler.textDocument.uri, document => {
+	connection.onFoldingRanges(params => {
+		return worker(params.textDocument.uri, document => {
 			return documentServiceHost.get(document.uri).getFoldingRanges(document);
 		});
 	});
-	connection.languages.onLinkedEditingRange(handler => {
-		return worker(handler.textDocument.uri, document => {
-			return documentServiceHost.get(document.uri).findLinkedEditingRanges(document, handler.position);
+	connection.languages.onLinkedEditingRange(params => {
+		return worker(params.textDocument.uri, document => {
+			return documentServiceHost.get(document.uri).findLinkedEditingRanges(document, params.position);
 		});
 	});
-	connection.onDocumentSymbol(handler => {
-		return worker(handler.textDocument.uri, document => {
+	connection.onDocumentSymbol(params => {
+		return worker(params.textDocument.uri, document => {
 			return documentServiceHost.get(document.uri).findDocumentSymbols(document);
 		});
 	});
-	connection.onDocumentColor(handler => {
-		return worker(handler.textDocument.uri, document => {
+	connection.onDocumentColor(params => {
+		return worker(params.textDocument.uri, document => {
 			return documentServiceHost.get(document.uri).findDocumentColors(document);
 		});
 	});
-	connection.onColorPresentation(handler => {
-		return worker(handler.textDocument.uri, document => {
-			return documentServiceHost.get(document.uri).getColorPresentations(document, handler.color, handler.range);
+	connection.onColorPresentation(params => {
+		return worker(params.textDocument.uri, document => {
+			return documentServiceHost.get(document.uri).getColorPresentations(document, params.color, params.range);
 		});
 	});
-	connection.onRequest(AutoInsertRequest.type, async handler => {
-		return worker(handler.textDocument.uri, document => {
-			return documentServiceHost.get(document.uri).doAutoInsert(document, handler.position, handler.options);
+	connection.onRequest(AutoInsertRequest.type, async params => {
+		return worker(params.textDocument.uri, document => {
+			return documentServiceHost.get(document.uri).doAutoInsert(document, params.position, params.options);
 		});
 	});
 

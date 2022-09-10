@@ -9,13 +9,13 @@ export function register(
 	connection: vscode.Connection,
 	projects: Workspaces,
 ) {
-	connection.onRequest(GetMatchTsConfigRequest.type, async handler => {
-		return (await projects.getProject(handler.uri))?.tsconfig;
+	connection.onRequest(GetMatchTsConfigRequest.type, async params => {
+		return (await projects.getProject(params.uri))?.tsconfig;
 	});
-	connection.onNotification(ReloadProjectNotification.type, async handler => {
+	connection.onNotification(ReloadProjectNotification.type, async params => {
 		projects.reloadProject();
 	});
-	connection.onNotification(WriteVirtualFilesNotification.type, async (params) => {
+	connection.onNotification(WriteVirtualFilesNotification.type, async params => {
 
 		const fs = await import('fs');
 
@@ -43,7 +43,7 @@ export function register(
 			}
 		}
 	});
-	connection.onNotification(VerifyAllScriptsNotification.type, async (params) => {
+	connection.onNotification(VerifyAllScriptsNotification.type, async params => {
 
 		let errors = 0;
 		let warnings = 0;
@@ -75,9 +75,9 @@ export function register(
 
 		connection.window.showInformationMessage(`Verification complete. Found ${errors} errors and ${warnings} warnings.`);
 	});
-	connection.onRequest(DetectDocumentNameCasesRequest.type, async handler => {
-		const languageService = await getLanguageService(handler.uri);
-		return languageService?.__internal__.detectTagNameCase(handler.uri);
+	connection.onRequest(DetectDocumentNameCasesRequest.type, async params => {
+		const languageService = await getLanguageService(params.uri);
+		return languageService?.__internal__.detectTagNameCase(params.uri);
 	});
 
 	async function getLanguageService(uri: string) {
