@@ -3,7 +3,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';
 import * as vscode from 'vscode-languageserver';
 import { createProject, Project } from './project';
-import { LanguageConfigs, RuntimeEnvironment, FileSystemHost, ServerInitializationOptions } from '../types';
+import { LanguageServerPlugin, RuntimeEnvironment, FileSystemHost, ServerInitializationOptions } from '../types';
 import { createSnapshots } from './snapshots';
 import { getInferredCompilerOptions } from './inferredCompilerOptions';
 import { URI } from 'vscode-uri';
@@ -13,7 +13,7 @@ export const rootTsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 
 export async function createWorkspaceProjects(
 	runtimeEnv: RuntimeEnvironment,
-	languageConfigs: LanguageConfigs,
+	plugins: LanguageServerPlugin[],
 	fsHost: FileSystemHost,
 	rootUri: URI,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -96,7 +96,7 @@ export async function createWorkspaceProjects(
 				const inferOptions = await getInferredCompilerOptions(ts, configHost);
 				return createProject(
 					runtimeEnv,
-					languageConfigs,
+					plugins,
 					fsHost,
 					sys,
 					ts,
@@ -227,7 +227,7 @@ export async function createWorkspaceProjects(
 		if (!project) {
 			project = createProject(
 				runtimeEnv,
-				languageConfigs,
+				plugins,
 				fsHost,
 				sys,
 				ts,

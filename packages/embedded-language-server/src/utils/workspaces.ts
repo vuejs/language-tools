@@ -3,7 +3,7 @@ import { ConfigurationHost } from '@volar/vue-language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
-import { FileSystemHost, LanguageConfigs, RuntimeEnvironment, ServerInitializationOptions } from '../types';
+import { FileSystemHost, LanguageServerPlugin, RuntimeEnvironment, ServerInitializationOptions } from '../types';
 import { createSnapshots } from './snapshots';
 import { createWorkspaceProjects, rootTsConfigNames, sortTsConfigs } from './workspaceProjects';
 
@@ -11,7 +11,7 @@ export interface Workspaces extends ReturnType<typeof createWorkspaces> { }
 
 export function createWorkspaces(
 	runtimeEnv: RuntimeEnvironment,
-	languageConfigs: LanguageConfigs,
+	plugins: LanguageServerPlugin[],
 	fsHost: FileSystemHost,
 	configurationHost: ConfigurationHost | undefined,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -57,7 +57,7 @@ export function createWorkspaces(
 		add: (rootUri: URI) => {
 			workspaces.set(rootUri.toString(), createWorkspaceProjects(
 				runtimeEnv,
-				languageConfigs,
+				plugins,
 				fsHost,
 				rootUri,
 				ts,

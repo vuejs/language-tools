@@ -8,11 +8,11 @@ import { createLanguageServer } from './server';
 import fileSchemaRequestHandler from './schemaRequestHandlers/file';
 import httpSchemaRequestHandler from './schemaRequestHandlers/http';
 import { createNodeFileSystemHost } from './utils/nodeFileSystemHost';
-import { LanguageConfigs } from './types';
+import { LanguageServerPlugin } from './types';
 
 const connection = vscode.createConnection(vscode.ProposedFeatures.all);
 
-export function createNodeServer(languageConfigs: LanguageConfigs) {
+export function createNodeServer(plugins: LanguageServerPlugin[]) {
 	createLanguageServer(connection, {
 		loadTypescript(options) {
 			return require(path.toUnix(options.typescript.serverPath));
@@ -67,5 +67,5 @@ export function createNodeServer(languageConfigs: LanguageConfigs) {
 				});
 			},
 		},
-	}, languageConfigs);
+	}, plugins);
 }

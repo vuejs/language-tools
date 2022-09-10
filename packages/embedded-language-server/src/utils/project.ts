@@ -6,7 +6,7 @@ import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import { loadCustomPlugins } from './config';
 import { GetDocumentContentRequest } from '../requests';
-import { FileSystem, FileSystemHost, LanguageConfigs, RuntimeEnvironment, ServerInitializationOptions } from '../types';
+import { FileSystem, FileSystemHost, LanguageServerPlugin, RuntimeEnvironment, ServerInitializationOptions } from '../types';
 import { createSnapshots } from './snapshots';
 import { ConfigurationHost } from '@volar/vue-language-service';
 import * as upath from 'upath';
@@ -16,7 +16,7 @@ export interface Project extends ReturnType<typeof createProject> { }
 
 export async function createProject(
 	runtimeEnv: RuntimeEnvironment,
-	languageConfigs: LanguageConfigs,
+	plugins: LanguageServerPlugin[],
 	fsHost: FileSystemHost,
 	sys: FileSystem,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -33,7 +33,7 @@ export async function createProject(
 	let typeRootVersion = 0;
 	let projectVersion = 0;
 	let vueLs: embeddedLS.LanguageService | undefined;
-	let parsedCommandLine = createParsedCommandLine(ts, sys, rootPath, tsConfig, languageConfigs);
+	let parsedCommandLine = createParsedCommandLine(ts, sys, rootPath, tsConfig, plugins);
 
 	const scripts = shared.createUriMap<{
 		version: number,
@@ -60,7 +60,7 @@ export async function createProject(
 	function getLanguageService() {
 		if (!vueLs) {
 
-			const languageModules = languageConfigs.languageService?.getLanguageModules?.(languageServiceHost) ?? [];
+			const languageModules = plugins.map(plugin => plugin.languageService?.getLanguageModules?.(languageServiceHost) ?? []).flat();
 			const languageContext = embedded.createEmbeddedLanguageServiceHost(languageServiceHost, languageModules);
 			const languageServiceContext = embeddedLS.createLanguageServiceContext({
 				host: languageServiceHost,
@@ -68,7 +68,7 @@ export async function createProject(
 				getPlugins() {
 					return [
 						...loadCustomPlugins(languageServiceHost.getCurrentDirectory()),
-						...languageConfigs.languageService?.getLanguageServicePlugins?.(languageServiceHost, vueLs!) ?? [],
+						...plugins.map(plugin => plugin.languageService?.getLanguageServicePlugins?.(languageServiceHost, vueLs!) ?? []).flat(),
 					];
 				},
 				env: {
@@ -129,7 +129,7 @@ export async function createProject(
 		const deletes = changes.filter(change => change.type === vscode.FileChangeType.Deleted);
 
 		if (creates.length || deletes.length) {
-			parsedCommandLine = createParsedCommandLine(ts, sys, rootPath, tsConfig, languageConfigs);
+			parsedCommandLine = createParsedCommandLine(ts, sys, rootPath, tsConfig, plugins);
 		}
 	}
 	function createLanguageServiceHost() {
@@ -231,19 +231,14 @@ function createParsedCommandLine(
 	sys: FileSystem,
 	rootPath: string,
 	tsConfig: string | ts.CompilerOptions,
-	languageConfigs: LanguageConfigs,
+	plugins: LanguageServerPlugin[],
 ): ts.ParsedCommandLine {
+	const extraExts = plugins.map(plugin => plugin.exts).flat();
 	try {
 		const parseConfigHost: ts.ParseConfigHost = {
 			useCaseSensitiveFileNames: sys.useCaseSensitiveFileNames,
 			readDirectory: (path, extensions, exclude, include, depth) => {
-				const exts = [...extensions, ...languageConfigs.definitelyExts];
-				for (const passiveExt of languageConfigs.indeterminateExts) {
-					if (include.some(i => i.endsWith(passiveExt))) {
-						exts.push(passiveExt);
-					}
-				}
-				return sys.readDirectory(path, exts, exclude, include, depth);
+				return sys.readDirectory(path, [...extensions, ...extraExts], exclude, include, depth);
 			},
 			fileExists: sys.fileExists,
 			readFile: sys.readFile,

@@ -1,4 +1,4 @@
-import { LanguageConfigs, RuntimeEnvironment } from '../types';
+import { LanguageServerPlugin, RuntimeEnvironment } from '../types';
 import * as embedded from '@volar/embedded-language-service';
 import { ConfigurationHost } from '@volar/vue-language-service';
 import { URI } from 'vscode-uri';
@@ -9,7 +9,7 @@ import type * as _ from 'vscode-languageserver-textdocument';
 
 export function createDocumentServiceHost(
 	runtimeEnv: RuntimeEnvironment,
-	languageConfigs: LanguageConfigs,
+	plugins: LanguageServerPlugin[],
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	configHost: ConfigurationHost | undefined,
 ) {
@@ -50,12 +50,12 @@ export function createDocumentServiceHost(
 			ts,
 			env,
 			getLanguageModules() {
-				return languageConfigs.documentService?.getLanguageModules?.(ts, env) ?? [];
+				return plugins.map(plugin => plugin.documentService?.getLanguageModules?.(ts, env) ?? []).flat();
 			},
 			getPlugins() {
 				return [
 					...loadCustomPlugins(rootUri.fsPath),
-					...languageConfigs.documentService?.getLanguageServicePlugins?.(serviceContext) ?? []
+					...plugins.map(plugin => plugin.documentService?.getLanguageServicePlugins?.(serviceContext) ?? []).flat(),
 				];
 			},
 		});

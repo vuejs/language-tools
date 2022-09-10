@@ -38,13 +38,11 @@ export interface RuntimeEnvironment {
 	) => FileSystemHost,
 }
 
-export type LanguageConfigs<A extends embedded.LanguageServiceHost = embedded.LanguageServiceHost, B = embeddedLS.LanguageService> = {
+export type LanguageServerPlugin<A extends embedded.LanguageServiceHost = embedded.LanguageServiceHost, B = embeddedLS.LanguageService> = {
 
-	definitelyExts: string[],
+	exts: string[],
 
-	indeterminateExts: string[],
-
-	semanticTokenLegend: vscode.SemanticTokensLegend,
+	semanticTokenLegend?: vscode.SemanticTokensLegend,
 
 	resolveLanguageServiceHost(
 		ts: typeof import('typescript/lib/tsserverlibrary'),

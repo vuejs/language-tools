@@ -2,7 +2,7 @@ import { configure as configureHttpRequests } from 'request-light';
 import * as ts from 'typescript/lib/tsserverlibrary'; // bundle typescript lib in web
 import * as vscode from 'vscode-languageserver/browser';
 import { createLanguageServer } from './server';
-import { LanguageConfigs } from './types';
+import { LanguageServerPlugin } from './types';
 import httpSchemaRequestHandler from './schemaRequestHandlers/http';
 import { createWebFileSystemHost } from './utils/webFileSystemHost';
 
@@ -10,7 +10,7 @@ const messageReader = new vscode.BrowserMessageReader(self);
 const messageWriter = new vscode.BrowserMessageWriter(self);
 const connection = vscode.createConnection(messageReader, messageWriter);
 
-export function createWebServer(languageConfigs: LanguageConfigs) {
+export function createWebServer(plugins: LanguageServerPlugin[]) {
 	createLanguageServer(connection, {
 		loadTypescript(options) {
 			return ts; // not support load by user config in web
@@ -27,5 +27,5 @@ export function createWebServer(languageConfigs: LanguageConfigs) {
 		},
 		fileSystemProvide: undefined, // TODO
 		createFileSystemHost: createWebFileSystemHost,
-	}, languageConfigs);
+	}, plugins);
 }

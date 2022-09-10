@@ -1,13 +1,13 @@
-import { LanguageConfigs } from '@volar/embedded-language-server';
+import { LanguageServerPlugin } from '@volar/embedded-language-server';
 import * as vue from '@volar/vue-language-service';
 import { DetectTagCasingRequest, GetConvertTagCasingEditsRequest } from './requests';
 import * as nameCasing from '@volar/vue-language-service/out/ideFeatures/nameCasing';
 import * as embedded from '@volar/embedded-language-core';
 import * as shared from '@volar/shared';
 
-export const languageConfigs: LanguageConfigs<vue.LanguageServiceHost> = {
-	definitelyExts: ['.vue'],
-	indeterminateExts: ['.md', '.html'],
+export const languageConfigs: LanguageServerPlugin<vue.LanguageServiceHost> = {
+	exts: ['.vue'],
+	// indeterminateExts: ['.md', '.html'],
 	semanticTokenLegend: vue.getSemanticTokenLegend(),
 	resolveLanguageServiceHost(ts, sys, tsConfig, host) {
 		let vueOptions: vue.VueCompilerOptions = {};

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
-import { FileSystemHost, LanguageConfigs, RuntimeEnvironment, ServerInitializationOptions } from './types';
+import { FileSystemHost, LanguageServerPlugin, RuntimeEnvironment, ServerInitializationOptions } from './types';
 import { createConfigurationHost } from './utils/configurationHost';
 import { createDocumentServiceHost } from './utils/documentServiceHost';
 import { createSnapshots } from './utils/snapshots';
@@ -9,7 +9,7 @@ import { createWorkspaces } from './utils/workspaces';
 export function createLanguageServer(
 	connection: vscode.Connection,
 	runtimeEnv: RuntimeEnvironment,
-	languageConfigs: LanguageConfigs,
+	plugins: LanguageServerPlugin[],
 ) {
 
 	let params: vscode.InitializeParams;
@@ -52,7 +52,7 @@ export function createLanguageServer(
 
 			documentServiceHost = createDocumentServiceHost(
 				runtimeEnv,
-				languageConfigs,
+				plugins,
 				ts,
 				configHost,
 			);
@@ -64,7 +64,7 @@ export function createLanguageServer(
 			(await import('./features/documentFeatures')).register(connection, documents, documentServiceHost);
 		}
 		if (options.languageFeatures) {
-			(await import('./registers/registerlanguageFeatures')).register(options.languageFeatures!, languageConfigs.semanticTokenLegend, result.capabilities, languageConfigs);
+			(await import('./registers/registerlanguageFeatures')).register(options.languageFeatures!, result.capabilities, plugins);
 
 			fsHost = runtimeEnv.createFileSystemHost(ts, params.capabilities);
 
@@ -72,7 +72,7 @@ export function createLanguageServer(
 
 			projects = createWorkspaces(
 				runtimeEnv,
-				languageConfigs,
+				plugins,
 				fsHost,
 				configHost,
 				ts,
@@ -86,7 +86,7 @@ export function createLanguageServer(
 				projects.add(root);
 			}
 
-			(await import('./features/customFeatures')).register(connection, projects, languageConfigs);
+			(await import('./features/customFeatures')).register(connection, projects, plugins);
 			(await import('./features/languageFeatures')).register(connection, projects, options.languageFeatures, params);
 		}
 

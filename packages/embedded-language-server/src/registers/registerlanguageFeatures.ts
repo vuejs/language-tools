@@ -1,12 +1,11 @@
 import * as embedded from '@volar/embedded-language-service';
-import { LanguageConfigs, ServerInitializationOptions } from '../types';
+import { LanguageServerPlugin, ServerInitializationOptions } from '../types';
 import * as vscode from 'vscode-languageserver';
 
 export function register(
 	features: NonNullable<ServerInitializationOptions['languageFeatures']>,
-	legend: vscode.SemanticTokensLegend,
 	server: vscode.ServerCapabilities,
-	languageConfigs: LanguageConfigs,
+	plugins: LanguageServerPlugin[],
 ) {
 	if (features.references) {
 		server.referencesProvider = true;
@@ -36,7 +35,7 @@ export function register(
 			fileOperations: {
 				willRename: {
 					filters: [
-						...[...languageConfigs.definitelyExts, ...languageConfigs.indeterminateExts].map(ext => ({ pattern: { glob: `**/*${ext}` } })),
+						...plugins.map(plugin => plugin.exts.map(ext => ({ pattern: { glob: `**/*${ext}` } }))).flat(),
 						{ pattern: { glob: '**/*.js' } },
 						{ pattern: { glob: '**/*.ts' } },
 						{ pattern: { glob: '**/*.jsx' } },
@@ -100,8 +99,17 @@ export function register(
 		server.semanticTokensProvider = {
 			range: true,
 			full: false,
-			legend,
+			legend: {
+				tokenModifiers: [],
+				tokenTypes: [],
+			},
 		};
+		for (const plugin of plugins) {
+			if (plugin.semanticTokenLegend) {
+				server.semanticTokensProvider.legend.tokenModifiers = server.semanticTokensProvider.legend.tokenModifiers.concat(plugin.semanticTokenLegend.tokenModifiers);
+				server.semanticTokensProvider.legend.tokenTypes = server.semanticTokensProvider.legend.tokenTypes.concat(plugin.semanticTokenLegend.tokenTypes);
+			}
+		}
 	}
 	if (features.codeAction) {
 		server.codeActionProvider = {
