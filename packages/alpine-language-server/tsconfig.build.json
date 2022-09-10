@@ -13,10 +13,16 @@
 	],
 	"references": [
 		{
-			"path": "../alpine-language-service/tsconfig.build.json"
+			"path": "../language-server/tsconfig.build.json"
 		},
 		{
-			"path": "../language-server/tsconfig.build.json"
+			"path": "../vue-language-core/tsconfig.build.json"
+		},
+		{
+			"path": "../vue-language-server/tsconfig.build.json"
+		},
+		{
+			"path": "../vue-language-service/tsconfig.build.json"
 		},
 	]
 }
