@@ -6,12 +6,11 @@ import usePugPlugin from '@volar-plugins/pug';
 import useTsPlugin from '@volar-plugins/typescript';
 import * as embeddedLS from '@volar/embedded-language-service';
 import * as embedded from '@volar/embedded-language-core';
-import { PluginContext } from '@volar/embedded-language-service';
+import { LanguageServiceRuntimeContext, PluginContext } from '@volar/embedded-language-service';
 import * as ts2 from '@volar/typescript-language-service';
 import * as vue from '@volar/vue-language-core';
 import type * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
-import * as nameCasing from './ideFeatures/nameCasing';
 import useVuePlugin from './plugins/vue';
 import useAutoDotValuePlugin from './plugins/vue-autoinsert-dotvalue';
 import useReferencesCodeLensPlugin from './plugins/vue-codelens-references';
@@ -60,31 +59,22 @@ export function createLanguageService(
 				...customPlugins,
 				...getLanguageServicePlugins(
 					host,
-					languageServiceContext.documents,
+					languageServiceContext,
 					languageService,
-					nameCasingApis.detect,
 				),
 			];
 		},
 		env,
 	});
 	const languageService = embeddedLS.createLanguageService(languageServiceContext);
-	const nameCasingApis = nameCasing.register(languageServiceContext, languageService.findReferences);
 
-	return {
-		...languageService,
-		__internal__: {
-			getConvertTagCasingEdits: nameCasingApis.convert,
-			detectTagNameCasing: nameCasingApis.detect,
-		},
-	};
+	return languageService;
 }
 
 function getLanguageServicePlugins(
 	host: vue.LanguageServiceHost,
-	vueDocuments: ReturnType<typeof embeddedLS.parseSourceFileDocuments>,
+	context: LanguageServiceRuntimeContext,
 	apis: ReturnType<typeof embeddedLS.createLanguageService>,
-	detectTagNameCase: ReturnType<typeof nameCasing.register>['detect'],
 ) {
 
 	const ts = host.getTypeScriptModule();
@@ -92,7 +82,7 @@ function getLanguageServicePlugins(
 	// plugins
 	const scriptTsPlugin = useTsPlugin();
 	const vuePlugin = useVuePlugin({
-		getVueDocument: (document) => vueDocuments.get(document.uri),
+		getVueDocument: (document) => context.documents.get(document.uri),
 		tsLs: scriptTsPlugin.languageService,
 		isJsxMissing: !host.getVueCompilationSettings().experimentalDisableTemplateSupport && host.getCompilationSettings().jsx !== ts.JsxEmit.Preserve,
 	});
@@ -111,19 +101,19 @@ function getLanguageServicePlugins(
 		getTsLs: () => scriptTsPlugin.languageService,
 	});
 	const referencesCodeLensPlugin = useReferencesCodeLensPlugin({
-		getVueDocument: (uri) => vueDocuments.get(uri),
+		getVueDocument: (uri) => context.documents.get(uri),
 		findReference: apis.findReferences,
 	});
 	const htmlPugConversionsPlugin = useHtmlPugConversionsPlugin({
-		getVueDocument: (uri) => vueDocuments.get(uri),
+		getVueDocument: (uri) => context.documents.get(uri),
 	});
 	const scriptSetupConversionsPlugin = useScriptSetupConversionsPlugin({
-		getVueDocument: (uri) => vueDocuments.get(uri),
+		getVueDocument: (uri) => context.documents.get(uri),
 		doCodeActions: apis.doCodeActions,
 		doCodeActionResolve: apis.doCodeActionResolve,
 	});
 	const refSugarConversionsPlugin = useRefSugarConversionsPlugin({
-		getVueDocument: (uri) => vueDocuments.get(uri),
+		getVueDocument: (uri) => context.documents.get(uri),
 		doCodeActions: apis.doCodeActions,
 		doCodeActionResolve: apis.doCodeActionResolve,
 		findReferences: apis.findReferences,
@@ -167,10 +157,9 @@ function getLanguageServicePlugins(
 			tsLs: scriptTsPlugin.languageService,
 			isSupportedDocument: (document) =>
 				document.languageId === languageId
-				&& !vueDocuments.get(document.uri) /* not petite-vue source file */,
+				&& !context.documents.get(document.uri) /* not petite-vue source file */,
 			vueLsHost: host,
-			vueDocuments,
-			detect: detectTagNameCase,
+			context,
 		});
 	}
 }

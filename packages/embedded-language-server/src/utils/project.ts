@@ -60,7 +60,9 @@ export async function createProject(
 	function getLanguageService() {
 		if (!vueLs) {
 			vueLs = languageConfigs.createLanguageService(
-				parsedCommandLine,
+				ts,
+				sys,
+				tsConfig,
 				languageServiceHost,
 				{
 					rootUri,
@@ -224,9 +226,6 @@ function createParsedCommandLine(
 	tsConfig: string | ts.CompilerOptions,
 	languageConfigs: LanguageConfigs,
 ): ts.ParsedCommandLine {
-	if (languageConfigs.createParsedCommandLine) {
-		return languageConfigs.createParsedCommandLine(ts, sys, rootPath, tsConfig);
-	}
 	try {
 		const parseConfigHost: ts.ParseConfigHost = {
 			useCaseSensitiveFileNames: sys.useCaseSensitiveFileNames,

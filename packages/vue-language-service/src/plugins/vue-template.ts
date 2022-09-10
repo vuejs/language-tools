@@ -1,5 +1,5 @@
 import useHtmlPlugin from '@volar-plugins/html';
-import { EmbeddedLanguageServicePlugin, SourceFileDocument, SourceFileDocuments, useConfigurationHost, useRootUri, useTypeScriptModule } from '@volar/embedded-language-service';
+import { EmbeddedLanguageServicePlugin, LanguageServiceRuntimeContext, SourceFileDocument, useConfigurationHost, useRootUri, useTypeScriptModule } from '@volar/embedded-language-service';
 import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
 import * as embedded from '@volar/embedded-language-core';
@@ -12,6 +12,7 @@ import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
 import { checkTemplateData, getTemplateTagsAndAttrs } from '../helpers';
+import * as casing from '../ideFeatures/nameCasing';
 
 export const semanticTokenTypes = [
 	'componentTag',
@@ -60,11 +61,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 	templateLanguagePlugin: T,
 	isSupportedDocument: (document: TextDocument) => boolean,
 	vueLsHost: vue.LanguageServiceHost,
-	vueDocuments: SourceFileDocuments,
-	detect(uri: string): Promise<{
-		tag: 'both' | 'kebabCase' | 'pascalCase' | 'unsure',
-		attr: 'kebabCase' | 'camelCase' | 'unsure',
-	}>,
+	context: LanguageServiceRuntimeContext,
 }): EmbeddedLanguageServicePlugin & T {
 
 	const rootUri = URI.parse(useRootUri());
@@ -94,7 +91,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				if (!options.isSupportedDocument(document))
 					return;
 
-				const vueDocument = options.vueDocuments.fromEmbeddedDocument(document);
+				const vueDocument = options.context.documents.fromEmbeddedDocument(document);
 				let tsItems: Awaited<ReturnType<typeof provideHtmlData>> | undefined;
 
 				if (vueDocument) {
@@ -133,7 +130,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			if (!options.isSupportedDocument(document))
 				return;
 
-			const vueDocument = options.vueDocuments.fromEmbeddedDocument(document);
+			const vueDocument = options.context.documents.fromEmbeddedDocument(document);
 			if (vueDocument) {
 				options.templateLanguagePlugin.updateCustomData([]);
 			}
@@ -147,7 +144,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					return;
 
 				const originalResult = await options.templateLanguagePlugin.validation?.onFull?.(document);
-				const vueDocument = options.vueDocuments.fromEmbeddedDocument(document);
+				const vueDocument = options.context.documents.fromEmbeddedDocument(document);
 
 				if (vueDocument) {
 
@@ -202,7 +199,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				return;
 
 			const result = await options.templateLanguagePlugin.findDocumentSemanticTokens?.(document, range) ?? [];
-			const vueDocument = options.vueDocuments.fromEmbeddedDocument(document);
+			const vueDocument = options.context.documents.fromEmbeddedDocument(document);
 			const scanner = options.getScanner(document);
 
 			if (vueDocument && scanner) {
@@ -293,7 +290,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 	async function resolveAutoImportItem(item: vscode.CompletionItem, data: AutoImportCompletionData) {
 
-		const _vueDocument = options.vueDocuments.get(data.vueDocumentUri);
+		const _vueDocument = options.context.documents.get(data.vueDocumentUri);
 		if (!_vueDocument)
 			return item;
 
@@ -444,7 +441,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			return;
 
 		const vueSourceFile = vueDocument.file;
-		const detected = await options.detect(vueDocument.uri);
+		const detected = casing.detect(options.context, vueDocument.uri);
 		const [attr, tag] = await Promise.all([
 			useConfigurationHost()?.getConfiguration<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('volar.completion.preferredAttrNameCase', vueDocument.uri),
 			useConfigurationHost()?.getConfiguration<'auto' | 'both' | 'kebab' | 'pascal'>('volar.completion.preferredTagNameCase', vueDocument.uri),
@@ -553,7 +550,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		const enabledComponentAutoImport = await useConfigurationHost()?.getConfiguration<boolean>('volar.completion.autoImportComponent') ?? true;
 
 		if (enabledComponentAutoImport && (descriptor.script || descriptor.scriptSetup)) {
-			for (const vueDocument of options.vueDocuments.getAll()) {
+			for (const vueDocument of options.context.documents.getAll()) {
 				let baseName = path.removeExt(path.basename(vueDocument.uri), '.vue');
 				if (baseName.toLowerCase() === 'index') {
 					baseName = path.basename(path.dirname(vueDocument.uri));

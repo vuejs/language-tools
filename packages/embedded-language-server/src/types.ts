@@ -46,15 +46,10 @@ export type LanguageConfigs<A = ts.ParsedCommandLine, B = embeddedLS.LanguageSer
 
 	semanticTokenLegend: vscode.SemanticTokensLegend,
 
-	createParsedCommandLine?(
+	createLanguageService(
 		ts: typeof import('typescript/lib/tsserverlibrary'),
 		sys: FileSystem,
-		rootPath: string,
 		tsConfig: string | ts.CompilerOptions,
-	): A,
-
-	createLanguageService(
-		parsedCommandLine: A,
 		host: embedded.LanguageServiceHost,
 		env: embeddedLS.PluginContext['env'],
 		customPlugins: embeddedLS.EmbeddedLanguageServicePlugin[],
