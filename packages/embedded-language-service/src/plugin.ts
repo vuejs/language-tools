@@ -25,12 +25,13 @@ export interface ExecuteCommandContext {
 
 export interface EmbeddedLanguageServicePlugin {
 
-	doValidation?(document: TextDocument, __options?: {
-		semantic?: boolean;
-		syntactic?: boolean;
-		suggestion?: boolean;
-		declaration?: boolean;
-	}): NullableResult<vscode.Diagnostic[]>;
+	validation?: {
+		onFull?(document: TextDocument): NullableResult<vscode.Diagnostic[]>;
+		onSemantic?(document: TextDocument): NullableResult<vscode.Diagnostic[]>;
+		onSyntactic?(document: TextDocument): NullableResult<vscode.Diagnostic[]>;
+		onSuggestion?(document: TextDocument): NullableResult<vscode.Diagnostic[]>;
+		onDeclaration?(document: TextDocument): NullableResult<vscode.Diagnostic[]>;
+	},
 	doHover?(document: TextDocument, position: vscode.Position): NullableResult<vscode.Hover>,
 	findImplementations?(document: TextDocument, position: vscode.Position): NullableResult<vscode.LocationLink[]>;
 	findReferences?(document: TextDocument, position: vscode.Position): NullableResult<vscode.Location[]>;

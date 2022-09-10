@@ -172,15 +172,27 @@ export default function (): EmbeddedLanguageServicePlugin & {
 			},
 		},
 
-		doValidation(document, options_2 = {
-			semantic: true,
-			syntactic: true,
-			suggestion: true,
-			declaration: true,
-		}) {
-			if (isTsDocument(document)) {
-				return tsLs2.doValidation(document.uri, options_2);
-			}
+		validation: {
+			onSemantic(document) {
+				if (isTsDocument(document)) {
+					return tsLs2.doValidation(document.uri, { semantic: true });
+				}
+			},
+			onDeclaration(document) {
+				if (isTsDocument(document)) {
+					return tsLs2.doValidation(document.uri, { declaration: true });
+				}
+			},
+			onSuggestion(document) {
+				if (isTsDocument(document)) {
+					return tsLs2.doValidation(document.uri, { suggestion: true });
+				}
+			},
+			onSyntactic(document) {
+				if (isTsDocument(document)) {
+					return tsLs2.doValidation(document.uri, { syntactic: true });
+				}
+			},
 		},
 
 		doHover(document, position) {

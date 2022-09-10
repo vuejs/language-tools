@@ -111,13 +111,15 @@ export default function (): EmbeddedLanguageServicePlugin {
 			},
 		},
 
-		async doValidation(document) {
-			return worker(document, async (stylesheet, cssLs) => {
+		validation: {
+			async onFull(document) {
+				return worker(document, async (stylesheet, cssLs) => {
 
-				const settings = await useConfigurationHost()?.getConfiguration<css.LanguageSettings>(document.languageId, document.uri);
+					const settings = await useConfigurationHost()?.getConfiguration<css.LanguageSettings>(document.languageId, document.uri);
 
-				return cssLs.doValidation(document, stylesheet, settings) as vscode.Diagnostic[];
-			});
+					return cssLs.doValidation(document, stylesheet, settings) as vscode.Diagnostic[];
+				});
+			},
 		},
 
 		async doHover(document, position) {

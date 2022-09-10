@@ -111,64 +111,66 @@ export default function (options: {
 
 		...htmlPlugin,
 
-		doValidation(document) {
-			return worker(document, (vueDocument, vueSourceFile) => {
+		validation: {
+			onFull(document) {
+				return worker(document, (vueDocument, vueSourceFile) => {
 
-				const result: vscode.Diagnostic[] = [];
-				const sfc = vueSourceFile.sfc;
+					const result: vscode.Diagnostic[] = [];
+					const sfc = vueSourceFile.sfc;
 
-				if (sfc.scriptSetup && sfc.scriptSetupAst) {
-					const scriptSetupRanges = parseScriptSetupRanges(ts, sfc.scriptSetupAst);
-					for (const range of scriptSetupRanges.notOnTopTypeExports) {
-						result.push(vscode.Diagnostic.create(
-							{
-								start: document.positionAt(range.start + sfc.scriptSetup.startTagEnd),
-								end: document.positionAt(range.end + sfc.scriptSetup.startTagEnd),
-							},
-							'type and interface export statements must be on the top in <script setup>',
-							vscode.DiagnosticSeverity.Warning,
-							undefined,
-							'volar',
-						));
+					if (sfc.scriptSetup && sfc.scriptSetupAst) {
+						const scriptSetupRanges = parseScriptSetupRanges(ts, sfc.scriptSetupAst);
+						for (const range of scriptSetupRanges.notOnTopTypeExports) {
+							result.push(vscode.Diagnostic.create(
+								{
+									start: document.positionAt(range.start + sfc.scriptSetup.startTagEnd),
+									end: document.positionAt(range.end + sfc.scriptSetup.startTagEnd),
+								},
+								'type and interface export statements must be on the top in <script setup>',
+								vscode.DiagnosticSeverity.Warning,
+								undefined,
+								'volar',
+							));
+						}
 					}
-				}
 
-				if (options.tsLs && !options.tsLs.__internal__.isValidFile(vueSourceFile.tsFileName)) {
-					for (const script of [sfc.script, sfc.scriptSetup]) {
+					if (options.tsLs && !options.tsLs.__internal__.isValidFile(vueSourceFile.tsFileName)) {
+						for (const script of [sfc.script, sfc.scriptSetup]) {
 
-						if (!script || script.content === '')
-							continue;
+							if (!script || script.content === '')
+								continue;
 
+							const error = vscode.Diagnostic.create(
+								{
+									start: document.positionAt(script.start),
+									end: document.positionAt(script.startTagEnd),
+								},
+								'Virtual script not found, may missing <script lang="ts"> / "allowJs": true / jsconfig.json.',
+								vscode.DiagnosticSeverity.Information,
+								undefined,
+								'volar',
+							);
+							result.push(error);
+						}
+					}
+
+					if (options.tsLs && sfc.template && options.isJsxMissing) {
 						const error = vscode.Diagnostic.create(
 							{
-								start: document.positionAt(script.start),
-								end: document.positionAt(script.startTagEnd),
+								start: document.positionAt(sfc.template.start),
+								end: document.positionAt(sfc.template.startTagEnd),
 							},
-							'Virtual script not found, may missing <script lang="ts"> / "allowJs": true / jsconfig.json.',
+							'TypeScript intellisense is disabled on template. To enable, configure `"jsx": "preserve"` in the `"compilerOptions"` property of tsconfig or jsconfig. To disable this prompt instead, configure `"experimentalDisableTemplateSupport": true` in `"vueCompilerOptions"` property.',
 							vscode.DiagnosticSeverity.Information,
 							undefined,
 							'volar',
 						);
 						result.push(error);
 					}
-				}
 
-				if (options.tsLs && sfc.template && options.isJsxMissing) {
-					const error = vscode.Diagnostic.create(
-						{
-							start: document.positionAt(sfc.template.start),
-							end: document.positionAt(sfc.template.startTagEnd),
-						},
-						'TypeScript intellisense is disabled on template. To enable, configure `"jsx": "preserve"` in the `"compilerOptions"` property of tsconfig or jsconfig. To disable this prompt instead, configure `"experimentalDisableTemplateSupport": true` in `"vueCompilerOptions"` property.',
-						vscode.DiagnosticSeverity.Information,
-						undefined,
-						'volar',
-					);
-					result.push(error);
-				}
-
-				return result;
-			});
+					return result;
+				});
+			},
 		},
 
 		findDocumentSymbols(document) {

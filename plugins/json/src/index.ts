@@ -37,18 +37,20 @@ export default function (): EmbeddedLanguageServicePlugin {
 			},
 		},
 
-		doValidation(document) {
-			return worker(document, async (jsonDocument) => {
+		validation: {
+			onFull(document) {
+				return worker(document, async (jsonDocument) => {
 
-				const documentLanguageSettings = undefined; // await getSettings(); // TODO
+					const documentLanguageSettings = undefined; // await getSettings(); // TODO
 
-				return await jsonLs.doValidation(
-					document,
-					jsonDocument,
-					documentLanguageSettings,
-					undefined, // TODO
-				) as vscode.Diagnostic[];
-			});
+					return await jsonLs.doValidation(
+						document,
+						jsonDocument,
+						documentLanguageSettings,
+						undefined, // TODO
+					) as vscode.Diagnostic[];
+				});
+			},
 		},
 
 		doHover(document, position) {

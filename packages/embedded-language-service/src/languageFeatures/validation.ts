@@ -151,15 +151,15 @@ export function register(context: LanguageServiceRuntimeContext) {
 		let shouldSend = false;
 		let lastCheckCancelAt = 0;
 
-		await worker(false, undefined, nonTsCache, cache.nonTs);
+		await worker(false, 'onFull', nonTsCache, cache.nonTs);
 		doResponse();
-		await worker(true, { syntactic: true }, scriptTsCache_syntactic, cache.tsSyntactic);
+		await worker(true, 'onSyntactic', scriptTsCache_syntactic, cache.tsSyntactic);
 		doResponse();
-		await worker(true, { suggestion: true }, scriptTsCache_suggestion, cache.tsSuggestion);
+		await worker(true, 'onSuggestion', scriptTsCache_suggestion, cache.tsSuggestion);
 		doResponse();
-		await worker(true, { semantic: true }, scriptTsCache_semantic, cache.tsSemantic);
+		await worker(true, 'onSemantic', scriptTsCache_semantic, cache.tsSemantic);
 		doResponse();
-		await worker(true, { declaration: true }, scriptTsCache_declaration, cache.tsDeclaration);
+		await worker(true, 'onDeclaration', scriptTsCache_declaration, cache.tsDeclaration);
 
 		return getErrors();
 
@@ -176,12 +176,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 		async function worker(
 			isTs: boolean,
-			options: {
-				declaration?: boolean,
-				semantic?: boolean,
-				suggestion?: boolean,
-				syntactic?: boolean,
-			} | undefined,
+			mode: 'onFull' | 'onSemantic' | 'onSyntactic' | 'onSuggestion' | 'onDeclaration',
 			cacheMap: typeof nonTsCache,
 			cache: Cache,
 		) {
@@ -222,7 +217,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 						}
 					}
 					else {
-						if (!options || options.declaration || options.semantic) {
+						if (mode === 'onFull' || mode === 'onDeclaration' || mode === 'onSemantic') {
 							if (cache && cache.documentVersion === document.version && cache.tsProjectVersion === tsProjectVersion) {
 								return cache.errors;
 							}
@@ -234,7 +229,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 						}
 					}
 
-					const errors = await plugin.doValidation?.(document, options);
+					const errors = await plugin.validation?.[mode]?.(document);
 
 					shouldSend = true;
 

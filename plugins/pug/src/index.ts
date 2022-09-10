@@ -35,21 +35,23 @@ export default function (): EmbeddedLanguageServicePlugin & ReturnType<typeof us
 			},
 		},
 
-		doValidation(document) {
-			return worker(document, (pugDocument) => {
+		validation: {
+			onFull(document) {
+				return worker(document, (pugDocument) => {
 
-				if (pugDocument.error) {
+					if (pugDocument.error) {
 
-					return [{
-						code: pugDocument.error.code,
-						message: pugDocument.error.msg,
-						range: {
-							start: { line: pugDocument.error.line, character: pugDocument.error.column },
-							end: { line: pugDocument.error.line, character: pugDocument.error.column },
-						},
-					}];
-				}
-			});
+						return [{
+							code: pugDocument.error.code,
+							message: pugDocument.error.msg,
+							range: {
+								start: { line: pugDocument.error.line, character: pugDocument.error.column },
+								end: { line: pugDocument.error.line, character: pugDocument.error.column },
+							},
+						}];
+					}
+				});
+			},
 		},
 
 		doHover(document, position) {

@@ -140,58 +140,60 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			return options.templateLanguagePlugin.doHover?.(document, position);
 		},
 
-		async doValidation(document, options_2) {
+		validation: {
+			async onFull(document) {
 
-			if (!options.isSupportedDocument(document))
-				return;
-
-			const originalResult = await options.templateLanguagePlugin.doValidation?.(document, options_2);
-			const vueDocument = options.vueDocuments.fromEmbeddedDocument(document);
-
-			if (vueDocument) {
-
-				if (!(vueDocument?.file instanceof vue.VueSourceFile))
+				if (!options.isSupportedDocument(document))
 					return;
 
-				const templateErrors: vscode.Diagnostic[] = [];
-				const sfcVueTemplateCompiled = vueDocument.file.compiledSFCTemplate;
+				const originalResult = await options.templateLanguagePlugin.validation?.onFull?.(document);
+				const vueDocument = options.vueDocuments.fromEmbeddedDocument(document);
 
-				if (sfcVueTemplateCompiled) {
+				if (vueDocument) {
 
-					for (const error of sfcVueTemplateCompiled.errors) {
-						onCompilerError(error, vscode.DiagnosticSeverity.Error);
+					if (!(vueDocument?.file instanceof vue.VueSourceFile))
+						return;
+
+					const templateErrors: vscode.Diagnostic[] = [];
+					const sfcVueTemplateCompiled = vueDocument.file.compiledSFCTemplate;
+
+					if (sfcVueTemplateCompiled) {
+
+						for (const error of sfcVueTemplateCompiled.errors) {
+							onCompilerError(error, vscode.DiagnosticSeverity.Error);
+						}
+
+						for (const warning of sfcVueTemplateCompiled.warnings) {
+							onCompilerError(warning, vscode.DiagnosticSeverity.Warning);
+						}
+
+						function onCompilerError(error: NonNullable<typeof sfcVueTemplateCompiled>['errors'][number], severity: vscode.DiagnosticSeverity) {
+
+							const templateHtmlRange = {
+								start: error.loc?.start.offset ?? 0,
+								end: error.loc?.end.offset ?? 0,
+							};
+							let errorMessage = error.message;
+
+							templateErrors.push({
+								range: {
+									start: document.positionAt(templateHtmlRange.start),
+									end: document.positionAt(templateHtmlRange.end),
+								},
+								severity,
+								code: error.code,
+								source: 'vue',
+								message: errorMessage,
+							});
+						}
 					}
 
-					for (const warning of sfcVueTemplateCompiled.warnings) {
-						onCompilerError(warning, vscode.DiagnosticSeverity.Warning);
-					}
-
-					function onCompilerError(error: NonNullable<typeof sfcVueTemplateCompiled>['errors'][number], severity: vscode.DiagnosticSeverity) {
-
-						const templateHtmlRange = {
-							start: error.loc?.start.offset ?? 0,
-							end: error.loc?.end.offset ?? 0,
-						};
-						let errorMessage = error.message;
-
-						templateErrors.push({
-							range: {
-								start: document.positionAt(templateHtmlRange.start),
-								end: document.positionAt(templateHtmlRange.end),
-							},
-							severity,
-							code: error.code,
-							source: 'vue',
-							message: errorMessage,
-						});
-					}
+					return [
+						...originalResult ?? [],
+						...templateErrors,
+					];
 				}
-
-				return [
-					...originalResult ?? [],
-					...templateErrors,
-				];
-			}
+			},
 		},
 
 		async findDocumentSemanticTokens(document, range) {
