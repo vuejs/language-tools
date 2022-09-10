@@ -6,7 +6,7 @@ createNodeServer({
 	indeterminateExts: [],
 	semanticTokenLegend: alpine.getSemanticTokenLegend(),
 	getDocumentService: alpine.getDocumentService,
-	createLanguageService: (ts, parsedCommandLine, host, env, customPlugins) => {
+	createLanguageService: (parsedCommandLine, host, env, customPlugins) => {
 		return alpine.createLanguageService(
 			{
 				...host,

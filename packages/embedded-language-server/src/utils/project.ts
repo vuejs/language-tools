@@ -60,7 +60,6 @@ export async function createProject(
 	function getLanguageService() {
 		if (!vueLs) {
 			vueLs = languageConfigs.createLanguageService(
-				ts,
 				parsedCommandLine,
 				languageServiceHost,
 				{

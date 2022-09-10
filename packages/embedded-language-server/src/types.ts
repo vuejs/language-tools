@@ -54,7 +54,6 @@ export type LanguageConfigs<A = ts.ParsedCommandLine, B = embeddedLS.LanguageSer
 	): A,
 
 	createLanguageService(
-		ts: typeof import('typescript/lib/tsserverlibrary'),
 		parsedCommandLine: A,
 		host: embedded.LanguageServiceHost,
 		env: embeddedLS.PluginContext['env'],

@@ -43,12 +43,11 @@ export const languageConfigs: LanguageConfigs<vue.ParsedCommandLine, vue.Languag
 			};
 		}
 	},
-	createLanguageService: (ts, parsedCommandLine, host, env, customPlugins) => {
+	createLanguageService: (parsedCommandLine, host, env, customPlugins) => {
 		return vue.createLanguageService(
 			{
 				...host,
 				getVueCompilationSettings: () => parsedCommandLine.vueOptions,
-				getTypeScriptModule: () => ts,
 			},
 			env,
 			customPlugins,
