@@ -42,7 +42,7 @@ const plugin: VueLanguagePlugin = () => {
 						vueTag: style.tag,
 						vueTagIndex: index,
 						capabilities: {
-							basic: true,
+							hover: true,
 							references: true,
 							definitions: true,
 							diagnostic: true,

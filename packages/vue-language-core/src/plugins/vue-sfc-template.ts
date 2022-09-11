@@ -35,7 +35,7 @@ const plugin: VueLanguagePlugin = () => {
 					{
 						vueTag: sfc.template.tag,
 						capabilities: {
-							basic: true,
+							hover: true,
 							references: true,
 							definitions: true,
 							diagnostic: true,

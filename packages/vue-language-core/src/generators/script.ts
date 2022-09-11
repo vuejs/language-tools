@@ -180,7 +180,7 @@ export function generate(
 			{
 				vueTag: 'scriptSrc',
 				capabilities: {
-					basic: true,
+					hover: true,
 					references: true,
 					definitions: true,
 					rename: true,
@@ -235,7 +235,7 @@ export function generate(
 			{
 				vueTag: vueTag,
 				capabilities: {
-					basic: true,
+					hover: true,
 					references: true,
 					definitions: true,
 					rename: true,
@@ -274,7 +274,7 @@ export function generate(
 			{
 				vueTag: 'scriptSetup',
 				capabilities: {
-					basic: true,
+					hover: true,
 					references: true,
 					definitions: true,
 					diagnostic: true,
@@ -311,7 +311,7 @@ export function generate(
 				{
 					vueTag: 'scriptSetup',
 					capabilities: {
-						basic: true,
+						hover: true,
 						references: true,
 						definitions: true,
 						diagnostic: true,
@@ -729,7 +729,7 @@ export function generate(
 										capabilities: isJustForErrorMapping ? {
 											diagnostic: true,
 										} : {
-											basic: true,
+											hover: true,
 											references: true,
 											definitions: true,
 											diagnostic: true,

@@ -44,7 +44,7 @@ const plugin: VueLanguagePlugin = () => {
 						vueTag: customBlock.tag,
 						vueTagIndex: index,
 						capabilities: {
-							basic: true,
+							hover: true,
 							references: true,
 							definitions: true,
 							diagnostic: true,

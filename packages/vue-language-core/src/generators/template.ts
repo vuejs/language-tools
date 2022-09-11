@@ -1388,7 +1388,7 @@ export function generate(
 					{
 						vueTag: 'template',
 						capabilities: {
-							basic: true,
+							hover: true,
 							references: true,
 							definitions: true,
 							diagnostic: true,
