@@ -121,18 +121,19 @@ export function createEmbeddedLanguageServiceHost(
 		const newProjectVersion = host.getProjectVersion?.();
 		const sholdUpdate = newProjectVersion === undefined || newProjectVersion !== lastProjectVersion;
 
+		lastProjectVersion = newProjectVersion;
+
 		if (!sholdUpdate)
 			return;
 
-		lastProjectVersion = newProjectVersion;
-
-		const renameFileNames = new Set(host.getScriptFileNames());
-		const sourceFilesToUpdate: [FileNode, EmbeddedLanguageModule, ts.IScriptSnapshot][] = [];
 		let tsFileUpdated = false;
+
+		const remainFileNames = new Set(host.getScriptFileNames());
+		const sourceFilesToUpdate: [FileNode, EmbeddedLanguageModule, ts.IScriptSnapshot][] = [];
 
 		// .vue
 		for (const [sourceFile, languageModule] of documentRegistry.getAll()) {
-			renameFileNames.delete(sourceFile.fileName);
+			remainFileNames.delete(sourceFile.fileName);
 			const newVersion = host.getScriptVersion(sourceFile.fileName);
 			if (embeddedLanguageSourceFileVersions.get(sourceFile) !== newVersion) {
 				embeddedLanguageSourceFileVersions.set(sourceFile, newVersion);
@@ -151,14 +152,14 @@ export function createEmbeddedLanguageServiceHost(
 		}
 
 		// add
-		for (const fileName of [...renameFileNames]) {
+		for (const fileName of [...remainFileNames]) {
 			const snapshot = host.getScriptSnapshot(fileName);
 			if (snapshot) {
 				for (const languageModule of languageModules) {
 					const sourceFile = languageModule.createSourceFile(fileName, snapshot);
 					if (sourceFile) {
 						documentRegistry.set(fileName, sourceFile, languageModule);
-						renameFileNames.delete(fileName);
+						remainFileNames.delete(fileName);
 						break;
 					}
 				}
@@ -169,19 +170,20 @@ export function createEmbeddedLanguageServiceHost(
 		for (const [oldTsFileName, oldTsFileVersion] of [...tsFileVersions]) {
 			const newVersion = host.getScriptVersion(oldTsFileName);
 			if (oldTsFileVersion !== newVersion) {
-				if (!renameFileNames.has(oldTsFileName) && !host.getScriptSnapshot(oldTsFileName)) {
+				if (!remainFileNames.has(oldTsFileName) && !host.getScriptSnapshot(oldTsFileName)) {
 					// delete
 					tsFileVersions.delete(oldTsFileName);
 				}
 				else {
 					// update
+					console.log('update ts file', oldTsFileName);
 					tsFileVersions.set(oldTsFileName, newVersion);
 				}
 				tsFileUpdated = true;
 			}
 		}
 
-		for (const nowFileName of renameFileNames) {
+		for (const nowFileName of remainFileNames) {
 			if (!tsFileVersions.has(nowFileName)) {
 				// add
 				const newVersion = host.getScriptVersion(nowFileName);

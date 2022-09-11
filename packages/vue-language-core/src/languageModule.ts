@@ -76,7 +76,7 @@ export function createEmbeddedLanguageModule(
 					}
 					let snapshot = host.getScriptSnapshot(fileName);
 					if (snapshot) {
-						if (!(vueCompilerOptions.strictTemplates ?? false) && (
+						if (!vueCompilerOptions.strictTemplates && (
 							// for vue 2.6 and vue 3
 							basename === 'runtime-dom.d.ts' ||
 							// for vue 2.7

@@ -122,7 +122,6 @@ export async function createProject(
 
 			if (script) {
 				projectVersion++;
-				typeRootVersion++;
 			}
 		}
 
@@ -131,6 +130,7 @@ export async function createProject(
 
 		if (creates.length || deletes.length) {
 			parsedCommandLine = createParsedCommandLine(ts, sys, rootPath, tsConfig, plugins);
+			typeRootVersion++;
 		}
 	}
 	function createLanguageServiceHost() {
