@@ -1,5 +1,5 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguageServicePlugin, useConfigurationHost, SourceFileDocument } from '@volar/language-service';
+import { EmbeddedLanguageServicePlugin, PluginContext, SourceFileDocument } from '@volar/language-service';
 
 const showReferencesCommand = 'volar.show-references';
 
@@ -17,14 +17,20 @@ export default function (options: {
 	findReference(uri: string, position: vscode.Position): Promise<vscode.Location[] | undefined>,
 }): EmbeddedLanguageServicePlugin {
 
+	let context: PluginContext;
+
 	return {
+
+		setup(_context) {
+			context = _context;
+		},
 
 		codeLens: {
 
 			on(document) {
 				return worker(document.uri, async (vueDocument) => {
 
-					const isEnabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.codeLens.references') ?? true;
+					const isEnabled = await context.env.configurationHost?.getConfiguration<boolean>('volar.codeLens.references') ?? true;
 
 					if (!isEnabled)
 						return;

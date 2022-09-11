@@ -1,7 +1,7 @@
 import * as shared from '@volar/shared';
 import type * as ts2 from '@volar/typescript-language-service';
 import { parseScriptSetupRanges } from '@volar/vue-language-core';
-import { EmbeddedLanguageServicePlugin, useTypeScriptModule, SourceFileDocument } from '@volar/language-service';
+import { EmbeddedLanguageServicePlugin, PluginContext, SourceFileDocument } from '@volar/language-service';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -95,21 +95,26 @@ const dataProvider = html.newHTMLDataProvider('vue', {
 
 export default function (options: {
 	getVueDocument(document: TextDocument): SourceFileDocument | undefined,
-	tsLs: ts2.LanguageService | undefined,
+	getTsLs: () => ts2.LanguageService | undefined,
 	isJsxMissing: boolean,
 }): EmbeddedLanguageServicePlugin {
-
-	const ts = useTypeScriptModule();
 
 	const htmlPlugin = useHtmlPlugin({
 		validLang: 'vue',
 		disableCustomData: true,
 	});
-	htmlPlugin.htmlLs.setDataProviders(false, [dataProvider]);
+
+	let context: PluginContext;
 
 	return {
 
 		...htmlPlugin,
+
+		setup(_context) {
+			htmlPlugin.setup?.(_context);
+			htmlPlugin.getHtmlLs().setDataProviders(false, [dataProvider]);
+			context = _context;
+		},
 
 		validation: {
 			onFull(document) {
@@ -119,7 +124,7 @@ export default function (options: {
 					const sfc = vueSourceFile.sfc;
 
 					if (sfc.scriptSetup && sfc.scriptSetupAst) {
-						const scriptSetupRanges = parseScriptSetupRanges(ts, sfc.scriptSetupAst);
+						const scriptSetupRanges = parseScriptSetupRanges(context.typescript.module, sfc.scriptSetupAst);
 						for (const range of scriptSetupRanges.notOnTopTypeExports) {
 							result.push(vscode.Diagnostic.create(
 								{
@@ -134,7 +139,9 @@ export default function (options: {
 						}
 					}
 
-					if (options.tsLs && !options.tsLs.__internal__.isValidFile(vueSourceFile.tsFileName)) {
+					const tsLs = options.getTsLs();
+
+					if (tsLs && !tsLs.__internal__.isValidFile(vueSourceFile.tsFileName)) {
 						for (const script of [sfc.script, sfc.scriptSetup]) {
 
 							if (!script || script.content === '')
@@ -154,7 +161,7 @@ export default function (options: {
 						}
 					}
 
-					if (options.tsLs && sfc.template && options.isJsxMissing) {
+					if (tsLs && sfc.template && options.isJsxMissing) {
 						const error = vscode.Diagnostic.create(
 							{
 								start: document.positionAt(sfc.template.start),
@@ -240,7 +247,7 @@ export default function (options: {
 				const sfcWithEmptyBlocks = getSfcCodeWithEmptyBlocks(vueSourceFile, document.getText());
 				const sfcWithEmptyBlocksDocument = TextDocument.create(document.uri, document.languageId, document.version, sfcWithEmptyBlocks);
 
-				return htmlPlugin.htmlLs.getFoldingRanges(sfcWithEmptyBlocksDocument);
+				return htmlPlugin.getHtmlLs().getFoldingRanges(sfcWithEmptyBlocksDocument);
 			});
 		},
 
@@ -250,7 +257,7 @@ export default function (options: {
 				const sfcWithEmptyBlocks = getSfcCodeWithEmptyBlocks(vueSourceFile, document.getText());
 				const sfcWithEmptyBlocksDocument = TextDocument.create(document.uri, document.languageId, document.version, sfcWithEmptyBlocks);
 
-				return htmlPlugin.htmlLs.getSelectionRanges(sfcWithEmptyBlocksDocument, positions);
+				return htmlPlugin.getHtmlLs().getSelectionRanges(sfcWithEmptyBlocksDocument, positions);
 			});
 		},
 

@@ -1,5 +1,5 @@
 import useHtmlPlugin from '@volar-plugins/html';
-import { EmbeddedLanguageServicePlugin, LanguageServiceRuntimeContext, SourceFileDocument, useConfigurationHost, useRootUri, useTypeScriptModule } from '@volar/language-service';
+import { EmbeddedLanguageServicePlugin, LanguageServiceRuntimeContext, PluginContext, SourceFileDocument } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
 import * as embedded from '@volar/language-core';
@@ -10,7 +10,6 @@ import * as path from 'upath';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { URI } from 'vscode-uri';
 import { checkTemplateData, getTemplateTagsAndAttrs } from '../helpers';
 import * as casing from '../ideFeatures/nameCasing';
 
@@ -57,15 +56,12 @@ interface AutoImportCompletionData {
 export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof useHtmlPlugin>>(options: {
 	getSemanticTokenLegend(): vscode.SemanticTokensLegend,
 	getScanner(document: TextDocument): html.Scanner | undefined,
-	tsLs: ts2.LanguageService,
+	getTsLs: () => ts2.LanguageService,
 	templateLanguagePlugin: T,
 	isSupportedDocument: (document: TextDocument) => boolean,
 	vueLsHost: vue.LanguageServiceHost,
 	context: LanguageServiceRuntimeContext,
 }): EmbeddedLanguageServicePlugin & T {
-
-	const rootUri = URI.parse(useRootUri());
-	const ts = useTypeScriptModule();
 
 	const componentCompletionDataCache = new WeakMap<
 		Awaited<ReturnType<typeof checkTemplateData>>,
@@ -75,9 +71,17 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 	const tokenTypes = new Map(options.getSemanticTokenLegend().tokenTypes.map((t, i) => [t, i]));
 	const runtimeMode = vue.resolveVueCompilerOptions(options.vueLsHost.getVueCompilationSettings()).experimentalRuntimeMode;
 
+	let context: PluginContext;
+	let ts: PluginContext['typescript']['module'];
+
 	return {
 
 		...options.templateLanguagePlugin,
+
+		setup(_context) {
+			options.templateLanguagePlugin.setup?.(context);
+			context = _context;
+		},
 
 		complete: {
 
@@ -207,7 +211,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				if (!(vueDocument.file instanceof vue.VueSourceFile))
 					return;
 
-				const templateScriptData = checkTemplateData(vueDocument.file, options.tsLs.__internal__.raw);
+				const templateScriptData = checkTemplateData(vueDocument.file, options.getTsLs().__internal__.raw);
 				const components = new Set([
 					...templateScriptData.components,
 					...templateScriptData.components.map(hyphenate).filter(name => !vue.isIntrinsicElement(runtimeMode, name)),
@@ -264,7 +268,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		// if (!tsItem)
 		// 	return item;
 
-		// tsItem = await options.tsLs.doCompletionResolve(tsItem);
+		// tsItem = await options.getTsLs().doCompletionResolve(tsItem);
 		// item.tags = [...item.tags ?? [], ...tsItem.tags ?? []];
 
 		// const details: string[] = [];
@@ -396,15 +400,15 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		return item;
 
 		async function getTypeScriptInsert() {
-			const embeddedScriptUri = shared.getUriByPath(rootUri, vueSourceFile.tsFileName);
+			const embeddedScriptUri = shared.getUriByPath(context.env.rootUri, vueSourceFile.tsFileName);
 			const tsImportName = camelize(path.basename(importFile).replace(/\./g, '-'));
-			const confitHost = useConfigurationHost();
+			const confitHost = context.env.configurationHost;
 			const [formatOptions, preferences] = await Promise.all([
 				ts2.getFormatCodeSettings((section, scopeUri) => confitHost?.getConfiguration(section, scopeUri) as any, embeddedScriptUri),
 				ts2.getUserPreferences((section, scopeUri) => confitHost?.getConfiguration(section, scopeUri) as any, embeddedScriptUri),
 			]);
 			(preferences as any).importModuleSpecifierEnding = 'minimal';
-			const tsDetail = options.tsLs.__internal__.raw.getCompletionEntryDetails(shared.getPathOfUri(embeddedScriptUri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
+			const tsDetail = options.getTsLs().__internal__.raw.getCompletionEntryDetails(shared.getPathOfUri(embeddedScriptUri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
 			if (tsDetail?.codeActions) {
 				for (const action of tsDetail.codeActions) {
 					for (const change of action.changes) {
@@ -443,8 +447,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		const vueSourceFile = vueDocument.file;
 		const detected = casing.detect(options.context, vueDocument.uri);
 		const [attr, tag] = await Promise.all([
-			useConfigurationHost()?.getConfiguration<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('volar.completion.preferredAttrNameCase', vueDocument.uri),
-			useConfigurationHost()?.getConfiguration<'auto' | 'both' | 'kebab' | 'pascal'>('volar.completion.preferredTagNameCase', vueDocument.uri),
+			context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('volar.completion.preferredAttrNameCase', vueDocument.uri),
+			context.env.configurationHost?.getConfiguration<'auto' | 'both' | 'kebab' | 'pascal'>('volar.completion.preferredTagNameCase', vueDocument.uri),
 		]);
 		const nameCases = {
 			tag: tag === 'auto' && detected.tag !== 'unsure' ? detected.tag : (tag === 'kebab' ? 'kebabCase' : tag === 'pascal' ? 'pascalCase' : 'both'),
@@ -547,7 +551,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		}
 
 		const descriptor = vueSourceFile.sfc;
-		const enabledComponentAutoImport = await useConfigurationHost()?.getConfiguration<boolean>('volar.completion.autoImportComponent') ?? true;
+		const enabledComponentAutoImport = await context.env.configurationHost?.getConfiguration<boolean>('volar.completion.autoImportComponent') ?? true;
 
 		if (enabledComponentAutoImport && (descriptor.script || descriptor.scriptSetup)) {
 			for (const vueDocument of options.context.documents.getAll()) {
@@ -737,7 +741,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			return;
 
 		const vueSourceFile = sourceDocument.file;
-		const templateData = checkTemplateData(vueSourceFile, options.tsLs.__internal__.raw);
+		const templateData = checkTemplateData(vueSourceFile, options.getTsLs().__internal__.raw);
 
 		let cache = componentCompletionDataCache.get(templateData);
 		if (!cache) {
@@ -778,7 +782,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 						if (offset >= 0) {
 							offset += searchText.length;
 							try {
-								bind = (await options.tsLs.__internal__.raw.getCompletionsAtPosition(file.fileName, offset, completionOptions))?.entries
+								bind = (await options.getTsLs().__internal__.raw.getCompletionsAtPosition(file.fileName, offset, completionOptions))?.entries
 									.filter(entry => entry.kind !== 'warning') ?? [];
 							} catch { }
 						}
@@ -789,7 +793,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 						if (offset >= 0) {
 							offset += searchText.length;
 							try {
-								on = (await options.tsLs.__internal__.raw.getCompletionsAtPosition(file.fileName, offset, completionOptions))?.entries
+								on = (await options.getTsLs().__internal__.raw.getCompletionsAtPosition(file.fileName, offset, completionOptions))?.entries
 									.filter(entry => entry.kind !== 'warning') ?? [];
 							} catch { }
 						}
@@ -798,7 +802,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				}
 				try {
 					const offset = file.text.indexOf(vue.SearchTexts.GlobalAttrs);
-					const globalBind = (await options.tsLs.__internal__.raw.getCompletionsAtPosition(file.fileName, offset, completionOptions))?.entries
+					const globalBind = (await options.getTsLs().__internal__.raw.getCompletionsAtPosition(file.fileName, offset, completionOptions))?.entries
 						.filter(entry => entry.kind !== 'warning') ?? [];
 					cache.set('*', { item: undefined, bind: globalBind, on: [] });
 				} catch { }

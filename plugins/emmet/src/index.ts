@@ -1,9 +1,15 @@
-import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/language-service';
+import { EmbeddedLanguageServicePlugin, PluginContext } from '@volar/language-service';
 import * as emmet from '@vscode/emmet-helper';
 
 export default function (): EmbeddedLanguageServicePlugin {
 
+	let context: PluginContext;
+
 	return {
+
+		setup(_context) {
+			context = _context;
+		},
 
 		complete: {
 
@@ -31,7 +37,7 @@ export default function (): EmbeddedLanguageServicePlugin {
 
 	async function getEmmetConfig(syntax: string): Promise<emmet.VSCodeEmmetConfig> {
 
-		const emmetConfig: any = await useConfigurationHost()?.getConfiguration<emmet.VSCodeEmmetConfig>('emmet') ?? {};
+		const emmetConfig: any = await context.env.configurationHost?.getConfiguration<emmet.VSCodeEmmetConfig>('emmet') ?? {};
 		const syntaxProfiles = Object.assign({}, emmetConfig['syntaxProfiles'] || {});
 		const preferences = Object.assign({}, emmetConfig['preferences'] || {});
 

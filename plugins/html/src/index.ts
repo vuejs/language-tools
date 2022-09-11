@@ -1,4 +1,4 @@
-import { EmbeddedLanguageServicePlugin, useConfigurationHost, useDocumentContext, useFileSystemProvider, useRootUri } from '@volar/language-service';
+import { EmbeddedLanguageServicePlugin, PluginContext } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
@@ -8,37 +8,41 @@ export default function (options: {
 	validLang?: string,
 	disableCustomData?: boolean,
 } = {}): EmbeddedLanguageServicePlugin & {
-	htmlLs: html.LanguageService,
+	getHtmlLs: () => html.LanguageService,
 	updateCustomData(extraData: html.IHTMLDataProvider[]): void,
 } {
 
-	const fileSystemProvider = useFileSystemProvider();
-	const documentContext = useDocumentContext();
-
 	const htmlDocuments = new WeakMap<TextDocument, [number, html.HTMLDocument]>();
-	const htmlLs = html.getLanguageService({ fileSystemProvider });
 
 	let inited = false;
 	let customData: html.IHTMLDataProvider[] = [];
 	let extraData: html.IHTMLDataProvider[] = [];
+	let htmlLs: html.LanguageService;
+	let context: PluginContext;
 
 	return {
 
-		htmlLs,
+		getHtmlLs: () => htmlLs,
+
 		updateCustomData,
+
+		setup(_context) {
+			htmlLs = html.getLanguageService({ fileSystemProvider: _context.env.fileSystemProvider });
+			context = _context;
+		},
 
 		complete: {
 
 			// https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/html-language-features/server/src/htmlServer.ts#L183
 			triggerCharacters: ['.', ':', '<', '"', '=', '/'],
 
-			async on(document, position, context) {
+			async on(document, position) {
 				return worker(document, async (htmlDocument) => {
 
-					const configs = await useConfigurationHost()?.getConfiguration<html.CompletionConfiguration>('html.completion', document.uri);
+					const configs = await context.env.configurationHost?.getConfiguration<html.CompletionConfiguration>('html.completion', document.uri);
 
-					if (documentContext) {
-						return htmlLs.doComplete2(document, position, htmlDocument, documentContext, configs);
+					if (context.env.documentContext) {
+						return htmlLs.doComplete2(document, position, htmlDocument, context.env.documentContext, configs);
 					}
 					else {
 						return htmlLs.doComplete(document, position, htmlDocument, configs);
@@ -59,7 +63,7 @@ export default function (options: {
 		async doHover(document, position) {
 			return worker(document, async (htmlDocument) => {
 
-				const hoverSettings = await useConfigurationHost()?.getConfiguration<html.HoverSettings>('html.hover', document.uri);
+				const hoverSettings = await context.env.configurationHost?.getConfiguration<html.HoverSettings>('html.hover', document.uri);
 
 				return htmlLs.doHover(document, position, htmlDocument, hoverSettings);
 			});
@@ -74,10 +78,10 @@ export default function (options: {
 		findDocumentLinks(document) {
 			return worker(document, (htmlDocument) => {
 
-				if (!documentContext)
+				if (!context.env.documentContext)
 					return;
 
-				return htmlLs.findDocumentLinks(document, documentContext);
+				return htmlLs.findDocumentLinks(document, context.env.documentContext);
 			});
 		},
 
@@ -102,7 +106,7 @@ export default function (options: {
 		async format(document, formatRange, options) {
 			return worker(document, async (htmlDocument) => {
 
-				const options_2 = await useConfigurationHost()?.getConfiguration<html.HTMLFormatConfiguration & { enable: boolean; }>('html.format', document.uri);
+				const options_2 = await context.env.configurationHost?.getConfiguration<html.HTMLFormatConfiguration & { enable: boolean; }>('html.format', document.uri);
 
 				if (options_2?.enable === false) {
 					return;
@@ -151,18 +155,18 @@ export default function (options: {
 			});
 		},
 
-		async doAutoInsert(document, position, context) {
+		async doAutoInsert(document, position, insertContext) {
 			return worker(document, async (htmlDocument) => {
 
-				const lastCharacter = context.lastChange.text[context.lastChange.text.length - 1];
+				const lastCharacter = insertContext.lastChange.text[insertContext.lastChange.text.length - 1];
 
-				if (context.lastChange.rangeLength === 0 && lastCharacter === '=') {
+				if (insertContext.lastChange.rangeLength === 0 && lastCharacter === '=') {
 
-					const enabled = (await useConfigurationHost()?.getConfiguration<boolean>('html.autoCreateQuotes')) ?? true;
+					const enabled = (await context.env.configurationHost?.getConfiguration<boolean>('html.autoCreateQuotes')) ?? true;
 
 					if (enabled) {
 
-						const text = htmlLs.doQuoteComplete(document, position, htmlDocument, await useConfigurationHost()?.getConfiguration<html.CompletionConfiguration>('html.completion', document.uri));
+						const text = htmlLs.doQuoteComplete(document, position, htmlDocument, await context.env.configurationHost?.getConfiguration<html.CompletionConfiguration>('html.completion', document.uri));
 
 						if (text) {
 							return text;
@@ -170,9 +174,9 @@ export default function (options: {
 					}
 				}
 
-				if (context.lastChange.rangeLength === 0 && (lastCharacter === '>' || lastCharacter === '/')) {
+				if (insertContext.lastChange.rangeLength === 0 && (lastCharacter === '>' || lastCharacter === '/')) {
 
-					const enabled = (await useConfigurationHost()?.getConfiguration<boolean>('html.autoClosingTags')) ?? true;
+					const enabled = (await context.env.configurationHost?.getConfiguration<boolean>('html.autoClosingTags')) ?? true;
 
 					if (enabled) {
 
@@ -192,7 +196,7 @@ export default function (options: {
 
 			inited = true;
 
-			useConfigurationHost()?.onDidChangeConfiguration(async () => {
+			context.env.configurationHost?.onDidChangeConfiguration(async () => {
 				customData = await getCustomData();
 				htmlLs.setDataProviders(true, [...customData, ...extraData]);
 			});
@@ -209,13 +213,13 @@ export default function (options: {
 
 	async function getCustomData() {
 
-		const configHost = useConfigurationHost();
+		const configHost = context.env.configurationHost;
 
 		if (configHost) {
 
 			const paths = new Set<string>();
 			const customData: string[] = await configHost.getConfiguration('html.customData') ?? [];
-			const rootPath = shared.getPathOfUri(useRootUri());
+			const rootPath = shared.getPathOfUri(context.env.rootUri.toString());
 
 			for (const customDataPath of customData) {
 				try {

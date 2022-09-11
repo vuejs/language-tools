@@ -1,5 +1,5 @@
 import type { TextRange } from '@volar/language-core';
-import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, SourceFileDocument, useConfigurationHost, useTypeScriptModule } from '@volar/language-service';
+import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, PluginContext, SourceFileDocument } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-core';
 import { scriptSetupConvertRanges } from '@volar/vue-language-core';
@@ -24,9 +24,13 @@ export default function (options: {
 	doCodeActionResolve: (item: vscode.CodeAction) => Promise<vscode.CodeAction>,
 }): EmbeddedLanguageServicePlugin {
 
-	const ts = useTypeScriptModule();
+	let context: PluginContext;
 
 	return {
+
+		setup(_context) {
+			context = _context;
+		},
 
 		codeLens: {
 
@@ -36,7 +40,7 @@ export default function (options: {
 					if (document.uri.endsWith('.html')) // petite-vue
 						return;
 
-					const isEnabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.codeLens.scriptSetupTools') ?? true;
+					const isEnabled = await context.env.configurationHost?.getConfiguration<boolean>('volar.codeLens.scriptSetupTools') ?? true;
 
 					if (!isEnabled)
 						return;
@@ -75,14 +79,14 @@ export default function (options: {
 			},
 		},
 
-		doExecuteCommand(command, args, context) {
+		doExecuteCommand(command, args, commandContext) {
 
 			if (command === Commands.USE_SETUP_SUGAR) {
 
 				const [uri] = args as CommandArgs;
 
 				return worker(uri, (vueDocument, vueSourceFile) => {
-					return useSetupSugar(ts, vueDocument, vueSourceFile, context, options.doCodeActions, options.doCodeActionResolve);
+					return useSetupSugar(context.typescript.module, vueDocument, vueSourceFile, commandContext, options.doCodeActions, options.doCodeActionResolve);
 				});
 			}
 
@@ -91,7 +95,7 @@ export default function (options: {
 				const [uri] = args as CommandArgs;
 
 				return worker(uri, (vueDocument, vueSourceFile) => {
-					return unuseSetupSugar(ts, vueDocument, vueSourceFile, context, options.doCodeActions, options.doCodeActionResolve);
+					return unuseSetupSugar(context.typescript.module, vueDocument, vueSourceFile, commandContext, options.doCodeActions, options.doCodeActionResolve);
 				});
 			}
 		},

@@ -6,14 +6,13 @@ import * as foldingRanges from './documentFeatures/foldingRanges';
 import * as format from './documentFeatures/format';
 import * as linkedEditingRanges from './documentFeatures/linkedEditingRanges';
 import * as selectionRanges from './documentFeatures/selectionRanges';
-import { DocumentServiceRuntimeContext } from './types';
+import { DocumentServiceRuntimeContext, PluginContext } from './types';
 import * as shared from '@volar/shared';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { EmbeddedLanguageServicePlugin } from './plugin';
 import { singleFileTypeScriptServiceHost, updateSingleFileTypeScriptServiceHost } from './utils/singleFileTypeScriptService';
 import { createDocumentRegistry, EmbeddedLanguageModule, FileNode } from '@volar/language-core';
 import { parseSourceFileDocument, SourceFileDocument } from './documents';
-import { PluginContext, setPluginContext } from './contextStore';
 import { shallowReactive as reactive } from '@vue/reactivity';
 
 // fix build
@@ -30,17 +29,16 @@ export function getDocumentServiceContext(options: {
 
 	const ts = options.ts;
 
-	setPluginContext({
+	let plugins: EmbeddedLanguageServicePlugin[];
+
+	const pluginContext: PluginContext = {
 		typescript: {
 			module: ts,
 			languageServiceHost: singleFileTypeScriptServiceHost,
 			languageService: ts.createLanguageService(singleFileTypeScriptServiceHost),
 		},
 		env: options.env,
-	});
-
-	let plugins: EmbeddedLanguageServicePlugin[];
-
+	};
 	const languageModules = options.getLanguageModules();
 	const vueDocuments = new WeakMap<TextDocument, [SourceFileDocument, EmbeddedLanguageModule]>();
 	const fileMods = new WeakMap<FileNode, EmbeddedLanguageModule>();
@@ -50,9 +48,13 @@ export function getDocumentServiceContext(options: {
 		get plugins() {
 			if (!plugins) {
 				plugins = options.getPlugins();
+				for (const plugin of plugins) {
+					plugin.setup?.(pluginContext);
+				}
 			}
 			return plugins;
 		},
+		pluginContext,
 		getSourceFileDocument(document) {
 
 			let cache = vueDocuments.get(document);

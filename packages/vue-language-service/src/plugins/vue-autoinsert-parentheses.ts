@@ -1,6 +1,6 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguageServicePlugin, useConfigurationHost, useTypeScriptModule, SourceFileDocument } from '@volar/language-service';
+import { EmbeddedLanguageServicePlugin, PluginContext, SourceFileDocument } from '@volar/language-service';
 import { isCharacterTyping } from './vue-autoinsert-dotvalue';
 import * as embedded from '@volar/language-core';
 import { FileNode } from '@volar/language-core';
@@ -9,13 +9,17 @@ export default function (options: {
 	getVueDocument: (document: TextDocument) => SourceFileDocument | undefined,
 }): EmbeddedLanguageServicePlugin {
 
-	const ts = useTypeScriptModule();
+	let context: PluginContext;
 
 	return {
 
+		setup(_context) {
+			context = _context;
+		},
+
 		async doAutoInsert(document, position, options_2) {
 
-			const enabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.autoWrapParentheses') ?? true;
+			const enabled = await context.env.configurationHost?.getConfiguration<boolean>('volar.autoWrapParentheses') ?? true;
 			if (!enabled)
 				return;
 
@@ -44,6 +48,7 @@ export default function (options: {
 			for (const mappedRange of templateFormatScript.mappings) {
 				if (mappedRange.sourceRange.end === offset) {
 					const text = document.getText().substring(mappedRange.sourceRange.start, mappedRange.sourceRange.end);
+					const ts = context.typescript.module;
 					const ast = ts.createSourceFile(templateFormatScript.fileName, text, ts.ScriptTarget.Latest);
 					if (ast.statements.length === 1) {
 						const statement = ast.statements[0];

@@ -43,7 +43,7 @@ export function getLanguageServicePlugins(
 	const scriptTsPlugin = useTsPlugin();
 	const vuePlugin = useVuePlugin({
 		getVueDocument: (document) => apis.context.documents.get(document.uri),
-		tsLs: scriptTsPlugin.languageService,
+		getTsLs: scriptTsPlugin.getLanguageService,
 		isJsxMissing: !host.getVueCompilationSettings().experimentalDisableTemplateSupport && host.getCompilationSettings().jsx !== ts.JsxEmit.Preserve,
 	});
 	const vueTemplateHtmlPlugin = _useVueTemplateLanguagePlugin(
@@ -58,7 +58,7 @@ export function getLanguageServicePlugins(
 	const jsonPlugin = useJsonPlugin();
 	const emmetPlugin = useEmmetPlugin();
 	const autoDotValuePlugin = useAutoDotValuePlugin({
-		getTsLs: () => scriptTsPlugin.languageService,
+		getTsLs: scriptTsPlugin.getLanguageService,
 	});
 	const referencesCodeLensPlugin = useReferencesCodeLensPlugin({
 		getVueDocument: (uri) => apis.context.documents.get(uri),
@@ -80,7 +80,7 @@ export function getLanguageServicePlugins(
 		doValidation: apis.doValidation,
 		doRename: apis.doRename,
 		findTypeDefinition: apis.findTypeDefinition,
-		scriptTsLs: scriptTsPlugin.languageService,
+		getScriptTsLs: scriptTsPlugin.getLanguageService,
 	});
 
 	return [
@@ -105,16 +105,16 @@ export function getLanguageServicePlugins(
 			getSemanticTokenLegend,
 			getScanner: (document): html.Scanner | undefined => {
 				if (document.languageId === 'html') {
-					return templateLanguagePlugin.htmlLs.createScanner(document.getText());
+					return templateLanguagePlugin.getHtmlLs().createScanner(document.getText());
 				}
 				else if (document.languageId === 'jade') {
 					const pugDocument = 'getPugDocument' in templateLanguagePlugin ? templateLanguagePlugin.getPugDocument(document) : undefined;
 					if (pugDocument) {
-						return 'pugLs' in templateLanguagePlugin ? templateLanguagePlugin.pugLs.createScanner(pugDocument) : undefined;
+						return 'getPugLs' in templateLanguagePlugin ? templateLanguagePlugin.getPugLs().createScanner(pugDocument) : undefined;
 					}
 				}
 			},
-			tsLs: scriptTsPlugin.languageService,
+			getTsLs: scriptTsPlugin.getLanguageService,
 			isSupportedDocument: (document) =>
 				document.languageId === languageId
 				&& !apis.context.documents.get(document.uri) /* not petite-vue source file */,

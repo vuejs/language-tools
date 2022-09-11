@@ -1,16 +1,21 @@
-import { EmbeddedLanguageServicePlugin, useConfigurationHost, useSchemaRequestService } from '@volar/language-service';
+import { EmbeddedLanguageServicePlugin, PluginContext } from '@volar/language-service';
 import * as json from 'vscode-json-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
 export default function (): EmbeddedLanguageServicePlugin {
 
-	const schemaRequestService = useSchemaRequestService();
-
 	const jsonDocuments = new WeakMap<TextDocument, [number, json.JSONDocument]>();
-	const jsonLs = json.getLanguageService({ schemaRequestService });
+
+	let context: PluginContext;
+	let jsonLs: json.LanguageService;
 
 	return {
+
+		setup(_context) {
+			context = _context;
+			jsonLs = json.getLanguageService({ schemaRequestService: _context.env.schemaRequestService });
+		},
 
 		complete: {
 
@@ -98,7 +103,7 @@ export default function (): EmbeddedLanguageServicePlugin {
 		format(document, range, options) {
 			return worker(document, async (jsonDocument) => {
 
-				const options_2 = await useConfigurationHost()?.getConfiguration<json.FormattingOptions & { enable: boolean; }>('json.format', document.uri);
+				const options_2 = await context.env.configurationHost?.getConfiguration<json.FormattingOptions & { enable: boolean; }>('json.format', document.uri);
 
 				if (options_2?.enable === false) {
 					return;

@@ -23,12 +23,11 @@ import * as signatureHelp from './languageFeatures/signatureHelp';
 import * as diagnostics from './languageFeatures/validation';
 import * as workspaceSymbol from './languageFeatures/workspaceSymbols';
 import { EmbeddedLanguageServicePlugin } from './plugin';
-import { LanguageServiceRuntimeContext as LanguageServiceContext } from './types';
+import { LanguageServiceRuntimeContext as LanguageServiceContext, PluginContext } from './types';
 import * as tsFaster from '@volar/typescript-faster';
 import * as shared from '@volar/shared';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { parseSourceFileDocuments } from './documents';
-import { PluginContext, setPluginContext } from './contextStore';
 
 // fix build
 import type * as _0 from 'vscode-languageserver-protocol';
@@ -46,17 +45,16 @@ export function createLanguageServiceContext(options: {
 	const tsLs = ts.createLanguageService(options.languageContext.typescriptLanguageServiceHost);
 	tsFaster.decorate(ts, options.languageContext.typescriptLanguageServiceHost, tsLs);
 
-	setPluginContext({
+	let plugins: EmbeddedLanguageServicePlugin[];
+
+	const pluginContext: PluginContext = {
 		env: options.env,
 		typescript: {
 			module: options.host.getTypeScriptModule(),
 			languageServiceHost: options.languageContext.typescriptLanguageServiceHost,
 			languageService: tsLs,
 		},
-	});
-
-	let plugins: EmbeddedLanguageServicePlugin[];
-
+	};
 	const textDocumentMapper = parseSourceFileDocuments(options.env.rootUri, options.languageContext.mapper);
 	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
 	const documentVersions = new Map<string, number>();
@@ -66,9 +64,13 @@ export function createLanguageServiceContext(options: {
 		get plugins() {
 			if (!plugins) {
 				plugins = options.getPlugins();
+				for (const plugin of plugins) {
+					plugin.setup?.(pluginContext);
+				}
 			}
 			return plugins;
 		},
+		pluginContext,
 		typescriptLanguageService: tsLs,
 		documents: textDocumentMapper,
 		getTextDocument,

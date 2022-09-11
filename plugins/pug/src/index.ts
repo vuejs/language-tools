@@ -1,36 +1,42 @@
-import { EmbeddedLanguageServicePlugin, useConfigurationHost, useDocumentContext } from '@volar/language-service';
+import { EmbeddedLanguageServicePlugin, PluginContext } from '@volar/language-service';
 import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as pug from '@volar/pug-language-service';
 import useHtmlPlugin from '@volar-plugins/html';
 
 export default function (): EmbeddedLanguageServicePlugin & ReturnType<typeof useHtmlPlugin> & {
-	htmlLs: html.LanguageService,
-	pugLs: pug.LanguageService,
+	getHtmlLs: () => html.LanguageService,
+	getPugLs: () => pug.LanguageService,
 	getPugDocument: (document: TextDocument) => pug.PugDocument | undefined,
 } {
 
-	const documentContext = useDocumentContext();
-
 	const htmlPlugin = useHtmlPlugin({});
-	const pugLs = pug.getLanguageService(htmlPlugin.htmlLs);
 	const pugDocuments = new WeakMap<TextDocument, [number, pug.PugDocument]>();
+
+	let context: PluginContext;
+	let pugLs: pug.LanguageService;
 
 	return {
 
 		...htmlPlugin,
-		pugLs,
+		getPugLs: () => pugLs,
 		getPugDocument,
+
+		setup(_context) {
+			htmlPlugin.setup?.(_context);
+			pugLs = pug.getLanguageService(htmlPlugin.getHtmlLs());
+			context = _context;
+		},
 
 		complete: {
 
-			on(document, position, context) {
+			on(document, position, _) {
 				return worker(document, (pugDocument) => {
 
-					if (!documentContext)
+					if (!context.env.documentContext)
 						return;
 
-					return pugLs.doComplete(pugDocument, position, documentContext, /** TODO: CompletionConfiguration */);
+					return pugLs.doComplete(pugDocument, position, context.env.documentContext, /** TODO: CompletionConfiguration */);
 				});
 			},
 		},
@@ -57,7 +63,7 @@ export default function (): EmbeddedLanguageServicePlugin & ReturnType<typeof us
 		doHover(document, position) {
 			return worker(document, async (pugDocument) => {
 
-				const hoverSettings = await useConfigurationHost()?.getConfiguration<html.HoverSettings>('html.hover', document.uri);
+				const hoverSettings = await context.env.configurationHost?.getConfiguration<html.HoverSettings>('html.hover', document.uri);
 
 				return pugLs.doHover(pugDocument, position, hoverSettings);
 			});
@@ -72,10 +78,10 @@ export default function (): EmbeddedLanguageServicePlugin & ReturnType<typeof us
 		findDocumentLinks(document) {
 			return worker(document, (pugDocument) => {
 
-				if (!documentContext)
+				if (!context.env.documentContext)
 					return;
 
-				return pugLs.findDocumentLinks(pugDocument, documentContext);
+				return pugLs.findDocumentLinks(pugDocument, context.env.documentContext);
 			});
 		},
 
@@ -97,18 +103,18 @@ export default function (): EmbeddedLanguageServicePlugin & ReturnType<typeof us
 			});
 		},
 
-		async doAutoInsert(document, position, context) {
+		async doAutoInsert(document, position, insertContext) {
 			return worker(document, async (pugDocument) => {
 
-				const lastCharacter = context.lastChange.text[context.lastChange.text.length - 1];
+				const lastCharacter = insertContext.lastChange.text[insertContext.lastChange.text.length - 1];
 
-				if (context.lastChange.rangeLength === 0 && lastCharacter === '=') {
+				if (insertContext.lastChange.rangeLength === 0 && lastCharacter === '=') {
 
-					const enabled = (await useConfigurationHost()?.getConfiguration<boolean>('html.autoCreateQuotes')) ?? true;
+					const enabled = (await context.env.configurationHost?.getConfiguration<boolean>('html.autoCreateQuotes')) ?? true;
 
 					if (enabled) {
 
-						const text = pugLs.doQuoteComplete(pugDocument, position, await useConfigurationHost()?.getConfiguration<html.CompletionConfiguration>('html.completion', document.uri));
+						const text = pugLs.doQuoteComplete(pugDocument, position, await context.env.configurationHost?.getConfiguration<html.CompletionConfiguration>('html.completion', document.uri));
 
 						if (text) {
 							return text;

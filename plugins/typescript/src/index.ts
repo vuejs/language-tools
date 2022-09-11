@@ -1,4 +1,4 @@
-import { EmbeddedLanguageServicePlugin, useConfigurationHost, useRootUri, useTypeScriptLanguageService, useTypeScriptLanguageServiceHost, useTypeScriptModule } from '@volar/language-service';
+import { EmbeddedLanguageServicePlugin, PluginContext } from '@volar/language-service';
 import * as ts2 from '@volar/typescript-language-service';
 import * as semver from 'semver';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -29,27 +29,28 @@ const jsDocTriggerCharacters = ['*'];
 const directiveCommentTriggerCharacters = ['@'];
 
 export default function (): EmbeddedLanguageServicePlugin & {
-	languageService: ts2.LanguageService,
+	getLanguageService: () => ts2.LanguageService,
 } {
 
-	const ts = useTypeScriptModule();
-	const tsLs = useTypeScriptLanguageService();
-	const tsLsHost = useTypeScriptLanguageServiceHost();
-	const configHost = useConfigurationHost();
-	const rootUri = useRootUri();
+	const basicTriggerCharacters = getBasicTriggerCharacters('4.3.0');
 
-	const basicTriggerCharacters = getBasicTriggerCharacters(ts.version);
-	const tsLs2 = ts2.createLanguageService(
-		ts,
-		tsLsHost,
-		tsLs,
-		(section, scopeUri) => configHost?.getConfiguration(section, scopeUri) as any,
-		rootUri,
-	);
+	let context: PluginContext;
+	let tsLs2: ts2.LanguageService;
 
 	return {
 
-		languageService: tsLs2,
+		getLanguageService: () => tsLs2,
+
+		setup(_context) {
+			context = _context;
+			tsLs2 = ts2.createLanguageService(
+				context.typescript.module,
+				context.typescript.languageServiceHost,
+				context.typescript.languageService,
+				(section, scopeUri) => context.env.configurationHost?.getConfiguration(section, scopeUri) as any,
+				context.env.rootUri.toString(),
+			);
+		},
 
 		complete: {
 
@@ -268,7 +269,7 @@ export default function (): EmbeddedLanguageServicePlugin & {
 		async format(document, range, options_2) {
 			if (isTsDocument(document)) {
 
-				const enable = await useConfigurationHost()?.getConfiguration<boolean>(getConfigTitle(document) + '.format.enable', document.uri);
+				const enable = await context.env.configurationHost?.getConfiguration<boolean>(getConfigTitle(document) + '.format.enable', document.uri);
 
 				if (enable === false) {
 					return;
@@ -281,7 +282,7 @@ export default function (): EmbeddedLanguageServicePlugin & {
 		async formatOnType(document, position, key, options_2) {
 			if (isTsDocument(document)) {
 
-				const enable = await useConfigurationHost()?.getConfiguration<boolean>(getConfigTitle(document) + '.format.enable', document.uri);
+				const enable = await context.env.configurationHost?.getConfiguration<boolean>(getConfigTitle(document) + '.format.enable', document.uri);
 
 				if (enable === false) {
 					return;

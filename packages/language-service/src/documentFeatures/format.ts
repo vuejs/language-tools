@@ -1,7 +1,6 @@
 import type { FileNode } from '@volar/language-core';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { useConfigurationHost } from '../contextStore';
 import { EmbeddedDocumentSourceMap, SourceFileDocument } from '../documents';
 import type { DocumentServiceRuntimeContext } from '../types';
 
@@ -38,7 +37,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 		let level = 0;
 
-		const initialIndentLanguageId = await useConfigurationHost()?.getConfiguration<Record<string, boolean>>('volar.format.initialIndent') ?? { html: true };
+		const initialIndentLanguageId = await context.pluginContext.env.configurationHost?.getConfiguration<Record<string, boolean>>('volar.format.initialIndent') ?? { html: true };
 
 		while (true) {
 

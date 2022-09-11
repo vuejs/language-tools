@@ -1,4 +1,4 @@
-import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, useConfigurationHost, useTypeScriptModule, SourceFileDocument, mergeWorkspaceEdits } from '@volar/language-service';
+import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, SourceFileDocument, mergeWorkspaceEdits, PluginContext } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
 import * as vue from '@volar/vue-language-core';
@@ -25,7 +25,7 @@ export default function (options: {
 	// for use ref sugar
 	findReferences: (uri: string, position: vscode.Position) => Promise<vscode.Location[] | undefined>,
 	findTypeDefinition: (uri: string, position: vscode.Position) => Promise<vscode.LocationLink[] | undefined>,
-	scriptTsLs: ts2.LanguageService,
+	getScriptTsLs: () => ts2.LanguageService,
 	// for unuse ref sugar
 	doCodeActions: (uri: string, range: vscode.Range, codeActionContext: vscode.CodeActionContext) => Promise<vscode.CodeAction[] | undefined>,
 	doCodeActionResolve: (item: vscode.CodeAction) => Promise<vscode.CodeAction>,
@@ -33,9 +33,15 @@ export default function (options: {
 	doValidation: (uri: string) => Promise<vscode.Diagnostic[] | undefined>,
 }): EmbeddedLanguageServicePlugin {
 
-	const ts = useTypeScriptModule();
+	let context: PluginContext;
+	let ts: PluginContext['typescript']['module'];
 
 	return {
+
+		setup(_context) {
+			context = _context;
+			ts = context.typescript.module;
+		},
 
 		codeLens: {
 
@@ -45,7 +51,7 @@ export default function (options: {
 					if (document.uri.endsWith('.html')) // petite-vue
 						return;
 
-					const isEnabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.codeLens.scriptSetupTools') ?? true;
+					const isEnabled = await context.env.configurationHost?.getConfiguration<boolean>('volar.codeLens.scriptSetupTools') ?? true;
 
 					if (!isEnabled)
 						return;
@@ -82,7 +88,7 @@ export default function (options: {
 				const [uri] = args as CommandArgs;
 
 				return worker(uri, (vueDocument, vueSourceFile) => {
-					return useRefSugar(ts, vueDocument, vueSourceFile, context, options.findReferences, options.findTypeDefinition, options.scriptTsLs);
+					return useRefSugar(ts, vueDocument, vueSourceFile, context, options.findReferences, options.findTypeDefinition, options.getScriptTsLs());
 				});
 			}
 

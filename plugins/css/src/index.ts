@@ -1,4 +1,4 @@
-import { EmbeddedLanguageServicePlugin, useConfigurationHost, useDocumentContext, useFileSystemProvider, useRootUri } from '@volar/language-service';
+import { EmbeddedLanguageServicePlugin, PluginContext } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as css from 'vscode-css-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
@@ -13,44 +13,50 @@ const wordPatterns: { [lang: string]: RegExp; } = {
 
 export default function (): EmbeddedLanguageServicePlugin {
 
-	const fileSystemProvider = useFileSystemProvider();
-	const documentContext = useDocumentContext();
-
-	const cssLs = css.getCSSLanguageService({ fileSystemProvider });
-	const scssLs = css.getSCSSLanguageService({ fileSystemProvider });
-	const lessLs = css.getLESSLanguageService({ fileSystemProvider });
-	const postcssLs: css.LanguageService = {
-		...scssLs,
-		doValidation: (document, stylesheet, documentSettings) => {
-			let errors = scssLs.doValidation(document, stylesheet, documentSettings);
-			errors = errors.filter(error => error.code !== 'css-semicolonexpected');
-			errors = errors.filter(error => error.code !== 'css-ruleorselectorexpected');
-			errors = errors.filter(error => error.code !== 'unknownAtRules');
-			return errors;
-		},
-	};
 	const stylesheets = new WeakMap<TextDocument, [number, css.Stylesheet]>();
 
 	let inited = false;
+	let context: PluginContext;
+	let cssLs: css.LanguageService;
+	let scssLs: css.LanguageService;
+	let lessLs: css.LanguageService;
+	let postcssLs: css.LanguageService;
 
 	return {
+
+		setup(_context) {
+			context = _context;
+			cssLs = css.getCSSLanguageService({ fileSystemProvider: _context.env.fileSystemProvider });
+			scssLs = css.getSCSSLanguageService({ fileSystemProvider: _context.env.fileSystemProvider });
+			lessLs = css.getLESSLanguageService({ fileSystemProvider: _context.env.fileSystemProvider });
+			postcssLs = {
+				...scssLs,
+				doValidation: (document, stylesheet, documentSettings) => {
+					let errors = scssLs.doValidation(document, stylesheet, documentSettings);
+					errors = errors.filter(error => error.code !== 'css-semicolonexpected');
+					errors = errors.filter(error => error.code !== 'css-ruleorselectorexpected');
+					errors = errors.filter(error => error.code !== 'unknownAtRules');
+					return errors;
+				},
+			};
+		},
 
 		complete: {
 
 			// https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/css-language-features/server/src/cssServer.ts#L97
 			triggerCharacters: ['/', '-', ':'],
 
-			async on(document, position, context) {
+			async on(document, position) {
 				return worker(document, async (stylesheet, cssLs) => {
 
-					if (!documentContext)
+					if (!context.env.documentContext)
 						return;
 
 					const wordPattern = wordPatterns[document.languageId] ?? wordPatterns.css;
 					const wordStart = shared.getWordRange(wordPattern, position, document)?.start; // TODO: use end?
 					const wordRange = vscode.Range.create(wordStart ?? position, position);
-					const settings = await useConfigurationHost()?.getConfiguration<css.LanguageSettings>(document.languageId, document.uri);
-					const cssResult = await cssLs.doComplete2(document, position, stylesheet, documentContext, settings?.completion);
+					const settings = await context.env.configurationHost?.getConfiguration<css.LanguageSettings>(document.languageId, document.uri);
+					const cssResult = await cssLs.doComplete2(document, position, stylesheet, context.env.documentContext, settings?.completion);
 
 					if (cssResult) {
 						for (const item of cssResult.items) {
@@ -115,7 +121,7 @@ export default function (): EmbeddedLanguageServicePlugin {
 			async onFull(document) {
 				return worker(document, async (stylesheet, cssLs) => {
 
-					const settings = await useConfigurationHost()?.getConfiguration<css.LanguageSettings>(document.languageId, document.uri);
+					const settings = await context.env.configurationHost?.getConfiguration<css.LanguageSettings>(document.languageId, document.uri);
 
 					return cssLs.doValidation(document, stylesheet, settings) as vscode.Diagnostic[];
 				});
@@ -125,7 +131,7 @@ export default function (): EmbeddedLanguageServicePlugin {
 		async doHover(document, position) {
 			return worker(document, async (stylesheet, cssLs) => {
 
-				const settings = await useConfigurationHost()?.getConfiguration<css.LanguageSettings>(document.languageId, document.uri);
+				const settings = await context.env.configurationHost?.getConfiguration<css.LanguageSettings>(document.languageId, document.uri);
 
 				return cssLs.doHover(document, position, stylesheet, settings?.hover);
 			});
@@ -146,10 +152,10 @@ export default function (): EmbeddedLanguageServicePlugin {
 		findDocumentLinks(document) {
 			return worker(document, (stylesheet, cssLs) => {
 
-				if (!documentContext)
+				if (!context.env.documentContext)
 					return;
 
-				return cssLs.findDocumentLinks(document, stylesheet, documentContext);
+				return cssLs.findDocumentLinks(document, stylesheet, context.env.documentContext);
 			});
 		},
 
@@ -186,7 +192,7 @@ export default function (): EmbeddedLanguageServicePlugin {
 		async format(document, range, options) {
 			return worker(document, async (stylesheet, cssLs) => {
 
-				const options_2 = await useConfigurationHost()?.getConfiguration<css.CSSFormatConfiguration & { enable: boolean; }>(document.languageId + '.format', document.uri);
+				const options_2 = await context.env.configurationHost?.getConfiguration<css.CSSFormatConfiguration & { enable: boolean; }>(document.languageId + '.format', document.uri);
 
 				if (options_2?.enable === false) {
 					return;
@@ -213,7 +219,7 @@ export default function (): EmbeddedLanguageServicePlugin {
 	async function initCustomData() {
 		if (!inited) {
 
-			useConfigurationHost()?.onDidChangeConfiguration(async () => {
+			context.env.configurationHost?.onDidChangeConfiguration(async () => {
 				const customData = await getCustomData();
 				cssLs.setDataProviders(true, customData);
 				scssLs.setDataProviders(true, customData);
@@ -230,13 +236,13 @@ export default function (): EmbeddedLanguageServicePlugin {
 
 	async function getCustomData() {
 
-		const configHost = useConfigurationHost();
+		const configHost = context.env.configurationHost;
 
 		if (configHost) {
 
 			const paths = new Set<string>();
 			const customData: string[] = await configHost.getConfiguration('css.customData') ?? [];
-			const rootPath = shared.getPathOfUri(useRootUri());
+			const rootPath = shared.getPathOfUri(context.env.rootUri.toString());
 
 			for (const customDataPath of customData) {
 				try {
