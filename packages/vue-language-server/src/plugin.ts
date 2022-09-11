@@ -50,7 +50,9 @@ const plugin: LanguageServerPlugin<vue.LanguageServiceHost> = {
 			const vueLanguagePlugins = vue.getDefaultVueLanguagePlugins(ts, shared.getPathOfUri(env.rootUri.toString()), {}, {}, []);
 			const vueLanguageModule: embedded.EmbeddedLanguageModule = {
 				createSourceFile(fileName, snapshot) {
-					return new vue.VueSourceFile(fileName, snapshot, ts, vueLanguagePlugins);
+					if (fileName.endsWith('.vue')) {
+						return new vue.VueSourceFile(fileName, snapshot, ts, vueLanguagePlugins);
+					}
 				},
 				updateSourceFile(sourceFile: vue.VueSourceFile, snapshot) {
 					sourceFile.update(snapshot);
