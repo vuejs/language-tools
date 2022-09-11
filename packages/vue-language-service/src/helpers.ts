@@ -22,7 +22,7 @@ export function checkTemplateData(
 	};
 
 	let file: embedded.FileNode | undefined;
-	embedded.forEachEmbeddeds(sourceFile, embedded => {
+	embedded.forEachEmbeddeds(sourceFile.embeddeds, embedded => {
 		if (embedded.fileName === sourceFile.tsFileName) {
 			file = embedded;
 		}

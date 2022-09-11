@@ -112,7 +112,7 @@ export interface ServerInitializationOptions {
 		rename?: boolean;
 		renameFileRefactoring?: boolean;
 		signatureHelp?: boolean;
-		completion?: {
+		completion?: boolean | {
 			/**
 			 * {@link __requests.GetDocumentSelectionRequest}
 			 * */

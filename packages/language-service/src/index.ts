@@ -1,8 +1,9 @@
-export { executePluginCommand, ExecutePluginCommandArgs } from './languageFeatures/executeCommand';
-export { mergeWorkspaceEdits } from './languageFeatures/rename';
-export * from './types';
-export * from './contextStore';
-export * from './plugin';
+export * from '@volar/language-core';
 export * from './baseDocumentService';
 export * from './baseLanguageService';
+export * from './contextStore';
 export * from './documents';
+export { executePluginCommand, ExecutePluginCommandArgs } from './languageFeatures/executeCommand';
+export { mergeWorkspaceEdits } from './languageFeatures/rename';
+export * from './plugin';
+export * from './types';

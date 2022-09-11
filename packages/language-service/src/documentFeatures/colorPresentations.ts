@@ -12,7 +12,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 			context,
 			document,
 			range,
-			sourceMap => sourceMap.embeddedFile.capabilities.documentSymbol, // TODO: add color capabilitie setting
+			sourceMap => !!sourceMap.embeddedFile.capabilities.documentSymbol, // TODO: add color capabilitie setting
 			function* (range, sourceMap) {
 				for (const [mappedRange] of sourceMap.getMappedRanges(range.start, range.end)) {
 					yield mappedRange;

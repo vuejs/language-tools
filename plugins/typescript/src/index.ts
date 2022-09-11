@@ -5,6 +5,8 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
+export { getSemanticTokenLegend } from '@volar/typescript-language-service';
+
 function getBasicTriggerCharacters(tsVersion: string) {
 
 	const triggerCharacters = ['.', '"', '\'', '`', '/', '<'];

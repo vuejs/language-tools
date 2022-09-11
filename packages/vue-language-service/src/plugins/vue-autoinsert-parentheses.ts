@@ -29,7 +29,7 @@ export default function (options: {
 
 			let templateFormatScript: FileNode | undefined;
 
-			embedded.forEachEmbeddeds(vueDocument.file, embedded => {
+			embedded.forEachEmbeddeds(vueDocument.file.embeddeds, embedded => {
 				if (embedded.fileName.endsWith('.__VLS_template_format.tsx')
 					|| embedded.fileName.endsWith('.__VLS_template_format.jsx')) {
 					templateFormatScript = embedded;

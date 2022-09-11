@@ -2,14 +2,14 @@ import { Mapping } from '@volar/source-map';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
 export interface DocumentCapabilities {
-	diagnostics: boolean,
-	foldingRanges: boolean,
-	formatting: boolean | {
+	diagnostics?: boolean,
+	foldingRanges?: boolean,
+	formatting?: boolean | {
 		initialIndentBracket?: [string, string],
 	},
-	documentSymbol: boolean,
-	codeActions: boolean,
-	inlayHints: boolean,
+	documentSymbol?: boolean,
+	codeActions?: boolean,
+	inlayHints?: boolean,
 }
 
 export interface PositionCapabilities {
@@ -53,13 +53,13 @@ export interface FileNode {
 	isTsHostFile: boolean,
 	capabilities: DocumentCapabilities,
 	mappings: Mapping<PositionCapabilities>[],
-	teleportMappings: Mapping<TeleportMappingData>[],
+	teleportMappings?: Mapping<TeleportMappingData>[],
 	embeddeds: FileNode[],
 }
 
-export interface EmbeddedLanguageModule {
-	createSourceFile(fileName: string, snapshot: ts.IScriptSnapshot): FileNode | undefined;
-	updateSourceFile(sourceFile: FileNode, snapshot: ts.IScriptSnapshot): void;
+export interface EmbeddedLanguageModule<T extends FileNode = FileNode> {
+	createSourceFile(fileName: string, snapshot: ts.IScriptSnapshot): T | undefined;
+	updateSourceFile(sourceFile: T, snapshot: ts.IScriptSnapshot): void;
 	proxyLanguageServiceHost?(host: LanguageServiceHost): Partial<LanguageServiceHost>;
 }
 

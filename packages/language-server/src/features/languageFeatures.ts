@@ -37,7 +37,7 @@ export function register(
 	connection.onCompletionResolve(async item => {
 		if (lastCompleteUri && lastCompleteLs) {
 
-			const activeSel = features.completion?.getDocumentSelectionRequest
+			const activeSel = typeof features.completion === 'object' && features.completion.getDocumentSelectionRequest
 				? await connection.sendRequest(GetEditorSelectionRequest.type)
 				: undefined;
 			const newPosition = activeSel?.textDocument.uri.toLowerCase() === lastCompleteUri.toLowerCase() ? activeSel.position : undefined;

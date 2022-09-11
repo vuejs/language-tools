@@ -172,7 +172,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 		function tryUpdateVueDocument() {
 			if (vueDocument && vueDocument[0].file.text !== document.getText()) {
-				vueDocument[1].updateSourceFile(vueDocument[0].file, ts.ScriptSnapshot.fromString(document.getText()));
+				context.updateSourceFile(vueDocument[0].file, ts.ScriptSnapshot.fromString(document.getText()));
 			}
 		}
 

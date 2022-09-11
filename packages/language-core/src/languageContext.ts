@@ -2,6 +2,7 @@ import { posix as path } from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { createDocumentRegistry, forEachEmbeddeds } from './documentRegistry';
 import { EmbeddedLanguageModule, FileNode, LanguageServiceHost } from './types';
+import { shallowReactive as reactive } from '@vue/reactivity';
 
 export type EmbeddedLanguageContext = ReturnType<typeof createEmbeddedLanguageServiceHost>;
 
@@ -31,8 +32,7 @@ export function createEmbeddedLanguageServiceHost(
 	const ts = host.getTypeScriptModule();
 	const tsFileVersions = new Map<string, string>();
 	const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
-	const fileVersions = new WeakMap<FileNode, string>();
-	const embeddedLanguageSourceFileVersions = new WeakMap<FileNode, string>();
+	const fileVersions = new Map<string, string>();
 	const _tsHost: Partial<ts.LanguageServiceHost> = {
 		fileExists: host.fileExists
 			? fileName => {
@@ -49,7 +49,7 @@ export function createEmbeddedLanguageServiceHost(
 						for (const langaugeModule of languageModules) {
 							const sourceFile = langaugeModule.createSourceFile(vueFileName, scriptSnapshot);
 							if (sourceFile) {
-								documentRegistry.set(vueFileName, sourceFile, langaugeModule);
+								documentRegistry.set(vueFileName, reactive(sourceFile), langaugeModule);
 								break;
 							}
 						}
@@ -135,8 +135,8 @@ export function createEmbeddedLanguageServiceHost(
 		for (const [sourceFile, languageModule] of documentRegistry.getAll()) {
 			remainFileNames.delete(sourceFile.fileName);
 			const newVersion = host.getScriptVersion(sourceFile.fileName);
-			if (embeddedLanguageSourceFileVersions.get(sourceFile) !== newVersion) {
-				embeddedLanguageSourceFileVersions.set(sourceFile, newVersion);
+			if (fileVersions.get(sourceFile.fileName) !== newVersion) {
+				fileVersions.set(sourceFile.fileName, newVersion);
 				const snapshot = host.getScriptSnapshot(sourceFile.fileName);
 				if (snapshot) {
 					// update
@@ -158,7 +158,7 @@ export function createEmbeddedLanguageServiceHost(
 				for (const languageModule of languageModules) {
 					const sourceFile = languageModule.createSourceFile(fileName, snapshot);
 					if (sourceFile) {
-						documentRegistry.set(fileName, sourceFile, languageModule);
+						documentRegistry.set(fileName, reactive(sourceFile), languageModule);
 						remainFileNames.delete(fileName);
 						break;
 					}
@@ -176,7 +176,6 @@ export function createEmbeddedLanguageServiceHost(
 				}
 				else {
 					// update
-					console.log('update ts file', oldTsFileName);
 					tsFileVersions.set(oldTsFileName, newVersion);
 				}
 				tsFileUpdated = true;
@@ -194,11 +193,15 @@ export function createEmbeddedLanguageServiceHost(
 
 		for (const [sourceFile, languageModule, snapshot] of sourceFilesToUpdate) {
 
+			forEachEmbeddeds(sourceFile.embeddeds, embedded => {
+				fileVersions.delete(embedded.fileName);
+			});
+
 			const oldScripts: Record<string, string> = {};
 			const newScripts: Record<string, string> = {};
 
 			if (!tsFileUpdated) {
-				forEachEmbeddeds(sourceFile, embedded => {
+				forEachEmbeddeds(sourceFile.embeddeds, embedded => {
 					if (embedded.isTsHostFile) {
 						oldScripts[embedded.fileName] = embedded.text;
 					}
@@ -206,9 +209,10 @@ export function createEmbeddedLanguageServiceHost(
 			}
 
 			languageModule.updateSourceFile(sourceFile, snapshot);
+			documentRegistry.onSourceFileUpdated(sourceFile);
 
 			if (!tsFileUpdated) {
-				forEachEmbeddeds(sourceFile, embedded => {
+				forEachEmbeddeds(sourceFile.embeddeds, embedded => {
 					if (embedded.isTsHostFile) {
 						newScripts[embedded.fileName] = embedded.text;
 					}
@@ -216,7 +220,8 @@ export function createEmbeddedLanguageServiceHost(
 			}
 
 			if (
-				Object.keys(oldScripts).length !== Object.keys(newScripts).length
+				!tsFileUpdated
+				&& Object.keys(oldScripts).length !== Object.keys(newScripts).length
 				|| Object.keys(oldScripts).some(fileName => oldScripts[fileName] !== newScripts[fileName])
 			) {
 				tsFileUpdated = true;
@@ -251,8 +256,8 @@ export function createEmbeddedLanguageServiceHost(
 	function getScriptVersion(fileName: string) {
 		let mapped = documentRegistry.fromEmbeddedFileName(fileName);
 		if (mapped) {
-			if (fileVersions.has(mapped.embedded)) {
-				return fileVersions.get(mapped.embedded)!;
+			if (fileVersions.has(mapped.embedded.fileName)) {
+				return fileVersions.get(mapped.embedded.fileName)!;
 			}
 			else {
 				let version = ts.sys?.createHash?.(mapped.embedded.text) ?? mapped.embedded.text;
@@ -260,7 +265,7 @@ export function createEmbeddedLanguageServiceHost(
 					// fix https://github.com/johnsoncodehk/volar/issues/1082
 					version = host.getScriptVersion(mapped.vueFile.fileName) + ':' + version;
 				}
-				fileVersions.set(mapped.embedded, version);
+				fileVersions.set(mapped.embedded.fileName, version);
 				return version;
 			}
 		}

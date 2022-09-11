@@ -224,20 +224,20 @@ export function parseSourceFileDocument(
 	));
 	const allSourceMaps = computed(() => {
 		const result: EmbeddedDocumentSourceMap[] = [];
-		forEachEmbeddeds(sourceFile, embedded => {
+		forEachEmbeddeds(sourceFile.embeddeds, embedded => {
 			result.push(getSourceMap(embedded));
 		});
 		return result;
 	});
 	const teleports = computed(() => {
 		const result: TeleportSourceMap[] = [];
-		forEachEmbeddeds(sourceFile, embedded => {
+		forEachEmbeddeds(sourceFile.embeddeds, embedded => {
 			if (embedded.teleportMappings) {
 				const embeddedDocument = getEmbeddedDocument(embedded)!;
 				const sourceMap = new TeleportSourceMap(
 					embedded,
 					embeddedDocument,
-					mapper.getTeleportSourceMap(embedded.teleportMappings),
+					mapper.getTeleportSourceMap(sourceFile, embedded.teleportMappings),
 				);
 				result.push(sourceMap);
 			}
@@ -267,7 +267,7 @@ export function parseSourceFileDocument(
 					embedded,
 					document.value,
 					getEmbeddedDocument(embedded),
-					mapper.getSourceMap(embedded.mappings),
+					mapper.getSourceMap(sourceFile, embedded.mappings),
 				)
 			];
 			sourceMaps.set(embedded, cache);
@@ -280,7 +280,7 @@ export function parseSourceFileDocument(
 
 		let document = embeddedDocuments.get(embeddedFile);
 
-		if (!document) {
+		if (!document || document.getText() !== embeddedFile.text) {
 
 			const uri = shared.getUriByPath(rootUri, embeddedFile.fileName);
 			const newVersion = (embeddedDocumentVersions.get(uri.toLowerCase()) ?? 0) + 1;

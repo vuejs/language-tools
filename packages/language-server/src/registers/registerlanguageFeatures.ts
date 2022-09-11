@@ -68,9 +68,10 @@ export function register(
 			])],
 			resolveProvider: true,
 		};
-		if (features.completion.ignoreTriggerCharacters) {
+		if (typeof features.completion === 'object' && features.completion.ignoreTriggerCharacters) {
+			const ignores = features.completion.ignoreTriggerCharacters;
 			server.completionProvider.triggerCharacters = server.completionProvider.triggerCharacters
-				?.filter(c => !features.completion!.ignoreTriggerCharacters?.includes(c));
+				?.filter(c => !ignores.includes(c));
 		}
 	}
 	if (features.documentHighlight) {

@@ -17,7 +17,7 @@ export enum Mode {
 	 * 123456 -> abcdef
 	 *   ^^        ^^
 	 */
-	Offset,
+	Offset = 1,
 	/**
 	 * @case1
 	 * 123456 -> abcdef
@@ -29,7 +29,7 @@ export enum Mode {
 	 * 123456 -> abcdef
 	 *   ^^      NOT_MATCH
 	 */
-	Totally,
+	Totally = 2,
 	/**
 	 * @case1
 	 * 123456 -> abcdef
@@ -41,7 +41,7 @@ export enum Mode {
 	 * 123456 -> abcdef
 	 *   ^^      ^    ^
 	 */
-	Expand,
+	Expand = 3,
 }
 
 export type MappingBase = {

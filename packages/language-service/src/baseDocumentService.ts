@@ -11,9 +11,10 @@ import * as shared from '@volar/shared';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { EmbeddedLanguageServicePlugin } from './plugin';
 import { singleFileTypeScriptServiceHost, updateSingleFileTypeScriptServiceHost } from './utils/singleFileTypeScriptService';
-import { createDocumentRegistry, EmbeddedLanguageModule } from '@volar/language-core';
+import { createDocumentRegistry, EmbeddedLanguageModule, FileNode } from '@volar/language-core';
 import { parseSourceFileDocument, SourceFileDocument } from './documents';
 import { PluginContext, setPluginContext } from './contextStore';
+import { shallowReactive as reactive } from '@vue/reactivity';
 
 // fix build
 import type * as _0 from 'vscode-languageserver-protocol';
@@ -42,6 +43,7 @@ export function getDocumentServiceContext(options: {
 
 	const languageModules = options.getLanguageModules();
 	const vueDocuments = new WeakMap<TextDocument, [SourceFileDocument, EmbeddedLanguageModule]>();
+	const fileMods = new WeakMap<FileNode, EmbeddedLanguageModule>();
 	const mapper = createDocumentRegistry();
 	const context: DocumentServiceRuntimeContext = {
 		typescript: ts,
@@ -55,25 +57,34 @@ export function getDocumentServiceContext(options: {
 
 			let cache = vueDocuments.get(document);
 
-			if (cache && cache[0].file.text !== document.getText()) {
-				cache[1].updateSourceFile(cache[0].file, ts.ScriptSnapshot.fromString(document.getText()));
+			if (cache) {
+				if (cache[0].file.text !== document.getText()) {
+					cache[1].updateSourceFile(cache[0].file, ts.ScriptSnapshot.fromString(document.getText()));
+					mapper.onSourceFileUpdated(cache[0].file);
+				}
 				return cache;
 			}
 
 			for (const languageModule of languageModules) {
-				const sourceFile = languageModule.createSourceFile(
+				let sourceFile = languageModule.createSourceFile(
 					'/untitled.' + shared.languageIdToSyntax(document.languageId),
 					ts.ScriptSnapshot.fromString(document.getText()),
 				);
 				if (sourceFile) {
+					sourceFile = reactive(sourceFile);
 					const sourceFileDoc = parseSourceFileDocument(options.env.rootUri, sourceFile, mapper);
 					cache = [sourceFileDoc, languageModule];
 					vueDocuments.set(document, cache);
+					fileMods.set(sourceFile, languageModule);
 					break;
 				}
 			}
 
 			return cache;
+		},
+		updateSourceFile(sourceFile, snapshot) {
+			fileMods.get(sourceFile)!.updateSourceFile(sourceFile, snapshot);
+			mapper.onSourceFileUpdated(sourceFile);
 		},
 		prepareLanguageServices(document) {
 			if (isTsDocument(document)) {
