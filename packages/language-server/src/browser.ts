@@ -30,3 +30,5 @@ export function createWebServer(plugins: LanguageServerPlugin[]) {
 		createFileSystemHost: createWebFileSystemHost,
 	}, plugins);
 }
+
+export * from './index';

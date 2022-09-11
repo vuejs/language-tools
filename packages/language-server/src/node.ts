@@ -70,3 +70,5 @@ export function createNodeServer(plugins: LanguageServerPlugin[]) {
 		},
 	}, plugins);
 }
+
+export * from './index';
