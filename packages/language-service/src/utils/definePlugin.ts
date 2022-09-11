@@ -12,13 +12,10 @@ export async function visitEmbedded(
 			return false;
 		}
 
-		if (embedded.self) {
+		const sourceMap = vueDocument.getSourceMap(embedded);
 
-			const sourceMap = vueDocument.getSourceMap(embedded.self);
-
-			if (!await cb(sourceMap)) {
-				return false;
-			}
+		if (!await cb(sourceMap)) {
+			return false;
 		}
 	}
 

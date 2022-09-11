@@ -1,7 +1,7 @@
 import { posix as path } from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { createDocumentRegistry, forEachEmbeddeds } from './documentRegistry';
-import { EmbeddedFile, EmbeddedLangaugeSourceFile, EmbeddedLanguageModule, LanguageServiceHost } from './types';
+import { EmbeddedLanguageModule, FileNode, LanguageServiceHost } from './types';
 
 export type EmbeddedLanguageContext = ReturnType<typeof createEmbeddedLanguageServiceHost>;
 
@@ -31,8 +31,8 @@ export function createEmbeddedLanguageServiceHost(
 	const ts = host.getTypeScriptModule();
 	const tsFileVersions = new Map<string, string>();
 	const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
-	const fileVersions = new WeakMap<EmbeddedFile, string>();
-	const embeddedLanguageSourceFileVersions = new WeakMap<EmbeddedLangaugeSourceFile, string>();
+	const fileVersions = new WeakMap<FileNode, string>();
+	const embeddedLanguageSourceFileVersions = new WeakMap<FileNode, string>();
 	const _tsHost: Partial<ts.LanguageServiceHost> = {
 		fileExists: host.fileExists
 			? fileName => {
@@ -127,7 +127,7 @@ export function createEmbeddedLanguageServiceHost(
 		lastProjectVersion = newProjectVersion;
 
 		const renameFileNames = new Set(host.getScriptFileNames());
-		const sourceFilesToUpdate: [EmbeddedLangaugeSourceFile, EmbeddedLanguageModule, ts.IScriptSnapshot][] = [];
+		const sourceFilesToUpdate: [FileNode, EmbeddedLanguageModule, ts.IScriptSnapshot][] = [];
 		let tsFileUpdated = false;
 
 		// .vue
@@ -196,9 +196,9 @@ export function createEmbeddedLanguageServiceHost(
 			const newScripts: Record<string, string> = {};
 
 			if (!tsFileUpdated) {
-				forEachEmbeddeds(sourceFile.embeddeds, embedded => {
-					if (embedded.file.isTsHostFile) {
-						oldScripts[embedded.file.fileName] = embedded.file.codeGen.getText();
+				forEachEmbeddeds(sourceFile, embedded => {
+					if (embedded.isTsHostFile) {
+						oldScripts[embedded.fileName] = embedded.text;
 					}
 				});
 			}
@@ -206,9 +206,9 @@ export function createEmbeddedLanguageServiceHost(
 			languageModule.updateSourceFile(sourceFile, snapshot);
 
 			if (!tsFileUpdated) {
-				forEachEmbeddeds(sourceFile.embeddeds, embedded => {
-					if (embedded.file.isTsHostFile) {
-						newScripts[embedded.file.fileName] = embedded.file.codeGen.getText();
+				forEachEmbeddeds(sourceFile, embedded => {
+					if (embedded.isTsHostFile) {
+						newScripts[embedded.fileName] = embedded.text;
 					}
 				});
 			}
@@ -230,8 +230,8 @@ export function createEmbeddedLanguageServiceHost(
 		const tsFileNames: string[] = [];
 
 		for (const mapped of documentRegistry.getAllEmbeddeds()) {
-			if (mapped.embedded.file.isTsHostFile) {
-				tsFileNames.push(mapped.embedded.file.fileName); // virtual .ts
+			if (mapped.embedded.isTsHostFile) {
+				tsFileNames.push(mapped.embedded.fileName); // virtual .ts
 			}
 		}
 
@@ -249,16 +249,16 @@ export function createEmbeddedLanguageServiceHost(
 	function getScriptVersion(fileName: string) {
 		let mapped = documentRegistry.fromEmbeddedFileName(fileName);
 		if (mapped) {
-			if (fileVersions.has(mapped.embedded.file)) {
-				return fileVersions.get(mapped.embedded.file)!;
+			if (fileVersions.has(mapped.embedded)) {
+				return fileVersions.get(mapped.embedded)!;
 			}
 			else {
-				let version = ts.sys?.createHash?.(mapped.embedded.file.codeGen.getText()) ?? mapped.embedded.file.codeGen.getText();
+				let version = ts.sys?.createHash?.(mapped.embedded.text) ?? mapped.embedded.text;
 				if (host.isTsc) {
 					// fix https://github.com/johnsoncodehk/volar/issues/1082
 					version = host.getScriptVersion(mapped.vueFile.fileName) + ':' + version;
 				}
-				fileVersions.set(mapped.embedded.file, version);
+				fileVersions.set(mapped.embedded, version);
 				return version;
 			}
 		}
@@ -272,8 +272,7 @@ export function createEmbeddedLanguageServiceHost(
 		}
 		const mapped = documentRegistry.fromEmbeddedFileName(fileName);
 		if (mapped) {
-			const text = mapped.embedded.file.codeGen.getText();
-			const snapshot = ts.ScriptSnapshot.fromString(text);
+			const snapshot = ts.ScriptSnapshot.fromString(mapped.embedded.text);
 			scriptSnapshots.set(fileName.toLowerCase(), [version, snapshot]);
 			return snapshot;
 		}

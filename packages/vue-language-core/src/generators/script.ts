@@ -1,5 +1,5 @@
 import { CodeGen, mergeCodeGen } from '@volar/code-gen';
-import type { EmbeddedFileMappingData, TeleportMappingData, TextRange } from '@volar/language-core';
+import type { TeleportMappingData, TextRange } from '@volar/language-core';
 import * as SourceMaps from '@volar/source-map';
 import { hyphenate } from '@vue/shared';
 import { posix as path } from 'path';
@@ -13,6 +13,7 @@ import type { ResolvedVueCompilerOptions } from '../types';
 import { getSlotsPropertyName, getVueLibraryName } from '../utils/shared';
 import { SearchTexts } from '../utils/string';
 import { walkInterpolationFragment } from '../utils/transform';
+import { EmbeddedFileMappingData } from '../sourceFile';
 
 /**
  * TODO: rewrite this
@@ -534,19 +535,15 @@ export function generate(
 						mappedRange: templateSideRange,
 						mode: SourceMaps.Mode.Offset,
 						data: {
-							toSource: {
-								capabilities: {
-									definitions: true,
-									references: true,
-									rename: true,
-								},
+							toSourceCapabilities: {
+								definitions: true,
+								references: true,
+								rename: true,
 							},
-							toTarget: {
-								capabilities: {
-									definitions: true,
-									references: true,
-									rename: true,
-								},
+							toGenedCapabilities: {
+								definitions: true,
+								references: true,
+								rename: true,
 							},
 						},
 					});

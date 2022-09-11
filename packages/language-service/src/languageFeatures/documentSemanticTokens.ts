@@ -41,7 +41,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 						return;
 
 					if (
-						mapping.data.capabilities.semanticTokens
+						mapping.data.semanticTokens
 						&& mapping.sourceRange.end > offsetRange.start
 						&& mapping.sourceRange.start < offsetRange.end
 					) {
@@ -71,7 +71,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				const _start = sourceMap.mappedDocument.offsetAt({ line: _token[0], character: _token[1] });
 				const _end = sourceMap.mappedDocument.offsetAt({ line: _token[0], character: _token[1] + _token[2] });
-				const range = sourceMap.getSourceRange(_start, _end, data => !!data.capabilities.semanticTokens)?.[0];
+				const range = sourceMap.getSourceRange(_start, _end, data => !!data.semanticTokens)?.[0];
 
 				if (!range)
 					return;

@@ -1,14 +1,52 @@
+import { DocumentCapabilities, EmbeddedFileSourceMap, FileNode, PositionCapabilities, Teleport, TeleportMappingData } from '@volar/language-core';
 import { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
-import { computed, ComputedRef, reactive, shallowRef as ref, Ref, pauseTracking, resetTracking } from '@vue/reactivity';
+import { computed, ComputedRef, pauseTracking, reactive, Ref, resetTracking, shallowRef as ref } from '@vue/reactivity';
 import { Sfc, VueLanguagePlugin } from './types';
-import { EmbeddedFileSourceMap, Teleport, EmbeddedFile, EmbeddedFileMappingData, Embedded, EmbeddedStructure, EmbeddedLangaugeSourceFile } from '@volar/language-core';
 
 import { CodeGen } from '@volar/code-gen';
-import { Mapping, MappingBase } from '@volar/source-map';
+import { Mapping } from '@volar/source-map';
 import * as CompilerDom from '@vue/compiler-dom';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
-export class VueSourceFile implements EmbeddedLangaugeSourceFile {
+export interface EmbeddedStructure {
+	self: Embedded | undefined,
+	embeddeds: EmbeddedStructure[],
+}
+
+export interface Embedded {
+	file: EmbeddedFile,
+	sourceMap: EmbeddedFileSourceMap,
+	teleport: Teleport | undefined,
+}
+
+export interface EmbeddedFile {
+	parentFileName?: string,
+	fileName: string,
+	isTsHostFile: boolean,
+	capabilities: DocumentCapabilities,
+	codeGen: CodeGen<EmbeddedFileMappingData>,
+	teleportMappings: Mapping<TeleportMappingData>[],
+};
+
+export interface EmbeddedFileMappingData {
+	vueTag: 'template' | 'script' | 'scriptSetup' | 'scriptSrc' | 'style' | 'customBlock' | undefined,
+	vueTagIndex?: number,
+	capabilities: PositionCapabilities,
+}
+
+export class VueSourceFile implements FileNode {
+
+	public isTsHostFile = false;
+	public capabilities = {
+		diagnostics: true,
+		foldingRanges: true,
+		formatting: true,
+		documentSymbol: true,
+		codeActions: true,
+		inlayHints: true,
+	};
+	public mappings = [];
+	public teleportMappings = [];
 
 	public sfc = reactive<Sfc>({
 		template: null,
@@ -40,7 +78,7 @@ export class VueSourceFile implements EmbeddedLangaugeSourceFile {
 	}
 
 	get tsFileName() {
-		return this._allEmbeddeds.value.find(e => e.file.fileName.replace(this.fileName, '').match(/^\.(js|ts)x?$/))?.file.fileName ?? '';
+		return this._allEmbeddeds.value.find(e => e[1].fileName.replace(this.fileName, '').match(/^\.(js|ts)x?$/))?.[1].fileName ?? '';
 	}
 
 	get embeddeds() {
@@ -217,32 +255,29 @@ export class VueSourceFile implements EmbeddedLangaugeSourceFile {
 
 			return files.value.map(_file => {
 				const file = _file.value;
-				const sourceMap = new EmbeddedFileSourceMap();
-				for (const mapping of file.codeGen.mappings) {
-					const vueRange = embeddedRangeToVueRange(mapping.data, mapping.sourceRange);
-					let additional: MappingBase[] | undefined;
-					if (mapping.additional) {
-						additional = [];
-						for (const add of mapping.additional) {
-							const addVueRange = embeddedRangeToVueRange(mapping.data, add.sourceRange);
-							additional.push({
-								...add,
-								sourceRange: addVueRange,
-							});
-						}
-					}
-					sourceMap.mappings.push({
-						...mapping,
-						sourceRange: vueRange,
-						additional,
-					});
-				}
-				const embedded: Embedded = {
-					file,
-					sourceMap,
-					teleport: new Teleport(file.teleportMappings),
+				const node: FileNode = {
+					fileName: file.fileName,
+					text: file.codeGen.getText(),
+					capabilities: file.capabilities,
+					isTsHostFile: file.isTsHostFile,
+					mappings: file.codeGen.mappings.map(mapping => {
+						return {
+							...mapping,
+							data: mapping.data.capabilities,
+							sourceRange: embeddedRangeToVueRange(mapping.data, mapping.sourceRange),
+							additional: mapping.additional ? mapping.additional.map(add => {
+								const addVueRange = embeddedRangeToVueRange(mapping.data, add.sourceRange);
+								return {
+									...add,
+									sourceRange: addVueRange,
+								};
+							}) : undefined,
+						};
+					}),
+					teleportMappings: file.teleportMappings,
+					embeddeds: [],
 				};
-				return embedded;
+				return [file, node] as [EmbeddedFile, FileNode];
 			});
 
 			function embeddedRangeToVueRange(data: EmbeddedFileMappingData, range: Mapping<unknown>['sourceRange']) {
@@ -298,7 +333,7 @@ export class VueSourceFile implements EmbeddedLangaugeSourceFile {
 	});
 	_allEmbeddeds = computed(() => {
 
-		const all: Embedded[] = [];
+		const all: [EmbeddedFile, FileNode][] = [];
 
 		for (const embeddedFiles of this._pluginEmbeddedFiles) {
 			for (const embedded of embeddedFiles.value) {
@@ -310,7 +345,9 @@ export class VueSourceFile implements EmbeddedLangaugeSourceFile {
 	});
 	_embeddeds = computed(() => {
 
-		const embeddeds: EmbeddedStructure[] = [];
+		const childs: FileNode[] = [];
+
+		// const embeddeds: EmbeddedStructure[] = [];
 		let remain = [...this._allEmbeddeds.value];
 
 		while (remain.length) {
@@ -321,43 +358,34 @@ export class VueSourceFile implements EmbeddedLangaugeSourceFile {
 			}
 		}
 
-		for (const e of remain) {
-			embeddeds.push({
-				self: e,
-				embeddeds: [],
-			});
-			if (e.file.parentFileName) {
-				console.error('Unable to resolve embedded: ' + e.file.parentFileName + ' -> ' + e.file.fileName);
+		for (const [embedded, node] of remain) {
+			childs.push(node);
+			if (embedded) {
+				console.error('Unable to resolve embedded: ' + embedded.parentFileName + ' -> ' + embedded.fileName);
 			}
 		}
 
-		return embeddeds;
+		return childs;
 
 		function consumeRemain() {
 			for (let i = remain.length - 1; i >= 0; i--) {
-				const embedded = remain[i];
-				if (!embedded.file.parentFileName) {
-					embeddeds.push({
-						self: embedded,
-						embeddeds: [],
-					});
+				const [embedded, node] = remain[i];
+				if (!embedded.parentFileName) {
+					childs.push(node);
 					remain.splice(i, 1);
 				}
 				else {
-					const parent = findParentStructure(embedded.file.parentFileName, embeddeds);
+					const parent = findParentStructure(embedded.parentFileName, childs);
 					if (parent) {
-						parent.embeddeds.push({
-							self: embedded,
-							embeddeds: [],
-						});
+						parent.embeddeds.push(node);
 						remain.splice(i, 1);
 					}
 				}
 			}
 		}
-		function findParentStructure(fileName: string, strus: EmbeddedStructure[]): EmbeddedStructure | undefined {
+		function findParentStructure(fileName: string, strus: FileNode[]): FileNode | undefined {
 			for (const stru of strus) {
-				if (stru.self?.file.fileName === fileName) {
+				if (stru.fileName === fileName) {
 					return stru;
 				}
 				let _stru = findParentStructure(fileName, stru.embeddeds);

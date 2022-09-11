@@ -4,13 +4,13 @@ import * as shared from '@volar/shared';
 import { languageFeatureWorker } from '../utils/featureWorkers';
 import * as dedupe from '../utils/dedupe';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { EmbeddedFileMappingData, TeleportSideData } from '@volar/language-core';
+import { PositionCapabilities, TeleportCapabilities } from '@volar/language-core';
 
 export function register(
 	context: LanguageServiceRuntimeContext,
 	api: 'findDefinition' | 'findTypeDefinition' | 'findImplementations',
-	isValidMappingData: (data: EmbeddedFileMappingData) => boolean,
-	isValidTeleportSideData: (sideData: TeleportSideData) => boolean,
+	isValidMappingData: (data: PositionCapabilities) => boolean,
+	isValidTeleportSideData: (sideData: TeleportCapabilities) => boolean,
 ) {
 
 	return (uri: string, position: vscode.Position) => {

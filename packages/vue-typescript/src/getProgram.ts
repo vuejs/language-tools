@@ -63,7 +63,7 @@ export function getProgram(
 
 			if (mapped) {
 
-				if (!mapped.embedded.file.capabilities.diagnostics)
+				if (!mapped.embedded.capabilities.diagnostics)
 					return [] as any;
 
 				const errors = transformDiagnostics(vueTsLs.getProgram()?.[api](sourceFile, cancellationToken) ?? []);
@@ -104,7 +104,7 @@ export function getProgram(
 					diagnostic.file.fileName,
 					diagnostic.start,
 					diagnostic.start + diagnostic.length,
-					data => !!data.capabilities.diagnostic,
+					data => !!data.diagnostic,
 				)) {
 
 					if (!core.typescriptLanguageServiceHost.fileExists?.(tsOrVueLoc.fileName))
@@ -122,7 +122,7 @@ export function getProgram(
 						diagnostic.file.fileName,
 						diagnostic.start,
 						diagnostic.start,
-						data => !!data.capabilities.diagnostic,
+						data => !!data.diagnostic,
 					)) {
 
 						if (!core.typescriptLanguageServiceHost.fileExists?.(start.fileName))
@@ -132,7 +132,7 @@ export function getProgram(
 							diagnostic.file.fileName,
 							diagnostic.start + diagnostic.length,
 							diagnostic.start + diagnostic.length,
-							data => !!data.capabilities.diagnostic,
+							data => !!data.diagnostic,
 						)) {
 
 							if (!core.typescriptLanguageServiceHost.fileExists?.(end.fileName))

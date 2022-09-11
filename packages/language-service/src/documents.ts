@@ -1,6 +1,6 @@
+import { DocumentRegistry, EmbeddedFileSourceMap, FileNode, forEachEmbeddeds, PositionCapabilities, Teleport, TeleportMappingData, TeleportCapabilities } from '@volar/language-core';
 import * as shared from '@volar/shared';
 import { SourceMapBase } from '@volar/source-map';
-import { Embedded, EmbeddedFile, EmbeddedFileMappingData, EmbeddedFileSourceMap, EmbeddedLangaugeSourceFile, forEachEmbeddeds, Teleport, TeleportMappingData, TeleportSideData, DocumentRegistry } from '@volar/language-core';
 import { computed } from '@vue/reactivity';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -62,10 +62,10 @@ export class SourceMap<Data = undefined> {
 	}
 }
 
-export class EmbeddedDocumentSourceMap extends SourceMap<EmbeddedFileMappingData> {
+export class EmbeddedDocumentSourceMap extends SourceMap<PositionCapabilities> {
 
 	constructor(
-		public embeddedFile: EmbeddedFile,
+		public embeddedFile: FileNode,
 		public sourceDocument: TextDocument,
 		public mappedDocument: TextDocument,
 		_sourceMap: EmbeddedFileSourceMap,
@@ -76,18 +76,18 @@ export class EmbeddedDocumentSourceMap extends SourceMap<EmbeddedFileMappingData
 
 export class TeleportSourceMap extends SourceMap<TeleportMappingData> {
 	constructor(
-		public embeddedFile: EmbeddedFile,
+		public embeddedFile: FileNode,
 		public document: TextDocument,
 		teleport: Teleport,
 	) {
 		super(document, document, teleport);
 	}
-	*findTeleports(start: vscode.Position, end?: vscode.Position, filter?: (data: TeleportSideData) => boolean) {
-		for (const [teleRange, data] of this.getMappedRanges(start, end, filter ? data => filter(data.toTarget) : undefined)) {
-			yield [teleRange, data.toTarget] as const;
+	*findTeleports(start: vscode.Position, end?: vscode.Position, filter?: (data: TeleportCapabilities) => boolean) {
+		for (const [teleRange, data] of this.getMappedRanges(start, end, filter ? data => filter(data.toGenedCapabilities) : undefined)) {
+			yield [teleRange, data.toGenedCapabilities] as const;
 		}
-		for (const [teleRange, data] of this.getSourceRanges(start, end, filter ? data => filter(data.toSource) : undefined)) {
-			yield [teleRange, data.toSource] as const;
+		for (const [teleRange, data] of this.getSourceRanges(start, end, filter ? data => filter(data.toSourceCapabilities) : undefined)) {
+			yield [teleRange, data.toSourceCapabilities] as const;
 		}
 	}
 }
@@ -97,7 +97,7 @@ export function parseSourceFileDocuments(
 	mapper: DocumentRegistry,
 ) {
 
-	const _sourceFiles = new WeakMap<EmbeddedLangaugeSourceFile, SourceFileDocument>();
+	const _sourceFiles = new WeakMap<FileNode, SourceFileDocument>();
 
 	// reactivity
 	const embeddedDocumentsMap = computed(() => {
@@ -152,7 +152,7 @@ export function parseSourceFileDocuments(
 			uri: string,
 			start: vscode.Position,
 			end?: vscode.Position,
-			filter?: (data: EmbeddedFileMappingData) => boolean,
+			filter?: (data: PositionCapabilities) => boolean,
 			sourceMapFilter?: (sourceMap: EmbeddedFileSourceMap) => boolean,
 		) {
 
@@ -191,10 +191,10 @@ export function parseSourceFileDocuments(
 		},
 	};
 
-	function get(sourceFile: EmbeddedLangaugeSourceFile) {
+	function get(sourceFile: FileNode) {
 		let vueDocument = _sourceFiles.get(sourceFile);
 		if (!vueDocument) {
-			vueDocument = parseSourceFileDocument(rootUri, sourceFile);
+			vueDocument = parseSourceFileDocument(rootUri, sourceFile, mapper);
 			_sourceFiles.set(sourceFile, vueDocument);
 		}
 		return vueDocument;
@@ -206,13 +206,14 @@ export function parseSourceFileDocuments(
 
 export function parseSourceFileDocument(
 	rootUri: URI,
-	sourceFile: EmbeddedLangaugeSourceFile,
+	sourceFile: FileNode,
+	mapper: DocumentRegistry,
 ) {
 
 	let documentVersion = 0;
 	const embeddedDocumentVersions = new Map<string, number>();
-	const embeddedDocuments = new WeakMap<EmbeddedFile, TextDocument>();
-	const sourceMaps = new WeakMap<Embedded, [number, EmbeddedDocumentSourceMap]>();
+	const embeddedDocuments = new WeakMap<FileNode, TextDocument>();
+	const sourceMaps = new WeakMap<FileNode, [number, EmbeddedDocumentSourceMap]>();
 
 	// computed
 	const document = computed(() => TextDocument.create(
@@ -223,20 +224,20 @@ export function parseSourceFileDocument(
 	));
 	const allSourceMaps = computed(() => {
 		const result: EmbeddedDocumentSourceMap[] = [];
-		forEachEmbeddeds(sourceFile.embeddeds, embedded => {
+		forEachEmbeddeds(sourceFile, embedded => {
 			result.push(getSourceMap(embedded));
 		});
 		return result;
 	});
 	const teleports = computed(() => {
 		const result: TeleportSourceMap[] = [];
-		forEachEmbeddeds(sourceFile.embeddeds, embedded => {
-			if (embedded.teleport) {
-				const embeddedDocument = getEmbeddedDocument(embedded.file)!;
+		forEachEmbeddeds(sourceFile, embedded => {
+			if (embedded.teleportMappings) {
+				const embeddedDocument = getEmbeddedDocument(embedded)!;
 				const sourceMap = new TeleportSourceMap(
-					embedded.file,
+					embedded,
 					embeddedDocument,
-					embedded.teleport,
+					mapper.getTeleportSourceMap(embedded.teleportMappings),
 				);
 				result.push(sourceMap);
 			}
@@ -254,7 +255,7 @@ export function parseSourceFileDocument(
 		getDocument: () => document.value,
 	};
 
-	function getSourceMap(embedded: Embedded) {
+	function getSourceMap(embedded: FileNode) {
 
 		let cache = sourceMaps.get(embedded);
 
@@ -263,10 +264,10 @@ export function parseSourceFileDocument(
 			cache = [
 				document.value.version,
 				new EmbeddedDocumentSourceMap(
-					embedded.file,
+					embedded,
 					document.value,
-					getEmbeddedDocument(embedded.file),
-					embedded.sourceMap,
+					getEmbeddedDocument(embedded),
+					mapper.getSourceMap(embedded.mappings),
 				)
 			];
 			sourceMaps.set(embedded, cache);
@@ -275,7 +276,7 @@ export function parseSourceFileDocument(
 		return cache[1];
 	}
 
-	function getEmbeddedDocument(embeddedFile: EmbeddedFile) {
+	function getEmbeddedDocument(embeddedFile: FileNode) {
 
 		let document = embeddedDocuments.get(embeddedFile);
 
@@ -290,7 +291,7 @@ export function parseSourceFileDocument(
 				uri,
 				shared.syntaxToLanguageId(embeddedFile.fileName.split('.').pop()!),
 				newVersion,
-				embeddedFile.codeGen.getText(),
+				embeddedFile.text,
 			);
 			embeddedDocuments.set(embeddedFile, document);
 		}

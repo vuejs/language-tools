@@ -1,69 +1,45 @@
-import { CodeGen } from '@volar/code-gen';
 import { Mapping } from '@volar/source-map';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { EmbeddedFileSourceMap, Teleport } from './sourceMaps';
 
-export interface EmbeddedStructure {
-	self: Embedded | undefined,
-	embeddeds: EmbeddedStructure[],
+export interface DocumentCapabilities {
+	diagnostics: boolean,
+	foldingRanges: boolean,
+	formatting: boolean | {
+		initialIndentBracket?: [string, string],
+	},
+	documentSymbol: boolean,
+	codeActions: boolean,
+	inlayHints: boolean,
 }
 
-export interface Embedded {
-	file: EmbeddedFile,
-	sourceMap: EmbeddedFileSourceMap,
-	teleport: Teleport | undefined,
+export interface PositionCapabilities {
+	hover?: boolean,
+	references?: boolean,
+	definitions?: boolean,
+	rename?: boolean | {
+		normalize?(newName: string): string,
+		apply?(oldName: string, newName: string): string,
+	},
+	completion?: boolean | {
+		additional: boolean,
+	},
+	diagnostic?: boolean,
+	semanticTokens?: boolean,
+
+	// TODO
+	referencesCodeLens?: boolean,
+	displayWithLink?: boolean,
 }
 
-export interface EmbeddedFile {
-	parentFileName?: string,
-	fileName: string,
-	isTsHostFile: boolean,
-	capabilities: {
-		diagnostics: boolean,
-		foldingRanges: boolean,
-		formatting: boolean | {
-			initialIndentBracket?: [string, string],
-		},
-		documentSymbol: boolean,
-		codeActions: boolean,
-		inlayHints: boolean,
-	},
-	codeGen: CodeGen<EmbeddedFileMappingData>,
-	teleportMappings: Mapping<TeleportMappingData>[],
-};
-
-export interface EmbeddedFileMappingData {
-	vueTag: 'template' | 'script' | 'scriptSetup' | 'scriptSrc' | 'style' | 'customBlock' | undefined,
-	vueTagIndex?: number,
-	capabilities: {
-		basic?: boolean,
-		references?: boolean,
-		definitions?: boolean,
-		diagnostic?: boolean,
-		rename?: boolean | {
-			normalize?(newName: string): string,
-			apply?(oldName: string, newName: string): string,
-		},
-		completion?: boolean | {
-			additional: boolean,
-		},
-		semanticTokens?: boolean,
-		referencesCodeLens?: boolean,
-		displayWithLink?: boolean,
-	},
-}
-
-export interface TeleportSideData {
-	capabilities: {
-		references?: boolean,
-		definitions?: boolean,
-		rename?: boolean,
-	},
+export interface TeleportCapabilities {
+	references?: boolean,
+	definitions?: boolean,
+	rename?: boolean,
 }
 
 export interface TeleportMappingData {
-	toSource: TeleportSideData,
-	toTarget: TeleportSideData,
+	toSourceCapabilities: TeleportCapabilities,
+	toGenedCapabilities: TeleportCapabilities,
 }
 
 export interface TextRange {
@@ -71,15 +47,19 @@ export interface TextRange {
 	end: number,
 }
 
-export interface EmbeddedLangaugeSourceFile {
+export interface FileNode {
 	fileName: string,
 	text: string,
-	embeddeds: EmbeddedStructure[],
+	isTsHostFile: boolean,
+	capabilities: DocumentCapabilities,
+	mappings: Mapping<PositionCapabilities>[],
+	teleportMappings: Mapping<TeleportMappingData>[],
+	embeddeds: FileNode[],
 }
 
 export interface EmbeddedLanguageModule {
-	createSourceFile(fileName: string, snapshot: ts.IScriptSnapshot): EmbeddedLangaugeSourceFile | undefined;
-	updateSourceFile(sourceFile: EmbeddedLangaugeSourceFile, snapshot: ts.IScriptSnapshot): void;
+	createSourceFile(fileName: string, snapshot: ts.IScriptSnapshot): FileNode | undefined;
+	updateSourceFile(sourceFile: FileNode, snapshot: ts.IScriptSnapshot): void;
 	proxyLanguageServiceHost?(host: LanguageServiceHost): Partial<LanguageServiceHost>;
 }
 

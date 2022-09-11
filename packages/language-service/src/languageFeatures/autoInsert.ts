@@ -13,9 +13,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 			{ position, autoInsertContext },
 			function* (arg, sourceMap) {
 
-				const position = sourceMap.getMappedRange(arg.position, arg.position, data => !!data.capabilities.completion)?.[0].start;
-				const rangeOffset = sourceMap.getMappedRange(arg.autoInsertContext.lastChange.rangeOffset, arg.autoInsertContext.lastChange.rangeOffset, data => !!data.capabilities.completion)?.[0].start;
-				const range = sourceMap.getMappedRange(arg.autoInsertContext.lastChange.range.start, arg.autoInsertContext.lastChange.range.end, data => !!data.capabilities.completion)?.[0];
+				const position = sourceMap.getMappedRange(arg.position, arg.position, data => !!data.completion)?.[0].start;
+				const rangeOffset = sourceMap.getMappedRange(arg.autoInsertContext.lastChange.rangeOffset, arg.autoInsertContext.lastChange.rangeOffset, data => !!data.completion)?.[0].start;
+				const range = sourceMap.getMappedRange(arg.autoInsertContext.lastChange.range.start, arg.autoInsertContext.lastChange.range.end, data => !!data.completion)?.[0];
 
 				if (position && rangeOffset !== undefined && range) {
 					yield {

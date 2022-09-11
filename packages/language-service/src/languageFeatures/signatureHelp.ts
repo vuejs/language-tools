@@ -14,7 +14,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				for (const [mappedRange] of sourceMap.getMappedRanges(
 					position,
 					position,
-					data => !!data.capabilities.completion,
+					data => !!data.completion,
 				)) {
 					yield mappedRange.start;
 				}

@@ -9,7 +9,6 @@ type CommandArgs = [string, vscode.Position, vscode.Location[]];
 
 export interface ReferencesCodeLensData {
 	uri: string,
-	vueTag: string | undefined,
 	position: vscode.Position,
 }
 
@@ -35,12 +34,11 @@ export default function (options: {
 					for (const sourceMap of vueDocument.getSourceMaps()) {
 						for (const mapping of sourceMap.base.mappings) {
 
-							if (!mapping.data.capabilities.referencesCodeLens)
+							if (!mapping.data.referencesCodeLens)
 								continue;
 
 							const data: ReferencesCodeLensData = {
 								uri: document.uri,
-								vueTag: mapping.data.vueTag,
 								position: document.positionAt(mapping.sourceRange.start),
 							};
 
@@ -67,10 +65,11 @@ export default function (options: {
 					return codeLens;
 
 				const sourceMaps = vueDocument.getSourceMaps();
+				const currentSourceMap = sourceMaps.find(sourceMap => sourceMap.getMappedRange(data.position));
 				const references = await options.findReference(data.uri, data.position) ?? [];
 				const referencesInDifferentDocument = references.filter(reference =>
 					reference.uri !== data.uri // different file
-					|| sourceMaps.some(sourceMap => sourceMap.getMappedRange(reference.range.start, reference.range.end, _data => _data.vueTag !== data.vueTag)) // different embedded document
+					|| sourceMaps.some(sourceMap => sourceMap.getMappedRange(reference.range.start, reference.range.end) && sourceMap !== currentSourceMap) // different embedded document
 				);
 				const referencesCount = referencesInDifferentDocument.length ?? 0;
 

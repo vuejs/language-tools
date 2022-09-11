@@ -1,9 +1,9 @@
-import { TextDocument } from 'vscode-languageserver-textdocument';
+import type { FileNode } from '@volar/language-core';
 import * as vscode from 'vscode-languageserver-protocol';
-import type { EmbeddedStructure } from '@volar/language-core';
-import type { DocumentServiceRuntimeContext } from '../types';
-import { EmbeddedDocumentSourceMap, SourceFileDocument } from '../documents';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import { useConfigurationHost } from '../contextStore';
+import { EmbeddedDocumentSourceMap, SourceFileDocument } from '../documents';
+import type { DocumentServiceRuntimeContext } from '../types';
 
 export function register(context: DocumentServiceRuntimeContext) {
 
@@ -56,12 +56,12 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 			for (const embedded of embeddeds) {
 
-				if (!embedded.self?.file.capabilities.formatting)
+				if (!embedded.capabilities.formatting)
 					continue;
 
-				const sourceMap = vueDocument[0].getSourceMap(embedded.self);
-				const initialIndentBracket = typeof embedded.self.file.capabilities.formatting === 'object' && initialIndentLanguageId[sourceMap.mappedDocument.languageId]
-					? embedded.self.file.capabilities.formatting.initialIndentBracket
+				const sourceMap = vueDocument[0].getSourceMap(embedded);
+				const initialIndentBracket = typeof embedded.capabilities.formatting === 'object' && initialIndentLanguageId[sourceMap.mappedDocument.languageId]
+					? embedded.capabilities.formatting.initialIndentBracket
 					: undefined;
 
 				let _edits: vscode.TextEdit[] | undefined;
@@ -179,14 +179,14 @@ export function register(context: DocumentServiceRuntimeContext) {
 		function getEmbeddedsByLevel(vueDocument: SourceFileDocument, level: number) {
 
 			const embeddeds = vueDocument.file.embeddeds;
-			const embeddedsLevels: EmbeddedStructure[][] = [embeddeds];
+			const embeddedsLevels: FileNode[][] = [embeddeds];
 
 			while (true) {
 
 				if (embeddedsLevels.length > level)
 					return embeddedsLevels[level];
 
-				let nextEmbeddeds: EmbeddedStructure[] = [];
+				let nextEmbeddeds: FileNode[] = [];
 
 				for (const embeddeds of embeddedsLevels[embeddedsLevels.length - 1]) {
 

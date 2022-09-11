@@ -265,7 +265,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				let sourceRange = sourceMap.getSourceRange(
 					error.range.start,
 					error.range.end,
-					data => !!data.capabilities.diagnostic,
+					data => !!data.diagnostic,
 				)?.[0];
 
 				// fix https://github.com/johnsoncodehk/volar/issues/1205
@@ -274,12 +274,12 @@ export function register(context: LanguageServiceRuntimeContext) {
 					const start = sourceMap.getSourceRange(
 						error.range.start,
 						error.range.start,
-						data => !!data.capabilities.diagnostic,
+						data => !!data.diagnostic,
 					)?.[0].start;
 					const end = sourceMap.getSourceRange(
 						error.range.end,
 						error.range.end,
-						data => !!data.capabilities.diagnostic,
+						data => !!data.diagnostic,
 					)?.[0].end;
 					if (start && end) {
 						sourceRange = { start, end };
@@ -301,7 +301,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 						info.location.uri,
 						info.location.range.start,
 						info.location.range.end,
-						data => !!data.capabilities.diagnostic,
+						data => !!data.diagnostic,
 					)) {
 						relatedInfos.push({
 							location: {

@@ -28,7 +28,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					const range = referenceSourceMap.getSourceRange(
 						reference.range.start,
 						reference.range.end,
-						data => !!data.capabilities.references,
+						data => !!data.references,
 					)?.[0];
 
 					if (!range)

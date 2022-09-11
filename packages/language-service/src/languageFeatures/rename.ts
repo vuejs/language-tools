@@ -17,13 +17,13 @@ export function register(context: LanguageServiceRuntimeContext) {
 				for (const [mappedRange, mappedData] of sourceMap.getMappedRanges(
 					arg.position,
 					arg.position,
-					data => typeof data.capabilities.rename === 'object' ? !!data.capabilities.rename.normalize : !!data.capabilities.rename,
+					data => typeof data.rename === 'object' ? !!data.rename.normalize : !!data.rename,
 				)) {
 
 					let newName = arg.newName;
 
-					if (typeof mappedData.capabilities.rename === 'object' && mappedData.capabilities.rename.normalize)
-						newName = mappedData.capabilities.rename.normalize(arg.newName);
+					if (typeof mappedData.rename === 'object' && mappedData.rename.normalize)
+						newName = mappedData.rename.normalize(arg.newName);
 
 					yield { position: mappedRange.start, newName };
 				}
@@ -74,7 +74,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 									for (const [teleRange] of teleport.findTeleports(
 										textEdit.range.start,
 										textEdit.range.end,
-										sideData => !!sideData.capabilities.rename,
+										sideData => !!sideData.rename,
 									)) {
 
 										if (recursiveChecker.has({ uri: teleport.document.uri, range: { start: teleRange.start, end: teleRange.start } }))
@@ -211,14 +211,14 @@ export function embeddedEditToSourceEdit(
 				tsUri,
 				tsEdit.range.start,
 				tsEdit.range.end,
-				data => typeof data.capabilities.rename === 'object' ? !!data.capabilities.rename.apply : !!data.capabilities.rename, // fix https://github.com/johnsoncodehk/volar/issues/1091
+				data => typeof data.rename === 'object' ? !!data.rename.apply : !!data.rename, // fix https://github.com/johnsoncodehk/volar/issues/1091
 			)) {
 
 				let newText_2 = tsEdit.newText;
 
-				if (vueLoc.sourceMap && typeof vueLoc.data.capabilities.rename === 'object' && vueLoc.data.capabilities.rename.apply) {
+				if (vueLoc.sourceMap && typeof vueLoc.data.rename === 'object' && vueLoc.data.rename.apply) {
 					const vueDoc = vueLoc.sourceMap.sourceDocument;
-					newText_2 = vueLoc.data.capabilities.rename.apply(vueDoc.getText(vueLoc.range), tsEdit.newText);
+					newText_2 = vueLoc.data.rename.apply(vueDoc.getText(vueLoc.range), tsEdit.newText);
 				}
 
 				if (!vueResult.changes) {
@@ -258,7 +258,7 @@ export function embeddedEditToSourceEdit(
 						for (const [vueRange] of sourceMap.getSourceRanges(
 							tsEdit.range.start,
 							tsEdit.range.end,
-							data => typeof data.capabilities.rename === 'object' ? !!data.capabilities.rename.apply : !!data.capabilities.rename, // fix https://github.com/johnsoncodehk/volar/issues/1091
+							data => typeof data.rename === 'object' ? !!data.rename.apply : !!data.rename, // fix https://github.com/johnsoncodehk/volar/issues/1091
 						)) {
 
 							vueDocEdit.edits.push({

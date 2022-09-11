@@ -93,15 +93,6 @@ importers:
       vscode-languageclient: 8.0.2
       vscode-nls: 5.2.0
 
-  packages/alpine-language-core:
-    specifiers:
-      '@volar/vue-language-core': 0.40.13
-      typescript: latest
-    dependencies:
-      '@volar/vue-language-core': link:../vue-language-core
-    devDependencies:
-      typescript: 4.8.3
-
   packages/alpine-language-server:
     specifiers:
       '@volar/language-server': 0.40.13
@@ -113,23 +104,6 @@ importers:
       '@volar/vue-language-core': link:../vue-language-core
       '@volar/vue-language-server': link:../vue-language-server
       '@volar/vue-language-service': link:../vue-language-service
-
-  packages/alpine-language-service:
-    specifiers:
-      '@types/semver': ^7.3.12
-      '@volar/alpine-language-core': 0.40.13
-      '@volar/vue-language-service': 0.40.13
-      '@volar/vue-language-service-types': 0.40.13
-      typescript: latest
-      vscode-uri: ^3.0.3
-    dependencies:
-      '@volar/alpine-language-core': link:../alpine-language-core
-      '@volar/vue-language-service': link:../vue-language-service
-      '@volar/vue-language-service-types': 0.40.13
-      vscode-uri: 3.0.3
-    devDependencies:
-      '@types/semver': 7.3.12
-      typescript: 4.8.3
 
   packages/code-gen:
     specifiers:
@@ -1241,13 +1215,6 @@ packages:
       vite: 3.1.0
       vue: 3.2.38
     dev: true
-
-  /@volar/vue-language-service-types/0.40.13:
-    resolution: {integrity: sha512-lVYs2T/cpEfic93TIyc9oOVFGQa3avMCmpPbXejlqYNHJuh9oMwOmEv3s7bkUX8i0uApTGOf3dz8PmKZddETYA==}
-    dependencies:
-      vscode-languageserver-protocol: 3.17.2
-      vscode-languageserver-textdocument: 1.0.7
-    dev: false
 
   /@vscode/emmet-helper/2.8.4:
     resolution: {integrity: sha512-lUki5QLS47bz/U8IlG9VQ+1lfxMtxMZENmU5nu4Z71eOD5j9FK0SmYGL5NiVJg9WBWeAU0VxRADMY2Qpq7BfVg==}

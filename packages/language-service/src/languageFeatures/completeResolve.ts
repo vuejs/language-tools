@@ -28,7 +28,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				if (sourceMap) {
 
 					const newPosition_2 = newPosition
-						? sourceMap.getMappedRange(newPosition, newPosition, data => !!data.capabilities.completion)?.[0].start
+						? sourceMap.getMappedRange(newPosition, newPosition, data => !!data.completion)?.[0].start
 						: undefined;
 					const resolvedItem = await plugin.complete.resolve(originalItem, newPosition_2);
 

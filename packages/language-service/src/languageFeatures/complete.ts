@@ -51,7 +51,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					if (!sourceMap)
 						continue;
 
-					for (const [embeddedRange] of sourceMap.getMappedRanges(position, position, data => !!data.capabilities.completion)) {
+					for (const [embeddedRange] of sourceMap.getMappedRanges(position, position, data => !!data.completion)) {
 
 						if (!cacheData.plugin.complete?.on)
 							continue;
@@ -134,7 +134,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					const plugins = context.plugins.sort(sortPlugins);
 
-					for (const [embeddedRange, data] of sourceMap.getMappedRanges(position, position, data => !!data.capabilities.completion)) {
+					for (const [embeddedRange, data] of sourceMap.getMappedRanges(position, position, data => !!data.completion)) {
 
 						for (const plugin of plugins) {
 
@@ -147,7 +147,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 							if (completionContext?.triggerCharacter && !plugin.complete.triggerCharacters?.includes(completionContext.triggerCharacter))
 								continue;
 
-							const isAdditionalMapping = typeof data.capabilities.completion === 'object' && data.capabilities.completion.additional;
+							const isAdditionalMapping = typeof data.completion === 'object' && data.completion.additional;
 							if (cache!.mainCompletion && ((!plugin.complete.isAdditional && !isAdditionalMapping) || cache?.mainCompletion.documentUri !== sourceMap.mappedDocument.uri))
 								continue;
 

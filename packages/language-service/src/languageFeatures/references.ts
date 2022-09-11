@@ -17,7 +17,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				for (const [mappedRange] of sourceMap.getMappedRanges(
 					position,
 					position,
-					data => !!data.capabilities.references,
+					data => !!data.references,
 				)) {
 					yield mappedRange.start;
 				}
@@ -56,7 +56,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 							for (const [teleRange] of teleport.findTeleports(
 								reference.range.start,
 								reference.range.end,
-								sideData => !!sideData.capabilities.references,
+								sideData => !!sideData.references,
 							)) {
 
 								if (recursiveChecker.has({ uri: teleport.document.uri, range: { start: teleRange.start, end: teleRange.start } }))
@@ -83,7 +83,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					const range = referenceSourceMap.getSourceRange(
 						reference.range.start,
 						reference.range.end,
-						data => !!data.capabilities.references,
+						data => !!data.references,
 					)?.[0];
 
 					if (!range)

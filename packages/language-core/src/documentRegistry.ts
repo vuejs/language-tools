@@ -1,14 +1,15 @@
-import type { EmbeddedFileMappingData, EmbeddedLangaugeSourceFile, EmbeddedLanguageModule } from './types';
+import type { FileNode, EmbeddedLanguageModule, DocumentCapabilities, PositionCapabilities } from './types';
 import { computed, shallowReactive } from '@vue/reactivity';
-import type { EmbeddedFileSourceMap, Teleport } from './sourceMaps';
-import type { Embedded, EmbeddedFile, EmbeddedStructure } from './types';
+import { Teleport } from './sourceMaps';
+import { Mapping, SourceMapBase } from '@volar/source-map';
 
-export function forEachEmbeddeds(input: EmbeddedStructure[], cb: (embedded: Embedded) => void) {
-	for (const child of input) {
-		if (child.self) {
-			cb(child.self);
+export function forEachEmbeddeds(input: FileNode, cb: (embedded: FileNode) => void) {
+	cb(input);
+	for (const child of input.embeddeds) {
+		if (child) {
+			cb(child);
 		}
-		forEachEmbeddeds(child.embeddeds, cb);
+		forEachEmbeddeds(child, cb);
 	}
 }
 
@@ -16,23 +17,23 @@ export type DocumentRegistry = ReturnType<typeof createDocumentRegistry>;
 
 export function createDocumentRegistry() {
 
-	const files = shallowReactive<Record<string, [EmbeddedLangaugeSourceFile, EmbeddedLanguageModule]>>({});
+	const files = shallowReactive<Record<string, [FileNode, EmbeddedLanguageModule]>>({});
 	const all = computed(() => Object.values(files));
 	const fileNames = computed(() => all.value.map(sourceFile => sourceFile?.[0].fileName));
 	const embeddedDocumentsMap = computed(() => {
-		const map = new WeakMap<EmbeddedFile, EmbeddedLangaugeSourceFile>();
+		const map = new WeakMap<FileNode, FileNode>();
 		for (const [sourceFile] of all.value) {
-			forEachEmbeddeds(sourceFile.embeddeds, embedded => {
-				map.set(embedded.file, sourceFile);
+			forEachEmbeddeds(sourceFile, embedded => {
+				map.set(embedded, sourceFile);
 			});
 		}
 		return map;
 	});
 	const sourceMapsByFileName = computed(() => {
-		const map = new Map<string, { vueFile: EmbeddedLangaugeSourceFile, embedded: Embedded; }>();
+		const map = new Map<string, { vueFile: FileNode, embedded: FileNode; }>();
 		for (const [sourceFile] of all.value) {
-			forEachEmbeddeds(sourceFile.embeddeds, embedded => {
-				map.set(embedded.file.fileName.toLowerCase(), { vueFile: sourceFile, embedded });
+			forEachEmbeddeds(sourceFile, embedded => {
+				map.set(embedded.fileName.toLowerCase(), { vueFile: sourceFile, embedded });
 			});
 		}
 		return map;
@@ -41,20 +42,22 @@ export function createDocumentRegistry() {
 		const map = new Map<string, Teleport>();
 		for (const key in files) {
 			const [sourceFile] = files[key]!;
-			forEachEmbeddeds(sourceFile.embeddeds, embedded => {
-				if (embedded.teleport) {
-					map.set(embedded.file.fileName.toLowerCase(), embedded.teleport);
+			forEachEmbeddeds(sourceFile, embedded => {
+				if (embedded.teleportMappings) {
+					map.set(embedded.fileName.toLowerCase(), getTeleport(embedded.teleportMappings));
 				}
 			});
 		}
 		return map;
 	});
+	const _sourceMaps = new WeakMap<Mapping<any>[], SourceMapBase<any>>();
+	const _teleports = new WeakMap<Mapping<any>[], Teleport>();
 
 	return {
-		get: (fileName: string): [EmbeddedLangaugeSourceFile, EmbeddedLanguageModule] | undefined => files[fileName.toLowerCase()],
+		get: (fileName: string): [FileNode, EmbeddedLanguageModule] | undefined => files[fileName.toLowerCase()],
 		delete: (fileName: string) => delete files[fileName.toLowerCase()],
 		has: (fileName: string) => !!files[fileName.toLowerCase()],
-		set: (fileName: string, vueFile: EmbeddedLangaugeSourceFile, languageModule: EmbeddedLanguageModule) => files[fileName.toLowerCase()] = [vueFile, languageModule],
+		set: (fileName: string, vueFile: FileNode, languageModule: EmbeddedLanguageModule) => files[fileName.toLowerCase()] = [vueFile, languageModule],
 
 		getFileNames: () => fileNames.value,
 		getAll: () => all.value,
@@ -70,8 +73,8 @@ export function createDocumentRegistry() {
 			fileName: string,
 			start: number,
 			end?: number,
-			filter?: (data: EmbeddedFileMappingData) => boolean,
-			sourceMapFilter?: (sourceMap: EmbeddedFileSourceMap) => boolean,
+			filter?: (data: PositionCapabilities) => boolean,
+			sourceMapFilter?: (sourceMap: DocumentCapabilities) => boolean,
 		) {
 
 			if (fileName.endsWith('/__VLS_types.ts')) { // TODO: monkey fix
@@ -85,10 +88,12 @@ export function createDocumentRegistry() {
 
 			if (mapped) {
 
-				if (sourceMapFilter && !sourceMapFilter(mapped.embedded.sourceMap))
+				if (sourceMapFilter && !sourceMapFilter(mapped.embedded.capabilities))
 					return;
 
-				for (const vueRange of mapped.embedded.sourceMap.getSourceRanges(start, end, filter)) {
+				const sourceMap = getSourceMap(mapped.embedded.mappings);
+
+				for (const vueRange of sourceMap.getSourceRanges(start, end, filter)) {
 					yield {
 						fileName: mapped.vueFile.fileName,
 						range: vueRange[0],
@@ -107,15 +112,26 @@ export function createDocumentRegistry() {
 				};
 			}
 		},
-		fromEmbeddedFile: function (
-			file: EmbeddedFile,
-		) {
+		fromEmbeddedFile: function (file: FileNode) {
 			return embeddedDocumentsMap.value.get(file);
 		},
-		fromEmbeddedFileName: function (
-			fileName: string,
-		) {
+		fromEmbeddedFileName: function (fileName: string) {
 			return sourceMapsByFileName.value.get(fileName.toLowerCase());
 		},
+		getSourceMap,
+		getTeleportSourceMap: getTeleport,
 	};
+
+	function getSourceMap(mappings: Mapping<any>[]) {
+		if (!_sourceMaps.has(mappings)) {
+			_sourceMaps.set(mappings, new SourceMapBase(mappings));
+		}
+		return _sourceMaps.get(mappings)!;
+	}
+	function getTeleport(mappings: Mapping<any>[]) {
+		if (!_teleports.has(mappings)) {
+			_teleports.set(mappings, new Teleport(mappings));
+		}
+		return _teleports.get(mappings)!;
+	}
 }

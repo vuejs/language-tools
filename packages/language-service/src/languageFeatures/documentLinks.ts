@@ -46,7 +46,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				for (const mapped of sourceMap.base.mappings) {
 
-					if (!mapped.data.capabilities.displayWithLink)
+					if (!mapped.data.displayWithLink)
 						continue;
 
 					result.push({

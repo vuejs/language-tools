@@ -3,6 +3,7 @@ import * as vscode from 'vscode-languageserver-protocol';
 import { EmbeddedLanguageServicePlugin, useConfigurationHost, useTypeScriptModule, SourceFileDocument } from '@volar/language-service';
 import { isCharacterTyping } from './vue-autoinsert-dotvalue';
 import * as embedded from '@volar/language-core';
+import { FileNode } from '@volar/language-core';
 
 export default function (options: {
 	getVueDocument: (document: TextDocument) => SourceFileDocument | undefined,
@@ -26,11 +27,11 @@ export default function (options: {
 				return;
 
 
-			let templateFormatScript: embedded.Embedded | undefined;
+			let templateFormatScript: FileNode | undefined;
 
-			embedded.forEachEmbeddeds(vueDocument.file.embeddeds, embedded => {
-				if (embedded.file.fileName.endsWith('.__VLS_template_format.tsx')
-					|| embedded.file.fileName.endsWith('.__VLS_template_format.jsx')) {
+			embedded.forEachEmbeddeds(vueDocument.file, embedded => {
+				if (embedded.fileName.endsWith('.__VLS_template_format.tsx')
+					|| embedded.fileName.endsWith('.__VLS_template_format.jsx')) {
 					templateFormatScript = embedded;
 				}
 			});
@@ -40,10 +41,10 @@ export default function (options: {
 
 			const offset = document.offsetAt(position);
 
-			for (const mappedRange of templateFormatScript.sourceMap.mappings) {
+			for (const mappedRange of templateFormatScript.mappings) {
 				if (mappedRange.sourceRange.end === offset) {
 					const text = document.getText().substring(mappedRange.sourceRange.start, mappedRange.sourceRange.end);
-					const ast = ts.createSourceFile(templateFormatScript.file.fileName, text, ts.ScriptTarget.Latest);
+					const ast = ts.createSourceFile(templateFormatScript.fileName, text, ts.ScriptTarget.Latest);
 					if (ast.statements.length === 1) {
 						const statement = ast.statements[0];
 						if (

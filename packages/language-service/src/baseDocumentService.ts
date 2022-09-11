@@ -11,7 +11,7 @@ import * as shared from '@volar/shared';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { EmbeddedLanguageServicePlugin } from './plugin';
 import { singleFileTypeScriptServiceHost, updateSingleFileTypeScriptServiceHost } from './utils/singleFileTypeScriptService';
-import { EmbeddedLanguageModule } from '@volar/language-core';
+import { createDocumentRegistry, EmbeddedLanguageModule } from '@volar/language-core';
 import { parseSourceFileDocument, SourceFileDocument } from './documents';
 import { PluginContext, setPluginContext } from './contextStore';
 
@@ -42,6 +42,7 @@ export function getDocumentServiceContext(options: {
 
 	const languageModules = options.getLanguageModules();
 	const vueDocuments = new WeakMap<TextDocument, [SourceFileDocument, EmbeddedLanguageModule]>();
+	const mapper = createDocumentRegistry();
 	const context: DocumentServiceRuntimeContext = {
 		typescript: ts,
 		get plugins() {
@@ -65,7 +66,7 @@ export function getDocumentServiceContext(options: {
 					ts.ScriptSnapshot.fromString(document.getText()),
 				);
 				if (sourceFile) {
-					const sourceFileDoc = parseSourceFileDocument(options.env.rootUri, sourceFile);
+					const sourceFileDoc = parseSourceFileDocument(options.env.rootUri, sourceFile, mapper);
 					cache = [sourceFileDoc, languageModule];
 					vueDocuments.set(document, cache);
 					break;

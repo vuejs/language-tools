@@ -61,11 +61,11 @@ export function createLanguageService(host: vue.LanguageServiceHost) {
 		const file = core.mapper.get(args.fileName);
 		let edits: readonly ts.FileTextChanges[] = [];
 		if (file) {
-			embedded.forEachEmbeddeds(file[0].embeddeds, embedded => {
-				if (embedded.file.isTsHostFile && embedded.file.capabilities.codeActions) {
+			embedded.forEachEmbeddeds(file[0], embedded => {
+				if (embedded.isTsHostFile && embedded.capabilities.codeActions) {
 					edits = edits.concat(ls.organizeImports({
 						...args,
-						fileName: embedded.file.fileName,
+						fileName: embedded.fileName,
 					}, formatOptions, preferences));
 				}
 			});
@@ -136,11 +136,11 @@ export function createLanguageService(host: vue.LanguageServiceHost) {
 					ref.textSpan.start,
 					ref.textSpan.start + ref.textSpan.length,
 					sideData => {
-						if ((mode === 'definition' || mode === 'typeDefinition' || mode === 'implementation') && !sideData.capabilities.definitions)
+						if ((mode === 'definition' || mode === 'typeDefinition' || mode === 'implementation') && !sideData.definitions)
 							return false;
-						if ((mode === 'references') && !sideData.capabilities.references)
+						if ((mode === 'references') && !sideData.references)
 							return false;
-						if ((mode === 'rename') && !sideData.capabilities.rename)
+						if ((mode === 'rename') && !sideData.rename)
 							return false;
 						return true;
 					},
@@ -188,7 +188,7 @@ export function createLanguageService(host: vue.LanguageServiceHost) {
 				for (const [teleRange] of teleport.findTeleports(
 					ref.textSpan.start,
 					ref.textSpan.start + ref.textSpan.length,
-					sideData => !!sideData.capabilities.definitions,
+					sideData => !!sideData.definitions,
 				)) {
 					if (loopChecker.has(ref.fileName + ':' + teleRange.start))
 						continue;
@@ -225,7 +225,7 @@ export function createLanguageService(host: vue.LanguageServiceHost) {
 					for (const [teleRange] of teleport.findTeleports(
 						ref.textSpan.start,
 						ref.textSpan.start + ref.textSpan.length,
-						sideData => !!sideData.capabilities.references,
+						sideData => !!sideData.references,
 					)) {
 						if (loopChecker.has(ref.fileName + ':' + teleRange.start))
 							continue;

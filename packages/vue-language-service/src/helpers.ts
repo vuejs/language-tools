@@ -6,7 +6,7 @@ import { computed, ComputedRef } from '@vue/reactivity';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
 export function checkTemplateData(
-	sourceFile: embedded.EmbeddedLangaugeSourceFile,
+	sourceFile: embedded.FileNode,
 	tsLs: ts.LanguageService,
 ) {
 
@@ -21,18 +21,18 @@ export function checkTemplateData(
 		includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
 	};
 
-	let file: embedded.EmbeddedFile | undefined;
-	embedded.forEachEmbeddeds(sourceFile.embeddeds, embedded => {
-		if (embedded.file.fileName === sourceFile.tsFileName) {
-			file = embedded.file;
+	let file: embedded.FileNode | undefined;
+	embedded.forEachEmbeddeds(sourceFile, embedded => {
+		if (embedded.fileName === sourceFile.tsFileName) {
+			file = embedded;
 		}
 	});
 
-	if (file && file.codeGen.getText().indexOf(vue.SearchTexts.Components) >= 0) {
+	if (file && file.text.indexOf(vue.SearchTexts.Components) >= 0) {
 
 		const components = tsLs.getCompletionsAtPosition(
 			file.fileName,
-			file.codeGen.getText().indexOf(vue.SearchTexts.Components),
+			file.text.indexOf(vue.SearchTexts.Components),
 			options
 		);
 
@@ -57,9 +57,9 @@ export function checkTemplateData(
 	};
 }
 
-const map = new WeakMap<embedded.EmbeddedLangaugeSourceFile, ComputedRef>();
+const map = new WeakMap<embedded.FileNode, ComputedRef>();
 
-export function getTemplateTagsAndAttrs(sourceFile: embedded.EmbeddedLangaugeSourceFile) {
+export function getTemplateTagsAndAttrs(sourceFile: embedded.FileNode) {
 
 	if (!map.has(sourceFile)) {
 		const getter = computed(() => {

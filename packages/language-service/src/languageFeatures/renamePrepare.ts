@@ -19,7 +19,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				for (const [mappedRange] of sourceMap.getMappedRanges(
 					position,
 					position,
-					data => typeof data.capabilities.rename === 'object' ? !!data.capabilities.rename.apply : !!data.capabilities.rename,
+					data => typeof data.rename === 'object' ? !!data.rename.apply : !!data.rename,
 				)) {
 					yield mappedRange.start;
 				}

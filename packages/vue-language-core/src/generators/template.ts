@@ -1,27 +1,28 @@
 import { CodeGen } from '@volar/code-gen';
-import { EmbeddedFileMappingData } from '@volar/language-core';
 import * as SourceMaps from '@volar/source-map';
 import * as CompilerCore from '@vue/compiler-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize, hyphenate, isHTMLTag, isSVGTag } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { parseBindingRanges } from '../parsers/scriptSetupRanges';
+import { EmbeddedFileMappingData } from '../sourceFile';
 import { ResolvedVueCompilerOptions } from '../types';
 import { SearchTexts } from '../utils/string';
 import { colletVars, walkInterpolationFragment } from '../utils/transform';
 
+// TODO: typecheck
 const capabilitiesSet = {
-	all: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
-	noDiagnostic: { basic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
+	all: { hover: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
+	noDiagnostic: { hover: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
 	diagnosticOnly: { diagnostic: true },
-	tagHover: { basic: true },
-	event: { basic: true, diagnostic: true },
+	tagHover: { hover: true },
+	event: { hover: true, diagnostic: true },
 	tagReference: { references: true, definitions: true, rename: { normalize: undefined, apply: (_: string, newName: string) => newName } },
-	attr: { basic: true, diagnostic: true, references: true, definitions: true, rename: true },
+	attr: { hover: true, diagnostic: true, references: true, definitions: true, rename: true },
 	attrReference: { references: true, definitions: true, rename: true },
 	scopedClassName: { references: true, definitions: true, rename: true, completion: true },
-	slotName: { basic: true, diagnostic: true, references: true, definitions: true, completion: true },
-	slotNameExport: { basic: true, diagnostic: true, references: true, definitions: true, /* referencesCodeLens: true */ },
+	slotName: { hover: true, diagnostic: true, references: true, definitions: true, completion: true },
+	slotNameExport: { hover: true, diagnostic: true, references: true, definitions: true, /* referencesCodeLens: true */ },
 	refAttr: { references: true, definitions: true, rename: true },
 };
 const formatBrackets = {

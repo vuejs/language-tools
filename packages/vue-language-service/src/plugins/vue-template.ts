@@ -744,10 +744,10 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 			cache = new Map();
 
-			let file: embedded.EmbeddedFile | undefined;
-			embedded.forEachEmbeddeds(sourceDocument.file.embeddeds, embedded => {
-				if (embedded.file.fileName === vueSourceFile.tsFileName) {
-					file = embedded.file;
+			let file: embedded.FileNode | undefined;
+			embedded.forEachEmbeddeds(sourceDocument.file, embedded => {
+				if (embedded.fileName === vueSourceFile.tsFileName) {
+					file = embedded;
 				}
 			});
 
@@ -774,7 +774,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					let on: ts.CompletionEntry[] = [];
 					{
 						const searchText = vue.SearchTexts.PropsCompletion(tag.name);
-						let offset = file.codeGen.getText().indexOf(searchText);
+						let offset = file.text.indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
 							try {
@@ -785,7 +785,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					}
 					{
 						const searchText = vue.SearchTexts.EmitCompletion(tag.name);
-						let offset = file.codeGen.getText().indexOf(searchText);
+						let offset = file.text.indexOf(searchText);
 						if (offset >= 0) {
 							offset += searchText.length;
 							try {
@@ -797,7 +797,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					cache.set(tag.name, { item: tag.item, bind, on });
 				}
 				try {
-					const offset = file.codeGen.getText().indexOf(vue.SearchTexts.GlobalAttrs);
+					const offset = file.text.indexOf(vue.SearchTexts.GlobalAttrs);
 					const globalBind = (await options.tsLs.__internal__.raw.getCompletionsAtPosition(file.fileName, offset, completionOptions))?.entries
 						.filter(entry => entry.kind !== 'warning') ?? [];
 					cache.set('*', { item: undefined, bind: globalBind, on: [] });

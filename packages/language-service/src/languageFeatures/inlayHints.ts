@@ -62,7 +62,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				if (!sourceMap)
 					return _inlayHint;
 
-				const position = sourceMap.getSourceRange(_inlayHint.position, _inlayHint.position, data => !!data.capabilities.completion)?.[0].start;
+				const position = sourceMap.getSourceRange(_inlayHint.position, _inlayHint.position, data => !!data.completion)?.[0].start;
 				const edits = _inlayHint.textEdits?.map(textEdit => transformTextEdit(textEdit, range => sourceMap.getSourceRange(range.start, range.end)?.[0])).filter(shared.notEmpty);
 
 				if (position) {
