@@ -692,11 +692,12 @@ export function generate(
 					vueTagIndex: styleIndex,
 					capabilities: {
 						references: true,
-						rename: true,
 						referencesCodeLens: true,
+						rename: {
+							normalize: beforeCssRename,
+							apply: doCssRename,
+						},
 					},
-					normalizeNewName: beforeCssRename,
-					applyNewName: doCssRename,
 				},
 			});
 			codeGen.addText(`'${className}'${optional ? '?' : ''}: ${propertyType}`);

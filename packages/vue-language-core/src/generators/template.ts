@@ -16,7 +16,7 @@ const capabilitiesSet = {
 	diagnosticOnly: { diagnostic: true },
 	tagHover: { basic: true },
 	event: { basic: true, diagnostic: true },
-	tagReference: { references: true, definitions: true, rename: { in: false, out: true } },
+	tagReference: { references: true, definitions: true, rename: { normalize: undefined, apply: (_: string, newName: string) => newName } },
 	attr: { basic: true, diagnostic: true, references: true, definitions: true, rename: true },
 	attrReference: { references: true, definitions: true, rename: true },
 	scopedClassName: { references: true, definitions: true, rename: true, completion: true },
@@ -182,9 +182,13 @@ export function generate(
 							[tagRange],
 							{
 								vueTag: 'template',
-								capabilities: capabilitiesSet.tagReference,
-								normalizeNewName: tagName === name ? undefined : unHyphenatComponentName,
-								applyNewName: keepHyphenateName,
+								capabilities: {
+									...capabilitiesSet.tagReference,
+									rename: {
+										normalize: tagName === name ? capabilitiesSet.tagReference.rename.normalize : unHyphenatComponentName,
+										apply: keepHyphenateName,
+									},
+								},
 							},
 						);
 						tsCodeGen.addText(';');
@@ -718,16 +722,20 @@ export function generate(
 									[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
 									{
 										vueTag: 'template',
-										capabilities: capabilitiesSet.attrReference,
-										normalizeNewName(newName) {
-											return camelize('on-' + newName);
-										},
-										applyNewName(oldName, newName) {
-											const hName = hyphenate(newName);
-											if (hyphenate(newName).startsWith('on-')) {
-												return camelize(hName.slice('on-'.length));
-											}
-											return newName;
+										capabilities: {
+											...capabilitiesSet.attrReference,
+											rename: {
+												normalize(newName) {
+													return camelize('on-' + newName);
+												},
+												apply(oldName, newName) {
+													const hName = hyphenate(newName);
+													if (hyphenate(newName).startsWith('on-')) {
+														return camelize(hName.slice('on-'.length));
+													}
+													return newName;
+												},
+											},
 										},
 									},
 								);
@@ -742,16 +750,20 @@ export function generate(
 										[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
 										{
 											vueTag: 'template',
-											capabilities: capabilitiesSet.attrReference,
-											normalizeNewName(newName) {
-												return 'on' + capitalize(newName);
-											},
-											applyNewName(oldName, newName) {
-												const hName = hyphenate(newName);
-												if (hyphenate(newName).startsWith('on-')) {
-													return camelize(hName.slice('on-'.length));
-												}
-												return newName;
+											capabilities: {
+												...capabilitiesSet.attrReference,
+												rename: {
+													normalize(newName) {
+														return 'on' + capitalize(newName);
+													},
+													apply(oldName, newName) {
+														const hName = hyphenate(newName);
+														if (hyphenate(newName).startsWith('on-')) {
+															return camelize(hName.slice('on-'.length));
+														}
+														return newName;
+													},
+												},
 											},
 										},
 									);
@@ -771,16 +783,20 @@ export function generate(
 								[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
 								{
 									vueTag: 'template',
-									capabilities: capabilitiesSet.attrReference,
-									normalizeNewName(newName) {
-										return camelize('on-' + newName);
-									},
-									applyNewName(oldName, newName) {
-										const hName = hyphenate(newName);
-										if (hyphenate(newName).startsWith('on-')) {
-											return camelize(hName.slice('on-'.length));
+									capabilities: {
+										...capabilitiesSet.attrReference,
+										rename: {
+											normalize(newName) {
+												return camelize('on-' + newName);
+											},
+											apply(oldName, newName) {
+												const hName = hyphenate(newName);
+												if (hyphenate(newName).startsWith('on-')) {
+													return camelize(hName.slice('on-'.length));
+												}
+												return newName;
+											},
 										}
-										return newName;
 									},
 								},
 							);
@@ -995,9 +1011,13 @@ export function generate(
 						},
 						{
 							vueTag: 'template',
-							capabilities: getCaps(capabilitiesSet.attr),
-							normalizeNewName: camelize,
-							applyNewName: keepHyphenateName,
+							capabilities: {
+								...getCaps(capabilitiesSet.attr),
+								rename: {
+									normalize: camelize,
+									apply: keepHyphenateName,
+								},
+							},
 						},
 						(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
 					);
@@ -1012,9 +1032,13 @@ export function generate(
 						},
 						{
 							vueTag: 'template',
-							capabilities: getCaps(capabilitiesSet.attr),
-							normalizeNewName: camelize,
-							applyNewName: keepHyphenateName,
+							capabilities: {
+								...getCaps(capabilitiesSet.attr),
+								rename: {
+									normalize: camelize,
+									apply: keepHyphenateName,
+								},
+							},
 						},
 						(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
 					);
@@ -1073,9 +1097,13 @@ export function generate(
 						},
 						{
 							vueTag: 'template',
-							capabilities: getCaps(capabilitiesSet.attr),
-							normalizeNewName: camelize,
-							applyNewName: keepHyphenateName,
+							capabilities: {
+								...getCaps(capabilitiesSet.attr),
+								rename: {
+									normalize: camelize,
+									apply: keepHyphenateName,
+								},
+							},
 						},
 						(prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}),
 					);
@@ -1129,9 +1157,13 @@ export function generate(
 					},
 					{
 						vueTag: 'template',
-						capabilities: getCaps(capabilitiesSet.attr),
-						normalizeNewName: camelize,
-						applyNewName: keepHyphenateName,
+						capabilities: {
+							...getCaps(capabilitiesSet.attr),
+							rename: {
+								normalize: camelize,
+								apply: keepHyphenateName,
+							},
+						},
 					},
 					(prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}),
 				);
@@ -1172,9 +1204,13 @@ export function generate(
 						},
 						{
 							vueTag: 'template',
-							capabilities: getCaps(capabilitiesSet.attr),
-							normalizeNewName: camelize,
-							applyNewName: keepHyphenateName,
+							capabilities: {
+								...getCaps(capabilitiesSet.attr),
+								rename: {
+									normalize: camelize,
+									apply: keepHyphenateName,
+								},
+							},
 						},
 						(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
 					);
@@ -1530,9 +1566,13 @@ export function generate(
 					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
-						capabilities: capabilitiesSet.noDiagnostic,
-						normalizeNewName: camelize,
-						applyNewName: keepHyphenateName,
+						capabilities: {
+							...capabilitiesSet.noDiagnostic,
+							rename: {
+								normalize: camelize,
+								apply: keepHyphenateName,
+							},
+						},
 					},
 				);
 				identifiers.add(camelize('v-' + prop.name));
@@ -1702,9 +1742,13 @@ export function generate(
 					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
-						normalizeNewName: camelize,
-						applyNewName: keepHyphenateName,
-						capabilities: capabilitiesSet.attrReference,
+						capabilities: {
+							...capabilitiesSet.attrReference,
+							rename: {
+								normalize: camelize,
+								apply: keepHyphenateName,
+							},
+						},
 					},
 					prop.arg.loc,
 				);
@@ -1736,9 +1780,13 @@ export function generate(
 					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
-						normalizeNewName: camelize,
-						applyNewName: keepHyphenateName,
-						capabilities: capabilitiesSet.attr,
+						capabilities: {
+							...capabilitiesSet.attr,
+							rename: {
+								normalize: camelize,
+								apply: keepHyphenateName,
+							},
+						},
 					},
 					prop.loc,
 				);

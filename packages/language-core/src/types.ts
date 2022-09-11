@@ -35,16 +35,14 @@ export interface EmbeddedFile {
 export interface EmbeddedFileMappingData {
 	vueTag: 'template' | 'script' | 'scriptSetup' | 'scriptSrc' | 'style' | 'customBlock' | undefined,
 	vueTagIndex?: number,
-	normalizeNewName?: (newName: string) => string,
-	applyNewName?: (oldName: string, newName: string) => string,
 	capabilities: {
 		basic?: boolean,
 		references?: boolean,
 		definitions?: boolean,
 		diagnostic?: boolean,
 		rename?: boolean | {
-			in: boolean,
-			out: boolean,
+			normalize?(newName: string): string,
+			apply?(oldName: string, newName: string): string,
 		},
 		completion?: boolean | {
 			additional: boolean,
