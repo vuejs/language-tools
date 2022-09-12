@@ -72,7 +72,6 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 	const runtimeMode = vue.resolveVueCompilerOptions(options.vueLsHost.getVueCompilationSettings()).experimentalRuntimeMode;
 
 	let context: PluginContext;
-	let ts: PluginContext['typescript']['module'];
 
 	return {
 
@@ -293,6 +292,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 	}
 
 	async function resolveAutoImportItem(item: vscode.CompletionItem, data: AutoImportCompletionData) {
+
+		const ts = context.typescript.module;
 
 		const _vueDocument = options.context.documents.get(data.vueDocumentUri);
 		if (!_vueDocument)
@@ -725,7 +726,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 	function getLastImportNode(ast: ts.SourceFile) {
 		let importNode: ts.ImportDeclaration | undefined;
 		ast.forEachChild(node => {
-			if (ts.isImportDeclaration(node)) {
+			if (context.typescript.module.isImportDeclaration(node)) {
 				importNode = node;
 			}
 		});
