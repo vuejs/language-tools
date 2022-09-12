@@ -7,8 +7,6 @@ let client: lsp.BaseLanguageClient;
 
 export async function activate(context: vscode.ExtensionContext) {
 
-	vscode.commands.executeCommand('setContext', 'volar.activated', true);
-
 	const documentSelector: lsp.DocumentSelector = [{ language: 'svelte' }];
 	const initializationOptions: ServerInitializationOptions = {
 		typescript: {
