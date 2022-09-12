@@ -2,9 +2,14 @@
 	"files": [],
 	"include": [],
 	"references": [
+		// Extensions
 		{
 			"path": "./extensions/vscode-vue-language-features/tsconfig.build.json"
 		},
+		{
+			"path": "./examples/svelte/tsconfig.build.json"
+		},
+		// Extra Pkgs
 		{
 			"path": "./packages/typescript-vue-plugin/tsconfig.build.json"
 		},

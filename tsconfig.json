@@ -4,6 +4,7 @@
 		"noEmit": true,
 	},
 	"include": [
+		"examples/*/src",
 		"extensions/*/src",
 		"packages/*/src",
 		"plugins/*/src",
