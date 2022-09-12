@@ -1,16 +1,19 @@
 import { CodeGen, mergeCodeGen } from '@volar/code-gen';
+import type { TeleportMappingData, TextRange } from '@volar/language-core';
 import * as SourceMaps from '@volar/source-map';
 import { hyphenate } from '@vue/shared';
 import { posix as path } from 'path';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import type * as templateGen from '../generators/template';
 import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { collectCssVars, collectStyleCssClasses } from '../plugins/vue-tsx';
-import { Sfc } from '../sourceFile';
-import type { EmbeddedFileMappingData, TeleportMappingData, TextRange, _VueCompilerOptions } from '../types';
+import { Sfc } from '../types';
+import type { ResolvedVueCompilerOptions } from '../types';
 import { getSlotsPropertyName, getVueLibraryName } from '../utils/shared';
 import { SearchTexts } from '../utils/string';
 import { walkInterpolationFragment } from '../utils/transform';
+import { EmbeddedFileMappingData } from '../sourceFile';
 
 /**
  * TODO: rewrite this
@@ -27,7 +30,7 @@ export function generate(
 	cssScopedClasses: ReturnType<typeof collectStyleCssClasses>,
 	htmlGen: ReturnType<typeof templateGen['generate']> | undefined,
 	compilerOptions: ts.CompilerOptions,
-	vueCompilerOptions: _VueCompilerOptions,
+	vueCompilerOptions: ResolvedVueCompilerOptions,
 	codeGen = new CodeGen<EmbeddedFileMappingData>(),
 	teleports: SourceMaps.Mapping<TeleportMappingData>[] = [],
 ) {
@@ -178,7 +181,7 @@ export function generate(
 			{
 				vueTag: 'scriptSrc',
 				capabilities: {
-					basic: true,
+					hover: true,
 					references: true,
 					definitions: true,
 					rename: true,
@@ -233,7 +236,7 @@ export function generate(
 			{
 				vueTag: vueTag,
 				capabilities: {
-					basic: true,
+					hover: true,
 					references: true,
 					definitions: true,
 					rename: true,
@@ -272,7 +275,7 @@ export function generate(
 			{
 				vueTag: 'scriptSetup',
 				capabilities: {
-					basic: true,
+					hover: true,
 					references: true,
 					definitions: true,
 					diagnostic: true,
@@ -309,7 +312,7 @@ export function generate(
 				{
 					vueTag: 'scriptSetup',
 					capabilities: {
-						basic: true,
+						hover: true,
 						references: true,
 						definitions: true,
 						diagnostic: true,
@@ -532,19 +535,15 @@ export function generate(
 						mappedRange: templateSideRange,
 						mode: SourceMaps.Mode.Offset,
 						data: {
-							toSource: {
-								capabilities: {
-									definitions: true,
-									references: true,
-									rename: true,
-								},
+							toSourceCapabilities: {
+								definitions: true,
+								references: true,
+								rename: true,
 							},
-							toTarget: {
-								capabilities: {
-									definitions: true,
-									references: true,
-									rename: true,
-								},
+							toGenedCapabilities: {
+								definitions: true,
+								references: true,
+								rename: true,
 							},
 						},
 					});
@@ -690,11 +689,12 @@ export function generate(
 					vueTagIndex: styleIndex,
 					capabilities: {
 						references: true,
-						rename: true,
 						referencesCodeLens: true,
+						rename: {
+							normalize: beforeCssRename,
+							apply: doCssRename,
+						},
 					},
-					normalizeNewName: beforeCssRename,
-					applyNewName: doCssRename,
 				},
 			});
 			codeGen.addText(`'${className}'${optional ? '?' : ''}: ${propertyType}`);
@@ -726,7 +726,7 @@ export function generate(
 										capabilities: isJustForErrorMapping ? {
 											diagnostic: true,
 										} : {
-											basic: true,
+											hover: true,
 											references: true,
 											definitions: true,
 											diagnostic: true,

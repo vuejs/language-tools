@@ -1,7 +1,8 @@
 import * as semver from 'semver';
-import _47 from './4_7';
-import _44 from './4_4';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import _40 from './4_0';
+import _44 from './4_4';
+import _47 from './4_7';
 
 export function decorate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),

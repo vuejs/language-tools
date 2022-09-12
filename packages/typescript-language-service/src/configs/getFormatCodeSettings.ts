@@ -1,3 +1,4 @@
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
 import { GetConfiguration } from '..';
 import { isTypeScriptDocument } from './shared';

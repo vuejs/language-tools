@@ -20,7 +20,10 @@
 		"paths": {
 			"@volar/*": [
 				"packages/*/src"
-			]
+			],
+			"@volar-plugins/*": [
+				"plugins/*/src"
+			],
 		},
 	},
 	"exclude": [

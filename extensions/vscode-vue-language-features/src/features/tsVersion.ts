@@ -4,7 +4,7 @@ import { BaseLanguageClient } from 'vscode-languageclient';
 import * as shared from '@volar/shared';
 import { userPick } from './splitEditors';
 import { takeOverModeEnabled } from '../common';
-import { ServerInitializationOptions } from 'packages/vue-language-server/src/types';
+import { ServerInitializationOptions } from '@volar/vue-language-server';
 
 const defaultTsdk = 'node_modules/typescript/lib';
 

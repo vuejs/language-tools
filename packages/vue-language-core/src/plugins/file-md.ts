@@ -1,7 +1,7 @@
 import { CodeGen } from '@volar/code-gen';
 import { SourceMapBase } from '@volar/source-map';
 import { parse, SFCBlock } from '@vue/compiler-sfc';
-import { VueLanguagePlugin } from '../sourceFile';
+import { VueLanguagePlugin } from '../types';
 
 const plugin: VueLanguagePlugin = () => {
 

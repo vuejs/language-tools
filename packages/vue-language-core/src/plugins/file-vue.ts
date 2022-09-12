@@ -1,4 +1,4 @@
-import { VueLanguagePlugin } from '../sourceFile';
+import { VueLanguagePlugin } from '../types';
 import { parse } from '@vue/compiler-sfc';
 
 const plugin: VueLanguagePlugin = () => {

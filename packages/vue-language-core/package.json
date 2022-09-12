@@ -18,6 +18,7 @@
 	},
 	"dependencies": {
 		"@volar/code-gen": "0.40.13",
+		"@volar/language-core": "0.40.13",
 		"@volar/source-map": "0.40.13",
 		"@vue/compiler-core": "^3.2.38",
 		"@vue/compiler-dom": "^3.2.38",

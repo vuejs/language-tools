@@ -6,6 +6,7 @@
 	"include": [
 		"extensions/*/src",
 		"packages/*/src",
+		"plugins/*/src",
 		"packages/*/src/**/*.json",
 	],
 }

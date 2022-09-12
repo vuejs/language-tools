@@ -1,11 +1,19 @@
-import * as vue from '@volar/vue-language-core';
 import * as tsFaster from '@volar/typescript-faster';
+import * as vue from '@volar/vue-language-core';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import { getProgram } from './getProgram';
+import * as embedded from '@volar/language-core';
 
-export function createLanguageService(...params: Parameters<typeof vue.createLanguageContext>) {
+export function createLanguageService(host: vue.LanguageServiceHost) {
 
-	const core = vue.createLanguageContext(...params);
-	const ts = params[0].getTypeScriptModule();
+	const mods = [vue.createEmbeddedLanguageModule(
+		host.getTypeScriptModule(),
+		host.getCurrentDirectory(),
+		host.getCompilationSettings(),
+		host.getVueCompilationSettings(),
+	)];
+	const core = embedded.createEmbeddedLanguageServiceHost(host, mods);
+	const ts = host.getTypeScriptModule();
 	const ls = ts.createLanguageService(core.typescriptLanguageServiceHost);
 
 	tsFaster.decorate(ts, core.typescriptLanguageServiceHost, ls);
@@ -50,18 +58,17 @@ export function createLanguageService(...params: Parameters<typeof vue.createLan
 
 	// apis
 	function organizeImports(args: ts.OrganizeImportsArgs, formatOptions: ts.FormatCodeSettings, preferences: ts.UserPreferences | undefined): ReturnType<ts.LanguageService['organizeImports']> {
-		const sourceFile = core.mapper.get(args.fileName);
+		const file = core.mapper.get(args.fileName);
 		let edits: readonly ts.FileTextChanges[] = [];
-		if (sourceFile) {
-			const embeddeds = sourceFile.allEmbeddeds;
-			for (const embedded of embeddeds) {
-				if (embedded.file.isTsHostFile && embedded.file.capabilities.codeActions) {
+		if (file) {
+			embedded.forEachEmbeddeds(file[0].embeddeds, embedded => {
+				if (embedded.isTsHostFile && embedded.capabilities.codeActions) {
 					edits = edits.concat(ls.organizeImports({
 						...args,
-						fileName: embedded.file.fileName,
+						fileName: embedded.fileName,
 					}, formatOptions, preferences));
 				}
-			}
+			});
 		}
 		else {
 			return ls.organizeImports(args, formatOptions, preferences);
@@ -129,11 +136,11 @@ export function createLanguageService(...params: Parameters<typeof vue.createLan
 					ref.textSpan.start,
 					ref.textSpan.start + ref.textSpan.length,
 					sideData => {
-						if ((mode === 'definition' || mode === 'typeDefinition' || mode === 'implementation') && !sideData.capabilities.definitions)
+						if ((mode === 'definition' || mode === 'typeDefinition' || mode === 'implementation') && !sideData.definitions)
 							return false;
-						if ((mode === 'references') && !sideData.capabilities.references)
+						if ((mode === 'references') && !sideData.references)
 							return false;
-						if ((mode === 'rename') && !sideData.capabilities.rename)
+						if ((mode === 'rename') && !sideData.rename)
 							return false;
 						return true;
 					},
@@ -181,7 +188,7 @@ export function createLanguageService(...params: Parameters<typeof vue.createLan
 				for (const [teleRange] of teleport.findTeleports(
 					ref.textSpan.start,
 					ref.textSpan.start + ref.textSpan.length,
-					sideData => !!sideData.capabilities.definitions,
+					sideData => !!sideData.definitions,
 				)) {
 					if (loopChecker.has(ref.fileName + ':' + teleRange.start))
 						continue;
@@ -218,7 +225,7 @@ export function createLanguageService(...params: Parameters<typeof vue.createLan
 					for (const [teleRange] of teleport.findTeleports(
 						ref.textSpan.start,
 						ref.textSpan.start + ref.textSpan.length,
-						sideData => !!sideData.capabilities.references,
+						sideData => !!sideData.references,
 					)) {
 						if (loopChecker.has(ref.fileName + ':' + teleRange.start))
 							continue;

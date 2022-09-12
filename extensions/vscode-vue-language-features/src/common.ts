@@ -3,7 +3,6 @@ import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient';
 import * as activeSelection from './features/activeSelection';
 import * as attrNameCase from './features/attrNameCase';
-import * as callGraph from './features/callGraph';
 import * as createWorkspaceSnippets from './features/createWorkspaceSnippets';
 import * as documentContent from './features/documentContent';
 import * as preview from './features/preview';
@@ -19,7 +18,7 @@ import * as doctor from './features/doctor';
 import * as fileReferences from './features/fileReferences';
 import * as reloadProject from './features/reloadProject';
 import * as serverSys from './features/serverSys';
-import { GetDocumentNameCasesRequest, ServerInitializationOptions } from '@volar/vue-language-server';
+import { ServerInitializationOptions } from '@volar/vue-language-server';
 
 let apiClient: lsp.BaseLanguageClient | undefined;
 let docClient: lsp.BaseLanguageClient | undefined;
@@ -84,17 +83,18 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	const documentFeaturesDocumentSelector: lsp.DocumentSelector = takeOverMode ?
 		[
 			{ language: 'vue' },
-			{ language: 'markdown' },
-			{ language: 'html' },
 			{ language: 'javascript' },
 			{ language: 'typescript' },
 			{ language: 'javascriptreact' },
 			{ language: 'typescriptreact' },
 		] : [
 			{ language: 'vue' },
-			{ language: 'markdown' },
-			{ language: 'html' },
 		];
+
+	if (enabledDocumentFeaturesInHtml()) {
+		documentFeaturesDocumentSelector.push({ language: 'html' });
+	}
+
 	const _useSecondServer = useSecondServer();
 	const _serverMaxOldSpaceSize = serverMaxOldSpaceSize();
 
@@ -139,7 +139,6 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	if (apiClient) {
 		tsconfig.register('volar.openTsconfig', context, docClient ?? apiClient);
 		fileReferences.register('volar.vue.findAllFileReferences', apiClient);
-		callGraph.register(context, apiClient);
 		verifyAll.register(context, docClient ?? apiClient);
 		autoInsertion.register(context, htmlClient, apiClient);
 		virtualFiles.register('volar.action.writeVirtualFiles', context, docClient ?? apiClient);
@@ -188,18 +187,10 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			serverSys.activate(context, client);
 		}
 
-		(async () => {
-			if (apiClient) {
-
-				const getTagNameCase = await tagNameCase.activate(context, apiClient);
-				const getAttrNameCase = await attrNameCase.activate(context, apiClient);
-
-				apiClient.onRequest(GetDocumentNameCasesRequest.type, async handler => ({
-					tagNameCase: getTagNameCase(handler.uri),
-					attrNameCase: getAttrNameCase(handler.uri),
-				}));
-			}
-		})();
+		if (apiClient) {
+			tagNameCase.activate(context, apiClient);
+			attrNameCase.activate(context, apiClient);
+		}
 	}
 }
 
@@ -258,9 +249,6 @@ function getInitializationOptions(
 				codeAction: true,
 				workspaceSymbol: true,
 				completion: {
-					defaultTagNameCase: 'both',
-					defaultAttrNameCase: 'kebabCase',
-					getDocumentNameCasesRequest: true,
 					getDocumentSelectionRequest: true,
 				},
 				schemaRequestService: { getDocumentContentRequest: true },
@@ -276,14 +264,6 @@ function getInitializationOptions(
 			} : {}),
 		} : undefined,
 		documentFeatures: mode === 'document-features' ? {
-			allowedLanguageIds: [
-				'vue',
-				'javascript',
-				'typescript',
-				'javascriptreact',
-				'typescriptreact',
-				enabledDocumentFeaturesInHtml() ? 'html' : undefined,
-			].filter(shared.notEmpty),
 			selectionRange: true,
 			foldingRange: true,
 			linkedEditingRange: true,

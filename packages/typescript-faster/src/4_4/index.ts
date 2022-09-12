@@ -1,5 +1,6 @@
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import { createModuleSpecifierCache } from './moduleSpecifierCache';
-import { createPackageJsonCache, canCreatePackageJsonCache, PackageJsonInfo, Ternary } from './packageJsonCache';
+import { canCreatePackageJsonCache, createPackageJsonCache, PackageJsonInfo, Ternary } from './packageJsonCache';
 
 export default function (
 	ts: typeof import('typescript/lib/tsserverlibrary'),
