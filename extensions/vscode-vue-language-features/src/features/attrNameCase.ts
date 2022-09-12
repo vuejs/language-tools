@@ -2,11 +2,12 @@ import * as vscode from 'vscode';
 import { userPick } from './splitEditors';
 import { BaseLanguageClient, State } from 'vscode-languageclient';
 import * as shared from '@volar/shared';
-import { DetectDocumentNameCasesRequest } from '@volar/vue-language-server';
+import { DetectTagCasingRequest } from '@volar/vue-language-server';
+
+export const attrCases = shared.createUriMap<'kebabCase' | 'camelCase'>();
 
 export async function activate(context: vscode.ExtensionContext, languageClient: BaseLanguageClient) {
 
-	const attrCases = shared.createUriMap<'kebabCase' | 'camelCase'>();
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	statusBar.command = 'volar.action.attrNameCase';
 
@@ -42,7 +43,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 			updateStatusBarText('camelCase');
 		}
 		if (select === '6') {
-			const detects = await languageClient.sendRequest(DetectDocumentNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(crtDoc));
+			const detects = await languageClient.sendRequest(DetectTagCasingRequest.type, { textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(crtDoc) });
 			if (detects) {
 				attrCases.uriSet(crtDoc.uri.toString(), getValidAttrCase(detects.attr));
 				updateStatusBarText(getValidAttrCase(detects.attr));
@@ -58,14 +59,6 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 			statusBar.dispose();
 		}
 	});
-
-	return (uri: string) => {
-		let attrCase = attrCases.uriGet(uri);
-		if (uri.toLowerCase() === vscode.window.activeTextEditor?.document.uri.toString().toLowerCase()) {
-			updateStatusBarText(attrCase);
-		}
-		return attrCase ?? 'kebabCase';
-	};
 
 	async function onChangeDocument(newDoc: vscode.TextDocument | undefined) {
 		if (
@@ -83,7 +76,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 					attrCase = 'camelCase';
 				}
 				else {
-					const templateCases = await languageClient.sendRequest(DetectDocumentNameCasesRequest.type, languageClient.code2ProtocolConverter.asTextDocumentIdentifier(newDoc));
+					const templateCases = await languageClient.sendRequest(DetectTagCasingRequest.type, { textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(newDoc) });
 					if (templateCases) {
 						attrCase = getValidAttrCase(templateCases.attr);
 						if (templateCases.attr === 'both') {

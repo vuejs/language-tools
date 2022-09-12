@@ -1,25 +1,28 @@
-import * as SourceMaps from '@volar/source-map';
 import { CodeGen } from '@volar/code-gen';
-import { camelize, hyphenate, capitalize, isHTMLTag, isSVGTag } from '@vue/shared';
-import * as CompilerDOM from '@vue/compiler-dom';
+import * as SourceMaps from '@volar/source-map';
 import * as CompilerCore from '@vue/compiler-core';
-import { EmbeddedFileMappingData, _VueCompilerOptions } from '../types';
-import { colletVars, walkInterpolationFragment } from '../utils/transform';
+import * as CompilerDOM from '@vue/compiler-dom';
+import { camelize, capitalize, hyphenate, isHTMLTag, isSVGTag } from '@vue/shared';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import { parseBindingRanges } from '../parsers/scriptSetupRanges';
+import { EmbeddedFileMappingData } from '../sourceFile';
+import { ResolvedVueCompilerOptions } from '../types';
 import { SearchTexts } from '../utils/string';
+import { colletVars, walkInterpolationFragment } from '../utils/transform';
 
+// TODO: typecheck
 const capabilitiesSet = {
-	all: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
-	noDiagnostic: { basic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
+	all: { hover: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
+	noDiagnostic: { hover: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
 	diagnosticOnly: { diagnostic: true },
-	tagHover: { basic: true },
-	event: { basic: true, diagnostic: true },
-	tagReference: { references: true, definitions: true, rename: { in: false, out: true } },
-	attr: { basic: true, diagnostic: true, references: true, definitions: true, rename: true },
+	tagHover: { hover: true },
+	event: { hover: true, diagnostic: true },
+	tagReference: { references: true, definitions: true, rename: { normalize: undefined, apply: (_: string, newName: string) => newName } },
+	attr: { hover: true, diagnostic: true, references: true, definitions: true, rename: true },
 	attrReference: { references: true, definitions: true, rename: true },
 	scopedClassName: { references: true, definitions: true, rename: true, completion: true },
-	slotName: { basic: true, diagnostic: true, references: true, definitions: true, completion: true },
-	slotNameExport: { basic: true, diagnostic: true, references: true, definitions: true, /* referencesCodeLens: true */ },
+	slotName: { hover: true, diagnostic: true, references: true, definitions: true, completion: true },
+	slotNameExport: { hover: true, diagnostic: true, references: true, definitions: true, /* referencesCodeLens: true */ },
 	refAttr: { references: true, definitions: true, rename: true },
 };
 const formatBrackets = {
@@ -60,7 +63,7 @@ export function isIntrinsicElement(runtimeMode: 'runtime-dom' | 'runtime-uni-app
 
 export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	vueCompilerOptions: _VueCompilerOptions,
+	vueCompilerOptions: ResolvedVueCompilerOptions,
 	sourceTemplate: string,
 	sourceLang: string,
 	templateAst: CompilerDOM.RootNode,
@@ -180,9 +183,13 @@ export function generate(
 							[tagRange],
 							{
 								vueTag: 'template',
-								capabilities: capabilitiesSet.tagReference,
-								normalizeNewName: tagName === name ? undefined : unHyphenatComponentName,
-								applyNewName: keepHyphenateName,
+								capabilities: {
+									...capabilitiesSet.tagReference,
+									rename: {
+										normalize: tagName === name ? capabilitiesSet.tagReference.rename.normalize : unHyphenatComponentName,
+										apply: keepHyphenateName,
+									},
+								},
 							},
 						);
 						tsCodeGen.addText(';');
@@ -716,16 +723,20 @@ export function generate(
 									[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
 									{
 										vueTag: 'template',
-										capabilities: capabilitiesSet.attrReference,
-										normalizeNewName(newName) {
-											return camelize('on-' + newName);
-										},
-										applyNewName(oldName, newName) {
-											const hName = hyphenate(newName);
-											if (hyphenate(newName).startsWith('on-')) {
-												return camelize(hName.slice('on-'.length));
-											}
-											return newName;
+										capabilities: {
+											...capabilitiesSet.attrReference,
+											rename: {
+												normalize(newName) {
+													return camelize('on-' + newName);
+												},
+												apply(oldName, newName) {
+													const hName = hyphenate(newName);
+													if (hyphenate(newName).startsWith('on-')) {
+														return camelize(hName.slice('on-'.length));
+													}
+													return newName;
+												},
+											},
 										},
 									},
 								);
@@ -740,16 +751,20 @@ export function generate(
 										[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
 										{
 											vueTag: 'template',
-											capabilities: capabilitiesSet.attrReference,
-											normalizeNewName(newName) {
-												return 'on' + capitalize(newName);
-											},
-											applyNewName(oldName, newName) {
-												const hName = hyphenate(newName);
-												if (hyphenate(newName).startsWith('on-')) {
-													return camelize(hName.slice('on-'.length));
-												}
-												return newName;
+											capabilities: {
+												...capabilitiesSet.attrReference,
+												rename: {
+													normalize(newName) {
+														return 'on' + capitalize(newName);
+													},
+													apply(oldName, newName) {
+														const hName = hyphenate(newName);
+														if (hyphenate(newName).startsWith('on-')) {
+															return camelize(hName.slice('on-'.length));
+														}
+														return newName;
+													},
+												},
 											},
 										},
 									);
@@ -769,16 +784,20 @@ export function generate(
 								[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
 								{
 									vueTag: 'template',
-									capabilities: capabilitiesSet.attrReference,
-									normalizeNewName(newName) {
-										return camelize('on-' + newName);
-									},
-									applyNewName(oldName, newName) {
-										const hName = hyphenate(newName);
-										if (hyphenate(newName).startsWith('on-')) {
-											return camelize(hName.slice('on-'.length));
+									capabilities: {
+										...capabilitiesSet.attrReference,
+										rename: {
+											normalize(newName) {
+												return camelize('on-' + newName);
+											},
+											apply(oldName, newName) {
+												const hName = hyphenate(newName);
+												if (hyphenate(newName).startsWith('on-')) {
+													return camelize(hName.slice('on-'.length));
+												}
+												return newName;
+											},
 										}
-										return newName;
 									},
 								},
 							);
@@ -993,9 +1012,13 @@ export function generate(
 						},
 						{
 							vueTag: 'template',
-							capabilities: getCaps(capabilitiesSet.attr),
-							normalizeNewName: camelize,
-							applyNewName: keepHyphenateName,
+							capabilities: {
+								...getCaps(capabilitiesSet.attr),
+								rename: {
+									normalize: camelize,
+									apply: keepHyphenateName,
+								},
+							},
 						},
 						(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
 					);
@@ -1010,9 +1033,13 @@ export function generate(
 						},
 						{
 							vueTag: 'template',
-							capabilities: getCaps(capabilitiesSet.attr),
-							normalizeNewName: camelize,
-							applyNewName: keepHyphenateName,
+							capabilities: {
+								...getCaps(capabilitiesSet.attr),
+								rename: {
+									normalize: camelize,
+									apply: keepHyphenateName,
+								},
+							},
 						},
 						(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
 					);
@@ -1071,9 +1098,13 @@ export function generate(
 						},
 						{
 							vueTag: 'template',
-							capabilities: getCaps(capabilitiesSet.attr),
-							normalizeNewName: camelize,
-							applyNewName: keepHyphenateName,
+							capabilities: {
+								...getCaps(capabilitiesSet.attr),
+								rename: {
+									normalize: camelize,
+									apply: keepHyphenateName,
+								},
+							},
 						},
 						(prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}),
 					);
@@ -1127,9 +1158,13 @@ export function generate(
 					},
 					{
 						vueTag: 'template',
-						capabilities: getCaps(capabilitiesSet.attr),
-						normalizeNewName: camelize,
-						applyNewName: keepHyphenateName,
+						capabilities: {
+							...getCaps(capabilitiesSet.attr),
+							rename: {
+								normalize: camelize,
+								apply: keepHyphenateName,
+							},
+						},
 					},
 					(prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}),
 				);
@@ -1170,9 +1205,13 @@ export function generate(
 						},
 						{
 							vueTag: 'template',
-							capabilities: getCaps(capabilitiesSet.attr),
-							normalizeNewName: camelize,
-							applyNewName: keepHyphenateName,
+							capabilities: {
+								...getCaps(capabilitiesSet.attr),
+								rename: {
+									normalize: camelize,
+									apply: keepHyphenateName,
+								},
+							},
 						},
 						(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
 					);
@@ -1350,7 +1389,7 @@ export function generate(
 					{
 						vueTag: 'template',
 						capabilities: {
-							basic: true,
+							hover: true,
 							references: true,
 							definitions: true,
 							diagnostic: true,
@@ -1528,9 +1567,13 @@ export function generate(
 					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
-						capabilities: capabilitiesSet.noDiagnostic,
-						normalizeNewName: camelize,
-						applyNewName: keepHyphenateName,
+						capabilities: {
+							...capabilitiesSet.noDiagnostic,
+							rename: {
+								normalize: camelize,
+								apply: keepHyphenateName,
+							},
+						},
 					},
 				);
 				identifiers.add(camelize('v-' + prop.name));
@@ -1700,9 +1743,13 @@ export function generate(
 					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
-						normalizeNewName: camelize,
-						applyNewName: keepHyphenateName,
-						capabilities: capabilitiesSet.attrReference,
+						capabilities: {
+							...capabilitiesSet.attrReference,
+							rename: {
+								normalize: camelize,
+								apply: keepHyphenateName,
+							},
+						},
 					},
 					prop.arg.loc,
 				);
@@ -1734,9 +1781,13 @@ export function generate(
 					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
-						normalizeNewName: camelize,
-						applyNewName: keepHyphenateName,
-						capabilities: capabilitiesSet.attr,
+						capabilities: {
+							...capabilitiesSet.attr,
+							rename: {
+								normalize: camelize,
+								apply: keepHyphenateName,
+							},
+						},
 					},
 					prop.loc,
 				);

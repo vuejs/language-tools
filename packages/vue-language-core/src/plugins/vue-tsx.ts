@@ -3,8 +3,8 @@ import { generate as genScript } from '../generators/script';
 import * as templateGen from '../generators/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
-import { Sfc, VueLanguagePlugin } from '../sourceFile';
-import { TextRange } from '../types';
+import { Sfc, VueLanguagePlugin } from '../types';
+import { TextRange } from '@volar/language-core';
 import { parseCssClassNames } from '../utils/parseCssClassNames';
 import { parseCssVars } from '../utils/parseCssVars';
 

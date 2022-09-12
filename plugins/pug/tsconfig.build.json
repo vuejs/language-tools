@@ -1,0 +1,21 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"outDir": "out",
+		"rootDir": "src",
+	},
+	"include": [
+		"src"
+	],
+	"references": [
+		{
+			"path": "../html/tsconfig.build.json"
+		},
+		{
+			"path": "../../packages/language-service/tsconfig.build.json"
+		},
+		{
+			"path": "../../packages/pug-language-service/tsconfig.build.json"
+		},
+	],
+}

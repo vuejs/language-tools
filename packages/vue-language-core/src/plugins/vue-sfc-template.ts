@@ -1,4 +1,4 @@
-import { VueLanguagePlugin } from '../sourceFile';
+import { VueLanguagePlugin } from '../types';
 
 const presetInitialIndentBrackets: Record<string, [string, string] | undefined> = {
 	html: ['<template>', '</template>'],
@@ -35,7 +35,7 @@ const plugin: VueLanguagePlugin = () => {
 					{
 						vueTag: sfc.template.tag,
 						capabilities: {
-							basic: true,
+							hover: true,
 							references: true,
 							definitions: true,
 							diagnostic: true,

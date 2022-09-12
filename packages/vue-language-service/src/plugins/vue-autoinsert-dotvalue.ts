@@ -4,32 +4,37 @@ import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { hyphenate } from '@vue/shared';
-import { isTsDocument } from './typescript';
-import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
+import { isTsDocument } from '@volar-plugins/typescript';
+import { EmbeddedLanguageServicePlugin, PluginContext } from '@volar/language-service';
 
 export default function (options: {
-	ts: typeof import('typescript/lib/tsserverlibrary'),
 	getTsLs: () => ts2.LanguageService,
 }): EmbeddedLanguageServicePlugin {
 
 	const asts = new WeakMap<TextDocument, ts.SourceFile>();
 
+	let context: PluginContext;
+
 	return {
 
-		async doAutoInsert(document, position, context) {
+		setup(_context) {
+			context = _context;
+		},
+
+		async doAutoInsert(document, position, insertContext) {
 
 			if (!isTsDocument(document))
 				return;
 
-			if (!isCharacterTyping(document, context))
+			if (!isCharacterTyping(document, insertContext))
 				return;
 
-			const enabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.autoCompleteRefs') ?? true;
+			const enabled = await context.env.configurationHost?.getConfiguration<boolean>('volar.autoCompleteRefs') ?? true;
 			if (!enabled)
 				return;
 
 			const sourceFile = getAst(document);
-			if (isBlacklistNode(options.ts, sourceFile, document.offsetAt(position)))
+			if (isBlacklistNode(context.typescript.module, sourceFile, document.offsetAt(position)))
 				return;
 
 			const typeDefs = options.getTsLs().findTypeDefinition(document.uri, position);
@@ -42,7 +47,7 @@ export default function (options: {
 	function getAst(tsDoc: TextDocument) {
 		let ast = asts.get(tsDoc);
 		if (!ast) {
-			ast = options.ts.createSourceFile(shared.getPathOfUri(tsDoc.uri), tsDoc.getText(), options.ts.ScriptTarget.Latest);
+			ast = context.typescript.module.createSourceFile(shared.getPathOfUri(tsDoc.uri), tsDoc.getText(), context.typescript.module.ScriptTarget.Latest);
 			asts.set(tsDoc, ast);
 		}
 		return ast;
