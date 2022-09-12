@@ -79,7 +79,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		...options.templateLanguagePlugin,
 
 		setup(_context) {
-			options.templateLanguagePlugin.setup?.(context);
+			options.templateLanguagePlugin.setup?.(_context);
 			context = _context;
 		},
 
