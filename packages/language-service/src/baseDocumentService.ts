@@ -23,7 +23,7 @@ export type DocumentService = ReturnType<typeof getDocumentService>;
 export function getDocumentServiceContext(options: {
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	getLanguageModules(): EmbeddedLanguageModule[],
-	getPlugins(): EmbeddedLanguageServicePlugin[],
+	createPlugins(): EmbeddedLanguageServicePlugin[],
 	env: PluginContext['env'];
 }) {
 
@@ -47,7 +47,7 @@ export function getDocumentServiceContext(options: {
 		typescript: ts,
 		get plugins() {
 			if (!plugins) {
-				plugins = options.getPlugins();
+				plugins = options.createPlugins();
 				for (const plugin of plugins) {
 					plugin.setup?.(pluginContext);
 				}

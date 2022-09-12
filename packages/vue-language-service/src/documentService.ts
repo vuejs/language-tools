@@ -7,6 +7,11 @@ import useTsPlugin from '@volar-plugins/typescript';
 import { DocumentServiceRuntimeContext } from '@volar/language-service';
 import useVuePlugin from './plugins/vue';
 import useAutoWrapParenthesesPlugin from './plugins/vue-autoinsert-parentheses';
+import * as embeddedLS from '@volar/language-service';
+import * as vue from '@volar/vue-language-core';
+
+import type * as _1 from 'vscode-languageserver-protocol';
+import type * as _2 from 'vscode-languageserver-textdocument';
 
 export function getDocumentServicePlugins(
 	context: DocumentServiceRuntimeContext
@@ -37,4 +42,31 @@ export function getDocumentServicePlugins(
 		tsPlugin,
 		autoWrapParenthesesPlugin,
 	];
+}
+
+export function createDocumentService(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	env: embeddedLS.PluginContext['env'],
+) {
+
+	const vueLanguageModule = vue.createEmbeddedLanguageModule(
+		ts,
+		env.rootUri.fsPath,
+		{},
+		{},
+	);
+	const languageServiceContext = embeddedLS.getDocumentServiceContext({
+		ts,
+		env,
+		getLanguageModules() {
+			return [vueLanguageModule];
+		},
+		createPlugins() {
+			return plugins;
+		},
+	});
+	const plugins = getDocumentServicePlugins(languageServiceContext);
+	const languageService = embeddedLS.getDocumentService(languageServiceContext);
+
+	return languageService;
 }

@@ -4,9 +4,11 @@ import useHtmlPlugin from '@volar-plugins/html';
 import useJsonPlugin from '@volar-plugins/json';
 import usePugPlugin from '@volar-plugins/pug';
 import useTsPlugin from '@volar-plugins/typescript';
+import * as embedded from '@volar/language-core';
 import * as embeddedLS from '@volar/language-service';
 import * as ts2 from '@volar/typescript-language-service';
 import * as vue from '@volar/vue-language-core';
+import { LanguageServiceHost } from '@volar/vue-language-core';
 import type * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import useVuePlugin from './plugins/vue';
@@ -122,4 +124,29 @@ export function getLanguageServicePlugins(
 			context: apis.context,
 		});
 	}
+}
+
+export function createLanguageService(
+	host: LanguageServiceHost,
+	env: embeddedLS.PluginContext['env'],
+) {
+
+	const vueLanguageModule = vue.createEmbeddedLanguageModule(
+		host.getTypeScriptModule(),
+		host.getCurrentDirectory(),
+		host.getCompilationSettings(),
+		host.getVueCompilationSettings(),
+	);
+	const core = embedded.createEmbeddedLanguageServiceHost(host, [vueLanguageModule]);
+	const languageServiceContext = embeddedLS.createLanguageServiceContext({
+		env,
+		host,
+		languageContext: core,
+		createPlugins() {
+			return getLanguageServicePlugins(host, languageService);
+		},
+	});
+	const languageService = embeddedLS.createLanguageService(languageServiceContext);
+
+	return languageService;
 }

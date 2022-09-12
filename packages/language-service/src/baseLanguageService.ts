@@ -37,7 +37,7 @@ export type LanguageService = ReturnType<typeof createLanguageService>;
 export function createLanguageServiceContext(options: {
 	host: LanguageServiceHost,
 	languageContext: ReturnType<typeof createEmbeddedLanguageServiceHost>,
-	getPlugins(): EmbeddedLanguageServicePlugin[],
+	createPlugins(): EmbeddedLanguageServicePlugin[],
 	env: PluginContext['env'];
 }) {
 
@@ -63,7 +63,7 @@ export function createLanguageServiceContext(options: {
 		core: options.languageContext,
 		get plugins() {
 			if (!plugins) {
-				plugins = options.getPlugins();
+				plugins = options.createPlugins();
 				for (const plugin of plugins) {
 					plugin.setup?.(pluginContext);
 				}

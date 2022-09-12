@@ -22,28 +22,6 @@ importers:
       vitest: 0.23.2
       vue: 3.2.38
 
-  extensions/vscode-alpine-language-features:
-    specifiers:
-      '@types/vscode': 1.67.0
-      '@volar/alpine-language-server': 0.40.13
-      '@volar/shared': 0.40.13
-      esbuild: latest
-      path-browserify: ^1.0.1
-      punycode: ^2.1.1
-      vsce: latest
-      vscode-languageclient: ^8.0.2
-      vscode-nls: ^5.2.0
-    devDependencies:
-      '@types/vscode': 1.67.0
-      '@volar/alpine-language-server': link:../../packages/alpine-language-server
-      '@volar/shared': link:../../packages/shared
-      esbuild: 0.15.7
-      path-browserify: 1.0.1
-      punycode: 2.1.1
-      vsce: 2.11.0
-      vscode-languageclient: 8.0.2
-      vscode-nls: 5.2.0
-
   extensions/vscode-typescript-vue-plugin:
     specifiers:
       esbuild: latest
@@ -92,18 +70,6 @@ importers:
       vsce: 2.11.0
       vscode-languageclient: 8.0.2
       vscode-nls: 5.2.0
-
-  packages/alpine-language-server:
-    specifiers:
-      '@volar/language-server': 0.40.13
-      '@volar/vue-language-core': 0.40.13
-      '@volar/vue-language-server': 0.40.13
-      '@volar/vue-language-service': 0.40.13
-    dependencies:
-      '@volar/language-server': link:../language-server
-      '@volar/vue-language-core': link:../vue-language-core
-      '@volar/vue-language-server': link:../vue-language-server
-      '@volar/vue-language-service': link:../vue-language-service
 
   packages/code-gen:
     specifiers:

@@ -66,7 +66,7 @@ export async function createProject(
 			const languageServiceContext = embeddedLS.createLanguageServiceContext({
 				host: languageServiceHost,
 				languageContext,
-				getPlugins() {
+				createPlugins() {
 					return [
 						...loadCustomPlugins(languageServiceHost.getCurrentDirectory()),
 						...plugins.map(plugin => plugin.languageService?.getLanguageServicePlugins?.(languageServiceHost, vueLs!) ?? []).flat(),
