@@ -15,11 +15,6 @@
 - [vite-plugin-vue-component-preview](https://github.com/johnsoncodehk/vite-plugin-vue-component-preview) \
 *Vite plugin for support Vue component preview view with `Vue Language Features`*
 
-### Alpine.js
-
-- [Alpine Language Features](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-alpine-language-features) (Experimental) \
-*Alpine.js language support extension for VSCode*
-
 ### Common
 
 - [volar-plugins](https://github.com/johnsoncodehk/volar-plugins) \

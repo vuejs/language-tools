@@ -6,13 +6,17 @@ import { handleKindModifiers } from './basic';
 import type { Data } from './basic';
 import * as previewer from '../../utils/previewer';
 import * as shared from '@volar/shared';
-import type { Settings } from '../..';
+import type { GetConfiguration } from '../..';
+import { URI } from 'vscode-uri';
+import { getFormatCodeSettings } from '../../configs/getFormatCodeSettings';
+import { getUserPreferences } from '../../configs/getUserPreferences';
 
 export function register(
+	rootUri: URI,
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
 	getTextDocument2: (uri: string) => TextDocument | undefined,
-	settings: Settings,
+	getConfiguration: GetConfiguration,
 ) {
 	return async (item: vscode.CompletionItem, newPosition?: vscode.Position): Promise<vscode.CompletionItem> => {
 
@@ -30,8 +34,8 @@ export function register(
 		}
 
 		const [formatOptions, preferences] = document ? await Promise.all([
-			settings.getFormatOptions?.(document.uri) ?? {},
-			settings.getPreferences?.(document.uri) ?? {},
+			getFormatCodeSettings(getConfiguration, document.uri),
+			getUserPreferences(getConfiguration, document.uri),
 		]) : [{}, {}];
 
 		let details: ts.CompletionEntryDetails | undefined;
@@ -54,7 +58,7 @@ export function register(
 					const entries = changes.textChanges.map(textChange => {
 						return { fileName, textSpan: textChange.span };
 					});
-					const locs = entriesToLocations(entries, getTextDocument2);
+					const locs = entriesToLocations(rootUri, entries, getTextDocument2);
 					locs.forEach((loc, index) => {
 						item.additionalTextEdits?.push(vscode.TextEdit.replace(loc.range, changes.textChanges[index].newText));
 					});
@@ -62,7 +66,7 @@ export function register(
 			}
 		}
 		if (details.displayParts) {
-			detailTexts.push(previewer.plainWithLinks(details.displayParts, { toResource: shared.fsPathToUri }, getTextDocument2));
+			detailTexts.push(previewer.plainWithLinks(details.displayParts, { toResource }, getTextDocument2));
 		}
 		if (detailTexts.length) {
 			item.detail = detailTexts.join('\n');
@@ -70,7 +74,7 @@ export function register(
 
 		item.documentation = {
 			kind: 'markdown',
-			value: previewer.markdownDocumentation(details.documentation, details.tags, { toResource: shared.fsPathToUri }, getTextDocument2),
+			value: previewer.markdownDocumentation(details.documentation, details.tags, { toResource }, getTextDocument2),
 		};
 
 		if (details) {
@@ -78,5 +82,9 @@ export function register(
 		}
 
 		return item;
+
+		function toResource(path: string) {
+			return shared.getUriByPath(rootUri, path);
+		}
 	};
 }

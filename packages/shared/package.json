@@ -1,6 +1,6 @@
 {
 	"name": "@volar/shared",
-	"version": "0.40.1",
+	"version": "0.40.13",
 	"main": "out/node.js",
 	"browser": "./out/browser.js",
 	"license": "MIT",
@@ -16,7 +16,7 @@
 	"dependencies": {
 		"upath": "^2.0.1",
 		"vscode-languageserver-protocol": "^3.17.2",
-		"vscode-languageserver-textdocument": "^1.0.5",
+		"vscode-languageserver-textdocument": "^1.0.7",
 		"vscode-uri": "^3.0.3"
 	},
 	"devDependencies": {

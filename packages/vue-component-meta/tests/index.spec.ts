@@ -1,15 +1,8 @@
 import * as path from 'path';
 import { describe, expect, test } from 'vitest';
-import { createComponentMetaChecker } from '..';
+import { createComponentMetaChecker, createComponentMetaCheckerByJsonConfig, MetaCheckerOptions, ComponentMetaChecker } from '..';
 
-describe(`vue-component-meta`, () => {
-
-	const tsconfigPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/tsconfig.json');
-	const checker = createComponentMetaChecker(tsconfigPath, {
-		forceUseTs: true,
-		schema: { ignore: ['MyIgnoredNestedProps'] },
-		printer: { newLine: 1 },
-	});
+const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describe(`vue-component-meta ${withTsconfig ? 'with tsconfig' : 'without tsconfig'}`, () => {
 
 	test('empty-component', () => {
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/empty-component/component.vue');
@@ -374,7 +367,7 @@ describe(`vue-component-meta`, () => {
 		expect(xfoo).toBeDefined();
 		expect(xfoo?.default).toBeUndefined();
 		expect(xfoo?.required).toBeTruthy();
-		expect(xfoo?.type).toEqual('string'); 
+		expect(xfoo?.type).toEqual('string');
 
 		expect(xbar).toBeDefined();
 		// expect(xbar?.default).toBe('""'); // @toto should be empty string
@@ -404,7 +397,7 @@ describe(`vue-component-meta`, () => {
 
 		expect(foo).toBeDefined();
 		expect(foo?.default).toBeUndefined();
-		expect(foo?.type).toEqual('string'); 
+		expect(foo?.type).toEqual('string');
 		expect(foo?.required).toBeTruthy();
 
 		expect(bar).toBeDefined();
@@ -678,3 +671,26 @@ describe(`vue-component-meta`, () => {
 		expect(propArrayDefault?.default).toEqual(`[1, 2, 3]`);
 	});
 });
+
+const checkerOptions: MetaCheckerOptions = {
+	forceUseTs: true,
+	schema: { ignore: ['MyIgnoredNestedProps'] },
+	printer: { newLine: 1 },
+};
+const tsconfigChecker = createComponentMetaChecker(
+	path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/tsconfig.json'),
+	checkerOptions,
+);
+const noTsConfigChecker = createComponentMetaCheckerByJsonConfig(
+	path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta'),
+	{
+		"extends": "../tsconfig.json",
+		"include": [
+			"**/*",
+		],
+	},
+	checkerOptions,
+);
+
+worker(tsconfigChecker, true);
+worker(noTsConfigChecker, false);

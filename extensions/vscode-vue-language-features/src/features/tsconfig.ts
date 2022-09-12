@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import { BaseLanguageClient } from 'vscode-languageclient';
-import * as shared from '@volar/shared';
 import * as path from 'path';
 import { takeOverModeEnabled } from '../common';
+import { GetMatchTsConfigRequest } from '@volar/vue-language-server';
 
 export async function register(cmd: string, context: vscode.ExtensionContext, languageClient: BaseLanguageClient) {
 
@@ -32,7 +32,7 @@ export async function register(cmd: string, context: vscode.ExtensionContext, la
 		}
 		else {
 			const tsconfig = await languageClient.sendRequest(
-				shared.GetMatchTsConfigRequest.type,
+				GetMatchTsConfigRequest.type,
 				languageClient.code2ProtocolConverter.asTextDocumentIdentifier(vscode.window.activeTextEditor.document),
 			);
 			if (tsconfig) {

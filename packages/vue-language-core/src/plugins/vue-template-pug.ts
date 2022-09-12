@@ -1,4 +1,4 @@
-import { VueLanguagePlugin } from '../sourceFile';
+import { VueLanguagePlugin } from '../types';
 import * as CompilerDom from '@vue/compiler-dom';
 import * as CompilerVue2 from '../utils/vue2TemplateCompiler';
 
@@ -23,6 +23,7 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 					const compiler = vueCompilerOptions.target < 3 ? CompilerVue2 : CompilerDom;
 					const completed = compiler.compile(pugDoc.htmlCode, {
 						...options,
+						...vueCompilerOptions.experimentalTemplateCompilerOptions,
 						onWarn(warning) {
 							options?.onWarn?.(createProxyObject(warning));
 						},

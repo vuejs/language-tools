@@ -133,8 +133,8 @@ export async function register(context: vscode.ExtensionContext) {
 					port = server.port;
 				}
 
-				const relativePath = path.relative(path.dirname(configFile), fileName).replace(/\\\\\\\\/g, '/');
-				let url = `http://localhost:${port}/__preview/${relativePath}#`;
+				const relativePath = shared.normalizeFileName(path.relative(path.dirname(configFile), fileName));
+				let url = `http://localhost:${port}/__preview${relativePath}#`;
 
 				if (lastPreviewDocument.isDirty) {
 					url += btoa(lastPreviewDocument.getText());
@@ -407,8 +407,8 @@ export async function register(context: vscode.ExtensionContext) {
 		}
 		else if (previewType === PreviewType.ExternalBrowser_Component) {
 			terminal.show();
-			const relativePath = path.relative(path.dirname(configFile), fileName).replace(/\\\\\\\\/g, '/');
-			panel.webview.html = getWebviewContent(`http://localhost:${port}/__preview/${relativePath}`, undefined, undefined, true);
+			const relativePath = shared.normalizeFileName(path.relative(path.dirname(configFile), fileName));
+			panel.webview.html = getWebviewContent(`http://localhost:${port}/__preview${relativePath}`, undefined, undefined, true);
 			externalBrowserPanel = panel;
 			return;
 		}

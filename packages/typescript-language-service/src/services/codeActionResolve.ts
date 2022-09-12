@@ -3,20 +3,24 @@ import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { fileTextChangesToWorkspaceEdit } from './rename';
 import { Data } from './codeAction';
-import type { Settings } from '../';
+import type { GetConfiguration } from '../';
+import { URI } from 'vscode-uri';
+import { getFormatCodeSettings } from '../configs/getFormatCodeSettings';
+import { getUserPreferences } from '../configs/getUserPreferences';
 
 export function register(
+	rootUri: URI,
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
-	settings: Settings,
+	getConfiguration: GetConfiguration,
 ) {
 	return async (codeAction: vscode.CodeAction) => {
 
 		const data: Data = codeAction.data;
 		const document = getTextDocument(data.uri);
 		const [formatOptions, preferences] = document ? await Promise.all([
-			settings.getFormatOptions?.(document.uri) ?? {},
-			settings.getPreferences?.(document.uri) ?? {},
+			getFormatCodeSettings(getConfiguration, document.uri),
+			getUserPreferences(getConfiguration, document.uri),
 		]) : [{}, {}];
 
 		if (data?.type === 'fixAll') {
@@ -26,18 +30,18 @@ export function register(
 				} catch { }
 			});
 			const changes = fixs.map(fix => fix?.changes ?? []).flat();
-			codeAction.edit = fileTextChangesToWorkspaceEdit(changes, getTextDocument);
+			codeAction.edit = fileTextChangesToWorkspaceEdit(rootUri, changes, getTextDocument);
 		}
 		else if (data?.type === 'refactor') {
 			const editInfo = languageService.getEditsForRefactor(data.fileName, formatOptions, data.range, data.refactorName, data.actionName, preferences);
 			if (editInfo) {
-				const edit = fileTextChangesToWorkspaceEdit(editInfo.edits, getTextDocument);
+				const edit = fileTextChangesToWorkspaceEdit(rootUri, editInfo.edits, getTextDocument);
 				codeAction.edit = edit;
 			}
 		}
 		else if (data?.type === 'organizeImports') {
 			const changes = languageService.organizeImports({ type: 'file', fileName: data.fileName }, formatOptions, preferences);
-			const edit = fileTextChangesToWorkspaceEdit(changes, getTextDocument);
+			const edit = fileTextChangesToWorkspaceEdit(rootUri, changes, getTextDocument);
 			codeAction.edit = edit;
 		}
 

@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "0.40.1",
+	"version": "0.40.13",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
@@ -307,6 +307,21 @@
 					"default": "off",
 					"description": "Traces the communication between VS Code and the language server."
 				},
+				"volar.vueserver.textDocumentSync": {
+					"type": "string",
+					"default": "incremental",
+					"enum": [
+						"incremental",
+						"full",
+						"none"
+					],
+					"enumDescriptions": [
+						"Documents are synced by sending the full content on open. After that only incremental updates to the document are send.",
+						"Documents are synced by always sending the full content of the document.",
+						"Documents should not be synced at all."
+					],
+					"description": "Defines how the host (editor) should sync document changes to the language server. SFC incremental parser only working when config \"incremental\"."
+				},
 				"volar.vueserver.useSecondServer": {
 					"type": "boolean",
 					"default": false,
@@ -354,6 +369,51 @@
 					"type": "boolean",
 					"default": false,
 					"description": "Auto-complete Ref value with `.value`."
+				},
+				"volar.format.initialIndent": {
+					"type": "object",
+					"description": "Whether to have initial indent.",
+					"default": {
+						"html": true
+					},
+					"properties": {
+						"html": {
+							"type": "boolean",
+							"default": true
+						},
+						"typescript": {
+							"type": "boolean",
+							"default": false
+						},
+						"javascript": {
+							"type": "boolean",
+							"default": false
+						},
+						"typescriptreact": {
+							"type": "boolean",
+							"default": false
+						},
+						"javascriptreact": {
+							"type": "boolean",
+							"default": false
+						},
+						"css": {
+							"type": "boolean",
+							"default": false
+						},
+						"scss": {
+							"type": "boolean",
+							"default": false
+						},
+						"json": {
+							"type": "boolean",
+							"default": false
+						},
+						"jsonc": {
+							"type": "boolean",
+							"default": false
+						}
+					}
 				},
 				"volar.takeOverMode.enabled": {
 					"type": [
@@ -823,7 +883,7 @@
 				"background": {
 					"activeOnStart": true,
 					"beginsPattern": "restarting server...$",
-					"endsPattern": "\\s*ready in"
+					"endsPattern": "\\s*ready in|server restarted."
 				}
 			}
 		]
@@ -843,14 +903,14 @@
 		"release": "npm run release:node && npm run release:browser"
 	},
 	"devDependencies": {
-		"@types/semver": "^7.3.10",
+		"@types/semver": "^7.3.12",
 		"@types/vscode": "1.67.0",
-		"@volar/preview": "0.40.1",
-		"@volar/shared": "0.40.1",
-		"@volar/vue-language-core": "0.40.1",
-		"@volar/vue-language-server": "0.40.1",
-		"@vue/compiler-sfc": "^3.2.37",
-		"@vue/reactivity": "^3.2.37",
+		"@volar/preview": "0.40.13",
+		"@volar/shared": "0.40.13",
+		"@volar/vue-language-core": "0.40.13",
+		"@volar/vue-language-server": "0.40.13",
+		"@vue/compiler-sfc": "^3.2.38",
+		"@vue/reactivity": "^3.2.38",
 		"esbuild": "latest",
 		"esbuild-plugin-copy": "latest",
 		"path-browserify": "^1.0.1",
@@ -858,6 +918,6 @@
 		"semver": "^7.3.7",
 		"vsce": "latest",
 		"vscode-languageclient": "^8.0.2",
-		"vscode-nls": "^5.0.1"
+		"vscode-nls": "^5.2.0"
 	}
 }

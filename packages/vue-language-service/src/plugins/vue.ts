@@ -1,12 +1,12 @@
 import * as shared from '@volar/shared';
 import type * as ts2 from '@volar/typescript-language-service';
 import { parseScriptSetupRanges } from '@volar/vue-language-core';
-import { EmbeddedLanguageServicePlugin } from '@volar/vue-language-service-types';
+import { EmbeddedLanguageServicePlugin, PluginContext, SourceFileDocument } from '@volar/language-service';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { VueDocument } from '../vueDocuments';
-import useHtmlPlugin from './html';
+import useHtmlPlugin from '@volar-plugins/html';
+import * as vue from '@volar/vue-language-core';
 
 const dataProvider = html.newHTMLDataProvider('vue', {
 	version: 1.1,
@@ -94,9 +94,8 @@ const dataProvider = html.newHTMLDataProvider('vue', {
 });
 
 export default function (options: {
-	ts: typeof import('typescript/lib/tsserverlibrary'),
-	getVueDocument(document: TextDocument): VueDocument | undefined,
-	tsLs: ts2.LanguageService | undefined,
+	getVueDocument(document: TextDocument): SourceFileDocument | undefined,
+	getTsLs: () => ts2.LanguageService | undefined,
 	isJsxMissing: boolean,
 }): EmbeddedLanguageServicePlugin {
 
@@ -104,77 +103,88 @@ export default function (options: {
 		validLang: 'vue',
 		disableCustomData: true,
 	});
-	htmlPlugin.htmlLs.setDataProviders(false, [dataProvider]);
+
+	let context: PluginContext;
 
 	return {
 
 		...htmlPlugin,
 
-		doValidation(document) {
-			return worker(document, (vueDocument) => {
+		setup(_context) {
+			htmlPlugin.setup?.(_context);
+			htmlPlugin.getHtmlLs().setDataProviders(false, [dataProvider]);
+			context = _context;
+		},
 
-				const result: vscode.Diagnostic[] = [];
-				const sfc = vueDocument.file.sfc;
+		validation: {
+			onFull(document) {
+				return worker(document, (vueDocument, vueSourceFile) => {
 
-				if (sfc.scriptSetup && sfc.scriptSetupAst) {
-					const scriptSetupRanges = parseScriptSetupRanges(options.ts, sfc.scriptSetupAst);
-					for (const range of scriptSetupRanges.notOnTopTypeExports) {
-						result.push(vscode.Diagnostic.create(
-							{
-								start: document.positionAt(range.start + sfc.scriptSetup.startTagEnd),
-								end: document.positionAt(range.end + sfc.scriptSetup.startTagEnd),
-							},
-							'type and interface export statements must be on the top in <script setup>',
-							vscode.DiagnosticSeverity.Warning,
-							undefined,
-							'volar',
-						));
+					const result: vscode.Diagnostic[] = [];
+					const sfc = vueSourceFile.sfc;
+
+					if (sfc.scriptSetup && sfc.scriptSetupAst) {
+						const scriptSetupRanges = parseScriptSetupRanges(context.typescript.module, sfc.scriptSetupAst);
+						for (const range of scriptSetupRanges.notOnTopTypeExports) {
+							result.push(vscode.Diagnostic.create(
+								{
+									start: document.positionAt(range.start + sfc.scriptSetup.startTagEnd),
+									end: document.positionAt(range.end + sfc.scriptSetup.startTagEnd),
+								},
+								'type and interface export statements must be on the top in <script setup>',
+								vscode.DiagnosticSeverity.Warning,
+								undefined,
+								'volar',
+							));
+						}
 					}
-				}
 
-				if (options.tsLs && !options.tsLs.__internal__.isValidFile(vueDocument.file.tsFileName)) {
-					for (const script of [sfc.script, sfc.scriptSetup]) {
+					const tsLs = options.getTsLs();
 
-						if (!script || script.content === '')
-							continue;
+					if (tsLs && !tsLs.__internal__.isValidFile(vueSourceFile.tsFileName)) {
+						for (const script of [sfc.script, sfc.scriptSetup]) {
 
+							if (!script || script.content === '')
+								continue;
+
+							const error = vscode.Diagnostic.create(
+								{
+									start: document.positionAt(script.start),
+									end: document.positionAt(script.startTagEnd),
+								},
+								'Virtual script not found, may missing <script lang="ts"> / "allowJs": true / jsconfig.json.',
+								vscode.DiagnosticSeverity.Information,
+								undefined,
+								'volar',
+							);
+							result.push(error);
+						}
+					}
+
+					if (tsLs && sfc.template && options.isJsxMissing) {
 						const error = vscode.Diagnostic.create(
 							{
-								start: document.positionAt(script.start),
-								end: document.positionAt(script.startTagEnd),
+								start: document.positionAt(sfc.template.start),
+								end: document.positionAt(sfc.template.startTagEnd),
 							},
-							'Virtual script not found, may missing <script lang="ts"> / "allowJs": true / jsconfig.json.',
+							'TypeScript intellisense is disabled on template. To enable, configure `"jsx": "preserve"` in the `"compilerOptions"` property of tsconfig or jsconfig. To disable this prompt instead, configure `"experimentalDisableTemplateSupport": true` in `"vueCompilerOptions"` property.',
 							vscode.DiagnosticSeverity.Information,
 							undefined,
 							'volar',
 						);
 						result.push(error);
 					}
-				}
 
-				if (options.tsLs && sfc.template && options.isJsxMissing) {
-					const error = vscode.Diagnostic.create(
-						{
-							start: document.positionAt(sfc.template.start),
-							end: document.positionAt(sfc.template.startTagEnd),
-						},
-						'TypeScript intellisense is disabled on template. To enable, configure `"jsx": "preserve"` in the `"compilerOptions"` property of tsconfig or jsconfig. To disable this prompt instead, configure `"experimentalDisableTemplateSupport": true` in `"vueCompilerOptions"` property.',
-						vscode.DiagnosticSeverity.Information,
-						undefined,
-						'volar',
-					);
-					result.push(error);
-				}
-
-				return result;
-			});
+					return result;
+				});
+			},
 		},
 
 		findDocumentSymbols(document) {
-			return worker(document, (vueDocument) => {
+			return worker(document, (vueDocument, vueSourceFile) => {
 
 				const result: vscode.SymbolInformation[] = [];
-				const descriptor = vueDocument.file.sfc;
+				const descriptor = vueSourceFile.sfc;
 
 				if (descriptor.template) {
 					result.push({
@@ -232,41 +242,76 @@ export default function (options: {
 		},
 
 		getFoldingRanges(document) {
-			return worker(document, (vueDocument) => {
+			return worker(document, (vueDocument, vueSourceFile) => {
 
-				const sfcWithEmptyBlocks = getSfcCodeWithEmptyBlocks(vueDocument, document.getText());
+				const sfcWithEmptyBlocks = getSfcCodeWithEmptyBlocks(vueSourceFile, document.getText());
 				const sfcWithEmptyBlocksDocument = TextDocument.create(document.uri, document.languageId, document.version, sfcWithEmptyBlocks);
 
-				return htmlPlugin.htmlLs.getFoldingRanges(sfcWithEmptyBlocksDocument);
+				return htmlPlugin.getHtmlLs().getFoldingRanges(sfcWithEmptyBlocksDocument);
 			});
 		},
 
 		getSelectionRanges(document, positions) {
-			return worker(document, (vueDocument) => {
+			return worker(document, (vueDocument, vueSourceFile) => {
 
-				const sfcWithEmptyBlocks = getSfcCodeWithEmptyBlocks(vueDocument, document.getText());
+				const sfcWithEmptyBlocks = getSfcCodeWithEmptyBlocks(vueSourceFile, document.getText());
 				const sfcWithEmptyBlocksDocument = TextDocument.create(document.uri, document.languageId, document.version, sfcWithEmptyBlocks);
 
-				return htmlPlugin.htmlLs.getSelectionRanges(sfcWithEmptyBlocksDocument, positions);
+				return htmlPlugin.getHtmlLs().getSelectionRanges(sfcWithEmptyBlocksDocument, positions);
 			});
 		},
 
-		format: undefined,
+		format(document) {
+			return worker(document, (vueDocument, vueSourceFile) => {
+
+				const blocks = [
+					vueSourceFile.sfc.script,
+					vueSourceFile.sfc.scriptSetup,
+					vueSourceFile.sfc.template,
+					...vueSourceFile.sfc.styles,
+					...vueSourceFile.sfc.customBlocks,
+				].filter((block): block is NonNullable<typeof block> => !!block)
+					.sort((a, b) => b.start - a.start);
+
+				const edits: vscode.TextEdit[] = [];
+
+				for (const block of blocks) {
+					const startPos = document.positionAt(block.start);
+					if (startPos.character !== 0) {
+						edits.push({
+							range: {
+								start: {
+									line: startPos.line,
+									character: 0,
+								},
+								end: startPos,
+							},
+							newText: '',
+						});
+					}
+				}
+
+				return edits;
+			});
+		},
 	};
 
-	function worker<T>(document: TextDocument, callback: (vueDocument: VueDocument) => T) {
+	function worker<T>(document: TextDocument, callback: (vueDocument: SourceFileDocument, vueSourceFile: vue.VueSourceFile) => T) {
 
 		const vueDocument = options.getVueDocument(document);
 		if (!vueDocument)
 			return;
 
-		return callback(vueDocument);
+		if (!(vueDocument.file instanceof vue.VueSourceFile))
+			return;
+
+		return callback(vueDocument, vueDocument.file);
 	}
 }
 
-function getSfcCodeWithEmptyBlocks(vueDocument: VueDocument, sfcCode: string) {
+function getSfcCodeWithEmptyBlocks(vueSourceFile: vue.VueSourceFile, sfcCode: string) {
 
-	const descriptor = vueDocument.file.sfc;
+	const descriptor = vueSourceFile.sfc;
 	const blocks = [
 		descriptor.template, // relate to below
 		descriptor.script,

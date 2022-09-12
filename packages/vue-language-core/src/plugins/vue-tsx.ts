@@ -3,8 +3,8 @@ import { generate as genScript } from '../generators/script';
 import * as templateGen from '../generators/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
-import { Sfc, VueLanguagePlugin } from '../sourceFile';
-import { TextRange } from '../types';
+import { Sfc, VueLanguagePlugin } from '../types';
+import { TextRange } from '@volar/language-core';
 import { parseCssClassNames } from '../utils/parseCssClassNames';
 import { parseCssVars } from '../utils/parseCssVars';
 
@@ -18,13 +18,12 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 		getEmbeddedFileNames(fileName, sfc) {
 
 			const fileNames: string[] = [];
+			const _gen = useGen(fileName, sfc);
 
-			if (!fileName.endsWith('.html')) {
-				const _gen = useGen(fileName, sfc);
-				if (_gen?.lang.value && ['js', 'ts', 'jsx', 'tsx'].includes(_gen.lang.value)) {
-					fileNames.push(fileName + '.' + _gen.lang.value);
-				}
+			if (_gen?.lang.value && ['js', 'ts', 'jsx', 'tsx'].includes(_gen.lang.value)) {
+				fileNames.push(fileName + '.' + _gen.lang.value);
 			}
+
 			if (sfc.template) {
 				fileNames.push(fileName + '.__VLS_template_format.tsx');
 				fileNames.push(fileName + '.__VLS_template_style.css');
@@ -132,6 +131,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 			return templateGen.generate(
 				ts,
 				vueCompilerOptions,
+				sfc.template?.content ?? '',
 				sfc.template?.lang ?? 'html',
 				sfc.templateAst,
 				!!sfc.scriptSetup,
@@ -149,6 +149,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 			cssModuleClasses.value,
 			cssScopedClasses.value,
 			htmlGen.value,
+			compilerOptions,
 			vueCompilerOptions,
 		));
 

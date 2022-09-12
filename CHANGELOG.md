@@ -1,5 +1,122 @@
 # Changelog
 
+## 0.40.13 (2022/9/8)
+
+- fix: cycle reactive reference lead to memory leak
+
+## 0.40.12 (2022/9/8)
+
+- perf: fix incremental template compile not working
+- perf: cache path resolve result on `getScriptVersion`
+- perf: faster code mapping range transform
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
+
+## 0.40.11 (2022/9/8)
+
+- feat: support for typescript class/object literal method completions ([#1835](https://github.com/johnsoncodehk/volar/issues/1835))
+- fix: langauge server crash if client did not support `onDidChangeWorkspaceFolders` ([#1834](https://github.com/johnsoncodehk/volar/issues/1834))
+- fix: "Format Selection" embedded range incorrect with initialIndentBracket
+- fix: formatting break document with `editor.formatOnPaste` enabled ([#1840](https://github.com/johnsoncodehk/volar/issues/1840)) ([#1841](https://github.com/johnsoncodehk/volar/issues/1841)) ([#1842](https://github.com/johnsoncodehk/volar/issues/1842)) ([#1843](https://github.com/johnsoncodehk/volar/issues/1843)) ([#1835](https://github.com/johnsoncodehk/volar/issues/1835))
+
+## 0.40.10 (2022/9/7)
+
+- feat: improve "Format Selection" for html content
+- feat: uniquely scope attribute shorthands ([#1812](https://github.com/johnsoncodehk/volar/issues/1812))
+- feat: add server name, version infos to LSP initialize response
+- fix: "Format Selection" should not format whole language block ([#1833](https://github.com/johnsoncodehk/volar/issues/1833))
+- fix: formatting break document content randomly ([#1827](https://github.com/johnsoncodehk/volar/issues/1827)) ([#1832](https://github.com/johnsoncodehk/volar/issues/1832))
+- fix: pug syntax highlighting confuses element id with interpolation ([#1826](https://github.com/johnsoncodehk/volar/issues/1826))
+- fix: don't cache IDE settings if IDE do not support config change notification
+
+## 0.40.9 (2022/9/6)
+
+- feat: improve vue document formatting
+- fix: script format loss indent ([#1823](https://github.com/johnsoncodehk/volar/issues/1823))
+
+## 0.40.8 (2022/9/6)
+
+- feat: add `volar.format.initialIndent` option for format `<style>`, `<script>` with initial indent ([#1806](https://github.com/johnsoncodehk/volar/issues/1806))
+- perf: cache `ts.ScriptSnapshot.fromString` result on formatting
+- fix: volar.config.js not working since v0.40.7 ([#1819](https://github.com/johnsoncodehk/volar/issues/1819))
+- fix: should not incremental update if SFC parse failed (https://github.com/johnsoncodehk/volar/issues/1807#issuecomment-1236857296)
+
+## 0.40.7 (2022/9/5)
+
+- feat: support multiple workspaces for document features
+- feat: add `initializationOptions.completion.ignoreTriggerCharacters` for LSP-Volar (https://github.com/sublimelsp/LSP-volar/issues/114)
+- feat: add `vueCompilerOptions.experimentalComponentOptionsWrapper` option for custom component options warpper ([#1517](https://github.com/johnsoncodehk/volar/issues/1517))
+- fix: add missing surrounding pair "`" ([#1659](https://github.com/johnsoncodehk/volar/issues/1659))
+- fix: formatting edit range incorrect edge case ([#1814](https://github.com/johnsoncodehk/volar/issues/1814))
+- fix: typescript onType format do not respect `typescript.format.enable`
+- fix: document features stop working for script block ([#1813](https://github.com/johnsoncodehk/volar/issues/1813))
+- fix: pug formatter extra spaces in `{{ }}` ([#1784](https://github.com/johnsoncodehk/volar/issues/1784))
+- fix: template incremental parser broken when typing slot name
+
+**Breaking changes**
+
+- vueCompilerOptions properties `experimentalImplicitWrapComponentOptionsWithDefineComponent`, `experimentalImplicitWrapComponentOptionsWithVue2Extend` replaced by `experimentalComponentOptionsWrapper`.
+
+## 0.40.6 (2022/9/4)
+
+- feat: support language features for Web IDE ([#612](https://github.com/johnsoncodehk/volar/issues/612))
+- feat: update vite problemMatcher ([#1801](https://github.com/johnsoncodehk/volar/issues/1801))
+- feat: add `volar.vueserver.textDocumentSync` option to disable incremental update ([#1807](https://github.com/johnsoncodehk/volar/issues/1807))
+- fix: `v-for`, `v-if` textmate scopes incorrect ([#1810](https://github.com/johnsoncodehk/volar/issues/1810))
+
+## 0.40.5 (2022/8/31)
+
+- feat: suppor add or switch workspaces without restart server ([#1574](https://github.com/johnsoncodehk/volar/issues/1574))
+- fix: sfc offset incremental update broken when input at block start
+- fix: document incremental update break document content on Sublime LSP (https://github.com/sublimelsp/LSP-volar/issues/120)
+- fix: unexpected prop types behavior with `compilerOptions.exactOptionalPropertyTypes` (https://github.com/vuejs/core/issues/6532)
+- fix: false positive error on `<input typeof="radio" value="...">` ([#1775](https://github.com/johnsoncodehk/volar/issues/1775))
+- fix: false positive style attribute inconsistent string type error ([#1781](https://github.com/johnsoncodehk/volar/issues/1781))
+- fix: langauge server broken with `outDir` + `rootDir` + `composite/incremental` tsconfig options ([#1782](https://github.com/johnsoncodehk/volar/issues/1782))
+- fix: json format should not trim first / end new line
+- fix: interpolation format adding redundant spaces ([#1784](https://github.com/johnsoncodehk/volar/issues/1784))
+
+## 0.40.4 (2022/8/29)
+
+- feat: respect VSCode `*.format.enable` settings
+- fix: template should not compile if content no change
+- fix: component preview not working on windows ([#1737](https://github.com/johnsoncodehk/volar/issues/1737))
+
+## 0.40.3 (2022/8/29)
+
+- perf: incremental update SFC blocks without full parse SFC and mitigate memory leak
+- perf: incremental update html template interpolation without recompile template
+- perf: cache `ts.createSourceFile` for tsx code gen
+- fix(vue-component-meta): cannot create checker with TS 4.8.2
+- fix: document features not working on Web IDE ([#1479](https://github.com/johnsoncodehk/volar/issues/1479))
+- fix: avoid auto complete triggers too aggressive in Sublime (https://github.com/sublimelsp/LSP-volar/issues/114)
+
+## 0.40.2 (2022/8/28)
+
+- feat(vue-component-meta): add `createComponentMetaCheckerByJsonConfig` API to support create checker without tsconfig
+- feat: move `highlight dom elements ☑` codeLens to status bar ([#1535](https://github.com/johnsoncodehk/volar/issues/1535))
+- feat: incremental update diagnostics cache range and avoid flicker ([#1718](https://github.com/johnsoncodehk/volar/issues/1718))
+- perf: incremental update TS script snapshot ([#1718](https://github.com/johnsoncodehk/volar/issues/1718))
+- perf: faster source map code mapping
+- fix: pug template tag mapping range incorrect ([#1723](https://github.com/johnsoncodehk/volar/issues/1723))
+- fix: vite plugin import path incorrect on windows ([#1772](https://github.com/johnsoncodehk/volar/issues/1772))
+- fix: false positive error on style attr when enabled `compilerOptions.exactOptionalPropertyTypes` ([#1560](https://github.com/johnsoncodehk/volar/issues/1560))
+- fix: .html intellisense of petite-vue not working
+- fix: .html intellisense of alpie not working
+- fix: intellisense not working for node_modules files with takeover mode on windows ([#1641](https://github.com/johnsoncodehk/volar/issues/1641))
+- fix: avoid vue-tsc type check .html, .md files ([#1661](https://github.com/johnsoncodehk/volar/issues/1661))
+- fix: `compilerOptions.types` resolve path incorrect on multiple workspaces ([#1679](https://github.com/johnsoncodehk/volar/issues/1679))
+- fix: cannot count script setup variable usage in template if disalbe jsx ([#1729](https://github.com/johnsoncodehk/volar/issues/1729))
+- fix: cannot resolve indirect circular reference components types ([#1708](https://github.com/johnsoncodehk/volar/issues/1708))
+- fix: cannot recognize namespace component ([#1726](https://github.com/johnsoncodehk/volar/issues/1726))
+- fix: template components types break by regular SFC `components` option ([#1731](https://github.com/johnsoncodehk/volar/issues/1731))
+- fix: indentation behavior incorrect ([#1762](https://github.com/johnsoncodehk/volar/issues/1762))
+- fix: TS1308 'async' error missing when use script setup ([#1753](https://github.com/johnsoncodehk/volar/issues/1753))
+
 ## 0.40.1 (2022/8/11)
 
 - fix: component context types missing in template if no script block ([#1688](https://github.com/johnsoncodehk/volar/issues/1688))
@@ -7,12 +124,6 @@
 - fix: v-else template interpolation missing in virtual code ([#1694](https://github.com/johnsoncodehk/volar/issues/1694))
 - fix: template interpolation formatting broken ([#1697](https://github.com/johnsoncodehk/volar/issues/1697))
 - fix: inline css intellisense not working
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 0.40.0 (2022/8/10)
 

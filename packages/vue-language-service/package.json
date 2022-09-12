@@ -1,6 +1,6 @@
 {
 	"name": "@volar/vue-language-service",
-	"version": "0.40.1",
+	"version": "0.40.13",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -13,36 +13,35 @@
 		"directory": "packages/vue-language-service"
 	},
 	"devDependencies": {
-		"@types/semver": "^7.3.10",
 		"typescript": "latest"
 	},
 	"dependencies": {
 		"@johnsoncodehk/html2pug": "^1.0.0",
-		"@johnsoncodehk/pug-beautify": "^0.2.2",
-		"@volar/pug-language-service": "0.40.1",
-		"@volar/shared": "0.40.1",
-		"@volar/source-map": "0.40.1",
-		"@volar/transforms": "0.40.1",
-		"@volar/typescript-faster": "0.40.1",
-		"@volar/typescript-language-service": "0.40.1",
-		"@volar/vue-language-core": "0.40.1",
-		"@volar/vue-language-service-types": "0.40.1",
-		"@volar/vue-typescript": "0.40.1",
-		"@vscode/emmet-helper": "^2.8.4",
-		"@vue/compiler-dom": "^3.2.37",
-		"@vue/reactivity": "^3.2.37",
-		"@vue/shared": "^3.2.37",
-		"semver": "^7.3.7",
+		"@volar-plugins/css": "0.40.13",
+		"@volar-plugins/emmet": "0.40.13",
+		"@volar-plugins/html": "0.40.13",
+		"@volar-plugins/json": "0.40.13",
+		"@volar-plugins/pug": "0.40.13",
+		"@volar-plugins/pug-beautify": "0.40.13",
+		"@volar-plugins/typescript": "0.40.13",
+		"@volar/language-core": "0.40.13",
+		"@volar/language-service": "0.40.13",
+		"@volar/shared": "0.40.13",
+		"@volar/source-map": "0.40.13",
+		"@volar/transforms": "0.40.13",
+		"@volar/typescript-language-service": "0.40.13",
+		"@volar/vue-language-core": "0.40.13",
+		"@vue/compiler-dom": "^3.2.38",
+		"@vue/reactivity": "^3.2.38",
+		"@vue/shared": "^3.2.38",
 		"upath": "^2.0.1",
-		"vscode-css-languageservice": "^6.0.1",
 		"vscode-html-languageservice": "^5.0.1",
 		"vscode-json-languageservice": "^5.1.0",
 		"vscode-languageserver-protocol": "^3.17.2",
-		"vscode-languageserver-textdocument": "^1.0.5"
+		"vscode-languageserver-textdocument": "^1.0.7",
+		"vscode-uri": "^3.0.3"
 	},
 	"browser": {
-		"./out/plugins/emmet.js": "./out/plugins/empty.js",
-		"./out/plugins/pug.js": "./out/plugins/empty.js",
 		"./out/plugins/vue-convert-htmlpug.js": "./out/plugins/empty.js"
 	}
 }

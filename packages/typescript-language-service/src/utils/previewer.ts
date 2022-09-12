@@ -3,9 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type * as Proto from '../protocol';
 import * as shared from '@volar/shared';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
+import type * as Proto from '../protocol';
 
 export interface IFilePathToResourceConverter {
 	/**
@@ -145,7 +146,7 @@ function convertLinkTags(
 							fileName: string,
 							textSpan: { start: number, length: number; },
 						};
-						const fileDoc = getTextDocument(shared.uriToFsPath(_target.fileName));
+						const fileDoc = getTextDocument(shared.getPathOfUri(_target.fileName));
 						if (fileDoc) {
 							const start = fileDoc.positionAt(_target.textSpan.start);
 							const end = fileDoc.positionAt(_target.textSpan.start + _target.textSpan.length);

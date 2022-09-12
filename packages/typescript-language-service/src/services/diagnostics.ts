@@ -2,8 +2,14 @@ import * as vscode from 'vscode-languageserver-protocol';
 import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
+import { URI } from 'vscode-uri';
 
-export function register(languageService: ts.LanguageService, getTextDocument: (uri: string) => TextDocument | undefined, ts: typeof import('typescript/lib/tsserverlibrary')) {
+export function register(
+	rootUri: URI,
+	languageService: ts.LanguageService,
+	getTextDocument: (uri: string) => TextDocument | undefined,
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+) {
 	return (
 		uri: string,
 		options: {
@@ -17,7 +23,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const document = getTextDocument(uri);
 		if (!document) return [];
 
-		const fileName = shared.uriToFsPath(document.uri);
+		const fileName = shared.getPathOfUri(document.uri);
 		const program = languageService.getProgram();
 		const sourceFile = program?.getSourceFile(fileName);
 		if (!program || !sourceFile) return [];
@@ -81,7 +87,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 
 			let document: TextDocument | undefined;
 			if (diag.file) {
-				document = getTextDocument(shared.fsPathToUri(diag.file.fileName));
+				document = getTextDocument(shared.getUriByPath(rootUri, diag.file.fileName));
 			}
 			if (!document) return;
 

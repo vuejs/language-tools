@@ -2,8 +2,10 @@ import { createLanguageService, LanguageServiceHost } from '../..';
 import * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';
 import * as shared from '@volar/shared';
+import { URI } from 'vscode-uri';
 
 const testRoot = path.resolve(__dirname, '../../../vue-test-workspace');
+export const rootUri = URI.file(testRoot);
 export const tester = createTester(testRoot);
 
 function createTester(root: string) {
@@ -55,24 +57,28 @@ function createTester(root: string) {
 			},
 		},
 	};
-	const languageService = createLanguageService(host, undefined, undefined, {
-		async getConfiguration<T>(section: string) {
-			const keys = section.split('.');
-			let settings = vscodeSettings;
-			for (const key of keys) {
-				if (key in settings) {
-					settings = settings[key];
-				}
-				else {
-					settings = undefined;
-					break;
-				}
+	const languageService = createLanguageService(
+		host,
+		{
+			rootUri,
+			configurationHost: {
+				async getConfiguration<T>(section: string) {
+					const keys = section.split('.');
+					let settings = vscodeSettings;
+					for (const key of keys) {
+						if (key in settings) {
+							settings = settings[key];
+						}
+						else {
+							settings = undefined;
+							break;
+						}
+					}
+					return settings;
+				},
+				onDidChangeConfiguration() { },
 			}
-			return settings;
-		},
-		onDidChangeConfiguration() { },
-		rootUris: [],
-	}, []);
+		});
 
 	return {
 		host,

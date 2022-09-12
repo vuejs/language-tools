@@ -1,1 +1,0 @@
-For a full change history, refer to the [CHANGELOG](https://github.com/johnsoncodehk/volar/blob/master/CHANGELOG.md) on the Volar GitHub site.

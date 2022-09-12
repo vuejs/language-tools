@@ -4,6 +4,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 export function walkInterpolationFragment(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	code: string,
+	ast: ts.SourceFile,
 	cb: (fragment: string, offset: number | undefined, isJustForErrorMapping?: boolean) => void,
 	localVars: Record<string, number>,
 	identifiers: Set<string>,
@@ -15,7 +16,6 @@ export function walkInterpolationFragment(
 		offset: number,
 	}[] = [];
 
-	const ast = ts.createSourceFile('/foo.ts', code, ts.ScriptTarget.ESNext);
 	const varCb = (id: ts.Identifier, isShorthand: boolean) => {
 		if (
 			!!localVars[id.text] ||

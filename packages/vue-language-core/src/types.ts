@@ -1,23 +1,25 @@
-import type * as ts from 'typescript/lib/tsserverlibrary';
+import * as embedded from '@volar/language-core';
+import { SFCParseResult } from '@vue/compiler-sfc';
 
-export type LanguageServiceHost = ts.LanguageServiceHost & {
-	getTypeScriptModule(): typeof import('typescript/lib/tsserverlibrary');
+import * as CompilerDom from '@vue/compiler-dom';
+import type * as ts from 'typescript/lib/tsserverlibrary';
+import { EmbeddedFile } from './sourceFile';
+
+export type LanguageServiceHost = embedded.LanguageServiceHost & {
 	getVueCompilationSettings(): VueCompilerOptions,
-	isTsPlugin?: boolean,
-	isTsc?: boolean,
 };
 
-export type VueCompilerOptions = Partial<_VueCompilerOptions>;
+export type VueCompilerOptions = Partial<ResolvedVueCompilerOptions>;
 
-export interface _VueCompilerOptions {
+export interface ResolvedVueCompilerOptions {
 	target: 2 | 2.7 | 3;
 	strictTemplates: boolean;
 	plugins: string[];
 
 	// experimental
+	experimentalComponentOptionsWrapper: [string, string];
+	experimentalComponentOptionsWrapperEnable: boolean | 'onlyJs';
 	experimentalRuntimeMode: 'runtime-dom' | 'runtime-uni-app';
-	experimentalImplicitWrapComponentOptionsWithDefineComponent: boolean | 'onlyJs';
-	experimentalImplicitWrapComponentOptionsWithVue2Extend: boolean | 'onlyJs';
 	experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup: boolean | 'onlyJs';
 	experimentalTemplateCompilerOptions: any;
 	experimentalTemplateCompilerOptionsRequirePath: string | undefined;
@@ -26,43 +28,48 @@ export interface _VueCompilerOptions {
 	experimentalAllowTypeNarrowingInInlineHandlers: boolean;
 }
 
-export interface EmbeddedFileMappingData {
-	vueTag: 'template' | 'script' | 'scriptSetup' | 'scriptSrc' | 'style' | 'customBlock' | undefined,
-	vueTagIndex?: number,
-	normalizeNewName?: (newName: string) => string,
-	applyNewName?: (oldName: string, newName: string) => string,
-	capabilities: {
-		basic?: boolean,
-		references?: boolean,
-		definitions?: boolean,
-		diagnostic?: boolean,
-		rename?: boolean | {
-			in: boolean,
-			out: boolean,
-		},
-		completion?: boolean | {
-			additional: boolean,
-		},
-		semanticTokens?: boolean,
-		referencesCodeLens?: boolean,
-		displayWithLink?: boolean,
+export type VueLanguagePlugin = (ctx: {
+	modules: {
+		typescript: typeof import('typescript/lib/tsserverlibrary');
 	},
+	compilerOptions: ts.CompilerOptions,
+	vueCompilerOptions: ResolvedVueCompilerOptions,
+}) => {
+	order?: number;
+	parseSFC?(fileName: string, content: string): SFCParseResult | undefined;
+	updateSFC?(oldResult: SFCParseResult, textChange: { start: number, end: number, newText: string; }): SFCParseResult | undefined;
+	compileSFCTemplate?(lang: string, template: string, options?: CompilerDom.CompilerOptions): CompilerDom.CodegenResult | undefined;
+	updateSFCTemplate?(oldResult: CompilerDom.CodegenResult, textChange: { start: number, end: number, newText: string; }): CompilerDom.CodegenResult | undefined;
+	getEmbeddedFileNames?(fileName: string, sfc: Sfc): string[];
+	resolveEmbeddedFile?(fileName: string, sfc: Sfc, embeddedFile: EmbeddedFile): void;
+};
+
+export interface SfcBlock {
+	tag: 'script' | 'scriptSetup' | 'template' | 'style' | 'customBlock',
+	start: number;
+	end: number;
+	startTagEnd: number;
+	endTagStart: number;
+	lang: string;
+	content: string;
 }
 
-export interface TeleportSideData {
-	capabilities: {
-		references?: boolean,
-		definitions?: boolean,
-		rename?: boolean,
-	},
-}
+export interface Sfc {
+	template: SfcBlock | null;
+	script: (SfcBlock & {
+		src: string | undefined;
+	}) | null;
+	scriptSetup: SfcBlock | null;
+	styles: (SfcBlock & {
+		module: string | undefined;
+		scoped: boolean;
+	})[];
+	customBlocks: (SfcBlock & {
+		type: string;
+	})[];
 
-export interface TeleportMappingData {
-	toSource: TeleportSideData,
-	toTarget: TeleportSideData,
-}
-
-export interface TextRange {
-	start: number,
-	end: number,
+	// ast
+	templateAst: CompilerDom.RootNode | undefined;
+	scriptAst: ts.SourceFile | undefined;
+	scriptSetupAst: ts.SourceFile | undefined;
 }

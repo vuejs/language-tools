@@ -12,15 +12,18 @@ fs.readFileSync = (...args) => {
         // add *.vue files to allow extensions
         tsc = tsc.replace(
             `ts.supportedTSExtensions = [[".ts", ".tsx", ".d.ts"], [".cts", ".d.cts"], [".mts", ".d.mts"]];`,
-            `ts.supportedTSExtensions = [[".ts", ".tsx", ".d.ts"], [".cts", ".d.cts"], [".mts", ".d.mts"], [".vue", ".md", ".html"]];`,
+            // `ts.supportedTSExtensions = [[".ts", ".tsx", ".d.ts"], [".cts", ".d.cts"], [".mts", ".d.mts"], [".vue", ".md", ".html"]];`,
+            `ts.supportedTSExtensions = [[".ts", ".tsx", ".d.ts"], [".cts", ".d.cts"], [".mts", ".d.mts"], [".vue"]];`,
         );
         tsc = tsc.replace(
             `ts.supportedJSExtensions = [[".js", ".jsx"], [".mjs"], [".cjs"]];`,
-            `ts.supportedJSExtensions = [[".js", ".jsx"], [".mjs"], [".cjs"], [".vue", ".md", ".html"]];`,
+            // `ts.supportedJSExtensions = [[".js", ".jsx"], [".mjs"], [".cjs"], [".vue", ".md", ".html"]];`,
+            `ts.supportedJSExtensions = [[".js", ".jsx"], [".mjs"], [".cjs"], [".vue"]];`,
         );
         tsc = tsc.replace(
             `var allSupportedExtensions = [[".ts", ".tsx", ".d.ts", ".js", ".jsx"], [".cts", ".d.cts", ".cjs"], [".mts", ".d.mts", ".mjs"]];`,
-            `var allSupportedExtensions = [[".ts", ".tsx", ".d.ts", ".js", ".jsx"], [".cts", ".d.cts", ".cjs"], [".mts", ".d.mts", ".mjs"], [".vue", ".md", ".html"]];`,
+            // `var allSupportedExtensions = [[".ts", ".tsx", ".d.ts", ".js", ".jsx"], [".cts", ".d.cts", ".cjs"], [".mts", ".d.mts", ".mjs"], [".vue", ".md", ".html"]];`,
+            `var allSupportedExtensions = [[".ts", ".tsx", ".d.ts", ".js", ".jsx"], [".cts", ".d.cts", ".cjs"], [".mts", ".d.mts", ".mjs"], [".vue"]];`,
         );
 
         // proxy createProgram apis

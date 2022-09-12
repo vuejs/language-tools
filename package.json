@@ -26,7 +26,7 @@
     "typescript": "latest",
     "vite": "latest",
     "vitest": "latest",
-    "vitepress": "^1.0.0-alpha.2",
-    "vue": "^3.2.37"
+    "vitepress": "1.0.0-alpha.13",
+    "vue": "^3.2.38"
   }
 }

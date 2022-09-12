@@ -13,7 +13,8 @@
 			],
 			"outFiles": [
 				"${workspaceRoot}/extensions/*/out/**/*.js",
-				"${workspaceRoot}/packages/*/out/**/*.js"
+				"${workspaceRoot}/packages/*/out/**/*.js",
+				"${workspaceRoot}/plugins/*/out/**/*.js"
 			],
 			"preLaunchTask": {
 				"type": "npm",
@@ -31,7 +32,8 @@
 			],
 			"outFiles": [
 				"${workspaceRoot}/extensions/*/out/**/*.js",
-				"${workspaceRoot}/packages/*/out/**/*.js"
+				"${workspaceRoot}/packages/*/out/**/*.js",
+				"${workspaceRoot}/plugins/*/out/**/*.js"
 			],
 			"preLaunchTask": {
 				"type": "npm",
@@ -49,7 +51,8 @@
 			],
 			"outFiles": [
 				"${workspaceRoot}/extensions/*/out/**/*.js",
-				"${workspaceRoot}/packages/*/out/**/*.js"
+				"${workspaceRoot}/packages/*/out/**/*.js",
+				"${workspaceRoot}/plugins/*/out/**/*.js"
 			],
 			"preLaunchTask": {
 				"type": "npm",
@@ -68,7 +71,8 @@
 			],
 			"outFiles": [
 				"${workspaceRoot}/extensions/*/out/**/*.js",
-				"${workspaceRoot}/packages/*/out/**/*.js"
+				"${workspaceRoot}/packages/*/out/**/*.js",
+				"${workspaceRoot}/plugins/*/out/**/*.js"
 			],
 			"preLaunchTask": {
 				"type": "npm",
@@ -82,7 +86,8 @@
 			"port": 6009,
 			"restart": true,
 			"outFiles": [
-				"${workspaceRoot}/packages/*/out/**/*.js"
+				"${workspaceRoot}/packages/*/out/**/*.js",
+				"${workspaceRoot}/plugins/*/out/**/*.js"
 			]
 		},
 		{
@@ -92,7 +97,8 @@
 			"port": 6010,
 			"restart": true,
 			"outFiles": [
-				"${workspaceRoot}/packages/*/out/**/*.js"
+				"${workspaceRoot}/packages/*/out/**/*.js",
+				"${workspaceRoot}/plugins/*/out/**/*.js"
 			]
 		},
 		{
@@ -102,7 +108,8 @@
 			"port": 6011,
 			"restart": true,
 			"outFiles": [
-				"${workspaceRoot}/packages/*/out/**/*.js"
+				"${workspaceRoot}/packages/*/out/**/*.js",
+				"${workspaceRoot}/plugins/*/out/**/*.js"
 			]
 		},
 		{
@@ -112,7 +119,8 @@
 			"port": 6109,
 			"restart": true,
 			"outFiles": [
-				"${workspaceRoot}/packages/*/out/**/*.js"
+				"${workspaceRoot}/packages/*/out/**/*.js",
+				"${workspaceRoot}/plugins/*/out/**/*.js"
 			]
 		},
 		{
@@ -122,7 +130,8 @@
 			"port": 6110,
 			"restart": true,
 			"outFiles": [
-				"${workspaceRoot}/packages/*/out/**/*.js"
+				"${workspaceRoot}/packages/*/out/**/*.js",
+				"${workspaceRoot}/plugins/*/out/**/*.js"
 			]
 		},
 		{
@@ -132,7 +141,8 @@
 			"port": 6111,
 			"restart": true,
 			"outFiles": [
-				"${workspaceRoot}/packages/*/out/**/*.js"
+				"${workspaceRoot}/packages/*/out/**/*.js",
+				"${workspaceRoot}/plugins/*/out/**/*.js"
 			]
 		}
 	],

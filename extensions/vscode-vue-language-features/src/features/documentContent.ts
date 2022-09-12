@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import { ResponseError } from 'vscode-languageclient';
-import * as shared from '@volar/shared';
 import type { BaseLanguageClient } from 'vscode-languageclient';
 import * as nls from 'vscode-nls';
+import { GetDocumentContentRequest } from '@volar/vue-language-server';
 
 const localize = nls.loadMessageBundle();
 
@@ -10,7 +10,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 
 	const schemaDocuments: { [uri: string]: boolean; } = {};
 
-	context.subscriptions.push(languageClient.onRequest(shared.GetDocumentContentRequest.type, handle => {
+	context.subscriptions.push(languageClient.onRequest(GetDocumentContentRequest.type, handle => {
 		const uri = vscode.Uri.parse(handle.uri);
 		if (uri.scheme === 'untitled') {
 			return Promise.reject(new ResponseError(3, localize('untitled.schema', 'Unable to load {0}', uri.toString())));

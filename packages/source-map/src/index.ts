@@ -17,7 +17,7 @@ export enum Mode {
 	 * 123456 -> abcdef
 	 *   ^^        ^^
 	 */
-	Offset,
+	Offset = 1,
 	/**
 	 * @case1
 	 * 123456 -> abcdef
@@ -29,7 +29,7 @@ export enum Mode {
 	 * 123456 -> abcdef
 	 *   ^^      NOT_MATCH
 	 */
-	Totally,
+	Totally = 2,
 	/**
 	 * @case1
 	 * 123456 -> abcdef
@@ -41,7 +41,7 @@ export enum Mode {
 	 * 123456 -> abcdef
 	 *   ^^      ^    ^
 	 */
-	Expand,
+	Expand = 3,
 }
 
 export type MappingBase = {
@@ -165,7 +165,7 @@ export class SourceMapBase<Data = undefined> {
 		return this.getRanges(start, end ?? start, true, filter);
 	}
 
-	protected * getRanges(startOffset: number, endOffset: number, sourceToTarget: boolean, filter?: (data: Data) => boolean) {
+	public * getRanges(startOffset: number, endOffset: number, sourceToTarget: boolean, filter?: (data: Data) => boolean) {
 
 		const memo = this.__memo.value;
 		const _memo = sourceToTarget ? memo.source : memo.mapped;

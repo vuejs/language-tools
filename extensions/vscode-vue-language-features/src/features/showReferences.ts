@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
-import * as shared from '@volar/shared';
 import type { BaseLanguageClient } from 'vscode-languageclient';
+import { ShowReferencesNotification } from '@volar/vue-language-server';
 
 export async function activate(context: vscode.ExtensionContext, languageClient: BaseLanguageClient) {
-	context.subscriptions.push(languageClient.onNotification(shared.ShowReferencesNotification.type, handler => {
-		const uri = handler.textDocument.uri;
-		const pos = handler.position;
-		const refs = handler.references;
+	context.subscriptions.push(languageClient.onNotification(ShowReferencesNotification.type, params => {
+		const uri = params.textDocument.uri;
+		const pos = params.position;
+		const refs = params.references;
 		vscode.commands.executeCommand(
 			'editor.action.showReferences',
 			vscode.Uri.parse(uri),

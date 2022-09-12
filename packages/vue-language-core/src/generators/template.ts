@@ -1,25 +1,28 @@
-import * as SourceMaps from '@volar/source-map';
 import { CodeGen } from '@volar/code-gen';
-import { camelize, hyphenate, capitalize, isHTMLTag, isSVGTag } from '@vue/shared';
-import * as CompilerDOM from '@vue/compiler-dom';
+import * as SourceMaps from '@volar/source-map';
 import * as CompilerCore from '@vue/compiler-core';
-import { EmbeddedFileMappingData, _VueCompilerOptions } from '../types';
-import { colletVars, walkInterpolationFragment } from '../utils/transform';
+import * as CompilerDOM from '@vue/compiler-dom';
+import { camelize, capitalize, hyphenate, isHTMLTag, isSVGTag } from '@vue/shared';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import { parseBindingRanges } from '../parsers/scriptSetupRanges';
+import { EmbeddedFileMappingData } from '../sourceFile';
+import { ResolvedVueCompilerOptions } from '../types';
 import { SearchTexts } from '../utils/string';
+import { colletVars, walkInterpolationFragment } from '../utils/transform';
 
+// TODO: typecheck
 const capabilitiesSet = {
-	all: { basic: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
-	noDiagnostic: { basic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
+	all: { hover: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
+	noDiagnostic: { hover: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
 	diagnosticOnly: { diagnostic: true },
-	tagHover: { basic: true },
-	event: { basic: true, diagnostic: true },
-	tagReference: { references: true, definitions: true, rename: { in: false, out: true } },
-	attr: { basic: true, diagnostic: true, references: true, definitions: true, rename: true },
+	tagHover: { hover: true },
+	event: { hover: true, diagnostic: true },
+	tagReference: { references: true, definitions: true, rename: { normalize: undefined, apply: (_: string, newName: string) => newName } },
+	attr: { hover: true, diagnostic: true, references: true, definitions: true, rename: true },
 	attrReference: { references: true, definitions: true, rename: true },
 	scopedClassName: { references: true, definitions: true, rename: true, completion: true },
-	slotName: { basic: true, diagnostic: true, references: true, definitions: true, completion: true },
-	slotNameExport: { basic: true, diagnostic: true, references: true, definitions: true, /* referencesCodeLens: true */ },
+	slotName: { hover: true, diagnostic: true, references: true, definitions: true, completion: true },
+	slotNameExport: { hover: true, diagnostic: true, references: true, definitions: true, /* referencesCodeLens: true */ },
 	refAttr: { references: true, definitions: true, rename: true },
 };
 const formatBrackets = {
@@ -60,7 +63,8 @@ export function isIntrinsicElement(runtimeMode: 'runtime-dom' | 'runtime-uni-app
 
 export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	vueCompilerOptions: _VueCompilerOptions,
+	vueCompilerOptions: ResolvedVueCompilerOptions,
+	sourceTemplate: string,
 	sourceLang: string,
 	templateAst: CompilerDOM.RootNode,
 	hasScriptSetup: boolean,
@@ -73,6 +77,7 @@ export function generate(
 	const slots = new Map<string, {
 		varName: string,
 		loc: SourceMaps.Range,
+		nodeLoc: any,
 	}>();
 	const slotExps = new Map<string, {
 		varName: string,
@@ -82,6 +87,7 @@ export function generate(
 	const tagOffsetsMap: Record<string, number[]> = {};
 	const tagResolves: Record<string, {
 		component: string,
+		isNamespacedTag: boolean,
 		emit: string,
 		offsets: number[],
 	} | undefined> = {};
@@ -90,6 +96,7 @@ export function generate(
 	const identifiers = new Set<string>();
 	const scopedClasses: { className: string, offset: number; }[] = [];
 	const blockConditions: string[] = [];
+	let slotsNum = 0;
 
 	tsFormatCodeGen.addText('export { };\n');
 
@@ -118,18 +125,16 @@ export function generate(
 		const tagRanges = tagOffsets.map(offset => ({ start: offset, end: offset + tagName.length }));
 		const isNamespacedTag = tagName.indexOf('.') >= 0;
 
-		const var_componentVar = capitalize(camelize(tagName.replace(/:/g, '-')));
+		const var_componentVar = isNamespacedTag ? `__VLS_ctx.${tagName}` : capitalize(camelize(tagName.replace(/:/g, '-')));
 		const var_emit = `__VLS_${elementIndex++}`;
 
 		if (isNamespacedTag) {
+
+			identifiers.add(tagName.split('.')[0]);
+
 			for (let i = 0; i < tagRanges.length; i++) {
 				const tagRange = tagRanges[i];
-				if (i === 0) {
-					tsCodeGen.addText(`declare const ${var_componentVar}: typeof __VLS_ctx.`);
-				}
-				else {
-					tsCodeGen.addText(`declare const __VLS_${elementIndex++}: typeof __VLS_ctx.`);
-				}
+				tsCodeGen.addText(`declare const __VLS_${elementIndex++}: typeof __VLS_ctx.`);
 				writeCode(
 					tagName,
 					tagRange,
@@ -178,9 +183,13 @@ export function generate(
 							[tagRange],
 							{
 								vueTag: 'template',
-								capabilities: capabilitiesSet.tagReference,
-								normalizeNewName: tagName === name ? undefined : unHyphenatComponentName,
-								applyNewName: keepHyphenateName,
+								capabilities: {
+									...capabilitiesSet.tagReference,
+									rename: {
+										normalize: tagName === name ? capabilitiesSet.tagReference.rename.normalize : unHyphenatComponentName,
+										apply: keepHyphenateName,
+									},
+								},
 							},
 						);
 						tsCodeGen.addText(';');
@@ -210,6 +219,7 @@ export function generate(
 
 		tagResolves[tagName] = {
 			component: var_componentVar,
+			isNamespacedTag,
 			emit: var_emit,
 			offsets: tagOffsets,
 		};
@@ -246,6 +256,7 @@ export function generate(
 	}
 	tsCodeGen.addText(`{\n`);
 	for (const [name, slot] of slots) {
+		slotsNum++;
 		writeObjectProperty(
 			name,
 			slot.loc,
@@ -257,6 +268,7 @@ export function generate(
 					referencesCodeLens: hasScriptSetup,
 				},
 			},
+			slot.nodeLoc,
 		);
 		tsCodeGen.addText(`: (_: typeof ${slot.varName}) => any,\n`);
 	}
@@ -270,8 +282,16 @@ export function generate(
 		cssCodeGen: cssCodeGen,
 		tagNames: tagOffsetsMap,
 		identifiers,
+		slotsNum,
 	};
 
+	function createTsAst(cacheTo: any, text: string) {
+		if (cacheTo.__volar_ast_text !== text) {
+			cacheTo.__volar_ast_text = text;
+			cacheTo.__volar_ast = ts.createSourceFile('/a.ts', text, ts.ScriptTarget.ESNext);
+		}
+		return cacheTo.__volar_ast as ts.SourceFile;
+	}
 	function visitNode(node: CompilerDOM.TemplateChildNode, parentEl: CompilerDOM.ElementNode | undefined): void {
 		if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 			visitElementNode(node, parentEl);
@@ -290,11 +310,23 @@ export function generate(
 		}
 		else if (node.type === CompilerDOM.NodeTypes.INTERPOLATION) {
 			// {{ ... }}
-			const context = node.loc.source.substring(2, node.loc.source.length - 2);
-			let start = node.loc.start.offset + 2;
+
+			let content = node.content.loc.source;
+			let start = node.content.loc.start.offset;
+			let leftCharacter: string;
+			let rightCharacter: string;
+
+			// fix https://github.com/johnsoncodehk/volar/issues/1787
+			while ((leftCharacter = sourceTemplate.substring(start - 1, start)).trim() === '' && leftCharacter.length) {
+				start--;
+				content = leftCharacter + content;
+			}
+			while ((rightCharacter = sourceTemplate.substring(start + content.length, start + content.length + 1)).trim() === '' && rightCharacter.length) {
+				content = content + rightCharacter;
+			}
 
 			writeInterpolation(
-				context,
+				content,
 				start,
 				{
 					vueTag: 'template',
@@ -302,10 +334,11 @@ export function generate(
 				},
 				'(',
 				');\n',
+				node.content.loc,
 			);
 			writeInterpolationVarsExtraCompletion();
 			writeFormatCode(
-				context,
+				content,
 				start,
 				formatBrackets.curly,
 			);
@@ -339,6 +372,7 @@ export function generate(
 						},
 						'(',
 						')',
+						branch.condition.loc,
 					);
 					writeFormatCode(
 						branch.condition.content,
@@ -376,7 +410,7 @@ export function generate(
 			tsCodeGen.addText(`for (const [`);
 			if (leftExpressionRange && leftExpressionText) {
 
-				const collentAst = ts.createSourceFile('/foo.ts', `const [${leftExpressionText}]`, ts.ScriptTarget.ESNext);
+				const collentAst = createTsAst(node.parseResult, `const [${leftExpressionText}]`);
 				colletVars(ts, collentAst, forBlockVars);
 
 				for (const varName of forBlockVars)
@@ -408,6 +442,7 @@ export function generate(
 					},
 					'(',
 					')',
+					source.loc,
 				);
 				writeFormatCode(
 					source.content,
@@ -456,7 +491,7 @@ export function generate(
 			const startTagEnd = node.loc.source.indexOf('>') + 1;
 			const endTagStart = node.loc.source.lastIndexOf('</');
 			const scriptCode = node.loc.source.substring(startTagEnd, endTagStart);
-			const collentAst = ts.createSourceFile('/foo.ts', scriptCode, ts.ScriptTarget.ESNext);
+			const collentAst = createTsAst(node, scriptCode);
 			const bindings = parseBindingRanges(ts, collentAst, false);
 			const scriptVars = bindings.map(binding => scriptCode.substring(binding.start, binding.end));
 
@@ -486,10 +521,8 @@ export function generate(
 			const fullTagStart = tsCodeGen.getText().length;
 			const tagCapabilities = {
 				...capabilitiesSet.diagnosticOnly,
-				...capabilitiesSet.tagHover,
-				...(_isIntrinsicElement ? {
-					...capabilitiesSet.tagReference,
-				} : {})
+				...(tagResolves[node.tag]?.isNamespacedTag ? {} : capabilitiesSet.tagHover),
+				...(_isIntrinsicElement ? capabilitiesSet.tagReference : {})
 			};
 			const endTagOffset = !node.isSelfClosing && sourceLang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
 
@@ -507,7 +540,7 @@ export function generate(
 				},
 			);
 			tsCodeGen.addText(` `);
-			const { hasRemainStyleOrClass } = writeProps(node, false, 'props');
+			const { hasRemainStyleOrClass, failedExps } = writeProps(node, false, 'props');
 
 			if (endTagOffset === undefined) {
 				tsCodeGen.addText(`/>`);
@@ -526,7 +559,31 @@ export function generate(
 						capabilities: tagCapabilities,
 					},
 				);
-				tsCodeGen.addText(`>`);
+				tsCodeGen.addText(`>;\n`);
+			}
+
+			// fix https://github.com/johnsoncodehk/volar/issues/1775
+			for (const failedExp of failedExps) {
+				writeInterpolation(
+					failedExp.loc.source,
+					failedExp.loc.start.offset,
+					{
+						vueTag: 'template',
+						capabilities: capabilitiesSet.all,
+					},
+					'(',
+					')',
+					failedExp.loc,
+				);
+				const fb = formatBrackets.round;
+				if (fb) {
+					writeFormatCode(
+						failedExp.loc.source,
+						failedExp.loc.start.offset,
+						fb,
+					);
+				}
+				tsCodeGen.addText(';\n');
 			}
 
 			// fix https://github.com/johnsoncodehk/volar/issues/705#issuecomment-974773353
@@ -666,16 +723,20 @@ export function generate(
 									[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
 									{
 										vueTag: 'template',
-										capabilities: capabilitiesSet.attrReference,
-										normalizeNewName(newName) {
-											return camelize('on-' + newName);
-										},
-										applyNewName(oldName, newName) {
-											const hName = hyphenate(newName);
-											if (hyphenate(newName).startsWith('on-')) {
-												return camelize(hName.slice('on-'.length));
-											}
-											return newName;
+										capabilities: {
+											...capabilitiesSet.attrReference,
+											rename: {
+												normalize(newName) {
+													return camelize('on-' + newName);
+												},
+												apply(oldName, newName) {
+													const hName = hyphenate(newName);
+													if (hyphenate(newName).startsWith('on-')) {
+														return camelize(hName.slice('on-'.length));
+													}
+													return newName;
+												},
+											},
 										},
 									},
 								);
@@ -690,16 +751,20 @@ export function generate(
 										[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
 										{
 											vueTag: 'template',
-											capabilities: capabilitiesSet.attrReference,
-											normalizeNewName(newName) {
-												return 'on' + capitalize(newName);
-											},
-											applyNewName(oldName, newName) {
-												const hName = hyphenate(newName);
-												if (hyphenate(newName).startsWith('on-')) {
-													return camelize(hName.slice('on-'.length));
-												}
-												return newName;
+											capabilities: {
+												...capabilitiesSet.attrReference,
+												rename: {
+													normalize(newName) {
+														return 'on' + capitalize(newName);
+													},
+													apply(oldName, newName) {
+														const hName = hyphenate(newName);
+														if (hyphenate(newName).startsWith('on-')) {
+															return camelize(hName.slice('on-'.length));
+														}
+														return newName;
+													},
+												},
 											},
 										},
 									);
@@ -719,16 +784,20 @@ export function generate(
 								[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
 								{
 									vueTag: 'template',
-									capabilities: capabilitiesSet.attrReference,
-									normalizeNewName(newName) {
-										return camelize('on-' + newName);
-									},
-									applyNewName(oldName, newName) {
-										const hName = hyphenate(newName);
-										if (hyphenate(newName).startsWith('on-')) {
-											return camelize(hName.slice('on-'.length));
+									capabilities: {
+										...capabilitiesSet.attrReference,
+										rename: {
+											normalize(newName) {
+												return camelize('on-' + newName);
+											},
+											apply(oldName, newName) {
+												const hName = hyphenate(newName);
+												if (hyphenate(newName).startsWith('on-')) {
+													return camelize(hName.slice('on-'.length));
+												}
+												return newName;
+											},
 										}
-										return newName;
 									},
 								},
 							);
@@ -753,6 +822,7 @@ export function generate(
 								vueTag: 'template',
 								capabilities: capabilitiesSet.event,
 							},
+							prop.arg.loc,
 						);
 						tsCodeGen.addText(`: `);
 						appendExpressionNode(prop);
@@ -776,6 +846,7 @@ export function generate(
 						},
 						'$event => {(',
 						')}',
+						prop.exp.loc,
 					);
 					writeFormatCode(
 						prop.exp.content,
@@ -788,7 +859,7 @@ export function generate(
 				function appendExpressionNode(prop: CompilerDOM.DirectiveNode) {
 					if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 
-						const ast = ts.createSourceFile('/foo.ts', prop.exp.content, ts.ScriptTarget.ESNext);
+						const ast = createTsAst(prop.exp, prop.exp.content);
 						let isCompoundExpession = true;
 
 						if (ast.getChildCount() === 2) { // with EOF 
@@ -831,7 +902,8 @@ export function generate(
 								capabilities: capabilitiesSet.all,
 							},
 							prefix,
-							suffix
+							suffix,
+							prop.exp.loc,
 						);
 						writeFormatCode(
 							prop.exp.content,
@@ -868,6 +940,7 @@ export function generate(
 
 		let styleCount = 0;
 		let classCount = 0;
+		const failedExps: CompilerDOM.SimpleExpressionNode[] = [];
 
 		for (const prop of node.props) {
 			if (
@@ -884,6 +957,13 @@ export function generate(
 							? prop.arg.content
 							: prop.arg.loc.source
 						: getModelValuePropName(node, vueCompilerOptions.target);
+
+				if (propName_1 === undefined) {
+					if (prop.exp) {
+						failedExps.push(prop.exp);
+					}
+					continue;
+				}
 
 				if (prop.modifiers.some(m => m === 'prop' || m === 'attr')) {
 					propName_1 = propName_1.substring(1);
@@ -919,6 +999,7 @@ export function generate(
 							vueTag: 'template',
 							capabilities: getCaps(capabilitiesSet.attr),
 						},
+						(prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}),
 					);
 				}
 				else if (prop.exp?.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
@@ -931,10 +1012,15 @@ export function generate(
 						},
 						{
 							vueTag: 'template',
-							capabilities: getCaps(capabilitiesSet.attr),
-							normalizeNewName: camelize,
-							applyNewName: keepHyphenateName,
+							capabilities: {
+								...getCaps(capabilitiesSet.attr),
+								rename: {
+									normalize: camelize,
+									apply: keepHyphenateName,
+								},
+							},
 						},
+						(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
 					);
 				}
 				else {
@@ -947,10 +1033,15 @@ export function generate(
 						},
 						{
 							vueTag: 'template',
-							capabilities: getCaps(capabilitiesSet.attr),
-							normalizeNewName: camelize,
-							applyNewName: keepHyphenateName,
+							capabilities: {
+								...getCaps(capabilitiesSet.attr),
+								rename: {
+									normalize: camelize,
+									apply: keepHyphenateName,
+								},
+							},
 						},
+						(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
 					);
 				}
 				writePropValuePrefix(isStatic);
@@ -964,6 +1055,7 @@ export function generate(
 						},
 						'(',
 						')',
+						prop.exp.loc,
 					);
 					const fb = getFormatBrackets(formatBrackets.round);
 					if (fb) {
@@ -975,7 +1067,7 @@ export function generate(
 					}
 				}
 				else {
-					tsCodeGen.addText('undefined');
+					tsCodeGen.addText('{}');
 				}
 				writePropValueSuffix(isStatic);
 				tsCodeGen.addMapping2({
@@ -1006,10 +1098,15 @@ export function generate(
 						},
 						{
 							vueTag: 'template',
-							capabilities: getCaps(capabilitiesSet.attr),
-							normalizeNewName: camelize,
-							applyNewName: keepHyphenateName,
+							capabilities: {
+								...getCaps(capabilitiesSet.attr),
+								rename: {
+									normalize: camelize,
+									apply: keepHyphenateName,
+								},
+							},
 						},
+						(prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}),
 					);
 					writePropValuePrefix(isStatic);
 					if (prop.exp) {
@@ -1019,6 +1116,7 @@ export function generate(
 							undefined,
 							'(',
 							')',
+							prop.exp.loc,
 						);
 					}
 					else {
@@ -1060,10 +1158,15 @@ export function generate(
 					},
 					{
 						vueTag: 'template',
-						capabilities: getCaps(capabilitiesSet.attr),
-						normalizeNewName: camelize,
-						applyNewName: keepHyphenateName,
+						capabilities: {
+							...getCaps(capabilitiesSet.attr),
+							rename: {
+								normalize: camelize,
+								apply: keepHyphenateName,
+							},
+						},
 					},
+					(prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}),
 				);
 				writePropValuePrefix(true);
 				if (prop.value) {
@@ -1102,10 +1205,15 @@ export function generate(
 						},
 						{
 							vueTag: 'template',
-							capabilities: getCaps(capabilitiesSet.attr),
-							normalizeNewName: camelize,
-							applyNewName: keepHyphenateName,
+							capabilities: {
+								...getCaps(capabilitiesSet.attr),
+								rename: {
+									normalize: camelize,
+									apply: keepHyphenateName,
+								},
+							},
 						},
+						(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
 					);
 					writePropValuePrefix(true);
 					if (prop.value) {
@@ -1140,6 +1248,7 @@ export function generate(
 					},
 					'(',
 					')',
+					prop.exp.loc,
 				);
 				const fb = getFormatBrackets(formatBrackets.round);
 				if (fb) {
@@ -1163,9 +1272,12 @@ export function generate(
 			}
 		}
 
-		return { hasRemainStyleOrClass: styleCount >= 2 || classCount >= 2 };
+		return {
+			hasRemainStyleOrClass: styleCount >= 2 || classCount >= 2,
+			failedExps,
+		};
 
-		function writePropName(name: string, isStatic: boolean, sourceRange: SourceMaps.Range, data: EmbeddedFileMappingData) {
+		function writePropName(name: string, isStatic: boolean, sourceRange: SourceMaps.Range, data: EmbeddedFileMappingData, cacheOn: any) {
 			if (mode === 'props' && isStatic) {
 				writeCode(
 					name,
@@ -1180,6 +1292,7 @@ export function generate(
 					sourceRange,
 					SourceMaps.Mode.Offset,
 					data,
+					cacheOn,
 				);
 			}
 		}
@@ -1276,7 +1389,7 @@ export function generate(
 					{
 						vueTag: 'template',
 						capabilities: {
-							basic: true,
+							hover: true,
 							references: true,
 							definitions: true,
 							diagnostic: true,
@@ -1314,7 +1427,7 @@ export function generate(
 				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					tsCodeGen.addText(`const `);
 
-					const collentAst = ts.createSourceFile('/foo.ts', `const ${prop.exp.content}`, ts.ScriptTarget.ESNext);
+					const collentAst = createTsAst(prop, `const ${prop.exp.content}`);
 					colletVars(ts, collentAst, slotBlockVars);
 
 					writeCode(
@@ -1385,6 +1498,7 @@ export function generate(
 						},
 						'',
 						'',
+						(prop.loc as any).slot_name ?? ((prop.loc as any).slot_name = {}),
 					);
 					tsCodeGen.addText(`]`);
 					writeInterpolationVarsExtraCompletion();
@@ -1453,9 +1567,13 @@ export function generate(
 					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
-						capabilities: capabilitiesSet.noDiagnostic,
-						normalizeNewName: camelize,
-						applyNewName: keepHyphenateName,
+						capabilities: {
+							...capabilitiesSet.noDiagnostic,
+							rename: {
+								normalize: camelize,
+								apply: keepHyphenateName,
+							},
+						},
 					},
 				);
 				identifiers.add(camelize('v-' + prop.name));
@@ -1470,6 +1588,7 @@ export function generate(
 						},
 						'(',
 						')',
+						prop.exp.loc,
 					);
 					writeFormatCode(
 						prop.exp.content,
@@ -1515,6 +1634,7 @@ export function generate(
 					},
 					'(',
 					')',
+					prop.value.loc,
 				);
 				tsCodeGen.addText(`;\n`);
 				writeInterpolationVarsExtraCompletion();
@@ -1598,6 +1718,7 @@ export function generate(
 					},
 					'(',
 					')',
+					prop.exp.loc,
 				);
 				tsCodeGen.addText(`;\n`);
 				writeInterpolationVarsExtraCompletion();
@@ -1622,10 +1743,15 @@ export function generate(
 					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
-						normalizeNewName: camelize,
-						applyNewName: keepHyphenateName,
-						capabilities: capabilitiesSet.attrReference,
+						capabilities: {
+							...capabilitiesSet.attrReference,
+							rename: {
+								normalize: camelize,
+								apply: keepHyphenateName,
+							},
+						},
 					},
+					prop.arg.loc,
 				);
 				tsCodeGen.addText(`: `);
 				writeInterpolation(
@@ -1637,6 +1763,7 @@ export function generate(
 					},
 					'(',
 					')',
+					prop.exp.loc,
 				);
 				tsCodeGen.addText(`,\n`);
 			}
@@ -1654,10 +1781,15 @@ export function generate(
 					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
-						normalizeNewName: camelize,
-						applyNewName: keepHyphenateName,
-						capabilities: capabilitiesSet.attr,
+						capabilities: {
+							...capabilitiesSet.attr,
+							rename: {
+								normalize: camelize,
+								apply: keepHyphenateName,
+							},
+						},
 					},
+					prop.loc,
 				);
 				tsCodeGen.addText(`: (`);
 				tsCodeGen.addText(propValue);
@@ -1695,6 +1827,7 @@ export function generate(
 					start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
 					end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
 				},
+				nodeLoc: node.loc,
 			});
 		}
 
@@ -1721,7 +1854,7 @@ export function generate(
 			}
 		}
 	}
-	function writeObjectProperty(mapCode: string, sourceRange: SourceMaps.Range, mapMode: SourceMaps.Mode, data: EmbeddedFileMappingData) {
+	function writeObjectProperty(mapCode: string, sourceRange: SourceMaps.Range, mapMode: SourceMaps.Mode, data: EmbeddedFileMappingData, cacheOn: any) {
 		if (validTsVar.test(mapCode)) {
 			writeCode(mapCode, sourceRange, mapMode, data);
 			return 1;
@@ -1733,6 +1866,7 @@ export function generate(
 				data,
 				'',
 				'',
+				cacheOn,
 			);
 			return 1;
 		}
@@ -1834,8 +1968,10 @@ export function generate(
 		data: EmbeddedFileMappingData | undefined,
 		prefix: string,
 		suffix: string,
+		cacheOn: any,
 	) {
-		const vars = walkInterpolationFragment(ts, prefix + mapCode + suffix, (frag, fragOffset, isJustForErrorMapping) => {
+		const ast = createTsAst(cacheOn, prefix + mapCode + suffix);
+		const vars = walkInterpolationFragment(ts, prefix + mapCode + suffix, ast, (frag, fragOffset, isJustForErrorMapping) => {
 			if (fragOffset === undefined) {
 				tsCodeGen.addText(frag);
 			}
@@ -1998,6 +2134,9 @@ function getModelValuePropName(node: CompilerDOM.ElementNode, vueVersion: number
 
 	if (tag === 'input' && type === 'checkbox')
 		return 'checked';
+
+	if (tag === 'input' && type === 'radio')
+		return undefined;
 
 	if (
 		tag === 'input' ||

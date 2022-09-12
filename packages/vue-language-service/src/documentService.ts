@@ -1,186 +1,72 @@
-import * as shared from '@volar/shared';
-import * as ts2 from '@volar/typescript-language-service';
-import { ConfigurationHost, EmbeddedLanguageServicePlugin, setCurrentConfigurationHost } from '@volar/vue-language-service-types';
-import * as vue from '@volar/vue-language-core';
-import type * as html from 'vscode-html-languageservice';
-import { TextDocument } from 'vscode-languageserver-textdocument';
-import useCssPlugin from './plugins/css';
-import useHtmlPlugin from './plugins/html';
-import useJsonPlugin from './plugins/json';
-import usePugPlugin from './plugins/pug';
-import usePugFormatPlugin from './plugins/pug-beautify';
-import useTsPlugin, { isTsDocument } from './plugins/typescript';
-import * as autoInsert from './documentFeatures/autoInsert';
-import * as colorPresentations from './documentFeatures/colorPresentations';
-import * as documentColors from './documentFeatures/documentColors';
-import * as documentSymbols from './documentFeatures/documentSymbols';
-import * as foldingRanges from './documentFeatures/foldingRanges';
-import * as format from './documentFeatures/format';
-import * as linkedEditingRanges from './documentFeatures/linkedEditingRanges';
-import * as selectionRanges from './documentFeatures/selectionRanges';
-import { getTsSettings } from './tsConfigs';
-import { DocumentServiceRuntimeContext } from './types';
-import * as sharedServices from './utils/sharedLs';
-import { parseVueDocument, VueDocument } from './vueDocuments';
-import useAutoWrapParenthesesPlugin from './plugins/vue-autoinsert-parentheses';
+import useCssPlugin from '@volar-plugins/css';
+import useHtmlPlugin from '@volar-plugins/html';
+import useJsonPlugin from '@volar-plugins/json';
+import usePugPlugin from '@volar-plugins/pug';
+import usePugFormatPlugin from '@volar-plugins/pug-beautify';
+import useTsPlugin from '@volar-plugins/typescript';
+import { DocumentServiceRuntimeContext } from '@volar/language-service';
 import useVuePlugin from './plugins/vue';
-import type * as _ from 'vscode-languageserver-protocol';
+import useAutoWrapParenthesesPlugin from './plugins/vue-autoinsert-parentheses';
+import * as embeddedLS from '@volar/language-service';
+import * as vue from '@volar/vue-language-core';
 
-export interface DocumentService extends ReturnType<typeof getDocumentService> { }
+import type * as _1 from 'vscode-languageserver-protocol';
+import type * as _2 from 'vscode-languageserver-textdocument';
 
-export function getDocumentService(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
-	configurationHost: ConfigurationHost | undefined,
-	fileSystemProvider: html.FileSystemProvider | undefined,
-	customPlugins: EmbeddedLanguageServicePlugin[],
+export function getDocumentServicePlugins(
+	context: DocumentServiceRuntimeContext
 ) {
 
-	setCurrentConfigurationHost(configurationHost); // TODO
-
-	const vueDocuments = new WeakMap<TextDocument, VueDocument>();
-	const tsSettings = getTsSettings(configurationHost);
-
-	let tsLs: ts2.LanguageService;
-
-	// language support plugins
 	const vuePlugin = useVuePlugin({
-		ts,
-		getVueDocument: doc => vueDocuments.get(doc),
-		tsLs: undefined,
+		getVueDocument: doc => context.getSourceFileDocument(doc)?.[0],
+		getTsLs: () => undefined,
 		isJsxMissing: false,
 	});
-	const htmlPlugin = useHtmlPlugin({
-		fileSystemProvider,
-	});
-	const pugPlugin = usePugPlugin({
-		configurationHost,
-		htmlPlugin,
-	});
-	const cssPlugin = useCssPlugin({
-		fileSystemProvider,
-	});
-	const jsonPlugin = useJsonPlugin({});
-	const tsPlugin = useTsPlugin({
-		tsVersion: ts.version,
-		getTsLs: () => tsLs,
-	});
+	const htmlPlugin = useHtmlPlugin();
+	const pugPlugin = usePugPlugin();
+	const cssPlugin = useCssPlugin();
+	const jsonPlugin = useJsonPlugin();
+	const tsPlugin = useTsPlugin();
 	const autoWrapParenthesesPlugin = useAutoWrapParenthesesPlugin({
-		ts,
-		getVueDocument: doc => vueDocuments.get(doc),
+		getVueDocument: doc => context.getSourceFileDocument(doc)?.[0],
 	});
-
-	// formatter plugins
 	const pugFormatPlugin = usePugFormatPlugin();
-	const formatPlugns = [
-		...customPlugins,
-		cssPlugin,
+
+	return [
+		vuePlugin,
 		htmlPlugin,
+		pugPlugin,
 		pugFormatPlugin,
+		cssPlugin,
 		jsonPlugin,
 		tsPlugin,
-	].map(patchHtmlFormat);
-
-	const context: DocumentServiceRuntimeContext = {
-		typescript: ts,
-		getVueDocument,
-		getPlugins() {
-			return [
-				...customPlugins,
-				vuePlugin,
-				htmlPlugin,
-				pugPlugin,
-				cssPlugin,
-				jsonPlugin,
-				tsPlugin,
-				autoWrapParenthesesPlugin,
-			];
-		},
-		getFormatPlugins() {
-			return formatPlugns;
-		},
-		updateTsLs(document) {
-			if (isTsDocument(document)) {
-				tsLs = sharedServices.getDummyTsLs(context.typescript, ts2, document, tsSettings);
-			}
-		},
-	};
-	const vuePlugins = vue.getPlugins(ts, '', {}, {}, []);
-
-	return {
-		format: format.register(context),
-		getFoldingRanges: foldingRanges.register(context),
-		getSelectionRanges: selectionRanges.register(context),
-		findLinkedEditingRanges: linkedEditingRanges.register(context),
-		findDocumentSymbols: documentSymbols.register(context),
-		findDocumentColors: documentColors.register(context),
-		getColorPresentations: colorPresentations.register(context),
-		doAutoInsert: autoInsert.register(context),
-	};
-
-	function getVueDocument(document: TextDocument) {
-
-		let vueDoc = vueDocuments.get(document);
-
-		if (vueDoc) {
-
-			vueDoc.file.update(ts.ScriptSnapshot.fromString(document.getText()));
-
-			return vueDoc;
-		}
-
-		const vueFile = vue.createSourceFile(
-			'/untitled.' + shared.languageIdToSyntax(document.languageId),
-			ts.ScriptSnapshot.fromString(document.getText()),
-			{},
-			context.typescript,
-			vuePlugins,
-		);
-		vueDoc = parseVueDocument(vueFile, undefined);
-
-		vueDocuments.set(document, vueDoc);
-
-		return vueDoc;
-	}
+		autoWrapParenthesesPlugin,
+	];
 }
 
-function patchHtmlFormat<T extends EmbeddedLanguageServicePlugin>(htmlPlugin: T) {
+export function createDocumentService(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	env: embeddedLS.PluginContext['env'],
+) {
 
-	const originalFormat = htmlPlugin.format;
+	const vueLanguageModule = vue.createEmbeddedLanguageModule(
+		ts,
+		env.rootUri.fsPath,
+		{},
+		{},
+	);
+	const languageServiceContext = embeddedLS.getDocumentServiceContext({
+		ts,
+		env,
+		getLanguageModules() {
+			return [vueLanguageModule];
+		},
+		createPlugins() {
+			return plugins;
+		},
+	});
+	const plugins = getDocumentServicePlugins(languageServiceContext);
+	const languageService = embeddedLS.getDocumentService(languageServiceContext);
 
-	if (originalFormat) {
-
-		htmlPlugin.format = async (document, range, options) => {
-
-			if (document.languageId === 'html') {
-
-				const prefixes = '<template>';
-				const suffixes = '</template>';
-
-				const patchDocument = TextDocument.create(document.uri, document.languageId, document.version, prefixes + document.getText() + suffixes);
-				const result = await originalFormat?.(patchDocument, {
-					start: patchDocument.positionAt(0),
-					end: patchDocument.positionAt(patchDocument.getText().length),
-				}, options);
-
-				if (!result?.length)
-					return result;
-
-				let newText = TextDocument.applyEdits(patchDocument, result);
-				newText = newText.trim();
-				newText = newText.substring(prefixes.length, newText.length - suffixes.length);
-
-				return [{
-					newText,
-					range: {
-						start: document.positionAt(0),
-						end: document.positionAt(document.getText().length),
-					}
-				}];
-			}
-
-			return originalFormat?.(document, range, options);
-		};
-	}
-
-	return htmlPlugin;
+	return languageService;
 }

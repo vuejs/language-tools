@@ -1,27 +1,53 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path';
-import type { VueCompilerOptions, _VueCompilerOptions } from '../types';
+import type { VueCompilerOptions, ResolvedVueCompilerOptions } from '../types';
 
-export type ParsedCommandLine = ReturnType<typeof createParsedCommandLine>;
+export type ParsedCommandLine = ts.ParsedCommandLine & {
+	vueOptions: VueCompilerOptions;
+};
+
+export function createParsedCommandLineByJson(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	parseConfigHost: ts.ParseConfigHost,
+	rootDir: string,
+	json: any,
+): ParsedCommandLine {
+
+	const tsConfigPath = path.join(rootDir, 'jsconfig.json');
+	const content = ts.parseJsonConfigFileContent(json, parseConfigHost, rootDir, {}, tsConfigPath);
+
+	return createParsedCommandLineBase(ts, parseConfigHost, content, tsConfigPath, new Set());
+}
 
 export function createParsedCommandLine(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	parseConfigHost: ts.ParseConfigHost,
-	tsConfig: string,
+	tsConfigPath: string,
 	extendsSet = new Set<string>(),
-): ts.ParsedCommandLine & {
-	vueOptions: VueCompilerOptions;
-} {
+): ParsedCommandLine {
 
-	const tsConfigPath = ts.sys.resolvePath(tsConfig);
-	const config = ts.readJsonConfigFile(tsConfigPath, ts.sys.readFile);
+	const config = ts.readJsonConfigFile(tsConfigPath, parseConfigHost.readFile);
 	const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(tsConfigPath), {}, path.basename(tsConfigPath));
-	content.options.outDir = undefined; // TODO: patching ts server broke with outDir + rootDir + composite/incremental
+	// fix https://github.com/johnsoncodehk/volar/issues/1786
+	// https://github.com/microsoft/TypeScript/issues/30457
+	// patching ts server broke with outDir + rootDir + composite/incremental
+	content.options.outDir = undefined;
+
+	return createParsedCommandLineBase(ts, parseConfigHost, content, tsConfigPath, extendsSet);
+}
+
+function createParsedCommandLineBase(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	parseConfigHost: ts.ParseConfigHost,
+	content: ts.ParsedCommandLine,
+	tsConfigPath: string,
+	extendsSet: Set<string>,
+): ParsedCommandLine {
 
 	let baseVueOptions = {};
 	const folder = path.dirname(tsConfigPath);
 
-	extendsSet.add(tsConfig);
+	extendsSet.add(tsConfigPath);
 
 	if (content.raw.extends) {
 		try {
@@ -39,23 +65,28 @@ export function createParsedCommandLine(
 		...content,
 		vueOptions: {
 			...baseVueOptions,
-			...resolveVueCompilerOptions(content.raw.vueCompilerOptions ?? {}, folder),
+			...resolveVueCompilerOptionsWorker(content.raw.vueCompilerOptions ?? {}, folder),
 		},
 	};
 }
 
-export function getVueCompilerOptions(vueOptions: VueCompilerOptions): _VueCompilerOptions {
+export function resolveVueCompilerOptions(vueOptions: VueCompilerOptions): ResolvedVueCompilerOptions {
+	const target = vueOptions.target ?? 3;
 	return {
 		...vueOptions,
 
-		target: vueOptions.target ?? 3,
+		target,
 		strictTemplates: vueOptions.strictTemplates ?? false,
 		plugins: vueOptions.plugins ?? [],
 
 		// experimental
+		experimentalComponentOptionsWrapper: vueOptions.experimentalComponentOptionsWrapper ?? (
+			target >= 2.7
+				? [`(await import('vue')).defineComponent(`, `)`]
+				: [`(await import('vue')).default.extend(`, `)`]
+		),
+		experimentalComponentOptionsWrapperEnable: vueOptions.experimentalComponentOptionsWrapperEnable ?? 'onlyJs',
 		experimentalRuntimeMode: vueOptions.experimentalRuntimeMode ?? 'runtime-dom',
-		experimentalImplicitWrapComponentOptionsWithDefineComponent: vueOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent ?? 'onlyJs',
-		experimentalImplicitWrapComponentOptionsWithVue2Extend: vueOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend ?? 'onlyJs',
 		experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup: vueOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup ?? 'onlyJs',
 		experimentalTemplateCompilerOptions: vueOptions.experimentalTemplateCompilerOptions ?? {},
 		experimentalTemplateCompilerOptionsRequirePath: vueOptions.experimentalTemplateCompilerOptionsRequirePath ?? undefined,
@@ -65,7 +96,7 @@ export function getVueCompilerOptions(vueOptions: VueCompilerOptions): _VueCompi
 	};
 }
 
-function resolveVueCompilerOptions(rawOptions: {
+function resolveVueCompilerOptionsWorker(rawOptions: {
 	[key: string]: any,
 	experimentalTemplateCompilerOptionsRequirePath?: string,
 }, rootPath: string) {

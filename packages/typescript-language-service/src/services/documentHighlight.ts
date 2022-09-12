@@ -9,7 +9,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const document = getTextDocument(uri);
 		if (!document) return [];
 
-		const fileName = shared.uriToFsPath(document.uri);
+		const fileName = shared.getPathOfUri(document.uri);
 		const offset = document.offsetAt(position);
 
 		let highlights: ReturnType<typeof languageService.getDocumentHighlights> | undefined;

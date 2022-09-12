@@ -1,17 +1,19 @@
 import { CodeGen, mergeCodeGen } from '@volar/code-gen';
+import type { TeleportMappingData, TextRange } from '@volar/language-core';
 import * as SourceMaps from '@volar/source-map';
 import { hyphenate } from '@vue/shared';
 import { posix as path } from 'path';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import type * as templateGen from '../generators/template';
 import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { collectCssVars, collectStyleCssClasses } from '../plugins/vue-tsx';
-import { Sfc } from '../sourceFile';
-import type { EmbeddedFileMappingData, TeleportMappingData } from '../types';
-import { TextRange, VueCompilerOptions } from '../types';
+import { Sfc } from '../types';
+import type { ResolvedVueCompilerOptions } from '../types';
 import { getSlotsPropertyName, getVueLibraryName } from '../utils/shared';
 import { SearchTexts } from '../utils/string';
 import { walkInterpolationFragment } from '../utils/transform';
+import { EmbeddedFileMappingData } from '../sourceFile';
 
 /**
  * TODO: rewrite this
@@ -27,15 +29,16 @@ export function generate(
 	cssModuleClasses: ReturnType<typeof collectStyleCssClasses>,
 	cssScopedClasses: ReturnType<typeof collectStyleCssClasses>,
 	htmlGen: ReturnType<typeof templateGen['generate']> | undefined,
-	compilerOptions: VueCompilerOptions,
+	compilerOptions: ts.CompilerOptions,
+	vueCompilerOptions: ResolvedVueCompilerOptions,
 	codeGen = new CodeGen<EmbeddedFileMappingData>(),
 	teleports: SourceMaps.Mapping<TeleportMappingData>[] = [],
 ) {
 
-	const downgradePropsAndEmitsToSetupReturnOnScriptSetup = compilerOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup === 'onlyJs'
+	const downgradePropsAndEmitsToSetupReturnOnScriptSetup = vueCompilerOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup === 'onlyJs'
 		? lang === 'js' || lang === 'jsx'
-		: !!compilerOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup;
-	const vueVersion = compilerOptions.target ?? 3;
+		: !!vueCompilerOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup;
+	const vueVersion = vueCompilerOptions.target ?? 3;
 	const vueLibName = getVueLibraryName(vueVersion);
 	const usedTypes = {
 		DefinePropsToOptions: false,
@@ -131,8 +134,13 @@ export function generate(
 
 	function writeScriptSetupTypes() {
 		if (usedTypes.DefinePropsToOptions) {
-			codeGen.addText(`type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;\n`);
-			codeGen.addText(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueLibName}').PropType<__VLS_NonUndefinedable<T[K]>> } : { type: import('${vueLibName}').PropType<T[K]>, required: true } };\n`);
+			if (compilerOptions.exactOptionalPropertyTypes) {
+				codeGen.addText(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueLibName}').PropType<T[K]> } : { type: import('${vueLibName}').PropType<T[K]>, required: true } };\n`);
+			}
+			else {
+				codeGen.addText(`type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;\n`);
+				codeGen.addText(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueLibName}').PropType<__VLS_NonUndefinedable<T[K]>> } : { type: import('${vueLibName}').PropType<T[K]>, required: true } };\n`);
+			}
 		}
 		if (usedTypes.mergePropDefaults) {
 			codeGen.addText(`type __VLS_WithDefaults<P, D> = {
@@ -173,7 +181,7 @@ export function generate(
 			{
 				vueTag: 'scriptSrc',
 				capabilities: {
-					basic: true,
+					hover: true,
 					references: true,
 					definitions: true,
 					rename: true,
@@ -199,17 +207,13 @@ export function generate(
 			if (scriptRanges?.exportDefault) {
 				isExportRawObject = sfc.script.content.substring(scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end).startsWith('{');
 			}
-			const wrapMode = getImplicitWrapComponentOptionsMode(lang);
-			if (isExportRawObject && wrapMode && scriptRanges?.exportDefault) {
+			const warpperEnabled = vueCompilerOptions.experimentalComponentOptionsWrapperEnable === true
+				|| (vueCompilerOptions.experimentalComponentOptionsWrapperEnable === 'onlyJs' && (lang === 'js' || lang === 'jsx'));
+			if (isExportRawObject && warpperEnabled && scriptRanges?.exportDefault) {
 				addVirtualCode('script', 0, scriptRanges.exportDefault.expression.start);
-				if (wrapMode === 'defineComponent') {
-					codeGen.addText(`(await import('${vueLibName}')).defineComponent(`);
-				}
-				else {
-					codeGen.addText(`(await import('vue')).default.extend(`);
-				}
+				codeGen.addText(vueCompilerOptions.experimentalComponentOptionsWrapper[0]);
 				addVirtualCode('script', scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end);
-				codeGen.addText(`)`);
+				codeGen.addText(vueCompilerOptions.experimentalComponentOptionsWrapper[1]);
 				addVirtualCode('script', scriptRanges.exportDefault.expression.end, sfc.script.content.length);
 			}
 			else {
@@ -232,7 +236,7 @@ export function generate(
 			{
 				vueTag: vueTag,
 				capabilities: {
-					basic: true,
+					hover: true,
 					references: true,
 					definitions: true,
 					rename: true,
@@ -271,7 +275,7 @@ export function generate(
 			{
 				vueTag: 'scriptSetup',
 				capabilities: {
-					basic: true,
+					hover: true,
 					references: true,
 					definitions: true,
 					diagnostic: true,
@@ -308,7 +312,7 @@ export function generate(
 				{
 					vueTag: 'scriptSetup',
 					capabilities: {
-						basic: true,
+						hover: true,
 						references: true,
 						definitions: true,
 						diagnostic: true,
@@ -431,7 +435,12 @@ export function generate(
 
 			writeTemplate();
 
-			codeGen.addText(`return {} as typeof __VLS_Component & (new () => { ${getSlotsPropertyName(vueVersion)}: ReturnType<typeof __VLS_template> });\n`);
+			if (htmlGen?.slotsNum) {
+				codeGen.addText(`return {} as typeof __VLS_Component & (new () => { ${getSlotsPropertyName(vueVersion)}: ReturnType<typeof __VLS_template> });\n`);
+			}
+			else {
+				codeGen.addText(`return {} as typeof __VLS_Component;\n`);
+			}
 
 			codeGen.addText(`};\n`);
 			codeGen.addText(`return await __VLS_setup();\n`);
@@ -445,11 +454,12 @@ export function generate(
 
 		if (lang === 'jsx' || lang === 'tsx') {
 
+			writeExportOptions();
+			writeConstNameOption();
+
 			codeGen.addText(`function __VLS_template() {\n`);
 			codeGen.addText(`import * as __VLS_types from './__VLS_types.js'; import('./__VLS_types.js');\n`);
 
-			writeExportOptions();
-			writeConstNameOption();
 			const templateGened = writeTemplateContext();
 
 			codeGen.addText(`}\n`);
@@ -457,7 +467,12 @@ export function generate(
 			writeComponentForTemplateUsage(templateGened.cssIds);
 		}
 		else {
-			codeGen.addText(`const __VLS_template = () => ({});\n`);
+			codeGen.addText(`function __VLS_template() {\n`);
+			const templateUsageVars = [...getTemplateUsageVars()];
+			codeGen.addText(`// @ts-ignore\n`);
+			codeGen.addText(`[${templateUsageVars.join(', ')}]\n`);
+			codeGen.addText(`return {};\n`);
+			codeGen.addText(`}\n`);
 		}
 	}
 	function writeComponentForTemplateUsage(cssIds: Set<string>) {
@@ -520,19 +535,15 @@ export function generate(
 						mappedRange: templateSideRange,
 						mode: SourceMaps.Mode.Offset,
 						data: {
-							toSource: {
-								capabilities: {
-									definitions: true,
-									references: true,
-									rename: true,
-								},
+							toSourceCapabilities: {
+								definitions: true,
+								references: true,
+								rename: true,
 							},
-							toTarget: {
-								capabilities: {
-									definitions: true,
-									references: true,
-									rename: true,
-								},
+							toGenedCapabilities: {
+								definitions: true,
+								references: true,
+								rename: true,
 							},
 						},
 					});
@@ -617,11 +628,11 @@ export function generate(
 		/* Components */
 		codeGen.addText('/* Components */\n');
 		codeGen.addText('let __VLS_otherComponents!: NonNullable<typeof __VLS_component extends { components: infer C } ? C : {}> & __VLS_types.GlobalComponents & typeof __VLS_vmUnwrap.components & __VLS_types.PickComponents<typeof __VLS_ctx>;\n');
-		codeGen.addText(`let __VLS_selfComponent!: __VLS_types.SelfComponent<typeof __VLS_name, typeof __VLS_component & (new () => { ${getSlotsPropertyName(compilerOptions.target ?? 3)}: typeof __VLS_slots })>;\n`);
+		codeGen.addText(`let __VLS_selfComponent!: __VLS_types.SelfComponent<typeof __VLS_name, typeof __VLS_component & (new () => { ${getSlotsPropertyName(vueCompilerOptions.target ?? 3)}: typeof __VLS_slots })>;\n`);
 		codeGen.addText('let __VLS_components!: typeof __VLS_otherComponents & Omit<typeof __VLS_selfComponent, keyof typeof __VLS_otherComponents>;\n');
 
-		codeGen.addText(`__VLS_components.${SearchTexts.Components};\n`);
-		codeGen.addText(`({} as __VLS_types.GlobalAttrs).${SearchTexts.GlobalAttrs};\n`);
+		codeGen.addText(`__VLS_components['${SearchTexts.Components}'];\n`);
+		codeGen.addText(`({} as __VLS_types.GlobalAttrs)['${SearchTexts.GlobalAttrs}'];\n`);
 
 		/* Style Scoped */
 		codeGen.addText('/* Style Scoped */\n');
@@ -642,6 +653,7 @@ export function generate(
 
 		codeGen.addText(`/* CSS variable injection */\n`);
 		const cssIds = writeCssVars();
+		codeGen.addText(`/* CSS variable injection end */\n`);
 
 		if (htmlGen) {
 			mergeCodeGen(codeGen, htmlGen.codeGen);
@@ -677,11 +689,12 @@ export function generate(
 					vueTagIndex: styleIndex,
 					capabilities: {
 						references: true,
-						rename: true,
 						referencesCodeLens: true,
+						rename: {
+							normalize: beforeCssRename,
+							apply: doCssRename,
+						},
 					},
-					normalizeNewName: beforeCssRename,
-					applyNewName: doCssRename,
 				},
 			});
 			codeGen.addText(`'${className}'${optional ? '?' : ''}: ${propertyType}`);
@@ -694,9 +707,11 @@ export function generate(
 
 			for (const cssVar of cssVars) {
 				for (const cssBind of cssVar.ranges) {
+					const code = cssVar.style.content.substring(cssBind.start, cssBind.end);
 					walkInterpolationFragment(
 						ts,
-						cssVar.style.content.substring(cssBind.start, cssBind.end),
+						code,
+						ts.createSourceFile('/a.txt', code, ts.ScriptTarget.ESNext),
 						(frag, fragOffset, isJustForErrorMapping) => {
 							if (fragOffset === undefined) {
 								codeGen.addText(frag);
@@ -711,7 +726,7 @@ export function generate(
 										capabilities: isJustForErrorMapping ? {
 											diagnostic: true,
 										} : {
-											basic: true,
+											hover: true,
 											references: true,
 											definitions: true,
 											diagnostic: true,
@@ -765,35 +780,6 @@ export function generate(
 		}
 
 		return usageVars;
-	}
-	function getImplicitWrapComponentOptionsMode(lang: string) {
-
-		let shimComponentOptionsMode: 'defineComponent' | 'Vue.extend' | false = false;
-
-		if (
-			compilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend === 'onlyJs'
-				? lang === 'js' || lang === 'jsx'
-				: !!compilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend
-		) {
-			shimComponentOptionsMode = 'Vue.extend';
-		}
-		if (
-			compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent === 'onlyJs'
-				? lang === 'js' || lang === 'jsx'
-				: !!compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent
-		) {
-			shimComponentOptionsMode = 'defineComponent';
-		}
-
-		// true override 'onlyJs'
-		if (compilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend === true) {
-			shimComponentOptionsMode = 'Vue.extend';
-		}
-		if (compilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent === true) {
-			shimComponentOptionsMode = 'defineComponent';
-		}
-
-		return shimComponentOptionsMode;
 	}
 }
 
