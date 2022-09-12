@@ -8,8 +8,8 @@ import { DetectTagCasingRequest, GetConvertTagCasingEditsRequest } from './reque
 const plugin: LanguageServerPlugin<vue.LanguageServiceHost> = {
 	exts: ['.vue'],
 	// indeterminateExts: ['.md', '.html'],
-	semanticTokenLegend: vue.getSemanticTokenLegend(),
 	languageService: {
+		semanticTokenLegend: vue.getSemanticTokenLegend(),
 		resolveLanguageServiceHost(ts, sys, tsConfig, host) {
 			let vueOptions: vue.VueCompilerOptions = {};
 			if (typeof tsConfig === 'string') {

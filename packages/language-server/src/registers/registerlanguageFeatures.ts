@@ -106,9 +106,9 @@ export function register(
 			},
 		};
 		for (const plugin of plugins) {
-			if (plugin.semanticTokenLegend) {
-				server.semanticTokensProvider.legend.tokenModifiers = server.semanticTokensProvider.legend.tokenModifiers.concat(plugin.semanticTokenLegend.tokenModifiers);
-				server.semanticTokensProvider.legend.tokenTypes = server.semanticTokensProvider.legend.tokenTypes.concat(plugin.semanticTokenLegend.tokenTypes);
+			if (plugin.languageService?.semanticTokenLegend) {
+				server.semanticTokensProvider.legend.tokenModifiers = server.semanticTokensProvider.legend.tokenModifiers.concat(plugin.languageService.semanticTokenLegend.tokenModifiers);
+				server.semanticTokensProvider.legend.tokenTypes = server.semanticTokensProvider.legend.tokenTypes.concat(plugin.languageService.semanticTokenLegend.tokenTypes);
 			}
 		}
 	}

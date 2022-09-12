@@ -42,9 +42,9 @@ export type LanguageServerPlugin<A extends embedded.LanguageServiceHost = embedd
 
 	exts: string[],
 
-	semanticTokenLegend?: vscode.SemanticTokensLegend,
-
 	languageService?: {
+
+		semanticTokenLegend?: vscode.SemanticTokensLegend,
 
 		resolveLanguageServiceHost?(
 			ts: typeof import('typescript/lib/tsserverlibrary'),
