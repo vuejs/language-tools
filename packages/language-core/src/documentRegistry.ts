@@ -32,7 +32,7 @@ export function createDocumentRegistry() {
 		const map = new Map<string, { vueFile: FileNode, embedded: FileNode; }>();
 		for (const [sourceFile] of all.value) {
 			forEachEmbeddeds(sourceFile.embeddeds, embedded => {
-				map.set(embedded.fileName.toLowerCase(), { vueFile: sourceFile, embedded });
+				map.set(normalizePath(embedded.fileName), { vueFile: sourceFile, embedded });
 			});
 		}
 		return map;
@@ -43,7 +43,7 @@ export function createDocumentRegistry() {
 			const [sourceFile] = files[key]!;
 			forEachEmbeddeds(sourceFile.embeddeds, embedded => {
 				if (embedded.teleportMappings) {
-					map.set(embedded.fileName.toLowerCase(), getTeleport(sourceFile, embedded.teleportMappings));
+					map.set(normalizePath(embedded.fileName), getTeleport(sourceFile, embedded.teleportMappings));
 				}
 			});
 		}
@@ -53,15 +53,15 @@ export function createDocumentRegistry() {
 	const _teleports = new WeakMap<FileNode, WeakMap<Mapping<any>[], Teleport>>();
 
 	return {
-		get: (fileName: string): [FileNode, EmbeddedLanguageModule] | undefined => files[fileName.toLowerCase()],
-		delete: (fileName: string) => delete files[fileName.toLowerCase()],
-		has: (fileName: string) => !!files[fileName.toLowerCase()],
-		set: (fileName: string, vueFile: FileNode, languageModule: EmbeddedLanguageModule) => files[fileName.toLowerCase()] = [vueFile, languageModule],
+		get: (fileName: string): [FileNode, EmbeddedLanguageModule] | undefined => files[normalizePath(fileName)],
+		delete: (fileName: string) => delete files[normalizePath(fileName)],
+		has: (fileName: string) => !!files[normalizePath(fileName)],
+		set: (fileName: string, vueFile: FileNode, languageModule: EmbeddedLanguageModule) => files[normalizePath(fileName)] = [vueFile, languageModule],
 
 		getFileNames: () => fileNames.value,
 		getAll: () => all.value,
 
-		getTeleport: (fileName: string) => teleports.value.get(fileName.toLowerCase()),
+		getTeleport: (fileName: string) => teleports.value.get(normalizePath(fileName)),
 		getAllEmbeddeds: function* () {
 			for (const sourceMap of sourceMapsByFileName.value) {
 				yield sourceMap[1];
@@ -83,7 +83,7 @@ export function createDocumentRegistry() {
 			if (end === undefined)
 				end = start;
 
-			const mapped = sourceMapsByFileName.value.get(fileName.toLowerCase());
+			const mapped = sourceMapsByFileName.value.get(normalizePath(fileName));
 
 			if (mapped) {
 
@@ -115,7 +115,7 @@ export function createDocumentRegistry() {
 			return embeddedDocumentsMap.value.get(file);
 		},
 		fromEmbeddedFileName: function (fileName: string) {
-			return sourceMapsByFileName.value.get(fileName.toLowerCase());
+			return sourceMapsByFileName.value.get(normalizePath(fileName));
 		},
 		getSourceMap,
 		getTeleportSourceMap: getTeleport,
@@ -152,4 +152,8 @@ export function createDocumentRegistry() {
 		}
 		return map2;
 	}
+}
+
+function normalizePath(fileName: string) {
+	return fileName.replace(/\\/g, '/').toLowerCase();
 }
