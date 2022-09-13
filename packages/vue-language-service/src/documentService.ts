@@ -61,7 +61,7 @@ export function createDocumentService(
 		getLanguageModules() {
 			return [vueLanguageModule];
 		},
-		createPlugins() {
+		getPlugins() {
 			return plugins;
 		},
 	});

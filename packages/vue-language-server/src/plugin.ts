@@ -6,7 +6,7 @@ import * as nameCasing from '@volar/vue-language-service/out/ideFeatures/nameCas
 import { DetectTagCasingRequest, GetConvertTagCasingEditsRequest } from './requests';
 
 const plugin: LanguageServerPlugin<vue.LanguageServiceHost> = {
-	exts: ['.vue'],
+	extensions: ['.vue'],
 	// indeterminateExts: ['.md', '.html'],
 	languageService: {
 		semanticTokenLegend: vue.getSemanticTokenLegend(),
@@ -29,7 +29,7 @@ const plugin: LanguageServerPlugin<vue.LanguageServiceHost> = {
 			);
 			return [vueLanguageModule];
 		},
-		getLanguageServicePlugins(host, service) {
+		getServicePlugins(host, service) {
 			return vue.getLanguageServicePlugins(host, service);
 		},
 		onInitialize(connection, getService) {
@@ -60,7 +60,7 @@ const plugin: LanguageServerPlugin<vue.LanguageServiceHost> = {
 			};
 			return [vueLanguageModule];
 		},
-		getLanguageServicePlugins(context) {
+		getServicePlugins(context) {
 			return vue.getDocumentServicePlugins(context);
 		},
 	},

@@ -65,11 +65,11 @@ export async function createProject(
 			const languageContext = embedded.createEmbeddedLanguageServiceHost(languageServiceHost, languageModules);
 			const languageServiceContext = embeddedLS.createLanguageServiceContext({
 				host: languageServiceHost,
-				languageContext,
-				createPlugins() {
+				context: languageContext,
+				getPlugins() {
 					return [
 						...loadCustomPlugins(languageServiceHost.getCurrentDirectory()),
-						...plugins.map(plugin => plugin.languageService?.getLanguageServicePlugins?.(languageServiceHost, vueLs!) ?? []).flat(),
+						...plugins.map(plugin => plugin.languageService?.getServicePlugins?.(languageServiceHost, vueLs!) ?? []).flat(),
 					];
 				},
 				env: {
@@ -240,7 +240,7 @@ function createParsedCommandLine(
 	tsConfig: string | ts.CompilerOptions,
 	plugins: LanguageServerPlugin[],
 ): ts.ParsedCommandLine {
-	const extraExts = plugins.map(plugin => plugin.exts).flat();
+	const extraExts = plugins.map(plugin => plugin.extensions).flat();
 	try {
 		const parseConfigHost: ts.ParseConfigHost = {
 			useCaseSensitiveFileNames: sys.useCaseSensitiveFileNames,

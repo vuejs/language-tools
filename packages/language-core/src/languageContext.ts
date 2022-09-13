@@ -1,7 +1,7 @@
 import { posix as path } from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { createDocumentRegistry, forEachEmbeddeds } from './documentRegistry';
-import { EmbeddedLanguageModule, FileNode, LanguageServiceHost } from './types';
+import { EmbeddedLanguageModule, SourceFile, LanguageServiceHost } from './types';
 import { shallowReactive as reactive } from '@vue/reactivity';
 
 export type EmbeddedLanguageContext = ReturnType<typeof createEmbeddedLanguageServiceHost>;
@@ -129,7 +129,7 @@ export function createEmbeddedLanguageServiceHost(
 		let tsFileUpdated = false;
 
 		const remainFileNames = new Set(host.getScriptFileNames());
-		const sourceFilesToUpdate: [FileNode, EmbeddedLanguageModule, ts.IScriptSnapshot][] = [];
+		const sourceFilesToUpdate: [SourceFile, EmbeddedLanguageModule, ts.IScriptSnapshot][] = [];
 
 		// .vue
 		for (const [sourceFile, languageModule] of documentRegistry.getAll()) {

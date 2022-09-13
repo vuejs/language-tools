@@ -1,4 +1,4 @@
-import { createNodeServer } from '@volar/language-server/node';
+import { createLanguageServer } from '@volar/language-server/node';
 import * as plugin from './plugin';
 
-createNodeServer([plugin]);
+createLanguageServer([plugin]);

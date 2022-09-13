@@ -1,4 +1,4 @@
-import { DocumentCapabilities, EmbeddedFileSourceMap, FileNode, PositionCapabilities, Teleport, TeleportMappingData } from '@volar/language-core';
+import { DocumentCapabilities, EmbeddedFileSourceMap, SourceFile, PositionCapabilities, Teleport, TeleportMappingData, EmbeddedFile } from '@volar/language-core';
 import { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
 import { computed, ComputedRef, pauseTracking, reactive, Ref, resetTracking, shallowRef as ref } from '@vue/reactivity';
 import { Sfc, VueLanguagePlugin } from './types';
@@ -14,12 +14,12 @@ export interface EmbeddedStructure {
 }
 
 export interface Embedded {
-	file: EmbeddedFile,
+	file: VueEmbeddedFile,
 	sourceMap: EmbeddedFileSourceMap,
 	teleport: Teleport | undefined,
 }
 
-export interface EmbeddedFile {
+export interface VueEmbeddedFile {
 	parentFileName?: string,
 	fileName: string,
 	isTsHostFile: boolean,
@@ -34,19 +34,7 @@ export interface EmbeddedFileMappingData {
 	capabilities: PositionCapabilities,
 }
 
-export class VueSourceFile implements FileNode {
-
-	public isTsHostFile = false;
-	public capabilities = {
-		diagnostics: true,
-		foldingRanges: true,
-		formatting: true,
-		documentSymbol: true,
-		codeActions: true,
-		inlayHints: true,
-	};
-	public mappings = [];
-	public teleportMappings = [];
+export class VueSourceFile implements SourceFile {
 
 	public sfc = reactive<Sfc>({
 		template: null,
@@ -210,7 +198,7 @@ export class VueSourceFile implements FileNode {
 		}
 	});
 	_pluginEmbeddedFiles = this.plugins.map(plugin => {
-		const embeddedFiles: Record<string, ComputedRef<EmbeddedFile>> = {};
+		const embeddedFiles: Record<string, ComputedRef<VueEmbeddedFile>> = {};
 		const files = computed(() => {
 			if (plugin.getEmbeddedFileNames) {
 				const embeddedFileNames = plugin.getEmbeddedFileNames(this.fileName, this.sfc);
@@ -222,7 +210,7 @@ export class VueSourceFile implements FileNode {
 				for (const embeddedFileName of embeddedFileNames) {
 					if (!embeddedFiles[embeddedFileName]) {
 						embeddedFiles[embeddedFileName] = computed(() => {
-							const file: EmbeddedFile = {
+							const file: VueEmbeddedFile = {
 								fileName: embeddedFileName,
 								capabilities: {
 									diagnostics: false,
@@ -255,7 +243,7 @@ export class VueSourceFile implements FileNode {
 
 			return files.value.map(_file => {
 				const file = _file.value;
-				const node: FileNode = {
+				const node: EmbeddedFile = {
 					fileName: file.fileName,
 					text: file.codeGen.getText(),
 					capabilities: file.capabilities,
@@ -277,7 +265,7 @@ export class VueSourceFile implements FileNode {
 					teleportMappings: file.teleportMappings,
 					embeddeds: [],
 				};
-				return [file, node] as [EmbeddedFile, FileNode];
+				return [file, node] as [VueEmbeddedFile, EmbeddedFile];
 			});
 
 			function embeddedRangeToVueRange(data: EmbeddedFileMappingData, range: Mapping<unknown>['sourceRange']) {
@@ -333,7 +321,7 @@ export class VueSourceFile implements FileNode {
 	});
 	_allEmbeddeds = computed(() => {
 
-		const all: [EmbeddedFile, FileNode][] = [];
+		const all: [VueEmbeddedFile, EmbeddedFile][] = [];
 
 		for (const embeddedFiles of this._pluginEmbeddedFiles) {
 			for (const embedded of embeddedFiles.value) {
@@ -345,7 +333,7 @@ export class VueSourceFile implements FileNode {
 	});
 	_embeddeds = computed(() => {
 
-		const childs: FileNode[] = [];
+		const childs: EmbeddedFile[] = [];
 
 		// const embeddeds: EmbeddedStructure[] = [];
 		let remain = [...this._allEmbeddeds.value];
@@ -383,7 +371,7 @@ export class VueSourceFile implements FileNode {
 				}
 			}
 		}
-		function findParentStructure(fileName: string, strus: FileNode[]): FileNode | undefined {
+		function findParentStructure(fileName: string, strus: SourceFile[]): SourceFile | undefined {
 			for (const stru of strus) {
 				if (stru.fileName === fileName) {
 					return stru;

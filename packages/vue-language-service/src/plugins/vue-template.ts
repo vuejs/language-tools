@@ -749,7 +749,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 			cache = new Map();
 
-			let file: embedded.FileNode | undefined;
+			let file: embedded.SourceFile | undefined;
 			embedded.forEachEmbeddeds(sourceDocument.file.embeddeds, embedded => {
 				if (embedded.fileName === vueSourceFile.tsFileName) {
 					file = embedded;

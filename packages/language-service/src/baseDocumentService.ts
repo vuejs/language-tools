@@ -11,7 +11,7 @@ import * as shared from '@volar/shared';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { EmbeddedLanguageServicePlugin } from './plugin';
 import { singleFileTypeScriptServiceHost, updateSingleFileTypeScriptServiceHost } from './utils/singleFileTypeScriptService';
-import { createDocumentRegistry, EmbeddedLanguageModule, FileNode } from '@volar/language-core';
+import { createDocumentRegistry, EmbeddedLanguageModule, SourceFile } from '@volar/language-core';
 import { parseSourceFileDocument, SourceFileDocument } from './documents';
 import { shallowReactive as reactive } from '@vue/reactivity';
 
@@ -23,7 +23,7 @@ export type DocumentService = ReturnType<typeof getDocumentService>;
 export function getDocumentServiceContext(options: {
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	getLanguageModules(): EmbeddedLanguageModule[],
-	createPlugins(): EmbeddedLanguageServicePlugin[],
+	getPlugins(): EmbeddedLanguageServicePlugin[],
 	env: PluginContext['env'];
 }) {
 
@@ -41,13 +41,13 @@ export function getDocumentServiceContext(options: {
 	};
 	const languageModules = options.getLanguageModules();
 	const vueDocuments = new WeakMap<TextDocument, [SourceFileDocument, EmbeddedLanguageModule]>();
-	const fileMods = new WeakMap<FileNode, EmbeddedLanguageModule>();
+	const fileMods = new WeakMap<SourceFile, EmbeddedLanguageModule>();
 	const mapper = createDocumentRegistry();
 	const context: DocumentServiceRuntimeContext = {
 		typescript: ts,
 		get plugins() {
 			if (!plugins) {
-				plugins = options.createPlugins();
+				plugins = options.getPlugins();
 				for (const plugin of plugins) {
 					plugin.setup?.(pluginContext);
 				}

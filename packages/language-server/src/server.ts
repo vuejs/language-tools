@@ -6,7 +6,7 @@ import { createDocumentServiceHost } from './utils/documentServiceHost';
 import { createSnapshots } from './utils/snapshots';
 import { createWorkspaces } from './utils/workspaces';
 
-export function createLanguageServer(
+export function createCommonLanguageServer(
 	connection: vscode.Connection,
 	runtimeEnv: RuntimeEnvironment,
 	plugins: LanguageServerPlugin[],

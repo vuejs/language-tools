@@ -1,4 +1,4 @@
-import { DocumentRegistry, EmbeddedFileSourceMap, FileNode, forEachEmbeddeds, PositionCapabilities, Teleport, TeleportMappingData, TeleportCapabilities } from '@volar/language-core';
+import { DocumentRegistry, EmbeddedFileSourceMap, SourceFile, forEachEmbeddeds, PositionCapabilities, Teleport, TeleportMappingData, TeleportCapabilities, EmbeddedFile } from '@volar/language-core';
 import * as shared from '@volar/shared';
 import { SourceMapBase } from '@volar/source-map';
 import { computed } from '@vue/reactivity';
@@ -65,7 +65,7 @@ export class SourceMap<Data = undefined> {
 export class EmbeddedDocumentSourceMap extends SourceMap<PositionCapabilities> {
 
 	constructor(
-		public embeddedFile: FileNode,
+		public embeddedFile: EmbeddedFile,
 		public sourceDocument: TextDocument,
 		public mappedDocument: TextDocument,
 		_sourceMap: EmbeddedFileSourceMap,
@@ -76,7 +76,7 @@ export class EmbeddedDocumentSourceMap extends SourceMap<PositionCapabilities> {
 
 export class TeleportSourceMap extends SourceMap<TeleportMappingData> {
 	constructor(
-		public embeddedFile: FileNode,
+		public embeddedFile: EmbeddedFile,
 		public document: TextDocument,
 		teleport: Teleport,
 	) {
@@ -97,7 +97,7 @@ export function parseSourceFileDocuments(
 	mapper: DocumentRegistry,
 ) {
 
-	const _sourceFiles = new WeakMap<FileNode, SourceFileDocument>();
+	const _sourceFiles = new WeakMap<SourceFile, SourceFileDocument>();
 
 	// reactivity
 	const embeddedDocumentsMap = computed(() => {
@@ -191,7 +191,7 @@ export function parseSourceFileDocuments(
 		},
 	};
 
-	function get(sourceFile: FileNode) {
+	function get(sourceFile: SourceFile) {
 		let vueDocument = _sourceFiles.get(sourceFile);
 		if (!vueDocument) {
 			vueDocument = parseSourceFileDocument(rootUri, sourceFile, mapper);
@@ -206,14 +206,14 @@ export function parseSourceFileDocuments(
 
 export function parseSourceFileDocument(
 	rootUri: URI,
-	sourceFile: FileNode,
+	sourceFile: SourceFile,
 	mapper: DocumentRegistry,
 ) {
 
 	let documentVersion = 0;
 	const embeddedDocumentVersions = new Map<string, number>();
-	const embeddedDocuments = new WeakMap<FileNode, TextDocument>();
-	const sourceMaps = new WeakMap<FileNode, [number, EmbeddedDocumentSourceMap]>();
+	const embeddedDocuments = new WeakMap<SourceFile, TextDocument>();
+	const sourceMaps = new WeakMap<SourceFile, [number, EmbeddedDocumentSourceMap]>();
 
 	// computed
 	const document = computed(() => TextDocument.create(
@@ -255,7 +255,7 @@ export function parseSourceFileDocument(
 		getDocument: () => document.value,
 	};
 
-	function getSourceMap(embedded: FileNode) {
+	function getSourceMap(embedded: EmbeddedFile) {
 
 		let cache = sourceMaps.get(embedded);
 
@@ -276,7 +276,7 @@ export function parseSourceFileDocument(
 		return cache[1];
 	}
 
-	function getEmbeddedDocument(embeddedFile: FileNode) {
+	function getEmbeddedDocument(embeddedFile: SourceFile) {
 
 		let document = embeddedDocuments.get(embeddedFile);
 

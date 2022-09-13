@@ -47,17 +47,23 @@ export interface TextRange {
 	end: number,
 }
 
-export interface FileNode {
+export interface SourceFile {
+	fileName: string,
+	text: string,
+	embeddeds: EmbeddedFile[],
+}
+
+export interface EmbeddedFile {
 	fileName: string,
 	text: string,
 	isTsHostFile: boolean,
 	capabilities: DocumentCapabilities,
 	mappings: Mapping<PositionCapabilities>[],
 	teleportMappings?: Mapping<TeleportMappingData>[],
-	embeddeds: FileNode[],
+	embeddeds: EmbeddedFile[],
 }
 
-export interface EmbeddedLanguageModule<T extends FileNode = FileNode> {
+export interface EmbeddedLanguageModule<T extends SourceFile = SourceFile> {
 	createSourceFile(fileName: string, snapshot: ts.IScriptSnapshot): T | undefined;
 	updateSourceFile(sourceFile: T, snapshot: ts.IScriptSnapshot): void;
 	proxyLanguageServiceHost?(host: LanguageServiceHost): Partial<LanguageServiceHost>;

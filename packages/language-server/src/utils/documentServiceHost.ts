@@ -52,10 +52,10 @@ export function createDocumentServiceHost(
 			getLanguageModules() {
 				return plugins.map(plugin => plugin.documentService?.getLanguageModules?.(ts, env) ?? []).flat();
 			},
-			createPlugins() {
+			getPlugins() {
 				return [
 					...loadCustomPlugins(rootUri.fsPath),
-					...plugins.map(plugin => plugin.documentService?.getLanguageServicePlugins?.(serviceContext) ?? []).flat(),
+					...plugins.map(plugin => plugin.documentService?.getServicePlugins?.(serviceContext) ?? []).flat(),
 				];
 			},
 		});

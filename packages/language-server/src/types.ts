@@ -40,7 +40,7 @@ export interface RuntimeEnvironment {
 
 export type LanguageServerPlugin<A extends embedded.LanguageServiceHost = embedded.LanguageServiceHost, B = embeddedLS.LanguageService> = {
 
-	exts: string[],
+	extensions: string[],
 
 	languageService?: {
 
@@ -55,7 +55,7 @@ export type LanguageServerPlugin<A extends embedded.LanguageServiceHost = embedd
 
 		getLanguageModules?(host: A): embedded.EmbeddedLanguageModule[],
 
-		getLanguageServicePlugins?(
+		getServicePlugins?(
 			host: A,
 			service: embeddedLS.LanguageService,
 		): embeddedLS.EmbeddedLanguageServicePlugin[],
@@ -73,7 +73,7 @@ export type LanguageServerPlugin<A extends embedded.LanguageServiceHost = embedd
 			env: embeddedLS.PluginContext['env'],
 		): embedded.EmbeddedLanguageModule[],
 
-		getLanguageServicePlugins?(
+		getServicePlugins?(
 			context: embeddedLS.DocumentServiceRuntimeContext,
 		): embeddedLS.EmbeddedLanguageServicePlugin[],
 	};

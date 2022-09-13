@@ -141,8 +141,8 @@ export function createLanguageService(
 	const languageServiceContext = embeddedLS.createLanguageServiceContext({
 		env,
 		host,
-		languageContext: core,
-		createPlugins() {
+		context: core,
+		getPlugins() {
 			return getLanguageServicePlugins(host, languageService);
 		},
 	});

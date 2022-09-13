@@ -6,7 +6,7 @@ import { computed, ComputedRef } from '@vue/reactivity';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
 export function checkTemplateData(
-	sourceFile: embedded.FileNode,
+	sourceFile: embedded.SourceFile,
 	tsLs: ts.LanguageService,
 ) {
 
@@ -21,7 +21,7 @@ export function checkTemplateData(
 		includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
 	};
 
-	let file: embedded.FileNode | undefined;
+	let file: embedded.SourceFile | undefined;
 	embedded.forEachEmbeddeds(sourceFile.embeddeds, embedded => {
 		if (embedded.fileName === sourceFile.tsFileName) {
 			file = embedded;
@@ -57,9 +57,9 @@ export function checkTemplateData(
 	};
 }
 
-const map = new WeakMap<embedded.FileNode, ComputedRef>();
+const map = new WeakMap<embedded.SourceFile, ComputedRef>();
 
-export function getTemplateTagsAndAttrs(sourceFile: embedded.FileNode) {
+export function getTemplateTagsAndAttrs(sourceFile: embedded.SourceFile) {
 
 	if (!map.has(sourceFile)) {
 		const getter = computed(() => {

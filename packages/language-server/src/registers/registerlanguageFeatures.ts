@@ -35,7 +35,7 @@ export function register(
 			fileOperations: {
 				willRename: {
 					filters: [
-						...plugins.map(plugin => plugin.exts.map(ext => ({ pattern: { glob: `**/*${ext}` } }))).flat(),
+						...plugins.map(plugin => plugin.extensions.map(ext => ({ pattern: { glob: `**/*${ext}` } }))).flat(),
 						{ pattern: { glob: '**/*.js' } },
 						{ pattern: { glob: '**/*.ts' } },
 						{ pattern: { glob: '**/*.jsx' } },

@@ -1,4 +1,4 @@
-import type { FileNode } from '@volar/language-core';
+import type { EmbeddedFile } from '@volar/language-core';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { EmbeddedDocumentSourceMap, SourceFileDocument } from '../documents';
@@ -178,14 +178,14 @@ export function register(context: DocumentServiceRuntimeContext) {
 		function getEmbeddedsByLevel(vueDocument: SourceFileDocument, level: number) {
 
 			const embeddeds = vueDocument.file.embeddeds;
-			const embeddedsLevels: FileNode[][] = [embeddeds];
+			const embeddedsLevels: EmbeddedFile[][] = [embeddeds];
 
 			while (true) {
 
 				if (embeddedsLevels.length > level)
 					return embeddedsLevels[level];
 
-				let nextEmbeddeds: FileNode[] = [];
+				let nextEmbeddeds: EmbeddedFile[] = [];
 
 				for (const embeddeds of embeddedsLevels[embeddedsLevels.length - 1]) {
 

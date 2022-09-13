@@ -1,18 +1,18 @@
 import { configure as configureHttpRequests } from 'request-light';
 import * as ts from 'typescript/lib/tsserverlibrary'; // bundle typescript lib in web
 import * as vscode from 'vscode-languageserver/browser';
-import { createLanguageServer } from './server';
+import { createCommonLanguageServer } from './server';
 import { LanguageServerPlugin } from './types';
 import httpSchemaRequestHandler from './schemaRequestHandlers/http';
 import { createWebFileSystemHost } from './utils/webFileSystemHost';
 
-export function createWebServer(plugins: LanguageServerPlugin[]) {
+export function createLanguageServer(plugins: LanguageServerPlugin[]) {
 
 	const messageReader = new vscode.BrowserMessageReader(self);
 	const messageWriter = new vscode.BrowserMessageWriter(self);
 	const connection = vscode.createConnection(messageReader, messageWriter);
 
-	createLanguageServer(connection, {
+	createCommonLanguageServer(connection, {
 		loadTypescript(options) {
 			return ts; // not support load by user config in web
 		},

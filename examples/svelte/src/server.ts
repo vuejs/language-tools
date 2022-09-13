@@ -1,10 +1,10 @@
 import useCssPlugin from '@volar-plugins/css';
 import useTsPlugin, { getSemanticTokenLegend } from '@volar-plugins/typescript';
-import { createNodeServer, EmbeddedLanguageModule, FileNode } from '@volar/language-server/node';
+import { createLanguageServer, EmbeddedLanguageModule, SourceFile } from '@volar/language-server/node';
 
 const blocksReg = /\<(script|style)[\s\S]*?\>([\s\S]*?)\<\/\1\>/g;
 
-const mod: EmbeddedLanguageModule<FileNode & { snapshot: any; }> = {
+const mod: EmbeddedLanguageModule<SourceFile & { snapshot: any; }> = {
 	createSourceFile(fileName, snapshot) {
 		if (fileName.endsWith('.svelte')) {
 
@@ -14,9 +14,6 @@ const mod: EmbeddedLanguageModule<FileNode & { snapshot: any; }> = {
 				snapshot,
 				fileName,
 				text,
-				isTsHostFile: false,
-				capabilities: {},
-				mappings: [],
 				embeddeds: getEmbeddeds(fileName, text),
 			};
 		}
@@ -112,14 +109,14 @@ function getEmbeddeds(fileName: string, text: string) {
 	});
 }
 
-createNodeServer([{
-	exts: ['.svelte'],
+createLanguageServer([{
+	extensions: ['.svelte'],
 	languageService: {
 		semanticTokenLegend: getSemanticTokenLegend(),
 		getLanguageModules(host) {
 			return [mod];
 		},
-		getLanguageServicePlugins() {
+		getServicePlugins() {
 			return [
 				useCssPlugin(),
 				useTsPlugin(),
@@ -130,7 +127,7 @@ createNodeServer([{
 		getLanguageModules(host) {
 			return [mod];
 		},
-		getLanguageServicePlugins() {
+		getServicePlugins() {
 			return [
 				useCssPlugin(),
 				useTsPlugin(),

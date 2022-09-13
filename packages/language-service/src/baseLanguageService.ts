@@ -36,14 +36,14 @@ export type LanguageService = ReturnType<typeof createLanguageService>;
 
 export function createLanguageServiceContext(options: {
 	host: LanguageServiceHost,
-	languageContext: ReturnType<typeof createEmbeddedLanguageServiceHost>,
-	createPlugins(): EmbeddedLanguageServicePlugin[],
+	context: ReturnType<typeof createEmbeddedLanguageServiceHost>,
+	getPlugins(): EmbeddedLanguageServicePlugin[],
 	env: PluginContext['env'];
 }) {
 
 	const ts = options.host.getTypeScriptModule();
-	const tsLs = ts.createLanguageService(options.languageContext.typescriptLanguageServiceHost);
-	tsFaster.decorate(ts, options.languageContext.typescriptLanguageServiceHost, tsLs);
+	const tsLs = ts.createLanguageService(options.context.typescriptLanguageServiceHost);
+	tsFaster.decorate(ts, options.context.typescriptLanguageServiceHost, tsLs);
 
 	let plugins: EmbeddedLanguageServicePlugin[];
 
@@ -51,19 +51,19 @@ export function createLanguageServiceContext(options: {
 		env: options.env,
 		typescript: {
 			module: options.host.getTypeScriptModule(),
-			languageServiceHost: options.languageContext.typescriptLanguageServiceHost,
+			languageServiceHost: options.context.typescriptLanguageServiceHost,
 			languageService: tsLs,
 		},
 	};
-	const textDocumentMapper = parseSourceFileDocuments(options.env.rootUri, options.languageContext.mapper);
+	const textDocumentMapper = parseSourceFileDocuments(options.env.rootUri, options.context.mapper);
 	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
 	const documentVersions = new Map<string, number>();
 	const context: LanguageServiceContext = {
 		host: options.host,
-		core: options.languageContext,
+		core: options.context,
 		get plugins() {
 			if (!plugins) {
-				plugins = options.createPlugins();
+				plugins = options.getPlugins();
 				for (const plugin of plugins) {
 					plugin.setup?.(pluginContext);
 				}
