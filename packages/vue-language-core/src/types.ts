@@ -13,6 +13,7 @@ export type VueCompilerOptions = Partial<ResolvedVueCompilerOptions>;
 
 export interface ResolvedVueCompilerOptions {
 	target: 2 | 2.7 | 3;
+	jsxTemplates: boolean;
 	strictTemplates: boolean;
 	plugins: string[];
 

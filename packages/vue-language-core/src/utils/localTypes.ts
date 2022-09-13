@@ -58,6 +58,10 @@ export type ExtractComponentSlots<T> =
 export type FillingEventArg_ParametersLength<E extends (...args: any) => any> = IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];
 export type FillingEventArg<E> = E extends (...args: any) => any ? FillingEventArg_ParametersLength<E> extends 0 ? ($event?: undefined) => ReturnType<E> : E : E;
 
+export type ExtractProps<T> =
+	T extends FunctionalComponent<infer P> ? P
+	: T extends new (...args: any) => { $props: infer Props } ? Props
+	: T; // IntrinsicElement
 export type ExtractEmit2<T> =
 	T extends FunctionalComponent<infer _, infer E> ? SetupContext<E>['emit']
 	: T extends new (...args: any) => { $emit: infer Emit } ? Emit

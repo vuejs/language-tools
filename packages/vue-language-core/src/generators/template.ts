@@ -127,6 +127,7 @@ export function generate(
 
 		const var_componentVar = isNamespacedTag ? `__VLS_ctx.${tagName}` : capitalize(camelize(tagName.replace(/:/g, '-')));
 		const var_emit = `__VLS_${elementIndex++}`;
+		const var_props = `__VLS_${elementIndex++}`;
 
 		if (isNamespacedTag) {
 
@@ -199,6 +200,7 @@ export function generate(
 			}
 		}
 		tsCodeGen.addText(`declare const ${var_emit}: import('./__VLS_types.js').ExtractEmit2<typeof ${var_componentVar}>;\n`);
+		tsCodeGen.addText(`declare const ${var_props}: import('./__VLS_types.js').ExtractProps<typeof ${var_componentVar}>;\n`);
 
 		const name1 = tagName; // hello-world
 		const name2 = isIntrinsicElement(vueCompilerOptions.experimentalRuntimeMode, tagName) ? tagName : camelize(tagName); // helloWorld
@@ -214,7 +216,7 @@ export function generate(
 		tsCodeGen.addText('/* Completion: Props */\n');
 		for (const name of componentNames) {
 			tsCodeGen.addText('// @ts-ignore\n');
-			tsCodeGen.addText(`(<${isIntrinsicElement(vueCompilerOptions.experimentalRuntimeMode, tagName) ? tagName : var_componentVar} ${SearchTexts.PropsCompletion(name)}/>);\n`);
+			tsCodeGen.addText(`${var_props}['${SearchTexts.PropsCompletion(name)}'];\n`);
 		}
 
 		tagResolves[tagName] = {
@@ -540,7 +542,7 @@ export function generate(
 				},
 			);
 			tsCodeGen.addText(` `);
-			const { hasRemainStyleOrClass, failedExps } = writeProps(node, false, 'props');
+			const { hasRemainStyleOrClass, failedExps } = writeProps(node, false, 'jsx');
 
 			if (endTagOffset === undefined) {
 				tsCodeGen.addText(`/>`);
@@ -616,7 +618,7 @@ export function generate(
 
 			if (hasRemainStyleOrClass) {
 				tsCodeGen.addText(`<${tagText} `);
-				writeProps(node, true, 'props');
+				writeProps(node, true, 'jsx');
 				tsCodeGen.addText(`/>\n`);
 			}
 
@@ -928,7 +930,7 @@ export function generate(
 
 				if (tag) {
 					tsCodeGen.addText(`const ${varComponentInstance} = new ${tag.component}({ `);
-					writeProps(node, false, 'slots');
+					writeProps(node, false, 'class');
 					tsCodeGen.addText(`});\n`);
 				}
 
@@ -936,7 +938,7 @@ export function generate(
 			}
 		}
 	}
-	function writeProps(node: CompilerDOM.ElementNode, forRemainStyleOrClass: boolean, mode: 'props' | 'slots') {
+	function writeProps(node: CompilerDOM.ElementNode, forRemainStyleOrClass: boolean, mode: 'jsx' | 'class') {
 
 		let styleCount = 0;
 		let classCount = 0;
@@ -1235,7 +1237,7 @@ export function generate(
 				if (forRemainStyleOrClass) {
 					continue;
 				}
-				if (mode === 'props')
+				if (mode === 'jsx')
 					tsCodeGen.addText('{...');
 				else
 					tsCodeGen.addText('...');
@@ -1258,7 +1260,7 @@ export function generate(
 						fb,
 					);
 				}
-				if (mode === 'props')
+				if (mode === 'jsx')
 					tsCodeGen.addText('} ');
 				else
 					tsCodeGen.addText(', ');
@@ -1278,7 +1280,7 @@ export function generate(
 		};
 
 		function writePropName(name: string, isStatic: boolean, sourceRange: SourceMaps.Range, data: EmbeddedFileMappingData, cacheOn: any) {
-			if (mode === 'props' && isStatic) {
+			if (mode === 'jsx' && isStatic) {
 				writeCode(
 					name,
 					sourceRange,
@@ -1297,7 +1299,7 @@ export function generate(
 			}
 		}
 		function writePropValuePrefix(isStatic: boolean) {
-			if (mode === 'props' && isStatic) {
+			if (mode === 'jsx' && isStatic) {
 				tsCodeGen.addText('={');
 			}
 			else {
@@ -1305,7 +1307,7 @@ export function generate(
 			}
 		}
 		function writePropValueSuffix(isStatic: boolean) {
-			if (mode === 'props' && isStatic) {
+			if (mode === 'jsx' && isStatic) {
 				tsCodeGen.addText('}');
 			}
 			else {
@@ -1313,15 +1315,15 @@ export function generate(
 			}
 		}
 		function writePropStart(isStatic: boolean) {
-			if (mode === 'props' && !isStatic) {
+			if (mode === 'jsx' && !isStatic) {
 				tsCodeGen.addText('{...{');
 			}
 		}
 		function writePropEnd(isStatic: boolean) {
-			if (mode === 'props' && isStatic) {
+			if (mode === 'jsx' && isStatic) {
 				tsCodeGen.addText(' ');
 			}
-			else if (mode === 'props' && !isStatic) {
+			else if (mode === 'jsx' && !isStatic) {
 				tsCodeGen.addText('}} ');
 			}
 			else {
@@ -1329,7 +1331,7 @@ export function generate(
 			}
 		}
 		function getCaps(caps: EmbeddedFileMappingData['capabilities']): EmbeddedFileMappingData['capabilities'] {
-			if (mode === 'props') {
+			if (mode === 'jsx') {
 				return caps;
 			}
 			else {
@@ -1340,7 +1342,7 @@ export function generate(
 			}
 		}
 		function getFormatBrackets(b: [string, string]) {
-			if (mode === 'props') {
+			if (mode === 'jsx') {
 				return b;
 			}
 			else {
@@ -1418,7 +1420,7 @@ export function generate(
 
 				if (tag && parentEl) {
 					tsCodeGen.addText(`const ${varComponentInstance} = new ${tag.component}({ `);
-					writeProps(parentEl, false, 'slots');
+					writeProps(parentEl, false, 'class');
 					tsCodeGen.addText(`});\n`);
 					writeInterpolationVarsExtraCompletion();
 					tsCodeGen.addText(`declare const ${varSlots}: import('./__VLS_types.js').ExtractComponentSlots<typeof ${varComponentInstance}>;\n`);
