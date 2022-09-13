@@ -11,8 +11,6 @@ export default function (options: {
 	getTsLs: () => ts2.LanguageService,
 }): EmbeddedLanguageServicePlugin {
 
-	const asts = new WeakMap<TextDocument, ts.SourceFile>();
-
 	let context: PluginContext;
 
 	return {
@@ -33,25 +31,48 @@ export default function (options: {
 			if (!enabled)
 				return;
 
-			const sourceFile = getAst(document);
+			const program = context.typescript.languageService.getProgram();
+			if (!program)
+				return;
+
+			const sourceFile = program.getSourceFile(shared.getPathOfUri(document.uri));
+			if (!sourceFile)
+				return;
+
 			if (isBlacklistNode(context.typescript.module, sourceFile, document.offsetAt(position)))
 				return;
 
-			const typeDefs = options.getTsLs().findTypeDefinition(document.uri, position);
-			if (isRefType(typeDefs, options.getTsLs())) {
+			const node = findPositionIdentifier(sourceFile, sourceFile, document.offsetAt(position));
+			if (!node)
+				return;
+
+			const checker = program.getTypeChecker();
+			const type = checker.getTypeAtLocation(node);
+			const props = type.getProperties();
+
+			if (props.some(prop => prop.name === 'value')) {
 				return '${1:.value}';
+			}
+
+			function findPositionIdentifier(sourceFile: ts.SourceFile, node: ts.Node, offset: number) {
+
+				let result: ts.Node | undefined;
+
+				node.forEachChild(child => {
+					if (!result) {
+						if (child.end === offset && context.typescript.module.isIdentifier(child)) {
+							result = child;
+						}
+						else if (child.end >= offset && child.getStart(sourceFile) < offset) {
+							result = findPositionIdentifier(sourceFile, child, offset);
+						}
+					}
+				});
+
+				return result;
 			}
 		},
 	};
-
-	function getAst(tsDoc: TextDocument) {
-		let ast = asts.get(tsDoc);
-		if (!ast) {
-			ast = context.typescript.module.createSourceFile(shared.getPathOfUri(tsDoc.uri), tsDoc.getText(), context.typescript.module.ScriptTarget.Latest);
-			asts.set(tsDoc, ast);
-		}
-		return ast;
-	}
 }
 
 export function isCharacterTyping(document: TextDocument, options: Parameters<NonNullable<EmbeddedLanguageServicePlugin['doAutoInsert']>>[2]) {
@@ -144,21 +165,4 @@ export function isBlacklistNode(ts: typeof import('typescript/lib/tsserverlibrar
 			}
 		}
 	}
-}
-export function isRefType(typeDefs: vscode.LocationLink[], tsLs: ts2.LanguageService) {
-	for (const typeDefine of typeDefs) {
-		const uri = vscode.Location.is(typeDefine) ? typeDefine.uri : typeDefine.targetUri;
-		const range = vscode.Location.is(typeDefine) ? typeDefine.range : typeDefine.targetSelectionRange;
-		const defineDoc = tsLs.__internal__.getTextDocument(uri);
-		if (!defineDoc)
-			continue;
-		const typeName = defineDoc.getText(range);
-		switch (typeName) {
-			case 'Ref':
-			case 'ComputedRef':
-			case 'WritableComputedRef':
-				return true;
-		}
-	}
-	return false;
 }

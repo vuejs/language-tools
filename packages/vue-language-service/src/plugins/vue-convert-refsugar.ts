@@ -5,7 +5,7 @@ import * as vue from '@volar/vue-language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
 import * as refSugarRanges from '../utils/refSugarRanges';
-import { isBlacklistNode, isRefType } from './vue-autoinsert-dotvalue';
+import { isBlacklistNode } from './vue-autoinsert-dotvalue';
 import { getAddMissingImportsEdits } from './vue-convert-scriptsetup';
 
 enum Commands {
@@ -245,6 +245,24 @@ async function useRefSugar(
 			));
 		}
 	}
+}
+
+function isRefType(typeDefs: vscode.LocationLink[], tsLs: ts2.LanguageService) {
+	for (const typeDefine of typeDefs) {
+		const uri = vscode.Location.is(typeDefine) ? typeDefine.uri : typeDefine.targetUri;
+		const range = vscode.Location.is(typeDefine) ? typeDefine.range : typeDefine.targetSelectionRange;
+		const defineDoc = tsLs.__internal__.getTextDocument(uri);
+		if (!defineDoc)
+			continue;
+		const typeName = defineDoc.getText(range);
+		switch (typeName) {
+			case 'Ref':
+			case 'ComputedRef':
+			case 'WritableComputedRef':
+				return true;
+		}
+	}
+	return false;
 }
 
 async function unuseRefSugar(
