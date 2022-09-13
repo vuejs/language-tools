@@ -1,5 +1,4 @@
 import * as shared from '@volar/shared';
-import type * as ts2 from '@volar/typescript-language-service';
 import { parseScriptSetupRanges } from '@volar/vue-language-core';
 import { EmbeddedLanguageServicePlugin, PluginContext, SourceFileDocument } from '@volar/language-service';
 import * as html from 'vscode-html-languageservice';
@@ -95,7 +94,6 @@ const dataProvider = html.newHTMLDataProvider('vue', {
 
 export default function (options: {
 	getVueDocument(document: TextDocument): SourceFileDocument | undefined,
-	getTsLs: () => ts2.LanguageService | undefined,
 	isJsxMissing: boolean,
 }): EmbeddedLanguageServicePlugin {
 
@@ -139,9 +137,9 @@ export default function (options: {
 						}
 					}
 
-					const tsLs = options.getTsLs();
+					const program = context.typescript.languageService.getProgram();
 
-					if (tsLs && !tsLs.__internal__.isValidFile(vueSourceFile.tsFileName)) {
+					if (program && !program.getSourceFile(vueSourceFile.tsFileName)) {
 						for (const script of [sfc.script, sfc.scriptSetup]) {
 
 							if (!script || script.content === '')
@@ -161,7 +159,7 @@ export default function (options: {
 						}
 					}
 
-					if (tsLs && sfc.template && options.isJsxMissing) {
+					if (program && sfc.template && options.isJsxMissing) {
 						const error = vscode.Diagnostic.create(
 							{
 								start: document.positionAt(sfc.template.start),

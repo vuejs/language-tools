@@ -1,15 +1,12 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver-protocol';
 import * as shared from '@volar/shared';
-import * as ts2 from '@volar/typescript-language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { hyphenate } from '@vue/shared';
 import { isTsDocument } from '@volar-plugins/typescript';
 import { EmbeddedLanguageServicePlugin, PluginContext } from '@volar/language-service';
 
-export default function (options: {
-	getTsLs: () => ts2.LanguageService,
-}): EmbeddedLanguageServicePlugin {
+export default function (): EmbeddedLanguageServicePlugin {
 
 	let context: PluginContext;
 

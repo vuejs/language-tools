@@ -45,7 +45,6 @@ export function getLanguageServicePlugins(
 	const scriptTsPlugin = useTsPlugin();
 	const vuePlugin = useVuePlugin({
 		getVueDocument: (document) => apis.context.documents.get(document.uri),
-		getTsLs: scriptTsPlugin.getLanguageService,
 		isJsxMissing: !host.getVueCompilationSettings().experimentalDisableTemplateSupport && host.getCompilationSettings().jsx !== ts.JsxEmit.Preserve,
 	});
 	const vueTemplateHtmlPlugin = _useVueTemplateLanguagePlugin(
@@ -59,9 +58,7 @@ export function getLanguageServicePlugins(
 	const cssPlugin = useCssPlugin();
 	const jsonPlugin = useJsonPlugin();
 	const emmetPlugin = useEmmetPlugin();
-	const autoDotValuePlugin = useAutoDotValuePlugin({
-		getTsLs: scriptTsPlugin.getLanguageService,
-	});
+	const autoDotValuePlugin = useAutoDotValuePlugin();
 	const referencesCodeLensPlugin = useReferencesCodeLensPlugin({
 		getVueDocument: (uri) => apis.context.documents.get(uri),
 		findReference: apis.findReferences,
