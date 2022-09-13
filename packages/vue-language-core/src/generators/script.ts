@@ -458,7 +458,6 @@ export function generate(
 			writeConstNameOption();
 
 			codeGen.addText(`function __VLS_template() {\n`);
-			codeGen.addText(`import * as __VLS_types from './__VLS_types.js'; import('./__VLS_types.js');\n`);
 
 			const templateGened = writeTemplateContext();
 
@@ -601,11 +600,11 @@ export function generate(
 		const useGlobalThisTypeInCtx = fileName.endsWith('.html');
 
 		codeGen.addText(`let __VLS_ctx!: ${useGlobalThisTypeInCtx ? 'typeof globalThis &' : ''}`);
-		codeGen.addText(`__VLS_types.PickNotAny<__VLS_Ctx, {}> & `);
+		codeGen.addText(`import('./__VLS_types.js').PickNotAny<__VLS_Ctx, {}> & `);
 		if (sfc.scriptSetup) {
-			codeGen.addText(`InstanceType<__VLS_types.PickNotAny<typeof __VLS_Component, new () => {}>> & `);
+			codeGen.addText(`InstanceType<import('./__VLS_types.js').PickNotAny<typeof __VLS_Component, new () => {}>> & `);
 		}
-		codeGen.addText(`InstanceType<__VLS_types.PickNotAny<typeof __VLS_component, new () => {}>> & {\n`);
+		codeGen.addText(`InstanceType<import('./__VLS_types.js').PickNotAny<typeof __VLS_component, new () => {}>> & {\n`);
 
 		/* CSS Module */
 		for (const cssModule of cssModuleClasses) {
@@ -627,12 +626,12 @@ export function generate(
 
 		/* Components */
 		codeGen.addText('/* Components */\n');
-		codeGen.addText('let __VLS_otherComponents!: NonNullable<typeof __VLS_component extends { components: infer C } ? C : {}> & __VLS_types.GlobalComponents & typeof __VLS_vmUnwrap.components & __VLS_types.PickComponents<typeof __VLS_ctx>;\n');
-		codeGen.addText(`let __VLS_selfComponent!: __VLS_types.SelfComponent<typeof __VLS_name, typeof __VLS_component & (new () => { ${getSlotsPropertyName(vueCompilerOptions.target ?? 3)}: typeof __VLS_slots })>;\n`);
-		codeGen.addText('let __VLS_components!: typeof __VLS_otherComponents & Omit<typeof __VLS_selfComponent, keyof typeof __VLS_otherComponents>;\n');
+		codeGen.addText(`let __VLS_otherComponents!: NonNullable<typeof __VLS_component extends { components: infer C } ? C : {}> & import('./__VLS_types.js').GlobalComponents & typeof __VLS_vmUnwrap.components & import('./__VLS_types.js').PickComponents<typeof __VLS_ctx>;\n`);
+		codeGen.addText(`let __VLS_selfComponent!: import('./__VLS_types.js').SelfComponent<typeof __VLS_name, typeof __VLS_component & (new () => { ${getSlotsPropertyName(vueCompilerOptions.target ?? 3)}: typeof __VLS_slots })>;\n`);
+		codeGen.addText(`let __VLS_components!: typeof __VLS_otherComponents & Omit<typeof __VLS_selfComponent, keyof typeof __VLS_otherComponents>;\n`);
 
 		codeGen.addText(`__VLS_components['${SearchTexts.Components}'];\n`);
-		codeGen.addText(`({} as __VLS_types.GlobalAttrs)['${SearchTexts.GlobalAttrs}'];\n`);
+		codeGen.addText(`({} as import('./__VLS_types.js').GlobalAttrs)['${SearchTexts.GlobalAttrs}'];\n`);
 
 		/* Style Scoped */
 		codeGen.addText('/* Style Scoped */\n');

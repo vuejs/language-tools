@@ -158,7 +158,7 @@ export function generate(
 			tsCodeGen.addText(`declare const ${var_componentVar}: `);
 
 			if (!vueCompilerOptions.strictTemplates)
-				tsCodeGen.addText(`__VLS_types.ConvertInvalidJsxElement<`);
+				tsCodeGen.addText(`import('./__VLS_types.js').ConvertInvalidJsxElement<`);
 
 			for (const name of names) {
 				tsCodeGen.addText(`\n'${name}' extends keyof typeof __VLS_components ? typeof __VLS_components['${name}'] : `);
@@ -198,7 +198,7 @@ export function generate(
 				}
 			}
 		}
-		tsCodeGen.addText(`declare const ${var_emit}: __VLS_types.ExtractEmit2<typeof ${var_componentVar}>;\n`);
+		tsCodeGen.addText(`declare const ${var_emit}: import('./__VLS_types.js').ExtractEmit2<typeof ${var_componentVar}>;\n`);
 
 		const name1 = tagName; // hello-world
 		const name2 = isIntrinsicElement(vueCompilerOptions.experimentalRuntimeMode, tagName) ? tagName : camelize(tagName); // helloWorld
@@ -431,7 +431,7 @@ export function generate(
 					formatBrackets.square,
 				);
 			}
-			tsCodeGen.addText(`] of __VLS_types.getVforSourceType`);
+			tsCodeGen.addText(`] of (await import('./__VLS_types.js')).getVforSourceType`);
 			if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 				writeInterpolation(
 					source.content,
@@ -637,7 +637,7 @@ export function generate(
 			if (vScope?.type === CompilerDOM.NodeTypes.DIRECTIVE && vScope.exp) {
 
 				const scopeVar = `__VLS_${elementIndex++}`;
-				const condition = `__VLS_types.withScope(__VLS_ctx, ${scopeVar})`;
+				const condition = `(await import('./__VLS_types.js')).withScope(__VLS_ctx, ${scopeVar})`;
 
 				tsCodeGen.addText(`const ${scopeVar} = `);
 				writeCode(
@@ -702,7 +702,7 @@ export function generate(
 					}
 
 					tsCodeGen.addText(`const __VLS_${elementIndex++}: {\n`);
-					tsCodeGen.addText(`'${prop.arg.loc.source}': __VLS_types.FillingEventArg<\n`);
+					tsCodeGen.addText(`'${prop.arg.loc.source}': import('./__VLS_types.js').FillingEventArg<\n`);
 					{
 
 						const key_2 = camelize('on-' + prop.arg.loc.source); // onClickOutside
@@ -710,10 +710,10 @@ export function generate(
 
 						if (tag) {
 
-							tsCodeGen.addText(`__VLS_types.FirstFunction<\n`);
+							tsCodeGen.addText(`import('./__VLS_types.js').FirstFunction<\n`);
 
 							{
-								tsCodeGen.addText(`__VLS_types.EmitEvent<typeof ${tag.component}, '${prop.arg.loc.source}'>,\n`);
+								tsCodeGen.addText(`import('./__VLS_types.js').EmitEvent<typeof ${tag.component}, '${prop.arg.loc.source}'>,\n`);
 							}
 
 							{
@@ -773,12 +773,12 @@ export function generate(
 							}
 
 							{
-								tsCodeGen.addText(`typeof ${varComponentInstance} extends { $emit: infer Emit } ? __VLS_types.EmitEvent2<Emit, '${prop.arg.loc.source}'> : unknown,\n`);
+								tsCodeGen.addText(`typeof ${varComponentInstance} extends { $emit: infer Emit } ? import('./__VLS_types.js').EmitEvent2<Emit, '${prop.arg.loc.source}'> : unknown,\n`);
 							}
 						}
 
 						{
-							tsCodeGen.addText(`__VLS_types.GlobalAttrs[`);
+							tsCodeGen.addText(`import('./__VLS_types.js').GlobalAttrs[`);
 							writeCodeWithQuotes(
 								key_2,
 								[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
@@ -1421,7 +1421,7 @@ export function generate(
 					writeProps(parentEl, false, 'slots');
 					tsCodeGen.addText(`});\n`);
 					writeInterpolationVarsExtraCompletion();
-					tsCodeGen.addText(`declare const ${varSlots}: __VLS_types.ExtractComponentSlots<typeof ${varComponentInstance}>;\n`);
+					tsCodeGen.addText(`declare const ${varSlots}: import('./__VLS_types.js').ExtractComponentSlots<typeof ${varComponentInstance}>;\n`);
 				}
 
 				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
@@ -1557,7 +1557,7 @@ export function generate(
 			) {
 
 				const diagStart = tsCodeGen.getText().length;
-				tsCodeGen.addText(`__VLS_types.directiveFunction(__VLS_ctx.`);
+				tsCodeGen.addText(`(await import('./__VLS_types.js')).directiveFunction(__VLS_ctx.`);
 				writeCode(
 					camelize('v-' + prop.name),
 					{
