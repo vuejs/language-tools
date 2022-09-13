@@ -57,11 +57,7 @@ const sidebar = [
       { text: 'Takeover Mode', link: '/takeover-mode' },
       { text: 'Troubleshooting', link: '/troubleshooting' },
     ],
-  },
-  {
-    text: 'Alpine (experimental)',
-    items: [{ text: 'Installation', link: '/alpine' }],
-  },
+  }
 ]
 
 export default defineConfig({
