@@ -28,7 +28,7 @@ export function checkTemplateData(
 		}
 	});
 
-	if (file && file.text.indexOf(vue.SearchTexts.Components) >= 0) {
+	if (file && file.text.indexOf(vue.SearchTexts.Components) >= 0 && tsLs.getProgram()?.getSourceFile(file.fileName)) {
 
 		const components = tsLs.getCompletionsAtPosition(
 			file.fileName,
