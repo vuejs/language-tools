@@ -28,9 +28,7 @@ function getBasicTriggerCharacters(tsVersion: string) {
 const jsDocTriggerCharacters = ['*'];
 const directiveCommentTriggerCharacters = ['@'];
 
-export default function (): EmbeddedLanguageServicePlugin & {
-	getLanguageService: () => ts2.LanguageService,
-} {
+export default function (): EmbeddedLanguageServicePlugin {
 
 	const basicTriggerCharacters = getBasicTriggerCharacters('4.3.0');
 
@@ -38,8 +36,6 @@ export default function (): EmbeddedLanguageServicePlugin & {
 	let tsLs2: ts2.LanguageService;
 
 	return {
-
-		getLanguageService: () => tsLs2,
 
 		setup(_context) {
 			context = _context;

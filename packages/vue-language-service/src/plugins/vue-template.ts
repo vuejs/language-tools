@@ -56,7 +56,6 @@ interface AutoImportCompletionData {
 export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof useHtmlPlugin>>(options: {
 	getSemanticTokenLegend(): vscode.SemanticTokensLegend,
 	getScanner(document: TextDocument): html.Scanner | undefined,
-	getTsLs: () => ts2.LanguageService,
 	templateLanguagePlugin: T,
 	isSupportedDocument: (document: TextDocument) => boolean,
 	vueLsHost: vue.LanguageServiceHost,
@@ -210,7 +209,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				if (!(vueDocument.file instanceof vue.VueSourceFile))
 					return;
 
-				const templateScriptData = checkTemplateData(vueDocument.file, options.getTsLs().__internal__.raw);
+				const templateScriptData = checkTemplateData(vueDocument.file, context.typescript.languageService);
 				const components = new Set([
 					...templateScriptData.components,
 					...templateScriptData.components.map(hyphenate).filter(name => !vue.isIntrinsicElement(runtimeMode, name)),
@@ -409,7 +408,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				ts2.getUserPreferences((section, scopeUri) => confitHost?.getConfiguration(section, scopeUri) as any, embeddedScriptUri),
 			]);
 			(preferences as any).importModuleSpecifierEnding = 'minimal';
-			const tsDetail = options.getTsLs().__internal__.raw.getCompletionEntryDetails(shared.getPathOfUri(embeddedScriptUri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
+			const tsDetail = context.typescript.languageService.getCompletionEntryDetails(shared.getPathOfUri(embeddedScriptUri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
 			if (tsDetail?.codeActions) {
 				for (const action of tsDetail.codeActions) {
 					for (const change of action.changes) {
@@ -742,7 +741,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			return;
 
 		const vueSourceFile = sourceDocument.file;
-		const templateData = checkTemplateData(vueSourceFile, options.getTsLs().__internal__.raw);
+		const templateData = checkTemplateData(vueSourceFile, context.typescript.languageService);
 
 		let cache = componentCompletionDataCache.get(templateData);
 		if (!cache) {
@@ -783,7 +782,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 						if (offset >= 0) {
 							offset += searchText.length;
 							try {
-								bind = (await options.getTsLs().__internal__.raw.getCompletionsAtPosition(file.fileName, offset, completionOptions))?.entries
+								bind = (await context.typescript.languageService.getCompletionsAtPosition(file.fileName, offset, completionOptions))?.entries
 									.filter(entry => entry.kind !== 'warning') ?? [];
 							} catch { }
 						}
@@ -794,7 +793,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 						if (offset >= 0) {
 							offset += searchText.length;
 							try {
-								on = (await options.getTsLs().__internal__.raw.getCompletionsAtPosition(file.fileName, offset, completionOptions))?.entries
+								on = (await context.typescript.languageService.getCompletionsAtPosition(file.fileName, offset, completionOptions))?.entries
 									.filter(entry => entry.kind !== 'warning') ?? [];
 							} catch { }
 						}
@@ -803,7 +802,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				}
 				try {
 					const offset = file.text.indexOf(vue.SearchTexts.GlobalAttrs);
-					const globalBind = (await options.getTsLs().__internal__.raw.getCompletionsAtPosition(file.fileName, offset, completionOptions))?.entries
+					const globalBind = (await context.typescript.languageService.getCompletionsAtPosition(file.fileName, offset, completionOptions))?.entries
 						.filter(entry => entry.kind !== 'warning') ?? [];
 					cache.set('*', { item: undefined, bind: globalBind, on: [] });
 				} catch { }

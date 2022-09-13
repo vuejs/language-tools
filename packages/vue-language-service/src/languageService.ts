@@ -42,7 +42,7 @@ export function getLanguageServicePlugins(
 	const ts = host.getTypeScriptModule();
 
 	// plugins
-	const scriptTsPlugin = useTsPlugin();
+	const tsPlugin = useTsPlugin();
 	const vuePlugin = useVuePlugin({
 		getVueDocument: (document) => apis.context.documents.get(document.uri),
 		isJsxMissing: !host.getVueCompilationSettings().experimentalDisableTemplateSupport && host.getCompilationSettings().jsx !== ts.JsxEmit.Preserve,
@@ -79,7 +79,6 @@ export function getLanguageServicePlugins(
 		doValidation: apis.doValidation,
 		doRename: apis.doRename,
 		findTypeDefinition: apis.findTypeDefinition,
-		getScriptTsLs: scriptTsPlugin.getLanguageService,
 	});
 
 	return [
@@ -92,7 +91,7 @@ export function getLanguageServicePlugins(
 		htmlPugConversionsPlugin,
 		scriptSetupConversionsPlugin,
 		refSugarConversionsPlugin,
-		scriptTsPlugin,
+		tsPlugin,
 		autoDotValuePlugin,
 		// put emmet plugin last to fix https://github.com/johnsoncodehk/volar/issues/1088
 		emmetPlugin,
@@ -113,7 +112,6 @@ export function getLanguageServicePlugins(
 					}
 				}
 			},
-			getTsLs: scriptTsPlugin.getLanguageService,
 			isSupportedDocument: (document) =>
 				document.languageId === languageId
 				&& !apis.context.documents.get(document.uri) /* not petite-vue source file */,
