@@ -184,7 +184,7 @@ async function useRefSugar(
 					if (end < _scriptSetup.startTagEnd || start > _scriptSetup.startTagEnd + _scriptSetup.content.length)
 						return false;
 
-					if (isBlacklistNode(ts, _scriptSetupAst, start - _scriptSetup.startTagEnd, false))
+					if (isBlacklistNode(ts, _scriptSetupAst, start - _scriptSetup.startTagEnd, true))
 						return false;
 
 					return true;

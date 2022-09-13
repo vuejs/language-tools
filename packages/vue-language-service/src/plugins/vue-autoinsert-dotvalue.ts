@@ -36,7 +36,7 @@ export default function (): EmbeddedLanguageServicePlugin {
 			if (!sourceFile)
 				return;
 
-			if (isBlacklistNode(context.typescript.module, sourceFile, document.offsetAt(position), true))
+			if (isBlacklistNode(context.typescript.module, sourceFile, document.offsetAt(position), false))
 				return;
 
 			const node = findPositionIdentifier(sourceFile, sourceFile, document.offsetAt(position));
@@ -89,7 +89,7 @@ export function isCharacterTyping(document: TextDocument, options: Parameters<No
 	return /\w/.test(lastCharacter) && !/\w/.test(nextCharacter);
 }
 
-export function isBlacklistNode(ts: typeof import('typescript/lib/tsserverlibrary'), node: ts.Node, pos: number, ignoreAccessDotValue: boolean) {
+export function isBlacklistNode(ts: typeof import('typescript/lib/tsserverlibrary'), node: ts.Node, pos: number, allowAccessDotValue: boolean) {
 	if (ts.isVariableDeclaration(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
 		return true;
 	}
@@ -114,7 +114,7 @@ export function isBlacklistNode(ts: typeof import('typescript/lib/tsserverlibrar
 	else if (ts.isTypeReferenceNode(node)) {
 		return true;
 	}
-	else if (ignoreAccessDotValue && ts.isPropertyAccessExpression(node) && node.name.text === 'value') {
+	else if (!allowAccessDotValue && ts.isPropertyAccessExpression(node) && node.expression.end === pos && node.name.text === 'value') {
 		return true;
 	}
 	else if (
@@ -130,7 +130,7 @@ export function isBlacklistNode(ts: typeof import('typescript/lib/tsserverlibrar
 		node.forEachChild(node => {
 			if (_isBlacklistNode) return;
 			if (pos >= node.getFullStart() && pos <= node.getEnd()) {
-				if (isBlacklistNode(ts, node, pos, ignoreAccessDotValue)) {
+				if (isBlacklistNode(ts, node, pos, allowAccessDotValue)) {
 					_isBlacklistNode = true;
 				}
 			}
