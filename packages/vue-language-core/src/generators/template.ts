@@ -34,7 +34,7 @@ const formatBrackets = {
 };
 const validTsVar = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 // @ts-ignore
-export const transformContext: CompilerDOM.TransformContext = {
+const transformContext: CompilerDOM.TransformContext = {
 	onError: () => { },
 	helperString: str => str.toString(),
 	replaceNode: node => { },
@@ -698,106 +698,45 @@ export function generate(
 			}
 		}
 		codeGen.addText(`}\n`);
+	}
+	function writeEvents(node: CompilerDOM.ElementNode) {
 
-		function writeEvents(node: CompilerDOM.ElementNode) {
+		const varComponentInstance = `__VLS_${elementIndex++}`;
+		let writedInstance = false;
 
-			const varComponentInstance = `__VLS_${elementIndex++}`;
-			let writedInstance = false;
+		for (const prop of node.props) {
+			if (
+				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+				&& prop.name === 'on'
+				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+			) {
 
-			for (const prop of node.props) {
-				if (
-					prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-					&& prop.name === 'on'
-					&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-				) {
+				tryWriteInstance();
 
-					tryWriteInstance();
+				const tag = tagResolves[node.tag];
+				const varInstanceProps = `__VLS_${elementIndex++}`;
 
-					const tag = tagResolves[node.tag];
-					const varInstanceProps = `__VLS_${elementIndex++}`;
+				if (tag) {
+					codeGen.addText(`type ${varInstanceProps} = typeof ${varComponentInstance} extends { $props: infer Props } ? Props & Record<string, unknown> : typeof ${tag.component} & Record<string, unknown>;\n`);
+				}
+
+				codeGen.addText(`const __VLS_${elementIndex++}: {\n`);
+				codeGen.addText(`'${prop.arg.loc.source}': import('./__VLS_types.js').FillingEventArg<\n`);
+				{
+
+					const key_2 = camelize('on-' + prop.arg.loc.source); // onClickOutside
+					const key_3 = 'on' + capitalize(prop.arg.loc.source); // onClick-outside
 
 					if (tag) {
-						codeGen.addText(`type ${varInstanceProps} = typeof ${varComponentInstance} extends { $props: infer Props } ? Props & Record<string, unknown> : typeof ${tag.component} & Record<string, unknown>;\n`);
-					}
 
-					codeGen.addText(`const __VLS_${elementIndex++}: {\n`);
-					codeGen.addText(`'${prop.arg.loc.source}': import('./__VLS_types.js').FillingEventArg<\n`);
-					{
+						codeGen.addText(`import('./__VLS_types.js').FirstFunction<\n`);
 
-						const key_2 = camelize('on-' + prop.arg.loc.source); // onClickOutside
-						const key_3 = 'on' + capitalize(prop.arg.loc.source); // onClick-outside
-
-						if (tag) {
-
-							codeGen.addText(`import('./__VLS_types.js').FirstFunction<\n`);
-
-							{
-								codeGen.addText(`import('./__VLS_types.js').EmitEvent<typeof ${tag.component}, '${prop.arg.loc.source}'>,\n`);
-							}
-
-							{
-								codeGen.addText(`${varInstanceProps}[`);
-								writeCodeWithQuotes(
-									key_2,
-									[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
-									{
-										vueTag: 'template',
-										capabilities: {
-											...capabilitiesSet.attrReference,
-											rename: {
-												normalize(newName) {
-													return camelize('on-' + newName);
-												},
-												apply(oldName, newName) {
-													const hName = hyphenate(newName);
-													if (hyphenate(newName).startsWith('on-')) {
-														return camelize(hName.slice('on-'.length));
-													}
-													return newName;
-												},
-											},
-										},
-									},
-								);
-								codeGen.addText(`],\n`);
-							}
-
-							{
-								if (key_3 !== key_2) {
-									codeGen.addText(`${varInstanceProps}[`);
-									writeCodeWithQuotes(
-										key_3,
-										[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
-										{
-											vueTag: 'template',
-											capabilities: {
-												...capabilitiesSet.attrReference,
-												rename: {
-													normalize(newName) {
-														return 'on' + capitalize(newName);
-													},
-													apply(oldName, newName) {
-														const hName = hyphenate(newName);
-														if (hyphenate(newName).startsWith('on-')) {
-															return camelize(hName.slice('on-'.length));
-														}
-														return newName;
-													},
-												},
-											},
-										},
-									);
-									codeGen.addText(`],\n`);
-								}
-							}
-
-							{
-								codeGen.addText(`typeof ${varComponentInstance} extends { $emit: infer Emit } ? import('./__VLS_types.js').EmitEvent2<Emit, '${prop.arg.loc.source}'> : unknown,\n`);
-							}
+						{
+							codeGen.addText(`import('./__VLS_types.js').EmitEvent<typeof ${tag.component}, '${prop.arg.loc.source}'>,\n`);
 						}
 
 						{
-							codeGen.addText(`import('./__VLS_types.js').GlobalAttrs[`);
+							codeGen.addText(`${varInstanceProps}[`);
 							writeCodeWithQuotes(
 								key_2,
 								[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
@@ -816,46 +755,164 @@ export function generate(
 												}
 												return newName;
 											},
-										}
+										},
 									},
 								},
 							);
 							codeGen.addText(`],\n`);
 						}
 
-						if (tag) {
-							codeGen.addText(`>\n`);
+						{
+							if (key_3 !== key_2) {
+								codeGen.addText(`${varInstanceProps}[`);
+								writeCodeWithQuotes(
+									key_3,
+									[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
+									{
+										vueTag: 'template',
+										capabilities: {
+											...capabilitiesSet.attrReference,
+											rename: {
+												normalize(newName) {
+													return 'on' + capitalize(newName);
+												},
+												apply(oldName, newName) {
+													const hName = hyphenate(newName);
+													if (hyphenate(newName).startsWith('on-')) {
+														return camelize(hName.slice('on-'.length));
+													}
+													return newName;
+												},
+											},
+										},
+									},
+								);
+								codeGen.addText(`],\n`);
+							}
+						}
+
+						{
+							codeGen.addText(`typeof ${varComponentInstance} extends { $emit: infer Emit } ? import('./__VLS_types.js').EmitEvent2<Emit, '${prop.arg.loc.source}'> : unknown,\n`);
 						}
 					}
-					codeGen.addText(`>\n`);
-					codeGen.addText(`} = {\n`);
+
 					{
-						writeObjectProperty(
-							prop.arg.loc.source,
-							{
-								start: prop.arg.loc.start.offset,
-								end: prop.arg.loc.end.offset,
-							},
-							SourceMaps.Mode.Offset,
+						codeGen.addText(`import('./__VLS_types.js').GlobalAttrs[`);
+						writeCodeWithQuotes(
+							key_2,
+							[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
 							{
 								vueTag: 'template',
-								capabilities: capabilitiesSet.event,
+								capabilities: {
+									...capabilitiesSet.attrReference,
+									rename: {
+										normalize(newName) {
+											return camelize('on-' + newName);
+										},
+										apply(oldName, newName) {
+											const hName = hyphenate(newName);
+											if (hyphenate(newName).startsWith('on-')) {
+												return camelize(hName.slice('on-'.length));
+											}
+											return newName;
+										},
+									}
+								},
 							},
-							prop.arg.loc,
 						);
-						codeGen.addText(`: `);
-						appendExpressionNode(prop);
+						codeGen.addText(`],\n`);
 					}
-					codeGen.addText(`};\n`);
-					writeInterpolationVarsExtraCompletion();
+
+					if (tag) {
+						codeGen.addText(`>\n`);
+					}
 				}
-				else if (
-					prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-					&& prop.name === 'on'
-					&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-				) {
-					// for vue 2 nameless event
-					// https://github.com/johnsoncodehk/vue-tsc/issues/67
+				codeGen.addText(`>\n`);
+				codeGen.addText(`} = {\n`);
+				{
+					writeObjectProperty(
+						prop.arg.loc.source,
+						{
+							start: prop.arg.loc.start.offset,
+							end: prop.arg.loc.end.offset,
+						},
+						SourceMaps.Mode.Offset,
+						{
+							vueTag: 'template',
+							capabilities: capabilitiesSet.event,
+						},
+						prop.arg.loc,
+					);
+					codeGen.addText(`: `);
+					appendExpressionNode(prop);
+				}
+				codeGen.addText(`};\n`);
+				writeInterpolationVarsExtraCompletion();
+			}
+			else if (
+				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+				&& prop.name === 'on'
+				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+			) {
+				// for vue 2 nameless event
+				// https://github.com/johnsoncodehk/vue-tsc/issues/67
+				writeInterpolation(
+					prop.exp.content,
+					prop.exp.loc.start.offset,
+					{
+						vueTag: 'template',
+						capabilities: capabilitiesSet.all,
+					},
+					'$event => {(',
+					')}',
+					prop.exp.loc,
+				);
+				writeFormatCode(
+					prop.exp.content,
+					prop.exp.loc.start.offset,
+					formatBrackets.round,
+				);
+				codeGen.addText(`;\n`);
+			}
+
+			function appendExpressionNode(prop: CompilerDOM.DirectiveNode) {
+				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+
+					const ast = createTsAst(prop.exp, prop.exp.content);
+					let isCompoundExpession = true;
+
+					if (ast.getChildCount() === 2) { // with EOF 
+						ast.forEachChild(child_1 => {
+							if (ts.isExpressionStatement(child_1)) {
+								child_1.forEachChild(child_2 => {
+									if (ts.isArrowFunction(child_2)) {
+										isCompoundExpession = false;
+									}
+									else if (ts.isIdentifier(child_2)) {
+										isCompoundExpession = false;
+									}
+								});
+							}
+							else if (ts.isFunctionDeclaration(child_1)) {
+								isCompoundExpession = false;
+							}
+						});
+					}
+
+					let prefix = '(';
+					let suffix = ')';
+
+					if (isCompoundExpession) {
+
+						prefix = '$event => {\n';
+						if (blockConditions.length) {
+							for (const blockCondition of blockConditions) {
+								prefix += `if (!(${blockCondition})) return;\n`;
+							}
+						}
+						suffix = '\n}';
+					}
+
 					writeInterpolation(
 						prop.exp.content,
 						prop.exp.loc.start.offset,
@@ -863,8 +920,8 @@ export function generate(
 							vueTag: 'template',
 							capabilities: capabilitiesSet.all,
 						},
-						'$event => {(',
-						')}',
+						prefix,
+						suffix,
 						prop.exp.loc,
 					);
 					writeFormatCode(
@@ -872,87 +929,29 @@ export function generate(
 						prop.exp.loc.start.offset,
 						formatBrackets.round,
 					);
-					codeGen.addText(`;\n`);
 				}
-
-				function appendExpressionNode(prop: CompilerDOM.DirectiveNode) {
-					if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-
-						const ast = createTsAst(prop.exp, prop.exp.content);
-						let isCompoundExpession = true;
-
-						if (ast.getChildCount() === 2) { // with EOF 
-							ast.forEachChild(child_1 => {
-								if (ts.isExpressionStatement(child_1)) {
-									child_1.forEachChild(child_2 => {
-										if (ts.isArrowFunction(child_2)) {
-											isCompoundExpession = false;
-										}
-										else if (ts.isIdentifier(child_2)) {
-											isCompoundExpession = false;
-										}
-									});
-								}
-								else if (ts.isFunctionDeclaration(child_1)) {
-									isCompoundExpession = false;
-								}
-							});
-						}
-
-						let prefix = '(';
-						let suffix = ')';
-
-						if (isCompoundExpession) {
-
-							prefix = '$event => {\n';
-							if (blockConditions.length) {
-								for (const blockCondition of blockConditions) {
-									prefix += `if (!(${blockCondition})) return;\n`;
-								}
-							}
-							suffix = '\n}';
-						}
-
-						writeInterpolation(
-							prop.exp.content,
-							prop.exp.loc.start.offset,
-							{
-								vueTag: 'template',
-								capabilities: capabilitiesSet.all,
-							},
-							prefix,
-							suffix,
-							prop.exp.loc,
-						);
-						writeFormatCode(
-							prop.exp.content,
-							prop.exp.loc.start.offset,
-							formatBrackets.round,
-						);
-					}
-					else {
-						codeGen.addText(`undefined`);
-					}
+				else {
+					codeGen.addText(`undefined`);
 				}
 			}
+		}
 
-			writeInterpolationVarsExtraCompletion();
+		writeInterpolationVarsExtraCompletion();
 
-			function tryWriteInstance() {
+		function tryWriteInstance() {
 
-				if (writedInstance)
-					return;
+			if (writedInstance)
+				return;
 
-				const tag = tagResolves[node.tag];
+			const tag = tagResolves[node.tag];
 
-				if (tag) {
-					codeGen.addText(`const ${varComponentInstance} = new ${tag.component}({ `);
-					writeProps(node, false, 'class');
-					codeGen.addText(`});\n`);
-				}
-
-				writedInstance = true;
+			if (tag) {
+				codeGen.addText(`const ${varComponentInstance} = new ${tag.component}({ `);
+				writeProps(node, false, 'class');
+				codeGen.addText(`});\n`);
 			}
+
+			writedInstance = true;
 		}
 	}
 	function writeProps(node: CompilerDOM.ElementNode, forRemainStyleOrClass: boolean, mode: 'jsx' | 'class') {
