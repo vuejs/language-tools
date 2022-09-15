@@ -17,10 +17,20 @@
 					],
 					"markdownDescription": "Target version of Vue."
 				},
+				"jsxTemplates": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Whether to compile template to JSX. (Generics component type checking only working with JSX)"
+				},
 				"strictTemplates": {
 					"type": "boolean",
 					"default": false,
 					"markdownDescription": "Strict props, component type-checking in templates."
+				},
+				"plugins": {
+					"type": "array",
+					"default": [],
+					"markdownDescription": "Plugins to be used in the SFC compiler."
 				},
 				"experimentalComponentOptionsWrapper": {
 					"type": "array",
@@ -38,11 +48,6 @@
 					],
 					"default": "onlyJs",
 					"markdownDescription": "Enable `experimentalComponentOptionsWrapper`?"
-				},
-				"plugins": {
-					"type": "array",
-					"default": [],
-					"markdownDescription": "Plugins to be used in the SFC compiler."
 				},
 				"experimentalRuntimeMode": {
 					"type": "string",

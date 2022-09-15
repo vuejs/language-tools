@@ -452,7 +452,7 @@ export function generate(
 	}
 	function writeTemplate() {
 
-		if (lang === 'jsx' || lang === 'tsx') {
+		if (!vueCompilerOptions.experimentalDisableTemplateSupport) {
 
 			writeExportOptions();
 			writeConstNameOption();

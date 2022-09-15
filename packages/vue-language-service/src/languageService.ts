@@ -39,13 +39,10 @@ export function getLanguageServicePlugins(
 	apis: embeddedLS.LanguageService,
 ) {
 
-	const ts = host.getTypeScriptModule();
-
 	// plugins
 	const tsPlugin = useTsPlugin();
 	const vuePlugin = useVuePlugin({
 		getVueDocument: (document) => apis.context.documents.get(document.uri),
-		isJsxMissing: !host.getVueCompilationSettings().experimentalDisableTemplateSupport && host.getCompilationSettings().jsx !== ts.JsxEmit.Preserve,
 	});
 	const vueTemplateHtmlPlugin = _useVueTemplateLanguagePlugin(
 		'html',
