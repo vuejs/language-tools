@@ -71,8 +71,8 @@ export function generate(
 	cssScopedClasses: string[] = [],
 ) {
 
-	const tsCodeGen = new CodeGen<EmbeddedFileMappingData>();
-	const tsFormatCodeGen = new CodeGen<EmbeddedFileMappingData>();
+	const codeGen = new CodeGen<EmbeddedFileMappingData>();
+	const formatCodeGen = new CodeGen<EmbeddedFileMappingData>();
 	const cssCodeGen = new CodeGen<EmbeddedFileMappingData>();
 	const slots = new Map<string, {
 		varName: string,
@@ -93,7 +93,7 @@ export function generate(
 	let slotsNum = 0;
 	let elementIndex = 0;
 
-	tsFormatCodeGen.addText('export { };\n');
+	formatCodeGen.addText('export { };\n');
 
 	const tagResolves = writeComponentCompletionSearchTexts();
 
@@ -106,8 +106,8 @@ export function generate(
 	writeInterpolationVarsExtraCompletion();
 
 	return {
-		codeGen: tsCodeGen,
-		formatCodeGen: tsFormatCodeGen,
+		codeGen,
+		formatCodeGen,
 		cssCodeGen,
 		tagNames,
 		identifiers,
@@ -116,11 +116,11 @@ export function generate(
 
 	function declareSlots() {
 
-		tsCodeGen.addText(`declare var __VLS_slots:\n`);
+		codeGen.addText(`declare var __VLS_slots:\n`);
 		for (const [exp, slot] of slotExps) {
-			tsCodeGen.addText(`Record<NonNullable<typeof ${exp}>, typeof ${slot.varName}> &\n`);
+			codeGen.addText(`Record<NonNullable<typeof ${exp}>, typeof ${slot.varName}> &\n`);
 		}
-		tsCodeGen.addText(`{\n`);
+		codeGen.addText(`{\n`);
 		for (const [name, slot] of slots) {
 			slotsNum++;
 			writeObjectProperty(
@@ -136,15 +136,15 @@ export function generate(
 				},
 				slot.nodeLoc,
 			);
-			tsCodeGen.addText(`: (_: typeof ${slot.varName}) => any,\n`);
+			codeGen.addText(`: (_: typeof ${slot.varName}) => any,\n`);
 		}
-		tsCodeGen.addText(`};\n`);
+		codeGen.addText(`};\n`);
 	}
 	function writeStyleScopedClasses() {
 
-		tsCodeGen.addText(`if (typeof __VLS_styleScopedClasses === 'object' && !Array.isArray(__VLS_styleScopedClasses)) {\n`);
+		codeGen.addText(`if (typeof __VLS_styleScopedClasses === 'object' && !Array.isArray(__VLS_styleScopedClasses)) {\n`);
 		for (const { className, offset } of scopedClasses) {
-			tsCodeGen.addText(`__VLS_styleScopedClasses[`);
+			codeGen.addText(`__VLS_styleScopedClasses[`);
 			writeCodeWithQuotes(
 				className,
 				{
@@ -159,9 +159,9 @@ export function generate(
 					},
 				},
 			);
-			tsCodeGen.addText(`];\n`);
+			codeGen.addText(`];\n`);
 		}
-		tsCodeGen.addText('}\n');
+		codeGen.addText('}\n');
 	}
 	function writeComponentCompletionSearchTexts() {
 
@@ -187,7 +187,7 @@ export function generate(
 
 				for (let i = 0; i < tagRanges.length; i++) {
 					const tagRange = tagRanges[i];
-					tsCodeGen.addText(`declare const __VLS_${elementIndex++}: typeof __VLS_ctx.`);
+					codeGen.addText(`declare const __VLS_${elementIndex++}: typeof __VLS_ctx.`);
 					writeCode(
 						tagName,
 						tagRange,
@@ -197,7 +197,7 @@ export function generate(
 							capabilities: capabilitiesSet.all,
 						},
 					);
-					tsCodeGen.addText(`;\n`);
+					codeGen.addText(`;\n`);
 				}
 			}
 			else {
@@ -208,29 +208,29 @@ export function generate(
 					capitalize(camelize(tagName)),
 				]);
 
-				tsCodeGen.addText(`declare const ${var_componentVar}: `);
+				codeGen.addText(`declare const ${var_componentVar}: `);
 
 				if (!vueCompilerOptions.strictTemplates)
-					tsCodeGen.addText(`import('./__VLS_types.js').ConvertInvalidJsxElement<`);
+					codeGen.addText(`import('./__VLS_types.js').ConvertInvalidJsxElement<`);
 
 				for (const name of names) {
-					tsCodeGen.addText(`\n'${name}' extends keyof typeof __VLS_components ? typeof __VLS_components['${name}'] : `);
+					codeGen.addText(`\n'${name}' extends keyof typeof __VLS_components ? typeof __VLS_components['${name}'] : `);
 				}
 				for (const name of names) {
-					tsCodeGen.addText(`\n'${name}' extends keyof typeof __VLS_ctx ? typeof __VLS_ctx['${name}'] : `);
+					codeGen.addText(`\n'${name}' extends keyof typeof __VLS_ctx ? typeof __VLS_ctx['${name}'] : `);
 				}
 
-				tsCodeGen.addText(`unknown`);
+				codeGen.addText(`unknown`);
 
 				if (!vueCompilerOptions.strictTemplates)
-					tsCodeGen.addText(`>`);
+					codeGen.addText(`>`);
 
-				tsCodeGen.addText(`;\n`);
+				codeGen.addText(`;\n`);
 
 				for (const vlsVar of ['__VLS_components', '__VLS_ctx']) {
 					for (const tagRange of tagRanges) {
 						for (const name of names) {
-							tsCodeGen.addText(vlsVar);
+							codeGen.addText(vlsVar);
 							writePropertyAccess2(
 								name,
 								[tagRange],
@@ -245,9 +245,9 @@ export function generate(
 									},
 								},
 							);
-							tsCodeGen.addText(';');
+							codeGen.addText(';');
 						}
-						tsCodeGen.addText('\n');
+						codeGen.addText('\n');
 					}
 				}
 			}
@@ -259,16 +259,16 @@ export function generate(
 			]);
 
 			/* Completion */
-			tsCodeGen.addText('/* Completion: Emits */\n');
+			codeGen.addText('/* Completion: Emits */\n');
 			for (const name of componentNames) {
-				tsCodeGen.addText('// @ts-ignore\n');
-				tsCodeGen.addText(`({} as import('./__VLS_types.js').ExtractEmit2<typeof ${var_componentVar}>)('${SearchTexts.EmitCompletion(name)}');\n`);
+				codeGen.addText('// @ts-ignore\n');
+				codeGen.addText(`({} as import('./__VLS_types.js').ExtractEmit2<typeof ${var_componentVar}>)('${SearchTexts.EmitCompletion(name)}');\n`);
 			}
 
-			tsCodeGen.addText('/* Completion: Props */\n');
+			codeGen.addText('/* Completion: Props */\n');
 			for (const name of componentNames) {
-				tsCodeGen.addText('// @ts-ignore\n');
-				tsCodeGen.addText(`({} as import('./__VLS_types.js').ExtractProps<typeof ${var_componentVar}>)['${SearchTexts.PropsCompletion(name)}'];\n`);
+				codeGen.addText('// @ts-ignore\n');
+				codeGen.addText(`({} as import('./__VLS_types.js').ExtractProps<typeof ${var_componentVar}>)['${SearchTexts.PropsCompletion(name)}'];\n`);
 			}
 
 			data[tagName] = {
@@ -372,16 +372,16 @@ export function generate(
 				const branch = node.branches[i];
 
 				if (i === 0)
-					tsCodeGen.addText('if');
+					codeGen.addText('if');
 				else if (branch.condition)
-					tsCodeGen.addText('else if');
+					codeGen.addText('else if');
 				else
-					tsCodeGen.addText('else');
+					codeGen.addText('else');
 
 				let addedBlockCondition = false;
 
 				if (branch.condition?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-					tsCodeGen.addText(` `);
+					codeGen.addText(` `);
 					writeInterpolation(
 						branch.condition.content,
 						branch.condition.loc.start.offset,
@@ -405,12 +405,12 @@ export function generate(
 					}
 				}
 
-				tsCodeGen.addText(` {\n`);
+				codeGen.addText(` {\n`);
 				writeInterpolationVarsExtraCompletion();
 				for (const childNode of branch.children) {
 					visitNode(childNode, parentEl);
 				}
-				tsCodeGen.addText('}\n');
+				codeGen.addText('}\n');
 
 				if (addedBlockCondition) {
 					blockConditions[blockConditions.length - 1] = `!(${blockConditions[blockConditions.length - 1]})`;
@@ -426,7 +426,7 @@ export function generate(
 			const leftExpressionText = leftExpressionRange ? node.loc.source.substring(leftExpressionRange.start - node.loc.start.offset, leftExpressionRange.end - node.loc.start.offset) : undefined;
 			const forBlockVars: string[] = [];
 
-			tsCodeGen.addText(`for (const [`);
+			codeGen.addText(`for (const [`);
 			if (leftExpressionRange && leftExpressionText) {
 
 				const collentAst = createTsAst(node.parseResult, `const [${leftExpressionText}]`);
@@ -450,7 +450,7 @@ export function generate(
 					formatBrackets.square,
 				);
 			}
-			tsCodeGen.addText(`] of (await import('./__VLS_types.js')).getVforSourceType`);
+			codeGen.addText(`] of (await import('./__VLS_types.js')).getVforSourceType`);
 			if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 				writeInterpolation(
 					source.content,
@@ -469,7 +469,7 @@ export function generate(
 					formatBrackets.empty,
 				);
 
-				tsCodeGen.addText(`) {\n`);
+				codeGen.addText(`) {\n`);
 
 				writeInterpolationVarsExtraCompletion();
 
@@ -477,7 +477,7 @@ export function generate(
 					visitNode(childNode, parentEl);
 				}
 
-				tsCodeGen.addText('}\n');
+				codeGen.addText('}\n');
 			}
 
 			for (const varName of forBlockVars)
@@ -490,7 +490,7 @@ export function generate(
 			// not needed progress
 		}
 		else {
-			tsCodeGen.addText(`// Unprocessed node type: ${node.type} json: ${JSON.stringify(node.loc)}\n`);
+			codeGen.addText(`// Unprocessed node type: ${node.type} json: ${JSON.stringify(node.loc)}\n`);
 		}
 	};
 	function visitElementNode(node: CompilerDOM.ElementNode, parentEl: CompilerDOM.ElementNode | undefined) {
@@ -532,12 +532,12 @@ export function generate(
 			return;
 		}
 
-		tsCodeGen.addText(`{\n`);
+		codeGen.addText(`{\n`);
 		{
 
 			const _isIntrinsicElement = isIntrinsicElement(vueCompilerOptions.experimentalRuntimeMode, node.tag);
 			const tagText = tagResolves[node.tag]?.component ?? node.tag;
-			const fullTagStart = tsCodeGen.getText().length;
+			const fullTagStart = codeGen.getText().length;
 			const tagCapabilities = {
 				...capabilitiesSet.diagnosticOnly,
 				...(tagResolves[node.tag]?.isNamespacedTag ? {} : capabilitiesSet.tagHover),
@@ -545,7 +545,7 @@ export function generate(
 			};
 			const endTagOffset = !node.isSelfClosing && sourceLang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
 
-			tsCodeGen.addText(`<`);
+			codeGen.addText(`<`);
 			writeCode(
 				tagText,
 				{
@@ -558,14 +558,14 @@ export function generate(
 					capabilities: tagCapabilities,
 				},
 			);
-			tsCodeGen.addText(` `);
+			codeGen.addText(` `);
 			const { hasRemainStyleOrClass, unwritedExps } = writeProps(node, false, 'jsx');
 
 			if (endTagOffset === undefined) {
-				tsCodeGen.addText(`/>`);
+				codeGen.addText(`/>`);
 			}
 			else {
-				tsCodeGen.addText(`></`);
+				codeGen.addText(`></`);
 				writeCode(
 					tagText,
 					{
@@ -578,7 +578,7 @@ export function generate(
 						capabilities: tagCapabilities,
 					},
 				);
-				tsCodeGen.addText(`>;\n`);
+				codeGen.addText(`>;\n`);
 			}
 
 			// fix https://github.com/johnsoncodehk/volar/issues/1775
@@ -602,7 +602,7 @@ export function generate(
 						fb,
 					);
 				}
-				tsCodeGen.addText(';\n');
+				codeGen.addText(';\n');
 			}
 
 			// fix https://github.com/johnsoncodehk/volar/issues/705#issuecomment-974773353
@@ -616,14 +616,14 @@ export function generate(
 			else {
 				startTagEnd = node.loc.start.offset + node.loc.source.substring(0, node.loc.source.lastIndexOf('</')).lastIndexOf('>') + 1;
 			}
-			tsCodeGen.addMapping2({
+			codeGen.addMapping2({
 				sourceRange: {
 					start: node.loc.start.offset,
 					end: startTagEnd,
 				},
 				mappedRange: {
 					start: fullTagStart,
-					end: tsCodeGen.getText().length,
+					end: codeGen.getText().length,
 				},
 				mode: SourceMaps.Mode.Totally,
 				data: {
@@ -631,12 +631,12 @@ export function generate(
 					capabilities: capabilitiesSet.diagnosticOnly,
 				},
 			});
-			tsCodeGen.addText(`\n`);
+			codeGen.addText(`\n`);
 
 			if (hasRemainStyleOrClass) {
-				tsCodeGen.addText(`<${tagText} `);
+				codeGen.addText(`<${tagText} `);
 				writeProps(node, true, 'jsx');
-				tsCodeGen.addText(`/>\n`);
+				codeGen.addText(`/>\n`);
 			}
 
 			let slotBlockVars: string[] | undefined;
@@ -658,7 +658,7 @@ export function generate(
 				const scopeVar = `__VLS_${elementIndex++}`;
 				const condition = `(await import('./__VLS_types.js')).withScope(__VLS_ctx, ${scopeVar})`;
 
-				tsCodeGen.addText(`const ${scopeVar} = `);
+				codeGen.addText(`const ${scopeVar} = `);
 				writeCode(
 					vScope.exp.loc.source,
 					{
@@ -671,8 +671,8 @@ export function generate(
 						capabilities: capabilitiesSet.all,
 					},
 				);
-				tsCodeGen.addText(';\n');
-				tsCodeGen.addText(`if (${condition}) {\n`);
+				codeGen.addText(';\n');
+				codeGen.addText(`if (${condition}) {\n`);
 				blockConditions.push(condition);
 				inScope = true;
 			}
@@ -693,11 +693,11 @@ export function generate(
 			}
 
 			if (inScope) {
-				tsCodeGen.addText('}\n');
+				codeGen.addText('}\n');
 				blockConditions.length = originalConditionsNum;
 			}
 		}
-		tsCodeGen.addText(`}\n`);
+		codeGen.addText(`}\n`);
 
 		function writeEvents(node: CompilerDOM.ElementNode) {
 
@@ -717,11 +717,11 @@ export function generate(
 					const varInstanceProps = `__VLS_${elementIndex++}`;
 
 					if (tag) {
-						tsCodeGen.addText(`type ${varInstanceProps} = typeof ${varComponentInstance} extends { $props: infer Props } ? Props & Record<string, unknown> : typeof ${tag.component} & Record<string, unknown>;\n`);
+						codeGen.addText(`type ${varInstanceProps} = typeof ${varComponentInstance} extends { $props: infer Props } ? Props & Record<string, unknown> : typeof ${tag.component} & Record<string, unknown>;\n`);
 					}
 
-					tsCodeGen.addText(`const __VLS_${elementIndex++}: {\n`);
-					tsCodeGen.addText(`'${prop.arg.loc.source}': import('./__VLS_types.js').FillingEventArg<\n`);
+					codeGen.addText(`const __VLS_${elementIndex++}: {\n`);
+					codeGen.addText(`'${prop.arg.loc.source}': import('./__VLS_types.js').FillingEventArg<\n`);
 					{
 
 						const key_2 = camelize('on-' + prop.arg.loc.source); // onClickOutside
@@ -729,14 +729,14 @@ export function generate(
 
 						if (tag) {
 
-							tsCodeGen.addText(`import('./__VLS_types.js').FirstFunction<\n`);
+							codeGen.addText(`import('./__VLS_types.js').FirstFunction<\n`);
 
 							{
-								tsCodeGen.addText(`import('./__VLS_types.js').EmitEvent<typeof ${tag.component}, '${prop.arg.loc.source}'>,\n`);
+								codeGen.addText(`import('./__VLS_types.js').EmitEvent<typeof ${tag.component}, '${prop.arg.loc.source}'>,\n`);
 							}
 
 							{
-								tsCodeGen.addText(`${varInstanceProps}[`);
+								codeGen.addText(`${varInstanceProps}[`);
 								writeCodeWithQuotes(
 									key_2,
 									[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
@@ -759,12 +759,12 @@ export function generate(
 										},
 									},
 								);
-								tsCodeGen.addText(`],\n`);
+								codeGen.addText(`],\n`);
 							}
 
 							{
 								if (key_3 !== key_2) {
-									tsCodeGen.addText(`${varInstanceProps}[`);
+									codeGen.addText(`${varInstanceProps}[`);
 									writeCodeWithQuotes(
 										key_3,
 										[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
@@ -787,17 +787,17 @@ export function generate(
 											},
 										},
 									);
-									tsCodeGen.addText(`],\n`);
+									codeGen.addText(`],\n`);
 								}
 							}
 
 							{
-								tsCodeGen.addText(`typeof ${varComponentInstance} extends { $emit: infer Emit } ? import('./__VLS_types.js').EmitEvent2<Emit, '${prop.arg.loc.source}'> : unknown,\n`);
+								codeGen.addText(`typeof ${varComponentInstance} extends { $emit: infer Emit } ? import('./__VLS_types.js').EmitEvent2<Emit, '${prop.arg.loc.source}'> : unknown,\n`);
 							}
 						}
 
 						{
-							tsCodeGen.addText(`import('./__VLS_types.js').GlobalAttrs[`);
+							codeGen.addText(`import('./__VLS_types.js').GlobalAttrs[`);
 							writeCodeWithQuotes(
 								key_2,
 								[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
@@ -820,15 +820,15 @@ export function generate(
 									},
 								},
 							);
-							tsCodeGen.addText(`],\n`);
+							codeGen.addText(`],\n`);
 						}
 
 						if (tag) {
-							tsCodeGen.addText(`>\n`);
+							codeGen.addText(`>\n`);
 						}
 					}
-					tsCodeGen.addText(`>\n`);
-					tsCodeGen.addText(`} = {\n`);
+					codeGen.addText(`>\n`);
+					codeGen.addText(`} = {\n`);
 					{
 						writeObjectProperty(
 							prop.arg.loc.source,
@@ -843,10 +843,10 @@ export function generate(
 							},
 							prop.arg.loc,
 						);
-						tsCodeGen.addText(`: `);
+						codeGen.addText(`: `);
 						appendExpressionNode(prop);
 					}
-					tsCodeGen.addText(`};\n`);
+					codeGen.addText(`};\n`);
 					writeInterpolationVarsExtraCompletion();
 				}
 				else if (
@@ -872,7 +872,7 @@ export function generate(
 						prop.exp.loc.start.offset,
 						formatBrackets.round,
 					);
-					tsCodeGen.addText(`;\n`);
+					codeGen.addText(`;\n`);
 				}
 
 				function appendExpressionNode(prop: CompilerDOM.DirectiveNode) {
@@ -931,7 +931,7 @@ export function generate(
 						);
 					}
 					else {
-						tsCodeGen.addText(`undefined`);
+						codeGen.addText(`undefined`);
 					}
 				}
 			}
@@ -946,9 +946,9 @@ export function generate(
 				const tag = tagResolves[node.tag];
 
 				if (tag) {
-					tsCodeGen.addText(`const ${varComponentInstance} = new ${tag.component}({ `);
+					codeGen.addText(`const ${varComponentInstance} = new ${tag.component}({ `);
 					writeProps(node, false, 'class');
-					tsCodeGen.addText(`});\n`);
+					codeGen.addText(`});\n`);
 				}
 
 				writedInstance = true;
@@ -1005,7 +1005,7 @@ export function generate(
 
 				// camelize name
 				writePropStart(isStatic);
-				const diagStart = tsCodeGen.getText().length;
+				const diagStart = codeGen.getText().length;
 				if (!prop.arg) {
 					writePropName(
 						propName_1,
@@ -1086,17 +1086,17 @@ export function generate(
 					}
 				}
 				else {
-					tsCodeGen.addText('{}');
+					codeGen.addText('{}');
 				}
 				writePropValueSuffix(isStatic);
-				tsCodeGen.addMapping2({
+				codeGen.addMapping2({
 					sourceRange: {
 						start: prop.loc.start.offset,
 						end: prop.loc.end.offset,
 					},
 					mappedRange: {
 						start: diagStart,
-						end: tsCodeGen.getText().length,
+						end: codeGen.getText().length,
 					},
 					mode: SourceMaps.Mode.Totally,
 					data: {
@@ -1139,7 +1139,7 @@ export function generate(
 						);
 					}
 					else {
-						tsCodeGen.addText('undefined');
+						codeGen.addText('undefined');
 					}
 					writePropValueSuffix(isStatic);
 					writePropEnd(isStatic);
@@ -1167,7 +1167,7 @@ export function generate(
 
 				// camelize name
 				writePropStart(true);
-				const diagStart = tsCodeGen.getText().length;
+				const diagStart = codeGen.getText().length;
 				writePropName(
 					propName,
 					true,
@@ -1192,12 +1192,12 @@ export function generate(
 					writeAttrValue(prop.value);
 				}
 				else {
-					tsCodeGen.addText('true');
+					codeGen.addText('true');
 				}
 				writePropValueSuffix(true);
 				writePropEnd(true);
-				const diagEnd = tsCodeGen.getText().length;
-				tsCodeGen.addMapping2({
+				const diagEnd = codeGen.getText().length;
+				codeGen.addMapping2({
 					sourceRange: {
 						start: prop.loc.start.offset,
 						end: prop.loc.end.offset,
@@ -1239,7 +1239,7 @@ export function generate(
 						writeAttrValue(prop.value);
 					}
 					else {
-						tsCodeGen.addText('true');
+						codeGen.addText('true');
 					}
 					writePropValueSuffix(true);
 					writePropEnd(true);
@@ -1255,9 +1255,9 @@ export function generate(
 					continue;
 				}
 				if (mode === 'jsx')
-					tsCodeGen.addText('{...');
+					codeGen.addText('{...');
 				else
-					tsCodeGen.addText('...');
+					codeGen.addText('...');
 				writeInterpolation(
 					prop.exp.content,
 					prop.exp.loc.start.offset,
@@ -1278,9 +1278,9 @@ export function generate(
 					);
 				}
 				if (mode === 'jsx')
-					tsCodeGen.addText('} ');
+					codeGen.addText('} ');
 				else
-					tsCodeGen.addText(', ');
+					codeGen.addText(', ');
 			}
 			else {
 				if (forRemainStyleOrClass) {
@@ -1317,34 +1317,34 @@ export function generate(
 		}
 		function writePropValuePrefix(isStatic: boolean) {
 			if (mode === 'jsx' && isStatic) {
-				tsCodeGen.addText('={');
+				codeGen.addText('={');
 			}
 			else {
-				tsCodeGen.addText(': (');
+				codeGen.addText(': (');
 			}
 		}
 		function writePropValueSuffix(isStatic: boolean) {
 			if (mode === 'jsx' && isStatic) {
-				tsCodeGen.addText('}');
+				codeGen.addText('}');
 			}
 			else {
-				tsCodeGen.addText(')');
+				codeGen.addText(')');
 			}
 		}
 		function writePropStart(isStatic: boolean) {
 			if (mode === 'jsx' && !isStatic) {
-				tsCodeGen.addText('{...{');
+				codeGen.addText('{...{');
 			}
 		}
 		function writePropEnd(isStatic: boolean) {
 			if (mode === 'jsx' && isStatic) {
-				tsCodeGen.addText(' ');
+				codeGen.addText(' ');
 			}
 			else if (mode === 'jsx' && !isStatic) {
-				tsCodeGen.addText('}} ');
+				codeGen.addText('}} ');
 			}
 			else {
-				tsCodeGen.addText(', ');
+				codeGen.addText(', ');
 			}
 		}
 		function getCaps(caps: EmbeddedFileMappingData['capabilities']): EmbeddedFileMappingData['capabilities'] {
@@ -1367,7 +1367,7 @@ export function generate(
 			}
 		}
 		function writeAttrValue(attrNode: CompilerDOM.TextNode) {
-			tsCodeGen.addText('"');
+			codeGen.addText('"');
 			let start = attrNode.loc.start.offset;
 			let end = attrNode.loc.end.offset;
 			if (end - start > attrNode.content.length) {
@@ -1383,7 +1383,7 @@ export function generate(
 					capabilities: getCaps(capabilitiesSet.all)
 				},
 			);
-			tsCodeGen.addText('"');
+			codeGen.addText('"');
 		}
 	}
 	function writeInlineCss(node: CompilerDOM.ElementNode) {
@@ -1436,15 +1436,15 @@ export function generate(
 				const varSlots = `__VLS_${elementIndex++}`;
 
 				if (tag && parentEl) {
-					tsCodeGen.addText(`const ${varComponentInstance} = new ${tag.component}({ `);
+					codeGen.addText(`const ${varComponentInstance} = new ${tag.component}({ `);
 					writeProps(parentEl, false, 'class');
-					tsCodeGen.addText(`});\n`);
+					codeGen.addText(`});\n`);
 					writeInterpolationVarsExtraCompletion();
-					tsCodeGen.addText(`declare const ${varSlots}: import('./__VLS_types.js').ExtractComponentSlots<typeof ${varComponentInstance}>;\n`);
+					codeGen.addText(`declare const ${varSlots}: import('./__VLS_types.js').ExtractComponentSlots<typeof ${varComponentInstance}>;\n`);
 				}
 
 				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-					tsCodeGen.addText(`const `);
+					codeGen.addText(`const `);
 
 					const collentAst = createTsAst(prop, `const ${prop.exp.content}`);
 					colletVars(ts, collentAst, slotBlockVars);
@@ -1467,12 +1467,12 @@ export function generate(
 						formatBrackets.round,
 					);
 
-					tsCodeGen.addText(` = `);
+					codeGen.addText(` = `);
 				}
 
 				if (!tag || !parentEl) {
 					// fix https://github.com/johnsoncodehk/volar/issues/1425
-					tsCodeGen.addText(`{} as any;\n`);
+					codeGen.addText(`{} as any;\n`);
 					continue;
 				}
 
@@ -1482,8 +1482,8 @@ export function generate(
 					isStatic = prop.arg.isStatic;
 					slotName = prop.arg.content;
 				}
-				const diagStart = tsCodeGen.getText().length;
-				tsCodeGen.addText(varSlots);
+				const diagStart = codeGen.getText().length;
+				codeGen.addText(varSlots);
 				const argRange = prop.arg
 					? {
 						start: prop.arg.loc.start.offset,
@@ -1507,7 +1507,7 @@ export function generate(
 					);
 				}
 				else {
-					tsCodeGen.addText(`[`);
+					codeGen.addText(`[`);
 					writeInterpolation(
 						slotName,
 						argRange.start + 1,
@@ -1519,11 +1519,11 @@ export function generate(
 						'',
 						(prop.loc as any).slot_name ?? ((prop.loc as any).slot_name = {}),
 					);
-					tsCodeGen.addText(`]`);
+					codeGen.addText(`]`);
 					writeInterpolationVarsExtraCompletion();
 				}
-				const diagEnd = tsCodeGen.getText().length;
-				tsCodeGen.addMapping2({
+				const diagEnd = codeGen.getText().length;
+				codeGen.addMapping2({
 					mappedRange: {
 						start: diagStart,
 						end: diagEnd,
@@ -1535,7 +1535,7 @@ export function generate(
 						capabilities: capabilitiesSet.diagnosticOnly,
 					},
 				});
-				tsCodeGen.addText(`;\n`);
+				codeGen.addText(`;\n`);
 
 				if (isStatic && !prop.arg) {
 
@@ -1546,8 +1546,8 @@ export function generate(
 					else if (prop.loc.source.startsWith('v-slot:'))
 						offset += 'v-slot:'.length;
 
-					tsCodeGen.addText(varSlots);
-					tsCodeGen.addText(`['`);
+					codeGen.addText(varSlots);
+					codeGen.addText(`['`);
 					writeCode(
 						'',
 						{ start: offset, end: offset },
@@ -1559,7 +1559,7 @@ export function generate(
 							},
 						},
 					);
-					tsCodeGen.addText(`'];\n`);
+					codeGen.addText(`'];\n`);
 				}
 			}
 		}
@@ -1575,8 +1575,8 @@ export function generate(
 				&& (prop.name !== 'scope' && prop.name !== 'data')
 			) {
 
-				const diagStart = tsCodeGen.getText().length;
-				tsCodeGen.addText(`(await import('./__VLS_types.js')).directiveFunction(__VLS_ctx.`);
+				const diagStart = codeGen.getText().length;
+				codeGen.addText(`(await import('./__VLS_types.js')).directiveFunction(__VLS_ctx.`);
 				writeCode(
 					camelize('v-' + prop.name),
 					{
@@ -1596,7 +1596,7 @@ export function generate(
 					},
 				);
 				identifiers.add(camelize('v-' + prop.name));
-				tsCodeGen.addText(`)(`);
+				codeGen.addText(`)(`);
 				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					writeInterpolation(
 						prop.exp.content,
@@ -1615,15 +1615,15 @@ export function generate(
 						formatBrackets.round,
 					);
 				}
-				tsCodeGen.addText(`)`);
-				tsCodeGen.addMapping2({
+				codeGen.addText(`)`);
+				codeGen.addMapping2({
 					sourceRange: {
 						start: prop.loc.start.offset,
 						end: prop.loc.end.offset,
 					},
 					mappedRange: {
 						start: diagStart,
-						end: tsCodeGen.getText().length,
+						end: codeGen.getText().length,
 					},
 					mode: SourceMaps.Mode.Totally,
 					data: {
@@ -1631,7 +1631,7 @@ export function generate(
 						capabilities: capabilitiesSet.diagnosticOnly,
 					},
 				});
-				tsCodeGen.addText(`;\n`);
+				codeGen.addText(`;\n`);
 				writeInterpolationVarsExtraCompletion();
 			}
 		}
@@ -1643,7 +1643,7 @@ export function generate(
 				&& prop.name === 'ref'
 				&& prop.value
 			) {
-				tsCodeGen.addText(`// @ts-ignore\n`);
+				codeGen.addText(`// @ts-ignore\n`);
 				writeInterpolation(
 					prop.value.content,
 					prop.value.loc.start.offset + 1,
@@ -1655,7 +1655,7 @@ export function generate(
 					')',
 					prop.value.loc,
 				);
-				tsCodeGen.addText(`;\n`);
+				codeGen.addText(`;\n`);
 				writeInterpolationVarsExtraCompletion();
 			}
 		}
@@ -1691,7 +1691,7 @@ export function generate(
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 				&& prop.arg.content === 'class'
 			) {
-				tsCodeGen.addText(`__VLS_styleScopedClasses = (`);
+				codeGen.addText(`__VLS_styleScopedClasses = (`);
 				writeCode(
 					prop.exp.content,
 					{
@@ -1704,7 +1704,7 @@ export function generate(
 						capabilities: capabilitiesSet.scopedClassName,
 					},
 				);
-				tsCodeGen.addText(`);\n`);
+				codeGen.addText(`);\n`);
 			}
 		}
 	}
@@ -1727,7 +1727,7 @@ export function generate(
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
 				hasDefaultBind = true;
-				tsCodeGen.addText(`const ${varDefaultBind} = `);
+				codeGen.addText(`const ${varDefaultBind} = `);
 				writeInterpolation(
 					prop.exp.content,
 					prop.exp.loc.start.offset,
@@ -1739,13 +1739,13 @@ export function generate(
 					')',
 					prop.exp.loc,
 				);
-				tsCodeGen.addText(`;\n`);
+				codeGen.addText(`;\n`);
 				writeInterpolationVarsExtraCompletion();
 				break;
 			}
 		}
 
-		tsCodeGen.addText(`const ${varBinds} = {\n`);
+		codeGen.addText(`const ${varBinds} = {\n`);
 		for (const prop of node.props) {
 			if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -1772,7 +1772,7 @@ export function generate(
 					},
 					prop.arg.loc,
 				);
-				tsCodeGen.addText(`: `);
+				codeGen.addText(`: `);
 				writeInterpolation(
 					prop.exp.content,
 					prop.exp.loc.start.offset,
@@ -1784,7 +1784,7 @@ export function generate(
 					')',
 					prop.exp.loc,
 				);
-				tsCodeGen.addText(`,\n`);
+				codeGen.addText(`,\n`);
 			}
 			else if (
 				prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
@@ -1810,27 +1810,27 @@ export function generate(
 					},
 					prop.loc,
 				);
-				tsCodeGen.addText(`: (`);
-				tsCodeGen.addText(propValue);
-				tsCodeGen.addText(`),\n`);
+				codeGen.addText(`: (`);
+				codeGen.addText(propValue);
+				codeGen.addText(`),\n`);
 			}
 		}
-		tsCodeGen.addText(`};\n`);
+		codeGen.addText(`};\n`);
 
 		writeInterpolationVarsExtraCompletion();
 
 		if (hasDefaultBind) {
-			tsCodeGen.addText(`var ${varSlot}!: typeof ${varDefaultBind} & typeof ${varBinds};\n`);
+			codeGen.addText(`var ${varSlot}!: typeof ${varDefaultBind} & typeof ${varBinds};\n`);
 		}
 		else {
-			tsCodeGen.addText(`var ${varSlot}!: typeof ${varBinds};\n`);
+			codeGen.addText(`var ${varSlot}!: typeof ${varBinds};\n`);
 		}
 
 		if (slotNameExp) {
 			const varSlotExp = `__VLS_${elementIndex++}`;
 			const varSlotExp2 = `__VLS_${elementIndex++}`;
-			tsCodeGen.addText(`const ${varSlotExp} = ${slotNameExp};\n`);
-			tsCodeGen.addText(`var ${varSlotExp2}!: typeof ${varSlotExp};\n`);
+			codeGen.addText(`const ${varSlotExp} = ${slotNameExp};\n`);
+			codeGen.addText(`var ${varSlotExp2}!: typeof ${varSlotExp};\n`);
 			slotExps.set(varSlotExp2, {
 				varName: varSlot,
 			});
@@ -1897,30 +1897,30 @@ export function generate(
 		for (let i = 1; i < sourceRanges.length; i++) {
 			const sourceRange = sourceRanges[i];
 			if (mode === 1 || mode === 2) {
-				tsCodeGen.addMapping2({
+				codeGen.addMapping2({
 					sourceRange,
 					mappedRange: {
-						start: tsCodeGen.getText().length - mapCode.length,
-						end: tsCodeGen.getText().length,
+						start: codeGen.getText().length - mapCode.length,
+						end: codeGen.getText().length,
 					},
 					mode: sourceRange.end - sourceRange.start === mapCode.length ? SourceMaps.Mode.Offset : SourceMaps.Mode.Expand,
 					data,
 				});
 			}
 			else if (mode === 3) {
-				tsCodeGen.addMapping2({
+				codeGen.addMapping2({
 					sourceRange,
 					mappedRange: {
-						start: tsCodeGen.getText().length - `['${mapCode}']`.length,
-						end: tsCodeGen.getText().length - `']`.length,
+						start: codeGen.getText().length - `['${mapCode}']`.length,
+						end: codeGen.getText().length - `']`.length,
 					},
 					mode: SourceMaps.Mode.Offset,
 					additional: [
 						{
 							sourceRange,
 							mappedRange: {
-								start: tsCodeGen.getText().length - `'${mapCode}']`.length,
-								end: tsCodeGen.getText().length - `]`.length,
+								start: codeGen.getText().length - `'${mapCode}']`.length,
+								end: codeGen.getText().length - `]`.length,
 							},
 							mode: SourceMaps.Mode.Totally,
 						}
@@ -1932,7 +1932,7 @@ export function generate(
 	}
 	function writePropertyAccess(mapCode: string, sourceRange: SourceMaps.Range, data: EmbeddedFileMappingData, checkValid = true) {
 		if (checkValid && validTsVar.test(mapCode)) {
-			tsCodeGen.addText(`.`);
+			codeGen.addText(`.`);
 			if (sourceRange.end - sourceRange.start === mapCode.length) {
 				writeCode(mapCode, sourceRange, SourceMaps.Mode.Offset, data);
 			}
@@ -1946,28 +1946,28 @@ export function generate(
 			return 2;
 		}
 		else {
-			tsCodeGen.addText(`[`);
+			codeGen.addText(`[`);
 			writeCodeWithQuotes(mapCode, sourceRange, data);
-			tsCodeGen.addText(`]`);
+			codeGen.addText(`]`);
 			return 3;
 		}
 	}
 	function writeCodeWithQuotes(mapCode: string, sourceRanges: SourceMaps.Range | SourceMaps.Range[], data: EmbeddedFileMappingData) {
 		const addText = `'${mapCode}'`;
 		for (const sourceRange of 'length' in sourceRanges ? sourceRanges : [sourceRanges]) {
-			tsCodeGen.addMapping2({
+			codeGen.addMapping2({
 				sourceRange,
 				mappedRange: {
-					start: tsCodeGen.getText().length + 1,
-					end: tsCodeGen.getText().length + addText.length - 1,
+					start: codeGen.getText().length + 1,
+					end: codeGen.getText().length + addText.length - 1,
 				},
 				mode: SourceMaps.Mode.Offset,
 				additional: [
 					{
 						sourceRange,
 						mappedRange: {
-							start: tsCodeGen.getText().length,
-							end: tsCodeGen.getText().length + addText.length,
+							start: codeGen.getText().length,
+							end: codeGen.getText().length + addText.length,
 						},
 						mode: SourceMaps.Mode.Totally,
 					}
@@ -1975,7 +1975,7 @@ export function generate(
 				data,
 			});
 		}
-		tsCodeGen.addText(addText);
+		codeGen.addText(addText);
 	}
 	function writeInterpolation(
 		mapCode: string,
@@ -1988,7 +1988,7 @@ export function generate(
 		const ast = createTsAst(cacheOn, prefix + mapCode + suffix);
 		const vars = walkInterpolationFragment(ts, prefix + mapCode + suffix, ast, (frag, fragOffset, isJustForErrorMapping) => {
 			if (fragOffset === undefined) {
-				tsCodeGen.addText(frag);
+				codeGen.addText(frag);
 			}
 			else {
 				fragOffset -= prefix.length;
@@ -1999,7 +1999,7 @@ export function generate(
 					frag = frag.substring(0, frag.length - overLength);
 				}
 				if (fragOffset < 0) {
-					tsCodeGen.addText(frag.substring(0, -fragOffset));
+					codeGen.addText(frag.substring(0, -fragOffset));
 					frag = frag.substring(-fragOffset);
 					fragOffset = 0;
 				}
@@ -2022,9 +2022,9 @@ export function generate(
 					);
 				}
 				else {
-					tsCodeGen.addText(frag);
+					codeGen.addText(frag);
 				}
-				tsCodeGen.addText(addSubfix);
+				codeGen.addText(addSubfix);
 			}
 		}, localVars, identifiers);
 		if (sourceOffset !== undefined) {
@@ -2041,10 +2041,10 @@ export function generate(
 		if (!tempVars.length)
 			return;
 
-		tsCodeGen.addText('[');
+		codeGen.addText('[');
 		for (const _vars of tempVars) {
 			for (const v of _vars) {
-				tsCodeGen.addCode2(v.text, v.offset, {
+				codeGen.addCode2(v.text, v.offset, {
 					vueTag: 'template',
 					capabilities: {
 						completion: {
@@ -2052,16 +2052,16 @@ export function generate(
 						},
 					},
 				});
-				tsCodeGen.addText(',');
+				codeGen.addText(',');
 			}
 		}
-		tsCodeGen.addText('];\n');
+		codeGen.addText('];\n');
 		tempVars.length = 0;
 	}
 	function writeFormatCode(mapCode: string, sourceOffset: number, formatWrapper: [string, string]) {
-		tsFormatCodeGen.addText(formatWrapper[0]);
-		const targetRange = tsFormatCodeGen.addText(mapCode);
-		tsFormatCodeGen.addMapping2({
+		formatCodeGen.addText(formatWrapper[0]);
+		const targetRange = formatCodeGen.addText(mapCode);
+		formatCodeGen.addMapping2({
 			mappedRange: targetRange,
 			sourceRange: {
 				start: sourceOffset,
@@ -2073,12 +2073,12 @@ export function generate(
 				capabilities: {},
 			},
 		});
-		tsFormatCodeGen.addText(formatWrapper[1]);
-		tsFormatCodeGen.addText(`\n;\n`);
+		formatCodeGen.addText(formatWrapper[1]);
+		formatCodeGen.addText(`\n;\n`);
 	}
 	function writeCode(mapCode: string, sourceRange: SourceMaps.Range, mode: SourceMaps.Mode, data: EmbeddedFileMappingData) {
-		const targetRange = tsCodeGen.addText(mapCode);
-		tsCodeGen.addMapping2({
+		const targetRange = codeGen.addText(mapCode);
+		codeGen.addMapping2({
 			sourceRange,
 			mappedRange: targetRange,
 			mode,
