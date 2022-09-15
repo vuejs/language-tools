@@ -533,7 +533,12 @@ export function generate(
 		}
 
 		codeGen.addText(`{\n`);
-		{
+
+		const endTagOffset = !node.isSelfClosing && sourceLang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
+
+		let _unwritedExps: CompilerCore.SimpleExpressionNode[];
+
+		if (vueCompilerOptions.jsxTemplates) {
 
 			const _isIntrinsicElement = isIntrinsicElement(vueCompilerOptions.experimentalRuntimeMode, node.tag);
 			const tagText = tagResolves[node.tag]?.component ?? node.tag;
@@ -543,7 +548,6 @@ export function generate(
 				...(tagResolves[node.tag]?.isNamespacedTag ? {} : capabilitiesSet.tagHover),
 				...(_isIntrinsicElement ? capabilitiesSet.tagReference : {})
 			};
-			const endTagOffset = !node.isSelfClosing && sourceLang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
 
 			codeGen.addText(`<`);
 			writeCode(
@@ -559,7 +563,8 @@ export function generate(
 				},
 			);
 			codeGen.addText(` `);
-			const { hasRemainStyleOrClass, unwritedExps } = writeProps(node, false, 'jsx');
+			const { hasRemainStyleOrClass, unwritedExps } = writeProps(node, false, 'jsx', 'props');
+			_unwritedExps = unwritedExps;
 
 			if (endTagOffset === undefined) {
 				codeGen.addText(`/>`);
@@ -579,30 +584,6 @@ export function generate(
 					},
 				);
 				codeGen.addText(`>;\n`);
-			}
-
-			// fix https://github.com/johnsoncodehk/volar/issues/1775
-			for (const failedExp of unwritedExps) {
-				writeInterpolation(
-					failedExp.loc.source,
-					failedExp.loc.start.offset,
-					{
-						vueTag: 'template',
-						capabilities: capabilitiesSet.all,
-					},
-					'(',
-					')',
-					failedExp.loc,
-				);
-				const fb = formatBrackets.round;
-				if (fb) {
-					writeFormatCode(
-						failedExp.loc.source,
-						failedExp.loc.start.offset,
-						fb,
-					);
-				}
-				codeGen.addText(';\n');
 			}
 
 			// fix https://github.com/johnsoncodehk/volar/issues/705#issuecomment-974773353
@@ -635,8 +616,118 @@ export function generate(
 
 			if (hasRemainStyleOrClass) {
 				codeGen.addText(`<${tagText} `);
-				writeProps(node, true, 'jsx');
+				writeProps(node, true, 'jsx', 'props');
 				codeGen.addText(`/>\n`);
+			}
+		}
+		else {
+
+			const tag = tagResolves[node.tag];
+			const var_props = `__VLS_${elementIndex++}`;
+
+			codeGen.addText(`let ${var_props}!: `);
+
+			if (!tag) {
+				codeGen.addText(`JSX.IntrinsicElements['`);
+				writeCode(
+					node.tag,
+					{
+						start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
+						end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
+					},
+					SourceMaps.Mode.Offset,
+					{
+						vueTag: 'template',
+						capabilities: capabilitiesSet.tagReference,
+					},
+				);
+				codeGen.addText(`'];\n`);
+			}
+			else {
+				if (!vueCompilerOptions.strictTemplates) {
+					codeGen.addText(`Record<string, unknown> & `);
+				}
+				codeGen.addText(`import('./__VLS_types.js').GlobalAttrs & import('./__VLS_types.js').ExtractProps<typeof ${tag.component}>;\n`);
+
+				if (!tag.isNamespacedTag) {
+					writeCode(
+						tag.component,
+						{
+							start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
+							end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
+						},
+						SourceMaps.Mode.Offset,
+						{
+							vueTag: 'template',
+							capabilities: capabilitiesSet.tagHover,
+						},
+					);
+					codeGen.addText(`;\n`);
+					if (endTagOffset !== undefined) {
+						writeCode(
+							tag.component,
+							{
+								start: endTagOffset,
+								end: endTagOffset + node.tag.length,
+							},
+							SourceMaps.Mode.Offset,
+							{
+								vueTag: 'template',
+								capabilities: capabilitiesSet.tagHover,
+							},
+						);
+						codeGen.addText(`;\n`);
+					}
+				}
+			}
+
+			writeCode(
+				var_props,
+				{
+					start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
+					end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
+				},
+				SourceMaps.Mode.Offset,
+				{
+					vueTag: 'template',
+					capabilities: capabilitiesSet.diagnosticOnly,
+				},
+			);
+			codeGen.addText(` = { `);
+			const { hasRemainStyleOrClass, unwritedExps } = writeProps(node, false, 'class', 'props');
+			_unwritedExps = unwritedExps;
+			codeGen.addText(` };\n`);
+
+			if (hasRemainStyleOrClass) {
+				codeGen.addText(`${var_props} = { `);
+				writeProps(node, true, 'class', 'props');
+				codeGen.addText(` };\n`);
+			}
+		}
+		{
+
+			// fix https://github.com/johnsoncodehk/volar/issues/1775
+			for (const failedExp of _unwritedExps) {
+				writeInterpolation(
+					failedExp.loc.source,
+					failedExp.loc.start.offset,
+					{
+						vueTag: 'template',
+						capabilities: capabilitiesSet.all,
+					},
+					'(',
+					')',
+					failedExp.loc,
+				);
+				const fb = formatBrackets.round;
+				if (fb) {
+					writeFormatCode(
+						failedExp.loc.source,
+						failedExp.loc.start.offset,
+						fb,
+					);
+				}
+				codeGen.addText(';\n');
 			}
 
 			let slotBlockVars: string[] | undefined;
@@ -947,14 +1038,14 @@ export function generate(
 
 			if (tag) {
 				codeGen.addText(`const ${varComponentInstance} = new ${tag.component}({ `);
-				writeProps(node, false, 'class');
+				writeProps(node, false, 'class', 'slots');
 				codeGen.addText(`});\n`);
 			}
 
 			writedInstance = true;
 		}
 	}
-	function writeProps(node: CompilerDOM.ElementNode, forRemainStyleOrClass: boolean, mode: 'jsx' | 'class') {
+	function writeProps(node: CompilerDOM.ElementNode, forRemainStyleOrClass: boolean, format: 'jsx' | 'class', mode: 'props' | 'slots') {
 
 		let styleCount = 0;
 		let classCount = 0;
@@ -1253,7 +1344,7 @@ export function generate(
 				if (forRemainStyleOrClass) {
 					continue;
 				}
-				if (mode === 'jsx')
+				if (format === 'jsx')
 					codeGen.addText('{...');
 				else
 					codeGen.addText('...');
@@ -1276,7 +1367,7 @@ export function generate(
 						fb,
 					);
 				}
-				if (mode === 'jsx')
+				if (format === 'jsx')
 					codeGen.addText('} ');
 				else
 					codeGen.addText(', ');
@@ -1296,7 +1387,7 @@ export function generate(
 		};
 
 		function writePropName(name: string, isStatic: boolean, sourceRange: SourceMaps.Range, data: EmbeddedFileMappingData, cacheOn: any) {
-			if (mode === 'jsx' && isStatic) {
+			if (format === 'jsx' && isStatic) {
 				writeCode(
 					name,
 					sourceRange,
@@ -1315,7 +1406,7 @@ export function generate(
 			}
 		}
 		function writePropValuePrefix(isStatic: boolean) {
-			if (mode === 'jsx' && isStatic) {
+			if (format === 'jsx' && isStatic) {
 				codeGen.addText('={');
 			}
 			else {
@@ -1323,7 +1414,7 @@ export function generate(
 			}
 		}
 		function writePropValueSuffix(isStatic: boolean) {
-			if (mode === 'jsx' && isStatic) {
+			if (format === 'jsx' && isStatic) {
 				codeGen.addText('}');
 			}
 			else {
@@ -1331,15 +1422,15 @@ export function generate(
 			}
 		}
 		function writePropStart(isStatic: boolean) {
-			if (mode === 'jsx' && !isStatic) {
+			if (format === 'jsx' && !isStatic) {
 				codeGen.addText('{...{');
 			}
 		}
 		function writePropEnd(isStatic: boolean) {
-			if (mode === 'jsx' && isStatic) {
+			if (format === 'jsx' && isStatic) {
 				codeGen.addText(' ');
 			}
-			else if (mode === 'jsx' && !isStatic) {
+			else if (format === 'jsx' && !isStatic) {
 				codeGen.addText('}} ');
 			}
 			else {
@@ -1347,7 +1438,7 @@ export function generate(
 			}
 		}
 		function getCaps(caps: EmbeddedFileMappingData['capabilities']): EmbeddedFileMappingData['capabilities'] {
-			if (mode === 'jsx') {
+			if (mode === 'props') {
 				return caps;
 			}
 			else {
@@ -1358,7 +1449,7 @@ export function generate(
 			}
 		}
 		function getFormatBrackets(b: [string, string]) {
-			if (mode === 'jsx') {
+			if (format === 'jsx') {
 				return b;
 			}
 			else {
@@ -1436,7 +1527,7 @@ export function generate(
 
 				if (tag && parentEl) {
 					codeGen.addText(`const ${varComponentInstance} = new ${tag.component}({ `);
-					writeProps(parentEl, false, 'class');
+					writeProps(parentEl, false, 'class', 'slots');
 					codeGen.addText(`});\n`);
 					writeInterpolationVarsExtraCompletion();
 					codeGen.addText(`declare const ${varSlots}: import('./__VLS_types.js').ExtractComponentSlots<typeof ${varComponentInstance}>;\n`);
