@@ -85,10 +85,6 @@ export function generate(
 	}>();
 	const cssScopedClassesSet = new Set(cssScopedClasses);
 	const tagNames = collectTagOffsets();
-	const tagResolves: Record<string, {
-		component: string,
-		isNamespacedTag: boolean,
-	} | undefined> = {};
 	const localVars: Record<string, number> = {};
 	const tempVars: ReturnType<typeof walkInterpolationFragment>[] = [];
 	const identifiers = new Set<string>();
@@ -100,161 +96,13 @@ export function generate(
 
 	tsFormatCodeGen.addText('export { };\n');
 
-	for (const tagName in tagNames) {
+	const tagResolves = writeComponentCompletionSearchTexts();
 
-		if (isIntrinsicElement(vueCompilerOptions.experimentalRuntimeMode, tagName))
-			continue;
+	visitNode(templateAst, undefined);
 
-		const tagOffsets = tagNames[tagName];
-		const tagRanges = tagOffsets.map(offset => ({ start: offset, end: offset + tagName.length }));
-		const isNamespacedTag = tagName.indexOf('.') >= 0;
+	writeStyleScopedClasses();
 
-		const var_componentVar = isNamespacedTag ? `__VLS_ctx.${tagName}` : capitalize(camelize(tagName.replace(/:/g, '-')));
-
-		if (isNamespacedTag) {
-
-			identifiers.add(tagName.split('.')[0]);
-
-			for (let i = 0; i < tagRanges.length; i++) {
-				const tagRange = tagRanges[i];
-				tsCodeGen.addText(`declare const __VLS_${elementIndex++}: typeof __VLS_ctx.`);
-				writeCode(
-					tagName,
-					tagRange,
-					SourceMaps.Mode.Offset,
-					{
-						vueTag: 'template',
-						capabilities: capabilitiesSet.all,
-					},
-				);
-				tsCodeGen.addText(`;\n`);
-			}
-		}
-		else {
-
-			const names = new Set([
-				tagName,
-				camelize(tagName),
-				capitalize(camelize(tagName)),
-			]);
-
-			tsCodeGen.addText(`declare const ${var_componentVar}: `);
-
-			if (!vueCompilerOptions.strictTemplates)
-				tsCodeGen.addText(`import('./__VLS_types.js').ConvertInvalidJsxElement<`);
-
-			for (const name of names) {
-				tsCodeGen.addText(`\n'${name}' extends keyof typeof __VLS_components ? typeof __VLS_components['${name}'] : `);
-			}
-			for (const name of names) {
-				tsCodeGen.addText(`\n'${name}' extends keyof typeof __VLS_ctx ? typeof __VLS_ctx['${name}'] : `);
-			}
-
-			tsCodeGen.addText(`unknown`);
-
-			if (!vueCompilerOptions.strictTemplates)
-				tsCodeGen.addText(`>`);
-
-			tsCodeGen.addText(`;\n`);
-
-			for (const vlsVar of ['__VLS_components', '__VLS_ctx']) {
-				for (const tagRange of tagRanges) {
-					for (const name of names) {
-						tsCodeGen.addText(vlsVar);
-						writePropertyAccess2(
-							name,
-							[tagRange],
-							{
-								vueTag: 'template',
-								capabilities: {
-									...capabilitiesSet.tagReference,
-									rename: {
-										normalize: tagName === name ? capabilitiesSet.tagReference.rename.normalize : unHyphenatComponentName,
-										apply: keepHyphenateName,
-									},
-								},
-							},
-						);
-						tsCodeGen.addText(';');
-					}
-					tsCodeGen.addText('\n');
-				}
-			}
-		}
-
-		const componentNames = new Set([
-			tagName, // hello-world
-			camelize(tagName), // helloWorld
-			capitalize(camelize(tagName)), // HelloWorld
-		]);
-
-		/* Completion */
-		tsCodeGen.addText('/* Completion: Emits */\n');
-		for (const name of componentNames) {
-			tsCodeGen.addText('// @ts-ignore\n');
-			tsCodeGen.addText(`({} as import('./__VLS_types.js').ExtractEmit2<typeof ${var_componentVar}>)('${SearchTexts.EmitCompletion(name)}');\n`);
-		}
-
-		tsCodeGen.addText('/* Completion: Props */\n');
-		for (const name of componentNames) {
-			tsCodeGen.addText('// @ts-ignore\n');
-			tsCodeGen.addText(`({} as import('./__VLS_types.js').ExtractProps<typeof ${var_componentVar}>)['${SearchTexts.PropsCompletion(name)}'];\n`);
-		}
-
-		tagResolves[tagName] = {
-			component: var_componentVar,
-			isNamespacedTag,
-		};
-	}
-
-	for (const childNode of templateAst.children) {
-		visitNode(childNode, undefined);
-	}
-
-	tsCodeGen.addText(`if (typeof __VLS_styleScopedClasses === 'object' && !Array.isArray(__VLS_styleScopedClasses)) {\n`);
-	for (const { className, offset } of scopedClasses) {
-		tsCodeGen.addText(`__VLS_styleScopedClasses[`);
-		writeCodeWithQuotes(
-			className,
-			{
-				start: offset,
-				end: offset + className.length,
-			},
-			{
-				vueTag: 'template',
-				capabilities: {
-					...capabilitiesSet.scopedClassName,
-					displayWithLink: cssScopedClassesSet.has(className),
-				},
-			},
-		);
-		tsCodeGen.addText(`];\n`);
-	}
-	tsCodeGen.addText('}\n');
-
-	tsCodeGen.addText(`declare var __VLS_slots:\n`);
-	for (const [exp, slot] of slotExps) {
-		tsCodeGen.addText(`Record<NonNullable<typeof ${exp}>, typeof ${slot.varName}> &\n`);
-	}
-	tsCodeGen.addText(`{\n`);
-	for (const [name, slot] of slots) {
-		slotsNum++;
-		writeObjectProperty(
-			name,
-			slot.loc,
-			SourceMaps.Mode.Expand,
-			{
-				vueTag: 'template',
-				capabilities: {
-					...capabilitiesSet.slotNameExport,
-					referencesCodeLens: hasScriptSetup,
-				},
-			},
-			slot.nodeLoc,
-		);
-		tsCodeGen.addText(`: (_: typeof ${slot.varName}) => any,\n`);
-	}
-	tsCodeGen.addText(`};\n`);
+	declareSlots();
 
 	writeInterpolationVarsExtraCompletion();
 
@@ -267,6 +115,171 @@ export function generate(
 		slotsNum,
 	};
 
+	function declareSlots() {
+
+		tsCodeGen.addText(`declare var __VLS_slots:\n`);
+		for (const [exp, slot] of slotExps) {
+			tsCodeGen.addText(`Record<NonNullable<typeof ${exp}>, typeof ${slot.varName}> &\n`);
+		}
+		tsCodeGen.addText(`{\n`);
+		for (const [name, slot] of slots) {
+			slotsNum++;
+			writeObjectProperty(
+				name,
+				slot.loc,
+				SourceMaps.Mode.Expand,
+				{
+					vueTag: 'template',
+					capabilities: {
+						...capabilitiesSet.slotNameExport,
+						referencesCodeLens: hasScriptSetup,
+					},
+				},
+				slot.nodeLoc,
+			);
+			tsCodeGen.addText(`: (_: typeof ${slot.varName}) => any,\n`);
+		}
+		tsCodeGen.addText(`};\n`);
+	}
+	function writeStyleScopedClasses() {
+
+		tsCodeGen.addText(`if (typeof __VLS_styleScopedClasses === 'object' && !Array.isArray(__VLS_styleScopedClasses)) {\n`);
+		for (const { className, offset } of scopedClasses) {
+			tsCodeGen.addText(`__VLS_styleScopedClasses[`);
+			writeCodeWithQuotes(
+				className,
+				{
+					start: offset,
+					end: offset + className.length,
+				},
+				{
+					vueTag: 'template',
+					capabilities: {
+						...capabilitiesSet.scopedClassName,
+						displayWithLink: cssScopedClassesSet.has(className),
+					},
+				},
+			);
+			tsCodeGen.addText(`];\n`);
+		}
+		tsCodeGen.addText('}\n');
+	}
+	function writeComponentCompletionSearchTexts() {
+
+		const data: Record<string, {
+			component: string,
+			isNamespacedTag: boolean,
+		} | undefined> = {};
+
+		for (const tagName in tagNames) {
+
+			if (isIntrinsicElement(vueCompilerOptions.experimentalRuntimeMode, tagName))
+				continue;
+
+			const tagOffsets = tagNames[tagName];
+			const tagRanges = tagOffsets.map(offset => ({ start: offset, end: offset + tagName.length }));
+			const isNamespacedTag = tagName.indexOf('.') >= 0;
+
+			const var_componentVar = isNamespacedTag ? `__VLS_ctx.${tagName}` : capitalize(camelize(tagName.replace(/:/g, '-')));
+
+			if (isNamespacedTag) {
+
+				identifiers.add(tagName.split('.')[0]);
+
+				for (let i = 0; i < tagRanges.length; i++) {
+					const tagRange = tagRanges[i];
+					tsCodeGen.addText(`declare const __VLS_${elementIndex++}: typeof __VLS_ctx.`);
+					writeCode(
+						tagName,
+						tagRange,
+						SourceMaps.Mode.Offset,
+						{
+							vueTag: 'template',
+							capabilities: capabilitiesSet.all,
+						},
+					);
+					tsCodeGen.addText(`;\n`);
+				}
+			}
+			else {
+
+				const names = new Set([
+					tagName,
+					camelize(tagName),
+					capitalize(camelize(tagName)),
+				]);
+
+				tsCodeGen.addText(`declare const ${var_componentVar}: `);
+
+				if (!vueCompilerOptions.strictTemplates)
+					tsCodeGen.addText(`import('./__VLS_types.js').ConvertInvalidJsxElement<`);
+
+				for (const name of names) {
+					tsCodeGen.addText(`\n'${name}' extends keyof typeof __VLS_components ? typeof __VLS_components['${name}'] : `);
+				}
+				for (const name of names) {
+					tsCodeGen.addText(`\n'${name}' extends keyof typeof __VLS_ctx ? typeof __VLS_ctx['${name}'] : `);
+				}
+
+				tsCodeGen.addText(`unknown`);
+
+				if (!vueCompilerOptions.strictTemplates)
+					tsCodeGen.addText(`>`);
+
+				tsCodeGen.addText(`;\n`);
+
+				for (const vlsVar of ['__VLS_components', '__VLS_ctx']) {
+					for (const tagRange of tagRanges) {
+						for (const name of names) {
+							tsCodeGen.addText(vlsVar);
+							writePropertyAccess2(
+								name,
+								[tagRange],
+								{
+									vueTag: 'template',
+									capabilities: {
+										...capabilitiesSet.tagReference,
+										rename: {
+											normalize: tagName === name ? capabilitiesSet.tagReference.rename.normalize : unHyphenatComponentName,
+											apply: keepHyphenateName,
+										},
+									},
+								},
+							);
+							tsCodeGen.addText(';');
+						}
+						tsCodeGen.addText('\n');
+					}
+				}
+			}
+
+			const componentNames = new Set([
+				tagName, // hello-world
+				camelize(tagName), // helloWorld
+				capitalize(camelize(tagName)), // HelloWorld
+			]);
+
+			/* Completion */
+			tsCodeGen.addText('/* Completion: Emits */\n');
+			for (const name of componentNames) {
+				tsCodeGen.addText('// @ts-ignore\n');
+				tsCodeGen.addText(`({} as import('./__VLS_types.js').ExtractEmit2<typeof ${var_componentVar}>)('${SearchTexts.EmitCompletion(name)}');\n`);
+			}
+
+			tsCodeGen.addText('/* Completion: Props */\n');
+			for (const name of componentNames) {
+				tsCodeGen.addText('// @ts-ignore\n');
+				tsCodeGen.addText(`({} as import('./__VLS_types.js').ExtractProps<typeof ${var_componentVar}>)['${SearchTexts.PropsCompletion(name)}'];\n`);
+			}
+
+			data[tagName] = {
+				component: var_componentVar,
+				isNamespacedTag,
+			};
+		}
+
+		return data;
+	}
 	function collectTagOffsets() {
 
 		const tagOffsetsMap: Record<string, number[]> = {};
@@ -294,8 +307,13 @@ export function generate(
 		}
 		return cacheTo.__volar_ast as ts.SourceFile;
 	}
-	function visitNode(node: CompilerDOM.TemplateChildNode, parentEl: CompilerDOM.ElementNode | undefined): void {
-		if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
+	function visitNode(node: CompilerCore.RootNode | CompilerDOM.TemplateChildNode, parentEl: CompilerDOM.ElementNode | undefined): void {
+		if (node.type === CompilerDOM.NodeTypes.ROOT) {
+			for (const childNode of node.children) {
+				visitNode(childNode, parentEl);
+			}
+		}
+		else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 			visitElementNode(node, parentEl);
 		}
 		else if (node.type === CompilerDOM.NodeTypes.TEXT_CALL) {
