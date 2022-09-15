@@ -94,7 +94,6 @@ const dataProvider = html.newHTMLDataProvider('vue', {
 
 export default function (options: {
 	getVueDocument(document: TextDocument): SourceFileDocument | undefined,
-	isJsxMissing: boolean,
 }): EmbeddedLanguageServicePlugin {
 
 	const htmlPlugin = useHtmlPlugin({
@@ -157,20 +156,6 @@ export default function (options: {
 							);
 							result.push(error);
 						}
-					}
-
-					if (program && sfc.template && options.isJsxMissing) {
-						const error = vscode.Diagnostic.create(
-							{
-								start: document.positionAt(sfc.template.start),
-								end: document.positionAt(sfc.template.startTagEnd),
-							},
-							'TypeScript intellisense is disabled on template. To enable, configure `"jsx": "preserve"` in the `"compilerOptions"` property of tsconfig or jsconfig. To disable this prompt instead, configure `"experimentalDisableTemplateSupport": true` in `"vueCompilerOptions"` property.',
-							vscode.DiagnosticSeverity.Information,
-							undefined,
-							'volar',
-						);
-						result.push(error);
 					}
 
 					return result;

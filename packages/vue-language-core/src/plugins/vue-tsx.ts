@@ -96,8 +96,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				: sfc.scriptSetup && sfc.scriptSetup.lang !== 'js' ? sfc.scriptSetup.lang
 					: sfc.script && sfc.script.lang !== 'js' ? sfc.script.lang
 						: 'js';
-			const disableTemplateScript = vueCompilerOptions.experimentalDisableTemplateSupport || compilerOptions.jsx !== ts.JsxEmit.Preserve;
-			if (!disableTemplateScript) {
+			if (vueCompilerOptions.jsxTemplates) {
 				if (lang === 'js') {
 					lang = 'jsx';
 				}

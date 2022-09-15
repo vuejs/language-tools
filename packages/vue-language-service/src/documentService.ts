@@ -19,7 +19,6 @@ export function getDocumentServicePlugins(
 
 	const vuePlugin = useVuePlugin({
 		getVueDocument: doc => context.getSourceFileDocument(doc)?.[0],
-		isJsxMissing: false,
 	});
 	const htmlPlugin = useHtmlPlugin();
 	const pugPlugin = usePugPlugin();
