@@ -84,50 +84,32 @@ export function generate(
 		loc: SourceMaps.Range,
 	}>();
 	const cssScopedClassesSet = new Set(cssScopedClasses);
-	const tagOffsetsMap: Record<string, number[]> = {};
+	const tagNames = collectTagOffsets();
 	const tagResolves: Record<string, {
 		component: string,
 		isNamespacedTag: boolean,
-		emit: string,
-		offsets: number[],
 	} | undefined> = {};
 	const localVars: Record<string, number> = {};
 	const tempVars: ReturnType<typeof walkInterpolationFragment>[] = [];
 	const identifiers = new Set<string>();
 	const scopedClasses: { className: string, offset: number; }[] = [];
 	const blockConditions: string[] = [];
+
 	let slotsNum = 0;
+	let elementIndex = 0;
 
 	tsFormatCodeGen.addText('export { };\n');
 
-	let elementIndex = 0;
-
-	walkElementNodes(templateAst, node => {
-
-		if (!tagOffsetsMap[node.tag]) {
-			tagOffsetsMap[node.tag] = [];
-		}
-
-		const offsets = tagOffsetsMap[node.tag];
-
-		offsets.push(node.loc.start.offset + node.loc.source.indexOf(node.tag)); // start tag
-		if (!node.isSelfClosing && sourceLang === 'html') {
-			offsets.push(node.loc.start.offset + node.loc.source.lastIndexOf(node.tag)); // end tag
-		}
-	});
-
-	for (const tagName in tagOffsetsMap) {
+	for (const tagName in tagNames) {
 
 		if (isIntrinsicElement(vueCompilerOptions.experimentalRuntimeMode, tagName))
 			continue;
 
-		const tagOffsets = tagOffsetsMap[tagName];
+		const tagOffsets = tagNames[tagName];
 		const tagRanges = tagOffsets.map(offset => ({ start: offset, end: offset + tagName.length }));
 		const isNamespacedTag = tagName.indexOf('.') >= 0;
 
 		const var_componentVar = isNamespacedTag ? `__VLS_ctx.${tagName}` : capitalize(camelize(tagName.replace(/:/g, '-')));
-		const var_emit = `__VLS_${elementIndex++}`;
-		const var_props = `__VLS_${elementIndex++}`;
 
 		if (isNamespacedTag) {
 
@@ -199,34 +181,29 @@ export function generate(
 				}
 			}
 		}
-		tsCodeGen.addText(`declare const ${var_emit}: import('./__VLS_types.js').ExtractEmit2<typeof ${var_componentVar}>;\n`);
-		tsCodeGen.addText(`declare const ${var_props}: import('./__VLS_types.js').ExtractProps<typeof ${var_componentVar}>;\n`);
 
-		const componentNames = new Set([tagName]); // hello-world
-
-		if (!isIntrinsicElement(vueCompilerOptions.experimentalRuntimeMode, tagName)) {
-			componentNames.add(camelize(tagName)); // helloWorld
-			componentNames.add(capitalize(camelize(tagName))); // HelloWorld
-		}
+		const componentNames = new Set([
+			tagName, // hello-world
+			camelize(tagName), // helloWorld
+			capitalize(camelize(tagName)), // HelloWorld
+		]);
 
 		/* Completion */
 		tsCodeGen.addText('/* Completion: Emits */\n');
 		for (const name of componentNames) {
 			tsCodeGen.addText('// @ts-ignore\n');
-			tsCodeGen.addText(`${var_emit}('${SearchTexts.EmitCompletion(name)}');\n`);
+			tsCodeGen.addText(`({} as import('./__VLS_types.js').ExtractEmit2<typeof ${var_componentVar}>)('${SearchTexts.EmitCompletion(name)}');\n`);
 		}
 
 		tsCodeGen.addText('/* Completion: Props */\n');
 		for (const name of componentNames) {
 			tsCodeGen.addText('// @ts-ignore\n');
-			tsCodeGen.addText(`${var_props}['${SearchTexts.PropsCompletion(name)}'];\n`);
+			tsCodeGen.addText(`({} as import('./__VLS_types.js').ExtractProps<typeof ${var_componentVar}>)['${SearchTexts.PropsCompletion(name)}'];\n`);
 		}
 
 		tagResolves[tagName] = {
 			component: var_componentVar,
 			isNamespacedTag,
-			emit: var_emit,
-			offsets: tagOffsets,
 		};
 	}
 
@@ -284,12 +261,32 @@ export function generate(
 	return {
 		codeGen: tsCodeGen,
 		formatCodeGen: tsFormatCodeGen,
-		cssCodeGen: cssCodeGen,
-		tagNames: tagOffsetsMap,
+		cssCodeGen,
+		tagNames,
 		identifiers,
 		slotsNum,
 	};
 
+	function collectTagOffsets() {
+
+		const tagOffsetsMap: Record<string, number[]> = {};
+
+		walkElementNodes(templateAst, node => {
+
+			if (!tagOffsetsMap[node.tag]) {
+				tagOffsetsMap[node.tag] = [];
+			}
+
+			const offsets = tagOffsetsMap[node.tag];
+
+			offsets.push(node.loc.start.offset + node.loc.source.indexOf(node.tag)); // start tag
+			if (!node.isSelfClosing && sourceLang === 'html') {
+				offsets.push(node.loc.start.offset + node.loc.source.lastIndexOf(node.tag)); // end tag
+			}
+		});
+
+		return tagOffsetsMap;
+	}
 	function createTsAst(cacheTo: any, text: string) {
 		if (cacheTo.__volar_ast_text !== text) {
 			cacheTo.__volar_ast_text = text;
