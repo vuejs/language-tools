@@ -202,10 +202,12 @@ export function generate(
 		tsCodeGen.addText(`declare const ${var_emit}: import('./__VLS_types.js').ExtractEmit2<typeof ${var_componentVar}>;\n`);
 		tsCodeGen.addText(`declare const ${var_props}: import('./__VLS_types.js').ExtractProps<typeof ${var_componentVar}>;\n`);
 
-		const name1 = tagName; // hello-world
-		const name2 = isIntrinsicElement(vueCompilerOptions.experimentalRuntimeMode, tagName) ? tagName : camelize(tagName); // helloWorld
-		const name3 = isIntrinsicElement(vueCompilerOptions.experimentalRuntimeMode, tagName) ? tagName : capitalize(name2); // HelloWorld
-		const componentNames = new Set([name1, name2, name3]);
+		const componentNames = new Set([tagName]); // hello-world
+
+		if (!isIntrinsicElement(vueCompilerOptions.experimentalRuntimeMode, tagName)) {
+			componentNames.add(camelize(tagName)); // helloWorld
+			componentNames.add(capitalize(camelize(tagName))); // HelloWorld
+		}
 
 		/* Completion */
 		tsCodeGen.addText('/* Completion: Emits */\n');
@@ -213,6 +215,7 @@ export function generate(
 			tsCodeGen.addText('// @ts-ignore\n');
 			tsCodeGen.addText(`${var_emit}('${SearchTexts.EmitCompletion(name)}');\n`);
 		}
+
 		tsCodeGen.addText('/* Completion: Props */\n');
 		for (const name of componentNames) {
 			tsCodeGen.addText('// @ts-ignore\n');
@@ -542,7 +545,7 @@ export function generate(
 				},
 			);
 			tsCodeGen.addText(` `);
-			const { hasRemainStyleOrClass, failedExps } = writeProps(node, false, 'jsx');
+			const { hasRemainStyleOrClass, unwritedExps } = writeProps(node, false, 'jsx');
 
 			if (endTagOffset === undefined) {
 				tsCodeGen.addText(`/>`);
@@ -565,7 +568,7 @@ export function generate(
 			}
 
 			// fix https://github.com/johnsoncodehk/volar/issues/1775
-			for (const failedExp of failedExps) {
+			for (const failedExp of unwritedExps) {
 				writeInterpolation(
 					failedExp.loc.source,
 					failedExp.loc.start.offset,
@@ -942,7 +945,7 @@ export function generate(
 
 		let styleCount = 0;
 		let classCount = 0;
-		const failedExps: CompilerDOM.SimpleExpressionNode[] = [];
+		const unwritedExps: CompilerDOM.SimpleExpressionNode[] = [];
 
 		for (const prop of node.props) {
 			if (
@@ -962,7 +965,7 @@ export function generate(
 
 				if (propName_1 === undefined) {
 					if (prop.exp) {
-						failedExps.push(prop.exp);
+						unwritedExps.push(prop.exp);
 					}
 					continue;
 				}
@@ -1276,7 +1279,7 @@ export function generate(
 
 		return {
 			hasRemainStyleOrClass: styleCount >= 2 || classCount >= 2,
-			failedExps,
+			unwritedExps,
 		};
 
 		function writePropName(name: string, isStatic: boolean, sourceRange: SourceMaps.Range, data: EmbeddedFileMappingData, cacheOn: any) {
