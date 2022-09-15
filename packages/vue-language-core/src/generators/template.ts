@@ -81,7 +81,6 @@ export function generate(
 	}>();
 	const slotExps = new Map<string, {
 		varName: string,
-		loc: SourceMaps.Range,
 	}>();
 	const cssScopedClassesSet = new Set(cssScopedClasses);
 	const tagNames = collectTagOffsets();
@@ -1834,10 +1833,6 @@ export function generate(
 			tsCodeGen.addText(`var ${varSlotExp2}!: typeof ${varSlotExp};\n`);
 			slotExps.set(varSlotExp2, {
 				varName: varSlot,
-				loc: {
-					start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
-					end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
-				},
 			});
 		}
 		else {
