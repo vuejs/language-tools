@@ -290,8 +290,9 @@ export function generate(
 			}
 
 			const offsets = tagOffsetsMap[node.tag];
+			const source = sourceTemplate.substring(node.loc.start.offset);
 
-			offsets.push(node.loc.start.offset + node.loc.source.indexOf(node.tag)); // start tag
+			offsets.push(node.loc.start.offset + source.indexOf(node.tag)); // start tag
 			if (!node.isSelfClosing && sourceLang === 'html') {
 				offsets.push(node.loc.start.offset + node.loc.source.lastIndexOf(node.tag)); // end tag
 			}
@@ -534,6 +535,7 @@ export function generate(
 
 		codeGen.addText(`{\n`);
 
+		const startTagOffset = node.loc.start.offset + sourceTemplate.substring(node.loc.start.offset).indexOf(node.tag);
 		const endTagOffset = !node.isSelfClosing && sourceLang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
 
 		let _unwritedExps: CompilerCore.SimpleExpressionNode[];
@@ -553,8 +555,8 @@ export function generate(
 			writeCode(
 				tagText,
 				{
-					start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
-					end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
+					start: startTagOffset,
+					end: startTagOffset + node.tag.length,
 				},
 				SourceMaps.Mode.Offset,
 				{
@@ -632,8 +634,8 @@ export function generate(
 				writeCode(
 					node.tag,
 					{
-						start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
-						end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
+						start: startTagOffset,
+						end: startTagOffset + node.tag.length,
 					},
 					SourceMaps.Mode.Offset,
 					{
@@ -653,8 +655,8 @@ export function generate(
 					writeCode(
 						tag.component,
 						{
-							start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
-							end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
+							start: startTagOffset,
+							end: startTagOffset + node.tag.length,
 						},
 						SourceMaps.Mode.Offset,
 						{
@@ -684,8 +686,8 @@ export function generate(
 			writeCode(
 				var_props,
 				{
-					start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
-					end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
+					start: startTagOffset,
+					end: startTagOffset + node.tag.length,
 				},
 				SourceMaps.Mode.Offset,
 				{
@@ -772,7 +774,7 @@ export function generate(
 			writeElReferences(node); // <el ref="foo" />
 			if (cssScopedClasses.length) writeClassScopeds(node);
 			writeEvents(node);
-			writeSlots(node);
+			writeSlots(node, startTagOffset);
 
 			for (const childNode of node.children) {
 				visitNode(childNode, parentEl);
@@ -1798,7 +1800,7 @@ export function generate(
 			}
 		}
 	}
-	function writeSlots(node: CompilerDOM.ElementNode) {
+	function writeSlots(node: CompilerDOM.ElementNode, startTagOffset: number) {
 
 		if (node.tag !== 'slot')
 			return;
@@ -1929,8 +1931,8 @@ export function generate(
 			slots.set(slotName, {
 				varName: varSlot,
 				loc: {
-					start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
-					end: node.loc.start.offset + node.loc.source.indexOf(node.tag) + node.tag.length,
+					start: startTagOffset,
+					end: startTagOffset + node.tag.length,
 				},
 				nodeLoc: node.loc,
 			});
