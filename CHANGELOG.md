@@ -1,5 +1,50 @@
 # Changelog
 
+## 1.0.0-alpha.0 (2022/9/16)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- feat: framework agnostic language server ([#1859](https://github.com/johnsoncodehk/volar/issues/1859))
+- feat: improve `.value` auto insert invalid location filting
+- feat: add `vueCompilerOptions.jsxTemplates` for more fault tolerant template ([#1865](https://github.com/johnsoncodehk/volar/issues/1865))
+- feat: add `volar.vueserver.petiteVue.processHtmlFile`, `volar.vueserver.vitePress.processMdFile` to config language support for petite-vue, VitePress ([#1878](https://github.com/johnsoncodehk/volar/issues/1878))
+- fix: template context types broken with `"moduleResolution": "nodenext"` ([#1862](https://github.com/johnsoncodehk/volar/issues/1862))
+- fix: language server throw when use `lang="js"` without `"allowJs": true`
+- fix: auto `.value` failed if position immediately after another property `.value` access expression ([#1853](https://github.com/johnsoncodehk/volar/issues/1853))
+- fix: language onEnterRules, increaseIndentPattern incorrect in `<script>`, `<style>` ([#1847](https://github.com/johnsoncodehk/volar/issues/1847))
+- fix: source-map vue version inconsistent ([#1874](https://github.com/johnsoncodehk/volar/issues/1874))
+- fix: fix pug tag offset ([#1783](https://github.com/johnsoncodehk/volar/issues/1783))
+
+**Breaking changes**
+
+- Remove Alpine extension ([#1858](https://github.com/johnsoncodehk/volar/issues/1858))
+- No built-in support for pug template anymore, if you have use pug with vue-tsc before, please follow below changes:
+
+`package.json`
+```
+{
+	"devDependencies": {
+-		"@volar/pug-language-service": "latest"
++		"@volar/vue-language-plugin-pug": "latest"
+	}
+}
+```
+
+`tsconfig.json`
+```
+{
+	"vueCompilerOptions": {
+		"plugins": ["@volar/vue-language-plugin-pug"]
+	}
+}
+```
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
+
 ## 0.40.13 (2022/9/8)
 
 - fix: cycle reactive reference lead to memory leak
@@ -9,12 +54,6 @@
 - perf: fix incremental template compile not working
 - perf: cache path resolve result on `getScriptVersion`
 - perf: faster code mapping range transform
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 0.40.11 (2022/9/8)
 
