@@ -9,7 +9,7 @@ import type * as _ from 'vscode-languageserver-textdocument';
 
 export function createDocumentServiceHost(
 	runtimeEnv: RuntimeEnvironment,
-	plugins: LanguageServerPlugin[],
+	plugins: ReturnType<LanguageServerPlugin>[],
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	configHost: ConfigurationHost | undefined,
 ) {

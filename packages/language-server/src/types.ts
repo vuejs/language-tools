@@ -38,7 +38,11 @@ export interface RuntimeEnvironment {
 	) => FileSystemHost,
 }
 
-export type LanguageServerPlugin<A extends embedded.LanguageServiceHost = embedded.LanguageServiceHost, B = embeddedLS.LanguageService> = {
+export type LanguageServerPlugin<
+	A extends ServerInitializationOptions = ServerInitializationOptions,
+	B extends embedded.LanguageServiceHost = embedded.LanguageServiceHost,
+	C = embeddedLS.LanguageService
+> = (initOptions: A) => {
 
 	extensions: string[],
 
@@ -51,18 +55,18 @@ export type LanguageServerPlugin<A extends embedded.LanguageServiceHost = embedd
 			sys: FileSystem,
 			tsConfig: string | ts.CompilerOptions,
 			host: embedded.LanguageServiceHost,
-		): A,
+		): B,
 
-		getLanguageModules?(host: A): embedded.EmbeddedLanguageModule[],
+		getLanguageModules?(host: B): embedded.EmbeddedLanguageModule[],
 
 		getServicePlugins?(
-			host: A,
+			host: B,
 			service: embeddedLS.LanguageService,
 		): embeddedLS.EmbeddedLanguageServicePlugin[],
 
 		onInitialize?(
 			connection: vscode.Connection,
-			getLangaugeService: (uri: string) => Promise<B>,
+			getLangaugeService: (uri: string) => Promise<C>,
 		): void,
 	},
 

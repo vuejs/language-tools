@@ -5,7 +5,7 @@ import * as vscode from 'vscode-languageserver';
 export function register(
 	features: NonNullable<ServerInitializationOptions['languageFeatures']>,
 	server: vscode.ServerCapabilities,
-	plugins: LanguageServerPlugin[],
+	plugins: ReturnType<LanguageServerPlugin>[],
 ) {
 	if (features.references) {
 		server.referencesProvider = true;

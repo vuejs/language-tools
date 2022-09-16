@@ -9,7 +9,7 @@ import { createWorkspaces } from './utils/workspaces';
 export function createCommonLanguageServer(
 	connection: vscode.Connection,
 	runtimeEnv: RuntimeEnvironment,
-	plugins: LanguageServerPlugin[],
+	_plugins: LanguageServerPlugin[],
 ) {
 
 	let params: vscode.InitializeParams;
@@ -19,6 +19,7 @@ export function createCommonLanguageServer(
 	let projects: ReturnType<typeof createWorkspaces> | undefined;
 	let documentServiceHost: ReturnType<typeof createDocumentServiceHost> | undefined;
 	let configHost: ReturnType<typeof createConfigurationHost> | undefined;
+	let plugins: ReturnType<LanguageServerPlugin>[];
 
 	const documents = createSnapshots(connection);
 
@@ -26,6 +27,7 @@ export function createCommonLanguageServer(
 
 		params = _params;
 		options = params.initializationOptions as any;
+		plugins = _plugins.map(plugin => plugin(options));
 
 		if (params.capabilities.workspace?.workspaceFolders && params.workspaceFolders) {
 			roots = params.workspaceFolders.map(folder => URI.parse(folder.uri));

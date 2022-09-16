@@ -11,8 +11,8 @@ export function createEmbeddedLanguageModule(
 	rootDir: string,
 	compilerOptions: ts.CompilerOptions,
 	_vueCompilerOptions: VueCompilerOptions,
+	exts: string[],
 	extraPlugins: VueLanguagePlugin[] = [],
-	exts: string[] = ['.vue', '.html', '.md'],
 ): embedded.EmbeddedLanguageModule {
 
 	const vueLanguagePlugin = getDefaultVueLanguagePlugins(

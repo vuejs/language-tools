@@ -13,7 +13,7 @@ export const rootTsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 
 export async function createWorkspaceProjects(
 	runtimeEnv: RuntimeEnvironment,
-	plugins: LanguageServerPlugin[],
+	plugins: ReturnType<LanguageServerPlugin>[],
 	fsHost: FileSystemHost,
 	rootUri: URI,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
