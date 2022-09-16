@@ -11,6 +11,9 @@
 		},
 		// Extra Pkgs
 		{
+			"path": "./packages/vue-plugin-pug/tsconfig.build.json"
+		},
+		{
 			"path": "./packages/typescript-vue-plugin/tsconfig.build.json"
 		},
 		{

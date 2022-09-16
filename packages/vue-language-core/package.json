@@ -13,7 +13,6 @@
 		"directory": "packages/vue-language-core"
 	},
 	"devDependencies": {
-		"@volar/pug-language-service": "0.40.13",
 		"typescript": "latest"
 	},
 	"dependencies": {
@@ -25,8 +24,5 @@
 		"@vue/compiler-sfc": "^3.2.38",
 		"@vue/reactivity": "^3.2.38",
 		"@vue/shared": "^3.2.38"
-	},
-	"browser": {
-		"./out/plugins/vue-template-pug.js": "./out/plugins/empty.js"
 	}
 }

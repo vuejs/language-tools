@@ -13,13 +13,10 @@
 	],
 	"references": [
 		{
-			"path": "../code-gen/tsconfig.build.json"
+			"path": "../pug-language-service/tsconfig.build.json"
 		},
 		{
-			"path": "../language-core/tsconfig.build.json"
-		},
-		{
-			"path": "../source-map/tsconfig.build.json"
+			"path": "../vue-language-core/tsconfig.build.json"
 		},
 	],
 }

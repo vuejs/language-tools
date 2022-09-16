@@ -277,7 +277,6 @@ importers:
     specifiers:
       '@volar/code-gen': 0.40.13
       '@volar/language-core': 0.40.13
-      '@volar/pug-language-service': 0.40.13
       '@volar/source-map': 0.40.13
       '@vue/compiler-core': ^3.2.38
       '@vue/compiler-dom': ^3.2.38
@@ -295,7 +294,6 @@ importers:
       '@vue/reactivity': 3.2.38
       '@vue/shared': 3.2.38
     devDependencies:
-      '@volar/pug-language-service': link:../pug-language-service
       typescript: 4.8.3
 
   packages/vue-language-server:
@@ -366,6 +364,14 @@ importers:
       vscode-uri: 3.0.3
     devDependencies:
       typescript: 4.8.3
+
+  packages/vue-plugin-pug:
+    specifiers:
+      '@volar/pug-language-service': 0.40.13
+      '@volar/vue-language-core': 0.40.13
+    dependencies:
+      '@volar/pug-language-service': link:../pug-language-service
+      '@volar/vue-language-core': link:../vue-language-core
 
   packages/vue-test-workspace:
     specifiers:
@@ -762,7 +768,6 @@ packages:
       path: 0.12.7
       yargs: 17.5.1
     transitivePeerDependencies:
-      - bluebird
       - encoding
       - supports-color
     dev: true
@@ -826,7 +831,6 @@ packages:
       write-pkg: 4.0.0
       yargs: 17.5.1
     transitivePeerDependencies:
-      - bluebird
       - encoding
       - supports-color
     dev: true
@@ -840,7 +844,6 @@ packages:
       envinfo: 7.8.1
       yargs: 17.5.1
     transitivePeerDependencies:
-      - bluebird
       - encoding
       - supports-color
     dev: true
@@ -854,7 +857,6 @@ packages:
       p-map: 4.0.0
       write-json-file: 4.3.0
     transitivePeerDependencies:
-      - bluebird
       - encoding
       - supports-color
     dev: true
@@ -867,7 +869,6 @@ packages:
       chalk: 4.1.2
       columnify: 1.6.0
     transitivePeerDependencies:
-      - bluebird
       - encoding
       - supports-color
     dev: true
@@ -906,7 +907,6 @@ packages:
       write-pkg: 4.0.0
       yargs: 17.5.1
     transitivePeerDependencies:
-      - bluebird
       - encoding
       - supports-color
     dev: true
@@ -931,7 +931,6 @@ packages:
       write-json-file: 4.3.0
       yargs: 17.5.1
     transitivePeerDependencies:
-      - bluebird
       - encoding
       - supports-color
     dev: true
@@ -978,8 +977,6 @@ packages:
       promise-retry: 2.0.1
       semver: 7.3.7
       which: 2.0.2
-    transitivePeerDependencies:
-      - bluebird
     dev: true
 
   /@npmcli/installed-package-contents/1.0.7:
@@ -1021,7 +1018,6 @@ packages:
       read-package-json-fast: 2.0.3
       which: 2.0.2
     transitivePeerDependencies:
-      - bluebird
       - supports-color
     dev: true
 
@@ -1640,8 +1636,6 @@ packages:
       ssri: 9.0.1
       tar: 6.1.11
       unique-filename: 2.0.1
-    transitivePeerDependencies:
-      - bluebird
     dev: true
 
   /cache-content-type/1.0.1:
@@ -1962,8 +1956,8 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
     dependencies:
-      JSONStream: 1.3.5
       is-text-path: 1.0.1
+      JSONStream: 1.3.5
       lodash: 4.17.21
       meow: 8.1.2
       split2: 3.2.2
@@ -2047,22 +2041,12 @@ packages:
 
   /debug/2.6.9:
     resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}
-    peerDependencies:
-      supports-color: '*'
-    peerDependenciesMeta:
-      supports-color:
-        optional: true
     dependencies:
       ms: 2.0.0
     dev: true
 
   /debug/3.2.7:
     resolution: {integrity: sha512-CFjzYYAi4ThfiQvizrFQevTTXHtnCqWfe7x1AhgEscTz6ZbLbfoLRLPugTQyBth6f8ZERVUSyWHFD/7Wu4t1XQ==}
-    peerDependencies:
-      supports-color: '*'
-    peerDependenciesMeta:
-      supports-color:
-        optional: true
     dependencies:
       ms: 2.1.3
     dev: true
@@ -3387,8 +3371,6 @@ packages:
     resolution: {integrity: sha512-JOUdCNlc21G50afBXfErUrr1RKymbgzlrO5KURY+wmDG1Uvd2jmxUJcHgylb/mYXy2SjiNZyYim/ptUBGsIi3A==}
     dependencies:
       morgan: 1.10.0
-    transitivePeerDependencies:
-      - supports-color
     dev: true
 
   /koa-mount/4.0.0:
@@ -3467,7 +3449,6 @@ packages:
       npm-package-arg: 9.1.0
       npm-registry-fetch: 13.3.1
     transitivePeerDependencies:
-      - bluebird
       - supports-color
     dev: true
 
@@ -3481,7 +3462,6 @@ packages:
       semver: 7.3.7
       ssri: 9.0.1
     transitivePeerDependencies:
-      - bluebird
       - supports-color
     dev: true
 
@@ -3616,7 +3596,6 @@ packages:
       socks-proxy-agent: 7.0.0
       ssri: 9.0.1
     transitivePeerDependencies:
-      - bluebird
       - supports-color
     dev: true
 
@@ -3832,8 +3811,6 @@ packages:
       depd: 2.0.0
       on-finished: 2.3.0
       on-headers: 1.0.2
-    transitivePeerDependencies:
-      - supports-color
     dev: true
 
   /ms/2.0.0:
@@ -3909,7 +3886,6 @@ packages:
       tar: 6.1.11
       which: 2.0.2
     transitivePeerDependencies:
-      - bluebird
       - supports-color
     dev: true
 
@@ -4027,7 +4003,6 @@ packages:
       npm-package-arg: 9.1.0
       proc-log: 2.0.1
     transitivePeerDependencies:
-      - bluebird
       - supports-color
     dev: true
 
@@ -4224,7 +4199,6 @@ packages:
       ssri: 9.0.1
       tar: 6.1.11
     transitivePeerDependencies:
-      - bluebird
       - supports-color
     dev: true
 
@@ -4459,11 +4433,6 @@ packages:
 
   /promise-inflight/1.0.1:
     resolution: {integrity: sha512-6zWPyEOFaQBJYcGMHBKTKJ3u6TBsnMFOIZSa6ce1e/ZrrsOlnHRHbabMjLiBYKp+n44X9eUI6VUPaukCXHuG4g==}
-    peerDependencies:
-      bluebird: '*'
-    peerDependenciesMeta:
-      bluebird:
-        optional: true
     dev: true
 
   /promise-retry/2.0.1:

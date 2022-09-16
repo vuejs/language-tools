@@ -1,4 +1,5 @@
-import { VueLanguagePlugin } from '../types';
+import type { VueLanguagePlugin } from '@volar/vue-language-core';
+import * as pug from '@volar/pug-language-service';
 
 const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions }) => {
 
@@ -7,12 +8,6 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions }) => {
 		compileSFCTemplate(lang, template, options) {
 
 			if (lang === 'pug') {
-
-				let pug: typeof import('@volar/pug-language-service') | undefined;
-
-				try {
-					pug = require('@volar/pug-language-service');
-				} catch { }
 
 				const pugDoc = pug?.baseParse(template);
 

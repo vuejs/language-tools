@@ -7,7 +7,6 @@ import * as useVueSfcScriptsFormat from './plugins/vue-sfc-scripts';
 import * as useVueSfcStyles from './plugins/vue-sfc-styles';
 import * as useVueSfcTemplate from './plugins/vue-sfc-template';
 import * as useHtmlPlugin from './plugins/vue-template-html';
-import * as usePugPlugin from './plugins/vue-template-pug';
 import useVueTsx from './plugins/vue-tsx';
 import { VueLanguagePlugin } from './types';
 import { VueCompilerOptions } from './types';
@@ -28,7 +27,6 @@ export function getDefaultVueLanguagePlugins(
 		useMdFilePlugin,
 		useHtmlFilePlugin,
 		useHtmlPlugin,
-		usePugPlugin,
 		useVueSfcStyles,
 		useVueSfcCustomBlocks,
 		useVueSfcScriptsFormat,
