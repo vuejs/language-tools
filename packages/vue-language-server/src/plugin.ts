@@ -1,18 +1,10 @@
 import * as embedded from '@volar/language-core';
-import { LanguageServerPlugin, ServerInitializationOptions } from '@volar/language-server';
+import { LanguageServerPlugin } from '@volar/language-server';
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-service';
 import * as nameCasing from '@volar/vue-language-service/out/ideFeatures/nameCasing';
 import { DetectTagCasingRequest, GetConvertTagCasingEditsRequest } from './requests';
-
-type VueServerInitializationOptions = ServerInitializationOptions & {
-	petiteVue?: {
-		processHtmlFile: boolean,
-	},
-	vitePress?: {
-		processMdFile: boolean,
-	},
-};
+import { VueServerInitializationOptions } from './types';
 
 const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageServiceHost> = (initOptions) => {
 

@@ -50,11 +50,6 @@
 		}
 	},
 	"contributes": {
-		"configurationDefaults": {
-			"[markdown]": {
-				"editor.quickSuggestions": true
-			}
-		},
 		"views": {
 			"explorer": [
 				{
@@ -306,6 +301,14 @@
 					],
 					"default": "off",
 					"description": "Traces the communication between VS Code and the language server."
+				},
+				"volar.vueserver.petiteVue.processHtmlFile": {
+					"type": "boolean",
+					"default": false
+				},
+				"volar.vueserver.vitePress.processMdFile": {
+					"type": "boolean",
+					"default": false
 				},
 				"volar.vueserver.textDocumentSync": {
 					"type": "string",

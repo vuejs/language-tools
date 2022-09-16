@@ -18,7 +18,7 @@ import * as doctor from './features/doctor';
 import * as fileReferences from './features/fileReferences';
 import * as reloadProject from './features/reloadProject';
 import * as serverSys from './features/serverSys';
-import { ServerInitializationOptions } from '@volar/vue-language-server';
+import { VueServerInitializationOptions } from '@volar/vue-language-server';
 
 let apiClient: lsp.BaseLanguageClient | undefined;
 let docClient: lsp.BaseLanguageClient | undefined;
@@ -28,7 +28,7 @@ type CreateLanguageClient = (
 	id: string,
 	name: string,
 	documentSelector: lsp.DocumentSelector,
-	initOptions: ServerInitializationOptions,
+	initOptions: VueServerInitializationOptions,
 	port: number,
 ) => Promise<lsp.BaseLanguageClient>;
 
@@ -47,7 +47,7 @@ export async function activate(context: vscode.ExtensionContext, createLc: Creat
 		}
 
 		const currentlangId = vscode.window.activeTextEditor.document.languageId;
-		if (currentlangId === 'vue' || currentlangId === 'markdown' || currentlangId === 'html') {
+		if (currentlangId === 'vue' || (currentlangId === 'markdown' && processMd()) || (currentlangId === 'html' && processHtml())) {
 			doActivate(context, createLc);
 			stopCheck.dispose();
 		}
@@ -67,18 +67,14 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	const takeOverMode = takeOverModeEnabled();
 	const languageFeaturesDocumentSelector: lsp.DocumentSelector = takeOverMode ?
 		[
-			{ /* scheme: 'file', */ language: 'vue' },
-			{ /* scheme: 'file', */ language: 'markdown' },
-			{ /* scheme: 'file', */ language: 'html' },
-			{ /* scheme: 'file', */ language: 'javascript' },
-			{ /* scheme: 'file', */ language: 'typescript' },
-			{ /* scheme: 'file', */ language: 'javascriptreact' },
-			{ /* scheme: 'file', */ language: 'typescriptreact' },
-			{ /* scheme: 'file', */ language: 'json' },
+			{ language: 'vue' },
+			{ language: 'javascript' },
+			{ language: 'typescript' },
+			{ language: 'javascriptreact' },
+			{ language: 'typescriptreact' },
+			{ language: 'json' },
 		] : [
-			{ /* scheme: 'file', */ language: 'vue' },
-			{ /* scheme: 'file', */ language: 'markdown' },
-			{ /* scheme: 'file', */ language: 'html' },
+			{ language: 'vue' },
 		];
 	const documentFeaturesDocumentSelector: lsp.DocumentSelector = takeOverMode ?
 		[
@@ -91,8 +87,14 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			{ language: 'vue' },
 		];
 
-	if (enabledDocumentFeaturesInHtml()) {
+	if (processHtml()) {
+		languageFeaturesDocumentSelector.push({ language: 'html' });
 		documentFeaturesDocumentSelector.push({ language: 'html' });
+	}
+
+	if (processMd()) {
+		languageFeaturesDocumentSelector.push({ language: 'markdown' });
+		documentFeaturesDocumentSelector.push({ language: 'markdown' });
 	}
 
 	const _useSecondServer = useSecondServer();
@@ -210,10 +212,6 @@ export function takeOverModeEnabled() {
 	return false;
 }
 
-function enabledDocumentFeaturesInHtml() {
-	return !vscode.extensions.getExtension('vscode.html-language-features');
-}
-
 function useSecondServer() {
 	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.useSecondServer');
 }
@@ -222,13 +220,27 @@ function serverMaxOldSpaceSize() {
 	return vscode.workspace.getConfiguration('volar').get<number | null>('vueserver.maxOldSpaceSize');
 }
 
+function processHtml() {
+	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.petiteVue.processHtmlFile');
+}
+
+function processMd() {
+	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.vitePress.processMdFile');
+}
+
 function getInitializationOptions(
 	context: vscode.ExtensionContext,
 	mode: 'main-language-features' | 'second-language-features' | 'document-features',
 	useSecondServer: boolean,
 ) {
 	const textDocumentSync = vscode.workspace.getConfiguration('volar').get<'incremental' | 'full' | 'none'>('vueserver.textDocumentSync');
-	const initializationOptions: ServerInitializationOptions = {
+	const initializationOptions: VueServerInitializationOptions = {
+		petiteVue: {
+			processHtmlFile: processHtml(),
+		},
+		vitePress: {
+			processMdFile: processMd(),
+		},
 		textDocumentSync: textDocumentSync ? {
 			incremental: lsp.TextDocumentSyncKind.Incremental,
 			full: lsp.TextDocumentSyncKind.Full,
