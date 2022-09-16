@@ -1,6 +1,5 @@
 import { VueLanguagePlugin } from '../types';
-import * as CompilerDOM from '@vue/compiler-dom';
-import * as CompilerVue2 from '../utils/vue2TemplateCompiler';
+import type * as CompilerDOM from '@vue/compiler-dom';
 
 interface Loc {
 	start: { offset: number; };
@@ -13,7 +12,7 @@ interface ElementNameNode {
 };
 type Node = CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.ExpressionNode | CompilerDOM.AttributeNode | CompilerDOM.DirectiveNode | ElementNameNode;
 
-const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
+const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions }) => {
 
 	return {
 
@@ -21,7 +20,7 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 
 			if (lang === 'html') {
 
-				const compiler = vueCompilerOptions.target < 3 ? CompilerVue2 : CompilerDOM;
+				const compiler = modules['@vue/compiler-dom'];
 
 				return compiler.compile(template, {
 					...options,
@@ -31,6 +30,8 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 		},
 
 		updateSFCTemplate(oldResult, change) {
+
+			const CompilerDOM = modules['@vue/compiler-dom'];
 
 			const lengthDiff = change.newText.length - (change.end - change.start);
 			let hitNodes: Node[] = [];

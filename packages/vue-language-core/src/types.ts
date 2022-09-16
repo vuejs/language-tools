@@ -32,6 +32,7 @@ export interface ResolvedVueCompilerOptions {
 export type VueLanguagePlugin = (ctx: {
 	modules: {
 		typescript: typeof import('typescript/lib/tsserverlibrary');
+		'@vue/compiler-dom': typeof import('@vue/compiler-dom');
 	},
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: ResolvedVueCompilerOptions,

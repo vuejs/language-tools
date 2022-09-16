@@ -12,6 +12,8 @@ import useVueTsx from './plugins/vue-tsx';
 import { VueLanguagePlugin } from './types';
 import { VueCompilerOptions } from './types';
 import { resolveVueCompilerOptions } from './utils/ts';
+import * as CompilerDOM from '@vue/compiler-dom';
+import * as CompilerVue2 from './utils/vue2TemplateCompiler';
 
 export function getDefaultVueLanguagePlugins(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -52,6 +54,7 @@ export function getDefaultVueLanguagePlugins(
 	}
 	const pluginCtx: Parameters<VueLanguagePlugin>[0] = {
 		modules: {
+			'@vue/compiler-dom': vueCompilerOptions.target < 3 ? CompilerVue2 : CompilerDOM,
 			typescript: ts,
 		},
 		compilerOptions,

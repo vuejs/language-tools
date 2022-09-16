@@ -1,6 +1,8 @@
 import * as CompilerDom from '@vue/compiler-dom';
 import * as CompilerCore from '@vue/compiler-core';
 
+export * from '@vue/compiler-dom';
+
 export function compile(
 	template: string,
 	options: CompilerDom.CompilerOptions = {}
@@ -38,7 +40,7 @@ export function compile(
 	);
 }
 
-export function baseCompile(
+function baseCompile(
 	template: string,
 	options: CompilerCore.CompilerOptions = {}
 ): CompilerCore.CodegenResult {

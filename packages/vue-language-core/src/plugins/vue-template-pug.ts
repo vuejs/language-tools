@@ -1,8 +1,6 @@
 import { VueLanguagePlugin } from '../types';
-import * as CompilerDom from '@vue/compiler-dom';
-import * as CompilerVue2 from '../utils/vue2TemplateCompiler';
 
-const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
+const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions }) => {
 
 	return {
 
@@ -20,7 +18,7 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 
 				if (pugDoc) {
 
-					const compiler = vueCompilerOptions.target < 3 ? CompilerVue2 : CompilerDom;
+					const compiler = modules['@vue/compiler-dom'];
 					const completed = compiler.compile(pugDoc.htmlCode, {
 						...options,
 						...vueCompilerOptions.experimentalTemplateCompilerOptions,
