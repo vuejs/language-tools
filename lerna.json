@@ -5,5 +5,5 @@
 		"packages/*",
 		"plugins/*"
 	],
-	"version": "0.40.13"
+	"version": "1.0.0-alpha.0"
 }
