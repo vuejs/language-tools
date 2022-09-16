@@ -7,7 +7,7 @@ interface Loc {
 	source: string;
 }
 interface ElementNameNode {
-	type: 'self-closeing-tag-name';
+	type: 'self-closing-tag-name';
 	loc: Loc;
 };
 type Node = CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.ExpressionNode | CompilerDOM.AttributeNode | CompilerDOM.DirectiveNode | ElementNameNode;
@@ -41,7 +41,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions }) => {
 				const hitNode = hitNodes[0];
 				if (
 					hitNode.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-					|| hitNode.type === 'self-closeing-tag-name'
+					|| hitNode.type === 'self-closing-tag-name'
 				) {
 					return oldResult;
 				}
@@ -65,7 +65,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions }) => {
 					else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 						if (node.isSelfClosing) {
 							const elementNameNode: ElementNameNode = {
-								type: 'self-closeing-tag-name',
+								type: 'self-closing-tag-name',
 								loc: {
 									start: { offset: node.loc.start.offset + 1 },
 									end: { offset: node.loc.start.offset + 1 + node.tag.length },
