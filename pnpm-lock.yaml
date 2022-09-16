@@ -296,6 +296,14 @@ importers:
     devDependencies:
       typescript: 4.8.3
 
+  packages/vue-language-plugin-pug:
+    specifiers:
+      '@volar/pug-language-service': 0.40.13
+      '@volar/vue-language-core': 0.40.13
+    dependencies:
+      '@volar/pug-language-service': link:../pug-language-service
+      '@volar/vue-language-core': link:../vue-language-core
+
   packages/vue-language-server:
     specifiers:
       '@volar/language-core': 0.40.13
@@ -364,14 +372,6 @@ importers:
       vscode-uri: 3.0.3
     devDependencies:
       typescript: 4.8.3
-
-  packages/vue-plugin-pug:
-    specifiers:
-      '@volar/pug-language-service': 0.40.13
-      '@volar/vue-language-core': 0.40.13
-    dependencies:
-      '@volar/pug-language-service': link:../pug-language-service
-      '@volar/vue-language-core': link:../vue-language-core
 
   packages/vue-test-workspace:
     specifiers:
