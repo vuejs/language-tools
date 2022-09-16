@@ -1,5 +1,6 @@
 import useCssPlugin from '@volar-plugins/css';
 import useTsPlugin, { getSemanticTokenLegend } from '@volar-plugins/typescript';
+import { LanguageServerPlugin } from '@volar/language-server';
 import { createLanguageServer, EmbeddedLanguageModule, SourceFile } from '@volar/language-server/node';
 
 const blocksReg = /\<(script|style)[\s\S]*?\>([\s\S]*?)\<\/\1\>/g;
@@ -109,7 +110,7 @@ function getEmbeddeds(fileName: string, text: string) {
 	});
 }
 
-createLanguageServer([{
+const plugin: LanguageServerPlugin = () => ({
 	extensions: ['.svelte'],
 	languageService: {
 		semanticTokenLegend: getSemanticTokenLegend(),
@@ -134,4 +135,6 @@ createLanguageServer([{
 			];
 		}
 	},
-}]);
+});
+
+createLanguageServer([plugin]);

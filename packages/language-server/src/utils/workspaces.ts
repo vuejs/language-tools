@@ -11,7 +11,7 @@ export interface Workspaces extends ReturnType<typeof createWorkspaces> { }
 
 export function createWorkspaces(
 	runtimeEnv: RuntimeEnvironment,
-	plugins: LanguageServerPlugin[],
+	plugins: ReturnType<LanguageServerPlugin>[],
 	fsHost: FileSystemHost,
 	configurationHost: ConfigurationHost | undefined,
 	ts: typeof import('typescript/lib/tsserverlibrary'),

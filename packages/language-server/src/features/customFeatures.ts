@@ -8,7 +8,7 @@ import { LanguageServerPlugin } from '../types';
 export function register(
 	connection: vscode.Connection,
 	projects: Workspaces,
-	plugins: LanguageServerPlugin[],
+	plugins: ReturnType<LanguageServerPlugin>[],
 ) {
 	connection.onRequest(GetMatchTsConfigRequest.type, async params => {
 		return (await projects.getProject(params.uri))?.tsconfig;

@@ -17,7 +17,7 @@ export interface Project extends ReturnType<typeof createProject> { }
 
 export async function createProject(
 	runtimeEnv: RuntimeEnvironment,
-	plugins: LanguageServerPlugin[],
+	plugins: ReturnType<LanguageServerPlugin>[],
 	fsHost: FileSystemHost,
 	sys: FileSystem,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -238,7 +238,7 @@ function createParsedCommandLine(
 	sys: FileSystem,
 	rootPath: string,
 	tsConfig: string | ts.CompilerOptions,
-	plugins: LanguageServerPlugin[],
+	plugins: ReturnType<LanguageServerPlugin>[],
 ): ts.ParsedCommandLine {
 	const extraExts = plugins.map(plugin => plugin.extensions).flat();
 	try {

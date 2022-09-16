@@ -102,6 +102,7 @@ function createComponentMetaCheckerBase(tsconfigPath: string, parsedCommandLine:
 		host.getCurrentDirectory(),
 		host.getCompilationSettings(),
 		host.getVueCompilationSettings(),
+		['.vue']
 	);
 	const core = embedded.createEmbeddedLanguageServiceHost(host, [vueLanguageModule]);
 	const proxyApis: Partial<ts.LanguageServiceHost> = checkerOptions.forceUseTs ? {

@@ -11,6 +11,7 @@ export function createLanguageService(host: vue.LanguageServiceHost) {
 		host.getCurrentDirectory(),
 		host.getCompilationSettings(),
 		host.getVueCompilationSettings(),
+		['.vue']
 	)];
 	const core = embedded.createEmbeddedLanguageServiceHost(host, mods);
 	const ts = host.getTypeScriptModule();
