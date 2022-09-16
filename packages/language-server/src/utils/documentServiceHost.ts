@@ -46,7 +46,7 @@ export function createDocumentServiceHost(
 			configurationHost: configHost,
 			fileSystemProvider: runtimeEnv.fileSystemProvide,
 		};
-		const serviceContext = embedded.getDocumentServiceContext({
+		const serviceContext = embedded.createDocumentServiceContext({
 			ts,
 			env,
 			getLanguageModules() {
@@ -59,6 +59,6 @@ export function createDocumentServiceHost(
 				];
 			},
 		});
-		return embedded.getDocumentService(serviceContext);
+		return embedded.createDocumentService(serviceContext);
 	}
 }

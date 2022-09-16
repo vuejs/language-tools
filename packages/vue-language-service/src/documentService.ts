@@ -54,7 +54,7 @@ export function createDocumentService(
 		{},
 		['.vue'],
 	);
-	const languageServiceContext = embeddedLS.getDocumentServiceContext({
+	const languageServiceContext = embeddedLS.createDocumentServiceContext({
 		ts,
 		env,
 		getLanguageModules() {
@@ -65,7 +65,7 @@ export function createDocumentService(
 		},
 	});
 	const plugins = getDocumentServicePlugins(languageServiceContext);
-	const languageService = embeddedLS.getDocumentService(languageServiceContext);
+	const languageService = embeddedLS.createDocumentService(languageServiceContext);
 
 	return languageService;
 }

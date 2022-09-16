@@ -18,9 +18,9 @@ import { shallowReactive as reactive } from '@vue/reactivity';
 // fix build
 import type * as _0 from 'vscode-languageserver-protocol';
 
-export type DocumentService = ReturnType<typeof getDocumentService>;
+export type DocumentService = ReturnType<typeof createDocumentService>;
 
-export function getDocumentServiceContext(options: {
+export function createDocumentServiceContext(options: {
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	getLanguageModules(): EmbeddedLanguageModule[],
 	getPlugins(): EmbeddedLanguageServicePlugin[],
@@ -105,7 +105,7 @@ export function isTsDocument(document: TextDocument) {
 		document.languageId === 'typescriptreact';
 }
 
-export function getDocumentService(context: DocumentServiceRuntimeContext) {
+export function createDocumentService(context: DocumentServiceRuntimeContext) {
 
 	return {
 		format: format.register(context),
