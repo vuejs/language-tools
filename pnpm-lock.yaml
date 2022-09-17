@@ -17,7 +17,7 @@ importers:
       '@types/node': 18.7.18
       '@vscode/test-web': 0.0.30
       typescript: 4.8.3
-      vite: 3.1.1
+      vite: 3.1.2
       vitepress: 1.0.0-alpha.13
       vitest: 0.23.2
       vue: 3.2.38
@@ -390,7 +390,7 @@ importers:
   packages/vue-typescript:
     specifiers:
       '@volar/code-gen': 1.0.0-alpha.0
-      '@volar/language-core': workspace:1.0.0-alpha.0
+      '@volar/language-core': 1.0.0-alpha.0
       '@volar/typescript-faster': 1.0.0-alpha.0
       '@volar/vue-language-core': 1.0.0-alpha.0
       typescript: latest
@@ -479,7 +479,7 @@ importers:
       '@types/semver': ^7.3.12
       '@volar/language-service': 1.0.0-alpha.0
       '@volar/shared': 1.0.0-alpha.0
-      '@volar/typescript-language-service': workspace:1.0.0-alpha.0
+      '@volar/typescript-language-service': 1.0.0-alpha.0
       semver: ^7.3.7
       vscode-languageserver-protocol: ^3.17.2
       vscode-languageserver-textdocument: ^1.0.7
@@ -1194,14 +1194,14 @@ packages:
       '@types/node': 18.7.13
     dev: true
 
-  /@vitejs/plugin-vue/3.0.3_vite@3.1.1+vue@3.2.38:
+  /@vitejs/plugin-vue/3.0.3_vite@3.1.2+vue@3.2.38:
     resolution: {integrity: sha512-U4zNBlz9mg+TA+i+5QPc3N5lQvdUXENZLO2h0Wdzp56gI1MWhqJOv+6R+d4kOzoaSSq6TnGPBdZAXKOe4lXy6g==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
       vite: ^3.0.0
       vue: ^3.2.25
     dependencies:
-      vite: 3.1.1
+      vite: 3.1.2
       vue: 3.2.38
     dev: true
 
@@ -5375,8 +5375,8 @@ packages:
     engines: {node: '>= 0.8'}
     dev: true
 
-  /vite/3.1.1:
-    resolution: {integrity: sha512-hgxQWev/AL7nWYrqByYo8nfcH9n97v6oFsta9+JX8h6cEkni7nHKP2kJleNYV2kcGhE8jsbaY1aStwPZXzPbgA==}
+  /vite/3.1.2:
+    resolution: {integrity: sha512-wTDKPkiVbeT+drTPdkuvjVIC/2vKKUc1w3qNOuwgpyvPCZF6fvdxB5v5WEcCsqaYea0zrwA4+XialJKCHM3oVQ==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
     peerDependencies:
@@ -5408,12 +5408,12 @@ packages:
     dependencies:
       '@docsearch/css': 3.2.1
       '@docsearch/js': 3.2.1
-      '@vitejs/plugin-vue': 3.0.3_vite@3.1.1+vue@3.2.38
+      '@vitejs/plugin-vue': 3.0.3_vite@3.1.2+vue@3.2.38
       '@vue/devtools-api': 6.2.1
       '@vueuse/core': 9.1.1_vue@3.2.38
       body-scroll-lock: 4.0.0-beta.0
       shiki: 0.11.1
-      vite: 3.1.1
+      vite: 3.1.2
       vue: 3.2.38
     transitivePeerDependencies:
       - '@algolia/client-search'
@@ -5459,7 +5459,7 @@ packages:
       tinybench: 2.1.5
       tinypool: 0.3.0
       tinyspy: 1.0.2
-      vite: 3.1.1
+      vite: 3.1.2
     transitivePeerDependencies:
       - less
       - sass
