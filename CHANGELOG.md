@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.0-alpha.1 (2022/9/17)
+
+- fix: `vue-tsc` depends version resolve failed ([#1881](https://github.com/johnsoncodehk/volar/issues/1881))
+
 ## 1.0.0-alpha.0 (2022/9/16)
 
 [[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
