@@ -3,6 +3,7 @@ import { VueLanguagePlugin } from '../types';
 const presetInitialIndentBrackets: Record<string, [string, string] | undefined> = {
 	css: ['{', '}'],
 	scss: ['{', '}'],
+	less: ['{', '}'],
 };
 
 const plugin: VueLanguagePlugin = () => {

@@ -408,6 +408,10 @@
 							"type": "boolean",
 							"default": false
 						},
+						"less": {
+							"type": "boolean",
+							"default": false
+						},						
 						"json": {
 							"type": "boolean",
 							"default": false
