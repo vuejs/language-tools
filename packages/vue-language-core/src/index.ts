@@ -13,4 +13,4 @@ export * from './plugins';
 
 // fix build
 export * as _0 from '@vue/compiler-sfc';
-export * as _1 from '@vue/compiler-core';
+export * as _1 from '@vue/compiler-dom';

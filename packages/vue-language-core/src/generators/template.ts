@@ -1,6 +1,5 @@
 import { CodeGen } from '@volar/code-gen';
 import * as SourceMaps from '@volar/source-map';
-import * as CompilerCore from '@vue/compiler-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize, hyphenate, isHTMLTag, isSVGTag } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -307,7 +306,7 @@ export function generate(
 		}
 		return cacheTo.__volar_ast as ts.SourceFile;
 	}
-	function visitNode(node: CompilerCore.RootNode | CompilerDOM.TemplateChildNode, parentEl: CompilerDOM.ElementNode | undefined): void {
+	function visitNode(node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode, parentEl: CompilerDOM.ElementNode | undefined): void {
 		if (node.type === CompilerDOM.NodeTypes.ROOT) {
 			for (const childNode of node.children) {
 				visitNode(childNode, parentEl);
@@ -538,7 +537,7 @@ export function generate(
 		const startTagOffset = node.loc.start.offset + sourceTemplate.substring(node.loc.start.offset).indexOf(node.tag);
 		const endTagOffset = !node.isSelfClosing && sourceLang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
 
-		let _unwritedExps: CompilerCore.SimpleExpressionNode[];
+		let _unwritedExps: CompilerDOM.SimpleExpressionNode[];
 
 		if (vueCompilerOptions.jsxTemplates) {
 
@@ -2264,7 +2263,7 @@ export function getPatchForSlotNode(node: CompilerDOM.ElementNode) {
 	);
 	if (forDirective) {
 		let forNode: CompilerDOM.ForNode | undefined;
-		CompilerCore.processFor(node, forDirective, transformContext, _forNode => {
+		CompilerDOM.processFor(node, forDirective, transformContext, _forNode => {
 			forNode = { ..._forNode };
 			return undefined;
 		});

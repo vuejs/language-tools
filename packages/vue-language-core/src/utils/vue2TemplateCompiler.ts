@@ -1,5 +1,4 @@
 import * as CompilerDom from '@vue/compiler-dom';
-import * as CompilerCore from '@vue/compiler-core';
 
 export * from '@vue/compiler-dom';
 
@@ -11,8 +10,8 @@ export function compile(
 	const onError = options.onError;
 	options.onError = (error) => {
 		if (
-			error.code === CompilerCore.ErrorCodes.X_V_FOR_TEMPLATE_KEY_PLACEMENT // :key binding allowed in v-for template child in vue 2
-			|| error.code === CompilerCore.ErrorCodes.X_V_IF_SAME_KEY // fix https://github.com/johnsoncodehk/volar/issues/1638
+			error.code === CompilerDom.ErrorCodes.X_V_FOR_TEMPLATE_KEY_PLACEMENT // :key binding allowed in v-for template child in vue 2
+			|| error.code === CompilerDom.ErrorCodes.X_V_IF_SAME_KEY // fix https://github.com/johnsoncodehk/volar/issues/1638
 		) {
 			return;
 		}
@@ -42,22 +41,22 @@ export function compile(
 
 function baseCompile(
 	template: string,
-	options: CompilerCore.CompilerOptions = {}
-): CompilerCore.CodegenResult {
+	options: CompilerDom.CompilerOptions = {}
+): CompilerDom.CodegenResult {
 
 	const onError = options.onError || ((error) => { throw error; });
 	const isModuleMode = options.mode === 'module';
 
 	const prefixIdentifiers = options.prefixIdentifiers === true || isModuleMode;
 	if (!prefixIdentifiers && options.cacheHandlers) {
-		onError(CompilerCore.createCompilerError(CompilerCore.ErrorCodes.X_CACHE_HANDLER_NOT_SUPPORTED));
+		onError(CompilerDom.createCompilerError(CompilerDom.ErrorCodes.X_CACHE_HANDLER_NOT_SUPPORTED));
 	}
 	if (options.scopeId && !isModuleMode) {
-		onError(CompilerCore.createCompilerError(CompilerCore.ErrorCodes.X_SCOPE_ID_NOT_SUPPORTED));
+		onError(CompilerDom.createCompilerError(CompilerDom.ErrorCodes.X_SCOPE_ID_NOT_SUPPORTED));
 	}
 
-	const ast = CompilerCore.baseParse(template, options);
-	const [nodeTransforms, directiveTransforms] = CompilerCore.getBaseTransformPreset(prefixIdentifiers);
+	const ast = CompilerDom.baseParse(template, options);
+	const [nodeTransforms, directiveTransforms] = CompilerDom.getBaseTransformPreset(prefixIdentifiers);
 
 	// v-for > v-if in vue 2
 	const transformIf = nodeTransforms[1];
@@ -65,7 +64,7 @@ function baseCompile(
 	nodeTransforms[1] = transformFor;
 	nodeTransforms[3] = transformIf;
 
-	CompilerCore.transform(
+	CompilerDom.transform(
 		ast,
 		Object.assign({}, options, {
 			prefixIdentifiers,
@@ -81,7 +80,7 @@ function baseCompile(
 		})
 	);
 
-	return CompilerCore.generate(
+	return CompilerDom.generate(
 		ast,
 		Object.assign({}, options, {
 			prefixIdentifiers
