@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.0-alpha.2 (2022/9/21)
+
+- feat: add less support for initial indent ([#1883](https://github.com/johnsoncodehk/volar/issues/1883))
+- feat: use `vue-template-compiler` instead of `@vue/compiler-dom` to collect template errors for target < 3
+- fix: moving components doesn't trigger import updates ([#1884](https://github.com/johnsoncodehk/volar/issues/1884))
+
 ## 1.0.0-alpha.1 (2022/9/17)
 
 - fix: `vue-tsc` depends version resolve failed ([#1881](https://github.com/johnsoncodehk/volar/issues/1881))
