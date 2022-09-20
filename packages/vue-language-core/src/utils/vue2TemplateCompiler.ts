@@ -13,19 +13,25 @@ export function compile(
 	const onWarn = options.onWarn;
 
 	options.onError = (error) => {
-		// ignore all error for baseCompile
-		return;
-	};
-	options.onWarn = (error) => {
-		// ignore all error for baseCompile
-		return;
+		if (
+			error.code === CompilerDom.ErrorCodes.X_V_FOR_TEMPLATE_KEY_PLACEMENT // :key binding allowed in v-for template child in vue 2
+			|| error.code === CompilerDom.ErrorCodes.X_V_IF_SAME_KEY // fix https://github.com/johnsoncodehk/volar/issues/1638
+		) {
+			return;
+		}
+		if (onError) {
+			onError(error);
+		}
+		else {
+			throw error;
+		}
 	};
 
 	const vue2Result = Vue2TemplateCompiler.compile(template, { outputSourceRange: true });
 
 	for (const error of vue2Result.errors) {
 		onError?.({
-			code: '',
+			code: 'vue-template-compiler',
 			name: '',
 			message: error.msg,
 			loc: {
@@ -37,7 +43,7 @@ export function compile(
 	}
 	for (const error of vue2Result.tips) {
 		onWarn?.({
-			code: '',
+			code: 'vue-template-compiler',
 			name: '',
 			message: error.msg,
 			loc: {
