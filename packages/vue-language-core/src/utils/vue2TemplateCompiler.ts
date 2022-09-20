@@ -1,5 +1,7 @@
 import * as CompilerDom from '@vue/compiler-dom';
 
+const Vue2TemplateCompiler: typeof import('vue-template-compiler') = require('vue-template-compiler/build');
+
 export * from '@vue/compiler-dom';
 
 export function compile(
@@ -8,20 +10,43 @@ export function compile(
 ): CompilerDom.CodegenResult {
 
 	const onError = options.onError;
+	const onWarn = options.onWarn;
+
 	options.onError = (error) => {
-		if (
-			error.code === CompilerDom.ErrorCodes.X_V_FOR_TEMPLATE_KEY_PLACEMENT // :key binding allowed in v-for template child in vue 2
-			|| error.code === CompilerDom.ErrorCodes.X_V_IF_SAME_KEY // fix https://github.com/johnsoncodehk/volar/issues/1638
-		) {
-			return;
-		}
-		if (onError) {
-			onError(error);
-		}
-		else {
-			throw error;
-		}
+		// ignore all error for baseCompile
+		return;
 	};
+	options.onWarn = (error) => {
+		// ignore all error for baseCompile
+		return;
+	};
+
+	const vue2Result = Vue2TemplateCompiler.compile(template, { outputSourceRange: true });
+
+	for (const error of vue2Result.errors) {
+		onError?.({
+			code: '',
+			name: '',
+			message: error.msg,
+			loc: {
+				source: '',
+				start: { column: -1, line: -1, offset: error.start },
+				end: { column: -1, line: -1, offset: error.end ?? error.start },
+			},
+		});
+	}
+	for (const error of vue2Result.tips) {
+		onWarn?.({
+			code: '',
+			name: '',
+			message: error.msg,
+			loc: {
+				source: '',
+				start: { column: -1, line: -1, offset: error.start },
+				end: { column: -1, line: -1, offset: error.end ?? error.start },
+			},
+		});
+	}
 
 	return baseCompile(
 		template,
