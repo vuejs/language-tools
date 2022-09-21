@@ -5,7 +5,11 @@
 	"license": "MIT",
 	"files": [
 		"out/**/*.js",
-		"out/**/*.d.ts"
+		"out/**/*.d.ts",
+		"browser.js",
+		"browser.d.ts",
+		"node.js",
+		"node.d.ts"
 	],
 	"repository": {
 		"type": "git",
