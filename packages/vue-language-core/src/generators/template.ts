@@ -1023,7 +1023,7 @@ export function generate(
 					);
 				}
 				else {
-					codeGen.addText(`undefined`);
+					codeGen.addText(`() => {}`);
 				}
 			}
 		}
