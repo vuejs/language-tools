@@ -2,6 +2,7 @@
 	"private": true,
 	"scripts": {
 		"build": "tsc -b tsconfig.build.json",
+		"build-ci": "tsc -b tsconfig.build-ci.json",
 		"watch": "npm run build && (npm run watch:base & npm run watch:vue-language-features & npm run watch:typescript-vue-plugin)",
 		"watch:base": "tsc -b tsconfig.build.json -w",
 		"watch:vue-language-features": "cd extensions/vscode-vue-language-features && npm run watch",
@@ -10,6 +11,7 @@
 		"version:test": "lerna version --exact --force-publish --yes --sync-workspace-lock --no-push --no-git-tag-version",
 		"release": "npm run release:base && npm run release:vue-language-features && npm run release:typescript-vue-plugin",
 		"release:base": "lerna publish --exact --force-publish --yes --sync-workspace-lock",
+		"release:base-next": "lerna publish --exact --force-publish --yes --sync-workspace-lock --dist-tag next",
 		"release:vue-language-features": "cd extensions/vscode-vue-language-features && npm run release",
 		"release:typescript-vue-plugin": "cd extensions/vscode-typescript-vue-plugin && npm run release",
 		"test": "vitest run",
@@ -19,12 +21,14 @@
 		"chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=./extensions/vscode-vue-language-features ../volar-starter"
 	},
 	"devDependencies": {
-		"@lerna-lite/cli": "latest",
 		"@types/node": "latest",
-		"@vscode/test-web": "latest",
 		"typescript": "latest",
 		"vite": "latest",
-		"vitest": "latest",
+		"vitest": "latest"
+	},
+	"optionalDependencies": {
+		"@lerna-lite/cli": "latest",
+		"@vscode/test-web": "latest",
 		"vitepress": "1.0.0-alpha.13",
 		"vue": "^3.2.38"
 	},
