@@ -20,7 +20,7 @@ type IsAny<T> = boolean extends (T extends never ? true : false) ? true : false;
 export type PickNotAny<A, B> = IsAny<A> extends true ? B : A;
 type AnyArray<T = any> = T[] | readonly T[];
 type ForableSource<T> = [
-	T extends { [Symbol.iterator](): IterableIterator<infer T1> } ? T1 : T[keyof T], // item
+	T extends { [Symbol.iterator](): Iterator<infer T1> } ? T1 : T[keyof T], // item
 	typeof Symbol.iterator extends keyof T ? number : T extends T ? keyof T : never, // key
 	typeof Symbol.iterator extends keyof T ? undefined : number, // index
 ][];
