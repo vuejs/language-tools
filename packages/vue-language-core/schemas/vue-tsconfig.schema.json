@@ -27,6 +27,10 @@
 					"default": false,
 					"markdownDescription": "Strict props, component type-checking in templates."
 				},
+				"skipTemplateCodegen": {
+					"type": "boolean",
+					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/577"
+				},
 				"plugins": {
 					"type": "array",
 					"default": [],
@@ -77,10 +81,6 @@
 				"experimentalTemplateCompilerOptionsRequirePath": {
 					"type": "string",
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/698"
-				},
-				"experimentalDisableTemplateSupport": {
-					"type": "boolean",
-					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/577"
 				},
 				"experimentalAllowTypeNarrowingInInlineHandlers": {
 					"type": "boolean",

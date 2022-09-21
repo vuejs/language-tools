@@ -78,6 +78,7 @@ export function resolveVueCompilerOptions(vueOptions: VueCompilerOptions): Resol
 		target,
 		jsxTemplates: vueOptions.jsxTemplates ?? false,
 		strictTemplates: vueOptions.strictTemplates ?? false,
+		skipTemplateCodegen: vueOptions.skipTemplateCodegen ?? false,
 		plugins: vueOptions.plugins ?? [],
 
 		// experimental
@@ -91,7 +92,6 @@ export function resolveVueCompilerOptions(vueOptions: VueCompilerOptions): Resol
 		experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup: vueOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup ?? 'onlyJs',
 		experimentalTemplateCompilerOptions: vueOptions.experimentalTemplateCompilerOptions ?? {},
 		experimentalTemplateCompilerOptionsRequirePath: vueOptions.experimentalTemplateCompilerOptionsRequirePath ?? undefined,
-		experimentalDisableTemplateSupport: vueOptions.experimentalDisableTemplateSupport ?? false,
 		experimentalResolveStyleCssClasses: vueOptions.experimentalResolveStyleCssClasses ?? 'scoped',
 		experimentalAllowTypeNarrowingInInlineHandlers: vueOptions.experimentalAllowTypeNarrowingInInlineHandlers ?? false,
 	};

@@ -452,7 +452,7 @@ export function generate(
 	}
 	function writeTemplate() {
 
-		if (!vueCompilerOptions.experimentalDisableTemplateSupport) {
+		if (!vueCompilerOptions.skipTemplateCodegen) {
 
 			writeExportOptions();
 			writeConstNameOption();

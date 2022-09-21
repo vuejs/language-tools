@@ -15,6 +15,7 @@ export interface ResolvedVueCompilerOptions {
 	target: 2 | 2.7 | 3;
 	jsxTemplates: boolean;
 	strictTemplates: boolean;
+	skipTemplateCodegen: boolean;
 	plugins: string[];
 
 	// experimental
@@ -24,7 +25,6 @@ export interface ResolvedVueCompilerOptions {
 	experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup: boolean | 'onlyJs';
 	experimentalTemplateCompilerOptions: any;
 	experimentalTemplateCompilerOptionsRequirePath: string | undefined;
-	experimentalDisableTemplateSupport: boolean;
 	experimentalResolveStyleCssClasses: 'scoped' | 'always' | 'never';
 	experimentalAllowTypeNarrowingInInlineHandlers: boolean;
 }
