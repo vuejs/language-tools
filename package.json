@@ -31,5 +31,10 @@
 		"@vscode/test-web": "latest",
 		"vitepress": "1.0.0-alpha.13",
 		"vue": "^3.2.38"
+	},
+	"pnpm": {
+		"overrides": {
+			"esbuild": "0.15.7"
+		}
 	}
 }
