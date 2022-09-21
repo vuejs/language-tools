@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.0-alpha.3 (2022/9/21)
+
+- fix: don't ignore `@vue/compiler-dom` compile errors for vue2 templates
+- fix: cannot start language server with `@volar/vue-language-server` since v1.0.0-alpha.0 ([#1888](https://github.com/johnsoncodehk/volar/issues/1888))
+
 ## 1.0.0-alpha.2 (2022/9/21)
 
 - feat: add less support for initial indent ([#1883](https://github.com/johnsoncodehk/volar/issues/1883))
