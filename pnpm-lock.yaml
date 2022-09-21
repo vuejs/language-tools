@@ -26,9 +26,9 @@ importers:
   examples/svelte:
     specifiers:
       '@types/vscode': 1.67.0
-      '@volar-plugins/css': 1.0.0-alpha.2
-      '@volar-plugins/typescript': 1.0.0-alpha.2
-      '@volar/language-server': 1.0.0-alpha.2
+      '@volar-plugins/css': 1.0.0-alpha.3
+      '@volar-plugins/typescript': 1.0.0-alpha.3
+      '@volar/language-server': 1.0.0-alpha.3
       vsce: latest
       vscode-languageclient: ^8.0.2
     dependencies:
@@ -43,7 +43,7 @@ importers:
   extensions/vscode-typescript-vue-plugin:
     specifiers:
       esbuild: latest
-      typescript-vue-plugin: 1.0.0-alpha.2
+      typescript-vue-plugin: 1.0.0-alpha.3
       typescript-vue-plugin-forward: file:typescript-vue-plugin-forward
       vsce: latest
     dependencies:
@@ -57,10 +57,10 @@ importers:
     specifiers:
       '@types/semver': ^7.3.12
       '@types/vscode': 1.67.0
-      '@volar/preview': 1.0.0-alpha.2
-      '@volar/shared': 1.0.0-alpha.2
-      '@volar/vue-language-core': 1.0.0-alpha.2
-      '@volar/vue-language-server': 1.0.0-alpha.2
+      '@volar/preview': 1.0.0-alpha.3
+      '@volar/shared': 1.0.0-alpha.3
+      '@volar/vue-language-core': 1.0.0-alpha.3
+      '@volar/vue-language-server': 1.0.0-alpha.3
       '@vue/compiler-sfc': ^3.2.38
       '@vue/reactivity': ^3.2.38
       esbuild: latest
@@ -91,14 +91,14 @@ importers:
 
   packages/code-gen:
     specifiers:
-      '@volar/source-map': 1.0.0-alpha.2
+      '@volar/source-map': 1.0.0-alpha.3
     dependencies:
       '@volar/source-map': link:../source-map
 
   packages/language-core:
     specifiers:
-      '@volar/code-gen': 1.0.0-alpha.2
-      '@volar/source-map': 1.0.0-alpha.2
+      '@volar/code-gen': 1.0.0-alpha.3
+      '@volar/source-map': 1.0.0-alpha.3
       '@vue/reactivity': ^3.2.38
     dependencies:
       '@volar/code-gen': link:../code-gen
@@ -107,9 +107,9 @@ importers:
 
   packages/language-server:
     specifiers:
-      '@volar/language-core': 1.0.0-alpha.2
-      '@volar/language-service': 1.0.0-alpha.2
-      '@volar/shared': 1.0.0-alpha.2
+      '@volar/language-core': 1.0.0-alpha.3
+      '@volar/language-service': 1.0.0-alpha.3
+      '@volar/shared': 1.0.0-alpha.3
       request-light: ^0.5.8
       upath: ^2.0.1
       vscode-html-languageservice: ^5.0.1
@@ -131,11 +131,11 @@ importers:
 
   packages/language-service:
     specifiers:
-      '@volar/language-core': 1.0.0-alpha.2
-      '@volar/shared': 1.0.0-alpha.2
-      '@volar/source-map': 1.0.0-alpha.2
-      '@volar/transforms': 1.0.0-alpha.2
-      '@volar/typescript-faster': 1.0.0-alpha.2
+      '@volar/language-core': 1.0.0-alpha.3
+      '@volar/shared': 1.0.0-alpha.3
+      '@volar/source-map': 1.0.0-alpha.3
+      '@volar/transforms': 1.0.0-alpha.3
+      '@volar/typescript-faster': 1.0.0-alpha.3
       '@vue/reactivity': ^3.2.38
       typescript: latest
       upath: ^2.0.1
@@ -171,10 +171,10 @@ importers:
 
   packages/pug-language-service:
     specifiers:
-      '@volar/code-gen': 1.0.0-alpha.2
-      '@volar/shared': 1.0.0-alpha.2
-      '@volar/source-map': 1.0.0-alpha.2
-      '@volar/transforms': 1.0.0-alpha.2
+      '@volar/code-gen': 1.0.0-alpha.3
+      '@volar/shared': 1.0.0-alpha.3
+      '@volar/source-map': 1.0.0-alpha.3
+      '@volar/transforms': 1.0.0-alpha.3
       pug-lexer: ^5.0.1
       pug-parser: ^6.0.0
       vscode-html-languageservice: ^5.0.1
@@ -215,7 +215,7 @@ importers:
 
   packages/transforms:
     specifiers:
-      '@volar/shared': 1.0.0-alpha.2
+      '@volar/shared': 1.0.0-alpha.3
       vscode-languageserver-types: ^3.17.2
     dependencies:
       '@volar/shared': link:../shared
@@ -235,7 +235,7 @@ importers:
   packages/typescript-language-service:
     specifiers:
       '@types/semver': ^7.3.12
-      '@volar/shared': 1.0.0-alpha.2
+      '@volar/shared': 1.0.0-alpha.3
       semver: ^7.3.7
       typescript: latest
       upath: ^2.0.1
@@ -257,8 +257,8 @@ importers:
 
   packages/typescript-vue-plugin:
     specifiers:
-      '@volar/vue-language-core': 1.0.0-alpha.2
-      '@volar/vue-typescript': 1.0.0-alpha.2
+      '@volar/vue-language-core': 1.0.0-alpha.3
+      '@volar/vue-typescript': 1.0.0-alpha.3
       typescript: latest
     dependencies:
       '@volar/vue-language-core': link:../vue-language-core
@@ -268,17 +268,17 @@ importers:
 
   packages/vue-component-meta:
     specifiers:
-      '@volar/language-core': 1.0.0-alpha.2
-      '@volar/vue-language-core': 1.0.0-alpha.2
+      '@volar/language-core': 1.0.0-alpha.3
+      '@volar/vue-language-core': 1.0.0-alpha.3
     dependencies:
       '@volar/language-core': link:../language-core
       '@volar/vue-language-core': link:../vue-language-core
 
   packages/vue-language-core:
     specifiers:
-      '@volar/code-gen': 1.0.0-alpha.2
-      '@volar/language-core': 1.0.0-alpha.2
-      '@volar/source-map': 1.0.0-alpha.2
+      '@volar/code-gen': 1.0.0-alpha.3
+      '@volar/language-core': 1.0.0-alpha.3
+      '@volar/source-map': 1.0.0-alpha.3
       '@vue/compiler-dom': ^3.2.38
       '@vue/compiler-sfc': ^3.2.38
       '@vue/reactivity': ^3.2.38
@@ -299,18 +299,18 @@ importers:
 
   packages/vue-language-plugin-pug:
     specifiers:
-      '@volar/pug-language-service': 1.0.0-alpha.2
-      '@volar/vue-language-core': 1.0.0-alpha.2
+      '@volar/pug-language-service': 1.0.0-alpha.3
+      '@volar/vue-language-core': 1.0.0-alpha.3
     dependencies:
       '@volar/pug-language-service': link:../pug-language-service
       '@volar/vue-language-core': link:../vue-language-core
 
   packages/vue-language-server:
     specifiers:
-      '@volar/language-core': 1.0.0-alpha.2
-      '@volar/language-server': 1.0.0-alpha.2
-      '@volar/shared': 1.0.0-alpha.2
-      '@volar/vue-language-service': 1.0.0-alpha.2
+      '@volar/language-core': 1.0.0-alpha.3
+      '@volar/language-server': 1.0.0-alpha.3
+      '@volar/shared': 1.0.0-alpha.3
+      '@volar/vue-language-service': 1.0.0-alpha.3
       vscode-languageserver-protocol: ^3.17.2
     dependencies:
       '@volar/language-core': link:../language-core
@@ -322,20 +322,20 @@ importers:
   packages/vue-language-service:
     specifiers:
       '@johnsoncodehk/html2pug': ^1.0.0
-      '@volar-plugins/css': 1.0.0-alpha.2
-      '@volar-plugins/emmet': 1.0.0-alpha.2
-      '@volar-plugins/html': 1.0.0-alpha.2
-      '@volar-plugins/json': 1.0.0-alpha.2
-      '@volar-plugins/pug': 1.0.0-alpha.2
-      '@volar-plugins/pug-beautify': 1.0.0-alpha.2
-      '@volar-plugins/typescript': 1.0.0-alpha.2
-      '@volar/language-core': 1.0.0-alpha.2
-      '@volar/language-service': 1.0.0-alpha.2
-      '@volar/shared': 1.0.0-alpha.2
-      '@volar/source-map': 1.0.0-alpha.2
-      '@volar/transforms': 1.0.0-alpha.2
-      '@volar/typescript-language-service': 1.0.0-alpha.2
-      '@volar/vue-language-core': 1.0.0-alpha.2
+      '@volar-plugins/css': 1.0.0-alpha.3
+      '@volar-plugins/emmet': 1.0.0-alpha.3
+      '@volar-plugins/html': 1.0.0-alpha.3
+      '@volar-plugins/json': 1.0.0-alpha.3
+      '@volar-plugins/pug': 1.0.0-alpha.3
+      '@volar-plugins/pug-beautify': 1.0.0-alpha.3
+      '@volar-plugins/typescript': 1.0.0-alpha.3
+      '@volar/language-core': 1.0.0-alpha.3
+      '@volar/language-service': 1.0.0-alpha.3
+      '@volar/shared': 1.0.0-alpha.3
+      '@volar/source-map': 1.0.0-alpha.3
+      '@volar/transforms': 1.0.0-alpha.3
+      '@volar/typescript-language-service': 1.0.0-alpha.3
+      '@volar/vue-language-core': 1.0.0-alpha.3
       '@vue/compiler-dom': ^3.2.38
       '@vue/reactivity': ^3.2.38
       '@vue/shared': ^3.2.38
@@ -382,18 +382,18 @@ importers:
 
   packages/vue-tsc:
     specifiers:
-      '@volar/vue-language-core': 1.0.0-alpha.2
-      '@volar/vue-typescript': 1.0.0-alpha.2
+      '@volar/vue-language-core': 1.0.0-alpha.3
+      '@volar/vue-typescript': 1.0.0-alpha.3
     dependencies:
       '@volar/vue-language-core': link:../vue-language-core
       '@volar/vue-typescript': link:../vue-typescript
 
   packages/vue-typescript:
     specifiers:
-      '@volar/code-gen': 1.0.0-alpha.2
-      '@volar/language-core': 1.0.0-alpha.2
-      '@volar/typescript-faster': 1.0.0-alpha.2
-      '@volar/vue-language-core': 1.0.0-alpha.2
+      '@volar/code-gen': 1.0.0-alpha.3
+      '@volar/language-core': 1.0.0-alpha.3
+      '@volar/typescript-faster': 1.0.0-alpha.3
+      '@volar/vue-language-core': 1.0.0-alpha.3
       typescript: latest
     dependencies:
       '@volar/code-gen': link:../code-gen
@@ -405,8 +405,8 @@ importers:
 
   plugins/css:
     specifiers:
-      '@volar/language-service': 1.0.0-alpha.2
-      '@volar/shared': 1.0.0-alpha.2
+      '@volar/language-service': 1.0.0-alpha.3
+      '@volar/shared': 1.0.0-alpha.3
       vscode-css-languageservice: ^6.1.0
       vscode-languageserver-protocol: ^3.17.2
       vscode-languageserver-textdocument: ^1.0.7
@@ -419,7 +419,7 @@ importers:
 
   plugins/emmet:
     specifiers:
-      '@volar/language-service': 1.0.0-alpha.2
+      '@volar/language-service': 1.0.0-alpha.3
       '@vscode/emmet-helper': ^2.8.4
     dependencies:
       '@volar/language-service': link:../../packages/language-service
@@ -427,8 +427,8 @@ importers:
 
   plugins/html:
     specifiers:
-      '@volar/language-service': 1.0.0-alpha.2
-      '@volar/shared': 1.0.0-alpha.2
+      '@volar/language-service': 1.0.0-alpha.3
+      '@volar/shared': 1.0.0-alpha.3
       vscode-html-languageservice: ^5.0.1
       vscode-languageserver-protocol: ^3.17.2
       vscode-languageserver-textdocument: ^1.0.7
@@ -441,7 +441,7 @@ importers:
 
   plugins/json:
     specifiers:
-      '@volar/language-service': 1.0.0-alpha.2
+      '@volar/language-service': 1.0.0-alpha.3
       vscode-json-languageservice: ^5.1.0
       vscode-languageserver-protocol: ^3.17.2
       vscode-languageserver-textdocument: ^1.0.7
@@ -453,9 +453,9 @@ importers:
 
   plugins/pug:
     specifiers:
-      '@volar-plugins/html': 1.0.0-alpha.2
-      '@volar/language-service': 1.0.0-alpha.2
-      '@volar/pug-language-service': 1.0.0-alpha.2
+      '@volar-plugins/html': 1.0.0-alpha.3
+      '@volar/language-service': 1.0.0-alpha.3
+      '@volar/pug-language-service': 1.0.0-alpha.3
       vscode-html-languageservice: ^5.0.1
       vscode-languageserver-textdocument: ^1.0.7
     dependencies:
@@ -468,7 +468,7 @@ importers:
   plugins/pug-beautify:
     specifiers:
       '@johnsoncodehk/pug-beautify': ^0.2.2
-      '@volar/language-service': 1.0.0-alpha.2
+      '@volar/language-service': 1.0.0-alpha.3
       vscode-languageserver-types: ^3.17.2
     dependencies:
       '@johnsoncodehk/pug-beautify': 0.2.2
@@ -478,9 +478,9 @@ importers:
   plugins/typescript:
     specifiers:
       '@types/semver': ^7.3.12
-      '@volar/language-service': 1.0.0-alpha.2
-      '@volar/shared': 1.0.0-alpha.2
-      '@volar/typescript-language-service': 1.0.0-alpha.2
+      '@volar/language-service': 1.0.0-alpha.3
+      '@volar/shared': 1.0.0-alpha.3
+      '@volar/typescript-language-service': 1.0.0-alpha.3
       semver: ^7.3.7
       vscode-languageserver-protocol: ^3.17.2
       vscode-languageserver-textdocument: ^1.0.7
@@ -729,15 +729,6 @@ packages:
     requiresBuild: true
     dependencies:
       esbuild-wasm: 0.15.8
-    dev: true
-    optional: true
-
-  /@esbuild/linux-loong64/0.15.7:
-    resolution: {integrity: sha512-IKznSJOsVUuyt7cDzzSZyqBEcZe+7WlBqTVXiF1OXP/4Nm387ToaXZ0fyLwI1iBlI/bzpxVq411QE2/Bt2XWWw==}
-    engines: {node: '>=12'}
-    cpu: [loong64]
-    os: [linux]
-    requiresBuild: true
     optional: true
 
   /@esbuild/linux-loong64/0.15.8:
@@ -746,7 +737,6 @@ packages:
     cpu: [loong64]
     os: [linux]
     requiresBuild: true
-    dev: true
     optional: true
 
   /@gar/promisify/1.1.3:
@@ -2508,14 +2498,6 @@ packages:
     dev: false
     optional: true
 
-  /esbuild-android-64/0.15.7:
-    resolution: {integrity: sha512-p7rCvdsldhxQr3YHxptf1Jcd86dlhvc3EQmQJaZzzuAxefO9PvcI0GLOa5nCWem1AJ8iMRu9w0r5TG8pHmbi9w==}
-    engines: {node: '>=12'}
-    cpu: [x64]
-    os: [android]
-    requiresBuild: true
-    optional: true
-
   /esbuild-android-64/0.15.8:
     resolution: {integrity: sha512-bVh8FIKOolF7/d4AMzt7xHlL0Ljr+mYKSHI39TJWDkybVWHdn6+4ODL3xZGHOxPpdRpitemXA1WwMKYBsw8dGw==}
     engines: {node: '>=12'}
@@ -2524,15 +2506,6 @@ packages:
     requiresBuild: true
     dependencies:
       esbuild-wasm: 0.15.8
-    dev: true
-    optional: true
-
-  /esbuild-android-arm64/0.15.7:
-    resolution: {integrity: sha512-L775l9ynJT7rVqRM5vo+9w5g2ysbOCfsdLV4CWanTZ1k/9Jb3IYlQ06VCI1edhcosTYJRECQFJa3eAvkx72eyQ==}
-    engines: {node: '>=12'}
-    cpu: [arm64]
-    os: [android]
-    requiresBuild: true
     optional: true
 
   /esbuild-android-arm64/0.15.8:
@@ -2541,30 +2514,12 @@ packages:
     cpu: [arm64]
     os: [android]
     requiresBuild: true
-    dev: true
-    optional: true
-
-  /esbuild-darwin-64/0.15.7:
-    resolution: {integrity: sha512-KGPt3r1c9ww009t2xLB6Vk0YyNOXh7hbjZ3EecHoVDxgtbUlYstMPDaReimKe6eOEfyY4hBEEeTvKwPsiH5WZg==}
-    engines: {node: '>=12'}
-    cpu: [x64]
-    os: [darwin]
-    requiresBuild: true
     optional: true
 
   /esbuild-darwin-64/0.15.8:
     resolution: {integrity: sha512-KaKcGfJ+yto7Fo5gAj3xwxHMd1fBIKatpCHK8znTJLVv+9+NN2/tIPBqA4w5rBwjX0UqXDeIE2v1xJP+nGEXgA==}
     engines: {node: '>=12'}
     cpu: [x64]
-    os: [darwin]
-    requiresBuild: true
-    dev: true
-    optional: true
-
-  /esbuild-darwin-arm64/0.15.7:
-    resolution: {integrity: sha512-kBIHvtVqbSGajN88lYMnR3aIleH3ABZLLFLxwL2stiuIGAjGlQW741NxVTpUHQXUmPzxi6POqc9npkXa8AcSZQ==}
-    engines: {node: '>=12'}
-    cpu: [arm64]
     os: [darwin]
     requiresBuild: true
     optional: true
@@ -2575,30 +2530,12 @@ packages:
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
-    dev: true
-    optional: true
-
-  /esbuild-freebsd-64/0.15.7:
-    resolution: {integrity: sha512-hESZB91qDLV5MEwNxzMxPfbjAhOmtfsr9Wnuci7pY6TtEh4UDuevmGmkUIjX/b+e/k4tcNBMf7SRQ2mdNuK/HQ==}
-    engines: {node: '>=12'}
-    cpu: [x64]
-    os: [freebsd]
-    requiresBuild: true
     optional: true
 
   /esbuild-freebsd-64/0.15.8:
     resolution: {integrity: sha512-jaxcsGHYzn2L0/lffON2WfH4Nc+d/EwozVTP5K2v016zxMb5UQMhLoJzvLgBqHT1SG0B/mO+a+THnJCMVg15zw==}
     engines: {node: '>=12'}
     cpu: [x64]
-    os: [freebsd]
-    requiresBuild: true
-    dev: true
-    optional: true
-
-  /esbuild-freebsd-arm64/0.15.7:
-    resolution: {integrity: sha512-dLFR0ChH5t+b3J8w0fVKGvtwSLWCv7GYT2Y2jFGulF1L5HftQLzVGN+6pi1SivuiVSmTh28FwUhi9PwQicXI6Q==}
-    engines: {node: '>=12'}
-    cpu: [arm64]
     os: [freebsd]
     requiresBuild: true
     optional: true
@@ -2609,30 +2546,12 @@ packages:
     cpu: [arm64]
     os: [freebsd]
     requiresBuild: true
-    dev: true
-    optional: true
-
-  /esbuild-linux-32/0.15.7:
-    resolution: {integrity: sha512-v3gT/LsONGUZcjbt2swrMjwxo32NJzk+7sAgtxhGx1+ZmOFaTRXBAi1PPfgpeo/J//Un2jIKm/I+qqeo4caJvg==}
-    engines: {node: '>=12'}
-    cpu: [ia32]
-    os: [linux]
-    requiresBuild: true
     optional: true
 
   /esbuild-linux-32/0.15.8:
     resolution: {integrity: sha512-9u1E54BRz1FQMl86iaHK146+4ID2KYNxL3trLZT4QLLx3M7Q9n4lGG3lrzqUatGR2cKy8c33b0iaCzsItZWkFg==}
     engines: {node: '>=12'}
     cpu: [ia32]
-    os: [linux]
-    requiresBuild: true
-    dev: true
-    optional: true
-
-  /esbuild-linux-64/0.15.7:
-    resolution: {integrity: sha512-LxXEfLAKwOVmm1yecpMmWERBshl+Kv5YJ/1KnyAr6HRHFW8cxOEsEfisD3sVl/RvHyW//lhYUVSuy9jGEfIRAQ==}
-    engines: {node: '>=12'}
-    cpu: [x64]
     os: [linux]
     requiresBuild: true
     optional: true
@@ -2643,30 +2562,12 @@ packages:
     cpu: [x64]
     os: [linux]
     requiresBuild: true
-    dev: true
-    optional: true
-
-  /esbuild-linux-arm/0.15.7:
-    resolution: {integrity: sha512-JKgAHtMR5f75wJTeuNQbyznZZa+pjiUHV7sRZp42UNdyXC6TiUYMW/8z8yIBAr2Fpad8hM1royZKQisqPABPvQ==}
-    engines: {node: '>=12'}
-    cpu: [arm]
-    os: [linux]
-    requiresBuild: true
     optional: true
 
   /esbuild-linux-arm/0.15.8:
     resolution: {integrity: sha512-7DVBU9SFjX4+vBwt8tHsUCbE6Vvl6y6FQWHAgyw1lybC5gULqn/WnjHYHN2/LJaZRsDBvxWT4msEgwLGq1Wd3Q==}
     engines: {node: '>=12'}
     cpu: [arm]
-    os: [linux]
-    requiresBuild: true
-    dev: true
-    optional: true
-
-  /esbuild-linux-arm64/0.15.7:
-    resolution: {integrity: sha512-P3cfhudpzWDkglutWgXcT2S7Ft7o2e3YDMrP1n0z2dlbUZghUkKCyaWw0zhp4KxEEzt/E7lmrtRu/pGWnwb9vw==}
-    engines: {node: '>=12'}
-    cpu: [arm64]
     os: [linux]
     requiresBuild: true
     optional: true
@@ -2677,30 +2578,12 @@ packages:
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
-    dev: true
-    optional: true
-
-  /esbuild-linux-mips64le/0.15.7:
-    resolution: {integrity: sha512-T7XKuxl0VpeFLCJXub6U+iybiqh0kM/bWOTb4qcPyDDwNVhLUiPcGdG2/0S7F93czUZOKP57YiLV8YQewgLHKw==}
-    engines: {node: '>=12'}
-    cpu: [mips64el]
-    os: [linux]
-    requiresBuild: true
     optional: true
 
   /esbuild-linux-mips64le/0.15.8:
     resolution: {integrity: sha512-yeFoNPVFPEzZvFYBfUQNG2TjGRaCyV1E27OcOg4LOtnGrxb2wA+mkW3luckyv1CEyd00mpAg7UdHx8nlx3ghgA==}
     engines: {node: '>=12'}
     cpu: [mips64el]
-    os: [linux]
-    requiresBuild: true
-    dev: true
-    optional: true
-
-  /esbuild-linux-ppc64le/0.15.7:
-    resolution: {integrity: sha512-6mGuC19WpFN7NYbecMIJjeQgvDb5aMuvyk0PDYBJrqAEMkTwg3Z98kEKuCm6THHRnrgsdr7bp4SruSAxEM4eJw==}
-    engines: {node: '>=12'}
-    cpu: [ppc64]
     os: [linux]
     requiresBuild: true
     optional: true
@@ -2711,30 +2594,12 @@ packages:
     cpu: [ppc64]
     os: [linux]
     requiresBuild: true
-    dev: true
-    optional: true
-
-  /esbuild-linux-riscv64/0.15.7:
-    resolution: {integrity: sha512-uUJsezbswAYo/X7OU/P+PuL/EI9WzxsEQXDekfwpQ23uGiooxqoLFAPmXPcRAt941vjlY9jtITEEikWMBr+F/g==}
-    engines: {node: '>=12'}
-    cpu: [riscv64]
-    os: [linux]
-    requiresBuild: true
     optional: true
 
   /esbuild-linux-riscv64/0.15.8:
     resolution: {integrity: sha512-OCGSOaspMUjexSCU8ZiA0UnV/NiRU+s2vIfEcAQWQ6u32R+2luyfh/4ZaY6jFbylJE07Esc/yRvb9Q5fXuClXA==}
     engines: {node: '>=12'}
     cpu: [riscv64]
-    os: [linux]
-    requiresBuild: true
-    dev: true
-    optional: true
-
-  /esbuild-linux-s390x/0.15.7:
-    resolution: {integrity: sha512-+tO+xOyTNMc34rXlSxK7aCwJgvQyffqEM5MMdNDEeMU3ss0S6wKvbBOQfgd5jRPblfwJ6b+bKiz0g5nABpY0QQ==}
-    engines: {node: '>=12'}
-    cpu: [s390x]
     os: [linux]
     requiresBuild: true
     optional: true
@@ -2745,15 +2610,6 @@ packages:
     cpu: [s390x]
     os: [linux]
     requiresBuild: true
-    dev: true
-    optional: true
-
-  /esbuild-netbsd-64/0.15.7:
-    resolution: {integrity: sha512-yVc4Wz+Pu3cP5hzm5kIygNPrjar/v5WCSoRmIjCPWfBVJkZNb5brEGKUlf+0Y759D48BCWa0WHrWXaNy0DULTQ==}
-    engines: {node: '>=12'}
-    cpu: [x64]
-    os: [netbsd]
-    requiresBuild: true
     optional: true
 
   /esbuild-netbsd-64/0.15.8:
@@ -2761,15 +2617,6 @@ packages:
     engines: {node: '>=12'}
     cpu: [x64]
     os: [netbsd]
-    requiresBuild: true
-    dev: true
-    optional: true
-
-  /esbuild-openbsd-64/0.15.7:
-    resolution: {integrity: sha512-GsimbwC4FSR4lN3wf8XmTQ+r8/0YSQo21rWDL0XFFhLHKlzEA4SsT1Tl8bPYu00IU6UWSJ+b3fG/8SB69rcuEQ==}
-    engines: {node: '>=12'}
-    cpu: [x64]
-    os: [openbsd]
     requiresBuild: true
     optional: true
 
@@ -2779,7 +2626,6 @@ packages:
     cpu: [x64]
     os: [openbsd]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-plugin-copy/1.3.0_esbuild@0.15.8:
@@ -2793,21 +2639,12 @@ packages:
       globby: 11.1.0
     dev: true
 
-  /esbuild-sunos-64/0.15.7:
-    resolution: {integrity: sha512-8CDI1aL/ts0mDGbWzjEOGKXnU7p3rDzggHSBtVryQzkSOsjCHRVe0iFYUuhczlxU1R3LN/E7HgUO4NXzGGP/Ag==}
-    engines: {node: '>=12'}
-    cpu: [x64]
-    os: [sunos]
-    requiresBuild: true
-    optional: true
-
   /esbuild-sunos-64/0.15.8:
     resolution: {integrity: sha512-qMP/jR/FzcIOwKj+W+Lb+8Cfr8GZHbHUJxAPi7DUhNZMQ/6y7sOgRzlOSpRrbbUntrRZh0MqOyDhJ3Gpo6L1QA==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [sunos]
     requiresBuild: true
-    dev: true
     optional: true
 
   /esbuild-wasm/0.15.8:
@@ -2815,30 +2652,12 @@ packages:
     engines: {node: '>=12'}
     hasBin: true
     requiresBuild: true
-    dev: true
-    optional: true
-
-  /esbuild-windows-32/0.15.7:
-    resolution: {integrity: sha512-cOnKXUEPS8EGCzRSFa1x6NQjGhGsFlVgjhqGEbLTPsA7x4RRYiy2RKoArNUU4iR2vHmzqS5Gr84MEumO/wxYKA==}
-    engines: {node: '>=12'}
-    cpu: [ia32]
-    os: [win32]
-    requiresBuild: true
     optional: true
 
   /esbuild-windows-32/0.15.8:
     resolution: {integrity: sha512-RKR1QHh4iWzjUhkP8Yqi75PPz/KS+b8zw3wUrzw6oAkj+iU5Qtyj61ZDaSG3Qf2vc6hTIUiPqVTqBH0NpXFNwg==}
     engines: {node: '>=12'}
     cpu: [ia32]
-    os: [win32]
-    requiresBuild: true
-    dev: true
-    optional: true
-
-  /esbuild-windows-64/0.15.7:
-    resolution: {integrity: sha512-7MI08Ec2sTIDv+zH6StNBKO+2hGUYIT42GmFyW6MBBWWtJhTcQLinKS6ldIN1d52MXIbiJ6nXyCJ+LpL4jBm3Q==}
-    engines: {node: '>=12'}
-    cpu: [x64]
     os: [win32]
     requiresBuild: true
     optional: true
@@ -2849,15 +2668,6 @@ packages:
     cpu: [x64]
     os: [win32]
     requiresBuild: true
-    dev: true
-    optional: true
-
-  /esbuild-windows-arm64/0.15.7:
-    resolution: {integrity: sha512-R06nmqBlWjKHddhRJYlqDd3Fabx9LFdKcjoOy08YLimwmsswlFBJV4rXzZCxz/b7ZJXvrZgj8DDv1ewE9+StMw==}
-    engines: {node: '>=12'}
-    cpu: [arm64]
-    os: [win32]
-    requiresBuild: true
     optional: true
 
   /esbuild-windows-arm64/0.15.8:
@@ -2866,36 +2676,7 @@ packages:
     cpu: [arm64]
     os: [win32]
     requiresBuild: true
-    dev: true
     optional: true
-
-  /esbuild/0.15.7:
-    resolution: {integrity: sha512-7V8tzllIbAQV1M4QoE52ImKu8hT/NLGlGXkiDsbEU5PS6K8Mn09ZnYoS+dcmHxOS9CRsV4IRAMdT3I67IyUNXw==}
-    engines: {node: '>=12'}
-    hasBin: true
-    requiresBuild: true
-    optionalDependencies:
-      '@esbuild/linux-loong64': 0.15.7
-      esbuild-android-64: 0.15.7
-      esbuild-android-arm64: 0.15.7
-      esbuild-darwin-64: 0.15.7
-      esbuild-darwin-arm64: 0.15.7
-      esbuild-freebsd-64: 0.15.7
-      esbuild-freebsd-arm64: 0.15.7
-      esbuild-linux-32: 0.15.7
-      esbuild-linux-64: 0.15.7
-      esbuild-linux-arm: 0.15.7
-      esbuild-linux-arm64: 0.15.7
-      esbuild-linux-mips64le: 0.15.7
-      esbuild-linux-ppc64le: 0.15.7
-      esbuild-linux-riscv64: 0.15.7
-      esbuild-linux-s390x: 0.15.7
-      esbuild-netbsd-64: 0.15.7
-      esbuild-openbsd-64: 0.15.7
-      esbuild-sunos-64: 0.15.7
-      esbuild-windows-32: 0.15.7
-      esbuild-windows-64: 0.15.7
-      esbuild-windows-arm64: 0.15.7
 
   /esbuild/0.15.8:
     resolution: {integrity: sha512-Remsk2dmr1Ia65sU+QasE6svJbsHe62lzR+CnjpUvbZ+uSYo1SitiOWPRfZQkCu82YWZBBKXiD/j0i//XWMZ+Q==}
@@ -2925,7 +2706,6 @@ packages:
       esbuild-windows-32: 0.15.8
       esbuild-windows-64: 0.15.8
       esbuild-windows-arm64: 0.15.8
-    dev: true
 
   /escalade/3.1.1:
     resolution: {integrity: sha512-k0er2gUkLf8O0zKJiAhmkTnJlTvINGv7ygDNPbeIsX/TJjGJZHuh9B2UxbsaEkmlEo9MfhrSzmhIlhRlI2GXnw==}
@@ -5979,7 +5759,7 @@ packages:
       terser:
         optional: true
     dependencies:
-      esbuild: 0.15.7
+      esbuild: 0.15.8
       postcss: 8.4.16
       resolve: 1.22.1
       rollup: 2.78.1
