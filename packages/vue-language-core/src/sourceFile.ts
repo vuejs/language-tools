@@ -1,6 +1,6 @@
-import { DocumentCapabilities, EmbeddedFileSourceMap, SourceFile, PositionCapabilities, Teleport, TeleportMappingData, EmbeddedFile } from '@volar/language-core';
+import { DocumentCapabilities, EmbeddedFile, EmbeddedFileSourceMap, PositionCapabilities, SourceFile, Teleport, TeleportMappingData } from '@volar/language-core';
 import { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
-import { computed, ComputedRef, pauseTracking, reactive, Ref, resetTracking, shallowRef as ref } from '@vue/reactivity';
+import { computed, ComputedRef, reactive, Ref, shallowRef as ref } from '@vue/reactivity';
 import { Sfc, VueLanguagePlugin } from './types';
 
 import { CodeGen } from '@volar/code-gen';
@@ -43,6 +43,15 @@ export class VueSourceFile implements SourceFile {
 		plugin: ReturnType<VueLanguagePlugin>,
 	} | undefined;
 
+	static compiledSFCTemplateCache: {
+		fileName: string,
+		template: string,
+		templateOffset: number,
+		snapshot: ts.IScriptSnapshot,
+		result: CompilerDom.CodegenResult,
+		plugin: ReturnType<VueLanguagePlugin>,
+	} | undefined;
+
 	static getSFC(plugins: ReturnType<VueLanguagePlugin>[], fileName: string, snapshot: ts.IScriptSnapshot) {
 
 		if (VueSourceFile.parsedSfcCache?.snapshot === snapshot) {
@@ -82,15 +91,105 @@ export class VueSourceFile implements SourceFile {
 		}
 	}
 
+	static getCompiledSFCTemplate(plugins: ReturnType<VueLanguagePlugin>[], sourceFile: VueSourceFile, newSnapshot: ts.IScriptSnapshot) {
+
+		if (VueSourceFile.compiledSFCTemplateCache?.snapshot === newSnapshot) {
+			return {
+				errors: [],
+				warnings: [],
+				ast: VueSourceFile.compiledSFCTemplateCache.result.ast,
+			};
+		}
+
+		if (
+			VueSourceFile.compiledSFCTemplateCache?.fileName === sourceFile.fileName
+			&& VueSourceFile.compiledSFCTemplateCache.template === sourceFile.sfc.template?.content
+			&& VueSourceFile.compiledSFCTemplateCache.templateOffset === sourceFile.sfc.template.startTagEnd
+		) {
+			return {
+				errors: [],
+				warnings: [],
+				ast: VueSourceFile.compiledSFCTemplateCache.result.ast,
+			};
+		}
+
+		if (sourceFile.sfc.template) {
+
+			// incremental update
+			if (VueSourceFile.compiledSFCTemplateCache?.plugin.updateSFCTemplate) {
+
+				const change = newSnapshot.getChangeRange(VueSourceFile.compiledSFCTemplateCache.snapshot);
+				const templateOffset = sourceFile.sfc.template.startTagEnd;
+
+				if (change) {
+					const newText = newSnapshot.getText(change.span.start, change.span.start + change.newLength);
+					const newResult = VueSourceFile.compiledSFCTemplateCache.plugin.updateSFCTemplate(VueSourceFile.compiledSFCTemplateCache.result, {
+						start: change.span.start - templateOffset,
+						end: change.span.start + change.span.length - templateOffset,
+						newText,
+					});
+					if (newResult) {
+						VueSourceFile.compiledSFCTemplateCache.snapshot = newSnapshot;
+						VueSourceFile.compiledSFCTemplateCache.result = newResult;
+						return {
+							errors: [],
+							warnings: [],
+							ast: newResult.ast,
+						};
+					}
+				}
+			}
+
+			for (const plugin of plugins) {
+
+				const errors: CompilerDom.CompilerError[] = [];
+				const warnings: CompilerDom.CompilerError[] = [];
+				let result: CompilerDom.CodegenResult | undefined;
+
+				try {
+					result = plugin.compileSFCTemplate?.(sourceFile.sfc.template.lang, sourceFile.sfc.template.content, {
+						onError: (err: CompilerDom.CompilerError) => errors.push(err),
+						onWarn: (err: CompilerDom.CompilerError) => warnings.push(err),
+						expressionPlugins: ['typescript'],
+					});
+				}
+				catch (e) {
+					const err = e as CompilerDom.CompilerError;
+					errors.push(err);
+				}
+
+				if (result || errors.length) {
+
+					if (result && !errors.length && !warnings.length) {
+						VueSourceFile.compiledSFCTemplateCache = {
+							fileName: sourceFile.fileName,
+							template: sourceFile.sfc.template.content,
+							templateOffset: sourceFile.sfc.template.startTagEnd,
+							snapshot: newSnapshot,
+							result: result,
+							plugin,
+						};
+					}
+
+					return {
+						errors,
+						warnings,
+						ast: result?.ast,
+					};
+				}
+			}
+		}
+	}
+
 	public sfc = reactive<Sfc>({
 		template: null,
 		script: null,
 		scriptSetup: null,
 		styles: [],
 		customBlocks: [],
-		templateAst: computed(() => {
-			return this._compiledSFCTemplate.value?.ast;
-		}) as unknown as Sfc['templateAst'],
+		getTemplateAst: () => {
+			return this.compiledSFCTemplate?.ast;
+		},
 		scriptAst: computed(() => {
 			if (this.sfc.script) {
 				return this.ts.createSourceFile(this.fileName + '.' + this.sfc.script.lang, this.sfc.script.content, this.ts.ScriptTarget.Latest);
@@ -108,7 +207,7 @@ export class VueSourceFile implements SourceFile {
 	}
 
 	get compiledSFCTemplate() {
-		return this._compiledSFCTemplate.value;
+		return VueSourceFile.getCompiledSFCTemplate(this.plugins, this, this._snapshot.value);
 	}
 
 	get tsFileName() {
@@ -123,88 +222,7 @@ export class VueSourceFile implements SourceFile {
 	_snapshot: Ref<ts.IScriptSnapshot>;
 	_text = computed(() => this._snapshot.value.getText(0, this._snapshot.value.getLength()));
 
-	// cache
-	_compiledSFCTemplateCache: {
-		snapshot: ts.IScriptSnapshot,
-		result: CompilerDom.CodegenResult,
-		plugin: ReturnType<VueLanguagePlugin>,
-	} | undefined;
-
 	// computeds
-	_compiledSFCTemplate = computed(() => {
-
-		if (this.sfc.template) {
-
-			pauseTracking();
-			// don't tracking
-			const newSnapshot = this._snapshot.value;
-			const templateOffset = this.sfc.template.startTagEnd;
-			resetTracking();
-
-			// tracking
-			this.sfc.template.content;
-
-			// incremental update
-			if (this._compiledSFCTemplateCache?.plugin.updateSFCTemplate) {
-
-				const change = newSnapshot.getChangeRange(this._compiledSFCTemplateCache.snapshot);
-
-				if (change) {
-					const newText = newSnapshot.getText(change.span.start, change.span.start + change.newLength);
-					const newResult = this._compiledSFCTemplateCache.plugin.updateSFCTemplate(this._compiledSFCTemplateCache.result, {
-						start: change.span.start - templateOffset,
-						end: change.span.start + change.span.length - templateOffset,
-						newText,
-					});
-					if (newResult) {
-						this._compiledSFCTemplateCache.snapshot = newSnapshot;
-						this._compiledSFCTemplateCache.result = newResult;
-						return {
-							errors: [],
-							warnings: [],
-							ast: newResult.ast,
-						};
-					}
-				}
-			}
-
-			for (const plugin of this.plugins) {
-
-				const errors: CompilerDom.CompilerError[] = [];
-				const warnings: CompilerDom.CompilerError[] = [];
-				let result: CompilerDom.CodegenResult | undefined;
-
-				try {
-					result = plugin.compileSFCTemplate?.(this.sfc.template.lang, this.sfc.template.content, {
-						onError: (err: CompilerDom.CompilerError) => errors.push(err),
-						onWarn: (err: CompilerDom.CompilerError) => warnings.push(err),
-						expressionPlugins: ['typescript'],
-					});
-				}
-				catch (e) {
-					const err = e as CompilerDom.CompilerError;
-					errors.push(err);
-				}
-
-				if (result || errors.length) {
-
-					if (result && !errors.length && !warnings.length) {
-						this._compiledSFCTemplateCache = {
-							snapshot: newSnapshot,
-							result: result,
-							plugin,
-						};
-					}
-
-					return {
-						errors,
-						warnings,
-						ast: result?.ast,
-					};
-				}
-			}
-		}
-	});
 	_pluginEmbeddedFiles = this.plugins.map(plugin => {
 		const embeddedFiles: Record<string, ComputedRef<VueEmbeddedFile>> = {};
 		const files = computed(() => {

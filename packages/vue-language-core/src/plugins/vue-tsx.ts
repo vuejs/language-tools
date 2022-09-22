@@ -123,8 +123,10 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 			return (setting === 'scoped' && style.scoped) || setting === 'always';
 		}));
 		const htmlGen = computed(() => {
+			
+			const templateAst = sfc.getTemplateAst();
 
-			if (!sfc.templateAst)
+			if (!templateAst)
 				return;
 
 			return templateGen.generate(
@@ -132,7 +134,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				vueCompilerOptions,
 				sfc.template?.content ?? '',
 				sfc.template?.lang ?? 'html',
-				sfc.templateAst,
+				templateAst,
 				!!sfc.scriptSetup,
 				Object.values(cssScopedClasses.value).map(style => style.classNames).flat(),
 			);
