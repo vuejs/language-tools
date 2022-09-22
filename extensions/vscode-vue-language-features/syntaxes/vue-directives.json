@@ -1,4 +1,5 @@
 {
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
 	"fileTypes": [],
 	"injectionSelector": "L:meta.tag -meta.attribute -entity.name.tag.pug -attribute_value -source.tsx -source.js.jsx, L:meta.element -meta.attribute",
 	"patterns": [
