@@ -36,6 +36,52 @@ export interface EmbeddedFileMappingData {
 
 export class VueSourceFile implements SourceFile {
 
+	static parsedSfcCache: {
+		fileName: string,
+		snapshot: ts.IScriptSnapshot,
+		sfc: SFCParseResult,
+		plugin: ReturnType<VueLanguagePlugin>,
+	} | undefined;
+
+	static getSFC(plugins: ReturnType<VueLanguagePlugin>[], fileName: string, snapshot: ts.IScriptSnapshot) {
+
+		if (VueSourceFile.parsedSfcCache?.snapshot === snapshot) {
+			return VueSourceFile.parsedSfcCache.sfc;
+		}
+
+		// incremental update
+		if (VueSourceFile.parsedSfcCache?.fileName === fileName && VueSourceFile.parsedSfcCache.plugin.updateSFC) {
+			const change = snapshot.getChangeRange(VueSourceFile.parsedSfcCache.snapshot);
+			if (change) {
+				const newSfc = VueSourceFile.parsedSfcCache.plugin.updateSFC(VueSourceFile.parsedSfcCache.sfc, {
+					start: change.span.start,
+					end: change.span.start + change.span.length,
+					newText: snapshot.getText(change.span.start, change.span.start + change.newLength),
+				});
+				if (newSfc) {
+					VueSourceFile.parsedSfcCache.snapshot = snapshot;
+					VueSourceFile.parsedSfcCache.sfc = newSfc;
+					return newSfc;
+				}
+			}
+		}
+
+		for (const plugin of plugins) {
+			const sfc = plugin.parseSFC?.(fileName, snapshot.getText(0, snapshot.getLength()));
+			if (sfc) {
+				if (!sfc.errors.length) {
+					VueSourceFile.parsedSfcCache = {
+						fileName,
+						snapshot,
+						sfc,
+						plugin,
+					};
+				}
+				return sfc;
+			}
+		}
+	}
+
 	public sfc = reactive<Sfc>({
 		template: null,
 		script: null,
@@ -78,11 +124,6 @@ export class VueSourceFile implements SourceFile {
 	_text = computed(() => this._snapshot.value.getText(0, this._snapshot.value.getLength()));
 
 	// cache
-	_parsedSfcCache: {
-		snapshot: ts.IScriptSnapshot,
-		sfc: SFCParseResult,
-		plugin: ReturnType<VueLanguagePlugin>,
-	} | undefined;
 	_compiledSFCTemplateCache: {
 		snapshot: ts.IScriptSnapshot,
 		result: CompilerDom.CodegenResult,
@@ -90,39 +131,6 @@ export class VueSourceFile implements SourceFile {
 	} | undefined;
 
 	// computeds
-	_parsedSfc = computed(() => {
-
-		// incremental update
-		if (this._parsedSfcCache?.plugin.updateSFC) {
-			const change = this._snapshot.value.getChangeRange(this._parsedSfcCache.snapshot);
-			if (change) {
-				const newSfc = this._parsedSfcCache.plugin.updateSFC(this._parsedSfcCache.sfc, {
-					start: change.span.start,
-					end: change.span.start + change.span.length,
-					newText: this._snapshot.value.getText(change.span.start, change.span.start + change.newLength),
-				});
-				if (newSfc) {
-					this._parsedSfcCache.snapshot = this._snapshot.value;
-					this._parsedSfcCache.sfc = newSfc;
-					return newSfc;
-				}
-			}
-		}
-
-		for (const plugin of this.plugins) {
-			const sfc = plugin.parseSFC?.(this.fileName, this._text.value);
-			if (sfc) {
-				if (!sfc.errors.length) {
-					this._parsedSfcCache = {
-						snapshot: this._snapshot.value,
-						sfc,
-						plugin,
-					};
-				}
-				return sfc;
-			}
-		}
-	});
 	_compiledSFCTemplate = computed(() => {
 
 		if (this.sfc.template) {
@@ -402,15 +410,17 @@ export class VueSourceFile implements SourceFile {
 			return;
 		}
 
+		const parsedSfc = VueSourceFile.getSFC(this.plugins, this.fileName, newScriptSnapshot);
+
 		this._snapshot.value = newScriptSnapshot;
 
 		// TODO: wait for https://github.com/vuejs/core/pull/5912
-		if (this._parsedSfc.value) {
-			updateTemplate(this._parsedSfc.value.descriptor.template);
-			updateScript(this._parsedSfc.value.descriptor.script);
-			updateScriptSetup(this._parsedSfc.value.descriptor.scriptSetup);
-			updateStyles(this._parsedSfc.value.descriptor.styles);
-			updateCustomBlocks(this._parsedSfc.value.descriptor.customBlocks);
+		if (parsedSfc) {
+			updateTemplate(parsedSfc.descriptor.template);
+			updateScript(parsedSfc.descriptor.script);
+			updateScriptSetup(parsedSfc.descriptor.scriptSetup);
+			updateStyles(parsedSfc.descriptor.styles);
+			updateCustomBlocks(parsedSfc.descriptor.customBlocks);
 		}
 		else {
 			updateTemplate(null);
