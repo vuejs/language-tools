@@ -251,14 +251,24 @@ export function generate(
 				}
 			}
 
+			const componentNames = new Set([
+				tagName, // hello-world
+				camelize(tagName), // helloWorld
+				capitalize(camelize(tagName)), // HelloWorld
+			]);
+
 			/* Completion */
 			codeGen.addText('/* Completion: Emits */\n');
-			codeGen.addText('// @ts-ignore\n');
-			codeGen.addText(`({} as import('./__VLS_types.js').ExtractEmit2<typeof ${var_componentVar}>)('${SearchTexts.EmitCompletion(tagName)}');\n`);
+			for (const name of componentNames) {
+				codeGen.addText('// @ts-ignore\n');
+				codeGen.addText(`({} as import('./__VLS_types.js').ExtractEmit2<typeof ${var_componentVar}>)('${SearchTexts.EmitCompletion(name)}');\n`);
+			}
 
 			codeGen.addText('/* Completion: Props */\n');
-			codeGen.addText('// @ts-ignore\n');
-			codeGen.addText(`({} as import('./__VLS_types.js').ExtractProps<typeof ${var_componentVar}>)['${SearchTexts.PropsCompletion(tagName)}'];\n`);
+			for (const name of componentNames) {
+				codeGen.addText('// @ts-ignore\n');
+				codeGen.addText(`({} as import('./__VLS_types.js').ExtractProps<typeof ${var_componentVar}>)['${SearchTexts.PropsCompletion(name)}'];\n`);
+			}
 
 			data[tagName] = {
 				component: var_componentVar,

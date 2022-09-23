@@ -42,6 +42,7 @@ export type GlobalComponents =
 	>;
 
 export declare function getVforSourceType<T>(source: T): ForableSource<NonNullable<T extends number ? number[] : T extends string ? string[] : T>>;
+export declare function getNameOption<T>(t?: T): T extends { name: infer N } ? N : undefined;
 export declare function directiveFunction<T>(dir: T):
 	T extends ObjectDirective<infer E, infer V> ? undefined extends V ? (value?: V) => void : (value: V) => void
 	: T extends FunctionDirective<infer E, infer V> ? undefined extends V ? (value?: V) => void : (value: V) => void
