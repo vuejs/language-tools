@@ -350,7 +350,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					'\n' + insert.insertText,
 				),
 			];
-			const _scriptRanges = vue.scriptRanges.parseScriptRanges(ts, sfc.scriptAst, !!sfc.scriptSetup, true, true);
+			const _scriptRanges = vue.scriptRanges.parseScriptRanges(ts, sfc.scriptAst, !!sfc.scriptSetup, true);
 			const exportDefault = _scriptRanges.exportDefault;
 			if (exportDefault) {
 				// https://github.com/microsoft/TypeScript/issues/36174

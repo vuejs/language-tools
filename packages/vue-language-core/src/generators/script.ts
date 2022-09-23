@@ -582,11 +582,11 @@ export function generate(
 	}
 	function writeConstNameOption() {
 		codeGen.addText(`\n`);
-		if (sfc.script && scriptRanges?.exportDefault?.args) {
-			const args = scriptRanges.exportDefault.args;
-			codeGen.addText(`const __VLS_name = (await import('./__VLS_types.js')).getNameOption(`);
-			codeGen.addText(`${sfc.script.content.substring(args.start, args.end)} as const`);
-			codeGen.addText(`);\n`);
+		if (sfc.script && scriptRanges?.exportDefault?.nameOption) {
+			const nameOption = scriptRanges.exportDefault.nameOption;
+			codeGen.addText(`const __VLS_name = `);
+			codeGen.addText(`${sfc.script.content.substring(nameOption.start, nameOption.end)} as const`);
+			codeGen.addText(`;\n`);
 		}
 		else if (sfc.scriptSetup) {
 			codeGen.addText(`let __VLS_name!: '${path.basename(fileName.substring(0, fileName.lastIndexOf('.')))}';\n`);

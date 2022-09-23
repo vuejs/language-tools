@@ -31,7 +31,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 	const cssVars = computed(() => collectCssVars(_sfc.value));
 	const scriptRanges = computed(() =>
 		_sfc.value.scriptAst
-			? parseScriptRanges(ts, _sfc.value.scriptAst, !!_sfc.value.scriptSetup, false, false)
+			? parseScriptRanges(ts, _sfc.value.scriptAst, !!_sfc.value.scriptSetup, false)
 			: undefined
 	);
 	const scriptSetupRanges = computed(() =>
