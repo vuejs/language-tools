@@ -71,7 +71,7 @@ export interface Sfc {
 	})[];
 
 	// ast
-	templateAst: CompilerDom.RootNode | undefined;
+	getTemplateAst: () => CompilerDom.RootNode | undefined;
 	scriptAst: ts.SourceFile | undefined;
 	scriptSetupAst: ts.SourceFile | undefined;
 }

@@ -1,4 +1,4 @@
-import { computed } from '@vue/reactivity';
+import { computed, shallowRef as ref } from '@vue/reactivity';
 import { generate as genScript } from '../generators/script';
 import * as templateGen from '../generators/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
@@ -11,17 +11,82 @@ import { parseCssVars } from '../utils/parseCssVars';
 const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOptions }) => {
 
 	const ts = modules.typescript;
-	const gen = new WeakMap<Sfc, ReturnType<typeof createGen>>();
+	const _fileName = ref('');
+	const _sfc = ref<Sfc>({} as any);
+	const lang = computed(() => {
+		let lang = !_sfc.value.script && !_sfc.value.scriptSetup ? 'ts'
+			: _sfc.value.scriptSetup && _sfc.value.scriptSetup.lang !== 'js' ? _sfc.value.scriptSetup.lang
+				: _sfc.value.script && _sfc.value.script.lang !== 'js' ? _sfc.value.script.lang
+					: 'js';
+		if (vueCompilerOptions.jsxTemplates) {
+			if (lang === 'js') {
+				lang = 'jsx';
+			}
+			else if (lang === 'ts') {
+				lang = 'tsx';
+			}
+		}
+		return lang;
+	});
+	const cssVars = computed(() => collectCssVars(_sfc.value));
+	const scriptRanges = computed(() =>
+		_sfc.value.scriptAst
+			? parseScriptRanges(ts, _sfc.value.scriptAst, !!_sfc.value.scriptSetup, false)
+			: undefined
+	);
+	const scriptSetupRanges = computed(() =>
+		_sfc.value.scriptSetupAst
+			? parseScriptSetupRanges(ts, _sfc.value.scriptSetupAst)
+			: undefined
+	);
+	const cssModuleClasses = computed(() => collectStyleCssClasses(_sfc.value, style => !!style.module));
+	const cssScopedClasses = computed(() => collectStyleCssClasses(_sfc.value, style => {
+		const setting = vueCompilerOptions.experimentalResolveStyleCssClasses;
+		return (setting === 'scoped' && style.scoped) || setting === 'always';
+	}));
+	const htmlGen = computed(() => {
+
+		const templateAst = _sfc.value.getTemplateAst();
+
+		if (!templateAst)
+			return;
+		
+		return templateGen.generate(
+			ts,
+			vueCompilerOptions,
+			_sfc.value.template?.content ?? '',
+			_sfc.value.template?.lang ?? 'html',
+			templateAst,
+			!!_sfc.value.scriptSetup,
+			Object.values(cssScopedClasses.value).map(style => style.classNames).flat(),
+		);
+	});
+	const tsxGen = computed(() => genScript(
+		ts,
+		_fileName.value,
+		_sfc.value,
+		lang.value,
+		scriptRanges.value,
+		scriptSetupRanges.value,
+		cssVars.value,
+		cssModuleClasses.value,
+		cssScopedClasses.value,
+		htmlGen.value,
+		compilerOptions,
+		vueCompilerOptions,
+	));
 
 	return {
 
 		getEmbeddedFileNames(fileName, sfc) {
 
-			const fileNames: string[] = [];
-			const _gen = useGen(fileName, sfc);
+			_fileName.value = fileName;
+			_sfc.value = sfc;
 
-			if (_gen?.lang.value && ['js', 'ts', 'jsx', 'tsx'].includes(_gen.lang.value)) {
-				fileNames.push(fileName + '.' + _gen.lang.value);
+			const fileNames: string[] = [];
+
+			if (['js', 'ts', 'jsx', 'tsx'].includes(lang.value)) {
+				fileNames.push(fileName + '.' + lang.value);
 			}
 
 			if (sfc.template) {
@@ -33,9 +98,13 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 		},
 
 		resolveEmbeddedFile(fileName, sfc, embeddedFile) {
+
+			_fileName.value = fileName;
+			_sfc.value = sfc;
+
 			const suffix = embeddedFile.fileName.replace(fileName, '');
-			const _gen = useGen(fileName, sfc);
-			if (suffix === '.' + _gen?.lang.value) {
+
+			if (suffix === '.' + lang.value) {
 				embeddedFile.isTsHostFile = true;
 				embeddedFile.capabilities = {
 					diagnostics: true,
@@ -45,8 +114,9 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 					codeActions: true,
 					inlayHints: true,
 				};
-				const tsx = _gen?.tsxGen.value;
+				const tsx = tsxGen.value;
 				if (tsx) {
+					console.log(embeddedFile.fileName, sfc.script?.content.length, tsx.codeGen.getText().length);
 					embeddedFile.codeGen.addText(tsx.codeGen.getText());
 					embeddedFile.codeGen.mappings = [...tsx.codeGen.mappings];
 					embeddedFile.teleportMappings = [...tsx.teleports];
@@ -65,99 +135,22 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				};
 				embeddedFile.isTsHostFile = false;
 
-				if (_gen?.htmlGen.value) {
-					embeddedFile.codeGen.addText(_gen.htmlGen.value.formatCodeGen.getText());
-					embeddedFile.codeGen.mappings = [..._gen.htmlGen.value.formatCodeGen.mappings];
+				if (htmlGen.value) {
+					embeddedFile.codeGen.addText(htmlGen.value.formatCodeGen.getText());
+					embeddedFile.codeGen.mappings = [...htmlGen.value.formatCodeGen.mappings];
 				}
 			}
 			else if (suffix.match(/^\.__VLS_template_style\.css$/)) {
 
 				embeddedFile.parentFileName = fileName + '.template.' + sfc.template?.lang;
 
-				if (_gen?.htmlGen.value) {
-					embeddedFile.codeGen.addText(_gen.htmlGen.value.cssCodeGen.getText());
-					embeddedFile.codeGen.mappings = [..._gen.htmlGen.value.cssCodeGen.mappings];
+				if (htmlGen.value) {
+					embeddedFile.codeGen.addText(htmlGen.value.cssCodeGen.getText());
+					embeddedFile.codeGen.mappings = [...htmlGen.value.cssCodeGen.mappings];
 				}
 			}
 		},
 	};
-
-	function useGen(fileName: string, sfc: Sfc) {
-		if (!gen.has(sfc)) {
-			gen.set(sfc, createGen(fileName, sfc));
-		}
-		return gen.get(sfc);
-	}
-
-	function createGen(fileName: string, sfc: Sfc) {
-
-		const lang = computed(() => {
-			let lang = !sfc.script && !sfc.scriptSetup ? 'ts'
-				: sfc.scriptSetup && sfc.scriptSetup.lang !== 'js' ? sfc.scriptSetup.lang
-					: sfc.script && sfc.script.lang !== 'js' ? sfc.script.lang
-						: 'js';
-			if (vueCompilerOptions.jsxTemplates) {
-				if (lang === 'js') {
-					lang = 'jsx';
-				}
-				else if (lang === 'ts') {
-					lang = 'tsx';
-				}
-			}
-			return lang;
-		});
-		const cssVars = computed(() => collectCssVars(sfc));
-		const scriptRanges = computed(() =>
-			sfc.scriptAst
-				? parseScriptRanges(ts, sfc.scriptAst, !!sfc.scriptSetup, false, false)
-				: undefined
-		);
-		const scriptSetupRanges = computed(() =>
-			sfc.scriptSetupAst
-				? parseScriptSetupRanges(ts, sfc.scriptSetupAst)
-				: undefined
-		);
-		const cssModuleClasses = computed(() => collectStyleCssClasses(sfc, style => !!style.module));
-		const cssScopedClasses = computed(() => collectStyleCssClasses(sfc, style => {
-			const setting = vueCompilerOptions.experimentalResolveStyleCssClasses;
-			return (setting === 'scoped' && style.scoped) || setting === 'always';
-		}));
-		const htmlGen = computed(() => {
-
-			if (!sfc.templateAst)
-				return;
-
-			return templateGen.generate(
-				ts,
-				vueCompilerOptions,
-				sfc.template?.content ?? '',
-				sfc.template?.lang ?? 'html',
-				sfc.templateAst,
-				!!sfc.scriptSetup,
-				Object.values(cssScopedClasses.value).map(style => style.classNames).flat(),
-			);
-		});
-		const tsxGen = computed(() => genScript(
-			ts,
-			fileName,
-			sfc,
-			lang.value,
-			scriptRanges.value,
-			scriptSetupRanges.value,
-			cssVars.value,
-			cssModuleClasses.value,
-			cssScopedClasses.value,
-			htmlGen.value,
-			compilerOptions,
-			vueCompilerOptions,
-		));
-
-		return {
-			lang,
-			htmlGen,
-			tsxGen,
-		};
-	}
 };
 export default plugin;
 
