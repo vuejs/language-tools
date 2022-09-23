@@ -50,7 +50,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 
 		if (!templateAst)
 			return;
-		
+
 		return templateGen.generate(
 			ts,
 			vueCompilerOptions,
@@ -116,7 +116,6 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				};
 				const tsx = tsxGen.value;
 				if (tsx) {
-					console.log(embeddedFile.fileName, sfc.script?.content.length, tsx.codeGen.getText().length);
 					embeddedFile.codeGen.addText(tsx.codeGen.getText());
 					embeddedFile.codeGen.mappings = [...tsx.codeGen.mappings];
 					embeddedFile.teleportMappings = [...tsx.teleports];

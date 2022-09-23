@@ -5,59 +5,72 @@ import { computed, ComputedRef } from '@vue/reactivity';
 
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
-export function checkTemplateData(
-	sourceFile: embedded.SourceFile,
+export function checkComponentNames(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
+	sourceFile: embedded.SourceFile,
 ) {
 
 	if (!(sourceFile instanceof vue.VueSourceFile)) {
-		return {
-			components: [],
-			componentItems: [],
-		};
+		return [];
 	}
 
-	const options: ts.GetCompletionsAtPositionOptions = {
-		includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
-	};
-
 	let file: embedded.SourceFile | undefined;
+	let tsSourceFile: ts.SourceFile | undefined;
+
 	embedded.forEachEmbeddeds(sourceFile.embeddeds, embedded => {
 		if (embedded.fileName === sourceFile.tsFileName) {
 			file = embedded;
 		}
 	});
 
-	if (file && file.text.indexOf(vue.SearchTexts.Components) >= 0 && tsLs.getProgram()?.getSourceFile(file.fileName)) {
+	if (file && (tsSourceFile = tsLs.getProgram()?.getSourceFile(file.fileName))) {
 
-		const components = tsLs.getCompletionsAtPosition(
-			file.fileName,
-			file.text.indexOf(vue.SearchTexts.Components),
-			options
-		);
+		const componentsNode = getComponentsNode(ts, tsSourceFile);
+		const checker = tsLs.getProgram()?.getTypeChecker();
 
-		if (components) {
+		if (checker && componentsNode) {
 
-			const items = components.entries
-				.filter(entry => entry.kind !== 'warning')
-				.filter(entry => entry.name.indexOf('$') === -1 && !entry.name.startsWith('_'));
+			const type = checker.getTypeAtLocation(componentsNode);
+			const components = type.getProperties();
 
-			const componentNames = items.map(entry => entry.name);
-
-			return {
-				components: componentNames,
-				componentItems: items,
-			};
+			return components
+				.map(c => c.name)
+				.filter(entry => entry.indexOf('$') === -1 && !entry.startsWith('_'));
 		}
 	}
 
-	return {
-		components: [],
-		componentItems: [],
-	};
+	return [];
 }
 
-const map = new WeakMap<embedded.SourceFile, ComputedRef>();
+function getComponentsNode(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	sourceFile: ts.SourceFile,
+) {
+
+	let componentsNode: ts.Node | undefined;
+
+	walk(sourceFile);
+
+	return componentsNode;
+
+	function walk(node: ts.Node) {
+		if (componentsNode) {
+			return;
+		}
+		else if (ts.isVariableDeclaration(node) && node.name.getText() === '__VLS_components') {
+			componentsNode = node;
+		}
+		else {
+			node.forEachChild(walk);
+		}
+	}
+}
+
+const map = new WeakMap<embedded.SourceFile, ComputedRef<{
+	tags: Map<string, number[]>;
+	attrs: Set<string>;
+} | undefined>>();
 
 export function getTemplateTagsAndAttrs(sourceFile: embedded.SourceFile) {
 
@@ -106,5 +119,8 @@ export function getTemplateTagsAndAttrs(sourceFile: embedded.SourceFile) {
 		map.set(sourceFile, getter);
 	}
 
-	return map.get(sourceFile)!.value;
+	return map.get(sourceFile)!.value ?? {
+		tags: new Map<string, number[]>(),
+		attrs: new Set<string>(),
+	};
 }

@@ -629,7 +629,6 @@ export function generate(
 		codeGen.addText(`let __VLS_selfComponent!: import('./__VLS_types.js').SelfComponent<typeof __VLS_name, typeof __VLS_component & (new () => { ${getSlotsPropertyName(vueCompilerOptions.target ?? 3)}: typeof __VLS_slots })>;\n`);
 		codeGen.addText(`let __VLS_components!: typeof __VLS_otherComponents & Omit<typeof __VLS_selfComponent, keyof typeof __VLS_otherComponents>;\n`);
 
-		codeGen.addText(`__VLS_components['${SearchTexts.Components}'];\n`);
 		codeGen.addText(`({} as import('./__VLS_types.js').GlobalAttrs)['${SearchTexts.GlobalAttrs}'];\n`);
 
 		/* Style Scoped */

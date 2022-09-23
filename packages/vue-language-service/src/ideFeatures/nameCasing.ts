@@ -1,6 +1,6 @@
 import { hyphenate } from '@vue/shared';
 import { SourceFileDocument, LanguageServiceRuntimeContext } from '@volar/language-service';
-import { checkTemplateData, getTemplateTagsAndAttrs } from '../helpers';
+import { checkComponentNames, getTemplateTagsAndAttrs } from '../helpers';
 import * as vue from '@volar/vue-language-core';
 import * as vscode from 'vscode-languageserver-protocol';
 
@@ -25,7 +25,7 @@ export async function convert(
 	const template = desc.template;
 	const document = vueDocument.getDocument();
 	const edits: vscode.TextEdit[] = [];
-	const components = new Set(checkTemplateData(vueDocument.file, context.typescriptLanguageService).components);
+	const components = new Set(checkComponentNames(context.host.getTypeScriptModule(), context.typescriptLanguageService, vueDocument.file));
 	const tagOffsets = getTemplateTagsAndAttrs(vueDocument.file).tags;
 
 	for (const [_, offsets] of tagOffsets) {
@@ -113,7 +113,7 @@ export function detect(
 	}
 	function getTagNameCase(vueDocument: SourceFileDocument): 'both' | 'kebabCase' | 'pascalCase' | 'unsure' {
 
-		const components = checkTemplateData(vueDocument.file, context.typescriptLanguageService).components;
+		const components = checkComponentNames(context.host.getTypeScriptModule(), context.typescriptLanguageService, vueDocument.file);
 		const tagNames = getTemplateTagsAndAttrs(vueDocument.file).tags;
 
 		let anyComponentUsed = false;
