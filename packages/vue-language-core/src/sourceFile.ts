@@ -181,53 +181,13 @@ export class VueSourceFile implements SourceFile {
 		}
 	}
 
-	public sfc = reactive<Sfc>({
-		template: null,
-		script: null,
-		scriptSetup: null,
-		styles: [],
-		customBlocks: [],
-		getTemplateAst: () => {
-			return this.compiledSFCTemplate?.ast;
-		},
-		scriptAst: computed(() => {
-			if (this.sfc.script) {
-				return this.ts.createSourceFile(this.fileName + '.' + this.sfc.script.lang, this.sfc.script.content, this.ts.ScriptTarget.Latest);
-			}
-		}) as unknown as Sfc['scriptAst'],
-		scriptSetupAst: computed(() => {
-			if (this.sfc.scriptSetup) {
-				return this.ts.createSourceFile(this.fileName + '.' + this.sfc.scriptSetup.lang, this.sfc.scriptSetup.content, this.ts.ScriptTarget.Latest);
-			}
-		}) as unknown as Sfc['scriptSetupAst'],
-	}) as Sfc /* avoid Sfc unwrap in .d.ts by reactive */;
+	static current = ref<VueSourceFile>({} as any);
 
-	get text() {
-		return this._text.value;
-	}
-
-	get compiledSFCTemplate() {
-		return VueSourceFile.getCompiledSFCTemplate(this.plugins, this, this._snapshot.value);
-	}
-
-	get tsFileName() {
-		return this._allEmbeddeds.value.find(e => e[1].fileName.replace(this.fileName, '').match(/^\.(js|ts)x?$/))?.[1].fileName ?? '';
-	}
-
-	get embeddeds() {
-		return this._embeddeds.value;
-	}
-
-	// refs
-	_snapshot: Ref<ts.IScriptSnapshot>;
-	_text = computed(() => this._snapshot.value.getText(0, this._snapshot.value.getLength()));
-
-	// computeds
-	_pluginEmbeddedFiles = this.plugins.map(plugin => {
+	static _pluginEmbeddedFiles = computed(() => VueSourceFile.current.value.plugins.map(plugin => {
 		const embeddedFiles: Record<string, ComputedRef<VueEmbeddedFile>> = {};
 		const files = computed(() => {
 			if (plugin.getEmbeddedFileNames) {
-				const embeddedFileNames = plugin.getEmbeddedFileNames(this.fileName, this.sfc);
+				const embeddedFileNames = plugin.getEmbeddedFileNames(VueSourceFile.current.value.fileName, VueSourceFile.current.value.sfc);
 				for (const oldFileName of Object.keys(embeddedFiles)) {
 					if (!embeddedFileNames.includes(oldFileName)) {
 						delete embeddedFiles[oldFileName];
@@ -250,9 +210,9 @@ export class VueSourceFile implements SourceFile {
 								codeGen: new CodeGen(),
 								teleportMappings: [],
 							};
-							for (const plugin of this.plugins) {
+							for (const plugin of VueSourceFile.current.value.plugins) {
 								if (plugin.resolveEmbeddedFile) {
-									plugin.resolveEmbeddedFile(this.fileName, this.sfc, file);
+									plugin.resolveEmbeddedFile(VueSourceFile.current.value.fileName, VueSourceFile.current.value.sfc, file);
 								}
 							}
 							return file;
@@ -264,7 +224,6 @@ export class VueSourceFile implements SourceFile {
 		});
 		return computed(() => {
 
-			const self = this;
 			const baseOffsetMap = new Map<string, number>();
 
 			return files.value.map(_file => {
@@ -303,20 +262,20 @@ export class VueSourceFile implements SourceFile {
 
 					if (baseOffset === undefined) {
 
-						if (data.vueTag === 'script' && self.sfc.script) {
-							baseOffset = self.sfc.script.startTagEnd;
+						if (data.vueTag === 'script' && VueSourceFile.current.value.sfc.script) {
+							baseOffset = VueSourceFile.current.value.sfc.script.startTagEnd;
 						}
-						else if (data.vueTag === 'scriptSetup' && self.sfc.scriptSetup) {
-							baseOffset = self.sfc.scriptSetup.startTagEnd;
+						else if (data.vueTag === 'scriptSetup' && VueSourceFile.current.value.sfc.scriptSetup) {
+							baseOffset = VueSourceFile.current.value.sfc.scriptSetup.startTagEnd;
 						}
-						else if (data.vueTag === 'template' && self.sfc.template) {
-							baseOffset = self.sfc.template.startTagEnd;
+						else if (data.vueTag === 'template' && VueSourceFile.current.value.sfc.template) {
+							baseOffset = VueSourceFile.current.value.sfc.template.startTagEnd;
 						}
 						else if (data.vueTag === 'style') {
-							baseOffset = self.sfc.styles[data.vueTagIndex!].startTagEnd;
+							baseOffset = VueSourceFile.current.value.sfc.styles[data.vueTagIndex!].startTagEnd;
 						}
 						else if (data.vueTag === 'customBlock') {
-							baseOffset = self.sfc.customBlocks[data.vueTagIndex!].startTagEnd;
+							baseOffset = VueSourceFile.current.value.sfc.customBlocks[data.vueTagIndex!].startTagEnd;
 						}
 
 						if (baseOffset !== undefined) {
@@ -332,9 +291,9 @@ export class VueSourceFile implements SourceFile {
 					}
 				}
 
-				if (data.vueTag === 'scriptSrc' && self.sfc.script?.src) {
-					const vueStart = self._text.value.substring(0, self.sfc.script.startTagEnd).lastIndexOf(self.sfc.script.src);
-					const vueEnd = vueStart + self.sfc.script.src.length;
+				if (data.vueTag === 'scriptSrc' && VueSourceFile.current.value.sfc.script?.src) {
+					const vueStart = VueSourceFile.current.value._snapshot.value.getText(0, VueSourceFile.current.value.sfc.script.startTagEnd).lastIndexOf(VueSourceFile.current.value.sfc.script.src);
+					const vueEnd = vueStart + VueSourceFile.current.value.sfc.script.src.length;
 					return {
 						start: vueStart - 1,
 						end: vueEnd + 1,
@@ -344,12 +303,12 @@ export class VueSourceFile implements SourceFile {
 				return range;
 			}
 		});
-	});
-	_allEmbeddeds = computed(() => {
+	}));
+	static _allEmbeddeds = computed(() => {
 
 		const all: [VueEmbeddedFile, EmbeddedFile][] = [];
 
-		for (const embeddedFiles of this._pluginEmbeddedFiles) {
+		for (const embeddedFiles of VueSourceFile._pluginEmbeddedFiles.value) {
 			for (const embedded of embeddedFiles.value) {
 				all.push(embedded);
 			}
@@ -357,12 +316,12 @@ export class VueSourceFile implements SourceFile {
 
 		return all;
 	});
-	_embeddeds = computed(() => {
+	static _embeddeds = computed(() => {
 
 		const childs: EmbeddedFile[] = [];
 
 		// const embeddeds: EmbeddedStructure[] = [];
-		let remain = [...this._allEmbeddeds.value];
+		let remain = [...VueSourceFile._allEmbeddeds.value];
 
 		while (remain.length) {
 			const beforeLength = remain.length;
@@ -410,6 +369,48 @@ export class VueSourceFile implements SourceFile {
 		}
 	});
 
+	public sfc = reactive<Sfc>({
+		template: null,
+		script: null,
+		scriptSetup: null,
+		styles: [],
+		customBlocks: [],
+		getTemplateAst: () => {
+			return this.compiledSFCTemplate?.ast;
+		},
+		scriptAst: computed(() => {
+			if (this.sfc.script) {
+				return this.ts.createSourceFile(this.fileName + '.' + this.sfc.script.lang, this.sfc.script.content, this.ts.ScriptTarget.Latest);
+			}
+		}) as unknown as Sfc['scriptAst'],
+		scriptSetupAst: computed(() => {
+			if (this.sfc.scriptSetup) {
+				return this.ts.createSourceFile(this.fileName + '.' + this.sfc.scriptSetup.lang, this.sfc.scriptSetup.content, this.ts.ScriptTarget.Latest);
+			}
+		}) as unknown as Sfc['scriptSetupAst'],
+	}) as Sfc /* avoid Sfc unwrap in .d.ts by reactive */;
+
+	get text() {
+		return this._snapshot.value.getText(0, this._snapshot.value.getLength());
+	}
+
+	get compiledSFCTemplate() {
+		return VueSourceFile.getCompiledSFCTemplate(this.plugins, this, this._snapshot.value);
+	}
+
+	get tsFileName() {
+		return this._allEmbeddeds.value.find(e => e[1].fileName.replace(this.fileName, '').match(/^\.(js|ts)x?$/))?.[1].fileName ?? '';
+	}
+
+	get embeddeds() {
+		return this._embeddeds.value;
+	}
+
+	// refs
+	_snapshot: Ref<ts.IScriptSnapshot>;
+	_allEmbeddeds = ref<[VueEmbeddedFile, EmbeddedFile][]>([]);
+	_embeddeds = ref<EmbeddedFile[]>([]);
+
 	constructor(
 		public fileName: string,
 		private pscriptSnapshot: ts.IScriptSnapshot,
@@ -448,12 +449,17 @@ export class VueSourceFile implements SourceFile {
 			updateCustomBlocks([]);
 		}
 
+		VueSourceFile.current.value = this;
+
+		this._allEmbeddeds.value = VueSourceFile._allEmbeddeds.value;
+		this._embeddeds.value = VueSourceFile._embeddeds.value;
+
 		function updateTemplate(block: SFCTemplateBlock | null) {
 
 			const newData: Sfc['template'] | null = block ? {
 				tag: 'template',
-				start: self._text.value.substring(0, block.loc.start.offset).lastIndexOf('<'),
-				end: block.loc.end.offset + self._text.value.substring(block.loc.end.offset).indexOf('>') + 1,
+				start: self._snapshot.value.getText(0, block.loc.start.offset).lastIndexOf('<'),
+				end: block.loc.end.offset + self._snapshot.value.getText(block.loc.end.offset, self._snapshot.value.getLength()).indexOf('>') + 1,
 				startTagEnd: block.loc.start.offset,
 				endTagStart: block.loc.end.offset,
 				content: block.content,
@@ -471,8 +477,8 @@ export class VueSourceFile implements SourceFile {
 
 			const newData: Sfc['script'] | null = block ? {
 				tag: 'script',
-				start: self._text.value.substring(0, block.loc.start.offset).lastIndexOf('<'),
-				end: block.loc.end.offset + self._text.value.substring(block.loc.end.offset).indexOf('>') + 1,
+				start: self._snapshot.value.getText(0, block.loc.start.offset).lastIndexOf('<'),
+				end: block.loc.end.offset + self._snapshot.value.getText(block.loc.end.offset, self._snapshot.value.getLength()).indexOf('>') + 1,
 				startTagEnd: block.loc.start.offset,
 				endTagStart: block.loc.end.offset,
 				content: block.content,
@@ -491,8 +497,8 @@ export class VueSourceFile implements SourceFile {
 
 			const newData: Sfc['scriptSetup'] | null = block ? {
 				tag: 'scriptSetup',
-				start: self._text.value.substring(0, block.loc.start.offset).lastIndexOf('<'),
-				end: block.loc.end.offset + self._text.value.substring(block.loc.end.offset).indexOf('>') + 1,
+				start: self._snapshot.value.getText(0, block.loc.start.offset).lastIndexOf('<'),
+				end: block.loc.end.offset + self._snapshot.value.getText(block.loc.end.offset, self._snapshot.value.getLength()).indexOf('>') + 1,
 				startTagEnd: block.loc.start.offset,
 				endTagStart: block.loc.end.offset,
 				content: block.content,
@@ -512,8 +518,8 @@ export class VueSourceFile implements SourceFile {
 				const block = blocks[i];
 				const newData: Sfc['styles'][number] = {
 					tag: 'style',
-					start: self._text.value.substring(0, block.loc.start.offset).lastIndexOf('<'),
-					end: block.loc.end.offset + self._text.value.substring(block.loc.end.offset).indexOf('>') + 1,
+					start: self._snapshot.value.getText(0, block.loc.start.offset).lastIndexOf('<'),
+					end: block.loc.end.offset + self._snapshot.value.getText(block.loc.end.offset, self._snapshot.value.getLength()).indexOf('>') + 1,
 					startTagEnd: block.loc.start.offset,
 					endTagStart: block.loc.end.offset,
 					content: block.content,
@@ -539,8 +545,8 @@ export class VueSourceFile implements SourceFile {
 				const block = blocks[i];
 				const newData: Sfc['customBlocks'][number] = {
 					tag: 'customBlock',
-					start: self._text.value.substring(0, block.loc.start.offset).lastIndexOf('<'),
-					end: block.loc.end.offset + self._text.value.substring(block.loc.end.offset).indexOf('>') + 1,
+					start: self._snapshot.value.getText(0, block.loc.start.offset).lastIndexOf('<'),
+					end: block.loc.end.offset + self._snapshot.value.getText(block.loc.end.offset, self._snapshot.value.getLength()).indexOf('>') + 1,
 					startTagEnd: block.loc.start.offset,
 					endTagStart: block.loc.end.offset,
 					content: block.content,
