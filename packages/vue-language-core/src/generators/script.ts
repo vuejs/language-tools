@@ -561,13 +561,12 @@ export function generate(
 	}
 	function writeExportOptions() {
 		codeGen.addText(`\n`);
-		codeGen.addText(`const __VLS_options = {\n`);
-		if (sfc.script && scriptRanges?.exportDefault?.args) {
-			const args = scriptRanges.exportDefault.args;
-			codeGen.addText(`...(`);
+		codeGen.addText(`const __VLS_componentsOption = `);
+		if (sfc.script && scriptRanges?.exportDefault?.componentsOption) {
+			const componentsOption = scriptRanges.exportDefault.componentsOption;
 			codeGen.addCode2(
-				sfc.script.content.substring(args.start, args.end),
-				args.start,
+				sfc.script.content.substring(componentsOption.start, componentsOption.end),
+				componentsOption.start,
 				{
 					vueTag: 'script',
 					capabilities: {
@@ -576,9 +575,11 @@ export function generate(
 					},
 				},
 			);
-			codeGen.addText(`),\n`);
 		}
-		codeGen.addText(`};\n`);
+		else {
+			codeGen.addText('{}');
+		}
+		codeGen.addText(`;\n`);
 	}
 	function writeConstNameOption() {
 		codeGen.addText(`\n`);
@@ -622,11 +623,9 @@ export function generate(
 		}
 		codeGen.addText(`};\n`);
 
-		codeGen.addText(`let __VLS_vmUnwrap!: typeof __VLS_options & { components: { } };\n`);
-
 		/* Components */
 		codeGen.addText('/* Components */\n');
-		codeGen.addText(`let __VLS_otherComponents!: NonNullable<typeof __VLS_component extends { components: infer C } ? C : {}> & import('./__VLS_types.js').GlobalComponents & typeof __VLS_vmUnwrap.components & import('./__VLS_types.js').PickComponents<typeof __VLS_ctx>;\n`);
+		codeGen.addText(`let __VLS_otherComponents!: NonNullable<typeof __VLS_component extends { components: infer C } ? C : {}> & import('./__VLS_types.js').GlobalComponents & typeof __VLS_componentsOption & import('./__VLS_types.js').PickComponents<typeof __VLS_ctx>;\n`);
 		codeGen.addText(`let __VLS_selfComponent!: import('./__VLS_types.js').SelfComponent<typeof __VLS_name, typeof __VLS_component & (new () => { ${getSlotsPropertyName(vueCompilerOptions.target ?? 3)}: typeof __VLS_slots })>;\n`);
 		codeGen.addText(`let __VLS_components!: typeof __VLS_otherComponents & Omit<typeof __VLS_selfComponent, keyof typeof __VLS_otherComponents>;\n`);
 
