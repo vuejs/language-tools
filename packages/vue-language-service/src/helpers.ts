@@ -2,6 +2,7 @@ import * as vue from '@volar/vue-language-core';
 import * as embedded from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { computed, ComputedRef } from '@vue/reactivity';
+import { typesFileName } from '@volar/vue-language-core/out/utils/localTypes';
 
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
@@ -41,30 +42,60 @@ export function checkComponentNames(
 	}
 
 	return [];
-}
 
-function getComponentsNode(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
-	sourceFile: ts.SourceFile,
-) {
+	function getComponentsNode(
+		ts: typeof import('typescript/lib/tsserverlibrary'),
+		sourceFile: ts.SourceFile,
+	) {
 
-	let componentsNode: ts.Node | undefined;
+		let componentsNode: ts.Node | undefined;
 
-	walk(sourceFile);
+		walk(sourceFile);
 
-	return componentsNode;
+		return componentsNode;
 
-	function walk(node: ts.Node) {
-		if (componentsNode) {
-			return;
-		}
-		else if (ts.isVariableDeclaration(node) && node.name.getText() === '__VLS_components') {
-			componentsNode = node;
-		}
-		else {
-			node.forEachChild(walk);
+		function walk(node: ts.Node) {
+			if (componentsNode) {
+				return;
+			}
+			else if (ts.isVariableDeclaration(node) && node.name.getText() === '__VLS_components') {
+				componentsNode = node;
+			}
+			else {
+				node.forEachChild(walk);
+			}
 		}
 	}
+}
+
+export function checkGlobalAttrs(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	tsLs: ts.LanguageService,
+	fileName: string,
+) {
+
+	const sharedTypesFileName = fileName.substring(0, fileName.lastIndexOf('/')) + '/' + typesFileName;
+
+	let tsSourceFile: ts.SourceFile | undefined;
+
+	if (tsSourceFile = tsLs.getProgram()?.getSourceFile(sharedTypesFileName)) {
+
+		const typeNoe = tsSourceFile.statements.find((node): node is ts.TypeAliasDeclaration => ts.isTypeAliasDeclaration(node) && node.name.getText() === 'GlobalAttrs');
+		const checker = tsLs.getProgram()?.getTypeChecker();
+
+		if (checker && typeNoe) {
+			checker.getTypeFromTypeNode;
+
+			const type = checker.getTypeFromTypeNode(typeNoe.type);
+			const attrs = type.getProperties();
+
+			console.log(attrs.map(c => c.name));
+
+			return attrs.map(c => c.name);
+		}
+	}
+
+	return [];
 }
 
 const map = new WeakMap<embedded.SourceFile, ComputedRef<{

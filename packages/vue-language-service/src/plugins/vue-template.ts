@@ -10,7 +10,7 @@ import * as path from 'upath';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { checkComponentNames, getTemplateTagsAndAttrs } from '../helpers';
+import { checkComponentNames, checkGlobalAttrs, getTemplateTagsAndAttrs } from '../helpers';
 import * as casing from '../ideFeatures/nameCasing';
 
 export const semanticTokenTypes = [
@@ -44,7 +44,6 @@ const vueGlobalDirectiveProvider = html.newHTMLDataProvider('vueGlobalDirective'
 
 interface HtmlCompletionData {
 	mode: 'html',
-	tsItem: ts.CompletionEntry | undefined,
 }
 
 interface AutoImportCompletionData {
@@ -90,10 +89,9 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					return;
 
 				const vueDocument = options.context.documents.fromEmbeddedDocument(document);
-				let tsItems: Awaited<ReturnType<typeof provideHtmlData>> | undefined;
 
 				if (vueDocument) {
-					tsItems = await provideHtmlData(vueDocument);
+					await provideHtmlData(vueDocument);
 				}
 
 				const htmlComplete = await options.templateLanguagePlugin.complete?.on?.(document, position, context);
@@ -101,8 +99,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				if (!htmlComplete)
 					return;
 
-				if (vueDocument && tsItems) {
-					afterHtmlCompletion(htmlComplete, vueDocument, tsItems);
+				if (vueDocument) {
+					afterHtmlCompletion(htmlComplete, vueDocument);
 				}
 
 				return htmlComplete;
@@ -455,7 +453,6 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			return;
 
 		const tags: html.ITagData[] = [];
-		const tsItems = new Map<string, ts.CompletionEntry>();
 		const globalAttributes: html.IAttributeData[] = [];
 
 		for (const [_componentName, { bind, on }] of componentCompletion) {
@@ -471,7 +468,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 				for (const prop of bind) {
 
-					const name = nameCases.attr === 'camelCase' ? prop.name : hyphenate(prop.name);
+					const name = nameCases.attr === 'camelCase' ? prop : hyphenate(prop);
 
 					if (hyphenate(name).startsWith('on-')) {
 
@@ -490,7 +487,6 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 								description: propKey,
 							},
 						);
-						tsItems.set(propKey, prop);
 					}
 					else {
 
@@ -511,12 +507,11 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 								description: propKey,
 							},
 						);
-						tsItems.set(propKey, prop);
 					}
 				}
 				for (const event of on) {
 
-					const name = nameCases.attr === 'camelCase' ? event.name : hyphenate(event.name);
+					const name = nameCases.attr === 'camelCase' ? event : hyphenate(event);
 					const propKey = createInternalItemId('componentEvent', [componentName, name]);
 
 					attributes.push({
@@ -527,7 +522,6 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 						name: '@' + name,
 						description: propKey,
 					});
-					tsItems.set(propKey, event);
 				}
 
 				if (componentName !== '*') {
@@ -576,11 +570,9 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			vueGlobalDirectiveProvider,
 			dataProvider,
 		]);
-
-		return tsItems;
 	}
 
-	function afterHtmlCompletion(completionList: vscode.CompletionList, vueDocument: SourceFileDocument, tsItems: Map<string, ts.CompletionEntry>) {
+	function afterHtmlCompletion(completionList: vscode.CompletionList, vueDocument: SourceFileDocument) {
 
 		const replacement = getReplacement(completionList, vueDocument.getDocument());
 		const componentNames = new Set(checkComponentNames(context.typescript.module, context.typescript.languageService, vueDocument.file).map(hyphenate));
@@ -645,8 +637,6 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			}
 			else if (itemIdKey && itemId) {
 
-				const tsItem = itemIdKey ? tsItems.get(itemIdKey) : undefined;
-
 				if (itemId.type === 'componentProp' || itemId.type === 'componentEvent') {
 
 					const [componentName] = itemId.args;
@@ -655,13 +645,11 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 						item.sortText = '\u0000' + (item.sortText ?? item.label);
 					}
 
-					if (tsItem) {
-						if (itemId.type === 'componentProp') {
-							item.kind = vscode.CompletionItemKind.Property;
-						}
-						else {
-							item.kind = vscode.CompletionItemKind.Event;
-						}
+					if (itemId.type === 'componentProp') {
+						item.kind = vscode.CompletionItemKind.Property;
+					}
+					else {
+						item.kind = vscode.CompletionItemKind.Event;
 					}
 				}
 				else if (
@@ -683,7 +671,6 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 				const data: HtmlCompletionData = {
 					mode: 'html',
-					tsItem: tsItem,
 				};
 
 				item.data = data;
@@ -736,7 +723,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 		const vueSourceFile = sourceDocument.file;
 		const componentNames = checkComponentNames(context.typescript.module, context.typescript.languageService, vueSourceFile);
-		const data = new Map<string, { bind: ts.CompletionEntry[], on: ts.CompletionEntry[]; }>;
+		const data = new Map<string, { bind: string[], on: string[]; }>;
 
 		let file: embedded.SourceFile | undefined;
 
@@ -784,13 +771,13 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 						} catch { }
 					}
 				}
-				data.set(tag, { bind, on });
+				data.set(tag, { bind: bind.map(p => p.name), on: on.map(p => p.name) });
 			}
 			try {
-				const offset = file.text.indexOf(vue.SearchTexts.GlobalAttrs);
-				const globalBind = (await context.typescript.languageService.getCompletionsAtPosition(file.fileName, offset, completionOptions))?.entries
-					.filter(entry => entry.kind !== 'warning') ?? [];
-				data.set('*', { bind: globalBind, on: [] });
+				data.set('*', {
+					bind: checkGlobalAttrs(context.typescript.module, context.typescript.languageService, file.fileName),
+					on: [],
+				});
 			} catch { }
 		}
 
