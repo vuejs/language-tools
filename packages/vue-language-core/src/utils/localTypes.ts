@@ -102,6 +102,11 @@ export type FirstFunction<F0 = void, F1 = void, F2 = void, F3 = void, F4 = void>
 export type GlobalAttrs = JSX.IntrinsicElements['div'];
 export type SelfComponent<N, C> = string extends N ? {} : N extends string ? { [P in N]: C } : {};
 export type ConvertInvalidJsxElement<T> = IsComponent<T> extends true ? T : any;
+export type GetComponents<Components, N1, N2 = unknown, N3 = unknown> =
+	N1 extends keyof Components ? Components[N1] :
+	N2 extends keyof Components ? Components[N2] :
+	N3 extends keyof Components ? Components[N3] :
+	unknown;
 
 type IsComponent<T> =
 	T extends (...args: any) => JSX.Element ? true

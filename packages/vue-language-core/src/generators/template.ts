@@ -207,20 +207,12 @@ export function generate(
 
 				codeGen.addText(`let ${var_componentVar}!: `);
 
-				if (!vueCompilerOptions.strictTemplates) {
+				if (vueCompilerOptions.jsxTemplates && !vueCompilerOptions.strictTemplates)
 					codeGen.addText(`import('./__VLS_types.js').ConvertInvalidJsxElement<`);
-				}
 
-				for (const name of names) {
-					codeGen.addText(`\n'${name}' extends keyof typeof __VLS_components ? typeof __VLS_components['${name}'] : `);
-				}
-				for (const name of names) {
-					codeGen.addText(`\n'${name}' extends keyof typeof __VLS_ctx ? typeof __VLS_ctx['${name}'] : `);
-				}
+				codeGen.addText(`import('./__VLS_types.js').GetComponents<typeof __VLS_components, ${[...names].map(name => `'${name}'`).join(', ')}>`);
 
-				codeGen.addText(`unknown`);
-
-				if (!vueCompilerOptions.strictTemplates)
+				if (vueCompilerOptions.jsxTemplates && !vueCompilerOptions.strictTemplates)
 					codeGen.addText(`>`);
 
 				codeGen.addText(`;\n`);
