@@ -567,8 +567,6 @@ export function generate(
 
 			const var_props = `__VLS_${elementIndex++}`;
 
-			codeGen.addText(`let ${var_props}!: `);
-
 			if (_isIntrinsicElement) {
 				codeGen.addText(`let ${var_props} = ({} as JSX.IntrinsicElements)`);
 				writePropertyAccess(
