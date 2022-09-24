@@ -645,10 +645,12 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					}
 
 					if (itemId.type === 'componentProp') {
-						item.kind = vscode.CompletionItemKind.Property;
+						if (componentName !== '*') {
+							item.kind = vscode.CompletionItemKind.Field;
+						}
 					}
 					else {
-						item.kind = vscode.CompletionItemKind.Event;
+						item.kind = componentName !== '*' ? vscode.CompletionItemKind.Function : vscode.CompletionItemKind.Event;
 					}
 				}
 				else if (
