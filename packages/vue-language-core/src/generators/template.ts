@@ -6,7 +6,6 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import { parseBindingRanges } from '../parsers/scriptSetupRanges';
 import { EmbeddedFileMappingData } from '../sourceFile';
 import { ResolvedVueCompilerOptions } from '../types';
-import { SearchTexts } from '../utils/string';
 import { colletVars, walkInterpolationFragment } from '../utils/transform';
 
 // TODO: typecheck
