@@ -1,6 +1,6 @@
 {
 	"name": "@volar/vue-language-core",
-	"version": "1.0.0-alpha.4",
+	"version": "1.0.0-alpha.5",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -16,9 +16,9 @@
 		"typescript": "latest"
 	},
 	"dependencies": {
-		"@volar/code-gen": "1.0.0-alpha.4",
-		"@volar/language-core": "1.0.0-alpha.4",
-		"@volar/source-map": "1.0.0-alpha.4",
+		"@volar/code-gen": "1.0.0-alpha.5",
+		"@volar/language-core": "1.0.0-alpha.5",
+		"@volar/source-map": "1.0.0-alpha.5",
 		"@vue/compiler-dom": "^3.2.38",
 		"@vue/compiler-sfc": "^3.2.38",
 		"@vue/reactivity": "^3.2.38",

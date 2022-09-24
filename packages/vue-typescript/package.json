@@ -1,6 +1,6 @@
 {
 	"name": "@volar/vue-typescript",
-	"version": "1.0.0-alpha.4",
+	"version": "1.0.0-alpha.5",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -16,9 +16,9 @@
 		"typescript": "latest"
 	},
 	"dependencies": {
-		"@volar/code-gen": "1.0.0-alpha.4",
-		"@volar/language-core": "1.0.0-alpha.4",
-		"@volar/typescript-faster": "1.0.0-alpha.4",
-		"@volar/vue-language-core": "1.0.0-alpha.4"
+		"@volar/code-gen": "1.0.0-alpha.5",
+		"@volar/language-core": "1.0.0-alpha.5",
+		"@volar/typescript-faster": "1.0.0-alpha.5",
+		"@volar/vue-language-core": "1.0.0-alpha.5"
 	}
 }
