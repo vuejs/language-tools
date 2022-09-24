@@ -121,7 +121,7 @@ export function getLanguageServicePlugins(
 export function createLanguageService(
 	host: LanguageServiceHost,
 	env: embeddedLS.PluginContext['env'],
-	documentRegistry: ts.DocumentRegistry | undefined,
+	documentRegistry?: ts.DocumentRegistry,
 ) {
 
 	const vueLanguageModule = vue.createEmbeddedLanguageModule(

@@ -22,5 +22,9 @@
 		{
 			"path": "./packages/vue-component-meta/tsconfig.build.json"
 		},
+		// IDE / tests
+		{
+			"path": "./tsconfig.json"
+		},
 	]
 }
