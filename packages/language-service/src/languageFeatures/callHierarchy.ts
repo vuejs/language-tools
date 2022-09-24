@@ -37,20 +37,17 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					const items = await plugin.callHierarchy?.prepare(document, position);
 
-					return items?.map(item => {
-
-						const data: PluginCallHierarchyData = {
-							uri,
-							originalItem: item,
-							pluginId: context.plugins.indexOf(plugin),
-							sourceMap: sourceMap ? {
-								embeddedDocumentUri: sourceMap.mappedDocument.uri,
-							} : undefined,
-						};
-
-						return <vscode.CallHierarchyItem>{
+					return items?.map<vscode.CallHierarchyItem>(item => {
+						return {
 							...item,
-							data: data,
+							data: {
+								uri,
+								originalItem: item,
+								pluginId: context.plugins.indexOf(plugin),
+								sourceMap: sourceMap ? {
+									embeddedDocumentUri: sourceMap.mappedDocument.uri,
+								} : undefined,
+							} satisfies PluginCallHierarchyData,
 						};
 					});
 				},

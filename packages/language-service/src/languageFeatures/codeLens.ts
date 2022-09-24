@@ -24,23 +24,21 @@ export function register(context: LanguageServiceRuntimeContext) {
 				const codeLens = await plugin.codeLens?.on?.(document);
 
 				if (codeLens) {
-					return codeLens.map(item => {
-						const data: PluginCodeLensData = {
-							uri,
-							originalItem: item,
-							pluginId: context.plugins.indexOf(plugin),
-						};
+					return codeLens.map<vscode.CodeLens>(item => {
 						const commandArgs: ExecutePluginCommandArgs | undefined = item.command ? [uri, context.plugins.indexOf(plugin), item.command] : undefined;
-						const codeLens: vscode.CodeLens = {
+						return {
 							...item,
 							command: item.command && commandArgs ? {
 								...item.command,
 								command: executePluginCommand,
 								arguments: commandArgs as any,
 							} : undefined,
-							data: data,
+							data: {
+								uri,
+								originalItem: item,
+								pluginId: context.plugins.indexOf(plugin),
+							} satisfies PluginCodeLensData,
 						};
-						return codeLens;
 					});
 				}
 			},

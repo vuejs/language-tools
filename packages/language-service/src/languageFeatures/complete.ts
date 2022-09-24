@@ -65,21 +65,20 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 						cacheData.list = {
 							...embeddedCompletionList,
-							items: embeddedCompletionList.items.map(item => {
-								const data: PluginCompletionData = {
-									uri,
-									originalItem: item,
-									pluginId: context.plugins.indexOf(cacheData.plugin),
-									sourceMap: {
-										embeddedDocumentUri: sourceMap.mappedDocument.uri,
-									},
-								};
+							items: embeddedCompletionList.items.map<vscode.CompletionItem>(item => {
 								return {
 									...transformCompletionItem(
 										item,
 										embeddedRange => sourceMap.getSourceRange(embeddedRange.start, embeddedRange.end)?.[0],
 									),
-									data: data,
+									data: {
+										uri,
+										originalItem: item,
+										pluginId: context.plugins.indexOf(cacheData.plugin),
+										sourceMap: {
+											embeddedDocumentUri: sourceMap.mappedDocument.uri,
+										},
+									} satisfies PluginCompletionData,
 								};
 							}),
 						};
@@ -99,16 +98,15 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					cacheData.list = {
 						...completionList,
-						items: completionList.items.map(item => {
-							const data: PluginCompletionData = {
-								uri,
-								originalItem: item,
-								pluginId: context.plugins.indexOf(cacheData.plugin),
-								sourceMap: undefined,
-							};
+						items: completionList.items.map<vscode.CompletionItem>(item => {
 							return {
 								...item,
-								data: data,
+								data: {
+									uri,
+									originalItem: item,
+									pluginId: context.plugins.indexOf(cacheData.plugin),
+									sourceMap: undefined,
+								} satisfies PluginCompletionData,
 							};
 						})
 					};
@@ -166,21 +164,20 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 							const completionList: vscode.CompletionList = {
 								...embeddedCompletionList,
-								items: embeddedCompletionList.items.map(item => {
-									const data: PluginCompletionData = {
-										uri,
-										originalItem: item,
-										pluginId: context.plugins.indexOf(plugin),
-										sourceMap: {
-											embeddedDocumentUri: sourceMap.mappedDocument.uri,
-										}
-									};
+								items: embeddedCompletionList.items.map<vscode.CompletionItem>(item => {
 									return {
 										...transformCompletionItem(
 											item,
 											embeddedRange => sourceMap.getSourceRange(embeddedRange.start, embeddedRange.end)?.[0],
 										),
-										data: data,
+										data: {
+											uri,
+											originalItem: item,
+											pluginId: context.plugins.indexOf(plugin),
+											sourceMap: {
+												embeddedDocumentUri: sourceMap.mappedDocument.uri,
+											}
+										} satisfies PluginCompletionData,
 									};
 								}),
 							};
@@ -237,16 +234,15 @@ export function register(context: LanguageServiceRuntimeContext) {
 						plugin,
 						list: {
 							...completionList,
-							items: completionList.items.map(item => {
-								const data: PluginCompletionData = {
-									uri,
-									originalItem: item,
-									pluginId: context.plugins.indexOf(plugin),
-									sourceMap: undefined,
-								};
+							items: completionList.items.map<vscode.CompletionItem>(item => {
 								return {
 									...item,
-									data: data,
+									data: {
+										uri,
+										originalItem: item,
+										pluginId: context.plugins.indexOf(plugin),
+										sourceMap: undefined,
+									},
 								};
 							})
 						},

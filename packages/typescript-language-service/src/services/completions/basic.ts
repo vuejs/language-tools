@@ -135,16 +135,14 @@ export function register(
 				}
 			}
 
-			const data: Data = {
-				uri,
-				fileName,
-				offset,
-				originalItem: tsEntry,
-			};
-
 			return {
 				...item,
-				data: data,
+				data: {
+					uri,
+					fileName,
+					offset,
+					originalItem: tsEntry,
+				} satisfies Data,
 			};
 		}
 

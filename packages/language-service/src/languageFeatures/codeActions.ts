@@ -76,20 +76,17 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				const codeActions = await plugin.codeAction?.on?.(document, arg.range, arg.codeActionContext);
 
-				return codeActions?.map(_codeAction => {
-
-					const data: PluginCodeActionData = {
-						uri,
-						originalItem: _codeAction,
-						pluginId: context.plugins.indexOf(plugin),
-						sourceMap: sourceMap ? {
-							embeddedDocumentUri: sourceMap.mappedDocument.uri,
-						} : undefined,
-					};
-
-					return <vscode.CodeAction>{
+				return codeActions?.map<vscode.CodeAction>(_codeAction => {
+					return {
 						..._codeAction,
-						data: data,
+						data: {
+							uri,
+							originalItem: _codeAction,
+							pluginId: context.plugins.indexOf(plugin),
+							sourceMap: sourceMap ? {
+								embeddedDocumentUri: sourceMap.mappedDocument.uri,
+							} : undefined,
+						} satisfies PluginCodeActionData,
 					};
 				});
 			},

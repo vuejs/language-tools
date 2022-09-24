@@ -43,17 +43,15 @@ export default function (options: {
 							if (!mapping.data.referencesCodeLens)
 								continue;
 
-							const data: ReferencesCodeLensData = {
-								uri: document.uri,
-								position: document.positionAt(mapping.sourceRange.start),
-							};
-
 							result.push({
 								range: {
 									start: document.positionAt(mapping.sourceRange.start),
 									end: document.positionAt(mapping.sourceRange.end),
 								},
-								data: data,
+								data: {
+									uri: document.uri,
+									position: document.positionAt(mapping.sourceRange.start),
+								} satisfies ReferencesCodeLensData,
 							});
 						}
 					}

@@ -9,20 +9,19 @@ import { EmbeddedFileMappingData } from '../sourceFile';
 import { ResolvedVueCompilerOptions } from '../types';
 import { colletVars, walkInterpolationFragment } from '../utils/transform';
 
-// TODO: typecheck
 const capabilitiesSet = {
-	all: { hover: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
-	noDiagnostic: { hover: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true },
-	diagnosticOnly: { diagnostic: true },
-	tagHover: { hover: true },
-	event: { hover: true, diagnostic: true },
-	tagReference: { references: true, definitions: true, rename: { normalize: undefined, apply: (_: string, newName: string) => newName } },
-	attr: { hover: true, diagnostic: true, references: true, definitions: true, rename: true },
-	attrReference: { references: true, definitions: true, rename: true },
-	scopedClassName: { references: true, definitions: true, rename: true, completion: true },
-	slotName: { hover: true, diagnostic: true, references: true, definitions: true, completion: true },
-	slotNameExport: { hover: true, diagnostic: true, references: true, definitions: true, /* referencesCodeLens: true */ },
-	refAttr: { references: true, definitions: true, rename: true },
+	all: { hover: true, diagnostic: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true } satisfies PositionCapabilities,
+	noDiagnostic: { hover: true, references: true, definitions: true, rename: true, completion: true, semanticTokens: true } satisfies PositionCapabilities,
+	diagnosticOnly: { diagnostic: true } satisfies PositionCapabilities,
+	tagHover: { hover: true } satisfies PositionCapabilities,
+	event: { hover: true, diagnostic: true } satisfies PositionCapabilities,
+	tagReference: { references: true, definitions: true, rename: { normalize: undefined, apply: (_: string, newName: string) => newName } } satisfies PositionCapabilities,
+	attr: { hover: true, diagnostic: true, references: true, definitions: true, rename: true } satisfies PositionCapabilities,
+	attrReference: { references: true, definitions: true, rename: true } satisfies PositionCapabilities,
+	scopedClassName: { references: true, definitions: true, rename: true, completion: true } satisfies PositionCapabilities,
+	slotName: { hover: true, diagnostic: true, references: true, definitions: true, completion: true } satisfies PositionCapabilities,
+	slotNameExport: { hover: true, diagnostic: true, references: true, definitions: true, /* referencesCodeLens: true */ } satisfies PositionCapabilities,
+	refAttr: { references: true, definitions: true, rename: true } satisfies PositionCapabilities,
 };
 const formatBrackets = {
 	empty: ['', ''] as [string, string],

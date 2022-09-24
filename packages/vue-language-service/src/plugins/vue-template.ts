@@ -595,17 +595,16 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				const [fileUri] = itemId.args;
 				const filePath = shared.getPathOfUri(fileUri);
 				const rPath = path.relative(options.vueLsHost.getCurrentDirectory(), filePath);
-				const data: AutoImportCompletionData = {
-					mode: 'autoImport',
-					vueDocumentUri: vueDocument.uri,
-					importUri: fileUri,
-				};
 				item.labelDetails = { description: rPath };
 				item.filterText = item.label + ' ' + rPath;
 				item.detail = rPath;
 				item.kind = vscode.CompletionItemKind.File;
 				item.sortText = '\u0003' + (item.sortText ?? item.label);
-				item.data = data;
+				item.data = {
+					mode: 'autoImport',
+					vueDocumentUri: vueDocument.uri,
+					importUri: fileUri,
+				} satisfies AutoImportCompletionData;
 			}
 			else if (itemIdKey && itemId) {
 
