@@ -1,6 +1,5 @@
 import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
-import * as shared from '@volar/shared';
 import { languageFeatureWorker } from '../utils/featureWorkers';
 import * as dedupe from '../utils/dedupe';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -74,27 +73,33 @@ export function register(context: LanguageServiceRuntimeContext) {
 					}
 				}
 			},
-			(data, sourceMap) => data.map(reference => {
+			(data, sourceMap) => {
 
-				const referenceSourceMap = context.documents.sourceMapFromEmbeddedDocumentUri(reference.uri);
+				const results: vscode.Location[] = [];
 
-				if (referenceSourceMap) {
+				for (const reference of data) {
 
-					const range = referenceSourceMap.getSourceRange(
-						reference.range.start,
-						reference.range.end,
-						data => !!data.references,
-					)?.[0];
+					const referenceSourceMap = context.documents.sourceMapFromEmbeddedDocumentUri(reference.uri);
 
-					if (!range)
-						return;
+					if (referenceSourceMap) {
 
-					reference.uri = referenceSourceMap.sourceDocument.uri;
-					reference.range = range;
+						for (const [range] of referenceSourceMap.getSourceRanges(
+							reference.range.start,
+							reference.range.end,
+							data => !!data.references,
+						)) {
+							results.push({
+								uri: referenceSourceMap.sourceDocument.uri,
+								range,
+							});
+						}
+					}
+
+					results.push(reference);
 				}
 
-				return reference;
-			}).filter(shared.notEmpty),
+				return results;
+			},
 			arr => dedupe.withLocations(arr.flat()),
 		);
 	};

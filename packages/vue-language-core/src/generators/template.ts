@@ -176,7 +176,6 @@ export function generate(
 			const tagOffsets = tagNames[tagName];
 			const tagRanges = tagOffsets.map(offset => ({ start: offset, end: offset + tagName.length }));
 			const isNamespacedTag = tagName.indexOf('.') >= 0;
-
 			const var_componentVar = isNamespacedTag ? `__VLS_ctx.${tagName}` : capitalize(camelize(tagName.replace(/:/g, '-')));
 
 			if (isNamespacedTag) {
@@ -185,7 +184,7 @@ export function generate(
 
 				for (let i = 0; i < tagRanges.length; i++) {
 					const tagRange = tagRanges[i];
-					codeGen.addText(`declare const __VLS_${elementIndex++}: typeof __VLS_ctx.`);
+					codeGen.addText(`let __VLS_${elementIndex++}!: typeof __VLS_ctx.`);
 					writeCode(
 						tagName,
 						tagRange,
@@ -206,10 +205,11 @@ export function generate(
 					capitalize(camelize(tagName)),
 				]);
 
-				codeGen.addText(`declare const ${var_componentVar}: `);
+				codeGen.addText(`let ${var_componentVar}!: `);
 
-				if (!vueCompilerOptions.strictTemplates)
+				if (!vueCompilerOptions.strictTemplates) {
 					codeGen.addText(`import('./__VLS_types.js').ConvertInvalidJsxElement<`);
+				}
 
 				for (const name of names) {
 					codeGen.addText(`\n'${name}' extends keyof typeof __VLS_components ? typeof __VLS_components['${name}'] : `);
@@ -225,29 +225,25 @@ export function generate(
 
 				codeGen.addText(`;\n`);
 
-				for (const vlsVar of ['__VLS_components', '__VLS_ctx']) {
-					for (const tagRange of tagRanges) {
-						for (const name of names) {
-							codeGen.addText(vlsVar);
-							writePropertyAccess2(
-								name,
-								[tagRange],
-								{
-									vueTag: 'template',
-									capabilities: {
-										...capabilitiesSet.tagReference,
-										rename: {
-											normalize: tagName === name ? capabilitiesSet.tagReference.rename.normalize : unHyphenatComponentName,
-											apply: keepHyphenateName,
-										},
-									},
+				for (const name of names) {
+					codeGen.addText('__VLS_components');
+					writePropertyAccess2(
+						name,
+						tagRanges,
+						{
+							vueTag: 'template',
+							capabilities: {
+								...capabilitiesSet.tagReference,
+								rename: {
+									normalize: tagName === name ? capabilitiesSet.tagReference.rename.normalize : unHyphenatComponentName,
+									apply: keepHyphenateName,
 								},
-							);
-							codeGen.addText(';');
-						}
-						codeGen.addText('\n');
-					}
+							},
+						},
+					);
+					codeGen.addText(';');
 				}
+				codeGen.addText('\n');
 			}
 
 			data[tagName] = {
@@ -1511,7 +1507,7 @@ export function generate(
 					writeProps(parentEl, false, 'class', 'slots');
 					codeGen.addText(`});\n`);
 					writeInterpolationVarsExtraCompletion();
-					codeGen.addText(`declare const ${varSlots}: import('./__VLS_types.js').ExtractComponentSlots<typeof ${varComponentInstance}>;\n`);
+					codeGen.addText(`let ${varSlots}!: import('./__VLS_types.js').ExtractComponentSlots<typeof ${varComponentInstance}>;\n`);
 				}
 
 				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
