@@ -1,17 +1,36 @@
 # Changelog
 
+## 1.0.0-alpha.4 (2022/9/24)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- fix: iterating `Symbol.Iterator` is not correctly inferred in `v-for` ([#1892](https://github.com/johnsoncodehk/volar/issues/1892))
+- fix: false positive error on `<CustomComponent @click.stop />` ([#464](https://github.com/johnsoncodehk/volar/issues/464#issuecomment-1159303260))
+- perf: improve for large template memory usage
+- perf: improve for monorepo project memory usage
+
+**Breaking changes**
+
+- vueCompilerOptions property `experimentalDisableTemplateSupport` renamed to `skipTemplateCodegen`
+
 ## 1.0.0-alpha.3 (2022/9/21)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
 
 - fix: don't ignore `@vue/compiler-dom` compile errors for vue2 templates
 - fix: cannot start language server with `@volar/vue-language-server` since v1.0.0-alpha.0 ([#1888](https://github.com/johnsoncodehk/volar/issues/1888))
 
 ## 1.0.0-alpha.2 (2022/9/21)
 
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
 - feat: add less support for initial indent ([#1883](https://github.com/johnsoncodehk/volar/issues/1883))
 - feat: use `vue-template-compiler` instead of `@vue/compiler-dom` to collect template errors for target < 3
 - fix: moving components doesn't trigger import updates ([#1884](https://github.com/johnsoncodehk/volar/issues/1884))
 
 ## 1.0.0-alpha.1 (2022/9/17)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
 
 - fix: `vue-tsc` depends version resolve failed ([#1881](https://github.com/johnsoncodehk/volar/issues/1881))
 
