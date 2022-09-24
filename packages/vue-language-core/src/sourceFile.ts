@@ -46,7 +46,6 @@ export class VueSourceFile implements SourceFile {
 	static compiledSFCTemplateCache: {
 		fileName: string,
 		template: string,
-		templateOffset: number,
 		snapshot: ts.IScriptSnapshot,
 		result: CompilerDom.CodegenResult,
 		plugin: ReturnType<VueLanguagePlugin>,
@@ -104,7 +103,6 @@ export class VueSourceFile implements SourceFile {
 		if (
 			VueSourceFile.compiledSFCTemplateCache?.fileName === sourceFile.fileName
 			&& VueSourceFile.compiledSFCTemplateCache.template === sourceFile.sfc.template?.content
-			&& VueSourceFile.compiledSFCTemplateCache.templateOffset === sourceFile.sfc.template.startTagEnd
 		) {
 			return {
 				errors: [],
@@ -130,7 +128,6 @@ export class VueSourceFile implements SourceFile {
 					});
 					if (newResult) {
 						VueSourceFile.compiledSFCTemplateCache.template = sourceFile.sfc.template.content;
-						VueSourceFile.compiledSFCTemplateCache.templateOffset = sourceFile.sfc.template.startTagEnd;
 						VueSourceFile.compiledSFCTemplateCache.snapshot = newSnapshot;
 						VueSourceFile.compiledSFCTemplateCache.result = newResult;
 						return {
@@ -166,7 +163,6 @@ export class VueSourceFile implements SourceFile {
 						VueSourceFile.compiledSFCTemplateCache = {
 							fileName: sourceFile.fileName,
 							template: sourceFile.sfc.template.content,
-							templateOffset: sourceFile.sfc.template.startTagEnd,
 							snapshot: newSnapshot,
 							result: result,
 							plugin,
