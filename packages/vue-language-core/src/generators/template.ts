@@ -597,20 +597,19 @@ export function generate(
 			codeGen.addText(`let ${var_props}!: `);
 
 			if (!tag) {
-				codeGen.addText(`JSX.IntrinsicElements['`);
-				writeCode(
+				codeGen.addText(`JSX.IntrinsicElements[`);
+				writeCodeWithQuotes(
 					node.tag,
 					{
 						start: startTagOffset,
 						end: startTagOffset + node.tag.length,
 					},
-					SourceMaps.Mode.Offset,
 					{
 						vueTag: 'template',
 						capabilities: capabilitiesSet.tagReference,
 					},
 				);
-				codeGen.addText(`'];\n`);
+				codeGen.addText(`];\n`);
 			}
 			else {
 				codeGen.addText(`import('./__VLS_types.js').ComponentProps<typeof ${tag.component}>;\n`);
