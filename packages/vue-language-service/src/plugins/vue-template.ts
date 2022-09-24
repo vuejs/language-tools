@@ -30,10 +30,6 @@ const eventModifiers: Record<string, string> = {
 	passive: 'attaches a DOM event with { passive: true }.',
 };
 
-interface HtmlCompletionData {
-	mode: 'html',
-}
-
 interface AutoImportCompletionData {
 	mode: 'autoImport',
 	vueDocumentUri: string,
@@ -96,12 +92,9 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 			async resolve(item) {
 
-				const data: HtmlCompletionData | AutoImportCompletionData | undefined = item.data;
+				const data: AutoImportCompletionData | undefined = item.data;
 
-				if (data?.mode === 'html') {
-					return await resolveHtmlItem(item, data);
-				}
-				else if (data?.mode === 'autoImport') {
+				if (data?.mode === 'autoImport') {
 					return await resolveAutoImportItem(item, data);
 				}
 
@@ -240,37 +233,6 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				return range;
 		},
 	};
-
-	async function resolveHtmlItem(item: vscode.CompletionItem, data: HtmlCompletionData) {
-
-		// let tsItem = data.tsItem;
-
-		// if (!tsItem)
-		// 	return item;
-
-		// tsItem = await options.getTsLs().doCompletionResolve(tsItem);
-		// item.tags = [...item.tags ?? [], ...tsItem.tags ?? []];
-
-		// const details: string[] = [];
-		// const documentations: string[] = [];
-
-		// if (item.detail) details.push(item.detail);
-		// if (tsItem.detail) details.push(tsItem.detail);
-		// if (details.length) {
-		// 	item.detail = details.join('\n\n');
-		// }
-
-		// if (item.documentation) documentations.push(typeof item.documentation === 'string' ? item.documentation : item.documentation.value);
-		// if (tsItem.documentation) documentations.push(typeof tsItem.documentation === 'string' ? tsItem.documentation : tsItem.documentation.value);
-		// if (documentations.length) {
-		// 	item.documentation = {
-		// 		kind: vscode.MarkupKind.Markdown,
-		// 		value: documentations.join('\n\n'),
-		// 	};
-		// }
-
-		return item;
-	}
 
 	async function resolveAutoImportItem(item: vscode.CompletionItem, data: AutoImportCompletionData) {
 
@@ -680,12 +642,6 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				else {
 					item.sortText = '\u0001' + (item.sortText ?? item.label);
 				}
-
-				const data: HtmlCompletionData = {
-					mode: 'html',
-				};
-
-				item.data = data;
 			}
 			else if (item.kind === vscode.CompletionItemKind.Property && componentNames.has(hyphenate(item.label))) {
 				item.kind = vscode.CompletionItemKind.Variable;
@@ -698,7 +654,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 			for (const item of completionList.items) {
 
-				const data: HtmlCompletionData | AutoImportCompletionData | undefined = item.data;
+				const data: AutoImportCompletionData | undefined = item.data;
 
 				if (data?.mode === 'autoImport' && data.importUri === vueDocument.uri) { // don't import itself
 					continue;

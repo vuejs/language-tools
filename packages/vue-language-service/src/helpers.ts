@@ -19,13 +19,26 @@ export function checkPropsOfTag(
 	if (!components)
 		return [];
 
-	const componentSymbol = components.componentsType.getProperty(tag)
-		?? components.componentsType.getProperty(camelize(tag))
-		?? components.componentsType.getProperty(capitalize(camelize(tag)));
+	const links = tag.split('.');
+	let componentSymbol = components.componentsType.getProperty(links[0])
+		?? components.componentsType.getProperty(camelize(links[0]))
+		?? components.componentsType.getProperty(capitalize(camelize(links[0])));
+
 	if (!componentSymbol)
 		return [];
 
-	const componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.componentsNode);
+	let componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.componentsNode);
+
+	for (let i = 1; i < links.length; i++) {
+		componentSymbol = componentType.getProperty(links[i]);
+		if (componentSymbol) {
+			componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.componentsNode);
+		}
+		else {
+			return [];
+		}
+	}
+
 	const result = new Set<string>();
 
 	for (const sig of componentType.getCallSignatures()) {
@@ -66,13 +79,26 @@ export function checkEventsOfTag(
 	if (!components)
 		return [];
 
-	const componentSymbol = components.componentsType.getProperty(tag)
-		?? components.componentsType.getProperty(camelize(tag))
-		?? components.componentsType.getProperty(capitalize(camelize(tag)));
+	const links = tag.split('.');
+	let componentSymbol = components.componentsType.getProperty(links[0])
+		?? components.componentsType.getProperty(camelize(links[0]))
+		?? components.componentsType.getProperty(capitalize(camelize(links[0])));
+
 	if (!componentSymbol)
 		return [];
 
-	const componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.componentsNode);
+	let componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.componentsNode);
+
+	for (let i = 1; i < links.length; i++) {
+		componentSymbol = componentType.getProperty(links[i]);
+		if (componentSymbol) {
+			componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.componentsNode);
+		}
+		else {
+			return [];
+		}
+	}
+
 	const result = new Set<string>();
 
 	// for (const sig of componentType.getCallSignatures()) {
