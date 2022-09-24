@@ -129,6 +129,8 @@ export class VueSourceFile implements SourceFile {
 						newText,
 					});
 					if (newResult) {
+						VueSourceFile.compiledSFCTemplateCache.template = sourceFile.sfc.template.content;
+						VueSourceFile.compiledSFCTemplateCache.templateOffset = sourceFile.sfc.template.startTagEnd;
 						VueSourceFile.compiledSFCTemplateCache.snapshot = newSnapshot;
 						VueSourceFile.compiledSFCTemplateCache.result = newResult;
 						return {
