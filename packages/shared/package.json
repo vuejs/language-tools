@@ -20,6 +20,6 @@
 		"vscode-uri": "^3.0.3"
 	},
 	"devDependencies": {
-		"typescript": "latest"
+		"typescript": "beta"
 	}
 }

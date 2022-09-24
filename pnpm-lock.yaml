@@ -10,7 +10,7 @@ importers:
       '@lerna-lite/cli': latest
       '@types/node': latest
       '@vscode/test-web': latest
-      typescript: latest
+      typescript: beta
       vite: latest
       vitepress: 1.0.0-alpha.13
       vitest: latest
@@ -22,7 +22,7 @@ importers:
       vue: 3.2.38
     devDependencies:
       '@types/node': 18.7.20
-      typescript: 4.8.3
+      typescript: 4.9.1-beta
       vite: 3.1.3
       vitest: 0.23.4
 
@@ -140,7 +140,7 @@ importers:
       '@volar/transforms': 1.0.0-alpha.5
       '@volar/typescript-faster': 1.0.0-alpha.5
       '@vue/reactivity': ^3.2.38
-      typescript: latest
+      typescript: beta
       upath: ^2.0.1
       vscode-html-languageservice: ^5.0.1
       vscode-json-languageservice: ^5.1.0
@@ -161,7 +161,7 @@ importers:
       vscode-languageserver-textdocument: 1.0.7
       vscode-uri: 3.0.3
     devDependencies:
-      typescript: 4.8.3
+      typescript: 4.9.1-beta
 
   packages/preview:
     specifiers:
@@ -197,7 +197,7 @@ importers:
 
   packages/shared:
     specifiers:
-      typescript: latest
+      typescript: beta
       upath: ^2.0.1
       vscode-languageserver-protocol: ^3.17.2
       vscode-languageserver-textdocument: ^1.0.7
@@ -208,7 +208,7 @@ importers:
       vscode-languageserver-textdocument: 1.0.7
       vscode-uri: 3.0.3
     devDependencies:
-      typescript: 4.8.3
+      typescript: 4.9.1-beta
 
   packages/source-map:
     specifiers:
@@ -228,19 +228,19 @@ importers:
     specifiers:
       '@types/semver': ^7.3.12
       semver: ^7.3.7
-      typescript: latest
+      typescript: beta
     dependencies:
       semver: 7.3.7
     devDependencies:
       '@types/semver': 7.3.12
-      typescript: 4.8.3
+      typescript: 4.9.1-beta
 
   packages/typescript-language-service:
     specifiers:
       '@types/semver': ^7.3.12
       '@volar/shared': 1.0.0-alpha.5
       semver: ^7.3.7
-      typescript: latest
+      typescript: beta
       upath: ^2.0.1
       vscode-languageserver-protocol: ^3.17.2
       vscode-languageserver-textdocument: ^1.0.7
@@ -256,18 +256,18 @@ importers:
       vscode-uri: 3.0.3
     devDependencies:
       '@types/semver': 7.3.12
-      typescript: 4.8.3
+      typescript: 4.9.1-beta
 
   packages/typescript-vue-plugin:
     specifiers:
       '@volar/vue-language-core': 1.0.0-alpha.5
       '@volar/vue-typescript': 1.0.0-alpha.5
-      typescript: latest
+      typescript: beta
     dependencies:
       '@volar/vue-language-core': link:../vue-language-core
       '@volar/vue-typescript': link:../vue-typescript
     devDependencies:
-      typescript: 4.8.3
+      typescript: 4.9.1-beta
 
   packages/vue-component-meta:
     specifiers:
@@ -286,7 +286,7 @@ importers:
       '@vue/compiler-sfc': ^3.2.38
       '@vue/reactivity': ^3.2.38
       '@vue/shared': ^3.2.38
-      typescript: latest
+      typescript: beta
       vue-template-compiler: ^2.7.10
     dependencies:
       '@volar/code-gen': link:../code-gen
@@ -298,7 +298,7 @@ importers:
       '@vue/shared': 3.2.38
       vue-template-compiler: 2.7.10
     devDependencies:
-      typescript: 4.8.3
+      typescript: 4.9.1-beta
 
   packages/vue-language-plugin-pug:
     specifiers:
@@ -342,7 +342,7 @@ importers:
       '@vue/compiler-dom': ^3.2.38
       '@vue/reactivity': ^3.2.38
       '@vue/shared': ^3.2.38
-      typescript: latest
+      typescript: beta
       upath: ^2.0.1
       vscode-html-languageservice: ^5.0.1
       vscode-json-languageservice: ^5.1.0
@@ -375,7 +375,7 @@ importers:
       vscode-languageserver-textdocument: 1.0.7
       vscode-uri: 3.0.3
     devDependencies:
-      typescript: 4.8.3
+      typescript: 4.9.1-beta
 
   packages/vue-test-workspace:
     specifiers:
@@ -397,14 +397,14 @@ importers:
       '@volar/language-core': 1.0.0-alpha.5
       '@volar/typescript-faster': 1.0.0-alpha.5
       '@volar/vue-language-core': 1.0.0-alpha.5
-      typescript: latest
+      typescript: beta
     dependencies:
       '@volar/code-gen': link:../code-gen
       '@volar/language-core': link:../language-core
       '@volar/typescript-faster': link:../typescript-faster
       '@volar/vue-language-core': link:../vue-language-core
     devDependencies:
-      typescript: 4.8.3
+      typescript: 4.9.1-beta
 
   plugins/css:
     specifiers:
@@ -5621,8 +5621,8 @@ packages:
     dev: false
     optional: true
 
-  /typescript/4.8.3:
-    resolution: {integrity: sha512-goMHfm00nWPa8UvR/CPSvykqf6dVV8x/dp0c5mFTMTIu0u0FlGWRioyy7Nn0PGAdHxpJZnuO/ut+PpQ8UiHAig==}
+  /typescript/4.9.1-beta:
+    resolution: {integrity: sha512-D4c0t1+sMOS5Hy8DQsGFfEYUuKzolXhf+7e/N0Td5etBPflEYzVwWLBrbVgHpLpLC53OJQCtxk31+NWO2SBPaA==}
     engines: {node: '>=4.2.0'}
     hasBin: true
     dev: true

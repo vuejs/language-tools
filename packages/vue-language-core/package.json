@@ -13,7 +13,7 @@
 		"directory": "packages/vue-language-core"
 	},
 	"devDependencies": {
-		"typescript": "latest"
+		"typescript": "beta"
 	},
 	"dependencies": {
 		"@volar/code-gen": "1.0.0-alpha.5",

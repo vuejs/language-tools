@@ -13,7 +13,7 @@
 		"directory": "packages/vue-language-service"
 	},
 	"devDependencies": {
-		"typescript": "latest"
+		"typescript": "beta"
 	},
 	"dependencies": {
 		"@johnsoncodehk/html2pug": "^1.0.0",

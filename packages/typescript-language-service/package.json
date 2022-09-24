@@ -14,7 +14,7 @@
 	},
 	"devDependencies": {
 		"@types/semver": "^7.3.12",
-		"typescript": "latest"
+		"typescript": "beta"
 	},
 	"dependencies": {
 		"@volar/shared": "1.0.0-alpha.5",
