@@ -9,7 +9,7 @@ import * as path from 'upath';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { checkComponentNames, checkEventsOfTag, checkGlobalAttrs, checkPropsOfTag, getTemplateTagsAndAttrs } from '../helpers';
+import { checkComponentNames, checkEventsOfTag, checkGlobalAttrs, checkPropsOfTag } from '../helpers';
 import * as casing from '../ideFeatures/nameCasing';
 
 export const semanticTokenTypes = [
@@ -29,17 +29,6 @@ const eventModifiers: Record<string, string> = {
 	middle: 'only trigger handler for middle button mouse events.',
 	passive: 'attaches a DOM event with { passive: true }.',
 };
-
-const vueGlobalDirectiveProvider = html.newHTMLDataProvider('vueGlobalDirective', {
-	version: 1.1,
-	tags: [],
-	globalAttributes: [
-		{ name: 'v-if' },
-		{ name: 'v-else-if' },
-		{ name: 'v-else', valueSet: 'v' },
-		{ name: 'v-for' },
-	],
-});
 
 interface HtmlCompletionData {
 	mode: 'html',
@@ -447,127 +436,149 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			tag: tag === 'auto' && detected.tag !== 'unsure' ? detected.tag : (tag === 'kebab' ? 'kebabCase' : tag === 'pascal' ? 'pascalCase' : 'both'),
 			attr: detected.attr !== 'unsure' && (attr === 'auto-camel' || attr === 'auto-kebab') ? detected.attr : (attr === 'auto-camel' || attr === 'camel') ? 'camelCase' : 'kebabCase',
 		};
-		const componentCompletion = await getComponentCompletionData(vueDocument);
-		if (!componentCompletion)
-			return;
 
-		const tags: html.ITagData[] = [];
-		const globalAttributes: html.IAttributeData[] = [];
-
-		for (const [_componentName, { bind, on }] of componentCompletion) {
-
-			const componentNames =
-				nameCases.tag === 'kebabCase' ? new Set([hyphenate(_componentName)])
-					: nameCases.tag === 'pascalCase' ? new Set([_componentName])
-						: new Set([hyphenate(_componentName), _componentName]);
-
-			for (const componentName of componentNames) {
-
-				const attributes: html.IAttributeData[] = componentName === '*' ? globalAttributes : [];
-
-				for (const prop of bind) {
-
-					const name = nameCases.attr === 'camelCase' ? prop : hyphenate(prop);
-
-					if (hyphenate(name).startsWith('on-')) {
-
-						const propNameBase = name.startsWith('on-')
-							? name.slice('on-'.length)
-							: (name['on'.length].toLowerCase() + name.slice('onX'.length));
-						const propKey = createInternalItemId('componentEvent', [componentName, propNameBase]);
-
-						attributes.push(
-							{
-								name: 'v-on:' + propNameBase,
-								description: propKey,
-							},
-							{
-								name: '@' + propNameBase,
-								description: propKey,
-							},
-						);
-					}
-					else {
-
-						const propName = name;
-						const propKey = createInternalItemId('componentProp', [componentName, propName]);
-
-						attributes.push(
-							{
-								name: propName,
-								description: propKey,
-							},
-							{
-								name: ':' + propName,
-								description: propKey,
-							},
-							{
-								name: 'v-bind:' + propName,
-								description: propKey,
-							},
-						);
-					}
-				}
-				for (const event of on) {
-
-					const name = nameCases.attr === 'camelCase' ? event : hyphenate(event);
-					const propKey = createInternalItemId('componentEvent', [componentName, name]);
-
-					attributes.push({
-						name: 'v-on:' + name,
-						description: propKey,
-					});
-					attributes.push({
-						name: '@' + name,
-						description: propKey,
-					});
-				}
-
-				if (componentName !== '*') {
-					tags.push({
-						name: componentName,
-						attributes,
-					});
-				}
-			}
-		}
-
-		const descriptor = vueSourceFile.sfc;
 		const enabledComponentAutoImport = await context.env.configurationHost?.getConfiguration<boolean>('volar.completion.autoImportComponent') ?? true;
 
-		if (enabledComponentAutoImport && (descriptor.script || descriptor.scriptSetup)) {
-			for (const vueDocument of options.context.documents.getAll()) {
-				let baseName = path.removeExt(path.basename(vueDocument.uri), '.vue');
-				if (baseName.toLowerCase() === 'index') {
-					baseName = path.basename(path.dirname(vueDocument.uri));
-				}
-				baseName = baseName.replace(/\./g, '-');
-				const componentName_1 = hyphenate(baseName);
-				const componentName_2 = capitalize(camelize(baseName));
-				let i: number | '' = '';
-				if (componentCompletion.has(componentName_1) || componentCompletion.has(componentName_2)) {
-					i = 1;
-					while (componentCompletion.has(componentName_1 + i) || componentCompletion.has(componentName_2 + i)) {
-						i++;
-					}
-				}
-				tags.push({
-					name: (nameCases.tag === 'kebabCase' ? componentName_1 : componentName_2) + i,
-					description: createInternalItemId('importFile', [vueDocument.uri]),
-					attributes: [],
-				});
-			}
-		}
-
-		const dataProvider = html.newHTMLDataProvider('vue-html', {
+		const globals = html.newHTMLDataProvider('vueGlobalDirective', {
 			version: 1.1,
-			tags,
-			globalAttributes,
+			tags: [],
+			globalAttributes: [
+				{ name: 'v-if' },
+				{ name: 'v-else-if' },
+				{ name: 'v-else', valueSet: 'v' },
+				{ name: 'v-for' },
+				...checkGlobalAttrs(context.typescript.module, context.typescript.languageService, vueSourceFile.fileName).map(attr => ({ name: attr }))
+			],
 		});
 
 		options.templateLanguagePlugin.updateCustomData([
-			vueGlobalDirectiveProvider,
-			dataProvider,
+			globals,
+			{
+				getId: () => 'vue-template',
+				isApplicable: () => true,
+				provideTags: () => {
+
+					const components = checkComponentNames(context.typescript.module, context.typescript.languageService, vueSourceFile);
+					const names = new Set<string>();
+					const tags: html.ITagData[] = [];
+
+					for (const tag of components) {
+						if (nameCases.tag === 'kebabCase') {
+							names.add(hyphenate(tag));
+						}
+						else if (nameCases.tag === 'pascalCase') {
+							names.add(tag);
+						}
+						else {
+							names.add(hyphenate(tag));
+							names.add(tag);
+						}
+					}
+
+					for (const name of names) {
+						tags.push({
+							name: name,
+							attributes: [],
+						});
+					}
+
+					const descriptor = vueSourceFile.sfc;
+
+					if (enabledComponentAutoImport && (descriptor.script || descriptor.scriptSetup)) {
+						for (const vueDocument of options.context.documents.getAll()) {
+							let baseName = path.removeExt(path.basename(vueDocument.uri), '.vue');
+							if (baseName.toLowerCase() === 'index') {
+								baseName = path.basename(path.dirname(vueDocument.uri));
+							}
+							baseName = baseName.replace(/\./g, '-');
+							const componentName_1 = hyphenate(baseName);
+							const componentName_2 = capitalize(camelize(baseName));
+							let i: number | '' = '';
+							if (names.has(componentName_1) || names.has(componentName_2)) {
+								i = 1;
+								while (names.has(componentName_1 + i) || names.has(componentName_2 + i)) {
+									i++;
+								}
+							}
+							tags.push({
+								name: (nameCases.tag === 'kebabCase' ? componentName_1 : componentName_2) + i,
+								description: createInternalItemId('importFile', [vueDocument.uri]),
+								attributes: [],
+							});
+						}
+					}
+
+					return tags;
+				},
+				provideAttributes: (tag) => {
+
+					const props = checkPropsOfTag(context.typescript.module, context.typescript.languageService, vueSourceFile, tag);
+					const events = checkEventsOfTag(context.typescript.module, context.typescript.languageService, vueSourceFile, tag);
+					const attributes: html.IAttributeData[] = [];
+
+					for (const prop of props) {
+
+						const name = nameCases.attr === 'camelCase' ? prop : hyphenate(prop);
+
+						if (hyphenate(name).startsWith('on-')) {
+
+							const propNameBase = name.startsWith('on-')
+								? name.slice('on-'.length)
+								: (name['on'.length].toLowerCase() + name.slice('onX'.length));
+							const propKey = createInternalItemId('componentEvent', [tag, propNameBase]);
+
+							attributes.push(
+								{
+									name: 'v-on:' + propNameBase,
+									description: propKey,
+								},
+								{
+									name: '@' + propNameBase,
+									description: propKey,
+								},
+							);
+						}
+						else {
+
+							const propName = name;
+							const propKey = createInternalItemId('componentProp', [tag, propName]);
+
+							attributes.push(
+								{
+									name: propName,
+									description: propKey,
+								},
+								{
+									name: ':' + propName,
+									description: propKey,
+								},
+								{
+									name: 'v-bind:' + propName,
+									description: propKey,
+								},
+							);
+						}
+					}
+
+					for (const event of events) {
+
+						const name = nameCases.attr === 'camelCase' ? event : hyphenate(event);
+						const propKey = createInternalItemId('componentEvent', [tag, name]);
+
+						attributes.push({
+							name: 'v-on:' + name,
+							description: propKey,
+						});
+						attributes.push({
+							name: '@' + name,
+							description: propKey,
+						});
+					}
+
+					return attributes;
+				},
+				provideValues: () => [],
+			},
 		]);
 	}
 
@@ -715,36 +726,6 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			text: importNode.getFullText(ast).trim(),
 			end: importNode.getEnd(),
 		} : undefined;
-	}
-
-	async function getComponentCompletionData(sourceDocument: SourceFileDocument) {
-
-		if (!(sourceDocument.file instanceof vue.VueSourceFile))
-			return;
-
-		const vueSourceFile = sourceDocument.file;
-		const componentNames = checkComponentNames(context.typescript.module, context.typescript.languageService, vueSourceFile);
-		const data = new Map<string, { bind: string[], on: string[]; }>;
-		const templateTagNames = [...getTemplateTagsAndAttrs(sourceDocument.file)?.tags.keys() ?? []];
-		const namespaceComponentTags = templateTagNames.filter(tag => tag.indexOf('.') >= 0);
-
-		for (const tag of [...componentNames, ...namespaceComponentTags]) {
-
-			if (data.has(tag))
-				continue;
-
-			data.set(tag, {
-				bind: checkPropsOfTag(context.typescript.module, context.typescript.languageService, sourceDocument.file, tag),
-				on: checkEventsOfTag(context.typescript.module, context.typescript.languageService, sourceDocument.file, tag),
-			});
-		}
-
-		data.set('*', {
-			bind: checkGlobalAttrs(context.typescript.module, context.typescript.languageService, sourceDocument.file.fileName),
-			on: [],
-		});
-
-		return data;
 	}
 }
 
