@@ -137,8 +137,8 @@ function getSourceRangePreferSurroundedPosition(sourceMap: EmbeddedDocumentSourc
 			result = sourceRange;
 		}
 		if (
-			(sourceRange.start.line > position.line || (sourceRange.start.line === position.line && sourceRange.start.character >= sourceRange.start.character))
-			&& (sourceRange.end.line < position.line || (sourceRange.end.line === position.line && sourceRange.end.character <= sourceRange.end.character))
+			(sourceRange.start.line < position.line || (sourceRange.start.line === position.line && sourceRange.start.character <= position.character))
+			&& (sourceRange.end.line > position.line || (sourceRange.end.line === position.line && sourceRange.end.character >= position.character))
 		) {
 			result = sourceRange;
 			break;
