@@ -162,8 +162,6 @@ export function checkGlobalAttrs(
 			const type = checker.getTypeFromTypeNode(typeNoe.type);
 			const attrs = type.getProperties();
 
-			console.log(attrs.map(c => c.name));
-
 			return attrs.map(c => c.name);
 		}
 	}

@@ -772,120 +772,58 @@ export function generate(
 
 				const tag = tagResolves[node.tag];
 				const varInstanceProps = `__VLS_${elementIndex++}`;
+				const key_2 = camelize('on-' + prop.arg.loc.source); // onClickOutside
 
-				if (tag) {
-					codeGen.addText(`type ${varInstanceProps} = typeof ${varComponentInstance} extends { $props: infer Props } ? Props & Record<string, unknown> : typeof ${tag.component} & Record<string, unknown>;\n`);
-				}
+				codeGen.addText(`type ${varInstanceProps} = import('./__VLS_types.js').InstanceProps<typeof ${varComponentInstance}, ${tag ? 'typeof ' + tag.component : '{}'}>;\n`);
+				codeGen.addText(`const __VLS_${elementIndex++}: import('./__VLS_types.js').EventObject<typeof ${varComponentInstance}, '${prop.arg.loc.source}', ${tag ? 'typeof ' + tag.component : '{}'}, `);
 
-				codeGen.addText(`const __VLS_${elementIndex++}: {\n`);
-				codeGen.addText(`'${prop.arg.loc.source}': import('./__VLS_types.js').FillingEventArg<\n`);
-				{
-
-					const key_2 = camelize('on-' + prop.arg.loc.source); // onClickOutside
-					const key_3 = 'on' + capitalize(prop.arg.loc.source); // onClick-outside
-
-					if (tag) {
-
-						codeGen.addText(`import('./__VLS_types.js').FirstFunction<\n`);
-
-						{
-							codeGen.addText(`import('./__VLS_types.js').EmitEvent<typeof ${tag.component}, '${prop.arg.loc.source}'>,\n`);
-						}
-
-						{
-							codeGen.addText(`${varInstanceProps}[`);
-							writeCodeWithQuotes(
-								key_2,
-								[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
-								{
-									vueTag: 'template',
-									capabilities: {
-										...capabilitiesSet.attrReference,
-										rename: {
-											normalize(newName) {
-												return camelize('on-' + newName);
-											},
-											apply(oldName, newName) {
-												const hName = hyphenate(newName);
-												if (hyphenate(newName).startsWith('on-')) {
-													return camelize(hName.slice('on-'.length));
-												}
-												return newName;
-											},
-										},
-									},
-								},
-							);
-							codeGen.addText(`],\n`);
-						}
-
-						{
-							if (key_3 !== key_2) {
-								codeGen.addText(`${varInstanceProps}[`);
-								writeCodeWithQuotes(
-									key_3,
-									[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
-									{
-										vueTag: 'template',
-										capabilities: {
-											...capabilitiesSet.attrReference,
-											rename: {
-												normalize(newName) {
-													return 'on' + capitalize(newName);
-												},
-												apply(oldName, newName) {
-													const hName = hyphenate(newName);
-													if (hyphenate(newName).startsWith('on-')) {
-														return camelize(hName.slice('on-'.length));
-													}
-													return newName;
-												},
-											},
-										},
-									},
-								);
-								codeGen.addText(`],\n`);
-							}
-						}
-
-						{
-							codeGen.addText(`typeof ${varComponentInstance} extends { $emit: infer Emit } ? import('./__VLS_types.js').EmitEvent2<Emit, '${prop.arg.loc.source}'> : unknown,\n`);
-						}
-					}
-
+				codeGen.addText(`${varInstanceProps}[`);
+				writeCodeWithQuotes(
+					key_2,
+					[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
 					{
-						codeGen.addText(`import('./__VLS_types.js').GlobalAttrs[`);
-						writeCodeWithQuotes(
-							key_2,
-							[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
-							{
-								vueTag: 'template',
-								capabilities: {
-									...capabilitiesSet.attrReference,
-									rename: {
-										normalize(newName) {
-											return camelize('on-' + newName);
-										},
-										apply(oldName, newName) {
-											const hName = hyphenate(newName);
-											if (hyphenate(newName).startsWith('on-')) {
-												return camelize(hName.slice('on-'.length));
-											}
-											return newName;
-										},
+						vueTag: 'template',
+						capabilities: {
+							...capabilitiesSet.attrReference,
+							rename: {
+								normalize(newName) {
+									return camelize('on-' + newName);
+								},
+								apply(oldName, newName) {
+									const hName = hyphenate(newName);
+									if (hyphenate(newName).startsWith('on-')) {
+										return camelize(hName.slice('on-'.length));
 									}
+									return newName;
 								},
 							},
-						);
-						codeGen.addText(`],\n`);
-					}
-
-					if (tag) {
-						codeGen.addText(`>\n`);
-					}
-				}
-				codeGen.addText(`>\n`);
-				codeGen.addText(`} = {\n`);
+						},
+					},
+				);
+				codeGen.addText(`], import('./__VLS_types.js').GlobalAttrs[`);
+				writeCodeWithQuotes(
+					key_2,
+					[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
+					{
+						vueTag: 'template',
+						capabilities: {
+							...capabilitiesSet.attrReference,
+							rename: {
+								normalize(newName) {
+									return camelize('on-' + newName);
+								},
+								apply(oldName, newName) {
+									const hName = hyphenate(newName);
+									if (hyphenate(newName).startsWith('on-')) {
+										return camelize(hName.slice('on-'.length));
+									}
+									return newName;
+								},
+							}
+						},
+					},
+				);
+				codeGen.addText(`]> = {\n`);
 				{
 					writeObjectProperty(
 						prop.arg.loc.source,
