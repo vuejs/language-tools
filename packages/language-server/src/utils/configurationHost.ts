@@ -18,7 +18,7 @@ export function createConfigurationHost(params: vscode.InitializeParams, connect
 			}
 		},
 		async getConfiguration(section, scopeUri) {
-			return await connection.workspace.getConfiguration({ scopeUri, section });
+			return (await connection.workspace.getConfiguration({ scopeUri, section })) ?? undefined /* replace null to undefined */;
 		},
 		onDidChangeConfiguration(cb) {
 			callbacks.push(cb);
