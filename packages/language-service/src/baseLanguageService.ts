@@ -39,10 +39,11 @@ export function createLanguageServiceContext(options: {
 	context: ReturnType<typeof createEmbeddedLanguageServiceHost>,
 	getPlugins(): EmbeddedLanguageServicePlugin[],
 	env: PluginContext['env'];
+	documentRegistry: ts.DocumentRegistry | undefined,
 }) {
 
 	const ts = options.host.getTypeScriptModule();
-	const tsLs = ts.createLanguageService(options.context.typescriptLanguageServiceHost);
+	const tsLs = ts.createLanguageService(options.context.typescriptLanguageServiceHost, options.documentRegistry);
 	tsFaster.decorate(ts, options.context.typescriptLanguageServiceHost, tsLs);
 
 	let plugins: EmbeddedLanguageServicePlugin[];

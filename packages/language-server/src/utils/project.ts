@@ -29,6 +29,7 @@ export async function createProject(
 	documents: ReturnType<typeof createSnapshots>,
 	connection: vscode.Connection,
 	configHost: ConfigurationHost | undefined,
+	documentRegistry: ts.DocumentRegistry | undefined,
 ) {
 
 	let typeRootVersion = 0;
@@ -97,6 +98,7 @@ export async function createProject(
 						}
 					},
 				},
+				documentRegistry,
 			});
 			vueLs = embeddedLS.createLanguageService(languageServiceContext);
 		}

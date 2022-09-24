@@ -27,6 +27,7 @@ export async function createWorkspaceProjects(
 	let inferredProject: Project | undefined;
 
 	const sys = fsHost.getWorkspaceFileSystem(rootUri);
+	const documentRegistry = ts.createDocumentRegistry(sys.useCaseSensitiveFileNames, shared.normalizeFileName(rootUri.fsPath));
 	const projects = shared.createUriMap<Project>();
 	const rootTsConfigs = new Set(sys.readDirectory(rootUri.fsPath, rootTsConfigNames, undefined, ['**/*']));
 
@@ -108,6 +109,7 @@ export async function createWorkspaceProjects(
 					documents,
 					connection,
 					configHost,
+					documentRegistry,
 				);
 			})();
 		}
@@ -239,6 +241,7 @@ export async function createWorkspaceProjects(
 				documents,
 				connection,
 				configHost,
+				documentRegistry,
 			);
 			projects.pathSet(rootUri, tsConfig, project);
 		}
