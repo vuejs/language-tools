@@ -1,6 +1,6 @@
 {
 	"name": "@volar-plugins/emmet",
-	"version": "1.0.0-alpha.3",
+	"version": "1.0.0-alpha.4",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -13,7 +13,7 @@
 		"directory": "plugins/emmet"
 	},
 	"dependencies": {
-		"@volar/language-service": "1.0.0-alpha.3",
+		"@volar/language-service": "1.0.0-alpha.4",
 		"@vscode/emmet-helper": "^2.8.4"
 	},
 	"browser": {
