@@ -1,8 +1,12 @@
+import { ResolvedVueCompilerOptions } from '../types';
 import { getSlotsPropertyName, getVueLibraryName } from './shared';
 
 export const typesFileName = '__VLS_types.ts';
 
-export function getTypesCode(vueVersion: number) {
+export function getTypesCode(
+	vueVersion: number,
+	vueCompilerOptions: ResolvedVueCompilerOptions,
+) {
 	const libName = getVueLibraryName(vueVersion);
 	const slots = getSlotsPropertyName(vueVersion);
 	return `
@@ -107,6 +111,10 @@ export type GetComponents<Components, N1, N2 = unknown, N3 = unknown> =
 	N2 extends keyof Components ? Components[N2] :
 	N3 extends keyof Components ? Components[N3] :
 	unknown;
+export type ComponentProps<T> =
+	${vueCompilerOptions.strictTemplates ? '' : 'Record<string, unknown> &'}
+	GlobalAttrs &
+	ExtractProps<T>;
 
 type IsComponent<T> =
 	T extends (...args: any) => JSX.Element ? true

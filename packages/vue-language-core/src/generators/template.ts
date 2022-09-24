@@ -613,10 +613,7 @@ export function generate(
 				codeGen.addText(`'];\n`);
 			}
 			else {
-				if (!vueCompilerOptions.strictTemplates) {
-					codeGen.addText(`Record<string, unknown> & `);
-				}
-				codeGen.addText(`import('./__VLS_types.js').GlobalAttrs & import('./__VLS_types.js').ExtractProps<typeof ${tag.component}>;\n`);
+				codeGen.addText(`import('./__VLS_types.js').ComponentProps<typeof ${tag.component}>;\n`);
 
 				if (!tag.isNamespacedTag) {
 					writeCode(

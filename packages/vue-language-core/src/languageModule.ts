@@ -36,7 +36,7 @@ export function createEmbeddedLanguageModule(
 	}
 
 	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);
-	const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(vueCompilerOptions.target));
+	const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(vueCompilerOptions.target, vueCompilerOptions));
 	const languageModule: embedded.EmbeddedLanguageModule = {
 		createSourceFile(fileName, snapshot) {
 			if (exts.some(ext => fileName.endsWith(ext))) {
