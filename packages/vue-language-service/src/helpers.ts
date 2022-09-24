@@ -3,69 +3,116 @@ import * as embedded from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { computed, ComputedRef } from '@vue/reactivity';
 import { typesFileName } from '@volar/vue-language-core/out/utils/localTypes';
+import { camelize, capitalize } from '@vue/shared';
 
 import type * as ts from 'typescript/lib/tsserverlibrary';
+
+export function checkPropsOfTag(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	tsLs: ts.LanguageService,
+	sourceFile: embedded.SourceFile,
+	tag: string,
+) {
+
+	const checker = tsLs.getProgram()!.getTypeChecker();
+	const components = getComponentsType(ts, tsLs, sourceFile);
+	if (!components)
+		return [];
+
+	const componentSymbol = components.componentsType.getProperty(tag)
+		?? components.componentsType.getProperty(camelize(tag))
+		?? components.componentsType.getProperty(capitalize(camelize(tag)));
+	if (!componentSymbol)
+		return [];
+
+	const componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.componentsNode);
+	const result = new Set<string>();
+
+	for (const sig of componentType.getCallSignatures()) {
+		const propParam = sig.parameters[0];
+		if (propParam) {
+			const propsType = checker.getTypeOfSymbolAtLocation(propParam, components.componentsNode);
+			const props = propsType.getProperties();
+			for (const prop of props) {
+				result.add(prop.name);
+			}
+		}
+	}
+
+	for (const sig of componentType.getConstructSignatures()) {
+		const instanceType = sig.getReturnType();
+		const propsSymbol = instanceType.getProperty('$props');
+		if (propsSymbol) {
+			const propsType = checker.getTypeOfSymbolAtLocation(propsSymbol, components.componentsNode);
+			const props = propsType.getProperties();
+			for (const prop of props) {
+				result.add(prop.name);
+			}
+		}
+	}
+
+	return [...result];
+}
+
+export function checkEventsOfTag(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	tsLs: ts.LanguageService,
+	sourceFile: embedded.SourceFile,
+	tag: string,
+) {
+
+	const checker = tsLs.getProgram()!.getTypeChecker();
+	const components = getComponentsType(ts, tsLs, sourceFile);
+	if (!components)
+		return [];
+
+	const componentSymbol = components.componentsType.getProperty(tag)
+		?? components.componentsType.getProperty(camelize(tag))
+		?? components.componentsType.getProperty(capitalize(camelize(tag)));
+	if (!componentSymbol)
+		return [];
+
+	const componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.componentsNode);
+	const result = new Set<string>();
+
+	// for (const sig of componentType.getCallSignatures()) {
+	// 	const emitParam = sig.parameters[1];
+	// 	if (emitParam) {
+	// 		// TODO
+	// 	}
+	// }
+
+	for (const sig of componentType.getConstructSignatures()) {
+		const instanceType = sig.getReturnType();
+		const emitSymbol = instanceType.getProperty('$emit');
+		if (emitSymbol) {
+			const emitType = checker.getTypeOfSymbolAtLocation(emitSymbol, components.componentsNode);
+			for (const call of emitType.getCallSignatures()) {
+				const eventNameParamSymbol = call.parameters[0];
+				if (eventNameParamSymbol) {
+					const eventNameParamType = checker.getTypeOfSymbolAtLocation(eventNameParamSymbol, components.componentsNode);
+					if (eventNameParamType.isStringLiteral()) {
+						result.add(eventNameParamType.value);
+					}
+				}
+			}
+		}
+	}
+
+	return [...result];
+}
 
 export function checkComponentNames(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
 	sourceFile: embedded.SourceFile,
 ) {
-
-	if (!(sourceFile instanceof vue.VueSourceFile)) {
-		return [];
-	}
-
-	let file: embedded.SourceFile | undefined;
-	let tsSourceFile: ts.SourceFile | undefined;
-
-	embedded.forEachEmbeddeds(sourceFile.embeddeds, embedded => {
-		if (embedded.fileName === sourceFile.tsFileName) {
-			file = embedded;
-		}
-	});
-
-	if (file && (tsSourceFile = tsLs.getProgram()?.getSourceFile(file.fileName))) {
-
-		const componentsNode = getComponentsNode(ts, tsSourceFile);
-		const checker = tsLs.getProgram()?.getTypeChecker();
-
-		if (checker && componentsNode) {
-
-			const type = checker.getTypeAtLocation(componentsNode);
-			const components = type.getProperties();
-
-			return components
-				.map(c => c.name)
-				.filter(entry => entry.indexOf('$') === -1 && !entry.startsWith('_'));
-		}
-	}
-
-	return [];
-
-	function getComponentsNode(
-		ts: typeof import('typescript/lib/tsserverlibrary'),
-		sourceFile: ts.SourceFile,
-	) {
-
-		let componentsNode: ts.Node | undefined;
-
-		walk(sourceFile);
-
-		return componentsNode;
-
-		function walk(node: ts.Node) {
-			if (componentsNode) {
-				return;
-			}
-			else if (ts.isVariableDeclaration(node) && node.name.getText() === '__VLS_components') {
-				componentsNode = node;
-			}
-			else {
-				node.forEachChild(walk);
-			}
-		}
-	}
+	return getComponentsType(ts, tsLs, sourceFile)
+		?.componentsType
+		?.getProperties()
+		.map(c => c.name)
+		.filter(entry => entry.indexOf('$') === -1 && !entry.startsWith('_'))
+		?? [];
 }
 
 export function checkGlobalAttrs(
@@ -96,6 +143,63 @@ export function checkGlobalAttrs(
 	}
 
 	return [];
+}
+
+function getComponentsType(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	tsLs: ts.LanguageService,
+	sourceFile: embedded.SourceFile,
+) {
+
+	if (!(sourceFile instanceof vue.VueSourceFile)) {
+		return;
+	}
+
+	let file: embedded.SourceFile | undefined;
+	let tsSourceFile: ts.SourceFile | undefined;
+
+	embedded.forEachEmbeddeds(sourceFile.embeddeds, embedded => {
+		if (embedded.fileName === sourceFile.tsFileName) {
+			file = embedded;
+		}
+	});
+
+	if (file && (tsSourceFile = tsLs.getProgram()?.getSourceFile(file.fileName))) {
+
+		const componentsNode = getComponentsNode(ts, tsSourceFile);
+		const checker = tsLs.getProgram()?.getTypeChecker();
+
+		if (checker && componentsNode) {
+			return {
+				componentsNode,
+				componentsType: checker.getTypeAtLocation(componentsNode),
+			};
+		}
+	}
+
+	function getComponentsNode(
+		ts: typeof import('typescript/lib/tsserverlibrary'),
+		sourceFile: ts.SourceFile,
+	) {
+
+		let componentsNode: ts.Node | undefined;
+
+		walk(sourceFile);
+
+		return componentsNode;
+
+		function walk(node: ts.Node) {
+			if (componentsNode) {
+				return;
+			}
+			else if (ts.isVariableDeclaration(node) && node.name.getText() === '__VLS_components') {
+				componentsNode = node;
+			}
+			else {
+				node.forEachChild(walk);
+			}
+		}
+	}
 }
 
 const map = new WeakMap<embedded.SourceFile, ComputedRef<{

@@ -61,10 +61,6 @@ export type ExtractProps<T> =
 	T extends FunctionalComponent<infer P> ? P
 	: T extends new (...args: any) => { $props: infer Props } ? Props
 	: T; // IntrinsicElement
-export type ExtractEmit2<T> =
-	T extends FunctionalComponent<infer _, infer E> ? SetupContext<E>['emit']
-	: T extends new (...args: any) => { $emit: infer Emit } ? Emit
-	: unknown;
 export type ReturnVoid<T> = T extends (...payload: infer P) => any ? (...payload: P) => void : (...args: any) => void;
 export type EmitEvent2<F, E> =
 	F extends {

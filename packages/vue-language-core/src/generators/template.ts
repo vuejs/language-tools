@@ -251,15 +251,6 @@ export function generate(
 				}
 			}
 
-			/* Completion */
-			codeGen.addText('/* Completion: Emits */\n');
-			codeGen.addText('// @ts-ignore\n');
-			codeGen.addText(`({} as import('./__VLS_types.js').ExtractEmit2<typeof ${var_componentVar}>)('${SearchTexts.EmitCompletion(tagName)}');\n`);
-
-			codeGen.addText('/* Completion: Props */\n');
-			codeGen.addText('// @ts-ignore\n');
-			codeGen.addText(`({} as import('./__VLS_types.js').ExtractProps<typeof ${var_componentVar}>)['${SearchTexts.PropsCompletion(tagName)}'];\n`);
-
 			data[tagName] = {
 				component: var_componentVar,
 				isNamespacedTag,

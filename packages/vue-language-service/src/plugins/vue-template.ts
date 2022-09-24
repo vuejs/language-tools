@@ -2,7 +2,6 @@ import useHtmlPlugin from '@volar-plugins/html';
 import { EmbeddedLanguageServicePlugin, LanguageServiceRuntimeContext, PluginContext, SourceFileDocument } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
-import * as embedded from '@volar/language-core';
 import * as vue from '@volar/vue-language-core';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -10,7 +9,7 @@ import * as path from 'upath';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { checkComponentNames, checkGlobalAttrs, getTemplateTagsAndAttrs } from '../helpers';
+import { checkComponentNames, checkEventsOfTag, checkGlobalAttrs, checkPropsOfTag, getTemplateTagsAndAttrs } from '../helpers';
 import * as casing from '../ideFeatures/nameCasing';
 
 export const semanticTokenTypes = [
@@ -724,62 +723,24 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		const vueSourceFile = sourceDocument.file;
 		const componentNames = checkComponentNames(context.typescript.module, context.typescript.languageService, vueSourceFile);
 		const data = new Map<string, { bind: string[], on: string[]; }>;
-
-		let file: embedded.SourceFile | undefined;
-
-		embedded.forEachEmbeddeds(sourceDocument.file.embeddeds, embedded => {
-			if (embedded.fileName === vueSourceFile.tsFileName) {
-				file = embedded;
-			}
-		});
-
 		const templateTagNames = [...getTemplateTagsAndAttrs(sourceDocument.file)?.tags.keys() ?? []];
-		const completionOptions: ts.GetCompletionsAtPositionOptions = {
-			includeCompletionsWithInsertText: true, // if missing, { 'aaa-bbb': any, ccc: any } type only has result ['ccc']
-		};
+		const namespaceComponentTags = templateTagNames.filter(tag => tag.indexOf('.') >= 0);
 
-		if (file) {
+		for (const tag of [...componentNames, ...namespaceComponentTags]) {
 
-			const namespaceComponentTags = templateTagNames.filter(tag => tag.indexOf('.') >= 0);
+			if (data.has(tag))
+				continue;
 
-			for (const tag of [...componentNames, ...namespaceComponentTags]) {
-
-				if (data.has(tag))
-					continue;
-
-				let bind: ts.CompletionEntry[] = [];
-				let on: ts.CompletionEntry[] = [];
-				{
-					const searchText = vue.SearchTexts.PropsCompletion(tag);
-					let offset = file.text.indexOf(searchText);
-					if (offset >= 0) {
-						offset += searchText.length;
-						try {
-							bind = (await context.typescript.languageService.getCompletionsAtPosition(file.fileName, offset, completionOptions))?.entries
-								.filter(entry => entry.kind !== 'warning') ?? [];
-						} catch { }
-					}
-				}
-				{
-					const searchText = vue.SearchTexts.EmitCompletion(tag);
-					let offset = file.text.indexOf(searchText);
-					if (offset >= 0) {
-						offset += searchText.length;
-						try {
-							on = (await context.typescript.languageService.getCompletionsAtPosition(file.fileName, offset, completionOptions))?.entries
-								.filter(entry => entry.kind !== 'warning') ?? [];
-						} catch { }
-					}
-				}
-				data.set(tag, { bind: bind.map(p => p.name), on: on.map(p => p.name) });
-			}
-			try {
-				data.set('*', {
-					bind: checkGlobalAttrs(context.typescript.module, context.typescript.languageService, file.fileName),
-					on: [],
-				});
-			} catch { }
+			data.set(tag, {
+				bind: checkPropsOfTag(context.typescript.module, context.typescript.languageService, sourceDocument.file, tag),
+				on: checkEventsOfTag(context.typescript.module, context.typescript.languageService, sourceDocument.file, tag),
+			});
 		}
+
+		data.set('*', {
+			bind: checkGlobalAttrs(context.typescript.module, context.typescript.languageService, sourceDocument.file.fileName),
+			on: [],
+		});
 
 		return data;
 	}

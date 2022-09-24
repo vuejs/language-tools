@@ -1,4 +1,3 @@
-export * from './utils/string';
 export * from './sourceFile';
 export * from './types';
 export * from './languageModule';
