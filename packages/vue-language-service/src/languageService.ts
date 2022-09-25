@@ -44,14 +44,6 @@ export function getLanguageServicePlugins(
 	const vuePlugin = useVuePlugin({
 		getVueDocument: (document) => apis.context.documents.get(document.uri),
 	});
-	const vueTemplateHtmlPlugin = _useVueTemplateLanguagePlugin(
-		'html',
-		useHtmlPlugin(),
-	);
-	const vueTemplatePugPlugin = _useVueTemplateLanguagePlugin(
-		'jade',
-		usePugPlugin(),
-	);
 	const cssPlugin = useCssPlugin();
 	const jsonPlugin = useJsonPlugin();
 	const emmetPlugin = useEmmetPlugin();
@@ -78,11 +70,38 @@ export function getLanguageServicePlugins(
 		findTypeDefinition: apis.findTypeDefinition,
 	});
 
+	// template plugins
+	const _htmlPlugin = useHtmlPlugin();
+	const _pugPlugin = usePugPlugin();
+	const htmlPlugin = useVueTemplateLanguagePlugin({
+		templateLanguagePlugin: _htmlPlugin,
+		getSemanticTokenLegend,
+		getScanner: (document): html.Scanner | undefined => {
+			return _htmlPlugin.getHtmlLs().createScanner(document.getText());
+		},
+		isSupportedDocument: (document) => document.languageId === 'html',
+		vueLsHost: host,
+		context: apis.context,
+	});
+	const pugPlugin = useVueTemplateLanguagePlugin({
+		templateLanguagePlugin: _pugPlugin,
+		getSemanticTokenLegend,
+		getScanner: (document): html.Scanner | undefined => {
+			const pugDocument = _pugPlugin.getPugDocument(document);
+			if (pugDocument) {
+				return _pugPlugin.getPugLs().createScanner(pugDocument);
+			}
+		},
+		isSupportedDocument: (document) => document.languageId === 'html',
+		vueLsHost: host,
+		context: apis.context,
+	});
+
 	return [
 		vuePlugin,
 		cssPlugin,
-		vueTemplateHtmlPlugin,
-		vueTemplatePugPlugin,
+		htmlPlugin,
+		pugPlugin,
 		jsonPlugin,
 		referencesCodeLensPlugin,
 		htmlPugConversionsPlugin,
@@ -90,32 +109,9 @@ export function getLanguageServicePlugins(
 		refSugarConversionsPlugin,
 		tsPlugin,
 		autoDotValuePlugin,
-		// put emmet plugin last to fix https://github.com/johnsoncodehk/volar/issues/1088
+		// put emmet plugin at last to fix https://github.com/johnsoncodehk/volar/issues/1088
 		emmetPlugin,
 	];
-
-	function _useVueTemplateLanguagePlugin<T extends ReturnType<typeof useHtmlPlugin> | ReturnType<typeof usePugPlugin>>(languageId: string, templateLanguagePlugin: T) {
-		return useVueTemplateLanguagePlugin({
-			templateLanguagePlugin,
-			getSemanticTokenLegend,
-			getScanner: (document): html.Scanner | undefined => {
-				if (document.languageId === 'html') {
-					return templateLanguagePlugin.getHtmlLs().createScanner(document.getText());
-				}
-				else if (document.languageId === 'jade') {
-					const pugDocument = 'getPugDocument' in templateLanguagePlugin ? templateLanguagePlugin.getPugDocument(document) : undefined;
-					if (pugDocument) {
-						return 'getPugLs' in templateLanguagePlugin ? templateLanguagePlugin.getPugLs().createScanner(pugDocument) : undefined;
-					}
-				}
-			},
-			isSupportedDocument: (document) =>
-				document.languageId === languageId
-				&& !apis.context.documents.get(document.uri) /* not petite-vue source file */,
-			vueLsHost: host,
-			context: apis.context,
-		});
-	}
 }
 
 export function createLanguageService(
