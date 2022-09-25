@@ -73,13 +73,13 @@ export function createNodeFileSystemHost(
 		const sysWithCache: Partial<typeof ts.sys> = {
 			fileExists(path: string) {
 				if (!fileExistsCache.has(path)) {
-					fileExistsCache.set(path, ts.sys.fileExists(path));
+					fileExistsCache.set(path, workspaceSys.fileExists(path));
 				}
 				return fileExistsCache.get(path)!;
 			},
 			directoryExists(path: string) {
 				if (!directoryExistsCache.has(path)) {
-					directoryExistsCache.set(path, ts.sys.directoryExists(path));
+					directoryExistsCache.set(path, workspaceSys.directoryExists(path));
 				}
 				return directoryExistsCache.get(path)!;
 			},
