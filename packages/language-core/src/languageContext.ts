@@ -234,24 +234,24 @@ export function createEmbeddedLanguageServiceHost(
 	}
 	function getScriptFileNames() {
 
-		const tsFileNames: string[] = [];
+		const tsFileNames = new Set<string>();
 
 		for (const mapped of documentRegistry.getAllEmbeddeds()) {
 			if (mapped.embedded.isTsHostFile) {
-				tsFileNames.push(mapped.embedded.fileName); // virtual .ts
+				tsFileNames.add(mapped.embedded.fileName); // virtual .ts
 			}
 		}
 
 		for (const fileName of host.getScriptFileNames()) {
 			if (host.isTsPlugin) {
-				tsFileNames.push(fileName); // .vue + .ts
+				tsFileNames.add(fileName); // .vue + .ts
 			}
 			else if (!documentRegistry.has(fileName)) {
-				tsFileNames.push(fileName); // .ts
+				tsFileNames.add(fileName); // .ts
 			}
 		}
 
-		return tsFileNames;
+		return [...tsFileNames];
 	}
 	function getScriptVersion(fileName: string) {
 		let mapped = documentRegistry.fromEmbeddedFileName(fileName);
