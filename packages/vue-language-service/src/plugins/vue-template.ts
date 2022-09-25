@@ -16,6 +16,16 @@ export const semanticTokenTypes = [
 	'componentTag',
 ];
 
+const globalDirectives = html.newHTMLDataProvider('vue-global-directive', {
+	version: 1.1,
+	tags: [],
+	globalAttributes: [
+		{ name: 'v-if' },
+		{ name: 'v-else-if' },
+		{ name: 'v-else', valueSet: 'v' },
+		{ name: 'v-for' },
+	],
+});
 // https://v3.vuejs.org/api/directives.html#v-on
 const eventModifiers: Record<string, string> = {
 	stop: 'call event.stopPropagation().',
@@ -401,20 +411,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 		const enabledComponentAutoImport = await context.env.configurationHost?.getConfiguration<boolean>('volar.completion.autoImportComponent') ?? true;
 
-		const globals = html.newHTMLDataProvider('vueGlobalDirective', {
-			version: 1.1,
-			tags: [],
-			globalAttributes: [
-				{ name: 'v-if' },
-				{ name: 'v-else-if' },
-				{ name: 'v-else', valueSet: 'v' },
-				{ name: 'v-for' },
-				...checkGlobalAttrs(context.typescript.module, context.typescript.languageService, vueSourceFile.fileName).map(attr => ({ name: attr }))
-			],
-		});
-
 		options.templateLanguagePlugin.updateCustomData([
-			globals,
+			globalDirectives,
 			{
 				getId: () => 'vue-template',
 				isApplicable: () => true,
@@ -474,11 +472,12 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				},
 				provideAttributes: (tag) => {
 
+					const globalProps = checkGlobalAttrs(context.typescript.module, context.typescript.languageService, vueSourceFile.fileName);
 					const props = checkPropsOfTag(context.typescript.module, context.typescript.languageService, vueSourceFile, tag);
 					const events = checkEventsOfTag(context.typescript.module, context.typescript.languageService, vueSourceFile, tag);
 					const attributes: html.IAttributeData[] = [];
 
-					for (const prop of props) {
+					for (const prop of [...props, ...globalProps]) {
 
 						const name = nameCases.attr === 'camelCase' ? prop : hyphenate(prop);
 
