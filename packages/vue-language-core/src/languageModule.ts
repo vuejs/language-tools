@@ -58,8 +58,8 @@ export function createEmbeddedLanguageModule(
 				getScriptFileNames() {
 					const fileNames = host.getScriptFileNames();
 					return [
-						...getDirs(fileNames).map(dir => path.join(dir, localTypes.typesFileName)),
-						...host.getScriptFileNames(),
+						...getSharedTypesFiles(fileNames),
+						...fileNames,
 					];
 				},
 				getScriptVersion(fileName) {
@@ -99,7 +99,9 @@ export function createEmbeddedLanguageModule(
 
 	return languageModule;
 
-	function getDirs(fileNames: string[]) {
-		return [...new Set(fileNames.map(path.dirname))];
+	function getSharedTypesFiles(fileNames: string[]) {
+		const moduleFiles = fileNames.filter(fileName => exts.some(ext => fileName.endsWith(ext)));
+		const moduleFileDirs = [...new Set(moduleFiles.map(path.dirname))];
+		return moduleFileDirs.map(dir => path.join(dir, localTypes.typesFileName));
 	}
 }
