@@ -1,11 +1,17 @@
 # Changelog
 
+## 1.0.0-beta.0 (2022/9/25)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- perf: reduce input files to improve performance for large project
+- fix: template incremental update not working
+
 ## 1.0.0-alpha.5 (2022/9/25)
 
 [[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
 
 - fix: language server crash on diagnosis `<style lang="postcss">` ([#1902](https://github.com/johnsoncodehk/volar/issues/1902))
-- fix: template incremental update not working
 - fix: template tags selection range incorrect with definition
 
 ## 1.0.0-alpha.4 (2022/9/24)
