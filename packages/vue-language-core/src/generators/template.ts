@@ -1606,6 +1606,10 @@ export function generate(
 						vueTag: 'template',
 						capabilities: {
 							...capabilitiesSet.noDiagnostic,
+							completion: {
+								// fix https://github.com/johnsoncodehk/volar/issues/1905
+								additional: true,
+							},
 							rename: {
 								normalize: camelize,
 								apply: keepHyphenateName,

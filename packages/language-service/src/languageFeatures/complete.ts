@@ -145,8 +145,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 							if (completionContext?.triggerCharacter && !plugin.complete.triggerCharacters?.includes(completionContext.triggerCharacter))
 								continue;
 
-							const isAdditionalMapping = typeof data.completion === 'object' && data.completion.additional;
-							if (cache!.mainCompletion && ((!plugin.complete.isAdditional && !isAdditionalMapping) || cache?.mainCompletion.documentUri !== sourceMap.mappedDocument.uri))
+							const isAdditional = typeof data.completion === 'object' && data.completion.additional || plugin.complete.isAdditional;
+
+							if (cache!.mainCompletion && (!isAdditional || cache?.mainCompletion.documentUri !== sourceMap.mappedDocument.uri))
 								continue;
 
 							// avoid duplicate items with .vue and .vue.html
@@ -158,7 +159,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 							if (!embeddedCompletionList || !embeddedCompletionList.items.length)
 								continue;
 
-							if (!plugin.complete.isAdditional) {
+							if (!isAdditional) {
 								cache!.mainCompletion = { documentUri: sourceMap.mappedDocument.uri };
 							}
 
