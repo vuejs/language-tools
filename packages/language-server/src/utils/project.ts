@@ -19,11 +19,9 @@ export async function createProject(
 	runtimeEnv: RuntimeEnvironment,
 	plugins: ReturnType<LanguageServerPlugin>[],
 	fsHost: FileSystemHost,
-	sys: FileSystem,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	options: ServerInitializationOptions,
 	rootUri: URI,
-	rootPath: string,
 	tsConfig: string | ts.CompilerOptions,
 	tsLocalized: ts.MapLike<string> | undefined,
 	documents: ReturnType<typeof createSnapshots>,
@@ -32,10 +30,12 @@ export async function createProject(
 	documentRegistry: ts.DocumentRegistry | undefined,
 ) {
 
+	const sys = fsHost.getWorkspaceFileSystem(rootUri);
+
 	let typeRootVersion = 0;
 	let projectVersion = 0;
 	let vueLs: embeddedLS.LanguageService | undefined;
-	let parsedCommandLine = createParsedCommandLine(ts, sys, rootPath, tsConfig, plugins);
+	let parsedCommandLine = createParsedCommandLine(ts, sys, shared.getPathOfUri(rootUri.toString()), tsConfig, plugins);
 
 	const scripts = shared.createUriMap<{
 		version: number,
@@ -131,7 +131,7 @@ export async function createProject(
 		const deletes = changes.filter(change => change.type === vscode.FileChangeType.Deleted);
 
 		if (creates.length || deletes.length) {
-			parsedCommandLine = createParsedCommandLine(ts, sys, rootPath, tsConfig, plugins);
+			parsedCommandLine = createParsedCommandLine(ts, sys, shared.getPathOfUri(rootUri.toString()), tsConfig, plugins);
 			typeRootVersion++;
 		}
 	}
@@ -148,7 +148,7 @@ export async function createProject(
 			readDirectory: sys.readDirectory,
 			realpath: sys.realpath,
 			fileExists: sys.fileExists,
-			getCurrentDirectory: () => rootPath,
+			getCurrentDirectory: () => shared.getPathOfUri(rootUri.toString()),
 			getProjectReferences: () => parsedCommandLine.projectReferences, // if circular, broken with provide `getParsedCommandLine: () => parsedCommandLine`
 			// custom
 			getDefaultLibFileName: options => {
