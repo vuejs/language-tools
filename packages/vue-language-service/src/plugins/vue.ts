@@ -7,90 +7,109 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import useHtmlPlugin from '@volar-plugins/html';
 import * as vue from '@volar/vue-language-core';
 
-const dataProvider = html.newHTMLDataProvider('vue', {
-	version: 1.1,
-	tags: [
+const dataProvider: html.IHTMLDataProvider = {
+	getId: () => 'vue',
+	isApplicable: () => true,
+	provideTags: () => [
 		{
 			name: 'template',
-			attributes: [
-				{
-					name: 'lang',
-					values: [
-						{ name: 'html' },
-						{ name: 'pug' },
-					],
-				},
-			],
+			attributes: [],
 		},
 		{
 			name: 'script',
-			attributes: [
-				{
-					name: 'lang',
-					values: [
-						{ name: 'js' },
-						{ name: 'ts' },
-						{ name: 'jsx' },
-						{ name: 'tsx' },
-					],
-				},
-				{ name: 'setup', valueSet: 'v' },
-			],
+			attributes: [],
 		},
 		{
 			name: 'style',
-			attributes: [
-				{
-					name: 'lang',
-					values: [
-						{ name: 'css' },
-						{ name: 'scss' },
-						{ name: 'less' },
-						{ name: 'stylus' },
-						{ name: 'postcss' },
-						{ name: 'sass' },
-					],
-				},
-				{ name: 'scoped', valueSet: 'v' },
-				{ name: 'module', valueSet: 'v' },
-			],
+			attributes: [],
 		},
 	],
-	globalAttributes: [
-		{
-			name: 'src',
-		},
-		{
-			name: 'lang',
-			// all other embedded languages
-			values: [
-				// template
-				{ name: 'html' },
-				{ name: 'pug' },
-				// script
-				{ name: 'js' },
-				{ name: 'ts' },
-				{ name: 'jsx' },
-				{ name: 'tsx' },
-				// style
-				{ name: 'css' },
-				{ name: 'scss' },
-				{ name: 'less' },
-				{ name: 'stylus' },
-				{ name: 'postcss' },
-				{ name: 'sass' },
-				// custom block
-				{ name: 'md' },
-				{ name: 'json' },
-				{ name: 'jsonc' },
-				{ name: 'yaml' },
-				{ name: 'toml' },
-				{ name: 'gql' },
-				{ name: 'graphql' },
-			],
+	provideAttributes: (tag) => {
+		if (tag === 'template') {
+			return [
+				{ name: 'src' },
+				{ name: 'lang' },
+			];
 		}
-	]
-});
+		else if (tag === 'script') {
+			return [
+				{ name: 'src' },
+				{ name: 'lang' },
+				{ name: 'setup', valueSet: 'v' },
+			];
+		}
+		else if (tag === 'style') {
+			return [
+				{ name: 'src' },
+				{ name: 'lang' },
+				{ name: 'scoped', valueSet: 'v' },
+				{ name: 'module', valueSet: 'v' },
+			];
+		}
+		else {
+			return [
+				{ name: 'src' },
+				{ name: 'lang' }
+			];
+		}
+	},
+	provideValues: (tag, attribute) => {
+		if (attribute === 'lang') {
+			if (tag === 'template') {
+				return [
+					{ name: 'html' },
+					{ name: 'pug' },
+				];
+			}
+			else if (tag === 'script') {
+				return [
+					{ name: 'js' },
+					{ name: 'ts' },
+					{ name: 'jsx' },
+					{ name: 'tsx' },
+				];
+			}
+			else if (tag === 'style') {
+				return [
+					{ name: 'css' },
+					{ name: 'scss' },
+					{ name: 'less' },
+					{ name: 'stylus' },
+					{ name: 'postcss' },
+					{ name: 'sass' },
+				];
+			}
+			else {
+				return [
+					// template
+					{ name: 'html' },
+					{ name: 'pug' },
+					// script
+					{ name: 'js' },
+					{ name: 'ts' },
+					{ name: 'jsx' },
+					{ name: 'tsx' },
+					// style
+					{ name: 'css' },
+					{ name: 'scss' },
+					{ name: 'less' },
+					{ name: 'stylus' },
+					{ name: 'postcss' },
+					{ name: 'sass' },
+					// custom block
+					{ name: 'md' },
+					{ name: 'json' },
+					{ name: 'jsonc' },
+					{ name: 'yaml' },
+					{ name: 'toml' },
+					{ name: 'gql' },
+					{ name: 'graphql' },
+				];
+			}
+		}
+		return [];
+	},
+};
 
 export default function (options: {
 	getVueDocument(document: TextDocument): SourceFileDocument | undefined,
@@ -100,8 +119,13 @@ export default function (options: {
 		validLang: 'vue',
 		disableCustomData: true,
 	});
+	const emptyBlocksDocument = new WeakMap<TextDocument, [number, TextDocument]>();
 
 	let context: LanguageServicePluginContext;
+
+	if (htmlPlugin.complete?.on) {
+		htmlPlugin.complete.on = apiWithEmptyBlocksDocument(htmlPlugin.complete.on);
+	}
 
 	return {
 
@@ -115,7 +139,7 @@ export default function (options: {
 
 		validation: {
 			onFull(document) {
-				return worker(document, (vueDocument, vueSourceFile) => {
+				return worker(document, (document, vueDocument, vueSourceFile) => {
 
 					const result: vscode.Diagnostic[] = [];
 					const sfc = vueSourceFile.sfc;
@@ -164,7 +188,7 @@ export default function (options: {
 		},
 
 		findDocumentSymbols(document) {
-			return worker(document, (vueDocument, vueSourceFile) => {
+			return worker(document, (document, vueDocument, vueSourceFile) => {
 
 				const result: vscode.SymbolInformation[] = [];
 				const descriptor = vueSourceFile.sfc;
@@ -225,27 +249,19 @@ export default function (options: {
 		},
 
 		getFoldingRanges(document) {
-			return worker(document, (vueDocument, vueSourceFile) => {
-
-				const sfcWithEmptyBlocks = getSfcCodeWithEmptyBlocks(vueSourceFile, document.getText());
-				const sfcWithEmptyBlocksDocument = TextDocument.create(document.uri, document.languageId, document.version, sfcWithEmptyBlocks);
-
-				return htmlPlugin.getHtmlLs().getFoldingRanges(sfcWithEmptyBlocksDocument);
+			return worker(document, (document, vueDocument, vueSourceFile) => {
+				return htmlPlugin.getHtmlLs().getFoldingRanges(document);
 			});
 		},
 
 		getSelectionRanges(document, positions) {
-			return worker(document, (vueDocument, vueSourceFile) => {
-
-				const sfcWithEmptyBlocks = getSfcCodeWithEmptyBlocks(vueSourceFile, document.getText());
-				const sfcWithEmptyBlocksDocument = TextDocument.create(document.uri, document.languageId, document.version, sfcWithEmptyBlocks);
-
-				return htmlPlugin.getHtmlLs().getSelectionRanges(sfcWithEmptyBlocksDocument, positions);
+			return worker(document, (document, vueDocument, vueSourceFile) => {
+				return htmlPlugin.getHtmlLs().getSelectionRanges(document, positions);
 			});
 		},
 
 		format(document) {
-			return worker(document, (vueDocument, vueSourceFile) => {
+			return worker(document, (document, vueDocument, vueSourceFile) => {
 
 				const blocks = [
 					vueSourceFile.sfc.script,
@@ -279,7 +295,16 @@ export default function (options: {
 		},
 	};
 
-	function worker<T>(document: TextDocument, callback: (vueDocument: SourceFileDocument, vueSourceFile: vue.VueSourceFile) => T) {
+	function apiWithEmptyBlocksDocument<T extends (doc: TextDocument, ...args: any[]) => any>(api: T): T {
+		const fn = (doc: TextDocument, ...args: any[]) => {
+			return worker(doc, (doc) => {
+				return api(doc, ...args);
+			});
+		};
+		return fn as T;
+	}
+
+	function worker<T>(document: TextDocument, callback: (emptyBlocksDocument: TextDocument, vueDocument: SourceFileDocument, vueSourceFile: vue.VueSourceFile) => T) {
 
 		const vueDocument = options.getVueDocument(document);
 		if (!vueDocument)
@@ -288,25 +313,30 @@ export default function (options: {
 		if (!(vueDocument.file instanceof vue.VueSourceFile))
 			return;
 
-		return callback(vueDocument, vueDocument.file);
+		let cache = emptyBlocksDocument.get(document);
+		if (!cache || cache[0] !== document.version) {
+			cache = [document.version, createEmptyBlocksDocument(document, vueDocument.file)];
+		}
+
+		return callback(cache[1], vueDocument, vueDocument.file);
 	}
+
 }
 
-function getSfcCodeWithEmptyBlocks(vueSourceFile: vue.VueSourceFile, sfcCode: string) {
+function createEmptyBlocksDocument(document: TextDocument, vueSourceFile: vue.VueSourceFile) {
+	return TextDocument.create(document.uri, document.languageId, document.version, clearSFCBlocksContents(document.getText(), vueSourceFile));
+}
+
+function clearSFCBlocksContents(sfcCode: string, vueSourceFile: vue.VueSourceFile) {
 
 	const descriptor = vueSourceFile.sfc;
 	const blocks = [
-		descriptor.template, // relate to below
+		descriptor.template,
 		descriptor.script,
 		descriptor.scriptSetup,
 		...descriptor.styles,
 		...descriptor.customBlocks,
 	].filter(shared.notEmpty);
-
-	// TODO: keep this for now and check why has this logic later
-	// if (descriptor.template && descriptor.template.lang !== 'html') {
-	//     blocks.push(descriptor.template);
-	// }
 
 	for (const block of blocks) {
 		const content = sfcCode.substring(block.startTagEnd, block.startTagEnd + block.content.length);
