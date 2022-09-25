@@ -1,4 +1,4 @@
-import { EmbeddedLanguageServicePlugin, PluginContext } from '@volar/language-service';
+import { EmbeddedLanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
 import * as json from 'vscode-json-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -7,7 +7,7 @@ export default function (): EmbeddedLanguageServicePlugin {
 
 	const jsonDocuments = new WeakMap<TextDocument, [number, json.JSONDocument]>();
 
-	let context: PluginContext;
+	let context: LanguageServicePluginContext;
 	let jsonLs: json.LanguageService;
 
 	return {

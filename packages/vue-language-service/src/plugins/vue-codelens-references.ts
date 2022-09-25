@@ -1,5 +1,5 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguageServicePlugin, PluginContext, SourceFileDocument } from '@volar/language-service';
+import { EmbeddedLanguageServicePlugin, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
 
 const showReferencesCommand = 'volar.show-references';
 
@@ -17,7 +17,7 @@ export default function (options: {
 	findReference(uri: string, position: vscode.Position): Promise<vscode.Location[] | undefined>,
 }): EmbeddedLanguageServicePlugin {
 
-	let context: PluginContext;
+	let context: LanguageServicePluginContext;
 
 	return {
 

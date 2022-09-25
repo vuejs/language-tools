@@ -23,7 +23,7 @@ import * as signatureHelp from './languageFeatures/signatureHelp';
 import * as diagnostics from './languageFeatures/validation';
 import * as workspaceSymbol from './languageFeatures/workspaceSymbols';
 import { EmbeddedLanguageServicePlugin } from './plugin';
-import { LanguageServiceRuntimeContext as LanguageServiceContext, PluginContext } from './types';
+import { LanguageServiceRuntimeContext as LanguageServiceContext, LanguageServicePluginContext } from './types';
 import * as tsFaster from '@volar/typescript-faster';
 import * as shared from '@volar/shared';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -38,7 +38,7 @@ export function createLanguageServiceContext(options: {
 	host: LanguageServiceHost,
 	context: ReturnType<typeof createEmbeddedLanguageServiceHost>,
 	getPlugins(): EmbeddedLanguageServicePlugin[],
-	env: PluginContext['env'];
+	env: LanguageServicePluginContext['env'];
 	documentRegistry: ts.DocumentRegistry | undefined,
 }) {
 
@@ -48,7 +48,7 @@ export function createLanguageServiceContext(options: {
 
 	let plugins: EmbeddedLanguageServicePlugin[];
 
-	const pluginContext: PluginContext = {
+	const pluginContext: LanguageServicePluginContext = {
 		env: options.env,
 		typescript: {
 			module: options.host.getTypeScriptModule(),

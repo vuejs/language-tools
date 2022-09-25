@@ -1,4 +1,4 @@
-import { EmbeddedLanguageServicePlugin, PluginContext } from '@volar/language-service';
+import { EmbeddedLanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
@@ -18,7 +18,7 @@ export default function (options: {
 	let customData: html.IHTMLDataProvider[] = [];
 	let extraData: html.IHTMLDataProvider[] = [];
 	let htmlLs: html.LanguageService;
-	let context: PluginContext;
+	let context: LanguageServicePluginContext;
 
 	return {
 

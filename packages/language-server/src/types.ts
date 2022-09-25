@@ -74,7 +74,7 @@ export type LanguageServerPlugin<
 
 		getLanguageModules?(
 			ts: typeof import('typescript/lib/tsserverlibrary'),
-			env: embeddedLS.PluginContext['env'],
+			env: embeddedLS.LanguageServicePluginContext['env'],
 		): embedded.EmbeddedLanguageModule[],
 
 		getServicePlugins?(

@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import { parseScriptSetupRanges } from '@volar/vue-language-core';
-import { EmbeddedLanguageServicePlugin, PluginContext, SourceFileDocument } from '@volar/language-service';
+import { EmbeddedLanguageServicePlugin, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -101,7 +101,7 @@ export default function (options: {
 		disableCustomData: true,
 	});
 
-	let context: PluginContext;
+	let context: LanguageServicePluginContext;
 
 	return {
 

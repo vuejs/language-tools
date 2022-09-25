@@ -1,5 +1,5 @@
 import type { TextRange } from '@volar/language-core';
-import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, PluginContext, SourceFileDocument } from '@volar/language-service';
+import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-core';
 import { scriptSetupConvertRanges } from '@volar/vue-language-core';
@@ -24,7 +24,7 @@ export default function (options: {
 	doCodeActionResolve: (item: vscode.CodeAction) => Promise<vscode.CodeAction>,
 }): EmbeddedLanguageServicePlugin {
 
-	let context: PluginContext;
+	let context: LanguageServicePluginContext;
 
 	return {
 

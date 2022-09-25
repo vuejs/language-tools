@@ -1,4 +1,4 @@
-import { EmbeddedLanguageServicePlugin, PluginContext } from '@volar/language-service';
+import { EmbeddedLanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as css from 'vscode-css-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
@@ -16,7 +16,7 @@ export default function (): EmbeddedLanguageServicePlugin {
 	const stylesheets = new WeakMap<TextDocument, [number, css.Stylesheet]>();
 
 	let inited = false;
-	let context: PluginContext;
+	let context: LanguageServicePluginContext;
 	let cssLs: css.LanguageService;
 	let scssLs: css.LanguageService;
 	let lessLs: css.LanguageService;

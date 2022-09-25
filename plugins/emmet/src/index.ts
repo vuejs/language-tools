@@ -1,9 +1,9 @@
-import { EmbeddedLanguageServicePlugin, PluginContext } from '@volar/language-service';
+import { EmbeddedLanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
 import * as emmet from '@vscode/emmet-helper';
 
 export default function (): EmbeddedLanguageServicePlugin {
 
-	let context: PluginContext;
+	let context: LanguageServicePluginContext;
 
 	return {
 

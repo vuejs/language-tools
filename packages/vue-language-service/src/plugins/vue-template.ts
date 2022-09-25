@@ -1,5 +1,5 @@
 import useHtmlPlugin from '@volar-plugins/html';
-import { EmbeddedLanguageServicePlugin, LanguageServiceRuntimeContext, PluginContext, SourceFileDocument } from '@volar/language-service';
+import { EmbeddedLanguageServicePlugin, LanguageServiceRuntimeContext, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
 import * as vue from '@volar/vue-language-core';
@@ -59,7 +59,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 	const tokenTypes = new Map(options.getSemanticTokenLegend().tokenTypes.map((t, i) => [t, i]));
 	const runtimeMode = vue.resolveVueCompilerOptions(options.vueLsHost.getVueCompilationSettings()).experimentalRuntimeMode;
 
-	let context: PluginContext;
+	let context: LanguageServicePluginContext;
 
 	return {
 

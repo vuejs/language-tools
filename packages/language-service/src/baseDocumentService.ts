@@ -6,7 +6,7 @@ import * as foldingRanges from './documentFeatures/foldingRanges';
 import * as format from './documentFeatures/format';
 import * as linkedEditingRanges from './documentFeatures/linkedEditingRanges';
 import * as selectionRanges from './documentFeatures/selectionRanges';
-import { DocumentServiceRuntimeContext, PluginContext } from './types';
+import { DocumentServiceRuntimeContext, LanguageServicePluginContext } from './types';
 import * as shared from '@volar/shared';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { EmbeddedLanguageServicePlugin } from './plugin';
@@ -24,14 +24,14 @@ export function createDocumentServiceContext(options: {
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	getLanguageModules(): EmbeddedLanguageModule[],
 	getPlugins(): EmbeddedLanguageServicePlugin[],
-	env: PluginContext['env'];
+	env: LanguageServicePluginContext['env'];
 }) {
 
 	const ts = options.ts;
 
 	let plugins: EmbeddedLanguageServicePlugin[];
 
-	const pluginContext: PluginContext = {
+	const pluginContext: LanguageServicePluginContext = {
 		typescript: {
 			module: ts,
 			languageServiceHost: singleFileTypeScriptServiceHost,

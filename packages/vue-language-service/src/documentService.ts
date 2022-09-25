@@ -44,7 +44,7 @@ export function getDocumentServicePlugins(
 
 export function createDocumentService(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	env: embeddedLS.PluginContext['env'],
+	env: embeddedLS.LanguageServicePluginContext['env'],
 ) {
 
 	const vueLanguageModule = vue.createEmbeddedLanguageModule(

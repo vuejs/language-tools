@@ -41,7 +41,7 @@ export function createDocumentServiceHost(
 	}
 
 	function create(rootUri: URI) {
-		const env: embedded.PluginContext['env'] = {
+		const env: embedded.LanguageServicePluginContext['env'] = {
 			rootUri,
 			configurationHost: configHost,
 			fileSystemProvider: runtimeEnv.fileSystemProvide,

@@ -120,7 +120,7 @@ export function getLanguageServicePlugins(
 
 export function createLanguageService(
 	host: LanguageServiceHost,
-	env: embeddedLS.PluginContext['env'],
+	env: embeddedLS.LanguageServicePluginContext['env'],
 	documentRegistry?: ts.DocumentRegistry,
 ) {
 

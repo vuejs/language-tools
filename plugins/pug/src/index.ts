@@ -1,4 +1,4 @@
-import { EmbeddedLanguageServicePlugin, PluginContext } from '@volar/language-service';
+import { EmbeddedLanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
 import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as pug from '@volar/pug-language-service';
@@ -13,7 +13,7 @@ export default function (): EmbeddedLanguageServicePlugin & ReturnType<typeof us
 	const htmlPlugin = useHtmlPlugin({});
 	const pugDocuments = new WeakMap<TextDocument, [number, pug.PugDocument]>();
 
-	let context: PluginContext;
+	let context: LanguageServicePluginContext;
 	let pugLs: pug.LanguageService;
 
 	return {

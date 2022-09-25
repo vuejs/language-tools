@@ -1,6 +1,6 @@
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import { PluginContext } from './types';
+import { LanguageServicePluginContext } from './types';
 
 export type NotNullableResult<T> = T | Thenable<T>;
 export type NullableResult<T> = NotNullableResult<T | undefined | null>;
@@ -26,7 +26,7 @@ export interface ExecuteCommandContext {
 
 export interface EmbeddedLanguageServicePlugin {
 
-	setup?(context: PluginContext): void;
+	setup?(context: LanguageServicePluginContext): void;
 
 	validation?: {
 		onFull?(document: TextDocument): NullableResult<vscode.Diagnostic[]>;

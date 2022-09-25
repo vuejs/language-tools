@@ -1,4 +1,4 @@
-import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, SourceFileDocument, mergeWorkspaceEdits, PluginContext } from '@volar/language-service';
+import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, SourceFileDocument, mergeWorkspaceEdits, LanguageServicePluginContext } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -32,8 +32,8 @@ export default function (options: {
 	doValidation: (uri: string) => Promise<vscode.Diagnostic[] | undefined>,
 }): EmbeddedLanguageServicePlugin {
 
-	let context: PluginContext;
-	let ts: PluginContext['typescript']['module'];
+	let context: LanguageServicePluginContext;
+	let ts: LanguageServicePluginContext['typescript']['module'];
 
 	return {
 
@@ -116,7 +116,7 @@ export default function (options: {
 }
 
 async function useRefSugar(
-	context: PluginContext,
+	context: LanguageServicePluginContext,
 	vueDocument: SourceFileDocument,
 	vueSourceFile: vue.VueSourceFile,
 	commandContext: ExecuteCommandContext,

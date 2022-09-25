@@ -10,7 +10,7 @@ import { URI } from 'vscode-uri';
 export interface DocumentServiceRuntimeContext {
 	typescript: typeof import('typescript/lib/tsserverlibrary');
 	plugins: EmbeddedLanguageServicePlugin[];
-	pluginContext: PluginContext;
+	pluginContext: LanguageServicePluginContext;
 	getSourceFileDocument(document: TextDocument): [SourceFileDocument, EmbeddedLanguageModule] | undefined;
 	updateSourceFile(sourceFile: SourceFile, snapshot: ts.IScriptSnapshot): void;
 	prepareLanguageServices(document: TextDocument): void;
@@ -22,11 +22,11 @@ export interface LanguageServiceRuntimeContext {
 	typescriptLanguageService: ts.LanguageService;
 	documents: SourceFileDocuments;
 	plugins: EmbeddedLanguageServicePlugin[];
-	pluginContext: PluginContext;
+	pluginContext: LanguageServicePluginContext;
 	getTextDocument(uri: string): TextDocument | undefined;
 };
 
-export interface PluginContext {
+export interface LanguageServicePluginContext {
 	typescript: {
 		module: typeof import('typescript/lib/tsserverlibrary');
 		languageServiceHost: ts.LanguageServiceHost;

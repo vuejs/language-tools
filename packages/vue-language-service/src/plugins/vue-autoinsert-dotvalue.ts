@@ -4,11 +4,11 @@ import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { hyphenate } from '@vue/shared';
 import { isTsDocument } from '@volar-plugins/typescript';
-import { EmbeddedLanguageServicePlugin, PluginContext } from '@volar/language-service';
+import { EmbeddedLanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
 
 export default function (): EmbeddedLanguageServicePlugin {
 
-	let context: PluginContext;
+	let context: LanguageServicePluginContext;
 
 	return {
 
