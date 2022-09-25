@@ -22,7 +22,7 @@ import * as renamePrepare from './languageFeatures/renamePrepare';
 import * as signatureHelp from './languageFeatures/signatureHelp';
 import * as diagnostics from './languageFeatures/validation';
 import * as workspaceSymbol from './languageFeatures/workspaceSymbols';
-import { EmbeddedLanguageServicePlugin } from './plugin';
+import { LanguageServicePlugin } from './plugin';
 import { LanguageServiceRuntimeContext as LanguageServiceContext, LanguageServicePluginContext } from './types';
 import * as tsFaster from '@volar/typescript-faster';
 import * as shared from '@volar/shared';
@@ -37,7 +37,7 @@ export type LanguageService = ReturnType<typeof createLanguageService>;
 export function createLanguageServiceContext(options: {
 	host: LanguageServiceHost,
 	context: ReturnType<typeof createEmbeddedLanguageServiceHost>,
-	getPlugins(): EmbeddedLanguageServicePlugin[],
+	getPlugins(): LanguageServicePlugin[],
 	env: LanguageServicePluginContext['env'];
 	documentRegistry: ts.DocumentRegistry | undefined,
 }) {
@@ -46,7 +46,7 @@ export function createLanguageServiceContext(options: {
 	const tsLs = ts.createLanguageService(options.context.typescriptLanguageServiceHost, options.documentRegistry);
 	tsFaster.decorate(ts, options.context.typescriptLanguageServiceHost, tsLs);
 
-	let plugins: EmbeddedLanguageServicePlugin[];
+	let plugins: LanguageServicePlugin[];
 
 	const pluginContext: LanguageServicePluginContext = {
 		env: options.env,

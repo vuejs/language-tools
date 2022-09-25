@@ -1,11 +1,11 @@
 import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
 import { languageFeatureWorker } from '../utils/featureWorkers';
-import { EmbeddedLanguageServicePlugin } from '@volar/language-service';
+import { LanguageServicePlugin } from '@volar/language-service';
 
 export function register(context: LanguageServiceRuntimeContext) {
 
-	return (uri: string, position: vscode.Position, autoInsertContext: Parameters<NonNullable<EmbeddedLanguageServicePlugin['doAutoInsert']>>[2]) => {
+	return (uri: string, position: vscode.Position, autoInsertContext: Parameters<NonNullable<LanguageServicePlugin['doAutoInsert']>>[2]) => {
 
 		return languageFeatureWorker(
 			context,

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguageServicePlugin, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
+import { LanguageServicePlugin, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
 
 const showReferencesCommand = 'volar.show-references';
 
@@ -15,7 +15,7 @@ export interface ReferencesCodeLensData {
 export default function (options: {
 	getVueDocument(uri: string): SourceFileDocument | undefined,
 	findReference(uri: string, position: vscode.Position): Promise<vscode.Location[] | undefined>,
-}): EmbeddedLanguageServicePlugin {
+}): LanguageServicePlugin {
 
 	let context: LanguageServicePluginContext;
 

@@ -1,10 +1,10 @@
-import { EmbeddedLanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
+import { LanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
 import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as pug from '@volar/pug-language-service';
 import useHtmlPlugin from '@volar-plugins/html';
 
-export default function (): EmbeddedLanguageServicePlugin & ReturnType<typeof useHtmlPlugin> & {
+export default function (): LanguageServicePlugin & ReturnType<typeof useHtmlPlugin> & {
 	getHtmlLs: () => html.LanguageService,
 	getPugLs: () => pug.LanguageService,
 	getPugDocument: (document: TextDocument) => pug.PugDocument | undefined,

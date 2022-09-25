@@ -24,7 +24,7 @@ export interface ExecuteCommandContext {
 	applyEdit(paramOrEdit: vscode.ApplyWorkspaceEditParams | vscode.WorkspaceEdit): Promise<vscode.ApplyWorkspaceEditResult>;
 }
 
-export interface EmbeddedLanguageServicePlugin {
+export interface LanguageServicePlugin {
 
 	setup?(context: LanguageServicePluginContext): void;
 

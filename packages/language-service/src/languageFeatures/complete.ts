@@ -1,5 +1,5 @@
 import { transformCompletionItem } from '@volar/transforms';
-import type { EmbeddedLanguageServicePlugin } from '@volar/language-service';
+import type { LanguageServicePlugin } from '@volar/language-service';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { LanguageServiceRuntimeContext } from '../types';
@@ -22,7 +22,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			sourceMap: {
 				embeddedDocumentUri: string;
 			} | undefined,
-			plugin: EmbeddedLanguageServicePlugin,
+			plugin: LanguageServicePlugin,
 			list: vscode.CompletionList,
 		}[],
 		mainCompletion: {
@@ -253,7 +253,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 		return combineCompletionList(cache.data.map(cacheData => cacheData.list));
 
-		function sortPlugins(a: EmbeddedLanguageServicePlugin, b: EmbeddedLanguageServicePlugin) {
+		function sortPlugins(a: LanguageServicePlugin, b: LanguageServicePlugin) {
 			return (b.complete?.isAdditional ? -1 : 1) - (a.complete?.isAdditional ? -1 : 1);
 		}
 

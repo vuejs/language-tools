@@ -62,7 +62,7 @@ export type LanguageServerPlugin<
 		getServicePlugins?(
 			host: B,
 			service: embeddedLS.LanguageService,
-		): embeddedLS.EmbeddedLanguageServicePlugin[],
+		): embeddedLS.LanguageServicePlugin[],
 
 		onInitialize?(
 			connection: vscode.Connection,
@@ -79,7 +79,7 @@ export type LanguageServerPlugin<
 
 		getServicePlugins?(
 			context: embeddedLS.DocumentServiceRuntimeContext,
-		): embeddedLS.EmbeddedLanguageServicePlugin[],
+		): embeddedLS.LanguageServicePlugin[],
 	};
 };
 

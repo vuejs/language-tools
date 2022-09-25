@@ -1,6 +1,6 @@
-import { EmbeddedLanguageServicePlugin } from '@volar/language-service';
+import { LanguageServicePlugin } from '@volar/language-service';
 
-export default function (): EmbeddedLanguageServicePlugin {
+export default function (): LanguageServicePlugin {
 	return {};
 }
 

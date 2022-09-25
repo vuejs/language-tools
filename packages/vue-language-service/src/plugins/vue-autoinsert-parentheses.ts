@@ -1,13 +1,13 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguageServicePlugin, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
+import { LanguageServicePlugin, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
 import { isCharacterTyping } from './vue-autoinsert-dotvalue';
 import * as embedded from '@volar/language-core';
 import { EmbeddedFile } from '@volar/language-core';
 
 export default function (options: {
 	getVueDocument: (document: TextDocument) => SourceFileDocument | undefined,
-}): EmbeddedLanguageServicePlugin {
+}): LanguageServicePlugin {
 
 	let context: LanguageServicePluginContext;
 

@@ -1,4 +1,4 @@
-import { EmbeddedLanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
+import { LanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
@@ -7,7 +7,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 export default function (options: {
 	validLang?: string,
 	disableCustomData?: boolean,
-} = {}): EmbeddedLanguageServicePlugin & {
+} = {}): LanguageServicePlugin & {
 	getHtmlLs: () => html.LanguageService,
 	updateCustomData(extraData: html.IHTMLDataProvider[]): void,
 } {

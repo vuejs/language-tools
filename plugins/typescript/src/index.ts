@@ -1,4 +1,4 @@
-import { EmbeddedLanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
+import { LanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
 import * as ts2 from '@volar/typescript-language-service';
 import * as semver from 'semver';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -28,7 +28,7 @@ function getBasicTriggerCharacters(tsVersion: string) {
 const jsDocTriggerCharacters = ['*'];
 const directiveCommentTriggerCharacters = ['@'];
 
-export default function (): EmbeddedLanguageServicePlugin {
+export default function (): LanguageServicePlugin {
 
 	const basicTriggerCharacters = getBasicTriggerCharacters('4.3.0');
 

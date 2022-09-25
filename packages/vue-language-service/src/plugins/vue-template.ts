@@ -1,5 +1,5 @@
 import useHtmlPlugin from '@volar-plugins/html';
-import { EmbeddedLanguageServicePlugin, LanguageServiceRuntimeContext, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
+import { LanguageServicePlugin, LanguageServiceRuntimeContext, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as ts2 from '@volar/typescript-language-service';
 import * as vue from '@volar/vue-language-core';
@@ -53,7 +53,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 	isSupportedDocument: (document: TextDocument) => boolean,
 	vueLsHost: vue.LanguageServiceHost,
 	context: LanguageServiceRuntimeContext,
-}): EmbeddedLanguageServicePlugin & T {
+}): LanguageServicePlugin & T {
 
 	const autoImportPositions = new WeakSet<vscode.Position>();
 	const tokenTypes = new Map(options.getSemanticTokenLegend().tokenTypes.map((t, i) => [t, i]));

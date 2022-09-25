@@ -1,12 +1,12 @@
 import type { DocumentServiceRuntimeContext } from '../types';
 import { documentArgFeatureWorker } from '../utils/featureWorkers';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import { EmbeddedLanguageServicePlugin } from '@volar/language-service';
+import { LanguageServicePlugin } from '@volar/language-service';
 import * as vscode from 'vscode-languageserver-protocol';
 
 export function register(context: DocumentServiceRuntimeContext) {
 
-	return (document: TextDocument, position: vscode.Position, options: Parameters<NonNullable<EmbeddedLanguageServicePlugin['doAutoInsert']>>[2]) => {
+	return (document: TextDocument, position: vscode.Position, options: Parameters<NonNullable<LanguageServicePlugin['doAutoInsert']>>[2]) => {
 
 		return documentArgFeatureWorker(
 			context,

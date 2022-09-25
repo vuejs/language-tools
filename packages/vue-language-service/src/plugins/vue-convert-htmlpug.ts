@@ -1,5 +1,5 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguageServicePlugin, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
+import { LanguageServicePlugin, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
 import { htmlToPug, pugToHtml } from '@johnsoncodehk/html2pug';
 import * as vue from '@volar/vue-language-core';
 
@@ -14,7 +14,7 @@ type CommandArgs = [string];
 
 export default function (options: {
 	getVueDocument(uri: string): SourceFileDocument | undefined,
-}): EmbeddedLanguageServicePlugin {
+}): LanguageServicePlugin {
 
 	let context: LanguageServicePluginContext;
 

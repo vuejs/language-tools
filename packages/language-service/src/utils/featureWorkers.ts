@@ -1,14 +1,14 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { visitEmbedded } from './definePlugin';
 import type { DocumentServiceRuntimeContext, LanguageServiceRuntimeContext } from '../types';
-import { EmbeddedLanguageServicePlugin } from '@volar/language-service';
+import { LanguageServicePlugin } from '@volar/language-service';
 import { EmbeddedDocumentSourceMap, SourceFileDocument } from '../documents';
 
 export async function documentFeatureWorker<T>(
 	context: DocumentServiceRuntimeContext,
 	document: TextDocument,
 	isValidSourceMap: (sourceMap: EmbeddedDocumentSourceMap) => boolean,
-	worker: (plugin: EmbeddedLanguageServicePlugin, document: TextDocument) => T,
+	worker: (plugin: LanguageServicePlugin, document: TextDocument) => T,
 	transform: (result: NonNullable<Awaited<T>>, sourceMap: EmbeddedDocumentSourceMap | undefined) => T | undefined,
 	combineResult?: (results: NonNullable<Awaited<T>>[]) => NonNullable<Awaited<T>>,
 ) {
@@ -30,7 +30,7 @@ export async function documentArgFeatureWorker<T, K>(
 	arg: K,
 	isValidSourceMap: (sourceMap: EmbeddedDocumentSourceMap) => boolean,
 	transformArg: (arg: K, sourceMap: EmbeddedDocumentSourceMap) => Generator<K> | [K],
-	worker: (plugin: EmbeddedLanguageServicePlugin, document: TextDocument, arg: K) => T,
+	worker: (plugin: LanguageServicePlugin, document: TextDocument, arg: K) => T,
 	transform: (result: NonNullable<Awaited<T>>, sourceMap: EmbeddedDocumentSourceMap | undefined) => T | undefined,
 	combineResult?: (results: NonNullable<Awaited<T>>[]) => NonNullable<Awaited<T>>,
 ) {
@@ -109,7 +109,7 @@ export async function languageFeatureWorker<T, K>(
 	uri: string,
 	arg: K,
 	transformArg: (arg: K, sourceMap: EmbeddedDocumentSourceMap) => Generator<K> | K[],
-	worker: (plugin: EmbeddedLanguageServicePlugin, document: TextDocument, arg: K, sourceMap: EmbeddedDocumentSourceMap | undefined, vueDocument: SourceFileDocument | undefined) => T,
+	worker: (plugin: LanguageServicePlugin, document: TextDocument, arg: K, sourceMap: EmbeddedDocumentSourceMap | undefined, vueDocument: SourceFileDocument | undefined) => T,
 	transform: (result: NonNullable<Awaited<T>>, sourceMap: EmbeddedDocumentSourceMap | undefined) => Awaited<T> | undefined,
 	combineResult?: (results: NonNullable<Awaited<T>>[]) => NonNullable<Awaited<T>>,
 	reportProgress?: (result: NonNullable<Awaited<T>>) => void,

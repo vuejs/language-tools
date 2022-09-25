@@ -4,9 +4,9 @@ import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { hyphenate } from '@vue/shared';
 import { isTsDocument } from '@volar-plugins/typescript';
-import { EmbeddedLanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
+import { LanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
 
-export default function (): EmbeddedLanguageServicePlugin {
+export default function (): LanguageServicePlugin {
 
 	let context: LanguageServicePluginContext;
 
@@ -72,7 +72,7 @@ export default function (): EmbeddedLanguageServicePlugin {
 	};
 }
 
-export function isCharacterTyping(document: TextDocument, options: Parameters<NonNullable<EmbeddedLanguageServicePlugin['doAutoInsert']>>[2]) {
+export function isCharacterTyping(document: TextDocument, options: Parameters<NonNullable<LanguageServicePlugin['doAutoInsert']>>[2]) {
 
 	const lastCharacter = options.lastChange.text[options.lastChange.text.length - 1];
 	const rangeStart = options.lastChange.range.start;

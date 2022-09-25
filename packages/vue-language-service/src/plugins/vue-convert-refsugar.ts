@@ -1,4 +1,4 @@
-import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, SourceFileDocument, mergeWorkspaceEdits, LanguageServicePluginContext } from '@volar/language-service';
+import { LanguageServicePlugin, ExecuteCommandContext, SourceFileDocument, mergeWorkspaceEdits, LanguageServicePluginContext } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -30,7 +30,7 @@ export default function (options: {
 	doCodeActionResolve: (item: vscode.CodeAction) => Promise<vscode.CodeAction>,
 	doRename: (uri: string, position: vscode.Position, newName: string) => Promise<vscode.WorkspaceEdit | undefined>,
 	doValidation: (uri: string) => Promise<vscode.Diagnostic[] | undefined>,
-}): EmbeddedLanguageServicePlugin {
+}): LanguageServicePlugin {
 
 	let context: LanguageServicePluginContext;
 	let ts: LanguageServicePluginContext['typescript']['module'];

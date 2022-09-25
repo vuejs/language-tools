@@ -1,4 +1,4 @@
-import { EmbeddedLanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
+import { LanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as css from 'vscode-css-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
@@ -11,7 +11,7 @@ const wordPatterns: { [lang: string]: RegExp; } = {
 	postcss: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@$#.!])?[\w-?]+%?|[@#!$.])/g, // scss
 };
 
-export default function (): EmbeddedLanguageServicePlugin {
+export default function (): LanguageServicePlugin {
 
 	const stylesheets = new WeakMap<TextDocument, [number, css.Stylesheet]>();
 

@@ -9,7 +9,7 @@ import * as selectionRanges from './documentFeatures/selectionRanges';
 import { DocumentServiceRuntimeContext, LanguageServicePluginContext } from './types';
 import * as shared from '@volar/shared';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { EmbeddedLanguageServicePlugin } from './plugin';
+import { LanguageServicePlugin } from './plugin';
 import { singleFileTypeScriptServiceHost, updateSingleFileTypeScriptServiceHost } from './utils/singleFileTypeScriptService';
 import { createDocumentRegistry, EmbeddedLanguageModule, SourceFile } from '@volar/language-core';
 import { parseSourceFileDocument, SourceFileDocument } from './documents';
@@ -23,13 +23,13 @@ export type DocumentService = ReturnType<typeof createDocumentService>;
 export function createDocumentServiceContext(options: {
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	getLanguageModules(): EmbeddedLanguageModule[],
-	getPlugins(): EmbeddedLanguageServicePlugin[],
+	getPlugins(): LanguageServicePlugin[],
 	env: LanguageServicePluginContext['env'];
 }) {
 
 	const ts = options.ts;
 
-	let plugins: EmbeddedLanguageServicePlugin[];
+	let plugins: LanguageServicePlugin[];
 
 	const pluginContext: LanguageServicePluginContext = {
 		typescript: {

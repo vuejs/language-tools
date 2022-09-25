@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import { parseScriptSetupRanges } from '@volar/vue-language-core';
-import { EmbeddedLanguageServicePlugin, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
+import { LanguageServicePlugin, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -94,7 +94,7 @@ const dataProvider = html.newHTMLDataProvider('vue', {
 
 export default function (options: {
 	getVueDocument(document: TextDocument): SourceFileDocument | undefined,
-}): EmbeddedLanguageServicePlugin {
+}): LanguageServicePlugin {
 
 	const htmlPlugin = useHtmlPlugin({
 		validLang: 'vue',

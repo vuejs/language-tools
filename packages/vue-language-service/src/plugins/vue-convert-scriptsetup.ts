@@ -1,5 +1,5 @@
 import type { TextRange } from '@volar/language-core';
-import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
+import { LanguageServicePlugin, ExecuteCommandContext, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-core';
 import { scriptSetupConvertRanges } from '@volar/vue-language-core';
@@ -22,7 +22,7 @@ export default function (options: {
 	getVueDocument(uri: string): SourceFileDocument | undefined,
 	doCodeActions: (uri: string, range: vscode.Range, codeActionContext: vscode.CodeActionContext) => Promise<vscode.CodeAction[] | undefined>,
 	doCodeActionResolve: (item: vscode.CodeAction) => Promise<vscode.CodeAction>,
-}): EmbeddedLanguageServicePlugin {
+}): LanguageServicePlugin {
 
 	let context: LanguageServicePluginContext;
 
