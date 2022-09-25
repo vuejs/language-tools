@@ -536,6 +536,37 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 						});
 					}
 
+					const models: string[] = [];
+
+					for (const prop of [...props, ...globalProps]) {
+						if (prop.startsWith('onUpdate:')) {
+							models.push(prop.substring('onUpdate:'.length));
+						}
+					}
+					for (const event of events) {
+						if (event.startsWith('update:')) {
+							models.push(event.substring('update:'.length));
+						}
+					}
+
+					for (const model of models) {
+
+						const name = nameCases.attr === 'camelCase' ? model : hyphenate(model);
+						const propKey = createInternalItemId('componentProp', [tag, name]);
+
+						attributes.push({
+							name: 'v-model:' + name,
+							description: propKey,
+						});
+
+						if (model === 'modelValue') {
+							attributes.push({
+								name: 'v-model',
+								description: propKey,
+							});
+						}
+					}
+
 					return attributes;
 				},
 				provideValues: () => [],
