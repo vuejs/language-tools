@@ -19,7 +19,7 @@ function createTester(root: string) {
 
 	const realTsConfig = shared.normalizeFileName(path.join(root, 'tsconfig.json'));
 	const config = ts.readJsonConfigFile(realTsConfig, ts.sys.readFile);
-	const parsedCommandLine = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(realTsConfig), {}, path.basename(realTsConfig));
+	const parsedCommandLine = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(realTsConfig), {}, realTsConfig);
 	parsedCommandLine.fileNames = parsedCommandLine.fileNames.map(shared.normalizeFileName);
 	const scriptVersions = new Map<string, string>();
 	const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();

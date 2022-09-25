@@ -27,7 +27,7 @@ export function createParsedCommandLine(
 ): ParsedCommandLine {
 
 	const config = ts.readJsonConfigFile(tsConfigPath, parseConfigHost.readFile);
-	const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(tsConfigPath), {}, path.basename(tsConfigPath));
+	const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(tsConfigPath), {}, tsConfigPath);
 	// fix https://github.com/johnsoncodehk/volar/issues/1786
 	// https://github.com/microsoft/TypeScript/issues/30457
 	// patching ts server broke with outDir + rootDir + composite/incremental

@@ -70,30 +70,29 @@ export function createNodeFileSystemHost(
 		});
 		const fileExistsCache = new Map<string, boolean>();
 		const directoryExistsCache = new Map<string, boolean>();
-		const sysWithCache: Partial<typeof ts.sys> = {
-			fileExists(path: string) {
-				if (!fileExistsCache.has(path)) {
-					fileExistsCache.set(path, workspaceSys.fileExists(path));
-				}
-				return fileExistsCache.get(path)!;
-			},
-			directoryExists(path: string) {
-				if (!directoryExistsCache.has(path)) {
-					directoryExistsCache.set(path, workspaceSys.directoryExists(path));
-				}
-				return directoryExistsCache.get(path)!;
-			},
-		};
 		// don't cache fs result if client did not supports file watcher
 		const sys = capabilities.workspace?.didChangeWatchedFiles
-			? new Proxy(workspaceSys, {
-				get(target, prop) {
-					if (prop in sysWithCache) {
-						return sysWithCache[prop as keyof typeof sysWithCache];
+			? new Proxy<Partial<ts.System>>({
+				fileExists(path: string) {
+					if (!fileExistsCache.has(path)) {
+						fileExistsCache.set(path, workspaceSys.fileExists(path));
 					}
-					return target[prop as keyof typeof target];
+					return fileExistsCache.get(path)!;
 				},
-			})
+				directoryExists(path: string) {
+					if (!directoryExistsCache.has(path)) {
+						directoryExistsCache.set(path, workspaceSys.directoryExists(path));
+					}
+					return directoryExistsCache.get(path)!;
+				},
+			}, {
+				get(target, prop) {
+					if (prop in target) {
+						return target[prop as keyof typeof target];
+					}
+					return workspaceSys[prop as keyof typeof workspaceSys];
+				},
+			}) as ts.System
 			: workspaceSys;
 
 		caches.add(fileExistsCache);

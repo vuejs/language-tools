@@ -249,10 +249,10 @@ function createParsedCommandLine(
 		let content: ts.ParsedCommandLine;
 		if (typeof tsConfig === 'string') {
 			const config = ts.readJsonConfigFile(tsConfig, parseConfigHost.readFile);
-			content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(tsConfig), {}, path.basename(tsConfig));
+			content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(tsConfig), {}, tsConfig);
 		}
 		else {
-			content = ts.parseJsonConfigFileContent({}, parseConfigHost, rootPath, tsConfig, 'jsconfig.json');
+			content = ts.parseJsonConfigFileContent({}, parseConfigHost, rootPath, tsConfig, path.join(rootPath, 'jsconfig.json'));
 		}
 		// fix https://github.com/johnsoncodehk/volar/issues/1786
 		// https://github.com/microsoft/TypeScript/issues/30457
