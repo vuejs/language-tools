@@ -82,6 +82,11 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 	let sendDiagSeq = 0;
 	let disposed = false;
 
+	const extraFileExtensions: ts.FileExtensionInfo[] = [{
+		extension: 'vue',
+		isMixedContent: true,
+		scriptKind: ts.ScriptKind.Deferred,
+	}];
 	const vueFiles = new Map<string, {
 		fileWatcher: ts.FileWatcher,
 		version: number,
@@ -123,11 +128,11 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		? info.serverHost.watchFile(projectName, () => {
 			onConfigUpdated();
 			onProjectUpdated();
-			parsedCommandLine = vue.createParsedCommandLine(ts, ts.sys, projectName);
+			parsedCommandLine = vue.createParsedCommandLine(ts, ts.sys, projectName, extraFileExtensions);
 		})
 		: undefined;
 	let parsedCommandLine = tsconfigWatcher // reuse fileExists result
-		? vue.createParsedCommandLine(ts, ts.sys, projectName)
+		? vue.createParsedCommandLine(ts, ts.sys, projectName, extraFileExtensions)
 		: undefined;
 
 	return {
@@ -137,7 +142,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 	};
 
 	async function onAnyDriveFileUpdated(fileName: string) {
-		if ((fileName.endsWith('.vue') || fileName.endsWith('.md') || fileName.endsWith('.html')) && info.project.fileExists(fileName) && !vueFiles.has(fileName)) {
+		if (fileName.endsWith('.vue') && info.project.fileExists(fileName) && !vueFiles.has(fileName)) {
 			onConfigUpdated();
 		}
 	}
@@ -180,16 +185,14 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 	function getVueFiles() {
 		const parseConfigHost: ts.ParseConfigHost = {
 			useCaseSensitiveFileNames: info.project.useCaseSensitiveFileNames(),
-			readDirectory: (path, extensions, exclude, include, depth) => {
-				return info.project.readDirectory(path, ['.vue'], exclude, include, depth);
-			},
+			readDirectory: (...args) => info.project.readDirectory(...args),
 			fileExists: fileName => info.project.fileExists(fileName),
 			readFile: fileName => info.project.readFile(fileName),
 		};
 		// fix https://github.com/johnsoncodehk/volar/issues/1276
 		// Should use raw tsconfig json not rootDir but seems cannot get it from plugin info
 		const includeRoot = path.resolve(info.project.getCurrentDirectory(), info.project.getCompilerOptions().rootDir || '.');
-		const { fileNames } = ts.parseJsonConfigFileContent({}, parseConfigHost, includeRoot, info.project.getCompilerOptions());
+		const { fileNames } = ts.parseJsonConfigFileContent({}, parseConfigHost, includeRoot, info.project.getCompilerOptions(), undefined /* TODO: info.project.config.configFilePath? */, undefined, extraFileExtensions);
 		return fileNames;
 	}
 	function update() {

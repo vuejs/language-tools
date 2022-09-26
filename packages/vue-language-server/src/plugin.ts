@@ -25,7 +25,7 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 			resolveLanguageServiceHost(ts, sys, tsConfig, host) {
 				let vueOptions: vue.VueCompilerOptions = {};
 				if (typeof tsConfig === 'string') {
-					vueOptions = vue.createParsedCommandLine(ts, sys, tsConfig).vueOptions;
+					vueOptions = vue.createParsedCommandLine(ts, sys, tsConfig, []).vueOptions;
 				}
 				return {
 					...host,

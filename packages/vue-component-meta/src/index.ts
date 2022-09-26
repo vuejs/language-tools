@@ -24,20 +24,18 @@ export type {
 	SlotMeta
 };
 
-const parseConfigHost: ts.ParseConfigHost = {
-	useCaseSensitiveFileNames: ts.sys.useCaseSensitiveFileNames,
-	readDirectory: (path, extensions, exclude, include, depth) => {
-		return ts.sys.readDirectory(path, [...extensions, '.vue'], exclude, include, depth);
-	},
-	fileExists: ts.sys.fileExists,
-	readFile: ts.sys.readFile,
-};
+
+const extraFileExtensions: ts.FileExtensionInfo[] = [{
+	extension: 'vue',
+	isMixedContent: true,
+	scriptKind: ts.ScriptKind.Deferred,
+}];
 
 export type ComponentMetaChecker = ReturnType<typeof createComponentMetaCheckerBase>;
 
 export function createComponentMetaCheckerByJsonConfig(root: string, json: any, checkerOptions: MetaCheckerOptions = {}) {
 
-	const parsedCommandLine = vue.createParsedCommandLineByJson(ts, parseConfigHost, root, json);
+	const parsedCommandLine = vue.createParsedCommandLineByJson(ts, ts.sys, root, json, extraFileExtensions);
 
 	for (const error of parsedCommandLine.errors) {
 		console.error(error);
@@ -48,7 +46,7 @@ export function createComponentMetaCheckerByJsonConfig(root: string, json: any, 
 
 export function createComponentMetaChecker(tsconfigPath: string, checkerOptions: MetaCheckerOptions = {}) {
 
-	const parsedCommandLine = vue.createParsedCommandLine(ts, parseConfigHost, tsconfigPath);
+	const parsedCommandLine = vue.createParsedCommandLine(ts, ts.sys, tsconfigPath, extraFileExtensions);
 
 	for (const error of parsedCommandLine.errors) {
 		console.error(error);

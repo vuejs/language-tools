@@ -11,29 +11,31 @@ export function createParsedCommandLineByJson(
 	parseConfigHost: ts.ParseConfigHost,
 	rootDir: string,
 	json: any,
+	extraFileExtensions: ts.FileExtensionInfo[],
 ): ParsedCommandLine {
 
 	const tsConfigPath = path.join(rootDir, 'jsconfig.json');
-	const content = ts.parseJsonConfigFileContent(json, parseConfigHost, rootDir, {}, tsConfigPath);
+	const content = ts.parseJsonConfigFileContent(json, parseConfigHost, rootDir, {}, tsConfigPath, undefined, extraFileExtensions);
 
-	return createParsedCommandLineBase(ts, parseConfigHost, content, tsConfigPath, new Set());
+	return createParsedCommandLineBase(ts, parseConfigHost, content, tsConfigPath, extraFileExtensions, new Set());
 }
 
 export function createParsedCommandLine(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	parseConfigHost: ts.ParseConfigHost,
 	tsConfigPath: string,
+	extraFileExtensions: ts.FileExtensionInfo[],
 	extendsSet = new Set<string>(),
 ): ParsedCommandLine {
 
 	const config = ts.readJsonConfigFile(tsConfigPath, parseConfigHost.readFile);
-	const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(tsConfigPath), {}, tsConfigPath);
+	const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(tsConfigPath), {}, tsConfigPath, undefined, extraFileExtensions);
 	// fix https://github.com/johnsoncodehk/volar/issues/1786
 	// https://github.com/microsoft/TypeScript/issues/30457
 	// patching ts server broke with outDir + rootDir + composite/incremental
 	content.options.outDir = undefined;
 
-	return createParsedCommandLineBase(ts, parseConfigHost, content, tsConfigPath, extendsSet);
+	return createParsedCommandLineBase(ts, parseConfigHost, content, tsConfigPath, extraFileExtensions, extendsSet);
 }
 
 function createParsedCommandLineBase(
@@ -41,6 +43,7 @@ function createParsedCommandLineBase(
 	parseConfigHost: ts.ParseConfigHost,
 	content: ts.ParsedCommandLine,
 	tsConfigPath: string,
+	extraFileExtensions: ts.FileExtensionInfo[],
 	extendsSet: Set<string>,
 ): ParsedCommandLine {
 
@@ -53,7 +56,7 @@ function createParsedCommandLineBase(
 		try {
 			const extendsPath = require.resolve(content.raw.extends, { paths: [folder] });
 			if (!extendsSet.has(extendsPath)) {
-				baseVueOptions = createParsedCommandLine(ts, parseConfigHost, extendsPath, extendsSet).vueOptions;
+				baseVueOptions = createParsedCommandLine(ts, parseConfigHost, extendsPath, extraFileExtensions, extendsSet).vueOptions;
 			}
 		}
 		catch (error) {

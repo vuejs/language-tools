@@ -236,23 +236,21 @@ function createParsedCommandLine(
 	tsConfig: string | ts.CompilerOptions,
 	plugins: ReturnType<LanguageServerPlugin>[],
 ): ts.ParsedCommandLine {
-	const extraExts = plugins.map(plugin => plugin.extensions).flat();
+	const extraFileExtensions: ts.FileExtensionInfo[] = plugins.map(plugin => plugin.extensions)
+		.flat()
+		.map(ext => ({
+			extension: ext.substring(1),
+			isMixedContent: true,
+			scriptKind: ts.ScriptKind.Deferred,
+		}));
 	try {
-		const parseConfigHost: ts.ParseConfigHost = {
-			useCaseSensitiveFileNames: sys.useCaseSensitiveFileNames,
-			readDirectory: (path, extensions, exclude, include, depth) => {
-				return sys.readDirectory(path, [...extensions, ...extraExts], exclude, include, depth);
-			},
-			fileExists: sys.fileExists,
-			readFile: sys.readFile,
-		};
 		let content: ts.ParsedCommandLine;
 		if (typeof tsConfig === 'string') {
-			const config = ts.readJsonConfigFile(tsConfig, parseConfigHost.readFile);
-			content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(tsConfig), {}, tsConfig);
+			const config = ts.readJsonConfigFile(tsConfig, sys.readFile);
+			content = ts.parseJsonSourceFileConfigFileContent(config, sys, path.dirname(tsConfig), {}, tsConfig, undefined, extraFileExtensions);
 		}
 		else {
-			content = ts.parseJsonConfigFileContent({}, parseConfigHost, rootPath, tsConfig, path.join(rootPath, 'jsconfig.json'));
+			content = ts.parseJsonConfigFileContent({}, sys, rootPath, tsConfig, path.join(rootPath, 'jsconfig.json'), undefined, extraFileExtensions);
 		}
 		// fix https://github.com/johnsoncodehk/volar/issues/1786
 		// https://github.com/microsoft/TypeScript/issues/30457
