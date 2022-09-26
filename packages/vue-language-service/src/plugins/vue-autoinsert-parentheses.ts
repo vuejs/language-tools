@@ -59,12 +59,17 @@ export default function (options: {
 							&& ts.isIdentifier(statement.expression.type.typeName)
 							&& statement.expression.type.typeName.text
 						) {
+							// https://code.visualstudio.com/docs/editor/userdefinedsnippets#_grammar
+							const escapedText = text
+								.replaceAll('\\', '\\\\')
+								.replaceAll('$', '\\$')
+								.replaceAll('}', '\\}');
 							return vscode.TextEdit.replace(
 								{
 									start: document.positionAt(mappedRange.sourceRange.start),
 									end: document.positionAt(mappedRange.sourceRange.end),
 								},
-								'(' + text + '$0' + ')',
+								'(' + escapedText + '$0' + ')',
 							);
 						}
 					}
