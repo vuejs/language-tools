@@ -4,11 +4,21 @@ import { checkComponentNames, getTemplateTagsAndAttrs } from '../helpers';
 import * as vue from '@volar/vue-language-core';
 import * as vscode from 'vscode-languageserver-protocol';
 
+export enum TagNameCasing {
+	Kebab,
+	Pascal,
+}
+
+export enum AttrNameCasing {
+	Kebab,
+	Camel,
+}
+
 export async function convert(
 	context: LanguageServiceRuntimeContext,
 	findReferences: (uri: string, position: vscode.Position) => Promise<vscode.Location[] | undefined>,
 	uri: string,
-	mode: 'kebab' | 'pascal',
+	casing: TagNameCasing,
 ) {
 
 	const vueDocument = context.documents.get(uri);
@@ -43,10 +53,10 @@ export async function convert(
 					const referenceText = document.getText(vueLoc.range);
 					for (const component of components) {
 						if (component === referenceText || hyphenate(component) === referenceText) {
-							if (mode === 'kebab' && referenceText !== hyphenate(component)) {
+							if (casing === TagNameCasing.Kebab && referenceText !== hyphenate(component)) {
 								edits.push(vscode.TextEdit.replace(vueLoc.range, hyphenate(component)));
 							}
-							if (mode === 'pascal' && referenceText !== component) {
+							if (casing === TagNameCasing.Pascal && referenceText !== component) {
 								edits.push(vscode.TextEdit.replace(vueLoc.range, component));
 							}
 						}
@@ -63,14 +73,14 @@ export function detect(
 	context: LanguageServiceRuntimeContext,
 	uri: string,
 ): {
-	tag: 'both' | 'kebabCase' | 'pascalCase' | 'unsure',
-	attr: 'kebabCase' | 'camelCase' | 'unsure',
+	tag: TagNameCasing[],
+	attr: AttrNameCasing[],
 } {
 
 	const vueDocument = context.documents.get(uri);
 	if (!vueDocument) return {
-		tag: 'unsure',
-		attr: 'unsure',
+		tag: [],
+		attr: [],
 	};
 
 	return {
@@ -78,47 +88,35 @@ export function detect(
 		attr: getAttrNameCase(vueDocument),
 	};
 
-	function getAttrNameCase(sourceFile: SourceFileDocument): 'kebabCase' | 'camelCase' | 'unsure' {
+	function getAttrNameCase(sourceFile: SourceFileDocument): AttrNameCasing[] {
 
 		const attrNames = getTemplateTagsAndAttrs(sourceFile.file).attrs;
-
-		let hasCamelCase = false;
-		let hasKebabCase = false;
+		const result: AttrNameCasing[] = [];
 
 		for (const tagName of attrNames) {
 			// attrName
 			if (tagName !== hyphenate(tagName)) {
-				hasCamelCase = true;
+				result.push(AttrNameCasing.Camel);
 				break;
 			}
 		}
 		for (const tagName of attrNames) {
 			// attr-name
 			if (tagName.indexOf('-') >= 0) {
-				hasKebabCase = true;
+				result.push(AttrNameCasing.Kebab);
 				break;
 			}
 		}
 
-		if (hasCamelCase && hasKebabCase) {
-			return 'kebabCase';
-		}
-		if (hasCamelCase) {
-			return 'camelCase';
-		}
-		if (hasKebabCase) {
-			return 'kebabCase';
-		}
-		return 'unsure';
+		return result;
 	}
-	function getTagNameCase(vueDocument: SourceFileDocument): 'both' | 'kebabCase' | 'pascalCase' | 'unsure' {
+	function getTagNameCase(vueDocument: SourceFileDocument): TagNameCasing[] {
 
 		const components = checkComponentNames(context.host.getTypeScriptModule(), context.typescriptLanguageService, vueDocument.file);
 		const tagNames = getTemplateTagsAndAttrs(vueDocument.file).tags;
+		const result: TagNameCasing[] = [];
 
 		let anyComponentUsed = false;
-		let hasPascalCase = false;
-		let hasKebabCase = false;
 
 		for (const component of components) {
 			if (tagNames.has(component) || tagNames.has(hyphenate(component))) {
@@ -127,12 +125,13 @@ export function detect(
 			}
 		}
 		if (!anyComponentUsed) {
-			return 'unsure'; // not sure component style, because do not have any component using in <template> for check
+			return []; // not sure component style, because do not have any component using in <template> for check
 		}
+
 		for (const [tagName] of tagNames) {
 			// TagName
 			if (tagName !== hyphenate(tagName)) {
-				hasPascalCase = true;
+				result.push(TagNameCasing.Pascal);
 				break;
 			}
 		}
@@ -140,20 +139,11 @@ export function detect(
 			// Tagname -> tagname
 			// TagName -> tag-name
 			if (component !== hyphenate(component) && tagNames.has(hyphenate(component))) {
-				hasKebabCase = true;
+				result.push(TagNameCasing.Kebab);
 				break;
 			}
 		}
 
-		if (hasPascalCase && hasKebabCase) {
-			return 'both';
-		}
-		if (hasPascalCase) {
-			return 'pascalCase';
-		}
-		if (hasKebabCase) {
-			return 'kebabCase';
-		}
-		return 'unsure';
+		return result;
 	}
 }

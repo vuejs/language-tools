@@ -94,8 +94,8 @@ function useDocDescriptor() {
 	}
 }
 
-export function userPick(groups: Record<string, vscode.QuickPickItem> | Record<string, vscode.QuickPickItem>[], placeholder?: string) {
-	return new Promise<string | undefined>(resolve => {
+export function userPick<T extends { [K: string]: vscode.QuickPickItem; }>(groups: T | T[], placeholder?: string) {
+	return new Promise<keyof T | undefined>(resolve => {
 		const quickPick = vscode.window.createQuickPick();
 		const items: vscode.QuickPickItem[] = [];
 		for (const group of Array.isArray(groups) ? groups : [groups]) {

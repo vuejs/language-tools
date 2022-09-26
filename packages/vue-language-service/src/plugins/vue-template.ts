@@ -404,10 +404,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('volar.completion.preferredAttrNameCase', vueDocument.uri),
 			context.env.configurationHost?.getConfiguration<'auto' | 'both' | 'kebab' | 'pascal'>('volar.completion.preferredTagNameCase', vueDocument.uri),
 		]);
-		const nameCases = {
-			tag: tag === 'auto' && detected.tag !== 'unsure' ? detected.tag : (tag === 'kebab' ? 'kebabCase' : tag === 'pascal' ? 'pascalCase' : 'both'),
-			attr: detected.attr !== 'unsure' && (attr === 'auto-camel' || attr === 'auto-kebab') ? detected.attr : (attr === 'auto-camel' || attr === 'camel') ? 'camelCase' : 'kebabCase',
-		};
+		const tagNameCasings = tag === 'auto' && detected.tag.length ? detected.tag : (tag === 'kebab' ? [casing.TagNameCasing.Kebab] : tag === 'pascal' ? [casing.TagNameCasing.Pascal] : [casing.TagNameCasing.Kebab, casing.TagNameCasing.Pascal]);
+		const attrNameCasing = detected.attr.length === 1 && (attr === 'auto-camel' || attr === 'auto-kebab') ? detected.attr[0] : (attr === 'auto-camel' || attr === 'camel') ? casing.AttrNameCasing.Camel : casing.AttrNameCasing.Kebab;
 
 		const enabledComponentAutoImport = await context.env.configurationHost?.getConfiguration<boolean>('volar.completion.autoImportComponent') ?? true;
 
@@ -423,14 +421,10 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					const tags: html.ITagData[] = [];
 
 					for (const tag of components) {
-						if (nameCases.tag === 'kebabCase') {
+						if (tagNameCasings.includes(casing.TagNameCasing.Kebab)) {
 							names.add(hyphenate(tag));
 						}
-						else if (nameCases.tag === 'pascalCase') {
-							names.add(tag);
-						}
-						else {
-							names.add(hyphenate(tag));
+						else if (tagNameCasings.includes(casing.TagNameCasing.Pascal)) {
 							names.add(tag);
 						}
 					}
@@ -461,7 +455,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 								}
 							}
 							tags.push({
-								name: (nameCases.tag === 'kebabCase' ? componentName_1 : componentName_2) + i,
+								name: (tagNameCasings.length === 1 && tagNameCasings[0] === casing.TagNameCasing.Kebab ? componentName_1 : componentName_2) + i,
 								description: createInternalItemId('importFile', [vueDocument.uri]),
 								attributes: [],
 							});
@@ -479,7 +473,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 					for (const prop of [...props, ...globalProps]) {
 
-						const name = nameCases.attr === 'camelCase' ? prop : hyphenate(prop);
+						const name = attrNameCasing === casing.AttrNameCasing.Camel ? prop : hyphenate(prop);
 
 						if (hyphenate(name).startsWith('on-')) {
 
@@ -523,7 +517,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 					for (const event of events) {
 
-						const name = nameCases.attr === 'camelCase' ? event : hyphenate(event);
+						const name = attrNameCasing === casing.AttrNameCasing.Camel ? event : hyphenate(event);
 						const propKey = createInternalItemId('componentEvent', [tag, name]);
 
 						attributes.push({
@@ -551,7 +545,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 					for (const model of models) {
 
-						const name = nameCases.attr === 'camelCase' ? model : hyphenate(model);
+						const name = attrNameCasing === casing.AttrNameCasing.Camel ? model : hyphenate(model);
 						const propKey = createInternalItemId('componentProp', [tag, name]);
 
 						attributes.push({

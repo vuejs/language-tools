@@ -2,14 +2,13 @@ import * as shared from '@volar/shared';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient';
 import * as activeSelection from './features/activeSelection';
-import * as attrNameCase from './features/attrNameCase';
+import * as nameCasing from './features/nameCasing';
 import * as createWorkspaceSnippets from './features/createWorkspaceSnippets';
 import * as documentContent from './features/documentContent';
 import * as preview from './features/preview';
 import * as showReferences from './features/showReferences';
 import * as splitEditors from './features/splitEditors';
 import * as autoInsertion from './features/autoInsertion';
-import * as tagNameCase from './features/tagNameCase';
 import * as tsVersion from './features/tsVersion';
 import * as verifyAll from './features/verifyAll';
 import * as virtualFiles from './features/virtualFiles';
@@ -190,8 +189,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		}
 
 		if (apiClient) {
-			tagNameCase.activate(context, apiClient);
-			attrNameCase.activate(context, apiClient);
+			nameCasing.activate(context, apiClient);
 		}
 	}
 }
