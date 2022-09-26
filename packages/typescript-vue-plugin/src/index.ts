@@ -23,9 +23,7 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 			// fix: https://github.com/johnsoncodehk/volar/issues/205
 			info.project.getScriptKind = fileName => {
 				switch (path.extname(fileName)) {
-					case '.vue': return ts.ScriptKind.TSX; // can't use External, Unknown
-					case '.md': return ts.ScriptKind.TSX; // can't use External, Unknown
-					case '.html': return ts.ScriptKind.TSX; // can't use External, Unknown
+					case '.vue': return ts.ScriptKind.Deferred;
 					case '.js': return ts.ScriptKind.JS;
 					case '.jsx': return ts.ScriptKind.JSX;
 					case '.ts': return ts.ScriptKind.TS;

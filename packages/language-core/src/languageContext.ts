@@ -88,7 +88,7 @@ export function createEmbeddedLanguageServiceHost(
 		getScriptKind(fileName) {
 
 			if (documentRegistry.has(fileName))
-				return ts.ScriptKind.TSX; // can't use External, Unknown
+				return ts.ScriptKind.Deferred;
 
 			switch (path.extname(fileName)) {
 				case '.js': return ts.ScriptKind.JS;
