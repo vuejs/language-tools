@@ -2,11 +2,16 @@
 	"files": [],
 	"include": [],
 	"references": [
-		{
-			"path": "./extensions/vscode-alpine-language-features/tsconfig.build.json"
-		},
+		// Extensions
 		{
 			"path": "./extensions/vscode-vue-language-features/tsconfig.build.json"
+		},
+		{
+			"path": "./examples/svelte/tsconfig.build.json"
+		},
+		// Extra Pkgs
+		{
+			"path": "./packages/vue-language-plugin-pug/tsconfig.build.json"
 		},
 		{
 			"path": "./packages/typescript-vue-plugin/tsconfig.build.json"
@@ -16,6 +21,10 @@
 		},
 		{
 			"path": "./packages/vue-component-meta/tsconfig.build.json"
+		},
+		// IDE / tests
+		{
+			"path": "./tsconfig.json"
 		},
 	]
 }

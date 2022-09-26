@@ -1,8 +1,12 @@
+import { ResolvedVueCompilerOptions } from '../types';
 import { getSlotsPropertyName, getVueLibraryName } from './shared';
 
 export const typesFileName = '__VLS_types.ts';
 
-export function getTypesCode(vueVersion: number) {
+export function getTypesCode(
+	vueVersion: number,
+	vueCompilerOptions: ResolvedVueCompilerOptions,
+) {
 	const libName = getVueLibraryName(vueVersion);
 	const slots = getSlotsPropertyName(vueVersion);
 	return `
@@ -20,7 +24,7 @@ type IsAny<T> = boolean extends (T extends never ? true : false) ? true : false;
 export type PickNotAny<A, B> = IsAny<A> extends true ? B : A;
 type AnyArray<T = any> = T[] | readonly T[];
 type ForableSource<T> = [
-	T extends { [Symbol.iterator](): IterableIterator<infer T1> } ? T1 : T[keyof T], // item
+	T extends { [Symbol.iterator](): Iterator<infer T1> } ? T1 : T[keyof T], // item
 	typeof Symbol.iterator extends keyof T ? number : T extends T ? keyof T : never, // key
 	typeof Symbol.iterator extends keyof T ? undefined : number, // index
 ][];
@@ -42,7 +46,6 @@ export type GlobalComponents =
 	>;
 
 export declare function getVforSourceType<T>(source: T): ForableSource<NonNullable<T extends number ? number[] : T extends string ? string[] : T>>;
-export declare function getNameOption<T>(t?: T): T extends { name: infer N } ? N : undefined;
 export declare function directiveFunction<T>(dir: T):
 	T extends ObjectDirective<infer E, infer V> ? undefined extends V ? (value?: V) => void : (value: V) => void
 	: T extends FunctionDirective<infer E, infer V> ? undefined extends V ? (value?: V) => void : (value: V) => void
@@ -58,10 +61,10 @@ export type ExtractComponentSlots<T> =
 export type FillingEventArg_ParametersLength<E extends (...args: any) => any> = IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];
 export type FillingEventArg<E> = E extends (...args: any) => any ? FillingEventArg_ParametersLength<E> extends 0 ? ($event?: undefined) => ReturnType<E> : E : E;
 
-export type ExtractEmit2<T> =
-	T extends FunctionalComponent<infer _, infer E> ? SetupContext<E>['emit']
-	: T extends new (...args: any) => { $emit: infer Emit } ? Emit
-	: unknown;
+export type ExtractProps<T> =
+	T extends FunctionalComponent<infer P> ? P
+	: T extends new (...args: any) => { $props: infer Props } ? Props
+	: T; // IntrinsicElement
 export type ReturnVoid<T> = T extends (...payload: infer P) => any ? (...payload: P) => void : (...args: any) => void;
 export type EmitEvent2<F, E> =
 	F extends {
@@ -102,14 +105,32 @@ export type FirstFunction<F0 = void, F1 = void, F2 = void, F3 = void, F4 = void>
 	unknown;
 export type GlobalAttrs = JSX.IntrinsicElements['div'];
 export type SelfComponent<N, C> = string extends N ? {} : N extends string ? { [P in N]: C } : {};
-export type PickComponents<T> = ComponentKeys<T> extends keyof T ? Pick<T, ComponentKeys<T>> : T;
 export type ConvertInvalidJsxElement<T> = IsComponent<T> extends true ? T : any;
+export type GetComponents<Components, N1, N2 = unknown, N3 = unknown> =
+	N1 extends keyof Components ? Components[N1] :
+	N2 extends keyof Components ? Components[N2] :
+	N3 extends keyof Components ? Components[N3] :
+	unknown;
+export type ComponentProps<T> =
+	${vueCompilerOptions.strictTemplates ? '' : 'Record<string, unknown> &'}
+	GlobalAttrs &
+	ExtractProps<T>;
+export type InstanceProps<I, C> = I extends { $props: infer Props } ? Props & Record<string, unknown> : C & Record<string, unknown>;
+export type EventObject<I, K1 extends string, C, E1, E2> = {
+	[K in K1]: import('./__VLS_types.js').FillingEventArg<
+		import('./__VLS_types.js').FirstFunction<
+			import('./__VLS_types.js').EmitEvent<C, K1>,
+			E1,
+			I extends { $emit: infer Emit } ? import('./__VLS_types.js').EmitEvent2<Emit, K1> : unknown,
+			E2,
+		>
+	>
+};
 
 type IsComponent<T> =
 	T extends (...args: any) => JSX.Element ? true
 	: T extends new (...args: any) => JSX.ElementClass ? true
 	: IsAny<T>
-type ComponentKeys<T> = keyof { [K in keyof T as IsComponent<T[K]> extends true ? K : never]: any };
 `;
 }
 

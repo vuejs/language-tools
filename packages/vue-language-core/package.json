@@ -1,6 +1,6 @@
 {
 	"name": "@volar/vue-language-core",
-	"version": "0.40.6",
+	"version": "1.0.0-beta.0",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -13,19 +13,16 @@
 		"directory": "packages/vue-language-core"
 	},
 	"devDependencies": {
-		"@volar/pug-language-service": "0.40.6",
-		"typescript": "latest"
+		"typescript": "beta"
 	},
 	"dependencies": {
-		"@volar/code-gen": "0.40.6",
-		"@volar/source-map": "0.40.6",
-		"@vue/compiler-core": "^3.2.37",
-		"@vue/compiler-dom": "^3.2.37",
-		"@vue/compiler-sfc": "^3.2.37",
-		"@vue/reactivity": "^3.2.37",
-		"@vue/shared": "^3.2.37"
-	},
-	"browser": {
-		"./out/plugins/vue-template-pug.js": "./out/plugins/empty.js"
+		"@volar/code-gen": "1.0.0-beta.0",
+		"@volar/language-core": "1.0.0-beta.0",
+		"@volar/source-map": "1.0.0-beta.0",
+		"@vue/compiler-dom": "^3.2.38",
+		"@vue/compiler-sfc": "^3.2.38",
+		"@vue/reactivity": "^3.2.38",
+		"@vue/shared": "^3.2.38",
+		"vue-template-compiler": "^2.7.10"
 	}
 }

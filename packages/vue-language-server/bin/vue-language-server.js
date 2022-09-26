@@ -4,5 +4,5 @@ if (process.argv.includes("--version")) {
 	console.log(`${pkgJSON["version"]}`);
 }
 else {
-	require("../out/node.js");
+	require("../out/nodeServer.js");
 }

@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "0.40.6",
+	"version": "1.0.0-beta.0",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
@@ -50,11 +50,6 @@
 		}
 	},
 	"contributes": {
-		"configurationDefaults": {
-			"[markdown]": {
-				"editor.quickSuggestions": true
-			}
-		},
 		"views": {
 			"explorer": [
 				{
@@ -307,6 +302,14 @@
 					"default": "off",
 					"description": "Traces the communication between VS Code and the language server."
 				},
+				"volar.vueserver.petiteVue.processHtmlFile": {
+					"type": "boolean",
+					"default": false
+				},
+				"volar.vueserver.vitePress.processMdFile": {
+					"type": "boolean",
+					"default": false
+				},
 				"volar.vueserver.textDocumentSync": {
 					"type": "string",
 					"default": "incremental",
@@ -369,6 +372,55 @@
 					"type": "boolean",
 					"default": false,
 					"description": "Auto-complete Ref value with `.value`."
+				},
+				"volar.format.initialIndent": {
+					"type": "object",
+					"description": "Whether to have initial indent.",
+					"default": {
+						"html": true
+					},
+					"properties": {
+						"html": {
+							"type": "boolean",
+							"default": true
+						},
+						"typescript": {
+							"type": "boolean",
+							"default": false
+						},
+						"javascript": {
+							"type": "boolean",
+							"default": false
+						},
+						"typescriptreact": {
+							"type": "boolean",
+							"default": false
+						},
+						"javascriptreact": {
+							"type": "boolean",
+							"default": false
+						},
+						"css": {
+							"type": "boolean",
+							"default": false
+						},
+						"scss": {
+							"type": "boolean",
+							"default": false
+						},
+						"less": {
+							"type": "boolean",
+							"default": false
+						},
+						"json": {
+							"type": "boolean",
+							"default": false
+						},
+						"jsonc": {
+							"type": "boolean",
+							"default": false
+						}
+					}
 				},
 				"volar.takeOverMode.enabled": {
 					"type": [
@@ -842,14 +894,14 @@
 		"release": "npm run release:node && npm run release:browser"
 	},
 	"devDependencies": {
-		"@types/semver": "^7.3.10",
+		"@types/semver": "^7.3.12",
 		"@types/vscode": "1.67.0",
-		"@volar/preview": "0.40.6",
-		"@volar/shared": "0.40.6",
-		"@volar/vue-language-core": "0.40.6",
-		"@volar/vue-language-server": "0.40.6",
-		"@vue/compiler-sfc": "^3.2.37",
-		"@vue/reactivity": "^3.2.37",
+		"@volar/preview": "1.0.0-beta.0",
+		"@volar/shared": "1.0.0-beta.0",
+		"@volar/vue-language-core": "1.0.0-beta.0",
+		"@volar/vue-language-server": "1.0.0-beta.0",
+		"@vue/compiler-sfc": "^3.2.38",
+		"@vue/reactivity": "^3.2.38",
 		"esbuild": "latest",
 		"esbuild-plugin-copy": "latest",
 		"ovsx": "^0.5.1",
@@ -858,6 +910,6 @@
 		"semver": "^7.3.7",
 		"vsce": "latest",
 		"vscode-languageclient": "^8.0.2",
-		"vscode-nls": "^5.0.1"
+		"vscode-nls": "^5.2.0"
 	}
 }

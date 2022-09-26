@@ -4,7 +4,7 @@ require('esbuild').build({
         server: './scripts/empty.js',
     } : {
         client: './out/nodeClientMain.js',
-        server: './node_modules/@volar/vue-language-server/out/node.js',
+        server: './node_modules/@volar/vue-language-server/out/nodeServer.js',
     },
     bundle: true,
     outdir: './dist/node',

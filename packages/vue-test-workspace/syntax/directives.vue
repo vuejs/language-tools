@@ -36,6 +36,12 @@ div(:foo="[{ bar: []}]")
 div(style="width: 100%; height: auto;")
 </template>
 
+<template lang="pug">
+h1.myClass(class="text-right") hello
+//- https://github.com/johnsoncodehk/volar/issues/1826
+h1#myId(class="text-right") hello
+</template>
+
 <!-- TODO -->
 <template lang="html">
 	<div @click></div>

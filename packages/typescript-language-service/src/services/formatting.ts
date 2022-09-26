@@ -2,12 +2,13 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
 import * as shared from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type { Settings } from '../';
+import type { GetConfiguration } from '../';
+import { getFormatCodeSettings } from '../configs/getFormatCodeSettings';
 
 export function register(
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
-	settings: Settings
+	getConfiguration: GetConfiguration,
 ) {
 	return {
 		onRange: async (uri: string, options: vscode.FormattingOptions, range?: vscode.Range): Promise<vscode.TextEdit[]> => {
@@ -16,7 +17,10 @@ export function register(
 			if (!document) return [];
 
 			const fileName = shared.getPathOfUri(document.uri);
-			const tsOptions = await settings.getFormatOptions?.(document.uri, options) ?? options;
+			const tsOptions = await getFormatCodeSettings(getConfiguration, document.uri, options);
+			if (typeof (tsOptions.indentSize) === "boolean" || typeof (tsOptions.indentSize) === "string") {
+				tsOptions.indentSize = undefined;
+			}
 
 			let scriptEdits: ReturnType<typeof languageService.getFormattingEditsForRange> | undefined;
 			try {
@@ -46,7 +50,7 @@ export function register(
 			if (!document) return [];
 
 			const fileName = shared.getPathOfUri(document.uri);
-			const tsOptions = await settings.getFormatOptions?.(document.uri, options) ?? options;
+			const tsOptions = await getFormatCodeSettings(getConfiguration, document.uri, options);
 
 			let scriptEdits: ReturnType<typeof languageService.getFormattingEditsForRange> | undefined;
 			try {

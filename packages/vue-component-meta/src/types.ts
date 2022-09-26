@@ -1,4 +1,4 @@
-
+import type * as ts from 'typescript/lib/tsserverlibrary';
 
 export interface ComponentMeta {
 	props: PropertyMeta[];

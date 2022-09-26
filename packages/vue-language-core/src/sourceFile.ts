@@ -1,30 +1,12 @@
+import { DocumentCapabilities, EmbeddedFile, EmbeddedFileSourceMap, PositionCapabilities, SourceFile, Teleport, TeleportMappingData } from '@volar/language-core';
 import { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
-import { computed, ComputedRef, reactive, shallowRef as ref, pauseTracking, resetTracking } from '@vue/reactivity';
-import { EmbeddedFileMappingData, TeleportMappingData, _VueCompilerOptions } from './types';
-import { EmbeddedFileSourceMap, Teleport } from './utils/sourceMaps';
+import { computed, ComputedRef, reactive, Ref, shallowRef as ref } from '@vue/reactivity';
+import { Sfc, VueLanguagePlugin } from './types';
 
 import { CodeGen } from '@volar/code-gen';
-import { Mapping, MappingBase } from '@volar/source-map';
+import { Mapping } from '@volar/source-map';
 import * as CompilerDom from '@vue/compiler-dom';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-
-export type VueLanguagePlugin = (ctx: {
-	modules: {
-		typescript: typeof import('typescript/lib/tsserverlibrary');
-	},
-	compilerOptions: ts.CompilerOptions,
-	vueCompilerOptions: _VueCompilerOptions,
-}) => {
-	order?: number;
-	parseSFC?(fileName: string, content: string): SFCParseResult | undefined;
-	updateSFC?(oldResult: SFCParseResult, textChange: { start: number, end: number, newText: string; }): SFCParseResult | undefined;
-	compileSFCTemplate?(lang: string, template: string, options?: CompilerDom.CompilerOptions): CompilerDom.CodegenResult | undefined;
-	updateSFCTemplate?(oldResult: CompilerDom.CodegenResult, textChange: { start: number, end: number, newText: string; }): CompilerDom.CodegenResult | undefined;
-	getEmbeddedFileNames?(fileName: string, sfc: Sfc): string[];
-	resolveEmbeddedFile?(fileName: string, sfc: Sfc, embeddedFile: EmbeddedFile): void;
-};
-
-export interface SourceFile extends ReturnType<typeof createSourceFile> { }
 
 export interface EmbeddedStructure {
 	self: Embedded | undefined,
@@ -32,160 +14,122 @@ export interface EmbeddedStructure {
 }
 
 export interface Embedded {
-	file: EmbeddedFile,
+	file: VueEmbeddedFile,
 	sourceMap: EmbeddedFileSourceMap,
 	teleport: Teleport | undefined,
 }
 
-export interface SfcBlock {
-	tag: 'script' | 'scriptSetup' | 'template' | 'style' | 'customBlock',
-	start: number;
-	end: number;
-	startTagEnd: number;
-	endTagStart: number;
-	lang: string;
-	content: string;
-}
-
-export interface Sfc {
-	template: SfcBlock | null;
-	script: (SfcBlock & {
-		src: string | undefined;
-	}) | null;
-	scriptSetup: SfcBlock | null;
-	styles: (SfcBlock & {
-		module: string | undefined;
-		scoped: boolean;
-	})[];
-	customBlocks: (SfcBlock & {
-		type: string;
-	})[];
-
-	// ast
-	templateAst: CompilerDom.RootNode | undefined;
-	scriptAst: ts.SourceFile | undefined;
-	scriptSetupAst: ts.SourceFile | undefined;
-}
-
-export interface EmbeddedFile {
+export interface VueEmbeddedFile {
 	parentFileName?: string,
 	fileName: string,
 	isTsHostFile: boolean,
-	capabilities: {
-		diagnostics: boolean,
-		foldingRanges: boolean,
-		formatting: boolean,
-		documentSymbol: boolean,
-		codeActions: boolean,
-		inlayHints: boolean,
-	},
+	capabilities: DocumentCapabilities,
 	codeGen: CodeGen<EmbeddedFileMappingData>,
 	teleportMappings: Mapping<TeleportMappingData>[],
 };
 
-export function createSourceFile(
-	fileName: string,
-	scriptSnapshot: ts.IScriptSnapshot,
-	ts: typeof import('typescript/lib/tsserverlibrary'),
-	plugins: ReturnType<VueLanguagePlugin>[],
-) {
+export interface EmbeddedFileMappingData {
+	vueTag: 'template' | 'script' | 'scriptSetup' | 'scriptSrc' | 'style' | 'customBlock' | undefined,
+	vueTagIndex?: number,
+	capabilities: PositionCapabilities,
+}
 
-	// refs
-	const snapshot = ref(scriptSnapshot);
-	const fileContent = computed(() => snapshot.value.getText(0, snapshot.value.getLength()));
-	const sfc = reactive<Sfc>({
-		template: null,
-		script: null,
-		scriptSetup: null,
-		styles: [],
-		customBlocks: [],
-		templateAst: computed(() => {
-			return compiledSFCTemplate.value?.ast;
-		}) as unknown as Sfc['templateAst'],
-		scriptAst: computed(() => {
-			if (sfc.script) {
-				return ts.createSourceFile(fileName + '.' + sfc.script.lang, sfc.script.content, ts.ScriptTarget.Latest);
-			}
-		}) as unknown as Sfc['scriptAst'],
-		scriptSetupAst: computed(() => {
-			if (sfc.scriptSetup) {
-				return ts.createSourceFile(fileName + '.' + sfc.scriptSetup.lang, sfc.scriptSetup.content, ts.ScriptTarget.Latest);
-			}
-		}) as unknown as Sfc['scriptSetupAst'],
-	}) as Sfc /* avoid Sfc unwrap in .d.ts by reactive */;
+export class VueSourceFile implements SourceFile {
 
-	// cache
-	let parsedSfcCache: {
+	static parsedSfcCache: {
+		fileName: string,
 		snapshot: ts.IScriptSnapshot,
 		sfc: SFCParseResult,
 		plugin: ReturnType<VueLanguagePlugin>,
 	} | undefined;
-	let compiledSFCTemplateCache: {
+
+	static compiledSFCTemplateCache: {
+		fileName: string,
+		template: string,
 		snapshot: ts.IScriptSnapshot,
 		result: CompilerDom.CodegenResult,
 		plugin: ReturnType<VueLanguagePlugin>,
 	} | undefined;
 
-	// computeds
-	const parsedSfc = computed(() => {
+	static getSFC(plugins: ReturnType<VueLanguagePlugin>[], fileName: string, snapshot: ts.IScriptSnapshot) {
+
+		if (VueSourceFile.parsedSfcCache?.snapshot === snapshot) {
+			return VueSourceFile.parsedSfcCache.sfc;
+		}
 
 		// incremental update
-		if (parsedSfcCache?.plugin.updateSFC) {
-			const change = snapshot.value.getChangeRange(parsedSfcCache.snapshot);
+		if (VueSourceFile.parsedSfcCache?.fileName === fileName && VueSourceFile.parsedSfcCache.plugin.updateSFC) {
+			const change = snapshot.getChangeRange(VueSourceFile.parsedSfcCache.snapshot);
 			if (change) {
-				const newSfc = parsedSfcCache.plugin.updateSFC(parsedSfcCache.sfc, {
+				const newSfc = VueSourceFile.parsedSfcCache.plugin.updateSFC(VueSourceFile.parsedSfcCache.sfc, {
 					start: change.span.start,
 					end: change.span.start + change.span.length,
-					newText: snapshot.value.getText(change.span.start, change.span.start + change.newLength),
+					newText: snapshot.getText(change.span.start, change.span.start + change.newLength),
 				});
 				if (newSfc) {
-					parsedSfcCache.snapshot = snapshot.value;
-					parsedSfcCache.sfc = newSfc;
+					VueSourceFile.parsedSfcCache.snapshot = snapshot;
+					VueSourceFile.parsedSfcCache.sfc = newSfc;
 					return newSfc;
 				}
 			}
 		}
 
 		for (const plugin of plugins) {
-			const sfc = plugin.parseSFC?.(fileName, fileContent.value);
+			const sfc = plugin.parseSFC?.(fileName, snapshot.getText(0, snapshot.getLength()));
 			if (sfc) {
-				parsedSfcCache = {
-					snapshot: snapshot.value,
-					sfc,
-					plugin,
-				};
+				if (!sfc.errors.length) {
+					VueSourceFile.parsedSfcCache = {
+						fileName,
+						snapshot,
+						sfc,
+						plugin,
+					};
+				}
 				return sfc;
 			}
 		}
-	});
-	const compiledSFCTemplate = computed(() => {
+	}
 
-		if (sfc.template) {
+	static getCompiledSFCTemplate(plugins: ReturnType<VueLanguagePlugin>[], sourceFile: VueSourceFile, newSnapshot: ts.IScriptSnapshot) {
 
-			pauseTracking();
-			// don't tracking
-			const newSnapshot = snapshot.value;
-			const templateOffset = sfc.template.startTagEnd;
-			resetTracking();
+		if (VueSourceFile.compiledSFCTemplateCache?.snapshot === newSnapshot) {
+			return {
+				errors: [],
+				warnings: [],
+				ast: VueSourceFile.compiledSFCTemplateCache.result.ast,
+			};
+		}
 
-			// tracking
-			sfc.template.content;
+		if (
+			VueSourceFile.compiledSFCTemplateCache?.fileName === sourceFile.fileName
+			&& VueSourceFile.compiledSFCTemplateCache.template === sourceFile.sfc.template?.content
+		) {
+			return {
+				errors: [],
+				warnings: [],
+				ast: VueSourceFile.compiledSFCTemplateCache.result.ast,
+			};
+		}
+
+		if (sourceFile.sfc.template) {
 
 			// incremental update
-			if (compiledSFCTemplateCache?.plugin.updateSFCTemplate) {
+			if (VueSourceFile.compiledSFCTemplateCache?.plugin.updateSFCTemplate) {
 
-				const change = newSnapshot.getChangeRange(compiledSFCTemplateCache.snapshot);
+				const change = newSnapshot.getChangeRange(VueSourceFile.compiledSFCTemplateCache.snapshot);
+				const templateOffset = sourceFile.sfc.template.startTagEnd;
 
 				if (change) {
 					const newText = newSnapshot.getText(change.span.start, change.span.start + change.newLength);
-					const newResult = compiledSFCTemplateCache.plugin.updateSFCTemplate(compiledSFCTemplateCache.result, {
+					const newResult = VueSourceFile.compiledSFCTemplateCache.plugin.updateSFCTemplate(VueSourceFile.compiledSFCTemplateCache.result, {
 						start: change.span.start - templateOffset,
 						end: change.span.start + change.span.length - templateOffset,
 						newText,
 					});
 					if (newResult) {
-						compiledSFCTemplateCache.snapshot = newSnapshot;
-						compiledSFCTemplateCache.result = newResult;
+						VueSourceFile.compiledSFCTemplateCache.template = sourceFile.sfc.template.content;
+						VueSourceFile.compiledSFCTemplateCache.snapshot = newSnapshot;
+						VueSourceFile.compiledSFCTemplateCache.result = newResult;
 						return {
 							errors: [],
 							warnings: [],
@@ -202,7 +146,7 @@ export function createSourceFile(
 				let result: CompilerDom.CodegenResult | undefined;
 
 				try {
-					result = plugin.compileSFCTemplate?.(sfc.template.lang, sfc.template.content, {
+					result = plugin.compileSFCTemplate?.(sourceFile.sfc.template.lang, sourceFile.sfc.template.content, {
 						onError: (err: CompilerDom.CompilerError) => errors.push(err),
 						onWarn: (err: CompilerDom.CompilerError) => warnings.push(err),
 						expressionPlugins: ['typescript'],
@@ -216,7 +160,9 @@ export function createSourceFile(
 				if (result || errors.length) {
 
 					if (result && !errors.length && !warnings.length) {
-						compiledSFCTemplateCache = {
+						VueSourceFile.compiledSFCTemplateCache = {
+							fileName: sourceFile.fileName,
+							template: sourceFile.sfc.template.content,
 							snapshot: newSnapshot,
 							result: result,
 							plugin,
@@ -231,12 +177,15 @@ export function createSourceFile(
 				}
 			}
 		}
-	});
-	const pluginEmbeddedFiles = plugins.map(plugin => {
-		const embeddedFiles: Record<string, ComputedRef<EmbeddedFile>> = {};
+	}
+
+	static current = ref<VueSourceFile>({} as any);
+
+	static _pluginEmbeddedFiles = computed(() => VueSourceFile.current.value.plugins.map(plugin => {
+		const embeddedFiles: Record<string, ComputedRef<VueEmbeddedFile>> = {};
 		const files = computed(() => {
 			if (plugin.getEmbeddedFileNames) {
-				const embeddedFileNames = plugin.getEmbeddedFileNames(fileName, sfc);
+				const embeddedFileNames = plugin.getEmbeddedFileNames(VueSourceFile.current.value.fileName, VueSourceFile.current.value.sfc);
 				for (const oldFileName of Object.keys(embeddedFiles)) {
 					if (!embeddedFileNames.includes(oldFileName)) {
 						delete embeddedFiles[oldFileName];
@@ -245,7 +194,7 @@ export function createSourceFile(
 				for (const embeddedFileName of embeddedFileNames) {
 					if (!embeddedFiles[embeddedFileName]) {
 						embeddedFiles[embeddedFileName] = computed(() => {
-							const file: EmbeddedFile = {
+							const file: VueEmbeddedFile = {
 								fileName: embeddedFileName,
 								capabilities: {
 									diagnostics: false,
@@ -259,9 +208,9 @@ export function createSourceFile(
 								codeGen: new CodeGen(),
 								teleportMappings: [],
 							};
-							for (const plugin of plugins) {
+							for (const plugin of VueSourceFile.current.value.plugins) {
 								if (plugin.resolveEmbeddedFile) {
-									plugin.resolveEmbeddedFile(fileName, sfc, file);
+									plugin.resolveEmbeddedFile(VueSourceFile.current.value.fileName, VueSourceFile.current.value.sfc, file);
 								}
 							}
 							return file;
@@ -272,42 +221,92 @@ export function createSourceFile(
 			return Object.values(embeddedFiles);
 		});
 		return computed(() => {
+
+			const baseOffsetMap = new Map<string, number>();
+
 			return files.value.map(_file => {
 				const file = _file.value;
-				const sourceMap = new EmbeddedFileSourceMap();
-				for (const mapping of file.codeGen.mappings) {
-					const vueRange = embeddedRangeToVueRange(mapping.data, mapping.sourceRange);
-					let additional: MappingBase[] | undefined;
-					if (mapping.additional) {
-						additional = [];
-						for (const add of mapping.additional) {
-							const addVueRange = embeddedRangeToVueRange(mapping.data, add.sourceRange);
-							additional.push({
-								...add,
-								sourceRange: addVueRange,
-							});
+				const node: EmbeddedFile = {
+					fileName: file.fileName,
+					text: file.codeGen.getText(),
+					capabilities: file.capabilities,
+					isTsHostFile: file.isTsHostFile,
+					mappings: file.codeGen.mappings.map(mapping => {
+						return {
+							...mapping,
+							data: mapping.data.capabilities,
+							sourceRange: embeddedRangeToVueRange(mapping.data, mapping.sourceRange),
+							additional: mapping.additional ? mapping.additional.map(add => {
+								const addVueRange = embeddedRangeToVueRange(mapping.data, add.sourceRange);
+								return {
+									...add,
+									sourceRange: addVueRange,
+								};
+							}) : undefined,
+						};
+					}),
+					teleportMappings: file.teleportMappings,
+					embeddeds: [],
+				};
+				return [file, node] as [VueEmbeddedFile, EmbeddedFile];
+			});
+
+			function embeddedRangeToVueRange(data: EmbeddedFileMappingData, range: Mapping<unknown>['sourceRange']) {
+
+				if (data.vueTag) {
+
+					const key = data.vueTag + '-' + data.vueTagIndex;
+					let baseOffset = baseOffsetMap.get(key);
+
+					if (baseOffset === undefined) {
+
+						if (data.vueTag === 'script' && VueSourceFile.current.value.sfc.script) {
+							baseOffset = VueSourceFile.current.value.sfc.script.startTagEnd;
+						}
+						else if (data.vueTag === 'scriptSetup' && VueSourceFile.current.value.sfc.scriptSetup) {
+							baseOffset = VueSourceFile.current.value.sfc.scriptSetup.startTagEnd;
+						}
+						else if (data.vueTag === 'template' && VueSourceFile.current.value.sfc.template) {
+							baseOffset = VueSourceFile.current.value.sfc.template.startTagEnd;
+						}
+						else if (data.vueTag === 'style') {
+							baseOffset = VueSourceFile.current.value.sfc.styles[data.vueTagIndex!].startTagEnd;
+						}
+						else if (data.vueTag === 'customBlock') {
+							baseOffset = VueSourceFile.current.value.sfc.customBlocks[data.vueTagIndex!].startTagEnd;
+						}
+
+						if (baseOffset !== undefined) {
+							baseOffsetMap.set(key, baseOffset);
 						}
 					}
-					sourceMap.mappings.push({
-						...mapping,
-						sourceRange: vueRange,
-						additional,
-					});
+
+					if (baseOffset !== undefined) {
+						return {
+							start: baseOffset + range.start,
+							end: baseOffset + range.end,
+						};
+					}
 				}
-				const embedded: Embedded = {
-					file,
-					sourceMap,
-					teleport: new Teleport(file.teleportMappings),
-				};
-				return embedded;
-			});
+
+				if (data.vueTag === 'scriptSrc' && VueSourceFile.current.value.sfc.script?.src) {
+					const vueStart = VueSourceFile.current.value._snapshot.value.getText(0, VueSourceFile.current.value.sfc.script.startTagEnd).lastIndexOf(VueSourceFile.current.value.sfc.script.src);
+					const vueEnd = vueStart + VueSourceFile.current.value.sfc.script.src.length;
+					return {
+						start: vueStart - 1,
+						end: vueEnd + 1,
+					};
+				}
+
+				return range;
+			}
 		});
-	});
-	const allEmbeddeds = computed(() => {
+	}));
+	static _allEmbeddeds = computed(() => {
 
-		const all: Embedded[] = [];
+		const all: [VueEmbeddedFile, EmbeddedFile][] = [];
 
-		for (const embeddedFiles of pluginEmbeddedFiles) {
+		for (const embeddedFiles of VueSourceFile._pluginEmbeddedFiles.value) {
 			for (const embedded of embeddedFiles.value) {
 				all.push(embedded);
 			}
@@ -315,28 +314,12 @@ export function createSourceFile(
 
 		return all;
 	});
-	const teleports = computed(() => {
+	static _embeddeds = computed(() => {
 
-		const _all: {
-			file: EmbeddedFile,
-			teleport: Teleport,
-		}[] = [];
+		const childs: EmbeddedFile[] = [];
 
-		for (const embedded of allEmbeddeds.value) {
-			if (embedded.teleport) {
-				_all.push({
-					file: embedded.file,
-					teleport: embedded.teleport,
-				});
-			}
-		}
-
-		return _all;
-	});
-	const embeddeds = computed(() => {
-
-		const embeddeds: EmbeddedStructure[] = [];
-		let remain = [...allEmbeddeds.value];
+		// const embeddeds: EmbeddedStructure[] = [];
+		let remain = [...VueSourceFile._allEmbeddeds.value];
 
 		while (remain.length) {
 			const beforeLength = remain.length;
@@ -346,43 +329,34 @@ export function createSourceFile(
 			}
 		}
 
-		for (const e of remain) {
-			embeddeds.push({
-				self: e,
-				embeddeds: [],
-			});
-			if (e.file.parentFileName) {
-				console.error('Unable to resolve embedded: ' + e.file.parentFileName + ' -> ' + e.file.fileName);
+		for (const [embedded, node] of remain) {
+			childs.push(node);
+			if (embedded) {
+				console.error('Unable to resolve embedded: ' + embedded.parentFileName + ' -> ' + embedded.fileName);
 			}
 		}
 
-		return embeddeds;
+		return childs;
 
 		function consumeRemain() {
 			for (let i = remain.length - 1; i >= 0; i--) {
-				const embedded = remain[i];
-				if (!embedded.file.parentFileName) {
-					embeddeds.push({
-						self: embedded,
-						embeddeds: [],
-					});
+				const [embedded, node] = remain[i];
+				if (!embedded.parentFileName) {
+					childs.push(node);
 					remain.splice(i, 1);
 				}
 				else {
-					const parent = findParentStructure(embedded.file.parentFileName, embeddeds);
+					const parent = findParentStructure(embedded.parentFileName, childs);
 					if (parent) {
-						parent.embeddeds.push({
-							self: embedded,
-							embeddeds: [],
-						});
+						parent.embeddeds.push(node);
 						remain.splice(i, 1);
 					}
 				}
 			}
 		}
-		function findParentStructure(fileName: string, strus: EmbeddedStructure[]): EmbeddedStructure | undefined {
+		function findParentStructure(fileName: string, strus: SourceFile[]): SourceFile | undefined {
 			for (const stru of strus) {
-				if (stru.self?.file.fileName === fileName) {
+				if (stru.fileName === fileName) {
 					return stru;
 				}
 				let _stru = findParentStructure(fileName, stru.embeddeds);
@@ -393,97 +367,77 @@ export function createSourceFile(
 		}
 	});
 
-	update(scriptSnapshot, true);
+	public sfc = reactive<Sfc>({
+		template: null,
+		script: null,
+		scriptSetup: null,
+		styles: [],
+		customBlocks: [],
+		getTemplateAst: () => {
+			return this.compiledSFCTemplate?.ast;
+		},
+		scriptAst: computed(() => {
+			if (this.sfc.script) {
+				return this.ts.createSourceFile(this.fileName + '.' + this.sfc.script.lang, this.sfc.script.content, this.ts.ScriptTarget.Latest);
+			}
+		}) as unknown as Sfc['scriptAst'],
+		scriptSetupAst: computed(() => {
+			if (this.sfc.scriptSetup) {
+				return this.ts.createSourceFile(this.fileName + '.' + this.sfc.scriptSetup.lang, this.sfc.scriptSetup.content, this.ts.ScriptTarget.Latest);
+			}
+		}) as unknown as Sfc['scriptSetupAst'],
+	}) as Sfc /* avoid Sfc unwrap in .d.ts by reactive */;
 
-	return {
-		fileName,
-		get text() {
-			return fileContent.value;
-		},
-		update,
-		get compiledSFCTemplate() {
-			return compiledSFCTemplate.value;
-		},
-		get tsFileName() {
-			return allEmbeddeds.value.find(e => e.file.fileName.replace(fileName, '').match(/^\.(js|ts)x?$/))?.file.fileName ?? '';
-		},
-		get sfc() {
-			return sfc;
-		},
-		get embeddeds() {
-			return embeddeds.value;
-		},
-		get allEmbeddeds() {
-			return allEmbeddeds.value;
-		},
-		get teleports() {
-			return teleports.value;
-		},
-	};
-
-	function embeddedRangeToVueRange(data: EmbeddedFileMappingData, range: Mapping<unknown>['sourceRange']) {
-
-		if (data.vueTag === 'scriptSrc') {
-			if (!sfc.script?.src) throw '!sfc.script?.src';
-			const vueStart = fileContent.value.substring(0, sfc.script.startTagEnd).lastIndexOf(sfc.script.src);
-			const vueEnd = vueStart + sfc.script.src.length;
-			return {
-				start: vueStart - 1,
-				end: vueEnd + 1,
-			};
-		}
-		else if (data.vueTag === 'script') {
-			if (!sfc.script) throw '!sfc.script';
-			return {
-				start: range.start + sfc.script.startTagEnd,
-				end: range.end + sfc.script.startTagEnd,
-			};
-		}
-		else if (data.vueTag === 'scriptSetup') {
-			if (!sfc.scriptSetup) throw '!sfc.scriptSetup';
-			return {
-				start: range.start + sfc.scriptSetup.startTagEnd,
-				end: range.end + sfc.scriptSetup.startTagEnd,
-			};
-		}
-		else if (data.vueTag === 'template') {
-			if (!sfc.template) throw '!sfc.template';
-			return {
-				start: range.start + sfc.template.startTagEnd,
-				end: range.end + sfc.template.startTagEnd,
-			};
-		}
-		else if (data.vueTag === 'style') {
-			if (data.vueTagIndex === undefined) throw 'data.vueTagIndex === undefined';
-			return {
-				start: range.start + sfc.styles[data.vueTagIndex].startTagEnd,
-				end: range.end + sfc.styles[data.vueTagIndex].startTagEnd,
-			};
-		}
-		else if (data.vueTag === 'customBlock') {
-			if (data.vueTagIndex === undefined) throw 'data.vueTagIndex === undefined';
-			return {
-				start: range.start + sfc.customBlocks[data.vueTagIndex].startTagEnd,
-				end: range.end + sfc.customBlocks[data.vueTagIndex].startTagEnd,
-			};
-		}
-		return range;
+	get text() {
+		return this._snapshot.value.getText(0, this._snapshot.value.getLength());
 	}
-	function update(newScriptSnapshot: ts.IScriptSnapshot, init = false) {
 
-		if (newScriptSnapshot === snapshot.value && !init) {
+	get compiledSFCTemplate() {
+		return VueSourceFile.getCompiledSFCTemplate(this.plugins, this, this._snapshot.value);
+	}
+
+	get tsFileName() {
+		return this._allEmbeddeds.value.find(e => e[1].fileName.replace(this.fileName, '').match(/^\.(js|ts)x?$/))?.[1].fileName ?? '';
+	}
+
+	get embeddeds() {
+		return this._embeddeds.value;
+	}
+
+	// refs
+	_snapshot: Ref<ts.IScriptSnapshot>;
+	_allEmbeddeds = ref<[VueEmbeddedFile, EmbeddedFile][]>([]);
+	_embeddeds = ref<EmbeddedFile[]>([]);
+
+	constructor(
+		public fileName: string,
+		private pscriptSnapshot: ts.IScriptSnapshot,
+		private ts: typeof import('typescript/lib/tsserverlibrary'),
+		private plugins: ReturnType<VueLanguagePlugin>[],
+	) {
+		this._snapshot = ref(this.pscriptSnapshot);
+		this.update(this._snapshot.value, true);
+	}
+
+	update(newScriptSnapshot: ts.IScriptSnapshot, init = false) {
+
+		const self = this;
+
+		if (newScriptSnapshot === this._snapshot.value && !init) {
 			return;
 		}
 
-		snapshot.value = newScriptSnapshot;
+		const parsedSfc = VueSourceFile.getSFC(this.plugins, this.fileName, newScriptSnapshot);
+
+		this._snapshot.value = newScriptSnapshot;
 
 		// TODO: wait for https://github.com/vuejs/core/pull/5912
-		if (parsedSfc.value) {
-			updateTemplate(parsedSfc.value.descriptor.template);
-			updateScript(parsedSfc.value.descriptor.script);
-			updateScriptSetup(parsedSfc.value.descriptor.scriptSetup);
-			updateStyles(parsedSfc.value.descriptor.styles);
-			updateCustomBlocks(parsedSfc.value.descriptor.customBlocks);
+		if (parsedSfc) {
+			updateTemplate(parsedSfc.descriptor.template);
+			updateScript(parsedSfc.descriptor.script);
+			updateScriptSetup(parsedSfc.descriptor.scriptSetup);
+			updateStyles(parsedSfc.descriptor.styles);
+			updateCustomBlocks(parsedSfc.descriptor.customBlocks);
 		}
 		else {
 			updateTemplate(null);
@@ -493,31 +447,36 @@ export function createSourceFile(
 			updateCustomBlocks([]);
 		}
 
+		VueSourceFile.current.value = this;
+
+		this._allEmbeddeds.value = VueSourceFile._allEmbeddeds.value;
+		this._embeddeds.value = VueSourceFile._embeddeds.value;
+
 		function updateTemplate(block: SFCTemplateBlock | null) {
 
 			const newData: Sfc['template'] | null = block ? {
 				tag: 'template',
-				start: fileContent.value.substring(0, block.loc.start.offset).lastIndexOf('<'),
-				end: block.loc.end.offset + fileContent.value.substring(block.loc.end.offset).indexOf('>') + 1,
+				start: self._snapshot.value.getText(0, block.loc.start.offset).lastIndexOf('<'),
+				end: block.loc.end.offset + self._snapshot.value.getText(block.loc.end.offset, self._snapshot.value.getLength()).indexOf('>') + 1,
 				startTagEnd: block.loc.start.offset,
 				endTagStart: block.loc.end.offset,
 				content: block.content,
 				lang: block.lang ?? 'html',
 			} : null;
 
-			if (sfc.template && newData) {
-				updateBlock(sfc.template, newData);
+			if (self.sfc.template && newData) {
+				updateBlock(self.sfc.template, newData);
 			}
 			else {
-				sfc.template = newData;
+				self.sfc.template = newData;
 			}
 		}
 		function updateScript(block: SFCScriptBlock | null) {
 
 			const newData: Sfc['script'] | null = block ? {
 				tag: 'script',
-				start: fileContent.value.substring(0, block.loc.start.offset).lastIndexOf('<'),
-				end: block.loc.end.offset + fileContent.value.substring(block.loc.end.offset).indexOf('>') + 1,
+				start: self._snapshot.value.getText(0, block.loc.start.offset).lastIndexOf('<'),
+				end: block.loc.end.offset + self._snapshot.value.getText(block.loc.end.offset, self._snapshot.value.getLength()).indexOf('>') + 1,
 				startTagEnd: block.loc.start.offset,
 				endTagStart: block.loc.end.offset,
 				content: block.content,
@@ -525,30 +484,30 @@ export function createSourceFile(
 				src: block.src,
 			} : null;
 
-			if (sfc.script && newData) {
-				updateBlock(sfc.script, newData);
+			if (self.sfc.script && newData) {
+				updateBlock(self.sfc.script, newData);
 			}
 			else {
-				sfc.script = newData;
+				self.sfc.script = newData;
 			}
 		}
 		function updateScriptSetup(block: SFCScriptBlock | null) {
 
 			const newData: Sfc['scriptSetup'] | null = block ? {
 				tag: 'scriptSetup',
-				start: fileContent.value.substring(0, block.loc.start.offset).lastIndexOf('<'),
-				end: block.loc.end.offset + fileContent.value.substring(block.loc.end.offset).indexOf('>') + 1,
+				start: self._snapshot.value.getText(0, block.loc.start.offset).lastIndexOf('<'),
+				end: block.loc.end.offset + self._snapshot.value.getText(block.loc.end.offset, self._snapshot.value.getLength()).indexOf('>') + 1,
 				startTagEnd: block.loc.start.offset,
 				endTagStart: block.loc.end.offset,
 				content: block.content,
 				lang: block.lang ?? 'js',
 			} : null;
 
-			if (sfc.scriptSetup && newData) {
-				updateBlock(sfc.scriptSetup, newData);
+			if (self.sfc.scriptSetup && newData) {
+				updateBlock(self.sfc.scriptSetup, newData);
 			}
 			else {
-				sfc.scriptSetup = newData;
+				self.sfc.scriptSetup = newData;
 			}
 		}
 		function updateStyles(blocks: SFCStyleBlock[]) {
@@ -557,8 +516,8 @@ export function createSourceFile(
 				const block = blocks[i];
 				const newData: Sfc['styles'][number] = {
 					tag: 'style',
-					start: fileContent.value.substring(0, block.loc.start.offset).lastIndexOf('<'),
-					end: block.loc.end.offset + fileContent.value.substring(block.loc.end.offset).indexOf('>') + 1,
+					start: self._snapshot.value.getText(0, block.loc.start.offset).lastIndexOf('<'),
+					end: block.loc.end.offset + self._snapshot.value.getText(block.loc.end.offset, self._snapshot.value.getLength()).indexOf('>') + 1,
 					startTagEnd: block.loc.start.offset,
 					endTagStart: block.loc.end.offset,
 					content: block.content,
@@ -567,15 +526,15 @@ export function createSourceFile(
 					scoped: !!block.scoped,
 				};
 
-				if (sfc.styles.length > i) {
-					updateBlock(sfc.styles[i], newData);
+				if (self.sfc.styles.length > i) {
+					updateBlock(self.sfc.styles[i], newData);
 				}
 				else {
-					sfc.styles.push(newData);
+					self.sfc.styles.push(newData);
 				}
 			}
-			while (sfc.styles.length > blocks.length) {
-				sfc.styles.pop();
+			while (self.sfc.styles.length > blocks.length) {
+				self.sfc.styles.pop();
 			}
 		}
 		function updateCustomBlocks(blocks: SFCBlock[]) {
@@ -584,8 +543,8 @@ export function createSourceFile(
 				const block = blocks[i];
 				const newData: Sfc['customBlocks'][number] = {
 					tag: 'customBlock',
-					start: fileContent.value.substring(0, block.loc.start.offset).lastIndexOf('<'),
-					end: block.loc.end.offset + fileContent.value.substring(block.loc.end.offset).indexOf('>') + 1,
+					start: self._snapshot.value.getText(0, block.loc.start.offset).lastIndexOf('<'),
+					end: block.loc.end.offset + self._snapshot.value.getText(block.loc.end.offset, self._snapshot.value.getLength()).indexOf('>') + 1,
 					startTagEnd: block.loc.start.offset,
 					endTagStart: block.loc.end.offset,
 					content: block.content,
@@ -593,15 +552,15 @@ export function createSourceFile(
 					type: block.type,
 				};
 
-				if (sfc.customBlocks.length > i) {
-					updateBlock(sfc.customBlocks[i], newData);
+				if (self.sfc.customBlocks.length > i) {
+					updateBlock(self.sfc.customBlocks[i], newData);
 				}
 				else {
-					sfc.customBlocks.push(newData);
+					self.sfc.customBlocks.push(newData);
 				}
 			}
-			while (sfc.customBlocks.length > blocks.length) {
-				sfc.customBlocks.pop();
+			while (self.sfc.customBlocks.length > blocks.length) {
+				self.sfc.customBlocks.pop();
 			}
 		}
 		function updateBlock<T>(oldBlock: T, newBlock: T) {

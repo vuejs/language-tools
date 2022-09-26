@@ -16,6 +16,9 @@
 			"path": "../code-gen/tsconfig.build.json"
 		},
 		{
+			"path": "../language-core/tsconfig.build.json"
+		},
+		{
 			"path": "../typescript-faster/tsconfig.build.json"
 		},
 		{

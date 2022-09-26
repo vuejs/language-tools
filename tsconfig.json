@@ -4,8 +4,10 @@
 		"noEmit": true,
 	},
 	"include": [
-		"extensions/*/src",
-		"packages/*/src",
-		"packages/*/src/**/*.json",
+		"*/*/src",
+		"*/*/tests",
+	],
+	"exclude": [
+		"node_modules",
 	],
 }

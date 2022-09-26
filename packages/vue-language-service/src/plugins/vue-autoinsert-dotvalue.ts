@@ -1,55 +1,78 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver-protocol';
 import * as shared from '@volar/shared';
-import * as ts2 from '@volar/typescript-language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { hyphenate } from '@vue/shared';
-import { isTsDocument } from './typescript';
-import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
+import { isTsDocument } from '@volar-plugins/typescript';
+import { LanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
 
-export default function (options: {
-	ts: typeof import('typescript/lib/tsserverlibrary'),
-	getTsLs: () => ts2.LanguageService,
-}): EmbeddedLanguageServicePlugin {
+export default function (): LanguageServicePlugin {
 
-	const asts = new WeakMap<TextDocument, ts.SourceFile>();
+	let context: LanguageServicePluginContext;
 
 	return {
 
-		async doAutoInsert(document, position, context) {
+		setup(_context) {
+			context = _context;
+		},
+
+		async doAutoInsert(document, position, insertContext) {
 
 			if (!isTsDocument(document))
 				return;
 
-			if (!isCharacterTyping(document, context))
+			if (!isCharacterTyping(document, insertContext))
 				return;
 
-			const enabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.autoCompleteRefs') ?? true;
+			const enabled = await context.env.configurationHost?.getConfiguration<boolean>('volar.autoCompleteRefs') ?? true;
 			if (!enabled)
 				return;
 
-			const sourceFile = getAst(document);
-			if (isBlacklistNode(options.ts, sourceFile, document.offsetAt(position)))
+			const program = context.typescript.languageService.getProgram();
+			if (!program)
 				return;
 
-			const typeDefs = options.getTsLs().findTypeDefinition(document.uri, position);
-			if (isRefType(typeDefs, options.getTsLs())) {
+			const sourceFile = program.getSourceFile(shared.getPathOfUri(document.uri));
+			if (!sourceFile)
+				return;
+
+			if (isBlacklistNode(context.typescript.module, sourceFile, document.offsetAt(position), false))
+				return;
+
+			const node = findPositionIdentifier(sourceFile, sourceFile, document.offsetAt(position));
+			if (!node)
+				return;
+
+			const checker = program.getTypeChecker();
+			const type = checker.getTypeAtLocation(node);
+			const props = type.getProperties();
+
+			if (props.some(prop => prop.name === 'value')) {
 				return '${1:.value}';
+			}
+
+			function findPositionIdentifier(sourceFile: ts.SourceFile, node: ts.Node, offset: number) {
+
+				let result: ts.Node | undefined;
+
+				node.forEachChild(child => {
+					if (!result) {
+						if (child.end === offset && context.typescript.module.isIdentifier(child)) {
+							result = child;
+						}
+						else if (child.end >= offset && child.getStart(sourceFile) < offset) {
+							result = findPositionIdentifier(sourceFile, child, offset);
+						}
+					}
+				});
+
+				return result;
 			}
 		},
 	};
-
-	function getAst(tsDoc: TextDocument) {
-		let ast = asts.get(tsDoc);
-		if (!ast) {
-			ast = options.ts.createSourceFile(shared.getPathOfUri(tsDoc.uri), tsDoc.getText(), options.ts.ScriptTarget.Latest);
-			asts.set(tsDoc, ast);
-		}
-		return ast;
-	}
 }
 
-export function isCharacterTyping(document: TextDocument, options: Parameters<NonNullable<EmbeddedLanguageServicePlugin['doAutoInsert']>>[2]) {
+export function isCharacterTyping(document: TextDocument, options: Parameters<NonNullable<LanguageServicePlugin['doAutoInsert']>>[2]) {
 
 	const lastCharacter = options.lastChange.text[options.lastChange.text.length - 1];
 	const rangeStart = options.lastChange.range.start;
@@ -66,7 +89,7 @@ export function isCharacterTyping(document: TextDocument, options: Parameters<No
 	return /\w/.test(lastCharacter) && !/\w/.test(nextCharacter);
 }
 
-export function isBlacklistNode(ts: typeof import('typescript/lib/tsserverlibrary'), node: ts.Node, pos: number) {
+export function isBlacklistNode(ts: typeof import('typescript/lib/tsserverlibrary'), node: ts.Node, pos: number, allowAccessDotValue: boolean) {
 	if (ts.isVariableDeclaration(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
 		return true;
 	}
@@ -88,7 +111,10 @@ export function isBlacklistNode(ts: typeof import('typescript/lib/tsserverlibrar
 	else if (ts.isLiteralTypeNode(node)) {
 		return true;
 	}
-	else if (ts.isPropertyAccessExpression(node) && node.name.text === 'value') {
+	else if (ts.isTypeReferenceNode(node)) {
+		return true;
+	}
+	else if (!allowAccessDotValue && ts.isPropertyAccessExpression(node) && node.expression.end === pos && node.name.text === 'value') {
 		return true;
 	}
 	else if (
@@ -104,7 +130,7 @@ export function isBlacklistNode(ts: typeof import('typescript/lib/tsserverlibrar
 		node.forEachChild(node => {
 			if (_isBlacklistNode) return;
 			if (pos >= node.getFullStart() && pos <= node.getEnd()) {
-				if (isBlacklistNode(ts, node, pos)) {
+				if (isBlacklistNode(ts, node, pos, allowAccessDotValue)) {
 					_isBlacklistNode = true;
 				}
 			}
@@ -136,21 +162,4 @@ export function isBlacklistNode(ts: typeof import('typescript/lib/tsserverlibrar
 			}
 		}
 	}
-}
-export function isRefType(typeDefs: vscode.LocationLink[], tsLs: ts2.LanguageService) {
-	for (const typeDefine of typeDefs) {
-		const uri = vscode.Location.is(typeDefine) ? typeDefine.uri : typeDefine.targetUri;
-		const range = vscode.Location.is(typeDefine) ? typeDefine.range : typeDefine.targetSelectionRange;
-		const defineDoc = tsLs.__internal__.getTextDocument(uri);
-		if (!defineDoc)
-			continue;
-		const typeName = defineDoc.getText(range);
-		switch (typeName) {
-			case 'Ref':
-			case 'ComputedRef':
-			case 'WritableComputedRef':
-				return true;
-		}
-	}
-	return false;
 }

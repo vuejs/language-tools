@@ -1,9 +1,10 @@
+import type { TextRange } from '@volar/language-core';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import { getStartEnd, parseBindingRanges } from './scriptSetupRanges';
-import type { TextRange } from '../types';
 
 export interface ScriptRanges extends ReturnType<typeof parseScriptRanges> { }
 
-export function parseScriptRanges(ts: typeof import('typescript/lib/tsserverlibrary'), ast: ts.SourceFile, hasScriptSetup: boolean, withComponentOption: boolean, withNode: boolean) {
+export function parseScriptRanges(ts: typeof import('typescript/lib/tsserverlibrary'), ast: ts.SourceFile, hasScriptSetup: boolean, withNode: boolean) {
 
 	let exportDefault: (TextRange & {
 		expression: TextRange,
@@ -11,6 +12,7 @@ export function parseScriptRanges(ts: typeof import('typescript/lib/tsserverlibr
 		argsNode: ts.ObjectLiteralExpression | undefined,
 		componentsOption: TextRange | undefined,
 		componentsOptionNode: ts.ObjectLiteralExpression | undefined,
+		nameOption: TextRange | undefined,
 	}) | undefined;
 
 	const bindings = hasScriptSetup ? parseBindingRanges(ts, ast, false) : [];
@@ -29,15 +31,17 @@ export function parseScriptRanges(ts: typeof import('typescript/lib/tsserverlibr
 			}
 			if (obj) {
 				let componentsOptionNode: ts.ObjectLiteralExpression | undefined;
-				if (withComponentOption) {
-					obj.forEachChild(node => {
-						if (ts.isPropertyAssignment(node) && ts.isIdentifier(node.name)) {
-							if (node.name.escapedText === 'components' && ts.isObjectLiteralExpression(node.initializer)) {
-								componentsOptionNode = node.initializer;
-							}
+				let nameOptionNode: ts.Expression | undefined;
+				obj.forEachChild(node => {
+					if (ts.isPropertyAssignment(node) && ts.isIdentifier(node.name)) {
+						if (node.name.escapedText === 'components' && ts.isObjectLiteralExpression(node.initializer)) {
+							componentsOptionNode = node.initializer;
 						}
-					});
-				}
+						if (node.name.escapedText === 'name') {
+							nameOptionNode = node.initializer;
+						}
+					}
+				});
 				exportDefault = {
 					..._getStartEnd(node),
 					expression: _getStartEnd(node.expression),
@@ -45,6 +49,7 @@ export function parseScriptRanges(ts: typeof import('typescript/lib/tsserverlibr
 					argsNode: withNode ? obj : undefined,
 					componentsOption: componentsOptionNode ? _getStartEnd(componentsOptionNode) : undefined,
 					componentsOptionNode: withNode ? componentsOptionNode : undefined,
+					nameOption: nameOptionNode ? _getStartEnd(nameOptionNode) : undefined,
 				};
 			}
 		}

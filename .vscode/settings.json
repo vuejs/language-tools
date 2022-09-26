@@ -2,6 +2,7 @@
 	"typescript.format.semicolons": "insert",
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,
+	"json.format.keepLines": true,
 	"typescript.tsdk": "node_modules/typescript/lib",
 	"[typescript]": {
 		"editor.defaultFormatter": "vscode.typescript-language-features"

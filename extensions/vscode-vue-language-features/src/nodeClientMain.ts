@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient/node';
 import { activate as commonActivate, deactivate as commonDeactivate } from './common';
+import { middleware } from './middleware';
 
 export function activate(context: vscode.ExtensionContext) {
 	return commonActivate(context, async (
@@ -31,27 +32,7 @@ export function activate(context: vscode.ExtensionContext) {
 			},
 		};
 		const clientOptions: lsp.LanguageClientOptions = {
-			middleware: {
-				handleDiagnostics: (uri, diagnostics, next) => {
-					const document = vscode.workspace.textDocuments.find(d => d.uri.toString() === uri.toString());
-					if (document) {
-						let outdated = false;
-						for (const diagnostic of diagnostics) {
-							const data = (diagnostic as any).data;
-							if (typeof data === 'object' && 'version' in data) {
-								if (document.version !== data.version) {
-									outdated = true;
-									break;
-								}
-							}
-						}
-						if (outdated) {
-							return;
-						}
-					}
-					next(uri, diagnostics);
-				},
-			},
+			middleware,
 			documentSelector,
 			initializationOptions: initOptions,
 			progressOnInitialization: true,

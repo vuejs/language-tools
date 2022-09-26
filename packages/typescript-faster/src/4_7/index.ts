@@ -1,3 +1,4 @@
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import { createModuleSpecifierCache } from './moduleSpecifierCache';
 import { createPackageJsonCache, PackageJsonInfo, Ternary } from './packageJsonCache';
 

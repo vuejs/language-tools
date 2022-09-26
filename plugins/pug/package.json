@@ -1,0 +1,25 @@
+{
+	"name": "@volar-plugins/pug",
+	"version": "1.0.0-beta.0",
+	"main": "out/index.js",
+	"license": "MIT",
+	"files": [
+		"out/**/*.js",
+		"out/**/*.d.ts"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/johnsoncodehk/volar.git",
+		"directory": "plugins/pug"
+	},
+	"dependencies": {
+		"@volar-plugins/html": "1.0.0-beta.0",
+		"@volar/language-service": "1.0.0-beta.0",
+		"@volar/pug-language-service": "1.0.0-beta.0",
+		"vscode-html-languageservice": "^5.0.1",
+		"vscode-languageserver-textdocument": "^1.0.7"
+	},
+	"browser": {
+		"./out/index.js": "./out/empty.js"
+	}
+}

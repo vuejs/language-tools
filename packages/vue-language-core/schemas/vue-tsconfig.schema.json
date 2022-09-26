@@ -17,15 +17,41 @@
 					],
 					"markdownDescription": "Target version of Vue."
 				},
+				"jsxTemplates": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Whether to compile template to JSX. (Generics component type checking only working with JSX)"
+				},
 				"strictTemplates": {
 					"type": "boolean",
 					"default": false,
 					"markdownDescription": "Strict props, component type-checking in templates."
 				},
+				"skipTemplateCodegen": {
+					"type": "boolean",
+					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/577"
+				},
 				"plugins": {
 					"type": "array",
 					"default": [],
 					"markdownDescription": "Plugins to be used in the SFC compiler."
+				},
+				"experimentalComponentOptionsWrapper": {
+					"type": "array",
+					"default": [
+						"(await import('vue')).defineComponent(",
+						")"
+					],
+					"markdownDescription": "How to wrap option of `export default { ... }`? Default: `[\"(await import('vue')).default.extend(\", \")\"]` for target < 2.7, `[\"(await import('vue')).defineComponent(\", \")\"]` for target >= 2.7."
+				},
+				"experimentalComponentOptionsWrapperEnable": {
+					"enum": [
+						true,
+						false,
+						"onlyJs"
+					],
+					"default": "onlyJs",
+					"markdownDescription": "Enable `experimentalComponentOptionsWrapper`?"
 				},
 				"experimentalRuntimeMode": {
 					"type": "string",
@@ -39,24 +65,6 @@
 						}
 					],
 					"markdownDescription": "Run app in browser or uni-app"
-				},
-				"experimentalImplicitWrapComponentOptionsWithDefineComponent": {
-					"enum": [
-						true,
-						false,
-						"onlyJs"
-					],
-					"default": "onlyJs",
-					"markdownDescription": "Implicit wrap object literal component options export with `defineComponent()`."
-				},
-				"experimentalImplicitWrapComponentOptionsWithVue2Extend": {
-					"enum": [
-						true,
-						false,
-						"onlyJs"
-					],
-					"default": "onlyJs",
-					"markdownDescription": "Implicit wrap object literal component options export with `Vue.extend()`."
 				},
 				"experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup": {
 					"enum": [
@@ -73,10 +81,6 @@
 				"experimentalTemplateCompilerOptionsRequirePath": {
 					"type": "string",
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/698"
-				},
-				"experimentalDisableTemplateSupport": {
-					"type": "boolean",
-					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/577"
 				},
 				"experimentalAllowTypeNarrowingInInlineHandlers": {
 					"type": "boolean",

@@ -1,19 +1,25 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver-protocol';
-import { EmbeddedLanguageServicePlugin, useConfigurationHost } from '@volar/vue-language-service-types';
+import { LanguageServicePlugin, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
 import { isCharacterTyping } from './vue-autoinsert-dotvalue';
-import { VueDocument } from '../vueDocuments';
+import * as embedded from '@volar/language-core';
+import { EmbeddedFile } from '@volar/language-core';
 
 export default function (options: {
-	ts: typeof import('typescript/lib/tsserverlibrary'),
-	getVueDocument: (document: TextDocument) => VueDocument | undefined,
-}): EmbeddedLanguageServicePlugin {
+	getVueDocument: (document: TextDocument) => SourceFileDocument | undefined,
+}): LanguageServicePlugin {
+
+	let context: LanguageServicePluginContext;
 
 	return {
 
+		setup(_context) {
+			context = _context;
+		},
+
 		async doAutoInsert(document, position, options_2) {
 
-			const enabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.autoWrapParentheses') ?? true;
+			const enabled = await context.env.configurationHost?.getConfiguration<boolean>('volar.autoWrapParentheses') ?? true;
 			if (!enabled)
 				return;
 
@@ -24,26 +30,33 @@ export default function (options: {
 			if (!vueDocument)
 				return;
 
-			const templateFormatScript = vueDocument.file.allEmbeddeds.find(e =>
-				e.file.fileName.endsWith('.__VLS_template_format.tsx')
-				|| e.file.fileName.endsWith('.__VLS_template_format.jsx')
-			);
+
+			let templateFormatScript: EmbeddedFile | undefined;
+
+			embedded.forEachEmbeddeds(vueDocument.file.embeddeds, embedded => {
+				if (embedded.fileName.endsWith('.__VLS_template_format.tsx')
+					|| embedded.fileName.endsWith('.__VLS_template_format.jsx')) {
+					templateFormatScript = embedded;
+				}
+			});
+
 			if (!templateFormatScript)
 				return;
 
 			const offset = document.offsetAt(position);
 
-			for (const mappedRange of templateFormatScript.sourceMap.mappings) {
+			for (const mappedRange of templateFormatScript.mappings) {
 				if (mappedRange.sourceRange.end === offset) {
 					const text = document.getText().substring(mappedRange.sourceRange.start, mappedRange.sourceRange.end);
-					const ast = options.ts.createSourceFile(templateFormatScript.file.fileName, text, options.ts.ScriptTarget.Latest);
+					const ts = context.typescript.module;
+					const ast = ts.createSourceFile(templateFormatScript.fileName, text, ts.ScriptTarget.Latest);
 					if (ast.statements.length === 1) {
 						const statement = ast.statements[0];
 						if (
-							options.ts.isExpressionStatement(statement)
-							&& options.ts.isAsExpression(statement.expression)
-							&& options.ts.isTypeReferenceNode(statement.expression.type)
-							&& options.ts.isIdentifier(statement.expression.type.typeName)
+							ts.isExpressionStatement(statement)
+							&& ts.isAsExpression(statement.expression)
+							&& ts.isTypeReferenceNode(statement.expression.type)
+							&& ts.isIdentifier(statement.expression.type.typeName)
 							&& statement.expression.type.typeName.text
 						) {
 							return vscode.TextEdit.replace(

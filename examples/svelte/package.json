@@ -1,0 +1,81 @@
+{
+	"private": true,
+	"name": "svelte-language-server-example",
+	"version": "1.0.0-beta.0",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/johnsoncodehk/volar.git",
+		"directory": "examples/svelte"
+	},
+	"displayName": "Svelte Langauge Server (Example)",
+	"description": "Svelte Langauge Server Example",
+	"author": "johnsoncodehk",
+	"publisher": "johnsoncodehk",
+	"engines": {
+		"vscode": "^1.67.0"
+	},
+	"keywords": [
+		"svelte"
+	],
+	"activationEvents": [
+		"onLanguage:svelte"
+	],
+	"main": "out/client",
+	"contributes": {
+		"languages": [
+			{
+				"id": "svelte",
+				"extensions": [
+					".svelte"
+				]
+			}
+		],
+		"semanticTokenScopes": [
+			{
+				"language": "svelte",
+				"scopes": {
+					"property": [
+						"variable.other.property.svelte"
+					],
+					"property.readonly": [
+						"variable.other.constant.property.svelte"
+					],
+					"variable": [
+						"variable.other.readwrite.svelte"
+					],
+					"variable.readonly": [
+						"variable.other.constant.object.svelte"
+					],
+					"function": [
+						"entity.name.function.svelte"
+					],
+					"namespace": [
+						"entity.name.type.module.svelte"
+					],
+					"variable.defaultLibrary": [
+						"support.variable.svelte"
+					],
+					"function.defaultLibrary": [
+						"support.function.svelte"
+					],
+					"componentTag": [
+						"support.class.component.svelte"
+					]
+				}
+			}
+		]
+	},
+	"scripts": {
+		"release": "vsce publish"
+	},
+	"devDependencies": {
+		"@types/vscode": "1.67.0",
+		"vsce": "latest"
+	},
+	"dependencies": {
+		"@volar-plugins/css": "1.0.0-beta.0",
+		"@volar-plugins/typescript": "1.0.0-beta.0",
+		"@volar/language-server": "1.0.0-beta.0",
+		"vscode-languageclient": "^8.0.2"
+	}
+}

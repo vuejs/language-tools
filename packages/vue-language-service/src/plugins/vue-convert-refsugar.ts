@@ -1,12 +1,12 @@
+import { LanguageServicePlugin, ExecuteCommandContext, SourceFileDocument, mergeWorkspaceEdits, LanguageServicePluginContext } from '@volar/language-service';
 import * as shared from '@volar/shared';
-import * as ts2 from '@volar/typescript-language-service';
-import * as refSugarRanges from '../utils/refSugarRanges';
+import * as vue from '@volar/vue-language-core';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
-import { mergeWorkspaceEdits } from '../languageFeatures/rename';
-import { EmbeddedLanguageServicePlugin, ExecuteCommandContext, useConfigurationHost } from '@volar/vue-language-service-types';
-import { isBlacklistNode, isRefType } from './vue-autoinsert-dotvalue';
+import * as refSugarRanges from '../utils/refSugarRanges';
+import { isBlacklistNode } from './vue-autoinsert-dotvalue';
 import { getAddMissingImportsEdits } from './vue-convert-scriptsetup';
-import { VueDocument } from '../vueDocuments';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 
 enum Commands {
 	USE_REF_SUGAR = 'refSugarConversions.use',
@@ -21,40 +21,46 @@ export interface ReferencesCodeLensData {
 type CommandArgs = [string];
 
 export default function (options: {
-	getVueDocument(uri: string): VueDocument | undefined,
+	getVueDocument(uri: string): SourceFileDocument | undefined,
 	// for use ref sugar
-	ts: typeof import('typescript/lib/tsserverlibrary'),
 	findReferences: (uri: string, position: vscode.Position) => Promise<vscode.Location[] | undefined>,
 	findTypeDefinition: (uri: string, position: vscode.Position) => Promise<vscode.LocationLink[] | undefined>,
-	scriptTsLs: ts2.LanguageService,
 	// for unuse ref sugar
 	doCodeActions: (uri: string, range: vscode.Range, codeActionContext: vscode.CodeActionContext) => Promise<vscode.CodeAction[] | undefined>,
 	doCodeActionResolve: (item: vscode.CodeAction) => Promise<vscode.CodeAction>,
 	doRename: (uri: string, position: vscode.Position, newName: string) => Promise<vscode.WorkspaceEdit | undefined>,
 	doValidation: (uri: string) => Promise<vscode.Diagnostic[] | undefined>,
-}): EmbeddedLanguageServicePlugin {
+}): LanguageServicePlugin {
+
+	let context: LanguageServicePluginContext;
+	let ts: LanguageServicePluginContext['typescript']['module'];
 
 	return {
+
+		setup(_context) {
+			context = _context;
+			ts = context.typescript.module;
+		},
 
 		codeLens: {
 
 			on(document) {
-				return worker(document.uri, async (vueDocument) => {
+				return worker(document.uri, async (vueDocument, vueSourceFile) => {
 
 					if (document.uri.endsWith('.html')) // petite-vue
 						return;
 
-					const isEnabled = await useConfigurationHost()?.getConfiguration<boolean>('volar.codeLens.scriptSetupTools') ?? true;
+					const isEnabled = await context.env.configurationHost?.getConfiguration<boolean>('volar.codeLens.scriptSetupTools') ?? true;
 
 					if (!isEnabled)
 						return;
 
 					const result: vscode.CodeLens[] = [];
-					const sfc = vueDocument.file.sfc;
+					const sfc = vueSourceFile.sfc;
 
 					if (sfc.scriptSetup && sfc.scriptSetupAst) {
 
-						const ranges = getRanges(options.ts, sfc.scriptSetupAst);
+						const ranges = getRanges(ts, sfc.scriptSetupAst);
 
 						result.push({
 							range: {
@@ -74,14 +80,14 @@ export default function (options: {
 			},
 		},
 
-		doExecuteCommand(command, args, context) {
+		doExecuteCommand(command, args, commandContext) {
 
 			if (command === Commands.USE_REF_SUGAR) {
 
 				const [uri] = args as CommandArgs;
 
-				return worker(uri, vueDocument => {
-					return useRefSugar(options.ts, vueDocument, context, options.findReferences, options.findTypeDefinition, options.scriptTsLs);
+				return worker(uri, (vueDocument, vueSourceFile) => {
+					return useRefSugar(context, vueDocument, vueSourceFile, commandContext, options.findReferences, options.findTypeDefinition);
 				});
 			}
 
@@ -89,51 +95,56 @@ export default function (options: {
 
 				const [uri] = args as CommandArgs;
 
-				return worker(uri, vueDocument => {
-					return unuseRefSugar(options.ts, vueDocument, context, options.doCodeActions, options.doCodeActionResolve, options.doRename, options.doValidation);
+				return worker(uri, (vueDocument, vueSourceFile) => {
+					return unuseRefSugar(ts, vueDocument, vueSourceFile, commandContext, options.doCodeActions, options.doCodeActionResolve, options.doRename, options.doValidation);
 				});
 			}
 		},
 	};
 
-	function worker<T>(uri: string, callback: (vueDocument: VueDocument) => T) {
+	function worker<T>(uri: string, callback: (vueDocument: SourceFileDocument, vueSourceFile: vue.VueSourceFile) => T) {
 
 		const vueDocument = options.getVueDocument(uri);
 		if (!vueDocument)
 			return;
 
-		return callback(vueDocument);
+		if (!(vueDocument.file instanceof vue.VueSourceFile))
+			return;
+
+		return callback(vueDocument, vueDocument.file);
 	}
 }
 
 async function useRefSugar(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
-	vueDocument: VueDocument,
-	context: ExecuteCommandContext,
+	context: LanguageServicePluginContext,
+	vueDocument: SourceFileDocument,
+	vueSourceFile: vue.VueSourceFile,
+	commandContext: ExecuteCommandContext,
 	findReferences: (uri: string, position: vscode.Position) => Promise<vscode.Location[] | undefined>,
 	findTypeDefinition: (uri: string, position: vscode.Position) => Promise<vscode.LocationLink[] | undefined>,
-	scriptTsLs: ts2.LanguageService,
 ) {
 
-	const sfc = vueDocument.file.sfc;
+	const ts = context.typescript.module;
+
+	const sfc = vueSourceFile.sfc;
 	if (!sfc.scriptSetup) return;
 	if (!sfc.scriptSetupAst) return;
 
-	context.workDoneProgress.begin('Unuse Ref Sugar', 0, '', true);
+	commandContext.workDoneProgress.begin('Use Ref Sugar', 0, '', true);
 
 	const edits = await getUseRefSugarEdits(vueDocument, sfc.scriptSetup, sfc.scriptSetupAst);
 
-	if (context.token.isCancellationRequested)
+	if (commandContext.token.isCancellationRequested)
 		return;
 
 	if (edits?.length) {
-		await context.applyEdit({ changes: { [vueDocument.uri]: edits } });
+		await commandContext.applyEdit({ changes: { [vueDocument.uri]: edits } });
 	}
 
-	context.workDoneProgress.done();
+	commandContext.workDoneProgress.done();
 
 	async function getUseRefSugarEdits(
-		_vueDocument: VueDocument,
+		_vueDocument: SourceFileDocument,
 		_scriptSetup: NonNullable<typeof sfc['scriptSetup']>,
 		_scriptSetupAst: ts.SourceFile,
 	) {
@@ -150,7 +161,7 @@ async function useRefSugar(
 			for (const binding of declaration.leftBindings) {
 
 				const definitions = await findTypeDefinition(document.uri, document.positionAt(_scriptSetup.startTagEnd + binding.end)) ?? [];
-				const _isRefType = isRefType(definitions, scriptTsLs);
+				const _isRefType = isRefType(definitions);
 
 				if (!_isRefType)
 					continue;
@@ -173,7 +184,7 @@ async function useRefSugar(
 					if (end < _scriptSetup.startTagEnd || start > _scriptSetup.startTagEnd + _scriptSetup.content.length)
 						return false;
 
-					if (isBlacklistNode(ts, _scriptSetupAst, start - _scriptSetup.startTagEnd))
+					if (isBlacklistNode(ts, _scriptSetupAst, start - _scriptSetup.startTagEnd, true))
 						return false;
 
 					return true;
@@ -234,11 +245,32 @@ async function useRefSugar(
 			));
 		}
 	}
+
+	function isRefType(typeDefs: vscode.LocationLink[]) {
+		const tsHost = context.typescript.languageServiceHost;
+		for (const typeDefine of typeDefs) {
+			const uri = vscode.Location.is(typeDefine) ? typeDefine.uri : typeDefine.targetUri;
+			const range = vscode.Location.is(typeDefine) ? typeDefine.range : typeDefine.targetSelectionRange;
+			const snapshot = tsHost.getScriptSnapshot(shared.getPathOfUri(uri));
+			if (!snapshot)
+				continue;
+			const defineDoc = TextDocument.create(uri, 'typescript', 0, snapshot.getText(0, snapshot.getLength()));
+			const typeName = defineDoc.getText(range);
+			switch (typeName) {
+				case 'Ref':
+				case 'ComputedRef':
+				case 'WritableComputedRef':
+					return true;
+			}
+		}
+		return false;
+	}
 }
 
 async function unuseRefSugar(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	vueDocument: VueDocument,
+	vueDocument: SourceFileDocument,
+	vueSourceFile: vue.VueSourceFile,
 	context: ExecuteCommandContext,
 	doCodeActions: (uri: string, range: vscode.Range, codeActionContext: vscode.CodeActionContext) => Promise<vscode.CodeAction[] | undefined>,
 	doCodeActionResolve: (item: vscode.CodeAction) => Promise<vscode.CodeAction>,
@@ -246,7 +278,7 @@ async function unuseRefSugar(
 	doValidation: (uri: string) => Promise<vscode.Diagnostic[] | undefined>,
 ) {
 
-	const sfc = vueDocument.file.sfc;
+	const sfc = vueSourceFile.sfc;
 	if (!sfc.scriptSetup) return;
 	if (!sfc.scriptSetupAst) return;
 
@@ -278,7 +310,7 @@ async function unuseRefSugar(
 	context.workDoneProgress.done();
 
 	function getRemoveInvalidDotValueEdits(
-		_vueDocument: VueDocument,
+		_vueDocument: SourceFileDocument,
 		errors: vscode.Diagnostic[],
 	) {
 
@@ -305,7 +337,7 @@ async function unuseRefSugar(
 		return result;
 	}
 	async function getUnRefSugarEdits(
-		_vueDocument: VueDocument,
+		_vueDocument: SourceFileDocument,
 		_scriptSetup: NonNullable<typeof sfc['scriptSetup']>,
 		_scriptSetupAst: ts.SourceFile,
 	) {

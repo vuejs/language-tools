@@ -1,8 +1,10 @@
 {
 	"npmClient": "pnpm",
 	"packages": [
+		"examples/*",
 		"extensions/*",
-		"packages/*"
+		"packages/*",
+		"plugins/*"
 	],
-	"version": "0.40.6"
+	"version": "1.0.0-beta.0"
 }

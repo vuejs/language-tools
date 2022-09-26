@@ -5,7 +5,8 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import * as semver from 'semver';
 import { parseKindModifier } from '../../utils/modifiers';
-import { Settings } from '../..';
+import { GetConfiguration } from '../..';
+import { getUserPreferences } from '../../configs/getUserPreferences';
 
 export interface Data {
 	uri: string,
@@ -17,7 +18,7 @@ export interface Data {
 export function register(
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
-	settings: Settings,
+	getConfiguration: GetConfiguration,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {
 
@@ -30,7 +31,7 @@ export function register(
 		if (!document)
 			return;
 
-		const preferences = await settings.getPreferences?.(document.uri) ?? {};
+		const preferences = await getUserPreferences(getConfiguration, document.uri);
 		const fileName = shared.getPathOfUri(document.uri);
 		const offset = document.offsetAt(position);
 
@@ -61,89 +62,89 @@ export function register(
 		const dotAccessorContext = getDotAccessorContext(ts.version, document);
 
 		const entries = completionContext.entries
-			.map(tsEntry => {
-
-				const item = vscode.CompletionItem.create(tsEntry.name);
-
-				item.kind = convertKind(tsEntry.kind);
-
-				if (tsEntry.source && tsEntry.hasAction) {
-					// De-prioritize auto-imports
-					// https://github.com/microsoft/vscode/issues/40311
-					item.sortText = '\uffff' + tsEntry.sortText;
-
-				} else {
-					item.sortText = tsEntry.sortText;
-				}
-
-				const { sourceDisplay, isSnippet } = tsEntry;
-				if (sourceDisplay) {
-					item.labelDetails = { description: ts.displayPartsToString(tsEntry.sourceDisplay) };
-				}
-
-				item.preselect = tsEntry.isRecommended;
-
-				let range: vscode.Range | ReturnType<typeof getRangeFromReplacementSpan> = getRangeFromReplacementSpan(tsEntry, document);
-				item.commitCharacters = getCommitCharacters(tsEntry, {
-					isNewIdentifierLocation: completionContext!.isNewIdentifierLocation,
-					isInValidCommitCharacterContext: isInValidCommitCharacterContext(document, position),
-					enableCallCompletions: true, // TODO: suggest.completeFunctionCalls
-				});
-				item.insertText = tsEntry.insertText;
-				item.insertTextFormat = isSnippet ? vscode.InsertTextFormat.Snippet : vscode.InsertTextFormat.PlainText;
-				item.filterText = getFilterText(tsEntry, wordRange, line, tsEntry.insertText);
-
-				if (completionContext!.isMemberCompletion && dotAccessorContext && !isSnippet) {
-					item.filterText = dotAccessorContext.text + (item.insertText || item.label);
-					if (!range) {
-						const replacementRange = wordRange;
-						if (replacementRange) {
-							range = {
-								inserting: dotAccessorContext.range,
-								replacing: rangeUnion(dotAccessorContext.range, replacementRange),
-							};
-						} else {
-							range = dotAccessorContext.range;
-						}
-						item.insertText = item.filterText;
-					}
-				}
-
-				handleKindModifiers(item, tsEntry);
-
-				if (!range && wordRange) {
-					range = {
-						inserting: vscode.Range.create(wordRange.start, position),
-						replacing: wordRange,
-					};
-				}
-
-				if (range) {
-					if (vscode.Range.is(range)) {
-						item.textEdit = vscode.TextEdit.replace(range, item.insertText || item.label);
-					}
-					else {
-						item.textEdit = vscode.InsertReplaceEdit.create(item.insertText || item.label, range.inserting, range.replacing);
-					}
-				}
-
-				const data: Data = {
-					uri,
-					fileName,
-					offset,
-					originalItem: tsEntry,
-				};
-
-				return {
-					...item,
-					data: data,
-				};
-			});
+			.map(tsEntry => toVScodeItem(tsEntry, document));
 
 		return {
 			isIncomplete: !!completionContext.isIncomplete,
 			items: entries,
 		};
+
+		function toVScodeItem(tsEntry: ts.CompletionEntry, document: TextDocument) {
+
+			const item = vscode.CompletionItem.create(tsEntry.name);
+
+			item.kind = convertKind(tsEntry.kind);
+
+			if (tsEntry.source && tsEntry.hasAction) {
+				// De-prioritize auto-imports
+				// https://github.com/microsoft/vscode/issues/40311
+				item.sortText = '\uffff' + tsEntry.sortText;
+
+			} else {
+				item.sortText = tsEntry.sortText;
+			}
+
+			const { sourceDisplay, isSnippet } = tsEntry;
+			if (sourceDisplay) {
+				item.labelDetails = { description: ts.displayPartsToString(tsEntry.sourceDisplay) };
+			}
+
+			item.preselect = tsEntry.isRecommended;
+
+			let range: vscode.Range | ReturnType<typeof getRangeFromReplacementSpan> = getRangeFromReplacementSpan(tsEntry, document);
+			item.commitCharacters = getCommitCharacters(tsEntry, {
+				isNewIdentifierLocation: completionContext!.isNewIdentifierLocation,
+				isInValidCommitCharacterContext: isInValidCommitCharacterContext(document, position),
+				enableCallCompletions: true, // TODO: suggest.completeFunctionCalls
+			});
+			item.insertText = tsEntry.insertText;
+			item.insertTextFormat = isSnippet ? vscode.InsertTextFormat.Snippet : vscode.InsertTextFormat.PlainText;
+			item.filterText = getFilterText(tsEntry, wordRange, line, tsEntry.insertText);
+
+			if (completionContext!.isMemberCompletion && dotAccessorContext && !isSnippet) {
+				item.filterText = dotAccessorContext.text + (item.insertText || item.label);
+				if (!range) {
+					const replacementRange = wordRange;
+					if (replacementRange) {
+						range = {
+							inserting: dotAccessorContext.range,
+							replacing: rangeUnion(dotAccessorContext.range, replacementRange),
+						};
+					} else {
+						range = dotAccessorContext.range;
+					}
+					item.insertText = item.filterText;
+				}
+			}
+
+			handleKindModifiers(item, tsEntry);
+
+			if (!range && wordRange) {
+				range = {
+					inserting: vscode.Range.create(wordRange.start, position),
+					replacing: wordRange,
+				};
+			}
+
+			if (range) {
+				if (vscode.Range.is(range)) {
+					item.textEdit = vscode.TextEdit.replace(range, item.insertText || item.label);
+				}
+				else {
+					item.textEdit = vscode.InsertReplaceEdit.create(item.insertText || item.label, range.inserting, range.replacing);
+				}
+			}
+
+			return {
+				...item,
+				data: {
+					uri,
+					fileName,
+					offset,
+					originalItem: tsEntry,
+				} satisfies Data,
+			};
+		}
 
 		function getDotAccessorContext(tsVersion: string, document: TextDocument) {
 			let dotAccessorContext: {

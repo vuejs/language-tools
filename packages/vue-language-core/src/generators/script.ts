@@ -1,17 +1,18 @@
 import { CodeGen, mergeCodeGen } from '@volar/code-gen';
+import type { TeleportMappingData, TextRange } from '@volar/language-core';
 import * as SourceMaps from '@volar/source-map';
 import { hyphenate } from '@vue/shared';
 import { posix as path } from 'path';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import type * as templateGen from '../generators/template';
 import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { collectCssVars, collectStyleCssClasses } from '../plugins/vue-tsx';
-import { Sfc } from '../sourceFile';
-import type { EmbeddedFileMappingData, TeleportMappingData } from '../types';
-import { TextRange, VueCompilerOptions } from '../types';
+import { Sfc } from '../types';
+import type { ResolvedVueCompilerOptions } from '../types';
 import { getSlotsPropertyName, getVueLibraryName } from '../utils/shared';
-import { SearchTexts } from '../utils/string';
 import { walkInterpolationFragment } from '../utils/transform';
+import { EmbeddedFileMappingData } from '../sourceFile';
 
 /**
  * TODO: rewrite this
@@ -28,7 +29,7 @@ export function generate(
 	cssScopedClasses: ReturnType<typeof collectStyleCssClasses>,
 	htmlGen: ReturnType<typeof templateGen['generate']> | undefined,
 	compilerOptions: ts.CompilerOptions,
-	vueCompilerOptions: VueCompilerOptions,
+	vueCompilerOptions: ResolvedVueCompilerOptions,
 	codeGen = new CodeGen<EmbeddedFileMappingData>(),
 	teleports: SourceMaps.Mapping<TeleportMappingData>[] = [],
 ) {
@@ -179,7 +180,7 @@ export function generate(
 			{
 				vueTag: 'scriptSrc',
 				capabilities: {
-					basic: true,
+					hover: true,
 					references: true,
 					definitions: true,
 					rename: true,
@@ -205,17 +206,13 @@ export function generate(
 			if (scriptRanges?.exportDefault) {
 				isExportRawObject = sfc.script.content.substring(scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end).startsWith('{');
 			}
-			const wrapMode = getImplicitWrapComponentOptionsMode(lang);
-			if (isExportRawObject && wrapMode && scriptRanges?.exportDefault) {
+			const warpperEnabled = vueCompilerOptions.experimentalComponentOptionsWrapperEnable === true
+				|| (vueCompilerOptions.experimentalComponentOptionsWrapperEnable === 'onlyJs' && (lang === 'js' || lang === 'jsx'));
+			if (isExportRawObject && warpperEnabled && scriptRanges?.exportDefault) {
 				addVirtualCode('script', 0, scriptRanges.exportDefault.expression.start);
-				if (wrapMode === 'defineComponent') {
-					codeGen.addText(`(await import('${vueLibName}')).defineComponent(`);
-				}
-				else {
-					codeGen.addText(`(await import('vue')).default.extend(`);
-				}
+				codeGen.addText(vueCompilerOptions.experimentalComponentOptionsWrapper[0]);
 				addVirtualCode('script', scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end);
-				codeGen.addText(`)`);
+				codeGen.addText(vueCompilerOptions.experimentalComponentOptionsWrapper[1]);
 				addVirtualCode('script', scriptRanges.exportDefault.expression.end, sfc.script.content.length);
 			}
 			else {
@@ -238,7 +235,7 @@ export function generate(
 			{
 				vueTag: vueTag,
 				capabilities: {
-					basic: true,
+					hover: true,
 					references: true,
 					definitions: true,
 					rename: true,
@@ -277,7 +274,7 @@ export function generate(
 			{
 				vueTag: 'scriptSetup',
 				capabilities: {
-					basic: true,
+					hover: true,
 					references: true,
 					definitions: true,
 					diagnostic: true,
@@ -314,7 +311,7 @@ export function generate(
 				{
 					vueTag: 'scriptSetup',
 					capabilities: {
-						basic: true,
+						hover: true,
 						references: true,
 						definitions: true,
 						diagnostic: true,
@@ -454,13 +451,12 @@ export function generate(
 	}
 	function writeTemplate() {
 
-		if (lang === 'jsx' || lang === 'tsx') {
+		if (!vueCompilerOptions.skipTemplateCodegen) {
 
 			writeExportOptions();
 			writeConstNameOption();
 
 			codeGen.addText(`function __VLS_template() {\n`);
-			codeGen.addText(`import * as __VLS_types from './__VLS_types.js'; import('./__VLS_types.js');\n`);
 
 			const templateGened = writeTemplateContext();
 
@@ -537,19 +533,15 @@ export function generate(
 						mappedRange: templateSideRange,
 						mode: SourceMaps.Mode.Offset,
 						data: {
-							toSource: {
-								capabilities: {
-									definitions: true,
-									references: true,
-									rename: true,
-								},
+							toSourceCapabilities: {
+								definitions: true,
+								references: true,
+								rename: true,
 							},
-							toTarget: {
-								capabilities: {
-									definitions: true,
-									references: true,
-									rename: true,
-								},
+							toGenedCapabilities: {
+								definitions: true,
+								references: true,
+								rename: true,
 							},
 						},
 					});
@@ -568,13 +560,12 @@ export function generate(
 	}
 	function writeExportOptions() {
 		codeGen.addText(`\n`);
-		codeGen.addText(`const __VLS_options = {\n`);
-		if (sfc.script && scriptRanges?.exportDefault?.args) {
-			const args = scriptRanges.exportDefault.args;
-			codeGen.addText(`...(`);
+		codeGen.addText(`const __VLS_componentsOption = `);
+		if (sfc.script && scriptRanges?.exportDefault?.componentsOption) {
+			const componentsOption = scriptRanges.exportDefault.componentsOption;
 			codeGen.addCode2(
-				sfc.script.content.substring(args.start, args.end),
-				args.start,
+				sfc.script.content.substring(componentsOption.start, componentsOption.end),
+				componentsOption.start,
 				{
 					vueTag: 'script',
 					capabilities: {
@@ -583,17 +574,19 @@ export function generate(
 					},
 				},
 			);
-			codeGen.addText(`),\n`);
 		}
-		codeGen.addText(`};\n`);
+		else {
+			codeGen.addText('{}');
+		}
+		codeGen.addText(`;\n`);
 	}
 	function writeConstNameOption() {
 		codeGen.addText(`\n`);
-		if (sfc.script && scriptRanges?.exportDefault?.args) {
-			const args = scriptRanges.exportDefault.args;
-			codeGen.addText(`const __VLS_name = (await import('./__VLS_types.js')).getNameOption(`);
-			codeGen.addText(`${sfc.script.content.substring(args.start, args.end)} as const`);
-			codeGen.addText(`);\n`);
+		if (sfc.script && scriptRanges?.exportDefault?.nameOption) {
+			const nameOption = scriptRanges.exportDefault.nameOption;
+			codeGen.addText(`const __VLS_name = `);
+			codeGen.addText(`${sfc.script.content.substring(nameOption.start, nameOption.end)} as const`);
+			codeGen.addText(`;\n`);
 		}
 		else if (sfc.scriptSetup) {
 			codeGen.addText(`let __VLS_name!: '${path.basename(fileName.substring(0, fileName.lastIndexOf('.')))}';\n`);
@@ -607,11 +600,11 @@ export function generate(
 		const useGlobalThisTypeInCtx = fileName.endsWith('.html');
 
 		codeGen.addText(`let __VLS_ctx!: ${useGlobalThisTypeInCtx ? 'typeof globalThis &' : ''}`);
-		codeGen.addText(`__VLS_types.PickNotAny<__VLS_Ctx, {}> & `);
+		codeGen.addText(`import('./__VLS_types.js').PickNotAny<__VLS_Ctx, {}> & `);
 		if (sfc.scriptSetup) {
-			codeGen.addText(`InstanceType<__VLS_types.PickNotAny<typeof __VLS_Component, new () => {}>> & `);
+			codeGen.addText(`InstanceType<import('./__VLS_types.js').PickNotAny<typeof __VLS_Component, new () => {}>> & `);
 		}
-		codeGen.addText(`InstanceType<__VLS_types.PickNotAny<typeof __VLS_component, new () => {}>> & {\n`);
+		codeGen.addText(`InstanceType<import('./__VLS_types.js').PickNotAny<typeof __VLS_component, new () => {}>> & {\n`);
 
 		/* CSS Module */
 		for (const cssModule of cssModuleClasses) {
@@ -629,16 +622,11 @@ export function generate(
 		}
 		codeGen.addText(`};\n`);
 
-		codeGen.addText(`let __VLS_vmUnwrap!: typeof __VLS_options & { components: { } };\n`);
-
 		/* Components */
 		codeGen.addText('/* Components */\n');
-		codeGen.addText('let __VLS_otherComponents!: NonNullable<typeof __VLS_component extends { components: infer C } ? C : {}> & __VLS_types.GlobalComponents & typeof __VLS_vmUnwrap.components & __VLS_types.PickComponents<typeof __VLS_ctx>;\n');
-		codeGen.addText(`let __VLS_selfComponent!: __VLS_types.SelfComponent<typeof __VLS_name, typeof __VLS_component & (new () => { ${getSlotsPropertyName(vueCompilerOptions.target ?? 3)}: typeof __VLS_slots })>;\n`);
-		codeGen.addText('let __VLS_components!: typeof __VLS_otherComponents & Omit<typeof __VLS_selfComponent, keyof typeof __VLS_otherComponents>;\n');
-
-		codeGen.addText(`__VLS_components['${SearchTexts.Components}'];\n`);
-		codeGen.addText(`({} as __VLS_types.GlobalAttrs)['${SearchTexts.GlobalAttrs}'];\n`);
+		codeGen.addText(`let __VLS_otherComponents!: NonNullable<typeof __VLS_component extends { components: infer C } ? C : {}> & import('./__VLS_types.js').GlobalComponents & typeof __VLS_componentsOption & typeof __VLS_ctx;\n`);
+		codeGen.addText(`let __VLS_selfComponent!: import('./__VLS_types.js').SelfComponent<typeof __VLS_name, typeof __VLS_component & (new () => { ${getSlotsPropertyName(vueCompilerOptions.target ?? 3)}: typeof __VLS_slots })>;\n`);
+		codeGen.addText(`let __VLS_components!: typeof __VLS_otherComponents & Omit<typeof __VLS_selfComponent, keyof typeof __VLS_otherComponents>;\n`);
 
 		/* Style Scoped */
 		codeGen.addText('/* Style Scoped */\n');
@@ -695,11 +683,12 @@ export function generate(
 					vueTagIndex: styleIndex,
 					capabilities: {
 						references: true,
-						rename: true,
 						referencesCodeLens: true,
+						rename: {
+							normalize: beforeCssRename,
+							apply: doCssRename,
+						},
 					},
-					normalizeNewName: beforeCssRename,
-					applyNewName: doCssRename,
 				},
 			});
 			codeGen.addText(`'${className}'${optional ? '?' : ''}: ${propertyType}`);
@@ -731,7 +720,7 @@ export function generate(
 										capabilities: isJustForErrorMapping ? {
 											diagnostic: true,
 										} : {
-											basic: true,
+											hover: true,
 											references: true,
 											definitions: true,
 											diagnostic: true,
@@ -785,35 +774,6 @@ export function generate(
 		}
 
 		return usageVars;
-	}
-	function getImplicitWrapComponentOptionsMode(lang: string) {
-
-		let shimComponentOptionsMode: 'defineComponent' | 'Vue.extend' | false = false;
-
-		if (
-			vueCompilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend === 'onlyJs'
-				? lang === 'js' || lang === 'jsx'
-				: !!vueCompilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend
-		) {
-			shimComponentOptionsMode = 'Vue.extend';
-		}
-		if (
-			vueCompilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent === 'onlyJs'
-				? lang === 'js' || lang === 'jsx'
-				: !!vueCompilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent
-		) {
-			shimComponentOptionsMode = 'defineComponent';
-		}
-
-		// true override 'onlyJs'
-		if (vueCompilerOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend === true) {
-			shimComponentOptionsMode = 'Vue.extend';
-		}
-		if (vueCompilerOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent === true) {
-			shimComponentOptionsMode = 'defineComponent';
-		}
-
-		return shimComponentOptionsMode;
 	}
 }
 

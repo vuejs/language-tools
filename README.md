@@ -15,15 +15,10 @@
 - [vite-plugin-vue-component-preview](https://github.com/johnsoncodehk/vite-plugin-vue-component-preview) \
 *Vite plugin for support Vue component preview view with `Vue Language Features`*
 
-### Alpine.js
-
-- [Alpine Language Features](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-alpine-language-features) (Experimental) \
-*Alpine.js language support extension for VSCode*
-
 ### Common
 
 - [volar-plugins](https://github.com/johnsoncodehk/volar-plugins) \
-*Common plugins to change language features behavior for `Vue Language Features` and `Alpine Language Features` extensions*
+*Common plugins to change language server behavior*
 
 Discord: https://discord.gg/5bnSSSSBbK
 
@@ -55,11 +50,6 @@ Discord: https://discord.gg/5bnSSSSBbK
 
 [Kingwl/monaco-volar](https://github.com/Kingwl/monaco-volar) \
 *Vue language support for Monaco on Browser*
-
-### Alpine.js
-
-[yaegassy/coc-volar-alpinejs](https://github.com/yaegassy/coc-volar-alpinejs) ⚡ 🤝 \
-*Alpine.js language client for coc.nvim*
 
 \* ⚡ support [multiple servers](https://github.com/johnsoncodehk/volar/discussions/393#discussioncomment-1213736) \
 \* 🤝 support [take over mode](https://github.com/johnsoncodehk/volar/discussions/471) \

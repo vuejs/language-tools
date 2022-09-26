@@ -1,6 +1,6 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { posix as path } from 'path';
-import type { VueCompilerOptions, _VueCompilerOptions } from '../types';
+import * as path from 'path';
+import type { VueCompilerOptions, ResolvedVueCompilerOptions } from '../types';
 
 export type ParsedCommandLine = ts.ParsedCommandLine & {
 	vueOptions: VueCompilerOptions;
@@ -27,7 +27,7 @@ export function createParsedCommandLine(
 ): ParsedCommandLine {
 
 	const config = ts.readJsonConfigFile(tsConfigPath, parseConfigHost.readFile);
-	const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(tsConfigPath), {}, path.basename(tsConfigPath));
+	const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(tsConfigPath), {}, tsConfigPath);
 	// fix https://github.com/johnsoncodehk/volar/issues/1786
 	// https://github.com/microsoft/TypeScript/issues/30457
 	// patching ts server broke with outDir + rootDir + composite/incremental
@@ -65,33 +65,39 @@ function createParsedCommandLineBase(
 		...content,
 		vueOptions: {
 			...baseVueOptions,
-			...resolveVueCompilerOptions(content.raw.vueCompilerOptions ?? {}, folder),
+			...resolveVueCompilerOptionsWorker(content.raw.vueCompilerOptions ?? {}, folder),
 		},
 	};
 }
 
-export function getVueCompilerOptions(vueOptions: VueCompilerOptions): _VueCompilerOptions {
+export function resolveVueCompilerOptions(vueOptions: VueCompilerOptions): ResolvedVueCompilerOptions {
+	const target = vueOptions.target ?? 3;
 	return {
 		...vueOptions,
 
-		target: vueOptions.target ?? 3,
+		target,
+		jsxTemplates: vueOptions.jsxTemplates ?? false,
 		strictTemplates: vueOptions.strictTemplates ?? false,
+		skipTemplateCodegen: vueOptions.skipTemplateCodegen ?? false,
 		plugins: vueOptions.plugins ?? [],
 
 		// experimental
+		experimentalComponentOptionsWrapper: vueOptions.experimentalComponentOptionsWrapper ?? (
+			target >= 2.7
+				? [`(await import('vue')).defineComponent(`, `)`]
+				: [`(await import('vue')).default.extend(`, `)`]
+		),
+		experimentalComponentOptionsWrapperEnable: vueOptions.experimentalComponentOptionsWrapperEnable ?? 'onlyJs',
 		experimentalRuntimeMode: vueOptions.experimentalRuntimeMode ?? 'runtime-dom',
-		experimentalImplicitWrapComponentOptionsWithDefineComponent: vueOptions.experimentalImplicitWrapComponentOptionsWithDefineComponent ?? 'onlyJs',
-		experimentalImplicitWrapComponentOptionsWithVue2Extend: vueOptions.experimentalImplicitWrapComponentOptionsWithVue2Extend ?? 'onlyJs',
 		experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup: vueOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup ?? 'onlyJs',
 		experimentalTemplateCompilerOptions: vueOptions.experimentalTemplateCompilerOptions ?? {},
 		experimentalTemplateCompilerOptionsRequirePath: vueOptions.experimentalTemplateCompilerOptionsRequirePath ?? undefined,
-		experimentalDisableTemplateSupport: vueOptions.experimentalDisableTemplateSupport ?? false,
 		experimentalResolveStyleCssClasses: vueOptions.experimentalResolveStyleCssClasses ?? 'scoped',
 		experimentalAllowTypeNarrowingInInlineHandlers: vueOptions.experimentalAllowTypeNarrowingInInlineHandlers ?? false,
 	};
 }
 
-function resolveVueCompilerOptions(rawOptions: {
+function resolveVueCompilerOptionsWorker(rawOptions: {
 	[key: string]: any,
 	experimentalTemplateCompilerOptionsRequirePath?: string,
 }, rootPath: string) {

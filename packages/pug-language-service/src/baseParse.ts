@@ -36,7 +36,7 @@ export function baseParse(pugCode: string) {
 		for (const emptyLineEnd of emptyLineEnds) {
 			codeGen.addText('<');
 			codeGen.addCode(
-				'x__VLS_',
+				'x',
 				{
 					start: emptyLineEnd,
 					end: emptyLineEnd,
@@ -119,14 +119,9 @@ export function baseParse(pugCode: string) {
 		}
 	}
 	function addStartTag(node: TagNode, selfClosing: boolean) {
-		const _range = getDocRange(node.line, node.column, 0);
 		codeGen.addCode(
 			'',
-			{
-				// -1 for monkey fix https://github.com/johnsoncodehk/volar/issues/1723
-				start: _range.start - 1,
-				end: _range.end - 1,
-			},
+			getDocRange(node.line, node.column, 0),
 			SourceMap.Mode.Totally,
 			undefined,
 		);

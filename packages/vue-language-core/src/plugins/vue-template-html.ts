@@ -1,6 +1,5 @@
-import { VueLanguagePlugin } from '../sourceFile';
-import * as CompilerDOM from '@vue/compiler-dom';
-import * as CompilerVue2 from '../utils/vue2TemplateCompiler';
+import { VueLanguagePlugin } from '../types';
+import type * as CompilerDOM from '@vue/compiler-dom';
 
 interface Loc {
 	start: { offset: number; };
@@ -8,12 +7,12 @@ interface Loc {
 	source: string;
 }
 interface ElementNameNode {
-	type: 'self-closeing-tag-name';
+	type: 'self-closing-tag-name';
 	loc: Loc;
 };
 type Node = CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.ExpressionNode | CompilerDOM.AttributeNode | CompilerDOM.DirectiveNode | ElementNameNode;
 
-const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
+const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions }) => {
 
 	return {
 
@@ -21,7 +20,7 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 
 			if (lang === 'html') {
 
-				const compiler = vueCompilerOptions.target < 3 ? CompilerVue2 : CompilerDOM;
+				const compiler = modules['@vue/compiler-dom'];
 
 				return compiler.compile(template, {
 					...options,
@@ -32,6 +31,8 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 
 		updateSFCTemplate(oldResult, change) {
 
+			const CompilerDOM = modules['@vue/compiler-dom'];
+
 			const lengthDiff = change.newText.length - (change.end - change.start);
 			let hitNodes: Node[] = [];
 
@@ -40,7 +41,7 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 				const hitNode = hitNodes[0];
 				if (
 					hitNode.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-					|| hitNode.type === 'self-closeing-tag-name'
+					|| hitNode.type === 'self-closing-tag-name'
 				) {
 					return oldResult;
 				}
@@ -64,7 +65,7 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 					else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 						if (node.isSelfClosing) {
 							const elementNameNode: ElementNameNode = {
-								type: 'self-closeing-tag-name',
+								type: 'self-closing-tag-name',
 								loc: {
 									start: { offset: node.loc.start.offset + 1 },
 									end: { offset: node.loc.start.offset + 1 + node.tag.length },
@@ -164,6 +165,9 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 						}
 					}
 					else if (node.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+						if (withinChangeRange(node.loc) && node.isStatic) { // slot name
+							return false;
+						}
 						node.content = node.loc.source;
 					}
 

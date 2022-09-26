@@ -1,5 +1,153 @@
 # Changelog
 
+## 1.0.0-beta.0 (2022/9/25)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- perf: reduce input files to improve performance for large project
+- fix: template incremental update not working
+
+## 1.0.0-alpha.5 (2022/9/25)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- fix: language server crash on diagnosis `<style lang="postcss">` ([#1902](https://github.com/johnsoncodehk/volar/issues/1902))
+- fix: template tags selection range incorrect with definition
+
+## 1.0.0-alpha.4 (2022/9/24)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- fix: iterating `Symbol.Iterator` is not correctly inferred in `v-for` ([#1892](https://github.com/johnsoncodehk/volar/issues/1892))
+- fix: false positive error on `<CustomComponent @click.stop />` ([#464](https://github.com/johnsoncodehk/volar/issues/464#issuecomment-1159303260))
+- perf: improve for large template memory usage
+- perf: improve for monorepo project memory usage
+
+**Breaking changes**
+
+- vueCompilerOptions property `experimentalDisableTemplateSupport` renamed to `skipTemplateCodegen`
+
+## 1.0.0-alpha.3 (2022/9/21)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- fix: don't ignore `@vue/compiler-dom` compile errors for vue2 templates
+- fix: cannot start language server with `@volar/vue-language-server` since v1.0.0-alpha.0 ([#1888](https://github.com/johnsoncodehk/volar/issues/1888))
+
+## 1.0.0-alpha.2 (2022/9/21)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- feat: add less support for initial indent ([#1883](https://github.com/johnsoncodehk/volar/issues/1883))
+- feat: use `vue-template-compiler` instead of `@vue/compiler-dom` to collect template errors for target < 3
+- fix: moving components doesn't trigger import updates ([#1884](https://github.com/johnsoncodehk/volar/issues/1884))
+
+## 1.0.0-alpha.1 (2022/9/17)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- fix: `vue-tsc` depends version resolve failed ([#1881](https://github.com/johnsoncodehk/volar/issues/1881))
+
+## 1.0.0-alpha.0 (2022/9/16)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- feat: framework agnostic language server ([#1859](https://github.com/johnsoncodehk/volar/issues/1859))
+- feat: improve `.value` auto insert invalid location filting
+- feat: add `vueCompilerOptions.jsxTemplates` for more fault tolerant template ([#1865](https://github.com/johnsoncodehk/volar/issues/1865))
+- feat: add `volar.vueserver.petiteVue.processHtmlFile`, `volar.vueserver.vitePress.processMdFile` to config language support for petite-vue, VitePress ([#1878](https://github.com/johnsoncodehk/volar/issues/1878))
+- fix: template context types broken with `"moduleResolution": "nodenext"` ([#1862](https://github.com/johnsoncodehk/volar/issues/1862))
+- fix: language server throw when use `lang="js"` without `"allowJs": true`
+- fix: auto `.value` failed if position immediately after another property `.value` access expression ([#1853](https://github.com/johnsoncodehk/volar/issues/1853))
+- fix: language onEnterRules, increaseIndentPattern incorrect in `<script>`, `<style>` ([#1847](https://github.com/johnsoncodehk/volar/issues/1847))
+- fix: source-map vue version inconsistent ([#1874](https://github.com/johnsoncodehk/volar/issues/1874))
+- fix: fix pug tag offset ([#1783](https://github.com/johnsoncodehk/volar/issues/1783))
+
+**Breaking changes**
+
+- Remove Alpine extension ([#1858](https://github.com/johnsoncodehk/volar/issues/1858))
+- No built-in support for pug template anymore, if you have use pug with vue-tsc before, please follow below changes:
+
+`package.json`
+```
+{
+	"devDependencies": {
+-		"@volar/pug-language-service": "latest"
++		"@volar/vue-language-plugin-pug": "latest"
+	}
+}
+```
+
+`tsconfig.json`
+```
+{
+	"vueCompilerOptions": {
+		"plugins": ["@volar/vue-language-plugin-pug"]
+	}
+}
+```
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
+
+## 0.40.13 (2022/9/8)
+
+- fix: cycle reactive reference lead to memory leak
+
+## 0.40.12 (2022/9/8)
+
+- perf: fix incremental template compile not working
+- perf: cache path resolve result on `getScriptVersion`
+- perf: faster code mapping range transform
+
+## 0.40.11 (2022/9/8)
+
+- feat: support for typescript class/object literal method completions ([#1835](https://github.com/johnsoncodehk/volar/issues/1835))
+- fix: langauge server crash if client did not support `onDidChangeWorkspaceFolders` ([#1834](https://github.com/johnsoncodehk/volar/issues/1834))
+- fix: "Format Selection" embedded range incorrect with initialIndentBracket
+- fix: formatting break document with `editor.formatOnPaste` enabled ([#1840](https://github.com/johnsoncodehk/volar/issues/1840)) ([#1841](https://github.com/johnsoncodehk/volar/issues/1841)) ([#1842](https://github.com/johnsoncodehk/volar/issues/1842)) ([#1843](https://github.com/johnsoncodehk/volar/issues/1843)) ([#1835](https://github.com/johnsoncodehk/volar/issues/1835))
+
+## 0.40.10 (2022/9/7)
+
+- feat: improve "Format Selection" for html content
+- feat: uniquely scope attribute shorthands ([#1812](https://github.com/johnsoncodehk/volar/issues/1812))
+- feat: add server name, version infos to LSP initialize response
+- fix: "Format Selection" should not format whole language block ([#1833](https://github.com/johnsoncodehk/volar/issues/1833))
+- fix: formatting break document content randomly ([#1827](https://github.com/johnsoncodehk/volar/issues/1827)) ([#1832](https://github.com/johnsoncodehk/volar/issues/1832))
+- fix: pug syntax highlighting confuses element id with interpolation ([#1826](https://github.com/johnsoncodehk/volar/issues/1826))
+- fix: don't cache IDE settings if IDE do not support config change notification
+
+## 0.40.9 (2022/9/6)
+
+- feat: improve vue document formatting
+- fix: script format loss indent ([#1823](https://github.com/johnsoncodehk/volar/issues/1823))
+
+## 0.40.8 (2022/9/6)
+
+- feat: add `volar.format.initialIndent` option for format `<style>`, `<script>` with initial indent ([#1806](https://github.com/johnsoncodehk/volar/issues/1806))
+- perf: cache `ts.ScriptSnapshot.fromString` result on formatting
+- fix: volar.config.js not working since v0.40.7 ([#1819](https://github.com/johnsoncodehk/volar/issues/1819))
+- fix: should not incremental update if SFC parse failed (https://github.com/johnsoncodehk/volar/issues/1807#issuecomment-1236857296)
+
+## 0.40.7 (2022/9/5)
+
+- feat: support multiple workspaces for document features
+- feat: add `initializationOptions.completion.ignoreTriggerCharacters` for LSP-Volar (https://github.com/sublimelsp/LSP-volar/issues/114)
+- feat: add `vueCompilerOptions.experimentalComponentOptionsWrapper` option for custom component options warpper ([#1517](https://github.com/johnsoncodehk/volar/issues/1517))
+- fix: add missing surrounding pair "`" ([#1659](https://github.com/johnsoncodehk/volar/issues/1659))
+- fix: formatting edit range incorrect edge case ([#1814](https://github.com/johnsoncodehk/volar/issues/1814))
+- fix: typescript onType format do not respect `typescript.format.enable`
+- fix: document features stop working for script block ([#1813](https://github.com/johnsoncodehk/volar/issues/1813))
+- fix: pug formatter extra spaces in `{{ }}` ([#1784](https://github.com/johnsoncodehk/volar/issues/1784))
+- fix: template incremental parser broken when typing slot name
+
+**Breaking changes**
+
+- vueCompilerOptions properties `experimentalImplicitWrapComponentOptionsWithDefineComponent`, `experimentalImplicitWrapComponentOptionsWithVue2Extend` replaced by `experimentalComponentOptionsWrapper`.
+
 ## 0.40.6 (2022/9/4)
 
 - feat: support language features for Web IDE ([#612](https://github.com/johnsoncodehk/volar/issues/612))
@@ -24,12 +172,6 @@
 - feat: respect VSCode `*.format.enable` settings
 - fix: template should not compile if content no change
 - fix: component preview not working on windows ([#1737](https://github.com/johnsoncodehk/volar/issues/1737))
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 0.40.3 (2022/8/29)
 

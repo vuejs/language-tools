@@ -1,0 +1,31 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"outDir": "out",
+		"rootDir": "src",
+	},
+	"include": [
+		"src"
+	],
+	"exclude": [
+		"node_modules",
+		".vscode-test"
+	],
+	"references": [
+		{
+			"path": "../language-core/tsconfig.build.json"
+		},
+		{
+			"path": "../shared/tsconfig.build.json"
+		},
+		{
+			"path": "../source-map/tsconfig.build.json"
+		},
+		{
+			"path": "../transforms/tsconfig.build.json"
+		},
+		{
+			"path": "../typescript-faster/tsconfig.build.json"
+		},
+	],
+}

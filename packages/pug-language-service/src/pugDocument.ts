@@ -1,4 +1,4 @@
-import { SourceMapBase, Mapping } from '@volar/source-map';
+import { SourceMapBase } from '@volar/source-map';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as html from 'vscode-html-languageservice';
 import { baseParse } from './baseParse';
@@ -15,7 +15,7 @@ export function register(htmlLs: html.LanguageService) {
 		const sourceMap = new SourceMap(
 			parsed.pugTextDocument,
 			htmlTextDocument,
-			parsed.sourceMap.mappings,
+			parsed.sourceMap,
 		);
 		const htmlDocument = htmlLs.parseHTMLDocument(htmlTextDocument);
 
@@ -31,14 +31,13 @@ export function register(htmlLs: html.LanguageService) {
 }
 
 // TODO: reuse from vueDocuments.ts
-export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
+export class SourceMap<Data = undefined> {
 
 	constructor(
 		public sourceDocument: TextDocument,
 		public mappedDocument: TextDocument,
-		public _mappings?: Mapping<Data>[],
+		public base: SourceMapBase<Data> = new SourceMapBase(),
 	) {
-		super(_mappings);
 	}
 
 	public getSourceRange<T extends number | vscode.Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
@@ -68,7 +67,7 @@ export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
 		const startOffset = startIsNumber ? start : fromDoc.offsetAt(start);
 		const endOffset = endIsNumber ? end : fromDoc.offsetAt(end);
 
-		for (const mapped of super.getRanges(startOffset, endOffset, sourceToTarget, filter)) {
+		for (const mapped of this.base.getRanges(startOffset, endOffset, sourceToTarget, filter)) {
 			yield getMapped(mapped);
 		}
 

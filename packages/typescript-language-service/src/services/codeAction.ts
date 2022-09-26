@@ -4,8 +4,10 @@ import * as shared from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { fileTextChangesToWorkspaceEdit } from './rename';
 import * as fixNames from '../utils/fixNames';
-import type { Settings } from '../';
+import type { GetConfiguration } from '../';
 import { URI } from 'vscode-uri';
+import { getFormatCodeSettings } from '../configs/getFormatCodeSettings';
+import { getUserPreferences } from '../configs/getUserPreferences';
 
 export interface FixAllData {
 	type: 'fixAll',
@@ -34,7 +36,7 @@ export function register(
 	rootUri: URI,
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
-	settings: Settings,
+	getConfiguration: GetConfiguration,
 ) {
 	return async (uri: string, range: vscode.Range, context: vscode.CodeActionContext) => {
 
@@ -42,8 +44,8 @@ export function register(
 		if (!document) return;
 
 		const [formatOptions, preferences] = await Promise.all([
-			settings.getFormatOptions?.(document.uri) ?? {},
-			settings.getPreferences?.(document.uri) ?? {},
+			getFormatCodeSettings(getConfiguration, document.uri),
+			getUserPreferences(getConfiguration, document.uri),
 		]);
 
 		const fileName = shared.getPathOfUri(document.uri);
@@ -92,18 +94,17 @@ export function register(
 
 		if (matchOnlyKind(vscode.CodeActionKind.SourceOrganizeImports)) {
 			const action = vscode.CodeAction.create('Organize Imports', vscode.CodeActionKind.SourceOrganizeImports);
-			const data: OrganizeImportsData = {
+			action.data = {
 				type: 'organizeImports',
 				uri,
 				fileName,
-			};
-			action.data = data;
+			} satisfies OrganizeImportsData;
 			result.push(action);
 		}
 
 		if (matchOnlyKind(`${vscode.CodeActionKind.SourceFixAll}.ts`)) {
 			const action = vscode.CodeAction.create('Fix All', vscode.CodeActionKind.SourceFixAll);
-			const data: FixAllData = {
+			action.data = {
 				uri,
 				type: 'fixAll',
 				fileName,
@@ -112,14 +113,13 @@ export function register(
 					fixNames.awaitInSyncFunction,
 					fixNames.unreachableCode,
 				],
-			};
-			action.data = data;
+			} satisfies FixAllData;
 			result.push(action);
 		}
 
 		if (matchOnlyKind(`${vscode.CodeActionKind.Source}.removeUnused.ts`)) {
 			const action = vscode.CodeAction.create('Remove all unused code', vscode.CodeActionKind.SourceFixAll);
-			const data: FixAllData = {
+			action.data = {
 				uri,
 				type: 'fixAll',
 				fileName,
@@ -132,14 +132,13 @@ export function register(
 					'unusedIdentifier_delete',
 					'unusedIdentifier_infer',
 				],
-			};
-			action.data = data;
+			} satisfies FixAllData;
 			result.push(action);
 		}
 
 		if (matchOnlyKind(`${vscode.CodeActionKind.Source}.addMissingImports.ts`)) {
 			const action = vscode.CodeAction.create('Add all missing imports', vscode.CodeActionKind.SourceFixAll);
-			const data: FixAllData = {
+			action.data = {
 				uri,
 				type: 'fixAll',
 				fileName,
@@ -149,8 +148,7 @@ export function register(
 					// TODO: remove patching
 					'fixMissingImport',
 				],
-			};
-			action.data = data;
+			} satisfies FixAllData;
 			result.push(action);
 		}
 
@@ -200,13 +198,12 @@ export function register(
 					codeFix.fixAllDescription,
 					kind,
 				);
-				const data: FixAllData = {
+				fixAll.data = {
 					uri,
 					type: 'fixAll',
 					fileName,
 					fixIds: [codeFix.fixId],
-				};
-				fixAll.data = data;
+				} satisfies FixAllData;
 				fixAll.diagnostics = diagnostics;
 				codeActions.push(fixAll);
 			}
@@ -219,15 +216,14 @@ export function register(
 					action.description,
 					action.kind,
 				);
-				const data: RefactorData = {
+				codeAction.data = {
 					uri,
 					type: 'refactor',
 					fileName,
 					range: { pos: start, end: end },
 					refactorName: refactor.name,
 					actionName: action.name,
-				};
-				codeAction.data = data;
+				} satisfies RefactorData;
 				if (action.notApplicableReason) {
 					codeAction.disabled = { reason: action.notApplicableReason };
 				}

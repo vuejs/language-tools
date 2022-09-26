@@ -1,4 +1,10 @@
-import { VueLanguagePlugin } from '../sourceFile';
+import { VueLanguagePlugin } from '../types';
+
+const presetInitialIndentBrackets: Record<string, [string, string] | undefined> = {
+	css: ['{', '}'],
+	scss: ['{', '}'],
+	less: ['{', '}'],
+};
 
 const plugin: VueLanguagePlugin = () => {
 
@@ -22,7 +28,9 @@ const plugin: VueLanguagePlugin = () => {
 				embeddedFile.capabilities = {
 					diagnostics: true,
 					foldingRanges: true,
-					formatting: true,
+					formatting: {
+						initialIndentBracket: presetInitialIndentBrackets[style.lang],
+					},
 					documentSymbol: true,
 					codeActions: true,
 					inlayHints: true,
@@ -35,7 +43,7 @@ const plugin: VueLanguagePlugin = () => {
 						vueTag: style.tag,
 						vueTagIndex: index,
 						capabilities: {
-							basic: true,
+							hover: true,
 							references: true,
 							definitions: true,
 							diagnostic: true,
@@ -48,5 +56,5 @@ const plugin: VueLanguagePlugin = () => {
 			}
 		},
 	};
-}
+};
 export = plugin;

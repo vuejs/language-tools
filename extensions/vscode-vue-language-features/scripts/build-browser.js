@@ -49,7 +49,7 @@ require('esbuild').build({
 	entryPoints: process.argv.includes('--empty') ? {
 		server: './scripts/empty.js',
 	} : {
-		server: './node_modules/@volar/vue-language-server/out/browser.js',
+		server: './node_modules/@volar/vue-language-server/out/webServer.js',
 	},
 	bundle: true,
 	outdir: './dist/browser',
