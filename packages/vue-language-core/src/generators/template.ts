@@ -1377,7 +1377,7 @@ export function generate(
 			}
 		}
 		function getFormatBrackets(b: [string, string]) {
-			if (format === 'jsx') {
+			if (mode === 'props') {
 				return b;
 			}
 			else {
