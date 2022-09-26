@@ -102,7 +102,7 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 		else {
 			const tsPaths = getCurrentTsPaths(context);
 			const tsVersion = shared.getTypeScriptVersion(tsPaths.serverPath);
-			statusBar.text = 'TS ' + tsVersion;
+			statusBar.text = '' + tsVersion;
 			if (takeOverModeEnabled()) {
 				statusBar.text += ' (takeover)';
 			}
