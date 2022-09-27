@@ -37,25 +37,22 @@ const plugin: VueLanguagePlugin = () => {
 					inlayHints: true,
 				};
 				embeddedFile.isTsHostFile = false;
-				embeddedFile.codeGen.append(
-					customBlock.content,
+				embeddedFile.appendContentFromSFCBlock(
+					customBlock,
 					0,
+					customBlock.content.length,
 					{
-						vueTag: customBlock.tag,
-						vueTagIndex: index,
-						capabilities: {
-							hover: true,
-							references: true,
-							definitions: true,
-							diagnostic: true,
-							rename: true,
-							completion: true,
-							semanticTokens: true,
-						},
+						hover: true,
+						references: true,
+						definitions: true,
+						diagnostic: true,
+						rename: true,
+						completion: true,
+						semanticTokens: true,
 					},
 				);
 			}
 		},
 	};
-}
+};
 export = plugin;

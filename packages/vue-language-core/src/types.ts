@@ -48,6 +48,7 @@ export type VueLanguagePlugin = (ctx: {
 
 export interface SfcBlock {
 	tag: 'script' | 'scriptSetup' | 'template' | 'style' | 'customBlock',
+	index: number | undefined;
 	start: number;
 	end: number;
 	startTagEnd: number;

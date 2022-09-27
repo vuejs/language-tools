@@ -1,7 +1,7 @@
 import { DocumentCapabilities, EmbeddedFile, EmbeddedFileSourceMap, PositionCapabilities, SourceFile, Teleport, TeleportMappingData } from '@volar/language-core';
 import { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
 import { computed, ComputedRef, reactive, Ref, shallowRef as ref } from '@vue/reactivity';
-import { Sfc, VueLanguagePlugin } from './types';
+import { Sfc, VueLanguagePlugin, SfcBlock } from './types';
 
 import { CodeGen } from '@volar/code-gen';
 import { Mapping } from '@volar/source-map';
@@ -19,14 +19,31 @@ export interface Embedded {
 	teleport: Teleport | undefined,
 }
 
-export interface VueEmbeddedFile {
-	parentFileName?: string,
-	fileName: string,
-	isTsHostFile: boolean,
-	capabilities: DocumentCapabilities,
-	codeGen: CodeGen<EmbeddedFileMappingData>,
-	teleportMappings: Mapping<TeleportMappingData>[],
-};
+export class VueEmbeddedFile {
+
+	public parentFileName?: string;
+	public isTsHostFile: boolean = false;
+	public capabilities: DocumentCapabilities = {};
+	public teleportMappings: Mapping<TeleportMappingData>[] = [];
+	public _codeGen: CodeGen<EmbeddedFileMappingData> = new CodeGen();
+
+	constructor(public fileName: string) { }
+
+	public appendContent(text: string) {
+		this._codeGen.append(text);
+	}
+	public appendContentFromSFCBlock(source: SfcBlock, start: number, end: number, capabilities: PositionCapabilities) {
+		this._codeGen.append(
+			source.content.substring(start, end),
+			start,
+			{
+				vueTag: source.tag,
+				vueTagIndex: source.index,
+				capabilities,
+			},
+		);
+	}
+}
 
 export interface EmbeddedFileMappingData {
 	vueTag: 'template' | 'script' | 'scriptSetup' | 'scriptSrc' | 'style' | 'customBlock' | undefined,
@@ -194,20 +211,7 @@ export class VueSourceFile implements SourceFile {
 				for (const embeddedFileName of embeddedFileNames) {
 					if (!embeddedFiles[embeddedFileName]) {
 						embeddedFiles[embeddedFileName] = computed(() => {
-							const file: VueEmbeddedFile = {
-								fileName: embeddedFileName,
-								capabilities: {
-									diagnostics: false,
-									foldingRanges: false,
-									formatting: false,
-									documentSymbol: false,
-									codeActions: false,
-									inlayHints: false,
-								},
-								isTsHostFile: false,
-								codeGen: new CodeGen(),
-								teleportMappings: [],
-							};
+							const file = new VueEmbeddedFile(embeddedFileName);
 							for (const plugin of VueSourceFile.current.value.plugins) {
 								if (plugin.resolveEmbeddedFile) {
 									plugin.resolveEmbeddedFile(VueSourceFile.current.value.fileName, VueSourceFile.current.value.sfc, file);
@@ -228,10 +232,10 @@ export class VueSourceFile implements SourceFile {
 				const file = _file.value;
 				const node: EmbeddedFile = {
 					fileName: file.fileName,
-					text: file.codeGen.text,
+					text: file._codeGen.text,
 					capabilities: file.capabilities,
 					isTsHostFile: file.isTsHostFile,
-					mappings: file.codeGen.mappings.map(mapping => {
+					mappings: file._codeGen.mappings.map(mapping => {
 						return {
 							...mapping,
 							data: mapping.data.capabilities,
@@ -456,6 +460,7 @@ export class VueSourceFile implements SourceFile {
 
 			const newData: Sfc['template'] | null = block ? {
 				tag: 'template',
+				index: undefined,
 				start: self._snapshot.value.getText(0, block.loc.start.offset).lastIndexOf('<'),
 				end: block.loc.end.offset + self._snapshot.value.getText(block.loc.end.offset, self._snapshot.value.getLength()).indexOf('>') + 1,
 				startTagEnd: block.loc.start.offset,
@@ -475,6 +480,7 @@ export class VueSourceFile implements SourceFile {
 
 			const newData: Sfc['script'] | null = block ? {
 				tag: 'script',
+				index: undefined,
 				start: self._snapshot.value.getText(0, block.loc.start.offset).lastIndexOf('<'),
 				end: block.loc.end.offset + self._snapshot.value.getText(block.loc.end.offset, self._snapshot.value.getLength()).indexOf('>') + 1,
 				startTagEnd: block.loc.start.offset,
@@ -495,6 +501,7 @@ export class VueSourceFile implements SourceFile {
 
 			const newData: Sfc['scriptSetup'] | null = block ? {
 				tag: 'scriptSetup',
+				index: undefined,
 				start: self._snapshot.value.getText(0, block.loc.start.offset).lastIndexOf('<'),
 				end: block.loc.end.offset + self._snapshot.value.getText(block.loc.end.offset, self._snapshot.value.getLength()).indexOf('>') + 1,
 				startTagEnd: block.loc.start.offset,
@@ -516,6 +523,7 @@ export class VueSourceFile implements SourceFile {
 				const block = blocks[i];
 				const newData: Sfc['styles'][number] = {
 					tag: 'style',
+					index: i,
 					start: self._snapshot.value.getText(0, block.loc.start.offset).lastIndexOf('<'),
 					end: block.loc.end.offset + self._snapshot.value.getText(block.loc.end.offset, self._snapshot.value.getLength()).indexOf('>') + 1,
 					startTagEnd: block.loc.start.offset,
@@ -543,6 +551,7 @@ export class VueSourceFile implements SourceFile {
 				const block = blocks[i];
 				const newData: Sfc['customBlocks'][number] = {
 					tag: 'customBlock',
+					index: i,
 					start: self._snapshot.value.getText(0, block.loc.start.offset).lastIndexOf('<'),
 					end: block.loc.end.offset + self._snapshot.value.getText(block.loc.end.offset, self._snapshot.value.getLength()).indexOf('>') + 1,
 					startTagEnd: block.loc.start.offset,

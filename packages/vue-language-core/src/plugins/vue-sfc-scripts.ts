@@ -31,16 +31,14 @@ const plugin: VueLanguagePlugin = () => {
 					inlayHints: false,
 				};
 				embeddedFile.isTsHostFile = false;
-				embeddedFile.codeGen.append(
-					script.content,
+				embeddedFile.appendContentFromSFCBlock(
+					script,
 					0,
-					{
-						vueTag: script.tag,
-						capabilities: {},
-					},
+					script.content.length,
+					{},
 				);
 			}
 		},
 	};
-}
+};
 export = plugin;
