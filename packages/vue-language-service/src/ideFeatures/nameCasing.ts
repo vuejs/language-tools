@@ -1,6 +1,6 @@
 import { hyphenate } from '@vue/shared';
 import { SourceFileDocument, LanguageServiceRuntimeContext } from '@volar/language-service';
-import { checkComponentNames, getTemplateTagsAndAttrs } from '../helpers';
+import { checkComponentNames, getTemplateTagsAndAttrs, checkPropsOfTag } from '../helpers';
 import * as vue from '@volar/vue-language-core';
 import * as vscode from 'vscode-languageserver-protocol';
 
@@ -14,9 +14,8 @@ export enum AttrNameCasing {
 	Camel,
 }
 
-export async function convert(
+export async function convertTagName(
 	context: LanguageServiceRuntimeContext,
-	findReferences: (uri: string, position: vscode.Position) => Promise<vscode.Location[] | undefined>,
 	uri: string,
 	casing: TagNameCasing,
 ) {
@@ -35,30 +34,68 @@ export async function convert(
 	const template = desc.template;
 	const document = vueDocument.getDocument();
 	const edits: vscode.TextEdit[] = [];
-	const components = new Set(checkComponentNames(context.host.getTypeScriptModule(), context.typescriptLanguageService, vueDocument.file));
-	const tagOffsets = getTemplateTagsAndAttrs(vueDocument.file).tags;
+	const components = checkComponentNames(context.host.getTypeScriptModule(), context.typescriptLanguageService, vueDocument.file);
+	const tags = getTemplateTagsAndAttrs(vueDocument.file);
 
-	for (const [_, offsets] of tagOffsets) {
-		if (offsets.length) {
+	for (const [tagName, { offsets }] of tags) {
+		const componentName = components.find(component => component === tagName || hyphenate(component) === tagName);
+		if (componentName) {
+			for (const offset of offsets) {
+				const start = document.positionAt(template.startTagEnd + offset);
+				const end = document.positionAt(template.startTagEnd + offset + tagName.length);
+				const range = vscode.Range.create(start, end);
+				if (casing === TagNameCasing.Kebab && tagName !== hyphenate(componentName)) {
+					edits.push(vscode.TextEdit.replace(range, hyphenate(componentName)));
+				}
+				if (casing === TagNameCasing.Pascal && tagName !== componentName) {
+					edits.push(vscode.TextEdit.replace(range, componentName));
+				}
+			}
+		}
+	}
 
-			const offset = template.startTagEnd + offsets[0];
-			const refs = await findReferences(uri, vueDocument.getDocument().positionAt(offset)) ?? [];
+	return edits;
+}
 
-			for (const vueLoc of refs) {
-				if (
-					vueLoc.uri === vueDocument.uri
-					&& document.offsetAt(vueLoc.range.start) >= template.startTagEnd
-					&& document.offsetAt(vueLoc.range.end) <= template.startTagEnd + template.content.length
-				) {
-					const referenceText = document.getText(vueLoc.range);
-					for (const component of components) {
-						if (component === referenceText || hyphenate(component) === referenceText) {
-							if (casing === TagNameCasing.Kebab && referenceText !== hyphenate(component)) {
-								edits.push(vscode.TextEdit.replace(vueLoc.range, hyphenate(component)));
-							}
-							if (casing === TagNameCasing.Pascal && referenceText !== component) {
-								edits.push(vscode.TextEdit.replace(vueLoc.range, component));
-							}
+export async function convertAttrName(
+	context: LanguageServiceRuntimeContext,
+	uri: string,
+	casing: AttrNameCasing,
+) {
+
+	const vueDocument = context.documents.get(uri);
+	if (!vueDocument)
+		return;
+
+	if (!(vueDocument.file instanceof vue.VueSourceFile))
+		return;
+
+	const desc = vueDocument.file.sfc;
+	if (!desc.template)
+		return;
+
+	const template = desc.template;
+	const document = vueDocument.getDocument();
+	const edits: vscode.TextEdit[] = [];
+	const components = checkComponentNames(context.host.getTypeScriptModule(), context.typescriptLanguageService, vueDocument.file);
+	const tags = getTemplateTagsAndAttrs(vueDocument.file);
+
+	for (const [tagName, { attrs }] of tags) {
+		const componentName = components.find(component => component === tagName || hyphenate(component) === tagName);
+		if (componentName) {
+			const props = checkPropsOfTag(context.host.getTypeScriptModule(), context.typescriptLanguageService, vueDocument.file, componentName);
+			for (const [attrName, { offsets }] of attrs) {
+				const propName = props.find(prop => prop === attrName || hyphenate(prop) === attrName);
+				if (propName) {
+					for (const offset of offsets) {
+						const start = document.positionAt(template.startTagEnd + offset);
+						const end = document.positionAt(template.startTagEnd + offset + attrName.length);
+						const range = vscode.Range.create(start, end);
+						if (casing === AttrNameCasing.Kebab && attrName !== hyphenate(propName)) {
+							edits.push(vscode.TextEdit.replace(range, hyphenate(propName)));
+						}
+						if (casing === AttrNameCasing.Camel && attrName !== propName) {
+							edits.push(vscode.TextEdit.replace(range, propName));
 						}
 					}
 				}
@@ -90,21 +127,23 @@ export function detect(
 
 	function getAttrNameCase(sourceFile: SourceFileDocument): AttrNameCasing[] {
 
-		const attrNames = getTemplateTagsAndAttrs(sourceFile.file).attrs;
+		const tags = getTemplateTagsAndAttrs(sourceFile.file);
 		const result: AttrNameCasing[] = [];
 
-		for (const tagName of attrNames) {
-			// attrName
-			if (tagName !== hyphenate(tagName)) {
-				result.push(AttrNameCasing.Camel);
-				break;
+		for (const [_, { attrs }] of tags) {
+			for (const [tagName] of attrs) {
+				// attrName
+				if (tagName !== hyphenate(tagName)) {
+					result.push(AttrNameCasing.Camel);
+					break;
+				}
 			}
-		}
-		for (const tagName of attrNames) {
-			// attr-name
-			if (tagName.indexOf('-') >= 0) {
-				result.push(AttrNameCasing.Kebab);
-				break;
+			for (const [tagName] of attrs) {
+				// attr-name
+				if (tagName.indexOf('-') >= 0) {
+					result.push(AttrNameCasing.Kebab);
+					break;
+				}
 			}
 		}
 
@@ -113,7 +152,7 @@ export function detect(
 	function getTagNameCase(vueDocument: SourceFileDocument): TagNameCasing[] {
 
 		const components = checkComponentNames(context.host.getTypeScriptModule(), context.typescriptLanguageService, vueDocument.file);
-		const tagNames = getTemplateTagsAndAttrs(vueDocument.file).tags;
+		const tagNames = getTemplateTagsAndAttrs(vueDocument.file);
 		const result: TagNameCasing[] = [];
 
 		let anyComponentUsed = false;

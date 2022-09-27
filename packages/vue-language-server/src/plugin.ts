@@ -3,7 +3,7 @@ import { LanguageServerPlugin } from '@volar/language-server';
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-service';
 import * as nameCasing from '@volar/vue-language-service';
-import { DetectNameCasingRequest, GetConvertTagCasingEditsRequest } from './requests';
+import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest } from './requests';
 import { VueServerInitializationOptions } from './types';
 
 const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageServiceHost> = (initOptions) => {
@@ -54,7 +54,12 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 
 				connection.onRequest(GetConvertTagCasingEditsRequest.type, async params => {
 					const languageService = await getService(params.textDocument.uri);
-					return nameCasing.convert(languageService.context, languageService.findReferences, params.textDocument.uri, params.casing);
+					return nameCasing.convertTagName(languageService.context, params.textDocument.uri, params.casing);
+				});
+
+				connection.onRequest(GetConvertAttrCasingEditsRequest.type, async params => {
+					const languageService = await getService(params.textDocument.uri);
+					return nameCasing.convertAttrName(languageService.context, params.textDocument.uri, params.casing);
 				});
 			},
 		},

@@ -22,5 +22,15 @@ export namespace GetConvertTagCasingEditsRequest {
 	};
 	export type ResponseType = vscode.TextEdit[] | null | undefined;
 	export type ErrorType = never;
-	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('volar/getTagCasing');
+	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('volar/convertTagNameCasing');
+}
+
+export namespace GetConvertAttrCasingEditsRequest {
+	export type ParamsType = {
+		textDocument: vscode.TextDocumentIdentifier,
+		casing: AttrNameCasing,
+	};
+	export type ResponseType = vscode.TextEdit[] | null | undefined;
+	export type ErrorType = never;
+	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('volar/convertAttrNameCasing');
 }

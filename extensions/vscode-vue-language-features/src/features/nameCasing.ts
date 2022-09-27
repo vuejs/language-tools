@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { userPick } from './splitEditors';
 import { BaseLanguageClient, State } from 'vscode-languageclient';
-import { AttrNameCasing, DetectNameCasingRequest, GetConvertTagCasingEditsRequest, TagNameCasing } from '@volar/vue-language-server';
+import { AttrNameCasing, DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, TagNameCasing } from '@volar/vue-language-server';
 
 export const attrNameCasings = new Map<string, AttrNameCasing>();
 export const tagNameCasings = new Map<string, TagNameCasing[]>();
@@ -38,6 +38,8 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 			{
 				'5': { label: (currentAttrNameCasing === AttrNameCasing.Kebab ? '• ' : '') + 'Prop Using kebab-case' },
 				'6': { label: (currentAttrNameCasing === AttrNameCasing.Camel ? '• ' : '') + 'Prop Using camelCase' },
+				'7': { label: 'Convert Prop name to kebab-case' },
+				'8': { label: 'Convert Prop name to cascalCase' },
 			},
 		]);
 
@@ -55,10 +57,10 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 			tagNameCasings.set(document.uri.toString(), [TagNameCasing.Pascal]);
 		}
 		if (select === '3') {
-			await convert(vscode.window.activeTextEditor, TagNameCasing.Kebab);
+			await convertTag(vscode.window.activeTextEditor, TagNameCasing.Kebab);
 		}
 		if (select === '4') {
-			await convert(vscode.window.activeTextEditor, TagNameCasing.Pascal);
+			await convertTag(vscode.window.activeTextEditor, TagNameCasing.Pascal);
 		}
 		// attr
 		if (select === '5') {
@@ -66,6 +68,12 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 		}
 		if (select === '6') {
 			attrNameCasings.set(document.uri.toString(), AttrNameCasing.Camel);
+		}
+		if (select === '7') {
+			await convertAttr(vscode.window.activeTextEditor, AttrNameCasing.Kebab);
+		}
+		if (select === '8') {
+			await convertAttr(vscode.window.activeTextEditor, AttrNameCasing.Camel);
 		}
 		updateStatusBarText();
 	});
@@ -79,7 +87,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 		}
 	});
 
-	async function convert(editor: vscode.TextEditor, casing: TagNameCasing) {
+	async function convertTag(editor: vscode.TextEditor, casing: TagNameCasing) {
 
 		const response = await languageClient.sendRequest(GetConvertTagCasingEditsRequest.type, {
 			textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(editor.document),
@@ -96,6 +104,26 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 		}
 
 		tagNameCasings.set(editor.document.uri.toString(), [casing]);
+		updateStatusBarText();
+	}
+
+	async function convertAttr(editor: vscode.TextEditor, casing: AttrNameCasing) {
+
+		const response = await languageClient.sendRequest(GetConvertAttrCasingEditsRequest.type, {
+			textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(editor.document),
+			casing,
+		});
+		const edits = await languageClient.protocol2CodeConverter.asTextEdits(response);
+
+		if (edits) {
+			editor.edit(editBuilder => {
+				for (const edit of edits) {
+					editBuilder.replace(edit.range, edit.newText);
+				}
+			});
+		}
+
+		attrNameCasings.set(editor.document.uri.toString(), casing);
 		updateStatusBarText();
 	}
 
@@ -169,7 +197,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 		const tagNameCasing = tagNameCasings.get(document.uri.toString());
 		let text = `<`;
 		if (tagNameCasing?.length === 2) {
-			text += 'tag-name/TagName ';
+			text += 'TagName ';
 		}
 		else if (tagNameCasing?.length === 1) {
 			if (tagNameCasing[0] === TagNameCasing.Kebab) {

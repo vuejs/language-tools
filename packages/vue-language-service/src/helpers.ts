@@ -226,60 +226,72 @@ function getComponentsType(
 	}
 }
 
-const map = new WeakMap<embedded.SourceFile, ComputedRef<{
-	tags: Map<string, number[]>;
-	attrs: Set<string>;
-} | undefined>>();
+type Tags = Map<string, {
+	offsets: number[];
+	attrs: Map<string, {
+		offsets: number[];
+	}>,
+}>;
 
-export function getTemplateTagsAndAttrs(sourceFile: embedded.SourceFile) {
+const map = new WeakMap<embedded.SourceFile, ComputedRef<Tags | undefined>>();
+
+export function getTemplateTagsAndAttrs(sourceFile: embedded.SourceFile): Tags {
 
 	if (!map.has(sourceFile)) {
 		const getter = computed(() => {
 			if (!(sourceFile instanceof vue.VueSourceFile))
 				return;
 			const ast = sourceFile.compiledSFCTemplate?.ast;
-			const tags = new Map<string, number[]>();
-			const attrs = new Set<string>();
+			const tags: Tags = new Map();
 			if (ast) {
 				vue.walkElementNodes(ast, node => {
 
 					if (!tags.has(node.tag)) {
-						tags.set(node.tag, []);
+						tags.set(node.tag, { offsets: [], attrs: new Map() });
 					}
 
-					const offsets = tags.get(node.tag)!;
+					const tag = tags.get(node.tag)!;
 					const startTagHtmlOffset = node.loc.start.offset + node.loc.source.indexOf(node.tag);
 					const endTagHtmlOffset = node.loc.start.offset + node.loc.source.lastIndexOf(node.tag);
 
-					offsets.push(startTagHtmlOffset);
-					offsets.push(endTagHtmlOffset);
+					tag.offsets.push(startTagHtmlOffset);
+					if (!node.isSelfClosing) {
+						tag.offsets.push(endTagHtmlOffset);
+					}
 
 					for (const prop of node.props) {
+
+						let name: string | undefined;
+						let offset: number | undefined;
+
 						if (
 							prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 							&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 							&& prop.arg.isStatic
 						) {
-							attrs.add(prop.arg.content);
+							name = prop.arg.content;
+							offset = prop.arg.loc.start.offset;
 						}
 						else if (
 							prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
 						) {
-							attrs.add(prop.name);
+							name = prop.name;
+							offset = prop.loc.start.offset;
+						}
+
+						if (name !== undefined && offset !== undefined) {
+							if (!tag.attrs.has(name)) {
+								tag.attrs.set(name, { offsets: [] });
+							}
+							tag.attrs.get(name)!.offsets.push(offset);
 						}
 					}
 				});
 			}
-			return {
-				tags,
-				attrs,
-			};
+			return tags;
 		});
 		map.set(sourceFile, getter);
 	}
 
-	return map.get(sourceFile)!.value ?? {
-		tags: new Map<string, number[]>(),
-		attrs: new Set<string>(),
-	};
+	return map.get(sourceFile)!.value ?? new Map();
 }
