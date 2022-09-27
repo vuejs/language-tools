@@ -402,9 +402,9 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		const detected = casing.detect(options.context, vueDocument.uri);
 		const [attr, tag] = await Promise.all([
 			context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('volar.completion.preferredAttrNameCase', vueDocument.uri),
-			context.env.configurationHost?.getConfiguration<'auto' | 'both' | 'kebab' | 'pascal'>('volar.completion.preferredTagNameCase', vueDocument.uri),
+			context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-pascal' | 'kebab' | 'pascal'>('volar.completion.preferredTagNameCase', vueDocument.uri),
 		]);
-		const tagNameCasings = tag === 'auto' && detected.tag.length ? detected.tag : (tag === 'kebab' ? [casing.TagNameCasing.Kebab] : tag === 'pascal' ? [casing.TagNameCasing.Pascal] : [casing.TagNameCasing.Kebab, casing.TagNameCasing.Pascal]);
+		const tagNameCasing = detected.tag.length === 1 && (tag === 'auto-pascal' || tag === 'auto-kebab') ? detected.tag[0] : (tag === 'auto-pascal' || tag === 'pascal') ? casing.TagNameCasing.Pascal : casing.TagNameCasing.Kebab;
 		const attrNameCasing = detected.attr.length === 1 && (attr === 'auto-camel' || attr === 'auto-kebab') ? detected.attr[0] : (attr === 'auto-camel' || attr === 'camel') ? casing.AttrNameCasing.Camel : casing.AttrNameCasing.Kebab;
 
 		const enabledComponentAutoImport = await context.env.configurationHost?.getConfiguration<boolean>('volar.completion.autoImportComponent') ?? true;
@@ -421,10 +421,10 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					const tags: html.ITagData[] = [];
 
 					for (const tag of components) {
-						if (tagNameCasings.includes(casing.TagNameCasing.Kebab)) {
+						if (tagNameCasing === casing.TagNameCasing.Kebab) {
 							names.add(hyphenate(tag));
 						}
-						else if (tagNameCasings.includes(casing.TagNameCasing.Pascal)) {
+						else if (tagNameCasing === casing.TagNameCasing.Pascal) {
 							names.add(tag);
 						}
 					}
@@ -455,7 +455,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 								}
 							}
 							tags.push({
-								name: (tagNameCasings.length === 1 && tagNameCasings[0] === casing.TagNameCasing.Kebab ? componentName_1 : componentName_2) + i,
+								name: (tagNameCasing === casing.TagNameCasing.Kebab ? componentName_1 : componentName_2) + i,
 								description: createInternalItemId('importFile', [vueDocument.uri]),
 								attributes: [],
 							});

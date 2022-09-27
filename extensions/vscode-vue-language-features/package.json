@@ -441,14 +441,14 @@
 				"volar.completion.preferredTagNameCase": {
 					"type": "string",
 					"enum": [
-						"auto",
-						"both",
+						"auto-kebab",
+						"auto-pascal",
 						"kebab",
 						"pascal"
 					],
 					"enumDescriptions": [
-						"Auto Detect from Content",
-						"<kebab-case> and <PascalCase>",
+						"Auto Detect from Content (Preferred <kebab-case>)",
+						"Auto Detect from Content (Preferred <PascalCase>)",
 						"<kebab-case>",
 						"<PascalCase>"
 					],
@@ -675,26 +675,6 @@
 				"icon": "images/nuxt-logo.svg"
 			},
 			{
-				"command": "volar.action.tagNameCase",
-				"title": "Change Tag Name Case",
-				"category": "Volar"
-			},
-			{
-				"command": "volar.action.tagNameCase.convertToKebabCase",
-				"title": "Convert Tag Name Case to kebab-case",
-				"category": "Volar"
-			},
-			{
-				"command": "volar.action.tagNameCase.convertToPascalCase",
-				"title": "Convert Tag Name Case to PascalCase",
-				"category": "Volar"
-			},
-			{
-				"command": "volar.action.attrNameCase",
-				"title": "Change Attr Name Case",
-				"category": "Volar"
-			},
-			{
 				"command": "volar.action.createWorkspaceSnippets",
 				"title": "Create Workspace Snippets",
 				"category": "Volar"
@@ -764,22 +744,6 @@
 				},
 				{
 					"command": "volar.action.nuxt",
-					"when": "editorLangId == vue"
-				},
-				{
-					"command": "volar.action.tagNameCase",
-					"when": "editorLangId == vue"
-				},
-				{
-					"command": "volar.action.tagNameCase.convertToKebabCase",
-					"when": "editorLangId == vue"
-				},
-				{
-					"command": "volar.action.tagNameCase.convertToPascalCase",
-					"when": "editorLangId == vue"
-				},
-				{
-					"command": "volar.action.attrNameCase",
 					"when": "editorLangId == vue"
 				},
 				{

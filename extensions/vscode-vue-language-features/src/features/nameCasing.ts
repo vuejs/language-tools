@@ -4,7 +4,7 @@ import { BaseLanguageClient, State } from 'vscode-languageclient';
 import { AttrNameCasing, DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, TagNameCasing } from '@volar/vue-language-server';
 
 export const attrNameCasings = new Map<string, AttrNameCasing>();
-export const tagNameCasings = new Map<string, TagNameCasing[]>();
+export const tagNameCasings = new Map<string, TagNameCasing>();
 
 export async function activate(context: vscode.ExtensionContext, languageClient: BaseLanguageClient) {
 
@@ -29,17 +29,16 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 		const currentTagNameCasing = tagNameCasings.get(document.uri.toString());
 		const select = await userPick([
 			{
-				'0': { label: (currentTagNameCasing?.length === 2 ? '• ' : '') + 'Component Using kebab-case and PascalCase (Both)' },
-				'1': { label: (currentTagNameCasing?.length === 1 && currentTagNameCasing[0] === TagNameCasing.Kebab ? '• ' : '') + 'Component Using kebab-case' },
-				'2': { label: (currentTagNameCasing?.length === 1 && currentTagNameCasing[0] === TagNameCasing.Pascal ? '• ' : '') + 'Component Using PascalCase' },
-				'3': { label: 'Convert Component name to kebab-case' },
-				'4': { label: 'Convert Component name to PascalCase' },
+				'1': { label: (currentTagNameCasing === TagNameCasing.Kebab ? '• ' : '') + 'Component Name Using kebab-case' },
+				'2': { label: (currentTagNameCasing === TagNameCasing.Pascal ? '• ' : '') + 'Component Name Using PascalCase' },
+				'3': { label: 'Convert Component Name to kebab-case' },
+				'4': { label: 'Convert Component Name to PascalCase' },
 			},
 			{
-				'5': { label: (currentAttrNameCasing === AttrNameCasing.Kebab ? '• ' : '') + 'Prop Using kebab-case' },
-				'6': { label: (currentAttrNameCasing === AttrNameCasing.Camel ? '• ' : '') + 'Prop Using camelCase' },
-				'7': { label: 'Convert Prop name to kebab-case' },
-				'8': { label: 'Convert Prop name to cascalCase' },
+				'5': { label: (currentAttrNameCasing === AttrNameCasing.Kebab ? '• ' : '') + 'Prop Name Using kebab-case' },
+				'6': { label: (currentAttrNameCasing === AttrNameCasing.Camel ? '• ' : '') + 'Prop Name Using camelCase' },
+				'7': { label: 'Convert Prop Name to kebab-case' },
+				'8': { label: 'Convert Prop Name to cascalCase' },
 			},
 		]);
 
@@ -47,14 +46,11 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 			return; // cancel
 		}
 		// tag
-		if (select === '0') {
-			tagNameCasings.set(document.uri.toString(), [TagNameCasing.Kebab, TagNameCasing.Pascal]);
-		}
 		if (select === '1') {
-			tagNameCasings.set(document.uri.toString(), [TagNameCasing.Kebab]);
+			tagNameCasings.set(document.uri.toString(), TagNameCasing.Kebab);
 		}
 		if (select === '2') {
-			tagNameCasings.set(document.uri.toString(), [TagNameCasing.Pascal]);
+			tagNameCasings.set(document.uri.toString(), TagNameCasing.Pascal);
 		}
 		if (select === '3') {
 			await convertTag(vscode.window.activeTextEditor, TagNameCasing.Kebab);
@@ -103,7 +99,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 			});
 		}
 
-		tagNameCasings.set(editor.document.uri.toString(), [casing]);
+		tagNameCasings.set(editor.document.uri.toString(), casing);
 		updateStatusBarText();
 	}
 
@@ -161,19 +157,21 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 			}
 
 			if (!tagNameCasing) {
-				const tagMode = vscode.workspace.getConfiguration('volar').get<'auto' | 'both' | 'kebab' | 'pascal'>('completion.preferredTagNameCase');
-				if (tagMode === 'both') {
-					tagNameCasing = [TagNameCasing.Kebab, TagNameCasing.Pascal];
-				}
-				else if (tagMode === 'kebab') {
-					tagNameCasing = [TagNameCasing.Kebab];
+				const tagMode = vscode.workspace.getConfiguration('volar').get<'auto-kebab' | 'auto-pascal' | 'kebab' | 'pascal'>('completion.preferredTagNameCase');
+				if (tagMode === 'kebab') {
+					tagNameCasing = TagNameCasing.Kebab;
 				}
 				else if (tagMode === 'pascal') {
-					tagNameCasing = [TagNameCasing.Pascal];
+					tagNameCasing = TagNameCasing.Pascal;
 				}
 				else {
 					detected ??= await detect(document);
-					tagNameCasing = detected?.tag ?? [];
+					if (detected?.tag.length === 1) {
+						tagNameCasing = detected.tag[0];
+					}
+					else {
+						tagNameCasing = TagNameCasing.Pascal;
+					}
 				}
 				tagNameCasings.set(document.uri.toString(), tagNameCasing);
 			}
@@ -196,16 +194,11 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 		const attrNameCasing = attrNameCasings.get(document.uri.toString());
 		const tagNameCasing = tagNameCasings.get(document.uri.toString());
 		let text = `<`;
-		if (tagNameCasing?.length === 2) {
-			text += 'TagName ';
+		if (tagNameCasing === TagNameCasing.Kebab) {
+			text += `tag-name `;
 		}
-		else if (tagNameCasing?.length === 1) {
-			if (tagNameCasing[0] === TagNameCasing.Kebab) {
-				text += `tag-name `;
-			}
-			else if (tagNameCasing[0] === TagNameCasing.Pascal) {
-				text += `TagName `;
-			}
+		else if (tagNameCasing === TagNameCasing.Pascal) {
+			text += `TagName `;
 		}
 		else {
 			text += '? ';
@@ -215,6 +208,9 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 		}
 		else if (attrNameCasing === AttrNameCasing.Camel) {
 			text += `propName`;
+		}
+		else {
+			text += '?';
 		}
 		text += ' />';
 		statusBar.text = text;

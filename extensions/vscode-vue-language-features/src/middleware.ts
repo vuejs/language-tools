@@ -30,15 +30,12 @@ export const middleware: lsp.Middleware = {
 					if (item.scopeUri) {
 						if (item.section === 'volar.completion.preferredTagNameCase') {
 							const tagNameCasing = tagNameCasings.get(item.scopeUri);
-							if (tagNameCasing?.length === 1) {
-								if (tagNameCasing[0] === TagNameCasing.Kebab) {
-									return 'kebab';
-								}
-								else if (tagNameCasing[0] === TagNameCasing.Pascal) {
-									return 'pascal';
-								}
+							if (tagNameCasing === TagNameCasing.Kebab) {
+								return 'kebab';
 							}
-							return 'auto';
+							else if (tagNameCasing === TagNameCasing.Pascal) {
+								return 'pascal';
+							}
 						}
 						if (item.section === 'volar.completion.preferredAttrNameCase') {
 							const attrCase = attrNameCasings.get(item.scopeUri);
