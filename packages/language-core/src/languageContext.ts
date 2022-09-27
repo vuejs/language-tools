@@ -202,7 +202,7 @@ export function createEmbeddedLanguageServiceHost(
 
 			if (!tsFileUpdated) {
 				forEachEmbeddeds(sourceFile.embeddeds, embedded => {
-					if (embedded.isTsHostFile) {
+					if (embedded.kind) {
 						oldScripts[embedded.fileName] = embedded.text;
 					}
 				});
@@ -213,7 +213,7 @@ export function createEmbeddedLanguageServiceHost(
 
 			if (!tsFileUpdated) {
 				forEachEmbeddeds(sourceFile.embeddeds, embedded => {
-					if (embedded.isTsHostFile) {
+					if (embedded.kind) {
 						newScripts[embedded.fileName] = embedded.text;
 					}
 				});
@@ -237,7 +237,7 @@ export function createEmbeddedLanguageServiceHost(
 		const tsFileNames = new Set<string>();
 
 		for (const mapped of documentRegistry.getAllEmbeddeds()) {
-			if (mapped.embedded.isTsHostFile) {
+			if (mapped.embedded.kind) {
 				tsFileNames.add(mapped.embedded.fileName); // virtual .ts
 			}
 		}

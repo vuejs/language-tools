@@ -1,3 +1,4 @@
+import { EmbeddedFileKind } from '@volar/language-core';
 import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
@@ -151,15 +152,15 @@ export function register(context: LanguageServiceRuntimeContext) {
 		let shouldSend = false;
 		let lastCheckCancelAt = 0;
 
-		await worker(false, 'onFull', nonTsCache, cache.nonTs);
+		await worker(EmbeddedFileKind.TextFile, 'onFull', nonTsCache, cache.nonTs);
 		doResponse();
-		await worker(true, 'onSyntactic', scriptTsCache_syntactic, cache.tsSyntactic);
+		await worker(EmbeddedFileKind.TypeScriptHostFile, 'onSyntactic', scriptTsCache_syntactic, cache.tsSyntactic);
 		doResponse();
-		await worker(true, 'onSuggestion', scriptTsCache_suggestion, cache.tsSuggestion);
+		await worker(EmbeddedFileKind.TypeScriptHostFile, 'onSuggestion', scriptTsCache_suggestion, cache.tsSuggestion);
 		doResponse();
-		await worker(true, 'onSemantic', scriptTsCache_semantic, cache.tsSemantic);
+		await worker(EmbeddedFileKind.TypeScriptHostFile, 'onSemantic', scriptTsCache_semantic, cache.tsSemantic);
 		doResponse();
-		await worker(true, 'onDeclaration', scriptTsCache_declaration, cache.tsDeclaration);
+		await worker(EmbeddedFileKind.TypeScriptHostFile, 'onDeclaration', scriptTsCache_declaration, cache.tsDeclaration);
 
 		return getErrors();
 
@@ -175,7 +176,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 		}
 
 		async function worker(
-			isTs: boolean,
+			kind: EmbeddedFileKind,
 			mode: 'onFull' | 'onSemantic' | 'onSyntactic' | 'onSuggestion' | 'onDeclaration',
 			cacheMap: typeof nonTsCache,
 			cache: Cache,
@@ -185,7 +186,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				uri,
 				true,
 				function* (arg, sourceMap) {
-					if (sourceMap.embeddedFile.capabilities.diagnostics && sourceMap.embeddedFile.isTsHostFile === isTs) {
+					if (sourceMap.embeddedFile.capabilities.diagnostics && sourceMap.embeddedFile.kind === kind) {
 						yield arg;
 					}
 				},
@@ -203,15 +204,15 @@ export function register(context: LanguageServiceRuntimeContext) {
 					}
 
 					// avoid duplicate errors from vue plugin & typescript plugin
-					if (isTsDocument(document) !== isTs)
+					if (isTsDocument(document) !== (kind === EmbeddedFileKind.TypeScriptHostFile))
 						return;
 
 					const pluginId = context.plugins.indexOf(plugin);
 					const pluginCache = cacheMap.get(pluginId) ?? cacheMap.set(pluginId, new Map()).get(pluginId)!;
 					const cache = pluginCache.get(document.uri);
-					const tsProjectVersion = isTs ? context.core.typescriptLanguageServiceHost.getProjectVersion?.() : undefined;
+					const tsProjectVersion = kind === EmbeddedFileKind.TypeScriptHostFile ? context.core.typescriptLanguageServiceHost.getProjectVersion?.() : undefined;
 
-					if (!isTs) {
+					if (kind !== EmbeddedFileKind.TypeScriptHostFile) {
 						if (cache && cache.documentVersion === document.version) {
 							return cache.errors;
 						}

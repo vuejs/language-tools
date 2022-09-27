@@ -1,17 +1,11 @@
-import { DocumentCapabilities, EmbeddedFile, EmbeddedFileSourceMap, PositionCapabilities, SourceFile, Teleport, TeleportMappingData } from '@volar/language-core';
+import { DocumentCapabilities, EmbeddedFile, EmbeddedFileKind, EmbeddedFileSourceMap, PositionCapabilities, SourceFile, Teleport, TeleportMappingData } from '@volar/language-core';
 import { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
 import { computed, ComputedRef, reactive, Ref, shallowRef as ref } from '@vue/reactivity';
 import { Sfc, VueLanguagePlugin, SfcBlock } from './types';
-
 import { CodeGen } from '@volar/code-gen';
 import { Mapping } from '@volar/source-map';
 import * as CompilerDom from '@vue/compiler-dom';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-
-export interface EmbeddedStructure {
-	self: Embedded | undefined,
-	embeddeds: EmbeddedStructure[],
-}
 
 export interface Embedded {
 	file: VueEmbeddedFile,
@@ -22,7 +16,7 @@ export interface Embedded {
 export class VueEmbeddedFile {
 
 	public parentFileName?: string;
-	public isTsHostFile: boolean = false;
+	public kind = EmbeddedFileKind.TextFile;
 	public capabilities: DocumentCapabilities = {};
 	public teleportMappings: Mapping<TeleportMappingData>[] = [];
 	public _codeGen: CodeGen<EmbeddedFileMappingData> = new CodeGen();
@@ -234,7 +228,7 @@ export class VueSourceFile implements SourceFile {
 					fileName: file.fileName,
 					text: file._codeGen.text,
 					capabilities: file.capabilities,
-					isTsHostFile: file.isTsHostFile,
+					kind: file.kind,
 					mappings: file._codeGen.mappings.map(mapping => {
 						return {
 							...mapping,

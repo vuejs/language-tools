@@ -35,7 +35,6 @@ const plugin: VueLanguagePlugin = () => {
 					codeActions: true,
 					inlayHints: true,
 				};
-				embeddedFile.isTsHostFile = false;
 				embeddedFile.appendContentFromSFCBlock(
 					style,
 					0,

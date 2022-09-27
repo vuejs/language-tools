@@ -1,6 +1,6 @@
 import useCssPlugin from '@volar-plugins/css';
 import useTsPlugin, { getSemanticTokenLegend } from '@volar-plugins/typescript';
-import { LanguageServerPlugin } from '@volar/language-server';
+import { EmbeddedFileKind, LanguageServerPlugin } from '@volar/language-server';
 import { createLanguageServer, EmbeddedLanguageModule, SourceFile } from '@volar/language-server/node';
 import { Mapping, MappingKind } from '@volar/source-map';
 
@@ -80,7 +80,7 @@ function getEmbeddeds(fileName: string, text: string) {
 		return {
 			fileName: fileName + (block[1] === 'script' ? '.js' : '.css'),
 			text: block[2],
-			isTsHostFile: block[1] === 'script',
+			kind: block[1] === 'script' ? EmbeddedFileKind.TypeScriptHostFile : EmbeddedFileKind.TextFile,
 			capabilities: {
 				diagnostics: true,
 				foldingRanges: true,

@@ -53,10 +53,15 @@ export interface SourceFile {
 	embeddeds: EmbeddedFile[],
 }
 
+export const enum EmbeddedFileKind {
+	TextFile = 0,
+	TypeScriptHostFile = 1,
+}
+
 export interface EmbeddedFile {
 	fileName: string,
 	text: string,
-	isTsHostFile: boolean,
+	kind: EmbeddedFileKind,
 	capabilities: DocumentCapabilities,
 	mappings: Mapping<PositionCapabilities>[],
 	teleportMappings?: Mapping<TeleportMappingData>[],
