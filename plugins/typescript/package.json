@@ -1,6 +1,6 @@
 {
 	"name": "@volar-plugins/typescript",
-	"version": "1.0.0-beta.0",
+	"version": "1.0.0-beta.1",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -13,9 +13,9 @@
 		"directory": "plugins/typescript"
 	},
 	"dependencies": {
-		"@volar/language-service": "1.0.0-beta.0",
-		"@volar/shared": "1.0.0-beta.0",
-		"@volar/typescript-language-service": "1.0.0-beta.0",
+		"@volar/language-service": "1.0.0-beta.1",
+		"@volar/shared": "1.0.0-beta.1",
+		"@volar/typescript-language-service": "1.0.0-beta.1",
 		"semver": "^7.3.7",
 		"vscode-languageserver-protocol": "^3.17.2",
 		"vscode-languageserver-textdocument": "^1.0.7"
