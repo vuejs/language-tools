@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.0.0-beta.1 (2022/9/27)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- feat: support autocomplete for `v-model:xxx` ([#1905](https://github.com/johnsoncodehk/volar/issues/1905))
+- feat: simplify status bar
+- feat: support prop name case conversion in the status bar
+- feat: remove "auto", "both" and add "auto-kebab", "auto-pascal" for `volar.completion.preferredTagNameCase`
+- fix: cannot resolve `compilerOptions.types` from a higher level directory in a workspace sub directory ([#1764](https://github.com/johnsoncodehk/volar/issues/1764))
+- fix: should not trigger autocomplete lang attribute in templates ([#1836](https://github.com/johnsoncodehk/volar/issues/1836))
+- fix: cannot trigger autocomplete end with `v-xxx` ([#1905](https://github.com/johnsoncodehk/volar/issues/1905))
+- fix: auto insert parentheses remove `$x` from `$x as y`
+- fix: auto insert parentheses not working on props
+
 ## 1.0.0-beta.0 (2022/9/25)
 
 [[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
