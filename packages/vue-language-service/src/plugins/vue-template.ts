@@ -404,7 +404,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('volar.completion.preferredAttrNameCase', vueDocument.uri),
 			context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-pascal' | 'kebab' | 'pascal'>('volar.completion.preferredTagNameCase', vueDocument.uri),
 		]);
-		const tagNameCasing = detected.tag.length === 1 && (tag === 'auto-pascal' || tag === 'auto-kebab') ? detected.tag[0] : (tag === 'auto-pascal' || tag === 'pascal') ? casing.TagNameCasing.Pascal : casing.TagNameCasing.Kebab;
+		const tagNameCasing = detected.tag.length === 1 && (tag === 'auto-pascal' || tag === 'auto-kebab') ? detected.tag[0] : (tag === 'auto-kebab' || tag === 'kebab') ? casing.TagNameCasing.Kebab : casing.TagNameCasing.Pascal;
 		const attrNameCasing = detected.attr.length === 1 && (attr === 'auto-camel' || attr === 'auto-kebab') ? detected.attr[0] : (attr === 'auto-camel' || attr === 'camel') ? casing.AttrNameCasing.Camel : casing.AttrNameCasing.Kebab;
 
 		const enabledComponentAutoImport = await context.env.configurationHost?.getConfiguration<boolean>('volar.completion.autoImportComponent') ?? true;

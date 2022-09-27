@@ -452,7 +452,7 @@
 						"<kebab-case>",
 						"<PascalCase>"
 					],
-					"default": "auto",
+					"default": "auto-pascal",
 					"description": "Preferred tag name case."
 				},
 				"volar.completion.preferredAttrNameCase": {
