@@ -186,7 +186,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				uri,
 				true,
 				function* (arg, sourceMap) {
-					if (sourceMap.embeddedFile.capabilities.diagnostics && sourceMap.embeddedFile.kind === kind) {
+					if (sourceMap.embeddedFile.capabilities.diagnostic && sourceMap.embeddedFile.kind === kind) {
 						yield arg;
 					}
 				},

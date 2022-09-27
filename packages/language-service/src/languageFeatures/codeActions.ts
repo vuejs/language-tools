@@ -35,7 +35,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			{ range, codeActionContext },
 			(arg, sourceMap) => {
 
-				if (!sourceMap.embeddedFile.capabilities.codeActions)
+				if (!sourceMap.embeddedFile.capabilities.codeAction)
 					return [];
 
 				const _codeActionContext: vscode.CodeActionContext = {

@@ -2,20 +2,20 @@ import { Mapping } from '@volar/source-map';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
 export interface DocumentCapabilities {
-	diagnostics?: boolean,
-	foldingRanges?: boolean,
-	formatting?: boolean | {
+	diagnostic?: boolean,
+	foldingRange?: boolean,
+	documentFormatting?: boolean | {
 		initialIndentBracket?: [string, string],
 	},
 	documentSymbol?: boolean,
-	codeActions?: boolean,
-	inlayHints?: boolean,
+	codeAction?: boolean,
+	inlayHint?: boolean,
 }
 
 export interface PositionCapabilities {
 	hover?: boolean,
 	references?: boolean,
-	definitions?: boolean,
+	definition?: boolean,
 	rename?: boolean | {
 		normalize?(newName: string): string,
 		apply?(oldName: string, newName: string): string,

@@ -63,7 +63,7 @@ export function createLanguageService(host: vue.LanguageServiceHost) {
 		let edits: readonly ts.FileTextChanges[] = [];
 		if (file) {
 			embedded.forEachEmbeddeds(file[0].embeddeds, embedded => {
-				if (embedded.kind && embedded.capabilities.codeActions) {
+				if (embedded.kind && embedded.capabilities.codeAction) {
 					edits = edits.concat(ls.organizeImports({
 						...args,
 						fileName: embedded.fileName,

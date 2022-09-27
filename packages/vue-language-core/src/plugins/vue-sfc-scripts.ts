@@ -21,14 +21,14 @@ const plugin: VueLanguagePlugin = () => {
 			const script = scriptMatch ? sfc.script : scriptSetupMatch ? sfc.scriptSetup : undefined;
 			if (script) {
 				embeddedFile.capabilities = {
-					diagnostics: false,
-					foldingRanges: true,
-					formatting: {
+					diagnostic: false,
+					foldingRange: true,
+					documentFormatting: {
 						initialIndentBracket: ['{', '}'],
 					},
 					documentSymbol: true,
-					codeActions: false,
-					inlayHints: false,
+					codeAction: false,
+					inlayHint: false,
 				};
 				embeddedFile.appendContentFromSFCBlock(
 					script,

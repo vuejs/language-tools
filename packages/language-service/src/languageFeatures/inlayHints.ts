@@ -28,7 +28,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				 * copy from ./codeActions.ts
 				 */
 
-				if (!sourceMap.embeddedFile.capabilities.inlayHints)
+				if (!sourceMap.embeddedFile.capabilities.inlayHint)
 					return [];
 
 				let minStart: number | undefined;

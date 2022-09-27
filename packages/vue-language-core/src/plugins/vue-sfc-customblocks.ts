@@ -27,14 +27,14 @@ const plugin: VueLanguagePlugin = () => {
 				const customBlock = sfc.customBlocks[index];
 
 				embeddedFile.capabilities = {
-					diagnostics: true,
-					foldingRanges: true,
-					formatting: {
+					diagnostic: true,
+					foldingRange: true,
+					documentFormatting: {
 						initialIndentBracket: presetInitialIndentBrackets[customBlock.lang],
 					},
 					documentSymbol: true,
-					codeActions: true,
-					inlayHints: true,
+					codeAction: true,
+					inlayHint: true,
 				};
 				embeddedFile.appendContentFromSFCBlock(
 					customBlock,
@@ -43,7 +43,7 @@ const plugin: VueLanguagePlugin = () => {
 					{
 						hover: true,
 						references: true,
-						definitions: true,
+						definition: true,
 						diagnostic: true,
 						rename: true,
 						completion: true,

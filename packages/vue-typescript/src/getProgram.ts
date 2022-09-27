@@ -63,7 +63,7 @@ export function getProgram(
 
 			if (mapped) {
 
-				if (!mapped.embedded.capabilities.diagnostics)
+				if (!mapped.embedded.capabilities.diagnostic)
 					return [] as any;
 
 				const errors = transformDiagnostics(vueTsLs.getProgram()?.[api](sourceFile, cancellationToken) ?? []);

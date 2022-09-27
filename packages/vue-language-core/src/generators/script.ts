@@ -177,7 +177,7 @@ export function generate(
 				capabilities: {
 					hover: true,
 					references: true,
-					definitions: true,
+					definition: true,
 					rename: true,
 					diagnostic: true,
 					completion: true,
@@ -232,7 +232,7 @@ export function generate(
 				capabilities: {
 					hover: true,
 					references: true,
-					definitions: true,
+					definition: true,
 					rename: true,
 					diagnostic: true, // also working for setup() returns unused in template checking
 					completion: true,
@@ -249,7 +249,7 @@ export function generate(
 				vueTag,
 				capabilities: {
 					references: true,
-					definitions: true,
+					definition: true,
 					rename: true,
 				},
 			},
@@ -271,7 +271,7 @@ export function generate(
 				capabilities: {
 					hover: true,
 					references: true,
-					definitions: true,
+					definition: true,
 					diagnostic: true,
 					rename: true,
 					completion: true,
@@ -308,7 +308,7 @@ export function generate(
 					capabilities: {
 						hover: true,
 						references: true,
-						definitions: true,
+						definition: true,
 						diagnostic: true,
 						rename: true,
 						completion: true,
@@ -717,7 +717,7 @@ export function generate(
 										} : {
 											hover: true,
 											references: true,
-											definitions: true,
+											definition: true,
 											diagnostic: true,
 											rename: true,
 											completion: true,

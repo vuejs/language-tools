@@ -19,14 +19,14 @@ const plugin: VueLanguagePlugin = () => {
 			const match = embeddedFile.fileName.match(/^(.*)\.template\.([^.]+)$/);
 			if (match && sfc.template) {
 				embeddedFile.capabilities = {
-					diagnostics: true,
-					foldingRanges: true,
-					formatting: {
+					diagnostic: true,
+					foldingRange: true,
+					documentFormatting: {
 						initialIndentBracket: presetInitialIndentBrackets[sfc.template.lang],
 					},
 					documentSymbol: true,
-					codeActions: true,
-					inlayHints: true,
+					codeAction: true,
+					inlayHint: true,
 				};
 				embeddedFile.appendContentFromSFCBlock(
 					sfc.template,
@@ -35,7 +35,7 @@ const plugin: VueLanguagePlugin = () => {
 					{
 						hover: true,
 						references: true,
-						definitions: true,
+						definition: true,
 						diagnostic: true,
 						rename: true,
 						completion: true,

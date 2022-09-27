@@ -107,12 +107,12 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 			if (suffix === '.' + lang.value) {
 				embeddedFile.kind = EmbeddedFileKind.TypeScriptHostFile;
 				embeddedFile.capabilities = {
-					diagnostics: true,
-					foldingRanges: false,
-					formatting: false,
+					diagnostic: true,
+					foldingRange: false,
+					documentFormatting: false,
 					documentSymbol: false,
-					codeActions: true,
-					inlayHints: true,
+					codeAction: true,
+					inlayHint: true,
 				};
 				const tsx = tsxGen.value;
 				if (tsx) {
@@ -125,12 +125,12 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 
 				embeddedFile.parentFileName = fileName + '.template.' + sfc.template?.lang;
 				embeddedFile.capabilities = {
-					diagnostics: false,
-					foldingRanges: false,
-					formatting: true,
+					diagnostic: false,
+					foldingRange: false,
+					documentFormatting: true,
 					documentSymbol: true,
-					codeActions: false,
-					inlayHints: false,
+					codeAction: false,
+					inlayHint: false,
 				};
 
 				if (htmlGen.value) {

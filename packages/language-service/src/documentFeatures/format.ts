@@ -55,12 +55,12 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 			for (const embedded of embeddeds) {
 
-				if (!embedded.capabilities.formatting)
+				if (!embedded.capabilities.documentFormatting)
 					continue;
 
 				const sourceMap = vueDocument[0].getSourceMap(embedded);
-				const initialIndentBracket = typeof embedded.capabilities.formatting === 'object' && initialIndentLanguageId[sourceMap.mappedDocument.languageId]
-					? embedded.capabilities.formatting.initialIndentBracket
+				const initialIndentBracket = typeof embedded.capabilities.documentFormatting === 'object' && initialIndentLanguageId[sourceMap.mappedDocument.languageId]
+					? embedded.capabilities.documentFormatting.initialIndentBracket
 					: undefined;
 
 				let _edits: vscode.TextEdit[] | undefined;

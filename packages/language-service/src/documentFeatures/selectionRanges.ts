@@ -13,7 +13,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 			context,
 			document,
 			positions,
-			sourceMap => !!sourceMap.embeddedFile.capabilities.foldingRanges,
+			sourceMap => !!sourceMap.embeddedFile.capabilities.foldingRange,
 			(positions, sourceMap) => [positions
 				.map(position => sourceMap.getMappedRange(position, position)?.[0].start)
 				.filter(shared.notEmpty)],
