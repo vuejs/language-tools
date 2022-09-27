@@ -4,7 +4,7 @@
 
 [[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
 
-- feat: support autocomplete for `v-model:xxx` ([#1905](https://github.com/johnsoncodehk/volar/issues/1905))
+- feat: support autocomplete for `v-model:xxx`
 - feat: simplify status bar
 - feat: support prop name case conversion in the status bar
 - feat: remove "auto", "both" and add "auto-kebab", "auto-pascal" for `volar.completion.preferredTagNameCase`
