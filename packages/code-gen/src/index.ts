@@ -1,94 +1,61 @@
-import { Mapping, Mode, Range } from '@volar/source-map';
+import { Mapping, MappingKind, MappingRange } from '@volar/source-map';
 
 export class CodeGen<T = undefined> {
 
-	private text = '';
+	public text = '';
 	public mappings: Mapping<T>[] = [];
 
-	public getText() {
-		return this.text;
-	}
-	public getMappings(sourceRangeParser?: (data: T, range: Range) => Range): Mapping<T>[] {
-		if (!sourceRangeParser) {
-			return this.mappings;
+	public append(str: string): MappingRange;
+	public append(str: string, sourceOffset: number, data: T): MappingRange;
+	public append(str: string, sourceOffset?: number, data?: T) {
+		if (sourceOffset !== undefined && data !== undefined) {
+			return this._append(str, { start: sourceOffset, end: sourceOffset + str.length }, MappingKind.Offset, data);
 		}
-		return this.mappings.map(mapping => ({
-			...mapping,
-			sourceRange: sourceRangeParser(mapping.data, mapping.sourceRange),
-			additional: mapping.additional
-				? mapping.additional.map(extraMapping => ({
-					...extraMapping,
-					sourceRange: sourceRangeParser(mapping.data, extraMapping.sourceRange),
-				}))
-				: undefined,
-		}));
+		else {
+			return this._append(str);
+		}
 	}
-	public addCode(str: string, sourceRange: Range, mode: Mode, data: T, extraSourceRanges?: Range[]) {
-		const targetRange = this.addText(str);
-		this.addMapping2({
-			mappedRange: targetRange,
-			sourceRange,
-			mode,
-			data,
-			additional: extraSourceRanges ? extraSourceRanges.map(extraSourceRange => ({
-				mappedRange: targetRange,
-				mode,
-				sourceRange: extraSourceRange,
-			})) : undefined,
-		});
-		return targetRange;
-	}
-	public addCode2(str: string, sourceOffset: number, data: T) {
-		const targetRange = this.addText(str);
-		this.addMapping2({
-			mappedRange: targetRange,
-			sourceRange: {
-				start: sourceOffset,
-				end: sourceOffset + str.length,
-			},
-			mode: Mode.Offset,
-			data,
-		});
-		return targetRange;
-	}
-	public addMapping(str: string, sourceRange: Range, mode: Mode, data: T) {
+
+	// internals
+	public _append(str: string, sourceRange?: MappingRange, kind?: MappingKind, data?: T, extraSourceRanges?: MappingRange[]): MappingRange {
 		const targetRange = {
 			start: this.text.length,
 			end: this.text.length + str.length,
 		};
-		this.addMapping2({ mappedRange: targetRange, sourceRange, mode, data });
+		this.text += str;
+		if (sourceRange !== undefined && kind !== undefined && data !== undefined) {
+			this.mappings.push({
+				mappedRange: targetRange,
+				sourceRange,
+				kind,
+				data,
+				additional: extraSourceRanges ? extraSourceRanges.map(extraSourceRange => ({
+					mappedRange: targetRange,
+					kind,
+					sourceRange: extraSourceRange,
+				})) : undefined,
+			});
+		}
 		return targetRange;
 	}
-	public addMapping2(mapping: Mapping<T>) {
-		this.mappings.push(mapping);
-	}
-	public addText(str: string) {
-		const range = {
-			start: this.text.length,
-			end: this.text.length + str.length,
-		};
-		this.text += str;
-		return range;
-	}
-}
-
-export function mergeCodeGen<T extends CodeGen<any>>(a: T, b: T) {
-	const aLength = a.getText().length;
-	for (const mapping of b.getMappings()) {
-		a.addMapping2({
-			...mapping,
-			mappedRange: {
-				start: mapping.mappedRange.start + aLength,
-				end: mapping.mappedRange.end + aLength,
-			},
-			additional: mapping.additional ? mapping.additional.map(mapping_2 => ({
-				...mapping_2,
+	public _merge<T extends CodeGen<any>>(b: T) {
+		const aLength = this.text.length;
+		for (const mapping of b.mappings) {
+			this.mappings.push({
+				...mapping,
 				mappedRange: {
-					start: mapping_2.mappedRange.start + aLength,
-					end: mapping_2.mappedRange.end + aLength,
+					start: mapping.mappedRange.start + aLength,
+					end: mapping.mappedRange.end + aLength,
 				},
-			})) : undefined,
-		});
+				additional: mapping.additional ? mapping.additional.map(mapping_2 => ({
+					...mapping_2,
+					mappedRange: {
+						start: mapping_2.mappedRange.start + aLength,
+						end: mapping_2.mappedRange.end + aLength,
+					},
+				})) : undefined,
+			});
+		}
+		this.append(b.text);
 	}
-	a.addText(b.getText());
 }

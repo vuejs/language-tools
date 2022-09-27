@@ -34,26 +34,26 @@ export function baseParse(pugCode: string) {
 
 		// support tag auto-complete in empty lines
 		for (const emptyLineEnd of emptyLineEnds) {
-			codeGen.addText('<');
-			codeGen.addCode(
+			codeGen.append('<');
+			codeGen._append(
 				'x',
 				{
 					start: emptyLineEnd,
 					end: emptyLineEnd,
 				},
-				SourceMap.Mode.Totally,
+				SourceMap.MappingKind.Totally,
 				{ isEmptyTagCompletion: true },
 			);
-			codeGen.addText(' />');
+			codeGen.append(' />');
 		}
 
-		codeGen.addCode(
+		codeGen._append(
 			'',
 			{
 				start: pugCode.trimEnd().length,
 				end: pugCode.trimEnd().length,
 			},
-			SourceMap.Mode.Totally,
+			SourceMap.MappingKind.Totally,
 			undefined,
 		);
 	}
@@ -66,8 +66,8 @@ export function baseParse(pugCode: string) {
 		};
 	};
 
-	const htmlCode = codeGen.getText();
-	const sourceMap = new SourceMap.SourceMapBase(codeGen.getMappings());
+	const htmlCode = codeGen.text;
+	const sourceMap = new SourceMap.SourceMapBase(codeGen.mappings);
 
 	return {
 		htmlCode,
@@ -87,7 +87,7 @@ export function baseParse(pugCode: string) {
 
 			const pugTagRange = getDocRange(node.line, node.column, node.name.length);
 
-			const fullHtmlStart = codeGen.getText().length;
+			const fullHtmlStart = codeGen.text.length;
 			fullPugTagEnd = pugTagRange.end;
 
 			const selfClosing = node.block.nodes.length === 0;
@@ -96,8 +96,8 @@ export function baseParse(pugCode: string) {
 				visitNode(node.block, next, parent);
 				addEndTag(node, next, parent);
 			}
-			const fullHtmlEnd = codeGen.getText().length;
-			codeGen.addMapping2({
+			const fullHtmlEnd = codeGen.text.length;
+			codeGen.mappings.push({
 				data: undefined,
 				sourceRange: {
 					start: pugTagRange.start,
@@ -107,11 +107,11 @@ export function baseParse(pugCode: string) {
 					start: fullHtmlStart,
 					end: fullHtmlEnd,
 				},
-				mode: SourceMap.Mode.Totally,
+				kind: SourceMap.MappingKind.Totally,
 			});
 		}
 		else if (node.type === 'Text') {
-			codeGen.addCode2(
+			codeGen.append(
 				node.val,
 				getDocOffset(node.line, node.column),
 				undefined,
@@ -119,23 +119,23 @@ export function baseParse(pugCode: string) {
 		}
 	}
 	function addStartTag(node: TagNode, selfClosing: boolean) {
-		codeGen.addCode(
+		codeGen._append(
 			'',
 			getDocRange(node.line, node.column, 0),
-			SourceMap.Mode.Totally,
+			SourceMap.MappingKind.Totally,
 			undefined,
 		);
-		codeGen.addText('<');
+		codeGen.append('<');
 		const tagRange = getDocRange(node.line, node.column, node.name.length);
 		if (pugCode.substring(tagRange.start, tagRange.end) === node.name) {
-			codeGen.addCode2(
+			codeGen.append(
 				node.name,
 				tagRange.start,
 				undefined,
 			);
 		}
 		else {
-			codeGen.addText(node.name);
+			codeGen.append(node.name);
 		}
 
 		const noTitleAttrs = node.attrs.filter(attr => !attr.mustEscape && attr.name !== 'class');
@@ -148,11 +148,11 @@ export function baseParse(pugCode: string) {
 		}
 
 		for (const attr of noTitleAttrs) {
-			codeGen.addText(' ');
-			codeGen.addText(attr.name);
+			codeGen.append(' ');
+			codeGen.append(attr.name);
 			if (typeof attr.val !== 'boolean') {
-				codeGen.addText('=');
-				codeGen.addCode2(
+				codeGen.append('=');
+				codeGen.append(
 					attr.val,
 					getDocOffset(attr.line, attr.column),
 					undefined
@@ -161,8 +161,8 @@ export function baseParse(pugCode: string) {
 		}
 
 		if (attrsBlock) {
-			codeGen.addText(' ');
-			codeGen.addCode2(
+			codeGen.append(' ');
+			codeGen.append(
 				attrsBlock.text,
 				attrsBlock.offset,
 				undefined,
@@ -170,10 +170,10 @@ export function baseParse(pugCode: string) {
 		}
 
 		if (selfClosing) {
-			codeGen.addText(' />');
+			codeGen.append(' />');
 		}
 		else {
-			codeGen.addText('>');
+			codeGen.append('>');
 		}
 	}
 	function addEndTag(node: TagNode, next: Node | undefined, parent: Node | undefined) {
@@ -191,35 +191,35 @@ export function baseParse(pugCode: string) {
 		}
 		if (nextStart !== undefined) {
 			fullPugTagEnd = nextStart;
-			codeGen.addCode(
+			codeGen._append(
 				'',
 				{
 					start: nextStart,
 					end: nextStart,
 				},
-				SourceMap.Mode.Totally,
+				SourceMap.MappingKind.Totally,
 				undefined,
 			);
 		}
-		codeGen.addText(`</${node.name}>`);
+		codeGen.append(`</${node.name}>`);
 	}
 	function addClassesOrStyles(attrs: TagNode['attrs'], attrName: string) {
 		if (!attrs.length) return;
-		codeGen.addText(' ');
-		codeGen.addText(attrName);
-		codeGen.addText('=');
-		codeGen.addText('"');
+		codeGen.append(' ');
+		codeGen.append(attrName);
+		codeGen.append('=');
+		codeGen.append('"');
 		for (const attr of attrs) {
 			if (typeof attr.val !== 'boolean') {
-				codeGen.addText(' ');
-				codeGen.addCode2(
+				codeGen.append(' ');
+				codeGen.append(
 					attr.val.slice(1, -1), // remove "
 					getDocOffset(attr.line, attr.column + 1),
 					undefined
 				);
 			}
 		}
-		codeGen.addText('"');
+		codeGen.append('"');
 	}
 	function collectEmptyLineEnds(tokens: pugLex.Token[]) {
 

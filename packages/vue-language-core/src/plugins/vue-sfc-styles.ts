@@ -36,7 +36,7 @@ const plugin: VueLanguagePlugin = () => {
 					inlayHints: true,
 				};
 				embeddedFile.isTsHostFile = false;
-				embeddedFile.codeGen.addCode2(
+				embeddedFile.codeGen.append(
 					style.content,
 					0,
 					{

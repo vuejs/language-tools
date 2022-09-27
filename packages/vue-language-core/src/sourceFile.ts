@@ -228,7 +228,7 @@ export class VueSourceFile implements SourceFile {
 				const file = _file.value;
 				const node: EmbeddedFile = {
 					fileName: file.fileName,
-					text: file.codeGen.getText(),
+					text: file.codeGen.text,
 					capabilities: file.capabilities,
 					isTsHostFile: file.isTsHostFile,
 					mappings: file.codeGen.mappings.map(mapping => {

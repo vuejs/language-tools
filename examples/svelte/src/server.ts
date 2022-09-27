@@ -2,6 +2,7 @@ import useCssPlugin from '@volar-plugins/css';
 import useTsPlugin, { getSemanticTokenLegend } from '@volar-plugins/typescript';
 import { LanguageServerPlugin } from '@volar/language-server';
 import { createLanguageServer, EmbeddedLanguageModule, SourceFile } from '@volar/language-server/node';
+import { Mapping, MappingKind } from '@volar/source-map';
 
 const blocksReg = /\<(script|style)[\s\S]*?\>([\s\S]*?)\<\/\1\>/g;
 
@@ -93,7 +94,7 @@ function getEmbeddeds(fileName: string, text: string) {
 				{
 					sourceRange: { start, end },
 					mappedRange: { start: 0, end: content.length },
-					mode: 1,
+					kind: MappingKind.Offset,
 					data: {
 						hover: true,
 						references: true,
@@ -104,7 +105,7 @@ function getEmbeddeds(fileName: string, text: string) {
 						semanticTokens: true,
 					},
 				}
-			],
+			]satisfies Mapping[],
 			embeddeds: [],
 		};
 	});

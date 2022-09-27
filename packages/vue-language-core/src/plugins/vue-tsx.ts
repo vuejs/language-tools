@@ -116,7 +116,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				};
 				const tsx = tsxGen.value;
 				if (tsx) {
-					embeddedFile.codeGen.addText(tsx.codeGen.getText());
+					embeddedFile.codeGen.append(tsx.codeGen.text);
 					embeddedFile.codeGen.mappings = [...tsx.codeGen.mappings];
 					embeddedFile.teleportMappings = [...tsx.teleports];
 				}
@@ -135,7 +135,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				embeddedFile.isTsHostFile = false;
 
 				if (htmlGen.value) {
-					embeddedFile.codeGen.addText(htmlGen.value.formatCodeGen.getText());
+					embeddedFile.codeGen.append(htmlGen.value.formatCodeGen.text);
 					embeddedFile.codeGen.mappings = [...htmlGen.value.formatCodeGen.mappings];
 				}
 			}
@@ -144,7 +144,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				embeddedFile.parentFileName = fileName + '.template.' + sfc.template?.lang;
 
 				if (htmlGen.value) {
-					embeddedFile.codeGen.addText(htmlGen.value.cssCodeGen.getText());
+					embeddedFile.codeGen.append(htmlGen.value.cssCodeGen.text);
 					embeddedFile.codeGen.mappings = [...htmlGen.value.cssCodeGen.mappings];
 				}
 			}

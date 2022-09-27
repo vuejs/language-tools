@@ -74,7 +74,7 @@ export function generate(
 	const cssCodeGen = new CodeGen<EmbeddedFileMappingData>();
 	const slots = new Map<string, {
 		varName: string,
-		loc: SourceMaps.Range,
+		loc: SourceMaps.MappingRange,
 		nodeLoc: any,
 	}>();
 	const slotExps = new Map<string, {
@@ -91,7 +91,7 @@ export function generate(
 	let slotsNum = 0;
 	let elementIndex = 0;
 
-	formatCodeGen.addText('export { };\n');
+	formatCodeGen.append('export { };\n');
 
 	const componentVars = writeComponentVars();
 
@@ -114,17 +114,17 @@ export function generate(
 
 	function declareSlots() {
 
-		codeGen.addText(`declare var __VLS_slots:\n`);
+		codeGen.append(`declare var __VLS_slots:\n`);
 		for (const [exp, slot] of slotExps) {
-			codeGen.addText(`Record<NonNullable<typeof ${exp}>, typeof ${slot.varName}> &\n`);
+			codeGen.append(`Record<NonNullable<typeof ${exp}>, typeof ${slot.varName}> &\n`);
 		}
-		codeGen.addText(`{\n`);
+		codeGen.append(`{\n`);
 		for (const [name, slot] of slots) {
 			slotsNum++;
 			writeObjectProperty(
 				name,
 				slot.loc,
-				SourceMaps.Mode.Expand,
+				SourceMaps.MappingKind.Expand,
 				{
 					vueTag: 'template',
 					capabilities: {
@@ -134,15 +134,15 @@ export function generate(
 				},
 				slot.nodeLoc,
 			);
-			codeGen.addText(`: (_: typeof ${slot.varName}) => any,\n`);
+			codeGen.append(`: (_: typeof ${slot.varName}) => any,\n`);
 		}
-		codeGen.addText(`};\n`);
+		codeGen.append(`};\n`);
 	}
 	function writeStyleScopedClasses() {
 
-		codeGen.addText(`if (typeof __VLS_styleScopedClasses === 'object' && !Array.isArray(__VLS_styleScopedClasses)) {\n`);
+		codeGen.append(`if (typeof __VLS_styleScopedClasses === 'object' && !Array.isArray(__VLS_styleScopedClasses)) {\n`);
 		for (const { className, offset } of scopedClasses) {
-			codeGen.addText(`__VLS_styleScopedClasses[`);
+			codeGen.append(`__VLS_styleScopedClasses[`);
 			writeCodeWithQuotes(
 				className,
 				{
@@ -157,9 +157,9 @@ export function generate(
 					},
 				},
 			);
-			codeGen.addText(`];\n`);
+			codeGen.append(`];\n`);
 		}
-		codeGen.addText('}\n');
+		codeGen.append('}\n');
 	}
 	function writeComponentVars() {
 
@@ -184,20 +184,20 @@ export function generate(
 				capitalize(camelize(tagName)),
 			]);
 
-			codeGen.addText(`let ${var_componentVar}!: `);
+			codeGen.append(`let ${var_componentVar}!: `);
 
 			if (vueCompilerOptions.jsxTemplates && !vueCompilerOptions.strictTemplates)
-				codeGen.addText(`import('./__VLS_types.js').ConvertInvalidJsxElement<`);
+				codeGen.append(`import('./__VLS_types.js').ConvertInvalidJsxElement<`);
 
-			codeGen.addText(`import('./__VLS_types.js').GetComponents<typeof __VLS_components, ${[...names].map(name => `'${name}'`).join(', ')}>`);
+			codeGen.append(`import('./__VLS_types.js').GetComponents<typeof __VLS_components, ${[...names].map(name => `'${name}'`).join(', ')}>`);
 
 			if (vueCompilerOptions.jsxTemplates && !vueCompilerOptions.strictTemplates)
-				codeGen.addText(`>`);
+				codeGen.append(`>`);
 
-			codeGen.addText(`;\n`);
+			codeGen.append(`;\n`);
 
 			for (const name of names) {
-				codeGen.addText('__VLS_components');
+				codeGen.append('__VLS_components');
 				writePropertyAccess2(
 					name,
 					tagRanges,
@@ -212,9 +212,9 @@ export function generate(
 						},
 					},
 				);
-				codeGen.addText(';');
+				codeGen.append(';');
 			}
-			codeGen.addText('\n');
+			codeGen.append('\n');
 
 			data[tagName] = var_componentVar;
 		}
@@ -315,16 +315,16 @@ export function generate(
 				const branch = node.branches[i];
 
 				if (i === 0)
-					codeGen.addText('if');
+					codeGen.append('if');
 				else if (branch.condition)
-					codeGen.addText('else if');
+					codeGen.append('else if');
 				else
-					codeGen.addText('else');
+					codeGen.append('else');
 
 				let addedBlockCondition = false;
 
 				if (branch.condition?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-					codeGen.addText(` `);
+					codeGen.append(` `);
 					writeInterpolation(
 						branch.condition.content,
 						branch.condition.loc.start.offset,
@@ -348,12 +348,12 @@ export function generate(
 					}
 				}
 
-				codeGen.addText(` {\n`);
+				codeGen.append(` {\n`);
 				writeInterpolationVarsExtraCompletion();
 				for (const childNode of branch.children) {
 					visitNode(childNode, parentEl);
 				}
-				codeGen.addText('}\n');
+				codeGen.append('}\n');
 
 				if (addedBlockCondition) {
 					blockConditions[blockConditions.length - 1] = `!(${blockConditions[blockConditions.length - 1]})`;
@@ -369,7 +369,7 @@ export function generate(
 			const leftExpressionText = leftExpressionRange ? node.loc.source.substring(leftExpressionRange.start - node.loc.start.offset, leftExpressionRange.end - node.loc.start.offset) : undefined;
 			const forBlockVars: string[] = [];
 
-			codeGen.addText(`for (const [`);
+			codeGen.append(`for (const [`);
 			if (leftExpressionRange && leftExpressionText) {
 
 				const collentAst = createTsAst(node.parseResult, `const [${leftExpressionText}]`);
@@ -381,7 +381,7 @@ export function generate(
 				writeCode(
 					leftExpressionText,
 					leftExpressionRange,
-					SourceMaps.Mode.Offset,
+					SourceMaps.MappingKind.Offset,
 					{
 						vueTag: 'template',
 						capabilities: capabilitiesSet.all,
@@ -393,7 +393,7 @@ export function generate(
 					formatBrackets.square,
 				);
 			}
-			codeGen.addText(`] of (await import('./__VLS_types.js')).getVforSourceType`);
+			codeGen.append(`] of (await import('./__VLS_types.js')).getVforSourceType`);
 			if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 				writeInterpolation(
 					source.content,
@@ -412,7 +412,7 @@ export function generate(
 					formatBrackets.empty,
 				);
 
-				codeGen.addText(`) {\n`);
+				codeGen.append(`) {\n`);
 
 				writeInterpolationVarsExtraCompletion();
 
@@ -420,7 +420,7 @@ export function generate(
 					visitNode(childNode, parentEl);
 				}
 
-				codeGen.addText('}\n');
+				codeGen.append('}\n');
 			}
 
 			for (const varName of forBlockVars)
@@ -433,7 +433,7 @@ export function generate(
 			// not needed progress
 		}
 		else {
-			codeGen.addText(`// Unprocessed node type: ${node.type} json: ${JSON.stringify(node.loc)}\n`);
+			codeGen.append(`// Unprocessed node type: ${node.type} json: ${JSON.stringify(node.loc)}\n`);
 		}
 	};
 	function visitElementNode(node: CompilerDOM.ElementNode, parentEl: CompilerDOM.ElementNode | undefined) {
@@ -466,7 +466,7 @@ export function generate(
 					start: node.loc.start.offset + startTagEnd,
 					end: node.loc.start.offset + startTagEnd + scriptCode.length,
 				},
-				SourceMaps.Mode.Offset,
+				SourceMaps.MappingKind.Offset,
 				{
 					vueTag: 'template',
 					capabilities: capabilitiesSet.all,
@@ -475,7 +475,7 @@ export function generate(
 			return;
 		}
 
-		codeGen.addText(`{\n`);
+		codeGen.append(`{\n`);
 
 		const startTagOffset = node.loc.start.offset + sourceTemplate.substring(node.loc.start.offset).indexOf(node.tag);
 		const endTagOffset = !node.isSelfClosing && sourceLang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
@@ -488,44 +488,44 @@ export function generate(
 
 		if (vueCompilerOptions.jsxTemplates) {
 
-			const fullTagStart = codeGen.getText().length;
+			const fullTagStart = codeGen.text.length;
 			const tagCapabilities: PositionCapabilities = _isIntrinsicElement || _isNamespacedTag ? capabilitiesSet.all : capabilitiesSet.diagnosticOnly;
 
-			codeGen.addText(`<`);
+			codeGen.append(`<`);
 			writeCode(
 				tagText,
 				{
 					start: startTagOffset,
 					end: startTagOffset + node.tag.length,
 				},
-				SourceMaps.Mode.Offset,
+				SourceMaps.MappingKind.Offset,
 				{
 					vueTag: 'template',
 					capabilities: tagCapabilities,
 				},
 			);
-			codeGen.addText(` `);
+			codeGen.append(` `);
 			const { hasRemainStyleOrClass, unwritedExps } = writeProps(node, false, 'jsx', 'props');
 			_unwritedExps = unwritedExps;
 
 			if (endTagOffset === undefined) {
-				codeGen.addText(`/>`);
+				codeGen.append(`/>`);
 			}
 			else {
-				codeGen.addText(`></`);
+				codeGen.append(`></`);
 				writeCode(
 					tagText,
 					{
 						start: endTagOffset,
 						end: endTagOffset + node.tag.length,
 					},
-					SourceMaps.Mode.Offset,
+					SourceMaps.MappingKind.Offset,
 					{
 						vueTag: 'template',
 						capabilities: tagCapabilities,
 					},
 				);
-				codeGen.addText(`>;\n`);
+				codeGen.append(`>;\n`);
 			}
 
 			// fix https://github.com/johnsoncodehk/volar/issues/705#issuecomment-974773353
@@ -539,27 +539,27 @@ export function generate(
 			else {
 				startTagEnd = node.loc.start.offset + node.loc.source.substring(0, node.loc.source.lastIndexOf('</')).lastIndexOf('>') + 1;
 			}
-			codeGen.addMapping2({
+			codeGen.mappings.push({
 				sourceRange: {
 					start: node.loc.start.offset,
 					end: startTagEnd,
 				},
 				mappedRange: {
 					start: fullTagStart,
-					end: codeGen.getText().length,
+					end: codeGen.text.length,
 				},
-				mode: SourceMaps.Mode.Totally,
+				kind: SourceMaps.MappingKind.Totally,
 				data: {
 					vueTag: 'template',
 					capabilities: capabilitiesSet.diagnosticOnly,
 				},
 			});
-			codeGen.addText(`\n`);
+			codeGen.append(`\n`);
 
 			if (hasRemainStyleOrClass) {
-				codeGen.addText(`<${tagText} `);
+				codeGen.append(`<${tagText} `);
 				writeProps(node, true, 'jsx', 'props');
-				codeGen.addText(`/>\n`);
+				codeGen.append(`/>\n`);
 			}
 		}
 		else {
@@ -567,7 +567,7 @@ export function generate(
 			const var_props = `__VLS_${elementIndex++}`;
 
 			if (_isIntrinsicElement) {
-				codeGen.addText(`let ${var_props} = ({} as JSX.IntrinsicElements)`);
+				codeGen.append(`let ${var_props} = ({} as JSX.IntrinsicElements)`);
 				writePropertyAccess(
 					node.tag,
 					{
@@ -582,10 +582,10 @@ export function generate(
 						},
 					},
 				);
-				codeGen.addText(`;\n`);
+				codeGen.append(`;\n`);
 
 				if (endTagOffset !== undefined) {
-					codeGen.addText(`({} as JSX.IntrinsicElements)`);
+					codeGen.append(`({} as JSX.IntrinsicElements)`);
 					writePropertyAccess(
 						node.tag,
 						{
@@ -600,12 +600,12 @@ export function generate(
 							},
 						},
 					);
-					codeGen.addText(`;\n`);
+					codeGen.append(`;\n`);
 				}
 			}
 			else if (_isNamespacedTag) {
 
-				codeGen.addText(`let ${var_props}!: import('./__VLS_types.js').ComponentProps<typeof ${tagText}>;\n`);
+				codeGen.append(`let ${var_props}!: import('./__VLS_types.js').ComponentProps<typeof ${tagText}>;\n`);
 
 				writeCode(
 					tagText,
@@ -613,13 +613,13 @@ export function generate(
 						start: startTagOffset,
 						end: startTagOffset + node.tag.length,
 					},
-					SourceMaps.Mode.Offset,
+					SourceMaps.MappingKind.Offset,
 					{
 						vueTag: 'template',
 						capabilities: capabilitiesSet.all,
 					},
 				);
-				codeGen.addText(`;\n`);
+				codeGen.append(`;\n`);
 
 				if (endTagOffset !== undefined) {
 					writeCode(
@@ -628,31 +628,31 @@ export function generate(
 							start: endTagOffset,
 							end: endTagOffset + node.tag.length,
 						},
-						SourceMaps.Mode.Offset,
+						SourceMaps.MappingKind.Offset,
 						{
 							vueTag: 'template',
 							capabilities: capabilitiesSet.all,
 						},
 					);
-					codeGen.addText(`;\n`);
+					codeGen.append(`;\n`);
 				}
 			}
 			else {
 
-				codeGen.addText(`let ${var_props}!: import('./__VLS_types.js').ComponentProps<typeof `);
+				codeGen.append(`let ${var_props}!: import('./__VLS_types.js').ComponentProps<typeof `);
 				writeCode(
 					tagText,
 					{
 						start: startTagOffset,
 						end: startTagOffset + node.tag.length,
 					},
-					SourceMaps.Mode.Offset,
+					SourceMaps.MappingKind.Offset,
 					{
 						vueTag: 'template',
 						capabilities: capabilitiesSet.tagHover,
 					},
 				);
-				codeGen.addText(`>;\n`);
+				codeGen.append(`>;\n`);
 
 				if (endTagOffset !== undefined) {
 					writeCode(
@@ -661,13 +661,13 @@ export function generate(
 							start: endTagOffset,
 							end: endTagOffset + node.tag.length,
 						},
-						SourceMaps.Mode.Offset,
+						SourceMaps.MappingKind.Offset,
 						{
 							vueTag: 'template',
 							capabilities: capabilitiesSet.tagHover,
 						},
 					);
-					codeGen.addText(`;\n`);
+					codeGen.append(`;\n`);
 				}
 			}
 
@@ -677,21 +677,21 @@ export function generate(
 					start: startTagOffset,
 					end: startTagOffset + node.tag.length,
 				},
-				SourceMaps.Mode.Offset,
+				SourceMaps.MappingKind.Offset,
 				{
 					vueTag: 'template',
 					capabilities: capabilitiesSet.diagnosticOnly,
 				},
 			);
-			codeGen.addText(` = { `);
+			codeGen.append(` = { `);
 			const { hasRemainStyleOrClass, unwritedExps } = writeProps(node, false, 'class', 'props');
 			_unwritedExps = unwritedExps;
-			codeGen.addText(` };\n`);
+			codeGen.append(` };\n`);
 
 			if (hasRemainStyleOrClass) {
-				codeGen.addText(`${var_props} = { `);
+				codeGen.append(`${var_props} = { `);
 				writeProps(node, true, 'class', 'props');
-				codeGen.addText(` };\n`);
+				codeGen.append(` };\n`);
 			}
 		}
 		{
@@ -717,7 +717,7 @@ export function generate(
 						fb,
 					);
 				}
-				codeGen.addText(';\n');
+				codeGen.append(';\n');
 			}
 
 			let slotBlockVars: string[] | undefined;
@@ -739,21 +739,21 @@ export function generate(
 				const scopeVar = `__VLS_${elementIndex++}`;
 				const condition = `(await import('./__VLS_types.js')).withScope(__VLS_ctx, ${scopeVar})`;
 
-				codeGen.addText(`const ${scopeVar} = `);
+				codeGen.append(`const ${scopeVar} = `);
 				writeCode(
 					vScope.exp.loc.source,
 					{
 						start: vScope.exp.loc.start.offset,
 						end: vScope.exp.loc.end.offset,
 					},
-					SourceMaps.Mode.Offset,
+					SourceMaps.MappingKind.Offset,
 					{
 						vueTag: 'template',
 						capabilities: capabilitiesSet.all,
 					},
 				);
-				codeGen.addText(';\n');
-				codeGen.addText(`if (${condition}) {\n`);
+				codeGen.append(';\n');
+				codeGen.append(`if (${condition}) {\n`);
 				blockConditions.push(condition);
 				inScope = true;
 			}
@@ -774,11 +774,11 @@ export function generate(
 			}
 
 			if (inScope) {
-				codeGen.addText('}\n');
+				codeGen.append('}\n');
 				blockConditions.length = originalConditionsNum;
 			}
 		}
-		codeGen.addText(`}\n`);
+		codeGen.append(`}\n`);
 	}
 	function writeEvents(node: CompilerDOM.ElementNode) {
 
@@ -798,10 +798,10 @@ export function generate(
 				const varInstanceProps = `__VLS_${elementIndex++}`;
 				const key_2 = camelize('on-' + prop.arg.loc.source); // onClickOutside
 
-				codeGen.addText(`type ${varInstanceProps} = import('./__VLS_types.js').InstanceProps<typeof ${varComponentInstance}, ${componentVar ? 'typeof ' + componentVar : '{}'}>;\n`);
-				codeGen.addText(`const __VLS_${elementIndex++}: import('./__VLS_types.js').EventObject<typeof ${varComponentInstance}, '${prop.arg.loc.source}', ${componentVar ? 'typeof ' + componentVar : '{}'}, `);
+				codeGen.append(`type ${varInstanceProps} = import('./__VLS_types.js').InstanceProps<typeof ${varComponentInstance}, ${componentVar ? 'typeof ' + componentVar : '{}'}>;\n`);
+				codeGen.append(`const __VLS_${elementIndex++}: import('./__VLS_types.js').EventObject<typeof ${varComponentInstance}, '${prop.arg.loc.source}', ${componentVar ? 'typeof ' + componentVar : '{}'}, `);
 
-				codeGen.addText(`${varInstanceProps}[`);
+				codeGen.append(`${varInstanceProps}[`);
 				writeCodeWithQuotes(
 					key_2,
 					[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
@@ -824,7 +824,7 @@ export function generate(
 						},
 					},
 				);
-				codeGen.addText(`], import('./__VLS_types.js').GlobalAttrs[`);
+				codeGen.append(`], import('./__VLS_types.js').GlobalAttrs[`);
 				writeCodeWithQuotes(
 					key_2,
 					[{ start: prop.arg.loc.start.offset, end: prop.arg.loc.end.offset }],
@@ -847,7 +847,7 @@ export function generate(
 						},
 					},
 				);
-				codeGen.addText(`]> = {\n`);
+				codeGen.append(`]> = {\n`);
 				{
 					writeObjectProperty(
 						prop.arg.loc.source,
@@ -855,17 +855,17 @@ export function generate(
 							start: prop.arg.loc.start.offset,
 							end: prop.arg.loc.end.offset,
 						},
-						SourceMaps.Mode.Offset,
+						SourceMaps.MappingKind.Offset,
 						{
 							vueTag: 'template',
 							capabilities: capabilitiesSet.event,
 						},
 						prop.arg.loc,
 					);
-					codeGen.addText(`: `);
+					codeGen.append(`: `);
 					appendExpressionNode(prop);
 				}
-				codeGen.addText(`};\n`);
+				codeGen.append(`};\n`);
 				writeInterpolationVarsExtraCompletion();
 			}
 			else if (
@@ -891,7 +891,7 @@ export function generate(
 					prop.exp.loc.start.offset,
 					formatBrackets.round,
 				);
-				codeGen.addText(`;\n`);
+				codeGen.append(`;\n`);
 			}
 
 			function appendExpressionNode(prop: CompilerDOM.DirectiveNode) {
@@ -950,7 +950,7 @@ export function generate(
 					);
 				}
 				else {
-					codeGen.addText(`() => {}`);
+					codeGen.append(`() => {}`);
 				}
 			}
 		}
@@ -965,9 +965,9 @@ export function generate(
 			const componentVar = componentVars[node.tag];
 
 			if (componentVar) {
-				codeGen.addText(`const ${varComponentInstance} = new ${componentVar}({ `);
+				codeGen.append(`const ${varComponentInstance} = new ${componentVar}({ `);
 				writeProps(node, false, 'class', 'slots');
-				codeGen.addText(`});\n`);
+				codeGen.append(`});\n`);
 			}
 
 			writedInstance = true;
@@ -1023,7 +1023,7 @@ export function generate(
 
 				// camelize name
 				writePropStart(isStatic);
-				const diagStart = codeGen.getText().length;
+				const diagStart = codeGen.text.length;
 				if (!prop.arg) {
 					writePropName(
 						propName_1,
@@ -1104,19 +1104,19 @@ export function generate(
 					}
 				}
 				else {
-					codeGen.addText('{}');
+					codeGen.append('{}');
 				}
 				writePropValueSuffix(isStatic);
-				codeGen.addMapping2({
+				codeGen.mappings.push({
 					sourceRange: {
 						start: prop.loc.start.offset,
 						end: prop.loc.end.offset,
 					},
 					mappedRange: {
 						start: diagStart,
-						end: codeGen.getText().length,
+						end: codeGen.text.length,
 					},
-					mode: SourceMaps.Mode.Totally,
+					kind: SourceMaps.MappingKind.Totally,
 					data: {
 						vueTag: 'template',
 						capabilities: getCaps(capabilitiesSet.diagnosticOnly),
@@ -1157,7 +1157,7 @@ export function generate(
 						);
 					}
 					else {
-						codeGen.addText('undefined');
+						codeGen.append('undefined');
 					}
 					writePropValueSuffix(isStatic);
 					writePropEnd(isStatic);
@@ -1185,7 +1185,7 @@ export function generate(
 
 				// camelize name
 				writePropStart(true);
-				const diagStart = codeGen.getText().length;
+				const diagStart = codeGen.text.length;
 				writePropName(
 					propName,
 					true,
@@ -1210,12 +1210,12 @@ export function generate(
 					writeAttrValue(prop.value);
 				}
 				else {
-					codeGen.addText('true');
+					codeGen.append('true');
 				}
 				writePropValueSuffix(true);
 				writePropEnd(true);
-				const diagEnd = codeGen.getText().length;
-				codeGen.addMapping2({
+				const diagEnd = codeGen.text.length;
+				codeGen.mappings.push({
 					sourceRange: {
 						start: prop.loc.start.offset,
 						end: prop.loc.end.offset,
@@ -1224,7 +1224,7 @@ export function generate(
 						start: diagStart,
 						end: diagEnd,
 					},
-					mode: SourceMaps.Mode.Totally,
+					kind: SourceMaps.MappingKind.Totally,
 					data: {
 						vueTag: 'template',
 						capabilities: getCaps(capabilitiesSet.diagnosticOnly),
@@ -1257,7 +1257,7 @@ export function generate(
 						writeAttrValue(prop.value);
 					}
 					else {
-						codeGen.addText('true');
+						codeGen.append('true');
 					}
 					writePropValueSuffix(true);
 					writePropEnd(true);
@@ -1273,9 +1273,9 @@ export function generate(
 					continue;
 				}
 				if (format === 'jsx')
-					codeGen.addText('{...');
+					codeGen.append('{...');
 				else
-					codeGen.addText('...');
+					codeGen.append('...');
 				writeInterpolation(
 					prop.exp.content,
 					prop.exp.loc.start.offset,
@@ -1296,9 +1296,9 @@ export function generate(
 					);
 				}
 				if (format === 'jsx')
-					codeGen.addText('} ');
+					codeGen.append('} ');
 				else
-					codeGen.addText(', ');
+					codeGen.append(', ');
 			}
 			else {
 				if (forRemainStyleOrClass) {
@@ -1314,12 +1314,12 @@ export function generate(
 			unwritedExps,
 		};
 
-		function writePropName(name: string, isStatic: boolean, sourceRange: SourceMaps.Range, data: EmbeddedFileMappingData, cacheOn: any) {
+		function writePropName(name: string, isStatic: boolean, sourceRange: SourceMaps.MappingRange, data: EmbeddedFileMappingData, cacheOn: any) {
 			if (format === 'jsx' && isStatic) {
 				writeCode(
 					name,
 					sourceRange,
-					SourceMaps.Mode.Offset,
+					SourceMaps.MappingKind.Offset,
 					data,
 				);
 			}
@@ -1327,7 +1327,7 @@ export function generate(
 				writeObjectProperty(
 					name,
 					sourceRange,
-					SourceMaps.Mode.Offset,
+					SourceMaps.MappingKind.Offset,
 					data,
 					cacheOn,
 				);
@@ -1335,34 +1335,34 @@ export function generate(
 		}
 		function writePropValuePrefix(isStatic: boolean) {
 			if (format === 'jsx' && isStatic) {
-				codeGen.addText('={');
+				codeGen.append('={');
 			}
 			else {
-				codeGen.addText(': (');
+				codeGen.append(': (');
 			}
 		}
 		function writePropValueSuffix(isStatic: boolean) {
 			if (format === 'jsx' && isStatic) {
-				codeGen.addText('}');
+				codeGen.append('}');
 			}
 			else {
-				codeGen.addText(')');
+				codeGen.append(')');
 			}
 		}
 		function writePropStart(isStatic: boolean) {
 			if (format === 'jsx' && !isStatic) {
-				codeGen.addText('{...{');
+				codeGen.append('{...{');
 			}
 		}
 		function writePropEnd(isStatic: boolean) {
 			if (format === 'jsx' && isStatic) {
-				codeGen.addText(' ');
+				codeGen.append(' ');
 			}
 			else if (format === 'jsx' && !isStatic) {
-				codeGen.addText('}} ');
+				codeGen.append('}} ');
 			}
 			else {
-				codeGen.addText(', ');
+				codeGen.append(', ');
 			}
 		}
 		function getCaps(caps: EmbeddedFileMappingData['capabilities']): EmbeddedFileMappingData['capabilities'] {
@@ -1385,7 +1385,7 @@ export function generate(
 			}
 		}
 		function writeAttrValue(attrNode: CompilerDOM.TextNode) {
-			codeGen.addText('"');
+			codeGen.append('"');
 			let start = attrNode.loc.start.offset;
 			let end = attrNode.loc.end.offset;
 			if (end - start > attrNode.content.length) {
@@ -1395,13 +1395,13 @@ export function generate(
 			writeCode(
 				toUnicode(attrNode.content),
 				{ start, end },
-				SourceMaps.Mode.Offset,
+				SourceMaps.MappingKind.Offset,
 				{
 					vueTag: 'template',
 					capabilities: getCaps(capabilitiesSet.all)
 				},
 			);
-			codeGen.addText('"');
+			codeGen.append('"');
 		}
 	}
 	function writeInlineCss(node: CompilerDOM.ElementNode) {
@@ -1419,8 +1419,8 @@ export function generate(
 				const end = prop.arg.loc.source.lastIndexOf(endCrt);
 				const content = prop.arg.loc.source.substring(start, end);
 
-				cssCodeGen.addText(`${node.tag} { `);
-				cssCodeGen.addCode2(
+				cssCodeGen.append(`${node.tag} { `);
+				cssCodeGen.append(
 					content,
 					prop.arg.loc.start.offset + start,
 					{
@@ -1436,7 +1436,7 @@ export function generate(
 						},
 					},
 				);
-				cssCodeGen.addText(` }\n`);
+				cssCodeGen.append(` }\n`);
 			}
 		}
 	}
@@ -1454,15 +1454,15 @@ export function generate(
 				const varSlots = `__VLS_${elementIndex++}`;
 
 				if (componentVar && parentEl) {
-					codeGen.addText(`const ${varComponentInstance} = new ${componentVar}({ `);
+					codeGen.append(`const ${varComponentInstance} = new ${componentVar}({ `);
 					writeProps(parentEl, false, 'class', 'slots');
-					codeGen.addText(`});\n`);
+					codeGen.append(`});\n`);
 					writeInterpolationVarsExtraCompletion();
-					codeGen.addText(`let ${varSlots}!: import('./__VLS_types.js').ExtractComponentSlots<typeof ${varComponentInstance}>;\n`);
+					codeGen.append(`let ${varSlots}!: import('./__VLS_types.js').ExtractComponentSlots<typeof ${varComponentInstance}>;\n`);
 				}
 
 				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-					codeGen.addText(`const `);
+					codeGen.append(`const `);
 
 					const collentAst = createTsAst(prop, `const ${prop.exp.content}`);
 					colletVars(ts, collentAst, slotBlockVars);
@@ -1473,7 +1473,7 @@ export function generate(
 							start: prop.exp.loc.start.offset,
 							end: prop.exp.loc.end.offset,
 						},
-						SourceMaps.Mode.Offset,
+						SourceMaps.MappingKind.Offset,
 						{
 							vueTag: 'template',
 							capabilities: capabilitiesSet.all,
@@ -1485,12 +1485,12 @@ export function generate(
 						formatBrackets.round,
 					);
 
-					codeGen.addText(` = `);
+					codeGen.append(` = `);
 				}
 
 				if (!componentVar || !parentEl) {
 					// fix https://github.com/johnsoncodehk/volar/issues/1425
-					codeGen.addText(`{} as any;\n`);
+					codeGen.append(`{} as any;\n`);
 					continue;
 				}
 
@@ -1500,8 +1500,8 @@ export function generate(
 					isStatic = prop.arg.isStatic;
 					slotName = prop.arg.content;
 				}
-				const diagStart = codeGen.getText().length;
-				codeGen.addText(varSlots);
+				const diagStart = codeGen.text.length;
+				codeGen.append(varSlots);
 				const argRange = prop.arg
 					? {
 						start: prop.arg.loc.start.offset,
@@ -1525,7 +1525,7 @@ export function generate(
 					);
 				}
 				else {
-					codeGen.addText(`[`);
+					codeGen.append(`[`);
 					writeInterpolation(
 						slotName,
 						argRange.start + 1,
@@ -1537,23 +1537,23 @@ export function generate(
 						'',
 						(prop.loc as any).slot_name ?? ((prop.loc as any).slot_name = {}),
 					);
-					codeGen.addText(`]`);
+					codeGen.append(`]`);
 					writeInterpolationVarsExtraCompletion();
 				}
-				const diagEnd = codeGen.getText().length;
-				codeGen.addMapping2({
+				const diagEnd = codeGen.text.length;
+				codeGen.mappings.push({
 					mappedRange: {
 						start: diagStart,
 						end: diagEnd,
 					},
 					sourceRange: argRange,
-					mode: SourceMaps.Mode.Totally,
+					kind: SourceMaps.MappingKind.Totally,
 					data: {
 						vueTag: 'template',
 						capabilities: capabilitiesSet.diagnosticOnly,
 					},
 				});
-				codeGen.addText(`;\n`);
+				codeGen.append(`;\n`);
 
 				if (isStatic && !prop.arg) {
 
@@ -1564,12 +1564,12 @@ export function generate(
 					else if (prop.loc.source.startsWith('v-slot:'))
 						offset += 'v-slot:'.length;
 
-					codeGen.addText(varSlots);
-					codeGen.addText(`['`);
+					codeGen.append(varSlots);
+					codeGen.append(`['`);
 					writeCode(
 						'',
 						{ start: offset, end: offset },
-						SourceMaps.Mode.Offset,
+						SourceMaps.MappingKind.Offset,
 						{
 							vueTag: 'template',
 							capabilities: {
@@ -1577,7 +1577,7 @@ export function generate(
 							},
 						},
 					);
-					codeGen.addText(`'];\n`);
+					codeGen.append(`'];\n`);
 				}
 			}
 		}
@@ -1593,15 +1593,15 @@ export function generate(
 				&& (prop.name !== 'scope' && prop.name !== 'data')
 			) {
 
-				const diagStart = codeGen.getText().length;
-				codeGen.addText(`(await import('./__VLS_types.js')).directiveFunction(__VLS_ctx.`);
+				const diagStart = codeGen.text.length;
+				codeGen.append(`(await import('./__VLS_types.js')).directiveFunction(__VLS_ctx.`);
 				writeCode(
 					camelize('v-' + prop.name),
 					{
 						start: prop.loc.start.offset,
 						end: prop.loc.start.offset + 'v-'.length + prop.name.length,
 					},
-					SourceMaps.Mode.Offset,
+					SourceMaps.MappingKind.Offset,
 					{
 						vueTag: 'template',
 						capabilities: {
@@ -1618,7 +1618,7 @@ export function generate(
 					},
 				);
 				identifiers.add(camelize('v-' + prop.name));
-				codeGen.addText(`)(`);
+				codeGen.append(`)(`);
 				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					writeInterpolation(
 						prop.exp.content,
@@ -1637,23 +1637,23 @@ export function generate(
 						formatBrackets.round,
 					);
 				}
-				codeGen.addText(`)`);
-				codeGen.addMapping2({
+				codeGen.append(`)`);
+				codeGen.mappings.push({
 					sourceRange: {
 						start: prop.loc.start.offset,
 						end: prop.loc.end.offset,
 					},
 					mappedRange: {
 						start: diagStart,
-						end: codeGen.getText().length,
+						end: codeGen.text.length,
 					},
-					mode: SourceMaps.Mode.Totally,
+					kind: SourceMaps.MappingKind.Totally,
 					data: {
 						vueTag: 'template',
 						capabilities: capabilitiesSet.diagnosticOnly,
 					},
 				});
-				codeGen.addText(`;\n`);
+				codeGen.append(`;\n`);
 				writeInterpolationVarsExtraCompletion();
 			}
 		}
@@ -1665,7 +1665,7 @@ export function generate(
 				&& prop.name === 'ref'
 				&& prop.value
 			) {
-				codeGen.addText(`// @ts-ignore\n`);
+				codeGen.append(`// @ts-ignore\n`);
 				writeInterpolation(
 					prop.value.content,
 					prop.value.loc.start.offset + 1,
@@ -1677,7 +1677,7 @@ export function generate(
 					')',
 					prop.value.loc,
 				);
-				codeGen.addText(`;\n`);
+				codeGen.append(`;\n`);
 				writeInterpolationVarsExtraCompletion();
 			}
 		}
@@ -1713,20 +1713,20 @@ export function generate(
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 				&& prop.arg.content === 'class'
 			) {
-				codeGen.addText(`__VLS_styleScopedClasses = (`);
+				codeGen.append(`__VLS_styleScopedClasses = (`);
 				writeCode(
 					prop.exp.content,
 					{
 						start: prop.exp.loc.start.offset,
 						end: prop.exp.loc.end.offset,
 					},
-					SourceMaps.Mode.Offset,
+					SourceMaps.MappingKind.Offset,
 					{
 						vueTag: 'template',
 						capabilities: capabilitiesSet.scopedClassName,
 					},
 				);
-				codeGen.addText(`);\n`);
+				codeGen.append(`);\n`);
 			}
 		}
 	}
@@ -1749,7 +1749,7 @@ export function generate(
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
 				hasDefaultBind = true;
-				codeGen.addText(`const ${varDefaultBind} = `);
+				codeGen.append(`const ${varDefaultBind} = `);
 				writeInterpolation(
 					prop.exp.content,
 					prop.exp.loc.start.offset,
@@ -1761,13 +1761,13 @@ export function generate(
 					')',
 					prop.exp.loc,
 				);
-				codeGen.addText(`;\n`);
+				codeGen.append(`;\n`);
 				writeInterpolationVarsExtraCompletion();
 				break;
 			}
 		}
 
-		codeGen.addText(`const ${varBinds} = {\n`);
+		codeGen.append(`const ${varBinds} = {\n`);
 		for (const prop of node.props) {
 			if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -1781,7 +1781,7 @@ export function generate(
 						start: prop.arg.loc.start.offset,
 						end: prop.arg.loc.end.offset,
 					},
-					SourceMaps.Mode.Offset,
+					SourceMaps.MappingKind.Offset,
 					{
 						vueTag: 'template',
 						capabilities: {
@@ -1794,7 +1794,7 @@ export function generate(
 					},
 					prop.arg.loc,
 				);
-				codeGen.addText(`: `);
+				codeGen.append(`: `);
 				writeInterpolation(
 					prop.exp.content,
 					prop.exp.loc.start.offset,
@@ -1806,7 +1806,7 @@ export function generate(
 					')',
 					prop.exp.loc,
 				);
-				codeGen.addText(`,\n`);
+				codeGen.append(`,\n`);
 			}
 			else if (
 				prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
@@ -1819,7 +1819,7 @@ export function generate(
 						start: prop.loc.start.offset,
 						end: prop.loc.start.offset + prop.name.length
 					},
-					SourceMaps.Mode.Offset,
+					SourceMaps.MappingKind.Offset,
 					{
 						vueTag: 'template',
 						capabilities: {
@@ -1832,27 +1832,27 @@ export function generate(
 					},
 					prop.loc,
 				);
-				codeGen.addText(`: (`);
-				codeGen.addText(propValue);
-				codeGen.addText(`),\n`);
+				codeGen.append(`: (`);
+				codeGen.append(propValue);
+				codeGen.append(`),\n`);
 			}
 		}
-		codeGen.addText(`};\n`);
+		codeGen.append(`};\n`);
 
 		writeInterpolationVarsExtraCompletion();
 
 		if (hasDefaultBind) {
-			codeGen.addText(`var ${varSlot}!: typeof ${varDefaultBind} & typeof ${varBinds};\n`);
+			codeGen.append(`var ${varSlot}!: typeof ${varDefaultBind} & typeof ${varBinds};\n`);
 		}
 		else {
-			codeGen.addText(`var ${varSlot}!: typeof ${varBinds};\n`);
+			codeGen.append(`var ${varSlot}!: typeof ${varBinds};\n`);
 		}
 
 		if (slotNameExp) {
 			const varSlotExp = `__VLS_${elementIndex++}`;
 			const varSlotExp2 = `__VLS_${elementIndex++}`;
-			codeGen.addText(`const ${varSlotExp} = ${slotNameExp};\n`);
-			codeGen.addText(`var ${varSlotExp2}!: typeof ${varSlotExp};\n`);
+			codeGen.append(`const ${varSlotExp} = ${slotNameExp};\n`);
+			codeGen.append(`var ${varSlotExp2}!: typeof ${varSlotExp};\n`);
 			slotExps.set(varSlotExp2, {
 				varName: varSlot,
 			});
@@ -1891,7 +1891,7 @@ export function generate(
 			}
 		}
 	}
-	function writeObjectProperty(mapCode: string, sourceRange: SourceMaps.Range, mapMode: SourceMaps.Mode, data: EmbeddedFileMappingData, cacheOn: any) {
+	function writeObjectProperty(mapCode: string, sourceRange: SourceMaps.MappingRange, mapMode: SourceMaps.MappingKind, data: EmbeddedFileMappingData, cacheOn: any) {
 		if (validTsVar.test(mapCode)) {
 			writeCode(mapCode, sourceRange, mapMode, data);
 			return 1;
@@ -1912,39 +1912,39 @@ export function generate(
 			return 2;
 		}
 	}
-	function writePropertyAccess2(mapCode: string, sourceRanges: SourceMaps.Range[], data: EmbeddedFileMappingData) {
+	function writePropertyAccess2(mapCode: string, sourceRanges: SourceMaps.MappingRange[], data: EmbeddedFileMappingData) {
 		const sourceRange = sourceRanges[0];
 		const mode = writePropertyAccess(mapCode, sourceRange, data);
 
 		for (let i = 1; i < sourceRanges.length; i++) {
 			const sourceRange = sourceRanges[i];
 			if (mode === 1 || mode === 2) {
-				codeGen.addMapping2({
+				codeGen.mappings.push({
 					sourceRange,
 					mappedRange: {
-						start: codeGen.getText().length - mapCode.length,
-						end: codeGen.getText().length,
+						start: codeGen.text.length - mapCode.length,
+						end: codeGen.text.length,
 					},
-					mode: sourceRange.end - sourceRange.start === mapCode.length ? SourceMaps.Mode.Offset : SourceMaps.Mode.Expand,
+					kind: sourceRange.end - sourceRange.start === mapCode.length ? SourceMaps.MappingKind.Offset : SourceMaps.MappingKind.Expand,
 					data,
 				});
 			}
 			else if (mode === 3) {
-				codeGen.addMapping2({
+				codeGen.mappings.push({
 					sourceRange,
 					mappedRange: {
-						start: codeGen.getText().length - `['${mapCode}']`.length,
-						end: codeGen.getText().length - `']`.length,
+						start: codeGen.text.length - `['${mapCode}']`.length,
+						end: codeGen.text.length - `']`.length,
 					},
-					mode: SourceMaps.Mode.Offset,
+					kind: SourceMaps.MappingKind.Offset,
 					additional: [
 						{
 							sourceRange,
 							mappedRange: {
-								start: codeGen.getText().length - `'${mapCode}']`.length,
-								end: codeGen.getText().length - `]`.length,
+								start: codeGen.text.length - `'${mapCode}']`.length,
+								end: codeGen.text.length - `]`.length,
 							},
-							mode: SourceMaps.Mode.Totally,
+							kind: SourceMaps.MappingKind.Totally,
 						}
 					],
 					data,
@@ -1952,52 +1952,52 @@ export function generate(
 			}
 		}
 	}
-	function writePropertyAccess(mapCode: string, sourceRange: SourceMaps.Range, data: EmbeddedFileMappingData, checkValid = true) {
+	function writePropertyAccess(mapCode: string, sourceRange: SourceMaps.MappingRange, data: EmbeddedFileMappingData, checkValid = true) {
 		if (checkValid && validTsVar.test(mapCode)) {
-			codeGen.addText(`.`);
+			codeGen.append(`.`);
 			if (sourceRange.end - sourceRange.start === mapCode.length) {
-				writeCode(mapCode, sourceRange, SourceMaps.Mode.Offset, data);
+				writeCode(mapCode, sourceRange, SourceMaps.MappingKind.Offset, data);
 			}
 			else {
-				writeCode(mapCode, sourceRange, SourceMaps.Mode.Expand, data);
+				writeCode(mapCode, sourceRange, SourceMaps.MappingKind.Expand, data);
 			}
 			return 1;
 		}
 		else if (mapCode.startsWith('[') && mapCode.endsWith(']')) {
-			writeCode(mapCode, sourceRange, SourceMaps.Mode.Offset, data);
+			writeCode(mapCode, sourceRange, SourceMaps.MappingKind.Offset, data);
 			return 2;
 		}
 		else {
-			codeGen.addText(`[`);
+			codeGen.append(`[`);
 			writeCodeWithQuotes(mapCode, sourceRange, data);
-			codeGen.addText(`]`);
+			codeGen.append(`]`);
 			return 3;
 		}
 	}
-	function writeCodeWithQuotes(mapCode: string, sourceRanges: SourceMaps.Range | SourceMaps.Range[], data: EmbeddedFileMappingData) {
+	function writeCodeWithQuotes(mapCode: string, sourceRanges: SourceMaps.MappingRange | SourceMaps.MappingRange[], data: EmbeddedFileMappingData) {
 		const addText = `'${mapCode}'`;
 		for (const sourceRange of 'length' in sourceRanges ? sourceRanges : [sourceRanges]) {
-			codeGen.addMapping2({
+			codeGen.mappings.push({
 				sourceRange,
 				mappedRange: {
-					start: codeGen.getText().length + 1,
-					end: codeGen.getText().length + addText.length - 1,
+					start: codeGen.text.length + 1,
+					end: codeGen.text.length + addText.length - 1,
 				},
-				mode: SourceMaps.Mode.Offset,
+				kind: SourceMaps.MappingKind.Offset,
 				additional: [
 					{
 						sourceRange,
 						mappedRange: {
-							start: codeGen.getText().length,
-							end: codeGen.getText().length + addText.length,
+							start: codeGen.text.length,
+							end: codeGen.text.length + addText.length,
 						},
-						mode: SourceMaps.Mode.Totally,
+						kind: SourceMaps.MappingKind.Totally,
 					}
 				],
 				data,
 			});
 		}
-		codeGen.addText(addText);
+		codeGen.append(addText);
 	}
 	function writeInterpolation(
 		mapCode: string,
@@ -2010,7 +2010,7 @@ export function generate(
 		const ast = createTsAst(cacheOn, prefix + mapCode + suffix);
 		const vars = walkInterpolationFragment(ts, prefix + mapCode + suffix, ast, (frag, fragOffset, isJustForErrorMapping) => {
 			if (fragOffset === undefined) {
-				codeGen.addText(frag);
+				codeGen.append(frag);
 			}
 			else {
 				fragOffset -= prefix.length;
@@ -2021,7 +2021,7 @@ export function generate(
 					frag = frag.substring(0, frag.length - overLength);
 				}
 				if (fragOffset < 0) {
-					codeGen.addText(frag.substring(0, -fragOffset));
+					codeGen.append(frag.substring(0, -fragOffset));
 					frag = frag.substring(-fragOffset);
 					fragOffset = 0;
 				}
@@ -2032,7 +2032,7 @@ export function generate(
 							start: sourceOffset + fragOffset,
 							end: sourceOffset + fragOffset + frag.length,
 						},
-						SourceMaps.Mode.Offset,
+						SourceMaps.MappingKind.Offset,
 						isJustForErrorMapping
 							? {
 								vueTag: data.vueTag,
@@ -2044,9 +2044,9 @@ export function generate(
 					);
 				}
 				else {
-					codeGen.addText(frag);
+					codeGen.append(frag);
 				}
-				codeGen.addText(addSubfix);
+				codeGen.append(addSubfix);
 			}
 		}, localVars, identifiers);
 		if (sourceOffset !== undefined) {
@@ -2063,10 +2063,10 @@ export function generate(
 		if (!tempVars.length)
 			return;
 
-		codeGen.addText('[');
+		codeGen.append('[');
 		for (const _vars of tempVars) {
 			for (const v of _vars) {
-				codeGen.addCode2(v.text, v.offset, {
+				codeGen.append(v.text, v.offset, {
 					vueTag: 'template',
 					capabilities: {
 						completion: {
@@ -2074,36 +2074,36 @@ export function generate(
 						},
 					},
 				});
-				codeGen.addText(',');
+				codeGen.append(',');
 			}
 		}
-		codeGen.addText('];\n');
+		codeGen.append('];\n');
 		tempVars.length = 0;
 	}
 	function writeFormatCode(mapCode: string, sourceOffset: number, formatWrapper: [string, string]) {
-		formatCodeGen.addText(formatWrapper[0]);
-		const targetRange = formatCodeGen.addText(mapCode);
-		formatCodeGen.addMapping2({
+		formatCodeGen.append(formatWrapper[0]);
+		const targetRange = formatCodeGen.append(mapCode);
+		formatCodeGen.mappings.push({
 			mappedRange: targetRange,
 			sourceRange: {
 				start: sourceOffset,
 				end: sourceOffset + mapCode.length,
 			},
-			mode: SourceMaps.Mode.Offset,
+			kind: SourceMaps.MappingKind.Offset,
 			data: {
 				vueTag: 'template',
 				capabilities: {},
 			},
 		});
-		formatCodeGen.addText(formatWrapper[1]);
-		formatCodeGen.addText(`\n;\n`);
+		formatCodeGen.append(formatWrapper[1]);
+		formatCodeGen.append(`\n;\n`);
 	}
-	function writeCode(mapCode: string, sourceRange: SourceMaps.Range, mode: SourceMaps.Mode, data: EmbeddedFileMappingData) {
-		const targetRange = codeGen.addText(mapCode);
-		codeGen.addMapping2({
+	function writeCode(mapCode: string, sourceRange: SourceMaps.MappingRange, mode: SourceMaps.MappingKind, data: EmbeddedFileMappingData) {
+		const targetRange = codeGen.append(mapCode);
+		codeGen.mappings.push({
 			sourceRange,
 			mappedRange: targetRange,
-			mode,
+			kind: mode,
 			data,
 		});
 	}

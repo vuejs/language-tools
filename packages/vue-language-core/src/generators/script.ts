@@ -1,4 +1,4 @@
-import { CodeGen, mergeCodeGen } from '@volar/code-gen';
+import { CodeGen } from '@volar/code-gen';
 import type { TeleportMappingData, TextRange } from '@volar/language-core';
 import * as SourceMaps from '@volar/source-map';
 import { hyphenate } from '@vue/shared';
@@ -57,13 +57,13 @@ export function generate(
 	writeTemplateIfNoScriptSetup();
 
 	if (!sfc.script && !sfc.scriptSetup) {
-		codeGen.addCode(
+		codeGen._append(
 			'export default {} as any',
 			{
 				start: 0,
 				end: 0,
 			},
-			SourceMaps.Mode.Expand,
+			SourceMaps.MappingKind.Expand,
 			{
 				vueTag: undefined,
 				capabilities: {},
@@ -73,13 +73,9 @@ export function generate(
 
 	if (sfc.scriptSetup) {
 		// for code action edits
-		codeGen.addCode(
+		codeGen.append(
 			'',
-			{
-				start: sfc.scriptSetup.content.length,
-				end: sfc.scriptSetup.content.length,
-			},
-			SourceMaps.Mode.Offset,
+			sfc.scriptSetup.content.length,
 			{
 				vueTag: 'scriptSetup',
 				capabilities: {},
@@ -89,15 +85,15 @@ export function generate(
 
 	// fix https://github.com/johnsoncodehk/volar/issues/1048
 	// fix https://github.com/johnsoncodehk/volar/issues/435
-	codeGen.addMapping2({
+	codeGen.mappings.push({
 		data: {
 			vueTag: undefined,
 			capabilities: {},
 		},
-		mode: SourceMaps.Mode.Expand,
+		kind: SourceMaps.MappingKind.Expand,
 		mappedRange: {
 			start: 0,
-			end: codeGen.getText().length,
+			end: codeGen.text.length,
 		},
 		sourceRange: {
 			start: 0,
@@ -107,14 +103,14 @@ export function generate(
 
 	// fix https://github.com/johnsoncodehk/volar/issues/1127
 	if (sfc.scriptSetup && exportdefaultStart !== undefined && exportdefaultEnd !== undefined) {
-		codeGen.addMapping2({
+		codeGen.mappings.push({
 			data: {
 				vueTag: 'scriptSetup',
 				capabilities: {
 					diagnostic: true,
 				},
 			},
-			mode: SourceMaps.Mode.Totally,
+			kind: SourceMaps.MappingKind.Totally,
 			mappedRange: {
 				start: exportdefaultStart,
 				end: exportdefaultEnd,
@@ -134,15 +130,15 @@ export function generate(
 	function writeScriptSetupTypes() {
 		if (usedTypes.DefinePropsToOptions) {
 			if (compilerOptions.exactOptionalPropertyTypes) {
-				codeGen.addText(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueLibName}').PropType<T[K]> } : { type: import('${vueLibName}').PropType<T[K]>, required: true } };\n`);
+				codeGen.append(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueLibName}').PropType<T[K]> } : { type: import('${vueLibName}').PropType<T[K]>, required: true } };\n`);
 			}
 			else {
-				codeGen.addText(`type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;\n`);
-				codeGen.addText(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueLibName}').PropType<__VLS_NonUndefinedable<T[K]>> } : { type: import('${vueLibName}').PropType<T[K]>, required: true } };\n`);
+				codeGen.append(`type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;\n`);
+				codeGen.append(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueLibName}').PropType<__VLS_NonUndefinedable<T[K]>> } : { type: import('${vueLibName}').PropType<T[K]>, required: true } };\n`);
 			}
 		}
 		if (usedTypes.mergePropDefaults) {
-			codeGen.addText(`type __VLS_WithDefaults<P, D> = {
+			codeGen.append(`type __VLS_WithDefaults<P, D> = {
 					// use 'keyof Pick<P, keyof P>' instead of 'keyof P' to keep props jsdoc
 					[K in keyof Pick<P, keyof P>]: K extends keyof D ? P[K] & {
 						default: D[K]
@@ -151,12 +147,12 @@ export function generate(
 		}
 		if (usedTypes.ConstructorOverloads) {
 			// fix https://github.com/johnsoncodehk/volar/issues/926
-			codeGen.addText('type __VLS_UnionToIntersection<U> = (U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never;\n');
+			codeGen.append('type __VLS_UnionToIntersection<U> = (U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never;\n');
 			if (scriptSetupRanges && scriptSetupRanges.emitsTypeNums !== -1) {
-				codeGen.addText(genConstructorOverloads('__VLS_ConstructorOverloads', scriptSetupRanges.emitsTypeNums));
+				codeGen.append(genConstructorOverloads('__VLS_ConstructorOverloads', scriptSetupRanges.emitsTypeNums));
 			}
 			else {
-				codeGen.addText(genConstructorOverloads('__VLS_ConstructorOverloads'));
+				codeGen.append(genConstructorOverloads('__VLS_ConstructorOverloads'));
 			}
 		}
 	}
@@ -172,11 +168,10 @@ export function generate(
 
 		if (!src.endsWith('.js') && !src.endsWith('.jsx')) src = src + '.js';
 
-		codeGen.addText(`export * from `);
-		codeGen.addCode(
+		codeGen.append(`export * from `);
+		codeGen.append(
 			`'${src}'`,
-			{ start: -1, end: -1 },
-			SourceMaps.Mode.Offset,
+			-1,
 			{
 				vueTag: 'scriptSrc',
 				capabilities: {
@@ -190,8 +185,8 @@ export function generate(
 				},
 			}
 		);
-		codeGen.addText(`;\n`);
-		codeGen.addText(`export { default } from '${src}';\n`);
+		codeGen.append(`;\n`);
+		codeGen.append(`export { default } from '${src}';\n`);
 	}
 	function writeScriptContentBeforeExportDefault() {
 		if (!sfc.script)
@@ -199,7 +194,7 @@ export function generate(
 
 		if (!!sfc.scriptSetup && scriptRanges?.exportDefault) {
 			addVirtualCode('script', 0, scriptRanges.exportDefault.expression.start);
-			exportdefaultStart = codeGen.getText().length - (scriptRanges.exportDefault.expression.start - scriptRanges.exportDefault.start);
+			exportdefaultStart = codeGen.text.length - (scriptRanges.exportDefault.expression.start - scriptRanges.exportDefault.start);
 		}
 		else {
 			let isExportRawObject = false;
@@ -210,9 +205,9 @@ export function generate(
 				|| (vueCompilerOptions.experimentalComponentOptionsWrapperEnable === 'onlyJs' && (lang === 'js' || lang === 'jsx'));
 			if (isExportRawObject && warpperEnabled && scriptRanges?.exportDefault) {
 				addVirtualCode('script', 0, scriptRanges.exportDefault.expression.start);
-				codeGen.addText(vueCompilerOptions.experimentalComponentOptionsWrapper[0]);
+				codeGen.append(vueCompilerOptions.experimentalComponentOptionsWrapper[0]);
 				addVirtualCode('script', scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end);
-				codeGen.addText(vueCompilerOptions.experimentalComponentOptionsWrapper[1]);
+				codeGen.append(vueCompilerOptions.experimentalComponentOptionsWrapper[1]);
 				addVirtualCode('script', scriptRanges.exportDefault.expression.end, sfc.script.content.length);
 			}
 			else {
@@ -229,7 +224,7 @@ export function generate(
 		}
 	}
 	function addVirtualCode(vueTag: 'script' | 'scriptSetup', start: number, end: number) {
-		codeGen.addCode2(
+		codeGen.append(
 			(vueTag === 'script' ? sfc.script : sfc.scriptSetup)!.content.substring(start, end),
 			start,
 			{
@@ -247,7 +242,7 @@ export function generate(
 		);
 	}
 	function addExtraReferenceVirtualCode(vueTag: 'script' | 'scriptSetup', start: number, end: number) {
-		codeGen.addCode2(
+		codeGen.append(
 			(vueTag === 'scriptSetup' ? sfc.scriptSetup : sfc.script)!.content.substring(start, end),
 			start,
 			{
@@ -268,7 +263,7 @@ export function generate(
 		if (!scriptSetupRanges)
 			return;
 
-		codeGen.addCode2(
+		codeGen.append(
 			sfc.scriptSetup.content.substring(0, scriptSetupRanges.importSectionEndOffset),
 			0,
 			{
@@ -296,16 +291,16 @@ export function generate(
 		if (sfc.scriptSetup && scriptSetupRanges) {
 
 			if (scriptRanges?.exportDefault) {
-				codeGen.addText('await (async () => {\n');
+				codeGen.append('await (async () => {\n');
 			}
 			else {
-				exportdefaultStart = codeGen.getText().length;
-				codeGen.addText('export default await (async () => {\n');
+				exportdefaultStart = codeGen.text.length;
+				codeGen.append('export default await (async () => {\n');
 			}
 
-			codeGen.addText('const __VLS_setup = async () => {\n');
+			codeGen.append('const __VLS_setup = async () => {\n');
 
-			codeGen.addCode2(
+			codeGen.append(
 				sfc.scriptSetup.content.substring(scriptSetupRanges.importSectionEndOffset),
 				scriptSetupRanges.importSectionEndOffset,
 				{
@@ -324,129 +319,129 @@ export function generate(
 
 			if (scriptSetupRanges.propsTypeArg && scriptSetupRanges.withDefaultsArg) {
 				// fix https://github.com/johnsoncodehk/volar/issues/1187
-				codeGen.addText(`const __VLS_withDefaultsArg = (function <T>(t: T) { return t })(`);
+				codeGen.append(`const __VLS_withDefaultsArg = (function <T>(t: T) { return t })(`);
 				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.withDefaultsArg.start, scriptSetupRanges.withDefaultsArg.end);
-				codeGen.addText(`);\n`);
+				codeGen.append(`);\n`);
 			}
 
 			if (scriptRanges?.exportDefault && scriptRanges.exportDefault.expression.start !== scriptRanges.exportDefault.args.start) {
 				// use defineComponent() from user space code if it exist
-				codeGen.addText(`const __VLS_Component = `);
+				codeGen.append(`const __VLS_Component = `);
 				addVirtualCode('script', scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.args.start);
-				codeGen.addText(`{\n`);
+				codeGen.append(`{\n`);
 			}
 			else {
-				codeGen.addText(`const __VLS_Component = (await import('${vueLibName}')).defineComponent({\n`);
+				codeGen.append(`const __VLS_Component = (await import('${vueLibName}')).defineComponent({\n`);
 			}
 
 			if (!downgradePropsAndEmitsToSetupReturnOnScriptSetup) {
 				if (scriptSetupRanges.propsRuntimeArg || scriptSetupRanges.propsTypeArg) {
-					codeGen.addText(`props: (`);
+					codeGen.append(`props: (`);
 					if (scriptSetupRanges.propsTypeArg) {
 
 						usedTypes.DefinePropsToOptions = true;
-						codeGen.addText(`{} as `);
+						codeGen.append(`{} as `);
 
 						if (scriptSetupRanges.withDefaultsArg) {
 							usedTypes.mergePropDefaults = true;
-							codeGen.addText(`__VLS_WithDefaults<`);
+							codeGen.append(`__VLS_WithDefaults<`);
 						}
 
-						codeGen.addText(`__VLS_TypePropsToRuntimeProps<`);
+						codeGen.append(`__VLS_TypePropsToRuntimeProps<`);
 						addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
-						codeGen.addText(`>`);
+						codeGen.append(`>`);
 
 						if (scriptSetupRanges.withDefaultsArg) {
-							codeGen.addText(`, typeof __VLS_withDefaultsArg`);
-							codeGen.addText(`>`);
+							codeGen.append(`, typeof __VLS_withDefaultsArg`);
+							codeGen.append(`>`);
 						}
 					}
 					else if (scriptSetupRanges.propsRuntimeArg) {
 						addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
 					}
-					codeGen.addText(`),\n`);
+					codeGen.append(`),\n`);
 				}
 				if (scriptSetupRanges.emitsTypeArg) {
 					usedTypes.ConstructorOverloads = true;
-					codeGen.addText(`emits: ({} as __VLS_UnionToIntersection<__VLS_ConstructorOverloads<`);
+					codeGen.append(`emits: ({} as __VLS_UnionToIntersection<__VLS_ConstructorOverloads<`);
 					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
-					codeGen.addText(`>>),\n`);
+					codeGen.append(`>>),\n`);
 				}
 				else if (scriptSetupRanges.emitsRuntimeArg) {
-					codeGen.addText(`emits: (`);
+					codeGen.append(`emits: (`);
 					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end);
-					codeGen.addText(`),\n`);
+					codeGen.append(`),\n`);
 				}
 			}
 
-			codeGen.addText(`setup() {\n`);
-			codeGen.addText(`return {\n`);
+			codeGen.append(`setup() {\n`);
+			codeGen.append(`return {\n`);
 
 			if (downgradePropsAndEmitsToSetupReturnOnScriptSetup) {
 				// fill $props
 				if (scriptSetupRanges.propsTypeArg) {
 					// NOTE: defineProps is inaccurate for $props
-					codeGen.addText(`$props: (await import('./__VLS_types.js')).makeOptional(defineProps<`);
+					codeGen.append(`$props: (await import('./__VLS_types.js')).makeOptional(defineProps<`);
 					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
-					codeGen.addText(`>()),\n`);
+					codeGen.append(`>()),\n`);
 				}
 				else if (scriptSetupRanges.propsRuntimeArg) {
 					// NOTE: defineProps is inaccurate for $props
-					codeGen.addText(`$props: (await import('./__VLS_types.js')).makeOptional(defineProps(`);
+					codeGen.append(`$props: (await import('./__VLS_types.js')).makeOptional(defineProps(`);
 					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
-					codeGen.addText(`)),\n`);
+					codeGen.append(`)),\n`);
 				}
 				// fill $emit
 				if (scriptSetupRanges.emitsAssignName) {
-					codeGen.addText(`$emit: ${scriptSetupRanges.emitsAssignName},\n`);
+					codeGen.append(`$emit: ${scriptSetupRanges.emitsAssignName},\n`);
 				}
 				else if (scriptSetupRanges.emitsTypeArg) {
-					codeGen.addText(`$emit: defineEmits<`);
+					codeGen.append(`$emit: defineEmits<`);
 					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
-					codeGen.addText(`>(),\n`);
+					codeGen.append(`>(),\n`);
 				}
 				else if (scriptSetupRanges.emitsRuntimeArg) {
-					codeGen.addText(`$emit: defineEmits(`);
+					codeGen.append(`$emit: defineEmits(`);
 					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end);
-					codeGen.addText(`),\n`);
+					codeGen.append(`),\n`);
 				}
 			}
 
 			if (scriptSetupRanges.exposeTypeArg) {
-				codeGen.addText(`...({} as `);
+				codeGen.append(`...({} as `);
 				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.exposeTypeArg.start, scriptSetupRanges.exposeTypeArg.end);
-				codeGen.addText(`),\n`);
+				codeGen.append(`),\n`);
 			}
 			else if (scriptSetupRanges.exposeRuntimeArg) {
-				codeGen.addText(`...(`);
+				codeGen.append(`...(`);
 				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.exposeRuntimeArg.start, scriptSetupRanges.exposeRuntimeArg.end);
-				codeGen.addText(`),\n`);
+				codeGen.append(`),\n`);
 			}
 
-			codeGen.addText(`};\n`);
-			codeGen.addText(`},\n`);
+			codeGen.append(`};\n`);
+			codeGen.append(`},\n`);
 
 			if (sfc.script && scriptRanges?.exportDefault?.args) {
 				addVirtualCode('script', scriptRanges.exportDefault.args.start + 1, scriptRanges.exportDefault.args.end - 1);
 			}
 
-			codeGen.addText(`});\n`);
+			codeGen.append(`});\n`);
 
 			writeTemplate();
 
 			if (htmlGen?.slotsNum) {
-				codeGen.addText(`return {} as typeof __VLS_Component & (new () => { ${getSlotsPropertyName(vueVersion)}: ReturnType<typeof __VLS_template> });\n`);
+				codeGen.append(`return {} as typeof __VLS_Component & (new () => { ${getSlotsPropertyName(vueVersion)}: ReturnType<typeof __VLS_template> });\n`);
 			}
 			else {
-				codeGen.addText(`return {} as typeof __VLS_Component;\n`);
+				codeGen.append(`return {} as typeof __VLS_Component;\n`);
 			}
 
-			codeGen.addText(`};\n`);
-			codeGen.addText(`return await __VLS_setup();\n`);
-			codeGen.addText(`})();`);
-			exportdefaultEnd = codeGen.getText().length;
+			codeGen.append(`};\n`);
+			codeGen.append(`return await __VLS_setup();\n`);
+			codeGen.append(`})();`);
+			exportdefaultEnd = codeGen.text.length;
 
-			codeGen.addText(`\n`);
+			codeGen.append(`\n`);
 		}
 	}
 	function writeTemplate() {
@@ -456,46 +451,46 @@ export function generate(
 			writeExportOptions();
 			writeConstNameOption();
 
-			codeGen.addText(`function __VLS_template() {\n`);
+			codeGen.append(`function __VLS_template() {\n`);
 
 			const templateGened = writeTemplateContext();
 
-			codeGen.addText(`}\n`);
+			codeGen.append(`}\n`);
 
 			writeComponentForTemplateUsage(templateGened.cssIds);
 		}
 		else {
-			codeGen.addText(`function __VLS_template() {\n`);
+			codeGen.append(`function __VLS_template() {\n`);
 			const templateUsageVars = [...getTemplateUsageVars()];
-			codeGen.addText(`// @ts-ignore\n`);
-			codeGen.addText(`[${templateUsageVars.join(', ')}]\n`);
-			codeGen.addText(`return {};\n`);
-			codeGen.addText(`}\n`);
+			codeGen.append(`// @ts-ignore\n`);
+			codeGen.append(`[${templateUsageVars.join(', ')}]\n`);
+			codeGen.append(`return {};\n`);
+			codeGen.append(`}\n`);
 		}
 	}
 	function writeComponentForTemplateUsage(cssIds: Set<string>) {
 
 		if (sfc.scriptSetup && scriptSetupRanges) {
 
-			codeGen.addText(`const __VLS_component = (await import('${vueLibName}')).defineComponent({\n`);
-			codeGen.addText(`setup() {\n`);
-			codeGen.addText(`return {\n`);
+			codeGen.append(`const __VLS_component = (await import('${vueLibName}')).defineComponent({\n`);
+			codeGen.append(`setup() {\n`);
+			codeGen.append(`return {\n`);
 			// fill ctx from props
 			if (downgradePropsAndEmitsToSetupReturnOnScriptSetup) {
 				if (scriptSetupRanges.propsAssignName) {
-					codeGen.addText(`...${scriptSetupRanges.propsAssignName},\n`);
+					codeGen.append(`...${scriptSetupRanges.propsAssignName},\n`);
 				}
 				else if (scriptSetupRanges.withDefaultsArg && scriptSetupRanges.propsTypeArg) {
-					codeGen.addText(`...withDefaults(defineProps<`);
+					codeGen.append(`...withDefaults(defineProps<`);
 					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
-					codeGen.addText(`>(), `);
+					codeGen.append(`>(), `);
 					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.withDefaultsArg.start, scriptSetupRanges.withDefaultsArg.end);
-					codeGen.addText(`),\n`);
+					codeGen.append(`),\n`);
 				}
 				else if (scriptSetupRanges.propsRuntimeArg) {
-					codeGen.addText(`...defineProps(`);
+					codeGen.append(`...defineProps(`);
 					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
-					codeGen.addText(`),\n`);
+					codeGen.append(`),\n`);
 				}
 			}
 			// bindings
@@ -523,15 +518,15 @@ export function generate(
 					if (!templateUsageVars.has(varName) && !cssIds.has(varName)) {
 						continue;
 					}
-					const templateSideRange = codeGen.addText(varName);
-					codeGen.addText(`: `);
-					const scriptSideRange = codeGen.addText(varName);
-					codeGen.addText(',\n');
+					const templateSideRange = codeGen.append(varName);
+					codeGen.append(`: `);
+					const scriptSideRange = codeGen.append(varName);
+					codeGen.append(',\n');
 
 					teleports.push({
 						sourceRange: scriptSideRange,
 						mappedRange: templateSideRange,
-						mode: SourceMaps.Mode.Offset,
+						kind: SourceMaps.MappingKind.Offset,
 						data: {
 							toSourceCapabilities: {
 								definitions: true,
@@ -547,23 +542,23 @@ export function generate(
 					});
 				}
 			}
-			codeGen.addText(`};\n`); // return {
-			codeGen.addText(`},\n`); // setup() {
-			codeGen.addText(`});\n`); // defineComponent({
+			codeGen.append(`};\n`); // return {
+			codeGen.append(`},\n`); // setup() {
+			codeGen.append(`});\n`); // defineComponent({
 		}
 		else if (sfc.script) {
-			codeGen.addText(`let __VLS_component!: typeof import('./${path.basename(fileName)}')['default'];\n`);
+			codeGen.append(`let __VLS_component!: typeof import('./${path.basename(fileName)}')['default'];\n`);
 		}
 		else {
-			codeGen.addText(`const __VLS_component = (await import('${vueLibName}')).defineComponent({});\n`);
+			codeGen.append(`const __VLS_component = (await import('${vueLibName}')).defineComponent({});\n`);
 		}
 	}
 	function writeExportOptions() {
-		codeGen.addText(`\n`);
-		codeGen.addText(`const __VLS_componentsOption = `);
+		codeGen.append(`\n`);
+		codeGen.append(`const __VLS_componentsOption = `);
 		if (sfc.script && scriptRanges?.exportDefault?.componentsOption) {
 			const componentsOption = scriptRanges.exportDefault.componentsOption;
-			codeGen.addCode2(
+			codeGen.append(
 				sfc.script.content.substring(componentsOption.start, componentsOption.end),
 				componentsOption.start,
 				{
@@ -576,39 +571,39 @@ export function generate(
 			);
 		}
 		else {
-			codeGen.addText('{}');
+			codeGen.append('{}');
 		}
-		codeGen.addText(`;\n`);
+		codeGen.append(`;\n`);
 	}
 	function writeConstNameOption() {
-		codeGen.addText(`\n`);
+		codeGen.append(`\n`);
 		if (sfc.script && scriptRanges?.exportDefault?.nameOption) {
 			const nameOption = scriptRanges.exportDefault.nameOption;
-			codeGen.addText(`const __VLS_name = `);
-			codeGen.addText(`${sfc.script.content.substring(nameOption.start, nameOption.end)} as const`);
-			codeGen.addText(`;\n`);
+			codeGen.append(`const __VLS_name = `);
+			codeGen.append(`${sfc.script.content.substring(nameOption.start, nameOption.end)} as const`);
+			codeGen.append(`;\n`);
 		}
 		else if (sfc.scriptSetup) {
-			codeGen.addText(`let __VLS_name!: '${path.basename(fileName.substring(0, fileName.lastIndexOf('.')))}';\n`);
+			codeGen.append(`let __VLS_name!: '${path.basename(fileName.substring(0, fileName.lastIndexOf('.')))}';\n`);
 		}
 		else {
-			codeGen.addText(`const __VLS_name = undefined;\n`);
+			codeGen.append(`const __VLS_name = undefined;\n`);
 		}
 	}
 	function writeTemplateContext() {
 
 		const useGlobalThisTypeInCtx = fileName.endsWith('.html');
 
-		codeGen.addText(`let __VLS_ctx!: ${useGlobalThisTypeInCtx ? 'typeof globalThis &' : ''}`);
-		codeGen.addText(`import('./__VLS_types.js').PickNotAny<__VLS_Ctx, {}> & `);
+		codeGen.append(`let __VLS_ctx!: ${useGlobalThisTypeInCtx ? 'typeof globalThis &' : ''}`);
+		codeGen.append(`import('./__VLS_types.js').PickNotAny<__VLS_Ctx, {}> & `);
 		if (sfc.scriptSetup) {
-			codeGen.addText(`InstanceType<import('./__VLS_types.js').PickNotAny<typeof __VLS_Component, new () => {}>> & `);
+			codeGen.append(`InstanceType<import('./__VLS_types.js').PickNotAny<typeof __VLS_Component, new () => {}>> & `);
 		}
-		codeGen.addText(`InstanceType<import('./__VLS_types.js').PickNotAny<typeof __VLS_component, new () => {}>> & {\n`);
+		codeGen.append(`InstanceType<import('./__VLS_types.js').PickNotAny<typeof __VLS_component, new () => {}>> & {\n`);
 
 		/* CSS Module */
 		for (const cssModule of cssModuleClasses) {
-			codeGen.addText(`${cssModule.style.module}: Record<string, string>`);
+			codeGen.append(`${cssModule.style.module}: Record<string, string>`);
 			for (const classNameRange of cssModule.classNameRanges) {
 				writeCssClassProperty(
 					cssModule.index,
@@ -618,19 +613,19 @@ export function generate(
 					false,
 				);
 			}
-			codeGen.addText(';\n');
+			codeGen.append(';\n');
 		}
-		codeGen.addText(`};\n`);
+		codeGen.append(`};\n`);
 
 		/* Components */
-		codeGen.addText('/* Components */\n');
-		codeGen.addText(`let __VLS_otherComponents!: NonNullable<typeof __VLS_component extends { components: infer C } ? C : {}> & import('./__VLS_types.js').GlobalComponents & typeof __VLS_componentsOption & typeof __VLS_ctx;\n`);
-		codeGen.addText(`let __VLS_selfComponent!: import('./__VLS_types.js').SelfComponent<typeof __VLS_name, typeof __VLS_component & (new () => { ${getSlotsPropertyName(vueCompilerOptions.target ?? 3)}: typeof __VLS_slots })>;\n`);
-		codeGen.addText(`let __VLS_components!: typeof __VLS_otherComponents & Omit<typeof __VLS_selfComponent, keyof typeof __VLS_otherComponents>;\n`);
+		codeGen.append('/* Components */\n');
+		codeGen.append(`let __VLS_otherComponents!: NonNullable<typeof __VLS_component extends { components: infer C } ? C : {}> & import('./__VLS_types.js').GlobalComponents & typeof __VLS_componentsOption & typeof __VLS_ctx;\n`);
+		codeGen.append(`let __VLS_selfComponent!: import('./__VLS_types.js').SelfComponent<typeof __VLS_name, typeof __VLS_component & (new () => { ${getSlotsPropertyName(vueCompilerOptions.target ?? 3)}: typeof __VLS_slots })>;\n`);
+		codeGen.append(`let __VLS_components!: typeof __VLS_otherComponents & Omit<typeof __VLS_selfComponent, keyof typeof __VLS_otherComponents>;\n`);
 
 		/* Style Scoped */
-		codeGen.addText('/* Style Scoped */\n');
-		codeGen.addText('type __VLS_StyleScopedClasses = {}');
+		codeGen.append('/* Style Scoped */\n');
+		codeGen.append('type __VLS_StyleScopedClasses = {}');
 		for (const scopedCss of cssScopedClasses) {
 			for (const classNameRange of scopedCss.classNameRanges) {
 				writeCssClassProperty(
@@ -642,41 +637,41 @@ export function generate(
 				);
 			}
 		}
-		codeGen.addText(';\n');
-		codeGen.addText('let __VLS_styleScopedClasses!: __VLS_StyleScopedClasses | keyof __VLS_StyleScopedClasses | (keyof __VLS_StyleScopedClasses)[];\n');
+		codeGen.append(';\n');
+		codeGen.append('let __VLS_styleScopedClasses!: __VLS_StyleScopedClasses | keyof __VLS_StyleScopedClasses | (keyof __VLS_StyleScopedClasses)[];\n');
 
-		codeGen.addText(`/* CSS variable injection */\n`);
+		codeGen.append(`/* CSS variable injection */\n`);
 		const cssIds = writeCssVars();
-		codeGen.addText(`/* CSS variable injection end */\n`);
+		codeGen.append(`/* CSS variable injection end */\n`);
 
 		if (htmlGen) {
-			mergeCodeGen(codeGen, htmlGen.codeGen);
+			codeGen._merge(htmlGen.codeGen);
 		}
 
 		if (!htmlGen) {
-			codeGen.addText(`const __VLS_slots = {};\n`);
+			codeGen.append(`const __VLS_slots = {};\n`);
 		}
 
-		codeGen.addText(`return __VLS_slots;\n`);
+		codeGen.append(`return __VLS_slots;\n`);
 
 		return { cssIds };
 
 		function writeCssClassProperty(styleIndex: number, className: string, classRange: TextRange, propertyType: string, optional: boolean) {
-			codeGen.addText(`\n & { `);
-			codeGen.addMapping2({
+			codeGen.append(`\n & { `);
+			codeGen.mappings.push({
 				mappedRange: {
-					start: codeGen.getText().length,
-					end: codeGen.getText().length + className.length + 2,
+					start: codeGen.text.length,
+					end: codeGen.text.length + className.length + 2,
 				},
 				sourceRange: classRange,
-				mode: SourceMaps.Mode.Totally,
+				kind: SourceMaps.MappingKind.Totally,
 				additional: [{
 					mappedRange: {
-						start: codeGen.getText().length + 1, // + '
-						end: codeGen.getText().length + 1 + className.length,
+						start: codeGen.text.length + 1, // + '
+						end: codeGen.text.length + 1 + className.length,
 					},
 					sourceRange: classRange,
-					mode: SourceMaps.Mode.Offset,
+					kind: SourceMaps.MappingKind.Offset,
 				}],
 				data: {
 					vueTag: 'style',
@@ -691,8 +686,8 @@ export function generate(
 					},
 				},
 			});
-			codeGen.addText(`'${className}'${optional ? '?' : ''}: ${propertyType}`);
-			codeGen.addText(` }`);
+			codeGen.append(`'${className}'${optional ? '?' : ''}: ${propertyType}`);
+			codeGen.append(` }`);
 		}
 		function writeCssVars() {
 
@@ -708,10 +703,10 @@ export function generate(
 						ts.createSourceFile('/a.txt', code, ts.ScriptTarget.ESNext),
 						(frag, fragOffset, isJustForErrorMapping) => {
 							if (fragOffset === undefined) {
-								codeGen.addText(frag);
+								codeGen.append(frag);
 							}
 							else {
-								codeGen.addCode2(
+								codeGen.append(
 									frag,
 									cssBind.start + fragOffset,
 									{
@@ -735,7 +730,7 @@ export function generate(
 						emptyLocalVars,
 						identifiers,
 					);
-					codeGen.addText(';\n');
+					codeGen.append(';\n');
 				}
 			}
 

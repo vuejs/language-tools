@@ -25,8 +25,8 @@ const plugin: VueLanguagePlugin = () => {
 				for (const match of content.matchAll(sfcBlockReg)) {
 					if (match.index !== undefined) {
 						const matchText = match[0];
-						codeGen.addCode2(matchText, match.index, undefined);
-						codeGen.addText('\n\n');
+						codeGen.append(matchText, match.index, undefined);
+						codeGen.append('\n\n');
 						content = content.substring(0, match.index) + ' '.repeat(matchText.length) + content.substring(match.index + matchText.length);
 					}
 				}
@@ -37,16 +37,16 @@ const plugin: VueLanguagePlugin = () => {
 					// [foo](http://foo.com)
 					.replace(/\[[\s\S]*?\]\([\s\S]*?\)/g, match => ' '.repeat(match.length));
 
-				codeGen.addText('<template>\n');
-				codeGen.addCode2(
+				codeGen.append('<template>\n');
+				codeGen.append(
 					content,
 					0,
 					undefined,
 				);
-				codeGen.addText('\n</template>');
+				codeGen.append('\n</template>');
 
 				const file2VueSourceMap = new SourceMapBase(codeGen.mappings);
-				const sfc = parse(codeGen.getText(), { sourceMap: false, ignoreEmpty: false });
+				const sfc = parse(codeGen.text, { sourceMap: false, ignoreEmpty: false });
 
 				if (sfc.descriptor.template) {
 					transformRange(sfc.descriptor.template);

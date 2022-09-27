@@ -1,11 +1,11 @@
 import { computed, shallowRef as ref } from '@vue/reactivity';
 
-export interface Range {
+export interface MappingRange {
 	start: number,
 	end: number,
 }
 
-export enum Mode {
+export enum MappingKind {
 	/**
 	 * @case1
 	 * 123456 -> abcdef
@@ -45,12 +45,12 @@ export enum Mode {
 }
 
 export type MappingBase = {
-	mode: Mode,
-	sourceRange: Range,
-	mappedRange: Range,
+	kind: MappingKind,
+	sourceRange: MappingRange,
+	mappedRange: MappingRange,
 };
 
-export type Mapping<T> = MappingBase & {
+export type Mapping<T = any> = MappingBase & {
 	data: T,
 	additional?: MappingBase[],
 };
@@ -194,13 +194,13 @@ export class SourceMapBase<Data = undefined> {
 				if (filter && !filter(mapping.data))
 					continue;
 
-				const mapped = this.getRange(startOffset, endOffset, sourceToTarget, mapping.mode, mapping.sourceRange, mapping.mappedRange, mapping.data);
+				const mapped = this.getRange(startOffset, endOffset, sourceToTarget, mapping.kind, mapping.sourceRange, mapping.mappedRange, mapping.data);
 				if (mapped) {
 					yield mapped;
 				}
 				else if (mapping.additional) {
 					for (const other of mapping.additional) {
-						const mapped = this.getRange(startOffset, endOffset, sourceToTarget, other.mode, other.sourceRange, other.mappedRange, mapping.data);
+						const mapped = this.getRange(startOffset, endOffset, sourceToTarget, other.kind, other.sourceRange, other.mappedRange, mapping.data);
 						if (mapped) {
 							yield mapped;
 							break; // only return first match additional range
@@ -235,10 +235,10 @@ export class SourceMapBase<Data = undefined> {
 		};
 	}
 
-	private getRange(start: number, end: number, sourceToTarget: boolean, mode: Mode, sourceRange: Range, targetRange: Range, data: Data): [{ start: number, end: number; }, Data] | undefined {
+	private getRange(start: number, end: number, sourceToTarget: boolean, mode: MappingKind, sourceRange: MappingRange, targetRange: MappingRange, data: Data): [{ start: number, end: number; }, Data] | undefined {
 		const mappedToRange = sourceToTarget ? targetRange : sourceRange;
 		const mappedFromRange = sourceToTarget ? sourceRange : targetRange;
-		if (mode === Mode.Totally) {
+		if (mode === MappingKind.Totally) {
 			if (start === mappedFromRange.start && end === mappedFromRange.end) {
 				const _start = mappedToRange.start;
 				const _end = mappedToRange.end;
@@ -248,7 +248,7 @@ export class SourceMapBase<Data = undefined> {
 				}, data];
 			}
 		}
-		else if (mode === Mode.Offset) {
+		else if (mode === MappingKind.Offset) {
 			if (start >= mappedFromRange.start && end <= mappedFromRange.end) {
 				const _start = mappedToRange.start + start - mappedFromRange.start;
 				const _end = mappedToRange.end + end - mappedFromRange.end;
@@ -258,7 +258,7 @@ export class SourceMapBase<Data = undefined> {
 				}, data];
 			}
 		}
-		else if (mode === Mode.Expand) {
+		else if (mode === MappingKind.Expand) {
 			if (start >= mappedFromRange.start && end <= mappedFromRange.end) {
 				const _start = mappedToRange.start;
 				const _end = mappedToRange.end;
