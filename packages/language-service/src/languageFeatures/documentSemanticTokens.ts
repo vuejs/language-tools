@@ -70,7 +70,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				for (const mapped of sourceMap.toSourceOffsets(offset)) {
 					if (mapped[1].data.semanticTokens) {
 						const start = document.positionAt(mapped[0]);
-						if (sourceMap.matchGeneratedPosition({ line: start.line, character: start.character + _token[2] }, mapped[1], 'end')) {
+						if (sourceMap.matchGeneratedPosition({ line: start.line, character: start.character + _token[2] }, mapped[1], 'right')) {
 							return [start.line, start.character, _token[2], _token[3], _token[4]];
 						}
 					}

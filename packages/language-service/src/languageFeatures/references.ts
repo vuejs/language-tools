@@ -85,7 +85,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 							if (!mapped[1].data.references)
 								continue;
 
-							const end = referenceSourceMap.matchSourcePosition(reference.range.end, mapped[1], 'end');
+							const end = referenceSourceMap.matchSourcePosition(reference.range.end, mapped[1], 'right');
 							if (!end)
 								continue;
 

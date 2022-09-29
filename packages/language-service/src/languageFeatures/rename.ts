@@ -213,7 +213,7 @@ export function embeddedEditToSourceEdit(
 				if (!shouldRename)
 					continue;
 
-				const end = vueLoc.sourceMap ? vueLoc.sourceMap.matchSourcePosition(tsEdit.range.end, vueLoc.mapping, 'end') : tsEdit.range.end;
+				const end = vueLoc.sourceMap ? vueLoc.sourceMap.matchSourcePosition(tsEdit.range.end, vueLoc.mapping, 'right') : tsEdit.range.end;
 				if (!end)
 					continue;
 
@@ -265,7 +265,7 @@ export function embeddedEditToSourceEdit(
 							if (!shouldApplyRename)
 								continue;
 
-							const end = sourceMap.matchSourcePosition(tsEdit.range.end, mapped[1], 'end');
+							const end = sourceMap.matchSourcePosition(tsEdit.range.end, mapped[1], 'right');
 							if (!end)
 								continue;
 

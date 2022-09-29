@@ -265,7 +265,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				let range: vscode.Range | undefined;
 				for (const start of sourceMap.toSourcePositions(error.range.start)) {
 					if (start[1].data.diagnostic) {
-						const end = sourceMap.matchSourcePosition(error.range.end, start[1], 'end');
+						const end = sourceMap.matchSourcePosition(error.range.end, start[1], 'right');
 						if (end) {
 							range = { start: start[0], end: end };
 						}

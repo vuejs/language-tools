@@ -141,7 +141,7 @@ function toSourcePositionPreferSurroundedPosition(sourceMap: EmbeddedDocumentSou
 
 	for (const mapped of sourceMap.toSourcePositions(mappedRange.start)) {
 		const start = mapped[0];
-		const end = sourceMap.matchSourcePosition(mapped[0], mapped[1], 'end');
+		const end = sourceMap.matchSourcePosition(mapped[0], mapped[1], 'right') ?? sourceMap.toSourcePosition(mappedRange.end, 'right')?.[0];
 		if (!end)
 			continue;
 		if (!result) {

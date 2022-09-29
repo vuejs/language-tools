@@ -20,46 +20,51 @@ export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
 		super(mappings);
 	}
 
-	public toSourcePosition(start: vscode.Position) {
-		for (const mapped of this.getPositions(start, this.mappedDocument, this.sourceDocument, 'generatedRange', 'sourceRange')) {
+	public toSourcePosition(start: vscode.Position, baseOffset: 'left' | 'right' = 'left') {
+		for (const mapped of this.getPositions(start, this.mappedDocument, this.sourceDocument, 'generatedRange', 'sourceRange', baseOffset)) {
 			return mapped;
 		}
 	}
 
-	public toGeneratedPosition(start: vscode.Position) {
-		for (const mapped of this.getPositions(start, this.sourceDocument, this.mappedDocument, 'sourceRange', 'generatedRange')) {
+	public toGeneratedPosition(start: vscode.Position, baseOffset: 'left' | 'right' = 'left') {
+		for (const mapped of this.getPositions(start, this.sourceDocument, this.mappedDocument, 'sourceRange', 'generatedRange', baseOffset)) {
 			return mapped;
 		}
 	}
 
-	public toSourcePositions(start: vscode.Position) {
-		return this.getPositions(start, this.mappedDocument, this.sourceDocument, 'generatedRange', 'sourceRange');
+	public toSourcePositions(start: vscode.Position, baseOffset: 'left' | 'right' = 'left') {
+		return this.getPositions(start, this.mappedDocument, this.sourceDocument, 'generatedRange', 'sourceRange', baseOffset);
 	}
 
-	public toGeneratedPositions(start: vscode.Position) {
-		return this.getPositions(start, this.sourceDocument, this.mappedDocument, 'sourceRange', 'generatedRange');
+	public toGeneratedPositions(start: vscode.Position, baseOffset: 'left' | 'right' = 'left') {
+		return this.getPositions(start, this.sourceDocument, this.mappedDocument, 'sourceRange', 'generatedRange', baseOffset);
 	}
 
-	protected * getPositions(start: vscode.Position, fromDoc: TextDocument, toDoc: TextDocument, from: 'sourceRange' | 'generatedRange', to: 'sourceRange' | 'generatedRange') {
+	protected * getPositions(start: vscode.Position, fromDoc: TextDocument, toDoc: TextDocument, from: 'sourceRange' | 'generatedRange', to: 'sourceRange' | 'generatedRange', baseOffset: 'left' | 'right') {
 		for (const mapped of this.matcing(fromDoc.offsetAt(start), from, to)) {
-			yield [toDoc.positionAt(mapped[0]), mapped[1]] as const;
+			let offset = mapped[0];
+			const mapping = mapped[1];
+			if (baseOffset === 'right') {
+				offset += (mapping.sourceRange[1] - mapping.sourceRange[0]) - (mapping.generatedRange[1] - mapping.generatedRange[0]);
+			}
+			yield [toDoc.positionAt(offset), mapping] as const;
 		}
 	}
 
-	public matchSourcePosition(start: vscode.Position, mapping: Mapping, baseOffset: 'start' | 'end') {
+	public matchSourcePosition(start: vscode.Position, mapping: Mapping, baseOffset: 'left' | 'right') {
 		let offset = this.matchOffset(this.mappedDocument.offsetAt(start), mapping['generatedRange'], mapping['sourceRange']);
 		if (offset !== undefined) {
-			if (baseOffset === 'end') {
+			if (baseOffset === 'right') {
 				offset += (mapping.sourceRange[1] - mapping.sourceRange[0]) - (mapping.generatedRange[1] - mapping.generatedRange[0]);
 			}
 			return this.sourceDocument.positionAt(offset);
 		}
 	}
 
-	public matchGeneratedPosition(start: vscode.Position, mapping: Mapping, mappingDirection: 'start' | 'end') {
+	public matchGeneratedPosition(start: vscode.Position, mapping: Mapping, baseOffset: 'left' | 'right') {
 		let offset = this.matchOffset(this.sourceDocument.offsetAt(start), mapping['sourceRange'], mapping['generatedRange']);
 		if (offset !== undefined) {
-			if (mappingDirection === 'end') {
+			if (baseOffset === 'right') {
 				offset += (mapping.generatedRange[1] - mapping.generatedRange[0]) - (mapping.sourceRange[1] - mapping.sourceRange[0]);
 			}
 			return this.mappedDocument.positionAt(offset);
