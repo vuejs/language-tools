@@ -20,9 +20,11 @@ export function register(context: DocumentServiceRuntimeContext) {
 					if (!sourceMap)
 						return location;
 
-					const sourceRange = sourceMap.getSourceRange(location.range.start, location.range.end)?.[0];
-					if (sourceRange) {
-						return vscode.Location.create(sourceMap.sourceDocument.uri, sourceRange);
+					const start = sourceMap.toSourcePosition(location.range.start)?.[0];
+					const end = sourceMap.toSourcePosition(location.range.end)?.[0];
+
+					if (start && end) {
+						return vscode.Location.create(sourceMap.sourceDocument.uri, { start, end });
 					}
 				},
 			),

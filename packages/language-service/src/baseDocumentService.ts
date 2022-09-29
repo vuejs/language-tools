@@ -74,7 +74,7 @@ export function createDocumentServiceContext(options: {
 				);
 				if (sourceFile) {
 					sourceFile = reactive(sourceFile);
-					const sourceFileDoc = parseSourceFileDocument(options.env.rootUri, sourceFile, mapper);
+					const sourceFileDoc = parseSourceFileDocument(options.env.rootUri, sourceFile);
 					cache = [sourceFileDoc, languageModule];
 					vueDocuments.set(document, cache);
 					fileMods.set(sourceFile, languageModule);

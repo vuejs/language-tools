@@ -19,8 +19,11 @@ export function register(context: LanguageServiceRuntimeContext) {
 				continue;
 
 			const symbols = transformSymbolInformations(embeddedSymbols, loc => {
-				for (const vueLoc of context.documents.fromEmbeddedLocation(loc.uri, loc.range.start, loc.range.end)) {
-					return vscode.Location.create(vueLoc.uri, vueLoc.range);
+				for (const vueLoc of context.documents.fromEmbeddedLocation(loc.uri, loc.range.start)) {
+					const end = vueLoc.sourceMap?.toSourcePosition(loc.range.end);
+					if (end) {
+						return vscode.Location.create(vueLoc.uri, { start: vueLoc.position, end: end[0] });
+					}
 				}
 			});
 

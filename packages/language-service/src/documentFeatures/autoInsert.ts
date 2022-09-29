@@ -14,12 +14,10 @@ export function register(context: DocumentServiceRuntimeContext) {
 			position,
 			sourceMap => true,
 			function* (position, sourceMap) {
-				for (const [mappedRange] of sourceMap.getMappedRanges(
-					position,
-					position,
-					data => !!data.completion,
-				)) {
-					yield mappedRange.start;
+				for (const mapped of sourceMap.toGeneratedPositions(position)) {
+					if (mapped[1].data.completion) {
+						yield mapped[0];
+					}
 				}
 			},
 			(plugin, document, position) => plugin.doAutoInsert?.(document, position, options),
@@ -31,10 +29,11 @@ export function register(context: DocumentServiceRuntimeContext) {
 				if (typeof data === 'string')
 					return data;
 
-				const range = sourceMap.getSourceRange(data.range.start, data.range.end)?.[0];
+				const start = sourceMap.toSourcePosition(data.range.start)?.[0];
+				const end = sourceMap.toSourcePosition(data.range.end)?.[0];
 
-				if (range) {
-					data.range = range;
+				if (start && end) {
+					data.range = { start, end };
 					return data;
 				}
 			},

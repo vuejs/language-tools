@@ -18,9 +18,11 @@ export function register(context: DocumentServiceRuntimeContext) {
 				if (!sourceMap)
 					return color;
 
-				const range = sourceMap.getSourceRange(color.range.start, color.range.end)?.[0];
-				if (range) {
-					return vscode.ColorInformation.create(range, color.color);
+				const start = sourceMap.toSourcePosition(color.range.start)?.[0];
+				const end = sourceMap.toSourcePosition(color.range.start)?.[0];
+
+				if (start && end) {
+					return vscode.ColorInformation.create({ start, end }, color.color);
 				}
 			}).filter(shared.notEmpty),
 			arr => arr.flat(),

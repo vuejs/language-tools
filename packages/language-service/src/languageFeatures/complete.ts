@@ -51,12 +51,15 @@ export function register(context: LanguageServiceRuntimeContext) {
 					if (!sourceMap)
 						continue;
 
-					for (const [embeddedRange] of sourceMap.getMappedRanges(position, position, data => !!data.completion)) {
+					for (const mapped of sourceMap.toGeneratedPositions(position)) {
+
+						if (!mapped[1].data.completion)
+							continue;
 
 						if (!cacheData.plugin.complete?.on)
 							continue;
 
-						const embeddedCompletionList = await cacheData.plugin.complete.on(sourceMap.mappedDocument, embeddedRange.start, completionContext);
+						const embeddedCompletionList = await cacheData.plugin.complete.on(sourceMap.mappedDocument, mapped[0], completionContext);
 
 						if (!embeddedCompletionList) {
 							cacheData.list.isIncomplete = false;
@@ -69,7 +72,13 @@ export function register(context: LanguageServiceRuntimeContext) {
 								return {
 									...transformCompletionItem(
 										item,
-										embeddedRange => sourceMap.getSourceRange(embeddedRange.start, embeddedRange.end)?.[0],
+										embeddedRange => {
+											const start = sourceMap.toSourcePosition(embeddedRange.start)?.[0];
+											const end = sourceMap.toSourcePosition(embeddedRange.end)?.[0];
+											if (start && end) {
+												return { start, end };
+											}
+										},
 									),
 									data: {
 										uri,
@@ -132,7 +141,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					const plugins = context.plugins.sort(sortPlugins);
 
-					for (const [embeddedRange, data] of sourceMap.getMappedRanges(position, position, data => !!data.completion)) {
+					for (const mapped of sourceMap.toGeneratedPositions(position)) {
+
+						if (!mapped[1].data.completion)
+							continue;
 
 						for (const plugin of plugins) {
 
@@ -145,7 +157,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 							if (completionContext?.triggerCharacter && !plugin.complete.triggerCharacters?.includes(completionContext.triggerCharacter))
 								continue;
 
-							const isAdditional = typeof data.completion === 'object' && data.completion.additional || plugin.complete.isAdditional;
+							const isAdditional = typeof mapped[1].data.completion === 'object' && mapped[1].data.completion.additional || plugin.complete.isAdditional;
 
 							if (cache!.mainCompletion && (!isAdditional || cache?.mainCompletion.documentUri !== sourceMap.mappedDocument.uri))
 								continue;
@@ -154,7 +166,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 							if (plugin.complete.isAdditional && cache?.data.some(data => data.plugin === plugin))
 								continue;
 
-							const embeddedCompletionList = await plugin.complete.on(sourceMap.mappedDocument, embeddedRange.start, completionContext);
+							const embeddedCompletionList = await plugin.complete.on(sourceMap.mappedDocument, mapped[0], completionContext);
 
 							if (!embeddedCompletionList || !embeddedCompletionList.items.length)
 								continue;
@@ -169,7 +181,13 @@ export function register(context: LanguageServiceRuntimeContext) {
 									return {
 										...transformCompletionItem(
 											item,
-											embeddedRange => sourceMap.getSourceRange(embeddedRange.start, embeddedRange.end)?.[0],
+											embeddedRange => {
+												const start = sourceMap.toSourcePosition(embeddedRange.start)?.[0];
+												const end = sourceMap.toSourcePosition(embeddedRange.end)?.[0];
+												if (start && end) {
+													return { start, end };
+												}
+											},
 										),
 										data: {
 											uri,

@@ -34,13 +34,14 @@ export function register(context: LanguageServiceRuntimeContext) {
 				let minStart: number | undefined;
 				let maxEnd: number | undefined;
 
-				for (const mapping of sourceMap.base.mappings) {
+				for (const mapping of sourceMap.mappings) {
 					const overlapRange = shared.getOverlapRange2(offsetRange.start, offsetRange.end, mapping.sourceRange[0], mapping.sourceRange[1]);
 					if (overlapRange) {
-						const embeddedRange = sourceMap.getMappedRange(overlapRange.start, overlapRange.end)?.[0];
-						if (embeddedRange) {
-							minStart = minStart === undefined ? embeddedRange.start : Math.min(embeddedRange.start, minStart);
-							maxEnd = maxEnd === undefined ? embeddedRange.end : Math.max(embeddedRange.end, maxEnd);
+						const start = sourceMap.toGeneratedOffset(overlapRange.start)?.[0];
+						const end = sourceMap.toGeneratedOffset(overlapRange.end)?.[0];
+						if (start !== undefined && end !== undefined) {
+							minStart = minStart === undefined ? start : Math.min(start, minStart);
+							maxEnd = maxEnd === undefined ? end : Math.max(end, maxEnd);
 						}
 					}
 				}
@@ -62,8 +63,14 @@ export function register(context: LanguageServiceRuntimeContext) {
 				if (!sourceMap)
 					return _inlayHint;
 
-				const position = sourceMap.getSourceRange(_inlayHint.position, _inlayHint.position, data => !!data.completion)?.[0].start;
-				const edits = _inlayHint.textEdits?.map(textEdit => transformTextEdit(textEdit, range => sourceMap.getSourceRange(range.start, range.end)?.[0])).filter(shared.notEmpty);
+				const position = sourceMap.toSourcePosition(_inlayHint.position)?.[0];
+				const edits = _inlayHint.textEdits?.map(textEdit => transformTextEdit(textEdit, range => {
+					const start = sourceMap.toSourcePosition(range.start)?.[0];
+					const end = sourceMap.toSourcePosition(range.end)?.[0];
+					if (start && end) {
+						return { start, end };
+					}
+				})).filter(shared.notEmpty);
 
 				if (position) {
 					return {

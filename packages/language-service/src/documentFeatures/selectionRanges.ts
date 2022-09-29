@@ -15,7 +15,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 			positions,
 			sourceMap => !!sourceMap.embeddedFile.capabilities.foldingRange,
 			(positions, sourceMap) => [positions
-				.map(position => sourceMap.getMappedRange(position, position)?.[0].start)
+				.map(position => sourceMap.toGeneratedPosition(position)?.[0])
 				.filter(shared.notEmpty)],
 			(plugin, document, positions) => positions.length ? plugin.getSelectionRanges?.(document, positions) : undefined,
 			(data, sourceMap) => transformSelectionRanges(
@@ -25,7 +25,12 @@ export function register(context: DocumentServiceRuntimeContext) {
 					if (!sourceMap)
 						return range;
 
-					return sourceMap.getSourceRange(range.start, range.end)?.[0];
+					const start = sourceMap.toSourcePosition(range.start)?.[0];
+					const end = sourceMap.toSourcePosition(range.end)?.[0];
+
+					if (start && end) {
+						return { start, end };
+					}
 				},
 			),
 		);

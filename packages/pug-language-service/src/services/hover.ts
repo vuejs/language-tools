@@ -3,22 +3,35 @@ import type * as html from 'vscode-html-languageservice';
 import type { PugDocument } from '../pugDocument';
 
 export function register(htmlLs: html.LanguageService) {
-	return (docDoc: PugDocument, pos: html.Position, options?: html.HoverSettings | undefined) => {
+	return (pugDoc: PugDocument, pos: html.Position, options?: html.HoverSettings | undefined) => {
 
-		const htmlRange = docDoc.sourceMap.getMappedRange(pos, pos, data => !data?.isEmptyTagCompletion)?.[0];
-		if (!htmlRange) return;
+		let htmlPos: html.Position | undefined;
+		for (const mapped of pugDoc.sourceMap.toGeneratedPositions(pos)) {
+			if (!mapped[1].data?.isEmptyTagCompletion) {
+				htmlPos = mapped[0];
+				break;
+			}
+		}
+		if (!htmlPos)
+			return;
 
 		const htmlResult = htmlLs.doHover(
-			docDoc.sourceMap.mappedDocument,
-			htmlRange.start,
-			docDoc.htmlDocument,
+			pugDoc.sourceMap.mappedDocument,
+			htmlPos,
+			pugDoc.htmlDocument,
 			options,
 		);
 		if (!htmlResult) return;
 
 		return transformHover(
 			htmlResult,
-			htmlRange => docDoc.sourceMap.getSourceRange(htmlRange.start, htmlRange.end)?.[0],
+			htmlRange => {
+				const start = pugDoc.sourceMap.toSourcePosition(htmlRange.start)?.[0];
+				const end = pugDoc.sourceMap.toSourcePosition(htmlRange.end)?.[0];
+				if (start && end) {
+					return { start, end };
+				}
+			},
 		);
 	};
 }

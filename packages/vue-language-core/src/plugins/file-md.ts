@@ -65,15 +65,8 @@ const plugin: VueLanguagePlugin = () => {
 				return sfc;
 
 				function transformRange(block: SFCBlock) {
-					const fileRange = file2VueSourceMap.getSourceRange(block.loc.start.offset, block.loc.end.offset)?.[0];
-					if (fileRange) {
-						block.loc.start.offset = fileRange.start;
-						block.loc.end.offset = fileRange.end;
-					}
-					else {
-						block.loc.start.offset = -1;
-						block.loc.end.offset = -1;
-					}
+					block.loc.start.offset = file2VueSourceMap.toSourceOffset(block.loc.start.offset)?.[0] ?? -1;
+					block.loc.end.offset = file2VueSourceMap.toSourceOffset(block.loc.end.offset)?.[0] ?? -1;
 				}
 			};
 		}

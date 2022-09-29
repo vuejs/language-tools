@@ -12,12 +12,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 			uri,
 			position,
 			function* (position, sourceMap) {
-				for (const [mappedRange] of sourceMap.getMappedRanges(
-					position,
-					position,
-					data => !!data.hover,
-				)) {
-					yield mappedRange.start;
+				for (const mapped of sourceMap.toGeneratedPositions(position)) {
+					if (mapped[1].data.hover) {
+						yield mapped[0];
+					}
 				}
 			},
 			(plugin, document, position) => plugin.doHover?.(document, position),
@@ -29,10 +27,11 @@ export function register(context: LanguageServiceRuntimeContext) {
 				if (!data.range)
 					return data;
 
-				const range = sourceMap.getSourceRange(data.range.start, data.range.end)?.[0];
+				const start = sourceMap.toSourcePosition(data.range.start)?.[0];
+				const end = sourceMap.toSourcePosition(data.range.end)?.[0];
 
-				if (range) {
-					data.range = range;
+				if (start && end) {
+					data.range = { start, end };
 					return data;
 				}
 			},

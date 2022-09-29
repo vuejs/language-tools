@@ -1,8 +1,7 @@
+import { buildMappings, Chunk, toString } from '@volar/code-gen';
 import * as shared from '@volar/shared';
-import * as SourceMap from '@volar/source-map';
-import { TextDocument } from 'vscode-languageserver-textdocument';
-import { buildMappings, toString, Chunk } from '@volar/code-gen';
 import * as pugLex from 'pug-lexer';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 
 const pugParser = require('pug-parser');
 
@@ -59,12 +58,10 @@ export function baseParse(pugCode: string) {
 		};
 	};
 
-	const sourceMap = new SourceMap.SourceMapBase<{ isEmptyTagCompletion: boolean; } | undefined>(buildMappings(codeGen));
-
 	return {
 		htmlCode: toString(codeGen),
+		mappings: buildMappings(codeGen),
 		pugTextDocument,
-		sourceMap,
 		error,
 		ast,
 	};

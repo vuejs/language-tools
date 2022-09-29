@@ -20,7 +20,12 @@ export function register(context: DocumentServiceRuntimeContext) {
 					if (!sourceMap)
 						return range;
 
-					return sourceMap.getSourceRange(range.start, range.end)?.[0];
+					const start = sourceMap.toSourcePosition(range.start)?.[0];
+					const end = sourceMap.toSourcePosition(range.end)?.[0];
+
+					if (start && end) {
+						return { start, end };
+					}
 				},
 			),
 			arr => arr.flat(),

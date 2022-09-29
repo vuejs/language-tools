@@ -21,12 +21,10 @@ export function register(
 			uri,
 			position,
 			function* (position, sourceMap) {
-				for (const [mappedRange] of sourceMap.getMappedRanges(
-					position,
-					position,
-					isValidMappingData,
-				)) {
-					yield mappedRange.start;
+				for (const mapped of sourceMap.toGeneratedPositions(position)) {
+					if (isValidMappingData(mapped[1].data)) {
+						yield mapped[0];
+					}
 				}
 			},
 			async (plugin, document, position, sourceMap) => {
@@ -65,18 +63,17 @@ export function register(
 
 						if (teleport) {
 
-							for (const [teleRange] of teleport.findTeleports(
-								definition.targetSelectionRange.start,
-								definition.targetSelectionRange.end,
-								isValidTeleportSideData,
-							)) {
+							for (const mapped of teleport.findTeleports(definition.targetSelectionRange.start)) {
 
-								if (recursiveChecker.has({ uri: teleport.document.uri, range: { start: teleRange.start, end: teleRange.start } }))
+								if (!isValidTeleportSideData(mapped[1]))
+									continue;
+
+								if (recursiveChecker.has({ uri: teleport.document.uri, range: { start: mapped[0], end: mapped[0] } }))
 									continue;
 
 								foundTeleport = true;
 
-								await withTeleports(teleport.document, teleRange.start, originDefinition ?? definition);
+								await withTeleports(teleport.document, mapped[0], originDefinition ?? definition);
 							}
 						}
 
@@ -98,7 +95,7 @@ export function register(
 
 				if (link.originSelectionRange && sourceMap) {
 
-					const originSelectionRange = getSourceRangePreferSurroundedPosition(sourceMap, link.originSelectionRange, position);
+					const originSelectionRange = toSourcePositionPreferSurroundedPosition(sourceMap, link.originSelectionRange, position);
 
 					if (!originSelectionRange)
 						return;
@@ -110,15 +107,25 @@ export function register(
 
 				if (targetSourceMap) {
 
-					const targetRange = targetSourceMap.getSourceRange(link.targetRange.start, link.targetRange.end)?.[0];
-					const targetSelectionRange = targetSourceMap.getSourceRange(link.targetSelectionRange.start, link.targetSelectionRange.end)?.[0];
+					const targetSelectionRangeStart = targetSourceMap.toSourcePosition(link.targetSelectionRange.start)?.[0];
+					const targetSelectionRangeEnd = targetSourceMap.toSourcePosition(link.targetSelectionRange.end)?.[0];
 
-					if (!targetSelectionRange)
+					if (!targetSelectionRangeStart || !targetSelectionRangeEnd)
 						return;
 
+					let targetRangeStart = targetSourceMap.toSourcePosition(link.targetRange.start)?.[0];
+					let targetRangeEnd = targetSourceMap.toSourcePosition(link.targetRange.end)?.[0];
+
 					link.targetUri = targetSourceMap.sourceDocument.uri;
-					link.targetRange = targetRange ?? targetSelectionRange; // loose range mapping to for template slots, slot properties
-					link.targetSelectionRange = targetSelectionRange;
+					link.targetRange = {
+						// loose range mapping to for template slots, slot properties
+						start: targetRangeStart ?? targetSelectionRangeStart,
+						end: targetRangeEnd ?? targetSelectionRangeEnd,
+					};
+					link.targetSelectionRange = {
+						start: targetSelectionRangeStart,
+						end: targetSelectionRangeEnd,
+					};
 				}
 
 				return link;
@@ -128,20 +135,23 @@ export function register(
 	};
 }
 
-function getSourceRangePreferSurroundedPosition(sourceMap: EmbeddedDocumentSourceMap, mappedRange: vscode.Range, position: vscode.Position) {
+function toSourcePositionPreferSurroundedPosition(sourceMap: EmbeddedDocumentSourceMap, mappedRange: vscode.Range, position: vscode.Position) {
 
 	let result: vscode.Range | undefined;
 
-	for (const [sourceRange] of sourceMap.getSourceRanges(mappedRange.start, mappedRange.end)) {
+	for (const mapped of sourceMap.toSourcePositions(mappedRange.start)) {
+		const start = mapped[0];
+		const end = sourceMap.matchSourcePosition(mapped[0], mapped[1], 'end');
+		if (!end)
+			continue;
 		if (!result) {
-			result = sourceRange;
+			result = { start, end };
 		}
 		if (
-			(sourceRange.start.line < position.line || (sourceRange.start.line === position.line && sourceRange.start.character <= position.character))
-			&& (sourceRange.end.line > position.line || (sourceRange.end.line === position.line && sourceRange.end.character >= position.character))
+			(start.line < position.line || (start.line === position.line && start.character <= position.character))
+			&& (end.line > position.line || (end.line === position.line && end.character >= position.character))
 		) {
-			result = sourceRange;
-			break;
+			return { start, end };
 		}
 	}
 

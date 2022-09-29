@@ -14,18 +14,18 @@ export function register(context: LanguageServiceRuntimeContext) {
 			uri,
 			{ position, newName },
 			function* (arg, sourceMap) {
-				for (const [mappedRange, mappedData] of sourceMap.getMappedRanges(
-					arg.position,
-					arg.position,
-					data => typeof data.rename === 'object' ? !!data.rename.normalize : !!data.rename,
-				)) {
+				for (const mapped of sourceMap.toGeneratedPositions(arg.position)) {
+
+					const shouldRename = typeof mapped[1].data.rename === 'object' ? !!mapped[1].data.rename.normalize : !!mapped[1].data.rename;
+					if (!shouldRename)
+						continue;
 
 					let newName = arg.newName;
 
-					if (typeof mappedData.rename === 'object' && mappedData.rename.normalize)
-						newName = mappedData.rename.normalize(arg.newName);
+					if (typeof mapped[1].data.rename === 'object' && mapped[1].data.rename.normalize)
+						newName = mapped[1].data.rename.normalize(arg.newName);
 
-					yield { position: mappedRange.start, newName };
+					yield { position: mapped[0], newName };
 				}
 			},
 			async (plugin, document, arg, sourceMap) => {
@@ -71,18 +71,17 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 								if (teleport) {
 
-									for (const [teleRange] of teleport.findTeleports(
-										textEdit.range.start,
-										textEdit.range.end,
-										sideData => !!sideData.rename,
-									)) {
+									for (const mapped of teleport.findTeleports(textEdit.range.start)) {
 
-										if (recursiveChecker.has({ uri: teleport.document.uri, range: { start: teleRange.start, end: teleRange.start } }))
+										if (!mapped[1].rename)
+											continue;
+
+										if (recursiveChecker.has({ uri: teleport.document.uri, range: { start: mapped[0], end: mapped[0] } }))
 											continue;
 
 										foundTeleport = true;
 
-										await withTeleports(teleport.document, teleRange.start, newName);
+										await withTeleports(teleport.document, mapped[0], newName);
 									}
 								}
 
@@ -207,18 +206,22 @@ export function embeddedEditToSourceEdit(
 	for (const tsUri in tsResult.changes) {
 		const tsEdits = tsResult.changes[tsUri];
 		for (const tsEdit of tsEdits) {
-			for (const vueLoc of vueDocuments.fromEmbeddedLocation(
-				tsUri,
-				tsEdit.range.start,
-				tsEdit.range.end,
-				data => typeof data.rename === 'object' ? !!data.rename.apply : !!data.rename, // fix https://github.com/johnsoncodehk/volar/issues/1091
-			)) {
+			for (const vueLoc of vueDocuments.fromEmbeddedLocation(tsUri, tsEdit.range.start)) {
+
+				// fix https://github.com/johnsoncodehk/volar/issues/1091
+				const shouldRename = !vueLoc.mapping || (typeof vueLoc.mapping.data?.rename === 'object' ? typeof vueLoc.mapping.data.rename.apply : !!vueLoc.mapping.data?.rename);
+				if (!shouldRename)
+					continue;
+
+				const end = vueLoc.sourceMap ? vueLoc.sourceMap.matchSourcePosition(tsEdit.range.end, vueLoc.mapping, 'end') : tsEdit.range.end;
+				if (!end)
+					continue;
 
 				let newText_2 = tsEdit.newText;
 
-				if (vueLoc.sourceMap && typeof vueLoc.data.rename === 'object' && vueLoc.data.rename.apply) {
+				if (vueLoc.sourceMap && typeof vueLoc.mapping.data.rename === 'object' && vueLoc.mapping.data.rename.apply) {
 					const vueDoc = vueLoc.sourceMap.sourceDocument;
-					newText_2 = vueLoc.data.rename.apply(vueDoc.getText(vueLoc.range), tsEdit.newText);
+					newText_2 = vueLoc.mapping.data.rename.apply(vueDoc.getText({ start: vueLoc.position, end }), tsEdit.newText);
 				}
 
 				if (!vueResult.changes) {
@@ -231,7 +234,7 @@ export function embeddedEditToSourceEdit(
 
 				vueResult.changes[vueLoc.uri].push({
 					newText: newText_2,
-					range: vueLoc.range,
+					range: { start: vueLoc.position, end },
 				});
 				hasResult = true;
 			}
@@ -255,16 +258,21 @@ export function embeddedEditToSourceEdit(
 						[],
 					);
 					for (const tsEdit of tsDocEdit.edits) {
-						for (const [vueRange] of sourceMap.getSourceRanges(
-							tsEdit.range.start,
-							tsEdit.range.end,
-							data => typeof data.rename === 'object' ? !!data.rename.apply : !!data.rename, // fix https://github.com/johnsoncodehk/volar/issues/1091
-						)) {
+						for (const mapped of sourceMap.toSourcePositions(tsEdit.range.start)) {
+
+							// fix https://github.com/johnsoncodehk/volar/issues/1091
+							const shouldApplyRename = typeof mapped[1].data.rename === 'object' ? !!mapped[1].data.rename.apply : !!mapped[1].data.rename;
+							if (!shouldApplyRename)
+								continue;
+
+							const end = sourceMap.matchSourcePosition(tsEdit.range.end, mapped[1], 'end');
+							if (!end)
+								continue;
 
 							vueDocEdit.edits.push({
 								annotationId: vscode.AnnotatedTextEdit.is(tsEdit.range) ? tsEdit.range.annotationId : undefined,
 								newText: tsEdit.newText,
-								range: vueRange,
+								range: { start: mapped[0], end },
 							});
 						}
 					}

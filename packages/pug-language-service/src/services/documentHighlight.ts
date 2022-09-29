@@ -5,18 +5,31 @@ import type { PugDocument } from '../pugDocument';
 export function register(htmlLs: html.LanguageService) {
 	return (pugDoc: PugDocument, pos: html.Position) => {
 
-		const htmlRange = pugDoc.sourceMap.getMappedRange(pos, pos, data => !data?.isEmptyTagCompletion)?.[0];
-		if (!htmlRange) return;
+		let htmlPos: html.Position | undefined;
+		for (const mapped of pugDoc.sourceMap.toGeneratedPositions(pos)) {
+			if (!mapped[1].data?.isEmptyTagCompletion) {
+				htmlPos = mapped[0];
+				break;
+			}
+		}
+		if (!htmlPos)
+			return;
 
 		const htmlResult = htmlLs.findDocumentHighlights(
 			pugDoc.sourceMap.mappedDocument,
-			htmlRange.start,
+			htmlPos,
 			pugDoc.htmlDocument,
 		);
 
 		return transformLocations(
 			htmlResult,
-			htmlRange => pugDoc.sourceMap.getSourceRange(htmlRange.start, htmlRange.end)?.[0],
+			htmlRange => {
+				const start = pugDoc.sourceMap.toSourcePosition(htmlRange.start)?.[0];
+				const end = pugDoc.sourceMap.toSourcePosition(htmlRange.end)?.[0];
+				if (start && end) {
+					return { start, end };
+				}
+			},
 		);
 	};
 }

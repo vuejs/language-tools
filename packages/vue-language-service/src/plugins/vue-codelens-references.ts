@@ -38,7 +38,7 @@ export default function (options: {
 					const result: vscode.CodeLens[] = [];
 
 					for (const sourceMap of vueDocument.getSourceMaps()) {
-						for (const mapping of sourceMap.base.mappings) {
+						for (const mapping of sourceMap.mappings) {
 
 							if (!mapping.data.referencesCodeLens)
 								continue;
@@ -69,11 +69,11 @@ export default function (options: {
 					return codeLens;
 
 				const sourceMaps = vueDocument.getSourceMaps();
-				const currentSourceMap = sourceMaps.find(sourceMap => sourceMap.getMappedRange(data.position));
+				const currentSourceMap = sourceMaps.find(sourceMap => sourceMap.toGeneratedPosition(data.position));
 				const references = await options.findReference(data.uri, data.position) ?? [];
 				const referencesInDifferentDocument = references.filter(reference =>
 					reference.uri !== data.uri // different file
-					|| sourceMaps.some(sourceMap => sourceMap.getMappedRange(reference.range.start, reference.range.end) && sourceMap !== currentSourceMap) // different embedded document
+					|| sourceMaps.some(sourceMap => sourceMap.toGeneratedPosition(reference.range.start) && sourceMap !== currentSourceMap) // different embedded document
 				);
 				const referencesCount = referencesInDifferentDocument.length ?? 0;
 

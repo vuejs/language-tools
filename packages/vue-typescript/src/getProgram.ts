@@ -98,58 +98,27 @@ export function getProgram(
 				&& diagnostic.length !== undefined
 			) {
 
-				let founded = false;
+				for (const start of core.mapper.fromEmbeddedLocation(diagnostic.file.fileName, diagnostic.start)) {
 
-				for (const tsOrVueLoc of core.mapper.fromEmbeddedLocation(
-					diagnostic.file.fileName,
-					diagnostic.start,
-					diagnostic.start + diagnostic.length,
-					data => !!data.diagnostic,
-				)) {
-
-					if (!core.typescriptLanguageServiceHost.fileExists?.(tsOrVueLoc.fileName))
+					if (start.mapping && !start.mapping.data.diagnostic)
 						continue;
 
-					onMapping(diagnostic, tsOrVueLoc.fileName, tsOrVueLoc.range.start, tsOrVueLoc.range.end, tsOrVueLoc.mapped?.vueFile.text);
+					if (!core.typescriptLanguageServiceHost.fileExists?.(start.fileName))
+						continue;
 
-					founded = true;
-					break;
-				}
-
-				// fix https://github.com/johnsoncodehk/volar/issues/1372
-				if (!founded) {
-					for (const start of core.mapper.fromEmbeddedLocation(
+					for (const end of core.mapper.fromEmbeddedLocation(
 						diagnostic.file.fileName,
-						diagnostic.start,
-						diagnostic.start,
-						data => !!data.diagnostic,
+						diagnostic.start + diagnostic.length,
 					)) {
 
-						if (!core.typescriptLanguageServiceHost.fileExists?.(start.fileName))
+						if (end.mapping && !end.mapping.data.diagnostic)
 							continue;
 
-						for (const end of core.mapper.fromEmbeddedLocation(
-							diagnostic.file.fileName,
-							diagnostic.start + diagnostic.length,
-							diagnostic.start + diagnostic.length,
-							data => !!data.diagnostic,
-						)) {
+						onMapping(diagnostic, start.fileName, start.offset, end.offset, core.mapper.get(start.fileName)?.[0].text);
 
-							if (!core.typescriptLanguageServiceHost.fileExists?.(end.fileName))
-								continue;
-
-							if (start.fileName !== end.fileName)
-								continue;
-
-							onMapping(diagnostic, start.fileName, start.range.start, end.range.end, start.mapped?.vueFile.text);
-
-							founded = true;
-							break;
-						}
-						if (founded) {
-							break;
-						}
+						break;
 					}
+					break;
 				}
 			}
 			else if (

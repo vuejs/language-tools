@@ -133,22 +133,16 @@ export function createLanguageService(host: vue.LanguageServiceHost) {
 				if (!teleport)
 					continue;
 
-				for (const [teleRange] of teleport.findTeleports(
-					ref.textSpan.start,
-					ref.textSpan.start + ref.textSpan.length,
-					sideData => {
-						if ((mode === 'definition' || mode === 'typeDefinition' || mode === 'implementation') && !sideData.definitions)
-							return false;
-						if ((mode === 'references') && !sideData.references)
-							return false;
-						if ((mode === 'rename') && !sideData.rename)
-							return false;
-						return true;
-					},
-				)) {
-					if (loopChecker.has(ref.fileName + ':' + teleRange.start))
+				for (const [teleOffset, data] of teleport.findTeleports(ref.textSpan.start)) {
+					if ((mode === 'definition' || mode === 'typeDefinition' || mode === 'implementation') && !data.definitions)
 						continue;
-					withTeleports(ref.fileName, teleRange.start);
+					if ((mode === 'references') && !data.references)
+						continue;
+					if ((mode === 'rename') && !data.rename)
+						continue;
+					if (loopChecker.has(ref.fileName + ':' + teleOffset))
+						continue;
+					withTeleports(ref.fileName, teleOffset);
 				}
 			}
 		}
@@ -186,14 +180,12 @@ export function createLanguageService(host: vue.LanguageServiceHost) {
 				if (!teleport)
 					continue;
 
-				for (const [teleRange] of teleport.findTeleports(
-					ref.textSpan.start,
-					ref.textSpan.start + ref.textSpan.length,
-					sideData => !!sideData.definitions,
-				)) {
-					if (loopChecker.has(ref.fileName + ':' + teleRange.start))
+				for (const [teleOffset, data] of teleport.findTeleports(ref.textSpan.start)) {
+					if (!data.definitions)
 						continue;
-					withTeleports(ref.fileName, teleRange.start);
+					if (loopChecker.has(ref.fileName + ':' + teleOffset))
+						continue;
+					withTeleports(ref.fileName, teleOffset);
 				}
 			}
 		}
@@ -223,14 +215,14 @@ export function createLanguageService(host: vue.LanguageServiceHost) {
 					if (!teleport)
 						continue;
 
-					for (const [teleRange] of teleport.findTeleports(
+					for (const [telePos, sideData] of teleport.findTeleports(
 						ref.textSpan.start,
-						ref.textSpan.start + ref.textSpan.length,
-						sideData => !!sideData.references,
 					)) {
-						if (loopChecker.has(ref.fileName + ':' + teleRange.start))
+						if (!sideData.references)
 							continue;
-						withTeleports(ref.fileName, teleRange.start);
+						if (loopChecker.has(ref.fileName + ':' + telePos))
+							continue;
+						withTeleports(ref.fileName, telePos);
 					}
 				}
 			}
@@ -298,12 +290,12 @@ export function createLanguageService(host: vue.LanguageServiceHost) {
 	function transformSpan(fileName: string | undefined, textSpan: ts.TextSpan | undefined) {
 		if (!fileName) return;
 		if (!textSpan) return;
-		for (const vueLoc of core.mapper.fromEmbeddedLocation(fileName, textSpan.start, textSpan.start + textSpan.length)) {
+		for (const vueLoc of core.mapper.fromEmbeddedLocation(fileName, textSpan.start)) {
 			return {
 				fileName: vueLoc.fileName,
 				textSpan: {
-					start: vueLoc.range.start,
-					length: vueLoc.range.end - vueLoc.range.start,
+					start: vueLoc.offset,
+					length: textSpan.length,
 				},
 			};
 		}

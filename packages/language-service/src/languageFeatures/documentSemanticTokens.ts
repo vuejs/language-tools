@@ -32,7 +32,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				let range: [number, number] | undefined;
 
-				for (const mapping of sourceMap.base.mappings) {
+				for (const mapping of sourceMap.mappings) {
 
 					if (cancleToken?.isCancellationRequested)
 						return;
@@ -61,22 +61,20 @@ export function register(context: LanguageServiceRuntimeContext) {
 				vscode.Range.create(document.positionAt(offsetRange[0]), document.positionAt(offsetRange[1])),
 				cancleToken,
 			),
-			(tokens, sourceMap) => tokens.map(_token => {
+			(tokens, sourceMap) => tokens.map<SemanticToken | undefined>(_token => {
 
 				if (!sourceMap)
 					return _token;
 
-				const _start = sourceMap.mappedDocument.offsetAt({ line: _token[0], character: _token[1] });
-				const _end = sourceMap.mappedDocument.offsetAt({ line: _token[0], character: _token[1] + _token[2] });
-				const range = sourceMap.getSourceRange(_start, _end, data => !!data.semanticTokens)?.[0];
-
-				if (!range)
-					return;
-
-				const start = document.positionAt(range.start);
-				const token: SemanticToken = [start.line, start.character, range.end - range.start, _token[3], _token[4]];
-
-				return token;
+				const offset = sourceMap.mappedDocument.offsetAt({ line: _token[0], character: _token[1] });
+				for (const mapped of sourceMap.toSourceOffsets(offset)) {
+					if (mapped[1].data.semanticTokens) {
+						const start = document.positionAt(mapped[0]);
+						if (sourceMap.matchGeneratedPosition({ line: start.line, character: start.character + _token[2] }, mapped[1], 'end')) {
+							return [start.line, start.character, _token[2], _token[3], _token[4]];
+						}
+					}
+				}
 			}).filter(shared.notEmpty),
 			tokens => tokens.flat(),
 			reportProgress, // TODO: this has no effect in LSP

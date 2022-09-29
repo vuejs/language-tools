@@ -12,22 +12,29 @@ export function register(context: LanguageServiceRuntimeContext) {
 			uri,
 			{ position, autoInsertContext },
 			function* (arg, sourceMap) {
+				for (const mapped of sourceMap.toGeneratedPositions(arg.position)) {
 
-				const position = sourceMap.getMappedRange(arg.position, arg.position, data => !!data.completion)?.[0].start;
-				const rangeOffset = sourceMap.getMappedRange(arg.autoInsertContext.lastChange.rangeOffset, arg.autoInsertContext.lastChange.rangeOffset, data => !!data.completion)?.[0].start;
-				const range = sourceMap.getMappedRange(arg.autoInsertContext.lastChange.range.start, arg.autoInsertContext.lastChange.range.end, data => !!data.completion)?.[0];
+					if (!mapped[1].data.completion)
+						continue;
 
-				if (position && rangeOffset !== undefined && range) {
-					yield {
-						position,
-						autoInsertContext: {
-							lastChange: {
-								...arg.autoInsertContext.lastChange,
-								rangeOffset,
-								range,
+					const position = mapped[0];
+					const rangeOffset = sourceMap.toGeneratedOffset(arg.autoInsertContext.lastChange.rangeOffset)?.[0];
+					const rangeStart = sourceMap.toGeneratedPosition(arg.autoInsertContext.lastChange.range.start)?.[0];
+					const rangeEnd = sourceMap.toGeneratedPosition(arg.autoInsertContext.lastChange.range.start)?.[0];
+
+					if (rangeOffset !== undefined && rangeStart && rangeEnd) {
+						yield {
+							position,
+							autoInsertContext: {
+								lastChange: {
+									...arg.autoInsertContext.lastChange,
+									rangeOffset,
+									range: { start: rangeStart, end: rangeEnd },
+								},
 							},
-						},
-					};
+						};
+						break;
+					}
 				}
 			},
 			(plugin, document, arg) => plugin.doAutoInsert?.(document, arg.position, arg.autoInsertContext),
@@ -39,10 +46,11 @@ export function register(context: LanguageServiceRuntimeContext) {
 				if (typeof data === 'string')
 					return data;
 
-				const range = sourceMap.getSourceRange(data.range.start, data.range.end)?.[0];
+				const start = sourceMap.toSourcePosition(data.range.start)?.[0];
+				const end = sourceMap.toSourcePosition(data.range.end)?.[0];
 
-				if (range) {
-					data.range = range;
+				if (start && end) {
+					data.range = { start, end };
 					return data;
 				}
 			},

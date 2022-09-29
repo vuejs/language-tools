@@ -28,7 +28,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				if (sourceMap) {
 
 					const newPosition_2 = newPosition
-						? sourceMap.getMappedRange(newPosition, newPosition, data => !!data.completion)?.[0].start
+						? [...sourceMap.toGeneratedPositions(newPosition)].find(mapped => mapped[1].data.completion)?.[0]
 						: undefined;
 					const resolvedItem = await plugin.complete.resolve(originalItem, newPosition_2);
 
@@ -48,8 +48,15 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					item = transformCompletionItem(
 						resolvedItem,
-						embeddedRange => plugin.resolveEmbeddedRange?.(embeddedRange)
-							?? sourceMap.getSourceRange(embeddedRange.start, embeddedRange.end)?.[0],
+						embeddedRange => {
+							let range = plugin.resolveEmbeddedRange?.(embeddedRange);
+							if (range) return range;
+							const start = sourceMap.toSourcePosition(embeddedRange.start)?.[0];
+							const end = sourceMap.toSourcePosition(embeddedRange.end)?.[0];
+							if (start && end) {
+								return { start, end };
+							}
+						},
 					);
 				}
 			}

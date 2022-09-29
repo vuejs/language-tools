@@ -175,8 +175,8 @@ importers:
   packages/pug-language-service:
     specifiers:
       '@volar/code-gen': 1.0.0-beta.1
+      '@volar/language-service': 1.0.0-beta.1
       '@volar/shared': 1.0.0-beta.1
-      '@volar/source-map': 1.0.0-beta.1
       '@volar/transforms': 1.0.0-beta.1
       pug-lexer: ^5.0.1
       pug-parser: ^6.0.0
@@ -185,8 +185,8 @@ importers:
       vscode-languageserver-types: ^3.17.2
     dependencies:
       '@volar/code-gen': link:../code-gen
+      '@volar/language-service': link:../language-service
       '@volar/shared': link:../shared
-      '@volar/source-map': link:../source-map
       '@volar/transforms': link:../transforms
       pug-lexer: 5.0.1
       pug-parser: 6.0.0

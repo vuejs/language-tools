@@ -14,12 +14,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 			uri,
 			position,
 			function* (position, sourceMap) {
-				for (const [mappedRange] of sourceMap.getMappedRanges(
-					position,
-					position,
-					data => !!data.references,
-				)) {
-					yield mappedRange.start;
+				for (const mapped of sourceMap.toGeneratedPositions(position)) {
+					if (mapped[1].data.references) {
+						yield mapped[0];
+					}
 				}
 			},
 			async (plugin, document, position, sourceMap, vueDocument) => {
@@ -53,18 +51,17 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 						if (teleport) {
 
-							for (const [teleRange] of teleport.findTeleports(
-								reference.range.start,
-								reference.range.end,
-								sideData => !!sideData.references,
-							)) {
+							for (const mapped of teleport.findTeleports(reference.range.start)) {
 
-								if (recursiveChecker.has({ uri: teleport.document.uri, range: { start: teleRange.start, end: teleRange.start } }))
+								if (!mapped[1].references)
+									continue;
+
+								if (recursiveChecker.has({ uri: teleport.document.uri, range: { start: mapped[0], end: mapped[0] } }))
 									continue;
 
 								foundTeleport = true;
 
-								await withTeleports(teleport.document, teleRange.start);
+								await withTeleports(teleport.document, mapped[0]);
 							}
 						}
 
@@ -79,12 +76,13 @@ export function register(context: LanguageServiceRuntimeContext) {
 				if (!sourceMap)
 					return highlisht;
 
-				const range = sourceMap.getSourceRange(highlisht.range.start, highlisht.range.end)?.[0];
+				const start = sourceMap.toSourcePosition(highlisht.range.start)?.[0];
+				const end = sourceMap.toSourcePosition(highlisht.range.end)?.[0];
 
-				if (range) {
+				if (start && end) {
 					return {
 						...highlisht,
-						range,
+						range: { start, end },
 					};
 				}
 			}).filter(shared.notEmpty),

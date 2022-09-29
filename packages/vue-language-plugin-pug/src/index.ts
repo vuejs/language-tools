@@ -1,5 +1,6 @@
 import type { VueLanguagePlugin } from '@volar/vue-language-core';
 import * as pug from '@volar/pug-language-service';
+import { SourceMapBase } from '@volar/source-map';
 
 const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions }) => {
 
@@ -13,12 +14,13 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions }) => {
 
 			if (lang === 'pug') {
 
-				const pugDoc = pug?.baseParse(template);
+				const pugFile = pug?.baseParse(template);
+				const map = new SourceMapBase(pugFile.mappings);
 
-				if (pugDoc) {
+				if (pugFile) {
 
 					const compiler = modules['@vue/compiler-dom'];
-					const completed = compiler.compile(pugDoc.htmlCode, {
+					const completed = compiler.compile(pugFile.htmlCode, {
 						...options,
 						...vueCompilerOptions.experimentalTemplateCompilerOptions,
 						onWarn(warning) {
@@ -36,8 +38,12 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions }) => {
 							get(target, prop) {
 								if (prop === 'offset') {
 									const htmlOffset = target.offset;
-									const pugOffset = pugDoc!.sourceMap.getSourceRange(htmlOffset, htmlOffset, data => !data?.isEmptyTagCompletion)?.[0]?.start;
-									return pugOffset ?? -1;
+									for (const mapped of map.toSourceOffsets(htmlOffset)) {
+										if (!mapped[1].data?.isEmptyTagCompletion) {
+											return mapped[0];
+										}
+									}
+									return -1;
 								}
 								const value = target[prop];
 								if (typeof value === 'object') {

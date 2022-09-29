@@ -1,7 +1,7 @@
-import type { EmbeddedFile, EmbeddedLanguageModule, DocumentCapabilities, PositionCapabilities, SourceFile } from './types';
+import { Mapping, SourceMapBase } from '@volar/source-map';
 import { computed, shallowReactive } from '@vue/reactivity';
 import { Teleport } from './sourceMaps';
-import { Mapping, SourceMapBase } from '@volar/source-map';
+import type { EmbeddedFile, EmbeddedLanguageModule, SourceFile } from './types';
 
 export function forEachEmbeddeds(input: EmbeddedFile[], cb: (embedded: EmbeddedFile) => void) {
 	for (const child of input) {
@@ -68,46 +68,31 @@ export function createDocumentRegistry() {
 			}
 		},
 
-		fromEmbeddedLocation: function* (
-			fileName: string,
-			start: number,
-			end?: number,
-			filter?: (data: PositionCapabilities) => boolean,
-			sourceMapFilter?: (sourceMap: DocumentCapabilities) => boolean,
-		) {
+		fromEmbeddedLocation: function* (fileName: string, offset: number) {
 
 			if (fileName.endsWith('/__VLS_types.ts')) { // TODO: monkey fix
 				return;
 			}
 
-			if (end === undefined)
-				end = start;
-
 			const mapped = sourceMapsByFileName.value.get(normalizePath(fileName));
 
 			if (mapped) {
 
-				if (sourceMapFilter && !sourceMapFilter(mapped.embedded.capabilities))
-					return;
-
 				const sourceMap = getSourceMap(mapped.vueFile, mapped.embedded.mappings);
 
-				for (const vueRange of sourceMap.getSourceRanges(start, end, filter)) {
+				for (const vueRange of sourceMap.toSourceOffsets(offset)) {
 					yield {
 						fileName: mapped.vueFile.fileName,
-						range: vueRange[0],
-						mapped: mapped,
-						data: vueRange[1],
+						offset: vueRange[0],
+						mapping: vueRange[1],
+						sourceMap,
 					};
 				}
 			}
 			else {
 				yield {
 					fileName,
-					range: {
-						start,
-						end,
-					},
+					offset,
 				};
 			}
 		},

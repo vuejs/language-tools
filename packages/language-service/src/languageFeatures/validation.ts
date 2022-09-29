@@ -262,35 +262,28 @@ export function register(context: LanguageServiceRuntimeContext) {
 			const _error: vscode.Diagnostic = { ...error };
 
 			if (sourceMap) {
-
-				let sourceRange = sourceMap.getSourceRange(
-					error.range.start,
-					error.range.end,
-					data => !!data.diagnostic,
-				)?.[0];
-
-				// fix https://github.com/johnsoncodehk/volar/issues/1205
-				// fix https://github.com/johnsoncodehk/volar/issues/1264
-				if (!sourceRange) {
-					const start = sourceMap.getSourceRange(
-						error.range.start,
-						error.range.start,
-						data => !!data.diagnostic,
-					)?.[0].start;
-					const end = sourceMap.getSourceRange(
-						error.range.end,
-						error.range.end,
-						data => !!data.diagnostic,
-					)?.[0].end;
-					if (start && end) {
-						sourceRange = { start, end };
+				let range: vscode.Range | undefined;
+				for (const start of sourceMap.toSourcePositions(error.range.start)) {
+					if (start[1].data.diagnostic) {
+						const end = sourceMap.matchSourcePosition(error.range.end, start[1], 'end');
+						if (end) {
+							range = { start: start[0], end: end };
+						}
+						else {
+							for (const end of sourceMap.toSourcePositions(error.range.end)) {
+								if (start[1].data.diagnostic) {
+									range = { start: start[0], end: end[0] };
+									break;
+								}
+							}
+						}
+						break;
 					}
 				}
-
-				if (!sourceRange)
+				if (!range) {
 					continue;
-
-				_error.range = sourceRange;
+				}
+				_error.range = range;
 			}
 
 			if (_error.relatedInformation) {
@@ -298,16 +291,19 @@ export function register(context: LanguageServiceRuntimeContext) {
 				const relatedInfos: vscode.DiagnosticRelatedInformation[] = [];
 
 				for (const info of _error.relatedInformation) {
-					for (const sourceLoc of context.documents.fromEmbeddedLocation(
-						info.location.uri,
-						info.location.range.start,
-						info.location.range.end,
-						data => !!data.diagnostic,
-					)) {
+					for (const mapped of context.documents.fromEmbeddedLocation(info.location.uri, info.location.range.start)) {
+
+						if (mapped.mapping && !mapped.mapping.data.diagnostic)
+							continue;
+
+						const end = mapped.sourceMap ? mapped.sourceMap.toSourcePosition(info.location.range.end)?.[0] : info.location.range.end;
+						if (!end)
+							continue;
+
 						relatedInfos.push({
 							location: {
-								uri: sourceLoc.uri,
-								range: sourceLoc.range,
+								uri: mapped.uri,
+								range: { start: mapped.position, end },
 							},
 							message: info.message,
 						});

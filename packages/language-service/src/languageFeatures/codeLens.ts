@@ -47,11 +47,13 @@ export function register(context: LanguageServiceRuntimeContext) {
 				if (!sourceMap)
 					return codeLens;
 
-				const range = sourceMap.getSourceRange(codeLens.range.start, codeLens.range.end)?.[0];
-				if (range) {
+				const start = sourceMap.toSourcePosition(codeLens.range.start)?.[0];
+				const end = sourceMap.toSourcePosition(codeLens.range.end)?.[0];
+
+				if (start && end) {
 					return {
 						...codeLens,
-						range,
+						range: { start, end },
 					};
 				}
 			}).filter(shared.notEmpty),

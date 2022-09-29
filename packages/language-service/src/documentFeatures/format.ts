@@ -67,7 +67,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 				if (onTypeParams) {
 
-					const embeddedPosition = sourceMap.getMappedRange(onTypeParams.position)?.[0].start;
+					const embeddedPosition = sourceMap.toGeneratedPosition(onTypeParams.position)?.[0];
 
 					if (embeddedPosition) {
 						_edits = await tryFormat(
@@ -81,33 +81,24 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 				else {
 
-					let embeddedRange = sourceMap.getMappedRange(range.start, range.end)?.[0];
+					let start = sourceMap.toGeneratedPosition(range.start)?.[0];
+					let end = sourceMap.toGeneratedPosition(range.end)?.[0];
 
-					if (!embeddedRange) {
-
-						let start = sourceMap.getMappedRange(range.start)?.[0].start;
-						let end = sourceMap.getMappedRange(range.end)?.[0].end;
-
-						if (!start) {
-							const firstMapping = sourceMap.base.mappings.sort((a, b) => a.sourceRange[0] - b.sourceRange[0])[0];
-							if (firstMapping && document.offsetAt(range.start) < firstMapping.sourceRange[0]) {
-								start = sourceMap.mappedDocument.positionAt(firstMapping.generatedRange[0]);
-							}
-						}
-
-						if (!end) {
-							const lastMapping = sourceMap.base.mappings.sort((a, b) => b.sourceRange[0] - a.sourceRange[0])[0];
-							if (lastMapping && document.offsetAt(range.end) > lastMapping.sourceRange[1]) {
-								end = sourceMap.mappedDocument.positionAt(lastMapping.generatedRange[1]);
-							}
-						}
-
-						if (start && end) {
-							embeddedRange = { start, end };
+					if (!start) {
+						const firstMapping = sourceMap.mappings.sort((a, b) => a.sourceRange[0] - b.sourceRange[0])[0];
+						if (firstMapping && document.offsetAt(range.start) < firstMapping.sourceRange[0]) {
+							start = sourceMap.mappedDocument.positionAt(firstMapping.generatedRange[0]);
 						}
 					}
 
-					if (embeddedRange) {
+					if (!end) {
+						const lastMapping = sourceMap.mappings.sort((a, b) => b.sourceRange[0] - a.sourceRange[0])[0];
+						if (lastMapping && document.offsetAt(range.end) > lastMapping.sourceRange[1]) {
+							end = sourceMap.mappedDocument.positionAt(lastMapping.generatedRange[1]);
+						}
+					}
+
+					if (start && end) {
 
 						toPatchIndent = {
 							sourceMapEmbeddedDocumentUri: sourceMap.mappedDocument.uri,
@@ -115,7 +106,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 						_edits = await tryFormat(
 							sourceMap.mappedDocument,
-							embeddedRange,
+							{ start, end },
 							initialIndentBracket,
 						);
 					}
@@ -125,13 +116,12 @@ export function register(context: DocumentServiceRuntimeContext) {
 					continue;
 
 				for (const textEdit of _edits) {
-					for (const [range] of sourceMap.getSourceRanges(
-						textEdit.range.start,
-						textEdit.range.end,
-					)) {
+					const start = sourceMap.toSourcePosition(textEdit.range.start)?.[0];
+					const end = sourceMap.toSourcePosition(textEdit.range.end)?.[0];
+					if (start && end) {
 						edits.push({
 							newText: textEdit.newText,
-							range,
+							range: { start, end },
 						});
 					}
 				}
@@ -294,7 +284,7 @@ function patchInterpolationIndent(vueDocument: SourceFileDocument, sourceMap: Em
 	const indentTextEdits: vscode.TextEdit[] = [];
 	const document = vueDocument.getDocument();
 
-	for (const mapped of sourceMap.base.mappings) {
+	for (const mapped of sourceMap.mappings) {
 
 		const textRange = {
 			start: document.positionAt(mapped.sourceRange[0]),

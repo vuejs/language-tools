@@ -25,12 +25,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 				uri,
 				position,
 				function* (position, sourceMap) {
-					for (const [mappedRange] of sourceMap.getMappedRanges(
-						position,
-						position,
-						data => !!data.references,
-					)) {
-						yield mappedRange.start;
+					for (const mapped of sourceMap.toGeneratedPositions(position)) {
+						if (mapped[1].data.references) {
+							yield mapped[0];
+						}
 					}
 				},
 				async (plugin, document, position, sourceMap) => {
@@ -187,27 +185,49 @@ export function register(context: LanguageServiceRuntimeContext) {
 		if (!sourceMap)
 			return [tsItem, tsRanges]; // not virtual file
 
-		let vueRange: vscode.Range | undefined = sourceMap.getSourceRange(tsItem.range.start, tsItem.range.end)?.[0];
-		if (!vueRange) {
+		const range = {
+			start: sourceMap.toSourcePosition(tsItem.range.start)?.[0],
+			end: sourceMap.toSourcePosition(tsItem.range.end)?.[0],
+		};
+
+		if (!range.start || !range.end) {
 			// TODO: <script> range
-			vueRange = {
-				start: sourceMap.sourceDocument.positionAt(0),
-				end: sourceMap.sourceDocument.positionAt(sourceMap.sourceDocument.getText().length),
-			};
+			range.start = sourceMap.sourceDocument.positionAt(0);
+			range.end = sourceMap.sourceDocument.positionAt(sourceMap.sourceDocument.getText().length);
 		}
 
-		const vueSelectionRange = sourceMap.getSourceRange(tsItem.selectionRange.start, tsItem.selectionRange.end)?.[0];
-		if (!vueSelectionRange)
+		const selectionRange = {
+			start: sourceMap.toSourcePosition(tsItem.selectionRange.start)?.[0],
+			end: sourceMap.toSourcePosition(tsItem.selectionRange.end)?.[0],
+		};
+
+		if (!selectionRange.start || !selectionRange.end)
 			return;
 
-		const vueRanges = tsRanges.map(tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end)?.[0]).filter(shared.notEmpty);
+		const vueRanges = tsRanges.map(tsRange => {
+			const start = sourceMap.toSourcePosition(tsItem.selectionRange.start)?.[0];
+			const end = sourceMap.toSourcePosition(tsRange.end)?.[0];
+			if (start && end) {
+				return { start, end };
+			}
+		}).filter(shared.notEmpty);
+
 		const vueItem: vscode.CallHierarchyItem = {
 			...tsItem,
 			name: tsItem.name === upath.basename(shared.getPathOfUri(sourceMap.mappedDocument.uri)) ? upath.basename(shared.getPathOfUri(sourceMap.sourceDocument.uri)) : tsItem.name,
 			uri: sourceMap.sourceDocument.uri,
-			range: vueRange,
-			selectionRange: vueSelectionRange,
+			// TS Bug: `range: range` not works
+			range: {
+				start: range.start,
+				end: range.end,
+			},
+			selectionRange: {
+				start: selectionRange.start,
+				end: selectionRange.end,
+			},
 		};
+
+		selectionRange.end;
 
 		return [vueItem, vueRanges];
 	}

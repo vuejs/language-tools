@@ -207,8 +207,11 @@ export class VueSourceFile implements SourceFile {
 					if (mapping.source !== undefined) {
 						const block = VueSourceFile.current.value.sfcBlocks.value[mapping.source];
 						if (block) {
-							mapping.sourceRange[0] += block.startTagEnd;
-							mapping.sourceRange[1] += block.startTagEnd;
+							mapping.sourceRange = [
+								mapping.sourceRange[0] + block.startTagEnd,
+								mapping.sourceRange[1] + block.startTagEnd,
+							];
+							mapping.source = undefined;
 						}
 					}
 				}
