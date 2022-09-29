@@ -16,7 +16,6 @@
 		"typescript": "beta"
 	},
 	"dependencies": {
-		"@volar/code-gen": "1.0.0-beta.1",
 		"@volar/language-core": "1.0.0-beta.1",
 		"@volar/source-map": "1.0.0-beta.1",
 		"@vue/compiler-dom": "^3.2.38",

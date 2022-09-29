@@ -1,3 +1,7 @@
+import { SegmentWithData, SegmentWithoutData } from 'muggle-string';
+
+export * from 'muggle-string';
+
 export interface Mapping<T = any> {
 	source?: string;
 	sourceRange: [number, number];
@@ -75,7 +79,7 @@ export class SourceMapBase<Data = undefined> {
 		return this._memo;
 	}
 
-	constructor(public mappings: Mapping<Data>[]) {
+	constructor(public readonly mappings: Mapping<Data>[]) {
 	}
 
 	public toSourceOffset(start: number) {
@@ -157,4 +161,25 @@ export class SourceMapBase<Data = undefined> {
 			high: Math.min(Math.max(low, high, 0), array.length - 1),
 		};
 	}
+}
+
+export function buildMappings<T>(chunks: SegmentWithoutData[] | SegmentWithData<T>[]) {
+	let length = 0;
+	const mappings: Mapping<T>[] = [];
+	for (const segment of chunks) {
+		if (typeof segment === 'string') {
+			length += segment.length;
+		}
+		else {
+			mappings.push({
+				generatedRange: [length, length + segment[0].length],
+				source: segment[1],
+				sourceRange: typeof segment[2] === 'number' ? [segment[2], segment[2] + segment[0].length] : segment[2],
+				// @ts-ignore
+				data: segment[3],
+			});
+			length += segment[0].length;
+		}
+	}
+	return mappings;
 }

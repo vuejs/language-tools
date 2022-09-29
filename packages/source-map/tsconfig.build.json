@@ -11,9 +11,4 @@
 		"node_modules",
 		".vscode-test"
 	],
-	"references": [
-		{
-			"path": "../shared/tsconfig.build.json"
-		},
-	],
 }

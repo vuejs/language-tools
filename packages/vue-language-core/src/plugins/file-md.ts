@@ -1,5 +1,4 @@
-import { buildMappings, toString, Chunk } from '@volar/code-gen';
-import { SourceMapBase } from '@volar/source-map';
+import { buildMappings, Segment, SourceMapBase, toString } from '@volar/source-map';
 import { parse, SFCBlock } from '@vue/compiler-sfc';
 import { VueLanguagePlugin } from '../types';
 
@@ -22,7 +21,7 @@ const plugin: VueLanguagePlugin = () => {
 					.replace(/\\\<[\s\S]*?\>\n?/g, match => ' '.repeat(match.length));
 
 				const sfcBlockReg = /\<(script|style)[\s\S]*?\>([\s\S]*?)\<\/\1\>/g;
-				const codeGen: Chunk[] = [];
+				const codeGen: Segment[] = [];
 
 				for (const match of content.matchAll(sfcBlockReg)) {
 					if (match.index !== undefined) {

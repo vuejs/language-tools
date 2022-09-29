@@ -1,4 +1,4 @@
-import { Chunk } from '@volar/code-gen';
+import { Segment } from '@volar/source-map';
 import { PositionCapabilities } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize, hyphenate, isHTMLTag, isSVGTag } from '@vue/shared';
@@ -67,9 +67,9 @@ export function generate(
 	cssScopedClasses: string[] = [],
 ) {
 
-	const codeGen: Chunk<PositionCapabilities>[] = [];
-	const formatCodeGen: Chunk<PositionCapabilities>[] = [];
-	const cssCodeGen: Chunk<PositionCapabilities>[] = [];
+	const codeGen: Segment<PositionCapabilities>[] = [];
+	const formatCodeGen: Segment<PositionCapabilities>[] = [];
+	const cssCodeGen: Segment<PositionCapabilities>[] = [];
 	const slots = new Map<string, {
 		varName: string,
 		loc: [number, number],

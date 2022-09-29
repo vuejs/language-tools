@@ -13,8 +13,8 @@
 		"directory": "packages/language-core"
 	},
 	"dependencies": {
-		"@volar/code-gen": "1.0.0-beta.1",
 		"@volar/source-map": "1.0.0-beta.1",
-		"@vue/reactivity": "^3.2.38"
+		"@vue/reactivity": "^3.2.38",
+		"muggle-string": "^0.1.0"
 	}
 }

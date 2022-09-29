@@ -16,10 +16,11 @@
 		"vscode-html-languageservice": "^5.0.1"
 	},
 	"dependencies": {
-		"@volar/code-gen": "1.0.0-beta.1",
 		"@volar/language-service": "1.0.0-beta.1",
 		"@volar/shared": "1.0.0-beta.1",
+		"@volar/source-map": "1.0.0-beta.1",
 		"@volar/transforms": "1.0.0-beta.1",
+		"muggle-string": "^0.1.0",
 		"pug-lexer": "^5.0.1",
 		"pug-parser": "^6.0.0",
 		"vscode-languageserver-textdocument": "^1.0.7",

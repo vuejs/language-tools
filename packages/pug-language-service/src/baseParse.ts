@@ -1,5 +1,6 @@
-import { buildMappings, Chunk, toString } from '@volar/code-gen';
+import { Segment, toString } from 'muggle-string';
 import * as shared from '@volar/shared';
+import { buildMappings } from '@volar/source-map';
 import * as pugLex from 'pug-lexer';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
@@ -9,7 +10,7 @@ export function baseParse(pugCode: string) {
 
 	const fileName = 'foo.pug';
 	const pugTextDocument = TextDocument.create('file:///a.pug', 'jade', 0, pugCode);
-	const codeGen: Chunk<{ isEmptyTagCompletion: boolean; } | undefined>[] = [];
+	const codeGen: Segment<{ isEmptyTagCompletion: boolean; } | undefined>[] = [];
 	let error: {
 		code: string,
 		msg: string,

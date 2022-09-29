@@ -1,4 +1,4 @@
-import { getLength, Chunk, toString } from '@volar/code-gen';
+import { getLength, Segment, toString } from '@volar/source-map';
 import type { PositionCapabilities, TeleportMappingData, TextRange } from '@volar/language-core';
 import * as SourceMaps from '@volar/source-map';
 import { hyphenate } from '@vue/shared';
@@ -26,7 +26,7 @@ export function generate(
 	htmlGen: ReturnType<typeof templateGen['generate']> | undefined,
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: ResolvedVueCompilerOptions,
-	codeGen: Chunk<PositionCapabilities>[] = [],
+	codeGen: Segment<PositionCapabilities>[] = [],
 	teleports: SourceMaps.Mapping<TeleportMappingData>[] = [],
 ) {
 

@@ -92,21 +92,15 @@ importers:
       vscode-languageclient: 8.0.2
       vscode-nls: 5.2.0
 
-  packages/code-gen:
-    specifiers:
-      '@volar/source-map': 1.0.0-beta.1
-    dependencies:
-      '@volar/source-map': link:../source-map
-
   packages/language-core:
     specifiers:
-      '@volar/code-gen': 1.0.0-beta.1
       '@volar/source-map': 1.0.0-beta.1
       '@vue/reactivity': ^3.2.38
+      muggle-string: ^0.1.0
     dependencies:
-      '@volar/code-gen': link:../code-gen
       '@volar/source-map': link:../source-map
       '@vue/reactivity': 3.2.38
+      muggle-string: 0.1.0
 
   packages/language-server:
     specifiers:
@@ -174,20 +168,22 @@ importers:
 
   packages/pug-language-service:
     specifiers:
-      '@volar/code-gen': 1.0.0-beta.1
       '@volar/language-service': 1.0.0-beta.1
       '@volar/shared': 1.0.0-beta.1
+      '@volar/source-map': 1.0.0-beta.1
       '@volar/transforms': 1.0.0-beta.1
+      muggle-string: ^0.1.0
       pug-lexer: ^5.0.1
       pug-parser: ^6.0.0
       vscode-html-languageservice: ^5.0.1
       vscode-languageserver-textdocument: ^1.0.7
       vscode-languageserver-types: ^3.17.2
     dependencies:
-      '@volar/code-gen': link:../code-gen
       '@volar/language-service': link:../language-service
       '@volar/shared': link:../shared
+      '@volar/source-map': link:../source-map
       '@volar/transforms': link:../transforms
+      muggle-string: 0.1.0
       pug-lexer: 5.0.1
       pug-parser: 6.0.0
       vscode-languageserver-textdocument: 1.0.7
@@ -211,7 +207,10 @@ importers:
       typescript: 4.9.1-beta
 
   packages/source-map:
-    specifiers: {}
+    specifiers:
+      muggle-string: ^0.1.0
+    dependencies:
+      muggle-string: 0.1.0
 
   packages/transforms:
     specifiers:
@@ -276,7 +275,6 @@ importers:
 
   packages/vue-language-core:
     specifiers:
-      '@volar/code-gen': 1.0.0-beta.1
       '@volar/language-core': 1.0.0-beta.1
       '@volar/source-map': 1.0.0-beta.1
       '@vue/compiler-dom': ^3.2.38
@@ -286,7 +284,6 @@ importers:
       typescript: beta
       vue-template-compiler: ^2.7.10
     dependencies:
-      '@volar/code-gen': link:../code-gen
       '@volar/language-core': link:../language-core
       '@volar/source-map': link:../source-map
       '@vue/compiler-dom': 3.2.38
@@ -390,16 +387,16 @@ importers:
 
   packages/vue-typescript:
     specifiers:
-      '@volar/code-gen': 1.0.0-beta.1
       '@volar/language-core': 1.0.0-beta.1
       '@volar/typescript-faster': 1.0.0-beta.1
       '@volar/vue-language-core': 1.0.0-beta.1
+      muggle-string: ^0.1.0
       typescript: beta
     dependencies:
-      '@volar/code-gen': link:../code-gen
       '@volar/language-core': link:../language-core
       '@volar/typescript-faster': link:../typescript-faster
       '@volar/vue-language-core': link:../vue-language-core
+      muggle-string: 0.1.0
     devDependencies:
       typescript: 4.9.1-beta
 
@@ -4044,6 +4041,10 @@ packages:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
     dev: false
     optional: true
+
+  /muggle-string/0.1.0:
+    resolution: {integrity: sha512-Tr1knR3d2mKvvWthlk7202rywKbiOm4rVFLsfAaSIhJ6dt9o47W4S+JMtWhd/PW9Wrdew2/S2fSvhz3E2gkfEg==}
+    dev: false
 
   /mute-stream/0.0.8:
     resolution: {integrity: sha512-nnbWWOkoWyUsTjKrhgD0dcz22mdkSnpYqbEjIm2nhwhuxlSkpywJmBo8h0ZqJdkp73mb90SssHkN4rsRaBAfAA==}
