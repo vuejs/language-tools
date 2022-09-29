@@ -1,4 +1,4 @@
-import { CodeGen } from '@volar/code-gen';
+import { buildMappings, toString, Chunk } from '@volar/code-gen';
 import { SourceMapBase } from '@volar/source-map';
 import { parse, SFCBlock } from '@vue/compiler-sfc';
 import { VueLanguagePlugin } from '../types';
@@ -6,6 +6,8 @@ import { VueLanguagePlugin } from '../types';
 const plugin: VueLanguagePlugin = () => {
 
 	return {
+
+		version: 1,
 
 		parseSFC(fileName, content) {
 
@@ -20,13 +22,13 @@ const plugin: VueLanguagePlugin = () => {
 					.replace(/\\\<[\s\S]*?\>\n?/g, match => ' '.repeat(match.length));
 
 				const sfcBlockReg = /\<(script|style)[\s\S]*?\>([\s\S]*?)\<\/\1\>/g;
-				const codeGen = new CodeGen();
+				const codeGen: Chunk[] = [];
 
 				for (const match of content.matchAll(sfcBlockReg)) {
 					if (match.index !== undefined) {
 						const matchText = match[0];
-						codeGen.append(matchText, match.index, undefined);
-						codeGen.append('\n\n');
+						codeGen.push([matchText, undefined, match.index]);
+						codeGen.push('\n\n');
 						content = content.substring(0, match.index) + ' '.repeat(matchText.length) + content.substring(match.index + matchText.length);
 					}
 				}
@@ -37,16 +39,12 @@ const plugin: VueLanguagePlugin = () => {
 					// [foo](http://foo.com)
 					.replace(/\[[\s\S]*?\]\([\s\S]*?\)/g, match => ' '.repeat(match.length));
 
-				codeGen.append('<template>\n');
-				codeGen.append(
-					content,
-					0,
-					undefined,
-				);
-				codeGen.append('\n</template>');
+				codeGen.push('<template>\n');
+				codeGen.push([content, undefined, 0]);
+				codeGen.push('\n</template>');
 
-				const file2VueSourceMap = new SourceMapBase(codeGen.mappings);
-				const sfc = parse(codeGen.text, { sourceMap: false, ignoreEmpty: false });
+				const file2VueSourceMap = new SourceMapBase(buildMappings(codeGen));
+				const sfc = parse(toString(codeGen), { sourceMap: false, ignoreEmpty: false });
 
 				if (sfc.descriptor.template) {
 					transformRange(sfc.descriptor.template);
@@ -80,5 +78,5 @@ const plugin: VueLanguagePlugin = () => {
 			};
 		}
 	};
-}
+};
 export = plugin;

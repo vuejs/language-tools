@@ -1,8 +1,7 @@
 import useCssPlugin from '@volar-plugins/css';
 import useTsPlugin, { getSemanticTokenLegend } from '@volar-plugins/typescript';
-import { EmbeddedFileKind, LanguageServerPlugin } from '@volar/language-server';
+import { EmbeddedFile, EmbeddedFileKind, LanguageServerPlugin } from '@volar/language-server';
 import { createLanguageServer, EmbeddedLanguageModule, SourceFile } from '@volar/language-server/node';
-import { Mapping, MappingKind } from '@volar/source-map';
 
 const blocksReg = /\<(script|style)[\s\S]*?\>([\s\S]*?)\<\/\1\>/g;
 
@@ -38,20 +37,22 @@ const mod: EmbeddedLanguageModule<SourceFile & { snapshot: any; }> = {
 
 			for (const embedded of sourceFile.embeddeds) {
 
-				const blockStart = embedded.mappings[0].sourceRange.start;
-				const blockEnd = embedded.mappings[0].sourceRange.end;
+				const firstMapping = embedded.mappings[0];
+				const sourceRange = firstMapping.sourceRange;
+				const blockStart = sourceRange[0];
+				const blockEnd = sourceRange[1];
 
 				if (changeStart >= blockStart && changeEnd <= blockEnd) {
 					const a = snapshot.getText(blockStart, changeStart);
 					const b = newText;
 					const c = snapshot.getText(changeEnd + lengthDiff, blockEnd + lengthDiff);
 					embedded.text = a + b + c;
-					embedded.mappings[0].mappedRange.end += lengthDiff;
-					embedded.mappings[0].sourceRange.end += lengthDiff;
+					embedded.mappings[0].generatedRange[1] += lengthDiff;
+					embedded.mappings[0].sourceRange[1] += lengthDiff;
 				}
 				else if (changeEnd <= blockStart && changeStart < blockStart) {
-					embedded.mappings[0].sourceRange.start += lengthDiff;
-					embedded.mappings[0].sourceRange.end += lengthDiff;
+					embedded.mappings[0].sourceRange[0] += lengthDiff;
+					embedded.mappings[0].sourceRange[1] += lengthDiff;
 				}
 				else if (changeStart >= blockEnd && changeEnd > blockEnd) {
 					// No need update
@@ -73,42 +74,42 @@ const mod: EmbeddedLanguageModule<SourceFile & { snapshot: any; }> = {
 };
 
 function getEmbeddeds(fileName: string, text: string) {
-	return [...text.matchAll(blocksReg)].map(block => {
+	return [...text.matchAll(blocksReg)].map<EmbeddedFile>(block => {
 		const content = block[2];
 		const start = block.index! + block[0].indexOf(content);
-		const end = start + content.length;;
-		return {
-			fileName: fileName + (block[1] === 'script' ? '.js' : '.css'),
-			text: block[2],
-			kind: block[1] === 'script' ? EmbeddedFileKind.TypeScriptHostFile : EmbeddedFileKind.TextFile,
-			capabilities: {
-				diagnostics: true,
-				foldingRanges: true,
-				documentSymbol: true,
-				codeActions: true,
-				inlayHints: true,
-				formatting: { initialIndentBracket: ['{', '}'] as [string, string] },
-				// formatting: true,
-			},
-			mappings: [
-				{
-					sourceRange: { start, end },
-					mappedRange: { start: 0, end: content.length },
-					kind: MappingKind.Offset,
-					data: {
-						hover: true,
-						references: true,
-						definitions: true,
-						rename: true,
-						completion: true,
-						diagnostic: true,
-						semanticTokens: true,
-					},
-				}
-			]satisfies Mapping[],
-			embeddeds: [],
-		};
+		const tag = block[1];
+		return blockToEmbeddedFile(fileName, content, start, tag);
 	});
+}
+
+function blockToEmbeddedFile(fileName: string, blockText: string, blockOffset: number, tag: string): EmbeddedFile {
+	return {
+		fileName: fileName + (tag === 'script' ? '.js' : '.css'),
+		text: blockText,
+		kind: tag === 'script' ? EmbeddedFileKind.TypeScriptHostFile : EmbeddedFileKind.TextFile,
+		capabilities: {
+			diagnostic: true,
+			foldingRange: true,
+			documentSymbol: true,
+			codeAction: true,
+			inlayHint: true,
+			documentFormatting: { initialIndentBracket: ['{', '}'] as [string, string] },
+		},
+		mappings: [{
+			sourceRange: [blockOffset, blockOffset + blockText.length],
+			generatedRange: [0, blockText.length],
+			data: {
+				hover: true,
+				references: true,
+				definition: true,
+				rename: true,
+				completion: true,
+				diagnostic: true,
+				semanticTokens: true,
+			},
+		}],
+		embeddeds: [],
+	};
 }
 
 const plugin: LanguageServerPlugin = () => ({

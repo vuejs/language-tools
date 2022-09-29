@@ -51,8 +51,8 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					result.push({
 						range: {
-							start: document.positionAt(mapped.sourceRange.start),
-							end: document.positionAt(mapped.sourceRange.end),
+							start: document.positionAt(mapped.sourceRange[0]),
+							end: document.positionAt(mapped.sourceRange[1]),
 						},
 						target: uri, // TODO
 					});

@@ -35,7 +35,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				let maxEnd: number | undefined;
 
 				for (const mapping of sourceMap.base.mappings) {
-					const overlapRange = shared.getOverlapRange2(offsetRange, mapping.sourceRange);
+					const overlapRange = shared.getOverlapRange2(offsetRange.start, offsetRange.end, mapping.sourceRange[0], mapping.sourceRange[1]);
 					if (overlapRange) {
 						const embeddedRange = sourceMap.getMappedRange(overlapRange.start, overlapRange.end)?.[0];
 						if (embeddedRange) {

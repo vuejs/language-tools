@@ -4,6 +4,8 @@ const plugin: VueLanguagePlugin = () => {
 
 	return {
 
+		version: 1,
+
 		getEmbeddedFileNames(fileName, sfc) {
 			const names: string[] = [];
 			if (sfc.script) {
@@ -30,12 +32,12 @@ const plugin: VueLanguagePlugin = () => {
 					codeAction: false,
 					inlayHint: false,
 				};
-				embeddedFile.appendContentFromSFCBlock(
-					script,
+				embeddedFile.content.push([
+					script.content,
+					script.name,
 					0,
-					script.content.length,
 					{},
-				);
+				]);
 			}
 		},
 	};

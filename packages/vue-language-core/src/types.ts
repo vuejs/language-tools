@@ -37,6 +37,8 @@ export type VueLanguagePlugin = (ctx: {
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: ResolvedVueCompilerOptions,
 }) => {
+	name?: string;
+	version: 1;
 	order?: number;
 	parseSFC?(fileName: string, content: string): SFCParseResult | undefined;
 	updateSFC?(oldResult: SFCParseResult, textChange: { start: number, end: number, newText: string; }): SFCParseResult | undefined;
@@ -47,8 +49,7 @@ export type VueLanguagePlugin = (ctx: {
 };
 
 export interface SfcBlock {
-	tag: 'script' | 'scriptSetup' | 'template' | 'style' | 'customBlock',
-	index: number | undefined;
+	name: string,
 	start: number;
 	end: number;
 	startTagEnd: number;

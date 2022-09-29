@@ -36,7 +36,7 @@ export class SourceMap<Data = undefined> {
 	constructor(
 		public sourceDocument: TextDocument,
 		public mappedDocument: TextDocument,
-		public base: SourceMapBase<Data> = new SourceMapBase(),
+		public base: SourceMapBase<Data>,
 	) {
 	}
 

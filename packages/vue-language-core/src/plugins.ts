@@ -64,5 +64,11 @@ export function getDefaultVueLanguagePlugins(
 		return aOrder - bOrder;
 	});
 
-	return plugins;
+	return plugins.filter(plugin => {
+		const valid = plugin.version >= 1 && plugin.version < 2;
+		if (!valid) {
+			console.warn(`Plugin ${JSON.stringify(plugin.name)} API version incompatible, expected 1.x but it's ${JSON.stringify(plugin.version)}`);
+		}
+		return valid;
+	});
 }

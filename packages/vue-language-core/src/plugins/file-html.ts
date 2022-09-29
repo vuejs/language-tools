@@ -5,6 +5,8 @@ const plugin: VueLanguagePlugin = () => {
 
 	return {
 
+		version: 1,
+
 		parseSFC(fileName, content) {
 
 			if (fileName.endsWith('.html')) {

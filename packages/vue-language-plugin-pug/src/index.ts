@@ -5,6 +5,10 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions }) => {
 
 	return {
 
+		name: require('../package.json').name,
+
+		version: 1,
+
 		compileSFCTemplate(lang, template, options) {
 
 			if (lang === 'pug') {

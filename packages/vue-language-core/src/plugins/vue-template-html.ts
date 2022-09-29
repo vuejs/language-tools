@@ -16,6 +16,8 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions }) => {
 
 	return {
 
+		version: 1,
+
 		compileSFCTemplate(lang, template, options) {
 
 			if (lang === 'html') {

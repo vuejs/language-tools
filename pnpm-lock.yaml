@@ -23,7 +23,7 @@ importers:
     devDependencies:
       '@types/node': 18.7.23
       typescript: 4.9.1-beta
-      vite: 3.1.3
+      vite: 3.1.4
       vitest: 0.23.4
 
   examples/svelte:
@@ -211,10 +211,7 @@ importers:
       typescript: 4.9.1-beta
 
   packages/source-map:
-    specifiers:
-      '@vue/reactivity': ^3.2.38
-    dependencies:
-      '@vue/reactivity': 3.2.38
+    specifiers: {}
 
   packages/transforms:
     specifiers:
@@ -1253,14 +1250,14 @@ packages:
       '@types/node': 18.7.13
     dev: true
 
-  /@vitejs/plugin-vue/3.0.3_vite@3.1.3+vue@3.2.38:
+  /@vitejs/plugin-vue/3.0.3_vite@3.1.4+vue@3.2.38:
     resolution: {integrity: sha512-U4zNBlz9mg+TA+i+5QPc3N5lQvdUXENZLO2h0Wdzp56gI1MWhqJOv+6R+d4kOzoaSSq6TnGPBdZAXKOe4lXy6g==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
       vite: ^3.0.0
       vue: ^3.2.25
     dependencies:
-      vite: 3.1.3
+      vite: 3.1.4
       vue: 3.2.38
     dev: false
     optional: true
@@ -5723,8 +5720,8 @@ packages:
     dev: false
     optional: true
 
-  /vite/3.1.3:
-    resolution: {integrity: sha512-/3XWiktaopByM5bd8dqvHxRt5EEgRikevnnrpND0gRfNkrMrPaGGexhtLCzv15RcCMtV2CLw+BPas8YFeSG0KA==}
+  /vite/3.1.4:
+    resolution: {integrity: sha512-JoQI08aBjY9lycL7jcEq4p9o1xUjq5aRvdH4KWaXtkSx7e7RpAh9D3IjzDWRD4Fg44LS3oDAIOG/Kq1L+82psA==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
     peerDependencies:
@@ -5756,12 +5753,12 @@ packages:
     dependencies:
       '@docsearch/css': 3.2.1
       '@docsearch/js': 3.2.1
-      '@vitejs/plugin-vue': 3.0.3_vite@3.1.3+vue@3.2.38
+      '@vitejs/plugin-vue': 3.0.3_vite@3.1.4+vue@3.2.38
       '@vue/devtools-api': 6.2.1
       '@vueuse/core': 9.1.1_vue@3.2.38
       body-scroll-lock: 4.0.0-beta.0
       shiki: 0.11.1
-      vite: 3.1.3
+      vite: 3.1.4
       vue: 3.2.38
     transitivePeerDependencies:
       - '@algolia/client-search'
@@ -5808,7 +5805,7 @@ packages:
       tinybench: 2.1.5
       tinypool: 0.3.0
       tinyspy: 1.0.2
-      vite: 3.1.3
+      vite: 3.1.4
     transitivePeerDependencies:
       - less
       - sass

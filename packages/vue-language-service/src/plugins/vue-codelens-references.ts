@@ -45,12 +45,12 @@ export default function (options: {
 
 							result.push({
 								range: {
-									start: document.positionAt(mapping.sourceRange.start),
-									end: document.positionAt(mapping.sourceRange.end),
+									start: document.positionAt(mapping.sourceRange[0]),
+									end: document.positionAt(mapping.sourceRange[1]),
 								},
 								data: {
 									uri: document.uri,
-									position: document.positionAt(mapping.sourceRange.start),
+									position: document.positionAt(mapping.sourceRange[0]),
 								} satisfies ReferencesCodeLensData,
 							});
 						}

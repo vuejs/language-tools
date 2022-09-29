@@ -46,8 +46,8 @@ export default function (options: {
 			const offset = document.offsetAt(position);
 
 			for (const mappedRange of templateFormatScript.mappings) {
-				if (mappedRange.sourceRange.end === offset) {
-					const text = document.getText().substring(mappedRange.sourceRange.start, mappedRange.sourceRange.end);
+				if (mappedRange.sourceRange[1] === offset) {
+					const text = document.getText().substring(mappedRange.sourceRange[0], mappedRange.sourceRange[1]);
 					const ts = context.typescript.module;
 					const ast = ts.createSourceFile(templateFormatScript.fileName, text, ts.ScriptTarget.Latest);
 					if (ast.statements.length === 1) {
@@ -66,8 +66,8 @@ export default function (options: {
 								.replaceAll('}', '\\}');
 							return vscode.TextEdit.replace(
 								{
-									start: document.positionAt(mappedRange.sourceRange.start),
-									end: document.positionAt(mappedRange.sourceRange.end),
+									start: document.positionAt(mappedRange.sourceRange[0]),
+									end: document.positionAt(mappedRange.sourceRange[1]),
 								},
 								'(' + escapedText + '$0' + ')',
 							);

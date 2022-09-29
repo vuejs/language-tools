@@ -13,13 +13,13 @@ export function register(context: LanguageServiceRuntimeContext) {
 		if (!document)
 			return;
 
-		const offsetRange = range ? {
-			start: document.offsetAt(range.start),
-			end: document.offsetAt(range.end),
-		} : {
-			start: 0,
-			end: document.getText().length,
-		};
+		const offsetRange: [number, number] = range ? [
+			document.offsetAt(range.start),
+			document.offsetAt(range.end),
+		] : [
+			0,
+			document.getText().length,
+		];
 
 		return languageFeatureWorker(
 			context,
@@ -30,10 +30,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				if (cancleToken?.isCancellationRequested)
 					return;
 
-				let range: {
-					start: number,
-					end: number,
-				} | undefined;
+				let range: [number, number] | undefined;
 
 				for (const mapping of sourceMap.base.mappings) {
 
@@ -42,15 +39,15 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					if (
 						mapping.data.semanticTokens
-						&& mapping.sourceRange.end > offsetRange.start
-						&& mapping.sourceRange.start < offsetRange.end
+						&& mapping.sourceRange[1] > offsetRange[0]
+						&& mapping.sourceRange[0] < offsetRange[1]
 					) {
 						if (!range) {
-							range = { ...mapping.mappedRange };
+							range = [...mapping.generatedRange];
 						}
 						else {
-							range.start = Math.min(range.start, mapping.mappedRange.start);
-							range.end = Math.max(range.end, mapping.mappedRange.end);
+							range[0] = Math.min(range[0], mapping.generatedRange[0]);
+							range[1] = Math.max(range[1], mapping.generatedRange[1]);
 						}
 					}
 				}
@@ -61,7 +58,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			},
 			(plugin, document, offsetRange) => plugin.findDocumentSemanticTokens?.(
 				document,
-				vscode.Range.create(document.positionAt(offsetRange.start), document.positionAt(offsetRange.end)),
+				vscode.Range.create(document.positionAt(offsetRange[0]), document.positionAt(offsetRange[1])),
 				cancleToken,
 			),
 			(tokens, sourceMap) => tokens.map(_token => {

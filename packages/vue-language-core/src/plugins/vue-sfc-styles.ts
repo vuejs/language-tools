@@ -10,6 +10,8 @@ const plugin: VueLanguagePlugin = () => {
 
 	return {
 
+		version: 1,
+
 		getEmbeddedFileNames(fileName, sfc) {
 			const names: string[] = [];
 			for (let i = 0; i < sfc.styles.length; i++) {
@@ -35,10 +37,10 @@ const plugin: VueLanguagePlugin = () => {
 					codeAction: true,
 					inlayHint: true,
 				};
-				embeddedFile.appendContentFromSFCBlock(
-					style,
+				embeddedFile.content.push([
+					style.content,
+					style.name,
 					0,
-					style.content.length,
 					{
 						hover: true,
 						references: true,
@@ -48,7 +50,7 @@ const plugin: VueLanguagePlugin = () => {
 						completion: true,
 						semanticTokens: true,
 					},
-				);
+				]);
 			}
 		},
 	};

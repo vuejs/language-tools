@@ -2,7 +2,7 @@ import { DocumentCapabilities, EmbeddedFile, EmbeddedFileKind, EmbeddedFileSourc
 import { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
 import { computed, ComputedRef, reactive, Ref, shallowRef as ref } from '@vue/reactivity';
 import { Sfc, VueLanguagePlugin, SfcBlock } from './types';
-import { CodeGen } from '@volar/code-gen';
+import { Chunk, buildMappings, toString } from '@volar/code-gen';
 import { Mapping } from '@volar/source-map';
 import * as CompilerDom from '@vue/compiler-dom';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -19,30 +19,10 @@ export class VueEmbeddedFile {
 	public kind = EmbeddedFileKind.TextFile;
 	public capabilities: DocumentCapabilities = {};
 	public teleportMappings: Mapping<TeleportMappingData>[] = [];
-	public _codeGen: CodeGen<EmbeddedFileMappingData> = new CodeGen();
+	public content: Chunk<PositionCapabilities>[] = [];
+	public extraMappings: Mapping<PositionCapabilities>[] = [];
 
 	constructor(public fileName: string) { }
-
-	public appendContent(text: string) {
-		this._codeGen.append(text);
-	}
-	public appendContentFromSFCBlock(source: SfcBlock, start: number, end: number, capabilities: PositionCapabilities) {
-		this._codeGen.append(
-			source.content.substring(start, end),
-			start,
-			{
-				vueTag: source.tag,
-				vueTagIndex: source.index,
-				capabilities,
-			},
-		);
-	}
-}
-
-export interface EmbeddedFileMappingData {
-	vueTag: 'template' | 'script' | 'scriptSetup' | 'scriptSrc' | 'style' | 'customBlock' | undefined,
-	vueTagIndex?: number,
-	capabilities: PositionCapabilities,
 }
 
 export class VueSourceFile implements SourceFile {
@@ -220,84 +200,29 @@ export class VueSourceFile implements SourceFile {
 		});
 		return computed(() => {
 
-			const baseOffsetMap = new Map<string, number>();
-
 			return files.value.map(_file => {
 				const file = _file.value;
+				const mappings = [...buildMappings(file.content), ...file.extraMappings];
+				for (const mapping of mappings) {
+					if (mapping.source !== undefined) {
+						const block = VueSourceFile.current.value.sfcBlocks.value[mapping.source];
+						if (block) {
+							mapping.sourceRange[0] += block.startTagEnd;
+							mapping.sourceRange[1] += block.startTagEnd;
+						}
+					}
+				}
 				const node: EmbeddedFile = {
 					fileName: file.fileName,
-					text: file._codeGen.text,
+					text: toString(file.content),
+					mappings,
 					capabilities: file.capabilities,
 					kind: file.kind,
-					mappings: file._codeGen.mappings.map(mapping => {
-						return {
-							...mapping,
-							data: mapping.data.capabilities,
-							sourceRange: embeddedRangeToVueRange(mapping.data, mapping.sourceRange),
-							additional: mapping.additional ? mapping.additional.map(add => {
-								const addVueRange = embeddedRangeToVueRange(mapping.data, add.sourceRange);
-								return {
-									...add,
-									sourceRange: addVueRange,
-								};
-							}) : undefined,
-						};
-					}),
 					teleportMappings: file.teleportMappings,
 					embeddeds: [],
 				};
 				return [file, node] as [VueEmbeddedFile, EmbeddedFile];
 			});
-
-			function embeddedRangeToVueRange(data: EmbeddedFileMappingData, range: Mapping<unknown>['sourceRange']) {
-
-				if (data.vueTag) {
-
-					const key = data.vueTag + '-' + data.vueTagIndex;
-					let baseOffset = baseOffsetMap.get(key);
-
-					if (baseOffset === undefined) {
-
-						if (data.vueTag === 'script' && VueSourceFile.current.value.sfc.script) {
-							baseOffset = VueSourceFile.current.value.sfc.script.startTagEnd;
-						}
-						else if (data.vueTag === 'scriptSetup' && VueSourceFile.current.value.sfc.scriptSetup) {
-							baseOffset = VueSourceFile.current.value.sfc.scriptSetup.startTagEnd;
-						}
-						else if (data.vueTag === 'template' && VueSourceFile.current.value.sfc.template) {
-							baseOffset = VueSourceFile.current.value.sfc.template.startTagEnd;
-						}
-						else if (data.vueTag === 'style') {
-							baseOffset = VueSourceFile.current.value.sfc.styles[data.vueTagIndex!].startTagEnd;
-						}
-						else if (data.vueTag === 'customBlock') {
-							baseOffset = VueSourceFile.current.value.sfc.customBlocks[data.vueTagIndex!].startTagEnd;
-						}
-
-						if (baseOffset !== undefined) {
-							baseOffsetMap.set(key, baseOffset);
-						}
-					}
-
-					if (baseOffset !== undefined) {
-						return {
-							start: baseOffset + range.start,
-							end: baseOffset + range.end,
-						};
-					}
-				}
-
-				if (data.vueTag === 'scriptSrc' && VueSourceFile.current.value.sfc.script?.src) {
-					const vueStart = VueSourceFile.current.value._snapshot.value.getText(0, VueSourceFile.current.value.sfc.script.startTagEnd).lastIndexOf(VueSourceFile.current.value.sfc.script.src);
-					const vueEnd = vueStart + VueSourceFile.current.value.sfc.script.src.length;
-					return {
-						start: vueStart - 1,
-						end: vueEnd + 1,
-					};
-				}
-
-				return range;
-			}
 		});
 	}));
 	static _allEmbeddeds = computed(() => {
@@ -386,6 +311,26 @@ export class VueSourceFile implements SourceFile {
 		}) as unknown as Sfc['scriptSetupAst'],
 	}) as Sfc /* avoid Sfc unwrap in .d.ts by reactive */;
 
+	sfcBlocks = computed(() => {
+		const blocks: Record<string, SfcBlock> = {};
+		if (this.sfc.template) {
+			blocks[this.sfc.template.name] = this.sfc.template;
+		}
+		if (this.sfc.script) {
+			blocks[this.sfc.script.name] = this.sfc.script;
+		}
+		if (this.sfc.scriptSetup) {
+			blocks[this.sfc.scriptSetup.name] = this.sfc.scriptSetup;
+		}
+		for (const block of this.sfc.styles) {
+			blocks[block.name] = block;
+		}
+		for (const block of this.sfc.customBlocks) {
+			blocks[block.name] = block;
+		}
+		return blocks;
+	});
+
 	get text() {
 		return this._snapshot.value.getText(0, this._snapshot.value.getLength());
 	}
@@ -453,8 +398,7 @@ export class VueSourceFile implements SourceFile {
 		function updateTemplate(block: SFCTemplateBlock | null) {
 
 			const newData: Sfc['template'] | null = block ? {
-				tag: 'template',
-				index: undefined,
+				name: 'template',
 				start: self._snapshot.value.getText(0, block.loc.start.offset).lastIndexOf('<'),
 				end: block.loc.end.offset + self._snapshot.value.getText(block.loc.end.offset, self._snapshot.value.getLength()).indexOf('>') + 1,
 				startTagEnd: block.loc.start.offset,
@@ -473,8 +417,7 @@ export class VueSourceFile implements SourceFile {
 		function updateScript(block: SFCScriptBlock | null) {
 
 			const newData: Sfc['script'] | null = block ? {
-				tag: 'script',
-				index: undefined,
+				name: 'script',
 				start: self._snapshot.value.getText(0, block.loc.start.offset).lastIndexOf('<'),
 				end: block.loc.end.offset + self._snapshot.value.getText(block.loc.end.offset, self._snapshot.value.getLength()).indexOf('>') + 1,
 				startTagEnd: block.loc.start.offset,
@@ -494,8 +437,7 @@ export class VueSourceFile implements SourceFile {
 		function updateScriptSetup(block: SFCScriptBlock | null) {
 
 			const newData: Sfc['scriptSetup'] | null = block ? {
-				tag: 'scriptSetup',
-				index: undefined,
+				name: 'scriptSetup',
 				start: self._snapshot.value.getText(0, block.loc.start.offset).lastIndexOf('<'),
 				end: block.loc.end.offset + self._snapshot.value.getText(block.loc.end.offset, self._snapshot.value.getLength()).indexOf('>') + 1,
 				startTagEnd: block.loc.start.offset,
@@ -516,8 +458,7 @@ export class VueSourceFile implements SourceFile {
 
 				const block = blocks[i];
 				const newData: Sfc['styles'][number] = {
-					tag: 'style',
-					index: i,
+					name: 'style_' + i,
 					start: self._snapshot.value.getText(0, block.loc.start.offset).lastIndexOf('<'),
 					end: block.loc.end.offset + self._snapshot.value.getText(block.loc.end.offset, self._snapshot.value.getLength()).indexOf('>') + 1,
 					startTagEnd: block.loc.start.offset,
@@ -544,8 +485,7 @@ export class VueSourceFile implements SourceFile {
 
 				const block = blocks[i];
 				const newData: Sfc['customBlocks'][number] = {
-					tag: 'customBlock',
-					index: i,
+					name: 'customBlock_' + i,
 					start: self._snapshot.value.getText(0, block.loc.start.offset).lastIndexOf('<'),
 					end: block.loc.end.offset + self._snapshot.value.getText(block.loc.end.offset, self._snapshot.value.getLength()).indexOf('>') + 1,
 					startTagEnd: block.loc.start.offset,

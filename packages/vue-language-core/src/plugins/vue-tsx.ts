@@ -78,6 +78,8 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 
 	return {
 
+		version: 1,
+
 		getEmbeddedFileNames(fileName, sfc) {
 
 			_fileName.value = fileName;
@@ -116,8 +118,8 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				};
 				const tsx = tsxGen.value;
 				if (tsx) {
-					embeddedFile._codeGen.text = tsx.codeGen.text;
-					embeddedFile._codeGen.mappings = [...tsx.codeGen.mappings];
+					embeddedFile.content = [...tsx.codeGen];
+					embeddedFile.extraMappings = [...tsx.extraMappings];
 					embeddedFile.teleportMappings = [...tsx.teleports];
 				}
 			}
@@ -134,8 +136,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				};
 
 				if (htmlGen.value) {
-					embeddedFile._codeGen.text = htmlGen.value.formatCodeGen.text;
-					embeddedFile._codeGen.mappings = [...htmlGen.value.formatCodeGen.mappings];
+					embeddedFile.content = [...htmlGen.value.formatCodeGen];
 				}
 			}
 			else if (suffix.match(/^\.__VLS_template_style\.css$/)) {
@@ -143,8 +144,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				embeddedFile.parentFileName = fileName + '.template.' + sfc.template?.lang;
 
 				if (htmlGen.value) {
-					embeddedFile._codeGen.text = htmlGen.value.cssCodeGen.text;
-					embeddedFile._codeGen.mappings = [...htmlGen.value.cssCodeGen.mappings];
+					embeddedFile.content = [...htmlGen.value.cssCodeGen];
 				}
 			}
 		},
@@ -175,12 +175,11 @@ export function collectStyleCssClasses(sfc: Sfc, condition: (style: Sfc['styles'
 }
 
 export function collectCssVars(sfc: Sfc) {
-	const result: { style: typeof sfc.styles[number], styleIndex: number, ranges: TextRange[]; }[] = [];
+	const result: { style: typeof sfc.styles[number], ranges: TextRange[]; }[] = [];
 	for (let i = 0; i < sfc.styles.length; i++) {
 		const style = sfc.styles[i];
 		result.push({
-			style: style,
-			styleIndex: i,
+			style,
 			ranges: [...parseCssVars(style.content)],
 		});
 	}

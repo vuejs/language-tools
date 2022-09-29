@@ -89,16 +89,16 @@ export function register(context: DocumentServiceRuntimeContext) {
 						let end = sourceMap.getMappedRange(range.end)?.[0].end;
 
 						if (!start) {
-							const firstMapping = sourceMap.base.mappings.sort((a, b) => a.sourceRange.start - b.sourceRange.start)[0];
-							if (firstMapping && document.offsetAt(range.start) < firstMapping.sourceRange.start) {
-								start = sourceMap.mappedDocument.positionAt(firstMapping.mappedRange.start);
+							const firstMapping = sourceMap.base.mappings.sort((a, b) => a.sourceRange[0] - b.sourceRange[0])[0];
+							if (firstMapping && document.offsetAt(range.start) < firstMapping.sourceRange[0]) {
+								start = sourceMap.mappedDocument.positionAt(firstMapping.generatedRange[0]);
 							}
 						}
 
 						if (!end) {
-							const lastMapping = sourceMap.base.mappings.sort((a, b) => b.sourceRange.start - a.sourceRange.start)[0];
-							if (lastMapping && document.offsetAt(range.end) > lastMapping.sourceRange.end) {
-								end = sourceMap.mappedDocument.positionAt(lastMapping.mappedRange.end);
+							const lastMapping = sourceMap.base.mappings.sort((a, b) => b.sourceRange[0] - a.sourceRange[0])[0];
+							if (lastMapping && document.offsetAt(range.end) > lastMapping.sourceRange[1]) {
+								end = sourceMap.mappedDocument.positionAt(lastMapping.generatedRange[1]);
 							}
 						}
 
@@ -297,8 +297,8 @@ function patchInterpolationIndent(vueDocument: SourceFileDocument, sourceMap: Em
 	for (const mapped of sourceMap.base.mappings) {
 
 		const textRange = {
-			start: document.positionAt(mapped.sourceRange.start),
-			end: document.positionAt(mapped.sourceRange.end),
+			start: document.positionAt(mapped.sourceRange[0]),
+			end: document.positionAt(mapped.sourceRange[1]),
 		};
 		const text = document.getText(textRange);
 
@@ -307,7 +307,7 @@ function patchInterpolationIndent(vueDocument: SourceFileDocument, sourceMap: Em
 
 		const lines = text.split('\n');
 		const removeIndent = getRemoveIndent(lines);
-		const baseIndent = getBaseIndent(mapped.sourceRange.start);
+		const baseIndent = getBaseIndent(mapped.sourceRange[0]);
 
 		for (let i = 1; i < lines.length; i++) {
 			const line = lines[i];

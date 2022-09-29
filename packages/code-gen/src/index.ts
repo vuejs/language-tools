@@ -1,61 +1,25 @@
-import { Mapping, MappingKind, MappingRange } from '@volar/source-map';
+import { Mapping } from '@volar/source-map';
+import { ChunkWithData, ChunkWithoutData } from './chunk';
 
-export class CodeGen<T = undefined> {
+export * from './chunk';
 
-	public text = '';
-	public mappings: Mapping<T>[] = [];
-
-	public append(str: string): MappingRange;
-	public append(str: string, sourceOffset: number, data: T): MappingRange;
-	public append(str: string, sourceOffset?: number, data?: T) {
-		if (sourceOffset !== undefined && data !== undefined) {
-			return this._append(str, { start: sourceOffset, end: sourceOffset + str.length }, MappingKind.Offset, data);
+export function buildMappings<T>(chunks: ChunkWithoutData[] | ChunkWithData<T>[]) {
+	let length = 0;
+	const mappings: Mapping<T>[] = [];
+	for (const segment of chunks) {
+		if (typeof segment === 'string') {
+			length += segment.length;
 		}
 		else {
-			return this._append(str);
-		}
-	}
-
-	// internals
-	public _append(str: string, sourceRange?: MappingRange, kind?: MappingKind, data?: T, extraSourceRanges?: MappingRange[]): MappingRange {
-		const targetRange = {
-			start: this.text.length,
-			end: this.text.length + str.length,
-		};
-		this.text += str;
-		if (sourceRange !== undefined && kind !== undefined && data !== undefined) {
-			this.mappings.push({
-				mappedRange: targetRange,
-				sourceRange,
-				kind,
-				data,
-				additional: extraSourceRanges ? extraSourceRanges.map(extraSourceRange => ({
-					mappedRange: targetRange,
-					kind,
-					sourceRange: extraSourceRange,
-				})) : undefined,
+			mappings.push({
+				generatedRange: [length, length + segment[0].length],
+				source: segment[1],
+				sourceRange: typeof segment[2] === 'number' ? [segment[2], segment[2] + segment[0].length] : segment[2],
+				// @ts-ignore
+				data: segment[3],
 			});
+			length += segment[0].length;
 		}
-		return targetRange;
 	}
-	public _merge<T extends CodeGen<any>>(b: T) {
-		const aLength = this.text.length;
-		for (const mapping of b.mappings) {
-			this.mappings.push({
-				...mapping,
-				mappedRange: {
-					start: mapping.mappedRange.start + aLength,
-					end: mapping.mappedRange.end + aLength,
-				},
-				additional: mapping.additional ? mapping.additional.map(mapping_2 => ({
-					...mapping_2,
-					mappedRange: {
-						start: mapping_2.mappedRange.start + aLength,
-						end: mapping_2.mappedRange.end + aLength,
-					},
-				})) : undefined,
-			});
-		}
-		this.append(b.text);
-	}
+	return mappings;
 }
