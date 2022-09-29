@@ -1,4 +1,4 @@
-import { DocumentCapabilities, EmbeddedFile, EmbeddedFileKind, EmbeddedFileSourceMap, PositionCapabilities, SourceFile, Teleport, TeleportMappingData } from '@volar/language-core';
+import { DocumentCapabilities, EmbeddedFile, EmbeddedFileKind, PositionCapabilities, SourceFile, TeleportMappingData } from '@volar/language-core';
 import { buildMappings, Mapping, Segment, toString } from '@volar/source-map';
 import * as CompilerDom from '@vue/compiler-dom';
 import { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
@@ -6,20 +6,14 @@ import { computed, ComputedRef, reactive, Ref, shallowRef as ref } from '@vue/re
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { Sfc, SfcBlock, VueLanguagePlugin } from './types';
 
-export interface Embedded {
-	file: VueEmbeddedFile,
-	sourceMap: EmbeddedFileSourceMap,
-	teleport: Teleport | undefined,
-}
-
 export class VueEmbeddedFile {
 
 	public parentFileName?: string;
 	public kind = EmbeddedFileKind.TextFile;
 	public capabilities: DocumentCapabilities = {};
-	public teleportMappings: Mapping<TeleportMappingData>[] = [];
 	public content: Segment<PositionCapabilities>[] = [];
 	public extraMappings: Mapping<PositionCapabilities>[] = [];
+	public teleportMappings: Mapping<TeleportMappingData>[] = [];
 
 	constructor(public fileName: string) { }
 }

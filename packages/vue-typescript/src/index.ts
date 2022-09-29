@@ -134,7 +134,7 @@ export function createLanguageService(host: vue.LanguageServiceHost) {
 					continue;
 
 				for (const [teleOffset, data] of teleport.findTeleports(ref.textSpan.start)) {
-					if ((mode === 'definition' || mode === 'typeDefinition' || mode === 'implementation') && !data.definitions)
+					if ((mode === 'definition' || mode === 'typeDefinition' || mode === 'implementation') && !data.definition)
 						continue;
 					if ((mode === 'references') && !data.references)
 						continue;
@@ -181,7 +181,7 @@ export function createLanguageService(host: vue.LanguageServiceHost) {
 					continue;
 
 				for (const [teleOffset, data] of teleport.findTeleports(ref.textSpan.start)) {
-					if (!data.definitions)
+					if (!data.definition)
 						continue;
 					if (loopChecker.has(ref.fileName + ':' + teleOffset))
 						continue;

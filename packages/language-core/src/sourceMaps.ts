@@ -1,7 +1,5 @@
 import * as SourceMaps from '@volar/source-map';
-import { PositionCapabilities, TeleportMappingData } from './types';
-
-export class EmbeddedFileSourceMap extends SourceMaps.SourceMapBase<PositionCapabilities> { }
+import { TeleportMappingData } from './types';
 
 export class Teleport extends SourceMaps.SourceMapBase<TeleportMappingData> {
 	*findTeleports(start: number) {

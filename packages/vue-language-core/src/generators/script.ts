@@ -491,12 +491,12 @@ export function generate(
 						generatedRange: [templateStart, templateEnd],
 						data: {
 							toSourceCapabilities: {
-								definitions: true,
+								definition: true,
 								references: true,
 								rename: true,
 							},
 							toGenedCapabilities: {
-								definitions: true,
+								definition: true,
 								references: true,
 								rename: true,
 							},

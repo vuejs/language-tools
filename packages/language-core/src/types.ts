@@ -33,7 +33,7 @@ export interface PositionCapabilities {
 
 export interface TeleportCapabilities {
 	references?: boolean,
-	definitions?: boolean,
+	definition?: boolean,
 	rename?: boolean,
 }
 

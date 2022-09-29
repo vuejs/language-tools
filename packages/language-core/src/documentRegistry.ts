@@ -103,7 +103,6 @@ export function createDocumentRegistry() {
 			return sourceMapsByFileName.value.get(normalizePath(fileName));
 		},
 		getSourceMap,
-		getTeleportSourceMap: getTeleport,
 		// TODO: unuse this
 		onSourceFileUpdated(file: SourceFile) {
 			_sourceMaps.delete(file);
