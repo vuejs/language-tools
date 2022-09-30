@@ -5,21 +5,24 @@ import * as vue from '@volar/vue-language-service';
 import * as nameCasing from '@volar/vue-language-service';
 import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest } from './requests';
 import { VueServerInitializationOptions } from './types';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 
 const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageServiceHost> = (initOptions) => {
 
-	const extensions = ['.vue'];
+	const extraFileExtensions: ts.FileExtensionInfo[] = [{ extension: 'vue', isMixedContent: true, scriptKind: 7 }];
 
 	if (initOptions.petiteVue?.processHtmlFile) {
-		extensions.push('.html');
+		extraFileExtensions.push({ extension: 'html', isMixedContent: true, scriptKind: 7 });
 	}
 
 	if (initOptions.vitePress?.processMdFile) {
-		extensions.push('.md');
+		extraFileExtensions.push({ extension: 'md', isMixedContent: true, scriptKind: 7 });
 	}
 
+	const exts = extraFileExtensions.map(ext => '.' + ext.extension);
+
 	return {
-		extensions,
+		extraFileExtensions,
 		languageService: {
 			semanticTokenLegend: vue.getSemanticTokenLegend(),
 			resolveLanguageServiceHost(ts, sys, tsConfig, host) {
@@ -38,7 +41,7 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 					host.getCurrentDirectory(),
 					host.getCompilationSettings(),
 					host.getVueCompilationSettings(),
-					extensions,
+					exts,
 				);
 				return [vueLanguageModule];
 			},
@@ -68,7 +71,7 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 				const vueLanguagePlugins = vue.getDefaultVueLanguagePlugins(ts, shared.getPathOfUri(env.rootUri.toString()), {}, {}, []);
 				const vueLanguageModule: embedded.EmbeddedLanguageModule = {
 					createSourceFile(fileName, snapshot) {
-						if (extensions.some(ext => fileName.endsWith(ext))) {
+						if (exts.some(ext => fileName.endsWith(ext))) {
 							return new vue.VueSourceFile(fileName, snapshot, ts, vueLanguagePlugins);
 						}
 					},

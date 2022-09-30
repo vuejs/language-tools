@@ -113,7 +113,7 @@ function blockToEmbeddedFile(fileName: string, blockText: string, blockOffset: n
 }
 
 const plugin: LanguageServerPlugin = () => ({
-	extensions: ['.svelte'],
+	extraFileExtensions: [{ extension: 'svelte', isMixedContent: true, scriptKind: 7 }],
 	languageService: {
 		semanticTokenLegend: getSemanticTokenLegend(),
 		getLanguageModules(host) {

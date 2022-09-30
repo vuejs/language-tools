@@ -44,7 +44,7 @@ export type LanguageServerPlugin<
 	C = embeddedLS.LanguageService
 > = (initOptions: A) => {
 
-	extensions: string[],
+	extraFileExtensions: ts.FileExtensionInfo[],
 
 	languageService?: {
 

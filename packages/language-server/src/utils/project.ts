@@ -224,13 +224,7 @@ function createParsedCommandLine(
 	tsConfig: string | ts.CompilerOptions,
 	plugins: ReturnType<LanguageServerPlugin>[],
 ): ts.ParsedCommandLine {
-	const extraFileExtensions: ts.FileExtensionInfo[] = plugins.map(plugin => plugin.extensions)
-		.flat()
-		.map(ext => ({
-			extension: ext.substring(1),
-			isMixedContent: true,
-			scriptKind: ts.ScriptKind.Deferred,
-		}));
+	const extraFileExtensions = plugins.map(plugin => plugin.extraFileExtensions).flat();
 	try {
 		let content: ts.ParsedCommandLine;
 		if (typeof tsConfig === 'string') {

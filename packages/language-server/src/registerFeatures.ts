@@ -71,7 +71,7 @@ export function setupSemanticCapabilities(
 			fileOperations: {
 				willRename: {
 					filters: [
-						...plugins.map(plugin => plugin.extensions.map(ext => ({ pattern: { glob: `**/*${ext}` } }))).flat(),
+						...plugins.map(plugin => plugin.extraFileExtensions.map(ext => ({ pattern: { glob: `**/*.${ext.extension}` } }))).flat(),
 						{ pattern: { glob: '**/*.js' } },
 						{ pattern: { glob: '**/*.ts' } },
 						{ pattern: { glob: '**/*.jsx' } },
@@ -169,7 +169,7 @@ export function setupSemanticCapabilities(
 	if (params.textDocument?.diagnostic && (options.diagnosticModel ?? DiagnosticModel.Push) === DiagnosticModel.Pull) {
 		server.diagnosticProvider = {
 			documentSelector: [
-				...plugins.map(plugin => plugin.extensions.map(ext => ({ pattern: `**/*${ext}` }))).flat(),
+				...plugins.map(plugin => plugin.extraFileExtensions.map(ext => ({ pattern: `**/*.${ext.extension}` }))).flat(),
 				{ pattern: '**/*.{ts,js,tsx,jsx}' },
 			],
 			interFileDependencies: true,
