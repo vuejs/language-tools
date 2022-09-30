@@ -1,5 +1,5 @@
 import * as embedded from '@volar/language-service';
-import { DiagnosticModel, LanguageServerPlugin, ServerInitializationOptions } from './types';
+import { DiagnosticModel, LanguageServerPlugin, InitializationOptions } from './types';
 import * as vscode from 'vscode-languageserver';
 import { ClientCapabilities } from 'vscode-languageserver';
 
@@ -40,7 +40,7 @@ export function setupSyntacticCapabilities(
 export function setupSemanticCapabilities(
 	params: ClientCapabilities,
 	server: vscode.ServerCapabilities,
-	options: ServerInitializationOptions,
+	options: InitializationOptions,
 	plugins: ReturnType<LanguageServerPlugin>[],
 ) {
 	if (params.textDocument?.references) {

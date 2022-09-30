@@ -5,7 +5,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import { loadCustomPlugins } from './config';
-import { FileSystem, FileSystemHost, LanguageServerPlugin, RuntimeEnvironment, ServerInitializationOptions } from '../types';
+import { FileSystem, FileSystemHost, LanguageServerPlugin, RuntimeEnvironment, InitializationOptions } from '../types';
 import { createSnapshots } from './snapshots';
 import { ConfigurationHost } from '@volar/vue-language-service';
 import * as upath from 'upath';
@@ -19,7 +19,7 @@ export async function createProject(
 	plugins: ReturnType<LanguageServerPlugin>[],
 	fsHost: FileSystemHost,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	options: ServerInitializationOptions,
+	options: InitializationOptions,
 	rootUri: URI,
 	tsConfig: string | ts.CompilerOptions,
 	tsLocalized: ts.MapLike<string> | undefined,

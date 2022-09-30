@@ -3,7 +3,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'upath';
 import * as vscode from 'vscode-languageserver';
 import { createProject, Project } from './project';
-import { LanguageServerPlugin, RuntimeEnvironment, FileSystemHost, ServerInitializationOptions } from '../types';
+import { LanguageServerPlugin, RuntimeEnvironment, FileSystemHost, InitializationOptions } from '../types';
 import { createSnapshots } from './snapshots';
 import { getInferredCompilerOptions } from './inferredCompilerOptions';
 import { URI } from 'vscode-uri';
@@ -18,7 +18,7 @@ export async function createWorkspaceProjects(
 	rootUri: URI,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLocalized: ts.MapLike<string> | undefined,
-	options: ServerInitializationOptions,
+	options: InitializationOptions,
 	documents: ReturnType<typeof createSnapshots>,
 	connection: vscode.Connection,
 	configHost: ConfigurationHost | undefined,

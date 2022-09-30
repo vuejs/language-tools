@@ -39,7 +39,7 @@ export interface RuntimeEnvironment {
 }
 
 export type LanguageServerPlugin<
-	A extends ServerInitializationOptions = ServerInitializationOptions,
+	A extends InitializationOptions = InitializationOptions,
 	B extends embedded.LanguageServiceHost = embedded.LanguageServiceHost,
 	C = embeddedLS.LanguageService
 > = (initOptions: A) => {
@@ -94,7 +94,7 @@ export enum DiagnosticModel {
 	Pull,
 }
 
-export interface ServerInitializationOptions {
+export interface InitializationOptions {
 	typescript: {
 		// Absolute path to node_modules/typescript/lib
 		tsdk: string;

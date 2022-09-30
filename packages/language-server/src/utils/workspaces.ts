@@ -3,7 +3,7 @@ import { ConfigurationHost } from '@volar/vue-language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
-import { DiagnosticModel, FileSystemHost, LanguageServerPlugin, RuntimeEnvironment, ServerInitializationOptions } from '../types';
+import { DiagnosticModel, FileSystemHost, LanguageServerPlugin, RuntimeEnvironment, InitializationOptions } from '../types';
 import { createSnapshots } from './snapshots';
 import { createWorkspaceProjects, rootTsConfigNames, sortTsConfigs } from './workspaceProjects';
 
@@ -17,7 +17,7 @@ export function createWorkspaces(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLocalized: ts.MapLike<string> | undefined,
 	client: vscode.ClientCapabilities,
-	options: ServerInitializationOptions,
+	options: InitializationOptions,
 	documents: ReturnType<typeof createSnapshots>,
 	connection: vscode.Connection,
 ) {

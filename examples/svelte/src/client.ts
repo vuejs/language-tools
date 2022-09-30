@@ -1,4 +1,4 @@
-import { ServerInitializationOptions } from '@volar/language-server';
+import { InitializationOptions } from '@volar/language-server';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient/node';
@@ -8,7 +8,7 @@ let client: lsp.BaseLanguageClient;
 export async function activate(context: vscode.ExtensionContext) {
 
 	const documentSelector: lsp.DocumentSelector = [{ language: 'svelte' }];
-	const initializationOptions: ServerInitializationOptions = {
+	const initializationOptions: InitializationOptions = {
 		typescript: {
 			tsdk: path.join(vscode.env.appRoot, 'extensions', 'node_modules', 'typescript', 'lib'),
 		},
