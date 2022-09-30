@@ -94,7 +94,7 @@ function useDocDescriptor() {
 	}
 }
 
-export function userPick<T extends { [K: string]: vscode.QuickPickItem; }>(groups: T | T[], placeholder?: string) {
+export function userPick<T extends { [K: string]: vscode.QuickPickItem | undefined; }>(groups: T | T[], placeholder?: string) {
 	return new Promise<keyof T | undefined>(resolve => {
 		const quickPick = vscode.window.createQuickPick();
 		const items: vscode.QuickPickItem[] = [];
@@ -105,7 +105,9 @@ export function userPick<T extends { [K: string]: vscode.QuickPickItem; }>(group
 					items.push({ label: '', kind: vscode.QuickPickItemKind.Separator });
 				}
 				for (const item of groupItems) {
-					items.push(item);
+					if (item) {
+						items.push(item);
+					}	
 				}
 			}
 		}

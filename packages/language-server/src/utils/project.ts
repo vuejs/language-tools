@@ -5,8 +5,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import { loadCustomPlugins } from './config';
-import { GetDocumentContentRequest } from '../requests';
-import { FileSystem, FileSystemHost, LanguageServerPlugin, RuntimeEnvironment, ServerInitializationOptions } from '../types';
+import { FileSystem, FileSystemHost, LanguageServerPlugin, RuntimeEnvironment, InitializationOptions } from '../types';
 import { createSnapshots } from './snapshots';
 import { ConfigurationHost } from '@volar/vue-language-service';
 import * as upath from 'upath';
@@ -20,7 +19,7 @@ export async function createProject(
 	plugins: ReturnType<LanguageServerPlugin>[],
 	fsHost: FileSystemHost,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	options: ServerInitializationOptions,
+	options: InitializationOptions,
 	rootUri: URI,
 	tsConfig: string | ts.CompilerOptions,
 	tsLocalized: ts.MapLike<string> | undefined,
@@ -78,24 +77,13 @@ export async function createProject(
 					configurationHost: configHost,
 					fileSystemProvider: runtimeEnv.fileSystemProvide,
 					documentContext: getHTMLDocumentContext(ts, languageServiceHost),
-					schemaRequestService: uri => {
+					schemaRequestService: async uri => {
 						const protocol = uri.substring(0, uri.indexOf(':'));
-
 						const builtInHandler = runtimeEnv.schemaRequestHandlers[protocol];
 						if (builtInHandler) {
-							return builtInHandler(uri);
+							return await builtInHandler(uri);
 						}
-
-						if (typeof options === 'object' && options.languageFeatures?.schemaRequestService) {
-							return connection.sendRequest(GetDocumentContentRequest.type, { uri }).then(responseText => {
-								return responseText;
-							}, error => {
-								return Promise.reject(error.message);
-							});
-						}
-						else {
-							return Promise.reject('clientHandledGetDocumentContentRequest is false');
-						}
+						return '';
 					},
 				},
 				documentRegistry,

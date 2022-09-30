@@ -18,14 +18,6 @@
 	"engines": {
 		"vscode": "^1.67.0"
 	},
-	"keywords": [
-		"volar",
-		"vue",
-		"vue3",
-		"ts",
-		"typescript",
-		"pug"
-	],
 	"activationEvents": [
 		"onLanguage:vue",
 		"onLanguage:markdown",
@@ -269,7 +261,7 @@
 			"type": "object",
 			"title": "Volar",
 			"properties": {
-				"volar-language-features.trace.server": {
+				"vue-semantic-server-1.trace.server": {
 					"scope": "window",
 					"type": "string",
 					"enum": [
@@ -280,7 +272,7 @@
 					"default": "off",
 					"description": "Traces the communication between VS Code and the language server."
 				},
-				"volar-language-features-2.trace.server": {
+				"vue-semantic-server-2.trace.server": {
 					"scope": "window",
 					"type": "string",
 					"enum": [
@@ -291,7 +283,7 @@
 					"default": "off",
 					"description": "Traces the communication between VS Code and the language server."
 				},
-				"volar-document-features.trace.server": {
+				"vue-syntactic-server.trace.server": {
 					"scope": "window",
 					"type": "string",
 					"enum": [

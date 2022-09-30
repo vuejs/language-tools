@@ -1,13 +1,11 @@
 import * as embedded from '@volar/language-service';
 import * as vscode from 'vscode-languageserver';
-import { AutoInsertRequest, FindFileReferenceRequest, GetEditorSelectionRequest, ShowReferencesNotification } from '../requests';
-import { ServerInitializationOptions } from '../types';
+import { AutoInsertRequest, FindFileReferenceRequest, ShowReferencesNotification } from '../requests';
 import type { Workspaces } from '../utils/workspaces';
 
 export function register(
 	connection: vscode.Connection,
 	projects: Workspaces,
-	features: NonNullable<ServerInitializationOptions['languageFeatures']>,
 	initParams: vscode.InitializeParams,
 ) {
 
@@ -36,14 +34,7 @@ export function register(
 	});
 	connection.onCompletionResolve(async item => {
 		if (lastCompleteUri && lastCompleteLs) {
-
-			const activeSel = typeof features.completion === 'object' && features.completion.getDocumentSelectionRequest
-				? await connection.sendRequest(GetEditorSelectionRequest.type)
-				: undefined;
-			const newPosition = activeSel?.textDocument.uri.toLowerCase() === lastCompleteUri.toLowerCase() ? activeSel.position : undefined;
-
-			item = await lastCompleteLs.doCompletionResolve(item, newPosition);
-
+			item = await lastCompleteLs.doCompletionResolve(item);
 			fixTextEdit(item);
 		}
 		return item;

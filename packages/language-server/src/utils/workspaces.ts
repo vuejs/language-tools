@@ -3,7 +3,7 @@ import { ConfigurationHost } from '@volar/vue-language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
-import { FileSystemHost, LanguageServerPlugin, RuntimeEnvironment, ServerInitializationOptions } from '../types';
+import { DiagnosticModel, FileSystemHost, LanguageServerPlugin, RuntimeEnvironment, InitializationOptions } from '../types';
 import { createSnapshots } from './snapshots';
 import { createWorkspaceProjects, rootTsConfigNames, sortTsConfigs } from './workspaceProjects';
 
@@ -16,7 +16,8 @@ export function createWorkspaces(
 	configurationHost: ConfigurationHost | undefined,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLocalized: ts.MapLike<string> | undefined,
-	options: ServerInitializationOptions,
+	client: vscode.ClientCapabilities,
+	options: InitializationOptions,
 	documents: ReturnType<typeof createSnapshots>,
 	connection: vscode.Connection,
 ) {
@@ -93,17 +94,17 @@ export function createWorkspaces(
 		await updateDiagnostics();
 
 		if (req === semanticTokensReq) {
-			if (options.languageFeatures?.semanticTokens) {
+			if (client.textDocument?.semanticTokens) {
 				connection.languages.semanticTokens.refresh();
 			}
-			if (options.languageFeatures?.inlayHints) {
-				connection.languages.semanticTokens.refresh();
+			if (client.textDocument?.inlayHint) {
+				connection.languages.inlayHint.refresh();
 			}
 		}
 	}
 	async function updateDiagnostics(docUri?: string) {
 
-		if (!options.languageFeatures?.diagnostics)
+		if ((options.diagnosticModel ?? DiagnosticModel.Push) !== DiagnosticModel.Push)
 			return;
 
 		const req = ++documentUpdatedReq;

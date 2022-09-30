@@ -63,7 +63,7 @@ export interface LanguageServicePlugin {
 		triggerCharacters?: string[],
 		isAdditional?: boolean,
 		on?(document: TextDocument, position: vscode.Position, context?: vscode.CompletionContext): NullableResult<vscode.CompletionList>,
-		resolve?(item: vscode.CompletionItem, newPosition?: vscode.Position): NotNullableResult<vscode.CompletionItem>,
+		resolve?(item: vscode.CompletionItem): NotNullableResult<vscode.CompletionItem>,
 	},
 
 	rename?: {

@@ -5,13 +5,6 @@ import type * as html from 'vscode-html-languageservice';
  * Server request client
  */
 
-export namespace GetDocumentContentRequest {
-	export type ParamsType = vscode.TextDocumentIdentifier;
-	export type ResponseType = string;
-	export type ErrorType = never;
-	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('vscode/content');
-}
-
 export namespace ShowReferencesNotification {
 	export type ResponseType = vscode.TextDocumentPositionParams & { references: vscode.Location[]; };
 	export const type = new vscode.NotificationType<ResponseType>('vue.findReferences');
@@ -22,12 +15,6 @@ export namespace GetDocumentPrintWidthRequest {
 	export type ResponseType = number | undefined;
 	export type ErrorType = never;
 	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('vue/getDocumentWordWrapColumn');
-}
-
-export namespace GetEditorSelectionRequest {
-	export type ResponseType = vscode.TextDocumentPositionParams | undefined;
-	export type ErrorType = never;
-	export const type = new vscode.RequestType0<ResponseType, ErrorType>('vue/activeSelection');
 }
 
 export namespace FindFileReferenceRequest {

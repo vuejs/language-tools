@@ -9,7 +9,14 @@ export function activate(context: vscode.ExtensionContext) {
 		name,
 		documentSelector,
 		initOptions,
+		fillInitializeParams,
 	) => {
+
+		class _LanguageClient extends lsp.LanguageClient {
+			fillInitializeParams(params: lsp.InitializeParams) {
+				fillInitializeParams(params);
+			}
+		}
 
 		const serverMain = vscode.Uri.joinPath(context.extensionUri, 'dist/browser/server.js');
 		const worker = new Worker(serverMain.toString());
@@ -22,7 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
 			},
 			middleware,
 		};
-		const client = new lsp.LanguageClient(
+		const client = new _LanguageClient(
 			id,
 			name,
 			clientOptions,
