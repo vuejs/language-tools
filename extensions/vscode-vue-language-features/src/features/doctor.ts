@@ -1,4 +1,4 @@
-import { getCurrentTsdk, getTsdkVersion } from './tsVersion';
+import { getCurrentTsdk, getTsVersion } from './tsVersion';
 import * as vscode from 'vscode';
 import { takeOverModeEnabled } from '../common';
 import * as fs from '../utils/fs';
@@ -59,7 +59,7 @@ export async function register(context: vscode.ExtensionContext) {
 		}
 
 		const tsdk = getCurrentTsdk(context);
-		const tsVersion = getTsdkVersion(tsdk.tsdk);
+		const tsVersion = getTsVersion(tsdk.tsdk);
 		const content = `
 ## Infos
 

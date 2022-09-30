@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { BaseLanguageClient } from 'vscode-languageclient';
-import { userPick } from './splitEditors';
+import { quickPick } from './splitEditors';
 import { takeOverModeEnabled } from '../common';
 import { InitializationOptions } from '@volar/vue-language-server';
 import * as fs from 'fs';
@@ -17,20 +17,20 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 
 		const usingWorkspaceTsdk = getCurrentTsdk(context).isWorkspacePath;
 		const configTsdk = getConfigTsdk();
-		const select = await userPick([
+		const select = await quickPick([
 			{
 				'use_vscode_tsdk': {
 					label: (!usingWorkspaceTsdk ? '• ' : '') + "Use VS Code's Version",
-					description: getTsdkVersion(getVscodeTsdk()),
+					description: getTsVersion(getVscodeTsdk()),
 				},
 				'use_workspace_tsdk': configTsdk ? {
 					label: (usingWorkspaceTsdk ? '• ' : '') + 'Use Workspace Version',
-					description: getTsdkVersion(resolveConfigTsdk(configTsdk)) ?? 'Could not load the TypeScript version at this path',
+					description: getTsVersion(resolveConfigTsdk(configTsdk)) ?? 'Could not load the TypeScript version at this path',
 					detail: configTsdk,
 				} : undefined,
 				'use_workspace_tsdk_deafult': configTsdk !== defaultTsdk ? {
 					label: (usingWorkspaceTsdk ? '• ' : '') + 'Use Workspace Version',
-					description: getTsdkVersion(resolveConfigTsdk(defaultTsdk)) ?? 'Could not load the TypeScript version at this path',
+					description: getTsVersion(resolveConfigTsdk(defaultTsdk)) ?? 'Could not load the TypeScript version at this path',
 					detail: defaultTsdk,
 				} : undefined,
 			},
@@ -87,7 +87,7 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 			statusBar.hide();
 		}
 		else {
-			const tsVersion = getTsdkVersion(getCurrentTsdk(context).tsdk);
+			const tsVersion = getTsVersion(getCurrentTsdk(context).tsdk);
 			statusBar.text = '' + tsVersion;
 			if (takeOverModeEnabled()) {
 				statusBar.text += ' (takeover)';
@@ -147,12 +147,12 @@ function useWorkspaceTsdk(context: vscode.ExtensionContext) {
 	return context.workspaceState.get('typescript.useWorkspaceTsdk', false);
 }
 
-export function getTsdkVersion(tsdk: string | undefined): string | undefined {
-	if (!tsdk || !fs.existsSync(tsdk)) {
+export function getTsVersion(libPath: string | undefined): string | undefined {
+	if (!libPath || !fs.existsSync(libPath)) {
 		return undefined;
 	}
 
-	const p = tsdk.split(path.sep);
+	const p = libPath.split(path.sep);
 	if (p.length <= 1) {
 		return undefined;
 	}

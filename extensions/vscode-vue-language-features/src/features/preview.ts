@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from '../utils/fs';
 import * as shared from '@volar/shared';
-import { userPick } from './splitEditors';
+import { quickPick } from './splitEditors';
 import { parse, SFCParseResult } from '@vue/compiler-sfc';
 import * as preview from '@volar/preview';
 
@@ -194,7 +194,7 @@ export async function register(context: vscode.ExtensionContext) {
 		highlight['highlight-on'] = { label: (highlightDomElements ? '• ' : '') + 'Highlight DOM Elements' };
 		highlight['highlight-off'] = { label: (!highlightDomElements ? '• ' : '') + `Don't Highlight DOM Elements` };
 
-		const key = await userPick([baseOptions, urlOptions, highlight]);
+		const key = await quickPick([baseOptions, urlOptions, highlight]);
 
 		if (key?.startsWith('url::')) {
 			const url = key.split('::')[1];
@@ -240,7 +240,7 @@ export async function register(context: vscode.ExtensionContext) {
 			return;
 
 		const viteConfigFile = await getConfigFile(editor.document.fileName, 'vite');
-		const select = await userPick({
+		const select = await quickPick({
 			[PreviewType.Webview]: {
 				label: 'Preview Vite App',
 				detail: vscode.workspace.rootPath && viteConfigFile ? path.relative(vscode.workspace.rootPath, viteConfigFile) : viteConfigFile,
@@ -267,7 +267,7 @@ export async function register(context: vscode.ExtensionContext) {
 			return;
 
 		const viteConfigFile = await getConfigFile(editor.document.fileName, 'nuxt');
-		const select = await userPick({
+		const select = await quickPick({
 			[PreviewType.Webview]: {
 				label: 'Preview Nuxt App',
 				detail: vscode.workspace.rootPath && viteConfigFile ? path.relative(vscode.workspace.rootPath, viteConfigFile) : viteConfigFile,

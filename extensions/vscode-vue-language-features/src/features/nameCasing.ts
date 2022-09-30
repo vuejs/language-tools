@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { userPick } from './splitEditors';
+import { quickPick } from './splitEditors';
 import { BaseLanguageClient, State } from 'vscode-languageclient';
 import { AttrNameCasing, DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, TagNameCasing } from '@volar/vue-language-server';
 
@@ -27,7 +27,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 		const document = vscode.window.activeTextEditor.document;
 		const currentAttrNameCasing = attrNameCasings.get(document.uri.toString());
 		const currentTagNameCasing = tagNameCasings.get(document.uri.toString());
-		const select = await userPick([
+		const select = await quickPick([
 			{
 				'1': { label: (currentTagNameCasing === TagNameCasing.Kebab ? '• ' : '') + 'Component Name Using kebab-case' },
 				'2': { label: (currentTagNameCasing === TagNameCasing.Pascal ? '• ' : '') + 'Component Name Using PascalCase' },
