@@ -287,7 +287,7 @@ function getInitializationOptions(
 			full: lsp.TextDocumentSyncKind.Full,
 			none: lsp.TextDocumentSyncKind.None,
 		}[textDocumentSync] : lsp.TextDocumentSyncKind.Incremental,
-		typescript: tsVersion.getCurrentTsPaths(context),
+		typescript: tsVersion.getCurrentTsdk(context),
 		petiteVue: {
 			processHtmlFile: processHtml(),
 		},

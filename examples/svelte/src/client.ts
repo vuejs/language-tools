@@ -10,7 +10,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	const documentSelector: lsp.DocumentSelector = [{ language: 'svelte' }];
 	const initializationOptions: ServerInitializationOptions = {
 		typescript: {
-			serverPath: path.join(vscode.env.appRoot, 'extensions', 'node_modules', 'typescript', 'lib', 'typescript.js'),
+			tsdk: path.join(vscode.env.appRoot, 'extensions', 'node_modules', 'typescript', 'lib'),
 		},
 	};
 	const serverModule = vscode.Uri.joinPath(context.extensionUri, 'out', 'server');

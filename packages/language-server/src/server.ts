@@ -93,7 +93,7 @@ export function createCommonLanguageServer(
 
 	async function createDocumenntServiceHost() {
 
-		const ts = runtimeEnv.loadTypescript(options);
+		const ts = runtimeEnv.loadTypescript(options.typescript.tsdk);
 
 		documentServiceHost = createDocumentServiceHost(
 			runtimeEnv,
@@ -115,10 +115,10 @@ export function createCommonLanguageServer(
 
 	async function createLanguageServiceHost() {
 
-		const ts = runtimeEnv.loadTypescript(options);
+		const ts = runtimeEnv.loadTypescript(options.typescript.tsdk);
 		fsHost = runtimeEnv.createFileSystemHost(ts, params.capabilities);
 
-		const tsLocalized = runtimeEnv.loadTypescriptLocalized(options);
+		const tsLocalized = params.locale ? runtimeEnv.loadTypescriptLocalized(options.typescript.tsdk, params.locale) : undefined;
 		const _projects = createWorkspaces(
 			runtimeEnv,
 			plugins,

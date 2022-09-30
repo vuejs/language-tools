@@ -1,10 +1,10 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { BaseLanguageClient } from 'vscode-languageclient';
-import * as shared from '@volar/shared';
 import { userPick } from './splitEditors';
 import { takeOverModeEnabled } from '../common';
 import { ServerInitializationOptions } from '@volar/vue-language-server';
+import * as fs from 'fs';
 
 const defaultTsdk = 'node_modules/typescript/lib';
 
@@ -15,69 +15,56 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 
 	const subscription = vscode.commands.registerCommand(cmd, async () => {
 
-		const useWorkspaceTsdk = getCurrentTsPaths(context).isWorkspacePath;
-		const workspaceTsPaths = getWorkspaceTsPaths();
-		const workspaceTsVersion = workspaceTsPaths ? shared.getTypeScriptVersion(workspaceTsPaths.serverPath) : undefined;
-		const vscodeTsPaths = getVscodeTsPaths();
-		const vscodeTsVersion = shared.getTypeScriptVersion(vscodeTsPaths.serverPath);
-		const tsdk = getTsdk();
-		const defaultTsServer = shared.getWorkspaceTypescriptPath(defaultTsdk, (vscode.workspace.workspaceFolders ?? []).map(folder => folder.uri.fsPath));
-		const defaultTsVersion = defaultTsServer ? shared.getTypeScriptVersion(defaultTsServer) : undefined;
-
-		const options: Record<string, vscode.QuickPickItem> = {};
-		options[0] = {
-			label: (!useWorkspaceTsdk ? '• ' : '') + "Use VS Code's Version",
-			description: vscodeTsVersion,
-		};
-		if (tsdk) {
-			options[1] = {
-				label: (useWorkspaceTsdk ? '• ' : '') + 'Use Workspace Version',
-				description: workspaceTsVersion ?? 'Could not load the TypeScript version at this path',
-				detail: tsdk,
-			};
-		}
-		if (tsdk !== defaultTsdk) {
-			options[2] = {
-				label: (useWorkspaceTsdk ? '• ' : '') + 'Use Workspace Version',
-				description: defaultTsVersion ?? 'Could not load the TypeScript version at this path',
-				detail: defaultTsdk,
-			};
-		}
-		if (takeOverModeEnabled()) {
-			options[3] = {
-				label: 'What is Takeover Mode?',
-			};
-		}
-
-		const select = await userPick(options);
-		if (select === undefined)
+		const usingWorkspaceTsdk = getCurrentTsdk(context).isWorkspacePath;
+		const configTsdk = getConfigTsdk();
+		const select = await userPick([
+			{
+				'use_vscode_tsdk': {
+					label: (!usingWorkspaceTsdk ? '• ' : '') + "Use VS Code's Version",
+					description: getTsdkVersion(getVscodeTsdk()),
+				},
+				'use_workspace_tsdk': configTsdk ? {
+					label: (usingWorkspaceTsdk ? '• ' : '') + 'Use Workspace Version',
+					description: getTsdkVersion(resolveConfigTsdk(configTsdk)) ?? 'Could not load the TypeScript version at this path',
+					detail: configTsdk,
+				} : undefined,
+				'use_workspace_tsdk_deafult': configTsdk !== defaultTsdk ? {
+					label: (usingWorkspaceTsdk ? '• ' : '') + 'Use Workspace Version',
+					description: getTsdkVersion(resolveConfigTsdk(defaultTsdk)) ?? 'Could not load the TypeScript version at this path',
+					detail: defaultTsdk,
+				} : undefined,
+			},
+			{
+				'takeover': {
+					label: 'What is Takeover Mode?',
+				},
+			}
+		]);
+		if (select === undefined) {
 			return; // cancel
-
-		if (select === '3') {
+		}
+		if (select === 'takeover') {
 			vscode.env.openExternal(vscode.Uri.parse('https://vuejs.org/guide/typescript/overview.html#takeover-mode'));
 			return;
 		}
-
-		if (select === '2') {
+		if (select === 'use_workspace_tsdk_deafult') {
 			vscode.workspace.getConfiguration('typescript').update('tsdk', defaultTsdk);
 		}
-
-		const nowUseWorkspaceTsdk = select !== '0';
-		if (nowUseWorkspaceTsdk !== isUseWorkspaceTsdk(context)) {
-			context.workspaceState.update('typescript.useWorkspaceTsdk', nowUseWorkspaceTsdk);
+		const shouldUseWorkspaceTsdk = select !== 'use_vscode_tsdk';
+		if (shouldUseWorkspaceTsdk !== useWorkspaceTsdk(context)) {
+			context.workspaceState.update('typescript.useWorkspaceTsdk', shouldUseWorkspaceTsdk);
 			reloadServers();
 		}
-
 		updateStatusBar();
 	});
 	context.subscriptions.push(subscription);
 
-	let tsdk = getTsdk();
+	let tsdk = getConfigTsdk();
 	vscode.workspace.onDidChangeConfiguration(() => {
-		const newTsdk = getTsdk();
+		const newTsdk = getConfigTsdk();
 		if (newTsdk !== tsdk) {
 			tsdk = newTsdk;
-			if (isUseWorkspaceTsdk(context)) {
+			if (useWorkspaceTsdk(context)) {
 				reloadServers();
 			}
 		}
@@ -100,8 +87,7 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 			statusBar.hide();
 		}
 		else {
-			const tsPaths = getCurrentTsPaths(context);
-			const tsVersion = shared.getTypeScriptVersion(tsPaths.serverPath);
+			const tsVersion = getTsdkVersion(getCurrentTsdk(context).tsdk);
 			statusBar.text = '' + tsVersion;
 			if (takeOverModeEnabled()) {
 				statusBar.text += ' (takeover)';
@@ -110,7 +96,7 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 		}
 	}
 	async function reloadServers() {
-		const tsPaths = getCurrentTsPaths(context);
+		const tsPaths = getCurrentTsdk(context);
 		for (const client of clients) {
 			const newInitOptions: ServerInitializationOptions = {
 				...client.clientOptions.initializationOptions,
@@ -122,57 +108,76 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 	}
 }
 
-export function getCurrentTsPaths(context: vscode.ExtensionContext) {
-	if (isUseWorkspaceTsdk(context)) {
-		const workspaceTsPaths = getWorkspaceTsPaths(true);
-		if (workspaceTsPaths) {
-			return { ...workspaceTsPaths, isWorkspacePath: true };
+export function getCurrentTsdk(context: vscode.ExtensionContext) {
+	if (useWorkspaceTsdk(context)) {
+		const resolvedTsdk = resolveConfigTsdk(getConfigTsdk() ?? defaultTsdk);
+		if (resolvedTsdk) {
+			return { tsdk: resolvedTsdk, isWorkspacePath: true };
 		}
 	}
-	return { ...getVscodeTsPaths(), isWorkspacePath: false };
+	return { tsdk: getVscodeTsdk(), isWorkspacePath: false };
 }
 
-function getWorkspaceTsPaths(useDefault = false) {
-	let tsdk = getTsdk();
-	if (!tsdk && useDefault) {
-		tsdk = defaultTsdk;
+function resolveConfigTsdk(tsdk: string) {
+	if (path.isAbsolute(tsdk)) {
+		return tsdk;
 	}
-	if (tsdk) {
-		const fsPaths = (vscode.workspace.workspaceFolders ?? []).map(folder => folder.uri.fsPath);
-		const tsPath = shared.getWorkspaceTypescriptPath(tsdk, fsPaths);
-		if (tsPath) {
-			return {
-				serverPath: tsPath,
-				localizedPath: shared.getWorkspaceTypescriptLocalizedPath(tsdk, vscode.env.language, fsPaths),
-			};
+	const workspaceFolderFsPaths = (vscode.workspace.workspaceFolders ?? []).map(folder => folder.uri.fsPath);
+	for (const folder of workspaceFolderFsPaths) {
+		const _path = path.join(folder, tsdk);
+		if (fs.existsSync(_path)) {
+			return _path;
 		}
 	}
 }
 
-function getVscodeTsPaths() {
+function getVscodeTsdk() {
 	const nightly = vscode.extensions.getExtension('ms-vscode.vscode-typescript-next');
 	if (nightly) {
-		const tsLibPath = path.join(nightly.extensionPath, 'node_modules/typescript/lib');
-		const serverPath = shared.findTypescriptModulePathInLib(tsLibPath);
-		if (serverPath) {
-			return {
-				serverPath,
-				localizedPath: shared.findTypescriptLocalizedPathInLib(tsLibPath, vscode.env.language)
-			};
+		return path.join(nightly.extensionPath, 'node_modules/typescript/lib');
+	}
+	return path.join(vscode.env.appRoot, 'extensions', 'node_modules', 'typescript', 'lib');
+}
+
+function getConfigTsdk() {
+	return vscode.workspace.getConfiguration('typescript').get<string>('tsdk');
+}
+
+function useWorkspaceTsdk(context: vscode.ExtensionContext) {
+	return context.workspaceState.get('typescript.useWorkspaceTsdk', false);
+}
+
+export function getTsdkVersion(tsdk: string | undefined): string | undefined {
+	if (!tsdk || !fs.existsSync(tsdk)) {
+		return undefined;
+	}
+
+	const p = tsdk.split(path.sep);
+	if (p.length <= 1) {
+		return undefined;
+	}
+	const p2 = p.slice(0, -1);
+	const modulePath = p2.join(path.sep);
+	let fileName = path.join(modulePath, 'package.json');
+	if (!fs.existsSync(fileName)) {
+		// Special case for ts dev versions
+		if (path.basename(modulePath) === 'built') {
+			fileName = path.join(modulePath, '..', 'package.json');
 		}
 	}
-	return {
-		serverPath: shared.getVscodeTypescriptPath(vscode.env.appRoot),
-		localizedPath: shared.getVscodeTypescriptLocalizedPath(vscode.env.appRoot, vscode.env.language),
-	};
-}
+	if (!fs.existsSync(fileName)) {
+		return undefined;
+	}
 
-function getTsdk() {
-	const tsConfigs = vscode.workspace.getConfiguration('typescript');
-	const tsdk = tsConfigs.get<string>('tsdk');
-	return tsdk;
-}
-
-function isUseWorkspaceTsdk(context: vscode.ExtensionContext) {
-	return context.workspaceState.get('typescript.useWorkspaceTsdk', false);
+	const contents = fs.readFileSync(fileName).toString();
+	let desc: any = null;
+	try {
+		desc = JSON.parse(contents);
+	} catch (err) {
+		return undefined;
+	}
+	if (!desc || !desc.version) {
+		return undefined;
+	}
+	return desc.version;
 }

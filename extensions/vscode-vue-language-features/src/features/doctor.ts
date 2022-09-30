@@ -1,6 +1,5 @@
-import { getCurrentTsPaths } from './tsVersion';
+import { getCurrentTsdk, getTsdkVersion } from './tsVersion';
 import * as vscode from 'vscode';
-import * as shared from '@volar/shared';
 import { takeOverModeEnabled } from '../common';
 import * as fs from '../utils/fs';
 import * as semver from 'semver'
@@ -59,8 +58,8 @@ export async function register(context: vscode.ExtensionContext) {
 			}
 		}
 
-		const tsPaths = getCurrentTsPaths(context);
-		const tsVersion = shared.getTypeScriptVersion(tsPaths.serverPath);
+		const tsdk = getCurrentTsdk(context);
+		const tsVersion = getTsdkVersion(tsdk.tsdk);
 		const content = `
 ## Infos
 

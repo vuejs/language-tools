@@ -27,8 +27,8 @@ export type FileSystem = Pick<ts.System,
 > & Partial<ts.System>;
 
 export interface RuntimeEnvironment {
-	loadTypescript: (initOptions: ServerInitializationOptions) => typeof import('typescript/lib/tsserverlibrary'),
-	loadTypescriptLocalized: (initOptions: ServerInitializationOptions) => any,
+	loadTypescript: (tsdk: string) => typeof import('typescript/lib/tsserverlibrary'),
+	loadTypescriptLocalized: (tsdk: string, locale: string) => any,
 	schemaRequestHandlers: { [schema: string]: (uri: string, encoding?: BufferEncoding) => Promise<string>; },
 	onDidChangeConfiguration?: (settings: any) => void,
 	fileSystemProvide: FileSystemProvider | undefined,
@@ -95,27 +95,13 @@ export enum DiagnosticModel {
 }
 
 export interface ServerInitializationOptions {
+	typescript: {
+		// Absolute path to node_modules/typescript/lib
+		tsdk: string;
+	};
 	serverMode?: ServerMode;
 	diagnosticModel?: DiagnosticModel;
 	textDocumentSync?: vscode.TextDocumentSyncKind | number;
-	typescript: {
-		/**
-		 * Path to tsserverlibrary.js / tsserver.js / typescript.js
-		 * @example
-		 * '/usr/local/lib/node_modules/typescript/lib/tsserverlibrary.js' // use global typescript install
-		 * 'typescript/lib/tsserverlibrary.js' // if `typescript` exist in `@volar/vue-lannguage-server` itself node_modules directory
-		 * '../../../typescript/lib/tsserverlibrary.js' // relative path to @volar/vue-language-server/out/index.js
-		 */
-		serverPath: string;
-		/**
-		 * Path to lib/xxx/diagnosticMessages.generated.json
-		 * @example
-		 * '/usr/local/lib/node_modules/typescript/lib/ja/diagnosticMessages.generated.json' // use global typescript install
-		 * 'typescript/lib/ja/diagnosticMessages.generated.json' // if `typescript` exist in `@volar/vue-lannguage-server` itself node_modules directory
-		 * '../../../typescript/lib/ja/diagnosticMessages.generated.json' // relative path to @volar/vue-language-server/out/index.js
-		 */
-		localizedPath?: string;
-	};
 	// for resolve https://github.com/sublimelsp/LSP-volar/issues/114
 	ignoreTriggerCharacters?: string[],
 }
