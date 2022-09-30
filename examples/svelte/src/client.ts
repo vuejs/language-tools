@@ -12,34 +12,6 @@ export async function activate(context: vscode.ExtensionContext) {
 		typescript: {
 			serverPath: path.join(vscode.env.appRoot, 'extensions', 'node_modules', 'typescript', 'lib', 'typescript.js'),
 		},
-		languageFeatures: {
-			references: true,
-			implementation: true,
-			definition: true,
-			typeDefinition: true,
-			callHierarchy: true,
-			hover: true,
-			rename: true,
-			renameFileRefactoring: true,
-			signatureHelp: true,
-			codeAction: true,
-			workspaceSymbol: true,
-			completion: true,
-			documentHighlight: true,
-			documentLink: true,
-			codeLens: true,
-			semanticTokens: true,
-			inlayHints: true,
-			diagnostics: true,
-		},
-		documentFeatures: {
-			selectionRange: true,
-			foldingRange: true,
-			linkedEditingRange: true,
-			documentSymbol: true,
-			documentColor: true,
-			documentFormatting: true,
-		},
 	};
 	const serverModule = vscode.Uri.joinPath(context.extensionUri, 'out', 'server');
 	const runOptions = { execArgv: <string[]>[] };

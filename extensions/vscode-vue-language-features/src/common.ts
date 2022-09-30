@@ -1,9 +1,7 @@
 import * as shared from '@volar/shared';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient';
-import * as activeSelection from './features/activeSelection';
 import * as nameCasing from './features/nameCasing';
-import * as documentContent from './features/documentContent';
 import * as preview from './features/preview';
 import * as showReferences from './features/showReferences';
 import * as splitEditors from './features/splitEditors';
@@ -16,7 +14,7 @@ import * as doctor from './features/doctor';
 import * as fileReferences from './features/fileReferences';
 import * as reloadProject from './features/reloadProject';
 import * as serverSys from './features/serverSys';
-import { VueServerInitializationOptions } from '@volar/vue-language-server';
+import { DiagnosticModel, ServerMode, VueServerInitializationOptions } from '@volar/vue-language-server';
 
 let apiClient: lsp.BaseLanguageClient | undefined;
 let docClient: lsp.BaseLanguageClient | undefined;
@@ -27,6 +25,7 @@ type CreateLanguageClient = (
 	name: string,
 	documentSelector: lsp.DocumentSelector,
 	initOptions: VueServerInitializationOptions,
+	fillInitializeParams: (params: lsp.InitializeParams) => void,
 	port: number,
 ) => Promise<lsp.BaseLanguageClient>;
 
@@ -103,21 +102,24 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			'volar-language-features',
 			'Volar - Language Features Server',
 			languageFeaturesDocumentSelector,
-			getInitializationOptions(context, 'main-language-features', _useSecondServer),
+			getInitializationOptions('main-language-features', context),
+			getFillInitializeParams('main-language-features', _useSecondServer),
 			6009,
 		),
 		_useSecondServer ? createLc(
 			'volar-language-features-2',
 			'Volar - Second Language Features Server',
 			languageFeaturesDocumentSelector,
-			getInitializationOptions(context, 'second-language-features', _useSecondServer),
+			getInitializationOptions('second-language-features', context),
+			getFillInitializeParams('second-language-features', _useSecondServer),
 			6010,
 		) : undefined,
 		createLc(
 			'volar-document-features',
 			'Volar - Document Features Server',
 			documentFeaturesDocumentSelector,
-			getInitializationOptions(context, 'document-features', _useSecondServer),
+			getInitializationOptions('document-features', context),
+			getFillInitializeParams('document-features', _useSecondServer),
 			6011,
 		),
 	]);
@@ -181,8 +183,6 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 		for (const client of clients) {
 			showReferences.activate(context, client);
-			documentContent.activate(context, client);
-			activeSelection.activate(context, client);
 			serverSys.activate(context, client);
 		}
 
@@ -224,61 +224,72 @@ function processMd() {
 	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.vitePress.processMdFile');
 }
 
-function getInitializationOptions(
-	context: vscode.ExtensionContext,
+function getFillInitializeParams(
 	mode: 'main-language-features' | 'second-language-features' | 'document-features',
 	useSecondServer: boolean,
 ) {
+
+	const enableSemanticFeatures_a = mode === 'main-language-features';
+	const enableSemanticFeatures_b = mode === 'second-language-features' || (mode === 'main-language-features' && !useSecondServer);
+	const enabledocumentFeatures = 'document-features';
+
+	return function (params: lsp.InitializeParams) {
+		if (params.capabilities.textDocument) {
+			params.capabilities.textDocument.references = enableSemanticFeatures_a ? params.capabilities.textDocument.references : undefined;
+			params.capabilities.textDocument.implementation = enableSemanticFeatures_a ? params.capabilities.textDocument.implementation : undefined;
+			params.capabilities.textDocument.definition = enableSemanticFeatures_a ? params.capabilities.textDocument.definition : undefined;
+			params.capabilities.textDocument.typeDefinition = enableSemanticFeatures_a ? params.capabilities.textDocument.typeDefinition : undefined;
+			params.capabilities.textDocument.callHierarchy = enableSemanticFeatures_a ? params.capabilities.textDocument.callHierarchy : undefined;
+			params.capabilities.textDocument.hover = enableSemanticFeatures_a ? params.capabilities.textDocument.hover : undefined;
+			params.capabilities.textDocument.rename = enableSemanticFeatures_a ? params.capabilities.textDocument.rename : undefined;
+			params.capabilities.textDocument.signatureHelp = enableSemanticFeatures_a ? params.capabilities.textDocument.signatureHelp : undefined;
+			params.capabilities.textDocument.codeAction = enableSemanticFeatures_a ? params.capabilities.textDocument.codeAction : undefined;
+			params.capabilities.textDocument.completion = enableSemanticFeatures_a ? params.capabilities.textDocument.completion : undefined;
+
+			params.capabilities.textDocument.documentHighlight = enableSemanticFeatures_b ? params.capabilities.textDocument.documentHighlight : undefined;
+			params.capabilities.textDocument.documentLink = enableSemanticFeatures_b ? params.capabilities.textDocument.documentLink : undefined;
+			params.capabilities.textDocument.codeLens = enableSemanticFeatures_b ? params.capabilities.textDocument.codeLens : undefined;
+			params.capabilities.textDocument.semanticTokens = enableSemanticFeatures_b ? params.capabilities.textDocument.semanticTokens : undefined;
+			params.capabilities.textDocument.inlayHint = enableSemanticFeatures_b ? params.capabilities.textDocument.inlayHint : undefined;
+			params.capabilities.textDocument.diagnostic = enableSemanticFeatures_b ? params.capabilities.textDocument.diagnostic : undefined;
+
+			params.capabilities.textDocument.selectionRange = enabledocumentFeatures ? params.capabilities.textDocument.selectionRange : undefined;
+			params.capabilities.textDocument.foldingRange = enabledocumentFeatures ? params.capabilities.textDocument.foldingRange : undefined;
+			params.capabilities.textDocument.linkedEditingRange = enabledocumentFeatures ? params.capabilities.textDocument.linkedEditingRange : undefined;
+			params.capabilities.textDocument.documentSymbol = enabledocumentFeatures ? params.capabilities.textDocument.documentSymbol : undefined;
+			params.capabilities.textDocument.colorProvider = enabledocumentFeatures ? params.capabilities.textDocument.colorProvider : undefined;
+			params.capabilities.textDocument.formatting = enabledocumentFeatures ? params.capabilities.textDocument.formatting : undefined;
+			params.capabilities.textDocument.rangeFormatting = enabledocumentFeatures ? params.capabilities.textDocument.rangeFormatting : undefined;
+			params.capabilities.textDocument.onTypeFormatting = enabledocumentFeatures ? params.capabilities.textDocument.onTypeFormatting : undefined;
+		}
+		if (params.capabilities.workspace) {
+			params.capabilities.workspace.symbol = enableSemanticFeatures_a ? params.capabilities.workspace.symbol : undefined;
+			params.capabilities.workspace.fileOperations = enableSemanticFeatures_a ? params.capabilities.workspace.fileOperations : undefined;
+		}
+	};
+}
+
+function getInitializationOptions(
+	mode: 'main-language-features' | 'second-language-features' | 'document-features',
+	context: vscode.ExtensionContext,
+) {
+	const enableSemanticFeatures_b = mode === 'second-language-features' || (mode === 'main-language-features' && !useSecondServer);
 	const textDocumentSync = vscode.workspace.getConfiguration('volar').get<'incremental' | 'full' | 'none'>('vueserver.textDocumentSync');
 	const initializationOptions: VueServerInitializationOptions = {
-		petiteVue: {
-			processHtmlFile: processHtml(),
-		},
-		vitePress: {
-			processMdFile: processMd(),
-		},
+		serverMode: mode === 'document-features' ? ServerMode.Syntactic : ServerMode.Semantic,
+		diagnosticModel: enableSemanticFeatures_b ? DiagnosticModel.Push : DiagnosticModel.Pull /* DiagnosticModel.Pull + params.capabilities.textDocument.diagnostic: undefined = no trigger */,
 		textDocumentSync: textDocumentSync ? {
 			incremental: lsp.TextDocumentSyncKind.Incremental,
 			full: lsp.TextDocumentSyncKind.Full,
 			none: lsp.TextDocumentSyncKind.None,
 		}[textDocumentSync] : lsp.TextDocumentSyncKind.Incremental,
 		typescript: tsVersion.getCurrentTsPaths(context),
-		languageFeatures: (mode === 'main-language-features' || mode === 'second-language-features') ? {
-			...(mode === 'main-language-features' ? {
-				references: true,
-				implementation: true,
-				definition: true,
-				typeDefinition: true,
-				callHierarchy: true,
-				hover: true,
-				rename: true,
-				renameFileRefactoring: true,
-				signatureHelp: true,
-				codeAction: true,
-				workspaceSymbol: true,
-				completion: {
-					getDocumentSelectionRequest: true,
-				},
-				schemaRequestService: { getDocumentContentRequest: true },
-			} : {}),
-			...((mode === 'second-language-features' || (mode === 'main-language-features' && !useSecondServer)) ? {
-				documentHighlight: true,
-				documentLink: true,
-				codeLens: { showReferencesNotification: true },
-				semanticTokens: true,
-				inlayHints: true,
-				diagnostics: true,
-				schemaRequestService: { getDocumentContentRequest: true },
-			} : {}),
-		} : undefined,
-		documentFeatures: mode === 'document-features' ? {
-			selectionRange: true,
-			foldingRange: true,
-			linkedEditingRange: true,
-			documentSymbol: true,
-			documentColor: true,
-			documentFormatting: true,
-		} : undefined,
+		petiteVue: {
+			processHtmlFile: processHtml(),
+		},
+		vitePress: {
+			processMdFile: processMd(),
+		},
 	};
 	return initializationOptions;
 }

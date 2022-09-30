@@ -3,12 +3,10 @@ import * as path from 'upath';
 import * as vscode from 'vscode-languageserver';
 import type { Workspaces } from '../utils/workspaces';
 import { GetMatchTsConfigRequest, ReloadProjectNotification, VerifyAllScriptsNotification, WriteVirtualFilesNotification } from '../requests';
-import { LanguageServerPlugin } from '../types';
 
 export function register(
 	connection: vscode.Connection,
 	projects: Workspaces,
-	plugins: ReturnType<LanguageServerPlugin>[],
 ) {
 	connection.onRequest(GetMatchTsConfigRequest.type, async params => {
 		return (await projects.getProject(params.uri))?.tsconfig;
@@ -67,13 +65,4 @@ export function register(
 
 		connection.window.showInformationMessage(`Verification complete. Found ${errors} errors and ${warnings} warnings.`);
 	});
-
-	for (const plugin of plugins) {
-		plugin.languageService?.onInitialize?.(connection, getLanguageService as any);
-	}
-
-	async function getLanguageService(uri: string) {
-		const project = (await projects.getProject(uri))?.project;
-		return project?.getLanguageService();
-	}
 }

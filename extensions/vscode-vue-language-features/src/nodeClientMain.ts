@@ -9,8 +9,15 @@ export function activate(context: vscode.ExtensionContext) {
 		name,
 		documentSelector,
 		initOptions,
+		fillInitializeParams,
 		port,
 	) => {
+
+		class _LanguageClient extends lsp.LanguageClient {
+			fillInitializeParams(params: lsp.InitializeParams) {
+				fillInitializeParams(params);
+			}
+		}
 
 		const serverModule = vscode.Uri.joinPath(context.extensionUri, 'server');
 		const maxOldSpaceSize = vscode.workspace.getConfiguration('volar').get<number | null>('vueserver.maxOldSpaceSize');
@@ -38,9 +45,9 @@ export function activate(context: vscode.ExtensionContext) {
 			progressOnInitialization: true,
 			synchronize: {
 				fileEvents: vscode.workspace.createFileSystemWatcher('{**/*.vue,**/*.md,**/*.html,**/*.js,**/*.jsx,**/*.ts,**/*.tsx,**/*.json}')
-			}
+			},
 		};
-		const client = new lsp.LanguageClient(
+		const client = new _LanguageClient(
 			id,
 			name,
 			serverOptions,
