@@ -72,8 +72,8 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 	[client_semantic_sensitive, client_semantic_tardy, client_syntactic] = await Promise.all([
 		createLc(
-			_useSecondServer ? 'vue-semantic' : 'vue-semantic-1',
-			_useSecondServer ? 'Vue Semantic Server' : 'Vue Sensitive Semantic Server',
+			'vue-semantic-server-1',
+			'Vue Semantic Server',
 			getDocumentSelector(ServerMode.Semantic),
 			getInitializationOptions(
 				ServerMode.Semantic,
@@ -96,7 +96,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			6010,
 		) : undefined,
 		createLc(
-			'vue-syntactic',
+			'vue-syntactic-server',
 			'Vue Syntactic Server',
 			getDocumentSelector(ServerMode.Syntactic),
 			getInitializationOptions(

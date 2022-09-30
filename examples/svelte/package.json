@@ -14,9 +14,6 @@
 	"engines": {
 		"vscode": "^1.67.0"
 	},
-	"keywords": [
-		"svelte"
-	],
 	"activationEvents": [
 		"onLanguage:svelte"
 	],
