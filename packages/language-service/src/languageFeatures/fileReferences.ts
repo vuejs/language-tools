@@ -21,21 +21,19 @@ export function register(context: LanguageServiceRuntimeContext) {
 			},
 			(data, sourceMap) => data.map(reference => {
 
-				const referenceSourceMap = context.documents.sourceMapFromEmbeddedDocumentUri(reference.uri);
-
-				if (referenceSourceMap) {
-
-					const start = referenceSourceMap.toSourcePosition(reference.range.start)?.[0];
-					const end = referenceSourceMap.toSourcePosition(reference.range.end)?.[0];
-
-					if (!start || !end)
-						return;
-
-					reference.uri = referenceSourceMap.sourceDocument.uri;
-					reference.range = { start, end };
+				const map = context.documents.sourceMapFromEmbeddedDocumentUri(reference.uri);
+				if (!map) {
+					return reference;
 				}
 
-				return reference;
+				if (map) {
+					const range = map.toSourceRange(reference.range);
+					if (range) {
+						reference.uri = map.sourceDocument.uri;
+						reference.range = range;
+						return reference;
+					}
+				}
 			}).filter(shared.notEmpty),
 			arr => dedupe.withLocations(arr.flat()),
 		);

@@ -41,13 +41,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				const _codeActionContext: vscode.CodeActionContext = {
 					diagnostics: transformLocations(
 						codeActionContext.diagnostics,
-						range => {
-							const start = sourceMap.toGeneratedPosition(range.start)?.[0];
-							const end = sourceMap.toGeneratedPosition(range.end)?.[0];
-							if (start && end) {
-								return { start, end };
-							}
-						},
+						range => sourceMap.toGeneratedRange(range),
 					),
 					only: codeActionContext.only,
 				};

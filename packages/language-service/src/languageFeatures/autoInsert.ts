@@ -12,24 +12,19 @@ export function register(context: LanguageServiceRuntimeContext) {
 			uri,
 			{ position, autoInsertContext },
 			function* (arg, sourceMap) {
-				for (const mapped of sourceMap.toGeneratedPositions(arg.position)) {
+				for (const position of sourceMap.toGeneratedPositions(arg.position, data => !!data.completion)) {
 
-					if (!mapped[1].data.completion)
-						continue;
-
-					const position = mapped[0];
 					const rangeOffset = sourceMap.toGeneratedOffset(arg.autoInsertContext.lastChange.rangeOffset)?.[0];
-					const rangeStart = sourceMap.toGeneratedPosition(arg.autoInsertContext.lastChange.range.start)?.[0];
-					const rangeEnd = sourceMap.toGeneratedPosition(arg.autoInsertContext.lastChange.range.start)?.[0];
+					const range = sourceMap.toGeneratedRange(arg.autoInsertContext.lastChange.range);
 
-					if (rangeOffset !== undefined && rangeStart && rangeEnd) {
+					if (rangeOffset !== undefined && range) {
 						yield {
 							position,
 							autoInsertContext: {
 								lastChange: {
 									...arg.autoInsertContext.lastChange,
 									rangeOffset,
-									range: { start: rangeStart, end: rangeEnd },
+									range,
 								},
 							},
 						};
@@ -38,20 +33,15 @@ export function register(context: LanguageServiceRuntimeContext) {
 				}
 			},
 			(plugin, document, arg) => plugin.doAutoInsert?.(document, arg.position, arg.autoInsertContext),
-			(data, sourceMap) => {
+			(item, sourceMap) => {
 
-				if (!sourceMap)
-					return data;
+				if (!sourceMap || typeof item === 'string')
+					return item;
 
-				if (typeof data === 'string')
-					return data;
-
-				const start = sourceMap.toSourcePosition(data.range.start)?.[0];
-				const end = sourceMap.toSourcePosition(data.range.end)?.[0];
-
-				if (start && end) {
-					data.range = { start, end };
-					return data;
+				const range = sourceMap.toSourceRange(item.range);
+				if (range) {
+					item.range = range;
+					return item;
 				}
 			},
 		);

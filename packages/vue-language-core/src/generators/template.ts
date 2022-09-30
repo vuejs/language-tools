@@ -13,7 +13,7 @@ const capabilitiesSet = {
 	diagnosticOnly: { diagnostic: true } satisfies PositionCapabilities,
 	tagHover: { hover: true } satisfies PositionCapabilities,
 	event: { hover: true, diagnostic: true } satisfies PositionCapabilities,
-	tagReference: { references: true, definition: true, rename: { normalize: undefined, apply: (_: string, newName: string) => newName } } satisfies PositionCapabilities,
+	tagReference: { references: true, definition: true, rename: { normalize: undefined, apply: noEditApply } } satisfies PositionCapabilities,
 	attr: { hover: true, diagnostic: true, references: true, definition: true, rename: true } satisfies PositionCapabilities,
 	attrReference: { references: true, definition: true, rename: true } satisfies PositionCapabilities,
 	scopedClassName: { references: true, definition: true, rename: true, completion: true } satisfies PositionCapabilities,
@@ -194,7 +194,7 @@ export function generate(
 							...capabilitiesSet.tagReference,
 							rename: {
 								normalize: tagName === name ? capabilitiesSet.tagReference.rename.normalize : unHyphenatComponentName,
-								apply: keepHyphenateName,
+								apply: getRenameApply(tagName),
 							},
 						},
 					);
@@ -699,7 +699,7 @@ export function generate(
 							normalize(newName) {
 								return camelize('on-' + newName);
 							},
-							apply(oldName, newName) {
+							apply(newName) {
 								const hName = hyphenate(newName);
 								if (hyphenate(newName).startsWith('on-')) {
 									return camelize(hName.slice('on-'.length));
@@ -719,7 +719,7 @@ export function generate(
 							normalize(newName) {
 								return camelize('on-' + newName);
 							},
-							apply(oldName, newName) {
+							apply(newName) {
 								const hName = hyphenate(newName);
 								if (hyphenate(newName).startsWith('on-')) {
 									return camelize(hName.slice('on-'.length));
@@ -916,7 +916,7 @@ export function generate(
 							...getCaps(capabilitiesSet.attr),
 							rename: {
 								normalize: camelize,
-								apply: keepHyphenateName,
+								apply: getRenameApply(propName_1),
 							},
 						},
 						(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
@@ -931,7 +931,7 @@ export function generate(
 							...getCaps(capabilitiesSet.attr),
 							rename: {
 								normalize: camelize,
-								apply: keepHyphenateName,
+								apply: getRenameApply(propName_1),
 							},
 						},
 						(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
@@ -978,7 +978,7 @@ export function generate(
 							...getCaps(capabilitiesSet.attr),
 							rename: {
 								normalize: camelize,
-								apply: keepHyphenateName,
+								apply: getRenameApply(propName_1),
 							},
 						},
 						(prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}),
@@ -1037,7 +1037,7 @@ export function generate(
 						...getCaps(capabilitiesSet.attr),
 						rename: {
 							normalize: camelize,
-							apply: keepHyphenateName,
+							apply: getRenameApply(prop.name),
 						},
 					},
 					(prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}),
@@ -1068,7 +1068,7 @@ export function generate(
 							...getCaps(capabilitiesSet.attr),
 							rename: {
 								normalize: camelize,
-								apply: keepHyphenateName,
+								apply: getRenameApply(prop.name),
 							},
 						},
 						(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
@@ -1400,7 +1400,7 @@ export function generate(
 						},
 						rename: {
 							normalize: camelize,
-							apply: keepHyphenateName,
+							apply: getRenameApply(prop.name),
 						},
 					},
 				]);
@@ -1545,7 +1545,7 @@ export function generate(
 						...capabilitiesSet.attrReference,
 						rename: {
 							normalize: camelize,
-							apply: keepHyphenateName,
+							apply: getRenameApply(prop.arg.content),
 						},
 					},
 					prop.arg.loc,
@@ -1573,7 +1573,7 @@ export function generate(
 						...capabilitiesSet.attr,
 						rename: {
 							normalize: camelize,
-							apply: keepHyphenateName,
+							apply: getRenameApply(prop.name),
 						},
 					},
 					prop.loc,
@@ -1806,11 +1806,11 @@ function toUnicode(str: string) {
 function unHyphenatComponentName(newName: string) {
 	return camelize('-' + newName);
 }
-function keepHyphenateName(oldName: string, newName: string) {
-	if (oldName === hyphenate(oldName)) {
-		return hyphenate(newName);
-	}
-	return newName;
+function getRenameApply(oldName: string) {
+	return oldName === hyphenate(oldName) ? hyphenate : noEditApply;
+}
+function noEditApply(n: string) {
+	return n;
 }
 // https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
 // https://v3.vuejs.org/guide/forms.html#basic-usage

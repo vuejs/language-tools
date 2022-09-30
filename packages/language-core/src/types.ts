@@ -18,7 +18,7 @@ export interface PositionCapabilities {
 	definition?: boolean,
 	rename?: boolean | {
 		normalize?(newName: string): string,
-		apply?(oldName: string, newName: string): string,
+		apply?(newName: string): string,
 	},
 	completion?: boolean | {
 		additional: boolean,

@@ -12,13 +12,7 @@ export function register(htmlLs: html.LanguageService) {
 
 		return transformLocations(
 			htmlResult,
-			htmlRange => {
-				const start = pugDoc.sourceMap.toSourcePosition(htmlRange.start)?.[0];
-				const end = pugDoc.sourceMap.toSourcePosition(htmlRange.end)?.[0];
-				if (start && end) {
-					return { start, end };
-				}
-			},
+			htmlRange => pugDoc.sourceMap.toSourceRange(htmlRange),
 		);
 	};
 }

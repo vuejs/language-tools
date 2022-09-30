@@ -63,14 +63,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 				if (!sourceMap)
 					return _inlayHint;
 
-				const position = sourceMap.toSourcePosition(_inlayHint.position)?.[0];
-				const edits = _inlayHint.textEdits?.map(textEdit => transformTextEdit(textEdit, range => {
-					const start = sourceMap.toSourcePosition(range.start)?.[0];
-					const end = sourceMap.toSourcePosition(range.end)?.[0];
-					if (start && end) {
-						return { start, end };
-					}
-				})).filter(shared.notEmpty);
+				const position = sourceMap.toSourcePosition(_inlayHint.position);
+				const edits = _inlayHint.textEdits
+					?.map(textEdit => transformTextEdit(textEdit, range => sourceMap!.toSourceRange(range)))
+					.filter(shared.notEmpty);
 
 				if (position) {
 					return {

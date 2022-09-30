@@ -767,6 +767,6 @@ function beforeCssRename(newName: string) {
 	return newName.startsWith('.') ? newName.slice(1) : newName;
 }
 
-function doCssRename(oldName: string, newName: string) {
+function doCssRename(newName: string) {
 	return '.' + newName;
 }

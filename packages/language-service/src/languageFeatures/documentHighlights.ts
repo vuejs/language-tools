@@ -13,13 +13,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			context,
 			uri,
 			position,
-			function* (position, sourceMap) {
-				for (const mapped of sourceMap.toGeneratedPositions(position)) {
-					if (mapped[1].data.references) {
-						yield mapped[0];
-					}
-				}
-			},
+			(position, sourceMap) => sourceMap.toGeneratedPositions(position, data => !!data.references),
 			async (plugin, document, position, sourceMap, vueDocument) => {
 
 				const recursiveChecker = dedupe.createLocationSet();
@@ -76,13 +70,11 @@ export function register(context: LanguageServiceRuntimeContext) {
 				if (!sourceMap)
 					return highlisht;
 
-				const start = sourceMap.toSourcePosition(highlisht.range.start)?.[0];
-				const end = sourceMap.toSourcePosition(highlisht.range.end)?.[0];
-
-				if (start && end) {
+				const range = sourceMap.toSourceRange(highlisht.range);
+				if (range) {
 					return {
 						...highlisht,
-						range: { start, end },
+						range,
 					};
 				}
 			}).filter(shared.notEmpty),

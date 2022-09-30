@@ -14,15 +14,9 @@ export function register(context: DocumentServiceRuntimeContext) {
 			sourceMap => !!sourceMap.embeddedFile.capabilities.documentSymbol, // TODO: add color capabilitie setting
 			(plugin, document) => plugin.findDocumentColors?.(document),
 			(data, sourceMap) => data.map(color => {
-
-				if (!sourceMap)
-					return color;
-
-				const start = sourceMap.toSourcePosition(color.range.start)?.[0];
-				const end = sourceMap.toSourcePosition(color.range.start)?.[0];
-
-				if (start && end) {
-					return vscode.ColorInformation.create({ start, end }, color.color);
+				const range = sourceMap.toSourceRange(color.range);
+				if (range) {
+					return vscode.ColorInformation.create(range, color.color);
 				}
 			}).filter(shared.notEmpty),
 			arr => arr.flat(),

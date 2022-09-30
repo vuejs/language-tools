@@ -7,13 +7,7 @@ export function register(htmlLs: html.LanguageService) {
 	return (pugDoc: PugDocument, posArr: html.Position[]) => {
 
 		const htmlPosArr = posArr
-			.map(position => {
-				for (const mapped of pugDoc.sourceMap.toGeneratedPositions(position)) {
-					if (!mapped[1].data?.isEmptyTagCompletion) {
-						return mapped[0];
-					}
-				}
-			})
+			.map(position => pugDoc.sourceMap.toGeneratedPosition(position, data => !data?.isEmptyTagCompletion))
 			.filter(shared.notEmpty);
 
 		const htmlResult = htmlLs.getSelectionRanges(
@@ -21,15 +15,6 @@ export function register(htmlLs: html.LanguageService) {
 			htmlPosArr,
 		);
 
-		return transformLocations(
-			htmlResult,
-			htmlRange => {
-				const start = pugDoc.sourceMap.toSourcePosition(htmlRange.start)?.[0];
-				const end = pugDoc.sourceMap.toSourcePosition(htmlRange.end)?.[0];
-				if (start && end) {
-					return { start, end };
-				}
-			},
-		);
+		return transformLocations(htmlResult, htmlRange => pugDoc.sourceMap.toSourceRange(htmlRange));
 	};
 }

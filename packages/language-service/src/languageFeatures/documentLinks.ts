@@ -19,12 +19,11 @@ export function register(context: LanguageServiceRuntimeContext) {
 				if (!sourceMap)
 					return link;
 
-				const start = sourceMap.toSourcePosition(link.range.start)?.[0];
-				const end = sourceMap.toSourcePosition(link.range.end)?.[0];
-				if (start && end) {
+				const range = sourceMap.toSourceRange(link.range);
+				if (range) {
 					return {
 						...link,
-						range: { start, end },
+						range,
 					};
 				}
 			}).filter(shared.notEmpty),

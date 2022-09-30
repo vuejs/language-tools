@@ -66,14 +66,12 @@ export function register(context: LanguageServiceRuntimeContext) {
 				if (!sourceMap)
 					return _token;
 
-				const offset = sourceMap.mappedDocument.offsetAt({ line: _token[0], character: _token[1] });
-				for (const mapped of sourceMap.toSourceOffsets(offset)) {
-					if (mapped[1].data.semanticTokens) {
-						const start = document.positionAt(mapped[0]);
-						if (sourceMap.matchGeneratedPosition({ line: start.line, character: start.character + _token[2] }, mapped[1], 'right')) {
-							return [start.line, start.character, _token[2], _token[3], _token[4]];
-						}
-					}
+				const range = sourceMap.toSourceRange({
+					start: { line: _token[0], character: _token[1] },
+					end: { line: _token[0], character: _token[1] + _token[2] },
+				}, data => !!data.semanticTokens);
+				if (range) {
+					return [range.start.line, range.start.character, _token[2], _token[3], _token[4]];
 				}
 			}).filter(shared.notEmpty),
 			tokens => tokens.flat(),

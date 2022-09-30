@@ -1,5 +1,5 @@
 import { transformCompletionItem } from '@volar/transforms';
-import type { LanguageServicePlugin } from '@volar/language-service';
+import type { LanguageServicePlugin, PositionCapabilities } from '@volar/language-service';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { LanguageServiceRuntimeContext } from '../types';
@@ -51,15 +51,13 @@ export function register(context: LanguageServiceRuntimeContext) {
 					if (!sourceMap)
 						continue;
 
-					for (const mapped of sourceMap.toGeneratedPositions(position)) {
 
-						if (!mapped[1].data.completion)
-							continue;
+					for (const mapped of sourceMap.toGeneratedPositions(position, data => !!data.completion)) {
 
 						if (!cacheData.plugin.complete?.on)
 							continue;
 
-						const embeddedCompletionList = await cacheData.plugin.complete.on(sourceMap.mappedDocument, mapped[0], completionContext);
+						const embeddedCompletionList = await cacheData.plugin.complete.on(sourceMap.mappedDocument, mapped, completionContext);
 
 						if (!embeddedCompletionList) {
 							cacheData.list.isIncomplete = false;
@@ -72,13 +70,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 								return {
 									...transformCompletionItem(
 										item,
-										embeddedRange => {
-											const start = sourceMap.toSourcePosition(embeddedRange.start)?.[0];
-											const end = sourceMap.toSourcePosition(embeddedRange.end)?.[0];
-											if (start && end) {
-												return { start, end };
-											}
-										},
+										embeddedRange => sourceMap.toSourceRange(embeddedRange),
 									),
 									data: {
 										uri,
@@ -141,10 +133,12 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					const plugins = context.plugins.sort(sortPlugins);
 
-					for (const mapped of sourceMap.toGeneratedPositions(position)) {
+					let _data: PositionCapabilities | undefined;
 
-						if (!mapped[1].data.completion)
-							continue;
+					for (const mapped of sourceMap.toGeneratedPositions(position, data => {
+						_data = data;
+						return !!data.completion;
+					})) {
 
 						for (const plugin of plugins) {
 
@@ -157,7 +151,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 							if (completionContext?.triggerCharacter && !plugin.complete.triggerCharacters?.includes(completionContext.triggerCharacter))
 								continue;
 
-							const isAdditional = typeof mapped[1].data.completion === 'object' && mapped[1].data.completion.additional || plugin.complete.isAdditional;
+							const isAdditional = _data && typeof _data.completion === 'object' && _data.completion.additional || plugin.complete.isAdditional;
 
 							if (cache!.mainCompletion && (!isAdditional || cache?.mainCompletion.documentUri !== sourceMap.mappedDocument.uri))
 								continue;
@@ -166,7 +160,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 							if (plugin.complete.isAdditional && cache?.data.some(data => data.plugin === plugin))
 								continue;
 
-							const embeddedCompletionList = await plugin.complete.on(sourceMap.mappedDocument, mapped[0], completionContext);
+							const embeddedCompletionList = await plugin.complete.on(sourceMap.mappedDocument, mapped, completionContext);
 
 							if (!embeddedCompletionList || !embeddedCompletionList.items.length)
 								continue;
@@ -181,13 +175,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 									return {
 										...transformCompletionItem(
 											item,
-											embeddedRange => {
-												const start = sourceMap.toSourcePosition(embeddedRange.start)?.[0];
-												const end = sourceMap.toSourcePosition(embeddedRange.end)?.[0];
-												if (start && end) {
-													return { start, end };
-												}
-											},
+											embeddedRange => sourceMap.toSourceRange(embeddedRange),
 										),
 										data: {
 											uri,

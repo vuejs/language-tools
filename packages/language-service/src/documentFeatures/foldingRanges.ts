@@ -13,21 +13,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 			document,
 			sourceMap => !!sourceMap.embeddedFile.capabilities.foldingRange,
 			(plugin, document) => plugin.getFoldingRanges?.(document),
-			(data, sourceMap) => transformFoldingRanges(
-				data,
-				range => {
-
-					if (!sourceMap)
-						return range;
-
-					const start = sourceMap.toSourcePosition(range.start)?.[0];
-					const end = sourceMap.toSourcePosition(range.end)?.[0];
-
-					if (start && end) {
-						return { start, end };
-					}
-				},
-			),
+			(data, sourceMap) => transformFoldingRanges(data, range => sourceMap?.toSourceRange(range)),
 			arr => arr.flat(),
 		);
 	};

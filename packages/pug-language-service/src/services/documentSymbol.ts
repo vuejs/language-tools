@@ -13,12 +13,11 @@ export function register(htmlLs: html.LanguageService) {
 		return transformSymbolInformations(
 			htmlResult,
 			htmlLocation => {
-				const start = pugDoc.sourceMap.toSourcePosition(htmlLocation.range.start)?.[0];
-				const end = pugDoc.sourceMap.toSourcePosition(htmlLocation.range.end)?.[0];
-				if (start && end) {
+				const range = pugDoc.sourceMap.toSourceRange(htmlLocation.range);
+				if (range) {
 					return {
 						uri: pugDoc.sourceMap.sourceDocument.uri,
-						range: { start, end },
+						range,
 					};
 				}
 			},

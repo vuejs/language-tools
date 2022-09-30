@@ -5,13 +5,7 @@ import type { PugDocument } from '../pugDocument';
 export function register(htmlLs: html.LanguageService) {
 	return async (pugDoc: PugDocument, pos: html.Position, documentContext: html.DocumentContext, options?: html.CompletionConfiguration | undefined) => {
 
-		let htmlPos: html.Position | undefined;
-		for (const mapped of pugDoc.sourceMap.toGeneratedPositions(pos)) {
-			if (!mapped[1].data?.isEmptyTagCompletion) {
-				htmlPos = mapped[0];
-				break;
-			}
-		}
+		const htmlPos = pugDoc.sourceMap.toGeneratedPosition(pos, data => !data?.isEmptyTagCompletion);
 		if (!htmlPos)
 			return;
 
@@ -23,15 +17,6 @@ export function register(htmlLs: html.LanguageService) {
 			options,
 		);
 
-		return transformCompletionList(
-			htmlComplete,
-			htmlRange => {
-				const start = pugDoc.sourceMap.toSourcePosition(htmlRange.start)?.[0];
-				const end = pugDoc.sourceMap.toSourcePosition(htmlRange.end)?.[0];
-				if (start && end) {
-					return { start, end };
-				}
-			},
-		);
+		return transformCompletionList(htmlComplete, htmlRange => pugDoc.sourceMap.toSourceRange(htmlRange));
 	};
 }

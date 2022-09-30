@@ -259,27 +259,11 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 		for (const error of errors) {
 
-			const _error: vscode.Diagnostic = { ...error };
+			// clone it to avoid modify cache
+			let _error: vscode.Diagnostic = { ...error };
 
 			if (sourceMap) {
-				let range: vscode.Range | undefined;
-				for (const start of sourceMap.toSourcePositions(error.range.start)) {
-					if (start[1].data.diagnostic) {
-						const end = sourceMap.matchSourcePosition(error.range.end, start[1], 'right');
-						if (end) {
-							range = { start: start[0], end: end };
-						}
-						else {
-							for (const end of sourceMap.toSourcePositions(error.range.end)) {
-								if (start[1].data.diagnostic) {
-									range = { start: start[0], end: end[0] };
-									break;
-								}
-							}
-						}
-						break;
-					}
-				}
+				const range = sourceMap.toSourceRange(error.range, data => !!data.diagnostic);
 				if (!range) {
 					continue;
 				}
@@ -291,23 +275,21 @@ export function register(context: LanguageServiceRuntimeContext) {
 				const relatedInfos: vscode.DiagnosticRelatedInformation[] = [];
 
 				for (const info of _error.relatedInformation) {
-					for (const mapped of context.documents.fromEmbeddedLocation(info.location.uri, info.location.range.start)) {
-
-						if (mapped.mapping && !mapped.mapping.data.diagnostic)
-							continue;
-
-						const end = mapped.sourceMap ? mapped.sourceMap.toSourcePosition(info.location.range.end)?.[0] : info.location.range.end;
-						if (!end)
-							continue;
-
-						relatedInfos.push({
-							location: {
-								uri: mapped.uri,
-								range: { start: mapped.position, end },
-							},
-							message: info.message,
-						});
-						break;
+					const map = context.documents.sourceMapFromEmbeddedDocumentUri(info.location.uri);
+					if (map) {
+						const range = map.toSourceRange(info.location.range, data => !!data.diagnostic);
+						if (range) {
+							relatedInfos.push({
+								location: {
+									uri: map.sourceDocument.uri,
+									range,
+								},
+								message: info.message,
+							});
+						}
+					}
+					else {
+						relatedInfos.push(info);
 					}
 				}
 

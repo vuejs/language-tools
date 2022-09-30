@@ -4,29 +4,32 @@ import { languageFeatureWorker } from '../utils/featureWorkers';
 import * as dedupe from '../utils/dedupe';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { SourceFileDocuments } from '../documents';
+import { PositionCapabilities } from '@volar/language-core';
 
 export function register(context: LanguageServiceRuntimeContext) {
 
 	return (uri: string, position: vscode.Position, newName: string) => {
+
+		let _data: PositionCapabilities | undefined;
 
 		return languageFeatureWorker(
 			context,
 			uri,
 			{ position, newName },
 			function* (arg, sourceMap) {
-				for (const mapped of sourceMap.toGeneratedPositions(arg.position)) {
-
-					const shouldRename = typeof mapped[1].data.rename === 'object' ? !!mapped[1].data.rename.normalize : !!mapped[1].data.rename;
-					if (!shouldRename)
-						continue;
+				for (const mapped of sourceMap.toGeneratedPositions(arg.position, data => {
+					_data = data;
+					return typeof data.rename === 'object' ? !!data.rename.normalize : !!data.rename;
+				})) {
 
 					let newName = arg.newName;
 
-					if (typeof mapped[1].data.rename === 'object' && mapped[1].data.rename.normalize)
-						newName = mapped[1].data.rename.normalize(arg.newName);
+					if (_data && typeof _data.rename === 'object' && _data.rename.normalize) {
+						newName = _data.rename.normalize(arg.newName);
+					}
 
-					yield { position: mapped[0], newName };
-				}
+					yield { position: mapped, newName };
+				};
 			},
 			async (plugin, document, arg, sourceMap) => {
 
@@ -173,19 +176,6 @@ export function mergeWorkspaceEdits(original: vscode.WorkspaceEdit, ...others: v
 	}
 }
 
-/**
- * TODO: rewrite this
- *
- * Start from Script LS
- * -> Access all results
- *
- * Start from template LS
- * -> Start from template content?
- *    -> Access all results
- * -> Start from script content?
- *    -> Yes: Only access template results
- *    -> No: Access all results
- */
 export function embeddedEditToSourceEdit(
 	tsResult: vscode.WorkspaceEdit,
 	vueDocuments: SourceFileDocuments,
@@ -204,38 +194,31 @@ export function embeddedEditToSourceEdit(
 		vueResult.changeAnnotations[uri] = tsAnno;
 	}
 	for (const tsUri in tsResult.changes) {
+		if (!vueResult.changes) {
+			vueResult.changes = {};
+		}
+		const map = vueDocuments.sourceMapFromEmbeddedDocumentUri(tsUri);
+		if (!map) {
+			vueResult.changes[tsUri] = tsResult.changes[tsUri];
+			hasResult = true;
+			continue;
+		}
 		const tsEdits = tsResult.changes[tsUri];
 		for (const tsEdit of tsEdits) {
-			for (const vueLoc of vueDocuments.fromEmbeddedLocation(tsUri, tsEdit.range.start)) {
-
-				// fix https://github.com/johnsoncodehk/volar/issues/1091
-				const shouldRename = !vueLoc.mapping || (typeof vueLoc.mapping.data?.rename === 'object' ? typeof vueLoc.mapping.data.rename.apply : !!vueLoc.mapping.data?.rename);
-				if (!shouldRename)
-					continue;
-
-				const end = vueLoc.sourceMap ? vueLoc.sourceMap.matchSourcePosition(tsEdit.range.end, vueLoc.mapping, 'right') : tsEdit.range.end;
-				if (!end)
-					continue;
-
-				let newText_2 = tsEdit.newText;
-
-				if (vueLoc.sourceMap && typeof vueLoc.mapping.data.rename === 'object' && vueLoc.mapping.data.rename.apply) {
-					const vueDoc = vueLoc.sourceMap.sourceDocument;
-					newText_2 = vueLoc.mapping.data.rename.apply(vueDoc.getText({ start: vueLoc.position, end }), tsEdit.newText);
+			let _data: PositionCapabilities | undefined;
+			const range = map.toSourceRange(tsEdit.range, data => {
+				_data = data;
+				return typeof data.rename === 'object' ? !!data.rename.apply : !!data.rename;
+			});
+			if (range) {
+				let newText = tsEdit.newText;
+				if (_data && typeof _data.rename === 'object' && _data.rename.apply) {
+					newText = _data.rename.apply(tsEdit.newText);
 				}
-
-				if (!vueResult.changes) {
-					vueResult.changes = {};
+				if (!vueResult.changes[map.sourceDocument.uri]) {
+					vueResult.changes[map.sourceDocument.uri] = [];
 				}
-
-				if (!vueResult.changes[vueLoc.uri]) {
-					vueResult.changes[vueLoc.uri] = [];
-				}
-
-				vueResult.changes[vueLoc.uri].push({
-					newText: newText_2,
-					range: { start: vueLoc.position, end },
-				});
+				vueResult.changes[map.sourceDocument.uri].push({ newText, range });
 				hasResult = true;
 			}
 		}
@@ -258,21 +241,21 @@ export function embeddedEditToSourceEdit(
 						[],
 					);
 					for (const tsEdit of tsDocEdit.edits) {
-						for (const mapped of sourceMap.toSourcePositions(tsEdit.range.start)) {
-
+						let _data: PositionCapabilities | undefined;
+						const range = sourceMap.toSourceRange(tsEdit.range, data => {
+							_data = data;
 							// fix https://github.com/johnsoncodehk/volar/issues/1091
-							const shouldApplyRename = typeof mapped[1].data.rename === 'object' ? !!mapped[1].data.rename.apply : !!mapped[1].data.rename;
-							if (!shouldApplyRename)
-								continue;
-
-							const end = sourceMap.matchSourcePosition(tsEdit.range.end, mapped[1], 'right');
-							if (!end)
-								continue;
-
+							return typeof data.rename === 'object' ? !!data.rename.apply : !!data.rename;
+						});
+						if (range) {
+							let newText = tsEdit.newText;
+							if (_data && typeof _data.rename === 'object' && _data.rename.apply) {
+								newText = _data.rename.apply(tsEdit.newText);
+							}
 							vueDocEdit.edits.push({
 								annotationId: vscode.AnnotatedTextEdit.is(tsEdit.range) ? tsEdit.range.annotationId : undefined,
-								newText: tsEdit.newText,
-								range: { start: mapped[0], end },
+								newText,
+								range,
 							});
 						}
 					}

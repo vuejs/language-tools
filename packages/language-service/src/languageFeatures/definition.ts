@@ -20,13 +20,7 @@ export function register(
 			context,
 			uri,
 			position,
-			function* (position, sourceMap) {
-				for (const mapped of sourceMap.toGeneratedPositions(position)) {
-					if (isValidMappingData(mapped[1].data)) {
-						yield mapped[0];
-					}
-				}
-			},
+			(position, sourceMap) => sourceMap.toGeneratedPositions(position, isValidMappingData),
 			async (plugin, document, position, sourceMap) => {
 
 				const recursiveChecker = dedupe.createLocationSet();
@@ -107,25 +101,16 @@ export function register(
 
 				if (targetSourceMap) {
 
-					const targetSelectionRangeStart = targetSourceMap.toSourcePosition(link.targetSelectionRange.start)?.[0];
-					const targetSelectionRangeEnd = targetSourceMap.toSourcePosition(link.targetSelectionRange.end)?.[0];
-
-					if (!targetSelectionRangeStart || !targetSelectionRangeEnd)
+					const targetSelectionRange = targetSourceMap.toSourceRange(link.targetSelectionRange);
+					if (!targetSelectionRange)
 						return;
 
-					let targetRangeStart = targetSourceMap.toSourcePosition(link.targetRange.start)?.[0];
-					let targetRangeEnd = targetSourceMap.toSourcePosition(link.targetRange.end)?.[0];
+					let targetRange = targetSourceMap.toSourceRange(link.targetRange);
 
 					link.targetUri = targetSourceMap.sourceDocument.uri;
-					link.targetRange = {
-						// loose range mapping to for template slots, slot properties
-						start: targetRangeStart ?? targetSelectionRangeStart,
-						end: targetRangeEnd ?? targetSelectionRangeEnd,
-					};
-					link.targetSelectionRange = {
-						start: targetSelectionRangeStart,
-						end: targetSelectionRangeEnd,
-					};
+					// loose range mapping to for template slots, slot properties
+					link.targetRange = targetRange ?? targetSelectionRange;
+					link.targetSelectionRange = targetSelectionRange;
 				}
 
 				return link;
@@ -139,19 +124,15 @@ function toSourcePositionPreferSurroundedPosition(sourceMap: EmbeddedDocumentSou
 
 	let result: vscode.Range | undefined;
 
-	for (const mapped of sourceMap.toSourcePositions(mappedRange.start)) {
-		const start = mapped[0];
-		const end = sourceMap.matchSourcePosition(mapped[0], mapped[1], 'right') ?? sourceMap.toSourcePosition(mappedRange.end, 'right')?.[0];
-		if (!end)
-			continue;
+	for (const range of sourceMap.toSourceRanges(mappedRange)) {
 		if (!result) {
-			result = { start, end };
+			result = range;
 		}
 		if (
-			(start.line < position.line || (start.line === position.line && start.character <= position.character))
-			&& (end.line > position.line || (end.line === position.line && end.character >= position.character))
+			(range.start.line < position.line || (range.start.line === position.line && range.start.character <= position.character))
+			&& (range.end.line > position.line || (range.end.line === position.line && range.end.character >= position.character))
 		) {
-			return { start, end };
+			return range;
 		}
 	}
 

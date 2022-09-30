@@ -15,24 +15,10 @@ export function register(context: DocumentServiceRuntimeContext) {
 			positions,
 			sourceMap => !!sourceMap.embeddedFile.capabilities.foldingRange,
 			(positions, sourceMap) => [positions
-				.map(position => sourceMap.toGeneratedPosition(position)?.[0])
+				.map(position => sourceMap.toGeneratedPosition(position))
 				.filter(shared.notEmpty)],
 			(plugin, document, positions) => positions.length ? plugin.getSelectionRanges?.(document, positions) : undefined,
-			(data, sourceMap) => transformSelectionRanges(
-				data,
-				range => {
-
-					if (!sourceMap)
-						return range;
-
-					const start = sourceMap.toSourcePosition(range.start)?.[0];
-					const end = sourceMap.toSourcePosition(range.end)?.[0];
-
-					if (start && end) {
-						return { start, end };
-					}
-				},
-			),
+			(item, sourceMap) => transformSelectionRanges(item, range => sourceMap.toSourceRange(range)),
 		);
 	};
 }

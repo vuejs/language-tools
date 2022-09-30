@@ -12,13 +12,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			context,
 			uri,
 			position,
-			function* (position, sourceMap) {
-				for (const mapped of sourceMap.toGeneratedPositions(position)) {
-					if (mapped[1].data.references) {
-						yield mapped[0];
-					}
-				}
-			},
+			(position, sourceMap) => sourceMap.toGeneratedPositions(position, data => !!data.references),
 			async (plugin, document, position, sourceMap, vueDocument) => {
 
 				const recursiveChecker = dedupe.createLocationSet();
@@ -75,28 +69,19 @@ export function register(context: LanguageServiceRuntimeContext) {
 				const results: vscode.Location[] = [];
 
 				for (const reference of data) {
-
-					const referenceSourceMap = context.documents.sourceMapFromEmbeddedDocumentUri(reference.uri);
-
-					if (referenceSourceMap) {
-
-						for (const mapped of referenceSourceMap.toSourcePositions(reference.range.start)) {
-
-							if (!mapped[1].data.references)
-								continue;
-
-							const end = referenceSourceMap.matchSourcePosition(reference.range.end, mapped[1], 'right');
-							if (!end)
-								continue;
-
+					const map = context.documents.sourceMapFromEmbeddedDocumentUri(reference.uri);
+					if (map) {
+						const range = map.toSourceRange(reference.range, data => !!data.references);
+						if (range) {
 							results.push({
-								uri: referenceSourceMap.sourceDocument.uri,
-								range: { start: mapped[0], end },
+								uri: map.sourceDocument.uri,
+								range,
 							});
 						}
 					}
-
-					results.push(reference);
+					else {
+						results.push(reference);
+					}
 				}
 
 				return results;

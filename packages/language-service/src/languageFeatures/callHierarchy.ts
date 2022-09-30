@@ -24,13 +24,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				context,
 				uri,
 				position,
-				function* (position, sourceMap) {
-					for (const mapped of sourceMap.toGeneratedPositions(position)) {
-						if (mapped[1].data.references) {
-							yield mapped[0];
-						}
-					}
-				},
+				(position, sourceMap) => sourceMap.toGeneratedPositions(position, data => !!data.references),
 				async (plugin, document, position, sourceMap) => {
 
 					const items = await plugin.callHierarchy?.prepare(document, position);
@@ -185,33 +179,20 @@ export function register(context: LanguageServiceRuntimeContext) {
 		if (!sourceMap)
 			return [tsItem, tsRanges]; // not virtual file
 
-		const range = {
-			start: sourceMap.toSourcePosition(tsItem.range.start)?.[0],
-			end: sourceMap.toSourcePosition(tsItem.range.end)?.[0],
-		};
-
-		if (!range.start || !range.end) {
+		let range = sourceMap.toSourceRange(tsItem.range);
+		if (!range) {
 			// TODO: <script> range
-			range.start = sourceMap.sourceDocument.positionAt(0);
-			range.end = sourceMap.sourceDocument.positionAt(sourceMap.sourceDocument.getText().length);
+			range = {
+				start: sourceMap.sourceDocument.positionAt(0),
+				end: sourceMap.sourceDocument.positionAt(sourceMap.sourceDocument.getText().length),
+			};
 		}
 
-		const selectionRange = {
-			start: sourceMap.toSourcePosition(tsItem.selectionRange.start)?.[0],
-			end: sourceMap.toSourcePosition(tsItem.selectionRange.end)?.[0],
-		};
-
-		if (!selectionRange.start || !selectionRange.end)
+		const selectionRange = sourceMap.toSourceRange(tsItem.selectionRange);
+		if (!selectionRange)
 			return;
 
-		const vueRanges = tsRanges.map(tsRange => {
-			const start = sourceMap.toSourcePosition(tsItem.selectionRange.start)?.[0];
-			const end = sourceMap.toSourcePosition(tsRange.end)?.[0];
-			if (start && end) {
-				return { start, end };
-			}
-		}).filter(shared.notEmpty);
-
+		const vueRanges = tsRanges.map(tsRange => sourceMap.toSourceRange(tsRange)).filter(shared.notEmpty);
 		const vueItem: vscode.CallHierarchyItem = {
 			...tsItem,
 			name: tsItem.name === upath.basename(shared.getPathOfUri(sourceMap.mappedDocument.uri)) ? upath.basename(shared.getPathOfUri(sourceMap.sourceDocument.uri)) : tsItem.name,

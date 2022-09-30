@@ -67,7 +67,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 				if (onTypeParams) {
 
-					const embeddedPosition = sourceMap.toGeneratedPosition(onTypeParams.position)?.[0];
+					const embeddedPosition = sourceMap.toGeneratedPosition(onTypeParams.position);
 
 					if (embeddedPosition) {
 						_edits = await tryFormat(
@@ -81,24 +81,23 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 				else {
 
-					let start = sourceMap.toGeneratedPosition(range.start)?.[0];
-					let end = sourceMap.toGeneratedPosition(range.end)?.[0];
+					let genRange = sourceMap.toGeneratedRange(range);
 
-					if (!start) {
+					if (!genRange) {
 						const firstMapping = sourceMap.mappings.sort((a, b) => a.sourceRange[0] - b.sourceRange[0])[0];
-						if (firstMapping && document.offsetAt(range.start) < firstMapping.sourceRange[0]) {
-							start = sourceMap.mappedDocument.positionAt(firstMapping.generatedRange[0]);
-						}
-					}
-
-					if (!end) {
 						const lastMapping = sourceMap.mappings.sort((a, b) => b.sourceRange[0] - a.sourceRange[0])[0];
-						if (lastMapping && document.offsetAt(range.end) > lastMapping.sourceRange[1]) {
-							end = sourceMap.mappedDocument.positionAt(lastMapping.generatedRange[1]);
+						if (
+							firstMapping && document.offsetAt(range.start) < firstMapping.sourceRange[0]
+							&& lastMapping && document.offsetAt(range.end) > lastMapping.sourceRange[1]
+						) {
+							genRange = {
+								start: sourceMap.mappedDocument.positionAt(firstMapping.generatedRange[0]),
+								end: sourceMap.mappedDocument.positionAt(lastMapping.generatedRange[1]),
+							};
 						}
 					}
 
-					if (start && end) {
+					if (genRange) {
 
 						toPatchIndent = {
 							sourceMapEmbeddedDocumentUri: sourceMap.mappedDocument.uri,
@@ -106,7 +105,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 						_edits = await tryFormat(
 							sourceMap.mappedDocument,
-							{ start, end },
+							genRange,
 							initialIndentBracket,
 						);
 					}
@@ -116,12 +115,11 @@ export function register(context: DocumentServiceRuntimeContext) {
 					continue;
 
 				for (const textEdit of _edits) {
-					const start = sourceMap.toSourcePosition(textEdit.range.start)?.[0];
-					const end = sourceMap.toSourcePosition(textEdit.range.end)?.[0];
-					if (start && end) {
+					const range = sourceMap.toSourceRange(textEdit.range);
+					if (range) {
 						edits.push({
 							newText: textEdit.newText,
-							range: { start, end },
+							range,
 						});
 					}
 				}
