@@ -3,7 +3,7 @@ import { ConfigurationHost } from '@volar/vue-language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
-import { FileSystemHost, LanguageServerPlugin, RuntimeEnvironment, ServerInitializationOptions, DiagnosticModel, ServerMode } from '../types';
+import { DiagnosticModel, FileSystemHost, LanguageServerPlugin, RuntimeEnvironment, ServerInitializationOptions } from '../types';
 import { createSnapshots } from './snapshots';
 import { createWorkspaceProjects, rootTsConfigNames, sortTsConfigs } from './workspaceProjects';
 
@@ -104,7 +104,7 @@ export function createWorkspaces(
 	}
 	async function updateDiagnostics(docUri?: string) {
 
-		if (options.serverMode === ServerMode.Syntactic || options.diagnosticModel === DiagnosticModel.Pull)
+		if ((options.diagnosticModel ?? DiagnosticModel.Push) !== DiagnosticModel.Push)
 			return;
 
 		const req = ++documentUpdatedReq;

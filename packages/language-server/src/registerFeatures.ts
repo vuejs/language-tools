@@ -166,7 +166,7 @@ export function setupSemanticCapabilities(
 	if (params.textDocument?.inlayHint) {
 		server.inlayHintProvider = true;
 	}
-	if (params.textDocument?.diagnostic && options.diagnosticModel === DiagnosticModel.Pull) {
+	if (params.textDocument?.diagnostic && (options.diagnosticModel ?? DiagnosticModel.Push) === DiagnosticModel.Pull) {
 		server.diagnosticProvider = {
 			documentSelector: [
 				...plugins.map(plugin => plugin.extensions.map(ext => ({ pattern: `**/*${ext}` }))).flat(),

@@ -16,9 +16,15 @@ import * as reloadProject from './features/reloadProject';
 import * as serverSys from './features/serverSys';
 import { DiagnosticModel, ServerMode, VueServerInitializationOptions } from '@volar/vue-language-server';
 
-let apiClient: lsp.BaseLanguageClient | undefined;
-let docClient: lsp.BaseLanguageClient | undefined;
-let htmlClient: lsp.BaseLanguageClient;
+enum LanguageFeaturesKind {
+	Semantic_Sensitive,
+	Semantic_Tardy,
+	Syntactic,
+}
+
+let client_semantic_sensitive: lsp.BaseLanguageClient | undefined;
+let client_semantic_tardy: lsp.BaseLanguageClient | undefined;
+let client_syntactic: lsp.BaseLanguageClient;
 
 type CreateLanguageClient = (
 	id: string,
@@ -61,70 +67,49 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 	vscode.commands.executeCommand('setContext', 'volar.activated', true);
 
-	const takeOverMode = takeOverModeEnabled();
-	const languageFeaturesDocumentSelector: lsp.DocumentSelector = takeOverMode ?
-		[
-			{ language: 'vue' },
-			{ language: 'javascript' },
-			{ language: 'typescript' },
-			{ language: 'javascriptreact' },
-			{ language: 'typescriptreact' },
-			{ language: 'json' },
-		] : [
-			{ language: 'vue' },
-		];
-	const documentFeaturesDocumentSelector: lsp.DocumentSelector = takeOverMode ?
-		[
-			{ language: 'vue' },
-			{ language: 'javascript' },
-			{ language: 'typescript' },
-			{ language: 'javascriptreact' },
-			{ language: 'typescriptreact' },
-		] : [
-			{ language: 'vue' },
-		];
-
-	if (processHtml()) {
-		languageFeaturesDocumentSelector.push({ language: 'html' });
-		documentFeaturesDocumentSelector.push({ language: 'html' });
-	}
-
-	if (processMd()) {
-		languageFeaturesDocumentSelector.push({ language: 'markdown' });
-		documentFeaturesDocumentSelector.push({ language: 'markdown' });
-	}
-
 	const _useSecondServer = useSecondServer();
 	const _serverMaxOldSpaceSize = serverMaxOldSpaceSize();
 
-	[apiClient, docClient, htmlClient] = await Promise.all([
+	[client_semantic_sensitive, client_semantic_tardy, client_syntactic] = await Promise.all([
 		createLc(
-			'volar-language-features',
-			'Volar - Language Features Server',
-			languageFeaturesDocumentSelector,
-			getInitializationOptions('main-language-features', context),
-			getFillInitializeParams('main-language-features', _useSecondServer),
+			_useSecondServer ? 'vue-semantic' : 'vue-semantic-1',
+			_useSecondServer ? 'Vue Semantic Server' : 'Vue Sensitive Semantic Server',
+			getDocumentSelector(ServerMode.Semantic),
+			getInitializationOptions(
+				ServerMode.Semantic,
+				_useSecondServer ? [LanguageFeaturesKind.Semantic_Sensitive] : [LanguageFeaturesKind.Semantic_Sensitive, LanguageFeaturesKind.Semantic_Tardy],
+				context,
+			),
+			getFillInitializeParams(_useSecondServer ? [LanguageFeaturesKind.Semantic_Sensitive] : [LanguageFeaturesKind.Semantic_Sensitive, LanguageFeaturesKind.Semantic_Tardy]),
 			6009,
 		),
 		_useSecondServer ? createLc(
-			'volar-language-features-2',
-			'Volar - Second Language Features Server',
-			languageFeaturesDocumentSelector,
-			getInitializationOptions('second-language-features', context),
-			getFillInitializeParams('second-language-features', _useSecondServer),
+			'vue-semantic-2',
+			'Vue Tardy Semantic Server',
+			getDocumentSelector(ServerMode.Semantic),
+			getInitializationOptions(
+				ServerMode.Semantic,
+				[LanguageFeaturesKind.Semantic_Tardy],
+				context,
+			),
+			getFillInitializeParams([LanguageFeaturesKind.Semantic_Tardy]),
 			6010,
 		) : undefined,
 		createLc(
-			'volar-document-features',
-			'Volar - Document Features Server',
-			documentFeaturesDocumentSelector,
-			getInitializationOptions('document-features', context),
-			getFillInitializeParams('document-features', _useSecondServer),
+			'vue-syntactic',
+			'Vue Syntactic Server',
+			getDocumentSelector(ServerMode.Syntactic),
+			getInitializationOptions(
+				ServerMode.Syntactic,
+				[LanguageFeaturesKind.Syntactic],
+				context,
+			),
+			getFillInitializeParams([LanguageFeaturesKind.Syntactic]),
 			6011,
 		),
 	]);
 
-	const clients = [apiClient, docClient, htmlClient].filter(shared.notEmpty);
+	const clients = [client_semantic_sensitive, client_semantic_tardy, client_syntactic].filter(shared.notEmpty);
 
 	registerUseSecondServerChange();
 	registerServerMaxOldSpaceSizeChange();
@@ -134,15 +119,15 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	splitEditors.register(context);
 	preview.register(context);
 	doctor.register(context);
-	tsVersion.register('volar.selectTypeScriptVersion', context, [apiClient, docClient].filter(shared.notEmpty));
-	reloadProject.register('volar.action.reloadProject', context, [apiClient, docClient].filter(shared.notEmpty));
+	tsVersion.register('volar.selectTypeScriptVersion', context, [client_semantic_sensitive, client_semantic_tardy].filter(shared.notEmpty));
+	reloadProject.register('volar.action.reloadProject', context, [client_semantic_sensitive, client_semantic_tardy].filter(shared.notEmpty));
 
-	if (apiClient) {
-		tsconfig.register('volar.openTsconfig', context, docClient ?? apiClient);
-		fileReferences.register('volar.vue.findAllFileReferences', apiClient);
-		verifyAll.register(context, docClient ?? apiClient);
-		autoInsertion.register(context, htmlClient, apiClient);
-		virtualFiles.register('volar.action.writeVirtualFiles', context, docClient ?? apiClient);
+	if (client_semantic_sensitive) {
+		tsconfig.register('volar.openTsconfig', context, client_semantic_tardy ?? client_semantic_sensitive);
+		fileReferences.register('volar.vue.findAllFileReferences', client_semantic_sensitive);
+		verifyAll.register(context, client_semantic_tardy ?? client_semantic_sensitive);
+		autoInsertion.register(context, client_syntactic, client_semantic_sensitive);
+		virtualFiles.register('volar.action.writeVirtualFiles', context, client_semantic_tardy ?? client_semantic_sensitive);
 	}
 
 	async function requestReloadVscode() {
@@ -170,9 +155,6 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		});
 	}
 	async function registerRestartRequest() {
-
-		// await Promise.all(clients.map(client => client.onReady()));
-
 		context.subscriptions.push(vscode.commands.registerCommand('volar.action.restartServer', async () => {
 			await Promise.all(clients.map(client => client.stop()));
 			await Promise.all(clients.map(client => client.start()));
@@ -186,17 +168,17 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			serverSys.activate(context, client);
 		}
 
-		if (apiClient) {
-			nameCasing.activate(context, apiClient);
+		if (client_semantic_sensitive) {
+			nameCasing.activate(context, client_semantic_sensitive);
 		}
 	}
 }
 
 export function deactivate(): Thenable<any> | undefined {
 	return Promise.all([
-		apiClient?.stop(),
-		docClient?.stop(),
-		htmlClient?.stop(),
+		client_semantic_sensitive?.stop(),
+		client_semantic_tardy?.stop(),
+		client_syntactic?.stop(),
 	].filter(shared.notEmpty));
 }
 
@@ -206,6 +188,30 @@ export function takeOverModeEnabled() {
 		return !vscode.extensions.getExtension('vscode.typescript-language-features');
 	}
 	return false;
+}
+
+function getDocumentSelector(serverMode: ServerMode) {
+	const takeOverMode = takeOverModeEnabled();
+	const selector: lsp.DocumentSelector = takeOverMode ?
+		[
+			{ language: 'vue' },
+			{ language: 'javascript' },
+			{ language: 'typescript' },
+			{ language: 'javascriptreact' },
+			{ language: 'typescriptreact' },
+		] : [
+			{ language: 'vue' },
+		];
+	if (takeOverMode && serverMode === ServerMode.Semantic) {
+		selector.push({ language: 'json' });
+	}
+	if (processHtml()) {
+		selector.push({ language: 'html' });
+	}
+	if (processMd()) {
+		selector.push({ language: 'markdown' });
+	}
+	return selector;
 }
 
 function useSecondServer() {
@@ -224,60 +230,58 @@ function processMd() {
 	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.vitePress.processMdFile');
 }
 
-function getFillInitializeParams(
-	mode: 'main-language-features' | 'second-language-features' | 'document-features',
-	useSecondServer: boolean,
-) {
-
-	const enableSemanticFeatures_a = mode === 'main-language-features';
-	const enableSemanticFeatures_b = mode === 'second-language-features' || (mode === 'main-language-features' && !useSecondServer);
-	const enabledocumentFeatures = mode === 'document-features';
-
+function getFillInitializeParams(featuresKinds: LanguageFeaturesKind[]) {
 	return function (params: lsp.InitializeParams) {
 		if (params.capabilities.textDocument) {
-			params.capabilities.textDocument.references = enableSemanticFeatures_a ? params.capabilities.textDocument.references : undefined;
-			params.capabilities.textDocument.implementation = enableSemanticFeatures_a ? params.capabilities.textDocument.implementation : undefined;
-			params.capabilities.textDocument.definition = enableSemanticFeatures_a ? params.capabilities.textDocument.definition : undefined;
-			params.capabilities.textDocument.typeDefinition = enableSemanticFeatures_a ? params.capabilities.textDocument.typeDefinition : undefined;
-			params.capabilities.textDocument.callHierarchy = enableSemanticFeatures_a ? params.capabilities.textDocument.callHierarchy : undefined;
-			params.capabilities.textDocument.hover = enableSemanticFeatures_a ? params.capabilities.textDocument.hover : undefined;
-			params.capabilities.textDocument.rename = enableSemanticFeatures_a ? params.capabilities.textDocument.rename : undefined;
-			params.capabilities.textDocument.signatureHelp = enableSemanticFeatures_a ? params.capabilities.textDocument.signatureHelp : undefined;
-			params.capabilities.textDocument.codeAction = enableSemanticFeatures_a ? params.capabilities.textDocument.codeAction : undefined;
-			params.capabilities.textDocument.completion = enableSemanticFeatures_a ? params.capabilities.textDocument.completion : undefined;
-
-			params.capabilities.textDocument.documentHighlight = enableSemanticFeatures_b ? params.capabilities.textDocument.documentHighlight : undefined;
-			params.capabilities.textDocument.documentLink = enableSemanticFeatures_b ? params.capabilities.textDocument.documentLink : undefined;
-			params.capabilities.textDocument.codeLens = enableSemanticFeatures_b ? params.capabilities.textDocument.codeLens : undefined;
-			params.capabilities.textDocument.semanticTokens = enableSemanticFeatures_b ? params.capabilities.textDocument.semanticTokens : undefined;
-			params.capabilities.textDocument.inlayHint = enableSemanticFeatures_b ? params.capabilities.textDocument.inlayHint : undefined;
-			params.capabilities.textDocument.diagnostic = enableSemanticFeatures_b ? params.capabilities.textDocument.diagnostic : undefined;
-
-			params.capabilities.textDocument.selectionRange = enabledocumentFeatures ? params.capabilities.textDocument.selectionRange : undefined;
-			params.capabilities.textDocument.foldingRange = enabledocumentFeatures ? params.capabilities.textDocument.foldingRange : undefined;
-			params.capabilities.textDocument.linkedEditingRange = enabledocumentFeatures ? params.capabilities.textDocument.linkedEditingRange : undefined;
-			params.capabilities.textDocument.documentSymbol = enabledocumentFeatures ? params.capabilities.textDocument.documentSymbol : undefined;
-			params.capabilities.textDocument.colorProvider = enabledocumentFeatures ? params.capabilities.textDocument.colorProvider : undefined;
-			params.capabilities.textDocument.formatting = enabledocumentFeatures ? params.capabilities.textDocument.formatting : undefined;
-			params.capabilities.textDocument.rangeFormatting = enabledocumentFeatures ? params.capabilities.textDocument.rangeFormatting : undefined;
-			params.capabilities.textDocument.onTypeFormatting = enabledocumentFeatures ? params.capabilities.textDocument.onTypeFormatting : undefined;
+			if (!featuresKinds.includes(LanguageFeaturesKind.Semantic_Sensitive)) {
+				params.capabilities.textDocument.references = undefined;
+				params.capabilities.textDocument.implementation = undefined;
+				params.capabilities.textDocument.definition = undefined;
+				params.capabilities.textDocument.typeDefinition = undefined;
+				params.capabilities.textDocument.callHierarchy = undefined;
+				params.capabilities.textDocument.hover = undefined;
+				params.capabilities.textDocument.rename = undefined;
+				params.capabilities.textDocument.signatureHelp = undefined;
+				params.capabilities.textDocument.codeAction = undefined;
+				params.capabilities.textDocument.completion = undefined;
+			}
+			if (!featuresKinds.includes(LanguageFeaturesKind.Semantic_Tardy)) {
+				params.capabilities.textDocument.documentHighlight = undefined;
+				params.capabilities.textDocument.documentLink = undefined;
+				params.capabilities.textDocument.codeLens = undefined;
+				params.capabilities.textDocument.semanticTokens = undefined;
+				params.capabilities.textDocument.inlayHint = undefined;
+				params.capabilities.textDocument.diagnostic = undefined;
+			}
+			if (!featuresKinds.includes(LanguageFeaturesKind.Syntactic)) {
+				params.capabilities.textDocument.selectionRange = undefined;
+				params.capabilities.textDocument.foldingRange = undefined;
+				params.capabilities.textDocument.linkedEditingRange = undefined;
+				params.capabilities.textDocument.documentSymbol = undefined;
+				params.capabilities.textDocument.colorProvider = undefined;
+				params.capabilities.textDocument.formatting = undefined;
+				params.capabilities.textDocument.rangeFormatting = undefined;
+				params.capabilities.textDocument.onTypeFormatting = undefined;
+			}
 		}
 		if (params.capabilities.workspace) {
-			params.capabilities.workspace.symbol = enableSemanticFeatures_a ? params.capabilities.workspace.symbol : undefined;
-			params.capabilities.workspace.fileOperations = enableSemanticFeatures_a ? params.capabilities.workspace.fileOperations : undefined;
+			if (!featuresKinds.includes(LanguageFeaturesKind.Semantic_Sensitive)) {
+				params.capabilities.workspace.symbol = undefined;
+				params.capabilities.workspace.fileOperations = undefined;
+			}
 		}
 	};
 }
 
 function getInitializationOptions(
-	mode: 'main-language-features' | 'second-language-features' | 'document-features',
+	serverMode: ServerMode,
+	featuresKinds: LanguageFeaturesKind[],
 	context: vscode.ExtensionContext,
 ) {
-	const enableSemanticFeatures_b = mode === 'second-language-features' || (mode === 'main-language-features' && !useSecondServer);
 	const textDocumentSync = vscode.workspace.getConfiguration('volar').get<'incremental' | 'full' | 'none'>('vueserver.textDocumentSync');
 	const initializationOptions: VueServerInitializationOptions = {
-		serverMode: mode === 'document-features' ? ServerMode.Syntactic : ServerMode.Semantic,
-		diagnosticModel: enableSemanticFeatures_b ? DiagnosticModel.Push : DiagnosticModel.Pull /* DiagnosticModel.Pull + params.capabilities.textDocument.diagnostic: undefined = no trigger */,
+		serverMode,
+		diagnosticModel: featuresKinds.includes(LanguageFeaturesKind.Semantic_Tardy) ? DiagnosticModel.Push : DiagnosticModel.None,
 		textDocumentSync: textDocumentSync ? {
 			incremental: lsp.TextDocumentSyncKind.Incremental,
 			full: lsp.TextDocumentSyncKind.Full,

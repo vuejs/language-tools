@@ -89,6 +89,7 @@ export enum ServerMode {
 }
 
 export enum DiagnosticModel {
+	None,
 	Push,
 	Pull,
 }
