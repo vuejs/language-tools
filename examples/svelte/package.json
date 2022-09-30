@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "svelte-language-server-example",
-	"version": "1.0.0-beta.1",
+	"version": "1.0.0-beta.2",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
@@ -70,9 +70,9 @@
 		"vsce": "latest"
 	},
 	"dependencies": {
-		"@volar-plugins/css": "1.0.0-beta.1",
-		"@volar-plugins/typescript": "1.0.0-beta.1",
-		"@volar/language-server": "1.0.0-beta.1",
+		"@volar-plugins/css": "1.0.0-beta.2",
+		"@volar-plugins/typescript": "1.0.0-beta.2",
+		"@volar/language-server": "1.0.0-beta.2",
 		"vscode-languageclient": "^8.0.2"
 	}
 }
