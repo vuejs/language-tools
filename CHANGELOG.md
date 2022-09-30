@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.0-beta.2 (2022/9/30)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+**Breaking changes**
+
+- Update VueLanguagePlugin API to v1.0 ([Example](https://github.com/johnsoncodehk/muggle-string#usage))
+- Update language server `initializationOptions` interface ([#1916](https://github.com/johnsoncodehk/volar/issues/1916))
+
 ## 1.0.0-beta.1 (2022/9/27)
 
 [[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
