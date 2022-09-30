@@ -675,11 +675,6 @@
 				"icon": "images/nuxt-logo.svg"
 			},
 			{
-				"command": "volar.action.createWorkspaceSnippets",
-				"title": "Create Workspace Snippets",
-				"category": "Volar"
-			},
-			{
 				"command": "volar.action.selectElement",
 				"title": "Go to Code",
 				"category": "Volar",
@@ -745,10 +740,6 @@
 				{
 					"command": "volar.action.nuxt",
 					"when": "editorLangId == vue"
-				},
-				{
-					"command": "volar.action.createWorkspaceSnippets",
-					"when": "volar.activated"
 				},
 				{
 					"command": "volar.action.selectElement",

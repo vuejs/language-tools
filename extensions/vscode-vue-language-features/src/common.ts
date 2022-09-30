@@ -3,7 +3,6 @@ import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient';
 import * as activeSelection from './features/activeSelection';
 import * as nameCasing from './features/nameCasing';
-import * as createWorkspaceSnippets from './features/createWorkspaceSnippets';
 import * as documentContent from './features/documentContent';
 import * as preview from './features/preview';
 import * as showReferences from './features/showReferences';
@@ -132,7 +131,6 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 	splitEditors.register(context);
 	preview.register(context);
-	createWorkspaceSnippets.register(context);
 	doctor.register(context);
 	tsVersion.register('volar.selectTypeScriptVersion', context, [apiClient, docClient].filter(shared.notEmpty));
 	reloadProject.register('volar.action.reloadProject', context, [apiClient, docClient].filter(shared.notEmpty));
