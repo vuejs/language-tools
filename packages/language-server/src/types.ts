@@ -84,14 +84,15 @@ export type LanguageServerPlugin<
 };
 
 export enum ServerMode {
-	Semantic,
-	Syntactic,
+	Semantic = 0,
+	// PartialSemantic = 1, // not support yet
+	Syntactic = 2
 }
 
 export enum DiagnosticModel {
-	None,
-	Push,
-	Pull,
+	None = 0,
+	Push = 1,
+	Pull = 2,
 }
 
 export interface InitializationOptions {
