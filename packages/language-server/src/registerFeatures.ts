@@ -104,12 +104,10 @@ export function setupSemanticCapabilities(
 			])],
 			resolveProvider: true,
 		};
-		// TODO
-		// if (typeof features.completion === 'object' && features.completion.ignoreTriggerCharacters) {
-		// 	const ignores = features.completion.ignoreTriggerCharacters;
-		// 	server.completionProvider.triggerCharacters = server.completionProvider.triggerCharacters
-		// 		?.filter(c => !ignores.includes(c));
-		// }
+		if (options.ignoreTriggerCharacters) {
+			server.completionProvider.triggerCharacters = server.completionProvider.triggerCharacters
+				?.filter(c => !options.ignoreTriggerCharacters!.includes(c));
+		}
 	}
 	if (params.textDocument?.documentHighlight) {
 		server.documentHighlightProvider = true;

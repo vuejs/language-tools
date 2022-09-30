@@ -231,7 +231,7 @@ function getFillInitializeParams(
 
 	const enableSemanticFeatures_a = mode === 'main-language-features';
 	const enableSemanticFeatures_b = mode === 'second-language-features' || (mode === 'main-language-features' && !useSecondServer);
-	const enabledocumentFeatures = 'document-features';
+	const enabledocumentFeatures = mode === 'document-features';
 
 	return function (params: lsp.InitializeParams) {
 		if (params.capabilities.textDocument) {

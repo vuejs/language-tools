@@ -94,7 +94,7 @@ export enum DiagnosticModel {
 }
 
 export interface ServerInitializationOptions {
-	serverMode?: ServerMode | number;
+	serverMode?: ServerMode;
 	diagnosticModel?: DiagnosticModel;
 	textDocumentSync?: vscode.TextDocumentSyncKind | number;
 	typescript: {
@@ -115,4 +115,6 @@ export interface ServerInitializationOptions {
 		 */
 		localizedPath?: string;
 	};
+	// for resolve https://github.com/sublimelsp/LSP-volar/issues/114
+	ignoreTriggerCharacters?: string[],
 }
