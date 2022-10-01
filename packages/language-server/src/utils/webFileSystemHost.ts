@@ -1,5 +1,5 @@
 import * as shared from '@volar/shared';
-import { posix as path } from 'path';
+import * as path from 'typesafe-path';
 import { FileType } from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
@@ -38,7 +38,7 @@ export function createWebFileSystemHost(): FileSystemHost {
 			connection = _connection;
 			connection.onDidChangeWatchedFiles(params => {
 				for (const change of params.changes) {
-					const fsPath = URI.parse(change.uri).fsPath;
+					const fsPath = URI.parse(change.uri).fsPath as path.OsPath;
 					const dir = getDir(path.dirname(fsPath));
 					const name = path.basename(fsPath);
 					if (change.type === vscode.FileChangeType.Created) {
@@ -94,7 +94,7 @@ export function createWebFileSystemHost(): FileSystemHost {
 			realpath: path => path, // TODO: cannot implement with vscode
 		};
 
-		function resolvePath(fsPath: string) {
+		function resolvePath(fsPath: path.OsPath) {
 			if (currentCwd !== rootUri.fsPath) {
 				process.chdir(rootUri.fsPath);
 				currentCwd = rootUri.fsPath;
@@ -102,7 +102,7 @@ export function createWebFileSystemHost(): FileSystemHost {
 			return path.resolve(fsPath);
 		}
 
-		function fileExists(fsPath: string): boolean {
+		function fileExists(fsPath: path.OsPath): boolean {
 			fsPath = resolvePath(fsPath);
 			const dir = getDir(path.dirname(fsPath));
 			const name = path.basename(fsPath);
@@ -119,7 +119,7 @@ export function createWebFileSystemHost(): FileSystemHost {
 			return false;
 		}
 
-		function readFile(fsPath: string) {
+		function readFile(fsPath: path.OsPath) {
 			fsPath = resolvePath(fsPath);
 			const dir = getDir(path.dirname(fsPath));
 			const name = path.basename(fsPath);
@@ -137,7 +137,7 @@ export function createWebFileSystemHost(): FileSystemHost {
 		}
 
 		function readDirectory(
-			fsPath: string,
+			fsPath: path.OsPath,
 			extensions?: readonly string[],
 			exclude?: readonly string[],
 			include?: readonly string[],
@@ -152,7 +152,9 @@ export function createWebFileSystemHost(): FileSystemHost {
 				false,
 				rootUri.fsPath,
 				depth,
-				dirPath => {
+				_dirPath => {
+
+					let dirPath = _dirPath as path.OsPath;
 
 					dirPath = resolvePath(dirPath);
 					const dir = getDir(dirPath);
@@ -178,7 +180,7 @@ export function createWebFileSystemHost(): FileSystemHost {
 		}
 
 		// for import path completion
-		function getDirectories(fsPath: string) {
+		function getDirectories(fsPath: path.OsPath) {
 
 			fsPath = resolvePath(fsPath);
 
@@ -205,7 +207,7 @@ export function createWebFileSystemHost(): FileSystemHost {
 			});
 		}
 
-		async function statAsync(connection: vscode.Connection, fsPath: string, dir: Dir) {
+		async function statAsync(connection: vscode.Connection, fsPath: path.OsPath, dir: Dir) {
 			const uri = getFsPathUri(fsPath);
 			const result = await connection.sendRequest(FsStatRequest.type, uri.toString());
 			if (result?.type === FileType.File || result?.type === FileType.SymbolicLink) {
@@ -218,7 +220,7 @@ export function createWebFileSystemHost(): FileSystemHost {
 			}
 		}
 
-		async function readFileAsync(connection: vscode.Connection, fsPath: string, dir: Dir) {
+		async function readFileAsync(connection: vscode.Connection, fsPath: path.OsPath, dir: Dir) {
 			const uri = getFsPathUri(fsPath);
 			const text = await connection.sendRequest(FsReadFileRequest.type, uri.toString());
 			if (text) {
@@ -231,13 +233,13 @@ export function createWebFileSystemHost(): FileSystemHost {
 			}
 		}
 
-		async function readDirectoryAsync(connection: vscode.Connection, fsPath: string, dir: Dir) {
+		async function readDirectoryAsync(connection: vscode.Connection, fsPath: path.OsPath, dir: Dir) {
 			const uri = getFsPathUri(fsPath);
 			const result = await connection.sendRequest(FsReadDirectoryRequest.type, uri.toString());
 			for (const [name, fileType] of result) {
 				if (dir.fileTypes.get(name) !== fileType && (fileType === FileType.File || fileType === FileType.SymbolicLink)) {
 					changes.push({
-						uri: getFsPathUri(path.join(fsPath, name)).toString(),
+						uri: getFsPathUri(path.join(fsPath, name as path.OsPath)).toString(),
 						type: vscode.FileChangeType.Created,
 					});
 				}
@@ -273,7 +275,7 @@ export function createWebFileSystemHost(): FileSystemHost {
 		}
 	}
 
-	function getDir(dirPath: string) {
+	function getDir(dirPath: path.OsPath) {
 
 		const dirNames: string[] = [];
 

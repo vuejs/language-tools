@@ -71,6 +71,7 @@ importers:
       path-browserify: ^1.0.1
       punycode: ^2.1.1
       semver: ^7.3.7
+      typesafe-path: ^0.1.0
       vsce: latest
       vscode-languageclient: ^8.0.2
       vscode-nls: ^5.2.0
@@ -88,6 +89,7 @@ importers:
       path-browserify: 1.0.1
       punycode: 2.1.1
       semver: 7.3.7
+      typesafe-path: 0.1.0
       vsce: 2.11.0
       vscode-languageclient: 8.0.2
       vscode-nls: 5.2.0
@@ -108,7 +110,7 @@ importers:
       '@volar/language-service': 1.0.0-beta.2
       '@volar/shared': 1.0.0-beta.2
       request-light: ^0.5.8
-      upath: ^2.0.1
+      typesafe-path: ^0.1.0
       vscode-html-languageservice: ^5.0.1
       vscode-languageserver: ^8.0.2
       vscode-languageserver-protocol: ^3.17.2
@@ -119,7 +121,7 @@ importers:
       '@volar/language-service': link:../language-service
       '@volar/shared': link:../shared
       request-light: 0.5.8
-      upath: 2.0.1
+      typesafe-path: 0.1.0
       vscode-html-languageservice: 5.0.1
       vscode-languageserver: 8.0.2
       vscode-languageserver-protocol: 3.17.2
@@ -135,7 +137,6 @@ importers:
       '@volar/typescript-faster': 1.0.0-beta.2
       '@vue/reactivity': ^3.2.38
       typescript: beta
-      upath: ^2.0.1
       vscode-html-languageservice: ^5.0.1
       vscode-json-languageservice: ^5.1.0
       vscode-languageserver-protocol: ^3.17.2
@@ -148,7 +149,6 @@ importers:
       '@volar/transforms': link:../transforms
       '@volar/typescript-faster': link:../typescript-faster
       '@vue/reactivity': 3.2.38
-      upath: 2.0.1
       vscode-html-languageservice: 5.0.1
       vscode-json-languageservice: 5.1.0
       vscode-languageserver-protocol: 3.17.2
@@ -193,13 +193,13 @@ importers:
 
   packages/shared:
     specifiers:
+      typesafe-path: ^0.1.0
       typescript: beta
-      upath: ^2.0.1
       vscode-languageserver-protocol: ^3.17.2
       vscode-languageserver-textdocument: ^1.0.7
       vscode-uri: ^3.0.3
     dependencies:
-      upath: 2.0.1
+      typesafe-path: 0.1.0
       vscode-languageserver-protocol: 3.17.2
       vscode-languageserver-textdocument: 1.0.7
       vscode-uri: 3.0.3
@@ -237,7 +237,6 @@ importers:
       '@volar/shared': 1.0.0-beta.2
       semver: ^7.3.7
       typescript: beta
-      upath: ^2.0.1
       vscode-languageserver-protocol: ^3.17.2
       vscode-languageserver-textdocument: ^1.0.7
       vscode-nls: ^5.2.0
@@ -245,7 +244,6 @@ importers:
     dependencies:
       '@volar/shared': link:../shared
       semver: 7.3.7
-      upath: 2.0.1
       vscode-languageserver-protocol: 3.17.2
       vscode-languageserver-textdocument: 1.0.7
       vscode-nls: 5.2.0
@@ -337,7 +335,6 @@ importers:
       '@vue/reactivity': ^3.2.38
       '@vue/shared': ^3.2.38
       typescript: beta
-      upath: ^2.0.1
       vscode-html-languageservice: ^5.0.1
       vscode-json-languageservice: ^5.1.0
       vscode-languageserver-protocol: ^3.17.2
@@ -362,7 +359,6 @@ importers:
       '@vue/compiler-dom': 3.2.38
       '@vue/reactivity': 3.2.38
       '@vue/shared': 3.2.38
-      upath: 2.0.1
       vscode-html-languageservice: 5.0.1
       vscode-json-languageservice: 5.1.0
       vscode-languageserver-protocol: 3.17.2
@@ -5619,6 +5615,9 @@ packages:
     dev: false
     optional: true
 
+  /typesafe-path/0.1.0:
+    resolution: {integrity: sha512-B0TTE9ExbBtwIlLtdbbp+wjMHqVV/lgmAJPJdnVSPuJ+XeQG0Rh5lTlPvHC94+iAYECyHOcyd96AmWSWMNEnQA==}
+
   /typescript/4.9.1-beta:
     resolution: {integrity: sha512-D4c0t1+sMOS5Hy8DQsGFfEYUuKzolXhf+7e/N0Td5etBPflEYzVwWLBrbVgHpLpLC53OJQCtxk31+NWO2SBPaA==}
     engines: {node: '>=4.2.0'}
@@ -5673,11 +5672,6 @@ packages:
   /universalify/2.0.0:
     resolution: {integrity: sha512-hAZsKq7Yy11Zu1DE0OzWjw7nnLZmJZYTDZZyEFHZdUhV8FkH5MCfoU1XMaxXovpyW5nq5scPqq0ZDP9Zyl04oQ==}
     engines: {node: '>= 10.0.0'}
-
-  /upath/2.0.1:
-    resolution: {integrity: sha512-1uEe95xksV1O0CYKXo8vQvN1JEbtJp7lb7C5U9HMsIp6IVwntkH/oNUzyVNQSd4S1sYk2FpSSW44FqMc8qee5w==}
-    engines: {node: '>=4'}
-    dev: false
 
   /url-join/4.0.1:
     resolution: {integrity: sha512-jk1+QP6ZJqyOiuEI9AEWQfju/nB2Pw466kbA0LEZljHwKeMgd9WrAEgEGxjPDD2+TNbbb37rTyhEfrCXfuKXnA==}

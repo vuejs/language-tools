@@ -2,7 +2,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
 import * as shared from '@volar/shared';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import * as path from 'upath';
+import { posix as path } from 'path';
 import { renameInfoOptions } from './prepareRename';
 import type { GetConfiguration } from '../';
 import { URI } from 'vscode-uri';

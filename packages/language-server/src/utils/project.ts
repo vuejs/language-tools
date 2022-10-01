@@ -5,12 +5,11 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import { loadCustomPlugins } from './config';
-import { FileSystem, FileSystemHost, LanguageServerPlugin, RuntimeEnvironment, InitializationOptions } from '../types';
+import { FileSystem, FileSystemHost, LanguageServerPlugin, RuntimeEnvironment } from '../types';
 import { createSnapshots } from './snapshots';
 import { ConfigurationHost } from '@volar/vue-language-service';
-import * as upath from 'upath';
 import * as html from 'vscode-html-languageservice';
-import { posix as path } from 'path';
+import * as path from 'typesafe-path';
 
 export interface Project extends ReturnType<typeof createProject> { }
 
@@ -19,12 +18,10 @@ export async function createProject(
 	plugins: ReturnType<LanguageServerPlugin>[],
 	fsHost: FileSystemHost,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	options: InitializationOptions,
 	rootUri: URI,
-	tsConfig: string | ts.CompilerOptions,
+	tsConfig: path.PosixPath | ts.CompilerOptions,
 	tsLocalized: ts.MapLike<string> | undefined,
 	documents: ReturnType<typeof createSnapshots>,
-	connection: vscode.Connection,
 	configHost: ConfigurationHost | undefined,
 	documentRegistry: ts.DocumentRegistry | undefined,
 ) {
@@ -220,8 +217,8 @@ export async function createProject(
 function createParsedCommandLine(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	sys: FileSystem,
-	rootPath: string,
-	tsConfig: string | ts.CompilerOptions,
+	rootPath: path.PosixPath,
+	tsConfig: path.PosixPath | ts.CompilerOptions,
 	plugins: ReturnType<LanguageServerPlugin>[],
 ): ts.ParsedCommandLine {
 	const extraFileExtensions = plugins.map(plugin => plugin.extraFileExtensions).flat();
@@ -232,7 +229,7 @@ function createParsedCommandLine(
 			content = ts.parseJsonSourceFileConfigFileContent(config, sys, path.dirname(tsConfig), {}, tsConfig, undefined, extraFileExtensions);
 		}
 		else {
-			content = ts.parseJsonConfigFileContent({}, sys, rootPath, tsConfig, path.join(rootPath, 'jsconfig.json'), undefined, extraFileExtensions);
+			content = ts.parseJsonConfigFileContent({}, sys, rootPath, tsConfig, path.join(rootPath, 'jsconfig.json' as path.PosixPath), undefined, extraFileExtensions);
 		}
 		// fix https://github.com/johnsoncodehk/volar/issues/1786
 		// https://github.com/microsoft/TypeScript/issues/30457
@@ -265,23 +262,22 @@ function getHTMLDocumentContext(
 				host.getCompilationSettings(),
 				host,
 			);
-			const failedLookupLocations: string[] = (resolveResult as any).failedLookupLocations;
+			const failedLookupLocations: path.PosixPath[] = (resolveResult as any).failedLookupLocations;
 			const dirs = new Set<string>();
 
-			for (const failed of failedLookupLocations) {
-				let path = failed;
-				const fileName = upath.basename(path);
+			for (let failed of failedLookupLocations) {
+				const fileName = path.basename(failed);
 				if (fileName === 'index.d.ts' || fileName === '*.d.ts') {
-					dirs.add(upath.dirname(path));
+					dirs.add(path.dirname(failed));
 				}
-				if (path.endsWith('.d.ts')) {
-					path = path.substring(0, path.length - '.d.ts'.length);
+				if (failed.endsWith('.d.ts')) {
+					failed = failed.substring(0, failed.length - '.d.ts'.length) as path.PosixPath;
 				}
 				else {
 					continue;
 				}
-				if (host.fileExists(path)) {
-					return isUri ? shared.getUriByPath(URI.parse(base), path) : path;
+				if (host.fileExists(failed)) {
+					return isUri ? shared.getUriByPath(URI.parse(base), failed) : failed;
 				}
 			}
 			for (const dir of dirs) {

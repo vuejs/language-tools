@@ -5,7 +5,7 @@ import * as ts2 from '@volar/typescript-language-service';
 import * as vue from '@volar/vue-language-core';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import * as path from 'upath';
+import { posix as path } from 'path';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -440,7 +440,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 					if (enabledComponentAutoImport && (descriptor.script || descriptor.scriptSetup)) {
 						for (const vueDocument of options.context.documents.getAll()) {
-							let baseName = path.removeExt(path.basename(vueDocument.uri), '.vue');
+							let baseName = path.basename(vueDocument.uri);
+							baseName = baseName.substring(0, baseName.length - '.vue'.length)
 							if (baseName.toLowerCase() === 'index') {
 								baseName = path.basename(path.dirname(vueDocument.uri));
 							}

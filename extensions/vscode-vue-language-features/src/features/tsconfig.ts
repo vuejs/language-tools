@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { BaseLanguageClient } from 'vscode-languageclient';
-import * as path from 'path';
+import * as path from 'typesafe-path';
 import { takeOverModeEnabled } from '../common';
 import { GetMatchTsConfigRequest } from '@volar/vue-language-server';
 
@@ -36,7 +36,7 @@ export async function register(cmd: string, context: vscode.ExtensionContext, la
 				languageClient.code2ProtocolConverter.asTextDocumentIdentifier(vscode.window.activeTextEditor.document),
 			);
 			if (tsconfig) {
-				statusBar.text = path.relative(vscode.workspace.rootPath!, tsconfig);
+				statusBar.text = path.relative(vscode.workspace.rootPath! as path.OsPath, tsconfig as path.PosixPath);
 				statusBar.command = cmd;
 				currentTsconfig = tsconfig;
 			}

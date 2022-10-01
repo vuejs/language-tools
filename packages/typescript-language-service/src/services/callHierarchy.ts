@@ -5,7 +5,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as PConst from '../protocol.const';
 import { parseKindModifier } from '../utils/modifiers';
 import * as typeConverters from '../utils/typeConverters';
-import * as upath from 'upath';
+import { posix as path } from 'path';
 import { URI } from 'vscode-uri';
 
 export function register(
@@ -73,8 +73,8 @@ export function register(
 		const rootPath = languageService.getProgram()?.getCompilerOptions().rootDir ?? '';
 		const document = getTextDocument(shared.getUriByPath(rootUri, item.file))!; // TODO
 		const useFileName = isSourceFileItem(item);
-		const name = useFileName ? upath.basename(item.file) : item.name;
-		const detail = useFileName ? upath.relative(rootPath, upath.dirname(item.file)) : item.containerName ?? '';
+		const name = useFileName ? path.basename(item.file) : item.name;
+		const detail = useFileName ? path.relative(rootPath, path.dirname(item.file)) : item.containerName ?? '';
 		const result: vscode.CallHierarchyItem = {
 			kind: typeConverters.SymbolKind.fromProtocolScriptElementKind(item.kind),
 			name,

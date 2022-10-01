@@ -1,4 +1,4 @@
-import * as path from 'path';
+import * as path from 'typesafe-path';
 import * as vscode from 'vscode';
 import { BaseLanguageClient } from 'vscode-languageclient';
 import { quickPick } from './splitEditors';
@@ -6,7 +6,7 @@ import { takeOverModeEnabled } from '../common';
 import { InitializationOptions } from '@volar/vue-language-server';
 import * as fs from 'fs';
 
-const defaultTsdk = 'node_modules/typescript/lib';
+const defaultTsdk = 'node_modules/typescript/lib' as path.PosixPath;
 
 export async function register(cmd: string, context: vscode.ExtensionContext, clients: BaseLanguageClient[]) {
 
@@ -118,11 +118,11 @@ export function getCurrentTsdk(context: vscode.ExtensionContext) {
 	return { tsdk: getVscodeTsdk(), isWorkspacePath: false };
 }
 
-function resolveConfigTsdk(tsdk: string) {
+function resolveConfigTsdk(tsdk: path.OsPath | path.PosixPath) {
 	if (path.isAbsolute(tsdk)) {
 		return tsdk;
 	}
-	const workspaceFolderFsPaths = (vscode.workspace.workspaceFolders ?? []).map(folder => folder.uri.fsPath);
+	const workspaceFolderFsPaths = (vscode.workspace.workspaceFolders ?? []).map(folder => folder.uri.fsPath as path.OsPath);
 	for (const folder of workspaceFolderFsPaths) {
 		const _path = path.join(folder, tsdk);
 		if (fs.existsSync(_path)) {
@@ -134,20 +134,26 @@ function resolveConfigTsdk(tsdk: string) {
 function getVscodeTsdk() {
 	const nightly = vscode.extensions.getExtension('ms-vscode.vscode-typescript-next');
 	if (nightly) {
-		return path.join(nightly.extensionPath, 'node_modules/typescript/lib');
+		return path.join(
+			nightly.extensionPath as path.OsPath,
+			'node_modules/typescript/lib' as path.PosixPath,
+		);
 	}
-	return path.join(vscode.env.appRoot, 'extensions', 'node_modules', 'typescript', 'lib');
+	return path.join(
+		vscode.env.appRoot as path.OsPath,
+		'extensions/node_modules/typescript/lib' as path.PosixPath,
+	);
 }
 
 function getConfigTsdk() {
-	return vscode.workspace.getConfiguration('typescript').get<string>('tsdk');
+	return vscode.workspace.getConfiguration('typescript').get<path.PosixPath>('tsdk');
 }
 
 function useWorkspaceTsdk(context: vscode.ExtensionContext) {
 	return context.workspaceState.get('typescript.useWorkspaceTsdk', false);
 }
 
-export function getTsVersion(libPath: string | undefined): string | undefined {
+export function getTsVersion(libPath: path.OsPath | path.PosixPath | undefined): string | undefined {
 	if (!libPath || !fs.existsSync(libPath)) {
 		return undefined;
 	}
@@ -157,12 +163,12 @@ export function getTsVersion(libPath: string | undefined): string | undefined {
 		return undefined;
 	}
 	const p2 = p.slice(0, -1);
-	const modulePath = p2.join(path.sep);
-	let fileName = path.join(modulePath, 'package.json');
+	const modulePath = p2.join(path.sep) as path.OsPath;
+	let fileName = path.join(modulePath, 'package.json' as path.PosixPath);
 	if (!fs.existsSync(fileName)) {
 		// Special case for ts dev versions
 		if (path.basename(modulePath) === 'built') {
-			fileName = path.join(modulePath, '..', 'package.json');
+			fileName = path.join(modulePath, '../package.json' as path.PosixPath);
 		}
 	}
 	if (!fs.existsSync(fileName)) {

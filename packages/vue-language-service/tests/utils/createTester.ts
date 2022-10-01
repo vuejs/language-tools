@@ -1,6 +1,6 @@
 import { createLanguageService, LanguageServiceHost } from '../..';
 import * as ts from 'typescript/lib/tsserverlibrary';
-import * as path from 'upath';
+import * as path from 'path';
 import * as shared from '@volar/shared';
 import { URI } from 'vscode-uri';
 

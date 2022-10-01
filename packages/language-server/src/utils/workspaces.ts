@@ -6,6 +6,7 @@ import { URI } from 'vscode-uri';
 import { DiagnosticModel, FileSystemHost, LanguageServerPlugin, RuntimeEnvironment, InitializationOptions } from '../types';
 import { createSnapshots } from './snapshots';
 import { createWorkspaceProjects, rootTsConfigNames, sortTsConfigs } from './workspaceProjects';
+import * as path from 'typesafe-path';
 
 export interface Workspaces extends ReturnType<typeof createWorkspaces> { }
 
@@ -63,9 +64,7 @@ export function createWorkspaces(
 				rootUri,
 				ts,
 				tsLocalized,
-				options,
 				documents,
-				connection,
 				configurationHost,
 			));
 		},
@@ -164,8 +163,8 @@ export function createWorkspaces(
 	async function getProject(uri: string) {
 
 		const rootUris = [...workspaces.keys()]
-			.filter(rootUri => shared.isFileInDir(URI.parse(uri).fsPath, URI.parse(rootUri).fsPath))
-			.sort((a, b) => sortTsConfigs(URI.parse(uri).fsPath, URI.parse(a).fsPath, URI.parse(b).fsPath));
+			.filter(rootUri => shared.isFileInDir(URI.parse(uri).fsPath as path.OsPath, URI.parse(rootUri).fsPath as path.OsPath))
+			.sort((a, b) => sortTsConfigs(URI.parse(uri).fsPath as path.OsPath, URI.parse(a).fsPath as path.OsPath, URI.parse(b).fsPath as path.OsPath));
 
 		for (const rootUri of rootUris) {
 			const workspace = await workspaces.get(rootUri);

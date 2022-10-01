@@ -1,5 +1,5 @@
 import * as shared from '@volar/shared';
-import * as upath from 'upath';
+import { posix as path } from 'path';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
@@ -195,7 +195,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 		const vueRanges = tsRanges.map(tsRange => sourceMap.toSourceRange(tsRange)).filter(shared.notEmpty);
 		const vueItem: vscode.CallHierarchyItem = {
 			...tsItem,
-			name: tsItem.name === upath.basename(shared.getPathOfUri(sourceMap.mappedDocument.uri)) ? upath.basename(shared.getPathOfUri(sourceMap.sourceDocument.uri)) : tsItem.name,
+			name: tsItem.name === path.basename(shared.getPathOfUri(sourceMap.mappedDocument.uri)) ? path.basename(shared.getPathOfUri(sourceMap.sourceDocument.uri)) : tsItem.name,
 			uri: sourceMap.sourceDocument.uri,
 			// TS Bug: `range: range` not works
 			range: {

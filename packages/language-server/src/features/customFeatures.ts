@@ -1,5 +1,5 @@
 import * as shared from '@volar/shared';
-import * as path from 'upath';
+import * as path from 'typesafe-path';
 import * as vscode from 'vscode-languageserver';
 import type { Workspaces } from '../utils/workspaces';
 import { GetMatchTsConfigRequest, ReloadProjectNotification, VerifyAllScriptsNotification, WriteVirtualFilesNotification } from '../requests';
@@ -49,7 +49,7 @@ export function register(
 				const allVueDocuments = ls.context.documents.getAll();
 				let i = 0;
 				for (const vueFile of allVueDocuments) {
-					progress.report(i++ / allVueDocuments.length * 100, path.relative(ls.context.host.getCurrentDirectory(), shared.getPathOfUri(vueFile.uri)));
+					progress.report(i++ / allVueDocuments.length * 100, path.relative(ls.context.host.getCurrentDirectory() as path.PosixPath, shared.getPathOfUri(vueFile.uri)));
 					if (progress.token.isCancellationRequested) {
 						continue;
 					}
