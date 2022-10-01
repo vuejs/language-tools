@@ -854,7 +854,7 @@
 		"path-browserify": "^1.0.1",
 		"punycode": "^2.1.1",
 		"semver": "^7.3.7",
-		"typesafe-path": "^0.1.0",
+		"typesafe-path": "^0.2.0",
 		"vsce": "latest",
 		"vscode-languageclient": "^8.0.2",
 		"vscode-nls": "^5.2.0"
