@@ -1,6 +1,6 @@
 import * as embedded from '@volar/language-service';
 import * as vscode from 'vscode-languageserver';
-import { AutoInsertRequest, FindFileReferenceRequest, ShowReferencesNotification } from '../requests';
+import { AutoInsertRequest, FindFileReferenceRequest, ShowReferencesNotification } from '../protocol';
 import type { Workspaces } from '../utils/workspaces';
 
 export function register(

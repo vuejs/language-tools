@@ -3,7 +3,7 @@ import * as path from 'typesafe-path';
 import { FileType } from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
-import { FsReadDirectoryRequest, FsReadFileRequest, FsStatRequest } from '../requests';
+import { FsReadDirectoryRequest, FsReadFileRequest, FsStatRequest } from '../protocol';
 import { FileSystem, FileSystemHost } from '../types';
 import { matchFiles } from './ts/utilities';
 

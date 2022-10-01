@@ -2,7 +2,7 @@ import * as shared from '@volar/shared';
 import * as path from 'typesafe-path';
 import * as vscode from 'vscode-languageserver';
 import type { Workspaces } from '../utils/workspaces';
-import { GetMatchTsConfigRequest, ReloadProjectNotification, VerifyAllScriptsNotification, WriteVirtualFilesNotification } from '../requests';
+import { GetMatchTsConfigRequest, ReloadProjectNotification, VerifyAllScriptsNotification, WriteVirtualFilesNotification } from '../protocol';
 
 export function register(
 	connection: vscode.Connection,

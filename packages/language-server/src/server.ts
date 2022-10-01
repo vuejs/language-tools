@@ -1,6 +1,6 @@
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
-import { FileSystemHost, LanguageServerPlugin, ServerMode, RuntimeEnvironment, InitializationOptions } from './types';
+import { FileSystemHost, LanguageServerPlugin, ServerMode, RuntimeEnvironment, LanguageServerInitializationOptions } from './types';
 import { createConfigurationHost } from './utils/configurationHost';
 import { createDocumentServiceHost } from './utils/documentServiceHost';
 import { createSnapshots } from './utils/snapshots';
@@ -14,7 +14,7 @@ export function createCommonLanguageServer(
 ) {
 
 	let params: vscode.InitializeParams;
-	let options: InitializationOptions;
+	let options: LanguageServerInitializationOptions;
 	let roots: URI[] = [];
 	let fsHost: FileSystemHost | undefined;
 	let projects: ReturnType<typeof createWorkspaces> | undefined;

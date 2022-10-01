@@ -3,7 +3,7 @@ import { LanguageServerPlugin } from '@volar/language-server';
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-service';
 import * as nameCasing from '@volar/vue-language-service';
-import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest } from './requests';
+import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest } from './protocol';
 import { VueServerInitializationOptions } from './types';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 

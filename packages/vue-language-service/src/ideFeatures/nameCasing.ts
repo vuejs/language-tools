@@ -3,16 +3,7 @@ import { SourceFileDocument, LanguageServiceRuntimeContext } from '@volar/langua
 import { checkComponentNames, getTemplateTagsAndAttrs, checkPropsOfTag } from '../helpers';
 import * as vue from '@volar/vue-language-core';
 import * as vscode from 'vscode-languageserver-protocol';
-
-export enum TagNameCasing {
-	Kebab,
-	Pascal,
-}
-
-export enum AttrNameCasing {
-	Kebab,
-	Camel,
-}
+import { AttrNameCasing, TagNameCasing } from '../types';
 
 export async function convertTagName(
 	context: LanguageServiceRuntimeContext,

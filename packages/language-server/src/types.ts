@@ -3,7 +3,7 @@ import * as embedded from '@volar/language-core';
 import type { FileSystemProvider } from 'vscode-html-languageservice';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
-import type * as Requests from './requests';
+import type * as Requests from './protocol';
 import { URI } from 'vscode-uri';
 
 export declare let __requests: typeof Requests; // keep this code for jsdoc link
@@ -39,7 +39,7 @@ export interface RuntimeEnvironment {
 }
 
 export type LanguageServerPlugin<
-	A extends InitializationOptions = InitializationOptions,
+	A extends LanguageServerInitializationOptions = LanguageServerInitializationOptions,
 	B extends embedded.LanguageServiceHost = embedded.LanguageServiceHost,
 	C = embeddedLS.LanguageService
 > = (initOptions: A) => {
@@ -95,7 +95,7 @@ export enum DiagnosticModel {
 	Pull = 2,
 }
 
-export interface InitializationOptions {
+export interface LanguageServerInitializationOptions {
 	typescript: {
 		// Absolute path to node_modules/typescript/lib
 		tsdk: string;

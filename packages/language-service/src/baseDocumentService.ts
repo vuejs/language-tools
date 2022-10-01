@@ -1,3 +1,7 @@
+import { createDocumentRegistry, EmbeddedLanguageModule, SourceFile } from '@volar/language-core';
+import * as shared from '@volar/shared';
+import { shallowReactive as reactive } from '@vue/reactivity';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as autoInsert from './documentFeatures/autoInsert';
 import * as colorPresentations from './documentFeatures/colorPresentations';
 import * as documentColors from './documentFeatures/documentColors';
@@ -6,17 +10,12 @@ import * as foldingRanges from './documentFeatures/foldingRanges';
 import * as format from './documentFeatures/format';
 import * as linkedEditingRanges from './documentFeatures/linkedEditingRanges';
 import * as selectionRanges from './documentFeatures/selectionRanges';
-import { DocumentServiceRuntimeContext, LanguageServicePluginContext } from './types';
-import * as shared from '@volar/shared';
-import { TextDocument } from 'vscode-languageserver-textdocument';
-import { LanguageServicePlugin } from './plugin';
-import { singleFileTypeScriptServiceHost, updateSingleFileTypeScriptServiceHost } from './utils/singleFileTypeScriptService';
-import { createDocumentRegistry, EmbeddedLanguageModule, SourceFile } from '@volar/language-core';
 import { parseSourceFileDocument, SourceFileDocument } from './documents';
-import { shallowReactive as reactive } from '@vue/reactivity';
+import { DocumentServiceRuntimeContext, LanguageServicePlugin, LanguageServicePluginContext } from './types';
+import { singleFileTypeScriptServiceHost, updateSingleFileTypeScriptServiceHost } from './utils/singleFileTypeScriptService';
 
 // fix build
-import type * as _0 from 'vscode-languageserver-protocol';
+import type * as _ from 'vscode-languageserver-protocol';
 
 export type DocumentService = ReturnType<typeof createDocumentService>;
 

@@ -1,6 +1,6 @@
-import { InitializationOptions } from "@volar/language-server";
+import { LanguageServerInitializationOptions } from "@volar/language-server";
 
-export type VueServerInitializationOptions = InitializationOptions & {
+export type VueServerInitializationOptions = LanguageServerInitializationOptions & {
 	petiteVue?: {
 		processHtmlFile: boolean,
 	},

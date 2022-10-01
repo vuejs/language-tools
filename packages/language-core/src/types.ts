@@ -53,7 +53,7 @@ export interface SourceFile {
 	embeddeds: EmbeddedFile[],
 }
 
-export const enum EmbeddedFileKind {
+export enum EmbeddedFileKind {
 	TextFile = 0,
 	TypeScriptHostFile = 1,
 }

@@ -11,6 +11,7 @@ import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { checkComponentNames, checkEventsOfTag, checkGlobalAttrs, checkPropsOfTag } from '../helpers';
 import * as casing from '../ideFeatures/nameCasing';
+import { AttrNameCasing, TagNameCasing } from '../types';
 
 export const semanticTokenTypes = [
 	'componentTag',
@@ -404,8 +405,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('volar.completion.preferredAttrNameCase', vueDocument.uri),
 			context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-pascal' | 'kebab' | 'pascal'>('volar.completion.preferredTagNameCase', vueDocument.uri),
 		]);
-		const tagNameCasing = detected.tag.length === 1 && (tag === 'auto-pascal' || tag === 'auto-kebab') ? detected.tag[0] : (tag === 'auto-kebab' || tag === 'kebab') ? casing.TagNameCasing.Kebab : casing.TagNameCasing.Pascal;
-		const attrNameCasing = detected.attr.length === 1 && (attr === 'auto-camel' || attr === 'auto-kebab') ? detected.attr[0] : (attr === 'auto-camel' || attr === 'camel') ? casing.AttrNameCasing.Camel : casing.AttrNameCasing.Kebab;
+		const tagNameCasing = detected.tag.length === 1 && (tag === 'auto-pascal' || tag === 'auto-kebab') ? detected.tag[0] : (tag === 'auto-kebab' || tag === 'kebab') ? TagNameCasing.Kebab : TagNameCasing.Pascal;
+		const attrNameCasing = detected.attr.length === 1 && (attr === 'auto-camel' || attr === 'auto-kebab') ? detected.attr[0] : (attr === 'auto-camel' || attr === 'camel') ? AttrNameCasing.Camel : AttrNameCasing.Kebab;
 
 		const enabledComponentAutoImport = await context.env.configurationHost?.getConfiguration<boolean>('volar.completion.autoImportComponent') ?? true;
 
@@ -421,10 +422,10 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					const tags: html.ITagData[] = [];
 
 					for (const tag of components) {
-						if (tagNameCasing === casing.TagNameCasing.Kebab) {
+						if (tagNameCasing === TagNameCasing.Kebab) {
 							names.add(hyphenate(tag));
 						}
-						else if (tagNameCasing === casing.TagNameCasing.Pascal) {
+						else if (tagNameCasing === TagNameCasing.Pascal) {
 							names.add(tag);
 						}
 					}
@@ -441,7 +442,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					if (enabledComponentAutoImport && (descriptor.script || descriptor.scriptSetup)) {
 						for (const vueDocument of options.context.documents.getAll()) {
 							let baseName = path.basename(vueDocument.uri);
-							baseName = baseName.substring(0, baseName.length - '.vue'.length)
+							baseName = baseName.substring(0, baseName.length - '.vue'.length);
 							if (baseName.toLowerCase() === 'index') {
 								baseName = path.basename(path.dirname(vueDocument.uri));
 							}
@@ -456,7 +457,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 								}
 							}
 							tags.push({
-								name: (tagNameCasing === casing.TagNameCasing.Kebab ? componentName_1 : componentName_2) + i,
+								name: (tagNameCasing === TagNameCasing.Kebab ? componentName_1 : componentName_2) + i,
 								description: createInternalItemId('importFile', [vueDocument.uri]),
 								attributes: [],
 							});
@@ -474,7 +475,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 					for (const prop of [...props, ...globalProps]) {
 
-						const name = attrNameCasing === casing.AttrNameCasing.Camel ? prop : hyphenate(prop);
+						const name = attrNameCasing === AttrNameCasing.Camel ? prop : hyphenate(prop);
 
 						if (hyphenate(name).startsWith('on-')) {
 
@@ -518,7 +519,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 					for (const event of events) {
 
-						const name = attrNameCasing === casing.AttrNameCasing.Camel ? event : hyphenate(event);
+						const name = attrNameCasing === AttrNameCasing.Camel ? event : hyphenate(event);
 						const propKey = createInternalItemId('componentEvent', [tag, name]);
 
 						attributes.push({
@@ -546,7 +547,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 					for (const model of models) {
 
-						const name = attrNameCasing === casing.AttrNameCasing.Camel ? model : hyphenate(model);
+						const name = attrNameCasing === AttrNameCasing.Camel ? model : hyphenate(model);
 						const propKey = createInternalItemId('componentProp', [tag, name]);
 
 						attributes.push({

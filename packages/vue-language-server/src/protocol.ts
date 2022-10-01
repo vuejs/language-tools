@@ -1,8 +1,6 @@
 import * as vscode from 'vscode-languageserver-protocol';
 import { TagNameCasing, AttrNameCasing } from '@volar/vue-language-service';
 
-export { TagNameCasing, AttrNameCasing } from '@volar/vue-language-service';
-
 export namespace DetectNameCasingRequest {
 	export type ParamsType = {
 		textDocument: vscode.TextDocumentIdentifier,

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { quickPick } from './splitEditors';
 import { BaseLanguageClient, State } from 'vscode-languageclient';
-import { AttrNameCasing, DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, TagNameCasing } from '@volar/vue-language-server';
+import { AttrNameCasing, TagNameCasing, DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest } from '@volar/vue-language-server';
 
 export const attrNameCasings = new Map<string, AttrNameCasing>();
 export const tagNameCasings = new Map<string, TagNameCasing>();
