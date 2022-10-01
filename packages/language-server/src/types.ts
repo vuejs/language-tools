@@ -80,6 +80,10 @@ export type LanguageServerPlugin<
 		getServicePlugins?(
 			context: embeddedLS.DocumentServiceRuntimeContext,
 		): embeddedLS.LanguageServicePlugin[],
+
+		onInitialize?(
+			connection: vscode.Connection,
+		): void,
 	};
 };
 

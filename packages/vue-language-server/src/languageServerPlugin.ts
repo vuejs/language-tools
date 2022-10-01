@@ -2,8 +2,9 @@ import * as embedded from '@volar/language-core';
 import { LanguageServerPlugin } from '@volar/language-server';
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-service';
+import * as vue2 from '@volar/vue-language-core';
 import * as nameCasing from '@volar/vue-language-service';
-import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest } from './protocol';
+import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest } from './protocol';
 import { VueServerInitializationOptions } from './types';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
@@ -28,7 +29,7 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 			resolveLanguageServiceHost(ts, sys, tsConfig, host) {
 				let vueOptions: vue.VueCompilerOptions = {};
 				if (typeof tsConfig === 'string') {
-					vueOptions = vue.createParsedCommandLine(ts, sys, tsConfig, []).vueOptions;
+					vueOptions = vue2.createParsedCommandLine(ts, sys, tsConfig, []).vueOptions;
 				}
 				return {
 					...host,
@@ -36,7 +37,7 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 				};
 			},
 			getLanguageModules(host) {
-				const vueLanguageModule = vue.createEmbeddedLanguageModule(
+				const vueLanguageModule = vue2.createEmbeddedLanguageModule(
 					host.getTypeScriptModule(),
 					host.getCurrentDirectory(),
 					host.getCompilationSettings(),
@@ -68,14 +69,14 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 		},
 		documentService: {
 			getLanguageModules(ts, env) {
-				const vueLanguagePlugins = vue.getDefaultVueLanguagePlugins(ts, shared.getPathOfUri(env.rootUri.toString()), {}, {}, []);
+				const vueLanguagePlugins = vue2.getDefaultVueLanguagePlugins(ts, shared.getPathOfUri(env.rootUri.toString()), {}, {}, []);
 				const vueLanguageModule: embedded.EmbeddedLanguageModule = {
 					createSourceFile(fileName, snapshot) {
 						if (exts.some(ext => fileName.endsWith(ext))) {
-							return new vue.VueSourceFile(fileName, snapshot, ts, vueLanguagePlugins);
+							return new vue2.VueSourceFile(fileName, snapshot, ts, vueLanguagePlugins);
 						}
 					},
-					updateSourceFile(sourceFile: vue.VueSourceFile, snapshot) {
+					updateSourceFile(sourceFile: vue2.VueSourceFile, snapshot) {
 						sourceFile.update(snapshot);
 					},
 				};
@@ -83,6 +84,11 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 			},
 			getServicePlugins(context) {
 				return vue.getDocumentServicePlugins(context);
+			},
+			onInitialize(connection) {
+				connection.onRequest(ParseSFCRequest.type, params => {
+					return vue2._0.parse(params, { sourceMap: false, ignoreEmpty: false });
+				});
 			},
 		},
 	};

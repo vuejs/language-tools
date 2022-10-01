@@ -1,8 +1,10 @@
 import * as vscode from 'vscode';
-import { ref, computed } from '@vue/reactivity';
-import { parse, SFCBlock } from '@vue/compiler-sfc';
+import { BaseLanguageClient } from 'vscode-languageclient';
+import { ParseSFCRequest } from '@volar/vue-language-server';
 
-export function register(context: vscode.ExtensionContext) {
+type SFCBlock = ParseSFCRequest.ResponseType['descriptor']['customBlocks'][number];
+
+export function register(context: vscode.ExtensionContext, client: BaseLanguageClient) {
 
 	const getDocDescriptor = useDocDescriptor();
 
@@ -16,7 +18,7 @@ export function register(context: vscode.ExtensionContext) {
 		const layout = await vscode.workspace.getConfiguration('volar').get<{ left: string[], right: string[]; }>('splitEditors.layout') ?? { left: [], right: [] };
 
 		const doc = editor.document;
-		const { descriptor } = getDocDescriptor(doc.getText());
+		const { descriptor } = await getDocDescriptor(doc.getText());
 		let leftBlocks: SFCBlock[] = [];
 		let rightBlocks: SFCBlock[] = [];
 
@@ -79,18 +81,21 @@ export function register(context: vscode.ExtensionContext) {
 			}
 		}
 	}
-}
 
-function useDocDescriptor() {
+	function useDocDescriptor() {
 
-	const splitDocText = ref('');
-	const splitDocDescriptor = computed(() => parse(splitDocText.value, { sourceMap: false, ignoreEmpty: false }));
+		let splitDocText = '';
+		let splitDocDescriptor: any;
 
-	return getDescriptor;
+		return getDescriptor;
 
-	function getDescriptor(text: string) {
-		splitDocText.value = text;
-		return splitDocDescriptor.value;
+		async function getDescriptor(text: string) {
+			if (text !== splitDocText) {
+				splitDocText = text;
+				splitDocDescriptor = await client.sendRequest(ParseSFCRequest.type, text);
+			}
+			return splitDocDescriptor;
+		}
 	}
 }
 
@@ -107,7 +112,7 @@ export function quickPick<T extends { [K: string]: vscode.QuickPickItem | undefi
 				for (const item of groupItems) {
 					if (item) {
 						items.push(item);
-					}	
+					}
 				}
 			}
 		}

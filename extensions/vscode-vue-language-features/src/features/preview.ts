@@ -3,9 +3,10 @@ import * as path from 'typesafe-path';
 import * as fs from '../utils/fs';
 import * as shared from '@volar/shared';
 import { quickPick } from './splitEditors';
-import { parse, SFCParseResult } from '@vue/compiler-sfc';
 import * as preview from '@volar/preview';
 import { getLocalHostAvaliablePort } from '../utils/http';
+import { BaseLanguageClient } from 'vscode-languageclient';
+import { ParseSFCRequest } from '@volar/vue-language-server';
 
 interface PreviewState {
 	mode: 'vite' | 'nuxt',
@@ -18,7 +19,7 @@ const enum PreviewType {
 	ExternalBrowser_Component = 'volar-component-preview',
 }
 
-export async function register(context: vscode.ExtensionContext) {
+export async function register(context: vscode.ExtensionContext, client: BaseLanguageClient) {
 
 	const panels = new Set<vscode.WebviewPanel>();
 	const panelUrl = new Map<vscode.WebviewPanel, string>();
@@ -74,7 +75,7 @@ export async function register(context: vscode.ExtensionContext) {
 		}
 	});
 
-	const sfcs = new WeakMap<vscode.TextDocument, { version: number, sfc: SFCParseResult; }>();
+	const sfcs = new WeakMap<vscode.TextDocument, { version: number, sfc: ParseSFCRequest.ResponseType; }>();
 
 	class VueComponentPreview implements vscode.WebviewViewProvider {
 
@@ -314,12 +315,13 @@ export async function register(context: vscode.ExtensionContext) {
 
 	updatePreviewIconStatus();
 
-	function getSfc(document: vscode.TextDocument) {
+	async function getSfc(document: vscode.TextDocument) {
 		let cache = sfcs.get(document);
 		if (!cache || cache.version !== document.version) {
+			const parsed = await client.sendRequest(ParseSFCRequest.type, document.getText());
 			cache = {
 				version: document.version,
-				sfc: parse(document.getText(), { sourceMap: false, ignoreEmpty: false }),
+				sfc: parsed,
 			};
 			sfcs.set(document, cache);
 		}
@@ -337,9 +339,9 @@ export async function register(context: vscode.ExtensionContext) {
 		}
 	}
 
-	function updateSelectionHighlights(textEditor: vscode.TextEditor) {
+	async function updateSelectionHighlights(textEditor: vscode.TextEditor) {
 		if (textEditor.document.languageId === 'vue' && highlightDomElements) {
-			const sfc = getSfc(textEditor.document);
+			const sfc = await getSfc(textEditor.document);
 			const offset = sfc.descriptor.template?.loc.start.offset ?? 0;
 			connection?.highlight(
 				textEditor.document.fileName,
@@ -488,7 +490,7 @@ export async function register(context: vscode.ExtensionContext) {
 		if (cancleToken.isCancelled)
 			return;
 
-		const sfc = getSfc(doc);
+		const sfc = await getSfc(doc);
 		const offset = sfc.descriptor.template?.loc.start.offset ?? 0;
 		const start = doc.positionAt(range[0] + offset);
 		const end = doc.positionAt(range[1] + offset);

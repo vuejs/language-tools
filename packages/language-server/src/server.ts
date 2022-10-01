@@ -111,6 +111,10 @@ export function createCommonLanguageServer(
 			documents,
 			documentServiceHost,
 		);
+
+		for (const plugin of plugins) {
+			plugin.documentService?.onInitialize?.(connection);
+		}
 	}
 
 	async function createLanguageServiceHost() {

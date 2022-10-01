@@ -5,6 +5,8 @@ import * as CompilerDom from '@vue/compiler-dom';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { VueEmbeddedFile } from './sourceFile';
 
+export { SFCParseResult } from '@vue/compiler-sfc';
+
 export type LanguageServiceHost = embedded.LanguageServiceHost & {
 	getVueCompilationSettings(): VueCompilerOptions,
 };
