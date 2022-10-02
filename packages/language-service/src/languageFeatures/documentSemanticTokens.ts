@@ -6,7 +6,7 @@ import { languageFeatureWorker } from '../utils/featureWorkers';
 
 export function register(context: LanguageServiceRuntimeContext) {
 
-	return (uri: string, range?: vscode.Range, cancleToken?: vscode.CancellationToken, reportProgress?: (tokens: SemanticToken[]) => void) => {
+	return (uri: string, range: vscode.Range | undefined, cancleToken: vscode.CancellationToken, reportProgress?: (tokens: SemanticToken[]) => void) => {
 
 		const document = context.getTextDocument(uri);
 
@@ -34,9 +34,6 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				for (const mapping of sourceMap.mappings) {
 
-					if (cancleToken?.isCancellationRequested)
-						return;
-
 					if (
 						mapping.data.semanticTokens
 						&& mapping.sourceRange[1] > offsetRange[0]
@@ -59,7 +56,6 @@ export function register(context: LanguageServiceRuntimeContext) {
 			(plugin, document, offsetRange) => plugin.findDocumentSemanticTokens?.(
 				document,
 				vscode.Range.create(document.positionAt(offsetRange[0]), document.positionAt(offsetRange[1])),
-				cancleToken,
 			),
 			(tokens, sourceMap) => tokens.map<SemanticToken | undefined>(_token => {
 

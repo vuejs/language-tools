@@ -6,6 +6,7 @@ import { createDocumentServiceHost } from './utils/documentServiceHost';
 import { createSnapshots } from './utils/snapshots';
 import { createWorkspaces } from './utils/workspaces';
 import { setupSemanticCapabilities, setupSyntacticCapabilities } from './registerFeatures';
+import { createCancellactionTokenHost } from './utils/cancellationPipe';
 
 export function createCommonLanguageServer(
 	connection: vscode.Connection,
@@ -123,6 +124,7 @@ export function createCommonLanguageServer(
 		fsHost = runtimeEnv.createFileSystemHost(ts, params.capabilities);
 
 		const tsLocalized = params.locale ? runtimeEnv.loadTypescriptLocalized(options.typescript.tsdk, params.locale) : undefined;
+		const cancelTokenHost = createCancellactionTokenHost(options.cancellationPipeName);
 		const _projects = createWorkspaces(
 			runtimeEnv,
 			plugins,
@@ -134,6 +136,7 @@ export function createCommonLanguageServer(
 			options,
 			documents,
 			connection,
+			cancelTokenHost,
 		);
 		projects = _projects;
 
@@ -142,7 +145,7 @@ export function createCommonLanguageServer(
 		}
 
 		(await import('./features/customFeatures')).register(connection, projects);
-		(await import('./features/languageFeatures')).register(connection, projects, params);
+		(await import('./features/languageFeatures')).register(connection, projects, params, cancelTokenHost);
 
 		for (const plugin of plugins) {
 			plugin.languageService?.onInitialize?.(connection, getLanguageService as any);

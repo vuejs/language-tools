@@ -10,6 +10,7 @@ import { createSnapshots } from './snapshots';
 import { ConfigurationHost } from '@volar/vue-language-service';
 import * as html from 'vscode-html-languageservice';
 import * as path from 'typesafe-path';
+import { CancellactionTokenHost } from './cancellationPipe';
 
 export interface Project extends ReturnType<typeof createProject> { }
 
@@ -24,12 +25,14 @@ export async function createProject(
 	documents: ReturnType<typeof createSnapshots>,
 	configHost: ConfigurationHost | undefined,
 	documentRegistry: ts.DocumentRegistry | undefined,
+	cancelTokenHost: CancellactionTokenHost,
 ) {
 
 	const sys = fsHost.getWorkspaceFileSystem(rootUri);
 
 	let typeRootVersion = 0;
 	let projectVersion = 0;
+	let projectVersionUpdateTime = 0;
 	let vueLs: embeddedLS.LanguageService | undefined;
 	let parsedCommandLine = createParsedCommandLine(ts, sys, shared.getPathOfUri(rootUri.toString()), tsConfig, plugins);
 
@@ -46,6 +49,7 @@ export async function createProject(
 	});
 	const disposeDocChange = documents.onDidChangeContent(params => {
 		projectVersion++;
+		projectVersionUpdateTime = cancelTokenHost.getMtime();
 	});
 
 	return {
@@ -122,6 +126,12 @@ export async function createProject(
 	}
 	function createLanguageServiceHost() {
 
+		const token: ts.CancellationToken = {
+			isCancellationRequested() {
+				return cancelTokenHost.getMtime() !== projectVersionUpdateTime;
+			},
+			throwIfCancellationRequested() { },
+		};
 		let host: embedded.LanguageServiceHost = {
 			// ts
 			getNewLine: () => sys.newLine,
@@ -135,6 +145,7 @@ export async function createProject(
 			fileExists: sys.fileExists,
 			getCurrentDirectory: () => shared.getPathOfUri(rootUri.toString()),
 			getProjectReferences: () => parsedCommandLine.projectReferences, // if circular, broken with provide `getParsedCommandLine: () => parsedCommandLine`
+			getCancellationToken: () => token,
 			// custom
 			getDefaultLibFileName: options => {
 				try {

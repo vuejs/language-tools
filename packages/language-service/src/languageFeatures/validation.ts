@@ -107,7 +107,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 	const scriptTsCache_syntactic: typeof nonTsCache = new Map();
 	const scriptTsCache_suggestion: typeof nonTsCache = new Map();
 
-	return async (uri: string, response?: (result: vscode.Diagnostic[]) => void, cancellationToken?: vscode.CancellationToken) => {
+	return async (uri: string, token?: vscode.CancellationToken, response?: (result: vscode.Diagnostic[]) => void) => {
 
 		const cache = responseCache.get(uri) ?? responseCache.set(uri, {
 			nonTs: { snapshot: undefined, errors: [] },
@@ -181,14 +181,14 @@ export function register(context: LanguageServiceRuntimeContext) {
 				},
 				async (plugin, document, arg, sourceMap) => {
 
-					if (cancellationToken) {
+					if (token) {
 
 						if (Date.now() - lastCheckCancelAt >= 5) {
 							await shared.sleep(5); // wait for LSP event polling
 							lastCheckCancelAt = Date.now();
 						}
 
-						if (cancellationToken.isCancellationRequested)
+						if (token.isCancellationRequested)
 							return;
 					}
 

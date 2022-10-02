@@ -15,7 +15,6 @@ export function register(
 	rootUri: URI,
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
-	getTextDocument2: (uri: string) => TextDocument | undefined,
 	getConfiguration: GetConfiguration,
 ) {
 	return async (item: vscode.CompletionItem, newPosition?: vscode.Position): Promise<vscode.CompletionItem> => {
@@ -58,7 +57,7 @@ export function register(
 					const entries = changes.textChanges.map(textChange => {
 						return { fileName, textSpan: textChange.span };
 					});
-					const locs = entriesToLocations(rootUri, entries, getTextDocument2);
+					const locs = entriesToLocations(rootUri, entries, getTextDocument);
 					locs.forEach((loc, index) => {
 						item.additionalTextEdits?.push(vscode.TextEdit.replace(loc.range, changes.textChanges[index].newText));
 					});
@@ -66,7 +65,7 @@ export function register(
 			}
 		}
 		if (details.displayParts) {
-			detailTexts.push(previewer.plainWithLinks(details.displayParts, { toResource }, getTextDocument2));
+			detailTexts.push(previewer.plainWithLinks(details.displayParts, { toResource }, getTextDocument));
 		}
 		if (detailTexts.length) {
 			item.detail = detailTexts.join('\n');
@@ -74,7 +73,7 @@ export function register(
 
 		item.documentation = {
 			kind: 'markdown',
-			value: previewer.markdownDocumentation(details.documentation, details.tags, { toResource }, getTextDocument2),
+			value: previewer.markdownDocumentation(details.documentation, details.tags, { toResource }, getTextDocument),
 		};
 
 		if (details) {

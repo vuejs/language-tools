@@ -29,7 +29,7 @@ let client_syntactic: lsp.BaseLanguageClient;
 type CreateLanguageClient = (
 	id: string,
 	name: string,
-	documentSelector: lsp.DocumentSelector,
+	langs: string[],
 	initOptions: VueServerInitializationOptions,
 	fillInitializeParams: (params: lsp.InitializeParams) => void,
 	port: number,
@@ -190,28 +190,27 @@ export function takeOverModeEnabled() {
 	return false;
 }
 
-function getDocumentSelector(serverMode: ServerMode) {
+export function getDocumentSelector(serverMode: ServerMode) {
 	const takeOverMode = takeOverModeEnabled();
-	const selector: lsp.DocumentSelector = takeOverMode ?
-		[
-			{ language: 'vue' },
-			{ language: 'javascript' },
-			{ language: 'typescript' },
-			{ language: 'javascriptreact' },
-			{ language: 'typescriptreact' },
-		] : [
-			{ language: 'vue' },
-		];
+	const langs = takeOverMode ? [
+		'vue',
+		'javascript',
+		'typescript',
+		'javascriptreact',
+		'typescriptreact',
+	] : [
+		'vue',
+	];
 	if (takeOverMode && serverMode === ServerMode.Semantic) {
-		selector.push({ language: 'json' });
+		langs.push('json');
 	}
 	if (processHtml()) {
-		selector.push({ language: 'html' });
+		langs.push('html');
 	}
 	if (processMd()) {
-		selector.push({ language: 'markdown' });
+		langs.push('markdown');
 	}
-	return selector;
+	return langs;
 }
 
 function useSecondServer() {

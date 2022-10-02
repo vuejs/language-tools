@@ -43,6 +43,14 @@ export default function (): LanguageServicePlugin {
 			if (!node)
 				return;
 
+			const token = context.typescript.languageServiceHost.getCancellationToken?.();
+			if (token) {
+				context.typescript.languageService.getQuickInfoAtPosition(shared.getPathOfUri(document.uri), node.end);
+				if (token?.isCancellationRequested()) {
+					return; // check cancel here because type checker do not use cancel token
+				}
+			}
+
 			const checker = program.getTypeChecker();
 			const type = checker.getTypeAtLocation(node);
 			const props = type.getProperties();

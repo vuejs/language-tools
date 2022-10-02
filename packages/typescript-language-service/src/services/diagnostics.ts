@@ -6,6 +6,7 @@ import { URI } from 'vscode-uri';
 
 export function register(
 	rootUri: URI,
+	host: ts.LanguageServiceHost,
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -18,8 +19,8 @@ export function register(
 			suggestion?: boolean,
 			declaration?: boolean,
 		},
-		cancellationToken?: ts.CancellationToken,
 	): vscode.Diagnostic[] => {
+
 		const document = getTextDocument(uri);
 		if (!document) return [];
 
@@ -28,17 +29,24 @@ export function register(
 		const sourceFile = program?.getSourceFile(fileName);
 		if (!program || !sourceFile) return [];
 
+		const token: ts.CancellationToken = {
+			isCancellationRequested() {
+				return host.getCancellationToken?.().isCancellationRequested() ?? false;
+			},
+			throwIfCancellationRequested() { },
+		};
+
 		let errors: ts.Diagnostic[] = [];
 
 		try {
 			errors = [
-				...options.semantic ? program.getSemanticDiagnostics(sourceFile, cancellationToken) : [],
-				...options.syntactic ? program.getSyntacticDiagnostics(sourceFile, cancellationToken) : [],
+				...options.semantic ? program.getSemanticDiagnostics(sourceFile, token) : [],
+				...options.syntactic ? program.getSyntacticDiagnostics(sourceFile, token) : [],
 				...options.suggestion ? languageService.getSuggestionDiagnostics(fileName) : [],
 			];
 
 			if (options.declaration && getEmitDeclarations(program.getCompilerOptions())) {
-				errors = errors.concat(program.getDeclarationDiagnostics(sourceFile, cancellationToken));
+				errors = errors.concat(program.getDeclarationDiagnostics(sourceFile, token));
 			}
 		}
 		catch { }

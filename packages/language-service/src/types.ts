@@ -88,7 +88,7 @@ export interface LanguageServicePlugin {
 	findDocumentHighlights?(document: TextDocument, position: vscode.Position): NullableResult<vscode.DocumentHighlight[]>;
 	findDocumentLinks?(document: TextDocument): NullableResult<vscode.DocumentLink[]>;
 	findDocumentSymbols?(document: TextDocument): NullableResult<vscode.SymbolInformation[]>;
-	findDocumentSemanticTokens?(document: TextDocument, range?: vscode.Range, cancleToken?: vscode.CancellationToken): NullableResult<SemanticToken[]>;
+	findDocumentSemanticTokens?(document: TextDocument, range: vscode.Range): NullableResult<SemanticToken[]>;
 	findWorkspaceSymbols?(query: string): NullableResult<vscode.SymbolInformation[]>;
 	doExecuteCommand?(command: string, args: any[], context: ExecuteCommandContext): NotNullableResult<void>;
 	findDocumentColors?(document: TextDocument): NullableResult<vscode.ColorInformation[]>;

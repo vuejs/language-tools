@@ -230,9 +230,9 @@ export default function (): LanguageServicePlugin {
 			}
 		},
 
-		findDocumentSemanticTokens(document, range, cancleToken) {
+		findDocumentSemanticTokens(document, range) {
 			if (isTsDocument(document)) {
-				return tsLs2.getDocumentSemanticTokens(document.uri, range, cancleToken);
+				return tsLs2.getDocumentSemanticTokens(document.uri, range);
 			}
 		},
 

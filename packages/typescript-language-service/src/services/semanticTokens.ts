@@ -14,11 +14,12 @@ export function getSemanticTokenLegend(): vscode.SemanticTokensLegend {
 }
 
 export function register(
+	host: ts.LanguageServiceHost,
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {
-	return (uri: string, range?: vscode.Range, cancle?: vscode.CancellationToken) => {
+	return (uri: string, range: vscode.Range) => {
 
 		const document = getTextDocument(uri);
 		if (!document) return;
@@ -27,12 +28,12 @@ export function register(
 		const start = range ? document.offsetAt(range.start) : 0;
 		const length = range ? (document.offsetAt(range.end) - start) : document.getText().length;
 
-		if (cancle?.isCancellationRequested) return;
+		if (host.getCancellationToken?.().isCancellationRequested()) return;
 		let response2: ReturnType<typeof languageService.getEncodedSyntacticClassifications> | undefined;
 		try { response2 = languageService.getEncodedSyntacticClassifications(file, { start, length }); } catch { }
 		if (!response2) return;
 
-		if (cancle?.isCancellationRequested) return;
+		if (host.getCancellationToken?.().isCancellationRequested()) return;
 		let response1: ReturnType<typeof languageService.getEncodedSemanticClassifications> | undefined;
 		try { response1 = languageService.getEncodedSemanticClassifications(file, { start, length }, ts.SemanticClassificationFormat.TwentyTwenty); } catch { }
 		if (!response1) return;

@@ -9,7 +9,6 @@ export function register(
 	rootUri: URI,
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
-	getTextDocument2: (uri: string) => TextDocument | undefined,
 ) {
 	return (uri: string): vscode.Location[] => {
 		const document = getTextDocument(uri);
@@ -21,6 +20,6 @@ export function register(
 		try { entries = languageService.getFileReferences(fileName); } catch { }
 		if (!entries) return [];
 
-		return entriesToLocations(rootUri, [...entries], getTextDocument2);
+		return entriesToLocations(rootUri, [...entries], getTextDocument);
 	};
 }

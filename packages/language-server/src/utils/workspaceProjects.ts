@@ -8,6 +8,7 @@ import { createSnapshots } from './snapshots';
 import { getInferredCompilerOptions } from './inferredCompilerOptions';
 import { URI } from 'vscode-uri';
 import { ConfigurationHost } from '@volar/vue-language-service';
+import { CancellactionTokenHost } from './cancellationPipe';
 
 export const rootTsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 
@@ -20,6 +21,7 @@ export async function createWorkspaceProjects(
 	tsLocalized: ts.MapLike<string> | undefined,
 	documents: ReturnType<typeof createSnapshots>,
 	configHost: ConfigurationHost | undefined,
+	cancelTokenHost: CancellactionTokenHost,
 ) {
 
 	let inferredProject: Project | undefined;
@@ -28,7 +30,6 @@ export async function createWorkspaceProjects(
 	const documentRegistry = ts.createDocumentRegistry(sys.useCaseSensitiveFileNames, shared.normalizeFileName(rootUri.fsPath));
 	const projects = shared.createUriMap<Project>();
 	const rootTsConfigs = new Set(sys.readDirectory(rootUri.fsPath, rootTsConfigNames, undefined, ['**/*']) as path.OsPath[]);
-
 	const disposeWatch = fsHost.onDidChangeWatchedFiles(async (params, reason) => {
 		const disposes: Promise<any>[] = [];
 		for (const change of params.changes) {
@@ -104,6 +105,7 @@ export async function createWorkspaceProjects(
 					documents,
 					configHost,
 					documentRegistry,
+					cancelTokenHost,
 				);
 			})();
 		}
@@ -233,6 +235,7 @@ export async function createWorkspaceProjects(
 				documents,
 				configHost,
 				documentRegistry,
+				cancelTokenHost,
 			);
 			projects.pathSet(rootUri, tsConfig, project);
 		}

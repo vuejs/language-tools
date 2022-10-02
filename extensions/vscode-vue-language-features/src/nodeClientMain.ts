@@ -1,17 +1,33 @@
+import { ServerMode } from '@volar/vue-language-server';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient/node';
-import { activate as commonActivate, deactivate as commonDeactivate } from './common';
+import { activate as commonActivate, deactivate as commonDeactivate, getDocumentSelector } from './common';
 import { middleware } from './middleware';
 
 export function activate(context: vscode.ExtensionContext) {
+
+	const cancellationPipeName = path.join(os.tmpdir(), `vscode-${context.extension.id}-cancellation-pipe.tmp`);
+	const langs = getDocumentSelector(ServerMode.Semantic);
+
+	vscode.workspace.onDidChangeTextDocument((e) => {
+		if (langs.includes(e.document.languageId)) {
+			fs.writeFileSync(cancellationPipeName, e.document.uri.fsPath + '|' + e.document.version);
+		}
+	});
+
 	return commonActivate(context, async (
 		id,
 		name,
-		documentSelector,
+		langs,
 		initOptions,
 		fillInitializeParams,
 		port,
 	) => {
+
+		initOptions.cancellationPipeName = cancellationPipeName;
 
 		class _LanguageClient extends lsp.LanguageClient {
 			fillInitializeParams(params: lsp.InitializeParams) {
@@ -40,7 +56,7 @@ export function activate(context: vscode.ExtensionContext) {
 		};
 		const clientOptions: lsp.LanguageClientOptions = {
 			middleware,
-			documentSelector,
+			documentSelector: langs.map<lsp.DocumentFilter>(lang => ({ language: lang })),
 			initializationOptions: initOptions,
 			progressOnInitialization: true,
 			synchronize: {

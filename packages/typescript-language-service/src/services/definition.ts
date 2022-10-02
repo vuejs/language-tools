@@ -9,7 +9,6 @@ export function register(
 	rootUri: URI,
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
-	getTextDocument2: (uri: string) => TextDocument | undefined,
 ) {
 	return (uri: string, position: vscode.Position) => {
 
@@ -23,6 +22,6 @@ export function register(
 		try { info = languageService.getDefinitionAndBoundSpan(fileName, offset); } catch { }
 		if (!info) return [];
 
-		return boundSpanToLocationLinks(rootUri, info, document, getTextDocument2);
+		return boundSpanToLocationLinks(rootUri, info, document, getTextDocument);
 	};
 }

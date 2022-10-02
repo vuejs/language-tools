@@ -9,7 +9,6 @@ export function register(
 	rootUri: URI,
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
-	getTextDocument2: (uri: string) => TextDocument | undefined,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {
 	return (uri: string, position: vscode.Position, documentOnly = false): vscode.Hover | undefined => {
@@ -25,7 +24,7 @@ export function register(
 
 		const parts: string[] = [];
 		const displayString = ts.displayPartsToString(info.displayParts);
-		const documentation = previewer.markdownDocumentation(info.documentation ?? [], info.tags, { toResource }, getTextDocument2);
+		const documentation = previewer.markdownDocumentation(info.documentation ?? [], info.tags, { toResource }, getTextDocument);
 
 		if (displayString && !documentOnly) {
 			parts.push(['```typescript', displayString, '```'].join('\n'));

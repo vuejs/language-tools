@@ -7,6 +7,7 @@ import { DiagnosticModel, FileSystemHost, LanguageServerPlugin, RuntimeEnvironme
 import { createSnapshots } from './snapshots';
 import { createWorkspaceProjects, rootTsConfigNames, sortTsConfigs } from './workspaceProjects';
 import * as path from 'typesafe-path';
+import { CancellactionTokenHost } from './cancellationPipe';
 
 export interface Workspaces extends ReturnType<typeof createWorkspaces> { }
 
@@ -21,6 +22,7 @@ export function createWorkspaces(
 	options: LanguageServerInitializationOptions,
 	documents: ReturnType<typeof createSnapshots>,
 	connection: vscode.Connection,
+	cancelTokenHost: CancellactionTokenHost,
 ) {
 
 	let semanticTokensReq = 0;
@@ -66,6 +68,7 @@ export function createWorkspaces(
 				tsLocalized,
 				documents,
 				configurationHost,
+				cancelTokenHost,
 			));
 		},
 		remove: (rootUri: URI) => {
@@ -108,14 +111,12 @@ export function createWorkspaces(
 
 		const req = ++documentUpdatedReq;
 		const delay = await configurationHost?.getConfiguration<number>('volar.diagnostics.delay');
-		const cancel: vscode.CancellationToken = {
+		const cancel = cancelTokenHost.createCancellactionToken({
 			get isCancellationRequested() {
 				return req !== documentUpdatedReq;
 			},
-			// @ts-ignore
-			onCancellationRequested: undefined,
-		};
-
+			onCancellationRequested: vscode.Event.None,
+		});
 		const changeDoc = docUri ? documents.data.uriGet(docUri) : undefined;
 		const otherDocs = [...documents.data.values()].filter(doc => doc !== changeDoc);
 
@@ -137,15 +138,15 @@ export function createWorkspaces(
 			}
 		}
 
-		async function sendDocumentDiagnostics(uri: string, version: number, cancel?: vscode.CancellationToken) {
+		async function sendDocumentDiagnostics(uri: string, version: number, cancel: vscode.CancellationToken) {
 
 			const project = (await getProject(uri))?.project;
 			if (!project) return;
 
 			const languageService = project.getLanguageService();
-			const errors = await languageService.doValidation(uri, result => {
+			const errors = await languageService.doValidation(uri, cancel, result => {
 				connection.sendDiagnostics({ uri: uri, diagnostics: result.map(addVersion), version });
-			}, cancel);
+			});
 
 			connection.sendDiagnostics({ uri: uri, diagnostics: errors.map(addVersion), version });
 

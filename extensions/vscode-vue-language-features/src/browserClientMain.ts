@@ -7,7 +7,7 @@ export function activate(context: vscode.ExtensionContext) {
 	return commonActivate(context, async (
 		id,
 		name,
-		documentSelector,
+		langs,
 		initOptions,
 		fillInitializeParams,
 	) => {
@@ -21,7 +21,7 @@ export function activate(context: vscode.ExtensionContext) {
 		const serverMain = vscode.Uri.joinPath(context.extensionUri, 'dist/browser/server.js');
 		const worker = new Worker(serverMain.toString());
 		const clientOptions: lsp.LanguageClientOptions = {
-			documentSelector,
+			documentSelector: langs.map<lsp.DocumentFilter>(lang => ({ language: lang })),
 			initializationOptions: initOptions,
 			progressOnInitialization: true,
 			synchronize: {

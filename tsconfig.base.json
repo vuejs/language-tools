@@ -29,6 +29,5 @@
 	"exclude": [
 		"node_modules",
 		"**/*/tests",
-		"**/*/testsCases",
 	],
 }

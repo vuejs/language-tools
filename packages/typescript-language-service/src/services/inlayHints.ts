@@ -20,7 +20,8 @@ export function register(
 		const fileName = shared.getPathOfUri(document.uri);
 		const start = document.offsetAt(range.start);
 		const end = document.offsetAt(range.end);
-		const inlayHints = 'provideInlayHints' in languageService ? languageService.provideInlayHints(fileName, { start, length: end - start }, preferences) : [];
+		let inlayHints: ts.InlayHint[] = [];
+		try { inlayHints = 'provideInlayHints' in languageService ? languageService.provideInlayHints(fileName, { start, length: end - start }, preferences) : []; } catch { }
 
 		return inlayHints.map(inlayHint => {
 			const result = vscode.InlayHint.create(
