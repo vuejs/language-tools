@@ -1,4 +1,3 @@
-import * as shared from '@volar/shared';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient';
 import * as nameCasing from './features/nameCasing';
@@ -17,14 +16,12 @@ import * as serverSys from './features/serverSys';
 import { DiagnosticModel, ServerMode, VueServerInitializationOptions } from '@volar/vue-language-server';
 
 enum LanguageFeaturesKind {
-	Semantic_Sensitive,
-	Semantic_Tardy,
+	Semantic,
 	Syntactic,
 }
 
-let client_semantic_sensitive: lsp.BaseLanguageClient | undefined;
-let client_semantic_tardy: lsp.BaseLanguageClient | undefined;
-let client_syntactic: lsp.BaseLanguageClient;
+let semanticClient: lsp.BaseLanguageClient;
+let syntacticClient: lsp.BaseLanguageClient;
 
 type CreateLanguageClient = (
 	id: string,
@@ -67,67 +64,50 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 	vscode.commands.executeCommand('setContext', 'volar.activated', true);
 
-	const _useSecondServer = useSecondServer();
 	const _serverMaxOldSpaceSize = serverMaxOldSpaceSize();
 
-	[client_semantic_sensitive, client_semantic_tardy, client_syntactic] = await Promise.all([
+	[semanticClient, syntacticClient] = await Promise.all([
 		createLc(
-			'vue-semantic-server-1',
+			'vue-semantic-server',
 			'Vue Semantic Server',
 			getDocumentSelector(ServerMode.Semantic),
 			getInitializationOptions(
 				ServerMode.Semantic,
-				_useSecondServer ? [LanguageFeaturesKind.Semantic_Sensitive] : [LanguageFeaturesKind.Semantic_Sensitive, LanguageFeaturesKind.Semantic_Tardy],
 				context,
 			),
-			getFillInitializeParams(_useSecondServer ? [LanguageFeaturesKind.Semantic_Sensitive] : [LanguageFeaturesKind.Semantic_Sensitive, LanguageFeaturesKind.Semantic_Tardy]),
+			getFillInitializeParams([LanguageFeaturesKind.Semantic]),
 			6009,
 		),
-		_useSecondServer ? createLc(
-			'vue-semantic-2',
-			'Vue Tardy Semantic Server',
-			getDocumentSelector(ServerMode.Semantic),
-			getInitializationOptions(
-				ServerMode.Semantic,
-				[LanguageFeaturesKind.Semantic_Tardy],
-				context,
-			),
-			getFillInitializeParams([LanguageFeaturesKind.Semantic_Tardy]),
-			6010,
-		) : undefined,
 		createLc(
 			'vue-syntactic-server',
 			'Vue Syntactic Server',
 			getDocumentSelector(ServerMode.Syntactic),
 			getInitializationOptions(
 				ServerMode.Syntactic,
-				[LanguageFeaturesKind.Syntactic],
 				context,
 			),
 			getFillInitializeParams([LanguageFeaturesKind.Syntactic]),
 			6011,
 		),
 	]);
+	const clients = [semanticClient, syntacticClient];
 
-	const clients = [client_semantic_sensitive, client_semantic_tardy, client_syntactic].filter(shared.notEmpty);
-
-	registerUseSecondServerChange();
 	registerServerMaxOldSpaceSizeChange();
 	registerRestartRequest();
 	registerClientRequests();
 
-	splitEditors.register(context, client_syntactic);
-	preview.register(context, client_syntactic);
+	splitEditors.register(context, syntacticClient);
+	preview.register(context, syntacticClient);
 	doctor.register(context);
-	tsVersion.register('volar.selectTypeScriptVersion', context, [client_semantic_sensitive, client_semantic_tardy].filter(shared.notEmpty));
-	reloadProject.register('volar.action.reloadProject', context, [client_semantic_sensitive, client_semantic_tardy].filter(shared.notEmpty));
+	tsVersion.register('volar.selectTypeScriptVersion', context, semanticClient);
+	reloadProject.register('volar.action.reloadProject', context, semanticClient);
 
-	if (client_semantic_sensitive) {
-		tsconfig.register('volar.openTsconfig', context, client_semantic_tardy ?? client_semantic_sensitive);
-		fileReferences.register('volar.vue.findAllFileReferences', client_semantic_sensitive);
-		verifyAll.register(context, client_semantic_tardy ?? client_semantic_sensitive);
-		autoInsertion.register(context, client_syntactic, client_semantic_sensitive);
-		virtualFiles.register('volar.action.writeVirtualFiles', context, client_semantic_tardy ?? client_semantic_sensitive);
+	if (semanticClient) {
+		tsconfig.register('volar.openTsconfig', context, semanticClient);
+		fileReferences.register('volar.vue.findAllFileReferences', semanticClient);
+		verifyAll.register(context, semanticClient);
+		autoInsertion.register(context, syntacticClient, semanticClient);
+		virtualFiles.register('volar.action.writeVirtualFiles', context, semanticClient);
 	}
 
 	async function requestReloadVscode() {
@@ -137,14 +117,6 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		);
 		if (reload === undefined) return; // cancel
 		vscode.commands.executeCommand('workbench.action.reloadWindow');
-	}
-	function registerUseSecondServerChange() {
-		vscode.workspace.onDidChangeConfiguration(async () => {
-			const nowUseSecondServer = useSecondServer();
-			if (_useSecondServer !== nowUseSecondServer) {
-				return requestReloadVscode();
-			}
-		});
 	}
 	function registerServerMaxOldSpaceSizeChange() {
 		vscode.workspace.onDidChangeConfiguration(async () => {
@@ -168,18 +140,17 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			serverSys.activate(context, client);
 		}
 
-		if (client_semantic_sensitive) {
-			nameCasing.activate(context, client_semantic_sensitive);
+		if (semanticClient) {
+			nameCasing.activate(context, semanticClient);
 		}
 	}
 }
 
 export function deactivate(): Thenable<any> | undefined {
 	return Promise.all([
-		client_semantic_sensitive?.stop(),
-		client_semantic_tardy?.stop(),
-		client_syntactic?.stop(),
-	].filter(shared.notEmpty));
+		semanticClient?.stop(),
+		syntacticClient?.stop(),
+	]);
 }
 
 export function takeOverModeEnabled() {
@@ -213,10 +184,6 @@ export function getDocumentSelector(serverMode: ServerMode) {
 	return langs;
 }
 
-function useSecondServer() {
-	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.useSecondServer');
-}
-
 function serverMaxOldSpaceSize() {
 	return vscode.workspace.getConfiguration('volar').get<number | null>('vueserver.maxOldSpaceSize');
 }
@@ -232,7 +199,7 @@ function processMd() {
 function getFillInitializeParams(featuresKinds: LanguageFeaturesKind[]) {
 	return function (params: lsp.InitializeParams) {
 		if (params.capabilities.textDocument) {
-			if (!featuresKinds.includes(LanguageFeaturesKind.Semantic_Sensitive)) {
+			if (!featuresKinds.includes(LanguageFeaturesKind.Semantic)) {
 				params.capabilities.textDocument.references = undefined;
 				params.capabilities.textDocument.implementation = undefined;
 				params.capabilities.textDocument.definition = undefined;
@@ -243,8 +210,7 @@ function getFillInitializeParams(featuresKinds: LanguageFeaturesKind[]) {
 				params.capabilities.textDocument.signatureHelp = undefined;
 				params.capabilities.textDocument.codeAction = undefined;
 				params.capabilities.textDocument.completion = undefined;
-			}
-			if (!featuresKinds.includes(LanguageFeaturesKind.Semantic_Tardy)) {
+				// Tardy
 				params.capabilities.textDocument.documentHighlight = undefined;
 				params.capabilities.textDocument.documentLink = undefined;
 				params.capabilities.textDocument.codeLens = undefined;
@@ -264,7 +230,7 @@ function getFillInitializeParams(featuresKinds: LanguageFeaturesKind[]) {
 			}
 		}
 		if (params.capabilities.workspace) {
-			if (!featuresKinds.includes(LanguageFeaturesKind.Semantic_Sensitive)) {
+			if (!featuresKinds.includes(LanguageFeaturesKind.Semantic)) {
 				params.capabilities.workspace.symbol = undefined;
 				params.capabilities.workspace.fileOperations = undefined;
 			}
@@ -274,13 +240,12 @@ function getFillInitializeParams(featuresKinds: LanguageFeaturesKind[]) {
 
 function getInitializationOptions(
 	serverMode: ServerMode,
-	featuresKinds: LanguageFeaturesKind[],
 	context: vscode.ExtensionContext,
 ) {
 	const textDocumentSync = vscode.workspace.getConfiguration('volar').get<'incremental' | 'full' | 'none'>('vueserver.textDocumentSync');
 	const initializationOptions: VueServerInitializationOptions = {
 		serverMode,
-		diagnosticModel: featuresKinds.includes(LanguageFeaturesKind.Semantic_Tardy) ? DiagnosticModel.Push : DiagnosticModel.None,
+		diagnosticModel: DiagnosticModel.Push,
 		textDocumentSync: textDocumentSync ? {
 			incremental: lsp.TextDocumentSyncKind.Incremental,
 			full: lsp.TextDocumentSyncKind.Full,

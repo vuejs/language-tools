@@ -261,18 +261,7 @@
 			"type": "object",
 			"title": "Volar",
 			"properties": {
-				"vue-semantic-server-1.trace.server": {
-					"scope": "window",
-					"type": "string",
-					"enum": [
-						"off",
-						"messages",
-						"verbose"
-					],
-					"default": "off",
-					"description": "Traces the communication between VS Code and the language server."
-				},
-				"vue-semantic-server-2.trace.server": {
+				"vue-semantic-server.trace.server": {
 					"scope": "window",
 					"type": "string",
 					"enum": [
@@ -316,11 +305,6 @@
 						"Documents should not be synced at all."
 					],
 					"description": "Defines how the host (editor) should sync document changes to the language server. SFC incremental parser only working when config \"incremental\"."
-				},
-				"volar.vueserver.useSecondServer": {
-					"type": "boolean",
-					"default": false,
-					"description": "Use second server to progress heavy diagnostic works, the main server workhorse computing intellisense, operations such as auto-complete can respond faster. Note that this will lead to more memory usage."
 				},
 				"volar.vueserver.maxOldSpaceSize": {
 					"type": [

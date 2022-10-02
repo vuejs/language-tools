@@ -8,7 +8,7 @@ import * as fs from 'fs';
 
 const defaultTsdk = 'node_modules/typescript/lib' as path.PosixPath;
 
-export async function register(cmd: string, context: vscode.ExtensionContext, clients: BaseLanguageClient[]) {
+export async function register(cmd: string, context: vscode.ExtensionContext, client: BaseLanguageClient) {
 
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	statusBar.command = cmd;
@@ -97,13 +97,11 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 	}
 	async function reloadServers() {
 		const tsPaths = getCurrentTsdk(context);
-		for (const client of clients) {
-			const newInitOptions: LanguageServerInitializationOptions = {
-				...client.clientOptions.initializationOptions,
-				typescript: tsPaths,
-			};
-			client.clientOptions.initializationOptions = newInitOptions;
-		}
+		const newInitOptions: LanguageServerInitializationOptions = {
+			...client.clientOptions.initializationOptions,
+			typescript: tsPaths,
+		};
+		client.clientOptions.initializationOptions = newInitOptions;
 		vscode.commands.executeCommand('volar.action.restartServer');
 	}
 }
