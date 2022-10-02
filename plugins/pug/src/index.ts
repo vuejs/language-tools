@@ -42,7 +42,7 @@ export default function (): LanguageServicePlugin & ReturnType<typeof useHtmlPlu
 		},
 
 		validation: {
-			onFull(document) {
+			onSyntactic(document) {
 				return worker(document, (pugDocument) => {
 
 					if (pugDocument.error) {

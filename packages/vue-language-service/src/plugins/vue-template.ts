@@ -126,12 +126,12 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		},
 
 		validation: {
-			async onFull(document) {
+			async onSyntactic(document) {
 
 				if (!options.isSupportedDocument(document))
 					return;
 
-				const originalResult = await options.templateLanguagePlugin.validation?.onFull?.(document);
+				const originalResult = await options.templateLanguagePlugin.validation?.onSyntactic?.(document);
 				const vueDocument = options.context.documents.fromEmbeddedDocument(document);
 
 				if (vueDocument) {

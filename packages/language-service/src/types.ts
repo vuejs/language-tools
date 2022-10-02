@@ -76,7 +76,6 @@ export interface LanguageServicePlugin {
 	setup?(context: LanguageServicePluginContext): void;
 
 	validation?: {
-		onFull?(document: TextDocument): NullableResult<vscode.Diagnostic[]>;
 		onSemantic?(document: TextDocument): NullableResult<vscode.Diagnostic[]>;
 		onSyntactic?(document: TextDocument): NullableResult<vscode.Diagnostic[]>;
 		onSuggestion?(document: TextDocument): NullableResult<vscode.Diagnostic[]>;

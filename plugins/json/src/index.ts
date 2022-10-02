@@ -43,7 +43,7 @@ export default function (): LanguageServicePlugin {
 		},
 
 		validation: {
-			onFull(document) {
+			onSyntactic(document) {
 				return worker(document, async (jsonDocument) => {
 
 					const documentLanguageSettings = undefined; // await getSettings(); // TODO

@@ -118,7 +118,7 @@ export default function (): LanguageServicePlugin {
 		},
 
 		validation: {
-			async onFull(document) {
+			async onSyntactic(document) {
 				return worker(document, async (stylesheet, cssLs) => {
 
 					const settings = await context.env.configurationHost?.getConfiguration<css.LanguageSettings>(document.languageId, document.uri);

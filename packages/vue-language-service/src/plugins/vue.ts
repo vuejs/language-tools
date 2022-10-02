@@ -138,7 +138,7 @@ export default function (options: {
 		},
 
 		validation: {
-			onFull(document) {
+			onSyntactic(document) {
 				return worker(document, (document, vueDocument, vueSourceFile) => {
 
 					const result: vscode.Diagnostic[] = [];
