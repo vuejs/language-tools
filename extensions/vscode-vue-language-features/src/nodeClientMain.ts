@@ -19,7 +19,7 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 		}
 
-		const serverModule = vscode.Uri.joinPath(context.extensionUri, 'server');
+		const serverModule = vscode.Uri.joinPath(context.extensionUri, 'server.js');
 		const maxOldSpaceSize = vscode.workspace.getConfiguration('volar').get<number | null>('vueserver.maxOldSpaceSize');
 		const runOptions = { execArgv: <string[]>[] };
 		if (maxOldSpaceSize) {
