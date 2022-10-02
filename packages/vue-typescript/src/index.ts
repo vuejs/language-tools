@@ -133,13 +133,15 @@ export function createLanguageService(host: vue.LanguageServiceHost) {
 				if (!teleport)
 					continue;
 
-				for (const [teleOffset, data] of teleport.findTeleports(ref.textSpan.start)) {
+				for (const teleOffset of teleport.findTeleports(ref.textSpan.start, data => {
 					if ((mode === 'definition' || mode === 'typeDefinition' || mode === 'implementation') && !data.definition)
-						continue;
+						return false;
 					if ((mode === 'references') && !data.references)
-						continue;
+						return false;
 					if ((mode === 'rename') && !data.rename)
-						continue;
+						return false;
+					return true;
+				})) {
 					if (loopChecker.has(ref.fileName + ':' + teleOffset))
 						continue;
 					withTeleports(ref.fileName, teleOffset);
@@ -180,9 +182,7 @@ export function createLanguageService(host: vue.LanguageServiceHost) {
 				if (!teleport)
 					continue;
 
-				for (const [teleOffset, data] of teleport.findTeleports(ref.textSpan.start)) {
-					if (!data.definition)
-						continue;
+				for (const teleOffset of teleport.findTeleports(ref.textSpan.start, data => !!data.definition)) {
 					if (loopChecker.has(ref.fileName + ':' + teleOffset))
 						continue;
 					withTeleports(ref.fileName, teleOffset);
@@ -215,11 +215,7 @@ export function createLanguageService(host: vue.LanguageServiceHost) {
 					if (!teleport)
 						continue;
 
-					for (const [telePos, sideData] of teleport.findTeleports(
-						ref.textSpan.start,
-					)) {
-						if (!sideData.references)
-							continue;
+					for (const telePos of teleport.findTeleports(ref.textSpan.start, data => !!data.references)) {
 						if (loopChecker.has(ref.fileName + ':' + telePos))
 							continue;
 						withTeleports(ref.fileName, telePos);
