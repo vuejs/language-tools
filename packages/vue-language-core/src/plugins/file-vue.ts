@@ -1,27 +1,28 @@
 import { VueLanguagePlugin } from '../types';
-import { parse } from '@vue/compiler-sfc';
+import { parse } from '../utils/parseSfc';
 
-const plugin: VueLanguagePlugin = () => {
+const plugin: VueLanguagePlugin = (ctx) => {
 
 	return {
 
 		version: 1,
 
 		parseSFC(fileName, content) {
-
 			if (fileName.endsWith('.vue')) {
-
-				return parse(content, { sourceMap: false, ignoreEmpty: false });
+				return parse(content);
 			}
 		},
 
 		updateSFC(sfc, change) {
 
-			// avoid broken @vue/compiler-sfc cache
-			if (!(sfc as any).__volar_clone) {
-				sfc = JSON.parse(JSON.stringify(sfc));
-				(sfc as any).__volar_clone = true;
-			}
+			/**
+			 * ./utils/parseSfc don't use cache anymore
+			 */
+			// // avoid broken @vue/compiler-sfc cache
+			// if (!(sfc as any).__volar_clone) {
+			// 	sfc = JSON.parse(JSON.stringify(sfc));
+			// 	(sfc as any).__volar_clone = true;
+			// }
 
 			const blocks = [
 				sfc.descriptor.template,

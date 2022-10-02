@@ -87,7 +87,7 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 			},
 			onInitialize(connection) {
 				connection.onRequest(ParseSFCRequest.type, params => {
-					return vue2._0.parse(params, { sourceMap: false, ignoreEmpty: false });
+					return vue2.parse(params);
 				});
 			},
 		},

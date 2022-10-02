@@ -1,6 +1,7 @@
 import { buildMappings, Segment, SourceMapBase, toString } from '@volar/source-map';
-import { parse, SFCBlock } from '@vue/compiler-sfc';
+import { SFCBlock } from '@vue/compiler-sfc';
 import { VueLanguagePlugin } from '../types';
+import { parse } from '../utils/parseSfc';
 
 const plugin: VueLanguagePlugin = () => {
 
@@ -43,7 +44,7 @@ const plugin: VueLanguagePlugin = () => {
 				codeGen.push('\n</template>');
 
 				const file2VueSourceMap = new SourceMapBase(buildMappings(codeGen));
-				const sfc = parse(toString(codeGen), { sourceMap: false, ignoreEmpty: false });
+				const sfc = parse(toString(codeGen));
 
 				if (sfc.descriptor.template) {
 					transformRange(sfc.descriptor.template);
