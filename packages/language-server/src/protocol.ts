@@ -32,7 +32,7 @@ export namespace FindFileReferenceRequest {
 
 export namespace GetMatchTsConfigRequest {
 	export type ParamsType = vscode.TextDocumentIdentifier;
-	export type ResponseType = string | null | undefined;
+    export type ResponseType = { fileName: string, raw: any } | null | undefined;
 	export type ErrorType = never;
 	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('volar/tsconfig');
 }

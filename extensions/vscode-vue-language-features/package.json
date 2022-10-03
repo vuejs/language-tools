@@ -334,6 +334,11 @@
 					"default": true,
 					"description": "Show Vite / Nuxt App preview icon."
 				},
+				"volar.doctor.statusBarItem": {
+					"type": "boolean",
+					"default": true,
+					"description": "Show known problems in status bar."
+				},
 				"volar.codeLens.scriptSetupTools": {
 					"type": "boolean",
 					"default": false,
@@ -614,7 +619,7 @@
 			},
 			{
 				"command": "volar.action.doctor",
-				"title": "Show doctor panel (WIP)",
+				"title": "Doctor",
 				"category": "Volar"
 			},
 			{

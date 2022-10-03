@@ -9,7 +9,13 @@ export function register(
 	projects: Workspaces,
 ) {
 	connection.onRequest(GetMatchTsConfigRequest.type, async params => {
-		return (await projects.getProject(params.uri))?.tsconfig;
+		const project = (await projects.getProject(params.uri));
+		if (project) {
+			return {
+				fileName: project.tsconfig,
+				raw: project.project?.getParsedCommandLine().raw,
+			};
+		}
 	});
 	connection.onNotification(ReloadProjectNotification.type, async params => {
 		projects.reloadProject();

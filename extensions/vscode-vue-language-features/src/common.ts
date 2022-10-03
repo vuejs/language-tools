@@ -98,7 +98,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 	splitEditors.register(context, syntacticClient);
 	preview.register(context, syntacticClient);
-	doctor.register(context);
+	doctor.register(context, semanticClient);
 	tsVersion.register('volar.selectTypeScriptVersion', context, semanticClient);
 	reloadProject.register('volar.action.reloadProject', context, semanticClient);
 
