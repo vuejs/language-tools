@@ -7,6 +7,10 @@
 		"url": "https://github.com/johnsoncodehk/volar.git",
 		"directory": "extensions/vscode-typescript-vue-plugin"
 	},
+	"sponsor": {
+		"url": "https://github.com/sponsors/johnsoncodehk"
+	},
+	"icon": "images/icon.png",
 	"displayName": "TypeScript Vue Plugin (Volar)",
 	"description": "Vue Plugin for TypeScript server",
 	"author": "johnsoncodehk",
