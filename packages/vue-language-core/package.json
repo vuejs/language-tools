@@ -1,6 +1,6 @@
 {
 	"name": "@volar/vue-language-core",
-	"version": "1.0.0-beta.2",
+	"version": "1.0.0-beta.3",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -16,8 +16,8 @@
 		"typescript": "beta"
 	},
 	"dependencies": {
-		"@volar/language-core": "1.0.0-beta.2",
-		"@volar/source-map": "1.0.0-beta.2",
+		"@volar/language-core": "1.0.0-beta.3",
+		"@volar/source-map": "1.0.0-beta.3",
 		"@vue/compiler-dom": "^3.2.38",
 		"@vue/compiler-sfc": "^3.2.38",
 		"@vue/reactivity": "^3.2.38",
