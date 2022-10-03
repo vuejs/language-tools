@@ -633,6 +633,11 @@
 				"category": "Volar (Debug)"
 			},
 			{
+				"command": "volar.action.showVirtualFiles",
+				"title": "Show Virtual Files",
+				"category": "Volar (Debug)"
+			},
+			{
 				"command": "volar.action.showCallGraph",
 				"title": "Show Call Graph",
 				"category": "Volar (Experimental)"
@@ -705,6 +710,10 @@
 				{
 					"command": "volar.action.writeVirtualFiles",
 					"when": "volar.activated"
+				},
+				{
+					"command": "volar.action.showVirtualFiles",
+					"when": "volar.activated && editorLangId == vue"
 				},
 				{
 					"command": "volar.action.showCallGraph",
@@ -836,6 +845,7 @@
 		"@types/vscode": "1.67.0",
 		"@volar/preview": "1.0.0-beta.3",
 		"@volar/shared": "1.0.0-beta.3",
+		"@volar/source-map": "1.0.0-beta.3",
 		"@volar/vue-language-core": "1.0.0-beta.3",
 		"@volar/vue-language-server": "1.0.0-beta.3",
 		"esbuild": "latest",

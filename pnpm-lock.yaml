@@ -62,6 +62,7 @@ importers:
       '@types/vscode': 1.67.0
       '@volar/preview': 1.0.0-beta.3
       '@volar/shared': 1.0.0-beta.3
+      '@volar/source-map': 1.0.0-beta.3
       '@volar/vue-language-core': 1.0.0-beta.3
       '@volar/vue-language-server': 1.0.0-beta.3
       esbuild: 0.15.7
@@ -79,6 +80,7 @@ importers:
       '@types/vscode': 1.67.0
       '@volar/preview': link:../../packages/preview
       '@volar/shared': link:../../packages/shared
+      '@volar/source-map': link:../../packages/source-map
       '@volar/vue-language-core': link:../../packages/vue-language-core
       '@volar/vue-language-server': link:../../packages/vue-language-server
       esbuild: 0.15.7

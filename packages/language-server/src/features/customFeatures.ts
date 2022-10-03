@@ -2,7 +2,8 @@ import * as shared from '@volar/shared';
 import * as path from 'typesafe-path';
 import * as vscode from 'vscode-languageserver';
 import type { Workspaces } from '../utils/workspaces';
-import { GetMatchTsConfigRequest, ReloadProjectNotification, VerifyAllScriptsNotification, WriteVirtualFilesNotification } from '../protocol';
+import { GetMatchTsConfigRequest, ReloadProjectNotification, VerifyAllScriptsNotification, WriteVirtualFilesNotification, GetVirtualFileNamesRequest, GetVirtualFileRequest } from '../protocol';
+import { forEachEmbeddeds } from '@volar/language-core';
 
 export function register(
 	connection: vscode.Connection,
@@ -15,6 +16,33 @@ export function register(
 				fileName: project.tsconfig,
 				raw: project.project?.getParsedCommandLine().raw,
 			};
+		}
+	});
+	connection.onRequest(GetVirtualFileNamesRequest.type, async document => {
+		const project = await projects.getProject(document.uri);
+		const fileNames: string[] = [];
+		if (project) {
+			const sourceFile = project.project?.getLanguageService().context.core.mapper.get(shared.getPathOfUri(document.uri))?.[0];
+			if (sourceFile) {
+				forEachEmbeddeds(sourceFile.embeddeds, e => {
+					if (e.text && e.kind === 1) {
+						fileNames.push(e.fileName);
+					}
+				});
+			}
+		}
+		return fileNames;
+	});
+	connection.onRequest(GetVirtualFileRequest.type, async params => {
+		const project = await projects.getProject(params.sourceFileUri);
+		if (project) {
+			const embeddedFile = project.project?.getLanguageService().context.core.mapper.fromEmbeddedFileName(params.virtualFileName)?.embedded;
+			if (embeddedFile) {
+				return {
+					content: embeddedFile.text,
+					mappings: embeddedFile.mappings as any,
+				};
+			}
 		}
 	});
 	connection.onNotification(ReloadProjectNotification.type, async params => {

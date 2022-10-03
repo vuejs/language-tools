@@ -10,12 +10,9 @@ export namespace ShowReferencesNotification {
 	export const type = new vscode.NotificationType<ResponseType>('vue.findReferences');
 }
 
-export namespace GetDocumentPrintWidthRequest {
-	export type ParamsType = vscode.TextDocumentIdentifier;
-	export type ResponseType = number | undefined;
-	export type ErrorType = never;
-	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('vue/getDocumentWordWrapColumn');
-}
+/**
+ * Client request server
+ */
 
 export namespace FindFileReferenceRequest {
 	export type ParamsType = {
@@ -26,13 +23,9 @@ export namespace FindFileReferenceRequest {
 	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('vue/findFileReference');
 }
 
-/**
- * Client request server
- */
-
 export namespace GetMatchTsConfigRequest {
 	export type ParamsType = vscode.TextDocumentIdentifier;
-    export type ResponseType = { fileName: string, raw: any } | null | undefined;
+	export type ResponseType = { fileName: string, raw: any; } | null | undefined;
 	export type ErrorType = never;
 	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('volar/tsconfig');
 }
@@ -63,6 +56,30 @@ export namespace WriteVirtualFilesNotification {
 
 export namespace ReloadProjectNotification {
 	export const type = new vscode.NotificationType<vscode.TextDocumentIdentifier>('volar.action.reloadProject');
+}
+
+export namespace GetVirtualFileNamesRequest {
+	export type ParamsType = vscode.TextDocumentIdentifier;
+	export type ResponseType = string[];
+	export type ErrorType = never;
+	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('vue/virtualFileNames');
+}
+
+export namespace GetVirtualFileRequest {
+	export type ParamsType = {
+		sourceFileUri: string;
+		virtualFileName: string;
+	};
+	export type ResponseType = {
+		content: string;
+		mappings: {
+			sourceRange: [number, number];
+			generatedRange: [number, number];
+			data: undefined;
+		}[];
+	};
+	export type ErrorType = never;
+	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('vue/virtualFile');
 }
 
 /**

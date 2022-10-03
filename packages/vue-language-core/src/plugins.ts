@@ -56,7 +56,7 @@ export function getDefaultVueLanguagePlugins(
 			typescript: ts,
 		},
 		compilerOptions,
-		vueCompilerOptions: vueCompilerOptions,
+		vueCompilerOptions,
 	};
 	const plugins = _plugins.map(plugin => plugin(pluginCtx)).sort((a, b) => {
 		const aOrder = a.order ?? 0;
