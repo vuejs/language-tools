@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.0-beta.3 (2022/10/3)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- feat: support `ParseSFCRequest` LSP request for parse SFC to avoid language client depend on `@vue/compiler-sfc`
+- feat: add `VueServerInitializationOptions#cancellationPipeName` option for language client cancellation token supports
+- feat: remove second semantic language server and `volar.vueserver.useSecondServer` setting
+- perf: cancel asynchronous request via named pipes (https://github.com/johnsoncodehk/volar/pull/1916#issuecomment-1264709112)
+- chore: change extension icon to Vue logo
+- chore: optimize bunding (2.2MB -> 975KB)
+
 ## 1.0.0-beta.2 (2022/9/30)
 
 [[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
