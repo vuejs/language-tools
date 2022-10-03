@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.0-beta.4 (2022/10/4)
+
+- feat: support document doctor for common problems checking ([#1254](https://github.com/johnsoncodehk/volar/issues/1254))
+- feat: add "Show Virtual Files" command for debug virtual code and mapping
+
 ## 1.0.0-beta.3 (2022/10/3)
 
 [[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
