@@ -26,16 +26,25 @@ const mappingSelectionDecorationType = vscode.window.createTextEditorDecorationT
 
 export async function register(cmd: string, context: vscode.ExtensionContext, client: BaseLanguageClient) {
 
-	const sourceEditorToVirtualUris = new WeakMap<vscode.TextEditor, string[]>();
+	const sourceUriToVirtualUris = new Map<string, string[]>();
 	const virtualUriToSourceEditor = new Map<string, vscode.TextEditor>();
 	const virtualUriToSourceMap = new Map<string, SourceMapBase>();
+	const docChangeEvent = new vscode.EventEmitter<vscode.Uri>();
 
 	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(update));
 	context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(update));
+	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(e => {
+		const uris = sourceUriToVirtualUris.get(e.document.uri.toString());
+		if (uris) {
+			for (const uri of uris) {
+				docChangeEvent.fire(vscode.Uri.parse(uri));
+			}
+		}
+	}));
 	context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(
 		scheme,
 		{
-			// onDidChange: docChangeEvent.event,
+			onDidChange: docChangeEvent.event,
 			async provideTextDocumentContent(uri: vscode.Uri): Promise<string | undefined> {
 
 				const fileName = uri.with({ scheme: 'file' }).fsPath;
@@ -57,7 +66,7 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 		if (sourceEditor) {
 			const fileNames = await client.sendRequest(GetVirtualFileNamesRequest.type, client.code2ProtocolConverter.asTextDocumentIdentifier(sourceEditor.document));
 			const uris = fileNames.map(fileName => vscode.Uri.file(fileName).with({ scheme }));
-			sourceEditorToVirtualUris.set(sourceEditor, uris.map(uri => uri.toString()));
+			sourceUriToVirtualUris.set(sourceEditor.document.uri.toString(), uris.map(uri => uri.toString()));
 			for (const uri of uris) {
 				virtualUriToSourceEditor.set(uri.toString(), sourceEditor);
 				vscode.window.showTextDocument(uri, { viewColumn: vscode.ViewColumn.Two, preview: false });
@@ -73,7 +82,7 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 	function update() {
 		if (vscode.window.activeTextEditor) {
 			const sourceEditor = virtualUriToSourceEditor.get(vscode.window.activeTextEditor.document.uri.toString()) ?? vscode.window.activeTextEditor;
-			const virtualUris = sourceEditorToVirtualUris.get(sourceEditor);
+			const virtualUris = sourceUriToVirtualUris.get(sourceEditor.document.uri.toString());
 			const virtualEditors = vscode.window.visibleTextEditors.filter(editor => virtualUris?.includes(editor.document.uri.toString()));;
 			if (virtualEditors) {
 				let mappingDecorationRanges: vscode.Range[] = [];
