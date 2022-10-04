@@ -29,9 +29,7 @@
 				"--extensionDevelopmentPath=${workspaceRoot}/examples/svelte"
 			],
 			"outFiles": [
-				"${workspaceRoot}/examples/*/out/**/*.js",
-				"${workspaceRoot}/packages/*/out/**/*.js",
-				"${workspaceRoot}/plugins/*/out/**/*.js"
+				"${workspaceRoot}/*/*/out/**/*.js"
 			],
 			"preLaunchTask": {
 				"type": "npm",

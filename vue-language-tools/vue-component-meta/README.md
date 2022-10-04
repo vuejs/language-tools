@@ -2,7 +2,7 @@
 
 ## Usage
 
-See https://github.com/johnsoncodehk/volar/blob/master/packages/vue-component-meta/tests/index.spec.ts.
+See https://github.com/johnsoncodehk/volar/blob/master/vue-language-tools/vue-component-meta/tests/index.spec.ts.
 
 ## Sponsors
 
