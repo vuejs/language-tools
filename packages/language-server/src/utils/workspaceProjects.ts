@@ -7,7 +7,7 @@ import { LanguageServerPlugin, RuntimeEnvironment, FileSystemHost } from '../typ
 import { createSnapshots } from './snapshots';
 import { getInferredCompilerOptions } from './inferredCompilerOptions';
 import { URI } from 'vscode-uri';
-import { ConfigurationHost } from '@volar/vue-language-service';
+import { ConfigurationHost } from '@volar/language-service';
 import { CancellactionTokenHost } from './cancellationPipe';
 
 export const rootTsConfigNames = ['tsconfig.json', 'jsconfig.json'];
@@ -255,7 +255,7 @@ export function sortTsConfigs(fsPath: path.OsPath, a: path.OsPath, b: path.OsPat
 	}
 
 	const aLength = shared.normalizeFileName(a).split('/').length;
-	const bLength = shared.normalizeFileName(a).split('/').length;
+	const bLength = shared.normalizeFileName(b).split('/').length;
 
 	if (aLength === bLength) {
 		const aWeight = path.basename(a) === 'tsconfig.json' ? 1 : 0;
