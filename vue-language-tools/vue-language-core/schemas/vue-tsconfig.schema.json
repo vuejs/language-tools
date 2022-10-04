@@ -31,6 +31,16 @@
 					"type": "boolean",
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/577"
 				},
+				"dataAttributes": {
+					"type": "array",
+					"default": ["data-*"],
+					"markdownDescription": "A glob matcher array that should always avoid recognized as HTML Attributes and Component props."
+				},
+				"htmlAttributes": {
+					"type": "array",
+					"default": ["aria-*"],
+					"markdownDescription": "A glob matcher array that should always be recognizing as HTML Attributes rather than Component props. Attribute name will never convert to camelize case."
+				},
 				"plugins": {
 					"type": "array",
 					"default": [],

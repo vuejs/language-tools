@@ -82,6 +82,8 @@ export function resolveVueCompilerOptions(vueOptions: VueCompilerOptions): Resol
 		jsxTemplates: vueOptions.jsxTemplates ?? false,
 		strictTemplates: vueOptions.strictTemplates ?? false,
 		skipTemplateCodegen: vueOptions.skipTemplateCodegen ?? false,
+		dataAttributes: vueOptions.dataAttributes ?? ['data-*'],
+		htmlAttributes: vueOptions.htmlAttributes ?? ['aria-*'],
 		plugins: vueOptions.plugins ?? [],
 
 		// experimental

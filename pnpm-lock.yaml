@@ -354,12 +354,14 @@ importers:
 
   vue-language-tools/vue-language-core:
     specifiers:
+      '@types/minimatch': ^5.1.2
       '@volar/language-core': 1.0.0-beta.8
       '@volar/source-map': 1.0.0-beta.8
       '@vue/compiler-dom': ^3.2.38
       '@vue/compiler-sfc': ^3.2.38
       '@vue/reactivity': ^3.2.38
       '@vue/shared': ^3.2.38
+      minimatch: ^5.1.0
       vue-template-compiler: ^2.7.10
     dependencies:
       '@volar/language-core': link:../../packages/language-core
@@ -368,7 +370,10 @@ importers:
       '@vue/compiler-sfc': 3.2.40
       '@vue/reactivity': 3.2.40
       '@vue/shared': 3.2.40
+      minimatch: 5.1.0
       vue-template-compiler: 2.7.10
+    devDependencies:
+      '@types/minimatch': 5.1.2
 
   vue-language-tools/vue-language-plugin-pug:
     specifiers:
@@ -1185,6 +1190,10 @@ packages:
     resolution: {integrity: sha512-hC7OMnszpxhZPduX+m+nrx+uFoLkWOMiR4oa/AZF3MuSETYTZmFfJAHqZEM8MVlvfG7BEUcgvtwoCTxBp6hm3g==}
     dev: true
 
+  /@types/minimatch/5.1.2:
+    resolution: {integrity: sha512-K0VQKziLUWkVKiRVrx4a40iPaxTUefQmjtkQofBkYRcoaaL/8rhwDWww9qWbrgicNOgnpIsMxyNIUM4+n6dUIA==}
+    dev: true
+
   /@types/minimist/1.2.2:
     resolution: {integrity: sha512-jhuKLIRrhvCPLqwPcx6INqmKeiA5EWrsCOPhrlFSrbrmU4ZMPjj5Ul/oLCMDO98XRUIwVm78xICz4EPCektzeQ==}
     dev: false
@@ -1610,7 +1619,6 @@ packages:
     dependencies:
       balanced-match: 1.0.2
     dev: false
-    optional: true
 
   /braces/3.0.2:
     resolution: {integrity: sha512-b8um+L1RzM3WDSzvhm6gIz1yfTbBt6YTlcEKAvsmqCZZFw46z626lVj9j1yEPW33H5H+lBQpZMP1k8l+78Ha0A==}
@@ -3913,7 +3921,6 @@ packages:
     dependencies:
       brace-expansion: 2.0.1
     dev: false
-    optional: true
 
   /minimist-options/4.1.0:
     resolution: {integrity: sha512-Q4r8ghd80yhO/0j1O3B2BjweX3fiHg9cdOwjJd2J76Q135c+NDxGCqdYKQ1SKBuFfgWbAUzBfvYjPUEeNgqN1A==}

@@ -6,6 +6,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import { parseBindingRanges } from '../parsers/scriptSetupRanges';
 import { ResolvedVueCompilerOptions } from '../types';
 import { colletVars, walkInterpolationFragment } from '../utils/transform';
+import * as minimatch from 'minimatch';
 
 const capabilitiesSet = {
 	all: { hover: true, diagnostic: true, references: true, definition: true, rename: true, completion: true, semanticTokens: true } satisfies PositionCapabilities,
@@ -459,7 +460,7 @@ export function generate(
 				tagCapabilities,
 			]);
 			codeGen.push(` `);
-			const { hasRemainStyleOrClass, unwritedExps } = writeProps(node, false, 'jsx', 'props');
+			const { unwritedExps } = writeProps(node, 'jsx', 'props');
 			_unwritedExps = unwritedExps;
 
 			if (endTagOffset === undefined) {
@@ -494,12 +495,6 @@ export function generate(
 				capabilitiesSet.diagnosticOnly,
 			]);
 			codeGen.push(`\n`);
-
-			if (hasRemainStyleOrClass) {
-				codeGen.push(`<${tagText} `);
-				writeProps(node, true, 'jsx', 'props');
-				codeGen.push(`/>\n`);
-			}
 		}
 		else {
 
@@ -581,15 +576,9 @@ export function generate(
 				capabilitiesSet.diagnosticOnly,
 			]);
 			codeGen.push(` = { `);
-			const { hasRemainStyleOrClass, unwritedExps } = writeProps(node, false, 'class', 'props');
+			const { unwritedExps } = writeProps(node, 'class', 'props');
 			_unwritedExps = unwritedExps;
 			codeGen.push(` };\n`);
-
-			if (hasRemainStyleOrClass) {
-				codeGen.push(`${var_props} = { `);
-				writeProps(node, true, 'class', 'props');
-				codeGen.push(` };\n`);
-			}
 		}
 		{
 
@@ -835,17 +824,17 @@ export function generate(
 
 			if (componentVar) {
 				codeGen.push(`const ${varComponentInstance} = new ${componentVar}({ `);
-				writeProps(node, false, 'class', 'slots');
+				writeProps(node, 'class', 'slots');
 				codeGen.push(`});\n`);
 			}
 
 			writedInstance = true;
 		}
 	}
-	function writeProps(node: CompilerDOM.ElementNode, forRemainStyleOrClass: boolean, format: 'jsx' | 'class', mode: 'props' | 'slots') {
+	function writeProps(node: CompilerDOM.ElementNode, format: 'jsx' | 'class', mode: 'props' | 'slots') {
 
-		let styleCount = 0;
-		let classCount = 0;
+		let styleAttrNums = 0;
+		let classAttrNums = 0;
 		const unwritedExps: CompilerDOM.SimpleExpressionNode[] = [];
 
 		for (const prop of node.props) {
@@ -856,38 +845,38 @@ export function generate(
 				&& (!prop.exp || prop.exp.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
 			) {
 
-				const isStatic = !prop.arg || (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic);
-				let propName_1 =
+				let attrNameText =
 					prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 						? prop.arg.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY
 							? prop.arg.content
 							: prop.arg.loc.source
 						: getModelValuePropName(node, vueCompilerOptions.target);
 
-				if (propName_1 === undefined) {
+				if (prop.modifiers.some(m => m === 'prop' || m === 'attr')) {
+					attrNameText = attrNameText?.substring(1);
+				}
+
+				if (
+					attrNameText === undefined
+					|| vueCompilerOptions.dataAttributes.some(pattern => minimatch(attrNameText!, pattern))
+					|| (attrNameText === 'style' && ++styleAttrNums >= 2)
+					|| (attrNameText === 'class' && ++classAttrNums >= 2)
+				) {
 					if (prop.exp) {
 						unwritedExps.push(prop.exp);
 					}
 					continue;
 				}
 
-				if (prop.modifiers.some(m => m === 'prop' || m === 'attr')) {
-					propName_1 = propName_1.substring(1);
-				}
-
-				const propName_2 = !isStatic ? propName_1 : hyphenate(propName_1) === propName_1 ? camelize(propName_1) : propName_1;
+				const isStatic = !prop.arg || (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic);
+				const propName = isStatic
+					&& hyphenate(attrNameText) === attrNameText
+					&& !vueCompilerOptions.htmlAttributes.some(pattern => minimatch(attrNameText!, pattern))
+					? camelize(attrNameText)
+					: attrNameText;
 
 				if (vueCompilerOptions.strictTemplates) {
-					propName_1 = propName_2;
-				}
-
-				if (forRemainStyleOrClass && propName_2 !== 'style' && propName_2 !== 'class')
-					continue;
-
-				if (propName_2 === 'style' || propName_2 === 'class') {
-					const index = propName_2 === 'style' ? styleCount++ : classCount++;
-					if (index >= 1 !== forRemainStyleOrClass)
-						continue;
+					attrNameText = propName;
 				}
 
 				// camelize name
@@ -900,7 +889,7 @@ export function generate(
 				]);
 				if (!prop.arg) {
 					writePropName(
-						propName_1,
+						attrNameText,
 						isStatic,
 						[prop.loc.start.offset, prop.loc.start.offset + 'v-model'.length],
 						getCaps(capabilitiesSet.attr),
@@ -909,14 +898,14 @@ export function generate(
 				}
 				else if (prop.exp?.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
 					writePropName(
-						propName_2,
+						propName,
 						isStatic,
-						[prop.arg.loc.start.offset, prop.arg.loc.start.offset + propName_1.length], // patch style attr,
+						[prop.arg.loc.start.offset, prop.arg.loc.start.offset + attrNameText.length], // patch style attr,
 						{
 							...getCaps(capabilitiesSet.attr),
 							rename: {
 								normalize: camelize,
-								apply: getRenameApply(propName_1),
+								apply: getRenameApply(attrNameText),
 							},
 						},
 						(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
@@ -924,14 +913,14 @@ export function generate(
 				}
 				else {
 					writePropName(
-						propName_2,
+						propName,
 						isStatic,
 						[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
 						{
 							...getCaps(capabilitiesSet.attr),
 							rename: {
 								normalize: camelize,
-								apply: getRenameApply(propName_1),
+								apply: getRenameApply(attrNameText),
 							},
 						},
 						(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
@@ -968,17 +957,17 @@ export function generate(
 				]);
 				writePropEnd(isStatic);
 				// original name
-				if (prop.arg && propName_1 !== propName_2) {
+				if (prop.arg && attrNameText !== propName) {
 					writePropStart(isStatic);
 					writePropName(
-						propName_1,
+						attrNameText,
 						isStatic,
 						[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
 						{
 							...getCaps(capabilitiesSet.attr),
 							rename: {
 								normalize: camelize,
-								apply: getRenameApply(propName_1),
+								apply: getRenameApply(attrNameText),
 							},
 						},
 						(prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}),
@@ -1005,20 +994,23 @@ export function generate(
 				prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
 			) {
 
-				const propName = hyphenate(prop.name) === prop.name ? camelize(prop.name) : prop.name;
-				let propName2 = prop.name;
+				let attrNameText = prop.name;
 
-				if (vueCompilerOptions.strictTemplates) {
-					propName2 = propName;
+				if (
+					vueCompilerOptions.dataAttributes.some(pattern => minimatch(attrNameText!, pattern))
+					|| (attrNameText === 'style' && ++styleAttrNums >= 2)
+					|| (attrNameText === 'class' && ++classAttrNums >= 2)
+				) {
+					continue;
 				}
 
-				if (forRemainStyleOrClass && propName !== 'style' && propName !== 'class')
-					continue;
+				const propName = hyphenate(prop.name) === prop.name
+					&& !vueCompilerOptions.htmlAttributes.some(pattern => minimatch(attrNameText, pattern))
+					? camelize(prop.name)
+					: prop.name;
 
-				if (propName === 'style' || propName === 'class') {
-					const index = propName === 'style' ? styleCount++ : classCount++;
-					if (index >= 1 !== forRemainStyleOrClass)
-						continue;
+				if (vueCompilerOptions.strictTemplates) {
+					attrNameText = propName;
 				}
 
 				// camelize name
@@ -1032,7 +1024,7 @@ export function generate(
 				writePropName(
 					propName,
 					true,
-					[prop.loc.start.offset, prop.loc.start.offset + propName2.length],
+					[prop.loc.start.offset, prop.loc.start.offset + attrNameText.length],
 					{
 						...getCaps(capabilitiesSet.attr),
 						rename: {
@@ -1058,10 +1050,10 @@ export function generate(
 					getCaps(capabilitiesSet.diagnosticOnly),
 				]);
 				// original name
-				if (propName2 !== propName) {
+				if (attrNameText !== propName) {
 					writePropStart(true);
 					writePropName(
-						propName2,
+						attrNameText,
 						true,
 						prop.loc.start.offset,
 						{
@@ -1090,9 +1082,6 @@ export function generate(
 				&& !prop.arg
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
-				if (forRemainStyleOrClass) {
-					continue;
-				}
 				if (format === 'jsx')
 					codeGen.push('{...');
 				else
@@ -1119,18 +1108,12 @@ export function generate(
 					codeGen.push(', ');
 			}
 			else {
-				if (forRemainStyleOrClass) {
-					continue;
-				}
 				// comment this line to avoid affecting comments in prop expressions
 				// tsCodeGen.addText("/* " + [prop.type, prop.name, prop.arg?.loc.source, prop.exp?.loc.source, prop.loc.source].join(", ") + " */ ");
 			}
 		}
 
-		return {
-			hasRemainStyleOrClass: styleCount >= 2 || classCount >= 2,
-			unwritedExps,
-		};
+		return { unwritedExps };
 
 		function writePropName(name: string, isStatic: boolean, sourceRange: number | [number, number], data: PositionCapabilities, cacheOn: any) {
 			if (format === 'jsx' && isStatic) {
@@ -1267,7 +1250,7 @@ export function generate(
 
 				if (componentVar && parentEl) {
 					codeGen.push(`const ${varComponentInstance} = new ${componentVar}({ `);
-					writeProps(parentEl, false, 'class', 'slots');
+					writeProps(parentEl, 'class', 'slots');
 					codeGen.push(`});\n`);
 					writeInterpolationVarsExtraCompletion();
 					codeGen.push(`let ${varSlots}!: import('./__VLS_types.js').ExtractComponentSlots<typeof ${varComponentInstance}>;\n`);

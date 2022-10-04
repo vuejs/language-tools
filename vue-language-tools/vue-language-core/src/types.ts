@@ -18,6 +18,8 @@ export interface ResolvedVueCompilerOptions {
 	jsxTemplates: boolean;
 	strictTemplates: boolean;
 	skipTemplateCodegen: boolean;
+	dataAttributes: string[];
+	htmlAttributes: string[];
 	plugins: string[];
 
 	// experimental
