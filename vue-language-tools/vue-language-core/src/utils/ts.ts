@@ -84,15 +84,14 @@ export function resolveVueCompilerOptions(vueOptions: VueCompilerOptions): Resol
 		skipTemplateCodegen: vueOptions.skipTemplateCodegen ?? false,
 		dataAttributes: vueOptions.dataAttributes ?? ['data-*'],
 		htmlAttributes: vueOptions.htmlAttributes ?? ['aria-*'],
-		plugins: vueOptions.plugins ?? [],
-
-		// experimental
-		experimentalComponentOptionsWrapper: vueOptions.experimentalComponentOptionsWrapper ?? (
+		optionsWrapper: vueOptions.optionsWrapper ?? (
 			target >= 2.7
 				? [`(await import('vue')).defineComponent(`, `)`]
 				: [`(await import('vue')).default.extend(`, `)`]
 		),
-		experimentalComponentOptionsWrapperEnable: vueOptions.experimentalComponentOptionsWrapperEnable ?? 'onlyJs',
+		plugins: vueOptions.plugins ?? [],
+
+		// experimental
 		experimentalRuntimeMode: vueOptions.experimentalRuntimeMode ?? 'runtime-dom',
 		experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup: vueOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup ?? 'onlyJs',
 		experimentalTemplateCompilerOptions: vueOptions.experimentalTemplateCompilerOptions ?? {},

@@ -46,22 +46,13 @@
 					"default": [],
 					"markdownDescription": "Plugins to be used in the SFC compiler."
 				},
-				"experimentalComponentOptionsWrapper": {
+				"optionsWrapper": {
 					"type": "array",
 					"default": [
 						"(await import('vue')).defineComponent(",
 						")"
 					],
 					"markdownDescription": "How to wrap option of `export default { ... }`? Default: `[\"(await import('vue')).default.extend(\", \")\"]` for target < 2.7, `[\"(await import('vue')).defineComponent(\", \")\"]` for target >= 2.7."
-				},
-				"experimentalComponentOptionsWrapperEnable": {
-					"enum": [
-						true,
-						false,
-						"onlyJs"
-					],
-					"default": "onlyJs",
-					"markdownDescription": "Enable `experimentalComponentOptionsWrapper`?"
 				},
 				"experimentalRuntimeMode": {
 					"type": "string",

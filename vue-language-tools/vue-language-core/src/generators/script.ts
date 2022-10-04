@@ -88,7 +88,7 @@ export function generate(
 
 	return {
 		codeGen,
-		extraMappings,	
+		extraMappings,
 		teleports,
 	};
 
@@ -155,13 +155,11 @@ export function generate(
 			if (scriptRanges?.exportDefault) {
 				isExportRawObject = sfc.script.content.substring(scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end).startsWith('{');
 			}
-			const warpperEnabled = vueCompilerOptions.experimentalComponentOptionsWrapperEnable === true
-				|| (vueCompilerOptions.experimentalComponentOptionsWrapperEnable === 'onlyJs' && (lang === 'js' || lang === 'jsx'));
-			if (isExportRawObject && warpperEnabled && scriptRanges?.exportDefault) {
+			if (isExportRawObject && vueCompilerOptions.optionsWrapper.length && scriptRanges?.exportDefault) {
 				addVirtualCode('script', 0, scriptRanges.exportDefault.expression.start);
-				codeGen.push(vueCompilerOptions.experimentalComponentOptionsWrapper[0]);
+				codeGen.push(vueCompilerOptions.optionsWrapper[0]);
 				addVirtualCode('script', scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end);
-				codeGen.push(vueCompilerOptions.experimentalComponentOptionsWrapper[1]);
+				codeGen.push(vueCompilerOptions.optionsWrapper[1]);
 				addVirtualCode('script', scriptRanges.exportDefault.expression.end, sfc.script.content.length);
 			}
 			else {

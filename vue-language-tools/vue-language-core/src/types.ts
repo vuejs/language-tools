@@ -20,11 +20,10 @@ export interface ResolvedVueCompilerOptions {
 	skipTemplateCodegen: boolean;
 	dataAttributes: string[];
 	htmlAttributes: string[];
+	optionsWrapper: [string, string] | [];
 	plugins: string[];
 
 	// experimental
-	experimentalComponentOptionsWrapper: [string, string];
-	experimentalComponentOptionsWrapperEnable: boolean | 'onlyJs';
 	experimentalRuntimeMode: 'runtime-dom' | 'runtime-uni-app';
 	experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup: boolean | 'onlyJs';
 	experimentalTemplateCompilerOptions: any;
