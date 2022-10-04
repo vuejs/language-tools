@@ -32,7 +32,7 @@ export async function createProject(
 
 	let typeRootVersion = 0;
 	let projectVersion = 0;
-	let projectVersionUpdateTime = 0;
+	let projectVersionUpdateTime = cancelTokenHost.getMtime();
 	let vueLs: embeddedLS.LanguageService | undefined;
 	let parsedCommandLine = createParsedCommandLine(ts, sys, shared.getPathOfUri(rootUri.toString()), tsConfig, plugins);
 

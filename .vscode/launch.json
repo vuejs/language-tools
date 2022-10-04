@@ -92,18 +92,6 @@
 			]
 		},
 		{
-			"name": "Attach to Second Language Features Server",
-			"type": "node",
-			"request": "attach",
-			"port": 6010,
-			"restart": true,
-			"outFiles": [
-				"${workspaceRoot}/examples/*/out/**/*.js",
-				"${workspaceRoot}/packages/*/out/**/*.js",
-				"${workspaceRoot}/plugins/*/out/**/*.js"
-			]
-		},
-		{
 			"name": "Attach to Document Features Server",
 			"type": "node",
 			"request": "attach",

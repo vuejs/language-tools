@@ -11,10 +11,17 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const cancellationPipeName = path.join(os.tmpdir(), `vscode-${context.extension.id}-cancellation-pipe.tmp`);
 	const langs = getDocumentSelector(ServerMode.Semantic);
+	let cancellationPipeUpdateKey: string | undefined;
 
 	vscode.workspace.onDidChangeTextDocument((e) => {
-		if (langs.includes(e.document.languageId)) {
-			fs.writeFileSync(cancellationPipeName, e.document.uri.fsPath + '|' + e.document.version);
+		let key = e.document.uri.toString() + '|' + e.document.version;
+		if (cancellationPipeUpdateKey === undefined) {
+			cancellationPipeUpdateKey = key;
+			return;
+		}
+		if (langs.includes(e.document.languageId) && cancellationPipeUpdateKey !== key) {
+			cancellationPipeUpdateKey = key;
+			fs.writeFileSync(cancellationPipeName, '');
 		}
 	});
 
