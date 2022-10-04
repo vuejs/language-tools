@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.0-beta.6 (2022/10/4)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- fix: vue-language-server not release
+
 ## 1.0.0-beta.5 (2022/10/4)
 
 [[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
