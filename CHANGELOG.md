@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.0.0-rc.0 (2022/10/5)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- feat(vue-component-meta): add file update apis for support HMR ([#1889](https://github.com/johnsoncodehk/volar/issues/1889))
+- feat: add `vueCompilerOptions#vueCompilerOpti`, `vueCompilerOptions#vueCompilerOpti` options for tsconfig ([#1871](https://github.com/johnsoncodehk/volar/issues/1871))
+- feat: support for `typescript.autoImportFileExcludePatterns`
+
+**Breaking changes**
+
+- Some `vueCompilerOptions` perperties leave experimental
+  - `experimentalComponentOptionsWrapper` -> `optionsWrapper`
+  - `experimentalAllowTypeNarrowingInInlineHandlers` -> `narrowingTypesInInlineHandlers`
+  - `experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup` -> `bypassDefineComponentToExposePropsAndEmitsForJsScriptSetupComponents`
+
 ## 1.0.0-beta.6 (2022/10/4)
 
 [[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
