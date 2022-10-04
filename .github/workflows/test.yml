@@ -22,6 +22,6 @@ jobs:
 
       # install pnpm
       - run: npm i -g pnpm
-      - run: pnpm install --frozen-lockfile --no-optional --filter "." --filter "./packages/**" --filter "./plugins/**"
+      - run: pnpm install --frozen-lockfile --no-optional --filter "." --filter "./packages/**" --filter "./plugins/**" --filter "./vue-language-tools/**"
       - run: pnpm run build-ci
       - run: pnpm run test
