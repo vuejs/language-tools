@@ -22,6 +22,7 @@ export interface ResolvedVueCompilerOptions {
 	htmlAttributes: string[];
 	optionsWrapper: [string, string] | [];
 	plugins: string[];
+	narrowingTypesInInlineHandlers: boolean;
 
 	// experimental
 	experimentalRuntimeMode: 'runtime-dom' | 'runtime-uni-app';
@@ -29,7 +30,6 @@ export interface ResolvedVueCompilerOptions {
 	experimentalTemplateCompilerOptions: any;
 	experimentalTemplateCompilerOptionsRequirePath: string | undefined;
 	experimentalResolveStyleCssClasses: 'scoped' | 'always' | 'never';
-	experimentalAllowTypeNarrowingInInlineHandlers: boolean;
 }
 
 export type VueLanguagePlugin = (ctx: {

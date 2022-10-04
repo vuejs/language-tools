@@ -89,6 +89,7 @@ export function resolveVueCompilerOptions(vueOptions: VueCompilerOptions): Resol
 				? [`(await import('vue')).defineComponent(`, `)`]
 				: [`(await import('vue')).default.extend(`, `)`]
 		),
+		narrowingTypesInInlineHandlers: vueOptions.narrowingTypesInInlineHandlers ?? false,
 		plugins: vueOptions.plugins ?? [],
 
 		// experimental
@@ -97,7 +98,6 @@ export function resolveVueCompilerOptions(vueOptions: VueCompilerOptions): Resol
 		experimentalTemplateCompilerOptions: vueOptions.experimentalTemplateCompilerOptions ?? {},
 		experimentalTemplateCompilerOptionsRequirePath: vueOptions.experimentalTemplateCompilerOptionsRequirePath ?? undefined,
 		experimentalResolveStyleCssClasses: vueOptions.experimentalResolveStyleCssClasses ?? 'scoped',
-		experimentalAllowTypeNarrowingInInlineHandlers: vueOptions.experimentalAllowTypeNarrowingInInlineHandlers ?? false,
 	};
 }
 

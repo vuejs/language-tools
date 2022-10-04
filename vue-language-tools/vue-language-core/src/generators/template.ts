@@ -324,7 +324,7 @@ export function generate(
 						formatBrackets.round,
 					);
 
-					if (vueCompilerOptions.experimentalAllowTypeNarrowingInInlineHandlers) {
+					if (vueCompilerOptions.narrowingTypesInInlineHandlers) {
 						blockConditions.push(branch.condition.content);
 						addedBlockCondition = true;
 					}

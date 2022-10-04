@@ -54,6 +54,10 @@
 					],
 					"markdownDescription": "How to wrap option of `export default { ... }`? Default: `[\"(await import('vue')).default.extend(\", \")\"]` for target < 2.7, `[\"(await import('vue')).defineComponent(\", \")\"]` for target >= 2.7."
 				},
+				"narrowingTypesInInlineHandlers": {
+					"type": "boolean",
+					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1249"
+				},
 				"experimentalRuntimeMode": {
 					"type": "string",
 					"default": "runtime-dom",
@@ -82,10 +86,6 @@
 				"experimentalTemplateCompilerOptionsRequirePath": {
 					"type": "string",
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/698"
-				},
-				"experimentalAllowTypeNarrowingInInlineHandlers": {
-					"type": "boolean",
-					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1249"
 				},
 				"experimentalResolveStyleCssClasses": {
 					"enum": [
