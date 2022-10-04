@@ -1,6 +1,6 @@
 {
 	"name": "@volar/vue-typescript",
-	"version": "1.0.0-beta.4",
+	"version": "1.0.0-beta.6",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -18,7 +18,7 @@
 	"dependencies": {
 		"@volar/language-core": "1.0.0-beta.4",
 		"@volar/typescript-faster": "1.0.0-beta.4",
-		"@volar/vue-language-core": "1.0.0-beta.4",
+		"@volar/vue-language-core": "1.0.0-beta.6",
 		"muggle-string": "^0.1.0"
 	}
 }
