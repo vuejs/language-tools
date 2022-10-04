@@ -137,7 +137,6 @@ importers:
       '@volar/transforms': 1.0.0-beta.8
       '@volar/typescript-faster': 1.0.0-beta.8
       '@vue/reactivity': ^3.2.38
-      typescript: beta
       vscode-html-languageservice: ^5.0.1
       vscode-json-languageservice: ^5.1.0
       vscode-languageserver-protocol: ^3.17.2
@@ -155,8 +154,6 @@ importers:
       vscode-languageserver-protocol: 3.17.2
       vscode-languageserver-textdocument: 1.0.7
       vscode-uri: 3.0.6
-    devDependencies:
-      typescript: 4.9.1-beta
 
   packages/preview:
     specifiers:
@@ -195,7 +192,6 @@ importers:
   packages/shared:
     specifiers:
       typesafe-path: ^0.2.0
-      typescript: beta
       vscode-languageserver-protocol: ^3.17.2
       vscode-languageserver-textdocument: ^1.0.7
       vscode-uri: ^3.0.3
@@ -204,8 +200,6 @@ importers:
       vscode-languageserver-protocol: 3.17.2
       vscode-languageserver-textdocument: 1.0.7
       vscode-uri: 3.0.6
-    devDependencies:
-      typescript: 4.9.1-beta
 
   packages/source-map:
     specifiers:
@@ -225,19 +219,16 @@ importers:
     specifiers:
       '@types/semver': ^7.3.12
       semver: ^7.3.7
-      typescript: beta
     dependencies:
       semver: 7.3.7
     devDependencies:
       '@types/semver': 7.3.12
-      typescript: 4.9.1-beta
 
   packages/typescript-language-service:
     specifiers:
       '@types/semver': ^7.3.12
       '@volar/shared': 1.0.0-beta.8
       semver: ^7.3.7
-      typescript: beta
       vscode-languageserver-protocol: ^3.17.2
       vscode-languageserver-textdocument: ^1.0.7
       vscode-nls: ^5.2.0
@@ -251,7 +242,6 @@ importers:
       vscode-uri: 3.0.6
     devDependencies:
       '@types/semver': 7.3.12
-      typescript: 4.9.1-beta
 
   plugins/css:
     specifiers:
@@ -348,12 +338,9 @@ importers:
     specifiers:
       '@volar/vue-language-core': 1.0.0-beta.8
       '@volar/vue-typescript': 1.0.0-beta.8
-      typescript: beta
     dependencies:
       '@volar/vue-language-core': link:../vue-language-core
       '@volar/vue-typescript': link:../vue-typescript
-    devDependencies:
-      typescript: 4.9.1-beta
 
   vue-language-tools/vue-component-meta:
     specifiers:
@@ -371,7 +358,6 @@ importers:
       '@vue/compiler-sfc': ^3.2.38
       '@vue/reactivity': ^3.2.38
       '@vue/shared': ^3.2.38
-      typescript: beta
       vue-template-compiler: ^2.7.10
     dependencies:
       '@volar/language-core': link:../../packages/language-core
@@ -381,8 +367,6 @@ importers:
       '@vue/reactivity': 3.2.40
       '@vue/shared': 3.2.40
       vue-template-compiler: 2.7.10
-    devDependencies:
-      typescript: 4.9.1-beta
 
   vue-language-tools/vue-language-plugin-pug:
     specifiers:
@@ -428,7 +412,6 @@ importers:
       '@vue/compiler-dom': ^3.2.38
       '@vue/reactivity': ^3.2.38
       '@vue/shared': ^3.2.38
-      typescript: beta
       vscode-html-languageservice: ^5.0.1
       vscode-json-languageservice: ^5.1.0
       vscode-languageserver-protocol: ^3.17.2
@@ -458,8 +441,6 @@ importers:
       vscode-languageserver-protocol: 3.17.2
       vscode-languageserver-textdocument: 1.0.7
       vscode-uri: 3.0.6
-    devDependencies:
-      typescript: 4.9.1-beta
 
   vue-language-tools/vue-test-workspace:
     specifiers:
@@ -481,14 +462,11 @@ importers:
       '@volar/typescript-faster': 1.0.0-beta.8
       '@volar/vue-language-core': 1.0.0-beta.8
       muggle-string: ^0.1.0
-      typescript: beta
     dependencies:
       '@volar/language-core': link:../../packages/language-core
       '@volar/typescript-faster': link:../../packages/typescript-faster
       '@volar/vue-language-core': link:../vue-language-core
       muggle-string: 0.1.0
-    devDependencies:
-      typescript: 4.9.1-beta
 
 packages:
 

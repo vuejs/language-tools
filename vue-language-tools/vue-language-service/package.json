@@ -12,9 +12,6 @@
 		"url": "https://github.com/johnsoncodehk/volar.git",
 		"directory": "vue-language-tools/vue-language-service"
 	},
-	"devDependencies": {
-		"typescript": "beta"
-	},
 	"dependencies": {
 		"@johnsoncodehk/html2pug": "^1.0.0",
 		"@volar-plugins/css": "1.0.0-beta.8",

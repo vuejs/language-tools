@@ -12,9 +12,6 @@
 		"url": "https://github.com/johnsoncodehk/volar.git",
 		"directory": "packages/language-service"
 	},
-	"devDependencies": {
-		"typescript": "beta"
-	},
 	"dependencies": {
 		"@volar/language-core": "1.0.0-beta.8",
 		"@volar/shared": "1.0.0-beta.8",
