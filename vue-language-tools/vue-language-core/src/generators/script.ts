@@ -30,9 +30,7 @@ export function generate(
 	teleports: SourceMaps.Mapping<TeleportMappingData>[] = [],
 ) {
 
-	const downgradePropsAndEmitsToSetupReturnOnScriptSetup = vueCompilerOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup === 'onlyJs'
-		? lang === 'js' || lang === 'jsx'
-		: !!vueCompilerOptions.experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup;
+	const bypassDefineComponent = vueCompilerOptions.bypassDefineComponentToExposePropsAndEmitsForJsScriptSetupComponents && lang === 'js' || lang === 'jsx';
 	const vueVersion = vueCompilerOptions.target ?? 3;
 	const vueLibName = getVueLibraryName(vueVersion);
 	const usedTypes = {
@@ -284,7 +282,7 @@ export function generate(
 				codeGen.push(`const __VLS_Component = (await import('${vueLibName}')).defineComponent({\n`);
 			}
 
-			if (!downgradePropsAndEmitsToSetupReturnOnScriptSetup) {
+			if (!bypassDefineComponent) {
 				if (scriptSetupRanges.propsRuntimeArg || scriptSetupRanges.propsTypeArg) {
 					codeGen.push(`props: (`);
 					if (scriptSetupRanges.propsTypeArg) {
@@ -327,7 +325,7 @@ export function generate(
 			codeGen.push(`setup() {\n`);
 			codeGen.push(`return {\n`);
 
-			if (downgradePropsAndEmitsToSetupReturnOnScriptSetup) {
+			if (bypassDefineComponent) {
 				// fill $props
 				if (scriptSetupRanges.propsTypeArg) {
 					// NOTE: defineProps is inaccurate for $props
@@ -432,7 +430,7 @@ export function generate(
 			codeGen.push(`setup() {\n`);
 			codeGen.push(`return {\n`);
 			// fill ctx from props
-			if (downgradePropsAndEmitsToSetupReturnOnScriptSetup) {
+			if (bypassDefineComponent) {
 				if (scriptSetupRanges.propsAssignName) {
 					codeGen.push(`...${scriptSetupRanges.propsAssignName},\n`);
 				}

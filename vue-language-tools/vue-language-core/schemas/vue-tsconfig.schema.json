@@ -58,6 +58,10 @@
 					"type": "boolean",
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1249"
 				},
+				"bypassDefineComponentToExposePropsAndEmitsForJsScriptSetupComponents": {
+					"type": "boolean",
+					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1192"
+				},
 				"experimentalRuntimeMode": {
 					"type": "string",
 					"default": "runtime-dom",
@@ -70,14 +74,6 @@
 						}
 					],
 					"markdownDescription": "Run app in browser or uni-app"
-				},
-				"experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup": {
-					"enum": [
-						true,
-						false,
-						"onlyJs"
-					],
-					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1192"
 				},
 				"experimentalTemplateCompilerOptions": {
 					"type": "object",

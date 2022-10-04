@@ -23,10 +23,10 @@ export interface ResolvedVueCompilerOptions {
 	optionsWrapper: [string, string] | [];
 	plugins: string[];
 	narrowingTypesInInlineHandlers: boolean;
+	bypassDefineComponentToExposePropsAndEmitsForJsScriptSetupComponents: boolean;
 
 	// experimental
 	experimentalRuntimeMode: 'runtime-dom' | 'runtime-uni-app';
-	experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup: boolean | 'onlyJs';
 	experimentalTemplateCompilerOptions: any;
 	experimentalTemplateCompilerOptionsRequirePath: string | undefined;
 	experimentalResolveStyleCssClasses: 'scoped' | 'always' | 'never';
