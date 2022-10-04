@@ -1,6 +1,7 @@
 import * as vue from '@volar/vue-language-core';
 import * as embedded from '@volar/language-core';
 import * as ts from 'typescript/lib/tsserverlibrary';
+import * as path from 'typesafe-path/posix';
 
 import type {
 	MetaCheckerOptions,
@@ -54,6 +55,7 @@ function baseCreate(loadParsedCommandLine: () => vue.ParsedCommandLine, checkerO
 	 */
 
 	let parsedCommandLine = loadParsedCommandLine();
+	let fileNames = (parsedCommandLine.fileNames as path.OsPath[]).map<path.PosixPath>(path => path.replace(/\\/g, '/') as path.PosixPath);
 	let projectVersion = 0;
 
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
@@ -64,7 +66,7 @@ function baseCreate(loadParsedCommandLine: () => vue.ParsedCommandLine, checkerO
 		getDefaultLibFileName: (options) => ts.getDefaultLibFilePath(options), // should use ts.getDefaultLibFilePath not ts.getDefaultLibFileName
 		useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,
 		getCompilationSettings: () => parsedCommandLine.options,
-		getScriptFileNames: () => parsedCommandLine.fileNames,
+		getScriptFileNames: () => fileNames,
 		getProjectReferences: () => parsedCommandLine.projectReferences,
 		getScriptVersion: (fileName) => scriptVersions.get(fileName)?.toString() ?? '',
 		getScriptSnapshot: (fileName) => {
@@ -83,7 +85,7 @@ function baseCreate(loadParsedCommandLine: () => vue.ParsedCommandLine, checkerO
 	/**
 	 * Meta
 	 */
-	const globalComponentName = _host.getCurrentDirectory().replace(/\\/g, '/') + '/__global.vue';
+	const globalComponentName = path.join((_host.getCurrentDirectory() as path.OsPath).replace(/\\/g, '/') as path.PosixPath, '__global.vue' as path.PosixPath);
 	const globalComponentSnapshot = ts.ScriptSnapshot.fromString('<script setup lang="ts"></script>');
 	const metaSnapshots: Record<string, ts.IScriptSnapshot> = {};
 	const host = new Proxy<Partial<vue.LanguageServiceHost>>({
@@ -155,16 +157,19 @@ function baseCreate(loadParsedCommandLine: () => vue.ParsedCommandLine, checkerO
 		getExportNames,
 		getComponentMeta,
 		updateFile(fileName: string, text: string) {
+			fileName = (fileName as path.OsPath).replace(/\\/g, '/') as path.PosixPath;
 			scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(text));
 			scriptVersions.set(fileName, scriptVersions.has(fileName) ? scriptVersions.get(fileName)! + 1 : 1);
 			projectVersion++;
 		},
 		deleteFile(fileName: string) {
-			parsedCommandLine.fileNames = parsedCommandLine.fileNames.filter(f => f !== fileName);
+			fileName = (fileName as path.OsPath).replace(/\\/g, '/') as path.PosixPath;
+			fileNames = fileNames.filter(f => f !== fileName);
 			projectVersion++;
 		},
 		reload() {
 			parsedCommandLine = loadParsedCommandLine();
+			fileNames = (parsedCommandLine.fileNames as path.OsPath[]).map<path.PosixPath>(path => path.replace(/\\/g, '/') as path.PosixPath);
 			this.clearCache();
 		},
 		clearCache() {

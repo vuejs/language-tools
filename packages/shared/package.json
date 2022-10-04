@@ -13,7 +13,7 @@
 		"directory": "packages/shared"
 	},
 	"dependencies": {
-		"typesafe-path": "^0.2.0",
+		"typesafe-path": "^0.2.1",
 		"vscode-languageserver-protocol": "^3.17.2",
 		"vscode-languageserver-textdocument": "^1.0.7",
 		"vscode-uri": "^3.0.3"
