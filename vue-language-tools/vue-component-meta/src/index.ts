@@ -34,35 +34,30 @@ const extraFileExtensions: ts.FileExtensionInfo[] = [{
 export type ComponentMetaChecker = ReturnType<typeof baseCreate>;
 
 export function createComponentMetaCheckerByJsonConfig(root: string, json: any, checkerOptions: MetaCheckerOptions = {}) {
-
-	const parsedCommandLine = vue.createParsedCommandLineByJson(ts, ts.sys, root, json, extraFileExtensions);
-
-	for (const error of parsedCommandLine.errors) {
-		console.error(error);
-	}
-
-	return baseCreate(parsedCommandLine, checkerOptions);
+	return baseCreate(
+		() => vue.createParsedCommandLineByJson(ts, ts.sys, root, json, extraFileExtensions),
+		checkerOptions,
+	);
 }
 
 export function createComponentMetaChecker(tsconfigPath: string, checkerOptions: MetaCheckerOptions = {}) {
-
-	const parsedCommandLine = vue.createParsedCommandLine(ts, ts.sys, tsconfigPath, extraFileExtensions);
-
-	for (const error of parsedCommandLine.errors) {
-		console.error(error);
-	}
-
-	return baseCreate(parsedCommandLine, checkerOptions);
+	return baseCreate(
+		() => vue.createParsedCommandLine(ts, ts.sys, tsconfigPath, extraFileExtensions),
+		checkerOptions,
+	);
 }
 
-function baseCreate(parsedCommandLine: vue.ParsedCommandLine, checkerOptions: MetaCheckerOptions) {
+function baseCreate(loadParsedCommandLine: () => vue.ParsedCommandLine, checkerOptions: MetaCheckerOptions) {
 
 	/**
 	 * Original Host
 	 */
+
+	let parsedCommandLine = loadParsedCommandLine();
+	let projectVersion = 0;
+
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
 	const scriptVersions = new Map<string, number>();
-	let projectVersion = 0;
 	const _host: vue.LanguageServiceHost = {
 		...ts.sys,
 		getProjectVersion: () => projectVersion.toString(),
@@ -166,6 +161,15 @@ function baseCreate(parsedCommandLine: vue.ParsedCommandLine, checkerOptions: Me
 		},
 		deleteFile(fileName: string) {
 			parsedCommandLine.fileNames = parsedCommandLine.fileNames.filter(f => f !== fileName);
+			projectVersion++;
+		},
+		reload() {
+			parsedCommandLine = loadParsedCommandLine();
+			this.clearCache();
+		},
+		clearCache() {
+			scriptSnapshots.clear();
+			scriptVersions.clear();
 			projectVersion++;
 		},
 		__internal__: {
