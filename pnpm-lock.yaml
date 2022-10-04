@@ -30,9 +30,9 @@ importers:
   examples/svelte:
     specifiers:
       '@types/vscode': 1.67.0
-      '@volar-plugins/css': 1.0.0-beta.6
-      '@volar-plugins/typescript': 1.0.0-beta.6
-      '@volar/language-server': 1.0.0-beta.6
+      '@volar-plugins/css': 1.0.0-beta.7
+      '@volar-plugins/typescript': 1.0.0-beta.7
+      '@volar/language-server': 1.0.0-beta.7
       vsce: latest
       vscode-languageclient: ^8.0.2
     dependencies:
@@ -47,7 +47,7 @@ importers:
   extensions/vscode-typescript-vue-plugin:
     specifiers:
       esbuild: 0.15.7
-      typescript-vue-plugin: 1.0.0-beta.6
+      typescript-vue-plugin: 1.0.0-beta.7
       typescript-vue-plugin-forward: file:typescript-vue-plugin-forward
       vsce: latest
     dependencies:
@@ -61,11 +61,11 @@ importers:
     specifiers:
       '@types/semver': ^7.3.12
       '@types/vscode': 1.67.0
-      '@volar/preview': 1.0.0-beta.6
-      '@volar/shared': 1.0.0-beta.6
-      '@volar/source-map': 1.0.0-beta.6
-      '@volar/vue-language-core': 1.0.0-beta.6
-      '@volar/vue-language-server': 1.0.0-beta.6
+      '@volar/preview': 1.0.0-beta.7
+      '@volar/shared': 1.0.0-beta.7
+      '@volar/source-map': 1.0.0-beta.7
+      '@volar/vue-language-core': 1.0.0-beta.7
+      '@volar/vue-language-server': 1.0.0-beta.7
       esbuild: 0.15.7
       esbuild-plugin-copy: latest
       esbuild-visualizer: latest
@@ -97,7 +97,7 @@ importers:
 
   packages/language-core:
     specifiers:
-      '@volar/source-map': 1.0.0-beta.6
+      '@volar/source-map': 1.0.0-beta.7
       '@vue/reactivity': ^3.2.38
       muggle-string: ^0.1.0
     dependencies:
@@ -107,9 +107,9 @@ importers:
 
   packages/language-server:
     specifiers:
-      '@volar/language-core': 1.0.0-beta.6
-      '@volar/language-service': 1.0.0-beta.6
-      '@volar/shared': 1.0.0-beta.6
+      '@volar/language-core': 1.0.0-beta.7
+      '@volar/language-service': 1.0.0-beta.7
+      '@volar/shared': 1.0.0-beta.7
       request-light: ^0.5.8
       typesafe-path: ^0.2.0
       vscode-html-languageservice: ^5.0.1
@@ -131,11 +131,11 @@ importers:
 
   packages/language-service:
     specifiers:
-      '@volar/language-core': 1.0.0-beta.6
-      '@volar/shared': 1.0.0-beta.6
-      '@volar/source-map': 1.0.0-beta.6
-      '@volar/transforms': 1.0.0-beta.6
-      '@volar/typescript-faster': 1.0.0-beta.6
+      '@volar/language-core': 1.0.0-beta.7
+      '@volar/shared': 1.0.0-beta.7
+      '@volar/source-map': 1.0.0-beta.7
+      '@volar/transforms': 1.0.0-beta.7
+      '@volar/typescript-faster': 1.0.0-beta.7
       '@vue/reactivity': ^3.2.38
       typescript: beta
       vscode-html-languageservice: ^5.0.1
@@ -169,10 +169,10 @@ importers:
 
   packages/pug-language-service:
     specifiers:
-      '@volar/language-service': 1.0.0-beta.6
-      '@volar/shared': 1.0.0-beta.6
-      '@volar/source-map': 1.0.0-beta.6
-      '@volar/transforms': 1.0.0-beta.6
+      '@volar/language-service': 1.0.0-beta.7
+      '@volar/shared': 1.0.0-beta.7
+      '@volar/source-map': 1.0.0-beta.7
+      '@volar/transforms': 1.0.0-beta.7
       muggle-string: ^0.1.0
       pug-lexer: ^5.0.1
       pug-parser: ^6.0.0
@@ -215,7 +215,7 @@ importers:
 
   packages/transforms:
     specifiers:
-      '@volar/shared': 1.0.0-beta.6
+      '@volar/shared': 1.0.0-beta.7
       vscode-languageserver-types: ^3.17.2
     dependencies:
       '@volar/shared': link:../shared
@@ -235,7 +235,7 @@ importers:
   packages/typescript-language-service:
     specifiers:
       '@types/semver': ^7.3.12
-      '@volar/shared': 1.0.0-beta.6
+      '@volar/shared': 1.0.0-beta.7
       semver: ^7.3.7
       typescript: beta
       vscode-languageserver-protocol: ^3.17.2
@@ -255,8 +255,8 @@ importers:
 
   plugins/css:
     specifiers:
-      '@volar/language-service': 1.0.0-beta.6
-      '@volar/shared': 1.0.0-beta.6
+      '@volar/language-service': 1.0.0-beta.7
+      '@volar/shared': 1.0.0-beta.7
       vscode-css-languageservice: ^6.1.0
       vscode-languageserver-protocol: ^3.17.2
       vscode-languageserver-textdocument: ^1.0.7
@@ -269,7 +269,7 @@ importers:
 
   plugins/emmet:
     specifiers:
-      '@volar/language-service': 1.0.0-beta.6
+      '@volar/language-service': 1.0.0-beta.7
       '@vscode/emmet-helper': ^2.8.4
     dependencies:
       '@volar/language-service': link:../../packages/language-service
@@ -277,8 +277,8 @@ importers:
 
   plugins/html:
     specifiers:
-      '@volar/language-service': 1.0.0-beta.6
-      '@volar/shared': 1.0.0-beta.6
+      '@volar/language-service': 1.0.0-beta.7
+      '@volar/shared': 1.0.0-beta.7
       vscode-html-languageservice: ^5.0.1
       vscode-languageserver-protocol: ^3.17.2
       vscode-languageserver-textdocument: ^1.0.7
@@ -291,7 +291,7 @@ importers:
 
   plugins/json:
     specifiers:
-      '@volar/language-service': 1.0.0-beta.6
+      '@volar/language-service': 1.0.0-beta.7
       vscode-json-languageservice: ^5.1.0
       vscode-languageserver-protocol: ^3.17.2
       vscode-languageserver-textdocument: ^1.0.7
@@ -303,9 +303,9 @@ importers:
 
   plugins/pug:
     specifiers:
-      '@volar-plugins/html': 1.0.0-beta.6
-      '@volar/language-service': 1.0.0-beta.6
-      '@volar/pug-language-service': 1.0.0-beta.6
+      '@volar-plugins/html': 1.0.0-beta.7
+      '@volar/language-service': 1.0.0-beta.7
+      '@volar/pug-language-service': 1.0.0-beta.7
       vscode-html-languageservice: ^5.0.1
       vscode-languageserver-textdocument: ^1.0.7
     dependencies:
@@ -318,7 +318,7 @@ importers:
   plugins/pug-beautify:
     specifiers:
       '@johnsoncodehk/pug-beautify': ^0.2.2
-      '@volar/language-service': 1.0.0-beta.6
+      '@volar/language-service': 1.0.0-beta.7
       vscode-languageserver-types: ^3.17.2
     dependencies:
       '@johnsoncodehk/pug-beautify': 0.2.2
@@ -328,9 +328,9 @@ importers:
   plugins/typescript:
     specifiers:
       '@types/semver': ^7.3.12
-      '@volar/language-service': 1.0.0-beta.6
-      '@volar/shared': 1.0.0-beta.6
-      '@volar/typescript-language-service': 1.0.0-beta.6
+      '@volar/language-service': 1.0.0-beta.7
+      '@volar/shared': 1.0.0-beta.7
+      '@volar/typescript-language-service': 1.0.0-beta.7
       semver: ^7.3.7
       vscode-languageserver-protocol: ^3.17.2
       vscode-languageserver-textdocument: ^1.0.7
@@ -346,8 +346,8 @@ importers:
 
   vue-language-tools/typescript-vue-plugin:
     specifiers:
-      '@volar/vue-language-core': 1.0.0-beta.6
-      '@volar/vue-typescript': 1.0.0-beta.6
+      '@volar/vue-language-core': 1.0.0-beta.7
+      '@volar/vue-typescript': 1.0.0-beta.7
       typescript: beta
     dependencies:
       '@volar/vue-language-core': link:../vue-language-core
@@ -358,7 +358,7 @@ importers:
   vue-language-tools/vue-component-meta:
     specifiers:
       '@volar/language-core': 1.0.0-beta.4
-      '@volar/vue-language-core': 1.0.0-beta.6
+      '@volar/vue-language-core': 1.0.0-beta.7
     dependencies:
       '@volar/language-core': 1.0.0-beta.4
       '@volar/vue-language-core': link:../vue-language-core
@@ -387,7 +387,7 @@ importers:
   vue-language-tools/vue-language-plugin-pug:
     specifiers:
       '@volar/pug-language-service': 1.0.0-beta.4
-      '@volar/vue-language-core': 1.0.0-beta.6
+      '@volar/vue-language-core': 1.0.0-beta.7
     dependencies:
       '@volar/pug-language-service': 1.0.0-beta.4
       '@volar/vue-language-core': link:../vue-language-core
@@ -397,8 +397,8 @@ importers:
       '@volar/language-core': 1.0.0-beta.4
       '@volar/language-server': 1.0.0-beta.4
       '@volar/shared': 1.0.0-beta.4
-      '@volar/vue-language-core': 1.0.0-beta.6
-      '@volar/vue-language-service': 1.0.0-beta.6
+      '@volar/vue-language-core': 1.0.0-beta.7
+      '@volar/vue-language-service': 1.0.0-beta.7
       vscode-languageserver-protocol: ^3.17.2
     dependencies:
       '@volar/language-core': 1.0.0-beta.4
@@ -424,7 +424,7 @@ importers:
       '@volar/source-map': 1.0.0-beta.4
       '@volar/transforms': 1.0.0-beta.4
       '@volar/typescript-language-service': 1.0.0-beta.4
-      '@volar/vue-language-core': 1.0.0-beta.6
+      '@volar/vue-language-core': 1.0.0-beta.7
       '@vue/compiler-dom': ^3.2.38
       '@vue/reactivity': ^3.2.38
       '@vue/shared': ^3.2.38
@@ -469,8 +469,8 @@ importers:
 
   vue-language-tools/vue-tsc:
     specifiers:
-      '@volar/vue-language-core': 1.0.0-beta.6
-      '@volar/vue-typescript': 1.0.0-beta.6
+      '@volar/vue-language-core': 1.0.0-beta.7
+      '@volar/vue-typescript': 1.0.0-beta.7
     dependencies:
       '@volar/vue-language-core': link:../vue-language-core
       '@volar/vue-typescript': link:../vue-typescript
@@ -479,7 +479,7 @@ importers:
     specifiers:
       '@volar/language-core': 1.0.0-beta.4
       '@volar/typescript-faster': 1.0.0-beta.4
-      '@volar/vue-language-core': 1.0.0-beta.6
+      '@volar/vue-language-core': 1.0.0-beta.7
       muggle-string: ^0.1.0
       typescript: beta
     dependencies:
