@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.0-beta.5 (2022/10/4)
+
+- feat: show plugin path in output of `vueCompilerOptions.plugins` if it failed to load
+- fix: document symbols not working in IDE other than VSCode ([#1925](https://github.com/johnsoncodehk/volar/issues/1925))
+- fix: hover info cannot show after save document (https://github.com/johnsoncodehk/volar/issues/1880#issuecomment-1266343050)
+- fix: cannot show "No tsconfig"
+
 ## 1.0.0-beta.4 (2022/10/4)
 
 - feat: support document doctor for common problems checking ([#1254](https://github.com/johnsoncodehk/volar/issues/1254))
