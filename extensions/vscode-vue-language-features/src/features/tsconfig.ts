@@ -35,7 +35,7 @@ export async function register(cmd: string, context: vscode.ExtensionContext, la
 				GetMatchTsConfigRequest.type,
 				languageClient.code2ProtocolConverter.asTextDocumentIdentifier(vscode.window.activeTextEditor.document),
 			);
-			if (tsconfig) {
+			if (tsconfig?.fileName) {
 				statusBar.text = path.relative(vscode.workspace.rootPath! as path.OsPath, tsconfig.fileName as path.PosixPath);
 				statusBar.command = cmd;
 				currentTsconfig = tsconfig.fileName;
