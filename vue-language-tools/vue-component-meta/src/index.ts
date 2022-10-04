@@ -31,7 +31,7 @@ const extraFileExtensions: ts.FileExtensionInfo[] = [{
 	scriptKind: ts.ScriptKind.Deferred,
 }];
 
-export type ComponentMetaChecker = ReturnType<typeof createComponentMetaCheckerBase>;
+export type ComponentMetaChecker = ReturnType<typeof baseCreate>;
 
 export function createComponentMetaCheckerByJsonConfig(root: string, json: any, checkerOptions: MetaCheckerOptions = {}) {
 
@@ -41,7 +41,7 @@ export function createComponentMetaCheckerByJsonConfig(root: string, json: any, 
 		console.error(error);
 	}
 
-	return createComponentMetaCheckerBase(root + '/jsconfig.json', parsedCommandLine, checkerOptions);
+	return baseCreate(parsedCommandLine, checkerOptions);
 }
 
 export function createComponentMetaChecker(tsconfigPath: string, checkerOptions: MetaCheckerOptions = {}) {
@@ -52,49 +52,77 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 		console.error(error);
 	}
 
-	return createComponentMetaCheckerBase(tsconfigPath, parsedCommandLine, checkerOptions);
+	return baseCreate(parsedCommandLine, checkerOptions);
 }
 
-function createComponentMetaCheckerBase(tsconfigPath: string, parsedCommandLine: vue.ParsedCommandLine, checkerOptions: MetaCheckerOptions) {
+function baseCreate(parsedCommandLine: vue.ParsedCommandLine, checkerOptions: MetaCheckerOptions) {
 
-	const scriptSnapshot: Record<string, ts.IScriptSnapshot> = {};
-	const globalComponentName = tsconfigPath.replace(/\\/g, '/') + '.global.vue';
-	const host: vue.LanguageServiceHost = {
+	/**
+	 * Original Host
+	 */
+	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
+	const scriptVersions = new Map<string, number>();
+	let projectVersion = 0;
+	const _host: vue.LanguageServiceHost = {
 		...ts.sys,
+		getProjectVersion: () => projectVersion.toString(),
 		getDefaultLibFileName: (options) => ts.getDefaultLibFilePath(options), // should use ts.getDefaultLibFilePath not ts.getDefaultLibFileName
 		useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,
 		getCompilationSettings: () => parsedCommandLine.options,
-		getScriptFileNames: () => {
-			return [
-				...parsedCommandLine.fileNames,
-				...parsedCommandLine.fileNames.map(getMetaFileName),
-				globalComponentName,
-				getMetaFileName(globalComponentName),
-			];
-		},
+		getScriptFileNames: () => parsedCommandLine.fileNames,
 		getProjectReferences: () => parsedCommandLine.projectReferences,
-		getScriptVersion: (fileName) => '0',
+		getScriptVersion: (fileName) => scriptVersions.get(fileName)?.toString() ?? '',
 		getScriptSnapshot: (fileName) => {
-			if (!scriptSnapshot[fileName]) {
-				let fileText: string | undefined;
-				if (isMetaFileName(fileName)) {
-					fileText = getMetaScriptContent(fileName);
-				}
-				else if (fileName === globalComponentName) {
-					fileText = `<script setup lang="ts"></script>`;
-				}
-				else {
-					fileText = ts.sys.readFile(fileName);
-				}
+			if (!scriptSnapshots.has(fileName)) {
+				const fileText = ts.sys.readFile(fileName);
 				if (fileText !== undefined) {
-					scriptSnapshot[fileName] = ts.ScriptSnapshot.fromString(fileText);
+					scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(fileText));
 				}
 			}
-			return scriptSnapshot[fileName];
+			return scriptSnapshots.get(fileName);
 		},
 		getTypeScriptModule: () => ts,
 		getVueCompilationSettings: () => parsedCommandLine.vueOptions,
 	};
+
+	/**
+	 * Meta
+	 */
+	const globalComponentName = _host.getCurrentDirectory().replace(/\\/g, '/') + '/__global.vue';
+	const globalComponentSnapshot = ts.ScriptSnapshot.fromString('<script setup lang="ts"></script>');
+	const metaSnapshots: Record<string, ts.IScriptSnapshot> = {};
+	const host = new Proxy<Partial<vue.LanguageServiceHost>>({
+		getScriptFileNames: () => {
+			const names = _host.getScriptFileNames();
+			return [
+				...names,
+				...names.map(getMetaFileName),
+				globalComponentName,
+				getMetaFileName(globalComponentName),
+			];
+		},
+		getScriptSnapshot: fileName => {
+			if (isMetaFileName(fileName)) {
+				if (!metaSnapshots[fileName]) {
+					metaSnapshots[fileName] = ts.ScriptSnapshot.fromString(getMetaScriptContent(fileName));
+				}
+				return metaSnapshots[fileName];
+			}
+			else if (fileName === globalComponentName) {
+				return globalComponentSnapshot;
+			}
+			else {
+				return _host.getScriptSnapshot(fileName);
+			}
+		},
+	}, {
+		get(target, prop) {
+			if (prop in target) {
+				return target[prop as keyof typeof target];
+			}
+			return _host[prop as keyof typeof _host];
+		},
+	}) as vue.LanguageServiceHost;
 	const vueLanguageModule = vue.createEmbeddedLanguageModule(
 		host.getTypeScriptModule(),
 		host.getCurrentDirectory(),
@@ -131,7 +159,17 @@ function createComponentMetaCheckerBase(tsconfigPath: string, parsedCommandLine:
 	return {
 		getExportNames,
 		getComponentMeta,
+		updateFile(fileName: string, text: string) {
+			scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(text));
+			scriptVersions.set(fileName, scriptVersions.has(fileName) ? scriptVersions.get(fileName)! + 1 : 1);
+			projectVersion++;
+		},
+		deleteFile(fileName: string) {
+			parsedCommandLine.fileNames = parsedCommandLine.fileNames.filter(f => f !== fileName);
+			projectVersion++;
+		},
 		__internal__: {
+			parsedCommandLine,
 			program,
 			tsLs,
 			typeChecker,
