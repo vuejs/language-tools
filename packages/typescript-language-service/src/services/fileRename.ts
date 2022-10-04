@@ -19,7 +19,7 @@ export function register(
 		const document = getTextDocument(oldUri);
 		const [formatOptions, preferences] = document ? await Promise.all([
 			getFormatCodeSettings(getConfiguration, document.uri),
-			getUserPreferences(getConfiguration, document.uri),
+			getUserPreferences(getConfiguration, document.uri, rootUri),
 		]) : [{}, {}];
 
 		const fileToRename = shared.getPathOfUri(oldUri);

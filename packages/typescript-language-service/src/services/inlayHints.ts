@@ -1,11 +1,13 @@
 import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
+import { URI } from 'vscode-uri';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { GetConfiguration } from '..';
 import { getUserPreferences } from '../configs/getUserPreferences';
 
 export function register(
+	rootUri: URI,
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
 	getConfiguration: GetConfiguration,
@@ -16,7 +18,7 @@ export function register(
 		const document = getTextDocument(uri);
 		if (!document) return;
 
-		const preferences = await getUserPreferences(getConfiguration, document.uri);
+		const preferences = await getUserPreferences(getConfiguration, document.uri, rootUri);
 		const fileName = shared.getPathOfUri(document.uri);
 		const start = document.offsetAt(range.start);
 		const end = document.offsetAt(range.end);

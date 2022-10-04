@@ -45,7 +45,7 @@ export function register(
 
 		const [formatOptions, preferences] = await Promise.all([
 			getFormatCodeSettings(getConfiguration, document.uri),
-			getUserPreferences(getConfiguration, document.uri),
+			getUserPreferences(getConfiguration, document.uri, rootUri),
 		]);
 
 		const fileName = shared.getPathOfUri(document.uri);

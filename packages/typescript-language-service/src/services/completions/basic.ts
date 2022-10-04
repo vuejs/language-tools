@@ -7,6 +7,7 @@ import * as semver from 'semver';
 import { parseKindModifier } from '../../utils/modifiers';
 import { GetConfiguration } from '../..';
 import { getUserPreferences } from '../../configs/getUserPreferences';
+import { URI } from 'vscode-uri';
 
 export interface Data {
 	uri: string,
@@ -16,6 +17,7 @@ export interface Data {
 }
 
 export function register(
+	rootUri: URI,
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
 	getConfiguration: GetConfiguration,
@@ -31,7 +33,7 @@ export function register(
 		if (!document)
 			return;
 
-		const preferences = await getUserPreferences(getConfiguration, document.uri);
+		const preferences = await getUserPreferences(getConfiguration, document.uri, rootUri);
 		const fileName = shared.getPathOfUri(document.uri);
 		const offset = document.offsetAt(position);
 

@@ -30,12 +30,12 @@ export function register(
 		if (renameInfo.fileToRename) {
 			const [formatOptions, preferences] = await Promise.all([
 				getFormatCodeSettings(getConfiguration, document.uri),
-				getUserPreferences(getConfiguration, document.uri),
+				getUserPreferences(getConfiguration, document.uri, rootUri),
 			]);
 			return renameFile(renameInfo.fileToRename, newName, formatOptions, preferences);
 		}
 
-		const { providePrefixAndSuffixTextForRename } = await getUserPreferences(getConfiguration, document.uri);
+		const { providePrefixAndSuffixTextForRename } = await getUserPreferences(getConfiguration, document.uri, rootUri);
 		const entries = languageService.findRenameLocations(fileName, offset, false, false, providePrefixAndSuffixTextForRename);
 		if (!entries)
 			return;

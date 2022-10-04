@@ -34,7 +34,7 @@ export function register(
 
 		const [formatOptions, preferences] = document ? await Promise.all([
 			getFormatCodeSettings(getConfiguration, document.uri),
-			getUserPreferences(getConfiguration, document.uri),
+			getUserPreferences(getConfiguration, document.uri, rootUri),
 		]) : [{}, {}];
 
 		let details: ts.CompletionEntryDetails | undefined;

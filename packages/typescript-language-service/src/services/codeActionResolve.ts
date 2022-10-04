@@ -20,7 +20,7 @@ export function register(
 		const document = getTextDocument(data.uri);
 		const [formatOptions, preferences] = document ? await Promise.all([
 			getFormatCodeSettings(getConfiguration, document.uri),
-			getUserPreferences(getConfiguration, document.uri),
+			getUserPreferences(getConfiguration, document.uri, rootUri),
 		]) : [{}, {}];
 
 		if (data?.type === 'fixAll') {

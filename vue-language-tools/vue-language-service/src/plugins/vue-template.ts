@@ -360,7 +360,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			const confitHost = context.env.configurationHost;
 			const [formatOptions, preferences] = await Promise.all([
 				ts2.getFormatCodeSettings((section, scopeUri) => confitHost?.getConfiguration(section, scopeUri) as any, embeddedScriptUri),
-				ts2.getUserPreferences((section, scopeUri) => confitHost?.getConfiguration(section, scopeUri) as any, embeddedScriptUri),
+				ts2.getUserPreferences((section, scopeUri) => confitHost?.getConfiguration(section, scopeUri) as any, embeddedScriptUri, undefined),
 			]);
 			(preferences as any).importModuleSpecifierEnding = 'minimal';
 			const tsDetail = context.typescript.languageService.getCompletionEntryDetails(shared.getPathOfUri(embeddedScriptUri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
