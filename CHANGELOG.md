@@ -5,7 +5,7 @@
 [[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
 
 - feat(vue-component-meta): add file update apis for support HMR ([#1889](https://github.com/johnsoncodehk/volar/issues/1889))
-- feat: add `vueCompilerOptions#vueCompilerOpti`, `vueCompilerOptions#vueCompilerOpti` options for tsconfig ([#1871](https://github.com/johnsoncodehk/volar/issues/1871))
+- feat: add `dataAttributes`, `htmlAttributes` options for vueCompilerOptions ([#1871](https://github.com/johnsoncodehk/volar/issues/1871))
 - feat: support for `typescript.autoImportFileExcludePatterns`
 
 **Breaking changes**
