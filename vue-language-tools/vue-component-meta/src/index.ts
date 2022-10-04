@@ -38,6 +38,7 @@ export function createComponentMetaCheckerByJsonConfig(root: string, json: any, 
 	return baseCreate(
 		() => vue.createParsedCommandLineByJson(ts, ts.sys, root, json, extraFileExtensions),
 		checkerOptions,
+		path.join((root as path.OsPath).replace(/\\/g, '/') as path.PosixPath, 'jsconfig.json.global.vue' as path.PosixPath),
 	);
 }
 
@@ -45,10 +46,11 @@ export function createComponentMetaChecker(tsconfigPath: string, checkerOptions:
 	return baseCreate(
 		() => vue.createParsedCommandLine(ts, ts.sys, tsconfigPath, extraFileExtensions),
 		checkerOptions,
+		(tsconfigPath as path.OsPath).replace(/\\/g, '/') as path.PosixPath + '.global.vue',
 	);
 }
 
-function baseCreate(loadParsedCommandLine: () => vue.ParsedCommandLine, checkerOptions: MetaCheckerOptions) {
+function baseCreate(loadParsedCommandLine: () => vue.ParsedCommandLine, checkerOptions: MetaCheckerOptions, globalComponentName: string) {
 
 	/**
 	 * Original Host
@@ -85,7 +87,6 @@ function baseCreate(loadParsedCommandLine: () => vue.ParsedCommandLine, checkerO
 	/**
 	 * Meta
 	 */
-	const globalComponentName = path.join((_host.getCurrentDirectory() as path.OsPath).replace(/\\/g, '/') as path.PosixPath, '__global.vue' as path.PosixPath);
 	const globalComponentSnapshot = ts.ScriptSnapshot.fromString('<script setup lang="ts"></script>');
 	const metaSnapshots: Record<string, ts.IScriptSnapshot> = {};
 	const host = new Proxy<Partial<vue.LanguageServiceHost>>({
