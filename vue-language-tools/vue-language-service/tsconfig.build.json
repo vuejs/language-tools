@@ -1,6 +1,7 @@
 {
-	"extends": "../../tsconfig.base.json",
+	"extends": "../../tsconfig.json",
 	"compilerOptions": {
+		"noEmit": false,
 		"outDir": "out",
 		"rootDir": "src",
 	},
@@ -36,25 +37,25 @@
 		},
 		// packages
 		{
-			"path": "../language-core/tsconfig.build.json"
+			"path": "../../packages/language-core/tsconfig.build.json"
 		},
 		{
-			"path": "../language-service/tsconfig.build.json"
+			"path": "../../packages/language-service/tsconfig.build.json"
 		},
 		{
-			"path": "../pug-language-service/tsconfig.build.json"
+			"path": "../../packages/pug-language-service/tsconfig.build.json"
 		},
 		{
-			"path": "../shared/tsconfig.build.json"
+			"path": "../../packages/shared/tsconfig.build.json"
 		},
 		{
-			"path": "../source-map/tsconfig.build.json"
+			"path": "../../packages/source-map/tsconfig.build.json"
 		},
 		{
-			"path": "../transforms/tsconfig.build.json"
+			"path": "../../packages/transforms/tsconfig.build.json"
 		},
 		{
-			"path": "../typescript-language-service/tsconfig.build.json"
+			"path": "../../packages/typescript-language-service/tsconfig.build.json"
 		},
 		{
 			"path": "../vue-language-core/tsconfig.build.json"

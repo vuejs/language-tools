@@ -6,8 +6,7 @@
 		"rootDir": "src",
 	},
 	"include": [
-		"src",
-		"src/**/*.json"
+		"src"
 	],
 	"exclude": [
 		"node_modules",
@@ -15,13 +14,10 @@
 	],
 	"references": [
 		{
-			"path": "../../vue-language-tools/vue-language-server/tsconfig.build.json"
+			"path": "../vue-language-core/tsconfig.build.json"
 		},
 		{
-			"path": "../../packages/preview/tsconfig.build.json"
+			"path": "../vue-typescript/tsconfig.build.json"
 		},
-		{
-			"path": "../../packages/shared/tsconfig.build.json"
-		}
-	]
+	],
 }

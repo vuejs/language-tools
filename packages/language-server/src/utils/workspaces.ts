@@ -1,5 +1,5 @@
 import * as shared from '@volar/shared';
-import { ConfigurationHost } from '@volar/vue-language-service';
+import { ConfigurationHost } from '@volar/language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';

@@ -1,6 +1,7 @@
 {
-	"extends": "../../tsconfig.base.json",
+	"extends": "../../tsconfig.json",
 	"compilerOptions": {
+		"noEmit": false,
 		"outDir": "out",
 		"rootDir": "src",
 	},
@@ -13,13 +14,13 @@
 	],
 	"references": [
 		{
-			"path": "../language-core/tsconfig.build.json"
+			"path": "../../packages/language-core/tsconfig.build.json"
 		},
 		{
-			"path": "../language-server/tsconfig.build.json"
+			"path": "../../packages/language-server/tsconfig.build.json"
 		},
 		{
-			"path": "../shared/tsconfig.build.json"
+			"path": "../../packages/shared/tsconfig.build.json"
 		},
 		{
 			"path": "../vue-language-core/tsconfig.build.json"

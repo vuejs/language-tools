@@ -1,5 +1,5 @@
 import * as vscode from 'vscode-languageserver';
-import { ConfigurationHost } from '@volar/vue-language-service';
+import { ConfigurationHost } from '@volar/language-service';
 
 export function createConfigurationHost(params: vscode.InitializeParams, connection: vscode.Connection): ConfigurationHost & { ready(): void; } {
 

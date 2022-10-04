@@ -7,7 +7,7 @@ import { URI } from 'vscode-uri';
 import { loadCustomPlugins } from './config';
 import { FileSystem, FileSystemHost, LanguageServerPlugin, RuntimeEnvironment } from '../types';
 import { createSnapshots } from './snapshots';
-import { ConfigurationHost } from '@volar/vue-language-service';
+import { ConfigurationHost } from '@volar/language-service';
 import * as html from 'vscode-html-languageservice';
 import * as path from 'typesafe-path';
 import { CancellactionTokenHost } from './cancellationPipe';

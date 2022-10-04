@@ -10,7 +10,7 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
-		"directory": "packages/vue-component-meta"
+		"directory": "vue-language-tools/vue-component-meta"
 	},
 	"dependencies": {
 		"@volar/language-core": "1.0.0-beta.4",

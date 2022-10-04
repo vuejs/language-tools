@@ -1,6 +1,7 @@
 {
-	"extends": "../../tsconfig.base.json",
+	"extends": "../../tsconfig.json",
 	"compilerOptions": {
+		"noEmit": false,
 		"outDir": "out",
 		"rootDir": "src",
 	},
@@ -13,10 +14,10 @@
 	],
 	"references": [
 		{
-			"path": "../vue-language-core/tsconfig.build.json"
+			"path": "../../packages/pug-language-service/tsconfig.build.json"
 		},
 		{
-			"path": "../vue-typescript/tsconfig.build.json"
+			"path": "../vue-language-core/tsconfig.build.json"
 		},
 	],
 }

@@ -1,5 +1,5 @@
 {
-	"name": "@volar/vue-language-server",
+	"name": "@volar/vue-typescript",
 	"version": "1.0.0-beta.4",
 	"main": "out/index.js",
 	"license": "MIT",
@@ -7,20 +7,18 @@
 		"out/**/*.js",
 		"out/**/*.d.ts"
 	],
-	"bin": {
-		"vue-language-server": "./bin/vue-language-server.js"
-	},
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
-		"directory": "packages/vue-language-server"
+		"directory": "vue-language-tools/vue-typescript"
+	},
+	"devDependencies": {
+		"typescript": "beta"
 	},
 	"dependencies": {
 		"@volar/language-core": "1.0.0-beta.4",
-		"@volar/language-server": "1.0.0-beta.4",
-		"@volar/shared": "1.0.0-beta.4",
+		"@volar/typescript-faster": "1.0.0-beta.4",
 		"@volar/vue-language-core": "1.0.0-beta.4",
-		"@volar/vue-language-service": "1.0.0-beta.4",
-		"vscode-languageserver-protocol": "^3.17.2"
+		"muggle-string": "^0.1.0"
 	}
 }
