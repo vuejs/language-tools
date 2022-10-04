@@ -46,7 +46,7 @@ export type LanguageServerPlugin<
 
 	extraFileExtensions: ts.FileExtensionInfo[],
 
-	languageService?: {
+	semanticService?: {
 
 		semanticTokenLegend?: vscode.SemanticTokensLegend,
 
@@ -70,7 +70,7 @@ export type LanguageServerPlugin<
 		): void,
 	},
 
-	documentService?: {
+	syntacticService?: {
 
 		getLanguageModules?(
 			ts: typeof import('typescript/lib/tsserverlibrary'),

@@ -114,7 +114,7 @@ function blockToEmbeddedFile(fileName: string, blockText: string, blockOffset: n
 
 const plugin: LanguageServerPlugin = () => ({
 	extraFileExtensions: [{ extension: 'svelte', isMixedContent: true, scriptKind: 7 }],
-	languageService: {
+	semanticService: {
 		semanticTokenLegend: getSemanticTokenLegend(),
 		getLanguageModules(host) {
 			return [mod];
@@ -126,7 +126,7 @@ const plugin: LanguageServerPlugin = () => ({
 			];
 		},
 	},
-	documentService: {
+	syntacticService: {
 		getLanguageModules(host) {
 			return [mod];
 		},

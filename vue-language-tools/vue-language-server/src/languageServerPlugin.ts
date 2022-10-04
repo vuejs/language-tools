@@ -24,7 +24,7 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 
 	return {
 		extraFileExtensions,
-		languageService: {
+		semanticService: {
 			semanticTokenLegend: vue.getSemanticTokenLegend(),
 			resolveLanguageServiceHost(ts, sys, tsConfig, host) {
 				let vueOptions: vue.VueCompilerOptions = {};
@@ -67,7 +67,7 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 				});
 			},
 		},
-		documentService: {
+		syntacticService: {
 			getLanguageModules(ts, env) {
 				const vueLanguagePlugins = vue2.getDefaultVueLanguagePlugins(ts, shared.getPathOfUri(env.rootUri.toString()), {}, {}, []);
 				const vueLanguageModule: embedded.EmbeddedLanguageModule = {

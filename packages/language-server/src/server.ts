@@ -114,7 +114,7 @@ export function createCommonLanguageServer(
 		);
 
 		for (const plugin of plugins) {
-			plugin.documentService?.onInitialize?.(connection);
+			plugin.syntacticService?.onInitialize?.(connection);
 		}
 	}
 
@@ -148,7 +148,7 @@ export function createCommonLanguageServer(
 		(await import('./features/languageFeatures')).register(connection, projects, params, cancelTokenHost);
 
 		for (const plugin of plugins) {
-			plugin.languageService?.onInitialize?.(connection, getLanguageService as any);
+			plugin.semanticService?.onInitialize?.(connection, getLanguageService as any);
 		}
 
 		async function getLanguageService(uri: string) {

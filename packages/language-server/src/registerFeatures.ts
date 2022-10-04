@@ -141,9 +141,9 @@ export function setupSemanticCapabilities(
 			},
 		};
 		for (const plugin of plugins) {
-			if (plugin.languageService?.semanticTokenLegend) {
-				server.semanticTokensProvider.legend.tokenModifiers = server.semanticTokensProvider.legend.tokenModifiers.concat(plugin.languageService.semanticTokenLegend.tokenModifiers);
-				server.semanticTokensProvider.legend.tokenTypes = server.semanticTokensProvider.legend.tokenTypes.concat(plugin.languageService.semanticTokenLegend.tokenTypes);
+			if (plugin.semanticService?.semanticTokenLegend) {
+				server.semanticTokensProvider.legend.tokenModifiers = server.semanticTokensProvider.legend.tokenModifiers.concat(plugin.semanticService.semanticTokenLegend.tokenModifiers);
+				server.semanticTokensProvider.legend.tokenTypes = server.semanticTokensProvider.legend.tokenTypes.concat(plugin.semanticService.semanticTokenLegend.tokenTypes);
 			}
 		}
 	}

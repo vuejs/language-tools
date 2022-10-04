@@ -62,7 +62,7 @@ export async function createProject(
 	function getLanguageService() {
 		if (!vueLs) {
 
-			const languageModules = plugins.map(plugin => plugin.languageService?.getLanguageModules?.(languageServiceHost) ?? []).flat();
+			const languageModules = plugins.map(plugin => plugin.semanticService?.getLanguageModules?.(languageServiceHost) ?? []).flat();
 			const languageContext = embedded.createEmbeddedLanguageServiceHost(languageServiceHost, languageModules);
 			const languageServiceContext = embeddedLS.createLanguageServiceContext({
 				host: languageServiceHost,
@@ -70,7 +70,7 @@ export async function createProject(
 				getPlugins() {
 					return [
 						...loadCustomPlugins(languageServiceHost.getCurrentDirectory()),
-						...plugins.map(plugin => plugin.languageService?.getServicePlugins?.(languageServiceHost, vueLs!) ?? []).flat(),
+						...plugins.map(plugin => plugin.semanticService?.getServicePlugins?.(languageServiceHost, vueLs!) ?? []).flat(),
 					];
 				},
 				env: {
@@ -168,8 +168,8 @@ export async function createProject(
 		}
 
 		for (const plugin of plugins) {
-			if (plugin.languageService?.resolveLanguageServiceHost) {
-				host = plugin.languageService.resolveLanguageServiceHost(ts, sys, tsConfig, host);
+			if (plugin.semanticService?.resolveLanguageServiceHost) {
+				host = plugin.semanticService.resolveLanguageServiceHost(ts, sys, tsConfig, host);
 			}
 		}
 
