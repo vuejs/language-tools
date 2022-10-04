@@ -68,7 +68,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			const problems = await getProblems(editor.document.uri);
 			if (problems.length && vscode.window.activeTextEditor?.document === editor.document) {
 				item.show();
-				item.text = problems.length + (problems.length === 1 ? ' problem found' : ' problems found');
+				item.text = problems.length + (problems.length === 1 ? ' known issue' : ' known issues');
 				docChangeEvent.fire(getDoctorUri(editor.document.uri));
 			}
 		}
