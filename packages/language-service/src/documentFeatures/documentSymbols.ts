@@ -18,7 +18,8 @@ export function register(context: DocumentServiceRuntimeContext) {
 				location => {
 					const range = sourceMap.toSourceRange(location.range);
 					if (range) {
-						return vscode.Location.create(sourceMap.sourceDocument.uri, range);
+						// use document.uri instead of sourceMap.sourceDocument.uri to fix https://github.com/johnsoncodehk/volar/issues/1925
+						return vscode.Location.create(document.uri, range);
 					}
 				},
 			),
