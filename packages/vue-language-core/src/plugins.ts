@@ -34,12 +34,14 @@ export function getDefaultVueLanguagePlugins(
 		useVueTsx,
 		...extraPlugins,
 	];
+	const pluginPaths = new Map<number, string>();
 	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);
 	if (typeof require?.resolve === 'function') {
 		for (const pluginPath of vueCompilerOptions.plugins) {
 			try {
 				const importPath = require.resolve(pluginPath, { paths: [rootDir] });
 				const plugin = require(importPath);
+				pluginPaths.set(_plugins.length, pluginPath);
 				_plugins.push(plugin);
 			}
 			catch (error) {
@@ -64,10 +66,10 @@ export function getDefaultVueLanguagePlugins(
 		return aOrder - bOrder;
 	});
 
-	return plugins.filter(plugin => {
+	return plugins.filter((plugin, i) => {
 		const valid = plugin.version >= 1 && plugin.version < 2;
 		if (!valid) {
-			console.warn(`Plugin ${JSON.stringify(plugin.name)} API version incompatible, expected 1.x but it's ${JSON.stringify(plugin.version)}`);
+			console.warn(`Plugin ${JSON.stringify(pluginPaths.get(i) ?? plugin.name)} API version incompatible, expected 1.x but got ${JSON.stringify(plugin.version)}`);
 		}
 		return valid;
 	});
