@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.0-rc.3 (2022/10/5)
+
+- feat: support .cjs, .mjs, .cts, .mts on takeover mode ([#1928](https://github.com/johnsoncodehk/volar/issues/1928))
+- fix: multiple style attributes report false positive error ([#1929](https://github.com/johnsoncodehk/volar/issues/1929))
+
 ## 1.0.0-rc.0 (2022/10/5)
 
 [[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
