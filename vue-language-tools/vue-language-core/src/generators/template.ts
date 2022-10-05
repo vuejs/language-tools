@@ -862,7 +862,7 @@ export function generate(
 					|| (attrNameText === 'style' && ++styleAttrNums >= 2)
 					|| (attrNameText === 'class' && ++classAttrNums >= 2)
 				) {
-					if (prop.exp) {
+					if (prop.exp && prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
 						unwritedExps.push(prop.exp);
 					}
 					continue;
