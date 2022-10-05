@@ -67,7 +67,7 @@ export function activate(context: vscode.ExtensionContext) {
 			initializationOptions: initOptions,
 			progressOnInitialization: true,
 			synchronize: {
-				fileEvents: vscode.workspace.createFileSystemWatcher('{**/*.vue,**/*.md,**/*.html,**/*.js,**/*.jsx,**/*.ts,**/*.tsx,**/*.json}')
+				fileEvents: vscode.workspace.createFileSystemWatcher('{**/*.vue,**/*.md,**/*.html,**/*.(c|m)?(js|ts)x?,**/*.json}')
 			},
 		};
 		const client = new _LanguageClient(

@@ -12,6 +12,8 @@ export function syntaxToLanguageId(syntax: string) {
 		case 'cjs': return 'javascript';
 		case 'mjs': return 'javascript';
 		case 'ts': return 'typescript';
+		case 'cts': return 'typescript';
+		case 'mts': return 'typescript';
 		case 'jsx': return 'javascriptreact';
 		case 'tsx': return 'typescriptreact';
 		case 'pug': return 'jade';
