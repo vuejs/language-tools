@@ -48,6 +48,9 @@ Discord: https://discord.gg/5bnSSSSBbK
 [tommasongr/nova-vue](https://github.com/tommasongr/nova-vue) \
 *Vue language client for Nova*
 
+[xiaoxin-sky/lapce-vue](https://github.com/xiaoxin-sky/lapce-vue) \
+*Vue language client for Lapce*
+
 [Kingwl/monaco-volar](https://github.com/Kingwl/monaco-volar) \
 *Vue language support for Monaco on Browser*
 
@@ -88,6 +91,7 @@ flowchart LR
 	ATOM[Atom]
 	EMACS[Emacs]
 	NOVA[Nova]
+	LAPCE[Lapce]
 
 	%% Language Clients
 	COC_VUE[yaegassy/coc-volar]
@@ -97,6 +101,7 @@ flowchart LR
 	ATOM_VUE[kabiaa/atom-ide-volar]
 	EMACS_VUE[jadestrong/lsp-volar]
 	NOVA_VUE[tommasongr/nova-vue]
+	LAPCE_VUE[xiaoxin-sky/lapce-vue]
 
 	click COC_VUE "https://github.com/yaegassy/coc-volar"
 	click NEO_VUE "https://github.com/neovim/nvim-lspconfig"
@@ -105,6 +110,7 @@ flowchart LR
 	click ATOM_VUE "https://github.com/kabiaa/atom-ide-volar"
 	click EMACS_VUE "https://github.com/jadestrong/lsp-volar"
 	click NOVA_VUE "https://github.com/tommasongr/nova-vue"
+	click LAPCE_VUE "https://github.com/xiaoxin-sky/lapce-vue"
 
 	%% Volar - Extensions
 	VSC_VUE[vscode-vue-language-features]
@@ -187,6 +193,7 @@ flowchart LR
 	EMACS --> EMACS_VUE
 	NOVA --> NOVA_VUE
 	VIM --> VIM_VUE
+	LAPCE --> LAPCE_VUE
 
 	VSC_VUE --> VUE_CLIENTS
 	COC_VUE --> VUE_CLIENTS
@@ -196,6 +203,7 @@ flowchart LR
 	EMACS_VUE --> VUE_CLIENTS
 	NOVA_VUE --> VUE_CLIENTS
 	VIM_VUE --> VUE_CLIENTS
+	LAPCE_VUE --> VUE_CLIENTS
 
 	%% VSC_VUE --> VOLAR_PREVIEW
 	%% COC_VUE --> VOLAR_PREVIEW
