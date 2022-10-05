@@ -1,8 +1,8 @@
 import { LanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
-import * as shared from '@volar/shared';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import * as path from 'path';
 
 export default function (options: {
 	validLang?: string,
@@ -217,25 +217,13 @@ export default function (options: {
 
 		if (configHost) {
 
-			const paths = new Set<string>();
 			const customData: string[] = await configHost.getConfiguration('html.customData') ?? [];
-			const rootPath = shared.getPathOfUri(context.env.rootUri.toString());
+			const newData: html.IHTMLDataProvider[] = [];
 
 			for (const customDataPath of customData) {
 				try {
-					const jsonPath = require.resolve(customDataPath, { paths: [rootPath] });
-					paths.add(jsonPath);
-				}
-				catch (error) {
-					console.error(error);
-				}
-			}
-
-			const newData: html.IHTMLDataProvider[] = [];
-
-			for (const path of paths) {
-				try {
-					newData.push(html.newHTMLDataProvider(path, require(path)));
+					const jsonPath = path.resolve(customDataPath);
+					newData.push(html.newHTMLDataProvider(customDataPath, require(jsonPath)));
 				}
 				catch (error) {
 					console.error(error);
