@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { BaseLanguageClient } from 'vscode-languageclient';
 import * as path from 'typesafe-path';
-import { takeOverModeEnabled } from '../common';
+import { processHtml, processMd, takeOverModeEnabled } from '../common';
 import { GetMatchTsConfigRequest } from '@volar/vue-language-server';
 
 export async function register(cmd: string, context: vscode.ExtensionContext, languageClient: BaseLanguageClient) {
@@ -20,8 +20,8 @@ export async function register(cmd: string, context: vscode.ExtensionContext, la
 	async function updateStatusBar() {
 		if (
 			vscode.window.activeTextEditor?.document.languageId !== 'vue'
-			&& vscode.window.activeTextEditor?.document.languageId !== 'markdown'
-			&& vscode.window.activeTextEditor?.document.languageId !== 'html'
+			&& !(processMd() && vscode.window.activeTextEditor?.document.languageId === 'markdown')
+			&& !(processHtml() && vscode.window.activeTextEditor?.document.languageId === 'html')
 			&& !(
 				takeOverModeEnabled()
 				&& vscode.window.activeTextEditor

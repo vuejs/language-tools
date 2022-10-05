@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { quickPick } from './splitEditors';
 import { BaseLanguageClient, State } from 'vscode-languageclient';
 import { AttrNameCasing, TagNameCasing, DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest } from '@volar/vue-language-server';
+import { processHtml, processMd } from '../common';
 
 export const attrNameCasings = new Map<string, AttrNameCasing>();
 export const tagNameCasings = new Map<string, TagNameCasing>();
@@ -126,8 +127,8 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 	async function update(document: vscode.TextDocument | undefined) {
 		if (
 			document?.languageId === 'vue'
-			|| document?.languageId === 'markdown'
-			|| document?.languageId === 'html'
+			|| (processMd() && document?.languageId === 'markdown')
+			|| (processHtml() && document?.languageId === 'html')
 		) {
 			let detected: Awaited<ReturnType<typeof detect>> | undefined;
 			let attrNameCasing = attrNameCasings.get(document.uri.toString());

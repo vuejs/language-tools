@@ -188,11 +188,11 @@ function serverMaxOldSpaceSize() {
 	return vscode.workspace.getConfiguration('volar').get<number | null>('vueserver.maxOldSpaceSize');
 }
 
-function processHtml() {
+export function processHtml() {
 	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.petiteVue.processHtmlFile');
 }
 
-function processMd() {
+export function processMd() {
 	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.vitePress.processMdFile');
 }
 
