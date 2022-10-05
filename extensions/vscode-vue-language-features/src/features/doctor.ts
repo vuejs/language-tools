@@ -128,7 +128,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		const vueTscVersoin = getWorkspacePackageJson(workspaceFolder, 'vue-tsc')?.version;
 		if (vueTscVersoin && vueTscVersoin !== context.extension.packageJSON.version) {
 			problems.push({
-				title: '`vue-tsc` version',
+				title: '`vue-tsc` version different',
 				message: `The \`${context.extension.packageJSON.displayName}\` version is \`${context.extension.packageJSON.version}\`, but workspace \`vue-tsc\` version is \`${vueTscVersoin}\`, there may have different type checking behavior.`,
 			});
 		}
