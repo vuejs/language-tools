@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.0-rc.4 (2022/10/6)
+
+- fix: html / css custom data not working (https://github.com/johnsoncodehk/volar/issues/707#issuecomment-1268513358)
+- fix: should not show tsconfig / name casing on status bar for md / html by default
+- fix: cannot watch *.ts changes without takeover mode (https://github.com/johnsoncodehk/volar/issues/1880#issuecomment-1269466716)
+
 ## 1.0.0-rc.3 (2022/10/5)
 
 - feat: support .cjs, .mjs, .cts, .mts on takeover mode ([#1928](https://github.com/johnsoncodehk/volar/issues/1928))
