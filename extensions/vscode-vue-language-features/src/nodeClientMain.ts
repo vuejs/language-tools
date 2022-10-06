@@ -4,7 +4,7 @@ import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient/node';
-import { activate as commonActivate, deactivate as commonDeactivate, getDocumentSelector } from './common';
+import { activate as commonActivate, deactivate as commonDeactivate, getDocumentSelector, processHtml, processMd } from './common';
 import { middleware } from './middleware';
 
 export function activate(context: vscode.ExtensionContext) {
@@ -67,7 +67,7 @@ export function activate(context: vscode.ExtensionContext) {
 			initializationOptions: initOptions,
 			progressOnInitialization: true,
 			synchronize: {
-				fileEvents: vscode.workspace.createFileSystemWatcher('{**/*.vue,**/*.md,**/*.html,**/*.js,**/*.ts,**/*.cjs,**/*.cts,**/*.mjs,**/*.mts,**/*.jsx,**/*.tsx,**/*.json}')
+				fileEvents: vscode.workspace.createFileSystemWatcher(`{**/*.vue,${processMd() ? '**/*.md,' : ''}${processHtml() ? '**/*.html,' : ''}**/*.js,**/*.ts,**/*.cjs,**/*.cts,**/*.mjs,**/*.mts,**/*.jsx,**/*.tsx,**/*.json}`)
 			},
 		};
 		const client = new _LanguageClient(
