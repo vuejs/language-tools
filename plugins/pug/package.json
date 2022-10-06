@@ -1,6 +1,6 @@
 {
 	"name": "@volar-plugins/pug",
-	"version": "1.0.0-rc.3",
+	"version": "1.0.0-rc.4",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -13,9 +13,9 @@
 		"directory": "plugins/pug"
 	},
 	"dependencies": {
-		"@volar-plugins/html": "1.0.0-rc.3",
-		"@volar/language-service": "1.0.0-rc.3",
-		"@volar/pug-language-service": "1.0.0-rc.3",
+		"@volar-plugins/html": "1.0.0-rc.4",
+		"@volar/language-service": "1.0.0-rc.4",
+		"@volar/pug-language-service": "1.0.0-rc.4",
 		"vscode-html-languageservice": "^5.0.1",
 		"vscode-languageserver-textdocument": "^1.0.7"
 	},
