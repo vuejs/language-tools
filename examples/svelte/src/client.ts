@@ -2,6 +2,7 @@ import { LanguageServerInitializationOptions } from '@volar/language-server';
 import * as path from 'typesafe-path';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient/node';
+import * as virtualFiles from '../../../extensions/vscode-vue-language-features/out/features/virtualFiles';
 
 let client: lsp.BaseLanguageClient;
 
@@ -58,6 +59,8 @@ export async function activate(context: vscode.ExtensionContext) {
 		clientOptions,
 	);
 	await client.start();
+
+	virtualFiles.register(context, client);
 }
 
 export function deactivate(): Thenable<any> | undefined {

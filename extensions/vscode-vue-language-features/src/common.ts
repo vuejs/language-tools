@@ -107,7 +107,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		fileReferences.register('volar.vue.findAllFileReferences', semanticClient);
 		verifyAll.register(context, semanticClient);
 		autoInsertion.register(context, syntacticClient, semanticClient);
-		virtualFiles.register('volar.action.writeVirtualFiles', context, semanticClient);
+		virtualFiles.register(context, semanticClient);
 	}
 
 	async function requestReloadVscode() {

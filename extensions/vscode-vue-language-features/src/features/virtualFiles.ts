@@ -24,7 +24,7 @@ const mappingSelectionDecorationType = vscode.window.createTextEditorDecorationT
 	backgroundColor: 'darkblue'
 });
 
-export async function register(cmd: string, context: vscode.ExtensionContext, client: BaseLanguageClient) {
+export async function register(context: vscode.ExtensionContext, client: BaseLanguageClient) {
 
 	const sourceUriToVirtualUris = new Map<string, string[]>();
 	const virtualUriToSourceEditor = new Map<string, vscode.TextEditor>();
@@ -73,7 +73,7 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 			}
 		}
 	}));
-	context.subscriptions.push(vscode.commands.registerCommand(cmd, () => {
+	context.subscriptions.push(vscode.commands.registerCommand('volar.action.writeVirtualFiles', () => {
 		if (vscode.window.activeTextEditor) {
 			client.sendNotification(WriteVirtualFilesNotification.type, client.code2ProtocolConverter.asTextDocumentIdentifier(vscode.window.activeTextEditor.document));
 		}
