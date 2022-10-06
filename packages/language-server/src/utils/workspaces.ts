@@ -40,15 +40,10 @@ export function createWorkspaces(
 		connection.sendDiagnostics({ uri: params.textDocument.uri, diagnostics: [] });
 	});
 	fsHost.onDidChangeWatchedFiles(params => {
-
 		const tsConfigChanges = params.changes.filter(change => rootTsConfigNames.includes(change.uri.substring(change.uri.lastIndexOf('/') + 1)));
 		if (tsConfigChanges.length) {
-			for (const doc of documents.data.values()) {
-				connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] });
-			}
+			reloadDiagnostics();
 		}
-
-		onDriveFileUpdated();
 	});
 	runtimeEnv.onDidChangeConfiguration?.(async () => {
 		onDriveFileUpdated();
@@ -87,6 +82,16 @@ export function createWorkspaces(
 		for (const [_, workspace] of workspaces) {
 			(await workspace).reload();
 		}
+
+		reloadDiagnostics();
+	}
+
+	function reloadDiagnostics() {
+		for (const doc of documents.data.values()) {
+			connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] });
+		}
+
+		onDriveFileUpdated();
 	}
 
 	async function onDriveFileUpdated() {
