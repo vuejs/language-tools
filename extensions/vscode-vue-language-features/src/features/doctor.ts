@@ -5,7 +5,7 @@ import { GetMatchTsConfigRequest, ParseSFCRequest } from '@volar/vue-language-se
 
 const scheme = 'vue-doctor';
 const knownValidSyntanxHighlightExtensions = {
-	postcss: ['cpylua.language-postcss'],
+	postcss: ['cpylua.language-postcss', 'vunguyentuan.vscode-postcss', 'csstools.postcss'],
 	stylus: ['sysoev.language-stylus'],
 	sass: ['Syler.sass-indented'],
 };
