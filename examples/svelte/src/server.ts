@@ -1,7 +1,7 @@
 import useCssPlugin from '@volar-plugins/css';
 import useTsPlugin, { getSemanticTokenLegend } from '@volar-plugins/typescript';
 import { EmbeddedFile, EmbeddedFileKind, LanguageServerPlugin } from '@volar/language-server';
-import { createLanguageServer, EmbeddedLanguageModule } from '@volar/language-server/node';
+import { createLanguageServer, LanguageModule } from '@volar/language-server/node';
 import { svelte2tsx } from 'svelte2tsx';
 import { decode } from '@jridgewell/sourcemap-codec';
 import { Mapping } from '@volar/source-map';
@@ -9,7 +9,7 @@ import { PositionCapabilities } from '@volar/language-core';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
 
-const mod: EmbeddedLanguageModule = {
+const mod: LanguageModule = {
 	createSourceFile(fileName, snapshot) {
 		if (fileName.endsWith('.svelte')) {
 			const text = snapshot.getText(0, snapshot.getLength());

@@ -1,4 +1,4 @@
-import { EmbeddedLanguageModule, LanguageServiceHost, EmbeddedLanguageContext, SourceFile } from '@volar/language-core';
+import { LanguageModule, LanguageServiceHost, EmbeddedLanguageContext, SourceFile } from '@volar/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { SourceFileDocument, SourceFileDocuments } from './documents';
@@ -11,7 +11,7 @@ export interface DocumentServiceRuntimeContext {
 	typescript: typeof import('typescript/lib/tsserverlibrary');
 	plugins: LanguageServicePlugin[];
 	pluginContext: LanguageServicePluginContext;
-	getSourceFileDocument(document: TextDocument): [SourceFileDocument, EmbeddedLanguageModule] | undefined;
+	getSourceFileDocument(document: TextDocument): [SourceFileDocument, LanguageModule] | undefined;
 	updateSourceFile(sourceFile: SourceFile, snapshot: ts.IScriptSnapshot): void;
 	prepareLanguageServices(document: TextDocument): void;
 };

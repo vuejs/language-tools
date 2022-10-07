@@ -68,7 +68,7 @@ export interface EmbeddedFile {
 	embeddeds: EmbeddedFile[],
 }
 
-export interface EmbeddedLanguageModule<T extends SourceFile = SourceFile> {
+export interface LanguageModule<T extends SourceFile = SourceFile> {
 	createSourceFile(fileName: string, snapshot: ts.IScriptSnapshot): T | undefined;
 	updateSourceFile(sourceFile: T, snapshot: ts.IScriptSnapshot): void;
 	proxyLanguageServiceHost?(host: LanguageServiceHost): Partial<LanguageServiceHost>;

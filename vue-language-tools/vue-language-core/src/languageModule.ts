@@ -13,7 +13,7 @@ export function createEmbeddedLanguageModule(
 	_vueCompilerOptions: VueCompilerOptions,
 	exts: string[],
 	extraPlugins: VueLanguagePlugin[] = [],
-): embedded.EmbeddedLanguageModule {
+): embedded.LanguageModule {
 
 	const vueLanguagePlugin = getDefaultVueLanguagePlugins(
 		ts,
@@ -37,7 +37,7 @@ export function createEmbeddedLanguageModule(
 
 	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);
 	const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(vueCompilerOptions.target, vueCompilerOptions));
-	const languageModule: embedded.EmbeddedLanguageModule = {
+	const languageModule: embedded.LanguageModule = {
 		createSourceFile(fileName, snapshot) {
 			if (exts.some(ext => fileName.endsWith(ext))) {
 				return new VueSourceFile(fileName, snapshot, ts, vueLanguagePlugin);

@@ -70,7 +70,7 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 		syntacticService: {
 			getLanguageModules(ts, env) {
 				const vueLanguagePlugins = vue2.getDefaultVueLanguagePlugins(ts, shared.getPathOfUri(env.rootUri.toString()), {}, {}, []);
-				const vueLanguageModule: embedded.EmbeddedLanguageModule = {
+				const vueLanguageModule: embedded.LanguageModule = {
 					createSourceFile(fileName, snapshot) {
 						if (exts.some(ext => fileName.endsWith(ext))) {
 							return new vue2.VueSourceFile(fileName, snapshot, ts, vueLanguagePlugins);

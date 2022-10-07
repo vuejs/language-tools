@@ -57,7 +57,7 @@ export type LanguageServerPlugin<
 			host: embedded.LanguageServiceHost,
 		): B,
 
-		getLanguageModules?(host: B): embedded.EmbeddedLanguageModule[],
+		getLanguageModules?(host: B): embedded.LanguageModule[],
 
 		getServicePlugins?(
 			host: B,
@@ -75,7 +75,7 @@ export type LanguageServerPlugin<
 		getLanguageModules?(
 			ts: typeof import('typescript/lib/tsserverlibrary'),
 			env: embeddedLS.LanguageServicePluginContext['env'],
-		): embedded.EmbeddedLanguageModule[],
+		): embedded.LanguageModule[],
 
 		getServicePlugins?(
 			context: embeddedLS.DocumentServiceRuntimeContext,

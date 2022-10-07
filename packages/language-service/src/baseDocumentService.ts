@@ -1,4 +1,4 @@
-import { createDocumentRegistry, EmbeddedLanguageModule, SourceFile } from '@volar/language-core';
+import { createDocumentRegistry, LanguageModule, SourceFile } from '@volar/language-core';
 import * as shared from '@volar/shared';
 import { shallowReactive as reactive } from '@vue/reactivity';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -21,7 +21,7 @@ export type DocumentService = ReturnType<typeof createDocumentService>;
 
 export function createDocumentServiceContext(options: {
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	getLanguageModules(): EmbeddedLanguageModule[],
+	getLanguageModules(): LanguageModule[],
 	getPlugins(): LanguageServicePlugin[],
 	env: LanguageServicePluginContext['env'];
 }) {
@@ -39,8 +39,8 @@ export function createDocumentServiceContext(options: {
 		env: options.env,
 	};
 	const languageModules = options.getLanguageModules();
-	const vueDocuments = new WeakMap<TextDocument, [SourceFileDocument, EmbeddedLanguageModule]>();
-	const fileMods = new WeakMap<SourceFile, EmbeddedLanguageModule>();
+	const vueDocuments = new WeakMap<TextDocument, [SourceFileDocument, LanguageModule]>();
+	const fileMods = new WeakMap<SourceFile, LanguageModule>();
 	const mapper = createDocumentRegistry();
 	const context: DocumentServiceRuntimeContext = {
 		typescript: ts,

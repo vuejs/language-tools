@@ -1,7 +1,7 @@
 import { Mapping, SourceMapBase } from '@volar/source-map';
 import { computed, shallowReactive } from '@vue/reactivity';
 import { Teleport } from './sourceMaps';
-import type { EmbeddedFile, EmbeddedLanguageModule, SourceFile } from './types';
+import type { EmbeddedFile, LanguageModule, SourceFile } from './types';
 
 export function forEachEmbeddeds(input: EmbeddedFile[], cb: (embedded: EmbeddedFile) => void) {
 	for (const child of input) {
@@ -16,7 +16,7 @@ export type DocumentRegistry = ReturnType<typeof createDocumentRegistry>;
 
 export function createDocumentRegistry() {
 
-	const files = shallowReactive<Record<string, [SourceFile, EmbeddedLanguageModule]>>({});
+	const files = shallowReactive<Record<string, [SourceFile, LanguageModule]>>({});
 	const all = computed(() => Object.values(files));
 	const fileNames = computed(() => all.value.map(sourceFile => sourceFile?.[0].fileName));
 	const embeddedDocumentsMap = computed(() => {
@@ -53,10 +53,10 @@ export function createDocumentRegistry() {
 	const _teleports = new WeakMap<SourceFile, WeakMap<Mapping<any>[], Teleport>>();
 
 	return {
-		get: (fileName: string): [SourceFile, EmbeddedLanguageModule] | undefined => files[normalizePath(fileName)],
+		get: (fileName: string): [SourceFile, LanguageModule] | undefined => files[normalizePath(fileName)],
 		delete: (fileName: string) => delete files[normalizePath(fileName)],
 		has: (fileName: string) => !!files[normalizePath(fileName)],
-		set: (fileName: string, vueFile: SourceFile, languageModule: EmbeddedLanguageModule) => files[normalizePath(fileName)] = [vueFile, languageModule],
+		set: (fileName: string, vueFile: SourceFile, languageModule: LanguageModule) => files[normalizePath(fileName)] = [vueFile, languageModule],
 
 		getFileNames: () => fileNames.value,
 		getAll: () => all.value,
