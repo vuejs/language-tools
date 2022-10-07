@@ -39,7 +39,7 @@ export async function activate(context: vscode.ExtensionContext, languageClient:
 				'5': { label: (currentAttrNameCasing === AttrNameCasing.Kebab ? '• ' : '') + 'Prop Name Using kebab-case' },
 				'6': { label: (currentAttrNameCasing === AttrNameCasing.Camel ? '• ' : '') + 'Prop Name Using camelCase' },
 				'7': { label: 'Convert Prop Name to kebab-case' },
-				'8': { label: 'Convert Prop Name to cascalCase' },
+				'8': { label: 'Convert Prop Name to camelCase' },
 			},
 		]);
 
