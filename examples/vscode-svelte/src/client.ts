@@ -17,7 +17,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			),
 		},
 	};
-	const serverModule = vscode.Uri.joinPath(context.extensionUri, 'out', 'server');
+	const serverModule = vscode.Uri.joinPath(context.extensionUri, 'node_modules', '@volar-examples', 'svelte-language-server', 'bin', 'svelte-language-server.js');
 	const runOptions = { execArgv: <string[]>[] };
 	const debugOptions = { execArgv: ['--nolazy', '--inspect=' + 6009] };
 	const serverOptions: lsp.ServerOptions = {
@@ -43,6 +43,7 @@ export async function activate(context: vscode.ExtensionContext) {
 				configuration(params, token, next) {
 					if (params.items.length === 1 && params.items[0].section === 'volar.format.initialIndent') {
 						return [{
+							typescript: true,
 							javascript: true,
 							css: true,
 						}];

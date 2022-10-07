@@ -6,8 +6,7 @@
 		"rootDir": "src",
 	},
 	"include": [
-		"src",
-		"src/**/*.json"
+		"src"
 	],
 	"exclude": [
 		"node_modules",
@@ -15,13 +14,7 @@
 	],
 	"references": [
 		{
-			"path": "../../plugins/css/tsconfig.build.json"
-		},
-		{
-			"path": "../../plugins/typescript/tsconfig.build.json"
-		},
-		{
-			"path": "../../packages/language-server/tsconfig.build.json"
+			"path": "../../packages/language-core/tsconfig.build.json"
 		}
 	]
 }
