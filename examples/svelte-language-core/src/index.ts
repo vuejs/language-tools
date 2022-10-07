@@ -1,15 +1,12 @@
-import useCssPlugin from '@volar-plugins/css';
-import useTsPlugin, { getSemanticTokenLegend } from '@volar-plugins/typescript';
-import { EmbeddedFile, EmbeddedFileKind, LanguageServerPlugin } from '@volar/language-server';
-import { createLanguageServer, LanguageModule } from '@volar/language-server/node';
-import { svelte2tsx } from 'svelte2tsx';
 import { decode } from '@jridgewell/sourcemap-codec';
-import { Mapping } from '@volar/source-map';
-import { PositionCapabilities } from '@volar/language-core';
+import { EmbeddedFile, EmbeddedFileKind, LanguageModule } from '@volar/language-core';
+import { svelte2tsx } from 'svelte2tsx';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
 
-const mod: LanguageModule = {
+export * from '@volar/language-core';
+
+export const languageModule: LanguageModule = {
 	createSourceFile(fileName, snapshot) {
 		if (fileName.endsWith('.svelte')) {
 			const text = snapshot.getText(0, snapshot.getLength());
@@ -38,7 +35,7 @@ function getEmbeddeds(fileName: string, text: string) {
 		const v3Mappings = decode(tsx.map.mappings);
 		const sourcedDoc = TextDocument.create(URI.file(fileName).toString(), 'svelte', 0, text);
 		const genDoc = TextDocument.create(URI.file(fileName + '.tsx').toString(), 'typescriptreact', 0, tsx.code);
-		const mappings: Mapping<PositionCapabilities>[] = [];
+		const mappings: EmbeddedFile['mappings'] = [];
 
 		let current: {
 			genOffset: number,
@@ -122,32 +119,3 @@ function getEmbeddeds(fileName: string, text: string) {
 		return [];
 	}
 }
-
-const plugin: LanguageServerPlugin = () => ({
-	extraFileExtensions: [{ extension: 'svelte', isMixedContent: true, scriptKind: 7 }],
-	semanticService: {
-		semanticTokenLegend: getSemanticTokenLegend(),
-		getLanguageModules(host) {
-			return [mod];
-		},
-		getServicePlugins() {
-			return [
-				useCssPlugin(),
-				useTsPlugin(),
-			];
-		},
-	},
-	syntacticService: {
-		getLanguageModules(host) {
-			return [mod];
-		},
-		getServicePlugins() {
-			return [
-				useCssPlugin(),
-				useTsPlugin(),
-			];
-		}
-	},
-});
-
-createLanguageServer([plugin]);

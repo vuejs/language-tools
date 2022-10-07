@@ -27,35 +27,61 @@ importers:
       vite: 3.1.6
       vitest: 0.23.4
 
-  examples/svelte:
+  examples/svelte-language-core:
     specifiers:
       '@jridgewell/sourcemap-codec': ^1.4.14
-      '@types/vscode': 1.67.0
-      '@volar-plugins/css': 1.0.0-rc.4
-      '@volar-plugins/typescript': 1.0.0-rc.4
-      '@volar/language-server': 1.0.0-rc.4
+      '@volar/language-core': 1.0.0-rc.4
       svelte: ^3.50.1
       svelte2tsx: ^0.5.19
-      typesafe-path: ^0.2.1
-      typescript: ^4.1.2
-      vsce: latest
-      vscode-languageclient: ^8.0.2
       vscode-languageserver-textdocument: ^1.0.7
       vscode-uri: ^3.0.3
     dependencies:
       '@jridgewell/sourcemap-codec': 1.4.14
-      '@volar-plugins/css': link:../../plugins/css
-      '@volar-plugins/typescript': link:../../plugins/typescript
-      '@volar/language-server': link:../../packages/language-server
+      '@volar/language-core': link:../../packages/language-core
       svelte: 3.50.1
-      svelte2tsx: 0.5.19_qy6w2iv5hnh55blsjuu7uihyzm
-      typesafe-path: 0.2.1
-      vscode-languageclient: 8.0.2
+      svelte2tsx: 0.5.19_svelte@3.50.1
       vscode-languageserver-textdocument: 1.0.7
       vscode-uri: 3.0.6
+
+  examples/svelte-language-server:
+    specifiers:
+      '@volar-examples/svelte-language-core': 1.0.0-rc.4
+      '@volar-plugins/typescript': 1.0.0-rc.4
+      '@volar/language-server': 1.0.0-rc.4
+    dependencies:
+      '@volar-examples/svelte-language-core': link:../svelte-language-core
+      '@volar-plugins/typescript': link:../../plugins/typescript
+      '@volar/language-server': link:../../packages/language-server
+
+  examples/svelte-tsc:
+    specifiers:
+      '@volar-examples/svelte-language-core': 1.0.0-rc.4
+      '@volar-examples/svelte-typescript': 1.0.0-rc.4
+    dependencies:
+      '@volar-examples/svelte-language-core': link:../svelte-language-core
+      '@volar-examples/svelte-typescript': link:../svelte-typescript
+
+  examples/svelte-typescript:
+    specifiers:
+      '@volar-examples/svelte-language-core': 1.0.0-rc.4
+      '@volar/typescript': 1.0.0-rc.4
+    dependencies:
+      '@volar-examples/svelte-language-core': link:../svelte-language-core
+      '@volar/typescript': link:../../packages/typescript
+
+  examples/vscode-svelte:
+    specifiers:
+      '@types/vscode': 1.67.0
+      '@volar-examples/svelte-language-server': 1.0.0-rc.4
+      typesafe-path: ^0.2.1
+      vsce: latest
+      vscode-languageclient: ^8.0.2
+    dependencies:
+      '@volar-examples/svelte-language-server': link:../svelte-language-server
+      typesafe-path: 0.2.1
+      vscode-languageclient: 8.0.2
     devDependencies:
       '@types/vscode': 1.67.0
-      typescript: 4.8.4
       vsce: 2.11.0
 
   extensions/vscode-typescript-vue-plugin:
@@ -5444,7 +5470,7 @@ packages:
     engines: {node: '>= 8'}
     dev: false
 
-  /svelte2tsx/0.5.19_qy6w2iv5hnh55blsjuu7uihyzm:
+  /svelte2tsx/0.5.19_svelte@3.50.1:
     resolution: {integrity: sha512-PvhcjG3fVhFmoO7XWYYqWYkg7lQzO8Q9/T4RQiCAsTZ+lK+9jCAPV8rbeQD8M4AN44u3JqgvaxHrmh095SaxBA==}
     peerDependencies:
       svelte: ^3.24
@@ -5453,7 +5479,6 @@ packages:
       dedent-js: 1.0.1
       pascal-case: 3.1.2
       svelte: 3.50.1
-      typescript: 4.8.4
     dev: false
 
   /tar-fs/2.1.1:
@@ -5688,12 +5713,6 @@ packages:
 
   /typesafe-path/0.2.1:
     resolution: {integrity: sha512-dngiIyVnCiCxyRaWwhi1aCBF8amSdjARnwaIjGVRmkzZ1613RLIi/B33VWn6/ofLlBzi/teHf5t7RnZtbOerbg==}
-
-  /typescript/4.8.4:
-    resolution: {integrity: sha512-QCh+85mCy+h0IGff8r5XWzOVSbBO+KfeYrMQh7NJ58QujwcE22u+NUSmUxqF+un70P9GXKxa2HCNiTTMJknyjQ==}
-    engines: {node: '>=4.2.0'}
-    hasBin: true
-    dev: true
 
   /typescript/4.9.1-beta:
     resolution: {integrity: sha512-D4c0t1+sMOS5Hy8DQsGFfEYUuKzolXhf+7e/N0Td5etBPflEYzVwWLBrbVgHpLpLC53OJQCtxk31+NWO2SBPaA==}

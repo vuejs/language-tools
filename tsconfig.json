@@ -24,6 +24,9 @@
 			"@volar-plugins/*": [
 				"plugins/*/src"
 			],
+			"@volar-examples/*": [
+				"examples/*/src"
+			],
 			"@volar/vue-*": [
 				"vue-language-tools/vue-*/src"
 			],

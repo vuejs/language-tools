@@ -1,0 +1,23 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"noEmit": false,
+		"outDir": "out",
+		"rootDir": "src",
+	},
+	"include": [
+		"src"
+	],
+	"exclude": [
+		"node_modules",
+		".vscode-test"
+	],
+	"references": [
+		{
+			"path": "../svelte-language-core/tsconfig.build.json"
+		},
+		{
+			"path": "../svelte-typescript/tsconfig.build.json"
+		},
+	],
+}
