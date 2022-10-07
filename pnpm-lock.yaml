@@ -272,10 +272,8 @@ importers:
   packages/typescript:
     specifiers:
       '@volar/language-core': 1.0.0
-      '@volar/typescript-faster': 1.0.0
     dependencies:
       '@volar/language-core': link:../language-core
-      '@volar/typescript-faster': link:../typescript-faster
 
   packages/typescript-faster:
     specifiers:
@@ -396,9 +394,11 @@ importers:
 
   vue-language-tools/typescript-vue-plugin:
     specifiers:
+      '@volar/typescript-faster': 1.0.0
       '@volar/vue-language-core': 1.0.0
       '@volar/vue-typescript': 1.0.0
     dependencies:
+      '@volar/typescript-faster': link:../../packages/typescript-faster
       '@volar/vue-language-core': link:../vue-language-core
       '@volar/vue-typescript': link:../vue-typescript
 

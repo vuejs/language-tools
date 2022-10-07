@@ -1,4 +1,3 @@
-import * as tsFaster from '@volar/typescript-faster';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { getProgram } from './getProgram';
 import * as embedded from '@volar/language-core';
@@ -9,9 +8,7 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 	const ts = host.getTypeScriptModule();
 	const ls = ts.createLanguageService(core.typescriptLanguageServiceHost);
 
-	tsFaster.decorate(ts, core.typescriptLanguageServiceHost, ls);
-
-	const proxy: Partial<ts.LanguageService> = {
+	return new Proxy<Partial<ts.LanguageService>>({
 		organizeImports,
 
 		// only support for .ts for now, not support for .vue
@@ -38,16 +35,14 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 		// getEditsForRefactor: tsLanguageService.rawLs.getEditsForRefactor,
 
 		getProgram: () => getProgram(ts, core, ls),
-	};
-
-	return new Proxy(ls, {
+	}, {
 		get: (target: any, property: keyof ts.LanguageService) => {
-			if (property in proxy) {
-				return proxy[property];
+			if (property in target) {
+				return target[property];
 			}
-			return target[property];
+			return ls[property];
 		},
-	});
+	}) as ts.LanguageService;
 
 	// apis
 	function organizeImports(args: ts.OrganizeImportsArgs, formatOptions: ts.FormatCodeSettings, preferences: ts.UserPreferences | undefined): ReturnType<ts.LanguageService['organizeImports']> {
