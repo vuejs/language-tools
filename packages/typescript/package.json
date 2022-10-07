@@ -1,5 +1,5 @@
 {
-	"name": "@volar/vue-typescript",
+	"name": "@volar/typescript",
 	"version": "1.0.0-rc.4",
 	"main": "out/index.js",
 	"license": "MIT",
@@ -10,10 +10,10 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
-		"directory": "vue-language-tools/vue-typescript"
+		"directory": "packages/typescript"
 	},
 	"dependencies": {
-		"@volar/typescript": "1.0.0-rc.4",
-		"@volar/vue-language-core": "1.0.0-rc.4"
+		"@volar/language-core": "1.0.0-rc.4",
+		"@volar/typescript-faster": "1.0.0-rc.4"
 	}
 }

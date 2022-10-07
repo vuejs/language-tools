@@ -229,6 +229,14 @@ importers:
       '@volar/shared': link:../shared
       vscode-languageserver-types: 3.17.2
 
+  packages/typescript:
+    specifiers:
+      '@volar/language-core': 1.0.0-rc.4
+      '@volar/typescript-faster': 1.0.0-rc.4
+    dependencies:
+      '@volar/language-core': link:../language-core
+      '@volar/typescript-faster': link:../typescript-faster
+
   packages/typescript-faster:
     specifiers:
       '@types/semver': ^7.3.12
@@ -477,15 +485,11 @@ importers:
 
   vue-language-tools/vue-typescript:
     specifiers:
-      '@volar/language-core': 1.0.0-rc.4
-      '@volar/typescript-faster': 1.0.0-rc.4
+      '@volar/typescript': 1.0.0-rc.4
       '@volar/vue-language-core': 1.0.0-rc.4
-      muggle-string: ^0.1.0
     dependencies:
-      '@volar/language-core': link:../../packages/language-core
-      '@volar/typescript-faster': link:../../packages/typescript-faster
+      '@volar/typescript': link:../../packages/typescript
       '@volar/vue-language-core': link:../vue-language-core
-      muggle-string: 0.1.0
 
 packages:
 

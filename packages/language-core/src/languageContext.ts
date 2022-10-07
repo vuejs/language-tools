@@ -263,7 +263,7 @@ export function createEmbeddedLanguageServiceHost(
 				let version = ts.sys?.createHash?.(mapped.embedded.text) ?? mapped.embedded.text;
 				if (host.isTsc) {
 					// fix https://github.com/johnsoncodehk/volar/issues/1082
-					version = host.getScriptVersion(mapped.vueFile.fileName) + ':' + version;
+					version = host.getScriptVersion(mapped.sourceFile.fileName) + ':' + version;
 				}
 				fileVersions.set(mapped.embedded.fileName, version);
 				return version;

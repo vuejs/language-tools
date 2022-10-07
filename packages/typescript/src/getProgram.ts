@@ -4,7 +4,7 @@ import type * as embedded from '@volar/language-core';
 export function getProgram(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	core: embedded.EmbeddedLanguageContext,
-	vueTsLs: ts.LanguageService,
+	ls: ts.LanguageService,
 ) {
 
 	const proxy: Partial<ts.Program> = {
@@ -31,7 +31,7 @@ export function getProgram(
 	});
 
 	function getProgram() {
-		return vueTsLs.getProgram()!;
+		return ls.getProgram()!;
 	}
 
 	function getRootFileNames() {
@@ -66,7 +66,7 @@ export function getProgram(
 				if (!mapped.embedded.capabilities.diagnostic)
 					return [] as any;
 
-				const errors = transformDiagnostics(vueTsLs.getProgram()?.[api](sourceFile, cancellationToken) ?? []);
+				const errors = transformDiagnostics(ls.getProgram()?.[api](sourceFile, cancellationToken) ?? []);
 
 				return errors as any;
 			}

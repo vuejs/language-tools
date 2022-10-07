@@ -14,10 +14,10 @@
 	],
 	"references": [
 		{
-			"path": "../../packages/typescript/tsconfig.build.json"
+			"path": "../language-core/tsconfig.build.json"
 		},
 		{
-			"path": "../vue-language-core/tsconfig.build.json"
+			"path": "../typescript-faster/tsconfig.build.json"
 		},
 	],
 }

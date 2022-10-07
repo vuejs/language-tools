@@ -29,10 +29,10 @@ export function createDocumentRegistry() {
 		return map;
 	});
 	const sourceMapsByFileName = computed(() => {
-		const map = new Map<string, { vueFile: SourceFile, embedded: EmbeddedFile; }>();
+		const map = new Map<string, { sourceFile: SourceFile, embedded: EmbeddedFile; }>();
 		for (const [sourceFile] of all.value) {
 			forEachEmbeddeds(sourceFile.embeddeds, embedded => {
-				map.set(normalizePath(embedded.fileName), { vueFile: sourceFile, embedded });
+				map.set(normalizePath(embedded.fileName), { sourceFile, embedded });
 			});
 		}
 		return map;
@@ -78,11 +78,11 @@ export function createDocumentRegistry() {
 
 			if (mapped) {
 
-				const sourceMap = getSourceMap(mapped.vueFile, mapped.embedded.mappings);
+				const sourceMap = getSourceMap(mapped.sourceFile, mapped.embedded.mappings);
 
 				for (const vueRange of sourceMap.toSourceOffsets(offset)) {
 					yield {
-						fileName: mapped.vueFile.fileName,
+						fileName: mapped.sourceFile.fileName,
 						offset: vueRange[0],
 						mapping: vueRange[1],
 						sourceMap,
