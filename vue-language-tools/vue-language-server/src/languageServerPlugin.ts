@@ -37,7 +37,7 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 				};
 			},
 			getLanguageModules(host) {
-				const vueLanguageModule = vue2.createEmbeddedLanguageModule(
+				const vueLanguageModule = vue2.createLanguageModule(
 					host.getTypeScriptModule(),
 					host.getCurrentDirectory(),
 					host.getCompilationSettings(),

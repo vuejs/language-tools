@@ -120,7 +120,7 @@ export function createLanguageService(
 	documentRegistry?: ts.DocumentRegistry,
 ) {
 
-	const vueLanguageModule = vue.createEmbeddedLanguageModule(
+	const vueLanguageModule = vue.createLanguageModule(
 		host.getTypeScriptModule(),
 		host.getCurrentDirectory(),
 		host.getCompilationSettings(),

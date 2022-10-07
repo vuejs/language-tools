@@ -121,7 +121,7 @@ function baseCreate(loadParsedCommandLine: () => vue.ParsedCommandLine, checkerO
 			return _host[prop as keyof typeof _host];
 		},
 	}) as vue.LanguageServiceHost;
-	const vueLanguageModule = vue.createEmbeddedLanguageModule(
+	const vueLanguageModule = vue.createLanguageModule(
 		host.getTypeScriptModule(),
 		host.getCurrentDirectory(),
 		host.getCompilationSettings(),

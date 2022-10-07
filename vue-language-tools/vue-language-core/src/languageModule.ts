@@ -6,7 +6,7 @@ import { VueLanguagePlugin, VueCompilerOptions } from './types';
 import * as localTypes from './utils/localTypes';
 import { resolveVueCompilerOptions } from './utils/ts';
 
-export function createEmbeddedLanguageModule(
+export function createLanguageModule(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	rootDir: string,
 	compilerOptions: ts.CompilerOptions,

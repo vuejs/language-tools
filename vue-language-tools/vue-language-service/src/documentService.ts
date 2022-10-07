@@ -47,7 +47,7 @@ export function createDocumentService(
 	env: embeddedLS.LanguageServicePluginContext['env'],
 ) {
 
-	const vueLanguageModule = vue.createEmbeddedLanguageModule(
+	const vueLanguageModule = vue.createLanguageModule(
 		ts,
 		env.rootUri.fsPath,
 		{},
