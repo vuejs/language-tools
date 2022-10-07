@@ -1,12 +1,23 @@
 # Changelog
 
+## 1.0.0-rc.5 (2022/10/7)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- fix: "Reload Project" command do not update diagnostics
+- feat: use svelte2tsx for svelte language server example ([#1940](https://github.com/johnsoncodehk/volar/issues/1940))
+
 ## 1.0.0-rc.4 (2022/10/6)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
 
 - fix: html / css custom data not working (https://github.com/johnsoncodehk/volar/issues/707#issuecomment-1268513358)
 - fix: should not show tsconfig / name casing on status bar for md / html by default
 - fix: cannot watch *.ts changes without takeover mode (https://github.com/johnsoncodehk/volar/issues/1880#issuecomment-1269466716)
 
 ## 1.0.0-rc.3 (2022/10/5)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
 
 - feat: support .cjs, .mjs, .cts, .mts on takeover mode ([#1928](https://github.com/johnsoncodehk/volar/issues/1928))
 - fix: multiple style attributes report false positive error ([#1929](https://github.com/johnsoncodehk/volar/issues/1929))
