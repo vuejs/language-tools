@@ -1,6 +1,6 @@
 {
 	"name": "@volar-examples/svelte-language-server",
-	"version": "1.0.0-rc.4",
+	"version": "1.0.0-rc.5",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -16,8 +16,8 @@
 		"directory": "examples/svelte-language-server"
 	},
 	"dependencies": {
-		"@volar-examples/svelte-language-core": "1.0.0-rc.4",
-		"@volar-plugins/typescript": "1.0.0-rc.4",
-		"@volar/language-server": "1.0.0-rc.4"
+		"@volar-examples/svelte-language-core": "1.0.0-rc.5",
+		"@volar-plugins/typescript": "1.0.0-rc.5",
+		"@volar/language-server": "1.0.0-rc.5"
 	}
 }
