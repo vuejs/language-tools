@@ -44,7 +44,7 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 			return; // cancel
 		}
 		if (select === 'takeover') {
-			vscode.env.openExternal(vscode.Uri.parse('https://vuejs.org/guide/typescript/overview.html#takeover-mode'));
+			vscode.env.openExternal(vscode.Uri.parse('https://vuejs.org/guide/typescript/overview.html#volar-takeover-mode'));
 			return;
 		}
 		if (select === 'use_workspace_tsdk_deafult') {
