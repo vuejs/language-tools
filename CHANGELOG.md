@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.0 (2022/10/7)
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
+
 ## 1.0.0-rc.5 (2022/10/7)
 
 [[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
@@ -179,12 +187,6 @@
 	}
 }
 ```
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 0.40.13 (2022/9/8)
 
