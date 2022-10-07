@@ -1,0 +1,25 @@
+{
+	"name": "@volar-examples/vue-and-svelte-language-server",
+	"version": "1.0.0-rc.5",
+	"main": "out/index.js",
+	"license": "MIT",
+	"files": [
+		"out/**/*.js",
+		"out/**/*.d.ts"
+	],
+	"bin": {
+		"vue-and-svelte-language-server": "./bin/vue-and-svelte-language-server.js"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/johnsoncodehk/volar.git",
+		"directory": "examples/vue-and-svelte-language-server"
+	},
+	"dependencies": {
+		"@volar-examples/svelte-language-core": "1.0.0-rc.5",
+		"@volar-plugins/typescript": "1.0.0-rc.5",
+		"@volar/language-server": "1.0.0-rc.5",
+		"@volar/shared": "1.0.0-rc.5",
+		"@volar/vue-language-core": "1.0.0-rc.5"
+	}
+}

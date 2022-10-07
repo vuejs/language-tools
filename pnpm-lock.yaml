@@ -77,12 +77,26 @@ importers:
       vsce: latest
       vscode-languageclient: ^8.0.2
     dependencies:
-      '@volar-examples/svelte-language-server': link:../svelte-language-server
+      '@volar-examples/svelte-language-server': link:../vue-and-svelte-language-server
       typesafe-path: 0.2.1
       vscode-languageclient: 8.0.2
     devDependencies:
       '@types/vscode': 1.67.0
       vsce: 2.11.0
+
+  examples/vue-and-svelte-language-server:
+    specifiers:
+      '@volar-examples/svelte-language-core': 1.0.0-rc.5
+      '@volar-plugins/typescript': 1.0.0-rc.5
+      '@volar/language-server': 1.0.0-rc.5
+      '@volar/shared': 1.0.0-rc.5
+      '@volar/vue-language-core': 1.0.0-rc.5
+    dependencies:
+      '@volar-examples/svelte-language-core': link:../svelte-language-core
+      '@volar-plugins/typescript': link:../../plugins/typescript
+      '@volar/language-server': link:../../packages/language-server
+      '@volar/shared': link:../../packages/shared
+      '@volar/vue-language-core': link:../../vue-language-tools/vue-language-core
 
   extensions/vscode-typescript-vue-plugin:
     specifiers:
