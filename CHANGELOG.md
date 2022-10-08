@@ -1,12 +1,26 @@
 # Changelog
 
-## 1.0.0 (2022/10/7)
+## 1.0.1 (2022/10/9)
+
+- feat(doctor): added more postcss syntax highliters ([#1945](https://github.com/johnsoncodehk/volar/issues/1945))
+- fix(doctor): `@vue/compiler-dom` missing message incorrect ([#1953](https://github.com/johnsoncodehk/volar/issues/1953))
+- fix: name casing tool typo ([#1941](https://github.com/johnsoncodehk/volar/issues/1941))
+- fix: takeover mode document link incorrect ([#1944](https://github.com/johnsoncodehk/volar/issues/1944))
+- fix: code color disordered if .ts script do not include to tsconfig ([#1946](https://github.com/johnsoncodehk/volar/issues/1946))
+- fix: cannot start language server if worksapce tsdk path invalid ([#1942](https://github.com/johnsoncodehk/volar/issues/1942))
+- fix: "Show Virtual Files" command not working for .md / .html
+- fix: tag autocomplete add duplicated import if the tag not use in template ([#1952](https://github.com/johnsoncodehk/volar/issues/1952))
+- fix: template AST broken when input space after tag name
+- fix: don't use native event type for component ([#1948](https://github.com/johnsoncodehk/volar/issues/1948)) ([#1951](https://github.com/johnsoncodehk/volar/issues/1951))
+- fix: command + hover `@click` cannot show selection range
 
 ### Our Sponsors
 
 <a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
 	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
 </a>
+
+## 1.0.0 (2022/10/7)
 
 ## 1.0.0-rc.5 (2022/10/7)
 
