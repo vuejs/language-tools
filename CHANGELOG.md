@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2 (2022/10/9)
+
+- fix: `TypeScript Vue Plugin (Volar)` breaks VSCode tsserver ([#1956](https://github.com/johnsoncodehk/volar/issues/1956))
+
 ## 1.0.1 (2022/10/9)
 
 - feat(doctor): added more postcss syntax highliters ([#1945](https://github.com/johnsoncodehk/volar/issues/1945))
