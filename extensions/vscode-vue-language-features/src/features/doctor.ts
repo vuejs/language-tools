@@ -119,8 +119,16 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		// check vue version < 2.7 but @vue/compiler-dom missing
 		if (vueVersion && semver.lt(vueVersion, '2.7.0') && !getWorkspacePackageJson(workspaceFolder, '@vue/compiler-dom')) {
 			problems.push({
-				title: 'TsConfig missing for Vue 2',
-				message: 'In ',
+				title: '`@vue/compiler-dom` missing for Vue 2',
+				message: 'Vue 2 do not have JSX types definition, so template type checkinng cannot working correctly, you can install `@vue/compiler-dom` by add it to `devDependencies` to resolve this problem.',
+			});
+		}
+
+		// check vue version >= 2.7 and < 3 but installed @vue/compiler-dom
+		if (vueVersion && semver.gte(vueVersion, '2.7.0') && semver.lt(vueVersion, '3.0.0') && getWorkspacePackageJson(workspaceFolder, '@vue/compiler-dom')) {
+			problems.push({
+				title: 'Do not need `@vue/compiler-dom`',
+				message: 'Vue 2.7 already included JSX types definition, you can remove `@vue/compiler-dom` depend from package.json.',
 			});
 		}
 
@@ -142,7 +150,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			});
 		}
 
-		// check using png bug don't install @volar/vue-language-plugin-pug
+		// check using pug but don't install @volar/vue-language-plugin-pug
 		if (
 			sfc?.descriptor.template?.lang === 'pug'
 			&& !tsconfig?.raw?.vueCompilerOptions?.plugins?.includes('@volar/vue-language-plugin-pug')
