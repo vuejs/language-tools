@@ -460,15 +460,11 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 							baseName = baseName.replace(/\./g, '-');
 							const componentName_1 = hyphenate(baseName);
 							const componentName_2 = capitalize(camelize(baseName));
-							let i: number | '' = '';
 							if (names.has(componentName_1) || names.has(componentName_2)) {
-								i = 1;
-								while (names.has(componentName_1 + i) || names.has(componentName_2 + i)) {
-									i++;
-								}
+								continue;
 							}
 							tags.push({
-								name: (tagNameCasing === TagNameCasing.Kebab ? componentName_1 : componentName_2) + i,
+								name: (tagNameCasing === TagNameCasing.Kebab ? componentName_1 : componentName_2),
 								description: createInternalItemId('importFile', [vueDocument.uri]),
 								attributes: [],
 							});
