@@ -30,10 +30,7 @@ export function createWorkspaces(
 
 	const workspaces = new Map<string, ReturnType<typeof createWorkspaceProjects>>();
 
-	documents.onDidOpen(params => {
-		updateDiagnostics(params.textDocument.uri);
-	});
-	documents.onDidChangeContent(async params => {
+	documents.onDidChangeContent(params => {
 		updateDiagnostics(params.textDocument.uri);
 	});
 	documents.onDidClose(params => {

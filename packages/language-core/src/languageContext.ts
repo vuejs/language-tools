@@ -151,6 +151,11 @@ export function createEmbeddedLanguageServiceHost(
 			}
 		}
 
+		// no any vue file version change, it mean project version was update by ts file change at this time
+		if (!sourceFilesToUpdate.length) {
+			tsFileUpdated = true;
+		}
+
 		// add
 		for (const fileName of [...remainFileNames]) {
 			const snapshot = host.getScriptSnapshot(fileName);
@@ -158,6 +163,7 @@ export function createEmbeddedLanguageServiceHost(
 				for (const languageModule of languageModules) {
 					const sourceFile = languageModule.createSourceFile(fileName, snapshot);
 					if (sourceFile) {
+						fileVersions.set(sourceFile.fileName, host.getScriptVersion(fileName));
 						documentRegistry.set(fileName, reactive(sourceFile), languageModule);
 						remainFileNames.delete(fileName);
 						break;
