@@ -118,7 +118,11 @@ export function getCurrentTsdk(context: vscode.ExtensionContext) {
 
 function resolveConfigTsdk(tsdk: path.OsPath | path.PosixPath) {
 	if (path.isAbsolute(tsdk)) {
-		return tsdk;
+		try {
+			if (require.resolve('./typescript.js', { paths: [tsdk] })) {
+				return tsdk;
+			}
+		} catch { }
 	}
 	const workspaceFolderFsPaths = (vscode.workspace.workspaceFolders ?? []).map(folder => folder.uri.fsPath as path.OsPath);
 	for (const folder of workspaceFolderFsPaths) {
