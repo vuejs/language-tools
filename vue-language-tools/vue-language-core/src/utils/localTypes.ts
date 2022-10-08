@@ -113,8 +113,8 @@ export type GetComponents<Components, N1, N2 = unknown, N3 = unknown> =
 	unknown;
 export type ComponentProps<T> =
 	${vueCompilerOptions.strictTemplates ? '' : 'Record<string, unknown> &'}
-	GlobalAttrs &
-	ExtractProps<T>;
+	ComponentProps_WithGlobalAttrs<ExtractProps<T>>;
+type ComponentProps_WithGlobalAttrs<T> = T & Omit<GlobalAttrs, keyof T>;
 export type InstanceProps<I, C> = I extends { $props: infer Props } ? Props & Record<string, unknown> : C & Record<string, unknown>;
 export type EventObject<I, K1 extends string, C, E1, E2> = {
 	[K in K1]: import('./__VLS_types.js').FillingEventArg<
