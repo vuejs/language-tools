@@ -39,6 +39,7 @@ export type VueLanguagePlugin = (ctx: {
 	},
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: ResolvedVueCompilerOptions,
+	pluginOptions: Record<string, Record<string, unknown>>,
 }) => {
 	name?: string;
 	version: 1;

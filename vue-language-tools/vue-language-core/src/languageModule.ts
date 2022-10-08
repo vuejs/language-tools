@@ -13,6 +13,7 @@ export function createLanguageModule(
 	_vueCompilerOptions: VueCompilerOptions,
 	exts: string[],
 	extraPlugins: VueLanguagePlugin[] = [],
+	pluginOptions: Record<string, Record<string, unknown>> = {}
 ): embedded.LanguageModule {
 
 	const vueLanguagePlugin = getDefaultVueLanguagePlugins(
@@ -21,6 +22,7 @@ export function createLanguageModule(
 		compilerOptions,
 		_vueCompilerOptions,
 		extraPlugins,
+		pluginOptions,
 	);
 
 	// from https://github.com/johnsoncodehk/volar/pull/1543

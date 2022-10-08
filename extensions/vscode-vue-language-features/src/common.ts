@@ -196,6 +196,17 @@ export function processMd() {
 	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.vitePress.processMdFile');
 }
 
+function additionalExtensions() {
+	const extensions = vscode.workspace.getConfiguration('volar').get<string>('vueserver.additionalExtensions');
+
+	if (extensions) {
+		return extensions.split(/,; /).map(e => e.trim()).filter(e => e !== "");
+	}
+	else {
+		return [];
+	}
+}
+
 function getFillInitializeParams(featuresKinds: LanguageFeaturesKind[]) {
 	return function (params: lsp.InitializeParams) {
 		if (params.capabilities.textDocument) {
@@ -258,6 +269,7 @@ function getInitializationOptions(
 		vitePress: {
 			processMdFile: processMd(),
 		},
+		additionalExtensions: additionalExtensions()
 	};
 	return initializationOptions;
 }

@@ -20,7 +20,20 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 		extraFileExtensions.push({ extension: 'md', isMixedContent: true, scriptKind: 7 });
 	}
 
+	if (initOptions.additionalExtensions) {
+		for (const additionalExtension of initOptions.additionalExtensions) {
+			const ext = additionalExtension.startsWith(".") ? additionalExtension.substring(1) : additionalExtension;
+			extraFileExtensions.push({ extension: ext, isMixedContent: true, scriptKind: 7 });
+		}
+	}
+
 	const exts = extraFileExtensions.map(ext => '.' + ext.extension);
+
+	const pluginOptions = {
+		'file-vue': {
+			extensions: exts
+		}
+	};
 
 	return {
 		extraFileExtensions,
@@ -43,6 +56,8 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 					host.getCompilationSettings(),
 					host.getVueCompilationSettings(),
 					exts,
+					[],
+					pluginOptions
 				);
 				return [vueLanguageModule];
 			},
