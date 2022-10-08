@@ -188,7 +188,9 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 	function getVueFiles() {
 		const parseConfigHost: ts.ParseConfigHost = {
 			useCaseSensitiveFileNames: info.project.useCaseSensitiveFileNames(),
-			readDirectory: (...args) => info.project.readDirectory(...args),
+			readDirectory: (path, extensions, exclude, include, depth) => {
+				return info.project.readDirectory(path, extensions.filter(ext => ext.endsWith('.vue')), exclude, include, depth);
+			},
 			fileExists: fileName => info.project.fileExists(fileName),
 			readFile: fileName => info.project.readFile(fileName),
 		};
