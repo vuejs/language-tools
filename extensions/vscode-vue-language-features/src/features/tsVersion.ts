@@ -48,7 +48,7 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 			return;
 		}
 		if (select === 'use_workspace_tsdk_deafult') {
-			vscode.workspace.getConfiguration('typescript').update('tsdk', defaultTsdk);
+			await vscode.workspace.getConfiguration('typescript').update('tsdk', defaultTsdk);
 		}
 		const shouldUseWorkspaceTsdk = select !== 'use_vscode_tsdk';
 		if (shouldUseWorkspaceTsdk !== useWorkspaceTsdk(context)) {
@@ -123,9 +123,11 @@ function resolveConfigTsdk(tsdk: path.OsPath | path.PosixPath) {
 	const workspaceFolderFsPaths = (vscode.workspace.workspaceFolders ?? []).map(folder => folder.uri.fsPath as path.OsPath);
 	for (const folder of workspaceFolderFsPaths) {
 		const _path = path.join(folder, tsdk);
-		if (fs.existsSync(_path)) {
-			return _path;
-		}
+		try {
+			if (require.resolve('./typescript.js', { paths: [_path] })) {
+				return _path;
+			}
+		} catch { }
 	}
 }
 
