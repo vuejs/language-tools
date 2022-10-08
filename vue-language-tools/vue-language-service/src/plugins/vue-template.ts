@@ -418,6 +418,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				provideTags: () => {
 
 					const components = checkComponentNames(context.typescript.module, context.typescript.languageService, vueSourceFile);
+					const scriptSetupRanges = vueSourceFile.sfc.scriptSetupAst ? vue.parseScriptSetupRanges(context.typescript.module, vueSourceFile.sfc.scriptSetupAst) : undefined;
 					const names = new Set<string>();
 					const tags: html.ITagData[] = [];
 
@@ -427,6 +428,16 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 						}
 						else if (tagNameCasing === TagNameCasing.Pascal) {
 							names.add(tag);
+						}
+					}
+
+					for (const binding of scriptSetupRanges?.bindings ?? []) {
+						const name = vueSourceFile.sfc.scriptSetup!.content.substring(binding.start, binding.end);
+						if (tagNameCasing === TagNameCasing.Kebab) {
+							names.add(hyphenate(name));
+						}
+						else if (tagNameCasing === TagNameCasing.Pascal) {
+							names.add(name);
 						}
 					}
 
