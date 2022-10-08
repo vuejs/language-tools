@@ -113,16 +113,14 @@ export type GetComponents<Components, N1, N2 = unknown, N3 = unknown> =
 	unknown;
 export type ComponentProps<T> =
 	${vueCompilerOptions.strictTemplates ? '' : 'Record<string, unknown> &'}
-	ComponentProps_WithGlobalAttrs<ExtractProps<T>>;
-type ComponentProps_WithGlobalAttrs<T> = T & Omit<GlobalAttrs, keyof T>;
+	ExtractProps<T>;
 export type InstanceProps<I, C> = I extends { $props: infer Props } ? Props & Record<string, unknown> : C & Record<string, unknown>;
-export type EventObject<I, K1 extends string, C, E1, E2> = {
+export type EventObject<I, K1 extends string, C, E1> = {
 	[K in K1]: import('./__VLS_types.js').FillingEventArg<
 		import('./__VLS_types.js').FirstFunction<
 			import('./__VLS_types.js').EmitEvent<C, K1>,
 			E1,
 			I extends { $emit: infer Emit } ? import('./__VLS_types.js').EmitEvent2<Emit, K1> : unknown,
-			E2,
 		>
 	>
 };

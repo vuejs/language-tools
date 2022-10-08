@@ -659,7 +659,7 @@ export function generate(
 	}
 	function writeEvents(node: CompilerDOM.ElementNode) {
 
-		const varComponentInstance = `__VLS_${elementIndex++}`;
+		let _varComponentInstance: string | undefined;
 		let writedInstance = false;
 
 		for (const prop of node.props) {
@@ -669,13 +669,18 @@ export function generate(
 				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
 
-				tryWriteInstance();
-
+				const varComponentInstance = tryWriteInstance();
 				const componentVar = componentVars[node.tag];
 				const varInstanceProps = `__VLS_${elementIndex++}`;
 				const key_2 = camelize('on-' + prop.arg.loc.source); // onClickOutside
 
-				codeGen.push(`type ${varInstanceProps} = import('./__VLS_types.js').InstanceProps<typeof ${varComponentInstance}, ${componentVar ? 'typeof ' + componentVar : '{}'}>;\n`);
+				codeGen.push(`type ${varInstanceProps} = `);
+				if (!varComponentInstance) {
+					codeGen.push(`JSX.IntrinsicElements['${node.tag}'];\n`);
+				}
+				else {
+					codeGen.push(`import('./__VLS_types.js').InstanceProps<typeof ${varComponentInstance}, ${componentVar ? 'typeof ' + componentVar : '{}'}>;\n`);;
+				}
 				codeGen.push(`const __VLS_${elementIndex++}: import('./__VLS_types.js').EventObject<typeof ${varComponentInstance}, '${prop.arg.loc.source}', ${componentVar ? 'typeof ' + componentVar : '{}'}, `);
 
 				codeGen.push(`${varInstanceProps}[`);
@@ -696,26 +701,6 @@ export function generate(
 								return newName;
 							},
 						},
-					},
-				);
-				codeGen.push(`], import('./__VLS_types.js').GlobalAttrs[`);
-				writeCodeWithQuotes(
-					key_2,
-					[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
-					{
-						...capabilitiesSet.attrReference,
-						rename: {
-							normalize(newName) {
-								return camelize('on-' + newName);
-							},
-							apply(newName) {
-								const hName = hyphenate(newName);
-								if (hyphenate(newName).startsWith('on-')) {
-									return camelize(hName.slice('on-'.length));
-								}
-								return newName;
-							},
-						}
 					},
 				);
 				codeGen.push(`]> = {\n`);
@@ -817,18 +802,21 @@ export function generate(
 
 		function tryWriteInstance() {
 
-			if (writedInstance)
-				return;
+			if (writedInstance) {
+				return _varComponentInstance;
+			}
 
 			const componentVar = componentVars[node.tag];
 
 			if (componentVar) {
-				codeGen.push(`const ${varComponentInstance} = new ${componentVar}({ `);
+				_varComponentInstance = `__VLS_${elementIndex++}`;
+				codeGen.push(`const ${_varComponentInstance} = new ${componentVar}({ `);
 				writeProps(node, 'class', 'slots');
 				codeGen.push(`});\n`);
 			}
 
 			writedInstance = true;
+			return _varComponentInstance;
 		}
 	}
 	function writeProps(node: CompilerDOM.ElementNode, format: 'jsx' | 'class', mode: 'props' | 'slots') {
