@@ -638,11 +638,6 @@
 				"category": "Volar (Debug)"
 			},
 			{
-				"command": "volar.action.showCallGraph",
-				"title": "Show Call Graph",
-				"category": "Volar (Experimental)"
-			},
-			{
 				"command": "volar.action.splitEditors",
 				"title": "Split <script>, <template>, <style> Editors",
 				"category": "Volar",
@@ -713,11 +708,7 @@
 				},
 				{
 					"command": "volar.action.showVirtualFiles",
-					"when": "volar.activated && editorLangId == vue"
-				},
-				{
-					"command": "volar.action.showCallGraph",
-					"when": "editorLangId == vue"
+					"when": "volar.activated"
 				},
 				{
 					"command": "volar.action.splitEditors",
