@@ -6,11 +6,7 @@ interface Loc {
 	end: { offset: number; };
 	source: string;
 }
-interface ElementNameNode {
-	type: 'self-closing-tag-name';
-	loc: Loc;
-};
-type Node = CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.ExpressionNode | CompilerDOM.AttributeNode | CompilerDOM.DirectiveNode | ElementNameNode;
+type Node = CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.ExpressionNode | CompilerDOM.AttributeNode | CompilerDOM.DirectiveNode;
 
 const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions }) => {
 
@@ -41,10 +37,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions }) => {
 			if (tryUpdateNode(oldResult.ast) && hitNodes.length) {
 				hitNodes = hitNodes.sort((a, b) => a.loc.source.length - b.loc.source.length);
 				const hitNode = hitNodes[0];
-				if (
-					hitNode.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-					|| hitNode.type === 'self-closing-tag-name'
-				) {
+				if (hitNode.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					return oldResult;
 				}
 			}
@@ -65,33 +58,12 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions }) => {
 						}
 					}
 					else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
-						if (node.isSelfClosing) {
-							const elementNameNode: ElementNameNode = {
-								type: 'self-closing-tag-name',
-								loc: {
-									start: { offset: node.loc.start.offset + 1 },
-									end: { offset: node.loc.start.offset + 1 + node.tag.length },
-									source: node.tag,
-								},
-							};
-							const oldTagType = getTagType(node.tag);
-							if (!tryUpdateNode(elementNameNode)) {
+						if (withinChangeRange(node.loc)) {
+							// if not self closing, should not hit tag name
+							const start = node.loc.start.offset + 2;
+							const end = node.loc.start.offset + node.loc.source.lastIndexOf('</');
+							if (!withinChangeRange({ start: { offset: start }, end: { offset: end }, source: '' })) {
 								return false;
-							}
-							node.tag = elementNameNode.loc.source;
-							const newTagType = getTagType(node.tag);
-							if (newTagType !== oldTagType) {
-								return false;
-							}
-						}
-						else {
-							if (withinChangeRange(node.loc)) {
-								// if not self closing, should not hit tag name
-								const start = node.loc.start.offset + 2;
-								const end = node.loc.start.offset + node.loc.source.lastIndexOf('</');
-								if (!withinChangeRange({ start: { offset: start }, end: { offset: end }, source: '' })) {
-									return false;
-								}
 							}
 						}
 						for (const prop of node.props) {
@@ -206,12 +178,3 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions }) => {
 	};
 };
 export = plugin;
-
-function getTagType(tag: string) {
-	if (tag === 'slot' || tag === 'template') {
-		return tag;
-	}
-	else {
-		return 'element';
-	}
-}
