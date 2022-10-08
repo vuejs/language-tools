@@ -1653,7 +1653,7 @@ export function generate(
 		codeGen.push([
 			'',
 			'template',
-			typeof sourceRange === 'number' ? sourceRange : sourceRange[0],
+			typeof sourceRange === 'number' ? sourceRange : sourceRange[1],
 			data,
 		]);
 	}
