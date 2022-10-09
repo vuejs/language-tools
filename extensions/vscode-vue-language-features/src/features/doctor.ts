@@ -79,7 +79,6 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 
 	async function getProblems(fileUri: vscode.Uri) {
 
-		const workspaceFolder = vscode.workspace.workspaceFolders?.find(f => fileUri.path.startsWith(f.uri.path))?.uri.fsPath ?? vscode.workspace.rootPath!;
 		const vueDoc = vscode.workspace.textDocuments.find(doc => doc.fileName === fileUri.fsPath);
 		const [
 			tsconfig,
@@ -90,14 +89,14 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			client.sendRequest(GetVueCompilerOptionsRequest.type, { uri: fileUri.toString() }),
 			vueDoc ? client.sendRequest(ParseSFCRequest.type, vueDoc.getText()) : undefined,
 		]);
-		const vueVersion = getWorkspacePackageJson(workspaceFolder, 'vue')?.version;
+		const vueMod = getWorkspacePackageJson(fileUri.fsPath, 'vue');
 		const problems: {
 			title: string;
 			message: string;
 		}[] = [];
 
 		// check vue module exist
-		if (!vueVersion) {
+		if (!vueMod) {
 			problems.push({
 				title: '`vue` module not found',
 				message: 'Vue module not found from workspace, you may have not install `node_modules` yet.',
@@ -105,19 +104,20 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		}
 
 		// check vue version < 3 but missing vueCompilerOptions.target
-		if (vueVersion) {
-			const vueVersionNumber = semver.gte(vueVersion, '3.0.0') ? 3 : semver.gte(vueVersion, '2.7.0') ? 2.7 : 2;
+		if (vueMod) {
+			const vueVersionNumber = semver.gte(vueMod.json.version, '3.0.0') ? 3 : semver.gte(vueMod.json.version, '2.7.0') ? 2.7 : 2;
 			const targetVersionNumber = vueOptions?.target ?? 3;
 			const lines = [
 				`Target version not match, you can specify the target version in \`vueCompilerOptions.target\` in tsconfig.json / jsconfig.json. (expected \`"target": ${vueVersionNumber}\`)`,
 				'',
-				'- Vue version: ' + vueVersion,
-				'- tsconfig: ' + (tsconfig?.fileName ?? 'Not found'),
+				'- Vue version: ' + vueMod.json.version,
 				'- tsconfig target: ' + targetVersionNumber + (vueOptions?.target !== undefined ? '' : ' (default)'),
+				'- Vue module: ' + vueMod.path,
+				'- tsconfig: ' + (tsconfig?.fileName ?? 'Not found'),
 				'- vueCompilerOptions:',
-				'```json',
-				JSON.stringify(vueOptions, undefined, 2),
-				'```',
+				'  ```json',
+				JSON.stringify(vueOptions, undefined, 2).split('\n').map(line => '  ' + line).join('\n'),
+				'  ```',
 			];
 			if (vueVersionNumber !== targetVersionNumber) {
 				problems.push({
@@ -128,7 +128,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		}
 
 		// check vue version < 2.7 but @vue/compiler-dom missing
-		if (vueVersion && semver.lt(vueVersion, '2.7.0') && !getWorkspacePackageJson(workspaceFolder, '@vue/compiler-dom')) {
+		if (vueMod && semver.lt(vueMod.json.version, '2.7.0') && !getWorkspacePackageJson(fileUri.fsPath, '@vue/compiler-dom')) {
 			problems.push({
 				title: '`@vue/compiler-dom` missing for Vue 2',
 				message: 'Vue 2 do not have JSX types definition, so template type checkinng cannot working correctly, you can install `@vue/compiler-dom` by add it to `devDependencies` to resolve this problem.',
@@ -136,7 +136,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		}
 
 		// check vue version >= 2.7 and < 3 but installed @vue/compiler-dom
-		if (vueVersion && semver.gte(vueVersion, '2.7.0') && semver.lt(vueVersion, '3.0.0') && getWorkspacePackageJson(workspaceFolder, '@vue/compiler-dom')) {
+		if (vueMod && semver.gte(vueMod.json.version, '2.7.0') && semver.lt(vueMod.json.version, '3.0.0') && getWorkspacePackageJson(fileUri.fsPath, '@vue/compiler-dom')) {
 			problems.push({
 				title: 'Do not need `@vue/compiler-dom`',
 				message: 'Vue 2.7 already included JSX types definition, you can remove `@vue/compiler-dom` depend from package.json.',
@@ -144,11 +144,15 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		}
 
 		// check vue-tsc version same with extension version
-		const vueTscVersoin = getWorkspacePackageJson(workspaceFolder, 'vue-tsc')?.version;
-		if (vueTscVersoin && vueTscVersoin !== context.extension.packageJSON.version) {
+		const vueTscMod = getWorkspacePackageJson(fileUri.fsPath, 'vue-tsc');
+		if (vueTscMod && vueTscMod.json.version !== context.extension.packageJSON.version) {
 			problems.push({
 				title: '`vue-tsc` version different',
-				message: `The \`${context.extension.packageJSON.displayName}\` version is \`${context.extension.packageJSON.version}\`, but workspace \`vue-tsc\` version is \`${vueTscVersoin}\`, there may have different type checking behavior.`,
+				message: [
+					`The \`${context.extension.packageJSON.displayName}\` version is \`${context.extension.packageJSON.version}\`, but workspace \`vue-tsc\` version is \`${vueTscMod.json.version}\`, there may have different type checking behavior.`,
+					'',
+					'vue-tsc module: ' + vueTscMod.path,
+				].join('\n'),
 			});
 		}
 
@@ -213,8 +217,12 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 	}
 }
 
-function getWorkspacePackageJson(folder: string, pkg: string): { version: string; } | undefined {
+function getWorkspacePackageJson(folder: string, pkg: string): { path: string, json: { version: string; }; } | undefined {
 	try {
-		return require(require.resolve(pkg + '/package.json', { paths: [folder] }));
+		const path = require.resolve(pkg + '/package.json', { paths: [folder] });
+		return {
+			path,
+			json: require(path),
+		};
 	} catch { }
 }
