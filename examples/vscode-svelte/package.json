@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "example-vscode-svelte",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
@@ -74,7 +74,7 @@
 		"vsce": "latest"
 	},
 	"dependencies": {
-		"@volar-examples/svelte-language-server": "1.0.1",
+		"@volar-examples/svelte-language-server": "1.0.2",
 		"typesafe-path": "^0.2.1",
 		"vscode-languageclient": "^8.0.2"
 	}
