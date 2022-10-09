@@ -369,7 +369,7 @@ export function generate(
 			codeGen.push(`};\n`);
 			codeGen.push(`},\n`);
 
-			if (sfc.script && scriptRanges?.exportDefault?.args) {
+			if (scriptRanges?.exportDefault?.args) {
 				addVirtualCode('script', scriptRanges.exportDefault.args.start + 1, scriptRanges.exportDefault.args.end - 1);
 			}
 
@@ -387,7 +387,7 @@ export function generate(
 			codeGen.push(`};\n`);
 			codeGen.push(`return await __VLS_setup();\n`);
 			codeGen.push(`})()`);
-			if (sfc.script && scriptRanges?.exportDefault?.args) {
+			if (scriptRanges?.exportDefault && scriptRanges.exportDefault.expression.end !== scriptRanges.exportDefault.end) {
 				addVirtualCode('script', scriptRanges.exportDefault.expression.end, scriptRanges.exportDefault.end);
 			}
 			codeGen.push(`;`);

@@ -22,7 +22,7 @@ export function parseScriptRanges(ts: typeof import('typescript/lib/tsserverlibr
 		if (ts.isExportAssignment(raw)) {
 
 			let node: ts.AsExpression | ts.ExportAssignment = raw;
-			if (ts.isAsExpression(node.expression)) { // fix https://github.com/johnsoncodehk/volar/issues/1882
+			while (ts.isAsExpression(node.expression)) { // fix https://github.com/johnsoncodehk/volar/issues/1882
 				node = node.expression;
 			}
 
@@ -50,7 +50,7 @@ export function parseScriptRanges(ts: typeof import('typescript/lib/tsserverlibr
 					}
 				});
 				exportDefault = {
-					..._getStartEnd(node),
+					..._getStartEnd(raw),
 					expression: _getStartEnd(node.expression),
 					args: _getStartEnd(obj),
 					argsNode: withNode ? obj : undefined,
