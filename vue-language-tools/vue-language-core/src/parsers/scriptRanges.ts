@@ -21,8 +21,8 @@ export function parseScriptRanges(ts: typeof import('typescript/lib/tsserverlibr
 
 		if (ts.isExportAssignment(raw)) {
 
-			let node: ts.AsExpression | ts.ExportAssignment = raw;
-			while (ts.isAsExpression(node.expression)) { // fix https://github.com/johnsoncodehk/volar/issues/1882
+			let node: ts.AsExpression | ts.ExportAssignment | ts.ParenthesizedExpression = raw;
+			while (ts.isAsExpression(node.expression) || ts.isParenthesizedExpression(node.expression)) { // fix https://github.com/johnsoncodehk/volar/issues/1882
 				node = node.expression;
 			}
 
