@@ -386,7 +386,11 @@ export function generate(
 
 			codeGen.push(`};\n`);
 			codeGen.push(`return await __VLS_setup();\n`);
-			codeGen.push(`})();`);
+			codeGen.push(`})()`);
+			if (sfc.script && scriptRanges?.exportDefault?.args) {
+				addVirtualCode('script', scriptRanges.exportDefault.expression.end, scriptRanges.exportDefault.end);
+			}
+			codeGen.push(`;`);
 			// fix https://github.com/johnsoncodehk/volar/issues/1127
 			codeGen.push([
 				'',
