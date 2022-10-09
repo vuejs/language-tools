@@ -1,7 +1,8 @@
 import useHtmlPlugin from '@volar-plugins/html';
 import { LanguageServicePlugin, LanguageServiceRuntimeContext, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
 import * as shared from '@volar/shared';
-import * as ts2 from '@volar/typescript-language-service';
+import { getFormatCodeSettings } from '@volar-plugins/typescript/out/configs/getFormatCodeSettings';
+import { getUserPreferences } from '@volar-plugins/typescript/out/configs/getUserPreferences';
 import * as vue from '@volar/vue-language-core';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -359,8 +360,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			const tsImportName = camelize(path.basename(importFile).replace(/\./g, '-'));
 			const confitHost = context.env.configurationHost;
 			const [formatOptions, preferences] = await Promise.all([
-				ts2.getFormatCodeSettings((section, scopeUri) => confitHost?.getConfiguration(section, scopeUri) as any, embeddedScriptUri),
-				ts2.getUserPreferences((section, scopeUri) => confitHost?.getConfiguration(section, scopeUri) as any, embeddedScriptUri, undefined),
+				getFormatCodeSettings((section, scopeUri) => confitHost?.getConfiguration(section, scopeUri) as any, embeddedScriptUri),
+				getUserPreferences((section, scopeUri) => confitHost?.getConfiguration(section, scopeUri) as any, embeddedScriptUri, undefined),
 			]);
 			(preferences as any).importModuleSpecifierEnding = 'minimal';
 			const tsDetail = context.typescript.languageService.getCompletionEntryDetails(shared.getPathOfUri(embeddedScriptUri), 0, tsImportName, formatOptions, importFile, preferences, undefined);

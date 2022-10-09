@@ -6,7 +6,7 @@ import usePugPlugin from '@volar-plugins/pug';
 import useTsPlugin from '@volar-plugins/typescript';
 import * as embedded from '@volar/language-core';
 import * as embeddedLS from '@volar/language-service';
-import * as ts2 from '@volar/typescript-language-service';
+import { getSemanticTokenLegend as getTsSemanticTokenLegend } from '@volar-plugins/typescript/out/createLangaugeService';
 import * as vue from '@volar/vue-language-core';
 import { LanguageServiceHost } from '@volar/vue-language-core';
 import type * as html from 'vscode-html-languageservice';
@@ -21,7 +21,7 @@ import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemantic
 
 export function getSemanticTokenLegend() {
 
-	const tsLegend = ts2.getSemanticTokenLegend();
+	const tsLegend = getTsSemanticTokenLegend();
 	const tokenTypesLegend = [
 		...tsLegend.tokenTypes,
 		...vueTemplateSemanticTokenTypes,
