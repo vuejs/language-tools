@@ -98,6 +98,7 @@ export function resolveVueCompilerOptions(vueOptions: VueCompilerOptions): Resol
 		experimentalTemplateCompilerOptions: vueOptions.experimentalTemplateCompilerOptions ?? {},
 		experimentalTemplateCompilerOptionsRequirePath: vueOptions.experimentalTemplateCompilerOptionsRequirePath ?? undefined,
 		experimentalResolveStyleCssClasses: vueOptions.experimentalResolveStyleCssClasses ?? 'scoped',
+		experimentalRfc436: vueOptions.experimentalRfc436 ?? false,
 	};
 }
 

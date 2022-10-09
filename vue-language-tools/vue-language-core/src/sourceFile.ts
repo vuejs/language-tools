@@ -440,6 +440,7 @@ export class VueSourceFile implements SourceFile {
 				endTagStart: block.loc.end.offset,
 				content: block.content,
 				lang: block.lang ?? 'js',
+				generic: typeof block.attrs.generic === 'string' ? block.attrs.generic : undefined,
 			} : null;
 
 			if (self.sfc.scriptSetup && newData) {
