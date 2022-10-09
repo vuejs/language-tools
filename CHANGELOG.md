@@ -3,6 +3,17 @@
 ## 1.0.2 (2022/10/9)
 
 - fix: `TypeScript Vue Plugin (Volar)` breaks VSCode tsserver ([#1956](https://github.com/johnsoncodehk/volar/issues/1956))
+- fix: pug intellisense not working
+- fix: semantic tokens confused git diff window (https://github.com/johnsoncodehk/volar/issues/1946#issuecomment-1272430742)
+- fix(doctor): cannot resolve `vueCompilerOptions` from extends tsconfig
+- fix(doctor): cannot resolve vue version from sub folder ([#1961](https://github.com/johnsoncodehk/volar/issues/1961)) ([#1962](https://github.com/johnsoncodehk/volar/issues/1962))
+- fix: scoped class name no longer displays underline ([#1960](https://github.com/johnsoncodehk/volar/issues/1960))
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
 
 ## 1.0.1 (2022/10/9)
 
@@ -17,12 +28,6 @@
 - fix: template AST broken when input space after tag name
 - fix: don't use native event type for component ([#1948](https://github.com/johnsoncodehk/volar/issues/1948)) ([#1951](https://github.com/johnsoncodehk/volar/issues/1951))
 - fix: command + hover `@click` cannot show selection range
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 1.0.0 (2022/10/7)
 
