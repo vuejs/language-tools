@@ -1,6 +1,13 @@
 import * as vscode from 'vscode-languageserver-protocol';
 import { TagNameCasing, AttrNameCasing, SFCParseResult } from '@volar/vue-language-service';
 
+export namespace GetVueCompilerOptionsRequest {
+	export type ParamsType = vscode.TextDocumentIdentifier;
+	export type ResponseType = any | null | undefined;
+	export type ErrorType = never;
+	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('volar/vueCompilerOptions');
+}
+
 export namespace DetectNameCasingRequest {
 	export type ParamsType = {
 		textDocument: vscode.TextDocumentIdentifier,

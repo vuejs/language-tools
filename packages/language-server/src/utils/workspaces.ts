@@ -112,7 +112,7 @@ export function createWorkspaces(
 			return;
 
 		const req = ++documentUpdatedReq;
-		const delay = await configurationHost?.getConfiguration<number>('volar.diagnostics.delay');
+		const delay = await configurationHost?.getConfiguration<number>('volar.diagnostics.delay') ?? 200;
 		const cancel = cancelTokenHost.createCancellactionToken({
 			get isCancellationRequested() {
 				return req !== documentUpdatedReq;
@@ -124,14 +124,14 @@ export function createWorkspaces(
 
 		if (changeDoc) {
 
-			await shared.sleep(delay ?? 200);
+			await shared.sleep(delay);
 
 			await sendDocumentDiagnostics(changeDoc.uri, changeDoc.version, cancel);
 		}
 
 		for (const doc of otherDocs) {
 
-			await shared.sleep(delay ?? 200);
+			await shared.sleep(delay);
 
 			await sendDocumentDiagnostics(doc.uri, doc.version, cancel);
 

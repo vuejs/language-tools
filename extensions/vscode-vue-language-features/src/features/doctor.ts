@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as semver from 'semver';
 import { BaseLanguageClient } from 'vscode-languageclient';
-import { GetMatchTsConfigRequest, ParseSFCRequest } from '@volar/vue-language-server';
+import { GetMatchTsConfigRequest, ParseSFCRequest, GetVueCompilerOptionsRequest } from '@volar/vue-language-server';
 
 const scheme = 'vue-doctor';
 const knownValidSyntanxHighlightExtensions = {
@@ -80,9 +80,16 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 	async function getProblems(fileUri: vscode.Uri) {
 
 		const workspaceFolder = vscode.workspace.workspaceFolders?.find(f => fileUri.path.startsWith(f.uri.path))?.uri.fsPath ?? vscode.workspace.rootPath!;
-		const tsconfig = await client.sendRequest(GetMatchTsConfigRequest.type, { uri: fileUri.toString() });
 		const vueDoc = vscode.workspace.textDocuments.find(doc => doc.fileName === fileUri.fsPath);
-		const sfc = vueDoc ? await client.sendRequest(ParseSFCRequest.type, vueDoc.getText()) : undefined;
+		const [
+			tsconfig,
+			vueOptions,
+			sfc,
+		] = await Promise.all([
+			client.sendRequest(GetMatchTsConfigRequest.type, { uri: fileUri.toString() }),
+			client.sendRequest(GetVueCompilerOptionsRequest.type, { uri: fileUri.toString() }),
+			vueDoc ? client.sendRequest(ParseSFCRequest.type, vueDoc.getText()) : undefined,
+		]);
 		const vueVersion = getWorkspacePackageJson(workspaceFolder, 'vue')?.version;
 		const problems: {
 			title: string;
@@ -100,13 +107,17 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		// check vue version < 3 but missing vueCompilerOptions.target
 		if (vueVersion) {
 			const vueVersionNumber = semver.gte(vueVersion, '3.0.0') ? 3 : semver.gte(vueVersion, '2.7.0') ? 2.7 : 2;
-			const targetVersionNumber = tsconfig?.raw?.vueCompilerOptions?.target ?? 3;
+			const targetVersionNumber = vueOptions?.target ?? 3;
 			const lines = [
 				`Target version not match, you can specify the target version in \`vueCompilerOptions.target\` in tsconfig.json / jsconfig.json. (expected \`"target": ${vueVersionNumber}\`)`,
 				'',
 				'- Vue version: ' + vueVersion,
 				'- tsconfig: ' + (tsconfig?.fileName ?? 'Not found'),
-				'- tsconfig target: ' + targetVersionNumber + (tsconfig?.raw?.vueCompilerOptions?.target !== undefined ? '' : ' (default)'),
+				'- tsconfig target: ' + targetVersionNumber + (vueOptions?.target !== undefined ? '' : ' (default)'),
+				'- vueCompilerOptions:',
+				'```json',
+				JSON.stringify(vueOptions, undefined, 2),
+				'```',
 			];
 			if (vueVersionNumber !== targetVersionNumber) {
 				problems.push({
@@ -153,7 +164,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		// check using pug but don't install @volar/vue-language-plugin-pug
 		if (
 			sfc?.descriptor.template?.lang === 'pug'
-			&& !tsconfig?.raw?.vueCompilerOptions?.plugins?.includes('@volar/vue-language-plugin-pug')
+			&& !vueOptions?.plugins?.includes('@volar/vue-language-plugin-pug')
 		) {
 			problems.push({
 				title: '`@volar/vue-language-plugin-pug` missing',
