@@ -13,29 +13,6 @@
 		".vscode-test"
 	],
 	"references": [
-		// plugins
-		{
-			"path": "../../plugins/css/tsconfig.build.json"
-		},
-		{
-			"path": "../../plugins/emmet/tsconfig.build.json"
-		},
-		{
-			"path": "../../plugins/html/tsconfig.build.json"
-		},
-		{
-			"path": "../../plugins/json/tsconfig.build.json"
-		},
-		{
-			"path": "../../plugins/pug/tsconfig.build.json"
-		},
-		{
-			"path": "../../plugins/pug-beautify/tsconfig.build.json"
-		},
-		{
-			"path": "../../plugins/typescript/tsconfig.build.json"
-		},
-		// packages
 		{
 			"path": "../../packages/language-core/tsconfig.build.json"
 		},

@@ -14,9 +14,6 @@
 	],
 	"references": [
 		{
-			"path": "../../plugins/typescript/tsconfig.build.json"
-		},
-		{
 			"path": "../../packages/language-server/tsconfig.build.json"
 		},
 		{
