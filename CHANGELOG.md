@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.3 (2022/10/10)
+
+- feat: support `as` expressions in export assignment for script setup ([#1882](https://github.com/johnsoncodehk/volar/issues/1882))
+- feat: support RFC 436 with new option `vueCompilerOptions.experimentalRfc436` ([#1964](https://github.com/johnsoncodehk/volar/issues/1964)) (https://github.com/vuejs/rfcs/discussions/436)
+
 ## 1.0.2 (2022/10/9)
 
 - fix: `TypeScript Vue Plugin (Volar)` breaks VSCode tsserver ([#1956](https://github.com/johnsoncodehk/volar/issues/1956))
