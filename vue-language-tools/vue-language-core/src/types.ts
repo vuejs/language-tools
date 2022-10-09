@@ -30,6 +30,7 @@ export interface ResolvedVueCompilerOptions {
 	experimentalTemplateCompilerOptions: any;
 	experimentalTemplateCompilerOptionsRequirePath: string | undefined;
 	experimentalResolveStyleCssClasses: 'scoped' | 'always' | 'never';
+	experimentalRfc436: boolean;
 }
 
 export type VueLanguagePlugin = (ctx: {
@@ -66,7 +67,10 @@ export interface Sfc {
 	script: (SfcBlock & {
 		src: string | undefined;
 	}) | null;
-	scriptSetup: SfcBlock | null;
+	scriptSetup: SfcBlock & {
+		// https://github.com/vuejs/rfcs/discussions/436
+		generic: string | undefined;
+	} | null;
 	styles: (SfcBlock & {
 		module: string | undefined;
 		scoped: boolean;
