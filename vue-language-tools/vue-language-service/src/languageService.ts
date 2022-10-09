@@ -92,7 +92,7 @@ export function getLanguageServicePlugins(
 				return _pugPlugin.getPugLs().createScanner(pugDocument);
 			}
 		},
-		isSupportedDocument: (document) => document.languageId === 'html',
+		isSupportedDocument: (document) => document.languageId === 'jade',
 		vueLsHost: host,
 		context: apis.context,
 	});
