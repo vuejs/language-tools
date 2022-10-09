@@ -166,6 +166,7 @@ export function createWorkspaces(
 	async function getProject(uri: string) {
 
 		const rootUris = [...workspaces.keys()]
+			.filter(rootUri => URI.parse(rootUri).scheme === URI.parse(uri).scheme) // fix https://github.com/johnsoncodehk/volar/issues/1946#issuecomment-1272430742
 			.filter(rootUri => shared.isFileInDir(URI.parse(uri).fsPath as path.OsPath, URI.parse(rootUri).fsPath as path.OsPath))
 			.sort((a, b) => sortTsConfigs(URI.parse(uri).fsPath as path.OsPath, URI.parse(a).fsPath as path.OsPath, URI.parse(b).fsPath as path.OsPath));
 
