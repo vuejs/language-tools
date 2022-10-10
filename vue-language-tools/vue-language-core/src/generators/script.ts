@@ -382,25 +382,30 @@ export function generate(
 			writeTemplate();
 
 			codeGen.push(`return {} as typeof __VLS_Component`);
-			if (htmlGen?.slotsNum) {
-				codeGen.push(` & (new () => { ${getSlotsPropertyName(vueVersion)}: ReturnType<typeof __VLS_template> })`);
-			}
+			codeGen.push(` & (new `);
 			if (vueCompilerOptions.experimentalRfc436 && sfc.scriptSetup.generic) {
-				codeGen.push(` & (new <${sfc.scriptSetup.generic}>() => {\n`);
 				if (scriptSetupRanges.propsTypeArg) {
-					codeGen.push(`$props: `);
+					codeGen.push(`<${sfc.scriptSetup.generic}>(__VLS_props: `);
 					addVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
-					codeGen.push(`,\n`);
+					codeGen.push(`) => {\n`);
+					codeGen.push(`$props: typeof __VLS_props,\n`);
+				}
+				else {
+					codeGen.push(`<${sfc.scriptSetup.generic}>() => {\n`);
 				}
 				if (scriptSetupRanges.emitsTypeArg) {
 					codeGen.push(`$emit: `);
 					addVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
 					codeGen.push(`,\n`);
 				}
-				codeGen.push(`})`);
 			}
-			codeGen.push(`;\n`);
-
+			else {
+				codeGen.push(`() => {\n`);
+			}
+			if (htmlGen?.slotsNum) {
+				codeGen.push(`${getSlotsPropertyName(vueVersion)}: ReturnType<typeof __VLS_template>,\n`);
+			}
+			codeGen.push(`});\n`);
 			codeGen.push(`};\n`);
 			codeGen.push(`return await __VLS_setup();\n`);
 			codeGen.push(`})()`);
