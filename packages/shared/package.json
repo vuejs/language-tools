@@ -1,8 +1,7 @@
 {
 	"name": "@volar/shared",
-	"version": "1.0.0-beta.0",
-	"main": "out/node.js",
-	"browser": "./out/browser.js",
+	"version": "1.0.3",
+	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
 		"out/**/*.js",
@@ -14,12 +13,9 @@
 		"directory": "packages/shared"
 	},
 	"dependencies": {
-		"upath": "^2.0.1",
+		"typesafe-path": "^0.2.1",
 		"vscode-languageserver-protocol": "^3.17.2",
 		"vscode-languageserver-textdocument": "^1.0.7",
 		"vscode-uri": "^3.0.3"
-	},
-	"devDependencies": {
-		"typescript": "beta"
 	}
 }

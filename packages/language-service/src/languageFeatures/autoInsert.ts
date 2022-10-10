@@ -12,38 +12,36 @@ export function register(context: LanguageServiceRuntimeContext) {
 			uri,
 			{ position, autoInsertContext },
 			function* (arg, sourceMap) {
+				for (const position of sourceMap.toGeneratedPositions(arg.position, data => !!data.completion)) {
 
-				const position = sourceMap.getMappedRange(arg.position, arg.position, data => !!data.completion)?.[0].start;
-				const rangeOffset = sourceMap.getMappedRange(arg.autoInsertContext.lastChange.rangeOffset, arg.autoInsertContext.lastChange.rangeOffset, data => !!data.completion)?.[0].start;
-				const range = sourceMap.getMappedRange(arg.autoInsertContext.lastChange.range.start, arg.autoInsertContext.lastChange.range.end, data => !!data.completion)?.[0];
+					const rangeOffset = sourceMap.toGeneratedOffset(arg.autoInsertContext.lastChange.rangeOffset)?.[0];
+					const range = sourceMap.toGeneratedRange(arg.autoInsertContext.lastChange.range);
 
-				if (position && rangeOffset !== undefined && range) {
-					yield {
-						position,
-						autoInsertContext: {
-							lastChange: {
-								...arg.autoInsertContext.lastChange,
-								rangeOffset,
-								range,
+					if (rangeOffset !== undefined && range) {
+						yield {
+							position,
+							autoInsertContext: {
+								lastChange: {
+									...arg.autoInsertContext.lastChange,
+									rangeOffset,
+									range,
+								},
 							},
-						},
-					};
+						};
+						break;
+					}
 				}
 			},
 			(plugin, document, arg) => plugin.doAutoInsert?.(document, arg.position, arg.autoInsertContext),
-			(data, sourceMap) => {
+			(item, sourceMap) => {
 
-				if (!sourceMap)
-					return data;
+				if (!sourceMap || typeof item === 'string')
+					return item;
 
-				if (typeof data === 'string')
-					return data;
-
-				const range = sourceMap.getSourceRange(data.range.start, data.range.end)?.[0];
-
+				const range = sourceMap.toSourceRange(item.range);
 				if (range) {
-					data.range = range;
-					return data;
+					item.range = range;
+					return item;
 				}
 			},
 		);

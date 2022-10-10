@@ -16,13 +16,10 @@ export function register(context: DocumentServiceRuntimeContext) {
 			(data, sourceMap) => transformSymbolInformations(
 				data,
 				location => {
-
-					if (!sourceMap)
-						return location;
-
-					const sourceRange = sourceMap.getSourceRange(location.range.start, location.range.end)?.[0];
-					if (sourceRange) {
-						return vscode.Location.create(sourceMap.sourceDocument.uri, sourceRange);
+					const range = sourceMap.toSourceRange(location.range);
+					if (range) {
+						// use document.uri instead of sourceMap.sourceDocument.uri to fix https://github.com/johnsoncodehk/volar/issues/1925
+						return vscode.Location.create(document.uri, range);
 					}
 				},
 			),

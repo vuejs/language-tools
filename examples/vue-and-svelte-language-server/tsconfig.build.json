@@ -1,0 +1,29 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"noEmit": false,
+		"outDir": "out",
+		"rootDir": "src",
+	},
+	"include": [
+		"src"
+	],
+	"exclude": [
+		"node_modules",
+		".vscode-test"
+	],
+	"references": [
+		{
+			"path": "../../packages/shared/tsconfig.build.json"
+		},
+		{
+			"path": "../../packages/language-server/tsconfig.build.json"
+		},
+		{
+			"path": "../../vue-language-tools/vue-language-core/tsconfig.build.json"
+		},
+		{
+			"path": "../svelte-language-core/tsconfig.build.json"
+		}
+	]
+}

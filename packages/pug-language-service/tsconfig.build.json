@@ -1,6 +1,7 @@
 {
-	"extends": "../../tsconfig.base.json",
+	"extends": "../../tsconfig.json",
 	"compilerOptions": {
+		"noEmit": false,
 		"outDir": "out",
 		"rootDir": "src",
 	},
@@ -19,10 +20,10 @@
 			"path": "../source-map/tsconfig.build.json"
 		},
 		{
-			"path": "../transforms/tsconfig.build.json"
+			"path": "../language-service/tsconfig.build.json"
 		},
 		{
-			"path": "../code-gen/tsconfig.build.json"
+			"path": "../transforms/tsconfig.build.json"
 		},
 	],
 }

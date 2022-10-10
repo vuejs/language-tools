@@ -1,5 +1,5 @@
 import * as shared from '@volar/shared';
-import * as upath from 'upath';
+import { posix as path } from 'path';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
@@ -24,15 +24,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				context,
 				uri,
 				position,
-				function* (position, sourceMap) {
-					for (const [mappedRange] of sourceMap.getMappedRanges(
-						position,
-						position,
-						data => !!data.references,
-					)) {
-						yield mappedRange.start;
-					}
-				},
+				(position, sourceMap) => sourceMap.toGeneratedPositions(position, data => !!data.references),
 				async (plugin, document, position, sourceMap) => {
 
 					const items = await plugin.callHierarchy?.prepare(document, position);
@@ -187,27 +179,36 @@ export function register(context: LanguageServiceRuntimeContext) {
 		if (!sourceMap)
 			return [tsItem, tsRanges]; // not virtual file
 
-		let vueRange: vscode.Range | undefined = sourceMap.getSourceRange(tsItem.range.start, tsItem.range.end)?.[0];
-		if (!vueRange) {
+		let range = sourceMap.toSourceRange(tsItem.range);
+		if (!range) {
 			// TODO: <script> range
-			vueRange = {
+			range = {
 				start: sourceMap.sourceDocument.positionAt(0),
 				end: sourceMap.sourceDocument.positionAt(sourceMap.sourceDocument.getText().length),
 			};
 		}
 
-		const vueSelectionRange = sourceMap.getSourceRange(tsItem.selectionRange.start, tsItem.selectionRange.end)?.[0];
-		if (!vueSelectionRange)
+		const selectionRange = sourceMap.toSourceRange(tsItem.selectionRange);
+		if (!selectionRange)
 			return;
 
-		const vueRanges = tsRanges.map(tsRange => sourceMap.getSourceRange(tsRange.start, tsRange.end)?.[0]).filter(shared.notEmpty);
+		const vueRanges = tsRanges.map(tsRange => sourceMap.toSourceRange(tsRange)).filter(shared.notEmpty);
 		const vueItem: vscode.CallHierarchyItem = {
 			...tsItem,
-			name: tsItem.name === upath.basename(shared.getPathOfUri(sourceMap.mappedDocument.uri)) ? upath.basename(shared.getPathOfUri(sourceMap.sourceDocument.uri)) : tsItem.name,
+			name: tsItem.name === path.basename(shared.getPathOfUri(sourceMap.mappedDocument.uri)) ? path.basename(shared.getPathOfUri(sourceMap.sourceDocument.uri)) : tsItem.name,
 			uri: sourceMap.sourceDocument.uri,
-			range: vueRange,
-			selectionRange: vueSelectionRange,
+			// TS Bug: `range: range` not works
+			range: {
+				start: range.start,
+				end: range.end,
+			},
+			selectionRange: {
+				start: selectionRange.start,
+				end: selectionRange.end,
+			},
 		};
+
+		selectionRange.end;
 
 		return [vueItem, vueRanges];
 	}

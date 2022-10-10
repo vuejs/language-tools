@@ -5,13 +5,12 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import { loadCustomPlugins } from './config';
-import { GetDocumentContentRequest } from '../requests';
-import { FileSystem, FileSystemHost, LanguageServerPlugin, RuntimeEnvironment, ServerInitializationOptions } from '../types';
+import { FileSystem, FileSystemHost, LanguageServerPlugin, RuntimeEnvironment } from '../types';
 import { createSnapshots } from './snapshots';
-import { ConfigurationHost } from '@volar/vue-language-service';
-import * as upath from 'upath';
+import { ConfigurationHost } from '@volar/language-service';
 import * as html from 'vscode-html-languageservice';
-import { posix as path } from 'path';
+import * as path from 'typesafe-path';
+import { CancellactionTokenHost } from './cancellationPipe';
 
 export interface Project extends ReturnType<typeof createProject> { }
 
@@ -20,20 +19,20 @@ export async function createProject(
 	plugins: ReturnType<LanguageServerPlugin>[],
 	fsHost: FileSystemHost,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	options: ServerInitializationOptions,
 	rootUri: URI,
-	tsConfig: string | ts.CompilerOptions,
+	tsConfig: path.PosixPath | ts.CompilerOptions,
 	tsLocalized: ts.MapLike<string> | undefined,
 	documents: ReturnType<typeof createSnapshots>,
-	connection: vscode.Connection,
 	configHost: ConfigurationHost | undefined,
 	documentRegistry: ts.DocumentRegistry | undefined,
+	cancelTokenHost: CancellactionTokenHost,
 ) {
 
 	const sys = fsHost.getWorkspaceFileSystem(rootUri);
 
 	let typeRootVersion = 0;
 	let projectVersion = 0;
+	let projectVersionUpdateTime = cancelTokenHost.getMtime();
 	let vueLs: embeddedLS.LanguageService | undefined;
 	let parsedCommandLine = createParsedCommandLine(ts, sys, shared.getPathOfUri(rootUri.toString()), tsConfig, plugins);
 
@@ -50,6 +49,7 @@ export async function createProject(
 	});
 	const disposeDocChange = documents.onDidChangeContent(params => {
 		projectVersion++;
+		projectVersionUpdateTime = cancelTokenHost.getMtime();
 	});
 
 	return {
@@ -62,7 +62,7 @@ export async function createProject(
 	function getLanguageService() {
 		if (!vueLs) {
 
-			const languageModules = plugins.map(plugin => plugin.languageService?.getLanguageModules?.(languageServiceHost) ?? []).flat();
+			const languageModules = plugins.map(plugin => plugin.semanticService?.getLanguageModules?.(languageServiceHost) ?? []).flat();
 			const languageContext = embedded.createEmbeddedLanguageServiceHost(languageServiceHost, languageModules);
 			const languageServiceContext = embeddedLS.createLanguageServiceContext({
 				host: languageServiceHost,
@@ -70,7 +70,7 @@ export async function createProject(
 				getPlugins() {
 					return [
 						...loadCustomPlugins(languageServiceHost.getCurrentDirectory()),
-						...plugins.map(plugin => plugin.languageService?.getServicePlugins?.(languageServiceHost, vueLs!) ?? []).flat(),
+						...plugins.map(plugin => plugin.semanticService?.getServicePlugins?.(languageServiceHost, vueLs!) ?? []).flat(),
 					];
 				},
 				env: {
@@ -78,24 +78,13 @@ export async function createProject(
 					configurationHost: configHost,
 					fileSystemProvider: runtimeEnv.fileSystemProvide,
 					documentContext: getHTMLDocumentContext(ts, languageServiceHost),
-					schemaRequestService: uri => {
+					schemaRequestService: async uri => {
 						const protocol = uri.substring(0, uri.indexOf(':'));
-
 						const builtInHandler = runtimeEnv.schemaRequestHandlers[protocol];
 						if (builtInHandler) {
-							return builtInHandler(uri);
+							return await builtInHandler(uri);
 						}
-
-						if (typeof options === 'object' && options.languageFeatures?.schemaRequestService) {
-							return connection.sendRequest(GetDocumentContentRequest.type, { uri }).then(responseText => {
-								return responseText;
-							}, error => {
-								return Promise.reject(error.message);
-							});
-						}
-						else {
-							return Promise.reject('clientHandledGetDocumentContentRequest is false');
-						}
+						return '';
 					},
 				},
 				documentRegistry,
@@ -137,6 +126,12 @@ export async function createProject(
 	}
 	function createLanguageServiceHost() {
 
+		const token: ts.CancellationToken = {
+			isCancellationRequested() {
+				return cancelTokenHost.getMtime() !== projectVersionUpdateTime;
+			},
+			throwIfCancellationRequested() { },
+		};
 		let host: embedded.LanguageServiceHost = {
 			// ts
 			getNewLine: () => sys.newLine,
@@ -150,6 +145,7 @@ export async function createProject(
 			fileExists: sys.fileExists,
 			getCurrentDirectory: () => shared.getPathOfUri(rootUri.toString()),
 			getProjectReferences: () => parsedCommandLine.projectReferences, // if circular, broken with provide `getParsedCommandLine: () => parsedCommandLine`
+			getCancellationToken: () => token,
 			// custom
 			getDefaultLibFileName: options => {
 				try {
@@ -172,8 +168,8 @@ export async function createProject(
 		}
 
 		for (const plugin of plugins) {
-			if (plugin.languageService?.resolveLanguageServiceHost) {
-				host = plugin.languageService.resolveLanguageServiceHost(ts, sys, tsConfig, host);
+			if (plugin.semanticService?.resolveLanguageServiceHost) {
+				host = plugin.semanticService.resolveLanguageServiceHost(ts, sys, tsConfig, host);
 			}
 		}
 
@@ -232,27 +228,19 @@ export async function createProject(
 function createParsedCommandLine(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	sys: FileSystem,
-	rootPath: string,
-	tsConfig: string | ts.CompilerOptions,
+	rootPath: path.PosixPath,
+	tsConfig: path.PosixPath | ts.CompilerOptions,
 	plugins: ReturnType<LanguageServerPlugin>[],
 ): ts.ParsedCommandLine {
-	const extraExts = plugins.map(plugin => plugin.extensions).flat();
+	const extraFileExtensions = plugins.map(plugin => plugin.extraFileExtensions).flat();
 	try {
-		const parseConfigHost: ts.ParseConfigHost = {
-			useCaseSensitiveFileNames: sys.useCaseSensitiveFileNames,
-			readDirectory: (path, extensions, exclude, include, depth) => {
-				return sys.readDirectory(path, [...extensions, ...extraExts], exclude, include, depth);
-			},
-			fileExists: sys.fileExists,
-			readFile: sys.readFile,
-		};
 		let content: ts.ParsedCommandLine;
 		if (typeof tsConfig === 'string') {
-			const config = ts.readJsonConfigFile(tsConfig, parseConfigHost.readFile);
-			content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(tsConfig), {}, tsConfig);
+			const config = ts.readJsonConfigFile(tsConfig, sys.readFile);
+			content = ts.parseJsonSourceFileConfigFileContent(config, sys, path.dirname(tsConfig), {}, tsConfig, undefined, extraFileExtensions);
 		}
 		else {
-			content = ts.parseJsonConfigFileContent({}, parseConfigHost, rootPath, tsConfig, path.join(rootPath, 'jsconfig.json'));
+			content = ts.parseJsonConfigFileContent({}, sys, rootPath, tsConfig, path.join(rootPath, 'jsconfig.json' as path.PosixPath), undefined, extraFileExtensions);
 		}
 		// fix https://github.com/johnsoncodehk/volar/issues/1786
 		// https://github.com/microsoft/TypeScript/issues/30457
@@ -285,23 +273,22 @@ function getHTMLDocumentContext(
 				host.getCompilationSettings(),
 				host,
 			);
-			const failedLookupLocations: string[] = (resolveResult as any).failedLookupLocations;
+			const failedLookupLocations: path.PosixPath[] = (resolveResult as any).failedLookupLocations;
 			const dirs = new Set<string>();
 
-			for (const failed of failedLookupLocations) {
-				let path = failed;
-				const fileName = upath.basename(path);
+			for (let failed of failedLookupLocations) {
+				const fileName = path.basename(failed);
 				if (fileName === 'index.d.ts' || fileName === '*.d.ts') {
-					dirs.add(upath.dirname(path));
+					dirs.add(path.dirname(failed));
 				}
-				if (path.endsWith('.d.ts')) {
-					path = path.substring(0, path.length - '.d.ts'.length);
+				if (failed.endsWith('.d.ts')) {
+					failed = failed.substring(0, failed.length - '.d.ts'.length) as path.PosixPath;
 				}
 				else {
 					continue;
 				}
-				if (host.fileExists(path)) {
-					return isUri ? shared.getUriByPath(URI.parse(base), path) : path;
+				if (host.fileExists(failed)) {
+					return isUri ? shared.getUriByPath(URI.parse(base), failed) : failed;
 				}
 			}
 			for (const dir of dirs) {

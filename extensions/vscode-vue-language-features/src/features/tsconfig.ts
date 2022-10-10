@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { BaseLanguageClient } from 'vscode-languageclient';
-import * as path from 'path';
-import { takeOverModeEnabled } from '../common';
+import * as path from 'typesafe-path';
+import { processHtml, processMd, takeOverModeEnabled } from '../common';
 import { GetMatchTsConfigRequest } from '@volar/vue-language-server';
 
 export async function register(cmd: string, context: vscode.ExtensionContext, languageClient: BaseLanguageClient) {
@@ -20,8 +20,8 @@ export async function register(cmd: string, context: vscode.ExtensionContext, la
 	async function updateStatusBar() {
 		if (
 			vscode.window.activeTextEditor?.document.languageId !== 'vue'
-			&& vscode.window.activeTextEditor?.document.languageId !== 'markdown'
-			&& vscode.window.activeTextEditor?.document.languageId !== 'html'
+			&& !(processMd() && vscode.window.activeTextEditor?.document.languageId === 'markdown')
+			&& !(processHtml() && vscode.window.activeTextEditor?.document.languageId === 'html')
 			&& !(
 				takeOverModeEnabled()
 				&& vscode.window.activeTextEditor
@@ -35,10 +35,10 @@ export async function register(cmd: string, context: vscode.ExtensionContext, la
 				GetMatchTsConfigRequest.type,
 				languageClient.code2ProtocolConverter.asTextDocumentIdentifier(vscode.window.activeTextEditor.document),
 			);
-			if (tsconfig) {
-				statusBar.text = path.relative(vscode.workspace.rootPath!, tsconfig);
+			if (tsconfig?.fileName) {
+				statusBar.text = path.relative(vscode.workspace.rootPath! as path.OsPath, tsconfig.fileName as path.PosixPath);
 				statusBar.command = cmd;
-				currentTsconfig = tsconfig;
+				currentTsconfig = tsconfig.fileName;
 			}
 			else {
 				statusBar.text = 'No tsconfig';

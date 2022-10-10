@@ -13,36 +13,23 @@ export function register(context: DocumentServiceRuntimeContext) {
 			document,
 			range,
 			sourceMap => !!sourceMap.embeddedFile.capabilities.documentSymbol, // TODO: add color capabilitie setting
-			function* (range, sourceMap) {
-				for (const [mappedRange] of sourceMap.getMappedRanges(range.start, range.end)) {
-					yield mappedRange;
-				}
-			},
+			(range, sourceMap) => sourceMap.toGeneratedRanges(range),
 			(plugin, document, range) => plugin.getColorPresentations?.(document, color, range),
 			(data, sourceMap) => data.map(cp => {
 
-				if (!sourceMap)
-					return cp;
-
 				if (cp.textEdit) {
-
-					const editRange = sourceMap.getSourceRange(cp.textEdit.range.start, cp.textEdit.range.end)?.[0];
-
-					if (!editRange)
+					const range = sourceMap.toSourceRange(cp.textEdit.range);
+					if (!range)
 						return undefined;
-
-					cp.textEdit.range = editRange;
+					cp.textEdit.range = range;
 				}
 
 				if (cp.additionalTextEdits) {
 					for (const textEdit of cp.additionalTextEdits) {
-
-						const editRange = sourceMap.getSourceRange(textEdit.range.start, textEdit.range.end)?.[0];
-
-						if (!editRange)
+						const range = sourceMap.toSourceRange(textEdit.range);
+						if (!range)
 							return undefined;
-
-						textEdit.range = editRange;
+						textEdit.range = range;
 					}
 				}
 				return cp;

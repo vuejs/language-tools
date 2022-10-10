@@ -35,13 +35,13 @@ export function register(context: LanguageServiceRuntimeContext) {
 			{ range, codeActionContext },
 			(arg, sourceMap) => {
 
-				if (!sourceMap.embeddedFile.capabilities.codeActions)
+				if (!sourceMap.embeddedFile.capabilities.codeAction)
 					return [];
 
 				const _codeActionContext: vscode.CodeActionContext = {
 					diagnostics: transformLocations(
 						codeActionContext.diagnostics,
-						range => sourceMap.getMappedRange(range.start, range.end)?.[0],
+						range => sourceMap.toGeneratedRange(range),
 					),
 					only: codeActionContext.only,
 				};
@@ -49,13 +49,14 @@ export function register(context: LanguageServiceRuntimeContext) {
 				let minStart: number | undefined;
 				let maxEnd: number | undefined;
 
-				for (const mapping of sourceMap.base.mappings) {
-					const overlapRange = shared.getOverlapRange2(offsetRange, mapping.sourceRange);
+				for (const mapping of sourceMap.mappings) {
+					const overlapRange = shared.getOverlapRange2(offsetRange.start, offsetRange.end, mapping.sourceRange[0], mapping.sourceRange[1]);
 					if (overlapRange) {
-						const embeddedRange = sourceMap.getMappedRange(overlapRange.start, overlapRange.end)?.[0];
-						if (embeddedRange) {
-							minStart = minStart === undefined ? embeddedRange.start : Math.min(embeddedRange.start, minStart);
-							maxEnd = maxEnd === undefined ? embeddedRange.end : Math.max(embeddedRange.end, maxEnd);
+						const start = sourceMap.toGeneratedOffset(overlapRange.start)?.[0];
+						const end = sourceMap.toGeneratedOffset(overlapRange.end)?.[0];
+						if (start !== undefined && end !== undefined) {
+							minStart = minStart === undefined ? start : Math.min(start, minStart);
+							maxEnd = maxEnd === undefined ? end : Math.max(end, maxEnd);
 						}
 					}
 				}

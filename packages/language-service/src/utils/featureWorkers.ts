@@ -9,7 +9,7 @@ export async function documentFeatureWorker<T>(
 	document: TextDocument,
 	isValidSourceMap: (sourceMap: EmbeddedDocumentSourceMap) => boolean,
 	worker: (plugin: LanguageServicePlugin, document: TextDocument) => T,
-	transform: (result: NonNullable<Awaited<T>>, sourceMap: EmbeddedDocumentSourceMap | undefined) => T | undefined,
+	transform: (result: NonNullable<Awaited<T>>, sourceMap: EmbeddedDocumentSourceMap) => T | undefined,
 	combineResult?: (results: NonNullable<Awaited<T>>[]) => NonNullable<Awaited<T>>,
 ) {
 	return documentArgFeatureWorker(
@@ -31,7 +31,7 @@ export async function documentArgFeatureWorker<T, K>(
 	isValidSourceMap: (sourceMap: EmbeddedDocumentSourceMap) => boolean,
 	transformArg: (arg: K, sourceMap: EmbeddedDocumentSourceMap) => Generator<K> | [K],
 	worker: (plugin: LanguageServicePlugin, document: TextDocument, arg: K) => T,
-	transform: (result: NonNullable<Awaited<T>>, sourceMap: EmbeddedDocumentSourceMap | undefined) => T | undefined,
+	transform: (result: NonNullable<Awaited<T>>, sourceMap: EmbeddedDocumentSourceMap) => T | undefined,
 	combineResult?: (results: NonNullable<Awaited<T>>[]) => NonNullable<Awaited<T>>,
 ) {
 
@@ -79,12 +79,7 @@ export async function documentArgFeatureWorker<T, K>(
 
 		for (const plugin of context.plugins) {
 
-			const embeddedResult = await worker(plugin, document, arg);
-
-			if (!embeddedResult)
-				continue;
-
-			const result = await transform(embeddedResult!, undefined);
+			const result = await worker(plugin, document, arg);
 
 			if (!result)
 				continue;

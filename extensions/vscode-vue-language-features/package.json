@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "1.0.0-beta.0",
+	"version": "1.0.3",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
@@ -18,14 +18,6 @@
 	"engines": {
 		"vscode": "^1.67.0"
 	},
-	"keywords": [
-		"volar",
-		"vue",
-		"vue3",
-		"ts",
-		"typescript",
-		"pug"
-	],
 	"activationEvents": [
 		"onLanguage:vue",
 		"onLanguage:markdown",
@@ -269,7 +261,7 @@
 			"type": "object",
 			"title": "Volar",
 			"properties": {
-				"volar-language-features.trace.server": {
+				"vue-semantic-server.trace.server": {
 					"scope": "window",
 					"type": "string",
 					"enum": [
@@ -280,18 +272,7 @@
 					"default": "off",
 					"description": "Traces the communication between VS Code and the language server."
 				},
-				"volar-language-features-2.trace.server": {
-					"scope": "window",
-					"type": "string",
-					"enum": [
-						"off",
-						"messages",
-						"verbose"
-					],
-					"default": "off",
-					"description": "Traces the communication between VS Code and the language server."
-				},
-				"volar-document-features.trace.server": {
+				"vue-syntactic-server.trace.server": {
 					"scope": "window",
 					"type": "string",
 					"enum": [
@@ -325,11 +306,6 @@
 					],
 					"description": "Defines how the host (editor) should sync document changes to the language server. SFC incremental parser only working when config \"incremental\"."
 				},
-				"volar.vueserver.useSecondServer": {
-					"type": "boolean",
-					"default": false,
-					"description": "Use second server to progress heavy diagnostic works, the main server workhorse computing intellisense, operations such as auto-complete can respond faster. Note that this will lead to more memory usage."
-				},
 				"volar.vueserver.maxOldSpaceSize": {
 					"type": [
 						"number",
@@ -357,6 +333,11 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Show Vite / Nuxt App preview icon."
+				},
+				"volar.doctor.statusBarItem": {
+					"type": "boolean",
+					"default": true,
+					"description": "Show known problems in status bar."
 				},
 				"volar.codeLens.scriptSetupTools": {
 					"type": "boolean",
@@ -441,18 +422,18 @@
 				"volar.completion.preferredTagNameCase": {
 					"type": "string",
 					"enum": [
-						"auto",
-						"both",
+						"auto-kebab",
+						"auto-pascal",
 						"kebab",
 						"pascal"
 					],
 					"enumDescriptions": [
-						"Auto Detect from Content",
-						"<kebab-case> and <PascalCase>",
+						"Auto Detect from Content (Preferred <kebab-case>)",
+						"Auto Detect from Content (Preferred <PascalCase>)",
 						"<kebab-case>",
 						"<PascalCase>"
 					],
-					"default": "auto",
+					"default": "auto-pascal",
 					"description": "Preferred tag name case."
 				},
 				"volar.completion.preferredAttrNameCase": {
@@ -638,7 +619,7 @@
 			},
 			{
 				"command": "volar.action.doctor",
-				"title": "Show doctor panel (WIP)",
+				"title": "Doctor",
 				"category": "Volar"
 			},
 			{
@@ -652,9 +633,9 @@
 				"category": "Volar (Debug)"
 			},
 			{
-				"command": "volar.action.showCallGraph",
-				"title": "Show Call Graph",
-				"category": "Volar (Experimental)"
+				"command": "volar.action.showVirtualFiles",
+				"title": "Show Virtual Files",
+				"category": "Volar (Debug)"
 			},
 			{
 				"command": "volar.action.splitEditors",
@@ -673,31 +654,6 @@
 				"title": "Experimental Features for Nuxt",
 				"category": "Volar",
 				"icon": "images/nuxt-logo.svg"
-			},
-			{
-				"command": "volar.action.tagNameCase",
-				"title": "Change Tag Name Case",
-				"category": "Volar"
-			},
-			{
-				"command": "volar.action.tagNameCase.convertToKebabCase",
-				"title": "Convert Tag Name Case to kebab-case",
-				"category": "Volar"
-			},
-			{
-				"command": "volar.action.tagNameCase.convertToPascalCase",
-				"title": "Convert Tag Name Case to PascalCase",
-				"category": "Volar"
-			},
-			{
-				"command": "volar.action.attrNameCase",
-				"title": "Change Attr Name Case",
-				"category": "Volar"
-			},
-			{
-				"command": "volar.action.createWorkspaceSnippets",
-				"title": "Create Workspace Snippets",
-				"category": "Volar"
 			},
 			{
 				"command": "volar.action.selectElement",
@@ -751,8 +707,8 @@
 					"when": "volar.activated"
 				},
 				{
-					"command": "volar.action.showCallGraph",
-					"when": "editorLangId == vue"
+					"command": "volar.action.showVirtualFiles",
+					"when": "volar.activated"
 				},
 				{
 					"command": "volar.action.splitEditors",
@@ -765,26 +721,6 @@
 				{
 					"command": "volar.action.nuxt",
 					"when": "editorLangId == vue"
-				},
-				{
-					"command": "volar.action.tagNameCase",
-					"when": "editorLangId == vue"
-				},
-				{
-					"command": "volar.action.tagNameCase.convertToKebabCase",
-					"when": "editorLangId == vue"
-				},
-				{
-					"command": "volar.action.tagNameCase.convertToPascalCase",
-					"when": "editorLangId == vue"
-				},
-				{
-					"command": "volar.action.attrNameCase",
-					"when": "editorLangId == vue"
-				},
-				{
-					"command": "volar.action.createWorkspaceSnippets",
-					"when": "volar.activated"
 				},
 				{
 					"command": "volar.action.selectElement",
@@ -885,29 +821,32 @@
 		"watch": "npm run build:node -- --watch & npm run build:browser -- --watch",
 		"build:node": "node scripts/build-node",
 		"build:browser": "node scripts/build-browser",
+		"prepack:bundle-size": "npm run prebuild && npm run build:node -- --minify --metafile && npm run build:browser -- --empty",
 		"prepack:node": "npm run prebuild && npm run build:node -- --minify && npm run build:browser -- --empty",
 		"prepack:browser": "npm run prebuild && npm run build:browser -- --minify && npm run build:node -- --empty",
 		"pack:node": "npm run prepack:node && vsce package",
 		"pack:browser": "npm run prepack:browser && vsce package",
 		"release:node": "npm run prepack:node && vsce publish --target win32-x64 win32-ia32 win32-arm64 linux-x64 linux-arm64 linux-armhf darwin-x64 darwin-arm64 alpine-x64 alpine-arm64 && ovsx publish",
 		"release:browser": "npm run prepack:browser && vsce publish --target web",
-		"release": "npm run release:node && npm run release:browser"
+		"release": "npm run release:node && npm run release:browser",
+		"bundle-size": "npm run prepack:bundle-size && esbuild-visualizer --metadata ./meta.json --exclude * .png && open ./stats.html"
 	},
 	"devDependencies": {
 		"@types/semver": "^7.3.12",
 		"@types/vscode": "1.67.0",
-		"@volar/preview": "1.0.0-beta.0",
-		"@volar/shared": "1.0.0-beta.0",
-		"@volar/vue-language-core": "1.0.0-beta.0",
-		"@volar/vue-language-server": "1.0.0-beta.0",
-		"@vue/compiler-sfc": "^3.2.38",
-		"@vue/reactivity": "^3.2.38",
+		"@volar/preview": "1.0.3",
+		"@volar/shared": "1.0.3",
+		"@volar/source-map": "1.0.3",
+		"@volar/vue-language-core": "1.0.3",
+		"@volar/vue-language-server": "1.0.3",
 		"esbuild": "latest",
 		"esbuild-plugin-copy": "latest",
 		"ovsx": "^0.5.1",
+		"esbuild-visualizer": "latest",
 		"path-browserify": "^1.0.1",
 		"punycode": "^2.1.1",
 		"semver": "^7.3.7",
+		"typesafe-path": "^0.2.1",
 		"vsce": "latest",
 		"vscode-languageclient": "^8.0.2",
 		"vscode-nls": "^5.2.0"

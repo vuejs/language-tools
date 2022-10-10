@@ -13,32 +13,27 @@ export function register(context: LanguageServiceRuntimeContext) {
 			context,
 			uri,
 			undefined,
-			function* (_, sourceMap) {
+			function* (_) {
 				yield _;
 			},
-			async (plugin, document, _, sourceMap, vueDocument) => {
+			async (plugin, document) => {
 				return await plugin.findFileReferences?.(document) ?? [];
 			},
 			(data, sourceMap) => data.map(reference => {
 
-				const referenceSourceMap = context.documents.sourceMapFromEmbeddedDocumentUri(reference.uri);
-
-				if (referenceSourceMap) {
-
-					const range = referenceSourceMap.getSourceRange(
-						reference.range.start,
-						reference.range.end,
-						data => !!data.references,
-					)?.[0];
-
-					if (!range)
-						return;
-
-					reference.uri = referenceSourceMap.sourceDocument.uri;
-					reference.range = range;
+				const map = context.documents.sourceMapFromEmbeddedDocumentUri(reference.uri);
+				if (!map) {
+					return reference;
 				}
 
-				return reference;
+				if (map) {
+					const range = map.toSourceRange(reference.range);
+					if (range) {
+						reference.uri = map.sourceDocument.uri;
+						reference.range = range;
+						return reference;
+					}
+				}
 			}).filter(shared.notEmpty),
 			arr => dedupe.withLocations(arr.flat()),
 		);

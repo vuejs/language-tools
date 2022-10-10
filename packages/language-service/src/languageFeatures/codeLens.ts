@@ -47,7 +47,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				if (!sourceMap)
 					return codeLens;
 
-				const range = sourceMap.getSourceRange(codeLens.range.start, codeLens.range.end)?.[0];
+				const range = sourceMap.toSourceRange(codeLens.range);
 				if (range) {
 					return {
 						...codeLens,

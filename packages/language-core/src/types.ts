@@ -2,23 +2,23 @@ import { Mapping } from '@volar/source-map';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
 export interface DocumentCapabilities {
-	diagnostics?: boolean,
-	foldingRanges?: boolean,
-	formatting?: boolean | {
+	diagnostic?: boolean,
+	foldingRange?: boolean,
+	documentFormatting?: boolean | {
 		initialIndentBracket?: [string, string],
 	},
 	documentSymbol?: boolean,
-	codeActions?: boolean,
-	inlayHints?: boolean,
+	codeAction?: boolean,
+	inlayHint?: boolean,
 }
 
 export interface PositionCapabilities {
 	hover?: boolean,
 	references?: boolean,
-	definitions?: boolean,
+	definition?: boolean,
 	rename?: boolean | {
 		normalize?(newName: string): string,
-		apply?(oldName: string, newName: string): string,
+		apply?(newName: string): string,
 	},
 	completion?: boolean | {
 		additional: boolean,
@@ -33,7 +33,7 @@ export interface PositionCapabilities {
 
 export interface TeleportCapabilities {
 	references?: boolean,
-	definitions?: boolean,
+	definition?: boolean,
 	rename?: boolean,
 }
 
@@ -53,17 +53,22 @@ export interface SourceFile {
 	embeddeds: EmbeddedFile[],
 }
 
+export enum EmbeddedFileKind {
+	TextFile = 0,
+	TypeScriptHostFile = 1,
+}
+
 export interface EmbeddedFile {
 	fileName: string,
 	text: string,
-	isTsHostFile: boolean,
+	kind: EmbeddedFileKind,
 	capabilities: DocumentCapabilities,
 	mappings: Mapping<PositionCapabilities>[],
 	teleportMappings?: Mapping<TeleportMappingData>[],
 	embeddeds: EmbeddedFile[],
 }
 
-export interface EmbeddedLanguageModule<T extends SourceFile = SourceFile> {
+export interface LanguageModule<T extends SourceFile = SourceFile> {
 	createSourceFile(fileName: string, snapshot: ts.IScriptSnapshot): T | undefined;
 	updateSourceFile(sourceFile: T, snapshot: ts.IScriptSnapshot): void;
 	proxyLanguageServiceHost?(host: LanguageServiceHost): Partial<LanguageServiceHost>;

@@ -12,9 +12,7 @@
 				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode-vue-language-features"
 			],
 			"outFiles": [
-				"${workspaceRoot}/extensions/*/out/**/*.js",
-				"${workspaceRoot}/packages/*/out/**/*.js",
-				"${workspaceRoot}/plugins/*/out/**/*.js"
+				"${workspaceRoot}/*/*/out/**/*.js"
 			],
 			"preLaunchTask": {
 				"type": "npm",
@@ -28,12 +26,10 @@
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"--disable-extensions",
-				"--extensionDevelopmentPath=${workspaceRoot}/examples/svelte"
+				"--extensionDevelopmentPath=${workspaceRoot}/examples/vscode-svelte"
 			],
 			"outFiles": [
-				"${workspaceRoot}/examples/*/out/**/*.js",
-				"${workspaceRoot}/packages/*/out/**/*.js",
-				"${workspaceRoot}/plugins/*/out/**/*.js"
+				"${workspaceRoot}/*/*/out/**/*.js"
 			],
 			"preLaunchTask": {
 				"type": "npm",
@@ -50,9 +46,7 @@
 				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode-typescript-vue-plugin"
 			],
 			"outFiles": [
-				"${workspaceRoot}/extensions/*/out/**/*.js",
-				"${workspaceRoot}/packages/*/out/**/*.js",
-				"${workspaceRoot}/plugins/*/out/**/*.js"
+				"${workspaceRoot}/*/*/out/**/*.js"
 			],
 			"preLaunchTask": {
 				"type": "npm",
@@ -70,9 +64,7 @@
 				"--extensionDevelopmentKind=web"
 			],
 			"outFiles": [
-				"${workspaceRoot}/extensions/*/out/**/*.js",
-				"${workspaceRoot}/packages/*/out/**/*.js",
-				"${workspaceRoot}/plugins/*/out/**/*.js"
+				"${workspaceRoot}/*/*/out/**/*.js"
 			],
 			"preLaunchTask": {
 				"type": "npm",
@@ -86,21 +78,7 @@
 			"port": 6009,
 			"restart": true,
 			"outFiles": [
-				"${workspaceRoot}/examples/*/out/**/*.js",
-				"${workspaceRoot}/packages/*/out/**/*.js",
-				"${workspaceRoot}/plugins/*/out/**/*.js"
-			]
-		},
-		{
-			"name": "Attach to Second Language Features Server",
-			"type": "node",
-			"request": "attach",
-			"port": 6010,
-			"restart": true,
-			"outFiles": [
-				"${workspaceRoot}/examples/*/out/**/*.js",
-				"${workspaceRoot}/packages/*/out/**/*.js",
-				"${workspaceRoot}/plugins/*/out/**/*.js"
+				"${workspaceRoot}/*/*/out/**/*.js"
 			]
 		},
 		{
@@ -110,9 +88,7 @@
 			"port": 6011,
 			"restart": true,
 			"outFiles": [
-				"${workspaceRoot}/examples/*/out/**/*.js",
-				"${workspaceRoot}/packages/*/out/**/*.js",
-				"${workspaceRoot}/plugins/*/out/**/*.js"
+				"${workspaceRoot}/*/*/out/**/*.js"
 			]
 		}
 	],

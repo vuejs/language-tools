@@ -11,18 +11,9 @@ export function register(context: DocumentServiceRuntimeContext) {
 		return documentFeatureWorker(
 			context,
 			document,
-			sourceMap => !!sourceMap.embeddedFile.capabilities.foldingRanges,
+			sourceMap => !!sourceMap.embeddedFile.capabilities.foldingRange,
 			(plugin, document) => plugin.getFoldingRanges?.(document),
-			(data, sourceMap) => transformFoldingRanges(
-				data,
-				range => {
-
-					if (!sourceMap)
-						return range;
-
-					return sourceMap.getSourceRange(range.start, range.end)?.[0];
-				},
-			),
+			(data, sourceMap) => transformFoldingRanges(data, range => sourceMap?.toSourceRange(range)),
 			arr => arr.flat(),
 		);
 	};

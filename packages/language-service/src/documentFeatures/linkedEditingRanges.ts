@@ -13,25 +13,11 @@ export function register(context: DocumentServiceRuntimeContext) {
 			document,
 			position,
 			sourceMap => true,
-			function* (position, sourceMap) {
-				for (const [mappedRange] of sourceMap.getMappedRanges(
-					position,
-					position,
-					data => !!data.completion,
-				)) {
-					yield mappedRange.start;
-				}
-			},
+			(position, sourceMap) => sourceMap.toGeneratedPositions(position, data => !!data.completion),
 			(plugin, document, position) => plugin.findLinkedEditingRanges?.(document, position),
 			(data, sourceMap) => ({
 				wordPattern: data.wordPattern,
-				ranges: data.ranges.map(range => {
-
-					if (!sourceMap)
-						return range;
-
-					return sourceMap.getSourceRange(range.start, range.end)?.[0];
-				}).filter(shared.notEmpty),
+				ranges: data.ranges.map(range => sourceMap.toSourceRange(range)).filter(shared.notEmpty),
 			}),
 		);
 	};

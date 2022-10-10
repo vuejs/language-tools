@@ -1,0 +1,102 @@
+{
+	"properties": {
+		"vueCompilerOptions": {
+			"type": "object",
+			"properties": {
+				"target": {
+					"type": "number",
+					"default": 3,
+					"anyOf": [
+						{
+							"enum": [
+								2,
+								2.7,
+								3
+							]
+						}
+					],
+					"markdownDescription": "Target version of Vue."
+				},
+				"jsxTemplates": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Whether to compile template to JSX. (Generics component type checking only working with JSX)"
+				},
+				"strictTemplates": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Strict props, component type-checking in templates."
+				},
+				"skipTemplateCodegen": {
+					"type": "boolean",
+					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/577"
+				},
+				"dataAttributes": {
+					"type": "array",
+					"default": ["data-*"],
+					"markdownDescription": "A glob matcher array that should always avoid recognized as HTML Attributes and Component props."
+				},
+				"htmlAttributes": {
+					"type": "array",
+					"default": ["aria-*"],
+					"markdownDescription": "A glob matcher array that should always be recognizing as HTML Attributes rather than Component props. Attribute name will never convert to camelize case."
+				},
+				"plugins": {
+					"type": "array",
+					"default": [],
+					"markdownDescription": "Plugins to be used in the SFC compiler."
+				},
+				"optionsWrapper": {
+					"type": "array",
+					"default": [
+						"(await import('vue')).defineComponent(",
+						")"
+					],
+					"markdownDescription": "How to wrap option of `export default { ... }`? Default: `[\"(await import('vue')).default.extend(\", \")\"]` for target < 2.7, `[\"(await import('vue')).defineComponent(\", \")\"]` for target >= 2.7."
+				},
+				"narrowingTypesInInlineHandlers": {
+					"type": "boolean",
+					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1249"
+				},
+				"bypassDefineComponentToExposePropsAndEmitsForJsScriptSetupComponents": {
+					"type": "boolean",
+					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1192"
+				},
+				"experimentalRuntimeMode": {
+					"type": "string",
+					"default": "runtime-dom",
+					"anyOf": [
+						{
+							"enum": [
+								"runtime-dom",
+								"runtime-uni-app"
+							]
+						}
+					],
+					"markdownDescription": "Run app in browser or uni-app"
+				},
+				"experimentalTemplateCompilerOptions": {
+					"type": "object",
+					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/576"
+				},
+				"experimentalTemplateCompilerOptionsRequirePath": {
+					"type": "string",
+					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/698"
+				},
+				"experimentalResolveStyleCssClasses": {
+					"enum": [
+						"scoped",
+						"always",
+						"never"
+					],
+					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1038, https://github.com/johnsoncodehk/volar/issues/1121"
+				},
+				"experimentalRfc436": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "https://github.com/vuejs/rfcs/discussions/436"
+				}
+			}
+		}
+	}
+}

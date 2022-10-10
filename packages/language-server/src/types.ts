@@ -3,7 +3,7 @@ import * as embedded from '@volar/language-core';
 import type { FileSystemProvider } from 'vscode-html-languageservice';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
-import type * as Requests from './requests';
+import type * as Requests from './protocol';
 import { URI } from 'vscode-uri';
 
 export declare let __requests: typeof Requests; // keep this code for jsdoc link
@@ -27,8 +27,8 @@ export type FileSystem = Pick<ts.System,
 > & Partial<ts.System>;
 
 export interface RuntimeEnvironment {
-	loadTypescript: (initOptions: ServerInitializationOptions) => typeof import('typescript/lib/tsserverlibrary'),
-	loadTypescriptLocalized: (initOptions: ServerInitializationOptions) => any,
+	loadTypescript: (tsdk: string) => typeof import('typescript/lib/tsserverlibrary'),
+	loadTypescriptLocalized: (tsdk: string, locale: string) => any,
 	schemaRequestHandlers: { [schema: string]: (uri: string, encoding?: BufferEncoding) => Promise<string>; },
 	onDidChangeConfiguration?: (settings: any) => void,
 	fileSystemProvide: FileSystemProvider | undefined,
@@ -39,14 +39,14 @@ export interface RuntimeEnvironment {
 }
 
 export type LanguageServerPlugin<
-	A extends ServerInitializationOptions = ServerInitializationOptions,
+	A extends LanguageServerInitializationOptions = LanguageServerInitializationOptions,
 	B extends embedded.LanguageServiceHost = embedded.LanguageServiceHost,
 	C = embeddedLS.LanguageService
 > = (initOptions: A) => {
 
-	extensions: string[],
+	extraFileExtensions: ts.FileExtensionInfo[],
 
-	languageService?: {
+	semanticService?: {
 
 		semanticTokenLegend?: vscode.SemanticTokensLegend,
 
@@ -57,7 +57,7 @@ export type LanguageServerPlugin<
 			host: embedded.LanguageServiceHost,
 		): B,
 
-		getLanguageModules?(host: B): embedded.EmbeddedLanguageModule[],
+		getLanguageModules?(host: B): embedded.LanguageModule[],
 
 		getServicePlugins?(
 			host: B,
@@ -70,89 +70,47 @@ export type LanguageServerPlugin<
 		): void,
 	},
 
-	documentService?: {
+	syntacticService?: {
 
 		getLanguageModules?(
 			ts: typeof import('typescript/lib/tsserverlibrary'),
 			env: embeddedLS.LanguageServicePluginContext['env'],
-		): embedded.EmbeddedLanguageModule[],
+		): embedded.LanguageModule[],
 
 		getServicePlugins?(
 			context: embeddedLS.DocumentServiceRuntimeContext,
 		): embeddedLS.LanguageServicePlugin[],
+
+		onInitialize?(
+			connection: vscode.Connection,
+		): void,
 	};
 };
 
-export interface ServerInitializationOptions {
-	textDocumentSync?: vscode.TextDocumentSyncKind | number;
+export enum ServerMode {
+	Semantic = 0,
+	// PartialSemantic = 1, // not support yet
+	Syntactic = 2
+}
+
+export enum DiagnosticModel {
+	None = 0,
+	Push = 1,
+	Pull = 2,
+}
+
+export interface LanguageServerInitializationOptions {
 	typescript: {
-		/**
-		 * Path to tsserverlibrary.js / tsserver.js / typescript.js
-		 * @example
-		 * '/usr/local/lib/node_modules/typescript/lib/tsserverlibrary.js' // use global typescript install
-		 * 'typescript/lib/tsserverlibrary.js' // if `typescript` exist in `@volar/vue-lannguage-server` itself node_modules directory
-		 * '../../../typescript/lib/tsserverlibrary.js' // relative path to @volar/vue-language-server/out/index.js
-		 */
-		serverPath: string;
-		/**
-		 * Path to lib/xxx/diagnosticMessages.generated.json
-		 * @example
-		 * '/usr/local/lib/node_modules/typescript/lib/ja/diagnosticMessages.generated.json' // use global typescript install
-		 * 'typescript/lib/ja/diagnosticMessages.generated.json' // if `typescript` exist in `@volar/vue-lannguage-server` itself node_modules directory
-		 * '../../../typescript/lib/ja/diagnosticMessages.generated.json' // relative path to @volar/vue-language-server/out/index.js
-		 */
-		localizedPath?: string;
+		// Absolute path to node_modules/typescript/lib
+		tsdk: string;
 	};
+	serverMode?: ServerMode;
+	diagnosticModel?: DiagnosticModel;
+	textDocumentSync?: vscode.TextDocumentSyncKind | number;
+	// for resolve https://github.com/sublimelsp/LSP-volar/issues/114
+	ignoreTriggerCharacters?: string[];
 	/**
-	 * typescript, html, css... language service will be create in server if this option is not null
+	 * https://github.com/Microsoft/TypeScript/wiki/Standalone-Server-%28tsserver%29#cancellation
 	 */
-	languageFeatures?: {
-		references?: boolean;
-		implementation?: boolean;
-		definition?: boolean;
-		typeDefinition?: boolean;
-		callHierarchy?: boolean;
-		hover?: boolean;
-		rename?: boolean;
-		renameFileRefactoring?: boolean;
-		signatureHelp?: boolean;
-		completion?: boolean | {
-			/**
-			 * {@link __requests.GetDocumentSelectionRequest}
-			 * */
-			getDocumentSelectionRequest?: boolean,
-			// for resolve https://github.com/sublimelsp/LSP-volar/issues/114
-			ignoreTriggerCharacters?: string,
-		};
-		documentHighlight?: boolean;
-		documentLink?: boolean;
-		workspaceSymbol?: boolean;
-		codeLens?: boolean | {
-			/**
-			 * {@link __requests.ShowReferencesNotification}
-			 * */
-			showReferencesNotification?: boolean,
-		};
-		semanticTokens?: boolean;
-		codeAction?: boolean;
-		inlayHints?: boolean;
-		diagnostics?: boolean;
-		schemaRequestService?: boolean | {
-			/**
-			 * {@link __requests.GetDocumentContentRequest}
-			 * */
-			getDocumentContentRequest?: boolean,
-		};
-	};
-	/**
-	 * html language service will be create in server if this option is not null
-	 */
-	documentFeatures?: {
-		selectionRange?: boolean;
-		foldingRange?: boolean;
-		linkedEditingRange?: boolean;
-		documentSymbol?: boolean;
-		documentColor?: boolean;
-		documentFormatting?: boolean,
-	};
+	cancellationPipeName?: string;
 }

@@ -7,20 +7,20 @@
 			"path": "./extensions/vscode-vue-language-features/tsconfig.build.json"
 		},
 		{
-			"path": "./examples/svelte/tsconfig.build.json"
+			"path": "./examples/vscode-svelte/tsconfig.build.json"
 		},
 		// Extra Pkgs
 		{
-			"path": "./packages/vue-language-plugin-pug/tsconfig.build.json"
+			"path": "./vue-language-tools/vue-language-plugin-pug/tsconfig.build.json"
 		},
 		{
-			"path": "./packages/typescript-vue-plugin/tsconfig.build.json"
+			"path": "./vue-language-tools/typescript-vue-plugin/tsconfig.build.json"
 		},
 		{
-			"path": "./packages/vue-tsc/tsconfig.build.json"
+			"path": "./vue-language-tools/vue-tsc/tsconfig.build.json"
 		},
 		{
-			"path": "./packages/vue-component-meta/tsconfig.build.json"
+			"path": "./vue-language-tools/vue-component-meta/tsconfig.build.json"
 		},
 		// IDE / tests
 		{
