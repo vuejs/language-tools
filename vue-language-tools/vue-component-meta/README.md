@@ -70,10 +70,10 @@ You can use JSDoc's `@type` to define the prop type in JavaScript projects.
 
 ```ts
 props: {
-  /*
+  /**
    * Array of texts to render as a message
    * @type {import('vue').PropOptions<string[]>}
-  */
+   */
   texts: {
     type: Array,
     required: false,
