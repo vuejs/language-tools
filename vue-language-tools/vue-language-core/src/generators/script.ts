@@ -235,7 +235,7 @@ export function generate(
 		if (sfc.scriptSetup && scriptSetupRanges) {
 
 			if (scriptRanges?.exportDefault) {
-				codeGen.push('await (async () => {\n');
+				codeGen.push('(() => {\n');
 			}
 			else {
 				// fix https://github.com/johnsoncodehk/volar/issues/1127
@@ -245,7 +245,7 @@ export function generate(
 					0,
 					{ diagnostic: true },
 				]);
-				codeGen.push('export default await (async ');
+				codeGen.push('export default (');
 				if (vueCompilerOptions.experimentalRfc436 && sfc.scriptSetup.generic) {
 					codeGen.push(`<${sfc.scriptSetup.generic}>`);
 				}
@@ -407,7 +407,7 @@ export function generate(
 			}
 			codeGen.push(`});\n`);
 			codeGen.push(`};\n`);
-			codeGen.push(`return await __VLS_setup();\n`);
+			codeGen.push(`return {} as unknown as Awaited<ReturnType<typeof __VLS_setup>>;\n`);
 			codeGen.push(`})()`);
 			if (scriptRanges?.exportDefault && scriptRanges.exportDefault.expression.end !== scriptRanges.exportDefault.end) {
 				addVirtualCode('script', scriptRanges.exportDefault.expression.end, scriptRanges.exportDefault.end);
