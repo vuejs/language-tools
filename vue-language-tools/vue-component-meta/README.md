@@ -7,8 +7,13 @@
 First of all, you need to create a component meta checker using `createComponentMetaChecker`:
 
 ```ts
+import * as url from 'url'
+import path from 'path'
+
 import type { MetaCheckerOptions } from 'vue-component-meta'
 import { createComponentMetaChecker } from 'vue-component-meta'
+
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
 const checkerOptions: MetaCheckerOptions = {
   forceUseTs: true,
@@ -18,7 +23,7 @@ const checkerOptions: MetaCheckerOptions = {
 
 const tsconfigChecker = createComponentMetaChecker(
   // Write your tsconfig path
-  resolve(__dirname, 'path-to-tsconfig'),
+  path.join(__dirname, 'path-to-tsconfig')
   checkerOptions,
 )
 ```
@@ -26,7 +31,12 @@ const tsconfigChecker = createComponentMetaChecker(
 Now, you can extract the component meta using `getComponentMeta` method of checker:
 
 ```ts
-const componentPath = path.resolve(__dirname, 'path-to-component');
+import * as url from 'url'
+import path from 'path'
+
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
+
+const componentPath = path.join(__dirname, 'path-to-component');
 const meta = checker.getComponentMeta(componentPath);
 ```
 
@@ -46,7 +56,7 @@ modelValue: {
 },
 ```
 
-When you extract the component meta and extract the `description` property of that prop it will be `Hide/Show alert based on v-model value` 😍
+When you extract the component meta and extract the `description` property of that prop it will be "Hide/Show alert based on v-model value" 😍
 
 > **Warning**
 >
@@ -54,13 +64,32 @@ When you extract the component meta and extract the `description` property of th
 
 You can use it to document your component as you build your project without writing additional documentation.
 
+### Defining type in JavaScript projects
+
+You can use JSDoc's `@type` to define the prop type in JavaScript projects.
+
+```ts
+props: {
+  /*
+   * Array of texts to render as a message
+   * @type {string[]}
+  */
+  texts: {
+    type: Array,
+    required: false,
+  }
+}
+```
+
+`vue-component-meta` meta will extract the prop definition as "Array of texts to render as a message" and its type as `string[]`.
+
 ## Pitfalls 👀
 
 As `vue-component-meta` uses static code analysis, it can't extract the dynamic prop definition.
 
 ### default value
 
-`vue-component-meta` won't able to extract default value for prop as props can't be analyzed.
+`vue-component-meta` won't be able to extract default value for prop as props can't be analyzed.
 
 ```ts
 props: {
@@ -98,7 +127,7 @@ props: {
 
 ### description
 
-Same as above scenario you might have issue with description not generating when prop definition is dynamic. In this case write prop description can be tricky.
+Same as above scenario you might have issue with description not generating when prop definition is dynamic. In this case writing prop description can be tricky.
 
 When it's function execution, write prop description in function definition:
 
