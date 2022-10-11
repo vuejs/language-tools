@@ -64,25 +64,6 @@ When you extract the component meta and extract the `description` property of th
 
 You can use it to document your component as you build your project without writing additional documentation.
 
-### Defining type in JavaScript projects
-
-You can use JSDoc's `@type` to define the prop type in JavaScript projects.
-
-```ts
-props: {
-  /**
-   * Array of texts to render as a message
-   * @type {import('vue').PropOptions<string[]>}
-   */
-  texts: {
-    type: Array,
-    required: false,
-  }
-}
-```
-
-`vue-component-meta` meta will extract the prop definition as "Array of texts to render as a message" and its type as `string[]`.
-
 ## Pitfalls 👀
 
 As `vue-component-meta` uses static code analysis, it can't extract the dynamic prop definition.
