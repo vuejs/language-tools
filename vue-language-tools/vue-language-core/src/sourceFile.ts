@@ -123,18 +123,26 @@ export class VueSourceFile implements SourceFile {
 				}
 			}
 
+			const errors: CompilerDom.CompilerError[] = [];
+			const warnings: CompilerDom.CompilerError[] = [];
+			let options: CompilerDom.CompilerOptions = {
+				onError: (err: CompilerDom.CompilerError) => errors.push(err),
+				onWarn: (err: CompilerDom.CompilerError) => warnings.push(err),
+				expressionPlugins: ['typescript'],
+			};
+
+			for (const plugin of plugins) {
+				if (plugin.resolveTemplateCompilerOptions) {
+					options = plugin.resolveTemplateCompilerOptions(options);
+				}
+			}
+
 			for (const plugin of plugins) {
 
-				const errors: CompilerDom.CompilerError[] = [];
-				const warnings: CompilerDom.CompilerError[] = [];
 				let result: CompilerDom.CodegenResult | undefined;
 
 				try {
-					result = plugin.compileSFCTemplate?.(sourceFile.sfc.template.lang, sourceFile.sfc.template.content, {
-						onError: (err: CompilerDom.CompilerError) => errors.push(err),
-						onWarn: (err: CompilerDom.CompilerError) => warnings.push(err),
-						expressionPlugins: ['typescript'],
-					});
+					result = plugin.compileSFCTemplate?.(sourceFile.sfc.template.lang, sourceFile.sfc.template.content, options);
 				}
 				catch (e) {
 					const err = e as CompilerDom.CompilerError;

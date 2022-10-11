@@ -14,16 +14,20 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions }) => {
 
 		version: 1,
 
+		resolveTemplateCompilerOptions(options) {
+			return {
+				...options,
+				...vueCompilerOptions.experimentalTemplateCompilerOptions,
+			};
+		},
+
 		compileSFCTemplate(lang, template, options) {
 
 			if (lang === 'html') {
 
 				const compiler = modules['@vue/compiler-dom'];
 
-				return compiler.compile(template, {
-					...options,
-					...vueCompilerOptions.experimentalTemplateCompilerOptions,
-				});
+				return compiler.compile(template, options);
 			}
 		},
 

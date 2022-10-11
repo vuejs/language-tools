@@ -46,7 +46,8 @@ export type VueLanguagePlugin = (ctx: {
 	order?: number;
 	parseSFC?(fileName: string, content: string): SFCParseResult | undefined;
 	updateSFC?(oldResult: SFCParseResult, textChange: { start: number, end: number, newText: string; }): SFCParseResult | undefined;
-	compileSFCTemplate?(lang: string, template: string, options?: CompilerDom.CompilerOptions): CompilerDom.CodegenResult | undefined;
+	resolveTemplateCompilerOptions?(options: CompilerDom.CompilerOptions): CompilerDom.CompilerOptions;
+	compileSFCTemplate?(lang: string, template: string, options: CompilerDom.CompilerOptions): CompilerDom.CodegenResult | undefined;
 	updateSFCTemplate?(oldResult: CompilerDom.CodegenResult, textChange: { start: number, end: number, newText: string; }): CompilerDom.CodegenResult | undefined;
 	getEmbeddedFileNames?(fileName: string, sfc: Sfc): string[];
 	resolveEmbeddedFile?(fileName: string, sfc: Sfc, embeddedFile: VueEmbeddedFile): void;
