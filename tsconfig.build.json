@@ -22,6 +22,10 @@
 		{
 			"path": "./vue-language-tools/vue-component-meta/tsconfig.build.json"
 		},
+		// Examples
+		{
+			"path": "./examples/svelte-tsc/tsconfig.build.json"
+		},
 		// IDE / tests
 		{
 			"path": "./tsconfig.json"
