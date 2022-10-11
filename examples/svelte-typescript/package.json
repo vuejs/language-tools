@@ -1,6 +1,6 @@
 {
 	"name": "@volar-examples/svelte-typescript",
-	"version": "1.0.4",
+	"version": "1.0.5",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -13,7 +13,7 @@
 		"directory": "packages/svelte-typescript"
 	},
 	"dependencies": {
-		"@volar-examples/svelte-language-core": "1.0.4",
-		"@volar/typescript": "1.0.4"
+		"@volar-examples/svelte-language-core": "1.0.5",
+		"@volar/typescript": "1.0.5"
 	}
 }
