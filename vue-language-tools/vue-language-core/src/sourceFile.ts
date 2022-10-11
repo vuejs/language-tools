@@ -449,6 +449,7 @@ export class VueSourceFile implements SourceFile {
 				content: block.content,
 				lang: block.lang ?? 'js',
 				generic: typeof block.attrs.generic === 'string' ? block.attrs.generic : undefined,
+				genericOffset: typeof block.attrs.generic === 'string' ? newScriptSnapshot.getText(0, newScriptSnapshot.getLength()).substring(0, block.loc.start.offset).lastIndexOf(block.attrs.generic) - block.loc.start.offset : -1,
 			} : null;
 
 			if (self.sfc.scriptSetup && newData) {

@@ -245,7 +245,22 @@ export function generate(
 				codeGen.push('export default (');
 			}
 			if (vueCompilerOptions.experimentalRfc436 && sfc.scriptSetup.generic) {
-				codeGen.push(`(<${sfc.scriptSetup.generic}>`);
+				codeGen.push(`(<`);
+				codeGen.push([
+					sfc.scriptSetup.generic,
+					sfc.scriptSetup.name,
+					sfc.scriptSetup.genericOffset,
+					{
+						hover: true,
+						references: true,
+						definition: true,
+						rename: true,
+						diagnostic: true,
+						completion: true,
+						semanticTokens: true,
+					},
+				]);
+				codeGen.push(`>`);
 			}
 			codeGen.push('(');
 			if (scriptSetupRanges.propsTypeArg) {

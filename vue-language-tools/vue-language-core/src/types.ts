@@ -69,6 +69,7 @@ export interface Sfc {
 	scriptSetup: SfcBlock & {
 		// https://github.com/vuejs/rfcs/discussions/436
 		generic: string | undefined;
+		genericOffset: number;
 	} | null;
 	styles: (SfcBlock & {
 		module: string | undefined;
