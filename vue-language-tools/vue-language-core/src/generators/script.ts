@@ -242,7 +242,7 @@ export function generate(
 					0,
 					{ diagnostic: true },
 				]);
-				codeGen.push('export default ');
+				codeGen.push('export default (');
 			}
 			if (vueCompilerOptions.experimentalRfc436 && sfc.scriptSetup.generic) {
 				codeGen.push(`<${sfc.scriptSetup.generic}>`);
@@ -373,29 +373,42 @@ export function generate(
 
 			writeTemplate();
 
-			codeGen.push(`return {} as Omit<JSX.Element, 'props' | 'children'> & Omit<InstanceType<typeof __VLS_Component>, '$slots' | '$emit'>`);
-			codeGen.push(` & {\n`);
-			if (scriptSetupRanges.propsTypeArg) {
-				codeGen.push(`props: typeof __VLS_props,\n`);
+			if (vueCompilerOptions.experimentalRfc436) {
+				codeGen.push(`return {} as Omit<JSX.Element, 'props' | 'children'> & Omit<InstanceType<typeof __VLS_Component>, '$slots' | '$emit'>`);
+				codeGen.push(` & {\n`);
+				if (scriptSetupRanges.propsTypeArg) {
+					codeGen.push(`props: typeof __VLS_props,\n`);
+				}
+				else {
+					codeGen.push(`props: InstanceType<typeof __VLS_Component>['$props'],\n`);
+				}
+				codeGen.push(`$emit: `);
+				if (scriptSetupRanges.emitsTypeArg) {
+					addVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
+				}
+				else {
+					codeGen.push(`InstanceType<typeof __VLS_Component>['$emit']`);
+				}
+				codeGen.push(`,\n`);
+				if (htmlGen?.slotsNum) {
+					codeGen.push(`children: ReturnType<typeof __VLS_template>,\n`);
+				}
+				codeGen.push(`};\n`);
 			}
 			else {
-				codeGen.push(`props: InstanceType<typeof __VLS_Component>['$props'],\n`);
+				codeGen.push(`return {} as typeof __VLS_Component`);
+				if (htmlGen?.slotsNum) {
+					codeGen.push(` & { new (): { $slots: ReturnType<typeof __VLS_template> }`);
+				}
+				codeGen.push(`;\n`);
+				codeGen.push(`};\n`);
 			}
-			codeGen.push(`$emit: `);
-			if (scriptSetupRanges.emitsTypeArg) {
-				addVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
-			}
-			else {
-				codeGen.push(`InstanceType<typeof __VLS_Component>['$emit']`);
-			}
-			codeGen.push(`,\n`);
-			if (htmlGen?.slotsNum) {
-				codeGen.push(`children: ReturnType<typeof __VLS_template>,\n`);
-			}
-			codeGen.push(`};\n`);
 			codeGen.push(`};\n`);
 			codeGen.push(`return {} as unknown as Awaited<ReturnType<typeof __VLS_setup>>;\n`);
-			codeGen.push(`}`);
+			codeGen.push(`})`);
+			if (!vueCompilerOptions.experimentalRfc436) {
+				codeGen.push(`({} as any)`);
+			}
 			if (scriptRanges?.exportDefault && scriptRanges.exportDefault.expression.end !== scriptRanges.exportDefault.end) {
 				addVirtualCode('script', scriptRanges.exportDefault.expression.end, scriptRanges.exportDefault.end);
 			}
