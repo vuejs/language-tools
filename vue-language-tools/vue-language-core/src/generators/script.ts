@@ -245,7 +245,7 @@ export function generate(
 				codeGen.push('export default (');
 			}
 			if (vueCompilerOptions.experimentalRfc436 && sfc.scriptSetup.generic) {
-				codeGen.push(`(<`);
+				codeGen.push(`<`);
 				codeGen.push([
 					sfc.scriptSetup.generic,
 					sfc.scriptSetup.name,
