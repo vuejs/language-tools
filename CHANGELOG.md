@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.0.5 (2022/10/12)
+
+- feat(doctor): report warning for `@types/node` version `>= 18.8.1` ([#1985](https://github.com/johnsoncodehk/volar/issues/1985))
+- fix: `@volar-examples/svelte-tsc`, `@volar-examples/svelte-typescript` released empty dist
+- fix: component syntax minor defect when enabled `experimentalRfc436`
+- fix: force use VSCode display language in language server ([#1959](https://github.com/johnsoncodehk/volar/issues/1959))
+- fix: don't hoisting defineProps type arg when disabled `experimentalRfc436` ([#1994](https://github.com/johnsoncodehk/volar/issues/1994))
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
+
 ## 1.0.4 (2022/10/12)
 
 - feat: Support generic typed template slots for RFC 436 ([#1987](https://github.com/johnsoncodehk/volar/issues/1987))
@@ -17,12 +31,6 @@
 **Breaking changes**
 
 - Removed `experimentalTemplateCompilerOptions`, `experimentalTemplateCompilerOptionsRequirePath` from `vueCompilerOptions` ([#1991](https://github.com/johnsoncodehk/volar/issues/1991))
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 1.0.3 (2022/10/10)
 
