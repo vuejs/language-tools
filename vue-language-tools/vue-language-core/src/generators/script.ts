@@ -263,13 +263,13 @@ export function generate(
 				codeGen.push(`>`);
 			}
 			codeGen.push('(');
-			if (scriptSetupRanges.propsTypeArg) {
+			if (vueCompilerOptions.experimentalRfc436 && scriptSetupRanges.propsTypeArg) {
 				codeGen.push('__VLS_props: ');
 				addVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
 			}
 			codeGen.push(') => {\n');
 			codeGen.push('const __VLS_setup = async () => {\n');
-			if (scriptSetupRanges.propsTypeArg) {
+			if (vueCompilerOptions.experimentalRfc436 && scriptSetupRanges.propsTypeArg) {
 				addVirtualCode('scriptSetup', scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.propsTypeArg.start);
 				codeGen.push('typeof __VLS_props');
 				addVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.end);
@@ -308,7 +308,14 @@ export function generate(
 							codeGen.push(`__VLS_WithDefaults<`);
 						}
 
-						codeGen.push(`__VLS_TypePropsToRuntimeProps<typeof __VLS_props>`);
+						codeGen.push(`__VLS_TypePropsToRuntimeProps<`);
+						if (vueCompilerOptions.experimentalRfc436) {
+							codeGen.push(`typeof __VLS_props`);
+						}
+						else {
+							addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
+						}
+						codeGen.push(`>`);
 
 						if (scriptSetupRanges.withDefaultsArg) {
 							codeGen.push(`, typeof __VLS_withDefaultsArg`);
