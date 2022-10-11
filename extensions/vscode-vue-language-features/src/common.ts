@@ -260,6 +260,7 @@ function getInitializationOptions(
 		vitePress: {
 			processMdFile: processMd(),
 		},
+		__language: vscode.env.language,
 	};
 	return initializationOptions;
 }
