@@ -75,14 +75,6 @@
 					],
 					"markdownDescription": "Run app in browser or uni-app"
 				},
-				"experimentalTemplateCompilerOptions": {
-					"type": "object",
-					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/576"
-				},
-				"experimentalTemplateCompilerOptionsRequirePath": {
-					"type": "string",
-					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/698"
-				},
 				"experimentalResolveStyleCssClasses": {
 					"enum": [
 						"scoped",

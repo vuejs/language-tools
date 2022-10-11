@@ -47,7 +47,7 @@ function createParsedCommandLineBase(
 	extendsSet: Set<string>,
 ): ParsedCommandLine {
 
-	let baseVueOptions = {};
+	let vueOptions = {};
 	const folder = path.dirname(tsConfigPath);
 
 	extendsSet.add(tsConfigPath);
@@ -56,7 +56,7 @@ function createParsedCommandLineBase(
 		try {
 			const extendsPath = require.resolve(content.raw.extends, { paths: [folder] });
 			if (!extendsSet.has(extendsPath)) {
-				baseVueOptions = createParsedCommandLine(ts, parseConfigHost, extendsPath, extraFileExtensions, extendsSet).vueOptions;
+				vueOptions = createParsedCommandLine(ts, parseConfigHost, extendsPath, extraFileExtensions, extendsSet).vueOptions;
 			}
 		}
 		catch (error) {
@@ -66,10 +66,7 @@ function createParsedCommandLineBase(
 
 	return {
 		...content,
-		vueOptions: {
-			...baseVueOptions,
-			...resolveVueCompilerOptionsWorker(content.raw.vueCompilerOptions ?? {}, folder),
-		},
+		vueOptions,
 	};
 }
 
@@ -95,32 +92,7 @@ export function resolveVueCompilerOptions(vueOptions: VueCompilerOptions): Resol
 
 		// experimental
 		experimentalRuntimeMode: vueOptions.experimentalRuntimeMode ?? 'runtime-dom',
-		experimentalTemplateCompilerOptions: vueOptions.experimentalTemplateCompilerOptions ?? {},
-		experimentalTemplateCompilerOptionsRequirePath: vueOptions.experimentalTemplateCompilerOptionsRequirePath ?? undefined,
 		experimentalResolveStyleCssClasses: vueOptions.experimentalResolveStyleCssClasses ?? 'scoped',
 		experimentalRfc436: vueOptions.experimentalRfc436 ?? false,
 	};
-}
-
-function resolveVueCompilerOptionsWorker(rawOptions: {
-	[key: string]: any,
-	experimentalTemplateCompilerOptionsRequirePath?: string,
-}, rootPath: string) {
-
-	const result = { ...rawOptions };
-
-	let templateOptionsPath = rawOptions.experimentalTemplateCompilerOptionsRequirePath;
-	if (templateOptionsPath) {
-		if (!path.isAbsolute(templateOptionsPath)) {
-			templateOptionsPath = require.resolve(templateOptionsPath, { paths: [rootPath] });
-		}
-		try {
-			result.experimentalTemplateCompilerOptions = require(templateOptionsPath).default;
-		} catch (error) {
-			console.warn('Failed to require "experimentalTemplateCompilerOptionsRequirePath":', templateOptionsPath);
-			console.error(error);
-		}
-	}
-
-	return result;
 }
