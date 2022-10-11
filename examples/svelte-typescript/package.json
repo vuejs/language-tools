@@ -1,6 +1,6 @@
 {
 	"name": "@volar-examples/svelte-typescript",
-	"version": "1.0.4-patch.1",
+	"version": "1.0.4",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
