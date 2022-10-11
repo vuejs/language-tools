@@ -66,7 +66,10 @@ function createParsedCommandLineBase(
 
 	return {
 		...content,
-		vueOptions,
+		vueOptions: {
+			...vueOptions,
+			...content.raw.vueCompilerOptions,
+		},
 	};
 }
 

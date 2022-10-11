@@ -242,12 +242,12 @@ export function generate(
 					0,
 					{ diagnostic: true },
 				]);
-				codeGen.push('export default ');
+				codeGen.push('export default (');
 			}
 			if (vueCompilerOptions.experimentalRfc436 && sfc.scriptSetup.generic) {
-				codeGen.push(`<${sfc.scriptSetup.generic}>`);
+				codeGen.push(`(<${sfc.scriptSetup.generic}>`);
 			}
-			codeGen.push('((');
+			codeGen.push('(');
 			if (scriptSetupRanges.propsTypeArg) {
 				codeGen.push('__VLS_props: ');
 				addVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
