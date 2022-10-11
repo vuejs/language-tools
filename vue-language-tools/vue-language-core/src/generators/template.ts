@@ -660,7 +660,6 @@ export function generate(
 	function writeEvents(node: CompilerDOM.ElementNode) {
 
 		let _varComponentInstance: string | undefined;
-		let writedInstance = false;
 
 		for (const prop of node.props) {
 			if (
@@ -802,20 +801,23 @@ export function generate(
 
 		function tryWriteInstance() {
 
-			if (writedInstance) {
-				return _varComponentInstance;
+			if (!_varComponentInstance) {
+				const componentVar = componentVars[node.tag];
+
+				if (componentVar) {
+					const _varComponentInstanceA = `__VLS_${elementIndex++}`;
+					const _varComponentInstanceB = `__VLS_${elementIndex++}`;
+					_varComponentInstance = `__VLS_${elementIndex++}`;
+					codeGen.push(`const ${_varComponentInstanceA} = new ${componentVar}({ `);
+					writeProps(node, 'class', 'slots');
+					codeGen.push(`});\n`);
+					codeGen.push(`const ${_varComponentInstanceB} = ${componentVar}({ `);
+					writeProps(node, 'class', 'slots');
+					codeGen.push(`});\n`);
+					codeGen.push(`let ${_varComponentInstance}!: import('./__VLS_types.js').PickNotAny<typeof ${_varComponentInstanceA}, typeof ${_varComponentInstanceB}>;\n`);
+				}
 			}
 
-			const componentVar = componentVars[node.tag];
-
-			if (componentVar) {
-				_varComponentInstance = `__VLS_${elementIndex++}`;
-				codeGen.push(`const ${_varComponentInstance} = new ${componentVar}({ `);
-				writeProps(node, 'class', 'slots');
-				codeGen.push(`});\n`);
-			}
-
-			writedInstance = true;
 			return _varComponentInstance;
 		}
 	}
@@ -1233,15 +1235,19 @@ export function generate(
 				&& prop.name === 'slot'
 			) {
 
-				const varComponentInstance = `__VLS_${elementIndex++}`;
+				const varComponentInstanceA = `__VLS_${elementIndex++}`;
+				const varComponentInstanceB = `__VLS_${elementIndex++}`;
 				const varSlots = `__VLS_${elementIndex++}`;
 
 				if (componentVar && parentEl) {
-					codeGen.push(`const ${varComponentInstance} = new ${componentVar}({ `);
+					codeGen.push(`const ${varComponentInstanceA} = new ${componentVar}({ `);
+					writeProps(parentEl, 'class', 'slots');
+					codeGen.push(`});\n`);
+					codeGen.push(`const ${varComponentInstanceB} = ${componentVar}({ `);
 					writeProps(parentEl, 'class', 'slots');
 					codeGen.push(`});\n`);
 					writeInterpolationVarsExtraCompletion();
-					codeGen.push(`let ${varSlots}!: import('./__VLS_types.js').ExtractComponentSlots<typeof ${varComponentInstance}>;\n`);
+					codeGen.push(`let ${varSlots}!: import('./__VLS_types.js').ExtractComponentSlots<import('./__VLS_types.js').PickNotAny<typeof ${varComponentInstanceA}, typeof ${varComponentInstanceB}>>;\n`);
 				}
 
 				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
