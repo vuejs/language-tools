@@ -97,5 +97,18 @@ export function resolveVueCompilerOptions(vueOptions: VueCompilerOptions): Resol
 		experimentalRuntimeMode: vueOptions.experimentalRuntimeMode ?? 'runtime-dom',
 		experimentalResolveStyleCssClasses: vueOptions.experimentalResolveStyleCssClasses ?? 'scoped',
 		experimentalRfc436: vueOptions.experimentalRfc436 ?? false,
+		experimentalModelPropName: vueOptions.experimentalModelPropName ?? {
+			'': {
+				'input': { type: 'radio' },
+			},
+			'checked': {
+				'input': { type: 'checkbox' },
+			},
+			'value': {
+				'input': true,
+				'textarea': true,
+				'select': true,
+			},
+		},
 	};
 }

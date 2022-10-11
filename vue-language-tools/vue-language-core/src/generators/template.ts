@@ -840,7 +840,7 @@ export function generate(
 						? prop.arg.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY
 							? prop.arg.content
 							: prop.arg.loc.source
-						: getModelValuePropName(node, vueCompilerOptions.target);
+						: getModelValuePropName(node, vueCompilerOptions.target, vueCompilerOptions);
 
 				if (prop.modifiers.some(m => m === 'prop' || m === 'attr')) {
 					attrNameText = attrNameText?.substring(1);
@@ -1791,26 +1791,35 @@ function noEditApply(n: string) {
 }
 // https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
 // https://v3.vuejs.org/guide/forms.html#basic-usage
-function getModelValuePropName(node: CompilerDOM.ElementNode, vueVersion: number) {
+function getModelValuePropName(node: CompilerDOM.ElementNode, vueVersion: number, vueCompilerOptions: ResolvedVueCompilerOptions) {
 
-	const tag = node.tag;
-	const typeAttr = node.props.find(prop => prop.type === CompilerDOM.NodeTypes.ATTRIBUTE && prop.name === 'type') as CompilerDOM.AttributeNode | undefined;
-	const type = typeAttr?.value?.content;
+	for (const modelName in vueCompilerOptions.experimentalModelPropName) {
+		const tags = vueCompilerOptions.experimentalModelPropName[modelName];
+		for (const tag in tags) {
+			if (node.tag === tag || node.tag === hyphenate(tag)) {
+				const attrs = tags[tag];
+				if (typeof attrs === 'object') {
+					let failed = false;
+					for (const attr in attrs) {
+						const attrNode = node.props.find(prop => prop.type === CompilerDOM.NodeTypes.ATTRIBUTE && prop.name === attr) as CompilerDOM.AttributeNode | undefined;
+						if (!attrNode || attrNode.value?.content !== attrs[attr]) {
+							failed = true;
+							break;
+						}
+					}
+					if (!failed) {
+						// all match
+						return modelName || undefined;
+					}
+				}
+				else if (attrs === true) {
+					return modelName || undefined;
+				}
+			}
+		}
+	}
 
-	if (tag === 'input' && type === 'checkbox')
-		return 'checked';
-
-	if (tag === 'input' && type === 'radio')
-		return undefined;
-
-	if (
-		tag === 'input' ||
-		tag === 'textarea' ||
-		tag === 'select' ||
-		vueVersion < 3
-	) return 'value';
-
-	return 'modelValue';
+	return vueVersion < 3 ? 'value' : 'modelValue';
 }
 
 // TODO: track https://github.com/vuejs/vue-next/issues/3498

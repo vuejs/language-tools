@@ -29,6 +29,7 @@ export interface ResolvedVueCompilerOptions {
 	experimentalRuntimeMode: 'runtime-dom' | 'runtime-uni-app';
 	experimentalResolveStyleCssClasses: 'scoped' | 'always' | 'never';
 	experimentalRfc436: boolean;
+	experimentalModelPropName: Record<string, Record<string, boolean | Record<string, string>>>;
 }
 
 export type VueLanguagePlugin = (ctx: {

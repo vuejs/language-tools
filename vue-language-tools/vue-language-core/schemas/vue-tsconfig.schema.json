@@ -33,17 +33,17 @@
 				},
 				"dataAttributes": {
 					"type": "array",
-					"default": [],
+					"default": [ ],
 					"markdownDescription": "A glob matcher array that should always avoid recognized as HTML Attributes and Component props."
 				},
 				"htmlAttributes": {
 					"type": "array",
-					"default": ["aria-*"],
+					"default": [ "aria-*" ],
 					"markdownDescription": "A glob matcher array that should always be recognizing as HTML Attributes rather than Component props. Attribute name will never convert to camelize case."
 				},
 				"plugins": {
 					"type": "array",
-					"default": [],
+					"default": [ ],
 					"markdownDescription": "Plugins to be used in the SFC compiler."
 				},
 				"optionsWrapper": {
@@ -87,6 +87,23 @@
 					"type": "boolean",
 					"default": false,
 					"markdownDescription": "https://github.com/vuejs/rfcs/discussions/436"
+				},
+				"experimentalModelPropName": {
+					"type": "object",
+					"default": {
+						"": {
+							"input": { "type": "radio" }
+						},
+						"checked": {
+							"input": { "type": "checkbox" }
+						},
+						"value": {
+							"input": true,
+							"textarea": true,
+							"select": true
+						}
+					},
+					"markdownDescription": "https://github.com/vuejs/rfcs/discussions/1969"
 				}
 			}
 		}
