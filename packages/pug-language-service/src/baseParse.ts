@@ -6,11 +6,15 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 
 const pugParser = require('pug-parser');
 
+export enum MappingKind {
+	EmptyTagCompletion,
+}
+
 export function baseParse(pugCode: string) {
 
 	const fileName = 'foo.pug';
 	const pugTextDocument = TextDocument.create('file:///a.pug', 'jade', 0, pugCode);
-	const codeGen: Segment<{ isEmptyTagCompletion: boolean; } | undefined>[] = [];
+	const codeGen: Segment<MappingKind | undefined>[] = [];
 	let error: {
 		code: string,
 		msg: string,
@@ -38,7 +42,7 @@ export function baseParse(pugCode: string) {
 				'x',
 				undefined,
 				emptyLineEnd,
-				{ isEmptyTagCompletion: true },
+				MappingKind.EmptyTagCompletion,
 			]);
 			codeGen.push('x />');
 		}
