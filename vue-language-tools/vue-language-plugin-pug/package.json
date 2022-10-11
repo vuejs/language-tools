@@ -14,6 +14,7 @@
 	},
 	"dependencies": {
 		"@volar/pug-language-service": "1.0.3",
+		"@volar/source-map": "1.0.3",
 		"@volar/vue-language-core": "1.0.3"
 	}
 }

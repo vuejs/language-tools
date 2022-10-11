@@ -18,14 +18,14 @@ importers:
       vue: ^3.2.38
     optionalDependencies:
       '@lerna-lite/cli': 1.11.3
-      '@vscode/test-web': 0.0.30
+      '@vscode/test-web': 0.0.31
       vitepress: 1.0.0-alpha.13
       vue: 3.2.40
     devDependencies:
       '@types/node': 18.8.0
       typescript: 4.9.1-beta
-      vite: 3.1.6
-      vitest: 0.24.0
+      vite: 3.1.7
+      vitest: 0.24.1
 
   examples/svelte-language-core:
     specifiers:
@@ -330,9 +330,11 @@ importers:
   vue-language-tools/vue-language-plugin-pug:
     specifiers:
       '@volar/pug-language-service': 1.0.3
+      '@volar/source-map': 1.0.3
       '@volar/vue-language-core': 1.0.3
     dependencies:
       '@volar/pug-language-service': link:../../packages/pug-language-service
+      '@volar/source-map': link:../../packages/source-map
       '@volar/vue-language-core': link:../vue-language-core
 
   vue-language-tools/vue-language-server:
@@ -685,25 +687,22 @@ packages:
     resolution: {integrity: sha512-XPSJHWmi394fuUuzDnGz1wiKqWfo1yXecHQMRf2l6hztTO+nPru658AyDngaBe7isIxEkRsPR3FZh+s7iVa4Uw==}
     dev: false
 
-  /@koa/cors/3.4.1:
-    resolution: {integrity: sha512-/sG9NlpGZ/aBpnRamIlGs+wX+C/IJ5DodNK7iPQIVCG4eUQdGeshGhWQ6JCi7tpnD9sCtFXcS04iTimuaJfh4Q==}
+  /@koa/cors/3.4.3:
+    resolution: {integrity: sha512-WPXQUaAeAMVaLTEFpoq3T2O1C+FstkjJnDQqy95Ck1UdILajsRhu6mhJ8H2f4NFPRBoCNN+qywTJfq/gGki5mw==}
     engines: {node: '>= 8.0.0'}
     dependencies:
       vary: 1.1.2
     dev: false
     optional: true
 
-  /@koa/router/10.1.1:
-    resolution: {integrity: sha512-ORNjq5z4EmQPriKbR0ER3k4Gh7YGNhWDL7JBW+8wXDrHLbWYKYSJaOJ9aN06npF5tbTxe2JBOsurpJDAvjiXKw==}
-    engines: {node: '>= 8.0.0'}
+  /@koa/router/12.0.0:
+    resolution: {integrity: sha512-cnnxeKHXlt7XARJptflGURdJaO+ITpNkOHmQu7NHmCoRinPbyvFzce/EG/E8Zy81yQ1W9MoSdtklc3nyaDReUw==}
+    engines: {node: '>= 12'}
     dependencies:
-      debug: 4.3.4
-      http-errors: 1.8.1
+      http-errors: 2.0.0
       koa-compose: 4.1.0
       methods: 1.1.2
       path-to-regexp: 6.2.1
-    transitivePeerDependencies:
-      - supports-color
     dev: false
     optional: true
 
@@ -1182,14 +1181,14 @@ packages:
       '@types/node': 18.8.0
     dev: true
 
-  /@vitejs/plugin-vue/3.1.0_vite@3.1.6+vue@3.2.40:
+  /@vitejs/plugin-vue/3.1.0_vite@3.1.7+vue@3.2.40:
     resolution: {integrity: sha512-fmxtHPjSOEIRg6vHYDaem+97iwCUg/uSIaTzp98lhELt2ISOQuDo2hbkBdXod0g15IhfPMQmAxh4heUks2zvDA==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
       vite: ^3.0.0
       vue: ^3.2.25
     dependencies:
-      vite: 3.1.6
+      vite: 3.1.7
       vue: 3.2.40
     dev: false
     optional: true
@@ -1335,14 +1334,14 @@ packages:
       vscode-uri: 2.1.2
     dev: false
 
-  /@vscode/test-web/0.0.30:
-    resolution: {integrity: sha512-l1StjU5FINfgVrgaKxSrbh+wrpZiFqTT5uQ/r1qano2yn9zWYmZUczQjjzzcUI0m4/38IPkwwI3gezSwdkKtpQ==}
-    engines: {node: '>=8.9.3'}
+  /@vscode/test-web/0.0.31:
+    resolution: {integrity: sha512-vMXPgklzoslrbDyNf7b6dRJYQblcLj7K9n7Mv8TPhExBYjwBxd+vjPql6n16HtrgCW4yqNi5BBZ2kffQx7eMyQ==}
+    engines: {node: '>=14'}
     hasBin: true
     requiresBuild: true
     dependencies:
-      '@koa/cors': 3.4.1
-      '@koa/router': 10.1.1
+      '@koa/cors': 3.4.3
+      '@koa/router': 12.0.0
       decompress: 4.2.1
       decompress-targz: 4.1.1
       get-stream: 6.0.1
@@ -3215,6 +3214,18 @@ packages:
       inherits: 2.0.4
       setprototypeof: 1.2.0
       statuses: 1.5.0
+      toidentifier: 1.0.1
+    dev: false
+    optional: true
+
+  /http-errors/2.0.0:
+    resolution: {integrity: sha512-FtwrG/euBzaEjYeRqOgly7G0qviiXoJWnvEH2Z1plBdXgbyjv34pHTSb9zoeHMyDy33+DWy5Wt9Wo+TURtOYSQ==}
+    engines: {node: '>= 0.8'}
+    dependencies:
+      depd: 2.0.0
+      inherits: 2.0.4
+      setprototypeof: 1.2.0
+      statuses: 2.0.1
       toidentifier: 1.0.1
     dev: false
     optional: true
@@ -5402,6 +5413,12 @@ packages:
     dev: false
     optional: true
 
+  /statuses/2.0.1:
+    resolution: {integrity: sha512-RwNA9Z/7PrK06rYLIzFMlaF+l73iwpzsqRIFgbMLbTcLD6cOao82TaWefPXQvB2fOC4AjuYSEndS7N/mTCbkdQ==}
+    engines: {node: '>= 0.8'}
+    dev: false
+    optional: true
+
   /string-width/4.2.3:
     resolution: {integrity: sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==}
     engines: {node: '>=8'}
@@ -5594,8 +5611,8 @@ packages:
     dev: false
     optional: true
 
-  /tinybench/2.2.1:
-    resolution: {integrity: sha512-VxB1P8DUhpCC1j2WtKgFYpv3SwU7vtnfmG29cK7hXcqyD7lLiq6SYCVpDceoAT99mvTN+V8Ay4OdtZQbB72+Sw==}
+  /tinybench/2.3.0:
+    resolution: {integrity: sha512-zs1gMVBwyyG2QbVchYIbnabRhMOCGvrwZz/q+SV+LIMa9q5YDQZi2kkI6ZRqV2Bz7ba1uvrc7ieUoE4KWnGeKg==}
     dev: true
 
   /tinypool/0.3.0:
@@ -5845,8 +5862,8 @@ packages:
     dev: false
     optional: true
 
-  /vite/3.1.6:
-    resolution: {integrity: sha512-qMXIwnehvvcK5XfJiXQUiTxoYAEMKhM+jqCY6ZSTKFBKu1hJnAKEzP3AOcnTerI0cMZYAaJ4wpW1wiXLMDt4mA==}
+  /vite/3.1.7:
+    resolution: {integrity: sha512-5vCAmU4S8lyVdFCInu9M54f/g8qbOMakVw5xJ4pjoaDy5wgy9sLLZkGdSLN52dlsBqh0tBqxjaqqa8LgPqwRAA==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
     peerDependencies:
@@ -5878,12 +5895,12 @@ packages:
     dependencies:
       '@docsearch/css': 3.2.1
       '@docsearch/js': 3.2.1
-      '@vitejs/plugin-vue': 3.1.0_vite@3.1.6+vue@3.2.40
+      '@vitejs/plugin-vue': 3.1.0_vite@3.1.7+vue@3.2.40
       '@vue/devtools-api': 6.4.2
       '@vueuse/core': 9.3.0_vue@3.2.40
       body-scroll-lock: 4.0.0-beta.0
       shiki: 0.11.1
-      vite: 3.1.6
+      vite: 3.1.7
       vue: 3.2.40
     transitivePeerDependencies:
       - '@algolia/client-search'
@@ -5898,8 +5915,8 @@ packages:
     dev: false
     optional: true
 
-  /vitest/0.24.0:
-    resolution: {integrity: sha512-k5j3FPTor+MJx2x0pDW2gtVk+s9VC6nSHT3SoqOIk9Je5fFpPgict+Xy2eAVXUogvSixs45Ya1oZk+oK93BO0w==}
+  /vitest/0.24.1:
+    resolution: {integrity: sha512-NKkK1xnDIOOr42pKBfGQQl6b6IWdFVBpG6ZS1T+nUlJuqcOiZ7lxjVwHy9wrtTYpJ0BWww9y6bSGYXubD29Nag==}
     engines: {node: '>=v14.16.0'}
     hasBin: true
     peerDependencies:
@@ -5927,10 +5944,10 @@ packages:
       debug: 4.3.4
       local-pkg: 0.4.2
       strip-literal: 0.4.2
-      tinybench: 2.2.1
+      tinybench: 2.3.0
       tinypool: 0.3.0
       tinyspy: 1.0.2
-      vite: 3.1.6
+      vite: 3.1.7
     transitivePeerDependencies:
       - less
       - sass
