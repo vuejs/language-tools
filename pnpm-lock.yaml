@@ -73,12 +73,12 @@ importers:
     specifiers:
       '@types/vscode': 1.67.0
       '@volar-examples/svelte-language-server': 1.0.3
-      typesafe-path: ^0.2.1
+      typesafe-path: ^0.2.2
       vsce: latest
       vscode-languageclient: ^8.0.2
     dependencies:
       '@volar-examples/svelte-language-server': link:../svelte-language-server
-      typesafe-path: 0.2.1
+      typesafe-path: 0.2.2
       vscode-languageclient: 8.0.2
     devDependencies:
       '@types/vscode': 1.67.0
@@ -126,7 +126,7 @@ importers:
       path-browserify: ^1.0.1
       punycode: ^2.1.1
       semver: ^7.3.7
-      typesafe-path: ^0.2.1
+      typesafe-path: ^0.2.2
       vsce: latest
       vscode-languageclient: ^8.0.2
       vscode-nls: ^5.2.0
@@ -144,7 +144,7 @@ importers:
       path-browserify: 1.0.1
       punycode: 2.1.1
       semver: 7.3.7
-      typesafe-path: 0.2.1
+      typesafe-path: 0.2.2
       vsce: 2.11.0
       vscode-languageclient: 8.0.2
       vscode-nls: 5.2.0
@@ -165,7 +165,7 @@ importers:
       '@volar/language-service': 1.0.3
       '@volar/shared': 1.0.3
       request-light: ^0.5.8
-      typesafe-path: ^0.2.1
+      typesafe-path: ^0.2.2
       vscode-html-languageservice: ^5.0.1
       vscode-languageserver: ^8.0.2
       vscode-languageserver-protocol: ^3.17.2
@@ -176,7 +176,7 @@ importers:
       '@volar/language-service': link:../language-service
       '@volar/shared': link:../shared
       request-light: 0.5.8
-      typesafe-path: 0.2.1
+      typesafe-path: 0.2.2
       vscode-html-languageservice: 5.0.2
       vscode-languageserver: 8.0.2
       vscode-languageserver-protocol: 3.17.2
@@ -245,12 +245,12 @@ importers:
 
   packages/shared:
     specifiers:
-      typesafe-path: ^0.2.1
+      typesafe-path: ^0.2.2
       vscode-languageserver-protocol: ^3.17.2
       vscode-languageserver-textdocument: ^1.0.7
       vscode-uri: ^3.0.3
     dependencies:
-      typesafe-path: 0.2.1
+      typesafe-path: 0.2.2
       vscode-languageserver-protocol: 3.17.2
       vscode-languageserver-textdocument: 1.0.7
       vscode-uri: 3.0.6
@@ -375,11 +375,11 @@ importers:
     specifiers:
       '@volar/language-core': 1.0.3
       '@volar/vue-language-core': 1.0.3
-      typesafe-path: ^0.2.1
+      typesafe-path: ^0.2.2
     dependencies:
       '@volar/language-core': link:../../packages/language-core
       '@volar/vue-language-core': link:../vue-language-core
-      typesafe-path: 0.2.1
+      typesafe-path: 0.2.2
 
   vue-language-tools/vue-language-core:
     specifiers:
@@ -422,6 +422,7 @@ importers:
       '@volar/vue-language-core': 1.0.3
       '@volar/vue-language-service': 1.0.3
       vscode-languageserver-protocol: ^3.17.2
+      vue-component-meta: 1.0.3
     dependencies:
       '@volar/language-core': link:../../packages/language-core
       '@volar/language-server': link:../../packages/language-server
@@ -429,6 +430,7 @@ importers:
       '@volar/vue-language-core': link:../vue-language-core
       '@volar/vue-language-service': link:../vue-language-service
       vscode-languageserver-protocol: 3.17.2
+      vue-component-meta: link:../vue-component-meta
 
   vue-language-tools/vue-language-service:
     specifiers:
@@ -5731,6 +5733,10 @@ packages:
 
   /typesafe-path/0.2.1:
     resolution: {integrity: sha512-dngiIyVnCiCxyRaWwhi1aCBF8amSdjARnwaIjGVRmkzZ1613RLIi/B33VWn6/ofLlBzi/teHf5t7RnZtbOerbg==}
+    dev: false
+
+  /typesafe-path/0.2.2:
+    resolution: {integrity: sha512-OJabfkAg1WLZSqJAJ0Z6Sdt3utnbzr/jh+NAHoyWHJe8CMSy79Gm085094M9nvTPy22KzTVn5Zq5mbapCI/hPA==}
 
   /typescript/4.9.1-beta:
     resolution: {integrity: sha512-D4c0t1+sMOS5Hy8DQsGFfEYUuKzolXhf+7e/N0Td5etBPflEYzVwWLBrbVgHpLpLC53OJQCtxk31+NWO2SBPaA==}

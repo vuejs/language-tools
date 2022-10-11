@@ -4,9 +4,10 @@ import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-service';
 import * as vue2 from '@volar/vue-language-core';
 import * as nameCasing from '@volar/vue-language-service';
-import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest, GetVueCompilerOptionsRequest } from './protocol';
+import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest, GetVueCompilerOptionsRequest, GetComponentMeta } from './protocol';
 import { VueServerInitializationOptions } from './types';
 import type * as ts from 'typescript/lib/tsserverlibrary';
+import * as meta from 'vue-component-meta';
 
 const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageServiceHost> = (initOptions) => {
 
@@ -70,6 +71,23 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 				connection.onRequest(GetConvertAttrCasingEditsRequest.type, async params => {
 					const languageService = await getService(params.textDocument.uri);
 					return nameCasing.convertAttrName(languageService.context, params.textDocument.uri, params.casing);
+				});
+
+				const checkers = new WeakMap<embedded.LanguageServiceHost, meta.ComponentMetaChecker>();
+
+				connection.onRequest(GetComponentMeta.type, async params => {
+					const languageService = await getService(params.uri);
+					let checker = checkers.get(languageService.context.host);
+					if (!checker) {
+						checker = meta.baseCreate(
+							languageService.context.host as vue.LanguageServiceHost,
+							{},
+							languageService.context.host.getCurrentDirectory() + '/tsconfig.json.global.vue',
+							languageService.context.pluginContext.typescript.module,
+						);
+						checkers.set(languageService.context.host, checker);
+					}
+					return checker.getComponentMeta(shared.getPathOfUri(params.uri));
 				});
 			},
 		},

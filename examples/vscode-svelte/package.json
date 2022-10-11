@@ -75,7 +75,7 @@
 	},
 	"dependencies": {
 		"@volar-examples/svelte-language-server": "1.0.3",
-		"typesafe-path": "^0.2.1",
+		"typesafe-path": "^0.2.2",
 		"vscode-languageclient": "^8.0.2"
 	}
 }

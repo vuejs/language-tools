@@ -8,6 +8,7 @@ import * as autoInsertion from './features/autoInsertion';
 import * as tsVersion from './features/tsVersion';
 import * as verifyAll from './features/verifyAll';
 import * as virtualFiles from './features/virtualFiles';
+import * as componentMeta from './features/componentMeta';
 import * as tsconfig from './features/tsconfig';
 import * as doctor from './features/doctor';
 import * as fileReferences from './features/fileReferences';
@@ -108,6 +109,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		verifyAll.register(context, semanticClient);
 		autoInsertion.register(context, syntacticClient, semanticClient);
 		virtualFiles.register(context, semanticClient);
+		componentMeta.register(context, semanticClient);
 	}
 
 	async function requestReloadVscode() {
