@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.0.4 (2022/10/12)
+
+- feat: Support generic typed template slots for RFC 436 ([#1987](https://github.com/johnsoncodehk/volar/issues/1987))
+- feat: add `resolveTemplateCompilerOptions` API for `VueLanguagePlugin`
+- feat: support intellisense for `generic` attribute ([#1967](https://github.com/johnsoncodehk/volar/issues/1967))
+- feat: add `Show Component Meta` command for inspect `vue-component-meta` result
+- feat: add `vueCompilerOptions.experimentalModelPropName` for customize `v-model` binding prop for vue 2 component ([#1969](https://github.com/johnsoncodehk/volar/issues/1969))
+- fix: `TypeScript Vue Plugin (Volar)` stop working
+- fix: change `vueCompilerOptions.dataAttributes` default value from `["data-*"]` to `[]` ([#1965](https://github.com/johnsoncodehk/volar/issues/1965))
+- fix: component props order should be on the top ([#1972](https://github.com/johnsoncodehk/volar/issues/1972))
+- fix: `@volar/vue-language-plugin-pug` crash due to missing depend
+- fix: component tag highlight not working for pug template ([#1977](https://github.com/johnsoncodehk/volar/issues/1977))
+- fix: references codeLens number incorrect ([#1989](https://github.com/johnsoncodehk/volar/issues/1989))
+
+**Breaking changes**
+
+- Removed `experimentalTemplateCompilerOptions`, `experimentalTemplateCompilerOptionsRequirePath` from `vueCompilerOptions` ([#1991](https://github.com/johnsoncodehk/volar/issues/1991))
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
+
 ## 1.0.3 (2022/10/10)
 
 - feat: support `as` expressions in export assignment for script setup ([#1882](https://github.com/johnsoncodehk/volar/issues/1882))
@@ -13,12 +37,6 @@
 - fix(doctor): cannot resolve `vueCompilerOptions` from extends tsconfig
 - fix(doctor): cannot resolve vue version from sub folder ([#1961](https://github.com/johnsoncodehk/volar/issues/1961)) ([#1962](https://github.com/johnsoncodehk/volar/issues/1962))
 - fix: scoped class name no longer displays underline ([#1960](https://github.com/johnsoncodehk/volar/issues/1960))
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 1.0.1 (2022/10/9)
 
