@@ -1,5 +1,6 @@
 import * as vscode from 'vscode-languageserver-protocol';
 import { LanguageServicePlugin, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
+import { VueSourceFile } from '@volar/vue-language-core';
 
 const showReferencesCommand = 'volar.show-references';
 
@@ -68,12 +69,21 @@ export default function (options: {
 				if (!vueDocument)
 					return codeLens;
 
-				const sourceMaps = vueDocument.getSourceMaps();
-				const currentSourceMap = sourceMaps.find(sourceMap => sourceMap.toGeneratedPosition(data.position));
+				const document = vueDocument.getDocument();
+				const offset = document.offsetAt(data.position);
+				const file = vueDocument.file as VueSourceFile;
+				const blocks = [
+					file.sfc.script,
+					file.sfc.scriptSetup,
+					file.sfc.template,
+					...file.sfc.styles,
+					...file.sfc.customBlocks,
+				];
 				const references = await options.findReference(data.uri, data.position) ?? [];
+				const sourceBlock = blocks.find(block => block && offset >= block.startTagEnd && offset <= block.endTagStart);
 				const referencesInDifferentDocument = references.filter(reference =>
 					reference.uri !== data.uri // different file
-					|| sourceMaps.some(sourceMap => sourceMap.toGeneratedPosition(reference.range.start) && sourceMap !== currentSourceMap) // different embedded document
+					|| sourceBlock !== blocks.find(block => block && document.offsetAt(reference.range.start) >= block.startTagEnd && document.offsetAt(reference.range.end) <= block.endTagStart) // different block
 				);
 				const referencesCount = referencesInDifferentDocument.length ?? 0;
 
