@@ -242,12 +242,12 @@ export function generate(
 					0,
 					{ diagnostic: true },
 				]);
-				codeGen.push('export default (');
+				codeGen.push('export default ');
 			}
 			if (vueCompilerOptions.experimentalRfc436 && sfc.scriptSetup.generic) {
 				codeGen.push(`<${sfc.scriptSetup.generic}>`);
 			}
-			codeGen.push('(');
+			codeGen.push('((');
 			if (scriptSetupRanges.propsTypeArg) {
 				codeGen.push('__VLS_props: ');
 				addVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
@@ -398,10 +398,9 @@ export function generate(
 			else {
 				codeGen.push(`return {} as typeof __VLS_Component`);
 				if (htmlGen?.slotsNum) {
-					codeGen.push(` & { new (): { $slots: ReturnType<typeof __VLS_template> }`);
+					codeGen.push(` & { new (): { $slots: ReturnType<typeof __VLS_template> } }`);
 				}
 				codeGen.push(`;\n`);
-				codeGen.push(`};\n`);
 			}
 			codeGen.push(`};\n`);
 			codeGen.push(`return {} as unknown as Awaited<ReturnType<typeof __VLS_setup>>;\n`);
