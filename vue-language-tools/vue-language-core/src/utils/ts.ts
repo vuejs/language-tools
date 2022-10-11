@@ -82,7 +82,7 @@ export function resolveVueCompilerOptions(vueOptions: VueCompilerOptions): Resol
 		jsxTemplates: vueOptions.jsxTemplates ?? false,
 		strictTemplates: vueOptions.strictTemplates ?? false,
 		skipTemplateCodegen: vueOptions.skipTemplateCodegen ?? false,
-		dataAttributes: vueOptions.dataAttributes ?? ['data-*'],
+		dataAttributes: vueOptions.dataAttributes ?? [],
 		htmlAttributes: vueOptions.htmlAttributes ?? ['aria-*'],
 		optionsWrapper: vueOptions.optionsWrapper ?? (
 			target >= 2.7

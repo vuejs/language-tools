@@ -33,7 +33,7 @@
 				},
 				"dataAttributes": {
 					"type": "array",
-					"default": ["data-*"],
+					"default": [],
 					"markdownDescription": "A glob matcher array that should always avoid recognized as HTML Attributes and Component props."
 				},
 				"htmlAttributes": {
