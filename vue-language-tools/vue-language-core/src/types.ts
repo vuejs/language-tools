@@ -27,8 +27,6 @@ export interface ResolvedVueCompilerOptions {
 
 	// experimental
 	experimentalRuntimeMode: 'runtime-dom' | 'runtime-uni-app';
-	experimentalTemplateCompilerOptions: any;
-	experimentalTemplateCompilerOptionsRequirePath: string | undefined;
 	experimentalResolveStyleCssClasses: 'scoped' | 'always' | 'never';
 	experimentalRfc436: boolean;
 }

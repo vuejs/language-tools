@@ -8,18 +8,11 @@ interface Loc {
 }
 type Node = CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.ExpressionNode | CompilerDOM.AttributeNode | CompilerDOM.DirectiveNode;
 
-const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions }) => {
+const plugin: VueLanguagePlugin = ({ modules }) => {
 
 	return {
 
 		version: 1,
-
-		resolveTemplateCompilerOptions(options) {
-			return {
-				...options,
-				...vueCompilerOptions.experimentalTemplateCompilerOptions,
-			};
-		},
 
 		compileSFCTemplate(lang, template, options) {
 
