@@ -53,16 +53,18 @@ export declare function directiveFunction<T>(dir: T):
 export declare function withScope<T, K>(ctx: T, scope: K): ctx is T & K;
 export declare function makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
 
+// TODO: make it stricter between class component type and functional component type
 export type ExtractComponentSlots<T> =
 	IsAny<T> extends true ? Record<string, any>
 	: T extends { ${slots}?: infer S } ? { [K in keyof S]-?: S[K] extends ((obj: infer O) => any) | undefined ? O : any }
+	: T extends { children?: infer S } ? { [K in keyof S]-?: S[K] extends ((obj: infer O) => any) | undefined ? O : any }
 	: Record<string, any>;
 
 export type FillingEventArg_ParametersLength<E extends (...args: any) => any> = IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];
 export type FillingEventArg<E> = E extends (...args: any) => any ? FillingEventArg_ParametersLength<E> extends 0 ? ($event?: undefined) => ReturnType<E> : E : E;
 
 export type ExtractProps<T> =
-	T extends FunctionalComponent<infer P> ? P
+	T extends (...args: any) => { props: infer Props } ? Props
 	: T extends new (...args: any) => { $props: infer Props } ? Props
 	: T; // IntrinsicElement
 export type ReturnVoid<T> = T extends (...payload: infer P) => any ? (...payload: P) => void : (...args: any) => void;
