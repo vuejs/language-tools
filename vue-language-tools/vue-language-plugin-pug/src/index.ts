@@ -1,7 +1,7 @@
 import type { VueLanguagePlugin } from '@volar/vue-language-core';
 import * as pug from '@volar/pug-language-service';
 import { SourceMapBase } from '@volar/source-map';
-import { MappingKind } from 'packages/pug-language-service/src/baseParse';
+import { MappingKind } from '@volar/pug-language-service';
 
 const plugin: VueLanguagePlugin = ({ modules }) => {
 
