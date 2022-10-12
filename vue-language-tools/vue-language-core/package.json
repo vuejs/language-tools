@@ -1,6 +1,6 @@
 {
 	"name": "@volar/vue-language-core",
-	"version": "1.0.5",
+	"version": "1.0.6",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -13,8 +13,8 @@
 		"directory": "vue-language-tools/vue-language-core"
 	},
 	"dependencies": {
-		"@volar/language-core": "1.0.5",
-		"@volar/source-map": "1.0.5",
+		"@volar/language-core": "1.0.6",
+		"@volar/source-map": "1.0.6",
 		"@vue/compiler-dom": "^3.2.40",
 		"@vue/compiler-sfc": "^3.2.40",
 		"@vue/reactivity": "^3.2.40",
