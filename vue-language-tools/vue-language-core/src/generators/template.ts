@@ -1183,7 +1183,7 @@ export function generate(
 				end--;
 			}
 			codeGen.push([
-				toUnicode(attrNode.content),
+				toUnicodeIfNeed(attrNode.content),
 				'template',
 				[start, end],
 				getCaps(capabilitiesSet.all),
@@ -1542,7 +1542,7 @@ export function generate(
 				prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
 				&& prop.name !== 'name' // slot name
 			) {
-				const propValue = prop.value !== undefined ? `"${toUnicode(prop.value.content)}"` : 'true';
+				const propValue = prop.value !== undefined ? `"${toUnicodeIfNeed(prop.value.content)}"` : 'true';
 				writeObjectProperty(
 					prop.name,
 					prop.loc.start.offset,
@@ -1771,6 +1771,12 @@ export function walkElementNodes(node: CompilerDOM.RootNode | CompilerDOM.Templa
 	}
 }
 
+function toUnicodeIfNeed(str: string) {
+	if (str.indexOf('\\') === -1 && str.indexOf('\n') === -1) {
+		return str;
+	}
+	return toUnicode(str);
+}
 function toUnicode(str: string) {
 	return str.split('').map(value => {
 		var temp = value.charCodeAt(0).toString(16).padStart(4, '0');
