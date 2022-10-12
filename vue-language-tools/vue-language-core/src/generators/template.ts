@@ -881,7 +881,7 @@ export function generate(
 					writePropName(
 						attrNameText,
 						isStatic,
-						[prop.loc.start.offset, prop.loc.start.offset + 'v-model'.length],
+						[prop.loc.start.offset, prop.loc.start.offset + prop.loc.source.indexOf('=')],
 						getCaps(capabilitiesSet.attr),
 						(prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}),
 					);
