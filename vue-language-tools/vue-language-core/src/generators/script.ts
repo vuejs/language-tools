@@ -242,8 +242,9 @@ export function generate(
 					0,
 					{ diagnostic: true },
 				]);
-				codeGen.push('export default (');
+				codeGen.push('export default ');
 			}
+			codeGen.push('(');
 			if (vueCompilerOptions.experimentalRfc436 && sfc.scriptSetup.generic) {
 				codeGen.push(`<`);
 				codeGen.push([
