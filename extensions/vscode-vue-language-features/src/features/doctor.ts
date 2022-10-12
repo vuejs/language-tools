@@ -159,11 +159,11 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		const typesNodeMod = getWorkspacePackageJson(fileUri.fsPath, '@types/node');
 		if (typesNodeMod && vueMod && semver.gte(typesNodeMod.json.version, '18.8.1') && semver.gte(vueMod.json.version, '3.0.0') && semver.lte(vueMod.json.version, '3.2.40')) {
 			problems.push({
-				title: '`@types/node` verion incompatible',
+				title: '`@types/node` version incompatible',
 				message: [
-					'`@types/node` verion `' + typesNodeMod.json.version + '` is incompatible to Vue version `' + vueMod.json.version + '`, it will cause DOM event type broken in template.',
+					'`@types/node` version `' + typesNodeMod.json.version + '` is incompatible to Vue version `' + vueMod.json.version + '`, it will cause DOM event type broken in template.',
 					'You can downgrade `@types/node` to `18.8.0`, or update Vue to `3.2.41` (if released) or later.',
-					'Issues: https://github.com/johnsoncodehk/volar/issues/1985',
+					'Issue: https://github.com/johnsoncodehk/volar/issues/1985',
 				].join('\n\n'),
 			});
 		}
