@@ -28,8 +28,9 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 
 	const sourceUriToVirtualUris = new Map<string, string[]>();
 	const virtualUriToSourceEditor = new Map<string, vscode.TextEditor>();
-	const virtualUriToSourceMap = new Map<string, SourceMapBase>();
+	const virtualUriToSourceMap = new Map<string, [number, SourceMapBase]>();
 	const docChangeEvent = new vscode.EventEmitter<vscode.Uri>();
+	let updateDecorationsTimeout: NodeJS.Timeout | undefined;
 
 	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(update));
 	context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(update));
@@ -48,13 +49,16 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			async provideTextDocumentContent(uri: vscode.Uri): Promise<string | undefined> {
 
 				const fileName = uri.with({ scheme: 'file' }).fsPath;
-				const sourceUri = virtualUriToSourceEditor.get(uri.toString());
+				const sourceEditor = virtualUriToSourceEditor.get(uri.toString());
 
-				if (sourceUri) {
+				if (sourceEditor) {
 
-					const virtual = await client.sendRequest(GetVirtualFileRequest.type, { sourceFileUri: sourceUri.document.uri.toString(), virtualFileName: fileName });
+					const virtual = await client.sendRequest(GetVirtualFileRequest.type, { sourceFileUri: sourceEditor.document.uri.toString(), virtualFileName: fileName });
 
-					virtualUriToSourceMap.set(uri.toString(), new SourceMapBase(virtual.mappings));
+					virtualUriToSourceMap.set(uri.toString(), [sourceEditor.document.version, new SourceMapBase(virtual.mappings)]);
+
+					clearTimeout(updateDecorationsTimeout);
+					updateDecorationsTimeout = setTimeout(update, 100);
 
 					return virtual.content;
 				}
@@ -84,12 +88,14 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			const sourceEditor = virtualUriToSourceEditor.get(vscode.window.activeTextEditor.document.uri.toString()) ?? vscode.window.activeTextEditor;
 			const virtualUris = sourceUriToVirtualUris.get(sourceEditor.document.uri.toString());
 			const virtualEditors = vscode.window.visibleTextEditors.filter(editor => virtualUris?.includes(editor.document.uri.toString()));;
-			if (virtualEditors) {
+			if (virtualEditors.length) {
 				let mappingDecorationRanges: vscode.Range[] = [];
 				let mappingSelectionDecorationRanges: vscode.Range[] = [];
+				let shouldUpdate = false;
 				for (const virtualEditor of virtualEditors) {
-					const map = virtualUriToSourceMap.get(virtualEditor.document.uri.toString());
-					if (map) {
+					const [version, map] = virtualUriToSourceMap.get(virtualEditor.document.uri.toString()) ?? [undefined, undefined];
+					if (map && version === sourceEditor.document.version) {
+						shouldUpdate = true;
 						mappingDecorationRanges = mappingDecorationRanges.concat(map.mappings.map(mapping => new vscode.Range(
 							sourceEditor.document.positionAt(mapping.sourceRange[0]),
 							sourceEditor.document.positionAt(mapping.sourceRange[1]),
@@ -135,8 +141,10 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 						}
 					}
 				}
-				sourceEditor.setDecorations(mappingDecorationType, mappingDecorationRanges);
-				sourceEditor.setDecorations(mappingSelectionDecorationType, mappingSelectionDecorationRanges);
+				if (shouldUpdate) {
+					sourceEditor.setDecorations(mappingDecorationType, mappingDecorationRanges);
+					sourceEditor.setDecorations(mappingSelectionDecorationType, mappingSelectionDecorationRanges);
+				}
 			}
 		}
 	}
