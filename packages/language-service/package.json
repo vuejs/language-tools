@@ -18,11 +18,11 @@
 		"@volar/source-map": "1.0.5",
 		"@volar/transforms": "1.0.5",
 		"@volar/typescript-faster": "1.0.5",
-		"@vue/reactivity": "^3.2.38",
-		"vscode-html-languageservice": "^5.0.1",
-		"vscode-json-languageservice": "^5.1.0",
+		"@vue/reactivity": "^3.2.40",
+		"vscode-html-languageservice": "^5.0.2",
+		"vscode-json-languageservice": "^5.1.1",
 		"vscode-languageserver-protocol": "^3.17.2",
 		"vscode-languageserver-textdocument": "^1.0.7",
-		"vscode-uri": "^3.0.3"
+		"vscode-uri": "^3.0.6"
 	}
 }

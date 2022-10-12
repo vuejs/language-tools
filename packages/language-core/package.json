@@ -14,7 +14,7 @@
 	},
 	"dependencies": {
 		"@volar/source-map": "1.0.5",
-		"@vue/reactivity": "^3.2.38",
+		"@vue/reactivity": "^3.2.40",
 		"muggle-string": "^0.1.0"
 	}
 }

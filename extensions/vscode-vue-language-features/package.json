@@ -849,7 +849,7 @@
 		"esbuild-visualizer": "latest",
 		"path-browserify": "^1.0.1",
 		"punycode": "^2.1.1",
-		"semver": "^7.3.7",
+		"semver": "^7.3.8",
 		"typesafe-path": "^0.2.2",
 		"vsce": "latest",
 		"vscode-languageclient": "^8.0.2",
