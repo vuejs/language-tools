@@ -1,16 +1,27 @@
 # Changelog
 
-## 1.0.6 (2022/10/12)
+## 1.0.7 (2022/10/13)
 
-- fix: component ast broken when use script setup with `export default` ([#1996](https://github.com/johnsoncodehk/volar/issues/1996))
-- fix: `experimentalModelPropName` link invalid ([#1999](https://github.com/johnsoncodehk/volar/issues/1999))
-- fix: `@volar/pug-language-service` crash ([#2000](https://github.com/johnsoncodehk/volar/issues/2000))
+- feat(vue-language-core): support custom v-model prefix ([#2004](https://github.com/johnsoncodehk/volar/issues/2004))
+- feat: allow passing attributes array for `experimentalModelPropName` ignore setting ([#1821](https://github.com/johnsoncodehk/volar/issues/1821))
+- fix: `@volar/vue-language-plugin-pug` cause to doctor warns in Vue 2.7 project ([#2002](https://github.com/johnsoncodehk/volar/issues/2002))
+- fix: mitigate virtual file mapping highlights dislocation
+- fix: tag hover not working when enabled `jsxTemplates`
+- fix: avoid convert invalid JSX type to any when enabled `jsxTemplates`
+- fix: component JSX type invalid when enabled `jsxTemplates` but template has no any slots
+- perf: try skip convert attribute value to unicode
 
 ### Our Sponsors
 
 <a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
 	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
 </a>
+
+## 1.0.6 (2022/10/12)
+
+- fix: component ast broken when use script setup with `export default` ([#1996](https://github.com/johnsoncodehk/volar/issues/1996))
+- fix: `experimentalModelPropName` link invalid ([#1999](https://github.com/johnsoncodehk/volar/issues/1999))
+- fix: `@volar/pug-language-service` crash ([#2000](https://github.com/johnsoncodehk/volar/issues/2000))
 
 ## 1.0.5 (2022/10/12)
 
