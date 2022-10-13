@@ -1771,8 +1771,6 @@ function getRenameApply(oldName: string) {
 function noEditApply(n: string) {
 	return n;
 }
-// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
-// https://v3.vuejs.org/guide/forms.html#basic-usage
 function getModelValuePropName(node: CompilerDOM.ElementNode, vueVersion: number, vueCompilerOptions: ResolvedVueCompilerOptions) {
 
 	for (const modelName in vueCompilerOptions.experimentalModelPropName) {

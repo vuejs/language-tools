@@ -97,6 +97,8 @@ export function resolveVueCompilerOptions(vueOptions: VueCompilerOptions): Resol
 		experimentalRuntimeMode: vueOptions.experimentalRuntimeMode ?? 'runtime-dom',
 		experimentalResolveStyleCssClasses: vueOptions.experimentalResolveStyleCssClasses ?? 'scoped',
 		experimentalRfc436: vueOptions.experimentalRfc436 ?? false,
+		// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
+		// https://v3.vuejs.org/guide/forms.html#basic-usage
 		experimentalModelPropName: vueOptions.experimentalModelPropName ?? {
 			'': {
 				'input': { type: 'radio' },
