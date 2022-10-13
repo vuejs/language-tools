@@ -172,17 +172,7 @@ export function generate(
 				capitalize(camelize(tagName)),
 			]);
 
-			codeGen.push(`let ${var_componentVar}!: `);
-
-			if (vueCompilerOptions.jsxTemplates && !vueCompilerOptions.strictTemplates)
-				codeGen.push(`import('./__VLS_types.js').ConvertInvalidJsxElement<`);
-
-			codeGen.push(`import('./__VLS_types.js').GetComponents<typeof __VLS_components, ${[...names].map(name => `'${name}'`).join(', ')}>`);
-
-			if (vueCompilerOptions.jsxTemplates && !vueCompilerOptions.strictTemplates)
-				codeGen.push(`>`);
-
-			codeGen.push(`;\n`);
+			codeGen.push(`let ${var_componentVar}!: import('./__VLS_types.js').GetComponents<typeof __VLS_components, ${[...names].map(name => `'${name}'`).join(', ')}>;\n`);
 
 			for (const name of names) {
 				for (const tagRange of tagRanges) {
