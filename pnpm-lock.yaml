@@ -412,6 +412,7 @@ importers:
     dependencies:
       '@volar/pug-language-service': link:../../packages/pug-language-service
       '@volar/source-map': link:../../packages/source-map
+    devDependencies:
       '@volar/vue-language-core': link:../vue-language-core
 
   vue-language-tools/vue-language-server:
