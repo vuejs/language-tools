@@ -3,7 +3,6 @@ import { PositionCapabilities } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize, hyphenate, isHTMLTag, isSVGTag } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { parseBindingRanges } from '../parsers/scriptSetupRanges';
 import { ResolvedVueCompilerOptions } from '../types';
 import { colletVars, walkInterpolationFragment } from '../utils/transform';
 import * as minimatch from 'minimatch';
@@ -413,22 +412,6 @@ export function generate(
 
 		if (node.tag !== 'template') {
 			parentEl = node;
-		}
-
-		if (node.tag === 'vls-sr') {
-
-			const startTagEnd = node.loc.source.indexOf('>') + 1;
-			const endTagStart = node.loc.source.lastIndexOf('</');
-			const scriptCode = node.loc.source.substring(startTagEnd, endTagStart);
-			const collentAst = createTsAst(node, scriptCode);
-			const bindings = parseBindingRanges(ts, collentAst, false);
-			const scriptVars = bindings.map(binding => scriptCode.substring(binding.start, binding.end));
-
-			for (const varName of scriptVars)
-				localVars[varName] = (localVars[varName] ?? 0) + 1;
-
-			codeGen.push([scriptCode, 'template', node.loc.start.offset + startTagEnd, capabilitiesSet.all]);
-			return;
 		}
 
 		codeGen.push(`{\n`);
