@@ -416,6 +416,9 @@ export function generate(
 				if (htmlGen?.slotsNum) {
 					codeGen.push(`children: ReturnType<typeof __VLS_template>,\n`);
 				}
+				else {
+					codeGen.push(`children: {},\n`);
+				}
 				codeGen.push(`};\n`);
 			}
 			else {
