@@ -113,6 +113,4 @@ export interface LanguageServerInitializationOptions {
 	 * https://github.com/Microsoft/TypeScript/wiki/Standalone-Server-%28tsserver%29#cancellation
 	 */
 	cancellationPipeName?: string;
-	// temporary workaround to fix https://github.com/johnsoncodehk/volar/issues/1959
-	__language?: string;
 }

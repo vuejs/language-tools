@@ -200,6 +200,10 @@ export function processMd() {
 
 function getFillInitializeParams(featuresKinds: LanguageFeaturesKind[]) {
 	return function (params: lsp.InitializeParams) {
+
+		// fix https://github.com/johnsoncodehk/volar/issues/1959
+		params.locale = vscode.env.language;
+
 		if (params.capabilities.textDocument) {
 			if (!featuresKinds.includes(LanguageFeaturesKind.Semantic)) {
 				params.capabilities.textDocument.references = undefined;
@@ -260,7 +264,6 @@ function getInitializationOptions(
 		vitePress: {
 			processMdFile: processMd(),
 		},
-		__language: vscode.env.language,
 	};
 	return initializationOptions;
 }
