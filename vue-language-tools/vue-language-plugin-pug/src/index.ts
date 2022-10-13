@@ -1,7 +1,6 @@
 import type { VueLanguagePlugin } from '@volar/vue-language-core';
 import * as pug from '@volar/pug-language-service';
 import { SourceMapBase } from '@volar/source-map';
-import { MappingKind } from '@volar/pug-language-service';
 
 const plugin: VueLanguagePlugin = ({ modules }) => {
 
@@ -39,7 +38,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 								if (prop === 'offset') {
 									const htmlOffset = target.offset;
 									for (const mapped of map.toSourceOffsets(htmlOffset)) {
-										if (mapped[1].data !== MappingKind.EmptyTagCompletion) {
+										if (mapped[1].data !== pug.MappingKind.EmptyTagCompletion) {
 											return mapped[0];
 										}
 									}
