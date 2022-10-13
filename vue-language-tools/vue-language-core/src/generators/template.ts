@@ -450,7 +450,10 @@ export function generate(
 				node.loc.start.offset,
 				capabilitiesSet.diagnosticOnly,
 			]);
-			const tagCapabilities: PositionCapabilities = _isIntrinsicElement || _isNamespacedTag ? capabilitiesSet.all : capabilitiesSet.diagnosticOnly;
+			const tagCapabilities: PositionCapabilities = _isIntrinsicElement || _isNamespacedTag ? capabilitiesSet.all : {
+				...capabilitiesSet.diagnosticOnly,
+				...capabilitiesSet.tagHover,
+			};
 
 			codeGen.push(`<`);
 			codeGen.push([
