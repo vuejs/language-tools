@@ -90,6 +90,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			vueDoc ? client.sendRequest(ParseSFCRequest.type, vueDoc.getText()) : undefined,
 		]);
 		const vueMod = getWorkspacePackageJson(fileUri.fsPath, 'vue');
+		const domMod = getWorkspacePackageJson(fileUri.fsPath, '@vue/compiler-dom');
 		const problems: {
 			title: string;
 			message: string;
@@ -110,9 +111,9 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			const lines = [
 				`Target version not match, you can specify the target version in \`vueCompilerOptions.target\` in tsconfig.json / jsconfig.json. (expected \`"target": ${vueVersionNumber}\`)`,
 				'',
-				'- Vue version: ' + vueMod.json.version,
+				'- vue version: ' + vueMod.json.version,
 				'- tsconfig target: ' + targetVersionNumber + (vueOptions?.target !== undefined ? '' : ' (default)'),
-				'- Vue module: ' + vueMod.path,
+				'- vue: ' + vueMod.path,
 				'- tsconfig: ' + (tsconfig?.fileName ?? 'Not found'),
 				'- vueCompilerOptions:',
 				'  ```json',
@@ -128,18 +129,27 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		}
 
 		// check vue version < 2.7 but @vue/compiler-dom missing
-		if (vueMod && semver.lt(vueMod.json.version, '2.7.0') && !getWorkspacePackageJson(fileUri.fsPath, '@vue/compiler-dom')) {
+		if (vueMod && semver.lt(vueMod.json.version, '2.7.0') && !domMod) {
 			problems.push({
 				title: '`@vue/compiler-dom` missing for Vue 2',
-				message: 'Vue 2 do not have JSX types definition, so template type checkinng cannot working correctly, you can install `@vue/compiler-dom` by add it to `devDependencies` to resolve this problem.',
+				message: [
+					'Vue 2 do not have JSX types definition, so template type checkinng cannot working correctly, you can install `@vue/compiler-dom` by add it to `devDependencies` to resolve this problem.',
+					'',
+					'- vue: ' + vueMod.path,
+				].join('\n'),
 			});
 		}
 
 		// check vue version >= 2.7 and < 3 but installed @vue/compiler-dom
-		if (vueMod && semver.gte(vueMod.json.version, '2.7.0') && semver.lt(vueMod.json.version, '3.0.0') && getWorkspacePackageJson(fileUri.fsPath, '@vue/compiler-dom')) {
+		if (vueMod && semver.gte(vueMod.json.version, '2.7.0') && semver.lt(vueMod.json.version, '3.0.0') && domMod) {
 			problems.push({
 				title: 'Do not need `@vue/compiler-dom`',
-				message: 'Vue 2.7 already included JSX types definition, you can remove `@vue/compiler-dom` depend from package.json.',
+				message: [
+					'Vue 2.7 already included JSX types definition, you can remove `@vue/compiler-dom` depend from package.json.',
+					'',
+					'- vue: ' + vueMod.path,
+					'- @vue/compiler-dom: ' + domMod.path,
+				].join('\n'),
 			});
 		}
 
@@ -150,22 +160,28 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 				title: '`vue-tsc` version different',
 				message: [
 					`The \`${context.extension.packageJSON.displayName}\` version is \`${context.extension.packageJSON.version}\`, but workspace \`vue-tsc\` version is \`${vueTscMod.json.version}\`, there may have different type checking behavior.`,
-					'vue-tsc module: ' + vueTscMod.path,
-				].join('\n\n'),
+					'',
+					'- vue-tsc: ' + vueTscMod.path,
+				].join('\n'),
 			});
 		}
 
-		// check vue-tsc version same with extension version
-		const typesNodeMod = getWorkspacePackageJson(fileUri.fsPath, '@types/node');
-		if (typesNodeMod && vueMod && semver.gte(typesNodeMod.json.version, '18.8.1') && semver.gte(vueMod.json.version, '3.0.0') && semver.lte(vueMod.json.version, '3.2.40')) {
-			problems.push({
-				title: '`@types/node` version incompatible',
-				message: [
-					'`@types/node` version `' + typesNodeMod.json.version + '` is incompatible to Vue version `' + vueMod.json.version + '`, it will cause DOM event type broken in template.',
-					'You can downgrade `@types/node` to `18.8.0`, or update Vue to `3.2.41` (if released) or later.',
-					'Issue: https://github.com/johnsoncodehk/volar/issues/1985',
-				].join('\n\n'),
-			});
+		// check @types/node > 18.8.0
+		if (vueMod && semver.gte(vueMod.json.version, '3.0.0') && semver.lte(vueMod.json.version, '3.2.40')) {
+			const typesNodeMod = getWorkspacePackageJson(fileUri.fsPath, '@types/node');
+			if (typesNodeMod && semver.gte(typesNodeMod.json.version, '18.8.1')) {
+				problems.push({
+					title: '`@types/node` version incompatible',
+					message: [
+						'`@types/node` version `' + typesNodeMod.json.version + '` is incompatible to Vue version `' + vueMod.json.version + '`, it will cause DOM event type broken in template.',
+						'',
+						'You can downgrade `@types/node` to `18.8.0`, or update Vue to `3.2.41` (if released) or later to resolve.',
+						'',
+						'- @types/node: ' + typesNodeMod.path,
+						'- Issue: https://github.com/johnsoncodehk/volar/issues/1985',
+					].join('\n'),
+				});
+			}
 		}
 
 		// check should use @volar-plugins/vetur instead of vetur
