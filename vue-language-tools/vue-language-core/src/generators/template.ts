@@ -1779,22 +1779,34 @@ function getModelValuePropName(node: CompilerDOM.ElementNode, vueVersion: number
 		const tags = vueCompilerOptions.experimentalModelPropName[modelName];
 		for (const tag in tags) {
 			if (node.tag === tag || node.tag === hyphenate(tag)) {
-				const attrs = tags[tag];
-				if (typeof attrs === 'object') {
-					let failed = false;
-					for (const attr in attrs) {
-						const attrNode = node.props.find(prop => prop.type === CompilerDOM.NodeTypes.ATTRIBUTE && prop.name === attr) as CompilerDOM.AttributeNode | undefined;
-						if (!attrNode || attrNode.value?.content !== attrs[attr]) {
-							failed = true;
-							break;
+				const v = tags[tag];
+				if (typeof v === 'object') {
+					const arr = Array.isArray(v) ? v : [v];
+					for (const attrs of arr) {
+						let failed = false;
+						for (const attr in attrs) {
+							const attrNode = node.props.find(prop => prop.type === CompilerDOM.NodeTypes.ATTRIBUTE && prop.name === attr) as CompilerDOM.AttributeNode | undefined;
+							if (!attrNode || attrNode.value?.content !== attrs[attr]) {
+								failed = true;
+								break;
+							}
+						}
+						if (!failed) {
+							// all match
+							return modelName || undefined;
 						}
 					}
-					if (!failed) {
-						// all match
-						return modelName || undefined;
-					}
 				}
-				else if (attrs === true) {
+			}
+		}
+	}
+
+	for (const modelName in vueCompilerOptions.experimentalModelPropName) {
+		const tags = vueCompilerOptions.experimentalModelPropName[modelName];
+		for (const tag in tags) {
+			if (node.tag === tag || node.tag === hyphenate(tag)) {
+				const attrs = tags[tag];
+				if (attrs === true) {
 					return modelName || undefined;
 				}
 			}
