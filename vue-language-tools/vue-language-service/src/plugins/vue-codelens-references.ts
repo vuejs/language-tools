@@ -79,18 +79,17 @@ export default function (options: {
 					...file.sfc.styles,
 					...file.sfc.customBlocks,
 				];
-				const references = await options.findReference(data.uri, data.position) ?? [];
+				const allRefs = await options.findReference(data.uri, data.position) ?? [];
 				const sourceBlock = blocks.find(block => block && offset >= block.startTagEnd && offset <= block.endTagStart);
-				const referencesInDifferentDocument = references.filter(reference =>
+				const diffDocRefs = allRefs.filter(reference =>
 					reference.uri !== data.uri // different file
 					|| sourceBlock !== blocks.find(block => block && document.offsetAt(reference.range.start) >= block.startTagEnd && document.offsetAt(reference.range.end) <= block.endTagStart) // different block
 				);
-				const referencesCount = referencesInDifferentDocument.length ?? 0;
 
 				codeLens.command = {
-					title: referencesCount === 1 ? '1 reference' : `${referencesCount} references`,
+					title: diffDocRefs.length === 1 ? '1 reference' : `${diffDocRefs.length} references`,
 					command: showReferencesCommand,
-					arguments: <CommandArgs>[data.uri, codeLens.range.start, references],
+					arguments: <CommandArgs>[data.uri, codeLens.range.start, diffDocRefs],
 				};
 
 				return codeLens;
