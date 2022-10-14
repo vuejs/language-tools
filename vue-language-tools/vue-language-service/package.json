@@ -20,7 +20,7 @@
 		"@volar-plugins/json": "1.0.7",
 		"@volar-plugins/pug": "1.0.7",
 		"@volar-plugins/pug-beautify": "1.0.7",
-		"@volar-plugins/typescript": "1.0.1-patch.1",
+		"@volar-plugins/typescript": "1.0.7",
 		"@volar/language-core": "1.0.7",
 		"@volar/language-service": "1.0.7",
 		"@volar/shared": "1.0.7",
