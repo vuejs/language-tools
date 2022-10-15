@@ -198,6 +198,10 @@ export function processMd() {
 	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.vitePress.processMdFile');
 }
 
+export function noProjectReferences() {
+	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.noProjectReferences');
+}
+
 function getFillInitializeParams(featuresKinds: LanguageFeaturesKind[]) {
 	return function (params: lsp.InitializeParams) {
 
@@ -264,6 +268,7 @@ function getInitializationOptions(
 		vitePress: {
 			processMdFile: processMd(),
 		},
+		noProjectReferences: noProjectReferences(),
 	};
 	return initializationOptions;
 }

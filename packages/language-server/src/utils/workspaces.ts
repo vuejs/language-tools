@@ -61,6 +61,7 @@ export function createWorkspaces(
 				documents,
 				configurationHost,
 				cancelTokenHost,
+				options,
 			));
 		},
 		remove: (rootUri: URI) => {

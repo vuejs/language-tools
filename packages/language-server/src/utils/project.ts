@@ -5,7 +5,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import { loadCustomPlugins } from './config';
-import { FileSystem, FileSystemHost, LanguageServerPlugin, RuntimeEnvironment } from '../types';
+import { FileSystem, FileSystemHost, LanguageServerInitializationOptions, LanguageServerPlugin, RuntimeEnvironment } from '../types';
 import { createSnapshots } from './snapshots';
 import { ConfigurationHost } from '@volar/language-service';
 import * as html from 'vscode-html-languageservice';
@@ -26,6 +26,7 @@ export async function createProject(
 	configHost: ConfigurationHost | undefined,
 	documentRegistry: ts.DocumentRegistry | undefined,
 	cancelTokenHost: CancellactionTokenHost,
+	serverOptions: LanguageServerInitializationOptions,
 ) {
 
 	const sys = fsHost.getWorkspaceFileSystem(rootUri);
@@ -162,6 +163,15 @@ export async function createProject(
 			getScriptSnapshot,
 			getTypeScriptModule: () => ts,
 		};
+
+		if (serverOptions.noProjectReferences) {
+			host.getProjectReferences = undefined;
+			host.getCompilationSettings = () => ({
+				...parsedCommandLine.options,
+				rootDir: undefined,
+				composite: false,
+			});
+		}
 
 		if (tsLocalized) {
 			host.getLocalizedDiagnosticMessages = () => tsLocalized;

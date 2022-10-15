@@ -314,6 +314,11 @@
 					"default": null,
 					"description": "Set --max-old-space-size option on server process. If you have problem on frequently \"Request textDocument/** failed.\" error, try setting higher memory(MB) on it."
 				},
+				"volar.vueserver.noProjectReferences": {
+					"type": "boolean",
+					"default": false,
+					"description": "Ignore project references settings of tsconfig in language server for resolve issue #1916."
+				},
 				"volar.codeLens.references": {
 					"type": "boolean",
 					"default": true,
