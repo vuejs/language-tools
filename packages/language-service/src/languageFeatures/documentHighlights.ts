@@ -13,7 +13,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 			context,
 			uri,
 			position,
-			(position, sourceMap) => sourceMap.toGeneratedPositions(position, data => !!data.references),
+			(position, sourceMap) => sourceMap.toGeneratedPositions(position,
+				// note https://github.com/johnsoncodehk/volar/issues/2009
+				data => typeof data.rename === 'object' ? !!data.rename.normalize : !!data.rename
+			),
 			async (plugin, document, position, sourceMap, vueDocument) => {
 
 				const recursiveChecker = dedupe.createLocationSet();
