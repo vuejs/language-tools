@@ -167,9 +167,10 @@ export function generate(
 			const var_componentVar = capitalize(camelize(tagName.replace(/:/g, '-')));
 
 			const names = new Set([
-				tagName,
-				camelize(tagName),
+				// order is important: https://github.com/johnsoncodehk/volar/issues/2010
 				capitalize(camelize(tagName)),
+				camelize(tagName),
+				tagName,
 			]);
 
 			codeGen.push(`let ${var_componentVar}!: import('./__VLS_types.js').GetComponents<typeof __VLS_components, ${[...names].map(name => `'${name}'`).join(', ')}>;\n`);
