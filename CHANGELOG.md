@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.0.8 (2022/10/15)
+
+- feat: support for twoslash queries (https://github.com/johnsoncodehk/volar-plugins/issues/9)
+- feat: support `generic` attribute auto-complete
+- feat: add `volar.vueserver.noProjectReferences` setting for support jump to source files from reference projects ([#1344](https://github.com/johnsoncodehk/volar/issues/1344))
+- fix: SFC parse failed if script content including `<script>` ([#1982](https://github.com/johnsoncodehk/volar/issues/1982))
+- fix: avoid report type error for invalid component without enable `jsxTemplates` ([#2007](https://github.com/johnsoncodehk/volar/issues/2007))
+- fix: intrinsic tag highlight should only including open tag and close tag ([#2009](https://github.com/johnsoncodehk/volar/issues/2009))
+- fix: component type should take capitalize property takes precedence over camelize property from context ([#2010](https://github.com/johnsoncodehk/volar/issues/2010))
+- fix: references codeLens should not including sources on display (https://github.com/johnsoncodehk/volar/issues/1989#issuecomment-1277585337)
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
+
 ## 1.0.7 (2022/10/13)
 
 - feat(vue-language-core): support custom v-model prefix ([#2004](https://github.com/johnsoncodehk/volar/issues/2004))
@@ -10,12 +27,6 @@
 - fix: avoid convert invalid JSX type to any when enabled `jsxTemplates`
 - fix: component JSX type invalid when enabled `jsxTemplates` but template has no any slots
 - perf: try skip convert attribute value to unicode
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 1.0.6 (2022/10/12)
 
