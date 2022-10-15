@@ -64,8 +64,8 @@ export type FillingEventArg_ParametersLength<E extends (...args: any) => any> = 
 export type FillingEventArg<E> = E extends (...args: any) => any ? FillingEventArg_ParametersLength<E> extends 0 ? ($event?: undefined) => ReturnType<E> : E : E;
 
 export type ExtractProps<T> =
-	T extends (...args: any) => { props: infer Props } ? Props
-	: T extends new (...args: any) => { $props: infer Props } ? Props
+	T extends (...args: any) => any ? (T extends (...args: any) => { props: infer Props } ? Props : {})
+	: T extends new (...args: any) => any ? (T extends new (...args: any) => { $props: infer Props } ? Props : {})
 	: T; // IntrinsicElement
 export type ReturnVoid<T> = T extends (...payload: infer P) => any ? (...payload: P) => void : (...args: any) => void;
 export type EmitEvent2<F, E> =
