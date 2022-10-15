@@ -63,10 +63,6 @@ export type ExtractComponentSlots<T> =
 export type FillingEventArg_ParametersLength<E extends (...args: any) => any> = IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];
 export type FillingEventArg<E> = E extends (...args: any) => any ? FillingEventArg_ParametersLength<E> extends 0 ? ($event?: undefined) => ReturnType<E> : E : E;
 
-export type ExtractProps<T> =
-	T extends (...args: any) => any ? (T extends (...args: any) => { props: infer Props } ? Props : {})
-	: T extends new (...args: any) => any ? (T extends new (...args: any) => { $props: infer Props } ? Props : {})
-	: T; // IntrinsicElement
 export type ReturnVoid<T> = T extends (...payload: infer P) => any ? (...payload: P) => void : (...args: any) => void;
 export type EmitEvent2<F, E> =
 	F extends {
@@ -105,7 +101,6 @@ export type FirstFunction<F0 = void, F1 = void, F2 = void, F3 = void, F4 = void>
 	NonNullable<F3> extends (Function | AnyArray<Function>) ? F3 :
 	NonNullable<F4> extends (Function | AnyArray<Function>) ? F4 :
 	unknown;
-export type GlobalAttrs = JSX.IntrinsicElements['div'];
 export type SelfComponent<N, C> = string extends N ? {} : N extends string ? { [P in N]: C } : {};
 export type GetComponents<Components, N1, N2 = unknown, N3 = unknown> =
 	N1 extends keyof Components ? Components[N1] :
@@ -114,7 +109,11 @@ export type GetComponents<Components, N1, N2 = unknown, N3 = unknown> =
 	unknown;
 export type ComponentProps<T> =
 	${vueCompilerOptions.strictTemplates ? '' : 'Record<string, unknown> &'}
-	ExtractProps<T>;
+	(
+		T extends (...args: any) => any ? (T extends (...args: any) => { props: infer Props } ? Props : {})
+		: T extends new (...args: any) => any ? (T extends new (...args: any) => { $props: infer Props } ? Props : {})
+		: T; // IntrinsicElement
+	);
 export type InstanceProps<I, C> = I extends { $props: infer Props } ? Props & Record<string, unknown> : C & Record<string, unknown>;
 export type EventObject<I, K1 extends string, C, E1> = {
 	[K in K1]: import('./__VLS_types.js').FillingEventArg<
@@ -125,6 +124,8 @@ export type EventObject<I, K1 extends string, C, E1> = {
 		>
 	>
 };
+
+type GlobalAttrs = JSX.IntrinsicElements['div'];
 `;
 }
 
