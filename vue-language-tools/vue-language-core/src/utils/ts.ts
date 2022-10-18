@@ -27,15 +27,25 @@ export function createParsedCommandLine(
 	extraFileExtensions: ts.FileExtensionInfo[],
 	extendsSet = new Set<string>(),
 ): ParsedCommandLine {
+	try {
+		const config = ts.readJsonConfigFile(tsConfigPath, parseConfigHost.readFile);
+		const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(tsConfigPath), {}, tsConfigPath, undefined, extraFileExtensions);
+		// fix https://github.com/johnsoncodehk/volar/issues/1786
+		// https://github.com/microsoft/TypeScript/issues/30457
+		// patching ts server broke with outDir + rootDir + composite/incremental
+		content.options.outDir = undefined;
 
-	const config = ts.readJsonConfigFile(tsConfigPath, parseConfigHost.readFile);
-	const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(tsConfigPath), {}, tsConfigPath, undefined, extraFileExtensions);
-	// fix https://github.com/johnsoncodehk/volar/issues/1786
-	// https://github.com/microsoft/TypeScript/issues/30457
-	// patching ts server broke with outDir + rootDir + composite/incremental
-	content.options.outDir = undefined;
-
-	return createParsedCommandLineBase(ts, parseConfigHost, content, tsConfigPath, extraFileExtensions, extendsSet);
+		return createParsedCommandLineBase(ts, parseConfigHost, content, tsConfigPath, extraFileExtensions, extendsSet);
+	}
+	catch (err) {
+		console.log('Failed to resolve tsconfig path:', tsConfigPath);
+		return {
+			fileNames: [],
+			options: {},
+			vueOptions: {},
+			errors: [],
+		};
+	}
 }
 
 function createParsedCommandLineBase(
