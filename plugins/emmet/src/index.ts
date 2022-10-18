@@ -1,4 +1,4 @@
-import { LanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
+import type { LanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
 import * as emmet from '@vscode/emmet-helper';
 
 export default function (): LanguageServicePlugin {

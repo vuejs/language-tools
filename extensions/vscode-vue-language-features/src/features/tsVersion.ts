@@ -2,7 +2,7 @@ import * as path from 'typesafe-path';
 import * as vscode from 'vscode';
 import { BaseLanguageClient } from 'vscode-languageclient';
 import { quickPick } from './splitEditors';
-import { takeOverModeEnabled } from '../common';
+import { noProjectReferences, takeOverModeEnabled } from '../common';
 import { LanguageServerInitializationOptions } from '@volar/vue-language-server';
 import * as fs from 'fs';
 
@@ -91,6 +91,9 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 			statusBar.text = '' + tsVersion;
 			if (takeOverModeEnabled()) {
 				statusBar.text += ' (takeover)';
+			}
+			if (noProjectReferences()) {
+				statusBar.text += ' (noProjectReferences)';
 			}
 			statusBar.show();
 		}

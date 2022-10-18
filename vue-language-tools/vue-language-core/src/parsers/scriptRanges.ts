@@ -17,8 +17,15 @@ export function parseScriptRanges(ts: typeof import('typescript/lib/tsserverlibr
 
 	const bindings = hasScriptSetup ? parseBindingRanges(ts, ast, false) : [];
 
-	ast.forEachChild(node => {
-		if (ts.isExportAssignment(node)) {
+	ast.forEachChild(raw => {
+
+		if (ts.isExportAssignment(raw)) {
+
+			let node: ts.AsExpression | ts.ExportAssignment | ts.ParenthesizedExpression = raw;
+			while (ts.isAsExpression(node.expression) || ts.isParenthesizedExpression(node.expression)) { // fix https://github.com/johnsoncodehk/volar/issues/1882
+				node = node.expression;
+			}
+
 			let obj: ts.ObjectLiteralExpression | undefined;
 			if (ts.isObjectLiteralExpression(node.expression)) {
 				obj = node.expression;
@@ -43,7 +50,7 @@ export function parseScriptRanges(ts: typeof import('typescript/lib/tsserverlibr
 					}
 				});
 				exportDefault = {
-					..._getStartEnd(node),
+					..._getStartEnd(raw),
 					expression: _getStartEnd(node.expression),
 					args: _getStartEnd(obj),
 					argsNode: withNode ? obj : undefined,

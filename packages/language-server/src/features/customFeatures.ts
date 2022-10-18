@@ -14,7 +14,6 @@ export function register(
 		if (project) {
 			return {
 				fileName: project.tsconfig,
-				raw: project.project?.getParsedCommandLine().raw,
 			};
 		}
 	});

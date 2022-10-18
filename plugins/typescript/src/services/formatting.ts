@@ -2,7 +2,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
 import * as shared from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type { GetConfiguration } from '../';
+import type { GetConfiguration } from '../createLangaugeService';
 import { getFormatCodeSettings } from '../configs/getFormatCodeSettings';
 
 export function register(

@@ -123,18 +123,26 @@ export class VueSourceFile implements SourceFile {
 				}
 			}
 
+			const errors: CompilerDom.CompilerError[] = [];
+			const warnings: CompilerDom.CompilerError[] = [];
+			let options: CompilerDom.CompilerOptions = {
+				onError: (err: CompilerDom.CompilerError) => errors.push(err),
+				onWarn: (err: CompilerDom.CompilerError) => warnings.push(err),
+				expressionPlugins: ['typescript'],
+			};
+
+			for (const plugin of plugins) {
+				if (plugin.resolveTemplateCompilerOptions) {
+					options = plugin.resolveTemplateCompilerOptions(options);
+				}
+			}
+
 			for (const plugin of plugins) {
 
-				const errors: CompilerDom.CompilerError[] = [];
-				const warnings: CompilerDom.CompilerError[] = [];
 				let result: CompilerDom.CodegenResult | undefined;
 
 				try {
-					result = plugin.compileSFCTemplate?.(sourceFile.sfc.template.lang, sourceFile.sfc.template.content, {
-						onError: (err: CompilerDom.CompilerError) => errors.push(err),
-						onWarn: (err: CompilerDom.CompilerError) => warnings.push(err),
-						expressionPlugins: ['typescript'],
-					});
+					result = plugin.compileSFCTemplate?.(sourceFile.sfc.template.lang, sourceFile.sfc.template.content, options);
 				}
 				catch (e) {
 					const err = e as CompilerDom.CompilerError;
@@ -440,6 +448,8 @@ export class VueSourceFile implements SourceFile {
 				endTagStart: block.loc.end.offset,
 				content: block.content,
 				lang: block.lang ?? 'js',
+				generic: typeof block.attrs.generic === 'string' ? block.attrs.generic : undefined,
+				genericOffset: typeof block.attrs.generic === 'string' ? newScriptSnapshot.getText(0, newScriptSnapshot.getLength()).substring(0, block.loc.start.offset).lastIndexOf(block.attrs.generic) - block.loc.start.offset : -1,
 			} : null;
 
 			if (self.sfc.scriptSetup && newData) {

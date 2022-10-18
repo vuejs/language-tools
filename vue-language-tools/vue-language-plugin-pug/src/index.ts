@@ -2,7 +2,7 @@ import type { VueLanguagePlugin } from '@volar/vue-language-core';
 import * as pug from '@volar/pug-language-service';
 import { SourceMapBase } from '@volar/source-map';
 
-const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions }) => {
+const plugin: VueLanguagePlugin = ({ modules }) => {
 
 	return {
 
@@ -22,7 +22,6 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions }) => {
 					const compiler = modules['@vue/compiler-dom'];
 					const completed = compiler.compile(pugFile.htmlCode, {
 						...options,
-						...vueCompilerOptions.experimentalTemplateCompilerOptions,
 						onWarn(warning) {
 							options?.onWarn?.(createProxyObject(warning));
 						},
@@ -39,7 +38,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions }) => {
 								if (prop === 'offset') {
 									const htmlOffset = target.offset;
 									for (const mapped of map.toSourceOffsets(htmlOffset)) {
-										if (!mapped[1].data?.isEmptyTagCompletion) {
+										if (mapped[1].data !== pug.MappingKind.EmptyTagCompletion) {
 											return mapped[0];
 										}
 									}

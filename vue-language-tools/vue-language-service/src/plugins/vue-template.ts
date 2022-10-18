@@ -1,7 +1,8 @@
 import useHtmlPlugin from '@volar-plugins/html';
 import { LanguageServicePlugin, LanguageServiceRuntimeContext, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
 import * as shared from '@volar/shared';
-import * as ts2 from '@volar/typescript-language-service';
+import { getFormatCodeSettings } from '@volar-plugins/typescript/out/configs/getFormatCodeSettings';
+import { getUserPreferences } from '@volar-plugins/typescript/out/configs/getUserPreferences';
 import * as vue from '@volar/vue-language-core';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -359,8 +360,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			const tsImportName = camelize(path.basename(importFile).replace(/\./g, '-'));
 			const confitHost = context.env.configurationHost;
 			const [formatOptions, preferences] = await Promise.all([
-				ts2.getFormatCodeSettings((section, scopeUri) => confitHost?.getConfiguration(section, scopeUri) as any, embeddedScriptUri),
-				ts2.getUserPreferences((section, scopeUri) => confitHost?.getConfiguration(section, scopeUri) as any, embeddedScriptUri, undefined),
+				getFormatCodeSettings((section, scopeUri) => confitHost?.getConfiguration(section, scopeUri) as any, embeddedScriptUri),
+				getUserPreferences((section, scopeUri) => confitHost?.getConfiguration(section, scopeUri) as any, embeddedScriptUri, undefined),
 			]);
 			(preferences as any).importModuleSpecifierEnding = 'minimal';
 			const tsDetail = context.typescript.languageService.getCompletionEntryDetails(shared.getPathOfUri(embeddedScriptUri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
@@ -478,12 +479,13 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				provideAttributes: (tag) => {
 
 					const globalProps = checkGlobalAttrs(context.typescript.module, context.typescript.languageService, vueSourceFile.fileName);
-					const props = checkPropsOfTag(context.typescript.module, context.typescript.languageService, vueSourceFile, tag);
+					const props = new Set(checkPropsOfTag(context.typescript.module, context.typescript.languageService, vueSourceFile, tag));
 					const events = checkEventsOfTag(context.typescript.module, context.typescript.languageService, vueSourceFile, tag);
 					const attributes: html.IAttributeData[] = [];
 
 					for (const prop of [...props, ...globalProps]) {
 
+						const isGlobal = !props.has(prop);
 						const name = attrNameCasing === AttrNameCasing.Camel ? prop : hyphenate(prop);
 
 						if (hyphenate(name).startsWith('on-')) {
@@ -491,7 +493,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 							const propNameBase = name.startsWith('on-')
 								? name.slice('on-'.length)
 								: (name['on'.length].toLowerCase() + name.slice('onX'.length));
-							const propKey = createInternalItemId('componentEvent', [tag, propNameBase]);
+							const propKey = createInternalItemId('componentEvent', [isGlobal ? '*' : tag, propNameBase]);
 
 							attributes.push(
 								{
@@ -507,7 +509,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 						else {
 
 							const propName = name;
-							const propKey = createInternalItemId('componentProp', [tag, propName]);
+							const propKey = createInternalItemId('componentProp', [isGlobal ? '*' : tag, propName]);
 
 							attributes.push(
 								{
@@ -541,23 +543,24 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 						});
 					}
 
-					const models: string[] = [];
+					const models: [boolean, string][] = [];
 
 					for (const prop of [...props, ...globalProps]) {
 						if (prop.startsWith('onUpdate:')) {
-							models.push(prop.substring('onUpdate:'.length));
+							const isGlobal = !props.has(prop);
+							models.push([isGlobal, prop.substring('onUpdate:'.length)]);
 						}
 					}
 					for (const event of events) {
 						if (event.startsWith('update:')) {
-							models.push(event.substring('update:'.length));
+							models.push([false, event.substring('update:'.length)]);
 						}
 					}
 
-					for (const model of models) {
+					for (const [isGlobal, model] of models) {
 
 						const name = attrNameCasing === AttrNameCasing.Camel ? model : hyphenate(model);
-						const propKey = createInternalItemId('componentProp', [tag, name]);
+						const propKey = createInternalItemId('componentProp', [isGlobal ? '*' : tag, name]);
 
 						attributes.push({
 							name: 'v-model:' + name,

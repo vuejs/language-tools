@@ -14,10 +14,7 @@
 	],
 	"references": [
 		{
-			"path": "../../plugins/shared/tsconfig.build.json"
-		},
-		{
-			"path": "../../plugins/typescript/tsconfig.build.json"
+			"path": "../../packages/shared/tsconfig.build.json"
 		},
 		{
 			"path": "../../packages/language-server/tsconfig.build.json"

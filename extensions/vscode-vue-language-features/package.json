@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "1.0.0",
+	"version": "1.0.8",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
@@ -313,6 +313,11 @@
 					],
 					"default": null,
 					"description": "Set --max-old-space-size option on server process. If you have problem on frequently \"Request textDocument/** failed.\" error, try setting higher memory(MB) on it."
+				},
+				"volar.vueserver.noProjectReferences": {
+					"type": "boolean",
+					"default": false,
+					"description": "Ignore project references settings of tsconfig in language server for resolve issue #1916."
 				},
 				"volar.vueserver.additionalExtensions": {
 					"type":"string",
@@ -643,6 +648,11 @@
 				"category": "Volar (Debug)"
 			},
 			{
+				"command": "volar.action.showComponentMeta",
+				"title": "Show Component Meta",
+				"category": "Volar"
+			},
+			{
 				"command": "volar.action.splitEditors",
 				"title": "Split <script>, <template>, <style> Editors",
 				"category": "Volar",
@@ -839,18 +849,18 @@
 	"devDependencies": {
 		"@types/semver": "^7.3.12",
 		"@types/vscode": "1.67.0",
-		"@volar/preview": "1.0.0",
-		"@volar/shared": "1.0.0",
-		"@volar/source-map": "1.0.0",
-		"@volar/vue-language-core": "1.0.0",
-		"@volar/vue-language-server": "1.0.0",
+		"@volar/preview": "1.0.8",
+		"@volar/shared": "1.0.8",
+		"@volar/source-map": "1.0.8",
+		"@volar/vue-language-core": "1.0.8",
+		"@volar/vue-language-server": "1.0.8",
 		"esbuild": "latest",
 		"esbuild-plugin-copy": "latest",
 		"esbuild-visualizer": "latest",
 		"path-browserify": "^1.0.1",
 		"punycode": "^2.1.1",
-		"semver": "^7.3.7",
-		"typesafe-path": "^0.2.1",
+		"semver": "^7.3.8",
+		"typesafe-path": "^0.2.2",
 		"vsce": "latest",
 		"vscode-languageclient": "^8.0.2",
 		"vscode-nls": "^5.2.0"

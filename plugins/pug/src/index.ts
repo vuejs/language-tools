@@ -1,4 +1,4 @@
-import { LanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
+import type { LanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
 import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as pug from '@volar/pug-language-service';

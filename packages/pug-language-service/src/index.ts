@@ -11,7 +11,7 @@ import { register as registerFoldingRanges } from './services/foldingRanges';
 import { register as registerQuoteComplete } from './services/quoteComplete';
 
 export { PugDocument } from './pugDocument';
-export { baseParse } from './baseParse';
+export * from './baseParse';
 
 export interface LanguageService extends ReturnType<typeof getLanguageService> { }
 

@@ -3,7 +3,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'typesafe-path';
 import * as vscode from 'vscode-languageserver';
 import { createProject, Project } from './project';
-import { LanguageServerPlugin, RuntimeEnvironment, FileSystemHost } from '../types';
+import { LanguageServerPlugin, RuntimeEnvironment, FileSystemHost, LanguageServerInitializationOptions } from '../types';
 import { createSnapshots } from './snapshots';
 import { getInferredCompilerOptions } from './inferredCompilerOptions';
 import { URI } from 'vscode-uri';
@@ -22,6 +22,7 @@ export async function createWorkspaceProjects(
 	documents: ReturnType<typeof createSnapshots>,
 	configHost: ConfigurationHost | undefined,
 	cancelTokenHost: CancellactionTokenHost,
+	serverOptions: LanguageServerInitializationOptions,
 ) {
 
 	let inferredProject: Project | undefined;
@@ -106,6 +107,7 @@ export async function createWorkspaceProjects(
 					configHost,
 					documentRegistry,
 					cancelTokenHost,
+					serverOptions,
 				);
 			})();
 		}
@@ -236,6 +238,7 @@ export async function createWorkspaceProjects(
 				configHost,
 				documentRegistry,
 				cancelTokenHost,
+				serverOptions,
 			);
 			projects.pathSet(rootUri, tsConfig, project);
 		}

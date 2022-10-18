@@ -188,7 +188,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 	function getVueFiles() {
 		const parseConfigHost: ts.ParseConfigHost = {
 			useCaseSensitiveFileNames: info.project.useCaseSensitiveFileNames(),
-			readDirectory: (...args) => info.project.readDirectory(...args),
+			readDirectory: (path, extensions, exclude, include, depth) => info.project.readDirectory(path, extensions, exclude, include, depth),
 			fileExists: fileName => info.project.fileExists(fileName),
 			readFile: fileName => info.project.readFile(fileName),
 		};
@@ -196,7 +196,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 		// Should use raw tsconfig json not rootDir but seems cannot get it from plugin info
 		const includeRoot = path.resolve(info.project.getCurrentDirectory(), info.project.getCompilerOptions().rootDir || '.');
 		const { fileNames } = ts.parseJsonConfigFileContent({}, parseConfigHost, includeRoot, info.project.getCompilerOptions(), undefined /* TODO: info.project.config.configFilePath? */, undefined, extraFileExtensions);
-		return fileNames;
+		return fileNames.filter(fileName => extraFileExtensions.some(ext => fileName.endsWith('.' + ext.extension)));
 	}
 	function update() {
 		const newVueFiles = new Set(getVueFiles());

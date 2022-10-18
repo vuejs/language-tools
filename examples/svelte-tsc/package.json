@@ -1,6 +1,6 @@
 {
 	"name": "@volar-examples/svelte-tsc",
-	"version": "1.0.0",
+	"version": "1.0.8",
 	"license": "MIT",
 	"files": [
 		"bin",
@@ -16,8 +16,8 @@
 		"svelte-tsc": "./bin/svelte-tsc.js"
 	},
 	"dependencies": {
-		"@volar-examples/svelte-language-core": "1.0.0",
-		"@volar-examples/svelte-typescript": "1.0.0"
+		"@volar-examples/svelte-language-core": "1.0.8",
+		"@volar-examples/svelte-typescript": "1.0.8"
 	},
 	"peerDependencies": {
 		"typescript": "*"

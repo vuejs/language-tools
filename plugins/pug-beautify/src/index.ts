@@ -1,5 +1,5 @@
 import * as vscode from 'vscode-languageserver-types';
-import { LanguageServicePlugin } from '@volar/language-service';
+import type { LanguageServicePlugin } from '@volar/language-service';
 
 export default function (): LanguageServicePlugin {
 

@@ -44,10 +44,9 @@ export function createLanguageService(
 	host: ts.LanguageServiceHost,
 	languageService: ts.LanguageService,
 	getConfiguration: GetConfiguration,
-	_rootUri: string,
+	rootUri: URI,
 ) {
 
-	const rootUri = URI.parse(_rootUri);
 	const documents = shared.createUriMap<[string, TextDocument]>();
 
 	return {

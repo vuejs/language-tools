@@ -61,6 +61,7 @@ export function createWorkspaces(
 				documents,
 				configurationHost,
 				cancelTokenHost,
+				options,
 			));
 		},
 		remove: (rootUri: URI) => {
@@ -112,7 +113,7 @@ export function createWorkspaces(
 			return;
 
 		const req = ++documentUpdatedReq;
-		const delay = await configurationHost?.getConfiguration<number>('volar.diagnostics.delay');
+		const delay = await configurationHost?.getConfiguration<number>('volar.diagnostics.delay') ?? 200;
 		const cancel = cancelTokenHost.createCancellactionToken({
 			get isCancellationRequested() {
 				return req !== documentUpdatedReq;
@@ -124,14 +125,14 @@ export function createWorkspaces(
 
 		if (changeDoc) {
 
-			await shared.sleep(delay ?? 200);
+			await shared.sleep(delay);
 
 			await sendDocumentDiagnostics(changeDoc.uri, changeDoc.version, cancel);
 		}
 
 		for (const doc of otherDocs) {
 
-			await shared.sleep(delay ?? 200);
+			await shared.sleep(delay);
 
 			await sendDocumentDiagnostics(doc.uri, doc.version, cancel);
 
@@ -166,6 +167,7 @@ export function createWorkspaces(
 	async function getProject(uri: string) {
 
 		const rootUris = [...workspaces.keys()]
+			.filter(rootUri => URI.parse(rootUri).scheme === URI.parse(uri).scheme) // fix https://github.com/johnsoncodehk/volar/issues/1946#issuecomment-1272430742
 			.filter(rootUri => shared.isFileInDir(URI.parse(uri).fsPath as path.OsPath, URI.parse(rootUri).fsPath as path.OsPath))
 			.sort((a, b) => sortTsConfigs(URI.parse(uri).fsPath as path.OsPath, URI.parse(a).fsPath as path.OsPath, URI.parse(b).fsPath as path.OsPath));
 

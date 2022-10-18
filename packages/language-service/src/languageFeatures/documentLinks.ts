@@ -49,6 +49,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 					if (!mapped.data.displayWithLink)
 						continue;
 
+					if (mapped.sourceRange[0] === mapped.sourceRange[1])
+						continue;
+
 					result.push({
 						range: {
 							start: document.positionAt(mapped.sourceRange[0]),

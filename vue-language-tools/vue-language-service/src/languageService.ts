@@ -6,7 +6,7 @@ import usePugPlugin from '@volar-plugins/pug';
 import useTsPlugin from '@volar-plugins/typescript';
 import * as embedded from '@volar/language-core';
 import * as embeddedLS from '@volar/language-service';
-import * as ts2 from '@volar/typescript-language-service';
+import { getSemanticTokenLegend as getTsSemanticTokenLegend } from '@volar-plugins/typescript/out/createLangaugeService';
 import * as vue from '@volar/vue-language-core';
 import { LanguageServiceHost } from '@volar/vue-language-core';
 import type * as html from 'vscode-html-languageservice';
@@ -17,11 +17,12 @@ import useReferencesCodeLensPlugin from './plugins/vue-codelens-references';
 import useHtmlPugConversionsPlugin from './plugins/vue-convert-htmlpug';
 import useRefSugarConversionsPlugin from './plugins/vue-convert-refsugar';
 import useScriptSetupConversionsPlugin from './plugins/vue-convert-scriptsetup';
+import useTwoslashQueries from './plugins/vue-twoslash-queries';
 import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemanticTokenTypes } from './plugins/vue-template';
 
 export function getSemanticTokenLegend() {
 
-	const tsLegend = ts2.getSemanticTokenLegend();
+	const tsLegend = getTsSemanticTokenLegend();
 	const tokenTypesLegend = [
 		...tsLegend.tokenTypes,
 		...vueTemplateSemanticTokenTypes,
@@ -92,9 +93,12 @@ export function getLanguageServicePlugins(
 				return _pugPlugin.getPugLs().createScanner(pugDocument);
 			}
 		},
-		isSupportedDocument: (document) => document.languageId === 'html',
+		isSupportedDocument: (document) => document.languageId === 'jade',
 		vueLsHost: host,
 		context: apis.context,
+	});
+	const twoslashQueriesPlugin = useTwoslashQueries({
+		getVueDocument: (document) => apis.context.documents.get(document.uri),
 	});
 
 	return [
@@ -111,6 +115,7 @@ export function getLanguageServicePlugins(
 		autoDotValuePlugin,
 		// put emmet plugin at last to fix https://github.com/johnsoncodehk/volar/issues/1088
 		emmetPlugin,
+		twoslashQueriesPlugin,
 	];
 }
 

@@ -173,7 +173,7 @@ export function generate(
 			addVirtualCode('script', scriptRanges.exportDefault.end, sfc.script.content.length);
 		}
 	}
-	function addVirtualCode(vueTag: 'script' | 'scriptSetup', start: number, end: number) {
+	function addVirtualCode(vueTag: 'script' | 'scriptSetup', start: number, end?: number) {
 		codeGen.push([
 			sfc[vueTag]!.content.substring(start, end),
 			vueTag,
@@ -234,10 +234,7 @@ export function generate(
 
 		if (sfc.scriptSetup && scriptSetupRanges) {
 
-			if (scriptRanges?.exportDefault) {
-				codeGen.push('await (async () => {\n');
-			}
-			else {
+			if (!scriptRanges?.exportDefault) {
 				// fix https://github.com/johnsoncodehk/volar/issues/1127
 				codeGen.push([
 					'',
@@ -245,25 +242,42 @@ export function generate(
 					0,
 					{ diagnostic: true },
 				]);
-				codeGen.push('export default await (async () => {\n');
+				codeGen.push('export default ');
 			}
-
+			codeGen.push('(');
+			if (vueCompilerOptions.experimentalRfc436 && sfc.scriptSetup.generic) {
+				codeGen.push(`<`);
+				codeGen.push([
+					sfc.scriptSetup.generic,
+					sfc.scriptSetup.name,
+					sfc.scriptSetup.genericOffset,
+					{
+						hover: true,
+						references: true,
+						definition: true,
+						rename: true,
+						diagnostic: true,
+						completion: true,
+						semanticTokens: true,
+					},
+				]);
+				codeGen.push(`>`);
+			}
+			codeGen.push('(');
+			if (vueCompilerOptions.experimentalRfc436 && scriptSetupRanges.propsTypeArg) {
+				codeGen.push('__VLS_props: ');
+				addVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
+			}
+			codeGen.push(') => {\n');
 			codeGen.push('const __VLS_setup = async () => {\n');
-
-			codeGen.push([
-				sfc.scriptSetup.content.substring(scriptSetupRanges.importSectionEndOffset),
-				'scriptSetup',
-				scriptSetupRanges.importSectionEndOffset,
-				{
-					hover: true,
-					references: true,
-					definition: true,
-					diagnostic: true,
-					rename: true,
-					completion: true,
-					semanticTokens: true,
-				},
-			]);
+			if (vueCompilerOptions.experimentalRfc436 && scriptSetupRanges.propsTypeArg) {
+				addVirtualCode('scriptSetup', scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.propsTypeArg.start);
+				codeGen.push('typeof __VLS_props');
+				addVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.end);
+			}
+			else {
+				addVirtualCode('scriptSetup', scriptSetupRanges.importSectionEndOffset);
+			}
 
 			if (scriptSetupRanges.propsTypeArg && scriptSetupRanges.withDefaultsArg) {
 				// fix https://github.com/johnsoncodehk/volar/issues/1187
@@ -296,7 +310,12 @@ export function generate(
 						}
 
 						codeGen.push(`__VLS_TypePropsToRuntimeProps<`);
-						addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
+						if (vueCompilerOptions.experimentalRfc436) {
+							codeGen.push(`typeof __VLS_props`);
+						}
+						else {
+							addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
+						}
 						codeGen.push(`>`);
 
 						if (scriptSetupRanges.withDefaultsArg) {
@@ -369,7 +388,7 @@ export function generate(
 			codeGen.push(`};\n`);
 			codeGen.push(`},\n`);
 
-			if (sfc.script && scriptRanges?.exportDefault?.args) {
+			if (scriptRanges?.exportDefault?.args) {
 				addVirtualCode('script', scriptRanges.exportDefault.args.start + 1, scriptRanges.exportDefault.args.end - 1);
 			}
 
@@ -377,16 +396,48 @@ export function generate(
 
 			writeTemplate();
 
-			if (htmlGen?.slotsNum) {
-				codeGen.push(`return {} as typeof __VLS_Component & (new () => { ${getSlotsPropertyName(vueVersion)}: ReturnType<typeof __VLS_template> });\n`);
+			if (vueCompilerOptions.experimentalRfc436) {
+				codeGen.push(`return {} as Omit<JSX.Element, 'props' | 'children'> & Omit<InstanceType<typeof __VLS_Component>, '$slots' | '$emit'>`);
+				codeGen.push(` & {\n`);
+				if (scriptSetupRanges.propsTypeArg) {
+					codeGen.push(`props: typeof __VLS_props,\n`);
+				}
+				else {
+					codeGen.push(`props: InstanceType<typeof __VLS_Component>['$props'],\n`);
+				}
+				codeGen.push(`$emit: `);
+				if (scriptSetupRanges.emitsTypeArg) {
+					addVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
+				}
+				else {
+					codeGen.push(`InstanceType<typeof __VLS_Component>['$emit']`);
+				}
+				codeGen.push(`,\n`);
+				if (htmlGen?.slotsNum) {
+					codeGen.push(`children: ReturnType<typeof __VLS_template>,\n`);
+				}
+				else {
+					codeGen.push(`children: {},\n`);
+				}
+				codeGen.push(`};\n`);
 			}
 			else {
-				codeGen.push(`return {} as typeof __VLS_Component;\n`);
+				codeGen.push(`return {} as typeof __VLS_Component`);
+				if (htmlGen?.slotsNum) {
+					codeGen.push(` & { new (): { $slots: ReturnType<typeof __VLS_template> } }`);
+				}
+				codeGen.push(`;\n`);
 			}
-
 			codeGen.push(`};\n`);
-			codeGen.push(`return await __VLS_setup();\n`);
-			codeGen.push(`})();`);
+			codeGen.push(`return {} as unknown as Awaited<ReturnType<typeof __VLS_setup>>;\n`);
+			codeGen.push(`})`);
+			if (!vueCompilerOptions.experimentalRfc436) {
+				codeGen.push(`({} as any)`);
+			}
+			if (scriptRanges?.exportDefault && scriptRanges.exportDefault.expression.end !== scriptRanges.exportDefault.end) {
+				addVirtualCode('script', scriptRanges.exportDefault.expression.end, scriptRanges.exportDefault.end);
+			}
+			codeGen.push(`;`);
 			// fix https://github.com/johnsoncodehk/volar/issues/1127
 			codeGen.push([
 				'',

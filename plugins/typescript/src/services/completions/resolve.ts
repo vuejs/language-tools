@@ -6,7 +6,7 @@ import { handleKindModifiers } from './basic';
 import type { Data } from './basic';
 import * as previewer from '../../utils/previewer';
 import * as shared from '@volar/shared';
-import type { GetConfiguration } from '../..';
+import type { GetConfiguration } from '../../createLangaugeService';
 import { URI } from 'vscode-uri';
 import { getFormatCodeSettings } from '../../configs/getFormatCodeSettings';
 import { getUserPreferences } from '../../configs/getUserPreferences';
