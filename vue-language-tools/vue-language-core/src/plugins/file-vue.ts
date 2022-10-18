@@ -3,20 +3,12 @@ import { parse } from '../utils/parseSfc';
 
 const plugin: VueLanguagePlugin = (ctx) => {
 
-	let validExtensions = ['.vue'];
-
-	if (ctx.pluginOptions['file-vue']) {
-		if (ctx.pluginOptions['file-vue']['extensions']) {
-			validExtensions = ctx.pluginOptions['file-vue']['extensions'] as string[];
-		}
-	}
-
 	return {
 
 		version: 1,
 
 		parseSFC(fileName, content) {
-			if (validExtensions.some(ext => fileName.endsWith(ext))) {
+			if (ctx.vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))) {
 				return parse(content);
 			}
 		},

@@ -7,5 +7,8 @@ export type VueServerInitializationOptions = LanguageServerInitializationOptions
 	vitePress?: {
 		processMdFile: boolean,
 	},
+	/**
+	 * @example ['vue1', 'vue2']
+	 */
 	additionalExtensions?: string[],
 };

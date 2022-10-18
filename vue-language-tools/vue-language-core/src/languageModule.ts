@@ -11,18 +11,16 @@ export function createLanguageModule(
 	rootDir: string,
 	compilerOptions: ts.CompilerOptions,
 	_vueCompilerOptions: VueCompilerOptions,
-	exts: string[],
 	extraPlugins: VueLanguagePlugin[] = [],
-	pluginOptions: Record<string, Record<string, unknown>> = {}
 ): embedded.LanguageModule {
 
+	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);
 	const vueLanguagePlugin = getDefaultVueLanguagePlugins(
 		ts,
 		rootDir,
 		compilerOptions,
 		_vueCompilerOptions,
 		extraPlugins,
-		pluginOptions,
 	);
 
 	// from https://github.com/johnsoncodehk/volar/pull/1543
@@ -30,18 +28,17 @@ export function createLanguageModule(
 		(ts as any).__VLS_pitched_resolveModuleNames = true;
 		const resolveModuleNames = ts.resolveModuleName;
 		ts.resolveModuleName = (...args) => {
-			if (args[6] === ts.ModuleKind.ESNext && exts.some(ext => args[0].endsWith(ext))) {
+			if (args[6] === ts.ModuleKind.ESNext && vueCompilerOptions.extensions.some(ext => args[0].endsWith(ext))) {
 				args[6] = ts.ModuleKind.CommonJS;
 			}
 			return resolveModuleNames(...args);
 		};
 	}
 
-	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);
 	const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(vueCompilerOptions.target, vueCompilerOptions));
 	const languageModule: embedded.LanguageModule = {
 		createSourceFile(fileName, snapshot) {
-			if (exts.some(ext => fileName.endsWith(ext))) {
+			if (vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))) {
 				return new VueSourceFile(fileName, snapshot, ts, vueLanguagePlugin);
 			}
 		},
@@ -102,7 +99,7 @@ export function createLanguageModule(
 	return languageModule;
 
 	function getSharedTypesFiles(fileNames: string[]) {
-		const moduleFiles = fileNames.filter(fileName => exts.some(ext => fileName.endsWith(ext)));
+		const moduleFiles = fileNames.filter(fileName => vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext)));
 		const moduleFileDirs = [...new Set(moduleFiles.map(path.dirname))];
 		return moduleFileDirs.map(dir => path.join(dir, localTypes.typesFileName));
 	}

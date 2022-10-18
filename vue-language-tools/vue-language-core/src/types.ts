@@ -15,6 +15,7 @@ export type VueCompilerOptions = Partial<ResolvedVueCompilerOptions>;
 
 export interface ResolvedVueCompilerOptions {
 	target: 2 | 2.7 | 3;
+	extensions: string[]; // base exts
 	jsxTemplates: boolean;
 	strictTemplates: boolean;
 	skipTemplateCodegen: boolean;
@@ -39,7 +40,6 @@ export type VueLanguagePlugin = (ctx: {
 	},
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: ResolvedVueCompilerOptions,
-	pluginOptions: Record<string, Record<string, unknown>>,
 }) => {
 	name?: string;
 	version: 1;

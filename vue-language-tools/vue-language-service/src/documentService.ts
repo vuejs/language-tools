@@ -52,7 +52,6 @@ export function createDocumentService(
 		env.rootUri.fsPath,
 		{},
 		{},
-		['.vue'],
 	);
 	const languageServiceContext = embeddedLS.createDocumentServiceContext({
 		ts,

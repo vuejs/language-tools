@@ -20,7 +20,6 @@ export function getDefaultVueLanguagePlugins(
 	compilerOptions: ts.CompilerOptions,
 	_vueCompilerOptions: VueCompilerOptions,
 	extraPlugins: VueLanguagePlugin[] = [],
-	pluginOptions: Record<string, Record<string, unknown>> = {},
 ) {
 
 	const _plugins: VueLanguagePlugin[] = [
@@ -60,7 +59,6 @@ export function getDefaultVueLanguagePlugins(
 		},
 		compilerOptions,
 		vueCompilerOptions,
-		pluginOptions
 	};
 	const plugins = _plugins.map(plugin => plugin(pluginCtx)).sort((a, b) => {
 		const aOrder = a.order ?? 0;

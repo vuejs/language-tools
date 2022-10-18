@@ -23,18 +23,9 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 
 	if (initOptions.additionalExtensions) {
 		for (const additionalExtension of initOptions.additionalExtensions) {
-			const ext = additionalExtension.startsWith(".") ? additionalExtension.substring(1) : additionalExtension;
-			extraFileExtensions.push({ extension: ext, isMixedContent: true, scriptKind: 7 });
+			extraFileExtensions.push({ extension: additionalExtension, isMixedContent: true, scriptKind: 7 });
 		}
 	}
-
-	const exts = extraFileExtensions.map(ext => '.' + ext.extension);
-
-	const pluginOptions = {
-		'file-vue': {
-			extensions: exts
-		}
-	};
 
 	return {
 		extraFileExtensions,
@@ -45,6 +36,7 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 				if (typeof tsConfig === 'string') {
 					vueOptions = vue2.createParsedCommandLine(ts, sys, tsConfig, []).vueOptions;
 				}
+				vueOptions.extensions = getVueExts(vueOptions.extensions ?? ['.vue']);
 				return {
 					...host,
 					getVueCompilationSettings: () => vueOptions,
@@ -56,9 +48,7 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 					host.getCurrentDirectory(),
 					host.getCompilationSettings(),
 					host.getVueCompilationSettings(),
-					exts,
 					[],
-					pluginOptions
 				);
 				return [vueLanguageModule];
 			},
@@ -109,9 +99,10 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 		syntacticService: {
 			getLanguageModules(ts, env) {
 				const vueLanguagePlugins = vue2.getDefaultVueLanguagePlugins(ts, shared.getPathOfUri(env.rootUri.toString()), {}, {}, []);
+				const vueExts = getVueExts(['.vue']);
 				const vueLanguageModule: embedded.LanguageModule = {
 					createSourceFile(fileName, snapshot) {
-						if (exts.some(ext => fileName.endsWith(ext))) {
+						if (vueExts.some(ext => fileName.endsWith(ext))) {
 							return new vue2.VueSourceFile(fileName, snapshot, ts, vueLanguagePlugins);
 						}
 					},
@@ -131,6 +122,13 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 			},
 		},
 	};
+
+	function getVueExts(baseExts: string[]) {
+		return [
+			...baseExts,
+			...initOptions.additionalExtensions?.map(ext => '.' + ext) ?? [],
+		];
+	}
 };
 
 export = plugin;
