@@ -42,7 +42,7 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 		}
 
-		const additionalExtensions = initOptions.additionalExtensions?.map(ext => `,**/*${ext}`).join("") ?? "";
+		const additionalExtensions = initOptions.additionalExtensions?.map(ext => `,**/*${ext}`).join('') ?? '';
 		const serverModule = vscode.Uri.joinPath(context.extensionUri, 'server.js');
 		const maxOldSpaceSize = vscode.workspace.getConfiguration('volar').get<number | null>('vueserver.maxOldSpaceSize');
 		const runOptions = { execArgv: <string[]>[] };
