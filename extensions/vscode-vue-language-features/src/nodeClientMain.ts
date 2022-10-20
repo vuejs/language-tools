@@ -42,6 +42,7 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 		}
 
+		const additionalExtensions = initOptions.additionalExtensions?.map(ext => `,**/*${ext}`).join("") ?? "";
 		const serverModule = vscode.Uri.joinPath(context.extensionUri, 'server.js');
 		const maxOldSpaceSize = vscode.workspace.getConfiguration('volar').get<number | null>('vueserver.maxOldSpaceSize');
 		const runOptions = { execArgv: <string[]>[] };
@@ -67,7 +68,7 @@ export function activate(context: vscode.ExtensionContext) {
 			initializationOptions: initOptions,
 			progressOnInitialization: true,
 			synchronize: {
-				fileEvents: vscode.workspace.createFileSystemWatcher(`{**/*.vue,${processMd() ? '**/*.md,' : ''}${processHtml() ? '**/*.html,' : ''}**/*.js,**/*.ts,**/*.cjs,**/*.cts,**/*.mjs,**/*.mts,**/*.jsx,**/*.tsx,**/*.json}`)
+				fileEvents: vscode.workspace.createFileSystemWatcher(`{**/*.vue,${processMd() ? '**/*.md,' : ''}${processHtml() ? '**/*.html,' : ''}**/*.js,**/*.ts,**/*.cjs,**/*.cts,**/*.mjs,**/*.mts,**/*.jsx,**/*.tsx,**/*.json${additionalExtensions}}`)
 			},
 		};
 		const client = new _LanguageClient(

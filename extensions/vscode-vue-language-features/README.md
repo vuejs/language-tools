@@ -162,7 +162,7 @@ defineProps<Props>()
 
 Syntax highlighting and intellisense can be applied to additional file extensions beyond just `.vue`. This will need to be configured in three different places for full support.
 
-In VS Code settings for the Volar extension add any additional extensions you need to `Additional Extensions`.
+In VS Code settings for the Volar extension add any additional extensions you need to `Additional Extensions`. Such as `.ext`.
 
 In your tsconfig.json file you will need to make sure your custom extension is included by TypeScript. If you have an include value for `./src/*.vue` then you would want to add an include for `./src/*.ext` as well. Next add a new key to the root of tsconfig.json called `vueCompilerOptions` with a child key of `extensions`. This should be an array that contains the `.vue` extension as well as your custom `.ext` extension.
 
