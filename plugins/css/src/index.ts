@@ -60,20 +60,8 @@ export default function (): LanguageServicePlugin {
 					const cssResult = await cssLs.doComplete2(document, position, stylesheet, context.env.documentContext, settings?.completion);
 
 					if (cssResult) {
-						for (let i = 0; i < cssResult.items.length; i++) {
-
-							const item = cssResult.items[i];
-
-							if (item.textEdit)
-								continue;
-
-							// track https://github.com/microsoft/vscode-css-languageservice/issues/265
-							const newText = item.insertText || item.label;
-							cssResult.items[i] = {
-								...item,
-								textEdit: vscode.TextEdit.replace(wordRange, newText),
-							};
-						}
+						cssResult.itemDefaults ??= {};
+						cssResult.itemDefaults.editRange ??= wordRange;
 					}
 
 					return cssResult;

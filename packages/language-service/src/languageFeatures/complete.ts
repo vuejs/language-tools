@@ -1,4 +1,4 @@
-import { transformCompletionItem } from '@volar/transforms';
+import { transformCompletionList } from '@volar/transforms';
 import type { LanguageServicePlugin, PositionCapabilities } from '@volar/language-service';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
@@ -64,25 +64,18 @@ export function register(context: LanguageServiceRuntimeContext) {
 							continue;
 						}
 
-						cacheData.list = {
-							...embeddedCompletionList,
-							items: embeddedCompletionList.items.map<vscode.CompletionItem>(item => {
-								return {
-									...transformCompletionItem(
-										item,
-										embeddedRange => sourceMap.toSourceRange(embeddedRange),
-									),
-									data: {
-										uri,
-										originalItem: item,
-										pluginId: context.plugins.indexOf(cacheData.plugin),
-										sourceMap: {
-											embeddedDocumentUri: sourceMap.mappedDocument.uri,
-										},
-									} satisfies PluginCompletionData,
-								};
-							}),
-						};
+						cacheData.list = transformCompletionList(
+							embeddedCompletionList,
+							range => sourceMap.toSourceRange(range),
+							(newItem, oldItem) => newItem.data = {
+								uri,
+								originalItem: oldItem,
+								pluginId: context.plugins.indexOf(cacheData.plugin),
+								sourceMap: {
+									embeddedDocumentUri: sourceMap.mappedDocument.uri,
+								},
+							} satisfies PluginCompletionData,
+						);
 					}
 				}
 				else if (document = context.getTextDocument(uri)) {
@@ -99,17 +92,15 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					cacheData.list = {
 						...completionList,
-						items: completionList.items.map<vscode.CompletionItem>(item => {
-							return {
-								...item,
-								data: {
-									uri,
-									originalItem: item,
-									pluginId: context.plugins.indexOf(cacheData.plugin),
-									sourceMap: undefined,
-								} satisfies PluginCompletionData,
-							};
-						})
+						items: completionList.items.map<vscode.CompletionItem>(item => ({
+							...item,
+							data: {
+								uri,
+								originalItem: item,
+								pluginId: context.plugins.indexOf(cacheData.plugin),
+								sourceMap: undefined,
+							} satisfies PluginCompletionData,
+						})),
 					};
 				}
 			}
@@ -169,25 +160,18 @@ export function register(context: LanguageServiceRuntimeContext) {
 								cache!.mainCompletion = { documentUri: sourceMap.mappedDocument.uri };
 							}
 
-							const completionList: vscode.CompletionList = {
-								...embeddedCompletionList,
-								items: embeddedCompletionList.items.map<vscode.CompletionItem>(item => {
-									return {
-										...transformCompletionItem(
-											item,
-											embeddedRange => sourceMap.toSourceRange(embeddedRange),
-										),
-										data: {
-											uri,
-											originalItem: item,
-											pluginId: context.plugins.indexOf(plugin),
-											sourceMap: {
-												embeddedDocumentUri: sourceMap.mappedDocument.uri,
-											}
-										} satisfies PluginCompletionData,
-									};
-								}),
-							};
+							const completionList = transformCompletionList(
+								embeddedCompletionList,
+								range => sourceMap.toSourceRange(range),
+								(newItem, oldItem) => newItem.data = {
+									uri,
+									originalItem: oldItem,
+									pluginId: context.plugins.indexOf(plugin),
+									sourceMap: {
+										embeddedDocumentUri: sourceMap.mappedDocument.uri,
+									}
+								} satisfies PluginCompletionData,
+							);
 
 							cache!.data.push({
 								sourceMap: {
@@ -264,9 +248,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 			return (b.complete?.isAdditional ? -1 : 1) - (a.complete?.isAdditional ? -1 : 1);
 		}
 
-		function combineCompletionList(lists: vscode.CompletionList[]) {
+		function combineCompletionList(lists: vscode.CompletionList[]): vscode.CompletionList {
 			return {
 				isIncomplete: lists.some(list => list.isIncomplete),
+				itemDefaults: lists.find(list => list.itemDefaults)?.itemDefaults,
 				items: lists.map(list => list.items).flat().filter((result: vscode.CompletionItem) =>
 					result.label.indexOf('__VLS_') === -1
 					&& (!result.labelDetails?.description || result.labelDetails.description.indexOf('__VLS_') === -1)
