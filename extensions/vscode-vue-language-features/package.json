@@ -320,8 +320,11 @@
 					"description": "Ignore project references settings of tsconfig in language server for resolve issue #1916."
 				},
 				"volar.vueserver.additionalExtensions": {
-					"type":"string",
-					"default": "",
+					"type":"array",
+					"items": {
+						"type": "string"
+					},
+					"default": [],
 					"description": "List any additional file extensions that should be processed as Vue files (requires restart)."
 				},
 				"volar.codeLens.references": {

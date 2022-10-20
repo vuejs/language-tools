@@ -203,14 +203,7 @@ export function noProjectReferences() {
 }
 
 function additionalExtensions() {
-	const extensions = vscode.workspace.getConfiguration('volar').get<string>('vueserver.additionalExtensions');
-
-	if (extensions) {
-		return extensions.split(/,; /).map(e => e.trim()).filter(e => e !== "");
-	}
-	else {
-		return [];
-	}
+	return vscode.workspace.getConfiguration('volar').get<string[]>('vueserver.additionalExtensions') ?? [];
 }
 
 function getFillInitializeParams(featuresKinds: LanguageFeaturesKind[]) {
