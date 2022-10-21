@@ -89,6 +89,7 @@ export function resolveVueCompilerOptions(vueOptions: VueCompilerOptions): Resol
 		...vueOptions,
 
 		target,
+		extensions: vueOptions.extensions ?? ['.vue'],
 		jsxTemplates: vueOptions.jsxTemplates ?? false,
 		strictTemplates: vueOptions.strictTemplates ?? false,
 		skipTemplateCodegen: vueOptions.skipTemplateCodegen ?? false,

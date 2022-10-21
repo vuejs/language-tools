@@ -130,7 +130,6 @@ export function createLanguageService(
 		host.getCurrentDirectory(),
 		host.getCompilationSettings(),
 		host.getVueCompilationSettings(),
-		['.vue'],
 	);
 	const core = embedded.createEmbeddedLanguageServiceHost(host, [vueLanguageModule]);
 	const languageServiceContext = embeddedLS.createLanguageServiceContext({
