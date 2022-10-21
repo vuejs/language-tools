@@ -25,9 +25,9 @@ export function register(
 				const inferredProject = await _inferredProject;
 				console.log('files:');
 				for (const script of inferredProject.scripts.values()) {
-					console.log('- ' + script.fileName);
-					console.log(`  size: ${script.snapshot?.getLength()}`);
-					console.log(`  ref counts: ${(workspace.documentRegistry as any).getLanguageServiceRefCounts?.(script.fileName, inferredProject.languageServiceHost.getScriptKind?.(script.fileName))})`);
+					console.log('  - ' + script.fileName);
+					console.log(`    size: ${script.snapshot?.getLength()}`);
+					console.log(`    ref counts: "${(workspace.documentRegistry as any).getLanguageServiceRefCounts?.(script.fileName, inferredProject.languageServiceHost.getScriptKind?.(script.fileName))})"`);
 				}
 			}
 			else {
@@ -41,9 +41,9 @@ export function register(
 				console.log('loaded: ' + !!project.getLanguageServiceDontCreate());
 				console.log('files:');
 				for (const script of project.scripts.values()) {
-					console.log('- ' + script.fileName);
-					console.log(`  size: ${script.snapshot?.getLength()}`);
-					console.log(`  ref counts: ${(workspace.documentRegistry as any).getLanguageServiceRefCounts?.(script.fileName, project.languageServiceHost.getScriptKind?.(script.fileName))})`);
+					console.log('  - ' + script.fileName);
+					console.log(`    size: ${script.snapshot?.getLength()}`);
+					console.log(`    ref counts: "${(workspace.documentRegistry as any).getLanguageServiceRefCounts?.(script.fileName, project.languageServiceHost.getScriptKind?.(script.fileName))})"`);
 				}
 			}
 			console.log('');
