@@ -7,6 +7,9 @@
 			"path": "./extensions/vscode-vue-language-features/tsconfig.build.json"
 		},
 		{
+			"path": "./extensions/vscode-typescript-vue-plugin/tsconfig.build.json"
+		},
+		{
 			"path": "./examples/vscode-svelte/tsconfig.build.json"
 		},
 		// Extra Pkgs
