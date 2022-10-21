@@ -48,7 +48,6 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 					host.getCurrentDirectory(),
 					host.getCompilationSettings(),
 					host.getVueCompilationSettings(),
-					[],
 				);
 				return [vueLanguageModule];
 			},
