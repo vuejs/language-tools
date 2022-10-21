@@ -60,8 +60,10 @@ export async function createWorkspaceProjects(
 
 	return {
 		projects,
+		documentRegistry,
 		getProjectAndTsConfig,
 		getInferredProject,
+		getInferredProjectDontCreate: () => inferredProject,
 		reload: clearProjects,
 		dispose() {
 			clearProjects();

@@ -54,6 +54,9 @@ export async function createProject(
 	});
 
 	return {
+		tsConfig,
+		scripts,
+		languageServiceHost,
 		getLanguageService,
 		getLanguageServiceDontCreate: () => vueLs,
 		getParsedCommandLine: () => parsedCommandLine,

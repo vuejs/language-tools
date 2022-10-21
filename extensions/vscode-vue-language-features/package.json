@@ -651,6 +651,11 @@
 				"category": "Volar (Debug)"
 			},
 			{
+				"command": "volar.action.serverStats",
+				"title": "Server Stats",
+				"category": "Volar (Debug)"
+			},
+			{
 				"command": "volar.action.showComponentMeta",
 				"title": "Show Component Meta",
 				"category": "Volar"
