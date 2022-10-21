@@ -66,6 +66,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	vscode.commands.executeCommand('setContext', 'volar.activated', true);
 
 	const _serverMaxOldSpaceSize = serverMaxOldSpaceSize();
+	const _additionalExtensions = additionalExtensions();
 
 	[semanticClient, syntacticClient] = await Promise.all([
 		createLc(
@@ -122,8 +123,10 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	}
 	function registerServerMaxOldSpaceSizeChange() {
 		vscode.workspace.onDidChangeConfiguration(async () => {
-			const nowServerMaxOldSpaceSize = serverMaxOldSpaceSize();
-			if (_serverMaxOldSpaceSize !== nowServerMaxOldSpaceSize) {
+			if (
+				_serverMaxOldSpaceSize !== serverMaxOldSpaceSize()
+				|| _additionalExtensions.join(',') !== additionalExtensions().join(',')
+			) {
 				return requestReloadVscode();
 			}
 		});
