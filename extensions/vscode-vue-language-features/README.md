@@ -160,21 +160,18 @@ defineProps<Props>()
 
 ### Custom File Extensions
 
-Syntax highlighting and intellisense can be applied to additional file extensions beyond just `.vue`. This will need to be configured in three different places for full support.
+Syntax highlighting and intellisense can be applied to additional file extensions beyond just `vue`. This will need to be configured in three different places for full support.
 
-In VS Code settings for the Volar extension add any additional extensions you need to `Additional Extensions`. Such as `.ext`.
+In VS Code settings for the Volar extension add any additional extensions you need to `Additional Extensions`. Such as `ext`.
 
-In your tsconfig.json file you will need to make sure your custom extension is included by TypeScript. If you have an include value for `./src/*.vue` then you would want to add an include for `./src/*.ext` as well. Next add a new key to the root of tsconfig.json called `vueCompilerOptions` with a child key of `extensions`. This should be an array that contains the `.vue` extension as well as your custom `.ext` extension.
+In your tsconfig.json file you will need to make sure your custom extension is included by TypeScript. If you have an include value for `./src/*.vue` then you would want to add an include for `./src/*.ext` as well.
 
 ```json
 "include": [
   "./src/*.ts",
   "./src/*.vue",
   "./src/*.ext",
-],
-"vueCompilerOptions": {
-  "extensions": [".vue", ".ext"]
-}
+]
 ```
 
 Finally you need to make VS Code recognize your new extension and automatically associate it with the Vue language format. To do this you need to configure your File Associations setting to map `*.ext` to the language value `vue`. This can be done under Text Editor &gt; Files, or with the key `files.associations`.
