@@ -23,6 +23,14 @@ export function register(
 			if (_inferredProject) {
 				console.log('loaded: true');
 				const inferredProject = await _inferredProject;
+				console.log('largest 10 files:');
+				for (const script of [...inferredProject.scripts.values()]
+					.sort((a, b) => (b.snapshot?.getLength() ?? 0) - (a.snapshot?.getLength() ?? 0))
+					.slice(0, 10)
+				) {
+					console.log('  - ' + script.fileName);
+					console.log(`    size: ${script.snapshot?.getLength()}`);
+				}
 				console.log('files:');
 				for (const script of inferredProject.scripts.values()) {
 					console.log('  - ' + script.fileName);
@@ -39,6 +47,14 @@ export function register(
 				const project = await _project;
 				console.log('tsconfig: ' + project.tsConfig);
 				console.log('loaded: ' + !!project.getLanguageServiceDontCreate());
+				console.log('largest 10 files:');
+				for (const script of [...project.scripts.values()]
+					.sort((a, b) => (b.snapshot?.getLength() ?? 0) - (a.snapshot?.getLength() ?? 0))
+					.slice(0, 10)
+				) {
+					console.log('  - ' + script.fileName);
+					console.log(`    size: ${script.snapshot?.getLength()}`);
+				}
 				console.log('files:');
 				for (const script of project.scripts.values()) {
 					console.log('  - ' + script.fileName);
