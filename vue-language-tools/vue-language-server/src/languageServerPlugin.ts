@@ -123,10 +123,11 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 	};
 
 	function getVueExts(baseExts: string[]) {
-		return [
+		const set = new Set([
 			...baseExts,
-			...initOptions.additionalExtensions?.map(ext => '.' + ext) ?? [],
-		];
+			...extraFileExtensions.map(ext => '.' + ext.extension),
+		]);
+		return [...set];
 	}
 };
 

@@ -8,7 +8,7 @@ const plugin: VueLanguagePlugin = (ctx) => {
 		version: 1,
 
 		parseSFC(fileName, content) {
-			if (ctx.vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))) {
+			if (!fileName.endsWith('.html') && !fileName.endsWith('.md') &&  ctx.vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))) {
 				return parse(content);
 			}
 		},
