@@ -1,5 +1,275 @@
 # Changelog
 
+## 1.0.8 (2022/10/15)
+
+- feat: support for twoslash queries (https://github.com/johnsoncodehk/volar-plugins/issues/9)
+- feat: support `generic` attribute auto-complete
+- feat: add `volar.vueserver.noProjectReferences` setting for support jump to source files from reference projects ([#1344](https://github.com/johnsoncodehk/volar/issues/1344))
+- fix: SFC parse failed if script content including `<script>` ([#1982](https://github.com/johnsoncodehk/volar/issues/1982))
+- fix: avoid report type error for invalid component without enable `jsxTemplates` ([#2007](https://github.com/johnsoncodehk/volar/issues/2007))
+- fix: intrinsic tag highlight should only including open tag and close tag ([#2009](https://github.com/johnsoncodehk/volar/issues/2009))
+- fix: component type should take capitalize property takes precedence over camelize property from context ([#2010](https://github.com/johnsoncodehk/volar/issues/2010))
+- fix: references codeLens should not including sources on display (https://github.com/johnsoncodehk/volar/issues/1989#issuecomment-1277585337)
+
+### Our Sponsors
+
+<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
+	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
+</a>
+
+## 1.0.7 (2022/10/13)
+
+- feat(vue-language-core): support custom v-model prefix ([#2004](https://github.com/johnsoncodehk/volar/issues/2004))
+- feat: allow passing attributes array for `experimentalModelPropName` ignore setting ([#1821](https://github.com/johnsoncodehk/volar/issues/1821))
+- fix: `@volar/vue-language-plugin-pug` cause to doctor warns in Vue 2.7 project ([#2002](https://github.com/johnsoncodehk/volar/issues/2002))
+- fix: mitigate virtual file mapping highlights dislocation
+- fix: tag hover not working when enabled `jsxTemplates`
+- fix: avoid convert invalid JSX type to any when enabled `jsxTemplates`
+- fix: component JSX type invalid when enabled `jsxTemplates` but template has no any slots
+- perf: try skip convert attribute value to unicode
+
+## 1.0.6 (2022/10/12)
+
+- fix: component ast broken when use script setup with `export default` ([#1996](https://github.com/johnsoncodehk/volar/issues/1996))
+- fix: `experimentalModelPropName` link invalid ([#1999](https://github.com/johnsoncodehk/volar/issues/1999))
+- fix: `@volar/pug-language-service` crash ([#2000](https://github.com/johnsoncodehk/volar/issues/2000))
+
+## 1.0.5 (2022/10/12)
+
+- feat(doctor): report warning for `@types/node` version `>= 18.8.1` ([#1985](https://github.com/johnsoncodehk/volar/issues/1985))
+- fix: `@volar-examples/svelte-tsc`, `@volar-examples/svelte-typescript` released empty dist
+- fix: component syntax minor defect when enabled `experimentalRfc436`
+- fix: force use VSCode display language in language server ([#1959](https://github.com/johnsoncodehk/volar/issues/1959))
+- fix: don't hoisting defineProps type arg when disabled `experimentalRfc436` ([#1994](https://github.com/johnsoncodehk/volar/issues/1994))
+
+## 1.0.4 (2022/10/12)
+
+- feat: Support generic typed template slots for RFC 436 ([#1987](https://github.com/johnsoncodehk/volar/issues/1987))
+- feat: add `resolveTemplateCompilerOptions` API for `VueLanguagePlugin`
+- feat: support intellisense for `generic` attribute ([#1967](https://github.com/johnsoncodehk/volar/issues/1967))
+- feat: add `Show Component Meta` command for inspect `vue-component-meta` result
+- feat: add `vueCompilerOptions.experimentalModelPropName` for customize `v-model` binding prop for vue 2 component ([#1969](https://github.com/johnsoncodehk/volar/issues/1969))
+- fix: `TypeScript Vue Plugin (Volar)` stop working
+- fix: change `vueCompilerOptions.dataAttributes` default value from `["data-*"]` to `[]` ([#1965](https://github.com/johnsoncodehk/volar/issues/1965))
+- fix: component props order should be on the top ([#1972](https://github.com/johnsoncodehk/volar/issues/1972))
+- fix: `@volar/vue-language-plugin-pug` crash due to missing depend
+- fix: component tag highlight not working for pug template ([#1977](https://github.com/johnsoncodehk/volar/issues/1977))
+- fix: references codeLens number incorrect ([#1989](https://github.com/johnsoncodehk/volar/issues/1989))
+
+**Breaking changes**
+
+- Removed `experimentalTemplateCompilerOptions`, `experimentalTemplateCompilerOptionsRequirePath` from `vueCompilerOptions` ([#1991](https://github.com/johnsoncodehk/volar/issues/1991))
+
+## 1.0.3 (2022/10/10)
+
+- feat: support `as` expressions in export assignment for script setup ([#1882](https://github.com/johnsoncodehk/volar/issues/1882))
+- feat: support RFC 436 with new option `vueCompilerOptions.experimentalRfc436` ([#1964](https://github.com/johnsoncodehk/volar/issues/1964)) (https://github.com/vuejs/rfcs/discussions/436)
+
+## 1.0.2 (2022/10/9)
+
+- fix: `TypeScript Vue Plugin (Volar)` breaks VSCode tsserver ([#1956](https://github.com/johnsoncodehk/volar/issues/1956))
+- fix: pug intellisense not working
+- fix: semantic tokens confused git diff window (https://github.com/johnsoncodehk/volar/issues/1946#issuecomment-1272430742)
+- fix(doctor): cannot resolve `vueCompilerOptions` from extends tsconfig
+- fix(doctor): cannot resolve vue version from sub folder ([#1961](https://github.com/johnsoncodehk/volar/issues/1961)) ([#1962](https://github.com/johnsoncodehk/volar/issues/1962))
+- fix: scoped class name no longer displays underline ([#1960](https://github.com/johnsoncodehk/volar/issues/1960))
+
+## 1.0.1 (2022/10/9)
+
+- feat(doctor): added more postcss syntax highliters ([#1945](https://github.com/johnsoncodehk/volar/issues/1945))
+- fix(doctor): `@vue/compiler-dom` missing message incorrect ([#1953](https://github.com/johnsoncodehk/volar/issues/1953))
+- fix: name casing tool typo ([#1941](https://github.com/johnsoncodehk/volar/issues/1941))
+- fix: takeover mode document link incorrect ([#1944](https://github.com/johnsoncodehk/volar/issues/1944))
+- fix: code color disordered if .ts script do not include to tsconfig ([#1946](https://github.com/johnsoncodehk/volar/issues/1946))
+- fix: cannot start language server if worksapce tsdk path invalid ([#1942](https://github.com/johnsoncodehk/volar/issues/1942))
+- fix: "Show Virtual Files" command not working for .md / .html
+- fix: tag autocomplete add duplicated import if the tag not use in template ([#1952](https://github.com/johnsoncodehk/volar/issues/1952))
+- fix: template AST broken when input space after tag name
+- fix: don't use native event type for component ([#1948](https://github.com/johnsoncodehk/volar/issues/1948)) ([#1951](https://github.com/johnsoncodehk/volar/issues/1951))
+- fix: command + hover `@click` cannot show selection range
+
+## 1.0.0 (2022/10/7)
+
+## 1.0.0-rc.5 (2022/10/7)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- fix: "Reload Project" command do not update diagnostics
+- feat: use svelte2tsx for svelte language server example ([#1940](https://github.com/johnsoncodehk/volar/issues/1940))
+
+## 1.0.0-rc.4 (2022/10/6)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- fix: html / css custom data not working (https://github.com/johnsoncodehk/volar/issues/707#issuecomment-1268513358)
+- fix: should not show tsconfig / name casing on status bar for md / html by default
+- fix: cannot watch *.ts changes without takeover mode (https://github.com/johnsoncodehk/volar/issues/1880#issuecomment-1269466716)
+
+## 1.0.0-rc.3 (2022/10/5)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- feat: support .cjs, .mjs, .cts, .mts on takeover mode ([#1928](https://github.com/johnsoncodehk/volar/issues/1928))
+- fix: multiple style attributes report false positive error ([#1929](https://github.com/johnsoncodehk/volar/issues/1929))
+
+## 1.0.0-rc.0 (2022/10/5)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- feat(vue-component-meta): add file update apis for support HMR ([#1889](https://github.com/johnsoncodehk/volar/issues/1889))
+- feat: add `dataAttributes`, `htmlAttributes` options for vueCompilerOptions ([#1871](https://github.com/johnsoncodehk/volar/issues/1871))
+- feat: support for `typescript.autoImportFileExcludePatterns`
+
+**Breaking changes**
+
+- Some `vueCompilerOptions` perperties leave experimental
+  - `experimentalComponentOptionsWrapper` -> `optionsWrapper`
+  - `experimentalAllowTypeNarrowingInInlineHandlers` -> `narrowingTypesInInlineHandlers`
+  - `experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup` -> `bypassDefineComponentToExposePropsAndEmitsForJsScriptSetupComponents`
+
+## 1.0.0-beta.6 (2022/10/4)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- fix: vue-language-server not release
+
+## 1.0.0-beta.5 (2022/10/4)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- feat: show plugin path in output of `vueCompilerOptions.plugins` if it failed to load
+- fix: document symbols not working in IDE other than VSCode ([#1925](https://github.com/johnsoncodehk/volar/issues/1925))
+- fix: hover info cannot show after save document (https://github.com/johnsoncodehk/volar/issues/1880#issuecomment-1266343050)
+- fix: cannot show "No tsconfig"
+
+## 1.0.0-beta.4 (2022/10/4)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- feat: support document doctor for common problems checking ([#1254](https://github.com/johnsoncodehk/volar/issues/1254))
+- feat: add "Show Virtual Files" command for debug virtual code and mapping
+
+## 1.0.0-beta.3 (2022/10/3)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- feat: support `ParseSFCRequest` LSP request for parse SFC to avoid language client depend on `@vue/compiler-sfc`
+- feat: add `VueServerInitializationOptions#cancellationPipeName` option for language client cancellation token supports
+- feat: remove second semantic language server and `volar.vueserver.useSecondServer` setting
+- perf: cancel asynchronous request via named pipes (https://github.com/johnsoncodehk/volar/pull/1916#issuecomment-1264709112)
+- chore: change extension icon to Vue logo
+- chore: optimize bunding (2.2MB -> 975KB)
+
+## 1.0.0-beta.2 (2022/9/30)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+**Breaking changes**
+
+- Update VueLanguagePlugin API to v1.0 ([Example](https://github.com/johnsoncodehk/muggle-string#usage))
+- Update language server `initializationOptions` interface ([#1916](https://github.com/johnsoncodehk/volar/issues/1916))
+
+## 1.0.0-beta.1 (2022/9/27)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- feat: support autocomplete for `v-model:xxx`
+- feat: simplify status bar
+- feat: support prop name case conversion in the status bar
+- feat: remove "auto", "both" and add "auto-kebab", "auto-pascal" for `volar.completion.preferredTagNameCase`
+- fix: cannot resolve `compilerOptions.types` from a higher level directory in a workspace sub directory ([#1764](https://github.com/johnsoncodehk/volar/issues/1764))
+- fix: should not trigger autocomplete lang attribute in templates ([#1836](https://github.com/johnsoncodehk/volar/issues/1836))
+- fix: cannot trigger autocomplete end with `v-xxx` ([#1905](https://github.com/johnsoncodehk/volar/issues/1905))
+- fix: auto insert parentheses remove `$x` from `$x as y`
+- fix: auto insert parentheses not working on props
+
+## 1.0.0-beta.0 (2022/9/25)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- perf: reduce input files to improve performance for large project
+- fix: template incremental update not working
+
+## 1.0.0-alpha.5 (2022/9/25)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- fix: language server crash on diagnosis `<style lang="postcss">` ([#1902](https://github.com/johnsoncodehk/volar/issues/1902))
+- fix: template tags selection range incorrect with definition
+
+## 1.0.0-alpha.4 (2022/9/24)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- fix: iterating `Symbol.Iterator` is not correctly inferred in `v-for` ([#1892](https://github.com/johnsoncodehk/volar/issues/1892))
+- fix: false positive error on `<CustomComponent @click.stop />` ([#464](https://github.com/johnsoncodehk/volar/issues/464#issuecomment-1159303260))
+- perf: improve for large template memory usage
+- perf: improve for monorepo project memory usage
+
+**Breaking changes**
+
+- vueCompilerOptions property `experimentalDisableTemplateSupport` renamed to `skipTemplateCodegen`
+
+## 1.0.0-alpha.3 (2022/9/21)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- fix: don't ignore `@vue/compiler-dom` compile errors for vue2 templates
+- fix: cannot start language server with `@volar/vue-language-server` since v1.0.0-alpha.0 ([#1888](https://github.com/johnsoncodehk/volar/issues/1888))
+
+## 1.0.0-alpha.2 (2022/9/21)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- feat: add less support for initial indent ([#1883](https://github.com/johnsoncodehk/volar/issues/1883))
+- feat: use `vue-template-compiler` instead of `@vue/compiler-dom` to collect template errors for target < 3
+- fix: moving components doesn't trigger import updates ([#1884](https://github.com/johnsoncodehk/volar/issues/1884))
+
+## 1.0.0-alpha.1 (2022/9/17)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- fix: `vue-tsc` depends version resolve failed ([#1881](https://github.com/johnsoncodehk/volar/issues/1881))
+
+## 1.0.0-alpha.0 (2022/9/16)
+
+[[Download](https://github.com/johnsoncodehk/volar/issues/1880)]
+
+- feat: framework agnostic language server ([#1859](https://github.com/johnsoncodehk/volar/issues/1859))
+- feat: improve `.value` auto insert invalid location filting
+- feat: add `vueCompilerOptions.jsxTemplates` for more fault tolerant template ([#1865](https://github.com/johnsoncodehk/volar/issues/1865))
+- feat: add `volar.vueserver.petiteVue.processHtmlFile`, `volar.vueserver.vitePress.processMdFile` to config language support for petite-vue, VitePress ([#1878](https://github.com/johnsoncodehk/volar/issues/1878))
+- fix: template context types broken with `"moduleResolution": "nodenext"` ([#1862](https://github.com/johnsoncodehk/volar/issues/1862))
+- fix: language server throw when use `lang="js"` without `"allowJs": true`
+- fix: auto `.value` failed if position immediately after another property `.value` access expression ([#1853](https://github.com/johnsoncodehk/volar/issues/1853))
+- fix: language onEnterRules, increaseIndentPattern incorrect in `<script>`, `<style>` ([#1847](https://github.com/johnsoncodehk/volar/issues/1847))
+- fix: source-map vue version inconsistent ([#1874](https://github.com/johnsoncodehk/volar/issues/1874))
+- fix: fix pug tag offset ([#1783](https://github.com/johnsoncodehk/volar/issues/1783))
+
+**Breaking changes**
+
+- Remove Alpine extension ([#1858](https://github.com/johnsoncodehk/volar/issues/1858))
+- No built-in support for pug template anymore, if you have use pug with vue-tsc before, please follow below changes:
+
+`package.json`
+```
+{
+	"devDependencies": {
+-		"@volar/pug-language-service": "latest"
++		"@volar/vue-language-plugin-pug": "latest"
+	}
+}
+```
+
+`tsconfig.json`
+```
+{
+	"vueCompilerOptions": {
+		"plugins": ["@volar/vue-language-plugin-pug"]
+	}
+}
+```
+
 ## 0.40.13 (2022/9/8)
 
 - fix: cycle reactive reference lead to memory leak
@@ -9,12 +279,6 @@
 - perf: fix incremental template compile not working
 - perf: cache path resolve result on `getScriptVersion`
 - perf: faster code mapping range transform
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 0.40.11 (2022/9/8)
 

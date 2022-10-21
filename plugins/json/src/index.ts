@@ -1,13 +1,13 @@
-import { EmbeddedLanguageServicePlugin, PluginContext } from '@volar/language-service';
+import type { LanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
 import * as json from 'vscode-json-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
-export default function (): EmbeddedLanguageServicePlugin {
+export default function (): LanguageServicePlugin {
 
 	const jsonDocuments = new WeakMap<TextDocument, [number, json.JSONDocument]>();
 
-	let context: PluginContext;
+	let context: LanguageServicePluginContext;
 	let jsonLs: json.LanguageService;
 
 	return {
@@ -43,7 +43,7 @@ export default function (): EmbeddedLanguageServicePlugin {
 		},
 
 		validation: {
-			onFull(document) {
+			onSyntactic(document) {
 				return worker(document, async (jsonDocument) => {
 
 					const documentLanguageSettings = undefined; // await getSettings(); // TODO

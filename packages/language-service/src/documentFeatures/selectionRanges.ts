@@ -13,21 +13,12 @@ export function register(context: DocumentServiceRuntimeContext) {
 			context,
 			document,
 			positions,
-			sourceMap => !!sourceMap.embeddedFile.capabilities.foldingRanges,
+			sourceMap => !!sourceMap.embeddedFile.capabilities.foldingRange,
 			(positions, sourceMap) => [positions
-				.map(position => sourceMap.getMappedRange(position, position)?.[0].start)
+				.map(position => sourceMap.toGeneratedPosition(position))
 				.filter(shared.notEmpty)],
 			(plugin, document, positions) => positions.length ? plugin.getSelectionRanges?.(document, positions) : undefined,
-			(data, sourceMap) => transformSelectionRanges(
-				data,
-				range => {
-
-					if (!sourceMap)
-						return range;
-
-					return sourceMap.getSourceRange(range.start, range.end)?.[0];
-				},
-			),
+			(item, sourceMap) => transformSelectionRanges(item, range => sourceMap.toSourceRange(range)),
 		);
 	};
 }

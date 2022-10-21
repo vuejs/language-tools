@@ -1,63 +1,146 @@
-import { DocumentRegistry, EmbeddedFileSourceMap, FileNode, forEachEmbeddeds, PositionCapabilities, Teleport, TeleportMappingData, TeleportCapabilities } from '@volar/language-core';
+import { DocumentRegistry, EmbeddedFile, forEachEmbeddeds, PositionCapabilities, SourceFile, TeleportMappingData } from '@volar/language-core';
 import * as shared from '@volar/shared';
-import { SourceMapBase } from '@volar/source-map';
+import { Mapping, SourceMapBase } from '@volar/source-map';
 import { computed } from '@vue/reactivity';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-
 import { URI } from 'vscode-uri';
 
 export type SourceFileDocuments = ReturnType<typeof parseSourceFileDocuments>;
 export type SourceFileDocument = ReturnType<typeof parseSourceFileDocument>;
 
-export class SourceMap<Data = undefined> {
+export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
 
 	constructor(
 		public sourceDocument: TextDocument,
 		public mappedDocument: TextDocument,
-		public base: SourceMapBase<Data> = new SourceMapBase(),
+		public mappings: Mapping<Data>[],
 	) {
+		super(mappings);
 	}
 
-	public getSourceRange<T extends number | vscode.Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
-		for (const mapped of this.getRanges(start, end ?? start, false, filter)) {
-			return mapped;
+	// Range APIs
+
+	public toSourceRange(range: vscode.Range, filter: (data: Data) => boolean = () => true) {
+		for (const result of this.toSourceRanges(range, filter)) {
+			return result;
 		}
 	}
-	public getMappedRange<T extends number | vscode.Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
-		for (const mapped of this.getRanges(start, end ?? start, true, filter)) {
-			return mapped;
+
+	public toGeneratedRange(range: vscode.Range, filter: (data: Data) => boolean = () => true) {
+		for (const result of this.toGeneratedRanges(range, filter)) {
+			return result;
 		}
 	}
-	public getSourceRanges<T extends number | vscode.Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
-		return this.getRanges(start, end ?? start, false, filter);
-	}
-	public getMappedRanges<T extends number | vscode.Position>(start: T, end?: T, filter?: (data: Data) => boolean) {
-		return this.getRanges(start, end ?? start, true, filter);
-	}
 
-	protected * getRanges<T extends number | vscode.Position>(start: T, end: T, sourceToTarget: boolean, filter?: (data: Data) => boolean) {
-
-		const startIsNumber = typeof start === 'number';
-		const endIsNumber = typeof end === 'number';
-
-		const toDoc = sourceToTarget ? this.mappedDocument : this.sourceDocument;
-		const fromDoc = sourceToTarget ? this.sourceDocument : this.mappedDocument;
-		const startOffset = startIsNumber ? start : fromDoc.offsetAt(start);
-		const endOffset = endIsNumber ? end : fromDoc.offsetAt(end);
-
-		for (const mapped of this.base.getRanges(startOffset, endOffset, sourceToTarget, filter)) {
-			yield getMapped(mapped);
+	public * toSourceRanges(range: vscode.Range, filter: (data: Data) => boolean = () => true) {
+		for (const result of this.toRanges(range, filter, 'toSourcePositionsBase', 'matchSourcePosition')) {
+			yield result;
 		}
+	}
 
-		function getMapped(mapped: [{ start: number, end: number; }, Data]): [{ start: T, end: T; }, Data] {
-			if (startIsNumber) {
-				return mapped as [{ start: T, end: T; }, Data];
+	public * toGeneratedRanges(range: vscode.Range, filter: (data: Data) => boolean = () => true) {
+		for (const result of this.toRanges(range, filter, 'toGeneratedPositionsBase', 'matchGeneratedPosition')) {
+			yield result;
+		}
+	}
+
+	protected * toRanges(
+		range: vscode.Range,
+		filter: (data: Data) => boolean,
+		api: 'toSourcePositionsBase' | 'toGeneratedPositionsBase',
+		api2: 'matchSourcePosition' | 'matchGeneratedPosition'
+	) {
+		const failedLookUps: (readonly [vscode.Position, Mapping<Data>])[] = [];
+		for (const mapped of this[api](range.start, filter, 'left')) {
+			const end = this[api2](range.end, mapped[1], 'right');
+			if (end) {
+				yield { start: mapped[0], end } as vscode.Range;
 			}
-			return [{
-				start: toDoc.positionAt(mapped[0].start) as T,
-				end: toDoc.positionAt(mapped[0].end) as T,
-			}, mapped[1]];
+			else {
+				failedLookUps.push(mapped);
+			}
+		}
+		for (const failedLookUp of failedLookUps) {
+			for (const mapped of this[api](range.end, filter, 'right')) {
+				yield { start: failedLookUp[0], end: mapped[0] } as vscode.Range;
+			}
+		}
+	}
+
+	// Position APIs
+
+	public toSourcePosition(position: vscode.Position, filter: (data: Data) => boolean = () => true, baseOffset: 'left' | 'right' = 'left') {
+		for (const mapped of this.toSourcePositions(position, filter, baseOffset)) {
+			return mapped;
+		}
+	}
+
+	public toGeneratedPosition(position: vscode.Position, filter: (data: Data) => boolean = () => true, baseOffset: 'left' | 'right' = 'left') {
+		for (const mapped of this.toGeneratedPositions(position, filter, baseOffset)) {
+			return mapped;
+		}
+	}
+
+	public * toSourcePositions(position: vscode.Position, filter: (data: Data) => boolean = () => true, baseOffset: 'left' | 'right' = 'left') {
+		for (const mapped of this.toSourcePositionsBase(position, filter, baseOffset)) {
+			yield mapped[0];
+		}
+	}
+
+	public * toGeneratedPositions(position: vscode.Position, filter: (data: Data) => boolean = () => true, baseOffset: 'left' | 'right' = 'left') {
+		for (const mapped of this.toGeneratedPositionsBase(position, filter, baseOffset)) {
+			yield mapped[0];
+		}
+	}
+
+	public toSourcePositionsBase(position: vscode.Position, filter: (data: Data) => boolean = () => true, baseOffset: 'left' | 'right' = 'left') {
+		return this.toPositions(position, filter, this.mappedDocument, this.sourceDocument, 'generatedRange', 'sourceRange', baseOffset);
+	}
+
+	public toGeneratedPositionsBase(position: vscode.Position, filter: (data: Data) => boolean = () => true, baseOffset: 'left' | 'right' = 'left') {
+		return this.toPositions(position, filter, this.sourceDocument, this.mappedDocument, 'sourceRange', 'generatedRange', baseOffset);
+	}
+
+	protected * toPositions(
+		position: vscode.Position,
+		filter: (data: Data) => boolean,
+		fromDoc: TextDocument,
+		toDoc: TextDocument,
+		from: 'sourceRange' | 'generatedRange',
+		to: 'sourceRange' | 'generatedRange',
+		baseOffset: 'left' | 'right',
+	) {
+		for (const mapped of this.matcing(fromDoc.offsetAt(position), from, to)) {
+			if (!filter(mapped[1].data)) {
+				continue;
+			}
+			let offset = mapped[0];
+			const mapping = mapped[1];
+			if (baseOffset === 'right') {
+				offset += (mapping.sourceRange[1] - mapping.sourceRange[0]) - (mapping.generatedRange[1] - mapping.generatedRange[0]);
+			}
+			yield [toDoc.positionAt(offset), mapping] as const;
+		}
+	}
+
+	protected matchSourcePosition(position: vscode.Position, mapping: Mapping, baseOffset: 'left' | 'right') {
+		let offset = this.matchOffset(this.mappedDocument.offsetAt(position), mapping['generatedRange'], mapping['sourceRange']);
+		if (offset !== undefined) {
+			if (baseOffset === 'right') {
+				offset += (mapping.sourceRange[1] - mapping.sourceRange[0]) - (mapping.generatedRange[1] - mapping.generatedRange[0]);
+			}
+			return this.sourceDocument.positionAt(offset);
+		}
+	}
+
+	protected matchGeneratedPosition(position: vscode.Position, mapping: Mapping, baseOffset: 'left' | 'right') {
+		let offset = this.matchOffset(this.sourceDocument.offsetAt(position), mapping['sourceRange'], mapping['generatedRange']);
+		if (offset !== undefined) {
+			if (baseOffset === 'right') {
+				offset += (mapping.generatedRange[1] - mapping.generatedRange[0]) - (mapping.sourceRange[1] - mapping.sourceRange[0]);
+			}
+			return this.mappedDocument.positionAt(offset);
 		}
 	}
 }
@@ -65,29 +148,29 @@ export class SourceMap<Data = undefined> {
 export class EmbeddedDocumentSourceMap extends SourceMap<PositionCapabilities> {
 
 	constructor(
-		public embeddedFile: FileNode,
+		public embeddedFile: EmbeddedFile,
 		public sourceDocument: TextDocument,
 		public mappedDocument: TextDocument,
-		_sourceMap: EmbeddedFileSourceMap,
+		mappings: Mapping<PositionCapabilities>[],
 	) {
-		super(sourceDocument, mappedDocument, _sourceMap);
+		super(sourceDocument, mappedDocument, mappings);
 	}
 }
 
 export class TeleportSourceMap extends SourceMap<TeleportMappingData> {
 	constructor(
-		public embeddedFile: FileNode,
+		public embeddedFile: EmbeddedFile,
 		public document: TextDocument,
-		teleport: Teleport,
+		mappings: Mapping<TeleportMappingData>[],
 	) {
-		super(document, document, teleport);
+		super(document, document, mappings);
 	}
-	*findTeleports(start: vscode.Position, end?: vscode.Position, filter?: (data: TeleportCapabilities) => boolean) {
-		for (const [teleRange, data] of this.getMappedRanges(start, end, filter ? data => filter(data.toGenedCapabilities) : undefined)) {
-			yield [teleRange, data.toGenedCapabilities] as const;
+	*findTeleports(start: vscode.Position) {
+		for (const mapped of this.toGeneratedPositionsBase(start)) {
+			yield [mapped[0], mapped[1].data.toGenedCapabilities] as const;
 		}
-		for (const [teleRange, data] of this.getSourceRanges(start, end, filter ? data => filter(data.toSourceCapabilities) : undefined)) {
-			yield [teleRange, data.toSourceCapabilities] as const;
+		for (const mapped of this.toSourcePositionsBase(start)) {
+			yield [mapped[0], mapped[1].data.toSourceCapabilities] as const;
 		}
 	}
 }
@@ -97,7 +180,7 @@ export function parseSourceFileDocuments(
 	mapper: DocumentRegistry,
 ) {
 
-	const _sourceFiles = new WeakMap<FileNode, SourceFileDocument>();
+	const _sourceFiles = new WeakMap<SourceFile, SourceFileDocument>();
 
 	// reactivity
 	const embeddedDocumentsMap = computed(() => {
@@ -109,7 +192,7 @@ export function parseSourceFileDocuments(
 		}
 		return map;
 	});
-	const embeddedDocumentsMapLsType = computed(() => {
+	const embeddedDocumentMaps = computed(() => {
 		const map = new Map<string, EmbeddedDocumentSourceMap>();
 		for (const vueDocument of getAll()) {
 			for (const sourceMap of vueDocument.getSourceMaps()) {
@@ -118,7 +201,7 @@ export function parseSourceFileDocuments(
 		}
 		return map;
 	});
-	const teleportsMapLsType = computed(() => {
+	const teleports = computed(() => {
 		const map = new Map<string, TeleportSourceMap>();
 		for (const vueDocument of getAll()) {
 			for (const teleport of vueDocument.getTeleports()) {
@@ -143,58 +226,17 @@ export function parseSourceFileDocuments(
 			return embeddedDocumentsMap.value.get(document);
 		},
 		sourceMapFromEmbeddedDocumentUri: (uri: string) => {
-			return embeddedDocumentsMapLsType.value.get(uri);
+			return embeddedDocumentMaps.value.get(uri);
 		},
 		teleportfromEmbeddedDocumentUri: (uri: string) => {
-			return teleportsMapLsType.value.get(uri);
-		},
-		fromEmbeddedLocation: function* (
-			uri: string,
-			start: vscode.Position,
-			end?: vscode.Position,
-			filter?: (data: PositionCapabilities) => boolean,
-			sourceMapFilter?: (sourceMap: EmbeddedFileSourceMap) => boolean,
-		) {
-
-			if (uri.endsWith('/__VLS_types.ts')) { // TODO: monkey fix
-				return;
-			}
-
-			if (end === undefined)
-				end = start;
-
-			const sourceMap = embeddedDocumentsMapLsType.value.get(uri);
-
-			if (sourceMap) {
-
-				if (sourceMapFilter && !sourceMapFilter(sourceMap.base))
-					return;
-
-				for (const vueRange of sourceMap.getSourceRanges(start, end, filter)) {
-					yield {
-						uri: sourceMap.sourceDocument.uri,
-						range: vueRange[0],
-						sourceMap,
-						data: vueRange[1],
-					};
-				}
-			}
-			else {
-				yield {
-					uri,
-					range: {
-						start,
-						end,
-					},
-				};
-			}
+			return teleports.value.get(uri);
 		},
 	};
 
-	function get(sourceFile: FileNode) {
+	function get(sourceFile: SourceFile) {
 		let vueDocument = _sourceFiles.get(sourceFile);
 		if (!vueDocument) {
-			vueDocument = parseSourceFileDocument(rootUri, sourceFile, mapper);
+			vueDocument = parseSourceFileDocument(rootUri, sourceFile);
 			_sourceFiles.set(sourceFile, vueDocument);
 		}
 		return vueDocument;
@@ -206,14 +248,13 @@ export function parseSourceFileDocuments(
 
 export function parseSourceFileDocument(
 	rootUri: URI,
-	sourceFile: FileNode,
-	mapper: DocumentRegistry,
+	sourceFile: SourceFile,
 ) {
 
 	let documentVersion = 0;
 	const embeddedDocumentVersions = new Map<string, number>();
-	const embeddedDocuments = new WeakMap<FileNode, TextDocument>();
-	const sourceMaps = new WeakMap<FileNode, [number, EmbeddedDocumentSourceMap]>();
+	const embeddedDocuments = new WeakMap<SourceFile, TextDocument>();
+	const sourceMaps = new WeakMap<SourceFile, [number, EmbeddedDocumentSourceMap]>();
 
 	// computed
 	const document = computed(() => TextDocument.create(
@@ -237,7 +278,7 @@ export function parseSourceFileDocument(
 				const sourceMap = new TeleportSourceMap(
 					embedded,
 					embeddedDocument,
-					mapper.getTeleportSourceMap(sourceFile, embedded.teleportMappings),
+					embedded.teleportMappings,
 				);
 				result.push(sourceMap);
 			}
@@ -255,7 +296,7 @@ export function parseSourceFileDocument(
 		getDocument: () => document.value,
 	};
 
-	function getSourceMap(embedded: FileNode) {
+	function getSourceMap(embedded: EmbeddedFile) {
 
 		let cache = sourceMaps.get(embedded);
 
@@ -267,7 +308,7 @@ export function parseSourceFileDocument(
 					embedded,
 					document.value,
 					getEmbeddedDocument(embedded),
-					mapper.getSourceMap(sourceFile, embedded.mappings),
+					embedded.mappings,
 				)
 			];
 			sourceMaps.set(embedded, cache);
@@ -276,7 +317,7 @@ export function parseSourceFileDocument(
 		return cache[1];
 	}
 
-	function getEmbeddedDocument(embeddedFile: FileNode) {
+	function getEmbeddedDocument(embeddedFile: SourceFile) {
 
 		let document = embeddedDocuments.get(embeddedFile);
 

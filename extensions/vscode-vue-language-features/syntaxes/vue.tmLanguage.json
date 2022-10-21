@@ -1,4 +1,5 @@
 {
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
 	"name": "Vue",
 	"scopeName": "source.vue",
 	"patterns": [
@@ -881,6 +882,9 @@
 				},
 				{
 					"include": "#vue-directives-original"
+				},
+				{
+					"include": "#vue-directives-generic-attr"
 				}
 			]
 		},
@@ -1079,6 +1083,56 @@
 						{
 							"match": ";",
 							"name": "punctuation.terminator.rule.css"
+						}
+					]
+				}
+			]
+		},
+		"vue-directives-generic-attr": {
+			"begin": "\\b(generic)\\s*(=)",
+			"captures": {
+				"1": {
+					"name": "entity.other.attribute-name.html.vue"
+				},
+				"2": {
+					"name": "punctuation.separator.key-value.html.vue"
+				}
+			},
+			"end": "(?<='|\")",
+			"name": "meta.attribute.generic.vue",
+			"patterns": [
+				{
+					"begin": "('|\")",
+					"beginCaptures": {
+						"1": {
+							"name": "punctuation.definition.string.begin.html.vue"
+						}
+					},
+					"end": "(\\1)",
+					"endCaptures": {
+						"1": {
+							"name": "punctuation.definition.string.end.html.vue"
+						}
+					},
+					"name": "meta.type.parameters.vue",
+					"comment": "https://github.com/microsoft/vscode/blob/fd4346210f59135fad81a8b8c4cea7bf5a9ca6b4/extensions/typescript-basics/syntaxes/TypeScript.tmLanguage.json#L4002-L4020",
+					"patterns": [
+						{
+							"include": "source.ts#comment"
+						},
+						{
+							"name": "storage.modifier.ts",
+							"match": "(?<![_$[:alnum:]])(?:(?<=\\.\\.\\.)|(?<!\\.))(extends|in|out)(?![_$[:alnum:]])(?:(?=\\.\\.\\.)|(?!\\.))"
+						},
+						{
+							"include": "source.ts#type"
+						},
+						{
+							"include": "source.ts#punctuation-comma"
+						},
+						{
+							"name": "keyword.operator.assignment.ts",
+							"match": "(=)(?!>)"
 						}
 					]
 				}

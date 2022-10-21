@@ -1,217 +1,144 @@
-import { computed, shallowRef as ref } from '@vue/reactivity';
+import { SegmentWithData, SegmentWithoutData } from 'muggle-string';
 
-export interface Range {
-	start: number,
-	end: number,
-}
+export * from 'muggle-string';
 
-export enum Mode {
-	/**
-	 * @case1
-	 * 123456 -> abcdef
-	 * ^    ^    ^    ^
-	 * @case2
-	 * 123456 -> abcdef
-	 *  ^  ^      ^  ^
-	 * @case3
-	 * 123456 -> abcdef
-	 *   ^^        ^^
-	 */
-	Offset = 1,
-	/**
-	 * @case1
-	 * 123456 -> abcdef
-	 * ^    ^    ^    ^
-	 * @case2
-	 * 123456 -> abcdef
-	 *  ^  ^     NOT_MATCH
-	 * @case3
-	 * 123456 -> abcdef
-	 *   ^^      NOT_MATCH
-	 */
-	Totally = 2,
-	/**
-	 * @case1
-	 * 123456 -> abcdef
-	 * ^    ^    ^    ^
-	 * @case2
-	 * 123456 -> abcdef
-	 *  ^  ^     ^    ^
-	 * @case3
-	 * 123456 -> abcdef
-	 *   ^^      ^    ^
-	 */
-	Expand = 3,
-}
-
-export type MappingBase = {
-	mode: Mode,
-	sourceRange: Range,
-	mappedRange: Range,
-};
-
-export type Mapping<T> = MappingBase & {
-	data: T,
-	additional?: MappingBase[],
+export interface Mapping<T = any> {
+	source?: string;
+	sourceRange: [number, number];
+	generatedRange: [number, number];
+	data: T;
 };
 
 export class SourceMapBase<Data = undefined> {
 
-	private __mappings = ref<Mapping<Data>[]>([]);
-	private __memo = computed(() => {
+	private _memo: {
+		sourceRange: {
+			offset: number;
+			mappings: Set<Mapping<Data>>;
+		}[];
+		generatedRange: {
+			offset: number;
+			mappings: Set<Mapping<Data>>;
+		}[];
+	} | undefined;
 
-		const self = this;
-		const source = createMemo('sourceRange');
-		const mapped = createMemo('mappedRange');
+	private get memo() {
+		if (!this._memo) {
 
-		return {
-			source,
-			mapped,
-		};
+			const self = this;
+			this._memo = {
+				sourceRange: createMemo('sourceRange'),
+				generatedRange: createMemo('generatedRange'),
+			};
 
-		function createMemo(key: 'mappedRange' | 'sourceRange') {
+			function createMemo(key: 'sourceRange' | 'generatedRange') {
 
-			const offsets = new Set<number>();
+				const offsets = new Set<number>();
 
-			for (const mapping of self.mappings) {
+				for (const mapping of self.mappings) {
+					offsets.add(mapping[key][0]);
+					offsets.add(mapping[key][1]);
+				}
 
-				offsets.add(mapping[key].start);
-				offsets.add(mapping[key].end);
+				const arr: {
+					offset: number,
+					mappings: Set<Mapping<Data>>,
+				}[] = [...offsets].sort((a, b) => a - b).map(offset => ({ offset, mappings: new Set() }));
 
-				if (mapping.additional) {
-					for (const addition of mapping.additional) {
-						offsets.add(addition[key].start);
-						offsets.add(addition[key].end);
+				for (const mapping of self.mappings) {
+
+					const startIndex = binarySearch(mapping[key][0])!;
+					const endIndex = binarySearch(mapping[key][1])!;
+
+					for (let i = startIndex; i <= endIndex; i++) {
+						arr[i].mappings.add(mapping);
 					}
 				}
-			}
 
-			const arr: {
-				offset: number,
-				mappings: Set<Mapping<Data>>,
-			}[] = [...offsets].sort((a, b) => a - b).map(offset => ({ offset, mappings: new Set() }));
+				return arr;
 
-			for (const mapping of self.mappings) {
-
-				const startIndex = binarySearch(mapping[key].start)!;
-				const endIndex = binarySearch(mapping[key].end)!;
-
-				for (let i = startIndex; i <= endIndex; i++) {
-					arr[i].mappings.add(mapping);
-				}
-
-				if (mapping.additional) {
-					for (const addition of mapping.additional) {
-
-						const startIndex = binarySearch(addition[key].start)!;
-						const endIndex = binarySearch(addition[key].end)!;
-
-						for (let i = startIndex; i <= endIndex; i++) {
-							arr[i].mappings.add(mapping);
+				function binarySearch(start: number) {
+					let low = 0;
+					let high = arr.length - 1;
+					while (low <= high) {
+						const mid = Math.floor((low + high) / 2);
+						const midValue = arr[mid];
+						if (midValue.offset < start) {
+							low = mid + 1;
+						}
+						else if (midValue.offset > start) {
+							high = mid - 1;
+						}
+						else {
+							return mid;
 						}
 					}
 				}
 			}
-
-			return arr;
-
-			function binarySearch(start: number) {
-				let low = 0;
-				let high = arr.length - 1;
-				while (low <= high) {
-					const mid = Math.floor((low + high) / 2);
-					const midValue = arr[mid];
-					if (midValue.offset < start) {
-						low = mid + 1;
-					}
-					else if (midValue.offset > start) {
-						high = mid - 1;
-					}
-					else {
-						return mid;
-					}
-				}
-			}
 		}
-	});
-
-	public get mappings() {
-		return this.__mappings.value;
-	}
-	public set mappings(value) {
-		this.__mappings.value = value;
+		return this._memo;
 	}
 
-	constructor(
-		_mappings?: Mapping<Data>[],
-	) {
-		this.mappings = _mappings ?? [];
+	constructor(public readonly mappings: Mapping<Data>[]) {
 	}
 
-	public getSourceRange(start: number, end?: number, filter?: (data: Data) => boolean) {
-		for (const mapped of this.getRanges(start, end ?? start, false, filter)) {
+	public toSourceOffset(start: number) {
+		for (const mapped of this.matcing(start, 'generatedRange', 'sourceRange')) {
 			return mapped;
 		}
 	}
-	public getMappedRange(start: number, end?: number, filter?: (data: Data) => boolean) {
-		for (const mapped of this.getRanges(start, end ?? start, true, filter)) {
+
+	public toGeneratedOffset(start: number) {
+		for (const mapped of this.matcing(start, 'sourceRange', 'generatedRange')) {
 			return mapped;
 		}
 	}
-	public getSourceRanges(start: number, end?: number, filter?: (data: Data) => boolean) {
-		return this.getRanges(start, end ?? start, false, filter);
-	}
-	public getMappedRanges(start: number, end?: number, filter?: (data: Data) => boolean) {
-		return this.getRanges(start, end ?? start, true, filter);
+
+	public toSourceOffsets(start: number) {
+		return this.matcing(start, 'generatedRange', 'sourceRange');
 	}
 
-	public * getRanges(startOffset: number, endOffset: number, sourceToTarget: boolean, filter?: (data: Data) => boolean) {
+	public toGeneratedOffsets(start: number) {
+		return this.matcing(start, 'sourceRange', 'generatedRange');
+	}
 
-		const memo = this.__memo.value;
-		const _memo = sourceToTarget ? memo.source : memo.mapped;
+	public * matcing(startOffset: number, from: 'sourceRange' | 'generatedRange', to: 'sourceRange' | 'generatedRange') {
 
-		if (_memo.length === 0)
+		const memo = this.memo[from];
+
+		if (memo.length === 0)
 			return;
 
 		const {
 			low: start,
 			high: end,
-		} = startOffset === endOffset ? this.binarySearchMemo(_memo, startOffset) : {
-			low: this.binarySearchMemo(_memo, startOffset).low,
-			high: this.binarySearchMemo(_memo, endOffset).high,
-		};
+		} = this.binarySearchMemo(memo, startOffset);
 		const skip = new Set<Mapping<Data>>();
 
 		for (let i = start; i <= end; i++) {
 
-			for (const mapping of _memo[i].mappings) {
+			for (const mapping of memo[i].mappings) {
 
 				if (skip.has(mapping)) {
 					continue;
 				}
 				skip.add(mapping);
 
-				if (filter && !filter(mapping.data))
-					continue;
-
-				const mapped = this.getRange(startOffset, endOffset, sourceToTarget, mapping.mode, mapping.sourceRange, mapping.mappedRange, mapping.data);
+				const mapped = this.matchOffset(startOffset, mapping[from], mapping[to]);
 				if (mapped) {
-					yield mapped;
-				}
-				else if (mapping.additional) {
-					for (const other of mapping.additional) {
-						const mapped = this.getRange(startOffset, endOffset, sourceToTarget, other.mode, other.sourceRange, other.mappedRange, mapping.data);
-						if (mapped) {
-							yield mapped;
-							break; // only return first match additional range
-						}
-					}
+					yield [mapped, mapping] as const;
 				}
 			}
 		}
 	}
 
-	private binarySearchMemo(array: typeof this.__memo.value.mapped, start: number) {
+	public matchOffset(start: number, mappedFromRange: [number, number], mappedToRange: [number, number]): number | undefined {
+		if (start >= mappedFromRange[0] && start <= mappedFromRange[1]) {
+			return mappedToRange[0] + start - mappedFromRange[0];
+		}
+	}
+
+	private binarySearchMemo(array: typeof this.memo['sourceRange'], start: number) {
 		let low = 0;
 		let high = array.length - 1;
 		while (low <= high) {
@@ -234,39 +161,25 @@ export class SourceMapBase<Data = undefined> {
 			high: Math.min(Math.max(low, high, 0), array.length - 1),
 		};
 	}
+}
 
-	private getRange(start: number, end: number, sourceToTarget: boolean, mode: Mode, sourceRange: Range, targetRange: Range, data: Data): [{ start: number, end: number; }, Data] | undefined {
-		const mappedToRange = sourceToTarget ? targetRange : sourceRange;
-		const mappedFromRange = sourceToTarget ? sourceRange : targetRange;
-		if (mode === Mode.Totally) {
-			if (start === mappedFromRange.start && end === mappedFromRange.end) {
-				const _start = mappedToRange.start;
-				const _end = mappedToRange.end;
-				return [{
-					start: Math.min(_start, _end),
-					end: Math.max(_start, _end),
-				}, data];
-			}
+export function buildMappings<T>(chunks: SegmentWithoutData[] | SegmentWithData<T>[]) {
+	let length = 0;
+	const mappings: Mapping<T>[] = [];
+	for (const segment of chunks) {
+		if (typeof segment === 'string') {
+			length += segment.length;
 		}
-		else if (mode === Mode.Offset) {
-			if (start >= mappedFromRange.start && end <= mappedFromRange.end) {
-				const _start = mappedToRange.start + start - mappedFromRange.start;
-				const _end = mappedToRange.end + end - mappedFromRange.end;
-				return [{
-					start: Math.min(_start, _end),
-					end: Math.max(_start, _end),
-				}, data];
-			}
-		}
-		else if (mode === Mode.Expand) {
-			if (start >= mappedFromRange.start && end <= mappedFromRange.end) {
-				const _start = mappedToRange.start;
-				const _end = mappedToRange.end;
-				return [{
-					start: Math.min(_start, _end),
-					end: Math.max(_start, _end),
-				}, data];
-			}
+		else {
+			mappings.push({
+				generatedRange: [length, length + segment[0].length],
+				source: segment[1],
+				sourceRange: typeof segment[2] === 'number' ? [segment[2], segment[2] + segment[0].length] : segment[2],
+				// @ts-ignore
+				data: segment[3],
+			});
+			length += segment[0].length;
 		}
 	}
+	return mappings;
 }

@@ -8,9 +8,9 @@
 *Vue, Vitepress, petite-vue language support extension for VSCode*
 - [TypeScript Vue Plugin](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-typescript-vue-plugin) \
 *VSCode extension to support Vue in TS server*
-- [vue-tsc](https://github.com/johnsoncodehk/volar/tree/master/packages/vue-tsc) \
+- [vue-tsc](https://github.com/johnsoncodehk/volar/tree/master/vue-language-tools/vue-tsc) \
 *Type-check and dts build command line tool*
-- [vue-component-meta](https://github.com/johnsoncodehk/volar/tree/master/packages/vue-component-meta) \
+- [vue-component-meta](https://github.com/johnsoncodehk/volar/tree/master/vue-language-tools/vue-component-meta) \
 *Component props, events, slots types information extract tool*
 - [vite-plugin-vue-component-preview](https://github.com/johnsoncodehk/vite-plugin-vue-component-preview) \
 *Vite plugin for support Vue component preview view with `Vue Language Features`*
@@ -18,7 +18,7 @@
 ### Common
 
 - [volar-plugins](https://github.com/johnsoncodehk/volar-plugins) \
-*Common plugins to change language features behavior for `Vue Language Features` and `Alpine Language Features` extensions*
+*Common plugins to change language server behavior*
 
 Discord: https://discord.gg/5bnSSSSBbK
 
@@ -48,13 +48,11 @@ Discord: https://discord.gg/5bnSSSSBbK
 [tommasongr/nova-vue](https://github.com/tommasongr/nova-vue) \
 *Vue language client for Nova*
 
+[xiaoxin-sky/lapce-vue](https://github.com/xiaoxin-sky/lapce-vue) \
+*Vue language client for Lapce*
+
 [Kingwl/monaco-volar](https://github.com/Kingwl/monaco-volar) \
 *Vue language support for Monaco on Browser*
-
-### Alpine.js
-
-[yaegassy/coc-volar-alpinejs](https://github.com/yaegassy/coc-volar-alpinejs) ⚡ 🤝 \
-*Alpine.js language client for coc.nvim*
 
 \* ⚡ support [multiple servers](https://github.com/johnsoncodehk/volar/discussions/393#discussioncomment-1213736) \
 \* 🤝 support [take over mode](https://github.com/johnsoncodehk/volar/discussions/471) \
@@ -93,6 +91,7 @@ flowchart LR
 	ATOM[Atom]
 	EMACS[Emacs]
 	NOVA[Nova]
+	LAPCE[Lapce]
 
 	%% Language Clients
 	COC_VUE[yaegassy/coc-volar]
@@ -102,6 +101,7 @@ flowchart LR
 	ATOM_VUE[kabiaa/atom-ide-volar]
 	EMACS_VUE[jadestrong/lsp-volar]
 	NOVA_VUE[tommasongr/nova-vue]
+	LAPCE_VUE[xiaoxin-sky/lapce-vue]
 
 	click COC_VUE "https://github.com/yaegassy/coc-volar"
 	click NEO_VUE "https://github.com/neovim/nvim-lspconfig"
@@ -110,6 +110,7 @@ flowchart LR
 	click ATOM_VUE "https://github.com/kabiaa/atom-ide-volar"
 	click EMACS_VUE "https://github.com/jadestrong/lsp-volar"
 	click NOVA_VUE "https://github.com/tommasongr/nova-vue"
+	click LAPCE_VUE "https://github.com/xiaoxin-sky/lapce-vue"
 
 	%% Volar - Extensions
 	VSC_VUE[vscode-vue-language-features]
@@ -131,17 +132,17 @@ flowchart LR
 	VUE_COMPONENT_META[vue-component-meta]
 	TS_VUE_PLUGIN[typescript-vue-plugin]
 
-	click VOLAR_VUE_SERVER "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-language-server"
-	click VOLAR_VUE_TS "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-typescript"
-	click VOLAR_VUE_CORE "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-language-core"
-	click VOLAR_VUE_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-language-service"
+	click VOLAR_VUE_SERVER "https://github.com/johnsoncodehk/volar/tree/master/vue-language-tools/vue-language-server"
+	click VOLAR_VUE_TS "https://github.com/johnsoncodehk/volar/tree/master/vue-language-tools/vue-typescript"
+	click VOLAR_VUE_CORE "https://github.com/johnsoncodehk/volar/tree/master/vue-language-tools/vue-language-core"
+	click VOLAR_VUE_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/vue-language-tools/vue-language-service"
+	click VUE_TSC "https://github.com/johnsoncodehk/volar/tree/master/vue-language-tools/vue-tsc"
+	click VUE_COMPONENT_META "https://github.com/johnsoncodehk/volar/tree/master/vue-language-tools/vue-component-meta"
+	click TS_VUE_PLUGIN "https://github.com/johnsoncodehk/volar/tree/master/vue-language-tools/typescript-vue-plugin"
 	click VOLAR_PUG_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/pug-language-service"
 	click VOLAR_TS_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/typescript-language-service"
 	click VOLAR_TS_FASTER "https://github.com/johnsoncodehk/volar/tree/master/packages/typescript-faster"
 	click VOLAR_PREVIEW "https://github.com/johnsoncodehk/volar/tree/master/packages/preview"
-	click VUE_TSC "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-tsc"
-	click VUE_COMPONENT_META "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-component-meta"
-	click TS_VUE_PLUGIN "https://github.com/johnsoncodehk/volar/tree/master/packages/typescript-vue-plugin"
 
 	%% Extrnal Packages
 	HTML_SERVICE[vscode-html-languageservice]
@@ -192,6 +193,7 @@ flowchart LR
 	EMACS --> EMACS_VUE
 	NOVA --> NOVA_VUE
 	VIM --> VIM_VUE
+	LAPCE --> LAPCE_VUE
 
 	VSC_VUE --> VUE_CLIENTS
 	COC_VUE --> VUE_CLIENTS
@@ -201,6 +203,7 @@ flowchart LR
 	EMACS_VUE --> VUE_CLIENTS
 	NOVA_VUE --> VUE_CLIENTS
 	VIM_VUE --> VUE_CLIENTS
+	LAPCE_VUE --> VUE_CLIENTS
 
 	%% VSC_VUE --> VOLAR_PREVIEW
 	%% COC_VUE --> VOLAR_PREVIEW
@@ -235,14 +238,6 @@ flowchart LR
 ```
 
 ## Sponsors
-
-<p align="center">
-	<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company/sponsors.svg">
-		<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company/sponsors.svg"/>
-	</a>
-</p>
-
----
 
 <p align="center">
 	<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg">

@@ -1,7 +1,7 @@
+import { AttrNameCasing, TagNameCasing } from '@volar/vue-language-server';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient';
-import { attrCases } from './features/attrNameCase';
-import { tagCases } from './features/tagNameCase';
+import { attrNameCasings, tagNameCasings } from './features/nameCasing';
 
 export const middleware: lsp.Middleware = {
 	handleDiagnostics: (uri, diagnostics, next) => {
@@ -29,21 +29,20 @@ export const middleware: lsp.Middleware = {
 				return params.items.map(item => {
 					if (item.scopeUri) {
 						if (item.section === 'volar.completion.preferredTagNameCase') {
-							const tagCase = tagCases.uriGet(item.scopeUri);
-							if (tagCase === 'kebabCase') {
+							const tagNameCasing = tagNameCasings.get(item.scopeUri);
+							if (tagNameCasing === TagNameCasing.Kebab) {
 								return 'kebab';
 							}
-							if (tagCase === 'pascalCase') {
+							else if (tagNameCasing === TagNameCasing.Pascal) {
 								return 'pascal';
 							}
-							return 'auto';
 						}
 						if (item.section === 'volar.completion.preferredAttrNameCase') {
-							const attrCase = attrCases.uriGet(item.scopeUri);
-							if (attrCase === 'kebabCase') {
+							const attrCase = attrNameCasings.get(item.scopeUri);
+							if (attrCase === AttrNameCasing.Kebab) {
 								return 'kebab';
 							}
-							if (attrCase === 'camelCase') {
+							if (attrCase === AttrNameCasing.Camel) {
 								return 'camel';
 							}
 						}

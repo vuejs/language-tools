@@ -4,29 +4,32 @@ import { languageFeatureWorker } from '../utils/featureWorkers';
 import * as dedupe from '../utils/dedupe';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { SourceFileDocuments } from '../documents';
+import { PositionCapabilities } from '@volar/language-core';
 
 export function register(context: LanguageServiceRuntimeContext) {
 
 	return (uri: string, position: vscode.Position, newName: string) => {
+
+		let _data: PositionCapabilities | undefined;
 
 		return languageFeatureWorker(
 			context,
 			uri,
 			{ position, newName },
 			function* (arg, sourceMap) {
-				for (const [mappedRange, mappedData] of sourceMap.getMappedRanges(
-					arg.position,
-					arg.position,
-					data => typeof data.rename === 'object' ? !!data.rename.normalize : !!data.rename,
-				)) {
+				for (const mapped of sourceMap.toGeneratedPositions(arg.position, data => {
+					_data = data;
+					return typeof data.rename === 'object' ? !!data.rename.normalize : !!data.rename;
+				})) {
 
 					let newName = arg.newName;
 
-					if (typeof mappedData.rename === 'object' && mappedData.rename.normalize)
-						newName = mappedData.rename.normalize(arg.newName);
+					if (_data && typeof _data.rename === 'object' && _data.rename.normalize) {
+						newName = _data.rename.normalize(arg.newName);
+					}
 
-					yield { position: mappedRange.start, newName };
-				}
+					yield { position: mapped, newName };
+				};
 			},
 			async (plugin, document, arg, sourceMap) => {
 
@@ -71,18 +74,17 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 								if (teleport) {
 
-									for (const [teleRange] of teleport.findTeleports(
-										textEdit.range.start,
-										textEdit.range.end,
-										sideData => !!sideData.rename,
-									)) {
+									for (const mapped of teleport.findTeleports(textEdit.range.start)) {
 
-										if (recursiveChecker.has({ uri: teleport.document.uri, range: { start: teleRange.start, end: teleRange.start } }))
+										if (!mapped[1].rename)
+											continue;
+
+										if (recursiveChecker.has({ uri: teleport.document.uri, range: { start: mapped[0], end: mapped[0] } }))
 											continue;
 
 										foundTeleport = true;
 
-										await withTeleports(teleport.document, teleRange.start, newName);
+										await withTeleports(teleport.document, mapped[0], newName);
 									}
 								}
 
@@ -174,19 +176,6 @@ export function mergeWorkspaceEdits(original: vscode.WorkspaceEdit, ...others: v
 	}
 }
 
-/**
- * TODO: rewrite this
- *
- * Start from Script LS
- * -> Access all results
- *
- * Start from template LS
- * -> Start from template content?
- *    -> Access all results
- * -> Start from script content?
- *    -> Yes: Only access template results
- *    -> No: Access all results
- */
 export function embeddedEditToSourceEdit(
 	tsResult: vscode.WorkspaceEdit,
 	vueDocuments: SourceFileDocuments,
@@ -205,34 +194,31 @@ export function embeddedEditToSourceEdit(
 		vueResult.changeAnnotations[uri] = tsAnno;
 	}
 	for (const tsUri in tsResult.changes) {
+		if (!vueResult.changes) {
+			vueResult.changes = {};
+		}
+		const map = vueDocuments.sourceMapFromEmbeddedDocumentUri(tsUri);
+		if (!map) {
+			vueResult.changes[tsUri] = tsResult.changes[tsUri];
+			hasResult = true;
+			continue;
+		}
 		const tsEdits = tsResult.changes[tsUri];
 		for (const tsEdit of tsEdits) {
-			for (const vueLoc of vueDocuments.fromEmbeddedLocation(
-				tsUri,
-				tsEdit.range.start,
-				tsEdit.range.end,
-				data => typeof data.rename === 'object' ? !!data.rename.apply : !!data.rename, // fix https://github.com/johnsoncodehk/volar/issues/1091
-			)) {
-
-				let newText_2 = tsEdit.newText;
-
-				if (vueLoc.sourceMap && typeof vueLoc.data.rename === 'object' && vueLoc.data.rename.apply) {
-					const vueDoc = vueLoc.sourceMap.sourceDocument;
-					newText_2 = vueLoc.data.rename.apply(vueDoc.getText(vueLoc.range), tsEdit.newText);
+			let _data: PositionCapabilities | undefined;
+			const range = map.toSourceRange(tsEdit.range, data => {
+				_data = data;
+				return typeof data.rename === 'object' ? !!data.rename.apply : !!data.rename;
+			});
+			if (range) {
+				let newText = tsEdit.newText;
+				if (_data && typeof _data.rename === 'object' && _data.rename.apply) {
+					newText = _data.rename.apply(tsEdit.newText);
 				}
-
-				if (!vueResult.changes) {
-					vueResult.changes = {};
+				if (!vueResult.changes[map.sourceDocument.uri]) {
+					vueResult.changes[map.sourceDocument.uri] = [];
 				}
-
-				if (!vueResult.changes[vueLoc.uri]) {
-					vueResult.changes[vueLoc.uri] = [];
-				}
-
-				vueResult.changes[vueLoc.uri].push({
-					newText: newText_2,
-					range: vueLoc.range,
-				});
+				vueResult.changes[map.sourceDocument.uri].push({ newText, range });
 				hasResult = true;
 			}
 		}
@@ -255,16 +241,21 @@ export function embeddedEditToSourceEdit(
 						[],
 					);
 					for (const tsEdit of tsDocEdit.edits) {
-						for (const [vueRange] of sourceMap.getSourceRanges(
-							tsEdit.range.start,
-							tsEdit.range.end,
-							data => typeof data.rename === 'object' ? !!data.rename.apply : !!data.rename, // fix https://github.com/johnsoncodehk/volar/issues/1091
-						)) {
-
+						let _data: PositionCapabilities | undefined;
+						const range = sourceMap.toSourceRange(tsEdit.range, data => {
+							_data = data;
+							// fix https://github.com/johnsoncodehk/volar/issues/1091
+							return typeof data.rename === 'object' ? !!data.rename.apply : !!data.rename;
+						});
+						if (range) {
+							let newText = tsEdit.newText;
+							if (_data && typeof _data.rename === 'object' && _data.rename.apply) {
+								newText = _data.rename.apply(tsEdit.newText);
+							}
 							vueDocEdit.edits.push({
 								annotationId: vscode.AnnotatedTextEdit.is(tsEdit.range) ? tsEdit.range.annotationId : undefined,
-								newText: tsEdit.newText,
-								range: vueRange,
+								newText,
+								range,
 							});
 						}
 					}

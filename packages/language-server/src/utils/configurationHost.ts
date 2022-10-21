@@ -1,5 +1,5 @@
 import * as vscode from 'vscode-languageserver';
-import { ConfigurationHost } from '@volar/vue-language-service';
+import { ConfigurationHost } from '@volar/language-service';
 
 export function createConfigurationHost(params: vscode.InitializeParams, connection: vscode.Connection): ConfigurationHost & { ready(): void; } {
 
@@ -18,7 +18,7 @@ export function createConfigurationHost(params: vscode.InitializeParams, connect
 			}
 		},
 		async getConfiguration(section, scopeUri) {
-			return await connection.workspace.getConfiguration({ scopeUri, section });
+			return (await connection.workspace.getConfiguration({ scopeUri, section })) ?? undefined /* replace null to undefined */;
 		},
 		onDidChangeConfiguration(cb) {
 			callbacks.push(cb);

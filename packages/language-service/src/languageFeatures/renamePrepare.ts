@@ -15,22 +15,15 @@ export function register(context: LanguageServiceRuntimeContext) {
 			context,
 			uri,
 			position,
-			function* (position, sourceMap) {
-				for (const [mappedRange] of sourceMap.getMappedRanges(
-					position,
-					position,
-					data => typeof data.rename === 'object' ? !!data.rename.apply : !!data.rename,
-				)) {
-					yield mappedRange.start;
-				}
-			},
+			(position, sourceMap) => sourceMap.toGeneratedPositions(position, data => typeof data.rename === 'object' ? !!data.rename.apply : !!data.rename),
 			(plugin, document, position) => plugin.rename?.prepare?.(document, position),
-			(data, sourceMap) => {
-
-				if (sourceMap && vscode.Range.is(data))
-					return sourceMap.getSourceRange(data.start, data.end)?.[0];
-
-				return data;
+			(item, sourceMap) => {
+				if (!sourceMap) {
+					return item;
+				}
+				if (vscode.Range.is(item)) {
+					return sourceMap.toSourceRange(item);
+				}
 			},
 			prepares => {
 

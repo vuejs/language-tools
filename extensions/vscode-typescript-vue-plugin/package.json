@@ -1,12 +1,16 @@
 {
 	"private": true,
 	"name": "vscode-typescript-vue-plugin",
-	"version": "0.40.13",
+	"version": "1.0.8",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
 		"directory": "extensions/vscode-typescript-vue-plugin"
 	},
+	"sponsor": {
+		"url": "https://github.com/sponsors/johnsoncodehk"
+	},
+	"icon": "images/icon.png",
 	"displayName": "TypeScript Vue Plugin (Volar)",
 	"description": "Vue Plugin for TypeScript server",
 	"author": "johnsoncodehk",
@@ -36,7 +40,7 @@
 	},
 	"devDependencies": {
 		"esbuild": "latest",
-		"typescript-vue-plugin": "0.40.13",
+		"typescript-vue-plugin": "1.0.8",
 		"vsce": "latest"
 	}
 }

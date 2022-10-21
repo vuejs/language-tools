@@ -1,14 +1,14 @@
 import { posix as path } from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { createDocumentRegistry, forEachEmbeddeds } from './documentRegistry';
-import { EmbeddedLanguageModule, FileNode, LanguageServiceHost } from './types';
+import { LanguageModule, SourceFile, LanguageServiceHost } from './types';
 import { shallowReactive as reactive } from '@vue/reactivity';
 
 export type EmbeddedLanguageContext = ReturnType<typeof createEmbeddedLanguageServiceHost>;
 
 export function createEmbeddedLanguageServiceHost(
 	host: LanguageServiceHost,
-	languageModules: EmbeddedLanguageModule[],
+	languageModules: LanguageModule[],
 ) {
 
 	for (const languageModule of languageModules.reverse()) {
@@ -88,7 +88,7 @@ export function createEmbeddedLanguageServiceHost(
 		getScriptKind(fileName) {
 
 			if (documentRegistry.has(fileName))
-				return ts.ScriptKind.TSX; // can't use External, Unknown
+				return ts.ScriptKind.Deferred;
 
 			switch (path.extname(fileName)) {
 				case '.js': return ts.ScriptKind.JS;
@@ -129,7 +129,7 @@ export function createEmbeddedLanguageServiceHost(
 		let tsFileUpdated = false;
 
 		const remainFileNames = new Set(host.getScriptFileNames());
-		const sourceFilesToUpdate: [FileNode, EmbeddedLanguageModule, ts.IScriptSnapshot][] = [];
+		const sourceFilesToUpdate: [SourceFile, LanguageModule, ts.IScriptSnapshot][] = [];
 
 		// .vue
 		for (const [sourceFile, languageModule] of documentRegistry.getAll()) {
@@ -151,6 +151,11 @@ export function createEmbeddedLanguageServiceHost(
 			}
 		}
 
+		// no any vue file version change, it mean project version was update by ts file change at this time
+		if (!sourceFilesToUpdate.length) {
+			tsFileUpdated = true;
+		}
+
 		// add
 		for (const fileName of [...remainFileNames]) {
 			const snapshot = host.getScriptSnapshot(fileName);
@@ -158,6 +163,7 @@ export function createEmbeddedLanguageServiceHost(
 				for (const languageModule of languageModules) {
 					const sourceFile = languageModule.createSourceFile(fileName, snapshot);
 					if (sourceFile) {
+						fileVersions.set(sourceFile.fileName, host.getScriptVersion(fileName));
 						documentRegistry.set(fileName, reactive(sourceFile), languageModule);
 						remainFileNames.delete(fileName);
 						break;
@@ -202,7 +208,7 @@ export function createEmbeddedLanguageServiceHost(
 
 			if (!tsFileUpdated) {
 				forEachEmbeddeds(sourceFile.embeddeds, embedded => {
-					if (embedded.isTsHostFile) {
+					if (embedded.kind) {
 						oldScripts[embedded.fileName] = embedded.text;
 					}
 				});
@@ -213,7 +219,7 @@ export function createEmbeddedLanguageServiceHost(
 
 			if (!tsFileUpdated) {
 				forEachEmbeddeds(sourceFile.embeddeds, embedded => {
-					if (embedded.isTsHostFile) {
+					if (embedded.kind) {
 						newScripts[embedded.fileName] = embedded.text;
 					}
 				});
@@ -234,24 +240,24 @@ export function createEmbeddedLanguageServiceHost(
 	}
 	function getScriptFileNames() {
 
-		const tsFileNames: string[] = [];
+		const tsFileNames = new Set<string>();
 
 		for (const mapped of documentRegistry.getAllEmbeddeds()) {
-			if (mapped.embedded.isTsHostFile) {
-				tsFileNames.push(mapped.embedded.fileName); // virtual .ts
+			if (mapped.embedded.kind) {
+				tsFileNames.add(mapped.embedded.fileName); // virtual .ts
 			}
 		}
 
 		for (const fileName of host.getScriptFileNames()) {
 			if (host.isTsPlugin) {
-				tsFileNames.push(fileName); // .vue + .ts
+				tsFileNames.add(fileName); // .vue + .ts
 			}
 			else if (!documentRegistry.has(fileName)) {
-				tsFileNames.push(fileName); // .ts
+				tsFileNames.add(fileName); // .ts
 			}
 		}
 
-		return tsFileNames;
+		return [...tsFileNames];
 	}
 	function getScriptVersion(fileName: string) {
 		let mapped = documentRegistry.fromEmbeddedFileName(fileName);
@@ -263,7 +269,7 @@ export function createEmbeddedLanguageServiceHost(
 				let version = ts.sys?.createHash?.(mapped.embedded.text) ?? mapped.embedded.text;
 				if (host.isTsc) {
 					// fix https://github.com/johnsoncodehk/volar/issues/1082
-					version = host.getScriptVersion(mapped.vueFile.fileName) + ':' + version;
+					version = host.getScriptVersion(mapped.sourceFile.fileName) + ':' + version;
 				}
 				fileVersions.set(mapped.embedded.fileName, version);
 				return version;

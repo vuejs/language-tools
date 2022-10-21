@@ -5,6 +5,7 @@ import { languageFeatureWorker } from '../utils/featureWorkers';
 import * as dedupe from '../utils/dedupe';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { PositionCapabilities, TeleportCapabilities } from '@volar/language-core';
+import { EmbeddedDocumentSourceMap } from '../documents';
 
 export function register(
 	context: LanguageServiceRuntimeContext,
@@ -19,15 +20,7 @@ export function register(
 			context,
 			uri,
 			position,
-			function* (position, sourceMap) {
-				for (const [mappedRange] of sourceMap.getMappedRanges(
-					position,
-					position,
-					isValidMappingData,
-				)) {
-					yield mappedRange.start;
-				}
-			},
+			(position, sourceMap) => sourceMap.toGeneratedPositions(position, isValidMappingData),
 			async (plugin, document, position, sourceMap) => {
 
 				const recursiveChecker = dedupe.createLocationSet();
@@ -64,18 +57,17 @@ export function register(
 
 						if (teleport) {
 
-							for (const [teleRange] of teleport.findTeleports(
-								definition.targetSelectionRange.start,
-								definition.targetSelectionRange.end,
-								isValidTeleportSideData,
-							)) {
+							for (const mapped of teleport.findTeleports(definition.targetSelectionRange.start)) {
 
-								if (recursiveChecker.has({ uri: teleport.document.uri, range: { start: teleRange.start, end: teleRange.start } }))
+								if (!isValidTeleportSideData(mapped[1]))
+									continue;
+
+								if (recursiveChecker.has({ uri: teleport.document.uri, range: { start: mapped[0], end: mapped[0] } }))
 									continue;
 
 								foundTeleport = true;
 
-								await withTeleports(teleport.document, teleRange.start, originDefinition ?? definition);
+								await withTeleports(teleport.document, mapped[0], originDefinition ?? definition);
 							}
 						}
 
@@ -97,7 +89,7 @@ export function register(
 
 				if (link.originSelectionRange && sourceMap) {
 
-					const originSelectionRange = sourceMap.getSourceRange(link.originSelectionRange.start, link.originSelectionRange.end)?.[0];
+					const originSelectionRange = toSourcePositionPreferSurroundedPosition(sourceMap, link.originSelectionRange, position);
 
 					if (!originSelectionRange)
 						return;
@@ -109,14 +101,15 @@ export function register(
 
 				if (targetSourceMap) {
 
-					const targetRange = targetSourceMap.getSourceRange(link.targetRange.start, link.targetRange.end)?.[0];
-					const targetSelectionRange = targetSourceMap.getSourceRange(link.targetSelectionRange.start, link.targetSelectionRange.end)?.[0];
-
+					const targetSelectionRange = targetSourceMap.toSourceRange(link.targetSelectionRange);
 					if (!targetSelectionRange)
 						return;
 
+					let targetRange = targetSourceMap.toSourceRange(link.targetRange);
+
 					link.targetUri = targetSourceMap.sourceDocument.uri;
-					link.targetRange = targetRange ?? targetSelectionRange; // loose range mapping to for template slots, slot properties
+					// loose range mapping to for template slots, slot properties
+					link.targetRange = targetRange ?? targetSelectionRange;
 					link.targetSelectionRange = targetSelectionRange;
 				}
 
@@ -125,4 +118,23 @@ export function register(
 			arr => dedupe.withLocationLinks(arr.flat()),
 		);
 	};
+}
+
+function toSourcePositionPreferSurroundedPosition(sourceMap: EmbeddedDocumentSourceMap, mappedRange: vscode.Range, position: vscode.Position) {
+
+	let result: vscode.Range | undefined;
+
+	for (const range of sourceMap.toSourceRanges(mappedRange)) {
+		if (!result) {
+			result = range;
+		}
+		if (
+			(range.start.line < position.line || (range.start.line === position.line && range.start.character <= position.character))
+			&& (range.end.line > position.line || (range.end.line === position.line && range.end.character >= position.character))
+		) {
+			return range;
+		}
+	}
+
+	return result;
 }

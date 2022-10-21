@@ -1,12 +1,46 @@
 {
-	"extends": "./tsconfig.base.json",
 	"compilerOptions": {
+		"target": "ES2016",
+		"lib": [
+			"WebWorker",
+			"ES2021",
+		],
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"sourceMap": true,
+		"composite": true,
+		"declaration": true,
+		"strict": true,
+		"alwaysStrict": false,
+		"noImplicitUseStrict": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"noUnusedLocals": true,
+		"baseUrl": "./",
+		"paths": {
+			"@volar/*": [
+				"packages/*/src"
+			],
+			"@volar-plugins/*": [
+				"plugins/*/src"
+			],
+			"@volar-examples/*": [
+				"examples/*/src"
+			],
+			"@volar/vue-*": [
+				"vue-language-tools/vue-*/src"
+			],
+			"vue-component-meta": [
+				"vue-language-tools/vue-component-meta/src"
+			],
+		},
 		"noEmit": true,
 	},
 	"include": [
-		"extensions/*/src",
-		"packages/*/src",
-		"plugins/*/src",
-		"packages/*/src/**/*.json",
+		"*/*/src",
+		"*/*/tests",
+	],
+	"exclude": [
+		"node_modules",
 	],
 }

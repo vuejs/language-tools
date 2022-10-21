@@ -10,15 +10,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			context,
 			uri,
 			position,
-			function* (position, sourceMap) {
-				for (const [mappedRange] of sourceMap.getMappedRanges(
-					position,
-					position,
-					data => !!data.completion,
-				)) {
-					yield mappedRange.start;
-				}
-			},
+			(position, sourceMap) => sourceMap.toGeneratedPositions(position, data => !!data.completion),
 			(plugin, document, position) => plugin.getSignatureHelp?.(document, position, signatureHelpContext),
 			(data, sourceMap) => data,
 		);

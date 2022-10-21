@@ -1,4 +1,4 @@
-import type { FileNode } from '@volar/language-core';
+import type { EmbeddedFile } from '@volar/language-core';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { EmbeddedDocumentSourceMap, SourceFileDocument } from '../documents';
@@ -55,19 +55,19 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 			for (const embedded of embeddeds) {
 
-				if (!embedded.capabilities.formatting)
+				if (!embedded.capabilities.documentFormatting)
 					continue;
 
 				const sourceMap = vueDocument[0].getSourceMap(embedded);
-				const initialIndentBracket = typeof embedded.capabilities.formatting === 'object' && initialIndentLanguageId[sourceMap.mappedDocument.languageId]
-					? embedded.capabilities.formatting.initialIndentBracket
+				const initialIndentBracket = typeof embedded.capabilities.documentFormatting === 'object' && initialIndentLanguageId[sourceMap.mappedDocument.languageId]
+					? embedded.capabilities.documentFormatting.initialIndentBracket
 					: undefined;
 
 				let _edits: vscode.TextEdit[] | undefined;
 
 				if (onTypeParams) {
 
-					const embeddedPosition = sourceMap.getMappedRange(onTypeParams.position)?.[0].start;
+					const embeddedPosition = sourceMap.toGeneratedPosition(onTypeParams.position);
 
 					if (embeddedPosition) {
 						_edits = await tryFormat(
@@ -81,33 +81,23 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 				else {
 
-					let embeddedRange = sourceMap.getMappedRange(range.start, range.end)?.[0];
+					let genRange = sourceMap.toGeneratedRange(range);
 
-					if (!embeddedRange) {
-
-						let start = sourceMap.getMappedRange(range.start)?.[0].start;
-						let end = sourceMap.getMappedRange(range.end)?.[0].end;
-
-						if (!start) {
-							const firstMapping = sourceMap.base.mappings.sort((a, b) => a.sourceRange.start - b.sourceRange.start)[0];
-							if (firstMapping && document.offsetAt(range.start) < firstMapping.sourceRange.start) {
-								start = sourceMap.mappedDocument.positionAt(firstMapping.mappedRange.start);
-							}
-						}
-
-						if (!end) {
-							const lastMapping = sourceMap.base.mappings.sort((a, b) => b.sourceRange.start - a.sourceRange.start)[0];
-							if (lastMapping && document.offsetAt(range.end) > lastMapping.sourceRange.end) {
-								end = sourceMap.mappedDocument.positionAt(lastMapping.mappedRange.end);
-							}
-						}
-
-						if (start && end) {
-							embeddedRange = { start, end };
+					if (!genRange) {
+						const firstMapping = sourceMap.mappings.sort((a, b) => a.sourceRange[0] - b.sourceRange[0])[0];
+						const lastMapping = sourceMap.mappings.sort((a, b) => b.sourceRange[0] - a.sourceRange[0])[0];
+						if (
+							firstMapping && document.offsetAt(range.start) < firstMapping.sourceRange[0]
+							&& lastMapping && document.offsetAt(range.end) > lastMapping.sourceRange[1]
+						) {
+							genRange = {
+								start: sourceMap.mappedDocument.positionAt(firstMapping.generatedRange[0]),
+								end: sourceMap.mappedDocument.positionAt(lastMapping.generatedRange[1]),
+							};
 						}
 					}
 
-					if (embeddedRange) {
+					if (genRange) {
 
 						toPatchIndent = {
 							sourceMapEmbeddedDocumentUri: sourceMap.mappedDocument.uri,
@@ -115,7 +105,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 						_edits = await tryFormat(
 							sourceMap.mappedDocument,
-							embeddedRange,
+							genRange,
 							initialIndentBracket,
 						);
 					}
@@ -125,10 +115,8 @@ export function register(context: DocumentServiceRuntimeContext) {
 					continue;
 
 				for (const textEdit of _edits) {
-					for (const [range] of sourceMap.getSourceRanges(
-						textEdit.range.start,
-						textEdit.range.end,
-					)) {
+					const range = sourceMap.toSourceRange(textEdit.range);
+					if (range) {
 						edits.push({
 							newText: textEdit.newText,
 							range,
@@ -178,14 +166,14 @@ export function register(context: DocumentServiceRuntimeContext) {
 		function getEmbeddedsByLevel(vueDocument: SourceFileDocument, level: number) {
 
 			const embeddeds = vueDocument.file.embeddeds;
-			const embeddedsLevels: FileNode[][] = [embeddeds];
+			const embeddedsLevels: EmbeddedFile[][] = [embeddeds];
 
 			while (true) {
 
 				if (embeddedsLevels.length > level)
 					return embeddedsLevels[level];
 
-				let nextEmbeddeds: FileNode[] = [];
+				let nextEmbeddeds: EmbeddedFile[] = [];
 
 				for (const embeddeds of embeddedsLevels[embeddedsLevels.length - 1]) {
 
@@ -294,11 +282,11 @@ function patchInterpolationIndent(vueDocument: SourceFileDocument, sourceMap: Em
 	const indentTextEdits: vscode.TextEdit[] = [];
 	const document = vueDocument.getDocument();
 
-	for (const mapped of sourceMap.base.mappings) {
+	for (const mapped of sourceMap.mappings) {
 
 		const textRange = {
-			start: document.positionAt(mapped.sourceRange.start),
-			end: document.positionAt(mapped.sourceRange.end),
+			start: document.positionAt(mapped.sourceRange[0]),
+			end: document.positionAt(mapped.sourceRange[1]),
 		};
 		const text = document.getText(textRange);
 
@@ -307,7 +295,7 @@ function patchInterpolationIndent(vueDocument: SourceFileDocument, sourceMap: Em
 
 		const lines = text.split('\n');
 		const removeIndent = getRemoveIndent(lines);
-		const baseIndent = getBaseIndent(mapped.sourceRange.start);
+		const baseIndent = getBaseIndent(mapped.sourceRange[0]);
 
 		for (let i = 1; i < lines.length; i++) {
 			const line = lines[i];

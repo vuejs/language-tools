@@ -1,5 +1,5 @@
-import { transformCompletionItem } from '@volar/transforms';
-import type { EmbeddedLanguageServicePlugin } from '@volar/language-service';
+import { transformCompletionList } from '@volar/transforms';
+import type { LanguageServicePlugin, PositionCapabilities } from '@volar/language-service';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { LanguageServiceRuntimeContext } from '../types';
@@ -22,7 +22,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			sourceMap: {
 				embeddedDocumentUri: string;
 			} | undefined,
-			plugin: EmbeddedLanguageServicePlugin,
+			plugin: LanguageServicePlugin,
 			list: vscode.CompletionList,
 		}[],
 		mainCompletion: {
@@ -51,38 +51,31 @@ export function register(context: LanguageServiceRuntimeContext) {
 					if (!sourceMap)
 						continue;
 
-					for (const [embeddedRange] of sourceMap.getMappedRanges(position, position, data => !!data.completion)) {
+
+					for (const mapped of sourceMap.toGeneratedPositions(position, data => !!data.completion)) {
 
 						if (!cacheData.plugin.complete?.on)
 							continue;
 
-						const embeddedCompletionList = await cacheData.plugin.complete.on(sourceMap.mappedDocument, embeddedRange.start, completionContext);
+						const embeddedCompletionList = await cacheData.plugin.complete.on(sourceMap.mappedDocument, mapped, completionContext);
 
 						if (!embeddedCompletionList) {
 							cacheData.list.isIncomplete = false;
 							continue;
 						}
 
-						cacheData.list = {
-							...embeddedCompletionList,
-							items: embeddedCompletionList.items.map(item => {
-								const data: PluginCompletionData = {
-									uri,
-									originalItem: item,
-									pluginId: context.plugins.indexOf(cacheData.plugin),
-									sourceMap: {
-										embeddedDocumentUri: sourceMap.mappedDocument.uri,
-									},
-								};
-								return {
-									...transformCompletionItem(
-										item,
-										embeddedRange => sourceMap.getSourceRange(embeddedRange.start, embeddedRange.end)?.[0],
-									),
-									data: data,
-								};
-							}),
-						};
+						cacheData.list = transformCompletionList(
+							embeddedCompletionList,
+							range => sourceMap.toSourceRange(range),
+							(newItem, oldItem) => newItem.data = {
+								uri,
+								originalItem: oldItem,
+								pluginId: context.plugins.indexOf(cacheData.plugin),
+								sourceMap: {
+									embeddedDocumentUri: sourceMap.mappedDocument.uri,
+								},
+							} satisfies PluginCompletionData,
+						);
 					}
 				}
 				else if (document = context.getTextDocument(uri)) {
@@ -99,18 +92,15 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					cacheData.list = {
 						...completionList,
-						items: completionList.items.map(item => {
-							const data: PluginCompletionData = {
+						items: completionList.items.map<vscode.CompletionItem>(item => ({
+							...item,
+							data: {
 								uri,
 								originalItem: item,
 								pluginId: context.plugins.indexOf(cacheData.plugin),
 								sourceMap: undefined,
-							};
-							return {
-								...item,
-								data: data,
-							};
-						})
+							} satisfies PluginCompletionData,
+						})),
 					};
 				}
 			}
@@ -134,7 +124,12 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					const plugins = context.plugins.sort(sortPlugins);
 
-					for (const [embeddedRange, data] of sourceMap.getMappedRanges(position, position, data => !!data.completion)) {
+					let _data: PositionCapabilities | undefined;
+
+					for (const mapped of sourceMap.toGeneratedPositions(position, data => {
+						_data = data;
+						return !!data.completion;
+					})) {
 
 						for (const plugin of plugins) {
 
@@ -147,43 +142,36 @@ export function register(context: LanguageServiceRuntimeContext) {
 							if (completionContext?.triggerCharacter && !plugin.complete.triggerCharacters?.includes(completionContext.triggerCharacter))
 								continue;
 
-							const isAdditionalMapping = typeof data.completion === 'object' && data.completion.additional;
-							if (cache!.mainCompletion && ((!plugin.complete.isAdditional && !isAdditionalMapping) || cache?.mainCompletion.documentUri !== sourceMap.mappedDocument.uri))
+							const isAdditional = _data && typeof _data.completion === 'object' && _data.completion.additional || plugin.complete.isAdditional;
+
+							if (cache!.mainCompletion && (!isAdditional || cache?.mainCompletion.documentUri !== sourceMap.mappedDocument.uri))
 								continue;
 
 							// avoid duplicate items with .vue and .vue.html
 							if (plugin.complete.isAdditional && cache?.data.some(data => data.plugin === plugin))
 								continue;
 
-							const embeddedCompletionList = await plugin.complete.on(sourceMap.mappedDocument, embeddedRange.start, completionContext);
+							const embeddedCompletionList = await plugin.complete.on(sourceMap.mappedDocument, mapped, completionContext);
 
 							if (!embeddedCompletionList || !embeddedCompletionList.items.length)
 								continue;
 
-							if (!plugin.complete.isAdditional) {
+							if (!isAdditional) {
 								cache!.mainCompletion = { documentUri: sourceMap.mappedDocument.uri };
 							}
 
-							const completionList: vscode.CompletionList = {
-								...embeddedCompletionList,
-								items: embeddedCompletionList.items.map(item => {
-									const data: PluginCompletionData = {
-										uri,
-										originalItem: item,
-										pluginId: context.plugins.indexOf(plugin),
-										sourceMap: {
-											embeddedDocumentUri: sourceMap.mappedDocument.uri,
-										}
-									};
-									return {
-										...transformCompletionItem(
-											item,
-											embeddedRange => sourceMap.getSourceRange(embeddedRange.start, embeddedRange.end)?.[0],
-										),
-										data: data,
-									};
-								}),
-							};
+							const completionList = transformCompletionList(
+								embeddedCompletionList,
+								range => sourceMap.toSourceRange(range),
+								(newItem, oldItem) => newItem.data = {
+									uri,
+									originalItem: oldItem,
+									pluginId: context.plugins.indexOf(plugin),
+									sourceMap: {
+										embeddedDocumentUri: sourceMap.mappedDocument.uri,
+									}
+								} satisfies PluginCompletionData,
+							);
 
 							cache!.data.push({
 								sourceMap: {
@@ -237,16 +225,15 @@ export function register(context: LanguageServiceRuntimeContext) {
 						plugin,
 						list: {
 							...completionList,
-							items: completionList.items.map(item => {
-								const data: PluginCompletionData = {
-									uri,
-									originalItem: item,
-									pluginId: context.plugins.indexOf(plugin),
-									sourceMap: undefined,
-								};
+							items: completionList.items.map<vscode.CompletionItem>(item => {
 								return {
 									...item,
-									data: data,
+									data: {
+										uri,
+										originalItem: item,
+										pluginId: context.plugins.indexOf(plugin),
+										sourceMap: undefined,
+									},
 								};
 							})
 						},
@@ -257,13 +244,14 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 		return combineCompletionList(cache.data.map(cacheData => cacheData.list));
 
-		function sortPlugins(a: EmbeddedLanguageServicePlugin, b: EmbeddedLanguageServicePlugin) {
+		function sortPlugins(a: LanguageServicePlugin, b: LanguageServicePlugin) {
 			return (b.complete?.isAdditional ? -1 : 1) - (a.complete?.isAdditional ? -1 : 1);
 		}
 
-		function combineCompletionList(lists: vscode.CompletionList[]) {
+		function combineCompletionList(lists: vscode.CompletionList[]): vscode.CompletionList {
 			return {
 				isIncomplete: lists.some(list => list.isIncomplete),
+				itemDefaults: lists.find(list => list.itemDefaults)?.itemDefaults,
 				items: lists.map(list => list.items).flat().filter((result: vscode.CompletionItem) =>
 					result.label.indexOf('__VLS_') === -1
 					&& (!result.labelDetails?.description || result.labelDetails.description.indexOf('__VLS_') === -1)

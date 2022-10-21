@@ -1,29 +1,32 @@
 import * as shared from '@volar/shared';
 import * as fs from 'fs';
 import { configure as configureHttpRequests } from 'request-light';
-import * as path from 'upath';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver/node';
-import { createLanguageServer } from './server';
+import { createCommonLanguageServer } from './server';
 import fileSchemaRequestHandler from './schemaRequestHandlers/file';
 import httpSchemaRequestHandler from './schemaRequestHandlers/http';
 import { createNodeFileSystemHost } from './utils/nodeFileSystemHost';
 import { LanguageServerPlugin } from './types';
 
-export function createNodeServer(plugins: LanguageServerPlugin[]) {
+export function createLanguageServer(plugins: LanguageServerPlugin[]) {
 
 	const connection = vscode.createConnection(vscode.ProposedFeatures.all);
 
-	createLanguageServer(connection, {
-		loadTypescript(options) {
-			return require(path.toUnix(options.typescript.serverPath));
-		},
-		loadTypescriptLocalized(options) {
-			if (options.typescript.localizedPath) {
+	createCommonLanguageServer(connection, {
+		loadTypescript(tsdk) {
+			for (const name of ['./typescript.js', './tsserverlibrary.js', './tsserver.js']) {
 				try {
-					return require(path.toUnix(options.typescript.localizedPath));
+					const path = require.resolve(name, { paths: [tsdk] });
+					return require(path);
 				} catch { }
 			}
+		},
+		loadTypescriptLocalized(tsdk, locale) {
+			try {
+				const path = require.resolve(`./${locale}/diagnosticMessages.generated.json`, { paths: [tsdk] });
+				return require(path);
+			} catch { }
 		},
 		schemaRequestHandlers: {
 			file: fileSchemaRequestHandler,

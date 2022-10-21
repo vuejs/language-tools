@@ -1,7 +1,7 @@
 import type * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { createSnapshots } from '../utils/snapshots';
-import { AutoInsertRequest } from '../requests';
+import { AutoInsertRequest } from '../protocol';
 import { createDocumentServiceHost } from '../utils/documentServiceHost';
 
 export function register(

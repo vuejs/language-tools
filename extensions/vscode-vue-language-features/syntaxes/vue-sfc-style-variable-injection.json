@@ -1,4 +1,5 @@
 {
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
 	"fileTypes": [],
 	"injectionSelector": "L:source.css -comment, L:source.postcss -comment, L:source.sass -comment, L:source.stylus -comment",
 	"patterns": [

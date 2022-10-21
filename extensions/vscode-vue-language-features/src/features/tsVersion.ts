@@ -1,83 +1,70 @@
-import * as path from 'path';
+import * as path from 'typesafe-path';
 import * as vscode from 'vscode';
 import { BaseLanguageClient } from 'vscode-languageclient';
-import * as shared from '@volar/shared';
-import { userPick } from './splitEditors';
-import { takeOverModeEnabled } from '../common';
-import { ServerInitializationOptions } from '@volar/vue-language-server';
+import { quickPick } from './splitEditors';
+import { noProjectReferences, takeOverModeEnabled } from '../common';
+import { LanguageServerInitializationOptions } from '@volar/vue-language-server';
+import * as fs from 'fs';
 
-const defaultTsdk = 'node_modules/typescript/lib';
+const defaultTsdk = 'node_modules/typescript/lib' as path.PosixPath;
 
-export async function register(cmd: string, context: vscode.ExtensionContext, clients: BaseLanguageClient[]) {
+export async function register(cmd: string, context: vscode.ExtensionContext, client: BaseLanguageClient) {
 
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	statusBar.command = cmd;
 
 	const subscription = vscode.commands.registerCommand(cmd, async () => {
 
-		const useWorkspaceTsdk = getCurrentTsPaths(context).isWorkspacePath;
-		const workspaceTsPaths = getWorkspaceTsPaths();
-		const workspaceTsVersion = workspaceTsPaths ? shared.getTypeScriptVersion(workspaceTsPaths.serverPath) : undefined;
-		const vscodeTsPaths = getVscodeTsPaths();
-		const vscodeTsVersion = shared.getTypeScriptVersion(vscodeTsPaths.serverPath);
-		const tsdk = getTsdk();
-		const defaultTsServer = shared.getWorkspaceTypescriptPath(defaultTsdk, (vscode.workspace.workspaceFolders ?? []).map(folder => folder.uri.fsPath));
-		const defaultTsVersion = defaultTsServer ? shared.getTypeScriptVersion(defaultTsServer) : undefined;
-
-		const options: Record<string, vscode.QuickPickItem> = {};
-		options[0] = {
-			label: (!useWorkspaceTsdk ? '• ' : '') + "Use VS Code's Version",
-			description: vscodeTsVersion,
-		};
-		if (tsdk) {
-			options[1] = {
-				label: (useWorkspaceTsdk ? '• ' : '') + 'Use Workspace Version',
-				description: workspaceTsVersion ?? 'Could not load the TypeScript version at this path',
-				detail: tsdk,
-			};
-		}
-		if (tsdk !== defaultTsdk) {
-			options[2] = {
-				label: (useWorkspaceTsdk ? '• ' : '') + 'Use Workspace Version',
-				description: defaultTsVersion ?? 'Could not load the TypeScript version at this path',
-				detail: defaultTsdk,
-			};
-		}
-		if (takeOverModeEnabled()) {
-			options[3] = {
-				label: 'What is Takeover Mode?',
-			};
-		}
-
-		const select = await userPick(options);
-		if (select === undefined)
+		const usingWorkspaceTsdk = getCurrentTsdk(context).isWorkspacePath;
+		const configTsdk = getConfigTsdk();
+		const select = await quickPick([
+			{
+				'use_vscode_tsdk': {
+					label: (!usingWorkspaceTsdk ? '• ' : '') + "Use VS Code's Version",
+					description: getTsVersion(getVscodeTsdk()),
+				},
+				'use_workspace_tsdk': configTsdk ? {
+					label: (usingWorkspaceTsdk ? '• ' : '') + 'Use Workspace Version',
+					description: getTsVersion(resolveConfigTsdk(configTsdk)) ?? 'Could not load the TypeScript version at this path',
+					detail: configTsdk,
+				} : undefined,
+				'use_workspace_tsdk_deafult': configTsdk !== defaultTsdk ? {
+					label: (usingWorkspaceTsdk ? '• ' : '') + 'Use Workspace Version',
+					description: getTsVersion(resolveConfigTsdk(defaultTsdk)) ?? 'Could not load the TypeScript version at this path',
+					detail: defaultTsdk,
+				} : undefined,
+			},
+			{
+				'takeover': {
+					label: 'What is Takeover Mode?',
+				},
+			}
+		]);
+		if (select === undefined) {
 			return; // cancel
-
-		if (select === '3') {
-			vscode.env.openExternal(vscode.Uri.parse('https://vuejs.org/guide/typescript/overview.html#takeover-mode'));
+		}
+		if (select === 'takeover') {
+			vscode.env.openExternal(vscode.Uri.parse('https://vuejs.org/guide/typescript/overview.html#volar-takeover-mode'));
 			return;
 		}
-
-		if (select === '2') {
-			vscode.workspace.getConfiguration('typescript').update('tsdk', defaultTsdk);
+		if (select === 'use_workspace_tsdk_deafult') {
+			await vscode.workspace.getConfiguration('typescript').update('tsdk', defaultTsdk);
 		}
-
-		const nowUseWorkspaceTsdk = select !== '0';
-		if (nowUseWorkspaceTsdk !== isUseWorkspaceTsdk(context)) {
-			context.workspaceState.update('typescript.useWorkspaceTsdk', nowUseWorkspaceTsdk);
+		const shouldUseWorkspaceTsdk = select !== 'use_vscode_tsdk';
+		if (shouldUseWorkspaceTsdk !== useWorkspaceTsdk(context)) {
+			context.workspaceState.update('typescript.useWorkspaceTsdk', shouldUseWorkspaceTsdk);
 			reloadServers();
 		}
-
 		updateStatusBar();
 	});
 	context.subscriptions.push(subscription);
 
-	let tsdk = getTsdk();
+	let tsdk = getConfigTsdk();
 	vscode.workspace.onDidChangeConfiguration(() => {
-		const newTsdk = getTsdk();
+		const newTsdk = getConfigTsdk();
 		if (newTsdk !== tsdk) {
 			tsdk = newTsdk;
-			if (isUseWorkspaceTsdk(context)) {
+			if (useWorkspaceTsdk(context)) {
 				reloadServers();
 			}
 		}
@@ -100,79 +87,110 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 			statusBar.hide();
 		}
 		else {
-			const tsPaths = getCurrentTsPaths(context);
-			const tsVersion = shared.getTypeScriptVersion(tsPaths.serverPath);
-			statusBar.text = 'TS ' + tsVersion;
+			const tsVersion = getTsVersion(getCurrentTsdk(context).tsdk);
+			statusBar.text = '' + tsVersion;
 			if (takeOverModeEnabled()) {
 				statusBar.text += ' (takeover)';
+			}
+			if (noProjectReferences()) {
+				statusBar.text += ' (noProjectReferences)';
 			}
 			statusBar.show();
 		}
 	}
 	async function reloadServers() {
-		const tsPaths = getCurrentTsPaths(context);
-		for (const client of clients) {
-			const newInitOptions: ServerInitializationOptions = {
-				...client.clientOptions.initializationOptions,
-				typescript: tsPaths,
-			};
-			client.clientOptions.initializationOptions = newInitOptions;
-		}
+		const tsPaths = getCurrentTsdk(context);
+		const newInitOptions: LanguageServerInitializationOptions = {
+			...client.clientOptions.initializationOptions,
+			typescript: tsPaths,
+		};
+		client.clientOptions.initializationOptions = newInitOptions;
 		vscode.commands.executeCommand('volar.action.restartServer');
 	}
 }
 
-export function getCurrentTsPaths(context: vscode.ExtensionContext) {
-	if (isUseWorkspaceTsdk(context)) {
-		const workspaceTsPaths = getWorkspaceTsPaths(true);
-		if (workspaceTsPaths) {
-			return { ...workspaceTsPaths, isWorkspacePath: true };
+export function getCurrentTsdk(context: vscode.ExtensionContext) {
+	if (useWorkspaceTsdk(context)) {
+		const resolvedTsdk = resolveConfigTsdk(getConfigTsdk() ?? defaultTsdk);
+		if (resolvedTsdk) {
+			return { tsdk: resolvedTsdk, isWorkspacePath: true };
 		}
 	}
-	return { ...getVscodeTsPaths(), isWorkspacePath: false };
+	return { tsdk: getVscodeTsdk(), isWorkspacePath: false };
 }
 
-function getWorkspaceTsPaths(useDefault = false) {
-	let tsdk = getTsdk();
-	if (!tsdk && useDefault) {
-		tsdk = defaultTsdk;
+function resolveConfigTsdk(tsdk: path.OsPath | path.PosixPath) {
+	if (path.isAbsolute(tsdk)) {
+		try {
+			if (require.resolve('./typescript.js', { paths: [tsdk] })) {
+				return tsdk;
+			}
+		} catch { }
 	}
-	if (tsdk) {
-		const fsPaths = (vscode.workspace.workspaceFolders ?? []).map(folder => folder.uri.fsPath);
-		const tsPath = shared.getWorkspaceTypescriptPath(tsdk, fsPaths);
-		if (tsPath) {
-			return {
-				serverPath: tsPath,
-				localizedPath: shared.getWorkspaceTypescriptLocalizedPath(tsdk, vscode.env.language, fsPaths),
-			};
-		}
+	const workspaceFolderFsPaths = (vscode.workspace.workspaceFolders ?? []).map(folder => folder.uri.fsPath as path.OsPath);
+	for (const folder of workspaceFolderFsPaths) {
+		const _path = path.join(folder, tsdk);
+		try {
+			if (require.resolve('./typescript.js', { paths: [_path] })) {
+				return _path;
+			}
+		} catch { }
 	}
 }
 
-function getVscodeTsPaths() {
+function getVscodeTsdk() {
 	const nightly = vscode.extensions.getExtension('ms-vscode.vscode-typescript-next');
 	if (nightly) {
-		const tsLibPath = path.join(nightly.extensionPath, 'node_modules/typescript/lib');
-		const serverPath = shared.findTypescriptModulePathInLib(tsLibPath);
-		if (serverPath) {
-			return {
-				serverPath,
-				localizedPath: shared.findTypescriptLocalizedPathInLib(tsLibPath, vscode.env.language)
-			};
+		return path.join(
+			nightly.extensionPath as path.OsPath,
+			'node_modules/typescript/lib' as path.PosixPath,
+		);
+	}
+	return path.join(
+		vscode.env.appRoot as path.OsPath,
+		'extensions/node_modules/typescript/lib' as path.PosixPath,
+	);
+}
+
+function getConfigTsdk() {
+	return vscode.workspace.getConfiguration('typescript').get<path.PosixPath>('tsdk');
+}
+
+function useWorkspaceTsdk(context: vscode.ExtensionContext) {
+	return context.workspaceState.get('typescript.useWorkspaceTsdk', false);
+}
+
+export function getTsVersion(libPath: path.OsPath | path.PosixPath | undefined): string | undefined {
+	if (!libPath || !fs.existsSync(libPath)) {
+		return undefined;
+	}
+
+	const p = libPath.split(path.sep);
+	if (p.length <= 1) {
+		return undefined;
+	}
+	const p2 = p.slice(0, -1);
+	const modulePath = p2.join(path.sep) as path.OsPath;
+	let fileName = path.join(modulePath, 'package.json' as path.PosixPath);
+	if (!fs.existsSync(fileName)) {
+		// Special case for ts dev versions
+		if (path.basename(modulePath) === 'built') {
+			fileName = path.join(modulePath, '../package.json' as path.PosixPath);
 		}
 	}
-	return {
-		serverPath: shared.getVscodeTypescriptPath(vscode.env.appRoot),
-		localizedPath: shared.getVscodeTypescriptLocalizedPath(vscode.env.appRoot, vscode.env.language),
-	};
-}
+	if (!fs.existsSync(fileName)) {
+		return undefined;
+	}
 
-function getTsdk() {
-	const tsConfigs = vscode.workspace.getConfiguration('typescript');
-	const tsdk = tsConfigs.get<string>('tsdk');
-	return tsdk;
-}
-
-function isUseWorkspaceTsdk(context: vscode.ExtensionContext) {
-	return context.workspaceState.get('typescript.useWorkspaceTsdk', false);
+	const contents = fs.readFileSync(fileName).toString();
+	let desc: any = null;
+	try {
+		desc = JSON.parse(contents);
+	} catch (err) {
+		return undefined;
+	}
+	if (!desc || !desc.version) {
+		return undefined;
+	}
+	return desc.version;
 }

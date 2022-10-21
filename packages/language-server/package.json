@@ -1,11 +1,15 @@
 {
 	"name": "@volar/language-server",
-	"version": "0.40.13",
+	"version": "1.0.8",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
 		"out/**/*.js",
-		"out/**/*.d.ts"
+		"out/**/*.d.ts",
+		"browser.js",
+		"browser.d.ts",
+		"node.js",
+		"node.d.ts"
 	],
 	"repository": {
 		"type": "git",
@@ -13,15 +17,15 @@
 		"directory": "packages/language-server"
 	},
 	"dependencies": {
-		"@volar/shared": "0.40.13",
-		"@volar/language-core": "0.40.13",
-		"@volar/language-service": "0.40.13",
+		"@volar/language-core": "1.0.8",
+		"@volar/language-service": "1.0.8",
+		"@volar/shared": "1.0.8",
 		"request-light": "^0.5.8",
-		"upath": "^2.0.1",
-		"vscode-html-languageservice": "^5.0.1",
+		"typesafe-path": "^0.2.2",
+		"vscode-html-languageservice": "^5.0.2",
 		"vscode-languageserver": "^8.0.2",
 		"vscode-languageserver-protocol": "^3.17.2",
 		"vscode-languageserver-textdocument": "^1.0.7",
-		"vscode-uri": "^3.0.3"
+		"vscode-uri": "^3.0.6"
 	}
 }

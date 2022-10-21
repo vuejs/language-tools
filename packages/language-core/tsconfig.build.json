@@ -1,6 +1,7 @@
 {
-	"extends": "../../tsconfig.base.json",
+	"extends": "../../tsconfig.json",
 	"compilerOptions": {
+		"noEmit": false,
 		"outDir": "out",
 		"rootDir": "src",
 	},
@@ -12,9 +13,6 @@
 		".vscode-test"
 	],
 	"references": [
-		{
-			"path": "../code-gen/tsconfig.build.json"
-		},
 		{
 			"path": "../source-map/tsconfig.build.json"
 		},

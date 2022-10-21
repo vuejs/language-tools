@@ -4,3 +4,5 @@ node_modules
 *.tsbuildinfo
 *.vsix
 .vscode-test-web
+extensions/vscode-vue-language-features/meta.json
+extensions/vscode-vue-language-features/stats.html

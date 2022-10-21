@@ -1,4 +1,8 @@
 import { createEmbeddedLanguageServiceHost, LanguageServiceHost } from '@volar/language-core';
+import * as shared from '@volar/shared';
+import * as tsFaster from '@volar/typescript-faster';
+import { TextDocument } from 'vscode-languageserver-textdocument';
+import { parseSourceFileDocuments } from './documents';
 import * as autoInsert from './languageFeatures/autoInsert';
 import * as callHierarchy from './languageFeatures/callHierarchy';
 import * as codeActionResolve from './languageFeatures/codeActionResolve';
@@ -22,48 +26,44 @@ import * as renamePrepare from './languageFeatures/renamePrepare';
 import * as signatureHelp from './languageFeatures/signatureHelp';
 import * as diagnostics from './languageFeatures/validation';
 import * as workspaceSymbol from './languageFeatures/workspaceSymbols';
-import { EmbeddedLanguageServicePlugin } from './plugin';
-import { LanguageServiceRuntimeContext as LanguageServiceContext, PluginContext } from './types';
-import * as tsFaster from '@volar/typescript-faster';
-import * as shared from '@volar/shared';
-import { TextDocument } from 'vscode-languageserver-textdocument';
-import { parseSourceFileDocuments } from './documents';
+import { LanguageServicePlugin, LanguageServicePluginContext, LanguageServiceRuntimeContext } from './types';
 
 // fix build
-import type * as _0 from 'vscode-languageserver-protocol';
+import type * as _ from 'vscode-languageserver-protocol';
 
 export type LanguageService = ReturnType<typeof createLanguageService>;
 
 export function createLanguageServiceContext(options: {
 	host: LanguageServiceHost,
-	languageContext: ReturnType<typeof createEmbeddedLanguageServiceHost>,
-	createPlugins(): EmbeddedLanguageServicePlugin[],
-	env: PluginContext['env'];
+	context: ReturnType<typeof createEmbeddedLanguageServiceHost>,
+	getPlugins(): LanguageServicePlugin[],
+	env: LanguageServicePluginContext['env'];
+	documentRegistry: ts.DocumentRegistry | undefined,
 }) {
 
 	const ts = options.host.getTypeScriptModule();
-	const tsLs = ts.createLanguageService(options.languageContext.typescriptLanguageServiceHost);
-	tsFaster.decorate(ts, options.languageContext.typescriptLanguageServiceHost, tsLs);
+	const tsLs = ts.createLanguageService(options.context.typescriptLanguageServiceHost, options.documentRegistry);
+	tsFaster.decorate(ts, options.context.typescriptLanguageServiceHost, tsLs);
 
-	let plugins: EmbeddedLanguageServicePlugin[];
+	let plugins: LanguageServicePlugin[];
 
-	const pluginContext: PluginContext = {
+	const pluginContext: LanguageServicePluginContext = {
 		env: options.env,
 		typescript: {
 			module: options.host.getTypeScriptModule(),
-			languageServiceHost: options.languageContext.typescriptLanguageServiceHost,
+			languageServiceHost: options.context.typescriptLanguageServiceHost,
 			languageService: tsLs,
 		},
 	};
-	const textDocumentMapper = parseSourceFileDocuments(options.env.rootUri, options.languageContext.mapper);
+	const textDocumentMapper = parseSourceFileDocuments(options.env.rootUri, options.context.mapper);
 	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
 	const documentVersions = new Map<string, number>();
-	const context: LanguageServiceContext = {
+	const context: LanguageServiceRuntimeContext = {
 		host: options.host,
-		core: options.languageContext,
+		core: options.context,
 		get plugins() {
 			if (!plugins) {
-				plugins = options.createPlugins();
+				plugins = options.getPlugins();
 				for (const plugin of plugins) {
 					plugin.setup?.(pluginContext);
 				}
@@ -107,14 +107,14 @@ export function createLanguageServiceContext(options: {
 	}
 }
 
-export function createLanguageService(context: LanguageServiceContext) {
+export function createLanguageService(context: LanguageServiceRuntimeContext) {
 
 	return {
 		doValidation: diagnostics.register(context),
 		findReferences: references.register(context),
 		findFileReferences: fileReferences.register(context),
-		findDefinition: definition.register(context, 'findDefinition', data => !!data.definitions, data => !!data.definitions),
-		findTypeDefinition: definition.register(context, 'findTypeDefinition', data => !!data.definitions, data => !!data.definitions),
+		findDefinition: definition.register(context, 'findDefinition', data => !!data.definition, data => !!data.definition),
+		findTypeDefinition: definition.register(context, 'findTypeDefinition', data => !!data.definition, data => !!data.definition),
 		findImplementations: definition.register(context, 'findImplementations', data => !!data.references, data => false),
 		prepareRename: renamePrepare.register(context),
 		doRename: rename.register(context),

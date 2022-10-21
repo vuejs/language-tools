@@ -1,14 +1,20 @@
-import * as vue from '@volar/vue-language-service';
+import { LanguageServicePlugin } from '@volar/language-service';
 
 export function loadCustomPlugins(dir: string) {
+	let configPath: string | undefined;
 	try {
-		const configPath = require.resolve('./volar.config.js', { paths: [dir] });
-		const config: { plugins?: vue.EmbeddedLanguageServicePlugin[]; } = require(configPath);
-		// console.warn('Found', configPath, 'and loaded', config.plugins?.length, 'plugins.');
-		return config.plugins ?? [];
+		configPath = require.resolve('./volar.config.js', { paths: [dir] });
+	} catch { }
+
+	try {
+		if (configPath) {
+			const config: { plugins?: LanguageServicePlugin[]; } = require(configPath);
+			return config.plugins ?? [];
+		}
 	}
 	catch (err) {
-		// console.warn('No volar.config.js found in', dir);
-		return [];
+		console.log(err);
 	}
+
+	return [];
 }

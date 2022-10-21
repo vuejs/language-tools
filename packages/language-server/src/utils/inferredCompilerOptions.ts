@@ -1,4 +1,4 @@
-import { ConfigurationHost } from '@volar/vue-language-service';
+import { ConfigurationHost } from '@volar/language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
 export async function getInferredCompilerOptions(

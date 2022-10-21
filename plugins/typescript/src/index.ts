@@ -1,11 +1,11 @@
-import { EmbeddedLanguageServicePlugin, PluginContext } from '@volar/language-service';
-import * as ts2 from '@volar/typescript-language-service';
+import type { LanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
+import * as ts2 from './createLangaugeService';
 import * as semver from 'semver';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
-export { getSemanticTokenLegend } from '@volar/typescript-language-service';
+export { getSemanticTokenLegend } from './createLangaugeService';
 
 function getBasicTriggerCharacters(tsVersion: string) {
 
@@ -28,18 +28,14 @@ function getBasicTriggerCharacters(tsVersion: string) {
 const jsDocTriggerCharacters = ['*'];
 const directiveCommentTriggerCharacters = ['@'];
 
-export default function (): EmbeddedLanguageServicePlugin & {
-	getLanguageService: () => ts2.LanguageService,
-} {
+export default function (): LanguageServicePlugin {
 
 	const basicTriggerCharacters = getBasicTriggerCharacters('4.3.0');
 
-	let context: PluginContext;
+	let context: LanguageServicePluginContext;
 	let tsLs2: ts2.LanguageService;
 
 	return {
-
-		getLanguageService: () => tsLs2,
 
 		setup(_context) {
 			context = _context;
@@ -48,7 +44,7 @@ export default function (): EmbeddedLanguageServicePlugin & {
 				context.typescript.languageServiceHost,
 				context.typescript.languageService,
 				(section, scopeUri) => context.env.configurationHost?.getConfiguration(section, scopeUri) as any,
-				context.env.rootUri.toString(),
+				context.env.rootUri,
 			);
 		},
 
@@ -234,9 +230,9 @@ export default function (): EmbeddedLanguageServicePlugin & {
 			}
 		},
 
-		findDocumentSemanticTokens(document, range, cancleToken) {
+		findDocumentSemanticTokens(document, range) {
 			if (isTsDocument(document)) {
-				return tsLs2.getDocumentSemanticTokens(document.uri, range, cancleToken);
+				return tsLs2.getDocumentSemanticTokens(document.uri, range);
 			}
 		},
 

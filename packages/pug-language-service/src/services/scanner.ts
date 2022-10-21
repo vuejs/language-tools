@@ -1,35 +1,30 @@
 import type * as html from 'vscode-html-languageservice';
+import { MappingKind } from '../baseParse';
 import type { PugDocument } from '../pugDocument';
 
 export function register(htmlLs: html.LanguageService) {
 	return (pugDoc: PugDocument, initialOffset = 0) => {
 
-		let htmlRange = pugDoc.sourceMap.getMappedRange(initialOffset, initialOffset, data => !data?.isEmptyTagCompletion)?.[0];
-		while (!htmlRange && initialOffset < pugDoc.pugTextDocument.getText().length) {
-			initialOffset++;
-			htmlRange = pugDoc.sourceMap.getMappedRange(initialOffset, initialOffset, data => !data?.isEmptyTagCompletion)?.[0];
-		}
-		if (!htmlRange) return;
+		const htmlOffset = pugDoc.sourceMap.mappings
+			.filter(mapping => mapping.sourceRange[0] >= initialOffset && mapping.data !== MappingKind.EmptyTagCompletion)
+			.sort((a, b) => a.generatedRange[0] - b.generatedRange[0])[0]
+			?.generatedRange[0];
 
-		const htmlScanner = htmlLs.createScanner(pugDoc.htmlTextDocument.getText(), htmlRange.start);
+		if (htmlOffset === undefined)
+			return;
 
-		let offset: number | undefined;
-		let end: number | undefined;
+		const htmlScanner = htmlLs.createScanner(pugDoc.htmlTextDocument.getText(), htmlOffset);
 
 		// @ts-expect-error
 		const scanner: html.Scanner = {
 			scan: () => {
-				offset = undefined;
-				end = undefined;
 				return htmlScanner.scan();
 			},
 			getTokenOffset: () => {
-				getTokenRange();
-				return offset!;
+				return pugDoc.sourceMap.toSourceOffset(htmlScanner.getTokenOffset())?.[0] ?? -1;
 			},
 			getTokenEnd: () => {
-				getTokenRange();
-				return end!;
+				return pugDoc.sourceMap.toSourceOffset(htmlScanner.getTokenEnd())?.[0] ?? -1;
 			},
 			getTokenText: htmlScanner.getTokenText,
 			getTokenLength: htmlScanner.getTokenLength,
@@ -38,21 +33,5 @@ export function register(htmlLs: html.LanguageService) {
 		};
 
 		return scanner;
-
-		function getTokenRange() {
-			if (offset === undefined || end === undefined) {
-				const htmlOffset = htmlScanner.getTokenOffset();
-				const htmlEnd = htmlScanner.getTokenEnd();
-				const pugRange = pugDoc.sourceMap.getSourceRange(htmlOffset, htmlEnd)?.[0];
-				if (pugRange) {
-					offset = pugRange.start;
-					end = pugRange.end;
-				}
-				else {
-					offset = -1;
-					end = -1;
-				}
-			}
-		}
 	};
 }

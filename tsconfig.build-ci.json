@@ -1,0 +1,15 @@
+{
+	"files": [],
+	"include": [],
+	"references": [
+		{
+			"path": "./vue-language-tools/vue-language-server/tsconfig.build.json"
+		},
+		{
+			"path": "./vue-language-tools/vue-tsc/tsconfig.build.json"
+		},
+		{
+			"path": "./vue-language-tools/vue-component-meta/tsconfig.build.json"
+		},
+	]
+}

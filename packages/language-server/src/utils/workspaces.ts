@@ -1,24 +1,28 @@
 import * as shared from '@volar/shared';
-import { ConfigurationHost } from '@volar/vue-language-service';
+import { ConfigurationHost } from '@volar/language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
-import { FileSystemHost, LanguageServerPlugin, RuntimeEnvironment, ServerInitializationOptions } from '../types';
+import { DiagnosticModel, FileSystemHost, LanguageServerPlugin, RuntimeEnvironment, LanguageServerInitializationOptions } from '../types';
 import { createSnapshots } from './snapshots';
 import { createWorkspaceProjects, rootTsConfigNames, sortTsConfigs } from './workspaceProjects';
+import * as path from 'typesafe-path';
+import { CancellactionTokenHost } from './cancellationPipe';
 
 export interface Workspaces extends ReturnType<typeof createWorkspaces> { }
 
 export function createWorkspaces(
 	runtimeEnv: RuntimeEnvironment,
-	plugins: LanguageServerPlugin[],
+	plugins: ReturnType<LanguageServerPlugin>[],
 	fsHost: FileSystemHost,
 	configurationHost: ConfigurationHost | undefined,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLocalized: ts.MapLike<string> | undefined,
-	options: ServerInitializationOptions,
+	client: vscode.ClientCapabilities,
+	options: LanguageServerInitializationOptions,
 	documents: ReturnType<typeof createSnapshots>,
 	connection: vscode.Connection,
+	cancelTokenHost: CancellactionTokenHost,
 ) {
 
 	let semanticTokensReq = 0;
@@ -26,25 +30,17 @@ export function createWorkspaces(
 
 	const workspaces = new Map<string, ReturnType<typeof createWorkspaceProjects>>();
 
-	documents.onDidOpen(params => {
-		updateDiagnostics(params.textDocument.uri);
-	});
-	documents.onDidChangeContent(async params => {
+	documents.onDidChangeContent(params => {
 		updateDiagnostics(params.textDocument.uri);
 	});
 	documents.onDidClose(params => {
 		connection.sendDiagnostics({ uri: params.textDocument.uri, diagnostics: [] });
 	});
 	fsHost.onDidChangeWatchedFiles(params => {
-
 		const tsConfigChanges = params.changes.filter(change => rootTsConfigNames.includes(change.uri.substring(change.uri.lastIndexOf('/') + 1)));
 		if (tsConfigChanges.length) {
-			for (const doc of documents.data.values()) {
-				connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] });
-			}
+			reloadDiagnostics();
 		}
-
-		onDriveFileUpdated();
 	});
 	runtimeEnv.onDidChangeConfiguration?.(async () => {
 		onDriveFileUpdated();
@@ -62,10 +58,10 @@ export function createWorkspaces(
 				rootUri,
 				ts,
 				tsLocalized,
-				options,
 				documents,
-				connection,
 				configurationHost,
+				cancelTokenHost,
+				options,
 			));
 		},
 		remove: (rootUri: URI) => {
@@ -84,6 +80,16 @@ export function createWorkspaces(
 		for (const [_, workspace] of workspaces) {
 			(await workspace).reload();
 		}
+
+		reloadDiagnostics();
+	}
+
+	function reloadDiagnostics() {
+		for (const doc of documents.data.values()) {
+			connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] });
+		}
+
+		onDriveFileUpdated();
 	}
 
 	async function onDriveFileUpdated() {
@@ -93,42 +99,40 @@ export function createWorkspaces(
 		await updateDiagnostics();
 
 		if (req === semanticTokensReq) {
-			if (options.languageFeatures?.semanticTokens) {
+			if (client.textDocument?.semanticTokens) {
 				connection.languages.semanticTokens.refresh();
 			}
-			if (options.languageFeatures?.inlayHints) {
-				connection.languages.semanticTokens.refresh();
+			if (client.textDocument?.inlayHint) {
+				connection.languages.inlayHint.refresh();
 			}
 		}
 	}
 	async function updateDiagnostics(docUri?: string) {
 
-		if (!options.languageFeatures?.diagnostics)
+		if ((options.diagnosticModel ?? DiagnosticModel.Push) !== DiagnosticModel.Push)
 			return;
 
 		const req = ++documentUpdatedReq;
-		const delay = await configurationHost?.getConfiguration<number>('volar.diagnostics.delay');
-		const cancel: vscode.CancellationToken = {
+		const delay = await configurationHost?.getConfiguration<number>('volar.diagnostics.delay') ?? 200;
+		const cancel = cancelTokenHost.createCancellactionToken({
 			get isCancellationRequested() {
 				return req !== documentUpdatedReq;
 			},
-			// @ts-ignore
-			onCancellationRequested: undefined,
-		};
-
+			onCancellationRequested: vscode.Event.None,
+		});
 		const changeDoc = docUri ? documents.data.uriGet(docUri) : undefined;
 		const otherDocs = [...documents.data.values()].filter(doc => doc !== changeDoc);
 
 		if (changeDoc) {
 
-			await shared.sleep(delay ?? 200);
+			await shared.sleep(delay);
 
 			await sendDocumentDiagnostics(changeDoc.uri, changeDoc.version, cancel);
 		}
 
 		for (const doc of otherDocs) {
 
-			await shared.sleep(delay ?? 200);
+			await shared.sleep(delay);
 
 			await sendDocumentDiagnostics(doc.uri, doc.version, cancel);
 
@@ -137,15 +141,15 @@ export function createWorkspaces(
 			}
 		}
 
-		async function sendDocumentDiagnostics(uri: string, version: number, cancel?: vscode.CancellationToken) {
+		async function sendDocumentDiagnostics(uri: string, version: number, cancel: vscode.CancellationToken) {
 
 			const project = (await getProject(uri))?.project;
 			if (!project) return;
 
 			const languageService = project.getLanguageService();
-			const errors = await languageService.doValidation(uri, result => {
+			const errors = await languageService.doValidation(uri, cancel, result => {
 				connection.sendDiagnostics({ uri: uri, diagnostics: result.map(addVersion), version });
-			}, cancel);
+			});
 
 			connection.sendDiagnostics({ uri: uri, diagnostics: errors.map(addVersion), version });
 
@@ -163,8 +167,9 @@ export function createWorkspaces(
 	async function getProject(uri: string) {
 
 		const rootUris = [...workspaces.keys()]
-			.filter(rootUri => shared.isFileInDir(URI.parse(uri).fsPath, URI.parse(rootUri).fsPath))
-			.sort((a, b) => sortTsConfigs(URI.parse(uri).fsPath, URI.parse(a).fsPath, URI.parse(b).fsPath));
+			.filter(rootUri => URI.parse(rootUri).scheme === URI.parse(uri).scheme) // fix https://github.com/johnsoncodehk/volar/issues/1946#issuecomment-1272430742
+			.filter(rootUri => shared.isFileInDir(URI.parse(uri).fsPath as path.OsPath, URI.parse(rootUri).fsPath as path.OsPath))
+			.sort((a, b) => sortTsConfigs(URI.parse(uri).fsPath as path.OsPath, URI.parse(a).fsPath as path.OsPath, URI.parse(b).fsPath as path.OsPath));
 
 		for (const rootUri of rootUris) {
 			const workspace = await workspaces.get(rootUri);

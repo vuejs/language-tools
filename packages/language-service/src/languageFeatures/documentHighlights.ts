@@ -13,15 +13,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 			context,
 			uri,
 			position,
-			function* (position, sourceMap) {
-				for (const [mappedRange] of sourceMap.getMappedRanges(
-					position,
-					position,
-					data => !!data.references,
-				)) {
-					yield mappedRange.start;
-				}
-			},
+			(position, sourceMap) => sourceMap.toGeneratedPositions(position,
+				// note https://github.com/johnsoncodehk/volar/issues/2009
+				data => typeof data.rename === 'object' ? !!data.rename.normalize : !!data.rename
+			),
 			async (plugin, document, position, sourceMap, vueDocument) => {
 
 				const recursiveChecker = dedupe.createLocationSet();
@@ -53,18 +48,17 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 						if (teleport) {
 
-							for (const [teleRange] of teleport.findTeleports(
-								reference.range.start,
-								reference.range.end,
-								sideData => !!sideData.references,
-							)) {
+							for (const mapped of teleport.findTeleports(reference.range.start)) {
 
-								if (recursiveChecker.has({ uri: teleport.document.uri, range: { start: teleRange.start, end: teleRange.start } }))
+								if (!mapped[1].references)
+									continue;
+
+								if (recursiveChecker.has({ uri: teleport.document.uri, range: { start: mapped[0], end: mapped[0] } }))
 									continue;
 
 								foundTeleport = true;
 
-								await withTeleports(teleport.document, teleRange.start);
+								await withTeleports(teleport.document, mapped[0]);
 							}
 						}
 
@@ -79,8 +73,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				if (!sourceMap)
 					return highlisht;
 
-				const range = sourceMap.getSourceRange(highlisht.range.start, highlisht.range.end)?.[0];
-
+				const range = sourceMap.toSourceRange(highlisht.range);
 				if (range) {
 					return {
 						...highlisht,

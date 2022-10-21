@@ -5,7 +5,7 @@ import { PluginCompletionData } from './complete';
 
 export function register(context: LanguageServiceRuntimeContext) {
 
-	return async (item: vscode.CompletionItem, newPosition?: vscode.Position) => {
+	return async (item: vscode.CompletionItem) => {
 
 		const data: PluginCompletionData | undefined = item.data;
 
@@ -27,10 +27,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				if (sourceMap) {
 
-					const newPosition_2 = newPosition
-						? sourceMap.getMappedRange(newPosition, newPosition, data => !!data.completion)?.[0].start
-						: undefined;
-					const resolvedItem = await plugin.complete.resolve(originalItem, newPosition_2);
+					const resolvedItem = await plugin.complete.resolve(originalItem);
 
 					// fix https://github.com/johnsoncodehk/volar/issues/916
 					if (resolvedItem.additionalTextEdits) {
@@ -48,8 +45,11 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					item = transformCompletionItem(
 						resolvedItem,
-						embeddedRange => plugin.resolveEmbeddedRange?.(embeddedRange)
-							?? sourceMap.getSourceRange(embeddedRange.start, embeddedRange.end)?.[0],
+						embeddedRange => {
+							let range = plugin.resolveEmbeddedRange?.(embeddedRange);
+							if (range) return range;
+							return sourceMap.toSourceRange(embeddedRange);
+						},
 					);
 				}
 			}

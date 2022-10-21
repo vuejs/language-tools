@@ -1,13 +1,13 @@
 import { URI } from 'vscode-uri';
-import * as upath from 'upath';
 import type { DocumentUri } from 'vscode-languageserver-textdocument';
+import * as path from 'typesafe-path';
 
 export function getPathOfUri(uri: DocumentUri) {
-	return upath.toUnix(URI.parse(uri).fsPath);
+	return URI.parse(uri).fsPath.replace(/\\/g, '/') as path.PosixPath;
 }
 
 export function normalizeFileName(fsPath: string) {
-	return upath.toUnix(URI.file(fsPath).fsPath);
+	return URI.file(fsPath).fsPath.replace(/\\/g, '/') as path.PosixPath;
 }
 
 export function normalizeUri(uri: string) {
@@ -21,7 +21,7 @@ export function getUriByPath(rootUri: URI, path: string) {
 	}).toString();
 }
 
-export function isFileInDir(fileName: string, dir: string) {
-	const relative = upath.relative(dir, fileName);
-	return !!relative && !relative.startsWith('..') && !upath.isAbsolute(relative);
+export function isFileInDir(fileName: path.OsPath, dir: path.OsPath) {
+	const relative = path.relative(dir, fileName);
+	return !!relative && !relative.startsWith('..') && !path.isAbsolute(relative);
 }

@@ -1,3 +1,7 @@
+import { createDocumentRegistry, LanguageModule, SourceFile } from '@volar/language-core';
+import * as shared from '@volar/shared';
+import { shallowReactive as reactive } from '@vue/reactivity';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as autoInsert from './documentFeatures/autoInsert';
 import * as colorPresentations from './documentFeatures/colorPresentations';
 import * as documentColors from './documentFeatures/documentColors';
@@ -6,32 +10,27 @@ import * as foldingRanges from './documentFeatures/foldingRanges';
 import * as format from './documentFeatures/format';
 import * as linkedEditingRanges from './documentFeatures/linkedEditingRanges';
 import * as selectionRanges from './documentFeatures/selectionRanges';
-import { DocumentServiceRuntimeContext, PluginContext } from './types';
-import * as shared from '@volar/shared';
-import { TextDocument } from 'vscode-languageserver-textdocument';
-import { EmbeddedLanguageServicePlugin } from './plugin';
-import { singleFileTypeScriptServiceHost, updateSingleFileTypeScriptServiceHost } from './utils/singleFileTypeScriptService';
-import { createDocumentRegistry, EmbeddedLanguageModule, FileNode } from '@volar/language-core';
 import { parseSourceFileDocument, SourceFileDocument } from './documents';
-import { shallowReactive as reactive } from '@vue/reactivity';
+import { DocumentServiceRuntimeContext, LanguageServicePlugin, LanguageServicePluginContext } from './types';
+import { singleFileTypeScriptServiceHost, updateSingleFileTypeScriptServiceHost } from './utils/singleFileTypeScriptService';
 
 // fix build
-import type * as _0 from 'vscode-languageserver-protocol';
+import type * as _ from 'vscode-languageserver-protocol';
 
-export type DocumentService = ReturnType<typeof getDocumentService>;
+export type DocumentService = ReturnType<typeof createDocumentService>;
 
-export function getDocumentServiceContext(options: {
+export function createDocumentServiceContext(options: {
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	getLanguageModules(): EmbeddedLanguageModule[],
-	createPlugins(): EmbeddedLanguageServicePlugin[],
-	env: PluginContext['env'];
+	getLanguageModules(): LanguageModule[],
+	getPlugins(): LanguageServicePlugin[],
+	env: LanguageServicePluginContext['env'];
 }) {
 
 	const ts = options.ts;
 
-	let plugins: EmbeddedLanguageServicePlugin[];
+	let plugins: LanguageServicePlugin[];
 
-	const pluginContext: PluginContext = {
+	const pluginContext: LanguageServicePluginContext = {
 		typescript: {
 			module: ts,
 			languageServiceHost: singleFileTypeScriptServiceHost,
@@ -40,14 +39,14 @@ export function getDocumentServiceContext(options: {
 		env: options.env,
 	};
 	const languageModules = options.getLanguageModules();
-	const vueDocuments = new WeakMap<TextDocument, [SourceFileDocument, EmbeddedLanguageModule]>();
-	const fileMods = new WeakMap<FileNode, EmbeddedLanguageModule>();
+	const vueDocuments = new WeakMap<TextDocument, [SourceFileDocument, LanguageModule]>();
+	const fileMods = new WeakMap<SourceFile, LanguageModule>();
 	const mapper = createDocumentRegistry();
 	const context: DocumentServiceRuntimeContext = {
 		typescript: ts,
 		get plugins() {
 			if (!plugins) {
-				plugins = options.createPlugins();
+				plugins = options.getPlugins();
 				for (const plugin of plugins) {
 					plugin.setup?.(pluginContext);
 				}
@@ -74,7 +73,7 @@ export function getDocumentServiceContext(options: {
 				);
 				if (sourceFile) {
 					sourceFile = reactive(sourceFile);
-					const sourceFileDoc = parseSourceFileDocument(options.env.rootUri, sourceFile, mapper);
+					const sourceFileDoc = parseSourceFileDocument(options.env.rootUri, sourceFile);
 					cache = [sourceFileDoc, languageModule];
 					vueDocuments.set(document, cache);
 					fileMods.set(sourceFile, languageModule);
@@ -105,7 +104,7 @@ export function isTsDocument(document: TextDocument) {
 		document.languageId === 'typescriptreact';
 }
 
-export function getDocumentService(context: DocumentServiceRuntimeContext) {
+export function createDocumentService(context: DocumentServiceRuntimeContext) {
 
 	return {
 		format: format.register(context),

@@ -19,7 +19,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				if (!sourceMap)
 					return link;
 
-				const range = sourceMap.getSourceRange(link.range.start, link.range.end)?.[0];
+				const range = sourceMap.toSourceRange(link.range);
 				if (range) {
 					return {
 						...link,
@@ -44,15 +44,18 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 			for (const sourceMap of vueDocument.getSourceMaps()) {
 
-				for (const mapped of sourceMap.base.mappings) {
+				for (const mapped of sourceMap.mappings) {
 
 					if (!mapped.data.displayWithLink)
 						continue;
 
+					if (mapped.sourceRange[0] === mapped.sourceRange[1])
+						continue;
+
 					result.push({
 						range: {
-							start: document.positionAt(mapped.sourceRange.start),
-							end: document.positionAt(mapped.sourceRange.end),
+							start: document.positionAt(mapped.sourceRange[0]),
+							end: document.positionAt(mapped.sourceRange[1]),
 						},
 						target: uri, // TODO
 					});

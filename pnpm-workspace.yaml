@@ -1,4 +1,6 @@
 packages:
+  - 'examples/*'
   - 'extensions/*'
   - 'packages/*'
   - 'plugins/*'
+  - 'vue-language-tools/*'

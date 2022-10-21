@@ -1,7 +1,7 @@
 import * as vscode from 'vscode-languageserver-types';
-import { EmbeddedLanguageServicePlugin } from '@volar/language-service';
+import type { LanguageServicePlugin } from '@volar/language-service';
 
-export default function (): EmbeddedLanguageServicePlugin {
+export default function (): LanguageServicePlugin {
 
 	return {
 

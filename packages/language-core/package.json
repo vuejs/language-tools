@@ -1,6 +1,6 @@
 {
 	"name": "@volar/language-core",
-	"version": "0.40.13",
+	"version": "1.0.8",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -13,8 +13,8 @@
 		"directory": "packages/language-core"
 	},
 	"dependencies": {
-		"@volar/code-gen": "0.40.13",
-		"@volar/source-map": "0.40.13",
-		"@vue/reactivity": "^3.2.38"
+		"@volar/source-map": "1.0.8",
+		"@vue/reactivity": "^3.2.40",
+		"muggle-string": "^0.1.0"
 	}
 }

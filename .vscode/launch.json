@@ -12,9 +12,7 @@
 				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode-vue-language-features"
 			],
 			"outFiles": [
-				"${workspaceRoot}/extensions/*/out/**/*.js",
-				"${workspaceRoot}/packages/*/out/**/*.js",
-				"${workspaceRoot}/plugins/*/out/**/*.js"
+				"${workspaceRoot}/*/*/out/**/*.js"
 			],
 			"preLaunchTask": {
 				"type": "npm",
@@ -22,18 +20,16 @@
 			}
 		},
 		{
-			"name": "Launch Alpine Language Features",
+			"name": "Launch Svelte Example",
 			"type": "extensionHost",
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"--disable-extensions",
-				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode-alpine-language-features"
+				"--extensionDevelopmentPath=${workspaceRoot}/examples/vscode-svelte"
 			],
 			"outFiles": [
-				"${workspaceRoot}/extensions/*/out/**/*.js",
-				"${workspaceRoot}/packages/*/out/**/*.js",
-				"${workspaceRoot}/plugins/*/out/**/*.js"
+				"${workspaceRoot}/*/*/out/**/*.js"
 			],
 			"preLaunchTask": {
 				"type": "npm",
@@ -50,9 +46,7 @@
 				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode-typescript-vue-plugin"
 			],
 			"outFiles": [
-				"${workspaceRoot}/extensions/*/out/**/*.js",
-				"${workspaceRoot}/packages/*/out/**/*.js",
-				"${workspaceRoot}/plugins/*/out/**/*.js"
+				"${workspaceRoot}/*/*/out/**/*.js"
 			],
 			"preLaunchTask": {
 				"type": "npm",
@@ -70,9 +64,7 @@
 				"--extensionDevelopmentKind=web"
 			],
 			"outFiles": [
-				"${workspaceRoot}/extensions/*/out/**/*.js",
-				"${workspaceRoot}/packages/*/out/**/*.js",
-				"${workspaceRoot}/plugins/*/out/**/*.js"
+				"${workspaceRoot}/*/*/out/**/*.js"
 			],
 			"preLaunchTask": {
 				"type": "npm",
@@ -86,19 +78,7 @@
 			"port": 6009,
 			"restart": true,
 			"outFiles": [
-				"${workspaceRoot}/packages/*/out/**/*.js",
-				"${workspaceRoot}/plugins/*/out/**/*.js"
-			]
-		},
-		{
-			"name": "Attach to Second Language Features Server",
-			"type": "node",
-			"request": "attach",
-			"port": 6010,
-			"restart": true,
-			"outFiles": [
-				"${workspaceRoot}/packages/*/out/**/*.js",
-				"${workspaceRoot}/plugins/*/out/**/*.js"
+				"${workspaceRoot}/*/*/out/**/*.js"
 			]
 		},
 		{
@@ -108,41 +88,7 @@
 			"port": 6011,
 			"restart": true,
 			"outFiles": [
-				"${workspaceRoot}/packages/*/out/**/*.js",
-				"${workspaceRoot}/plugins/*/out/**/*.js"
-			]
-		},
-		{
-			"name": "Attach to Alpine Langauge Features Server",
-			"type": "node",
-			"request": "attach",
-			"port": 6109,
-			"restart": true,
-			"outFiles": [
-				"${workspaceRoot}/packages/*/out/**/*.js",
-				"${workspaceRoot}/plugins/*/out/**/*.js"
-			]
-		},
-		{
-			"name": "Attach to Alpine Second Language Features Server",
-			"type": "node",
-			"request": "attach",
-			"port": 6110,
-			"restart": true,
-			"outFiles": [
-				"${workspaceRoot}/packages/*/out/**/*.js",
-				"${workspaceRoot}/plugins/*/out/**/*.js"
-			]
-		},
-		{
-			"name": "Attach to Alpine Document Features Server",
-			"type": "node",
-			"request": "attach",
-			"port": 6111,
-			"restart": true,
-			"outFiles": [
-				"${workspaceRoot}/packages/*/out/**/*.js",
-				"${workspaceRoot}/plugins/*/out/**/*.js"
+				"${workspaceRoot}/*/*/out/**/*.js"
 			]
 		}
 	],

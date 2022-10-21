@@ -174,7 +174,6 @@ function _combineContinuousChangeRanges(a: ts.TextChangeRange, b: ts.TextChangeR
 export function createSnapshots(connection: vscode.Connection) {
 
 	const snapshots = shared.createUriMap<IncrementalScriptSnapshot>();
-	const onDidOpens = new Set<(params: vscode.DidOpenTextDocumentParams) => void>();
 	const onDidChangeContents = new Set<(params: vscode.DidChangeTextDocumentParams) => void>();
 	const onDidCloses = new Set<(params: vscode.DidCloseTextDocumentParams) => void>();
 
@@ -185,8 +184,8 @@ export function createSnapshots(connection: vscode.Connection) {
 			params.textDocument.version,
 			params.textDocument.text,
 		));
-		for (const cb of onDidOpens) {
-			cb(params);
+		for (const cb of onDidChangeContents) {
+			cb({ textDocument: params.textDocument, contentChanges: [{ text: params.textDocument.text }] });
 		}
 	});
 	connection.onDidChangeTextDocument(params => {
@@ -220,10 +219,6 @@ export function createSnapshots(connection: vscode.Connection) {
 
 	return {
 		data: snapshots,
-		onDidOpen: (cb: (params: vscode.DidOpenTextDocumentParams) => void) => {
-			onDidOpens.add(cb);
-			return () => onDidOpens.delete(cb);
-		},
 		onDidChangeContent: (cb: (params: vscode.DidChangeTextDocumentParams) => void) => {
 			onDidChangeContents.add(cb);
 			return () => onDidChangeContents.delete(cb);

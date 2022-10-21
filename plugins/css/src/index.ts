@@ -1,8 +1,9 @@
-import { EmbeddedLanguageServicePlugin, PluginContext } from '@volar/language-service';
+import type { LanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as css from 'vscode-css-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import * as path from 'path';
 
 const wordPatterns: { [lang: string]: RegExp; } = {
 	css: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@#.!])?[\w-?]+%?|[@#!.])/g,
@@ -11,12 +12,12 @@ const wordPatterns: { [lang: string]: RegExp; } = {
 	postcss: /(#?-?\d*\.\d\w*%?)|(::?[\w-]*(?=[^,{;]*[,{]))|(([@$#.!])?[\w-?]+%?|[@#!$.])/g, // scss
 };
 
-export default function (): EmbeddedLanguageServicePlugin {
+export default function (): LanguageServicePlugin {
 
 	const stylesheets = new WeakMap<TextDocument, [number, css.Stylesheet]>();
 
 	let inited = false;
-	let context: PluginContext;
+	let context: LanguageServicePluginContext;
 	let cssLs: css.LanguageService;
 	let scssLs: css.LanguageService;
 	let lessLs: css.LanguageService;
@@ -59,15 +60,8 @@ export default function (): EmbeddedLanguageServicePlugin {
 					const cssResult = await cssLs.doComplete2(document, position, stylesheet, context.env.documentContext, settings?.completion);
 
 					if (cssResult) {
-						for (const item of cssResult.items) {
-
-							if (item.textEdit)
-								continue;
-
-							// track https://github.com/microsoft/vscode-css-languageservice/issues/265
-							const newText = item.insertText || item.label;
-							item.textEdit = vscode.TextEdit.replace(wordRange, newText);
-						}
+						cssResult.itemDefaults ??= {};
+						cssResult.itemDefaults.editRange ??= wordRange;
 					}
 
 					return cssResult;
@@ -118,7 +112,7 @@ export default function (): EmbeddedLanguageServicePlugin {
 		},
 
 		validation: {
-			async onFull(document) {
+			async onSyntactic(document) {
 				return worker(document, async (stylesheet, cssLs) => {
 
 					const settings = await context.env.configurationHost?.getConfiguration<css.LanguageSettings>(document.languageId, document.uri);
@@ -240,25 +234,13 @@ export default function (): EmbeddedLanguageServicePlugin {
 
 		if (configHost) {
 
-			const paths = new Set<string>();
 			const customData: string[] = await configHost.getConfiguration('css.customData') ?? [];
-			const rootPath = shared.getPathOfUri(context.env.rootUri.toString());
+			const newData: css.ICSSDataProvider[] = [];
 
 			for (const customDataPath of customData) {
 				try {
-					const jsonPath = require.resolve(customDataPath, { paths: [rootPath] });
-					paths.add(jsonPath);
-				}
-				catch (error) {
-					console.error(error);
-				}
-			}
-
-			const newData: css.ICSSDataProvider[] = [];
-
-			for (const path of paths) {
-				try {
-					newData.push(css.newCSSDataProvider(require(path)));
+					const jsonPath = path.resolve(customDataPath);
+					newData.push(css.newCSSDataProvider(require(jsonPath)));
 				}
 				catch (error) {
 					console.error(error);

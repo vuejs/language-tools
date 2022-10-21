@@ -7,13 +7,6 @@ import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import { languageFeatureWorker } from '../utils/featureWorkers';
 
-function isTsDocument(document: TextDocument) {
-	return document.languageId === 'javascript' ||
-		document.languageId === 'typescript' ||
-		document.languageId === 'javascriptreact' ||
-		document.languageId === 'typescriptreact';
-}
-
 export function updateRange(
 	range: vscode.Range,
 	change: {
@@ -114,7 +107,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 	const scriptTsCache_syntactic: typeof nonTsCache = new Map();
 	const scriptTsCache_suggestion: typeof nonTsCache = new Map();
 
-	return async (uri: string, response?: (result: vscode.Diagnostic[]) => void, cancellationToken?: vscode.CancellationToken) => {
+	return async (uri: string, token?: vscode.CancellationToken, response?: (result: vscode.Diagnostic[]) => void) => {
 
 		const cache = responseCache.get(uri) ?? responseCache.set(uri, {
 			nonTs: { snapshot: undefined, errors: [] },
@@ -151,15 +144,13 @@ export function register(context: LanguageServiceRuntimeContext) {
 		let shouldSend = false;
 		let lastCheckCancelAt = 0;
 
-		await worker(false, 'onFull', nonTsCache, cache.nonTs);
+		await worker('onSyntactic', scriptTsCache_syntactic, cache.tsSyntactic);
 		doResponse();
-		await worker(true, 'onSyntactic', scriptTsCache_syntactic, cache.tsSyntactic);
+		await worker('onSuggestion', scriptTsCache_suggestion, cache.tsSuggestion);
 		doResponse();
-		await worker(true, 'onSuggestion', scriptTsCache_suggestion, cache.tsSuggestion);
+		await worker('onSemantic', scriptTsCache_semantic, cache.tsSemantic);
 		doResponse();
-		await worker(true, 'onSemantic', scriptTsCache_semantic, cache.tsSemantic);
-		doResponse();
-		await worker(true, 'onDeclaration', scriptTsCache_declaration, cache.tsDeclaration);
+		await worker('onDeclaration', scriptTsCache_declaration, cache.tsDeclaration);
 
 		return getErrors();
 
@@ -175,8 +166,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 		}
 
 		async function worker(
-			isTs: boolean,
-			mode: 'onFull' | 'onSemantic' | 'onSyntactic' | 'onSuggestion' | 'onDeclaration',
+			mode: 'onSemantic' | 'onSyntactic' | 'onSuggestion' | 'onDeclaration',
 			cacheMap: typeof nonTsCache,
 			cache: Cache,
 		) {
@@ -185,47 +175,36 @@ export function register(context: LanguageServiceRuntimeContext) {
 				uri,
 				true,
 				function* (arg, sourceMap) {
-					if (sourceMap.embeddedFile.capabilities.diagnostics && sourceMap.embeddedFile.isTsHostFile === isTs) {
+					if (sourceMap.embeddedFile.capabilities.diagnostic) {
 						yield arg;
 					}
 				},
 				async (plugin, document, arg, sourceMap) => {
 
-					if (cancellationToken) {
+					if (token) {
 
 						if (Date.now() - lastCheckCancelAt >= 5) {
 							await shared.sleep(5); // wait for LSP event polling
 							lastCheckCancelAt = Date.now();
 						}
 
-						if (cancellationToken.isCancellationRequested)
+						if (token.isCancellationRequested)
 							return;
 					}
-
-					// avoid duplicate errors from vue plugin & typescript plugin
-					if (isTsDocument(document) !== isTs)
-						return;
 
 					const pluginId = context.plugins.indexOf(plugin);
 					const pluginCache = cacheMap.get(pluginId) ?? cacheMap.set(pluginId, new Map()).get(pluginId)!;
 					const cache = pluginCache.get(document.uri);
-					const tsProjectVersion = isTs ? context.core.typescriptLanguageServiceHost.getProjectVersion?.() : undefined;
+					const tsProjectVersion = (mode === 'onDeclaration' || mode === 'onSemantic') ? context.core.typescriptLanguageServiceHost.getProjectVersion?.() : undefined;
 
-					if (!isTs) {
-						if (cache && cache.documentVersion === document.version) {
+					if (mode === 'onDeclaration' || mode === 'onSemantic') {
+						if (cache && cache.documentVersion === document.version && cache.tsProjectVersion === tsProjectVersion) {
 							return cache.errors;
 						}
 					}
 					else {
-						if (mode === 'onFull' || mode === 'onDeclaration' || mode === 'onSemantic') {
-							if (cache && cache.documentVersion === document.version && cache.tsProjectVersion === tsProjectVersion) {
-								return cache.errors;
-							}
-						}
-						else {
-							if (cache && cache.documentVersion === document.version) {
-								return cache.errors;
-							}
+						if (cache && cache.documentVersion === document.version) {
+							return cache.errors;
 						}
 					}
 
@@ -258,38 +237,15 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 		for (const error of errors) {
 
-			const _error: vscode.Diagnostic = { ...error };
+			// clone it to avoid modify cache
+			let _error: vscode.Diagnostic = { ...error };
 
 			if (sourceMap) {
-
-				let sourceRange = sourceMap.getSourceRange(
-					error.range.start,
-					error.range.end,
-					data => !!data.diagnostic,
-				)?.[0];
-
-				// fix https://github.com/johnsoncodehk/volar/issues/1205
-				// fix https://github.com/johnsoncodehk/volar/issues/1264
-				if (!sourceRange) {
-					const start = sourceMap.getSourceRange(
-						error.range.start,
-						error.range.start,
-						data => !!data.diagnostic,
-					)?.[0].start;
-					const end = sourceMap.getSourceRange(
-						error.range.end,
-						error.range.end,
-						data => !!data.diagnostic,
-					)?.[0].end;
-					if (start && end) {
-						sourceRange = { start, end };
-					}
-				}
-
-				if (!sourceRange)
+				const range = sourceMap.toSourceRange(error.range, data => !!data.diagnostic);
+				if (!range) {
 					continue;
-
-				_error.range = sourceRange;
+				}
+				_error.range = range;
 			}
 
 			if (_error.relatedInformation) {
@@ -297,20 +253,21 @@ export function register(context: LanguageServiceRuntimeContext) {
 				const relatedInfos: vscode.DiagnosticRelatedInformation[] = [];
 
 				for (const info of _error.relatedInformation) {
-					for (const sourceLoc of context.documents.fromEmbeddedLocation(
-						info.location.uri,
-						info.location.range.start,
-						info.location.range.end,
-						data => !!data.diagnostic,
-					)) {
-						relatedInfos.push({
-							location: {
-								uri: sourceLoc.uri,
-								range: sourceLoc.range,
-							},
-							message: info.message,
-						});
-						break;
+					const map = context.documents.sourceMapFromEmbeddedDocumentUri(info.location.uri);
+					if (map) {
+						const range = map.toSourceRange(info.location.range, data => !!data.diagnostic);
+						if (range) {
+							relatedInfos.push({
+								location: {
+									uri: map.sourceDocument.uri,
+									range,
+								},
+								message: info.message,
+							});
+						}
+					}
+					else {
+						relatedInfos.push(info);
 					}
 				}
 

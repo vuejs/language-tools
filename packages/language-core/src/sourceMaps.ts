@@ -1,15 +1,17 @@
 import * as SourceMaps from '@volar/source-map';
-import { PositionCapabilities, TeleportMappingData, TeleportCapabilities } from './types';
-
-export class EmbeddedFileSourceMap extends SourceMaps.SourceMapBase<PositionCapabilities> { }
+import { TeleportCapabilities, TeleportMappingData } from './types';
 
 export class Teleport extends SourceMaps.SourceMapBase<TeleportMappingData> {
-	*findTeleports(start: number, end?: number, filter?: (data: TeleportCapabilities) => boolean) {
-		for (const [teleRange, data] of this.getMappedRanges(start, end, filter ? data => filter(data.toGenedCapabilities) : undefined)) {
-			yield [teleRange, data.toGenedCapabilities] as const;
+	*findTeleports(start: number, filter?: (data: TeleportCapabilities) => boolean) {
+		for (const mapped of this.toGeneratedOffsets(start)) {
+			if (!filter || filter(mapped[1].data.toSourceCapabilities)) {
+				yield mapped[0];
+			}
 		}
-		for (const [teleRange, data] of this.getSourceRanges(start, end, filter ? data => filter(data.toGenedCapabilities) : undefined)) {
-			yield [teleRange, data.toGenedCapabilities] as const;
+		for (const mapped of this.toSourceOffsets(start)) {
+			if (!filter || filter(mapped[1].data.toGenedCapabilities)) {
+				yield mapped[0];
+			}
 		}
 	}
 }

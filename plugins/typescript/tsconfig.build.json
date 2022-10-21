@@ -1,6 +1,7 @@
 {
-	"extends": "../../tsconfig.base.json",
+	"extends": "../../tsconfig.json",
 	"compilerOptions": {
+		"noEmit": false,
 		"outDir": "out",
 		"rootDir": "src",
 	},
@@ -13,9 +14,6 @@
 		},
 		{
 			"path": "../../packages/shared/tsconfig.build.json"
-		},
-		{
-			"path": "../../packages/typescript-language-service/tsconfig.build.json"
 		},
 	],
 }

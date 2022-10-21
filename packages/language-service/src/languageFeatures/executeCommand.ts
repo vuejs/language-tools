@@ -2,7 +2,7 @@ import type { LanguageServiceRuntimeContext } from '../types';
 import { ExecuteCommandContext } from '@volar/language-service';
 import * as vscode from 'vscode-languageserver-protocol';
 
-export const executePluginCommand = 'volar.executtePluginCommand';
+export const executePluginCommand = 'volar.executePluginCommand';
 
 export type ExecutePluginCommandArgs = [
 	string, // uri
