@@ -34,7 +34,6 @@
 	},
 	"pnpm": {
 		"overrides": {
-			"@types/node": "18.8.0",
 			"esbuild": "0.15.7"
 		}
 	}
