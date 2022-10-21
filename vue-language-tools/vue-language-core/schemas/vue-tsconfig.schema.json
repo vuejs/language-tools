@@ -17,6 +17,11 @@
 					],
 					"markdownDescription": "Target version of Vue."
 				},
+				"extensions": {
+					"type": "array",
+					"default": [ ".vue" ],
+					"markdownDescription": "Valid file extensions that should be considered as regular Vue SFC, please note that you should not use this option separately for additional file extensions IDE support, see https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features/README.md#custom-file-extensions."
+				},
 				"jsxTemplates": {
 					"type": "boolean",
 					"default": false,
