@@ -29,7 +29,7 @@ export async function documentArgFeatureWorker<T, K>(
 	document: TextDocument,
 	arg: K,
 	isValidSourceMap: (sourceMap: EmbeddedDocumentSourceMap) => boolean,
-	transformArg: (arg: K, sourceMap: EmbeddedDocumentSourceMap) => Generator<K> | [K],
+	transformArg: (arg: K, sourceMap: EmbeddedDocumentSourceMap) => Generator<K> | K[],
 	worker: (plugin: LanguageServicePlugin, document: TextDocument, arg: K) => T,
 	transform: (result: NonNullable<Awaited<T>>, sourceMap: EmbeddedDocumentSourceMap) => T | undefined,
 	combineResult?: (results: NonNullable<Awaited<T>>[]) => NonNullable<Awaited<T>>,
