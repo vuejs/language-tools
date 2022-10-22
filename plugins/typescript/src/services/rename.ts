@@ -94,7 +94,10 @@ export function fileTextChangesToWorkspaceEdit(rootUri: URI, changes: readonly t
 			continue;
 
 		const docEdit = vscode.TextDocumentEdit.create(
-			{ uri: uri, version: doc.version },
+			{
+				uri,
+				version: null, // fix https://github.com/johnsoncodehk/volar/issues/2025
+			},
 			[],
 		);
 
