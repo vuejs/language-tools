@@ -38,10 +38,36 @@ export function getSemanticTokenLegend() {
 export function getLanguageServicePlugins(
 	host: vue.LanguageServiceHost,
 	apis: embeddedLS.LanguageService,
-) {
+): embeddedLS.LanguageServicePlugin[] {
 
 	// plugins
-	const tsPlugin = useTsPlugin();
+	const _tsPlugin = useTsPlugin();
+	const tsPlugin: embeddedLS.LanguageServicePlugin = (() => {
+		let context: embeddedLS.LanguageServicePluginContext;
+		return {
+			..._tsPlugin,
+			setup(_context) {
+				_tsPlugin.setup?.(_context);
+				context = _context;
+			},
+			complete: {
+				..._tsPlugin.complete,
+				async resolve(item) {
+					item = await _tsPlugin.complete!.resolve!(item);
+					if (
+						/\w*Vue$/.test(item.label)
+						&& item.textEdit?.newText && /\w*Vue$/.test(item.textEdit.newText)
+						&& item.additionalTextEdits?.length === 1 && item.additionalTextEdits[0].newText.indexOf('Vue from ') >= 0
+						&& (await context.env.configurationHost?.getConfiguration<boolean>('volar.completion.trimVueFromImportName') ?? true)
+					) {
+						item.textEdit.newText = item.textEdit.newText.slice(0, -'Vue'.length);
+						item.additionalTextEdits[0].newText = item.additionalTextEdits[0].newText.replace('Vue from ', ' from ');
+					}
+					return item;
+				},
+			},
+		};
+	})();
 	const vuePlugin = useVuePlugin({
 		getVueDocument: (document) => apis.context.documents.get(document.uri),
 	});

@@ -471,6 +471,11 @@
 					"default": true,
 					"description": "Enabled auto-import for component with tag completion."
 				},
+				"volar.completion.trimVueFromImportName": {
+					"type": "boolean",
+					"default": true,
+					"description": "Trim \"Vue\" from import name from auto import."
+				},
 				"volar.preview.script.vite": {
 					"type": "string",
 					"default": "node {VITE_BIN} --port={PORT}"
