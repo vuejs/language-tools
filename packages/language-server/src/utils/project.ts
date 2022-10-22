@@ -131,6 +131,7 @@ export async function createProject(
 
 		if (creates.length || deletes.length) {
 			parsedCommandLine = createParsedCommandLine(ts, sys, shared.getPathOfUri(rootUri.toString()), tsConfig, plugins);
+			projectVersion++;
 			typeRootVersion++;
 		}
 	}

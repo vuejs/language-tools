@@ -41,6 +41,9 @@ export function createWorkspaces(
 		if (tsConfigChanges.length) {
 			reloadDiagnostics();
 		}
+		else {
+			onDriveFileUpdated();
+		}
 	});
 	runtimeEnv.onDidChangeConfiguration?.(async () => {
 		onDriveFileUpdated();
@@ -51,18 +54,20 @@ export function createWorkspaces(
 		getProject,
 		reloadProject,
 		add: (rootUri: URI) => {
-			workspaces.set(rootUri.toString(), createWorkspaceProjects(
-				runtimeEnv,
-				plugins,
-				fsHost,
-				rootUri,
-				ts,
-				tsLocalized,
-				documents,
-				configurationHost,
-				cancelTokenHost,
-				options,
-			));
+			if (!workspaces.has(rootUri.toString())) {
+				workspaces.set(rootUri.toString(), createWorkspaceProjects(
+					runtimeEnv,
+					plugins,
+					fsHost,
+					rootUri,
+					ts,
+					tsLocalized,
+					documents,
+					configurationHost,
+					cancelTokenHost,
+					options,
+				));
+			}
 		},
 		remove: (rootUri: URI) => {
 			const _workspace = workspaces.get(rootUri.toString());
