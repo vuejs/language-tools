@@ -180,9 +180,11 @@ export function createWorkspaces(
 		}
 
 		if (rootUris.length) {
+			const project = await (await workspaces.get(rootUris[0]))?.getInferredProject();
+			project?.tryAddFile(shared.getPathOfUri(uri));
 			return {
 				tsconfig: undefined,
-				project: await (await workspaces.get(rootUris[0]))?.getInferredProject(),
+				project,
 			};
 		}
 	}

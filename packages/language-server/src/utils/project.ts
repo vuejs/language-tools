@@ -60,6 +60,12 @@ export async function createProject(
 		getLanguageService,
 		getLanguageServiceDontCreate: () => vueLs,
 		getParsedCommandLine: () => parsedCommandLine,
+		tryAddFile: (fileName: string) => {
+			if (!parsedCommandLine.fileNames.includes(fileName)) {
+				parsedCommandLine.fileNames.push(fileName);
+				projectVersion++;
+			}
+		},
 		dispose,
 	};
 
@@ -253,7 +259,7 @@ function createParsedCommandLine(
 			content = ts.parseJsonSourceFileConfigFileContent(config, sys, path.dirname(tsConfig), {}, tsConfig, undefined, extraFileExtensions);
 		}
 		else {
-			content = ts.parseJsonConfigFileContent({}, sys, rootPath, tsConfig, path.join(rootPath, 'jsconfig.json' as path.PosixPath), undefined, extraFileExtensions);
+			content = ts.parseJsonConfigFileContent({ files: [] }, sys, rootPath, tsConfig, path.join(rootPath, 'jsconfig.json' as path.PosixPath), undefined, extraFileExtensions);
 		}
 		// fix https://github.com/johnsoncodehk/volar/issues/1786
 		// https://github.com/microsoft/TypeScript/issues/30457
