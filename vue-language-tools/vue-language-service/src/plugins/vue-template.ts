@@ -358,27 +358,30 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		async function getTypeScriptInsert() {
 			const embeddedScriptUri = shared.getUriByPath(context.env.rootUri, vueSourceFile.tsFileName);
 			const tsImportName = camelize(path.basename(importFile).replace(/\./g, '-'));
-			const confitHost = context.env.configurationHost;
+			const configHost = context.env.configurationHost;
 			const [formatOptions, preferences] = await Promise.all([
-				getFormatCodeSettings((section, scopeUri) => confitHost?.getConfiguration(section, scopeUri) as any, embeddedScriptUri),
-				getUserPreferences((section, scopeUri) => confitHost?.getConfiguration(section, scopeUri) as any, embeddedScriptUri, undefined),
+				getFormatCodeSettings((section, scopeUri) => configHost?.getConfiguration(section, scopeUri) as any, embeddedScriptUri),
+				getUserPreferences((section, scopeUri) => configHost?.getConfiguration(section, scopeUri) as any, embeddedScriptUri, undefined),
 			]);
 			(preferences as any).importModuleSpecifierEnding = 'minimal';
-			const tsDetail = context.typescript.languageService.getCompletionEntryDetails(shared.getPathOfUri(embeddedScriptUri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
-			if (tsDetail?.codeActions) {
-				for (const action of tsDetail.codeActions) {
-					for (const change of action.changes) {
-						for (const textChange of change.textChanges) {
-							if (textChange.newText.indexOf(`import ${tsImportName} `) >= 0) {
-								return {
-									insertText: textChange.newText.replace(`import ${tsImportName} `, `import ${componentName} `).trim(),
-									description: action.description,
-								};
+			try {
+				const tsDetail = context.typescript.languageService.getCompletionEntryDetails(shared.getPathOfUri(embeddedScriptUri), 0, tsImportName, formatOptions, importFile, preferences, undefined);
+				if (tsDetail?.codeActions) {
+					for (const action of tsDetail.codeActions) {
+						for (const change of action.changes) {
+							for (const textChange of change.textChanges) {
+								if (textChange.newText.indexOf(`import ${tsImportName} `) >= 0) {
+									return {
+										insertText: textChange.newText.replace(`import ${tsImportName} `, `import ${componentName} `).trim(),
+										description: action.description,
+									};
+								}
 							}
 						}
 					}
 				}
 			}
+			catch { }
 		}
 		function getMonkeyInsert() {
 			const anyImport = scriptSetupImport ?? scriptImport;
