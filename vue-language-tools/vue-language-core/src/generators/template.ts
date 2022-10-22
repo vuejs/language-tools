@@ -1681,7 +1681,7 @@ export function generate(
 				}
 				codeGen.push(addSubfix);
 			}
-		}, localVars, identifiers);
+		}, localVars, identifiers, vueCompilerOptions);
 		if (sourceOffset !== undefined) {
 			for (const v of vars) {
 				v.offset = sourceOffset + v.offset - prefix.length;

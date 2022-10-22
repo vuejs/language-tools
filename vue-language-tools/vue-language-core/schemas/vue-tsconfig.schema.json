@@ -93,6 +93,11 @@
 					"default": false,
 					"markdownDescription": "https://github.com/vuejs/rfcs/discussions/436"
 				},
+				"experimentalUseElementAccessInTemplate": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/997"
+				},
 				"experimentalModelPropName": {
 					"type": "object",
 					"default": {

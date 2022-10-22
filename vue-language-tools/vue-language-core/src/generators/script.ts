@@ -736,6 +736,7 @@ export function generate(
 						},
 						emptyLocalVars,
 						identifiers,
+						vueCompilerOptions,
 					);
 					codeGen.push(';\n');
 				}

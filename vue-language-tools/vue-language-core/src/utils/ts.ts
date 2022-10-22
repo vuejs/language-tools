@@ -123,5 +123,6 @@ export function resolveVueCompilerOptions(vueOptions: VueCompilerOptions): Resol
 				'select': true,
 			},
 		},
+		experimentalUseElementAccessInTemplate: vueOptions.experimentalUseElementAccessInTemplate ?? false,
 	};
 }

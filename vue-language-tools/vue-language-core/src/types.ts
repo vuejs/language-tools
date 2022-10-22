@@ -31,6 +31,7 @@ export interface ResolvedVueCompilerOptions {
 	experimentalResolveStyleCssClasses: 'scoped' | 'always' | 'never';
 	experimentalRfc436: boolean;
 	experimentalModelPropName: Record<string, Record<string, boolean | Record<string, string> | Record<string, string>[]>>;
+	experimentalUseElementAccessInTemplate: boolean;
 }
 
 export type VueLanguagePlugin = (ctx: {
