@@ -3,7 +3,7 @@ import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import { fileTextChangesToWorkspaceEdit } from './rename';
-import type { GetConfiguration } from '../createLangaugeService';
+import type { GetConfiguration } from '../createLanguageService';
 import { URI } from 'vscode-uri';
 import { getFormatCodeSettings } from '../configs/getFormatCodeSettings';
 import { getUserPreferences } from '../configs/getUserPreferences';

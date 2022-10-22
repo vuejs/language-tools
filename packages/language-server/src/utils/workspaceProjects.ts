@@ -8,7 +8,7 @@ import { createSnapshots } from './snapshots';
 import { getInferredCompilerOptions } from './inferredCompilerOptions';
 import { URI } from 'vscode-uri';
 import { ConfigurationHost } from '@volar/language-service';
-import { CancellactionTokenHost } from './cancellationPipe';
+import { CancellationTokenHost } from './cancellationPipe';
 
 export const rootTsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 
@@ -21,7 +21,7 @@ export async function createWorkspaceProjects(
 	tsLocalized: ts.MapLike<string> | undefined,
 	documents: ReturnType<typeof createSnapshots>,
 	configHost: ConfigurationHost | undefined,
-	cancelTokenHost: CancellactionTokenHost,
+	cancelTokenHost: CancellationTokenHost,
 	serverOptions: LanguageServerInitializationOptions,
 ) {
 

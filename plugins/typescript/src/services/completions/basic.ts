@@ -5,7 +5,7 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import * as semver from 'semver';
 import { parseKindModifier } from '../../utils/modifiers';
-import type { GetConfiguration } from '../../createLangaugeService';
+import type { GetConfiguration } from '../../createLanguageService';
 import { getUserPreferences } from '../../configs/getUserPreferences';
 import { URI } from 'vscode-uri';
 

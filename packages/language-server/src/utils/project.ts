@@ -10,7 +10,7 @@ import { createSnapshots } from './snapshots';
 import { ConfigurationHost } from '@volar/language-service';
 import * as html from 'vscode-html-languageservice';
 import * as path from 'typesafe-path';
-import { CancellactionTokenHost } from './cancellationPipe';
+import { CancellationTokenHost } from './cancellationPipe';
 
 export interface Project extends ReturnType<typeof createProject> { }
 
@@ -25,7 +25,7 @@ export async function createProject(
 	documents: ReturnType<typeof createSnapshots>,
 	configHost: ConfigurationHost | undefined,
 	documentRegistry: ts.DocumentRegistry | undefined,
-	cancelTokenHost: CancellactionTokenHost,
+	cancelTokenHost: CancellationTokenHost,
 	serverOptions: LanguageServerInitializationOptions,
 ) {
 

@@ -55,7 +55,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	};
 	client = new lsp.LanguageClient(
 		'svelte-language-server',
-		'Svelte Langauge Server',
+		'Svelte Language Server',
 		serverOptions,
 		clientOptions,
 	);

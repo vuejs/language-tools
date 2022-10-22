@@ -1,7 +1,7 @@
 import * as embedded from '@volar/language-service';
 import * as vscode from 'vscode-languageserver';
 import { AutoInsertRequest, FindFileReferenceRequest, ShowReferencesNotification } from '../protocol';
-import { CancellactionTokenHost } from '../utils/cancellationPipe';
+import { CancellationTokenHost } from '../utils/cancellationPipe';
 import type { Workspaces } from '../utils/workspaces';
 import * as shared from '@volar/shared';
 
@@ -9,7 +9,7 @@ export function register(
 	connection: vscode.Connection,
 	projects: Workspaces,
 	initParams: vscode.InitializeParams,
-	cancelHost: CancellactionTokenHost,
+	cancelHost: CancellationTokenHost,
 ) {
 
 	let lastCompleteUri: string;
@@ -210,7 +210,7 @@ export function register(
 		}) ?? buildTokens([]);
 	});
 	connection.languages.diagnostics.on(async (params, token, workDoneProgressReporter, resultProgressReporter) => {
-		token = cancelHost.createCancellactionToken(token);
+		token = cancelHost.createCancellationToken(token);
 		const result = await worker(params.textDocument.uri, vueLs => {
 			return vueLs.doValidation(params.textDocument.uri, token, errors => {
 				// resultProgressReporter is undefined in vscode

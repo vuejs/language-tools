@@ -7,7 +7,7 @@ import { DiagnosticModel, FileSystemHost, LanguageServerPlugin, RuntimeEnvironme
 import { createSnapshots } from './snapshots';
 import { createWorkspaceProjects, rootTsConfigNames, sortTsConfigs } from './workspaceProjects';
 import * as path from 'typesafe-path';
-import { CancellactionTokenHost } from './cancellationPipe';
+import { CancellationTokenHost } from './cancellationPipe';
 
 export interface Workspaces extends ReturnType<typeof createWorkspaces> { }
 
@@ -22,7 +22,7 @@ export function createWorkspaces(
 	options: LanguageServerInitializationOptions,
 	documents: ReturnType<typeof createSnapshots>,
 	connection: vscode.Connection,
-	cancelTokenHost: CancellactionTokenHost,
+	cancelTokenHost: CancellationTokenHost,
 ) {
 
 	let semanticTokensReq = 0;
@@ -114,7 +114,7 @@ export function createWorkspaces(
 
 		const req = ++documentUpdatedReq;
 		const delay = await configurationHost?.getConfiguration<number>('volar.diagnostics.delay') ?? 200;
-		const cancel = cancelTokenHost.createCancellactionToken({
+		const cancel = cancelTokenHost.createCancellationToken({
 			get isCancellationRequested() {
 				return req !== documentUpdatedReq;
 			},

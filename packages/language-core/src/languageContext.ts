@@ -46,10 +46,10 @@ export function createEmbeddedLanguageServiceHost(
 					// create virtual files
 					const scriptSnapshot = host.getScriptSnapshot(vueFileName);
 					if (scriptSnapshot) {
-						for (const langaugeModule of languageModules) {
-							const sourceFile = langaugeModule.createSourceFile(vueFileName, scriptSnapshot);
+						for (const languageModule of languageModules) {
+							const sourceFile = languageModule.createSourceFile(vueFileName, scriptSnapshot);
 							if (sourceFile) {
-								documentRegistry.set(vueFileName, reactive(sourceFile), langaugeModule);
+								documentRegistry.set(vueFileName, reactive(sourceFile), languageModule);
 								break;
 							}
 						}

@@ -48,14 +48,14 @@ export async function activate(context: vscode.ExtensionContext, createLc: Creat
 			return;
 		}
 
-		const currentlangId = vscode.window.activeTextEditor.document.languageId;
-		if (currentlangId === 'vue' || (currentlangId === 'markdown' && processMd()) || (currentlangId === 'html' && processHtml())) {
+		const currentLangId = vscode.window.activeTextEditor.document.languageId;
+		if (currentLangId === 'vue' || (currentLangId === 'markdown' && processMd()) || (currentLangId === 'html' && processHtml())) {
 			doActivate(context, createLc);
 			stopCheck.dispose();
 		}
 
 		const takeOverMode = takeOverModeEnabled();
-		if (takeOverMode && ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(currentlangId)) {
+		if (takeOverMode && ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(currentLangId)) {
 			doActivate(context, createLc);
 			stopCheck.dispose();
 		}

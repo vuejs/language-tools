@@ -4,7 +4,7 @@ import * as fs from '../utils/fs';
 import * as shared from '@volar/shared';
 import { quickPick } from './splitEditors';
 import * as preview from '@volar/preview';
-import { getLocalHostAvaliablePort } from '../utils/http';
+import { getLocalHostAvailablePort } from '../utils/http';
 import { BaseLanguageClient } from 'vscode-languageclient';
 import { ParseSFCRequest } from '@volar/vue-language-server';
 
@@ -481,13 +481,13 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		}
 	}
 
-	async function handleGoToCode(fileName: string, range: [number, number], cancleToken: { readonly isCancelled: boolean; }) {
+	async function handleGoToCode(fileName: string, range: [number, number], cancelToken: { readonly isCancelled: boolean; }) {
 
 		avoidUpdateOnDidChangeActiveTextEditor = true;
 
 		const doc = await vscode.workspace.openTextDocument(fileName);
 
-		if (cancleToken.isCancelled)
+		if (cancelToken.isCancelled)
 			return;
 
 		const sfc = await getSfc(doc);
@@ -496,7 +496,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		const end = doc.positionAt(range[1] + offset);
 		await vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
 
-		if (cancleToken.isCancelled)
+		if (cancelToken.isCancelled)
 			return;
 
 		const editor = vscode.window.activeTextEditor;
@@ -508,7 +508,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 
 	async function startPreviewServer(viteDir: string, type: 'vite' | 'nuxt') {
 
-		const port = await getLocalHostAvaliablePort(vscode.workspace.getConfiguration('volar').get('preview.port')!);
+		const port = await getLocalHostAvailablePort(vscode.workspace.getConfiguration('volar').get('preview.port')!);
 		let script = await vscode.workspace.getConfiguration('volar').get<string>('preview.script.' + (type === 'nuxt' ? 'nuxi' : 'vite')) ?? '';
 
 		if (script.indexOf('{VITE_BIN}') >= 0) {

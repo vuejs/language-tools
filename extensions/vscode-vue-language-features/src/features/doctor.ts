@@ -226,7 +226,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 					if (!someInstalled) {
 						problems.push({
 							title: 'Syntax Highlighting for ' + block.lang,
-							message: `Did not find a valid syntax highlighter extension for ${block.lang} langauge block; you can choose to install one of the following:\n\n`
+							message: `Did not find a valid syntax highlighter extension for ${block.lang} language block; you can choose to install one of the following:\n\n`
 								+ validExts.map(ext => `- [${ext}](https://marketplace.visualstudio.com/items?itemName=${ext})\n`),
 						});
 					}

@@ -66,7 +66,7 @@ export type LanguageServerPlugin<
 
 		onInitialize?(
 			connection: vscode.Connection,
-			getLangaugeService: (uri: string) => Promise<C>,
+			getLanguageService: (uri: string) => Promise<C>,
 		): void,
 	},
 

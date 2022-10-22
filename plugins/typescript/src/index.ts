@@ -1,11 +1,11 @@
 import type { LanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
-import * as ts2 from './createLangaugeService';
+import * as ts2 from './createLanguageService';
 import * as semver from 'semver';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
-export { getSemanticTokenLegend } from './createLangaugeService';
+export { getSemanticTokenLegend } from './createLanguageService';
 
 function getBasicTriggerCharacters(tsVersion: string) {
 

@@ -1,6 +1,6 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
-import type { GetConfiguration } from '../createLangaugeService';
+import type { GetConfiguration } from '../createLanguageService';
 import { isTypeScriptDocument } from './shared';
 
 export async function getFormatCodeSettings(

@@ -283,7 +283,7 @@
 ## 0.40.11 (2022/9/8)
 
 - feat: support for typescript class/object literal method completions ([#1835](https://github.com/johnsoncodehk/volar/issues/1835))
-- fix: langauge server crash if client did not support `onDidChangeWorkspaceFolders` ([#1834](https://github.com/johnsoncodehk/volar/issues/1834))
+- fix: language server crash if client did not support `onDidChangeWorkspaceFolders` ([#1834](https://github.com/johnsoncodehk/volar/issues/1834))
 - fix: "Format Selection" embedded range incorrect with initialIndentBracket
 - fix: formatting break document with `editor.formatOnPaste` enabled ([#1840](https://github.com/johnsoncodehk/volar/issues/1840)) ([#1841](https://github.com/johnsoncodehk/volar/issues/1841)) ([#1842](https://github.com/johnsoncodehk/volar/issues/1842)) ([#1843](https://github.com/johnsoncodehk/volar/issues/1843)) ([#1835](https://github.com/johnsoncodehk/volar/issues/1835))
 
@@ -340,7 +340,7 @@
 - fix: unexpected prop types behavior with `compilerOptions.exactOptionalPropertyTypes` (https://github.com/vuejs/core/issues/6532)
 - fix: false positive error on `<input typeof="radio" value="...">` ([#1775](https://github.com/johnsoncodehk/volar/issues/1775))
 - fix: false positive style attribute inconsistent string type error ([#1781](https://github.com/johnsoncodehk/volar/issues/1781))
-- fix: langauge server broken with `outDir` + `rootDir` + `composite/incremental` tsconfig options ([#1782](https://github.com/johnsoncodehk/volar/issues/1782))
+- fix: language server broken with `outDir` + `rootDir` + `composite/incremental` tsconfig options ([#1782](https://github.com/johnsoncodehk/volar/issues/1782))
 - fix: json format should not trim first / end new line
 - fix: interpolation format adding redundant spaces ([#1784](https://github.com/johnsoncodehk/volar/issues/1784))
 

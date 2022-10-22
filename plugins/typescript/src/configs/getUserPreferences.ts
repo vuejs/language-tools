@@ -1,5 +1,5 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import type { GetConfiguration } from '../createLangaugeService';
+import type { GetConfiguration } from '../createLanguageService';
 import { isTypeScriptDocument } from './shared';
 import { posix as path } from 'path';
 import { URI } from 'vscode-uri';
