@@ -66,9 +66,6 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 	vscode.commands.executeCommand('setContext', 'volar.activated', true);
 
-	const _serverMaxOldSpaceSize = serverMaxOldSpaceSize();
-	const _additionalExtensions = additionalExtensions();
-
 	[semanticClient, syntacticClient] = await Promise.all([
 		createLc(
 			'vue-semantic-server',
@@ -124,10 +121,14 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		vscode.commands.executeCommand('workbench.action.reloadWindow');
 	}
 	function registerServerMaxOldSpaceSizeChange() {
-		vscode.workspace.onDidChangeConfiguration(async () => {
+		vscode.workspace.onDidChangeConfiguration(async (e) => {
 			if (
-				_serverMaxOldSpaceSize !== serverMaxOldSpaceSize()
-				|| _additionalExtensions.join(',') !== additionalExtensions().join(',')
+				e.affectsConfiguration('volar.vueserver.maxOldSpaceSize')
+				|| e.affectsConfiguration('volar.vueserver.diagnosticModel')
+				|| e.affectsConfiguration('volar.vueserver.noProjectReferences')
+				|| e.affectsConfiguration('volar.vueserver.petiteVue.processHtmlFile')
+				|| e.affectsConfiguration('volar.vueserver.vitePress.processMdFile')
+				|| e.affectsConfiguration('volar.vueserver.additionalExtensions')
 			) {
 				return requestReloadVscode();
 			}
@@ -191,10 +192,6 @@ export function getDocumentSelector(serverMode: ServerMode) {
 	return langs;
 }
 
-function serverMaxOldSpaceSize() {
-	return vscode.workspace.getConfiguration('volar').get<number | null>('vueserver.maxOldSpaceSize');
-}
-
 export function processHtml() {
 	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.petiteVue.processHtmlFile');
 }
@@ -205,6 +202,10 @@ export function processMd() {
 
 export function noProjectReferences() {
 	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.noProjectReferences');
+}
+
+export function diagnosticModel() {
+	return vscode.workspace.getConfiguration('volar').get<'push' | 'pull'>('vueserver.diagnosticModel');
 }
 
 function additionalExtensions() {
@@ -264,7 +265,7 @@ function getInitializationOptions(
 	const textDocumentSync = vscode.workspace.getConfiguration('volar').get<'incremental' | 'full' | 'none'>('vueserver.textDocumentSync');
 	const initializationOptions: VueServerInitializationOptions = {
 		serverMode,
-		diagnosticModel: DiagnosticModel.Push,
+		diagnosticModel: diagnosticModel() === 'pull' ? DiagnosticModel.Pull : DiagnosticModel.Push,
 		textDocumentSync: textDocumentSync ? {
 			incremental: lsp.TextDocumentSyncKind.Incremental,
 			full: lsp.TextDocumentSyncKind.Full,

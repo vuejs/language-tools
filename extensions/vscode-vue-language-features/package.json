@@ -306,6 +306,19 @@
 					],
 					"description": "Defines how the host (editor) should sync document changes to the language server. SFC incremental parser only working when config \"incremental\"."
 				},
+				"volar.vueserver.diagnosticModel": {
+					"type": "string",
+					"default": "push",
+					"enum": [
+						"push",
+						"pull"
+					],
+					"enumDescriptions": [
+						"Diagnostic push by language server.",
+						"Diagnostic pull by language client."
+					],
+					"description": "Diagnostic update model."
+				},
 				"volar.vueserver.maxOldSpaceSize": {
 					"type": [
 						"number",
