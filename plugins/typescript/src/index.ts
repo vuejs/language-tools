@@ -4,6 +4,7 @@ import * as semver from 'semver';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import * as shared from '@volar/shared';
 
 export { getSemanticTokenLegend } from './createLanguageService';
 
@@ -46,6 +47,21 @@ export default function (): LanguageServicePlugin {
 				(section, scopeUri) => context.env.configurationHost?.getConfiguration(section, scopeUri) as any,
 				context.env.rootUri,
 			);
+		},
+
+		doAutoInsert(document, position, ctx) {
+			if (
+				(document.languageId === 'javascriptreact' || document.languageId === 'typescriptreact')
+				&& ctx.lastChange.text.endsWith('>')
+			) {
+				const configName = document.languageId === 'javascriptreact' ? 'javascript.autoClosingTags' : 'typescript.autoClosingTags';
+				const config = context.env.configurationHost?.getConfiguration<boolean>(configName) ?? true;
+				if (config) {
+					const tsLs = context.typescript.languageService;
+					const close = tsLs.getJsxClosingTagAtPosition(shared.getPathOfUri(document.uri), document.offsetAt(position));
+					return close?.newText;
+				}
+			}
 		},
 
 		complete: {
