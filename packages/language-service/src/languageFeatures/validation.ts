@@ -14,12 +14,16 @@ export function updateRange(
 		newEnd: vscode.Position;
 	},
 ) {
-	updatePosition(range.start, change, false);
-	updatePosition(range.end, change, true);
+	if (!updatePosition(range.start, change, false)) {
+		return false;
+	}
+	if (!updatePosition(range.end, change, true)) {
+		return false;
+	}
 	if (range.end.line === range.start.line && range.end.character <= range.start.character) {
 		range.end.character++;
 	}
-	return range;
+	return true;
 }
 
 function updatePosition(
@@ -33,13 +37,16 @@ function updatePosition(
 	if (change.range.end.line > position.line) {
 		if (change.newEnd.line > position.line) {
 			// No change
+			return true;
 		}
 		else if (change.newEnd.line === position.line) {
 			position.character = Math.min(position.character, change.newEnd.character);
+			return true;
 		}
 		else if (change.newEnd.line < position.line) {
 			position.line = change.newEnd.line;
 			position.character = change.newEnd.character;
+			return true;
 		}
 	}
 	else if (change.range.end.line === position.line) {
@@ -60,25 +67,30 @@ function updatePosition(
 					}
 				}
 			}
+			return true;
 		}
 		else {
 			if (change.newEnd.line !== change.range.end.line) {
 				if (change.newEnd.line < change.range.end.line) {
 					position.line = change.newEnd.line;
 					position.character = change.newEnd.character;
+					return true;
 				}
 			}
 			else {
 				const offset = change.range.end.character - position.character;
 				if (-characterDiff > offset) {
 					position.character += characterDiff + offset;
+					return true;
 				}
 			}
 		}
 	}
 	else if (change.range.end.line < position.line) {
 		position.line += change.newEnd.line - change.range.end.line;
+		return true;
 	}
+	return false;
 }
 
 export function register(context: LanguageServiceRuntimeContext) {
@@ -119,6 +131,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 		const newSnapshot = context.host.getScriptSnapshot(shared.getPathOfUri(uri));
 		const newDocument = newSnapshot ? TextDocument.create('file://a.txt', 'txt', 0, newSnapshot.getText(0, newSnapshot.getLength())) : undefined;
 
+		let failedToUpdateRange = false;
+		let errorsUpdated = false;
+		let lastCheckCancelAt = 0;
+
 		for (const _cache of Object.values(cache)) {
 
 			const oldSnapshot = _cache.snapshot;
@@ -126,7 +142,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 			_cache.snapshot = newSnapshot;
 
-			if (newDocument && oldSnapshot && newSnapshot && change) {
+			if (!failedToUpdateRange && newDocument && oldSnapshot && newSnapshot && change) {
 				const oldDocument = TextDocument.create('file://a.txt', 'txt', 0, oldSnapshot.getText(0, oldSnapshot.getLength()));
 				const changeRange = {
 					range: {
@@ -136,13 +152,13 @@ export function register(context: LanguageServiceRuntimeContext) {
 					newEnd: newDocument.positionAt(change.span.start + change.newLength),
 				};
 				for (const error of _cache.errors) {
-					updateRange(error.range, changeRange);
+					if (!updateRange(error.range, changeRange)) {
+						failedToUpdateRange = true;
+						break;
+					}
 				}
 			}
 		}
-
-		let shouldSend = false;
-		let lastCheckCancelAt = 0;
 
 		await worker('onSyntactic', scriptTsCache_syntactic, cache.tsSyntactic);
 		doResponse();
@@ -155,9 +171,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 		return getErrors();
 
 		function doResponse() {
-			if (shouldSend) {
+			if (errorsUpdated && !failedToUpdateRange) {
 				response?.(getErrors());
-				shouldSend = false;
+				errorsUpdated = false;
 			}
 		}
 
@@ -210,7 +226,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					const errors = await plugin.validation?.[mode]?.(document);
 
-					shouldSend = true;
+					errorsUpdated = true;
 
 					pluginCache.set(document.uri, {
 						documentVersion: document.version,

@@ -143,6 +143,9 @@ export function createWorkspaces(
 
 		async function sendDocumentDiagnostics(uri: string, version: number, cancel: vscode.CancellationToken) {
 
+			if (cancel.isCancellationRequested)
+				return;
+
 			const project = (await getProject(uri))?.project;
 			if (!project) return;
 
