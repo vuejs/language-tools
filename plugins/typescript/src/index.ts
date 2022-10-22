@@ -59,7 +59,9 @@ export default function (): LanguageServicePlugin {
 				if (config) {
 					const tsLs = context.typescript.languageService;
 					const close = tsLs.getJsxClosingTagAtPosition(shared.getPathOfUri(document.uri), document.offsetAt(position));
-					return close?.newText;
+					if (close) {
+						return '$0' + close.newText;
+					}
 				}
 			}
 		},
