@@ -15,15 +15,15 @@ export function updateRange(
 	},
 ) {
 	if (!updatePosition(range.start, change, false)) {
-		return false;
+		return;
 	}
 	if (!updatePosition(range.end, change, true)) {
-		return false;
+		return;
 	}
 	if (range.end.line === range.start.line && range.end.character <= range.start.character) {
 		range.end.character++;
 	}
-	return true;
+	return range;
 }
 
 function updatePosition(
@@ -70,20 +70,20 @@ function updatePosition(
 			return true;
 		}
 		else {
-			if (change.newEnd.line !== change.range.end.line) {
-				if (change.newEnd.line < change.range.end.line) {
-					position.line = change.newEnd.line;
-					position.character = change.newEnd.character;
-					return true;
-				}
-			}
-			else {
+			if (change.newEnd.line === change.range.end.line) {
 				const offset = change.range.end.character - position.character;
 				if (-characterDiff > offset) {
 					position.character += characterDiff + offset;
-					return true;
 				}
 			}
+			else if (change.newEnd.line < change.range.end.line) {
+				position.line = change.newEnd.line;
+				position.character = change.newEnd.character;
+			}
+			else {
+				// No change
+			}
+			return true;
 		}
 	}
 	else if (change.range.end.line < position.line) {
