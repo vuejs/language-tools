@@ -10,6 +10,8 @@ import type { GetConfiguration } from '../../createLanguageService';
 import { URI } from 'vscode-uri';
 import { getFormatCodeSettings } from '../../configs/getFormatCodeSettings';
 import { getUserPreferences } from '../../configs/getUserPreferences';
+import { snippetForFunctionCall } from '../../utils/snippetForFunctionCall';
+import { isTypeScriptDocument } from '../../configs/shared';
 
 export function register(
 	rootUri: URI,
@@ -80,10 +82,70 @@ export function register(
 			handleKindModifiers(item, details);
 		}
 
+		if (document) {
+
+			const useCodeSnippetsOnMethodSuggest = await getConfiguration<boolean>((isTypeScriptDocument(document.uri) ? 'typescript' : 'javascript') + '.suggest.completeFunctionCalls', document.uri) ?? false;
+			const useCodeSnippet = useCodeSnippetsOnMethodSuggest && (item.kind === vscode.CompletionItemKind.Function || item.kind === vscode.CompletionItemKind.Method);
+
+			if (useCodeSnippet) {
+				const shouldCompleteFunction = isValidFunctionCompletionContext(languageService, fileName, offset, document);
+				if (shouldCompleteFunction) {
+					const { snippet, parameterCount } = snippetForFunctionCall(item, details.displayParts);
+					if (item.textEdit) {
+						item.textEdit.newText = snippet;
+					}
+					if (item.insertText) {
+						item.insertText = snippet;
+					}
+					item.insertTextFormat = vscode.InsertTextFormat.Snippet;
+					if (parameterCount > 0) {
+						//Fix for https://github.com/microsoft/vscode/issues/104059
+						//Don't show parameter hints if "editor.parameterHints.enabled": false
+						// if (await getConfiguration('editor.parameterHints.enabled', document.uri)) {
+						// 	item.command = {
+						// 		title: 'triggerParameterHints',
+						// 		command: 'editor.action.triggerParameterHints',
+						// 	};
+						// }
+					}
+				}
+			}
+		}
+
 		return item;
 
 		function toResource(path: string) {
 			return shared.getUriByPath(rootUri, path);
 		}
 	};
+}
+
+function isValidFunctionCompletionContext(
+	client: ts.LanguageService,
+	filepath: string,
+	offset: number,
+	document: TextDocument,
+): boolean {
+	// Workaround for https://github.com/microsoft/TypeScript/issues/12677
+	// Don't complete function calls inside of destructive assignments or imports
+	try {
+		const response = client.getQuickInfoAtPosition(filepath, offset);
+		if (response) {
+			switch (response.kind) {
+				case 'var':
+				case 'let':
+				case 'const':
+				case 'alias':
+					return false;
+			}
+		}
+	} catch {
+		// Noop
+	}
+
+	// Don't complete function call if there is already something that looks like a function call
+	// https://github.com/microsoft/vscode/issues/18131
+	const position = document.positionAt(offset);
+	const after = shared.getLineText(document, position.line).slice(position.character);
+	return after.match(/^[a-z_$0-9]*\s*\(/gi) === null;
 }
