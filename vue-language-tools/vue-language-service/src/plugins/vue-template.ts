@@ -506,7 +506,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 								},
 							);
 						}
-						else {
+						{
 
 							const propName = name;
 							const propKey = createInternalItemId('componentProp', [isGlobal ? '*' : tag, propName]);
