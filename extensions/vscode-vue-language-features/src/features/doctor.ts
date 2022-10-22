@@ -100,7 +100,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		if (!vueMod) {
 			problems.push({
 				title: '`vue` module not found',
-				message: 'Vue module not found from workspace; you may not have installed `node_modules` yet.',
+				message: 'Vue module not found from workspace, you may not have installed `node_modules` yet.',
 			});
 		}
 
@@ -157,7 +157,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		const vueTscMod = getWorkspacePackageJson(fileUri.fsPath, 'vue-tsc');
 		if (vueTscMod && vueTscMod.json.version !== context.extension.packageJSON.version) {
 			problems.push({
-				title: 'Different `vue-tsc` different',
+				title: 'Different `vue-tsc` version',
 				message: [
 					`The \`${context.extension.packageJSON.displayName}\`\'s version is \`${context.extension.packageJSON.version}\`, but the workspace\'s \`vue-tsc\` version is \`${vueTscMod.json.version}\`. This may produce different type checking behavior.`,
 					'',
