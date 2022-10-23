@@ -4,7 +4,7 @@ import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
 interface IncrementalScriptSnapshotChange {
-	applyed: boolean,
+	applied: boolean,
 	changeRange: ts.TextChangeRange | undefined,
 	version: number,
 	contentChange: {
@@ -25,7 +25,7 @@ class IncrementalScriptSnapshot {
 		this.document = TextDocument.create(uri, languageId, version, text);
 		this.changes = [
 			{
-				applyed: true,
+				applied: true,
 				changeRange: undefined,
 				version,
 				contentChange: undefined,
@@ -42,7 +42,7 @@ class IncrementalScriptSnapshot {
 		TextDocument.update(this.document, params.contentChanges, params.textDocument.version);
 		this.changes = [
 			{
-				applyed: true,
+				applied: true,
 				changeRange: undefined,
 				version: params.textDocument.version,
 				contentChange: undefined,
@@ -90,7 +90,7 @@ class IncrementalScriptSnapshot {
 		this.clearUnReferenceVersions();
 
 		const lastChange = this.changes[this.changes.length - 1];
-		if (!lastChange.applyed) {
+		if (!lastChange.applied) {
 			this.applyVersionToRootDocument(lastChange.version, false);
 		}
 
@@ -121,7 +121,7 @@ class IncrementalScriptSnapshot {
 			if (change.version > version) {
 				break;
 			}
-			if (!change.applyed) {
+			if (!change.applied) {
 				if (change.contentChange) {
 					change.changeRange = {
 						span: {
@@ -132,7 +132,7 @@ class IncrementalScriptSnapshot {
 					};
 					TextDocument.update(this.document, [change.contentChange], change.version);
 				}
-				change.applyed = true;
+				change.applied = true;
 			}
 			removeEnd = i + 1;
 		}
@@ -194,7 +194,7 @@ export function createSnapshots(connection: vscode.Connection) {
 			if (params.contentChanges.every(vscode.TextDocumentContentChangeEvent.isIncremental)) {
 				for (const contentChange of params.contentChanges) {
 					incrementalSnapshot.changes.push({
-						applyed: false,
+						applied: false,
 						changeRange: undefined,
 						contentChange,
 						version: params.textDocument.version,
