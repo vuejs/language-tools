@@ -50,11 +50,11 @@ export function register(
 			}
 
 			const serverToken = tsTokenTypeToServerTokenType(tokenType);
-			const serverTokenModifiers = tsTokenModifierToServerTokenModifier(tokenModifiers);
 			if (serverToken === undefined) {
 				continue;
 			}
 
+			const serverTokenModifiers = tsTokenModifierToServerTokenModifier(tokenModifiers);
 			// we can use the document's range conversion methods because the result is at the same version as the document
 			const startPos = document.positionAt(offset);
 			const endPos = document.positionAt(offset + length);
@@ -74,10 +74,10 @@ export function register(
 		function tsTokenModifierToServerTokenModifier(input: number) {
 			let m = 0;
 			for (let i = 0; i < tokenModifiers.length; i++) {
-				if (input & Math.pow(2, i)) {
+				if (input & (1 << i)) {
 					const match = legend.tokenModifiers.indexOf(tokenModifiers[i]);
 					if (match >= 0) {
-						m |= Math.pow(2, match);
+						m |= 1 << match;
 					}
 				}
 			}
