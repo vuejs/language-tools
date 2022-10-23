@@ -212,9 +212,13 @@ export function generate(
 			const offsets = tagOffsetsMap[node.tag];
 			const source = sourceTemplate.substring(node.loc.start.offset);
 
-			offsets.push(node.loc.start.offset + source.indexOf(node.tag)); // start tag
+			const startTagOffset = node.loc.start.offset + source.indexOf(node.tag);
+			offsets.push(startTagOffset); // start tag
 			if (!node.isSelfClosing && sourceLang === 'html') {
-				offsets.push(node.loc.start.offset + node.loc.source.lastIndexOf(node.tag)); // end tag
+				const endTagOffset = node.loc.start.offset + node.loc.source.lastIndexOf(node.tag);
+				if (endTagOffset !== startTagOffset) {
+					offsets.push(endTagOffset); // end tag
+				}
 			}
 		});
 
@@ -408,7 +412,11 @@ export function generate(
 		codeGen.push(`{\n`);
 
 		const startTagOffset = node.loc.start.offset + sourceTemplate.substring(node.loc.start.offset).indexOf(node.tag);
-		const endTagOffset = !node.isSelfClosing && sourceLang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
+		let endTagOffset = !node.isSelfClosing && sourceLang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
+
+		if (endTagOffset === startTagOffset) {
+			endTagOffset = undefined;
+		}
 
 		let _unwritedExps: CompilerDOM.SimpleExpressionNode[];
 
