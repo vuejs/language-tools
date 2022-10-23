@@ -33,13 +33,19 @@
 
 ### Special Sponsor
 
-<a href="https://v3.nuxtjs.org/">
-	<img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/nuxt.svg"  height="80" />
-</a>
+<table>
+	<tr>
+		<td align="center" valign="middle">
+			<a href="https://v3.nuxtjs.org/">
+				<img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/nuxt.svg" height="80" />
+			</a>
+		</td>
+	</tr>
+</table>
 
 ### Out Gold Sponsors
 
-<tabel>
+<table>
 	<tr>
 		<td align="center" valign="middle">
 			<a href="https://vuejs.org/">
@@ -47,11 +53,11 @@
 			</a>
 		</td>
 	</tr>
-</tabel>
+</table>
 
 ### Out Silver Sponsors
 
-<tabel>
+<table>
 	<tr>
 		<td align="center" valign="middle">
 			<a href="https://www.prefect.io/">
@@ -59,7 +65,7 @@
 			</a>
 		</td>
 	</tr>
-</tabel>
+</table>
 
 
 ## 1.0.8 (2022/10/15)
