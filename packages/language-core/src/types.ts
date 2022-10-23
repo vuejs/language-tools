@@ -21,7 +21,8 @@ export interface PositionCapabilities {
 		apply?(newName: string): string,
 	},
 	completion?: boolean | {
-		additional: boolean,
+		additional?: boolean,
+		autoImportOnly?: boolean,
 	},
 	diagnostic?: boolean,
 	semanticTokens?: boolean,

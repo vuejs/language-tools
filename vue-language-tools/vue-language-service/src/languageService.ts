@@ -19,6 +19,7 @@ import useRefSugarConversionsPlugin from './plugins/vue-convert-refsugar';
 import useScriptSetupConversionsPlugin from './plugins/vue-convert-scriptsetup';
 import useTwoslashQueries from './plugins/vue-twoslash-queries';
 import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemanticTokenTypes } from './plugins/vue-template';
+import type { Data } from '@volar-plugins/typescript/src/services/completions/basic';
 
 export function getSemanticTokenLegend() {
 
@@ -44,25 +45,104 @@ export function getLanguageServicePlugins(
 	const _tsPlugin = useTsPlugin();
 	const tsPlugin: embeddedLS.LanguageServicePlugin = (() => {
 		let context: embeddedLS.LanguageServicePluginContext;
+		const autoImportPositions = new WeakSet<vscode.Position>();
 		return {
 			..._tsPlugin,
 			setup(_context) {
 				_tsPlugin.setup?.(_context);
 				context = _context;
 			},
+			resolveEmbeddedRange(range) {
+				if (autoImportPositions.has(range.start) && autoImportPositions.has(range.end))
+					return range;
+			},
 			complete: {
 				..._tsPlugin.complete,
 				async resolve(item) {
 					item = await _tsPlugin.complete!.resolve!(item);
+
 					if (
-						/\w*Vue$/.test(item.label)
-						&& item.textEdit?.newText && /\w*Vue$/.test(item.textEdit.newText)
-						&& item.additionalTextEdits?.length === 1 && item.additionalTextEdits[0].newText.indexOf('Vue from ') >= 0
-						&& (await context.env.configurationHost?.getConfiguration<boolean>('volar.completion.trimVueFromImportName') ?? true)
+						item.textEdit?.newText && /\w*Vue$/.test(item.textEdit.newText)
+						&& item.additionalTextEdits?.length === 1 && item.additionalTextEdits[0].newText.indexOf('import ' + item.textEdit.newText + ' from ') >= 0
+						&& (await context.env.configurationHost?.getConfiguration<boolean>('volar.completion.normalizeComponentAutoImportName') ?? true)
 					) {
-						item.textEdit.newText = item.textEdit.newText.slice(0, -'Vue'.length);
-						item.additionalTextEdits[0].newText = item.additionalTextEdits[0].newText.replace('Vue from ', ' from ');
+						let newName = item.textEdit.newText.slice(0, -'Vue'.length);
+						newName = newName[0].toUpperCase() + newName.substring(1);
+						item.additionalTextEdits[0].newText = item.additionalTextEdits[0].newText.replace(
+							'import ' + item.textEdit.newText + ' from ',
+							'import ' + newName + ' from ',
+						);
+						item.textEdit.newText = newName;
 					}
+
+					const data: Data = item.data;
+					if (data && item.additionalTextEdits?.length && item.textEdit) {
+						const map = apis.context.documents.sourceMapFromEmbeddedDocumentUri(data.uri);
+						const doc = map ? apis.context.documents.get(map.sourceDocument.uri) : undefined;
+						if (map && doc?.file instanceof vue.VueSourceFile) {
+							let isComponentAutoImport = false;
+							for (const [_, mapping] of map.toSourceOffsets(data.offset)) {
+								if (typeof mapping.data.completion === 'object' && mapping.data.completion.autoImportOnly) {
+									isComponentAutoImport = true;
+									break;
+								}
+							}
+
+							const sfc = doc.file.sfc;
+							const componentName = item.textEdit.newText;
+							const textDoc = doc.getDocument();
+							if (isComponentAutoImport && sfc.scriptAst && sfc.script) {
+								const ts = context.typescript.module;
+								const _scriptRanges = vue.scriptRanges.parseScriptRanges(ts, sfc.scriptAst, !!sfc.scriptSetup, true);
+								const exportDefault = _scriptRanges.exportDefault;
+								if (exportDefault) {
+									// https://github.com/microsoft/TypeScript/issues/36174
+									const printer = ts.createPrinter();
+									if (exportDefault.componentsOption && exportDefault.componentsOptionNode) {
+										const newNode: typeof exportDefault.componentsOptionNode = {
+											...exportDefault.componentsOptionNode,
+											properties: [
+												...exportDefault.componentsOptionNode.properties,
+												ts.factory.createShorthandPropertyAssignment(componentName),
+											] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
+										};
+										const printText = printer.printNode(ts.EmitHint.Expression, newNode, sfc.scriptAst);
+										const editRange = vscode.Range.create(
+											textDoc.positionAt(sfc.script.startTagEnd + exportDefault.componentsOption.start),
+											textDoc.positionAt(sfc.script.startTagEnd + exportDefault.componentsOption.end),
+										);
+										autoImportPositions.add(editRange.start);
+										autoImportPositions.add(editRange.end);
+										item.additionalTextEdits.push(vscode.TextEdit.replace(
+											editRange,
+											unescape(printText.replace(/\\u/g, '%u')),
+										));
+									}
+									else if (exportDefault.args && exportDefault.argsNode) {
+										const newNode: typeof exportDefault.argsNode = {
+											...exportDefault.argsNode,
+											properties: [
+												...exportDefault.argsNode.properties,
+												ts.factory.createShorthandPropertyAssignment(`components: { ${componentName} }`),
+											] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
+										};
+										const printText = printer.printNode(ts.EmitHint.Expression, newNode, sfc.scriptAst);
+										const editRange = vscode.Range.create(
+											textDoc.positionAt(sfc.script.startTagEnd + exportDefault.args.start),
+											textDoc.positionAt(sfc.script.startTagEnd + exportDefault.args.end),
+										);
+										autoImportPositions.add(editRange.start);
+										autoImportPositions.add(editRange.end);
+										item.additionalTextEdits.push(vscode.TextEdit.replace(
+											editRange,
+											unescape(printText.replace(/\\u/g, '%u')),
+										));
+									}
+								}
+							}
+						}
+					}
+
 					return item;
 				},
 			},

@@ -156,6 +156,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 							if (!embeddedCompletionList || !embeddedCompletionList.items.length)
 								continue;
 
+							if (typeof _data?.completion === 'object' && _data.completion.autoImportOnly) {
+								embeddedCompletionList.items = embeddedCompletionList.items.filter(item => !!item.labelDetails);
+							}
+
 							if (!isAdditional) {
 								cache!.mainCompletion = { documentUri: sourceMap.mappedDocument.uri };
 							}

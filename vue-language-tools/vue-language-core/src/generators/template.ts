@@ -539,7 +539,13 @@ export function generate(
 					tagText,
 					'template',
 					[startTagOffset, startTagOffset + node.tag.length],
-					capabilitiesSet.tagHover,
+					{
+						...capabilitiesSet.tagHover,
+						completion: {
+							additional: true,
+							autoImportOnly: true,
+						},
+					},
 				]);
 				codeGen.push(`>;\n`);
 
@@ -548,7 +554,13 @@ export function generate(
 						tagText,
 						'template',
 						[endTagOffset, endTagOffset + node.tag.length],
-						capabilitiesSet.tagHover,
+						{
+							...capabilitiesSet.tagHover,
+							completion: {
+								additional: true,
+								autoImportOnly: true,
+							},
+						},
 					]);
 					codeGen.push(`;\n`);
 				}

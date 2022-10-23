@@ -487,15 +487,10 @@
 					"default": "auto-kebab",
 					"description": "Preferred attr name case."
 				},
-				"volar.completion.autoImportComponent": {
+				"volar.completion.normalizeComponentAutoImportName": {
 					"type": "boolean",
 					"default": true,
-					"description": "Enabled auto-import for component with tag completion."
-				},
-				"volar.completion.trimVueFromImportName": {
-					"type": "boolean",
-					"default": true,
-					"description": "Trim \"Vue\" from import name from auto import."
+					"description": "Normalize import name for auto import. (\"myCompVue\" -> \"MyComp\")"
 				},
 				"volar.preview.script.vite": {
 					"type": "string",
