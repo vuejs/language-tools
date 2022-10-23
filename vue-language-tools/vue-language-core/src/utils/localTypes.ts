@@ -112,7 +112,7 @@ export type ComponentProps<T> =
 	(
 		T extends (...args: any) => any ? (T extends (...args: any) => { props: infer Props } ? Props : {})
 		: T extends new (...args: any) => any ? (T extends new (...args: any) => { $props: infer Props } ? Props : {})
-		: T; // IntrinsicElement
+		: T // IntrinsicElement
 	);
 export type InstanceProps<I, C> = I extends { $props: infer Props } ? Props & Record<string, unknown> : C & Record<string, unknown>;
 export type EventObject<I, K1 extends string, C, E1> = {

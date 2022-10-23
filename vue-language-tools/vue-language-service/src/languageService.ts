@@ -58,7 +58,25 @@ export function getLanguageServicePlugins(
 			},
 			complete: {
 				..._tsPlugin.complete,
+				async on(document, position, context) {
+					const result = await _tsPlugin.complete!.on!(document, position, context);
+					if (result) {
+						const map = apis.context.documents.sourceMapFromEmbeddedDocumentUri(document.uri);
+						const doc = map ? apis.context.documents.get(map.sourceDocument.uri) : undefined;
+						if (map && doc?.file instanceof vue.VueSourceFile) {
+							if (map.toSourcePosition(position, data => typeof data.completion === 'object' && !!data.completion.autoImportOnly)) {
+								result.items.forEach(item => {
+									item.data.__isComponentAutoImport = true;
+								});
+							}
+						}
+					}
+					return result;
+				},
 				async resolve(item) {
+					if (item.textEdit?.newText === 'IconCone') {
+						console.log(item.textEdit);
+					}
 					item = await _tsPlugin.complete!.resolve!(item);
 
 					if (
@@ -76,22 +94,14 @@ export function getLanguageServicePlugins(
 					}
 
 					const data: Data = item.data;
-					if (data && item.additionalTextEdits?.length && item.textEdit) {
+					if (item.data?.__isComponentAutoImport && data && item.additionalTextEdits?.length && item.textEdit) {
 						const map = apis.context.documents.sourceMapFromEmbeddedDocumentUri(data.uri);
 						const doc = map ? apis.context.documents.get(map.sourceDocument.uri) : undefined;
 						if (map && doc?.file instanceof vue.VueSourceFile) {
-							let isComponentAutoImport = false;
-							for (const [_, mapping] of map.toSourceOffsets(data.offset)) {
-								if (typeof mapping.data.completion === 'object' && mapping.data.completion.autoImportOnly) {
-									isComponentAutoImport = true;
-									break;
-								}
-							}
-
 							const sfc = doc.file.sfc;
 							const componentName = item.textEdit.newText;
 							const textDoc = doc.getDocument();
-							if (isComponentAutoImport && sfc.scriptAst && sfc.script) {
+							if (sfc.scriptAst && sfc.script) {
 								const ts = context.typescript.module;
 								const _scriptRanges = vue.scriptRanges.parseScriptRanges(ts, sfc.scriptAst, !!sfc.scriptSetup, true);
 								const exportDefault = _scriptRanges.exportDefault;
