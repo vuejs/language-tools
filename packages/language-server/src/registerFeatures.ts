@@ -114,7 +114,11 @@ export function setupSemanticCapabilities(
 					filters: [
 						...plugins.map(plugin => plugin.extraFileExtensions.map(ext => ({ pattern: { glob: `**/*.${ext.extension}` } }))).flat(),
 						{ pattern: { glob: '**/*.js' } },
+						{ pattern: { glob: '**/*.cjs' } },
+						{ pattern: { glob: '**/*.mjs' } },
 						{ pattern: { glob: '**/*.ts' } },
+						{ pattern: { glob: '**/*.cts' } },
+						{ pattern: { glob: '**/*.mts' } },
 						{ pattern: { glob: '**/*.jsx' } },
 						{ pattern: { glob: '**/*.tsx' } },
 						{ pattern: { glob: '**/*.json' } },
