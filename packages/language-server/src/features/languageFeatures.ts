@@ -4,6 +4,7 @@ import { AutoInsertRequest, FindFileReferenceRequest, ShowReferencesNotification
 import { CancellationTokenHost } from '../utils/cancellationPipe';
 import type { Workspaces } from '../utils/workspaces';
 import * as shared from '@volar/shared';
+import { semanticTokensLegend } from '../registerFeatures';
 
 export function register(
 	connection: vscode.Connection,
@@ -187,6 +188,7 @@ export function register(
 			const result = await vueLs?.getSemanticTokens(
 				params.textDocument.uri,
 				undefined,
+				semanticTokensLegend,
 				token,
 				tokens => resultProgress?.report(buildTokens(tokens)),
 			) ?? [];
@@ -202,6 +204,7 @@ export function register(
 			const result = await vueLs?.getSemanticTokens(
 				params.textDocument.uri,
 				params.range,
+				semanticTokensLegend,
 				token,
 				tokens => resultProgress?.report(buildTokens(tokens)),
 			) ?? [];

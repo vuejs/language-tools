@@ -1,5 +1,5 @@
 import { languageModule as svelteLanguageModule } from '@volar-examples/svelte-language-core';
-import useTsPlugin, { getSemanticTokenLegend } from '@volar-plugins/typescript';
+import useTsPlugin from '@volar-plugins/typescript';
 import { createLanguageServer, LanguageModule, LanguageServerInitializationOptions, LanguageServerPlugin } from '@volar/language-server/node';
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-core';
@@ -11,7 +11,6 @@ const plugin: LanguageServerPlugin<LanguageServerInitializationOptions, vue.Lang
 			{ extension: 'svelte', isMixedContent: true, scriptKind: 7 },
 		],
 		semanticService: {
-			semanticTokenLegend: getSemanticTokenLegend(),
 			resolveLanguageServiceHost(ts, sys, tsConfig, host) {
 				let vueOptions: vue.VueCompilerOptions = {};
 				if (typeof tsConfig === 'string') {

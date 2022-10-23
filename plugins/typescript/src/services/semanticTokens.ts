@@ -3,23 +3,13 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as shared from '@volar/shared';
 
-export function getSemanticTokenLegend(): vscode.SemanticTokensLegend {
-	if (tokenTypes.length !== TokenType._) {
-		console.warn('TokenType has added new entries.');
-	}
-	if (tokenModifiers.length !== TokenModifier._) {
-		console.warn('TokenModifier has added new entries.');
-	}
-	return { tokenTypes, tokenModifiers };
-}
-
 export function register(
 	host: ts.LanguageServiceHost,
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {
-	return (uri: string, range: vscode.Range) => {
+	return (uri: string, range: vscode.Range, legend: vscode.SemanticTokensLegend) => {
 
 		const document = getTextDocument(uri);
 		if (!document) return;
@@ -59,6 +49,12 @@ export function register(
 				}
 			}
 
+			const serverToken = tsTokenTypeToServerTokenType(tokenType);
+			const serverTokenModifiers = tsTokenModifierToServerTokenModifier(tokenModifiers);
+			if (serverToken === undefined) {
+				continue;
+			}
+
 			// we can use the document's range conversion methods because the result is at the same version as the document
 			const startPos = document.positionAt(offset);
 			const endPos = document.positionAt(offset + length);
@@ -66,10 +62,27 @@ export function register(
 			for (let line = startPos.line; line <= endPos.line; line++) {
 				const startCharacter = (line === startPos.line ? startPos.character : 0);
 				const endCharacter = (line === endPos.line ? endPos.character : docLineLength(document, line));
-				tokens.push([line, startCharacter, endCharacter - startCharacter, tokenType, tokenModifiers]);
+				tokens.push([line, startCharacter, endCharacter - startCharacter, serverToken, serverTokenModifiers]);
 			}
 		}
 		return tokens;
+
+		function tsTokenTypeToServerTokenType(tokenType: number) {
+			return legend.tokenTypes.indexOf(tokenTypes[tokenType]);
+		}
+
+		function tsTokenModifierToServerTokenModifier(input: number) {
+			let m = 0;
+			for (let i = 0; i < tokenModifiers.length; i++) {
+				if (input & Math.pow(2, i)) {
+					const match = legend.tokenModifiers.indexOf(tokenModifiers[i]);
+					if (match >= 0) {
+						m |= Math.pow(2, match);
+					}
+				}
+			}
+			return m;
+		}
 	};
 }
 
@@ -110,10 +123,6 @@ declare const enum TokenEncodingConsts {
 	typeOffset = 8,
 	modifierMask = 255
 }
-declare const enum VersionRequirement {
-	major = 3,
-	minor = 7
-}
 
 function getTokenTypeFromClassification(tsClassification: number): number | undefined {
 	if (tsClassification > TokenEncodingConsts.modifierMask) {
@@ -145,7 +154,7 @@ tokenModifiers[TokenModifier.async] = 'async';
 tokenModifiers[TokenModifier.declaration] = 'declaration';
 tokenModifiers[TokenModifier.readonly] = 'readonly';
 tokenModifiers[TokenModifier.static] = 'static';
-tokenModifiers[TokenModifier.local] = 'local';
+tokenModifiers[TokenModifier.local] = 'local'; // missing in server tokenModifiers
 tokenModifiers[TokenModifier.defaultLibrary] = 'defaultLibrary';
 
 // mapping for the original ExperimentalProtocol.ClassificationType from TypeScript (only used when plugin is not available)
@@ -160,16 +169,6 @@ tokenTypeMap[ExperimentalProtocol.ClassificationType.parameterName] = TokenType.
 
 
 namespace ExperimentalProtocol {
-
-	export const enum EndOfLineState {
-		None,
-		InMultiLineCommentTrivia,
-		InSingleQuoteStringLiteral,
-		InDoubleQuoteStringLiteral,
-		InTemplateHeadOrNoSubstitutionTemplate,
-		InTemplateMiddleOrTail,
-		InTemplateSubstitutionPosition,
-	}
 
 	export const enum ClassificationType {
 		comment = 1,

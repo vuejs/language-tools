@@ -33,37 +33,6 @@
 					".svelte"
 				]
 			}
-		],
-		"semanticTokenScopes": [
-			{
-				"language": "svelte",
-				"scopes": {
-					"property": [
-						"variable.other.property.svelte"
-					],
-					"property.readonly": [
-						"variable.other.constant.property.svelte"
-					],
-					"variable": [
-						"variable.other.readwrite.svelte"
-					],
-					"variable.readonly": [
-						"variable.other.constant.object.svelte"
-					],
-					"function": [
-						"entity.name.function.svelte"
-					],
-					"namespace": [
-						"entity.name.type.module.svelte"
-					],
-					"variable.defaultLibrary": [
-						"support.variable.svelte"
-					],
-					"function.defaultLibrary": [
-						"support.function.svelte"
-					]
-				}
-			}
 		]
 	},
 	"scripts": {

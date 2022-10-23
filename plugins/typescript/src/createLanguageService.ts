@@ -31,7 +31,6 @@ import { URI } from 'vscode-uri';
 import * as _ from 'vscode-languageserver-protocol';
 
 export interface LanguageService extends ReturnType<typeof createLanguageService> { }
-export { getSemanticTokenLegend } from './services/semanticTokens';
 export * from './configs/getFormatCodeSettings';
 export * from './configs/getUserPreferences';
 

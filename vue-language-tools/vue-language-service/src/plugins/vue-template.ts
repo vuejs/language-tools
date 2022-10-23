@@ -9,10 +9,6 @@ import { checkComponentNames, checkEventsOfTag, checkGlobalAttrs, checkPropsOfTa
 import * as casing from '../ideFeatures/nameCasing';
 import { AttrNameCasing, TagNameCasing } from '../types';
 
-export const semanticTokenTypes = [
-	'componentTag',
-];
-
 const globalDirectives = html.newHTMLDataProvider('vue-global-directive', {
 	version: 1.1,
 	tags: [],
@@ -38,7 +34,6 @@ const eventModifiers: Record<string, string> = {
 };
 
 export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof useHtmlPlugin>>(options: {
-	getSemanticTokenLegend(): vscode.SemanticTokensLegend,
 	getScanner(document: TextDocument): html.Scanner | undefined,
 	templateLanguagePlugin: T,
 	isSupportedDocument: (document: TextDocument) => boolean,
@@ -46,7 +41,6 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 	context: LanguageServiceRuntimeContext,
 }): LanguageServicePlugin & T {
 
-	const tokenTypes = new Map(options.getSemanticTokenLegend().tokenTypes.map((t, i) => [t, i]));
 	const runtimeMode = vue.resolveVueCompilerOptions(options.vueLsHost.getVueCompilationSettings()).experimentalRuntimeMode;
 
 	let context: LanguageServicePluginContext;
@@ -159,12 +153,12 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			},
 		},
 
-		async findDocumentSemanticTokens(document, range) {
+		async findDocumentSemanticTokens(document, range, legend) {
 
 			if (!options.isSupportedDocument(document))
 				return;
 
-			const result = await options.templateLanguagePlugin.findDocumentSemanticTokens?.(document, range) ?? [];
+			const result = await options.templateLanguagePlugin.findDocumentSemanticTokens?.(document, range, legend) ?? [];
 			const vueDocument = options.context.documents.fromEmbeddedDocument(document);
 			const scanner = options.getScanner(document);
 
@@ -206,7 +200,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 							const tokenPosition = document.positionAt(tokenOffset);
 
 							if (components.has(tokenText)) {
-								result.push([tokenPosition.line, tokenPosition.character, tokenLength, tokenTypes.get('componentTag') ?? -1, 0]);
+								result.push([tokenPosition.line, tokenPosition.character, tokenLength, legend.tokenTypes.indexOf('class'), 0]);
 							}
 						}
 					}

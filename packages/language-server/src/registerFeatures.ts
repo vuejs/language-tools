@@ -3,6 +3,47 @@ import { DiagnosticModel, LanguageServerPlugin, LanguageServerInitializationOpti
 import * as vscode from 'vscode-languageserver';
 import { ClientCapabilities } from 'vscode-languageserver';
 
+// https://code.visualstudio.com/api/language-extensions/semantic-highlight-guide#standard-token-types-and-modifiers
+export const semanticTokensLegend: vscode.SemanticTokensLegend = {
+	tokenTypes: [
+		'namespace',
+		'class',
+		'enum',
+		'interface',
+		'struct',
+		'typeParameter',
+		'type',
+		'parameter',
+		'variable',
+		'property',
+		'enumMember',
+		'decorator',
+		'event',
+		'function',
+		'method',
+		'macro',
+		'label',
+		'comment',
+		'string',
+		'keyword',
+		'number',
+		'regexp',
+		'operator',
+	],
+	tokenModifiers: [
+		'declaration',
+		'definition',
+		'readonly',
+		'static',
+		'deprecated',
+		'abstract',
+		'async',
+		'modification',
+		'documentation',
+		'defaultLibrary',
+	],
+};
+
 export function setupSyntacticCapabilities(
 	params: ClientCapabilities,
 	server: vscode.ServerCapabilities,
@@ -135,17 +176,8 @@ export function setupSemanticCapabilities(
 		server.semanticTokensProvider = {
 			range: true,
 			full: false,
-			legend: {
-				tokenModifiers: [],
-				tokenTypes: [],
-			},
+			legend: semanticTokensLegend,
 		};
-		for (const plugin of plugins) {
-			if (plugin.semanticService?.semanticTokenLegend) {
-				server.semanticTokensProvider.legend.tokenModifiers = server.semanticTokensProvider.legend.tokenModifiers.concat(plugin.semanticService.semanticTokenLegend.tokenModifiers);
-				server.semanticTokensProvider.legend.tokenTypes = server.semanticTokensProvider.legend.tokenTypes.concat(plugin.semanticService.semanticTokenLegend.tokenTypes);
-			}
-		}
 	}
 	if (params.textDocument?.codeAction) {
 		server.codeActionProvider = {

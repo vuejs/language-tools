@@ -6,8 +6,6 @@ import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 
-export { getSemanticTokenLegend } from './createLanguageService';
-
 function getBasicTriggerCharacters(tsVersion: string) {
 
 	const triggerCharacters = ['.', '"', '\'', '`', '/', '<'];
@@ -248,9 +246,9 @@ export default function (): LanguageServicePlugin {
 			}
 		},
 
-		findDocumentSemanticTokens(document, range) {
+		findDocumentSemanticTokens(document, range, legend) {
 			if (isTsDocument(document)) {
-				return tsLs2.getDocumentSemanticTokens(document.uri, range);
+				return tsLs2.getDocumentSemanticTokens(document.uri, range, legend);
 			}
 		},
 

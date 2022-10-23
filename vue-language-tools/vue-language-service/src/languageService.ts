@@ -6,7 +6,6 @@ import usePugPlugin from '@volar-plugins/pug';
 import useTsPlugin from '@volar-plugins/typescript';
 import * as embedded from '@volar/language-core';
 import * as embeddedLS from '@volar/language-service';
-import { getSemanticTokenLegend as getTsSemanticTokenLegend } from '@volar-plugins/typescript/out/createLanguageService';
 import * as vue from '@volar/vue-language-core';
 import { LanguageServiceHost } from '@volar/vue-language-core';
 import type * as html from 'vscode-html-languageservice';
@@ -18,23 +17,8 @@ import useHtmlPugConversionsPlugin from './plugins/vue-convert-htmlpug';
 import useRefSugarConversionsPlugin from './plugins/vue-convert-refsugar';
 import useScriptSetupConversionsPlugin from './plugins/vue-convert-scriptsetup';
 import useTwoslashQueries from './plugins/vue-twoslash-queries';
-import useVueTemplateLanguagePlugin, { semanticTokenTypes as vueTemplateSemanticTokenTypes } from './plugins/vue-template';
+import useVueTemplateLanguagePlugin from './plugins/vue-template';
 import type { Data } from '@volar-plugins/typescript/src/services/completions/basic';
-
-export function getSemanticTokenLegend() {
-
-	const tsLegend = getTsSemanticTokenLegend();
-	const tokenTypesLegend = [
-		...tsLegend.tokenTypes,
-		...vueTemplateSemanticTokenTypes,
-	];
-	const semanticTokenLegend: vscode.SemanticTokensLegend = {
-		tokenTypes: tokenTypesLegend,
-		tokenModifiers: tsLegend.tokenModifiers,
-	};
-
-	return semanticTokenLegend;
-}
 
 export function getLanguageServicePlugins(
 	host: vue.LanguageServiceHost,
@@ -192,7 +176,6 @@ export function getLanguageServicePlugins(
 	const _pugPlugin = usePugPlugin();
 	const htmlPlugin = useVueTemplateLanguagePlugin({
 		templateLanguagePlugin: _htmlPlugin,
-		getSemanticTokenLegend,
 		getScanner: (document): html.Scanner | undefined => {
 			return _htmlPlugin.getHtmlLs().createScanner(document.getText());
 		},
@@ -202,7 +185,6 @@ export function getLanguageServicePlugins(
 	});
 	const pugPlugin = useVueTemplateLanguagePlugin({
 		templateLanguagePlugin: _pugPlugin,
-		getSemanticTokenLegend,
 		getScanner: (document): html.Scanner | undefined => {
 			const pugDocument = _pugPlugin.getPugDocument(document);
 			if (pugDocument) {

@@ -30,7 +30,6 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 	return {
 		extraFileExtensions,
 		semanticService: {
-			semanticTokenLegend: vue.getSemanticTokenLegend(),
 			resolveLanguageServiceHost(ts, sys, tsConfig, host) {
 				let vueOptions: vue.VueCompilerOptions = {};
 				if (typeof tsConfig === 'string') {
