@@ -1,5 +1,67 @@
 # Changelog
 
+## 1.0.9 (2022/10/23)
+
+- feat(vue-tsc): add error message for `noEmitOnError` ([#1669](https://github.com/johnsoncodehk/volar/issues/1669))
+- feat: add support for custom file extensions ([#1931](https://github.com/johnsoncodehk/volar/issues/1931))
+- feat: add support for `typescript/javascript.suggest.completeFunctionCalls` ([#956](https://github.com/johnsoncodehk/volar/issues/956))
+- feat: add support for JSX auto closing tags and tags commenting ([#1494](https://github.com/johnsoncodehk/volar/issues/1494))
+- feat: add support for auto import component from .ts sources ([#1643](https://github.com/johnsoncodehk/volar/issues/1643))
+- feat: add `Server Stats` command for debugging loading files
+- feat: add `volar.completion.normalizeComponentAutoImportName` setting to support remove `Vue` ending for component auto import ([#82](https://github.com/johnsoncodehk/volar/issues/82))
+- feat: add `volar.vueserver.diagnosticModel` setting to support pull model for diagnostic
+- feat: add `experimentalUseElementAccessInTemplate` setting in vueCompilerOptions for class component supports ([#997](https://github.com/johnsoncodehk/volar/issues/997))
+- feat: migrated to standard token types for support semantic tokens IDE other than VSCode
+- feat: register file watchers in language server for support IDE other than VSCode ([#2037](https://github.com/johnsoncodehk/volar/issues/2037))
+- perf: load scripts on demand on inferred project
+- fix(doctor): update valid `@types/node` version and clarity words ([#2043](https://github.com/johnsoncodehk/volar/issues/2043))
+- fix: avoid language server crash by invalid tsconfig references path ([#1957](https://github.com/johnsoncodehk/volar/issues/1957))
+- fix: `LanguageServicePlugin` error don'ts reporting
+- fix: SCSS At-Rule autocomplete not working
+- fix: intellisense not working for files path start with `.` ([#1147](https://github.com/johnsoncodehk/volar/issues/1147))
+- fix: avoid reporting partial diagnostic when failed to update cache range
+- fix: formatting not working for template interpolations ([#2026](https://github.com/johnsoncodehk/volar/issues/2026))
+- fix: file watchers not working ([#2028](https://github.com/johnsoncodehk/volar/issues/2028))
+- fix: document version of code action incorrect ([#2025](https://github.com/johnsoncodehk/volar/issues/2025))
+- fix: don't filter `onXxx` for props autocomplete ([#2034](https://github.com/johnsoncodehk/volar/issues/2034))
+- fix: import statements completion not working (https://github.com/johnsoncodehk/volar/issues/1983#issuecomment-1278778898)
+- fix: server throwing errors due to component auto import completion canceled ([#1983](https://github.com/johnsoncodehk/volar/issues/1983))
+- fix: expand selection does not work correctly in `<template>` ([#1465](https://github.com/johnsoncodehk/volar/issues/1465))
+- fix: component tags messes with duplicate name template properties ([#2030](https://github.com/johnsoncodehk/volar/issues/2030))
+- fix: improve invalid content trimming in .md files for VitePress
+- fix: avoid language server throwing when changing built-in TS plugin activation
+
+### Special Sponsor
+
+<a href="https://v3.nuxtjs.org/">
+	<img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/nuxt.svg"  height="80" />
+</a>
+
+### Out Gold Sponsors
+
+<tabel>
+	<tr>
+		<td align="center" valign="middle">
+			<a href="https://vuejs.org/">
+				<img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/vue.png" height="80" />
+			</a>
+		</td>
+	</tr>
+</tabel>
+
+### Out Silver Sponsors
+
+<tabel>
+	<tr>
+		<td align="center" valign="middle">
+			<a href="https://www.prefect.io/">
+				<img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/prefect.svg" height="50" />
+			</a>
+		</td>
+	</tr>
+</tabel>
+
+
 ## 1.0.8 (2022/10/15)
 
 - feat: support for twoslash queries (https://github.com/johnsoncodehk/volar-plugins/issues/9)
@@ -10,12 +72,6 @@
 - fix: intrinsic tag highlight should only including open tag and close tag ([#2009](https://github.com/johnsoncodehk/volar/issues/2009))
 - fix: component type should take capitalize property takes precedence over camelize property from context ([#2010](https://github.com/johnsoncodehk/volar/issues/2010))
 - fix: references codeLens should not including sources on display (https://github.com/johnsoncodehk/volar/issues/1989#issuecomment-1277585337)
-
-### Our Sponsors
-
-<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg">
-	<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company_compact/sponsors.svg"/>
-</a>
 
 ## 1.0.7 (2022/10/13)
 
