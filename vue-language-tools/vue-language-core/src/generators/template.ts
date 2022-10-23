@@ -170,7 +170,7 @@ export function generate(
 				camelize(tagName),
 				tagName,
 			]);
-			const varName = capitalize(camelize(tagName.replace(/:/g, '-')));
+			const varName = validTsVar.test(tagName) ? tagName : capitalize(camelize(tagName.replace(/:/g, '-')));
 
 			codeGen.push(`${varName}: import('./__VLS_types.js').GetComponents<typeof __VLS_components, ${[...names].map(name => `'${name}'`).join(', ')}>;\n`);
 
