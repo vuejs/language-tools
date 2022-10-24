@@ -28,6 +28,14 @@ export function register(
 		try { response1 = languageService.getEncodedSemanticClassifications(file, { start, length }, ts.SemanticClassificationFormat.TwentyTwenty); } catch { }
 		if (!response1) return;
 
+		const tokenModifiersTable: number[] = [];
+		tokenModifiersTable[TokenModifier.async] = 1 << legend.tokenModifiers.indexOf('async');
+		tokenModifiersTable[TokenModifier.declaration] = 1 << legend.tokenModifiers.indexOf('declaration');
+		tokenModifiersTable[TokenModifier.readonly] = 1 << legend.tokenModifiers.indexOf('readonly');
+		tokenModifiersTable[TokenModifier.static] = 1 << legend.tokenModifiers.indexOf('static');
+		tokenModifiersTable[TokenModifier.local] = 1 << legend.tokenModifiers.indexOf('local'); // missing in server tokenModifiers
+		tokenModifiersTable[TokenModifier.defaultLibrary] = 1 << legend.tokenModifiers.indexOf('defaultLibrary');
+
 		const tokenSpan = [...response1.spans, ...response2.spans];
 		const tokens: [number, number, number, number, number][] = [];
 		let i = 0;
@@ -73,13 +81,13 @@ export function register(
 
 		function tsTokenModifierToServerTokenModifier(input: number) {
 			let m = 0;
-			for (let i = 0; i < tokenModifiers.length; i++) {
-				if (input & (1 << i)) {
-					const match = legend.tokenModifiers.indexOf(tokenModifiers[i]);
-					if (match >= 0) {
-						m |= 1 << match;
-					}
+			let i = 0;
+			while (input) {
+				if (input & 1) {
+					m |= tokenModifiersTable[i];
 				}
+				input = input >> 1;
+				i++;
 			}
 			return m;
 		}
