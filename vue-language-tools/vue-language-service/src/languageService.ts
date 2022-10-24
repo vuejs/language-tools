@@ -58,9 +58,6 @@ export function getLanguageServicePlugins(
 					return result;
 				},
 				async resolve(item) {
-					if (item.textEdit?.newText === 'IconCone') {
-						console.log(item.textEdit);
-					}
 					item = await _tsPlugin.complete!.resolve!(item);
 
 					if (
@@ -75,6 +72,7 @@ export function getLanguageServicePlugins(
 							'import ' + newName + ' from ',
 						);
 						item.textEdit.newText = newName;
+						item.labelDetails = { detail: ' -> ' + newName };
 					}
 
 					const data: Data = item.data;
