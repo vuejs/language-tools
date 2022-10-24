@@ -74,10 +74,10 @@ export function register(
 		function tsTokenModifierToServerTokenModifier(input: number) {
 			let m = 0;
 			for (let i = 0; i < tokenModifiers.length; i++) {
-				if (input & Math.pow(2, i)) {
+				if (input & (1<<i)) {
 					const match = legend.tokenModifiers.indexOf(tokenModifiers[i]);
 					if (match >= 0) {
-						m |= Math.pow(2, match);
+						m |= (1<<match);
 					}
 				}
 			}
