@@ -2,7 +2,7 @@ import * as path from 'typesafe-path';
 import * as vscode from 'vscode';
 import { BaseLanguageClient } from 'vscode-languageclient';
 import { quickPick } from './splitEditors';
-import { takeOverModeEnabled } from '../common';
+import { noProjectReferences, takeOverModeEnabled } from '../common';
 import { LanguageServerInitializationOptions } from '@volar/vue-language-server';
 import * as fs from 'fs';
 
@@ -28,7 +28,7 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 					description: getTsVersion(resolveConfigTsdk(configTsdk)) ?? 'Could not load the TypeScript version at this path',
 					detail: configTsdk,
 				} : undefined,
-				'use_workspace_tsdk_deafult': configTsdk !== defaultTsdk ? {
+				'use_workspace_tsdk_default': configTsdk !== defaultTsdk ? {
 					label: (usingWorkspaceTsdk ? '• ' : '') + 'Use Workspace Version',
 					description: getTsVersion(resolveConfigTsdk(defaultTsdk)) ?? 'Could not load the TypeScript version at this path',
 					detail: defaultTsdk,
@@ -47,7 +47,7 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 			vscode.env.openExternal(vscode.Uri.parse('https://vuejs.org/guide/typescript/overview.html#volar-takeover-mode'));
 			return;
 		}
-		if (select === 'use_workspace_tsdk_deafult') {
+		if (select === 'use_workspace_tsdk_default') {
 			await vscode.workspace.getConfiguration('typescript').update('tsdk', defaultTsdk);
 		}
 		const shouldUseWorkspaceTsdk = select !== 'use_vscode_tsdk';
@@ -92,6 +92,9 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 			if (takeOverModeEnabled()) {
 				statusBar.text += ' (takeover)';
 			}
+			if (noProjectReferences()) {
+				statusBar.text += ' (noProjectReferences)';
+			}
 			statusBar.show();
 		}
 	}
@@ -108,7 +111,7 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 
 export function getCurrentTsdk(context: vscode.ExtensionContext) {
 	if (useWorkspaceTsdk(context)) {
-		const resolvedTsdk = resolveConfigTsdk(getConfigTsdk() ?? defaultTsdk);
+		const resolvedTsdk = resolveConfigTsdk(getConfigTsdk() || defaultTsdk);
 		if (resolvedTsdk) {
 			return { tsdk: resolvedTsdk, isWorkspacePath: true };
 		}
@@ -150,7 +153,7 @@ function getVscodeTsdk() {
 }
 
 function getConfigTsdk() {
-	return vscode.workspace.getConfiguration('typescript').get<path.PosixPath>('tsdk');
+	return vscode.workspace.getConfiguration('typescript').get<path.PosixPath>('tsdk') ?? '';
 }
 
 function useWorkspaceTsdk(context: vscode.ExtensionContext) {

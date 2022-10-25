@@ -17,6 +17,11 @@
 					],
 					"markdownDescription": "Target version of Vue."
 				},
+				"extensions": {
+					"type": "array",
+					"default": [ ".vue" ],
+					"markdownDescription": "Valid file extensions that should be considered as regular Vue SFC, please note that you should not use this option separately for additional file extensions IDE support, see https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features/README.md#custom-file-extensions."
+				},
 				"jsxTemplates": {
 					"type": "boolean",
 					"default": false,
@@ -33,17 +38,17 @@
 				},
 				"dataAttributes": {
 					"type": "array",
-					"default": ["data-*"],
+					"default": [ ],
 					"markdownDescription": "A glob matcher array that should always avoid recognized as HTML Attributes and Component props."
 				},
 				"htmlAttributes": {
 					"type": "array",
-					"default": ["aria-*"],
+					"default": [ "aria-*" ],
 					"markdownDescription": "A glob matcher array that should always be recognizing as HTML Attributes rather than Component props. Attribute name will never convert to camelize case."
 				},
 				"plugins": {
 					"type": "array",
-					"default": [],
+					"default": [ ],
 					"markdownDescription": "Plugins to be used in the SFC compiler."
 				},
 				"optionsWrapper": {
@@ -75,14 +80,6 @@
 					],
 					"markdownDescription": "Run app in browser or uni-app"
 				},
-				"experimentalTemplateCompilerOptions": {
-					"type": "object",
-					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/576"
-				},
-				"experimentalTemplateCompilerOptionsRequirePath": {
-					"type": "string",
-					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/698"
-				},
 				"experimentalResolveStyleCssClasses": {
 					"enum": [
 						"scoped",
@@ -95,6 +92,28 @@
 					"type": "boolean",
 					"default": false,
 					"markdownDescription": "https://github.com/vuejs/rfcs/discussions/436"
+				},
+				"experimentalUseElementAccessInTemplate": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/997"
+				},
+				"experimentalModelPropName": {
+					"type": "object",
+					"default": {
+						"": {
+							"input": { "type": "radio" }
+						},
+						"checked": {
+							"input": { "type": "checkbox" }
+						},
+						"value": {
+							"input": true,
+							"textarea": true,
+							"select": true
+						}
+					},
+					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1969"
 				}
 			}
 		}

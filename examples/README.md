@@ -1,12 +1,12 @@
-# Svelte Langauge Server Example
+# Svelte Language Server Example
 
-This example show how to create a Svelte langauge server via Volar framework.
+This example show how to create a Svelte language server via Volar framework.
 
 With this solution you can avoid dealing with problems that usually require a lot of effort to solve, such as:
 
 - Multi-level nested embedded language
 - Embedded code mapping
-- TypeScript langauge service performance optimization
+- TypeScript language service performance optimization
 - Web IDE support
 - Incremental parser
 

@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "1.0.3",
+	"version": "1.0.9",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
@@ -176,6 +176,10 @@
 					"source.ts": "typescript",
 					"source.js.jsx": "javascriptreact",
 					"source.tsx": "typescriptreact",
+					"meta.tag.js": "jsx-tags",
+					"meta.tag.tsx": "jsx-tags",
+					"meta.tag.without-attributes.js": "jsx-tags",
+					"meta.tag.without-attributes.tsx": "jsx-tags",
 					"source.json": "json",
 					"source.json.comments": "jsonc",
 					"source.yaml": "yaml",
@@ -214,6 +218,10 @@
 					"source.ts": "typescript",
 					"source.js.jsx": "javascriptreact",
 					"source.tsx": "typescriptreact",
+					"meta.tag.js": "jsx-tags",
+					"meta.tag.tsx": "jsx-tags",
+					"meta.tag.without-attributes.js": "jsx-tags",
+					"meta.tag.without-attributes.tsx": "jsx-tags",
 					"source.json": "json",
 					"source.json.comments": "jsonc",
 					"source.yaml": "yaml",
@@ -306,6 +314,19 @@
 					],
 					"description": "Defines how the host (editor) should sync document changes to the language server. SFC incremental parser only working when config \"incremental\"."
 				},
+				"volar.vueserver.diagnosticModel": {
+					"type": "string",
+					"default": "push",
+					"enum": [
+						"push",
+						"pull"
+					],
+					"enumDescriptions": [
+						"Diagnostic push by language server.",
+						"Diagnostic pull by language client."
+					],
+					"description": "Diagnostic update model."
+				},
 				"volar.vueserver.maxOldSpaceSize": {
 					"type": [
 						"number",
@@ -313,6 +334,19 @@
 					],
 					"default": null,
 					"description": "Set --max-old-space-size option on server process. If you have problem on frequently \"Request textDocument/** failed.\" error, try setting higher memory(MB) on it."
+				},
+				"volar.vueserver.noProjectReferences": {
+					"type": "boolean",
+					"default": false,
+					"description": "Ignore project references settings of tsconfig in language server for resolve issue #1916."
+				},
+				"volar.vueserver.additionalExtensions": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": [],
+					"description": "List any additional file extensions that should be processed as Vue files (requires restart)."
 				},
 				"volar.codeLens.references": {
 					"type": "boolean",
@@ -453,10 +487,10 @@
 					"default": "auto-kebab",
 					"description": "Preferred attr name case."
 				},
-				"volar.completion.autoImportComponent": {
+				"volar.completion.normalizeComponentAutoImportName": {
 					"type": "boolean",
 					"default": true,
-					"description": "Enabled auto-import for component with tag completion."
+					"description": "Normalize import name for auto import. (\"myCompVue\" -> \"MyComp\")"
 				},
 				"volar.preview.script.vite": {
 					"type": "string",
@@ -508,104 +542,6 @@
 				}
 			}
 		},
-		"semanticTokenScopes": [
-			{
-				"language": "vue",
-				"scopes": {
-					"property": [
-						"variable.other.property.vue"
-					],
-					"property.readonly": [
-						"variable.other.constant.property.vue"
-					],
-					"variable": [
-						"variable.other.readwrite.vue"
-					],
-					"variable.readonly": [
-						"variable.other.constant.object.vue"
-					],
-					"function": [
-						"entity.name.function.vue"
-					],
-					"namespace": [
-						"entity.name.type.module.vue"
-					],
-					"variable.defaultLibrary": [
-						"support.variable.vue"
-					],
-					"function.defaultLibrary": [
-						"support.function.vue"
-					],
-					"componentTag": [
-						"support.class.component.vue"
-					]
-				}
-			},
-			{
-				"language": "markdown",
-				"scopes": {
-					"property": [
-						"variable.other.property.vue"
-					],
-					"property.readonly": [
-						"variable.other.constant.property.vue"
-					],
-					"variable": [
-						"variable.other.readwrite.vue"
-					],
-					"variable.readonly": [
-						"variable.other.constant.object.vue"
-					],
-					"function": [
-						"entity.name.function.vue"
-					],
-					"namespace": [
-						"entity.name.type.module.vue"
-					],
-					"variable.defaultLibrary": [
-						"support.variable.vue"
-					],
-					"function.defaultLibrary": [
-						"support.function.vue"
-					],
-					"componentTag": [
-						"support.class.component.vue"
-					]
-				}
-			},
-			{
-				"language": "html",
-				"scopes": {
-					"property": [
-						"variable.other.property.vue"
-					],
-					"property.readonly": [
-						"variable.other.constant.property.vue"
-					],
-					"variable": [
-						"variable.other.readwrite.vue"
-					],
-					"variable.readonly": [
-						"variable.other.constant.object.vue"
-					],
-					"function": [
-						"entity.name.function.vue"
-					],
-					"namespace": [
-						"entity.name.type.module.vue"
-					],
-					"variable.defaultLibrary": [
-						"support.variable.vue"
-					],
-					"function.defaultLibrary": [
-						"support.function.vue"
-					],
-					"componentTag": [
-						"support.class.component.vue"
-					]
-				}
-			}
-		],
 		"commands": [
 			{
 				"command": "volar.action.restartServer",
@@ -636,6 +572,16 @@
 				"command": "volar.action.showVirtualFiles",
 				"title": "Show Virtual Files",
 				"category": "Volar (Debug)"
+			},
+			{
+				"command": "volar.action.serverStats",
+				"title": "Server Stats",
+				"category": "Volar (Debug)"
+			},
+			{
+				"command": "volar.action.showComponentMeta",
+				"title": "Show Component Meta",
+				"category": "Volar"
 			},
 			{
 				"command": "volar.action.splitEditors",
@@ -834,19 +780,19 @@
 	"devDependencies": {
 		"@types/semver": "^7.3.12",
 		"@types/vscode": "1.67.0",
-		"@volar/preview": "1.0.3",
-		"@volar/shared": "1.0.3",
-		"@volar/source-map": "1.0.3",
-		"@volar/vue-language-core": "1.0.3",
-		"@volar/vue-language-server": "1.0.3",
+		"@volar/preview": "1.0.9",
+		"@volar/shared": "1.0.9",
+		"@volar/source-map": "1.0.9",
+		"@volar/vue-language-core": "1.0.9",
+		"@volar/vue-language-server": "1.0.9",
 		"esbuild": "latest",
 		"esbuild-plugin-copy": "latest",
 		"ovsx": "^0.5.1",
 		"esbuild-visualizer": "latest",
 		"path-browserify": "^1.0.1",
 		"punycode": "^2.1.1",
-		"semver": "^7.3.7",
-		"typesafe-path": "^0.2.1",
+		"semver": "^7.3.8",
+		"typesafe-path": "^0.2.2",
 		"vsce": "latest",
 		"vscode-languageclient": "^8.0.2",
 		"vscode-nls": "^5.2.0"

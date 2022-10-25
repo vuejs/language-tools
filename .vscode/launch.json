@@ -72,7 +72,7 @@
 			}
 		},
 		{
-			"name": "Attach to Langauge Features Server",
+			"name": "Attach to Language Features Server",
 			"type": "node",
 			"request": "attach",
 			"port": 6009,

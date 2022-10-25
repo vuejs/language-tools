@@ -1,7 +1,7 @@
 import * as WebSocket from 'ws';
 
 export function createPreviewConnection(options: {
-	onGotoCode: (fileName: string, range: [number, number], cancleToken: { readonly isCancelled: boolean; }) => void,
+	onGotoCode: (fileName: string, range: [number, number], cancelToken: { readonly isCancelled: boolean; }) => void,
 	getFileHref: (fileName: string, range: [number, number]) => string,
 }) {
 

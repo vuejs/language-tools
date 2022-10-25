@@ -1,6 +1,6 @@
 {
 	"name": "@volar/preview",
-	"version": "1.0.3",
+	"version": "1.0.9",
 	"license": "MIT",
 	"files": [
 		"bin",

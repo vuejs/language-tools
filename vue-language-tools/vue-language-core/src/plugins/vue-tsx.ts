@@ -92,7 +92,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 			}
 
 			if (sfc.template) {
-				fileNames.push(fileName + '.__VLS_template_format.tsx');
+				fileNames.push(fileName + '.__VLS_template_format.ts');
 				fileNames.push(fileName + '.__VLS_template_style.css');
 			}
 
@@ -123,7 +123,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 					embeddedFile.teleportMappings = [...tsx.teleports];
 				}
 			}
-			else if (suffix.match(/^\.__VLS_template_format\.tsx$/)) {
+			else if (suffix.match(/^\.__VLS_template_format\.ts$/)) {
 
 				embeddedFile.parentFileName = fileName + '.template.' + sfc.template?.lang;
 				embeddedFile.capabilities = {

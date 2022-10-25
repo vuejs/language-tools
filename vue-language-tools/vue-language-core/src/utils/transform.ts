@@ -1,5 +1,6 @@
 import { isGloballyWhitelisted } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
+import { ResolvedVueCompilerOptions } from '../types';
 
 export function walkInterpolationFragment(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -8,6 +9,7 @@ export function walkInterpolationFragment(
 	cb: (fragment: string, offset: number | undefined, isJustForErrorMapping?: boolean) => void,
 	localVars: Record<string, number>,
 	identifiers: Set<string>,
+	vueOptions: ResolvedVueCompilerOptions,
 ) {
 
 	let ctxVars: {
@@ -54,19 +56,53 @@ export function walkInterpolationFragment(
 			// fix https://github.com/johnsoncodehk/volar/issues/1205
 			// fix https://github.com/johnsoncodehk/volar/issues/1264
 			cb('', ctxVars[i + 1].offset, true);
-			cb('__VLS_ctx.', undefined);
-			if (ctxVars[i + 1].isShorthand) {
-				cb(code.substring(ctxVars[i].offset, ctxVars[i + 1].offset + ctxVars[i + 1].text.length), ctxVars[i].offset);
-				cb(': ', undefined);
+			if (vueOptions.experimentalUseElementAccessInTemplate) {
+				const varStart = ctxVars[i].offset;
+				const varEnd = ctxVars[i].offset + ctxVars[i].text.length;
+				cb('__VLS_ctx[', undefined);
+				cb('', varStart, true);
+				cb("'", undefined);
+				cb(code.substring(varStart, varEnd), varStart);
+				cb("'", undefined);
+				cb('', varEnd, true);
+				cb(']', undefined);
+				if (ctxVars[i + 1].isShorthand) {
+					cb(code.substring(varEnd, ctxVars[i + 1].offset + ctxVars[i + 1].text.length), varEnd);
+					cb(': ', undefined);
+				}
+				else {
+					cb(code.substring(varEnd, ctxVars[i + 1].offset), varEnd);
+				}
 			}
 			else {
-				cb(code.substring(ctxVars[i].offset, ctxVars[i + 1].offset), ctxVars[i].offset);
+				cb('__VLS_ctx.', undefined);
+				if (ctxVars[i + 1].isShorthand) {
+					cb(code.substring(ctxVars[i].offset, ctxVars[i + 1].offset + ctxVars[i + 1].text.length), ctxVars[i].offset);
+					cb(': ', undefined);
+				}
+				else {
+					cb(code.substring(ctxVars[i].offset, ctxVars[i + 1].offset), ctxVars[i].offset);
+				}
 			}
 		}
 
-		cb('', ctxVars[ctxVars.length - 1].offset, true);
-		cb('__VLS_ctx.', undefined);
-		cb(code.substring(ctxVars[ctxVars.length - 1].offset), ctxVars[ctxVars.length - 1].offset);
+		if (vueOptions.experimentalUseElementAccessInTemplate) {
+			const varStart = ctxVars[ctxVars.length - 1].offset;
+			const varEnd = ctxVars[ctxVars.length - 1].offset + ctxVars[ctxVars.length - 1].text.length;
+			cb('__VLS_ctx[', undefined);
+			cb('', varStart, true);
+			cb("'", undefined);
+			cb(code.substring(varStart, varEnd), varStart);
+			cb("'", undefined);
+			cb('', varEnd, true);
+			cb(']', undefined);
+			cb(code.substring(varEnd), varEnd);
+		}
+		else {
+			cb('', ctxVars[ctxVars.length - 1].offset, true);
+			cb('__VLS_ctx.', undefined);
+			cb(code.substring(ctxVars[ctxVars.length - 1].offset), ctxVars[ctxVars.length - 1].offset);
+		}
 	}
 	else {
 		cb(code, 0);

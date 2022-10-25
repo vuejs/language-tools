@@ -53,18 +53,16 @@ export declare function directiveFunction<T>(dir: T):
 export declare function withScope<T, K>(ctx: T, scope: K): ctx is T & K;
 export declare function makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
 
+// TODO: make it stricter between class component type and functional component type
 export type ExtractComponentSlots<T> =
 	IsAny<T> extends true ? Record<string, any>
 	: T extends { ${slots}?: infer S } ? { [K in keyof S]-?: S[K] extends ((obj: infer O) => any) | undefined ? O : any }
+	: T extends { children?: infer S } ? { [K in keyof S]-?: S[K] extends ((obj: infer O) => any) | undefined ? O : any }
 	: Record<string, any>;
 
 export type FillingEventArg_ParametersLength<E extends (...args: any) => any> = IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];
 export type FillingEventArg<E> = E extends (...args: any) => any ? FillingEventArg_ParametersLength<E> extends 0 ? ($event?: undefined) => ReturnType<E> : E : E;
 
-export type ExtractProps<T> =
-	T extends FunctionalComponent<infer P> ? P
-	: T extends new (...args: any) => { $props: infer Props } ? Props
-	: T; // IntrinsicElement
 export type ReturnVoid<T> = T extends (...payload: infer P) => any ? (...payload: P) => void : (...args: any) => void;
 export type EmitEvent2<F, E> =
 	F extends {
@@ -103,9 +101,7 @@ export type FirstFunction<F0 = void, F1 = void, F2 = void, F3 = void, F4 = void>
 	NonNullable<F3> extends (Function | AnyArray<Function>) ? F3 :
 	NonNullable<F4> extends (Function | AnyArray<Function>) ? F4 :
 	unknown;
-export type GlobalAttrs = JSX.IntrinsicElements['div'];
 export type SelfComponent<N, C> = string extends N ? {} : N extends string ? { [P in N]: C } : {};
-export type ConvertInvalidJsxElement<T> = IsComponent<T> extends true ? T : any;
 export type GetComponents<Components, N1, N2 = unknown, N3 = unknown> =
 	N1 extends keyof Components ? Components[N1] :
 	N2 extends keyof Components ? Components[N2] :
@@ -113,7 +109,11 @@ export type GetComponents<Components, N1, N2 = unknown, N3 = unknown> =
 	unknown;
 export type ComponentProps<T> =
 	${vueCompilerOptions.strictTemplates ? '' : 'Record<string, unknown> &'}
-	ExtractProps<T>;
+	(
+		T extends (...args: any) => any ? (T extends (...args: any) => { props: infer Props } ? Props : {})
+		: T extends new (...args: any) => any ? (T extends new (...args: any) => { $props: infer Props } ? Props : {})
+		: T // IntrinsicElement
+	);
 export type InstanceProps<I, C> = I extends { $props: infer Props } ? Props & Record<string, unknown> : C & Record<string, unknown>;
 export type EventObject<I, K1 extends string, C, E1> = {
 	[K in K1]: import('./__VLS_types.js').FillingEventArg<
@@ -125,10 +125,7 @@ export type EventObject<I, K1 extends string, C, E1> = {
 	>
 };
 
-type IsComponent<T> =
-	T extends (...args: any) => JSX.Element ? true
-	: T extends new (...args: any) => JSX.ElementClass ? true
-	: IsAny<T>
+type GlobalAttrs = JSX.IntrinsicElements['div'];
 `;
 }
 

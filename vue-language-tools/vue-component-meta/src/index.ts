@@ -1,6 +1,6 @@
 import * as vue from '@volar/vue-language-core';
 import * as embedded from '@volar/language-core';
-import * as ts from 'typescript/lib/tsserverlibrary';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'typesafe-path/posix';
 
 import type {
@@ -25,32 +25,47 @@ export type {
 	SlotMeta
 };
 
-
 const extraFileExtensions: ts.FileExtensionInfo[] = [{
 	extension: 'vue',
 	isMixedContent: true,
-	scriptKind: ts.ScriptKind.Deferred,
+	scriptKind: 7 /* ts.ScriptKind.Deferred */,
 }];
 
 export type ComponentMetaChecker = ReturnType<typeof baseCreate>;
 
-export function createComponentMetaCheckerByJsonConfig(root: string, json: any, checkerOptions: MetaCheckerOptions = {}) {
-	return baseCreate(
+export function createComponentMetaCheckerByJsonConfig(
+	root: string,
+	json: any,
+	checkerOptions: MetaCheckerOptions = {},
+	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
+) {
+	return createComponentMetaCheckerWorker(
 		() => vue.createParsedCommandLineByJson(ts, ts.sys, root, json, extraFileExtensions),
 		checkerOptions,
 		path.join((root as path.OsPath).replace(/\\/g, '/') as path.PosixPath, 'jsconfig.json.global.vue' as path.PosixPath),
+		ts,
 	);
 }
 
-export function createComponentMetaChecker(tsconfigPath: string, checkerOptions: MetaCheckerOptions = {}) {
-	return baseCreate(
+export function createComponentMetaChecker(
+	tsconfigPath: string,
+	checkerOptions: MetaCheckerOptions = {},
+	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
+) {
+	return createComponentMetaCheckerWorker(
 		() => vue.createParsedCommandLine(ts, ts.sys, tsconfigPath, extraFileExtensions),
 		checkerOptions,
 		(tsconfigPath as path.OsPath).replace(/\\/g, '/') as path.PosixPath + '.global.vue',
+		ts,
 	);
 }
 
-function baseCreate(loadParsedCommandLine: () => vue.ParsedCommandLine, checkerOptions: MetaCheckerOptions, globalComponentName: string) {
+function createComponentMetaCheckerWorker(
+	loadParsedCommandLine: () => vue.ParsedCommandLine,
+	checkerOptions: MetaCheckerOptions,
+	globalComponentName: string,
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+) {
 
 	/**
 	 * Original Host
@@ -84,6 +99,38 @@ function baseCreate(loadParsedCommandLine: () => vue.ParsedCommandLine, checkerO
 		getVueCompilationSettings: () => parsedCommandLine.vueOptions,
 	};
 
+	return {
+		...baseCreate(_host, checkerOptions, globalComponentName, ts),
+		updateFile(fileName: string, text: string) {
+			fileName = (fileName as path.OsPath).replace(/\\/g, '/') as path.PosixPath;
+			scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(text));
+			scriptVersions.set(fileName, scriptVersions.has(fileName) ? scriptVersions.get(fileName)! + 1 : 1);
+			projectVersion++;
+		},
+		deleteFile(fileName: string) {
+			fileName = (fileName as path.OsPath).replace(/\\/g, '/') as path.PosixPath;
+			fileNames = fileNames.filter(f => f !== fileName);
+			projectVersion++;
+		},
+		reload() {
+			parsedCommandLine = loadParsedCommandLine();
+			fileNames = (parsedCommandLine.fileNames as path.OsPath[]).map<path.PosixPath>(path => path.replace(/\\/g, '/') as path.PosixPath);
+			this.clearCache();
+		},
+		clearCache() {
+			scriptSnapshots.clear();
+			scriptVersions.clear();
+			projectVersion++;
+		},
+	};
+}
+
+export function baseCreate(
+	_host: vue.LanguageServiceHost,
+	checkerOptions: MetaCheckerOptions,
+	globalComponentName: string,
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+) {
 	/**
 	 * Meta
 	 */
@@ -126,7 +173,6 @@ function baseCreate(loadParsedCommandLine: () => vue.ParsedCommandLine, checkerO
 		host.getCurrentDirectory(),
 		host.getCompilationSettings(),
 		host.getVueCompilationSettings(),
-		['.vue']
 	);
 	const core = embedded.createEmbeddedLanguageServiceHost(host, [vueLanguageModule]);
 	const proxyApis: Partial<ts.LanguageServiceHost> = checkerOptions.forceUseTs ? {
@@ -149,40 +195,14 @@ function baseCreate(loadParsedCommandLine: () => vue.ParsedCommandLine, checkerO
 		}
 	});
 	const tsLs = ts.createLanguageService(proxyHost);
-	const program = tsLs.getProgram()!;
-	const typeChecker = program.getTypeChecker();
 	let globalPropNames: string[] = [];
 	globalPropNames = getComponentMeta(globalComponentName).props.map(prop => prop.name);
 
 	return {
 		getExportNames,
 		getComponentMeta,
-		updateFile(fileName: string, text: string) {
-			fileName = (fileName as path.OsPath).replace(/\\/g, '/') as path.PosixPath;
-			scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(text));
-			scriptVersions.set(fileName, scriptVersions.has(fileName) ? scriptVersions.get(fileName)! + 1 : 1);
-			projectVersion++;
-		},
-		deleteFile(fileName: string) {
-			fileName = (fileName as path.OsPath).replace(/\\/g, '/') as path.PosixPath;
-			fileNames = fileNames.filter(f => f !== fileName);
-			projectVersion++;
-		},
-		reload() {
-			parsedCommandLine = loadParsedCommandLine();
-			fileNames = (parsedCommandLine.fileNames as path.OsPath[]).map<path.PosixPath>(path => path.replace(/\\/g, '/') as path.PosixPath);
-			this.clearCache();
-		},
-		clearCache() {
-			scriptSnapshots.clear();
-			scriptVersions.clear();
-			projectVersion++;
-		},
 		__internal__: {
-			parsedCommandLine,
-			program,
 			tsLs,
-			typeChecker,
 		},
 	};
 
@@ -202,12 +222,16 @@ function baseCreate(loadParsedCommandLine: () => vue.ParsedCommandLine, checkerO
 	}
 
 	function getExportNames(componentPath: string) {
-		return _getExports(componentPath).exports.map(e => e.getName());
+		const program = tsLs.getProgram()!;
+		const typeChecker = program.getTypeChecker();
+		return _getExports(program, typeChecker, componentPath).exports.map(e => e.getName());
 	}
 
 	function getComponentMeta(componentPath: string, exportName = 'default'): ComponentMeta {
 
-		const { symbolNode, exports } = _getExports(componentPath);
+		const program = tsLs.getProgram()!;
+		const typeChecker = program.getTypeChecker();
+		const { symbolNode, exports } = _getExports(program, typeChecker, componentPath);
 		const _export = exports.find((property) => property.getName() === exportName);
 
 		if (!_export) {
@@ -238,7 +262,7 @@ function baseCreate(loadParsedCommandLine: () => vue.ParsedCommandLine, checkerO
 					.map((prop) => {
 						const {
 							resolveNestedProperties,
-						} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions);
+						} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts);
 
 						return resolveNestedProperties(prop);
 					})
@@ -256,13 +280,14 @@ function baseCreate(loadParsedCommandLine: () => vue.ParsedCommandLine, checkerO
 
 			const vueSourceFile = core.mapper.get(componentPath)?.[0];
 			const vueDefaults = vueSourceFile && exportName === 'default'
-				? (vueSourceFile instanceof vue.VueSourceFile ? readVueComponentDefaultProps(vueSourceFile, printer) : {})
+				? (vueSourceFile instanceof vue.VueSourceFile ? readVueComponentDefaultProps(vueSourceFile, printer, ts) : {})
 				: {};
 			const tsDefaults = !vueSourceFile ? readTsComponentDefaultProps(
 				componentPath.substring(componentPath.lastIndexOf('.') + 1), // ts | js | tsx | jsx
 				snapshot.getText(0, snapshot.getLength()),
 				exportName,
 				printer,
+				ts,
 			) : {};
 
 			for (const [propName, defaultExp] of Object.entries({
@@ -297,7 +322,7 @@ function baseCreate(loadParsedCommandLine: () => vue.ParsedCommandLine, checkerO
 
 					const {
 						resolveEventSignature,
-					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions);
+					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts);
 
 					return resolveEventSignature(call);
 				}).filter(event => event.name);
@@ -308,7 +333,8 @@ function baseCreate(loadParsedCommandLine: () => vue.ParsedCommandLine, checkerO
 
 		function getSlots() {
 
-			const propertyName = (parsedCommandLine.vueOptions.target ?? 3) < 3 ? '$scopedSlots' : '$slots';
+			const target = _host.getVueCompilationSettings().target ?? 3;
+			const propertyName = target < 3 ? '$scopedSlots' : '$slots';
 			const $slots = symbolProperties.find(prop => prop.escapedName === propertyName);
 
 			if ($slots) {
@@ -318,7 +344,7 @@ function baseCreate(loadParsedCommandLine: () => vue.ParsedCommandLine, checkerO
 				return properties.map((prop) => {
 					const {
 						resolveSlotProperties,
-					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions);
+					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts);
 
 					return resolveSlotProperties(prop);
 				});
@@ -338,7 +364,7 @@ function baseCreate(loadParsedCommandLine: () => vue.ParsedCommandLine, checkerO
 				return exposed.map((prop) => {
 					const {
 						resolveExposedProperties,
-					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions);
+					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts);
 
 					return resolveExposedProperties(prop);
 				});
@@ -348,7 +374,11 @@ function baseCreate(loadParsedCommandLine: () => vue.ParsedCommandLine, checkerO
 		}
 	}
 
-	function _getExports(componentPath: string) {
+	function _getExports(
+		program: ts.Program,
+		typeChecker: ts.TypeChecker,
+		componentPath: string,
+	) {
 
 		const sourceFile = program?.getSourceFile(getMetaFileName(componentPath));
 		if (!sourceFile) {
@@ -387,7 +417,12 @@ function baseCreate(loadParsedCommandLine: () => vue.ParsedCommandLine, checkerO
 	}
 }
 
-function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expression, { rawType, schema: options }: MetaCheckerOptions) {
+function createSchemaResolvers(
+	typeChecker: ts.TypeChecker,
+	symbolNode: ts.Expression,
+	{ rawType, schema: options }: MetaCheckerOptions,
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+) {
 	const enabled = !!options;
 	const ignore = typeof options === 'object' ? [...options?.ignore ?? []] : [];
 
@@ -539,7 +574,11 @@ function createSchemaResolvers(typeChecker: ts.TypeChecker, symbolNode: ts.Expre
 	};
 }
 
-function readVueComponentDefaultProps(vueSourceFile: vue.VueSourceFile, printer: ts.Printer | undefined) {
+function readVueComponentDefaultProps(
+	vueSourceFile: vue.VueSourceFile,
+	printer: ts.Printer | undefined,
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+) {
 	let result: Record<string, { default?: string, required?: boolean; }> = {};
 
 	scriptSetupWorker();
@@ -562,7 +601,7 @@ function readVueComponentDefaultProps(vueSourceFile: vue.VueSourceFile, printer:
 				for (const prop of obj.properties) {
 					if (ts.isPropertyAssignment(prop)) {
 						const name = prop.name.getText(ast);
-						const expNode = resolveDefaultOptionExpression(prop.initializer);
+						const expNode = resolveDefaultOptionExpression(prop.initializer, ts);
 						const expText = printer?.printNode(ts.EmitHint.Expression, expNode, ast) ?? expNode.getText(ast);
 
 						result[name] = {
@@ -579,7 +618,7 @@ function readVueComponentDefaultProps(vueSourceFile: vue.VueSourceFile, printer:
 			if (obj) {
 				result = {
 					...result,
-					...resolvePropsOption(ast, obj, printer),
+					...resolvePropsOption(ast, obj, printer, ts),
 				};
 			}
 		}
@@ -603,7 +642,7 @@ function readVueComponentDefaultProps(vueSourceFile: vue.VueSourceFile, printer:
 		const descriptor = vueSourceFile.sfc;
 
 		if (descriptor.script) {
-			const scriptResult = readTsComponentDefaultProps(descriptor.script.lang, descriptor.script.content, 'default', printer);
+			const scriptResult = readTsComponentDefaultProps(descriptor.script.lang, descriptor.script.content, 'default', printer, ts);
 			for (const [key, value] of Object.entries(scriptResult)) {
 				result[key] = value;
 			}
@@ -611,13 +650,19 @@ function readVueComponentDefaultProps(vueSourceFile: vue.VueSourceFile, printer:
 	}
 }
 
-function readTsComponentDefaultProps(lang: string, tsFileText: string, exportName: string, printer: ts.Printer | undefined) {
+function readTsComponentDefaultProps(
+	lang: string,
+	tsFileText: string,
+	exportName: string,
+	printer: ts.Printer | undefined,
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+) {
 
 	const ast = ts.createSourceFile('/tmp.' + lang, tsFileText, ts.ScriptTarget.Latest);
 	const props = getPropsNode();
 
 	if (props) {
-		return resolvePropsOption(ast, props, printer);
+		return resolvePropsOption(ast, props, printer, ts);
 	}
 
 	return {};
@@ -685,7 +730,12 @@ function readTsComponentDefaultProps(lang: string, tsFileText: string, exportNam
 	}
 }
 
-function resolvePropsOption(ast: ts.SourceFile, props: ts.ObjectLiteralExpression, printer: ts.Printer | undefined) {
+function resolvePropsOption(
+	ast: ts.SourceFile,
+	props: ts.ObjectLiteralExpression,
+	printer: ts.Printer | undefined,
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+) {
 
 	const result: Record<string, { default?: string, required?: boolean; }> = {};
 
@@ -704,7 +754,7 @@ function resolvePropsOption(ast: ts.SourceFile, props: ts.ObjectLiteralExpressio
 					result[name].required = exp === 'true';
 				}
 				if (defaultProp) {
-					const expNode = resolveDefaultOptionExpression((defaultProp as any).initializer);
+					const expNode = resolveDefaultOptionExpression((defaultProp as any).initializer, ts);
 					const expText = printer?.printNode(ts.EmitHint.Expression, expNode, ast) ?? expNode.getText(ast);
 					result[name].default = expText;
 				}
@@ -715,7 +765,10 @@ function resolvePropsOption(ast: ts.SourceFile, props: ts.ObjectLiteralExpressio
 	return result;
 }
 
-function resolveDefaultOptionExpression(_default: ts.Expression) {
+function resolveDefaultOptionExpression(
+	_default: ts.Expression,
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+) {
 	if (ts.isArrowFunction(_default)) {
 		if (ts.isBlock(_default.body)) {
 			return _default; // TODO

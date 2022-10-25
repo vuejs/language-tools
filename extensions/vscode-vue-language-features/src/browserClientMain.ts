@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient/browser';
-import { activate as commonActivate, deactivate as commonDeactivate, processHtml, processMd } from './common';
+import { activate as commonActivate, deactivate as commonDeactivate } from './common';
 import { middleware } from './middleware';
 
 export function activate(context: vscode.ExtensionContext) {
@@ -24,9 +24,6 @@ export function activate(context: vscode.ExtensionContext) {
 			documentSelector: langs.map<lsp.DocumentFilter>(lang => ({ language: lang })),
 			initializationOptions: initOptions,
 			progressOnInitialization: true,
-			synchronize: {
-				fileEvents: vscode.workspace.createFileSystemWatcher(`{**/*.vue,${processMd() ? '**/*.md,' : ''}${processHtml() ? '**/*.html,' : ''}**/*.js,**/*.ts,**/*.cjs,**/*.cts,**/*.mjs,**/*.mts,**/*.jsx,**/*.tsx,**/*.json}`)
-			},
 			middleware,
 		};
 		const client = new _LanguageClient(

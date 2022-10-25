@@ -15,13 +15,13 @@ const plugin: VueLanguagePlugin = () => {
 
 				content = content
 					// code block
-					.replace(/```[\s\S]*?```/g, match => '```' + ' '.repeat(match.length - 6) + '```')
+					.replace(/```[\s\S]+?```/g, match => '```' + ' '.repeat(match.length - 6) + '```')
 					// inline code block
-					.replace(/`[\s\S]*?`/g, match => `\`${' '.repeat(match.length - 2)}\``)
+					.replace(/`[^\n`]+?`/g, match => `\`${' '.repeat(match.length - 2)}\``)
 					// # \<script setup>
-					.replace(/\\\<[\s\S]*?\>\n?/g, match => ' '.repeat(match.length));
+					.replace(/\\\<[\s\S]+?\>\n?/g, match => ' '.repeat(match.length));
 
-				const sfcBlockReg = /\<(script|style)[\s\S]*?\>([\s\S]*?)\<\/\1\>/g;
+				const sfcBlockReg = /\<(script|style)\b[\s\S]*?\>([\s\S]*?)\<\/\1\>/g;
 				const codeGen: Segment[] = [];
 
 				for (const match of content.matchAll(sfcBlockReg)) {

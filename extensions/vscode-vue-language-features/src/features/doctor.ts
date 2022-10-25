@@ -41,7 +41,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 				}
 
 				content += '---\n\n';
-				content += `> Have question about the report message? You can see how it judge by inspecting the [source code](https://github.com/johnsoncodehk/volar/blob/master/extensions/vscode-vue-language-features/src/features/doctor.ts).\n\n`;
+				content += `> Have any questions about the report message? You can see how it is composed by inspecting the [source code](https://github.com/johnsoncodehk/volar/blob/master/extensions/vscode-vue-language-features/src/features/doctor.ts).\n\n`;
 
 				return content.trim();
 			}
@@ -90,6 +90,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			vueDoc ? client.sendRequest(ParseSFCRequest.type, vueDoc.getText()) : undefined,
 		]);
 		const vueMod = getWorkspacePackageJson(fileUri.fsPath, 'vue');
+		const domMod = getWorkspacePackageJson(fileUri.fsPath, '@vue/compiler-dom');
 		const problems: {
 			title: string;
 			message: string;
@@ -99,7 +100,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		if (!vueMod) {
 			problems.push({
 				title: '`vue` module not found',
-				message: 'Vue module not found from workspace, you may have not install `node_modules` yet.',
+				message: 'Vue module not found from workspace, you may not have installed `node_modules` yet.',
 			});
 		}
 
@@ -108,11 +109,11 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			const vueVersionNumber = semver.gte(vueMod.json.version, '3.0.0') ? 3 : semver.gte(vueMod.json.version, '2.7.0') ? 2.7 : 2;
 			const targetVersionNumber = vueOptions?.target ?? 3;
 			const lines = [
-				`Target version not match, you can specify the target version in \`vueCompilerOptions.target\` in tsconfig.json / jsconfig.json. (expected \`"target": ${vueVersionNumber}\`)`,
+				`Target version mismatch. You can specify the target version in \`vueCompilerOptions.target\` in tsconfig.json / jsconfig.json. (Expected \`"target": ${vueVersionNumber}\`)`,
 				'',
-				'- Vue version: ' + vueMod.json.version,
+				'- vue version: ' + vueMod.json.version,
 				'- tsconfig target: ' + targetVersionNumber + (vueOptions?.target !== undefined ? '' : ' (default)'),
-				'- Vue module: ' + vueMod.path,
+				'- vue: ' + vueMod.path,
 				'- tsconfig: ' + (tsconfig?.fileName ?? 'Not found'),
 				'- vueCompilerOptions:',
 				'  ```json',
@@ -128,18 +129,27 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		}
 
 		// check vue version < 2.7 but @vue/compiler-dom missing
-		if (vueMod && semver.lt(vueMod.json.version, '2.7.0') && !getWorkspacePackageJson(fileUri.fsPath, '@vue/compiler-dom')) {
+		if (vueMod && semver.lt(vueMod.json.version, '2.7.0') && !domMod) {
 			problems.push({
 				title: '`@vue/compiler-dom` missing for Vue 2',
-				message: 'Vue 2 do not have JSX types definition, so template type checkinng cannot working correctly, you can install `@vue/compiler-dom` by add it to `devDependencies` to resolve this problem.',
+				message: [
+					'Vue 2 does not have JSX types definitions, so template type checking will not work correctly. You can resolve this problem by installing `@vue/compiler-dom` and adding it to your project\'s `devDependencies`.',
+					'',
+					'- vue: ' + vueMod.path,
+				].join('\n'),
 			});
 		}
 
 		// check vue version >= 2.7 and < 3 but installed @vue/compiler-dom
-		if (vueMod && semver.gte(vueMod.json.version, '2.7.0') && semver.lt(vueMod.json.version, '3.0.0') && getWorkspacePackageJson(fileUri.fsPath, '@vue/compiler-dom')) {
+		if (vueMod && semver.gte(vueMod.json.version, '2.7.0') && semver.lt(vueMod.json.version, '3.0.0') && domMod) {
 			problems.push({
-				title: 'Do not need `@vue/compiler-dom`',
-				message: 'Vue 2.7 already included JSX types definition, you can remove `@vue/compiler-dom` depend from package.json.',
+				title: 'Unnecessary `@vue/compiler-dom`',
+				message: [
+					'Vue 2.7 already includes JSX type definitions. You can remove the `@vue/compiler-dom` dependency from package.json.',
+					'',
+					'- vue: ' + vueMod.path,
+					'- @vue/compiler-dom: ' + domMod.path,
+				].join('\n'),
 			});
 		}
 
@@ -147,11 +157,27 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		const vueTscMod = getWorkspacePackageJson(fileUri.fsPath, 'vue-tsc');
 		if (vueTscMod && vueTscMod.json.version !== context.extension.packageJSON.version) {
 			problems.push({
-				title: '`vue-tsc` version different',
+				title: 'Different `vue-tsc` version',
 				message: [
-					`The \`${context.extension.packageJSON.displayName}\` version is \`${context.extension.packageJSON.version}\`, but workspace \`vue-tsc\` version is \`${vueTscMod.json.version}\`, there may have different type checking behavior.`,
+					`The \`${context.extension.packageJSON.displayName}\`\'s version is \`${context.extension.packageJSON.version}\`, but the workspace\'s \`vue-tsc\` version is \`${vueTscMod.json.version}\`. This may produce different type checking behavior.`,
 					'',
-					'vue-tsc module: ' + vueTscMod.path,
+					'- vue-tsc: ' + vueTscMod.path,
+				].join('\n'),
+			});
+		}
+
+		// check @types/node > 18.8.0 && < 18.11.1
+		const typesNodeMod = getWorkspacePackageJson(fileUri.fsPath, '@types/node');
+		if (typesNodeMod && semver.gte(typesNodeMod.json.version, '18.8.1') && semver.lte(typesNodeMod.json.version, '18.11.0')) {
+			problems.push({
+				title: 'Incompatible `@types/node` version',
+				message: [
+					'`@types/node`\'s version `' + typesNodeMod.json.version + '` is incompatible with Vue. It will cause broken DOM event types in template.',
+					'',
+					'You can update `@types/node` to `18.11.1` or later to resolve.',
+					'',
+					'- @types/node: ' + typesNodeMod.path,
+					'- Issue: https://github.com/johnsoncodehk/volar/issues/1985',
 				].join('\n'),
 			});
 		}
@@ -161,7 +187,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		if (vetur?.isActive) {
 			problems.push({
 				title: 'Use @volar-plugins/vetur instead of Vetur',
-				message: 'Detected Vetur enabled, you might consider disabling it and use [@volar-plugins/vetur](https://github.com/johnsoncodehk/volar-plugins/tree/master/packages/vetur) instead of.',
+				message: 'Detected Vetur enabled. Consider disabling Vetur and use [@volar-plugins/vetur](https://github.com/johnsoncodehk/volar-plugins/tree/master/packages/vetur) instead.',
 			});
 		}
 
@@ -173,7 +199,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			problems.push({
 				title: '`@volar/vue-language-plugin-pug` missing',
 				message: [
-					'For `<template lang="pug">`, you need add plugin via `$ npm install -D @volar/vue-language-plugin-pug` and add it to `vueCompilerOptions.plugins` to support TypeScript intellisense in Pug template.',
+					'For `<template lang="pug">`, the `@volar/vue-language-plugin-pug` plugin is required. Install it using `$ npm install -D @volar/vue-language-plugin-pug` and add it to `vueCompilerOptions.plugins` to support TypeScript intellisense in Pug templates.',
 					'',
 					'- tsconfig.json / jsconfig.json',
 					'```jsonc',
@@ -199,8 +225,8 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 					const someInstalled = validExts.some(ext => !!vscode.extensions.getExtension(ext));
 					if (!someInstalled) {
 						problems.push({
-							title: 'Syntax Highlight for ' + block.lang,
-							message: `Not found valid syntax highlight extension for ${block.lang} langauge block, you can choose to install one of the following:\n\n`
+							title: 'Syntax Highlighting for ' + block.lang,
+							message: `Did not find a valid syntax highlighter extension for ${block.lang} language block; you can choose to install one of the following:\n\n`
 								+ validExts.map(ext => `- [${ext}](https://marketplace.visualstudio.com/items?itemName=${ext})\n`),
 						});
 					}

@@ -30,6 +30,9 @@
 			"@volar/vue-*": [
 				"vue-language-tools/vue-*/src"
 			],
+			"vue-component-meta": [
+				"vue-language-tools/vue-component-meta/src"
+			],
 		},
 		"noEmit": true,
 	},

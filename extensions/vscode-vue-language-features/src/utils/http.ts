@@ -12,7 +12,7 @@ export function isLocalHostPortUsing(port: number) {
 	});
 }
 
-export async function getLocalHostAvaliablePort(port: number) {
+export async function getLocalHostAvailablePort(port: number) {
 	if (await isLocalHostPortUsing(port)) {
 		port++;
 	}

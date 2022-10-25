@@ -7,7 +7,6 @@ export function createLanguageService(host: vue.LanguageServiceHost) {
 		host.getCurrentDirectory(),
 		host.getCompilationSettings(),
 		host.getVueCompilationSettings(),
-		['.vue']
 	)];
 	return base.createLanguageService(host, mods);
 }

@@ -3,7 +3,6 @@ import { PositionCapabilities } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize, hyphenate, isHTMLTag, isSVGTag } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { parseBindingRanges } from '../parsers/scriptSetupRanges';
 import { ResolvedVueCompilerOptions } from '../types';
 import { colletVars, walkInterpolationFragment } from '../utils/transform';
 import * as minimatch from 'minimatch';
@@ -154,6 +153,8 @@ export function generate(
 
 		const data: Record<string, string> = {};
 
+		codeGen.push(`let __VLS_templateComponents!: {\n`);
+
 		for (const tagName in tagNames) {
 
 			if (isIntrinsicElement(vueCompilerOptions.experimentalRuntimeMode, tagName))
@@ -163,27 +164,35 @@ export function generate(
 			if (isNamespacedTag)
 				continue;
 
+			const names = new Set([
+				// order is important: https://github.com/johnsoncodehk/volar/issues/2010
+				capitalize(camelize(tagName)),
+				camelize(tagName),
+				tagName,
+			]);
+			const varName = validTsVar.test(tagName) ? tagName : capitalize(camelize(tagName.replace(/:/g, '-')));
+
+			codeGen.push(`${varName}: import('./__VLS_types.js').GetComponents<typeof __VLS_components, ${[...names].map(name => `'${name}'`).join(', ')}>;\n`);
+
+			data[tagName] = varName;
+		}
+
+		codeGen.push(`};\n`);
+
+		for (const tagName in tagNames) {
+
+			const varName = data[tagName];
+			if (!varName)
+				continue;
+
 			const tagOffsets = tagNames[tagName];
 			const tagRanges: [number, number][] = tagOffsets.map(offset => [offset, offset + tagName.length]);
-			const var_componentVar = capitalize(camelize(tagName.replace(/:/g, '-')));
-
 			const names = new Set([
-				tagName,
-				camelize(tagName),
+				// order is important: https://github.com/johnsoncodehk/volar/issues/2010
 				capitalize(camelize(tagName)),
+				camelize(tagName),
+				tagName,
 			]);
-
-			codeGen.push(`let ${var_componentVar}!: `);
-
-			if (vueCompilerOptions.jsxTemplates && !vueCompilerOptions.strictTemplates)
-				codeGen.push(`import('./__VLS_types.js').ConvertInvalidJsxElement<`);
-
-			codeGen.push(`import('./__VLS_types.js').GetComponents<typeof __VLS_components, ${[...names].map(name => `'${name}'`).join(', ')}>`);
-
-			if (vueCompilerOptions.jsxTemplates && !vueCompilerOptions.strictTemplates)
-				codeGen.push(`>`);
-
-			codeGen.push(`;\n`);
 
 			for (const name of names) {
 				for (const tagRange of tagRanges) {
@@ -204,7 +213,22 @@ export function generate(
 			}
 			codeGen.push('\n');
 
-			data[tagName] = var_componentVar;
+			codeGen.push(`[`);
+			for (const tagRange of tagRanges) {
+				codeGen.push([
+					varName,
+					'template',
+					tagRange,
+					{
+						completion: {
+							additional: true,
+							autoImportOnly: true,
+						},
+					},
+				]);
+				codeGen.push(',');
+			}
+			codeGen.push(`];\n`);
 		}
 
 		return data;
@@ -222,9 +246,13 @@ export function generate(
 			const offsets = tagOffsetsMap[node.tag];
 			const source = sourceTemplate.substring(node.loc.start.offset);
 
-			offsets.push(node.loc.start.offset + source.indexOf(node.tag)); // start tag
+			const startTagOffset = node.loc.start.offset + source.indexOf(node.tag);
+			offsets.push(startTagOffset); // start tag
 			if (!node.isSelfClosing && sourceLang === 'html') {
-				offsets.push(node.loc.start.offset + node.loc.source.lastIndexOf(node.tag)); // end tag
+				const endTagOffset = node.loc.start.offset + node.loc.source.lastIndexOf(node.tag);
+				if (endTagOffset !== startTagOffset) {
+					offsets.push(endTagOffset); // end tag
+				}
 			}
 		});
 
@@ -415,32 +443,19 @@ export function generate(
 			parentEl = node;
 		}
 
-		if (node.tag === 'vls-sr') {
-
-			const startTagEnd = node.loc.source.indexOf('>') + 1;
-			const endTagStart = node.loc.source.lastIndexOf('</');
-			const scriptCode = node.loc.source.substring(startTagEnd, endTagStart);
-			const collentAst = createTsAst(node, scriptCode);
-			const bindings = parseBindingRanges(ts, collentAst, false);
-			const scriptVars = bindings.map(binding => scriptCode.substring(binding.start, binding.end));
-
-			for (const varName of scriptVars)
-				localVars[varName] = (localVars[varName] ?? 0) + 1;
-
-			codeGen.push([scriptCode, 'template', node.loc.start.offset + startTagEnd, capabilitiesSet.all]);
-			return;
-		}
-
 		codeGen.push(`{\n`);
 
 		const startTagOffset = node.loc.start.offset + sourceTemplate.substring(node.loc.start.offset).indexOf(node.tag);
-		const endTagOffset = !node.isSelfClosing && sourceLang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
+		let endTagOffset = !node.isSelfClosing && sourceLang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
+
+		if (endTagOffset === startTagOffset) {
+			endTagOffset = undefined;
+		}
 
 		let _unwritedExps: CompilerDOM.SimpleExpressionNode[];
 
 		const _isIntrinsicElement = isIntrinsicElement(vueCompilerOptions.experimentalRuntimeMode, node.tag);
 		const _isNamespacedTag = node.tag.indexOf('.') >= 0;
-		const tagText = componentVars[node.tag] ?? node.tag;
 
 		if (vueCompilerOptions.jsxTemplates) {
 
@@ -450,11 +465,17 @@ export function generate(
 				node.loc.start.offset,
 				capabilitiesSet.diagnosticOnly,
 			]);
-			const tagCapabilities: PositionCapabilities = _isIntrinsicElement || _isNamespacedTag ? capabilitiesSet.all : capabilitiesSet.diagnosticOnly;
+			const tagCapabilities: PositionCapabilities = _isIntrinsicElement || _isNamespacedTag ? capabilitiesSet.all : {
+				...capabilitiesSet.diagnosticOnly,
+				...capabilitiesSet.tagHover,
+			};
 
 			codeGen.push(`<`);
+			if (componentVars[node.tag]) {
+				codeGen.push(`__VLS_templateComponents.`);
+			}
 			codeGen.push([
-				tagText,
+				componentVars[node.tag] ?? node.tag,
 				'template',
 				[startTagOffset, startTagOffset + node.tag.length],
 				tagCapabilities,
@@ -468,8 +489,11 @@ export function generate(
 			}
 			else {
 				codeGen.push(`></`);
+				if (componentVars[node.tag]) {
+					codeGen.push(`__VLS_templateComponents.`);
+				}
 				codeGen.push([
-					tagText,
+					componentVars[node.tag] ?? node.tag,
 					'template',
 					[endTagOffset, endTagOffset + node.tag.length],
 					tagCapabilities,
@@ -527,10 +551,10 @@ export function generate(
 			}
 			else if (_isNamespacedTag) {
 
-				codeGen.push(`let ${var_props}!: import('./__VLS_types.js').ComponentProps<typeof ${tagText}>;\n`);
+				codeGen.push(`let ${var_props}!: import('./__VLS_types.js').ComponentProps<typeof ${node.tag}>;\n`);
 
 				codeGen.push([
-					tagText,
+					node.tag,
 					'template',
 					[startTagOffset, startTagOffset + node.tag.length],
 					capabilitiesSet.all,
@@ -539,7 +563,7 @@ export function generate(
 
 				if (endTagOffset !== undefined) {
 					codeGen.push([
-						tagText,
+						node.tag,
 						'template',
 						[endTagOffset, endTagOffset + node.tag.length],
 						capabilitiesSet.all,
@@ -550,8 +574,11 @@ export function generate(
 			else {
 
 				codeGen.push(`let ${var_props}!: import('./__VLS_types.js').ComponentProps<typeof `);
+				if (componentVars[node.tag]) {
+					codeGen.push(`__VLS_templateComponents.`);
+				}
 				codeGen.push([
-					tagText,
+					componentVars[node.tag] ?? node.tag,
 					'template',
 					[startTagOffset, startTagOffset + node.tag.length],
 					capabilitiesSet.tagHover,
@@ -559,8 +586,11 @@ export function generate(
 				codeGen.push(`>;\n`);
 
 				if (endTagOffset !== undefined) {
+					if (componentVars[node.tag]) {
+						codeGen.push(`__VLS_templateComponents.`);
+					}
 					codeGen.push([
-						tagText,
+						componentVars[node.tag] ?? node.tag,
 						'template',
 						[endTagOffset, endTagOffset + node.tag.length],
 						capabilitiesSet.tagHover,
@@ -660,7 +690,6 @@ export function generate(
 	function writeEvents(node: CompilerDOM.ElementNode) {
 
 		let _varComponentInstance: string | undefined;
-		let writedInstance = false;
 
 		for (const prop of node.props) {
 			if (
@@ -679,9 +708,9 @@ export function generate(
 					codeGen.push(`JSX.IntrinsicElements['${node.tag}'];\n`);
 				}
 				else {
-					codeGen.push(`import('./__VLS_types.js').InstanceProps<typeof ${varComponentInstance}, ${componentVar ? 'typeof ' + componentVar : '{}'}>;\n`);;
+					codeGen.push(`import('./__VLS_types.js').InstanceProps<typeof ${varComponentInstance}, ${componentVar ? 'typeof __VLS_templateComponents.' + componentVar : '{}'}>;\n`);;
 				}
-				codeGen.push(`const __VLS_${elementIndex++}: import('./__VLS_types.js').EventObject<typeof ${varComponentInstance}, '${prop.arg.loc.source}', ${componentVar ? 'typeof ' + componentVar : '{}'}, `);
+				codeGen.push(`const __VLS_${elementIndex++}: import('./__VLS_types.js').EventObject<typeof ${varComponentInstance}, '${prop.arg.loc.source}', ${componentVar ? 'typeof __VLS_templateComponents.' + componentVar : '{}'}, `);
 
 				codeGen.push(`${varInstanceProps}[`);
 				writeCodeWithQuotes(
@@ -802,20 +831,23 @@ export function generate(
 
 		function tryWriteInstance() {
 
-			if (writedInstance) {
-				return _varComponentInstance;
+			if (!_varComponentInstance) {
+				const componentVar = componentVars[node.tag];
+
+				if (componentVar) {
+					const _varComponentInstanceA = `__VLS_${elementIndex++}`;
+					const _varComponentInstanceB = `__VLS_${elementIndex++}`;
+					_varComponentInstance = `__VLS_${elementIndex++}`;
+					codeGen.push(`const ${_varComponentInstanceA} = new ${componentVar}({ `);
+					writeProps(node, 'class', 'slots');
+					codeGen.push(`});\n`);
+					codeGen.push(`const ${_varComponentInstanceB} = ${componentVar}({ `);
+					writeProps(node, 'class', 'slots');
+					codeGen.push(`});\n`);
+					codeGen.push(`let ${_varComponentInstance}!: import('./__VLS_types.js').PickNotAny<typeof ${_varComponentInstanceA}, typeof ${_varComponentInstanceB}>;\n`);
+				}
 			}
 
-			const componentVar = componentVars[node.tag];
-
-			if (componentVar) {
-				_varComponentInstance = `__VLS_${elementIndex++}`;
-				codeGen.push(`const ${_varComponentInstance} = new ${componentVar}({ `);
-				writeProps(node, 'class', 'slots');
-				codeGen.push(`});\n`);
-			}
-
-			writedInstance = true;
 			return _varComponentInstance;
 		}
 	}
@@ -838,7 +870,7 @@ export function generate(
 						? prop.arg.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY
 							? prop.arg.content
 							: prop.arg.loc.source
-						: getModelValuePropName(node, vueCompilerOptions.target);
+						: getModelValuePropName(node, vueCompilerOptions.target, vueCompilerOptions);
 
 				if (prop.modifiers.some(m => m === 'prop' || m === 'attr')) {
 					attrNameText = attrNameText?.substring(1);
@@ -879,7 +911,7 @@ export function generate(
 					writePropName(
 						attrNameText,
 						isStatic,
-						[prop.loc.start.offset, prop.loc.start.offset + 'v-model'.length],
+						[prop.loc.start.offset, prop.loc.start.offset + prop.loc.source.indexOf('=')],
 						getCaps(capabilitiesSet.attr),
 						(prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}),
 					);
@@ -1181,7 +1213,7 @@ export function generate(
 				end--;
 			}
 			codeGen.push([
-				toUnicode(attrNode.content),
+				toUnicodeIfNeed(attrNode.content),
 				'template',
 				[start, end],
 				getCaps(capabilitiesSet.all),
@@ -1233,15 +1265,19 @@ export function generate(
 				&& prop.name === 'slot'
 			) {
 
-				const varComponentInstance = `__VLS_${elementIndex++}`;
+				const varComponentInstanceA = `__VLS_${elementIndex++}`;
+				const varComponentInstanceB = `__VLS_${elementIndex++}`;
 				const varSlots = `__VLS_${elementIndex++}`;
 
 				if (componentVar && parentEl) {
-					codeGen.push(`const ${varComponentInstance} = new ${componentVar}({ `);
+					codeGen.push(`const ${varComponentInstanceA} = new __VLS_templateComponents.${componentVar}({ `);
+					writeProps(parentEl, 'class', 'slots');
+					codeGen.push(`});\n`);
+					codeGen.push(`const ${varComponentInstanceB} = __VLS_templateComponents.${componentVar}({ `);
 					writeProps(parentEl, 'class', 'slots');
 					codeGen.push(`});\n`);
 					writeInterpolationVarsExtraCompletion();
-					codeGen.push(`let ${varSlots}!: import('./__VLS_types.js').ExtractComponentSlots<typeof ${varComponentInstance}>;\n`);
+					codeGen.push(`let ${varSlots}!: import('./__VLS_types.js').ExtractComponentSlots<import('./__VLS_types.js').PickNotAny<typeof ${varComponentInstanceA}, typeof ${varComponentInstanceB}>>;\n`);
 				}
 
 				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
@@ -1536,7 +1572,7 @@ export function generate(
 				prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
 				&& prop.name !== 'name' // slot name
 			) {
-				const propValue = prop.value !== undefined ? `"${toUnicode(prop.value.content)}"` : 'true';
+				const propValue = prop.value !== undefined ? `"${toUnicodeIfNeed(prop.value.content)}"` : 'true';
 				writeObjectProperty(
 					prop.name,
 					prop.loc.start.offset,
@@ -1698,7 +1734,7 @@ export function generate(
 				}
 				codeGen.push(addSubfix);
 			}
-		}, localVars, identifiers);
+		}, localVars, identifiers, vueCompilerOptions);
 		if (sourceOffset !== undefined) {
 			for (const v of vars) {
 				v.offset = sourceOffset + v.offset - prefix.length;
@@ -1765,6 +1801,12 @@ export function walkElementNodes(node: CompilerDOM.RootNode | CompilerDOM.Templa
 	}
 }
 
+function toUnicodeIfNeed(str: string) {
+	if (str.indexOf('\\') === -1 && str.indexOf('\n') === -1) {
+		return str;
+	}
+	return toUnicode(str);
+}
 function toUnicode(str: string) {
 	return str.split('').map(value => {
 		var temp = value.charCodeAt(0).toString(16).padStart(4, '0');
@@ -1783,28 +1825,47 @@ function getRenameApply(oldName: string) {
 function noEditApply(n: string) {
 	return n;
 }
-// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
-// https://v3.vuejs.org/guide/forms.html#basic-usage
-function getModelValuePropName(node: CompilerDOM.ElementNode, vueVersion: number) {
+function getModelValuePropName(node: CompilerDOM.ElementNode, vueVersion: number, vueCompilerOptions: ResolvedVueCompilerOptions) {
 
-	const tag = node.tag;
-	const typeAttr = node.props.find(prop => prop.type === CompilerDOM.NodeTypes.ATTRIBUTE && prop.name === 'type') as CompilerDOM.AttributeNode | undefined;
-	const type = typeAttr?.value?.content;
+	for (const modelName in vueCompilerOptions.experimentalModelPropName) {
+		const tags = vueCompilerOptions.experimentalModelPropName[modelName];
+		for (const tag in tags) {
+			if (node.tag === tag || node.tag === hyphenate(tag)) {
+				const v = tags[tag];
+				if (typeof v === 'object') {
+					const arr = Array.isArray(v) ? v : [v];
+					for (const attrs of arr) {
+						let failed = false;
+						for (const attr in attrs) {
+							const attrNode = node.props.find(prop => prop.type === CompilerDOM.NodeTypes.ATTRIBUTE && prop.name === attr) as CompilerDOM.AttributeNode | undefined;
+							if (!attrNode || attrNode.value?.content !== attrs[attr]) {
+								failed = true;
+								break;
+							}
+						}
+						if (!failed) {
+							// all match
+							return modelName || undefined;
+						}
+					}
+				}
+			}
+		}
+	}
 
-	if (tag === 'input' && type === 'checkbox')
-		return 'checked';
+	for (const modelName in vueCompilerOptions.experimentalModelPropName) {
+		const tags = vueCompilerOptions.experimentalModelPropName[modelName];
+		for (const tag in tags) {
+			if (node.tag === tag || node.tag === hyphenate(tag)) {
+				const attrs = tags[tag];
+				if (attrs === true) {
+					return modelName || undefined;
+				}
+			}
+		}
+	}
 
-	if (tag === 'input' && type === 'radio')
-		return undefined;
-
-	if (
-		tag === 'input' ||
-		tag === 'textarea' ||
-		tag === 'select' ||
-		vueVersion < 3
-	) return 'value';
-
-	return 'modelValue';
+	return vueVersion < 3 ? 'value' : 'modelValue';
 }
 
 // TODO: track https://github.com/vuejs/vue-next/issues/3498

@@ -7,7 +7,7 @@ import { DiagnosticModel, FileSystemHost, LanguageServerPlugin, RuntimeEnvironme
 import { createSnapshots } from './snapshots';
 import { createWorkspaceProjects, rootTsConfigNames, sortTsConfigs } from './workspaceProjects';
 import * as path from 'typesafe-path';
-import { CancellactionTokenHost } from './cancellationPipe';
+import { CancellationTokenHost } from './cancellationPipe';
 
 export interface Workspaces extends ReturnType<typeof createWorkspaces> { }
 
@@ -22,7 +22,7 @@ export function createWorkspaces(
 	options: LanguageServerInitializationOptions,
 	documents: ReturnType<typeof createSnapshots>,
 	connection: vscode.Connection,
-	cancelTokenHost: CancellactionTokenHost,
+	cancelTokenHost: CancellationTokenHost,
 ) {
 
 	let semanticTokensReq = 0;
@@ -41,6 +41,9 @@ export function createWorkspaces(
 		if (tsConfigChanges.length) {
 			reloadDiagnostics();
 		}
+		else {
+			onDriveFileUpdated();
+		}
 	});
 	runtimeEnv.onDidChangeConfiguration?.(async () => {
 		onDriveFileUpdated();
@@ -51,17 +54,20 @@ export function createWorkspaces(
 		getProject,
 		reloadProject,
 		add: (rootUri: URI) => {
-			workspaces.set(rootUri.toString(), createWorkspaceProjects(
-				runtimeEnv,
-				plugins,
-				fsHost,
-				rootUri,
-				ts,
-				tsLocalized,
-				documents,
-				configurationHost,
-				cancelTokenHost,
-			));
+			if (!workspaces.has(rootUri.toString())) {
+				workspaces.set(rootUri.toString(), createWorkspaceProjects(
+					runtimeEnv,
+					plugins,
+					fsHost,
+					rootUri,
+					ts,
+					tsLocalized,
+					documents,
+					configurationHost,
+					cancelTokenHost,
+					options,
+				));
+			}
 		},
 		remove: (rootUri: URI) => {
 			const _workspace = workspaces.get(rootUri.toString());
@@ -113,7 +119,7 @@ export function createWorkspaces(
 
 		const req = ++documentUpdatedReq;
 		const delay = await configurationHost?.getConfiguration<number>('volar.diagnostics.delay') ?? 200;
-		const cancel = cancelTokenHost.createCancellactionToken({
+		const cancel = cancelTokenHost.createCancellationToken({
 			get isCancellationRequested() {
 				return req !== documentUpdatedReq;
 			},
@@ -141,6 +147,9 @@ export function createWorkspaces(
 		}
 
 		async function sendDocumentDiagnostics(uri: string, version: number, cancel: vscode.CancellationToken) {
+
+			if (cancel.isCancellationRequested)
+				return;
 
 			const project = (await getProject(uri))?.project;
 			if (!project) return;
@@ -179,9 +188,11 @@ export function createWorkspaces(
 		}
 
 		if (rootUris.length) {
+			const project = await (await workspaces.get(rootUris[0]))?.getInferredProject();
+			project?.tryAddFile(shared.getPathOfUri(uri));
 			return {
 				tsconfig: undefined,
-				project: await (await workspaces.get(rootUris[0]))?.getInferredProject(),
+				project,
 			};
 		}
 	}

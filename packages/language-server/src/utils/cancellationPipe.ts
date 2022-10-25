@@ -1,12 +1,12 @@
 import * as vscode from 'vscode-languageserver';
 
-export type CancellactionTokenHost = ReturnType<typeof createCancellactionTokenHost>;
+export type CancellationTokenHost = ReturnType<typeof createCancellationTokenHost>;
 
-export function createCancellactionTokenHost(_cancellationPipeName: string | undefined) {
+export function createCancellationTokenHost(_cancellationPipeName: string | undefined) {
 
 	if (_cancellationPipeName === undefined) {
 		return {
-			createCancellactionToken(original: vscode.CancellationToken) {
+			createCancellationToken(original: vscode.CancellationToken) {
 				return original;
 			},
 			getMtime() {
@@ -19,11 +19,11 @@ export function createCancellactionTokenHost(_cancellationPipeName: string | und
 	const fs: typeof import('fs') = require('fs');
 
 	return {
-		createCancellactionToken,
+		createCancellationToken,
 		getMtime,
 	};
 
-	function createCancellactionToken(original: vscode.CancellationToken) {
+	function createCancellationToken(original: vscode.CancellationToken) {
 		const mtime = getMtime();
 		const token: vscode.CancellationToken = {
 			get isCancellationRequested() {

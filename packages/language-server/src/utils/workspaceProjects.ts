@@ -3,12 +3,12 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'typesafe-path';
 import * as vscode from 'vscode-languageserver';
 import { createProject, Project } from './project';
-import { LanguageServerPlugin, RuntimeEnvironment, FileSystemHost } from '../types';
+import { LanguageServerPlugin, RuntimeEnvironment, FileSystemHost, LanguageServerInitializationOptions } from '../types';
 import { createSnapshots } from './snapshots';
 import { getInferredCompilerOptions } from './inferredCompilerOptions';
 import { URI } from 'vscode-uri';
 import { ConfigurationHost } from '@volar/language-service';
-import { CancellactionTokenHost } from './cancellationPipe';
+import { CancellationTokenHost } from './cancellationPipe';
 
 export const rootTsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 
@@ -21,7 +21,8 @@ export async function createWorkspaceProjects(
 	tsLocalized: ts.MapLike<string> | undefined,
 	documents: ReturnType<typeof createSnapshots>,
 	configHost: ConfigurationHost | undefined,
-	cancelTokenHost: CancellactionTokenHost,
+	cancelTokenHost: CancellationTokenHost,
+	serverOptions: LanguageServerInitializationOptions,
 ) {
 
 	let inferredProject: Project | undefined;
@@ -59,8 +60,10 @@ export async function createWorkspaceProjects(
 
 	return {
 		projects,
+		documentRegistry,
 		getProjectAndTsConfig,
 		getInferredProject,
+		getInferredProjectDontCreate: () => inferredProject,
 		reload: clearProjects,
 		dispose() {
 			clearProjects();
@@ -106,6 +109,7 @@ export async function createWorkspaceProjects(
 					configHost,
 					documentRegistry,
 					cancelTokenHost,
+					serverOptions,
 				);
 			})();
 		}
@@ -236,6 +240,7 @@ export async function createWorkspaceProjects(
 				configHost,
 				documentRegistry,
 				cancelTokenHost,
+				serverOptions,
 			);
 			projects.pathSet(rootUri, tsConfig, project);
 		}

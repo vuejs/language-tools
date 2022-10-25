@@ -36,6 +36,7 @@ const dataProvider: html.IHTMLDataProvider = {
 				{ name: 'src' },
 				{ name: 'lang' },
 				{ name: 'setup', valueSet: 'v' },
+				{ name: 'generic' },
 			];
 		}
 		else if (tag === 'style') {

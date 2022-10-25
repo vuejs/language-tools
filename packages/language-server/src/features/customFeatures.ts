@@ -2,13 +2,69 @@ import * as shared from '@volar/shared';
 import * as path from 'typesafe-path';
 import * as vscode from 'vscode-languageserver';
 import type { Workspaces } from '../utils/workspaces';
-import { GetMatchTsConfigRequest, ReloadProjectNotification, VerifyAllScriptsNotification, WriteVirtualFilesNotification, GetVirtualFileNamesRequest, GetVirtualFileRequest } from '../protocol';
+import { GetMatchTsConfigRequest, ReloadProjectNotification, VerifyAllScriptsNotification, WriteVirtualFilesNotification, GetVirtualFileNamesRequest, GetVirtualFileRequest, ReportStats } from '../protocol';
 import { forEachEmbeddeds } from '@volar/language-core';
 
 export function register(
 	connection: vscode.Connection,
 	projects: Workspaces,
 ) {
+	connection.onNotification(ReportStats.type, async () => {
+		for (const [rootUri, _workspace] of projects.workspaces) {
+
+			console.log('workspace: ' + rootUri);
+			const workspace = await _workspace;
+
+			console.log('documentRegistry stats: ' + workspace.documentRegistry.reportStats());
+			console.log('');
+
+			console.log('tsconfig: inferred');
+			const _inferredProject = workspace.getInferredProjectDontCreate();
+			if (_inferredProject) {
+				console.log('loaded: true');
+				const inferredProject = await _inferredProject;
+				console.log('largest 10 files:');
+				for (const script of [...inferredProject.scripts.values()]
+					.sort((a, b) => (b.snapshot?.getLength() ?? 0) - (a.snapshot?.getLength() ?? 0))
+					.slice(0, 10)
+				) {
+					console.log('  - ' + script.fileName);
+					console.log(`    size: ${script.snapshot?.getLength()}`);
+				}
+				console.log('files:');
+				for (const script of inferredProject.scripts.values()) {
+					console.log('  - ' + script.fileName);
+					console.log(`    size: ${script.snapshot?.getLength()}`);
+					console.log(`    ref counts: "${(workspace.documentRegistry as any).getLanguageServiceRefCounts?.(script.fileName, inferredProject.languageServiceHost.getScriptKind?.(script.fileName))})"`);
+				}
+			}
+			else {
+				console.log('loaded: false');
+			}
+			console.log('');
+
+			for (const _project of workspace.projects.values()) {
+				const project = await _project;
+				console.log('tsconfig: ' + project.tsConfig);
+				console.log('loaded: ' + !!project.getLanguageServiceDontCreate());
+				console.log('largest 10 files:');
+				for (const script of [...project.scripts.values()]
+					.sort((a, b) => (b.snapshot?.getLength() ?? 0) - (a.snapshot?.getLength() ?? 0))
+					.slice(0, 10)
+				) {
+					console.log('  - ' + script.fileName);
+					console.log(`    size: ${script.snapshot?.getLength()}`);
+				}
+				console.log('files:');
+				for (const script of project.scripts.values()) {
+					console.log('  - ' + script.fileName);
+					console.log(`    size: ${script.snapshot?.getLength()}`);
+					console.log(`    ref counts: "${(workspace.documentRegistry as any).getLanguageServiceRefCounts?.(script.fileName, project.languageServiceHost.getScriptKind?.(script.fileName))})"`);
+				}
+			}
+			console.log('');
+		}
+	});
 	connection.onRequest(GetMatchTsConfigRequest.type, async params => {
 		const project = (await projects.getProject(params.uri));
 		if (project) {

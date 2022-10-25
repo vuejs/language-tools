@@ -1,12 +1,15 @@
 import type * as html from 'vscode-html-languageservice';
+import { MappingKind } from '../baseParse';
 import type { PugDocument } from '../pugDocument';
 
 export function register(htmlLs: html.LanguageService) {
 	return (pugDoc: PugDocument, initialOffset = 0) => {
 
 		const htmlOffset = pugDoc.sourceMap.mappings
-			.find(mapping => initialOffset >= mapping.sourceRange[0] && !mapping.data?.isEmptyTagCompletion)
+			.filter(mapping => mapping.sourceRange[0] >= initialOffset && mapping.data !== MappingKind.EmptyTagCompletion)
+			.sort((a, b) => a.generatedRange[0] - b.generatedRange[0])[0]
 			?.generatedRange[0];
+
 		if (htmlOffset === undefined)
 			return;
 

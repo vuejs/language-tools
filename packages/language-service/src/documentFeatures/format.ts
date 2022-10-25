@@ -243,26 +243,27 @@ export function register(context: DocumentServiceRuntimeContext) {
 				if (!edits.length)
 					return edits;
 
-				let newText = TextDocument.applyEdits(formatDocument, edits);
-
 				if (initialIndentBracket) {
+					let newText = TextDocument.applyEdits(formatDocument, edits);
 					newText = newText.substring(
 						newText.indexOf(initialIndentBracket[0]) + initialIndentBracket[0].length,
 						newText.lastIndexOf(initialIndentBracket[1]),
 					);
+					if (newText === document.getText()) {
+						edits = [];
+					}
+					else {
+						edits = [{
+							newText,
+							range: {
+								start: document.positionAt(0),
+								end: document.positionAt(document.getText().length),
+							},
+						}];
+					}
 				}
 
-				if (newText === document.getText()) {
-					return [];
-				}
-
-				return [{
-					range: {
-						start: document.positionAt(0),
-						end: document.positionAt(document.getText().length),
-					},
-					newText,
-				}];
+				return edits;
 			}
 		}
 

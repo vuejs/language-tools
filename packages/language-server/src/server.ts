@@ -6,7 +6,7 @@ import { createDocumentServiceHost } from './utils/documentServiceHost';
 import { createSnapshots } from './utils/snapshots';
 import { createWorkspaces } from './utils/workspaces';
 import { setupSemanticCapabilities, setupSyntacticCapabilities } from './registerFeatures';
-import { createCancellactionTokenHost } from './utils/cancellationPipe';
+import { createCancellationTokenHost } from './utils/cancellationPipe';
 
 export function createCommonLanguageServer(
 	connection: vscode.Connection,
@@ -28,7 +28,7 @@ export function createCommonLanguageServer(
 	connection.onInitialize(async _params => {
 
 		params = _params;
-		options = params.initializationOptions as any;
+		options = params.initializationOptions;
 		plugins = _plugins.map(plugin => plugin(options));
 
 		if (params.capabilities.workspace?.workspaceFolders && params.workspaceFolders) {
@@ -52,7 +52,7 @@ export function createCommonLanguageServer(
 		const serverMode = options.serverMode ?? ServerMode.Semantic;
 
 		setupSyntacticCapabilities(params.capabilities, result.capabilities);
-		await createDocumenntServiceHost();
+		await _createDocumentServiceHost();
 
 		if (serverMode === ServerMode.Semantic) {
 			setupSemanticCapabilities(params.capabilities, result.capabilities, options, plugins);
@@ -89,10 +89,27 @@ export function createCommonLanguageServer(
 				}
 			});
 		}
+
+		if (params.capabilities.workspace?.didChangeWatchedFiles?.dynamicRegistration) {
+			connection.client.register(vscode.DidChangeWatchedFilesNotification.type, {
+				watchers: [
+					...plugins.map(plugin => plugin.extraFileExtensions.map(ext => ({ globPattern: `**/*.${ext.extension}` }))).flat(),
+					{ globPattern: '**/*.js' },
+					{ globPattern: '**/*.cjs' },
+					{ globPattern: '**/*.mjs' },
+					{ globPattern: '**/*.ts' },
+					{ globPattern: '**/*.cts' },
+					{ globPattern: '**/*.mts' },
+					{ globPattern: '**/*.jsx' },
+					{ globPattern: '**/*.tsx' },
+					{ globPattern: '**/*.json' },
+				]
+			});
+		}
 	});
 	connection.listen();
 
-	async function createDocumenntServiceHost() {
+	async function _createDocumentServiceHost() {
 
 		const ts = runtimeEnv.loadTypescript(options.typescript.tsdk);
 
@@ -124,7 +141,7 @@ export function createCommonLanguageServer(
 		fsHost = runtimeEnv.createFileSystemHost(ts, params.capabilities);
 
 		const tsLocalized = params.locale ? runtimeEnv.loadTypescriptLocalized(options.typescript.tsdk, params.locale) : undefined;
-		const cancelTokenHost = createCancellactionTokenHost(options.cancellationPipeName);
+		const cancelTokenHost = createCancellationTokenHost(options.cancellationPipeName);
 		const _projects = createWorkspaces(
 			runtimeEnv,
 			plugins,

@@ -27,15 +27,25 @@ export function createParsedCommandLine(
 	extraFileExtensions: ts.FileExtensionInfo[],
 	extendsSet = new Set<string>(),
 ): ParsedCommandLine {
+	try {
+		const config = ts.readJsonConfigFile(tsConfigPath, parseConfigHost.readFile);
+		const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(tsConfigPath), {}, tsConfigPath, undefined, extraFileExtensions);
+		// fix https://github.com/johnsoncodehk/volar/issues/1786
+		// https://github.com/microsoft/TypeScript/issues/30457
+		// patching ts server broke with outDir + rootDir + composite/incremental
+		content.options.outDir = undefined;
 
-	const config = ts.readJsonConfigFile(tsConfigPath, parseConfigHost.readFile);
-	const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(tsConfigPath), {}, tsConfigPath, undefined, extraFileExtensions);
-	// fix https://github.com/johnsoncodehk/volar/issues/1786
-	// https://github.com/microsoft/TypeScript/issues/30457
-	// patching ts server broke with outDir + rootDir + composite/incremental
-	content.options.outDir = undefined;
-
-	return createParsedCommandLineBase(ts, parseConfigHost, content, tsConfigPath, extraFileExtensions, extendsSet);
+		return createParsedCommandLineBase(ts, parseConfigHost, content, tsConfigPath, extraFileExtensions, extendsSet);
+	}
+	catch (err) {
+		console.log('Failed to resolve tsconfig path:', tsConfigPath);
+		return {
+			fileNames: [],
+			options: {},
+			vueOptions: {},
+			errors: [],
+		};
+	}
 }
 
 function createParsedCommandLineBase(
@@ -47,7 +57,7 @@ function createParsedCommandLineBase(
 	extendsSet: Set<string>,
 ): ParsedCommandLine {
 
-	let baseVueOptions = {};
+	let vueOptions = {};
 	const folder = path.dirname(tsConfigPath);
 
 	extendsSet.add(tsConfigPath);
@@ -56,7 +66,7 @@ function createParsedCommandLineBase(
 		try {
 			const extendsPath = require.resolve(content.raw.extends, { paths: [folder] });
 			if (!extendsSet.has(extendsPath)) {
-				baseVueOptions = createParsedCommandLine(ts, parseConfigHost, extendsPath, extraFileExtensions, extendsSet).vueOptions;
+				vueOptions = createParsedCommandLine(ts, parseConfigHost, extendsPath, extraFileExtensions, extendsSet).vueOptions;
 			}
 		}
 		catch (error) {
@@ -67,8 +77,8 @@ function createParsedCommandLineBase(
 	return {
 		...content,
 		vueOptions: {
-			...baseVueOptions,
-			...resolveVueCompilerOptionsWorker(content.raw.vueCompilerOptions ?? {}, folder),
+			...vueOptions,
+			...content.raw.vueCompilerOptions,
 		},
 	};
 }
@@ -79,10 +89,11 @@ export function resolveVueCompilerOptions(vueOptions: VueCompilerOptions): Resol
 		...vueOptions,
 
 		target,
+		extensions: vueOptions.extensions ?? ['.vue'],
 		jsxTemplates: vueOptions.jsxTemplates ?? false,
 		strictTemplates: vueOptions.strictTemplates ?? false,
 		skipTemplateCodegen: vueOptions.skipTemplateCodegen ?? false,
-		dataAttributes: vueOptions.dataAttributes ?? ['data-*'],
+		dataAttributes: vueOptions.dataAttributes ?? [],
 		htmlAttributes: vueOptions.htmlAttributes ?? ['aria-*'],
 		optionsWrapper: vueOptions.optionsWrapper ?? (
 			target >= 2.7
@@ -95,32 +106,23 @@ export function resolveVueCompilerOptions(vueOptions: VueCompilerOptions): Resol
 
 		// experimental
 		experimentalRuntimeMode: vueOptions.experimentalRuntimeMode ?? 'runtime-dom',
-		experimentalTemplateCompilerOptions: vueOptions.experimentalTemplateCompilerOptions ?? {},
-		experimentalTemplateCompilerOptionsRequirePath: vueOptions.experimentalTemplateCompilerOptionsRequirePath ?? undefined,
 		experimentalResolveStyleCssClasses: vueOptions.experimentalResolveStyleCssClasses ?? 'scoped',
 		experimentalRfc436: vueOptions.experimentalRfc436 ?? false,
+		// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
+		// https://v3.vuejs.org/guide/forms.html#basic-usage
+		experimentalModelPropName: vueOptions.experimentalModelPropName ?? {
+			'': {
+				'input': { type: 'radio' },
+			},
+			'checked': {
+				'input': { type: 'checkbox' },
+			},
+			'value': {
+				'input': true,
+				'textarea': true,
+				'select': true,
+			},
+		},
+		experimentalUseElementAccessInTemplate: vueOptions.experimentalUseElementAccessInTemplate ?? false,
 	};
-}
-
-function resolveVueCompilerOptionsWorker(rawOptions: {
-	[key: string]: any,
-	experimentalTemplateCompilerOptionsRequirePath?: string,
-}, rootPath: string) {
-
-	const result = { ...rawOptions };
-
-	let templateOptionsPath = rawOptions.experimentalTemplateCompilerOptionsRequirePath;
-	if (templateOptionsPath) {
-		if (!path.isAbsolute(templateOptionsPath)) {
-			templateOptionsPath = require.resolve(templateOptionsPath, { paths: [rootPath] });
-		}
-		try {
-			result.experimentalTemplateCompilerOptions = require(templateOptionsPath).default;
-		} catch (error) {
-			console.warn('Failed to require "experimentalTemplateCompilerOptionsRequirePath":', templateOptionsPath);
-			console.error(error);
-		}
-	}
-
-	return result;
 }

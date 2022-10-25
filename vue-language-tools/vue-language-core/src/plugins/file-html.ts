@@ -29,7 +29,7 @@ const plugin: VueLanguagePlugin = () => {
 
 				let templateContent = content;
 
-				const sfcBlockReg = /\<(script|style)([\s\S]*?)\>([\s\S]*?)\<\/\1\>/g;
+				const sfcBlockReg = /\<(script|style)\b([\s\S]*?)\>([\s\S]*?)\<\/\1\>/g;
 				const langReg = /\blang\s*=\s*(['\"]?)(\S*)\b\1/;
 
 				for (const match of content.matchAll(sfcBlockReg)) {

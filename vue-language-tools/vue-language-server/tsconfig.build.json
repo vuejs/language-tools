@@ -28,5 +28,8 @@
 		{
 			"path": "../vue-language-service/tsconfig.build.json"
 		},
+		{
+			"path": "../vue-component-meta/tsconfig.build.json"
+		},
 	]
 }

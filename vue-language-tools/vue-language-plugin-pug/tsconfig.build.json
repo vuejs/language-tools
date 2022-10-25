@@ -17,6 +17,9 @@
 			"path": "../../packages/pug-language-service/tsconfig.build.json"
 		},
 		{
+			"path": "../../packages/source-map/tsconfig.build.json"
+		},
+		{
 			"path": "../vue-language-core/tsconfig.build.json"
 		},
 	],

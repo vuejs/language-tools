@@ -4,9 +4,10 @@ import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-service';
 import * as vue2 from '@volar/vue-language-core';
 import * as nameCasing from '@volar/vue-language-service';
-import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest, GetVueCompilerOptionsRequest } from './protocol';
+import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest, GetVueCompilerOptionsRequest, GetComponentMeta } from './protocol';
 import { VueServerInitializationOptions } from './types';
 import type * as ts from 'typescript/lib/tsserverlibrary';
+import * as meta from 'vue-component-meta';
 
 const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageServiceHost> = (initOptions) => {
 
@@ -20,17 +21,21 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 		extraFileExtensions.push({ extension: 'md', isMixedContent: true, scriptKind: 7 });
 	}
 
-	const exts = extraFileExtensions.map(ext => '.' + ext.extension);
+	if (initOptions.additionalExtensions) {
+		for (const additionalExtension of initOptions.additionalExtensions) {
+			extraFileExtensions.push({ extension: additionalExtension, isMixedContent: true, scriptKind: 7 });
+		}
+	}
 
 	return {
 		extraFileExtensions,
 		semanticService: {
-			semanticTokenLegend: vue.getSemanticTokenLegend(),
 			resolveLanguageServiceHost(ts, sys, tsConfig, host) {
 				let vueOptions: vue.VueCompilerOptions = {};
 				if (typeof tsConfig === 'string') {
 					vueOptions = vue2.createParsedCommandLine(ts, sys, tsConfig, []).vueOptions;
 				}
+				vueOptions.extensions = getVueExts(vueOptions.extensions ?? ['.vue']);
 				return {
 					...host,
 					getVueCompilationSettings: () => vueOptions,
@@ -42,7 +47,6 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 					host.getCurrentDirectory(),
 					host.getCompilationSettings(),
 					host.getVueCompilationSettings(),
-					exts,
 				);
 				return [vueLanguageModule];
 			},
@@ -71,14 +75,32 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 					const languageService = await getService(params.textDocument.uri);
 					return nameCasing.convertAttrName(languageService.context, params.textDocument.uri, params.casing);
 				});
+
+				const checkers = new WeakMap<embedded.LanguageServiceHost, meta.ComponentMetaChecker>();
+
+				connection.onRequest(GetComponentMeta.type, async params => {
+					const languageService = await getService(params.uri);
+					let checker = checkers.get(languageService.context.host);
+					if (!checker) {
+						checker = meta.baseCreate(
+							languageService.context.host as vue.LanguageServiceHost,
+							{},
+							languageService.context.host.getCurrentDirectory() + '/tsconfig.json.global.vue',
+							languageService.context.pluginContext.typescript.module,
+						);
+						checkers.set(languageService.context.host, checker);
+					}
+					return checker.getComponentMeta(shared.getPathOfUri(params.uri));
+				});
 			},
 		},
 		syntacticService: {
 			getLanguageModules(ts, env) {
 				const vueLanguagePlugins = vue2.getDefaultVueLanguagePlugins(ts, shared.getPathOfUri(env.rootUri.toString()), {}, {}, []);
+				const vueExts = getVueExts(['.vue']);
 				const vueLanguageModule: embedded.LanguageModule = {
 					createSourceFile(fileName, snapshot) {
-						if (exts.some(ext => fileName.endsWith(ext))) {
+						if (vueExts.some(ext => fileName.endsWith(ext))) {
 							return new vue2.VueSourceFile(fileName, snapshot, ts, vueLanguagePlugins);
 						}
 					},
@@ -98,6 +120,14 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 			},
 		},
 	};
+
+	function getVueExts(baseExts: string[]) {
+		const set = new Set([
+			...baseExts,
+			...extraFileExtensions.map(ext => '.' + ext.extension),
+		]);
+		return [...set];
+	}
 };
 
 export = plugin;

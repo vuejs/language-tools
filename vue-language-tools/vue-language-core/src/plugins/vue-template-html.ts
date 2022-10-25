@@ -8,7 +8,7 @@ interface Loc {
 }
 type Node = CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.ExpressionNode | CompilerDOM.AttributeNode | CompilerDOM.DirectiveNode;
 
-const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions }) => {
+const plugin: VueLanguagePlugin = ({ modules }) => {
 
 	return {
 
@@ -20,10 +20,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions }) => {
 
 				const compiler = modules['@vue/compiler-dom'];
 
-				return compiler.compile(template, {
-					...options,
-					...vueCompilerOptions.experimentalTemplateCompilerOptions,
-				});
+				return compiler.compile(template, options);
 			}
 		},
 
