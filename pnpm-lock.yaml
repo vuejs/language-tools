@@ -138,7 +138,7 @@ importers:
       esbuild: 0.15.12
       esbuild-plugin-copy: 1.6.0_esbuild@0.15.12
       esbuild-visualizer: 0.3.1
-      ovsx: 0.5.1
+      ovsx: 0.5.2
       path-browserify: 1.0.1
       punycode: 2.1.1
       semver: 7.3.8
@@ -3102,8 +3102,8 @@ packages:
     dev: false
     optional: true
 
-  /follow-redirects/1.15.1:
-    resolution: {integrity: sha512-yLAMQs+k0b2m7cVxpS1VKJVvoz7SS9Td1zss3XRwXj+ZDH00RJgnuLx7E44wx02kQLrdM3aOOy+FpzS7+8OizA==}
+  /follow-redirects/1.15.2:
+    resolution: {integrity: sha512-VQLG33o04KaQ8uYi2tVNbdrWp1QWxNNea+nmIB4EVM28v0hmP17z7aG1+wAkNzVq4KeXTq3221ye5qTJP91JwA==}
     engines: {node: '>=4.0'}
     peerDependencies:
       debug: '*'
@@ -4846,13 +4846,13 @@ packages:
     dev: false
     optional: true
 
-  /ovsx/0.5.1:
-    resolution: {integrity: sha512-3OWq0l7DuVHi2bd2aQe5+QVQlFIqvrcw3/2vGXL404L6Tr+R4QHtzfnYYghv8CCa85xJHjU0RhcaC7pyXkAUbg==}
+  /ovsx/0.5.2:
+    resolution: {integrity: sha512-UbLultRCk46WddeA0Cly4hoRhzBJUiLgbIEViXlgOvV54LbsppClDkMLoCevUUBHoiNdMX2NuiSgURAEXgCZdw==}
     engines: {node: '>= 14'}
     hasBin: true
     dependencies:
       commander: 6.2.1
-      follow-redirects: 1.15.1
+      follow-redirects: 1.15.2
       is-ci: 2.0.0
       leven: 3.1.0
       tmp: 0.2.1
