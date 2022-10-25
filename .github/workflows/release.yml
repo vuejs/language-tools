@@ -1,0 +1,27 @@
+name: release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 7
+
+      - run: pnpm install --frozen-lockfile --filter "{extensions/vscode-vue-language-features}..."
+      - run: cd extensions/vscode-vue-language-features
+      - run: pnpm run prepack:node
+      - run: pnpm ovsx publish
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
