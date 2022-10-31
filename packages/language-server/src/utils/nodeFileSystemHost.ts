@@ -1,8 +1,8 @@
-import * as shared from '@volar/shared';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import { FileSystem, FileSystemHost } from '../types';
 import { IterableWeakSet } from './iterableWeakSet';
+import { createUriMap } from './uriMap';
 
 let currentCwd = '';
 
@@ -11,7 +11,7 @@ export function createNodeFileSystemHost(
 	capabilities: vscode.ClientCapabilities,
 ): FileSystemHost {
 
-	const instances = shared.createUriMap<FileSystem>();
+	const instances = createUriMap<FileSystem>();
 	const onDidChangeWatchedFilesCb = new Set<(params: vscode.DidChangeWatchedFilesParams, reason: 'lsp' | 'web-cache-updated') => void>();
 	const caches = new IterableWeakSet<Map<string, boolean>>();
 

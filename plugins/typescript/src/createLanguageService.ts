@@ -46,7 +46,7 @@ export function createLanguageService(
 	rootUri: URI,
 ) {
 
-	const documents = shared.createUriMap<[string, TextDocument]>();
+	const documents = new Map<string, [string, TextDocument]>();
 
 	return {
 		findDefinition: definitions.register(rootUri, languageService, getTextDocument),
@@ -81,15 +81,15 @@ export function createLanguageService(
 	function getTextDocument(uri: string) {
 		const fileName = shared.getPathOfUri(uri);
 		const version = host.getScriptVersion(fileName);
-		const oldDoc = documents.uriGet(uri);
+		const oldDoc = documents.get(uri);
 		if (!oldDoc || oldDoc[0] !== version) {
 			const scriptSnapshot = host.getScriptSnapshot(fileName);
 			if (scriptSnapshot) {
 				const scriptText = scriptSnapshot.getText(0, scriptSnapshot.getLength());
 				const document = TextDocument.create(uri, shared.syntaxToLanguageId(uri.substring(uri.lastIndexOf('.') + 1)), oldDoc ? oldDoc[1].version + 1 : 0, scriptText);
-				documents.uriSet(uri, [version, document]);
+				documents.set(uri, [version, document]);
 			}
 		}
-		return documents.uriGet(uri)?.[1];
+		return documents.get(uri)?.[1];
 	}
 }

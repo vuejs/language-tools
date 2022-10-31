@@ -2,6 +2,7 @@ import * as shared from '@volar/shared';
 import { transformLocations } from '@volar/transforms';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
+import { getOverlapRange } from '../utils/common';
 import * as dedupe from '../utils/dedupe';
 import { languageFeatureWorker } from '../utils/featureWorkers';
 import { embeddedEditToSourceEdit } from './rename';
@@ -50,7 +51,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				let maxEnd: number | undefined;
 
 				for (const mapping of sourceMap.mappings) {
-					const overlapRange = shared.getOverlapRange2(offsetRange.start, offsetRange.end, mapping.sourceRange[0], mapping.sourceRange[1]);
+					const overlapRange = getOverlapRange(offsetRange.start, offsetRange.end, mapping.sourceRange[0], mapping.sourceRange[1]);
 					if (overlapRange) {
 						const start = sourceMap.toGeneratedOffset(overlapRange.start)?.[0];
 						const end = sourceMap.toGeneratedOffset(overlapRange.end)?.[0];

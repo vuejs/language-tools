@@ -11,6 +11,7 @@ import { ConfigurationHost } from '@volar/language-service';
 import * as html from 'vscode-html-languageservice';
 import * as path from 'typesafe-path';
 import { CancellationTokenHost } from './cancellationPipe';
+import { createUriMap } from './uriMap';
 
 export interface Project extends ReturnType<typeof createProject> { }
 
@@ -37,7 +38,7 @@ export async function createProject(
 	let vueLs: embeddedLS.LanguageService | undefined;
 	let parsedCommandLine = createParsedCommandLine(ts, sys, shared.getPathOfUri(rootUri.toString()), tsConfig, plugins);
 
-	const scripts = shared.createUriMap<{
+	const scripts = createUriMap<{
 		version: number,
 		fileName: string,
 		snapshot: ts.IScriptSnapshot | undefined,

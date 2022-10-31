@@ -146,6 +146,16 @@ function isValidFunctionCompletionContext(
 	// Don't complete function call if there is already something that looks like a function call
 	// https://github.com/microsoft/vscode/issues/18131
 	const position = document.positionAt(offset);
-	const after = shared.getLineText(document, position.line).slice(position.character);
+	const after = getLineText(document, position.line).slice(position.character);
 	return after.match(/^[a-z_$0-9]*\s*\(/gi) === null;
+}
+
+export function getLineText(document: TextDocument, line: number) {
+	const endOffset = document.offsetAt({ line: line + 1, character: 0 });
+	const end = document.positionAt(endOffset);
+	const text = document.getText({
+		start: { line: line, character: 0 },
+		end: end.line === line ? end : document.positionAt(endOffset - 1),
+	});
+	return text;
 }

@@ -9,6 +9,7 @@ import { getInferredCompilerOptions } from './inferredCompilerOptions';
 import { URI } from 'vscode-uri';
 import { ConfigurationHost } from '@volar/language-service';
 import { CancellationTokenHost } from './cancellationPipe';
+import { createUriMap } from './uriMap';
 
 export const rootTsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 
@@ -29,7 +30,7 @@ export async function createWorkspaceProjects(
 
 	const sys = fsHost.getWorkspaceFileSystem(rootUri);
 	const documentRegistry = ts.createDocumentRegistry(sys.useCaseSensitiveFileNames, shared.normalizeFileName(rootUri.fsPath));
-	const projects = shared.createUriMap<Project>();
+	const projects = createUriMap<Project>();
 	const rootTsConfigs = new Set(sys.readDirectory(rootUri.fsPath, rootTsConfigNames, undefined, ['**/*']) as path.OsPath[]);
 	const disposeWatch = fsHost.onDidChangeWatchedFiles(async (params, reason) => {
 		const disposes: Promise<any>[] = [];

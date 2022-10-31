@@ -1,5 +1,4 @@
 import { Segment, toString } from 'muggle-string';
-import * as shared from '@volar/shared';
 import { buildMappings } from '@volar/source-map';
 import * as pugLex from 'pug-lexer';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -220,12 +219,12 @@ export function baseParse(pugCode: string) {
 		for (const token of tokens) {
 			if (token.type === 'newline' || token.type === 'outdent') {
 				let currentLine = token.loc.start.line - 2;
-				let prevLine = shared.getLineText(pugTextDocument, currentLine);
+				let prevLine = getLineText(pugTextDocument, currentLine);
 				while (prevLine.trim() === '') {
 					ends.push(pugTextDocument.offsetAt({ line: currentLine + 1, character: 0 }) - 1);
 					if (currentLine <= 0) break;
 					currentLine--;
-					prevLine = shared.getLineText(pugTextDocument, currentLine);
+					prevLine = getLineText(pugTextDocument, currentLine);
 				}
 			}
 		}
@@ -369,4 +368,14 @@ export interface BlockCommentNode {
 	buffer: boolean,
 	line: number,
 	column: number,
+}
+
+function getLineText(document: TextDocument, line: number) {
+	const endOffset = document.offsetAt({ line: line + 1, character: 0 });
+	const end = document.positionAt(endOffset);
+	const text = document.getText({
+		start: { line: line, character: 0 },
+		end: end.line === line ? end : document.positionAt(endOffset - 1),
+	});
+	return text;
 }

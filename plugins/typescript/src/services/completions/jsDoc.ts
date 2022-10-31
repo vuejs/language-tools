@@ -3,6 +3,7 @@ import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import * as nls from 'vscode-nls';
+import { getLineText } from './resolve';
 
 const localize = nls.loadMessageBundle(); // TODO: not working
 
@@ -53,7 +54,7 @@ function createCompletionItem(document: TextDocument, position: vscode.Position,
 	item.sortText = '\0';
 	item.insertTextFormat = vscode.InsertTextFormat.Snippet;
 
-	const line = shared.getLineText(document, position.line);
+	const line = getLineText(document, position.line);
 	const prefix = line.slice(0, position.character).match(/\/\**\s*$/);
 	const suffix = line.slice(position.character).match(/^\s*\**\//);
 	const start = vscode.Position.create(position.line, position.character + (prefix ? -prefix[0].length : 0));
@@ -70,7 +71,7 @@ function isPotentiallyValidDocCompletionPosition(
 ): boolean {
 	// Only show the JSdoc completion when the everything before the cursor is whitespace
 	// or could be the opening of a comment
-	const line = shared.getLineText(document, position.line);
+	const line = getLineText(document, position.line);
 	const prefix = line.slice(0, position.character);
 	if (!/^\s*$|\/\*\*\s*$|^\s*\/\*\*+\s*$/.test(prefix)) {
 		return false;

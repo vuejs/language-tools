@@ -21,7 +21,7 @@ importers:
       '@types/node': 18.11.8
       typescript: 4.9.1-beta
       vite: 3.2.2
-      vitest: 0.24.3
+      vitest: 0.24.4
 
   examples/svelte-language-core:
     specifiers:
@@ -242,13 +242,9 @@ importers:
   packages/shared:
     specifiers:
       typesafe-path: ^0.2.2
-      vscode-languageserver-protocol: ^3.17.2
-      vscode-languageserver-textdocument: ^1.0.7
       vscode-uri: ^3.0.6
     dependencies:
       typesafe-path: 0.2.2
-      vscode-languageserver-protocol: 3.17.2
-      vscode-languageserver-textdocument: 1.0.7
       vscode-uri: 3.0.6
 
   packages/source-map:
@@ -282,12 +278,10 @@ importers:
 
   plugins/css:
     specifiers:
-      '@volar/shared': 1.0.9
       vscode-css-languageservice: ^6.1.1
       vscode-languageserver-protocol: ^3.17.2
       vscode-languageserver-textdocument: ^1.0.7
     dependencies:
-      '@volar/shared': link:../../packages/shared
       vscode-css-languageservice: 6.1.1
       vscode-languageserver-protocol: 3.17.2
       vscode-languageserver-textdocument: 1.0.7
@@ -6063,8 +6057,8 @@ packages:
     dev: false
     optional: true
 
-  /tinybench/2.3.0:
-    resolution: {integrity: sha512-zs1gMVBwyyG2QbVchYIbnabRhMOCGvrwZz/q+SV+LIMa9q5YDQZi2kkI6ZRqV2Bz7ba1uvrc7ieUoE4KWnGeKg==}
+  /tinybench/2.3.1:
+    resolution: {integrity: sha512-hGYWYBMPr7p4g5IarQE7XhlyWveh1EKhy4wUBS1LrHXCKYgvz+4/jCqgmJqZxxldesn05vccrtME2RLLZNW7iA==}
     dev: true
 
   /tinypool/0.3.0:
@@ -6376,8 +6370,8 @@ packages:
     dev: false
     optional: true
 
-  /vitest/0.24.3:
-    resolution: {integrity: sha512-aM0auuPPgMSstWvr851hB74g/LKaKBzSxcG3da7ejfZbx08Y21JpZmbmDYrMTCGhVZKqTGwzcnLMwyfz2WzkhQ==}
+  /vitest/0.24.4:
+    resolution: {integrity: sha512-4ratHSyVEJPtBLV00uhL4Wj3Pmandc9rsxUkE0q9peNOfaOgGF4lEepdkaXGRi9AGFKr1GRVtjGOJ6Fp2lCpEg==}
     engines: {node: '>=v14.16.0'}
     hasBin: true
     peerDependencies:
@@ -6405,7 +6399,7 @@ packages:
       debug: 4.3.4
       local-pkg: 0.4.2
       strip-literal: 0.4.2
-      tinybench: 2.3.0
+      tinybench: 2.3.1
       tinypool: 0.3.0
       tinyspy: 1.0.2
       vite: 3.2.2

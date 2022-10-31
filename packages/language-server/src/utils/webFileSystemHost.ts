@@ -1,4 +1,3 @@
-import * as shared from '@volar/shared';
 import * as path from 'typesafe-path';
 import { FileType } from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver';
@@ -6,6 +5,7 @@ import { URI } from 'vscode-uri';
 import { FsReadDirectoryRequest, FsReadFileRequest, FsStatRequest } from '../protocol';
 import { FileSystem, FileSystemHost } from '../types';
 import { matchFiles } from './ts/utilities';
+import { createUriMap } from './uriMap';
 
 let currentCwd = '/';
 
@@ -18,7 +18,7 @@ interface Dir {
 
 export function createWebFileSystemHost(): FileSystemHost {
 
-	const instances = shared.createUriMap<FileSystem>();
+	const instances = createUriMap<FileSystem>();
 	const onDidChangeWatchedFilesCb = new Set<(params: vscode.DidChangeWatchedFilesParams, reason: 'lsp' | 'web-cache-updated') => void>();
 	const root: Dir = {
 		dirs: new Map(),

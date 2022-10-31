@@ -1,6 +1,6 @@
-import { getWordRange } from '@volar/shared';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
+import { getWordRange } from '../utils/common';
 import { languageFeatureWorker } from '../utils/featureWorkers';
 
 // https://github.com/microsoft/vscode/blob/dcf27391b7dd7c1cece483806af75b4f87188e70/extensions/html/language-configuration.json#L35

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
-import * as shared from '@volar/shared';
 import { languageFeatureWorker } from '../utils/featureWorkers';
+import { isInsideRange } from '../utils/common';
 
 export function register(context: LanguageServiceRuntimeContext) {
 
@@ -26,7 +26,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			},
 			hovers => ({
 				contents: hovers.map(getHoverTexts).flat(),
-				range: hovers.find(hover => hover.range && shared.isInsideRange(hover.range, { start: position, end: position }))?.range ?? hovers[0].range,
+				range: hovers.find(hover => hover.range && isInsideRange(hover.range, { start: position, end: position }))?.range ?? hovers[0].range,
 			}),
 		);
 	};

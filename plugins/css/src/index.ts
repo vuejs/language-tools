@@ -1,5 +1,4 @@
 import type { LanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
-import * as shared from '@volar/shared';
 import * as css from 'vscode-css-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -54,7 +53,7 @@ export default function (): LanguageServicePlugin {
 						return;
 
 					const wordPattern = wordPatterns[document.languageId] ?? wordPatterns.css;
-					const wordStart = shared.getWordRange(wordPattern, position, document)?.start; // TODO: use end?
+					const wordStart = getWordRange(wordPattern, position, document)?.start; // TODO: use end?
 					const wordRange = vscode.Range.create(wordStart ?? position, position);
 					const settings = await context.env.configurationHost?.getConfiguration<css.LanguageSettings>(document.languageId, document.uri);
 					const cssResult = await cssLs.doComplete2(document, position, stylesheet, context.env.documentContext, settings?.completion);
@@ -75,7 +74,7 @@ export default function (): LanguageServicePlugin {
 				return worker(document, (stylesheet, cssLs) => {
 
 					const wordPattern = wordPatterns[document.languageId] ?? wordPatterns.css;
-					const wordRange = shared.getWordRange(wordPattern, position, document);
+					const wordRange = getWordRange(wordPattern, position, document);
 
 					return wordRange;
 				});
@@ -297,3 +296,30 @@ export default function (): LanguageServicePlugin {
 		return callback(stylesheet, cssLs);
 	}
 };
+
+// track https://github.com/microsoft/vscode-css-languageservice/pull/301
+function getWordRange(wordPattern: RegExp, position: vscode.Position, document: TextDocument): vscode.Range | undefined {
+	const lineStart: vscode.Position = {
+		line: position.line,
+		character: 0,
+	};
+	const lineEnd: vscode.Position = {
+		line: position.line + 1,
+		character: 0,
+	};
+	const offset = document.offsetAt(position);
+	const lineStartOffset = document.offsetAt(lineStart);
+	const lineText = document.getText({ start: lineStart, end: lineEnd });
+	for (const match of lineText.matchAll(wordPattern)) {
+		if (match.index === undefined) continue;
+		const matchStart = match.index + lineStartOffset;
+		const matchEnd = matchStart + match[0].length;
+		if (offset >= matchStart && offset <= matchEnd) {
+			return {
+				start: document.positionAt(matchStart),
+				end: document.positionAt(matchEnd),
+			};
+		}
+	}
+	return undefined;
+}

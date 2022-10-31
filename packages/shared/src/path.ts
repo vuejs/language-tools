@@ -1,8 +1,7 @@
 import { URI } from 'vscode-uri';
-import type { DocumentUri } from 'vscode-languageserver-textdocument';
 import * as path from 'typesafe-path';
 
-export function getPathOfUri(uri: DocumentUri) {
+export function getPathOfUri(uri: string) {
 	return URI.parse(uri).fsPath.replace(/\\/g, '/') as path.PosixPath;
 }
 
