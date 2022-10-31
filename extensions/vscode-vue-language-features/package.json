@@ -299,6 +299,9 @@
 					"type": "boolean",
 					"default": false
 				},
+				"volar.vueserver.json.customBlockSchemaUrls": {
+					"type": "object"
+				},
 				"volar.vueserver.textDocumentSync": {
 					"type": "string",
 					"default": "incremental",

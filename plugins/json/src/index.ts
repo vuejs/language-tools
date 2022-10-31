@@ -3,7 +3,7 @@ import * as json from 'vscode-json-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
-export default function (): LanguageServicePlugin {
+export default function (settings?: json.LanguageSettings): LanguageServicePlugin {
 
 	const jsonDocuments = new WeakMap<TextDocument, [number, json.JSONDocument]>();
 
@@ -15,6 +15,9 @@ export default function (): LanguageServicePlugin {
 		setup(_context) {
 			context = _context;
 			jsonLs = json.getLanguageService({ schemaRequestService: _context.env.schemaRequestService });
+			if (settings) {
+				jsonLs.configure(settings);
+			}
 		},
 
 		complete: {

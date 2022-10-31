@@ -278,6 +278,9 @@ function getInitializationOptions(
 		vitePress: {
 			processMdFile: processMd(),
 		},
+		json: {
+			customBlockSchemaUrls: vscode.workspace.getConfiguration('volar').get<Record<string, string>>('vueserver.json.customBlockSchemaUrls')
+		},
 		noProjectReferences: noProjectReferences(),
 		additionalExtensions: additionalExtensions()
 	};
