@@ -51,7 +51,18 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 				return [vueLanguageModule];
 			},
 			getServicePlugins(host, service) {
-				return vue.getLanguageServicePlugins(host, service);
+				const settings: vue.Settings = {};
+				if (initOptions.json) {
+					settings.json = { schemas: [] };
+					for (const blockType in initOptions.json.customBlockSchemaUrls) {
+						const url = initOptions.json.customBlockSchemaUrls[blockType];
+						settings.json.schemas?.push({
+							fileMatch: [`*.customBlock_${blockType}_*.json*`],
+							uri: new URL(url, service.context.pluginContext.env.rootUri.toString() + '/').toString(),
+						});
+					}
+				}
+				return vue.getLanguageServicePlugins(host, service, settings);
 			},
 			onInitialize(connection, getService) {
 

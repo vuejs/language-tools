@@ -20,9 +20,14 @@ import useTwoslashQueries from './plugins/vue-twoslash-queries';
 import useVueTemplateLanguagePlugin from './plugins/vue-template';
 import type { Data } from '@volar-plugins/typescript/src/services/completions/basic';
 
+export interface Settings {
+	json?: Parameters<typeof useJsonPlugin>[0];
+}
+
 export function getLanguageServicePlugins(
 	host: vue.LanguageServiceHost,
 	apis: embeddedLS.LanguageService,
+	settings?: Settings,
 ): embeddedLS.LanguageServicePlugin[] {
 
 	// plugins
@@ -144,7 +149,7 @@ export function getLanguageServicePlugins(
 		getVueDocument: (document) => apis.context.documents.get(document.uri),
 	});
 	const cssPlugin = useCssPlugin();
-	const jsonPlugin = useJsonPlugin();
+	const jsonPlugin = useJsonPlugin(settings?.json);
 	const emmetPlugin = useEmmetPlugin();
 	const autoDotValuePlugin = useAutoDotValuePlugin();
 	const referencesCodeLensPlugin = useReferencesCodeLensPlugin({
@@ -219,6 +224,7 @@ export function createLanguageService(
 	host: LanguageServiceHost,
 	env: embeddedLS.LanguageServicePluginContext['env'],
 	documentRegistry?: ts.DocumentRegistry,
+	settings?: Settings,
 ) {
 
 	const vueLanguageModule = vue.createLanguageModule(
@@ -233,7 +239,7 @@ export function createLanguageService(
 		host,
 		context: core,
 		getPlugins() {
-			return getLanguageServicePlugins(host, languageService);
+			return getLanguageServicePlugins(host, languageService, settings);
 		},
 		documentRegistry,
 	});
