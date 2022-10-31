@@ -787,7 +787,6 @@
 		"@volar/vue-language-server": "1.0.9",
 		"esbuild": "latest",
 		"esbuild-plugin-copy": "latest",
-		"ovsx": "^0.5.1",
 		"esbuild-visualizer": "latest",
 		"path-browserify": "^1.0.1",
 		"punycode": "^2.1.1",

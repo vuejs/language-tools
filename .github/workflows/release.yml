@@ -15,10 +15,7 @@ jobs:
         with:
           node-version: 16
 
-      - uses: pnpm/action-setup@v2.2.4
-        with:
-          version: 7
-
+      - run: npm i -g pnpm ovsx
       - run: pnpm install --frozen-lockfile --no-optional
       - run: pnpm run prepack:node && pnpm ovsx publish
         working-directory: extensions/vscode-vue-language-features
