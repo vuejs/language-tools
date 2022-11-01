@@ -36,8 +36,11 @@
 <table>
 	<tr>
 		<td align="center" valign="middle">
-			<a href="https://v3.nuxtjs.org/">
+			<!-- <a href="https://v3.nuxtjs.org/">
 				<img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/nuxt.svg" height="80" />
+			</a> -->
+			<a href="https://volta.net/">
+				<img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/volta.svg" height="60" />
 			</a>
 		</td>
 	</tr>
