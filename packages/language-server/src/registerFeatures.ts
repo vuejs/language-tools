@@ -47,29 +47,30 @@ export const semanticTokensLegend: vscode.SemanticTokensLegend = {
 export function setupSyntacticCapabilities(
 	params: ClientCapabilities,
 	server: vscode.ServerCapabilities,
+	initOptions: LanguageServerInitializationOptions,
 ) {
-	if (params.textDocument?.selectionRange) {
+	if (!initOptions.respectClientCapabilities || params.textDocument?.selectionRange) {
 		server.selectionRangeProvider = true;
 	}
-	if (params.textDocument?.foldingRange) {
+	if (!initOptions.respectClientCapabilities || params.textDocument?.foldingRange) {
 		server.foldingRangeProvider = true;
 	}
-	if (params.textDocument?.linkedEditingRange) {
+	if (!initOptions.respectClientCapabilities || params.textDocument?.linkedEditingRange) {
 		server.linkedEditingRangeProvider = true;
 	}
-	if (params.textDocument?.colorProvider) {
+	if (!initOptions.respectClientCapabilities || params.textDocument?.colorProvider) {
 		server.colorProvider = true;
 	}
-	if (params.textDocument?.documentSymbol) {
+	if (!initOptions.respectClientCapabilities || params.textDocument?.documentSymbol) {
 		server.documentSymbolProvider = true;
 	}
-	if (params.textDocument?.formatting) {
+	if (!initOptions.respectClientCapabilities || params.textDocument?.formatting) {
 		server.documentFormattingProvider = true;
 	}
-	if (params.textDocument?.rangeFormatting) {
+	if (!initOptions.respectClientCapabilities || params.textDocument?.rangeFormatting) {
 		server.documentRangeFormattingProvider = true;
 	}
-	if (params.textDocument?.onTypeFormatting) {
+	if (!initOptions.respectClientCapabilities || params.textDocument?.onTypeFormatting) {
 		// https://github.com/microsoft/vscode/blob/ce119308e8fd4cd3f992d42b297588e7abe33a0c/extensions/typescript-language-features/src/languageFeatures/formatting.ts#L99
 		server.documentOnTypeFormattingProvider = {
 			firstTriggerCharacter: ';',
@@ -81,33 +82,33 @@ export function setupSyntacticCapabilities(
 export function setupSemanticCapabilities(
 	params: ClientCapabilities,
 	server: vscode.ServerCapabilities,
-	options: LanguageServerInitializationOptions,
+	initOptions: LanguageServerInitializationOptions,
 	plugins: ReturnType<LanguageServerPlugin>[],
 ) {
-	if (params.textDocument?.references) {
+	if (!initOptions.respectClientCapabilities || params.textDocument?.references) {
 		server.referencesProvider = true;
 	}
-	if (params.textDocument?.implementation) {
+	if (!initOptions.respectClientCapabilities || params.textDocument?.implementation) {
 		server.implementationProvider = true;
 	}
-	if (params.textDocument?.definition) {
+	if (!initOptions.respectClientCapabilities || params.textDocument?.definition) {
 		server.definitionProvider = true;
 	}
-	if (params.textDocument?.typeDefinition) {
+	if (!initOptions.respectClientCapabilities || params.textDocument?.typeDefinition) {
 		server.typeDefinitionProvider = true;
 	}
-	if (params.textDocument?.callHierarchy) {
+	if (!initOptions.respectClientCapabilities || params.textDocument?.callHierarchy) {
 		server.callHierarchyProvider = true;
 	}
-	if (params.textDocument?.hover) {
+	if (!initOptions.respectClientCapabilities || params.textDocument?.hover) {
 		server.hoverProvider = true;
 	}
-	if (params.textDocument?.rename) {
+	if (!initOptions.respectClientCapabilities || params.textDocument?.rename) {
 		server.renameProvider = {
 			prepareProvider: true,
 		};
 	}
-	if (params.workspace?.fileOperations) {
+	if (!initOptions.respectClientCapabilities || params.workspace?.fileOperations) {
 		server.workspace = {
 			fileOperations: {
 				willRename: {
@@ -127,13 +128,13 @@ export function setupSemanticCapabilities(
 			}
 		};
 	}
-	if (params.textDocument?.signatureHelp) {
+	if (!initOptions.respectClientCapabilities || params.textDocument?.signatureHelp) {
 		server.signatureHelpProvider = {
 			triggerCharacters: ['(', ',', '<'],
 			retriggerCharacters: [')'],
 		};
 	}
-	if (params.textDocument?.completion) {
+	if (!initOptions.respectClientCapabilities || params.textDocument?.completion) {
 		server.completionProvider = {
 			// triggerCharacters: '!@#$%^&*()_+-=`~{}|[]\:";\'<>?,./ '.split(''), // all symbols on keyboard
 			// hardcode to fix https://github.com/sublimelsp/LSP-volar/issues/114
@@ -149,23 +150,23 @@ export function setupSemanticCapabilities(
 			])],
 			resolveProvider: true,
 		};
-		if (options.ignoreTriggerCharacters) {
+		if (initOptions.ignoreTriggerCharacters) {
 			server.completionProvider.triggerCharacters = server.completionProvider.triggerCharacters
-				?.filter(c => !options.ignoreTriggerCharacters!.includes(c));
+				?.filter(c => !initOptions.ignoreTriggerCharacters!.includes(c));
 		}
 	}
-	if (params.textDocument?.documentHighlight) {
+	if (!initOptions.respectClientCapabilities || params.textDocument?.documentHighlight) {
 		server.documentHighlightProvider = true;
 	}
-	if (params.textDocument?.documentLink) {
+	if (!initOptions.respectClientCapabilities || params.textDocument?.documentLink) {
 		server.documentLinkProvider = {
 			resolveProvider: false, // TODO
 		};
 	}
-	if (params.workspace?.symbol) {
+	if (!initOptions.respectClientCapabilities || params.workspace?.symbol) {
 		server.workspaceSymbolProvider = true;
 	}
-	if (params.textDocument?.codeLens) {
+	if (!initOptions.respectClientCapabilities || params.textDocument?.codeLens) {
 		server.codeLensProvider = {
 			resolveProvider: true,
 		};
@@ -176,14 +177,14 @@ export function setupSemanticCapabilities(
 			]
 		};
 	}
-	if (params.textDocument?.semanticTokens) {
+	if (!initOptions.respectClientCapabilities || params.textDocument?.semanticTokens) {
 		server.semanticTokensProvider = {
 			range: true,
 			full: false,
 			legend: semanticTokensLegend,
 		};
 	}
-	if (params.textDocument?.codeAction) {
+	if (!initOptions.respectClientCapabilities || params.textDocument?.codeAction) {
 		server.codeActionProvider = {
 			codeActionKinds: [
 				vscode.CodeActionKind.Empty,
@@ -199,10 +200,10 @@ export function setupSemanticCapabilities(
 			resolveProvider: true,
 		};
 	}
-	if (params.textDocument?.inlayHint) {
+	if (!initOptions.respectClientCapabilities || params.textDocument?.inlayHint) {
 		server.inlayHintProvider = true;
 	}
-	if (params.textDocument?.diagnostic && (options.diagnosticModel ?? DiagnosticModel.Push) === DiagnosticModel.Pull) {
+	if (!initOptions.respectClientCapabilities || params.textDocument?.diagnostic && (initOptions.diagnosticModel ?? DiagnosticModel.Push) === DiagnosticModel.Pull) {
 		server.diagnosticProvider = {
 			documentSelector: [
 				...plugins.map(plugin => plugin.extraFileExtensions.map(ext => ({ pattern: `**/*.${ext.extension}` }))).flat(),

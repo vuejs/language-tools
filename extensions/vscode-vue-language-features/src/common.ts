@@ -264,6 +264,7 @@ function getInitializationOptions(
 ) {
 	const textDocumentSync = vscode.workspace.getConfiguration('volar').get<'incremental' | 'full' | 'none'>('vueserver.textDocumentSync');
 	const initializationOptions: VueServerInitializationOptions = {
+		respectClientCapabilities: true,
 		serverMode,
 		diagnosticModel: diagnosticModel() === 'pull' ? DiagnosticModel.Pull : DiagnosticModel.Push,
 		textDocumentSync: textDocumentSync ? {

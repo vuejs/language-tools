@@ -51,7 +51,7 @@ export function createCommonLanguageServer(
 
 		const serverMode = options.serverMode ?? ServerMode.Semantic;
 
-		setupSyntacticCapabilities(params.capabilities, result.capabilities);
+		setupSyntacticCapabilities(params.capabilities, result.capabilities, options);
 		await _createDocumentServiceHost();
 
 		if (serverMode === ServerMode.Semantic) {

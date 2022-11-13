@@ -112,4 +112,8 @@ export interface LanguageServerInitializationOptions {
 	 */
 	cancellationPipeName?: string;
 	noProjectReferences?: boolean;
+	/**
+	 * Enable this option to make language server setup server capabilities based on client capabilities to support multiple servers.
+	 */
+	respectClientCapabilities?: boolean;
 }
