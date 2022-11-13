@@ -11,7 +11,7 @@ export function createProgramProxy(
 ) {
 
 	if (!options.options.noEmit && !options.options.emitDeclarationOnly)
-		return doThrow('js emit is not support');
+		return doThrow('js emit is not supported');
 
 	if (!options.host)
 		return doThrow('!options.host');
