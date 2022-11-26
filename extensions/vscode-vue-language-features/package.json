@@ -781,7 +781,7 @@
 		"bundle-size": "npm run prepack:bundle-size && esbuild-visualizer --metadata ./meta.json --exclude * .png && open ./stats.html"
 	},
 	"devDependencies": {
-		"@types/semver": "^7.3.12",
+		"@types/semver": "^7.3.13",
 		"@types/vscode": "1.67.0",
 		"@volar/preview": "1.0.9",
 		"@volar/shared": "1.0.9",

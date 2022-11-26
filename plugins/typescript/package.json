@@ -21,6 +21,6 @@
 		"vscode-uri": "^3.0.6"
 	},
 	"devDependencies": {
-		"@types/semver": "^7.3.12"
+		"@types/semver": "^7.3.13"
 	}
 }

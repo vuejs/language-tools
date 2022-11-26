@@ -15,7 +15,7 @@
 	"dependencies": {
 		"@volar-plugins/html": "1.0.9",
 		"@volar/pug-language-service": "1.0.9",
-		"vscode-html-languageservice": "^5.0.2",
+		"vscode-html-languageservice": "^5.0.3",
 		"vscode-languageserver-textdocument": "^1.0.7"
 	},
 	"browser": {
