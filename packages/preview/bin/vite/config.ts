@@ -318,7 +318,7 @@ config.plugins.push({
 	name: '__volar_preview',
 	transform(this, code, id, options?) {
 		const createAppText = 'createApp,';
-		if (id.indexOf('vue.js?') >= 0 && code.indexOf(createAppText) >= 0 && code.indexOf('__createAppProxy') === -1) {
+		if (id.indexOf('/vue.js?') >= 0 && code.indexOf(createAppText) >= 0 && code.indexOf('__createAppProxy') === -1) {
 			const createAppOffset = code.lastIndexOf(createAppText);
 			code =
 				code.substring(0, createAppOffset)
