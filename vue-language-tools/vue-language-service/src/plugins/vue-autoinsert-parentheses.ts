@@ -34,8 +34,7 @@ export default function (options: {
 			let templateFormatScript: EmbeddedFile | undefined;
 
 			embedded.forEachEmbeddeds(vueDocument.file.embeddeds, embedded => {
-				if (embedded.fileName.endsWith('.__VLS_template_format.tsx')
-					|| embedded.fileName.endsWith('.__VLS_template_format.jsx')) {
+				if (embedded.fileName.endsWith('.__VLS_template_format.ts')) {
 					templateFormatScript = embedded;
 				}
 			});
@@ -54,10 +53,22 @@ export default function (options: {
 						const statement = ast.statements[0];
 						if (
 							ts.isExpressionStatement(statement)
-							&& ts.isAsExpression(statement.expression)
-							&& ts.isTypeReferenceNode(statement.expression.type)
-							&& ts.isIdentifier(statement.expression.type.typeName)
-							&& statement.expression.type.typeName.text
+							&& (
+								(
+									ts.isAsExpression(statement.expression)
+									&& ts.isTypeReferenceNode(statement.expression.type)
+									&& ts.isIdentifier(statement.expression.type.typeName)
+									&& statement.expression.type.typeName.text
+								)
+								|| (
+									ts.isBinaryExpression(statement.expression)
+									&& statement.expression.right.getText(ast)
+								)
+								|| (
+									ts.isTypeOfExpression(statement.expression)
+									&& statement.expression.expression.getText(ast)
+								)
+							)
 						) {
 							// https://code.visualstudio.com/docs/editor/userdefinedsnippets#_grammar
 							const escapedText = text
