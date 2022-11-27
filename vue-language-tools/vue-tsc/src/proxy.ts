@@ -66,7 +66,7 @@ export function createProgramProxy(
 		const vueTsLs = vueTs.createLanguageService(vueLsHost);
 
 		program = vueTsLs.getProgram();
-		program.__VLS_ctx = ctx;
+		program.__vue = ctx;
 
 		function getVueCompilerOptions(): vue.VueCompilerOptions {
 			const tsConfig = ctx.options.options.configFilePath;
@@ -109,8 +109,8 @@ export function createProgramProxy(
 		}
 	}
 	else {
-		program.__VLS_ctx.options = options;
-		program.__VLS_ctx.projectVersion++;
+		program.__vue.options = options;
+		program.__vue.projectVersion++;
 	}
 
 	for (const rootName of options.rootNames) {
