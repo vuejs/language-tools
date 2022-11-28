@@ -160,6 +160,9 @@ export class VueSourceFile implements SourceFile {
 							plugin,
 						};
 					}
+					else {
+						VueSourceFile.compiledSFCTemplateCache = undefined;
+					}
 
 					return {
 						errors,
