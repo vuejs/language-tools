@@ -90,7 +90,7 @@ export function createCommonLanguageServer(
 			});
 		}
 
-		if (params.capabilities.workspace?.didChangeWatchedFiles?.dynamicRegistration) {
+		if (options.serverMode !== ServerMode.Syntactic && params.capabilities.workspace?.didChangeWatchedFiles?.dynamicRegistration) {
 			connection.client.register(vscode.DidChangeWatchedFilesNotification.type, {
 				watchers: [
 					...plugins.map(plugin => plugin.extraFileExtensions.map(ext => ({ globPattern: `**/*.${ext.extension}` }))).flat(),
