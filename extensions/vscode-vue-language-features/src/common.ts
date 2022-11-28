@@ -127,6 +127,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 				|| e.affectsConfiguration('volar.vueserver.diagnosticModel')
 				|| e.affectsConfiguration('volar.vueserver.noProjectReferences')
 				|| e.affectsConfiguration('volar.vueserver.reverseConfigFilePriority')
+				|| e.affectsConfiguration('volar.vueserver.disableFileWatcher')
 				|| e.affectsConfiguration('volar.vueserver.petiteVue.processHtmlFile')
 				|| e.affectsConfiguration('volar.vueserver.vitePress.processMdFile')
 				|| e.affectsConfiguration('volar.vueserver.additionalExtensions')
@@ -209,6 +210,10 @@ export function reverseConfigFilePriority() {
 	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.reverseConfigFilePriority');
 }
 
+export function disableFileWatcher() {
+	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.disableFileWatcher');
+}
+
 export function diagnosticModel() {
 	return vscode.workspace.getConfiguration('volar').get<'push' | 'pull'>('vueserver.diagnosticModel');
 }
@@ -289,6 +294,7 @@ function getInitializationOptions(
 		},
 		noProjectReferences: noProjectReferences(),
 		reverseConfigFilePriority: reverseConfigFilePriority(),
+		disableFileWatcher: disableFileWatcher(),
 		additionalExtensions: additionalExtensions()
 	};
 	return initializationOptions;

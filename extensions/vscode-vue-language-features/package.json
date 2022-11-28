@@ -348,6 +348,11 @@
 					"default": false,
 					"description": "Reverse priority for tsconfig pickup."
 				},
+				"volar.vueserver.disableFileWatcher": {
+					"type": "boolean",
+					"default": false,
+					"description": "Disable file watcher in language server for better performance."
+				},
 				"volar.vueserver.additionalExtensions": {
 					"type": "array",
 					"items": {

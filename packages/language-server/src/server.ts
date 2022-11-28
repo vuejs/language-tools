@@ -90,22 +90,28 @@ export function createCommonLanguageServer(
 			});
 		}
 
-		if (options.serverMode !== ServerMode.Syntactic && params.capabilities.workspace?.didChangeWatchedFiles?.dynamicRegistration) {
+		if (
+			options.serverMode !== ServerMode.Syntactic
+			&& !options.disableFileWatcher
+			&& params.capabilities.workspace?.didChangeWatchedFiles?.dynamicRegistration
+		) {
 			connection.client.register(vscode.DidChangeWatchedFilesNotification.type, {
 				watchers: [
 					...plugins.map(plugin => plugin.extraFileExtensions.map(ext => ({ globPattern: `**/*.${ext.extension}` }))).flat(),
-					{ globPattern: `**/*.{${[
-						'js',
-						'cjs',
-						'mjs',
-						'ts',
-						'cts',
-						'mts',
-						'jsx',
-						'tsx',
-						'json',
-						...plugins.map(plugin => plugin.extraFileExtensions.map(ext => ext.extension)).flat(),
-					].join(',')}}` },
+					{
+						globPattern: `**/*.{${[
+							'js',
+							'cjs',
+							'mjs',
+							'ts',
+							'cts',
+							'mts',
+							'jsx',
+							'tsx',
+							'json',
+							...plugins.map(plugin => plugin.extraFileExtensions.map(ext => ext.extension)).flat(),
+						].join(',')}}`
+					},
 				]
 			});
 		}
