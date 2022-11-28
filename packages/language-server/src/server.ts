@@ -94,15 +94,18 @@ export function createCommonLanguageServer(
 			connection.client.register(vscode.DidChangeWatchedFilesNotification.type, {
 				watchers: [
 					...plugins.map(plugin => plugin.extraFileExtensions.map(ext => ({ globPattern: `**/*.${ext.extension}` }))).flat(),
-					{ globPattern: '**/*.js' },
-					{ globPattern: '**/*.cjs' },
-					{ globPattern: '**/*.mjs' },
-					{ globPattern: '**/*.ts' },
-					{ globPattern: '**/*.cts' },
-					{ globPattern: '**/*.mts' },
-					{ globPattern: '**/*.jsx' },
-					{ globPattern: '**/*.tsx' },
-					{ globPattern: '**/*.json' },
+					{ globPattern: `**/*.{${[
+						'js',
+						'cjs',
+						'mjs',
+						'ts',
+						'cts',
+						'mts',
+						'jsx',
+						'tsx',
+						'json',
+						...plugins.map(plugin => plugin.extraFileExtensions.map(ext => ext.extension)).flat(),
+					].join(',')}}` },
 				]
 			});
 		}
