@@ -12,57 +12,57 @@ export function register(
 	connection.onNotification(ReportStats.type, async () => {
 		for (const [rootUri, _workspace] of projects.workspaces) {
 
-			console.log('workspace: ' + rootUri);
+			connection.console.log('workspace: ' + rootUri);
 			const workspace = await _workspace;
 
-			console.log('documentRegistry stats: ' + workspace.documentRegistry.reportStats());
-			console.log('');
+			connection.console.log('documentRegistry stats: ' + workspace.documentRegistry.reportStats());
+			connection.console.log('');
 
-			console.log('tsconfig: inferred');
+			connection.console.log('tsconfig: inferred');
 			const _inferredProject = workspace.getInferredProjectDontCreate();
 			if (_inferredProject) {
-				console.log('loaded: true');
+				connection.console.log('loaded: true');
 				const inferredProject = await _inferredProject;
-				console.log('largest 10 files:');
+				connection.console.log('largest 10 files:');
 				for (const script of [...inferredProject.scripts.values()]
 					.sort((a, b) => (b.snapshot?.getLength() ?? 0) - (a.snapshot?.getLength() ?? 0))
 					.slice(0, 10)
 				) {
-					console.log('  - ' + script.fileName);
-					console.log(`    size: ${script.snapshot?.getLength()}`);
+					connection.console.log('  - ' + script.fileName);
+					connection.console.log(`    size: ${script.snapshot?.getLength()}`);
 				}
-				console.log('files:');
+				connection.console.log('files:');
 				for (const script of inferredProject.scripts.values()) {
-					console.log('  - ' + script.fileName);
-					console.log(`    size: ${script.snapshot?.getLength()}`);
-					console.log(`    ref counts: "${(workspace.documentRegistry as any).getLanguageServiceRefCounts?.(script.fileName, inferredProject.languageServiceHost.getScriptKind?.(script.fileName))})"`);
+					connection.console.log('  - ' + script.fileName);
+					connection.console.log(`    size: ${script.snapshot?.getLength()}`);
+					connection.console.log(`    ref counts: "${(workspace.documentRegistry as any).getLanguageServiceRefCounts?.(script.fileName, inferredProject.languageServiceHost.getScriptKind?.(script.fileName))})"`);
 				}
 			}
 			else {
-				console.log('loaded: false');
+				connection.console.log('loaded: false');
 			}
-			console.log('');
+			connection.console.log('');
 
 			for (const _project of workspace.projects.values()) {
 				const project = await _project;
-				console.log('tsconfig: ' + project.tsConfig);
-				console.log('loaded: ' + !!project.getLanguageServiceDontCreate());
-				console.log('largest 10 files:');
+				connection.console.log('tsconfig: ' + project.tsConfig);
+				connection.console.log('loaded: ' + !!project.getLanguageServiceDontCreate());
+				connection.console.log('largest 10 files:');
 				for (const script of [...project.scripts.values()]
 					.sort((a, b) => (b.snapshot?.getLength() ?? 0) - (a.snapshot?.getLength() ?? 0))
 					.slice(0, 10)
 				) {
-					console.log('  - ' + script.fileName);
-					console.log(`    size: ${script.snapshot?.getLength()}`);
+					connection.console.log('  - ' + script.fileName);
+					connection.console.log(`    size: ${script.snapshot?.getLength()}`);
 				}
-				console.log('files:');
+				connection.console.log('files:');
 				for (const script of project.scripts.values()) {
-					console.log('  - ' + script.fileName);
-					console.log(`    size: ${script.snapshot?.getLength()}`);
-					console.log(`    ref counts: "${(workspace.documentRegistry as any).getLanguageServiceRefCounts?.(script.fileName, project.languageServiceHost.getScriptKind?.(script.fileName))})"`);
+					connection.console.log('  - ' + script.fileName);
+					connection.console.log(`    size: ${script.snapshot?.getLength()}`);
+					connection.console.log(`    ref counts: "${(workspace.documentRegistry as any).getLanguageServiceRefCounts?.(script.fileName, project.languageServiceHost.getScriptKind?.(script.fileName))})"`);
 				}
 			}
-			console.log('');
+			connection.console.log('');
 		}
 	});
 	connection.onRequest(GetMatchTsConfigRequest.type, async params => {
