@@ -3,6 +3,7 @@ import { URI } from 'vscode-uri';
 import { FileSystem, FileSystemHost } from '../types';
 import { IterableWeakSet } from './iterableWeakSet';
 import { createUriMap } from './uriMap';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 
 let currentCwd = '';
 

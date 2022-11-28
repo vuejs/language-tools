@@ -27,6 +27,7 @@ import * as signatureHelp from './languageFeatures/signatureHelp';
 import * as diagnostics from './languageFeatures/validation';
 import * as workspaceSymbol from './languageFeatures/workspaceSymbols';
 import { LanguageServicePlugin, LanguageServicePluginContext, LanguageServiceRuntimeContext } from './types';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 
 // fix build
 import type * as _ from 'vscode-languageserver-protocol';

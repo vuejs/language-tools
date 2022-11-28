@@ -125,7 +125,7 @@ function createProxyHost(ts: typeof import('typescript/lib/tsserverlibrary'), in
 	update();
 
 	const directoryWatcher = info.serverHost.watchDirectory(info.project.getCurrentDirectory(), onAnyDriveFileUpdated, true);
-	const projectName = info.project.projectName;
+	const projectName = info.project.getProjectName();
 
 	let tsconfigWatcher = info.project.fileExists(projectName)
 		? info.serverHost.watchFile(projectName, () => {

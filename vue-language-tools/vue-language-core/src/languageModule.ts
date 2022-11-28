@@ -5,6 +5,7 @@ import { VueSourceFile } from './sourceFile';
 import { VueLanguagePlugin, VueCompilerOptions } from './types';
 import * as localTypes from './utils/localTypes';
 import { resolveVueCompilerOptions } from './utils/ts';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 
 export function createLanguageModule(
 	ts: typeof import('typescript/lib/tsserverlibrary'),

@@ -19,6 +19,7 @@ import useScriptSetupConversionsPlugin from './plugins/vue-convert-scriptsetup';
 import useTwoslashQueries from './plugins/vue-twoslash-queries';
 import useVueTemplateLanguagePlugin from './plugins/vue-template';
 import type { Data } from '@volar-plugins/typescript/src/services/completions/basic';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 
 export interface Settings {
 	json?: Parameters<typeof useJsonPlugin>[0];
