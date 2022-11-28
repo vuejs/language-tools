@@ -106,7 +106,7 @@ export default function (settings?: json.LanguageSettings): LanguageServicePlugi
 		format(document, range, options) {
 			return worker(document, async (jsonDocument) => {
 
-				const options_2 = await context.env.configurationHost?.getConfiguration<json.FormattingOptions & { enable: boolean; }>('json.format', document.uri);
+				const options_2 = await context.env.configurationHost?.getConfiguration<json.FormattingOptions & { enable: boolean; }>('json.format');
 
 				if (options_2?.enable === false) {
 					return;

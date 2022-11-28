@@ -4,6 +4,7 @@ import { ConfigurationHost } from '@volar/language-service';
 export function createConfigurationHost(params: vscode.InitializeParams, connection: vscode.Connection): ConfigurationHost & { ready(): void; } {
 
 	const callbacks: Function[] = [];
+	let cache: Record<string, any> = {};
 
 	connection.onDidChangeConfiguration(async () => {
 		for (const cb of callbacks) {
@@ -18,10 +19,19 @@ export function createConfigurationHost(params: vscode.InitializeParams, connect
 			}
 		},
 		async getConfiguration(section, scopeUri) {
-			return (await connection.workspace.getConfiguration({ scopeUri, section })) ?? undefined /* replace null to undefined */;
+			if (!scopeUri && params.capabilities.workspace?.didChangeConfiguration) {
+				cache[section] ??= await getConfigurationWorker(section, scopeUri);
+				return cache[section];
+			}
+			return await getConfigurationWorker(section, scopeUri);
 		},
 		onDidChangeConfiguration(cb) {
+			cache = {};
 			callbacks.push(cb);
 		},
 	};
+
+	async function getConfigurationWorker(section: string, scopeUri?: string) {
+		return (await connection.workspace.getConfiguration({ scopeUri, section })) ?? undefined /* replace null to undefined */;
+	}
 }

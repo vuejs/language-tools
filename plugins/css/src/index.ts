@@ -45,7 +45,7 @@ export default function (): LanguageServicePlugin {
 					if (!context.env.documentContext)
 						return;
 
-					const settings = await context.env.configurationHost?.getConfiguration<css.LanguageSettings>(document.languageId, document.uri);
+					const settings = await context.env.configurationHost?.getConfiguration<css.LanguageSettings>(document.languageId);
 					const cssResult = await cssLs.doComplete2(document, position, stylesheet, context.env.documentContext, settings?.completion);
 
 					return cssResult;
@@ -95,7 +95,7 @@ export default function (): LanguageServicePlugin {
 			async onSyntactic(document) {
 				return worker(document, async (stylesheet, cssLs) => {
 
-					const settings = await context.env.configurationHost?.getConfiguration<css.LanguageSettings>(document.languageId, document.uri);
+					const settings = await context.env.configurationHost?.getConfiguration<css.LanguageSettings>(document.languageId);
 
 					return cssLs.doValidation(document, stylesheet, settings) as vscode.Diagnostic[];
 				});
@@ -105,7 +105,7 @@ export default function (): LanguageServicePlugin {
 		async doHover(document, position) {
 			return worker(document, async (stylesheet, cssLs) => {
 
-				const settings = await context.env.configurationHost?.getConfiguration<css.LanguageSettings>(document.languageId, document.uri);
+				const settings = await context.env.configurationHost?.getConfiguration<css.LanguageSettings>(document.languageId);
 
 				return cssLs.doHover(document, position, stylesheet, settings?.hover);
 			});
@@ -166,7 +166,7 @@ export default function (): LanguageServicePlugin {
 		async format(document, range, options) {
 			return worker(document, async (stylesheet, cssLs) => {
 
-				const options_2 = await context.env.configurationHost?.getConfiguration<css.CSSFormatConfiguration & { enable: boolean; }>(document.languageId + '.format', document.uri);
+				const options_2 = await context.env.configurationHost?.getConfiguration<css.CSSFormatConfiguration & { enable: boolean; }>(document.languageId + '.format');
 
 				if (options_2?.enable === false) {
 					return;

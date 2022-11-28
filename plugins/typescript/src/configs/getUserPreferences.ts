@@ -10,8 +10,8 @@ export async function getUserPreferences(
 	workspaceFolder: URI | undefined,
 ): Promise<ts.UserPreferences> {
 
-	const config = await getConfiguration(isTypeScriptDocument(uri) ? 'typescript' : 'javascript', uri) ?? {};
-	const preferencesConfig = await getConfiguration(isTypeScriptDocument(uri) ? 'typescript.preferences' : 'javascript.preferences', uri) ?? {};
+	const config = await getConfiguration(isTypeScriptDocument(uri) ? 'typescript' : 'javascript') ?? {};
+	const preferencesConfig = await getConfiguration(isTypeScriptDocument(uri) ? 'typescript.preferences' : 'javascript.preferences') ?? {};
 	const preferences: ts.UserPreferences = {
 		...config.unstable ?? {},
 		quotePreference: getQuoteStylePreference(preferencesConfig),

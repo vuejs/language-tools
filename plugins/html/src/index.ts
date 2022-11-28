@@ -39,7 +39,7 @@ export default function (options: {
 			async on(document, position) {
 				return worker(document, async (htmlDocument) => {
 
-					const configs = await context.env.configurationHost?.getConfiguration<html.CompletionConfiguration>('html.completion', document.uri);
+					const configs = await context.env.configurationHost?.getConfiguration<html.CompletionConfiguration>('html.completion');
 
 					if (context.env.documentContext) {
 						return htmlLs.doComplete2(document, position, htmlDocument, context.env.documentContext, configs);
@@ -63,7 +63,7 @@ export default function (options: {
 		async doHover(document, position) {
 			return worker(document, async (htmlDocument) => {
 
-				const hoverSettings = await context.env.configurationHost?.getConfiguration<html.HoverSettings>('html.hover', document.uri);
+				const hoverSettings = await context.env.configurationHost?.getConfiguration<html.HoverSettings>('html.hover');
 
 				return htmlLs.doHover(document, position, htmlDocument, hoverSettings);
 			});
@@ -106,7 +106,7 @@ export default function (options: {
 		async format(document, formatRange, options) {
 			return worker(document, async (htmlDocument) => {
 
-				const options_2 = await context.env.configurationHost?.getConfiguration<html.HTMLFormatConfiguration & { enable: boolean; }>('html.format', document.uri);
+				const options_2 = await context.env.configurationHost?.getConfiguration<html.HTMLFormatConfiguration & { enable: boolean; }>('html.format');
 
 				if (options_2?.enable === false) {
 					return;
@@ -166,7 +166,7 @@ export default function (options: {
 
 					if (enabled) {
 
-						const text = htmlLs.doQuoteComplete(document, position, htmlDocument, await context.env.configurationHost?.getConfiguration<html.CompletionConfiguration>('html.completion', document.uri));
+						const text = htmlLs.doQuoteComplete(document, position, htmlDocument, await context.env.configurationHost?.getConfiguration<html.CompletionConfiguration>('html.completion'));
 
 						if (text) {
 							return text;

@@ -63,7 +63,7 @@ export default function (): LanguageServicePlugin & ReturnType<typeof useHtmlPlu
 		doHover(document, position) {
 			return worker(document, async (pugDocument) => {
 
-				const hoverSettings = await context.env.configurationHost?.getConfiguration<html.HoverSettings>('html.hover', document.uri);
+				const hoverSettings = await context.env.configurationHost?.getConfiguration<html.HoverSettings>('html.hover');
 
 				return pugLs.doHover(pugDocument, position, hoverSettings);
 			});
@@ -114,7 +114,7 @@ export default function (): LanguageServicePlugin & ReturnType<typeof useHtmlPlu
 
 					if (enabled) {
 
-						const text = pugLs.doQuoteComplete(pugDocument, position, await context.env.configurationHost?.getConfiguration<html.CompletionConfiguration>('html.completion', document.uri));
+						const text = pugLs.doQuoteComplete(pugDocument, position, await context.env.configurationHost?.getConfiguration<html.CompletionConfiguration>('html.completion'));
 
 						if (text) {
 							return text;

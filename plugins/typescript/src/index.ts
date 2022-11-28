@@ -42,7 +42,7 @@ export default function (): LanguageServicePlugin {
 				context.typescript.module,
 				context.typescript.languageServiceHost,
 				context.typescript.languageService,
-				(section, scopeUri) => context.env.configurationHost?.getConfiguration(section, scopeUri) as any,
+				(section) => context.env.configurationHost?.getConfiguration(section) as any,
 				context.env.rootUri,
 			);
 		},
@@ -281,7 +281,7 @@ export default function (): LanguageServicePlugin {
 		async format(document, range, options_2) {
 			if (isTsDocument(document)) {
 
-				const enable = await context.env.configurationHost?.getConfiguration<boolean>(getConfigTitle(document) + '.format.enable', document.uri);
+				const enable = await context.env.configurationHost?.getConfiguration<boolean>(getConfigTitle(document) + '.format.enable');
 
 				if (enable === false) {
 					return;
@@ -294,7 +294,7 @@ export default function (): LanguageServicePlugin {
 		async formatOnType(document, position, key, options_2) {
 			if (isTsDocument(document)) {
 
-				const enable = await context.env.configurationHost?.getConfiguration<boolean>(getConfigTitle(document) + '.format.enable', document.uri);
+				const enable = await context.env.configurationHost?.getConfiguration<boolean>(getConfigTitle(document) + '.format.enable');
 
 				if (enable === false) {
 					return;

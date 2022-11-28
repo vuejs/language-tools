@@ -84,7 +84,7 @@ export function register(
 
 		if (document) {
 
-			const useCodeSnippetsOnMethodSuggest = await getConfiguration<boolean>((isTypeScriptDocument(document.uri) ? 'typescript' : 'javascript') + '.suggest.completeFunctionCalls', document.uri) ?? false;
+			const useCodeSnippetsOnMethodSuggest = await getConfiguration<boolean>((isTypeScriptDocument(document.uri) ? 'typescript' : 'javascript') + '.suggest.completeFunctionCalls') ?? false;
 			const useCodeSnippet = useCodeSnippetsOnMethodSuggest && (item.kind === vscode.CompletionItemKind.Function || item.kind === vscode.CompletionItemKind.Method);
 
 			if (useCodeSnippet) {
