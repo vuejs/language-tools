@@ -112,6 +112,7 @@ export interface LanguageServerInitializationOptions {
 	 */
 	cancellationPipeName?: string;
 	noProjectReferences?: boolean;
+	reverseConfigFilePriority?: boolean;
 	/**
 	 * Enable this option to make language server setup server capabilities based on client capabilities to support multiple servers.
 	 */

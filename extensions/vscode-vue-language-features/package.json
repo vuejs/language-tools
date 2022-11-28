@@ -343,6 +343,11 @@
 					"default": false,
 					"description": "Ignore project references settings of tsconfig in language server for resolve issue #1916."
 				},
+				"volar.vueserver.reverseConfigFilePriority": {
+					"type": "boolean",
+					"default": false,
+					"description": "Reverse priority for tsconfig pickup."
+				},
 				"volar.vueserver.additionalExtensions": {
 					"type": "array",
 					"items": {

@@ -126,6 +126,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 				e.affectsConfiguration('volar.vueserver.maxOldSpaceSize')
 				|| e.affectsConfiguration('volar.vueserver.diagnosticModel')
 				|| e.affectsConfiguration('volar.vueserver.noProjectReferences')
+				|| e.affectsConfiguration('volar.vueserver.reverseConfigFilePriority')
 				|| e.affectsConfiguration('volar.vueserver.petiteVue.processHtmlFile')
 				|| e.affectsConfiguration('volar.vueserver.vitePress.processMdFile')
 				|| e.affectsConfiguration('volar.vueserver.additionalExtensions')
@@ -202,6 +203,10 @@ export function processMd() {
 
 export function noProjectReferences() {
 	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.noProjectReferences');
+}
+
+export function reverseConfigFilePriority() {
+	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.reverseConfigFilePriority');
 }
 
 export function diagnosticModel() {
@@ -283,6 +288,7 @@ function getInitializationOptions(
 			customBlockSchemaUrls: vscode.workspace.getConfiguration('volar').get<Record<string, string>>('vueserver.json.customBlockSchemaUrls')
 		},
 		noProjectReferences: noProjectReferences(),
+		reverseConfigFilePriority: reverseConfigFilePriority(),
 		additionalExtensions: additionalExtensions()
 	};
 	return initializationOptions;

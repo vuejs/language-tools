@@ -162,7 +162,11 @@ export async function createWorkspaceProjects(
 				const project = await projects.pathGet(rootUri, rootTsConfig);
 				if (project) {
 
-					const chains = await getReferencesChains(project.getParsedCommandLine(), rootTsConfig, []);
+					let chains = await getReferencesChains(project.getParsedCommandLine(), rootTsConfig, []);
+
+					if (serverOptions.reverseConfigFilePriority) {
+						chains = chains.reverse();
+					}
 
 					for (const chain of chains) {
 						for (let i = chain.length - 1; i >= 0; i--) {
