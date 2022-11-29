@@ -371,11 +371,6 @@
 					"default": false,
 					"description": "[pug ☐] code lens."
 				},
-				"volar.icon.splitEditors": {
-					"type": "boolean",
-					"default": true,
-					"description": "Show split editor icon in title area of editor."
-				},
 				"volar.icon.preview": {
 					"type": "boolean",
 					"default": true,
@@ -599,8 +594,7 @@
 			{
 				"command": "volar.action.splitEditors",
 				"title": "Split <script>, <template>, <style> Editors",
-				"category": "Volar",
-				"icon": "images/split-editors.png"
+				"category": "Volar"
 			},
 			{
 				"command": "volar.action.vite",
@@ -671,7 +665,7 @@
 				},
 				{
 					"command": "volar.action.splitEditors",
-					"when": "editorLangId == vue"
+					"when": "volar.activated"
 				},
 				{
 					"command": "volar.action.vite",
@@ -695,11 +689,6 @@
 				}
 			],
 			"editor/title": [
-				{
-					"command": "volar.action.splitEditors",
-					"when": "resourceLangId == vue && config.volar.icon.splitEditors",
-					"group": "navigation"
-				},
 				{
 					"command": "volar.action.vite",
 					"when": "editorLangId == vue && config.volar.icon.preview && volar.foundViteDir",
