@@ -91,7 +91,7 @@ export function register(context: vscode.ExtensionContext, client: BaseLanguageC
 
 	function useDocDescriptor() {
 
-		let splitDocText = '';
+		let splitDocText: string | undefined;
 		let splitDocDescriptor: any;
 
 		return getDescriptor;
