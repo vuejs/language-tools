@@ -59,9 +59,16 @@ export function register(context: vscode.ExtensionContext, client: BaseLanguageC
 			rightBlocks = rightBlocks.concat(descriptor.customBlocks);
 		}
 
-		await foldingBlocks(leftBlocks);
-		await vscode.commands.executeCommand('workbench.action.toggleSplitEditorInGroup');
-		await foldingBlocks(rightBlocks);
+		await vscode.commands.executeCommand('workbench.action.joinEditorInGroup');
+
+		if (vscode.window.activeTextEditor === editor) {
+			await foldingBlocks(leftBlocks);
+			await vscode.commands.executeCommand('workbench.action.toggleSplitEditorInGroup');
+			await foldingBlocks(rightBlocks);
+		}
+		else {
+			await vscode.commands.executeCommand('editor.unfoldAll');
+		}
 
 		async function foldingBlocks(blocks: SFCBlock[]) {
 
