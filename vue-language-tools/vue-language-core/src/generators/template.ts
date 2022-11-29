@@ -1197,12 +1197,17 @@ export function generate(
 			codeGen.push('"');
 			let start = attrNode.loc.start.offset;
 			let end = attrNode.loc.end.offset;
-			if (end - start > attrNode.content.length) {
+			let content = attrNode.loc.source;
+			if (
+				(content.startsWith('"') && content.endsWith('"'))
+				|| (content.startsWith("'") && content.endsWith("'"))
+			) {
 				start++;
 				end--;
+				content = content.slice(1, -1);
 			}
 			codeGen.push([
-				toUnicodeIfNeed(attrNode.content),
+				toUnicodeIfNeed(content),
 				'template',
 				[start, end],
 				getCaps(capabilitiesSet.all),
