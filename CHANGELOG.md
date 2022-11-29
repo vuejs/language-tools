@@ -1,8 +1,56 @@
 # Changelog
 
+## 1.0.10 (2022/11/29)
+
+- feat: add `volar.vueserver.json.customBlockSchemaUrls` setting to support preset json schema urls for custom blocks ([#2079](https://github.com/johnsoncodehk/volar/issues/2079))
+- feat: add `volar.vueserver.reverseConfigFilePriority` setting to support customize tsconfig priority ([#1815](https://github.com/johnsoncodehk/volar/issues/1815))
+- feat: add `volar.vueserver.disableFileWatcher` setting for better performance ([#2027](https://github.com/johnsoncodehk/volar/issues/2027))
+- feat(vue-tsc): support for TypeScript 5.0 ([#2095](https://github.com/johnsoncodehk/volar/issues/2095))
+- feat: auto insert parentheses for `instanceof` expressions ([#2099](https://github.com/johnsoncodehk/volar/issues/2099))
+- feat: more accurate HTML attributes auto-complete
+- feat: add `nativeTags` instead of `experimentalRuntimeMode` to vueCompilerOptions for uni-app supports ([#2065](https://github.com/johnsoncodehk/volar/issues/2065))
+- feat: remove split editors icon and use command instead of
+- fix: goto definition not working with nvim-lspconfig (https://github.com/johnsoncodehk/volar/pull/1916#issuecomment-1293166322)
+- fix(preview): more accurate script judgment ([#2135](https://github.com/johnsoncodehk/volar/issues/2135))
+- fix: local components types should cover global components types ([#1886](https://github.com/johnsoncodehk/volar/issues/1886))
+- fix: auto insert parentheses for AsExpressions not working
+- fix: template code mapping confusion when undo with invalid template code ([#2151](https://github.com/johnsoncodehk/volar/issues/2151))
+- fix: output Server Stats through LSP API ([#2050](https://github.com/johnsoncodehk/volar/issues/2050))
+- fix: vite app preview not working if project path includes spaces (https://github.com/johnsoncodehk/vite-plugin-vue-component-preview/issues/7)
+- fix: avoid component preview create multiple terminals ([#2128](https://github.com/johnsoncodehk/volar/issues/2128))
+- fix: avoid folding when join split editors ([#1887](https://github.com/johnsoncodehk/volar/issues/1887))
+- fix: split editors command crash with empty document ([#2072](https://github.com/johnsoncodehk/volar/issues/2072))
+- fix: avoid escape `&quot;` ([#2091](https://github.com/johnsoncodehk/volar/issues/2091))
+- fix: script setup first variable jsdoc missing (https://github.com/johnsoncodehk/volar/issues/1327#issuecomment-1304784005)
+- fix: document symbols of SFC blocks range incorrect ([#2118](https://github.com/johnsoncodehk/volar/issues/2118))
+- fix: `strictTemplates` option works only bound props ([#2136](https://github.com/johnsoncodehk/volar/issues/2136))
+- fix: props required warning missing when `jsxTemplates` option enabled ([#2139](https://github.com/johnsoncodehk/volar/issues/2139))
+- fix: cannot infer events parameter type in recursive component ([#2140](https://github.com/johnsoncodehk/volar/issues/2140))
+- perf: faster semantic tokens parsing ([#2053](https://github.com/johnsoncodehk/volar/issues/2053)) ([#2056](https://github.com/johnsoncodehk/volar/issues/2056))
+- perf: avoid create file watchers in syntactic server
+- perf: cache workspace configuration in language servers ([#2062](https://github.com/johnsoncodehk/volar/issues/2062))
+
+### Special Sponsor
+
+<table><tr>
+	<td align="center" valign="middle"><a href="https://volta.net/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/volta.svg" height="60" /></a></td>
+</tr></table>
+
+### Out Gold Sponsors
+
+<table><tr>
+	<td align="center" valign="middle"><a href="https://vuejs.org/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/vue.png" height="80" /></a></td>
+</tr></table>
+
+### Out Silver Sponsors
+
+<table><tr>
+	<td align="center" valign="middle"><a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/prefect.svg" height="50" /></a></td>
+</tr></table>
+
 ## 1.0.9 (2022/10/23)
 
-- feat(vue-tsc): add error message for `noEmitOnError` ([#1669](https://github.com/johnsoncodehk/volar/issues/1669))
+- feat(vue-tsc): add error message for `noEmitOnError` ([#2053](https://github.com/johnsoncodehk/volar/issues/1669))
 - feat: add support for custom file extensions ([#1931](https://github.com/johnsoncodehk/volar/issues/1931))
 - feat: add support for `typescript/javascript.suggest.completeFunctionCalls` ([#956](https://github.com/johnsoncodehk/volar/issues/956))
 - feat: add support for JSX auto closing tags and tags commenting ([#1494](https://github.com/johnsoncodehk/volar/issues/1494))
@@ -30,45 +78,6 @@
 - fix: component tags messes with duplicate name template properties ([#2030](https://github.com/johnsoncodehk/volar/issues/2030))
 - fix: improve invalid content trimming in .md files for VitePress
 - fix: avoid language server throwing when changing built-in TS plugin activation
-
-### Special Sponsor
-
-<table>
-	<tr>
-		<td align="center" valign="middle">
-			<!-- <a href="https://v3.nuxtjs.org/">
-				<img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/nuxt.svg" height="80" />
-			</a> -->
-			<a href="https://volta.net/">
-				<img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/volta.svg" height="60" />
-			</a>
-		</td>
-	</tr>
-</table>
-
-### Out Gold Sponsors
-
-<table>
-	<tr>
-		<td align="center" valign="middle">
-			<a href="https://vuejs.org/">
-				<img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/vue.png" height="80" />
-			</a>
-		</td>
-	</tr>
-</table>
-
-### Out Silver Sponsors
-
-<table>
-	<tr>
-		<td align="center" valign="middle">
-			<a href="https://www.prefect.io/">
-				<img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/prefect.svg" height="50" />
-			</a>
-		</td>
-	</tr>
-</table>
 
 
 ## 1.0.8 (2022/10/15)
