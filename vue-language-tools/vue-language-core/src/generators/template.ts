@@ -833,10 +833,10 @@ export function generate(
 					const _varComponentInstanceA = `__VLS_${elementIndex++}`;
 					const _varComponentInstanceB = `__VLS_${elementIndex++}`;
 					_varComponentInstance = `__VLS_${elementIndex++}`;
-					codeGen.push(`const ${_varComponentInstanceA} = new ${componentVar}({ `);
+					codeGen.push(`const ${_varComponentInstanceA} = new __VLS_templateComponents.${componentVar}({ `);
 					writeProps(node, 'class', 'slots');
 					codeGen.push(`});\n`);
-					codeGen.push(`const ${_varComponentInstanceB} = ${componentVar}({ `);
+					codeGen.push(`const ${_varComponentInstanceB} = __VLS_templateComponents.${componentVar}({ `);
 					writeProps(node, 'class', 'slots');
 					codeGen.push(`});\n`);
 					codeGen.push(`let ${_varComponentInstance}!: import('./__VLS_types.js').PickNotAny<typeof ${_varComponentInstanceA}, typeof ${_varComponentInstanceB}>;\n`);
