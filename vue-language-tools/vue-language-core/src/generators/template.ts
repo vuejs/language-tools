@@ -1033,7 +1033,7 @@ export function generate(
 				writePropName(
 					propName,
 					true,
-					[prop.loc.start.offset, prop.loc.start.offset + attrNameText.length],
+					[prop.loc.start.offset, prop.loc.start.offset + prop.name.length],
 					{
 						...getCaps(capabilitiesSet.attr),
 						rename: {
@@ -1051,13 +1051,13 @@ export function generate(
 					codeGen.push('true');
 				}
 				writePropValueSuffix(true);
-				writePropEnd(true);
 				codeGen.push([
 					'',
 					'template',
 					prop.loc.end.offset,
 					getCaps(capabilitiesSet.diagnosticOnly),
 				]);
+				writePropEnd(true);
 				// original name
 				if (attrNameText !== propName) {
 					writePropStart(true);
