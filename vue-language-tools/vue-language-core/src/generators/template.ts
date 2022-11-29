@@ -461,6 +461,12 @@ export function generate(
 
 			codeGen.push(`<`);
 			if (componentVars[node.tag]) {
+				codeGen.push([
+					'',
+					'template',
+					startTagOffset,
+					capabilitiesSet.diagnosticOnly,
+				]);
 				codeGen.push(`__VLS_templateComponents.`);
 			}
 			codeGen.push([
