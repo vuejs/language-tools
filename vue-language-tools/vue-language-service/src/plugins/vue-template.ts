@@ -41,7 +41,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 	context: LanguageServiceRuntimeContext,
 }): LanguageServicePlugin & T {
 
-	const runtimeMode = vue.resolveVueCompilerOptions(options.vueLsHost.getVueCompilationSettings()).experimentalRuntimeMode;
+	const vueCompilerOptions = vue.resolveVueCompilerOptions(options.vueLsHost.getVueCompilationSettings());
+	const nativeTags = new Set(vueCompilerOptions.nativeTags);
 
 	let context: LanguageServicePluginContext;
 
@@ -170,7 +171,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				const templateScriptData = checkComponentNames(context.typescript.module, context.typescript.languageService, vueDocument.file);
 				const components = new Set([
 					...templateScriptData,
-					...templateScriptData.map(hyphenate).filter(name => !vue.isIntrinsicElement(runtimeMode, name)),
+					...templateScriptData.map(hyphenate).filter(name => !nativeTags.has(name)),
 				]);
 				const offsetRange = range ? {
 					start: document.offsetAt(range.start),

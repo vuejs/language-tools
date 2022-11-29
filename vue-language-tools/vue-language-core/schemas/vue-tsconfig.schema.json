@@ -36,6 +36,15 @@
 					"type": "boolean",
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/577"
 				},
+				"nativeTags": {
+					"type": "array",
+					"default": [
+						"div",
+						"img",
+						"..."
+					],
+					"markdownDescription": "List of valid intrinsic elements."
+				},
 				"dataAttributes": {
 					"type": "array",
 					"default": [ ],
@@ -66,19 +75,6 @@
 				"bypassDefineComponentToExposePropsAndEmitsForJsScriptSetupComponents": {
 					"type": "boolean",
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1192"
-				},
-				"experimentalRuntimeMode": {
-					"type": "string",
-					"default": "runtime-dom",
-					"anyOf": [
-						{
-							"enum": [
-								"runtime-dom",
-								"runtime-uni-app"
-							]
-						}
-					],
-					"markdownDescription": "Run app in browser or uni-app"
 				},
 				"experimentalResolveStyleCssClasses": {
 					"enum": [

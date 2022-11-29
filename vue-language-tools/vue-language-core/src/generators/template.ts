@@ -1,7 +1,7 @@
 import { Segment } from '@volar/source-map';
 import { PositionCapabilities } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
-import { camelize, capitalize, hyphenate, isHTMLTag, isSVGTag } from '@vue/shared';
+import { camelize, capitalize, hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { ResolvedVueCompilerOptions } from '../types';
 import { colletVars, walkInterpolationFragment } from '../utils/transform';
@@ -45,18 +45,6 @@ const transformContext: CompilerDOM.TransformContext = {
 	expressionPlugins: ['typescript'],
 };
 
-function _isHTMLTag(tag: string) {
-	return isHTMLTag(tag)
-		// fix https://github.com/johnsoncodehk/volar/issues/1340
-		|| tag === 'hgroup'
-		|| tag === 'slot'
-		|| tag === 'component';
-}
-
-export function isIntrinsicElement(runtimeMode: 'runtime-dom' | 'runtime-uni-app', tag: string) {
-	return runtimeMode === 'runtime-dom' ? (_isHTMLTag(tag) || isSVGTag(tag)) : ['block', 'component', 'template', 'slot'].includes(tag);
-}
-
 export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	vueCompilerOptions: ResolvedVueCompilerOptions,
@@ -67,6 +55,7 @@ export function generate(
 	cssScopedClasses: string[] = [],
 ) {
 
+	const nativeTags = new Set(vueCompilerOptions.nativeTags);
 	const codeGen: Segment<PositionCapabilities>[] = [];
 	const formatCodeGen: Segment<PositionCapabilities>[] = [];
 	const cssCodeGen: Segment<PositionCapabilities>[] = [];
@@ -157,7 +146,7 @@ export function generate(
 
 		for (const tagName in tagNames) {
 
-			if (isIntrinsicElement(vueCompilerOptions.experimentalRuntimeMode, tagName))
+			if (nativeTags.has(tagName))
 				continue;
 
 			const isNamespacedTag = tagName.indexOf('.') >= 0;
@@ -454,7 +443,7 @@ export function generate(
 
 		let _unwritedExps: CompilerDOM.SimpleExpressionNode[];
 
-		const _isIntrinsicElement = isIntrinsicElement(vueCompilerOptions.experimentalRuntimeMode, node.tag);
+		const _isIntrinsicElement = nativeTags.has(node.tag);
 		const _isNamespacedTag = node.tag.indexOf('.') >= 0;
 
 		if (vueCompilerOptions.jsxTemplates) {

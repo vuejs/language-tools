@@ -19,6 +19,7 @@ export interface ResolvedVueCompilerOptions {
 	jsxTemplates: boolean;
 	strictTemplates: boolean;
 	skipTemplateCodegen: boolean;
+	nativeTags: string[];
 	dataAttributes: string[];
 	htmlAttributes: string[];
 	optionsWrapper: [string, string] | [];
@@ -27,7 +28,6 @@ export interface ResolvedVueCompilerOptions {
 	bypassDefineComponentToExposePropsAndEmitsForJsScriptSetupComponents: boolean;
 
 	// experimental
-	experimentalRuntimeMode: 'runtime-dom' | 'runtime-uni-app';
 	experimentalResolveStyleCssClasses: 'scoped' | 'always' | 'never';
 	experimentalRfc436: boolean;
 	experimentalModelPropName: Record<string, Record<string, boolean | Record<string, string> | Record<string, string>[]>>;

@@ -78,7 +78,6 @@ export function getLanguageServicePlugins(
 							'import ' + newName + ' from ',
 						);
 						item.textEdit.newText = newName;
-						item.labelDetails = { detail: ' -> ' + newName };
 					}
 
 					const data: Data = item.data;
