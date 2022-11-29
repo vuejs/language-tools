@@ -7,6 +7,7 @@ export function createConfigurationHost(params: vscode.InitializeParams, connect
 	let cache: Record<string, any> = {};
 
 	connection.onDidChangeConfiguration(async () => {
+		cache = {};
 		for (const cb of callbacks) {
 			cb();
 		}
@@ -26,7 +27,6 @@ export function createConfigurationHost(params: vscode.InitializeParams, connect
 			return await getConfigurationWorker(section, scopeUri);
 		},
 		onDidChangeConfiguration(cb) {
-			cache = {};
 			callbacks.push(cb);
 		},
 	};
