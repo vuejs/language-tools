@@ -517,7 +517,10 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			script = script.replace('{PORT}', port.toString());
 		}
 
-		const terminal = vscode.window.createTerminal('volar-preview:' + port);
+		const terminal = vscode.window.createTerminal({
+			name: 'volar-preview:' + port,
+			isTransient: true,
+		});
 		terminal.sendText(`cd ${JSON.stringify(viteDir)}`);
 		terminal.sendText(script);
 
