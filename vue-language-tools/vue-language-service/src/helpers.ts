@@ -141,10 +141,11 @@ export function checkComponentNames(
 		?? [];
 }
 
-export function checkGlobalAttrs(
+export function getElementAttrs(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
 	fileName: string,
+	tagName: string,
 ) {
 
 	const sharedTypesFileName = fileName.substring(0, fileName.lastIndexOf('/')) + '/' + typesFileName;
@@ -153,16 +154,19 @@ export function checkGlobalAttrs(
 
 	if (tsSourceFile = tsLs.getProgram()?.getSourceFile(sharedTypesFileName)) {
 
-		const typeNoe = tsSourceFile.statements.find((node): node is ts.TypeAliasDeclaration => ts.isTypeAliasDeclaration(node) && node.name.getText() === 'GlobalAttrs');
+		const typeNode = tsSourceFile.statements.find((node): node is ts.TypeAliasDeclaration => ts.isTypeAliasDeclaration(node) && node.name.getText() === 'IntrinsicElements');
 		const checker = tsLs.getProgram()?.getTypeChecker();
 
-		if (checker && typeNoe) {
-			checker.getTypeFromTypeNode;
+		if (checker && typeNode) {
 
-			const type = checker.getTypeFromTypeNode(typeNoe.type);
-			const attrs = type.getProperties();
+			const type = checker.getTypeFromTypeNode(typeNode.type);
+			const el = type.getProperty(tagName);
 
-			return attrs.map(c => c.name);
+			if (el) {
+				const attrs = checker.getTypeOfSymbolAtLocation(el, typeNode).getProperties();
+
+				return attrs.map(c => c.name);
+			}
 		}
 	}
 

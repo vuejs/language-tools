@@ -125,7 +125,7 @@ export type EventObject<I, K1 extends string, C, E1> = {
 	>
 };
 
-type GlobalAttrs = JSX.IntrinsicElements['div'];
+type IntrinsicElements = JSX.IntrinsicElements;
 `;
 }
 

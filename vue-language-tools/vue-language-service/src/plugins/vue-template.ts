@@ -5,7 +5,7 @@ import { hyphenate } from '@vue/shared';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { checkComponentNames, checkEventsOfTag, checkGlobalAttrs, checkPropsOfTag } from '../helpers';
+import { checkComponentNames, checkEventsOfTag, getElementAttrs, checkPropsOfTag } from '../helpers';
 import * as casing from '../ideFeatures/nameCasing';
 import { AttrNameCasing, TagNameCasing } from '../types';
 
@@ -268,12 +268,12 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				},
 				provideAttributes: (tag) => {
 
-					const globalProps = checkGlobalAttrs(context.typescript.module, context.typescript.languageService, vueSourceFile.fileName);
+					const attrs = getElementAttrs(context.typescript.module, context.typescript.languageService, vueSourceFile.fileName, tag);
 					const props = new Set(checkPropsOfTag(context.typescript.module, context.typescript.languageService, vueSourceFile, tag));
 					const events = checkEventsOfTag(context.typescript.module, context.typescript.languageService, vueSourceFile, tag);
 					const attributes: html.IAttributeData[] = [];
 
-					for (const prop of [...props, ...globalProps]) {
+					for (const prop of [...props, ...attrs]) {
 
 						const isGlobal = !props.has(prop);
 						const name = attrNameCasing === AttrNameCasing.Camel ? prop : hyphenate(prop);
@@ -335,7 +335,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 					const models: [boolean, string][] = [];
 
-					for (const prop of [...props, ...globalProps]) {
+					for (const prop of [...props, ...attrs]) {
 						if (prop.startsWith('onUpdate:')) {
 							const isGlobal = !props.has(prop);
 							models.push([isGlobal, prop.substring('onUpdate:'.length)]);
