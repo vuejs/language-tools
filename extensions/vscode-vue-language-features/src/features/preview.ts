@@ -35,7 +35,6 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 
 	let connection: ReturnType<typeof preview.createPreviewConnection> | undefined;
 	let highlightDomElements = true;
-	const onDidChangeCodeLensesEmmiter = new vscode.EventEmitter<void>();
 
 	const previewTerminal = vscode.window.terminals.find(terminal => terminal.name.startsWith('volar-preview:'));
 	if (previewTerminal) {
@@ -47,7 +46,6 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 				return 'vscode://files:/' + fileName;
 			},
 		});
-		onDidChangeCodeLensesEmmiter.fire();
 		statusBar.text = 'Preview Port: ' + previewTerminal.name.split(':')[1];
 		statusBar.show();
 	}
@@ -61,7 +59,6 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 					return 'vscode://files:/' + fileName;
 				},
 			});
-			onDidChangeCodeLensesEmmiter.fire();
 			statusBar.text = 'Preview Port: ' + e.name.split(':')[1];
 			statusBar.show();
 		}
@@ -70,7 +67,6 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		if (e.name.startsWith('volar-preview:')) {
 			connection?.stop();
 			connection = undefined;
-			onDidChangeCodeLensesEmmiter.fire();
 			statusBar.hide();
 		}
 	});
@@ -522,7 +518,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		}
 
 		const terminal = vscode.window.createTerminal('volar-preview:' + port);
-		terminal.sendText(`cd ${viteDir}`);
+		terminal.sendText(`cd ${JSON.stringify(viteDir)}`);
 		terminal.sendText(script);
 
 		return {
