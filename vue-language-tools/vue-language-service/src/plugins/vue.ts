@@ -199,8 +199,8 @@ export default function (options: {
 						name: 'template',
 						kind: vscode.SymbolKind.Module,
 						location: vscode.Location.create(document.uri, vscode.Range.create(
-							document.positionAt(descriptor.template.startTagEnd),
-							document.positionAt(descriptor.template.startTagEnd + descriptor.template.content.length),
+							document.positionAt(descriptor.template.start),
+							document.positionAt(descriptor.template.end),
 						)),
 					});
 				}
@@ -209,8 +209,8 @@ export default function (options: {
 						name: 'script',
 						kind: vscode.SymbolKind.Module,
 						location: vscode.Location.create(document.uri, vscode.Range.create(
-							document.positionAt(descriptor.script.startTagEnd),
-							document.positionAt(descriptor.script.startTagEnd + descriptor.script.content.length),
+							document.positionAt(descriptor.script.start),
+							document.positionAt(descriptor.script.end),
 						)),
 					});
 				}
@@ -219,8 +219,8 @@ export default function (options: {
 						name: 'script setup',
 						kind: vscode.SymbolKind.Module,
 						location: vscode.Location.create(document.uri, vscode.Range.create(
-							document.positionAt(descriptor.scriptSetup.startTagEnd),
-							document.positionAt(descriptor.scriptSetup.startTagEnd + descriptor.scriptSetup.content.length),
+							document.positionAt(descriptor.scriptSetup.start),
+							document.positionAt(descriptor.scriptSetup.end),
 						)),
 					});
 				}
@@ -229,8 +229,8 @@ export default function (options: {
 						name: `${['style', style.scoped ? 'scoped' : undefined, style.module ? 'module' : undefined].filter(shared.notEmpty).join(' ')}`,
 						kind: vscode.SymbolKind.Module,
 						location: vscode.Location.create(document.uri, vscode.Range.create(
-							document.positionAt(style.startTagEnd),
-							document.positionAt(style.startTagEnd + style.content.length),
+							document.positionAt(style.start),
+							document.positionAt(style.end),
 						)),
 					});
 				}
@@ -239,8 +239,8 @@ export default function (options: {
 						name: `${customBlock.type}`,
 						kind: vscode.SymbolKind.Module,
 						location: vscode.Location.create(document.uri, vscode.Range.create(
-							document.positionAt(customBlock.startTagEnd),
-							document.positionAt(customBlock.startTagEnd + customBlock.content.length),
+							document.positionAt(customBlock.start),
+							document.positionAt(customBlock.end),
 						)),
 					});
 				}
