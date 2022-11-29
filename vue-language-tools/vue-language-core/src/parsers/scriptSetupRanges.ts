@@ -32,7 +32,7 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 			// fix https://github.com/johnsoncodehk/volar/issues/1223
 			&& !ts.isImportEqualsDeclaration(node)
 		) {
-			importSectionEndOffset = node.getStart(ast);
+			importSectionEndOffset = node.getStart(ast, true);
 			foundNonImportExportNode = true;
 		}
 		else if (isTypeExport && foundNonImportExportNode) {
