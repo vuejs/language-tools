@@ -429,7 +429,7 @@ export function generate(
 				codeGen.push(`;\n`);
 			}
 			codeGen.push(`};\n`);
-			codeGen.push(`return {} as unknown as Awaited<ReturnType<typeof __VLS_setup>>;\n`);
+			codeGen.push(`return {} as typeof __VLS_setup extends () => Promise<infer T> ? T : never;\n`);
 			codeGen.push(`})`);
 			if (!vueCompilerOptions.experimentalRfc436) {
 				codeGen.push(`({} as any)`);
