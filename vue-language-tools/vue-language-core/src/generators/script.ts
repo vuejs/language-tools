@@ -627,7 +627,7 @@ export function generate(
 		/* Components */
 		codeGen.push('/* Components */\n');
 		codeGen.push(`let __VLS_localComponents!: NonNullable<typeof __VLS_internalComponent extends { components: infer C } ? C : {}> & typeof __VLS_componentsOption & typeof __VLS_ctx;\n`);
-		codeGen.push(`let __VLS_otherComponents!: typeof __VLS_localComponents & Omit<import('./__VLS_types.js').GlobalComponents, keyof typeof __VLS_localComponents>;\n`);
+		codeGen.push(`let __VLS_otherComponents!: typeof __VLS_localComponents & import('./__VLS_types.js').GlobalComponents;\n`);
 		codeGen.push(`let __VLS_own!: import('./__VLS_types.js').SelfComponent<typeof __VLS_name, typeof __VLS_internalComponent & typeof __VLS_publicComponent & (new () => { ${getSlotsPropertyName(vueCompilerOptions.target ?? 3)}: typeof __VLS_slots })>;\n`);
 		codeGen.push(`let __VLS_components!: typeof __VLS_otherComponents & Omit<typeof __VLS_own, keyof typeof __VLS_otherComponents>;\n`);
 
