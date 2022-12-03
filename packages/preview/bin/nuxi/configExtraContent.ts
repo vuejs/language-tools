@@ -16,10 +16,10 @@ module.exports.default.vue.compilerOptions.nodeTransforms.push(
 		if (node.type === 1) {
 			const start = node.loc.start.offset;
 			const end = node.loc.end.offset;
-			addEvent(node, 'pointerenter', `$volar.highlight($event.target, $.type.__file, [${start},${end}])`);
-			addEvent(node, 'pointerleave', '$volar.unHighlight($event.target)');
-			addEvent(node, 'vnode-mounted', `$volar.vnodeMounted($event.el, $.type.__file, [${start},${end}])`);
-			addEvent(node, 'vnode-unmounted', '$volar.vnodeUnmounted($event.el)');
+			addEvent(node, 'pointerenter', `$event ? $volar.highlight($event.target, $.type.__file, [${start},${end}]) : undefined`);
+			addEvent(node, 'pointerleave', '$event ? $volar.unHighlight($event.target) : undefined');
+			addEvent(node, 'vnode-mounted', `$event ? $volar.vnodeMounted($event.el, $.type.__file, [${start},${end}]) : undefined`);
+			addEvent(node, 'vnode-unmounted', '$event ? $volar.vnodeUnmounted($event.el) : undefined');
 		}
 	}
 );
