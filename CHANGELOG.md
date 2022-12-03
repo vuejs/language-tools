@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.0.11 (2022/12/3)
+
+- fix(vue-tsc): dts emit do not generated `DefineComponent` type ([#2161](https://github.com/johnsoncodehk/volar/issues/2161))
+- fix: global components types loss in vue 2 projects ([#2157](https://github.com/johnsoncodehk/volar/issues/2157))
+- fix: Vite / Nuxt app preview crash when template includes `<html>` tag
+
+### Special Sponsor
+
+<table><tr>
+	<td align="center" valign="middle"><a href="https://volta.net/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/volta.svg" height="60" /></a></td>
+</tr></table>
+
+### Out Gold Sponsors
+
+<table><tr>
+	<td align="center" valign="middle"><a href="https://vuejs.org/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/vue.png" height="80" /></a></td>
+</tr></table>
+
+### Out Silver Sponsors
+
+<table><tr>
+	<td align="center" valign="middle"><a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/prefect.svg" height="50" /></a></td>
+</tr></table>
+
 ## 1.0.10 (2022/11/29)
 
 - feat: add `volar.vueserver.json.customBlockSchemaUrls` setting to support preset json schema urls for custom blocks ([#2079](https://github.com/johnsoncodehk/volar/issues/2079))
@@ -29,24 +53,6 @@
 - perf: faster semantic tokens parsing ([#2053](https://github.com/johnsoncodehk/volar/issues/2053)) ([#2056](https://github.com/johnsoncodehk/volar/issues/2056))
 - perf: avoid create file watchers in syntactic server
 - perf: cache workspace configuration in language servers ([#2062](https://github.com/johnsoncodehk/volar/issues/2062))
-
-### Special Sponsor
-
-<table><tr>
-	<td align="center" valign="middle"><a href="https://volta.net/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/volta.svg" height="60" /></a></td>
-</tr></table>
-
-### Out Gold Sponsors
-
-<table><tr>
-	<td align="center" valign="middle"><a href="https://vuejs.org/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/vue.png" height="80" /></a></td>
-</tr></table>
-
-### Out Silver Sponsors
-
-<table><tr>
-	<td align="center" valign="middle"><a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/prefect.svg" height="50" /></a></td>
-</tr></table>
 
 ## 1.0.9 (2022/10/23)
 
