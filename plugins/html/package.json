@@ -1,6 +1,6 @@
 {
 	"name": "@volar-plugins/html",
-	"version": "1.0.10",
+	"version": "1.0.11",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [

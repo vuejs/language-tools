@@ -1,6 +1,6 @@
 {
 	"name": "@volar/language-service",
-	"version": "1.0.10",
+	"version": "1.0.11",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -13,11 +13,11 @@
 		"directory": "packages/language-service"
 	},
 	"dependencies": {
-		"@volar/language-core": "1.0.10",
-		"@volar/shared": "1.0.10",
-		"@volar/source-map": "1.0.10",
-		"@volar/transforms": "1.0.10",
-		"@volar/typescript-faster": "1.0.10",
+		"@volar/language-core": "1.0.11",
+		"@volar/shared": "1.0.11",
+		"@volar/source-map": "1.0.11",
+		"@volar/transforms": "1.0.11",
+		"@volar/typescript-faster": "1.0.11",
 		"@vue/reactivity": "^3.2.45",
 		"vscode-html-languageservice": "^5.0.3",
 		"vscode-json-languageservice": "^5.1.3",
