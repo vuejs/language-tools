@@ -547,6 +547,15 @@
 					"type": "number",
 					"default": 200,
 					"description": "Delay time for diagnostics."
+				},
+				"volar.virtualFiles.mappingSelectionBackgroundColor": {
+					"type": [
+						"null",
+						"string",
+						"object"
+					],
+					"default": null,
+					"description": "Virtual files mapping selection background color."
 				}
 			}
 		},

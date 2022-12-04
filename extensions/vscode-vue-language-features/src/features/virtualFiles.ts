@@ -4,6 +4,7 @@ import { WriteVirtualFilesNotification, GetVirtualFileNamesRequest, GetVirtualFi
 import { SourceMapBase } from '@volar/source-map';
 
 const scheme = 'volar-virtual-file';
+const mappingSelectionBackgroundColor = vscode.workspace.getConfiguration('volar').get('virtualFiles.mappingSelectionBackgroundColor');
 const mappingDecorationType = vscode.window.createTextEditorDecorationType({
 	borderWidth: '1px',
 	borderStyle: 'solid',
@@ -20,8 +21,12 @@ const mappingDecorationType = vscode.window.createTextEditorDecorationType({
 });
 const mappingSelectionDecorationType = vscode.window.createTextEditorDecorationType({
 	cursor: 'crosshair',
-	// use a themable color. See package.json for the declaration and default values.
-	backgroundColor: 'darkblue'
+	light: {
+		backgroundColor: mappingSelectionBackgroundColor ?? 'lightblue'
+	},
+	dark: {
+	  backgroundColor: mappingSelectionBackgroundColor ?? 'darkblue'
+	}
 });
 
 export async function register(context: vscode.ExtensionContext, client: BaseLanguageClient) {
