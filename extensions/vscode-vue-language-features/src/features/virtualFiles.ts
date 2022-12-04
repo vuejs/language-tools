@@ -25,7 +25,7 @@ const mappingSelectionDecorationType = vscode.window.createTextEditorDecorationT
 		backgroundColor: mappingSelectionBackgroundColor ?? 'lightblue'
 	},
 	dark: {
-	  backgroundColor: mappingSelectionBackgroundColor ?? 'darkblue'
+		backgroundColor: mappingSelectionBackgroundColor ?? 'darkblue'
 	}
 });
 
