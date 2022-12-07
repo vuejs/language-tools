@@ -22,7 +22,7 @@ export function activate(context: vscode.ExtensionContext) {
 		const worker = new Worker(serverMain.toString());
 		const clientOptions: lsp.LanguageClientOptions = {
 			documentSelector: langs.map<lsp.DocumentFilter>(lang => ({ language: lang })),
-			initializationOptions: initOptions,
+			initializationOptions: JSON.parse(JSON.stringify(initOptions)),
 			progressOnInitialization: true,
 			middleware,
 		};

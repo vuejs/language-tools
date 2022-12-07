@@ -282,7 +282,7 @@ function getInitializationOptions(
 			full: lsp.TextDocumentSyncKind.Full,
 			none: lsp.TextDocumentSyncKind.None,
 		}[textDocumentSync] : lsp.TextDocumentSyncKind.Incremental,
-		typescript: tsVersion.getCurrentTsdk(context),
+		typescript: typeof navigator === undefined? tsVersion.getCurrentTsdk(context): { tsdk: 'tsserver.web.js' },
 		petiteVue: {
 			processHtmlFile: processHtml(),
 		},
