@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'typesafe-path';
 import * as fs from '../utils/fs';
 import * as shared from '@volar/shared';
-import { quickPick } from './splitEditors';
+import { quickPick } from '@volar/vscode-language-client/out/common';
 import * as preview from '@volar/preview';
 import { getLocalHostAvailablePort } from '../utils/http';
 import { BaseLanguageClient } from 'vscode-languageclient';

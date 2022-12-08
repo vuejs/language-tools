@@ -1,10 +1,14 @@
 import * as vscode from 'vscode';
 import { BaseLanguageClient } from 'vscode-languageclient';
 import * as path from 'typesafe-path';
-import { processHtml, processMd, takeOverModeEnabled } from '../common';
-import { GetMatchTsConfigRequest } from '@volar/vue-language-server';
+import { GetMatchTsConfigRequest } from '@volar/language-server';
 
-export async function register(cmd: string, context: vscode.ExtensionContext, languageClient: BaseLanguageClient) {
+export async function register(
+	cmd: string,
+	context: vscode.ExtensionContext,
+	client: BaseLanguageClient,
+	shouldStatusBarShow: (document: vscode.TextDocument) => boolean,
+) {
 
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	let currentTsconfig = '';
@@ -12,28 +16,22 @@ export async function register(cmd: string, context: vscode.ExtensionContext, la
 	updateStatusBar();
 
 	vscode.window.onDidChangeActiveTextEditor(updateStatusBar, undefined, context.subscriptions);
-	vscode.commands.registerCommand(cmd, async () => {
+	context.subscriptions.push(vscode.commands.registerCommand(cmd, async () => {
 		const document = await vscode.workspace.openTextDocument(currentTsconfig);
 		await vscode.window.showTextDocument(document);
-	});
+	}));
 
 	async function updateStatusBar() {
 		if (
-			vscode.window.activeTextEditor?.document.languageId !== 'vue'
-			&& !(processMd() && vscode.window.activeTextEditor?.document.languageId === 'markdown')
-			&& !(processHtml() && vscode.window.activeTextEditor?.document.languageId === 'html')
-			&& !(
-				takeOverModeEnabled()
-				&& vscode.window.activeTextEditor
-				&& ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(vscode.window.activeTextEditor.document.languageId)
-			)
+			!vscode.window.activeTextEditor
+			|| !shouldStatusBarShow(vscode.window.activeTextEditor.document)
 		) {
 			statusBar.hide();
 		}
 		else {
-			const tsconfig = await languageClient.sendRequest(
+			const tsconfig = await client.sendRequest(
 				GetMatchTsConfigRequest.type,
-				languageClient.code2ProtocolConverter.asTextDocumentIdentifier(vscode.window.activeTextEditor.document),
+				client.code2ProtocolConverter.asTextDocumentIdentifier(vscode.window.activeTextEditor.document),
 			);
 			if (tsconfig?.fileName) {
 				statusBar.text = path.relative(vscode.workspace.rootPath! as path.OsPath, tsconfig.fileName as path.PosixPath);

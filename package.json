@@ -22,7 +22,7 @@
 	},
 	"devDependencies": {
 		"@types/node": "latest",
-		"typescript": "next",
+		"typescript": "latest",
 		"vite": "latest",
 		"vitest": "latest"
 	},

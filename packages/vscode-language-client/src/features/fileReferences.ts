@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
 import { BaseLanguageClient } from 'vscode-languageclient';
 import * as nls from 'vscode-nls';
-import { FindFileReferenceRequest } from '@volar/vue-language-server';
+import { FindFileReferenceRequest } from '@volar/language-server';
 
 const localize = nls.loadMessageBundle();
 
-export async function register(cmd: string, client: BaseLanguageClient) {
-	vscode.commands.registerCommand(cmd, async (uri?: vscode.Uri) => {
+export async function register(cmd: string, context: vscode.ExtensionContext, client: BaseLanguageClient) {
+	context.subscriptions.push(vscode.commands.registerCommand(cmd, async (uri?: vscode.Uri) => {
 
 		// https://github.com/microsoft/vscode/blob/main/extensions/typescript-language-features/src/languageFeatures/fileReferences.ts
 		await vscode.window.withProgress({
@@ -27,7 +27,6 @@ export async function register(cmd: string, client: BaseLanguageClient) {
 			}
 
 			const locations = response.map(loc => client.protocol2CodeConverter.asLocation(loc));
-
 			const config = vscode.workspace.getConfiguration('references');
 			const existingSetting = config.inspect<string>('preferredLocation');
 
@@ -38,5 +37,5 @@ export async function register(cmd: string, client: BaseLanguageClient) {
 				await config.update('preferredLocation', existingSetting?.workspaceFolderValue ?? existingSetting?.workspaceValue);
 			}
 		});
-	});
+	}));
 }

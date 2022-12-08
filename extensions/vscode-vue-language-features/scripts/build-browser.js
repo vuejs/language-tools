@@ -24,14 +24,6 @@ require('esbuild').build({
 					const path = require.resolve('../node_modules/path-browserify', { paths: [__dirname] })
 					return { path: path }
 				})
-				build.onResolve({ filter: /\/tsVersion$/ }, args => {
-					const path = require.resolve(args.path.replace('/tsVersion', '/empty'), { paths: [args.resolveDir] })
-					return { path: path }
-				})
-				build.onResolve({ filter: /\/preview$/ }, args => {
-					const path = require.resolve(args.path.replace('/preview', '/empty'), { paths: [args.resolveDir] })
-					return { path: path }
-				})
 			},
 		},
 		require('esbuild-plugin-copy').copy({

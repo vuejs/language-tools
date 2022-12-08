@@ -1,21 +1,24 @@
+import {
+	registerAutoInsertion,
+	registerShowVirtualFiles,
+	registerWriteVirtualFiles,
+	registerFileReferences,
+	registerReloadProjects,
+	registerServerStats,
+	registerVerifyAll,
+	registerTsConfig,
+	registerShowReferences,
+	registerServerSys,
+	registerTsVersion,
+	getCurrentTsdk,
+} from '@volar/vscode-language-client';
+import { DiagnosticModel, ServerMode, VueServerInitializationOptions } from '@volar/vue-language-server';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient';
-import * as nameCasing from './features/nameCasing';
-import * as preview from './features/preview';
-import * as showReferences from './features/showReferences';
-import * as splitEditors from './features/splitEditors';
-import * as autoInsertion from './features/autoInsertion';
-import * as tsVersion from './features/tsVersion';
-import * as verifyAll from './features/verifyAll';
-import * as virtualFiles from './features/virtualFiles';
-import * as serverStatus from './features/serverStatus';
 import * as componentMeta from './features/componentMeta';
-import * as tsconfig from './features/tsconfig';
 import * as doctor from './features/doctor';
-import * as fileReferences from './features/fileReferences';
-import * as reloadProject from './features/reloadProject';
-import * as serverSys from './features/serverSys';
-import { DiagnosticModel, ServerMode, VueServerInitializationOptions } from '@volar/vue-language-server';
+import * as nameCasing from './features/nameCasing';
+import * as splitEditors from './features/splitEditors';
 
 enum LanguageFeaturesKind {
 	Semantic,
@@ -71,10 +74,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			'vue-semantic-server',
 			'Vue Semantic Server',
 			getDocumentSelector(ServerMode.Semantic),
-			getInitializationOptions(
-				ServerMode.Semantic,
-				context,
-			),
+			getInitializationOptions(ServerMode.Semantic, context),
 			getFillInitializeParams([LanguageFeaturesKind.Semantic]),
 			6009,
 		),
@@ -82,10 +82,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			'vue-syntactic-server',
 			'Vue Syntactic Server',
 			getDocumentSelector(ServerMode.Syntactic),
-			getInitializationOptions(
-				ServerMode.Syntactic,
-				context,
-			),
+			getInitializationOptions(ServerMode.Syntactic, context),
 			getFillInitializeParams([LanguageFeaturesKind.Syntactic]),
 			6011,
 		),
@@ -97,19 +94,44 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	registerClientRequests();
 
 	splitEditors.register(context, syntacticClient);
-	preview.register(context, syntacticClient);
 	doctor.register(context, semanticClient);
-	tsVersion.register('volar.selectTypeScriptVersion', context, semanticClient);
-	reloadProject.register('volar.action.reloadProject', context, semanticClient);
+	componentMeta.register(context, semanticClient);
 
-	if (semanticClient) {
-		tsconfig.register('volar.openTsconfig', context, semanticClient);
-		fileReferences.register('volar.vue.findAllFileReferences', semanticClient);
-		verifyAll.register(context, semanticClient);
-		autoInsertion.register(context, syntacticClient, semanticClient);
-		virtualFiles.register(context, semanticClient);
-		serverStatus.register(context, semanticClient);
-		componentMeta.register(context, semanticClient);
+	registerAutoInsertion(context, [syntacticClient, semanticClient]);
+	registerShowVirtualFiles('volar.action.showVirtualFiles', context, semanticClient);
+	registerWriteVirtualFiles('volar.action.writeVirtualFiles', context, semanticClient);
+	registerFileReferences('volar.vue.findAllFileReferences', context, semanticClient);
+	registerTsConfig('volar.openTsconfig', context, semanticClient,
+		document => {
+			return document.languageId === 'vue'
+				|| (processMd() && document.languageId === 'markdown')
+				|| (processHtml() && document.languageId === 'html')
+				|| (
+					takeOverModeEnabled()
+					&& ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(document.languageId)
+				);
+		},
+	);
+	registerReloadProjects('volar.action.reloadProject', context, [semanticClient]);
+	registerServerStats('volar.action.serverStats', context, [semanticClient]);
+	registerVerifyAll('volar.action.verifyAllScripts', context, [semanticClient]);
+	registerTsVersion('volar.selectTypeScriptVersion', context, semanticClient,
+		document => {
+			return document.languageId === 'vue'
+				|| (processMd() && document.languageId === 'markdown')
+				|| (processHtml() && document.languageId === 'html')
+				|| (
+					takeOverModeEnabled()
+					&& ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(document.languageId)
+				);
+		},
+		() => takeOverModeEnabled(),
+		() => noProjectReferences(),
+	);
+
+	for (const client of clients) {
+		registerShowReferences(context, client);
+		registerServerSys(context, client);
 	}
 
 	async function requestReloadVscode() {
@@ -121,7 +143,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		vscode.commands.executeCommand('workbench.action.reloadWindow');
 	}
 	function registerServerMaxOldSpaceSizeChange() {
-		vscode.workspace.onDidChangeConfiguration(async (e) => {
+		vscode.workspace.onDidChangeConfiguration((e) => {
 			if (
 				e.affectsConfiguration('volar.vueserver.maxOldSpaceSize')
 				|| e.affectsConfiguration('volar.vueserver.diagnosticModel')
@@ -132,7 +154,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 				|| e.affectsConfiguration('volar.vueserver.vitePress.processMdFile')
 				|| e.affectsConfiguration('volar.vueserver.additionalExtensions')
 			) {
-				return requestReloadVscode();
+				requestReloadVscode();
 			}
 		});
 	}
@@ -144,15 +166,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		}));
 	}
 	function registerClientRequests() {
-
-		for (const client of clients) {
-			showReferences.activate(context, client);
-			serverSys.activate(context, client);
-		}
-
-		if (semanticClient) {
-			nameCasing.activate(context, semanticClient);
-		}
+		nameCasing.activate(context, semanticClient);
 	}
 }
 
@@ -282,7 +296,7 @@ function getInitializationOptions(
 			full: lsp.TextDocumentSyncKind.Full,
 			none: lsp.TextDocumentSyncKind.None,
 		}[textDocumentSync] : lsp.TextDocumentSyncKind.Incremental,
-		typescript: typeof navigator === undefined? tsVersion.getCurrentTsdk(context): { tsdk: 'tsserver.web.js' },
+		typescript: getCurrentTsdk(context),
 		petiteVue: {
 			processHtmlFile: processHtml(),
 		},
