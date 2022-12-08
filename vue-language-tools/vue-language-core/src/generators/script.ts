@@ -30,7 +30,7 @@ export function generate(
 	teleports: SourceMaps.Mapping<TeleportMappingData>[] = [],
 ) {
 
-	const bypassDefineComponent = vueCompilerOptions.bypassDefineComponentToExposePropsAndEmitsForJsScriptSetupComponents && lang === 'js' || lang === 'jsx';
+	const bypassDefineComponent = lang === 'js' || lang === 'jsx';
 	const vueVersion = vueCompilerOptions.target ?? 3;
 	const vueLibName = getVueLibraryName(vueVersion);
 	const usedTypes = {

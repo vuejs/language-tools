@@ -25,7 +25,6 @@ export interface ResolvedVueCompilerOptions {
 	optionsWrapper: [string, string] | [];
 	plugins: string[];
 	narrowingTypesInInlineHandlers: boolean;
-	bypassDefineComponentToExposePropsAndEmitsForJsScriptSetupComponents: boolean;
 
 	// experimental
 	experimentalResolveStyleCssClasses: 'scoped' | 'always' | 'never';
