@@ -20,8 +20,12 @@ const mappingDecorationType = vscode.window.createTextEditorDecorationType({
 });
 const mappingSelectionDecorationType = vscode.window.createTextEditorDecorationType({
 	cursor: 'crosshair',
-	// use a themable color. See package.json for the declaration and default values.
-	backgroundColor: 'darkblue'
+	light: {
+		backgroundColor: 'lightblue'
+	},
+	dark: {
+		backgroundColor: 'darkblue'
+	}
 });
 
 export async function register(context: vscode.ExtensionContext, client: BaseLanguageClient) {
