@@ -153,11 +153,13 @@ function resolveWorkspaceTsdk(tsdk: path.OsPath | path.PosixPath) {
 function getVScodeTsdkUri() {
 
 	if (isWeb) {
-		const tsExtUri = vscode.extensions.getExtension('vscode.typescript-language-features')?.extensionUri.toString()
-			// incase vscode.typescript-language-features disabled
-			?? vscode.extensions.getExtension('vscode.typescript')?.extensionUri.toString().replace('/vscode.typescript', '/vscode.typescript-language-features');
-		if (tsExtUri) {
-			return vscode.Uri.parse(tsExtUri + '/dist/browser/typescript');
+		const tsExt = vscode.extensions.getExtension('vscode.typescript-language-features');
+		if (tsExt) {
+			return vscode.Uri.parse(tsExt.extensionUri.toString() + '/dist/browser/typescript');
+		}
+		else {
+			const version = require('typescript/package.json').version;
+			return vscode.Uri.parse(`https://cdn.jsdelivr.net/npm/typescript@${version}/lib`);
 		}
 	}
 
