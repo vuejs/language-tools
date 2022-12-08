@@ -63,6 +63,7 @@ export default function (options: {
 								|| (
 									ts.isBinaryExpression(statement.expression)
 									&& statement.expression.right.getText(ast)
+									&& statement.expression.operatorToken.kind === ts.SyntaxKind.InstanceOfKeyword
 								)
 								|| (
 									ts.isTypeOfExpression(statement.expression)
