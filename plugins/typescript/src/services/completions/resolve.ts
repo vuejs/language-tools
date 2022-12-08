@@ -59,7 +59,7 @@ export function register(
 					const entries = changes.textChanges.map(textChange => {
 						return { fileName, textSpan: textChange.span };
 					});
-					const locs = entriesToLocations(rootUri, entries, getTextDocument);
+					const locs = entriesToLocations(entries, getTextDocument);
 					locs.forEach((loc, index) => {
 						item.additionalTextEdits?.push(vscode.TextEdit.replace(loc.range, changes.textChanges[index].newText));
 					});
@@ -115,7 +115,7 @@ export function register(
 		return item;
 
 		function toResource(path: string) {
-			return shared.getUriByPath(rootUri, path);
+			return shared.getUriByPath(path);
 		}
 	};
 }

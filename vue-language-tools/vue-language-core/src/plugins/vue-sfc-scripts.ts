@@ -17,7 +17,7 @@ const plugin: VueLanguagePlugin = () => {
 			return names;
 		},
 
-		resolveEmbeddedFile(fileName, sfc, embeddedFile) {
+		resolveEmbeddedFile(_fileName, sfc, embeddedFile) {
 			const scriptMatch = embeddedFile.fileName.match(/^(.*)\.script_format\.([^.]+)$/);
 			const scriptSetupMatch = embeddedFile.fileName.match(/^(.*)\.scriptSetup_format\.([^.]+)$/);
 			const script = scriptMatch ? sfc.script : scriptSetupMatch ? sfc.scriptSetup : undefined;

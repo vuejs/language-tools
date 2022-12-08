@@ -212,7 +212,7 @@ export function register(
 			return buildTokens(result);
 		}) ?? buildTokens([]);
 	});
-	connection.languages.diagnostics.on(async (params, token, workDoneProgressReporter, resultProgressReporter) => {
+	connection.languages.diagnostics.on(async (params, token, _workDoneProgressReporter, resultProgressReporter) => {
 		token = cancelHost.createCancellationToken(token);
 		const result = await worker(params.textDocument.uri, vueLs => {
 			return vueLs.doValidation(params.textDocument.uri, token, errors => {

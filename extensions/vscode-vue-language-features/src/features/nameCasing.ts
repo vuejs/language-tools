@@ -7,7 +7,7 @@ import { processHtml, processMd } from '../common';
 export const attrNameCasings = new Map<string, AttrNameCasing>();
 export const tagNameCasings = new Map<string, TagNameCasing>();
 
-export async function activate(context: vscode.ExtensionContext, languageClient: BaseLanguageClient) {
+export async function activate(_context: vscode.ExtensionContext, languageClient: BaseLanguageClient) {
 
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	statusBar.command = 'volar.action.nameCasing';

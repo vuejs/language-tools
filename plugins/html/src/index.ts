@@ -76,7 +76,7 @@ export default function (options: {
 		},
 
 		findDocumentLinks(document) {
-			return worker(document, (htmlDocument) => {
+			return worker(document, () => {
 
 				if (!context.env.documentContext)
 					return;
@@ -92,19 +92,19 @@ export default function (options: {
 		},
 
 		getFoldingRanges(document) {
-			return worker(document, (htmlDocument) => {
+			return worker(document, () => {
 				return htmlLs.getFoldingRanges(document);
 			});
 		},
 
 		getSelectionRanges(document, positions) {
-			return worker(document, (htmlDocument) => {
+			return worker(document, () => {
 				return htmlLs.getSelectionRanges(document, positions);
 			});
 		},
 
 		async format(document, formatRange, options) {
-			return worker(document, async (htmlDocument) => {
+			return worker(document, async () => {
 
 				const options_2 = await context.env.configurationHost?.getConfiguration<html.HTMLFormatConfiguration & { enable: boolean; }>('html.format');
 

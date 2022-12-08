@@ -17,7 +17,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				// note https://github.com/johnsoncodehk/volar/issues/2009
 				data => typeof data.rename === 'object' ? !!data.rename.normalize : !!data.rename
 			),
-			async (plugin, document, position, sourceMap, vueDocument) => {
+			async (plugin, document, position) => {
 
 				const recursiveChecker = dedupe.createLocationSet();
 				const result: vscode.DocumentHighlight[] = [];

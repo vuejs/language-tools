@@ -195,7 +195,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 						yield arg;
 					}
 				},
-				async (plugin, document, arg, sourceMap) => {
+				async (plugin, document) => {
 
 					if (token) {
 

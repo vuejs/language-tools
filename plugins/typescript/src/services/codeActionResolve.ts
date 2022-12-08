@@ -30,18 +30,18 @@ export function register(
 				} catch { }
 			});
 			const changes = fixs.map(fix => fix?.changes ?? []).flat();
-			codeAction.edit = fileTextChangesToWorkspaceEdit(rootUri, changes, getTextDocument);
+			codeAction.edit = fileTextChangesToWorkspaceEdit(changes, getTextDocument);
 		}
 		else if (data?.type === 'refactor') {
 			const editInfo = languageService.getEditsForRefactor(data.fileName, formatOptions, data.range, data.refactorName, data.actionName, preferences);
 			if (editInfo) {
-				const edit = fileTextChangesToWorkspaceEdit(rootUri, editInfo.edits, getTextDocument);
+				const edit = fileTextChangesToWorkspaceEdit(editInfo.edits, getTextDocument);
 				codeAction.edit = edit;
 			}
 		}
 		else if (data?.type === 'organizeImports') {
 			const changes = languageService.organizeImports({ type: 'file', fileName: data.fileName }, formatOptions, preferences);
-			const edit = fileTextChangesToWorkspaceEdit(rootUri, changes, getTextDocument);
+			const edit = fileTextChangesToWorkspaceEdit(changes, getTextDocument);
 			codeAction.edit = edit;
 		}
 

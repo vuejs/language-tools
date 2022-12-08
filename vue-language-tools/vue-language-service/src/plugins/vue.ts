@@ -140,7 +140,7 @@ export default function (options: {
 
 		validation: {
 			onSyntactic(document) {
-				return worker(document, (document, vueDocument, vueSourceFile) => {
+				return worker(document, (document, _vueDocument, vueSourceFile) => {
 
 					const result: vscode.Diagnostic[] = [];
 					const sfc = vueSourceFile.sfc;
@@ -189,7 +189,7 @@ export default function (options: {
 		},
 
 		findDocumentSymbols(document) {
-			return worker(document, (document, vueDocument, vueSourceFile) => {
+			return worker(document, (document, _vueDocument, vueSourceFile) => {
 
 				const result: vscode.SymbolInformation[] = [];
 				const descriptor = vueSourceFile.sfc;
@@ -250,19 +250,19 @@ export default function (options: {
 		},
 
 		getFoldingRanges(document) {
-			return worker(document, (document, vueDocument, vueSourceFile) => {
+			return worker(document, (document) => {
 				return htmlPlugin.getHtmlLs().getFoldingRanges(document);
 			});
 		},
 
 		getSelectionRanges(document, positions) {
-			return worker(document, (document, vueDocument, vueSourceFile) => {
+			return worker(document, (document) => {
 				return htmlPlugin.getHtmlLs().getSelectionRanges(document, positions);
 			});
 		},
 
 		format(document) {
-			return worker(document, (document, vueDocument, vueSourceFile) => {
+			return worker(document, (document, _vueDocument, vueSourceFile) => {
 
 				const blocks = [
 					vueSourceFile.sfc.script,

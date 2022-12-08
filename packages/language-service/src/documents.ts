@@ -4,7 +4,6 @@ import { Mapping, SourceMapBase } from '@volar/source-map';
 import { computed } from '@vue/reactivity';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { URI } from 'vscode-uri';
 
 export type SourceFileDocuments = ReturnType<typeof parseSourceFileDocuments>;
 export type SourceFileDocument = ReturnType<typeof parseSourceFileDocument>;
@@ -175,10 +174,7 @@ export class TeleportSourceMap extends SourceMap<TeleportMappingData> {
 	}
 }
 
-export function parseSourceFileDocuments(
-	rootUri: URI,
-	mapper: DocumentRegistry,
-) {
+export function parseSourceFileDocuments(mapper: DocumentRegistry) {
 
 	const _sourceFiles = new WeakMap<SourceFile, SourceFileDocument>();
 
@@ -236,7 +232,7 @@ export function parseSourceFileDocuments(
 	function get(sourceFile: SourceFile) {
 		let vueDocument = _sourceFiles.get(sourceFile);
 		if (!vueDocument) {
-			vueDocument = parseSourceFileDocument(rootUri, sourceFile);
+			vueDocument = parseSourceFileDocument(sourceFile);
 			_sourceFiles.set(sourceFile, vueDocument);
 		}
 		return vueDocument;
@@ -246,10 +242,7 @@ export function parseSourceFileDocuments(
 	}
 }
 
-export function parseSourceFileDocument(
-	rootUri: URI,
-	sourceFile: SourceFile,
-) {
+export function parseSourceFileDocument(sourceFile: SourceFile) {
 
 	let documentVersion = 0;
 	const embeddedDocumentVersions = new Map<string, number>();
@@ -258,7 +251,7 @@ export function parseSourceFileDocument(
 
 	// computed
 	const document = computed(() => TextDocument.create(
-		shared.getUriByPath(rootUri, sourceFile.fileName),
+		shared.getUriByPath(sourceFile.fileName),
 		sourceFile.fileName.endsWith('.md') ? 'markdown' : 'vue',
 		documentVersion++,
 		sourceFile.text,
@@ -287,7 +280,7 @@ export function parseSourceFileDocument(
 	});
 
 	return {
-		uri: shared.getUriByPath(rootUri, sourceFile.fileName),
+		uri: shared.getUriByPath(sourceFile.fileName),
 		file: sourceFile,
 		getSourceMap,
 		getEmbeddedDocument,
@@ -323,7 +316,7 @@ export function parseSourceFileDocument(
 
 		if (!document || document.getText() !== embeddedFile.text) {
 
-			const uri = shared.getUriByPath(rootUri, embeddedFile.fileName);
+			const uri = shared.getUriByPath(embeddedFile.fileName);
 			const newVersion = (embeddedDocumentVersions.get(uri.toLowerCase()) ?? 0) + 1;
 
 			embeddedDocumentVersions.set(uri.toLowerCase(), newVersion);

@@ -23,7 +23,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			context,
 			uri,
 			range,
-			(arg, sourceMap) => {
+			(_arg, sourceMap) => {
 
 				/**
 				 * copy from ./codeActions.ts
@@ -56,7 +56,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				return [];
 			},
-			(plugin, document, arg, sourceMap) => {
+			(plugin, document, arg) => {
 				return plugin.inlayHints?.on?.(document, arg);
 			},
 			(inlayHints, sourceMap) => inlayHints.map(_inlayHint => {

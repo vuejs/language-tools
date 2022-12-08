@@ -33,7 +33,7 @@ const validTsVar = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 const transformContext: CompilerDOM.TransformContext = {
 	onError: () => { },
 	helperString: str => str.toString(),
-	replaceNode: node => { },
+	replaceNode: () => { },
 	cacheHandlers: false,
 	prefixIdentifiers: false,
 	scopes: {

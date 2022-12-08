@@ -40,7 +40,7 @@ export function register(
 		if (!entries)
 			return;
 
-		const locations = locationsToWorkspaceEdit(rootUri, newName, entries, getTextDocument);
+		const locations = locationsToWorkspaceEdit(newName, entries, getTextDocument);
 		return locations;
 	};
 
@@ -59,21 +59,21 @@ export function register(
 		const newFilePath = path.join(dirname, newName);
 
 		const response = languageService.getEditsForFileRename(fileToRename, newFilePath, formatOptions, preferences);
-		const edits = fileTextChangesToWorkspaceEdit(rootUri, response, getTextDocument);
+		const edits = fileTextChangesToWorkspaceEdit(response, getTextDocument);
 		if (!edits.documentChanges) {
 			edits.documentChanges = [];
 		}
 
 		edits.documentChanges.push(vscode.RenameFile.create(
-			shared.getUriByPath(rootUri, fileToRename),
-			shared.getUriByPath(rootUri, newFilePath),
+			shared.getUriByPath(fileToRename),
+			shared.getUriByPath(newFilePath),
 		));
 
 		return edits;
 	}
 }
 
-export function fileTextChangesToWorkspaceEdit(rootUri: URI, changes: readonly ts.FileTextChanges[], getTextDocument: (uri: string) => TextDocument | undefined) {
+export function fileTextChangesToWorkspaceEdit(changes: readonly ts.FileTextChanges[], getTextDocument: (uri: string) => TextDocument | undefined) {
 	const workspaceEdit: vscode.WorkspaceEdit = {};
 
 	for (const change of changes) {
@@ -82,7 +82,7 @@ export function fileTextChangesToWorkspaceEdit(rootUri: URI, changes: readonly t
 			workspaceEdit.documentChanges = [];
 		}
 
-		const uri = shared.getUriByPath(rootUri, change.fileName);
+		const uri = shared.getUriByPath(change.fileName);
 		let doc = getTextDocument(uri);
 
 		if (change.isNewFile) {
@@ -115,7 +115,7 @@ export function fileTextChangesToWorkspaceEdit(rootUri: URI, changes: readonly t
 
 	return workspaceEdit;
 }
-function locationsToWorkspaceEdit(rootUri: URI, newText: string, locations: readonly ts.RenameLocation[], getTextDocument: (uri: string) => TextDocument | undefined) {
+function locationsToWorkspaceEdit(newText: string, locations: readonly ts.RenameLocation[], getTextDocument: (uri: string) => TextDocument | undefined) {
 	const workspaceEdit: vscode.WorkspaceEdit = {};
 
 	for (const location of locations) {
@@ -124,7 +124,7 @@ function locationsToWorkspaceEdit(rootUri: URI, newText: string, locations: read
 			workspaceEdit.changes = {};
 		}
 
-		const uri = shared.getUriByPath(rootUri, location.fileName);
+		const uri = shared.getUriByPath(location.fileName);
 		const doc = getTextDocument(uri);
 		if (!doc) continue;
 

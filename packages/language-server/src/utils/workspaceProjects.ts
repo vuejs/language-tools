@@ -238,7 +238,7 @@ export async function createWorkspaceProjects(
 				plugins,
 				fsHost,
 				ts,
-				URI.parse(shared.getUriByPath(rootUri, path.dirname(tsConfig))),
+				URI.parse(shared.getUriByPath(path.dirname(tsConfig))),
 				tsConfig,
 				tsLocalized,
 				documents,

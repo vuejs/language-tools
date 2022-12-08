@@ -17,7 +17,7 @@ const plugin: VueLanguagePlugin = () => {
 			return [];
 		},
 
-		resolveEmbeddedFile(fileName, sfc, embeddedFile) {
+		resolveEmbeddedFile(_fileName, sfc, embeddedFile) {
 			const match = embeddedFile.fileName.match(/^(.*)\.template\.([^.]+)$/);
 			if (match && sfc.template) {
 				embeddedFile.capabilities = {

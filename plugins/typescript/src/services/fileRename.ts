@@ -29,7 +29,7 @@ export function register(
 		try { response = languageService.getEditsForFileRename(fileToRename, newFilePath, formatOptions, preferences); } catch { }
 		if (!response?.length) return;
 
-		const edits = fileTextChangesToWorkspaceEdit(rootUri, response, getTextDocument);
+		const edits = fileTextChangesToWorkspaceEdit(response, getTextDocument);
 		return edits;
 	};
 }

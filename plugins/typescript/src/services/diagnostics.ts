@@ -2,10 +2,8 @@ import * as vscode from 'vscode-languageserver-protocol';
 import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import { URI } from 'vscode-uri';
 
 export function register(
-	rootUri: URI,
 	host: ts.LanguageServiceHost,
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
@@ -95,7 +93,7 @@ export function register(
 
 			let document: TextDocument | undefined;
 			if (diag.file) {
-				document = getTextDocument(shared.getUriByPath(rootUri, diag.file.fileName));
+				document = getTextDocument(shared.getUriByPath(diag.file.fileName));
 			}
 			if (!document) return;
 

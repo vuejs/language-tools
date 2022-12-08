@@ -31,7 +31,7 @@ export async function register(
 
 		const tsdk = getTsdk(context);
 		const configTsdkPath = getConfigTsdkPath();
-		const vscodeTsdkUri = await getVScodeTsdkUri(context);
+		const vscodeTsdkUri = getVScodeTsdkUri();
 		const select = await quickPick([
 			{
 				useVSCodeTsdk: {
@@ -123,7 +123,7 @@ export function getTsdk(context: vscode.ExtensionContext) {
 			};
 		}
 	}
-	const vscodeTsdkUri = getVScodeTsdkUri(context);
+	const vscodeTsdkUri = getVScodeTsdkUri();
 	return {
 		tsdk: vscodeTsdkUri.scheme === 'file' ? vscodeTsdkUri.fsPath : vscodeTsdkUri.toString(),
 		uri: vscodeTsdkUri,
@@ -150,14 +150,16 @@ function resolveWorkspaceTsdk(tsdk: path.OsPath | path.PosixPath) {
 	}
 }
 
-function getVScodeTsdkUri(context: vscode.ExtensionContext) {
+function getVScodeTsdkUri() {
 
 	if (isWeb) {
-		const tsExtUri = vscode.extensions.getExtension('vscode.typescript-language-features')?.extensionUri.toString()
-			// incase vscode.typescript-language-features disabled
-			?? vscode.extensions.getExtension('vscode.typescript')?.extensionUri.toString().replace('/vscode.typescript', '/vscode.typescript-language-features');
-		if (tsExtUri) {
-			return vscode.Uri.parse(tsExtUri + '/dist/browser/typescript');
+		const tsExt = vscode.extensions.getExtension('vscode.typescript-language-features');
+		if (tsExt) {
+			return vscode.Uri.parse(tsExt.extensionUri.toString() + '/dist/browser/typescript');
+		}
+		else {
+			const version = require('typescript/package.json').version;
+			return vscode.Uri.parse(`https://cdn.jsdelivr.net/npm/typescript@${version}/lib`);
 		}
 	}
 

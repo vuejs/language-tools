@@ -13,7 +13,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			uri,
 			position,
 			(position, sourceMap) => sourceMap.toGeneratedPositions(position, data => !!data.references),
-			async (plugin, document, position, sourceMap, vueDocument) => {
+			async (plugin, document, position) => {
 
 				const recursiveChecker = dedupe.createLocationSet();
 				const result: vscode.Location[] = [];
@@ -64,7 +64,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					}
 				}
 			},
-			(data, sourceMap) => {
+			(data) => {
 
 				const results: vscode.Location[] = [];
 

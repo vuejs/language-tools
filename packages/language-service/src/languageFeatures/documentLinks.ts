@@ -12,8 +12,8 @@ export function register(context: LanguageServiceRuntimeContext) {
 			context,
 			uri,
 			undefined,
-			(arg, sourceMap) => [arg],
-			(plugin, document, arg) => plugin.findDocumentLinks?.(document),
+			(arg) => [arg],
+			(plugin, document) => plugin.findDocumentLinks?.(document),
 			(data, sourceMap) => data.map(link => {
 
 				if (!sourceMap)

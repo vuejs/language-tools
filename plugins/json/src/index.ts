@@ -25,7 +25,7 @@ export default function (settings?: json.LanguageSettings): LanguageServicePlugi
 			// https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/json-language-features/server/src/jsonServer.ts#L150
 			triggerCharacters: ['"', ':'],
 
-			on(document, position, context) {
+			on(document, position) {
 				return worker(document, async (jsonDocument) => {
 					return await jsonLs.doComplete(document, position, jsonDocument);
 				});
@@ -92,7 +92,7 @@ export default function (settings?: json.LanguageSettings): LanguageServicePlugi
 		},
 
 		getFoldingRanges(document) {
-			return worker(document, async (jsonDocument) => {
+			return worker(document, async () => {
 				return await jsonLs.getFoldingRanges(document);
 			});
 		},
@@ -104,7 +104,7 @@ export default function (settings?: json.LanguageSettings): LanguageServicePlugi
 		},
 
 		format(document, range, options) {
-			return worker(document, async (jsonDocument) => {
+			return worker(document, async () => {
 
 				const options_2 = await context.env.configurationHost?.getConfiguration<json.FormattingOptions & { enable: boolean; }>('json.format');
 

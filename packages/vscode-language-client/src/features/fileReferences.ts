@@ -12,7 +12,7 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 		await vscode.window.withProgress({
 			location: vscode.ProgressLocation.Window,
 			title: localize('progress.title', "Finding file references")
-		}, async (_progress, token) => {
+		}, async (_progress) => {
 
       			if (!uri) {
       			  const editor = vscode.window.activeTextEditor;
