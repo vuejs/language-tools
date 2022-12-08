@@ -4,6 +4,7 @@ import { FileSystem, FileSystemHost } from '../types';
 import { IterableWeakSet } from './iterableWeakSet';
 import { createUriMap } from './uriMap';
 import type * as ts from 'typescript/lib/tsserverlibrary';
+import * as shared from '@volar/shared';
 
 let currentCwd = '';
 
@@ -52,15 +53,17 @@ export function createNodeFileSystemHost(
 
 	function createWorkspaceFileSystem(rootUri: URI): FileSystem {
 
+		const rootPath = shared.getPathOfUri(rootUri.toString());
+
 		const workspaceSys = new Proxy(ts.sys, {
 			get(target, prop) {
 				const fn = target[prop as keyof typeof target];
 				if (typeof fn === 'function') {
 					return new Proxy(fn, {
 						apply(target, thisArg, args) {
-							if (currentCwd !== rootUri.fsPath) {
-								process.chdir(rootUri.fsPath);
-								currentCwd = rootUri.fsPath;
+							if (currentCwd !== rootPath) {
+								process.chdir(rootPath);
+								currentCwd = rootPath;
 							}
 							return (target as any).apply(thisArg, args);
 						}

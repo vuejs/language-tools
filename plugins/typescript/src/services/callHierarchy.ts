@@ -71,7 +71,7 @@ export function register(
 
 	function fromProtocolCallHierarchyItem(item: ts.CallHierarchyItem): vscode.CallHierarchyItem {
 		const rootPath = languageService.getProgram()?.getCompilerOptions().rootDir ?? '';
-		const document = getTextDocument(shared.getUriByPath(rootUri, item.file))!; // TODO
+		const document = getTextDocument(shared.getUriByPath(item.file))!; // TODO
 		const useFileName = isSourceFileItem(item);
 		const name = useFileName ? path.basename(item.file) : item.name;
 		const detail = useFileName ? path.relative(rootPath, path.dirname(item.file)) : item.containerName ?? '';
@@ -79,7 +79,7 @@ export function register(
 			kind: typeConverters.SymbolKind.fromProtocolScriptElementKind(item.kind),
 			name,
 			detail,
-			uri: shared.getUriByPath(rootUri, item.file),
+			uri: shared.getUriByPath(item.file),
 			range: {
 				start: document.positionAt(item.span.start),
 				end: document.positionAt(item.span.start + item.span.length),
@@ -98,7 +98,7 @@ export function register(
 	}
 
 	function fromProtocolCallHierchyIncomingCall(item: ts.CallHierarchyIncomingCall): vscode.CallHierarchyIncomingCall {
-		const document = getTextDocument(shared.getUriByPath(rootUri, item.from.file))!;
+		const document = getTextDocument(shared.getUriByPath(item.from.file))!;
 		return {
 			from: fromProtocolCallHierarchyItem(item.from),
 			fromRanges: item.fromSpans.map(fromSpan => ({

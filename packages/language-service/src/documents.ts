@@ -258,7 +258,7 @@ export function parseSourceFileDocument(
 
 	// computed
 	const document = computed(() => TextDocument.create(
-		shared.getUriByPath(rootUri, sourceFile.fileName),
+		shared.getUriByPath(sourceFile.fileName),
 		sourceFile.fileName.endsWith('.md') ? 'markdown' : 'vue',
 		documentVersion++,
 		sourceFile.text,
@@ -287,7 +287,7 @@ export function parseSourceFileDocument(
 	});
 
 	return {
-		uri: shared.getUriByPath(rootUri, sourceFile.fileName),
+		uri: shared.getUriByPath(sourceFile.fileName),
 		file: sourceFile,
 		getSourceMap,
 		getEmbeddedDocument,
@@ -323,7 +323,7 @@ export function parseSourceFileDocument(
 
 		if (!document || document.getText() !== embeddedFile.text) {
 
-			const uri = shared.getUriByPath(rootUri, embeddedFile.fileName);
+			const uri = shared.getUriByPath(embeddedFile.fileName);
 			const newVersion = (embeddedDocumentVersions.get(uri.toLowerCase()) ?? 0) + 1;
 
 			embeddedDocumentVersions.set(uri.toLowerCase(), newVersion);

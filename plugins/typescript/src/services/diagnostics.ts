@@ -95,7 +95,7 @@ export function register(
 
 			let document: TextDocument | undefined;
 			if (diag.file) {
-				document = getTextDocument(shared.getUriByPath(rootUri, diag.file.fileName));
+				document = getTextDocument(shared.getUriByPath(diag.file.fileName));
 			}
 			if (!document) return;
 

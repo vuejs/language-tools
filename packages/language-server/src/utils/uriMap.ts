@@ -42,7 +42,7 @@ export function createUriMap<T>(map: Options<T> = new Map<string, T>()) {
 			pathToUriKeys.set(rootUri, map);
 		}
 		if (!map.has(path)) {
-			map.set(path, shared.getUriByPath(rootUri, path).toLowerCase());
+			map.set(path, shared.getUriByPath(path).toLowerCase());
 		}
 		return map.get(path)!;
 	}

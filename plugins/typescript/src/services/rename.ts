@@ -65,8 +65,8 @@ export function register(
 		}
 
 		edits.documentChanges.push(vscode.RenameFile.create(
-			shared.getUriByPath(rootUri, fileToRename),
-			shared.getUriByPath(rootUri, newFilePath),
+			shared.getUriByPath(fileToRename),
+			shared.getUriByPath(newFilePath),
 		));
 
 		return edits;
@@ -82,7 +82,7 @@ export function fileTextChangesToWorkspaceEdit(rootUri: URI, changes: readonly t
 			workspaceEdit.documentChanges = [];
 		}
 
-		const uri = shared.getUriByPath(rootUri, change.fileName);
+		const uri = shared.getUriByPath(change.fileName);
 		let doc = getTextDocument(uri);
 
 		if (change.isNewFile) {
@@ -124,7 +124,7 @@ function locationsToWorkspaceEdit(rootUri: URI, newText: string, locations: read
 			workspaceEdit.changes = {};
 		}
 
-		const uri = shared.getUriByPath(rootUri, location.fileName);
+		const uri = shared.getUriByPath(location.fileName);
 		const doc = getTextDocument(uri);
 		if (!doc) continue;
 

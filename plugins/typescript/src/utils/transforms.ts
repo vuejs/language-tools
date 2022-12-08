@@ -7,7 +7,7 @@ import { URI } from 'vscode-uri';
 export function entriesToLocations(rootUri: URI, entries: { fileName: string, textSpan: ts.TextSpan; }[], getTextDocument: (uri: string) => TextDocument | undefined) {
 	const locations: vscode.Location[] = [];
 	for (const entry of entries) {
-		const entryUri = shared.getUriByPath(rootUri, entry.fileName);
+		const entryUri = shared.getUriByPath(entry.fileName);
 		const doc = getTextDocument(entryUri);
 		if (!doc) continue;
 		const range = vscode.Range.create(
@@ -22,7 +22,7 @@ export function entriesToLocations(rootUri: URI, entries: { fileName: string, te
 export function entriesToLocationLinks<T extends ts.DocumentSpan>(rootUri: URI, entries: T[], getTextDocument: (uri: string) => TextDocument | undefined): vscode.LocationLink[] {
 	const locations: vscode.LocationLink[] = [];
 	for (const entry of entries) {
-		const entryUri = shared.getUriByPath(rootUri, entry.fileName);
+		const entryUri = shared.getUriByPath(entry.fileName);
 		const doc = getTextDocument(entryUri);
 		if (!doc) continue;
 		const targetSelectionRange = vscode.Range.create(
@@ -50,7 +50,7 @@ export function boundSpanToLocationLinks(rootUri: URI, info: ts.DefinitionInfoAn
 		originalDoc.positionAt(info.textSpan.start + info.textSpan.length),
 	);
 	for (const entry of info.definitions) {
-		const entryUri = shared.getUriByPath(rootUri, entry.fileName);
+		const entryUri = shared.getUriByPath(entry.fileName);
 		const doc = getTextDocument(entryUri);
 		if (!doc) continue;
 		const targetSelectionRange = vscode.Range.create(

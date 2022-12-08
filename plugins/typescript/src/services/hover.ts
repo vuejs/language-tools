@@ -47,7 +47,7 @@ export function register(
 		};
 
 		function toResource(path: string) {
-			return shared.getUriByPath(rootUri, path);
+			return shared.getUriByPath(path);
 		}
 	};
 }

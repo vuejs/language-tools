@@ -163,7 +163,8 @@ export async function createProject(
 				try {
 					return ts.getDefaultLibFilePath(options);
 				} catch {
-					return sys.resolvePath('node_modules/typescript/lib/' + ts.getDefaultLibFileName(options)); // web
+					// web
+					return shared.getPathOfUri(serverOptions.typescript.tsdk + '/' + ts.getDefaultLibFileName(options));
 				}
 			},
 			getProjectVersion: () => projectVersion.toString(),
@@ -309,12 +310,12 @@ function getHTMLDocumentContext(
 					continue;
 				}
 				if (host.fileExists(failed)) {
-					return isUri ? shared.getUriByPath(URI.parse(base), failed) : failed;
+					return isUri ? shared.getUriByPath(failed) : failed;
 				}
 			}
 			for (const dir of dirs) {
 				if (host.directoryExists?.(dir) ?? true) {
-					return isUri ? shared.getUriByPath(URI.parse(base), dir) : dir;
+					return isUri ? shared.getUriByPath(dir) : dir;
 				}
 			}
 
