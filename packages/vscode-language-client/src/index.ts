@@ -8,4 +8,4 @@ export { register as registerVerifyAll } from './features/verifyAll';
 export { register as registerTsConfig } from './features/tsconfig';
 export { register as registerShowReferences } from './features/showReferences';
 export { register as registerServerSys } from './features/serverSys';
-export { register as registerTsVersion, getCurrentTsdk } from './features/tsVersion';
+export { register as registerTsVersion, getTsdk } from './features/tsVersion';

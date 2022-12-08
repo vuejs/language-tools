@@ -10,7 +10,7 @@ import {
 	registerShowReferences,
 	registerServerSys,
 	registerTsVersion,
-	getCurrentTsdk,
+	getTsdk,
 } from '@volar/vscode-language-client';
 import { DiagnosticModel, ServerMode, VueServerInitializationOptions } from '@volar/vue-language-server';
 import * as vscode from 'vscode';
@@ -288,6 +288,7 @@ function getInitializationOptions(
 ) {
 	const textDocumentSync = vscode.workspace.getConfiguration('volar').get<'incremental' | 'full' | 'none'>('vueserver.textDocumentSync');
 	const initializationOptions: VueServerInitializationOptions = {
+		// volar
 		respectClientCapabilities: true,
 		serverMode,
 		diagnosticModel: diagnosticModel() === 'pull' ? DiagnosticModel.Pull : DiagnosticModel.Push,
@@ -296,7 +297,11 @@ function getInitializationOptions(
 			full: lsp.TextDocumentSyncKind.Full,
 			none: lsp.TextDocumentSyncKind.None,
 		}[textDocumentSync] : lsp.TextDocumentSyncKind.Incremental,
-		typescript: getCurrentTsdk(context),
+		typescript: { tsdk: getTsdk(context).tsdk },
+		noProjectReferences: noProjectReferences(),
+		reverseConfigFilePriority: reverseConfigFilePriority(),
+		disableFileWatcher: disableFileWatcher(),
+		// vue
 		petiteVue: {
 			processHtmlFile: processHtml(),
 		},
@@ -306,10 +311,7 @@ function getInitializationOptions(
 		json: {
 			customBlockSchemaUrls: vscode.workspace.getConfiguration('volar').get<Record<string, string>>('vueserver.json.customBlockSchemaUrls')
 		},
-		noProjectReferences: noProjectReferences(),
-		reverseConfigFilePriority: reverseConfigFilePriority(),
-		disableFileWatcher: disableFileWatcher(),
-		additionalExtensions: additionalExtensions()
+		additionalExtensions: additionalExtensions(),
 	};
 	return initializationOptions;
 }

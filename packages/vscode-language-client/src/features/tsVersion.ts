@@ -5,6 +5,7 @@ import { quickPick } from '../common';
 import { LanguageServerInitializationOptions } from '@volar/language-server';
 
 const defaultTsdkPath = 'node_modules/typescript/lib' as path.PosixPath;
+const isWeb = vscode.env.appHost === 'web';
 
 export async function register(
 	cmd: string,
@@ -28,7 +29,7 @@ export async function register(
 
 	async function onCommand() {
 
-		const tsdk = getCurrentTsdk(context);
+		const tsdk = getTsdk(context);
 		const configTsdkPath = getConfigTsdkPath();
 		const vscodeTsdkUri = await getVScodeTsdkUri(context);
 		const select = await quickPick([
@@ -36,13 +37,14 @@ export async function register(
 				useVSCodeTsdk: {
 					label: (!tsdk.isWorkspacePath ? '• ' : '') + "Use VS Code's Version",
 					description: await getTsVersion(vscodeTsdkUri),
+					detail: isWeb ? vscodeTsdkUri.toString() : undefined,
 				},
-				useConfigWorkspaceTsdk: configTsdkPath ? {
+				useConfigWorkspaceTsdk: configTsdkPath && !isWeb ? {
 					label: (tsdk.isWorkspacePath ? '• ' : '') + 'Use Workspace Version',
 					description: await getTsVersion(vscode.Uri.file(resolveWorkspaceTsdk(configTsdkPath) ?? '/')) ?? 'Could not load the TypeScript version at this path',
 					detail: configTsdkPath,
 				} : undefined,
-				useDefaultWorkspaceTsdk: configTsdkPath !== defaultTsdkPath ? {
+				useDefaultWorkspaceTsdk: configTsdkPath !== defaultTsdkPath && !isWeb ? {
 					label: (tsdk.isWorkspacePath ? '• ' : '') + 'Use Workspace Version',
 					description: await getTsVersion(vscode.Uri.file(resolveWorkspaceTsdk(defaultTsdkPath) ?? '/')) ?? 'Could not load the TypeScript version at this path',
 					detail: defaultTsdkPath,
@@ -87,7 +89,7 @@ export async function register(
 			statusBar.hide();
 		}
 		else {
-			const tsVersion = await getTsVersion(getCurrentTsdk(context).uri);
+			const tsVersion = await getTsVersion(getTsdk(context).uri);
 			statusBar.text = tsVersion ?? 'x.x.x';
 			if (takeOverModeEnabled()) {
 				statusBar.text += ' (takeover)';
@@ -100,7 +102,7 @@ export async function register(
 	}
 
 	async function reloadServers() {
-		const tsPaths = getCurrentTsdk(context);
+		const tsPaths = getTsdk(context);
 		const newInitOptions: LanguageServerInitializationOptions = {
 			...client.clientOptions.initializationOptions,
 			typescript: tsPaths,
@@ -110,7 +112,7 @@ export async function register(
 	}
 }
 
-export function getCurrentTsdk(context: vscode.ExtensionContext) {
+export function getTsdk(context: vscode.ExtensionContext) {
 	if (isUseWorkspaceTsdk(context)) {
 		const resolvedTsdk = resolveWorkspaceTsdk(getConfigTsdkPath() || defaultTsdkPath);
 		if (resolvedTsdk) {
@@ -150,7 +152,7 @@ function resolveWorkspaceTsdk(tsdk: path.OsPath | path.PosixPath) {
 
 function getVScodeTsdkUri(context: vscode.ExtensionContext) {
 
-	if (vscode.env.appHost === 'web') {
+	if (isWeb) {
 		const tsExtUri = vscode.extensions.getExtension('vscode.typescript-language-features')?.extensionUri.toString()
 			// incase vscode.typescript-language-features disabled
 			?? vscode.extensions.getExtension('vscode.typescript')?.extensionUri.toString().replace('/vscode.typescript', '/vscode.typescript-language-features');
@@ -183,8 +185,8 @@ function isUseWorkspaceTsdk(context: vscode.ExtensionContext) {
 
 async function getTsVersion(libUri: vscode.Uri): Promise<string | undefined> {
 
-	if (vscode.env.appHost === 'web') {
-		return;
+	if (isWeb) {
+		return require('typescript/package.json').version;
 	}
 
 	const p = libUri.toString().split('/');
