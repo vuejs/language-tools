@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import type { BaseLanguageClient } from 'vscode-languageclient';
-import { WriteVirtualFilesNotification, GetVirtualFileNamesRequest, GetVirtualFileRequest } from '@volar/vue-language-server';
+import { GetVirtualFileNamesRequest, GetVirtualFileRequest } from '@volar/language-server';
 import { SourceMapBase } from '@volar/source-map';
 
 const scheme = 'volar-virtual-file';
@@ -28,7 +28,7 @@ const mappingSelectionDecorationType = vscode.window.createTextEditorDecorationT
 	}
 });
 
-export async function register(context: vscode.ExtensionContext, client: BaseLanguageClient) {
+export async function register(cmd: string, context: vscode.ExtensionContext, client: BaseLanguageClient) {
 
 	const sourceUriToVirtualUris = new Map<string, string[]>();
 	const virtualUriToSourceEditor = new Map<string, vscode.TextEditor>();
@@ -70,7 +70,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			}
 		},
 	));
-	context.subscriptions.push(vscode.commands.registerCommand('volar.action.showVirtualFiles', async () => {
+	context.subscriptions.push(vscode.commands.registerCommand(cmd, async () => {
 		const sourceEditor = vscode.window.activeTextEditor;
 		if (sourceEditor) {
 			const fileNames = await client.sendRequest(GetVirtualFileNamesRequest.type, client.code2ProtocolConverter.asTextDocumentIdentifier(sourceEditor.document));
@@ -80,11 +80,6 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 				virtualUriToSourceEditor.set(uri.toString(), sourceEditor);
 				vscode.window.showTextDocument(uri, { viewColumn: vscode.ViewColumn.Two, preview: false });
 			}
-		}
-	}));
-	context.subscriptions.push(vscode.commands.registerCommand('volar.action.writeVirtualFiles', () => {
-		if (vscode.window.activeTextEditor) {
-			client.sendNotification(WriteVirtualFilesNotification.type, client.code2ProtocolConverter.asTextDocumentIdentifier(vscode.window.activeTextEditor.document));
 		}
 	}));
 

@@ -6,6 +6,7 @@ import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient/node';
 import { activate as commonActivate, deactivate as commonDeactivate, getDocumentSelector } from './common';
 import { middleware } from './middleware';
+import * as preview from './features/preview';
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -74,6 +75,10 @@ export function activate(context: vscode.ExtensionContext) {
 			clientOptions,
 		);
 		await client.start();
+
+		if (initOptions.serverMode === ServerMode.Semantic) {
+			preview.register(context, client);
+		}
 
 		return client;
 	});

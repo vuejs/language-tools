@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import type { BaseLanguageClient } from 'vscode-languageclient';
-import { AutoInsertRequest } from '@volar/vue-language-server';
+import { AutoInsertRequest } from '@volar/language-server';
 
-export async function register(context: vscode.ExtensionContext, htmlClient: BaseLanguageClient, tsClient: BaseLanguageClient) {
+export async function register(context: vscode.ExtensionContext, clients: BaseLanguageClient[]) {
 
 	const supportedLanguages: Record<string, boolean> = {
 		vue: true,
@@ -13,14 +13,13 @@ export async function register(context: vscode.ExtensionContext, htmlClient: Bas
 		typescriptreact: true,
 	};
 
-	let disposables: vscode.Disposable[] = [];
-	vscode.workspace.onDidChangeTextDocument(onDidChangeTextDocument, null, disposables);
-
 	let isEnabled = false;
-	updateEnabledState();
-	vscode.window.onDidChangeActiveTextEditor(updateEnabledState, null, disposables);
-
 	let timeout: NodeJS.Timeout | undefined;
+
+	updateEnabledState();
+
+	vscode.workspace.onDidChangeTextDocument(onDidChangeTextDocument, null, context.subscriptions);
+	vscode.window.onDidChangeActiveTextEditor(updateEnabledState, null, context.subscriptions);
 
 	function updateEnabledState() {
 		isEnabled = false;
@@ -52,24 +51,28 @@ export async function register(context: vscode.ExtensionContext, htmlClient: Bas
 
 		doAutoInsert(document, lastChange, async (document, position, lastChange) => {
 
-			const params = {
-				...htmlClient.code2ProtocolConverter.asTextDocumentPositionParams(document, position),
-				options: {
-					lastChange: {
-						...lastChange,
-						range: htmlClient.code2ProtocolConverter.asRange(lastChange.range),
+			for (const client of clients) {
+
+				const params = {
+					...client.code2ProtocolConverter.asTextDocumentPositionParams(document, position),
+					options: {
+						lastChange: {
+							...lastChange,
+							range: client.code2ProtocolConverter.asRange(lastChange.range),
+						},
 					},
-				},
-			};
+				};
 
-			const result = await htmlClient.sendRequest(AutoInsertRequest.type, params)
-				?? await tsClient.sendRequest(AutoInsertRequest.type, params);
+				const result = await client.sendRequest(AutoInsertRequest.type, params);
 
-			if (typeof result === 'string') {
-				return result;
-			}
-			else {
-				return htmlClient.protocol2CodeConverter.asTextEdit(result);
+				if (result !== undefined) {
+					if (typeof result === 'string') {
+						return result;
+					}
+					else {
+						return client.protocol2CodeConverter.asTextEdit(result);
+					}
+				}
 			}
 		});
 	}
@@ -107,6 +110,4 @@ export async function register(context: vscode.ExtensionContext, htmlClient: Bas
 			timeout = undefined;
 		}, 100);
 	}
-
-	return vscode.Disposable.from(...disposables);
 }

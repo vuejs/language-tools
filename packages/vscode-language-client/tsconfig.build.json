@@ -6,8 +6,7 @@
 		"rootDir": "src",
 	},
 	"include": [
-		"src",
-		"src/**/*.json"
+		"src"
 	],
 	"exclude": [
 		"node_modules",
@@ -15,10 +14,7 @@
 	],
 	"references": [
 		{
-			"path": "../../packages/vscode-language-client/tsconfig.build.json"
-		},
-		{
-			"path": "../svelte-language-server/tsconfig.build.json"
+			"path": "../language-server/tsconfig.build.json"
 		}
 	]
 }
