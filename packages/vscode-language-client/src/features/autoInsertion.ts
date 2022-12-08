@@ -2,16 +2,11 @@ import * as vscode from 'vscode';
 import type { BaseLanguageClient } from 'vscode-languageclient';
 import { AutoInsertRequest } from '@volar/language-server';
 
-export async function register(context: vscode.ExtensionContext, clients: BaseLanguageClient[]) {
-
-	const supportedLanguages: Record<string, boolean> = {
-		vue: true,
-		markdown: true,
-		javascript: true,
-		typescript: true,
-		javascriptreact: true,
-		typescriptreact: true,
-	};
+export async function register(
+	context: vscode.ExtensionContext,
+	clients: BaseLanguageClient[],
+	active: (document: vscode.TextDocument) => boolean,
+) {
 
 	let isEnabled = false;
 	let timeout: NodeJS.Timeout | undefined;
@@ -28,7 +23,7 @@ export async function register(context: vscode.ExtensionContext, clients: BaseLa
 			return;
 		}
 		let document = editor.document;
-		if (!supportedLanguages[document.languageId]) {
+		if (!active(document)) {
 			return;
 		}
 		isEnabled = true;
@@ -49,7 +44,7 @@ export async function register(context: vscode.ExtensionContext, clients: BaseLa
 
 		const lastChange = contentChanges[contentChanges.length - 1];
 
-		doAutoInsert(document, lastChange, async (document, position, lastChange) => {
+		doAutoInsert(document, lastChange, async (document, position, lastChange, isCancel) => {
 
 			for (const client of clients) {
 
@@ -62,6 +57,8 @@ export async function register(context: vscode.ExtensionContext, clients: BaseLa
 						},
 					},
 				};
+
+				if (isCancel()) return;
 
 				const result = await client.sendRequest(AutoInsertRequest.type, params);
 
@@ -80,13 +77,13 @@ export async function register(context: vscode.ExtensionContext, clients: BaseLa
 	function doAutoInsert(
 		document: vscode.TextDocument,
 		lastChange: vscode.TextDocumentContentChangeEvent,
-		provider: (document: vscode.TextDocument, position: vscode.Position, lastChange: vscode.TextDocumentContentChangeEvent) => Thenable<string | vscode.TextEdit | null | undefined>,
+		provider: (document: vscode.TextDocument, position: vscode.Position, lastChange: vscode.TextDocumentContentChangeEvent, isCancel: () => boolean) => Thenable<string | vscode.TextEdit | null | undefined>,
 	) {
 		const rangeStart = lastChange.range.start;
 		const version = document.version;
 		timeout = setTimeout(() => {
 			const position = new vscode.Position(rangeStart.line, rangeStart.character + lastChange.text.length);
-			provider(document, position, lastChange).then(text => {
+			provider(document, position, lastChange, () => vscode.window.activeTextEditor?.document.version !== version).then(text => {
 				if (text && isEnabled) {
 					const activeEditor = vscode.window.activeTextEditor;
 					if (activeEditor) {
@@ -96,7 +93,8 @@ export async function register(context: vscode.ExtensionContext, clients: BaseLa
 								const selections = activeEditor.selections;
 								if (selections.length && selections.some(s => s.active.isEqual(position))) {
 									activeEditor.insertSnippet(new vscode.SnippetString(text), selections.map(s => s.active));
-								} else {
+								}
+								else {
 									activeEditor.insertSnippet(new vscode.SnippetString(text), position);
 								}
 							}

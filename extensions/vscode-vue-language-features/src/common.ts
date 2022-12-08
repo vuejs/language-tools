@@ -97,7 +97,16 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	doctor.register(context, semanticClient);
 	componentMeta.register(context, semanticClient);
 
-	registerAutoInsertion(context, [syntacticClient, semanticClient]);
+	const supportedLanguages: Record<string, boolean> = {
+		vue: true,
+		markdown: true,
+		javascript: true,
+		typescript: true,
+		javascriptreact: true,
+		typescriptreact: true,
+	};
+
+	registerAutoInsertion(context, [syntacticClient, semanticClient], document => supportedLanguages[document.languageId]);
 	registerShowVirtualFiles('volar.action.showVirtualFiles', context, semanticClient);
 	registerWriteVirtualFiles('volar.action.writeVirtualFiles', context, semanticClient);
 	registerFileReferences('volar.vue.findAllFileReferences', context, semanticClient);
