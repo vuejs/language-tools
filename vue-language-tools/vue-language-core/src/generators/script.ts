@@ -37,6 +37,7 @@ export function generate(
 		DefinePropsToOptions: false,
 		mergePropDefaults: false,
 		ConstructorOverloads: false,
+		WithTemplateSlots: false,
 	};
 
 	writeScriptSrc();
@@ -117,6 +118,9 @@ export function generate(
 			else {
 				codeGen.push(genConstructorOverloads('__VLS_ConstructorOverloads'));
 			}
+		}
+		if (usedTypes.WithTemplateSlots) {
+			codeGen.push(`type __VLS_WithTemplateSlots<T, S> = T & { new(): { $slots: S } };\n`);
 		}
 	}
 	function writeScriptSrc() {
@@ -422,11 +426,13 @@ export function generate(
 				codeGen.push(`};\n`);
 			}
 			else {
-				codeGen.push(`return {} as typeof __VLS_publicComponent`);
 				if (htmlGen?.slotsNum) {
-					codeGen.push(` & { new (): { $slots: ReturnType<typeof __VLS_template> } }`);
+					usedTypes.WithTemplateSlots = true;
+					codeGen.push(`return {} as __VLS_WithTemplateSlots<typeof __VLS_publicComponent, ReturnType<typeof __VLS_template>>;\n`);
 				}
-				codeGen.push(`;\n`);
+				else {
+					codeGen.push(`return {} as typeof __VLS_publicComponent;\n`);
+				}
 			}
 			codeGen.push(`};\n`);
 			codeGen.push(`return {} as typeof __VLS_setup extends () => Promise<infer T> ? T : never;\n`);
