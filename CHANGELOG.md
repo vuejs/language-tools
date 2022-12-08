@@ -1,10 +1,14 @@
 # Changelog
 
-## 1.0.11 (2022/12/3)
+## 1.0.12 (2022/12/9)
 
-- fix(vue-tsc): dts emit do not generated `DefineComponent` type ([#2161](https://github.com/johnsoncodehk/volar/issues/2161))
-- fix: global components types loss in vue 2 projects ([#2157](https://github.com/johnsoncodehk/volar/issues/2157))
-- fix: Vite / Nuxt app preview crash when template includes `<html>` tag
+- feat: added `@volar/vscode-language-client` package ([#2181](https://github.com/johnsoncodehk/volar/issues/2181))
+- fix: document content messed up randomly ([#1807](https://github.com/johnsoncodehk/volar/issues/1807))
+- fix: "Show Virtual Files" mapping background color unclear with light theme ([#2147](https://github.com/johnsoncodehk/volar/issues/2147)) ([#2170](https://github.com/johnsoncodehk/volar/issues/2170))
+- fix: props type checking not working for Element Plus components ([#2176](https://github.com/johnsoncodehk/volar/issues/2176)) ([#2180](https://github.com/johnsoncodehk/volar/issues/2180))
+- fix: attribute values being wrapped in parentheses while typing ([#2182](https://github.com/johnsoncodehk/volar/issues/2182))
+- fix: formatting crashes ([#2077](https://github.com/johnsoncodehk/volar/issues/2077))
+- fix: cannot emit component type with `DefineComponent` when template has slots ([#2161](https://github.com/johnsoncodehk/volar/issues/2161))
 
 ### Special Sponsor
 
@@ -23,6 +27,12 @@
 <table><tr>
 	<td align="center" valign="middle"><a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/prefect.svg" height="50" /></a></td>
 </tr></table>
+
+## 1.0.11 (2022/12/3)
+
+- fix(vue-tsc): dts emit do not generated `DefineComponent` type ([#2161](https://github.com/johnsoncodehk/volar/issues/2161))
+- fix: global components types loss in vue 2 projects ([#2157](https://github.com/johnsoncodehk/volar/issues/2157))
+- fix: Vite / Nuxt app preview crash when template includes `<html>` tag
 
 ## 1.0.10 (2022/11/29)
 
