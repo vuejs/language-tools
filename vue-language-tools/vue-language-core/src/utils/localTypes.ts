@@ -110,8 +110,8 @@ export type GetComponents<Components, N1, N2 = unknown, N3 = unknown> =
 export type ComponentProps<T> =
 	${vueCompilerOptions.strictTemplates ? '' : 'Record<string, unknown> &'}
 	(
-		T extends (...args: any) => any ? (T extends (...args: any) => { props: infer Props } ? Props : {})
-		: T extends new (...args: any) => any ? (T extends new (...args: any) => { $props: infer Props } ? Props : {})
+		T extends new (...args: any) => any ? (T extends new (...args: any) => { $props: infer Props } ? Props : {})
+		: T extends (...args: any) => any ? (T extends (...args: any) => { props: infer Props } ? Props : {})
 		: T // IntrinsicElement
 	);
 export type InstanceProps<I, C> = I extends { $props: infer Props } ? Props & Record<string, unknown> : C & Record<string, unknown>;
