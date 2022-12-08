@@ -1,8 +1,8 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
-import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { createUriMap } from './uriMap';
+import type * as _ from 'vscode-uri';
 
 interface IncrementalScriptSnapshotChange {
 	applied: boolean,
@@ -58,7 +58,7 @@ class IncrementalScriptSnapshot {
 
 		const lastChange = this.changes[this.changes.length - 1];
 		if (!lastChange.snapshot) {
-			this.applyVersionToRootDocument(lastChange.version, false);
+			this.applyVersionChanges(lastChange.version, false);
 			const text = this.document.getText();
 			const cache = new WeakMap<ts.IScriptSnapshot, ts.TextChangeRange | undefined>();
 			const snapshot: ts.IScriptSnapshot = {
@@ -66,10 +66,11 @@ class IncrementalScriptSnapshot {
 				getLength: () => text.length,
 				getChangeRange: (oldSnapshot) => {
 					if (!cache.has(oldSnapshot)) {
-						const start = this.changes.findIndex(change => change.snapshot?.deref() === oldSnapshot) + 1;
-						const end = this.changes.indexOf(lastChange) + 1;
-						if (start >= 0 && end >= 0) {
-							const changeRanges = this.changes.slice(start, end).map(change => change.changeRange).filter(shared.notEmpty);
+						const oldIndex = this.changes.findIndex(change => change.snapshot?.deref() === oldSnapshot);
+						if (oldIndex >= 0) {
+							const start = oldIndex + 1;
+							const end = this.changes.indexOf(lastChange) + 1;
+							const changeRanges = this.changes.slice(start, end).map(change => change.changeRange!);
 							const result = combineContinuousChangeRanges.apply(null, changeRanges);
 							cache.set(oldSnapshot, result);
 						}
@@ -92,7 +93,7 @@ class IncrementalScriptSnapshot {
 
 		const lastChange = this.changes[this.changes.length - 1];
 		if (!lastChange.applied) {
-			this.applyVersionToRootDocument(lastChange.version, false);
+			this.applyVersionChanges(lastChange.version, false);
 		}
 
 		return this.document;
@@ -100,22 +101,24 @@ class IncrementalScriptSnapshot {
 
 	clearUnReferenceVersions() {
 		let versionToApply: number | undefined;
-		const lastVersion = this.changes[this.changes.length - 1].version;
 		for (let i = 0; i <= this.changes.length - 2; i++) {
 			const change = this.changes[i];
-			if (change.version !== lastVersion && !change.snapshot?.deref()) {
-				versionToApply = change.version;
+			const nextChange = this.changes[i + 1];
+			if (!change.snapshot?.deref()) {
+				if (change.version !== nextChange.version) {
+					versionToApply = change.version;
+				}
 			}
 			else {
 				break;
 			}
 		}
 		if (versionToApply !== undefined) {
-			this.applyVersionToRootDocument(versionToApply, true);
+			this.applyVersionChanges(versionToApply, true);
 		}
 	}
 
-	applyVersionToRootDocument(version: number, removeBeforeVersions: boolean) {
+	applyVersionChanges(version: number, removeBeforeVersions: boolean) {
 		let removeEnd = -1;
 		for (let i = 0; i < this.changes.length; i++) {
 			const change = this.changes[i];
