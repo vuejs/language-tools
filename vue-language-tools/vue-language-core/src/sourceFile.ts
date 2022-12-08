@@ -219,22 +219,21 @@ export class VueSourceFile implements SourceFile {
 						}
 					}
 				}
-				const node: EmbeddedFile = {
-					fileName: file.fileName,
+				return {
+					file,
 					text: toString(file.content),
 					mappings,
-					capabilities: file.capabilities,
-					kind: file.kind,
-					teleportMappings: file.teleportMappings,
-					embeddeds: [],
 				};
-				return [file, node] as [VueEmbeddedFile, EmbeddedFile];
 			});
 		});
 	}));
 	static _allEmbeddeds = computed(() => {
 
-		const all: [VueEmbeddedFile, EmbeddedFile][] = [];
+		const all: {
+			file: VueEmbeddedFile;
+			text: string;
+			mappings: Mapping<PositionCapabilities>[];
+		}[] = [];
 
 		for (const embeddedFiles of VueSourceFile._pluginEmbeddedFiles.value) {
 			for (const embedded of embeddedFiles.value) {
@@ -248,7 +247,6 @@ export class VueSourceFile implements SourceFile {
 
 		const childs: EmbeddedFile[] = [];
 
-		// const embeddeds: EmbeddedStructure[] = [];
 		let remain = [...VueSourceFile._allEmbeddeds.value];
 
 		while (remain.length) {
@@ -259,26 +257,39 @@ export class VueSourceFile implements SourceFile {
 			}
 		}
 
-		for (const [embedded, node] of remain) {
-			childs.push(node);
-			if (embedded) {
-				console.error('Unable to resolve embedded: ' + embedded.parentFileName + ' -> ' + embedded.fileName);
-			}
+		for (const { file, text, mappings } of remain) {
+			childs.push({
+				...file,
+				text,
+				mappings,
+				embeddeds: [],
+			});
+			console.error('Unable to resolve embedded: ' + file.parentFileName + ' -> ' + file.fileName);
 		}
 
 		return childs;
 
 		function consumeRemain() {
 			for (let i = remain.length - 1; i >= 0; i--) {
-				const [embedded, node] = remain[i];
-				if (!embedded.parentFileName) {
-					childs.push(node);
+				const { file, text, mappings } = remain[i];
+				if (!file.parentFileName) {
+					childs.push({
+						...file,
+						text,
+						mappings,
+						embeddeds: [],
+					});
 					remain.splice(i, 1);
 				}
 				else {
-					const parent = findParentStructure(embedded.parentFileName, childs);
+					const parent = findParentStructure(file.parentFileName, childs);
 					if (parent) {
-						parent.embeddeds.push(node);
+						parent.embeddeds.push({
+							...file,
+							text,
+							mappings,
+							embeddeds: [],
+						});
 						remain.splice(i, 1);
 					}
 				}
@@ -347,7 +358,7 @@ export class VueSourceFile implements SourceFile {
 	}
 
 	get tsFileName() {
-		return this._allEmbeddeds.value.find(e => e[1].fileName.replace(this.fileName, '').match(/^\.(js|ts)x?$/))?.[1].fileName ?? '';
+		return this._allEmbeddeds.value.find(e => e.file.fileName.replace(this.fileName, '').match(/^\.(js|ts)x?$/))?.file.fileName ?? '';
 	}
 
 	get embeddeds() {
@@ -356,7 +367,11 @@ export class VueSourceFile implements SourceFile {
 
 	// refs
 	_snapshot: Ref<ts.IScriptSnapshot>;
-	_allEmbeddeds = ref<[VueEmbeddedFile, EmbeddedFile][]>([]);
+	_allEmbeddeds = ref<{
+		file: VueEmbeddedFile;
+		text: string;
+		mappings: Mapping<PositionCapabilities>[];
+	}[]>([]);
 	_embeddeds = ref<EmbeddedFile[]>([]);
 
 	constructor(
