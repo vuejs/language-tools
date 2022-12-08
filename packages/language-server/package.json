@@ -1,6 +1,6 @@
 {
 	"name": "@volar/language-server",
-	"version": "1.0.11",
+	"version": "1.0.12",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -17,9 +17,9 @@
 		"directory": "packages/language-server"
 	},
 	"dependencies": {
-		"@volar/language-core": "1.0.11",
-		"@volar/language-service": "1.0.11",
-		"@volar/shared": "1.0.11",
+		"@volar/language-core": "1.0.12",
+		"@volar/language-service": "1.0.12",
+		"@volar/shared": "1.0.12",
 		"request-light": "^0.6.0",
 		"typesafe-path": "^0.2.2",
 		"vscode-html-languageservice": "^5.0.3",
