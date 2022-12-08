@@ -164,7 +164,7 @@ export default function (): LanguageServicePlugin {
 		},
 
 		async format(document, range, options) {
-			return worker(document, async (stylesheet, cssLs) => {
+			return worker(document, async (_stylesheet, cssLs) => {
 
 				const options_2 = await context.env.configurationHost?.getConfiguration<css.CSSFormatConfiguration & { enable: boolean; }>(document.languageId + '.format');
 

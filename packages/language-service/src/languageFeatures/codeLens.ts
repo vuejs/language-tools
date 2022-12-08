@@ -18,8 +18,8 @@ export function register(context: LanguageServiceRuntimeContext) {
 			context,
 			uri,
 			undefined,
-			(arg, sourceMap) => [arg],
-			async (plugin, document, arg, sourceMap) => {
+			(arg) => [arg],
+			async (plugin, document) => {
 
 				const codeLens = await plugin.codeLens?.on?.(document);
 

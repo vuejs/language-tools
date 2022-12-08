@@ -31,7 +31,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					yield { position: mapped, newName };
 				};
 			},
-			async (plugin, document, arg, sourceMap) => {
+			async (plugin, document, arg) => {
 
 				const recursiveChecker = dedupe.createLocationSet();
 				let result: vscode.WorkspaceEdit | undefined;
@@ -122,7 +122,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					}
 				}
 			},
-			(data, sourceMap) => {
+			(data) => {
 				return embeddedEditToSourceEdit(
 					data,
 					context.documents,

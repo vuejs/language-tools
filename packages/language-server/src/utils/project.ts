@@ -49,7 +49,7 @@ export async function createProject(
 	const disposeWatchEvent = fsHost.onDidChangeWatchedFiles(params => {
 		onWorkspaceFilesChanged(params.changes);
 	});
-	const disposeDocChange = documents.onDidChangeContent(params => {
+	const disposeDocChange = documents.onDidChangeContent(() => {
 		projectVersion++;
 		projectVersionUpdateTime = cancelTokenHost.getMtime();
 	});

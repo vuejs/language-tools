@@ -62,7 +62,7 @@ function createTester(root: string) {
 		{
 			rootUri,
 			configurationHost: {
-				async getConfiguration<T>(section: string) {
+				async getConfiguration(section: string) {
 					const keys = section.split('.');
 					let settings = vscodeSettings;
 					for (const key of keys) {

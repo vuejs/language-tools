@@ -13,10 +13,10 @@ export function createLanguageServer(plugins: LanguageServerPlugin[]) {
 	const connection = vscode.createConnection(messageReader, messageWriter);
 
 	createCommonLanguageServer(connection, {
-		loadTypescript(options) {
+		loadTypescript() {
 			return ts; // not support load by user config in web
 		},
-		loadTypescriptLocalized(options) {
+		loadTypescriptLocalized() {
 			// TODO
 		},
 		schemaRequestHandlers: {

@@ -6,10 +6,8 @@ import * as PConst from '../protocol.const';
 import { parseKindModifier } from '../utils/modifiers';
 import * as typeConverters from '../utils/typeConverters';
 import { posix as path } from 'path';
-import { URI } from 'vscode-uri';
 
 export function register(
-	rootUri: URI,
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
 ) {

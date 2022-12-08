@@ -100,7 +100,7 @@ export function register(
 			}
 		}
 	});
-	connection.onNotification(ReloadProjectNotification.type, async params => {
+	connection.onNotification(ReloadProjectNotification.type, () => {
 		projects.reloadProject();
 	});
 	connection.onNotification(WriteVirtualFilesNotification.type, async params => {

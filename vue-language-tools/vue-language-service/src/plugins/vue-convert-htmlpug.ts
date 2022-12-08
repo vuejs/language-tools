@@ -27,7 +27,7 @@ export default function (options: {
 		codeLens: {
 
 			on(document) {
-				return worker(document.uri, async (vueDocument, vueSourceFile) => {
+				return worker(document.uri, async (_vueDocument, vueSourceFile) => {
 
 					const isEnabled = await context.env.configurationHost?.getConfiguration<boolean>('volar.codeLens.pugTools') ?? true;
 

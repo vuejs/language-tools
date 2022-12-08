@@ -64,7 +64,7 @@ export function register(
 			line = line.substring(0, line.length - 1);
 		}
 
-		const dotAccessorContext = getDotAccessorContext(ts.version, document);
+		const dotAccessorContext = getDotAccessorContext(document);
 
 		const entries = completionContext.entries
 			.map(tsEntry => toVScodeItem(tsEntry, document));
@@ -151,7 +151,7 @@ export function register(
 			};
 		}
 
-		function getDotAccessorContext(tsVersion: string, document: TextDocument) {
+		function getDotAccessorContext(document: TextDocument) {
 			let dotAccessorContext: {
 				range: vscode.Range;
 				text: string;

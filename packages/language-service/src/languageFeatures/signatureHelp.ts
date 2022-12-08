@@ -12,7 +12,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			position,
 			(position, sourceMap) => sourceMap.toGeneratedPositions(position, data => !!data.completion),
 			(plugin, document, position) => plugin.getSignatureHelp?.(document, position, signatureHelpContext),
-			(data, sourceMap) => data,
+			(data) => data,
 		);
 	};
 }

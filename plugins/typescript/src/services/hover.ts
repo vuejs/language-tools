@@ -3,10 +3,8 @@ import * as vscode from 'vscode-languageserver-protocol';
 import * as previewer from '../utils/previewer';
 import * as shared from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import { URI } from 'vscode-uri';
 
 export function register(
-	rootUri: URI,
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
 	ts: typeof import('typescript/lib/tsserverlibrary'),

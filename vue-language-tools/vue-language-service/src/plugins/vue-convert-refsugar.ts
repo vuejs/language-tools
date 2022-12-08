@@ -45,7 +45,7 @@ export default function (options: {
 		codeLens: {
 
 			on(document) {
-				return worker(document.uri, async (vueDocument, vueSourceFile) => {
+				return worker(document.uri, async (_vueDocument, vueSourceFile) => {
 
 					if (document.uri.endsWith('.html')) // petite-vue
 						return;

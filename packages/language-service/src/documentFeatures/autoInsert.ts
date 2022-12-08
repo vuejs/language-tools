@@ -12,7 +12,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 			context,
 			document,
 			position,
-			sourceMap => true,
+			() => true,
 			(position, sourceMap) => sourceMap.toGeneratedPositions(position, data => !!data.completion),
 			(plugin, document, position) => plugin.doAutoInsert?.(document, position, options),
 			(data, sourceMap) => {

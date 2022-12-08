@@ -40,7 +40,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 	if (previewTerminal) {
 		connection = preview.createPreviewConnection({
 			onGotoCode: handleGoToCode,
-			getFileHref: (fileName, range) => {
+			getFileHref: (fileName) => {
 				avoidUpdateOnDidChangeActiveTextEditor = false;
 				updateComponentPreview?.();
 				return 'vscode://files:/' + fileName;
@@ -53,7 +53,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		if (e.name.startsWith('volar-preview:')) {
 			connection = preview.createPreviewConnection({
 				onGotoCode: handleGoToCode,
-				getFileHref: (fileName, range) => {
+				getFileHref: (fileName) => {
 					avoidUpdateOnDidChangeActiveTextEditor = false;
 					updateComponentPreview?.();
 					return 'vscode://files:/' + fileName;
@@ -295,12 +295,12 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 	context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(e => {
 		updateSelectionHighlights(e.textEditor);
 	}));
-	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(e => {
+	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(() => {
 		if (vscode.window.activeTextEditor) {
 			updateSelectionHighlights(vscode.window.activeTextEditor);
 		}
 	}));
-	context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(e => {
+	context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(() => {
 		if (vscode.window.activeTextEditor) {
 			updateSelectionHighlights(vscode.window.activeTextEditor);
 		}

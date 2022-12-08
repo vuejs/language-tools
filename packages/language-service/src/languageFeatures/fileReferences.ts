@@ -19,7 +19,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			async (plugin, document) => {
 				return await plugin.findFileReferences?.(document) ?? [];
 			},
-			(data, sourceMap) => data.map(reference => {
+			(data) => data.map(reference => {
 
 				const map = context.documents.sourceMapFromEmbeddedDocumentUri(reference.uri);
 				if (!map) {

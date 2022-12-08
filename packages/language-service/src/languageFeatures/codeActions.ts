@@ -34,7 +34,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			context,
 			uri,
 			{ range, codeActionContext },
-			(arg, sourceMap) => {
+			(_arg, sourceMap) => {
 
 				if (!sourceMap.embeddedFile.capabilities.codeAction)
 					return [];

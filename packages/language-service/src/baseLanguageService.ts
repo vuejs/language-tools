@@ -56,7 +56,7 @@ export function createLanguageServiceContext(options: {
 			languageService: tsLs,
 		},
 	};
-	const textDocumentMapper = parseSourceFileDocuments(options.env.rootUri, options.context.mapper);
+	const textDocumentMapper = parseSourceFileDocuments(options.context.mapper);
 	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
 	const documentVersions = new Map<string, number>();
 	const context: LanguageServiceRuntimeContext = {
@@ -116,7 +116,7 @@ export function createLanguageService(context: LanguageServiceRuntimeContext) {
 		findFileReferences: fileReferences.register(context),
 		findDefinition: definition.register(context, 'findDefinition', data => !!data.definition, data => !!data.definition),
 		findTypeDefinition: definition.register(context, 'findTypeDefinition', data => !!data.definition, data => !!data.definition),
-		findImplementations: definition.register(context, 'findImplementations', data => !!data.references, data => false),
+		findImplementations: definition.register(context, 'findImplementations', data => !!data.references, () => false),
 		prepareRename: renamePrepare.register(context),
 		doRename: rename.register(context),
 		getEditsForFileRename: fileRename.register(context),

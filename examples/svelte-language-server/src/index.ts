@@ -5,7 +5,7 @@ import { createLanguageServer, LanguageServerPlugin } from '@volar/language-serv
 const plugin: LanguageServerPlugin = () => ({
 	extraFileExtensions: [{ extension: 'svelte', isMixedContent: true, scriptKind: 7 }],
 	semanticService: {
-		getLanguageModules(host) {
+		getLanguageModules() {
 			return [languageModule];
 		},
 		getServicePlugins() {
@@ -15,7 +15,7 @@ const plugin: LanguageServerPlugin = () => ({
 		},
 	},
 	syntacticService: {
-		getLanguageModules(host) {
+		getLanguageModules() {
 			return [languageModule];
 		},
 		getServicePlugins() {

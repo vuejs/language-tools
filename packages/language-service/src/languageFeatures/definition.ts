@@ -21,7 +21,7 @@ export function register(
 			uri,
 			position,
 			(position, sourceMap) => sourceMap.toGeneratedPositions(position, isValidMappingData),
-			async (plugin, document, position, sourceMap) => {
+			async (plugin, document, position) => {
 
 				const recursiveChecker = dedupe.createLocationSet();
 				const result: vscode.LocationLink[] = [];
