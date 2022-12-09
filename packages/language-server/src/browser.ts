@@ -5,6 +5,7 @@ import { createCommonLanguageServer } from './server';
 import { LanguageServerPlugin } from './types';
 import httpSchemaRequestHandler from './schemaRequestHandlers/http';
 import { createWebFileSystemHost } from './utils/webFileSystemHost';
+import * as shared from '@volar/shared';
 
 export function createLanguageServer(plugins: LanguageServerPlugin[]) {
 
@@ -16,8 +17,13 @@ export function createLanguageServer(plugins: LanguageServerPlugin[]) {
 		loadTypescript() {
 			return ts; // not support load by user config in web
 		},
-		loadTypescriptLocalized() {
-			// TODO
+		async loadTypescriptLocalized(tsdk, locale) {
+			try {
+				const uri = shared.getUriByPath(`${tsdk}/${locale}/diagnosticMessages.generated.json`);
+				const json = await httpSchemaRequestHandler(uri);
+				return JSON.parse(json);
+			}
+			catch { }
 		},
 		schemaRequestHandlers: {
 			http: httpSchemaRequestHandler,

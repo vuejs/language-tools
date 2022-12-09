@@ -149,7 +149,7 @@ export function createCommonLanguageServer(
 		const ts = runtimeEnv.loadTypescript(options.typescript.tsdk);
 		fsHost = runtimeEnv.createFileSystemHost(ts, params.capabilities);
 
-		const tsLocalized = params.locale ? runtimeEnv.loadTypescriptLocalized(options.typescript.tsdk, params.locale) : undefined;
+		const tsLocalized = params.locale ? await runtimeEnv.loadTypescriptLocalized(options.typescript.tsdk, params.locale) : undefined;
 		const cancelTokenHost = createCancellationTokenHost(options.cancellationPipeName);
 		const _projects = createWorkspaces(
 			runtimeEnv,

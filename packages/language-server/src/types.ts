@@ -28,7 +28,7 @@ export type FileSystem = Pick<ts.System,
 
 export interface RuntimeEnvironment {
 	loadTypescript: (tsdk: string) => typeof import('typescript/lib/tsserverlibrary'),
-	loadTypescriptLocalized: (tsdk: string, locale: string) => any,
+	loadTypescriptLocalized: (tsdk: string, locale: string) => Promise<{} | undefined>,
 	schemaRequestHandlers: { [schema: string]: (uri: string, encoding?: BufferEncoding) => Promise<string>; },
 	onDidChangeConfiguration?: (settings: any) => void,
 	fileSystemProvide: FileSystemProvider | undefined,

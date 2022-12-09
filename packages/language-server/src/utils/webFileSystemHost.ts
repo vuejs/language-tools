@@ -259,7 +259,7 @@ export function createWebFileSystemHost(): FileSystemHost {
 		async function readJsdelivrFile(connection: vscode.Connection, uri: string) {
 			// ignore .js because it's no help for intellisense
 			if (uri.endsWith('.d.ts') || uri.endsWith('.json')) {
-				const text = await connection.sendRequest(FsReadFileRequest.type, uri);
+				const text = await connection.sendRequest(FsReadFileRequest.type, uri) ?? undefined;
 				if (
 					text !== undefined
 					// ignore https://cdn.jsdelivr.net/npm/@vue/runtime-dom

@@ -22,7 +22,7 @@ export function createLanguageServer(plugins: LanguageServerPlugin[]) {
 				} catch { }
 			}
 		},
-		loadTypescriptLocalized(tsdk, locale) {
+		async loadTypescriptLocalized(tsdk, locale) {
 			try {
 				const path = require.resolve(`./${locale}/diagnosticMessages.generated.json`, { paths: [tsdk] });
 				return require(path);

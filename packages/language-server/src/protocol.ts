@@ -11,11 +11,11 @@ export namespace ShowReferencesNotification {
 }
 
 export namespace FsStatRequest {
-	export const type = new vscode.RequestType<vscode.DocumentUri, html.FileStat | undefined, unknown>('fs/stat');
+	export const type = new vscode.RequestType<vscode.DocumentUri, html.FileStat | null | undefined, unknown>('fs/stat');
 }
 
 export namespace FsReadFileRequest {
-	export const type = new vscode.RequestType<vscode.DocumentUri, string | undefined, unknown>('fs/readFile');
+	export const type = new vscode.RequestType<vscode.DocumentUri, string | null | undefined, unknown>('fs/readFile');
 }
 
 export namespace FsReadDirectoryRequest {
