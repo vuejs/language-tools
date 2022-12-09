@@ -27,11 +27,11 @@ export function createWebFileSystemHost(): FileSystemHost {
 		fileTypes: new Map(),
 		searched: false,
 	};
-	const pendings = new Set<Promise<void>>();
+	const pendings: [string, string, Promise<void>][] = [];
 	const changes: vscode.FileEvent[] = [];
 	const onReadys: ((connection: vscode.Connection) => void)[] = [];
 
-	let checking = false;
+	let loading = false;
 	let connection: vscode.Connection | undefined;
 
 	return {
@@ -114,10 +114,10 @@ export function createWebFileSystemHost(): FileSystemHost {
 			}
 			dir.fileTypes.set(name, undefined);
 			if (connection) {
-				addPending(statAsync(connection, fsPath, dir));
+				addPending('Stat', fsPath, statAsync(connection, fsPath, dir));
 			}
 			else {
-				onReadys.push((connection) => addPending(statAsync(connection, fsPath, dir)));
+				onReadys.push((connection) => addPending('Stat', fsPath, statAsync(connection, fsPath, dir)));
 			}
 			return false;
 		}
@@ -131,10 +131,10 @@ export function createWebFileSystemHost(): FileSystemHost {
 			}
 			dir.fileTexts.set(name, '');
 			if (connection) {
-				addPending(readFileAsync(connection, fsPath, dir));
+				addPending('Read File', fsPath, readFileAsync(connection, fsPath, dir));
 			}
 			else {
-				onReadys.push((connection) => addPending(readFileAsync(connection, fsPath, dir)));
+				onReadys.push((connection) => addPending('Read File', fsPath, readFileAsync(connection, fsPath, dir)));
 			}
 			return '';
 		}
@@ -166,10 +166,10 @@ export function createWebFileSystemHost(): FileSystemHost {
 					if (!dir.searched) {
 						dir.searched = true;
 						if (connection) {
-							addPending(readDirectoryAsync(connection, dirPath, dir));
+							addPending('Read Directory', dirPath, readDirectoryAsync(connection, dirPath, dir));
 						}
 						else {
-							onReadys.push((connection) => addPending(readDirectoryAsync(connection, dirPath, dir)));
+							onReadys.push((connection) => addPending('Read Directory', dirPath, readDirectoryAsync(connection, dirPath, dir)));
 						}
 					}
 
@@ -193,10 +193,10 @@ export function createWebFileSystemHost(): FileSystemHost {
 			if (!dir.searched) {
 				dir.searched = true;
 				if (connection) {
-					addPending(readDirectoryAsync(connection, fsPath, dir));
+					addPending('Read Directory', fsPath, readDirectoryAsync(connection, fsPath, dir));
 				}
 				else {
-					onReadys.push((connection) => addPending(readDirectoryAsync(connection, fsPath, dir)));
+					onReadys.push((connection) => addPending('Read Directory', fsPath, readDirectoryAsync(connection, fsPath, dir)));
 				}
 			}
 
@@ -244,22 +244,27 @@ export function createWebFileSystemHost(): FileSystemHost {
 		}
 	}
 
-	async function addPending(p: Promise<any>) {
+	async function addPending(action: string, fileName: string, p: Promise<any>) {
 
-		pendings.add(p);
+		pendings.push([action, fileName, p]);
 
-		if (checking === false) {
-			checking = true;
-			while (pendings.size > 0) {
-				const _pendings = [...pendings];
-				pendings.clear();
-				await Promise.all(_pendings);
+		if (loading === false) {
+			loading = true;
+			const progress = await connection?.window.createWorkDoneProgress();
+			progress?.begin(action);
+			let i = 0;
+			while (pendings.length) {
+				const current = pendings.shift()!;
+				progress?.report(i / pendings.length, URI.parse(shared.getUriByPath(current[1])).fsPath);
+				await current;
+				i++;
 			}
+			progress?.done();
 			if (changes.length) {
 				fireChanges({ changes: [...changes] }, 'web-cache-updated');
 				changes.length = 0;
 			}
-			checking = false;
+			loading = false;
 		}
 	}
 

@@ -7,7 +7,7 @@ export function getPathOfUri(uri: string) {
 		return _uri.fsPath.replace(/\\/g, '/') as path.PosixPath;
 	}
 	else {
-		return '/__uri__/' + uri.replace('://', '__uri_scheme__/') as path.PosixPath;
+		return '/__uri__' + uri.replace('://', '__uri_scheme__/') as path.PosixPath;
 	}
 }
 
@@ -16,8 +16,8 @@ export function normalizeFileName(fsPath: string) {
 }
 
 export function getUriByPath(path: string) {
-	if (path.startsWith('/__uri__/')) {
-		return path.replace('/__uri__/', '').replace('__uri_scheme__/', '://');
+	if (path.startsWith('/__uri__')) {
+		return path.replace('/__uri__', '').replace('__uri_scheme__/', '://');
 	}
 	return URI.file(path).toString();
 }

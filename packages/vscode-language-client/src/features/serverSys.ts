@@ -32,9 +32,9 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			}
 		}));
 
-		context.subscriptions.push(client.onRequest(FsReadDirectoryRequest.type, uri => {
+		context.subscriptions.push(client.onRequest(FsReadDirectoryRequest.type, async uri => {
 			try {
-				return vscode.workspace.fs.readDirectory(client.protocol2CodeConverter.asUri(uri));
+				return await vscode.workspace.fs.readDirectory(client.protocol2CodeConverter.asUri(uri));
 			}
 			catch {
 				return [];
