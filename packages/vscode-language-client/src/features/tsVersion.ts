@@ -5,7 +5,6 @@ import { quickPick } from '../common';
 import { LanguageServerInitializationOptions } from '@volar/language-server';
 
 const defaultTsdkPath = 'node_modules/typescript/lib' as path.PosixPath;
-const isWeb = vscode.env.appHost === 'web';
 
 export async function register(
 	cmd: string,
@@ -32,6 +31,7 @@ export async function register(
 		const tsdk = getTsdk(context);
 		const configTsdkPath = getConfigTsdkPath();
 		const vscodeTsdkUri = getVScodeTsdkUri();
+		const isWeb = vscodeTsdkUri.scheme !== 'file';
 		const select = await quickPick([
 			{
 				useVSCodeTsdk: {
@@ -152,29 +152,26 @@ function resolveWorkspaceTsdk(tsdk: path.OsPath | path.PosixPath) {
 
 function getVScodeTsdkUri() {
 
-	if (isWeb) {
-		const tsExt = vscode.extensions.getExtension('vscode.typescript-language-features');
-		if (tsExt) {
-			return vscode.Uri.parse(tsExt.extensionUri.toString() + '/dist/browser/typescript');
-		}
-		else {
-			const version = require('typescript/package.json').version;
-			return vscode.Uri.parse(`https://cdn.jsdelivr.net/npm/typescript@${version}/lib`);
-		}
-	}
-
 	const nightly = vscode.extensions.getExtension('ms-vscode.vscode-typescript-next');
 	if (nightly) {
+		return vscode.Uri.parse(nightly.extensionUri.toString() + '/node_modules/typescript/lib');
+	}
+
+	if (vscode.env.appRoot) {
 		return vscode.Uri.file(path.join(
-			nightly.extensionPath as path.OsPath,
-			'node_modules/typescript/lib' as path.PosixPath,
+			vscode.env.appRoot as path.OsPath,
+			'extensions/node_modules/typescript/lib' as path.PosixPath,
 		));
 	}
 
-	return vscode.Uri.file(path.join(
-		vscode.env.appRoot as path.OsPath,
-		'extensions/node_modules/typescript/lib' as path.PosixPath,
-	));
+	// web
+	const tsExt = vscode.extensions.getExtension('vscode.typescript-language-features');
+	if (tsExt) {
+		return vscode.Uri.parse(tsExt.extensionUri.toString() + '/dist/browser/typescript');
+	}
+
+	const version = require('typescript/package.json').version;
+	return vscode.Uri.parse(`https://cdn.jsdelivr.net/npm/typescript@${version}/lib`);
 }
 
 function getConfigTsdkPath() {
@@ -186,6 +183,8 @@ function isUseWorkspaceTsdk(context: vscode.ExtensionContext) {
 }
 
 async function getTsVersion(libUri: vscode.Uri): Promise<string | undefined> {
+
+	const isWeb = libUri.scheme !== 'file';
 
 	if (isWeb) {
 		return require('typescript/package.json').version;
