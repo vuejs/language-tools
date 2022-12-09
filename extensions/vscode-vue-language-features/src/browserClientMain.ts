@@ -4,7 +4,7 @@ import { activate as commonActivate, deactivate as commonDeactivate } from './co
 import { middleware } from './middleware';
 
 export function activate(context: vscode.ExtensionContext) {
-	return commonActivate(context, async (
+	return commonActivate(context, (
 		id,
 		name,
 		langs,
@@ -32,7 +32,7 @@ export function activate(context: vscode.ExtensionContext) {
 			clientOptions,
 			worker,
 		);
-		await client.start();
+		client.start();
 
 		return client;
 	});

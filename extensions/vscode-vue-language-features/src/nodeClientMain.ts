@@ -26,7 +26,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	return commonActivate(context, async (
+	return commonActivate(context, (
 		id,
 		name,
 		langs,
@@ -74,7 +74,7 @@ export function activate(context: vscode.ExtensionContext) {
 			serverOptions,
 			clientOptions,
 		);
-		await client.start();
+		client.start();
 
 		if (initOptions.serverMode === ServerMode.Semantic) {
 			preview.register(context, client);

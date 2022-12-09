@@ -67,10 +67,8 @@ export function register(
 	});
 	connection.onRequest(GetMatchTsConfigRequest.type, async params => {
 		const project = (await projects.getProject(params.uri));
-		if (project) {
-			return {
-				fileName: project.tsconfig,
-			};
+		if (project?.tsconfig) {
+			return { uri: shared.getUriByPath(project.tsconfig) };
 		}
 	});
 	connection.onRequest(GetVirtualFileNamesRequest.type, async document => {

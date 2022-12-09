@@ -10,6 +10,18 @@ export namespace ShowReferencesNotification {
 	export const type = new vscode.NotificationType<ResponseType>('vue.findReferences');
 }
 
+export namespace FsStatRequest {
+	export const type = new vscode.RequestType<vscode.DocumentUri, html.FileStat | undefined, unknown>('fs/stat');
+}
+
+export namespace FsReadFileRequest {
+	export const type = new vscode.RequestType<vscode.DocumentUri, string | undefined, unknown>('fs/readFile');
+}
+
+export namespace FsReadDirectoryRequest {
+	export const type = new vscode.RequestType<vscode.DocumentUri, [string, html.FileType][], unknown>('fs/readDirectory');
+}
+
 /**
  * Client request server
  */
@@ -25,7 +37,7 @@ export namespace FindFileReferenceRequest {
 
 export namespace GetMatchTsConfigRequest {
 	export type ParamsType = vscode.TextDocumentIdentifier;
-	export type ResponseType = { fileName: string; } | null | undefined;
+	export type ResponseType = { uri: string; } | null | undefined;
 	export type ErrorType = never;
 	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('volar/tsconfig');
 }
@@ -85,20 +97,4 @@ export namespace GetVirtualFileRequest {
 
 export namespace ReportStats {
 	export const type = new vscode.NotificationType0('vue/stats');
-}
-
-/**
- * FS request for browser
- */
-
-export namespace FsStatRequest {
-	export const type = new vscode.RequestType<vscode.DocumentUri, html.FileStat | undefined, unknown>('fs/stat');
-}
-
-export namespace FsReadFileRequest {
-	export const type = new vscode.RequestType<vscode.DocumentUri, string | undefined, unknown>('fs/readFile');
-}
-
-export namespace FsReadDirectoryRequest {
-	export const type = new vscode.RequestType<vscode.DocumentUri, [string, html.FileType][], unknown>('fs/readDirectory');
 }

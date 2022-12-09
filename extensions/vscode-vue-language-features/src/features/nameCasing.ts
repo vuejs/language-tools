@@ -7,7 +7,9 @@ import { processHtml, processMd } from '../common';
 export const attrNameCasings = new Map<string, AttrNameCasing>();
 export const tagNameCasings = new Map<string, TagNameCasing>();
 
-export async function activate(_context: vscode.ExtensionContext, languageClient: BaseLanguageClient) {
+export async function activate(_context: vscode.ExtensionContext, client: BaseLanguageClient) {
+
+	await client.start();
 
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	statusBar.command = 'volar.action.nameCasing';
@@ -75,7 +77,7 @@ export async function activate(_context: vscode.ExtensionContext, languageClient
 		updateStatusBarText();
 	});
 
-	languageClient.onDidChangeState(e => {
+	client.onDidChangeState(e => {
 		if (e.newState === State.Stopped) {
 			d_1.dispose();
 			d_2.dispose();
@@ -86,11 +88,11 @@ export async function activate(_context: vscode.ExtensionContext, languageClient
 
 	async function convertTag(editor: vscode.TextEditor, casing: TagNameCasing) {
 
-		const response = await languageClient.sendRequest(GetConvertTagCasingEditsRequest.type, {
-			textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(editor.document),
+		const response = await client.sendRequest(GetConvertTagCasingEditsRequest.type, {
+			textDocument: client.code2ProtocolConverter.asTextDocumentIdentifier(editor.document),
 			casing,
 		});
-		const edits = await languageClient.protocol2CodeConverter.asTextEdits(response);
+		const edits = await client.protocol2CodeConverter.asTextEdits(response);
 
 		if (edits) {
 			editor.edit(editBuilder => {
@@ -106,11 +108,11 @@ export async function activate(_context: vscode.ExtensionContext, languageClient
 
 	async function convertAttr(editor: vscode.TextEditor, casing: AttrNameCasing) {
 
-		const response = await languageClient.sendRequest(GetConvertAttrCasingEditsRequest.type, {
-			textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(editor.document),
+		const response = await client.sendRequest(GetConvertAttrCasingEditsRequest.type, {
+			textDocument: client.code2ProtocolConverter.asTextDocumentIdentifier(editor.document),
 			casing,
 		});
-		const edits = await languageClient.protocol2CodeConverter.asTextEdits(response);
+		const edits = await client.protocol2CodeConverter.asTextEdits(response);
 
 		if (edits) {
 			editor.edit(editBuilder => {
@@ -186,7 +188,7 @@ export async function activate(_context: vscode.ExtensionContext, languageClient
 	}
 
 	function detect(document: vscode.TextDocument) {
-		return languageClient.sendRequest(DetectNameCasingRequest.type, { textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(document) });
+		return client.sendRequest(DetectNameCasingRequest.type, { textDocument: client.code2ProtocolConverter.asTextDocumentIdentifier(document) });
 	}
 
 	function updateStatusBarText() {

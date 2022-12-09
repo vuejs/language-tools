@@ -14,8 +14,8 @@ interface Options<T> {
 
 export function createUriMap<T>(map: Options<T> = new Map<string, T>()) {
 
-	const uriToUriKeys: Map<string, string> = new Map();
-	const pathToUriKeys: WeakMap<URI, Map<string, string>> = new WeakMap();
+	const uriToUri = new Map<string, string>();
+	const pathToUri = new Map<string, string>();
 
 	return {
 		clear,
@@ -31,20 +31,15 @@ export function createUriMap<T>(map: Options<T> = new Map<string, T>()) {
 	};
 
 	function getUriByUri(uri: string) {
-		if (!uriToUriKeys.has(uri))
-			uriToUriKeys.set(uri, normalizeUri(uri).toLowerCase());
-		return uriToUriKeys.get(uri)!;
+		if (!uriToUri.has(uri))
+			uriToUri.set(uri, normalizeUri(uri).toLowerCase());
+		return uriToUri.get(uri)!;
 	}
-	function getUriByPath(rootUri: URI, path: string) {
-		let map = pathToUriKeys.get(rootUri);
-		if (!map) {
-			map = new Map();
-			pathToUriKeys.set(rootUri, map);
+	function getUriByPath(path: string) {
+		if (!pathToUri.has(path)) {
+			pathToUri.set(path, shared.getUriByPath(path).toLowerCase());
 		}
-		if (!map.has(path)) {
-			map.set(path, shared.getUriByPath(path).toLowerCase());
-		}
-		return map.get(path)!;
+		return pathToUri.get(path)!;
 	}
 
 	function clear() {
@@ -67,17 +62,17 @@ export function createUriMap<T>(map: Options<T> = new Map<string, T>()) {
 		return map.set(getUriByUri(_uri), item);
 	}
 
-	function pathDelete(rootUri: URI, path: string) {
-		return uriDelete(getUriByPath(rootUri, path));
+	function pathDelete(path: string) {
+		return uriDelete(getUriByPath(path));
 	}
-	function pathGet(rootUri: URI, path: string) {
-		return uriGet(getUriByPath(rootUri, path));
+	function pathGet(path: string) {
+		return uriGet(getUriByPath(path));
 	}
-	function pathHas(rootUri: URI, path: string) {
-		return uriGet(getUriByPath(rootUri, path));
+	function pathHas(path: string) {
+		return uriGet(getUriByPath(path));
 	}
-	function pathSet(rootUri: URI, path: string, item: T) {
-		return uriSet(getUriByPath(rootUri, path), item);
+	function pathSet(path: string, item: T) {
+		return uriSet(getUriByPath(path), item);
 	}
 }
 

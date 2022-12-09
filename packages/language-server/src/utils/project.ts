@@ -199,21 +199,21 @@ export async function createProject(
 
 		function getScriptVersion(fileName: string) {
 
-			const doc = documents.data.pathGet(rootUri, fileName);
+			const doc = documents.data.pathGet(fileName);
 			if (doc) {
 				return doc.version.toString();
 			}
 
-			return scripts.pathGet(rootUri, fileName)?.version.toString() ?? '';
+			return scripts.pathGet(fileName)?.version.toString() ?? '';
 		}
 		function getScriptSnapshot(fileName: string) {
 
-			const doc = documents.data.pathGet(rootUri, fileName);
+			const doc = documents.data.pathGet(fileName);
 			if (doc) {
 				return doc.getSnapshot();
 			}
 
-			const script = scripts.pathGet(rootUri, fileName);
+			const script = scripts.pathGet(fileName);
 			if (script && script.snapshotVersion === script.version) {
 				return script.snapshot;
 			}
@@ -227,7 +227,7 @@ export async function createProject(
 						script.snapshotVersion = script.version;
 					}
 					else {
-						scripts.pathSet(rootUri, fileName, {
+						scripts.pathSet(fileName, {
 							version: -1,
 							fileName: fileName,
 							snapshot: snapshot,

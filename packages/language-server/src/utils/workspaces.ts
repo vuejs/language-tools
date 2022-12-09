@@ -6,7 +6,6 @@ import { URI } from 'vscode-uri';
 import { DiagnosticModel, FileSystemHost, LanguageServerPlugin, RuntimeEnvironment, LanguageServerInitializationOptions } from '../types';
 import { createSnapshots } from './snapshots';
 import { createWorkspaceProjects, rootTsConfigNames, sortTsConfigs } from './workspaceProjects';
-import * as path from 'typesafe-path';
 import { CancellationTokenHost } from './cancellationPipe';
 
 export interface Workspaces extends ReturnType<typeof createWorkspaces> { }
@@ -175,9 +174,8 @@ export function createWorkspaces(
 	async function getProject(uri: string) {
 
 		const rootUris = [...workspaces.keys()]
-			.filter(rootUri => URI.parse(rootUri).scheme === URI.parse(uri).scheme) // fix https://github.com/johnsoncodehk/volar/issues/1946#issuecomment-1272430742
-			.filter(rootUri => shared.isFileInDir(URI.parse(uri).fsPath as path.OsPath, URI.parse(rootUri).fsPath as path.OsPath))
-			.sort((a, b) => sortTsConfigs(URI.parse(uri).fsPath as path.OsPath, URI.parse(a).fsPath as path.OsPath, URI.parse(b).fsPath as path.OsPath));
+			.filter(rootUri => shared.isFileInDir(shared.getPathOfUri(uri), shared.getPathOfUri(rootUri)))
+			.sort((a, b) => sortTsConfigs(shared.getPathOfUri(uri), shared.getPathOfUri(a), shared.getPathOfUri(b)));
 
 		for (const rootUri of rootUris) {
 			const workspace = await workspaces.get(rootUri);

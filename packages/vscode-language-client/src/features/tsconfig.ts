@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { BaseLanguageClient } from 'vscode-languageclient';
-import * as path from 'typesafe-path';
 import { GetMatchTsConfigRequest } from '@volar/language-server';
+import * as path from 'typesafe-path';
 
 export async function register(
 	cmd: string,
@@ -11,14 +11,17 @@ export async function register(
 ) {
 
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
-	let currentTsconfig = '';
+	let currentTsconfigUri: vscode.Uri | undefined;
 
 	updateStatusBar();
 
 	vscode.window.onDidChangeActiveTextEditor(updateStatusBar, undefined, context.subscriptions);
+
 	context.subscriptions.push(vscode.commands.registerCommand(cmd, async () => {
-		const document = await vscode.workspace.openTextDocument(currentTsconfig);
-		await vscode.window.showTextDocument(document);
+		if (currentTsconfigUri) {
+			const document = await vscode.workspace.openTextDocument(currentTsconfigUri);
+			await vscode.window.showTextDocument(document);
+		}
 	}));
 
 	async function updateStatusBar() {
@@ -33,10 +36,13 @@ export async function register(
 				GetMatchTsConfigRequest.type,
 				client.code2ProtocolConverter.asTextDocumentIdentifier(vscode.window.activeTextEditor.document),
 			);
-			if (tsconfig?.fileName) {
-				statusBar.text = path.relative(vscode.workspace.rootPath! as path.OsPath, tsconfig.fileName as path.PosixPath);
+			if (tsconfig?.uri) {
+				currentTsconfigUri = vscode.Uri.parse(tsconfig.uri);
+				statusBar.text = path.relative(
+					(vscode.workspace.rootPath || '/') as path.OsPath,
+					currentTsconfigUri.fsPath as path.OsPath,
+				);
 				statusBar.command = cmd;
-				currentTsconfig = tsconfig.fileName;
 			}
 			else {
 				statusBar.text = 'No tsconfig';

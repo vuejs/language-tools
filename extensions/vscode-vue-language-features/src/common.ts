@@ -35,7 +35,7 @@ type CreateLanguageClient = (
 	initOptions: VueServerInitializationOptions,
 	fillInitializeParams: (params: lsp.InitializeParams) => void,
 	port: number,
-) => Promise<lsp.BaseLanguageClient>;
+) => lsp.BaseLanguageClient;
 
 export async function activate(context: vscode.ExtensionContext, createLc: CreateLanguageClient) {
 
@@ -69,24 +69,22 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 	vscode.commands.executeCommand('setContext', 'volar.activated', true);
 
-	[semanticClient, syntacticClient] = await Promise.all([
-		createLc(
-			'vue-semantic-server',
-			'Vue Semantic Server',
-			getDocumentSelector(ServerMode.Semantic),
-			getInitializationOptions(ServerMode.Semantic, context),
-			getFillInitializeParams([LanguageFeaturesKind.Semantic]),
-			6009,
-		),
-		createLc(
-			'vue-syntactic-server',
-			'Vue Syntactic Server',
-			getDocumentSelector(ServerMode.Syntactic),
-			getInitializationOptions(ServerMode.Syntactic, context),
-			getFillInitializeParams([LanguageFeaturesKind.Syntactic]),
-			6011,
-		),
-	]);
+	semanticClient = createLc(
+		'vue-semantic-server',
+		'Vue Semantic Server',
+		getDocumentSelector(ServerMode.Semantic),
+		getInitializationOptions(ServerMode.Semantic, context),
+		getFillInitializeParams([LanguageFeaturesKind.Semantic]),
+		6009,
+	);
+	syntacticClient = createLc(
+		'vue-syntactic-server',
+		'Vue Syntactic Server',
+		getDocumentSelector(ServerMode.Syntactic),
+		getInitializationOptions(ServerMode.Syntactic, context),
+		getFillInitializeParams([LanguageFeaturesKind.Syntactic]),
+		6011,
+	);
 	const clients = [semanticClient, syntacticClient];
 
 	registerServerMaxOldSpaceSizeChange();

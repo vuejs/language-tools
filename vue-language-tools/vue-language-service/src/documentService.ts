@@ -9,6 +9,7 @@ import useVuePlugin from './plugins/vue';
 import useAutoWrapParenthesesPlugin from './plugins/vue-autoinsert-parentheses';
 import * as embeddedLS from '@volar/language-service';
 import * as vue from '@volar/vue-language-core';
+import * as shared from '@volar/shared';
 
 import type * as _1 from 'vscode-languageserver-protocol';
 import type * as _2 from 'vscode-languageserver-textdocument';
@@ -49,7 +50,7 @@ export function createDocumentService(
 
 	const vueLanguageModule = vue.createLanguageModule(
 		ts,
-		env.rootUri.fsPath,
+		shared.getPathOfUri(env.rootUri.toString()),
 		{},
 		{},
 	);

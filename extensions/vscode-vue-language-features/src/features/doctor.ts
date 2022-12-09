@@ -114,7 +114,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 				'- vue version: ' + vueMod.json.version,
 				'- tsconfig target: ' + targetVersionNumber + (vueOptions?.target !== undefined ? '' : ' (default)'),
 				'- vue: ' + vueMod.path,
-				'- tsconfig: ' + (tsconfig?.fileName ?? 'Not found'),
+				'- tsconfig: ' + (tsconfig?.uri ?? 'Not found'),
 				'- vueCompilerOptions:',
 				'  ```json',
 				JSON.stringify(vueOptions, undefined, 2).split('\n').map(line => '  ' + line).join('\n'),

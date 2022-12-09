@@ -7,22 +7,22 @@ export function getPathOfUri(uri: string) {
 		return _uri.fsPath.replace(/\\/g, '/') as path.PosixPath;
 	}
 	else {
-		return '/__uri__/' + uri.replace('://', '__uriScheme__/') as path.PosixPath;
+		return '/__uri__/' + uri.replace('://', '__uri_scheme__/') as path.PosixPath;
 	}
 }
 
 export function normalizeFileName(fsPath: string) {
-	return URI.file(fsPath).fsPath.replace(/\\/g, '/') as path.PosixPath;
+	return getPathOfUri(getUriByPath(fsPath));
 }
 
 export function getUriByPath(path: string) {
 	if (path.startsWith('/__uri__/')) {
-		return path.replace('/__uri__/', '').replace('__uriScheme__/', '://');
+		return path.replace('/__uri__/', '').replace('__uri_scheme__/', '://');
 	}
 	return URI.file(path).toString();
 }
 
-export function isFileInDir(fileName: path.OsPath, dir: path.OsPath) {
+export function isFileInDir(fileName: path.OsPath | path.PosixPath, dir: path.OsPath | path.PosixPath) {
 	const relative = path.relative(dir, fileName);
 	return !!relative && !relative.startsWith('..') && !path.isAbsolute(relative);
 }
