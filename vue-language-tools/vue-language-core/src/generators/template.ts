@@ -1098,9 +1098,9 @@ export function generate(
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
 				if (format === 'jsx')
-					codeGen.push('{...');
+					codeGen.push('{__VLS_bound');
 				else
-					codeGen.push('...');
+					codeGen.push('__VLS_bound');
 				writeInterpolation(
 					prop.exp.content,
 					prop.exp.loc.start.offset,
