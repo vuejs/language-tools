@@ -32,7 +32,7 @@ export async function createWorkspaceProjects(
 	const documentRegistry = ts.createDocumentRegistry(sys.useCaseSensitiveFileNames, shared.getPathOfUri(rootUri.toString()));
 	const projects = createUriMap<Project>();
 	const rootTsConfigs = new Set(sys.readDirectory(shared.getPathOfUri(rootUri.toString()), rootTsConfigNames, undefined, ['**/*']).map(fileName => shared.normalizeFileName(fileName)));
-	const disposeWatch = fsHost.onDidChangeWatchedFiles(async (params, reason) => {
+	const disposeWatch = fsHost.onDidChangeWatchedFiles(async (params) => {
 		const disposes: Promise<any>[] = [];
 		for (const change of params.changes) {
 			if (rootTsConfigNames.includes(change.uri.substring(change.uri.lastIndexOf('/') + 1))) {
@@ -52,9 +52,6 @@ export async function createWorkspaceProjects(
 					})());
 				}
 			}
-		}
-		if (reason === 'web-cache-updated' && params.changes.some(change => change.uri.indexOf('/node_modules/') >= 0)) {
-			clearProjects();
 		}
 		return Promise.all(disposes);
 	});
@@ -126,13 +123,11 @@ export async function createWorkspaceProjects(
 
 			let matches: path.PosixPath[] = [];
 
-
 			for (const rootTsConfig of rootTsConfigs) {
 				if (shared.isFileInDir(shared.getPathOfUri(uri.toString()), path.dirname(rootTsConfig))) {
 					matches.push(rootTsConfig);
 				}
 			}
-
 
 			matches = matches.sort((a, b) => sortTsConfigs(shared.getPathOfUri(uri.toString()), a, b));
 

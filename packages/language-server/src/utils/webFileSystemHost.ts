@@ -20,7 +20,7 @@ interface Dir {
 export function createWebFileSystemHost(): FileSystemHost {
 
 	const instances = createUriMap<FileSystem>();
-	const onDidChangeWatchedFilesCb = new Set<(params: vscode.DidChangeWatchedFilesParams, reason: 'lsp' | 'web-cache-updated') => void>();
+	const onDidChangeWatchedFilesCb = new Set<(params: vscode.DidChangeWatchedFilesParams) => void>();
 	const root: Dir = {
 		dirs: new Map(),
 		fileTexts: new Map(),
@@ -53,7 +53,7 @@ export function createWebFileSystemHost(): FileSystemHost {
 						dir.fileTexts.delete(name);
 					}
 				}
-				fireChanges(params, 'lsp');
+				fireChanges(params);
 			});
 			for (const cb of onReadys) {
 				cb(connection);
@@ -205,27 +205,68 @@ export function createWebFileSystemHost(): FileSystemHost {
 
 		async function statAsync(connection: vscode.Connection, fsPath: path.OsPath, dir: Dir) {
 			const uri = shared.getUriByPath(fsPath);
-			const result = await connection.sendRequest(FsStatRequest.type, uri);
-			if (result?.type === FileType.File || result?.type === FileType.SymbolicLink) {
-				const name = path.basename(fsPath);
-				dir.fileTypes.set(name, result.type);
-				changes.push({
-					uri: uri,
-					type: vscode.FileChangeType.Created,
-				});
+			if (uri.startsWith('https://cdn.jsdelivr.net/npm/')) { // stat request always response file type for jsdelivr
+				const text = await readJsdelivrFile(connection, uri);
+				if (text !== undefined) {
+					const name = path.basename(fsPath);
+					dir.fileTypes.set(name, FileType.File);
+					dir.fileTexts.set(name, text);
+					changes.push({
+						uri: uri,
+						type: vscode.FileChangeType.Created,
+					});
+				}
+			}
+			else {
+				const result = await connection.sendRequest(FsStatRequest.type, uri);
+				if (result?.type === FileType.File || result?.type === FileType.SymbolicLink) {
+					const name = path.basename(fsPath);
+					dir.fileTypes.set(name, result.type);
+					changes.push({
+						uri: uri,
+						type: vscode.FileChangeType.Created,
+					});
+				}
 			}
 		}
 
 		async function readFileAsync(connection: vscode.Connection, fsPath: path.OsPath, dir: Dir) {
 			const uri = shared.getUriByPath(fsPath);
-			const text = await connection.sendRequest(FsReadFileRequest.type, uri);
-			if (text) {
-				const name = path.basename(fsPath);
-				dir.fileTexts.set(name, text);
-				changes.push({
-					uri: uri,
-					type: vscode.FileChangeType.Changed,
-				});
+			if (uri.startsWith('https://cdn.jsdelivr.net/npm/')) {
+				const text = await readJsdelivrFile(connection, uri);
+				if (text !== undefined) {
+					const name = path.basename(fsPath);
+					dir.fileTexts.set(name, text);
+					changes.push({
+						uri: uri,
+						type: vscode.FileChangeType.Changed,
+					});
+				}
+			}
+			else {
+				const text = await connection.sendRequest(FsReadFileRequest.type, uri);
+				if (text) {
+					const name = path.basename(fsPath);
+					dir.fileTexts.set(name, text);
+					changes.push({
+						uri: uri,
+						type: vscode.FileChangeType.Changed,
+					});
+				}
+			}
+		}
+
+		async function readJsdelivrFile(connection: vscode.Connection, uri: string) {
+			// ignore .js because it's no help for intellisense
+			if (uri.endsWith('.d.ts') || uri.endsWith('.json')) {
+				const text = await connection.sendRequest(FsReadFileRequest.type, uri);
+				if (
+					text !== undefined
+					// ignore https://cdn.jsdelivr.net/npm/@vue/runtime-dom
+					&& text.indexOf('Minified by jsDelivr') === -1
+				) {
+					return text;
+				}
 			}
 		}
 
@@ -261,17 +302,17 @@ export function createWebFileSystemHost(): FileSystemHost {
 			}
 			progress?.done();
 			if (changes.length) {
-				fireChanges({ changes: [...changes] }, 'web-cache-updated');
+				fireChanges({ changes: [...changes] });
 				changes.length = 0;
 			}
 			loading = false;
 		}
 	}
 
-	async function fireChanges(params: vscode.DidChangeWatchedFilesParams, reason: 'lsp' | 'web-cache-updated') {
+	async function fireChanges(params: vscode.DidChangeWatchedFilesParams) {
 		for (const cb of [...onDidChangeWatchedFilesCb]) {
 			if (onDidChangeWatchedFilesCb.has(cb)) {
-				await cb(params, reason);
+				await cb(params);
 			}
 		}
 	}

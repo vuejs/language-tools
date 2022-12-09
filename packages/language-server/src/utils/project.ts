@@ -164,7 +164,7 @@ export async function createProject(
 					return ts.getDefaultLibFilePath(options);
 				} catch {
 					// web
-					return shared.getPathOfUri(serverOptions.typescript.tsdk + '/' + ts.getDefaultLibFileName(options));
+					return serverOptions.typescript.tsdk + '/' + ts.getDefaultLibFileName(options);
 				}
 			},
 			getProjectVersion: () => projectVersion.toString(),

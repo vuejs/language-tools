@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { BaseLanguageClient } from 'vscode-languageclient';
 import { quickPick } from '../common';
 import { LanguageServerInitializationOptions } from '@volar/language-server';
+import * as shared from '@volar/shared';
 
 const defaultTsdkPath = 'node_modules/typescript/lib' as path.PosixPath;
 
@@ -125,7 +126,7 @@ export function getTsdk(context: vscode.ExtensionContext) {
 	}
 	const vscodeTsdkUri = getVScodeTsdkUri();
 	return {
-		tsdk: vscodeTsdkUri.scheme === 'file' ? vscodeTsdkUri.fsPath : vscodeTsdkUri.toString(),
+		tsdk: shared.getPathOfUri(vscodeTsdkUri.toString()),
 		uri: vscodeTsdkUri,
 		isWorkspacePath: false,
 	};
@@ -165,11 +166,6 @@ function getVScodeTsdkUri() {
 	}
 
 	// web
-	const tsExt = vscode.extensions.getExtension('vscode.typescript-language-features');
-	if (tsExt) {
-		return vscode.Uri.parse(tsExt.extensionUri.toString() + '/dist/browser/typescript');
-	}
-
 	const version = require('typescript/package.json').version;
 	return vscode.Uri.parse(`https://cdn.jsdelivr.net/npm/typescript@${version}/lib`);
 }

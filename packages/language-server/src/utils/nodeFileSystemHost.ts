@@ -14,7 +14,7 @@ export function createNodeFileSystemHost(
 ): FileSystemHost {
 
 	const instances = createUriMap<FileSystem>();
-	const onDidChangeWatchedFilesCb = new Set<(params: vscode.DidChangeWatchedFilesParams, reason: 'lsp' | 'web-cache-updated') => void>();
+	const onDidChangeWatchedFilesCb = new Set<(params: vscode.DidChangeWatchedFilesParams) => void>();
 	const caches = new IterableWeakSet<Map<string, boolean>>();
 
 	return {
@@ -27,7 +27,7 @@ export function createNodeFileSystemHost(
 				}
 				for (const cb of [...onDidChangeWatchedFilesCb]) {
 					if (onDidChangeWatchedFilesCb.has(cb)) {
-						await cb(params, 'lsp');
+						await cb(params);
 					}
 				}
 			});
