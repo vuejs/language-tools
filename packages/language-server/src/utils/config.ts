@@ -9,6 +9,7 @@ export function loadCustomPlugins(dir: string) {
 	try {
 		if (configPath) {
 			const config: { plugins?: LanguageServicePlugin[]; } = require(configPath);
+			delete require.cache[configPath];
 			return config.plugins ?? [];
 		}
 	}

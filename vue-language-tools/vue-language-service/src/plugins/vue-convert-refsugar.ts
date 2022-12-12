@@ -346,9 +346,6 @@ async function unuseRefSugar(
 		const document = _vueDocument.getDocument();
 		const edits: vscode.TextEdit[] = [];
 
-		if (!ranges)
-			return;
-
 		let varsNum = 0;
 		let varsCur = 0;
 
@@ -417,11 +414,9 @@ async function unuseRefSugar(
 		return edits;
 
 		function inRawCall(start: number, end: number) {
-			if (ranges) {
-				for (const rawRange of ranges.raws) {
-					if (start >= (_scriptSetup.startTagEnd + rawRange.argsRange.start) && end <= (_scriptSetup.startTagEnd + rawRange.argsRange.end)) {
-						return true;
-					}
+			for (const rawRange of ranges.raws) {
+				if (start >= (_scriptSetup.startTagEnd + rawRange.argsRange.start) && end <= (_scriptSetup.startTagEnd + rawRange.argsRange.end)) {
+					return true;
 				}
 			}
 			return false;

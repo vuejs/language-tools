@@ -38,7 +38,7 @@ export async function register(
 				useVSCodeTsdk: {
 					label: (!tsdk.isWorkspacePath ? '• ' : '') + "Use VS Code's Version",
 					description: await getTsVersion(vscodeTsdkUri),
-					detail: isWeb ? vscodeTsdkUri.toString() : undefined,
+					detail: isWeb ? vscodeTsdkUri.toString(true) : undefined,
 				},
 				useConfigWorkspaceTsdk: configTsdkPath && !isWeb ? {
 					label: (tsdk.isWorkspacePath ? '• ' : '') + 'Use Workspace Version',

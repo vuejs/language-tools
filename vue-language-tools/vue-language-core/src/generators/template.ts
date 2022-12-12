@@ -1809,7 +1809,7 @@ function toUnicodeIfNeed(str: string) {
 }
 function toUnicode(str: string) {
 	return str.split('').map(value => {
-		var temp = value.charCodeAt(0).toString(16).padStart(4, '0');
+		const temp = value.charCodeAt(0).toString(16).padStart(4, '0');
 		if (temp.length > 2) {
 			return '\\u' + temp;
 		}

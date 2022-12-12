@@ -173,12 +173,9 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					...templateScriptData,
 					...templateScriptData.map(hyphenate).filter(name => !nativeTags.has(name)),
 				]);
-				const offsetRange = range ? {
+				const offsetRange = {
 					start: document.offsetAt(range.start),
 					end: document.offsetAt(range.end),
-				} : {
-					start: 0,
-					end: document.getText().length,
 				};
 
 				let token = scanner.scan();
