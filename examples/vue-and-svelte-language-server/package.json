@@ -1,6 +1,6 @@
 {
 	"name": "@volar-examples/vue-and-svelte-language-server",
-	"version": "1.0.12",
+	"version": "1.0.13",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -16,10 +16,10 @@
 		"directory": "examples/vue-and-svelte-language-server"
 	},
 	"dependencies": {
-		"@volar-examples/svelte-language-core": "1.0.12",
-		"@volar-plugins/typescript": "1.0.12",
-		"@volar/language-server": "1.0.12",
-		"@volar/shared": "1.0.12",
-		"@volar/vue-language-core": "1.0.12"
+		"@volar-examples/svelte-language-core": "1.0.13",
+		"@volar-plugins/typescript": "1.0.13",
+		"@volar/language-server": "1.0.13",
+		"@volar/shared": "1.0.13",
+		"@volar/vue-language-core": "1.0.13"
 	}
 }
