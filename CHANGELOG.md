@@ -1,14 +1,13 @@
 # Changelog
 
-## 1.0.12 (2022/12/9)
+## 1.0.13 (2022/12/12)
 
-- feat: added `@volar/vscode-language-client` package ([#2181](https://github.com/johnsoncodehk/volar/issues/2181))
-- fix: document content messed up randomly ([#1807](https://github.com/johnsoncodehk/volar/issues/1807))
-- fix: "Show Virtual Files" mapping background color unclear with light theme ([#2147](https://github.com/johnsoncodehk/volar/issues/2147)) ([#2170](https://github.com/johnsoncodehk/volar/issues/2170))
-- fix: props type checking not working for Element Plus components ([#2176](https://github.com/johnsoncodehk/volar/issues/2176)) ([#2180](https://github.com/johnsoncodehk/volar/issues/2180))
-- fix: attribute values being wrapped in parentheses while typing ([#2182](https://github.com/johnsoncodehk/volar/issues/2182))
-- fix: formatting crashes ([#2077](https://github.com/johnsoncodehk/volar/issues/2077))
-- fix: cannot emit component type with `DefineComponent` when template has slots ([#2161](https://github.com/johnsoncodehk/volar/issues/2161))
+- feat(web-ide): show loading file at status bar
+- feat(web-ide): support node_modules types via CDN
+- feat(web-ide): support locale typescript diagnostic messages
+- fix(web-ide): cannot use default typescript lib types
+- fix(web-ide): cannot found match tsconfig
+- fix: `volar.config.js` plugins dirty cache between different tsconfig projects
 
 ### Special Sponsor
 
@@ -27,6 +26,16 @@
 <table><tr>
 	<td align="center" valign="middle"><a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/prefect.svg" height="50" /></a></td>
 </tr></table>
+
+## 1.0.12 (2022/12/9)
+
+- feat: added `@volar/vscode-language-client` package ([#2181](https://github.com/johnsoncodehk/volar/issues/2181))
+- fix: document content messed up randomly ([#1807](https://github.com/johnsoncodehk/volar/issues/1807))
+- fix: "Show Virtual Files" mapping background color unclear with light theme ([#2147](https://github.com/johnsoncodehk/volar/issues/2147)) ([#2170](https://github.com/johnsoncodehk/volar/issues/2170))
+- fix: props type checking not working for Element Plus components ([#2176](https://github.com/johnsoncodehk/volar/issues/2176)) ([#2180](https://github.com/johnsoncodehk/volar/issues/2180))
+- fix: attribute values being wrapped in parentheses while typing ([#2182](https://github.com/johnsoncodehk/volar/issues/2182))
+- fix: formatting crashes ([#2077](https://github.com/johnsoncodehk/volar/issues/2077))
+- fix: cannot emit component type with `DefineComponent` when template has slots ([#2161](https://github.com/johnsoncodehk/volar/issues/2161))
 
 ## 1.0.11 (2022/12/3)
 
