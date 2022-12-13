@@ -62,7 +62,7 @@ export async function register(
 
 				const result = await client.sendRequest(AutoInsertRequest.type, params);
 
-				if (result !== undefined) {
+				if (result !== undefined && result !== null) {
 					if (typeof result === 'string') {
 						return result;
 					}
