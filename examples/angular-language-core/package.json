@@ -1,0 +1,24 @@
+{
+	"name": "@volar-examples/angular-language-core",
+	"version": "1.0.13",
+	"main": "out/index.js",
+	"license": "MIT",
+	"files": [
+		"out/**/*.js",
+		"out/**/*.d.ts"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/johnsoncodehk/volar.git",
+		"directory": "examples/angular-language-core"
+	},
+	"dependencies": {
+		"@angular-eslint/bundled-angular-compiler": "^15.1.0",
+		"@volar/language-core": "1.0.13",
+		"vscode-languageserver-textdocument": "^1.0.7",
+		"vscode-uri": "^3.0.6"
+	},
+	"devDependencies": {
+		"@angular/compiler": "^15.0.4"
+	}
+}

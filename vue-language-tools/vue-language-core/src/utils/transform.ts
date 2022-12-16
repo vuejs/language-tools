@@ -75,7 +75,7 @@ export function walkInterpolationFragment(
 				}
 			}
 			else {
-				cb('__VLS_ctx.', undefined);
+				cb('(__VLS_ctx).', undefined);
 				if (ctxVars[i + 1].isShorthand) {
 					cb(code.substring(ctxVars[i].offset, ctxVars[i + 1].offset + ctxVars[i + 1].text.length), ctxVars[i].offset);
 					cb(': ', undefined);
@@ -100,7 +100,7 @@ export function walkInterpolationFragment(
 		}
 		else {
 			cb('', ctxVars[ctxVars.length - 1].offset, true);
-			cb('__VLS_ctx.', undefined);
+			cb('(__VLS_ctx).', undefined);
 			cb(code.substring(ctxVars[ctxVars.length - 1].offset), ctxVars[ctxVars.length - 1].offset);
 		}
 	}

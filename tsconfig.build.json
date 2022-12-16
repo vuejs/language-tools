@@ -29,6 +29,12 @@
 		{
 			"path": "./examples/svelte-tsc/tsconfig.build.json"
 		},
+		{
+			"path": "./examples/vscode-svelte/tsconfig.build.json"
+		},
+		{
+			"path": "./examples/vscode-angular/tsconfig.build.json"
+		},
 		// IDE / tests
 		{
 			"path": "./tsconfig.json"

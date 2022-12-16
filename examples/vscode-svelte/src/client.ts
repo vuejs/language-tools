@@ -35,9 +35,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	const clientOptions: lsp.LanguageClientOptions = {
 		documentSelector,
 		initializationOptions,
-		synchronize: {
-			fileEvents: vscode.workspace.createFileSystemWatcher('{**/*.svelte,**/*.js,**/*.jsx,**/*.ts,**/*.tsx,**/*.json}')
-		},
 		middleware: {
 			workspace: {
 				configuration(params, token, next) {

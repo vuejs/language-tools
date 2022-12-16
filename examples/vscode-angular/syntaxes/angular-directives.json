@@ -1,0 +1,123 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"fileTypes": [ ],
+	"injectionSelector": "L:meta.tag -meta.attribute -source.tsx -source.js.jsx, L:meta.element -meta.attribute",
+	"patterns": [
+		{
+			"include": "#directives"
+		}
+	],
+	"repository": {
+		"directives": {
+			"begin": "((\\*?)(\\[)((ngIf)|(ngFor)|([^\\]]*))(\\]))|((\\*)((ngIf)|(ngFor)|([\\w-]*)))|((\\()(([^\\)]*))(\\)))",
+			"beginCaptures": {
+				"2": {
+					"name": "punctuation.separator.key-value.html.angular"
+				},
+				"3": {
+					"name": "punctuation.separator.key-value.html.angular"
+				},
+				"5": {
+					"name": "keyword.control.conditional.angular"
+				},
+				"6": {
+					"name": "keyword.control.loop.angular"
+				},
+				"7": {
+					"name": "entity.other.attribute-name.html.angular"
+				},
+				"8": {
+					"name": "punctuation.separator.key-value.html.angular"
+				},
+				"10": {
+					"name": "punctuation.separator.key-value.html.angular"
+				},
+				"12": {
+					"name": "keyword.control.conditional.angular"
+				},
+				"13": {
+					"name": "keyword.control.loop.angular"
+				},
+				"14": {
+					"name": "entity.other.attribute-name.html.angular"
+				},
+				"16": {
+					"name": "punctuation.separator.key-value.html.angular"
+				},
+				"17": {
+					"name": "entity.other.attribute-name.html.angular"
+				},
+				"18": {
+					"name": "punctuation.separator.key-value.html.angular"
+				}
+			},
+			"end": "(?=\\s*+[^=\\s])",
+			"endCaptures": {
+				"1": {
+					"name": "punctuation.definition.string.end.html.angular"
+				}
+			},
+			"name": "meta.attribute.directive.angular",
+			"patterns": [
+				{
+					"include": "#directives-expression"
+				}
+			]
+		},
+		"directives-expression": {
+			"patterns": [
+				{
+					"begin": "(=)\\s*('|\"|`)",
+					"beginCaptures": {
+						"1": {
+							"name": "punctuation.separator.key-value.html.angular"
+						},
+						"2": {
+							"name": "punctuation.definition.string.begin.html.angular"
+						}
+					},
+					"end": "(\\2)",
+					"endCaptures": {
+						"1": {
+							"name": "punctuation.definition.string.end.html.angular"
+						}
+					},
+					"patterns": [
+						{
+							"begin": "(?<=('|\"|`))",
+							"end": "(?=\\1)",
+							"name": "source.ts.embedded.html.angular",
+							"patterns": [
+								{
+									"include": "source.ts"
+								}
+							]
+						}
+					]
+				},
+				{
+					"begin": "(=)\\s*(?=[^'\"`])",
+					"beginCaptures": {
+						"1": {
+							"name": "punctuation.separator.key-value.html.angular"
+						}
+					},
+					"end": "(?=(\\s|>|\\/>))",
+					"patterns": [
+						{
+							"begin": "(?=[^'\"`])",
+							"end": "(?=(\\s|>|\\/>))",
+							"name": "source.ts.embedded.html.angular",
+							"patterns": [
+								{
+									"include": "source.ts"
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	},
+	"scopeName": "text.html.angular.directives"
+}

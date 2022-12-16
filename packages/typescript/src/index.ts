@@ -49,7 +49,7 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 		const file = core.mapper.get(args.fileName);
 		let edits: readonly ts.FileTextChanges[] = [];
 		if (file) {
-			embedded.forEachEmbeddeds(file[0].embeddeds, embedded => {
+			embedded.forEachEmbeddeds(file[0], embedded => {
 				if (embedded.kind && embedded.capabilities.codeAction) {
 					edits = edits.concat(ls.organizeImports({
 						...args,

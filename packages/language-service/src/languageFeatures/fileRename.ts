@@ -14,7 +14,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 			let tsExt: string | undefined;
 
-			forEachEmbeddeds(vueDocument.file.embeddeds, embedded => {
+			forEachEmbeddeds(vueDocument.file, embedded => {
 				if (embedded.kind && embedded.fileName.replace(vueDocument.file.fileName, '').match(/^\.(js|ts)x?$/)) {
 					tsExt = embedded.fileName.substring(embedded.fileName.lastIndexOf('.'));
 				}

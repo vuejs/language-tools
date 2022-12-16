@@ -199,7 +199,7 @@ export function createEmbeddedLanguageServiceHost(
 
 		for (const [sourceFile, languageModule, snapshot] of sourceFilesToUpdate) {
 
-			forEachEmbeddeds(sourceFile.embeddeds, embedded => {
+			forEachEmbeddeds(sourceFile, embedded => {
 				fileVersions.delete(embedded.fileName);
 			});
 
@@ -207,7 +207,7 @@ export function createEmbeddedLanguageServiceHost(
 			const newScripts: Record<string, string> = {};
 
 			if (!tsFileUpdated) {
-				forEachEmbeddeds(sourceFile.embeddeds, embedded => {
+				forEachEmbeddeds(sourceFile, embedded => {
 					if (embedded.kind) {
 						oldScripts[embedded.fileName] = embedded.text;
 					}
@@ -218,7 +218,7 @@ export function createEmbeddedLanguageServiceHost(
 			documentRegistry.onSourceFileUpdated(sourceFile);
 
 			if (!tsFileUpdated) {
-				forEachEmbeddeds(sourceFile.embeddeds, embedded => {
+				forEachEmbeddeds(sourceFile, embedded => {
 					if (embedded.kind) {
 						newScripts[embedded.fileName] = embedded.text;
 					}

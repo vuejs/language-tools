@@ -72,8 +72,7 @@ export async function documentArgFeatureWorker<T, K>(
 			return true;
 		});
 	}
-
-	if (results.length === 0 || !!combineResult) {
+	else if (results.length === 0 || !!combineResult) {
 
 		context.prepareLanguageServices(document);
 
@@ -149,8 +148,7 @@ export async function languageFeatureWorker<T, K>(
 			return true;
 		});
 	}
-
-	if (document && (results.length === 0 || !!combineResult)) {
+	else if (document && (results.length === 0 || !!combineResult)) {
 
 		for (const plugin of context.plugins) {
 

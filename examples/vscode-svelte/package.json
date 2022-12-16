@@ -1,11 +1,11 @@
 {
 	"private": true,
-	"name": "example-vscode-svelte",
+	"name": "vscode-svelte",
 	"version": "1.0.13",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
-		"directory": "examples/svelte"
+		"directory": "examples/vscode-svelte"
 	},
 	"displayName": "Svelte Language Server (Example)",
 	"description": "Svelte Language Server Example",

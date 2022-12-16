@@ -48,10 +48,8 @@ export interface TextRange {
 	end: number,
 }
 
-export interface SourceFile {
-	fileName: string,
-	text: string,
-	embeddeds: EmbeddedFile[],
+export interface SourceFile extends EmbeddedFile {
+	// TODO: snapshot
 }
 
 export enum EmbeddedFileKind {
