@@ -252,7 +252,7 @@ export function parseSourceFileDocument(sourceFile: SourceFile) {
 	// computed
 	const document = computed(() => TextDocument.create(
 		shared.getUriByPath(sourceFile.fileName),
-		sourceFile.fileName.endsWith('.md') ? 'markdown' : 'vue',
+		shared.syntaxToLanguageId(sourceFile.fileName.slice(sourceFile.fileName.lastIndexOf('.') + 1)),
 		documentVersion++,
 		sourceFile.text,
 	));
