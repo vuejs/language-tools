@@ -1,6 +1,6 @@
 {
 	"private": true,
-	"name": "example-vscode-angular",
+	"name": "vscode-angular-example",
 	"version": "1.0.13",
 	"repository": {
 		"type": "git",

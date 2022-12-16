@@ -1,6 +1,6 @@
 {
 	"private": true,
-	"name": "example-vscode-svelte",
+	"name": "vscode-svelte-example",
 	"version": "1.0.13",
 	"repository": {
 		"type": "git",
