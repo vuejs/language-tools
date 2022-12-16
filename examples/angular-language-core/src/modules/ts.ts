@@ -36,7 +36,7 @@ export function createTsLanguageModule(
 			const text = snapshot.getText(0, snapshot.getLength());
 			const change = snapshot.getChangeRange(sourceFile.snapshot);
 
-			// incremental update is important for performance
+			// incremental update for better performance
 			sourceFile.ast = change
 				? sourceFile.ast.update(text, change)
 				: ts.createSourceFile(sourceFile.fileName, text, ts.ScriptTarget.Latest);

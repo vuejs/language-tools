@@ -22,7 +22,6 @@ export class HTMLTemplateFile implements SourceFile {
 		public snapshot: ts.IScriptSnapshot,
 	) {
 
-		console.log('createSourceFile', fileName);
 		const generated = generate(ts, fileName, snapshot.getText(0, snapshot.getLength()));
 
 		this.text = snapshot.getText(0, snapshot.getLength()); // TODO: use empty string with snapshot
@@ -56,7 +55,6 @@ export class HTMLTemplateFile implements SourceFile {
 	}
 
 	update(snapshot: ts.IScriptSnapshot) {
-		console.log('updateSourceFile', this.fileName);
 		const generated = generate(this.ts, this.fileName, snapshot.getText(0, snapshot.getLength()));
 		this.text = snapshot.getText(0, snapshot.getLength());
 		this.mappings = [
@@ -102,80 +100,62 @@ function generate(
 	const conditions: string[] = [];
 	const ngTemplates: TmplAstTemplate[] = [];
 
+	let elementIndex = 0;
+
 	codegen.text += 'export { };\n';
 	codegen.text += `declare const __ctx: __Templates2Components['${fileName}'];\n`;
-	codegen.text += `declare const __components: __Selectors2Components;\n`;
+	codegen.text += `declare const __components: __Selectors2Components & HTMLElementTagNameMap;\n`;
 
 	const visitor: Parameters<TmplAstNode['visit']>[0] = {
 		visit(node) {
-			console.log('visit');
 			node.visit(visitor);
 		},
 		visitElement(element) {
-			console.log('visitElement');
 			codegen.text += `{\n`;
-			const isComponent = element.name.indexOf('-') >= 0;
-			if (isComponent) {
-				codegen.text += '__components';
-				codegen.addPropertyAccess(
-					element.startSourceSpan.start.offset + '<'.length,
-					element.startSourceSpan.start.offset + '<'.length + element.name.length,
-				);
-				codegen.text += ` = {\n`;
-			}
-			else {
-				codegen.text += `const { } = {\n`;
-			}
+			// const isComponent = element.name.indexOf('-') >= 0;
+			const index = elementIndex++;
+			codegen.text += `const __element_${index} = __components`;
+			codegen.addPropertyAccess(
+				element.startSourceSpan.start.offset + '<'.length,
+				element.startSourceSpan.start.offset + '<'.length + element.name.length,
+			);
+			codegen.text += `;\n`;
 			for (const input of element.inputs) {
-				codegen.addObjectKey(input.keySpan.start.offset, input.keySpan.end.offset);
-				codegen.text += ': (';
+				codegen.text += `__element_${index}`;
+				codegen.addPropertyAccess(input.keySpan.start.offset, input.keySpan.end.offset);
+				codegen.text += ' = (';
 				if (input.valueSpan) {
 					addInterpolationFragment(input.valueSpan.start.offset, input.valueSpan.end.offset);
-					codegen.text += `)`;
-					codegen.addSourceText(input.valueSpan.end.offset, input.valueSpan.end.offset); // error message mapping
 				}
-				else {
-					codegen.text += `)`;
-					codegen.addSourceText(input.keySpan.end.offset, input.keySpan.end.offset); // error message mapping
-				}
-				codegen.text += `,\n`;
+				codegen.text += `);\n`;
 			}
 			for (const attr of element.attributes) {
 				if (attr.keySpan) {
-					codegen.addObjectKey(attr.keySpan.start.offset, attr.keySpan.end.offset);
-					codegen.text += ': "';
+					codegen.text += `__element_${index}`;
+					codegen.addPropertyAccess(attr.keySpan.start.offset, attr.keySpan.end.offset);
+					codegen.text += ' = "';
 					if (attr.valueSpan) {
 						codegen.addSourceText(attr.valueSpan.start.offset, attr.valueSpan.end.offset);
-						codegen.text += `"`;
-						codegen.addSourceText(attr.valueSpan.end.offset, attr.valueSpan.end.offset); // error message mapping
 					}
-					else {
-						codegen.text += `"`;
-						codegen.addSourceText(attr.keySpan.end.offset, attr.keySpan.end.offset); // error message mapping
-					}
-					codegen.text += `,\n`;
+					codegen.text += `";\n`;
 				}
 			}
-			codegen.text += `};\n`;
 			for (const child of element.children) {
 				child.visit(visitor);
 			}
-			if (isComponent) {
-				for (const output of element.outputs) {
-					codegen.text += `__components['${element.name}']`;
-					codegen.addPropertyAccess(output.keySpan.start.offset, output.keySpan.end.offset);
-					codegen.text += `.subscribe($event => {\n`;
-					localVars.$event ??= 0;
-					localVars.$event++;
-					addInterpolationFragment(output.handlerSpan.start.offset, output.handlerSpan.end.offset);
-					localVars.$event--;
-					codegen.text += '};\n';
-				}
+			for (const output of element.outputs) {
+				codegen.text += `__element_${index}`;
+				codegen.addPropertyAccess(output.keySpan.start.offset, output.keySpan.end.offset);
+				codegen.text += `.subscribe($event => { `;
+				localVars.$event ??= 0;
+				localVars.$event++;
+				addInterpolationFragment(output.handlerSpan.start.offset, output.handlerSpan.end.offset);
+				localVars.$event--;
+				codegen.text += ' });\n';
 			}
 			codegen.text += `}\n`;
 		},
 		visitTemplate(template) {
-			console.log('visitTemplate', template.tagName);
 
 			if (template.tagName === 'ng-template') {
 				ngTemplates.push(template);
@@ -235,36 +215,28 @@ function generate(
 			}
 		},
 		visitContent(content) {
-			console.log('visitContent');
 			content.visit(visitor);
 		},
 		visitVariable(variable) {
-			console.log('visitVariable');
 			variable.visit(visitor);
 		},
 		visitReference(reference) {
-			console.log('visitReference');
 			reference.visit(visitor);
 		},
 		visitTextAttribute(attribute) {
-			console.log('visitTextAttribute');
 			attribute.visit(visitor);
 		},
 		visitBoundAttribute(attribute) {
-			console.log('visitBoundAttribute');
 			attribute.visit(visitor);
 		},
 		visitBoundEvent(event) {
-			console.log('visitBoundEvent');
 			event.visit(visitor);
 		},
 		visitText(_text) {
-			console.log('visitText');
 			// text.visit(visitor);
 		},
 		visitBoundText(text) {
 			const content = fileText.substring(text.value.sourceSpan.start, text.value.sourceSpan.end);
-			console.log('visitBoundText');
 			const interpolations = content.matchAll(/{{[\s\S]*?}}/g);
 			for (const interpolation of interpolations) {
 				const start = text.value.sourceSpan.start + interpolation.index! + '{{'.length;
@@ -274,7 +246,6 @@ function generate(
 			}
 		},
 		visitIcu(icu) {
-			console.log('visitIcu');
 			icu.visit(visitor);
 		},
 	};
