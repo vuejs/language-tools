@@ -7,6 +7,8 @@ import type { SchemaRequestService } from 'vscode-json-languageservice';
 import { URI } from 'vscode-uri';
 import type * as vscode from 'vscode-languageserver-protocol';
 
+export * from 'vscode-languageserver-protocol';
+
 export interface DocumentServiceRuntimeContext {
 	typescript: typeof import('typescript/lib/tsserverlibrary');
 	plugins: LanguageServicePlugin[];

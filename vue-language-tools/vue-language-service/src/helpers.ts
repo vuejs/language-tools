@@ -186,7 +186,7 @@ function getComponentsType(
 	let file: embedded.SourceFile | undefined;
 	let tsSourceFile: ts.SourceFile | undefined;
 
-	embedded.forEachEmbeddeds(sourceFile.embeddeds, embedded => {
+	embedded.forEachEmbeddeds(sourceFile, embedded => {
 		if (embedded.fileName === sourceFile.tsFileName) {
 			file = embedded;
 		}

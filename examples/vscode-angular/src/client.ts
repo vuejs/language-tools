@@ -2,13 +2,16 @@ import { LanguageServerInitializationOptions } from '@volar/language-server';
 import * as path from 'typesafe-path';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient/node';
-import { registerShowVirtualFiles } from '@volar/vscode-language-client';
+import { registerShowVirtualFiles, registerTsConfig } from '@volar/vscode-language-client';
 
 let client: lsp.BaseLanguageClient;
 
 export async function activate(context: vscode.ExtensionContext) {
 
-	const documentSelector: lsp.DocumentSelector = [{ language: 'svelte' }];
+	const documentSelector: lsp.DocumentFilter[] = [
+		{ language: 'html' },
+		{ language: 'typescript' },
+	];
 	const initializationOptions: LanguageServerInitializationOptions = {
 		typescript: {
 			tsdk: path.join(
@@ -17,7 +20,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			),
 		},
 	};
-	const serverModule = vscode.Uri.joinPath(context.extensionUri, 'node_modules', '@volar-examples', 'svelte-language-server', 'bin', 'svelte-language-server.js');
+	const serverModule = vscode.Uri.joinPath(context.extensionUri, 'node_modules', '@volar-examples', 'angular-language-server', 'bin', 'angular-language-server.js');
 	const runOptions = { execArgv: <string[]>[] };
 	const debugOptions = { execArgv: ['--nolazy', '--inspect=' + 6009] };
 	const serverOptions: lsp.ServerOptions = {
@@ -35,30 +38,17 @@ export async function activate(context: vscode.ExtensionContext) {
 	const clientOptions: lsp.LanguageClientOptions = {
 		documentSelector,
 		initializationOptions,
-		middleware: {
-			workspace: {
-				configuration(params, token, next) {
-					if (params.items.length === 1 && params.items[0].section === 'volar.format.initialIndent') {
-						return [{
-							typescript: true,
-							javascript: true,
-							css: true,
-						}];
-					}
-					return next(params, token);
-				}
-			}
-		}
 	};
 	client = new lsp.LanguageClient(
-		'svelte-language-server',
-		'Svelte Language Server',
+		'volar-angular-language-server',
+		'Angular Language Server (Volar)',
 		serverOptions,
 		clientOptions,
 	);
 	await client.start();
 
-	registerShowVirtualFiles('volar.action.showVirtualFiles', context, client)
+	registerShowVirtualFiles('volar-angular.action.showVirtualFiles', context, client);
+	registerTsConfig('volar-angular.action.showTsConfig', context, client, document => documentSelector.some(selector => selector.language === document.languageId));
 }
 
 export function deactivate(): Thenable<any> | undefined {

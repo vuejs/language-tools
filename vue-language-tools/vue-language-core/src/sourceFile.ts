@@ -349,6 +349,37 @@ export class VueSourceFile implements SourceFile {
 		return blocks;
 	});
 
+	get kind(): EmbeddedFileKind {
+		return EmbeddedFileKind.TextFile;
+	}
+
+	get capabilities(): DocumentCapabilities {
+		return {
+			diagnostic: true,
+			foldingRange: true,
+			documentFormatting: true,
+			documentSymbol: true,
+			codeAction: true,
+			inlayHint: true,
+		};
+	}
+
+	get mappings(): Mapping<PositionCapabilities>[] {
+		return [{
+			sourceRange: [0, this._snapshot.value.getLength()],
+			generatedRange: [0, this._snapshot.value.getLength()],
+			data: {
+				hover: true,
+				references: true,
+				definition: true,
+				rename: true,
+				completion: true,
+				diagnostic: true,
+				semanticTokens: true,
+			},
+		}];
+	}
+
 	get text() {
 		return this._snapshot.value.getText(0, this._snapshot.value.getLength());
 	}

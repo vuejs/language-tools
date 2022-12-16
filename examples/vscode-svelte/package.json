@@ -5,7 +5,7 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
-		"directory": "examples/svelte"
+		"directory": "examples/vscode-svelte"
 	},
 	"displayName": "Svelte Language Server (Example)",
 	"description": "Svelte Language Server Example",

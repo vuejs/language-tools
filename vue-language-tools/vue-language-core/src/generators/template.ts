@@ -1394,7 +1394,7 @@ export function generate(
 					prop.loc.start.offset,
 					capabilitiesSet.diagnosticOnly,
 				]);
-				codeGen.push(`(await import('./__VLS_types.js')).directiveFunction(__VLS_ctx.`);
+				codeGen.push(`(await import('./__VLS_types.js')).directiveFunction((__VLS_ctx).`);
 				codeGen.push([
 					camelize('v-' + prop.name),
 					'template',

@@ -1,0 +1,44 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"fileTypes": [],
+	"injectionSelector": "L:text.pug -comment -string.comment, L:text.html.derivative -comment.block, L:text.html.markdown -comment.block",
+	"patterns": [
+		{
+			"include": "#angular-interpolations"
+		}
+	],
+	"repository": {
+		"angular-interpolations": {
+			"patterns": [
+				{
+					"begin": "\\{\\{",
+					"beginCaptures": [
+						{
+							"name": "punctuation.definition.tag.begin.html.angular"
+						}
+					],
+					"end": "\\}\\}",
+					"endCaptures": [
+						{
+							"name": "punctuation.definition.tag.end.html.angular"
+						}
+					],
+					"name": "expression.embbeded.angular",
+					"patterns": [
+						{
+							"begin": "\\G",
+							"end": "(?=\\}\\})",
+							"name": "source.ts.embedded.html.angular",
+							"patterns": [
+								{
+									"include": "source.ts"
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	},
+	"scopeName": "angular.interpolations"
+}

@@ -258,14 +258,14 @@ export function parseSourceFileDocument(sourceFile: SourceFile) {
 	));
 	const allSourceMaps = computed(() => {
 		const result: EmbeddedDocumentSourceMap[] = [];
-		forEachEmbeddeds(sourceFile.embeddeds, embedded => {
+		forEachEmbeddeds(sourceFile, embedded => {
 			result.push(getSourceMap(embedded));
 		});
 		return result;
 	});
 	const teleports = computed(() => {
 		const result: TeleportSourceMap[] = [];
-		forEachEmbeddeds(sourceFile.embeddeds, embedded => {
+		forEachEmbeddeds(sourceFile, embedded => {
 			if (embedded.teleportMappings) {
 				const embeddedDocument = getEmbeddedDocument(embedded)!;
 				const sourceMap = new TeleportSourceMap(

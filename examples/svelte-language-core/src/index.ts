@@ -11,10 +11,19 @@ export const languageModule: LanguageModule = {
 		if (fileName.endsWith('.svelte')) {
 			const text = snapshot.getText(0, snapshot.getLength());
 			return {
-				snapshot,
 				fileName,
 				text,
+				kind: EmbeddedFileKind.TextFile,
 				embeddeds: getEmbeddeds(fileName, text),
+				capabilities: {
+					diagnostic: true,
+					foldingRange: true,
+					documentFormatting: true,
+					documentSymbol: true,
+					codeAction: true,
+					inlayHint: true,
+				},
+				mappings: [],
 			};
 		}
 	},

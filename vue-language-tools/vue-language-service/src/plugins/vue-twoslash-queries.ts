@@ -33,7 +33,7 @@ export default function (options: {
 						})]);
 					}
 
-					forEachEmbeddeds(vueFile.embeddeds, (embedded) => {
+					forEachEmbeddeds(vueFile, (embedded) => {
 						if (embedded.kind === EmbeddedFileKind.TypeScriptHostFile) {
 							const sourceMap = vueDocument.getSourceMap(embedded);
 							for (const [pointerPosition, hoverOffset] of hoverOffsets) {

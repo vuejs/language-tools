@@ -3,12 +3,10 @@ import { computed, shallowReactive } from '@vue/reactivity';
 import { Teleport } from './sourceMaps';
 import type { EmbeddedFile, LanguageModule, SourceFile } from './types';
 
-export function forEachEmbeddeds(input: EmbeddedFile[], cb: (embedded: EmbeddedFile) => void) {
-	for (const child of input) {
-		if (child) {
-			cb(child);
-		}
-		forEachEmbeddeds(child.embeddeds, cb);
+export function forEachEmbeddeds(file: EmbeddedFile, cb: (embedded: EmbeddedFile) => void) {
+	cb(file);
+	for (const child of file.embeddeds) {
+		forEachEmbeddeds(child, cb);
 	}
 }
 
@@ -22,7 +20,7 @@ export function createDocumentRegistry() {
 	const embeddedDocumentsMap = computed(() => {
 		const map = new WeakMap<EmbeddedFile, SourceFile>();
 		for (const [sourceFile] of all.value) {
-			forEachEmbeddeds(sourceFile.embeddeds, embedded => {
+			forEachEmbeddeds(sourceFile, embedded => {
 				map.set(embedded, sourceFile);
 			});
 		}
@@ -31,7 +29,7 @@ export function createDocumentRegistry() {
 	const sourceMapsByFileName = computed(() => {
 		const map = new Map<string, { sourceFile: SourceFile, embedded: EmbeddedFile; }>();
 		for (const [sourceFile] of all.value) {
-			forEachEmbeddeds(sourceFile.embeddeds, embedded => {
+			forEachEmbeddeds(sourceFile, embedded => {
 				map.set(normalizePath(embedded.fileName), { sourceFile, embedded });
 			});
 		}
@@ -41,7 +39,7 @@ export function createDocumentRegistry() {
 		const map = new Map<string, Teleport>();
 		for (const key in files) {
 			const [sourceFile] = files[key]!;
-			forEachEmbeddeds(sourceFile.embeddeds, embedded => {
+			forEachEmbeddeds(sourceFile, embedded => {
 				if (embedded.teleportMappings) {
 					map.set(normalizePath(embedded.fileName), getTeleport(sourceFile, embedded.teleportMappings));
 				}

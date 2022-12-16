@@ -1,0 +1,24 @@
+{
+	"name": "@volar-examples/angular-language-server",
+	"version": "1.0.13",
+	"main": "out/index.js",
+	"license": "MIT",
+	"files": [
+		"out/**/*.js",
+		"out/**/*.d.ts"
+	],
+	"bin": {
+		"angular-language-server": "./bin/angular-language-server.js"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/johnsoncodehk/volar.git",
+		"directory": "examples/angular-language-server"
+	},
+	"dependencies": {
+		"@volar-examples/angular-language-core": "1.0.13",
+		"@volar-plugins/typescript": "1.0.13",
+		"@volar/language-server": "1.0.13",
+		"@volar/shared": "1.0.13"
+	}
+}
