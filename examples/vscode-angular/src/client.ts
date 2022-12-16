@@ -2,7 +2,11 @@ import { LanguageServerInitializationOptions } from '@volar/language-server';
 import * as path from 'typesafe-path';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient/node';
-import { registerShowVirtualFiles, registerTsConfig } from '@volar/vscode-language-client';
+import {
+	registerShowVirtualFiles,
+	registerTsConfig,
+	registerTsVersion,
+} from '@volar/vscode-language-client';
 
 let client: lsp.BaseLanguageClient;
 
@@ -47,8 +51,11 @@ export async function activate(context: vscode.ExtensionContext) {
 	);
 	await client.start();
 
+	const isSupportDoc = (document: vscode.TextDocument) => documentSelector.some(selector => selector.language === document.languageId);
+
 	registerShowVirtualFiles('volar-angular.action.showVirtualFiles', context, client);
-	registerTsConfig('volar-angular.action.showTsConfig', context, client, document => documentSelector.some(selector => selector.language === document.languageId));
+	registerTsConfig('volar-angular.action.showTsConfig', context, client, isSupportDoc);
+	registerTsVersion('volar-angular.action.showTsVersion', context, client, isSupportDoc, text => text + ' (angular)');
 }
 
 export function deactivate(): Thenable<any> | undefined {

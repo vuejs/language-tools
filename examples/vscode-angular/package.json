@@ -60,11 +60,6 @@
 				"category": "Volar-Angular (Debug)"
 			}
 		],
-		"configurationDefaults": {
-			"[html]": {
-				"editor.semanticHighlighting.enabled": true
-			}
-		},
 		"configuration": {
 			"type": "object",
 			"title": "Volar-Angular",

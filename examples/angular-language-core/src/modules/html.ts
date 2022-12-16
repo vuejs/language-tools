@@ -126,8 +126,6 @@ function generate(
 			else {
 				codegen.text += `const { } = {\n`;
 			}
-			if (element.name === 'my-app')
-				console.log(JSON.stringify(element));
 			for (const input of element.inputs) {
 				codegen.addObjectKey(input.keySpan.start.offset, input.keySpan.end.offset);
 				codegen.text += ': (';
@@ -161,6 +159,18 @@ function generate(
 			codegen.text += `};\n`;
 			for (const child of element.children) {
 				child.visit(visitor);
+			}
+			if (isComponent) {
+				for (const output of element.outputs) {
+					codegen.text += `__components['${element.name}']`;
+					codegen.addPropertyAccess(output.keySpan.start.offset, output.keySpan.end.offset);
+					codegen.text += `.subscribe($event => {\n`;
+					localVars.$event ??= 0;
+					localVars.$event++;
+					addInterpolationFragment(output.handlerSpan.start.offset, output.handlerSpan.end.offset);
+					localVars.$event--;
+					codegen.text += '};\n';
+				}
 			}
 			codegen.text += `}\n`;
 		},
@@ -215,7 +225,8 @@ function generate(
 				codegen.text += ` of `;
 				addInterpolationFragment(forOfSource.start.offset, forOfSource.end.offset);
 				codegen.text += `) {\n`;
-				localVars[binding] = localVars[binding] ? localVars[binding] + 1 : 1;
+				localVars[binding] ??= 0;
+				localVars[binding]++;
 				for (const child of template.children) {
 					child.visit(visitor);
 				}

@@ -12,8 +12,7 @@ export async function register(
 	context: vscode.ExtensionContext,
 	client: BaseLanguageClient,
 	shouldStatusBarShow: (document: vscode.TextDocument) => boolean,
-	takeOverModeEnabled: () => boolean,
-	noProjectReferences: () => boolean,
+	resolveStatusText: (text: string) => string,
 ) {
 
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
@@ -52,9 +51,9 @@ export async function register(
 				} : undefined,
 			},
 			{
-				takeover: takeOverModeEnabled() ? {
+				takeover: {
 					label: 'What is Takeover Mode?',
-				} : undefined,
+				},
 			}
 		]);
 
@@ -92,12 +91,7 @@ export async function register(
 		else {
 			const tsVersion = await getTsVersion(getTsdk(context).uri);
 			statusBar.text = tsVersion ?? 'x.x.x';
-			if (takeOverModeEnabled()) {
-				statusBar.text += ' (takeover)';
-			}
-			if (noProjectReferences()) {
-				statusBar.text += ' (noProjectReferences)';
-			}
+			statusBar.text = resolveStatusText(statusBar.text);
 			statusBar.show();
 		}
 	}

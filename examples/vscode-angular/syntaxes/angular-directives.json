@@ -9,7 +9,7 @@
 	],
 	"repository": {
 		"directives": {
-			"begin": "((\\*?)(\\[)((ngIf)|(ngFor)|([^\\]]*))(\\]))|((\\*)((ngIf)|(ngFor)|([\\w-]*)))",
+			"begin": "((\\*?)(\\[)((ngIf)|(ngFor)|([^\\]]*))(\\]))|((\\*)((ngIf)|(ngFor)|([\\w-]*)))|((\\()(([^\\)]*))(\\)))",
 			"beginCaptures": {
 				"2": {
 					"name": "punctuation.separator.key-value.html.angular"
@@ -40,6 +40,15 @@
 				},
 				"14": {
 					"name": "entity.other.attribute-name.html.angular"
+				},
+				"16": {
+					"name": "punctuation.separator.key-value.html.angular"
+				},
+				"17": {
+					"name": "entity.other.attribute-name.html.angular"
+				},
+				"18": {
+					"name": "punctuation.separator.key-value.html.angular"
 				}
 			},
 			"end": "(?=\\s*+[^=\\s])",

@@ -132,8 +132,15 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 					&& ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(document.languageId)
 				);
 		},
-		() => takeOverModeEnabled(),
-		() => noProjectReferences(),
+		text => {
+			if (takeOverModeEnabled()) {
+				text += ' (vue)';
+			}
+			if (noProjectReferences()) {
+				text += ' (noProjectReferences)';
+			}
+			return text;
+		},
 	);
 
 	for (const client of clients) {
