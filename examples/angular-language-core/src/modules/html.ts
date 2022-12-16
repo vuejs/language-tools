@@ -103,7 +103,8 @@ function generate(
 	const ngTemplates: TmplAstTemplate[] = [];
 
 	codegen.text += 'export { };\n';
-	codegen.text += `declare const __ctx: __Components['${fileName}'];\n`;
+	codegen.text += `declare const __ctx: __Templates2Components['${fileName}'];\n`;
+	codegen.text += `declare const __components: __Selectors2Components;\n`;
 
 	const visitor: Parameters<TmplAstNode['visit']>[0] = {
 		visit(node) {
@@ -113,12 +114,51 @@ function generate(
 		visitElement(element) {
 			console.log('visitElement');
 			codegen.text += `{\n`;
-			for (const input of element.inputs) {
-				codegen.text += '(';
-				// console.log(input.sourceSpan.start.offset, input.sourceSpan.end.offset);
-				addInterpolationFragment(input.value.sourceSpan.start, input.value.sourceSpan.end);
-				codegen.text += `);\n`;
+			const isComponent = element.name.indexOf('-') >= 0;
+			if (isComponent) {
+				codegen.text += '__components';
+				codegen.addPropertyAccess(
+					element.startSourceSpan.start.offset + '<'.length,
+					element.startSourceSpan.start.offset + '<'.length + element.name.length,
+				);
+				codegen.text += ` = {\n`;
 			}
+			else {
+				codegen.text += `const { } = {\n`;
+			}
+			if (element.name === 'my-app')
+				console.log(JSON.stringify(element));
+			for (const input of element.inputs) {
+				codegen.addObjectKey(input.keySpan.start.offset, input.keySpan.end.offset);
+				codegen.text += ': (';
+				if (input.valueSpan) {
+					addInterpolationFragment(input.valueSpan.start.offset, input.valueSpan.end.offset);
+					codegen.text += `)`;
+					codegen.addSourceText(input.valueSpan.end.offset, input.valueSpan.end.offset); // error message mapping
+				}
+				else {
+					codegen.text += `)`;
+					codegen.addSourceText(input.keySpan.end.offset, input.keySpan.end.offset); // error message mapping
+				}
+				codegen.text += `,\n`;
+			}
+			for (const attr of element.attributes) {
+				if (attr.keySpan) {
+					codegen.addObjectKey(attr.keySpan.start.offset, attr.keySpan.end.offset);
+					codegen.text += ': "';
+					if (attr.valueSpan) {
+						codegen.addSourceText(attr.valueSpan.start.offset, attr.valueSpan.end.offset);
+						codegen.text += `"`;
+						codegen.addSourceText(attr.valueSpan.end.offset, attr.valueSpan.end.offset); // error message mapping
+					}
+					else {
+						codegen.text += `"`;
+						codegen.addSourceText(attr.keySpan.end.offset, attr.keySpan.end.offset); // error message mapping
+					}
+					codegen.text += `,\n`;
+				}
+			}
+			codegen.text += `};\n`;
 			for (const child of element.children) {
 				child.visit(visitor);
 			}
@@ -148,9 +188,10 @@ function generate(
 					codegen.text += `}\n`;
 				}
 				if (attr.name === 'ngIfElse' && attr.valueSpan) {
-					codegen.text += '(__templates).';
-					const templateBlock = codegen.addSourceText(attr.valueSpan.start.offset, attr.valueSpan.end.offset);
+					codegen.text += '(__templates)';
+					codegen.addPropertyAccess(attr.valueSpan.start.offset, attr.valueSpan.end.offset);
 					codegen.text += ';\n';
+					const templateBlock = fileText.substring(attr.valueSpan.start.offset, attr.valueSpan.end.offset);
 					templateBlocksConditions[templateBlock] ??= [];
 					templateBlocksConditions[templateBlock].push([
 						...conditions,
@@ -180,8 +221,6 @@ function generate(
 				}
 				localVars[binding]--;
 				codegen.text += `}\n`;
-
-				// console.log(JSON.stringify(template));
 			}
 		},
 		visitContent(content) {
@@ -236,9 +275,10 @@ function generate(
 	codegen.text += 'var __templates = {\n';
 	for (const template of ngTemplates) {
 		for (const reference of template.references) {
-			const templateBlock = codegen.addSourceText(reference.keySpan.start.offset, reference.keySpan.end.offset);
+			codegen.addObjectKey(reference.keySpan.start.offset, reference.keySpan.end.offset);
 			codegen.text += ': (() => {\n';
 			let ifBlockOpen = false;
+			const templateBlock = fileText.substring(reference.keySpan.start.offset, reference.keySpan.end.offset);
 			if (templateBlocksConditions[templateBlock]) {
 				ifBlockOpen = true;
 				codegen.text += `if (`;

@@ -53,6 +53,7 @@ export function createTsLanguageModule(
 
 		const classComponents: {
 			templateUrl?: string,
+			selectorNode?: ts.StringLiteral,
 			urlNodes: ts.Node[],
 			decoratorName: string,
 			className: string,
@@ -75,6 +76,10 @@ export function createTsLanguageModule(
 							decoratorName,
 							urlNodes: [],
 						};
+						const selectorProp = decorator.expression.arguments[0].properties.find((prop) => prop.name?.getText(ast) === 'selector');
+						if (selectorProp && ts.isPropertyAssignment(selectorProp) && ts.isStringLiteral(selectorProp.initializer)) {
+							classComponent.selectorNode = selectorProp.initializer;
+						}
 						const templateUrlProp = decorator.expression.arguments[0].properties.find((prop) => prop.name?.getText(ast) === 'templateUrl');
 						if (templateUrlProp && ts.isPropertyAssignment(templateUrlProp) && ts.isStringLiteral(templateUrlProp.initializer)) {
 							const templateUrl = path.resolve(path.dirname(ast.fileName), templateUrlProp.initializer.text);
@@ -109,16 +114,25 @@ export function createTsLanguageModule(
 				}
 			}
 			const classComponentsWithTemplateUrl = classComponents.filter(component => !!component.templateUrl);
+			codegen.text += `declare global {\n`;
 			if (classComponentsWithTemplateUrl.length) {
 				codegen.text += `type __WithComponent<P extends string, C1, C2> = C1 extends import('@angular/core').Component ? { [k in P]: C2 } : {};\n`;
-				codegen.text += `declare global {\n`;
-				codegen.text += `interface __Components extends\n`;
+				codegen.text += `interface __Templates2Components extends\n`;
 				codegen.text += classComponentsWithTemplateUrl.map((component) => {
 					return `__WithComponent<'${component.templateUrl}', ${component.decoratorName}, ${component.className}>`;
 				}).join(',\n');
 				codegen.text += `\n{ }\n`;
-				codegen.text += `}\n`;
 			}
+			const classComponentsWithSelector = classComponents.filter(component => !!component.selectorNode);
+			if (classComponentsWithSelector.length) {
+				codegen.text += `type __WithComponent2<P extends {}, C1> = C1 extends import('@angular/core').Component ? P : {};\n`;
+				for (const classComponentWithSelector of classComponentsWithSelector) {
+					codegen.text += `interface __Selectors2Components extends __WithComponent2<{ `;
+					codegen.addSourceText(classComponentWithSelector.selectorNode!.getStart(ast), classComponentWithSelector.selectorNode!.getEnd());
+					codegen.text += `: ${classComponentWithSelector.className} }, ${classComponentWithSelector.decoratorName}> { }\n`;
+				}
+			}
+			codegen.text += `}\n`;
 		}
 
 		return codegen;
@@ -137,6 +151,8 @@ const fullCap: PositionCapabilities = {
 
 export class Codegen {
 
+	static validTsVar = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
+
 	constructor(public sourceCode: string) { }
 
 	public text = '';
@@ -151,5 +167,34 @@ export class Codegen {
 		const addText = this.sourceCode.substring(start, end);
 		this.text += addText;
 		return addText;
+	}
+
+	public addPropertyAccess(start: number, end: number, data: PositionCapabilities = fullCap) {
+		if (Codegen.validTsVar.test(this.sourceCode.substring(start, end))) {
+			this.text += `.`;
+			this.addSourceText(start, end, data);
+		}
+		else {
+			this.text += `[`;
+			this.addSourceTextWithQuotes(start, end, data);
+			this.text += `]`;
+		}
+	}
+
+	public addObjectKey(start: number, end: number, data: PositionCapabilities = fullCap) {
+		if (Codegen.validTsVar.test(this.sourceCode.substring(start, end))) {
+			this.addSourceText(start, end, data);
+		}
+		else {
+			this.addSourceTextWithQuotes(start, end, data);
+		}
+	}
+
+	public addSourceTextWithQuotes(start: number, end: number, data: PositionCapabilities = fullCap) {
+		this.addSourceText(start, start, data);
+		this.text += `'`;
+		this.addSourceText(start, end, data);
+		this.text += `'`;
+		this.addSourceText(end, end, data);
 	}
 }
