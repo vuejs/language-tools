@@ -15,7 +15,7 @@ importers:
     optionalDependencies:
       '@lerna-lite/cli': 1.13.0
       '@vscode/test-web': 0.0.33
-      vitepress: 1.0.0-alpha.31_@types+node@18.11.15
+      vitepress: 1.0.0-alpha.32_@types+node@18.11.15
       vue: 3.2.45
     devDependencies:
       '@types/node': 18.11.15
@@ -27,7 +27,6 @@ importers:
     specifiers:
       '@angular-eslint/bundled-angular-compiler': ^15.1.0
       '@angular/compiler': ^15.0.4
-      '@typescript-eslint/types': ^5.46.1
       '@volar/language-core': 1.0.13
       vscode-languageserver-textdocument: ^1.0.7
       vscode-uri: ^3.0.6
@@ -38,7 +37,6 @@ importers:
       vscode-uri: 3.0.6
     devDependencies:
       '@angular/compiler': 15.0.4
-      '@typescript-eslint/types': 5.46.1
 
   examples/angular-language-server:
     specifiers:
@@ -98,18 +96,21 @@ importers:
     specifiers:
       '@types/vscode': 1.67.0
       '@volar-examples/angular-language-server': 1.0.13
+      '@volar/language-server': 1.0.13
       '@volar/vscode-language-client': 1.0.13
+      esbuild: latest
       typesafe-path: ^0.2.2
       vsce: latest
       vscode-languageclient: ^8.0.2
-    dependencies:
-      '@volar-examples/angular-language-server': link:../angular-language-server
-      '@volar/vscode-language-client': link:../../packages/vscode-language-client
-      typesafe-path: 0.2.2
-      vscode-languageclient: 8.0.2
     devDependencies:
       '@types/vscode': 1.67.0
+      '@volar-examples/angular-language-server': link:../angular-language-server
+      '@volar/language-server': link:../../packages/language-server
+      '@volar/vscode-language-client': link:../../packages/vscode-language-client
+      esbuild: 0.16.7
+      typesafe-path: 0.2.2
       vsce: 2.15.0
+      vscode-languageclient: 8.0.2
 
   examples/vscode-svelte:
     specifiers:
@@ -1592,11 +1593,6 @@ packages:
     resolution: {integrity: sha512-6YOoWjruKj1uLf3INHH7D3qTXwFfEsg1kf3c0uDdSBJwfa/llkwIjrAGV7j7mVgGNbzTQ3HiHKKDXl6bJPD97w==}
     dependencies:
       '@types/node': 18.8.0
-    dev: true
-
-  /@typescript-eslint/types/5.46.1:
-    resolution: {integrity: sha512-Z5pvlCaZgU+93ryiYUwGwLl9AQVB/PQ1TsJ9NZ/gHzZjN7g9IAn6RSDkpCV8hqTwAiaj6fmCcKSQeBPlIpW28w==}
-    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: true
 
   /@vitejs/plugin-vue/4.0.0_vite@4.0.1+vue@3.2.45:
@@ -6286,8 +6282,8 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
 
-  /vitepress/1.0.0-alpha.31_@types+node@18.11.15:
-    resolution: {integrity: sha512-FWFXLs7WLbFbemxjBWo2S2+qUZCIoeLLyAKfVUpIu3LUB8oQ8cyIANRGO6f6zsM51u2bvJU9Sm+V6Z0WjOWS2Q==}
+  /vitepress/1.0.0-alpha.32_@types+node@18.11.15:
+    resolution: {integrity: sha512-Q45N1cLdRr8MAu/+wAKKow7CNQD4sNBlSNsW1UxYfkvSgwPN/dlEmpEkQl/uOpE3C1kv3jvvEJVY0RAIaJFWYQ==}
     hasBin: true
     requiresBuild: true
     dependencies:

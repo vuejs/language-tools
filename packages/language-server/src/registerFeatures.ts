@@ -170,12 +170,11 @@ export function setupSemanticCapabilities(
 		server.codeLensProvider = {
 			resolveProvider: true,
 		};
-		server.executeCommandProvider = {
-			commands: [
-				...server.executeCommandProvider?.commands ?? [],
-				embedded.executePluginCommand,
-			]
-		};
+		server.executeCommandProvider = { commands: [...server.executeCommandProvider?.commands ?? []] };
+		// @ts-expect-error
+		if (!initOptions.__noPluginCommands) {
+			server.executeCommandProvider.commands.push(embedded.executePluginCommand);
+		}
 	}
 	if (!initOptions.respectClientCapabilities || params.textDocument?.semanticTokens) {
 		server.semanticTokensProvider = {

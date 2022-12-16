@@ -1,21 +1,25 @@
-# Angular Language Server (Example)
+# Volar language server example for Angular
 
-> An example Angular Language Server implement via [Volar](https://github.com/johnsoncodehk/volar) framework.
+⚠️⚠️⚠️⚠️⚠️
 
-⚠️ This is a quick implementation for demonstration purposes only, functionality reliability and correctness are not guaranteed, and there are no plan to maintenance this plugin.
+Don't use it in the projects you work on.
+
+It's not a production-ready tool, this is a quick implementation for demonstration purposes only, functionality reliability and correctness are not guaranteed, and there are no plan to maintenance this plugin.
+
+⚠️⚠️⚠️⚠️⚠️
 
 ## Features
 
 - Template AST error diagnosis
 - Directives, Interpolations Syntax Highlighting
 - Intellisense Support for Template Directives and Interpolations
-- Typed Prop Support
-- Typed Event Support
+- Component props and event types Support
 - Type Narrowing Support for `*ngIf` if else block
+- Only 500 KB and Fast
 
 ## Usage
 
-We have only one performance-optimized available setup due to this is for demonstration purposes only. Please make sure you follow each step.
+We have only one stubborn way to setup (that has the best performance) because this is for demonstration purposes only. Please make sure you follow each step.
 
 1. Disable "TypeScript and JavaScript Language Features" to [takeover language support for .ts](https://vuejs.org/guide/typescript/overview.html#volar-takeover-mode)
 
@@ -29,10 +33,12 @@ We have only one performance-optimized available setup due to this is for demons
 
    2. Right click and select "Disable (Workspace)"
 
-3. Disable "Vue Language Features (Volar)" to avoid it's takeover mode active
+3. Create / Open `.vscode/settings.json` in workspace and put following setting to avoid "Vue Language Features (Volar)" auto active with takeover mode
 
-   1. Search `Vue.volar` in Extensions sidebar
-
-   2. Right click and select "Disable (Workspace)"
+   ```json
+	{
+		"volar.takeOverMode.enabled": false
+	}
+   ```
 
 4. Reload VSCode

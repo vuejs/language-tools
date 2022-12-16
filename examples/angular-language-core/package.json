@@ -19,7 +19,6 @@
 		"vscode-uri": "^3.0.6"
 	},
 	"devDependencies": {
-		"@angular/compiler": "^15.0.4",
-		"@typescript-eslint/types": "^5.46.1"
+		"@angular/compiler": "^15.0.4"
 	}
 }
