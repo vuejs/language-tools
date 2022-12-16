@@ -125,7 +125,7 @@ export class SourceMapBase<Data = undefined> {
 				skip.add(mapping);
 
 				const mapped = this.matchOffset(startOffset, mapping[from], mapping[to]);
-				if (mapped) {
+				if (mapped !== undefined) {
 					yield [mapped, mapping] as const;
 				}
 			}
