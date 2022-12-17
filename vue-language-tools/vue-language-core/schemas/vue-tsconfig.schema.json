@@ -106,6 +106,9 @@
 						}
 					},
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1969"
+				},
+				"experimentalTscProgramCallback": {
+					"type": "string"
 				}
 			}
 		}
