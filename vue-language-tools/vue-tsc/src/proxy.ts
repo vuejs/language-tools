@@ -25,7 +25,7 @@ export function createProgramProxy(
 
 		const ctx = {
 			projectVersion: 0,
-			options: options,
+			options,
 			get languageServiceHost() {
 				return vueLsHost;
 			},
@@ -122,10 +122,12 @@ export function createProgramProxy(
 	}
 
 	const vueCompilerOptions = program.__vue.languageServiceHost.getVueCompilationSettings();
-	if (vueCompilerOptions.experimentalTscProgramCallback) {
-		const dir = program.__vue.languageServiceHost.getCurrentDirectory();
-		const cb = require(require.resolve(vueCompilerOptions.experimentalTscProgramCallback, { paths: [dir] }));
-		cb(program);
+	if (vueCompilerOptions.experimentalTscProgramCallbacks) {
+		for (const cbPath of vueCompilerOptions.experimentalTscProgramCallbacks) {
+			const dir = program.__vue.languageServiceHost.getCurrentDirectory();
+			const cb = require(require.resolve(cbPath, { paths: [dir] }));
+			cb(program);
+		}
 	}
 
 	return program;
