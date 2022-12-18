@@ -110,7 +110,7 @@ export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
 		to: 'sourceRange' | 'generatedRange',
 		baseOffset: 'left' | 'right',
 	) {
-		for (const mapped of this.matcing(fromDoc.offsetAt(position), from, to)) {
+		for (const mapped of this.matcing(fromDoc.offsetAt(position), from, to, baseOffset === 'right')) {
 			if (!filter(mapped[1].data)) {
 				continue;
 			}
@@ -124,21 +124,15 @@ export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
 	}
 
 	protected matchSourcePosition(position: vscode.Position, mapping: Mapping, baseOffset: 'left' | 'right') {
-		let offset = this.matchOffset(this.mappedDocument.offsetAt(position), mapping['generatedRange'], mapping['sourceRange']);
+		let offset = this.matchOffset(this.mappedDocument.offsetAt(position), mapping['generatedRange'], mapping['sourceRange'], baseOffset === 'right');
 		if (offset !== undefined) {
-			if (baseOffset === 'right') {
-				offset += (mapping.sourceRange[1] - mapping.sourceRange[0]) - (mapping.generatedRange[1] - mapping.generatedRange[0]);
-			}
 			return this.sourceDocument.positionAt(offset);
 		}
 	}
 
 	protected matchGeneratedPosition(position: vscode.Position, mapping: Mapping, baseOffset: 'left' | 'right') {
-		let offset = this.matchOffset(this.sourceDocument.offsetAt(position), mapping['sourceRange'], mapping['generatedRange']);
+		let offset = this.matchOffset(this.sourceDocument.offsetAt(position), mapping['sourceRange'], mapping['generatedRange'], baseOffset === 'right');
 		if (offset !== undefined) {
-			if (baseOffset === 'right') {
-				offset += (mapping.generatedRange[1] - mapping.generatedRange[0]) - (mapping.sourceRange[1] - mapping.sourceRange[0]);
-			}
 			return this.mappedDocument.positionAt(offset);
 		}
 	}

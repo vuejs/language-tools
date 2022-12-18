@@ -109,6 +109,7 @@ export function getProgram(
 					for (const end of core.mapper.fromEmbeddedLocation(
 						diagnostic.file.fileName,
 						diagnostic.start + diagnostic.length,
+						true,
 					)) {
 
 						if (end.mapping && !end.mapping.data.diagnostic)
