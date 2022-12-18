@@ -118,4 +118,5 @@ export interface LanguageServerInitializationOptions {
 	 * Enable this option to make language server setup server capabilities based on client capabilities to support multiple servers.
 	 */
 	respectClientCapabilities?: boolean;
+	maxFileSize?: number;
 }

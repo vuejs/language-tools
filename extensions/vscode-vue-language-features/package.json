@@ -291,6 +291,11 @@
 					"default": "off",
 					"description": "Traces the communication between VS Code and the language server."
 				},
+				"volar.vueserver.maxFileSize": {
+					"type": "number",
+					"default": 20971520,
+					"description": "Maximum file size for Vue Server to load. (default: 20MB)"
+				},
 				"volar.vueserver.petiteVue.processHtmlFile": {
 					"type": "boolean",
 					"default": false

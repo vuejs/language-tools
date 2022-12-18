@@ -167,6 +167,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 				|| e.affectsConfiguration('volar.vueserver.petiteVue.processHtmlFile')
 				|| e.affectsConfiguration('volar.vueserver.vitePress.processMdFile')
 				|| e.affectsConfiguration('volar.vueserver.additionalExtensions')
+				|| e.affectsConfiguration('volar.vueserver.maxFileSize')
 			) {
 				requestReloadVscode();
 			}
@@ -326,6 +327,7 @@ function getInitializationOptions(
 			customBlockSchemaUrls: vscode.workspace.getConfiguration('volar').get<Record<string, string>>('vueserver.json.customBlockSchemaUrls')
 		},
 		additionalExtensions: additionalExtensions(),
+		maxFileSize: vscode.workspace.getConfiguration('volar').get<number>('vueserver.maxFileSize'),
 	};
 	return initializationOptions;
 }

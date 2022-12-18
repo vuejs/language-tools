@@ -219,6 +219,13 @@ export async function createProject(
 			}
 
 			if (sys.fileExists(fileName)) {
+				if (serverOptions.maxFileSize) {
+					const fileSize = sys.getFileSize?.(fileName);
+					if (fileSize !== undefined && fileSize > serverOptions.maxFileSize) {
+						console.warn(`IGNORING "${fileName}" because it is too large (${fileSize}bytes > ${serverOptions.maxFileSize}bytes)`);
+						return ts.ScriptSnapshot.fromString('');
+					}
+				}
 				const text = sys.readFile(fileName, 'utf8');
 				if (text !== undefined) {
 					const snapshot = ts.ScriptSnapshot.fromString(text);
