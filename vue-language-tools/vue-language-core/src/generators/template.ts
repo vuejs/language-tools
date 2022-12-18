@@ -1310,7 +1310,6 @@ export function generate(
 							...capabilitiesSet.slotName,
 							completion: !!prop.arg,
 						},
-						false,
 					);
 				}
 				else {
@@ -1641,8 +1640,8 @@ export function generate(
 			return 2;
 		}
 	}
-	function writePropertyAccess(mapCode: string, sourceRange: number | [number, number], data: PositionCapabilities, checkValid = true) {
-		if (checkValid && validTsVar.test(mapCode)) {
+	function writePropertyAccess(mapCode: string, sourceRange: number | [number, number], data: PositionCapabilities) {
+		if (validTsVar.test(mapCode)) {
 			codeGen.push(`.`);
 			codeGen.push([mapCode, 'template', sourceRange, data]);
 		}
