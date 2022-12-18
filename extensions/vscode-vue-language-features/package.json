@@ -406,6 +406,11 @@
 					"default": false,
 					"description": "Auto-complete Ref value with `.value`."
 				},
+				"volar.addSpaceBetweenDoubleCurlyBrackets": {
+					"type": "boolean",
+					"default": true,
+					"description": "Auto add space between double curly brackets: {{|}} -> {{ | }}"
+				},
 				"volar.format.initialIndent": {
 					"type": "object",
 					"description": "Whether to have initial indent.",

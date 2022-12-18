@@ -7,6 +7,7 @@ import useTsPlugin from '@volar-plugins/typescript';
 import { DocumentServiceRuntimeContext } from '@volar/language-service';
 import useVuePlugin from './plugins/vue';
 import useAutoWrapParenthesesPlugin from './plugins/vue-autoinsert-parentheses';
+import useAutoAddSpacePlugin from './plugins/vue-autoinsert-space';
 import * as embeddedLS from '@volar/language-service';
 import * as vue from '@volar/vue-language-core';
 import * as shared from '@volar/shared';
@@ -29,6 +30,7 @@ export function getDocumentServicePlugins(
 	const autoWrapParenthesesPlugin = useAutoWrapParenthesesPlugin({
 		getVueDocument: doc => context.getSourceFileDocument(doc)?.[0],
 	});
+	const autoAddSpacePlugin = useAutoAddSpacePlugin();
 	const pugFormatPlugin = usePugFormatPlugin();
 
 	return [
@@ -40,6 +42,7 @@ export function getDocumentServicePlugins(
 		jsonPlugin,
 		tsPlugin,
 		autoWrapParenthesesPlugin,
+		autoAddSpacePlugin,
 	];
 }
 

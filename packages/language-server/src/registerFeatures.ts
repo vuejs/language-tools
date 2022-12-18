@@ -74,7 +74,11 @@ export function setupSyntacticCapabilities(
 		// https://github.com/microsoft/vscode/blob/ce119308e8fd4cd3f992d42b297588e7abe33a0c/extensions/typescript-language-features/src/languageFeatures/formatting.ts#L99
 		server.documentOnTypeFormattingProvider = {
 			firstTriggerCharacter: ';',
-			moreTriggerCharacter: ['}', '\n'],
+			moreTriggerCharacter: [
+				'}',
+				'\n',
+				'{', // addSpaceBetweenDoubleCurlyBrackets
+			],
 		};
 	}
 }
