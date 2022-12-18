@@ -66,7 +66,7 @@ export function createDocumentRegistry() {
 			}
 		},
 
-		fromEmbeddedLocation: function* (fileName: string, offset: number) {
+		fromEmbeddedLocation: function* (fileName: string, offset: number, baseOnRight: boolean = false) {
 
 			if (fileName.endsWith('/__VLS_types.ts')) { // TODO: monkey fix
 				return;
@@ -78,7 +78,7 @@ export function createDocumentRegistry() {
 
 				const sourceMap = getSourceMap(mapped.sourceFile, mapped.embedded.mappings);
 
-				for (const vueRange of sourceMap.toSourceOffsets(offset)) {
+				for (const vueRange of sourceMap.toSourceOffsets(offset, baseOnRight)) {
 					yield {
 						fileName: mapped.sourceFile.fileName,
 						offset: vueRange[0],

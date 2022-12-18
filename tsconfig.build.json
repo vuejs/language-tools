@@ -23,6 +23,9 @@
 			"path": "./vue-language-tools/vue-tsc/tsconfig.build.json"
 		},
 		{
+			"path": "./vue-language-tools/vue-tsc-eslint-hook/tsconfig.build.json"
+		},
+		{
 			"path": "./vue-language-tools/vue-component-meta/tsconfig.build.json"
 		},
 		// Examples

@@ -441,6 +441,8 @@ export function generate(
 			endTagOffset = undefined;
 		}
 
+		const tagOffsets = endTagOffset !== undefined ? [startTagOffset, endTagOffset] : [startTagOffset];
+
 		let _unwritedExps: CompilerDOM.SimpleExpressionNode[];
 
 		const _isIntrinsicElement = nativeTags.has(node.tag);
@@ -517,25 +519,13 @@ export function generate(
 		}
 		else {
 
-			const var_props = `__VLS_${elementIndex++}`;
-
 			if (_isIntrinsicElement) {
-				codeGen.push(`let ${var_props} = ({} as JSX.IntrinsicElements)`);
-				writePropertyAccess(
-					node.tag,
-					startTagOffset,
-					{
-						...capabilitiesSet.tagReference,
-						...capabilitiesSet.tagHover,
-					},
-				);
-				codeGen.push(`;\n`);
 
-				if (endTagOffset !== undefined) {
+				for (const offset of tagOffsets) {
 					codeGen.push(`({} as JSX.IntrinsicElements)`);
 					writePropertyAccess(
 						node.tag,
-						endTagOffset,
+						offset,
 						{
 							...capabilitiesSet.tagReference,
 							...capabilitiesSet.tagHover,
@@ -543,42 +533,24 @@ export function generate(
 					);
 					codeGen.push(`;\n`);
 				}
+
+				codeGen.push(`let __VLS_${elementIndex++}: JSX.IntrinsicElements = { `);
 			}
 			else if (_isNamespacedTag) {
 
-				codeGen.push(`let ${var_props}!: import('./__VLS_types.js').ComponentProps<typeof ${node.tag}>;\n`);
-
-				codeGen.push([
-					node.tag,
-					'template',
-					[startTagOffset, startTagOffset + node.tag.length],
-					capabilitiesSet.all,
-				]);
-				codeGen.push(`;\n`);
-
-				if (endTagOffset !== undefined) {
+				for (const offset of tagOffsets) {
 					codeGen.push([
 						node.tag,
 						'template',
-						[endTagOffset, endTagOffset + node.tag.length],
+						[offset, offset + node.tag.length],
 						capabilitiesSet.all,
 					]);
 					codeGen.push(`;\n`);
 				}
+
+				codeGen.push(`const __VLS_${elementIndex++}: import('./__VLS_types.js').ComponentProps<typeof ${node.tag}> = { `);
 			}
 			else {
-
-				codeGen.push(`let ${var_props}!: import('./__VLS_types.js').ComponentProps<typeof `);
-				if (componentVars[node.tag]) {
-					codeGen.push(`__VLS_templateComponents.`);
-				}
-				codeGen.push([
-					componentVars[node.tag] ?? node.tag,
-					'template',
-					[startTagOffset, startTagOffset + node.tag.length],
-					capabilitiesSet.tagHover,
-				]);
-				codeGen.push(`>;\n`);
 
 				if (endTagOffset !== undefined) {
 					if (componentVars[node.tag]) {
@@ -592,18 +564,25 @@ export function generate(
 					]);
 					codeGen.push(`;\n`);
 				}
+
+				codeGen.push(`const __VLS_${elementIndex++}: { '${node.tag}': import('./__VLS_types.js').ComponentProps<typeof `);
+				if (componentVars[node.tag]) {
+					codeGen.push(`__VLS_templateComponents.`);
+				}
+				codeGen.push([
+					componentVars[node.tag] ?? node.tag,
+					'template',
+					[startTagOffset, startTagOffset + node.tag.length],
+					capabilitiesSet.tagHover,
+				]);
+				codeGen.push(`> } = { `);
 			}
 
-			codeGen.push([
-				var_props,
-				'template',
-				[startTagOffset, startTagOffset + node.tag.length],
-				capabilitiesSet.diagnosticOnly,
-			]);
-			codeGen.push(` = { `);
+			writeObjectProperty(node.tag, startTagOffset, capabilitiesSet.diagnosticOnly, node);
+			codeGen.push(` : { `);
 			const { unwritedExps } = writeProps(node, 'class', 'props');
 			_unwritedExps = unwritedExps;
-			codeGen.push(` };\n`);
+			codeGen.push(` } };\n`);
 		}
 		{
 
@@ -1331,7 +1310,6 @@ export function generate(
 							...capabilitiesSet.slotName,
 							completion: !!prop.arg,
 						},
-						false,
 					);
 				}
 				else {
@@ -1662,8 +1640,8 @@ export function generate(
 			return 2;
 		}
 	}
-	function writePropertyAccess(mapCode: string, sourceRange: number | [number, number], data: PositionCapabilities, checkValid = true) {
-		if (checkValid && validTsVar.test(mapCode)) {
+	function writePropertyAccess(mapCode: string, sourceRange: number | [number, number], data: PositionCapabilities) {
+		if (validTsVar.test(mapCode)) {
 			codeGen.push(`.`);
 			codeGen.push([mapCode, 'template', sourceRange, data]);
 		}

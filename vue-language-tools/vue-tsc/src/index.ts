@@ -1,8 +1,18 @@
 import * as ts from 'typescript/lib/tsserverlibrary';
 import * as vue from '@volar/vue-language-core';
 import * as vueTs from '@volar/vue-typescript';
+import { state } from './shared';
 
-export function createProgramProxy(
+export type _Program = ts.Program & { __vue: ProgramContext; };
+
+interface ProgramContext {
+	projectVersion: number,
+	options: ts.CreateProgramOptions,
+	languageServiceHost: vue.LanguageServiceHost,
+	languageService: ReturnType<typeof vueTs.createLanguageService>,
+}
+
+export function createProgram(
 	options: ts.CreateProgramOptions, // rootNamesOrOptions: readonly string[] | CreateProgramOptions,
 	_options?: ts.CompilerOptions,
 	_host?: ts.CompilerHost,
@@ -11,23 +21,30 @@ export function createProgramProxy(
 ) {
 
 	if (!options.options.noEmit && !options.options.emitDeclarationOnly)
-		return doThrow('js emit is not supported');
+		throw toThrow('js emit is not supported');
 
 	if (!options.options.noEmit && options.options.noEmitOnError)
-		return doThrow('noEmitOnError is not supported');
+		throw toThrow('noEmitOnError is not supported');
 
 	if (!options.host)
-		return doThrow('!options.host');
+		throw toThrow('!options.host');
 
-	let program = options.oldProgram as any;
+	let program = options.oldProgram as _Program | undefined;
 
-	if (!program) {
+	if (state.hook) {
+		program = state.hook.program;
+		program.__vue.options = options;
+	}
+	else if (!program) {
 
-		const ctx = {
+		const ctx: ProgramContext = {
 			projectVersion: 0,
 			options,
 			get languageServiceHost() {
 				return vueLsHost;
+			},
+			get languageService() {
+				return vueTsLs;
 			},
 		};
 		const vueCompilerOptions = getVueCompilerOptions();
@@ -68,8 +85,8 @@ export function createProgramProxy(
 		});
 		const vueTsLs = vueTs.createLanguageService(vueLsHost);
 
-		program = vueTsLs.getProgram();
-		program.__vue = ctx;
+		program = vueTsLs.getProgram() as (ts.Program & { __vue: ProgramContext; });
+		program!.__vue = ctx;
 
 		function getVueCompilerOptions(): vue.VueCompilerOptions {
 			const tsConfig = ctx.options.options.configFilePath;
@@ -112,22 +129,30 @@ export function createProgramProxy(
 		}
 	}
 	else {
-		program.__vue.options = options;
-		program.__vue.projectVersion++;
+		const ctx: ProgramContext = program.__vue;
+		ctx.options = options;
+		ctx.projectVersion++;
+	}
+
+	const vueCompilerOptions = program.__vue.languageServiceHost.getVueCompilationSettings();
+	if (vueCompilerOptions.hooks) {
+		const index = (state.hook?.index ?? -1) + 1;
+		if (index < vueCompilerOptions.hooks.length) {
+			const cbPath = vueCompilerOptions.hooks[index];
+			const dir = program.__vue.languageServiceHost.getCurrentDirectory();
+			const cb = require(require.resolve(cbPath, { paths: [dir] }));
+			state.hook = {
+				program,
+				index,
+				worker: (async () => await cb(program))(),
+			};
+			throw 'hook';
+		}
 	}
 
 	for (const rootName of options.rootNames) {
 		// register file watchers
 		options.host.getSourceFile(rootName, ts.ScriptTarget.ESNext);
-	}
-
-	const vueCompilerOptions = program.__vue.languageServiceHost.getVueCompilationSettings();
-	if (vueCompilerOptions.experimentalTscProgramCallbacks) {
-		for (const cbPath of vueCompilerOptions.experimentalTscProgramCallbacks) {
-			const dir = program.__vue.languageServiceHost.getCurrentDirectory();
-			const cb = require(require.resolve(cbPath, { paths: [dir] }));
-			cb(program);
-		}
 	}
 
 	return program;
@@ -137,7 +162,7 @@ export function loadTsLib() {
 	return ts;
 }
 
-function doThrow(msg: string) {
+function toThrow(msg: string) {
 	console.error(msg);
-	throw msg;
+	return msg;
 }

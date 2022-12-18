@@ -135,6 +135,7 @@ export function resolveVueCompilerOptions(vueOptions: VueCompilerOptions): Resol
 		),
 		narrowingTypesInInlineHandlers: vueOptions.narrowingTypesInInlineHandlers ?? false,
 		plugins: vueOptions.plugins ?? [],
+		hooks: vueOptions.hooks ?? [],
 
 		// experimental
 		experimentalResolveStyleCssClasses: vueOptions.experimentalResolveStyleCssClasses ?? 'scoped',

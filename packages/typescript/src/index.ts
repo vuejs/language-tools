@@ -4,11 +4,18 @@ import * as embedded from '@volar/language-core';
 
 export function createLanguageService(host: embedded.LanguageServiceHost, mods: embedded.LanguageModule[]) {
 
+	type _LanguageService = {
+		__internal__: {
+			languageService: ts.LanguageService;
+			context: embedded.EmbeddedLanguageContext;
+		};
+	} & ts.LanguageService;
+
 	const core = embedded.createEmbeddedLanguageServiceHost(host, mods);
 	const ts = host.getTypeScriptModule();
 	const ls = ts.createLanguageService(core.typescriptLanguageServiceHost);
 
-	return new Proxy<Partial<ts.LanguageService>>({
+	return new Proxy<Partial<_LanguageService>>({
 		organizeImports,
 
 		// only support for .ts for now, not support for .vue
@@ -35,6 +42,11 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 		// getEditsForRefactor: tsLanguageService.rawLs.getEditsForRefactor,
 
 		getProgram: () => getProgram(ts, core, ls),
+
+		__internal__: {
+			context: core,
+			languageService: ls,
+		},
 	}, {
 		get: (target: any, property: keyof ts.LanguageService) => {
 			if (property in target) {
@@ -42,7 +54,7 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 			}
 			return ls[property];
 		},
-	}) as ts.LanguageService;
+	}) as _LanguageService;
 
 	// apis
 	function organizeImports(args: ts.OrganizeImportsArgs, formatOptions: ts.FormatCodeSettings, preferences: ts.UserPreferences | undefined): ReturnType<ts.LanguageService['organizeImports']> {

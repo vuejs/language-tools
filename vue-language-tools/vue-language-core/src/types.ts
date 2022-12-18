@@ -24,6 +24,7 @@ export interface ResolvedVueCompilerOptions {
 	htmlAttributes: string[];
 	optionsWrapper: [string, string] | [];
 	plugins: string[];
+	hooks: string[];
 	narrowingTypesInInlineHandlers: boolean;
 
 	// experimental

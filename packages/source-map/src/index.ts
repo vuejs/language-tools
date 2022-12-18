@@ -82,27 +82,27 @@ export class SourceMapBase<Data = undefined> {
 	constructor(public readonly mappings: Mapping<Data>[]) {
 	}
 
-	public toSourceOffset(start: number) {
-		for (const mapped of this.matcing(start, 'generatedRange', 'sourceRange')) {
+	public toSourceOffset(start: number, baseOnRight: boolean = false) {
+		for (const mapped of this.matcing(start, 'generatedRange', 'sourceRange', baseOnRight)) {
 			return mapped;
 		}
 	}
 
-	public toGeneratedOffset(start: number) {
-		for (const mapped of this.matcing(start, 'sourceRange', 'generatedRange')) {
+	public toGeneratedOffset(start: number, baseOnRight: boolean = false) {
+		for (const mapped of this.matcing(start, 'sourceRange', 'generatedRange', baseOnRight)) {
 			return mapped;
 		}
 	}
 
-	public toSourceOffsets(start: number) {
-		return this.matcing(start, 'generatedRange', 'sourceRange');
+	public toSourceOffsets(start: number, baseOnRight: boolean = false) {
+		return this.matcing(start, 'generatedRange', 'sourceRange', baseOnRight);
 	}
 
-	public toGeneratedOffsets(start: number) {
-		return this.matcing(start, 'sourceRange', 'generatedRange');
+	public toGeneratedOffsets(start: number, baseOnRight: boolean = false) {
+		return this.matcing(start, 'sourceRange', 'generatedRange', baseOnRight);
 	}
 
-	public * matcing(startOffset: number, from: 'sourceRange' | 'generatedRange', to: 'sourceRange' | 'generatedRange') {
+	public * matcing(startOffset: number, from: 'sourceRange' | 'generatedRange', to: 'sourceRange' | 'generatedRange', baseOnRight: boolean) {
 
 		const memo = this.memo[from];
 
@@ -124,7 +124,7 @@ export class SourceMapBase<Data = undefined> {
 				}
 				skip.add(mapping);
 
-				const mapped = this.matchOffset(startOffset, mapping[from], mapping[to]);
+				const mapped = this.matchOffset(startOffset, mapping[from], mapping[to], baseOnRight);
 				if (mapped !== undefined) {
 					yield [mapped, mapping] as const;
 				}
@@ -132,9 +132,13 @@ export class SourceMapBase<Data = undefined> {
 		}
 	}
 
-	public matchOffset(start: number, mappedFromRange: [number, number], mappedToRange: [number, number]): number | undefined {
+	public matchOffset(start: number, mappedFromRange: [number, number], mappedToRange: [number, number], baseOnRight: boolean): number | undefined {
 		if (start >= mappedFromRange[0] && start <= mappedFromRange[1]) {
-			return mappedToRange[0] + start - mappedFromRange[0];
+			let offset = mappedToRange[0] + start - mappedFromRange[0];
+			if (baseOnRight) {
+				offset += (mappedToRange[1] - mappedToRange[0]) - (mappedFromRange[1] - mappedFromRange[0]);
+			}
+			return offset;
 		}
 	}
 
