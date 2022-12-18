@@ -39,7 +39,7 @@ fs.readFileSync = (...args) => {
 		require(tscPath);
 	}
 	catch (err) {
-		if (err === 'tscProgramCallback') {
+		if (err === 'hook') {
 			state.lastTscProgramCallback.worker.then(main);
 		}
 		else {

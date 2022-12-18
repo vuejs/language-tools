@@ -135,10 +135,10 @@ export function createProgram(
 	}
 
 	const vueCompilerOptions = program.__vue.languageServiceHost.getVueCompilationSettings();
-	if (vueCompilerOptions.experimentalTscProgramCallbacks) {
+	if (vueCompilerOptions.hooks) {
 		const index = (state.lastTscProgramCallback?.index ?? -1) + 1;
-		if (index < vueCompilerOptions.experimentalTscProgramCallbacks.length) {
-			const cbPath = vueCompilerOptions.experimentalTscProgramCallbacks[index];
+		if (index < vueCompilerOptions.hooks.length) {
+			const cbPath = vueCompilerOptions.hooks[index];
 			const dir = program.__vue.languageServiceHost.getCurrentDirectory();
 			const cb = require(require.resolve(cbPath, { paths: [dir] }));
 			state.lastTscProgramCallback = {
@@ -146,7 +146,7 @@ export function createProgram(
 				index,
 				worker: (async () => await cb(program))(),
 			};
-			throw 'tscProgramCallback';
+			throw 'hook';
 		}
 	}
 

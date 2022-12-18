@@ -107,7 +107,7 @@
 					},
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1969"
 				},
-				"experimentalTscProgramCallbacks": {
+				"hooks": {
 					"type": "array",
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/pull/2217"
 				}
