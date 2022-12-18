@@ -43,6 +43,10 @@ export = async function (
 				for (const result of lintResult) {
 
 					result.filePath = vueFile.fileName;
+					result.errorCount = 0;
+					result.warningCount = 0;
+					result.fixableErrorCount = 0;
+					result.fixableWarningCount = 0;
 					const messages: Linter.LintMessage[] = [];
 
 					for (const message of result.messages) {
@@ -89,6 +93,10 @@ export = async function (
 									endLine: range.end.line + 1,
 									endColumn: range.end.character + 1,
 								});
+								result.errorCount += message.severity === 2 ? 1 : 0;
+								result.warningCount += message.severity === 1 ? 1 : 0;
+								result.fixableErrorCount += message.severity === 2 && message.fix ? 1 : 0;
+								result.fixableWarningCount += message.severity === 1 && message.fix ? 1 : 0;
 
 								break;
 							}
