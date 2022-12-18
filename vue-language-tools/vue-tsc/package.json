@@ -1,6 +1,7 @@
 {
 	"name": "vue-tsc",
 	"version": "1.0.13",
+	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
 		"bin",
