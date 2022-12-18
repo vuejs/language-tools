@@ -31,8 +31,8 @@ export function createProgram(
 
 	let program = options.oldProgram as _Program | undefined;
 
-	if (state.lastTscProgramCallback) {
-		program = state.lastTscProgramCallback.program;
+	if (state.hook) {
+		program = state.hook.program;
 		program.__vue.options = options;
 	}
 	else if (!program) {
@@ -136,12 +136,12 @@ export function createProgram(
 
 	const vueCompilerOptions = program.__vue.languageServiceHost.getVueCompilationSettings();
 	if (vueCompilerOptions.hooks) {
-		const index = (state.lastTscProgramCallback?.index ?? -1) + 1;
+		const index = (state.hook?.index ?? -1) + 1;
 		if (index < vueCompilerOptions.hooks.length) {
 			const cbPath = vueCompilerOptions.hooks[index];
 			const dir = program.__vue.languageServiceHost.getCurrentDirectory();
 			const cb = require(require.resolve(cbPath, { paths: [dir] }));
-			state.lastTscProgramCallback = {
+			state.hook = {
 				program,
 				index,
 				worker: (async () => await cb(program))(),

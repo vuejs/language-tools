@@ -40,7 +40,7 @@ fs.readFileSync = (...args) => {
 	}
 	catch (err) {
 		if (err === 'hook') {
-			state.lastTscProgramCallback.worker.then(main);
+			state.hook.worker.then(main);
 		}
 		else {
 			throw err;
