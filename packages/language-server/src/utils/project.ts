@@ -80,7 +80,7 @@ export async function createProject(
 				context: languageContext,
 				getPlugins() {
 					return [
-						...loadCustomPlugins(languageServiceHost.getCurrentDirectory()),
+						...loadCustomPlugins(languageServiceHost.getCurrentDirectory(), serverOptions.configFilePath),
 						...plugins.map(plugin => plugin.semanticService?.getServicePlugins?.(languageServiceHost, vueLs!) ?? []).flat(),
 					];
 				},

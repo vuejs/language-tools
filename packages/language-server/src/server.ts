@@ -127,6 +127,7 @@ export function createCommonLanguageServer(
 			plugins,
 			ts,
 			configHost,
+			options,
 		);
 
 		for (const root of roots) {

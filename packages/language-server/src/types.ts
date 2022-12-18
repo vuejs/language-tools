@@ -119,4 +119,5 @@ export interface LanguageServerInitializationOptions {
 	 */
 	respectClientCapabilities?: boolean;
 	maxFileSize?: number;
+	configFilePath?: string;
 }

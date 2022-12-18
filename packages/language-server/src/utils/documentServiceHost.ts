@@ -1,4 +1,4 @@
-import { LanguageServerPlugin, RuntimeEnvironment } from '../types';
+import { LanguageServerInitializationOptions, LanguageServerPlugin, RuntimeEnvironment } from '../types';
 import * as embedded from '@volar/language-service';
 import { URI } from 'vscode-uri';
 import { loadCustomPlugins } from './config';
@@ -11,6 +11,7 @@ export function createDocumentServiceHost(
 	plugins: ReturnType<LanguageServerPlugin>[],
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	configHost: embedded.ConfigurationHost | undefined,
+	initOptions: LanguageServerInitializationOptions,
 ) {
 
 	const workspaceServices = new Map<string, embedded.DocumentService>();
@@ -53,7 +54,7 @@ export function createDocumentServiceHost(
 			},
 			getPlugins() {
 				return [
-					...loadCustomPlugins(rootUri.fsPath),
+					...loadCustomPlugins(rootUri.fsPath, initOptions.configFilePath),
 					...plugins.map(plugin => plugin.syntacticService?.getServicePlugins?.(serviceContext) ?? []).flat(),
 				];
 			},

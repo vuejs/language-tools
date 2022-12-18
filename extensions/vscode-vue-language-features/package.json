@@ -291,6 +291,11 @@
 					"default": "off",
 					"description": "Traces the communication between VS Code and the language server."
 				},
+				"volar.vueserver.configFilePath": {
+					"type": "string",
+					"default": "./volar.config.js",
+					"description": "Path to volar.config.js."
+				},
 				"volar.vueserver.maxFileSize": {
 					"type": "number",
 					"default": 20971520,

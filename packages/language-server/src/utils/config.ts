@@ -1,9 +1,9 @@
 import { LanguageServicePlugin } from '@volar/language-service';
 
-export function loadCustomPlugins(dir: string) {
+export function loadCustomPlugins(dir: string, configFile: string | undefined) {
 	let configPath: string | undefined;
 	try {
-		configPath = require.resolve('./volar.config.js', { paths: [dir] });
+		configPath = require.resolve(configFile ?? './volar.config.js', { paths: [dir] });
 	} catch { }
 
 	try {

@@ -168,6 +168,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 				|| e.affectsConfiguration('volar.vueserver.vitePress.processMdFile')
 				|| e.affectsConfiguration('volar.vueserver.additionalExtensions')
 				|| e.affectsConfiguration('volar.vueserver.maxFileSize')
+				|| e.affectsConfiguration('volar.vueserver.configFilePath')
 			) {
 				requestReloadVscode();
 			}
@@ -304,6 +305,7 @@ function getInitializationOptions(
 	const textDocumentSync = vscode.workspace.getConfiguration('volar').get<'incremental' | 'full' | 'none'>('vueserver.textDocumentSync');
 	const initializationOptions: VueServerInitializationOptions = {
 		// volar
+		configFilePath: vscode.workspace.getConfiguration('volar').get<string>('vueserver.configFilePath'),
 		respectClientCapabilities: true,
 		serverMode,
 		diagnosticModel: diagnosticModel() === 'pull' ? DiagnosticModel.Pull : DiagnosticModel.Push,
@@ -316,6 +318,7 @@ function getInitializationOptions(
 		noProjectReferences: noProjectReferences(),
 		reverseConfigFilePriority: reverseConfigFilePriority(),
 		disableFileWatcher: disableFileWatcher(),
+		maxFileSize: vscode.workspace.getConfiguration('volar').get<number>('vueserver.maxFileSize'),
 		// vue
 		petiteVue: {
 			processHtmlFile: processHtml(),
@@ -324,10 +327,9 @@ function getInitializationOptions(
 			processMdFile: processMd(),
 		},
 		json: {
-			customBlockSchemaUrls: vscode.workspace.getConfiguration('volar').get<Record<string, string>>('vueserver.json.customBlockSchemaUrls')
+			customBlockSchemaUrls: vscode.workspace.getConfiguration('volar').get<Record<string, string>>('vueserver.json.customBlockSchemaUrls'),
 		},
 		additionalExtensions: additionalExtensions(),
-		maxFileSize: vscode.workspace.getConfiguration('volar').get<number>('vueserver.maxFileSize'),
 	};
 	return initializationOptions;
 }
