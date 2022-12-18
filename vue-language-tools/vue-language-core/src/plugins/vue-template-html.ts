@@ -80,6 +80,9 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 						}
 					}
 					else if (node.type === CompilerDOM.NodeTypes.DIRECTIVE) {
+						if (node.arg && withinChangeRange(node.arg.loc) && node.name === 'slot') {
+							return false;
+						}
 						if (node.arg && !tryUpdateNode(node.arg)) {
 							return false;
 						}
@@ -136,7 +139,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 						}
 					}
 					else if (node.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-						if (withinChangeRange(node.loc) && node.isStatic) { // slot name
+						if (withinChangeRange(node.loc) && node.isStatic) { // TODO: review this (slot name?)
 							return false;
 						}
 						node.content = node.loc.source;
