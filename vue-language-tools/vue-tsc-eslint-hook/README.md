@@ -1,5 +1,9 @@
 # vue-tsc-eslint-hook
 
+Use ESLint with vue-tsc to have better performance and accuracy.
+
+Example: https://github.com/DrJume/vue-volar-eslint
+
 ## Usage
 
 `package.json`
