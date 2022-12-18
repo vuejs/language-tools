@@ -154,16 +154,18 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		}
 
 		// check vue-tsc version same with extension version
-		const vueTscMod = getWorkspacePackageJson(fileUri.fsPath, 'vue-tsc');
-		if (vueTscMod && vueTscMod.json.version !== context.extension.packageJSON.version) {
-			problems.push({
-				title: 'Different `vue-tsc` version',
-				message: [
-					`The \`${context.extension.packageJSON.displayName}\`\'s version is \`${context.extension.packageJSON.version}\`, but the workspace\'s \`vue-tsc\` version is \`${vueTscMod.json.version}\`. This may produce different type checking behavior.`,
-					'',
-					'- vue-tsc: ' + vueTscMod.path,
-				].join('\n'),
-			});
+		if (vscode.workspace.getConfiguration('volar').get<boolean>('doctor.checkVueTsc')) {
+			const vueTscMod = getWorkspacePackageJson(fileUri.fsPath, 'vue-tsc');
+			if (vueTscMod && vueTscMod.json.version !== context.extension.packageJSON.version) {
+				problems.push({
+					title: 'Different `vue-tsc` version',
+					message: [
+						`The \`${context.extension.packageJSON.displayName}\`\'s version is \`${context.extension.packageJSON.version}\`, but the workspace\'s \`vue-tsc\` version is \`${vueTscMod.json.version}\`. This may produce different type checking behavior.`,
+						'',
+						'- vue-tsc: ' + vueTscMod.path,
+					].join('\n'),
+				});
+			}
 		}
 
 		// check @types/node > 18.8.0 && < 18.11.1

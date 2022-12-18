@@ -386,6 +386,11 @@
 					"default": true,
 					"description": "Show known problems in status bar."
 				},
+				"volar.doctor.checkVueTsc": {
+					"type": "boolean",
+					"default": false,
+					"description": "Check vue-tsc version."
+				},
 				"volar.codeLens.scriptSetupTools": {
 					"type": "boolean",
 					"default": false,
