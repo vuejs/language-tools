@@ -30,7 +30,13 @@ export async function register(
 	}
 
 	function onDidChangeTextDocument({ document, contentChanges, reason }: vscode.TextDocumentChangeEvent) {
-		if (!isEnabled || contentChanges.length === 0 || reason === vscode.TextDocumentChangeReason.Undo || reason === vscode.TextDocumentChangeReason.Redo) {
+		if (
+			!isEnabled
+			|| contentChanges.length !== 1
+			|| !contentChanges[0].text // delete
+			|| reason === vscode.TextDocumentChangeReason.Undo
+			|| reason === vscode.TextDocumentChangeReason.Redo
+		) {
 			return;
 		}
 		const activeDocument = vscode.window.activeTextEditor?.document;
