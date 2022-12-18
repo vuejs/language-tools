@@ -1,13 +1,19 @@
 # Changelog
 
-## 1.0.13 (2022/12/12)
+## 1.0.14 (2022/12/18)
 
-- feat(web-ide): show loading file at status bar
-- feat(web-ide): support node_modules types via CDN
-- feat(web-ide): support locale typescript diagnostic messages
-- fix(web-ide): cannot use default typescript lib types
-- fix(web-ide): cannot found match tsconfig
-- fix: `volar.config.js` plugins dirty cache between different tsconfig projects
+- feat: add angular language server example ([#2215](https://github.com/johnsoncodehk/volar/issues/2215))
+- feat(vue-tsc): support for hook api ([#2217](https://github.com/johnsoncodehk/volar/issues/2217))
+- feat: add `vue-tsc-eslint-hook` module to support use eslint in vue-tsc ([#2220](https://github.com/johnsoncodehk/volar/issues/2220))
+- feat: add setting `volar.vueserver.maxFileSize` ([#2186](https://github.com/johnsoncodehk/volar/issues/2186))
+- feat: add setting `volar.doctor.checkVueTsc` and disable by default ([#2186](https://github.com/johnsoncodehk/volar/issues/2186))
+- feat: add setting `volar.vueserver.configFilePath` ([#2078](https://github.com/johnsoncodehk/volar/issues/2078))
+- feat: auto add space between double curly brackets ([#2088](https://github.com/johnsoncodehk/volar/issues/2088))
+- feat: support formatting for style `v-bind` ([#2105](https://github.com/johnsoncodehk/volar/issues/2105))
+- fix: virtual code mapping ignored offset 0 ([#2052](https://github.com/johnsoncodehk/volar/issues/2052))
+- fix: auto complete ref value with '.value' not working ([#2203](https://github.com/johnsoncodehk/volar/issues/2203))
+- fix: template AST broken by slot name incremental update ([#2207](https://github.com/johnsoncodehk/volar/issues/2207))
+- fix: preview not working for Vite v4 ([#2198](https://github.com/johnsoncodehk/volar/issues/2198))
 
 ### Special Sponsor
 
@@ -26,6 +32,15 @@
 <table><tr>
 	<td align="center" valign="middle"><a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/prefect.svg" height="50" /></a></td>
 </tr></table>
+
+## 1.0.13 (2022/12/12)
+
+- feat(web-ide): show loading file at status bar
+- feat(web-ide): support node_modules types via CDN
+- feat(web-ide): support locale typescript diagnostic messages
+- fix(web-ide): cannot use default typescript lib types
+- fix(web-ide): cannot found match tsconfig
+- fix: `volar.config.js` plugins dirty cache between different tsconfig projects
 
 ## 1.0.12 (2022/12/9)
 
