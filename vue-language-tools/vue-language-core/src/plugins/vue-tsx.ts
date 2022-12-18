@@ -138,6 +138,20 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				if (htmlGen.value) {
 					embeddedFile.content = [...htmlGen.value.formatCodeGen];
 				}
+
+				for (const cssVar of cssVars.value) {
+					embeddedFile.content.push('\n\n');
+					for (const range of cssVar.ranges) {
+						embeddedFile.content.push('(');
+						embeddedFile.content.push([
+							cssVar.style.content.substring(range.start, range.end),
+							cssVar.style.name,
+							range.start,
+							{},
+						]);
+						embeddedFile.content.push(');\n');
+					}
+				}
 			}
 			else if (suffix.match(/^\.__VLS_template_style\.css$/)) {
 
