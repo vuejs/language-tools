@@ -75,7 +75,7 @@ fs.readFileSync = (...args) => {
 
 createViteConfig();
 
-if (viteVersion.startsWith('3.')) {
+if (Number(viteVersion.split('.')[0]) >= 3) {
 	import('file://' + viteBinPath);
 }
 else {
