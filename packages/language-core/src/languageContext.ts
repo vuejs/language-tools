@@ -119,11 +119,11 @@ export function createEmbeddedLanguageServiceHost(
 	function update() {
 
 		const newProjectVersion = host.getProjectVersion?.();
-		const sholdUpdate = newProjectVersion === undefined || newProjectVersion !== lastProjectVersion;
+		const shouldUpdate = newProjectVersion === undefined || newProjectVersion !== lastProjectVersion;
 
 		lastProjectVersion = newProjectVersion;
 
-		if (!sholdUpdate)
+		if (!shouldUpdate)
 			return;
 
 		let tsFileUpdated = false;
