@@ -349,35 +349,19 @@ export class VueSourceFile implements SourceFile {
 		return blocks;
 	});
 
-	get kind(): EmbeddedFileKind {
-		return EmbeddedFileKind.TextFile;
-	}
+	kind = EmbeddedFileKind.TextFile;
 
-	get capabilities(): DocumentCapabilities {
-		return {
-			diagnostic: true,
-			foldingRange: true,
-			documentFormatting: true,
-			documentSymbol: true,
-			codeAction: true,
-			inlayHint: true,
-		};
-	}
+	capabilities: DocumentCapabilities = {
+		diagnostic: true,
+		foldingRange: true,
+		documentFormatting: true,
+		documentSymbol: true,
+		codeAction: true,
+		inlayHint: true,
+	};
 
 	get mappings(): Mapping<PositionCapabilities>[] {
-		return [{
-			sourceRange: [0, this._snapshot.value.getLength()],
-			generatedRange: [0, this._snapshot.value.getLength()],
-			data: {
-				hover: true,
-				references: true,
-				definition: true,
-				rename: true,
-				completion: true,
-				diagnostic: true,
-				semanticTokens: true,
-			},
-		}];
+		return this._mappings.value;
 	}
 
 	get text() {
@@ -398,6 +382,19 @@ export class VueSourceFile implements SourceFile {
 
 	// refs
 	_snapshot: Ref<ts.IScriptSnapshot>;
+	_mappings = computed<Mapping<PositionCapabilities>[]>(() => [{
+		sourceRange: [0, this._snapshot.value.getLength()],
+		generatedRange: [0, this._snapshot.value.getLength()],
+		data: {
+			hover: true,
+			references: true,
+			definition: true,
+			rename: true,
+			completion: true,
+			diagnostic: true,
+			semanticTokens: true,
+		},
+	}]);
 	_allEmbeddeds = ref<{
 		file: VueEmbeddedFile;
 		text: string;
