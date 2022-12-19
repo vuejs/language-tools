@@ -427,8 +427,8 @@ function createSchemaResolvers(
 	const ignore = typeof options === 'object' ? [...options?.ignore ?? []] : [];
 
 	function shouldIgnore(subtype: ts.Type) {
-		const type = typeChecker.typeToString(subtype);
-		if (type === 'any') {
+		const name = typeChecker.typeToString(subtype);
+		if (name === 'any') {
 			return true;
 		}
 
@@ -436,7 +436,18 @@ function createSchemaResolvers(
 			return false;
 		}
 
-		return ignore.includes(type);
+		for (const item of ignore) {
+			if (typeof item === 'function') {
+				const result = item(name, subtype, typeChecker);
+				if (result != null)
+					return result
+			}
+			else if (name === item) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	function setVisited(subtype: ts.Type) {
