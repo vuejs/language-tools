@@ -10,7 +10,6 @@ export function getTypesCode(
 	const libName = getVueLibraryName(vueVersion);
 	const slots = getSlotsPropertyName(vueVersion);
 	return `
-import * as vue from '${libName}';
 import type {
 	FunctionalComponent,
 	EmitsOptions,
@@ -36,7 +35,7 @@ export type GlobalComponents =
 	& PickNotAny<import('@vue/runtime-core').GlobalComponents, {}>
 	// @ts-ignore
 	& PickNotAny<import('@vue/runtime-dom').GlobalComponents, {}>
-	& Pick<typeof vue,
+	& Pick<typeof import('${libName}'),
 		// @ts-ignore
 		'Transition'
 		| 'TransitionGroup'

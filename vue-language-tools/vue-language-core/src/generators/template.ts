@@ -75,7 +75,7 @@ export function generate(
 	const scopedClasses: { className: string, offset: number; }[] = [];
 	const blockConditions: string[] = [];
 
-	let slotsNum = 0;
+	let hasSlot = false;
 	let elementIndex = 0;
 
 	formatCodeGen.push('export { };\n');
@@ -96,18 +96,19 @@ export function generate(
 		cssCodeGen,
 		tagNames,
 		identifiers,
-		slotsNum,
+		hasSlot,
 	};
 
 	function declareSlots() {
 
 		codeGen.push(`declare var __VLS_slots:\n`);
 		for (const [exp, slot] of slotExps) {
+			hasSlot = true;
 			codeGen.push(`Record<NonNullable<typeof ${exp}>, (_: typeof ${slot.varName}) => any> &\n`);
 		}
 		codeGen.push(`{\n`);
 		for (const [name, slot] of slots) {
-			slotsNum++;
+			hasSlot = true;
 			writeObjectProperty(
 				name,
 				slot.loc, // TODO: SourceMaps.MappingKind.Expand

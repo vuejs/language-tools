@@ -417,7 +417,7 @@ export function generate(
 					codeGen.push(`InstanceType<typeof __VLS_publicComponent>['$emit']`);
 				}
 				codeGen.push(`,\n`);
-				if (htmlGen?.slotsNum) {
+				if (htmlGen?.hasSlot) {
 					codeGen.push(`children: ReturnType<typeof __VLS_template>,\n`);
 				}
 				else {
@@ -426,7 +426,7 @@ export function generate(
 				codeGen.push(`};\n`);
 			}
 			else {
-				if (htmlGen?.slotsNum) {
+				if (htmlGen?.hasSlot) {
 					usedTypes.WithTemplateSlots = true;
 					codeGen.push(`return {} as __VLS_WithTemplateSlots<typeof __VLS_publicComponent, ReturnType<typeof __VLS_template>>;\n`);
 				}
