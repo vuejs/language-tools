@@ -1,19 +1,17 @@
 # Changelog
 
-## 1.0.14 (2022/12/18)
+## 1.0.16 (2022/12/20)
 
-- feat: add angular language server example ([#2215](https://github.com/johnsoncodehk/volar/issues/2215))
-- feat(vue-tsc): support for hook api ([#2217](https://github.com/johnsoncodehk/volar/issues/2217))
-- feat: add `vue-tsc-eslint-hook` module to support use eslint in vue-tsc ([#2220](https://github.com/johnsoncodehk/volar/issues/2220))
-- feat: add setting `volar.vueserver.maxFileSize` ([#2186](https://github.com/johnsoncodehk/volar/issues/2186))
-- feat: add setting `volar.doctor.checkVueTsc` and disable by default ([#2186](https://github.com/johnsoncodehk/volar/issues/2186))
-- feat: add setting `volar.vueserver.configFilePath` ([#2078](https://github.com/johnsoncodehk/volar/issues/2078))
-- feat: auto add space between double curly brackets ([#2088](https://github.com/johnsoncodehk/volar/issues/2088))
-- feat: support formatting for style `v-bind` ([#2105](https://github.com/johnsoncodehk/volar/issues/2105))
-- fix: virtual code mapping ignored offset 0 ([#2052](https://github.com/johnsoncodehk/volar/issues/2052))
-- fix: auto complete ref value with '.value' not working ([#2203](https://github.com/johnsoncodehk/volar/issues/2203))
-- fix: template AST broken by slot name incremental update ([#2207](https://github.com/johnsoncodehk/volar/issues/2207))
-- fix: preview not working for Vite v4 ([#2198](https://github.com/johnsoncodehk/volar/issues/2198))
+- feat(component-meta): make `schema.ignore` accept functions ([#2232](https://github.com/johnsoncodehk/volar/issues/2232))
+- feat: add `volar.icon.splitEditors` setting ([#2163](https://github.com/johnsoncodehk/volar/issues/2163))
+- feat: support twoslash queries in .ts when using takeover mode
+- fix: fixed typescript-vue-plugin performance regression ([#2228](https://github.com/johnsoncodehk/volar/issues/2228))
+- fix: deleting space for `{{ |}}` become `{{ | }}` ([#2222](https://github.com/johnsoncodehk/volar/issues/2222))
+- fix: dynamic slot name type `<slot :name="(name as 'a' | 'b')" />` not working ([#2233](https://github.com/johnsoncodehk/volar/issues/2233))
+- fix: typed template slots missing when template only exist dynamic slots ([#2233](https://github.com/johnsoncodehk/volar/issues/2233))
+- fix: fixed template `Type 'void' has no call signatures` errors ([#2225](https://github.com/johnsoncodehk/volar/issues/2225))
+- fix(vue-tsc): shim `vue-tsc/out/proxy.js` for vite-plugin-checker (https://github.com/fi3ework/vite-plugin-checker/issues/193)
+- perf: rewrite typescript-vue-plugin for much better performance ([#2225](https://github.com/johnsoncodehk/volar/issues/2225))
 
 ### Special Sponsor
 
@@ -32,6 +30,21 @@
 <table><tr>
 	<td align="center" valign="middle"><a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/prefect.svg" height="50" /></a></td>
 </tr></table>
+
+## 1.0.14 (2022/12/18)
+
+- feat: add angular language server example ([#2215](https://github.com/johnsoncodehk/volar/issues/2215))
+- feat(vue-tsc): support for hook api ([#2217](https://github.com/johnsoncodehk/volar/issues/2217))
+- feat: add `vue-tsc-eslint-hook` module to support use eslint in vue-tsc ([#2220](https://github.com/johnsoncodehk/volar/issues/2220))
+- feat: add setting `volar.vueserver.maxFileSize` ([#2186](https://github.com/johnsoncodehk/volar/issues/2186))
+- feat: add setting `volar.doctor.checkVueTsc` and disable by default ([#2186](https://github.com/johnsoncodehk/volar/issues/2186))
+- feat: add setting `volar.vueserver.configFilePath` ([#2078](https://github.com/johnsoncodehk/volar/issues/2078))
+- feat: auto add space between double curly brackets ([#2088](https://github.com/johnsoncodehk/volar/issues/2088))
+- feat: support formatting for style `v-bind` ([#2105](https://github.com/johnsoncodehk/volar/issues/2105))
+- fix: virtual code mapping ignored offset 0 ([#2052](https://github.com/johnsoncodehk/volar/issues/2052))
+- fix: auto complete ref value with '.value' not working ([#2203](https://github.com/johnsoncodehk/volar/issues/2203))
+- fix: template AST broken by slot name incremental update ([#2207](https://github.com/johnsoncodehk/volar/issues/2207))
+- fix: preview not working for Vite v4 ([#2198](https://github.com/johnsoncodehk/volar/issues/2198))
 
 ## 1.0.13 (2022/12/12)
 
