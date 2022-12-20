@@ -35,6 +35,9 @@
 		{
 			"path": "../../plugins/typescript/tsconfig.build.json"
 		},
+		{
+			"path": "../../plugins/typescript-twoslash-queries/tsconfig.build.json"
+		},
 		// packages
 		{
 			"path": "../../packages/language-core/tsconfig.build.json"

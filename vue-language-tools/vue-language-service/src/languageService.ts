@@ -4,6 +4,7 @@ import useHtmlPlugin from '@volar-plugins/html';
 import useJsonPlugin from '@volar-plugins/json';
 import usePugPlugin from '@volar-plugins/pug';
 import useTsPlugin from '@volar-plugins/typescript';
+import useTsTqPlugin from '@volar-plugins/typescript-twoslash-queries';
 import * as embedded from '@volar/language-core';
 import * as embeddedLS from '@volar/language-service';
 import * as vue from '@volar/vue-language-core';
@@ -198,7 +199,8 @@ export function getLanguageServicePlugins(
 		vueLsHost: host,
 		context: apis.context,
 	});
-	const twoslashQueriesPlugin = useTwoslashQueries({
+	const tsTwoslashQueriesPlugin = useTsTqPlugin();
+	const vueTwoslashQueriesPlugin = useTwoslashQueries({
 		getVueDocument: (document) => apis.context.documents.get(document.uri),
 	});
 
@@ -214,9 +216,10 @@ export function getLanguageServicePlugins(
 		refSugarConversionsPlugin,
 		tsPlugin,
 		autoDotValuePlugin,
+		tsTwoslashQueriesPlugin,
+		vueTwoslashQueriesPlugin,
 		// put emmet plugin at last to fix https://github.com/johnsoncodehk/volar/issues/1088
 		emmetPlugin,
-		twoslashQueriesPlugin,
 	];
 }
 

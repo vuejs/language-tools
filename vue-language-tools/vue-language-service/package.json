@@ -21,6 +21,7 @@
 		"@volar-plugins/pug": "1.0.14",
 		"@volar-plugins/pug-beautify": "1.0.14",
 		"@volar-plugins/typescript": "1.0.14",
+		"@volar-plugins/typescript-twoslash-queries": "1.0.14",
 		"@volar/language-core": "1.0.14",
 		"@volar/language-service": "1.0.14",
 		"@volar/shared": "1.0.14",

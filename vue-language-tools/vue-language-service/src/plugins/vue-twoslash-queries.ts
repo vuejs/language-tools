@@ -24,8 +24,8 @@ export default function (options: {
 					const hoverOffsets: [vscode.Position, number][] = [];
 					const inlayHints: vscode.InlayHint[] = [];
 
-					for (const pointer of document.getText(range).matchAll(/\^\?/g)) {
-						const offset = pointer.index! + document.offsetAt(range.start);
+					for (const pointer of document.getText(range).matchAll(/<!--\s*\^\?\s*-->/g)) {
+						const offset = pointer.index! + pointer[0].indexOf('^?') + document.offsetAt(range.start);
 						const position = document.positionAt(offset);
 						hoverOffsets.push([position, document.offsetAt({
 							line: position.line - 1,
