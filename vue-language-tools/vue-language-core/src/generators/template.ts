@@ -103,7 +103,7 @@ export function generate(
 
 		codeGen.push(`declare var __VLS_slots:\n`);
 		for (const [exp, slot] of slotExps) {
-			codeGen.push(`Record<NonNullable<typeof ${exp}>, typeof ${slot.varName}> &\n`);
+			codeGen.push(`Record<NonNullable<typeof ${exp}>, (_: typeof ${slot.varName}) => any> &\n`);
 		}
 		codeGen.push(`{\n`);
 		for (const [name, slot] of slots) {
@@ -1489,8 +1489,6 @@ export function generate(
 		const varDefaultBind = `__VLS_${elementIndex++}`;
 		const varBinds = `__VLS_${elementIndex++}`;
 		const varSlot = `__VLS_${elementIndex++}`;
-		const slotName = getSlotName();
-		const slotNameExp = getSlotNameExp();
 		let hasDefaultBind = false;
 
 		for (const prop of node.props) {
@@ -1579,16 +1577,25 @@ export function generate(
 			codeGen.push(`var ${varSlot}!: typeof ${varBinds};\n`);
 		}
 
-		if (slotNameExp) {
+		const slotNameExpNode = getSlotNameExpNode();
+		if (slotNameExpNode) {
 			const varSlotExp = `__VLS_${elementIndex++}`;
 			const varSlotExp2 = `__VLS_${elementIndex++}`;
-			codeGen.push(`const ${varSlotExp} = ${slotNameExp};\n`);
+			codeGen.push(`const ${varSlotExp} = `);
+			if (typeof slotNameExpNode === 'string') {
+				codeGen.push(slotNameExpNode);
+			}
+			else {
+				writeInterpolation(slotNameExpNode.content, undefined, undefined, '(', ')', slotNameExpNode);
+			}
+			codeGen.push(`;\n`);
 			codeGen.push(`var ${varSlotExp2}!: typeof ${varSlotExp};\n`);
 			slotExps.set(varSlotExp2, {
 				varName: varSlot,
 			});
 		}
 		else {
+			const slotName = getSlotName();
 			slots.set(slotName, {
 				varName: varSlot,
 				loc: [startTagOffset, startTagOffset + node.tag.length],
@@ -1606,14 +1613,14 @@ export function generate(
 			}
 			return 'default';
 		}
-		function getSlotNameExp() {
+		function getSlotNameExpNode() {
 			for (const prop2 of node.props) {
 				if (prop2.type === CompilerDOM.NodeTypes.DIRECTIVE && prop2.name === 'bind' && prop2.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop2.arg.content === 'name') {
 					if (prop2.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-						return prop2.exp.content;
+						return prop2.exp;
 					}
 					else {
-						return `'default'`;
+						return `('default' as const)`;
 					}
 				}
 			}
