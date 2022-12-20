@@ -19,7 +19,7 @@
 		"@vue/compiler-sfc": "^3.2.45",
 		"@vue/reactivity": "^3.2.45",
 		"@vue/shared": "^3.2.45",
-		"minimatch": "^5.1.0",
+		"minimatch": "^5.1.1",
 		"vue-template-compiler": "^2.7.14"
 	},
 	"devDependencies": {

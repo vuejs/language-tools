@@ -10,7 +10,7 @@ importers:
       typescript: latest
       vite: latest
       vitepress: latest
-      vitest: latest
+      vitest: 0.25.8
       vue: ^3.2.45
     optionalDependencies:
       '@lerna-lite/cli': 1.13.0
@@ -21,15 +21,15 @@ importers:
       '@types/node': 18.11.17
       typescript: 4.9.4
       vite: 4.0.2_@types+node@18.11.17
-      vitest: 0.26.0
+      vitest: 0.25.8
 
   examples/angular-language-core:
     specifiers:
       '@angular-eslint/bundled-angular-compiler': ^15.1.0
       '@angular/compiler': ^15.0.4
       '@volar/language-core': 1.0.14
-      vscode-languageserver-textdocument: ^1.0.7
-      vscode-uri: ^3.0.6
+      vscode-languageserver-textdocument: ^1.0.8
+      vscode-uri: ^3.0.7
     dependencies:
       '@angular-eslint/bundled-angular-compiler': 15.1.0
       '@volar/language-core': link:../../packages/language-core
@@ -56,8 +56,8 @@ importers:
       '@volar/language-core': 1.0.14
       svelte: ^3.53.1
       svelte2tsx: ^0.5.20
-      vscode-languageserver-textdocument: ^1.0.7
-      vscode-uri: ^3.0.6
+      vscode-languageserver-textdocument: ^1.0.8
+      vscode-uri: ^3.0.7
     dependencies:
       '@jridgewell/sourcemap-codec': 1.4.14
       '@volar/language-core': link:../../packages/language-core
@@ -216,8 +216,8 @@ importers:
       vscode-html-languageservice: ^5.0.3
       vscode-languageserver: ^8.0.2
       vscode-languageserver-protocol: ^3.17.2
-      vscode-languageserver-textdocument: ^1.0.7
-      vscode-uri: ^3.0.6
+      vscode-languageserver-textdocument: ^1.0.8
+      vscode-uri: ^3.0.7
     dependencies:
       '@volar/language-core': link:../language-core
       '@volar/language-service': link:../language-service
@@ -241,8 +241,8 @@ importers:
       vscode-html-languageservice: ^5.0.3
       vscode-json-languageservice: ^5.1.3
       vscode-languageserver-protocol: ^3.17.2
-      vscode-languageserver-textdocument: ^1.0.7
-      vscode-uri: ^3.0.6
+      vscode-languageserver-textdocument: ^1.0.8
+      vscode-uri: ^3.0.7
     dependencies:
       '@volar/language-core': link:../language-core
       '@volar/shared': link:../shared
@@ -275,7 +275,7 @@ importers:
       pug-lexer: ^5.0.1
       pug-parser: ^6.0.0
       vscode-html-languageservice: ^5.0.3
-      vscode-languageserver-textdocument: ^1.0.7
+      vscode-languageserver-textdocument: ^1.0.8
       vscode-languageserver-types: ^3.17.2
     dependencies:
       '@volar/language-service': link:../language-service
@@ -293,7 +293,7 @@ importers:
   packages/shared:
     specifiers:
       typesafe-path: ^0.2.2
-      vscode-uri: ^3.0.6
+      vscode-uri: ^3.0.7
     dependencies:
       typesafe-path: 0.2.2
       vscode-uri: 3.0.7
@@ -349,7 +349,7 @@ importers:
     specifiers:
       vscode-css-languageservice: ^6.2.1
       vscode-languageserver-protocol: ^3.17.2
-      vscode-languageserver-textdocument: ^1.0.7
+      vscode-languageserver-textdocument: ^1.0.8
     dependencies:
       vscode-css-languageservice: 6.2.1
       vscode-languageserver-protocol: 3.17.2
@@ -365,7 +365,7 @@ importers:
     specifiers:
       vscode-html-languageservice: ^5.0.3
       vscode-languageserver-protocol: ^3.17.2
-      vscode-languageserver-textdocument: ^1.0.7
+      vscode-languageserver-textdocument: ^1.0.8
     dependencies:
       vscode-html-languageservice: 5.0.3
       vscode-languageserver-protocol: 3.17.2
@@ -375,7 +375,7 @@ importers:
     specifiers:
       vscode-json-languageservice: ^5.1.3
       vscode-languageserver-protocol: ^3.17.2
-      vscode-languageserver-textdocument: ^1.0.7
+      vscode-languageserver-textdocument: ^1.0.8
     dependencies:
       vscode-json-languageservice: 5.1.3
       vscode-languageserver-protocol: 3.17.2
@@ -386,7 +386,7 @@ importers:
       '@volar-plugins/html': 1.0.14
       '@volar/pug-language-service': 1.0.14
       vscode-html-languageservice: ^5.0.3
-      vscode-languageserver-textdocument: ^1.0.7
+      vscode-languageserver-textdocument: ^1.0.8
     dependencies:
       '@volar-plugins/html': link:../html
       '@volar/pug-language-service': link:../../packages/pug-language-service
@@ -407,9 +407,9 @@ importers:
       '@volar/shared': 1.0.14
       semver: ^7.3.8
       vscode-languageserver-protocol: ^3.17.2
-      vscode-languageserver-textdocument: ^1.0.7
+      vscode-languageserver-textdocument: ^1.0.8
       vscode-nls: ^5.2.0
-      vscode-uri: ^3.0.6
+      vscode-uri: ^3.0.7
     dependencies:
       '@volar/shared': link:../../packages/shared
       semver: 7.3.8
@@ -423,7 +423,7 @@ importers:
   plugins/typescript-twoslash-queries:
     specifiers:
       '@volar/shared': 1.0.14
-      vscode-languageserver-textdocument: ^1.0.7
+      vscode-languageserver-textdocument: ^1.0.8
     dependencies:
       '@volar/shared': link:../../packages/shared
       vscode-languageserver-textdocument: 1.0.8
@@ -457,7 +457,7 @@ importers:
       '@vue/compiler-sfc': ^3.2.45
       '@vue/reactivity': ^3.2.45
       '@vue/shared': ^3.2.45
-      minimatch: ^5.1.0
+      minimatch: ^5.1.1
       vue-template-compiler: ^2.7.14
     dependencies:
       '@volar/language-core': link:../../packages/language-core
@@ -523,8 +523,8 @@ importers:
       vscode-html-languageservice: ^5.0.3
       vscode-json-languageservice: ^5.1.3
       vscode-languageserver-protocol: ^3.17.2
-      vscode-languageserver-textdocument: ^1.0.7
-      vscode-uri: ^3.0.6
+      vscode-languageserver-textdocument: ^1.0.8
+      vscode-uri: ^3.0.7
     dependencies:
       '@johnsoncodehk/html2pug': 1.0.0
       '@volar-plugins/css': link:../../plugins/css
@@ -567,7 +567,7 @@ importers:
   vue-language-tools/vue-tsc-eslint-hook:
     specifiers:
       '@types/eslint': latest
-      vscode-languageserver-textdocument: ^1.0.7
+      vscode-languageserver-textdocument: ^1.0.8
       vue-tsc: 1.0.14
     dependencies:
       vscode-languageserver-textdocument: 1.0.8
@@ -2079,6 +2079,8 @@ packages:
 
   /buffer-from/1.1.2:
     resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
+    dev: false
+    optional: true
 
   /buffer/5.7.1:
     resolution: {integrity: sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ==}
@@ -3879,6 +3881,7 @@ packages:
 
   /jsonc-parser/3.2.0:
     resolution: {integrity: sha512-gfFQZrcTc8CnKXp6Y4/CBT3fTc0OVuDofpre4aEeEpSBPV5X5v4+Vmx+8snU7RLPrNHPKSgLxGo9YuQzz20o+w==}
+    dev: false
 
   /jsonfile/6.1.0:
     resolution: {integrity: sha512-5dgndWOriYSm5cnYaJNhalLNDKOqFwyDB/rr1E9ZsGciGvKPs8R2xYGCacuf3z6K1YKDz182fd+fY3cn3pMqXQ==}
@@ -4461,15 +4464,6 @@ packages:
     hasBin: true
     dev: false
     optional: true
-
-  /mlly/1.0.0:
-    resolution: {integrity: sha512-QL108Hwt+u9bXdWgOI0dhzZfACovn5Aen4Xvc8Jasd9ouRH4NjnrXEiyP3nVvJo91zPlYjVRckta0Nt2zfoR6g==}
-    dependencies:
-      acorn: 8.8.1
-      pathe: 1.0.0
-      pkg-types: 1.0.1
-      ufo: 1.0.1
-    dev: true
 
   /modify-values/1.0.1:
     resolution: {integrity: sha512-xV2bxeN6F7oYjZWTe/YPAy6MN2M+sL4u/Rlm2AHCIVGfo2p1yGmBHQ6vHehl4bRTZBdHu3TSkWdYgkwpYzAGSw==}
@@ -5074,14 +5068,6 @@ packages:
     dev: false
     optional: true
 
-  /pathe/0.2.0:
-    resolution: {integrity: sha512-sTitTPYnn23esFR3RlqYBWn4c45WGeLcsKzQiUpXJAyfcWkolvlYpV8FLo7JishK946oQwMFUCHXQ9AjGPKExw==}
-    dev: true
-
-  /pathe/1.0.0:
-    resolution: {integrity: sha512-nPdMG0Pd09HuSsr7QOKUXO2Jr9eqaDiZvDwdyIhNG5SHYujkQHYKDfGQkulBxvbDHz8oHLsTgKN86LSwYzSHAg==}
-    dev: true
-
   /pathval/1.1.1:
     resolution: {integrity: sha512-Dp6zGqpTdETdR63lehJYPeIOqpiNBNtc7BpWSLrOje7UaIsE5aY92r/AunQA7rsXvet3lrJ3JnZX29UPTKXyKQ==}
     dev: true
@@ -5141,14 +5127,6 @@ packages:
       find-up: 4.1.0
     dev: false
     optional: true
-
-  /pkg-types/1.0.1:
-    resolution: {integrity: sha512-jHv9HB+Ho7dj6ItwppRDDl0iZRYBD0jsakHXtFgoLr+cHSF6xC+QL54sJmWxyGxOLYSHm0afhXhXcQDQqH9z8g==}
-    dependencies:
-      jsonc-parser: 3.2.0
-      mlly: 1.0.0
-      pathe: 1.0.0
-    dev: true
 
   /playwright-core/1.29.0:
     resolution: {integrity: sha512-pboOm1m0RD6z1GtwAbEH60PYRfF87vKdzOSRw2RyO0Y0a7utrMyWN2Au1ojGvQr4umuBMODkKTv607YIRypDSQ==}
@@ -5773,13 +5751,6 @@ packages:
     resolution: {integrity: sha512-R0XvVJ9WusLiqTCEiGCmICCMplcCkIwwR11mOSD9CR5u+IXYdiseeEuXCVAjS54zqwkLcPNnmU4OeJ6tUrWhDw==}
     engines: {node: '>=0.10.0'}
 
-  /source-map-support/0.5.21:
-    resolution: {integrity: sha512-uBHU3L3czsIyYXKX88fdrGovxdSCoTGDRZ6SYXtSRxLZUzHg5P/66Ht6uoUlHu9EZod+inXhKo3qQgwXUT/y1w==}
-    dependencies:
-      buffer-from: 1.1.2
-      source-map: 0.6.1
-    dev: true
-
   /source-map/0.6.1:
     resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
     engines: {node: '>=0.10.0'}
@@ -6217,10 +6188,6 @@ packages:
     resolution: {integrity: sha512-8Y75pvTYkLJW2hWQHXxoqRgV7qb9B+9vFEtidML+7koHUFapnVJAZ6cKs+Qjz5Aw3aZWHMC6u0wJE3At+nSGwA==}
     dev: true
 
-  /ufo/1.0.1:
-    resolution: {integrity: sha512-boAm74ubXHY7KJQZLlXrtMz52qFvpsbOxDcZOnw/Wf+LS4Mmyu7JxmzD4tDLtUQtmZECypJ0FrCz4QIe6dvKRA==}
-    dev: true
-
   /uglify-js/3.17.4:
     resolution: {integrity: sha512-T9q82TJI9e/C1TAxYvfb16xO120tMVFZrGA3f9/P4424DNu6ypK103y0GPFVa17yotwSyZW5iYXgjYHkGrJW/g==}
     engines: {node: '>=0.8.0'}
@@ -6324,27 +6291,6 @@ packages:
     dev: false
     optional: true
 
-  /vite-node/0.26.0_@types+node@18.11.17:
-    resolution: {integrity: sha512-nLtHWCv6reONl1oFsKhQ/LT7n3UNLpvVARAJlmGrQV6qSElht/9AdN41Pa+WSkw2Winh682UzM0Yw0GNlfqejw==}
-    engines: {node: '>=v14.16.0'}
-    hasBin: true
-    dependencies:
-      debug: 4.3.4
-      mlly: 1.0.0
-      pathe: 0.2.0
-      source-map: 0.6.1
-      source-map-support: 0.5.21
-      vite: 4.0.2_@types+node@18.11.17
-    transitivePeerDependencies:
-      - '@types/node'
-      - less
-      - sass
-      - stylus
-      - sugarss
-      - supports-color
-      - terser
-    dev: true
-
   /vite/4.0.2_@types+node@18.11.17:
     resolution: {integrity: sha512-QJaY3R+tFlTagH0exVqbgkkw45B+/bXVBzF2ZD1KB5Z8RiAoiKo60vSUf6/r4c2Vh9jfGBKM4oBI9b4/1ZJYng==}
     engines: {node: ^14.18.0 || >=16.0.0}
@@ -6407,8 +6353,8 @@ packages:
     dev: false
     optional: true
 
-  /vitest/0.26.0:
-    resolution: {integrity: sha512-5kUnms5WOa0qrDCJePEPB13v9mhr+ZT1Qy0qNg0eVj1X7/Fx4GY4L1e5s3OH+BQ/J7M5WtaKsUGv9l1pbC7v2Q==}
+  /vitest/0.25.8:
+    resolution: {integrity: sha512-X75TApG2wZTJn299E/TIYevr4E9/nBo1sUtZzn0Ci5oK8qnpZAZyhwg0qCeMSakGIWtc6oRwcQFyFfW14aOFWg==}
     engines: {node: '>=v14.16.0'}
     hasBin: true
     peerDependencies:
@@ -6443,7 +6389,6 @@ packages:
       tinypool: 0.3.0
       tinyspy: 1.0.2
       vite: 4.0.2_@types+node@18.11.17
-      vite-node: 0.26.0_@types+node@18.11.17
     transitivePeerDependencies:
       - less
       - sass

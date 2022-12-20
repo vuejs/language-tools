@@ -21,6 +21,6 @@
 		"eslint": "*"
 	},
 	"dependencies": {
-		"vscode-languageserver-textdocument": "^1.0.7"
+		"vscode-languageserver-textdocument": "^1.0.8"
 	}
 }

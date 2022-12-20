@@ -15,8 +15,8 @@
 	"dependencies": {
 		"@angular-eslint/bundled-angular-compiler": "^15.1.0",
 		"@volar/language-core": "1.0.14",
-		"vscode-languageserver-textdocument": "^1.0.7",
-		"vscode-uri": "^3.0.6"
+		"vscode-languageserver-textdocument": "^1.0.8",
+		"vscode-uri": "^3.0.7"
 	},
 	"devDependencies": {
 		"@angular/compiler": "^15.0.4"

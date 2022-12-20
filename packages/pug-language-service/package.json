@@ -23,7 +23,7 @@
 		"muggle-string": "^0.1.0",
 		"pug-lexer": "^5.0.1",
 		"pug-parser": "^6.0.0",
-		"vscode-languageserver-textdocument": "^1.0.7",
+		"vscode-languageserver-textdocument": "^1.0.8",
 		"vscode-languageserver-types": "^3.17.2"
 	}
 }

@@ -1,4 +1,4 @@
-import { LanguageServicePlugin, LanguageServicePluginContext, InlayHint } from '@volar/language-service';
+import type { LanguageServicePlugin, LanguageServicePluginContext, InlayHint } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
