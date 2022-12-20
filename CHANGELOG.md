@@ -11,7 +11,7 @@
 - fix: typed template slots missing when template only exist dynamic slots ([#2233](https://github.com/johnsoncodehk/volar/issues/2233))
 - fix: fixed template `Type 'void' has no call signatures` errors ([#2225](https://github.com/johnsoncodehk/volar/issues/2225))
 - fix(vue-tsc): shim `vue-tsc/out/proxy.js` for vite-plugin-checker (https://github.com/fi3ework/vite-plugin-checker/issues/193)
-- perf: rewrite typescript-vue-plugin for much better performance ([#2225](https://github.com/johnsoncodehk/volar/issues/2225))
+- perf: rewrite typescript-vue-plugin for much better performance
 
 ### Special Sponsor
 
