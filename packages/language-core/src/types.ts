@@ -75,6 +75,5 @@ export interface LanguageModule<T extends SourceFile = SourceFile> {
 
 export type LanguageServiceHost = ts.LanguageServiceHost & {
 	getTypeScriptModule(): typeof import('typescript/lib/tsserverlibrary');
-	isTsPlugin?: boolean,
 	isTsc?: boolean,
 };

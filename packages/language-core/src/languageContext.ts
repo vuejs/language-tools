@@ -40,7 +40,7 @@ export function createEmbeddedLanguageServiceHost(
 
 				// .vue.js -> .vue
 				// .vue.ts -> .vue
-				// .vue.d.ts (never)
+				// .vue.d.ts -> [ignored]
 				const vueFileName = fileName.substring(0, fileName.lastIndexOf('.'));
 
 				if (!documentRegistry.get(vueFileName)) {
@@ -129,36 +129,36 @@ export function createEmbeddedLanguageServiceHost(
 
 		let tsFileUpdated = false;
 
-		const remainFileNames = new Set(host.getScriptFileNames());
-		const sourceFilesToUpdate: [SourceFile, LanguageModule, ts.IScriptSnapshot][] = [];
+		const checkRemains = new Set(host.getScriptFileNames());
+		const sourceFilesShouldUpdate: [SourceFile, LanguageModule, ts.IScriptSnapshot][] = [];
 
 		// .vue
 		for (const [sourceFile, languageModule] of documentRegistry.getAll()) {
-			remainFileNames.delete(sourceFile.fileName);
+			checkRemains.delete(sourceFile.fileName);
+
+			const snapshot = host.getScriptSnapshot(sourceFile.fileName);
+			if (!snapshot) {
+				// delete
+				documentRegistry.delete(sourceFile.fileName)
+				tsFileUpdated = true;
+				continue;
+			}
+
 			const newVersion = host.getScriptVersion(sourceFile.fileName);
 			if (sourceVueFileVersions.get(sourceFile.fileName) !== newVersion) {
+				// update
 				sourceVueFileVersions.set(sourceFile.fileName, newVersion);
-				const snapshot = host.getScriptSnapshot(sourceFile.fileName);
-				if (snapshot) {
-					// update
-					sourceFilesToUpdate.push([sourceFile, languageModule, snapshot]);
-				}
-				else {
-					// delete
-					if (documentRegistry.delete(sourceFile.fileName)) {
-						tsFileUpdated = true;
-					}
-				}
+				sourceFilesShouldUpdate.push([sourceFile, languageModule, snapshot]);
 			}
 		}
 
 		// no any vue file version change, it mean project version was update by ts file change at this time
-		if (!sourceFilesToUpdate.length) {
+		if (!sourceFilesShouldUpdate.length) {
 			tsFileUpdated = true;
 		}
 
 		// add
-		for (const fileName of [...remainFileNames]) {
+		for (const fileName of [...checkRemains]) {
 			const snapshot = host.getScriptSnapshot(fileName);
 			if (snapshot) {
 				for (const languageModule of languageModules) {
@@ -166,7 +166,7 @@ export function createEmbeddedLanguageServiceHost(
 					if (sourceFile) {
 						sourceVueFileVersions.set(sourceFile.fileName, host.getScriptVersion(fileName));
 						documentRegistry.set(fileName, reactive(sourceFile), languageModule);
-						remainFileNames.delete(fileName);
+						checkRemains.delete(fileName);
 						break;
 					}
 				}
@@ -177,7 +177,7 @@ export function createEmbeddedLanguageServiceHost(
 		for (const [oldTsFileName, oldTsFileVersion] of [...sourceTsFileVersions]) {
 			const newVersion = host.getScriptVersion(oldTsFileName);
 			if (oldTsFileVersion !== newVersion) {
-				if (!remainFileNames.has(oldTsFileName) && !host.getScriptSnapshot(oldTsFileName)) {
+				if (!checkRemains.has(oldTsFileName) && !host.getScriptSnapshot(oldTsFileName)) {
 					// delete
 					sourceTsFileVersions.delete(oldTsFileName);
 				}
@@ -189,7 +189,7 @@ export function createEmbeddedLanguageServiceHost(
 			}
 		}
 
-		for (const nowFileName of remainFileNames) {
+		for (const nowFileName of checkRemains) {
 			if (!sourceTsFileVersions.has(nowFileName)) {
 				// add
 				const newVersion = host.getScriptVersion(nowFileName);
@@ -198,7 +198,7 @@ export function createEmbeddedLanguageServiceHost(
 			}
 		}
 
-		for (const [sourceFile, languageModule, snapshot] of sourceFilesToUpdate) {
+		for (const [sourceFile, languageModule, snapshot] of sourceFilesShouldUpdate) {
 
 			forEachEmbeddeds(sourceFile, embedded => {
 				virtualFileVersions.delete(embedded.fileName);
@@ -250,10 +250,7 @@ export function createEmbeddedLanguageServiceHost(
 		}
 
 		for (const fileName of host.getScriptFileNames()) {
-			if (host.isTsPlugin) {
-				tsFileNames.add(fileName); // .vue + .ts
-			}
-			else if (!documentRegistry.has(fileName)) {
+			if (!documentRegistry.has(fileName)) {
 				tsFileNames.add(fileName); // .ts
 			}
 		}
