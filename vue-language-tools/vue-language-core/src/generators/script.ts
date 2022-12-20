@@ -608,7 +608,6 @@ export function generate(
 		const useGlobalThisTypeInCtx = fileName.endsWith('.html');
 
 		codeGen.push(`let __VLS_ctx!: ${useGlobalThisTypeInCtx ? 'typeof globalThis &' : ''}`);
-		codeGen.push(`import('./__VLS_types.js').PickNotAny<__VLS_Ctx, {}> & `);
 		if (sfc.scriptSetup) {
 			codeGen.push(`InstanceType<import('./__VLS_types.js').PickNotAny<typeof __VLS_publicComponent, new () => {}>> & `);
 		}
