@@ -182,6 +182,7 @@
 					"meta.tag.without-attributes.tsx": "jsx-tags",
 					"source.json": "json",
 					"source.json.comments": "jsonc",
+					"source.json5": "json5",
 					"source.yaml": "yaml",
 					"source.toml": "toml",
 					"source.graphql": "graphql"
@@ -224,6 +225,7 @@
 					"meta.tag.without-attributes.tsx": "jsx-tags",
 					"source.json": "json",
 					"source.json.comments": "jsonc",
+					"source.json5": "json5",
 					"source.yaml": "yaml",
 					"source.toml": "toml",
 					"source.graphql": "graphql"
@@ -465,6 +467,10 @@
 							"default": false
 						},
 						"jsonc": {
+							"type": "boolean",
+							"default": false
+						},
+						"json5": {
 							"type": "boolean",
 							"default": false
 						}
