@@ -101,6 +101,7 @@ const dataProvider: html.IHTMLDataProvider = {
 					{ name: 'md' },
 					{ name: 'json' },
 					{ name: 'jsonc' },
+					{ name: 'json5' },
 					{ name: 'yaml' },
 					{ name: 'toml' },
 					{ name: 'gql' },
