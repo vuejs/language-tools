@@ -57,7 +57,7 @@ function createParsedCommandLineBase(
 	extendsSet: Set<string>,
 ): ParsedCommandLine {
 
-	let vueOptions = {};
+	let extendsVueOptions = {};
 	const folder = path.dirname(tsConfigPath);
 
 	extendsSet.add(tsConfigPath);
@@ -66,7 +66,7 @@ function createParsedCommandLineBase(
 		try {
 			const extendsPath = require.resolve(content.raw.extends, { paths: [folder] });
 			if (!extendsSet.has(extendsPath)) {
-				vueOptions = createParsedCommandLine(ts, parseConfigHost, extendsPath, extraFileExtensions, extendsSet).vueOptions;
+				extendsVueOptions = createParsedCommandLine(ts, parseConfigHost, extendsPath, extraFileExtensions, extendsSet).vueOptions;
 			}
 		}
 		catch (error) {
@@ -74,12 +74,24 @@ function createParsedCommandLineBase(
 		}
 	}
 
+	const vueOptions: Partial<ResolvedVueCompilerOptions> = {
+		...extendsVueOptions,
+		...content.raw.vueCompilerOptions,
+	};
+	
+	vueOptions.hooks = vueOptions.hooks?.map(hook => {
+		try {
+			hook = require.resolve(hook, { paths: [folder] });
+		}
+		catch (error) {
+			console.error(error);
+		}
+		return hook;
+	});
+
 	return {
 		...content,
-		vueOptions: {
-			...vueOptions,
-			...content.raw.vueCompilerOptions,
-		},
+		vueOptions,
 	};
 }
 

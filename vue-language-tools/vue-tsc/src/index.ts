@@ -138,13 +138,12 @@ export function createProgram(
 	if (vueCompilerOptions.hooks) {
 		const index = (state.hook?.index ?? -1) + 1;
 		if (index < vueCompilerOptions.hooks.length) {
-			const cbPath = vueCompilerOptions.hooks[index];
-			const dir = program.__vue.languageServiceHost.getCurrentDirectory();
-			const cb = require(require.resolve(cbPath, { paths: [dir] }));
+			const hookPath = vueCompilerOptions.hooks[index];
+			const hook = require(hookPath);
 			state.hook = {
 				program,
 				index,
-				worker: (async () => await cb(program))(),
+				worker: (async () => await hook(program))(),
 			};
 			throw 'hook';
 		}
