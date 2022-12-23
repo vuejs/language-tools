@@ -64,27 +64,21 @@ export = async function (
 							line: (message.endLine ?? message.line) - 1,
 							character: (message.endColumn ?? message.column) - 1,
 						});
+						const map = mapper.getSourceMap(vueFile, embeddedFile.mappings);
 
-						for (const start of mapper.fromEmbeddedLocation(embeddedFile.fileName, msgStart)) {
+						for (const start of map.toSourceOffsets(msgStart)) {
 
-							if (start.mapping && !start.mapping.data.diagnostic)
+							if (!start[1].data.diagnostic)
 								continue;
 
-							if (start.fileName !== vueFile.fileName)
-								continue;
+							for (const end of map.toSourceOffsets(msgEnd, true)) {
 
-							for (const end of mapper.fromEmbeddedLocation(
-								embeddedFile.fileName,
-								msgEnd,
-								true,
-							)) {
-
-								if (end.mapping && !end.mapping.data.diagnostic)
+								if (!end[1].data.diagnostic)
 									continue;
 
 								const range = {
-									start: sourceDocument.positionAt(start.offset),
-									end: sourceDocument.positionAt(end.offset),
+									start: sourceDocument.positionAt(start[0]),
+									end: sourceDocument.positionAt(end[0]),
 								};
 								messages.push({
 									...message,
@@ -100,6 +94,7 @@ export = async function (
 
 								break;
 							}
+
 							break;
 						}
 					}

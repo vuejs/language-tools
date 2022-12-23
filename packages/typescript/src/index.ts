@@ -285,13 +285,24 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 	function transformSpan(fileName: string | undefined, textSpan: ts.TextSpan | undefined) {
 		if (!fileName) return;
 		if (!textSpan) return;
-		for (const sourceLoc of core.mapper.fromEmbeddedLocation(fileName, textSpan.start)) {
+		const mapped = core.mapper.fromEmbeddedFileName(fileName);
+		if (mapped) {
+			const map = core.mapper.getSourceMap(mapped.sourceFile, mapped.embedded.mappings);
+			const sourceLoc = map.toSourceOffset(textSpan.start);
+			if (sourceLoc) {
+				return {
+					fileName: mapped.sourceFile.fileName,
+					textSpan: {
+						start: sourceLoc[0],
+						length: textSpan.length,
+					},
+				};
+			}
+		}
+		else {
 			return {
-				fileName: sourceLoc.fileName,
-				textSpan: {
-					start: sourceLoc.offset,
-					length: textSpan.length,
-				},
+				fileName,
+				textSpan,
 			};
 		}
 	}

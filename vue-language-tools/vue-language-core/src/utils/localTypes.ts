@@ -10,6 +10,7 @@ export function getTypesCode(
 	const libName = getVueLibraryName(vueVersion);
 	const slots = getSlotsPropertyName(vueVersion);
 	return `
+// @ts-nocheck
 import type {
 	FunctionalComponent,
 	EmitsOptions,
@@ -127,7 +128,7 @@ export type EventObject<I, K1 extends string, C, E1> = {
 };
 
 type IntrinsicElements = JSX.IntrinsicElements;
-`;
+`.trim();
 }
 
 // TODO: not working for overloads > n (n = 8)

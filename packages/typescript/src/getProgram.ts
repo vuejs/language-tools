@@ -98,33 +98,40 @@ export function getProgram(
 				&& diagnostic.length !== undefined
 			) {
 
-				for (const start of core.mapper.fromEmbeddedLocation(diagnostic.file.fileName, diagnostic.start)) {
+				const mapped = core.mapper.fromEmbeddedFileName(diagnostic.file.fileName);
 
-					if (start.mapping && !start.mapping.data.diagnostic)
+				if (mapped) {
+
+					if (core.typescriptLanguageServiceHost.fileExists?.(mapped.sourceFile.fileName) === false)
 						continue;
 
-					if (!core.typescriptLanguageServiceHost.fileExists?.(start.fileName))
-						continue;
+					const map = core.mapper.getSourceMap(mapped.sourceFile, mapped.embedded.mappings);
 
-					for (const end of core.mapper.fromEmbeddedLocation(
-						diagnostic.file.fileName,
-						diagnostic.start + diagnostic.length,
-						true,
-					)) {
+					for (const start of map.toSourceOffsets(diagnostic.start)) {
 
-						if (end.mapping && !end.mapping.data.diagnostic)
+						if (!start[1].data.diagnostic)
 							continue;
 
-						onMapping(diagnostic, start.fileName, start.offset, end.offset, core.mapper.get(start.fileName)?.[0].text);
+						for (const end of map.toSourceOffsets(diagnostic.start + diagnostic.length, true)) {
 
+							if (!end[1].data.diagnostic)
+								continue;
+
+							onMapping(diagnostic, mapped.sourceFile.fileName, start[0], end[0], mapped.sourceFile.text);
+							break;
+						}
 						break;
 					}
-					break;
+				}
+				else {
+
+					if (core.typescriptLanguageServiceHost.fileExists?.(diagnostic.file.fileName) === false)
+						continue;
+
+					onMapping(diagnostic, diagnostic.file.fileName, diagnostic.start, diagnostic.start + diagnostic.length, diagnostic.file.text);
 				}
 			}
-			else if (
-				diagnostic.file === undefined
-			) {
+			else if (diagnostic.file === undefined) {
 				result.push(diagnostic);
 			}
 		}

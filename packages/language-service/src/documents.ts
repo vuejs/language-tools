@@ -232,7 +232,7 @@ export function parseSourceFileDocuments(mapper: DocumentRegistry) {
 		return vueDocument;
 	}
 	function getAll() {
-		return mapper.getAll().map(file => get(file[0]));
+		return mapper.all().map(file => get(file[0]));
 	}
 }
 

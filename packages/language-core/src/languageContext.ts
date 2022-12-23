@@ -1,7 +1,7 @@
 import { posix as path } from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { createDocumentRegistry, forEachEmbeddeds } from './documentRegistry';
-import { LanguageModule, SourceFile, LanguageServiceHost } from './types';
+import { LanguageModule, SourceFile, LanguageServiceHost, EmbeddedFileKind } from './types';
 import { shallowReactive as reactive } from '@vue/reactivity';
 
 export type EmbeddedLanguageContext = ReturnType<typeof createEmbeddedLanguageServiceHost>;
@@ -72,12 +72,12 @@ export function createEmbeddedLanguageServiceHost(
 		getScriptSnapshot,
 		readDirectory: (_path, extensions, exclude, include, depth) => {
 			const result = host.readDirectory?.(_path, extensions, exclude, include, depth) ?? [];
-			for (const vuePath of documentRegistry.getFileNames()) {
-				const vuePath2 = path.join(_path, path.basename(vuePath));
-				if (path.relative(_path.toLowerCase(), vuePath.toLowerCase()).startsWith('..')) {
+			for (const [sourceFile] of documentRegistry.all()) {
+				const vuePath2 = path.join(_path, path.basename(sourceFile.fileName));
+				if (path.relative(_path.toLowerCase(), sourceFile.fileName.toLowerCase()).startsWith('..')) {
 					continue;
 				}
-				if (!depth && vuePath.toLowerCase() === vuePath2.toLowerCase()) {
+				if (!depth && sourceFile.fileName.toLowerCase() === vuePath2.toLowerCase()) {
 					result.push(vuePath2);
 				}
 				else if (depth) {
@@ -133,7 +133,7 @@ export function createEmbeddedLanguageServiceHost(
 		const sourceFilesShouldUpdate: [SourceFile, LanguageModule, ts.IScriptSnapshot][] = [];
 
 		// .vue
-		for (const [sourceFile, languageModule] of documentRegistry.getAll()) {
+		for (const [sourceFile, languageModule] of documentRegistry.all()) {
 			checkRemains.delete(sourceFile.fileName);
 
 			const snapshot = host.getScriptSnapshot(sourceFile.fileName);
@@ -243,10 +243,12 @@ export function createEmbeddedLanguageServiceHost(
 
 		const tsFileNames = new Set<string>();
 
-		for (const mapped of documentRegistry.getAllEmbeddeds()) {
-			if (mapped.embedded.kind) {
-				tsFileNames.add(mapped.embedded.fileName); // virtual .ts
-			}
+		for (const [sourceFile] of documentRegistry.all()) {
+			forEachEmbeddeds(sourceFile, embedded => {
+				if (embedded.kind === EmbeddedFileKind.TypeScriptHostFile) {
+					tsFileNames.add(embedded.fileName); // virtual .ts
+				}
+			});
 		}
 
 		for (const fileName of host.getScriptFileNames()) {
