@@ -5,6 +5,7 @@ import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import { createProject, Project } from './project';
 import { getInferredCompilerOptions } from './utils/inferredCompilerOptions';
+import { loadCustomPlugins } from './utils/serverConfig';
 import { createUriMap } from './utils/uriMap';
 import { WorkspacesParams } from './workspaces';
 
@@ -22,6 +23,7 @@ export async function createWorkspace(params: WorkspaceParams) {
 
 	let inferredProject: Project | undefined;
 
+	const workspacePlugins = loadCustomPlugins(shared.getPathOfUri(rootUri.toString()), initOptions.configFilePath);
 	const sys = fileSystemHost.getWorkspaceFileSystem(rootUri);
 	const documentRegistry = ts.createDocumentRegistry(sys.useCaseSensitiveFileNames, shared.getPathOfUri(rootUri.toString()));
 	const projects = createUriMap<Project>();
@@ -91,6 +93,7 @@ export async function createWorkspace(params: WorkspaceParams) {
 				const inferOptions = await getInferredCompilerOptions(ts, configurationHost);
 				return createProject({
 					workspace: params,
+					workspacePlugins,
 					rootUri,
 					tsConfig: inferOptions,
 					documentRegistry,
@@ -222,6 +225,7 @@ export async function createWorkspace(params: WorkspaceParams) {
 		if (!project) {
 			project = createProject({
 				workspace: params,
+				workspacePlugins,
 				rootUri: URI.parse(shared.getUriByPath(path.dirname(tsConfig))),
 				tsConfig,
 				documentRegistry,

@@ -7,15 +7,16 @@ import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import { FileSystem, LanguageServerPlugin } from '../types';
-import { loadCustomPlugins } from './utils/serverConfig';
 import { createUriMap } from './utils/uriMap';
 import { WorkspaceParams } from './workspace';
+import { LanguageServicePlugin } from '@volar/language-service';
 
 export interface ProjectParams {
 	workspace: WorkspaceParams;
 	rootUri: URI;
 	tsConfig: path.PosixPath | ts.CompilerOptions,
 	documentRegistry: ts.DocumentRegistry,
+	workspacePlugins: LanguageServicePlugin[],
 }
 
 export type Project = ReturnType<typeof createProject>;
@@ -76,7 +77,7 @@ export async function createProject(params: ProjectParams) {
 				context: languageContext,
 				getPlugins() {
 					return [
-						...loadCustomPlugins(languageServiceHost.getCurrentDirectory(), initOptions.configFilePath),
+						...params.workspacePlugins,
 						...plugins.map(plugin => plugin.semanticService?.getServicePlugins?.(languageServiceHost, vueLs!) ?? []).flat(),
 					];
 				},
