@@ -1,33 +1,38 @@
-import * as shared from '@volar/shared';
 import { ConfigurationHost } from '@volar/language-service';
+import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
-import { DiagnosticModel, FileSystemHost, LanguageServerPlugin, RuntimeEnvironment, LanguageServerInitializationOptions } from '../types';
-import { createSnapshots } from './snapshots';
-import { createWorkspaceProjects, rootTsConfigNames, sortTsConfigs } from './workspaceProjects';
+import { DiagnosticModel, FileSystemHost, LanguageServerInitializationOptions, LanguageServerPlugin } from '../types';
 import { CancellationTokenHost } from './cancellationPipe';
+import { createDocuments } from './documents';
+import { ServerParams } from './server';
+import { createWorkspace, rootTsConfigNames, sortTsConfigs } from './workspace';
+
+export interface WorkspacesParams {
+	server: ServerParams;
+	initParams: vscode.InitializeParams,
+	initOptions: LanguageServerInitializationOptions,
+	plugins: ReturnType<LanguageServerPlugin>[],
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	tsLocalized: ts.MapLike<string> | undefined,
+	fileSystemHost: FileSystemHost,
+	configurationHost: ConfigurationHost | undefined,
+	documents: ReturnType<typeof createDocuments>,
+	cancelTokenHost: CancellationTokenHost,
+}
 
 export interface Workspaces extends ReturnType<typeof createWorkspaces> { }
 
-export function createWorkspaces(
-	runtimeEnv: RuntimeEnvironment,
-	plugins: ReturnType<LanguageServerPlugin>[],
-	fsHost: FileSystemHost,
-	configurationHost: ConfigurationHost | undefined,
-	ts: typeof import('typescript/lib/tsserverlibrary'),
-	tsLocalized: ts.MapLike<string> | undefined,
-	client: vscode.ClientCapabilities,
-	options: LanguageServerInitializationOptions,
-	documents: ReturnType<typeof createSnapshots>,
-	connection: vscode.Connection,
-	cancelTokenHost: CancellationTokenHost,
-) {
+export function createWorkspaces(params: WorkspacesParams) {
+
+	const { fileSystemHost, configurationHost, initParams, initOptions, documents, cancelTokenHost } = params;
+	const { connection, runtimeEnv } = params.server;
 
 	let semanticTokensReq = 0;
 	let documentUpdatedReq = 0;
 
-	const workspaces = new Map<string, ReturnType<typeof createWorkspaceProjects>>();
+	const workspaces = new Map<string, ReturnType<typeof createWorkspace>>();
 
 	documents.onDidChangeContent(params => {
 		updateDiagnostics(params.textDocument.uri);
@@ -35,7 +40,7 @@ export function createWorkspaces(
 	documents.onDidClose(params => {
 		connection.sendDiagnostics({ uri: params.textDocument.uri, diagnostics: [] });
 	});
-	fsHost.onDidChangeWatchedFiles(params => {
+	fileSystemHost.onDidChangeWatchedFiles(params => {
 		const tsConfigChanges = params.changes.filter(change => rootTsConfigNames.includes(change.uri.substring(change.uri.lastIndexOf('/') + 1)));
 		if (tsConfigChanges.length) {
 			reloadDiagnostics();
@@ -54,18 +59,10 @@ export function createWorkspaces(
 		reloadProject,
 		add: (rootUri: URI) => {
 			if (!workspaces.has(rootUri.toString())) {
-				workspaces.set(rootUri.toString(), createWorkspaceProjects(
-					runtimeEnv,
-					plugins,
-					fsHost,
+				workspaces.set(rootUri.toString(), createWorkspace({
+					workspaces: params,
 					rootUri,
-					ts,
-					tsLocalized,
-					documents,
-					configurationHost,
-					cancelTokenHost,
-					options,
-				));
+				}));
 			}
 		},
 		remove: (rootUri: URI) => {
@@ -79,7 +76,7 @@ export function createWorkspaces(
 
 	async function reloadProject() {
 
-		fsHost.clearCache();
+		fileSystemHost.reload();
 
 		for (const [_, workspace] of workspaces) {
 			(await workspace).reload();
@@ -103,17 +100,17 @@ export function createWorkspaces(
 		await updateDiagnostics();
 
 		if (req === semanticTokensReq) {
-			if (client.textDocument?.semanticTokens) {
+			if (initParams.capabilities.textDocument?.semanticTokens) {
 				connection.languages.semanticTokens.refresh();
 			}
-			if (client.textDocument?.inlayHint) {
+			if (initParams.capabilities.textDocument?.inlayHint) {
 				connection.languages.inlayHint.refresh();
 			}
 		}
 	}
 	async function updateDiagnostics(docUri?: string) {
 
-		if ((options.diagnosticModel ?? DiagnosticModel.Push) !== DiagnosticModel.Push)
+		if ((initOptions.diagnosticModel ?? DiagnosticModel.Push) !== DiagnosticModel.Push)
 			return;
 
 		const req = ++documentUpdatedReq;

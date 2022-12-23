@@ -1,13 +1,13 @@
 import type * as vscode from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { createSnapshots } from '../utils/snapshots';
-import { AutoInsertRequest } from '../protocol';
-import { createDocumentServiceHost } from '../utils/documentServiceHost';
+import { createDocuments } from '../documents';
+import { AutoInsertRequest } from '../../protocol';
+import { createSyntaxServicesHost } from '../syntaxServicesHost';
 
 export function register(
 	connection: vscode.Connection,
-	documents: ReturnType<typeof createSnapshots>,
-	documentServiceHost: ReturnType<typeof createDocumentServiceHost>,
+	documents: ReturnType<typeof createDocuments>,
+	documentServiceHost: ReturnType<typeof createSyntaxServicesHost>,
 ) {
 	connection.onDocumentFormatting(params => {
 		return worker(params.textDocument.uri, document => {

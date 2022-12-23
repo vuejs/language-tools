@@ -1,5 +1,5 @@
 import * as embedded from '@volar/language-service';
-import { DiagnosticModel, LanguageServerPlugin, LanguageServerInitializationOptions } from './types';
+import { DiagnosticModel, LanguageServerPlugin, LanguageServerInitializationOptions } from '../../types';
 import * as vscode from 'vscode-languageserver';
 import { ClientCapabilities } from 'vscode-languageserver';
 

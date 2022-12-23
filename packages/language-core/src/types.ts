@@ -73,7 +73,7 @@ export interface LanguageModule<T extends SourceFile = SourceFile> {
 	proxyLanguageServiceHost?(host: LanguageServiceHost): Partial<LanguageServiceHost>;
 }
 
-export type LanguageServiceHost = ts.LanguageServiceHost & {
+export interface LanguageServiceHost extends ts.LanguageServiceHost {
 	getTypeScriptModule(): typeof import('typescript/lib/tsserverlibrary');
 	isTsc?: boolean,
 };

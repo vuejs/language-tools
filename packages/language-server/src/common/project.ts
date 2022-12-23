@@ -1,36 +1,32 @@
-import * as shared from '@volar/shared';
-import * as embeddedLS from '@volar/language-service';
 import * as embedded from '@volar/language-core';
+import * as embeddedLS from '@volar/language-service';
+import * as shared from '@volar/shared';
+import * as path from 'typesafe-path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
+import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
-import { loadCustomPlugins } from './config';
-import { FileSystem, FileSystemHost, LanguageServerInitializationOptions, LanguageServerPlugin, RuntimeEnvironment } from '../types';
-import { createSnapshots } from './snapshots';
-import { ConfigurationHost } from '@volar/language-service';
-import * as html from 'vscode-html-languageservice';
-import * as path from 'typesafe-path';
-import { CancellationTokenHost } from './cancellationPipe';
-import { createUriMap } from './uriMap';
+import { FileSystem, LanguageServerPlugin } from '../types';
+import { loadCustomPlugins } from './utils/serverConfig';
+import { createUriMap } from './utils/uriMap';
+import { WorkspaceParams } from './workspace';
 
-export interface Project extends ReturnType<typeof createProject> { }
-
-export async function createProject(
-	runtimeEnv: RuntimeEnvironment,
-	plugins: ReturnType<LanguageServerPlugin>[],
-	fsHost: FileSystemHost,
-	ts: typeof import('typescript/lib/tsserverlibrary'),
-	rootUri: URI,
+export interface ProjectParams {
+	workspace: WorkspaceParams;
+	rootUri: URI;
 	tsConfig: path.PosixPath | ts.CompilerOptions,
-	tsLocalized: ts.MapLike<string> | undefined,
-	documents: ReturnType<typeof createSnapshots>,
-	configHost: ConfigurationHost | undefined,
-	documentRegistry: ts.DocumentRegistry | undefined,
-	cancelTokenHost: CancellationTokenHost,
-	serverOptions: LanguageServerInitializationOptions,
-) {
+	documentRegistry: ts.DocumentRegistry,
+}
 
-	const sys = fsHost.getWorkspaceFileSystem(rootUri);
+export type Project = ReturnType<typeof createProject>;
+
+export async function createProject(params: ProjectParams) {
+
+	const { tsConfig, documentRegistry, rootUri } = params;
+	const { ts, fileSystemHost, documents, cancelTokenHost, tsLocalized, initOptions, configurationHost } = params.workspace.workspaces;
+	const { plugins } = params.workspace.workspaces;
+	const { runtimeEnv } = params.workspace.workspaces.server;
+	const sys = fileSystemHost.getWorkspaceFileSystem(rootUri);
 
 	let typeRootVersion = 0;
 	let projectVersion = 0;
@@ -46,7 +42,7 @@ export async function createProject(
 	}>();
 	const languageServiceHost = createLanguageServiceHost();
 
-	const disposeWatchEvent = fsHost.onDidChangeWatchedFiles(params => {
+	const disposeWatchEvent = fileSystemHost.onDidChangeWatchedFiles(params => {
 		onWorkspaceFilesChanged(params.changes);
 	});
 	const disposeDocChange = documents.onDidChangeContent(() => {
@@ -80,13 +76,13 @@ export async function createProject(
 				context: languageContext,
 				getPlugins() {
 					return [
-						...loadCustomPlugins(languageServiceHost.getCurrentDirectory(), serverOptions.configFilePath),
+						...loadCustomPlugins(languageServiceHost.getCurrentDirectory(), initOptions.configFilePath),
 						...plugins.map(plugin => plugin.semanticService?.getServicePlugins?.(languageServiceHost, vueLs!) ?? []).flat(),
 					];
 				},
 				env: {
 					rootUri,
-					configurationHost: configHost,
+					configurationHost: configurationHost,
 					fileSystemProvider: runtimeEnv.fileSystemProvide,
 					documentContext: getHTMLDocumentContext(ts, languageServiceHost),
 					schemaRequestService: async uri => {
@@ -164,7 +160,7 @@ export async function createProject(
 					return ts.getDefaultLibFilePath(options);
 				} catch {
 					// web
-					return serverOptions.typescript.tsdk + '/' + ts.getDefaultLibFileName(options);
+					return initOptions.typescript.tsdk + '/' + ts.getDefaultLibFileName(options);
 				}
 			},
 			getProjectVersion: () => projectVersion.toString(),
@@ -176,7 +172,7 @@ export async function createProject(
 			getTypeScriptModule: () => ts,
 		};
 
-		if (serverOptions.noProjectReferences) {
+		if (initOptions.noProjectReferences) {
 			host.getProjectReferences = undefined;
 			host.getCompilationSettings = () => ({
 				...parsedCommandLine.options,
@@ -219,10 +215,10 @@ export async function createProject(
 			}
 
 			if (sys.fileExists(fileName)) {
-				if (serverOptions.maxFileSize) {
+				if (initOptions.maxFileSize) {
 					const fileSize = sys.getFileSize?.(fileName);
-					if (fileSize !== undefined && fileSize > serverOptions.maxFileSize) {
-						console.warn(`IGNORING "${fileName}" because it is too large (${fileSize}bytes > ${serverOptions.maxFileSize}bytes)`);
+					if (fileSize !== undefined && fileSize > initOptions.maxFileSize) {
+						console.warn(`IGNORING "${fileName}" because it is too large (${fileSize}bytes > ${initOptions.maxFileSize}bytes)`);
 						return ts.ScriptSnapshot.fromString('');
 					}
 				}

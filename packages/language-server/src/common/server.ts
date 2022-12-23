@@ -1,44 +1,48 @@
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
-import { FileSystemHost, LanguageServerPlugin, ServerMode, RuntimeEnvironment, LanguageServerInitializationOptions } from './types';
-import { createConfigurationHost } from './utils/configurationHost';
-import { createDocumentServiceHost } from './utils/documentServiceHost';
-import { createSnapshots } from './utils/snapshots';
-import { createWorkspaces } from './utils/workspaces';
-import { setupSemanticCapabilities, setupSyntacticCapabilities } from './registerFeatures';
-import { createCancellationTokenHost } from './utils/cancellationPipe';
+import { FileSystemHost, LanguageServerInitializationOptions, LanguageServerPlugin, RuntimeEnvironment, ServerMode } from '../types';
+import { createCancellationTokenHost } from './cancellationPipe';
+import { createConfigurationHost } from './configurationHost';
+import { createDocuments } from './documents';
+import { createSyntaxServicesHost } from './syntaxServicesHost';
+import { setupSemanticCapabilities, setupSyntacticCapabilities } from './utils/registerFeatures';
+import { createWorkspaces } from './workspaces';
 
-export function createCommonLanguageServer(
+export interface ServerParams {
 	connection: vscode.Connection,
 	runtimeEnv: RuntimeEnvironment,
-	_plugins: LanguageServerPlugin[],
-) {
+	plugins: LanguageServerPlugin[],
+}
 
-	let params: vscode.InitializeParams;
+export function createCommonLanguageServer(params: ServerParams) {
+
+	const { connection, runtimeEnv, plugins: _plugins } = params;
+
+	let initParams: vscode.InitializeParams;
 	let options: LanguageServerInitializationOptions;
 	let roots: URI[] = [];
 	let fsHost: FileSystemHost | undefined;
 	let projects: ReturnType<typeof createWorkspaces> | undefined;
-	let documentServiceHost: ReturnType<typeof createDocumentServiceHost> | undefined;
-	let configHost: ReturnType<typeof createConfigurationHost> | undefined;
+	let documentServiceHost: ReturnType<typeof createSyntaxServicesHost> | undefined;
+	let configurationHost: ReturnType<typeof createConfigurationHost> | undefined;
 	let plugins: ReturnType<LanguageServerPlugin>[];
 
-	const documents = createSnapshots(connection);
+	const documents = createDocuments(connection);
 
 	connection.onInitialize(async _params => {
 
-		params = _params;
-		options = params.initializationOptions;
+		initParams = _params;
+		options = initParams.initializationOptions;
 		plugins = _plugins.map(plugin => plugin(options));
 
-		if (params.capabilities.workspace?.workspaceFolders && params.workspaceFolders) {
-			roots = params.workspaceFolders.map(folder => URI.parse(folder.uri));
+		if (initParams.capabilities.workspace?.workspaceFolders && initParams.workspaceFolders) {
+			roots = initParams.workspaceFolders.map(folder => URI.parse(folder.uri));
 		}
-		else if (params.rootUri) {
-			roots = [URI.parse(params.rootUri)];
+		else if (initParams.rootUri) {
+			roots = [URI.parse(initParams.rootUri)];
 		}
-		else if (params.rootPath) {
-			roots = [URI.file(params.rootPath)];
+		else if (initParams.rootPath) {
+			roots = [URI.file(initParams.rootPath)];
 		}
 
 		const result: vscode.InitializeResult = {
@@ -47,15 +51,15 @@ export function createCommonLanguageServer(
 			},
 		};
 
-		configHost = params.capabilities.workspace?.configuration ? createConfigurationHost(params, connection) : undefined;
+		configurationHost = initParams.capabilities.workspace?.configuration ? createConfigurationHost(initParams, connection) : undefined;
 
 		const serverMode = options.serverMode ?? ServerMode.Semantic;
 
-		setupSyntacticCapabilities(params.capabilities, result.capabilities, options);
+		setupSyntacticCapabilities(initParams.capabilities, result.capabilities, options);
 		await _createDocumentServiceHost();
 
 		if (serverMode === ServerMode.Semantic) {
-			setupSemanticCapabilities(params.capabilities, result.capabilities, options, plugins);
+			setupSemanticCapabilities(initParams.capabilities, result.capabilities, options, plugins);
 			await createLanguageServiceHost();
 		}
 
@@ -70,12 +74,12 @@ export function createCommonLanguageServer(
 
 		return result;
 	});
-	connection.onInitialized(async () => {
+	connection.onInitialized(() => {
 
 		fsHost?.ready(connection);
-		configHost?.ready();
+		configurationHost?.ready();
 
-		if (params.capabilities.workspace?.workspaceFolders) {
+		if (initParams.capabilities.workspace?.workspaceFolders) {
 			connection.workspace.onDidChangeWorkspaceFolders(e => {
 
 				for (const folder of e.added) {
@@ -93,7 +97,7 @@ export function createCommonLanguageServer(
 		if (
 			options.serverMode !== ServerMode.Syntactic
 			&& !options.disableFileWatcher
-			&& params.capabilities.workspace?.didChangeWatchedFiles?.dynamicRegistration
+			&& initParams.capabilities.workspace?.didChangeWatchedFiles?.dynamicRegistration
 		) {
 			connection.client.register(vscode.DidChangeWatchedFilesNotification.type, {
 				watchers: [
@@ -122,11 +126,11 @@ export function createCommonLanguageServer(
 
 		const ts = runtimeEnv.loadTypescript(options.typescript.tsdk);
 
-		documentServiceHost = createDocumentServiceHost(
+		documentServiceHost = createSyntaxServicesHost(
 			runtimeEnv,
 			plugins,
 			ts,
-			configHost,
+			configurationHost,
 			options,
 		);
 
@@ -148,23 +152,22 @@ export function createCommonLanguageServer(
 	async function createLanguageServiceHost() {
 
 		const ts = runtimeEnv.loadTypescript(options.typescript.tsdk);
-		fsHost = runtimeEnv.createFileSystemHost(ts, params.capabilities);
+		fsHost = runtimeEnv.createFileSystemHost(ts, initParams.capabilities);
 
-		const tsLocalized = params.locale ? await runtimeEnv.loadTypescriptLocalized(options.typescript.tsdk, params.locale) : undefined;
+		const tsLocalized = initParams.locale ? await runtimeEnv.loadTypescriptLocalized(options.typescript.tsdk, initParams.locale) : undefined;
 		const cancelTokenHost = createCancellationTokenHost(options.cancellationPipeName);
-		const _projects = createWorkspaces(
-			runtimeEnv,
-			plugins,
-			fsHost,
-			configHost,
+		const _projects = createWorkspaces({
+			server: params,
+			fileSystemHost: fsHost,
+			configurationHost,
 			ts,
 			tsLocalized,
-			params.capabilities,
-			options,
+			initParams: initParams,
+			initOptions: options,
 			documents,
-			connection,
 			cancelTokenHost,
-		);
+			plugins,
+		});
 		projects = _projects;
 
 		for (const root of roots) {
@@ -172,7 +175,7 @@ export function createCommonLanguageServer(
 		}
 
 		(await import('./features/customFeatures')).register(connection, projects);
-		(await import('./features/languageFeatures')).register(connection, projects, params, cancelTokenHost);
+		(await import('./features/languageFeatures')).register(connection, projects, initParams, cancelTokenHost);
 
 		for (const plugin of plugins) {
 			plugin.semanticService?.onInitialize?.(connection, getLanguageService as any);

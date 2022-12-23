@@ -4,8 +4,8 @@ import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import { FsReadDirectoryRequest, FsReadFileRequest, FsStatRequest } from '../protocol';
 import { FileSystem, FileSystemHost } from '../types';
-import { matchFiles } from './ts/utilities';
-import { createUriMap } from './uriMap';
+import { matchFiles } from './typescript/utilities';
+import { createUriMap } from '../common/utils/uriMap';
 import * as shared from '@volar/shared';
 
 let currentCwd = '/';
@@ -60,7 +60,7 @@ export function createWebFileSystemHost(): FileSystemHost {
 			}
 			onReadys.length = 0;
 		},
-		clearCache() {
+		reload() {
 			root.dirs.clear();
 			root.fileTexts.clear();
 			root.fileTypes.clear();

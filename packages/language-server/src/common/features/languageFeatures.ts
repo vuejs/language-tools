@@ -1,10 +1,10 @@
 import * as embedded from '@volar/language-service';
 import * as vscode from 'vscode-languageserver';
-import { AutoInsertRequest, FindFileReferenceRequest, ShowReferencesNotification } from '../protocol';
-import { CancellationTokenHost } from '../utils/cancellationPipe';
-import type { Workspaces } from '../utils/workspaces';
+import { AutoInsertRequest, FindFileReferenceRequest, ShowReferencesNotification } from '../../protocol';
+import { CancellationTokenHost } from '../cancellationPipe';
+import type { Workspaces } from '../workspaces';
 import * as shared from '@volar/shared';
-import { semanticTokensLegend } from '../registerFeatures';
+import { semanticTokensLegend } from '../utils/registerFeatures';
 
 export function register(
 	connection: vscode.Connection,

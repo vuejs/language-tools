@@ -18,7 +18,6 @@ export async function getInferredCompilerOptions(
 	const experimentalDecorators = readExperimentalDecorators();
 	const strictNullChecks = readImplicitStrictNullChecks();
 	const strictFunctionTypes = readImplicitStrictFunctionTypes();
-
 	const options: ts.CompilerOptions = {
 		...inferredProjectCompilerOptions('typescript'),
 		allowJs: true,

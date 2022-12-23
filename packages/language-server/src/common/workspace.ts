@@ -1,38 +1,32 @@
 import * as shared from '@volar/shared';
-import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'typesafe-path';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
-import { createProject, Project } from './project';
-import { LanguageServerPlugin, RuntimeEnvironment, FileSystemHost, LanguageServerInitializationOptions } from '../types';
-import { createSnapshots } from './snapshots';
-import { getInferredCompilerOptions } from './inferredCompilerOptions';
 import { URI } from 'vscode-uri';
-import { ConfigurationHost } from '@volar/language-service';
-import { CancellationTokenHost } from './cancellationPipe';
-import { createUriMap } from './uriMap';
+import { createProject, Project } from './project';
+import { getInferredCompilerOptions } from './utils/inferredCompilerOptions';
+import { createUriMap } from './utils/uriMap';
+import { WorkspacesParams } from './workspaces';
 
 export const rootTsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 
-export async function createWorkspaceProjects(
-	runtimeEnv: RuntimeEnvironment,
-	plugins: ReturnType<LanguageServerPlugin>[],
-	fsHost: FileSystemHost,
+export interface WorkspaceParams {
+	workspaces: WorkspacesParams;
 	rootUri: URI,
-	ts: typeof import('typescript/lib/tsserverlibrary'),
-	tsLocalized: ts.MapLike<string> | undefined,
-	documents: ReturnType<typeof createSnapshots>,
-	configHost: ConfigurationHost | undefined,
-	cancelTokenHost: CancellationTokenHost,
-	serverOptions: LanguageServerInitializationOptions,
-) {
+}
+
+export async function createWorkspace(params: WorkspaceParams) {
+
+	const { rootUri } = params;
+	const { ts, fileSystemHost, initOptions, configurationHost } = params.workspaces;
 
 	let inferredProject: Project | undefined;
 
-	const sys = fsHost.getWorkspaceFileSystem(rootUri);
+	const sys = fileSystemHost.getWorkspaceFileSystem(rootUri);
 	const documentRegistry = ts.createDocumentRegistry(sys.useCaseSensitiveFileNames, shared.getPathOfUri(rootUri.toString()));
 	const projects = createUriMap<Project>();
 	const rootTsConfigs = new Set(sys.readDirectory(shared.getPathOfUri(rootUri.toString()), rootTsConfigNames, undefined, ['**/*']).map(fileName => shared.normalizeFileName(fileName)));
-	const disposeWatch = fsHost.onDidChangeWatchedFiles(async (params) => {
+	const disposeWatch = fileSystemHost.onDidChangeWatchedFiles(async (params) => {
 		const disposes: Promise<any>[] = [];
 		for (const change of params.changes) {
 			if (rootTsConfigNames.includes(change.uri.substring(change.uri.lastIndexOf('/') + 1))) {
@@ -94,21 +88,13 @@ export async function createWorkspaceProjects(
 	function getInferredProject() {
 		if (!inferredProject) {
 			inferredProject = (async () => {
-				const inferOptions = await getInferredCompilerOptions(ts, configHost);
-				return createProject(
-					runtimeEnv,
-					plugins,
-					fsHost,
-					ts,
+				const inferOptions = await getInferredCompilerOptions(ts, configurationHost);
+				return createProject({
+					workspace: params,
 					rootUri,
-					inferOptions,
-					tsLocalized,
-					documents,
-					configHost,
+					tsConfig: inferOptions,
 					documentRegistry,
-					cancelTokenHost,
-					serverOptions,
-				);
+				});
 			})();
 		}
 		return inferredProject;
@@ -164,7 +150,7 @@ export async function createWorkspaceProjects(
 
 					let chains = await getReferencesChains(project.getParsedCommandLine(), rootTsConfig, []);
 
-					if (serverOptions.reverseConfigFilePriority) {
+					if (initOptions.reverseConfigFilePriority) {
 						chains = chains.reverse();
 					}
 
@@ -234,20 +220,12 @@ export async function createWorkspaceProjects(
 		const tsConfig = shared.normalizeFileName(_tsConfig);
 		let project = projects.pathGet(tsConfig);
 		if (!project) {
-			project = createProject(
-				runtimeEnv,
-				plugins,
-				fsHost,
-				ts,
-				URI.parse(shared.getUriByPath(path.dirname(tsConfig))),
+			project = createProject({
+				workspace: params,
+				rootUri: URI.parse(shared.getUriByPath(path.dirname(tsConfig))),
 				tsConfig,
-				tsLocalized,
-				documents,
-				configHost,
 				documentRegistry,
-				cancelTokenHost,
-				serverOptions,
-			);
+			});
 			projects.pathSet(tsConfig, project);
 		}
 		return project;

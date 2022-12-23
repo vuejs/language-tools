@@ -1,12 +1,12 @@
-import { LanguageServerInitializationOptions, LanguageServerPlugin, RuntimeEnvironment } from '../types';
 import * as embedded from '@volar/language-service';
 import { URI } from 'vscode-uri';
-import { loadCustomPlugins } from './config';
+import { LanguageServerInitializationOptions, LanguageServerPlugin, RuntimeEnvironment } from '../types';
+import { loadCustomPlugins } from './utils/serverConfig';
 
 // fix build
 import type * as _ from 'vscode-languageserver-textdocument';
 
-export function createDocumentServiceHost(
+export function createSyntaxServicesHost(
 	runtimeEnv: RuntimeEnvironment,
 	plugins: ReturnType<LanguageServerPlugin>[],
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -14,7 +14,7 @@ export function createDocumentServiceHost(
 	initOptions: LanguageServerInitializationOptions,
 ) {
 
-	const workspaceServices = new Map<string, embedded.DocumentService>();
+	const services = new Map<string, embedded.DocumentService>();
 	const untitledService = create(URI.from({ scheme: 'untitled' }));
 
 	return {
@@ -24,15 +24,15 @@ export function createDocumentServiceHost(
 	};
 
 	function add(rootUri: URI) {
-		workspaceServices.set(rootUri.toString(), create(rootUri));
+		services.set(rootUri.toString(), create(rootUri));
 	}
 
 	function remove(rootUri: URI) {
-		workspaceServices.delete(rootUri.toString());
+		services.delete(rootUri.toString());
 	}
 
 	function get(documentUri: string) {
-		for (const [rootUri, service] of workspaceServices) {
+		for (const [rootUri, service] of services) {
 			if (documentUri.startsWith(rootUri)) {
 				return service;
 			}

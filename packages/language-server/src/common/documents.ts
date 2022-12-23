@@ -1,7 +1,7 @@
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { createUriMap } from './uriMap';
+import { createUriMap } from './utils/uriMap';
 import type * as _ from 'vscode-uri';
 
 interface IncrementalScriptSnapshotChange {
@@ -175,7 +175,7 @@ function _combineContinuousChangeRanges(a: ts.TextChangeRange, b: ts.TextChangeR
 	return { span: { start, length }, newLength };
 }
 
-export function createSnapshots(connection: vscode.Connection) {
+export function createDocuments(connection: vscode.Connection) {
 
 	const snapshots = createUriMap<IncrementalScriptSnapshot>();
 	const onDidChangeContents = new Set<(params: vscode.DidChangeTextDocumentParams) => void>();

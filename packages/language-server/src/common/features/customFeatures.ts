@@ -1,8 +1,8 @@
 import * as shared from '@volar/shared';
 import * as path from 'typesafe-path';
 import * as vscode from 'vscode-languageserver';
-import type { Workspaces } from '../utils/workspaces';
-import { GetMatchTsConfigRequest, ReloadProjectNotification, VerifyAllScriptsNotification, WriteVirtualFilesNotification, GetVirtualFileNamesRequest, GetVirtualFileRequest, ReportStats } from '../protocol';
+import type { Workspaces } from '../workspaces';
+import { GetMatchTsConfigRequest, ReloadProjectNotification, VerifyAllScriptsNotification, WriteVirtualFilesNotification, GetVirtualFileNamesRequest, GetVirtualFileRequest, ReportStats } from '../../protocol';
 import { forEachEmbeddeds } from '@volar/language-core';
 
 export function register(
