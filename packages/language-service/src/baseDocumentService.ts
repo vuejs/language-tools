@@ -1,6 +1,5 @@
-import { createDocumentRegistry, LanguageModule, SourceFile } from '@volar/language-core';
+import { createDocumentRegistry, LanguageModule } from '@volar/language-core';
 import * as shared from '@volar/shared';
-import { shallowReactive as reactive } from '@vue/reactivity';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as autoInsert from './documentFeatures/autoInsert';
 import * as colorPresentations from './documentFeatures/colorPresentations';
@@ -10,7 +9,7 @@ import * as foldingRanges from './documentFeatures/foldingRanges';
 import * as format from './documentFeatures/format';
 import * as linkedEditingRanges from './documentFeatures/linkedEditingRanges';
 import * as selectionRanges from './documentFeatures/selectionRanges';
-import { parseSourceFileDocument, SourceFileDocument } from './documents';
+import { parseSourceFileDocuments } from './documents';
 import { DocumentServiceRuntimeContext, LanguageServicePlugin, LanguageServicePluginContext } from './types';
 import { singleFileTypeScriptServiceHost, updateSingleFileTypeScriptServiceHost } from './utils/singleFileTypeScriptService';
 
@@ -26,10 +25,9 @@ export function createDocumentServiceContext(options: {
 	env: LanguageServicePluginContext['env'];
 }) {
 
-	const ts = options.ts;
-
 	let plugins: LanguageServicePlugin[];
 
+	const ts = options.ts;
 	const pluginContext: LanguageServicePluginContext = {
 		typescript: {
 			module: ts,
@@ -39,9 +37,9 @@ export function createDocumentServiceContext(options: {
 		env: options.env,
 	};
 	const languageModules = options.getLanguageModules();
-	const vueDocuments = new WeakMap<TextDocument, [SourceFileDocument, LanguageModule]>();
-	const fileMods = new WeakMap<SourceFile, LanguageModule>();
-	const mapper = createDocumentRegistry();
+	const lastUpdateVersions = new Map<string, number>();
+	const virtualFiles = createDocumentRegistry(languageModules);
+	const textDocumentMapper = parseSourceFileDocuments(virtualFiles);
 	const context: DocumentServiceRuntimeContext = {
 		typescript: ts,
 		get plugins() {
@@ -54,38 +52,17 @@ export function createDocumentServiceContext(options: {
 			return plugins;
 		},
 		pluginContext,
-		getSourceFileDocument(document) {
-
-			let cache = vueDocuments.get(document);
-
-			if (cache) {
-				if (cache[0].file.text !== document.getText()) {
-					cache[1].updateSourceFile(cache[0].file, ts.ScriptSnapshot.fromString(document.getText()));
-					mapper.onSourceFileUpdated(cache[0].file);
-				}
-				return cache;
+		getVirtualDocuments(document) {
+			let lastVersion = lastUpdateVersions.get(document.uri);
+			if (lastVersion === undefined || lastVersion !== document.version) {
+				const fileName = shared.getPathOfUri(document.uri);
+				virtualFiles.update(fileName, ts.ScriptSnapshot.fromString(document.getText()));
+				lastUpdateVersions.set(document.uri, document.version);
 			}
-
-			for (const languageModule of languageModules) {
-				let sourceFile = languageModule.createSourceFile(
-					'/untitled.' + shared.languageIdToSyntax(document.languageId),
-					ts.ScriptSnapshot.fromString(document.getText()),
-				);
-				if (sourceFile) {
-					sourceFile = reactive(sourceFile);
-					const sourceFileDoc = parseSourceFileDocument(sourceFile);
-					cache = [sourceFileDoc, languageModule];
-					vueDocuments.set(document, cache);
-					fileMods.set(sourceFile, languageModule);
-					break;
-				}
-			}
-
-			return cache;
+			return textDocumentMapper.get(document.uri);
 		},
-		updateSourceFile(sourceFile, snapshot) {
-			fileMods.get(sourceFile)!.updateSourceFile(sourceFile, snapshot);
-			mapper.onSourceFileUpdated(sourceFile);
+		updateVirtualFile(fileName, snapshot) {
+			virtualFiles.update(fileName, snapshot);
 		},
 		prepareLanguageServices(document) {
 			if (isTsDocument(document)) {

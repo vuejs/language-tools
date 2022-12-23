@@ -2,7 +2,6 @@ import { posix as path } from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { createDocumentRegistry, forEachEmbeddeds } from './documentRegistry';
 import { LanguageModule, SourceFile, LanguageServiceHost, EmbeddedFileKind } from './types';
-import { shallowReactive as reactive } from '@vue/reactivity';
 
 export type EmbeddedLanguageContext = ReturnType<typeof createEmbeddedLanguageServiceHost>;
 
@@ -28,7 +27,7 @@ export function createEmbeddedLanguageServiceHost(
 	let lastProjectVersion: string | undefined;
 	let tsProjectVersion = 0;
 
-	const documentRegistry = createDocumentRegistry();
+	const documentRegistry = createDocumentRegistry(languageModules);
 	const ts = host.getTypeScriptModule();
 	const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
 	const sourceTsFileVersions = new Map<string, string>();
@@ -43,17 +42,11 @@ export function createEmbeddedLanguageServiceHost(
 				// .vue.d.ts -> [ignored]
 				const vueFileName = fileName.substring(0, fileName.lastIndexOf('.'));
 
-				if (!documentRegistry.get(vueFileName)) {
+				if (!documentRegistry.has(vueFileName)) {
 					// create virtual files
 					const scriptSnapshot = host.getScriptSnapshot(vueFileName);
 					if (scriptSnapshot) {
-						for (const languageModule of languageModules) {
-							const sourceFile = languageModule.createSourceFile(vueFileName, scriptSnapshot);
-							if (sourceFile) {
-								documentRegistry.set(vueFileName, reactive(sourceFile), languageModule);
-								break;
-							}
-						}
+						documentRegistry.update(vueFileName, scriptSnapshot);
 					}
 				}
 
@@ -72,12 +65,12 @@ export function createEmbeddedLanguageServiceHost(
 		getScriptSnapshot,
 		readDirectory: (_path, extensions, exclude, include, depth) => {
 			const result = host.readDirectory?.(_path, extensions, exclude, include, depth) ?? [];
-			for (const [sourceFile] of documentRegistry.all()) {
-				const vuePath2 = path.join(_path, path.basename(sourceFile.fileName));
-				if (path.relative(_path.toLowerCase(), sourceFile.fileName.toLowerCase()).startsWith('..')) {
+			for (const [fileName] of documentRegistry.all()) {
+				const vuePath2 = path.join(_path, path.basename(fileName));
+				if (path.relative(_path.toLowerCase(), fileName.toLowerCase()).startsWith('..')) {
 					continue;
 				}
-				if (!depth && sourceFile.fileName.toLowerCase() === vuePath2.toLowerCase()) {
+				if (!depth && fileName.toLowerCase() === vuePath2.toLowerCase()) {
 					result.push(vuePath2);
 				}
 				else if (depth) {
@@ -130,25 +123,25 @@ export function createEmbeddedLanguageServiceHost(
 		let tsFileUpdated = false;
 
 		const checkRemains = new Set(host.getScriptFileNames());
-		const sourceFilesShouldUpdate: [SourceFile, LanguageModule, ts.IScriptSnapshot][] = [];
+		const sourceFilesShouldUpdate: [string, SourceFile, ts.IScriptSnapshot][] = [];
 
 		// .vue
-		for (const [sourceFile, languageModule] of documentRegistry.all()) {
-			checkRemains.delete(sourceFile.fileName);
+		for (const [fileName, _, virtualFile] of documentRegistry.all()) {
+			checkRemains.delete(fileName);
 
-			const snapshot = host.getScriptSnapshot(sourceFile.fileName);
+			const snapshot = host.getScriptSnapshot(fileName);
 			if (!snapshot) {
 				// delete
-				documentRegistry.delete(sourceFile.fileName)
+				documentRegistry.update(fileName, undefined);
 				tsFileUpdated = true;
 				continue;
 			}
 
-			const newVersion = host.getScriptVersion(sourceFile.fileName);
-			if (sourceVueFileVersions.get(sourceFile.fileName) !== newVersion) {
+			const newVersion = host.getScriptVersion(fileName);
+			if (sourceVueFileVersions.get(fileName) !== newVersion) {
 				// update
-				sourceVueFileVersions.set(sourceFile.fileName, newVersion);
-				sourceFilesShouldUpdate.push([sourceFile, languageModule, snapshot]);
+				sourceVueFileVersions.set(fileName, newVersion);
+				sourceFilesShouldUpdate.push([fileName, virtualFile, snapshot]);
 			}
 		}
 
@@ -161,14 +154,9 @@ export function createEmbeddedLanguageServiceHost(
 		for (const fileName of [...checkRemains]) {
 			const snapshot = host.getScriptSnapshot(fileName);
 			if (snapshot) {
-				for (const languageModule of languageModules) {
-					const sourceFile = languageModule.createSourceFile(fileName, snapshot);
-					if (sourceFile) {
-						sourceVueFileVersions.set(sourceFile.fileName, host.getScriptVersion(fileName));
-						documentRegistry.set(fileName, reactive(sourceFile), languageModule);
-						checkRemains.delete(fileName);
-						break;
-					}
+				const virtualFile = documentRegistry.update(fileName, snapshot);
+				if (virtualFile) {
+					checkRemains.delete(fileName);
 				}
 			}
 		}
@@ -198,9 +186,9 @@ export function createEmbeddedLanguageServiceHost(
 			}
 		}
 
-		for (const [sourceFile, languageModule, snapshot] of sourceFilesShouldUpdate) {
+		for (const [fileName, virtualFile, snapshot] of sourceFilesShouldUpdate) {
 
-			forEachEmbeddeds(sourceFile, embedded => {
+			forEachEmbeddeds(virtualFile, embedded => {
 				virtualFileVersions.delete(embedded.fileName);
 			});
 
@@ -208,19 +196,18 @@ export function createEmbeddedLanguageServiceHost(
 			const newScripts: Record<string, string> = {};
 
 			if (!tsFileUpdated) {
-				forEachEmbeddeds(sourceFile, embedded => {
-					if (embedded.kind) {
+				forEachEmbeddeds(virtualFile, embedded => {
+					if (embedded.kind === EmbeddedFileKind.TypeScriptHostFile) {
 						oldScripts[embedded.fileName] = embedded.text;
 					}
 				});
 			}
 
-			languageModule.updateSourceFile(sourceFile, snapshot);
-			documentRegistry.onSourceFileUpdated(sourceFile);
+			documentRegistry.update(fileName, snapshot);
 
 			if (!tsFileUpdated) {
-				forEachEmbeddeds(sourceFile, embedded => {
-					if (embedded.kind) {
+				forEachEmbeddeds(virtualFile, embedded => {
+					if (embedded.kind === EmbeddedFileKind.TypeScriptHostFile) {
 						newScripts[embedded.fileName] = embedded.text;
 					}
 				});
@@ -243,7 +230,7 @@ export function createEmbeddedLanguageServiceHost(
 
 		const tsFileNames = new Set<string>();
 
-		for (const [sourceFile] of documentRegistry.all()) {
+		for (const [_1, _2, sourceFile] of documentRegistry.all()) {
 			forEachEmbeddeds(sourceFile, embedded => {
 				if (embedded.kind === EmbeddedFileKind.TypeScriptHostFile) {
 					tsFileNames.add(embedded.fileName); // virtual .ts

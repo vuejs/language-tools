@@ -6,7 +6,7 @@ import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
 export type SourceFileDocuments = ReturnType<typeof parseSourceFileDocuments>;
-export type SourceFileDocument = ReturnType<typeof parseSourceFileDocument>;
+export type SourceFileDocument = ReturnType<typeof createVirtualDocumentsHost>;
 
 export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
 
@@ -209,7 +209,7 @@ export function parseSourceFileDocuments(mapper: DocumentRegistry) {
 			const vueFile = mapper.get(fileName);
 
 			if (vueFile) {
-				return get(vueFile[0]);
+				return get(fileName, vueFile[1]);
 			}
 		},
 		fromEmbeddedDocument: (document: TextDocument) => {
@@ -223,20 +223,20 @@ export function parseSourceFileDocuments(mapper: DocumentRegistry) {
 		},
 	};
 
-	function get(sourceFile: SourceFile) {
+	function get(fileName: string, sourceFile: SourceFile) {
 		let vueDocument = _sourceFiles.get(sourceFile);
 		if (!vueDocument) {
-			vueDocument = parseSourceFileDocument(sourceFile);
+			vueDocument = createVirtualDocumentsHost(fileName, sourceFile);
 			_sourceFiles.set(sourceFile, vueDocument);
 		}
 		return vueDocument;
 	}
 	function getAll() {
-		return mapper.all().map(file => get(file[0]));
+		return mapper.all().map(file => get(file[0], file[2]));
 	}
 }
 
-export function parseSourceFileDocument(sourceFile: SourceFile) {
+export function createVirtualDocumentsHost(fileName: string, virtualFile: SourceFile) {
 
 	let documentVersion = 0;
 	const embeddedDocumentVersions = new Map<string, number>();
@@ -245,21 +245,21 @@ export function parseSourceFileDocument(sourceFile: SourceFile) {
 
 	// computed
 	const document = computed(() => TextDocument.create(
-		shared.getUriByPath(sourceFile.fileName),
-		shared.syntaxToLanguageId(sourceFile.fileName.slice(sourceFile.fileName.lastIndexOf('.') + 1)),
+		shared.getUriByPath(virtualFile.fileName),
+		shared.syntaxToLanguageId(virtualFile.fileName.slice(virtualFile.fileName.lastIndexOf('.') + 1)),
 		documentVersion++,
-		sourceFile.text,
+		virtualFile.text,
 	));
 	const allSourceMaps = computed(() => {
 		const result: EmbeddedDocumentSourceMap[] = [];
-		forEachEmbeddeds(sourceFile, embedded => {
+		forEachEmbeddeds(virtualFile, embedded => {
 			result.push(getSourceMap(embedded));
 		});
 		return result;
 	});
 	const teleports = computed(() => {
 		const result: TeleportSourceMap[] = [];
-		forEachEmbeddeds(sourceFile, embedded => {
+		forEachEmbeddeds(virtualFile, embedded => {
 			if (embedded.teleportMappings) {
 				const embeddedDocument = getEmbeddedDocument(embedded)!;
 				const sourceMap = new TeleportSourceMap(
@@ -274,8 +274,9 @@ export function parseSourceFileDocument(sourceFile: SourceFile) {
 	});
 
 	return {
-		uri: shared.getUriByPath(sourceFile.fileName),
-		file: sourceFile,
+		fileName,
+		uri: shared.getUriByPath(fileName),
+		file: virtualFile,
 		getSourceMap,
 		getEmbeddedDocument,
 		getSourceMaps: () => allSourceMaps.value,

@@ -1,5 +1,5 @@
 import { Mapping, SourceMapBase } from '@volar/source-map';
-import { computed, shallowReactive } from '@vue/reactivity';
+import { computed, shallowReactive as reactive } from '@vue/reactivity';
 import { Teleport } from './sourceMaps';
 import type { EmbeddedFile, LanguageModule, PositionCapabilities, SourceFile, TeleportMappingData } from './types';
 
@@ -12,13 +12,13 @@ export function forEachEmbeddeds(file: EmbeddedFile, cb: (embedded: EmbeddedFile
 
 export type DocumentRegistry = ReturnType<typeof createDocumentRegistry>;
 
-export function createDocumentRegistry() {
+export function createDocumentRegistry(languageModules: LanguageModule[]) {
 
-	const files = shallowReactive<Record<string, [SourceFile, LanguageModule]>>({});
+	const files = reactive<Record<string, [string, ts.IScriptSnapshot, SourceFile, LanguageModule]>>({});
 	const all = computed(() => Object.values(files));
 	const sourceMapsByFileName = computed(() => {
 		const map = new Map<string, { sourceFile: SourceFile, embedded: EmbeddedFile; }>();
-		for (const [sourceFile] of all.value) {
+		for (const [_1, _2, sourceFile] of all.value) {
 			forEachEmbeddeds(sourceFile, embedded => {
 				map.set(normalizePath(embedded.fileName), { sourceFile, embedded });
 			});
@@ -28,7 +28,7 @@ export function createDocumentRegistry() {
 	const teleports = computed(() => {
 		const map = new Map<string, Teleport>();
 		for (const key in files) {
-			const [sourceFile] = files[key]!;
+			const [_1, _2, sourceFile] = files[key]!;
 			forEachEmbeddeds(sourceFile, embedded => {
 				if (embedded.teleportMappings) {
 					map.set(normalizePath(embedded.fileName), getTeleport(sourceFile, embedded.teleportMappings));
@@ -41,20 +41,42 @@ export function createDocumentRegistry() {
 	const _teleports = new WeakMap<SourceFile, WeakMap<Mapping<TeleportMappingData>[], Teleport>>();
 
 	return {
-		get: (fileName: string): [SourceFile, LanguageModule] | undefined => files[normalizePath(fileName)],
-		delete: (fileName: string) => delete files[normalizePath(fileName)],
+		update(fileName: string, snapshot: ts.IScriptSnapshot | undefined) {
+			const key = normalizePath(fileName);
+			if (snapshot) {
+				if (files[key]) {
+					const virtualFile = files[key][2];
+					files[key][1] = snapshot;
+					files[key][3].updateSourceFile(virtualFile, snapshot);
+					_sourceMaps.delete(virtualFile);
+					_teleports.delete(virtualFile);
+					return virtualFile; // updated
+				}
+				for (const languageModule of languageModules) {
+					const virtualFile = languageModule.createSourceFile(fileName, snapshot);
+					if (virtualFile) {
+						files[key] = [fileName, snapshot, reactive(virtualFile), languageModule];
+						return virtualFile; // created
+					}
+				}
+			}
+			delete files[key]; // deleted
+		},
+		get(fileName: string) {
+			const key = normalizePath(fileName);
+			if (files[key]) {
+				return [
+					files[key]![1],
+					files[key]![2],
+				] as const;
+			}
+		},
 		has: (fileName: string) => !!files[normalizePath(fileName)],
-		set: (fileName: string, vueFile: SourceFile, languageModule: LanguageModule) => files[normalizePath(fileName)] = [vueFile, languageModule],
 		all: () => all.value,
 		getTeleport: (fileName: string) => teleports.value.get(normalizePath(fileName)),
 		getSourceMap,
 		fromEmbeddedFileName: function (fileName: string) {
 			return sourceMapsByFileName.value.get(normalizePath(fileName));
-		},
-		// TODO: remove this
-		onSourceFileUpdated(file: SourceFile) {
-			_sourceMaps.delete(file);
-			_teleports.delete(file);
 		},
 	};
 

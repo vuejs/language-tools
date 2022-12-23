@@ -20,7 +20,7 @@ export function getDocumentServicePlugins(
 ) {
 
 	const vuePlugin = useVuePlugin({
-		getVueDocument: doc => context.getSourceFileDocument(doc)?.[0],
+		getVueDocument: doc => context.getVirtualDocuments(doc),
 	});
 	const htmlPlugin = useHtmlPlugin();
 	const pugPlugin = usePugPlugin();
@@ -28,7 +28,7 @@ export function getDocumentServicePlugins(
 	const jsonPlugin = useJsonPlugin();
 	const tsPlugin = useTsPlugin();
 	const autoWrapParenthesesPlugin = useAutoWrapParenthesesPlugin({
-		getVueDocument: doc => context.getSourceFileDocument(doc)?.[0],
+		getVueDocument: doc => context.getVirtualDocuments(doc),
 	});
 	const autoAddSpacePlugin = useAutoAddSpacePlugin();
 	const pugFormatPlugin = usePugFormatPlugin();

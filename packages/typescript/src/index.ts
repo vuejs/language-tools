@@ -58,10 +58,10 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 
 	// apis
 	function organizeImports(args: ts.OrganizeImportsArgs, formatOptions: ts.FormatCodeSettings, preferences: ts.UserPreferences | undefined): ReturnType<ts.LanguageService['organizeImports']> {
-		const file = core.mapper.get(args.fileName);
 		let edits: readonly ts.FileTextChanges[] = [];
+		const file = core.mapper.get(args.fileName)?.[1];
 		if (file) {
-			embedded.forEachEmbeddeds(file[0], embedded => {
+			embedded.forEachEmbeddeds(file, embedded => {
 				if (embedded.kind && embedded.capabilities.codeAction) {
 					edits = edits.concat(ls.organizeImports({
 						...args,

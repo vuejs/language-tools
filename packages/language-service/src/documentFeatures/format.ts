@@ -22,7 +22,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 			range = vscode.Range.create(document.positionAt(0), document.positionAt(document.getText().length));
 		}
 
-		const vueDocument = context.getSourceFileDocument(document);
+		const vueDocument = context.getVirtualDocuments(document);
 		const originalDocument = document;
 		const rootEdits = onTypeParams
 			? await tryFormat(document, onTypeParams.position, undefined, onTypeParams.ch)
@@ -43,7 +43,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 			tryUpdateVueDocument();
 
-			const embeddeds = getEmbeddedsByLevel(vueDocument[0], level++);
+			const embeddeds = getEmbeddedsByLevel(vueDocument, level++);
 
 			if (embeddeds.length === 0)
 				break;
@@ -58,7 +58,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 				if (!embedded.capabilities.documentFormatting)
 					continue;
 
-				const sourceMap = vueDocument[0].getSourceMap(embedded);
+				const sourceMap = vueDocument.getSourceMap(embedded);
 				const initialIndentBracket = typeof embedded.capabilities.documentFormatting === 'object' && initialIndentLanguageId[sourceMap.mappedDocument.languageId]
 					? embedded.capabilities.documentFormatting.initialIndentBracket
 					: undefined;
@@ -133,11 +133,11 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 				tryUpdateVueDocument();
 
-				const sourceMap = vueDocument[0].getSourceMaps().find(sourceMap => sourceMap.mappedDocument.uri === toPatchIndent?.sourceMapEmbeddedDocumentUri);
+				const sourceMap = vueDocument.getSourceMaps().find(sourceMap => sourceMap.mappedDocument.uri === toPatchIndent?.sourceMapEmbeddedDocumentUri);
 
 				if (sourceMap) {
 
-					const indentEdits = patchInterpolationIndent(vueDocument[0], sourceMap);
+					const indentEdits = patchInterpolationIndent(vueDocument, sourceMap);
 
 					if (indentEdits.length > 0) {
 						applyEdits(indentEdits);
@@ -158,8 +158,8 @@ export function register(context: DocumentServiceRuntimeContext) {
 		return [textEdit];
 
 		function tryUpdateVueDocument() {
-			if (vueDocument && vueDocument[0].file.text !== document.getText()) {
-				context.updateSourceFile(vueDocument[0].file, ts.ScriptSnapshot.fromString(document.getText()));
+			if (vueDocument && vueDocument.file.text !== document.getText()) {
+				context.updateVirtualFile(vueDocument.fileName, ts.ScriptSnapshot.fromString(document.getText()));
 			}
 		}
 

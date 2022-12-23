@@ -35,13 +35,13 @@ export async function documentArgFeatureWorker<T, K>(
 	combineResult?: (results: NonNullable<Awaited<T>>[]) => NonNullable<Awaited<T>>,
 ) {
 
-	const vueDocument = context.getSourceFileDocument(document);
+	const vueDocument = context.getVirtualDocuments(document);
 
 	let results: NonNullable<Awaited<T>>[] = [];
 
 	if (vueDocument) {
 
-		await visitEmbedded(vueDocument[0], async sourceMap => {
+		await visitEmbedded(vueDocument, async sourceMap => {
 
 			if (!isValidSourceMap(sourceMap))
 				return true;

@@ -75,7 +75,7 @@ export function register(
 		const project = await projects.getProject(document.uri);
 		const fileNames: string[] = [];
 		if (project) {
-			const sourceFile = project.project?.getLanguageService().context.core.mapper.get(shared.getPathOfUri(document.uri))?.[0];
+			const sourceFile = project.project?.getLanguageService().context.core.mapper.get(shared.getPathOfUri(document.uri))?.[1];
 			if (sourceFile) {
 				forEachEmbeddeds(sourceFile, e => {
 					if (e.text && e.kind === 1) {
