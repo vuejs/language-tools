@@ -64,38 +64,43 @@ export = async function (
 							line: (message.endLine ?? message.line) - 1,
 							character: (message.endColumn ?? message.column) - 1,
 						});
-						const map = mapper.getSourceMap(embeddedFile);
 
-						for (const start of map.toSourceOffsets(msgStart)) {
+						for (const [sourceFileName, map] of mapper.getMaps(embeddedFile)) {
 
-							if (!start[1].data.diagnostic)
+							if (sourceFileName !== vueFile.fileName)
 								continue;
 
-							for (const end of map.toSourceOffsets(msgEnd, true)) {
+							for (const start of map.toSourceOffsets(msgStart)) {
 
-								if (!end[1].data.diagnostic)
+								if (!start[1].data.diagnostic)
 									continue;
 
-								const range = {
-									start: sourceDocument.positionAt(start[0]),
-									end: sourceDocument.positionAt(end[0]),
-								};
-								messages.push({
-									...message,
-									line: range.start.line + 1,
-									column: range.start.character + 1,
-									endLine: range.end.line + 1,
-									endColumn: range.end.character + 1,
-								});
-								result.errorCount += message.severity === 2 ? 1 : 0;
-								result.warningCount += message.severity === 1 ? 1 : 0;
-								result.fixableErrorCount += message.severity === 2 && message.fix ? 1 : 0;
-								result.fixableWarningCount += message.severity === 1 && message.fix ? 1 : 0;
+								for (const end of map.toSourceOffsets(msgEnd, true)) {
+
+									if (!end[1].data.diagnostic)
+										continue;
+
+									const range = {
+										start: sourceDocument.positionAt(start[0]),
+										end: sourceDocument.positionAt(end[0]),
+									};
+									messages.push({
+										...message,
+										line: range.start.line + 1,
+										column: range.start.character + 1,
+										endLine: range.end.line + 1,
+										endColumn: range.end.character + 1,
+									});
+									result.errorCount += message.severity === 2 ? 1 : 0;
+									result.warningCount += message.severity === 1 ? 1 : 0;
+									result.fixableErrorCount += message.severity === 2 && message.fix ? 1 : 0;
+									result.fixableWarningCount += message.severity === 1 && message.fix ? 1 : 0;
+
+									break;
+								}
 
 								break;
 							}
-
-							break;
 						}
 					}
 

@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
-import { parseScriptSetupRanges } from '@volar/vue-language-core';
-import { LanguageServicePlugin, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
+import { parseScriptSetupRanges, VueFile } from '@volar/vue-language-core';
+import { LanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -114,7 +114,7 @@ const dataProvider: html.IHTMLDataProvider = {
 };
 
 export default function (options: {
-	getVueDocument(document: TextDocument): SourceFileDocument | undefined,
+	getVueFile: (document: TextDocument) => VueFile | undefined,
 }): LanguageServicePlugin {
 
 	const htmlPlugin = useHtmlPlugin({
@@ -141,7 +141,7 @@ export default function (options: {
 
 		validation: {
 			onSyntactic(document) {
-				return worker(document, (document, _vueDocument, vueSourceFile) => {
+				return worker(document, (document, vueSourceFile) => {
 
 					const result: vscode.Diagnostic[] = [];
 					const sfc = vueSourceFile.sfc;
@@ -190,7 +190,7 @@ export default function (options: {
 		},
 
 		findDocumentSymbols(document) {
-			return worker(document, (document, _vueDocument, vueSourceFile) => {
+			return worker(document, (document, vueSourceFile) => {
 
 				const result: vscode.SymbolInformation[] = [];
 				const descriptor = vueSourceFile.sfc;
@@ -263,7 +263,7 @@ export default function (options: {
 		},
 
 		format(document) {
-			return worker(document, (document, _vueDocument, vueSourceFile) => {
+			return worker(document, (document, vueSourceFile) => {
 
 				const blocks = [
 					vueSourceFile.sfc.script,
@@ -306,21 +306,18 @@ export default function (options: {
 		return fn as T;
 	}
 
-	function worker<T>(document: TextDocument, callback: (emptyBlocksDocument: TextDocument, vueDocument: SourceFileDocument, vueSourceFile: vue.VueFile) => T) {
+	function worker<T>(document: TextDocument, callback: (emptyBlocksDocument: TextDocument, vueSourceFile: vue.VueFile) => T) {
 
-		const vueDocument = options.getVueDocument(document);
-		if (!vueDocument)
-			return;
+		const vueFile = options.getVueFile(document);
+		if (vueFile) {
 
-		if (!(vueDocument.rootFile instanceof vue.VueFile))
-			return;
+			let cache = emptyBlocksDocument.get(document);
+			if (!cache || cache[0] !== document.version) {
+				cache = [document.version, createEmptyBlocksDocument(document, vueFile)];
+			}
 
-		let cache = emptyBlocksDocument.get(document);
-		if (!cache || cache[0] !== document.version) {
-			cache = [document.version, createEmptyBlocksDocument(document, vueDocument.rootFile)];
+			return callback(cache[1], vueFile);
 		}
-
-		return callback(cache[1], vueDocument, vueDocument.rootFile);
 	}
 
 }

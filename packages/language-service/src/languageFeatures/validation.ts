@@ -1,8 +1,9 @@
+import { PositionCapabilities } from '@volar/language-core';
 import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { EmbeddedDocumentSourceMap } from '../documents';
+import { SourceMap } from '../documents';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import { languageFeatureWorker } from '../utils/featureWorkers';
@@ -190,8 +191,8 @@ export function register(context: LanguageServiceRuntimeContext) {
 				context,
 				uri,
 				true,
-				function* (arg, map) {
-					if (map.file.capabilities.diagnostic) {
+				function* (arg, _, file) {
+					if (file.capabilities.diagnostic) {
 						yield arg;
 					}
 				},
@@ -236,7 +237,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					return errors;
 				},
-				(errors, sourceMap) => transformErrorRange(sourceMap, errors),
+				(errors, map) => transformErrorRange(map, errors),
 				arr => dedupe.withDiagnostics(arr.flat()),
 			);
 
@@ -247,7 +248,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 		}
 	};
 
-	function transformErrorRange(map: EmbeddedDocumentSourceMap | undefined, errors: vscode.Diagnostic[]) {
+	function transformErrorRange(map: SourceMap<PositionCapabilities> | undefined, errors: vscode.Diagnostic[]) {
 
 		const result: vscode.Diagnostic[] = [];
 
@@ -269,17 +270,18 @@ export function register(context: LanguageServiceRuntimeContext) {
 				const relatedInfos: vscode.DiagnosticRelatedInformation[] = [];
 
 				for (const info of _error.relatedInformation) {
-					const map = context.documents.getMap(info.location.uri);
-					if (map) {
-						const range = map.toSourceRange(info.location.range, data => !!data.diagnostic);
-						if (range) {
-							relatedInfos.push({
-								location: {
-									uri: map.sourceDocument.uri,
-									range,
-								},
-								message: info.message,
-							});
+					if (context.documents.getVirtualFile(info.location.uri)) {
+						for (const [_, map] of context.documents.getMapsByVirtualFileUri(info.location.uri)) {
+							const range = map.toSourceRange(info.location.range, data => !!data.diagnostic);
+							if (range) {
+								relatedInfos.push({
+									location: {
+										uri: map.sourceDocument.uri,
+										range,
+									},
+									message: info.message,
+								});
+							}
 						}
 					}
 					else {

@@ -52,14 +52,14 @@ export function createDocumentServiceContext(options: {
 			return plugins;
 		},
 		pluginContext,
-		getVirtualDocuments(document) {
+		documents: textDocumentMapper,
+		update(document) {
 			let lastVersion = lastUpdateVersions.get(document.uri);
 			if (lastVersion === undefined || lastVersion !== document.version) {
 				const fileName = shared.getPathOfUri(document.uri);
 				virtualFiles.update(fileName, ts.ScriptSnapshot.fromString(document.getText()));
 				lastUpdateVersions.set(document.uri, document.version);
 			}
-			return textDocumentMapper.get(document.uri);
 		},
 		updateVirtualFile(fileName, snapshot) {
 			virtualFiles.update(fileName, snapshot);

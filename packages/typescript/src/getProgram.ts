@@ -105,22 +105,26 @@ export function getProgram(
 					if (core.typescriptLanguageServiceHost.fileExists?.(source[0]) === false)
 						continue;
 
-					const map = core.mapper.getSourceMap(source[2]);
+					for (const [sourceFileName, map] of core.mapper.getMaps(source[2])) {
 
-					for (const start of map.toSourceOffsets(diagnostic.start)) {
-
-						if (!start[1].data.diagnostic)
+						if (sourceFileName !== source[0])
 							continue;
 
-						for (const end of map.toSourceOffsets(diagnostic.start + diagnostic.length, true)) {
+						for (const start of map.toSourceOffsets(diagnostic.start)) {
 
-							if (!end[1].data.diagnostic)
+							if (!start[1].data.diagnostic)
 								continue;
 
-							onMapping(diagnostic, source[0], start[0], end[0], source[1].getText(0, source[1].getLength()));
+							for (const end of map.toSourceOffsets(diagnostic.start + diagnostic.length, true)) {
+
+								if (!end[1].data.diagnostic)
+									continue;
+
+								onMapping(diagnostic, source[0], start[0], end[0], source[1].getText(0, source[1].getLength()));
+								break;
+							}
 							break;
 						}
-						break;
 					}
 				}
 				else {

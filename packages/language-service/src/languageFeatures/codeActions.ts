@@ -34,9 +34,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 			context,
 			uri,
 			{ range, codeActionContext },
-			(_arg, map) => {
+			(_arg, map, file) => {
 
-				if (!map.file.capabilities.codeAction)
+				if (!file.capabilities.codeAction)
 					return [];
 
 				const _codeActionContext: vscode.CodeActionContext = {
@@ -50,11 +50,11 @@ export function register(context: LanguageServiceRuntimeContext) {
 				let minStart: number | undefined;
 				let maxEnd: number | undefined;
 
-				for (const mapping of map.mappings) {
+				for (const mapping of map.map.mappings) {
 					const overlapRange = getOverlapRange(offsetRange.start, offsetRange.end, mapping.sourceRange[0], mapping.sourceRange[1]);
 					if (overlapRange) {
-						const start = map.toGeneratedOffset(overlapRange.start)?.[0];
-						const end = map.toGeneratedOffset(overlapRange.end)?.[0];
+						const start = map.map.toGeneratedOffset(overlapRange.start)?.[0];
+						const end = map.map.toGeneratedOffset(overlapRange.end)?.[0];
 						if (start !== undefined && end !== undefined) {
 							minStart = minStart === undefined ? start : Math.min(start, minStart);
 							maxEnd = maxEnd === undefined ? end : Math.max(end, maxEnd);

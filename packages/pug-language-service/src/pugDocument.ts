@@ -2,6 +2,7 @@ import { SourceMap } from '@volar/language-service';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as html from 'vscode-html-languageservice';
 import { baseParse } from './baseParse';
+import { SourceMapBase } from '@volar/source-map';
 
 export interface PugDocument extends ReturnType<ReturnType<typeof register>> { }
 
@@ -14,7 +15,7 @@ export function register(htmlLs: html.LanguageService) {
 		const sourceMap = new SourceMap(
 			parsed.pugTextDocument,
 			htmlTextDocument,
-			parsed.mappings,
+			new SourceMapBase(parsed.mappings),
 		);
 		const htmlDocument = htmlLs.parseHTMLDocument(htmlTextDocument);
 

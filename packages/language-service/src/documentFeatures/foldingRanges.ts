@@ -11,7 +11,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 		return documentFeatureWorker(
 			context,
 			document,
-			map => !!map.file.capabilities.foldingRange,
+			file => !!file.capabilities.foldingRange,
 			(plugin, document) => plugin.getFoldingRanges?.(document),
 			(data, sourceMap) => transformFoldingRanges(data, range => sourceMap?.toSourceRange(range)),
 			arr => arr.flat(),

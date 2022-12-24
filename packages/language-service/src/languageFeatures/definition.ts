@@ -5,7 +5,7 @@ import { languageFeatureWorker } from '../utils/featureWorkers';
 import * as dedupe from '../utils/dedupe';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { PositionCapabilities, TeleportCapabilities } from '@volar/language-core';
-import { EmbeddedDocumentSourceMap } from '../documents';
+import { SourceMap } from '../documents';
 
 export function register(
 	context: LanguageServiceRuntimeContext,
@@ -97,13 +97,15 @@ export function register(
 					link.originSelectionRange = originSelectionRange;
 				}
 
-				const targetSourceMap = context.documents.getMap(link.targetUri);
+				let foundTargetSelectionRange = false;
 
-				if (targetSourceMap) {
+				for (const [_, targetSourceMap] of context.documents.getMapsByVirtualFileUri(link.targetUri)) {
 
 					const targetSelectionRange = targetSourceMap.toSourceRange(link.targetSelectionRange);
 					if (!targetSelectionRange)
-						return;
+						continue;
+
+					foundTargetSelectionRange = true;
 
 					let targetRange = targetSourceMap.toSourceRange(link.targetRange);
 
@@ -113,6 +115,10 @@ export function register(
 					link.targetSelectionRange = targetSelectionRange;
 				}
 
+				if (context.documents.getVirtualFile(link.targetUri) && !foundTargetSelectionRange) {
+					return;
+				}
+
 				return link;
 			}).filter(shared.notEmpty),
 			arr => dedupe.withLocationLinks(arr.flat()),
@@ -120,7 +126,7 @@ export function register(
 	};
 }
 
-function toSourcePositionPreferSurroundedPosition(map: EmbeddedDocumentSourceMap, mappedRange: vscode.Range, position: vscode.Position) {
+function toSourcePositionPreferSurroundedPosition(map: SourceMap, mappedRange: vscode.Range, position: vscode.Position) {
 
 	let result: vscode.Range | undefined;
 

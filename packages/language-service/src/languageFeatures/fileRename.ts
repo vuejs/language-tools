@@ -8,14 +8,14 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 	return async (oldUri: string, newUri: string) => {
 
-		const vueDocument = context.documents.get(oldUri);
+		const rootFile = context.documents.getRootFile(oldUri);
 
-		if (vueDocument) {
+		if (rootFile) {
 
 			let tsExt: string | undefined;
 
-			forEachEmbeddeds(vueDocument.rootFile, embedded => {
-				if (embedded.kind && embedded.fileName.replace(vueDocument.fileName, '').match(/^\.(js|ts)x?$/)) {
+			forEachEmbeddeds(rootFile, embedded => {
+				if (embedded.kind && embedded.fileName.replace(rootFile.fileName, '').match(/^\.(js|ts)x?$/)) {
 					tsExt = embedded.fileName.substring(embedded.fileName.lastIndexOf('.'));
 				}
 			});

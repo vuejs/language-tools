@@ -38,7 +38,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				let range: [number, number] | undefined;
 
-				for (const mapping of map.mappings) {
+				for (const mapping of map.map.mappings) {
 
 					if (
 						mapping.data.semanticTokens

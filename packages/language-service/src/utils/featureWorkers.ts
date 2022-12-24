@@ -1,15 +1,15 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { visitEmbedded } from './definePlugin';
 import type { DocumentServiceRuntimeContext, LanguageServiceRuntimeContext } from '../types';
-import { LanguageServicePlugin } from '@volar/language-service';
-import { EmbeddedDocumentSourceMap, SourceFileDocument } from '../documents';
+import { LanguageServicePlugin, PositionCapabilities, VirtualFile } from '@volar/language-service';
+import { SourceMap } from '../documents';
 
 export async function documentFeatureWorker<T>(
 	context: DocumentServiceRuntimeContext,
 	document: TextDocument,
-	isValidSourceMap: (sourceMap: EmbeddedDocumentSourceMap) => boolean,
+	isValidSourceMap: (file: VirtualFile, sourceMap: SourceMap<PositionCapabilities>) => boolean,
 	worker: (plugin: LanguageServicePlugin, document: TextDocument) => T,
-	transform: (result: NonNullable<Awaited<T>>, sourceMap: EmbeddedDocumentSourceMap) => T | undefined,
+	transform: (result: NonNullable<Awaited<T>>, sourceMap: SourceMap<PositionCapabilities>) => T | undefined,
 	combineResult?: (results: NonNullable<Awaited<T>>[]) => NonNullable<Awaited<T>>,
 ) {
 	return documentArgFeatureWorker(
@@ -28,22 +28,23 @@ export async function documentArgFeatureWorker<T, K>(
 	context: DocumentServiceRuntimeContext,
 	document: TextDocument,
 	arg: K,
-	isValidSourceMap: (sourceMap: EmbeddedDocumentSourceMap) => boolean,
-	transformArg: (arg: K, sourceMap: EmbeddedDocumentSourceMap) => Generator<K> | K[],
+	isValidSourceMap: (file: VirtualFile, sourceMap: SourceMap<PositionCapabilities>) => boolean,
+	transformArg: (arg: K, sourceMap: SourceMap<PositionCapabilities>) => Generator<K> | K[],
 	worker: (plugin: LanguageServicePlugin, document: TextDocument, arg: K) => T,
-	transform: (result: NonNullable<Awaited<T>>, sourceMap: EmbeddedDocumentSourceMap) => T | undefined,
+	transform: (result: NonNullable<Awaited<T>>, sourceMap: SourceMap<PositionCapabilities>) => T | undefined,
 	combineResult?: (results: NonNullable<Awaited<T>>[]) => NonNullable<Awaited<T>>,
 ) {
 
-	const vueDocument = context.getVirtualDocuments(document);
+	context.update(document);
+	const virtualFile = context.documents.getRootFile(document.uri);
 
 	let results: NonNullable<Awaited<T>>[] = [];
 
-	if (vueDocument) {
+	if (virtualFile) {
 
-		await visitEmbedded(vueDocument, async map => {
+		await visitEmbedded(context.documents, virtualFile, async (file, map) => {
 
-			if (!isValidSourceMap(map))
+			if (!isValidSourceMap(file, map))
 				return true;
 
 			context.prepareLanguageServices(map.mappedDocument);
@@ -102,27 +103,27 @@ export async function languageFeatureWorker<T, K>(
 	context: LanguageServiceRuntimeContext,
 	uri: string,
 	arg: K,
-	transformArg: (arg: K, sourceMap: EmbeddedDocumentSourceMap) => Generator<K> | K[],
-	worker: (plugin: LanguageServicePlugin, document: TextDocument, arg: K, sourceMap: EmbeddedDocumentSourceMap | undefined, vueDocument: SourceFileDocument | undefined) => T,
-	transform: (result: NonNullable<Awaited<T>>, sourceMap: EmbeddedDocumentSourceMap | undefined) => Awaited<T> | undefined,
+	transformArg: (arg: K, sourceMap: SourceMap<PositionCapabilities>, file: VirtualFile) => Generator<K> | K[],
+	worker: (plugin: LanguageServicePlugin, document: TextDocument, arg: K, sourceMap: SourceMap<PositionCapabilities> | undefined, file: VirtualFile | undefined) => T,
+	transform: (result: NonNullable<Awaited<T>>, sourceMap: SourceMap<PositionCapabilities> | undefined) => Awaited<T> | undefined,
 	combineResult?: (results: NonNullable<Awaited<T>>[]) => NonNullable<Awaited<T>>,
 	reportProgress?: (result: NonNullable<Awaited<T>>) => void,
 ) {
 
 	const document = context.getTextDocument(uri);
-	const vueDocument = context.documents.get(uri);
+	const virtualFile = context.documents.getRootFile(uri);
 
 	let results: NonNullable<Awaited<T>>[] = [];
 
-	if (vueDocument) {
+	if (virtualFile) {
 
-		await visitEmbedded(vueDocument, async map => {
+		await visitEmbedded(context.documents, virtualFile, async (file, map) => {
 
-			for (const mappedArg of transformArg(arg, map)) {
+			for (const mappedArg of transformArg(arg, map, file)) {
 
 				for (const plugin of context.plugins) {
 
-					const embeddedResult = await worker(plugin, map.mappedDocument, mappedArg, map, vueDocument);
+					const embeddedResult = await worker(plugin, map.mappedDocument, mappedArg, map, file);
 
 					if (!embeddedResult)
 						continue;

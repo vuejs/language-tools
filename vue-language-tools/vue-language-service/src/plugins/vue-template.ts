@@ -1,11 +1,11 @@
 import useHtmlPlugin from '@volar-plugins/html';
-import { EmbeddedDocumentSourceMap, LanguageServicePlugin, LanguageServicePluginContext, LanguageServiceRuntimeContext } from '@volar/language-service';
+import { LanguageServicePlugin, LanguageServicePluginContext, LanguageServiceRuntimeContext, PositionCapabilities, SourceMap } from '@volar/language-service';
 import * as vue from '@volar/vue-language-core';
 import { hyphenate } from '@vue/shared';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { checkComponentNames, checkEventsOfTag, getElementAttrs, checkPropsOfTag } from '../helpers';
+import { checkComponentNames, checkEventsOfTag, checkPropsOfTag, getElementAttrs } from '../helpers';
 import * as casing from '../ideFeatures/nameCasing';
 import { AttrNameCasing, TagNameCasing } from '../types';
 
@@ -67,19 +67,22 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				if (!options.isSupportedDocument(document))
 					return;
 
-				const map = options.context.documents.getMap(document.uri);
-
-				if (map) {
-					await provideHtmlData(map);
+				for (const [_, map] of options.context.documents.getMapsByVirtualFileUri(document.uri)) {
+					const virtualFile = options.context.documents.getRootFile(map.sourceDocument.uri);
+					if (virtualFile && virtualFile instanceof vue.VueFile) {
+						await provideHtmlData(map, virtualFile);
+					}
 				}
 
 				const htmlComplete = await options.templateLanguagePlugin.complete?.on?.(document, position, context);
-
 				if (!htmlComplete)
 					return;
 
-				if (map) {
-					afterHtmlCompletion(htmlComplete, map);
+				for (const [_, map] of options.context.documents.getMapsByVirtualFileUri(document.uri)) {
+					const virtualFile = options.context.documents.getRootFile(map.sourceDocument.uri);
+					if (virtualFile && virtualFile instanceof vue.VueFile) {
+						afterHtmlCompletion(htmlComplete, map, virtualFile);
+					}
 				}
 
 				return htmlComplete;
@@ -91,10 +94,9 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			if (!options.isSupportedDocument(document))
 				return;
 
-			const map = options.context.documents.getMap(document.uri);
-			if (map) {
+			if (options.context.documents.getVirtualFile(document.uri))
 				options.templateLanguagePlugin.updateCustomData([]);
-			}
+
 			return options.templateLanguagePlugin.doHover?.(document, position);
 		},
 
@@ -105,15 +107,15 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					return;
 
 				const originalResult = await options.templateLanguagePlugin.validation?.onSyntactic?.(document);
-				const map = options.context.documents.getMap(document.uri);
 
-				if (map) {
+				for (const [_, map] of options.context.documents.getMapsByVirtualFileUri(document.uri)) {
 
-					if (!(map.rootFile instanceof vue.VueFile))
-						return;
+					const virtualFile = options.context.documents.getRootFile(map.sourceDocument.uri);
+					if (!virtualFile || !(virtualFile instanceof vue.VueFile))
+						continue;
 
 					const templateErrors: vscode.Diagnostic[] = [];
-					const sfcVueTemplateCompiled = map.rootFile.compiledSFCTemplate;
+					const sfcVueTemplateCompiled = virtualFile.compiledSFCTemplate;
 
 					if (sfcVueTemplateCompiled) {
 
@@ -160,15 +162,17 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				return;
 
 			const result = await options.templateLanguagePlugin.findDocumentSemanticTokens?.(document, range, legend) ?? [];
-			const map = options.context.documents.getMap(document.uri);
 			const scanner = options.getScanner(document);
+			if (!scanner)
+				return;
 
-			if (map && scanner) {
+			for (const [_, map] of options.context.documents.getMapsByVirtualFileUri(document.uri)) {
 
-				if (!(map.rootFile instanceof vue.VueFile))
-					return;
+				const virtualFile = options.context.documents.getRootFile(map.sourceDocument.uri);
+				if (!virtualFile || !(virtualFile instanceof vue.VueFile))
+					continue;
 
-				const templateScriptData = checkComponentNames(context.typescript.module, context.typescript.languageService, map.rootFile);
+				const templateScriptData = checkComponentNames(context.typescript.module, context.typescript.languageService, virtualFile);
 				const components = new Set([
 					...templateScriptData,
 					...templateScriptData.map(hyphenate).filter(name => !nativeTags.has(name)),
@@ -210,12 +214,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		},
 	};
 
-	async function provideHtmlData(map: EmbeddedDocumentSourceMap) {
+	async function provideHtmlData(map: SourceMap<PositionCapabilities>, vueSourceFile: vue.VueFile) {
 
-		if (!(map.rootFile instanceof vue.VueFile))
-			return;
-
-		const vueSourceFile = map.rootFile;
 		const detected = casing.detect(options.context, map.sourceDocument.uri);
 		const [attr, tag] = await Promise.all([
 			context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('volar.completion.preferredAttrNameCase', map.sourceDocument.uri),
@@ -370,10 +370,10 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		]);
 	}
 
-	function afterHtmlCompletion(completionList: vscode.CompletionList, map: EmbeddedDocumentSourceMap) {
+	function afterHtmlCompletion(completionList: vscode.CompletionList, map: SourceMap<PositionCapabilities>, vueSourceFile: vue.VueFile) {
 
 		const replacement = getReplacement(completionList, map.sourceDocument);
-		const componentNames = new Set(checkComponentNames(context.typescript.module, context.typescript.languageService, map.rootFile).map(hyphenate));
+		const componentNames = new Set(checkComponentNames(context.typescript.module, context.typescript.languageService, vueSourceFile).map(hyphenate));
 
 		if (replacement) {
 

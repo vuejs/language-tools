@@ -92,7 +92,7 @@ export function register(
 			if (virtualFile) {
 				return {
 					content: virtualFile.snapshot.getText(0, virtualFile.snapshot.getLength()),
-					mappings: virtualFile.mappings as any,
+					mappings: virtualFile.mappings.filter(mapping => mapping.source === undefined) as any,
 				};
 			}
 		}

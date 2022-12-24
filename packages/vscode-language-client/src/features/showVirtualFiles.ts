@@ -39,10 +39,9 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(update));
 	context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(update));
 	context.subscriptions.push(vscode.window.onDidChangeVisibleTextEditors(update));
-	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(e => {
-		const uris = sourceUriToVirtualUris.get(e.document.uri.toString());
-		if (uris) {
-			for (const uri of uris) {
+	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(() => {
+		for (const [_, virtualUris] of sourceUriToVirtualUris) {
+			for (const uri of virtualUris) {
 				docChangeEvent.fire(vscode.Uri.parse(uri));
 			}
 		}

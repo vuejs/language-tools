@@ -69,14 +69,15 @@ export function register(context: LanguageServiceRuntimeContext) {
 				const results: vscode.Location[] = [];
 
 				for (const reference of data) {
-					const map = context.documents.getMap(reference.uri);
-					if (map) {
-						const range = map.toSourceRange(reference.range, data => !!data.references);
-						if (range) {
-							results.push({
-								uri: map.sourceDocument.uri,
-								range,
-							});
+					if (context.documents.getVirtualFile(reference.uri)) {
+						for (const [_, map] of context.documents.getMapsByVirtualFileUri(reference.uri)) {
+							const range = map.toSourceRange(reference.range, data => !!data.references);
+							if (range) {
+								results.push({
+									uri: map.sourceDocument.uri,
+									range,
+								});
+							}
 						}
 					}
 					else {

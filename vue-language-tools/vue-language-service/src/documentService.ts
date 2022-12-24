@@ -14,22 +14,26 @@ import * as shared from '@volar/shared';
 
 import type * as _1 from 'vscode-languageserver-protocol';
 import type * as _2 from 'vscode-languageserver-textdocument';
+import { VueFile } from '@volar/vue-language-core';
 
 export function getDocumentServicePlugins(
 	context: DocumentServiceRuntimeContext
 ) {
 
-	const vuePlugin = useVuePlugin({
-		getVueDocument: doc => context.getVirtualDocuments(doc),
-	});
+	const getVueFile = (document: _2.TextDocument) => {
+		context.update(document);
+		const virtualFile = context.documents.getVirtualFile(document.uri);
+		if (virtualFile instanceof VueFile) {
+			return virtualFile;
+		}
+	};
+	const vuePlugin = useVuePlugin({ getVueFile });
 	const htmlPlugin = useHtmlPlugin();
 	const pugPlugin = usePugPlugin();
 	const cssPlugin = useCssPlugin();
 	const jsonPlugin = useJsonPlugin();
 	const tsPlugin = useTsPlugin();
-	const autoWrapParenthesesPlugin = useAutoWrapParenthesesPlugin({
-		getVueDocument: doc => context.getVirtualDocuments(doc),
-	});
+	const autoWrapParenthesesPlugin = useAutoWrapParenthesesPlugin({ getVueFile });
 	const autoAddSpacePlugin = useAutoAddSpacePlugin();
 	const pugFormatPlugin = usePugFormatPlugin();
 

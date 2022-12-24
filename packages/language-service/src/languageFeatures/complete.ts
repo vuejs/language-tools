@@ -46,36 +46,33 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				if (cacheData.map) {
 
-					const map = context.documents.getMap(cacheData.map.embeddedDocumentUri);
+					for (const [_, map] of context.documents.getMapsByVirtualFileUri(cacheData.map.embeddedDocumentUri)) {
 
-					if (!map)
-						continue;
+						for (const mapped of map.toGeneratedPositions(position, data => !!data.completion)) {
 
+							if (!cacheData.plugin.complete?.on)
+								continue;
 
-					for (const mapped of map.toGeneratedPositions(position, data => !!data.completion)) {
+							const embeddedCompletionList = await cacheData.plugin.complete.on(map.mappedDocument, mapped, completionContext);
 
-						if (!cacheData.plugin.complete?.on)
-							continue;
+							if (!embeddedCompletionList) {
+								cacheData.list.isIncomplete = false;
+								continue;
+							}
 
-						const embeddedCompletionList = await cacheData.plugin.complete.on(map.mappedDocument, mapped, completionContext);
-
-						if (!embeddedCompletionList) {
-							cacheData.list.isIncomplete = false;
-							continue;
+							cacheData.list = transformCompletionList(
+								embeddedCompletionList,
+								range => map.toSourceRange(range),
+								(newItem, oldItem) => newItem.data = {
+									uri,
+									originalItem: oldItem,
+									pluginId: context.plugins.indexOf(cacheData.plugin),
+									map: {
+										embeddedDocumentUri: map.mappedDocument.uri,
+									},
+								} satisfies PluginCompletionData,
+							);
 						}
-
-						cacheData.list = transformCompletionList(
-							embeddedCompletionList,
-							range => map.toSourceRange(range),
-							(newItem, oldItem) => newItem.data = {
-								uri,
-								originalItem: oldItem,
-								pluginId: context.plugins.indexOf(cacheData.plugin),
-								map: {
-									embeddedDocumentUri: map.mappedDocument.uri,
-								},
-							} satisfies PluginCompletionData,
-						);
 					}
 				}
 				else if (document = context.getTextDocument(uri)) {
@@ -107,7 +104,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 		}
 		else {
 
-			const vueDocument = context.documents.get(uri);
+			const rootFile = context.documents.getRootFile(uri);
 
 			cache = {
 				uri,
@@ -118,9 +115,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 			// monky fix https://github.com/johnsoncodehk/volar/issues/1358
 			let isFirstMapping = true;
 
-			if (vueDocument) {
+			if (rootFile) {
 
-				await visitEmbedded(vueDocument, async map => {
+				await visitEmbedded(context.documents, rootFile, async (_, map) => {
 
 					const plugins = context.plugins.sort(sortPlugins);
 

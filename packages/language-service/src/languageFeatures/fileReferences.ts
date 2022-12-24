@@ -21,12 +21,11 @@ export function register(context: LanguageServiceRuntimeContext) {
 			},
 			(data) => data.map(reference => {
 
-				const map = context.documents.getMap(reference.uri);
-				if (!map) {
+				if (!context.documents.getVirtualFile(reference.uri)) {
 					return reference;
 				}
 
-				if (map) {
+				for (const [_, map] of context.documents.getMapsByVirtualFileUri(reference.uri)) {
 					const range = map.toSourceRange(reference.range);
 					if (range) {
 						reference.uri = map.sourceDocument.uri;
