@@ -169,7 +169,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 		function getEmbeddedFilesByLevel(rootFile: VirtualFile, level: number) {
 
-			const embeddeds = rootFile.embeddeds;
+			const embeddeds = rootFile.embeddedFiles;
 			const embeddedsLevels: VirtualFile[][] = [embeddeds];
 
 			while (true) {
@@ -181,7 +181,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 				for (const embeddeds of embeddedsLevels[embeddedsLevels.length - 1]) {
 
-					nextEmbeddeds = nextEmbeddeds.concat(embeddeds.embeddeds);
+					nextEmbeddeds = nextEmbeddeds.concat(embeddeds.embeddedFiles);
 				}
 
 				embeddedsLevels.push(nextEmbeddeds);

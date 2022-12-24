@@ -23,13 +23,13 @@ export = async function (
 		if (vueFile) {
 
 			const sourceDocument = TextDocument.create('', '', 0, vueFile.snapshot.getText(0, vueFile.snapshot.getLength()));
-			const all: typeof vueFile.embeddeds = [];
+			const all: typeof vueFile.embeddedFiles = [];
 
-			vueFile.embeddeds.forEach(async function visit(embeddedFile) {
+			vueFile.embeddedFiles.forEach(async function visit(embeddedFile) {
 				if (embeddedFile.capabilities.diagnostic) {
 					all.push(embeddedFile);
 				}
-				embeddedFile.embeddeds.forEach(visit);
+				embeddedFile.embeddedFiles.forEach(visit);
 			});
 
 			for (const embeddedFile of all) {

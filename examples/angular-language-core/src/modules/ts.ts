@@ -8,7 +8,7 @@ export function createTsLanguageModule(
 ) {
 
 	const languageModule: LanguageModule<VirtualFile & { ast: ts.SourceFile, snapshot: ts.IScriptSnapshot; }> = {
-		createSourceFile(fileName, snapshot) {
+		createFile(fileName, snapshot) {
 			if (fileName.endsWith('.ts')) {
 				const text = snapshot.getText(0, snapshot.getLength());
 				const ast = ts.createSourceFile(fileName, text, ts.ScriptTarget.Latest);
@@ -28,11 +28,11 @@ export function createTsLanguageModule(
 					},
 					kind: EmbeddedFileKind.TypeScriptHostFile,
 					mappings: virtualFile.mappings,
-					embeddeds: [],
+					embeddedFiles: [],
 				};
 			}
 		},
-		updateSourceFile(sourceFile, snapshot) {
+		updateFile(sourceFile, snapshot) {
 			const text = snapshot.getText(0, snapshot.getLength());
 			const change = snapshot.getChangeRange(sourceFile.snapshot);
 

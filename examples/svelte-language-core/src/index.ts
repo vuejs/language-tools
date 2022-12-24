@@ -7,13 +7,13 @@ import { URI } from 'vscode-uri';
 export * from '@volar/language-core';
 
 export const languageModule: LanguageModule = {
-	createSourceFile(fileName, snapshot) {
+	createFile(fileName, snapshot) {
 		if (fileName.endsWith('.svelte')) {
 			return {
 				fileName,
 				snapshot,
 				kind: EmbeddedFileKind.TextFile,
-				embeddeds: getEmbeddeds(fileName, snapshot.getText(0, snapshot.getLength())),
+				embeddedFiles: getEmbeddeds(fileName, snapshot.getText(0, snapshot.getLength())),
 				capabilities: {
 					diagnostic: true,
 					foldingRange: true,
@@ -26,9 +26,9 @@ export const languageModule: LanguageModule = {
 			};
 		}
 	},
-	updateSourceFile(sourceFile, snapshot) {
+	updateFile(sourceFile, snapshot) {
 		sourceFile.snapshot = snapshot;
-		sourceFile.embeddeds = getEmbeddeds(sourceFile.fileName, sourceFile.snapshot.getText(0, sourceFile.snapshot.getLength()));
+		sourceFile.embeddedFiles = getEmbeddeds(sourceFile.fileName, sourceFile.snapshot.getText(0, sourceFile.snapshot.getLength()));
 	},
 };
 
@@ -128,7 +128,7 @@ function getEmbeddeds(fileName: string, text: string) {
 				documentFormatting: false,
 			},
 			mappings: mappings,
-			embeddeds: [],
+			embeddedFiles: [],
 		});
 
 		return embeddeds;

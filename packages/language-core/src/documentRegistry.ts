@@ -5,7 +5,7 @@ import type { LanguageModule, PositionCapabilities, VirtualFile } from './types'
 
 export function forEachEmbeddeds(file: VirtualFile, cb: (embedded: VirtualFile) => void) {
 	cb(file);
-	for (const child of file.embeddeds) {
+	for (const child of file.embeddedFiles) {
 		forEachEmbeddeds(child, cb);
 	}
 }
@@ -36,11 +36,11 @@ export function createVirtualFilesHost(languageModules: LanguageModule[]) {
 			if (files[key]) {
 				const virtualFile = files[key][2];
 				files[key][1] = snapshot;
-				files[key][3].updateSourceFile(virtualFile, snapshot);
+				files[key][3].updateFile(virtualFile, snapshot);
 				return virtualFile; // updated
 			}
 			for (const languageModule of languageModules) {
-				const virtualFile = languageModule.createSourceFile(fileName, snapshot);
+				const virtualFile = languageModule.createFile(fileName, snapshot);
 				if (virtualFile) {
 					files[key] = [fileName, snapshot, reactive(virtualFile), languageModule];
 					return virtualFile; // created
@@ -51,7 +51,7 @@ export function createVirtualFilesHost(languageModules: LanguageModule[]) {
 			const key = normalizePath(fileName);
 			if (files[key]) {
 				const virtualFile = files[key][2];
-				files[key][3].deleteSourceFile?.(virtualFile);
+				files[key][3].deleteFile?.(virtualFile);
 				delete files[key]; // deleted
 			}
 		},

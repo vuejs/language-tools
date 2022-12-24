@@ -8,7 +8,7 @@ export async function visitEmbedded(
 	rootFile = current,
 ) {
 
-	for (const embedded of current.embeddeds) {
+	for (const embedded of current.embeddedFiles) {
 		if (!await visitEmbedded(documents, embedded, cb, rootFile)) {
 			return false;
 		}

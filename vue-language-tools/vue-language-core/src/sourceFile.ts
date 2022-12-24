@@ -262,7 +262,7 @@ export class VueFile implements VirtualFile {
 				...file,
 				snapshot,
 				mappings,
-				embeddeds: [],
+				embeddedFiles: [],
 			});
 			console.error('Unable to resolve embedded: ' + file.parentFileName + ' -> ' + file.fileName);
 		}
@@ -277,18 +277,18 @@ export class VueFile implements VirtualFile {
 						...file,
 						snapshot,
 						mappings,
-						embeddeds: [],
+						embeddedFiles: [],
 					});
 					remain.splice(i, 1);
 				}
 				else {
 					const parent = findParentStructure(file.parentFileName, childs);
 					if (parent) {
-						parent.embeddeds.push({
+						parent.embeddedFiles.push({
 							...file,
 							snapshot,
 							mappings,
-							embeddeds: [],
+							embeddedFiles: [],
 						});
 						remain.splice(i, 1);
 					}
@@ -300,7 +300,7 @@ export class VueFile implements VirtualFile {
 				if (stru.fileName === fileName) {
 					return stru;
 				}
-				let _stru = findParentStructure(fileName, stru.embeddeds);
+				let _stru = findParentStructure(fileName, stru.embeddedFiles);
 				if (_stru) {
 					return _stru;
 				}
@@ -379,7 +379,7 @@ export class VueFile implements VirtualFile {
 		return this._allEmbeddeds.value.find(e => e.file.fileName.replace(this.fileName, '').match(/^\.(js|ts)x?$/))?.file.fileName ?? '';
 	}
 
-	get embeddeds() {
+	get embeddedFiles() {
 		return this._embeddeds.value;
 	}
 

@@ -13,7 +13,7 @@ export class HTMLTemplateFile implements VirtualFile {
 	};
 	public kind = EmbeddedFileKind.TextFile;
 	public mappings: VirtualFile['mappings'] = [];
-	public embeddeds: VirtualFile['embeddeds'] = [];
+	public embeddedFiles: VirtualFile['embeddedFiles'] = [];
 	public parsed: ParsedTemplate;
 
 	constructor(
@@ -34,7 +34,7 @@ export class HTMLTemplateFile implements VirtualFile {
 				sourceRange: [0, this.text.length],
 			},
 		];
-		this.embeddeds = [
+		this.embeddedFiles = [
 			{
 				fileName: fileName + '.__template.ts',
 				snapshot: this.ts.ScriptSnapshot.fromString(generated.codegen.text),
@@ -48,7 +48,7 @@ export class HTMLTemplateFile implements VirtualFile {
 				},
 				kind: EmbeddedFileKind.TypeScriptHostFile,
 				mappings: generated.codegen.mappings,
-				embeddeds: [],
+				embeddedFiles: [],
 			},
 		];
 		this.parsed = generated.parsed;
@@ -66,20 +66,20 @@ export class HTMLTemplateFile implements VirtualFile {
 				sourceRange: [0, this.text.length],
 			},
 		];
-		this.embeddeds[0].snapshot = this.ts.ScriptSnapshot.fromString(generated.codegen.text);
-		this.embeddeds[0].mappings = generated.codegen.mappings;
+		this.embeddedFiles[0].snapshot = this.ts.ScriptSnapshot.fromString(generated.codegen.text);
+		this.embeddedFiles[0].mappings = generated.codegen.mappings;
 		this.parsed = generated.parsed;
 	}
 }
 
 export function createHtmlLanguageModule(ts: typeof import('typescript/lib/tsserverlibrary')): LanguageModule<HTMLTemplateFile> {
 	return {
-		createSourceFile(fileName, snapshot) {
+		createFile(fileName, snapshot) {
 			if (fileName.endsWith('.html')) {
 				return new HTMLTemplateFile(ts, fileName, snapshot);
 			}
 		},
-		updateSourceFile(sourceFile, snapshot) {
+		updateFile(sourceFile, snapshot) {
 			sourceFile.update(snapshot);
 		},
 	};
