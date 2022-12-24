@@ -88,11 +88,18 @@ export function register(
 	connection.onRequest(GetVirtualFileRequest.type, async params => {
 		const project = await projects.getProject(params.sourceFileUri);
 		if (project) {
-			const virtualFile = project.project?.getLanguageService().context.core.mapper.getSourceByVirtualFileName(params.virtualFileName)?.[2];
-			if (virtualFile) {
+			const sourceAndVirtual = project.project?.getLanguageService().context.core.mapper.getSourceByVirtualFileName(params.virtualFileName);
+			if (sourceAndVirtual) {
+				const virtualFile = sourceAndVirtual[2];
+				const mappings: Record<string, any[]> = {};
+				for (const mapping of virtualFile.mappings) {
+					const sourceUri = shared.getUriByPath(mapping.source ?? sourceAndVirtual[0]);
+					mappings[sourceUri] ??= [];
+					mappings[sourceUri].push(mapping);
+				}
 				return {
 					content: virtualFile.snapshot.getText(0, virtualFile.snapshot.getLength()),
-					mappings: virtualFile.mappings.filter(mapping => mapping.source === undefined) as any,
+					mappings,
 				};
 			}
 		}
