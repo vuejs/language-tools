@@ -6,17 +6,17 @@ export function register(htmlLs: html.LanguageService) {
 	return (pugDoc: PugDocument) => {
 
 		const htmlResult = htmlLs.findDocumentSymbols(
-			pugDoc.sourceMap.mappedDocument,
+			pugDoc.map.mappedDocument,
 			pugDoc.htmlDocument,
 		);
 
 		return transformSymbolInformations(
 			htmlResult,
 			htmlLocation => {
-				const range = pugDoc.sourceMap.toSourceRange(htmlLocation.range);
+				const range = pugDoc.map.toSourceRange(htmlLocation.range);
 				if (range) {
 					return {
-						uri: pugDoc.sourceMap.sourceDocument.uri,
+						uri: pugDoc.map.sourceDocument.uri,
 						range,
 					};
 				}

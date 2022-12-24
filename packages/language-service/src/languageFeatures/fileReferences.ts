@@ -21,7 +21,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			},
 			(data) => data.map(reference => {
 
-				const map = context.documents.sourceMapFromEmbeddedDocumentUri(reference.uri);
+				const map = context.documents.getMap(reference.uri);
 				if (!map) {
 					return reference;
 				}

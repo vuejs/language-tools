@@ -1,5 +1,5 @@
 import useHtmlPlugin from '@volar-plugins/html';
-import { LanguageServicePlugin, LanguageServicePluginContext, LanguageServiceRuntimeContext, SourceFileDocument } from '@volar/language-service';
+import { EmbeddedDocumentSourceMap, LanguageServicePlugin, LanguageServicePluginContext, LanguageServiceRuntimeContext } from '@volar/language-service';
 import * as vue from '@volar/vue-language-core';
 import { hyphenate } from '@vue/shared';
 import * as html from 'vscode-html-languageservice';
@@ -67,10 +67,10 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				if (!options.isSupportedDocument(document))
 					return;
 
-				const vueDocument = options.context.documents.fromEmbeddedDocument(document);
+				const map = options.context.documents.getMap(document.uri);
 
-				if (vueDocument) {
-					await provideHtmlData(vueDocument);
+				if (map) {
+					await provideHtmlData(map);
 				}
 
 				const htmlComplete = await options.templateLanguagePlugin.complete?.on?.(document, position, context);
@@ -78,8 +78,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				if (!htmlComplete)
 					return;
 
-				if (vueDocument) {
-					afterHtmlCompletion(htmlComplete, vueDocument);
+				if (map) {
+					afterHtmlCompletion(htmlComplete, map);
 				}
 
 				return htmlComplete;
@@ -91,8 +91,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			if (!options.isSupportedDocument(document))
 				return;
 
-			const vueDocument = options.context.documents.fromEmbeddedDocument(document);
-			if (vueDocument) {
+			const map = options.context.documents.getMap(document.uri);
+			if (map) {
 				options.templateLanguagePlugin.updateCustomData([]);
 			}
 			return options.templateLanguagePlugin.doHover?.(document, position);
@@ -105,15 +105,15 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					return;
 
 				const originalResult = await options.templateLanguagePlugin.validation?.onSyntactic?.(document);
-				const vueDocument = options.context.documents.fromEmbeddedDocument(document);
+				const map = options.context.documents.getMap(document.uri);
 
-				if (vueDocument) {
+				if (map) {
 
-					if (!(vueDocument?.file instanceof vue.VueSourceFile))
+					if (!(map.rootFile instanceof vue.VueFile))
 						return;
 
 					const templateErrors: vscode.Diagnostic[] = [];
-					const sfcVueTemplateCompiled = vueDocument.file.compiledSFCTemplate;
+					const sfcVueTemplateCompiled = map.rootFile.compiledSFCTemplate;
 
 					if (sfcVueTemplateCompiled) {
 
@@ -160,15 +160,15 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				return;
 
 			const result = await options.templateLanguagePlugin.findDocumentSemanticTokens?.(document, range, legend) ?? [];
-			const vueDocument = options.context.documents.fromEmbeddedDocument(document);
+			const map = options.context.documents.getMap(document.uri);
 			const scanner = options.getScanner(document);
 
-			if (vueDocument && scanner) {
+			if (map && scanner) {
 
-				if (!(vueDocument.file instanceof vue.VueSourceFile))
+				if (!(map.rootFile instanceof vue.VueFile))
 					return;
 
-				const templateScriptData = checkComponentNames(context.typescript.module, context.typescript.languageService, vueDocument.file);
+				const templateScriptData = checkComponentNames(context.typescript.module, context.typescript.languageService, map.rootFile);
 				const components = new Set([
 					...templateScriptData,
 					...templateScriptData.map(hyphenate).filter(name => !nativeTags.has(name)),
@@ -210,16 +210,16 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		},
 	};
 
-	async function provideHtmlData(vueDocument: SourceFileDocument) {
+	async function provideHtmlData(map: EmbeddedDocumentSourceMap) {
 
-		if (!(vueDocument.file instanceof vue.VueSourceFile))
+		if (!(map.rootFile instanceof vue.VueFile))
 			return;
 
-		const vueSourceFile = vueDocument.file;
-		const detected = casing.detect(options.context, vueDocument.uri);
+		const vueSourceFile = map.rootFile;
+		const detected = casing.detect(options.context, map.sourceDocument.uri);
 		const [attr, tag] = await Promise.all([
-			context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('volar.completion.preferredAttrNameCase', vueDocument.uri),
-			context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-pascal' | 'kebab' | 'pascal'>('volar.completion.preferredTagNameCase', vueDocument.uri),
+			context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('volar.completion.preferredAttrNameCase', map.sourceDocument.uri),
+			context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-pascal' | 'kebab' | 'pascal'>('volar.completion.preferredTagNameCase', map.sourceDocument.uri),
 		]);
 		const tagNameCasing = detected.tag.length === 1 && (tag === 'auto-pascal' || tag === 'auto-kebab') ? detected.tag[0] : (tag === 'auto-kebab' || tag === 'kebab') ? TagNameCasing.Kebab : TagNameCasing.Pascal;
 		const attrNameCasing = detected.attr.length === 1 && (attr === 'auto-camel' || attr === 'auto-kebab') ? detected.attr[0] : (attr === 'auto-camel' || attr === 'camel') ? AttrNameCasing.Camel : AttrNameCasing.Kebab;
@@ -370,10 +370,10 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		]);
 	}
 
-	function afterHtmlCompletion(completionList: vscode.CompletionList, vueDocument: SourceFileDocument) {
+	function afterHtmlCompletion(completionList: vscode.CompletionList, map: EmbeddedDocumentSourceMap) {
 
-		const replacement = getReplacement(completionList, vueDocument.getDocument());
-		const componentNames = new Set(checkComponentNames(context.typescript.module, context.typescript.languageService, vueDocument.file).map(hyphenate));
+		const replacement = getReplacement(completionList, map.sourceDocument);
+		const componentNames = new Set(checkComponentNames(context.typescript.module, context.typescript.languageService, map.rootFile).map(hyphenate));
 
 		if (replacement) {
 

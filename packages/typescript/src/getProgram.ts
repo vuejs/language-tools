@@ -59,11 +59,11 @@ export function getProgram(
 
 		if (sourceFile) {
 
-			const mapped = core.mapper.fromEmbeddedFileName(sourceFile.fileName);
+			const source = core.mapper.getSourceByVirtualFileName(sourceFile.fileName);
 
-			if (mapped) {
+			if (source) {
 
-				if (!mapped.embedded.capabilities.diagnostic)
+				if (!source[2].capabilities.diagnostic)
 					return [] as any;
 
 				const errors = transformDiagnostics(ls.getProgram()?.[api](sourceFile, cancellationToken) ?? []);
@@ -98,14 +98,14 @@ export function getProgram(
 				&& diagnostic.length !== undefined
 			) {
 
-				const mapped = core.mapper.fromEmbeddedFileName(diagnostic.file.fileName);
+				const source = core.mapper.getSourceByVirtualFileName(diagnostic.file.fileName);
 
-				if (mapped) {
+				if (source) {
 
-					if (core.typescriptLanguageServiceHost.fileExists?.(mapped.sourceFile.fileName) === false)
+					if (core.typescriptLanguageServiceHost.fileExists?.(source[0]) === false)
 						continue;
 
-					const map = core.mapper.getSourceMap(mapped.sourceFile, mapped.embedded.mappings);
+					const map = core.mapper.getSourceMap(source[2]);
 
 					for (const start of map.toSourceOffsets(diagnostic.start)) {
 
@@ -117,7 +117,7 @@ export function getProgram(
 							if (!end[1].data.diagnostic)
 								continue;
 
-							onMapping(diagnostic, mapped.sourceFile.fileName, start[0], end[0], mapped.sourceFile.text);
+							onMapping(diagnostic, source[0], start[0], end[0], source[1].getText(0, source[1].getLength()));
 							break;
 						}
 						break;

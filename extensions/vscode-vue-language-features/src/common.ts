@@ -5,7 +5,6 @@ import {
 	registerFileReferences,
 	registerReloadProjects,
 	registerServerStats,
-	registerVerifyAll,
 	registerTsConfig,
 	registerShowReferences,
 	registerServerSys,
@@ -121,7 +120,6 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	);
 	registerReloadProjects('volar.action.reloadProject', context, [semanticClient]);
 	registerServerStats('volar.action.serverStats', context, [semanticClient]);
-	registerVerifyAll('volar.action.verifyAllScripts', context, [semanticClient]);
 	registerTsVersion('volar.selectTypeScriptVersion', context, semanticClient,
 		document => {
 			return document.languageId === 'vue'

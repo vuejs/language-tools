@@ -1,8 +1,7 @@
 import * as shared from '@volar/shared';
-import * as path from 'typesafe-path';
 import * as vscode from 'vscode-languageserver';
 import type { Workspaces } from '../workspaces';
-import { GetMatchTsConfigRequest, ReloadProjectNotification, VerifyAllScriptsNotification, WriteVirtualFilesNotification, GetVirtualFileNamesRequest, GetVirtualFileRequest, ReportStats } from '../../protocol';
+import { GetMatchTsConfigRequest, ReloadProjectNotification, WriteVirtualFilesNotification, GetVirtualFileNamesRequest, GetVirtualFileRequest, ReportStats } from '../../protocol';
 import { forEachEmbeddeds } from '@volar/language-core';
 
 export function register(
@@ -89,11 +88,11 @@ export function register(
 	connection.onRequest(GetVirtualFileRequest.type, async params => {
 		const project = await projects.getProject(params.sourceFileUri);
 		if (project) {
-			const embeddedFile = project.project?.getLanguageService().context.core.mapper.fromEmbeddedFileName(params.virtualFileName)?.embedded;
-			if (embeddedFile) {
+			const virtualFile = project.project?.getLanguageService().context.core.mapper.getSourceByVirtualFileName(params.virtualFileName)?.[2];
+			if (virtualFile) {
 				return {
-					content: embeddedFile.text,
-					mappings: embeddedFile.mappings as any,
+					content: virtualFile.text,
+					mappings: virtualFile.mappings as any,
 				};
 			}
 		}
@@ -120,36 +119,5 @@ export function register(
 				}
 			}
 		}
-	});
-	connection.onNotification(VerifyAllScriptsNotification.type, async params => {
-
-		let errors = 0;
-		let warnings = 0;
-
-		const progress = await connection.window.createWorkDoneProgress();
-		progress.begin('Verify', 0, '', true);
-
-		const project = await projects.getProject(params.uri);
-		if (project) {
-			const ls = (await project.project)?.getLanguageServiceDontCreate();
-			if (ls) {
-				const allVueDocuments = ls.context.documents.getAll();
-				let i = 0;
-				for (const vueFile of allVueDocuments) {
-					progress.report(i++ / allVueDocuments.length * 100, path.relative(ls.context.host.getCurrentDirectory() as path.PosixPath, shared.getPathOfUri(vueFile.uri)));
-					if (progress.token.isCancellationRequested) {
-						continue;
-					}
-					let _result = await ls.doValidation(vueFile.uri, progress.token);
-					connection.sendDiagnostics({ uri: vueFile.uri, diagnostics: _result });
-					errors += _result.filter(error => error.severity === vscode.DiagnosticSeverity.Error).length;
-					warnings += _result.filter(error => error.severity === vscode.DiagnosticSeverity.Warning).length;
-				}
-			}
-		}
-
-		progress.done();
-
-		connection.window.showInformationMessage(`Verification complete. Found ${errors} errors and ${warnings} warnings.`);
 	});
 }

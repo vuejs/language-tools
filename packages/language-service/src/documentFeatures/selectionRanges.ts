@@ -13,10 +13,10 @@ export function register(context: DocumentServiceRuntimeContext) {
 			context,
 			document,
 			positions,
-			sourceMap => !!sourceMap.embeddedFile.capabilities.documentFormatting,
-			(positions, sourceMap) => {
+			map => !!map.file.capabilities.documentFormatting,
+			(positions, map) => {
 				const result = positions
-					.map(position => sourceMap.toGeneratedPosition(position))
+					.map(position => map.toGeneratedPosition(position))
 					.filter(shared.notEmpty);
 				if (result.length) {
 					return [result];
@@ -24,7 +24,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 				return [];
 			},
 			(plugin, document, positions) => plugin.getSelectionRanges?.(document, positions),
-			(item, sourceMap) => transformSelectionRanges(item, range => sourceMap.toSourceRange(range)),
+			(item, map) => transformSelectionRanges(item, range => map.toSourceRange(range)),
 			results => {
 				for (let i = 0; i < results[0].length; i++) {
 					const first = results[0][i];

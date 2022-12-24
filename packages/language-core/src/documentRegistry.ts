@@ -1,26 +1,28 @@
 import { Mapping, SourceMapBase } from '@volar/source-map';
 import { computed, shallowReactive as reactive } from '@vue/reactivity';
 import { Teleport } from './sourceMaps';
-import type { EmbeddedFile, LanguageModule, PositionCapabilities, SourceFile, TeleportMappingData } from './types';
+import type { VirtualFile, LanguageModule, PositionCapabilities, TeleportMappingData } from './types';
 
-export function forEachEmbeddeds(file: EmbeddedFile, cb: (embedded: EmbeddedFile) => void) {
+export function forEachEmbeddeds(file: VirtualFile, cb: (embedded: VirtualFile) => void) {
 	cb(file);
 	for (const child of file.embeddeds) {
 		forEachEmbeddeds(child, cb);
 	}
 }
 
-export type DocumentRegistry = ReturnType<typeof createDocumentRegistry>;
+export type DocumentRegistry = ReturnType<typeof createVirtualFilesHost>;
 
-export function createDocumentRegistry(languageModules: LanguageModule[]) {
+type Row = [string, ts.IScriptSnapshot, VirtualFile, LanguageModule];
 
-	const files = reactive<Record<string, [string, ts.IScriptSnapshot, SourceFile, LanguageModule]>>({});
+export function createVirtualFilesHost(languageModules: LanguageModule[]) {
+
+	const files = reactive<Record<string, Row>>({});
 	const all = computed(() => Object.values(files));
 	const sourceMapsByFileName = computed(() => {
-		const map = new Map<string, { sourceFile: SourceFile, embedded: EmbeddedFile; }>();
-		for (const [_1, _2, sourceFile] of all.value) {
-			forEachEmbeddeds(sourceFile, embedded => {
-				map.set(normalizePath(embedded.fileName), { sourceFile, embedded });
+		const map = new Map<string, [VirtualFile, Row]>();
+		for (const row of all.value) {
+			forEachEmbeddeds(row[2], file => {
+				map.set(normalizePath(file.fileName), [file, row]);
 			});
 		}
 		return map;
@@ -31,14 +33,17 @@ export function createDocumentRegistry(languageModules: LanguageModule[]) {
 			const [_1, _2, sourceFile] = files[key]!;
 			forEachEmbeddeds(sourceFile, embedded => {
 				if (embedded.teleportMappings) {
-					map.set(normalizePath(embedded.fileName), getTeleport(sourceFile, embedded.teleportMappings));
+					const _map = getTeleport(embedded);
+					if (_map) {
+						map.set(normalizePath(embedded.fileName), _map);
+					}
 				}
 			});
 		}
 		return map;
 	});
-	const _sourceMaps = new WeakMap<SourceFile, WeakMap<Mapping<PositionCapabilities>[], SourceMapBase<PositionCapabilities>>>();
-	const _teleports = new WeakMap<SourceFile, WeakMap<Mapping<TeleportMappingData>[], Teleport>>();
+	const _sourceMaps = new WeakMap<ts.IScriptSnapshot, WeakMap<Mapping<PositionCapabilities>[], SourceMapBase<PositionCapabilities>>>();
+	const _teleports = new WeakMap<ts.IScriptSnapshot, WeakMap<Mapping<TeleportMappingData>[], Teleport>>();
 
 	return {
 		update(fileName: string, snapshot: ts.IScriptSnapshot | undefined) {
@@ -48,8 +53,6 @@ export function createDocumentRegistry(languageModules: LanguageModule[]) {
 					const virtualFile = files[key][2];
 					files[key][1] = snapshot;
 					files[key][3].updateSourceFile(virtualFile, snapshot);
-					_sourceMaps.delete(virtualFile);
-					_teleports.delete(virtualFile);
 					return virtualFile; // updated
 				}
 				for (const languageModule of languageModules) {
@@ -66,8 +69,8 @@ export function createDocumentRegistry(languageModules: LanguageModule[]) {
 			const key = normalizePath(fileName);
 			if (files[key]) {
 				return [
-					files[key]![1],
-					files[key]![2],
+					files[key][1],
+					files[key][2],
 				] as const;
 			}
 		},
@@ -75,36 +78,48 @@ export function createDocumentRegistry(languageModules: LanguageModule[]) {
 		all: () => all.value,
 		getTeleport: (fileName: string) => teleports.value.get(normalizePath(fileName)),
 		getSourceMap,
-		fromEmbeddedFileName: function (fileName: string) {
-			return sourceMapsByFileName.value.get(normalizePath(fileName));
+		getSourceByVirtualFileName(fileName: string) {
+			const source = sourceMapsByFileName.value.get(normalizePath(fileName));
+			if (source) {
+				return [
+					source[1][0],
+					source[1][1],
+					source[0],
+				] as const;
+			}
 		},
 	};
 
-	function getSourceMap(file: SourceFile, mappings: Mapping<PositionCapabilities>[]) {
-		let map1 = _sourceMaps.get(file);
+	function getSourceMap(file: VirtualFile) {
+		const snapshot = sourceMapsByFileName.value.get(normalizePath(file.fileName))![1][1];
+		let map1 = _sourceMaps.get(snapshot);
 		if (!map1) {
 			map1 = new WeakMap();
-			_sourceMaps.set(file, map1);
+			_sourceMaps.set(snapshot, map1);
 		}
-		let map2 = map1.get(mappings);
+		let map2 = map1.get(file.mappings);
 		if (!map2) {
-			map2 = new SourceMapBase(mappings);
-			map1.set(mappings, map2);
+			map2 = new SourceMapBase(file.mappings);
+			map1.set(file.mappings, map2);
 		}
 		return map2;
 	}
-	function getTeleport(file: SourceFile, mappings: Mapping<TeleportMappingData>[]) {
-		let map1 = _teleports.get(file);
+
+	function getTeleport(file: VirtualFile) {
+		const snapshot = sourceMapsByFileName.value.get(normalizePath(file.fileName))![1][1];
+		let map1 = _teleports.get(snapshot);
 		if (!map1) {
 			map1 = new WeakMap();
-			_teleports.set(file, map1);
+			_teleports.set(snapshot, map1);
 		}
-		let map2 = map1.get(mappings);
-		if (!map2) {
-			map2 = new Teleport(mappings);
-			map1.set(mappings, map2);
+		if (file.teleportMappings) {
+			let map2 = map1.get(file.teleportMappings);
+			if (!map2) {
+				map2 = new Teleport(file.teleportMappings);
+				map1.set(file.teleportMappings, map2);
+			}
+			return map2;
 		}
-		return map2;
 	}
 }
 

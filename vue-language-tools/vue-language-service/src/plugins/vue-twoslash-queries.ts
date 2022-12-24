@@ -35,20 +35,22 @@ export default function (options: {
 
 					forEachEmbeddeds(vueFile, (embedded) => {
 						if (embedded.kind === EmbeddedFileKind.TypeScriptHostFile) {
-							const sourceMap = vueDocument.getSourceMap(embedded);
-							for (const [pointerPosition, hoverOffset] of hoverOffsets) {
-								for (const [tsOffset, mapping] of sourceMap.toGeneratedOffsets(hoverOffset)) {
-									if (mapping.data.hover) {
-										const quickInfo = context.typescript.languageService.getQuickInfoAtPosition(embedded.fileName, tsOffset);
-										if (quickInfo) {
-											inlayHints.push({
-												position: { line: pointerPosition.line, character: pointerPosition.character + 2 },
-												label: ts.displayPartsToString(quickInfo.displayParts),
-												paddingLeft: true,
-												paddingRight: false,
-											});
+							const map = vueDocument.maps.get(embedded);
+							if (map) {
+								for (const [pointerPosition, hoverOffset] of hoverOffsets) {
+									for (const [tsOffset, mapping] of map.toGeneratedOffsets(hoverOffset)) {
+										if (mapping.data.hover) {
+											const quickInfo = context.typescript.languageService.getQuickInfoAtPosition(embedded.fileName, tsOffset);
+											if (quickInfo) {
+												inlayHints.push({
+													position: { line: pointerPosition.line, character: pointerPosition.character + 2 },
+													label: ts.displayPartsToString(quickInfo.displayParts),
+													paddingLeft: true,
+													paddingRight: false,
+												});
+											}
+											break;
 										}
-										break;
 									}
 								}
 							}
@@ -61,13 +63,13 @@ export default function (options: {
 		},
 	};
 
-	function worker<T>(document: TextDocument, callback: (vueDocument: SourceFileDocument, vueSourceFile: vue.VueSourceFile) => T) {
+	function worker<T>(document: TextDocument, callback: (vueDocument: SourceFileDocument, vueSourceFile: vue.VueFile) => T) {
 
 		const vueDocument = options.getVueDocument(document);
 		if (!vueDocument)
 			return;
 
-		if (!(vueDocument.file instanceof vue.VueSourceFile))
+		if (!(vueDocument.file instanceof vue.VueFile))
 			return;
 
 		return callback(vueDocument, vueDocument.file);

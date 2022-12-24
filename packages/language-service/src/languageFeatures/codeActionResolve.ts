@@ -20,9 +20,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 			const originalItem = data.originalItem;
 
-			if (data.sourceMap) {
+			if (data.map) {
 
-				const sourceMap = context.documents.sourceMapFromEmbeddedDocumentUri(data.sourceMap.embeddedDocumentUri);
+				const sourceMap = context.documents.getMap(data.map.embeddedDocumentUri);
 
 				if (sourceMap) {
 

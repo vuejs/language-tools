@@ -4,7 +4,6 @@ export { register as registerWriteVirtualFiles } from './features/writeVirtualFi
 export { register as registerFileReferences } from './features/fileReferences';
 export { register as registerReloadProjects } from './features/reloadProject';
 export { register as registerServerStats } from './features/serverStatus';
-export { register as registerVerifyAll } from './features/verifyAll';
 export { register as registerTsConfig } from './features/tsconfig';
 export { register as registerShowReferences } from './features/showReferences';
 export { register as registerServerSys } from './features/serverSys';

@@ -11,14 +11,14 @@ export function register(context: DocumentServiceRuntimeContext) {
 		return documentFeatureWorker(
 			context,
 			document,
-			sourceMap => !!sourceMap.embeddedFile.capabilities.documentSymbol, // TODO: add color capabilitie setting
+			map => !!map.file.capabilities.documentSymbol, // TODO: add color capabilitie setting
 			(plugin, document) => plugin.findDocumentSymbols?.(document),
-			(data, sourceMap) => transformSymbolInformations(
+			(data, map) => transformSymbolInformations(
 				data,
 				location => {
-					const range = sourceMap.toSourceRange(location.range);
+					const range = map.toSourceRange(location.range);
 					if (range) {
-						// use document.uri instead of sourceMap.sourceDocument.uri to fix https://github.com/johnsoncodehk/volar/issues/1925
+						// use document.uri instead of map.sourceDocument.uri to fix https://github.com/johnsoncodehk/volar/issues/1925
 						return vscode.Location.create(document.uri, range);
 					}
 				},

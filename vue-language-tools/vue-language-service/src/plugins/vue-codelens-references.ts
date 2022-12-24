@@ -1,6 +1,6 @@
 import * as vscode from 'vscode-languageserver-protocol';
 import { LanguageServicePlugin, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
-import { VueSourceFile } from '@volar/vue-language-core';
+import { VueFile } from '@volar/vue-language-core';
 
 const showReferencesCommand = 'volar.show-references';
 
@@ -38,8 +38,8 @@ export default function (options: {
 
 					const result: vscode.CodeLens[] = [];
 
-					for (const sourceMap of vueDocument.getSourceMaps()) {
-						for (const mapping of sourceMap.mappings) {
+					for (const map of [...vueDocument.maps.values()]) {
+						for (const mapping of map.mappings) {
 
 							if (!mapping.data.referencesCodeLens)
 								continue;
@@ -69,9 +69,9 @@ export default function (options: {
 				if (!vueDocument)
 					return codeLens;
 
-				const document = vueDocument.getDocument();
+				const document = vueDocument.document;
 				const offset = document.offsetAt(data.position);
-				const file = vueDocument.file as VueSourceFile;
+				const file = vueDocument.file as VueFile;
 				const blocks = [
 					file.sfc.script,
 					file.sfc.scriptSetup,

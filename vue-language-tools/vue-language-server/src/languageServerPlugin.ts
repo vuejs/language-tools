@@ -112,10 +112,10 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 				const vueLanguageModule: embedded.LanguageModule = {
 					createSourceFile(fileName, snapshot) {
 						if (vueExts.some(ext => fileName.endsWith(ext))) {
-							return new vue2.VueSourceFile(fileName, snapshot, ts, vueLanguagePlugins);
+							return new vue2.VueFile(fileName, snapshot, ts, vueLanguagePlugins);
 						}
 					},
-					updateSourceFile(sourceFile: vue2.VueSourceFile, snapshot) {
+					updateSourceFile(sourceFile: vue2.VueFile, snapshot) {
 						sourceFile.update(snapshot);
 					},
 				};

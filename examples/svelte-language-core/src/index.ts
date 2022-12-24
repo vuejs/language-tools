@@ -1,5 +1,5 @@
 import { decode } from '@jridgewell/sourcemap-codec';
-import { EmbeddedFile, EmbeddedFileKind, LanguageModule } from '@volar/language-core';
+import { VirtualFile, EmbeddedFileKind, LanguageModule } from '@volar/language-core';
 import { svelte2tsx } from 'svelte2tsx';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
@@ -44,7 +44,7 @@ function getEmbeddeds(fileName: string, text: string) {
 		const v3Mappings = decode(tsx.map.mappings);
 		const sourcedDoc = TextDocument.create(URI.file(fileName).toString(), 'svelte', 0, text);
 		const genDoc = TextDocument.create(URI.file(fileName + '.tsx').toString(), 'typescriptreact', 0, tsx.code);
-		const mappings: EmbeddedFile['mappings'] = [];
+		const mappings: VirtualFile['mappings'] = [];
 
 		let current: {
 			genOffset: number,
@@ -104,7 +104,7 @@ function getEmbeddeds(fileName: string, text: string) {
 			}
 		}
 
-		const embeddeds: EmbeddedFile[] = [];
+		const embeddeds: VirtualFile[] = [];
 
 		embeddeds.push({
 			fileName: fileName + '.ts',

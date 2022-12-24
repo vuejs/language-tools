@@ -1,7 +1,7 @@
 import { posix as path } from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { createDocumentRegistry, forEachEmbeddeds } from './documentRegistry';
-import { LanguageModule, SourceFile, LanguageServiceHost, EmbeddedFileKind } from './types';
+import { createVirtualFilesHost, forEachEmbeddeds } from './documentRegistry';
+import { LanguageModule, VirtualFile, LanguageServiceHost, EmbeddedFileKind } from './types';
 
 export type EmbeddedLanguageContext = ReturnType<typeof createEmbeddedLanguageServiceHost>;
 
@@ -27,7 +27,7 @@ export function createEmbeddedLanguageServiceHost(
 	let lastProjectVersion: string | undefined;
 	let tsProjectVersion = 0;
 
-	const documentRegistry = createDocumentRegistry(languageModules);
+	const documentRegistry = createVirtualFilesHost(languageModules);
 	const ts = host.getTypeScriptModule();
 	const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
 	const sourceTsFileVersions = new Map<string, string>();
@@ -50,7 +50,7 @@ export function createEmbeddedLanguageServiceHost(
 					}
 				}
 
-				if (!!documentRegistry.fromEmbeddedFileName(fileName)) {
+				if (documentRegistry.getSourceByVirtualFileName(fileName)) {
 					return true;
 				}
 
@@ -123,7 +123,7 @@ export function createEmbeddedLanguageServiceHost(
 		let tsFileUpdated = false;
 
 		const checkRemains = new Set(host.getScriptFileNames());
-		const sourceFilesShouldUpdate: [string, SourceFile, ts.IScriptSnapshot][] = [];
+		const sourceFilesShouldUpdate: [string, VirtualFile, ts.IScriptSnapshot][] = [];
 
 		// .vue
 		for (const [fileName, _, virtualFile] of documentRegistry.all()) {
@@ -247,18 +247,18 @@ export function createEmbeddedLanguageServiceHost(
 		return [...tsFileNames];
 	}
 	function getScriptVersion(fileName: string) {
-		let mapped = documentRegistry.fromEmbeddedFileName(fileName);
-		if (mapped) {
-			if (virtualFileVersions.has(mapped.embedded.fileName)) {
-				return virtualFileVersions.get(mapped.embedded.fileName)!;
+		let source = documentRegistry.getSourceByVirtualFileName(fileName);
+		if (source) {
+			if (virtualFileVersions.has(source[2].fileName)) {
+				return virtualFileVersions.get(source[2].fileName)!;
 			}
 			else {
-				let version = ts.sys?.createHash?.(mapped.embedded.text) ?? mapped.embedded.text;
+				let version = ts.sys?.createHash?.(source[2].text) ?? source[2].text;
 				if (host.isTsc) {
 					// fix https://github.com/johnsoncodehk/volar/issues/1082
-					version = host.getScriptVersion(mapped.sourceFile.fileName) + ':' + version;
+					version = host.getScriptVersion(source[0]) + ':' + version;
 				}
-				virtualFileVersions.set(mapped.embedded.fileName, version);
+				virtualFileVersions.set(source[2].fileName, version);
 				return version;
 			}
 		}
@@ -270,9 +270,9 @@ export function createEmbeddedLanguageServiceHost(
 		if (cache && cache[0] === version) {
 			return cache[1];
 		}
-		const mapped = documentRegistry.fromEmbeddedFileName(fileName);
-		if (mapped) {
-			const snapshot = ts.ScriptSnapshot.fromString(mapped.embedded.text);
+		const source = documentRegistry.getSourceByVirtualFileName(fileName);
+		if (source) {
+			const snapshot = ts.ScriptSnapshot.fromString(source[2].text);
 			scriptSnapshots.set(fileName.toLowerCase(), [version, snapshot]);
 			return snapshot;
 		}

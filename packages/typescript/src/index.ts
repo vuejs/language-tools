@@ -226,11 +226,11 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 
 	// transforms
 	function transformFileTextChanges(changes: ts.FileTextChanges): ts.FileTextChanges | undefined {
-		const sourceFile = core.mapper.fromEmbeddedFileName(changes.fileName);
-		if (sourceFile) {
+		const source = core.mapper.getSourceByVirtualFileName(changes.fileName);
+		if (source) {
 			return {
 				...changes,
-				fileName: sourceFile.sourceFile.fileName,
+				fileName: source[0],
 				textChanges: changes.textChanges.map(c => {
 					const span = transformSpan(changes.fileName, c.span);
 					if (span) {
@@ -285,13 +285,13 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 	function transformSpan(fileName: string | undefined, textSpan: ts.TextSpan | undefined) {
 		if (!fileName) return;
 		if (!textSpan) return;
-		const mapped = core.mapper.fromEmbeddedFileName(fileName);
-		if (mapped) {
-			const map = core.mapper.getSourceMap(mapped.sourceFile, mapped.embedded.mappings);
+		const source = core.mapper.getSourceByVirtualFileName(fileName);
+		if (source) {
+			const map = core.mapper.getSourceMap(source[2]);
 			const sourceLoc = map.toSourceOffset(textSpan.start);
 			if (sourceLoc) {
 				return {
-					fileName: mapped.sourceFile.fileName,
+					fileName: source[0],
 					textSpan: {
 						start: sourceLoc[0],
 						length: textSpan.length,

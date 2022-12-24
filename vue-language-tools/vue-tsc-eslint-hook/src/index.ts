@@ -64,7 +64,7 @@ export = async function (
 							line: (message.endLine ?? message.line) - 1,
 							character: (message.endColumn ?? message.column) - 1,
 						});
-						const map = mapper.getSourceMap(vueFile, embeddedFile.mappings);
+						const map = mapper.getSourceMap(embeddedFile);
 
 						for (const start of map.toSourceOffsets(msgStart)) {
 

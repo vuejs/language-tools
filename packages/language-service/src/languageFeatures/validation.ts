@@ -190,8 +190,8 @@ export function register(context: LanguageServiceRuntimeContext) {
 				context,
 				uri,
 				true,
-				function* (arg, sourceMap) {
-					if (sourceMap.embeddedFile.capabilities.diagnostic) {
+				function* (arg, map) {
+					if (map.file.capabilities.diagnostic) {
 						yield arg;
 					}
 				},
@@ -247,7 +247,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 		}
 	};
 
-	function transformErrorRange(sourceMap: EmbeddedDocumentSourceMap | undefined, errors: vscode.Diagnostic[]) {
+	function transformErrorRange(map: EmbeddedDocumentSourceMap | undefined, errors: vscode.Diagnostic[]) {
 
 		const result: vscode.Diagnostic[] = [];
 
@@ -256,8 +256,8 @@ export function register(context: LanguageServiceRuntimeContext) {
 			// clone it to avoid modify cache
 			let _error: vscode.Diagnostic = { ...error };
 
-			if (sourceMap) {
-				const range = sourceMap.toSourceRange(error.range, data => !!data.diagnostic);
+			if (map) {
+				const range = map.toSourceRange(error.range, data => !!data.diagnostic);
 				if (!range) {
 					continue;
 				}
@@ -269,7 +269,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				const relatedInfos: vscode.DiagnosticRelatedInformation[] = [];
 
 				for (const info of _error.relatedInformation) {
-					const map = context.documents.sourceMapFromEmbeddedDocumentUri(info.location.uri);
+					const map = context.documents.getMap(info.location.uri);
 					if (map) {
 						const range = map.toSourceRange(info.location.range, data => !!data.diagnostic);
 						if (range) {

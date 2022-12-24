@@ -10,7 +10,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 export function checkPropsOfTag(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
-	sourceFile: embedded.SourceFile,
+	sourceFile: embedded.VirtualFile,
 	tag: string,
 ) {
 
@@ -70,7 +70,7 @@ export function checkPropsOfTag(
 export function checkEventsOfTag(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
-	sourceFile: embedded.SourceFile,
+	sourceFile: embedded.VirtualFile,
 	tag: string,
 ) {
 
@@ -131,7 +131,7 @@ export function checkEventsOfTag(
 export function checkComponentNames(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
-	sourceFile: embedded.SourceFile,
+	sourceFile: embedded.VirtualFile,
 ) {
 	return getComponentsType(ts, tsLs, sourceFile)
 		?.componentsType
@@ -176,14 +176,14 @@ export function getElementAttrs(
 function getComponentsType(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
-	sourceFile: embedded.SourceFile,
+	sourceFile: embedded.VirtualFile,
 ) {
 
-	if (!(sourceFile instanceof vue.VueSourceFile)) {
+	if (!(sourceFile instanceof vue.VueFile)) {
 		return;
 	}
 
-	let file: embedded.SourceFile | undefined;
+	let file: embedded.VirtualFile | undefined;
 	let tsSourceFile: ts.SourceFile | undefined;
 
 	embedded.forEachEmbeddeds(sourceFile, embedded => {
@@ -237,13 +237,13 @@ type Tags = Map<string, {
 	}>,
 }>;
 
-const map = new WeakMap<embedded.SourceFile, ComputedRef<Tags | undefined>>();
+const map = new WeakMap<embedded.VirtualFile, ComputedRef<Tags | undefined>>();
 
-export function getTemplateTagsAndAttrs(sourceFile: embedded.SourceFile): Tags {
+export function getTemplateTagsAndAttrs(sourceFile: embedded.VirtualFile): Tags {
 
 	if (!map.has(sourceFile)) {
 		const getter = computed(() => {
-			if (!(sourceFile instanceof vue.VueSourceFile))
+			if (!(sourceFile instanceof vue.VueFile))
 				return;
 			const ast = sourceFile.compiledSFCTemplate?.ast;
 			const tags: Tags = new Map();

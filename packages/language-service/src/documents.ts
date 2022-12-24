@@ -1,12 +1,12 @@
-import { DocumentRegistry, EmbeddedFile, forEachEmbeddeds, PositionCapabilities, SourceFile, TeleportMappingData } from '@volar/language-core';
+import { DocumentRegistry, VirtualFile, forEachEmbeddeds, PositionCapabilities, TeleportMappingData } from '@volar/language-core';
 import * as shared from '@volar/shared';
 import { Mapping, SourceMapBase } from '@volar/source-map';
-import { computed } from '@vue/reactivity';
+import ts = require('typescript');
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
 export type SourceFileDocuments = ReturnType<typeof parseSourceFileDocuments>;
-export type SourceFileDocument = ReturnType<typeof createVirtualDocumentsHost>;
+export type SourceFileDocument = NonNullable<ReturnType<ReturnType<typeof parseSourceFileDocuments>['get']>>;
 
 export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
 
@@ -141,7 +141,8 @@ export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
 export class EmbeddedDocumentSourceMap extends SourceMap<PositionCapabilities> {
 
 	constructor(
-		public embeddedFile: EmbeddedFile,
+		public rootFile: VirtualFile,
+		public file: VirtualFile,
 		public sourceDocument: TextDocument,
 		public mappedDocument: TextDocument,
 		mappings: Mapping<PositionCapabilities>[],
@@ -152,7 +153,7 @@ export class EmbeddedDocumentSourceMap extends SourceMap<PositionCapabilities> {
 
 export class TeleportSourceMap extends SourceMap<TeleportMappingData> {
 	constructor(
-		public embeddedFile: EmbeddedFile,
+		public file: VirtualFile,
 		public document: TextDocument,
 		mappings: Mapping<TeleportMappingData>[],
 	) {
@@ -170,161 +171,102 @@ export class TeleportSourceMap extends SourceMap<TeleportMappingData> {
 
 export function parseSourceFileDocuments(mapper: DocumentRegistry) {
 
-	const _sourceFiles = new WeakMap<SourceFile, SourceFileDocument>();
+	let version = 0;
 
-	// reactivity
-	const embeddedDocumentsMap = computed(() => {
-		const map = new Map<TextDocument, SourceFileDocument>();
-		for (const vueDocument of getAll()) {
-			for (const sourceMap of vueDocument.getSourceMaps()) {
-				map.set(sourceMap.mappedDocument, vueDocument);
-			}
-		}
-		return map;
-	});
-	const embeddedDocumentMaps = computed(() => {
-		const map = new Map<string, EmbeddedDocumentSourceMap>();
-		for (const vueDocument of getAll()) {
-			for (const sourceMap of vueDocument.getSourceMaps()) {
-				map.set(sourceMap.mappedDocument.uri, sourceMap);
-			}
-		}
-		return map;
-	});
-	const teleports = computed(() => {
-		const map = new Map<string, TeleportSourceMap>();
-		for (const vueDocument of getAll()) {
-			for (const teleport of vueDocument.getTeleports()) {
-				map.set(teleport.mappedDocument.uri, teleport);
-			}
-		}
-		return map;
-	});
+	const snapshotsToMaps = new WeakMap<ts.IScriptSnapshot, {
+		fileName: string,
+		snapshot: ts.IScriptSnapshot,
+		document: TextDocument,
+		file: VirtualFile,
+		maps: Map<VirtualFile, EmbeddedDocumentSourceMap>,
+		teleports: Map<VirtualFile, TeleportSourceMap>,
+	}>();
 
 	return {
-		getAll: getAll,
 		get: (uri: string) => {
 
 			const fileName = shared.getPathOfUri(uri);
-			const vueFile = mapper.get(fileName);
+			const virtualFile = mapper.get(fileName);
 
-			if (vueFile) {
-				return get(fileName, vueFile[1]);
+			if (virtualFile) {
+				return getMaps(fileName, virtualFile[0], virtualFile[1]);
 			}
 		},
-		fromEmbeddedDocument: (document: TextDocument) => {
-			return embeddedDocumentsMap.value.get(document);
+		getTeleport(virtualFileUri: string) {
+			const fileName = shared.getPathOfUri(virtualFileUri);
+			const source = mapper.getSourceByVirtualFileName(fileName);
+			if (source) {
+				const maps = getMaps(source[0], source[1], source[2]);
+				for (const [_, teleport] of maps.teleports) {
+					if (teleport.file.fileName.toLowerCase() === fileName.toLowerCase()) {
+						return teleport;
+					}
+				}
+			}
 		},
-		sourceMapFromEmbeddedDocumentUri: (uri: string) => {
-			return embeddedDocumentMaps.value.get(uri);
-		},
-		teleportfromEmbeddedDocumentUri: (uri: string) => {
-			return teleports.value.get(uri);
+		getMap(virtualFileUri: string) {
+			const fileName = shared.getPathOfUri(virtualFileUri);
+			const source = mapper.getSourceByVirtualFileName(fileName);
+			if (source) {
+				const maps = getMaps(source[0], source[1], source[2]);
+				for (const [_, map] of maps.maps) {
+					if (map.file.fileName.toLowerCase() === fileName.toLowerCase()) {
+						return map;
+					}
+				}
+			}
 		},
 	};
 
-	function get(fileName: string, sourceFile: SourceFile) {
-		let vueDocument = _sourceFiles.get(sourceFile);
-		if (!vueDocument) {
-			vueDocument = createVirtualDocumentsHost(fileName, sourceFile);
-			_sourceFiles.set(sourceFile, vueDocument);
-		}
-		return vueDocument;
-	}
-	function getAll() {
-		return mapper.all().map(file => get(file[0], file[2]));
-	}
-}
+	function getMaps(fileName: string, snapshot: ts.IScriptSnapshot, rootFile: VirtualFile) {
 
-export function createVirtualDocumentsHost(fileName: string, virtualFile: SourceFile) {
+		let result = snapshotsToMaps.get(snapshot);
 
-	let documentVersion = 0;
-	const embeddedDocumentVersions = new Map<string, number>();
-	const embeddedDocuments = new WeakMap<SourceFile, TextDocument>();
-	const sourceMaps = new WeakMap<SourceFile, [number, EmbeddedDocumentSourceMap]>();
+		if (!result) {
 
-	// computed
-	const document = computed(() => TextDocument.create(
-		shared.getUriByPath(virtualFile.fileName),
-		shared.syntaxToLanguageId(virtualFile.fileName.slice(virtualFile.fileName.lastIndexOf('.') + 1)),
-		documentVersion++,
-		virtualFile.text,
-	));
-	const allSourceMaps = computed(() => {
-		const result: EmbeddedDocumentSourceMap[] = [];
-		forEachEmbeddeds(virtualFile, embedded => {
-			result.push(getSourceMap(embedded));
-		});
-		return result;
-	});
-	const teleports = computed(() => {
-		const result: TeleportSourceMap[] = [];
-		forEachEmbeddeds(virtualFile, embedded => {
-			if (embedded.teleportMappings) {
-				const embeddedDocument = getEmbeddedDocument(embedded)!;
-				const sourceMap = new TeleportSourceMap(
-					embedded,
-					embeddedDocument,
-					embedded.teleportMappings,
-				);
-				result.push(sourceMap);
-			}
-		});
-		return result;
-	});
-
-	return {
-		fileName,
-		uri: shared.getUriByPath(fileName),
-		file: virtualFile,
-		getSourceMap,
-		getEmbeddedDocument,
-		getSourceMaps: () => allSourceMaps.value,
-		getTeleports: () => teleports.value,
-		getDocument: () => document.value,
-	};
-
-	function getSourceMap(embedded: EmbeddedFile) {
-
-		let cache = sourceMaps.get(embedded);
-
-		if (!cache || cache[0] !== document.value.version) {
-
-			cache = [
-				document.value.version,
-				new EmbeddedDocumentSourceMap(
-					embedded,
-					document.value,
-					getEmbeddedDocument(embedded),
-					embedded.mappings,
-				)
-			];
-			sourceMaps.set(embedded, cache);
-		}
-
-		return cache[1];
-	}
-
-	function getEmbeddedDocument(embeddedFile: SourceFile) {
-
-		let document = embeddedDocuments.get(embeddedFile);
-
-		if (!document || document.getText() !== embeddedFile.text) {
-
-			const uri = shared.getUriByPath(embeddedFile.fileName);
-			const newVersion = (embeddedDocumentVersions.get(uri.toLowerCase()) ?? 0) + 1;
-
-			embeddedDocumentVersions.set(uri.toLowerCase(), newVersion);
-
-			document = TextDocument.create(
-				uri,
-				shared.syntaxToLanguageId(embeddedFile.fileName.split('.').pop()!),
-				newVersion,
-				embeddedFile.text,
+			const document = TextDocument.create(
+				shared.getUriByPath(fileName),
+				'vue',
+				version++,
+				snapshot.getText(0, snapshot.getLength()),
 			);
-			embeddedDocuments.set(embeddedFile, document);
+			const maps = new Map<VirtualFile, EmbeddedDocumentSourceMap>();
+			const teleports = new Map<VirtualFile, TeleportSourceMap>();
+
+			forEachEmbeddeds(rootFile, file => {
+				const virtualFileDocument = TextDocument.create(
+					shared.getUriByPath(file.fileName),
+					shared.syntaxToLanguageId(file.fileName.substring(file.fileName.lastIndexOf('.') + 1)),
+					version++,
+					file.text,
+				);
+				maps.set(file, new EmbeddedDocumentSourceMap(
+					rootFile,
+					file,
+					document,
+					virtualFileDocument,
+					file.mappings,
+				));
+				if (file.teleportMappings) {
+					teleports.set(file, new TeleportSourceMap(
+						file,
+						virtualFileDocument,
+						file.teleportMappings,
+					));
+				}
+			});
+
+			result = {
+				fileName,
+				snapshot,
+				document,
+				file: rootFile,
+				maps,
+				teleports,
+			};
+			snapshotsToMaps.set(snapshot, result);
 		}
 
-		return document;
+		return result;
 	}
 }

@@ -13,9 +13,9 @@ export async function visitEmbedded(
 		}
 	}
 
-	const sourceMap = vueDocument.getSourceMap(current);
+	const sourceMap = vueDocument.maps.get(current);
 
-	if (!await cb(sourceMap)) {
+	if (sourceMap && !await cb(sourceMap)) {
 		return false;
 	}
 

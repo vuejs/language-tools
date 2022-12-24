@@ -42,12 +42,12 @@ export function register(context: LanguageServiceRuntimeContext) {
 					});
 				}
 			},
-			(data, sourceMap) => data.map(codeLens => {
+			(data, map) => data.map(codeLens => {
 
-				if (!sourceMap)
+				if (!map)
 					return codeLens;
 
-				const range = sourceMap.toSourceRange(codeLens.range);
+				const range = map.toSourceRange(codeLens.range);
 				if (range) {
 					return {
 						...codeLens,

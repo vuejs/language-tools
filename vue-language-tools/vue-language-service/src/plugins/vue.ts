@@ -306,13 +306,13 @@ export default function (options: {
 		return fn as T;
 	}
 
-	function worker<T>(document: TextDocument, callback: (emptyBlocksDocument: TextDocument, vueDocument: SourceFileDocument, vueSourceFile: vue.VueSourceFile) => T) {
+	function worker<T>(document: TextDocument, callback: (emptyBlocksDocument: TextDocument, vueDocument: SourceFileDocument, vueSourceFile: vue.VueFile) => T) {
 
 		const vueDocument = options.getVueDocument(document);
 		if (!vueDocument)
 			return;
 
-		if (!(vueDocument.file instanceof vue.VueSourceFile))
+		if (!(vueDocument.file instanceof vue.VueFile))
 			return;
 
 		let cache = emptyBlocksDocument.get(document);
@@ -325,11 +325,11 @@ export default function (options: {
 
 }
 
-function createEmptyBlocksDocument(document: TextDocument, vueSourceFile: vue.VueSourceFile) {
+function createEmptyBlocksDocument(document: TextDocument, vueSourceFile: vue.VueFile) {
 	return TextDocument.create(document.uri, document.languageId, document.version, clearSFCBlocksContents(document.getText(), vueSourceFile));
 }
 
-function clearSFCBlocksContents(sfcCode: string, vueSourceFile: vue.VueSourceFile) {
+function clearSFCBlocksContents(sfcCode: string, vueSourceFile: vue.VueFile) {
 
 	const descriptor = vueSourceFile.sfc;
 	const blocks = [

@@ -1,4 +1,4 @@
-import type { EmbeddedFile } from '@volar/language-core';
+import type { VirtualFile } from '@volar/language-core';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { EmbeddedDocumentSourceMap, SourceFileDocument } from '../documents';
@@ -58,8 +58,11 @@ export function register(context: DocumentServiceRuntimeContext) {
 				if (!embedded.capabilities.documentFormatting)
 					continue;
 
-				const sourceMap = vueDocument.getSourceMap(embedded);
-				const initialIndentBracket = typeof embedded.capabilities.documentFormatting === 'object' && initialIndentLanguageId[sourceMap.mappedDocument.languageId]
+				const map = vueDocument.maps.get(embedded);
+				if (!map)
+					continue;
+
+				const initialIndentBracket = typeof embedded.capabilities.documentFormatting === 'object' && initialIndentLanguageId[map.mappedDocument.languageId]
 					? embedded.capabilities.documentFormatting.initialIndentBracket
 					: undefined;
 
@@ -67,11 +70,11 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 				if (onTypeParams) {
 
-					const embeddedPosition = sourceMap.toGeneratedPosition(onTypeParams.position);
+					const embeddedPosition = map.toGeneratedPosition(onTypeParams.position);
 
 					if (embeddedPosition) {
 						_edits = await tryFormat(
-							sourceMap.mappedDocument,
+							map.mappedDocument,
 							embeddedPosition,
 							initialIndentBracket,
 							onTypeParams.ch,
@@ -81,18 +84,18 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 				else {
 
-					let genRange = sourceMap.toGeneratedRange(range);
+					let genRange = map.toGeneratedRange(range);
 
 					if (!genRange) {
-						const firstMapping = sourceMap.mappings.sort((a, b) => a.sourceRange[0] - b.sourceRange[0])[0];
-						const lastMapping = sourceMap.mappings.sort((a, b) => b.sourceRange[0] - a.sourceRange[0])[0];
+						const firstMapping = map.mappings.sort((a, b) => a.sourceRange[0] - b.sourceRange[0])[0];
+						const lastMapping = map.mappings.sort((a, b) => b.sourceRange[0] - a.sourceRange[0])[0];
 						if (
 							firstMapping && document.offsetAt(range.start) < firstMapping.sourceRange[0]
 							&& lastMapping && document.offsetAt(range.end) > lastMapping.sourceRange[1]
 						) {
 							genRange = {
-								start: sourceMap.mappedDocument.positionAt(firstMapping.generatedRange[0]),
-								end: sourceMap.mappedDocument.positionAt(lastMapping.generatedRange[1]),
+								start: map.mappedDocument.positionAt(firstMapping.generatedRange[0]),
+								end: map.mappedDocument.positionAt(lastMapping.generatedRange[1]),
 							};
 						}
 					}
@@ -100,11 +103,11 @@ export function register(context: DocumentServiceRuntimeContext) {
 					if (genRange) {
 
 						toPatchIndent = {
-							sourceMapEmbeddedDocumentUri: sourceMap.mappedDocument.uri,
+							sourceMapEmbeddedDocumentUri: map.mappedDocument.uri,
 						};
 
 						_edits = await tryFormat(
-							sourceMap.mappedDocument,
+							map.mappedDocument,
 							genRange,
 							initialIndentBracket,
 						);
@@ -115,7 +118,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 					continue;
 
 				for (const textEdit of _edits) {
-					const range = sourceMap.toSourceRange(textEdit.range);
+					const range = map.toSourceRange(textEdit.range);
 					if (range) {
 						edits.push({
 							newText: textEdit.newText,
@@ -133,7 +136,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 				tryUpdateVueDocument();
 
-				const sourceMap = vueDocument.getSourceMaps().find(sourceMap => sourceMap.mappedDocument.uri === toPatchIndent?.sourceMapEmbeddedDocumentUri);
+				const sourceMap = [...vueDocument.maps.values()].find(map => map.mappedDocument.uri === toPatchIndent?.sourceMapEmbeddedDocumentUri);
 
 				if (sourceMap) {
 
@@ -166,14 +169,14 @@ export function register(context: DocumentServiceRuntimeContext) {
 		function getEmbeddedsByLevel(vueDocument: SourceFileDocument, level: number) {
 
 			const embeddeds = vueDocument.file.embeddeds;
-			const embeddedsLevels: EmbeddedFile[][] = [embeddeds];
+			const embeddedsLevels: VirtualFile[][] = [embeddeds];
 
 			while (true) {
 
 				if (embeddedsLevels.length > level)
 					return embeddedsLevels[level];
 
-				let nextEmbeddeds: EmbeddedFile[] = [];
+				let nextEmbeddeds: VirtualFile[] = [];
 
 				for (const embeddeds of embeddedsLevels[embeddedsLevels.length - 1]) {
 
@@ -278,12 +281,12 @@ export function register(context: DocumentServiceRuntimeContext) {
 	};
 }
 
-function patchInterpolationIndent(vueDocument: SourceFileDocument, sourceMap: EmbeddedDocumentSourceMap) {
+function patchInterpolationIndent(vueDocument: SourceFileDocument, map: EmbeddedDocumentSourceMap) {
 
 	const indentTextEdits: vscode.TextEdit[] = [];
-	const document = vueDocument.getDocument();
+	const document = vueDocument.document;
 
-	for (const mapped of sourceMap.mappings) {
+	for (const mapped of map.mappings) {
 
 		const textRange = {
 			start: document.positionAt(mapped.sourceRange[0]),

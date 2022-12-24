@@ -41,23 +41,23 @@ export async function documentArgFeatureWorker<T, K>(
 
 	if (vueDocument) {
 
-		await visitEmbedded(vueDocument, async sourceMap => {
+		await visitEmbedded(vueDocument, async map => {
 
-			if (!isValidSourceMap(sourceMap))
+			if (!isValidSourceMap(map))
 				return true;
 
-			context.prepareLanguageServices(sourceMap.mappedDocument);
+			context.prepareLanguageServices(map.mappedDocument);
 
-			for (const mappedArg of transformArg(arg, sourceMap)) {
+			for (const mappedArg of transformArg(arg, map)) {
 
 				for (const plugin of context.plugins) {
 
-					const embeddedResult = await worker(plugin, sourceMap.mappedDocument, mappedArg);
+					const embeddedResult = await worker(plugin, map.mappedDocument, mappedArg);
 
 					if (!embeddedResult)
 						continue;
 
-					const result = await transform(embeddedResult!, sourceMap);
+					const result = await transform(embeddedResult!, map);
 
 					if (!result)
 						continue;
@@ -116,18 +116,18 @@ export async function languageFeatureWorker<T, K>(
 
 	if (vueDocument) {
 
-		await visitEmbedded(vueDocument, async sourceMap => {
+		await visitEmbedded(vueDocument, async map => {
 
-			for (const mappedArg of transformArg(arg, sourceMap)) {
+			for (const mappedArg of transformArg(arg, map)) {
 
 				for (const plugin of context.plugins) {
 
-					const embeddedResult = await worker(plugin, sourceMap.mappedDocument, mappedArg, sourceMap, vueDocument);
+					const embeddedResult = await worker(plugin, map.mappedDocument, mappedArg, map, vueDocument);
 
 					if (!embeddedResult)
 						continue;
 
-					const result = transform(embeddedResult!, sourceMap);
+					const result = transform(embeddedResult!, map);
 
 					if (!result)
 						continue;

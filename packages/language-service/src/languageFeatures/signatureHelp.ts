@@ -10,7 +10,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			context,
 			uri,
 			position,
-			(position, sourceMap) => sourceMap.toGeneratedPositions(position, data => !!data.completion),
+			(position, map) => map.toGeneratedPositions(position, data => !!data.completion),
 			(plugin, document, position) => plugin.getSignatureHelp?.(document, position, signatureHelpContext),
 			(data) => data,
 		);

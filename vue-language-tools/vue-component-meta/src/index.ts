@@ -280,7 +280,7 @@ export function baseCreate(
 
 			const vueSourceFile = core.mapper.get(componentPath)?.[1];
 			const vueDefaults = vueSourceFile && exportName === 'default'
-				? (vueSourceFile instanceof vue.VueSourceFile ? readVueComponentDefaultProps(vueSourceFile, printer, ts) : {})
+				? (vueSourceFile instanceof vue.VueFile ? readVueComponentDefaultProps(vueSourceFile, printer, ts) : {})
 				: {};
 			const tsDefaults = !vueSourceFile ? readTsComponentDefaultProps(
 				componentPath.substring(componentPath.lastIndexOf('.') + 1), // ts | js | tsx | jsx
@@ -586,7 +586,7 @@ function createSchemaResolvers(
 }
 
 function readVueComponentDefaultProps(
-	vueSourceFile: vue.VueSourceFile,
+	vueSourceFile: vue.VueFile,
 	printer: ts.Printer | undefined,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {

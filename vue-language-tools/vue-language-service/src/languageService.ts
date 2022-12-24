@@ -52,9 +52,9 @@ export function getLanguageServicePlugins(
 				async on(document, position, context) {
 					const result = await _tsPlugin.complete!.on!(document, position, context);
 					if (result) {
-						const map = apis.context.documents.sourceMapFromEmbeddedDocumentUri(document.uri);
+						const map = apis.context.documents.getMap(document.uri);
 						const doc = map ? apis.context.documents.get(map.sourceDocument.uri) : undefined;
-						if (map && doc?.file instanceof vue.VueSourceFile) {
+						if (map && doc?.file instanceof vue.VueFile) {
 							if (map.toSourcePosition(position, data => typeof data.completion === 'object' && !!data.completion.autoImportOnly)) {
 								result.items.forEach(item => {
 									item.data.__isComponentAutoImport = true;
@@ -83,12 +83,12 @@ export function getLanguageServicePlugins(
 
 					const data: Data = item.data;
 					if (item.data?.__isComponentAutoImport && data && item.additionalTextEdits?.length && item.textEdit) {
-						const map = apis.context.documents.sourceMapFromEmbeddedDocumentUri(data.uri);
+						const map = apis.context.documents.getMap(data.uri);
 						const doc = map ? apis.context.documents.get(map.sourceDocument.uri) : undefined;
-						if (map && doc?.file instanceof vue.VueSourceFile) {
+						if (map && doc?.file instanceof vue.VueFile) {
 							const sfc = doc.file.sfc;
 							const componentName = item.textEdit.newText;
-							const textDoc = doc.getDocument();
+							const textDoc = doc.document;
 							if (sfc.scriptAst && sfc.script) {
 								const ts = context.typescript.module;
 								const _scriptRanges = vue.scriptRanges.parseScriptRanges(ts, sfc.scriptAst, !!sfc.scriptSetup, true);

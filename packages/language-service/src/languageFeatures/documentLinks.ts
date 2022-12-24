@@ -2,7 +2,8 @@ import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as shared from '@volar/shared';
 import { languageFeatureWorker } from '../utils/featureWorkers';
-import { SourceFileDocument } from '../documents';
+import { TextDocument } from 'vscode-languageserver-textdocument';
+import { EmbeddedDocumentSourceMap } from '../documents';
 
 export function register(context: LanguageServiceRuntimeContext) {
 
@@ -14,12 +15,12 @@ export function register(context: LanguageServiceRuntimeContext) {
 			undefined,
 			(arg) => [arg],
 			(plugin, document) => plugin.findDocumentLinks?.(document),
-			(data, sourceMap) => data.map(link => {
+			(data, map) => data.map(link => {
 
-				if (!sourceMap)
+				if (!map)
 					return link;
 
-				const range = sourceMap.toSourceRange(link.range);
+				const range = map.toSourceRange(link.range);
 				if (range) {
 					return {
 						...link,
@@ -29,22 +30,21 @@ export function register(context: LanguageServiceRuntimeContext) {
 			}).filter(shared.notEmpty),
 			arr => arr.flat(),
 		) ?? [];
-		const vueDocument = context.documents.get(uri);
-		const fictitiousLinks = vueDocument ? getFictitiousLinks(vueDocument) : [];
+		const maps = context.documents.get(uri);
+		const fictitiousLinks = maps ? getFictitiousLinks(maps.document, [...maps.maps.values()]) : [];
 
 		return [
 			...pluginLinks,
 			...fictitiousLinks,
 		];
 
-		function getFictitiousLinks(vueDocument: SourceFileDocument) {
+		function getFictitiousLinks(document: TextDocument, maps: EmbeddedDocumentSourceMap[]) {
 
 			const result: vscode.DocumentLink[] = [];
-			const document = vueDocument.getDocument();
 
-			for (const sourceMap of vueDocument.getSourceMaps()) {
+			for (const map of maps) {
 
-				for (const mapped of sourceMap.mappings) {
+				for (const mapped of map.mappings) {
 
 					if (!mapped.data.displayWithLink)
 						continue;

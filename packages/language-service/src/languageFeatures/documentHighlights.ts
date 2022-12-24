@@ -13,7 +13,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			context,
 			uri,
 			position,
-			(position, sourceMap) => sourceMap.toGeneratedPositions(position,
+			(position, map) => map.toGeneratedPositions(position,
 				// note https://github.com/johnsoncodehk/volar/issues/2009
 				data => typeof data.rename === 'object' ? !!data.rename.normalize : !!data.rename
 			),
@@ -44,7 +44,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 						recursiveChecker.add({ uri: document.uri, range: { start: reference.range.start, end: reference.range.start } });
 
-						const teleport = context.documents.teleportfromEmbeddedDocumentUri(document.uri);
+						const teleport = context.documents.getTeleport(document.uri);
 
 						if (teleport) {
 
@@ -68,12 +68,12 @@ export function register(context: LanguageServiceRuntimeContext) {
 					}
 				}
 			},
-			(data, sourceMap) => data.map(highlisht => {
+			(data, map) => data.map(highlisht => {
 
-				if (!sourceMap)
+				if (!map)
 					return highlisht;
 
-				const range = sourceMap.toSourceRange(highlisht.range);
+				const range = map.toSourceRange(highlisht.range);
 				if (range) {
 					return {
 						...highlisht,

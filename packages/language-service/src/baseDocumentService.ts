@@ -1,4 +1,4 @@
-import { createDocumentRegistry, LanguageModule } from '@volar/language-core';
+import { createVirtualFilesHost, LanguageModule } from '@volar/language-core';
 import * as shared from '@volar/shared';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as autoInsert from './documentFeatures/autoInsert';
@@ -38,7 +38,7 @@ export function createDocumentServiceContext(options: {
 	};
 	const languageModules = options.getLanguageModules();
 	const lastUpdateVersions = new Map<string, number>();
-	const virtualFiles = createDocumentRegistry(languageModules);
+	const virtualFiles = createVirtualFilesHost(languageModules);
 	const textDocumentMapper = parseSourceFileDocuments(virtualFiles);
 	const context: DocumentServiceRuntimeContext = {
 		typescript: ts,

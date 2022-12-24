@@ -102,13 +102,13 @@ export default function (options: {
 		},
 	};
 
-	function worker<T>(uri: string, callback: (vueDocument: SourceFileDocument, vueSourceFile: vue.VueSourceFile) => T) {
+	function worker<T>(uri: string, callback: (vueDocument: SourceFileDocument, vueSourceFile: vue.VueFile) => T) {
 
 		const vueDocument = options.getVueDocument(uri);
 		if (!vueDocument)
 			return;
 
-		if (!(vueDocument.file instanceof vue.VueSourceFile))
+		if (!(vueDocument.file instanceof vue.VueFile))
 			return;
 
 		return callback(vueDocument, vueDocument.file);
@@ -118,7 +118,7 @@ export default function (options: {
 async function useRefSugar(
 	context: LanguageServicePluginContext,
 	vueDocument: SourceFileDocument,
-	vueSourceFile: vue.VueSourceFile,
+	vueSourceFile: vue.VueFile,
 	commandContext: ExecuteCommandContext,
 	findReferences: (uri: string, position: vscode.Position) => Promise<vscode.Location[] | undefined>,
 	findTypeDefinition: (uri: string, position: vscode.Position) => Promise<vscode.LocationLink[] | undefined>,
@@ -138,7 +138,7 @@ async function useRefSugar(
 		return;
 
 	if (edits?.length) {
-		await commandContext.applyEdit({ changes: { [vueDocument.uri]: edits } });
+		await commandContext.applyEdit({ changes: { [vueDocument.document.uri]: edits } });
 	}
 
 	commandContext.workDoneProgress.done();
@@ -151,7 +151,7 @@ async function useRefSugar(
 
 		const ranges = refSugarRanges.parseDeclarationRanges(ts, _scriptSetupAst);
 		const dotValueRanges = refSugarRanges.parseDotValueRanges(ts, _scriptSetupAst);
-		const document = _vueDocument.getDocument();
+		const document = _vueDocument.document;
 		const edits: vscode.TextEdit[] = [];
 
 		for (const declaration of ranges) {
@@ -270,7 +270,7 @@ async function useRefSugar(
 async function unuseRefSugar(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	vueDocument: SourceFileDocument,
-	vueSourceFile: vue.VueSourceFile,
+	vueSourceFile: vue.VueFile,
 	context: ExecuteCommandContext,
 	doCodeActions: (uri: string, range: vscode.Range, codeActionContext: vscode.CodeActionContext) => Promise<vscode.CodeAction[] | undefined>,
 	doCodeActionResolve: (item: vscode.CodeAction) => Promise<vscode.CodeAction>,
@@ -291,10 +291,10 @@ async function unuseRefSugar(
 
 	if (edits?.length) {
 
-		await context.applyEdit({ changes: { [vueDocument.uri]: edits } });
+		await context.applyEdit({ changes: { [vueDocument.document.uri]: edits } });
 		await shared.sleep(200);
 
-		const errors = await doValidation(vueDocument.uri) ?? [];
+		const errors = await doValidation(vueDocument.document.uri) ?? [];
 		const importEdits = await getAddMissingImportsEdits(vueDocument, doCodeActions, doCodeActionResolve);
 		const removeInvalidValueEdits = getRemoveInvalidDotValueEdits(vueDocument, errors);
 
@@ -314,7 +314,7 @@ async function unuseRefSugar(
 		errors: vscode.Diagnostic[],
 	) {
 
-		const document = _vueDocument.getDocument();
+		const document = _vueDocument.document;
 		const edits: vscode.TextEdit[] = [];
 
 		for (const error of errors) {
@@ -343,7 +343,7 @@ async function unuseRefSugar(
 	) {
 
 		const ranges = getRanges(ts, _scriptSetupAst);
-		const document = _vueDocument.getDocument();
+		const document = _vueDocument.document;
 		const edits: vscode.TextEdit[] = [];
 
 		let varsNum = 0;
@@ -378,10 +378,10 @@ async function unuseRefSugar(
 				await shared.sleep(0);
 
 				const bindingName = _scriptSetup.content.substring(binding.start, binding.end);
-				const renames = await doRename(_vueDocument.uri, document.positionAt(_scriptSetup.startTagEnd + binding.end), bindingName + '.value');
+				const renames = await doRename(_vueDocument.document.uri, document.positionAt(_scriptSetup.startTagEnd + binding.end), bindingName + '.value');
 
 				if (renames?.changes) {
-					const edits_2 = renames.changes[_vueDocument.uri];
+					const edits_2 = renames.changes[_vueDocument.document.uri];
 					if (edits_2) {
 						for (const edit of edits_2) {
 

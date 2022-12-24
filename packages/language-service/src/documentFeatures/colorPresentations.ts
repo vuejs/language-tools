@@ -12,13 +12,13 @@ export function register(context: DocumentServiceRuntimeContext) {
 			context,
 			document,
 			range,
-			sourceMap => !!sourceMap.embeddedFile.capabilities.documentSymbol, // TODO: add color capabilitie setting
-			(range, sourceMap) => sourceMap.toGeneratedRanges(range),
+			map => !!map.file.capabilities.documentSymbol, // TODO: add color capabilitie setting
+			(range, map) => map.toGeneratedRanges(range),
 			(plugin, document, range) => plugin.getColorPresentations?.(document, color, range),
-			(data, sourceMap) => data.map(cp => {
+			(data, map) => data.map(cp => {
 
 				if (cp.textEdit) {
-					const range = sourceMap.toSourceRange(cp.textEdit.range);
+					const range = map.toSourceRange(cp.textEdit.range);
 					if (!range)
 						return undefined;
 					cp.textEdit.range = range;
@@ -26,7 +26,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 				if (cp.additionalTextEdits) {
 					for (const textEdit of cp.additionalTextEdits) {
-						const range = sourceMap.toSourceRange(textEdit.range);
+						const range = map.toSourceRange(textEdit.range);
 						if (!range)
 							return undefined;
 						textEdit.range = range;

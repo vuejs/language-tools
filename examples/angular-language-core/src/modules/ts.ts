@@ -1,4 +1,4 @@
-import { LanguageModule, SourceFile, EmbeddedFileKind, PositionCapabilities } from '@volar/language-core';
+import { LanguageModule, VirtualFile, EmbeddedFileKind, PositionCapabilities } from '@volar/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path';
 import type { Mapping } from '@volar/source-map';
@@ -7,7 +7,7 @@ export function createTsLanguageModule(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {
 
-	const languageModule: LanguageModule<SourceFile & { ast: ts.SourceFile, snapshot: ts.IScriptSnapshot; }> = {
+	const languageModule: LanguageModule<VirtualFile & { ast: ts.SourceFile, snapshot: ts.IScriptSnapshot; }> = {
 		createSourceFile(fileName, snapshot) {
 			if (fileName.endsWith('.ts')) {
 				const text = snapshot.getText(0, snapshot.getLength());

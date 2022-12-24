@@ -11,10 +11,10 @@ export function register(context: DocumentServiceRuntimeContext) {
 		return documentFeatureWorker(
 			context,
 			document,
-			sourceMap => !!sourceMap.embeddedFile.capabilities.documentSymbol, // TODO: add color capabilitie setting
+			map => !!map.file.capabilities.documentSymbol, // TODO: add color capabilitie setting
 			(plugin, document) => plugin.findDocumentColors?.(document),
-			(data, sourceMap) => data.map(color => {
-				const range = sourceMap.toSourceRange(color.range);
+			(data, map) => data.map(color => {
+				const range = map.toSourceRange(color.range);
 				if (range) {
 					return vscode.ColorInformation.create(range, color.color);
 				}

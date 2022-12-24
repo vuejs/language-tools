@@ -1,19 +1,19 @@
-import { DocumentCapabilities, EmbeddedFileKind, LanguageModule, SourceFile } from '@volar/language-core';
+import { DocumentCapabilities, EmbeddedFileKind, LanguageModule, VirtualFile } from '@volar/language-core';
 import type { TmplAstNode, TmplAstTemplate, ParsedTemplate, ParseSourceSpan } from '@angular/compiler';
 import { Codegen } from './ts';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
 const { parseTemplate }: typeof import('@angular/compiler') = require('@angular-eslint/bundled-angular-compiler');
 
-export class HTMLTemplateFile implements SourceFile {
+export class HTMLTemplateFile implements VirtualFile {
 
 	public text: string;
 	public capabilities: DocumentCapabilities = {
 		diagnostic: true,
 	};
 	public kind = EmbeddedFileKind.TextFile;
-	public mappings: SourceFile['mappings'] = [];
-	public embeddeds: SourceFile['embeddeds'] = [];
+	public mappings: VirtualFile['mappings'] = [];
+	public embeddeds: VirtualFile['embeddeds'] = [];
 	public parsed: ParsedTemplate;
 
 	constructor(

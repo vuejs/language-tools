@@ -58,10 +58,6 @@ export namespace AutoInsertRequest {
 	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('vue/autoInsert');
 }
 
-export namespace VerifyAllScriptsNotification {
-	export const type = new vscode.NotificationType<vscode.TextDocumentIdentifier>('volar.action.verifyAllScripts');
-}
-
 export namespace WriteVirtualFilesNotification {
 	export const type = new vscode.NotificationType<vscode.TextDocumentIdentifier>('volar.action.writeVirtualFiles');
 }

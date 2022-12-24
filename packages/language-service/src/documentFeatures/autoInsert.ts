@@ -13,14 +13,14 @@ export function register(context: DocumentServiceRuntimeContext) {
 			document,
 			position,
 			() => true,
-			(position, sourceMap) => sourceMap.toGeneratedPositions(position, data => !!data.completion),
+			(position, map) => map.toGeneratedPositions(position, data => !!data.completion),
 			(plugin, document, position) => plugin.doAutoInsert?.(document, position, options),
-			(data, sourceMap) => {
+			(data, map) => {
 
 				if (typeof data === 'string')
 					return data;
 
-				const range = sourceMap.toSourceRange(data.range);
+				const range = map.toSourceRange(data.range);
 				if (range) {
 					data.range = range;
 					return data;

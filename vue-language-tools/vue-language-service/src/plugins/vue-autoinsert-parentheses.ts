@@ -3,7 +3,7 @@ import * as vscode from 'vscode-languageserver-protocol';
 import { LanguageServicePlugin, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
 import { isCharacterTyping } from './vue-autoinsert-dotvalue';
 import * as embedded from '@volar/language-core';
-import { EmbeddedFile } from '@volar/language-core';
+import { VirtualFile } from '@volar/language-core';
 
 export default function (options: {
 	getVueDocument: (document: TextDocument) => SourceFileDocument | undefined,
@@ -31,7 +31,7 @@ export default function (options: {
 				return;
 
 
-			let templateFormatScript: EmbeddedFile | undefined;
+			let templateFormatScript: VirtualFile | undefined;
 
 			embedded.forEachEmbeddeds(vueDocument.file, embedded => {
 				if (embedded.fileName.endsWith('.__VLS_template_format.ts')) {

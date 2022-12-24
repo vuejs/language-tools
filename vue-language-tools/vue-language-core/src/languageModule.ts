@@ -1,7 +1,7 @@
 import type * as embedded from '@volar/language-core';
 import { posix as path } from 'path';
 import { getDefaultVueLanguagePlugins } from './plugins';
-import { VueSourceFile } from './sourceFile';
+import { VueFile } from './sourceFile';
 import { VueLanguagePlugin, VueCompilerOptions } from './types';
 import * as localTypes from './utils/localTypes';
 import { resolveVueCompilerOptions } from './utils/ts';
@@ -40,10 +40,10 @@ export function createLanguageModule(
 	const languageModule: embedded.LanguageModule = {
 		createSourceFile(fileName, snapshot) {
 			if (vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))) {
-				return new VueSourceFile(fileName, snapshot, ts, vueLanguagePlugin);
+				return new VueFile(fileName, snapshot, ts, vueLanguagePlugin);
 			}
 		},
-		updateSourceFile(sourceFile: VueSourceFile, snapshot) {
+		updateSourceFile(sourceFile: VueFile, snapshot) {
 			sourceFile.update(snapshot);
 		},
 		proxyLanguageServiceHost(host) {

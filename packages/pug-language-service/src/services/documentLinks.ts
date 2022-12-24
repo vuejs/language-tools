@@ -6,13 +6,13 @@ export function register(htmlLs: html.LanguageService) {
 	return (pugDoc: PugDocument, docContext: html.DocumentContext) => {
 
 		const htmlResult = htmlLs.findDocumentLinks(
-			pugDoc.sourceMap.mappedDocument,
+			pugDoc.map.mappedDocument,
 			docContext,
 		);
 
 		return transformLocations(
 			htmlResult,
-			htmlRange => pugDoc.sourceMap.toSourceRange(htmlRange),
+			htmlRange => pugDoc.map.toSourceRange(htmlRange),
 		);
 	};
 }

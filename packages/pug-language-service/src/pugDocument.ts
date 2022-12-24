@@ -22,7 +22,7 @@ export function register(htmlLs: html.LanguageService) {
 			pugTextDocument: parsed.pugTextDocument,
 			htmlTextDocument,
 			htmlDocument,
-			sourceMap,
+			map: sourceMap,
 			error: parsed.error,
 			ast: parsed.ast,
 		};

@@ -20,7 +20,7 @@ export function register(
 			context,
 			uri,
 			position,
-			(position, sourceMap) => sourceMap.toGeneratedPositions(position, isValidMappingData),
+			(position, map) => map.toGeneratedPositions(position, isValidMappingData),
 			async (plugin, document, position) => {
 
 				const recursiveChecker = dedupe.createLocationSet();
@@ -53,7 +53,7 @@ export function register(
 
 						recursiveChecker.add({ uri: definition.targetUri, range: { start: definition.targetRange.start, end: definition.targetRange.start } });
 
-						const teleport = context.documents.teleportfromEmbeddedDocumentUri(definition.targetUri);
+						const teleport = context.documents.getTeleport(definition.targetUri);
 
 						if (teleport) {
 
@@ -97,7 +97,7 @@ export function register(
 					link.originSelectionRange = originSelectionRange;
 				}
 
-				const targetSourceMap = context.documents.sourceMapFromEmbeddedDocumentUri(link.targetUri);
+				const targetSourceMap = context.documents.getMap(link.targetUri);
 
 				if (targetSourceMap) {
 
@@ -120,11 +120,11 @@ export function register(
 	};
 }
 
-function toSourcePositionPreferSurroundedPosition(sourceMap: EmbeddedDocumentSourceMap, mappedRange: vscode.Range, position: vscode.Position) {
+function toSourcePositionPreferSurroundedPosition(map: EmbeddedDocumentSourceMap, mappedRange: vscode.Range, position: vscode.Position) {
 
 	let result: vscode.Range | undefined;
 
-	for (const range of sourceMap.toSourceRanges(mappedRange)) {
+	for (const range of map.toSourceRanges(mappedRange)) {
 		if (!result) {
 			result = range;
 		}

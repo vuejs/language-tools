@@ -12,7 +12,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			context,
 			uri,
 			position,
-			(position, sourceMap) => sourceMap.toGeneratedPositions(position, data => !!data.references),
+			(position, map) => map.toGeneratedPositions(position, data => !!data.references),
 			async (plugin, document, position) => {
 
 				const recursiveChecker = dedupe.createLocationSet();
@@ -40,7 +40,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 						recursiveChecker.add({ uri: reference.uri, range: { start: reference.range.start, end: reference.range.start } });
 
-						const teleport = context.documents.teleportfromEmbeddedDocumentUri(reference.uri);
+						const teleport = context.documents.getTeleport(reference.uri);
 
 						if (teleport) {
 
@@ -69,7 +69,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				const results: vscode.Location[] = [];
 
 				for (const reference of data) {
-					const map = context.documents.sourceMapFromEmbeddedDocumentUri(reference.uri);
+					const map = context.documents.getMap(reference.uri);
 					if (map) {
 						const range = map.toSourceRange(reference.range, data => !!data.references);
 						if (range) {

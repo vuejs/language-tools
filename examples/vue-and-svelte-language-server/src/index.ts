@@ -45,10 +45,10 @@ const plugin: LanguageServerPlugin<LanguageServerInitializationOptions, vue.Lang
 				const vueLanguageModule: LanguageModule = {
 					createSourceFile(fileName, snapshot) {
 						if (fileName.endsWith('.vue')) {
-							return new vue.VueSourceFile(fileName, snapshot, ts, vueLanguagePlugins);
+							return new vue.VueFile(fileName, snapshot, ts, vueLanguagePlugins);
 						}
 					},
-					updateSourceFile(sourceFile: vue.VueSourceFile, snapshot) {
+					updateSourceFile(sourceFile: vue.VueFile, snapshot) {
 						sourceFile.update(snapshot);
 					},
 				};

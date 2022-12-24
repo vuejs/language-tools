@@ -48,28 +48,24 @@ export interface TextRange {
 	end: number,
 }
 
-export interface SourceFile extends EmbeddedFile {
-	// TODO: snapshot
-}
-
 export enum EmbeddedFileKind {
 	TextFile = 0,
 	TypeScriptHostFile = 1,
 }
 
-export interface EmbeddedFile {
+export interface VirtualFile {
 	fileName: string,
 	text: string,
 	kind: EmbeddedFileKind,
 	capabilities: DocumentCapabilities,
 	mappings: Mapping<PositionCapabilities>[],
 	teleportMappings?: Mapping<TeleportMappingData>[],
-	embeddeds: EmbeddedFile[],
+	embeddeds: VirtualFile[],
 }
 
-export interface LanguageModule<T extends SourceFile = SourceFile> {
+export interface LanguageModule<T extends VirtualFile = VirtualFile> {
 	createSourceFile(fileName: string, snapshot: ts.IScriptSnapshot): T | undefined;
-	updateSourceFile(sourceFile: T, snapshot: ts.IScriptSnapshot): void;
+	updateSourceFile(virtualFile: T, snapshot: ts.IScriptSnapshot): void;
 	proxyLanguageServiceHost?(host: LanguageServiceHost): Partial<LanguageServiceHost>;
 }
 

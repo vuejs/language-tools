@@ -1,5 +1,5 @@
 import { hyphenate } from '@vue/shared';
-import { SourceFileDocument, LanguageServiceRuntimeContext } from '@volar/language-service';
+import { LanguageServiceRuntimeContext, VirtualFile } from '@volar/language-service';
 import { checkComponentNames, getTemplateTagsAndAttrs, checkPropsOfTag } from '../helpers';
 import * as vue from '@volar/vue-language-core';
 import * as vscode from 'vscode-languageserver-protocol';
@@ -15,7 +15,7 @@ export async function convertTagName(
 	if (!vueDocument)
 		return;
 
-	if (!(vueDocument.file instanceof vue.VueSourceFile))
+	if (!(vueDocument.file instanceof vue.VueFile))
 		return;
 
 	const desc = vueDocument.file.sfc;
@@ -23,7 +23,7 @@ export async function convertTagName(
 		return;
 
 	const template = desc.template;
-	const document = vueDocument.getDocument();
+	const document = vueDocument.document;
 	const edits: vscode.TextEdit[] = [];
 	const components = checkComponentNames(context.host.getTypeScriptModule(), context.typescriptLanguageService, vueDocument.file);
 	const tags = getTemplateTagsAndAttrs(vueDocument.file);
@@ -58,7 +58,7 @@ export async function convertAttrName(
 	if (!vueDocument)
 		return;
 
-	if (!(vueDocument.file instanceof vue.VueSourceFile))
+	if (!(vueDocument.file instanceof vue.VueFile))
 		return;
 
 	const desc = vueDocument.file.sfc;
@@ -66,7 +66,7 @@ export async function convertAttrName(
 		return;
 
 	const template = desc.template;
-	const document = vueDocument.getDocument();
+	const document = vueDocument.document;
 	const edits: vscode.TextEdit[] = [];
 	const components = checkComponentNames(context.host.getTypeScriptModule(), context.typescriptLanguageService, vueDocument.file);
 	const tags = getTemplateTagsAndAttrs(vueDocument.file);
@@ -112,13 +112,13 @@ export function detect(
 	};
 
 	return {
-		tag: getTagNameCase(vueDocument),
-		attr: getAttrNameCase(vueDocument),
+		tag: getTagNameCase(vueDocument.file),
+		attr: getAttrNameCase(vueDocument.file),
 	};
 
-	function getAttrNameCase(sourceFile: SourceFileDocument): AttrNameCasing[] {
+	function getAttrNameCase(file: VirtualFile): AttrNameCasing[] {
 
-		const tags = getTemplateTagsAndAttrs(sourceFile.file);
+		const tags = getTemplateTagsAndAttrs(file);
 		const result: AttrNameCasing[] = [];
 
 		for (const [_, { attrs }] of tags) {
@@ -140,10 +140,10 @@ export function detect(
 
 		return result;
 	}
-	function getTagNameCase(vueDocument: SourceFileDocument): TagNameCasing[] {
+	function getTagNameCase(file: VirtualFile): TagNameCasing[] {
 
-		const components = checkComponentNames(context.host.getTypeScriptModule(), context.typescriptLanguageService, vueDocument.file);
-		const tagNames = getTemplateTagsAndAttrs(vueDocument.file);
+		const components = checkComponentNames(context.host.getTypeScriptModule(), context.typescriptLanguageService, file);
+		const tagNames = getTemplateTagsAndAttrs(file);
 		const result: TagNameCasing[] = [];
 
 		let anyComponentUsed = false;

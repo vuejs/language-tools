@@ -1,4 +1,4 @@
-import { DocumentCapabilities, EmbeddedFile, EmbeddedFileKind, PositionCapabilities, SourceFile, TeleportMappingData } from '@volar/language-core';
+import { DocumentCapabilities, VirtualFile, EmbeddedFileKind, PositionCapabilities, TeleportMappingData } from '@volar/language-core';
 import { buildMappings, Mapping, Segment, toString } from '@volar/source-map';
 import * as CompilerDom from '@vue/compiler-dom';
 import { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
@@ -18,7 +18,7 @@ export class VueEmbeddedFile {
 	constructor(public fileName: string) { }
 }
 
-export class VueSourceFile implements SourceFile {
+export class VueFile implements VirtualFile {
 
 	static parsedSfcCache: {
 		fileName: string,
@@ -37,22 +37,22 @@ export class VueSourceFile implements SourceFile {
 
 	static getSFC(plugins: ReturnType<VueLanguagePlugin>[], fileName: string, snapshot: ts.IScriptSnapshot) {
 
-		if (VueSourceFile.parsedSfcCache?.snapshot === snapshot) {
-			return VueSourceFile.parsedSfcCache.sfc;
+		if (VueFile.parsedSfcCache?.snapshot === snapshot) {
+			return VueFile.parsedSfcCache.sfc;
 		}
 
 		// incremental update
-		if (VueSourceFile.parsedSfcCache?.fileName === fileName && VueSourceFile.parsedSfcCache.plugin.updateSFC) {
-			const change = snapshot.getChangeRange(VueSourceFile.parsedSfcCache.snapshot);
+		if (VueFile.parsedSfcCache?.fileName === fileName && VueFile.parsedSfcCache.plugin.updateSFC) {
+			const change = snapshot.getChangeRange(VueFile.parsedSfcCache.snapshot);
 			if (change) {
-				const newSfc = VueSourceFile.parsedSfcCache.plugin.updateSFC(VueSourceFile.parsedSfcCache.sfc, {
+				const newSfc = VueFile.parsedSfcCache.plugin.updateSFC(VueFile.parsedSfcCache.sfc, {
 					start: change.span.start,
 					end: change.span.start + change.span.length,
 					newText: snapshot.getText(change.span.start, change.span.start + change.newLength),
 				});
 				if (newSfc) {
-					VueSourceFile.parsedSfcCache.snapshot = snapshot;
-					VueSourceFile.parsedSfcCache.sfc = newSfc;
+					VueFile.parsedSfcCache.snapshot = snapshot;
+					VueFile.parsedSfcCache.sfc = newSfc;
 					return newSfc;
 				}
 			}
@@ -62,7 +62,7 @@ export class VueSourceFile implements SourceFile {
 			const sfc = plugin.parseSFC?.(fileName, snapshot.getText(0, snapshot.getLength()));
 			if (sfc) {
 				if (!sfc.errors.length) {
-					VueSourceFile.parsedSfcCache = {
+					VueFile.parsedSfcCache = {
 						fileName,
 						snapshot,
 						sfc,
@@ -74,46 +74,46 @@ export class VueSourceFile implements SourceFile {
 		}
 	}
 
-	static getCompiledSFCTemplate(plugins: ReturnType<VueLanguagePlugin>[], sourceFile: VueSourceFile, newSnapshot: ts.IScriptSnapshot) {
+	static getCompiledSFCTemplate(plugins: ReturnType<VueLanguagePlugin>[], sourceFile: VueFile, newSnapshot: ts.IScriptSnapshot) {
 
-		if (VueSourceFile.compiledSFCTemplateCache?.snapshot === newSnapshot) {
+		if (VueFile.compiledSFCTemplateCache?.snapshot === newSnapshot) {
 			return {
 				errors: [],
 				warnings: [],
-				ast: VueSourceFile.compiledSFCTemplateCache.result.ast,
+				ast: VueFile.compiledSFCTemplateCache.result.ast,
 			};
 		}
 
 		if (
-			VueSourceFile.compiledSFCTemplateCache?.fileName === sourceFile.fileName
-			&& VueSourceFile.compiledSFCTemplateCache.template === sourceFile.sfc.template?.content
+			VueFile.compiledSFCTemplateCache?.fileName === sourceFile.fileName
+			&& VueFile.compiledSFCTemplateCache.template === sourceFile.sfc.template?.content
 		) {
 			return {
 				errors: [],
 				warnings: [],
-				ast: VueSourceFile.compiledSFCTemplateCache.result.ast,
+				ast: VueFile.compiledSFCTemplateCache.result.ast,
 			};
 		}
 
 		if (sourceFile.sfc.template) {
 
 			// incremental update
-			if (VueSourceFile.compiledSFCTemplateCache?.plugin.updateSFCTemplate) {
+			if (VueFile.compiledSFCTemplateCache?.plugin.updateSFCTemplate) {
 
-				const change = newSnapshot.getChangeRange(VueSourceFile.compiledSFCTemplateCache.snapshot);
+				const change = newSnapshot.getChangeRange(VueFile.compiledSFCTemplateCache.snapshot);
 				const templateOffset = sourceFile.sfc.template.startTagEnd;
 
 				if (change) {
 					const newText = newSnapshot.getText(change.span.start, change.span.start + change.newLength);
-					const newResult = VueSourceFile.compiledSFCTemplateCache.plugin.updateSFCTemplate(VueSourceFile.compiledSFCTemplateCache.result, {
+					const newResult = VueFile.compiledSFCTemplateCache.plugin.updateSFCTemplate(VueFile.compiledSFCTemplateCache.result, {
 						start: change.span.start - templateOffset,
 						end: change.span.start + change.span.length - templateOffset,
 						newText,
 					});
 					if (newResult) {
-						VueSourceFile.compiledSFCTemplateCache.template = sourceFile.sfc.template.content;
-						VueSourceFile.compiledSFCTemplateCache.snapshot = newSnapshot;
-						VueSourceFile.compiledSFCTemplateCache.result = newResult;
+						VueFile.compiledSFCTemplateCache.template = sourceFile.sfc.template.content;
+						VueFile.compiledSFCTemplateCache.snapshot = newSnapshot;
+						VueFile.compiledSFCTemplateCache.result = newResult;
 						return {
 							errors: [],
 							warnings: [],
@@ -152,7 +152,7 @@ export class VueSourceFile implements SourceFile {
 				if (result || errors.length) {
 
 					if (result && !errors.length && !warnings.length) {
-						VueSourceFile.compiledSFCTemplateCache = {
+						VueFile.compiledSFCTemplateCache = {
 							fileName: sourceFile.fileName,
 							template: sourceFile.sfc.template.content,
 							snapshot: newSnapshot,
@@ -161,7 +161,7 @@ export class VueSourceFile implements SourceFile {
 						};
 					}
 					else {
-						VueSourceFile.compiledSFCTemplateCache = undefined;
+						VueFile.compiledSFCTemplateCache = undefined;
 					}
 
 					return {
@@ -174,13 +174,13 @@ export class VueSourceFile implements SourceFile {
 		}
 	}
 
-	static current = ref<VueSourceFile>({} as any);
+	static current = ref<VueFile>({} as any);
 
-	static _pluginEmbeddedFiles = computed(() => VueSourceFile.current.value.plugins.map(plugin => {
+	static _pluginEmbeddedFiles = computed(() => VueFile.current.value.plugins.map(plugin => {
 		const embeddedFiles: Record<string, ComputedRef<VueEmbeddedFile>> = {};
 		const files = computed(() => {
 			if (plugin.getEmbeddedFileNames) {
-				const embeddedFileNames = plugin.getEmbeddedFileNames(VueSourceFile.current.value.fileName, VueSourceFile.current.value.sfc);
+				const embeddedFileNames = plugin.getEmbeddedFileNames(VueFile.current.value.fileName, VueFile.current.value.sfc);
 				for (const oldFileName of Object.keys(embeddedFiles)) {
 					if (!embeddedFileNames.includes(oldFileName)) {
 						delete embeddedFiles[oldFileName];
@@ -190,9 +190,9 @@ export class VueSourceFile implements SourceFile {
 					if (!embeddedFiles[embeddedFileName]) {
 						embeddedFiles[embeddedFileName] = computed(() => {
 							const file = new VueEmbeddedFile(embeddedFileName);
-							for (const plugin of VueSourceFile.current.value.plugins) {
+							for (const plugin of VueFile.current.value.plugins) {
 								if (plugin.resolveEmbeddedFile) {
-									plugin.resolveEmbeddedFile(VueSourceFile.current.value.fileName, VueSourceFile.current.value.sfc, file);
+									plugin.resolveEmbeddedFile(VueFile.current.value.fileName, VueFile.current.value.sfc, file);
 								}
 							}
 							return file;
@@ -209,7 +209,7 @@ export class VueSourceFile implements SourceFile {
 				const mappings = [...buildMappings(file.content), ...file.extraMappings];
 				for (const mapping of mappings) {
 					if (mapping.source !== undefined) {
-						const block = VueSourceFile.current.value.sfcBlocks.value[mapping.source];
+						const block = VueFile.current.value.sfcBlocks.value[mapping.source];
 						if (block) {
 							mapping.sourceRange = [
 								mapping.sourceRange[0] + block.startTagEnd,
@@ -235,7 +235,7 @@ export class VueSourceFile implements SourceFile {
 			mappings: Mapping<PositionCapabilities>[];
 		}[] = [];
 
-		for (const embeddedFiles of VueSourceFile._pluginEmbeddedFiles.value) {
+		for (const embeddedFiles of VueFile._pluginEmbeddedFiles.value) {
 			for (const embedded of embeddedFiles.value) {
 				all.push(embedded);
 			}
@@ -245,9 +245,9 @@ export class VueSourceFile implements SourceFile {
 	});
 	static _embeddeds = computed(() => {
 
-		const childs: EmbeddedFile[] = [];
+		const childs: VirtualFile[] = [];
 
-		let remain = [...VueSourceFile._allEmbeddeds.value];
+		let remain = [...VueFile._allEmbeddeds.value];
 
 		while (remain.length) {
 			const beforeLength = remain.length;
@@ -295,7 +295,7 @@ export class VueSourceFile implements SourceFile {
 				}
 			}
 		}
-		function findParentStructure(fileName: string, strus: SourceFile[]): SourceFile | undefined {
+		function findParentStructure(fileName: string, strus: VirtualFile[]): VirtualFile | undefined {
 			for (const stru of strus) {
 				if (stru.fileName === fileName) {
 					return stru;
@@ -369,7 +369,7 @@ export class VueSourceFile implements SourceFile {
 	}
 
 	get compiledSFCTemplate() {
-		return VueSourceFile.getCompiledSFCTemplate(this.plugins, this, this._snapshot.value);
+		return VueFile.getCompiledSFCTemplate(this.plugins, this, this._snapshot.value);
 	}
 
 	get tsFileName() {
@@ -400,7 +400,7 @@ export class VueSourceFile implements SourceFile {
 		text: string;
 		mappings: Mapping<PositionCapabilities>[];
 	}[]>([]);
-	_embeddeds = ref<EmbeddedFile[]>([]);
+	_embeddeds = ref<VirtualFile[]>([]);
 
 	constructor(
 		public fileName: string,
@@ -420,7 +420,7 @@ export class VueSourceFile implements SourceFile {
 			return;
 		}
 
-		const parsedSfc = VueSourceFile.getSFC(this.plugins, this.fileName, newScriptSnapshot);
+		const parsedSfc = VueFile.getSFC(this.plugins, this.fileName, newScriptSnapshot);
 
 		this._snapshot.value = newScriptSnapshot;
 
@@ -440,10 +440,10 @@ export class VueSourceFile implements SourceFile {
 			updateCustomBlocks([]);
 		}
 
-		VueSourceFile.current.value = this;
+		VueFile.current.value = this;
 
-		this._allEmbeddeds.value = VueSourceFile._allEmbeddeds.value;
-		this._embeddeds.value = VueSourceFile._embeddeds.value;
+		this._allEmbeddeds.value = VueFile._allEmbeddeds.value;
+		this._embeddeds.value = VueFile._embeddeds.value;
 
 		function updateTemplate(block: SFCTemplateBlock | null) {
 

@@ -16,8 +16,8 @@ export function register(context: LanguageServiceRuntimeContext) {
 			context,
 			uri,
 			{ position, newName },
-			function* (arg, sourceMap) {
-				for (const mapped of sourceMap.toGeneratedPositions(arg.position, data => {
+			function* (arg, map) {
+				for (const mapped of map.toGeneratedPositions(arg.position, data => {
 					_data = data;
 					return typeof data.rename === 'object' ? !!data.rename.normalize : !!data.rename;
 				})) {
@@ -70,7 +70,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 								recursiveChecker.add({ uri: editUri, range: { start: textEdit.range.start, end: textEdit.range.start } });
 
-								const teleport = context.documents.teleportfromEmbeddedDocumentUri(editUri);
+								const teleport = context.documents.getTeleport(editUri);
 
 								if (teleport) {
 
@@ -190,14 +190,14 @@ export function embeddedEditToSourceEdit(
 			vueResult.changeAnnotations = {};
 
 		const tsAnno = tsResult.changeAnnotations[tsUri];
-		const uri = vueDocuments.sourceMapFromEmbeddedDocumentUri(tsUri)?.sourceDocument.uri ?? tsUri;
+		const uri = vueDocuments.getMap(tsUri)?.sourceDocument.uri ?? tsUri;
 		vueResult.changeAnnotations[uri] = tsAnno;
 	}
 	for (const tsUri in tsResult.changes) {
 		if (!vueResult.changes) {
 			vueResult.changes = {};
 		}
-		const map = vueDocuments.sourceMapFromEmbeddedDocumentUri(tsUri);
+		const map = vueDocuments.getMap(tsUri);
 		if (!map) {
 			vueResult.changes[tsUri] = tsResult.changes[tsUri];
 			hasResult = true;
@@ -230,19 +230,19 @@ export function embeddedEditToSourceEdit(
 			}
 			let vueDocEdit: typeof tsDocEdit | undefined;
 			if (vscode.TextDocumentEdit.is(tsDocEdit)) {
-				const sourceMap = vueDocuments.sourceMapFromEmbeddedDocumentUri(tsDocEdit.textDocument.uri);
-				if (sourceMap) {
+				const map = vueDocuments.getMap(tsDocEdit.textDocument.uri);
+				if (map) {
 					vueDocEdit = vscode.TextDocumentEdit.create(
 						{
-							uri: sourceMap.sourceDocument.uri,
-							// version: sourceMap.sourceDocument.version,
+							uri: map.sourceDocument.uri,
+							// version: map.sourceDocument.version,
 							version: null, // fix https://github.com/johnsoncodehk/volar/issues/1490
 						},
 						[],
 					);
 					for (const tsEdit of tsDocEdit.edits) {
 						let _data: PositionCapabilities | undefined;
-						const range = sourceMap.toSourceRange(tsEdit.range, data => {
+						const range = map.toSourceRange(tsEdit.range, data => {
 							_data = data;
 							// fix https://github.com/johnsoncodehk/volar/issues/1091
 							return typeof data.rename === 'object' ? !!data.rename.apply : !!data.rename;
@@ -271,11 +271,11 @@ export function embeddedEditToSourceEdit(
 				vueDocEdit = tsDocEdit; // TODO: remove .ts?
 			}
 			else if (vscode.RenameFile.is(tsDocEdit)) {
-				const oldUri = vueDocuments.sourceMapFromEmbeddedDocumentUri(tsDocEdit.oldUri)?.sourceDocument.uri ?? tsDocEdit.oldUri;
+				const oldUri = vueDocuments.getMap(tsDocEdit.oldUri)?.sourceDocument.uri ?? tsDocEdit.oldUri;
 				vueDocEdit = vscode.RenameFile.create(oldUri, tsDocEdit.newUri /* TODO: remove .ts? */, tsDocEdit.options, tsDocEdit.annotationId);
 			}
 			else if (vscode.DeleteFile.is(tsDocEdit)) {
-				const uri = vueDocuments.sourceMapFromEmbeddedDocumentUri(tsDocEdit.uri)?.sourceDocument.uri ?? tsDocEdit.uri;
+				const uri = vueDocuments.getMap(tsDocEdit.uri)?.sourceDocument.uri ?? tsDocEdit.uri;
 				vueDocEdit = vscode.DeleteFile.create(uri, tsDocEdit.options, tsDocEdit.annotationId);
 			}
 			if (vueDocEdit) {
