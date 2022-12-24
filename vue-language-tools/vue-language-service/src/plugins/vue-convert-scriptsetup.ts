@@ -107,10 +107,10 @@ export default function (options: {
 		if (!vueDocument)
 			return;
 
-		if (!(vueDocument.file instanceof vue.VueFile))
+		if (!(vueDocument.rootFile instanceof vue.VueFile))
 			return;
 
-		return callback(vueDocument, vueDocument.file);
+		return callback(vueDocument, vueDocument.rootFile);
 	}
 }
 

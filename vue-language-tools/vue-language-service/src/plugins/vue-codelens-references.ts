@@ -71,7 +71,7 @@ export default function (options: {
 
 				const document = vueDocument.document;
 				const offset = document.offsetAt(data.position);
-				const file = vueDocument.file as VueFile;
+				const file = vueDocument.rootFile as VueFile;
 				const blocks = [
 					file.sfc.script,
 					file.sfc.scriptSetup,

@@ -22,7 +22,7 @@ export = async function (
 
 		if (vueFile) {
 
-			const sourceDocument = TextDocument.create('', '', 0, vueFile.text);
+			const sourceDocument = TextDocument.create('', '', 0, vueFile.snapshot.getText(0, vueFile.snapshot.getLength()));
 			const all: typeof vueFile.embeddeds = [];
 
 			vueFile.embeddeds.forEach(async function visit(embeddedFile) {
@@ -35,10 +35,10 @@ export = async function (
 			for (const embeddedFile of all) {
 
 				const lintResult = await eslint.lintText(
-					embeddedFile.text,
+					embeddedFile.snapshot.getText(0, embeddedFile.snapshot.getLength()),
 					{ filePath: embeddedFile.fileName },
 				);
-				const embeddedDocument = TextDocument.create('', '', 0, embeddedFile.text);
+				const embeddedDocument = TextDocument.create('', '', 0, embeddedFile.snapshot.getText(0, embeddedFile.snapshot.getLength()));
 
 				for (const result of lintResult) {
 

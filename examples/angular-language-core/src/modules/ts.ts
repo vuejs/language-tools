@@ -43,7 +43,7 @@ export function createTsLanguageModule(
 			sourceFile.snapshot = snapshot;
 
 			const gen = createVirtualFile(sourceFile.ast);
-			sourceFile.text = gen.text;
+			sourceFile.snapshot = ts.ScriptSnapshot.fromString(gen.text);
 			sourceFile.mappings = gen.mappings;
 		},
 	};

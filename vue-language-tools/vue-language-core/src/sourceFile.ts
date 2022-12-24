@@ -221,7 +221,7 @@ export class VueFile implements VirtualFile {
 				}
 				return {
 					file,
-					text: toString(file.content),
+					snapshot: VueFile.current.value.ts.ScriptSnapshot.fromString(toString(file.content)),
 					mappings,
 				};
 			});
@@ -231,7 +231,7 @@ export class VueFile implements VirtualFile {
 
 		const all: {
 			file: VueEmbeddedFile;
-			text: string;
+			snapshot: ts.IScriptSnapshot;
 			mappings: Mapping<PositionCapabilities>[];
 		}[] = [];
 
@@ -257,10 +257,10 @@ export class VueFile implements VirtualFile {
 			}
 		}
 
-		for (const { file, text, mappings } of remain) {
+		for (const { file, snapshot, mappings } of remain) {
 			childs.push({
 				...file,
-				text,
+				snapshot,
 				mappings,
 				embeddeds: [],
 			});
@@ -271,11 +271,11 @@ export class VueFile implements VirtualFile {
 
 		function consumeRemain() {
 			for (let i = remain.length - 1; i >= 0; i--) {
-				const { file, text, mappings } = remain[i];
+				const { file, snapshot, mappings } = remain[i];
 				if (!file.parentFileName) {
 					childs.push({
 						...file,
-						text,
+						snapshot,
 						mappings,
 						embeddeds: [],
 					});
@@ -286,7 +286,7 @@ export class VueFile implements VirtualFile {
 					if (parent) {
 						parent.embeddeds.push({
 							...file,
-							text,
+							snapshot,
 							mappings,
 							embeddeds: [],
 						});
@@ -364,8 +364,8 @@ export class VueFile implements VirtualFile {
 		return this._mappings.value;
 	}
 
-	get text() {
-		return this._snapshot.value.getText(0, this._snapshot.value.getLength());
+	get snapshot() {
+		return this._snapshot.value;
 	}
 
 	get compiledSFCTemplate() {
@@ -400,18 +400,18 @@ export class VueFile implements VirtualFile {
 	}]);
 	_allEmbeddeds = ref<{
 		file: VueEmbeddedFile;
-		text: string;
+		snapshot: ts.IScriptSnapshot;
 		mappings: Mapping<PositionCapabilities>[];
 	}[]>([]);
 	_embeddeds = ref<VirtualFile[]>([]);
 
 	constructor(
 		public fileName: string,
-		private pscriptSnapshot: ts.IScriptSnapshot,
+		private scriptSnapshot: ts.IScriptSnapshot,
 		private ts: typeof import('typescript/lib/tsserverlibrary'),
 		private plugins: ReturnType<VueLanguagePlugin>[],
 	) {
-		this._snapshot = ref(this.pscriptSnapshot);
+		this._snapshot = ref(this.scriptSnapshot);
 		this.update(this._snapshot.value, true);
 	}
 

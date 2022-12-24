@@ -54,7 +54,7 @@ export function getLanguageServicePlugins(
 					if (result) {
 						const map = apis.context.documents.getMap(document.uri);
 						const doc = map ? apis.context.documents.get(map.sourceDocument.uri) : undefined;
-						if (map && doc?.file instanceof vue.VueFile) {
+						if (map && doc?.rootFile instanceof vue.VueFile) {
 							if (map.toSourcePosition(position, data => typeof data.completion === 'object' && !!data.completion.autoImportOnly)) {
 								result.items.forEach(item => {
 									item.data.__isComponentAutoImport = true;
@@ -85,8 +85,8 @@ export function getLanguageServicePlugins(
 					if (item.data?.__isComponentAutoImport && data && item.additionalTextEdits?.length && item.textEdit) {
 						const map = apis.context.documents.getMap(data.uri);
 						const doc = map ? apis.context.documents.get(map.sourceDocument.uri) : undefined;
-						if (map && doc?.file instanceof vue.VueFile) {
-							const sfc = doc.file.sfc;
+						if (map && doc?.rootFile instanceof vue.VueFile) {
+							const sfc = doc.rootFile.sfc;
 							const componentName = item.textEdit.newText;
 							const textDoc = doc.document;
 							if (sfc.scriptAst && sfc.script) {

@@ -15,18 +15,18 @@ export async function convertTagName(
 	if (!vueDocument)
 		return;
 
-	if (!(vueDocument.file instanceof vue.VueFile))
+	if (!(vueDocument.rootFile instanceof vue.VueFile))
 		return;
 
-	const desc = vueDocument.file.sfc;
+	const desc = vueDocument.rootFile.sfc;
 	if (!desc.template)
 		return;
 
 	const template = desc.template;
 	const document = vueDocument.document;
 	const edits: vscode.TextEdit[] = [];
-	const components = checkComponentNames(context.host.getTypeScriptModule(), context.typescriptLanguageService, vueDocument.file);
-	const tags = getTemplateTagsAndAttrs(vueDocument.file);
+	const components = checkComponentNames(context.host.getTypeScriptModule(), context.typescriptLanguageService, vueDocument.rootFile);
+	const tags = getTemplateTagsAndAttrs(vueDocument.rootFile);
 
 	for (const [tagName, { offsets }] of tags) {
 		const componentName = components.find(component => component === tagName || hyphenate(component) === tagName);
@@ -58,23 +58,23 @@ export async function convertAttrName(
 	if (!vueDocument)
 		return;
 
-	if (!(vueDocument.file instanceof vue.VueFile))
+	if (!(vueDocument.rootFile instanceof vue.VueFile))
 		return;
 
-	const desc = vueDocument.file.sfc;
+	const desc = vueDocument.rootFile.sfc;
 	if (!desc.template)
 		return;
 
 	const template = desc.template;
 	const document = vueDocument.document;
 	const edits: vscode.TextEdit[] = [];
-	const components = checkComponentNames(context.host.getTypeScriptModule(), context.typescriptLanguageService, vueDocument.file);
-	const tags = getTemplateTagsAndAttrs(vueDocument.file);
+	const components = checkComponentNames(context.host.getTypeScriptModule(), context.typescriptLanguageService, vueDocument.rootFile);
+	const tags = getTemplateTagsAndAttrs(vueDocument.rootFile);
 
 	for (const [tagName, { attrs }] of tags) {
 		const componentName = components.find(component => component === tagName || hyphenate(component) === tagName);
 		if (componentName) {
-			const props = checkPropsOfTag(context.host.getTypeScriptModule(), context.typescriptLanguageService, vueDocument.file, componentName);
+			const props = checkPropsOfTag(context.host.getTypeScriptModule(), context.typescriptLanguageService, vueDocument.rootFile, componentName);
 			for (const [attrName, { offsets }] of attrs) {
 				const propName = props.find(prop => prop === attrName || hyphenate(prop) === attrName);
 				if (propName) {
@@ -112,8 +112,8 @@ export function detect(
 	};
 
 	return {
-		tag: getTagNameCase(vueDocument.file),
-		attr: getAttrNameCase(vueDocument.file),
+		tag: getTagNameCase(vueDocument.rootFile),
+		attr: getAttrNameCase(vueDocument.rootFile),
 	};
 
 	function getAttrNameCase(file: VirtualFile): AttrNameCasing[] {

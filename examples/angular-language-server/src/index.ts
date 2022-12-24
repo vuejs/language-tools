@@ -42,7 +42,7 @@ function createNgTemplateLsPlugin(docs: SourceFileDocuments): LanguageServicePlu
 
 			onSyntactic(document) {
 
-				const file = docs.get(document.uri)?.file;
+				const file = docs.get(document.uri)?.rootFile;
 
 				if (file instanceof HTMLTemplateFile) {
 					return (file.parsed.errors ?? []).map<Diagnostic>(error => ({

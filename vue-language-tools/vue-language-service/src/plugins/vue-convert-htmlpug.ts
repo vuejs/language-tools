@@ -101,12 +101,12 @@ export default function (options: {
 	function worker<T>(uri: string, callback: (vueDocument: SourceFileDocument, vueSourceFile: vue.VueFile) => T) {
 
 		const vueDocument = options.getVueDocument(uri);
-		if (!vueDocument || vueDocument.file.fileName.endsWith('.md') || vueDocument.file.fileName.endsWith('.html'))
+		if (!vueDocument || vueDocument.rootFile.fileName.endsWith('.md') || vueDocument.rootFile.fileName.endsWith('.html'))
 			return;
 		
-		if (!(vueDocument.file instanceof vue.VueFile))
+		if (!(vueDocument.rootFile instanceof vue.VueFile))
 			return;
 
-		return callback(vueDocument, vueDocument.file);
+		return callback(vueDocument, vueDocument.rootFile);
 	}
 }

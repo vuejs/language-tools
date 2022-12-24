@@ -46,24 +46,29 @@ export function createVirtualFilesHost(languageModules: LanguageModule[]) {
 	const _teleports = new WeakMap<ts.IScriptSnapshot, WeakMap<Mapping<TeleportMappingData>[], Teleport>>();
 
 	return {
-		update(fileName: string, snapshot: ts.IScriptSnapshot | undefined) {
+		update(fileName: string, snapshot: ts.IScriptSnapshot) {
 			const key = normalizePath(fileName);
-			if (snapshot) {
-				if (files[key]) {
-					const virtualFile = files[key][2];
-					files[key][1] = snapshot;
-					files[key][3].updateSourceFile(virtualFile, snapshot);
-					return virtualFile; // updated
-				}
-				for (const languageModule of languageModules) {
-					const virtualFile = languageModule.createSourceFile(fileName, snapshot);
-					if (virtualFile) {
-						files[key] = [fileName, snapshot, reactive(virtualFile), languageModule];
-						return virtualFile; // created
-					}
+			if (files[key]) {
+				const virtualFile = files[key][2];
+				files[key][1] = snapshot;
+				files[key][3].updateSourceFile(virtualFile, snapshot);
+				return virtualFile; // updated
+			}
+			for (const languageModule of languageModules) {
+				const virtualFile = languageModule.createSourceFile(fileName, snapshot);
+				if (virtualFile) {
+					files[key] = [fileName, snapshot, reactive(virtualFile), languageModule];
+					return virtualFile; // created
 				}
 			}
-			delete files[key]; // deleted
+		},
+		delete(fileName: string) {
+			const key = normalizePath(fileName);
+			if (files[key]) {
+				const virtualFile = files[key][2];
+				files[key][3].deleteSourceFile?.(virtualFile);
+				delete files[key]; // deleted
+			}
 		},
 		get(fileName: string) {
 			const key = normalizePath(fileName);
@@ -74,7 +79,7 @@ export function createVirtualFilesHost(languageModules: LanguageModule[]) {
 				] as const;
 			}
 		},
-		has: (fileName: string) => !!files[normalizePath(fileName)],
+		hasSourceFile: (fileName: string) => !!files[normalizePath(fileName)],
 		all: () => all.value,
 		getTeleport: (fileName: string) => teleports.value.get(normalizePath(fileName)),
 		getSourceMap,

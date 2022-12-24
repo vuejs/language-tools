@@ -9,12 +9,11 @@ export * from '@volar/language-core';
 export const languageModule: LanguageModule = {
 	createSourceFile(fileName, snapshot) {
 		if (fileName.endsWith('.svelte')) {
-			const text = snapshot.getText(0, snapshot.getLength());
 			return {
 				fileName,
-				text,
+				snapshot,
 				kind: EmbeddedFileKind.TextFile,
-				embeddeds: getEmbeddeds(fileName, text),
+				embeddeds: getEmbeddeds(fileName, snapshot.getText(0, snapshot.getLength())),
 				capabilities: {
 					diagnostic: true,
 					foldingRange: true,
@@ -28,8 +27,8 @@ export const languageModule: LanguageModule = {
 		}
 	},
 	updateSourceFile(sourceFile, snapshot) {
-		sourceFile.text = snapshot.getText(0, snapshot.getLength());
-		sourceFile.embeddeds = getEmbeddeds(sourceFile.fileName, sourceFile.text);
+		sourceFile.snapshot = snapshot;
+		sourceFile.embeddeds = getEmbeddeds(sourceFile.fileName, sourceFile.snapshot.getText(0, sourceFile.snapshot.getLength()));
 	},
 };
 
@@ -108,7 +107,17 @@ function getEmbeddeds(fileName: string, text: string) {
 
 		embeddeds.push({
 			fileName: fileName + '.ts',
-			text: tsx.code,
+			snapshot: {
+				getText(start, end) {
+					return tsx.code.substring(start, end);
+				},
+				getLength() {
+					return tsx.code.length;
+				},
+				getChangeRange() {
+					return undefined;
+				},
+			},
 			kind: EmbeddedFileKind.TypeScriptHostFile,
 			capabilities: {
 				diagnostic: true,

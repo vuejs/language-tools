@@ -161,14 +161,14 @@ export function register(context: DocumentServiceRuntimeContext) {
 		return [textEdit];
 
 		function tryUpdateVueDocument() {
-			if (vueDocument && vueDocument.file.text !== document.getText()) {
+			if (vueDocument && vueDocument.snapshot.getText(0, vueDocument.snapshot.getLength()) !== document.getText()) {
 				context.updateVirtualFile(vueDocument.fileName, ts.ScriptSnapshot.fromString(document.getText()));
 			}
 		}
 
 		function getEmbeddedsByLevel(vueDocument: SourceFileDocument, level: number) {
 
-			const embeddeds = vueDocument.file.embeddeds;
+			const embeddeds = vueDocument.rootFile.embeddeds;
 			const embeddedsLevels: VirtualFile[][] = [embeddeds];
 
 			while (true) {

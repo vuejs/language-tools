@@ -177,7 +177,7 @@ export function parseSourceFileDocuments(mapper: DocumentRegistry) {
 		fileName: string,
 		snapshot: ts.IScriptSnapshot,
 		document: TextDocument,
-		file: VirtualFile,
+		rootFile: VirtualFile,
 		maps: Map<VirtualFile, EmbeddedDocumentSourceMap>,
 		teleports: Map<VirtualFile, TeleportSourceMap>,
 	}>();
@@ -238,7 +238,7 @@ export function parseSourceFileDocuments(mapper: DocumentRegistry) {
 					shared.getUriByPath(file.fileName),
 					shared.syntaxToLanguageId(file.fileName.substring(file.fileName.lastIndexOf('.') + 1)),
 					version++,
-					file.text,
+					file.snapshot.getText(0, file.snapshot.getLength()),
 				);
 				maps.set(file, new EmbeddedDocumentSourceMap(
 					rootFile,
@@ -260,7 +260,7 @@ export function parseSourceFileDocuments(mapper: DocumentRegistry) {
 				fileName,
 				snapshot,
 				document,
-				file: rootFile,
+				rootFile,
 				maps,
 				teleports,
 			};

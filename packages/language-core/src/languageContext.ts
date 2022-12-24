@@ -1,7 +1,7 @@
 import { posix as path } from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { createVirtualFilesHost, forEachEmbeddeds } from './documentRegistry';
-import { LanguageModule, VirtualFile, LanguageServiceHost, EmbeddedFileKind } from './types';
+import { LanguageModule, LanguageServiceHost, EmbeddedFileKind } from './types';
 
 export type EmbeddedLanguageContext = ReturnType<typeof createEmbeddedLanguageServiceHost>;
 
@@ -27,12 +27,12 @@ export function createEmbeddedLanguageServiceHost(
 	let lastProjectVersion: string | undefined;
 	let tsProjectVersion = 0;
 
-	const documentRegistry = createVirtualFilesHost(languageModules);
+	const virtualFiles = createVirtualFilesHost(languageModules);
 	const ts = host.getTypeScriptModule();
 	const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
 	const sourceTsFileVersions = new Map<string, string>();
-	const sourceVueFileVersions = new Map<string, string>();
-	const virtualFileVersions = new Map<string, string>();
+	const sourceFileVersions = new Map<string, string>();
+	const virtualFileVersions = new Map<string, { value: number, virtualFileSnapshot: ts.IScriptSnapshot, sourceFileSnapshot: ts.IScriptSnapshot; }>();
 	const _tsHost: Partial<ts.LanguageServiceHost> = {
 		fileExists: host.fileExists
 			? fileName => {
@@ -42,15 +42,15 @@ export function createEmbeddedLanguageServiceHost(
 				// .vue.d.ts -> [ignored]
 				const vueFileName = fileName.substring(0, fileName.lastIndexOf('.'));
 
-				if (!documentRegistry.has(vueFileName)) {
+				if (!virtualFiles.hasSourceFile(vueFileName)) {
 					// create virtual files
 					const scriptSnapshot = host.getScriptSnapshot(vueFileName);
 					if (scriptSnapshot) {
-						documentRegistry.update(vueFileName, scriptSnapshot);
+						virtualFiles.update(vueFileName, scriptSnapshot);
 					}
 				}
 
-				if (documentRegistry.getSourceByVirtualFileName(fileName)) {
+				if (virtualFiles.getSourceByVirtualFileName(fileName)) {
 					return true;
 				}
 
@@ -65,7 +65,7 @@ export function createEmbeddedLanguageServiceHost(
 		getScriptSnapshot,
 		readDirectory: (_path, extensions, exclude, include, depth) => {
 			const result = host.readDirectory?.(_path, extensions, exclude, include, depth) ?? [];
-			for (const [fileName] of documentRegistry.all()) {
+			for (const [fileName] of virtualFiles.all()) {
 				const vuePath2 = path.join(_path, path.basename(fileName));
 				if (path.relative(_path.toLowerCase(), fileName.toLowerCase()).startsWith('..')) {
 					continue;
@@ -81,7 +81,7 @@ export function createEmbeddedLanguageServiceHost(
 		},
 		getScriptKind(fileName) {
 
-			if (documentRegistry.has(fileName))
+			if (virtualFiles.hasSourceFile(fileName))
 				return ts.ScriptKind.Deferred;
 
 			switch (path.extname(fileName)) {
@@ -102,10 +102,10 @@ export function createEmbeddedLanguageServiceHost(
 				return target[property] || host[property];
 			},
 		}),
-		mapper: new Proxy(documentRegistry, {
+		mapper: new Proxy(virtualFiles, {
 			get: (target, property) => {
 				update();
-				return target[property as keyof typeof documentRegistry];
+				return target[property as keyof typeof virtualFiles];
 			},
 		}),
 	};
@@ -120,43 +120,44 @@ export function createEmbeddedLanguageServiceHost(
 		if (!shouldUpdate)
 			return;
 
-		let tsFileUpdated = false;
+		let shouldUpdateTsProject = false;
+		let virtualFilesUpdatedNum = 0;
 
-		const checkRemains = new Set(host.getScriptFileNames());
-		const sourceFilesShouldUpdate: [string, VirtualFile, ts.IScriptSnapshot][] = [];
+		const remainRootFiles = new Set(host.getScriptFileNames());
 
 		// .vue
-		for (const [fileName, _, virtualFile] of documentRegistry.all()) {
-			checkRemains.delete(fileName);
+		for (const [fileName] of virtualFiles.all()) {
+			remainRootFiles.delete(fileName);
 
 			const snapshot = host.getScriptSnapshot(fileName);
 			if (!snapshot) {
 				// delete
-				documentRegistry.update(fileName, undefined);
-				tsFileUpdated = true;
+				virtualFiles.delete(fileName);
+				shouldUpdateTsProject = true;
 				continue;
 			}
 
 			const newVersion = host.getScriptVersion(fileName);
-			if (sourceVueFileVersions.get(fileName) !== newVersion) {
+			if (sourceFileVersions.get(fileName) !== newVersion) {
 				// update
-				sourceVueFileVersions.set(fileName, newVersion);
-				sourceFilesShouldUpdate.push([fileName, virtualFile, snapshot]);
+				sourceFileVersions.set(fileName, newVersion);
+				virtualFiles.update(fileName, snapshot);
+				virtualFilesUpdatedNum++;
 			}
 		}
 
 		// no any vue file version change, it mean project version was update by ts file change at this time
-		if (!sourceFilesShouldUpdate.length) {
-			tsFileUpdated = true;
+		if (!virtualFilesUpdatedNum) {
+			shouldUpdateTsProject = true;
 		}
 
 		// add
-		for (const fileName of [...checkRemains]) {
+		for (const fileName of [...remainRootFiles]) {
 			const snapshot = host.getScriptSnapshot(fileName);
 			if (snapshot) {
-				const virtualFile = documentRegistry.update(fileName, snapshot);
+				const virtualFile = virtualFiles.update(fileName, snapshot);
 				if (virtualFile) {
-					checkRemains.delete(fileName);
+					remainRootFiles.delete(fileName);
 				}
 			}
 		}
@@ -165,7 +166,7 @@ export function createEmbeddedLanguageServiceHost(
 		for (const [oldTsFileName, oldTsFileVersion] of [...sourceTsFileVersions]) {
 			const newVersion = host.getScriptVersion(oldTsFileName);
 			if (oldTsFileVersion !== newVersion) {
-				if (!checkRemains.has(oldTsFileName) && !host.getScriptSnapshot(oldTsFileName)) {
+				if (!remainRootFiles.has(oldTsFileName) && !host.getScriptSnapshot(oldTsFileName)) {
 					// delete
 					sourceTsFileVersions.delete(oldTsFileName);
 				}
@@ -173,56 +174,32 @@ export function createEmbeddedLanguageServiceHost(
 					// update
 					sourceTsFileVersions.set(oldTsFileName, newVersion);
 				}
-				tsFileUpdated = true;
+				shouldUpdateTsProject = true;
 			}
 		}
 
-		for (const nowFileName of checkRemains) {
+		for (const nowFileName of remainRootFiles) {
 			if (!sourceTsFileVersions.has(nowFileName)) {
 				// add
 				const newVersion = host.getScriptVersion(nowFileName);
 				sourceTsFileVersions.set(nowFileName, newVersion);
-				tsFileUpdated = true;
+				shouldUpdateTsProject = true;
 			}
 		}
 
-		for (const [fileName, virtualFile, snapshot] of sourceFilesShouldUpdate) {
-
-			forEachEmbeddeds(virtualFile, embedded => {
-				virtualFileVersions.delete(embedded.fileName);
-			});
-
-			const oldScripts: Record<string, string> = {};
-			const newScripts: Record<string, string> = {};
-
-			if (!tsFileUpdated) {
+		for (const [_1, _2, virtualFile] of virtualFiles.all()) {
+			if (!shouldUpdateTsProject) {
 				forEachEmbeddeds(virtualFile, embedded => {
 					if (embedded.kind === EmbeddedFileKind.TypeScriptHostFile) {
-						oldScripts[embedded.fileName] = embedded.text;
+						if (virtualFileVersions.has(embedded.fileName) && virtualFileVersions.get(embedded.fileName)?.virtualFileSnapshot !== embedded.snapshot) {
+							shouldUpdateTsProject = true;
+						}
 					}
 				});
-			}
-
-			documentRegistry.update(fileName, snapshot);
-
-			if (!tsFileUpdated) {
-				forEachEmbeddeds(virtualFile, embedded => {
-					if (embedded.kind === EmbeddedFileKind.TypeScriptHostFile) {
-						newScripts[embedded.fileName] = embedded.text;
-					}
-				});
-			}
-
-			if (
-				!tsFileUpdated
-				&& Object.keys(oldScripts).length !== Object.keys(newScripts).length
-				|| Object.keys(oldScripts).some(fileName => oldScripts[fileName] !== newScripts[fileName])
-			) {
-				tsFileUpdated = true;
 			}
 		}
 
-		if (tsFileUpdated) {
+		if (shouldUpdateTsProject) {
 			tsProjectVersion++;
 		}
 	}
@@ -230,7 +207,7 @@ export function createEmbeddedLanguageServiceHost(
 
 		const tsFileNames = new Set<string>();
 
-		for (const [_1, _2, sourceFile] of documentRegistry.all()) {
+		for (const [_1, _2, sourceFile] of virtualFiles.all()) {
 			forEachEmbeddeds(sourceFile, embedded => {
 				if (embedded.kind === EmbeddedFileKind.TypeScriptHostFile) {
 					tsFileNames.add(embedded.fileName); // virtual .ts
@@ -239,7 +216,7 @@ export function createEmbeddedLanguageServiceHost(
 		}
 
 		for (const fileName of host.getScriptFileNames()) {
-			if (!documentRegistry.has(fileName)) {
+			if (!virtualFiles.hasSourceFile(fileName)) {
 				tsFileNames.add(fileName); // .ts
 			}
 		}
@@ -247,20 +224,26 @@ export function createEmbeddedLanguageServiceHost(
 		return [...tsFileNames];
 	}
 	function getScriptVersion(fileName: string) {
-		let source = documentRegistry.getSourceByVirtualFileName(fileName);
+		let source = virtualFiles.getSourceByVirtualFileName(fileName);
 		if (source) {
-			if (virtualFileVersions.has(source[2].fileName)) {
-				return virtualFileVersions.get(source[2].fileName)!;
-			}
-			else {
-				let version = ts.sys?.createHash?.(source[2].text) ?? source[2].text;
-				if (host.isTsc) {
-					// fix https://github.com/johnsoncodehk/volar/issues/1082
-					version = host.getScriptVersion(source[0]) + ':' + version;
-				}
+			let version = virtualFileVersions.get(source[2].fileName);
+			if (!version) {
+				version = {
+					value: 0,
+					virtualFileSnapshot: source[2].snapshot,
+					sourceFileSnapshot: source[1],
+				};
 				virtualFileVersions.set(source[2].fileName, version);
-				return version;
 			}
+			else if (
+				version.virtualFileSnapshot !== source[2].snapshot
+				|| (host.isTsc && version.sourceFileSnapshot !== source[1]) // fix https://github.com/johnsoncodehk/volar/issues/1082
+			) {
+				version.value++;
+				version.virtualFileSnapshot = source[2].snapshot;
+				version.sourceFileSnapshot = source[1];
+			}
+			return version.value.toString();
 		}
 		return host.getScriptVersion(fileName);
 	}
@@ -270,9 +253,9 @@ export function createEmbeddedLanguageServiceHost(
 		if (cache && cache[0] === version) {
 			return cache[1];
 		}
-		const source = documentRegistry.getSourceByVirtualFileName(fileName);
+		const source = virtualFiles.getSourceByVirtualFileName(fileName);
 		if (source) {
-			const snapshot = ts.ScriptSnapshot.fromString(source[2].text);
+			const snapshot = source[2].snapshot;
 			scriptSnapshots.set(fileName.toLowerCase(), [version, snapshot]);
 			return snapshot;
 		}

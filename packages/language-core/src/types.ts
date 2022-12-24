@@ -55,7 +55,7 @@ export enum EmbeddedFileKind {
 
 export interface VirtualFile {
 	fileName: string,
-	text: string,
+	snapshot: ts.IScriptSnapshot,
 	kind: EmbeddedFileKind,
 	capabilities: DocumentCapabilities,
 	mappings: Mapping<PositionCapabilities>[],
@@ -66,6 +66,7 @@ export interface VirtualFile {
 export interface LanguageModule<T extends VirtualFile = VirtualFile> {
 	createSourceFile(fileName: string, snapshot: ts.IScriptSnapshot): T | undefined;
 	updateSourceFile(virtualFile: T, snapshot: ts.IScriptSnapshot): void;
+	deleteSourceFile?(virtualFile: T): void;
 	proxyLanguageServiceHost?(host: LanguageServiceHost): Partial<LanguageServiceHost>;
 }
 

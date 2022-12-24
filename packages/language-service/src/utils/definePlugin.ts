@@ -3,7 +3,7 @@ import { EmbeddedDocumentSourceMap, SourceFileDocument } from '../documents';
 export async function visitEmbedded(
 	vueDocument: SourceFileDocument,
 	cb: (sourceMap: EmbeddedDocumentSourceMap) => Promise<boolean>,
-	current = vueDocument.file,
+	current = vueDocument.rootFile,
 ) {
 
 	for (const embedded of current.embeddeds) {

@@ -37,7 +37,7 @@ export class HTMLTemplateFile implements VirtualFile {
 		this.embeddeds = [
 			{
 				fileName: fileName + '.__template.ts',
-				text: generated.codegen.text,
+				snapshot: this.ts.ScriptSnapshot.fromString(generated.codegen.text),
 				capabilities: {
 					diagnostic: true,
 					foldingRange: false,
@@ -66,7 +66,7 @@ export class HTMLTemplateFile implements VirtualFile {
 				sourceRange: [0, this.text.length],
 			},
 		];
-		this.embeddeds[0].text = generated.codegen.text;
+		this.embeddeds[0].snapshot = this.ts.ScriptSnapshot.fromString(generated.codegen.text);
 		this.embeddeds[0].mappings = generated.codegen.mappings;
 		this.parsed = generated.parsed;
 	}

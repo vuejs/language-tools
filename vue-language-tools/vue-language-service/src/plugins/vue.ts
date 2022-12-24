@@ -312,15 +312,15 @@ export default function (options: {
 		if (!vueDocument)
 			return;
 
-		if (!(vueDocument.file instanceof vue.VueFile))
+		if (!(vueDocument.rootFile instanceof vue.VueFile))
 			return;
 
 		let cache = emptyBlocksDocument.get(document);
 		if (!cache || cache[0] !== document.version) {
-			cache = [document.version, createEmptyBlocksDocument(document, vueDocument.file)];
+			cache = [document.version, createEmptyBlocksDocument(document, vueDocument.rootFile)];
 		}
 
-		return callback(cache[1], vueDocument, vueDocument.file);
+		return callback(cache[1], vueDocument, vueDocument.rootFile);
 	}
 
 }

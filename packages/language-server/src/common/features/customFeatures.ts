@@ -77,7 +77,7 @@ export function register(
 			const sourceFile = project.project?.getLanguageService().context.core.mapper.get(shared.getPathOfUri(document.uri))?.[1];
 			if (sourceFile) {
 				forEachEmbeddeds(sourceFile, e => {
-					if (e.text && e.kind === 1) {
+					if (e.snapshot.getLength() && e.kind === 1) {
 						fileNames.push(e.fileName);
 					}
 				});
@@ -91,7 +91,7 @@ export function register(
 			const virtualFile = project.project?.getLanguageService().context.core.mapper.getSourceByVirtualFileName(params.virtualFileName)?.[2];
 			if (virtualFile) {
 				return {
-					content: virtualFile.text,
+					content: virtualFile.snapshot.getText(0, virtualFile.snapshot.getLength()),
 					mappings: virtualFile.mappings as any,
 				};
 			}
