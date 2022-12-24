@@ -3,7 +3,8 @@ import type { LanguageServiceRuntimeContext } from '../types';
 import * as shared from '@volar/shared';
 import { languageFeatureWorker } from '../utils/featureWorkers';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { EmbeddedDocumentSourceMap } from '../documents';
+import { SourceMap } from '../documents';
+import { PositionCapabilities, VirtualFile } from '@volar/language-core';
 
 export function register(context: LanguageServiceRuntimeContext) {
 
@@ -30,21 +31,21 @@ export function register(context: LanguageServiceRuntimeContext) {
 			}).filter(shared.notEmpty),
 			arr => arr.flat(),
 		) ?? [];
-		const maps = context.documents.get(uri);
-		const fictitiousLinks = maps ? getFictitiousLinks(maps.document, [...maps.maps.values()]) : [];
+		const maps = context.documents.getMapsBySourceFileUri(uri);
+		const fictitiousLinks = maps ? getFictitiousLinks(context.documents.getDocumentByUri(maps.snapshot, uri), maps.maps) : [];
 
 		return [
 			...pluginLinks,
 			...fictitiousLinks,
 		];
 
-		function getFictitiousLinks(document: TextDocument, maps: EmbeddedDocumentSourceMap[]) {
+		function getFictitiousLinks(document: TextDocument, maps: [VirtualFile, SourceMap<PositionCapabilities>][]) {
 
 			const result: vscode.DocumentLink[] = [];
 
-			for (const map of maps) {
+			for (const [_, map] of maps) {
 
-				for (const mapped of map.mappings) {
+				for (const mapped of map.map.mappings) {
 
 					if (!mapped.data.displayWithLink)
 						continue;

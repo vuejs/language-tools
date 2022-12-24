@@ -1,10 +1,9 @@
-import { EmbeddedFileKind, forEachEmbeddeds, LanguageServicePlugin, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
+import { VirtualFileKind, forEachEmbeddedFile, LanguageServicePlugin, LanguageServicePluginContext, DocumentsAndSourceMaps } from '@volar/language-service';
 import * as vue from '@volar/vue-language-core';
 import * as vscode from 'vscode-languageserver-protocol';
-import { TextDocument } from 'vscode-languageserver-textdocument';
 
 export default function (options: {
-	getVueDocument(document: TextDocument): SourceFileDocument | undefined,
+	documents: DocumentsAndSourceMaps,
 }): LanguageServicePlugin {
 
 	let context: LanguageServicePluginContext;
@@ -18,7 +17,7 @@ export default function (options: {
 		inlayHints: {
 
 			on(document, range) {
-				return worker(document, (vueDocument, vueFile) => {
+				return worker(document.uri, (vueFile) => {
 
 					const ts = context.typescript.module;
 					const hoverOffsets: [vscode.Position, number][] = [];
@@ -33,12 +32,11 @@ export default function (options: {
 						})]);
 					}
 
-					forEachEmbeddeds(vueFile, (embedded) => {
-						if (embedded.kind === EmbeddedFileKind.TypeScriptHostFile) {
-							const map = vueDocument.maps.get(embedded);
-							if (map) {
+					forEachEmbeddedFile(vueFile, (embedded) => {
+						if (embedded.kind === VirtualFileKind.TypeScriptHostFile) {
+							for (const [_, map] of options.documents.getMapsByVirtualFileUri(document.uri)) {
 								for (const [pointerPosition, hoverOffset] of hoverOffsets) {
-									for (const [tsOffset, mapping] of map.toGeneratedOffsets(hoverOffset)) {
+									for (const [tsOffset, mapping] of map.map.toGeneratedOffsets(hoverOffset)) {
 										if (mapping.data.hover) {
 											const quickInfo = context.typescript.languageService.getQuickInfoAtPosition(embedded.fileName, tsOffset);
 											if (quickInfo) {
@@ -63,15 +61,12 @@ export default function (options: {
 		},
 	};
 
-	function worker<T>(document: TextDocument, callback: (vueDocument: SourceFileDocument, vueSourceFile: vue.VueFile) => T) {
+	function worker<T>(uri: string, callback: (vueSourceFile: vue.VueFile) => T) {
 
-		const vueDocument = options.getVueDocument(document);
-		if (!vueDocument)
+		const virtualFile = options.documents.getVirtualFileByUri(uri);
+		if (!(virtualFile instanceof vue.VueFile))
 			return;
 
-		if (!(vueDocument.file instanceof vue.VueFile))
-			return;
-
-		return callback(vueDocument, vueDocument.file);
+		return callback(virtualFile);
 	}
 }

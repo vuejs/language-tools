@@ -1,7 +1,7 @@
 import type { VirtualFile } from '@volar/language-core';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { EmbeddedDocumentSourceMap, SourceFileDocument } from '../documents';
+import { SourceMap } from '../documents';
 import type { DocumentServiceRuntimeContext } from '../types';
 
 export function register(context: DocumentServiceRuntimeContext) {
@@ -22,13 +22,13 @@ export function register(context: DocumentServiceRuntimeContext) {
 			range = vscode.Range.create(document.positionAt(0), document.positionAt(document.getText().length));
 		}
 
-		const vueDocument = context.getVirtualDocuments(document);
+		const virtualFile = context.documents.getVirtualFileByUri(document.uri);
 		const originalDocument = document;
 		const rootEdits = onTypeParams
 			? await tryFormat(document, onTypeParams.position, undefined, onTypeParams.ch)
 			: await tryFormat(document, range, undefined);
 
-		if (!vueDocument)
+		if (!virtualFile)
 			return rootEdits;
 
 		if (rootEdits?.length) {
@@ -43,9 +43,8 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 			tryUpdateVueDocument();
 
-			const embeddeds = getEmbeddedsByLevel(vueDocument, level++);
-
-			if (embeddeds.length === 0)
+			const embeddedFiles = getEmbeddedFilesByLevel(virtualFile, level++);
+			if (embeddedFiles.length === 0)
 				break;
 
 			let edits: vscode.TextEdit[] = [];
@@ -53,16 +52,17 @@ export function register(context: DocumentServiceRuntimeContext) {
 				sourceMapEmbeddedDocumentUri: string,
 			} | undefined;
 
-			for (const embedded of embeddeds) {
+			for (const embedded of embeddedFiles) {
 
 				if (!embedded.capabilities.documentFormatting)
 					continue;
 
-				const map = vueDocument.maps.get(embedded);
+				const maps = [...context.documents.getMapsByVirtualFileName(embedded.fileName)];
+				const map = maps.find(map => map[1].sourceFileDocument.uri === document.uri)?.[1];
 				if (!map)
 					continue;
 
-				const initialIndentBracket = typeof embedded.capabilities.documentFormatting === 'object' && initialIndentLanguageId[map.mappedDocument.languageId]
+				const initialIndentBracket = typeof embedded.capabilities.documentFormatting === 'object' && initialIndentLanguageId[map.virtualFileDocument.languageId]
 					? embedded.capabilities.documentFormatting.initialIndentBracket
 					: undefined;
 
@@ -74,7 +74,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 					if (embeddedPosition) {
 						_edits = await tryFormat(
-							map.mappedDocument,
+							map.virtualFileDocument,
 							embeddedPosition,
 							initialIndentBracket,
 							onTypeParams.ch,
@@ -87,15 +87,15 @@ export function register(context: DocumentServiceRuntimeContext) {
 					let genRange = map.toGeneratedRange(range);
 
 					if (!genRange) {
-						const firstMapping = map.mappings.sort((a, b) => a.sourceRange[0] - b.sourceRange[0])[0];
-						const lastMapping = map.mappings.sort((a, b) => b.sourceRange[0] - a.sourceRange[0])[0];
+						const firstMapping = map.map.mappings.sort((a, b) => a.sourceRange[0] - b.sourceRange[0])[0];
+						const lastMapping = map.map.mappings.sort((a, b) => b.sourceRange[0] - a.sourceRange[0])[0];
 						if (
 							firstMapping && document.offsetAt(range.start) < firstMapping.sourceRange[0]
 							&& lastMapping && document.offsetAt(range.end) > lastMapping.sourceRange[1]
 						) {
 							genRange = {
-								start: map.mappedDocument.positionAt(firstMapping.generatedRange[0]),
-								end: map.mappedDocument.positionAt(lastMapping.generatedRange[1]),
+								start: map.virtualFileDocument.positionAt(firstMapping.generatedRange[0]),
+								end: map.virtualFileDocument.positionAt(lastMapping.generatedRange[1]),
 							};
 						}
 					}
@@ -103,11 +103,11 @@ export function register(context: DocumentServiceRuntimeContext) {
 					if (genRange) {
 
 						toPatchIndent = {
-							sourceMapEmbeddedDocumentUri: map.mappedDocument.uri,
+							sourceMapEmbeddedDocumentUri: map.virtualFileDocument.uri,
 						};
 
 						_edits = await tryFormat(
-							map.mappedDocument,
+							map.virtualFileDocument,
 							genRange,
 							initialIndentBracket,
 						);
@@ -136,11 +136,12 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 				tryUpdateVueDocument();
 
-				const sourceMap = [...vueDocument.maps.values()].find(map => map.mappedDocument.uri === toPatchIndent?.sourceMapEmbeddedDocumentUri);
+				const maps = [...context.documents.getMapsByVirtualFileName(virtualFile.fileName)];
+				const map = maps.find(map => map[1].sourceFileDocument.uri === toPatchIndent?.sourceMapEmbeddedDocumentUri)?.[1];
 
-				if (sourceMap) {
+				if (map) {
 
-					const indentEdits = patchInterpolationIndent(vueDocument, sourceMap);
+					const indentEdits = patchInterpolationIndent(context.documents.getDocumentByFileName(virtualFile.snapshot, virtualFile.fileName), map);
 
 					if (indentEdits.length > 0) {
 						applyEdits(indentEdits);
@@ -161,29 +162,28 @@ export function register(context: DocumentServiceRuntimeContext) {
 		return [textEdit];
 
 		function tryUpdateVueDocument() {
-			if (vueDocument && vueDocument.file.text !== document.getText()) {
-				context.updateVirtualFile(vueDocument.fileName, ts.ScriptSnapshot.fromString(document.getText()));
+			if (virtualFile && virtualFile.snapshot.getText(0, virtualFile.snapshot.getLength()) !== document.getText()) {
+				context.updateVirtualFile(virtualFile.fileName, ts.ScriptSnapshot.fromString(document.getText()));
 			}
 		}
 
-		function getEmbeddedsByLevel(vueDocument: SourceFileDocument, level: number) {
+		function getEmbeddedFilesByLevel(rootFile: VirtualFile, level: number) {
 
-			const embeddeds = vueDocument.file.embeddeds;
-			const embeddedsLevels: VirtualFile[][] = [embeddeds];
+			const embeddedFilesByLevel: VirtualFile[][] = [rootFile.embeddedFiles];
 
 			while (true) {
 
-				if (embeddedsLevels.length > level)
-					return embeddedsLevels[level];
+				if (embeddedFilesByLevel.length > level)
+					return embeddedFilesByLevel[level];
 
-				let nextEmbeddeds: VirtualFile[] = [];
+				let nextLevel: VirtualFile[] = [];
 
-				for (const embeddeds of embeddedsLevels[embeddedsLevels.length - 1]) {
+				for (const file of embeddedFilesByLevel[embeddedFilesByLevel.length - 1]) {
 
-					nextEmbeddeds = nextEmbeddeds.concat(embeddeds.embeddeds);
+					nextLevel = nextLevel.concat(file.embeddedFiles);
 				}
 
-				embeddedsLevels.push(nextEmbeddeds);
+				embeddedFilesByLevel.push(nextLevel);
 			}
 		}
 
@@ -281,12 +281,11 @@ export function register(context: DocumentServiceRuntimeContext) {
 	};
 }
 
-function patchInterpolationIndent(vueDocument: SourceFileDocument, map: EmbeddedDocumentSourceMap) {
+function patchInterpolationIndent(document: TextDocument, map: SourceMap) {
 
 	const indentTextEdits: vscode.TextEdit[] = [];
-	const document = vueDocument.document;
 
-	for (const mapped of map.mappings) {
+	for (const mapped of map.map.mappings) {
 
 		const textRange = {
 			start: document.positionAt(mapped.sourceRange[0]),

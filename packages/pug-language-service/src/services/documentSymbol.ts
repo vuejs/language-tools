@@ -6,7 +6,7 @@ export function register(htmlLs: html.LanguageService) {
 	return (pugDoc: PugDocument) => {
 
 		const htmlResult = htmlLs.findDocumentSymbols(
-			pugDoc.map.mappedDocument,
+			pugDoc.map.virtualFileDocument,
 			pugDoc.htmlDocument,
 		);
 
@@ -16,7 +16,7 @@ export function register(htmlLs: html.LanguageService) {
 				const range = pugDoc.map.toSourceRange(htmlLocation.range);
 				if (range) {
 					return {
-						uri: pugDoc.map.sourceDocument.uri,
+						uri: pugDoc.map.sourceFileDocument.uri,
 						range,
 					};
 				}

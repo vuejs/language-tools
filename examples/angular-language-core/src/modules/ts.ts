@@ -1,4 +1,4 @@
-import { LanguageModule, VirtualFile, EmbeddedFileKind, PositionCapabilities } from '@volar/language-core';
+import { LanguageModule, VirtualFile, VirtualFileKind, PositionCapabilities } from '@volar/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path';
 import type { Mapping } from '@volar/source-map';
@@ -8,7 +8,7 @@ export function createTsLanguageModule(
 ) {
 
 	const languageModule: LanguageModule<VirtualFile & { ast: ts.SourceFile, snapshot: ts.IScriptSnapshot; }> = {
-		createSourceFile(fileName, snapshot) {
+		createFile(fileName, snapshot) {
 			if (fileName.endsWith('.ts')) {
 				const text = snapshot.getText(0, snapshot.getLength());
 				const ast = ts.createSourceFile(fileName, text, ts.ScriptTarget.Latest);
@@ -26,13 +26,13 @@ export function createTsLanguageModule(
 						codeAction: true,
 						inlayHint: true,
 					},
-					kind: EmbeddedFileKind.TypeScriptHostFile,
+					kind: VirtualFileKind.TypeScriptHostFile,
 					mappings: virtualFile.mappings,
-					embeddeds: [],
+					embeddedFiles: [],
 				};
 			}
 		},
-		updateSourceFile(sourceFile, snapshot) {
+		updateFile(sourceFile, snapshot) {
 			const text = snapshot.getText(0, snapshot.getLength());
 			const change = snapshot.getChangeRange(sourceFile.snapshot);
 
@@ -43,7 +43,7 @@ export function createTsLanguageModule(
 			sourceFile.snapshot = snapshot;
 
 			const gen = createVirtualFile(sourceFile.ast);
-			sourceFile.text = gen.text;
+			sourceFile.snapshot = ts.ScriptSnapshot.fromString(gen.text);
 			sourceFile.mappings = gen.mappings;
 		},
 	};

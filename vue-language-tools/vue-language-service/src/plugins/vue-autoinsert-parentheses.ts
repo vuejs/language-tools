@@ -1,12 +1,13 @@
-import type { TextDocument } from 'vscode-languageserver-textdocument';
 import * as vscode from 'vscode-languageserver-protocol';
-import { LanguageServicePlugin, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
+import { LanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
 import { isCharacterTyping } from './vue-autoinsert-dotvalue';
 import * as embedded from '@volar/language-core';
 import { VirtualFile } from '@volar/language-core';
+import { VueFile } from '@volar/vue-language-core';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 
 export default function (options: {
-	getVueDocument: (document: TextDocument) => SourceFileDocument | undefined,
+	getVueFile: (document: TextDocument) => VueFile | undefined,
 }): LanguageServicePlugin {
 
 	let context: LanguageServicePluginContext;
@@ -26,14 +27,14 @@ export default function (options: {
 			if (!isCharacterTyping(document, options_2))
 				return;
 
-			const vueDocument = options.getVueDocument(document);
-			if (!vueDocument)
+			const vueFile = options.getVueFile(document);
+			if (!vueFile)
 				return;
 
 
 			let templateFormatScript: VirtualFile | undefined;
 
-			embedded.forEachEmbeddeds(vueDocument.file, embedded => {
+			embedded.forEachEmbeddedFile(vueFile, embedded => {
 				if (embedded.fileName.endsWith('.__VLS_template_format.ts')) {
 					templateFormatScript = embedded;
 				}

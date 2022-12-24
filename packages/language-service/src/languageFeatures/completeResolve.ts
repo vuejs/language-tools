@@ -23,9 +23,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 			if (data.map) {
 
-				const map = context.documents.getMap(data.map.embeddedDocumentUri);
-
-				if (map) {
+				for (const [_, map] of context.documents.getMapsByVirtualFileUri(data.map.embeddedDocumentUri)) {
 
 					const resolvedItem = await plugin.complete.resolve(originalItem);
 

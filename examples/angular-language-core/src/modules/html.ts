@@ -1,4 +1,4 @@
-import { DocumentCapabilities, EmbeddedFileKind, LanguageModule, VirtualFile } from '@volar/language-core';
+import { DocumentCapabilities, VirtualFileKind, LanguageModule, VirtualFile } from '@volar/language-core';
 import type { TmplAstNode, TmplAstTemplate, ParsedTemplate, ParseSourceSpan } from '@angular/compiler';
 import { Codegen } from './ts';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -11,9 +11,9 @@ export class HTMLTemplateFile implements VirtualFile {
 	public capabilities: DocumentCapabilities = {
 		diagnostic: true,
 	};
-	public kind = EmbeddedFileKind.TextFile;
+	public kind = VirtualFileKind.TextFile;
 	public mappings: VirtualFile['mappings'] = [];
-	public embeddeds: VirtualFile['embeddeds'] = [];
+	public embeddedFiles: VirtualFile['embeddedFiles'] = [];
 	public parsed: ParsedTemplate;
 
 	constructor(
@@ -34,10 +34,10 @@ export class HTMLTemplateFile implements VirtualFile {
 				sourceRange: [0, this.text.length],
 			},
 		];
-		this.embeddeds = [
+		this.embeddedFiles = [
 			{
 				fileName: fileName + '.__template.ts',
-				text: generated.codegen.text,
+				snapshot: this.ts.ScriptSnapshot.fromString(generated.codegen.text),
 				capabilities: {
 					diagnostic: true,
 					foldingRange: false,
@@ -46,9 +46,9 @@ export class HTMLTemplateFile implements VirtualFile {
 					codeAction: false,
 					inlayHint: true,
 				},
-				kind: EmbeddedFileKind.TypeScriptHostFile,
+				kind: VirtualFileKind.TypeScriptHostFile,
 				mappings: generated.codegen.mappings,
-				embeddeds: [],
+				embeddedFiles: [],
 			},
 		];
 		this.parsed = generated.parsed;
@@ -66,20 +66,20 @@ export class HTMLTemplateFile implements VirtualFile {
 				sourceRange: [0, this.text.length],
 			},
 		];
-		this.embeddeds[0].text = generated.codegen.text;
-		this.embeddeds[0].mappings = generated.codegen.mappings;
+		this.embeddedFiles[0].snapshot = this.ts.ScriptSnapshot.fromString(generated.codegen.text);
+		this.embeddedFiles[0].mappings = generated.codegen.mappings;
 		this.parsed = generated.parsed;
 	}
 }
 
 export function createHtmlLanguageModule(ts: typeof import('typescript/lib/tsserverlibrary')): LanguageModule<HTMLTemplateFile> {
 	return {
-		createSourceFile(fileName, snapshot) {
+		createFile(fileName, snapshot) {
 			if (fileName.endsWith('.html')) {
 				return new HTMLTemplateFile(ts, fileName, snapshot);
 			}
 		},
-		updateSourceFile(sourceFile, snapshot) {
+		updateFile(sourceFile, snapshot) {
 			sourceFile.update(snapshot);
 		},
 	};

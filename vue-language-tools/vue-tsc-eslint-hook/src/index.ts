@@ -22,23 +22,23 @@ export = async function (
 
 		if (vueFile) {
 
-			const sourceDocument = TextDocument.create('', '', 0, vueFile.text);
-			const all: typeof vueFile.embeddeds = [];
+			const sourceDocument = TextDocument.create('', '', 0, vueFile.snapshot.getText(0, vueFile.snapshot.getLength()));
+			const all: typeof vueFile.embeddedFiles = [];
 
-			vueFile.embeddeds.forEach(async function visit(embeddedFile) {
+			vueFile.embeddedFiles.forEach(async function visit(embeddedFile) {
 				if (embeddedFile.capabilities.diagnostic) {
 					all.push(embeddedFile);
 				}
-				embeddedFile.embeddeds.forEach(visit);
+				embeddedFile.embeddedFiles.forEach(visit);
 			});
 
 			for (const embeddedFile of all) {
 
 				const lintResult = await eslint.lintText(
-					embeddedFile.text,
+					embeddedFile.snapshot.getText(0, embeddedFile.snapshot.getLength()),
 					{ filePath: embeddedFile.fileName },
 				);
-				const embeddedDocument = TextDocument.create('', '', 0, embeddedFile.text);
+				const embeddedDocument = TextDocument.create('', '', 0, embeddedFile.snapshot.getText(0, embeddedFile.snapshot.getLength()));
 
 				for (const result of lintResult) {
 
@@ -64,38 +64,43 @@ export = async function (
 							line: (message.endLine ?? message.line) - 1,
 							character: (message.endColumn ?? message.column) - 1,
 						});
-						const map = mapper.getSourceMap(embeddedFile);
 
-						for (const start of map.toSourceOffsets(msgStart)) {
+						for (const [sourceFileName, map] of mapper.getMaps(embeddedFile)) {
 
-							if (!start[1].data.diagnostic)
+							if (sourceFileName !== vueFile.fileName)
 								continue;
 
-							for (const end of map.toSourceOffsets(msgEnd, true)) {
+							for (const start of map.toSourceOffsets(msgStart)) {
 
-								if (!end[1].data.diagnostic)
+								if (!start[1].data.diagnostic)
 									continue;
 
-								const range = {
-									start: sourceDocument.positionAt(start[0]),
-									end: sourceDocument.positionAt(end[0]),
-								};
-								messages.push({
-									...message,
-									line: range.start.line + 1,
-									column: range.start.character + 1,
-									endLine: range.end.line + 1,
-									endColumn: range.end.character + 1,
-								});
-								result.errorCount += message.severity === 2 ? 1 : 0;
-								result.warningCount += message.severity === 1 ? 1 : 0;
-								result.fixableErrorCount += message.severity === 2 && message.fix ? 1 : 0;
-								result.fixableWarningCount += message.severity === 1 && message.fix ? 1 : 0;
+								for (const end of map.toSourceOffsets(msgEnd, true)) {
+
+									if (!end[1].data.diagnostic)
+										continue;
+
+									const range = {
+										start: sourceDocument.positionAt(start[0]),
+										end: sourceDocument.positionAt(end[0]),
+									};
+									messages.push({
+										...message,
+										line: range.start.line + 1,
+										column: range.start.character + 1,
+										endLine: range.end.line + 1,
+										endColumn: range.end.character + 1,
+									});
+									result.errorCount += message.severity === 2 ? 1 : 0;
+									result.warningCount += message.severity === 1 ? 1 : 0;
+									result.fixableErrorCount += message.severity === 2 && message.fix ? 1 : 0;
+									result.fixableWarningCount += message.severity === 1 && message.fix ? 1 : 0;
+
+									break;
+								}
 
 								break;
 							}
-
-							break;
 						}
 					}
 

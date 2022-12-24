@@ -1,4 +1,4 @@
-import { DocumentCapabilities, VirtualFile, EmbeddedFileKind, PositionCapabilities, TeleportMappingData } from '@volar/language-core';
+import { DocumentCapabilities, VirtualFile, VirtualFileKind, PositionCapabilities, TeleportMappingData } from '@volar/language-core';
 import { buildMappings, Mapping, Segment, toString } from '@volar/source-map';
 import * as CompilerDom from '@vue/compiler-dom';
 import { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
@@ -9,7 +9,7 @@ import { Sfc, SfcBlock, VueLanguagePlugin } from './types';
 export class VueEmbeddedFile {
 
 	public parentFileName?: string;
-	public kind = EmbeddedFileKind.TextFile;
+	public kind = VirtualFileKind.TextFile;
 	public capabilities: DocumentCapabilities = {};
 	public content: Segment<PositionCapabilities>[] = [];
 	public extraMappings: Mapping<PositionCapabilities>[] = [];
@@ -221,17 +221,17 @@ export class VueFile implements VirtualFile {
 				}
 				return {
 					file,
-					text: toString(file.content),
+					snapshot: VueFile.current.value.ts.ScriptSnapshot.fromString(toString(file.content)),
 					mappings,
 				};
 			});
 		});
 	}));
-	static _allEmbeddeds = computed(() => {
+	static _allEmbeddedFiles = computed(() => {
 
 		const all: {
 			file: VueEmbeddedFile;
-			text: string;
+			snapshot: ts.IScriptSnapshot;
 			mappings: Mapping<PositionCapabilities>[];
 		}[] = [];
 
@@ -243,11 +243,11 @@ export class VueFile implements VirtualFile {
 
 		return all;
 	});
-	static _embeddeds = computed(() => {
+	static _embeddedFiles = computed(() => {
 
 		const childs: VirtualFile[] = [];
 
-		let remain = [...VueFile._allEmbeddeds.value];
+		let remain = [...VueFile._allEmbeddedFiles.value];
 
 		while (remain.length) {
 			const beforeLength = remain.length;
@@ -257,12 +257,12 @@ export class VueFile implements VirtualFile {
 			}
 		}
 
-		for (const { file, text, mappings } of remain) {
+		for (const { file, snapshot, mappings } of remain) {
 			childs.push({
 				...file,
-				text,
+				snapshot,
 				mappings,
-				embeddeds: [],
+				embeddedFiles: [],
 			});
 			console.error('Unable to resolve embedded: ' + file.parentFileName + ' -> ' + file.fileName);
 		}
@@ -271,24 +271,24 @@ export class VueFile implements VirtualFile {
 
 		function consumeRemain() {
 			for (let i = remain.length - 1; i >= 0; i--) {
-				const { file, text, mappings } = remain[i];
+				const { file, snapshot, mappings } = remain[i];
 				if (!file.parentFileName) {
 					childs.push({
 						...file,
-						text,
+						snapshot,
 						mappings,
-						embeddeds: [],
+						embeddedFiles: [],
 					});
 					remain.splice(i, 1);
 				}
 				else {
 					const parent = findParentStructure(file.parentFileName, childs);
 					if (parent) {
-						parent.embeddeds.push({
+						parent.embeddedFiles.push({
 							...file,
-							text,
+							snapshot,
 							mappings,
-							embeddeds: [],
+							embeddedFiles: [],
 						});
 						remain.splice(i, 1);
 					}
@@ -300,7 +300,7 @@ export class VueFile implements VirtualFile {
 				if (stru.fileName === fileName) {
 					return stru;
 				}
-				let _stru = findParentStructure(fileName, stru.embeddeds);
+				let _stru = findParentStructure(fileName, stru.embeddedFiles);
 				if (_stru) {
 					return _stru;
 				}
@@ -349,7 +349,7 @@ export class VueFile implements VirtualFile {
 		return blocks;
 	});
 
-	kind = EmbeddedFileKind.TextFile;
+	kind = VirtualFileKind.TextFile;
 
 	capabilities: DocumentCapabilities = {
 		diagnostic: true,
@@ -364,8 +364,8 @@ export class VueFile implements VirtualFile {
 		return this._mappings.value;
 	}
 
-	get text() {
-		return this._snapshot.value.getText(0, this._snapshot.value.getLength());
+	get snapshot() {
+		return this._snapshot.value;
 	}
 
 	get compiledSFCTemplate() {
@@ -379,7 +379,7 @@ export class VueFile implements VirtualFile {
 		return this._allEmbeddeds.value.find(e => e.file.fileName.replace(this.fileName, '').match(/^\.(js|ts)x?$/))?.file.fileName ?? '';
 	}
 
-	get embeddeds() {
+	get embeddedFiles() {
 		return this._embeddeds.value;
 	}
 
@@ -400,18 +400,18 @@ export class VueFile implements VirtualFile {
 	}]);
 	_allEmbeddeds = ref<{
 		file: VueEmbeddedFile;
-		text: string;
+		snapshot: ts.IScriptSnapshot;
 		mappings: Mapping<PositionCapabilities>[];
 	}[]>([]);
 	_embeddeds = ref<VirtualFile[]>([]);
 
 	constructor(
 		public fileName: string,
-		private pscriptSnapshot: ts.IScriptSnapshot,
+		private scriptSnapshot: ts.IScriptSnapshot,
 		private ts: typeof import('typescript/lib/tsserverlibrary'),
 		private plugins: ReturnType<VueLanguagePlugin>[],
 	) {
-		this._snapshot = ref(this.pscriptSnapshot);
+		this._snapshot = ref(this.scriptSnapshot);
 		this.update(this._snapshot.value, true);
 	}
 
@@ -445,8 +445,8 @@ export class VueFile implements VirtualFile {
 
 		VueFile.current.value = this;
 
-		this._allEmbeddeds.value = VueFile._allEmbeddeds.value;
-		this._embeddeds.value = VueFile._embeddeds.value;
+		this._allEmbeddeds.value = VueFile._allEmbeddedFiles.value;
+		this._embeddeds.value = VueFile._embeddedFiles.value;
 
 		function updateTemplate(block: SFCTemplateBlock | null) {
 

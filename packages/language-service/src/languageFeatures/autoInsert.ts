@@ -14,7 +14,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			function* (arg, map) {
 				for (const position of map.toGeneratedPositions(arg.position, data => !!data.completion)) {
 
-					const rangeOffset = map.toGeneratedOffset(arg.autoInsertContext.lastChange.rangeOffset)?.[0];
+					const rangeOffset = map.map.toGeneratedOffset(arg.autoInsertContext.lastChange.rangeOffset)?.[0];
 					const range = map.toGeneratedRange(arg.autoInsertContext.lastChange.range);
 
 					if (rangeOffset !== undefined && range) {

@@ -2,7 +2,7 @@ import * as shared from '@volar/shared';
 import * as vscode from 'vscode-languageserver';
 import type { Workspaces } from '../workspaces';
 import { GetMatchTsConfigRequest, ReloadProjectNotification, WriteVirtualFilesNotification, GetVirtualFileNamesRequest, GetVirtualFileRequest, ReportStats } from '../../protocol';
-import { forEachEmbeddeds } from '@volar/language-core';
+import { forEachEmbeddedFile } from '@volar/language-core';
 
 export function register(
 	connection: vscode.Connection,
@@ -76,8 +76,8 @@ export function register(
 		if (project) {
 			const sourceFile = project.project?.getLanguageService().context.core.mapper.get(shared.getPathOfUri(document.uri))?.[1];
 			if (sourceFile) {
-				forEachEmbeddeds(sourceFile, e => {
-					if (e.text && e.kind === 1) {
+				forEachEmbeddedFile(sourceFile, e => {
+					if (e.snapshot.getLength() && e.kind === 1) {
 						fileNames.push(e.fileName);
 					}
 				});
@@ -88,11 +88,18 @@ export function register(
 	connection.onRequest(GetVirtualFileRequest.type, async params => {
 		const project = await projects.getProject(params.sourceFileUri);
 		if (project) {
-			const virtualFile = project.project?.getLanguageService().context.core.mapper.getSourceByVirtualFileName(params.virtualFileName)?.[2];
-			if (virtualFile) {
+			const sourceAndVirtual = project.project?.getLanguageService().context.core.mapper.getSourceByVirtualFileName(params.virtualFileName);
+			if (sourceAndVirtual) {
+				const virtualFile = sourceAndVirtual[2];
+				const mappings: Record<string, any[]> = {};
+				for (const mapping of virtualFile.mappings) {
+					const sourceUri = shared.getUriByPath(mapping.source ?? sourceAndVirtual[0]);
+					mappings[sourceUri] ??= [];
+					mappings[sourceUri].push(mapping);
+				}
 				return {
-					content: virtualFile.text,
-					mappings: virtualFile.mappings as any,
+					content: virtualFile.snapshot.getText(0, virtualFile.snapshot.getLength()),
+					mappings,
 				};
 			}
 		}

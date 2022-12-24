@@ -61,7 +61,7 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 		let edits: readonly ts.FileTextChanges[] = [];
 		const file = core.mapper.get(args.fileName)?.[1];
 		if (file) {
-			embedded.forEachEmbeddeds(file, embedded => {
+			embedded.forEachEmbeddedFile(file, embedded => {
 				if (embedded.kind && embedded.capabilities.codeAction) {
 					edits = edits.concat(ls.organizeImports({
 						...args,
@@ -127,8 +127,12 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 			symbols = symbols.concat(_symbols);
 			for (const ref of _symbols) {
 				loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
-				const teleport = core.mapper.getTeleport(ref.fileName);
 
+				const virtualFile = core.mapper.getSourceByVirtualFileName(ref.fileName)?.[2];
+				if (!virtualFile)
+					continue;
+
+				const teleport = core.mapper.getTeleport(virtualFile);
 				if (!teleport)
 					continue;
 
@@ -177,7 +181,11 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 
 				loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
 
-				const teleport = core.mapper.getTeleport(ref.fileName);
+				const virtualFile = core.mapper.getSourceByVirtualFileName(ref.fileName)?.[2];
+				if (!virtualFile)
+					continue;
+
+				const teleport = core.mapper.getTeleport(virtualFile);
 				if (!teleport)
 					continue;
 
@@ -210,7 +218,11 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 
 					loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
 
-					const teleport = core.mapper.getTeleport(ref.fileName);
+					const virtualFile = core.mapper.getSourceByVirtualFileName(ref.fileName)?.[2];
+					if (!virtualFile)
+						continue;
+
+					const teleport = core.mapper.getTeleport(virtualFile);
 					if (!teleport)
 						continue;
 
@@ -287,16 +299,21 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 		if (!textSpan) return;
 		const source = core.mapper.getSourceByVirtualFileName(fileName);
 		if (source) {
-			const map = core.mapper.getSourceMap(source[2]);
-			const sourceLoc = map.toSourceOffset(textSpan.start);
-			if (sourceLoc) {
-				return {
-					fileName: source[0],
-					textSpan: {
-						start: sourceLoc[0],
-						length: textSpan.length,
-					},
-				};
+			for (const [sourceFileName, map] of core.mapper.getMaps(source[2])) {
+
+				if (source[0] !== sourceFileName)
+					continue;
+
+				const sourceLoc = map.toSourceOffset(textSpan.start);
+				if (sourceLoc) {
+					return {
+						fileName: source[0],
+						textSpan: {
+							start: sourceLoc[0],
+							length: textSpan.length,
+						},
+					};
+				}
 			}
 		}
 		else {

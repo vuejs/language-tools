@@ -44,7 +44,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 						recursiveChecker.add({ uri: document.uri, range: { start: reference.range.start, end: reference.range.start } });
 
-						const teleport = context.documents.getTeleport(document.uri);
+						const teleport = context.documents.getTeleportByUri(document.uri);
 
 						if (teleport) {
 

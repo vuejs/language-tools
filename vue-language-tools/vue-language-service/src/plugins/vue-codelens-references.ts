@@ -1,5 +1,5 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import { LanguageServicePlugin, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
+import { LanguageServicePlugin, LanguageServicePluginContext, DocumentsAndSourceMaps } from '@volar/language-service';
 import { VueFile } from '@volar/vue-language-core';
 
 const showReferencesCommand = 'volar.show-references';
@@ -14,7 +14,7 @@ export interface ReferencesCodeLensData {
 }
 
 export default function (options: {
-	getVueDocument(uri: string): SourceFileDocument | undefined,
+	documents: DocumentsAndSourceMaps,
 	findReference(uri: string, position: vscode.Position): Promise<vscode.Location[] | undefined>,
 }): LanguageServicePlugin {
 
@@ -29,7 +29,7 @@ export default function (options: {
 		codeLens: {
 
 			on(document) {
-				return worker(document.uri, async (vueDocument) => {
+				return worker(document.uri, async (vueFile) => {
 
 					const isEnabled = await context.env.configurationHost?.getConfiguration<boolean>('volar.codeLens.references') ?? true;
 
@@ -38,8 +38,8 @@ export default function (options: {
 
 					const result: vscode.CodeLens[] = [];
 
-					for (const map of [...vueDocument.maps.values()]) {
-						for (const mapping of map.mappings) {
+					for (const [_, map] of options.documents.getMapsByVirtualFileName(vueFile.fileName)) {
+						for (const mapping of map.map.mappings) {
 
 							if (!mapping.data.referencesCodeLens)
 								continue;
@@ -64,33 +64,31 @@ export default function (options: {
 			async resolve(codeLens) {
 
 				const data: ReferencesCodeLensData = codeLens.data;
-				const vueDocument = options.getVueDocument(data.uri);
 
-				if (!vueDocument)
-					return codeLens;
+				await worker(data.uri, async (vueFile) => {
 
-				const document = vueDocument.document;
-				const offset = document.offsetAt(data.position);
-				const file = vueDocument.file as VueFile;
-				const blocks = [
-					file.sfc.script,
-					file.sfc.scriptSetup,
-					file.sfc.template,
-					...file.sfc.styles,
-					...file.sfc.customBlocks,
-				];
-				const allRefs = await options.findReference(data.uri, data.position) ?? [];
-				const sourceBlock = blocks.find(block => block && offset >= block.startTagEnd && offset <= block.endTagStart);
-				const diffDocRefs = allRefs.filter(reference =>
-					reference.uri !== data.uri // different file
-					|| sourceBlock !== blocks.find(block => block && document.offsetAt(reference.range.start) >= block.startTagEnd && document.offsetAt(reference.range.end) <= block.endTagStart) // different block
-				);
+					const document = options.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
+					const offset = document.offsetAt(data.position);
+					const blocks = [
+						vueFile.sfc.script,
+						vueFile.sfc.scriptSetup,
+						vueFile.sfc.template,
+						...vueFile.sfc.styles,
+						...vueFile.sfc.customBlocks,
+					];
+					const allRefs = await options.findReference(data.uri, data.position) ?? [];
+					const sourceBlock = blocks.find(block => block && offset >= block.startTagEnd && offset <= block.endTagStart);
+					const diffDocRefs = allRefs.filter(reference =>
+						reference.uri !== data.uri // different file
+						|| sourceBlock !== blocks.find(block => block && document.offsetAt(reference.range.start) >= block.startTagEnd && document.offsetAt(reference.range.end) <= block.endTagStart) // different block
+					);
 
-				codeLens.command = {
-					title: diffDocRefs.length === 1 ? '1 reference' : `${diffDocRefs.length} references`,
-					command: showReferencesCommand,
-					arguments: <CommandArgs>[data.uri, codeLens.range.start, diffDocRefs],
-				};
+					codeLens.command = {
+						title: diffDocRefs.length === 1 ? '1 reference' : `${diffDocRefs.length} references`,
+						command: showReferencesCommand,
+						arguments: <CommandArgs>[data.uri, codeLens.range.start, diffDocRefs],
+					};
+				});
 
 				return codeLens;
 			},
@@ -111,12 +109,12 @@ export default function (options: {
 		},
 	};
 
-	function worker<T>(uri: string, callback: (vueDocument: SourceFileDocument) => T) {
+	function worker<T>(uri: string, callback: (vueSourceFile: VueFile) => T) {
 
-		const vueDocument = options.getVueDocument(uri);
-		if (!vueDocument)
+		const virtualFile = options.documents.getVirtualFileByUri(uri);
+		if (!(virtualFile instanceof VueFile))
 			return;
 
-		return callback(vueDocument);
+		return callback(virtualFile);
 	}
 }

@@ -2,20 +2,20 @@ import type { LanguageServiceRuntimeContext } from '../types';
 import { embeddedEditToSourceEdit } from './rename';
 import type * as _ from 'vscode-languageserver-protocol';
 import * as dedupe from '../utils/dedupe';
-import { forEachEmbeddeds } from '@volar/language-core';
+import { forEachEmbeddedFile } from '@volar/language-core';
 
 export function register(context: LanguageServiceRuntimeContext) {
 
 	return async (oldUri: string, newUri: string) => {
 
-		const vueDocument = context.documents.get(oldUri);
+		const rootFile = context.documents.getRootFileBySourceFileUri(oldUri);
 
-		if (vueDocument) {
+		if (rootFile) {
 
 			let tsExt: string | undefined;
 
-			forEachEmbeddeds(vueDocument.file, embedded => {
-				if (embedded.kind && embedded.fileName.replace(vueDocument.file.fileName, '').match(/^\.(js|ts)x?$/)) {
+			forEachEmbeddedFile(rootFile, embedded => {
+				if (embedded.kind && embedded.fileName.replace(rootFile.fileName, '').match(/^\.(js|ts)x?$/)) {
 					tsExt = embedded.fileName.substring(embedded.fileName.lastIndexOf('.'));
 				}
 			});

@@ -80,11 +80,11 @@ export namespace GetVirtualFileRequest {
 	};
 	export type ResponseType = {
 		content: string;
-		mappings: {
+		mappings: Record<string, {
 			sourceRange: [number, number];
 			generatedRange: [number, number];
 			data: undefined;
-		}[];
+		}[]>;
 	};
 	export type ErrorType = never;
 	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('vue/virtualFile');

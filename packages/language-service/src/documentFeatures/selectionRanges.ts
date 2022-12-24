@@ -13,7 +13,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 			context,
 			document,
 			positions,
-			map => !!map.file.capabilities.documentFormatting,
+			file => !!file.capabilities.documentFormatting,
 			(positions, map) => {
 				const result = positions
 					.map(position => map.toGeneratedPosition(position))

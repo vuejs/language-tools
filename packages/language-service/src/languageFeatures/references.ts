@@ -40,7 +40,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 						recursiveChecker.add({ uri: reference.uri, range: { start: reference.range.start, end: reference.range.start } });
 
-						const teleport = context.documents.getTeleport(reference.uri);
+						const teleport = context.documents.getTeleportByUri(reference.uri);
 
 						if (teleport) {
 
@@ -69,14 +69,15 @@ export function register(context: LanguageServiceRuntimeContext) {
 				const results: vscode.Location[] = [];
 
 				for (const reference of data) {
-					const map = context.documents.getMap(reference.uri);
-					if (map) {
-						const range = map.toSourceRange(reference.range, data => !!data.references);
-						if (range) {
-							results.push({
-								uri: map.sourceDocument.uri,
-								range,
-							});
+					if (context.documents.getVirtualFileByUri(reference.uri)) {
+						for (const [_, map] of context.documents.getMapsByVirtualFileUri(reference.uri)) {
+							const range = map.toSourceRange(reference.range, data => !!data.references);
+							if (range) {
+								results.push({
+									uri: map.sourceFileDocument.uri,
+									range,
+								});
+							}
 						}
 					}
 					else {

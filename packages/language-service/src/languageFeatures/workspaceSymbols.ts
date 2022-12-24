@@ -19,11 +19,12 @@ export function register(context: LanguageServiceRuntimeContext) {
 				continue;
 
 			const symbols = transformSymbolInformations(embeddedSymbols, loc => {
-				const map = context.documents.getMap(loc.uri);
-				if (map) {
-					const range = map.toSourceRange(loc.range);
-					if (range) {
-						return vscode.Location.create(map.sourceDocument.uri, range);
+				if (context.documents.getVirtualFileByUri(loc.uri)) {
+					for (const [_, map] of context.documents.getMapsByVirtualFileUri(loc.uri)) {
+						const range = map.toSourceRange(loc.range);
+						if (range) {
+							return vscode.Location.create(map.sourceFileDocument.uri, range);
+						}
 					}
 				}
 				else {

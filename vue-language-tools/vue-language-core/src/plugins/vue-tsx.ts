@@ -4,7 +4,7 @@ import * as templateGen from '../generators/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { Sfc, VueLanguagePlugin } from '../types';
-import { EmbeddedFileKind, TextRange } from '@volar/language-core';
+import { VirtualFileKind, TextRange } from '@volar/language-core';
 import { parseCssClassNames } from '../utils/parseCssClassNames';
 import { parseCssVars } from '../utils/parseCssVars';
 
@@ -107,7 +107,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 			const suffix = embeddedFile.fileName.replace(fileName, '');
 
 			if (suffix === '.' + lang.value) {
-				embeddedFile.kind = EmbeddedFileKind.TypeScriptHostFile;
+				embeddedFile.kind = VirtualFileKind.TypeScriptHostFile;
 				embeddedFile.capabilities = {
 					diagnostic: true,
 					foldingRange: false,

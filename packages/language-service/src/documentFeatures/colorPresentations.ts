@@ -12,7 +12,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 			context,
 			document,
 			range,
-			map => !!map.file.capabilities.documentSymbol, // TODO: add color capabilitie setting
+			(file) => !!file.capabilities.documentSymbol, // TODO: add color capabilitie setting
 			(range, map) => map.toGeneratedRanges(range),
 			(plugin, document, range) => plugin.getColorPresentations?.(document, color, range),
 			(data, map) => data.map(cp => {

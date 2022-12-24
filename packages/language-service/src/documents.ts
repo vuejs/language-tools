@@ -1,22 +1,19 @@
-import { DocumentRegistry, VirtualFile, forEachEmbeddeds, PositionCapabilities, TeleportMappingData } from '@volar/language-core';
+import { VirtualFiles, VirtualFile, PositionCapabilities, TeleportMappingData, Teleport, forEachEmbeddedFile } from '@volar/language-core';
 import * as shared from '@volar/shared';
 import { Mapping, SourceMapBase } from '@volar/source-map';
-import ts = require('typescript');
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 
-export type SourceFileDocuments = ReturnType<typeof parseSourceFileDocuments>;
-export type SourceFileDocument = NonNullable<ReturnType<ReturnType<typeof parseSourceFileDocuments>['get']>>;
+export type DocumentsAndSourceMaps = ReturnType<typeof createDocumentsAndSourceMaps>;
 
-export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
+export class SourceMap<Data = any> {
 
 	constructor(
-		public sourceDocument: TextDocument,
-		public mappedDocument: TextDocument,
-		public mappings: Mapping<Data>[],
-	) {
-		super(mappings);
-	}
+		public sourceFileDocument: TextDocument,
+		public virtualFileDocument: TextDocument,
+		public map: SourceMapBase<Data>,
+	) { }
 
 	// Range APIs
 
@@ -94,11 +91,11 @@ export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
 	}
 
 	public toSourcePositionsBase(position: vscode.Position, filter: (data: Data) => boolean = () => true, baseOffset: 'left' | 'right' = 'left') {
-		return this.toPositions(position, filter, this.mappedDocument, this.sourceDocument, 'generatedRange', 'sourceRange', baseOffset);
+		return this.toPositions(position, filter, this.virtualFileDocument, this.sourceFileDocument, 'generatedRange', 'sourceRange', baseOffset);
 	}
 
 	public toGeneratedPositionsBase(position: vscode.Position, filter: (data: Data) => boolean = () => true, baseOffset: 'left' | 'right' = 'left') {
-		return this.toPositions(position, filter, this.sourceDocument, this.mappedDocument, 'sourceRange', 'generatedRange', baseOffset);
+		return this.toPositions(position, filter, this.sourceFileDocument, this.virtualFileDocument, 'sourceRange', 'generatedRange', baseOffset);
 	}
 
 	protected * toPositions(
@@ -110,7 +107,7 @@ export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
 		to: 'sourceRange' | 'generatedRange',
 		baseOffset: 'left' | 'right',
 	) {
-		for (const mapped of this.matcing(fromDoc.offsetAt(position), from, to, baseOffset === 'right')) {
+		for (const mapped of this.map.matcing(fromDoc.offsetAt(position), from, to, baseOffset === 'right')) {
 			if (!filter(mapped[1].data)) {
 				continue;
 			}
@@ -124,30 +121,17 @@ export class SourceMap<Data = undefined> extends SourceMapBase<Data> {
 	}
 
 	protected matchSourcePosition(position: vscode.Position, mapping: Mapping, baseOffset: 'left' | 'right') {
-		let offset = this.matchOffset(this.mappedDocument.offsetAt(position), mapping['generatedRange'], mapping['sourceRange'], baseOffset === 'right');
+		let offset = this.map.matchOffset(this.virtualFileDocument.offsetAt(position), mapping['generatedRange'], mapping['sourceRange'], baseOffset === 'right');
 		if (offset !== undefined) {
-			return this.sourceDocument.positionAt(offset);
+			return this.sourceFileDocument.positionAt(offset);
 		}
 	}
 
 	protected matchGeneratedPosition(position: vscode.Position, mapping: Mapping, baseOffset: 'left' | 'right') {
-		let offset = this.matchOffset(this.sourceDocument.offsetAt(position), mapping['sourceRange'], mapping['generatedRange'], baseOffset === 'right');
+		let offset = this.map.matchOffset(this.sourceFileDocument.offsetAt(position), mapping['sourceRange'], mapping['generatedRange'], baseOffset === 'right');
 		if (offset !== undefined) {
-			return this.mappedDocument.positionAt(offset);
+			return this.virtualFileDocument.positionAt(offset);
 		}
-	}
-}
-
-export class EmbeddedDocumentSourceMap extends SourceMap<PositionCapabilities> {
-
-	constructor(
-		public rootFile: VirtualFile,
-		public file: VirtualFile,
-		public sourceDocument: TextDocument,
-		public mappedDocument: TextDocument,
-		mappings: Mapping<PositionCapabilities>[],
-	) {
-		super(sourceDocument, mappedDocument, mappings);
 	}
 }
 
@@ -155,13 +139,13 @@ export class TeleportSourceMap extends SourceMap<TeleportMappingData> {
 	constructor(
 		public file: VirtualFile,
 		public document: TextDocument,
-		mappings: Mapping<TeleportMappingData>[],
+		map: SourceMapBase<TeleportMappingData>,
 	) {
-		super(document, document, mappings);
+		super(document, document, map);
 	}
 	*findTeleports(start: vscode.Position) {
 		for (const mapped of this.toGeneratedPositionsBase(start)) {
-			yield [mapped[0], mapped[1].data.toGenedCapabilities] as const;
+			yield [mapped[0], mapped[1].data.toGeneratedCapabilities] as const;
 		}
 		for (const mapped of this.toSourcePositionsBase(start)) {
 			yield [mapped[0], mapped[1].data.toSourceCapabilities] as const;
@@ -169,104 +153,112 @@ export class TeleportSourceMap extends SourceMap<TeleportMappingData> {
 	}
 }
 
-export function parseSourceFileDocuments(mapper: DocumentRegistry) {
+export function createDocumentsAndSourceMaps(mapper: VirtualFiles) {
 
 	let version = 0;
 
-	const snapshotsToMaps = new WeakMap<ts.IScriptSnapshot, {
-		fileName: string,
-		snapshot: ts.IScriptSnapshot,
-		document: TextDocument,
-		file: VirtualFile,
-		maps: Map<VirtualFile, EmbeddedDocumentSourceMap>,
-		teleports: Map<VirtualFile, TeleportSourceMap>,
-	}>();
+	const _maps = new WeakMap<SourceMapBase<PositionCapabilities>, [VirtualFile, SourceMap<PositionCapabilities>]>();
+	const _teleports = new WeakMap<Teleport, TeleportSourceMap>();
+	const _documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
 
 	return {
-		get: (uri: string) => {
-
-			const fileName = shared.getPathOfUri(uri);
-			const virtualFile = mapper.get(fileName);
-
+		getRootFileBySourceFileUri(sourceFileUri: string) {
+			const fileName = shared.getPathOfUri(sourceFileUri);
+			const rootFile = mapper.get(fileName);
+			if (rootFile) {
+				return rootFile[1];
+			}
+		},
+		getVirtualFileByUri(virtualFileUri: string) {
+			return mapper.getSourceByVirtualFileName(shared.getPathOfUri(virtualFileUri))?.[2];
+		},
+		getTeleportByUri(virtualFileUri: string) {
+			const fileName = shared.getPathOfUri(virtualFileUri);
+			const virtualFile = mapper.getSourceByVirtualFileName(fileName)?.[2];
 			if (virtualFile) {
-				return getMaps(fileName, virtualFile[0], virtualFile[1]);
+				const teleport = mapper.getTeleport(virtualFile);
+				if (teleport) {
+					if (!_teleports.has(teleport)) {
+						_teleports.set(teleport, new TeleportSourceMap(
+							virtualFile,
+							getDocumentByFileName(virtualFile.snapshot, fileName),
+							teleport,
+						));
+					}
+					return _teleports.get(teleport);
+				}
 			}
 		},
-		getTeleport(virtualFileUri: string) {
-			const fileName = shared.getPathOfUri(virtualFileUri);
-			const source = mapper.getSourceByVirtualFileName(fileName);
+		getMapsBySourceFileUri(uri: string) {
+			return this.getMapsBySourceFileName(shared.getPathOfUri(uri));
+		},
+		getMapsBySourceFileName(fileName: string) {
+			const source = mapper.get(fileName);
 			if (source) {
-				const maps = getMaps(source[0], source[1], source[2]);
-				for (const [_, teleport] of maps.teleports) {
-					if (teleport.file.fileName.toLowerCase() === fileName.toLowerCase()) {
-						return teleport;
+				const result: [VirtualFile, SourceMap<PositionCapabilities>][] = [];
+				forEachEmbeddedFile(source[1], (embedded) => {
+					for (const [sourceFileName, map] of mapper.getMaps(embedded)) {
+						if (sourceFileName === fileName) {
+							if (!_maps.has(map)) {
+								_maps.set(map, [
+									embedded,
+									new SourceMap(
+										getDocumentByFileName(source[0], sourceFileName),
+										getDocumentByFileName(embedded.snapshot, fileName),
+										map,
+									)
+								]);
+							}
+							if (_maps.has(map)) {
+								result.push(_maps.get(map)!);
+							}
+						}
+					}
+				});
+				return {
+					snapshot: source[0],
+					maps: result,
+				};
+			}
+		},
+		getMapsByVirtualFileUri(virtualFileUri: string) {
+			return this.getMapsByVirtualFileName(shared.getPathOfUri(virtualFileUri));
+		},
+		*getMapsByVirtualFileName(virtualFileName: string): IterableIterator<[VirtualFile, SourceMap<PositionCapabilities>]> {
+			const virtualFile = mapper.getSourceByVirtualFileName(virtualFileName)?.[2];
+			if (virtualFile) {
+				for (const [sourceFileName, map] of mapper.getMaps(virtualFile)) {
+					if (!_maps.has(map)) {
+						const sourceSnapshot = mapper.get(sourceFileName)?.[0];
+						if (sourceSnapshot) {
+							_maps.set(map, [virtualFile, new SourceMap(
+								getDocumentByFileName(sourceSnapshot, sourceFileName),
+								getDocumentByFileName(virtualFile.snapshot, virtualFileName),
+								map,
+							)]);
+						}
+					}
+					if (_maps.has(map)) {
+						yield _maps.get(map)!;
 					}
 				}
 			}
 		},
-		getMap(virtualFileUri: string) {
-			const fileName = shared.getPathOfUri(virtualFileUri);
-			const source = mapper.getSourceByVirtualFileName(fileName);
-			if (source) {
-				const maps = getMaps(source[0], source[1], source[2]);
-				for (const [_, map] of maps.maps) {
-					if (map.file.fileName.toLowerCase() === fileName.toLowerCase()) {
-						return map;
-					}
-				}
-			}
+		getDocumentByUri(snapshot: ts.IScriptSnapshot, uri: string) {
+			return this.getDocumentByFileName(snapshot, shared.getPathOfUri(uri));
 		},
+		getDocumentByFileName,
 	};
 
-	function getMaps(fileName: string, snapshot: ts.IScriptSnapshot, rootFile: VirtualFile) {
-
-		let result = snapshotsToMaps.get(snapshot);
-
-		if (!result) {
-
-			const document = TextDocument.create(
+	function getDocumentByFileName(snapshot: ts.IScriptSnapshot, fileName: string) {
+		if (!_documents.has(snapshot)) {
+			_documents.set(snapshot, TextDocument.create(
 				shared.getUriByPath(fileName),
-				'vue',
+				shared.syntaxToLanguageId(fileName.substring(fileName.lastIndexOf('.') + 1)),
 				version++,
 				snapshot.getText(0, snapshot.getLength()),
-			);
-			const maps = new Map<VirtualFile, EmbeddedDocumentSourceMap>();
-			const teleports = new Map<VirtualFile, TeleportSourceMap>();
-
-			forEachEmbeddeds(rootFile, file => {
-				const virtualFileDocument = TextDocument.create(
-					shared.getUriByPath(file.fileName),
-					shared.syntaxToLanguageId(file.fileName.substring(file.fileName.lastIndexOf('.') + 1)),
-					version++,
-					file.text,
-				);
-				maps.set(file, new EmbeddedDocumentSourceMap(
-					rootFile,
-					file,
-					document,
-					virtualFileDocument,
-					file.mappings,
-				));
-				if (file.teleportMappings) {
-					teleports.set(file, new TeleportSourceMap(
-						file,
-						virtualFileDocument,
-						file.teleportMappings,
-					));
-				}
-			});
-
-			result = {
-				fileName,
-				snapshot,
-				document,
-				file: rootFile,
-				maps,
-				teleports,
-			};
-			snapshotsToMaps.set(snapshot, result);
+			));
 		}
-
-		return result;
+		return _documents.get(snapshot)!;
 	}
 }

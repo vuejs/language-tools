@@ -40,7 +40,7 @@ export interface TeleportCapabilities {
 
 export interface TeleportMappingData {
 	toSourceCapabilities: TeleportCapabilities,
-	toGenedCapabilities: TeleportCapabilities,
+	toGeneratedCapabilities: TeleportCapabilities,
 }
 
 export interface TextRange {
@@ -48,24 +48,25 @@ export interface TextRange {
 	end: number,
 }
 
-export enum EmbeddedFileKind {
+export enum VirtualFileKind {
 	TextFile = 0,
 	TypeScriptHostFile = 1,
 }
 
 export interface VirtualFile {
 	fileName: string,
-	text: string,
-	kind: EmbeddedFileKind,
+	snapshot: ts.IScriptSnapshot,
+	kind: VirtualFileKind,
 	capabilities: DocumentCapabilities,
 	mappings: Mapping<PositionCapabilities>[],
 	teleportMappings?: Mapping<TeleportMappingData>[],
-	embeddeds: VirtualFile[],
+	embeddedFiles: VirtualFile[],
 }
 
 export interface LanguageModule<T extends VirtualFile = VirtualFile> {
-	createSourceFile(fileName: string, snapshot: ts.IScriptSnapshot): T | undefined;
-	updateSourceFile(virtualFile: T, snapshot: ts.IScriptSnapshot): void;
+	createFile(fileName: string, snapshot: ts.IScriptSnapshot): T | undefined;
+	updateFile(virtualFile: T, snapshot: ts.IScriptSnapshot): void;
+	deleteFile?(virtualFile: T): void;
 	proxyLanguageServiceHost?(host: LanguageServiceHost): Partial<LanguageServiceHost>;
 }
 

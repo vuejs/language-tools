@@ -5,7 +5,7 @@ import { languageFeatureWorker } from '../utils/featureWorkers';
 import * as dedupe from '../utils/dedupe';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { PositionCapabilities, TeleportCapabilities } from '@volar/language-core';
-import { EmbeddedDocumentSourceMap } from '../documents';
+import { SourceMap } from '../documents';
 
 export function register(
 	context: LanguageServiceRuntimeContext,
@@ -53,7 +53,7 @@ export function register(
 
 						recursiveChecker.add({ uri: definition.targetUri, range: { start: definition.targetRange.start, end: definition.targetRange.start } });
 
-						const teleport = context.documents.getTeleport(definition.targetUri);
+						const teleport = context.documents.getTeleportByUri(definition.targetUri);
 
 						if (teleport) {
 
@@ -97,20 +97,26 @@ export function register(
 					link.originSelectionRange = originSelectionRange;
 				}
 
-				const targetSourceMap = context.documents.getMap(link.targetUri);
+				let foundTargetSelectionRange = false;
 
-				if (targetSourceMap) {
+				for (const [_, targetSourceMap] of context.documents.getMapsByVirtualFileUri(link.targetUri)) {
 
 					const targetSelectionRange = targetSourceMap.toSourceRange(link.targetSelectionRange);
 					if (!targetSelectionRange)
-						return;
+						continue;
+
+					foundTargetSelectionRange = true;
 
 					let targetRange = targetSourceMap.toSourceRange(link.targetRange);
 
-					link.targetUri = targetSourceMap.sourceDocument.uri;
+					link.targetUri = targetSourceMap.sourceFileDocument.uri;
 					// loose range mapping to for template slots, slot properties
 					link.targetRange = targetRange ?? targetSelectionRange;
 					link.targetSelectionRange = targetSelectionRange;
+				}
+
+				if (context.documents.getVirtualFileByUri(link.targetUri) && !foundTargetSelectionRange) {
+					return;
 				}
 
 				return link;
@@ -120,7 +126,7 @@ export function register(
 	};
 }
 
-function toSourcePositionPreferSurroundedPosition(map: EmbeddedDocumentSourceMap, mappedRange: vscode.Range, position: vscode.Position) {
+function toSourcePositionPreferSurroundedPosition(map: SourceMap, mappedRange: vscode.Range, position: vscode.Position) {
 
 	let result: vscode.Range | undefined;
 

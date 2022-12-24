@@ -11,7 +11,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 		return documentFeatureWorker(
 			context,
 			document,
-			map => !!map.file.capabilities.documentSymbol, // TODO: add color capabilitie setting
+			(file) => !!file.capabilities.documentSymbol, // TODO: add color capabilitie setting
 			(plugin, document) => plugin.findDocumentColors?.(document),
 			(data, map) => data.map(color => {
 				const range = map.toSourceRange(color.range);

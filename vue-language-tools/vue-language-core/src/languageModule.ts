@@ -38,12 +38,12 @@ export function createLanguageModule(
 
 	const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(vueCompilerOptions.target, vueCompilerOptions));
 	const languageModule: embedded.LanguageModule = {
-		createSourceFile(fileName, snapshot) {
+		createFile(fileName, snapshot) {
 			if (vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))) {
 				return new VueFile(fileName, snapshot, ts, vueLanguagePlugin);
 			}
 		},
-		updateSourceFile(sourceFile: VueFile, snapshot) {
+		updateFile(sourceFile: VueFile, snapshot) {
 			sourceFile.update(snapshot);
 		},
 		proxyLanguageServiceHost(host) {

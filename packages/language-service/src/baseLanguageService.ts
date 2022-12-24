@@ -2,7 +2,7 @@ import { createEmbeddedLanguageServiceHost, LanguageServiceHost } from '@volar/l
 import * as shared from '@volar/shared';
 import * as tsFaster from '@volar/typescript-faster';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { parseSourceFileDocuments } from './documents';
+import { createDocumentsAndSourceMaps } from './documents';
 import * as autoInsert from './languageFeatures/autoInsert';
 import * as callHierarchy from './languageFeatures/callHierarchy';
 import * as codeActionResolve from './languageFeatures/codeActionResolve';
@@ -56,7 +56,7 @@ export function createLanguageServiceContext(options: {
 			languageService: tsLs,
 		},
 	};
-	const textDocumentMapper = parseSourceFileDocuments(options.context.mapper);
+	const textDocumentMapper = createDocumentsAndSourceMaps(options.context.mapper);
 	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
 	const documentVersions = new Map<string, number>();
 	const context: LanguageServiceRuntimeContext = {

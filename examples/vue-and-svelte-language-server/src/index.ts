@@ -43,12 +43,12 @@ const plugin: LanguageServerPlugin<LanguageServerInitializationOptions, vue.Lang
 			getLanguageModules(ts, env) {
 				const vueLanguagePlugins = vue.getDefaultVueLanguagePlugins(ts, shared.getPathOfUri(env.rootUri.toString()), {}, {}, []);
 				const vueLanguageModule: LanguageModule = {
-					createSourceFile(fileName, snapshot) {
+					createFile(fileName, snapshot) {
 						if (fileName.endsWith('.vue')) {
 							return new vue.VueFile(fileName, snapshot, ts, vueLanguagePlugins);
 						}
 					},
-					updateSourceFile(sourceFile: vue.VueFile, snapshot) {
+					updateFile(sourceFile: vue.VueFile, snapshot) {
 						sourceFile.update(snapshot);
 					},
 				};
