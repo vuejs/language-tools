@@ -68,7 +68,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					return;
 
 				for (const [_, map] of options.context.documents.getMapsByVirtualFileUri(document.uri)) {
-					const virtualFile = options.context.documents.getRootFileBySourceFileUri(map.sourceDocument.uri);
+					const virtualFile = options.context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
 					if (virtualFile && virtualFile instanceof vue.VueFile) {
 						await provideHtmlData(map, virtualFile);
 					}
@@ -79,7 +79,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					return;
 
 				for (const [_, map] of options.context.documents.getMapsByVirtualFileUri(document.uri)) {
-					const virtualFile = options.context.documents.getRootFileBySourceFileUri(map.sourceDocument.uri);
+					const virtualFile = options.context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
 					if (virtualFile && virtualFile instanceof vue.VueFile) {
 						afterHtmlCompletion(htmlComplete, map, virtualFile);
 					}
@@ -110,7 +110,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 				for (const [_, map] of options.context.documents.getMapsByVirtualFileUri(document.uri)) {
 
-					const virtualFile = options.context.documents.getRootFileBySourceFileUri(map.sourceDocument.uri);
+					const virtualFile = options.context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
 					if (!virtualFile || !(virtualFile instanceof vue.VueFile))
 						continue;
 
@@ -168,7 +168,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 			for (const [_, map] of options.context.documents.getMapsByVirtualFileUri(document.uri)) {
 
-				const virtualFile = options.context.documents.getRootFileBySourceFileUri(map.sourceDocument.uri);
+				const virtualFile = options.context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
 				if (!virtualFile || !(virtualFile instanceof vue.VueFile))
 					continue;
 
@@ -216,10 +216,10 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 	async function provideHtmlData(map: SourceMap<PositionCapabilities>, vueSourceFile: vue.VueFile) {
 
-		const detected = casing.detect(options.context, map.sourceDocument.uri);
+		const detected = casing.detect(options.context, map.sourceFileDocument.uri);
 		const [attr, tag] = await Promise.all([
-			context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('volar.completion.preferredAttrNameCase', map.sourceDocument.uri),
-			context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-pascal' | 'kebab' | 'pascal'>('volar.completion.preferredTagNameCase', map.sourceDocument.uri),
+			context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('volar.completion.preferredAttrNameCase', map.sourceFileDocument.uri),
+			context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-pascal' | 'kebab' | 'pascal'>('volar.completion.preferredTagNameCase', map.sourceFileDocument.uri),
 		]);
 		const tagNameCasing = detected.tag.length === 1 && (tag === 'auto-pascal' || tag === 'auto-kebab') ? detected.tag[0] : (tag === 'auto-kebab' || tag === 'kebab') ? TagNameCasing.Kebab : TagNameCasing.Pascal;
 		const attrNameCasing = detected.attr.length === 1 && (attr === 'auto-camel' || attr === 'auto-kebab') ? detected.attr[0] : (attr === 'auto-camel' || attr === 'camel') ? AttrNameCasing.Camel : AttrNameCasing.Kebab;
@@ -372,7 +372,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 	function afterHtmlCompletion(completionList: vscode.CompletionList, map: SourceMap<PositionCapabilities>, vueSourceFile: vue.VueFile) {
 
-		const replacement = getReplacement(completionList, map.sourceDocument);
+		const replacement = getReplacement(completionList, map.sourceFileDocument);
 		const componentNames = new Set(checkComponentNames(context.typescript.module, context.typescript.languageService, vueSourceFile).map(hyphenate));
 
 		if (replacement) {

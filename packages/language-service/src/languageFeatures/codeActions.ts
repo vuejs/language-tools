@@ -65,8 +65,8 @@ export function register(context: LanguageServiceRuntimeContext) {
 				if (minStart !== undefined && maxEnd !== undefined) {
 					return [{
 						range: vscode.Range.create(
-							map.mappedDocument.positionAt(minStart),
-							map.mappedDocument.positionAt(maxEnd),
+							map.virtualFileDocument.positionAt(minStart),
+							map.virtualFileDocument.positionAt(maxEnd),
 						),
 						codeActionContext: _codeActionContext,
 					}];
@@ -86,7 +86,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 							originalItem: _codeAction,
 							pluginId: context.plugins.indexOf(plugin),
 							map: map ? {
-								embeddedDocumentUri: map.mappedDocument.uri,
+								embeddedDocumentUri: map.virtualFileDocument.uri,
 							} : undefined,
 						} satisfies PluginCodeActionData,
 					};

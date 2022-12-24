@@ -196,7 +196,7 @@ export function embeddedEditToSourceEdit(
 		else {
 			for (const [_, map] of vueDocuments.getMapsByVirtualFileUri(tsUri)) {
 				// TODO: check capability?
-				const uri = map.sourceDocument.uri;
+				const uri = map.sourceFileDocument.uri;
 				sourceResult.changeAnnotations[uri] = tsAnno;
 			}
 		}
@@ -223,10 +223,10 @@ export function embeddedEditToSourceEdit(
 					if (_data && typeof _data.rename === 'object' && _data.rename.apply) {
 						newText = _data.rename.apply(tsEdit.newText);
 					}
-					if (!sourceResult.changes[map.sourceDocument.uri]) {
-						sourceResult.changes[map.sourceDocument.uri] = [];
+					if (!sourceResult.changes[map.sourceFileDocument.uri]) {
+						sourceResult.changes[map.sourceFileDocument.uri] = [];
 					}
-					sourceResult.changes[map.sourceDocument.uri].push({ newText, range });
+					sourceResult.changes[map.sourceFileDocument.uri].push({ newText, range });
 					hasResult = true;
 				}
 			}
@@ -243,7 +243,7 @@ export function embeddedEditToSourceEdit(
 					for (const [_, map] of vueDocuments.getMapsByVirtualFileUri(tsDocEdit.textDocument.uri)) {
 						sourceEdit = vscode.TextDocumentEdit.create(
 							{
-								uri: map.sourceDocument.uri,
+								uri: map.sourceFileDocument.uri,
 								// version: map.sourceDocument.version,
 								version: null, // fix https://github.com/johnsoncodehk/volar/issues/1490
 							},
@@ -287,7 +287,7 @@ export function embeddedEditToSourceEdit(
 				else {
 					for (const [_, map] of vueDocuments.getMapsByVirtualFileUri(tsDocEdit.oldUri)) {
 						// TODO: check capability?
-						sourceEdit = vscode.RenameFile.create(map.sourceDocument.uri, tsDocEdit.newUri /* TODO: remove .ts? */, tsDocEdit.options, tsDocEdit.annotationId);
+						sourceEdit = vscode.RenameFile.create(map.sourceFileDocument.uri, tsDocEdit.newUri /* TODO: remove .ts? */, tsDocEdit.options, tsDocEdit.annotationId);
 					}
 				}
 			}
@@ -298,7 +298,7 @@ export function embeddedEditToSourceEdit(
 				else {
 					for (const [_, map] of vueDocuments.getMapsByVirtualFileUri(tsDocEdit.uri)) {
 						// TODO: check capability?
-						sourceEdit = vscode.DeleteFile.create(map.sourceDocument.uri, tsDocEdit.options, tsDocEdit.annotationId);
+						sourceEdit = vscode.DeleteFile.create(map.sourceFileDocument.uri, tsDocEdit.options, tsDocEdit.annotationId);
 					}
 				}
 			}

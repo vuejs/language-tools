@@ -10,8 +10,8 @@ export type DocumentsAndSourceMaps = ReturnType<typeof createDocumentsAndSourceM
 export class SourceMap<Data = any> {
 
 	constructor(
-		public sourceDocument: TextDocument,
-		public mappedDocument: TextDocument,
+		public sourceFileDocument: TextDocument,
+		public virtualFileDocument: TextDocument,
 		public map: SourceMapBase<Data>,
 	) { }
 
@@ -91,11 +91,11 @@ export class SourceMap<Data = any> {
 	}
 
 	public toSourcePositionsBase(position: vscode.Position, filter: (data: Data) => boolean = () => true, baseOffset: 'left' | 'right' = 'left') {
-		return this.toPositions(position, filter, this.mappedDocument, this.sourceDocument, 'generatedRange', 'sourceRange', baseOffset);
+		return this.toPositions(position, filter, this.virtualFileDocument, this.sourceFileDocument, 'generatedRange', 'sourceRange', baseOffset);
 	}
 
 	public toGeneratedPositionsBase(position: vscode.Position, filter: (data: Data) => boolean = () => true, baseOffset: 'left' | 'right' = 'left') {
-		return this.toPositions(position, filter, this.sourceDocument, this.mappedDocument, 'sourceRange', 'generatedRange', baseOffset);
+		return this.toPositions(position, filter, this.sourceFileDocument, this.virtualFileDocument, 'sourceRange', 'generatedRange', baseOffset);
 	}
 
 	protected * toPositions(
@@ -121,16 +121,16 @@ export class SourceMap<Data = any> {
 	}
 
 	protected matchSourcePosition(position: vscode.Position, mapping: Mapping, baseOffset: 'left' | 'right') {
-		let offset = this.map.matchOffset(this.mappedDocument.offsetAt(position), mapping['generatedRange'], mapping['sourceRange'], baseOffset === 'right');
+		let offset = this.map.matchOffset(this.virtualFileDocument.offsetAt(position), mapping['generatedRange'], mapping['sourceRange'], baseOffset === 'right');
 		if (offset !== undefined) {
-			return this.sourceDocument.positionAt(offset);
+			return this.sourceFileDocument.positionAt(offset);
 		}
 	}
 
 	protected matchGeneratedPosition(position: vscode.Position, mapping: Mapping, baseOffset: 'left' | 'right') {
-		let offset = this.map.matchOffset(this.sourceDocument.offsetAt(position), mapping['sourceRange'], mapping['generatedRange'], baseOffset === 'right');
+		let offset = this.map.matchOffset(this.sourceFileDocument.offsetAt(position), mapping['sourceRange'], mapping['generatedRange'], baseOffset === 'right');
 		if (offset !== undefined) {
-			return this.mappedDocument.positionAt(offset);
+			return this.virtualFileDocument.positionAt(offset);
 		}
 	}
 }

@@ -49,8 +49,8 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				if (minStart !== undefined && maxEnd !== undefined) {
 					return [vscode.Range.create(
-						map.mappedDocument.positionAt(minStart),
-						map.mappedDocument.positionAt(maxEnd),
+						map.virtualFileDocument.positionAt(minStart),
+						map.virtualFileDocument.positionAt(maxEnd),
 					)];
 				}
 

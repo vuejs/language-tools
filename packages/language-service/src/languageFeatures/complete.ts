@@ -53,7 +53,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 							if (!cacheData.plugin.complete?.on)
 								continue;
 
-							const embeddedCompletionList = await cacheData.plugin.complete.on(map.mappedDocument, mapped, completionContext);
+							const embeddedCompletionList = await cacheData.plugin.complete.on(map.virtualFileDocument, mapped, completionContext);
 
 							if (!embeddedCompletionList) {
 								cacheData.list.isIncomplete = false;
@@ -68,7 +68,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 									originalItem: oldItem,
 									pluginId: context.plugins.indexOf(cacheData.plugin),
 									map: {
-										embeddedDocumentUri: map.mappedDocument.uri,
+										embeddedDocumentUri: map.virtualFileDocument.uri,
 									},
 								} satisfies PluginCompletionData,
 							);
@@ -141,14 +141,14 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 							const isAdditional = _data && typeof _data.completion === 'object' && _data.completion.additional || plugin.complete.isAdditional;
 
-							if (cache!.mainCompletion && (!isAdditional || cache?.mainCompletion.documentUri !== map.mappedDocument.uri))
+							if (cache!.mainCompletion && (!isAdditional || cache?.mainCompletion.documentUri !== map.virtualFileDocument.uri))
 								continue;
 
 							// avoid duplicate items with .vue and .vue.html
 							if (plugin.complete.isAdditional && cache?.data.some(data => data.plugin === plugin))
 								continue;
 
-							const embeddedCompletionList = await plugin.complete.on(map.mappedDocument, mapped, completionContext);
+							const embeddedCompletionList = await plugin.complete.on(map.virtualFileDocument, mapped, completionContext);
 
 							if (!embeddedCompletionList || !embeddedCompletionList.items.length)
 								continue;
@@ -158,7 +158,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 							}
 
 							if (!isAdditional) {
-								cache!.mainCompletion = { documentUri: map.mappedDocument.uri };
+								cache!.mainCompletion = { documentUri: map.virtualFileDocument.uri };
 							}
 
 							const completionList = transformCompletionList(
@@ -169,14 +169,14 @@ export function register(context: LanguageServiceRuntimeContext) {
 									originalItem: oldItem,
 									pluginId: context.plugins.indexOf(plugin),
 									map: {
-										embeddedDocumentUri: map.mappedDocument.uri,
+										embeddedDocumentUri: map.virtualFileDocument.uri,
 									}
 								} satisfies PluginCompletionData,
 							);
 
 							cache!.data.push({
 								map: {
-									embeddedDocumentUri: map.mappedDocument.uri,
+									embeddedDocumentUri: map.virtualFileDocument.uri,
 								},
 								plugin,
 								list: completionList,

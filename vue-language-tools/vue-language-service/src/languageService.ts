@@ -53,7 +53,7 @@ export function getLanguageServicePlugins(
 					const result = await _tsPlugin.complete!.on!(document, position, context);
 					if (result) {
 						for (const [_, map] of apis.context.documents.getMapsByVirtualFileUri(document.uri)) {
-							const virtualFile = apis.context.documents.getRootFileBySourceFileUri(map.sourceDocument.uri);
+							const virtualFile = apis.context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
 							if (virtualFile instanceof vue.VueFile) {
 								if (map.toSourcePosition(position, data => typeof data.completion === 'object' && !!data.completion.autoImportOnly)) {
 									result.items.forEach(item => {
@@ -85,7 +85,7 @@ export function getLanguageServicePlugins(
 					const data: Data = item.data;
 					if (item.data?.__isComponentAutoImport && data && item.additionalTextEdits?.length && item.textEdit) {
 						for (const [_, map] of apis.context.documents.getMapsByVirtualFileUri(data.uri)) {
-							const virtualFile = apis.context.documents.getRootFileBySourceFileUri(map.sourceDocument.uri);
+							const virtualFile = apis.context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
 							if (virtualFile instanceof vue.VueFile) {
 								const sfc = virtualFile.sfc;
 								const componentName = item.textEdit.newText;

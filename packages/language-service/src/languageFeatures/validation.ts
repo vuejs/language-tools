@@ -276,7 +276,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 							if (range) {
 								relatedInfos.push({
 									location: {
-										uri: map.sourceDocument.uri,
+										uri: map.sourceFileDocument.uri,
 										range,
 									},
 									message: info.message,

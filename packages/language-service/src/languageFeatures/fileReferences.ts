@@ -28,7 +28,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				for (const [_, map] of context.documents.getMapsByVirtualFileUri(reference.uri)) {
 					const range = map.toSourceRange(reference.range);
 					if (range) {
-						reference.uri = map.sourceDocument.uri;
+						reference.uri = map.sourceFileDocument.uri;
 						reference.range = range;
 						return reference;
 					}

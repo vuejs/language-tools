@@ -47,13 +47,13 @@ export async function documentArgFeatureWorker<T, K>(
 			if (!isValidSourceMap(file, map))
 				return true;
 
-			context.prepareLanguageServices(map.mappedDocument);
+			context.prepareLanguageServices(map.virtualFileDocument);
 
 			for (const mappedArg of transformArg(arg, map)) {
 
 				for (const plugin of context.plugins) {
 
-					const embeddedResult = await worker(plugin, map.mappedDocument, mappedArg);
+					const embeddedResult = await worker(plugin, map.virtualFileDocument, mappedArg);
 
 					if (!embeddedResult)
 						continue;
@@ -123,7 +123,7 @@ export async function languageFeatureWorker<T, K>(
 
 				for (const plugin of context.plugins) {
 
-					const embeddedResult = await worker(plugin, map.mappedDocument, mappedArg, map, file);
+					const embeddedResult = await worker(plugin, map.virtualFileDocument, mappedArg, map, file);
 
 					if (!embeddedResult)
 						continue;

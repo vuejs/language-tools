@@ -58,11 +58,11 @@ export function register(context: DocumentServiceRuntimeContext) {
 					continue;
 
 				const maps = [...context.documents.getMapsByVirtualFileName(embedded.fileName)];
-				const map = maps.find(map => map[1].sourceDocument.uri === document.uri)?.[1];
+				const map = maps.find(map => map[1].sourceFileDocument.uri === document.uri)?.[1];
 				if (!map)
 					continue;
 
-				const initialIndentBracket = typeof embedded.capabilities.documentFormatting === 'object' && initialIndentLanguageId[map.mappedDocument.languageId]
+				const initialIndentBracket = typeof embedded.capabilities.documentFormatting === 'object' && initialIndentLanguageId[map.virtualFileDocument.languageId]
 					? embedded.capabilities.documentFormatting.initialIndentBracket
 					: undefined;
 
@@ -74,7 +74,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 					if (embeddedPosition) {
 						_edits = await tryFormat(
-							map.mappedDocument,
+							map.virtualFileDocument,
 							embeddedPosition,
 							initialIndentBracket,
 							onTypeParams.ch,
@@ -94,8 +94,8 @@ export function register(context: DocumentServiceRuntimeContext) {
 							&& lastMapping && document.offsetAt(range.end) > lastMapping.sourceRange[1]
 						) {
 							genRange = {
-								start: map.mappedDocument.positionAt(firstMapping.generatedRange[0]),
-								end: map.mappedDocument.positionAt(lastMapping.generatedRange[1]),
+								start: map.virtualFileDocument.positionAt(firstMapping.generatedRange[0]),
+								end: map.virtualFileDocument.positionAt(lastMapping.generatedRange[1]),
 							};
 						}
 					}
@@ -103,11 +103,11 @@ export function register(context: DocumentServiceRuntimeContext) {
 					if (genRange) {
 
 						toPatchIndent = {
-							sourceMapEmbeddedDocumentUri: map.mappedDocument.uri,
+							sourceMapEmbeddedDocumentUri: map.virtualFileDocument.uri,
 						};
 
 						_edits = await tryFormat(
-							map.mappedDocument,
+							map.virtualFileDocument,
 							genRange,
 							initialIndentBracket,
 						);
@@ -137,7 +137,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 				tryUpdateVueDocument();
 
 				const maps = [...context.documents.getMapsByVirtualFileName(virtualFile.fileName)];
-				const map = maps.find(map => map[1].sourceDocument.uri === toPatchIndent?.sourceMapEmbeddedDocumentUri)?.[1];
+				const map = maps.find(map => map[1].sourceFileDocument.uri === toPatchIndent?.sourceMapEmbeddedDocumentUri)?.[1];
 
 				if (map) {
 

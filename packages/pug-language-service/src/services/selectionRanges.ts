@@ -12,7 +12,7 @@ export function register(htmlLs: html.LanguageService) {
 			.filter(shared.notEmpty);
 
 		const htmlResult = htmlLs.getSelectionRanges(
-			pugDoc.map.mappedDocument,
+			pugDoc.map.virtualFileDocument,
 			htmlPosArr,
 		);
 

@@ -23,7 +23,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					for (const [_, map] of context.documents.getMapsByVirtualFileUri(loc.uri)) {
 						const range = map.toSourceRange(loc.range);
 						if (range) {
-							return vscode.Location.create(map.sourceDocument.uri, range);
+							return vscode.Location.create(map.sourceFileDocument.uri, range);
 						}
 					}
 				}

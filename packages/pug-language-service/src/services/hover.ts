@@ -11,7 +11,7 @@ export function register(htmlLs: html.LanguageService) {
 			return;
 
 		const htmlResult = htmlLs.doHover(
-			pugDoc.map.mappedDocument,
+			pugDoc.map.virtualFileDocument,
 			htmlPos,
 			pugDoc.htmlDocument,
 			options,

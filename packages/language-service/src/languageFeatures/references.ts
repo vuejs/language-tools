@@ -74,7 +74,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 							const range = map.toSourceRange(reference.range, data => !!data.references);
 							if (range) {
 								results.push({
-									uri: map.sourceDocument.uri,
+									uri: map.sourceFileDocument.uri,
 									range,
 								});
 							}

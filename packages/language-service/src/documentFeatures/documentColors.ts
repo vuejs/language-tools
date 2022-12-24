@@ -16,6 +16,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 			(data, map) => data.map(color => {
 				const range = map.toSourceRange(color.range);
 				if (range) {
+					console.log(map.sourceFileDocument.uri, map.virtualFileDocument.uri, color.color);
 					return vscode.ColorInformation.create(range, color.color);
 				}
 			}).filter(shared.notEmpty),

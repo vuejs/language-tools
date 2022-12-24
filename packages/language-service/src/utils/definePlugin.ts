@@ -15,7 +15,7 @@ export async function visitEmbedded(
 	}
 
 	for (const [_, map] of documents.getMapsByVirtualFileName(current.fileName)) {
-		if (documents.getRootFileBySourceFileUri(map.sourceDocument.uri) === rootFile) {
+		if (documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri) === rootFile) {
 			if (!await cb(current, map)) {
 				return false;
 			}

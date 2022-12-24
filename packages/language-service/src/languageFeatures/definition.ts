@@ -109,7 +109,7 @@ export function register(
 
 					let targetRange = targetSourceMap.toSourceRange(link.targetRange);
 
-					link.targetUri = targetSourceMap.sourceDocument.uri;
+					link.targetUri = targetSourceMap.sourceFileDocument.uri;
 					// loose range mapping to for template slots, slot properties
 					link.targetRange = targetRange ?? targetSelectionRange;
 					link.targetSelectionRange = targetSelectionRange;
