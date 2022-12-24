@@ -36,7 +36,7 @@ export async function documentArgFeatureWorker<T, K>(
 ) {
 
 	context.update(document);
-	const virtualFile = context.documents.getRootFile(document.uri);
+	const virtualFile = context.documents.getRootFileBySourceFileUri(document.uri);
 
 	let results: NonNullable<Awaited<T>>[] = [];
 
@@ -111,7 +111,7 @@ export async function languageFeatureWorker<T, K>(
 ) {
 
 	const document = context.getTextDocument(uri);
-	const virtualFile = context.documents.getRootFile(uri);
+	const virtualFile = context.documents.getRootFileBySourceFileUri(uri);
 
 	let results: NonNullable<Awaited<T>>[] = [];
 

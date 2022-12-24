@@ -22,7 +22,7 @@ export function getDocumentServicePlugins(
 
 	const getVueFile = (document: _2.TextDocument) => {
 		context.update(document);
-		const virtualFile = context.documents.getVirtualFile(document.uri);
+		const virtualFile = context.documents.getVirtualFileByUri(document.uri);
 		if (virtualFile instanceof VueFile) {
 			return virtualFile;
 		}

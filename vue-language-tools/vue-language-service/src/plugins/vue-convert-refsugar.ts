@@ -1,4 +1,4 @@
-import { LanguageServicePlugin, ExecuteCommandContext, mergeWorkspaceEdits, LanguageServicePluginContext, SourceFileDocuments } from '@volar/language-service';
+import { LanguageServicePlugin, ExecuteCommandContext, mergeWorkspaceEdits, LanguageServicePluginContext, DocumentsAndSourceMaps } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -21,7 +21,7 @@ export interface ReferencesCodeLensData {
 type CommandArgs = [string];
 
 export default function (options: {
-	documents: SourceFileDocuments,
+	documents: DocumentsAndSourceMaps,
 	// for use ref sugar
 	findReferences: (uri: string, position: vscode.Position) => Promise<vscode.Location[] | undefined>,
 	findTypeDefinition: (uri: string, position: vscode.Position) => Promise<vscode.LocationLink[] | undefined>,
@@ -106,7 +106,7 @@ export default function (options: {
 
 	function worker<T>(uri: string, callback: (vueSourceFile: vue.VueFile) => T) {
 
-		const virtualFile = options.documents.getVirtualFile(uri);
+		const virtualFile = options.documents.getVirtualFileByUri(uri);
 		if (!(virtualFile instanceof vue.VueFile))
 			return;
 

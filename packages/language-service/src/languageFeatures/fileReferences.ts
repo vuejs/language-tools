@@ -21,7 +21,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			},
 			(data) => data.map(reference => {
 
-				if (!context.documents.getVirtualFile(reference.uri)) {
+				if (!context.documents.getVirtualFileByUri(reference.uri)) {
 					return reference;
 				}
 

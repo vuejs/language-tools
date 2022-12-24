@@ -3,7 +3,7 @@ import type { LanguageServiceRuntimeContext } from '../types';
 import { languageFeatureWorker } from '../utils/featureWorkers';
 import * as dedupe from '../utils/dedupe';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { SourceFileDocuments } from '../documents';
+import { DocumentsAndSourceMaps } from '../documents';
 import { PositionCapabilities } from '@volar/language-core';
 
 export function register(context: LanguageServiceRuntimeContext) {
@@ -70,7 +70,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 								recursiveChecker.add({ uri: editUri, range: { start: textEdit.range.start, end: textEdit.range.start } });
 
-								const teleport = context.documents.getTeleport(editUri);
+								const teleport = context.documents.getTeleportByUri(editUri);
 
 								if (teleport) {
 
@@ -178,7 +178,7 @@ export function mergeWorkspaceEdits(original: vscode.WorkspaceEdit, ...others: v
 
 export function embeddedEditToSourceEdit(
 	tsResult: vscode.WorkspaceEdit,
-	vueDocuments: SourceFileDocuments,
+	vueDocuments: DocumentsAndSourceMaps,
 ) {
 
 	const sourceResult: vscode.WorkspaceEdit = {};
@@ -190,7 +190,7 @@ export function embeddedEditToSourceEdit(
 
 		const tsAnno = tsResult.changeAnnotations[tsUri];
 
-		if (!vueDocuments.getVirtualFile(tsUri)) {
+		if (!vueDocuments.getVirtualFileByUri(tsUri)) {
 			sourceResult.changeAnnotations[tsUri] = tsAnno;
 		}
 		else {
@@ -205,7 +205,7 @@ export function embeddedEditToSourceEdit(
 
 		sourceResult.changes ??= {};
 
-		if (!vueDocuments.getVirtualFile(tsUri)) {
+		if (!vueDocuments.getVirtualFileByUri(tsUri)) {
 			sourceResult.changes[tsUri] = tsResult.changes[tsUri];
 			hasResult = true;
 			continue;
@@ -239,7 +239,7 @@ export function embeddedEditToSourceEdit(
 
 			let sourceEdit: typeof tsDocEdit | undefined;
 			if (vscode.TextDocumentEdit.is(tsDocEdit)) {
-				if (vueDocuments.getVirtualFile(tsDocEdit.textDocument.uri)) {
+				if (vueDocuments.getVirtualFileByUri(tsDocEdit.textDocument.uri)) {
 					for (const [_, map] of vueDocuments.getMapsByVirtualFileUri(tsDocEdit.textDocument.uri)) {
 						sourceEdit = vscode.TextDocumentEdit.create(
 							{
@@ -281,7 +281,7 @@ export function embeddedEditToSourceEdit(
 				sourceEdit = tsDocEdit; // TODO: remove .ts?
 			}
 			else if (vscode.RenameFile.is(tsDocEdit)) {
-				if (!vueDocuments.getVirtualFile(tsDocEdit.oldUri)) {
+				if (!vueDocuments.getVirtualFileByUri(tsDocEdit.oldUri)) {
 					sourceEdit = tsDocEdit;
 				}
 				else {
@@ -292,7 +292,7 @@ export function embeddedEditToSourceEdit(
 				}
 			}
 			else if (vscode.DeleteFile.is(tsDocEdit)) {
-				if (!vueDocuments.getVirtualFile(tsDocEdit.uri)) {
+				if (!vueDocuments.getVirtualFileByUri(tsDocEdit.uri)) {
 					sourceEdit = tsDocEdit;
 				}
 				else {

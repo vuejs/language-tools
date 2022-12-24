@@ -1,11 +1,11 @@
-import { DocumentRegistry, VirtualFile, PositionCapabilities, TeleportMappingData, Teleport, forEachEmbeddeds } from '@volar/language-core';
+import { VirtualFiles, VirtualFile, PositionCapabilities, TeleportMappingData, Teleport, forEachEmbeddeds } from '@volar/language-core';
 import * as shared from '@volar/shared';
 import { Mapping, SourceMapBase } from '@volar/source-map';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
-export type SourceFileDocuments = ReturnType<typeof parseSourceFileDocuments>;
+export type DocumentsAndSourceMaps = ReturnType<typeof createDocumentsAndSourceMaps>;
 
 export class SourceMap<Data = any> {
 
@@ -153,7 +153,7 @@ export class TeleportSourceMap extends SourceMap<TeleportMappingData> {
 	}
 }
 
-export function parseSourceFileDocuments(mapper: DocumentRegistry) {
+export function createDocumentsAndSourceMaps(mapper: VirtualFiles) {
 
 	let version = 0;
 
@@ -162,17 +162,17 @@ export function parseSourceFileDocuments(mapper: DocumentRegistry) {
 	const _documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
 
 	return {
-		getRootFile(sourceFileUri: string) {
+		getRootFileBySourceFileUri(sourceFileUri: string) {
 			const fileName = shared.getPathOfUri(sourceFileUri);
 			const rootFile = mapper.get(fileName);
 			if (rootFile) {
 				return rootFile[1];
 			}
 		},
-		getVirtualFile(virtualFileUri: string) {
+		getVirtualFileByUri(virtualFileUri: string) {
 			return mapper.getSourceByVirtualFileName(shared.getPathOfUri(virtualFileUri))?.[2];
 		},
-		getTeleport(virtualFileUri: string) {
+		getTeleportByUri(virtualFileUri: string) {
 			const fileName = shared.getPathOfUri(virtualFileUri);
 			const virtualFile = mapper.getSourceByVirtualFileName(fileName)?.[2];
 			if (virtualFile) {

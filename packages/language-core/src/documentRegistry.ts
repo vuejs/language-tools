@@ -10,11 +10,11 @@ export function forEachEmbeddeds(file: VirtualFile, cb: (embedded: VirtualFile) 
 	}
 }
 
-export type DocumentRegistry = ReturnType<typeof createVirtualFilesHost>;
+export type VirtualFiles = ReturnType<typeof createVirtualFiles>;
 
 type Row = [string, ts.IScriptSnapshot, VirtualFile, LanguageModule];
 
-export function createVirtualFilesHost(languageModules: LanguageModule[]) {
+export function createVirtualFiles(languageModules: LanguageModule[]) {
 
 	const files = reactive<Record<string, Row>>({});
 	const all = computed(() => Object.values(files));

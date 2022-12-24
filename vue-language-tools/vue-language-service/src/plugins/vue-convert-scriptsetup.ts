@@ -1,5 +1,5 @@
 import type { TextRange } from '@volar/language-core';
-import { LanguageServicePlugin, ExecuteCommandContext, LanguageServicePluginContext, SourceFileDocuments } from '@volar/language-service';
+import { LanguageServicePlugin, ExecuteCommandContext, LanguageServicePluginContext, DocumentsAndSourceMaps } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-core';
 import { scriptSetupConvertRanges } from '@volar/vue-language-core';
@@ -20,7 +20,7 @@ export interface ReferencesCodeLensData {
 type CommandArgs = [string];
 
 export default function (options: {
-	documents: SourceFileDocuments,
+	documents: DocumentsAndSourceMaps,
 	doCodeActions: (uri: string, range: vscode.Range, codeActionContext: vscode.CodeActionContext) => Promise<vscode.CodeAction[] | undefined>,
 	doCodeActionResolve: (item: vscode.CodeAction) => Promise<vscode.CodeAction>,
 }): LanguageServicePlugin {
@@ -106,7 +106,7 @@ export default function (options: {
 
 	function worker<T>(uri: string, callback: (vueFile: vue.VueFile) => T) {
 
-		const virtualFile = options.documents.getVirtualFile(uri);
+		const virtualFile = options.documents.getVirtualFileByUri(uri);
 		if (!(virtualFile instanceof vue.VueFile))
 			return;
 

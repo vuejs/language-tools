@@ -1,4 +1,4 @@
-import { createVirtualFilesHost, LanguageModule } from '@volar/language-core';
+import { createVirtualFiles, LanguageModule } from '@volar/language-core';
 import * as shared from '@volar/shared';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as autoInsert from './documentFeatures/autoInsert';
@@ -9,7 +9,7 @@ import * as foldingRanges from './documentFeatures/foldingRanges';
 import * as format from './documentFeatures/format';
 import * as linkedEditingRanges from './documentFeatures/linkedEditingRanges';
 import * as selectionRanges from './documentFeatures/selectionRanges';
-import { parseSourceFileDocuments } from './documents';
+import { createDocumentsAndSourceMaps } from './documents';
 import { DocumentServiceRuntimeContext, LanguageServicePlugin, LanguageServicePluginContext } from './types';
 import { singleFileTypeScriptServiceHost, updateSingleFileTypeScriptServiceHost } from './utils/singleFileTypeScriptService';
 
@@ -38,8 +38,8 @@ export function createDocumentServiceContext(options: {
 	};
 	const languageModules = options.getLanguageModules();
 	const lastUpdateVersions = new Map<string, number>();
-	const virtualFiles = createVirtualFilesHost(languageModules);
-	const textDocumentMapper = parseSourceFileDocuments(virtualFiles);
+	const virtualFiles = createVirtualFiles(languageModules);
+	const textDocumentMapper = createDocumentsAndSourceMaps(virtualFiles);
 	const context: DocumentServiceRuntimeContext = {
 		typescript: ts,
 		get plugins() {

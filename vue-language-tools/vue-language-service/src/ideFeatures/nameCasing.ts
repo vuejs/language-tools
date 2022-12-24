@@ -11,7 +11,7 @@ export async function convertTagName(
 	casing: TagNameCasing,
 ) {
 
-	const rootFile = context.documents.getRootFile(uri);
+	const rootFile = context.documents.getRootFileBySourceFileUri(uri);
 	if (!(rootFile instanceof vue.VueFile))
 		return;
 
@@ -51,7 +51,7 @@ export async function convertAttrName(
 	casing: AttrNameCasing,
 ) {
 
-	const rootFile = context.documents.getRootFile(uri);
+	const rootFile = context.documents.getRootFileBySourceFileUri(uri);
 	if (!(rootFile instanceof vue.VueFile))
 		return;
 
@@ -99,7 +99,7 @@ export function detect(
 	attr: AttrNameCasing[],
 } {
 
-	const rootFile = context.documents.getRootFile(uri);
+	const rootFile = context.documents.getRootFileBySourceFileUri(uri);
 	if (!(rootFile instanceof vue.VueFile)) {
 		return {
 			tag: [],

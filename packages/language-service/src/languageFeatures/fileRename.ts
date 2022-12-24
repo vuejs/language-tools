@@ -8,7 +8,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 	return async (oldUri: string, newUri: string) => {
 
-		const rootFile = context.documents.getRootFile(oldUri);
+		const rootFile = context.documents.getRootFileBySourceFileUri(oldUri);
 
 		if (rootFile) {
 

@@ -1,8 +1,8 @@
-import { SourceFileDocuments, SourceMap } from '../documents';
+import { DocumentsAndSourceMaps, SourceMap } from '../documents';
 import { PositionCapabilities, VirtualFile } from '@volar/language-core';
 
 export async function visitEmbedded(
-	documents: SourceFileDocuments,
+	documents: DocumentsAndSourceMaps,
 	current: VirtualFile,
 	cb: (file: VirtualFile, sourceMap: SourceMap<PositionCapabilities>) => Promise<boolean>,
 	rootFile = current,
@@ -15,7 +15,7 @@ export async function visitEmbedded(
 	}
 
 	for (const [_, map] of documents.getMapsByVirtualFileName(current.fileName)) {
-		if (documents.getRootFile(map.sourceDocument.uri) === rootFile) {
+		if (documents.getRootFileBySourceFileUri(map.sourceDocument.uri) === rootFile) {
 			if (!await cb(current, map)) {
 				return false;
 			}

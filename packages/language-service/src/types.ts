@@ -5,7 +5,7 @@ import type { SchemaRequestService } from 'vscode-json-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
-import { SourceFileDocuments } from './documents';
+import { DocumentsAndSourceMaps } from './documents';
 
 export * from 'vscode-languageserver-protocol';
 
@@ -13,7 +13,7 @@ export interface DocumentServiceRuntimeContext {
 	typescript: typeof import('typescript/lib/tsserverlibrary');
 	plugins: LanguageServicePlugin[];
 	pluginContext: LanguageServicePluginContext;
-	documents: SourceFileDocuments;
+	documents: DocumentsAndSourceMaps;
 	update(document: TextDocument): void;
 	updateVirtualFile(fileName: string, snapshot: ts.IScriptSnapshot): void;
 	prepareLanguageServices(document: TextDocument): void;
@@ -23,7 +23,7 @@ export interface LanguageServiceRuntimeContext {
 	host: LanguageServiceHost;
 	core: EmbeddedLanguageContext;
 	typescriptLanguageService: ts.LanguageService;
-	documents: SourceFileDocuments;
+	documents: DocumentsAndSourceMaps;
 	plugins: LanguageServicePlugin[];
 	pluginContext: LanguageServicePluginContext;
 	getTextDocument(uri: string): TextDocument | undefined;

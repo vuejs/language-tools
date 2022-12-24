@@ -1,6 +1,6 @@
 import { posix as path } from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { createVirtualFilesHost, forEachEmbeddeds } from './documentRegistry';
+import { createVirtualFiles, forEachEmbeddeds } from './documentRegistry';
 import { LanguageModule, LanguageServiceHost, EmbeddedFileKind } from './types';
 
 export type EmbeddedLanguageContext = ReturnType<typeof createEmbeddedLanguageServiceHost>;
@@ -27,7 +27,7 @@ export function createEmbeddedLanguageServiceHost(
 	let lastProjectVersion: string | undefined;
 	let tsProjectVersion = 0;
 
-	const virtualFiles = createVirtualFilesHost(languageModules);
+	const virtualFiles = createVirtualFiles(languageModules);
 	const ts = host.getTypeScriptModule();
 	const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
 	const sourceTsFileVersions = new Map<string, string>();

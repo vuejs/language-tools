@@ -1,9 +1,9 @@
-import { EmbeddedFileKind, forEachEmbeddeds, LanguageServicePlugin, LanguageServicePluginContext, SourceFileDocuments } from '@volar/language-service';
+import { EmbeddedFileKind, forEachEmbeddeds, LanguageServicePlugin, LanguageServicePluginContext, DocumentsAndSourceMaps } from '@volar/language-service';
 import * as vue from '@volar/vue-language-core';
 import * as vscode from 'vscode-languageserver-protocol';
 
 export default function (options: {
-	documents: SourceFileDocuments,
+	documents: DocumentsAndSourceMaps,
 }): LanguageServicePlugin {
 
 	let context: LanguageServicePluginContext;
@@ -63,7 +63,7 @@ export default function (options: {
 
 	function worker<T>(uri: string, callback: (vueSourceFile: vue.VueFile) => T) {
 
-		const virtualFile = options.documents.getVirtualFile(uri);
+		const virtualFile = options.documents.getVirtualFileByUri(uri);
 		if (!(virtualFile instanceof vue.VueFile))
 			return;
 

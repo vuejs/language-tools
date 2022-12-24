@@ -53,7 +53,7 @@ export function register(
 
 						recursiveChecker.add({ uri: definition.targetUri, range: { start: definition.targetRange.start, end: definition.targetRange.start } });
 
-						const teleport = context.documents.getTeleport(definition.targetUri);
+						const teleport = context.documents.getTeleportByUri(definition.targetUri);
 
 						if (teleport) {
 
@@ -115,7 +115,7 @@ export function register(
 					link.targetSelectionRange = targetSelectionRange;
 				}
 
-				if (context.documents.getVirtualFile(link.targetUri) && !foundTargetSelectionRange) {
+				if (context.documents.getVirtualFileByUri(link.targetUri) && !foundTargetSelectionRange) {
 					return;
 				}
 

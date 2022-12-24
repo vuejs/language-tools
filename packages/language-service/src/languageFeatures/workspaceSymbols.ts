@@ -19,7 +19,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				continue;
 
 			const symbols = transformSymbolInformations(embeddedSymbols, loc => {
-				if (context.documents.getVirtualFile(loc.uri)) {
+				if (context.documents.getVirtualFileByUri(loc.uri)) {
 					for (const [_, map] of context.documents.getMapsByVirtualFileUri(loc.uri)) {
 						const range = map.toSourceRange(loc.range);
 						if (range) {

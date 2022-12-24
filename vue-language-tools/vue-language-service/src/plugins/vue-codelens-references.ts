@@ -1,5 +1,5 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import { LanguageServicePlugin, LanguageServicePluginContext, SourceFileDocuments } from '@volar/language-service';
+import { LanguageServicePlugin, LanguageServicePluginContext, DocumentsAndSourceMaps } from '@volar/language-service';
 import { VueFile } from '@volar/vue-language-core';
 
 const showReferencesCommand = 'volar.show-references';
@@ -14,7 +14,7 @@ export interface ReferencesCodeLensData {
 }
 
 export default function (options: {
-	documents: SourceFileDocuments,
+	documents: DocumentsAndSourceMaps,
 	findReference(uri: string, position: vscode.Position): Promise<vscode.Location[] | undefined>,
 }): LanguageServicePlugin {
 
@@ -111,7 +111,7 @@ export default function (options: {
 
 	function worker<T>(uri: string, callback: (vueSourceFile: VueFile) => T) {
 
-		const virtualFile = options.documents.getVirtualFile(uri);
+		const virtualFile = options.documents.getVirtualFileByUri(uri);
 		if (!(virtualFile instanceof VueFile))
 			return;
 

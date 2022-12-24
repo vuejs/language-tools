@@ -270,7 +270,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				const relatedInfos: vscode.DiagnosticRelatedInformation[] = [];
 
 				for (const info of _error.relatedInformation) {
-					if (context.documents.getVirtualFile(info.location.uri)) {
+					if (context.documents.getVirtualFileByUri(info.location.uri)) {
 						for (const [_, map] of context.documents.getMapsByVirtualFileUri(info.location.uri)) {
 							const range = map.toSourceRange(info.location.range, data => !!data.diagnostic);
 							if (range) {

@@ -22,7 +22,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 			range = vscode.Range.create(document.positionAt(0), document.positionAt(document.getText().length));
 		}
 
-		const virtualFile = context.documents.getVirtualFile(document.uri);
+		const virtualFile = context.documents.getVirtualFileByUri(document.uri);
 		const originalDocument = document;
 		const rootEdits = onTypeParams
 			? await tryFormat(document, onTypeParams.position, undefined, onTypeParams.ch)

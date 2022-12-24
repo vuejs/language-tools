@@ -104,7 +104,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 		}
 		else {
 
-			const rootFile = context.documents.getRootFile(uri);
+			const rootFile = context.documents.getRootFileBySourceFileUri(uri);
 
 			cache = {
 				uri,

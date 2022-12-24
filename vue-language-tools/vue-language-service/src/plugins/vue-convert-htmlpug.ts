@@ -1,5 +1,5 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import { LanguageServicePlugin, LanguageServicePluginContext, SourceFileDocuments } from '@volar/language-service';
+import { LanguageServicePlugin, LanguageServicePluginContext, DocumentsAndSourceMaps } from '@volar/language-service';
 import { htmlToPug, pugToHtml } from '@johnsoncodehk/html2pug';
 import * as vue from '@volar/vue-language-core';
 
@@ -13,7 +13,7 @@ export interface ReferencesCodeLensData {
 type CommandArgs = [string];
 
 export default function (options: {
-	documents: SourceFileDocuments,
+	documents: DocumentsAndSourceMaps,
 }): LanguageServicePlugin {
 
 	let context: LanguageServicePluginContext;
@@ -100,7 +100,7 @@ export default function (options: {
 
 	function worker<T>(uri: string, callback: (vueSourceFile: vue.VueFile) => T) {
 
-		const virtualFile = options.documents.getVirtualFile(uri);
+		const virtualFile = options.documents.getVirtualFileByUri(uri);
 		if (!(virtualFile instanceof vue.VueFile))
 			return;
 

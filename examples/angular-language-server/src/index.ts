@@ -1,7 +1,7 @@
 import { createTsLanguageModule, createHtmlLanguageModule, HTMLTemplateFile } from '@volar-examples/angular-language-core';
 import createTsPlugin from '@volar-plugins/typescript';
 import { createLanguageServer, LanguageServerPlugin } from '@volar/language-server/node';
-import type { LanguageServicePlugin, SourceFileDocuments, Diagnostic } from '@volar/language-service';
+import type { LanguageServicePlugin, DocumentsAndSourceMaps, Diagnostic } from '@volar/language-service';
 
 const plugin: LanguageServerPlugin = () => ({
 	extraFileExtensions: [{ extension: 'html', isMixedContent: true, scriptKind: 7 }],
@@ -34,7 +34,7 @@ const plugin: LanguageServerPlugin = () => ({
 	},
 });
 
-function createNgTemplateLsPlugin(docs: SourceFileDocuments): LanguageServicePlugin {
+function createNgTemplateLsPlugin(docs: DocumentsAndSourceMaps): LanguageServicePlugin {
 
 	return {
 
@@ -42,7 +42,7 @@ function createNgTemplateLsPlugin(docs: SourceFileDocuments): LanguageServicePlu
 
 			onSyntactic(document) {
 
-				const file = docs.getRootFile(document.uri);
+				const file = docs.getRootFileBySourceFileUri(document.uri);
 
 				if (file instanceof HTMLTemplateFile) {
 					return (file.parsed.errors ?? []).map<Diagnostic>(error => ({
