@@ -3,10 +3,10 @@ import { computed, shallowReactive as reactive } from '@vue/reactivity';
 import { Teleport } from './sourceMaps';
 import type { LanguageModule, PositionCapabilities, VirtualFile } from './types';
 
-export function forEachEmbeddeds(file: VirtualFile, cb: (embedded: VirtualFile) => void) {
+export function forEachEmbeddedFile(file: VirtualFile, cb: (embedded: VirtualFile) => void) {
 	cb(file);
-	for (const child of file.embeddedFiles) {
-		forEachEmbeddeds(child, cb);
+	for (const embeddedFile of file.embeddedFiles) {
+		forEachEmbeddedFile(embeddedFile, cb);
 	}
 }
 
@@ -21,13 +21,13 @@ export function createVirtualFiles(languageModules: LanguageModule[]) {
 	const virtualFileNameToSource = computed(() => {
 		const map = new Map<string, [VirtualFile, Row]>();
 		for (const row of all.value) {
-			forEachEmbeddeds(row[2], file => {
+			forEachEmbeddedFile(row[2], file => {
 				map.set(normalizePath(file.fileName), [file, row]);
 			});
 		}
 		return map;
 	});
-	const virtualSnapshotsMap = new WeakMap<ts.IScriptSnapshot, Map<string, [string, SourceMapBase<PositionCapabilities>]>>();
+	const virtualFileToSourceMapsMap = new WeakMap<ts.IScriptSnapshot, Map<string, [string, SourceMapBase<PositionCapabilities>]>>();
 	const _teleports = new WeakMap<ts.IScriptSnapshot, Teleport | undefined>();
 
 	return {
@@ -67,7 +67,7 @@ export function createVirtualFiles(languageModules: LanguageModule[]) {
 		hasSourceFile: (fileName: string) => !!files[normalizePath(fileName)],
 		all: () => all.value,
 		getTeleport,
-		getMaps,
+		getMaps: getSourceMaps,
 		getSourceByVirtualFileName(fileName: string) {
 			const source = virtualFileNameToSource.value.get(normalizePath(fileName));
 			if (source) {
@@ -80,26 +80,26 @@ export function createVirtualFiles(languageModules: LanguageModule[]) {
 		},
 	};
 
-	function getMaps(virtualFile: VirtualFile) {
-		let sourceSnapshotsMap = virtualSnapshotsMap.get(virtualFile.snapshot);
-		if (!sourceSnapshotsMap) {
-			sourceSnapshotsMap = new Map();
-			virtualSnapshotsMap.set(virtualFile.snapshot, sourceSnapshotsMap);
-		}
+	function getSourceMaps(virtualFile: VirtualFile) {
+		const sourceMapsBySourceFileName = virtualFileToSourceMapsMap.get(virtualFile.snapshot) ?? new Map();
+		virtualFileToSourceMapsMap.set(virtualFile.snapshot, sourceMapsBySourceFileName);
+
 		const sources = new Set<string | undefined>();
-		for (const m of virtualFile.mappings) {
-			sources.add(m.source);
+		for (const map of virtualFile.mappings) {
+			sources.add(map.source);
 		}
+
 		for (const source of sources) {
 			const sourceFileName = source ?? virtualFileNameToSource.value.get(normalizePath(virtualFile.fileName))![1][0];
-			if (!sourceSnapshotsMap.has(sourceFileName)) {
-				sourceSnapshotsMap.set(sourceFileName, [
+			if (!sourceMapsBySourceFileName.has(sourceFileName)) {
+				sourceMapsBySourceFileName.set(sourceFileName, [
 					sourceFileName,
-					new SourceMapBase(virtualFile.mappings.filter(m => m.source === source)),
+					new SourceMapBase(virtualFile.mappings.filter(mapping => mapping.source === source)),
 				]);
 			}
 		}
-		return [...sourceSnapshotsMap.values()];
+
+		return [...sourceMapsBySourceFileName.values()];
 	}
 
 	function getTeleport(file: VirtualFile) {

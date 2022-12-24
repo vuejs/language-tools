@@ -34,7 +34,7 @@ export default function (options: {
 
 			let templateFormatScript: VirtualFile | undefined;
 
-			embedded.forEachEmbeddeds(vueFile, embedded => {
+			embedded.forEachEmbeddedFile(vueFile, embedded => {
 				if (embedded.fileName.endsWith('.__VLS_template_format.ts')) {
 					templateFormatScript = embedded;
 				}

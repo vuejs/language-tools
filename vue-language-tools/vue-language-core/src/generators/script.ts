@@ -548,7 +548,7 @@ export function generate(
 								references: true,
 								rename: true,
 							},
-							toGenedCapabilities: {
+							toGeneratedCapabilities: {
 								definition: true,
 								references: true,
 								rename: true,

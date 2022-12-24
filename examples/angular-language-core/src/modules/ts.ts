@@ -1,4 +1,4 @@
-import { LanguageModule, VirtualFile, EmbeddedFileKind, PositionCapabilities } from '@volar/language-core';
+import { LanguageModule, VirtualFile, VirtualFileKind, PositionCapabilities } from '@volar/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path';
 import type { Mapping } from '@volar/source-map';
@@ -26,7 +26,7 @@ export function createTsLanguageModule(
 						codeAction: true,
 						inlayHint: true,
 					},
-					kind: EmbeddedFileKind.TypeScriptHostFile,
+					kind: VirtualFileKind.TypeScriptHostFile,
 					mappings: virtualFile.mappings,
 					embeddedFiles: [],
 				};

@@ -1,7 +1,7 @@
 import { posix as path } from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { createVirtualFiles, forEachEmbeddeds } from './documentRegistry';
-import { LanguageModule, LanguageServiceHost, EmbeddedFileKind } from './types';
+import { createVirtualFiles, forEachEmbeddedFile } from './documentRegistry';
+import { LanguageModule, LanguageServiceHost, VirtualFileKind } from './types';
 
 export type EmbeddedLanguageContext = ReturnType<typeof createEmbeddedLanguageServiceHost>;
 
@@ -189,8 +189,8 @@ export function createEmbeddedLanguageServiceHost(
 
 		for (const [_1, _2, virtualFile] of virtualFiles.all()) {
 			if (!shouldUpdateTsProject) {
-				forEachEmbeddeds(virtualFile, embedded => {
-					if (embedded.kind === EmbeddedFileKind.TypeScriptHostFile) {
+				forEachEmbeddedFile(virtualFile, embedded => {
+					if (embedded.kind === VirtualFileKind.TypeScriptHostFile) {
 						if (virtualFileVersions.has(embedded.fileName) && virtualFileVersions.get(embedded.fileName)?.virtualFileSnapshot !== embedded.snapshot) {
 							shouldUpdateTsProject = true;
 						}
@@ -208,8 +208,8 @@ export function createEmbeddedLanguageServiceHost(
 		const tsFileNames = new Set<string>();
 
 		for (const [_1, _2, sourceFile] of virtualFiles.all()) {
-			forEachEmbeddeds(sourceFile, embedded => {
-				if (embedded.kind === EmbeddedFileKind.TypeScriptHostFile) {
+			forEachEmbeddedFile(sourceFile, embedded => {
+				if (embedded.kind === VirtualFileKind.TypeScriptHostFile) {
 					tsFileNames.add(embedded.fileName); // virtual .ts
 				}
 			});

@@ -1,4 +1,4 @@
-import { VirtualFiles, VirtualFile, PositionCapabilities, TeleportMappingData, Teleport, forEachEmbeddeds } from '@volar/language-core';
+import { VirtualFiles, VirtualFile, PositionCapabilities, TeleportMappingData, Teleport, forEachEmbeddedFile } from '@volar/language-core';
 import * as shared from '@volar/shared';
 import { Mapping, SourceMapBase } from '@volar/source-map';
 import * as vscode from 'vscode-languageserver-protocol';
@@ -145,7 +145,7 @@ export class TeleportSourceMap extends SourceMap<TeleportMappingData> {
 	}
 	*findTeleports(start: vscode.Position) {
 		for (const mapped of this.toGeneratedPositionsBase(start)) {
-			yield [mapped[0], mapped[1].data.toGenedCapabilities] as const;
+			yield [mapped[0], mapped[1].data.toGeneratedCapabilities] as const;
 		}
 		for (const mapped of this.toSourcePositionsBase(start)) {
 			yield [mapped[0], mapped[1].data.toSourceCapabilities] as const;
@@ -196,7 +196,7 @@ export function createDocumentsAndSourceMaps(mapper: VirtualFiles) {
 			const source = mapper.get(fileName);
 			if (source) {
 				const result: [VirtualFile, SourceMap<PositionCapabilities>][] = [];
-				forEachEmbeddeds(source[1], (embedded) => {
+				forEachEmbeddedFile(source[1], (embedded) => {
 					for (const [sourceFileName, map] of mapper.getMaps(embedded)) {
 						if (sourceFileName === fileName) {
 							if (!_maps.has(map)) {

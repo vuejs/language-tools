@@ -61,7 +61,7 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 		let edits: readonly ts.FileTextChanges[] = [];
 		const file = core.mapper.get(args.fileName)?.[1];
 		if (file) {
-			embedded.forEachEmbeddeds(file, embedded => {
+			embedded.forEachEmbeddedFile(file, embedded => {
 				if (embedded.kind && embedded.capabilities.codeAction) {
 					edits = edits.concat(ls.organizeImports({
 						...args,

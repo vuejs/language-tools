@@ -9,7 +9,7 @@ export class Teleport extends SourceMaps.SourceMapBase<TeleportMappingData> {
 			}
 		}
 		for (const mapped of this.toSourceOffsets(start)) {
-			if (!filter || filter(mapped[1].data.toGenedCapabilities)) {
+			if (!filter || filter(mapped[1].data.toGeneratedCapabilities)) {
 				yield mapped[0];
 			}
 		}

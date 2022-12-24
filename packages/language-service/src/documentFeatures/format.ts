@@ -169,22 +169,21 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 		function getEmbeddedFilesByLevel(rootFile: VirtualFile, level: number) {
 
-			const embeddeds = rootFile.embeddedFiles;
-			const embeddedsLevels: VirtualFile[][] = [embeddeds];
+			const embeddedFilesByLevel: VirtualFile[][] = [rootFile.embeddedFiles];
 
 			while (true) {
 
-				if (embeddedsLevels.length > level)
-					return embeddedsLevels[level];
+				if (embeddedFilesByLevel.length > level)
+					return embeddedFilesByLevel[level];
 
-				let nextEmbeddeds: VirtualFile[] = [];
+				let nextLevel: VirtualFile[] = [];
 
-				for (const embeddeds of embeddedsLevels[embeddedsLevels.length - 1]) {
+				for (const file of embeddedFilesByLevel[embeddedFilesByLevel.length - 1]) {
 
-					nextEmbeddeds = nextEmbeddeds.concat(embeddeds.embeddedFiles);
+					nextLevel = nextLevel.concat(file.embeddedFiles);
 				}
 
-				embeddedsLevels.push(nextEmbeddeds);
+				embeddedFilesByLevel.push(nextLevel);
 			}
 		}
 

@@ -1,4 +1,4 @@
-import { DocumentCapabilities, EmbeddedFileKind, LanguageModule, VirtualFile } from '@volar/language-core';
+import { DocumentCapabilities, VirtualFileKind, LanguageModule, VirtualFile } from '@volar/language-core';
 import type { TmplAstNode, TmplAstTemplate, ParsedTemplate, ParseSourceSpan } from '@angular/compiler';
 import { Codegen } from './ts';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -11,7 +11,7 @@ export class HTMLTemplateFile implements VirtualFile {
 	public capabilities: DocumentCapabilities = {
 		diagnostic: true,
 	};
-	public kind = EmbeddedFileKind.TextFile;
+	public kind = VirtualFileKind.TextFile;
 	public mappings: VirtualFile['mappings'] = [];
 	public embeddedFiles: VirtualFile['embeddedFiles'] = [];
 	public parsed: ParsedTemplate;
@@ -46,7 +46,7 @@ export class HTMLTemplateFile implements VirtualFile {
 					codeAction: false,
 					inlayHint: true,
 				},
-				kind: EmbeddedFileKind.TypeScriptHostFile,
+				kind: VirtualFileKind.TypeScriptHostFile,
 				mappings: generated.codegen.mappings,
 				embeddedFiles: [],
 			},

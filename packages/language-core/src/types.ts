@@ -40,7 +40,7 @@ export interface TeleportCapabilities {
 
 export interface TeleportMappingData {
 	toSourceCapabilities: TeleportCapabilities,
-	toGenedCapabilities: TeleportCapabilities,
+	toGeneratedCapabilities: TeleportCapabilities,
 }
 
 export interface TextRange {
@@ -48,7 +48,7 @@ export interface TextRange {
 	end: number,
 }
 
-export enum EmbeddedFileKind {
+export enum VirtualFileKind {
 	TextFile = 0,
 	TypeScriptHostFile = 1,
 }
@@ -56,7 +56,7 @@ export enum EmbeddedFileKind {
 export interface VirtualFile {
 	fileName: string,
 	snapshot: ts.IScriptSnapshot,
-	kind: EmbeddedFileKind,
+	kind: VirtualFileKind,
 	capabilities: DocumentCapabilities,
 	mappings: Mapping<PositionCapabilities>[],
 	teleportMappings?: Mapping<TeleportMappingData>[],

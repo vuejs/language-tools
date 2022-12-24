@@ -1,4 +1,4 @@
-import { DocumentCapabilities, VirtualFile, EmbeddedFileKind, PositionCapabilities, TeleportMappingData } from '@volar/language-core';
+import { DocumentCapabilities, VirtualFile, VirtualFileKind, PositionCapabilities, TeleportMappingData } from '@volar/language-core';
 import { buildMappings, Mapping, Segment, toString } from '@volar/source-map';
 import * as CompilerDom from '@vue/compiler-dom';
 import { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
@@ -9,7 +9,7 @@ import { Sfc, SfcBlock, VueLanguagePlugin } from './types';
 export class VueEmbeddedFile {
 
 	public parentFileName?: string;
-	public kind = EmbeddedFileKind.TextFile;
+	public kind = VirtualFileKind.TextFile;
 	public capabilities: DocumentCapabilities = {};
 	public content: Segment<PositionCapabilities>[] = [];
 	public extraMappings: Mapping<PositionCapabilities>[] = [];
@@ -227,7 +227,7 @@ export class VueFile implements VirtualFile {
 			});
 		});
 	}));
-	static _allEmbeddeds = computed(() => {
+	static _allEmbeddedFiles = computed(() => {
 
 		const all: {
 			file: VueEmbeddedFile;
@@ -243,11 +243,11 @@ export class VueFile implements VirtualFile {
 
 		return all;
 	});
-	static _embeddeds = computed(() => {
+	static _embeddedFiles = computed(() => {
 
 		const childs: VirtualFile[] = [];
 
-		let remain = [...VueFile._allEmbeddeds.value];
+		let remain = [...VueFile._allEmbeddedFiles.value];
 
 		while (remain.length) {
 			const beforeLength = remain.length;
@@ -349,7 +349,7 @@ export class VueFile implements VirtualFile {
 		return blocks;
 	});
 
-	kind = EmbeddedFileKind.TextFile;
+	kind = VirtualFileKind.TextFile;
 
 	capabilities: DocumentCapabilities = {
 		diagnostic: true,
@@ -445,8 +445,8 @@ export class VueFile implements VirtualFile {
 
 		VueFile.current.value = this;
 
-		this._allEmbeddeds.value = VueFile._allEmbeddeds.value;
-		this._embeddeds.value = VueFile._embeddeds.value;
+		this._allEmbeddeds.value = VueFile._allEmbeddedFiles.value;
+		this._embeddeds.value = VueFile._embeddedFiles.value;
 
 		function updateTemplate(block: SFCTemplateBlock | null) {
 
