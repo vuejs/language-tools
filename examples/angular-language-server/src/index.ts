@@ -42,7 +42,7 @@ function createNgTemplateLsPlugin(docs: SourceFileDocuments): LanguageServicePlu
 
 			onSyntactic(document) {
 
-				const file = docs.get(document.uri)?.rootFile;
+				const file = docs.getRootFile(document.uri);
 
 				if (file instanceof HTMLTemplateFile) {
 					return (file.parsed.errors ?? []).map<Diagnostic>(error => ({
@@ -61,4 +61,3 @@ function createNgTemplateLsPlugin(docs: SourceFileDocuments): LanguageServicePlu
 }
 
 createLanguageServer([plugin]);
-
