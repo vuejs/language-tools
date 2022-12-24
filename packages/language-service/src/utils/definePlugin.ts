@@ -5,17 +5,20 @@ export async function visitEmbedded(
 	documents: SourceFileDocuments,
 	current: VirtualFile,
 	cb: (file: VirtualFile, sourceMap: SourceMap<PositionCapabilities>) => Promise<boolean>,
+	rootFile = current,
 ) {
 
 	for (const embedded of current.embeddeds) {
-		if (!await visitEmbedded(documents, embedded, cb)) {
+		if (!await visitEmbedded(documents, embedded, cb, rootFile)) {
 			return false;
 		}
 	}
 
 	for (const [_, map] of documents.getMapsByVirtualFileName(current.fileName)) {
-		if (!await cb(current, map)) {
-			return false;
+		if (documents.getRootFile(map.sourceDocument.uri) === rootFile) {
+			if (!await cb(current, map)) {
+				return false;
+			}
 		}
 	}
 
