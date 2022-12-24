@@ -1,5 +1,6 @@
 import { getLength, Segment, toString } from '@volar/source-map';
-import type { PositionCapabilities, TeleportMappingData, TextRange } from '@volar/language-core';
+import type { FileRangeCapabilities, MirrorBehaviorCapabilities } from '@volar/language-core';
+import type { TextRange } from '../types';
 import * as SourceMaps from '@volar/source-map';
 import { hyphenate } from '@vue/shared';
 import { posix as path } from 'path';
@@ -26,8 +27,8 @@ export function generate(
 	htmlGen: ReturnType<typeof templateGen['generate']> | undefined,
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: ResolvedVueCompilerOptions,
-	codeGen: Segment<PositionCapabilities>[] = [],
-	teleports: SourceMaps.Mapping<TeleportMappingData>[] = [],
+	codeGen: Segment<FileRangeCapabilities>[] = [],
+	mirrorBehaviorMappings: SourceMaps.Mapping<[MirrorBehaviorCapabilities, MirrorBehaviorCapabilities]>[] = [],
 ) {
 
 	const bypassDefineComponent = lang === 'js' || lang === 'jsx';
@@ -88,7 +89,7 @@ export function generate(
 	return {
 		codeGen,
 		extraMappings,
-		teleports,
+		mirrorBehaviorMappings,
 	};
 
 	function writeScriptSetupTypes() {
@@ -539,21 +540,21 @@ export function generate(
 					const scriptEnd = getLength(codeGen);
 					codeGen.push(',\n');
 
-					teleports.push({
+					mirrorBehaviorMappings.push({
 						sourceRange: [scriptStart, scriptEnd],
 						generatedRange: [templateStart, templateEnd],
-						data: {
-							toSourceCapabilities: {
+						data: [
+							{
 								definition: true,
 								references: true,
 								rename: true,
 							},
-							toGeneratedCapabilities: {
+							{
 								definition: true,
 								references: true,
 								rename: true,
 							},
-						},
+						],
 					});
 				}
 			}

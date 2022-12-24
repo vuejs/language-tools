@@ -87,3 +87,8 @@ export interface Sfc {
 	scriptAst: ts.SourceFile | undefined;
 	scriptSetupAst: ts.SourceFile | undefined;
 }
+
+export interface TextRange {
+	start: number,
+	end: number,
+}

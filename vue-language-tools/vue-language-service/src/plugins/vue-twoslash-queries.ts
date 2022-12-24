@@ -1,4 +1,4 @@
-import { VirtualFileKind, forEachEmbeddedFile, LanguageServicePlugin, LanguageServicePluginContext, DocumentsAndSourceMaps } from '@volar/language-service';
+import { FileKind, forEachEmbeddedFile, LanguageServicePlugin, LanguageServicePluginContext, DocumentsAndSourceMaps } from '@volar/language-service';
 import * as vue from '@volar/vue-language-core';
 import * as vscode from 'vscode-languageserver-protocol';
 
@@ -33,7 +33,7 @@ export default function (options: {
 					}
 
 					forEachEmbeddedFile(vueFile, (embedded) => {
-						if (embedded.kind === VirtualFileKind.TypeScriptHostFile) {
+						if (embedded.kind === FileKind.TypeScriptHostFile) {
 							for (const [_, map] of options.documents.getMapsByVirtualFileUri(document.uri)) {
 								for (const [pointerPosition, hoverOffset] of hoverOffsets) {
 									for (const [tsOffset, mapping] of map.map.toGeneratedOffsets(hoverOffset)) {

@@ -1,9 +1,9 @@
-import { PositionCapabilities } from '@volar/language-core';
+import { FileRangeCapabilities } from '@volar/language-core';
 import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { SourceMap } from '../documents';
+import { SourceMapWithDocuments } from '../documents';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import { languageFeatureWorker } from '../utils/featureWorkers';
@@ -212,7 +212,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					const pluginId = context.plugins.indexOf(plugin);
 					const pluginCache = cacheMap.get(pluginId) ?? cacheMap.set(pluginId, new Map()).get(pluginId)!;
 					const cache = pluginCache.get(document.uri);
-					const tsProjectVersion = (mode === 'onDeclaration' || mode === 'onSemantic') ? context.core.typescriptLanguageServiceHost.getProjectVersion?.() : undefined;
+					const tsProjectVersion = (mode === 'onDeclaration' || mode === 'onSemantic') ? context.core.typescript.languageServiceHost.getProjectVersion?.() : undefined;
 
 					if (mode === 'onDeclaration' || mode === 'onSemantic') {
 						if (cache && cache.documentVersion === document.version && cache.tsProjectVersion === tsProjectVersion) {
@@ -248,7 +248,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 		}
 	};
 
-	function transformErrorRange(map: SourceMap<PositionCapabilities> | undefined, errors: vscode.Diagnostic[]) {
+	function transformErrorRange(map: SourceMapWithDocuments<FileRangeCapabilities> | undefined, errors: vscode.Diagnostic[]) {
 
 		const result: vscode.Diagnostic[] = [];
 

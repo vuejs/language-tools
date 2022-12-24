@@ -1,4 +1,4 @@
-import type { TextRange } from '@volar/language-core';
+import type { TextRange } from '../types';
 import { LanguageServicePlugin, ExecuteCommandContext, LanguageServicePluginContext, DocumentsAndSourceMaps } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-core';

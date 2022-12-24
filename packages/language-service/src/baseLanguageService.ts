@@ -1,4 +1,4 @@
-import { createEmbeddedLanguageServiceHost, LanguageServiceHost } from '@volar/language-core';
+import { createLanguageContext, LanguageServiceHost } from '@volar/language-core';
 import * as shared from '@volar/shared';
 import * as tsFaster from '@volar/typescript-faster';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -36,15 +36,15 @@ export type LanguageService = ReturnType<typeof createLanguageService>;
 
 export function createLanguageServiceContext(options: {
 	host: LanguageServiceHost,
-	context: ReturnType<typeof createEmbeddedLanguageServiceHost>,
+	context: ReturnType<typeof createLanguageContext>,
 	getPlugins(): LanguageServicePlugin[],
 	env: LanguageServicePluginContext['env'];
 	documentRegistry: ts.DocumentRegistry | undefined,
 }) {
 
 	const ts = options.host.getTypeScriptModule();
-	const tsLs = ts.createLanguageService(options.context.typescriptLanguageServiceHost, options.documentRegistry);
-	tsFaster.decorate(ts, options.context.typescriptLanguageServiceHost, tsLs);
+	const tsLs = ts.createLanguageService(options.context.typescript.languageServiceHost, options.documentRegistry);
+	tsFaster.decorate(ts, options.context.typescript.languageServiceHost, tsLs);
 
 	let plugins: LanguageServicePlugin[];
 
@@ -52,11 +52,11 @@ export function createLanguageServiceContext(options: {
 		env: options.env,
 		typescript: {
 			module: options.host.getTypeScriptModule(),
-			languageServiceHost: options.context.typescriptLanguageServiceHost,
+			languageServiceHost: options.context.typescript.languageServiceHost,
 			languageService: tsLs,
 		},
 	};
-	const textDocumentMapper = createDocumentsAndSourceMaps(options.context.mapper);
+	const textDocumentMapper = createDocumentsAndSourceMaps(options.context.virtualFiles);
 	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
 	const documentVersions = new Map<string, number>();
 	const context: LanguageServiceRuntimeContext = {

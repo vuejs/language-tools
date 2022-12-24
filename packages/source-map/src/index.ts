@@ -9,7 +9,7 @@ export interface Mapping<T = any> {
 	data: T;
 };
 
-export class SourceMapBase<Data = undefined> {
+export class SourceMap<Data = any> {
 
 	private _memo: {
 		sourceRange: {
@@ -79,30 +79,29 @@ export class SourceMapBase<Data = undefined> {
 		return this._memo;
 	}
 
-	constructor(public readonly mappings: Mapping<Data>[]) {
-	}
+	constructor(public readonly mappings: Mapping<Data>[]) { }
 
 	public toSourceOffset(start: number, baseOnRight: boolean = false) {
-		for (const mapped of this.matcing(start, 'generatedRange', 'sourceRange', baseOnRight)) {
+		for (const mapped of this.matching(start, 'generatedRange', 'sourceRange', baseOnRight)) {
 			return mapped;
 		}
 	}
 
 	public toGeneratedOffset(start: number, baseOnRight: boolean = false) {
-		for (const mapped of this.matcing(start, 'sourceRange', 'generatedRange', baseOnRight)) {
+		for (const mapped of this.matching(start, 'sourceRange', 'generatedRange', baseOnRight)) {
 			return mapped;
 		}
 	}
 
 	public toSourceOffsets(start: number, baseOnRight: boolean = false) {
-		return this.matcing(start, 'generatedRange', 'sourceRange', baseOnRight);
+		return this.matching(start, 'generatedRange', 'sourceRange', baseOnRight);
 	}
 
 	public toGeneratedOffsets(start: number, baseOnRight: boolean = false) {
-		return this.matcing(start, 'sourceRange', 'generatedRange', baseOnRight);
+		return this.matching(start, 'sourceRange', 'generatedRange', baseOnRight);
 	}
 
-	public * matcing(startOffset: number, from: 'sourceRange' | 'generatedRange', to: 'sourceRange' | 'generatedRange', baseOnRight: boolean) {
+	public * matching(startOffset: number, from: 'sourceRange' | 'generatedRange', to: 'sourceRange' | 'generatedRange', baseOnRight: boolean) {
 
 		const memo = this.memo[from];
 

@@ -1,5 +1,5 @@
 import { Segment } from '@volar/source-map';
-import { PositionCapabilities } from '@volar/language-core';
+import { FileRangeCapabilities } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -8,18 +8,18 @@ import { colletVars, walkInterpolationFragment } from '../utils/transform';
 import * as minimatch from 'minimatch';
 
 const capabilitiesSet = {
-	all: { hover: true, diagnostic: true, references: true, definition: true, rename: true, completion: true, semanticTokens: true } satisfies PositionCapabilities,
-	noDiagnostic: { hover: true, references: true, definition: true, rename: true, completion: true, semanticTokens: true } satisfies PositionCapabilities,
-	diagnosticOnly: { diagnostic: true } satisfies PositionCapabilities,
-	tagHover: { hover: true } satisfies PositionCapabilities,
-	event: { hover: true, diagnostic: true } satisfies PositionCapabilities,
-	tagReference: { references: true, definition: true, rename: { normalize: undefined, apply: noEditApply } } satisfies PositionCapabilities,
-	attr: { hover: true, diagnostic: true, references: true, definition: true, rename: true } satisfies PositionCapabilities,
-	attrReference: { references: true, definition: true, rename: true } satisfies PositionCapabilities,
-	scopedClassName: { references: true, definition: true, rename: true, completion: true } satisfies PositionCapabilities,
-	slotName: { hover: true, diagnostic: true, references: true, definition: true, completion: true } satisfies PositionCapabilities,
-	slotNameExport: { hover: true, diagnostic: true, references: true, definition: true, /* referencesCodeLens: true */ } satisfies PositionCapabilities,
-	refAttr: { references: true, definition: true, rename: true } satisfies PositionCapabilities,
+	all: { hover: true, diagnostic: true, references: true, definition: true, rename: true, completion: true, semanticTokens: true } satisfies FileRangeCapabilities,
+	noDiagnostic: { hover: true, references: true, definition: true, rename: true, completion: true, semanticTokens: true } satisfies FileRangeCapabilities,
+	diagnosticOnly: { diagnostic: true } satisfies FileRangeCapabilities,
+	tagHover: { hover: true } satisfies FileRangeCapabilities,
+	event: { hover: true, diagnostic: true } satisfies FileRangeCapabilities,
+	tagReference: { references: true, definition: true, rename: { normalize: undefined, apply: noEditApply } } satisfies FileRangeCapabilities,
+	attr: { hover: true, diagnostic: true, references: true, definition: true, rename: true } satisfies FileRangeCapabilities,
+	attrReference: { references: true, definition: true, rename: true } satisfies FileRangeCapabilities,
+	scopedClassName: { references: true, definition: true, rename: true, completion: true } satisfies FileRangeCapabilities,
+	slotName: { hover: true, diagnostic: true, references: true, definition: true, completion: true } satisfies FileRangeCapabilities,
+	slotNameExport: { hover: true, diagnostic: true, references: true, definition: true, /* referencesCodeLens: true */ } satisfies FileRangeCapabilities,
+	refAttr: { references: true, definition: true, rename: true } satisfies FileRangeCapabilities,
 };
 const formatBrackets = {
 	empty: ['', ''] as [string, string],
@@ -56,9 +56,9 @@ export function generate(
 ) {
 
 	const nativeTags = new Set(vueCompilerOptions.nativeTags);
-	const codeGen: Segment<PositionCapabilities>[] = [];
-	const formatCodeGen: Segment<PositionCapabilities>[] = [];
-	const cssCodeGen: Segment<PositionCapabilities>[] = [];
+	const codeGen: Segment<FileRangeCapabilities>[] = [];
+	const formatCodeGen: Segment<FileRangeCapabilities>[] = [];
+	const cssCodeGen: Segment<FileRangeCapabilities>[] = [];
 	const slots = new Map<string, {
 		varName: string,
 		loc: [number, number],
@@ -457,7 +457,7 @@ export function generate(
 				node.loc.start.offset,
 				capabilitiesSet.diagnosticOnly,
 			]);
-			const tagCapabilities: PositionCapabilities = _isIntrinsicElement || _isNamespacedTag ? capabilitiesSet.all : {
+			const tagCapabilities: FileRangeCapabilities = _isIntrinsicElement || _isNamespacedTag ? capabilitiesSet.all : {
 				...capabilitiesSet.diagnosticOnly,
 				...capabilitiesSet.tagHover,
 			};
@@ -1110,7 +1110,7 @@ export function generate(
 
 		return { unwritedExps };
 
-		function writePropName(name: string, isStatic: boolean, sourceRange: number | [number, number], data: PositionCapabilities, cacheOn: any) {
+		function writePropName(name: string, isStatic: boolean, sourceRange: number | [number, number], data: FileRangeCapabilities, cacheOn: any) {
 			if (format === 'jsx' && isStatic) {
 				codeGen.push([
 					name,
@@ -1160,7 +1160,7 @@ export function generate(
 				codeGen.push(', ');
 			}
 		}
-		function getCaps(caps: PositionCapabilities): PositionCapabilities {
+		function getCaps(caps: FileRangeCapabilities): FileRangeCapabilities {
 			if (mode === 'props') {
 				return caps;
 			}
@@ -1627,7 +1627,7 @@ export function generate(
 			}
 		}
 	}
-	function writeObjectProperty(mapCode: string, sourceRange: number | [number, number], data: PositionCapabilities, cacheOn: any) {
+	function writeObjectProperty(mapCode: string, sourceRange: number | [number, number], data: FileRangeCapabilities, cacheOn: any) {
 		if (validTsVar.test(mapCode)) {
 			codeGen.push([mapCode, 'template', sourceRange, data]);
 			return 1;
@@ -1648,7 +1648,7 @@ export function generate(
 			return 2;
 		}
 	}
-	function writePropertyAccess(mapCode: string, sourceRange: number | [number, number], data: PositionCapabilities) {
+	function writePropertyAccess(mapCode: string, sourceRange: number | [number, number], data: FileRangeCapabilities) {
 		if (validTsVar.test(mapCode)) {
 			codeGen.push(`.`);
 			codeGen.push([mapCode, 'template', sourceRange, data]);
@@ -1662,7 +1662,7 @@ export function generate(
 			codeGen.push(`]`);
 		}
 	}
-	function writeCodeWithQuotes(mapCode: string, sourceRange: number | [number, number], data: PositionCapabilities) {
+	function writeCodeWithQuotes(mapCode: string, sourceRange: number | [number, number], data: FileRangeCapabilities) {
 		codeGen.push([
 			'',
 			'template',
@@ -1682,7 +1682,7 @@ export function generate(
 	function writeInterpolation(
 		mapCode: string,
 		sourceOffset: number | undefined,
-		data: PositionCapabilities | undefined,
+		data: FileRangeCapabilities | undefined,
 		prefix: string,
 		suffix: string,
 		cacheOn: any,

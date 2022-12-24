@@ -3,8 +3,8 @@ import type { LanguageServiceRuntimeContext } from '../types';
 import * as shared from '@volar/shared';
 import { languageFeatureWorker } from '../utils/featureWorkers';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { SourceMap } from '../documents';
-import { PositionCapabilities, VirtualFile } from '@volar/language-core';
+import { SourceMapWithDocuments } from '../documents';
+import { FileRangeCapabilities, VirtualFile } from '@volar/language-core';
 
 export function register(context: LanguageServiceRuntimeContext) {
 
@@ -39,7 +39,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			...fictitiousLinks,
 		];
 
-		function getFictitiousLinks(document: TextDocument, maps: [VirtualFile, SourceMap<PositionCapabilities>][]) {
+		function getFictitiousLinks(document: TextDocument, maps: [VirtualFile, SourceMapWithDocuments<FileRangeCapabilities>][]) {
 
 			const result: vscode.DocumentLink[] = [];
 

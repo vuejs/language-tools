@@ -1,7 +1,7 @@
 import { Mapping } from '@volar/source-map';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
-export interface DocumentCapabilities {
+export interface FileCapabilities {
 	diagnostic?: boolean,
 	foldingRange?: boolean,
 	documentFormatting?: boolean | {
@@ -12,7 +12,7 @@ export interface DocumentCapabilities {
 	inlayHint?: boolean,
 }
 
-export interface PositionCapabilities {
+export interface FileRangeCapabilities {
 	hover?: boolean,
 	references?: boolean,
 	definition?: boolean,
@@ -32,23 +32,13 @@ export interface PositionCapabilities {
 	displayWithLink?: boolean,
 }
 
-export interface TeleportCapabilities {
+export interface MirrorBehaviorCapabilities {
 	references?: boolean,
 	definition?: boolean,
 	rename?: boolean,
 }
 
-export interface TeleportMappingData {
-	toSourceCapabilities: TeleportCapabilities,
-	toGeneratedCapabilities: TeleportCapabilities,
-}
-
-export interface TextRange {
-	start: number,
-	end: number,
-}
-
-export enum VirtualFileKind {
+export enum FileKind {
 	TextFile = 0,
 	TypeScriptHostFile = 1,
 }
@@ -56,10 +46,10 @@ export enum VirtualFileKind {
 export interface VirtualFile {
 	fileName: string,
 	snapshot: ts.IScriptSnapshot,
-	kind: VirtualFileKind,
-	capabilities: DocumentCapabilities,
-	mappings: Mapping<PositionCapabilities>[],
-	teleportMappings?: Mapping<TeleportMappingData>[],
+	kind: FileKind,
+	capabilities: FileCapabilities,
+	mappings: Mapping<FileRangeCapabilities>[],
+	mirrorBehaviorMappings?: Mapping<[MirrorBehaviorCapabilities, MirrorBehaviorCapabilities]>[],
 	embeddedFiles: VirtualFile[],
 }
 

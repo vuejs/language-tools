@@ -7,13 +7,13 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 	type _LanguageService = {
 		__internal__: {
 			languageService: ts.LanguageService;
-			context: embedded.EmbeddedLanguageContext;
+			context: embedded.LanguageContext;
 		};
 	} & ts.LanguageService;
 
-	const core = embedded.createEmbeddedLanguageServiceHost(host, mods);
+	const core = embedded.createLanguageContext(host, mods);
 	const ts = host.getTypeScriptModule();
-	const ls = ts.createLanguageService(core.typescriptLanguageServiceHost);
+	const ls = ts.createLanguageService(core.typescript.languageServiceHost);
 
 	return new Proxy<Partial<_LanguageService>>({
 		organizeImports,
@@ -59,7 +59,7 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 	// apis
 	function organizeImports(args: ts.OrganizeImportsArgs, formatOptions: ts.FormatCodeSettings, preferences: ts.UserPreferences | undefined): ReturnType<ts.LanguageService['organizeImports']> {
 		let edits: readonly ts.FileTextChanges[] = [];
-		const file = core.mapper.get(args.fileName)?.[1];
+		const file = core.virtualFiles.get(args.fileName)?.[1];
 		if (file) {
 			embedded.forEachEmbeddedFile(file, embedded => {
 				if (embedded.kind && embedded.capabilities.codeAction) {
@@ -109,11 +109,11 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 		const loopChecker = new Set<string>();
 		let symbols: (ts.DefinitionInfo | ts.ReferenceEntry | ts.ImplementationLocation | ts.RenameLocation)[] = [];
 
-		withTeleports(fileName, position);
+		withMirrors(fileName, position);
 
 		return symbols.map(s => transformDocumentSpanLike(s)).filter(notEmpty);
 
-		function withTeleports(fileName: string, position: number) {
+		function withMirrors(fileName: string, position: number) {
 			if (loopChecker.has(fileName + ':' + position))
 				return;
 			loopChecker.add(fileName + ':' + position);
@@ -128,26 +128,24 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 			for (const ref of _symbols) {
 				loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
 
-				const virtualFile = core.mapper.getSourceByVirtualFileName(ref.fileName)?.[2];
+				const virtualFile = core.virtualFiles.getSourceByVirtualFileName(ref.fileName)?.[2];
 				if (!virtualFile)
 					continue;
 
-				const teleport = core.mapper.getTeleport(virtualFile);
-				if (!teleport)
+				const mirrorMap = core.virtualFiles.getMirrorMap(virtualFile);
+				if (!mirrorMap)
 					continue;
 
-				for (const teleOffset of teleport.findTeleports(ref.textSpan.start, data => {
+				for (const [mirrorOffset, data] of mirrorMap.findMirrorOffsets(ref.textSpan.start)) {
 					if ((mode === 'definition' || mode === 'typeDefinition' || mode === 'implementation') && !data.definition)
-						return false;
-					if ((mode === 'references') && !data.references)
-						return false;
-					if ((mode === 'rename') && !data.rename)
-						return false;
-					return true;
-				})) {
-					if (loopChecker.has(ref.fileName + ':' + teleOffset))
 						continue;
-					withTeleports(ref.fileName, teleOffset);
+					if ((mode === 'references') && !data.references)
+						continue;
+					if ((mode === 'rename') && !data.rename)
+						continue;
+					if (loopChecker.has(ref.fileName + ':' + mirrorOffset))
+						continue;
+					withMirrors(ref.fileName, mirrorOffset);
 				}
 			}
 		}
@@ -158,7 +156,7 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 		let textSpan: ts.TextSpan | undefined;
 		let symbols: ts.DefinitionInfo[] = [];
 
-		withTeleports(fileName, position);
+		withMirrors(fileName, position);
 
 		if (!textSpan) return;
 		return {
@@ -166,7 +164,7 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 			definitions: symbols?.map(s => transformDocumentSpanLike(s)).filter(notEmpty),
 		};
 
-		function withTeleports(fileName: string, position: number) {
+		function withMirrors(fileName: string, position: number) {
 			if (loopChecker.has(fileName + ':' + position))
 				return;
 			loopChecker.add(fileName + ':' + position);
@@ -181,18 +179,20 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 
 				loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
 
-				const virtualFile = core.mapper.getSourceByVirtualFileName(ref.fileName)?.[2];
+				const virtualFile = core.virtualFiles.getSourceByVirtualFileName(ref.fileName)?.[2];
 				if (!virtualFile)
 					continue;
 
-				const teleport = core.mapper.getTeleport(virtualFile);
-				if (!teleport)
+				const mirrorMap = core.virtualFiles.getMirrorMap(virtualFile);
+				if (!mirrorMap)
 					continue;
 
-				for (const teleOffset of teleport.findTeleports(ref.textSpan.start, data => !!data.definition)) {
-					if (loopChecker.has(ref.fileName + ':' + teleOffset))
+				for (const [mirrorOffset, data] of mirrorMap.findMirrorOffsets(ref.textSpan.start)) {
+					if (!data.definition)
 						continue;
-					withTeleports(ref.fileName, teleOffset);
+					if (loopChecker.has(ref.fileName + ':' + mirrorOffset))
+						continue;
+					withMirrors(ref.fileName, mirrorOffset);
 				}
 			}
 		}
@@ -202,11 +202,11 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 		const loopChecker = new Set<string>();
 		let symbols: ts.ReferencedSymbol[] = [];
 
-		withTeleports(fileName, position);
+		withMirrors(fileName, position);
 
 		return symbols.map(s => transformReferencedSymbol(s)).filter(notEmpty);
 
-		function withTeleports(fileName: string, position: number) {
+		function withMirrors(fileName: string, position: number) {
 			if (loopChecker.has(fileName + ':' + position))
 				return;
 			loopChecker.add(fileName + ':' + position);
@@ -218,18 +218,20 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 
 					loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
 
-					const virtualFile = core.mapper.getSourceByVirtualFileName(ref.fileName)?.[2];
+					const virtualFile = core.virtualFiles.getSourceByVirtualFileName(ref.fileName)?.[2];
 					if (!virtualFile)
 						continue;
 
-					const teleport = core.mapper.getTeleport(virtualFile);
-					if (!teleport)
+					const mirrorMap = core.virtualFiles.getMirrorMap(virtualFile);
+					if (!mirrorMap)
 						continue;
 
-					for (const telePos of teleport.findTeleports(ref.textSpan.start, data => !!data.references)) {
-						if (loopChecker.has(ref.fileName + ':' + telePos))
+					for (const [mirrorOffset, data] of mirrorMap.findMirrorOffsets(ref.textSpan.start)) {
+						if (!data.references)
 							continue;
-						withTeleports(ref.fileName, telePos);
+						if (loopChecker.has(ref.fileName + ':' + mirrorOffset))
+							continue;
+						withMirrors(ref.fileName, mirrorOffset);
 					}
 				}
 			}
@@ -238,7 +240,7 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 
 	// transforms
 	function transformFileTextChanges(changes: ts.FileTextChanges): ts.FileTextChanges | undefined {
-		const source = core.mapper.getSourceByVirtualFileName(changes.fileName);
+		const source = core.virtualFiles.getSourceByVirtualFileName(changes.fileName);
 		if (source) {
 			return {
 				...changes,
@@ -297,9 +299,9 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 	function transformSpan(fileName: string | undefined, textSpan: ts.TextSpan | undefined) {
 		if (!fileName) return;
 		if (!textSpan) return;
-		const source = core.mapper.getSourceByVirtualFileName(fileName);
+		const source = core.virtualFiles.getSourceByVirtualFileName(fileName);
 		if (source) {
-			for (const [sourceFileName, map] of core.mapper.getMaps(source[2])) {
+			for (const [sourceFileName, map] of core.virtualFiles.getMaps(source[2])) {
 
 				if (source[0] !== sourceFileName)
 					continue;

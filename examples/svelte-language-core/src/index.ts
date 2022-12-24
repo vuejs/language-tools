@@ -1,5 +1,5 @@
 import { decode } from '@jridgewell/sourcemap-codec';
-import { VirtualFile, VirtualFileKind, LanguageModule } from '@volar/language-core';
+import { VirtualFile, FileKind, LanguageModule } from '@volar/language-core';
 import { svelte2tsx } from 'svelte2tsx';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
@@ -12,7 +12,7 @@ export const languageModule: LanguageModule = {
 			return {
 				fileName,
 				snapshot,
-				kind: VirtualFileKind.TextFile,
+				kind: FileKind.TextFile,
 				embeddedFiles: getEmbeddeds(fileName, snapshot.getText(0, snapshot.getLength())),
 				capabilities: {
 					diagnostic: true,
@@ -118,7 +118,7 @@ function getEmbeddeds(fileName: string, text: string) {
 					return undefined;
 				},
 			},
-			kind: VirtualFileKind.TypeScriptHostFile,
+			kind: FileKind.TypeScriptHostFile,
 			capabilities: {
 				diagnostic: true,
 				foldingRange: false,

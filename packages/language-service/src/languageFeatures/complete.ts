@@ -1,5 +1,5 @@
 import { transformCompletionList } from '@volar/transforms';
-import type { LanguageServicePlugin, PositionCapabilities } from '@volar/language-service';
+import type { LanguageServicePlugin, FileRangeCapabilities } from '@volar/language-service';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import type { LanguageServiceRuntimeContext } from '../types';
@@ -121,7 +121,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					const plugins = context.plugins.sort(sortPlugins);
 
-					let _data: PositionCapabilities | undefined;
+					let _data: FileRangeCapabilities | undefined;
 
 					for (const mapped of map.toGeneratedPositions(position, data => {
 						_data = data;

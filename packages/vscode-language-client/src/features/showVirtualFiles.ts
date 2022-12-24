@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import type { BaseLanguageClient } from 'vscode-languageclient';
 import { GetVirtualFileNamesRequest, GetVirtualFileRequest } from '@volar/language-server';
-import { SourceMapBase } from '@volar/source-map';
+import { SourceMap } from '@volar/source-map';
 
 const scheme = 'volar-virtual-file';
 const mappingDecorationType = vscode.window.createTextEditorDecorationType({
@@ -32,7 +32,7 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 
 	const sourceUriToVirtualUris = new Map<string, Set<string>>();
 	const virtualUriToSourceEditor = new Map<string, vscode.TextEditor>();
-	const virtualUriToSourceMap = new Map<string, [string, number, SourceMapBase][]>();
+	const virtualUriToSourceMap = new Map<string, [string, number, SourceMap][]>();
 	const docChangeEvent = new vscode.EventEmitter<vscode.Uri>();
 	let updateDecorationsTimeout: NodeJS.Timeout | undefined;
 
@@ -65,7 +65,7 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 							virtualUriToSourceMap.get(uri.toString())?.push([
 								sourceEditor.document.uri.toString(),
 								sourceEditor.document.version,
-								new SourceMapBase(mappings),
+								new SourceMap(mappings),
 							]);
 							if (!sourceUriToVirtualUris.has(sourceUri)) {
 								sourceUriToVirtualUris.set(sourceUri, new Set());

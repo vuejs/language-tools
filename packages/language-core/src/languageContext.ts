@@ -1,11 +1,11 @@
 import { posix as path } from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { createVirtualFiles, forEachEmbeddedFile } from './documentRegistry';
-import { LanguageModule, LanguageServiceHost, VirtualFileKind } from './types';
+import { LanguageModule, LanguageServiceHost, FileKind } from './types';
 
-export type EmbeddedLanguageContext = ReturnType<typeof createEmbeddedLanguageServiceHost>;
+export type LanguageContext = ReturnType<typeof createLanguageContext>;
 
-export function createEmbeddedLanguageServiceHost(
+export function createLanguageContext(
 	host: LanguageServiceHost,
 	languageModules: LanguageModule[],
 ) {
@@ -96,13 +96,15 @@ export function createEmbeddedLanguageServiceHost(
 	};
 
 	return {
-		typescriptLanguageServiceHost: new Proxy(_tsHost as ts.LanguageServiceHost, {
-			get: (target, property: keyof ts.LanguageServiceHost) => {
-				update();
-				return target[property] || host[property];
-			},
-		}),
-		mapper: new Proxy(virtualFiles, {
+		typescript: {
+			languageServiceHost: new Proxy(_tsHost as ts.LanguageServiceHost, {
+				get: (target, property: keyof ts.LanguageServiceHost) => {
+					update();
+					return target[property] || host[property];
+				},
+			}),
+		},
+		virtualFiles: new Proxy(virtualFiles, {
 			get: (target, property) => {
 				update();
 				return target[property as keyof typeof virtualFiles];
@@ -190,7 +192,7 @@ export function createEmbeddedLanguageServiceHost(
 		for (const [_1, _2, virtualFile] of virtualFiles.all()) {
 			if (!shouldUpdateTsProject) {
 				forEachEmbeddedFile(virtualFile, embedded => {
-					if (embedded.kind === VirtualFileKind.TypeScriptHostFile) {
+					if (embedded.kind === FileKind.TypeScriptHostFile) {
 						if (virtualFileVersions.has(embedded.fileName) && virtualFileVersions.get(embedded.fileName)?.virtualFileSnapshot !== embedded.snapshot) {
 							shouldUpdateTsProject = true;
 						}
@@ -209,7 +211,7 @@ export function createEmbeddedLanguageServiceHost(
 
 		for (const [_1, _2, sourceFile] of virtualFiles.all()) {
 			forEachEmbeddedFile(sourceFile, embedded => {
-				if (embedded.kind === VirtualFileKind.TypeScriptHostFile) {
+				if (embedded.kind === FileKind.TypeScriptHostFile) {
 					tsFileNames.add(embedded.fileName); // virtual .ts
 				}
 			});

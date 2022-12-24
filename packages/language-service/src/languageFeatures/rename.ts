@@ -4,13 +4,13 @@ import { languageFeatureWorker } from '../utils/featureWorkers';
 import * as dedupe from '../utils/dedupe';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { DocumentsAndSourceMaps } from '../documents';
-import { PositionCapabilities } from '@volar/language-core';
+import { FileRangeCapabilities } from '@volar/language-core';
 
 export function register(context: LanguageServiceRuntimeContext) {
 
 	return (uri: string, position: vscode.Position, newName: string) => {
 
-		let _data: PositionCapabilities | undefined;
+		let _data: FileRangeCapabilities | undefined;
 
 		return languageFeatureWorker(
 			context,
@@ -36,11 +36,11 @@ export function register(context: LanguageServiceRuntimeContext) {
 				const recursiveChecker = dedupe.createLocationSet();
 				let result: vscode.WorkspaceEdit | undefined;
 
-				await withTeleports(document, arg.position, arg.newName);
+				await withMirrors(document, arg.position, arg.newName);
 
 				return result;
 
-				async function withTeleports(document: TextDocument, position: vscode.Position, newName: string) {
+				async function withMirrors(document: TextDocument, position: vscode.Position, newName: string) {
 
 					if (!plugin.rename?.on)
 						return;
@@ -66,29 +66,29 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 							for (const textEdit of textEdits) {
 
-								let foundTeleport = false;
+								let foundMirrorPosition = false;
 
 								recursiveChecker.add({ uri: editUri, range: { start: textEdit.range.start, end: textEdit.range.start } });
 
-								const teleport = context.documents.getTeleportByUri(editUri);
+								const mirrorMap = context.documents.getMirrorMapByUri(editUri)?.[1];
 
-								if (teleport) {
+								if (mirrorMap) {
 
-									for (const mapped of teleport.findTeleports(textEdit.range.start)) {
+									for (const mapped of mirrorMap.findMirrorPositions(textEdit.range.start)) {
 
 										if (!mapped[1].rename)
 											continue;
 
-										if (recursiveChecker.has({ uri: teleport.document.uri, range: { start: mapped[0], end: mapped[0] } }))
+										if (recursiveChecker.has({ uri: mirrorMap.document.uri, range: { start: mapped[0], end: mapped[0] } }))
 											continue;
 
-										foundTeleport = true;
+										foundMirrorPosition = true;
 
-										await withTeleports(teleport.document, mapped[0], newName);
+										await withMirrors(mirrorMap.document, mapped[0], newName);
 									}
 								}
 
-								if (!foundTeleport) {
+								if (!foundMirrorPosition) {
 
 									if (!result.changes)
 										result.changes = {};
@@ -213,7 +213,7 @@ export function embeddedEditToSourceEdit(
 		for (const [_, map] of vueDocuments.getMapsByVirtualFileUri(tsUri)) {
 			const tsEdits = tsResult.changes[tsUri];
 			for (const tsEdit of tsEdits) {
-				let _data: PositionCapabilities | undefined;
+				let _data: FileRangeCapabilities | undefined;
 				const range = map.toSourceRange(tsEdit.range, data => {
 					_data = data;
 					return typeof data.rename === 'object' ? !!data.rename.apply : !!data.rename;
@@ -250,7 +250,7 @@ export function embeddedEditToSourceEdit(
 							[],
 						);
 						for (const tsEdit of tsDocEdit.edits) {
-							let _data: PositionCapabilities | undefined;
+							let _data: FileRangeCapabilities | undefined;
 							const range = map.toSourceRange(tsEdit.range, data => {
 								_data = data;
 								// fix https://github.com/johnsoncodehk/volar/issues/1091

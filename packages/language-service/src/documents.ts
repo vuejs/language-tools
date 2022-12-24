@@ -1,18 +1,18 @@
-import { VirtualFiles, VirtualFile, PositionCapabilities, TeleportMappingData, Teleport, forEachEmbeddedFile } from '@volar/language-core';
+import { VirtualFiles, VirtualFile, FileRangeCapabilities, MirrorBehaviorCapabilities, MirrorMap, forEachEmbeddedFile } from '@volar/language-core';
 import * as shared from '@volar/shared';
-import { Mapping, SourceMapBase } from '@volar/source-map';
+import { Mapping, SourceMap } from '@volar/source-map';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
 export type DocumentsAndSourceMaps = ReturnType<typeof createDocumentsAndSourceMaps>;
 
-export class SourceMap<Data = any> {
+export class SourceMapWithDocuments<Data = any> {
 
 	constructor(
 		public sourceFileDocument: TextDocument,
 		public virtualFileDocument: TextDocument,
-		public map: SourceMapBase<Data>,
+		public map: SourceMap<Data>,
 	) { }
 
 	// Range APIs
@@ -107,7 +107,7 @@ export class SourceMap<Data = any> {
 		to: 'sourceRange' | 'generatedRange',
 		baseOffset: 'left' | 'right',
 	) {
-		for (const mapped of this.map.matcing(fromDoc.offsetAt(position), from, to, baseOffset === 'right')) {
+		for (const mapped of this.map.matching(fromDoc.offsetAt(position), from, to, baseOffset === 'right')) {
 			if (!filter(mapped[1].data)) {
 				continue;
 			}
@@ -135,20 +135,19 @@ export class SourceMap<Data = any> {
 	}
 }
 
-export class TeleportSourceMap extends SourceMap<TeleportMappingData> {
+export class MirrorMapWithDocument extends SourceMapWithDocuments<[MirrorBehaviorCapabilities, MirrorBehaviorCapabilities]> {
 	constructor(
-		public file: VirtualFile,
 		public document: TextDocument,
-		map: SourceMapBase<TeleportMappingData>,
+		map: MirrorMap,
 	) {
 		super(document, document, map);
 	}
-	*findTeleports(start: vscode.Position) {
+	*findMirrorPositions(start: vscode.Position) {
 		for (const mapped of this.toGeneratedPositionsBase(start)) {
-			yield [mapped[0], mapped[1].data.toGeneratedCapabilities] as const;
+			yield [mapped[0], mapped[1].data[1]] as const;
 		}
 		for (const mapped of this.toSourcePositionsBase(start)) {
-			yield [mapped[0], mapped[1].data.toSourceCapabilities] as const;
+			yield [mapped[0], mapped[1].data[0]] as const;
 		}
 	}
 }
@@ -157,8 +156,8 @@ export function createDocumentsAndSourceMaps(mapper: VirtualFiles) {
 
 	let version = 0;
 
-	const _maps = new WeakMap<SourceMapBase<PositionCapabilities>, [VirtualFile, SourceMap<PositionCapabilities>]>();
-	const _teleports = new WeakMap<Teleport, TeleportSourceMap>();
+	const _maps = new WeakMap<SourceMap<FileRangeCapabilities>, [VirtualFile, SourceMapWithDocuments<FileRangeCapabilities>]>();
+	const _mirrorMaps = new WeakMap<MirrorMap, [VirtualFile, MirrorMapWithDocument]>();
 	const _documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
 
 	return {
@@ -172,20 +171,19 @@ export function createDocumentsAndSourceMaps(mapper: VirtualFiles) {
 		getVirtualFileByUri(virtualFileUri: string) {
 			return mapper.getSourceByVirtualFileName(shared.getPathOfUri(virtualFileUri))?.[2];
 		},
-		getTeleportByUri(virtualFileUri: string) {
+		getMirrorMapByUri(virtualFileUri: string) {
 			const fileName = shared.getPathOfUri(virtualFileUri);
 			const virtualFile = mapper.getSourceByVirtualFileName(fileName)?.[2];
 			if (virtualFile) {
-				const teleport = mapper.getTeleport(virtualFile);
-				if (teleport) {
-					if (!_teleports.has(teleport)) {
-						_teleports.set(teleport, new TeleportSourceMap(
-							virtualFile,
+				const map = mapper.getMirrorMap(virtualFile);
+				if (map) {
+					if (!_mirrorMaps.has(map)) {
+						_mirrorMaps.set(map, [virtualFile, new MirrorMapWithDocument(
 							getDocumentByFileName(virtualFile.snapshot, fileName),
-							teleport,
-						));
+							map,
+						)]);
 					}
-					return _teleports.get(teleport);
+					return _mirrorMaps.get(map);
 				}
 			}
 		},
@@ -195,14 +193,14 @@ export function createDocumentsAndSourceMaps(mapper: VirtualFiles) {
 		getMapsBySourceFileName(fileName: string) {
 			const source = mapper.get(fileName);
 			if (source) {
-				const result: [VirtualFile, SourceMap<PositionCapabilities>][] = [];
+				const result: [VirtualFile, SourceMapWithDocuments<FileRangeCapabilities>][] = [];
 				forEachEmbeddedFile(source[1], (embedded) => {
 					for (const [sourceFileName, map] of mapper.getMaps(embedded)) {
 						if (sourceFileName === fileName) {
 							if (!_maps.has(map)) {
 								_maps.set(map, [
 									embedded,
-									new SourceMap(
+									new SourceMapWithDocuments(
 										getDocumentByFileName(source[0], sourceFileName),
 										getDocumentByFileName(embedded.snapshot, fileName),
 										map,
@@ -224,14 +222,14 @@ export function createDocumentsAndSourceMaps(mapper: VirtualFiles) {
 		getMapsByVirtualFileUri(virtualFileUri: string) {
 			return this.getMapsByVirtualFileName(shared.getPathOfUri(virtualFileUri));
 		},
-		*getMapsByVirtualFileName(virtualFileName: string): IterableIterator<[VirtualFile, SourceMap<PositionCapabilities>]> {
+		*getMapsByVirtualFileName(virtualFileName: string): IterableIterator<[VirtualFile, SourceMapWithDocuments<FileRangeCapabilities>]> {
 			const virtualFile = mapper.getSourceByVirtualFileName(virtualFileName)?.[2];
 			if (virtualFile) {
 				for (const [sourceFileName, map] of mapper.getMaps(virtualFile)) {
 					if (!_maps.has(map)) {
 						const sourceSnapshot = mapper.get(sourceFileName)?.[0];
 						if (sourceSnapshot) {
-							_maps.set(map, [virtualFile, new SourceMap(
+							_maps.set(map, [virtualFile, new SourceMapWithDocuments(
 								getDocumentByFileName(sourceSnapshot, sourceFileName),
 								getDocumentByFileName(virtualFile.snapshot, virtualFileName),
 								map,

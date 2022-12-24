@@ -174,7 +174,7 @@ export function baseCreate(
 		host.getCompilationSettings(),
 		host.getVueCompilationSettings(),
 	);
-	const core = embedded.createEmbeddedLanguageServiceHost(host, [vueLanguageModule]);
+	const core = embedded.createLanguageContext(host, [vueLanguageModule]);
 	const proxyApis: Partial<ts.LanguageServiceHost> = checkerOptions.forceUseTs ? {
 		getScriptKind: (fileName) => {
 			if (fileName.endsWith('.vue.js')) {
@@ -183,10 +183,10 @@ export function baseCreate(
 			if (fileName.endsWith('.vue.jsx')) {
 				return ts.ScriptKind.TSX;
 			}
-			return core.typescriptLanguageServiceHost.getScriptKind!(fileName);
+			return core.typescript.languageServiceHost.getScriptKind!(fileName);
 		},
 	} : {};
-	const proxyHost = new Proxy(core.typescriptLanguageServiceHost, {
+	const proxyHost = new Proxy(core.typescript.languageServiceHost, {
 		get(target, propKey: keyof ts.LanguageServiceHost) {
 			if (propKey in proxyApis) {
 				return proxyApis[propKey];
@@ -278,7 +278,7 @@ export function baseCreate(
 			const printer = ts.createPrinter(checkerOptions.printer);
 			const snapshot = host.getScriptSnapshot(componentPath)!;
 
-			const vueSourceFile = core.mapper.get(componentPath)?.[1];
+			const vueSourceFile = core.virtualFiles.get(componentPath)?.[1];
 			const vueDefaults = vueSourceFile && exportName === 'default'
 				? (vueSourceFile instanceof vue.VueFile ? readVueComponentDefaultProps(vueSourceFile, printer, ts) : {})
 				: {};

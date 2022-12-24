@@ -1,4 +1,4 @@
-import { EmbeddedLanguageContext, LanguageServiceHost } from '@volar/language-core';
+import { LanguageContext, LanguageServiceHost } from '@volar/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { DocumentContext, FileSystemProvider } from 'vscode-html-languageservice';
 import type { SchemaRequestService } from 'vscode-json-languageservice';
@@ -21,7 +21,7 @@ export interface DocumentServiceRuntimeContext {
 
 export interface LanguageServiceRuntimeContext {
 	host: LanguageServiceHost;
-	core: EmbeddedLanguageContext;
+	core: LanguageContext;
 	typescriptLanguageService: ts.LanguageService;
 	documents: DocumentsAndSourceMaps;
 	plugins: LanguageServicePlugin[];

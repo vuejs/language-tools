@@ -1,4 +1,4 @@
-import { DocumentCapabilities, VirtualFile, VirtualFileKind, PositionCapabilities, TeleportMappingData } from '@volar/language-core';
+import { FileCapabilities, VirtualFile, FileKind, FileRangeCapabilities, MirrorBehaviorCapabilities } from '@volar/language-core';
 import { buildMappings, Mapping, Segment, toString } from '@volar/source-map';
 import * as CompilerDom from '@vue/compiler-dom';
 import { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
@@ -9,11 +9,11 @@ import { Sfc, SfcBlock, VueLanguagePlugin } from './types';
 export class VueEmbeddedFile {
 
 	public parentFileName?: string;
-	public kind = VirtualFileKind.TextFile;
-	public capabilities: DocumentCapabilities = {};
-	public content: Segment<PositionCapabilities>[] = [];
-	public extraMappings: Mapping<PositionCapabilities>[] = [];
-	public teleportMappings: Mapping<TeleportMappingData>[] = [];
+	public kind = FileKind.TextFile;
+	public capabilities: FileCapabilities = {};
+	public content: Segment<FileRangeCapabilities>[] = [];
+	public extraMappings: Mapping<FileRangeCapabilities>[] = [];
+	public mirrorBehaviorMappings: Mapping<[MirrorBehaviorCapabilities, MirrorBehaviorCapabilities]>[] = [];
 
 	constructor(public fileName: string) { }
 }
@@ -232,7 +232,7 @@ export class VueFile implements VirtualFile {
 		const all: {
 			file: VueEmbeddedFile;
 			snapshot: ts.IScriptSnapshot;
-			mappings: Mapping<PositionCapabilities>[];
+			mappings: Mapping<FileRangeCapabilities>[];
 		}[] = [];
 
 		for (const embeddedFiles of VueFile._pluginEmbeddedFiles.value) {
@@ -349,9 +349,9 @@ export class VueFile implements VirtualFile {
 		return blocks;
 	});
 
-	kind = VirtualFileKind.TextFile;
+	kind = FileKind.TextFile;
 
-	capabilities: DocumentCapabilities = {
+	capabilities: FileCapabilities = {
 		diagnostic: true,
 		foldingRange: true,
 		documentFormatting: true,
@@ -360,7 +360,7 @@ export class VueFile implements VirtualFile {
 		inlayHint: true,
 	};
 
-	get mappings(): Mapping<PositionCapabilities>[] {
+	get mappings(): Mapping<FileRangeCapabilities>[] {
 		return this._mappings.value;
 	}
 
@@ -385,7 +385,7 @@ export class VueFile implements VirtualFile {
 
 	// refs
 	_snapshot: Ref<ts.IScriptSnapshot>;
-	_mappings = computed<Mapping<PositionCapabilities>[]>(() => [{
+	_mappings = computed<Mapping<FileRangeCapabilities>[]>(() => [{
 		sourceRange: [0, this._snapshot.value.getLength()],
 		generatedRange: [0, this._snapshot.value.getLength()],
 		data: {
@@ -401,7 +401,7 @@ export class VueFile implements VirtualFile {
 	_allEmbeddeds = ref<{
 		file: VueEmbeddedFile;
 		snapshot: ts.IScriptSnapshot;
-		mappings: Mapping<PositionCapabilities>[];
+		mappings: Mapping<FileRangeCapabilities>[];
 	}[]>([]);
 	_embeddeds = ref<VirtualFile[]>([]);
 

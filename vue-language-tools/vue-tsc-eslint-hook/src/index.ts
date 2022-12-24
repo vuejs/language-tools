@@ -13,7 +13,7 @@ export = async function (
 		useEslintrc: false,
 	});
 	const fileNames = program.__vue.languageServiceHost.getScriptFileNames();
-	const mapper = program.__vue.languageService.__internal__.context.mapper;
+	const mapper = program.__vue.languageService.__internal__.context.virtualFiles;
 	const formatter = await eslint.loadFormatter();
 
 	for (const fileName of fileNames) {

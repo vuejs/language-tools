@@ -3,7 +3,7 @@ import type * as embedded from '@volar/language-core';
 
 export function getProgram(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	core: embedded.EmbeddedLanguageContext,
+	core: embedded.LanguageContext,
 	ls: ts.LanguageService,
 ) {
 
@@ -35,7 +35,7 @@ export function getProgram(
 	}
 
 	function getRootFileNames() {
-		return getProgram().getRootFileNames().filter(fileName => core.typescriptLanguageServiceHost.fileExists?.(fileName));
+		return getProgram().getRootFileNames().filter(fileName => core.typescript.languageServiceHost.fileExists?.(fileName));
 	}
 
 	// for vue-tsc --noEmit --watch
@@ -59,7 +59,7 @@ export function getProgram(
 
 		if (sourceFile) {
 
-			const source = core.mapper.getSourceByVirtualFileName(sourceFile.fileName);
+			const source = core.virtualFiles.getSourceByVirtualFileName(sourceFile.fileName);
 
 			if (source) {
 
@@ -79,7 +79,7 @@ export function getProgram(
 		return transformDiagnostics(getProgram().getGlobalDiagnostics(cancellationToken) ?? []);
 	}
 	function emit(targetSourceFile?: ts.SourceFile, _writeFile?: ts.WriteFileCallback, cancellationToken?: ts.CancellationToken, emitOnlyDtsFiles?: boolean, customTransformers?: ts.CustomTransformers): ts.EmitResult {
-		const scriptResult = getProgram().emit(targetSourceFile, (core.typescriptLanguageServiceHost.writeFile ?? ts.sys.writeFile), cancellationToken, emitOnlyDtsFiles, customTransformers);
+		const scriptResult = getProgram().emit(targetSourceFile, (core.typescript.languageServiceHost.writeFile ?? ts.sys.writeFile), cancellationToken, emitOnlyDtsFiles, customTransformers);
 		return {
 			emitSkipped: scriptResult.emitSkipped,
 			emittedFiles: scriptResult.emittedFiles,
@@ -98,14 +98,14 @@ export function getProgram(
 				&& diagnostic.length !== undefined
 			) {
 
-				const source = core.mapper.getSourceByVirtualFileName(diagnostic.file.fileName);
+				const source = core.virtualFiles.getSourceByVirtualFileName(diagnostic.file.fileName);
 
 				if (source) {
 
-					if (core.typescriptLanguageServiceHost.fileExists?.(source[0]) === false)
+					if (core.typescript.languageServiceHost.fileExists?.(source[0]) === false)
 						continue;
 
-					for (const [sourceFileName, map] of core.mapper.getMaps(source[2])) {
+					for (const [sourceFileName, map] of core.virtualFiles.getMaps(source[2])) {
 
 						if (sourceFileName !== source[0])
 							continue;
@@ -129,7 +129,7 @@ export function getProgram(
 				}
 				else {
 
-					if (core.typescriptLanguageServiceHost.fileExists?.(diagnostic.file.fileName) === false)
+					if (core.typescript.languageServiceHost.fileExists?.(diagnostic.file.fileName) === false)
 						continue;
 
 					onMapping(diagnostic, diagnostic.file.fileName, diagnostic.start, diagnostic.start + diagnostic.length, diagnostic.file.text);
@@ -150,7 +150,7 @@ export function getProgram(
 			if (!file) {
 
 				if (docText === undefined) {
-					const snapshot = core.typescriptLanguageServiceHost.getScriptSnapshot(fileName);
+					const snapshot = core.typescript.languageServiceHost.getScriptSnapshot(fileName);
 					if (snapshot) {
 						docText = snapshot.getText(0, snapshot.getLength());
 					}

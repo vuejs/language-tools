@@ -1,5 +1,5 @@
 import useHtmlPlugin from '@volar-plugins/html';
-import { LanguageServicePlugin, LanguageServicePluginContext, LanguageServiceRuntimeContext, PositionCapabilities, SourceMap } from '@volar/language-service';
+import { LanguageServicePlugin, LanguageServicePluginContext, LanguageServiceRuntimeContext, FileRangeCapabilities, SourceMapWithDocuments } from '@volar/language-service';
 import * as vue from '@volar/vue-language-core';
 import { hyphenate } from '@vue/shared';
 import * as html from 'vscode-html-languageservice';
@@ -214,7 +214,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		},
 	};
 
-	async function provideHtmlData(map: SourceMap<PositionCapabilities>, vueSourceFile: vue.VueFile) {
+	async function provideHtmlData(map: SourceMapWithDocuments<FileRangeCapabilities>, vueSourceFile: vue.VueFile) {
 
 		const detected = casing.detect(options.context, map.sourceFileDocument.uri);
 		const [attr, tag] = await Promise.all([
@@ -370,7 +370,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		]);
 	}
 
-	function afterHtmlCompletion(completionList: vscode.CompletionList, map: SourceMap<PositionCapabilities>, vueSourceFile: vue.VueFile) {
+	function afterHtmlCompletion(completionList: vscode.CompletionList, map: SourceMapWithDocuments<FileRangeCapabilities>, vueSourceFile: vue.VueFile) {
 
 		const replacement = getReplacement(completionList, map.sourceFileDocument);
 		const componentNames = new Set(checkComponentNames(context.typescript.module, context.typescript.languageService, vueSourceFile).map(hyphenate));

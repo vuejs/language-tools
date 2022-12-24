@@ -1,4 +1,4 @@
-import { LanguageModule, VirtualFile, VirtualFileKind, PositionCapabilities } from '@volar/language-core';
+import { LanguageModule, VirtualFile, FileKind, FileRangeCapabilities } from '@volar/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path';
 import type { Mapping } from '@volar/source-map';
@@ -26,7 +26,7 @@ export function createTsLanguageModule(
 						codeAction: true,
 						inlayHint: true,
 					},
-					kind: VirtualFileKind.TypeScriptHostFile,
+					kind: FileKind.TypeScriptHostFile,
 					mappings: virtualFile.mappings,
 					embeddedFiles: [],
 				};
@@ -139,7 +139,7 @@ export function createTsLanguageModule(
 	}
 }
 
-const fullCap: PositionCapabilities = {
+const fullCap: FileRangeCapabilities = {
 	hover: true,
 	references: true,
 	definition: true,
@@ -156,9 +156,9 @@ export class Codegen {
 	constructor(public sourceCode: string) { }
 
 	public text = '';
-	public mappings: Mapping<PositionCapabilities>[] = [];
+	public mappings: Mapping<FileRangeCapabilities>[] = [];
 
-	public addSourceText(start: number, end: number, data: PositionCapabilities = fullCap) {
+	public addSourceText(start: number, end: number, data: FileRangeCapabilities = fullCap) {
 		this.mappings.push({
 			sourceRange: [start, end],
 			generatedRange: [this.text.length, this.text.length + end - start],
@@ -169,7 +169,7 @@ export class Codegen {
 		return addText;
 	}
 
-	public addPropertyAccess(start: number, end: number, data: PositionCapabilities = fullCap) {
+	public addPropertyAccess(start: number, end: number, data: FileRangeCapabilities = fullCap) {
 		if (Codegen.validTsVar.test(this.sourceCode.substring(start, end))) {
 			this.text += `.`;
 			this.addSourceText(start, end, data);
@@ -181,7 +181,7 @@ export class Codegen {
 		}
 	}
 
-	public addObjectKey(start: number, end: number, data: PositionCapabilities = fullCap) {
+	public addObjectKey(start: number, end: number, data: FileRangeCapabilities = fullCap) {
 		if (Codegen.validTsVar.test(this.sourceCode.substring(start, end))) {
 			this.addSourceText(start, end, data);
 		}
@@ -190,7 +190,7 @@ export class Codegen {
 		}
 	}
 
-	public addSourceTextWithQuotes(start: number, end: number, data: PositionCapabilities = fullCap) {
+	public addSourceTextWithQuotes(start: number, end: number, data: FileRangeCapabilities = fullCap) {
 		this.addSourceText(start, start, data);
 		this.text += `'`;
 		this.addSourceText(start, end, data);

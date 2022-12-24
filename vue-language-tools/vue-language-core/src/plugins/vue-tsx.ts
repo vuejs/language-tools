@@ -4,7 +4,8 @@ import * as templateGen from '../generators/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { Sfc, VueLanguagePlugin } from '../types';
-import { VirtualFileKind, TextRange } from '@volar/language-core';
+import { FileKind } from '@volar/language-core';
+import { TextRange } from '../types';
 import { parseCssClassNames } from '../utils/parseCssClassNames';
 import { parseCssVars } from '../utils/parseCssVars';
 
@@ -107,7 +108,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 			const suffix = embeddedFile.fileName.replace(fileName, '');
 
 			if (suffix === '.' + lang.value) {
-				embeddedFile.kind = VirtualFileKind.TypeScriptHostFile;
+				embeddedFile.kind = FileKind.TypeScriptHostFile;
 				embeddedFile.capabilities = {
 					diagnostic: true,
 					foldingRange: false,
@@ -120,7 +121,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				if (tsx) {
 					embeddedFile.content = [...tsx.codeGen];
 					embeddedFile.extraMappings = [...tsx.extraMappings];
-					embeddedFile.teleportMappings = [...tsx.teleports];
+					embeddedFile.mirrorBehaviorMappings = [...tsx.mirrorBehaviorMappings];
 				}
 			}
 			else if (suffix.match(/^\.__VLS_template_format\.ts$/)) {

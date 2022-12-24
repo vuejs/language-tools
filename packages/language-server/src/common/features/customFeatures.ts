@@ -74,7 +74,7 @@ export function register(
 		const project = await projects.getProject(document.uri);
 		const fileNames: string[] = [];
 		if (project) {
-			const sourceFile = project.project?.getLanguageService().context.core.mapper.get(shared.getPathOfUri(document.uri))?.[1];
+			const sourceFile = project.project?.getLanguageService().context.core.virtualFiles.get(shared.getPathOfUri(document.uri))?.[1];
 			if (sourceFile) {
 				forEachEmbeddedFile(sourceFile, e => {
 					if (e.snapshot.getLength() && e.kind === 1) {
@@ -88,7 +88,7 @@ export function register(
 	connection.onRequest(GetVirtualFileRequest.type, async params => {
 		const project = await projects.getProject(params.sourceFileUri);
 		if (project) {
-			const sourceAndVirtual = project.project?.getLanguageService().context.core.mapper.getSourceByVirtualFileName(params.virtualFileName);
+			const sourceAndVirtual = project.project?.getLanguageService().context.core.virtualFiles.getSourceByVirtualFileName(params.virtualFileName);
 			if (sourceAndVirtual) {
 				const virtualFile = sourceAndVirtual[2];
 				const mappings: Record<string, any[]> = {};
@@ -116,9 +116,9 @@ export function register(
 			const ls = (await project.project)?.getLanguageServiceDontCreate();
 			if (ls) {
 				const sourceFiles = new Set(ls.context.host.getScriptFileNames());
-				for (const virtualFile of ls.context.core.typescriptLanguageServiceHost.getScriptFileNames()) {
+				for (const virtualFile of ls.context.core.typescript.languageServiceHost.getScriptFileNames()) {
 					if (virtualFile.startsWith(ls.context.host.getCurrentDirectory()) && !sourceFiles.has(virtualFile)) {
-						const snapshot = ls.context.core.typescriptLanguageServiceHost.getScriptSnapshot(virtualFile);
+						const snapshot = ls.context.core.typescript.languageServiceHost.getScriptSnapshot(virtualFile);
 						if (snapshot) {
 							fs.writeFile(virtualFile, snapshot.getText(0, snapshot.getLength()), () => { });
 						}

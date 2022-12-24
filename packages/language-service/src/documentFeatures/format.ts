@@ -1,7 +1,7 @@
 import type { VirtualFile } from '@volar/language-core';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { SourceMap } from '../documents';
+import { SourceMapWithDocuments } from '../documents';
 import type { DocumentServiceRuntimeContext } from '../types';
 
 export function register(context: DocumentServiceRuntimeContext) {
@@ -281,7 +281,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 	};
 }
 
-function patchInterpolationIndent(document: TextDocument, map: SourceMap) {
+function patchInterpolationIndent(document: TextDocument, map: SourceMapWithDocuments) {
 
 	const indentTextEdits: vscode.TextEdit[] = [];
 

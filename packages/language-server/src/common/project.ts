@@ -71,7 +71,7 @@ export async function createProject(params: ProjectParams) {
 		if (!vueLs) {
 
 			const languageModules = plugins.map(plugin => plugin.semanticService?.getLanguageModules?.(languageServiceHost) ?? []).flat();
-			const languageContext = embedded.createEmbeddedLanguageServiceHost(languageServiceHost, languageModules);
+			const languageContext = embedded.createLanguageContext(languageServiceHost, languageModules);
 			const languageServiceContext = embeddedLS.createLanguageServiceContext({
 				host: languageServiceHost,
 				context: languageContext,
