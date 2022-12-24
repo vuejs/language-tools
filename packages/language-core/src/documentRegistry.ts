@@ -27,7 +27,7 @@ export function createVirtualFiles(languageModules: LanguageModule[]) {
 		}
 		return map;
 	});
-	const virtualSnapshotsMap = new WeakMap<ts.IScriptSnapshot, Map<ts.IScriptSnapshot, [string, SourceMapBase<PositionCapabilities>]>>();
+	const virtualSnapshotsMap = new WeakMap<ts.IScriptSnapshot, Map<string, [string, SourceMapBase<PositionCapabilities>]>>();
 	const _teleports = new WeakMap<ts.IScriptSnapshot, Teleport | undefined>();
 
 	return {
@@ -92,14 +92,11 @@ export function createVirtualFiles(languageModules: LanguageModule[]) {
 		}
 		for (const source of sources) {
 			const sourceFileName = source ?? virtualFileNameToSource.value.get(normalizePath(virtualFile.fileName))![1][0];
-			const sourceSnapshot = files[normalizePath(sourceFileName)]?.[1];
-			if (sourceSnapshot) {
-				if (!sourceSnapshotsMap.has(sourceSnapshot)) {
-					sourceSnapshotsMap.set(sourceSnapshot, [
-						sourceFileName,
-						new SourceMapBase(virtualFile.mappings.filter(m => m.source === source)),
-					]);
-				}
+			if (!sourceSnapshotsMap.has(sourceFileName)) {
+				sourceSnapshotsMap.set(sourceFileName, [
+					sourceFileName,
+					new SourceMapBase(virtualFile.mappings.filter(m => m.source === source)),
+				]);
 			}
 		}
 		return [...sourceSnapshotsMap.values()];

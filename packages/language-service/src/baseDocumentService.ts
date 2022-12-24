@@ -25,7 +25,7 @@ export function createDocumentServiceContext(options: {
 	env: LanguageServicePluginContext['env'];
 }) {
 
-	let plugins: LanguageServicePlugin[];
+	let plugins: LanguageServicePlugin[] | undefined;
 
 	const ts = options.ts;
 	const pluginContext: LanguageServicePluginContext = {
