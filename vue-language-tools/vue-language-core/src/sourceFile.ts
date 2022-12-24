@@ -2,7 +2,7 @@ import { DocumentCapabilities, VirtualFile, EmbeddedFileKind, PositionCapabiliti
 import { buildMappings, Mapping, Segment, toString } from '@volar/source-map';
 import * as CompilerDom from '@vue/compiler-dom';
 import { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
-import { computed, ComputedRef, reactive, Ref, shallowRef as ref } from '@vue/reactivity';
+import { computed, ComputedRef, reactive, Ref, shallowRef as ref, pauseTracking, resetTracking } from '@vue/reactivity';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { Sfc, SfcBlock, VueLanguagePlugin } from './types';
 
@@ -369,7 +369,10 @@ export class VueFile implements VirtualFile {
 	}
 
 	get compiledSFCTemplate() {
-		return VueFile.getCompiledSFCTemplate(this.plugins, this, this._snapshot.value);
+		pauseTracking();
+		const snapshot = this._snapshot.value;
+		resetTracking();
+		return VueFile.getCompiledSFCTemplate(this.plugins, this, snapshot);
 	}
 
 	get tsFileName() {
