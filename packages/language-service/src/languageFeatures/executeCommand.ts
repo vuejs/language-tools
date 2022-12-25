@@ -2,7 +2,9 @@ import type { LanguageServiceRuntimeContext } from '../types';
 import { ExecuteCommandContext } from '@volar/language-service';
 import * as vscode from 'vscode-languageserver-protocol';
 
-export const executePluginCommand = 'volar.executePluginCommand';
+const randomCommandId = Math.random().toString(36).slice(2); // TODO
+
+export const executePluginCommand = `volar.${randomCommandId}.executePluginCommand`;
 
 export type ExecutePluginCommandArgs = [
 	string, // uri

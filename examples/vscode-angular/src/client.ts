@@ -43,8 +43,6 @@ export async function activate(context: vscode.ExtensionContext) {
 		},
 		cancellationPipeName,
 		noProjectReferences: true,
-		// @ts-expect-error
-		__noPluginCommands: true,
 	};
 	const serverModule = vscode.Uri.joinPath(context.extensionUri, 'server.js');
 	const runOptions = { execArgv: <string[]>[] };
