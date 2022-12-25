@@ -1192,7 +1192,8 @@ export function generate(
 			}
 		}
 		function writeAttrValue(attrNode: CompilerDOM.TextNode) {
-			codeGen.push('"');
+			const char = attrNode.loc.source.startsWith("'") ? "'" : '"';
+			codeGen.push(char);
 			let start = attrNode.loc.start.offset;
 			let end = attrNode.loc.end.offset;
 			let content = attrNode.loc.source;
@@ -1210,7 +1211,7 @@ export function generate(
 				[start, end],
 				getCaps(capabilitiesSet.all),
 			]);
-			codeGen.push('"');
+			codeGen.push(char);
 		}
 	}
 	function writeInlineCss(node: CompilerDOM.ElementNode) {
