@@ -111,6 +111,7 @@ export type ComponentProps<T> =
 	${vueCompilerOptions.strictTemplates ? '' : 'Record<string, unknown> &'}
 	(
 		T extends new (...args: any) => { $props: infer Props } ? Props
+		: T extends (props: infer Props, ...args: any) => any ? Props
 		: T extends (...args: any) => { props: infer Props } ? Props
 		: T extends new (...args: any) => any ? {}
 		: T extends (...args: any) => any ? {}
