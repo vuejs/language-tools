@@ -427,7 +427,7 @@ export function generate(
 				codeGen.push(`};\n`);
 			}
 			else {
-				if (htmlGen?.hasSlot) {
+				if (!vueCompilerOptions.skipTemplateCodegen && htmlGen?.hasSlot) {
 					usedTypes.WithTemplateSlots = true;
 					codeGen.push(`return {} as __VLS_WithTemplateSlots<typeof __VLS_publicComponent, ReturnType<typeof __VLS_template>>;\n`);
 				}
