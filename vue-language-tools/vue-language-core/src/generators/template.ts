@@ -832,6 +832,17 @@ export function generate(
 		let classAttrNums = 0;
 		const unwritedExps: CompilerDOM.SimpleExpressionNode[] = [];
 
+		if (node.props.some(prop =>
+			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+			&& prop.name === 'bind'
+			&& !prop.arg
+			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+		)) {
+			// fix https://github.com/johnsoncodehk/volar/issues/2166
+			styleAttrNums++;
+			classAttrNums++;
+		}
+
 		for (const prop of node.props) {
 			if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
