@@ -150,7 +150,7 @@ export function getLanguageServicePlugins(
 	})();
 	const vuePlugin = useVuePlugin({
 		getVueFile(document) {
-			const virtualFile = apis.context.documents.getMapsByVirtualFileUri(document.uri);
+			const virtualFile = apis.context.documents.getVirtualFileByUri(document.uri);
 			if (virtualFile instanceof VueFile) {
 				return virtualFile;
 			}
