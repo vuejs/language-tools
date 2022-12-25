@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import type { BaseLanguageClient } from 'vscode-languageclient';
 import { GetVirtualFileNamesRequest, GetVirtualFileRequest } from '@volar/language-server';
 import { SourceMap } from '@volar/source-map';
+import type { FileRangeCapabilities } from '@volar/language-core';
 
 const scheme = 'volar-virtual-file';
 const mappingDecorationType = vscode.window.createTextEditorDecorationType({
@@ -30,10 +31,39 @@ const mappingSelectionDecorationType = vscode.window.createTextEditorDecorationT
 
 export async function register(cmd: string, context: vscode.ExtensionContext, client: BaseLanguageClient) {
 
+	class MappingDataHoverProvider implements vscode.HoverProvider {
+		async provideHover(document: vscode.TextDocument, position: vscode.Position, _token: vscode.CancellationToken) {
+
+			const maps = virtualUriToSourceMap.get(document.uri.toString());
+			if (!maps) return;
+
+			const data: [string, FileRangeCapabilities][] = [];
+
+			for (const [sourceUri, _, map] of maps) {
+				const source = map.toSourceOffset(document.offsetAt(position));
+				if (source) {
+					data.push([sourceUri, source[1].data]);
+				}
+			}
+
+			if (data.length === 0) return;
+
+			return new vscode.Hover(data.map(([uri, data]) => [
+				uri,
+				'```json',
+				JSON.stringify(data, null, 2),
+				'```',
+			].join('\n')));
+		}
+	}
+
+	vscode.languages.registerHoverProvider({ scheme }, new MappingDataHoverProvider());
+
 	const sourceUriToVirtualUris = new Map<string, Set<string>>();
 	const virtualUriToSourceEditor = new Map<string, vscode.TextEditor>();
-	const virtualUriToSourceMap = new Map<string, [string, number, SourceMap][]>();
+	const virtualUriToSourceMap = new Map<string, [string, number, SourceMap<FileRangeCapabilities>][]>();
 	const docChangeEvent = new vscode.EventEmitter<vscode.Uri>();
+
 	let updateVirtualDocument: NodeJS.Timeout | undefined;
 	let updateDecorationsTimeout: NodeJS.Timeout | undefined;
 

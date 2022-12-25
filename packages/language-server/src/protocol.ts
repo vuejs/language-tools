@@ -1,5 +1,6 @@
 import * as vscode from 'vscode-languageserver-protocol';
 import type * as html from 'vscode-html-languageservice';
+import type { FileRangeCapabilities } from '@volar/language-core';
 
 /**
  * Server request client
@@ -83,7 +84,7 @@ export namespace GetVirtualFileRequest {
 		mappings: Record<string, {
 			sourceRange: [number, number];
 			generatedRange: [number, number];
-			data: undefined;
+			data: FileRangeCapabilities;
 		}[]>;
 	};
 	export type ErrorType = never;
