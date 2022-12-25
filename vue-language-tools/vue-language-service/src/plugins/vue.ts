@@ -164,7 +164,7 @@ export default function (options: {
 
 					const program = context.typescript.languageService.getProgram();
 
-					if (program && !program.getSourceFile(vueSourceFile.tsFileName)) {
+					if (program && !program.getSourceFile(vueSourceFile.mainScriptName)) {
 						for (const script of [sfc.script, sfc.scriptSetup]) {
 
 							if (!script || script.content === '')
