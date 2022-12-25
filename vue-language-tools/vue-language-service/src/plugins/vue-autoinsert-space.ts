@@ -10,7 +10,7 @@ export default function (): LanguageServicePlugin {
 			context = _context;
 		},
 
-		async doAutoInsert(document, position) {
+		async doAutoInsert(document, _, { lastChange }) {
 
 			if (document.languageId === 'html' || document.languageId === 'jade') {
 
@@ -18,18 +18,20 @@ export default function (): LanguageServicePlugin {
 				if (!enabled)
 					return;
 
-				const prev = document.getText({
-					start: { line: position.line, character: position.character - 2 },
-					end: position,
-				});
-				if (prev === '{{') {
-					const next = document.getText({
-						start: position,
-						end: { line: position.line, character: position.character + 2 },
-					});
-					if (next === '}}') {
-						return ` $0 `;
-					}
+				if (
+					lastChange.text === '{}'
+					&& document.getText({
+						start: { line: lastChange.range.start.line, character: lastChange.range.start.character - 1 },
+						end: { line: lastChange.range.start.line, character: lastChange.range.start.character + 3 }
+					}) === '{{}}'
+				) {
+					return {
+						newText: ` $0 `,
+						range: {
+							start: { line: lastChange.range.start.line, character: lastChange.range.start.character + 1 },
+							end: { line: lastChange.range.start.line, character: lastChange.range.start.character + 1 }
+						},
+					};
 				}
 			}
 		},

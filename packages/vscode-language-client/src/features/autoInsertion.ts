@@ -30,13 +30,7 @@ export async function register(
 	}
 
 	function onDidChangeTextDocument({ document, contentChanges, reason }: vscode.TextDocumentChangeEvent) {
-		if (
-			!isEnabled
-			|| contentChanges.length !== 1
-			|| !contentChanges[0].text // delete
-			|| reason === vscode.TextDocumentChangeReason.Undo
-			|| reason === vscode.TextDocumentChangeReason.Redo
-		) {
+		if (!isEnabled || contentChanges.length === 0 || reason === vscode.TextDocumentChangeReason.Undo || reason === vscode.TextDocumentChangeReason.Redo) {
 			return;
 		}
 		const activeDocument = vscode.window.activeTextEditor?.document;
@@ -85,33 +79,32 @@ export async function register(
 		lastChange: vscode.TextDocumentContentChangeEvent,
 		provider: (document: vscode.TextDocument, position: vscode.Position, lastChange: vscode.TextDocumentContentChangeEvent, isCancel: () => boolean) => Thenable<string | vscode.TextEdit | null | undefined>,
 	) {
+		const rangeStart = lastChange.range.start;
 		const version = document.version;
 		timeout = setTimeout(() => {
-			const position = vscode.window.activeTextEditor?.selections.length === 1 && vscode.window.activeTextEditor.selections[0].active;
-			if (position) {
-				provider(document, position, lastChange, () => vscode.window.activeTextEditor?.document.version !== version).then(text => {
-					if (text && isEnabled) {
-						const activeEditor = vscode.window.activeTextEditor;
-						if (activeEditor) {
-							const activeDocument = activeEditor.document;
-							if (document === activeDocument && activeDocument.version === version) {
-								if (typeof text === 'string') {
-									const selections = activeEditor.selections;
-									if (selections.length && selections.some(s => s.active.isEqual(position))) {
-										activeEditor.insertSnippet(new vscode.SnippetString(text), selections.map(s => s.active));
-									}
-									else {
-										activeEditor.insertSnippet(new vscode.SnippetString(text), position);
-									}
+			const position = new vscode.Position(rangeStart.line, rangeStart.character + lastChange.text.length);
+			provider(document, position, lastChange, () => vscode.window.activeTextEditor?.document.version !== version).then(text => {
+				if (text && isEnabled) {
+					const activeEditor = vscode.window.activeTextEditor;
+					if (activeEditor) {
+						const activeDocument = activeEditor.document;
+						if (document === activeDocument && activeDocument.version === version) {
+							if (typeof text === 'string') {
+								const selections = activeEditor.selections;
+								if (selections.length && selections.some(s => s.active.isEqual(position))) {
+									activeEditor.insertSnippet(new vscode.SnippetString(text), selections.map(s => s.active));
 								}
 								else {
-									activeEditor.insertSnippet(new vscode.SnippetString(text.newText), text.range);
+									activeEditor.insertSnippet(new vscode.SnippetString(text), position);
 								}
+							}
+							else {
+								activeEditor.insertSnippet(new vscode.SnippetString(text.newText), text.range);
 							}
 						}
 					}
-				});
-			}
+				}
+			});
 			timeout = undefined;
 		}, 100);
 	}
