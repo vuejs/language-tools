@@ -9,11 +9,15 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 	const sourceUriToMetaUri = new Map<string, string>();
 	const metaUriToSourceEditor = new Map<string, vscode.TextEditor>();
 	const docChangeEvent = new vscode.EventEmitter<vscode.Uri>();
+	let updateVirtualDocument: NodeJS.Timeout | undefined;
 
 	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(e => {
 		const uri = sourceUriToMetaUri.get(e.document.uri.toString());
 		if (uri) {
-			docChangeEvent.fire(vscode.Uri.parse(uri));
+			clearTimeout(updateVirtualDocument);
+			updateVirtualDocument = setTimeout(() => {
+				docChangeEvent.fire(vscode.Uri.parse(uri));
+			}, 100);
 		}
 	}));
 	context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(

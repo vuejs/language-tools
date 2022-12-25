@@ -34,16 +34,22 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 	const virtualUriToSourceEditor = new Map<string, vscode.TextEditor>();
 	const virtualUriToSourceMap = new Map<string, [string, number, SourceMap][]>();
 	const docChangeEvent = new vscode.EventEmitter<vscode.Uri>();
+	let updateVirtualDocument: NodeJS.Timeout | undefined;
 	let updateDecorationsTimeout: NodeJS.Timeout | undefined;
 
 	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(updateDecorations));
 	context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(updateDecorations));
 	context.subscriptions.push(vscode.window.onDidChangeVisibleTextEditors(updateDecorations));
 	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(e => {
-		const virtualUris = sourceUriToVirtualUris.get(e.document.uri.toString());
-		virtualUris?.forEach(uri => {
-			docChangeEvent.fire(vscode.Uri.parse(uri));
-		});
+		if (sourceUriToVirtualUris.has(e.document.uri.toString())) {
+			const virtualUris = sourceUriToVirtualUris.get(e.document.uri.toString());
+			clearTimeout(updateVirtualDocument);
+			updateVirtualDocument = setTimeout(() => {
+				virtualUris?.forEach(uri => {
+					docChangeEvent.fire(vscode.Uri.parse(uri));
+				});
+			}, 100);
+		}
 	}));
 	context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(
 		scheme,
@@ -96,29 +102,30 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 	}));
 
 	function updateDecorations() {
-		if (vscode.window.activeTextEditor) {
-			for (const [virtualUri, sources] of virtualUriToSourceMap) {
-				const virtualEditor = vscode.window.visibleTextEditors.find(editor => editor.document.uri.toString() === virtualUri);
-				if (virtualEditor) {
-					virtualEditor.setDecorations(mappingSelectionDecorationType, []);
-					let virtualRanges1: vscode.Range[] = [];
-					let virtualRanges2: vscode.Range[] = [];
-					for (const [sourceUri, sourceVersion, map] of sources) {
-						const sourceEditor = vscode.window.visibleTextEditors.find(editor => editor.document.uri.toString() === sourceUri);
-						if (sourceEditor && sourceEditor.document.version === sourceVersion) {
-							const mappingDecorationRanges = map.mappings.map(mapping => new vscode.Range(
-								sourceEditor.document.positionAt(mapping.sourceRange[0]),
-								sourceEditor.document.positionAt(mapping.sourceRange[1]),
-							));
-							sourceEditor.setDecorations(mappingDecorationType, mappingDecorationRanges);
-							virtualRanges1 = virtualRanges1.concat(map.mappings.map(mapping => new vscode.Range(
-								virtualEditor.document.positionAt(mapping.generatedRange[0]),
-								virtualEditor.document.positionAt(mapping.generatedRange[1]),
-							)));
+		for (const [virtualUri, sources] of virtualUriToSourceMap) {
 
-							/**
-							 * selection
-							 */
+			const virtualEditor = vscode.window.visibleTextEditors.find(editor => editor.document.uri.toString() === virtualUri);
+			let virtualRanges1: vscode.Range[] = [];
+			let virtualRanges2: vscode.Range[] = [];
+
+			if (virtualEditor) {
+				for (const [sourceUri, sourceVersion, map] of sources) {
+					const sourceEditor = vscode.window.visibleTextEditors.find(editor => editor.document.uri.toString() === sourceUri);
+					if (sourceEditor && sourceEditor.document.version === sourceVersion) {
+						const mappingDecorationRanges = map.mappings.map(mapping => new vscode.Range(
+							sourceEditor.document.positionAt(mapping.sourceRange[0]),
+							sourceEditor.document.positionAt(mapping.sourceRange[1]),
+						));
+						sourceEditor.setDecorations(mappingDecorationType, mappingDecorationRanges);
+						virtualRanges1 = virtualRanges1.concat(map.mappings.map(mapping => new vscode.Range(
+							virtualEditor.document.positionAt(mapping.generatedRange[0]),
+							virtualEditor.document.positionAt(mapping.generatedRange[1]),
+						)));
+
+						/**
+						 * selection
+						 */
+						if (vscode.window.activeTextEditor) {
 							const selection = vscode.window.activeTextEditor.selection;
 							const startOffset = vscode.window.activeTextEditor.document.offsetAt(selection.start);
 							sourceEditor.setDecorations(mappingSelectionDecorationType, []);
@@ -159,9 +166,21 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 								}
 							}
 						}
+						else {
+							sourceEditor.setDecorations(mappingSelectionDecorationType, []);
+						}
 					}
-					virtualEditor.setDecorations(mappingDecorationType, virtualRanges1);
-					virtualEditor.setDecorations(mappingSelectionDecorationType, virtualRanges2);
+				}
+				virtualEditor.setDecorations(mappingDecorationType, virtualRanges1);
+				virtualEditor.setDecorations(mappingSelectionDecorationType, virtualRanges2);
+			}
+			else {
+				for (const [sourceUri] of sources) {
+					const sourceEditor = vscode.window.visibleTextEditors.find(editor => editor.document.uri.toString() === sourceUri);
+					if (sourceEditor) {
+						sourceEditor.setDecorations(mappingDecorationType, []);
+						sourceEditor.setDecorations(mappingSelectionDecorationType, []);
+					}
 				}
 			}
 		}
