@@ -633,8 +633,8 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 
 			<div id="loading">
 				<div style="display: flex; align-items: center; flex-direction: column; min-height: 100vh; justify-content: space-evenly;">
-					<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company/sponsors.svg" target="_top">
-						<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/company/sponsors.svg?time=${Math.round(Date.now() / 1000 / 3600)}" />
+					<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg" target="_top">
+						<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg?time=${Math.round(Date.now() / 1000 / 3600)}" />
 					</a>
 
 					<div style="height: 35px; width: 116px; display: flex;">
