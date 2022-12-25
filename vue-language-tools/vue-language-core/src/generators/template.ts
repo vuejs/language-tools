@@ -47,6 +47,7 @@ const transformContext: CompilerDOM.TransformContext = {
 
 export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
+	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: ResolvedVueCompilerOptions,
 	sourceTemplate: string,
 	sourceLang: string,
@@ -1315,14 +1316,29 @@ export function generate(
 				]);
 				codeGen.push(varSlots);
 				if (isStatic) {
-					writePropertyAccess(
-						slotName,
-						argRange,
-						{
-							...capabilitiesSet.slotName,
-							completion: !!prop.arg,
-						},
-					);
+					// https://github.com/johnsoncodehk/volar/issues/2236
+					if (!compilerOptions.noPropertyAccessFromIndexSignature) {
+						writePropertyAccess(
+							slotName,
+							argRange,
+							{
+								...capabilitiesSet.slotName,
+								completion: !!prop.arg,
+							},
+						);
+					}
+					else {
+						codeGen.push(`[`);
+						writeCodeWithQuotes(
+							slotName,
+							argRange,
+							{
+								...capabilitiesSet.slotName,
+								completion: !!prop.arg,
+							},
+						);
+						codeGen.push(`]`);
+					}
 				}
 				else {
 					codeGen.push(`[`);

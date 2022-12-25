@@ -1,5 +1,8 @@
 {
 	"extends": "../tsconfig.json",
+	"compilerOptions": {
+		"noPropertyAccessFromIndexSignature": true,
+	},
 	"include": [
 		"**/*.vue",
 		"**/*.html",
