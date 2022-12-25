@@ -328,6 +328,10 @@ function getInitializationOptions(
 			customBlockSchemaUrls: vscode.workspace.getConfiguration('volar').get<Record<string, string>>('vueserver.json.customBlockSchemaUrls'),
 		},
 		additionalExtensions: additionalExtensions(),
+		semanticTokensLegend: {
+			tokenTypes: ['component'],
+			tokenModifiers: [],
+		},
 	};
 	return initializationOptions;
 }

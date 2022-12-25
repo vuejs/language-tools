@@ -59,7 +59,7 @@ export function createCommonLanguageServer(params: ServerParams) {
 		await _createDocumentServiceHost();
 
 		if (serverMode === ServerMode.Semantic) {
-			setupSemanticCapabilities(initParams.capabilities, result.capabilities, options, plugins);
+			setupSemanticCapabilities(initParams.capabilities, result.capabilities, options, plugins, getSemanticTokensLegend());
 			await createLanguageServiceHost();
 		}
 
@@ -175,7 +175,7 @@ export function createCommonLanguageServer(params: ServerParams) {
 		}
 
 		(await import('./features/customFeatures')).register(connection, projects);
-		(await import('./features/languageFeatures')).register(connection, projects, initParams, cancelTokenHost);
+		(await import('./features/languageFeatures')).register(connection, projects, initParams, cancelTokenHost, getSemanticTokensLegend());
 
 		for (const plugin of plugins) {
 			plugin.semanticService?.onInitialize?.(connection, getLanguageService as any);
@@ -186,4 +186,55 @@ export function createCommonLanguageServer(params: ServerParams) {
 			return project?.getLanguageService();
 		}
 	}
+
+	function getSemanticTokensLegend() {
+		if (!options.semanticTokensLegend) {
+			return standardSemanticTokensLegend;
+		}
+		return {
+			tokenTypes: [...standardSemanticTokensLegend.tokenTypes, ...options.semanticTokensLegend.tokenTypes],
+			tokenModifiers: [...standardSemanticTokensLegend.tokenModifiers, ...options.semanticTokensLegend.tokenModifiers],
+		};
+	}
 }
+
+// https://code.visualstudio.com/api/language-extensions/semantic-highlight-guide#standard-token-types-and-modifiers
+const standardSemanticTokensLegend: vscode.SemanticTokensLegend = {
+	tokenTypes: [
+		'namespace',
+		'class',
+		'enum',
+		'interface',
+		'struct',
+		'typeParameter',
+		'type',
+		'parameter',
+		'variable',
+		'property',
+		'enumMember',
+		'decorator',
+		'event',
+		'function',
+		'method',
+		'macro',
+		'label',
+		'comment',
+		'string',
+		'keyword',
+		'number',
+		'regexp',
+		'operator',
+	],
+	tokenModifiers: [
+		'declaration',
+		'definition',
+		'readonly',
+		'static',
+		'deprecated',
+		'abstract',
+		'async',
+		'modification',
+		'documentation',
+		'defaultLibrary',
+	],
+};

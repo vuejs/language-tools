@@ -4,13 +4,13 @@ import { AutoInsertRequest, FindFileReferenceRequest, ShowReferencesNotification
 import { CancellationTokenHost } from '../cancellationPipe';
 import type { Workspaces } from '../workspaces';
 import * as shared from '@volar/shared';
-import { semanticTokensLegend } from '../utils/registerFeatures';
 
 export function register(
 	connection: vscode.Connection,
 	projects: Workspaces,
 	initParams: vscode.InitializeParams,
 	cancelHost: CancellationTokenHost,
+	semanticTokensLegend: vscode.SemanticTokensLegend,
 ) {
 
 	let lastCompleteUri: string;

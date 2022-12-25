@@ -117,4 +117,8 @@ export interface LanguageServerInitializationOptions {
 	respectClientCapabilities?: boolean;
 	maxFileSize?: number;
 	configFilePath?: string;
+	/**
+	 * Extra semantic token types and modifiers that are supported by the client.
+	 */
+	semanticTokensLegend?: vscode.SemanticTokensLegend;
 }

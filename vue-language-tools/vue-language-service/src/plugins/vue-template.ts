@@ -202,7 +202,11 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 							const tokenPosition = document.positionAt(tokenOffset);
 
 							if (components.has(tokenText)) {
-								result.push([tokenPosition.line, tokenPosition.character, tokenLength, legend.tokenTypes.indexOf('class'), 0]);
+								let tokenType = legend.tokenTypes.indexOf('component');
+								if (tokenType === -1) {
+									tokenType = legend.tokenTypes.indexOf('class');
+								}
+								result.push([tokenPosition.line, tokenPosition.character, tokenLength, tokenType, 0]);
 							}
 						}
 					}

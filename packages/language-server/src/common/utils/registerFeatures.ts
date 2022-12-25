@@ -3,47 +3,6 @@ import { DiagnosticModel, LanguageServerPlugin, LanguageServerInitializationOpti
 import * as vscode from 'vscode-languageserver';
 import { ClientCapabilities } from 'vscode-languageserver';
 
-// https://code.visualstudio.com/api/language-extensions/semantic-highlight-guide#standard-token-types-and-modifiers
-export const semanticTokensLegend: vscode.SemanticTokensLegend = {
-	tokenTypes: [
-		'namespace',
-		'class',
-		'enum',
-		'interface',
-		'struct',
-		'typeParameter',
-		'type',
-		'parameter',
-		'variable',
-		'property',
-		'enumMember',
-		'decorator',
-		'event',
-		'function',
-		'method',
-		'macro',
-		'label',
-		'comment',
-		'string',
-		'keyword',
-		'number',
-		'regexp',
-		'operator',
-	],
-	tokenModifiers: [
-		'declaration',
-		'definition',
-		'readonly',
-		'static',
-		'deprecated',
-		'abstract',
-		'async',
-		'modification',
-		'documentation',
-		'defaultLibrary',
-	],
-};
-
 export function setupSyntacticCapabilities(
 	params: ClientCapabilities,
 	server: vscode.ServerCapabilities,
@@ -84,6 +43,7 @@ export function setupSemanticCapabilities(
 	server: vscode.ServerCapabilities,
 	initOptions: LanguageServerInitializationOptions,
 	plugins: ReturnType<LanguageServerPlugin>[],
+	semanticTokensLegend: vscode.SemanticTokensLegend,
 ) {
 	if (!initOptions.respectClientCapabilities || params.textDocument?.references) {
 		server.referencesProvider = true;
