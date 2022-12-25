@@ -63,7 +63,9 @@ export function createNodeFileSystemHost(
 					return new Proxy(fn, {
 						apply(target, thisArg, args) {
 							if (currentCwd !== rootPath) {
-								process.chdir(rootPath);
+								if (ts.sys.directoryExists(rootPath)) { // #2234, #2039
+									process.chdir(rootPath);
+								}
 								currentCwd = rootPath;
 							}
 							return (target as any).apply(thisArg, args);
