@@ -1,5 +1,40 @@
 # Changelog
 
+## 1.0.17 (2022/12/26)
+
+- feat: support syntax highlighting for `lang="json5"` ([#2244](https://github.com/johnsoncodehk/volar/issues/2244))
+- feat: support for generating virtual file from multiple sources ([#2253](https://github.com/johnsoncodehk/volar/issues/2253))
+- feat: display mapping data on hover for virtual document
+- feat: re-support component semantic token ([#2252](https://github.com/johnsoncodehk/volar/issues/2252))
+- fix(vue-tsc): cannot resolve hook path from extends options
+- fix: fixed workspace configs caching not working edge case ([#2062](https://github.com/johnsoncodehk/volar/issues/2062))
+- fix: cannot find volar.config.js for sub folder tsconfig project
+- fix: emmet abbreviation suggestion keeps disappearing every third letter ([#2240](https://github.com/johnsoncodehk/volar/issues/2240))
+- fix: `{{ }}` colorizedBracketPairs not working ([#1759](https://github.com/johnsoncodehk/volar/issues/1759))
+- fix: fixed volar-base language servers executePluginCommand duplicate registration error
+- fix: avoid throw on un-exist workspace folder ([#2039](https://github.com/johnsoncodehk/volar/issues/2039))
+- fix: ignore class, style attrs when `v-bind` exist ([#2166](https://github.com/johnsoncodehk/volar/issues/2166))
+- fix: functional component type check not working when return type includes `props` property ([#2206](https://github.com/johnsoncodehk/volar/issues/2206))
+- fix: v-slot error when `noPropertyAccessFromIndexSignature` is enabled ([#2236](https://github.com/johnsoncodehk/volar/issues/2236))
+- fix: `skipTemplateCodegen` should ignore template slots emit ([#2237](https://github.com/johnsoncodehk/volar/issues/2237))
+- fix: recursive closing of html tag edge cases ([#2238](https://github.com/johnsoncodehk/volar/issues/2238)) ([#2247](https://github.com/johnsoncodehk/volar/issues/2247))
+- fix: double quotes not allowed in attribute value ([#2250](https://github.com/johnsoncodehk/volar/issues/2250))
+- perf: embedded files on demand calculation not working
+
+### Out Gold Sponsors
+
+<table><tr>
+	<td align="center" valign="middle"><a href="https://vuejs.org/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/vue.png" height="80" /></a></td>
+	<td align="center" valign="middle"><a href="https://volta.net/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/volta.svg" height="60" /></a></td>
+</tr></table>
+
+### Out Silver Sponsors
+
+<table><tr>
+	<td align="center" valign="middle"><a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/prefect.svg" height="50" /></a></td>
+	<td align="center" valign="middle"><a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/365talents.png" height="70" /></a></td>
+</tr></table>
+
 ## 1.0.16 (2022/12/20)
 
 - feat(component-meta): make `schema.ignore` accept functions ([#2232](https://github.com/johnsoncodehk/volar/issues/2232))
@@ -11,25 +46,7 @@
 - fix: typed template slots missing when template only exist dynamic slots ([#2233](https://github.com/johnsoncodehk/volar/issues/2233))
 - fix: fixed template `Type 'void' has no call signatures` errors ([#2225](https://github.com/johnsoncodehk/volar/issues/2225))
 - fix(vue-tsc): shim `vue-tsc/out/proxy.js` for vite-plugin-checker (https://github.com/fi3ework/vite-plugin-checker/issues/193)
-- perf: rewrite typescript-vue-plugin for much better performance
-
-### Special Sponsor
-
-<table><tr>
-	<td align="center" valign="middle"><a href="https://volta.net/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/volta.svg" height="60" /></a></td>
-</tr></table>
-
-### Out Gold Sponsors
-
-<table><tr>
-	<td align="center" valign="middle"><a href="https://vuejs.org/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/vue.png" height="80" /></a></td>
-</tr></table>
-
-### Out Silver Sponsors
-
-<table><tr>
-	<td align="center" valign="middle"><a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/prefect.svg" height="50" /></a></td>
-</tr></table>
+- perf: rewrite typescript-vue-plugin for much better performance and fixed path resolve edge case ([#2137](https://github.com/johnsoncodehk/volar/issues/2137))
 
 ## 1.0.14 (2022/12/18)
 
