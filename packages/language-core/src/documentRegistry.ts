@@ -101,11 +101,10 @@ export function createVirtualFiles(languageModules: LanguageModule[]) {
 	}
 
 	function getMirrorMap(file: VirtualFile) {
-		const snapshot = virtualFileNameToSource.value.get(normalizePath(file.fileName))![1][1];
-		if (!virtualFileToMirrorMap.has(snapshot)) {
-			virtualFileToMirrorMap.set(snapshot, file.mirrorBehaviorMappings ? new MirrorMap(file.mirrorBehaviorMappings) : undefined);
+		if (!virtualFileToMirrorMap.has(file.snapshot)) {
+			virtualFileToMirrorMap.set(file.snapshot, file.mirrorBehaviorMappings ? new MirrorMap(file.mirrorBehaviorMappings) : undefined);
 		}
-		return virtualFileToMirrorMap.get(snapshot);
+		return virtualFileToMirrorMap.get(file.snapshot);
 	}
 }
 
