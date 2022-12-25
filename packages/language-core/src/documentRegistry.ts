@@ -79,8 +79,11 @@ export function createVirtualFiles(languageModules: LanguageModule[]) {
 	};
 
 	function getSourceMaps(virtualFile: VirtualFile) {
-		const sourceMapsBySourceFileName = virtualFileToSourceMapsMap.get(virtualFile.snapshot) ?? new Map();
-		virtualFileToSourceMapsMap.set(virtualFile.snapshot, sourceMapsBySourceFileName);
+		let sourceMapsBySourceFileName = virtualFileToSourceMapsMap.get(virtualFile.snapshot);
+		if (!sourceMapsBySourceFileName) {
+			sourceMapsBySourceFileName = new Map();
+			virtualFileToSourceMapsMap.set(virtualFile.snapshot, sourceMapsBySourceFileName);
+		}
 
 		const sources = new Set<string | undefined>();
 		for (const map of virtualFile.mappings) {
