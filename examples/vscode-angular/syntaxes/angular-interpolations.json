@@ -23,7 +23,7 @@
 							"name": "punctuation.definition.tag.end.html.angular"
 						}
 					],
-					"name": "expression.embbeded.angular",
+					"name": "expression.embedded.angular",
 					"patterns": [
 						{
 							"begin": "\\G",
