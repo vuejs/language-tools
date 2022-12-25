@@ -1,6 +1,6 @@
 {
 	"name": "@volar-examples/angular-language-core",
-	"version": "1.0.16",
+	"version": "1.0.17",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -14,7 +14,7 @@
 	},
 	"dependencies": {
 		"@angular-eslint/bundled-angular-compiler": "^15.1.0",
-		"@volar/language-core": "1.0.16",
+		"@volar/language-core": "1.0.17",
 		"vscode-languageserver-textdocument": "^1.0.8",
 		"vscode-uri": "^3.0.7"
 	},

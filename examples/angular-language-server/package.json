@@ -1,6 +1,6 @@
 {
 	"name": "@volar-examples/angular-language-server",
-	"version": "1.0.16",
+	"version": "1.0.17",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -16,9 +16,9 @@
 		"directory": "examples/angular-language-server"
 	},
 	"dependencies": {
-		"@volar-examples/angular-language-core": "1.0.16",
-		"@volar-plugins/typescript": "1.0.16",
-		"@volar/language-server": "1.0.16",
-		"@volar/shared": "1.0.16"
+		"@volar-examples/angular-language-core": "1.0.17",
+		"@volar-plugins/typescript": "1.0.17",
+		"@volar/language-server": "1.0.17",
+		"@volar/shared": "1.0.17"
 	}
 }
