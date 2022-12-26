@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.0.18 (2022/12/26)
+
+- feat: check deprecated properties for `vueCompilerOptions` in tsconfig
+- fix: auto add spaces for `{{}}` not working if template block not at the top
+- fix: remove duplicate file watchers for .vue files
+- fix: auto complete randomly report `[TS Error] { }` and failed ([#2190](https://github.com/johnsoncodehk/volar/issues/2190))
+- fix: cross-file renaming cannot be performed consecutively
+- fix: should not report unknown tag error without `strictTemplates` enabled ([#2255](https://github.com/johnsoncodehk/volar/issues/2255))
+
+### Out Gold Sponsors
+
+<table><tr>
+	<td align="center" valign="middle"><a href="https://vuejs.org/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/vue.png" height="80" /></a></td>
+	<td align="center" valign="middle"><a href="https://volta.net/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/volta.svg" height="60" /></a></td>
+</tr></table>
+
+### Out Silver Sponsors
+
+<table><tr>
+	<td align="center" valign="middle"><a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/prefect.svg" height="50" /></a></td>
+	<td align="center" valign="middle"><a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/365talents.png" height="70" /></a></td>
+</tr></table>
+
 ## 1.0.17 (2022/12/26)
 
 - feat: support syntax highlighting for `lang="json5"` ([#2244](https://github.com/johnsoncodehk/volar/issues/2244))
@@ -20,20 +43,6 @@
 - fix: recursive closing of html tag edge cases ([#2238](https://github.com/johnsoncodehk/volar/issues/2238)) ([#2247](https://github.com/johnsoncodehk/volar/issues/2247))
 - fix: double quotes not allowed in attribute value ([#2250](https://github.com/johnsoncodehk/volar/issues/2250))
 - perf: embedded files on demand calculation not working
-
-### Out Gold Sponsors
-
-<table><tr>
-	<td align="center" valign="middle"><a href="https://vuejs.org/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/vue.png" height="80" /></a></td>
-	<td align="center" valign="middle"><a href="https://volta.net/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/volta.svg" height="60" /></a></td>
-</tr></table>
-
-### Out Silver Sponsors
-
-<table><tr>
-	<td align="center" valign="middle"><a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/prefect.svg" height="50" /></a></td>
-	<td align="center" valign="middle"><a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/365talents.png" height="70" /></a></td>
-</tr></table>
 
 ## 1.0.16 (2022/12/20)
 
