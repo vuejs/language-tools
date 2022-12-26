@@ -65,7 +65,7 @@ export function createLanguageContext(
 		getScriptSnapshot,
 		readDirectory: (_path, extensions, exclude, include, depth) => {
 			const result = host.readDirectory?.(_path, extensions, exclude, include, depth) ?? [];
-			for (const [fileName] of virtualFiles.all()) {
+			for (const [, [fileName]] of virtualFiles.all) {
 				const vuePath2 = path.join(_path, path.basename(fileName));
 				if (path.relative(_path.toLowerCase(), fileName.toLowerCase()).startsWith('..')) {
 					continue;
@@ -128,7 +128,7 @@ export function createLanguageContext(
 		const remainRootFiles = new Set(host.getScriptFileNames());
 
 		// .vue
-		for (const [fileName] of virtualFiles.all()) {
+		for (const [_, [fileName]] of virtualFiles.all) {
 			remainRootFiles.delete(fileName);
 
 			const snapshot = host.getScriptSnapshot(fileName);
@@ -189,7 +189,7 @@ export function createLanguageContext(
 			}
 		}
 
-		for (const [_1, _2, virtualFile] of virtualFiles.all()) {
+		for (const [_, [_1, _2, virtualFile]] of virtualFiles.all) {
 			if (!shouldUpdateTsProject) {
 				forEachEmbeddedFile(virtualFile, embedded => {
 					if (embedded.kind === FileKind.TypeScriptHostFile) {
@@ -209,7 +209,7 @@ export function createLanguageContext(
 
 		const tsFileNames = new Set<string>();
 
-		for (const [_1, _2, sourceFile] of virtualFiles.all()) {
+		for (const [_, [_1, _2, sourceFile]] of virtualFiles.all) {
 			forEachEmbeddedFile(sourceFile, embedded => {
 				if (embedded.kind === FileKind.TypeScriptHostFile) {
 					tsFileNames.add(embedded.fileName); // virtual .ts
