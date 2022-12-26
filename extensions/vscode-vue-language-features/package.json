@@ -116,6 +116,30 @@
 			{
 				"fileMatch": "jsconfig.*.json",
 				"url": "./dist/schemas/vue-tsconfig.schema.json"
+			},
+			{
+				"fileMatch": "tsconfig.json",
+				"url": "./dist/schemas/vue-tsconfig.deprecated.schema.json"
+			},
+			{
+				"fileMatch": "tsconfig-*.json",
+				"url": "./dist/schemas/vue-tsconfig.deprecated.schema.json"
+			},
+			{
+				"fileMatch": "tsconfig.*.json",
+				"url": "./dist/schemas/vue-tsconfig.deprecated.schema.json"
+			},
+			{
+				"fileMatch": "jsconfig.json",
+				"url": "./dist/schemas/vue-tsconfig.deprecated.schema.json"
+			},
+			{
+				"fileMatch": "jsconfig-*.json",
+				"url": "./dist/schemas/vue-tsconfig.deprecated.schema.json"
+			},
+			{
+				"fileMatch": "jsconfig.*.json",
+				"url": "./dist/schemas/vue-tsconfig.deprecated.schema.json"
 			}
 		],
 		"semanticTokenScopes": [

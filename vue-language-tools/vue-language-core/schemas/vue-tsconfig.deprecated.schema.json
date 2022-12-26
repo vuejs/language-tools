@@ -1,0 +1,60 @@
+{
+	"properties": {
+		"vueCompilerOptions": {
+			"type": "object",
+			"properties": {
+				"experimentalCompatMode": {
+					"deprecated": true
+				},
+				"experimentalTemplateCompilerOptions": {
+					"deprecated": true
+				},
+				"experimentalTemplateCompilerOptionsRequirePath": {
+					"deprecated": true
+				},
+				"experimentalDisableTemplateSupport": {
+					"deprecated": true
+				},
+				"experimentalResolveNonScopedCssClasses": {
+					"deprecated": true
+				},
+				"experimentalShamefullySupportOptionsApi": {
+					"deprecated": true
+				},
+				"experimentalAllowTypeNarrowingInInlineHandlers": {
+					"deprecated": true
+				},
+				"experimentalImplicitWrapComponentOptionsWithDefineComponent": {
+					"deprecated": true
+				},
+				"experimentalDowngradePropsAndEmitsToSetupReturnOnScriptSetup": {
+					"deprecated": true
+				},
+				"experimentalRuntimeMode": {
+					"deprecated": true
+				},
+				"experimentalUseScriptLeadingCommentInTemplate": {
+					"deprecated": true
+				},
+				"experimentalSuppressUnknownJsxPropertyErrors": {
+					"deprecated": true
+				},
+				"experimentalSuppressInvalidJsxElementTypeErrors": {
+					"deprecated": true
+				},
+				"experimentalImplicitWrapComponentOptionsWithVue2Extend": {
+					"deprecated": true
+				},
+				"experimentalComponentOptionsWrapper": {
+					"deprecated": true
+				},
+				"experimentalComponentOptionsWrapperEnable": {
+					"deprecated": true
+				},
+				"bypassDefineComponentToExposePropsAndEmitsForJsScriptSetupComponents": {
+					"deprecated": true
+				}
+			}
+		}
+	}
+}
