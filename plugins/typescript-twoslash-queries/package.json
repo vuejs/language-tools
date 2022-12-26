@@ -1,6 +1,6 @@
 {
 	"name": "@volar-plugins/typescript-twoslash-queries",
-	"version": "1.0.17",
+	"version": "1.0.18",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -13,7 +13,7 @@
 		"directory": "plugins/typescript-twoslash-queries"
 	},
 	"dependencies": {
-		"@volar/shared": "1.0.17",
+		"@volar/shared": "1.0.18",
 		"vscode-languageserver-textdocument": "^1.0.8"
 	}
 }
