@@ -106,7 +106,7 @@ export type GetComponents<Components, N1, N2 = unknown, N3 = unknown> =
 	N1 extends keyof Components ? Components[N1] :
 	N2 extends keyof Components ? Components[N2] :
 	N3 extends keyof Components ? Components[N3] :
-	unknown;
+	${vueCompilerOptions.strictTemplates ? 'unknown' : 'any'};
 export type ComponentProps<T> =
 	${vueCompilerOptions.strictTemplates ? '' : 'Record<string, unknown> &'}
 	(
