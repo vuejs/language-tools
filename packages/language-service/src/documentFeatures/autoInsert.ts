@@ -11,10 +11,28 @@ export function register(context: DocumentServiceRuntimeContext) {
 		return documentArgFeatureWorker(
 			context,
 			document,
-			position,
+			{ position, options },
 			() => true,
-			(position, map) => map.toGeneratedPositions(position, data => !!data.completion),
-			(plugin, document, position) => plugin.doAutoInsert?.(document, position, options),
+			function* ({ position, options }, map) {
+				for (const mappedPos of map.toGeneratedPositions(position, data => !!data.completion)) {
+					for (const [mappedChangeOffset] of map.map.toGeneratedOffsets(options.lastChange.rangeOffset)) {
+						yield {
+							position: mappedPos,
+							options: {
+								lastChange: {
+									...options.lastChange,
+									rangeOffset: mappedChangeOffset,
+									range: {
+										start: map.virtualFileDocument.positionAt(mappedChangeOffset),
+										end: map.virtualFileDocument.positionAt(mappedChangeOffset + options.lastChange.rangeLength),
+									},
+								}
+							}
+						};
+					}
+				}
+			},
+			(plugin, document, { position, options }) => plugin.doAutoInsert?.(document, position, options),
 			(data, map) => {
 
 				if (typeof data === 'string')
