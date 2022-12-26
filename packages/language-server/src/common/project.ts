@@ -62,6 +62,7 @@ export async function createProject(params: ProjectParams) {
 			if (!parsedCommandLine.fileNames.includes(fileName)) {
 				parsedCommandLine.fileNames.push(fileName);
 				projectVersion++;
+				projectVersionUpdateTime = cancelTokenHost.getMtime();
 			}
 		},
 		dispose,
@@ -103,6 +104,8 @@ export async function createProject(params: ProjectParams) {
 	}
 	async function onWorkspaceFilesChanged(changes: vscode.FileEvent[]) {
 
+		const _projectVersion = projectVersion;
+
 		for (const change of changes) {
 
 			const script = scripts.uriGet(change.uri);
@@ -131,6 +134,10 @@ export async function createProject(params: ProjectParams) {
 			parsedCommandLine = createParsedCommandLine(ts, sys, shared.getPathOfUri(rootUri.toString()), tsConfig, plugins);
 			projectVersion++;
 			typeRootVersion++;
+		}
+
+		if (_projectVersion !== projectVersion) {
+			projectVersionUpdateTime = cancelTokenHost.getMtime();
 		}
 	}
 	function createLanguageServiceHost() {
