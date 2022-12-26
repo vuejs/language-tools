@@ -101,7 +101,6 @@ export function createCommonLanguageServer(params: ServerParams) {
 		) {
 			connection.client.register(vscode.DidChangeWatchedFilesNotification.type, {
 				watchers: [
-					...plugins.map(plugin => plugin.extraFileExtensions.map(ext => ({ globPattern: `**/*.${ext.extension}` }))).flat(),
 					{
 						globPattern: `**/*.{${[
 							'js',
