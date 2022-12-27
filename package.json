@@ -15,9 +15,9 @@
 		"release:vue-language-features": "cd ./extensions/vscode-vue-language-features && npm run release",
 		"release:typescript-vue-plugin": "cd ./extensions/vscode-typescript-vue-plugin && npm run release",
 		"test": "vitest run",
-		"docs:dev": "vitepress dev docs",
-		"docs:build": "vitepress build docs",
-		"docs:serve": "vitepress serve docs",
+		"docs:dev": "cd docs && npm run dev",
+		"docs:build": "cd docs && npm run build",
+		"docs:serve": "cd docs && npm run serve",
 		"chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=./extensions/vscode-vue-language-features ../volar-starter"
 	},
 	"devDependencies": {
@@ -29,7 +29,6 @@
 	"optionalDependencies": {
 		"@lerna-lite/cli": "latest",
 		"@vscode/test-web": "latest",
-		"vitepress": "latest",
 		"vue": "^3.2.45"
 	}
 }

@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "1.0.18",
+	"version": "1.0.19-alpha.1",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
