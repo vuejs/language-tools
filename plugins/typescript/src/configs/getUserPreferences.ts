@@ -11,7 +11,7 @@ export async function getUserPreferences(
 ): Promise<ts.UserPreferences> {
 
 	const config = await getConfiguration(isTypeScriptDocument(uri) ? 'typescript' : 'javascript') ?? {};
-	const preferencesConfig = await getConfiguration(isTypeScriptDocument(uri) ? 'typescript.preferences' : 'javascript.preferences') ?? {};
+	const preferencesConfig = config?.preferences ?? {};
 	const preferences: ts.UserPreferences = {
 		...config.unstable ?? {},
 		quotePreference: getQuoteStylePreference(preferencesConfig),
@@ -28,7 +28,7 @@ export async function getUserPreferences(
 		includeCompletionsWithSnippetText: config.suggest?.includeCompletionsWithSnippetText ?? true,
 		includeCompletionsWithClassMemberSnippets: config.suggest?.classMemberSnippets?.enabled ?? true,
 		includeCompletionsWithObjectLiteralMethodSnippets: config.suggest?.objectLiteralMethodSnippets?.enabled ?? true,
-		autoImportFileExcludePatterns: getAutoImportFileExcludePatternsPreference(config, workspaceFolder),
+		autoImportFileExcludePatterns: getAutoImportFileExcludePatternsPreference(preferencesConfig, workspaceFolder),
 		useLabelDetailsInCompletionEntries: true,
 		allowIncompleteCompletions: true,
 		displayPartsForJSDoc: true,
@@ -43,8 +43,12 @@ export async function getUserPreferences(
 		includeInlayFunctionLikeReturnTypeHints: config.inlayHints?.functionLikeReturnTypes?.enabled ?? false,
 		includeInlayEnumMemberValueHints: config.inlayHints?.enumMemberValues?.enabled ?? false,
 
-		// custom
+		// https://github.com/microsoft/vscode/blob/main/extensions/typescript-language-features/src/languageFeatures/completions.ts#L728-L730
 		includeCompletionsForModuleExports: config.suggest?.autoImports ?? true,
+		includeCompletionsWithInsertText: true,
+
+		// includePackageJsonAutoImports have no effect because this is used only in tsserver but not language service
+		// includePackageJsonAutoImports: tsPreferencesConfig.includePackageJsonAutoImports ?? 'auto',
 	};
 
 	return preferences;

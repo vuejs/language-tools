@@ -44,7 +44,7 @@ export function register(
 			details = languageService.getCompletionEntryDetails(fileName, offset, data.originalItem.name, formatOptions, data.originalItem.source, preferences, data.originalItem.data);
 		}
 		catch (err) {
-			item.detail = `[TS Error] ${JSON.stringify(err)}`;
+			item.detail = `[TS Error]\n${err}\n${JSON.stringify(err, undefined, 2)}`;
 		}
 
 		if (!details)
