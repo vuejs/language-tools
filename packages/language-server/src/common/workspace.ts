@@ -7,33 +7,29 @@ import { createProject, Project } from './project';
 import { getInferredCompilerOptions } from './utils/inferredCompilerOptions';
 import { loadCustomPlugins } from './utils/serverConfig';
 import { createUriMap } from './utils/uriMap';
-import { WorkspacesParams } from './workspaces';
+import { WorkspacesContext } from './workspaces';
 
 export const rootTsConfigNames = ['tsconfig.json', 'jsconfig.json'];
 
-export interface WorkspaceParams {
-	workspaces: WorkspacesParams;
+export interface WorkspaceContext {
+	workspaces: WorkspacesContext;
 	rootUri: URI,
 }
 
-export async function createWorkspace(params: WorkspaceParams) {
-
-	const { rootUri } = params;
-	const { ts, fileSystemHost, initOptions, configurationHost } = params.workspaces;
+export async function createWorkspace(context: WorkspaceContext) {
 
 	let inferredProject: Project | undefined;
 
-	const workspacePlugins = loadCustomPlugins(shared.getPathOfUri(rootUri.toString()), initOptions.configFilePath);
-	const sys = fileSystemHost.getWorkspaceFileSystem(rootUri);
-	const documentRegistry = ts.createDocumentRegistry(sys.useCaseSensitiveFileNames, shared.getPathOfUri(rootUri.toString()));
+	const workspacePlugins = loadCustomPlugins(shared.getPathOfUri(context.rootUri.toString()), context.workspaces.initOptions.configFilePath);
+	const sys = context.workspaces.fileSystemHost.getWorkspaceFileSystem(context.rootUri);
+	const documentRegistry = context.workspaces.ts.createDocumentRegistry(sys.useCaseSensitiveFileNames, shared.getPathOfUri(context.rootUri.toString()));
 	const projects = createUriMap<Project>();
-	const rootTsConfigs = new Set(sys.readDirectory(shared.getPathOfUri(rootUri.toString()), rootTsConfigNames, undefined, ['**/*']).map(fileName => shared.normalizeFileName(fileName)));
-	const disposeWatch = fileSystemHost.onDidChangeWatchedFiles(async (params) => {
-		const disposes: Promise<any>[] = [];
-		for (const change of params.changes) {
+	const rootTsConfigs = new Set(sys.readDirectory(shared.getPathOfUri(context.rootUri.toString()), rootTsConfigNames, undefined, ['**/*']).map(fileName => shared.normalizeFileName(fileName)));
+	const disposeTsConfigWatch = context.workspaces.fileSystemHost.onDidChangeWatchedFiles(({ changes }) => {
+		for (const change of changes) {
 			if (rootTsConfigNames.includes(change.uri.substring(change.uri.lastIndexOf('/') + 1))) {
 				if (change.type === vscode.FileChangeType.Created) {
-					if (shared.isFileInDir(shared.getPathOfUri(change.uri), shared.getPathOfUri(rootUri.toString()))) {
+					if (shared.isFileInDir(shared.getPathOfUri(change.uri), shared.getPathOfUri(context.rootUri.toString()))) {
 						rootTsConfigs.add(shared.getPathOfUri(change.uri));
 					}
 				}
@@ -41,15 +37,12 @@ export async function createWorkspace(params: WorkspaceParams) {
 					if (change.type === vscode.FileChangeType.Deleted) {
 						rootTsConfigs.delete(shared.getPathOfUri(change.uri));
 					}
-					const _project = projects.uriGet(change.uri);
+					const project = projects.uriGet(change.uri);
 					projects.uriDelete(change.uri);
-					disposes.push((async () => {
-						(await _project)?.dispose();
-					})());
+					project?.then(project => project.dispose());
 				}
 			}
 		}
-		return Promise.all(disposes);
 	});
 
 	return {
@@ -61,7 +54,7 @@ export async function createWorkspace(params: WorkspaceParams) {
 		reload: clearProjects,
 		dispose() {
 			clearProjects();
-			disposeWatch();
+			disposeTsConfigWatch();
 		},
 	};
 
@@ -90,11 +83,11 @@ export async function createWorkspace(params: WorkspaceParams) {
 	function getInferredProject() {
 		if (!inferredProject) {
 			inferredProject = (async () => {
-				const inferOptions = await getInferredCompilerOptions(ts, configurationHost);
+				const inferOptions = await getInferredCompilerOptions(context.workspaces.ts, context.workspaces.configurationHost);
 				return createProject({
-					workspace: params,
+					workspace: context,
 					workspacePlugins,
-					rootUri,
+					rootUri: context.rootUri,
 					tsConfig: inferOptions,
 					documentRegistry,
 				});
@@ -153,7 +146,7 @@ export async function createWorkspace(params: WorkspaceParams) {
 
 					let chains = await getReferencesChains(project.getParsedCommandLine(), rootTsConfig, []);
 
-					if (initOptions.reverseConfigFilePriority) {
+					if (context.workspaces.initOptions.reverseConfigFilePriority) {
 						chains = chains.reverse();
 					}
 
@@ -224,7 +217,7 @@ export async function createWorkspace(params: WorkspaceParams) {
 		let project = projects.pathGet(tsConfig);
 		if (!project) {
 			project = createProject({
-				workspace: params,
+				workspace: context,
 				workspacePlugins,
 				rootUri: URI.parse(shared.getUriByPath(path.dirname(tsConfig))),
 				tsConfig,

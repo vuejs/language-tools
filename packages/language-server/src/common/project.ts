@@ -8,11 +8,11 @@ import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import { FileSystem, LanguageServerPlugin } from '../types';
 import { createUriMap } from './utils/uriMap';
-import { WorkspaceParams } from './workspace';
+import { WorkspaceContext } from './workspace';
 import { LanguageServicePlugin } from '@volar/language-service';
 
-export interface ProjectParams {
-	workspace: WorkspaceParams;
+export interface ProjectContext {
+	workspace: WorkspaceContext;
 	rootUri: URI;
 	tsConfig: path.PosixPath | ts.CompilerOptions,
 	documentRegistry: ts.DocumentRegistry,
@@ -21,19 +21,15 @@ export interface ProjectParams {
 
 export type Project = ReturnType<typeof createProject>;
 
-export async function createProject(params: ProjectParams) {
+export async function createProject(context: ProjectContext) {
 
-	const { tsConfig, documentRegistry, rootUri } = params;
-	const { ts, fileSystemHost, documents, cancelTokenHost, tsLocalized, initOptions, configurationHost } = params.workspace.workspaces;
-	const { plugins } = params.workspace.workspaces;
-	const { runtimeEnv } = params.workspace.workspaces.server;
-	const sys = fileSystemHost.getWorkspaceFileSystem(rootUri);
+	const sys = context.workspace.workspaces.fileSystemHost.getWorkspaceFileSystem(context.rootUri);
 
 	let typeRootVersion = 0;
 	let projectVersion = 0;
-	let projectVersionUpdateTime = cancelTokenHost.getMtime();
-	let vueLs: embeddedLS.LanguageService | undefined;
-	let parsedCommandLine = createParsedCommandLine(ts, sys, shared.getPathOfUri(rootUri.toString()), tsConfig, plugins);
+	let projectVersionUpdateTime = context.workspace.workspaces.cancelTokenHost.getMtime();
+	let languageService: embeddedLS.LanguageService | undefined;
+	let parsedCommandLine = createParsedCommandLine(context.workspace.workspaces.ts, sys, shared.getPathOfUri(context.rootUri.toString()), context.tsConfig, context.workspace.workspaces.plugins);
 
 	const scripts = createUriMap<{
 		version: number,
@@ -42,65 +38,64 @@ export async function createProject(params: ProjectParams) {
 		snapshotVersion: number | undefined,
 	}>();
 	const languageServiceHost = createLanguageServiceHost();
-
-	const disposeWatchEvent = fileSystemHost.onDidChangeWatchedFiles(params => {
+	const disposeWatchEvent = context.workspace.workspaces.fileSystemHost.onDidChangeWatchedFiles(params => {
 		onWorkspaceFilesChanged(params.changes);
 	});
-	const disposeDocChange = documents.onDidChangeContent(() => {
+	const disposeDocChange = context.workspace.workspaces.documents.onDidChangeContent(() => {
 		projectVersion++;
-		projectVersionUpdateTime = cancelTokenHost.getMtime();
+		projectVersionUpdateTime = context.workspace.workspaces.cancelTokenHost.getMtime();
 	});
 
 	return {
-		tsConfig,
+		tsConfig: context.tsConfig,
 		scripts,
 		languageServiceHost,
 		getLanguageService,
-		getLanguageServiceDontCreate: () => vueLs,
+		getLanguageServiceDontCreate: () => languageService,
 		getParsedCommandLine: () => parsedCommandLine,
 		tryAddFile: (fileName: string) => {
 			if (!parsedCommandLine.fileNames.includes(fileName)) {
 				parsedCommandLine.fileNames.push(fileName);
 				projectVersion++;
-				projectVersionUpdateTime = cancelTokenHost.getMtime();
+				projectVersionUpdateTime = context.workspace.workspaces.cancelTokenHost.getMtime();
 			}
 		},
 		dispose,
 	};
 
 	function getLanguageService() {
-		if (!vueLs) {
+		if (!languageService) {
 
-			const languageModules = plugins.map(plugin => plugin.semanticService?.getLanguageModules?.(languageServiceHost) ?? []).flat();
+			const languageModules = context.workspace.workspaces.plugins.map(plugin => plugin.semanticService?.getLanguageModules?.(languageServiceHost) ?? []).flat();
 			const languageContext = embedded.createLanguageContext(languageServiceHost, languageModules);
 			const languageServiceContext = embeddedLS.createLanguageServiceContext({
 				host: languageServiceHost,
 				context: languageContext,
 				getPlugins() {
 					return [
-						...params.workspacePlugins,
-						...plugins.map(plugin => plugin.semanticService?.getServicePlugins?.(languageServiceHost, vueLs!) ?? []).flat(),
+						...context.workspacePlugins,
+						...context.workspace.workspaces.plugins.map(plugin => plugin.semanticService?.getServicePlugins?.(languageServiceHost, languageService!) ?? []).flat(),
 					];
 				},
 				env: {
-					rootUri,
-					configurationHost: configurationHost,
-					fileSystemProvider: runtimeEnv.fileSystemProvide,
-					documentContext: getHTMLDocumentContext(ts, languageServiceHost),
+					rootUri: context.rootUri,
+					configurationHost: context.workspace.workspaces.configurationHost,
+					fileSystemProvider: context.workspace.workspaces.server.runtimeEnv.fileSystemProvide,
+					documentContext: getHTMLDocumentContext(context.workspace.workspaces.ts, languageServiceHost),
 					schemaRequestService: async uri => {
 						const protocol = uri.substring(0, uri.indexOf(':'));
-						const builtInHandler = runtimeEnv.schemaRequestHandlers[protocol];
+						const builtInHandler = context.workspace.workspaces.server.runtimeEnv.schemaRequestHandlers[protocol];
 						if (builtInHandler) {
 							return await builtInHandler(uri);
 						}
 						return '';
 					},
 				},
-				documentRegistry,
+				documentRegistry: context.documentRegistry,
 			});
-			vueLs = embeddedLS.createLanguageService(languageServiceContext);
+			languageService = embeddedLS.createLanguageService(languageServiceContext);
 		}
-		return vueLs;
+		return languageService;
 	}
 	async function onWorkspaceFilesChanged(changes: vscode.FileEvent[]) {
 
@@ -131,20 +126,20 @@ export async function createProject(params: ProjectParams) {
 		const deletes = changes.filter(change => change.type === vscode.FileChangeType.Deleted);
 
 		if (creates.length || deletes.length) {
-			parsedCommandLine = createParsedCommandLine(ts, sys, shared.getPathOfUri(rootUri.toString()), tsConfig, plugins);
+			parsedCommandLine = createParsedCommandLine(context.workspace.workspaces.ts, sys, shared.getPathOfUri(context.rootUri.toString()), context.tsConfig, context.workspace.workspaces.plugins);
 			projectVersion++;
 			typeRootVersion++;
 		}
 
 		if (_projectVersion !== projectVersion) {
-			projectVersionUpdateTime = cancelTokenHost.getMtime();
+			projectVersionUpdateTime = context.workspace.workspaces.cancelTokenHost.getMtime();
 		}
 	}
 	function createLanguageServiceHost() {
 
 		const token: ts.CancellationToken = {
 			isCancellationRequested() {
-				return cancelTokenHost.getMtime() !== projectVersionUpdateTime;
+				return context.workspace.workspaces.cancelTokenHost.getMtime() !== projectVersionUpdateTime;
 			},
 			throwIfCancellationRequested() { },
 		};
@@ -159,16 +154,16 @@ export async function createProject(params: ProjectParams) {
 			readDirectory: sys.readDirectory,
 			realpath: sys.realpath,
 			fileExists: sys.fileExists,
-			getCurrentDirectory: () => shared.getPathOfUri(rootUri.toString()),
+			getCurrentDirectory: () => shared.getPathOfUri(context.rootUri.toString()),
 			getProjectReferences: () => parsedCommandLine.projectReferences, // if circular, broken with provide `getParsedCommandLine: () => parsedCommandLine`
 			getCancellationToken: () => token,
 			// custom
 			getDefaultLibFileName: options => {
 				try {
-					return ts.getDefaultLibFilePath(options);
+					return context.workspace.workspaces.ts.getDefaultLibFilePath(options);
 				} catch {
 					// web
-					return initOptions.typescript.tsdk + '/' + ts.getDefaultLibFileName(options);
+					return context.workspace.workspaces.initOptions.typescript.tsdk + '/' + context.workspace.workspaces.ts.getDefaultLibFileName(options);
 				}
 			},
 			getProjectVersion: () => projectVersion.toString(),
@@ -177,10 +172,10 @@ export async function createProject(params: ProjectParams) {
 			getCompilationSettings: () => parsedCommandLine.options,
 			getScriptVersion,
 			getScriptSnapshot,
-			getTypeScriptModule: () => ts,
+			getTypeScriptModule: () => context.workspace.workspaces.ts,
 		};
 
-		if (initOptions.noProjectReferences) {
+		if (context.workspace.workspaces.initOptions.noProjectReferences) {
 			host.getProjectReferences = undefined;
 			host.getCompilationSettings = () => ({
 				...parsedCommandLine.options,
@@ -189,13 +184,13 @@ export async function createProject(params: ProjectParams) {
 			});
 		}
 
-		if (tsLocalized) {
-			host.getLocalizedDiagnosticMessages = () => tsLocalized;
+		if (context.workspace.workspaces.tsLocalized) {
+			host.getLocalizedDiagnosticMessages = () => context.workspace.workspaces.tsLocalized;
 		}
 
-		for (const plugin of plugins) {
+		for (const plugin of context.workspace.workspaces.plugins) {
 			if (plugin.semanticService?.resolveLanguageServiceHost) {
-				host = plugin.semanticService.resolveLanguageServiceHost(ts, sys, tsConfig, host);
+				host = plugin.semanticService.resolveLanguageServiceHost(context.workspace.workspaces.ts, sys, context.tsConfig, host);
 			}
 		}
 
@@ -203,7 +198,7 @@ export async function createProject(params: ProjectParams) {
 
 		function getScriptVersion(fileName: string) {
 
-			const doc = documents.data.pathGet(fileName);
+			const doc = context.workspace.workspaces.documents.data.pathGet(fileName);
 			if (doc) {
 				return doc.version.toString();
 			}
@@ -212,7 +207,7 @@ export async function createProject(params: ProjectParams) {
 		}
 		function getScriptSnapshot(fileName: string) {
 
-			const doc = documents.data.pathGet(fileName);
+			const doc = context.workspace.workspaces.documents.data.pathGet(fileName);
 			if (doc) {
 				return doc.getSnapshot();
 			}
@@ -223,16 +218,16 @@ export async function createProject(params: ProjectParams) {
 			}
 
 			if (sys.fileExists(fileName)) {
-				if (initOptions.maxFileSize) {
+				if (context.workspace.workspaces.initOptions.maxFileSize) {
 					const fileSize = sys.getFileSize?.(fileName);
-					if (fileSize !== undefined && fileSize > initOptions.maxFileSize) {
-						console.warn(`IGNORING "${fileName}" because it is too large (${fileSize}bytes > ${initOptions.maxFileSize}bytes)`);
-						return ts.ScriptSnapshot.fromString('');
+					if (fileSize !== undefined && fileSize > context.workspace.workspaces.initOptions.maxFileSize) {
+						console.warn(`IGNORING "${fileName}" because it is too large (${fileSize}bytes > ${context.workspace.workspaces.initOptions.maxFileSize}bytes)`);
+						return context.workspace.workspaces.ts.ScriptSnapshot.fromString('');
 					}
 				}
 				const text = sys.readFile(fileName, 'utf8');
 				if (text !== undefined) {
-					const snapshot = ts.ScriptSnapshot.fromString(text);
+					const snapshot = context.workspace.workspaces.ts.ScriptSnapshot.fromString(text);
 					if (script) {
 						script.snapshot = snapshot;
 						script.snapshotVersion = script.version;
@@ -251,7 +246,7 @@ export async function createProject(params: ProjectParams) {
 		}
 	}
 	function dispose() {
-		vueLs?.dispose();
+		languageService?.dispose();
 		scripts.clear();
 		disposeWatchEvent();
 		disposeDocChange();

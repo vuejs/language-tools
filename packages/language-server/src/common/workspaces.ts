@@ -6,11 +6,11 @@ import { URI } from 'vscode-uri';
 import { DiagnosticModel, FileSystemHost, LanguageServerInitializationOptions, LanguageServerPlugin } from '../types';
 import { CancellationTokenHost } from './cancellationPipe';
 import { createDocuments } from './documents';
-import { ServerParams } from './server';
+import { ServerContext } from './server';
 import { createWorkspace, rootTsConfigNames, sortTsConfigs } from './workspace';
 
-export interface WorkspacesParams {
-	server: ServerParams;
+export interface WorkspacesContext {
+	server: ServerContext;
 	initParams: vscode.InitializeParams,
 	initOptions: LanguageServerInitializationOptions,
 	plugins: ReturnType<LanguageServerPlugin>[],
@@ -24,43 +24,40 @@ export interface WorkspacesParams {
 
 export interface Workspaces extends ReturnType<typeof createWorkspaces> { }
 
-export function createWorkspaces(params: WorkspacesParams) {
+export function createWorkspaces(context: WorkspacesContext) {
 
-	const { fileSystemHost, configurationHost, initParams, initOptions, documents, cancelTokenHost } = params;
-	const { connection, runtimeEnv } = params.server;
+	const workspaces = new Map<string, ReturnType<typeof createWorkspace>>();
 
 	let semanticTokensReq = 0;
 	let documentUpdatedReq = 0;
 
-	const workspaces = new Map<string, ReturnType<typeof createWorkspace>>();
-
-	documents.onDidChangeContent(params => {
-		updateDiagnostics(params.textDocument.uri);
+	context.documents.onDidChangeContent(({ textDocument }) => {
+		updateDiagnostics(textDocument.uri);
 	});
-	documents.onDidClose(params => {
-		connection.sendDiagnostics({ uri: params.textDocument.uri, diagnostics: [] });
+	context.documents.onDidClose(({ textDocument }) => {
+		context.server.connection.sendDiagnostics({ uri: textDocument.uri, diagnostics: [] });
 	});
-	fileSystemHost.onDidChangeWatchedFiles(params => {
-		const tsConfigChanges = params.changes.filter(change => rootTsConfigNames.includes(change.uri.substring(change.uri.lastIndexOf('/') + 1)));
+	context.fileSystemHost.onDidChangeWatchedFiles(({ changes }) => {
+		const tsConfigChanges = changes.filter(change => rootTsConfigNames.includes(change.uri.substring(change.uri.lastIndexOf('/') + 1)));
 		if (tsConfigChanges.length) {
 			reloadDiagnostics();
 		}
 		else {
-			onDriveFileUpdated();
+			updateDiagnosticsAndSemanticTokens();
 		}
 	});
-	runtimeEnv.onDidChangeConfiguration?.(async () => {
-		onDriveFileUpdated();
+	context.server.runtimeEnv.onDidChangeConfiguration?.(async () => {
+		updateDiagnosticsAndSemanticTokens();
 	});
 
 	return {
 		workspaces,
-		getProject,
+		getProject: getProjectAndTsConfig,
 		reloadProject,
 		add: (rootUri: URI) => {
 			if (!workspaces.has(rootUri.toString())) {
 				workspaces.set(rootUri.toString(), createWorkspace({
-					workspaces: params,
+					workspaces: context,
 					rootUri,
 				}));
 			}
@@ -76,7 +73,7 @@ export function createWorkspaces(params: WorkspacesParams) {
 
 	async function reloadProject() {
 
-		fileSystemHost.reload();
+		context.fileSystemHost.reload();
 
 		for (const [_, workspace] of workspaces) {
 			(await workspace).reload();
@@ -86,89 +83,89 @@ export function createWorkspaces(params: WorkspacesParams) {
 	}
 
 	function reloadDiagnostics() {
-		for (const doc of documents.data.values()) {
-			connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] });
+		for (const doc of context.documents.data.values()) {
+			context.server.connection.sendDiagnostics({ uri: doc.uri, diagnostics: [] });
 		}
 
-		onDriveFileUpdated();
+		updateDiagnosticsAndSemanticTokens();
 	}
 
-	async function onDriveFileUpdated() {
+	async function updateDiagnosticsAndSemanticTokens() {
 
 		const req = ++semanticTokensReq;
 
 		await updateDiagnostics();
 
+		const delay = await context.configurationHost?.getConfiguration<number>('volar.diagnostics.delay') ?? 200;
+		await shared.sleep(delay);
+
 		if (req === semanticTokensReq) {
-			if (initParams.capabilities.textDocument?.semanticTokens) {
-				connection.languages.semanticTokens.refresh();
+			if (context.initParams.capabilities.textDocument?.semanticTokens) {
+				context.server.connection.languages.semanticTokens.refresh();
 			}
-			if (initParams.capabilities.textDocument?.inlayHint) {
-				connection.languages.inlayHint.refresh();
+			if (context.initParams.capabilities.textDocument?.inlayHint) {
+				context.server.connection.languages.inlayHint.refresh();
 			}
 		}
 	}
+
 	async function updateDiagnostics(docUri?: string) {
 
-		if ((initOptions.diagnosticModel ?? DiagnosticModel.Push) !== DiagnosticModel.Push)
+		if ((context.initOptions.diagnosticModel ?? DiagnosticModel.Push) !== DiagnosticModel.Push)
 			return;
 
 		const req = ++documentUpdatedReq;
-		const delay = await configurationHost?.getConfiguration<number>('volar.diagnostics.delay') ?? 200;
-		const cancel = cancelTokenHost.createCancellationToken({
+		const delay = await context.configurationHost?.getConfiguration<number>('volar.diagnostics.delay') ?? 200;
+		const cancel = context.cancelTokenHost.createCancellationToken({
 			get isCancellationRequested() {
 				return req !== documentUpdatedReq;
 			},
 			onCancellationRequested: vscode.Event.None,
 		});
-		const changeDoc = docUri ? documents.data.uriGet(docUri) : undefined;
-		const otherDocs = [...documents.data.values()].filter(doc => doc !== changeDoc);
+		const changeDoc = docUri ? context.documents.data.uriGet(docUri) : undefined;
+		const otherDocs = [...context.documents.data.values()].filter(doc => doc !== changeDoc);
 
 		if (changeDoc) {
-
 			await shared.sleep(delay);
-
+			if (cancel.isCancellationRequested) {
+				return;
+			}
 			await sendDocumentDiagnostics(changeDoc.uri, changeDoc.version, cancel);
 		}
 
 		for (const doc of otherDocs) {
-
 			await shared.sleep(delay);
-
-			await sendDocumentDiagnostics(doc.uri, doc.version, cancel);
-
 			if (cancel.isCancellationRequested) {
 				break;
 			}
-		}
-
-		async function sendDocumentDiagnostics(uri: string, version: number, cancel: vscode.CancellationToken) {
-
-			if (cancel.isCancellationRequested)
-				return;
-
-			const project = (await getProject(uri))?.project;
-			if (!project) return;
-
-			const languageService = project.getLanguageService();
-			const errors = await languageService.doValidation(uri, cancel, result => {
-				connection.sendDiagnostics({ uri: uri, diagnostics: result.map(addVersion), version });
-			});
-
-			connection.sendDiagnostics({ uri: uri, diagnostics: errors.map(addVersion), version });
-
-			function addVersion(error: vscode.Diagnostic) {
-				if (error.data === undefined) {
-					error.data = { version };
-				}
-				else if (typeof error.data === 'object') {
-					error.data.version = version;
-				}
-				return error;
-			}
+			await sendDocumentDiagnostics(doc.uri, doc.version, cancel);
 		}
 	}
-	async function getProject(uri: string) {
+
+	async function sendDocumentDiagnostics(uri: string, version: number, cancel: vscode.CancellationToken) {
+
+		const project = (await getProjectAndTsConfig(uri))?.project;
+		if (!project) return;
+
+		const languageService = project.getLanguageService();
+		const errors = await languageService.doValidation(uri, cancel, result => {
+			context.server.connection.sendDiagnostics({ uri: uri, diagnostics: result.map(addVersion), version });
+		});
+
+		context.server.connection.sendDiagnostics({ uri: uri, diagnostics: errors.map(addVersion), version });
+
+		function addVersion(error: vscode.Diagnostic) {
+			if (error.data === undefined) {
+				error.data = { version };
+			}
+			else if (typeof error.data === 'object') {
+				error.data.version = version;
+			}
+			return error;
+		}
+	}
+
+	async function getProjectAndTsConfig(uri: string) {
 
 		const rootUris = [...workspaces.keys()]
 			.filter(rootUri => shared.isFileInDir(shared.getPathOfUri(uri), shared.getPathOfUri(rootUri)))
@@ -176,9 +173,9 @@ export function createWorkspaces(params: WorkspacesParams) {
 
 		for (const rootUri of rootUris) {
 			const workspace = await workspaces.get(rootUri);
-			const project = await workspace?.getProjectAndTsConfig(uri);
-			if (project) {
-				return project;
+			const projectAndTsConfig = await workspace?.getProjectAndTsConfig(uri);
+			if (projectAndTsConfig) {
+				return projectAndTsConfig;
 			}
 		}
 

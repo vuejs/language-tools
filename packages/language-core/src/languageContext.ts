@@ -136,6 +136,7 @@ export function createLanguageContext(
 				// delete
 				virtualFiles.delete(fileName);
 				shouldUpdateTsProject = true;
+				virtualFilesUpdatedNum++;
 				continue;
 			}
 
