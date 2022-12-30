@@ -5,7 +5,7 @@ import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
 import { createProject, Project } from './project';
 import { getInferredCompilerOptions } from './utils/inferredCompilerOptions';
-import { loadCustomPlugins } from './utils/serverConfig';
+import { loadServerConfig } from './utils/serverConfig';
 import { createUriMap } from './utils/uriMap';
 import { WorkspacesContext } from './workspaces';
 
@@ -20,7 +20,7 @@ export async function createWorkspace(context: WorkspaceContext) {
 
 	let inferredProject: Project | undefined;
 
-	const workspacePlugins = loadCustomPlugins(shared.getPathOfUri(context.rootUri.toString()), context.workspaces.initOptions.configFilePath);
+	const serverConfig = loadServerConfig(shared.getPathOfUri(context.rootUri.toString()), context.workspaces.initOptions.configFilePath);
 	const sys = context.workspaces.fileSystemHost.getWorkspaceFileSystem(context.rootUri);
 	const documentRegistry = context.workspaces.ts.createDocumentRegistry(sys.useCaseSensitiveFileNames, shared.getPathOfUri(context.rootUri.toString()));
 	const projects = createUriMap<Project>();
@@ -86,10 +86,10 @@ export async function createWorkspace(context: WorkspaceContext) {
 				const inferOptions = await getInferredCompilerOptions(context.workspaces.ts, context.workspaces.configurationHost);
 				return createProject({
 					workspace: context,
-					workspacePlugins,
 					rootUri: context.rootUri,
 					tsConfig: inferOptions,
 					documentRegistry,
+					serverConfig,
 				});
 			})();
 		}
@@ -218,7 +218,7 @@ export async function createWorkspace(context: WorkspaceContext) {
 		if (!project) {
 			project = createProject({
 				workspace: context,
-				workspacePlugins,
+				serverConfig,
 				rootUri: URI.parse(shared.getUriByPath(path.dirname(tsConfig))),
 				tsConfig,
 				documentRegistry,

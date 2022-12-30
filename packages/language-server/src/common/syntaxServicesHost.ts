@@ -1,7 +1,7 @@
 import * as embedded from '@volar/language-service';
 import { URI } from 'vscode-uri';
 import { LanguageServerInitializationOptions, LanguageServerPlugin, RuntimeEnvironment } from '../types';
-import { loadCustomPlugins } from './utils/serverConfig';
+import { loadServerConfig } from './utils/serverConfig';
 
 // fix build
 import type * as _ from 'vscode-languageserver-textdocument';
@@ -46,6 +46,7 @@ export function createSyntaxServicesHost(
 			configurationHost: configHost,
 			fileSystemProvider: runtimeEnv.fileSystemProvide,
 		};
+		const serverConfig = loadServerConfig(rootUri.fsPath, initOptions.configFilePath);
 		const serviceContext = embedded.createDocumentServiceContext({
 			ts,
 			env,
@@ -54,7 +55,7 @@ export function createSyntaxServicesHost(
 			},
 			getPlugins() {
 				return [
-					...loadCustomPlugins(rootUri.fsPath, initOptions.configFilePath),
+					...serverConfig?.plugins ?? [],
 					...plugins.map(plugin => plugin.syntacticService?.getServicePlugins?.(serviceContext) ?? []).flat(),
 				];
 			},
