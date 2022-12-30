@@ -89,8 +89,8 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			client.sendRequest(GetVueCompilerOptionsRequest.type, { uri: fileUri.toString() }),
 			vueDoc ? client.sendRequest(ParseSFCRequest.type, vueDoc.getText()) : undefined,
 		]);
-		const vueMod = getWorkspacePackageJson(fileUri.fsPath, 'vue');
-		const domMod = getWorkspacePackageJson(fileUri.fsPath, '@vue/compiler-dom');
+		const vueMod = getPackageJsonOfWorkspacePackage(fileUri.fsPath, 'vue');
+		const domMod = getPackageJsonOfWorkspacePackage(fileUri.fsPath, '@vue/runtime-dom');
 		const problems: {
 			title: string;
 			message: string;
@@ -128,34 +128,34 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			}
 		}
 
-		// check vue version < 2.7 but @vue/compiler-dom missing
+		// check vue version < 2.7 but @vue/runtime-dom missing
 		if (vueMod && semver.lt(vueMod.json.version, '2.7.0') && !domMod) {
 			problems.push({
-				title: '`@vue/compiler-dom` missing for Vue 2',
+				title: '`@vue/runtime-dom` missing for Vue 2',
 				message: [
-					'Vue 2 does not have JSX types definitions, so template type checking will not work correctly. You can resolve this problem by installing `@vue/compiler-dom` and adding it to your project\'s `devDependencies`.',
+					'Vue 2 does not have JSX types definitions, so template type checking will not work correctly. You can resolve this problem by installing `@vue/runtime-dom` and adding it to your project\'s `devDependencies`.',
 					'',
 					'- vue: ' + vueMod.path,
 				].join('\n'),
 			});
 		}
 
-		// check vue version >= 2.7 and < 3 but installed @vue/compiler-dom
+		// check vue version >= 2.7 and < 3 but installed @vue/runtime-dom
 		if (vueMod && semver.gte(vueMod.json.version, '2.7.0') && semver.lt(vueMod.json.version, '3.0.0') && domMod) {
 			problems.push({
-				title: 'Unnecessary `@vue/compiler-dom`',
+				title: 'Unnecessary `@vue/runtime-dom`',
 				message: [
-					'Vue 2.7 already includes JSX type definitions. You can remove the `@vue/compiler-dom` dependency from package.json.',
+					'Vue 2.7 already includes JSX type definitions. You can remove the `@vue/runtime-dom` dependency from package.json.',
 					'',
 					'- vue: ' + vueMod.path,
-					'- @vue/compiler-dom: ' + domMod.path,
+					'- @vue/runtime-dom: ' + domMod.path,
 				].join('\n'),
 			});
 		}
 
 		// check vue-tsc version same with extension version
 		if (vscode.workspace.getConfiguration('volar').get<boolean>('doctor.checkVueTsc')) {
-			const vueTscMod = getWorkspacePackageJson(fileUri.fsPath, 'vue-tsc');
+			const vueTscMod = getPackageJsonOfWorkspacePackage(fileUri.fsPath, 'vue-tsc');
 			if (vueTscMod && vueTscMod.json.version !== context.extension.packageJSON.version) {
 				problems.push({
 					title: 'Different `vue-tsc` version',
@@ -169,7 +169,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		}
 
 		// check @types/node > 18.8.0 && < 18.11.1
-		const typesNodeMod = getWorkspacePackageJson(fileUri.fsPath, '@types/node');
+		const typesNodeMod = getPackageJsonOfWorkspacePackage(fileUri.fsPath, '@types/node');
 		if (typesNodeMod && semver.gte(typesNodeMod.json.version, '18.8.1') && semver.lte(typesNodeMod.json.version, '18.11.0')) {
 			problems.push({
 				title: 'Incompatible `@types/node` version',
@@ -245,7 +245,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 	}
 }
 
-function getWorkspacePackageJson(folder: string, pkg: string): { path: string, json: { version: string; }; } | undefined {
+function getPackageJsonOfWorkspacePackage(folder: string, pkg: string): { path: string, json: { version: string; }; } | undefined {
 	try {
 		const path = require.resolve(pkg + '/package.json', { paths: [folder] });
 		return {
