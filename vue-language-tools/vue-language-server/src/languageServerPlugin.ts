@@ -107,11 +107,11 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 		},
 		syntacticService: {
 			getLanguageModules(ts, env) {
-				const vueLanguagePlugins = vue2.getDefaultVueLanguagePlugins(ts, shared.getPathOfUri(env.rootUri.toString()), {}, {}, []);
-				const vueExts = getVueExts(['.vue']);
+				const vueOptions: vue.VueCompilerOptions = { extensions: getVueExts(['.vue']) };
+				const vueLanguagePlugins = vue2.getDefaultVueLanguagePlugins(ts, shared.getPathOfUri(env.rootUri.toString()), {}, vueOptions, []);
 				const vueLanguageModule: embedded.LanguageModule = {
 					createFile(fileName, snapshot) {
-						if (vueExts.some(ext => fileName.endsWith(ext))) {
+						if (vueOptions.extensions?.some(ext => fileName.endsWith(ext))) {
 							return new vue2.VueFile(fileName, snapshot, ts, vueLanguagePlugins);
 						}
 					},
