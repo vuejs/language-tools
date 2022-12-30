@@ -29,7 +29,7 @@ export default function (options: {
 		codeLens: {
 
 			on(document) {
-				return worker(document.uri, async (vueFile) => {
+				return worker(document.uri, async () => {
 
 					const isEnabled = await context.env.configurationHost?.getConfiguration<boolean>('volar.codeLens.references') ?? true;
 
@@ -38,7 +38,7 @@ export default function (options: {
 
 					const result: vscode.CodeLens[] = [];
 
-					for (const [_, map] of options.documents.getMapsByVirtualFileName(vueFile.fileName)) {
+					for (const [_, map] of options.documents.getMapsBySourceFileUri(document.uri)?.maps ?? []) {
 						for (const mapping of map.map.mappings) {
 
 							if (!mapping.data.referencesCodeLens)
