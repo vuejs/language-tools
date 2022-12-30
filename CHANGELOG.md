@@ -1,13 +1,14 @@
 # Changelog
 
-## 1.0.18 (2022/12/26)
+## 1.0.19 (2022/12/31)
 
-- feat: check deprecated properties for `vueCompilerOptions` in tsconfig
-- fix: auto add spaces for `{{}}` not working if template block not at the top
-- fix: remove duplicate file watchers for .vue files
-- fix: auto complete randomly report `[TS Error] { }` and failed ([#2190](https://github.com/johnsoncodehk/volar/issues/2190))
-- fix: cross-file renaming cannot be performed consecutively
-- fix: should not report unknown tag error without `strictTemplates` enabled ([#2255](https://github.com/johnsoncodehk/volar/issues/2255))
+- feat: add `experimentalAdditionalLanguageModules` option for `vueCompilerOptions` ([#2267](https://github.com/johnsoncodehk/volar/issues/2267))
+- fix: TS `typescript/javascript.preferences.autoImportFileExcludePatterns` setting not working
+- fix: formatting not working for extra vue file extensions ([#2263](https://github.com/johnsoncodehk/volar/issues/2263))
+- fix(doctor): accidentally report `@vue/compiler-dom` warning ([#2262](https://github.com/johnsoncodehk/volar/issues/2262))
+- fix(vue-component-meta): `required` property incorrect ([#2256](https://github.com/johnsoncodehk/volar/issues/2256))
+- fix(preview): cannot start preview if project never start run vite server ([#2223](https://github.com/johnsoncodehk/volar/issues/2223))
+- fix: references codeLens not working
 
 ### Out Gold Sponsors
 
@@ -22,6 +23,15 @@
 	<td align="center" valign="middle"><a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/prefect.svg" height="50" /></a></td>
 	<td align="center" valign="middle"><a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/365talents.png" height="70" /></a></td>
 </tr></table>
+
+## 1.0.18 (2022/12/26)
+
+- feat: check deprecated properties for `vueCompilerOptions` in tsconfig
+- fix: auto add spaces for `{{}}` not working if template block not at the top
+- fix: remove duplicate file watchers for .vue files
+- fix: auto complete randomly report `[TS Error] { }` and failed ([#2190](https://github.com/johnsoncodehk/volar/issues/2190))
+- fix: cross-file renaming cannot be performed consecutively
+- fix: should not report unknown tag error without `strictTemplates` enabled ([#2255](https://github.com/johnsoncodehk/volar/issues/2255))
 
 ## 1.0.17 (2022/12/26)
 
