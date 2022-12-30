@@ -472,7 +472,7 @@ function createSchemaResolvers(
 				name: tag.name,
 				text: tag.text?.map(part => part.text).join(''),
 			})),
-			required: !Boolean((prop.declarations?.[0] as ts.ParameterDeclaration)?.questionToken ?? false),
+			required: !(prop.flags & ts.SymbolFlags.Optional),
 			type: typeChecker.typeToString(subtype),
 			rawType: rawType ? subtype : undefined,
 			schema,
