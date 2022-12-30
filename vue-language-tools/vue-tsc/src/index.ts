@@ -1,4 +1,4 @@
-import * as ts from 'typescript/lib/tsserverlibrary';
+import * as ts from 'typescript';
 import * as vue from '@volar/vue-language-core';
 import * as vueTs from '@volar/vue-typescript';
 import { state } from './shared';
@@ -86,12 +86,12 @@ export function createProgram(
 		const vueTsLs = vueTs.createLanguageService(vueLsHost);
 
 		program = vueTsLs.getProgram() as (ts.Program & { __vue: ProgramContext; });
-		program!.__vue = ctx;
+		program.__vue = ctx;
 
 		function getVueCompilerOptions(): vue.VueCompilerOptions {
 			const tsConfig = ctx.options.options.configFilePath;
 			if (typeof tsConfig === 'string') {
-				return vue.createParsedCommandLine(ts, ts.sys, tsConfig, []).vueOptions;
+				return vue.createParsedCommandLine(ts as any, ts.sys, tsConfig, []).vueOptions;
 			}
 			return {};
 		}

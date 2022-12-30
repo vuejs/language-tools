@@ -237,13 +237,13 @@ export function createLanguageService(
 	settings?: Settings,
 ) {
 
-	const vueLanguageModule = vue.createLanguageModule(
+	const vueLanguageModules = vue.createLanguageModules(
 		host.getTypeScriptModule(),
 		host.getCurrentDirectory(),
 		host.getCompilationSettings(),
 		host.getVueCompilationSettings(),
 	);
-	const core = embedded.createLanguageContext(host, [vueLanguageModule]);
+	const core = embedded.createLanguageContext(host, vueLanguageModules);
 	const languageServiceContext = embeddedLS.createLanguageServiceContext({
 		env,
 		host,

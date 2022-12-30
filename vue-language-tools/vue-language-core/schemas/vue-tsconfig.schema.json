@@ -60,6 +60,10 @@
 					"default": [ ],
 					"markdownDescription": "Plugins to be used in the SFC compiler."
 				},
+				"hooks": {
+					"type": "array",
+					"markdownDescription": "https://github.com/johnsoncodehk/volar/pull/2217"
+				},
 				"optionsWrapper": {
 					"type": "array",
 					"default": [
@@ -107,9 +111,9 @@
 					},
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1969"
 				},
-				"hooks": {
+				"experimentalAdditionalLanguageModules": {
 					"type": "array",
-					"markdownDescription": "https://github.com/johnsoncodehk/volar/pull/2217"
+					"markdownDescription": "https://github.com/johnsoncodehk/volar/pull/2267"
 				}
 			}
 		}

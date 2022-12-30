@@ -7,13 +7,13 @@ import * as localTypes from './utils/localTypes';
 import { resolveVueCompilerOptions } from './utils/ts';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
-export function createLanguageModule(
+export function createLanguageModules(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	rootDir: string,
 	compilerOptions: ts.CompilerOptions,
 	_vueCompilerOptions: VueCompilerOptions,
 	extraPlugins: VueLanguagePlugin[] = [],
-): embedded.LanguageModule {
+): embedded.LanguageModule[] {
 
 	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);
 	const vueLanguagePlugin = getDefaultVueLanguagePlugins(
@@ -97,7 +97,10 @@ export function createLanguageModule(
 		},
 	};
 
-	return languageModule;
+	return [
+		languageModule,
+		...vueCompilerOptions.experimentalAdditionalLanguageModules?.map(module => require(module)) ?? [],
+	];
 
 	function getSharedTypesFiles(fileNames: string[]) {
 		const moduleFiles = fileNames.filter(fileName => vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext)));

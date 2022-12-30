@@ -79,6 +79,15 @@ function createParsedCommandLineBase(
 		...content.raw.vueCompilerOptions,
 	};
 	
+	vueOptions.plugins = vueOptions.plugins?.map(plugin => {
+		try {
+			plugin = require.resolve(plugin, { paths: [folder] });
+		}
+		catch (error) {
+			console.error(error);
+		}
+		return plugin;
+	});
 	vueOptions.hooks = vueOptions.hooks?.map(hook => {
 		try {
 			hook = require.resolve(hook, { paths: [folder] });
@@ -87,6 +96,15 @@ function createParsedCommandLineBase(
 			console.error(error);
 		}
 		return hook;
+	});
+	vueOptions.experimentalAdditionalLanguageModules = vueOptions.experimentalAdditionalLanguageModules?.map(module => {
+		try {
+			module = require.resolve(module, { paths: [folder] });
+		}
+		catch (error) {
+			console.error(error);
+		}
+		return module;
 	});
 
 	return {
@@ -148,6 +166,7 @@ export function resolveVueCompilerOptions(vueOptions: VueCompilerOptions): Resol
 		narrowingTypesInInlineHandlers: vueOptions.narrowingTypesInInlineHandlers ?? false,
 		plugins: vueOptions.plugins ?? [],
 		hooks: vueOptions.hooks ?? [],
+		experimentalAdditionalLanguageModules: vueOptions.experimentalAdditionalLanguageModules ?? [],
 
 		// experimental
 		experimentalResolveStyleCssClasses: vueOptions.experimentalResolveStyleCssClasses ?? 'scoped',

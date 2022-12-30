@@ -22,14 +22,14 @@ const plugin: LanguageServerPlugin<LanguageServerInitializationOptions, vue.Lang
 				};
 			},
 			getLanguageModules(host) {
-				const vueLanguageModule = vue.createLanguageModule(
+				const vueLanguageModules = vue.createLanguageModules(
 					host.getTypeScriptModule(),
 					host.getCurrentDirectory(),
 					host.getCompilationSettings(),
 					host.getVueCompilationSettings(),
 				);
 				return [
-					vueLanguageModule,
+					...vueLanguageModules,
 					svelteLanguageModule,
 				];
 			},

@@ -168,13 +168,13 @@ export function baseCreate(
 			return _host[prop as keyof typeof _host];
 		},
 	}) as vue.LanguageServiceHost;
-	const vueLanguageModule = vue.createLanguageModule(
+	const vueLanguageModules = vue.createLanguageModules(
 		host.getTypeScriptModule(),
 		host.getCurrentDirectory(),
 		host.getCompilationSettings(),
 		host.getVueCompilationSettings(),
 	);
-	const core = embedded.createLanguageContext(host, [vueLanguageModule]);
+	const core = embedded.createLanguageContext(host, vueLanguageModules);
 	const proxyApis: Partial<ts.LanguageServiceHost> = checkerOptions.forceUseTs ? {
 		getScriptKind: (fileName) => {
 			if (fileName.endsWith('.vue.js')) {

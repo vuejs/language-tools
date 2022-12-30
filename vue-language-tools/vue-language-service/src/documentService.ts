@@ -55,7 +55,7 @@ export function createDocumentService(
 	env: embeddedLS.LanguageServicePluginContext['env'],
 ) {
 
-	const vueLanguageModule = vue.createLanguageModule(
+	const vueLanguageModules = vue.createLanguageModules(
 		ts,
 		shared.getPathOfUri(env.rootUri.toString()),
 		{},
@@ -65,7 +65,7 @@ export function createDocumentService(
 		ts,
 		env,
 		getLanguageModules() {
-			return [vueLanguageModule];
+			return vueLanguageModules;
 		},
 		getPlugins() {
 			return plugins;

@@ -42,13 +42,13 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 				};
 			},
 			getLanguageModules(host) {
-				const vueLanguageModule = vue2.createLanguageModule(
+				const vueLanguageModules = vue2.createLanguageModules(
 					host.getTypeScriptModule(),
 					host.getCurrentDirectory(),
 					host.getCompilationSettings(),
 					host.getVueCompilationSettings(),
 				);
-				return [vueLanguageModule];
+				return vueLanguageModules;
 			},
 			getServicePlugins(host, service) {
 				const settings: vue.Settings = {};
