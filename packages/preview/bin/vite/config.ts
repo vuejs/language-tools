@@ -180,12 +180,6 @@ function __createAppProxy(...args) {
     }
     function installGoToCode() {
         window.addEventListener('scroll', updateOverlay);
-        window.addEventListener('message', function (event) {
-            var _a;
-            if (((_a = event.data) === null || _a === void 0 ? void 0 : _a.command) === 'selectElement') {
-                enable();
-            }
-        });
         window.addEventListener('pointerdown', function (ev) {
             disable(true);
         });

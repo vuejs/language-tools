@@ -191,11 +191,6 @@ export default app => {
 	function installGoToCode() {
 
 		window.addEventListener('scroll', updateOverlay);
-		window.addEventListener('message', event => {
-			if (event.data?.command === 'selectElement') {
-				enable();
-			}
-		});
 		window.addEventListener('pointerdown', event => {
 			disable(true);
 		});

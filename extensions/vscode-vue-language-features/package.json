@@ -596,7 +596,7 @@
 				},
 				"volar.preview.backgroundColor": {
 					"type": "string",
-					"default": "#f0f0f0",
+					"default": "#fff",
 					"description": "Component preview background color."
 				},
 				"volar.preview.transparentGrid": {
@@ -686,24 +686,6 @@
 				"icon": "images/nuxt-logo.svg"
 			},
 			{
-				"command": "volar.action.selectElement",
-				"title": "Go to Code",
-				"category": "Volar",
-				"icon": "$(search)"
-			},
-			{
-				"command": "volar.action.openInBrowser",
-				"title": "Open in Browser",
-				"category": "Volar",
-				"icon": "$(link-external)"
-			},
-			{
-				"command": "workbench.action.webview.reloadWebviewAction",
-				"title": "Refresh",
-				"category": "Volar",
-				"icon": "$(refresh)"
-			},
-			{
 				"command": "volar.selectTypeScriptVersion",
 				"title": "Select TypeScript Version...",
 				"category": "Volar"
@@ -749,14 +731,6 @@
 					"when": "editorLangId == vue"
 				},
 				{
-					"command": "volar.action.selectElement",
-					"when": "volarPreviewFocus"
-				},
-				{
-					"command": "volar.action.openInBrowser",
-					"when": "volarPreviewFocus"
-				},
-				{
 					"command": "volar.selectTypeScriptVersion",
 					"when": "volar.activated"
 				}
@@ -775,21 +749,6 @@
 				{
 					"command": "volar.action.nuxt",
 					"when": "editorLangId == vue && config.volar.icon.preview && volar.foundNuxtDir",
-					"group": "navigation"
-				},
-				{
-					"command": "volar.action.selectElement",
-					"when": "volarPreviewFocus",
-					"group": "navigation"
-				},
-				{
-					"command": "volar.action.openInBrowser",
-					"when": "volarPreviewFocus",
-					"group": "navigation"
-				},
-				{
-					"command": "workbench.action.webview.reloadWebviewAction",
-					"when": "volarPreviewFocus",
 					"group": "navigation"
 				}
 			],

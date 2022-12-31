@@ -8,11 +8,6 @@ import { getLocalHostAvailablePort } from '../utils/http';
 import { BaseLanguageClient } from 'vscode-languageclient';
 import { ParseSFCRequest } from '@volar/vue-language-server';
 
-interface PreviewState {
-	mode: 'vite' | 'nuxt',
-	fileName: path.OsPath,
-}
-
 const enum PreviewType {
 	Webview = 'volar-webview',
 	ExternalBrowser = 'volar-start-server',
@@ -21,10 +16,7 @@ const enum PreviewType {
 
 export async function register(context: vscode.ExtensionContext, client: BaseLanguageClient) {
 
-	const panels = new Set<vscode.WebviewPanel>();
-	const panelUrl = new Map<vscode.WebviewPanel, string>();
-	let _activePreview: vscode.WebviewPanel | undefined;
-	let externalBrowserPanel: vscode.WebviewPanel | undefined;
+	let _loadingPanel: vscode.WebviewPanel | undefined;
 	let avoidUpdateOnDidChangeActiveTextEditor = false;
 	let updateComponentPreview: Function | undefined;
 
@@ -144,7 +136,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 					const bgSrc = webviewView.webview.asWebviewUri(bgPath);
 
 					webviewView.webview.html = '';
-					webviewView.webview.html = getWebviewContent(url, undefined, bgSrc.toString());
+					webviewView.webview.html = getWebviewContent(url, bgSrc.toString());
 				}
 				else {
 					webviewView.webview.postMessage({
@@ -154,20 +146,6 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 					});
 				}
 			}
-		}
-	}
-
-	class FinderPanelSerializer implements vscode.WebviewPanelSerializer {
-		async deserializeWebviewPanel(panel: vscode.WebviewPanel, state: PreviewState) {
-
-			const terminal = vscode.window.terminals.find(terminal => terminal.name.startsWith('volar-preview:'));
-			if (!terminal) {
-				return; // don't create server because maybe user closed it intentionally
-			}
-
-			const port = await openPreview(PreviewType.Webview, state.fileName, state.mode, panel);
-
-			panel.webview.html = getWebviewContent(`http://localhost:${port}`, state);
 		}
 	}
 
@@ -184,34 +162,15 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 
 		baseOptions['kill'] = { label: 'Kill Preview Server' };
 		baseOptions['browser'] = { label: 'Open in Browser' };
-
-		for (const panel of panels) {
-			urlOptions['url::' + panelUrl.get(panel)] = { label: 'Input WebView URL', detail: panelUrl.get(panel) };
-		}
-
 		highlight['highlight-on'] = { label: (highlightDomElements ? '• ' : '') + 'Highlight DOM Elements' };
 		highlight['highlight-off'] = { label: (!highlightDomElements ? '• ' : '') + `Don't Highlight DOM Elements` };
 
 		const key = await quickPick([baseOptions, urlOptions, highlight]);
 
-		if (key?.startsWith('url::')) {
-			const url = key.split('::')[1];
-			const input = await vscode.window.showInputBox({ value: url });
-			for (const panel of panels) {
-				if (panelUrl.get(panel) === url) {
-					if (input !== undefined && input !== statusBar.text) {
-						panel.webview.html = getWebviewContent(input);
-					}
-				}
-			}
-		}
 		if (key === 'kill') {
 			for (const terminal of vscode.window.terminals) {
 				if (terminal.name.startsWith('volar-preview:')) {
 					terminal.dispose();
-				}
-				for (const panel of panels) {
-					panel.dispose();
 				}
 			}
 		}
@@ -242,11 +201,12 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			[PreviewType.Webview]: {
 				label: 'Preview Vite App',
 				detail: vscode.workspace.rootPath && viteConfigFile ? path.relative(vscode.workspace.rootPath as path.OsPath, viteConfigFile) : viteConfigFile,
+				description: 'Press `Alt` to use go to code feature',
 			},
 			[PreviewType.ExternalBrowser]: {
 				label: 'Preview Vite App in External Browser',
 				detail: vscode.workspace.rootPath && viteConfigFile ? path.relative(vscode.workspace.rootPath as path.OsPath, viteConfigFile) : viteConfigFile,
-				description: 'Press `Alt` to use go to code in Browser',
+				description: 'Press `Alt` to use go to code feature',
 			},
 			[PreviewType.ExternalBrowser_Component]: {
 				label: `Preview Component in External Browser`,
@@ -281,17 +241,6 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 
 		openPreview(select as PreviewType, editor.document.fileName as path.OsPath, 'nuxt');
 	}));
-	context.subscriptions.push(vscode.commands.registerCommand('volar.action.selectElement', () => {
-		const panel = [...panels].find(panel => panel.active);
-		if (panel) {
-			panel.webview.postMessage({ sender: 'volar', command: 'selectElement' });
-		}
-	}));
-	context.subscriptions.push(vscode.commands.registerCommand('volar.action.openInBrowser', () => {
-		for (const panel of panels) {
-			vscode.env.openExternal(vscode.Uri.parse(panelUrl.get(panel)!));
-		}
-	}));
 	context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(e => {
 		updateSelectionHighlights(e.textEditor);
 	}));
@@ -306,7 +255,6 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		}
 	}));
 
-	context.subscriptions.push(vscode.window.registerWebviewPanelSerializer(PreviewType.Webview, new FinderPanelSerializer()));
 	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(updatePreviewIconStatus));
 
 	updatePreviewIconStatus();
@@ -372,7 +320,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			port = server.port;
 		}
 
-		const panel = _panel ?? vscode.window.createWebviewPanel(
+		const loadingPanel = _panel ?? vscode.window.createWebviewPanel(
 			previewType,
 			'Preview ' + path.relative((vscode.workspace.rootPath ?? '') as path.OsPath, configFile),
 			vscode.ViewColumn.Beside,
@@ -382,80 +330,47 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 				enableFindWidget: true,
 			},
 		);
-		trackActive();
 
 		const panelContext: vscode.Disposable[] = [];
 
-		panel.onDidDispose(() => {
+		loadingPanel.onDidDispose(() => {
 			for (const disposable of panelContext) {
 				disposable.dispose();
 			}
-			panels.delete(panel);
-			if (panel !== externalBrowserPanel && panels.size === 0) {
-				terminal?.dispose();
-			}
 		});
 
-		panelContext.push(panel.webview.onDidReceiveMessage(webviewEventHandler));
+		panelContext.push(loadingPanel.webview.onDidReceiveMessage(webviewEventHandler));
+
+		terminal.show();
+		_loadingPanel = loadingPanel;
 
 		if (previewType === PreviewType.ExternalBrowser) {
-			terminal.show();
-			panel.webview.html = getWebviewContent(`http://localhost:${port}`, undefined, undefined, true);
-			externalBrowserPanel = panel;
-			return;
+			loadingPanel.webview.html = getWebviewContent(`http://localhost:${port}`, undefined, 'openExternal');
 		}
 		else if (previewType === PreviewType.ExternalBrowser_Component) {
-			terminal.show();
 			const relativePath = shared.normalizeFileName(path.relative(path.dirname(configFile), fileName));
-			panel.webview.html = getWebviewContent(`http://localhost:${port}/__preview${relativePath}`, undefined, undefined, true);
-			externalBrowserPanel = panel;
-			return;
+			loadingPanel.webview.html = getWebviewContent(`http://localhost:${port}/__preview${relativePath}`, undefined, 'openExternal');
 		}
-
-		panels.add(panel);
-
-		if (previewType === PreviewType.Webview) {
-
-			panelContext.push(vscode.workspace.onDidChangeConfiguration(() => {
-				panel.webview.html = getWebviewContent(`http://localhost:${port}`, { fileName, mode });
-			}));
-			panel.webview.html = getWebviewContent(`http://localhost:${port}`, { fileName, mode });
+		else if (previewType === PreviewType.Webview) {
+			loadingPanel.webview.html = getWebviewContent(`http://localhost:${port}`, undefined, 'openSimpleBrowser');
 		}
 
 		return port;
 
-		function trackActive(): void {
-			panel.onDidChangeViewState(({ webviewPanel }) => {
-				setPreviewActiveContext(webviewPanel.active);
-				_activePreview = webviewPanel.active ? panel : undefined;
-			});
-
-			panel.onDidDispose(() => {
-				if (_activePreview === panel) {
-					setPreviewActiveContext(false);
-					_activePreview = undefined;
-				}
-			});
-		}
-
-		function setPreviewActiveContext(value: boolean) {
-			vscode.commands.executeCommand('setContext', 'volarPreviewFocus', value);
-		}
-
 		async function webviewEventHandler(message: any) {
 			switch (message.command) {
 				case 'openUrl': {
-					const url = message.data;
-					vscode.env.openExternal(vscode.Uri.parse(url));
+					const { url, external } = message.data;
+					if (external) {
+						vscode.env.openExternal(vscode.Uri.parse(url));
+					}
+					else {
+						vscode.commands.executeCommand('simpleBrowser.api.open', url, { preserveFocus: true, viewColumn: vscode.ViewColumn.Beside });
+					}
 					break;
 				}
-				case 'closeExternalBrowserPanel': {
-					externalBrowserPanel?.dispose();
-					break;
-				}
-				case 'urlChanged': {
-					const url = message.data;
-					panelUrl.set(panel, url);
+				case 'closeLoadingPanel': {
+					_loadingPanel?.dispose();
 					break;
 				}
 				case 'log': {
@@ -553,7 +468,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		return configFile;
 	}
 
-	function getWebviewContent(url: string, state?: PreviewState, bg?: string, openExternalOnLoaded?: boolean) {
+	function getWebviewContent(url: string, bg?: string, onLoadEvent?: 'openExternal' | 'openSimpleBrowser') {
 
 		const configs = vscode.workspace.getConfiguration('volar');
 
@@ -569,7 +484,6 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			<script>
 
 			const vscode = acquireVsCodeApi();
-			${state ? `vscode.setState(${JSON.stringify(state)});` : ''}
 
 			let preview;
 
@@ -610,9 +524,9 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 
 			function previewFrameLoaded() {
 				preview.onload = undefined;
-				${openExternalOnLoaded ? `
-					vscode.postMessage({ command: 'openUrl', data: '${url}' });
-					vscode.postMessage({ command: 'closeExternalBrowserPanel' });
+				${onLoadEvent ? `
+					vscode.postMessage({ command: 'openUrl', data: { url: '${url}', external: ${onLoadEvent === 'openExternal'} } });
+					vscode.postMessage({ command: 'closeLoadingPanel' });
 				` : `
 					preview.style.height = '100vh';
 					document.getElementById('loading').remove();
