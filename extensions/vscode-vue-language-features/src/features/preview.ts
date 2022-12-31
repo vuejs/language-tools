@@ -365,11 +365,8 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 						vscode.env.openExternal(vscode.Uri.parse(url));
 					}
 					else {
-						vscode.commands.executeCommand('simpleBrowser.api.open', url, { preserveFocus: true, viewColumn: vscode.ViewColumn.Beside });
+						vscode.commands.executeCommand('simpleBrowser.api.open', url, { preserveFocus: true, viewColumn: _loadingPanel?.viewColumn ?? vscode.ViewColumn.Beside });
 					}
-					break;
-				}
-				case 'closeLoadingPanel': {
 					_loadingPanel?.dispose();
 					break;
 				}
@@ -526,7 +523,6 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 				preview.onload = undefined;
 				${onLoadEvent ? `
 					vscode.postMessage({ command: 'openUrl', data: { url: '${url}', external: ${onLoadEvent === 'openExternal'} } });
-					vscode.postMessage({ command: 'closeLoadingPanel' });
 				` : `
 					preview.style.height = '100vh';
 					document.getElementById('loading').remove();
