@@ -18,7 +18,6 @@ export function getDefaultVueLanguagePlugins(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	compilerOptions: ts.CompilerOptions,
 	_vueCompilerOptions: VueCompilerOptions,
-	extraPlugins: VueLanguagePlugin[] = [],
 ) {
 
 	const _plugins: VueLanguagePlugin[] = [
@@ -31,7 +30,6 @@ export function getDefaultVueLanguagePlugins(
 		useVueSfcScriptsFormat,
 		useVueSfcTemplate,
 		useVueTsx,
-		...extraPlugins,
 	];
 	const pluginPaths = new Map<number, string>();
 	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);

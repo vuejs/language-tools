@@ -39,7 +39,7 @@ const plugin: LanguageServerPlugin<LanguageServerInitializationOptions, vue.Lang
 		},
 		syntacticService: {
 			getLanguageModules(ts) {
-				const vueLanguagePlugins = vue.getDefaultVueLanguagePlugins(ts, {}, {}, []);
+				const vueLanguagePlugins = vue.getDefaultVueLanguagePlugins(ts, {}, {});
 				const vueLanguageModule: LanguageModule = {
 					createFile(fileName, snapshot) {
 						if (fileName.endsWith('.vue')) {

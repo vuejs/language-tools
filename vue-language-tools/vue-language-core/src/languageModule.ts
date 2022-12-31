@@ -2,7 +2,7 @@ import type * as embedded from '@volar/language-core';
 import { posix as path } from 'path';
 import { getDefaultVueLanguagePlugins } from './plugins';
 import { VueFile } from './sourceFile';
-import { VueLanguagePlugin, VueCompilerOptions } from './types';
+import { VueCompilerOptions } from './types';
 import * as localTypes from './utils/localTypes';
 import { resolveVueCompilerOptions } from './utils/ts';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -11,7 +11,6 @@ export function createLanguageModules(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	compilerOptions: ts.CompilerOptions,
 	_vueCompilerOptions: VueCompilerOptions,
-	extraPlugins: VueLanguagePlugin[] = [],
 ): embedded.LanguageModule[] {
 
 	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);
@@ -19,7 +18,6 @@ export function createLanguageModules(
 		ts,
 		compilerOptions,
 		_vueCompilerOptions,
-		extraPlugins,
 	);
 
 	// from https://github.com/johnsoncodehk/volar/pull/1543

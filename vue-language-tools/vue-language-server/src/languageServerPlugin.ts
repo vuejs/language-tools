@@ -107,7 +107,7 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 		syntacticService: {
 			getLanguageModules(ts) {
 				const vueOptions: vue.VueCompilerOptions = { extensions: getVueExts(['.vue']) };
-				const vueLanguagePlugins = vue2.getDefaultVueLanguagePlugins(ts, {}, vueOptions, []);
+				const vueLanguagePlugins = vue2.getDefaultVueLanguagePlugins(ts, {}, vueOptions);
 				const vueLanguageModule: embedded.LanguageModule = {
 					createFile(fileName, snapshot) {
 						if (vueOptions.extensions?.some(ext => fileName.endsWith(ext))) {
