@@ -21,7 +21,7 @@
 
 <table><tr>
 	<td align="center" valign="middle"><a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/prefect.svg" height="50" /></a></td>
-	<td align="center" valign="middle"><a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/365talents.png" height="70" /></a></td>
+	<td align="center" valign="middle"><a href="https://github.com/365talents"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/365talents.png" height="70" /></a></td>
 </tr></table>
 
 ## 1.0.18 (2022/12/26)
