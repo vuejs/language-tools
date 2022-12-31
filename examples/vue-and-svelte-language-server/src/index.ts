@@ -1,7 +1,6 @@
 import { languageModule as svelteLanguageModule } from '@volar-examples/svelte-language-core';
 import useTsPlugin from '@volar-plugins/typescript';
 import { createLanguageServer, LanguageModule, LanguageServerInitializationOptions, LanguageServerPlugin } from '@volar/language-server/node';
-import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-core';
 
 const plugin: LanguageServerPlugin<LanguageServerInitializationOptions, vue.LanguageServiceHost> = () => {
@@ -24,7 +23,6 @@ const plugin: LanguageServerPlugin<LanguageServerInitializationOptions, vue.Lang
 			getLanguageModules(host) {
 				const vueLanguageModules = vue.createLanguageModules(
 					host.getTypeScriptModule(),
-					host.getCurrentDirectory(),
 					host.getCompilationSettings(),
 					host.getVueCompilationSettings(),
 				);
@@ -40,8 +38,8 @@ const plugin: LanguageServerPlugin<LanguageServerInitializationOptions, vue.Lang
 			},
 		},
 		syntacticService: {
-			getLanguageModules(ts, env) {
-				const vueLanguagePlugins = vue.getDefaultVueLanguagePlugins(ts, shared.getPathOfUri(env.rootUri.toString()), {}, {}, []);
+			getLanguageModules(ts) {
+				const vueLanguagePlugins = vue.getDefaultVueLanguagePlugins(ts, {}, {}, []);
 				const vueLanguageModule: LanguageModule = {
 					createFile(fileName, snapshot) {
 						if (fileName.endsWith('.vue')) {

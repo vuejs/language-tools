@@ -239,7 +239,6 @@ export function createLanguageService(
 
 	const vueLanguageModules = vue.createLanguageModules(
 		host.getTypeScriptModule(),
-		host.getCurrentDirectory(),
 		host.getCompilationSettings(),
 		host.getVueCompilationSettings(),
 	);

@@ -16,7 +16,6 @@ import * as CompilerVue2 from './utils/vue2TemplateCompiler';
 
 export function getDefaultVueLanguagePlugins(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	rootDir: string,
 	compilerOptions: ts.CompilerOptions,
 	_vueCompilerOptions: VueCompilerOptions,
 	extraPlugins: VueLanguagePlugin[] = [],
@@ -39,7 +38,7 @@ export function getDefaultVueLanguagePlugins(
 	if (typeof require?.resolve === 'function') {
 		for (const pluginPath of vueCompilerOptions.plugins) {
 			try {
-				const importPath = require.resolve(pluginPath, { paths: [rootDir] });
+				const importPath = require.resolve(pluginPath);
 				const plugin = require(importPath);
 				pluginPaths.set(_plugins.length, pluginPath);
 				_plugins.push(plugin);

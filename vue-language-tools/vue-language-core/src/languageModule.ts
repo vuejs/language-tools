@@ -9,7 +9,6 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 
 export function createLanguageModules(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	rootDir: string,
 	compilerOptions: ts.CompilerOptions,
 	_vueCompilerOptions: VueCompilerOptions,
 	extraPlugins: VueLanguagePlugin[] = [],
@@ -18,7 +17,6 @@ export function createLanguageModules(
 	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);
 	const vueLanguagePlugin = getDefaultVueLanguagePlugins(
 		ts,
-		rootDir,
 		compilerOptions,
 		_vueCompilerOptions,
 		extraPlugins,

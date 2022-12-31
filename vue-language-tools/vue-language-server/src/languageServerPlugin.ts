@@ -44,7 +44,6 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 			getLanguageModules(host) {
 				const vueLanguageModules = vue2.createLanguageModules(
 					host.getTypeScriptModule(),
-					host.getCurrentDirectory(),
 					host.getCompilationSettings(),
 					host.getVueCompilationSettings(),
 				);
@@ -106,9 +105,9 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 			},
 		},
 		syntacticService: {
-			getLanguageModules(ts, env) {
+			getLanguageModules(ts) {
 				const vueOptions: vue.VueCompilerOptions = { extensions: getVueExts(['.vue']) };
-				const vueLanguagePlugins = vue2.getDefaultVueLanguagePlugins(ts, shared.getPathOfUri(env.rootUri.toString()), {}, vueOptions, []);
+				const vueLanguagePlugins = vue2.getDefaultVueLanguagePlugins(ts, {}, vueOptions, []);
 				const vueLanguageModule: embedded.LanguageModule = {
 					createFile(fileName, snapshot) {
 						if (vueOptions.extensions?.some(ext => fileName.endsWith(ext))) {
