@@ -1,19 +1,21 @@
-import type { DocumentServiceRuntimeContext } from '../types';
-import { documentArgFeatureWorker } from '../utils/featureWorkers';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
+import type { LanguageServiceRuntimeContext } from '../types';
+import { languageFeatureWorker } from '../utils/featureWorkers';
 import * as vscode from 'vscode-languageserver-protocol';
 import * as shared from '@volar/shared';
 
-export function register(context: DocumentServiceRuntimeContext) {
+export function register(context: LanguageServiceRuntimeContext) {
 
-	return (document: TextDocument, color: vscode.Color, range: vscode.Range) => {
+	return (uri: string, color: vscode.Color, range: vscode.Range) => {
 
-		return documentArgFeatureWorker(
+		return languageFeatureWorker(
 			context,
-			document,
+			uri,
 			range,
-			(file) => !!file.capabilities.documentSymbol, // TODO: add color capabilitie setting
-			(range, map) => map.toGeneratedRanges(range),
+			(range, map, file) => {
+				if (file.capabilities.documentSymbol) // TODO: add color capability setting
+					return map.toGeneratedRanges(range);
+				return [];
+			},
 			(plugin, document, range) => plugin.getColorPresentations?.(document, color, range),
 			(data, map) => data.map(cp => {
 

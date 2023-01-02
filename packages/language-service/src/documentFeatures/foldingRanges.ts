@@ -1,16 +1,15 @@
-import type { DocumentServiceRuntimeContext } from '../types';
+import type { LanguageServiceRuntimeContext } from '../types';
 import { documentFeatureWorker } from '../utils/featureWorkers';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { transformFoldingRanges } from '@volar/transforms';
 import type * as _ from 'vscode-languageserver-protocol';
 
-export function register(context: DocumentServiceRuntimeContext) {
+export function register(context: LanguageServiceRuntimeContext) {
 
-	return (document: TextDocument) => {
+	return (uri: string) => {
 
 		return documentFeatureWorker(
 			context,
-			document,
+			uri,
 			file => !!file.capabilities.foldingRange,
 			(plugin, document) => plugin.getFoldingRanges?.(document),
 			(data, sourceMap) => transformFoldingRanges(data, range => sourceMap?.toSourceRange(range)),

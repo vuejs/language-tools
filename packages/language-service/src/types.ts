@@ -9,16 +9,6 @@ import { DocumentsAndSourceMaps } from './documents';
 
 export * from 'vscode-languageserver-protocol';
 
-export interface DocumentServiceRuntimeContext {
-	typescript: typeof import('typescript/lib/tsserverlibrary');
-	plugins: LanguageServicePlugin[];
-	pluginContext: LanguageServicePluginContext;
-	documents: DocumentsAndSourceMaps;
-	update(document: TextDocument): void;
-	updateVirtualFile(fileName: string, snapshot: ts.IScriptSnapshot): void;
-	prepareLanguageServices(document: TextDocument): void;
-};
-
 export interface LanguageServiceRuntimeContext {
 	host: LanguageServiceHost;
 	core: LanguageContext;

@@ -6,7 +6,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
-import { FileSystem, LanguageServerPlugin } from '../types';
+import { FileSystem, LanguageServerPlugin, ServerMode } from '../types';
 import { createUriMap } from './utils/uriMap';
 import { WorkspaceContext } from './workspace';
 import { ServerConfig } from './utils/serverConfig';
@@ -23,7 +23,18 @@ export type Project = ReturnType<typeof createProject>;
 
 export async function createProject(context: ProjectContext) {
 
-	const sys = context.workspace.workspaces.fileSystemHost.getWorkspaceFileSystem(context.rootUri);
+	const sys: FileSystem = context.workspace.workspaces.initOptions.serverMode === ServerMode.Syntactic
+		? {
+			newLine: '\n',
+			useCaseSensitiveFileNames: false,
+			fileExists: () => false,
+			readFile: () => undefined,
+			readDirectory: () => [],
+			getCurrentDirectory: () => '',
+			realpath: () => '',
+			resolvePath: () => '',
+		}
+		: context.workspace.workspaces.fileSystemHost.getWorkspaceFileSystem(context.rootUri);
 
 	let typeRootVersion = 0;
 	let projectVersion = 0;
@@ -66,7 +77,7 @@ export async function createProject(context: ProjectContext) {
 	function getLanguageService() {
 		if (!languageService) {
 
-			const languageModules = context.workspace.workspaces.plugins.map(plugin => plugin.semanticService?.getLanguageModules?.(languageServiceHost) ?? []).flat();
+			const languageModules = context.workspace.workspaces.plugins.map(plugin => plugin.getLanguageModules?.(languageServiceHost) ?? []).flat();
 			const languageContext = embedded.createLanguageContext(languageServiceHost, languageModules);
 			const languageServiceContext = embeddedLS.createLanguageServiceContext({
 				host: languageServiceHost,
@@ -74,7 +85,7 @@ export async function createProject(context: ProjectContext) {
 				getPlugins() {
 					return [
 						...context.serverConfig?.plugins ?? [],
-						...context.workspace.workspaces.plugins.map(plugin => plugin.semanticService?.getServicePlugins?.(languageServiceHost, languageService!) ?? []).flat(),
+						...context.workspace.workspaces.plugins.map(plugin => plugin.getServicePlugins?.(languageServiceHost, languageService!) ?? []).flat(),
 					];
 				},
 				env: {
@@ -189,8 +200,8 @@ export async function createProject(context: ProjectContext) {
 		}
 
 		for (const plugin of context.workspace.workspaces.plugins) {
-			if (plugin.semanticService?.resolveLanguageServiceHost) {
-				host = plugin.semanticService.resolveLanguageServiceHost(context.workspace.workspaces.ts, sys, context.tsConfig, host);
+			if (plugin.resolveLanguageServiceHost) {
+				host = plugin.resolveLanguageServiceHost(context.workspace.workspaces.ts, sys, context.tsConfig, host);
 			}
 		}
 

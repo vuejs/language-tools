@@ -4,8 +4,7 @@ import { FileSystemHost, LanguageServerInitializationOptions, LanguageServerPlug
 import { createCancellationTokenHost } from './cancellationPipe';
 import { createConfigurationHost } from './configurationHost';
 import { createDocuments } from './documents';
-import { createSyntaxServicesHost } from './syntaxServicesHost';
-import { setupSemanticCapabilities, setupSyntacticCapabilities } from './utils/registerFeatures';
+import { setupCapabilities } from './utils/registerFeatures';
 import { createWorkspaces } from './workspaces';
 
 export interface ServerContext {
@@ -21,7 +20,6 @@ export function createCommonLanguageServer(context: ServerContext) {
 	let roots: URI[] = [];
 	let fsHost: FileSystemHost | undefined;
 	let projects: ReturnType<typeof createWorkspaces> | undefined;
-	let documentServiceHost: ReturnType<typeof createSyntaxServicesHost> | undefined;
 	let configurationHost: ReturnType<typeof createConfigurationHost> | undefined;
 	let plugins: ReturnType<LanguageServerPlugin>[];
 
@@ -51,15 +49,8 @@ export function createCommonLanguageServer(context: ServerContext) {
 
 		configurationHost = initParams.capabilities.workspace?.configuration ? createConfigurationHost(initParams, context.connection) : undefined;
 
-		const serverMode = options.serverMode ?? ServerMode.Semantic;
-
-		setupSyntacticCapabilities(initParams.capabilities, result.capabilities, options);
-		await _createDocumentServiceHost();
-
-		if (serverMode === ServerMode.Semantic) {
-			setupSemanticCapabilities(initParams.capabilities, result.capabilities, options, plugins, getSemanticTokensLegend());
-			await createLanguageServiceHost();
-		}
+		setupCapabilities(initParams.capabilities, result.capabilities, options, plugins, getSemanticTokensLegend());
+		await createLanguageServiceHost();
 
 		try {
 			// show version on LSP logs
@@ -81,12 +72,10 @@ export function createCommonLanguageServer(context: ServerContext) {
 			context.connection.workspace.onDidChangeWorkspaceFolders(e => {
 
 				for (const folder of e.added) {
-					documentServiceHost?.add(URI.parse(folder.uri));
 					projects?.add(URI.parse(folder.uri));
 				}
 
 				for (const folder of e.removed) {
-					documentServiceHost?.remove(URI.parse(folder.uri));
 					projects?.remove(URI.parse(folder.uri));
 				}
 			});
@@ -119,33 +108,6 @@ export function createCommonLanguageServer(context: ServerContext) {
 	});
 	context.connection.listen();
 
-	async function _createDocumentServiceHost() {
-
-		const ts = context.runtimeEnv.loadTypescript(options.typescript.tsdk);
-
-		documentServiceHost = createSyntaxServicesHost(
-			context.runtimeEnv,
-			plugins,
-			ts,
-			configurationHost,
-			options,
-		);
-
-		for (const root of roots) {
-			documentServiceHost.add(root);
-		}
-
-		(await import('./features/documentFeatures')).register(
-			context.connection,
-			documents,
-			documentServiceHost,
-		);
-
-		for (const plugin of plugins) {
-			plugin.syntacticService?.onInitialize?.(context.connection);
-		}
-	}
-
 	async function createLanguageServiceHost() {
 
 		const ts = context.runtimeEnv.loadTypescript(options.typescript.tsdk);
@@ -175,7 +137,7 @@ export function createCommonLanguageServer(context: ServerContext) {
 		(await import('./features/languageFeatures')).register(context.connection, projects, initParams, cancelTokenHost, getSemanticTokensLegend());
 
 		for (const plugin of plugins) {
-			plugin.semanticService?.onInitialize?.(context.connection, getLanguageService as any);
+			plugin.onInitialize?.(context.connection, getLanguageService as any);
 		}
 
 		async function getLanguageService(uri: string) {

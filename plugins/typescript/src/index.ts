@@ -287,7 +287,7 @@ export default function (): LanguageServicePlugin {
 					return;
 				}
 
-				return tsLs2.doFormatting.onRange(document.uri, options_2, range);
+				return tsLs2.doFormatting.onRange(document.uri, range, options_2);
 			}
 		},
 

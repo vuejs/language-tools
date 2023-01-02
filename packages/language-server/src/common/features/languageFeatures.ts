@@ -19,6 +19,52 @@ export function register(
 	let lastCodeActionLs: embedded.LanguageService;
 	let lastCallHierarchyLs: embedded.LanguageService;
 
+	connection.onDocumentFormatting(async params => {
+		return worker(params.textDocument.uri, vueLs => {
+			return vueLs.format(params.textDocument.uri, params.options);
+		});
+	});
+	connection.onDocumentRangeFormatting(async params => {
+		return worker(params.textDocument.uri, vueLs => {
+			return vueLs.format(params.textDocument.uri, params.options, params.range);
+		});
+	});
+	connection.onDocumentOnTypeFormatting(async params => {
+		return worker(params.textDocument.uri, vueLs => {
+			return vueLs.format(params.textDocument.uri, params.options, undefined, params);
+		});
+	});
+	connection.onSelectionRanges(async params => {
+		return worker(params.textDocument.uri, vueLs => {
+			return vueLs.getSelectionRanges(params.textDocument.uri, params.positions);
+		});
+	});
+	connection.onFoldingRanges(async params => {
+		return worker(params.textDocument.uri, vueLs => {
+			return vueLs.getFoldingRanges(params.textDocument.uri);
+		});
+	});
+	connection.languages.onLinkedEditingRange(async params => {
+		return worker(params.textDocument.uri, vueLs => {
+			return vueLs.findLinkedEditingRanges(params.textDocument.uri, params.position);
+		});
+	});
+	connection.onDocumentSymbol(async params => {
+		return worker(params.textDocument.uri, vueLs => {
+			return vueLs.findDocumentSymbols(params.textDocument.uri);
+		});
+	});
+	connection.onDocumentColor(async params => {
+		return worker(params.textDocument.uri, vueLs => {
+			return vueLs.findDocumentColors(params.textDocument.uri);
+		});
+	});
+	connection.onColorPresentation(async params => {
+		return worker(params.textDocument.uri, vueLs => {
+			return vueLs.getColorPresentations(params.textDocument.uri, params.color, params.range);
+		});
+	});
+
 	connection.onCompletion(async (params) => {
 		return worker(params.textDocument.uri, async vueLs => {
 			lastCompleteUri = params.textDocument.uri;

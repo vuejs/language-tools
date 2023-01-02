@@ -41,45 +41,26 @@ export type LanguageServerPlugin<
 	C = embeddedLS.LanguageService
 > = (initOptions: A) => {
 
-	extraFileExtensions: ts.FileExtensionInfo[],
+	extraFileExtensions: ts.FileExtensionInfo[];
 
-	semanticService?: {
+	resolveLanguageServiceHost?(
+		ts: typeof import('typescript/lib/tsserverlibrary'),
+		sys: FileSystem,
+		tsConfig: string | ts.CompilerOptions,
+		host: embedded.LanguageServiceHost,
+	): B;
 
-		resolveLanguageServiceHost?(
-			ts: typeof import('typescript/lib/tsserverlibrary'),
-			sys: FileSystem,
-			tsConfig: string | ts.CompilerOptions,
-			host: embedded.LanguageServiceHost,
-		): B,
+	getLanguageModules?(host: B): embedded.LanguageModule[];
 
-		getLanguageModules?(host: B): embedded.LanguageModule[],
+	getServicePlugins?(
+		host: B,
+		service: embeddedLS.LanguageService,
+	): embeddedLS.LanguageServicePlugin[];
 
-		getServicePlugins?(
-			host: B,
-			service: embeddedLS.LanguageService,
-		): embeddedLS.LanguageServicePlugin[],
-
-		onInitialize?(
-			connection: vscode.Connection,
-			getLanguageService: (uri: string) => Promise<C>,
-		): void,
-	},
-
-	syntacticService?: {
-
-		getLanguageModules?(
-			ts: typeof import('typescript/lib/tsserverlibrary'),
-			env: embeddedLS.LanguageServicePluginContext['env'],
-		): embedded.LanguageModule[],
-
-		getServicePlugins?(
-			context: embeddedLS.DocumentServiceRuntimeContext,
-		): embeddedLS.LanguageServicePlugin[],
-
-		onInitialize?(
-			connection: vscode.Connection,
-		): void,
-	};
+	onInitialize?(
+		connection: vscode.Connection,
+		getLanguageService: (uri: string) => Promise<C>,
+	): void;
 };
 
 export enum ServerMode {

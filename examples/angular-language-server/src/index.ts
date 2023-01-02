@@ -5,32 +5,17 @@ import type { LanguageServicePlugin, DocumentsAndSourceMaps, Diagnostic } from '
 
 const plugin: LanguageServerPlugin = () => ({
 	extraFileExtensions: [{ extension: 'html', isMixedContent: true, scriptKind: 7 }],
-	semanticService: {
-		getLanguageModules(host) {
-			return [
-				createTsLanguageModule(host.getTypeScriptModule()),
-				createHtmlLanguageModule(host.getTypeScriptModule()),
-			];
-		},
-		getServicePlugins(_host, service) {
-			return [
-				createTsPlugin(),
-				createNgTemplateLsPlugin(service.context.documents),
-			];
-		},
+	getLanguageModules(host) {
+		return [
+			createTsLanguageModule(host.getTypeScriptModule()),
+			createHtmlLanguageModule(host.getTypeScriptModule()),
+		];
 	},
-	syntacticService: {
-		getLanguageModules(ts) {
-			return [
-				createTsLanguageModule(ts),
-				createHtmlLanguageModule(ts),
-			];
-		},
-		getServicePlugins() {
-			return [
-				createTsPlugin(),
-			];
-		}
+	getServicePlugins(_host, service) {
+		return [
+			createTsPlugin(),
+			createNgTemplateLsPlugin(service.context.documents),
+		];
 	},
 });
 

@@ -29,105 +29,82 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 
 	return {
 		extraFileExtensions,
-		semanticService: {
-			resolveLanguageServiceHost(ts, sys, tsConfig, host) {
-				let vueOptions: vue.VueCompilerOptions = {};
-				if (typeof tsConfig === 'string') {
-					vueOptions = vue2.createParsedCommandLine(ts, sys, tsConfig, []).vueOptions;
-				}
-				vueOptions.extensions = getVueExts(vueOptions.extensions ?? ['.vue']);
-				return {
-					...host,
-					getVueCompilationSettings: () => vueOptions,
-				};
-			},
-			getLanguageModules(host) {
-				const vueLanguageModules = vue2.createLanguageModules(
-					host.getTypeScriptModule(),
-					host.getCompilationSettings(),
-					host.getVueCompilationSettings(),
-				);
-				return vueLanguageModules;
-			},
-			getServicePlugins(host, service) {
-				const settings: vue.Settings = {};
-				if (initOptions.json) {
-					settings.json = { schemas: [] };
-					for (const blockType in initOptions.json.customBlockSchemaUrls) {
-						const url = initOptions.json.customBlockSchemaUrls[blockType];
-						settings.json.schemas?.push({
-							fileMatch: [`*.customBlock_${blockType}_*.json*`],
-							uri: new URL(url, service.context.pluginContext.env.rootUri.toString() + '/').toString(),
-						});
-					}
-				}
-				return vue.getLanguageServicePlugins(host, service, settings);
-			},
-			onInitialize(connection, getService) {
-
-				connection.onRequest(GetVueCompilerOptionsRequest.type, async params => {
-					const languageService = await getService(params.uri);
-					const host = languageService.context.host as vue.LanguageServiceHost;
-					return host.getVueCompilationSettings?.();
-				});
-
-				connection.onRequest(DetectNameCasingRequest.type, async params => {
-					const languageService = await getService(params.textDocument.uri);
-					return nameCasing.detect(languageService.context, params.textDocument.uri);
-				});
-
-				connection.onRequest(GetConvertTagCasingEditsRequest.type, async params => {
-					const languageService = await getService(params.textDocument.uri);
-					return nameCasing.convertTagName(languageService.context, params.textDocument.uri, params.casing);
-				});
-
-				connection.onRequest(GetConvertAttrCasingEditsRequest.type, async params => {
-					const languageService = await getService(params.textDocument.uri);
-					return nameCasing.convertAttrName(languageService.context, params.textDocument.uri, params.casing);
-				});
-
-				const checkers = new WeakMap<embedded.LanguageServiceHost, meta.ComponentMetaChecker>();
-
-				connection.onRequest(GetComponentMeta.type, async params => {
-					const languageService = await getService(params.uri);
-					let checker = checkers.get(languageService.context.host);
-					if (!checker) {
-						checker = meta.baseCreate(
-							languageService.context.host as vue.LanguageServiceHost,
-							{},
-							languageService.context.host.getCurrentDirectory() + '/tsconfig.json.global.vue',
-							languageService.context.pluginContext.typescript.module,
-						);
-						checkers.set(languageService.context.host, checker);
-					}
-					return checker.getComponentMeta(shared.getPathOfUri(params.uri));
-				});
-			},
+		resolveLanguageServiceHost(ts, sys, tsConfig, host) {
+			let vueOptions: vue.VueCompilerOptions = {};
+			if (typeof tsConfig === 'string') {
+				vueOptions = vue2.createParsedCommandLine(ts, sys, tsConfig, []).vueOptions;
+			}
+			vueOptions.extensions = getVueExts(vueOptions.extensions ?? ['.vue']);
+			return {
+				...host,
+				getVueCompilationSettings: () => vueOptions,
+			};
 		},
-		syntacticService: {
-			getLanguageModules(ts) {
-				const vueOptions: vue.VueCompilerOptions = { extensions: getVueExts(['.vue']) };
-				const vueLanguagePlugins = vue2.getDefaultVueLanguagePlugins(ts, {}, vueOptions);
-				const vueLanguageModule: embedded.LanguageModule = {
-					createFile(fileName, snapshot) {
-						if (vueOptions.extensions?.some(ext => fileName.endsWith(ext))) {
-							return new vue2.VueFile(fileName, snapshot, ts, vueLanguagePlugins);
-						}
-					},
-					updateFile(sourceFile: vue2.VueFile, snapshot) {
-						sourceFile.update(snapshot);
-					},
-				};
-				return [vueLanguageModule];
-			},
-			getServicePlugins(context) {
-				return vue.getDocumentServicePlugins(context);
-			},
-			onInitialize(connection) {
-				connection.onRequest(ParseSFCRequest.type, params => {
-					return vue2.parse(params);
-				});
-			},
+		getLanguageModules(host) {
+			const vueLanguageModules = vue2.createLanguageModules(
+				host.getTypeScriptModule(),
+				host.getCompilationSettings(),
+				host.getVueCompilationSettings(),
+			);
+			return vueLanguageModules;
+		},
+		getServicePlugins(host, service) {
+			const settings: vue.Settings = {};
+			if (initOptions.json) {
+				settings.json = { schemas: [] };
+				for (const blockType in initOptions.json.customBlockSchemaUrls) {
+					const url = initOptions.json.customBlockSchemaUrls[blockType];
+					settings.json.schemas?.push({
+						fileMatch: [`*.customBlock_${blockType}_*.json*`],
+						uri: new URL(url, service.context.pluginContext.env.rootUri.toString() + '/').toString(),
+					});
+				}
+			}
+			return vue.getLanguageServicePlugins(host, service, settings);
+		},
+		onInitialize(connection, getService) {
+
+			connection.onRequest(ParseSFCRequest.type, params => {
+				return vue2.parse(params);
+			});
+
+			connection.onRequest(GetVueCompilerOptionsRequest.type, async params => {
+				const languageService = await getService(params.uri);
+				const host = languageService.context.host as vue.LanguageServiceHost;
+				return host.getVueCompilationSettings?.();
+			});
+
+			connection.onRequest(DetectNameCasingRequest.type, async params => {
+				const languageService = await getService(params.textDocument.uri);
+				return nameCasing.detect(languageService.context, params.textDocument.uri);
+			});
+
+			connection.onRequest(GetConvertTagCasingEditsRequest.type, async params => {
+				const languageService = await getService(params.textDocument.uri);
+				return nameCasing.convertTagName(languageService.context, params.textDocument.uri, params.casing);
+			});
+
+			connection.onRequest(GetConvertAttrCasingEditsRequest.type, async params => {
+				const languageService = await getService(params.textDocument.uri);
+				return nameCasing.convertAttrName(languageService.context, params.textDocument.uri, params.casing);
+			});
+
+			const checkers = new WeakMap<embedded.LanguageServiceHost, meta.ComponentMetaChecker>();
+
+			connection.onRequest(GetComponentMeta.type, async params => {
+				const languageService = await getService(params.uri);
+				let checker = checkers.get(languageService.context.host);
+				if (!checker) {
+					checker = meta.baseCreate(
+						languageService.context.host as vue.LanguageServiceHost,
+						{},
+						languageService.context.host.getCurrentDirectory() + '/tsconfig.json.global.vue',
+						languageService.context.pluginContext.typescript.module,
+					);
+					checkers.set(languageService.context.host, checker);
+				}
+				return checker.getComponentMeta(shared.getPathOfUri(params.uri));
+			});
 		},
 	};
 

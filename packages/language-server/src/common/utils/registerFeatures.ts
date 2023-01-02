@@ -3,11 +3,15 @@ import { DiagnosticModel, LanguageServerPlugin, LanguageServerInitializationOpti
 import * as vscode from 'vscode-languageserver';
 import { ClientCapabilities } from 'vscode-languageserver';
 
-export function setupSyntacticCapabilities(
+export function setupCapabilities(
 	params: ClientCapabilities,
 	server: vscode.ServerCapabilities,
 	initOptions: LanguageServerInitializationOptions,
+	plugins: ReturnType<LanguageServerPlugin>[],
+	semanticTokensLegend: vscode.SemanticTokensLegend,
 ) {
+
+	// Syntactic
 	if (!initOptions.respectClientCapabilities || params.textDocument?.selectionRange) {
 		server.selectionRangeProvider = true;
 	}
@@ -36,15 +40,8 @@ export function setupSyntacticCapabilities(
 			moreTriggerCharacter: ['}', '\n'],
 		};
 	}
-}
 
-export function setupSemanticCapabilities(
-	params: ClientCapabilities,
-	server: vscode.ServerCapabilities,
-	initOptions: LanguageServerInitializationOptions,
-	plugins: ReturnType<LanguageServerPlugin>[],
-	semanticTokensLegend: vscode.SemanticTokensLegend,
-) {
+	// Semantic
 	if (!initOptions.respectClientCapabilities || params.textDocument?.references) {
 		server.referencesProvider = true;
 	}
@@ -66,26 +63,6 @@ export function setupSemanticCapabilities(
 	if (!initOptions.respectClientCapabilities || params.textDocument?.rename) {
 		server.renameProvider = {
 			prepareProvider: true,
-		};
-	}
-	if (!initOptions.respectClientCapabilities || params.workspace?.fileOperations) {
-		server.workspace = {
-			fileOperations: {
-				willRename: {
-					filters: [
-						...plugins.map(plugin => plugin.extraFileExtensions.map(ext => ({ pattern: { glob: `**/*.${ext.extension}` } }))).flat(),
-						{ pattern: { glob: '**/*.js' } },
-						{ pattern: { glob: '**/*.cjs' } },
-						{ pattern: { glob: '**/*.mjs' } },
-						{ pattern: { glob: '**/*.ts' } },
-						{ pattern: { glob: '**/*.cts' } },
-						{ pattern: { glob: '**/*.mts' } },
-						{ pattern: { glob: '**/*.jsx' } },
-						{ pattern: { glob: '**/*.tsx' } },
-						{ pattern: { glob: '**/*.json' } },
-					]
-				}
-			}
 		};
 	}
 	if (!initOptions.respectClientCapabilities || params.textDocument?.signatureHelp) {
@@ -122,9 +99,6 @@ export function setupSemanticCapabilities(
 		server.documentLinkProvider = {
 			resolveProvider: false, // TODO
 		};
-	}
-	if (!initOptions.respectClientCapabilities || params.workspace?.symbol) {
-		server.workspaceSymbolProvider = true;
 	}
 	if (!initOptions.respectClientCapabilities || params.textDocument?.codeLens) {
 		server.codeLensProvider = {
@@ -168,5 +142,30 @@ export function setupSemanticCapabilities(
 			interFileDependencies: true,
 			workspaceDiagnostics: false,
 		};
+	}
+
+	// cross file features
+	if (!initOptions.respectClientCapabilities || params.workspace?.fileOperations) {
+		server.workspace = {
+			fileOperations: {
+				willRename: {
+					filters: [
+						...plugins.map(plugin => plugin.extraFileExtensions.map(ext => ({ pattern: { glob: `**/*.${ext.extension}` } }))).flat(),
+						{ pattern: { glob: '**/*.js' } },
+						{ pattern: { glob: '**/*.cjs' } },
+						{ pattern: { glob: '**/*.mjs' } },
+						{ pattern: { glob: '**/*.ts' } },
+						{ pattern: { glob: '**/*.cts' } },
+						{ pattern: { glob: '**/*.mts' } },
+						{ pattern: { glob: '**/*.jsx' } },
+						{ pattern: { glob: '**/*.tsx' } },
+						{ pattern: { glob: '**/*.json' } },
+					]
+				}
+			}
+		};
+	}
+	if (!initOptions.respectClientCapabilities || params.workspace?.symbol) {
+		server.workspaceSymbolProvider = true;
 	}
 }
