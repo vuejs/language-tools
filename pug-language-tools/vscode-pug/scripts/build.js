@@ -1,7 +1,7 @@
 require('esbuild').build({
 	entryPoints: {
 		client: './out/client.js',
-		server: './node_modules/@volar-examples/angular-language-server/bin/angular-language-server.js',
+		server: './node_modules/@volar/pug-language-server/bin/pug-language-server.js',
 	},
 	bundle: true,
 	metafile: process.argv.includes('--metafile'),

@@ -47,7 +47,6 @@
 		"@volar/pug-language-server": "1.0.19",
 		"@types/vscode": "1.67.0",
 		"@volar/language-server": "1.0.19",
-		"@volar/vscode-language-client": "1.0.19",
 		"esbuild": "latest",
 		"typesafe-path": "^0.2.2",
 		"vsce": "latest",

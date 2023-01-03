@@ -441,7 +441,6 @@ importers:
       '@types/vscode': 1.67.0
       '@volar/language-server': 1.0.19
       '@volar/pug-language-server': 1.0.19
-      '@volar/vscode-language-client': 1.0.19
       esbuild: latest
       typesafe-path: ^0.2.2
       vsce: latest
@@ -450,7 +449,6 @@ importers:
       '@types/vscode': 1.67.0
       '@volar/language-server': link:../../packages/language-server
       '@volar/pug-language-server': link:../pug-language-server
-      '@volar/vscode-language-client': link:../../packages/vscode-language-client
       esbuild: 0.16.13
       typesafe-path: 0.2.2
       vsce: 2.15.0
