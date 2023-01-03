@@ -4,6 +4,7 @@ import type { FileSystemProvider } from 'vscode-html-languageservice';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
+import { LanguageServiceRuntimeContext } from '@volar/language-service';
 
 export type FileSystemHost = {
 	ready(connection: vscode.Connection): void,
@@ -54,7 +55,7 @@ export type LanguageServerPlugin<
 
 	getServicePlugins?(
 		host: B,
-		service: embeddedLS.LanguageService,
+		context: LanguageServiceRuntimeContext,
 	): embeddedLS.LanguageServicePlugin[];
 
 	onInitialize?(

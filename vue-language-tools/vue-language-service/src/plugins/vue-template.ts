@@ -1,5 +1,5 @@
 import useHtmlPlugin from '@volar-plugins/html';
-import { LanguageServicePlugin, LanguageServiceRuntimeContext, FileRangeCapabilities, SourceMapWithDocuments } from '@volar/language-service';
+import { FileRangeCapabilities, SourceMapWithDocuments } from '@volar/language-service';
 import * as vue from '@volar/vue-language-core';
 import { hyphenate } from '@vue/shared';
 import * as html from 'vscode-html-languageservice';
@@ -7,7 +7,7 @@ import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { checkComponentNames, checkEventsOfTag, checkPropsOfTag, getElementAttrs } from '../helpers';
 import * as casing from '../ideFeatures/nameCasing';
-import { AttrNameCasing, TagNameCasing } from '../types';
+import { AttrNameCasing, TagNameCasing, VueLanguageServicePlugin } from '../types';
 
 const globalDirectives = html.newHTMLDataProvider('vue-global-directive', {
 	version: 1.1,
@@ -37,19 +37,17 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 	getScanner(document: TextDocument, t: ReturnType<T>): html.Scanner | undefined,
 	templateLanguagePlugin: T,
 	isSupportedDocument: (document: TextDocument) => boolean,
-	vueLsHost: vue.LanguageServiceHost,
-	context: LanguageServiceRuntimeContext,
 }): T {
 
-	const plugin: LanguageServicePlugin = (context) => {
+	const plugin: VueLanguageServicePlugin = (_context, service) => {
 
-		if (!context.typescript)
+		if (!_context.typescript)
 			return {};
 
-		const _ts = context.typescript;
-		const vueCompilerOptions = vue.resolveVueCompilerOptions(options.vueLsHost.getVueCompilationSettings());
+		const _ts = _context.typescript;
+		const vueCompilerOptions = vue.resolveVueCompilerOptions(_context.host.getVueCompilationSettings());
 		const nativeTags = new Set(vueCompilerOptions.nativeTags);
-		const templatePlugin = options.templateLanguagePlugin(context);
+		const templatePlugin = options.templateLanguagePlugin(_context, service);
 
 		return {
 
@@ -67,8 +65,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					if (!options.isSupportedDocument(document))
 						return;
 
-					for (const [_, map] of options.context.documents.getMapsByVirtualFileUri(document.uri)) {
-						const virtualFile = options.context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
+					for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
+						const virtualFile = _context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
 						if (virtualFile && virtualFile instanceof vue.VueFile) {
 							await provideHtmlData(map, virtualFile);
 						}
@@ -78,8 +76,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					if (!htmlComplete)
 						return;
 
-					for (const [_, map] of options.context.documents.getMapsByVirtualFileUri(document.uri)) {
-						const virtualFile = options.context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
+					for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
+						const virtualFile = _context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
 						if (virtualFile && virtualFile instanceof vue.VueFile) {
 							afterHtmlCompletion(htmlComplete, map, virtualFile);
 						}
@@ -94,7 +92,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				if (!options.isSupportedDocument(document))
 					return;
 
-				if (options.context.documents.getVirtualFileByUri(document.uri))
+				if (_context.documents.getVirtualFileByUri(document.uri))
 					templatePlugin.updateCustomData([]);
 
 				return templatePlugin.doHover?.(document, position);
@@ -108,9 +106,9 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 					const originalResult = await templatePlugin.validation?.onSyntactic?.(document);
 
-					for (const [_, map] of options.context.documents.getMapsByVirtualFileUri(document.uri)) {
+					for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
 
-						const virtualFile = options.context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
+						const virtualFile = _context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
 						if (!virtualFile || !(virtualFile instanceof vue.VueFile))
 							continue;
 
@@ -166,9 +164,9 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				if (!scanner)
 					return;
 
-				for (const [_, map] of options.context.documents.getMapsByVirtualFileUri(document.uri)) {
+				for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
 
-					const virtualFile = options.context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
+					const virtualFile = _context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
 					if (!virtualFile || !(virtualFile instanceof vue.VueFile))
 						continue;
 
@@ -220,10 +218,10 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 		async function provideHtmlData(map: SourceMapWithDocuments<FileRangeCapabilities>, vueSourceFile: vue.VueFile) {
 
-			const detected = casing.detect(options.context, _ts, map.sourceFileDocument.uri);
+			const detected = casing.detect(_context, _ts, map.sourceFileDocument.uri);
 			const [attr, tag] = await Promise.all([
-				context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('volar.completion.preferredAttrNameCase', map.sourceFileDocument.uri),
-				context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-pascal' | 'kebab' | 'pascal'>('volar.completion.preferredTagNameCase', map.sourceFileDocument.uri),
+				_context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('volar.completion.preferredAttrNameCase', map.sourceFileDocument.uri),
+				_context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-pascal' | 'kebab' | 'pascal'>('volar.completion.preferredTagNameCase', map.sourceFileDocument.uri),
 			]);
 			const tagNameCasing = detected.tag.length === 1 && (tag === 'auto-pascal' || tag === 'auto-kebab') ? detected.tag[0] : (tag === 'auto-kebab' || tag === 'kebab') ? TagNameCasing.Kebab : TagNameCasing.Pascal;
 			const attrNameCasing = detected.attr.length === 1 && (attr === 'auto-camel' || attr === 'auto-kebab') ? detected.attr[0] : (attr === 'auto-camel' || attr === 'camel') ? AttrNameCasing.Camel : AttrNameCasing.Kebab;

@@ -8,7 +8,7 @@ import useTsTqPlugin from '@volar-plugins/typescript-twoslash-queries';
 import * as embedded from '@volar/language-core';
 import * as embeddedLS from '@volar/language-service';
 import * as vue from '@volar/vue-language-core';
-import { LanguageServiceHost, VueFile } from '@volar/vue-language-core';
+import { VueLanguageServiceHost } from '@volar/vue-language-core';
 import type * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import useVuePlugin from './plugins/vue';
@@ -21,25 +21,22 @@ import useTwoslashQueries from './plugins/vue-twoslash-queries';
 import useVueTemplateLanguagePlugin from './plugins/vue-template';
 import type { Data } from '@volar-plugins/typescript/src/services/completions/basic';
 import type * as ts from 'typescript/lib/tsserverlibrary';
+import { LanguageServicePlugin } from '@volar/language-service';
 
 export interface Settings {
 	json?: Parameters<typeof useJsonPlugin>[0];
 }
 
-export function getLanguageServicePlugins(
-	host: vue.LanguageServiceHost,
-	apis: embeddedLS.LanguageService,
-	settings?: Settings,
-): embeddedLS.LanguageServicePlugin[] {
+export function getLanguageServicePlugins(settings?: Settings) {
 
 	// plugins
-	const tsPlugin: embeddedLS.LanguageServicePlugin = (context) => {
+	const tsPlugin: embeddedLS.LanguageServicePlugin = (_context, service) => {
 
-		if (!context.typescript)
+		if (!_context.typescript)
 			return {};
 
-		const ts = context.typescript.module;
-		const base = createTsPlugin()(context);
+		const ts = _context.typescript.module;
+		const base = createTsPlugin()(_context, service);
 		const autoImportPositions = new WeakSet<vscode.Position>();
 
 		return {
@@ -53,8 +50,8 @@ export function getLanguageServicePlugins(
 				async on(document, position, context) {
 					const result = await base.complete!.on!(document, position, context);
 					if (result) {
-						for (const [_, map] of apis.context.documents.getMapsByVirtualFileUri(document.uri)) {
-							const virtualFile = apis.context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
+						for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
+							const virtualFile = _context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
 							if (virtualFile instanceof vue.VueFile) {
 								if (map.toSourcePosition(position, data => typeof data.completion === 'object' && !!data.completion.autoImportOnly)) {
 									result.items.forEach(item => {
@@ -72,7 +69,7 @@ export function getLanguageServicePlugins(
 					if (
 						item.textEdit?.newText && /\w*Vue$/.test(item.textEdit.newText)
 						&& item.additionalTextEdits?.length === 1 && item.additionalTextEdits[0].newText.indexOf('import ' + item.textEdit.newText + ' from ') >= 0
-						&& (await context.env.configurationHost?.getConfiguration<boolean>('volar.completion.normalizeComponentAutoImportName') ?? true)
+						&& (await _context.env.configurationHost?.getConfiguration<boolean>('volar.completion.normalizeComponentAutoImportName') ?? true)
 					) {
 						let newName = item.textEdit.newText.slice(0, -'Vue'.length);
 						newName = newName[0].toUpperCase() + newName.substring(1);
@@ -85,12 +82,12 @@ export function getLanguageServicePlugins(
 
 					const data: Data = item.data;
 					if (item.data?.__isComponentAutoImport && data && item.additionalTextEdits?.length && item.textEdit) {
-						for (const [_, map] of apis.context.documents.getMapsByVirtualFileUri(data.uri)) {
-							const virtualFile = apis.context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
+						for (const [_, map] of _context.documents.getMapsByVirtualFileUri(data.uri)) {
+							const virtualFile = _context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
 							if (virtualFile instanceof vue.VueFile) {
 								const sfc = virtualFile.sfc;
 								const componentName = item.textEdit.newText;
-								const textDoc = apis.context.documents.getDocumentByFileName(virtualFile.snapshot, virtualFile.fileName);
+								const textDoc = _context.documents.getDocumentByFileName(virtualFile.snapshot, virtualFile.fileName);
 								if (sfc.scriptAst && sfc.script) {
 									const _scriptRanges = vue.scriptRanges.parseScriptRanges(ts, sfc.scriptAst, !!sfc.scriptSetup, true);
 									const exportDefault = _scriptRanges.exportDefault;
@@ -148,39 +145,15 @@ export function getLanguageServicePlugins(
 			},
 		};
 	};
-	const vuePlugin = useVuePlugin({
-		getVueFile(document) {
-			const virtualFile = apis.context.documents.getVirtualFileByUri(document.uri);
-			if (virtualFile instanceof VueFile) {
-				return virtualFile;
-			}
-		}
-	});
+	const vuePlugin = useVuePlugin();
 	const cssPlugin = useCssPlugin();
 	const jsonPlugin = useJsonPlugin(settings?.json);
 	const emmetPlugin = useEmmetPlugin();
 	const autoDotValuePlugin = useAutoDotValuePlugin();
-	const referencesCodeLensPlugin = useReferencesCodeLensPlugin({
-		documents: apis.context.documents,
-		findReference: apis.findReferences,
-	});
-	const htmlPugConversionsPlugin = useHtmlPugConversionsPlugin({
-		documents: apis.context.documents,
-	});
-	const scriptSetupConversionsPlugin = useScriptSetupConversionsPlugin({
-		documents: apis.context.documents,
-		doCodeActions: apis.doCodeActions,
-		doCodeActionResolve: apis.doCodeActionResolve,
-	});
-	const refSugarConversionsPlugin = useRefSugarConversionsPlugin({
-		documents: apis.context.documents,
-		doCodeActions: apis.doCodeActions,
-		doCodeActionResolve: apis.doCodeActionResolve,
-		findReferences: apis.findReferences,
-		doValidation: apis.doValidation,
-		doRename: apis.doRename,
-		findTypeDefinition: apis.findTypeDefinition,
-	});
+	const referencesCodeLensPlugin = useReferencesCodeLensPlugin();
+	const htmlPugConversionsPlugin = useHtmlPugConversionsPlugin();
+	const scriptSetupConversionsPlugin = useScriptSetupConversionsPlugin();
+	const refSugarConversionsPlugin = useRefSugarConversionsPlugin();
 
 	// template plugins
 	const htmlPlugin = useVueTemplateLanguagePlugin({
@@ -189,8 +162,6 @@ export function getLanguageServicePlugins(
 			return htmlPlugin.getHtmlLs().createScanner(document.getText());
 		},
 		isSupportedDocument: (document) => document.languageId === 'html',
-		vueLsHost: host,
-		context: apis.context,
 	});
 	const pugPlugin = useVueTemplateLanguagePlugin({
 		templateLanguagePlugin: usePugPlugin(),
@@ -201,13 +172,9 @@ export function getLanguageServicePlugins(
 			}
 		},
 		isSupportedDocument: (document) => document.languageId === 'jade',
-		vueLsHost: host,
-		context: apis.context,
 	});
 	const tsTwoslashQueriesPlugin = useTsTqPlugin();
-	const vueTwoslashQueriesPlugin = useTwoslashQueries({
-		documents: apis.context.documents,
-	});
+	const vueTwoslashQueriesPlugin = useTwoslashQueries();
 
 	return [
 		vuePlugin,
@@ -225,12 +192,12 @@ export function getLanguageServicePlugins(
 		vueTwoslashQueriesPlugin,
 		// put emmet plugin at last to fix https://github.com/johnsoncodehk/volar/issues/1088
 		emmetPlugin,
-	];
+	] as LanguageServicePlugin[];
 }
 
 export function createLanguageService(
-	host: LanguageServiceHost,
-	env: embeddedLS.LanguageServicePluginContext['env'],
+	host: VueLanguageServiceHost,
+	env: embeddedLS.LanguageServiceRuntimeContext['env'],
 	documentRegistry?: ts.DocumentRegistry,
 	settings?: Settings,
 ) {
@@ -246,10 +213,9 @@ export function createLanguageService(
 		env,
 		host,
 		context: core,
-		getPlugins() {
-			return getLanguageServicePlugins(host, languageService, settings);
-		},
 		documentRegistry,
+		getPlugins: () => getLanguageServicePlugins(settings),
+		getLanguageService: () => languageService,
 	});
 	const languageService = embeddedLS.createLanguageService(languageServiceContext);
 

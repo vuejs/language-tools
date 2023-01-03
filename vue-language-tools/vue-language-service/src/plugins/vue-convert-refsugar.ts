@@ -1,4 +1,4 @@
-import { LanguageServicePlugin, ExecuteCommandContext, mergeWorkspaceEdits, LanguageServicePluginContext, DocumentsAndSourceMaps } from '@volar/language-service';
+import { ExecuteCommandContext, mergeWorkspaceEdits, LanguageServiceRuntimeContext } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -7,6 +7,7 @@ import * as refSugarRanges from '../utils/refSugarRanges';
 import { isBlacklistNode } from './vue-autoinsert-dotvalue';
 import { getAddMissingImportsEdits } from './vue-convert-scriptsetup';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import { VueLanguageServicePlugin } from '../types';
 
 enum Commands {
 	USE_REF_SUGAR = 'refSugarConversions.use',
@@ -20,19 +21,9 @@ export interface ReferencesCodeLensData {
 
 type CommandArgs = [string];
 
-export default function (options: {
-	documents: DocumentsAndSourceMaps,
-	// for use ref sugar
-	findReferences: (uri: string, position: vscode.Position) => Promise<vscode.Location[] | undefined>,
-	findTypeDefinition: (uri: string, position: vscode.Position) => Promise<vscode.LocationLink[] | undefined>,
-	// for unuse ref sugar
-	doCodeActions: (uri: string, range: vscode.Range, codeActionContext: vscode.CodeActionContext) => Promise<vscode.CodeAction[] | undefined>,
-	doCodeActionResolve: (item: vscode.CodeAction) => Promise<vscode.CodeAction>,
-	doRename: (uri: string, position: vscode.Position, newName: string) => Promise<vscode.WorkspaceEdit | undefined>,
-	doValidation: (uri: string) => Promise<vscode.Diagnostic[] | undefined>,
-}): LanguageServicePlugin {
+export default function (): VueLanguageServicePlugin {
 
-	return (context) => {
+	return (context, service) => {
 
 		if (!context.typescript)
 			return {};
@@ -86,8 +77,8 @@ export default function (options: {
 					const [uri] = args as CommandArgs;
 
 					return worker(uri, (vueFile) => {
-						const document = options.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
-						return useRefSugar(_ts, document, vueFile, commandContext, options.findReferences, options.findTypeDefinition);
+						const document = context.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
+						return useRefSugar(_ts, document, vueFile, commandContext, service.findReferences, service.findTypeDefinition);
 					});
 				}
 
@@ -96,8 +87,8 @@ export default function (options: {
 					const [uri] = args as CommandArgs;
 
 					return worker(uri, (vueFile) => {
-						const document = options.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
-						return unuseRefSugar(_ts.module, document, vueFile, commandContext, options.doCodeActions, options.doCodeActionResolve, options.doRename, options.doValidation);
+						const document = context.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
+						return unuseRefSugar(_ts.module, document, vueFile, commandContext, service.doCodeActions, service.doCodeActionResolve, service.doRename, service.doValidation);
 					});
 				}
 			},
@@ -105,7 +96,7 @@ export default function (options: {
 
 		function worker<T>(uri: string, callback: (vueSourceFile: vue.VueFile) => T) {
 
-			const virtualFile = options.documents.getVirtualFileByUri(uri);
+			const virtualFile = context.documents.getVirtualFileByUri(uri);
 			if (!(virtualFile instanceof vue.VueFile))
 				return;
 
@@ -115,7 +106,7 @@ export default function (options: {
 }
 
 async function useRefSugar(
-	_ts: NonNullable<LanguageServicePluginContext['typescript']>,
+	_ts: NonNullable<LanguageServiceRuntimeContext['typescript']>,
 	document: TextDocument,
 	vueSourceFile: vue.VueFile,
 	commandContext: ExecuteCommandContext,

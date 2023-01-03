@@ -9,7 +9,7 @@ import { VueServerInitializationOptions } from './types';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as meta from 'vue-component-meta';
 
-const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageServiceHost> = (initOptions) => {
+const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.VueLanguageServiceHost> = (initOptions) => {
 
 	const extraFileExtensions: ts.FileExtensionInfo[] = [{ extension: 'vue', isMixedContent: true, scriptKind: 7 }];
 
@@ -52,7 +52,7 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 			}
 			return [];
 		},
-		getServicePlugins(host, service) {
+		getServicePlugins(_, context) {
 			const settings: vue.Settings = {};
 			if (initOptions.json) {
 				settings.json = { schemas: [] };
@@ -60,11 +60,11 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 					const url = initOptions.json.customBlockSchemaUrls[blockType];
 					settings.json.schemas?.push({
 						fileMatch: [`*.customBlock_${blockType}_*.json*`],
-						uri: new URL(url, service.context.pluginContext.env.rootUri.toString() + '/').toString(),
+						uri: new URL(url, context.env.rootUri.toString() + '/').toString(),
 					});
 				}
 			}
-			return vue.getLanguageServicePlugins(host, service, settings);
+			return vue.getLanguageServicePlugins(settings);
 		},
 		onInitialize(connection, getService) {
 
@@ -74,28 +74,28 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 
 			connection.onRequest(GetVueCompilerOptionsRequest.type, async params => {
 				const languageService = await getService(params.uri);
-				const host = languageService.context.host as vue.LanguageServiceHost;
+				const host = languageService.context.host as vue.VueLanguageServiceHost;
 				return host.getVueCompilationSettings?.();
 			});
 
 			connection.onRequest(DetectNameCasingRequest.type, async params => {
 				const languageService = await getService(params.textDocument.uri);
-				if (languageService.context.pluginContext.typescript) {
-					return nameCasing.detect(languageService.context, languageService.context.pluginContext.typescript, params.textDocument.uri);
+				if (languageService.context.typescript) {
+					return nameCasing.detect(languageService.context, languageService.context.typescript, params.textDocument.uri);
 				}
 			});
 
 			connection.onRequest(GetConvertTagCasingEditsRequest.type, async params => {
 				const languageService = await getService(params.textDocument.uri);
-				if (languageService.context.pluginContext.typescript) {
-					return nameCasing.convertTagName(languageService.context, languageService.context.pluginContext.typescript, params.textDocument.uri, params.casing);
+				if (languageService.context.typescript) {
+					return nameCasing.convertTagName(languageService.context, languageService.context.typescript, params.textDocument.uri, params.casing);
 				}
 			});
 
 			connection.onRequest(GetConvertAttrCasingEditsRequest.type, async params => {
 				const languageService = await getService(params.textDocument.uri);
-				if (languageService.context.pluginContext.typescript) {
-					return nameCasing.convertAttrName(languageService.context, languageService.context.pluginContext.typescript, params.textDocument.uri, params.casing);
+				if (languageService.context.typescript) {
+					return nameCasing.convertAttrName(languageService.context, languageService.context.typescript, params.textDocument.uri, params.casing);
 				}
 			});
 
@@ -104,16 +104,16 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 			connection.onRequest(GetComponentMeta.type, async params => {
 
 				const languageService = await getService(params.uri);
-				if (!languageService.context.pluginContext.typescript)
+				if (!languageService.context.typescript)
 					return;
 
 				let checker = checkers.get(languageService.context.host);
 				if (!checker) {
 					checker = meta.baseCreate(
-						languageService.context.host as vue.LanguageServiceHost,
+						languageService.context.host as vue.VueLanguageServiceHost,
 						{},
 						languageService.context.host.getCurrentDirectory() + '/tsconfig.json.global.vue',
-						languageService.context.pluginContext.typescript.module,
+						languageService.context.typescript.module,
 					);
 					checkers.set(languageService.context.host, checker);
 				}

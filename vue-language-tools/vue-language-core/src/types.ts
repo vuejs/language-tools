@@ -7,7 +7,7 @@ import { VueEmbeddedFile } from './sourceFile';
 
 export type { SFCParseResult } from '@vue/compiler-sfc';
 
-export type LanguageServiceHost = embedded.LanguageServiceHost & {
+export type VueLanguageServiceHost = embedded.LanguageServiceHost & {
 	getVueCompilationSettings(): VueCompilerOptions,
 };
 

@@ -4,9 +4,10 @@ import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { hyphenate } from '@vue/shared';
 import { isTsDocument } from '@volar-plugins/typescript';
-import { LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
+import { LanguageServicePluginInstance } from '@volar/language-service';
+import { VueLanguageServicePlugin } from '../types';
 
-const plugin: LanguageServicePlugin = (context) => {
+const plugin: VueLanguageServicePlugin = (context) => {
 
 	if (!context.typescript)
 		return {};

@@ -6,19 +6,15 @@ import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
 import { DocumentsAndSourceMaps } from './documents';
+import { LanguageService } from '@volar/language-service';
 
 export * from 'vscode-languageserver-protocol';
 
-export interface LanguageServiceRuntimeContext {
-	host: LanguageServiceHost;
+export interface LanguageServiceRuntimeContext<Host extends LanguageServiceHost = LanguageServiceHost> {
+	host: Host;
 	core: LanguageContext;
 	documents: DocumentsAndSourceMaps;
 	plugins: LanguageServicePluginInstance[];
-	pluginContext: LanguageServicePluginContext;
-	getTextDocument(uri: string): TextDocument | undefined;
-};
-
-export interface LanguageServicePluginContext {
 	typescript: {
 		module: typeof import('typescript/lib/tsserverlibrary');
 		languageServiceHost: ts.LanguageServiceHost;
@@ -30,8 +26,9 @@ export interface LanguageServicePluginContext {
 		documentContext?: DocumentContext;
 		fileSystemProvider?: FileSystemProvider;
 		schemaRequestService?: SchemaRequestService;
-	},
-}
+	};
+	getTextDocument(uri: string): TextDocument | undefined;
+};
 
 export interface ConfigurationHost {
 	getConfiguration: (<T> (section: string, scopeUri?: string) => Promise<T | undefined>),
@@ -63,11 +60,11 @@ export interface ExecuteCommandContext {
 	applyEdit(paramOrEdit: vscode.ApplyWorkspaceEditParams | vscode.WorkspaceEdit): Promise<vscode.ApplyWorkspaceEditResult>;
 }
 
-export type LanguageServicePlugin<T = {}> = ((context: LanguageServicePluginContext) => LanguageServicePluginInstance & T);
+export type LanguageServicePlugin<T = {}> = ((context: LanguageServiceRuntimeContext, service: LanguageService) => LanguageServicePluginInstance & T);
 
 export interface LanguageServicePluginInstance {
 
-	setup?(context: LanguageServicePluginContext): void;
+	setup?(context: LanguageServiceRuntimeContext): void;
 
 	validation?: {
 		onSemantic?(document: TextDocument): NullableResult<vscode.Diagnostic[]>;

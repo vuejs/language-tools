@@ -7,7 +7,7 @@ import { AttrNameCasing, TagNameCasing } from '../types';
 
 export async function convertTagName(
 	context: LanguageServiceRuntimeContext,
-	_ts: NonNullable<LanguageServiceRuntimeContext['pluginContext']['typescript']>,
+	_ts: NonNullable<LanguageServiceRuntimeContext['typescript']>,
 	uri: string,
 	casing: TagNameCasing,
 ) {
@@ -48,7 +48,7 @@ export async function convertTagName(
 
 export async function convertAttrName(
 	context: LanguageServiceRuntimeContext,
-	_ts: NonNullable<LanguageServiceRuntimeContext['pluginContext']['typescript']>,
+	_ts: NonNullable<LanguageServiceRuntimeContext['typescript']>,
 	uri: string,
 	casing: AttrNameCasing,
 ) {
@@ -95,7 +95,7 @@ export async function convertAttrName(
 
 export function detect(
 	context: LanguageServiceRuntimeContext,
-	_ts: NonNullable<LanguageServiceRuntimeContext['pluginContext']['typescript']>,
+	_ts: NonNullable<LanguageServiceRuntimeContext['typescript']>,
 	uri: string,
 ): {
 	tag: TagNameCasing[],

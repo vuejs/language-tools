@@ -77,7 +77,7 @@ function createComponentMetaCheckerWorker(
 
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
 	const scriptVersions = new Map<string, number>();
-	const _host: vue.LanguageServiceHost = {
+	const _host: vue.VueLanguageServiceHost = {
 		...ts.sys,
 		getProjectVersion: () => projectVersion.toString(),
 		getDefaultLibFileName: (options) => ts.getDefaultLibFilePath(options), // should use ts.getDefaultLibFilePath not ts.getDefaultLibFileName
@@ -126,7 +126,7 @@ function createComponentMetaCheckerWorker(
 }
 
 export function baseCreate(
-	_host: vue.LanguageServiceHost,
+	_host: vue.VueLanguageServiceHost,
 	checkerOptions: MetaCheckerOptions,
 	globalComponentName: string,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -136,7 +136,7 @@ export function baseCreate(
 	 */
 	const globalComponentSnapshot = ts.ScriptSnapshot.fromString('<script setup lang="ts"></script>');
 	const metaSnapshots: Record<string, ts.IScriptSnapshot> = {};
-	const host = new Proxy<Partial<vue.LanguageServiceHost>>({
+	const host = new Proxy<Partial<vue.VueLanguageServiceHost>>({
 		getScriptFileNames: () => {
 			const names = _host.getScriptFileNames();
 			return [
@@ -167,7 +167,7 @@ export function baseCreate(
 			}
 			return _host[prop as keyof typeof _host];
 		},
-	}) as vue.LanguageServiceHost;
+	}) as vue.VueLanguageServiceHost;
 	const vueLanguageModules = ts ? vue.createLanguageModules(
 		ts,
 		host.getCompilationSettings(),

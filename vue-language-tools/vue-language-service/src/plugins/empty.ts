@@ -1,6 +1,6 @@
-import { LanguageServicePlugin } from '@volar/language-service';
+import { VueLanguageServicePlugin } from '../types';
 
-export default function (): LanguageServicePlugin {
+export default function (): VueLanguageServicePlugin {
 	return () => ({});
 }
 

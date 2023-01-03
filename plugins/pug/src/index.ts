@@ -9,10 +9,10 @@ const plugin: LanguageServicePlugin<{
 	updateCustomData(extraData: html.IHTMLDataProvider[]): void,
 	getPugLs: () => pug.LanguageService,
 	getPugDocument: (document: TextDocument) => pug.PugDocument | undefined,
-}> = (context) => {
+}> = (context, service) => {
 
 	const pugDocuments = new WeakMap<TextDocument, [number, pug.PugDocument]>();
-	const htmlPlugin = useHtmlPlugin()(context);
+	const htmlPlugin = useHtmlPlugin()(context, service);
 	const pugLs = pug.getLanguageService(htmlPlugin.getHtmlLs());
 
 	return {

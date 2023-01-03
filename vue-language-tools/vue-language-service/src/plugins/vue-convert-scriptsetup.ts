@@ -1,5 +1,5 @@
-import type { TextRange } from '../types';
-import { LanguageServicePlugin, ExecuteCommandContext, DocumentsAndSourceMaps } from '@volar/language-service';
+import type { TextRange, VueLanguageServicePlugin } from '../types';
+import { ExecuteCommandContext } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-core';
 import { scriptSetupConvertRanges } from '@volar/vue-language-core';
@@ -19,13 +19,9 @@ export interface ReferencesCodeLensData {
 
 type CommandArgs = [string];
 
-export default function (options: {
-	documents: DocumentsAndSourceMaps,
-	doCodeActions: (uri: string, range: vscode.Range, codeActionContext: vscode.CodeActionContext) => Promise<vscode.CodeAction[] | undefined>,
-	doCodeActionResolve: (item: vscode.CodeAction) => Promise<vscode.CodeAction>,
-}): LanguageServicePlugin {
+export default function (): VueLanguageServicePlugin {
 
-	return (context) => {
+	return (context, service) => {
 
 		if (!context.typescript)
 			return {};
@@ -88,8 +84,8 @@ export default function (options: {
 					const [uri] = args as CommandArgs;
 
 					return worker(uri, (vueFile) => {
-						const document = options.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
-						return useSetupSugar(_ts.module, document, vueFile, commandContext, options.doCodeActions, options.doCodeActionResolve);
+						const document = context.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
+						return useSetupSugar(_ts.module, document, vueFile, commandContext, service.doCodeActions, service.doCodeActionResolve);
 					});
 				}
 
@@ -98,8 +94,8 @@ export default function (options: {
 					const [uri] = args as CommandArgs;
 
 					return worker(uri, (vueFile) => {
-						const document = options.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
-						return unuseSetupSugar(_ts.module, document, vueFile, commandContext, options.doCodeActions, options.doCodeActionResolve);
+						const document = context.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
+						return unuseSetupSugar(_ts.module, document, vueFile, commandContext, service.doCodeActions, service.doCodeActionResolve);
 					});
 				}
 			},
@@ -107,7 +103,7 @@ export default function (options: {
 
 		function worker<T>(uri: string, callback: (vueFile: vue.VueFile) => T) {
 
-			const virtualFile = options.documents.getVirtualFileByUri(uri);
+			const virtualFile = context.documents.getVirtualFileByUri(uri);
 			if (!(virtualFile instanceof vue.VueFile))
 				return;
 

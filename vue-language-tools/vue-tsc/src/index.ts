@@ -8,7 +8,7 @@ export type _Program = ts.Program & { __vue: ProgramContext; };
 interface ProgramContext {
 	projectVersion: number,
 	options: ts.CreateProgramOptions,
-	languageServiceHost: vue.LanguageServiceHost,
+	languageServiceHost: vue.VueLanguageServiceHost,
 	languageService: ReturnType<typeof vueTs.createLanguageService>,
 }
 
@@ -54,7 +54,7 @@ export function createProgram(
 			scriptSnapshot: ts.IScriptSnapshot,
 			version: string,
 		}>();
-		const vueLsHost = new Proxy(<vue.LanguageServiceHost>{
+		const vueLsHost = new Proxy(<vue.VueLanguageServiceHost>{
 			resolveModuleNames: undefined, // avoid failed with tsc built-in fileExists
 			writeFile: (fileName, content) => {
 				if (fileName.indexOf('__VLS_') === -1) {
@@ -78,7 +78,7 @@ export function createProgram(
 		}, {
 			get: (target, property) => {
 				if (property in target) {
-					return target[property as keyof vue.LanguageServiceHost];
+					return target[property as keyof vue.VueLanguageServiceHost];
 				}
 				return ctx.options.host![property as keyof ts.CompilerHost];
 			},

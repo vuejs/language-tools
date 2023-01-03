@@ -3,7 +3,7 @@ import useTsPlugin from '@volar-plugins/typescript';
 import { createLanguageServer, LanguageServerInitializationOptions, LanguageServerPlugin } from '@volar/language-server/node';
 import * as vue from '@volar/vue-language-core';
 
-const plugin: LanguageServerPlugin<LanguageServerInitializationOptions, vue.LanguageServiceHost> = () => {
+const plugin: LanguageServerPlugin<LanguageServerInitializationOptions, vue.VueLanguageServiceHost> = () => {
 	return {
 		extraFileExtensions: [
 			{ extension: 'vue', isMixedContent: true, scriptKind: 7 },

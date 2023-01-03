@@ -85,7 +85,7 @@ export async function createProject(context: ProjectContext) {
 				getPlugins() {
 					return [
 						...context.serverConfig?.plugins ?? [],
-						...context.workspace.workspaces.plugins.map(plugin => plugin.getServicePlugins?.(languageServiceHost, languageService!) ?? []).flat(),
+						...context.workspace.workspaces.plugins.map(plugin => plugin.getServicePlugins?.(languageServiceHost, languageServiceContext) ?? []).flat(),
 					];
 				},
 				env: {
@@ -105,6 +105,7 @@ export async function createProject(context: ProjectContext) {
 					},
 				},
 				documentRegistry: context.documentRegistry,
+				getLanguageService: () => languageService!,
 			});
 			languageService = embeddedLS.createLanguageService(languageServiceContext);
 		}

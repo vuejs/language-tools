@@ -1,6 +1,6 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import { LanguageServicePlugin, DocumentsAndSourceMaps } from '@volar/language-service';
 import { VueFile } from '@volar/vue-language-core';
+import { VueLanguageServicePlugin } from '../types';
 
 const showReferencesCommand = 'volar.show-references';
 
@@ -13,12 +13,9 @@ export interface ReferencesCodeLensData {
 	position: vscode.Position,
 }
 
-export default function (options: {
-	documents: DocumentsAndSourceMaps,
-	findReference(uri: string, position: vscode.Position): Promise<vscode.Location[] | undefined>,
-}): LanguageServicePlugin {
+export default function (): VueLanguageServicePlugin {
 
-	return (context) => {
+	return (context, service) => {
 
 		return {
 
@@ -34,7 +31,7 @@ export default function (options: {
 
 						const result: vscode.CodeLens[] = [];
 
-						for (const [_, map] of options.documents.getMapsBySourceFileUri(document.uri)?.maps ?? []) {
+						for (const [_, map] of context.documents.getMapsBySourceFileUri(document.uri)?.maps ?? []) {
 							for (const mapping of map.map.mappings) {
 
 								if (!mapping.data.referencesCodeLens)
@@ -63,7 +60,7 @@ export default function (options: {
 
 					await worker(data.uri, async (vueFile) => {
 
-						const document = options.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
+						const document = context.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
 						const offset = document.offsetAt(data.position);
 						const blocks = [
 							vueFile.sfc.script,
@@ -72,7 +69,7 @@ export default function (options: {
 							...vueFile.sfc.styles,
 							...vueFile.sfc.customBlocks,
 						];
-						const allRefs = await options.findReference(data.uri, data.position) ?? [];
+						const allRefs = await service.findReferences?.(data.uri, data.position) ?? [];
 						const sourceBlock = blocks.find(block => block && offset >= block.startTagEnd && offset <= block.endTagStart);
 						const diffDocRefs = allRefs.filter(reference =>
 							reference.uri !== data.uri // different file
@@ -107,7 +104,7 @@ export default function (options: {
 
 		function worker<T>(uri: string, callback: (vueSourceFile: VueFile) => T) {
 
-			const virtualFile = options.documents.getVirtualFileByUri(uri);
+			const virtualFile = context.documents.getVirtualFileByUri(uri);
 			if (!(virtualFile instanceof VueFile))
 				return;
 

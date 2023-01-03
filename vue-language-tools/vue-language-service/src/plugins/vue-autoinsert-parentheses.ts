@@ -1,96 +1,90 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import { LanguageServicePlugin } from '@volar/language-service';
 import { isCharacterTyping } from './vue-autoinsert-dotvalue';
 import * as embedded from '@volar/language-core';
 import { VirtualFile } from '@volar/language-core';
 import { VueFile } from '@volar/vue-language-core';
-import { TextDocument } from 'vscode-languageserver-textdocument';
+import { VueLanguageServicePlugin } from '../types';
 
-export default function (options: {
-	getVueFile: (document: TextDocument) => VueFile | undefined,
-}): LanguageServicePlugin {
+const plugin: VueLanguageServicePlugin = (context) => {
 
+	if (!context.typescript) {
+		return {};
+	}
 
-	return (context) => {
+	const ts = context.typescript.module;
 
-		if (!context.typescript) {
-			return {};
-		}
+	return {
 
-		const ts = context.typescript.module;
+		async doAutoInsert(document, position, options_2) {
 
-		return {
+			const enabled = await context.env.configurationHost?.getConfiguration<boolean>('volar.autoWrapParentheses') ?? false;
+			if (!enabled)
+				return;
 
-			async doAutoInsert(document, position, options_2) {
+			if (!isCharacterTyping(document, options_2))
+				return;
 
-				const enabled = await context.env.configurationHost?.getConfiguration<boolean>('volar.autoWrapParentheses') ?? false;
-				if (!enabled)
-					return;
+			const vueFile = context.documents.getVirtualFileByUri(document.uri);
+			if (!(vueFile instanceof VueFile))
+				return;
 
-				if (!isCharacterTyping(document, options_2))
-					return;
+			let templateFormatScript: VirtualFile | undefined;
 
-				const vueFile = options.getVueFile(document);
-				if (!vueFile)
-					return;
+			embedded.forEachEmbeddedFile(vueFile, embedded => {
+				if (embedded.fileName.endsWith('.__VLS_template_format.ts')) {
+					templateFormatScript = embedded;
+				}
+			});
 
+			if (!templateFormatScript)
+				return;
 
-				let templateFormatScript: VirtualFile | undefined;
+			const offset = document.offsetAt(position);
 
-				embedded.forEachEmbeddedFile(vueFile, embedded => {
-					if (embedded.fileName.endsWith('.__VLS_template_format.ts')) {
-						templateFormatScript = embedded;
-					}
-				});
-
-				if (!templateFormatScript)
-					return;
-
-				const offset = document.offsetAt(position);
-
-				for (const mappedRange of templateFormatScript.mappings) {
-					if (mappedRange.sourceRange[1] === offset) {
-						const text = document.getText().substring(mappedRange.sourceRange[0], mappedRange.sourceRange[1]);
-						const ast = ts.createSourceFile(templateFormatScript.fileName, text, ts.ScriptTarget.Latest);
-						if (ast.statements.length === 1) {
-							const statement = ast.statements[0];
-							if (
-								ts.isExpressionStatement(statement)
-								&& (
-									(
-										ts.isAsExpression(statement.expression)
-										&& ts.isTypeReferenceNode(statement.expression.type)
-										&& ts.isIdentifier(statement.expression.type.typeName)
-										&& statement.expression.type.typeName.text
-									)
-									|| (
-										ts.isBinaryExpression(statement.expression)
-										&& statement.expression.right.getText(ast)
-										&& statement.expression.operatorToken.kind === ts.SyntaxKind.InstanceOfKeyword
-									)
-									|| (
-										ts.isTypeOfExpression(statement.expression)
-										&& statement.expression.expression.getText(ast)
-									)
+			for (const mappedRange of templateFormatScript.mappings) {
+				if (mappedRange.sourceRange[1] === offset) {
+					const text = document.getText().substring(mappedRange.sourceRange[0], mappedRange.sourceRange[1]);
+					const ast = ts.createSourceFile(templateFormatScript.fileName, text, ts.ScriptTarget.Latest);
+					if (ast.statements.length === 1) {
+						const statement = ast.statements[0];
+						if (
+							ts.isExpressionStatement(statement)
+							&& (
+								(
+									ts.isAsExpression(statement.expression)
+									&& ts.isTypeReferenceNode(statement.expression.type)
+									&& ts.isIdentifier(statement.expression.type.typeName)
+									&& statement.expression.type.typeName.text
 								)
-							) {
-								// https://code.visualstudio.com/docs/editor/userdefinedsnippets#_grammar
-								const escapedText = text
-									.replaceAll('\\', '\\\\')
-									.replaceAll('$', '\\$')
-									.replaceAll('}', '\\}');
-								return vscode.TextEdit.replace(
-									{
-										start: document.positionAt(mappedRange.sourceRange[0]),
-										end: document.positionAt(mappedRange.sourceRange[1]),
-									},
-									'(' + escapedText + '$0' + ')',
-								);
-							}
+								|| (
+									ts.isBinaryExpression(statement.expression)
+									&& statement.expression.right.getText(ast)
+									&& statement.expression.operatorToken.kind === ts.SyntaxKind.InstanceOfKeyword
+								)
+								|| (
+									ts.isTypeOfExpression(statement.expression)
+									&& statement.expression.expression.getText(ast)
+								)
+							)
+						) {
+							// https://code.visualstudio.com/docs/editor/userdefinedsnippets#_grammar
+							const escapedText = text
+								.replaceAll('\\', '\\\\')
+								.replaceAll('$', '\\$')
+								.replaceAll('}', '\\}');
+							return vscode.TextEdit.replace(
+								{
+									start: document.positionAt(mappedRange.sourceRange[0]),
+									end: document.positionAt(mappedRange.sourceRange[1]),
+								},
+								'(' + escapedText + '$0' + ')',
+							);
 						}
 					}
 				}
-			},
-		};
+			}
+		},
 	};
-}
+};
+
+export default () => plugin;

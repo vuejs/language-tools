@@ -26,7 +26,7 @@ import * as renamePrepare from './languageFeatures/renamePrepare';
 import * as signatureHelp from './languageFeatures/signatureHelp';
 import * as diagnostics from './languageFeatures/validation';
 import * as workspaceSymbol from './languageFeatures/workspaceSymbols';
-import { LanguageServicePlugin, LanguageServicePluginInstance, LanguageServicePluginContext, LanguageServiceRuntimeContext } from './types';
+import { LanguageServicePlugin, LanguageServicePluginInstance, LanguageServiceRuntimeContext } from './types';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
 import * as colorPresentations from './documentFeatures/colorPresentations';
@@ -46,8 +46,9 @@ export function createLanguageServiceContext(options: {
 	host: LanguageServiceHost,
 	context: ReturnType<typeof createLanguageContext>,
 	getPlugins(): (LanguageServicePlugin | LanguageServicePluginInstance)[],
-	env: LanguageServicePluginContext['env'];
+	env: LanguageServiceRuntimeContext['env'];
 	documentRegistry: ts.DocumentRegistry | undefined,
+	getLanguageService: () => LanguageService,
 }) {
 
 	const ts = options.host.getTypeScriptModule();
@@ -59,37 +60,35 @@ export function createLanguageServiceContext(options: {
 
 	let plugins: LanguageServicePluginInstance[] | undefined;
 
-	const pluginContext: LanguageServicePluginContext = {
-		env: options.env,
-		typescript: ts && tsLs ? {
-			module: ts,
-			languageServiceHost: options.context.typescript.languageServiceHost,
-			languageService: tsLs,
-		} : undefined,
-	};
 	const textDocumentMapper = createDocumentsAndSourceMaps(options.context.virtualFiles);
 	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
 	const documentVersions = new Map<string, number>();
 	const context: LanguageServiceRuntimeContext = {
 		host: options.host,
 		core: options.context,
+		env: options.env,
 		get plugins() {
 			if (!plugins) {
+				plugins = []; // avoid infinite loop
 				plugins = options.getPlugins().map(plugin => {
 					if (plugin instanceof Function) {
-						const _plugin = plugin(pluginContext);
-						_plugin.setup?.(pluginContext);
+						const _plugin = plugin(this, options.getLanguageService());
+						_plugin.setup?.(this);
 						return _plugin;
 					}
 					else {
-						plugin.setup?.(pluginContext);
+						plugin.setup?.(this);
 						return plugin;
 					}
 				});
 			}
 			return plugins;
 		},
-		pluginContext,
+		typescript: ts && tsLs ? {
+			module: ts,
+			languageServiceHost: options.context.typescript.languageServiceHost,
+			languageService: tsLs,
+		} : undefined,
 		documents: textDocumentMapper,
 		getTextDocument,
 	};
@@ -162,7 +161,7 @@ export function createLanguageService(context: LanguageServiceRuntimeContext) {
 		doExecuteCommand: executeCommand.register(context),
 		getInlayHints: inlayHints.register(context),
 		callHierarchy: callHierarchy.register(context),
-		dispose: () => context.pluginContext.typescript?.languageService.dispose(),
+		dispose: () => context.typescript?.languageService.dispose(),
 		context,
 	};
 }

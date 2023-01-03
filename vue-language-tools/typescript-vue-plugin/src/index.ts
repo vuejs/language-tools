@@ -37,7 +37,7 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 				return info.project.__vue_getScriptKind(fileName);
 			};
 
-			const vueTsLsHost: vue.LanguageServiceHost = {
+			const vueTsLsHost: vue.VueLanguageServiceHost = {
 				getNewLine: () => info.project.getNewLine(),
 				useCaseSensitiveFileNames: () => info.project.useCaseSensitiveFileNames(),
 				readFile: path => info.project.readFile(path),

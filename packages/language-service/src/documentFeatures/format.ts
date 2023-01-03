@@ -33,7 +33,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 		const originalSnapshot = source[0];
 		const rootVirtualFile = source[1];
 		const originalDocument = document;
-		const initialIndentLanguageId = await context.pluginContext.env.configurationHost?.getConfiguration<Record<string, boolean>>('volar.format.initialIndent') ?? { html: true };
+		const initialIndentLanguageId = await context.env.configurationHost?.getConfiguration<Record<string, boolean>>('volar.format.initialIndent') ?? { html: true };
 
 		let level = 0;
 		let edited = false;
@@ -229,10 +229,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 				let edits: vscode.TextEdit[] | null | undefined;
 				let recover: (() => void) | undefined;
 
-				if (formatDocument !== document && isTsDocument(formatDocument) && context.pluginContext.typescript) {
+				if (formatDocument !== document && isTsDocument(formatDocument) && context.typescript) {
 					const formatFileName = shared.getPathOfUri(formatDocument.uri);
 					const formatSnapshot = stringToSnapshot(formatDocument.getText());
-					const host = context.pluginContext.typescript.languageServiceHost;
+					const host = context.typescript.languageServiceHost;
 					const original = {
 						getProjectVersion: host.getProjectVersion,
 						getScriptVersion: host.getScriptVersion,
