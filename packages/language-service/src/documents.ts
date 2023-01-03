@@ -158,7 +158,7 @@ export function createDocumentsAndSourceMaps(mapper: VirtualFiles) {
 
 	const _maps = new WeakMap<SourceMap<FileRangeCapabilities>, [VirtualFile, SourceMapWithDocuments<FileRangeCapabilities>]>();
 	const _mirrorMaps = new WeakMap<MirrorMap, [VirtualFile, MirrorMapWithDocument]>();
-	const _documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
+	const _documents = new WeakMap<ts.IScriptSnapshot, Map<string, TextDocument>>();
 
 	return {
 		getSourceByUri(sourceFileUri: string) {
@@ -254,13 +254,17 @@ export function createDocumentsAndSourceMaps(mapper: VirtualFiles) {
 
 	function getDocumentByFileName(snapshot: ts.IScriptSnapshot, fileName: string) {
 		if (!_documents.has(snapshot)) {
-			_documents.set(snapshot, TextDocument.create(
+			_documents.set(snapshot, new Map());
+		}
+		const map = _documents.get(snapshot)!;
+		if (!map.has(fileName)) {
+			map.set(fileName, TextDocument.create(
 				shared.getUriByPath(fileName),
 				shared.syntaxToLanguageId(fileName.substring(fileName.lastIndexOf('.') + 1)),
 				version++,
 				snapshot.getText(0, snapshot.getLength()),
 			));
 		}
-		return _documents.get(snapshot)!;
+		return map.get(fileName)!;
 	}
 }
