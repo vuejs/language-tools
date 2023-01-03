@@ -6,6 +6,7 @@
 		"extensions/*",
 		"packages/*",
 		"plugins/*",
+		"pug-language-tools/*",
 		"vue-language-tools/*"
 	],
 	"version": "1.0.19"

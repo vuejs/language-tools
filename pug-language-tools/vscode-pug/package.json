@@ -5,10 +5,10 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
-		"directory": "extensions/vscode-pug"
+		"directory": "pug-language-tools/vscode-pug"
 	},
-	"displayName": "Pug (Volar)",
-	"description": "Pug (Volar)",
+	"displayName": "Pug Language Features (Volar)",
+	"description": "Pug Language Features (Volar)",
 	"author": "johnsoncodehk",
 	"publisher": "johnsoncodehk",
 	"engines": {

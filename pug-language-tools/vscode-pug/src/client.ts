@@ -7,9 +7,6 @@ let client: lsp.BaseLanguageClient;
 
 export async function activate(context: vscode.ExtensionContext) {
 
-	const documentSelector: lsp.DocumentFilter[] = [
-		{ language: 'jade' },
-	];
 	const initializationOptions: LanguageServerInitializationOptions = {
 		typescript: {
 			tsdk: path.join(
@@ -37,12 +34,12 @@ export async function activate(context: vscode.ExtensionContext) {
 		},
 	};
 	const clientOptions: lsp.LanguageClientOptions = {
-		documentSelector,
+		documentSelector: [{ language: 'jade' }],
 		initializationOptions,
 	};
 	client = new lsp.LanguageClient(
 		'volar-pug-language-server',
-		'Pug (Volar Example)',
+		'Pug (Volar)',
 		serverOptions,
 		clientOptions,
 	);
