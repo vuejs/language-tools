@@ -4,7 +4,7 @@ import { createConnection, startLanguageServer, LanguageServerPlugin } from '@vo
 
 const plugin: LanguageServerPlugin = () => ({
 	extraFileExtensions: [{ extension: 'pug', isMixedContent: true }],
-	getServicePlugins() {
+	getLanguageServicePlugins() {
 		return [
 			createPugPlugin(),
 			createPugBeautifyPlugin(),

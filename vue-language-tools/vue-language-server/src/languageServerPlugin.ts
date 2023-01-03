@@ -52,7 +52,7 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.VueLangua
 			}
 			return [];
 		},
-		getServicePlugins(_, context) {
+		getLanguageServicePlugins(_, context) {
 			const settings: vue.Settings = {};
 			if (initOptions.json) {
 				settings.json = { schemas: [] };

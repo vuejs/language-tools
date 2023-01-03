@@ -85,7 +85,7 @@ export async function createProject(context: ProjectContext) {
 				getPlugins() {
 					return [
 						...context.serverConfig?.plugins ?? [],
-						...context.workspace.workspaces.plugins.map(plugin => plugin.getServicePlugins?.(languageServiceHost, languageServiceContext) ?? []).flat(),
+						...context.workspace.workspaces.plugins.map(plugin => plugin.getLanguageServicePlugins?.(languageServiceHost, languageServiceContext) ?? []).flat(),
 					];
 				},
 				env: {

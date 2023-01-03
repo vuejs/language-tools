@@ -15,7 +15,7 @@ const plugin: LanguageServerPlugin = () => ({
 		}
 		return [];
 	},
-	getServicePlugins() {
+	getLanguageServicePlugins() {
 		return [
 			createTsPlugin(),
 			ngTemplatePlugin,

@@ -53,7 +53,7 @@ export type LanguageServerPlugin<
 
 	getLanguageModules?(host: B): embedded.LanguageModule[];
 
-	getServicePlugins?(
+	getLanguageServicePlugins?(
 		host: B,
 		context: LanguageServiceRuntimeContext,
 	): embeddedLS.LanguageServicePlugin[];

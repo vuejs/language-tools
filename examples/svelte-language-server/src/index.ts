@@ -8,7 +8,7 @@ const plugin: LanguageServerPlugin = () => ({
 		getLanguageModules() {
 			return [languageModule];
 		},
-		getServicePlugins() {
+		getLanguageServicePlugins() {
 			return [
 				useTsPlugin(),
 			];
@@ -18,7 +18,7 @@ const plugin: LanguageServerPlugin = () => ({
 		getLanguageModules() {
 			return [languageModule];
 		},
-		getServicePlugins() {
+		getLanguageServicePlugins() {
 			return [
 				useTsPlugin(),
 			];

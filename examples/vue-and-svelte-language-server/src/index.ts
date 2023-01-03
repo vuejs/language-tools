@@ -36,7 +36,7 @@ const plugin: LanguageServerPlugin<LanguageServerInitializationOptions, vue.VueL
 
 			return plugins;
 		},
-		getServicePlugins() {
+		getLanguageServicePlugins() {
 			return [
 				useTsPlugin(),
 			];
