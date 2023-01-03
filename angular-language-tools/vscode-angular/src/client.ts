@@ -6,6 +6,7 @@ import {
 	registerShowVirtualFiles,
 	registerTsConfig,
 	registerTsVersion,
+	takeOverModeActive,
 } from '@volar/vscode-language-client';
 import * as os from 'os';
 import * as fs from 'fs';
@@ -13,6 +14,26 @@ import * as fs from 'fs';
 let client: lsp.BaseLanguageClient;
 
 export async function activate(context: vscode.ExtensionContext) {
+
+	const stopCheck = vscode.window.onDidChangeActiveTextEditor(tryActivate);
+	tryActivate();
+
+	function tryActivate() {
+
+		if (!vscode.window.activeTextEditor) {
+			return;
+		}
+
+		const currentLangId = vscode.window.activeTextEditor.document.languageId;
+		const takeOverMode = takeOverModeActive(context);
+		if (takeOverMode && ['javascript', 'typescript', 'javascriptreact', 'typescriptreact', 'html'].includes(currentLangId)) {
+			doActivate(context);
+			stopCheck.dispose();
+		}
+	}
+}
+
+async function doActivate(context: vscode.ExtensionContext) {
 
 	const cancellationPipeName = path.join(os.tmpdir() as path.OsPath, `vscode-${context.extension.id}-cancellation-pipe.tmp` as path.PosixPath);
 	const isSupportDoc = (document: vscode.TextDocument) => documentSelector.some(selector => selector.language === document.languageId);

@@ -64,6 +64,11 @@
 			"type": "object",
 			"title": "Volar-Angular",
 			"properties": {
+				"volar.takeOverMode.extension": {
+					"type": "string",
+					"default": "johnsoncodehk.vscode-angular",
+					"description": "The extension that take over language support for *.ts."
+				},
 				"volar-angular-language-server.trace.server": {
 					"scope": "window",
 					"type": "string",

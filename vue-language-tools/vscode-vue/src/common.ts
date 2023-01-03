@@ -10,6 +10,7 @@ import {
 	registerServerSys,
 	registerTsVersion,
 	getTsdk,
+	takeOverModeActive,
 } from '@volar/vscode-language-client';
 import { DiagnosticModel, ServerMode, VueServerInitializationOptions } from '@volar/vue-language-server';
 import * as vscode from 'vscode';
@@ -56,7 +57,7 @@ export async function activate(context: vscode.ExtensionContext, createLc: Creat
 			stopCheck.dispose();
 		}
 
-		const takeOverMode = takeOverModeEnabled();
+		const takeOverMode = takeOverModeActive(context);
 		if (takeOverMode && ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(currentLangId)) {
 			doActivate(context, createLc);
 			stopCheck.dispose();
@@ -71,7 +72,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	semanticClient = createLc(
 		'vue-semantic-server',
 		'Vue Semantic Server',
-		getDocumentSelector(ServerMode.Semantic),
+		getDocumentSelector(context, ServerMode.Semantic),
 		getInitializationOptions(ServerMode.Semantic, context),
 		getFillInitializeParams([LanguageFeaturesKind.Semantic]),
 		6009,
@@ -79,7 +80,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	syntacticClient = createLc(
 		'vue-syntactic-server',
 		'Vue Syntactic Server',
-		getDocumentSelector(ServerMode.Syntactic),
+		getDocumentSelector(context, ServerMode.Syntactic),
 		getInitializationOptions(ServerMode.Syntactic, context),
 		getFillInitializeParams([LanguageFeaturesKind.Syntactic]),
 		6011,
@@ -113,7 +114,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 				|| (processMd() && document.languageId === 'markdown')
 				|| (processHtml() && document.languageId === 'html')
 				|| (
-					takeOverModeEnabled()
+					takeOverModeActive(context)
 					&& ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(document.languageId)
 				);
 		},
@@ -126,14 +127,12 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 				|| (processMd() && document.languageId === 'markdown')
 				|| (processHtml() && document.languageId === 'html')
 				|| (
-					takeOverModeEnabled()
+					takeOverModeActive(context)
 					&& ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(document.languageId)
 				);
 		},
 		text => {
-			if (takeOverModeEnabled()) {
-				text += ' (vue)';
-			}
+			text += ' (vue)';
 			if (noProjectReferences()) {
 				text += ' (noProjectReferences)';
 			}
@@ -191,16 +190,8 @@ export function deactivate(): Thenable<any> | undefined {
 	]);
 }
 
-export function takeOverModeEnabled() {
-	const status = vscode.workspace.getConfiguration('volar').get<false | 'auto'>('takeOverMode.enabled');
-	if (status /* true | 'auto' */) {
-		return !vscode.extensions.getExtension('vscode.typescript-language-features');
-	}
-	return false;
-}
-
-export function getDocumentSelector(serverMode: ServerMode) {
-	const takeOverMode = takeOverModeEnabled();
+export function getDocumentSelector(context: vscode.ExtensionContext, serverMode: ServerMode) {
+	const takeOverMode = takeOverModeActive(context);
 	const langs = takeOverMode ? [
 		'vue',
 		'javascript',

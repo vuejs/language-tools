@@ -420,7 +420,7 @@
 					"items": {
 						"type": "string"
 					},
-					"default": [],
+					"default": [ ],
 					"description": "List any additional file extensions that should be processed as Vue files (requires restart)."
 				},
 				"volar.codeLens.references": {
@@ -526,21 +526,10 @@
 						}
 					}
 				},
-				"volar.takeOverMode.enabled": {
-					"type": [
-						"boolean",
-						"string"
-					],
-					"enum": [
-						"auto",
-						false
-					],
-					"enumDescriptions": [
-						"Auto enable take over mode when built-in TS extension disabled.",
-						"Never enable take over mode."
-					],
-					"default": "auto",
-					"description": "Take over language support for *.ts."
+				"volar.takeOverMode.extension": {
+					"type": "string",
+					"default": "Vue.volar",
+					"description": "The extension that take over language support for *.ts."
 				},
 				"volar.completion.preferredTagNameCase": {
 					"type": "string",

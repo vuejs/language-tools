@@ -33,11 +33,11 @@ We have only one stubborn way to setup (that has the best performance) because t
 
    2. Right click and select "Disable (Workspace)"
 
-3. Create / Open `.vscode/settings.json` in workspace and put following setting to avoid "Vue Language Features (Volar)" auto active with takeover mode
+3. Create / Open `.vscode/settings.json` in workspace and put following setting.
 
    ```json
 	{
-		"volar.takeOverMode.enabled": false
+		"volar.takeOverMode.extension": "johnsoncodehk.vscode-angular"
 	}
    ```
 
