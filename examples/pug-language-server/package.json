@@ -17,6 +17,7 @@
 	},
 	"dependencies": {
 		"@volar-plugins/pug": "1.0.19",
+		"@volar-plugins/pug-beautify": "1.0.19",
 		"@volar/language-server": "1.0.19"
 	}
 }

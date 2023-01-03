@@ -48,6 +48,7 @@ export default function (): LanguageServicePlugin & ReturnType<typeof useHtmlPlu
 					if (pugDocument.error) {
 
 						return [{
+							source: 'pug',
 							code: pugDocument.error.code,
 							message: pugDocument.error.msg,
 							range: {
@@ -56,6 +57,8 @@ export default function (): LanguageServicePlugin & ReturnType<typeof useHtmlPlu
 							},
 						}];
 					}
+
+					return [];
 				});
 			},
 		},

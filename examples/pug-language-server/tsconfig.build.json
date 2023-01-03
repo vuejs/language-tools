@@ -18,6 +18,9 @@
 		},
 		{
 			"path": "../../plugins/pug/tsconfig.build.json"
+		},
+		{
+			"path": "../../plugins/pug-beautify/tsconfig.build.json"
 		}
 	]
 }

@@ -57,9 +57,11 @@ importers:
   examples/pug-language-server:
     specifiers:
       '@volar-plugins/pug': 1.0.19
+      '@volar-plugins/pug-beautify': 1.0.19
       '@volar/language-server': 1.0.19
     dependencies:
       '@volar-plugins/pug': link:../../plugins/pug
+      '@volar-plugins/pug-beautify': link:../../plugins/pug-beautify
       '@volar/language-server': link:../../packages/language-server
 
   examples/svelte-language-core:

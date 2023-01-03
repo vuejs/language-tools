@@ -1,4 +1,4 @@
-import type { LanguageServerInitializationOptions } from '@volar/language-server';
+import { LanguageServerInitializationOptions, ServerMode, DiagnosticModel } from '@volar/language-server';
 import * as path from 'typesafe-path';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient/node';
@@ -17,7 +17,9 @@ export async function activate(context: vscode.ExtensionContext) {
 				'extensions/node_modules/typescript/lib' as path.PosixPath,
 			),
 		},
-		noProjectReferences: true,
+		diagnosticModel: DiagnosticModel.Pull,
+		serverMode: ServerMode.Syntactic, // avoid cross file behavior for better performance
+		disableFileWatcher: true,
 	};
 	const serverModule = vscode.Uri.joinPath(context.extensionUri, 'server.js');
 	const runOptions = { execArgv: <string[]>[] };
