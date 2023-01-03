@@ -14,13 +14,13 @@
 	],
 	"references": [
 		{
-			"path": "../../pug-language-tools/pug-language-service/tsconfig.build.json"
+			"path": "../../packages/language-server/tsconfig.build.json"
 		},
 		{
-			"path": "../../packages/source-map/tsconfig.build.json"
+			"path": "../../plugins/pug/tsconfig.build.json"
 		},
 		{
-			"path": "../vue-language-core/tsconfig.build.json"
-		},
-	],
+			"path": "../../plugins/pug-beautify/tsconfig.build.json"
+		}
+	]
 }

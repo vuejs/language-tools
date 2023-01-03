@@ -6,7 +6,8 @@
 		"rootDir": "src",
 	},
 	"include": [
-		"src"
+		"src",
+		"src/**/*.json"
 	],
 	"exclude": [
 		"node_modules",
@@ -14,13 +15,10 @@
 	],
 	"references": [
 		{
-			"path": "../../pug-language-tools/pug-language-service/tsconfig.build.json"
+			"path": "../../packages/language-server/tsconfig.build.json"
 		},
 		{
-			"path": "../../packages/source-map/tsconfig.build.json"
-		},
-		{
-			"path": "../vue-language-core/tsconfig.build.json"
-		},
-	],
+			"path": "../pug-language-server/tsconfig.build.json"
+		}
+	]
 }

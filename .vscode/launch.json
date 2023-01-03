@@ -20,6 +20,23 @@
 			}
 		},
 		{
+			"name": "Launch Pug",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"--disable-extensions",
+				"--extensionDevelopmentPath=${workspaceRoot}/pug-language-tools/vscode-pug"
+			],
+			"outFiles": [
+				"${workspaceRoot}/*/*/out/**/*.js"
+			],
+			"preLaunchTask": {
+				"type": "npm",
+				"script": "watch"
+			}
+		},
+		{
 			"name": "Launch Svelte Example",
 			"type": "extensionHost",
 			"request": "launch",

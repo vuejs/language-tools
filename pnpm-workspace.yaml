@@ -4,4 +4,5 @@ packages:
   - 'extensions/*'
   - 'packages/*'
   - 'plugins/*'
+  - 'pug-language-tools/*'
   - 'vue-language-tools/*'

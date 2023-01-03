@@ -133,11 +133,23 @@ export function setupCapabilities(
 	if (!initOptions.respectClientCapabilities || params.textDocument?.inlayHint) {
 		server.inlayHintProvider = true;
 	}
-	if (!initOptions.respectClientCapabilities || params.textDocument?.diagnostic && (initOptions.diagnosticModel ?? DiagnosticModel.Push) === DiagnosticModel.Pull) {
+	if ((!initOptions.respectClientCapabilities || params.textDocument?.diagnostic) && (initOptions.diagnosticModel ?? DiagnosticModel.Push) === DiagnosticModel.Pull) {
 		server.diagnosticProvider = {
 			documentSelector: [
-				...plugins.map(plugin => plugin.extraFileExtensions.map(ext => ({ pattern: `**/*.${ext.extension}` }))).flat(),
-				{ pattern: '**/*.{ts,js,tsx,jsx}' },
+				{
+					pattern: `**/*.{${[
+						'js',
+						'cjs',
+						'mjs',
+						'ts',
+						'cts',
+						'mts',
+						'jsx',
+						'tsx',
+						// 'json',
+						...plugins.map(plugin => plugin.extraFileExtensions?.map(ext => ext.extension) ?? []).flat(),
+					].join(',')}}`
+				}
 			],
 			interFileDependencies: true,
 			workspaceDiagnostics: false,
@@ -150,16 +162,22 @@ export function setupCapabilities(
 			fileOperations: {
 				willRename: {
 					filters: [
-						...plugins.map(plugin => plugin.extraFileExtensions.map(ext => ({ pattern: { glob: `**/*.${ext.extension}` } }))).flat(),
-						{ pattern: { glob: '**/*.js' } },
-						{ pattern: { glob: '**/*.cjs' } },
-						{ pattern: { glob: '**/*.mjs' } },
-						{ pattern: { glob: '**/*.ts' } },
-						{ pattern: { glob: '**/*.cts' } },
-						{ pattern: { glob: '**/*.mts' } },
-						{ pattern: { glob: '**/*.jsx' } },
-						{ pattern: { glob: '**/*.tsx' } },
-						{ pattern: { glob: '**/*.json' } },
+						{
+							pattern: {
+								glob: `**/*.{${[
+									'js',
+									'cjs',
+									'mjs',
+									'ts',
+									'cts',
+									'mts',
+									'jsx',
+									'tsx',
+									'json',
+									...plugins.map(plugin => plugin.extraFileExtensions?.map(ext => ext.extension) ?? []).flat(),
+								].join(',')}}`
+							}
+						},
 					]
 				}
 			}

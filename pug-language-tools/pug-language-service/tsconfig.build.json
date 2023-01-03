@@ -14,16 +14,16 @@
 	],
 	"references": [
 		{
-			"path": "../shared/tsconfig.build.json"
+			"path": "../../packages/shared/tsconfig.build.json"
 		},
 		{
-			"path": "../source-map/tsconfig.build.json"
+			"path": "../../packages/source-map/tsconfig.build.json"
 		},
 		{
-			"path": "../language-service/tsconfig.build.json"
+			"path": "../../packages/language-service/tsconfig.build.json"
 		},
 		{
-			"path": "../transforms/tsconfig.build.json"
+			"path": "../../packages/transforms/tsconfig.build.json"
 		},
 	],
 }
