@@ -13,7 +13,7 @@ export interface ServerContext {
 	plugins: LanguageServerPlugin[],
 }
 
-export function createCommonLanguageServer(context: ServerContext) {
+export function startCommonLanguageServer(context: ServerContext) {
 
 	let initParams: vscode.InitializeParams;
 	let options: LanguageServerInitializationOptions;

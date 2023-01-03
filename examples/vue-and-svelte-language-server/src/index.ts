@@ -1,6 +1,6 @@
 import { languageModule as svelteLanguageModule } from '@volar-examples/svelte-language-core';
 import useTsPlugin from '@volar-plugins/typescript';
-import { createLanguageServer, LanguageServerInitializationOptions, LanguageServerPlugin } from '@volar/language-server/node';
+import { createConnection, startLanguageServer, LanguageServerInitializationOptions, LanguageServerPlugin } from '@volar/language-server/node';
 import * as vue from '@volar/vue-language-core';
 
 const plugin: LanguageServerPlugin<LanguageServerInitializationOptions, vue.VueLanguageServiceHost> = () => {
@@ -44,4 +44,4 @@ const plugin: LanguageServerPlugin<LanguageServerInitializationOptions, vue.VueL
 	};
 };
 
-createLanguageServer([plugin]);
+startLanguageServer(createConnection(), plugin);

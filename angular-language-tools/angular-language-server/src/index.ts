@@ -1,6 +1,6 @@
 import { createTsLanguageModule, createHtmlLanguageModule, HTMLTemplateFile } from '@volar-examples/angular-language-core';
 import createTsPlugin from '@volar-plugins/typescript';
-import { createLanguageServer, LanguageServerPlugin } from '@volar/language-server/node';
+import { createConnection, startLanguageServer, LanguageServerPlugin } from '@volar/language-server/node';
 import type { LanguageServicePlugin, Diagnostic } from '@volar/language-service';
 
 const plugin: LanguageServerPlugin = () => ({
@@ -46,4 +46,4 @@ const ngTemplatePlugin: LanguageServicePlugin = (context) => ({
 	}
 });
 
-createLanguageServer([plugin]);
+startLanguageServer(createConnection(), plugin);

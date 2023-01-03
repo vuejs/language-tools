@@ -1,7 +1,7 @@
 import { configure as configureHttpRequests } from 'request-light';
 import * as ts from 'typescript/lib/tsserverlibrary'; // bundle typescript lib in web
 import * as vscode from 'vscode-languageserver/browser';
-import { createCommonLanguageServer } from '../common/server';
+import { startCommonLanguageServer } from '../common/server';
 import { LanguageServerPlugin } from '../types';
 import httpSchemaRequestHandler from '../common/schemaRequestHandlers/http';
 import { createWebFileSystemHost } from './fileSystems';
@@ -9,13 +9,17 @@ import * as shared from '@volar/shared';
 
 export * from '../index';
 
-export function createLanguageServer(plugins: LanguageServerPlugin[]) {
+export function createConnection() {
 
 	const messageReader = new vscode.BrowserMessageReader(self);
 	const messageWriter = new vscode.BrowserMessageWriter(self);
 	const connection = vscode.createConnection(messageReader, messageWriter);
 
-	createCommonLanguageServer({
+	return connection;
+}
+
+export function startLanguageServer(connection: vscode.Connection, ...plugins: LanguageServerPlugin[]) {
+	startCommonLanguageServer({
 		plugins,
 		connection,
 		runtimeEnv: {

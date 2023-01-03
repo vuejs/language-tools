@@ -1,6 +1,6 @@
 import createPugPlugin from '@volar-plugins/pug';
 import createPugBeautifyPlugin from '@volar-plugins/pug-beautify';
-import { createLanguageServer, LanguageServerPlugin } from '@volar/language-server/node';
+import { createConnection, startLanguageServer, LanguageServerPlugin } from '@volar/language-server/node';
 
 const plugin: LanguageServerPlugin = () => ({
 	extraFileExtensions: [{ extension: 'pug', isMixedContent: true }],
@@ -12,4 +12,4 @@ const plugin: LanguageServerPlugin = () => ({
 	},
 });
 
-createLanguageServer([plugin]);
+startLanguageServer(createConnection(), plugin);

@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import { configure as configureHttpRequests } from 'request-light';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver/node';
-import { createCommonLanguageServer } from '../common/server';
+import { startCommonLanguageServer } from '../common/server';
 import fileSchemaRequestHandler from '../common/schemaRequestHandlers/file';
 import httpSchemaRequestHandler from '../common/schemaRequestHandlers/http';
 import { createNodeFileSystemHost } from './fileSystem';
@@ -11,11 +11,12 @@ import { LanguageServerPlugin } from '../types';
 
 export * from '../index';
 
-export function createLanguageServer(plugins: LanguageServerPlugin[]) {
+export function createConnection() {
+	return vscode.createConnection(vscode.ProposedFeatures.all);
+}
 
-	const connection = vscode.createConnection(vscode.ProposedFeatures.all);
-
-	createCommonLanguageServer({
+export function startLanguageServer(connection: vscode.Connection, ...plugins: LanguageServerPlugin[]) {
+	startCommonLanguageServer({
 		plugins,
 		connection,
 		runtimeEnv: {
