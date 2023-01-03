@@ -5,6 +5,7 @@ import * as tsFaster from '@volar/typescript-faster';
 
 const init: ts.server.PluginModuleFactory = (modules) => {
 	const { typescript: ts } = modules;
+	const externalFiles = new Map<ts.server.Project, string[]>();
 	const pluginModule: ts.server.PluginModule = {
 		create(info) {
 
@@ -21,10 +22,13 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 				scriptKind: ts.ScriptKind.Deferred,
 			}];
 			const parsed = vue.createParsedCommandLine(ts, ts.sys, projectName, extraFileExtensions);
-			if (!parsed.fileNames.some(fileName => fileName.endsWith('.vue'))) {
+			const vueFileNames = parsed.fileNames.filter(fileName => fileName.endsWith('.vue'));
+			if (!vueFileNames.length) {
 				// no vue file
 				return info.languageService;
 			}
+
+			externalFiles.set(info.project, vueFileNames);
 
 			// fix: https://github.com/johnsoncodehk/volar/issues/205
 			// @ts-expect-error
@@ -86,6 +90,9 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 					return target[property];
 				},
 			});
+		},
+		getExternalFiles(project) {
+			return externalFiles.get(project) ?? [];
 		},
 	};
 	return pluginModule;
