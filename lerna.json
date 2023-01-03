@@ -9,5 +9,5 @@
 		"pug-language-tools/*",
 		"vue-language-tools/*"
 	],
-	"version": "1.0.19"
+	"version": "1.0.20"
 }

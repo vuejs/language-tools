@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "1.0.19",
+	"version": "1.0.20",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
@@ -420,7 +420,7 @@
 					"items": {
 						"type": "string"
 					},
-					"default": [ ],
+					"default": [],
 					"description": "List any additional file extensions that should be processed as Vue files (requires restart)."
 				},
 				"volar.codeLens.references": {
@@ -808,12 +808,12 @@
 	"devDependencies": {
 		"@types/semver": "^7.3.13",
 		"@types/vscode": "1.67.0",
-		"@volar/preview": "1.0.19",
-		"@volar/shared": "1.0.19",
-		"@volar/source-map": "1.0.19",
-		"@volar/vscode-language-client": "1.0.19",
-		"@volar/vue-language-core": "1.0.19",
-		"@volar/vue-language-server": "1.0.19",
+		"@volar/preview": "1.0.20",
+		"@volar/shared": "1.0.20",
+		"@volar/source-map": "1.0.20",
+		"@volar/vscode-language-client": "1.0.20",
+		"@volar/vue-language-core": "1.0.20",
+		"@volar/vue-language-server": "1.0.20",
 		"esbuild": "latest",
 		"esbuild-plugin-copy": "latest",
 		"esbuild-visualizer": "latest",

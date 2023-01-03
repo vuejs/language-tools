@@ -1,6 +1,6 @@
 {
 	"name": "@volar-plugins/pug-beautify",
-	"version": "1.0.19",
+	"version": "1.0.20",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [

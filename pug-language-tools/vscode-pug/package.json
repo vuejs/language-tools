@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "vscode-pug",
-	"version": "1.0.19",
+	"version": "1.0.20",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
@@ -44,9 +44,9 @@
 		"release": "npm run build && vsce publish --pre-release"
 	},
 	"devDependencies": {
-		"@volar/pug-language-server": "1.0.19",
 		"@types/vscode": "1.67.0",
-		"@volar/language-server": "1.0.19",
+		"@volar/language-server": "1.0.20",
+		"@volar/pug-language-server": "1.0.20",
 		"esbuild": "latest",
 		"typesafe-path": "^0.2.2",
 		"vsce": "latest",
