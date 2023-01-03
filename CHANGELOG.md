@@ -1,14 +1,13 @@
 # Changelog
 
-## 1.0.19 (2022/12/31)
+## 1.0.20 (2022/1/4)
 
-- feat: add `experimentalAdditionalLanguageModules` option for `vueCompilerOptions` ([#2267](https://github.com/johnsoncodehk/volar/issues/2267))
-- fix: TS `typescript/javascript.preferences.autoImportFileExcludePatterns` setting not working
-- fix: formatting not working for extra vue file extensions ([#2263](https://github.com/johnsoncodehk/volar/issues/2263))
-- fix(doctor): accidentally report `@vue/compiler-dom` warning ([#2262](https://github.com/johnsoncodehk/volar/issues/2262))
-- fix(vue-component-meta): `required` property incorrect ([#2256](https://github.com/johnsoncodehk/volar/issues/2256))
-- fix(preview): cannot start preview if project never start run vite server ([#2223](https://github.com/johnsoncodehk/volar/issues/2223))
-- fix: references codeLens not working
+- feat: support url field for embedded preview
+- feat: released pug extension ([#2274](https://github.com/johnsoncodehk/volar/issues/2274))
+- feat: add `volar.takeOverMode.extension` setting for choice extension that takeover *.ts language support
+- fix(typescript-vue-plugin): can't always get latest status of .vue files ([#2271](https://github.com/johnsoncodehk/volar/issues/2271))
+- refactor(framework): simplify `LanguageServerPlugin` api and dependency injection connection ([#2273](https://github.com/johnsoncodehk/volar/issues/2273))
+- refactor(framework): combine `createLanguageService` and `createDocumentService`
 
 ### Out Gold Sponsors
 
@@ -23,6 +22,16 @@
 	<td align="center" valign="middle"><a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/prefect.svg" height="50" /></a></td>
 	<td align="center" valign="middle"><a href="https://github.com/365talents"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/365talents.png" height="70" /></a></td>
 </tr></table>
+
+## 1.0.19 (2022/12/31)
+
+- feat: add `experimentalAdditionalLanguageModules` option for `vueCompilerOptions` ([#2267](https://github.com/johnsoncodehk/volar/issues/2267))
+- fix: TS `typescript/javascript.preferences.autoImportFileExcludePatterns` setting not working
+- fix: formatting not working for extra vue file extensions ([#2263](https://github.com/johnsoncodehk/volar/issues/2263))
+- fix(doctor): accidentally report `@vue/compiler-dom` warning ([#2262](https://github.com/johnsoncodehk/volar/issues/2262))
+- fix(vue-component-meta): `required` property incorrect ([#2256](https://github.com/johnsoncodehk/volar/issues/2256))
+- fix(preview): cannot start preview if project never start run vite server ([#2223](https://github.com/johnsoncodehk/volar/issues/2223))
+- fix: references codeLens not working
 
 ## 1.0.18 (2022/12/26)
 
