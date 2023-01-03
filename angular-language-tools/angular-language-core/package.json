@@ -10,7 +10,7 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
-		"directory": "examples/angular-language-core"
+		"directory": "angular-language-tools/angular-language-core"
 	},
 	"dependencies": {
 		"@angular-eslint/bundled-angular-compiler": "^15.1.0",

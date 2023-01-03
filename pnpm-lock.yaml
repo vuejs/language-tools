@@ -21,13 +21,7 @@ importers:
       vite: 4.0.3_@types+node@18.11.18
       vitest: 0.25.8
 
-  docs:
-    specifiers:
-      vitepress: latest
-    optionalDependencies:
-      vitepress: 1.0.0-alpha.34
-
-  examples/angular-language-core:
+  angular-language-tools/angular-language-core:
     specifiers:
       '@angular-eslint/bundled-angular-compiler': ^15.1.0
       '@angular/compiler': ^15.0.4
@@ -42,7 +36,7 @@ importers:
     devDependencies:
       '@angular/compiler': 15.0.4
 
-  examples/angular-language-server:
+  angular-language-tools/angular-language-server:
     specifiers:
       '@volar-examples/angular-language-core': 1.0.19
       '@volar-plugins/typescript': 1.0.19
@@ -53,6 +47,32 @@ importers:
       '@volar-plugins/typescript': link:../../plugins/typescript
       '@volar/language-server': link:../../packages/language-server
       '@volar/shared': link:../../packages/shared
+
+  angular-language-tools/vscode-angular:
+    specifiers:
+      '@types/vscode': 1.67.0
+      '@volar-examples/angular-language-server': 1.0.19
+      '@volar/language-server': 1.0.19
+      '@volar/vscode-language-client': 1.0.19
+      esbuild: latest
+      typesafe-path: ^0.2.2
+      vsce: latest
+      vscode-languageclient: ^8.0.2
+    devDependencies:
+      '@types/vscode': 1.67.0
+      '@volar-examples/angular-language-server': link:../angular-language-server
+      '@volar/language-server': link:../../packages/language-server
+      '@volar/vscode-language-client': link:../../packages/vscode-language-client
+      esbuild: 0.16.13
+      typesafe-path: 0.2.2
+      vsce: 2.15.0
+      vscode-languageclient: 8.0.2
+
+  docs:
+    specifiers:
+      vitepress: latest
+    optionalDependencies:
+      vitepress: 1.0.0-alpha.34
 
   examples/svelte-language-core:
     specifiers:
@@ -95,26 +115,6 @@ importers:
     dependencies:
       '@volar-examples/svelte-language-core': link:../svelte-language-core
       '@volar/typescript': link:../../packages/typescript
-
-  examples/vscode-angular:
-    specifiers:
-      '@types/vscode': 1.67.0
-      '@volar-examples/angular-language-server': 1.0.19
-      '@volar/language-server': 1.0.19
-      '@volar/vscode-language-client': 1.0.19
-      esbuild: latest
-      typesafe-path: ^0.2.2
-      vsce: latest
-      vscode-languageclient: ^8.0.2
-    devDependencies:
-      '@types/vscode': 1.67.0
-      '@volar-examples/angular-language-server': link:../angular-language-server
-      '@volar/language-server': link:../../packages/language-server
-      '@volar/vscode-language-client': link:../../packages/vscode-language-client
-      esbuild: 0.16.13
-      typesafe-path: 0.2.2
-      vsce: 2.15.0
-      vscode-languageclient: 8.0.2
 
   examples/vscode-svelte:
     specifiers:

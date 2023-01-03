@@ -5,10 +5,10 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
-		"directory": "examples/vscode-angular"
+		"directory": "angular-language-tools/vscode-angular"
 	},
-	"displayName": "Angular (Volar)",
-	"description": "Angular (Volar)",
+	"displayName": "Angular Language Features (Volar)",
+	"description": "Angular Language Features (Volar)",
 	"author": "johnsoncodehk",
 	"publisher": "johnsoncodehk",
 	"engines": {

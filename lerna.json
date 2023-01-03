@@ -5,6 +5,7 @@
 		"examples/*",
 		"packages/*",
 		"plugins/*",
+		"angular-language-tools/*",
 		"pug-language-tools/*",
 		"vue-language-tools/*"
 	],

@@ -13,7 +13,7 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
-		"directory": "examples/angular-language-server"
+		"directory": "angular-language-tools/angular-language-server"
 	},
 	"dependencies": {
 		"@volar-examples/angular-language-core": "1.0.19",

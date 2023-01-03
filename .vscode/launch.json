@@ -60,7 +60,7 @@
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"--disable-extensions",
-				"--extensionDevelopmentPath=${workspaceRoot}/examples/vscode-angular"
+				"--extensionDevelopmentPath=${workspaceRoot}/angular-language-tools/vscode-angular"
 			],
 			"outFiles": [
 				"${workspaceRoot}/*/*/out/**/*.js"
