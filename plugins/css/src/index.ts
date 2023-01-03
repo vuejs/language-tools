@@ -33,11 +33,10 @@ const plugin: LanguageServicePlugin = (context) => {
 			async on(document, position) {
 				return worker(document, async (stylesheet, cssLs) => {
 
-					if (!context.env.documentContext)
-						return;
-
 					const settings = await context.env.configurationHost?.getConfiguration<css.LanguageSettings>(document.languageId);
-					const cssResult = await cssLs.doComplete2(document, position, stylesheet, context.env.documentContext, settings?.completion);
+					const cssResult = context.env.documentContext
+						? await cssLs.doComplete2(document, position, stylesheet, context.env.documentContext, settings?.completion)
+						: await cssLs.doComplete(document, position, stylesheet, settings?.completion);
 
 					return cssResult;
 				});
