@@ -1,25 +1,25 @@
-import type { DocumentServiceRuntimeContext } from '../types';
-import { documentArgFeatureWorker } from '../utils/featureWorkers';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
+import type { LanguageServiceRuntimeContext } from '../types';
+import { languageFeatureWorker } from '../utils/featureWorkers';
 import { transformSelectionRanges } from '@volar/transforms';
 import * as vscode from 'vscode-languageserver-protocol';
 import * as shared from '@volar/shared';
 
-export function register(context: DocumentServiceRuntimeContext) {
+export function register(context: LanguageServiceRuntimeContext) {
 
-	return (document: TextDocument, positions: vscode.Position[]) => {
+	return (uri: string, positions: vscode.Position[]) => {
 
-		return documentArgFeatureWorker(
+		return languageFeatureWorker(
 			context,
-			document,
+			uri,
 			positions,
-			file => !!file.capabilities.documentFormatting,
-			(positions, map) => {
-				const result = positions
-					.map(position => map.toGeneratedPosition(position))
-					.filter(shared.notEmpty);
-				if (result.length) {
-					return [result];
+			(positions, map, file) => {
+				if (file.capabilities.documentFormatting) {
+					const result = positions
+						.map(position => map.toGeneratedPosition(position))
+						.filter(shared.notEmpty);
+					if (result.length) {
+						return [result];
+					}
 				}
 				return [];
 			},

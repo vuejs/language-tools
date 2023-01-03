@@ -1,15 +1,16 @@
 import type { VirtualFile } from '@volar/language-core';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { SourceMapWithDocuments } from '../documents';
-import type { DocumentServiceRuntimeContext } from '../types';
+import type { LanguageServiceRuntimeContext } from '../types';
+import * as shared from '@volar/shared';
+import { SourceMap } from '@volar/source-map';
 
-export function register(context: DocumentServiceRuntimeContext) {
+export function register(context: LanguageServiceRuntimeContext) {
 
-	const ts = context.typescript;
+	const ts = context.pluginContext.typescript.module;
 
 	return async (
-		document: TextDocument,
+		uri: string,
 		options: vscode.FormattingOptions,
 		range?: vscode.Range,
 		onTypeParams?: {
@@ -18,32 +19,29 @@ export function register(context: DocumentServiceRuntimeContext) {
 		},
 	) => {
 
-		if (!range) {
-			range = vscode.Range.create(document.positionAt(0), document.positionAt(document.getText().length));
+		let document = context.getTextDocument(uri);
+		if (!document) return;
+
+		range ??= vscode.Range.create(document.positionAt(0), document.positionAt(document.getText().length));
+
+		const source = context.documents.getSourceByUri(document.uri);
+		if (!source) {
+			return onTypeParams
+				? await tryFormat(document, onTypeParams.position, undefined, onTypeParams.ch)
+				: await tryFormat(document, range, undefined);
 		}
 
-		const virtualFile = context.documents.getRootFileBySourceFileUri(document.uri);
+		const originalSnapshot = source[0];
+		const rootVirtualFile = source[1];
 		const originalDocument = document;
-		const rootEdits = onTypeParams
-			? await tryFormat(document, onTypeParams.position, undefined, onTypeParams.ch)
-			: await tryFormat(document, range, undefined);
-
-		if (!virtualFile)
-			return rootEdits;
-
-		if (rootEdits?.length) {
-			applyEdits(rootEdits);
-		}
+		const initialIndentLanguageId = await context.pluginContext.env.configurationHost?.getConfiguration<Record<string, boolean>>('volar.format.initialIndent') ?? { html: true };
 
 		let level = 0;
-
-		const initialIndentLanguageId = await context.pluginContext.env.configurationHost?.getConfiguration<Record<string, boolean>>('volar.format.initialIndent') ?? { html: true };
+		let edited = false;
 
 		while (true) {
 
-			tryUpdateVueDocument();
-
-			const embeddedFiles = getEmbeddedFilesByLevel(virtualFile, level++);
+			const embeddedFiles = getEmbeddedFilesByLevel(rootVirtualFile, level++);
 			if (embeddedFiles.length === 0)
 				break;
 
@@ -58,7 +56,7 @@ export function register(context: DocumentServiceRuntimeContext) {
 					continue;
 
 				const maps = [...context.documents.getMapsByVirtualFileName(embedded.fileName)];
-				const map = maps.find(map => map[1].sourceFileDocument.uri === document.uri)?.[1];
+				const map = maps.find(map => map[1].sourceFileDocument.uri === document!.uri)?.[1];
 				if (!map)
 					continue;
 
@@ -129,25 +127,31 @@ export function register(context: DocumentServiceRuntimeContext) {
 			}
 
 			if (edits.length > 0) {
-				applyEdits(edits);
+				const newText = TextDocument.applyEdits(document, edits);
+				document = TextDocument.create(document.uri, document.languageId, document.version + 1, newText);
+				context.core.virtualFiles.update(shared.getPathOfUri(document.uri), ts.ScriptSnapshot.fromString(document.getText()));
+				edited = true;
 			}
 
 			if (toPatchIndent) {
 
-				tryUpdateVueDocument();
+				for (const [_, map] of context.documents.getMapsByVirtualFileUri(toPatchIndent?.sourceMapEmbeddedDocumentUri)) {
 
-				const maps = [...context.documents.getMapsByVirtualFileName(virtualFile.fileName)];
-				const map = maps.find(map => map[1].sourceFileDocument.uri === toPatchIndent?.sourceMapEmbeddedDocumentUri)?.[1];
-
-				if (map) {
-
-					const indentEdits = patchInterpolationIndent(context.documents.getDocumentByFileName(virtualFile.snapshot, virtualFile.fileName), map);
+					const indentEdits = patchInterpolationIndent(document, map.map);
 
 					if (indentEdits.length > 0) {
-						applyEdits(indentEdits);
+						const newText = TextDocument.applyEdits(document, indentEdits);
+						document = TextDocument.create(document.uri, document.languageId, document.version + 1, newText);
+						context.core.virtualFiles.update(shared.getPathOfUri(document.uri), ts.ScriptSnapshot.fromString(document.getText()));
+						edited = true;
 					}
 				}
 			}
+		}
+
+		if (edited) {
+			// recover
+			context.core.virtualFiles.update(shared.getPathOfUri(document.uri), originalSnapshot);
 		}
 
 		if (document.getText() === originalDocument.getText())
@@ -161,15 +165,9 @@ export function register(context: DocumentServiceRuntimeContext) {
 
 		return [textEdit];
 
-		function tryUpdateVueDocument() {
-			if (virtualFile && virtualFile.snapshot.getText(0, virtualFile.snapshot.getLength()) !== document.getText()) {
-				context.updateVirtualFile(virtualFile.fileName, ts.ScriptSnapshot.fromString(document.getText()));
-			}
-		}
-
 		function getEmbeddedFilesByLevel(rootFile: VirtualFile, level: number) {
 
-			const embeddedFilesByLevel: VirtualFile[][] = [rootFile.embeddedFiles];
+			const embeddedFilesByLevel: VirtualFile[][] = [[rootFile]];
 
 			while (true) {
 
@@ -187,7 +185,12 @@ export function register(context: DocumentServiceRuntimeContext) {
 			}
 		}
 
-		async function tryFormat(document: TextDocument, range: vscode.Range | vscode.Position, initialIndentBracket: [string, string] | undefined, ch?: string) {
+		async function tryFormat(
+			document: TextDocument,
+			range: vscode.Range | vscode.Position,
+			initialIndentBracket: [string, string] | undefined,
+			ch?: string,
+		) {
 
 			let formatDocument = document;
 			let formatRange = range;
@@ -222,11 +225,39 @@ export function register(context: DocumentServiceRuntimeContext) {
 				}
 			}
 
-			context.prepareLanguageServices(formatDocument);
-
 			for (const plugin of context.plugins) {
 
 				let edits: vscode.TextEdit[] | null | undefined;
+				let recover: (() => void) | undefined;
+
+				if (formatDocument !== document && isTsDocument(formatDocument)) {
+					const formatFileName = shared.getPathOfUri(formatDocument.uri);
+					const formatSnapshot = ts.ScriptSnapshot.fromString(formatDocument.getText());
+					const host = context.pluginContext.typescript.languageServiceHost;
+					const original = {
+						getProjectVersion: host.getProjectVersion,
+						getScriptVersion: host.getScriptVersion,
+						getScriptSnapshot: host.getScriptSnapshot,
+					};
+					host.getProjectVersion = () => original.getProjectVersion?.() + '-' + formatDocument.version;
+					host.getScriptVersion = (fileName) => {
+						if (fileName === formatFileName) {
+							return original.getScriptVersion?.(fileName) + '-' + formatDocument.version.toString();
+						}
+						return original.getScriptVersion?.(fileName);
+					};
+					host.getScriptSnapshot = (fileName) => {
+						if (fileName === formatFileName) {
+							return formatSnapshot;
+						}
+						return original.getScriptSnapshot?.(fileName);
+					};
+					recover = () => {
+						host.getProjectVersion = original.getProjectVersion;
+						host.getScriptVersion = original.getScriptVersion;
+						host.getScriptSnapshot = original.getScriptSnapshot;
+					};
+				}
 
 				try {
 					if (ch !== undefined && vscode.Position.is(formatRange)) {
@@ -239,6 +270,8 @@ export function register(context: DocumentServiceRuntimeContext) {
 				catch (err) {
 					console.error(err);
 				}
+
+				recover?.();
 
 				if (!edits)
 					continue;
@@ -269,23 +302,14 @@ export function register(context: DocumentServiceRuntimeContext) {
 				return edits;
 			}
 		}
-
-		function applyEdits(textEdits: vscode.TextEdit[]) {
-
-			const newText = TextDocument.applyEdits(document, textEdits);
-
-			if (newText !== document.getText()) {
-				document = TextDocument.create(document.uri, document.languageId, document.version + 1, newText);
-			}
-		}
 	};
 }
 
-function patchInterpolationIndent(document: TextDocument, map: SourceMapWithDocuments) {
+function patchInterpolationIndent(document: TextDocument, map: SourceMap) {
 
 	const indentTextEdits: vscode.TextEdit[] = [];
 
-	for (const mapped of map.map.mappings) {
+	for (const mapped of map.mappings) {
 
 		const textRange = {
 			start: document.positionAt(mapped.sourceRange[0]),
@@ -299,6 +323,9 @@ function patchInterpolationIndent(document: TextDocument, map: SourceMapWithDocu
 		const lines = text.split('\n');
 		const removeIndent = getRemoveIndent(lines);
 		const baseIndent = getBaseIndent(mapped.sourceRange[0]);
+
+		if (removeIndent === baseIndent)
+			continue;
 
 		for (let i = 1; i < lines.length; i++) {
 			const line = lines[i];
@@ -328,4 +355,11 @@ function patchInterpolationIndent(document: TextDocument, map: SourceMapWithDocu
 		const startLineText = document.getText({ start: startPos, end: { line: startPos.line, character: 0 } });
 		return startLineText.substring(0, startLineText.length - startLineText.trimStart().length);
 	}
+}
+
+export function isTsDocument(document: TextDocument) {
+	return document.languageId === 'javascript' ||
+		document.languageId === 'typescript' ||
+		document.languageId === 'javascriptreact' ||
+		document.languageId === 'typescriptreact';
 }

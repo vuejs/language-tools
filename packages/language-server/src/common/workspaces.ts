@@ -3,7 +3,7 @@ import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
 import { URI } from 'vscode-uri';
-import { DiagnosticModel, FileSystemHost, LanguageServerInitializationOptions, LanguageServerPlugin } from '../types';
+import { DiagnosticModel, FileSystemHost, LanguageServerInitializationOptions, LanguageServerPlugin, ServerMode } from '../types';
 import { CancellationTokenHost } from './cancellationPipe';
 import { createDocuments } from './documents';
 import { ServerContext } from './server';
@@ -171,11 +171,13 @@ export function createWorkspaces(context: WorkspacesContext) {
 			.filter(rootUri => shared.isFileInDir(shared.getPathOfUri(uri), shared.getPathOfUri(rootUri)))
 			.sort((a, b) => sortTsConfigs(shared.getPathOfUri(uri), shared.getPathOfUri(a), shared.getPathOfUri(b)));
 
-		for (const rootUri of rootUris) {
-			const workspace = await workspaces.get(rootUri);
-			const projectAndTsConfig = await workspace?.getProjectAndTsConfig(uri);
-			if (projectAndTsConfig) {
-				return projectAndTsConfig;
+		if (context.initOptions.serverMode !== ServerMode.Syntactic) {
+			for (const rootUri of rootUris) {
+				const workspace = await workspaces.get(rootUri);
+				const projectAndTsConfig = await workspace?.getProjectAndTsConfig(uri);
+				if (projectAndTsConfig) {
+					return projectAndTsConfig;
+				}
 			}
 		}
 

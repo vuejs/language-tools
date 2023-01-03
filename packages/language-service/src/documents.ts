@@ -161,6 +161,10 @@ export function createDocumentsAndSourceMaps(mapper: VirtualFiles) {
 	const _documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
 
 	return {
+		getSourceByUri(sourceFileUri: string) {
+			const fileName = shared.getPathOfUri(sourceFileUri);
+			return mapper.get(fileName);
+		},
 		getRootFileBySourceFileUri(sourceFileUri: string) {
 			const fileName = shared.getPathOfUri(sourceFileUri);
 			const rootFile = mapper.get(fileName);

@@ -11,7 +11,7 @@ export function register(
 	getConfiguration: GetConfiguration,
 ) {
 	return {
-		onRange: async (uri: string, options: vscode.FormattingOptions, range?: vscode.Range): Promise<vscode.TextEdit[]> => {
+		onRange: async (uri: string, range: vscode.Range | undefined, options: vscode.FormattingOptions): Promise<vscode.TextEdit[]> => {
 
 			const document = getTextDocument(uri);
 			if (!document) return [];

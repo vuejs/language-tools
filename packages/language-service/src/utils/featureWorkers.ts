@@ -1,102 +1,31 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { visitEmbedded } from './definePlugin';
-import type { DocumentServiceRuntimeContext, LanguageServiceRuntimeContext } from '../types';
+import type { LanguageServiceRuntimeContext } from '../types';
 import { LanguageServicePlugin, FileRangeCapabilities, VirtualFile } from '@volar/language-service';
 import { SourceMapWithDocuments } from '../documents';
 
 export async function documentFeatureWorker<T>(
-	context: DocumentServiceRuntimeContext,
-	document: TextDocument,
+	context: LanguageServiceRuntimeContext,
+	uri: string,
 	isValidSourceMap: (file: VirtualFile, sourceMap: SourceMapWithDocuments<FileRangeCapabilities>) => boolean,
 	worker: (plugin: LanguageServicePlugin, document: TextDocument) => T,
-	transform: (result: NonNullable<Awaited<T>>, sourceMap: SourceMapWithDocuments<FileRangeCapabilities>) => T | undefined,
+	transform: (result: NonNullable<Awaited<T>>, sourceMap: SourceMapWithDocuments<FileRangeCapabilities>) => Awaited<T> | undefined,
 	combineResult?: (results: NonNullable<Awaited<T>>[]) => NonNullable<Awaited<T>>,
 ) {
-	return documentArgFeatureWorker(
+	return languageFeatureWorker(
 		context,
-		document,
+		uri,
 		true,
-		isValidSourceMap,
-		() => [true],
+		(_, map, file) => {
+			if (isValidSourceMap(file, map)) {
+				return [true];
+			}
+			return [];
+		},
 		worker,
 		transform,
 		combineResult,
 	);
-}
-
-export async function documentArgFeatureWorker<T, K>(
-	context: DocumentServiceRuntimeContext,
-	document: TextDocument,
-	arg: K,
-	isValidSourceMap: (file: VirtualFile, sourceMap: SourceMapWithDocuments<FileRangeCapabilities>) => boolean,
-	transformArg: (arg: K, sourceMap: SourceMapWithDocuments<FileRangeCapabilities>) => Generator<K> | K[],
-	worker: (plugin: LanguageServicePlugin, document: TextDocument, arg: K) => T,
-	transform: (result: NonNullable<Awaited<T>>, sourceMap: SourceMapWithDocuments<FileRangeCapabilities>) => T | undefined,
-	combineResult?: (results: NonNullable<Awaited<T>>[]) => NonNullable<Awaited<T>>,
-) {
-
-	context.update(document);
-	const virtualFile = context.documents.getRootFileBySourceFileUri(document.uri);
-
-	let results: NonNullable<Awaited<T>>[] = [];
-
-	if (virtualFile) {
-
-		await visitEmbedded(context.documents, virtualFile, async (file, map) => {
-
-			if (!isValidSourceMap(file, map))
-				return true;
-
-			context.prepareLanguageServices(map.virtualFileDocument);
-
-			for (const mappedArg of transformArg(arg, map)) {
-
-				for (const plugin of context.plugins) {
-
-					const embeddedResult = await worker(plugin, map.virtualFileDocument, mappedArg);
-
-					if (!embeddedResult)
-						continue;
-
-					const result = await transform(embeddedResult!, map);
-
-					if (!result)
-						continue;
-
-					results.push(result!);
-
-					if (!combineResult)
-						return false;
-				}
-			}
-
-			return true;
-		});
-	}
-	else if (results.length === 0 || !!combineResult) {
-
-		context.prepareLanguageServices(document);
-
-		for (const plugin of context.plugins) {
-
-			const result = await worker(plugin, document, arg);
-
-			if (!result)
-				continue;
-
-			results.push(result!);
-
-			if (!combineResult)
-				break;
-		}
-	}
-
-	if (combineResult && results.length > 0) {
-		return combineResult(results);
-	}
-	else if (results.length > 0) {
-		return results[0];
-	}
 }
 
 export async function languageFeatureWorker<T, K>(
@@ -105,7 +34,7 @@ export async function languageFeatureWorker<T, K>(
 	arg: K,
 	transformArg: (arg: K, sourceMap: SourceMapWithDocuments<FileRangeCapabilities>, file: VirtualFile) => Generator<K> | K[],
 	worker: (plugin: LanguageServicePlugin, document: TextDocument, arg: K, sourceMap: SourceMapWithDocuments<FileRangeCapabilities> | undefined, file: VirtualFile | undefined) => T,
-	transform: (result: NonNullable<Awaited<T>>, sourceMap: SourceMapWithDocuments<FileRangeCapabilities> | undefined) => Awaited<T> | undefined,
+	transform: (result: NonNullable<Awaited<T>>, sourceMap: SourceMapWithDocuments<FileRangeCapabilities>) => Awaited<T> | undefined,
 	combineResult?: (results: NonNullable<Awaited<T>>[]) => NonNullable<Awaited<T>>,
 	reportProgress?: (result: NonNullable<Awaited<T>>) => void,
 ) {
@@ -149,17 +78,11 @@ export async function languageFeatureWorker<T, K>(
 			return true;
 		});
 	}
-	else if (document && (results.length === 0 || !!combineResult)) {
+	else if (document) {
 
 		for (const plugin of context.plugins) {
 
-			const embeddedResult = await worker(plugin, document, arg, undefined, undefined);
-
-			if (!embeddedResult)
-				continue;
-
-			const result = transform(embeddedResult!, undefined);
-
+			const result = await worker(plugin, document, arg, undefined, undefined);
 			if (!result)
 				continue;
 
