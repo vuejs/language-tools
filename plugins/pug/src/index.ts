@@ -25,10 +25,7 @@ const plugin: LanguageServicePlugin<{
 
 			on(document, position, _) {
 				return worker(document, (pugDocument) => {
-
-					const documentContext = context.env.documentContext ?? { resolveReference: () => undefined };
-
-					return pugLs.doComplete(pugDocument, position, documentContext, /** TODO: CompletionConfiguration */);
+					return pugLs.doComplete(pugDocument, position, context.env.documentContext, /** TODO: CompletionConfiguration */);
 				});
 			},
 		},
@@ -72,10 +69,9 @@ const plugin: LanguageServicePlugin<{
 
 		findDocumentLinks(document) {
 			return worker(document, (pugDocument) => {
-
-				const documentContext = context.env.documentContext ?? { resolveReference: () => undefined };
-
-				return pugLs.findDocumentLinks(pugDocument, documentContext);
+				if (context.env.documentContext) {
+					return pugLs.findDocumentLinks(pugDocument, context.env.documentContext);
+				}
 			});
 		},
 
