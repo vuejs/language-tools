@@ -1,21 +1,15 @@
-import type { LanguageServicePlugin, LanguageServicePluginContext, InlayHint } from '@volar/language-service';
+import type { LanguageServicePlugin, InlayHint } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
-export default function (): LanguageServicePlugin {
-
-	let context: LanguageServicePluginContext;
+const plugin: LanguageServicePlugin = (context) => {
 
 	return {
-
-		setup(_context) {
-			context = _context;
-		},
 
 		inlayHints: {
 
 			on(document, range) {
-				if (isTsDocument(document)) {
+				if (context.typescript && isTsDocument(document)) {
 
 					const ts = context.typescript.module;
 					const inlayHints: InlayHint[] = [];
@@ -44,7 +38,8 @@ export default function (): LanguageServicePlugin {
 			},
 		},
 	};
-}
+};
+export default () => plugin;
 
 function isTsDocument(document: TextDocument) {
 	return document.languageId === 'javascript' ||

@@ -168,11 +168,11 @@ export function baseCreate(
 			return _host[prop as keyof typeof _host];
 		},
 	}) as vue.LanguageServiceHost;
-	const vueLanguageModules = vue.createLanguageModules(
-		host.getTypeScriptModule(),
+	const vueLanguageModules = ts ? vue.createLanguageModules(
+		ts,
 		host.getCompilationSettings(),
 		host.getVueCompilationSettings(),
-	);
+	) : [];
 	const core = embedded.createLanguageContext(host, vueLanguageModules);
 	const proxyApis: Partial<ts.LanguageServiceHost> = checkerOptions.forceUseTs ? {
 		getScriptKind: (fileName) => {
@@ -439,7 +439,7 @@ function createSchemaResolvers(
 			if (typeof item === 'function') {
 				const result = item(name, subtype, typeChecker);
 				if (result != null)
-					return result
+					return result;
 			}
 			else if (name === item) {
 				return true;

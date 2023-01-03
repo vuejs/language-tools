@@ -20,15 +20,21 @@ const plugin: LanguageServerPlugin<LanguageServerInitializationOptions, vue.Lang
 			};
 		},
 		getLanguageModules(host) {
-			const vueLanguageModules = vue.createLanguageModules(
-				host.getTypeScriptModule(),
-				host.getCompilationSettings(),
-				host.getVueCompilationSettings(),
-			);
-			return [
-				...vueLanguageModules,
-				svelteLanguageModule,
-			];
+			let plugins = [svelteLanguageModule];
+
+			const ts = host.getTypeScriptModule();
+			if (ts) {
+				plugins = [
+					...plugins,
+					...vue.createLanguageModules(
+						ts,
+						host.getCompilationSettings(),
+						host.getVueCompilationSettings(),
+					),
+				];
+			}
+
+			return plugins;
 		},
 		getServicePlugins() {
 			return [

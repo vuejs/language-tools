@@ -3,7 +3,7 @@ import useEmmetPlugin from '@volar-plugins/emmet';
 import useHtmlPlugin from '@volar-plugins/html';
 import useJsonPlugin from '@volar-plugins/json';
 import usePugPlugin from '@volar-plugins/pug';
-import useTsPlugin from '@volar-plugins/typescript';
+import createTsPlugin from '@volar-plugins/typescript';
 import useTsTqPlugin from '@volar-plugins/typescript-twoslash-queries';
 import * as embedded from '@volar/language-core';
 import * as embeddedLS from '@volar/language-service';
@@ -33,24 +33,25 @@ export function getLanguageServicePlugins(
 ): embeddedLS.LanguageServicePlugin[] {
 
 	// plugins
-	const _tsPlugin = useTsPlugin();
-	const tsPlugin: embeddedLS.LanguageServicePlugin = (() => {
-		let context: embeddedLS.LanguageServicePluginContext;
+	const tsPlugin: embeddedLS.LanguageServicePlugin = (context) => {
+
+		if (!context.typescript)
+			return {};
+
+		const ts = context.typescript.module;
+		const base = createTsPlugin()(context);
 		const autoImportPositions = new WeakSet<vscode.Position>();
+
 		return {
-			..._tsPlugin,
-			setup(_context) {
-				_tsPlugin.setup?.(_context);
-				context = _context;
-			},
+			...base,
 			resolveEmbeddedRange(range) {
 				if (autoImportPositions.has(range.start) && autoImportPositions.has(range.end))
 					return range;
 			},
 			complete: {
-				..._tsPlugin.complete,
+				...base.complete,
 				async on(document, position, context) {
-					const result = await _tsPlugin.complete!.on!(document, position, context);
+					const result = await base.complete!.on!(document, position, context);
 					if (result) {
 						for (const [_, map] of apis.context.documents.getMapsByVirtualFileUri(document.uri)) {
 							const virtualFile = apis.context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
@@ -66,7 +67,7 @@ export function getLanguageServicePlugins(
 					return result;
 				},
 				async resolve(item) {
-					item = await _tsPlugin.complete!.resolve!(item);
+					item = await base.complete!.resolve!(item);
 
 					if (
 						item.textEdit?.newText && /\w*Vue$/.test(item.textEdit.newText)
@@ -91,7 +92,6 @@ export function getLanguageServicePlugins(
 								const componentName = item.textEdit.newText;
 								const textDoc = apis.context.documents.getDocumentByFileName(virtualFile.snapshot, virtualFile.fileName);
 								if (sfc.scriptAst && sfc.script) {
-									const ts = context.typescript.module;
 									const _scriptRanges = vue.scriptRanges.parseScriptRanges(ts, sfc.scriptAst, !!sfc.scriptSetup, true);
 									const exportDefault = _scriptRanges.exportDefault;
 									if (exportDefault) {
@@ -147,7 +147,7 @@ export function getLanguageServicePlugins(
 				},
 			},
 		};
-	})();
+	};
 	const vuePlugin = useVuePlugin({
 		getVueFile(document) {
 			const virtualFile = apis.context.documents.getVirtualFileByUri(document.uri);
@@ -183,23 +183,21 @@ export function getLanguageServicePlugins(
 	});
 
 	// template plugins
-	const _htmlPlugin = useHtmlPlugin();
-	const _pugPlugin = usePugPlugin();
 	const htmlPlugin = useVueTemplateLanguagePlugin({
-		templateLanguagePlugin: _htmlPlugin,
-		getScanner: (document): html.Scanner | undefined => {
-			return _htmlPlugin.getHtmlLs().createScanner(document.getText());
+		templateLanguagePlugin: useHtmlPlugin(),
+		getScanner: (document, htmlPlugin): html.Scanner | undefined => {
+			return htmlPlugin.getHtmlLs().createScanner(document.getText());
 		},
 		isSupportedDocument: (document) => document.languageId === 'html',
 		vueLsHost: host,
 		context: apis.context,
 	});
 	const pugPlugin = useVueTemplateLanguagePlugin({
-		templateLanguagePlugin: _pugPlugin,
-		getScanner: (document): html.Scanner | undefined => {
-			const pugDocument = _pugPlugin.getPugDocument(document);
+		templateLanguagePlugin: usePugPlugin(),
+		getScanner: (document, pugPlugin): html.Scanner | undefined => {
+			const pugDocument = pugPlugin.getPugDocument(document);
 			if (pugDocument) {
-				return _pugPlugin.getPugLs().createScanner(pugDocument);
+				return pugPlugin.getPugLs().createScanner(pugDocument);
 			}
 		},
 		isSupportedDocument: (document) => document.languageId === 'jade',
@@ -237,11 +235,12 @@ export function createLanguageService(
 	settings?: Settings,
 ) {
 
-	const vueLanguageModules = vue.createLanguageModules(
-		host.getTypeScriptModule(),
+	const ts = host.getTypeScriptModule();
+	const vueLanguageModules = ts ? vue.createLanguageModules(
+		ts,
 		host.getCompilationSettings(),
 		host.getVueCompilationSettings(),
-	);
+	) : [];
 	const core = embedded.createLanguageContext(host, vueLanguageModules);
 	const languageServiceContext = embeddedLS.createLanguageServiceContext({
 		env,

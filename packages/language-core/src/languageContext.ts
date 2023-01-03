@@ -81,17 +81,21 @@ export function createLanguageContext(
 		},
 		getScriptKind(fileName) {
 
-			if (virtualFiles.hasSourceFile(fileName))
-				return ts.ScriptKind.Deferred;
+			if (ts) {
+				if (virtualFiles.hasSourceFile(fileName))
+					return ts.ScriptKind.Deferred;
 
-			switch (path.extname(fileName)) {
-				case '.js': return ts.ScriptKind.JS;
-				case '.jsx': return ts.ScriptKind.JSX;
-				case '.ts': return ts.ScriptKind.TS;
-				case '.tsx': return ts.ScriptKind.TSX;
-				case '.json': return ts.ScriptKind.JSON;
-				default: return ts.ScriptKind.Unknown;
+				switch (path.extname(fileName)) {
+					case '.js': return ts.ScriptKind.JS;
+					case '.jsx': return ts.ScriptKind.JSX;
+					case '.ts': return ts.ScriptKind.TS;
+					case '.tsx': return ts.ScriptKind.TSX;
+					case '.json': return ts.ScriptKind.JSON;
+					default: return ts.ScriptKind.Unknown;
+				}
 			}
+
+			return 0;
 		},
 	};
 

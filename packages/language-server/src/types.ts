@@ -76,7 +76,7 @@ export enum DiagnosticModel {
 }
 
 export interface LanguageServerInitializationOptions {
-	typescript: {
+	typescript?: {
 		// Absolute path to node_modules/typescript/lib
 		tsdk: string;
 	};

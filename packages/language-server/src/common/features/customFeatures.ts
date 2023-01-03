@@ -14,7 +14,7 @@ export function register(
 			connection.console.log('workspace: ' + rootUri);
 			const workspace = await _workspace;
 
-			connection.console.log('documentRegistry stats: ' + workspace.documentRegistry.reportStats());
+			connection.console.log('documentRegistry stats: ' + workspace.documentRegistry?.reportStats());
 			connection.console.log('');
 
 			connection.console.log('tsconfig: inferred');

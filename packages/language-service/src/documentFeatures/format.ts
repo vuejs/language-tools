@@ -4,10 +4,9 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as shared from '@volar/shared';
 import { SourceMap } from '@volar/source-map';
+import { stringToSnapshot } from '../utils/common';
 
 export function register(context: LanguageServiceRuntimeContext) {
-
-	const ts = context.pluginContext.typescript.module;
 
 	return async (
 		uri: string,
@@ -129,7 +128,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			if (edits.length > 0) {
 				const newText = TextDocument.applyEdits(document, edits);
 				document = TextDocument.create(document.uri, document.languageId, document.version + 1, newText);
-				context.core.virtualFiles.update(shared.getPathOfUri(document.uri), ts.ScriptSnapshot.fromString(document.getText()));
+				context.core.virtualFiles.update(shared.getPathOfUri(document.uri), stringToSnapshot(document.getText()));
 				edited = true;
 			}
 
@@ -142,7 +141,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					if (indentEdits.length > 0) {
 						const newText = TextDocument.applyEdits(document, indentEdits);
 						document = TextDocument.create(document.uri, document.languageId, document.version + 1, newText);
-						context.core.virtualFiles.update(shared.getPathOfUri(document.uri), ts.ScriptSnapshot.fromString(document.getText()));
+						context.core.virtualFiles.update(shared.getPathOfUri(document.uri), stringToSnapshot(document.getText()));
 						edited = true;
 					}
 				}
@@ -230,9 +229,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 				let edits: vscode.TextEdit[] | null | undefined;
 				let recover: (() => void) | undefined;
 
-				if (formatDocument !== document && isTsDocument(formatDocument)) {
+				if (formatDocument !== document && isTsDocument(formatDocument) && context.pluginContext.typescript) {
 					const formatFileName = shared.getPathOfUri(formatDocument.uri);
-					const formatSnapshot = ts.ScriptSnapshot.fromString(formatDocument.getText());
+					const formatSnapshot = stringToSnapshot(formatDocument.getText());
 					const host = context.pluginContext.typescript.languageServiceHost;
 					const original = {
 						getProjectVersion: host.getProjectVersion,

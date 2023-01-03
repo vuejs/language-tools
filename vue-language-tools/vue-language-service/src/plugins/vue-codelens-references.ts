@@ -1,5 +1,5 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import { LanguageServicePlugin, LanguageServicePluginContext, DocumentsAndSourceMaps } from '@volar/language-service';
+import { LanguageServicePlugin, DocumentsAndSourceMaps } from '@volar/language-service';
 import { VueFile } from '@volar/vue-language-core';
 
 const showReferencesCommand = 'volar.show-references';
@@ -18,103 +18,100 @@ export default function (options: {
 	findReference(uri: string, position: vscode.Position): Promise<vscode.Location[] | undefined>,
 }): LanguageServicePlugin {
 
-	let context: LanguageServicePluginContext;
+	return (context) => {
 
-	return {
+		return {
 
-		setup(_context) {
-			context = _context;
-		},
+			codeLens: {
 
-		codeLens: {
+				on(document) {
+					return worker(document.uri, async () => {
 
-			on(document) {
-				return worker(document.uri, async () => {
+						const isEnabled = await context.env.configurationHost?.getConfiguration<boolean>('volar.codeLens.references') ?? true;
 
-					const isEnabled = await context.env.configurationHost?.getConfiguration<boolean>('volar.codeLens.references') ?? true;
+						if (!isEnabled)
+							return;
 
-					if (!isEnabled)
-						return;
+						const result: vscode.CodeLens[] = [];
 
-					const result: vscode.CodeLens[] = [];
+						for (const [_, map] of options.documents.getMapsBySourceFileUri(document.uri)?.maps ?? []) {
+							for (const mapping of map.map.mappings) {
 
-					for (const [_, map] of options.documents.getMapsBySourceFileUri(document.uri)?.maps ?? []) {
-						for (const mapping of map.map.mappings) {
+								if (!mapping.data.referencesCodeLens)
+									continue;
 
-							if (!mapping.data.referencesCodeLens)
-								continue;
-
-							result.push({
-								range: {
-									start: document.positionAt(mapping.sourceRange[0]),
-									end: document.positionAt(mapping.sourceRange[1]),
-								},
-								data: {
-									uri: document.uri,
-									position: document.positionAt(mapping.sourceRange[0]),
-								} satisfies ReferencesCodeLensData,
-							});
+								result.push({
+									range: {
+										start: document.positionAt(mapping.sourceRange[0]),
+										end: document.positionAt(mapping.sourceRange[1]),
+									},
+									data: {
+										uri: document.uri,
+										position: document.positionAt(mapping.sourceRange[0]),
+									} satisfies ReferencesCodeLensData,
+								});
+							}
 						}
-					}
 
-					return result;
-				});
+						return result;
+					});
+				},
+
+				async resolve(codeLens) {
+
+					const data: ReferencesCodeLensData = codeLens.data;
+
+					await worker(data.uri, async (vueFile) => {
+
+						const document = options.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
+						const offset = document.offsetAt(data.position);
+						const blocks = [
+							vueFile.sfc.script,
+							vueFile.sfc.scriptSetup,
+							vueFile.sfc.template,
+							...vueFile.sfc.styles,
+							...vueFile.sfc.customBlocks,
+						];
+						const allRefs = await options.findReference(data.uri, data.position) ?? [];
+						const sourceBlock = blocks.find(block => block && offset >= block.startTagEnd && offset <= block.endTagStart);
+						const diffDocRefs = allRefs.filter(reference =>
+							reference.uri !== data.uri // different file
+							|| sourceBlock !== blocks.find(block => block && document.offsetAt(reference.range.start) >= block.startTagEnd && document.offsetAt(reference.range.end) <= block.endTagStart) // different block
+						);
+
+						codeLens.command = {
+							title: diffDocRefs.length === 1 ? '1 reference' : `${diffDocRefs.length} references`,
+							command: showReferencesCommand,
+							arguments: <CommandArgs>[data.uri, codeLens.range.start, diffDocRefs],
+						};
+					});
+
+					return codeLens;
+				},
 			},
 
-			async resolve(codeLens) {
+			doExecuteCommand(command, args, context) {
 
-				const data: ReferencesCodeLensData = codeLens.data;
+				if (command === showReferencesCommand) {
 
-				await worker(data.uri, async (vueFile) => {
+					const [uri, position, references] = args as CommandArgs;
 
-					const document = options.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
-					const offset = document.offsetAt(data.position);
-					const blocks = [
-						vueFile.sfc.script,
-						vueFile.sfc.scriptSetup,
-						vueFile.sfc.template,
-						...vueFile.sfc.styles,
-						...vueFile.sfc.customBlocks,
-					];
-					const allRefs = await options.findReference(data.uri, data.position) ?? [];
-					const sourceBlock = blocks.find(block => block && offset >= block.startTagEnd && offset <= block.endTagStart);
-					const diffDocRefs = allRefs.filter(reference =>
-						reference.uri !== data.uri // different file
-						|| sourceBlock !== blocks.find(block => block && document.offsetAt(reference.range.start) >= block.startTagEnd && document.offsetAt(reference.range.end) <= block.endTagStart) // different block
-					);
-
-					codeLens.command = {
-						title: diffDocRefs.length === 1 ? '1 reference' : `${diffDocRefs.length} references`,
-						command: showReferencesCommand,
-						arguments: <CommandArgs>[data.uri, codeLens.range.start, diffDocRefs],
-					};
-				});
-
-				return codeLens;
+					context.showReferences({
+						textDocument: { uri },
+						position,
+						references,
+					});
+				}
 			},
-		},
+		};
 
-		doExecuteCommand(command, args, context) {
+		function worker<T>(uri: string, callback: (vueSourceFile: VueFile) => T) {
 
-			if (command === showReferencesCommand) {
+			const virtualFile = options.documents.getVirtualFileByUri(uri);
+			if (!(virtualFile instanceof VueFile))
+				return;
 
-				const [uri, position, references] = args as CommandArgs;
-
-				context.showReferences({
-					textDocument: { uri },
-					position,
-					references,
-				});
-			}
-		},
+			return callback(virtualFile);
+		}
 	};
-
-	function worker<T>(uri: string, callback: (vueSourceFile: VueFile) => T) {
-
-		const virtualFile = options.documents.getVirtualFileByUri(uri);
-		if (!(virtualFile instanceof VueFile))
-			return;
-
-		return callback(virtualFile);
-	}
 }

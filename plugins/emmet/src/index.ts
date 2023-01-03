@@ -1,15 +1,9 @@
-import type { LanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
+import type { LanguageServicePlugin } from '@volar/language-service';
 import * as emmet from '@vscode/emmet-helper';
 
-export default function (): LanguageServicePlugin {
-
-	let context: LanguageServicePluginContext;
+const plugin: LanguageServicePlugin = (context) => {
 
 	return {
-
-		setup(_context) {
-			context = _context;
-		},
 
 		complete: {
 
@@ -65,4 +59,6 @@ export default function (): LanguageServicePlugin {
 			showSuggestionsAsSnippets: emmetConfig['showSuggestionsAsSnippets']
 		};
 	}
-}
+};
+
+export default () => plugin;

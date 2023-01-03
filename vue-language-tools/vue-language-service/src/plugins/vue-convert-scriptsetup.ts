@@ -1,5 +1,5 @@
 import type { TextRange } from '../types';
-import { LanguageServicePlugin, ExecuteCommandContext, LanguageServicePluginContext, DocumentsAndSourceMaps } from '@volar/language-service';
+import { LanguageServicePlugin, ExecuteCommandContext, DocumentsAndSourceMaps } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-core';
 import { scriptSetupConvertRanges } from '@volar/vue-language-core';
@@ -25,93 +25,95 @@ export default function (options: {
 	doCodeActionResolve: (item: vscode.CodeAction) => Promise<vscode.CodeAction>,
 }): LanguageServicePlugin {
 
-	let context: LanguageServicePluginContext;
+	return (context) => {
 
-	return {
+		if (!context.typescript)
+			return {};
 
-		setup(_context) {
-			context = _context;
-		},
+		const _ts = context.typescript;
 
-		codeLens: {
+		return {
 
-			on(document) {
-				return worker(document.uri, async (vueFile) => {
+			codeLens: {
 
-					if (document.uri.endsWith('.html')) // petite-vue
-						return;
+				on(document) {
+					return worker(document.uri, async (vueFile) => {
 
-					const isEnabled = await context.env.configurationHost?.getConfiguration<boolean>('volar.codeLens.scriptSetupTools') ?? true;
+						if (document.uri.endsWith('.html')) // petite-vue
+							return;
 
-					if (!isEnabled)
-						return;
+						const isEnabled = await context.env.configurationHost?.getConfiguration<boolean>('volar.codeLens.scriptSetupTools') ?? true;
 
-					const result: vscode.CodeLens[] = [];
-					const descriptor = vueFile.sfc;
+						if (!isEnabled)
+							return;
 
-					if (descriptor.scriptSetup) {
-						result.push({
-							range: {
-								start: document.positionAt(descriptor.scriptSetup.startTagEnd),
-								end: document.positionAt(descriptor.scriptSetup.startTagEnd + descriptor.scriptSetup.content.length),
-							},
-							command: {
-								title: 'setup sugar ☑',
-								command: Commands.UNUSE_SETUP_SUGAR,
-								arguments: <CommandArgs>[document.uri],
-							},
-						});
-					}
-					else if (descriptor.script) {
-						result.push({
-							range: {
-								start: document.positionAt(descriptor.script.startTagEnd),
-								end: document.positionAt(descriptor.script.startTagEnd + descriptor.script.content.length),
-							},
-							command: {
-								title: 'setup sugar ☐',
-								command: Commands.USE_SETUP_SUGAR,
-								arguments: <CommandArgs>[document.uri],
-							},
-						});
-					}
-					return result;
-				});
+						const result: vscode.CodeLens[] = [];
+						const descriptor = vueFile.sfc;
+
+						if (descriptor.scriptSetup) {
+							result.push({
+								range: {
+									start: document.positionAt(descriptor.scriptSetup.startTagEnd),
+									end: document.positionAt(descriptor.scriptSetup.startTagEnd + descriptor.scriptSetup.content.length),
+								},
+								command: {
+									title: 'setup sugar ☑',
+									command: Commands.UNUSE_SETUP_SUGAR,
+									arguments: <CommandArgs>[document.uri],
+								},
+							});
+						}
+						else if (descriptor.script) {
+							result.push({
+								range: {
+									start: document.positionAt(descriptor.script.startTagEnd),
+									end: document.positionAt(descriptor.script.startTagEnd + descriptor.script.content.length),
+								},
+								command: {
+									title: 'setup sugar ☐',
+									command: Commands.USE_SETUP_SUGAR,
+									arguments: <CommandArgs>[document.uri],
+								},
+							});
+						}
+						return result;
+					});
+				},
 			},
-		},
 
-		doExecuteCommand(command, args, commandContext) {
+			doExecuteCommand(command, args, commandContext) {
 
-			if (command === Commands.USE_SETUP_SUGAR) {
+				if (command === Commands.USE_SETUP_SUGAR) {
 
-				const [uri] = args as CommandArgs;
+					const [uri] = args as CommandArgs;
 
-				return worker(uri, (vueFile) => {
-					const document = options.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
-					return useSetupSugar(context.typescript.module, document, vueFile, commandContext, options.doCodeActions, options.doCodeActionResolve);
-				});
-			}
+					return worker(uri, (vueFile) => {
+						const document = options.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
+						return useSetupSugar(_ts.module, document, vueFile, commandContext, options.doCodeActions, options.doCodeActionResolve);
+					});
+				}
 
-			if (command === Commands.UNUSE_SETUP_SUGAR) {
+				if (command === Commands.UNUSE_SETUP_SUGAR) {
 
-				const [uri] = args as CommandArgs;
+					const [uri] = args as CommandArgs;
 
-				return worker(uri, (vueFile) => {
-					const document = options.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
-					return unuseSetupSugar(context.typescript.module, document, vueFile, commandContext, options.doCodeActions, options.doCodeActionResolve);
-				});
-			}
-		},
+					return worker(uri, (vueFile) => {
+						const document = options.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
+						return unuseSetupSugar(_ts.module, document, vueFile, commandContext, options.doCodeActions, options.doCodeActionResolve);
+					});
+				}
+			},
+		};
+
+		function worker<T>(uri: string, callback: (vueFile: vue.VueFile) => T) {
+
+			const virtualFile = options.documents.getVirtualFileByUri(uri);
+			if (!(virtualFile instanceof vue.VueFile))
+				return;
+
+			return callback(virtualFile);
+		}
 	};
-
-	function worker<T>(uri: string, callback: (vueFile: vue.VueFile) => T) {
-
-		const virtualFile = options.documents.getVirtualFileByUri(uri);
-		if (!(virtualFile instanceof vue.VueFile))
-			return;
-
-		return callback(virtualFile);
-	}
 }
 
 async function useSetupSugar(

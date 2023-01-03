@@ -1,20 +1,19 @@
-import type { LanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
+import type { LanguageServicePlugin } from '@volar/language-service';
 import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as pug from '@volar/pug-language-service';
 import useHtmlPlugin from '@volar-plugins/html';
 
-export default function (): LanguageServicePlugin & ReturnType<typeof useHtmlPlugin> & {
+const plugin: LanguageServicePlugin<{
 	getHtmlLs: () => html.LanguageService,
+	updateCustomData(extraData: html.IHTMLDataProvider[]): void,
 	getPugLs: () => pug.LanguageService,
 	getPugDocument: (document: TextDocument) => pug.PugDocument | undefined,
-} {
+}> = (context) => {
 
-	const htmlPlugin = useHtmlPlugin({});
 	const pugDocuments = new WeakMap<TextDocument, [number, pug.PugDocument]>();
-
-	let context: LanguageServicePluginContext;
-	let pugLs: pug.LanguageService;
+	const htmlPlugin = useHtmlPlugin()(context);
+	const pugLs = pug.getLanguageService(htmlPlugin.getHtmlLs());
 
 	return {
 
@@ -22,21 +21,14 @@ export default function (): LanguageServicePlugin & ReturnType<typeof useHtmlPlu
 		getPugLs: () => pugLs,
 		getPugDocument,
 
-		setup(_context) {
-			htmlPlugin.setup?.(_context);
-			pugLs = pug.getLanguageService(htmlPlugin.getHtmlLs());
-			context = _context;
-		},
-
 		complete: {
 
 			on(document, position, _) {
 				return worker(document, (pugDocument) => {
 
-					if (!context.env.documentContext)
-						return;
+					const documentContext = context.env.documentContext ?? { resolveReference: () => undefined };
 
-					return pugLs.doComplete(pugDocument, position, context.env.documentContext, /** TODO: CompletionConfiguration */);
+					return pugLs.doComplete(pugDocument, position, documentContext, /** TODO: CompletionConfiguration */);
 				});
 			},
 		},
@@ -81,10 +73,9 @@ export default function (): LanguageServicePlugin & ReturnType<typeof useHtmlPlu
 		findDocumentLinks(document) {
 			return worker(document, (pugDocument) => {
 
-				if (!context.env.documentContext)
-					return;
+				const documentContext = context.env.documentContext ?? { resolveReference: () => undefined };
 
-				return pugLs.findDocumentLinks(pugDocument, context.env.documentContext);
+				return pugLs.findDocumentLinks(pugDocument, documentContext);
 			});
 		},
 
@@ -155,4 +146,5 @@ export default function (): LanguageServicePlugin & ReturnType<typeof useHtmlPlu
 
 		return doc;
 	}
-}
+};
+export default () => plugin;

@@ -1,10 +1,7 @@
 import { ConfigurationHost } from '@volar/language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
-export async function getInferredCompilerOptions(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
-	configurationHost: ConfigurationHost | undefined,
-) {
+export async function getInferredCompilerOptions(configurationHost: ConfigurationHost | undefined) {
 
 	let [implicitProjectConfig_1, implicitProjectConfig_2] = await Promise.all([
 		configurationHost?.getConfiguration<any>('js/ts.implicitProjectConfig'),
@@ -24,7 +21,7 @@ export async function getInferredCompilerOptions(
 		allowSyntheticDefaultImports: true,
 		allowNonTsExtensions: true,
 		resolveJsonModule: true,
-		jsx: ts.JsxEmit.Preserve,
+		jsx: 1 /* ts.JsxEmit.Preserve */,
 	};
 
 	return options;
@@ -51,9 +48,9 @@ export async function getInferredCompilerOptions(
 
 	function inferredProjectCompilerOptions(projectType: 'typescript' | 'javascript'): ts.CompilerOptions {
 		const projectConfig: ts.CompilerOptions = {
-			module: ts.ModuleKind.CommonJS,
-			target: ts.ScriptTarget.ES2020,
-			jsx: ts.JsxEmit.Preserve,
+			module: 1 /* ts.ModuleKind.CommonJS */,
+			target: 7 /* ts.ScriptTarget.ES2020 */,
+			jsx: 1 /* ts.JsxEmit.Preserve */,
 		};
 
 		if (checkJs) {

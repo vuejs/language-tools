@@ -12,9 +12,8 @@ export * from 'vscode-languageserver-protocol';
 export interface LanguageServiceRuntimeContext {
 	host: LanguageServiceHost;
 	core: LanguageContext;
-	typescriptLanguageService: ts.LanguageService;
 	documents: DocumentsAndSourceMaps;
-	plugins: LanguageServicePlugin[];
+	plugins: LanguageServicePluginInstance[];
 	pluginContext: LanguageServicePluginContext;
 	getTextDocument(uri: string): TextDocument | undefined;
 };
@@ -24,7 +23,7 @@ export interface LanguageServicePluginContext {
 		module: typeof import('typescript/lib/tsserverlibrary');
 		languageServiceHost: ts.LanguageServiceHost;
 		languageService: ts.LanguageService;
-	},
+	} | undefined;
 	env: {
 		rootUri: URI;
 		configurationHost?: ConfigurationHost;
@@ -64,7 +63,9 @@ export interface ExecuteCommandContext {
 	applyEdit(paramOrEdit: vscode.ApplyWorkspaceEditParams | vscode.WorkspaceEdit): Promise<vscode.ApplyWorkspaceEditResult>;
 }
 
-export interface LanguageServicePlugin {
+export type LanguageServicePlugin<T = {}> = ((context: LanguageServicePluginContext) => LanguageServicePluginInstance & T);
+
+export interface LanguageServicePluginInstance {
 
 	setup?(context: LanguageServicePluginContext): void;
 

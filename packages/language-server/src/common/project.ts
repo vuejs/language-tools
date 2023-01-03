@@ -15,7 +15,7 @@ export interface ProjectContext {
 	workspace: WorkspaceContext;
 	rootUri: URI;
 	tsConfig: path.PosixPath | ts.CompilerOptions,
-	documentRegistry: ts.DocumentRegistry,
+	documentRegistry: ts.DocumentRegistry | undefined,
 	serverConfig: ServerConfig | undefined,
 }
 
@@ -23,7 +23,7 @@ export type Project = ReturnType<typeof createProject>;
 
 export async function createProject(context: ProjectContext) {
 
-	const sys: FileSystem = context.workspace.workspaces.initOptions.serverMode === ServerMode.Syntactic
+	const sys: FileSystem = context.workspace.workspaces.initOptions.serverMode === ServerMode.Syntactic || !context.workspace.workspaces.fileSystemHost
 		? {
 			newLine: '\n',
 			useCaseSensitiveFileNames: false,
@@ -49,7 +49,7 @@ export async function createProject(context: ProjectContext) {
 		snapshotVersion: number | undefined,
 	}>();
 	const languageServiceHost = createLanguageServiceHost();
-	const disposeWatchEvent = context.workspace.workspaces.fileSystemHost.onDidChangeWatchedFiles(params => {
+	const disposeWatchEvent = context.workspace.workspaces.fileSystemHost?.onDidChangeWatchedFiles(params => {
 		onWorkspaceFilesChanged(params.changes);
 	});
 	const disposeDocChange = context.workspace.workspaces.documents.onDidChangeContent(() => {
@@ -92,7 +92,9 @@ export async function createProject(context: ProjectContext) {
 					rootUri: context.rootUri,
 					configurationHost: context.workspace.workspaces.configurationHost,
 					fileSystemProvider: context.workspace.workspaces.server.runtimeEnv.fileSystemProvide,
-					documentContext: getHTMLDocumentContext(context.workspace.workspaces.ts, languageServiceHost),
+					documentContext: context.workspace.workspaces.ts
+						? getHTMLDocumentContext(context.workspace.workspaces.ts, languageServiceHost)
+						: undefined,
 					schemaRequestService: async uri => {
 						const protocol = uri.substring(0, uri.indexOf(':'));
 						const builtInHandler = context.workspace.workspaces.server.runtimeEnv.schemaRequestHandlers[protocol];
@@ -170,12 +172,15 @@ export async function createProject(context: ProjectContext) {
 			getCancellationToken: () => token,
 			// custom
 			getDefaultLibFileName: options => {
-				try {
-					return context.workspace.workspaces.ts.getDefaultLibFilePath(options);
-				} catch {
-					// web
-					return context.workspace.workspaces.initOptions.typescript.tsdk + '/' + context.workspace.workspaces.ts.getDefaultLibFileName(options);
+				if (context.workspace.workspaces.initOptions.typescript && context.workspace.workspaces.ts) {
+					try {
+						return context.workspace.workspaces.ts.getDefaultLibFilePath(options);
+					} catch {
+						// web
+						return context.workspace.workspaces.initOptions.typescript.tsdk + '/' + context.workspace.workspaces.ts.getDefaultLibFileName(options);
+					}
 				}
+				return '';
 			},
 			getProjectVersion: () => projectVersion.toString(),
 			getTypeRootsVersion: () => typeRootVersion,
@@ -183,7 +188,9 @@ export async function createProject(context: ProjectContext) {
 			getCompilationSettings: () => parsedCommandLine.options,
 			getScriptVersion,
 			getScriptSnapshot,
-			getTypeScriptModule: () => context.workspace.workspaces.ts,
+			getTypeScriptModule: () => {
+				return context.workspace.workspaces.ts;
+			},
 		};
 
 		if (context.workspace.workspaces.initOptions.noProjectReferences) {
@@ -200,7 +207,7 @@ export async function createProject(context: ProjectContext) {
 		}
 
 		for (const plugin of context.workspace.workspaces.plugins) {
-			if (plugin.resolveLanguageServiceHost) {
+			if (context.workspace.workspaces.ts && plugin.resolveLanguageServiceHost) {
 				host = plugin.resolveLanguageServiceHost(context.workspace.workspaces.ts, sys, context.tsConfig, host);
 			}
 		}
@@ -228,7 +235,7 @@ export async function createProject(context: ProjectContext) {
 				return script.snapshot;
 			}
 
-			if (sys.fileExists(fileName)) {
+			if (context.workspace.workspaces.ts && sys.fileExists(fileName)) {
 				if (context.workspace.workspaces.initOptions.maxFileSize) {
 					const fileSize = sys.getFileSize?.(fileName);
 					if (fileSize !== undefined && fileSize > context.workspace.workspaces.initOptions.maxFileSize) {
@@ -259,43 +266,45 @@ export async function createProject(context: ProjectContext) {
 	function dispose() {
 		languageService?.dispose();
 		scripts.clear();
-		disposeWatchEvent();
+		disposeWatchEvent?.();
 		disposeDocChange();
 	}
 }
 
 function createParsedCommandLine(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript/lib/tsserverlibrary') | undefined,
 	sys: FileSystem,
 	rootPath: path.PosixPath,
 	tsConfig: path.PosixPath | ts.CompilerOptions,
 	plugins: ReturnType<LanguageServerPlugin>[],
 ): ts.ParsedCommandLine {
 	const extraFileExtensions = plugins.map(plugin => plugin.extraFileExtensions ?? []).flat();
-	try {
-		let content: ts.ParsedCommandLine;
-		if (typeof tsConfig === 'string') {
-			const config = ts.readJsonConfigFile(tsConfig, sys.readFile);
-			content = ts.parseJsonSourceFileConfigFileContent(config, sys, path.dirname(tsConfig), {}, tsConfig, undefined, extraFileExtensions);
+	if (ts) {
+		try {
+			let content: ts.ParsedCommandLine;
+			if (typeof tsConfig === 'string') {
+				const config = ts.readJsonConfigFile(tsConfig, sys.readFile);
+				content = ts.parseJsonSourceFileConfigFileContent(config, sys, path.dirname(tsConfig), {}, tsConfig, undefined, extraFileExtensions);
+			}
+			else {
+				content = ts.parseJsonConfigFileContent({ files: [] }, sys, rootPath, tsConfig, path.join(rootPath, 'jsconfig.json' as path.PosixPath), undefined, extraFileExtensions);
+			}
+			// fix https://github.com/johnsoncodehk/volar/issues/1786
+			// https://github.com/microsoft/TypeScript/issues/30457
+			// patching ts server broke with outDir + rootDir + composite/incremental
+			content.options.outDir = undefined;
+			content.fileNames = content.fileNames.map(shared.normalizeFileName);
+			return content;
 		}
-		else {
-			content = ts.parseJsonConfigFileContent({ files: [] }, sys, rootPath, tsConfig, path.join(rootPath, 'jsconfig.json' as path.PosixPath), undefined, extraFileExtensions);
+		catch {
+			// will be failed if web fs host first result not ready
 		}
-		// fix https://github.com/johnsoncodehk/volar/issues/1786
-		// https://github.com/microsoft/TypeScript/issues/30457
-		// patching ts server broke with outDir + rootDir + composite/incremental
-		content.options.outDir = undefined;
-		content.fileNames = content.fileNames.map(shared.normalizeFileName);
-		return content;
 	}
-	catch {
-		// will be failed if web fs host first result not ready
-		return {
-			errors: [],
-			fileNames: [],
-			options: {},
-		};
-	}
+	return {
+		errors: [],
+		fileNames: [],
+		options: {},
+	};
 }
 
 function getHTMLDocumentContext(

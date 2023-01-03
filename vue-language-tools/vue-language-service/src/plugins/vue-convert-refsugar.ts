@@ -32,90 +32,90 @@ export default function (options: {
 	doValidation: (uri: string) => Promise<vscode.Diagnostic[] | undefined>,
 }): LanguageServicePlugin {
 
-	let context: LanguageServicePluginContext;
-	let ts: LanguageServicePluginContext['typescript']['module'];
+	return (context) => {
 
-	return {
+		if (!context.typescript)
+			return {};
 
-		setup(_context) {
-			context = _context;
-			ts = context.typescript.module;
-		},
+		const _ts = context.typescript;
 
-		codeLens: {
+		return {
 
-			on(document) {
-				return worker(document.uri, async (vueFile) => {
+			codeLens: {
 
-					if (document.uri.endsWith('.html')) // petite-vue
-						return;
+				on(document) {
+					return worker(document.uri, async (vueFile) => {
 
-					const isEnabled = await context.env.configurationHost?.getConfiguration<boolean>('volar.codeLens.scriptSetupTools') ?? true;
+						if (document.uri.endsWith('.html')) // petite-vue
+							return;
 
-					if (!isEnabled)
-						return;
+						const isEnabled = await context.env.configurationHost?.getConfiguration<boolean>('volar.codeLens.scriptSetupTools') ?? true;
 
-					const result: vscode.CodeLens[] = [];
-					const sfc = vueFile.sfc;
+						if (!isEnabled)
+							return;
 
-					if (sfc.scriptSetup && sfc.scriptSetupAst) {
+						const result: vscode.CodeLens[] = [];
+						const sfc = vueFile.sfc;
 
-						const ranges = getRanges(ts, sfc.scriptSetupAst);
+						if (sfc.scriptSetup && sfc.scriptSetupAst) {
 
-						result.push({
-							range: {
-								start: document.positionAt(sfc.scriptSetup.startTagEnd),
-								end: document.positionAt(sfc.scriptSetup.startTagEnd + sfc.scriptSetup.content.length),
-							},
-							command: {
-								title: 'ref sugar ' + (ranges.refs.length ? '☑' : '☐'),
-								command: ranges.refs.length ? Commands.UNUSE_REF_SUGAR : Commands.USE_REF_SUGAR,
-								arguments: [document.uri],
-							},
-						});
-					}
+							const ranges = getRanges(_ts.module, sfc.scriptSetupAst);
 
-					return result;
-				});
+							result.push({
+								range: {
+									start: document.positionAt(sfc.scriptSetup.startTagEnd),
+									end: document.positionAt(sfc.scriptSetup.startTagEnd + sfc.scriptSetup.content.length),
+								},
+								command: {
+									title: 'ref sugar ' + (ranges.refs.length ? '☑' : '☐'),
+									command: ranges.refs.length ? Commands.UNUSE_REF_SUGAR : Commands.USE_REF_SUGAR,
+									arguments: [document.uri],
+								},
+							});
+						}
+
+						return result;
+					});
+				},
 			},
-		},
 
-		doExecuteCommand(command, args, commandContext) {
+			doExecuteCommand(command, args, commandContext) {
 
-			if (command === Commands.USE_REF_SUGAR) {
+				if (command === Commands.USE_REF_SUGAR) {
 
-				const [uri] = args as CommandArgs;
+					const [uri] = args as CommandArgs;
 
-				return worker(uri, (vueFile) => {
-					const document = options.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
-					return useRefSugar(context, document, vueFile, commandContext, options.findReferences, options.findTypeDefinition);
-				});
-			}
+					return worker(uri, (vueFile) => {
+						const document = options.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
+						return useRefSugar(_ts, document, vueFile, commandContext, options.findReferences, options.findTypeDefinition);
+					});
+				}
 
-			if (command === Commands.UNUSE_REF_SUGAR) {
+				if (command === Commands.UNUSE_REF_SUGAR) {
 
-				const [uri] = args as CommandArgs;
+					const [uri] = args as CommandArgs;
 
-				return worker(uri, (vueFile) => {
-					const document = options.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
-					return unuseRefSugar(ts, document, vueFile, commandContext, options.doCodeActions, options.doCodeActionResolve, options.doRename, options.doValidation);
-				});
-			}
-		},
+					return worker(uri, (vueFile) => {
+						const document = options.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
+						return unuseRefSugar(_ts.module, document, vueFile, commandContext, options.doCodeActions, options.doCodeActionResolve, options.doRename, options.doValidation);
+					});
+				}
+			},
+		};
+
+		function worker<T>(uri: string, callback: (vueSourceFile: vue.VueFile) => T) {
+
+			const virtualFile = options.documents.getVirtualFileByUri(uri);
+			if (!(virtualFile instanceof vue.VueFile))
+				return;
+
+			return callback(virtualFile);
+		}
 	};
-
-	function worker<T>(uri: string, callback: (vueSourceFile: vue.VueFile) => T) {
-
-		const virtualFile = options.documents.getVirtualFileByUri(uri);
-		if (!(virtualFile instanceof vue.VueFile))
-			return;
-
-		return callback(virtualFile);
-	}
 }
 
 async function useRefSugar(
-	context: LanguageServicePluginContext,
+	_ts: NonNullable<LanguageServicePluginContext['typescript']>,
 	document: TextDocument,
 	vueSourceFile: vue.VueFile,
 	commandContext: ExecuteCommandContext,
@@ -123,7 +123,7 @@ async function useRefSugar(
 	findTypeDefinition: (uri: string, position: vscode.Position) => Promise<vscode.LocationLink[] | undefined>,
 ) {
 
-	const ts = context.typescript.module;
+	const ts = _ts.module;
 
 	const sfc = vueSourceFile.sfc;
 	if (!sfc.scriptSetup) return;
@@ -245,7 +245,7 @@ async function useRefSugar(
 	}
 
 	function isRefType(typeDefs: vscode.LocationLink[]) {
-		const tsHost = context.typescript.languageServiceHost;
+		const tsHost = _ts.languageServiceHost;
 		for (const typeDefine of typeDefs) {
 			const uri = vscode.Location.is(typeDefine) ? typeDefine.uri : typeDefine.targetUri;
 			const range = vscode.Location.is(typeDefine) ? typeDefine.range : typeDefine.targetSelectionRange;

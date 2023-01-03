@@ -1,7 +1,7 @@
 import * as vscode from 'vscode-languageserver-types';
 import type { LanguageServicePlugin } from '@volar/language-service';
 
-export default function (): LanguageServicePlugin {
+const plugin: LanguageServicePlugin = () => {
 
 	return {
 
@@ -38,3 +38,4 @@ export default function (): LanguageServicePlugin {
 		},
 	};
 }
+export default () => plugin;

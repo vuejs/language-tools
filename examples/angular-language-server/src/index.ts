@@ -6,10 +6,14 @@ import type { LanguageServicePlugin, DocumentsAndSourceMaps, Diagnostic } from '
 const plugin: LanguageServerPlugin = () => ({
 	extraFileExtensions: [{ extension: 'html', isMixedContent: true, scriptKind: 7 }],
 	getLanguageModules(host) {
-		return [
-			createTsLanguageModule(host.getTypeScriptModule()),
-			createHtmlLanguageModule(host.getTypeScriptModule()),
-		];
+		const ts = host.getTypeScriptModule();
+		if (ts) {
+			return [
+				createTsLanguageModule(ts),
+				createHtmlLanguageModule(ts),
+			];
+		}
+		return [];
 	},
 	getServicePlugins(_host, service) {
 		return [
@@ -21,27 +25,30 @@ const plugin: LanguageServerPlugin = () => ({
 
 function createNgTemplateLsPlugin(docs: DocumentsAndSourceMaps): LanguageServicePlugin {
 
-	return {
+	return () => {
 
-		validation: {
+		return {
 
-			onSyntactic(document) {
+			validation: {
 
-				const file = docs.getRootFileBySourceFileUri(document.uri);
+				onSyntactic(document) {
 
-				if (file instanceof HTMLTemplateFile) {
-					return (file.parsed.errors ?? []).map<Diagnostic>(error => ({
-						range: {
-							start: { line: error.span.start.line, character: error.span.start.col },
-							end: { line: error.span.end.line, character: error.span.end.col },
-						},
-						severity: error.level === 1 ? 1 : 2,
-						source: 'ng-template',
-						message: error.msg,
-					}));
-				}
-			},
-		}
+					const file = docs.getRootFileBySourceFileUri(document.uri);
+
+					if (file instanceof HTMLTemplateFile) {
+						return (file.parsed.errors ?? []).map<Diagnostic>(error => ({
+							range: {
+								start: { line: error.span.start.line, character: error.span.start.col },
+								end: { line: error.span.end.line, character: error.span.end.col },
+							},
+							severity: error.level === 1 ? 1 : 2,
+							source: 'ng-template',
+							message: error.msg,
+						}));
+					}
+				},
+			}
+		};
 	};
 }
 

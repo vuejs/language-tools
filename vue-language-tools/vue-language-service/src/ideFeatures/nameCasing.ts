@@ -7,6 +7,7 @@ import { AttrNameCasing, TagNameCasing } from '../types';
 
 export async function convertTagName(
 	context: LanguageServiceRuntimeContext,
+	_ts: NonNullable<LanguageServiceRuntimeContext['pluginContext']['typescript']>,
 	uri: string,
 	casing: TagNameCasing,
 ) {
@@ -22,7 +23,7 @@ export async function convertTagName(
 	const template = desc.template;
 	const document = context.documents.getDocumentByFileName(rootFile.snapshot, rootFile.fileName);
 	const edits: vscode.TextEdit[] = [];
-	const components = checkComponentNames(context.host.getTypeScriptModule(), context.typescriptLanguageService, rootFile);
+	const components = checkComponentNames(_ts.module, _ts.languageService, rootFile);
 	const tags = getTemplateTagsAndAttrs(rootFile);
 
 	for (const [tagName, { offsets }] of tags) {
@@ -47,6 +48,7 @@ export async function convertTagName(
 
 export async function convertAttrName(
 	context: LanguageServiceRuntimeContext,
+	_ts: NonNullable<LanguageServiceRuntimeContext['pluginContext']['typescript']>,
 	uri: string,
 	casing: AttrNameCasing,
 ) {
@@ -62,13 +64,13 @@ export async function convertAttrName(
 	const template = desc.template;
 	const document = context.documents.getDocumentByFileName(rootFile.snapshot, rootFile.fileName);
 	const edits: vscode.TextEdit[] = [];
-	const components = checkComponentNames(context.host.getTypeScriptModule(), context.typescriptLanguageService, rootFile);
+	const components = checkComponentNames(_ts.module, _ts.languageService, rootFile);
 	const tags = getTemplateTagsAndAttrs(rootFile);
 
 	for (const [tagName, { attrs }] of tags) {
 		const componentName = components.find(component => component === tagName || hyphenate(component) === tagName);
 		if (componentName) {
-			const props = checkPropsOfTag(context.host.getTypeScriptModule(), context.typescriptLanguageService, rootFile, componentName);
+			const props = checkPropsOfTag(_ts.module, _ts.languageService, rootFile, componentName);
 			for (const [attrName, { offsets }] of attrs) {
 				const propName = props.find(prop => prop === attrName || hyphenate(prop) === attrName);
 				if (propName) {
@@ -93,6 +95,7 @@ export async function convertAttrName(
 
 export function detect(
 	context: LanguageServiceRuntimeContext,
+	_ts: NonNullable<LanguageServiceRuntimeContext['pluginContext']['typescript']>,
 	uri: string,
 ): {
 	tag: TagNameCasing[],
@@ -138,7 +141,7 @@ export function detect(
 	}
 	function getTagNameCase(file: VirtualFile): TagNameCasing[] {
 
-		const components = checkComponentNames(context.host.getTypeScriptModule(), context.typescriptLanguageService, file);
+		const components = checkComponentNames(_ts.module, _ts.languageService, file);
 		const tagNames = getTemplateTagsAndAttrs(file);
 		const result: TagNameCasing[] = [];
 

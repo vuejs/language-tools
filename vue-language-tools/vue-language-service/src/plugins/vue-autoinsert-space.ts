@@ -1,14 +1,8 @@
-import { LanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
+import { LanguageServicePlugin } from '@volar/language-service';
 
-export default function (): LanguageServicePlugin {
-
-	let context: LanguageServicePluginContext;
+const plugin: LanguageServicePlugin = (context) => {
 
 	return {
-
-		setup(_context) {
-			context = _context;
-		},
 
 		async doAutoInsert(document, _, { lastChange }) {
 
@@ -36,4 +30,6 @@ export default function (): LanguageServicePlugin {
 			}
 		},
 	};
-}
+};
+
+export default () => plugin;

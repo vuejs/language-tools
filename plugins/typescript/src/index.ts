@@ -1,4 +1,4 @@
-import type { LanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
+import type { LanguageServicePlugin } from '@volar/language-service';
 import * as ts2 from './createLanguageService';
 import * as semver from 'semver';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -26,30 +26,28 @@ function getBasicTriggerCharacters(tsVersion: string) {
 
 const jsDocTriggerCharacters = ['*'];
 const directiveCommentTriggerCharacters = ['@'];
-
-export default function (): LanguageServicePlugin {
+const plugin: LanguageServicePlugin = (context) => {
 
 	const basicTriggerCharacters = getBasicTriggerCharacters('4.3.0');
 
-	let context: LanguageServicePluginContext;
-	let tsLs2: ts2.LanguageService;
+	if (!context.typescript) {
+		return {};
+	}
+
+	const tsLs2 = ts2.createLanguageService(
+		context.typescript.module,
+		context.typescript.languageServiceHost,
+		context.typescript.languageService,
+		(section) => context.env.configurationHost?.getConfiguration(section) as any,
+		context.env.rootUri,
+	);
 
 	return {
 
-		setup(_context) {
-			context = _context;
-			tsLs2 = ts2.createLanguageService(
-				context.typescript.module,
-				context.typescript.languageServiceHost,
-				context.typescript.languageService,
-				(section) => context.env.configurationHost?.getConfiguration(section) as any,
-				context.env.rootUri,
-			);
-		},
-
 		doAutoInsert(document, position, ctx) {
 			if (
-				(document.languageId === 'javascriptreact' || document.languageId === 'typescriptreact')
+				context.typescript
+				&& (document.languageId === 'javascriptreact' || document.languageId === 'typescriptreact')
 				&& ctx.lastChange.text.endsWith('>')
 			) {
 				const configName = document.languageId === 'javascriptreact' ? 'javascript.autoClosingTags' : 'typescript.autoClosingTags';
@@ -304,7 +302,8 @@ export default function (): LanguageServicePlugin {
 			}
 		},
 	};
-}
+};
+export default () => plugin;
 
 function getConfigTitle(document: TextDocument) {
 	if (document.languageId === 'javascriptreact') {

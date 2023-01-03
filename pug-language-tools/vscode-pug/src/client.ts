@@ -1,5 +1,4 @@
-import { LanguageServerInitializationOptions, ServerMode, DiagnosticModel } from '@volar/language-server';
-import * as path from 'typesafe-path';
+import { LanguageServerInitializationOptions, DiagnosticModel } from '@volar/language-server';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient/node';
 
@@ -8,14 +7,8 @@ let client: lsp.BaseLanguageClient;
 export async function activate(context: vscode.ExtensionContext) {
 
 	const initializationOptions: LanguageServerInitializationOptions = {
-		typescript: {
-			tsdk: path.join(
-				vscode.env.appRoot as path.OsPath,
-				'extensions/node_modules/typescript/lib' as path.PosixPath,
-			),
-		},
-		diagnosticModel: DiagnosticModel.Pull,
-		serverMode: ServerMode.Syntactic, // avoid cross file behavior for better performance
+		diagnosticModel: DiagnosticModel.Pull, // not matter because pug diagnostic is very fast
+		disableFileWatcher: true, // don't care about file changes
 	};
 	const serverModule = vscode.Uri.joinPath(context.extensionUri, 'server.js');
 	const runOptions = { execArgv: <string[]>[] };

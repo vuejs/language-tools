@@ -1,14 +1,14 @@
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { visitEmbedded } from './definePlugin';
-import type { LanguageServiceRuntimeContext } from '../types';
-import { LanguageServicePlugin, FileRangeCapabilities, VirtualFile } from '@volar/language-service';
+import type { LanguageServicePluginInstance, LanguageServiceRuntimeContext } from '../types';
+import { FileRangeCapabilities, VirtualFile } from '@volar/language-service';
 import { SourceMapWithDocuments } from '../documents';
 
 export async function documentFeatureWorker<T>(
 	context: LanguageServiceRuntimeContext,
 	uri: string,
 	isValidSourceMap: (file: VirtualFile, sourceMap: SourceMapWithDocuments<FileRangeCapabilities>) => boolean,
-	worker: (plugin: LanguageServicePlugin, document: TextDocument) => T,
+	worker: (plugin: LanguageServicePluginInstance, document: TextDocument) => T,
 	transform: (result: NonNullable<Awaited<T>>, sourceMap: SourceMapWithDocuments<FileRangeCapabilities>) => Awaited<T> | undefined,
 	combineResult?: (results: NonNullable<Awaited<T>>[]) => NonNullable<Awaited<T>>,
 ) {
@@ -33,7 +33,7 @@ export async function languageFeatureWorker<T, K>(
 	uri: string,
 	arg: K,
 	transformArg: (arg: K, sourceMap: SourceMapWithDocuments<FileRangeCapabilities>, file: VirtualFile) => Generator<K> | K[],
-	worker: (plugin: LanguageServicePlugin, document: TextDocument, arg: K, sourceMap: SourceMapWithDocuments<FileRangeCapabilities> | undefined, file: VirtualFile | undefined) => T,
+	worker: (plugin: LanguageServicePluginInstance, document: TextDocument, arg: K, sourceMap: SourceMapWithDocuments<FileRangeCapabilities> | undefined, file: VirtualFile | undefined) => T,
 	transform: (result: NonNullable<Awaited<T>>, sourceMap: SourceMapWithDocuments<FileRangeCapabilities>) => Awaited<T> | undefined,
 	combineResult?: (results: NonNullable<Awaited<T>>[]) => NonNullable<Awaited<T>>,
 	reportProgress?: (result: NonNullable<Awaited<T>>) => void,

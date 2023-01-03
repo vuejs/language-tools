@@ -41,12 +41,16 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 			};
 		},
 		getLanguageModules(host) {
-			const vueLanguageModules = vue2.createLanguageModules(
-				host.getTypeScriptModule(),
-				host.getCompilationSettings(),
-				host.getVueCompilationSettings(),
-			);
-			return vueLanguageModules;
+			const ts = host.getTypeScriptModule();
+			if (ts) {
+				const vueLanguageModules = vue2.createLanguageModules(
+					ts,
+					host.getCompilationSettings(),
+					host.getVueCompilationSettings(),
+				);
+				return vueLanguageModules;
+			}
+			return [];
 		},
 		getServicePlugins(host, service) {
 			const settings: vue.Settings = {};
@@ -76,23 +80,33 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.LanguageS
 
 			connection.onRequest(DetectNameCasingRequest.type, async params => {
 				const languageService = await getService(params.textDocument.uri);
-				return nameCasing.detect(languageService.context, params.textDocument.uri);
+				if (languageService.context.pluginContext.typescript) {
+					return nameCasing.detect(languageService.context, languageService.context.pluginContext.typescript, params.textDocument.uri);
+				}
 			});
 
 			connection.onRequest(GetConvertTagCasingEditsRequest.type, async params => {
 				const languageService = await getService(params.textDocument.uri);
-				return nameCasing.convertTagName(languageService.context, params.textDocument.uri, params.casing);
+				if (languageService.context.pluginContext.typescript) {
+					return nameCasing.convertTagName(languageService.context, languageService.context.pluginContext.typescript, params.textDocument.uri, params.casing);
+				}
 			});
 
 			connection.onRequest(GetConvertAttrCasingEditsRequest.type, async params => {
 				const languageService = await getService(params.textDocument.uri);
-				return nameCasing.convertAttrName(languageService.context, params.textDocument.uri, params.casing);
+				if (languageService.context.pluginContext.typescript) {
+					return nameCasing.convertAttrName(languageService.context, languageService.context.pluginContext.typescript, params.textDocument.uri, params.casing);
+				}
 			});
 
 			const checkers = new WeakMap<embedded.LanguageServiceHost, meta.ComponentMetaChecker>();
 
 			connection.onRequest(GetComponentMeta.type, async params => {
+
 				const languageService = await getService(params.uri);
+				if (!languageService.context.pluginContext.typescript)
+					return;
+
 				let checker = checkers.get(languageService.context.host);
 				if (!checker) {
 					checker = meta.baseCreate(

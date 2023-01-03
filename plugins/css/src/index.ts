@@ -1,38 +1,29 @@
-import type { LanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
+import type { LanguageServicePlugin } from '@volar/language-service';
 import * as css from 'vscode-css-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as path from 'path';
 
-export default function (): LanguageServicePlugin {
-
-	const stylesheets = new WeakMap<TextDocument, [number, css.Stylesheet]>();
+const plugin: LanguageServicePlugin = (context) => {
 
 	let inited = false;
-	let context: LanguageServicePluginContext;
-	let cssLs: css.LanguageService;
-	let scssLs: css.LanguageService;
-	let lessLs: css.LanguageService;
-	let postcssLs: css.LanguageService;
+
+	const stylesheets = new WeakMap<TextDocument, [number, css.Stylesheet]>();
+	const cssLs = css.getCSSLanguageService({ fileSystemProvider: context.env.fileSystemProvider });
+	const scssLs = css.getSCSSLanguageService({ fileSystemProvider: context.env.fileSystemProvider });
+	const lessLs = css.getLESSLanguageService({ fileSystemProvider: context.env.fileSystemProvider });
+	const postcssLs: css.LanguageService = {
+		...scssLs,
+		doValidation: (document, stylesheet, documentSettings) => {
+			let errors = scssLs.doValidation(document, stylesheet, documentSettings);
+			errors = errors.filter(error => error.code !== 'css-semicolonexpected');
+			errors = errors.filter(error => error.code !== 'css-ruleorselectorexpected');
+			errors = errors.filter(error => error.code !== 'unknownAtRules');
+			return errors;
+		},
+	};
 
 	return {
-
-		setup(_context) {
-			context = _context;
-			cssLs = css.getCSSLanguageService({ fileSystemProvider: _context.env.fileSystemProvider });
-			scssLs = css.getSCSSLanguageService({ fileSystemProvider: _context.env.fileSystemProvider });
-			lessLs = css.getLESSLanguageService({ fileSystemProvider: _context.env.fileSystemProvider });
-			postcssLs = {
-				...scssLs,
-				doValidation: (document, stylesheet, documentSettings) => {
-					let errors = scssLs.doValidation(document, stylesheet, documentSettings);
-					errors = errors.filter(error => error.code !== 'css-semicolonexpected');
-					errors = errors.filter(error => error.code !== 'css-ruleorselectorexpected');
-					errors = errors.filter(error => error.code !== 'unknownAtRules');
-					return errors;
-				},
-			};
-		},
 
 		complete: {
 
@@ -277,3 +268,5 @@ export default function (): LanguageServicePlugin {
 		return callback(stylesheet, cssLs);
 	}
 };
+
+export default () => plugin;

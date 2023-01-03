@@ -14,9 +14,9 @@ export interface WorkspacesContext {
 	initParams: vscode.InitializeParams,
 	initOptions: LanguageServerInitializationOptions,
 	plugins: ReturnType<LanguageServerPlugin>[],
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript/lib/tsserverlibrary') | undefined,
 	tsLocalized: ts.MapLike<string> | undefined,
-	fileSystemHost: FileSystemHost,
+	fileSystemHost: FileSystemHost | undefined,
 	configurationHost: ConfigurationHost | undefined,
 	documents: ReturnType<typeof createDocuments>,
 	cancelTokenHost: CancellationTokenHost,
@@ -37,7 +37,7 @@ export function createWorkspaces(context: WorkspacesContext) {
 	context.documents.onDidClose(({ textDocument }) => {
 		context.server.connection.sendDiagnostics({ uri: textDocument.uri, diagnostics: [] });
 	});
-	context.fileSystemHost.onDidChangeWatchedFiles(({ changes }) => {
+	context.fileSystemHost?.onDidChangeWatchedFiles(({ changes }) => {
 		const tsConfigChanges = changes.filter(change => rootTsConfigNames.includes(change.uri.substring(change.uri.lastIndexOf('/') + 1)));
 		if (tsConfigChanges.length) {
 			reloadDiagnostics();
@@ -73,7 +73,7 @@ export function createWorkspaces(context: WorkspacesContext) {
 
 	async function reloadProject() {
 
-		context.fileSystemHost.reload();
+		context.fileSystemHost?.reload();
 
 		for (const [_, workspace] of workspaces) {
 			(await workspace).reload();
