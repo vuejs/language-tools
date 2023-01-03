@@ -99,7 +99,7 @@ export function createCommonLanguageServer(context: ServerContext) {
 							'jsx',
 							'tsx',
 							'json',
-							...plugins.map(plugin => plugin.extraFileExtensions.map(ext => ext.extension)).flat(),
+							...plugins.map(plugin => plugin.extraFileExtensions?.map(ext => ext.extension) ?? []).flat(),
 						].join(',')}}`
 					},
 				]

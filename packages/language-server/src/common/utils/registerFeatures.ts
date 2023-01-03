@@ -136,7 +136,7 @@ export function setupCapabilities(
 	if (!initOptions.respectClientCapabilities || params.textDocument?.diagnostic && (initOptions.diagnosticModel ?? DiagnosticModel.Push) === DiagnosticModel.Pull) {
 		server.diagnosticProvider = {
 			documentSelector: [
-				...plugins.map(plugin => plugin.extraFileExtensions.map(ext => ({ pattern: `**/*.${ext.extension}` }))).flat(),
+				...plugins.map(plugin => plugin.extraFileExtensions?.map(ext => ({ pattern: `**/*.${ext.extension}` })) ?? []).flat(),
 				{ pattern: '**/*.{ts,js,tsx,jsx}' },
 			],
 			interFileDependencies: true,
@@ -150,7 +150,7 @@ export function setupCapabilities(
 			fileOperations: {
 				willRename: {
 					filters: [
-						...plugins.map(plugin => plugin.extraFileExtensions.map(ext => ({ pattern: { glob: `**/*.${ext.extension}` } }))).flat(),
+						...plugins.map(plugin => plugin.extraFileExtensions?.map(ext => ({ pattern: { glob: `**/*.${ext.extension}` } })) ?? []).flat(),
 						{ pattern: { glob: '**/*.js' } },
 						{ pattern: { glob: '**/*.cjs' } },
 						{ pattern: { glob: '**/*.mjs' } },
