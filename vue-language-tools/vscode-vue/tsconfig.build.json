@@ -15,7 +15,7 @@
 	],
 	"references": [
 		{
-			"path": "../../vue-language-tools/vue-language-server/tsconfig.build.json"
+			"path": "../vue-language-server/tsconfig.build.json"
 		},
 		{
 			"path": "../../packages/preview/tsconfig.build.json"

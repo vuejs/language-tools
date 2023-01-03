@@ -4,10 +4,10 @@
 	"references": [
 		// Extensions
 		{
-			"path": "./extensions/vscode-vue-language-features/tsconfig.build.json"
+			"path": "./vue-language-tools/vscode-vue/tsconfig.build.json"
 		},
 		{
-			"path": "./extensions/vscode-typescript-vue-plugin/tsconfig.build.json"
+			"path": "./vue-language-tools/vscode-typescript-vue-plugin/tsconfig.build.json"
 		},
 		{
 			"path": "./pug-language-tools/vscode-pug/tsconfig.build.json"

@@ -3,7 +3,6 @@
 	"npmClient": "pnpm",
 	"packages": [
 		"examples/*",
-		"extensions/*",
 		"packages/*",
 		"plugins/*",
 		"pug-language-tools/*",
