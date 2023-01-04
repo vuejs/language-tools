@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import type { BaseLanguageClient } from 'vscode-languageclient';
+import { BaseLanguageClient, TextDocument } from 'vscode-languageclient';
 import { GetVirtualFileNamesRequest, GetVirtualFileRequest } from '@volar/language-server';
 import { SourceMap } from '@volar/source-map';
 import type { FileRangeCapabilities } from '@volar/language-core';
@@ -63,6 +63,7 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 	const virtualUriToSourceEditor = new Map<string, vscode.TextEditor>();
 	const virtualUriToSourceMap = new Map<string, [string, number, SourceMap<FileRangeCapabilities>][]>();
 	const docChangeEvent = new vscode.EventEmitter<vscode.Uri>();
+	const virtualDocuments = new Map<string, TextDocument>();
 
 	let updateVirtualDocument: NodeJS.Timeout | undefined;
 	let updateDecorationsTimeout: NodeJS.Timeout | undefined;
@@ -109,6 +110,7 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 							sourceUriToVirtualUris.get(sourceUri)?.add(uri.toString());
 						}
 					});
+					virtualDocuments.set(uri.toString(), TextDocument.create('', '', 0, virtual.content));
 
 					clearTimeout(updateDecorationsTimeout);
 					updateDecorationsTimeout = setTimeout(updateDecorations, 100);
@@ -148,8 +150,8 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 						));
 						sourceEditor.setDecorations(mappingDecorationType, mappingDecorationRanges);
 						virtualRanges1 = virtualRanges1.concat(map.mappings.map(mapping => new vscode.Range(
-							virtualEditor.document.positionAt(mapping.generatedRange[0]),
-							virtualEditor.document.positionAt(mapping.generatedRange[1]),
+							getGeneratedPosition(virtualUri, mapping.generatedRange[0]),
+							getGeneratedPosition(virtualUri, mapping.generatedRange[1]),
 						)));
 
 						/**
@@ -166,14 +168,14 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 									sourceEditor.document.positionAt(mapped[1].sourceRange[1]),
 								)));
 								virtualRanges2 = virtualRanges2.concat(matchVirtualRanges.map(mapped => new vscode.Range(
-									virtualEditor.document.positionAt(mapped[1].generatedRange[0]),
-									virtualEditor.document.positionAt(mapped[1].generatedRange[1]),
+									getGeneratedPosition(virtualUri, mapped[1].generatedRange[0]),
+									getGeneratedPosition(virtualUri, mapped[1].generatedRange[1]),
 								)));
 								const mapped = matchVirtualRanges.sort((a, b) => a[1].generatedRange[0] - b[1].generatedRange[0])[0];
 								if (mapped) {
 									virtualEditor.revealRange(new vscode.Range(
-										virtualEditor.document.positionAt(mapped[1].generatedRange[0]),
-										virtualEditor.document.positionAt(mapped[1].generatedRange[1]),
+										getGeneratedPosition(virtualUri, mapped[1].generatedRange[0]),
+										getGeneratedPosition(virtualUri, mapped[1].generatedRange[1]),
 									));
 								}
 							}
@@ -184,8 +186,8 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 									sourceEditor.document.positionAt(mapped[1].sourceRange[1]),
 								)));
 								virtualRanges2 = virtualRanges2.concat(matchSourceRanges.map(mapped => new vscode.Range(
-									virtualEditor.document.positionAt(mapped[1].generatedRange[0]),
-									virtualEditor.document.positionAt(mapped[1].generatedRange[1]),
+									getGeneratedPosition(virtualUri, mapped[1].generatedRange[0]),
+									getGeneratedPosition(virtualUri, mapped[1].generatedRange[1]),
 								)));
 								const mapped = matchSourceRanges.sort((a, b) => a[1].sourceRange[0] - b[1].sourceRange[0])[0];
 								if (mapped) {
@@ -214,5 +216,11 @@ export async function register(cmd: string, context: vscode.ExtensionContext, cl
 				}
 			}
 		}
+	}
+
+	function getGeneratedPosition(virtualUri: string, offset: number) {
+		const document = virtualDocuments.get(virtualUri)!;
+		const position = document.positionAt(offset);
+		return new vscode.Position(position.line, position.character);
 	}
 }
