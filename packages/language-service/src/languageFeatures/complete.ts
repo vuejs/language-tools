@@ -63,6 +63,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 							cacheData.list = transformCompletionList(
 								embeddedCompletionList,
 								range => map.toSourceRange(range),
+								map.virtualFileDocument,
 								(newItem, oldItem) => newItem.data = {
 									uri,
 									originalItem: oldItem,
@@ -164,6 +165,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 							const completionList = transformCompletionList(
 								embeddedCompletionList,
 								range => map.toSourceRange(range),
+								map.virtualFileDocument,
 								(newItem, oldItem) => newItem.data = {
 									uri,
 									originalItem: oldItem,

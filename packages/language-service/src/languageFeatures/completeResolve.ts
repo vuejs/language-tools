@@ -48,6 +48,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 							if (range) return range;
 							return map.toSourceRange(embeddedRange);
 						},
+						map.virtualFileDocument,
 					);
 				}
 			}

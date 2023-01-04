@@ -23,6 +23,6 @@ export function register(htmlLs: html.LanguageService) {
 			options,
 		);
 
-		return transformCompletionList(htmlComplete, htmlRange => pugDoc.map.toSourceRange(htmlRange));
+		return transformCompletionList(htmlComplete, htmlRange => pugDoc.map.toSourceRange(htmlRange), pugDoc.map.virtualFileDocument);
 	};
 }

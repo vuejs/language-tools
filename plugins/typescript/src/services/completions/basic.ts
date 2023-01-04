@@ -103,7 +103,7 @@ export function register(
 			item.insertTextFormat = isSnippet ? vscode.InsertTextFormat.Snippet : vscode.InsertTextFormat.PlainText;
 			item.filterText = getFilterText(tsEntry, wordRange, line, tsEntry.insertText);
 
-			if (completionContext!.isMemberCompletion && dotAccessorContext && !isSnippet) {
+			if (completionContext?.isMemberCompletion && dotAccessorContext && !isSnippet) {
 				item.filterText = dotAccessorContext.text + (item.insertText || item.label);
 				if (!range) {
 					const replacementRange = wordRange;

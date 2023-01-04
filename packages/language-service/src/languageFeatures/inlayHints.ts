@@ -66,7 +66,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				const position = map.toSourcePosition(_inlayHint.position);
 				const edits = _inlayHint.textEdits
-					?.map(textEdit => transformTextEdit(textEdit, range => map!.toSourceRange(range)))
+					?.map(textEdit => transformTextEdit(textEdit, range => map!.toSourceRange(range), map.virtualFileDocument))
 					.filter(shared.notEmpty);
 
 				if (position) {
