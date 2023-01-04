@@ -1,42 +1,46 @@
-import useCssPlugin from '@volar-plugins/css';
-import useEmmetPlugin from '@volar-plugins/emmet';
-import useHtmlPlugin from '@volar-plugins/html';
-import useJsonPlugin from '@volar-plugins/json';
-import usePugPlugin from '@volar-plugins/pug';
+import createCssPlugin from '@volar-plugins/css';
+import createEmmetPlugin from '@volar-plugins/emmet';
+import createHtmlPlugin from '@volar-plugins/html';
+import createJsonPlugin from '@volar-plugins/json';
+import createPugPlugin from '@volar-plugins/pug';
 import createTsPlugin from '@volar-plugins/typescript';
-import useTsTqPlugin from '@volar-plugins/typescript-twoslash-queries';
+import createTsTqPlugin from '@volar-plugins/typescript-twoslash-queries';
 import * as embedded from '@volar/language-core';
 import * as embeddedLS from '@volar/language-service';
 import * as vue from '@volar/vue-language-core';
 import { VueLanguageServiceHost } from '@volar/vue-language-core';
 import type * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
-import useVuePlugin from './plugins/vue';
-import useAutoDotValuePlugin from './plugins/vue-autoinsert-dotvalue';
-import useReferencesCodeLensPlugin from './plugins/vue-codelens-references';
-import useHtmlPugConversionsPlugin from './plugins/vue-convert-htmlpug';
-import useRefSugarConversionsPlugin from './plugins/vue-convert-refsugar';
-import useScriptSetupConversionsPlugin from './plugins/vue-convert-scriptsetup';
-import useTwoslashQueries from './plugins/vue-twoslash-queries';
-import useVueTemplateLanguagePlugin from './plugins/vue-template';
+import createVuePlugin from './plugins/vue';
+import createAutoDotValuePlugin from './plugins/vue-autoinsert-dotvalue';
+import createReferencesCodeLensPlugin from './plugins/vue-codelens-references';
+import createHtmlPugConversionsPlugin from './plugins/vue-convert-htmlpug';
+import createRefSugarConversionsPlugin from './plugins/vue-convert-refsugar';
+import createScriptSetupConversionsPlugin from './plugins/vue-convert-scriptsetup';
+import createTwoslashQueries from './plugins/vue-twoslash-queries';
+import createVueTemplateLanguagePlugin from './plugins/vue-template';
 import type { Data } from '@volar-plugins/typescript/src/services/completions/basic';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { LanguageServicePlugin } from '@volar/language-service';
 
+import createPugFormatPlugin from '@volar-plugins/pug-beautify';
+import createAutoWrapParenthesesPlugin from './plugins/vue-autoinsert-parentheses';
+import createAutoAddSpacePlugin from './plugins/vue-autoinsert-space';
+
 export interface Settings {
-	json?: Parameters<typeof useJsonPlugin>[0];
+	json?: Parameters<typeof createJsonPlugin>[0];
 }
 
 export function getLanguageServicePlugins(settings?: Settings) {
 
-	// plugins
-	const tsPlugin: embeddedLS.LanguageServicePlugin = (_context, service) => {
+	const tsPlugin = createTsPlugin();
+	const tsPluginPatchAutoImport: embeddedLS.LanguageServicePlugin = (_context, service) => {
 
 		if (!_context.typescript)
 			return {};
 
 		const ts = _context.typescript.module;
-		const base = createTsPlugin()(_context, service);
+		const base = tsPlugin(_context, service);
 		const autoImportPositions = new WeakSet<vscode.Position>();
 
 		return {
@@ -145,26 +149,17 @@ export function getLanguageServicePlugins(settings?: Settings) {
 			},
 		};
 	};
-	const vuePlugin = useVuePlugin();
-	const cssPlugin = useCssPlugin();
-	const jsonPlugin = useJsonPlugin(settings?.json);
-	const emmetPlugin = useEmmetPlugin();
-	const autoDotValuePlugin = useAutoDotValuePlugin();
-	const referencesCodeLensPlugin = useReferencesCodeLensPlugin();
-	const htmlPugConversionsPlugin = useHtmlPugConversionsPlugin();
-	const scriptSetupConversionsPlugin = useScriptSetupConversionsPlugin();
-	const refSugarConversionsPlugin = useRefSugarConversionsPlugin();
 
 	// template plugins
-	const htmlPlugin = useVueTemplateLanguagePlugin({
-		templateLanguagePlugin: useHtmlPlugin(),
+	const htmlPlugin = createVueTemplateLanguagePlugin({
+		templateLanguagePlugin: createHtmlPlugin(),
 		getScanner: (document, htmlPlugin): html.Scanner | undefined => {
 			return htmlPlugin.getHtmlLs().createScanner(document.getText());
 		},
 		isSupportedDocument: (document) => document.languageId === 'html',
 	});
-	const pugPlugin = useVueTemplateLanguagePlugin({
-		templateLanguagePlugin: usePugPlugin(),
+	const pugPlugin = createVueTemplateLanguagePlugin({
+		templateLanguagePlugin: createPugPlugin(),
 		getScanner: (document, pugPlugin): html.Scanner | undefined => {
 			const pugDocument = pugPlugin.getPugDocument(document);
 			if (pugDocument) {
@@ -173,25 +168,26 @@ export function getLanguageServicePlugins(settings?: Settings) {
 		},
 		isSupportedDocument: (document) => document.languageId === 'jade',
 	});
-	const tsTwoslashQueriesPlugin = useTsTqPlugin();
-	const vueTwoslashQueriesPlugin = useTwoslashQueries();
 
 	return [
-		vuePlugin,
-		cssPlugin,
+		createVuePlugin(),
+		createCssPlugin(),
 		htmlPlugin,
 		pugPlugin,
-		jsonPlugin,
-		referencesCodeLensPlugin,
-		htmlPugConversionsPlugin,
-		scriptSetupConversionsPlugin,
-		refSugarConversionsPlugin,
-		tsPlugin,
-		autoDotValuePlugin,
-		tsTwoslashQueriesPlugin,
-		vueTwoslashQueriesPlugin,
+		createJsonPlugin(settings?.json),
+		createReferencesCodeLensPlugin(),
+		createHtmlPugConversionsPlugin(),
+		createScriptSetupConversionsPlugin(),
+		createRefSugarConversionsPlugin(),
+		tsPluginPatchAutoImport,
+		createAutoDotValuePlugin(),
+		createTsTqPlugin(),
+		createTwoslashQueries(),
+		createPugFormatPlugin(),
+		createAutoWrapParenthesesPlugin(),
+		createAutoAddSpacePlugin(),
 		// put emmet plugin at last to fix https://github.com/johnsoncodehk/volar/issues/1088
-		emmetPlugin,
+		createEmmetPlugin(),
 	] as LanguageServicePlugin[];
 }
 
