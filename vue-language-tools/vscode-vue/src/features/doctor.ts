@@ -196,12 +196,17 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		// check using pug but don't install @volar/vue-language-plugin-pug
 		if (
 			sfc?.descriptor.template?.lang === 'pug'
-			&& !vueOptions?.plugins?.includes('@volar/vue-language-plugin-pug')
+			&& !vueOptions?.plugins?.some((pluginPath: string) => pluginPath.indexOf('vue-language-plugin-pug') >= 0)
 		) {
 			problems.push({
 				title: '`@volar/vue-language-plugin-pug` missing',
 				message: [
 					'For `<template lang="pug">`, the `@volar/vue-language-plugin-pug` plugin is required. Install it using `$ npm install -D @volar/vue-language-plugin-pug` and add it to `vueCompilerOptions.plugins` to support TypeScript intellisense in Pug templates.',
+					'',
+					'- package.json',
+					'```json',
+					JSON.stringify({ devDependencies: { "@volar/vue-language-plugin-pug": "latest" } }, undefined, 2),
+					'```',
 					'',
 					'- tsconfig.json / jsconfig.json',
 					'```jsonc',
