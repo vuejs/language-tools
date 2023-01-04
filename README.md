@@ -17,6 +17,8 @@
 
 ### Common
 
+- [language-tools-starter](https://github.com/volarjs/language-tools-starter) \
+*A template for creating embedded language tools based on Volar framework*
 - [volar-plugins](https://github.com/johnsoncodehk/volar-plugins) \
 *Common plugins to change language server behavior*
 
