@@ -17,7 +17,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				return [];
 			},
 			(plugin, document, range) => plugin.getColorPresentations?.(document, color, range),
-			(data, map) => data.map(cp => {
+			(data, map) => map ? data.map(cp => {
 
 				if (cp.textEdit) {
 					const range = map.toSourceRange(cp.textEdit.range);
@@ -35,7 +35,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					}
 				}
 				return cp;
-			}).filter(shared.notEmpty),
+			}).filter(shared.notEmpty) : data,
 		);
 	};
 }

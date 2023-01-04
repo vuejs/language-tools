@@ -12,7 +12,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			uri,
 			file => !!file.capabilities.documentSymbol, // TODO: add color capabilitie setting
 			(plugin, document) => plugin.findDocumentSymbols?.(document),
-			(data, map) => transformSymbolInformations(
+			(data, map) => map ? transformSymbolInformations(
 				data,
 				location => {
 					const range = map.toSourceRange(location.range);
@@ -21,7 +21,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 						return vscode.Location.create(uri, range);
 					}
 				},
-			),
+			) : data,
 			arr => arr.flat(),
 		);
 	};

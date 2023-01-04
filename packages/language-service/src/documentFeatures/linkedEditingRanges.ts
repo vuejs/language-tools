@@ -13,10 +13,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 			position,
 			(position, map) => map.toGeneratedPositions(position, data => !!data.completion),
 			(plugin, document, position) => plugin.findLinkedEditingRanges?.(document, position),
-			(data, map) => ({
+			(data, map) => map ? ({
 				wordPattern: data.wordPattern,
 				ranges: data.ranges.map(range => map.toSourceRange(range)).filter(shared.notEmpty),
-			}),
+			}) : data,
 		);
 	};
 }

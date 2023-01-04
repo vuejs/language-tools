@@ -24,7 +24,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 				return [];
 			},
 			(plugin, document, positions) => plugin.getSelectionRanges?.(document, positions),
-			(item, map) => transformSelectionRanges(item, range => map.toSourceRange(range)),
+			(item, map) => map ? transformSelectionRanges(item, range => map.toSourceRange(range)) : item,
 			results => {
 				for (let i = 0; i < results[0].length; i++) {
 					const first = results[0][i];

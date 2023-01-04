@@ -12,12 +12,13 @@ export function register(context: LanguageServiceRuntimeContext) {
 			uri,
 			file => !!file.capabilities.documentSymbol, // TODO: add color capability setting
 			(plugin, document) => plugin.findDocumentColors?.(document),
-			(data, map) => data.map(color => {
+			(data, map) => map ? data.map(color => {
+
 				const range = map.toSourceRange(color.range);
 				if (range) {
 					return vscode.ColorInformation.create(range, color.color);
 				}
-			}).filter(shared.notEmpty),
+			}).filter(shared.notEmpty) : data,
 			arr => arr.flat(),
 		);
 	};
