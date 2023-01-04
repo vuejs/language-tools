@@ -83,6 +83,9 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 						if (node.arg && withinChangeRange(node.arg.loc) && node.name === 'slot') {
 							return false;
 						}
+						if (node.exp && withinChangeRange(node.exp.loc) && node.name === 'for') { // #2266
+							return false;
+						}
 						if (node.arg && !tryUpdateNode(node.arg)) {
 							return false;
 						}
@@ -105,11 +108,11 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 						}
 					}
 					else if (node.type === CompilerDOM.NodeTypes.IF) {
-						for (const branche of node.branches) {
-							if (branche.condition && !tryUpdateNode(branche.condition)) {
+						for (const branch of node.branches) {
+							if (branch.condition && !tryUpdateNode(branch.condition)) {
 								return false;
 							}
-							for (const child of branche.children) {
+							for (const child of branch.children) {
 								if (!tryUpdateNode(child)) {
 									return false;
 								}
