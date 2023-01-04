@@ -2,7 +2,7 @@
 
 ## 1.0.20 (2022/1/4)
 
-- feat: support url field for embedded preview
+- feat: support browser navigation for embedded preview
 - feat: released pug extension ([#2274](https://github.com/johnsoncodehk/volar/issues/2274))
 - feat: add `volar.takeOverMode.extension` setting for choice extension that takeover *.ts language support
 - fix(typescript-vue-plugin): can't always get latest status of .vue files ([#2271](https://github.com/johnsoncodehk/volar/issues/2271))
