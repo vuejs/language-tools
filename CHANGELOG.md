@@ -1,13 +1,13 @@
 # Changelog
 
-## 1.0.20 (2022/1/4)
+## 1.0.21 (2022/1/5)
 
-- feat: support browser navigation for embedded preview
-- feat: released pug extension ([#2274](https://github.com/johnsoncodehk/volar/issues/2274))
-- feat: add `volar.takeOverMode.extension` setting for choice extension that takeover *.ts language support
-- fix(typescript-vue-plugin): can't always get latest status of .vue files ([#2271](https://github.com/johnsoncodehk/volar/issues/2271))
-- refactor(framework): simplify `LanguageServerPlugin` api and dependency injection connection ([#2273](https://github.com/johnsoncodehk/volar/issues/2273))
-- refactor(framework): combine `createLanguageService` and `createDocumentService`
+- fix: cannot jump to .vue definition from .ts with takeover mode
+- fix: cannot detect `@volar/vue-language-plugin-pug` installed ([#2272](https://github.com/johnsoncodehk/volar/issues/2272))
+- fix: ignore incremental update for v-for expression ([#2266](https://github.com/johnsoncodehk/volar/issues/2266))
+- fix: auto insert spaces for `{{}}` not working
+- fix: completion in template inserts stray leading dot ([#2155](https://github.com/johnsoncodehk/volar/issues/2155))
+- fix: if source document EOL is `\r\n`, virtual document mapping decorations range incorrect
 
 ### Our Gold Sponsors
 
@@ -22,6 +22,16 @@
 	<td align="center" valign="middle"><a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/prefect.svg" height="50" /></a></td>
 	<td align="center" valign="middle"><a href="https://github.com/365talents"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/365talents.png" height="70" /></a></td>
 </tr></table>
+
+## 1.0.20 (2022/1/4)
+
+- feat: support browser navigation for embedded preview
+- feat: released pug extension ([#2274](https://github.com/johnsoncodehk/volar/issues/2274))
+- feat: add `volar.takeOverMode.extension` setting for choice extension that takeover *.ts language support
+- fix(typescript-vue-plugin): can't always get latest status of .vue files ([#2271](https://github.com/johnsoncodehk/volar/issues/2271))
+- fix: multi-line template interpolation formatting indentation incorrect
+- refactor(framework): simplify `LanguageServerPlugin` api and dependency injection connection ([#2273](https://github.com/johnsoncodehk/volar/issues/2273))
+- refactor(framework): combine `createLanguageService` and `createDocumentService`
 
 ## 1.0.19 (2022/12/31)
 
