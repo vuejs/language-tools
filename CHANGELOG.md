@@ -9,14 +9,14 @@
 - refactor(framework): simplify `LanguageServerPlugin` api and dependency injection connection ([#2273](https://github.com/johnsoncodehk/volar/issues/2273))
 - refactor(framework): combine `createLanguageService` and `createDocumentService`
 
-### Out Gold Sponsors
+### Our Gold Sponsors
 
 <table><tr>
 	<td align="center" valign="middle"><a href="https://vuejs.org/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/vue.png" height="80" /></a></td>
 	<td align="center" valign="middle"><a href="https://volta.net/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/volta.svg" height="60" /></a></td>
 </tr></table>
 
-### Out Silver Sponsors
+### Our Silver Sponsors
 
 <table><tr>
 	<td align="center" valign="middle"><a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/prefect.svg" height="50" /></a></td>
