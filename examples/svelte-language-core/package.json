@@ -1,6 +1,6 @@
 {
 	"name": "@volar-examples/svelte-language-core",
-	"version": "1.0.20",
+	"version": "1.0.21",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -14,7 +14,7 @@
 	},
 	"dependencies": {
 		"@jridgewell/sourcemap-codec": "^1.4.14",
-		"@volar/language-core": "1.0.20",
+		"@volar/language-core": "1.0.21",
 		"svelte": "^3.53.1",
 		"svelte2tsx": "^0.5.20",
 		"vscode-languageserver-textdocument": "^1.0.8",
