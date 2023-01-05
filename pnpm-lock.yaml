@@ -154,15 +154,6 @@ importers:
       vscode-languageserver-textdocument: 1.0.8
       vscode-uri: 3.0.7
 
-  packages/preview:
-    specifiers:
-      '@types/ws': ^8.5.3
-      ws: ^8.11.0
-    dependencies:
-      ws: 8.11.0
-    devDependencies:
-      '@types/ws': 8.5.3
-
   packages/shared:
     specifiers:
       typesafe-path: ^0.2.2
@@ -354,6 +345,15 @@ importers:
       vsce: 2.15.0
       vscode-languageclient: 8.0.2
 
+  vue-language-tools/preview:
+    specifiers:
+      '@types/ws': ^8.5.3
+      ws: ^8.11.0
+    dependencies:
+      ws: 8.11.0
+    devDependencies:
+      '@types/ws': 8.5.3
+
   vue-language-tools/typescript-vue-plugin:
     specifiers:
       '@volar/typescript-faster': 1.0.22
@@ -400,7 +400,7 @@ importers:
     devDependencies:
       '@types/semver': 7.3.13
       '@types/vscode': 1.67.0
-      '@volar/preview': link:../../packages/preview
+      '@volar/preview': link:../preview
       '@volar/shared': link:../../packages/shared
       '@volar/source-map': link:../../packages/source-map
       '@volar/vscode-language-client': link:../../packages/vscode-language-client
@@ -1558,10 +1558,6 @@ packages:
     dev: false
     optional: true
 
-  /@types/node/18.11.16:
-    resolution: {integrity: sha512-6T7P5bDkRhqRxrQtwj7vru+bWTpelgtcETAZEUSdq0YISKz8WKdoBukQLYQQ6DFHvU9JRsbFq0JH5C51X2ZdnA==}
-    dev: true
-
   /@types/node/18.11.18:
     resolution: {integrity: sha512-DHQpWGjyQKSHj3ebjFI/wRKcqQcdR+MoFBygntYOZytCqNfkd2ZC4ARDJ2DQqhjH5p85Nnd3jhUJIXrszFX/JA==}
     dev: true
@@ -1586,7 +1582,7 @@ packages:
   /@types/ws/8.5.3:
     resolution: {integrity: sha512-6YOoWjruKj1uLf3INHH7D3qTXwFfEsg1kf3c0uDdSBJwfa/llkwIjrAGV7j7mVgGNbzTQ3HiHKKDXl6bJPD97w==}
     dependencies:
-      '@types/node': 18.11.16
+      '@types/node': 18.11.18
     dev: true
 
   /@vitejs/plugin-vue/4.0.0_vite@4.0.4+vue@3.2.45:
