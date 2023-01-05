@@ -54,23 +54,6 @@
 			}
 		},
 		{
-			"name": "Launch Angular",
-			"type": "extensionHost",
-			"request": "launch",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-				"--disable-extensions",
-				"--extensionDevelopmentPath=${workspaceRoot}/angular-language-tools/vscode-angular"
-			],
-			"outFiles": [
-				"${workspaceRoot}/*/*/out/**/*.js"
-			],
-			"preLaunchTask": {
-				"type": "npm",
-				"script": "watch"
-			}
-		},
-		{
 			"type": "extensionHost",
 			"request": "launch",
 			"name": "Launch TypeScript Vue Plugin",

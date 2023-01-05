@@ -13,9 +13,6 @@
 			"path": "./pug-language-tools/vscode-pug/tsconfig.build.json"
 		},
 		{
-			"path": "./angular-language-tools/vscode-angular/tsconfig.build.json"
-		},
-		{
 			"path": "./examples/vscode-svelte/tsconfig.build.json"
 		},
 		// Extra Pkgs

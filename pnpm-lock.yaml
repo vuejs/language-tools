@@ -21,53 +21,6 @@ importers:
       vite: 4.0.4_@types+node@18.11.18
       vitest: 0.25.8
 
-  angular-language-tools/angular-language-core:
-    specifiers:
-      '@angular-eslint/bundled-angular-compiler': ^15.1.0
-      '@angular/compiler': ^15.0.4
-      '@volar/language-core': 1.0.22
-      vscode-languageserver-textdocument: ^1.0.8
-      vscode-uri: ^3.0.7
-    dependencies:
-      '@angular-eslint/bundled-angular-compiler': 15.1.0
-      '@volar/language-core': link:../../packages/language-core
-      vscode-languageserver-textdocument: 1.0.8
-      vscode-uri: 3.0.7
-    devDependencies:
-      '@angular/compiler': 15.0.4
-
-  angular-language-tools/angular-language-server:
-    specifiers:
-      '@volar-examples/angular-language-core': 1.0.22
-      '@volar-plugins/typescript': 1.0.22
-      '@volar/language-server': 1.0.22
-      '@volar/shared': 1.0.22
-    dependencies:
-      '@volar-examples/angular-language-core': link:../angular-language-core
-      '@volar-plugins/typescript': link:../../plugins/typescript
-      '@volar/language-server': link:../../packages/language-server
-      '@volar/shared': link:../../packages/shared
-
-  angular-language-tools/vscode-angular:
-    specifiers:
-      '@types/vscode': 1.67.0
-      '@volar-examples/angular-language-server': 1.0.22
-      '@volar/language-server': 1.0.22
-      '@volar/vscode-language-client': 1.0.22
-      esbuild: latest
-      typesafe-path: ^0.2.2
-      vsce: latest
-      vscode-languageclient: ^8.0.2
-    devDependencies:
-      '@types/vscode': 1.67.0
-      '@volar-examples/angular-language-server': link:../angular-language-server
-      '@volar/language-server': link:../../packages/language-server
-      '@volar/vscode-language-client': link:../../packages/vscode-language-client
-      esbuild: 0.16.14
-      typesafe-path: 0.2.2
-      vsce: 2.15.0
-      vscode-languageclient: 8.0.2
-
   docs:
     specifiers:
       vitepress: latest
@@ -737,22 +690,6 @@ packages:
       '@algolia/requester-common': 4.14.2
     dev: false
     optional: true
-
-  /@angular-eslint/bundled-angular-compiler/15.1.0:
-    resolution: {integrity: sha512-zcOx+PnYuVDIG3wd/JVzCYdEUarKGtgIcN4iU9ZF+BVk5e8i9cbD3U8U3EDJKbrrokbFl9GBBJMCOa6XYTGJwQ==}
-    dev: false
-
-  /@angular/compiler/15.0.4:
-    resolution: {integrity: sha512-KtxgRJUGZamOXpIILFG2FTUW+bbc2phi/o6955/Q4LR1HOICQrYEy8PrT1Gp+lVXFKgDG+6cb01lH14LoBQvyw==}
-    engines: {node: ^14.20.0 || ^16.13.0 || >=18.10.0}
-    peerDependencies:
-      '@angular/core': 15.0.4
-    peerDependenciesMeta:
-      '@angular/core':
-        optional: true
-    dependencies:
-      tslib: 2.4.1
-    dev: true
 
   /@babel/code-frame/7.18.6:
     resolution: {integrity: sha512-TDCmlK5eOvH+eH7cdAFlNXeVJqWIQ7gW9tY1GJIpUtFb6CmjVyq2VM3u71bOyR8CRihcCgMUYoDNyLXao3+70Q==}
@@ -6119,6 +6056,7 @@ packages:
 
   /tslib/2.4.1:
     resolution: {integrity: sha512-tGyy4dAjRIEwI7BzsB0lynWgOpfqjUdq91XXAlIWD2OwKBH7oCl/GZG/HT4BOHrTlPMOASlMQ7veyTqpmRcrNA==}
+    dev: false
 
   /tsscmp/1.0.6:
     resolution: {integrity: sha512-LxhtAkPDTkVCMQjt2h6eBVY28KCjikZqZfMcC15YBeNjkgUpdCfBu5HoiOTDu86v6smE8yOjyEktJ8hlbANHQA==}
