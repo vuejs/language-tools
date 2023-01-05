@@ -1,10 +1,10 @@
 # Changelog
 
-## 1.0.22 (2022/1/5)
+## 1.0.22 (2023/1/5)
 
 - fix: document folding ranges not working in .ts
 
-## 1.0.21 (2022/1/5)
+## 1.0.21 (2023/1/5)
 
 - fix: cannot jump to .vue definition from .ts with takeover mode
 - fix: cannot detect `@volar/vue-language-plugin-pug` installed ([#2272](https://github.com/johnsoncodehk/volar/issues/2272))
@@ -27,7 +27,7 @@
 	<td align="center" valign="middle"><a href="https://github.com/365talents"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/365talents.png" height="70" /></a></td>
 </tr></table>
 
-## 1.0.20 (2022/1/4)
+## 1.0.20 (2023/1/4)
 
 - feat: support browser navigation for embedded preview
 - feat: released pug extension ([#2274](https://github.com/johnsoncodehk/volar/issues/2274))
