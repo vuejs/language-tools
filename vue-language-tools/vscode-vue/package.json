@@ -7,6 +7,9 @@
 		"url": "https://github.com/johnsoncodehk/volar.git",
 		"directory": "vue-language-tools/vscode-vue"
 	},
+	"categories": [
+		"Programming Languages"
+	],
 	"sponsor": {
 		"url": "https://github.com/sponsors/johnsoncodehk"
 	},
@@ -420,7 +423,7 @@
 					"items": {
 						"type": "string"
 					},
-					"default": [],
+					"default": [ ],
 					"description": "List any additional file extensions that should be processed as Vue files (requires restart)."
 				},
 				"volar.codeLens.references": {
