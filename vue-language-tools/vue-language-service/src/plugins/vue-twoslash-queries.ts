@@ -1,31 +1,27 @@
-import { EmbeddedFileKind, forEachEmbeddeds, LanguageServicePlugin, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
+import { FileKind, forEachEmbeddedFile } from '@volar/language-service';
 import * as vue from '@volar/vue-language-core';
 import * as vscode from 'vscode-languageserver-protocol';
-import { TextDocument } from 'vscode-languageserver-textdocument';
+import { VueLanguageServicePlugin } from '../types';
 
-export default function (options: {
-	getVueDocument(document: TextDocument): SourceFileDocument | undefined,
-}): LanguageServicePlugin {
+const plugin: VueLanguageServicePlugin = (context) => {
 
-	let context: LanguageServicePluginContext;
+	if (!context.typescript)
+		return {};
+
+	const _ts = context.typescript;
 
 	return {
-
-		setup(_context) {
-			context = _context;
-		},
 
 		inlayHints: {
 
 			on(document, range) {
-				return worker(document, (vueDocument, vueFile) => {
+				return worker(document.uri, (vueFile) => {
 
-					const ts = context.typescript.module;
 					const hoverOffsets: [vscode.Position, number][] = [];
 					const inlayHints: vscode.InlayHint[] = [];
 
-					for (const pointer of document.getText(range).matchAll(/\^\?/g)) {
-						const offset = pointer.index! + document.offsetAt(range.start);
+					for (const pointer of document.getText(range).matchAll(/<!--\s*\^\?\s*-->/g)) {
+						const offset = pointer.index! + pointer[0].indexOf('^?') + document.offsetAt(range.start);
 						const position = document.positionAt(offset);
 						hoverOffsets.push([position, document.offsetAt({
 							line: position.line - 1,
@@ -33,22 +29,23 @@ export default function (options: {
 						})]);
 					}
 
-					forEachEmbeddeds(vueFile.embeddeds, (embedded) => {
-						if (embedded.kind === EmbeddedFileKind.TypeScriptHostFile) {
-							const sourceMap = vueDocument.getSourceMap(embedded);
-							for (const [pointerPosition, hoverOffset] of hoverOffsets) {
-								for (const [tsOffset, mapping] of sourceMap.toGeneratedOffsets(hoverOffset)) {
-									if (mapping.data.hover) {
-										const quickInfo = context.typescript.languageService.getQuickInfoAtPosition(embedded.fileName, tsOffset);
-										if (quickInfo) {
-											inlayHints.push({
-												position: { line: pointerPosition.line, character: pointerPosition.character + 2 },
-												label: ts.displayPartsToString(quickInfo.displayParts),
-												paddingLeft: true,
-												paddingRight: false,
-											});
+					forEachEmbeddedFile(vueFile, (embedded) => {
+						if (embedded.kind === FileKind.TypeScriptHostFile) {
+							for (const [_, map] of context.documents.getMapsByVirtualFileUri(document.uri)) {
+								for (const [pointerPosition, hoverOffset] of hoverOffsets) {
+									for (const [tsOffset, mapping] of map.map.toGeneratedOffsets(hoverOffset)) {
+										if (mapping.data.hover) {
+											const quickInfo = _ts.languageService.getQuickInfoAtPosition(embedded.fileName, tsOffset);
+											if (quickInfo) {
+												inlayHints.push({
+													position: { line: pointerPosition.line, character: pointerPosition.character + 2 },
+													label: _ts.module.displayPartsToString(quickInfo.displayParts),
+													paddingLeft: true,
+													paddingRight: false,
+												});
+											}
+											break;
 										}
-										break;
 									}
 								}
 							}
@@ -61,15 +58,14 @@ export default function (options: {
 		},
 	};
 
-	function worker<T>(document: TextDocument, callback: (vueDocument: SourceFileDocument, vueSourceFile: vue.VueSourceFile) => T) {
+	function worker<T>(uri: string, callback: (vueSourceFile: vue.VueFile) => T) {
 
-		const vueDocument = options.getVueDocument(document);
-		if (!vueDocument)
+		const virtualFile = context.documents.getVirtualFileByUri(uri);
+		if (!(virtualFile instanceof vue.VueFile))
 			return;
 
-		if (!(vueDocument.file instanceof vue.VueSourceFile))
-			return;
-
-		return callback(vueDocument, vueDocument.file);
+		return callback(virtualFile);
 	}
-}
+};
+
+export default () => plugin;

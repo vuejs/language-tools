@@ -2,7 +2,9 @@ import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as shared from '@volar/shared';
 import { languageFeatureWorker } from '../utils/featureWorkers';
-import { SourceFileDocument } from '../documents';
+import { TextDocument } from 'vscode-languageserver-textdocument';
+import { SourceMapWithDocuments } from '../documents';
+import { FileRangeCapabilities, VirtualFile } from '@volar/language-core';
 
 export function register(context: LanguageServiceRuntimeContext) {
 
@@ -12,14 +14,14 @@ export function register(context: LanguageServiceRuntimeContext) {
 			context,
 			uri,
 			undefined,
-			(arg, sourceMap) => [arg],
-			(plugin, document, arg) => plugin.findDocumentLinks?.(document),
-			(data, sourceMap) => data.map(link => {
+			(arg) => [arg],
+			(plugin, document) => plugin.findDocumentLinks?.(document),
+			(data, map) => data.map(link => {
 
-				if (!sourceMap)
+				if (!map)
 					return link;
 
-				const range = sourceMap.toSourceRange(link.range);
+				const range = map.toSourceRange(link.range);
 				if (range) {
 					return {
 						...link,
@@ -29,22 +31,21 @@ export function register(context: LanguageServiceRuntimeContext) {
 			}).filter(shared.notEmpty),
 			arr => arr.flat(),
 		) ?? [];
-		const vueDocument = context.documents.get(uri);
-		const fictitiousLinks = vueDocument ? getFictitiousLinks(vueDocument) : [];
+		const maps = context.documents.getMapsBySourceFileUri(uri);
+		const fictitiousLinks = maps ? getFictitiousLinks(context.documents.getDocumentByUri(maps.snapshot, uri), maps.maps) : [];
 
 		return [
 			...pluginLinks,
 			...fictitiousLinks,
 		];
 
-		function getFictitiousLinks(vueDocument: SourceFileDocument) {
+		function getFictitiousLinks(document: TextDocument, maps: [VirtualFile, SourceMapWithDocuments<FileRangeCapabilities>][]) {
 
 			const result: vscode.DocumentLink[] = [];
-			const document = vueDocument.getDocument();
 
-			for (const sourceMap of vueDocument.getSourceMaps()) {
+			for (const [_, map] of maps) {
 
-				for (const mapped of sourceMap.mappings) {
+				for (const mapped of map.map.mappings) {
 
 					if (!mapped.data.displayWithLink)
 						continue;

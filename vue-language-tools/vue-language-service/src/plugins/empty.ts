@@ -1,7 +1,7 @@
-import { LanguageServicePlugin } from '@volar/language-service';
+import { VueLanguageServicePlugin } from '../types';
 
-export default function (): LanguageServicePlugin {
-	return {};
+export default function (): VueLanguageServicePlugin {
+	return () => ({});
 }
 
 export const semanticTokenTypes = [];

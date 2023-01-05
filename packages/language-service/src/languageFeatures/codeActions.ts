@@ -11,7 +11,7 @@ export interface PluginCodeActionData {
 	uri: string,
 	originalItem: vscode.CodeAction,
 	pluginId: number,
-	sourceMap: {
+	map: {
 		embeddedDocumentUri: string;
 	} | undefined,
 }
@@ -34,15 +34,15 @@ export function register(context: LanguageServiceRuntimeContext) {
 			context,
 			uri,
 			{ range, codeActionContext },
-			(arg, sourceMap) => {
+			(_arg, map, file) => {
 
-				if (!sourceMap.embeddedFile.capabilities.codeAction)
+				if (!file.capabilities.codeAction)
 					return [];
 
 				const _codeActionContext: vscode.CodeActionContext = {
 					diagnostics: transformLocations(
 						codeActionContext.diagnostics,
-						range => sourceMap.toGeneratedRange(range),
+						range => map.toGeneratedRange(range),
 					),
 					only: codeActionContext.only,
 				};
@@ -50,11 +50,11 @@ export function register(context: LanguageServiceRuntimeContext) {
 				let minStart: number | undefined;
 				let maxEnd: number | undefined;
 
-				for (const mapping of sourceMap.mappings) {
+				for (const mapping of map.map.mappings) {
 					const overlapRange = getOverlapRange(offsetRange.start, offsetRange.end, mapping.sourceRange[0], mapping.sourceRange[1]);
 					if (overlapRange) {
-						const start = sourceMap.toGeneratedOffset(overlapRange.start)?.[0];
-						const end = sourceMap.toGeneratedOffset(overlapRange.end)?.[0];
+						const start = map.map.toGeneratedOffset(overlapRange.start)?.[0];
+						const end = map.map.toGeneratedOffset(overlapRange.end)?.[0];
 						if (start !== undefined && end !== undefined) {
 							minStart = minStart === undefined ? start : Math.min(start, minStart);
 							maxEnd = maxEnd === undefined ? end : Math.max(end, maxEnd);
@@ -65,8 +65,8 @@ export function register(context: LanguageServiceRuntimeContext) {
 				if (minStart !== undefined && maxEnd !== undefined) {
 					return [{
 						range: vscode.Range.create(
-							sourceMap.mappedDocument.positionAt(minStart),
-							sourceMap.mappedDocument.positionAt(maxEnd),
+							map.virtualFileDocument.positionAt(minStart),
+							map.virtualFileDocument.positionAt(maxEnd),
 						),
 						codeActionContext: _codeActionContext,
 					}];
@@ -74,7 +74,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				return [];
 			},
-			async (plugin, document, arg, sourceMap) => {
+			async (plugin, document, arg, map) => {
 
 				const codeActions = await plugin.codeAction?.on?.(document, arg.range, arg.codeActionContext);
 
@@ -85,8 +85,8 @@ export function register(context: LanguageServiceRuntimeContext) {
 							uri,
 							originalItem: _codeAction,
 							pluginId: context.plugins.indexOf(plugin),
-							sourceMap: sourceMap ? {
-								embeddedDocumentUri: sourceMap.mappedDocument.uri,
+							map: map ? {
+								embeddedDocumentUri: map.virtualFileDocument.uri,
 							} : undefined,
 						} satisfies PluginCodeActionData,
 					};

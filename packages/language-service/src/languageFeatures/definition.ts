@@ -4,14 +4,14 @@ import * as shared from '@volar/shared';
 import { languageFeatureWorker } from '../utils/featureWorkers';
 import * as dedupe from '../utils/dedupe';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { PositionCapabilities, TeleportCapabilities } from '@volar/language-core';
-import { EmbeddedDocumentSourceMap } from '../documents';
+import { FileRangeCapabilities, MirrorBehaviorCapabilities } from '@volar/language-core';
+import { SourceMapWithDocuments } from '../documents';
 
 export function register(
 	context: LanguageServiceRuntimeContext,
 	api: 'findDefinition' | 'findTypeDefinition' | 'findImplementations',
-	isValidMappingData: (data: PositionCapabilities) => boolean,
-	isValidTeleportSideData: (sideData: TeleportCapabilities) => boolean,
+	isValidMapping: (data: FileRangeCapabilities) => boolean,
+	isValidMirrorPosition: (mirrorData: MirrorBehaviorCapabilities) => boolean,
 ) {
 
 	return (uri: string, position: vscode.Position) => {
@@ -20,17 +20,17 @@ export function register(
 			context,
 			uri,
 			position,
-			(position, sourceMap) => sourceMap.toGeneratedPositions(position, isValidMappingData),
-			async (plugin, document, position, sourceMap) => {
+			(position, map) => map.toGeneratedPositions(position, isValidMapping),
+			async (plugin, document, position) => {
 
 				const recursiveChecker = dedupe.createLocationSet();
 				const result: vscode.LocationLink[] = [];
 
-				await withTeleports(document, position, undefined);
+				await withMirrors(document, position, undefined);
 
 				return result;
 
-				async function withTeleports(document: TextDocument, position: vscode.Position, originDefinition: vscode.LocationLink | undefined) {
+				async function withMirrors(document: TextDocument, position: vscode.Position, originDefinition: vscode.LocationLink | undefined) {
 
 					const _api = api === 'findDefinition' ? plugin.definition?.on :
 						api === 'findTypeDefinition' ? plugin.definition?.onType :
@@ -49,29 +49,29 @@ export function register(
 
 					for (const definition of definitions) {
 
-						let foundTeleport = false;
+						let foundMirrorPosition = false;
 
 						recursiveChecker.add({ uri: definition.targetUri, range: { start: definition.targetRange.start, end: definition.targetRange.start } });
 
-						const teleport = context.documents.teleportfromEmbeddedDocumentUri(definition.targetUri);
+						const mirrorMap = context.documents.getMirrorMapByUri(definition.targetUri)?.[1];
 
-						if (teleport) {
+						if (mirrorMap) {
 
-							for (const mapped of teleport.findTeleports(definition.targetSelectionRange.start)) {
+							for (const mapped of mirrorMap.findMirrorPositions(definition.targetSelectionRange.start)) {
 
-								if (!isValidTeleportSideData(mapped[1]))
+								if (!isValidMirrorPosition(mapped[1]))
 									continue;
 
-								if (recursiveChecker.has({ uri: teleport.document.uri, range: { start: mapped[0], end: mapped[0] } }))
+								if (recursiveChecker.has({ uri: mirrorMap.document.uri, range: { start: mapped[0], end: mapped[0] } }))
 									continue;
 
-								foundTeleport = true;
+								foundMirrorPosition = true;
 
-								await withTeleports(teleport.document, mapped[0], originDefinition ?? definition);
+								await withMirrors(mirrorMap.document, mapped[0], originDefinition ?? definition);
 							}
 						}
 
-						if (!foundTeleport) {
+						if (!foundMirrorPosition) {
 							if (originDefinition) {
 								result.push({
 									...definition,
@@ -97,20 +97,26 @@ export function register(
 					link.originSelectionRange = originSelectionRange;
 				}
 
-				const targetSourceMap = context.documents.sourceMapFromEmbeddedDocumentUri(link.targetUri);
+				let foundTargetSelectionRange = false;
 
-				if (targetSourceMap) {
+				for (const [_, targetSourceMap] of context.documents.getMapsByVirtualFileUri(link.targetUri)) {
 
 					const targetSelectionRange = targetSourceMap.toSourceRange(link.targetSelectionRange);
 					if (!targetSelectionRange)
-						return;
+						continue;
+
+					foundTargetSelectionRange = true;
 
 					let targetRange = targetSourceMap.toSourceRange(link.targetRange);
 
-					link.targetUri = targetSourceMap.sourceDocument.uri;
+					link.targetUri = targetSourceMap.sourceFileDocument.uri;
 					// loose range mapping to for template slots, slot properties
 					link.targetRange = targetRange ?? targetSelectionRange;
 					link.targetSelectionRange = targetSelectionRange;
+				}
+
+				if (context.documents.getVirtualFileByUri(link.targetUri) && !foundTargetSelectionRange) {
+					return;
 				}
 
 				return link;
@@ -120,11 +126,11 @@ export function register(
 	};
 }
 
-function toSourcePositionPreferSurroundedPosition(sourceMap: EmbeddedDocumentSourceMap, mappedRange: vscode.Range, position: vscode.Position) {
+function toSourcePositionPreferSurroundedPosition(map: SourceMapWithDocuments, mappedRange: vscode.Range, position: vscode.Position) {
 
 	let result: vscode.Range | undefined;
 
-	for (const range of sourceMap.toSourceRanges(mappedRange)) {
+	for (const range of map.toSourceRanges(mappedRange)) {
 		if (!result) {
 			result = range;
 		}

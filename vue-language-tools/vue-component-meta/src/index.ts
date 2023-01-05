@@ -77,7 +77,7 @@ function createComponentMetaCheckerWorker(
 
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
 	const scriptVersions = new Map<string, number>();
-	const _host: vue.LanguageServiceHost = {
+	const _host: vue.VueLanguageServiceHost = {
 		...ts.sys,
 		getProjectVersion: () => projectVersion.toString(),
 		getDefaultLibFileName: (options) => ts.getDefaultLibFilePath(options), // should use ts.getDefaultLibFilePath not ts.getDefaultLibFileName
@@ -126,7 +126,7 @@ function createComponentMetaCheckerWorker(
 }
 
 export function baseCreate(
-	_host: vue.LanguageServiceHost,
+	_host: vue.VueLanguageServiceHost,
 	checkerOptions: MetaCheckerOptions,
 	globalComponentName: string,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -136,7 +136,7 @@ export function baseCreate(
 	 */
 	const globalComponentSnapshot = ts.ScriptSnapshot.fromString('<script setup lang="ts"></script>');
 	const metaSnapshots: Record<string, ts.IScriptSnapshot> = {};
-	const host = new Proxy<Partial<vue.LanguageServiceHost>>({
+	const host = new Proxy<Partial<vue.VueLanguageServiceHost>>({
 		getScriptFileNames: () => {
 			const names = _host.getScriptFileNames();
 			return [
@@ -167,14 +167,13 @@ export function baseCreate(
 			}
 			return _host[prop as keyof typeof _host];
 		},
-	}) as vue.LanguageServiceHost;
-	const vueLanguageModule = vue.createLanguageModule(
-		host.getTypeScriptModule(),
-		host.getCurrentDirectory(),
+	}) as vue.VueLanguageServiceHost;
+	const vueLanguageModules = ts ? vue.createLanguageModules(
+		ts,
 		host.getCompilationSettings(),
 		host.getVueCompilationSettings(),
-	);
-	const core = embedded.createEmbeddedLanguageServiceHost(host, [vueLanguageModule]);
+	) : [];
+	const core = embedded.createLanguageContext(host, vueLanguageModules);
 	const proxyApis: Partial<ts.LanguageServiceHost> = checkerOptions.forceUseTs ? {
 		getScriptKind: (fileName) => {
 			if (fileName.endsWith('.vue.js')) {
@@ -183,10 +182,10 @@ export function baseCreate(
 			if (fileName.endsWith('.vue.jsx')) {
 				return ts.ScriptKind.TSX;
 			}
-			return core.typescriptLanguageServiceHost.getScriptKind!(fileName);
+			return core.typescript.languageServiceHost.getScriptKind!(fileName);
 		},
 	} : {};
-	const proxyHost = new Proxy(core.typescriptLanguageServiceHost, {
+	const proxyHost = new Proxy(core.typescript.languageServiceHost, {
 		get(target, propKey: keyof ts.LanguageServiceHost) {
 			if (propKey in proxyApis) {
 				return proxyApis[propKey];
@@ -278,9 +277,9 @@ export function baseCreate(
 			const printer = ts.createPrinter(checkerOptions.printer);
 			const snapshot = host.getScriptSnapshot(componentPath)!;
 
-			const vueSourceFile = core.mapper.get(componentPath)?.[0];
+			const vueSourceFile = core.virtualFiles.get(componentPath)?.[1];
 			const vueDefaults = vueSourceFile && exportName === 'default'
-				? (vueSourceFile instanceof vue.VueSourceFile ? readVueComponentDefaultProps(vueSourceFile, printer, ts) : {})
+				? (vueSourceFile instanceof vue.VueFile ? readVueComponentDefaultProps(vueSourceFile, printer, ts) : {})
 				: {};
 			const tsDefaults = !vueSourceFile ? readTsComponentDefaultProps(
 				componentPath.substring(componentPath.lastIndexOf('.') + 1), // ts | js | tsx | jsx
@@ -427,8 +426,8 @@ function createSchemaResolvers(
 	const ignore = typeof options === 'object' ? [...options?.ignore ?? []] : [];
 
 	function shouldIgnore(subtype: ts.Type) {
-		const type = typeChecker.typeToString(subtype);
-		if (type === 'any') {
+		const name = typeChecker.typeToString(subtype);
+		if (name === 'any') {
 			return true;
 		}
 
@@ -436,7 +435,18 @@ function createSchemaResolvers(
 			return false;
 		}
 
-		return ignore.includes(type);
+		for (const item of ignore) {
+			if (typeof item === 'function') {
+				const result = item(name, subtype, typeChecker);
+				if (result != null)
+					return result;
+			}
+			else if (name === item) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	function setVisited(subtype: ts.Type) {
@@ -461,7 +471,7 @@ function createSchemaResolvers(
 				name: tag.name,
 				text: tag.text?.map(part => part.text).join(''),
 			})),
-			required: !Boolean((prop.declarations?.[0] as ts.ParameterDeclaration)?.questionToken ?? false),
+			required: !(prop.flags & ts.SymbolFlags.Optional),
 			type: typeChecker.typeToString(subtype),
 			rawType: rawType ? subtype : undefined,
 			schema,
@@ -575,7 +585,7 @@ function createSchemaResolvers(
 }
 
 function readVueComponentDefaultProps(
-	vueSourceFile: vue.VueSourceFile,
+	vueSourceFile: vue.VueFile,
 	printer: ts.Printer | undefined,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {

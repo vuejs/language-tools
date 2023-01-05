@@ -3,13 +3,13 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Launch Vue Language Features",
+			"name": "Launch Vue",
 			"type": "extensionHost",
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"--disable-extensions",
-				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode-vue-language-features"
+				"--extensionDevelopmentPath=${workspaceRoot}/vue-language-tools/vscode-vue"
 			],
 			"outFiles": [
 				"${workspaceRoot}/*/*/out/**/*.js"
@@ -20,7 +20,24 @@
 			}
 		},
 		{
-			"name": "Launch Svelte Example",
+			"name": "Launch Pug",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"--disable-extensions",
+				"--extensionDevelopmentPath=${workspaceRoot}/pug-language-tools/vscode-pug"
+			],
+			"outFiles": [
+				"${workspaceRoot}/*/*/out/**/*.js"
+			],
+			"preLaunchTask": {
+				"type": "npm",
+				"script": "watch"
+			}
+		},
+		{
+			"name": "Launch Svelte",
 			"type": "extensionHost",
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
@@ -43,7 +60,7 @@
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"--disable-extensions",
-				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode-typescript-vue-plugin"
+				"--extensionDevelopmentPath=${workspaceRoot}/vue-language-tools/vscode-typescript-vue-plugin"
 			],
 			"outFiles": [
 				"${workspaceRoot}/*/*/out/**/*.js"
@@ -54,13 +71,13 @@
 			}
 		},
 		{
-			"name": "Launch Web Client",
+			"name": "Launch Vue (Web)",
 			"type": "pwa-extensionHost",
 			"debugWebWorkerHost": true,
 			"request": "launch",
 			"args": [
 				"--disable-extensions",
-				"--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode-vue-language-features",
+				"--extensionDevelopmentPath=${workspaceFolder}/vue-language-tools/vscode-vue",
 				"--extensionDevelopmentKind=web"
 			],
 			"outFiles": [

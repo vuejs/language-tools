@@ -6,43 +6,32 @@ const tscPath = require.resolve('typescript/lib/tsc');
 const proxyPath = require.resolve('../out/proxy');
 
 fs.readFileSync = (...args) => {
-    if (args[0] === tscPath) {
-        let tsc = readFileSync(...args);
+	if (args[0] === tscPath) {
+		let tsc = readFileSync(...args);
 
-        // add *.vue files to allow extensions
-        tsc = tsc.replace(
-            `ts.supportedTSExtensions = [[".ts", ".tsx", ".d.ts"], [".cts", ".d.cts"], [".mts", ".d.mts"]];`,
-            `ts.supportedTSExtensions = [[".ts", ".tsx", ".d.ts"], [".cts", ".d.cts"], [".mts", ".d.mts"], [".svelte"]];`,
-        );
-        tsc = tsc.replace(
-            `ts.supportedJSExtensions = [[".js", ".jsx"], [".mjs"], [".cjs"]];`,
-            `ts.supportedJSExtensions = [[".js", ".jsx"], [".mjs"], [".cjs"], [".svelte"]];`,
-        );
-        tsc = tsc.replace(
-            `var allSupportedExtensions = [[".ts", ".tsx", ".d.ts", ".js", ".jsx"], [".cts", ".d.cts", ".cjs"], [".mts", ".d.mts", ".mjs"]];`,
-            `var allSupportedExtensions = [[".ts", ".tsx", ".d.ts", ".js", ".jsx"], [".cts", ".d.cts", ".cjs"], [".mts", ".d.mts", ".mjs"], [".svelte"]];`,
-        );
+		// add *.svelte files to allow extensions
+		tryReplace(/supportedTSExtensions = .*(?=;)/, s => s + '.concat([[".svelte"]])');
+		tryReplace(/supportedJSExtensions = .*(?=;)/, s => s + '.concat([[".svelte"]])');
+		tryReplace(/allSupportedExtensions = .*(?=;)/, s => s + '.concat([[".svelte"]])');
 
-        // proxy createProgram apis
-        tsc = tsc.replace(
-            `function createProgram(rootNamesOrOptions, _options, _host, _oldProgram, _configFileParsingDiagnostics) {`,
-            `function createProgram(rootNamesOrOptions, _options, _host, _oldProgram, _configFileParsingDiagnostics) { return require(${JSON.stringify(proxyPath)}).createProgramProxy(...arguments);`,
-        );
+		// proxy startTracing, dumpTracingLegend
+		tryReplace(/ = tracingEnabled\./g, ` = require(${JSON.stringify(proxyPath)}).loadTsLib().`);
 
-        // proxy tracing
-        tsc = tsc.replace(
-            `ts.startTracing = tracingEnabled.startTracing;`,
-            `ts.startTracing = require(${JSON.stringify(proxyPath)}).loadTsLib().startTracing;`,
-        );
+		// proxy createProgram apis
+		tryReplace(/function createProgram\(.+\) {/, s => s + ` return require(${JSON.stringify(proxyPath)}).createProgramProxy(...arguments);`);
 
-        tsc = tsc.replace(
-            `ts.dumpTracingLegend = tracingEnabled.dumpLegend;`,
-            `ts.dumpTracingLegend = require(${JSON.stringify(proxyPath)}).loadTsLib().dumpTracingLegend;`,
-        );
+		return tsc;
 
-        return tsc;
-    }
-    return readFileSync(...args);
+		function tryReplace(search, replace) {
+			const before = tsc;
+			tsc = tsc.replace(search, replace);
+			const after = tsc;
+			if (after === before) {
+				throw 'Search string not found: ' + JSON.stringify(search.toString());
+			}
+		}
+	}
+	return readFileSync(...args);
 };
 
 require(tscPath);

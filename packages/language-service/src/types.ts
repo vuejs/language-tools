@@ -1,45 +1,34 @@
-import { LanguageModule, LanguageServiceHost, EmbeddedLanguageContext, SourceFile } from '@volar/language-core';
+import { LanguageContext, LanguageServiceHost } from '@volar/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
-import { SourceFileDocument, SourceFileDocuments } from './documents';
 import type { DocumentContext, FileSystemProvider } from 'vscode-html-languageservice';
 import type { SchemaRequestService } from 'vscode-json-languageservice';
-import { URI } from 'vscode-uri';
 import type * as vscode from 'vscode-languageserver-protocol';
+import type { TextDocument } from 'vscode-languageserver-textdocument';
+import { URI } from 'vscode-uri';
+import { DocumentsAndSourceMaps } from './documents';
+import { LanguageService } from '@volar/language-service';
 
-export interface DocumentServiceRuntimeContext {
-	typescript: typeof import('typescript/lib/tsserverlibrary');
-	plugins: LanguageServicePlugin[];
-	pluginContext: LanguageServicePluginContext;
-	getSourceFileDocument(document: TextDocument): [SourceFileDocument, LanguageModule] | undefined;
-	updateSourceFile(sourceFile: SourceFile, snapshot: ts.IScriptSnapshot): void;
-	prepareLanguageServices(document: TextDocument): void;
-};
+export * from 'vscode-languageserver-protocol';
 
-export interface LanguageServiceRuntimeContext {
-	host: LanguageServiceHost;
-	core: EmbeddedLanguageContext;
-	typescriptLanguageService: ts.LanguageService;
-	documents: SourceFileDocuments;
-	plugins: LanguageServicePlugin[];
-	pluginContext: LanguageServicePluginContext;
-	getTextDocument(uri: string): TextDocument | undefined;
-};
-
-export interface LanguageServicePluginContext {
+export interface LanguageServiceRuntimeContext<Host extends LanguageServiceHost = LanguageServiceHost> {
+	host: Host;
+	core: LanguageContext;
+	documents: DocumentsAndSourceMaps;
+	plugins: LanguageServicePluginInstance[];
 	typescript: {
 		module: typeof import('typescript/lib/tsserverlibrary');
 		languageServiceHost: ts.LanguageServiceHost;
 		languageService: ts.LanguageService;
-	},
+	} | undefined;
 	env: {
 		rootUri: URI;
 		configurationHost?: ConfigurationHost;
 		documentContext?: DocumentContext;
 		fileSystemProvider?: FileSystemProvider;
 		schemaRequestService?: SchemaRequestService;
-	},
-}
+	};
+	getTextDocument(uri: string): TextDocument | undefined;
+};
 
 export interface ConfigurationHost {
 	getConfiguration: (<T> (section: string, scopeUri?: string) => Promise<T | undefined>),
@@ -71,9 +60,11 @@ export interface ExecuteCommandContext {
 	applyEdit(paramOrEdit: vscode.ApplyWorkspaceEditParams | vscode.WorkspaceEdit): Promise<vscode.ApplyWorkspaceEditResult>;
 }
 
-export interface LanguageServicePlugin {
+export type LanguageServicePlugin<T = {}> = ((context: LanguageServiceRuntimeContext, service: LanguageService) => LanguageServicePluginInstance & T);
 
-	setup?(context: LanguageServicePluginContext): void;
+export interface LanguageServicePluginInstance {
+
+	setup?(context: LanguageServiceRuntimeContext): void;
 
 	validation?: {
 		onSemantic?(document: TextDocument): NullableResult<vscode.Diagnostic[]>;

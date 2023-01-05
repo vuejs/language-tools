@@ -40,9 +40,6 @@ export function register(
 		let completionContext: ReturnType<typeof languageService.getCompletionsAtPosition> | undefined;
 		try {
 			completionContext = languageService.getCompletionsAtPosition(fileName, offset, {
-				// https://github.com/microsoft/TypeScript/blob/2cb7e779d70d57ef0d46dd3f768e646b8bbe783a/src/harness/fourslashImpl.ts#L3114-L3115
-				includeCompletionsForModuleExports: true,
-				includeCompletionsWithInsertText: true, // fix includeCompletionsForImportStatements not working
 				...preferences,
 				...options,
 			});
@@ -64,7 +61,7 @@ export function register(
 			line = line.substring(0, line.length - 1);
 		}
 
-		const dotAccessorContext = getDotAccessorContext(ts.version, document);
+		const dotAccessorContext = getDotAccessorContext(document);
 
 		const entries = completionContext.entries
 			.map(tsEntry => toVScodeItem(tsEntry, document));
@@ -106,7 +103,7 @@ export function register(
 			item.insertTextFormat = isSnippet ? vscode.InsertTextFormat.Snippet : vscode.InsertTextFormat.PlainText;
 			item.filterText = getFilterText(tsEntry, wordRange, line, tsEntry.insertText);
 
-			if (completionContext!.isMemberCompletion && dotAccessorContext && !isSnippet) {
+			if (completionContext?.isMemberCompletion && dotAccessorContext && !isSnippet) {
 				item.filterText = dotAccessorContext.text + (item.insertText || item.label);
 				if (!range) {
 					const replacementRange = wordRange;
@@ -151,7 +148,7 @@ export function register(
 			};
 		}
 
-		function getDotAccessorContext(tsVersion: string, document: TextDocument) {
+		function getDotAccessorContext(document: TextDocument) {
 			let dotAccessorContext: {
 				range: vscode.Range;
 				text: string;

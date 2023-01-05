@@ -1,13 +1,13 @@
 import useHtmlPlugin from '@volar-plugins/html';
-import { LanguageServicePlugin, LanguageServicePluginContext, LanguageServiceRuntimeContext, SourceFileDocument } from '@volar/language-service';
+import { FileRangeCapabilities, SourceMapWithDocuments } from '@volar/language-service';
 import * as vue from '@volar/vue-language-core';
 import { hyphenate } from '@vue/shared';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { checkComponentNames, checkEventsOfTag, checkGlobalAttrs, checkPropsOfTag } from '../helpers';
+import { checkComponentNames, checkEventsOfTag, checkPropsOfTag, getElementAttrs } from '../helpers';
 import * as casing from '../ideFeatures/nameCasing';
-import { AttrNameCasing, TagNameCasing } from '../types';
+import { AttrNameCasing, TagNameCasing, VueLanguageServicePlugin } from '../types';
 
 const globalDirectives = html.newHTMLDataProvider('vue-global-directive', {
 	version: 1.1,
@@ -34,434 +34,437 @@ const eventModifiers: Record<string, string> = {
 };
 
 export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof useHtmlPlugin>>(options: {
-	getScanner(document: TextDocument): html.Scanner | undefined,
+	getScanner(document: TextDocument, t: ReturnType<T>): html.Scanner | undefined,
 	templateLanguagePlugin: T,
 	isSupportedDocument: (document: TextDocument) => boolean,
-	vueLsHost: vue.LanguageServiceHost,
-	context: LanguageServiceRuntimeContext,
-}): LanguageServicePlugin & T {
+}): T {
 
-	const runtimeMode = vue.resolveVueCompilerOptions(options.vueLsHost.getVueCompilationSettings()).experimentalRuntimeMode;
+	const plugin: VueLanguageServicePlugin = (_context, service) => {
 
-	let context: LanguageServicePluginContext;
+		if (!_context.typescript)
+			return {};
 
-	return {
+		const _ts = _context.typescript;
+		const vueCompilerOptions = vue.resolveVueCompilerOptions(_context.host.getVueCompilationSettings());
+		const nativeTags = new Set(vueCompilerOptions.nativeTags);
+		const templatePlugin = options.templateLanguagePlugin(_context, service);
 
-		...options.templateLanguagePlugin,
+		return {
 
-		setup(_context) {
-			options.templateLanguagePlugin.setup?.(_context);
-			context = _context;
-		},
+			...templatePlugin,
 
-		complete: {
+			complete: {
 
-			triggerCharacters: [
-				...options.templateLanguagePlugin.complete?.triggerCharacters ?? [],
-				'@', // vue event shorthand
-			],
+				triggerCharacters: [
+					...templatePlugin.complete?.triggerCharacters ?? [],
+					'@', // vue event shorthand
+				],
 
-			async on(document, position, context) {
+				async on(document, position, context) {
 
-				if (!options.isSupportedDocument(document))
-					return;
-
-				const vueDocument = options.context.documents.fromEmbeddedDocument(document);
-
-				if (vueDocument) {
-					await provideHtmlData(vueDocument);
-				}
-
-				const htmlComplete = await options.templateLanguagePlugin.complete?.on?.(document, position, context);
-
-				if (!htmlComplete)
-					return;
-
-				if (vueDocument) {
-					afterHtmlCompletion(htmlComplete, vueDocument);
-				}
-
-				return htmlComplete;
-			},
-		},
-
-		doHover(document, position) {
-
-			if (!options.isSupportedDocument(document))
-				return;
-
-			const vueDocument = options.context.documents.fromEmbeddedDocument(document);
-			if (vueDocument) {
-				options.templateLanguagePlugin.updateCustomData([]);
-			}
-			return options.templateLanguagePlugin.doHover?.(document, position);
-		},
-
-		validation: {
-			async onSyntactic(document) {
-
-				if (!options.isSupportedDocument(document))
-					return;
-
-				const originalResult = await options.templateLanguagePlugin.validation?.onSyntactic?.(document);
-				const vueDocument = options.context.documents.fromEmbeddedDocument(document);
-
-				if (vueDocument) {
-
-					if (!(vueDocument?.file instanceof vue.VueSourceFile))
+					if (!options.isSupportedDocument(document))
 						return;
 
-					const templateErrors: vscode.Diagnostic[] = [];
-					const sfcVueTemplateCompiled = vueDocument.file.compiledSFCTemplate;
-
-					if (sfcVueTemplateCompiled) {
-
-						for (const error of sfcVueTemplateCompiled.errors) {
-							onCompilerError(error, vscode.DiagnosticSeverity.Error);
-						}
-
-						for (const warning of sfcVueTemplateCompiled.warnings) {
-							onCompilerError(warning, vscode.DiagnosticSeverity.Warning);
-						}
-
-						function onCompilerError(error: NonNullable<typeof sfcVueTemplateCompiled>['errors'][number], severity: vscode.DiagnosticSeverity) {
-
-							const templateHtmlRange = {
-								start: error.loc?.start.offset ?? 0,
-								end: error.loc?.end.offset ?? 0,
-							};
-							let errorMessage = error.message;
-
-							templateErrors.push({
-								range: {
-									start: document.positionAt(templateHtmlRange.start),
-									end: document.positionAt(templateHtmlRange.end),
-								},
-								severity,
-								code: error.code,
-								source: 'vue',
-								message: errorMessage,
-							});
+					for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
+						const virtualFile = _context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
+						if (virtualFile && virtualFile instanceof vue.VueFile) {
+							await provideHtmlData(map, virtualFile);
 						}
 					}
 
-					return [
-						...originalResult ?? [],
-						...templateErrors,
-					];
-				}
+					const htmlComplete = await templatePlugin.complete?.on?.(document, position, context);
+					if (!htmlComplete)
+						return;
+
+					for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
+						const virtualFile = _context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
+						if (virtualFile && virtualFile instanceof vue.VueFile) {
+							afterHtmlCompletion(htmlComplete, map, virtualFile);
+						}
+					}
+
+					return htmlComplete;
+				},
 			},
-		},
 
-		async findDocumentSemanticTokens(document, range, legend) {
+			doHover(document, position) {
 
-			if (!options.isSupportedDocument(document))
-				return;
-
-			const result = await options.templateLanguagePlugin.findDocumentSemanticTokens?.(document, range, legend) ?? [];
-			const vueDocument = options.context.documents.fromEmbeddedDocument(document);
-			const scanner = options.getScanner(document);
-
-			if (vueDocument && scanner) {
-
-				if (!(vueDocument.file instanceof vue.VueSourceFile))
+				if (!options.isSupportedDocument(document))
 					return;
 
-				const templateScriptData = checkComponentNames(context.typescript.module, context.typescript.languageService, vueDocument.file);
-				const components = new Set([
-					...templateScriptData,
-					...templateScriptData.map(hyphenate).filter(name => !vue.isIntrinsicElement(runtimeMode, name)),
-				]);
-				const offsetRange = range ? {
-					start: document.offsetAt(range.start),
-					end: document.offsetAt(range.end),
-				} : {
-					start: 0,
-					end: document.getText().length,
-				};
+				if (_context.documents.getVirtualFileByUri(document.uri))
+					templatePlugin.updateCustomData([]);
 
-				let token = scanner.scan();
+				return templatePlugin.doHover?.(document, position);
+			},
 
-				while (token !== html.TokenType.EOS) {
+			validation: {
+				async onSyntactic(document) {
 
-					const tokenOffset = scanner.getTokenOffset();
+					if (!options.isSupportedDocument(document))
+						return;
 
-					// TODO: fix source map perf and break in while condition
-					if (tokenOffset > offsetRange.end)
-						break;
+					const originalResult = await templatePlugin.validation?.onSyntactic?.(document);
 
-					if (tokenOffset >= offsetRange.start && (token === html.TokenType.StartTag || token === html.TokenType.EndTag)) {
+					for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
 
-						const tokenText = scanner.getTokenText();
+						const virtualFile = _context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
+						if (!virtualFile || !(virtualFile instanceof vue.VueFile))
+							continue;
 
-						if (components.has(tokenText) || tokenText.indexOf('.') >= 0) {
+						const templateErrors: vscode.Diagnostic[] = [];
+						const sfcVueTemplateCompiled = virtualFile.compiledSFCTemplate;
 
-							const tokenLength = scanner.getTokenLength();
-							const tokenPosition = document.positionAt(tokenOffset);
+						if (sfcVueTemplateCompiled) {
 
-							if (components.has(tokenText)) {
-								result.push([tokenPosition.line, tokenPosition.character, tokenLength, legend.tokenTypes.indexOf('class'), 0]);
+							for (const error of sfcVueTemplateCompiled.errors) {
+								onCompilerError(error, vscode.DiagnosticSeverity.Error);
+							}
+
+							for (const warning of sfcVueTemplateCompiled.warnings) {
+								onCompilerError(warning, vscode.DiagnosticSeverity.Warning);
+							}
+
+							function onCompilerError(error: NonNullable<typeof sfcVueTemplateCompiled>['errors'][number], severity: vscode.DiagnosticSeverity) {
+
+								const templateHtmlRange = {
+									start: error.loc?.start.offset ?? 0,
+									end: error.loc?.end.offset ?? 0,
+								};
+								let errorMessage = error.message;
+
+								templateErrors.push({
+									range: {
+										start: document.positionAt(templateHtmlRange.start),
+										end: document.positionAt(templateHtmlRange.end),
+									},
+									severity,
+									code: error.code,
+									source: 'vue',
+									message: errorMessage,
+								});
 							}
 						}
+
+						return [
+							...originalResult ?? [],
+							...templateErrors,
+						];
 					}
-					token = scanner.scan();
-				}
-			}
-
-			return result;
-		},
-	};
-
-	async function provideHtmlData(vueDocument: SourceFileDocument) {
-
-		if (!(vueDocument.file instanceof vue.VueSourceFile))
-			return;
-
-		const vueSourceFile = vueDocument.file;
-		const detected = casing.detect(options.context, vueDocument.uri);
-		const [attr, tag] = await Promise.all([
-			context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('volar.completion.preferredAttrNameCase', vueDocument.uri),
-			context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-pascal' | 'kebab' | 'pascal'>('volar.completion.preferredTagNameCase', vueDocument.uri),
-		]);
-		const tagNameCasing = detected.tag.length === 1 && (tag === 'auto-pascal' || tag === 'auto-kebab') ? detected.tag[0] : (tag === 'auto-kebab' || tag === 'kebab') ? TagNameCasing.Kebab : TagNameCasing.Pascal;
-		const attrNameCasing = detected.attr.length === 1 && (attr === 'auto-camel' || attr === 'auto-kebab') ? detected.attr[0] : (attr === 'auto-camel' || attr === 'camel') ? AttrNameCasing.Camel : AttrNameCasing.Kebab;
-
-		options.templateLanguagePlugin.updateCustomData([
-			globalDirectives,
-			{
-				getId: () => 'vue-template',
-				isApplicable: () => true,
-				provideTags: () => {
-
-					const components = checkComponentNames(context.typescript.module, context.typescript.languageService, vueSourceFile);
-					const scriptSetupRanges = vueSourceFile.sfc.scriptSetupAst ? vue.parseScriptSetupRanges(context.typescript.module, vueSourceFile.sfc.scriptSetupAst) : undefined;
-					const names = new Set<string>();
-					const tags: html.ITagData[] = [];
-
-					for (const tag of components) {
-						if (tagNameCasing === TagNameCasing.Kebab) {
-							names.add(hyphenate(tag));
-						}
-						else if (tagNameCasing === TagNameCasing.Pascal) {
-							names.add(tag);
-						}
-					}
-
-					for (const binding of scriptSetupRanges?.bindings ?? []) {
-						const name = vueSourceFile.sfc.scriptSetup!.content.substring(binding.start, binding.end);
-						if (tagNameCasing === TagNameCasing.Kebab) {
-							names.add(hyphenate(name));
-						}
-						else if (tagNameCasing === TagNameCasing.Pascal) {
-							names.add(name);
-						}
-					}
-
-					for (const name of names) {
-						tags.push({
-							name: name,
-							attributes: [],
-						});
-					}
-
-					return tags;
 				},
-				provideAttributes: (tag) => {
+			},
 
-					const globalProps = checkGlobalAttrs(context.typescript.module, context.typescript.languageService, vueSourceFile.fileName);
-					const props = new Set(checkPropsOfTag(context.typescript.module, context.typescript.languageService, vueSourceFile, tag));
-					const events = checkEventsOfTag(context.typescript.module, context.typescript.languageService, vueSourceFile, tag);
-					const attributes: html.IAttributeData[] = [];
+			async findDocumentSemanticTokens(document, range, legend) {
 
-					for (const prop of [...props, ...globalProps]) {
+				if (!options.isSupportedDocument(document))
+					return;
 
-						const isGlobal = !props.has(prop);
-						const name = attrNameCasing === AttrNameCasing.Camel ? prop : hyphenate(prop);
+				const result = await templatePlugin.findDocumentSemanticTokens?.(document, range, legend) ?? [];
+				const scanner = options.getScanner(document, templatePlugin as ReturnType<T>);
+				if (!scanner)
+					return;
 
-						if (hyphenate(name).startsWith('on-')) {
+				for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
 
-							const propNameBase = name.startsWith('on-')
-								? name.slice('on-'.length)
-								: (name['on'.length].toLowerCase() + name.slice('onX'.length));
-							const propKey = createInternalItemId('componentEvent', [isGlobal ? '*' : tag, propNameBase]);
+					const virtualFile = _context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
+					if (!virtualFile || !(virtualFile instanceof vue.VueFile))
+						continue;
 
-							attributes.push(
-								{
-									name: 'v-on:' + propNameBase,
-									description: propKey,
-								},
-								{
-									name: '@' + propNameBase,
-									description: propKey,
-								},
-							);
+					const templateScriptData = checkComponentNames(_ts.module, _ts.languageService, virtualFile);
+					const components = new Set([
+						...templateScriptData,
+						...templateScriptData.map(hyphenate).filter(name => !nativeTags.has(name)),
+					]);
+					const offsetRange = {
+						start: document.offsetAt(range.start),
+						end: document.offsetAt(range.end),
+					};
+
+					let token = scanner.scan();
+
+					while (token !== html.TokenType.EOS) {
+
+						const tokenOffset = scanner.getTokenOffset();
+
+						// TODO: fix source map perf and break in while condition
+						if (tokenOffset > offsetRange.end)
+							break;
+
+						if (tokenOffset >= offsetRange.start && (token === html.TokenType.StartTag || token === html.TokenType.EndTag)) {
+
+							const tokenText = scanner.getTokenText();
+
+							if (components.has(tokenText) || tokenText.indexOf('.') >= 0) {
+
+								const tokenLength = scanner.getTokenLength();
+								const tokenPosition = document.positionAt(tokenOffset);
+
+								if (components.has(tokenText)) {
+									let tokenType = legend.tokenTypes.indexOf('component');
+									if (tokenType === -1) {
+										tokenType = legend.tokenTypes.indexOf('class');
+									}
+									result.push([tokenPosition.line, tokenPosition.character, tokenLength, tokenType, 0]);
+								}
+							}
 						}
-						{
+						token = scanner.scan();
+					}
+				}
 
-							const propName = name;
-							const propKey = createInternalItemId('componentProp', [isGlobal ? '*' : tag, propName]);
+				return result;
+			},
+		};
 
-							attributes.push(
-								{
-									name: propName,
-									description: propKey,
-								},
-								{
-									name: ':' + propName,
-									description: propKey,
-								},
-								{
-									name: 'v-bind:' + propName,
-									description: propKey,
-								},
-							);
+		async function provideHtmlData(map: SourceMapWithDocuments<FileRangeCapabilities>, vueSourceFile: vue.VueFile) {
+
+			const detected = casing.detect(_context, _ts, map.sourceFileDocument.uri);
+			const [attr, tag] = await Promise.all([
+				_context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('volar.completion.preferredAttrNameCase', map.sourceFileDocument.uri),
+				_context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-pascal' | 'kebab' | 'pascal'>('volar.completion.preferredTagNameCase', map.sourceFileDocument.uri),
+			]);
+			const tagNameCasing = detected.tag.length === 1 && (tag === 'auto-pascal' || tag === 'auto-kebab') ? detected.tag[0] : (tag === 'auto-kebab' || tag === 'kebab') ? TagNameCasing.Kebab : TagNameCasing.Pascal;
+			const attrNameCasing = detected.attr.length === 1 && (attr === 'auto-camel' || attr === 'auto-kebab') ? detected.attr[0] : (attr === 'auto-camel' || attr === 'camel') ? AttrNameCasing.Camel : AttrNameCasing.Kebab;
+
+			templatePlugin.updateCustomData([
+				globalDirectives,
+				{
+					getId: () => 'vue-template',
+					isApplicable: () => true,
+					provideTags: () => {
+
+						const components = checkComponentNames(_ts.module, _ts.languageService, vueSourceFile);
+						const scriptSetupRanges = vueSourceFile.sfc.scriptSetupAst ? vue.parseScriptSetupRanges(_ts.module, vueSourceFile.sfc.scriptSetupAst) : undefined;
+						const names = new Set<string>();
+						const tags: html.ITagData[] = [];
+
+						for (const tag of components) {
+							if (tagNameCasing === TagNameCasing.Kebab) {
+								names.add(hyphenate(tag));
+							}
+							else if (tagNameCasing === TagNameCasing.Pascal) {
+								names.add(tag);
+							}
 						}
-					}
 
-					for (const event of events) {
+						for (const binding of scriptSetupRanges?.bindings ?? []) {
+							const name = vueSourceFile.sfc.scriptSetup!.content.substring(binding.start, binding.end);
+							if (tagNameCasing === TagNameCasing.Kebab) {
+								names.add(hyphenate(name));
+							}
+							else if (tagNameCasing === TagNameCasing.Pascal) {
+								names.add(name);
+							}
+						}
 
-						const name = attrNameCasing === AttrNameCasing.Camel ? event : hyphenate(event);
-						const propKey = createInternalItemId('componentEvent', [tag, name]);
+						for (const name of names) {
+							tags.push({
+								name: name,
+								attributes: [],
+							});
+						}
 
-						attributes.push({
-							name: 'v-on:' + name,
-							description: propKey,
-						});
-						attributes.push({
-							name: '@' + name,
-							description: propKey,
-						});
-					}
+						return tags;
+					},
+					provideAttributes: (tag) => {
 
-					const models: [boolean, string][] = [];
+						const attrs = getElementAttrs(_ts.module, _ts.languageService, vueSourceFile.fileName, tag);
+						const props = new Set(checkPropsOfTag(_ts.module, _ts.languageService, vueSourceFile, tag));
+						const events = checkEventsOfTag(_ts.module, _ts.languageService, vueSourceFile, tag);
+						const attributes: html.IAttributeData[] = [];
 
-					for (const prop of [...props, ...globalProps]) {
-						if (prop.startsWith('onUpdate:')) {
+						for (const prop of [...props, ...attrs]) {
+
 							const isGlobal = !props.has(prop);
-							models.push([isGlobal, prop.substring('onUpdate:'.length)]);
+							const name = attrNameCasing === AttrNameCasing.Camel ? prop : hyphenate(prop);
+
+							if (hyphenate(name).startsWith('on-')) {
+
+								const propNameBase = name.startsWith('on-')
+									? name.slice('on-'.length)
+									: (name['on'.length].toLowerCase() + name.slice('onX'.length));
+								const propKey = createInternalItemId('componentEvent', [isGlobal ? '*' : tag, propNameBase]);
+
+								attributes.push(
+									{
+										name: 'v-on:' + propNameBase,
+										description: propKey,
+									},
+									{
+										name: '@' + propNameBase,
+										description: propKey,
+									},
+								);
+							}
+							{
+
+								const propName = name;
+								const propKey = createInternalItemId('componentProp', [isGlobal ? '*' : tag, propName]);
+
+								attributes.push(
+									{
+										name: propName,
+										description: propKey,
+									},
+									{
+										name: ':' + propName,
+										description: propKey,
+									},
+									{
+										name: 'v-bind:' + propName,
+										description: propKey,
+									},
+								);
+							}
 						}
-					}
-					for (const event of events) {
-						if (event.startsWith('update:')) {
-							models.push([false, event.substring('update:'.length)]);
-						}
-					}
 
-					for (const [isGlobal, model] of models) {
+						for (const event of events) {
 
-						const name = attrNameCasing === AttrNameCasing.Camel ? model : hyphenate(model);
-						const propKey = createInternalItemId('componentProp', [isGlobal ? '*' : tag, name]);
+							const name = attrNameCasing === AttrNameCasing.Camel ? event : hyphenate(event);
+							const propKey = createInternalItemId('componentEvent', [tag, name]);
 
-						attributes.push({
-							name: 'v-model:' + name,
-							description: propKey,
-						});
-
-						if (model === 'modelValue') {
 							attributes.push({
-								name: 'v-model',
+								name: 'v-on:' + name,
+								description: propKey,
+							});
+							attributes.push({
+								name: '@' + name,
 								description: propKey,
 							});
 						}
-					}
 
-					return attributes;
+						const models: [boolean, string][] = [];
+
+						for (const prop of [...props, ...attrs]) {
+							if (prop.startsWith('onUpdate:')) {
+								const isGlobal = !props.has(prop);
+								models.push([isGlobal, prop.substring('onUpdate:'.length)]);
+							}
+						}
+						for (const event of events) {
+							if (event.startsWith('update:')) {
+								models.push([false, event.substring('update:'.length)]);
+							}
+						}
+
+						for (const [isGlobal, model] of models) {
+
+							const name = attrNameCasing === AttrNameCasing.Camel ? model : hyphenate(model);
+							const propKey = createInternalItemId('componentProp', [isGlobal ? '*' : tag, name]);
+
+							attributes.push({
+								name: 'v-model:' + name,
+								description: propKey,
+							});
+
+							if (model === 'modelValue') {
+								attributes.push({
+									name: 'v-model',
+									description: propKey,
+								});
+							}
+						}
+
+						return attributes;
+					},
+					provideValues: () => [],
 				},
-				provideValues: () => [],
-			},
-		]);
-	}
-
-	function afterHtmlCompletion(completionList: vscode.CompletionList, vueDocument: SourceFileDocument) {
-
-		const replacement = getReplacement(completionList, vueDocument.getDocument());
-		const componentNames = new Set(checkComponentNames(context.typescript.module, context.typescript.languageService, vueDocument.file).map(hyphenate));
-
-		if (replacement) {
-
-			const isEvent = replacement.text.startsWith('@') || replacement.text.startsWith('v-on:');
-			const hasModifier = replacement.text.includes('.');
-
-			if (isEvent && hasModifier) {
-
-				const modifiers = replacement.text.split('.').slice(1);
-				const textWithoutModifier = replacement.text.split('.')[0];
-
-				for (const modifier in eventModifiers) {
-
-					if (modifiers.includes(modifier))
-						continue;
-
-					const modifierDes = eventModifiers[modifier];
-					const newItem: html.CompletionItem = {
-						label: modifier,
-						filterText: textWithoutModifier + '.' + modifier,
-						documentation: modifierDes,
-						textEdit: {
-							range: replacement.textEdit.range,
-							newText: textWithoutModifier + '.' + modifier,
-						},
-						kind: vscode.CompletionItemKind.EnumMember,
-					};
-
-					completionList.items.push(newItem);
-				}
-			}
+			]);
 		}
 
-		for (const item of completionList.items) {
+		function afterHtmlCompletion(completionList: vscode.CompletionList, map: SourceMapWithDocuments<FileRangeCapabilities>, vueSourceFile: vue.VueFile) {
 
-			const itemIdKey = typeof item.documentation === 'string' ? item.documentation : item.documentation?.value;
-			const itemId = itemIdKey ? readInternalItemId(itemIdKey) : undefined;
+			const replacement = getReplacement(completionList, map.sourceFileDocument);
+			const componentNames = new Set(checkComponentNames(_ts.module, _ts.languageService, vueSourceFile).map(hyphenate));
 
-			if (itemId) {
-				item.documentation = undefined;
+			if (replacement) {
+
+				const isEvent = replacement.text.startsWith('@') || replacement.text.startsWith('v-on:');
+				const hasModifier = replacement.text.includes('.');
+
+				if (isEvent && hasModifier) {
+
+					const modifiers = replacement.text.split('.').slice(1);
+					const textWithoutModifier = replacement.text.split('.')[0];
+
+					for (const modifier in eventModifiers) {
+
+						if (modifiers.includes(modifier))
+							continue;
+
+						const modifierDes = eventModifiers[modifier];
+						const newItem: html.CompletionItem = {
+							label: modifier,
+							filterText: textWithoutModifier + '.' + modifier,
+							documentation: modifierDes,
+							textEdit: {
+								range: replacement.textEdit.range,
+								newText: textWithoutModifier + '.' + modifier,
+							},
+							kind: vscode.CompletionItemKind.EnumMember,
+						};
+
+						completionList.items.push(newItem);
+					}
+				}
 			}
 
-			if (itemIdKey && itemId) {
+			for (const item of completionList.items) {
 
-				if (itemId.type === 'componentProp' || itemId.type === 'componentEvent') {
+				const itemIdKey = typeof item.documentation === 'string' ? item.documentation : item.documentation?.value;
+				const itemId = itemIdKey ? readInternalItemId(itemIdKey) : undefined;
 
-					const [componentName] = itemId.args;
+				if (itemId) {
+					item.documentation = undefined;
+				}
 
-					if (componentName !== '*') {
-						item.sortText = '\u0000' + (item.sortText ?? item.label);
-					}
+				if (itemIdKey && itemId) {
 
-					if (itemId.type === 'componentProp') {
+					if (itemId.type === 'componentProp' || itemId.type === 'componentEvent') {
+
+						const [componentName] = itemId.args;
+
 						if (componentName !== '*') {
-							item.kind = vscode.CompletionItemKind.Field;
+							item.sortText = '\u0000' + (item.sortText ?? item.label);
+						}
+
+						if (itemId.type === 'componentProp') {
+							if (componentName !== '*') {
+								item.kind = vscode.CompletionItemKind.Field;
+							}
+						}
+						else {
+							item.kind = componentName !== '*' ? vscode.CompletionItemKind.Function : vscode.CompletionItemKind.Event;
 						}
 					}
+					else if (
+						item.label === 'v-if'
+						|| item.label === 'v-else-if'
+						|| item.label === 'v-else'
+						|| item.label === 'v-for'
+					) {
+						item.kind = vscode.CompletionItemKind.Method;
+						item.sortText = '\u0003' + (item.sortText ?? item.label);
+					}
+					else if (item.label.startsWith('v-')) {
+						item.kind = vscode.CompletionItemKind.Function;
+						item.sortText = '\u0002' + (item.sortText ?? item.label);
+					}
 					else {
-						item.kind = componentName !== '*' ? vscode.CompletionItemKind.Function : vscode.CompletionItemKind.Event;
+						item.sortText = '\u0001' + (item.sortText ?? item.label);
 					}
 				}
-				else if (
-					item.label === 'v-if'
-					|| item.label === 'v-else-if'
-					|| item.label === 'v-else'
-					|| item.label === 'v-for'
-				) {
-					item.kind = vscode.CompletionItemKind.Method;
-					item.sortText = '\u0003' + (item.sortText ?? item.label);
-				}
-				else if (item.label.startsWith('v-')) {
-					item.kind = vscode.CompletionItemKind.Function;
-					item.sortText = '\u0002' + (item.sortText ?? item.label);
-				}
-				else {
-					item.sortText = '\u0001' + (item.sortText ?? item.label);
+				else if (item.kind === vscode.CompletionItemKind.Property && componentNames.has(hyphenate(item.label))) {
+					item.kind = vscode.CompletionItemKind.Variable;
+					item.sortText = '\u0000' + (item.sortText ?? item.label);
 				}
 			}
-			else if (item.kind === vscode.CompletionItemKind.Property && componentNames.has(hyphenate(item.label))) {
-				item.kind = vscode.CompletionItemKind.Variable;
-				item.sortText = '\u0000' + (item.sortText ?? item.label);
-			}
-		}
 
-		options.templateLanguagePlugin.updateCustomData([]);
-	}
+			templatePlugin.updateCustomData([]);
+		}
+	};
+
+	return plugin as T;
 }
 
 function createInternalItemId(type: 'vueDirective' | 'componentEvent' | 'componentProp', args: string[]) {

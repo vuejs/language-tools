@@ -8,11 +8,11 @@
  */
 
 import * as vscode from 'vscode-languageserver-protocol';
-import type * as Proto from '../protocol';
 import * as PConst from '../protocol.const';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 
 export namespace SymbolKind {
-	export function fromProtocolScriptElementKind(kind: Proto.ScriptElementKind) {
+	export function fromProtocolScriptElementKind(kind: ts.ScriptElementKind) {
 		switch (kind) {
 			case PConst.Kind.module: return vscode.SymbolKind.Module;
 			case PConst.Kind.class: return vscode.SymbolKind.Class;

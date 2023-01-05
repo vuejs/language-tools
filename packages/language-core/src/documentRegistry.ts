@@ -1,140 +1,131 @@
-import { Mapping, SourceMapBase } from '@volar/source-map';
-import { computed, shallowReactive } from '@vue/reactivity';
-import { Teleport } from './sourceMaps';
-import type { EmbeddedFile, LanguageModule, SourceFile } from './types';
+import { SourceMap } from '@volar/source-map';
+import { MirrorMap } from './sourceMaps';
+import type { LanguageModule, FileRangeCapabilities, VirtualFile } from './types';
 
-export function forEachEmbeddeds(input: EmbeddedFile[], cb: (embedded: EmbeddedFile) => void) {
-	for (const child of input) {
-		if (child) {
-			cb(child);
-		}
-		forEachEmbeddeds(child.embeddeds, cb);
-	}
-}
+export type VirtualFiles = ReturnType<typeof createVirtualFiles>;
 
-export type DocumentRegistry = ReturnType<typeof createDocumentRegistry>;
+type Source = [
+	string, // source file name
+	ts.IScriptSnapshot, // source file snapshot
+	VirtualFile, // root virtual file
+	LanguageModule, // language module that created the root virtual file
+];
 
-export function createDocumentRegistry() {
+export function createVirtualFiles(languageModules: LanguageModule[]) {
 
-	const files = shallowReactive<Record<string, [SourceFile, LanguageModule]>>({});
-	const all = computed(() => Object.values(files));
-	const fileNames = computed(() => all.value.map(sourceFile => sourceFile?.[0].fileName));
-	const embeddedDocumentsMap = computed(() => {
-		const map = new WeakMap<EmbeddedFile, SourceFile>();
-		for (const [sourceFile] of all.value) {
-			forEachEmbeddeds(sourceFile.embeddeds, embedded => {
-				map.set(embedded, sourceFile);
-			});
-		}
-		return map;
-	});
-	const sourceMapsByFileName = computed(() => {
-		const map = new Map<string, { sourceFile: SourceFile, embedded: EmbeddedFile; }>();
-		for (const [sourceFile] of all.value) {
-			forEachEmbeddeds(sourceFile.embeddeds, embedded => {
-				map.set(normalizePath(embedded.fileName), { sourceFile, embedded });
-			});
-		}
-		return map;
-	});
-	const teleports = computed(() => {
-		const map = new Map<string, Teleport>();
-		for (const key in files) {
-			const [sourceFile] = files[key]!;
-			forEachEmbeddeds(sourceFile.embeddeds, embedded => {
-				if (embedded.teleportMappings) {
-					map.set(normalizePath(embedded.fileName), getTeleport(sourceFile, embedded.teleportMappings));
-				}
-			});
-		}
-		return map;
-	});
-	const _sourceMaps = new WeakMap<SourceFile, WeakMap<Mapping<any>[], SourceMapBase<any>>>();
-	const _teleports = new WeakMap<SourceFile, WeakMap<Mapping<any>[], Teleport>>();
+	const sourceFiles = new Map<string, Source>();
+	const virtualFiles = new Map<string, [VirtualFile, Source]>();
+	const virtualFileToSourceMapsMap = new WeakMap<ts.IScriptSnapshot, Map<string, [string, SourceMap<FileRangeCapabilities>]>>();
+	const virtualFileToMirrorMap = new WeakMap<ts.IScriptSnapshot, MirrorMap | undefined>();
+
+	let sourceFilesDirty = true;
 
 	return {
-		get: (fileName: string): [SourceFile, LanguageModule] | undefined => files[normalizePath(fileName)],
-		delete: (fileName: string) => delete files[normalizePath(fileName)],
-		has: (fileName: string) => !!files[normalizePath(fileName)],
-		set: (fileName: string, vueFile: SourceFile, languageModule: LanguageModule) => files[normalizePath(fileName)] = [vueFile, languageModule],
-
-		getFileNames: () => fileNames.value,
-		getAll: () => all.value,
-
-		getTeleport: (fileName: string) => teleports.value.get(normalizePath(fileName)),
-		getAllEmbeddeds: function* () {
-			for (const sourceMap of sourceMapsByFileName.value) {
-				yield sourceMap[1];
+		all: sourceFiles,
+		update(fileName: string, snapshot: ts.IScriptSnapshot) {
+			const key = normalizePath(fileName);
+			const value = sourceFiles.get(key);
+			if (value) {
+				const virtualFile = value[2];
+				value[1] = snapshot;
+				value[3].updateFile(virtualFile, snapshot);
+				sourceFilesDirty = true;
+				return virtualFile; // updated
 			}
-		},
-
-		fromEmbeddedLocation: function* (fileName: string, offset: number) {
-
-			if (fileName.endsWith('/__VLS_types.ts')) { // TODO: monkey fix
-				return;
-			}
-
-			const mapped = sourceMapsByFileName.value.get(normalizePath(fileName));
-
-			if (mapped) {
-
-				const sourceMap = getSourceMap(mapped.sourceFile, mapped.embedded.mappings);
-
-				for (const vueRange of sourceMap.toSourceOffsets(offset)) {
-					yield {
-						fileName: mapped.sourceFile.fileName,
-						offset: vueRange[0],
-						mapping: vueRange[1],
-						sourceMap,
-					};
+			for (const languageModule of languageModules) {
+				const virtualFile = languageModule.createFile(fileName, snapshot);
+				if (virtualFile) {
+					sourceFiles.set(key, [fileName, snapshot, virtualFile, languageModule]);
+					sourceFilesDirty = true;
+					return virtualFile; // created
 				}
 			}
-			else {
-				yield {
-					fileName,
-					offset,
-				};
+		},
+		delete(fileName: string) {
+			const key = normalizePath(fileName);
+			const value = sourceFiles.get(key);
+			if (value) {
+				const virtualFile = value[2];
+				value[3].deleteFile?.(virtualFile);
+				sourceFiles.delete(key); // deleted
+				sourceFilesDirty = true;
 			}
 		},
-		fromEmbeddedFile: function (file: EmbeddedFile) {
-			return embeddedDocumentsMap.value.get(file);
+		get(fileName: string) {
+			const key = normalizePath(fileName);
+			const value = sourceFiles.get(key);
+			if (value) {
+				return [
+					value[1],
+					value[2],
+				] as const;
+			}
 		},
-		fromEmbeddedFileName: function (fileName: string) {
-			return sourceMapsByFileName.value.get(normalizePath(fileName));
-		},
-		getSourceMap,
-		// TODO: unuse this
-		onSourceFileUpdated(file: SourceFile) {
-			_sourceMaps.delete(file);
-			_teleports.delete(file);
+		hasSourceFile: (fileName: string) => sourceFiles.has(normalizePath(fileName)),
+		getMirrorMap: getMirrorMap,
+		getMaps: getSourceMaps,
+		getSourceByVirtualFileName(fileName: string) {
+			const source = getVirtualFilesMap().get(normalizePath(fileName));
+			if (source) {
+				return [
+					source[1][0],
+					source[1][1],
+					source[0],
+				] as const;
+			}
 		},
 	};
 
-	function getSourceMap(file: SourceFile, mappings: Mapping<any>[]) {
-		let map1 = _sourceMaps.get(file);
-		if (!map1) {
-			map1 = new WeakMap();
-			_sourceMaps.set(file, map1);
+	function getVirtualFilesMap() {
+		if (sourceFilesDirty) {
+			sourceFilesDirty = false;
+			virtualFiles.clear();
+			for (const [_, row] of sourceFiles) {
+				forEachEmbeddedFile(row[2], file => {
+					virtualFiles.set(normalizePath(file.fileName), [file, row]);
+				});
+			}
 		}
-		let map2 = map1.get(mappings);
-		if (!map2) {
-			map2 = new SourceMapBase(mappings);
-			map1.set(mappings, map2);
-		}
-		return map2;
+		return virtualFiles;
 	}
-	function getTeleport(file: SourceFile, mappings: Mapping<any>[]) {
-		let map1 = _teleports.get(file);
-		if (!map1) {
-			map1 = new WeakMap();
-			_teleports.set(file, map1);
+
+	function getSourceMaps(virtualFile: VirtualFile) {
+		let sourceMapsBySourceFileName = virtualFileToSourceMapsMap.get(virtualFile.snapshot);
+		if (!sourceMapsBySourceFileName) {
+			sourceMapsBySourceFileName = new Map();
+			virtualFileToSourceMapsMap.set(virtualFile.snapshot, sourceMapsBySourceFileName);
 		}
-		let map2 = map1.get(mappings);
-		if (!map2) {
-			map2 = new Teleport(mappings);
-			map1.set(mappings, map2);
+
+		const sources = new Set<string | undefined>();
+		for (const map of virtualFile.mappings) {
+			sources.add(map.source);
 		}
-		return map2;
+
+		for (const source of sources) {
+			const sourceFileName = source ?? getVirtualFilesMap().get(normalizePath(virtualFile.fileName))![1][0];
+			if (!sourceMapsBySourceFileName.has(sourceFileName)) {
+				sourceMapsBySourceFileName.set(sourceFileName, [
+					sourceFileName,
+					new SourceMap(virtualFile.mappings.filter(mapping => mapping.source === source)),
+				]);
+			}
+		}
+
+		return [...sourceMapsBySourceFileName.values()];
+	}
+
+	function getMirrorMap(file: VirtualFile) {
+		if (!virtualFileToMirrorMap.has(file.snapshot)) {
+			virtualFileToMirrorMap.set(file.snapshot, file.mirrorBehaviorMappings ? new MirrorMap(file.mirrorBehaviorMappings) : undefined);
+		}
+		return virtualFileToMirrorMap.get(file.snapshot);
+	}
+}
+
+export function forEachEmbeddedFile(file: VirtualFile, cb: (embedded: VirtualFile) => void) {
+	cb(file);
+	for (const embeddedFile of file.embeddedFiles) {
+		forEachEmbeddedFile(embeddedFile, cb);
 	}
 }
 

@@ -35,15 +35,15 @@
 		{
 			"path": "../../plugins/typescript/tsconfig.build.json"
 		},
+		{
+			"path": "../../plugins/typescript-twoslash-queries/tsconfig.build.json"
+		},
 		// packages
 		{
 			"path": "../../packages/language-core/tsconfig.build.json"
 		},
 		{
 			"path": "../../packages/language-service/tsconfig.build.json"
-		},
-		{
-			"path": "../../packages/pug-language-service/tsconfig.build.json"
 		},
 		{
 			"path": "../../packages/shared/tsconfig.build.json"
@@ -60,6 +60,10 @@
 		},
 		{
 			"path": "../vue-typescript/tsconfig.build.json"
+		},
+		// pug-language-tools
+		{
+			"path": "../../pug-language-tools/pug-language-service/tsconfig.build.json"
 		},
 	],
 }

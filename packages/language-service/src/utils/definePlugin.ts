@@ -1,21 +1,24 @@
-import { EmbeddedDocumentSourceMap, SourceFileDocument } from '../documents';
+import { DocumentsAndSourceMaps, SourceMapWithDocuments } from '../documents';
+import { FileRangeCapabilities, VirtualFile } from '@volar/language-core';
 
 export async function visitEmbedded(
-	vueDocument: SourceFileDocument,
-	cb: (sourceMap: EmbeddedDocumentSourceMap) => Promise<boolean>,
-	embeddeds = vueDocument.file.embeddeds,
+	documents: DocumentsAndSourceMaps,
+	current: VirtualFile,
+	cb: (file: VirtualFile, sourceMap: SourceMapWithDocuments<FileRangeCapabilities>) => Promise<boolean>,
+	rootFile = current,
 ) {
 
-	for (const embedded of embeddeds) {
-
-		if (!await visitEmbedded(vueDocument, cb, embedded.embeddeds)) {
+	for (const embedded of current.embeddedFiles) {
+		if (!await visitEmbedded(documents, embedded, cb, rootFile)) {
 			return false;
 		}
+	}
 
-		const sourceMap = vueDocument.getSourceMap(embedded);
-
-		if (!await cb(sourceMap)) {
-			return false;
+	for (const [_, map] of documents.getMapsByVirtualFileName(current.fileName)) {
+		if (documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri) === rootFile) {
+			if (!await cb(current, map)) {
+				return false;
+			}
 		}
 	}
 

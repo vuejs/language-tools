@@ -3,16 +3,14 @@ import * as embedded from '@volar/language-core';
 import type { FileSystemProvider } from 'vscode-html-languageservice';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver';
-import type * as Requests from './protocol';
 import { URI } from 'vscode-uri';
-
-export declare let __requests: typeof Requests; // keep this code for jsdoc link
+import { LanguageServiceRuntimeContext } from '@volar/language-service';
 
 export type FileSystemHost = {
 	ready(connection: vscode.Connection): void,
-	clearCache(): void,
+	reload(): void,
 	getWorkspaceFileSystem(rootUri: URI): FileSystem,
-	onDidChangeWatchedFiles(cb: (params: vscode.DidChangeWatchedFilesParams, reason: 'lsp' | 'web-cache-updated') => void): () => void,
+	onDidChangeWatchedFiles(cb: (params: vscode.DidChangeWatchedFilesParams) => void): () => void,
 };
 
 export type FileSystem = Pick<ts.System,
@@ -28,7 +26,7 @@ export type FileSystem = Pick<ts.System,
 
 export interface RuntimeEnvironment {
 	loadTypescript: (tsdk: string) => typeof import('typescript/lib/tsserverlibrary'),
-	loadTypescriptLocalized: (tsdk: string, locale: string) => any,
+	loadTypescriptLocalized: (tsdk: string, locale: string) => Promise<{} | undefined>,
 	schemaRequestHandlers: { [schema: string]: (uri: string, encoding?: BufferEncoding) => Promise<string>; },
 	onDidChangeConfiguration?: (settings: any) => void,
 	fileSystemProvide: FileSystemProvider | undefined,
@@ -44,45 +42,26 @@ export type LanguageServerPlugin<
 	C = embeddedLS.LanguageService
 > = (initOptions: A) => {
 
-	extraFileExtensions: ts.FileExtensionInfo[],
+	extraFileExtensions?: ts.FileExtensionInfo[];
 
-	semanticService?: {
+	resolveLanguageServiceHost?(
+		ts: typeof import('typescript/lib/tsserverlibrary'),
+		sys: FileSystem,
+		tsConfig: string | ts.CompilerOptions,
+		host: embedded.LanguageServiceHost,
+	): B;
 
-		resolveLanguageServiceHost?(
-			ts: typeof import('typescript/lib/tsserverlibrary'),
-			sys: FileSystem,
-			tsConfig: string | ts.CompilerOptions,
-			host: embedded.LanguageServiceHost,
-		): B,
+	getLanguageModules?(host: B): embedded.LanguageModule[];
 
-		getLanguageModules?(host: B): embedded.LanguageModule[],
+	getLanguageServicePlugins?(
+		host: B,
+		context: LanguageServiceRuntimeContext,
+	): embeddedLS.LanguageServicePlugin[];
 
-		getServicePlugins?(
-			host: B,
-			service: embeddedLS.LanguageService,
-		): embeddedLS.LanguageServicePlugin[],
-
-		onInitialize?(
-			connection: vscode.Connection,
-			getLanguageService: (uri: string) => Promise<C>,
-		): void,
-	},
-
-	syntacticService?: {
-
-		getLanguageModules?(
-			ts: typeof import('typescript/lib/tsserverlibrary'),
-			env: embeddedLS.LanguageServicePluginContext['env'],
-		): embedded.LanguageModule[],
-
-		getServicePlugins?(
-			context: embeddedLS.DocumentServiceRuntimeContext,
-		): embeddedLS.LanguageServicePlugin[],
-
-		onInitialize?(
-			connection: vscode.Connection,
-		): void,
-	};
+	onInitialize?(
+		connection: vscode.Connection,
+		getLanguageService: (uri: string) => Promise<C>,
+	): void;
 };
 
 export enum ServerMode {
@@ -98,7 +77,7 @@ export enum DiagnosticModel {
 }
 
 export interface LanguageServerInitializationOptions {
-	typescript: {
+	typescript?: {
 		// Absolute path to node_modules/typescript/lib
 		tsdk: string;
 	};
@@ -112,8 +91,16 @@ export interface LanguageServerInitializationOptions {
 	 */
 	cancellationPipeName?: string;
 	noProjectReferences?: boolean;
+	reverseConfigFilePriority?: boolean;
+	disableFileWatcher?: boolean;
 	/**
 	 * Enable this option to make language server setup server capabilities based on client capabilities to support multiple servers.
 	 */
 	respectClientCapabilities?: boolean;
+	maxFileSize?: number;
+	configFilePath?: string;
+	/**
+	 * Extra semantic token types and modifiers that are supported by the client.
+	 */
+	semanticTokensLegend?: vscode.SemanticTokensLegend;
 }

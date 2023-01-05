@@ -1,5 +1,5 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import type { TextRange } from '@volar/language-core';
+import type { TextRange } from '../types';
 
 export interface ScriptSetupRanges extends ReturnType<typeof parseScriptSetupRanges> { }
 
@@ -32,7 +32,7 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 			// fix https://github.com/johnsoncodehk/volar/issues/1223
 			&& !ts.isImportEqualsDeclaration(node)
 		) {
-			importSectionEndOffset = node.getStart(ast);
+			importSectionEndOffset = node.getStart(ast, true);
 			foundNonImportExportNode = true;
 		}
 		else if (isTypeExport && foundNonImportExportNode) {

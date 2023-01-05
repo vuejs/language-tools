@@ -3,10 +3,8 @@ import * as vscode from 'vscode-languageserver-protocol';
 import { boundSpanToLocationLinks } from '../utils/transforms';
 import * as shared from '@volar/shared';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import { URI } from 'vscode-uri';
 
 export function register(
-	rootUri: URI,
 	languageService: ts.LanguageService,
 	getTextDocument: (uri: string) => TextDocument | undefined,
 ) {
@@ -22,6 +20,6 @@ export function register(
 		try { info = languageService.getDefinitionAndBoundSpan(fileName, offset); } catch { }
 		if (!info) return [];
 
-		return boundSpanToLocationLinks(rootUri, info, document, getTextDocument);
+		return boundSpanToLocationLinks(info, document, getTextDocument);
 	};
 }

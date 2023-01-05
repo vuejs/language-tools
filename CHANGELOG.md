@@ -1,8 +1,168 @@
 # Changelog
 
+## 1.0.22 (2022/1/5)
+
+- fix: document folding ranges not working in .ts
+
+## 1.0.21 (2022/1/5)
+
+- fix: cannot jump to .vue definition from .ts with takeover mode
+- fix: cannot detect `@volar/vue-language-plugin-pug` installed ([#2272](https://github.com/johnsoncodehk/volar/issues/2272))
+- fix: ignore incremental update for v-for expression ([#2266](https://github.com/johnsoncodehk/volar/issues/2266))
+- fix: auto insert spaces for `{{}}` not working
+- fix: completion in template inserts stray leading dot ([#2155](https://github.com/johnsoncodehk/volar/issues/2155))
+- fix: if source document EOL is `\r\n`, virtual document mapping decorations range incorrect
+
+### Our Gold Sponsors
+
+<table><tr>
+	<td align="center" valign="middle"><a href="https://vuejs.org/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/vue.png" height="80" /></a></td>
+	<td align="center" valign="middle"><a href="https://volta.net/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/volta.svg" height="60" /></a></td>
+</tr></table>
+
+### Our Silver Sponsors
+
+<table><tr>
+	<td align="center" valign="middle"><a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/prefect.svg" height="50" /></a></td>
+	<td align="center" valign="middle"><a href="https://github.com/365talents"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/365talents.png" height="70" /></a></td>
+</tr></table>
+
+## 1.0.20 (2022/1/4)
+
+- feat: support browser navigation for embedded preview
+- feat: released pug extension ([#2274](https://github.com/johnsoncodehk/volar/issues/2274))
+- feat: add `volar.takeOverMode.extension` setting for choice extension that takeover *.ts language support
+- fix(typescript-vue-plugin): can't always get latest status of .vue files ([#2271](https://github.com/johnsoncodehk/volar/issues/2271))
+- fix: multi-line template interpolation formatting indentation incorrect
+- refactor(framework): simplify `LanguageServerPlugin` api and dependency injection connection ([#2273](https://github.com/johnsoncodehk/volar/issues/2273))
+- refactor(framework): combine `createLanguageService` and `createDocumentService`
+
+## 1.0.19 (2022/12/31)
+
+- feat: add `experimentalAdditionalLanguageModules` option for `vueCompilerOptions` ([#2267](https://github.com/johnsoncodehk/volar/issues/2267))
+- fix: TS `typescript/javascript.preferences.autoImportFileExcludePatterns` setting not working
+- fix: formatting not working for extra vue file extensions ([#2263](https://github.com/johnsoncodehk/volar/issues/2263))
+- fix(doctor): accidentally report `@vue/compiler-dom` warning ([#2262](https://github.com/johnsoncodehk/volar/issues/2262))
+- fix(vue-component-meta): `required` property incorrect ([#2256](https://github.com/johnsoncodehk/volar/issues/2256))
+- fix(preview): cannot start preview if project never start run vite server ([#2223](https://github.com/johnsoncodehk/volar/issues/2223))
+- fix: references codeLens not working
+
+## 1.0.18 (2022/12/26)
+
+- feat: check deprecated properties for `vueCompilerOptions` in tsconfig
+- fix: auto add spaces for `{{}}` not working if template block not at the top
+- fix: remove duplicate file watchers for .vue files
+- fix: auto complete randomly report `[TS Error] { }` and failed ([#2190](https://github.com/johnsoncodehk/volar/issues/2190))
+- fix: cross-file renaming cannot be performed consecutively
+- fix: should not report unknown tag error without `strictTemplates` enabled ([#2255](https://github.com/johnsoncodehk/volar/issues/2255))
+
+## 1.0.17 (2022/12/26)
+
+- feat: support syntax highlighting for `lang="json5"` ([#2244](https://github.com/johnsoncodehk/volar/issues/2244))
+- feat: support for generating virtual file from multiple sources ([#2253](https://github.com/johnsoncodehk/volar/issues/2253))
+- feat: display mapping data on hover for virtual document
+- feat: re-support component semantic token ([#2252](https://github.com/johnsoncodehk/volar/issues/2252))
+- fix(vue-tsc): cannot resolve hook path from extends options
+- fix: fixed workspace configs caching not working edge case ([#2062](https://github.com/johnsoncodehk/volar/issues/2062))
+- fix: cannot find volar.config.js for sub folder tsconfig project
+- fix: emmet abbreviation suggestion keeps disappearing every third letter ([#2240](https://github.com/johnsoncodehk/volar/issues/2240))
+- fix: `{{ }}` colorizedBracketPairs not working ([#1759](https://github.com/johnsoncodehk/volar/issues/1759))
+- fix: fixed volar-base language servers executePluginCommand duplicate registration error
+- fix: avoid throw on un-exist workspace folder ([#2039](https://github.com/johnsoncodehk/volar/issues/2039))
+- fix: ignore class, style attrs when `v-bind` exist ([#2166](https://github.com/johnsoncodehk/volar/issues/2166))
+- fix: functional component type check not working when return type includes `props` property ([#2206](https://github.com/johnsoncodehk/volar/issues/2206))
+- fix: v-slot error when `noPropertyAccessFromIndexSignature` is enabled ([#2236](https://github.com/johnsoncodehk/volar/issues/2236))
+- fix: `skipTemplateCodegen` should ignore template slots emit ([#2237](https://github.com/johnsoncodehk/volar/issues/2237))
+- fix: recursive closing of html tag edge cases ([#2238](https://github.com/johnsoncodehk/volar/issues/2238)) ([#2247](https://github.com/johnsoncodehk/volar/issues/2247))
+- fix: double quotes not allowed in attribute value ([#2250](https://github.com/johnsoncodehk/volar/issues/2250))
+- perf: embedded files on demand calculation not working
+
+## 1.0.16 (2022/12/20)
+
+- feat(component-meta): make `schema.ignore` accept functions ([#2232](https://github.com/johnsoncodehk/volar/issues/2232))
+- feat: add `volar.icon.splitEditors` setting ([#2163](https://github.com/johnsoncodehk/volar/issues/2163))
+- feat: support twoslash queries in .ts when using takeover mode
+- fix: fixed typescript-vue-plugin performance regression ([#2228](https://github.com/johnsoncodehk/volar/issues/2228))
+- fix: deleting space for `{{ |}}` become `{{ | }}` ([#2222](https://github.com/johnsoncodehk/volar/issues/2222))
+- fix: dynamic slot name type `<slot :name="(name as 'a' | 'b')" />` not working ([#2233](https://github.com/johnsoncodehk/volar/issues/2233))
+- fix: typed template slots missing when template only exist dynamic slots ([#2233](https://github.com/johnsoncodehk/volar/issues/2233))
+- fix: fixed template `Type 'void' has no call signatures` errors ([#2225](https://github.com/johnsoncodehk/volar/issues/2225))
+- fix(vue-tsc): shim `vue-tsc/out/proxy.js` for vite-plugin-checker (https://github.com/fi3ework/vite-plugin-checker/issues/193)
+- perf: rewrite typescript-vue-plugin for much better performance and fixed path resolve edge case ([#2137](https://github.com/johnsoncodehk/volar/issues/2137))
+
+## 1.0.14 (2022/12/18)
+
+- feat: add angular language server example ([#2215](https://github.com/johnsoncodehk/volar/issues/2215))
+- feat(vue-tsc): support for hook api ([#2217](https://github.com/johnsoncodehk/volar/issues/2217))
+- feat: add `vue-tsc-eslint-hook` module to support use eslint in vue-tsc ([#2220](https://github.com/johnsoncodehk/volar/issues/2220))
+- feat: add setting `volar.vueserver.maxFileSize` ([#2186](https://github.com/johnsoncodehk/volar/issues/2186))
+- feat: add setting `volar.doctor.checkVueTsc` and disable by default ([#2186](https://github.com/johnsoncodehk/volar/issues/2186))
+- feat: add setting `volar.vueserver.configFilePath` ([#2078](https://github.com/johnsoncodehk/volar/issues/2078))
+- feat: auto add space between double curly brackets ([#2088](https://github.com/johnsoncodehk/volar/issues/2088))
+- feat: support formatting for style `v-bind` ([#2105](https://github.com/johnsoncodehk/volar/issues/2105))
+- fix: virtual code mapping ignored offset 0 ([#2052](https://github.com/johnsoncodehk/volar/issues/2052))
+- fix: auto complete ref value with '.value' not working ([#2203](https://github.com/johnsoncodehk/volar/issues/2203))
+- fix: template AST broken by slot name incremental update ([#2207](https://github.com/johnsoncodehk/volar/issues/2207))
+- fix: preview not working for Vite v4 ([#2198](https://github.com/johnsoncodehk/volar/issues/2198))
+
+## 1.0.13 (2022/12/12)
+
+- feat(web-ide): show loading file at status bar
+- feat(web-ide): support node_modules types via CDN
+- feat(web-ide): support locale typescript diagnostic messages
+- fix(web-ide): cannot use default typescript lib types
+- fix(web-ide): cannot found match tsconfig
+- fix: `volar.config.js` plugins dirty cache between different tsconfig projects
+
+## 1.0.12 (2022/12/9)
+
+- feat: added `@volar/vscode-language-client` package ([#2181](https://github.com/johnsoncodehk/volar/issues/2181))
+- fix: document content messed up randomly ([#1807](https://github.com/johnsoncodehk/volar/issues/1807))
+- fix: "Show Virtual Files" mapping background color unclear with light theme ([#2147](https://github.com/johnsoncodehk/volar/issues/2147)) ([#2170](https://github.com/johnsoncodehk/volar/issues/2170))
+- fix: props type checking not working for Element Plus components ([#2176](https://github.com/johnsoncodehk/volar/issues/2176)) ([#2180](https://github.com/johnsoncodehk/volar/issues/2180))
+- fix: attribute values being wrapped in parentheses while typing ([#2182](https://github.com/johnsoncodehk/volar/issues/2182))
+- fix: formatting crashes ([#2077](https://github.com/johnsoncodehk/volar/issues/2077))
+- fix: cannot emit component type with `DefineComponent` when template has slots ([#2161](https://github.com/johnsoncodehk/volar/issues/2161))
+
+## 1.0.11 (2022/12/3)
+
+- fix(vue-tsc): dts emit do not generated `DefineComponent` type ([#2161](https://github.com/johnsoncodehk/volar/issues/2161))
+- fix: global components types loss in vue 2 projects ([#2157](https://github.com/johnsoncodehk/volar/issues/2157))
+- fix: Vite / Nuxt app preview crash when template includes `<html>` tag
+
+## 1.0.10 (2022/11/29)
+
+- feat: add `volar.vueserver.json.customBlockSchemaUrls` setting to support preset json schema urls for custom blocks ([#2079](https://github.com/johnsoncodehk/volar/issues/2079))
+- feat: add `volar.vueserver.reverseConfigFilePriority` setting to support customize tsconfig priority ([#1815](https://github.com/johnsoncodehk/volar/issues/1815))
+- feat: add `volar.vueserver.disableFileWatcher` setting for better performance ([#2027](https://github.com/johnsoncodehk/volar/issues/2027))
+- feat(vue-tsc): support for TypeScript 5.0 ([#2095](https://github.com/johnsoncodehk/volar/issues/2095))
+- feat: auto insert parentheses for `instanceof` expressions ([#2099](https://github.com/johnsoncodehk/volar/issues/2099))
+- feat: more accurate HTML attributes auto-complete
+- feat: add `nativeTags` instead of `experimentalRuntimeMode` to vueCompilerOptions for uni-app supports ([#2065](https://github.com/johnsoncodehk/volar/issues/2065))
+- feat: remove split editors icon and use command instead of
+- fix: goto definition not working with nvim-lspconfig (https://github.com/johnsoncodehk/volar/pull/1916#issuecomment-1293166322)
+- fix(preview): more accurate script judgment ([#2135](https://github.com/johnsoncodehk/volar/issues/2135))
+- fix: local components types should cover global components types ([#1886](https://github.com/johnsoncodehk/volar/issues/1886))
+- fix: auto insert parentheses for AsExpressions not working
+- fix: template code mapping confusion when undo with invalid template code ([#2151](https://github.com/johnsoncodehk/volar/issues/2151))
+- fix: output Server Stats through LSP API ([#2050](https://github.com/johnsoncodehk/volar/issues/2050))
+- fix: vite app preview not working if project path includes spaces (https://github.com/johnsoncodehk/vite-plugin-vue-component-preview/issues/7)
+- fix: avoid component preview create multiple terminals ([#2128](https://github.com/johnsoncodehk/volar/issues/2128))
+- fix: avoid folding when join split editors ([#1887](https://github.com/johnsoncodehk/volar/issues/1887))
+- fix: split editors command crash with empty document ([#2072](https://github.com/johnsoncodehk/volar/issues/2072))
+- fix: avoid escape `&quot;` ([#2091](https://github.com/johnsoncodehk/volar/issues/2091))
+- fix: script setup first variable jsdoc missing (https://github.com/johnsoncodehk/volar/issues/1327#issuecomment-1304784005)
+- fix: document symbols of SFC blocks range incorrect ([#2118](https://github.com/johnsoncodehk/volar/issues/2118))
+- fix: `strictTemplates` option works only bound props ([#2136](https://github.com/johnsoncodehk/volar/issues/2136))
+- fix: props required warning missing when `jsxTemplates` option enabled ([#2139](https://github.com/johnsoncodehk/volar/issues/2139))
+- fix: cannot infer events parameter type in recursive component ([#2140](https://github.com/johnsoncodehk/volar/issues/2140))
+- perf: faster semantic tokens parsing ([#2053](https://github.com/johnsoncodehk/volar/issues/2053)) ([#2056](https://github.com/johnsoncodehk/volar/issues/2056))
+- perf: avoid create file watchers in syntactic server
+- perf: cache workspace configuration in language servers ([#2062](https://github.com/johnsoncodehk/volar/issues/2062))
+
 ## 1.0.9 (2022/10/23)
 
-- feat(vue-tsc): add error message for `noEmitOnError` ([#1669](https://github.com/johnsoncodehk/volar/issues/1669))
+- feat(vue-tsc): add error message for `noEmitOnError` ([#2053](https://github.com/johnsoncodehk/volar/issues/1669))
 - feat: add support for custom file extensions ([#1931](https://github.com/johnsoncodehk/volar/issues/1931))
 - feat: add support for `typescript/javascript.suggest.completeFunctionCalls` ([#956](https://github.com/johnsoncodehk/volar/issues/956))
 - feat: add support for JSX auto closing tags and tags commenting ([#1494](https://github.com/johnsoncodehk/volar/issues/1494))
@@ -30,45 +190,6 @@
 - fix: component tags messes with duplicate name template properties ([#2030](https://github.com/johnsoncodehk/volar/issues/2030))
 - fix: improve invalid content trimming in .md files for VitePress
 - fix: avoid language server throwing when changing built-in TS plugin activation
-
-### Special Sponsor
-
-<table>
-	<tr>
-		<td align="center" valign="middle">
-			<!-- <a href="https://v3.nuxtjs.org/">
-				<img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/nuxt.svg" height="80" />
-			</a> -->
-			<a href="https://volta.net/">
-				<img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/volta.svg" height="60" />
-			</a>
-		</td>
-	</tr>
-</table>
-
-### Out Gold Sponsors
-
-<table>
-	<tr>
-		<td align="center" valign="middle">
-			<a href="https://vuejs.org/">
-				<img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/vue.png" height="80" />
-			</a>
-		</td>
-	</tr>
-</table>
-
-### Out Silver Sponsors
-
-<table>
-	<tr>
-		<td align="center" valign="middle">
-			<a href="https://www.prefect.io/">
-				<img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/prefect.svg" height="50" />
-			</a>
-		</td>
-	</tr>
-</table>
 
 
 ## 1.0.8 (2022/10/15)

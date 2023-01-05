@@ -20,11 +20,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 			const originalItem = data.originalItem;
 
-			if (data.sourceMap) {
+			if (data.map) {
 
-				const sourceMap = context.documents.sourceMapFromEmbeddedDocumentUri(data.sourceMap.embeddedDocumentUri);
-
-				if (sourceMap) {
+				if (context.documents.getVirtualFileByUri(data.map.embeddedDocumentUri)) {
 
 					const resolvedItem = await plugin.codeAction?.resolve(originalItem);
 

@@ -3,21 +3,21 @@ import type { LanguageServiceRuntimeContext } from '../types';
 import { languageFeatureWorker } from '../utils/featureWorkers';
 import * as dedupe from '../utils/dedupe';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { SourceFileDocuments } from '../documents';
-import { PositionCapabilities } from '@volar/language-core';
+import { DocumentsAndSourceMaps } from '../documents';
+import { FileRangeCapabilities } from '@volar/language-core';
 
 export function register(context: LanguageServiceRuntimeContext) {
 
 	return (uri: string, position: vscode.Position, newName: string) => {
 
-		let _data: PositionCapabilities | undefined;
+		let _data: FileRangeCapabilities | undefined;
 
 		return languageFeatureWorker(
 			context,
 			uri,
 			{ position, newName },
-			function* (arg, sourceMap) {
-				for (const mapped of sourceMap.toGeneratedPositions(arg.position, data => {
+			function* (arg, map) {
+				for (const mapped of map.toGeneratedPositions(arg.position, data => {
 					_data = data;
 					return typeof data.rename === 'object' ? !!data.rename.normalize : !!data.rename;
 				})) {
@@ -31,16 +31,16 @@ export function register(context: LanguageServiceRuntimeContext) {
 					yield { position: mapped, newName };
 				};
 			},
-			async (plugin, document, arg, sourceMap) => {
+			async (plugin, document, arg) => {
 
 				const recursiveChecker = dedupe.createLocationSet();
 				let result: vscode.WorkspaceEdit | undefined;
 
-				await withTeleports(document, arg.position, arg.newName);
+				await withMirrors(document, arg.position, arg.newName);
 
 				return result;
 
-				async function withTeleports(document: TextDocument, position: vscode.Position, newName: string) {
+				async function withMirrors(document: TextDocument, position: vscode.Position, newName: string) {
 
 					if (!plugin.rename?.on)
 						return;
@@ -66,29 +66,29 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 							for (const textEdit of textEdits) {
 
-								let foundTeleport = false;
+								let foundMirrorPosition = false;
 
 								recursiveChecker.add({ uri: editUri, range: { start: textEdit.range.start, end: textEdit.range.start } });
 
-								const teleport = context.documents.teleportfromEmbeddedDocumentUri(editUri);
+								const mirrorMap = context.documents.getMirrorMapByUri(editUri)?.[1];
 
-								if (teleport) {
+								if (mirrorMap) {
 
-									for (const mapped of teleport.findTeleports(textEdit.range.start)) {
+									for (const mapped of mirrorMap.findMirrorPositions(textEdit.range.start)) {
 
 										if (!mapped[1].rename)
 											continue;
 
-										if (recursiveChecker.has({ uri: teleport.document.uri, range: { start: mapped[0], end: mapped[0] } }))
+										if (recursiveChecker.has({ uri: mirrorMap.document.uri, range: { start: mapped[0], end: mapped[0] } }))
 											continue;
 
-										foundTeleport = true;
+										foundMirrorPosition = true;
 
-										await withTeleports(teleport.document, mapped[0], newName);
+										await withMirrors(mirrorMap.document, mapped[0], newName);
 									}
 								}
 
-								if (!foundTeleport) {
+								if (!foundMirrorPosition) {
 
 									if (!result.changes)
 										result.changes = {};
@@ -122,7 +122,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					}
 				}
 			},
-			(data, sourceMap) => {
+			(data) => {
 				return embeddedEditToSourceEdit(
 					data,
 					context.documents,
@@ -178,113 +178,137 @@ export function mergeWorkspaceEdits(original: vscode.WorkspaceEdit, ...others: v
 
 export function embeddedEditToSourceEdit(
 	tsResult: vscode.WorkspaceEdit,
-	vueDocuments: SourceFileDocuments,
+	vueDocuments: DocumentsAndSourceMaps,
 ) {
 
-	const vueResult: vscode.WorkspaceEdit = {};
+	const sourceResult: vscode.WorkspaceEdit = {};
 	let hasResult = false;
 
 	for (const tsUri in tsResult.changeAnnotations) {
 
-		if (!vueResult.changeAnnotations)
-			vueResult.changeAnnotations = {};
+		sourceResult.changeAnnotations ??= {};
 
 		const tsAnno = tsResult.changeAnnotations[tsUri];
-		const uri = vueDocuments.sourceMapFromEmbeddedDocumentUri(tsUri)?.sourceDocument.uri ?? tsUri;
-		vueResult.changeAnnotations[uri] = tsAnno;
+
+		if (!vueDocuments.getVirtualFileByUri(tsUri)) {
+			sourceResult.changeAnnotations[tsUri] = tsAnno;
+		}
+		else {
+			for (const [_, map] of vueDocuments.getMapsByVirtualFileUri(tsUri)) {
+				// TODO: check capability?
+				const uri = map.sourceFileDocument.uri;
+				sourceResult.changeAnnotations[uri] = tsAnno;
+			}
+		}
 	}
 	for (const tsUri in tsResult.changes) {
-		if (!vueResult.changes) {
-			vueResult.changes = {};
-		}
-		const map = vueDocuments.sourceMapFromEmbeddedDocumentUri(tsUri);
-		if (!map) {
-			vueResult.changes[tsUri] = tsResult.changes[tsUri];
+
+		sourceResult.changes ??= {};
+
+		if (!vueDocuments.getVirtualFileByUri(tsUri)) {
+			sourceResult.changes[tsUri] = tsResult.changes[tsUri];
 			hasResult = true;
 			continue;
 		}
-		const tsEdits = tsResult.changes[tsUri];
-		for (const tsEdit of tsEdits) {
-			let _data: PositionCapabilities | undefined;
-			const range = map.toSourceRange(tsEdit.range, data => {
-				_data = data;
-				return typeof data.rename === 'object' ? !!data.rename.apply : !!data.rename;
-			});
-			if (range) {
-				let newText = tsEdit.newText;
-				if (_data && typeof _data.rename === 'object' && _data.rename.apply) {
-					newText = _data.rename.apply(tsEdit.newText);
+		for (const [_, map] of vueDocuments.getMapsByVirtualFileUri(tsUri)) {
+			const tsEdits = tsResult.changes[tsUri];
+			for (const tsEdit of tsEdits) {
+				let _data: FileRangeCapabilities | undefined;
+				const range = map.toSourceRange(tsEdit.range, data => {
+					_data = data;
+					return typeof data.rename === 'object' ? !!data.rename.apply : !!data.rename;
+				});
+				if (range) {
+					let newText = tsEdit.newText;
+					if (_data && typeof _data.rename === 'object' && _data.rename.apply) {
+						newText = _data.rename.apply(tsEdit.newText);
+					}
+					if (!sourceResult.changes[map.sourceFileDocument.uri]) {
+						sourceResult.changes[map.sourceFileDocument.uri] = [];
+					}
+					sourceResult.changes[map.sourceFileDocument.uri].push({ newText, range });
+					hasResult = true;
 				}
-				if (!vueResult.changes[map.sourceDocument.uri]) {
-					vueResult.changes[map.sourceDocument.uri] = [];
-				}
-				vueResult.changes[map.sourceDocument.uri].push({ newText, range });
-				hasResult = true;
 			}
 		}
 	}
 	if (tsResult.documentChanges) {
 		for (const tsDocEdit of tsResult.documentChanges) {
-			if (!vueResult.documentChanges) {
-				vueResult.documentChanges = [];
-			}
-			let vueDocEdit: typeof tsDocEdit | undefined;
+
+			sourceResult.documentChanges ??= [];
+
+			let sourceEdit: typeof tsDocEdit | undefined;
 			if (vscode.TextDocumentEdit.is(tsDocEdit)) {
-				const sourceMap = vueDocuments.sourceMapFromEmbeddedDocumentUri(tsDocEdit.textDocument.uri);
-				if (sourceMap) {
-					vueDocEdit = vscode.TextDocumentEdit.create(
-						{
-							uri: sourceMap.sourceDocument.uri,
-							// version: sourceMap.sourceDocument.version,
-							version: null, // fix https://github.com/johnsoncodehk/volar/issues/1490
-						},
-						[],
-					);
-					for (const tsEdit of tsDocEdit.edits) {
-						let _data: PositionCapabilities | undefined;
-						const range = sourceMap.toSourceRange(tsEdit.range, data => {
-							_data = data;
-							// fix https://github.com/johnsoncodehk/volar/issues/1091
-							return typeof data.rename === 'object' ? !!data.rename.apply : !!data.rename;
-						});
-						if (range) {
-							let newText = tsEdit.newText;
-							if (_data && typeof _data.rename === 'object' && _data.rename.apply) {
-								newText = _data.rename.apply(tsEdit.newText);
-							}
-							vueDocEdit.edits.push({
-								annotationId: vscode.AnnotatedTextEdit.is(tsEdit.range) ? tsEdit.range.annotationId : undefined,
-								newText,
-								range,
+				if (vueDocuments.getVirtualFileByUri(tsDocEdit.textDocument.uri)) {
+					for (const [_, map] of vueDocuments.getMapsByVirtualFileUri(tsDocEdit.textDocument.uri)) {
+						sourceEdit = vscode.TextDocumentEdit.create(
+							{
+								uri: map.sourceFileDocument.uri,
+								// version: map.sourceDocument.version,
+								version: null, // fix https://github.com/johnsoncodehk/volar/issues/1490
+							},
+							[],
+						);
+						for (const tsEdit of tsDocEdit.edits) {
+							let _data: FileRangeCapabilities | undefined;
+							const range = map.toSourceRange(tsEdit.range, data => {
+								_data = data;
+								// fix https://github.com/johnsoncodehk/volar/issues/1091
+								return typeof data.rename === 'object' ? !!data.rename.apply : !!data.rename;
 							});
+							if (range) {
+								let newText = tsEdit.newText;
+								if (_data && typeof _data.rename === 'object' && _data.rename.apply) {
+									newText = _data.rename.apply(tsEdit.newText);
+								}
+								sourceEdit.edits.push({
+									annotationId: vscode.AnnotatedTextEdit.is(tsEdit.range) ? tsEdit.range.annotationId : undefined,
+									newText,
+									range,
+								});
+							}
 						}
-					}
-					if (!vueDocEdit.edits.length) {
-						vueDocEdit = undefined;
+						if (!sourceEdit.edits.length) {
+							sourceEdit = undefined;
+						}
 					}
 				}
 				else {
-					vueDocEdit = tsDocEdit;
+					sourceEdit = tsDocEdit;
 				}
 			}
 			else if (vscode.CreateFile.is(tsDocEdit)) {
-				vueDocEdit = tsDocEdit; // TODO: remove .ts?
+				sourceEdit = tsDocEdit; // TODO: remove .ts?
 			}
 			else if (vscode.RenameFile.is(tsDocEdit)) {
-				const oldUri = vueDocuments.sourceMapFromEmbeddedDocumentUri(tsDocEdit.oldUri)?.sourceDocument.uri ?? tsDocEdit.oldUri;
-				vueDocEdit = vscode.RenameFile.create(oldUri, tsDocEdit.newUri /* TODO: remove .ts? */, tsDocEdit.options, tsDocEdit.annotationId);
+				if (!vueDocuments.getVirtualFileByUri(tsDocEdit.oldUri)) {
+					sourceEdit = tsDocEdit;
+				}
+				else {
+					for (const [_, map] of vueDocuments.getMapsByVirtualFileUri(tsDocEdit.oldUri)) {
+						// TODO: check capability?
+						sourceEdit = vscode.RenameFile.create(map.sourceFileDocument.uri, tsDocEdit.newUri /* TODO: remove .ts? */, tsDocEdit.options, tsDocEdit.annotationId);
+					}
+				}
 			}
 			else if (vscode.DeleteFile.is(tsDocEdit)) {
-				const uri = vueDocuments.sourceMapFromEmbeddedDocumentUri(tsDocEdit.uri)?.sourceDocument.uri ?? tsDocEdit.uri;
-				vueDocEdit = vscode.DeleteFile.create(uri, tsDocEdit.options, tsDocEdit.annotationId);
+				if (!vueDocuments.getVirtualFileByUri(tsDocEdit.uri)) {
+					sourceEdit = tsDocEdit;
+				}
+				else {
+					for (const [_, map] of vueDocuments.getMapsByVirtualFileUri(tsDocEdit.uri)) {
+						// TODO: check capability?
+						sourceEdit = vscode.DeleteFile.create(map.sourceFileDocument.uri, tsDocEdit.options, tsDocEdit.annotationId);
+					}
+				}
 			}
-			if (vueDocEdit) {
-				vueResult.documentChanges.push(vueDocEdit);
+			if (sourceEdit) {
+				sourceResult.documentChanges.push(sourceEdit);
 				hasResult = true;
 			}
 		}
 	}
 	if (hasResult) {
-		return vueResult;
+		return sourceResult;
 	}
 }

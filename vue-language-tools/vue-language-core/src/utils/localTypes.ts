@@ -10,7 +10,7 @@ export function getTypesCode(
 	const libName = getVueLibraryName(vueVersion);
 	const slots = getSlotsPropertyName(vueVersion);
 	return `
-import * as vue from '${libName}';
+// @ts-nocheck
 import type {
 	FunctionalComponent,
 	EmitsOptions,
@@ -36,7 +36,7 @@ export type GlobalComponents =
 	& PickNotAny<import('@vue/runtime-core').GlobalComponents, {}>
 	// @ts-ignore
 	& PickNotAny<import('@vue/runtime-dom').GlobalComponents, {}>
-	& Pick<typeof vue,
+	& Pick<typeof import('${libName}'),
 		// @ts-ignore
 		'Transition'
 		| 'TransitionGroup'
@@ -106,12 +106,15 @@ export type GetComponents<Components, N1, N2 = unknown, N3 = unknown> =
 	N1 extends keyof Components ? Components[N1] :
 	N2 extends keyof Components ? Components[N2] :
 	N3 extends keyof Components ? Components[N3] :
-	unknown;
+	${vueCompilerOptions.strictTemplates ? 'unknown' : 'any'};
 export type ComponentProps<T> =
 	${vueCompilerOptions.strictTemplates ? '' : 'Record<string, unknown> &'}
 	(
-		T extends (...args: any) => any ? (T extends (...args: any) => { props: infer Props } ? Props : {})
-		: T extends new (...args: any) => any ? (T extends new (...args: any) => { $props: infer Props } ? Props : {})
+		T extends new (...args: any) => { $props: infer Props } ? Props
+		: T extends (props: infer Props, ...args: any) => any ? Props
+		: T extends (...args: any) => { props: infer Props } ? Props
+		: T extends new (...args: any) => any ? {}
+		: T extends (...args: any) => any ? {}
 		: T // IntrinsicElement
 	);
 export type InstanceProps<I, C> = I extends { $props: infer Props } ? Props & Record<string, unknown> : C & Record<string, unknown>;
@@ -125,8 +128,8 @@ export type EventObject<I, K1 extends string, C, E1> = {
 	>
 };
 
-type GlobalAttrs = JSX.IntrinsicElements['div'];
-`;
+type IntrinsicElements = JSX.IntrinsicElements;
+`.trim();
 }
 
 // TODO: not working for overloads > n (n = 8)

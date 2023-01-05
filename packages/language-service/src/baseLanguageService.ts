@@ -1,8 +1,8 @@
-import { createEmbeddedLanguageServiceHost, LanguageServiceHost } from '@volar/language-core';
+import { createLanguageContext, LanguageServiceHost } from '@volar/language-core';
 import * as shared from '@volar/shared';
 import * as tsFaster from '@volar/typescript-faster';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { parseSourceFileDocuments } from './documents';
+import { createDocumentsAndSourceMaps } from './documents';
 import * as autoInsert from './languageFeatures/autoInsert';
 import * as callHierarchy from './languageFeatures/callHierarchy';
 import * as codeActionResolve from './languageFeatures/codeActionResolve';
@@ -26,7 +26,16 @@ import * as renamePrepare from './languageFeatures/renamePrepare';
 import * as signatureHelp from './languageFeatures/signatureHelp';
 import * as diagnostics from './languageFeatures/validation';
 import * as workspaceSymbol from './languageFeatures/workspaceSymbols';
-import { LanguageServicePlugin, LanguageServicePluginContext, LanguageServiceRuntimeContext } from './types';
+import { LanguageServicePlugin, LanguageServicePluginInstance, LanguageServiceRuntimeContext } from './types';
+import type * as ts from 'typescript/lib/tsserverlibrary';
+
+import * as colorPresentations from './documentFeatures/colorPresentations';
+import * as documentColors from './documentFeatures/documentColors';
+import * as documentSymbols from './documentFeatures/documentSymbols';
+import * as foldingRanges from './documentFeatures/foldingRanges';
+import * as format from './documentFeatures/format';
+import * as linkedEditingRanges from './documentFeatures/linkedEditingRanges';
+import * as selectionRanges from './documentFeatures/selectionRanges';
 
 // fix build
 import type * as _ from 'vscode-languageserver-protocol';
@@ -35,43 +44,51 @@ export type LanguageService = ReturnType<typeof createLanguageService>;
 
 export function createLanguageServiceContext(options: {
 	host: LanguageServiceHost,
-	context: ReturnType<typeof createEmbeddedLanguageServiceHost>,
-	getPlugins(): LanguageServicePlugin[],
-	env: LanguageServicePluginContext['env'];
+	context: ReturnType<typeof createLanguageContext>,
+	getPlugins(): (LanguageServicePlugin | LanguageServicePluginInstance)[],
+	env: LanguageServiceRuntimeContext['env'];
 	documentRegistry: ts.DocumentRegistry | undefined,
+	getLanguageService: () => LanguageService,
 }) {
 
 	const ts = options.host.getTypeScriptModule();
-	const tsLs = ts.createLanguageService(options.context.typescriptLanguageServiceHost, options.documentRegistry);
-	tsFaster.decorate(ts, options.context.typescriptLanguageServiceHost, tsLs);
+	const tsLs = ts?.createLanguageService(options.context.typescript.languageServiceHost, options.documentRegistry);
 
-	let plugins: LanguageServicePlugin[];
+	if (ts && tsLs) {
+		tsFaster.decorate(ts, options.context.typescript.languageServiceHost, tsLs);
+	}
 
-	const pluginContext: LanguageServicePluginContext = {
-		env: options.env,
-		typescript: {
-			module: options.host.getTypeScriptModule(),
-			languageServiceHost: options.context.typescriptLanguageServiceHost,
-			languageService: tsLs,
-		},
-	};
-	const textDocumentMapper = parseSourceFileDocuments(options.env.rootUri, options.context.mapper);
+	let plugins: LanguageServicePluginInstance[] | undefined;
+
+	const textDocumentMapper = createDocumentsAndSourceMaps(options.context.virtualFiles);
 	const documents = new WeakMap<ts.IScriptSnapshot, TextDocument>();
 	const documentVersions = new Map<string, number>();
 	const context: LanguageServiceRuntimeContext = {
 		host: options.host,
 		core: options.context,
+		env: options.env,
 		get plugins() {
 			if (!plugins) {
-				plugins = options.getPlugins();
-				for (const plugin of plugins) {
-					plugin.setup?.(pluginContext);
-				}
+				plugins = []; // avoid infinite loop
+				plugins = options.getPlugins().map(plugin => {
+					if (plugin instanceof Function) {
+						const _plugin = plugin(this, options.getLanguageService());
+						_plugin.setup?.(this);
+						return _plugin;
+					}
+					else {
+						plugin.setup?.(this);
+						return plugin;
+					}
+				});
 			}
 			return plugins;
 		},
-		pluginContext,
-		typescriptLanguageService: tsLs,
+		typescript: ts && tsLs ? {
+			module: ts,
+			languageServiceHost: options.context.typescript.languageServiceHost,
+			languageService: tsLs,
+		} : undefined,
 		documents: textDocumentMapper,
 		getTextDocument,
 	};
@@ -110,12 +127,21 @@ export function createLanguageServiceContext(options: {
 export function createLanguageService(context: LanguageServiceRuntimeContext) {
 
 	return {
+
+		format: format.register(context),
+		getFoldingRanges: foldingRanges.register(context),
+		getSelectionRanges: selectionRanges.register(context),
+		findLinkedEditingRanges: linkedEditingRanges.register(context),
+		findDocumentSymbols: documentSymbols.register(context),
+		findDocumentColors: documentColors.register(context),
+		getColorPresentations: colorPresentations.register(context),
+
 		doValidation: diagnostics.register(context),
 		findReferences: references.register(context),
 		findFileReferences: fileReferences.register(context),
 		findDefinition: definition.register(context, 'findDefinition', data => !!data.definition, data => !!data.definition),
 		findTypeDefinition: definition.register(context, 'findTypeDefinition', data => !!data.definition, data => !!data.definition),
-		findImplementations: definition.register(context, 'findImplementations', data => !!data.references, data => false),
+		findImplementations: definition.register(context, 'findImplementations', data => !!data.references, () => false),
 		prepareRename: renamePrepare.register(context),
 		doRename: rename.register(context),
 		getEditsForFileRename: fileRename.register(context),
@@ -135,7 +161,7 @@ export function createLanguageService(context: LanguageServiceRuntimeContext) {
 		doExecuteCommand: executeCommand.register(context),
 		getInlayHints: inlayHints.register(context),
 		callHierarchy: callHierarchy.register(context),
-		dispose: () => context.typescriptLanguageService.dispose(),
+		dispose: () => context.typescript?.languageService.dispose(),
 		context,
 	};
 }

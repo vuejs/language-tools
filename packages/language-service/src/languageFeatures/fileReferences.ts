@@ -19,17 +19,16 @@ export function register(context: LanguageServiceRuntimeContext) {
 			async (plugin, document) => {
 				return await plugin.findFileReferences?.(document) ?? [];
 			},
-			(data, sourceMap) => data.map(reference => {
+			(data) => data.map(reference => {
 
-				const map = context.documents.sourceMapFromEmbeddedDocumentUri(reference.uri);
-				if (!map) {
+				if (!context.documents.getVirtualFileByUri(reference.uri)) {
 					return reference;
 				}
 
-				if (map) {
+				for (const [_, map] of context.documents.getMapsByVirtualFileUri(reference.uri)) {
 					const range = map.toSourceRange(reference.range);
 					if (range) {
-						reference.uri = map.sourceDocument.uri;
+						reference.uri = map.sourceFileDocument.uri;
 						reference.range = range;
 						return reference;
 					}

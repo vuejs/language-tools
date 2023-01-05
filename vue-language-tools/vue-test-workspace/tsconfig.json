@@ -18,10 +18,10 @@
 			],
 			"__FIND_DEFINITION_ROOT__/*": [
 				"./find-definition/*"
-			],
+			]
 		}
 	},
 	"include": [
-		"**/*.vue",
+		"**/*"
 	]
 }

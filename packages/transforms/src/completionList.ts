@@ -4,6 +4,7 @@ import { transform as transformCompletionItem } from './completionItem';
 export function transform<T extends vscode.CompletionList>(
 	completionList: T,
 	getOtherRange: (range: vscode.Range) => vscode.Range | undefined,
+	document: vscode.TextDocument,
 	onItem?: (newItem: vscode.CompletionItem, oldItem: vscode.CompletionItem) => void,
 ): T {
 	return {
@@ -20,7 +21,7 @@ export function transform<T extends vscode.CompletionList>(
 				: undefined,
 		} : undefined,
 		items: completionList.items.map(item => {
-			const newItem = transformCompletionItem(item, getOtherRange);
+			const newItem = transformCompletionItem(item, getOtherRange, document);
 			onItem?.(newItem, item);
 			return newItem;
 		}),

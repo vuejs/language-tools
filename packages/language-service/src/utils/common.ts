@@ -53,3 +53,11 @@ export function getWordRange(wordPattern: RegExp, position: vscode.Position, doc
 	}
 	return undefined;
 }
+
+export function stringToSnapshot(str: string): ts.IScriptSnapshot {
+	return {
+		getText: (start, end) => str.substring(start, end),
+		getLength: () => str.length,
+		getChangeRange: () => undefined,
+	};
+}

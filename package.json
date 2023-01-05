@@ -3,33 +3,33 @@
 	"scripts": {
 		"build": "tsc -b tsconfig.build.json",
 		"build-ci": "tsc -b tsconfig.build-ci.json",
-		"watch": "npm run build && (npm run watch:base & npm run watch:vue-language-features & npm run watch:typescript-vue-plugin)",
+		"watch": "npm run build && (npm run watch:base & npm run watch:vue & npm run watch:typescript-vue-plugin)",
 		"watch:base": "tsc -b tsconfig.build.json -w",
-		"watch:vue-language-features": "cd extensions/vscode-vue-language-features && npm run watch",
-		"watch:typescript-vue-plugin": "cd extensions/vscode-typescript-vue-plugin && npm run watch",
+		"watch:vue": "cd ./vue-language-tools/vscode-vue && npm run watch",
+		"watch:typescript-vue-plugin": "cd ./vue-language-tools/vscode-typescript-vue-plugin && npm run watch",
 		"prerelease": "npm run build && npm run test",
 		"version:test": "lerna version --exact --force-publish --yes --sync-workspace-lock --no-push --no-git-tag-version",
-		"release": "npm run release:base && npm run release:vue-language-features && npm run release:typescript-vue-plugin",
+		"release": "npm run release:base && npm run release:vue && npm run release:pug && npm run release:typescript-vue-plugin",
 		"release:base": "lerna publish --exact --force-publish --yes --sync-workspace-lock",
 		"release:base-next": "lerna publish --exact --force-publish --yes --sync-workspace-lock --dist-tag next",
-		"release:vue-language-features": "cd extensions/vscode-vue-language-features && npm run release",
-		"release:typescript-vue-plugin": "cd extensions/vscode-typescript-vue-plugin && npm run release",
+		"release:vue": "cd ./vue-language-tools/vscode-vue && npm run release",
+		"release:pug": "cd ./pug-language-tools/vscode-pug && npm run release",
+		"release:typescript-vue-plugin": "cd ./vue-language-tools/vscode-typescript-vue-plugin && npm run release",
 		"test": "vitest run",
-		"docs:dev": "vitepress dev docs",
-		"docs:build": "vitepress build docs",
-		"docs:serve": "vitepress serve docs",
-		"chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=./extensions/vscode-vue-language-features ../volar-starter"
+		"docs:dev": "cd docs && npm run dev",
+		"docs:build": "cd docs && npm run build",
+		"docs:serve": "cd docs && npm run serve",
+		"chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=./vue-language-tools/vscode-vue ../volar-starter"
 	},
 	"devDependencies": {
 		"@types/node": "latest",
 		"typescript": "latest",
 		"vite": "latest",
-		"vitest": "latest"
+		"vitest": "0.25.8"
 	},
 	"optionalDependencies": {
 		"@lerna-lite/cli": "latest",
 		"@vscode/test-web": "latest",
-		"vitepress": "latest",
 		"vue": "^3.2.45"
 	}
 }

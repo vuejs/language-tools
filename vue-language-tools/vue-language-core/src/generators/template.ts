@@ -1,31 +1,31 @@
 import { Segment } from '@volar/source-map';
-import { PositionCapabilities } from '@volar/language-core';
+import { FileRangeCapabilities } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
-import { camelize, capitalize, hyphenate, isHTMLTag, isSVGTag } from '@vue/shared';
+import { camelize, capitalize, hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { ResolvedVueCompilerOptions } from '../types';
 import { colletVars, walkInterpolationFragment } from '../utils/transform';
 import * as minimatch from 'minimatch';
 
 const capabilitiesSet = {
-	all: { hover: true, diagnostic: true, references: true, definition: true, rename: true, completion: true, semanticTokens: true } satisfies PositionCapabilities,
-	noDiagnostic: { hover: true, references: true, definition: true, rename: true, completion: true, semanticTokens: true } satisfies PositionCapabilities,
-	diagnosticOnly: { diagnostic: true } satisfies PositionCapabilities,
-	tagHover: { hover: true } satisfies PositionCapabilities,
-	event: { hover: true, diagnostic: true } satisfies PositionCapabilities,
-	tagReference: { references: true, definition: true, rename: { normalize: undefined, apply: noEditApply } } satisfies PositionCapabilities,
-	attr: { hover: true, diagnostic: true, references: true, definition: true, rename: true } satisfies PositionCapabilities,
-	attrReference: { references: true, definition: true, rename: true } satisfies PositionCapabilities,
-	scopedClassName: { references: true, definition: true, rename: true, completion: true } satisfies PositionCapabilities,
-	slotName: { hover: true, diagnostic: true, references: true, definition: true, completion: true } satisfies PositionCapabilities,
-	slotNameExport: { hover: true, diagnostic: true, references: true, definition: true, /* referencesCodeLens: true */ } satisfies PositionCapabilities,
-	refAttr: { references: true, definition: true, rename: true } satisfies PositionCapabilities,
+	all: { hover: true, diagnostic: true, references: true, definition: true, rename: true, completion: true, semanticTokens: true } satisfies FileRangeCapabilities,
+	noDiagnostic: { hover: true, references: true, definition: true, rename: true, completion: true, semanticTokens: true } satisfies FileRangeCapabilities,
+	diagnosticOnly: { diagnostic: true } satisfies FileRangeCapabilities,
+	tagHover: { hover: true } satisfies FileRangeCapabilities,
+	event: { hover: true, diagnostic: true } satisfies FileRangeCapabilities,
+	tagReference: { references: true, definition: true, rename: { normalize: undefined, apply: noEditApply } } satisfies FileRangeCapabilities,
+	attr: { hover: true, diagnostic: true, references: true, definition: true, rename: true } satisfies FileRangeCapabilities,
+	attrReference: { references: true, definition: true, rename: true } satisfies FileRangeCapabilities,
+	scopedClassName: { references: true, definition: true, rename: true, completion: true } satisfies FileRangeCapabilities,
+	slotName: { hover: true, diagnostic: true, references: true, definition: true, completion: true } satisfies FileRangeCapabilities,
+	slotNameExport: { hover: true, diagnostic: true, references: true, definition: true, /* referencesCodeLens: true */ } satisfies FileRangeCapabilities,
+	refAttr: { references: true, definition: true, rename: true } satisfies FileRangeCapabilities,
 };
 const formatBrackets = {
 	empty: ['', ''] as [string, string],
 	round: ['(', ')'] as [string, string],
 	// fix https://github.com/johnsoncodehk/volar/issues/1210
-	curly: ['({ __VLS_foo:', '})'] as [string, string],
+	curly: ['({', '})'] as [string, string],
 	square: ['[', ']'] as [string, string],
 };
 const validTsVar = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
@@ -33,7 +33,7 @@ const validTsVar = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 const transformContext: CompilerDOM.TransformContext = {
 	onError: () => { },
 	helperString: str => str.toString(),
-	replaceNode: node => { },
+	replaceNode: () => { },
 	cacheHandlers: false,
 	prefixIdentifiers: false,
 	scopes: {
@@ -45,20 +45,9 @@ const transformContext: CompilerDOM.TransformContext = {
 	expressionPlugins: ['typescript'],
 };
 
-function _isHTMLTag(tag: string) {
-	return isHTMLTag(tag)
-		// fix https://github.com/johnsoncodehk/volar/issues/1340
-		|| tag === 'hgroup'
-		|| tag === 'slot'
-		|| tag === 'component';
-}
-
-export function isIntrinsicElement(runtimeMode: 'runtime-dom' | 'runtime-uni-app', tag: string) {
-	return runtimeMode === 'runtime-dom' ? (_isHTMLTag(tag) || isSVGTag(tag)) : ['block', 'component', 'template', 'slot'].includes(tag);
-}
-
 export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
+	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: ResolvedVueCompilerOptions,
 	sourceTemplate: string,
 	sourceLang: string,
@@ -67,9 +56,10 @@ export function generate(
 	cssScopedClasses: string[] = [],
 ) {
 
-	const codeGen: Segment<PositionCapabilities>[] = [];
-	const formatCodeGen: Segment<PositionCapabilities>[] = [];
-	const cssCodeGen: Segment<PositionCapabilities>[] = [];
+	const nativeTags = new Set(vueCompilerOptions.nativeTags);
+	const codeGen: Segment<FileRangeCapabilities>[] = [];
+	const formatCodeGen: Segment<FileRangeCapabilities>[] = [];
+	const cssCodeGen: Segment<FileRangeCapabilities>[] = [];
 	const slots = new Map<string, {
 		varName: string,
 		loc: [number, number],
@@ -86,7 +76,7 @@ export function generate(
 	const scopedClasses: { className: string, offset: number; }[] = [];
 	const blockConditions: string[] = [];
 
-	let slotsNum = 0;
+	let hasSlot = false;
 	let elementIndex = 0;
 
 	formatCodeGen.push('export { };\n');
@@ -107,18 +97,19 @@ export function generate(
 		cssCodeGen,
 		tagNames,
 		identifiers,
-		slotsNum,
+		hasSlot,
 	};
 
 	function declareSlots() {
 
 		codeGen.push(`declare var __VLS_slots:\n`);
 		for (const [exp, slot] of slotExps) {
-			codeGen.push(`Record<NonNullable<typeof ${exp}>, typeof ${slot.varName}> &\n`);
+			hasSlot = true;
+			codeGen.push(`Record<NonNullable<typeof ${exp}>, (_: typeof ${slot.varName}) => any> &\n`);
 		}
 		codeGen.push(`{\n`);
 		for (const [name, slot] of slots) {
-			slotsNum++;
+			hasSlot = true;
 			writeObjectProperty(
 				name,
 				slot.loc, // TODO: SourceMaps.MappingKind.Expand
@@ -157,7 +148,7 @@ export function generate(
 
 		for (const tagName in tagNames) {
 
-			if (isIntrinsicElement(vueCompilerOptions.experimentalRuntimeMode, tagName))
+			if (nativeTags.has(tagName))
 				continue;
 
 			const isNamespacedTag = tagName.indexOf('.') >= 0;
@@ -452,9 +443,11 @@ export function generate(
 			endTagOffset = undefined;
 		}
 
+		const tagOffsets = endTagOffset !== undefined ? [startTagOffset, endTagOffset] : [startTagOffset];
+
 		let _unwritedExps: CompilerDOM.SimpleExpressionNode[];
 
-		const _isIntrinsicElement = isIntrinsicElement(vueCompilerOptions.experimentalRuntimeMode, node.tag);
+		const _isIntrinsicElement = nativeTags.has(node.tag);
 		const _isNamespacedTag = node.tag.indexOf('.') >= 0;
 
 		if (vueCompilerOptions.jsxTemplates) {
@@ -465,13 +458,19 @@ export function generate(
 				node.loc.start.offset,
 				capabilitiesSet.diagnosticOnly,
 			]);
-			const tagCapabilities: PositionCapabilities = _isIntrinsicElement || _isNamespacedTag ? capabilitiesSet.all : {
+			const tagCapabilities: FileRangeCapabilities = _isIntrinsicElement || _isNamespacedTag ? capabilitiesSet.all : {
 				...capabilitiesSet.diagnosticOnly,
 				...capabilitiesSet.tagHover,
 			};
 
 			codeGen.push(`<`);
 			if (componentVars[node.tag]) {
+				codeGen.push([
+					'',
+					'template',
+					startTagOffset,
+					capabilitiesSet.diagnosticOnly,
+				]);
 				codeGen.push(`__VLS_templateComponents.`);
 			}
 			codeGen.push([
@@ -522,25 +521,13 @@ export function generate(
 		}
 		else {
 
-			const var_props = `__VLS_${elementIndex++}`;
-
 			if (_isIntrinsicElement) {
-				codeGen.push(`let ${var_props} = ({} as JSX.IntrinsicElements)`);
-				writePropertyAccess(
-					node.tag,
-					startTagOffset,
-					{
-						...capabilitiesSet.tagReference,
-						...capabilitiesSet.tagHover,
-					},
-				);
-				codeGen.push(`;\n`);
 
-				if (endTagOffset !== undefined) {
+				for (const offset of tagOffsets) {
 					codeGen.push(`({} as JSX.IntrinsicElements)`);
 					writePropertyAccess(
 						node.tag,
-						endTagOffset,
+						offset,
 						{
 							...capabilitiesSet.tagReference,
 							...capabilitiesSet.tagHover,
@@ -548,42 +535,24 @@ export function generate(
 					);
 					codeGen.push(`;\n`);
 				}
+
+				codeGen.push(`let __VLS_${elementIndex++}: JSX.IntrinsicElements = { `);
 			}
 			else if (_isNamespacedTag) {
 
-				codeGen.push(`let ${var_props}!: import('./__VLS_types.js').ComponentProps<typeof ${node.tag}>;\n`);
-
-				codeGen.push([
-					node.tag,
-					'template',
-					[startTagOffset, startTagOffset + node.tag.length],
-					capabilitiesSet.all,
-				]);
-				codeGen.push(`;\n`);
-
-				if (endTagOffset !== undefined) {
+				for (const offset of tagOffsets) {
 					codeGen.push([
 						node.tag,
 						'template',
-						[endTagOffset, endTagOffset + node.tag.length],
+						[offset, offset + node.tag.length],
 						capabilitiesSet.all,
 					]);
 					codeGen.push(`;\n`);
 				}
+
+				codeGen.push(`const __VLS_${elementIndex++}: import('./__VLS_types.js').ComponentProps<typeof ${node.tag}> = { `);
 			}
 			else {
-
-				codeGen.push(`let ${var_props}!: import('./__VLS_types.js').ComponentProps<typeof `);
-				if (componentVars[node.tag]) {
-					codeGen.push(`__VLS_templateComponents.`);
-				}
-				codeGen.push([
-					componentVars[node.tag] ?? node.tag,
-					'template',
-					[startTagOffset, startTagOffset + node.tag.length],
-					capabilitiesSet.tagHover,
-				]);
-				codeGen.push(`>;\n`);
 
 				if (endTagOffset !== undefined) {
 					if (componentVars[node.tag]) {
@@ -597,18 +566,25 @@ export function generate(
 					]);
 					codeGen.push(`;\n`);
 				}
+
+				codeGen.push(`const __VLS_${elementIndex++}: { '${node.tag}': import('./__VLS_types.js').ComponentProps<typeof `);
+				if (componentVars[node.tag]) {
+					codeGen.push(`__VLS_templateComponents.`);
+				}
+				codeGen.push([
+					componentVars[node.tag] ?? node.tag,
+					'template',
+					[startTagOffset, startTagOffset + node.tag.length],
+					capabilitiesSet.tagHover,
+				]);
+				codeGen.push(`> } = { `);
 			}
 
-			codeGen.push([
-				var_props,
-				'template',
-				[startTagOffset, startTagOffset + node.tag.length],
-				capabilitiesSet.diagnosticOnly,
-			]);
-			codeGen.push(` = { `);
+			writeObjectProperty(node.tag, startTagOffset, capabilitiesSet.diagnosticOnly, node);
+			codeGen.push(` : { `);
 			const { unwritedExps } = writeProps(node, 'class', 'props');
 			_unwritedExps = unwritedExps;
-			codeGen.push(` };\n`);
+			codeGen.push(` } };\n`);
 		}
 		{
 
@@ -838,10 +814,10 @@ export function generate(
 					const _varComponentInstanceA = `__VLS_${elementIndex++}`;
 					const _varComponentInstanceB = `__VLS_${elementIndex++}`;
 					_varComponentInstance = `__VLS_${elementIndex++}`;
-					codeGen.push(`const ${_varComponentInstanceA} = new ${componentVar}({ `);
+					codeGen.push(`const ${_varComponentInstanceA} = new __VLS_templateComponents.${componentVar}({ `);
 					writeProps(node, 'class', 'slots');
 					codeGen.push(`});\n`);
-					codeGen.push(`const ${_varComponentInstanceB} = ${componentVar}({ `);
+					codeGen.push(`const ${_varComponentInstanceB} = __VLS_templateComponents.${componentVar}({ `);
 					writeProps(node, 'class', 'slots');
 					codeGen.push(`});\n`);
 					codeGen.push(`let ${_varComponentInstance}!: import('./__VLS_types.js').PickNotAny<typeof ${_varComponentInstanceA}, typeof ${_varComponentInstanceB}>;\n`);
@@ -856,6 +832,17 @@ export function generate(
 		let styleAttrNums = 0;
 		let classAttrNums = 0;
 		const unwritedExps: CompilerDOM.SimpleExpressionNode[] = [];
+
+		if (node.props.some(prop =>
+			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+			&& prop.name === 'bind'
+			&& !prop.arg
+			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+		)) {
+			// fix https://github.com/johnsoncodehk/volar/issues/2166
+			styleAttrNums++;
+			classAttrNums++;
+		}
 
 		for (const prop of node.props) {
 			if (
@@ -1044,7 +1031,7 @@ export function generate(
 				writePropName(
 					propName,
 					true,
-					[prop.loc.start.offset, prop.loc.start.offset + attrNameText.length],
+					[prop.loc.start.offset, prop.loc.start.offset + prop.name.length],
 					{
 						...getCaps(capabilitiesSet.attr),
 						rename: {
@@ -1062,13 +1049,13 @@ export function generate(
 					codeGen.push('true');
 				}
 				writePropValueSuffix(true);
-				writePropEnd(true);
 				codeGen.push([
 					'',
 					'template',
 					prop.loc.end.offset,
 					getCaps(capabilitiesSet.diagnosticOnly),
 				]);
+				writePropEnd(true);
 				// original name
 				if (attrNameText !== propName) {
 					writePropStart(true);
@@ -1135,7 +1122,7 @@ export function generate(
 
 		return { unwritedExps };
 
-		function writePropName(name: string, isStatic: boolean, sourceRange: number | [number, number], data: PositionCapabilities, cacheOn: any) {
+		function writePropName(name: string, isStatic: boolean, sourceRange: number | [number, number], data: FileRangeCapabilities, cacheOn: any) {
 			if (format === 'jsx' && isStatic) {
 				codeGen.push([
 					name,
@@ -1185,7 +1172,7 @@ export function generate(
 				codeGen.push(', ');
 			}
 		}
-		function getCaps(caps: PositionCapabilities): PositionCapabilities {
+		function getCaps(caps: FileRangeCapabilities): FileRangeCapabilities {
 			if (mode === 'props') {
 				return caps;
 			}
@@ -1205,20 +1192,26 @@ export function generate(
 			}
 		}
 		function writeAttrValue(attrNode: CompilerDOM.TextNode) {
-			codeGen.push('"');
+			const char = attrNode.loc.source.startsWith("'") ? "'" : '"';
+			codeGen.push(char);
 			let start = attrNode.loc.start.offset;
 			let end = attrNode.loc.end.offset;
-			if (end - start > attrNode.content.length) {
+			let content = attrNode.loc.source;
+			if (
+				(content.startsWith('"') && content.endsWith('"'))
+				|| (content.startsWith("'") && content.endsWith("'"))
+			) {
 				start++;
 				end--;
+				content = content.slice(1, -1);
 			}
 			codeGen.push([
-				toUnicodeIfNeed(attrNode.content),
+				toUnicodeIfNeed(content),
 				'template',
 				[start, end],
 				getCaps(capabilitiesSet.all),
 			]);
-			codeGen.push('"');
+			codeGen.push(char);
 		}
 	}
 	function writeInlineCss(node: CompilerDOM.ElementNode) {
@@ -1324,15 +1317,29 @@ export function generate(
 				]);
 				codeGen.push(varSlots);
 				if (isStatic) {
-					writePropertyAccess(
-						slotName,
-						argRange,
-						{
-							...capabilitiesSet.slotName,
-							completion: !!prop.arg,
-						},
-						false,
-					);
+					// https://github.com/johnsoncodehk/volar/issues/2236
+					if (!compilerOptions.noPropertyAccessFromIndexSignature) {
+						writePropertyAccess(
+							slotName,
+							argRange,
+							{
+								...capabilitiesSet.slotName,
+								completion: !!prop.arg,
+							},
+						);
+					}
+					else {
+						codeGen.push(`[`);
+						writeCodeWithQuotes(
+							slotName,
+							argRange,
+							{
+								...capabilitiesSet.slotName,
+								completion: !!prop.arg,
+							},
+						);
+						codeGen.push(`]`);
+					}
 				}
 				else {
 					codeGen.push(`[`);
@@ -1511,8 +1518,6 @@ export function generate(
 		const varDefaultBind = `__VLS_${elementIndex++}`;
 		const varBinds = `__VLS_${elementIndex++}`;
 		const varSlot = `__VLS_${elementIndex++}`;
-		const slotName = getSlotName();
-		const slotNameExp = getSlotNameExp();
 		let hasDefaultBind = false;
 
 		for (const prop of node.props) {
@@ -1601,16 +1606,25 @@ export function generate(
 			codeGen.push(`var ${varSlot}!: typeof ${varBinds};\n`);
 		}
 
-		if (slotNameExp) {
+		const slotNameExpNode = getSlotNameExpNode();
+		if (slotNameExpNode) {
 			const varSlotExp = `__VLS_${elementIndex++}`;
 			const varSlotExp2 = `__VLS_${elementIndex++}`;
-			codeGen.push(`const ${varSlotExp} = ${slotNameExp};\n`);
+			codeGen.push(`const ${varSlotExp} = `);
+			if (typeof slotNameExpNode === 'string') {
+				codeGen.push(slotNameExpNode);
+			}
+			else {
+				writeInterpolation(slotNameExpNode.content, undefined, undefined, '(', ')', slotNameExpNode);
+			}
+			codeGen.push(`;\n`);
 			codeGen.push(`var ${varSlotExp2}!: typeof ${varSlotExp};\n`);
 			slotExps.set(varSlotExp2, {
 				varName: varSlot,
 			});
 		}
 		else {
+			const slotName = getSlotName();
 			slots.set(slotName, {
 				varName: varSlot,
 				loc: [startTagOffset, startTagOffset + node.tag.length],
@@ -1628,20 +1642,20 @@ export function generate(
 			}
 			return 'default';
 		}
-		function getSlotNameExp() {
+		function getSlotNameExpNode() {
 			for (const prop2 of node.props) {
 				if (prop2.type === CompilerDOM.NodeTypes.DIRECTIVE && prop2.name === 'bind' && prop2.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop2.arg.content === 'name') {
 					if (prop2.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-						return prop2.exp.content;
+						return prop2.exp;
 					}
 					else {
-						return `'default'`;
+						return `('default' as const)`;
 					}
 				}
 			}
 		}
 	}
-	function writeObjectProperty(mapCode: string, sourceRange: number | [number, number], data: PositionCapabilities, cacheOn: any) {
+	function writeObjectProperty(mapCode: string, sourceRange: number | [number, number], data: FileRangeCapabilities, cacheOn: any) {
 		if (validTsVar.test(mapCode)) {
 			codeGen.push([mapCode, 'template', sourceRange, data]);
 			return 1;
@@ -1662,8 +1676,8 @@ export function generate(
 			return 2;
 		}
 	}
-	function writePropertyAccess(mapCode: string, sourceRange: number | [number, number], data: PositionCapabilities, checkValid = true) {
-		if (checkValid && validTsVar.test(mapCode)) {
+	function writePropertyAccess(mapCode: string, sourceRange: number | [number, number], data: FileRangeCapabilities) {
+		if (validTsVar.test(mapCode)) {
 			codeGen.push(`.`);
 			codeGen.push([mapCode, 'template', sourceRange, data]);
 		}
@@ -1676,7 +1690,7 @@ export function generate(
 			codeGen.push(`]`);
 		}
 	}
-	function writeCodeWithQuotes(mapCode: string, sourceRange: number | [number, number], data: PositionCapabilities) {
+	function writeCodeWithQuotes(mapCode: string, sourceRange: number | [number, number], data: FileRangeCapabilities) {
 		codeGen.push([
 			'',
 			'template',
@@ -1696,7 +1710,7 @@ export function generate(
 	function writeInterpolation(
 		mapCode: string,
 		sourceOffset: number | undefined,
-		data: PositionCapabilities | undefined,
+		data: FileRangeCapabilities | undefined,
 		prefix: string,
 		suffix: string,
 		cacheOn: any,
@@ -1809,7 +1823,7 @@ function toUnicodeIfNeed(str: string) {
 }
 function toUnicode(str: string) {
 	return str.split('').map(value => {
-		var temp = value.charCodeAt(0).toString(16).padStart(4, '0');
+		const temp = value.charCodeAt(0).toString(16).padStart(4, '0');
 		if (temp.length > 2) {
 			return '\\u' + temp;
 		}

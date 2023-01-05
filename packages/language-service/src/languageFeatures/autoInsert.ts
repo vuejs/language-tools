@@ -1,21 +1,20 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import type { LanguageServiceRuntimeContext } from '../types';
+import type { LanguageServicePluginInstance, LanguageServiceRuntimeContext } from '../types';
 import { languageFeatureWorker } from '../utils/featureWorkers';
-import { LanguageServicePlugin } from '@volar/language-service';
 
 export function register(context: LanguageServiceRuntimeContext) {
 
-	return (uri: string, position: vscode.Position, autoInsertContext: Parameters<NonNullable<LanguageServicePlugin['doAutoInsert']>>[2]) => {
+	return (uri: string, position: vscode.Position, autoInsertContext: Parameters<NonNullable<LanguageServicePluginInstance['doAutoInsert']>>[2]) => {
 
 		return languageFeatureWorker(
 			context,
 			uri,
 			{ position, autoInsertContext },
-			function* (arg, sourceMap) {
-				for (const position of sourceMap.toGeneratedPositions(arg.position, data => !!data.completion)) {
+			function* (arg, map) {
+				for (const position of map.toGeneratedPositions(arg.position, data => !!data.completion)) {
 
-					const rangeOffset = sourceMap.toGeneratedOffset(arg.autoInsertContext.lastChange.rangeOffset)?.[0];
-					const range = sourceMap.toGeneratedRange(arg.autoInsertContext.lastChange.range);
+					const rangeOffset = map.map.toGeneratedOffset(arg.autoInsertContext.lastChange.rangeOffset)?.[0];
+					const range = map.toGeneratedRange(arg.autoInsertContext.lastChange.range);
 
 					if (rangeOffset !== undefined && range) {
 						yield {
@@ -33,12 +32,12 @@ export function register(context: LanguageServiceRuntimeContext) {
 				}
 			},
 			(plugin, document, arg) => plugin.doAutoInsert?.(document, arg.position, arg.autoInsertContext),
-			(item, sourceMap) => {
+			(item, map) => {
 
-				if (!sourceMap || typeof item === 'string')
+				if (!map || typeof item === 'string')
 					return item;
 
-				const range = sourceMap.toSourceRange(item.range);
+				const range = map.toSourceRange(item.range);
 				if (range) {
 					item.range = range;
 					return item;

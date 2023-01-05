@@ -1,6 +1,6 @@
 {
 	"name": "@volar-plugins/json",
-	"version": "1.0.9",
+	"version": "1.0.22",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -15,6 +15,6 @@
 	"dependencies": {
 		"vscode-json-languageservice": "^5.1.3",
 		"vscode-languageserver-protocol": "^3.17.2",
-		"vscode-languageserver-textdocument": "^1.0.7"
+		"vscode-languageserver-textdocument": "^1.0.8"
 	}
 }

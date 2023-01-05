@@ -1,4 +1,4 @@
-import type { TextRange } from '@volar/language-core';
+import type { TextRange } from '../types';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { getStartEnd, parseBindingRanges } from './scriptSetupRanges';
 

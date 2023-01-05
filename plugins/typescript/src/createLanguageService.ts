@@ -35,7 +35,7 @@ export * from './configs/getFormatCodeSettings';
 export * from './configs/getUserPreferences';
 
 export interface GetConfiguration {
-	<T = any>(section: string, scopeUri: string): Promise<T | undefined>;
+	<T = any>(section: string): Promise<T | undefined>;
 };
 
 export function createLanguageService(
@@ -49,11 +49,11 @@ export function createLanguageService(
 	const documents = new Map<string, [string, TextDocument]>();
 
 	return {
-		findDefinition: definitions.register(rootUri, languageService, getTextDocument),
-		findTypeDefinition: typeDefinitions.register(rootUri, languageService, getTextDocument),
-		findReferences: references.register(rootUri, languageService, getTextDocument),
-		findFileReferences: fileReferences.register(rootUri, languageService, getTextDocument),
-		findImplementations: implementation.register(rootUri, languageService, getTextDocument),
+		findDefinition: definitions.register(languageService, getTextDocument),
+		findTypeDefinition: typeDefinitions.register(languageService, getTextDocument),
+		findReferences: references.register(languageService, getTextDocument),
+		findFileReferences: fileReferences.register(languageService, getTextDocument),
+		findImplementations: implementation.register(languageService, getTextDocument),
 		prepareRename: prepareRename.register(languageService, getTextDocument),
 		doRename: rename.register(rootUri, languageService, getTextDocument, getConfiguration),
 		getEditsForFileRename: fileRename.register(rootUri, languageService, getTextDocument, getConfiguration),
@@ -63,19 +63,19 @@ export function createLanguageService(
 
 		findDocumentHighlights: documentHighlight.register(languageService, getTextDocument, ts),
 		findDocumentSymbols: documentSymbol.register(languageService, getTextDocument),
-		findWorkspaceSymbols: workspaceSymbols.register(rootUri, languageService, getTextDocument),
+		findWorkspaceSymbols: workspaceSymbols.register(languageService, getTextDocument),
 		doComplete: completions.register(rootUri, languageService, getTextDocument, getConfiguration, ts),
 		doCompletionResolve: completionResolve.register(rootUri, languageService, getTextDocument, getConfiguration),
 		doDirectiveCommentComplete: directiveCommentCompletions.register(getTextDocument),
 		doJsDocComplete: jsDocCompletions.register(languageService, getTextDocument),
-		doHover: hover.register(rootUri, languageService, getTextDocument, ts),
+		doHover: hover.register(languageService, getTextDocument, ts),
 		doFormatting: formatting.register(languageService, getTextDocument, getConfiguration),
 		getSignatureHelp: signatureHelp.register(languageService, getTextDocument, ts),
 		getSelectionRanges: selectionRanges.register(languageService, getTextDocument),
-		doValidation: diagnostics.register(rootUri, host, languageService, getTextDocument, ts),
+		doValidation: diagnostics.register(host, languageService, getTextDocument, ts),
 		getFoldingRanges: foldingRanges.register(languageService, getTextDocument, ts),
 		getDocumentSemanticTokens: semanticTokens.register(host, languageService, getTextDocument, ts),
-		callHierarchy: callHierarchy.register(rootUri, languageService, getTextDocument),
+		callHierarchy: callHierarchy.register(languageService, getTextDocument),
 	};
 
 	function getTextDocument(uri: string) {

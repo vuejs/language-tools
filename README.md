@@ -4,9 +4,9 @@
 
 ### Vue.js
 
-- [Vue Language Features](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features) \
+- [Vue Language Features](https://github.com/johnsoncodehk/volar/tree/master/vue-language-tools/vscode-vue) \
 *Vue, Vitepress, petite-vue language support extension for VSCode*
-- [TypeScript Vue Plugin](https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-typescript-vue-plugin) \
+- [TypeScript Vue Plugin](https://github.com/johnsoncodehk/volar/tree/master/vue-language-tools/vscode-typescript-vue-plugin) \
 *VSCode extension to support Vue in TS server*
 - [vue-tsc](https://github.com/johnsoncodehk/volar/tree/master/vue-language-tools/vue-tsc) \
 *Type-check and dts build command line tool*
@@ -17,6 +17,8 @@
 
 ### Common
 
+- [language-tools-starter](https://github.com/volarjs/language-tools-starter) \
+*A template for creating embedded language tools based on Volar framework*
 - [volar-plugins](https://github.com/johnsoncodehk/volar-plugins) \
 *Common plugins to change language server behavior*
 
@@ -113,11 +115,11 @@ flowchart LR
 	click LAPCE_VUE "https://github.com/xiaoxin-sky/lapce-vue"
 
 	%% Volar - Extensions
-	VSC_VUE[vscode-vue-language-features]
+	VSC_VUE[vscode-vue]
 	VSC_TSVP[vscode-typescript-vue-plugin]
 
-	click VSC_VUE "https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features"
-	click VSC_TSVP "https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-typescript-vue-plugin"
+	click VSC_VUE "https://github.com/johnsoncodehk/volar/tree/master/vue-language-tools/vscode-vue"
+	click VSC_TSVP "https://github.com/johnsoncodehk/volar/tree/master/vue-language-tools/vscode-typescript-vue-plugin"
 
 	%% Volar - Packages
 	VOLAR_VUE_SERVER["@volar/vue-language-server"]
@@ -159,7 +161,7 @@ flowchart LR
 	click CSS_SERVICE "https://github.com/microsoft/vscode-css-languageservice"
 	click JSON_SERVICE "https://github.com/microsoft/vscode-json-languageservice"
 	click TS "https://github.com/microsoft/TypeScript"
-	click VSC_TS "https://github.com/microsoft/vscode/tree/main/extensions/typescript-language-features"
+	click VSC_TS "https://github.com/microsoft/vscode/tree/main/vue-language-tools/typescript-language-features"
 	click VUE_REPL "https://github.com/vuejs/repl"
 	click MONACO_VOLAR "https://github.com/Kingwl/monaco-volar"
 	%% click VITE_PLUGIN_CHECKER "https://github.com/fi3ework/vite-plugin-checker"
@@ -167,14 +169,12 @@ flowchart LR
 
 	subgraph VUE_CLIENTS[Language Clients]
 	  direction LR
-	  VUE_CLIENT_API[Language Features]
-	  VUE_CLIENT_DOC[Second Language Features]
-	  VUE_CLIENT_HTML[Document Features]
+	  VUE_CLIENT_SEMANTIC[Semantic Features]
+	  VUE_CLIENT_SYNTACTIC[Syntactic Features]
 	end
 
-	click VUE_CLIENT_API "https://github.com/johnsoncodehk/volar/discussions/393#discussioncomment-1213736"
-	click VUE_CLIENT_DOC "https://github.com/johnsoncodehk/volar/discussions/393#discussioncomment-1213736"
-	click VUE_CLIENT_HTML "https://github.com/johnsoncodehk/volar/discussions/393#discussioncomment-1213736"
+	click VUE_CLIENT_SEMANTIC "https://github.com/johnsoncodehk/volar/discussions/393#discussioncomment-1213736"
+	click VUE_CLIENT_SYNTACTIC "https://github.com/johnsoncodehk/volar/discussions/393#discussioncomment-1213736"
 
 	subgraph Embedded Language Services
 	  direction LR

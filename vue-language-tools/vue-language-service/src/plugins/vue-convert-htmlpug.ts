@@ -1,7 +1,7 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import { LanguageServicePlugin, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
 import { htmlToPug, pugToHtml } from '@johnsoncodehk/html2pug';
 import * as vue from '@volar/vue-language-core';
+import { VueLanguageServicePlugin } from '../types';
 
 const toggleConvertCommand = 'htmlPugConversions.toggle';
 
@@ -12,22 +12,14 @@ export interface ReferencesCodeLensData {
 
 type CommandArgs = [string];
 
-export default function (options: {
-	getVueDocument(uri: string): SourceFileDocument | undefined,
-}): LanguageServicePlugin {
-
-	let context: LanguageServicePluginContext;
+const plugin: VueLanguageServicePlugin = (context) => {
 
 	return {
-
-		setup(_context) {
-			context = _context;
-		},
 
 		codeLens: {
 
 			on(document) {
-				return worker(document.uri, async (vueDocument, vueSourceFile) => {
+				return worker(document.uri, async (vueSourceFile) => {
 
 					const isEnabled = await context.env.configurationHost?.getConfiguration<boolean>('volar.codeLens.pugTools') ?? true;
 
@@ -60,10 +52,10 @@ export default function (options: {
 
 				const [uri] = args as CommandArgs;
 
-				return worker(uri, (vueDocument, vueSourceFile) => {
+				return worker(uri, (vueFile) => {
 
-					const document = vueDocument.getDocument();
-					const desc = vueSourceFile.sfc;
+					const document = context.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
+					const desc = vueFile.sfc;
 					if (!desc.template)
 						return;
 
@@ -98,15 +90,14 @@ export default function (options: {
 		},
 	};
 
-	function worker<T>(uri: string, callback: (vueDocument: SourceFileDocument, vueSourceFile: vue.VueSourceFile) => T) {
+	function worker<T>(uri: string, callback: (vueSourceFile: vue.VueFile) => T) {
 
-		const vueDocument = options.getVueDocument(uri);
-		if (!vueDocument || vueDocument.file.fileName.endsWith('.md') || vueDocument.file.fileName.endsWith('.html'))
-			return;
-		
-		if (!(vueDocument.file instanceof vue.VueSourceFile))
+		const virtualFile = context.documents.getVirtualFileByUri(uri);
+		if (!(virtualFile instanceof vue.VueFile))
 			return;
 
-		return callback(vueDocument, vueDocument.file);
+		return callback(virtualFile);
 	}
-}
+};
+
+export default () => plugin;

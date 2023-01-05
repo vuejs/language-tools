@@ -9,7 +9,7 @@ export async function getFormatCodeSettings(
 	options?: vscode.FormattingOptions,
 ): Promise<ts.FormatCodeSettings> {
 
-	let config = await getConfiguration(isTypeScriptDocument(uri) ? 'typescript.format' : 'javascript.format', uri);
+	let config = await getConfiguration(isTypeScriptDocument(uri) ? 'typescript.format' : 'javascript.format');
 
 	config = config ?? {};
 

@@ -18,18 +18,6 @@ export function syntaxToLanguageId(syntax: string) {
 	return syntax;
 }
 
-export function languageIdToSyntax(languageId: string) {
-	switch (languageId) {
-		case 'javascript': return 'js';
-		case 'typescript': return 'ts';
-		case 'javascriptreact': return 'jsx';
-		case 'typescriptreact': return 'tsx';
-		case 'jade': return 'pug';
-		case 'markdown': return 'md';
-	}
-	return languageId;
-}
-
 export function notEmpty<T>(value: T | null | undefined): value is T {
 	return value !== null && value !== undefined;
 }

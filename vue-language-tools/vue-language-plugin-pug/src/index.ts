@@ -1,6 +1,6 @@
 import type { VueLanguagePlugin } from '@volar/vue-language-core';
 import * as pug from '@volar/pug-language-service';
-import { SourceMapBase } from '@volar/source-map';
+import { SourceMap } from '@volar/source-map';
 
 const plugin: VueLanguagePlugin = ({ modules }) => {
 
@@ -15,7 +15,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 			if (lang === 'pug') {
 
 				const pugFile = pug?.baseParse(template);
-				const map = new SourceMapBase(pugFile.mappings);
+				const map = new SourceMap(pugFile.mappings);
 
 				if (pugFile) {
 

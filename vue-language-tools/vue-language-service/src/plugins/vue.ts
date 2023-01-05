@@ -1,6 +1,6 @@
 import * as shared from '@volar/shared';
 import { parseScriptSetupRanges } from '@volar/vue-language-core';
-import { LanguageServicePlugin, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
+import { LanguageServicePlugin } from '@volar/language-service';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -101,6 +101,7 @@ const dataProvider: html.IHTMLDataProvider = {
 					{ name: 'md' },
 					{ name: 'json' },
 					{ name: 'jsonc' },
+					{ name: 'json5' },
 					{ name: 'yaml' },
 					{ name: 'toml' },
 					{ name: 'gql' },
@@ -111,18 +112,18 @@ const dataProvider: html.IHTMLDataProvider = {
 		return [];
 	},
 };
+const plugin: LanguageServicePlugin = (context, service) => {
 
-export default function (options: {
-	getVueDocument(document: TextDocument): SourceFileDocument | undefined,
-}): LanguageServicePlugin {
+	if (!context.typescript)
+		return {};
 
+	const _ts = context.typescript;
 	const htmlPlugin = useHtmlPlugin({
 		validLang: 'vue',
 		disableCustomData: true,
-	});
+	})(context, service);
+	htmlPlugin.getHtmlLs().setDataProviders(false, [dataProvider]);
 	const emptyBlocksDocument = new WeakMap<TextDocument, [number, TextDocument]>();
-
-	let context: LanguageServicePluginContext;
 
 	if (htmlPlugin.complete?.on) {
 		htmlPlugin.complete.on = apiWithEmptyBlocksDocument(htmlPlugin.complete.on);
@@ -132,21 +133,15 @@ export default function (options: {
 
 		...htmlPlugin,
 
-		setup(_context) {
-			htmlPlugin.setup?.(_context);
-			htmlPlugin.getHtmlLs().setDataProviders(false, [dataProvider]);
-			context = _context;
-		},
-
 		validation: {
 			onSyntactic(document) {
-				return worker(document, (document, vueDocument, vueSourceFile) => {
+				return worker(document, (document, vueSourceFile) => {
 
 					const result: vscode.Diagnostic[] = [];
 					const sfc = vueSourceFile.sfc;
 
 					if (sfc.scriptSetup && sfc.scriptSetupAst) {
-						const scriptSetupRanges = parseScriptSetupRanges(context.typescript.module, sfc.scriptSetupAst);
+						const scriptSetupRanges = parseScriptSetupRanges(_ts.module, sfc.scriptSetupAst);
 						for (const range of scriptSetupRanges.notOnTopTypeExports) {
 							result.push(vscode.Diagnostic.create(
 								{
@@ -161,9 +156,9 @@ export default function (options: {
 						}
 					}
 
-					const program = context.typescript.languageService.getProgram();
+					const program = _ts.languageService.getProgram();
 
-					if (program && !program.getSourceFile(vueSourceFile.tsFileName)) {
+					if (program && !program.getSourceFile(vueSourceFile.mainScriptName)) {
 						for (const script of [sfc.script, sfc.scriptSetup]) {
 
 							if (!script || script.content === '')
@@ -189,7 +184,7 @@ export default function (options: {
 		},
 
 		findDocumentSymbols(document) {
-			return worker(document, (document, vueDocument, vueSourceFile) => {
+			return worker(document, (document, vueSourceFile) => {
 
 				const result: vscode.SymbolInformation[] = [];
 				const descriptor = vueSourceFile.sfc;
@@ -199,8 +194,8 @@ export default function (options: {
 						name: 'template',
 						kind: vscode.SymbolKind.Module,
 						location: vscode.Location.create(document.uri, vscode.Range.create(
-							document.positionAt(descriptor.template.startTagEnd),
-							document.positionAt(descriptor.template.startTagEnd + descriptor.template.content.length),
+							document.positionAt(descriptor.template.start),
+							document.positionAt(descriptor.template.end),
 						)),
 					});
 				}
@@ -209,8 +204,8 @@ export default function (options: {
 						name: 'script',
 						kind: vscode.SymbolKind.Module,
 						location: vscode.Location.create(document.uri, vscode.Range.create(
-							document.positionAt(descriptor.script.startTagEnd),
-							document.positionAt(descriptor.script.startTagEnd + descriptor.script.content.length),
+							document.positionAt(descriptor.script.start),
+							document.positionAt(descriptor.script.end),
 						)),
 					});
 				}
@@ -219,8 +214,8 @@ export default function (options: {
 						name: 'script setup',
 						kind: vscode.SymbolKind.Module,
 						location: vscode.Location.create(document.uri, vscode.Range.create(
-							document.positionAt(descriptor.scriptSetup.startTagEnd),
-							document.positionAt(descriptor.scriptSetup.startTagEnd + descriptor.scriptSetup.content.length),
+							document.positionAt(descriptor.scriptSetup.start),
+							document.positionAt(descriptor.scriptSetup.end),
 						)),
 					});
 				}
@@ -229,8 +224,8 @@ export default function (options: {
 						name: `${['style', style.scoped ? 'scoped' : undefined, style.module ? 'module' : undefined].filter(shared.notEmpty).join(' ')}`,
 						kind: vscode.SymbolKind.Module,
 						location: vscode.Location.create(document.uri, vscode.Range.create(
-							document.positionAt(style.startTagEnd),
-							document.positionAt(style.startTagEnd + style.content.length),
+							document.positionAt(style.start),
+							document.positionAt(style.end),
 						)),
 					});
 				}
@@ -239,8 +234,8 @@ export default function (options: {
 						name: `${customBlock.type}`,
 						kind: vscode.SymbolKind.Module,
 						location: vscode.Location.create(document.uri, vscode.Range.create(
-							document.positionAt(customBlock.startTagEnd),
-							document.positionAt(customBlock.startTagEnd + customBlock.content.length),
+							document.positionAt(customBlock.start),
+							document.positionAt(customBlock.end),
 						)),
 					});
 				}
@@ -250,19 +245,19 @@ export default function (options: {
 		},
 
 		getFoldingRanges(document) {
-			return worker(document, (document, vueDocument, vueSourceFile) => {
+			return worker(document, (document) => {
 				return htmlPlugin.getHtmlLs().getFoldingRanges(document);
 			});
 		},
 
 		getSelectionRanges(document, positions) {
-			return worker(document, (document, vueDocument, vueSourceFile) => {
+			return worker(document, (document) => {
 				return htmlPlugin.getHtmlLs().getSelectionRanges(document, positions);
 			});
 		},
 
 		format(document) {
-			return worker(document, (document, vueDocument, vueSourceFile) => {
+			return worker(document, (document, vueSourceFile) => {
 
 				const blocks = [
 					vueSourceFile.sfc.script,
@@ -305,30 +300,28 @@ export default function (options: {
 		return fn as T;
 	}
 
-	function worker<T>(document: TextDocument, callback: (emptyBlocksDocument: TextDocument, vueDocument: SourceFileDocument, vueSourceFile: vue.VueSourceFile) => T) {
+	function worker<T>(document: TextDocument, callback: (emptyBlocksDocument: TextDocument, vueSourceFile: vue.VueFile) => T) {
 
-		const vueDocument = options.getVueDocument(document);
-		if (!vueDocument)
-			return;
+		const vueFile = context.documents.getVirtualFileByUri(document.uri);
+		if (vueFile instanceof vue.VueFile) {
 
-		if (!(vueDocument.file instanceof vue.VueSourceFile))
-			return;
+			let cache = emptyBlocksDocument.get(document);
+			if (!cache || cache[0] !== document.version) {
+				cache = [document.version, createEmptyBlocksDocument(document, vueFile)];
+			}
 
-		let cache = emptyBlocksDocument.get(document);
-		if (!cache || cache[0] !== document.version) {
-			cache = [document.version, createEmptyBlocksDocument(document, vueDocument.file)];
+			return callback(cache[1], vueFile);
 		}
-
-		return callback(cache[1], vueDocument, vueDocument.file);
 	}
+};
 
-}
+export default () => plugin;
 
-function createEmptyBlocksDocument(document: TextDocument, vueSourceFile: vue.VueSourceFile) {
+function createEmptyBlocksDocument(document: TextDocument, vueSourceFile: vue.VueFile) {
 	return TextDocument.create(document.uri, document.languageId, document.version, clearSFCBlocksContents(document.getText(), vueSourceFile));
 }
 
-function clearSFCBlocksContents(sfcCode: string, vueSourceFile: vue.VueSourceFile) {
+function clearSFCBlocksContents(sfcCode: string, vueSourceFile: vue.VueFile) {
 
 	const descriptor = vueSourceFile.sfc;
 	const blocks = [

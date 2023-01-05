@@ -1,5 +1,5 @@
 import { decode } from '@jridgewell/sourcemap-codec';
-import { EmbeddedFile, EmbeddedFileKind, LanguageModule } from '@volar/language-core';
+import { VirtualFile, FileKind, LanguageModule } from '@volar/language-core';
 import { svelte2tsx } from 'svelte2tsx';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
@@ -7,20 +7,28 @@ import { URI } from 'vscode-uri';
 export * from '@volar/language-core';
 
 export const languageModule: LanguageModule = {
-	createSourceFile(fileName, snapshot) {
+	createFile(fileName, snapshot) {
 		if (fileName.endsWith('.svelte')) {
-			const text = snapshot.getText(0, snapshot.getLength());
 			return {
-				snapshot,
 				fileName,
-				text,
-				embeddeds: getEmbeddeds(fileName, text),
+				snapshot,
+				kind: FileKind.TextFile,
+				embeddedFiles: getEmbeddeds(fileName, snapshot.getText(0, snapshot.getLength())),
+				capabilities: {
+					diagnostic: true,
+					foldingRange: true,
+					documentFormatting: true,
+					documentSymbol: true,
+					codeAction: true,
+					inlayHint: true,
+				},
+				mappings: [],
 			};
 		}
 	},
-	updateSourceFile(sourceFile, snapshot) {
-		sourceFile.text = snapshot.getText(0, snapshot.getLength());
-		sourceFile.embeddeds = getEmbeddeds(sourceFile.fileName, sourceFile.text);
+	updateFile(sourceFile, snapshot) {
+		sourceFile.snapshot = snapshot;
+		sourceFile.embeddedFiles = getEmbeddeds(sourceFile.fileName, sourceFile.snapshot.getText(0, sourceFile.snapshot.getLength()));
 	},
 };
 
@@ -35,7 +43,7 @@ function getEmbeddeds(fileName: string, text: string) {
 		const v3Mappings = decode(tsx.map.mappings);
 		const sourcedDoc = TextDocument.create(URI.file(fileName).toString(), 'svelte', 0, text);
 		const genDoc = TextDocument.create(URI.file(fileName + '.tsx').toString(), 'typescriptreact', 0, tsx.code);
-		const mappings: EmbeddedFile['mappings'] = [];
+		const mappings: VirtualFile['mappings'] = [];
 
 		let current: {
 			genOffset: number,
@@ -95,12 +103,22 @@ function getEmbeddeds(fileName: string, text: string) {
 			}
 		}
 
-		const embeddeds: EmbeddedFile[] = [];
+		const embeddeds: VirtualFile[] = [];
 
 		embeddeds.push({
 			fileName: fileName + '.ts',
-			text: tsx.code,
-			kind: EmbeddedFileKind.TypeScriptHostFile,
+			snapshot: {
+				getText(start, end) {
+					return tsx.code.substring(start, end);
+				},
+				getLength() {
+					return tsx.code.length;
+				},
+				getChangeRange() {
+					return undefined;
+				},
+			},
+			kind: FileKind.TypeScriptHostFile,
 			capabilities: {
 				diagnostic: true,
 				foldingRange: false,
@@ -110,7 +128,7 @@ function getEmbeddeds(fileName: string, text: string) {
 				documentFormatting: false,
 			},
 			mappings: mappings,
-			embeddeds: [],
+			embeddedFiles: [],
 		});
 
 		return embeddeds;

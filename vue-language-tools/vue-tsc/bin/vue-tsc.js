@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 const fs = require('fs');
-
 const readFileSync = fs.readFileSync;
 const tscPath = require.resolve('typescript/lib/tsc');
-const proxyPath = require.resolve('../out/proxy');
+const proxyApiPath = require.resolve('../out/index');
+const { state } = require('../out/shared');
 
 fs.readFileSync = (...args) => {
 	if (args[0] === tscPath) {
@@ -15,10 +15,10 @@ fs.readFileSync = (...args) => {
 		tryReplace(/allSupportedExtensions = .*(?=;)/, s => s + '.concat([[".vue"]])');
 
 		// proxy startTracing, dumpTracingLegend
-		tryReplace(/ = tracingEnabled\./g, ` = require(${JSON.stringify(proxyPath)}).loadTsLib().`);
+		tryReplace(/ = tracingEnabled\./g, ` = require(${JSON.stringify(proxyApiPath)}).loadTsLib().`);
 
 		// proxy createProgram apis
-		tryReplace(/function createProgram\(.+\) {/, s => s + ` return require(${JSON.stringify(proxyPath)}).createProgramProxy(...arguments);`);
+		tryReplace(/function createProgram\(.+\) {/, s => s + ` return require(${JSON.stringify(proxyApiPath)}).createProgram(...arguments);`);
 
 		return tsc;
 
@@ -34,4 +34,16 @@ fs.readFileSync = (...args) => {
 	return readFileSync(...args);
 };
 
-require(tscPath);
+(function main() {
+	try {
+		require(tscPath);
+	}
+	catch (err) {
+		if (err === 'hook') {
+			state.hook.worker.then(main);
+		}
+		else {
+			throw err;
+		}
+	}
+})();

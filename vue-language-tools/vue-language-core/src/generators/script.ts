@@ -1,5 +1,6 @@
 import { getLength, Segment, toString } from '@volar/source-map';
-import type { PositionCapabilities, TeleportMappingData, TextRange } from '@volar/language-core';
+import type { FileRangeCapabilities, MirrorBehaviorCapabilities } from '@volar/language-core';
+import type { TextRange } from '../types';
 import * as SourceMaps from '@volar/source-map';
 import { hyphenate } from '@vue/shared';
 import { posix as path } from 'path';
@@ -26,17 +27,18 @@ export function generate(
 	htmlGen: ReturnType<typeof templateGen['generate']> | undefined,
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: ResolvedVueCompilerOptions,
-	codeGen: Segment<PositionCapabilities>[] = [],
-	teleports: SourceMaps.Mapping<TeleportMappingData>[] = [],
+	codeGen: Segment<FileRangeCapabilities>[] = [],
+	mirrorBehaviorMappings: SourceMaps.Mapping<[MirrorBehaviorCapabilities, MirrorBehaviorCapabilities]>[] = [],
 ) {
 
-	const bypassDefineComponent = vueCompilerOptions.bypassDefineComponentToExposePropsAndEmitsForJsScriptSetupComponents && lang === 'js' || lang === 'jsx';
+	const bypassDefineComponent = lang === 'js' || lang === 'jsx';
 	const vueVersion = vueCompilerOptions.target ?? 3;
 	const vueLibName = getVueLibraryName(vueVersion);
 	const usedTypes = {
 		DefinePropsToOptions: false,
 		mergePropDefaults: false,
 		ConstructorOverloads: false,
+		WithTemplateSlots: false,
 	};
 
 	writeScriptSrc();
@@ -87,7 +89,7 @@ export function generate(
 	return {
 		codeGen,
 		extraMappings,
-		teleports,
+		mirrorBehaviorMappings,
 	};
 
 	function writeScriptSetupTypes() {
@@ -117,6 +119,9 @@ export function generate(
 			else {
 				codeGen.push(genConstructorOverloads('__VLS_ConstructorOverloads'));
 			}
+		}
+		if (usedTypes.WithTemplateSlots) {
+			codeGen.push(`type __VLS_WithTemplateSlots<T, S> = T & { new(): { $slots: S } };\n`);
 		}
 	}
 	function writeScriptSrc() {
@@ -288,12 +293,12 @@ export function generate(
 
 			if (scriptRanges?.exportDefault && scriptRanges.exportDefault.expression.start !== scriptRanges.exportDefault.args.start) {
 				// use defineComponent() from user space code if it exist
-				codeGen.push(`const __VLS_Component = `);
+				codeGen.push(`const __VLS_publicComponent = `);
 				addVirtualCode('script', scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.args.start);
 				codeGen.push(`{\n`);
 			}
 			else {
-				codeGen.push(`const __VLS_Component = (await import('${vueLibName}')).defineComponent({\n`);
+				codeGen.push(`const __VLS_publicComponent = (await import('${vueLibName}')).defineComponent({\n`);
 			}
 
 			if (!bypassDefineComponent) {
@@ -397,23 +402,23 @@ export function generate(
 			writeTemplate();
 
 			if (vueCompilerOptions.experimentalRfc436) {
-				codeGen.push(`return {} as Omit<JSX.Element, 'props' | 'children'> & Omit<InstanceType<typeof __VLS_Component>, '$slots' | '$emit'>`);
+				codeGen.push(`return {} as Omit<JSX.Element, 'props' | 'children'> & Omit<InstanceType<typeof __VLS_publicComponent>, '$slots' | '$emit'>`);
 				codeGen.push(` & {\n`);
 				if (scriptSetupRanges.propsTypeArg) {
 					codeGen.push(`props: typeof __VLS_props,\n`);
 				}
 				else {
-					codeGen.push(`props: InstanceType<typeof __VLS_Component>['$props'],\n`);
+					codeGen.push(`props: InstanceType<typeof __VLS_publicComponent>['$props'],\n`);
 				}
 				codeGen.push(`$emit: `);
 				if (scriptSetupRanges.emitsTypeArg) {
 					addVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
 				}
 				else {
-					codeGen.push(`InstanceType<typeof __VLS_Component>['$emit']`);
+					codeGen.push(`InstanceType<typeof __VLS_publicComponent>['$emit']`);
 				}
 				codeGen.push(`,\n`);
-				if (htmlGen?.slotsNum) {
+				if (htmlGen?.hasSlot) {
 					codeGen.push(`children: ReturnType<typeof __VLS_template>,\n`);
 				}
 				else {
@@ -422,14 +427,16 @@ export function generate(
 				codeGen.push(`};\n`);
 			}
 			else {
-				codeGen.push(`return {} as typeof __VLS_Component`);
-				if (htmlGen?.slotsNum) {
-					codeGen.push(` & { new (): { $slots: ReturnType<typeof __VLS_template> } }`);
+				if (!vueCompilerOptions.skipTemplateCodegen && htmlGen?.hasSlot) {
+					usedTypes.WithTemplateSlots = true;
+					codeGen.push(`return {} as __VLS_WithTemplateSlots<typeof __VLS_publicComponent, ReturnType<typeof __VLS_template>>;\n`);
 				}
-				codeGen.push(`;\n`);
+				else {
+					codeGen.push(`return {} as typeof __VLS_publicComponent;\n`);
+				}
 			}
 			codeGen.push(`};\n`);
-			codeGen.push(`return {} as unknown as Awaited<ReturnType<typeof __VLS_setup>>;\n`);
+			codeGen.push(`return {} as typeof __VLS_setup extends () => Promise<infer T> ? T : never;\n`);
 			codeGen.push(`})`);
 			if (!vueCompilerOptions.experimentalRfc436) {
 				codeGen.push(`({} as any)`);
@@ -477,7 +484,7 @@ export function generate(
 
 		if (sfc.scriptSetup && scriptSetupRanges) {
 
-			codeGen.push(`const __VLS_component = (await import('${vueLibName}')).defineComponent({\n`);
+			codeGen.push(`const __VLS_internalComponent = (await import('${vueLibName}')).defineComponent({\n`);
 			codeGen.push(`setup() {\n`);
 			codeGen.push(`return {\n`);
 			// fill ctx from props
@@ -533,21 +540,21 @@ export function generate(
 					const scriptEnd = getLength(codeGen);
 					codeGen.push(',\n');
 
-					teleports.push({
+					mirrorBehaviorMappings.push({
 						sourceRange: [scriptStart, scriptEnd],
 						generatedRange: [templateStart, templateEnd],
-						data: {
-							toSourceCapabilities: {
+						data: [
+							{
 								definition: true,
 								references: true,
 								rename: true,
 							},
-							toGenedCapabilities: {
+							{
 								definition: true,
 								references: true,
 								rename: true,
 							},
-						},
+						],
 					});
 				}
 			}
@@ -556,10 +563,10 @@ export function generate(
 			codeGen.push(`});\n`); // defineComponent({
 		}
 		else if (sfc.script) {
-			codeGen.push(`let __VLS_component!: typeof import('./${path.basename(fileName)}')['default'];\n`);
+			codeGen.push(`let __VLS_internalComponent!: typeof import('./${path.basename(fileName)}')['default'];\n`);
 		}
 		else {
-			codeGen.push(`const __VLS_component = (await import('${vueLibName}')).defineComponent({});\n`);
+			codeGen.push(`const __VLS_internalComponent = (await import('${vueLibName}')).defineComponent({});\n`);
 		}
 	}
 	function writeExportOptions() {
@@ -602,11 +609,10 @@ export function generate(
 		const useGlobalThisTypeInCtx = fileName.endsWith('.html');
 
 		codeGen.push(`let __VLS_ctx!: ${useGlobalThisTypeInCtx ? 'typeof globalThis &' : ''}`);
-		codeGen.push(`import('./__VLS_types.js').PickNotAny<__VLS_Ctx, {}> & `);
 		if (sfc.scriptSetup) {
-			codeGen.push(`InstanceType<import('./__VLS_types.js').PickNotAny<typeof __VLS_Component, new () => {}>> & `);
+			codeGen.push(`InstanceType<import('./__VLS_types.js').PickNotAny<typeof __VLS_publicComponent, new () => {}>> & `);
 		}
-		codeGen.push(`InstanceType<import('./__VLS_types.js').PickNotAny<typeof __VLS_component, new () => {}>> & {\n`);
+		codeGen.push(`InstanceType<import('./__VLS_types.js').PickNotAny<typeof __VLS_internalComponent, new () => {}>> & {\n`);
 
 		/* CSS Module */
 		for (const cssModule of cssModuleClasses) {
@@ -626,9 +632,10 @@ export function generate(
 
 		/* Components */
 		codeGen.push('/* Components */\n');
-		codeGen.push(`let __VLS_otherComponents!: NonNullable<typeof __VLS_component extends { components: infer C } ? C : {}> & import('./__VLS_types.js').GlobalComponents & typeof __VLS_componentsOption & typeof __VLS_ctx;\n`);
-		codeGen.push(`let __VLS_selfComponent!: import('./__VLS_types.js').SelfComponent<typeof __VLS_name, typeof __VLS_component & (new () => { ${getSlotsPropertyName(vueCompilerOptions.target ?? 3)}: typeof __VLS_slots })>;\n`);
-		codeGen.push(`let __VLS_components!: typeof __VLS_otherComponents & Omit<typeof __VLS_selfComponent, keyof typeof __VLS_otherComponents>;\n`);
+		codeGen.push(`let __VLS_localComponents!: NonNullable<typeof __VLS_internalComponent extends { components: infer C } ? C : {}> & typeof __VLS_componentsOption & typeof __VLS_ctx;\n`);
+		codeGen.push(`let __VLS_otherComponents!: typeof __VLS_localComponents & import('./__VLS_types.js').GlobalComponents;\n`);
+		codeGen.push(`let __VLS_own!: import('./__VLS_types.js').SelfComponent<typeof __VLS_name, typeof __VLS_internalComponent & typeof __VLS_publicComponent & (new () => { ${getSlotsPropertyName(vueCompilerOptions.target ?? 3)}: typeof __VLS_slots })>;\n`);
+		codeGen.push(`let __VLS_components!: typeof __VLS_otherComponents & Omit<typeof __VLS_own, keyof typeof __VLS_otherComponents>;\n`);
 
 		/* Style Scoped */
 		codeGen.push('/* Style Scoped */\n');

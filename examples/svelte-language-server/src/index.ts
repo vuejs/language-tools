@@ -1,24 +1,24 @@
 import { languageModule } from '@volar-examples/svelte-language-core';
 import useTsPlugin from '@volar-plugins/typescript';
-import { createLanguageServer, LanguageServerPlugin } from '@volar/language-server/node';
+import { createConnection, startLanguageServer, LanguageServerPlugin } from '@volar/language-server/node';
 
 const plugin: LanguageServerPlugin = () => ({
 	extraFileExtensions: [{ extension: 'svelte', isMixedContent: true, scriptKind: 7 }],
 	semanticService: {
-		getLanguageModules(host) {
+		getLanguageModules() {
 			return [languageModule];
 		},
-		getServicePlugins() {
+		getLanguageServicePlugins() {
 			return [
 				useTsPlugin(),
 			];
 		},
 	},
 	syntacticService: {
-		getLanguageModules(host) {
+		getLanguageModules() {
 			return [languageModule];
 		},
-		getServicePlugins() {
+		getLanguageServicePlugins() {
 			return [
 				useTsPlugin(),
 			];
@@ -26,4 +26,4 @@ const plugin: LanguageServerPlugin = () => ({
 	},
 });
 
-createLanguageServer([plugin]);
+startLanguageServer(createConnection(), plugin);

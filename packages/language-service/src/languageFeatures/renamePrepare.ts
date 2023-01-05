@@ -15,14 +15,14 @@ export function register(context: LanguageServiceRuntimeContext) {
 			context,
 			uri,
 			position,
-			(position, sourceMap) => sourceMap.toGeneratedPositions(position, data => typeof data.rename === 'object' ? !!data.rename.apply : !!data.rename),
+			(position, map) => map.toGeneratedPositions(position, data => typeof data.rename === 'object' ? !!data.rename.apply : !!data.rename),
 			(plugin, document, position) => plugin.rename?.prepare?.(document, position),
-			(item, sourceMap) => {
-				if (!sourceMap) {
+			(item, map) => {
+				if (!map) {
 					return item;
 				}
 				if (vscode.Range.is(item)) {
-					return sourceMap.toSourceRange(item);
+					return map.toSourceRange(item);
 				}
 			},
 			prepares => {

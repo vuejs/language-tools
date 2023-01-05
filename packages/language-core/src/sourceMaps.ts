@@ -1,17 +1,13 @@
 import * as SourceMaps from '@volar/source-map';
-import { TeleportCapabilities, TeleportMappingData } from './types';
+import { MirrorBehaviorCapabilities } from './types';
 
-export class Teleport extends SourceMaps.SourceMapBase<TeleportMappingData> {
-	*findTeleports(start: number, filter?: (data: TeleportCapabilities) => boolean) {
+export class MirrorMap extends SourceMaps.SourceMap<[MirrorBehaviorCapabilities, MirrorBehaviorCapabilities]> {
+	*findMirrorOffsets(start: number) {
 		for (const mapped of this.toGeneratedOffsets(start)) {
-			if (!filter || filter(mapped[1].data.toSourceCapabilities)) {
-				yield mapped[0];
-			}
+			yield [mapped[0], mapped[1].data[1]] as const;
 		}
 		for (const mapped of this.toSourceOffsets(start)) {
-			if (!filter || filter(mapped[1].data.toGenedCapabilities)) {
-				yield mapped[0];
-			}
+			yield [mapped[0], mapped[1].data[0]] as const;
 		}
 	}
 }

@@ -16,7 +16,7 @@
 			"path": "../../packages/language-service/tsconfig.build.json"
 		},
 		{
-			"path": "../../packages/pug-language-service/tsconfig.build.json"
+			"path": "../../pug-language-tools/pug-language-service/tsconfig.build.json"
 		},
 	],
 }

@@ -13,20 +13,20 @@ export function register(context: LanguageServiceRuntimeContext) {
 			context,
 			uri,
 			position,
-			(position, sourceMap) => sourceMap.toGeneratedPositions(position,
+			(position, map) => map.toGeneratedPositions(position,
 				// note https://github.com/johnsoncodehk/volar/issues/2009
 				data => typeof data.rename === 'object' ? !!data.rename.normalize : !!data.rename
 			),
-			async (plugin, document, position, sourceMap, vueDocument) => {
+			async (plugin, document, position) => {
 
 				const recursiveChecker = dedupe.createLocationSet();
 				const result: vscode.DocumentHighlight[] = [];
 
-				await withTeleports(document, position);
+				await withMirrors(document, position);
 
 				return result;
 
-				async function withTeleports(document: TextDocument, position: vscode.Position) {
+				async function withMirrors(document: TextDocument, position: vscode.Position) {
 
 					if (!plugin.findDocumentHighlights)
 						return;
@@ -40,40 +40,40 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					for (const reference of references) {
 
-						let foundTeleport = false;
+						let foundMirrorPosition = false;
 
 						recursiveChecker.add({ uri: document.uri, range: { start: reference.range.start, end: reference.range.start } });
 
-						const teleport = context.documents.teleportfromEmbeddedDocumentUri(document.uri);
+						const mirrorMap = context.documents.getMirrorMapByUri(document.uri)?.[1];
 
-						if (teleport) {
+						if (mirrorMap) {
 
-							for (const mapped of teleport.findTeleports(reference.range.start)) {
+							for (const mapped of mirrorMap.findMirrorPositions(reference.range.start)) {
 
 								if (!mapped[1].references)
 									continue;
 
-								if (recursiveChecker.has({ uri: teleport.document.uri, range: { start: mapped[0], end: mapped[0] } }))
+								if (recursiveChecker.has({ uri: mirrorMap.document.uri, range: { start: mapped[0], end: mapped[0] } }))
 									continue;
 
-								foundTeleport = true;
+								foundMirrorPosition = true;
 
-								await withTeleports(teleport.document, mapped[0]);
+								await withMirrors(mirrorMap.document, mapped[0]);
 							}
 						}
 
-						if (!foundTeleport) {
+						if (!foundMirrorPosition) {
 							result.push(reference);
 						}
 					}
 				}
 			},
-			(data, sourceMap) => data.map(highlisht => {
+			(data, map) => data.map(highlisht => {
 
-				if (!sourceMap)
+				if (!map)
 					return highlisht;
 
-				const range = sourceMap.toSourceRange(highlisht.range);
+				const range = map.toSourceRange(highlisht.range);
 				if (range) {
 					return {
 						...highlisht,

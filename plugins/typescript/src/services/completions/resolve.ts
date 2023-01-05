@@ -44,7 +44,7 @@ export function register(
 			details = languageService.getCompletionEntryDetails(fileName, offset, data.originalItem.name, formatOptions, data.originalItem.source, preferences, data.originalItem.data);
 		}
 		catch (err) {
-			item.detail = `[TS Error] ${JSON.stringify(err)}`;
+			item.detail = `[TS Error]\n${err}\n${JSON.stringify(err, undefined, 2)}`;
 		}
 
 		if (!details)
@@ -59,7 +59,7 @@ export function register(
 					const entries = changes.textChanges.map(textChange => {
 						return { fileName, textSpan: textChange.span };
 					});
-					const locs = entriesToLocations(rootUri, entries, getTextDocument);
+					const locs = entriesToLocations(entries, getTextDocument);
 					locs.forEach((loc, index) => {
 						item.additionalTextEdits?.push(vscode.TextEdit.replace(loc.range, changes.textChanges[index].newText));
 					});
@@ -84,7 +84,7 @@ export function register(
 
 		if (document) {
 
-			const useCodeSnippetsOnMethodSuggest = await getConfiguration<boolean>((isTypeScriptDocument(document.uri) ? 'typescript' : 'javascript') + '.suggest.completeFunctionCalls', document.uri) ?? false;
+			const useCodeSnippetsOnMethodSuggest = await getConfiguration<boolean>((isTypeScriptDocument(document.uri) ? 'typescript' : 'javascript') + '.suggest.completeFunctionCalls') ?? false;
 			const useCodeSnippet = useCodeSnippetsOnMethodSuggest && (item.kind === vscode.CompletionItemKind.Function || item.kind === vscode.CompletionItemKind.Method);
 
 			if (useCodeSnippet) {
@@ -115,7 +115,7 @@ export function register(
 		return item;
 
 		function toResource(path: string) {
-			return shared.getUriByPath(rootUri, path);
+			return shared.getUriByPath(path);
 		}
 	};
 }

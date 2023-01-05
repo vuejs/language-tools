@@ -1,20 +1,19 @@
-import type { LanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
+import type { LanguageServicePlugin } from '@volar/language-service';
 import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as pug from '@volar/pug-language-service';
 import useHtmlPlugin from '@volar-plugins/html';
 
-export default function (): LanguageServicePlugin & ReturnType<typeof useHtmlPlugin> & {
+const plugin: LanguageServicePlugin<{
 	getHtmlLs: () => html.LanguageService,
+	updateCustomData(extraData: html.IHTMLDataProvider[]): void,
 	getPugLs: () => pug.LanguageService,
 	getPugDocument: (document: TextDocument) => pug.PugDocument | undefined,
-} {
+}> = (context, service) => {
 
-	const htmlPlugin = useHtmlPlugin({});
 	const pugDocuments = new WeakMap<TextDocument, [number, pug.PugDocument]>();
-
-	let context: LanguageServicePluginContext;
-	let pugLs: pug.LanguageService;
+	const htmlPlugin = useHtmlPlugin()(context, service);
+	const pugLs = pug.getLanguageService(htmlPlugin.getHtmlLs());
 
 	return {
 
@@ -22,20 +21,10 @@ export default function (): LanguageServicePlugin & ReturnType<typeof useHtmlPlu
 		getPugLs: () => pugLs,
 		getPugDocument,
 
-		setup(_context) {
-			htmlPlugin.setup?.(_context);
-			pugLs = pug.getLanguageService(htmlPlugin.getHtmlLs());
-			context = _context;
-		},
-
 		complete: {
 
 			on(document, position, _) {
 				return worker(document, (pugDocument) => {
-
-					if (!context.env.documentContext)
-						return;
-
 					return pugLs.doComplete(pugDocument, position, context.env.documentContext, /** TODO: CompletionConfiguration */);
 				});
 			},
@@ -48,6 +37,7 @@ export default function (): LanguageServicePlugin & ReturnType<typeof useHtmlPlu
 					if (pugDocument.error) {
 
 						return [{
+							source: 'pug',
 							code: pugDocument.error.code,
 							message: pugDocument.error.msg,
 							range: {
@@ -56,6 +46,8 @@ export default function (): LanguageServicePlugin & ReturnType<typeof useHtmlPlu
 							},
 						}];
 					}
+
+					return [];
 				});
 			},
 		},
@@ -63,7 +55,7 @@ export default function (): LanguageServicePlugin & ReturnType<typeof useHtmlPlu
 		doHover(document, position) {
 			return worker(document, async (pugDocument) => {
 
-				const hoverSettings = await context.env.configurationHost?.getConfiguration<html.HoverSettings>('html.hover', document.uri);
+				const hoverSettings = await context.env.configurationHost?.getConfiguration<html.HoverSettings>('html.hover');
 
 				return pugLs.doHover(pugDocument, position, hoverSettings);
 			});
@@ -77,11 +69,9 @@ export default function (): LanguageServicePlugin & ReturnType<typeof useHtmlPlu
 
 		findDocumentLinks(document) {
 			return worker(document, (pugDocument) => {
-
-				if (!context.env.documentContext)
-					return;
-
-				return pugLs.findDocumentLinks(pugDocument, context.env.documentContext);
+				if (context.env.documentContext) {
+					return pugLs.findDocumentLinks(pugDocument, context.env.documentContext);
+				}
 			});
 		},
 
@@ -114,7 +104,7 @@ export default function (): LanguageServicePlugin & ReturnType<typeof useHtmlPlu
 
 					if (enabled) {
 
-						const text = pugLs.doQuoteComplete(pugDocument, position, await context.env.configurationHost?.getConfiguration<html.CompletionConfiguration>('html.completion', document.uri));
+						const text = pugLs.doQuoteComplete(pugDocument, position, await context.env.configurationHost?.getConfiguration<html.CompletionConfiguration>('html.completion'));
 
 						if (text) {
 							return text;
@@ -152,4 +142,5 @@ export default function (): LanguageServicePlugin & ReturnType<typeof useHtmlPlu
 
 		return doc;
 	}
-}
+};
+export default () => plugin;

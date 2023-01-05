@@ -1,7 +1,7 @@
 import { Mapping } from '@volar/source-map';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
-export interface DocumentCapabilities {
+export interface FileCapabilities {
 	diagnostic?: boolean,
 	foldingRange?: boolean,
 	documentFormatting?: boolean | {
@@ -12,7 +12,7 @@ export interface DocumentCapabilities {
 	inlayHint?: boolean,
 }
 
-export interface PositionCapabilities {
+export interface FileRangeCapabilities {
 	hover?: boolean,
 	references?: boolean,
 	definition?: boolean,
@@ -32,51 +32,35 @@ export interface PositionCapabilities {
 	displayWithLink?: boolean,
 }
 
-export interface TeleportCapabilities {
+export interface MirrorBehaviorCapabilities {
 	references?: boolean,
 	definition?: boolean,
 	rename?: boolean,
 }
 
-export interface TeleportMappingData {
-	toSourceCapabilities: TeleportCapabilities,
-	toGenedCapabilities: TeleportCapabilities,
-}
-
-export interface TextRange {
-	start: number,
-	end: number,
-}
-
-export interface SourceFile {
-	fileName: string,
-	text: string,
-	embeddeds: EmbeddedFile[],
-}
-
-export enum EmbeddedFileKind {
+export enum FileKind {
 	TextFile = 0,
 	TypeScriptHostFile = 1,
 }
 
-export interface EmbeddedFile {
+export interface VirtualFile {
 	fileName: string,
-	text: string,
-	kind: EmbeddedFileKind,
-	capabilities: DocumentCapabilities,
-	mappings: Mapping<PositionCapabilities>[],
-	teleportMappings?: Mapping<TeleportMappingData>[],
-	embeddeds: EmbeddedFile[],
+	snapshot: ts.IScriptSnapshot,
+	kind: FileKind,
+	capabilities: FileCapabilities,
+	mappings: Mapping<FileRangeCapabilities>[],
+	mirrorBehaviorMappings?: Mapping<[MirrorBehaviorCapabilities, MirrorBehaviorCapabilities]>[],
+	embeddedFiles: VirtualFile[],
 }
 
-export interface LanguageModule<T extends SourceFile = SourceFile> {
-	createSourceFile(fileName: string, snapshot: ts.IScriptSnapshot): T | undefined;
-	updateSourceFile(sourceFile: T, snapshot: ts.IScriptSnapshot): void;
+export interface LanguageModule<T extends VirtualFile = VirtualFile> {
+	createFile(fileName: string, snapshot: ts.IScriptSnapshot): T | undefined;
+	updateFile(virtualFile: T, snapshot: ts.IScriptSnapshot): void;
+	deleteFile?(virtualFile: T): void;
 	proxyLanguageServiceHost?(host: LanguageServiceHost): Partial<LanguageServiceHost>;
 }
 
-export type LanguageServiceHost = ts.LanguageServiceHost & {
-	getTypeScriptModule(): typeof import('typescript/lib/tsserverlibrary');
-	isTsPlugin?: boolean,
+export interface LanguageServiceHost extends ts.LanguageServiceHost {
+	getTypeScriptModule(): typeof import('typescript/lib/tsserverlibrary') | undefined;
 	isTsc?: boolean,
 };

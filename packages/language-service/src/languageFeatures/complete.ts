@@ -1,15 +1,15 @@
 import { transformCompletionList } from '@volar/transforms';
-import type { LanguageServicePlugin, PositionCapabilities } from '@volar/language-service';
+import type { FileRangeCapabilities } from '@volar/language-service';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import type { LanguageServiceRuntimeContext } from '../types';
+import type { LanguageServicePluginInstance, LanguageServiceRuntimeContext } from '../types';
 import { visitEmbedded } from '../utils/definePlugin';
 
 export interface PluginCompletionData {
 	uri: string,
 	originalItem: vscode.CompletionItem,
 	pluginId: number,
-	sourceMap: {
+	map: {
 		embeddedDocumentUri: string;
 	} | undefined,
 }
@@ -19,10 +19,10 @@ export function register(context: LanguageServiceRuntimeContext) {
 	let cache: {
 		uri: string,
 		data: {
-			sourceMap: {
+			map: {
 				embeddedDocumentUri: string;
 			} | undefined,
-			plugin: LanguageServicePlugin,
+			plugin: LanguageServicePluginInstance,
 			list: vscode.CompletionList,
 		}[],
 		mainCompletion: {
@@ -44,38 +44,36 @@ export function register(context: LanguageServiceRuntimeContext) {
 				if (!cacheData.list.isIncomplete)
 					continue;
 
-				if (cacheData.sourceMap) {
+				if (cacheData.map) {
 
-					const sourceMap = context.documents.sourceMapFromEmbeddedDocumentUri(cacheData.sourceMap.embeddedDocumentUri);
+					for (const [_, map] of context.documents.getMapsByVirtualFileUri(cacheData.map.embeddedDocumentUri)) {
 
-					if (!sourceMap)
-						continue;
+						for (const mapped of map.toGeneratedPositions(position, data => !!data.completion)) {
 
+							if (!cacheData.plugin.complete?.on)
+								continue;
 
-					for (const mapped of sourceMap.toGeneratedPositions(position, data => !!data.completion)) {
+							const embeddedCompletionList = await cacheData.plugin.complete.on(map.virtualFileDocument, mapped, completionContext);
 
-						if (!cacheData.plugin.complete?.on)
-							continue;
+							if (!embeddedCompletionList) {
+								cacheData.list.isIncomplete = false;
+								continue;
+							}
 
-						const embeddedCompletionList = await cacheData.plugin.complete.on(sourceMap.mappedDocument, mapped, completionContext);
-
-						if (!embeddedCompletionList) {
-							cacheData.list.isIncomplete = false;
-							continue;
+							cacheData.list = transformCompletionList(
+								embeddedCompletionList,
+								range => map.toSourceRange(range),
+								map.virtualFileDocument,
+								(newItem, oldItem) => newItem.data = {
+									uri,
+									originalItem: oldItem,
+									pluginId: context.plugins.indexOf(cacheData.plugin),
+									map: {
+										embeddedDocumentUri: map.virtualFileDocument.uri,
+									},
+								} satisfies PluginCompletionData,
+							);
 						}
-
-						cacheData.list = transformCompletionList(
-							embeddedCompletionList,
-							range => sourceMap.toSourceRange(range),
-							(newItem, oldItem) => newItem.data = {
-								uri,
-								originalItem: oldItem,
-								pluginId: context.plugins.indexOf(cacheData.plugin),
-								sourceMap: {
-									embeddedDocumentUri: sourceMap.mappedDocument.uri,
-								},
-							} satisfies PluginCompletionData,
-						);
 					}
 				}
 				else if (document = context.getTextDocument(uri)) {
@@ -98,7 +96,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 								uri,
 								originalItem: item,
 								pluginId: context.plugins.indexOf(cacheData.plugin),
-								sourceMap: undefined,
+								map: undefined,
 							} satisfies PluginCompletionData,
 						})),
 					};
@@ -107,7 +105,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 		}
 		else {
 
-			const vueDocument = context.documents.get(uri);
+			const rootFile = context.documents.getRootFileBySourceFileUri(uri);
 
 			cache = {
 				uri,
@@ -118,15 +116,15 @@ export function register(context: LanguageServiceRuntimeContext) {
 			// monky fix https://github.com/johnsoncodehk/volar/issues/1358
 			let isFirstMapping = true;
 
-			if (vueDocument) {
+			if (rootFile) {
 
-				await visitEmbedded(vueDocument, async sourceMap => {
+				await visitEmbedded(context.documents, rootFile, async (_, map) => {
 
 					const plugins = context.plugins.sort(sortPlugins);
 
-					let _data: PositionCapabilities | undefined;
+					let _data: FileRangeCapabilities | undefined;
 
-					for (const mapped of sourceMap.toGeneratedPositions(position, data => {
+					for (const mapped of map.toGeneratedPositions(position, data => {
 						_data = data;
 						return !!data.completion;
 					})) {
@@ -144,14 +142,14 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 							const isAdditional = _data && typeof _data.completion === 'object' && _data.completion.additional || plugin.complete.isAdditional;
 
-							if (cache!.mainCompletion && (!isAdditional || cache?.mainCompletion.documentUri !== sourceMap.mappedDocument.uri))
+							if (cache!.mainCompletion && (!isAdditional || cache?.mainCompletion.documentUri !== map.virtualFileDocument.uri))
 								continue;
 
 							// avoid duplicate items with .vue and .vue.html
 							if (plugin.complete.isAdditional && cache?.data.some(data => data.plugin === plugin))
 								continue;
 
-							const embeddedCompletionList = await plugin.complete.on(sourceMap.mappedDocument, mapped, completionContext);
+							const embeddedCompletionList = await plugin.complete.on(map.virtualFileDocument, mapped, completionContext);
 
 							if (!embeddedCompletionList || !embeddedCompletionList.items.length)
 								continue;
@@ -161,25 +159,26 @@ export function register(context: LanguageServiceRuntimeContext) {
 							}
 
 							if (!isAdditional) {
-								cache!.mainCompletion = { documentUri: sourceMap.mappedDocument.uri };
+								cache!.mainCompletion = { documentUri: map.virtualFileDocument.uri };
 							}
 
 							const completionList = transformCompletionList(
 								embeddedCompletionList,
-								range => sourceMap.toSourceRange(range),
+								range => map.toSourceRange(range),
+								map.virtualFileDocument,
 								(newItem, oldItem) => newItem.data = {
 									uri,
 									originalItem: oldItem,
 									pluginId: context.plugins.indexOf(plugin),
-									sourceMap: {
-										embeddedDocumentUri: sourceMap.mappedDocument.uri,
+									map: {
+										embeddedDocumentUri: map.virtualFileDocument.uri,
 									}
 								} satisfies PluginCompletionData,
 							);
 
 							cache!.data.push({
-								sourceMap: {
-									embeddedDocumentUri: sourceMap.mappedDocument.uri,
+								map: {
+									embeddedDocumentUri: map.virtualFileDocument.uri,
 								},
 								plugin,
 								list: completionList,
@@ -225,7 +224,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					}
 
 					cache.data.push({
-						sourceMap: undefined,
+						map: undefined,
 						plugin,
 						list: {
 							...completionList,
@@ -248,7 +247,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 		return combineCompletionList(cache.data.map(cacheData => cacheData.list));
 
-		function sortPlugins(a: LanguageServicePlugin, b: LanguageServicePlugin) {
+		function sortPlugins(a: LanguageServicePluginInstance, b: LanguageServicePluginInstance) {
 			return (b.complete?.isAdditional ? -1 : 1) - (a.complete?.isAdditional ? -1 : 1);
 		}
 

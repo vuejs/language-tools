@@ -361,7 +361,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 
 		expect(baz).toBeDefined();
 		expect(baz?.default).toBeUndefined();
-		// expect(baz?.required).toBeFalsy(); // @todo should not be required
+		expect(baz?.required).toBeFalsy();
 		expect(baz?.type).toEqual('string | undefined');
 
 		expect(xfoo).toBeDefined();
@@ -371,12 +371,12 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 
 		expect(xbar).toBeDefined();
 		// expect(xbar?.default).toBe('""'); // @toto should be empty string
-		// expect(xbar?.required).toBeFalsy(); // @todo should not be required
+		expect(xbar?.required).toBeFalsy();
 		expect(xbar?.type).toEqual('string | undefined');
 
 		expect(xbaz).toBeDefined();
 		expect(xbaz?.default).toBeUndefined();
-		// expect(baz?.required).toBeFalsy(); // @todo should not be required
+		expect(baz?.required).toBeFalsy();
 		expect(xbaz?.type).toEqual('string | undefined');
 	});
 
@@ -408,7 +408,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		expect(baz).toBeDefined();
 		expect(baz?.default).toBeUndefined();
 		expect(baz?.type).toEqual('string | undefined');
-		// expect(baz?.required).toBeFalsy(); // @todo should not be required
+		expect(baz?.required).toBeFalsy();
 
 		expect(xfoo).toBeDefined();
 		expect(xfoo?.default).toBeUndefined();
@@ -418,12 +418,12 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		expect(xbar).toBeDefined();
 		// expect(xbar?.default).toBe('""'); // @todo should be empty string
 		expect(xbar?.type).toEqual('string | undefined');
-		// expect(xbar?.required).toBeFalsy(); // @todo should not be required
+		expect(xbar?.required).toBeFalsy();
 
 		expect(xbaz).toBeDefined();
 		expect(xbaz?.default).toBeUndefined();
 		expect(xbaz?.type).toEqual('string | undefined');
-		// expect(baz?.required).toBeFalsy(); // @todo should not be required
+		expect(baz?.required).toBeFalsy();
 
 		expect(hello).toBeDefined();
 		expect(hello?.default).toEqual('"Hello"');

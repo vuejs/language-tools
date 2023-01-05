@@ -22,7 +22,7 @@ const plugin: VueLanguagePlugin = () => {
 			return names;
 		},
 
-		resolveEmbeddedFile(fileName, sfc, embeddedFile) {
+		resolveEmbeddedFile(_fileName, sfc, embeddedFile) {
 			const match = embeddedFile.fileName.match(/^(.*)\.customBlock_([^_]+)_(\d+)\.([^.]+)$/);
 			if (match) {
 				const index = parseInt(match[3]);

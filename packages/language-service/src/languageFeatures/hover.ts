@@ -11,14 +11,14 @@ export function register(context: LanguageServiceRuntimeContext) {
 			context,
 			uri,
 			position,
-			(position, sourceMap) => sourceMap.toGeneratedPositions(position, data => !!data.hover),
+			(position, map) => map.toGeneratedPositions(position, data => !!data.hover),
 			(plugin, document, position) => plugin.doHover?.(document, position),
-			(item, sourceMap) => {
+			(item, map) => {
 
-				if (!sourceMap || !item.range)
+				if (!map || !item.range)
 					return item;
 
-				const range = sourceMap.toSourceRange(item.range);
+				const range = map.toSourceRange(item.range);
 				if (range) {
 					item.range = range;
 					return item;

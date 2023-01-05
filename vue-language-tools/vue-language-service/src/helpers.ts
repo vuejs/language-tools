@@ -10,7 +10,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 export function checkPropsOfTag(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
-	sourceFile: embedded.SourceFile,
+	sourceFile: embedded.VirtualFile,
 	tag: string,
 ) {
 
@@ -70,7 +70,7 @@ export function checkPropsOfTag(
 export function checkEventsOfTag(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
-	sourceFile: embedded.SourceFile,
+	sourceFile: embedded.VirtualFile,
 	tag: string,
 ) {
 
@@ -131,7 +131,7 @@ export function checkEventsOfTag(
 export function checkComponentNames(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
-	sourceFile: embedded.SourceFile,
+	sourceFile: embedded.VirtualFile,
 ) {
 	return getComponentsType(ts, tsLs, sourceFile)
 		?.componentsType
@@ -141,10 +141,11 @@ export function checkComponentNames(
 		?? [];
 }
 
-export function checkGlobalAttrs(
+export function getElementAttrs(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
 	fileName: string,
+	tagName: string,
 ) {
 
 	const sharedTypesFileName = fileName.substring(0, fileName.lastIndexOf('/')) + '/' + typesFileName;
@@ -153,16 +154,19 @@ export function checkGlobalAttrs(
 
 	if (tsSourceFile = tsLs.getProgram()?.getSourceFile(sharedTypesFileName)) {
 
-		const typeNoe = tsSourceFile.statements.find((node): node is ts.TypeAliasDeclaration => ts.isTypeAliasDeclaration(node) && node.name.getText() === 'GlobalAttrs');
+		const typeNode = tsSourceFile.statements.find((node): node is ts.TypeAliasDeclaration => ts.isTypeAliasDeclaration(node) && node.name.getText() === 'IntrinsicElements');
 		const checker = tsLs.getProgram()?.getTypeChecker();
 
-		if (checker && typeNoe) {
-			checker.getTypeFromTypeNode;
+		if (checker && typeNode) {
 
-			const type = checker.getTypeFromTypeNode(typeNoe.type);
-			const attrs = type.getProperties();
+			const type = checker.getTypeFromTypeNode(typeNode.type);
+			const el = type.getProperty(tagName);
 
-			return attrs.map(c => c.name);
+			if (el) {
+				const attrs = checker.getTypeOfSymbolAtLocation(el, typeNode).getProperties();
+
+				return attrs.map(c => c.name);
+			}
 		}
 	}
 
@@ -172,18 +176,18 @@ export function checkGlobalAttrs(
 function getComponentsType(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
-	sourceFile: embedded.SourceFile,
+	sourceFile: embedded.VirtualFile,
 ) {
 
-	if (!(sourceFile instanceof vue.VueSourceFile)) {
+	if (!(sourceFile instanceof vue.VueFile)) {
 		return;
 	}
 
-	let file: embedded.SourceFile | undefined;
+	let file: embedded.VirtualFile | undefined;
 	let tsSourceFile: ts.SourceFile | undefined;
 
-	embedded.forEachEmbeddeds(sourceFile.embeddeds, embedded => {
-		if (embedded.fileName === sourceFile.tsFileName) {
+	embedded.forEachEmbeddedFile(sourceFile, embedded => {
+		if (embedded.fileName === sourceFile.mainScriptName) {
 			file = embedded;
 		}
 	});
@@ -233,13 +237,13 @@ type Tags = Map<string, {
 	}>,
 }>;
 
-const map = new WeakMap<embedded.SourceFile, ComputedRef<Tags | undefined>>();
+const map = new WeakMap<embedded.VirtualFile, ComputedRef<Tags | undefined>>();
 
-export function getTemplateTagsAndAttrs(sourceFile: embedded.SourceFile): Tags {
+export function getTemplateTagsAndAttrs(sourceFile: embedded.VirtualFile): Tags {
 
 	if (!map.has(sourceFile)) {
 		const getter = computed(() => {
-			if (!(sourceFile instanceof vue.VueSourceFile))
+			if (!(sourceFile instanceof vue.VueFile))
 				return;
 			const ast = sourceFile.compiledSFCTemplate?.ast;
 			const tags: Tags = new Map();

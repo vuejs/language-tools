@@ -20,7 +20,7 @@
 				"extensions": {
 					"type": "array",
 					"default": [ ".vue" ],
-					"markdownDescription": "Valid file extensions that should be considered as regular Vue SFC, please note that you should not use this option separately for additional file extensions IDE support, see https://github.com/johnsoncodehk/volar/tree/master/extensions/vscode-vue-language-features/README.md#custom-file-extensions."
+					"markdownDescription": "Valid file extensions that should be considered as regular Vue SFC, please note that you should not use this option separately for additional file extensions IDE support, see https://github.com/johnsoncodehk/volar/tree/master/vue-language-tools/vscode-vue/README.md#custom-file-extensions."
 				},
 				"jsxTemplates": {
 					"type": "boolean",
@@ -35,6 +35,15 @@
 				"skipTemplateCodegen": {
 					"type": "boolean",
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/577"
+				},
+				"nativeTags": {
+					"type": "array",
+					"default": [
+						"div",
+						"img",
+						"..."
+					],
+					"markdownDescription": "List of valid intrinsic elements."
 				},
 				"dataAttributes": {
 					"type": "array",
@@ -51,6 +60,10 @@
 					"default": [ ],
 					"markdownDescription": "Plugins to be used in the SFC compiler."
 				},
+				"hooks": {
+					"type": "array",
+					"markdownDescription": "https://github.com/johnsoncodehk/volar/pull/2217"
+				},
 				"optionsWrapper": {
 					"type": "array",
 					"default": [
@@ -62,23 +75,6 @@
 				"narrowingTypesInInlineHandlers": {
 					"type": "boolean",
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1249"
-				},
-				"bypassDefineComponentToExposePropsAndEmitsForJsScriptSetupComponents": {
-					"type": "boolean",
-					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1192"
-				},
-				"experimentalRuntimeMode": {
-					"type": "string",
-					"default": "runtime-dom",
-					"anyOf": [
-						{
-							"enum": [
-								"runtime-dom",
-								"runtime-uni-app"
-							]
-						}
-					],
-					"markdownDescription": "Run app in browser or uni-app"
 				},
 				"experimentalResolveStyleCssClasses": {
 					"enum": [
@@ -114,6 +110,10 @@
 						}
 					},
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1969"
+				},
+				"experimentalAdditionalLanguageModules": {
+					"type": "array",
+					"markdownDescription": "https://github.com/johnsoncodehk/volar/pull/2267"
 				}
 			}
 		}

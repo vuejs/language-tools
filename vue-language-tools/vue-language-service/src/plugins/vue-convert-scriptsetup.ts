@@ -1,10 +1,11 @@
-import type { TextRange } from '@volar/language-core';
-import { LanguageServicePlugin, ExecuteCommandContext, LanguageServicePluginContext, SourceFileDocument } from '@volar/language-service';
+import type { TextRange, VueLanguageServicePlugin } from '../types';
+import { ExecuteCommandContext } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-core';
 import { scriptSetupConvertRanges } from '@volar/vue-language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 
 enum Commands {
 	USE_SETUP_SUGAR = 'scriptSetupConversions.use',
@@ -18,106 +19,103 @@ export interface ReferencesCodeLensData {
 
 type CommandArgs = [string];
 
-export default function (options: {
-	getVueDocument(uri: string): SourceFileDocument | undefined,
-	doCodeActions: (uri: string, range: vscode.Range, codeActionContext: vscode.CodeActionContext) => Promise<vscode.CodeAction[] | undefined>,
-	doCodeActionResolve: (item: vscode.CodeAction) => Promise<vscode.CodeAction>,
-}): LanguageServicePlugin {
+export default function (): VueLanguageServicePlugin {
 
-	let context: LanguageServicePluginContext;
+	return (context, service) => {
 
-	return {
+		if (!context.typescript)
+			return {};
 
-		setup(_context) {
-			context = _context;
-		},
+		const _ts = context.typescript;
 
-		codeLens: {
+		return {
 
-			on(document) {
-				return worker(document.uri, async (vueDocument, vueSourceFile) => {
+			codeLens: {
 
-					if (document.uri.endsWith('.html')) // petite-vue
-						return;
+				on(document) {
+					return worker(document.uri, async (vueFile) => {
 
-					const isEnabled = await context.env.configurationHost?.getConfiguration<boolean>('volar.codeLens.scriptSetupTools') ?? true;
+						if (document.uri.endsWith('.html')) // petite-vue
+							return;
 
-					if (!isEnabled)
-						return;
+						const isEnabled = await context.env.configurationHost?.getConfiguration<boolean>('volar.codeLens.scriptSetupTools') ?? true;
 
-					const result: vscode.CodeLens[] = [];
-					const descriptor = vueSourceFile.sfc;
+						if (!isEnabled)
+							return;
 
-					if (descriptor.scriptSetup) {
-						result.push({
-							range: {
-								start: document.positionAt(descriptor.scriptSetup.startTagEnd),
-								end: document.positionAt(descriptor.scriptSetup.startTagEnd + descriptor.scriptSetup.content.length),
-							},
-							command: {
-								title: 'setup sugar ☑',
-								command: Commands.UNUSE_SETUP_SUGAR,
-								arguments: <CommandArgs>[document.uri],
-							},
-						});
-					}
-					else if (descriptor.script) {
-						result.push({
-							range: {
-								start: document.positionAt(descriptor.script.startTagEnd),
-								end: document.positionAt(descriptor.script.startTagEnd + descriptor.script.content.length),
-							},
-							command: {
-								title: 'setup sugar ☐',
-								command: Commands.USE_SETUP_SUGAR,
-								arguments: <CommandArgs>[document.uri],
-							},
-						});
-					}
-					return result;
-				});
+						const result: vscode.CodeLens[] = [];
+						const descriptor = vueFile.sfc;
+
+						if (descriptor.scriptSetup) {
+							result.push({
+								range: {
+									start: document.positionAt(descriptor.scriptSetup.startTagEnd),
+									end: document.positionAt(descriptor.scriptSetup.startTagEnd + descriptor.scriptSetup.content.length),
+								},
+								command: {
+									title: 'setup sugar ☑',
+									command: Commands.UNUSE_SETUP_SUGAR,
+									arguments: <CommandArgs>[document.uri],
+								},
+							});
+						}
+						else if (descriptor.script) {
+							result.push({
+								range: {
+									start: document.positionAt(descriptor.script.startTagEnd),
+									end: document.positionAt(descriptor.script.startTagEnd + descriptor.script.content.length),
+								},
+								command: {
+									title: 'setup sugar ☐',
+									command: Commands.USE_SETUP_SUGAR,
+									arguments: <CommandArgs>[document.uri],
+								},
+							});
+						}
+						return result;
+					});
+				},
 			},
-		},
 
-		doExecuteCommand(command, args, commandContext) {
+			doExecuteCommand(command, args, commandContext) {
 
-			if (command === Commands.USE_SETUP_SUGAR) {
+				if (command === Commands.USE_SETUP_SUGAR) {
 
-				const [uri] = args as CommandArgs;
+					const [uri] = args as CommandArgs;
 
-				return worker(uri, (vueDocument, vueSourceFile) => {
-					return useSetupSugar(context.typescript.module, vueDocument, vueSourceFile, commandContext, options.doCodeActions, options.doCodeActionResolve);
-				});
-			}
+					return worker(uri, (vueFile) => {
+						const document = context.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
+						return useSetupSugar(_ts.module, document, vueFile, commandContext, service.doCodeActions, service.doCodeActionResolve);
+					});
+				}
 
-			if (command === Commands.UNUSE_SETUP_SUGAR) {
+				if (command === Commands.UNUSE_SETUP_SUGAR) {
 
-				const [uri] = args as CommandArgs;
+					const [uri] = args as CommandArgs;
 
-				return worker(uri, (vueDocument, vueSourceFile) => {
-					return unuseSetupSugar(context.typescript.module, vueDocument, vueSourceFile, commandContext, options.doCodeActions, options.doCodeActionResolve);
-				});
-			}
-		},
+					return worker(uri, (vueFile) => {
+						const document = context.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
+						return unuseSetupSugar(_ts.module, document, vueFile, commandContext, service.doCodeActions, service.doCodeActionResolve);
+					});
+				}
+			},
+		};
+
+		function worker<T>(uri: string, callback: (vueFile: vue.VueFile) => T) {
+
+			const virtualFile = context.documents.getVirtualFileByUri(uri);
+			if (!(virtualFile instanceof vue.VueFile))
+				return;
+
+			return callback(virtualFile);
+		}
 	};
-
-	function worker<T>(uri: string, callback: (vueDocument: SourceFileDocument, vueSourceFile: vue.VueSourceFile) => T) {
-
-		const vueDocument = options.getVueDocument(uri);
-		if (!vueDocument)
-			return;
-
-		if (!(vueDocument.file instanceof vue.VueSourceFile))
-			return;
-
-		return callback(vueDocument, vueDocument.file);
-	}
 }
 
 async function useSetupSugar(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	vueDocument: SourceFileDocument,
-	vueSourceFile: vue.VueSourceFile,
+	document: TextDocument,
+	vueSourceFile: vue.VueFile,
 	context: ExecuteCommandContext,
 	doCodeActions: (uri: string, range: vscode.Range, codeActionContext: vscode.CodeActionContext) => Promise<vscode.CodeAction[] | undefined>,
 	doCodeActionResolve: (item: vscode.CodeAction) => Promise<vscode.CodeAction>,
@@ -128,31 +126,29 @@ async function useSetupSugar(
 	if (!sfc.scriptAst) return;
 
 	const edits = await getEdits(
-		vueDocument,
+		document,
 		sfc.script,
 		sfc.scriptAst,
 	);
 
 	if (edits?.length) {
 
-		await context.applyEdit({ changes: { [vueDocument.uri]: edits } });
+		await context.applyEdit({ changes: { [document.uri]: edits } });
 		await shared.sleep(200);
 
-		const importEdits = await getAddMissingImportsEdits(vueDocument, doCodeActions, doCodeActionResolve);
+		const importEdits = await getAddMissingImportsEdits(document, doCodeActions, doCodeActionResolve);
 		if (importEdits) {
 			await context.applyEdit(importEdits);
 		}
 	}
 
 	async function getEdits(
-		_vueDocument: NonNullable<typeof vueDocument>,
+		document: TextDocument,
 		_script: NonNullable<typeof sfc['script']>,
 		_scriptAst: ts.SourceFile,
 	) {
 
 		const ranges = scriptSetupConvertRanges.parseUseScriptSetupRanges(ts, _scriptAst);
-		const document = _vueDocument.getDocument();
-
 		const edits: vscode.TextEdit[] = [];
 		const scriptStartPos = document.positionAt(_script.startTagEnd);
 		const startTagText = document.getText({
@@ -285,8 +281,8 @@ async function useSetupSugar(
 
 async function unuseSetupSugar(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	vueDocument: SourceFileDocument,
-	vueSourceFile: vue.VueSourceFile,
+	document: TextDocument,
+	vueSourceFile: vue.VueFile,
 	context: ExecuteCommandContext,
 	doCodeActions: (uri: string, range: vscode.Range, codeActionContext: vscode.CodeActionContext) => Promise<vscode.CodeAction[] | undefined>,
 	doCodeActionResolve: (item: vscode.CodeAction) => Promise<vscode.CodeAction>,
@@ -297,7 +293,7 @@ async function unuseSetupSugar(
 	if (!sfc.scriptSetupAst) return;
 
 	const edits = await getEdits(
-		vueDocument,
+		document,
 		sfc.script,
 		sfc.scriptSetup,
 		sfc.scriptAst,
@@ -306,21 +302,18 @@ async function unuseSetupSugar(
 
 	if (edits?.length) {
 
-		await context.applyEdit({ changes: { [vueDocument.uri]: edits } });
+		await context.applyEdit({ changes: { [document.uri]: edits } });
 		await shared.sleep(200);
 
-		const importEdits = await getAddMissingImportsEdits(vueDocument);
+		const importEdits = await getAddMissingImportsEdits(document);
 		if (importEdits) {
 			await context.applyEdit(importEdits);
 		}
 	}
 
 
-	async function getAddMissingImportsEdits(
-		_vueDocument: NonNullable<typeof vueDocument>,
-	) {
+	async function getAddMissingImportsEdits(document: TextDocument) {
 
-		const document = _vueDocument.getDocument();
 		const codeActions = await doCodeActions(document.uri, {
 			start: document.positionAt(0),
 			end: document.positionAt(document.getText().length),
@@ -337,7 +330,7 @@ async function unuseSetupSugar(
 		}
 	}
 	async function getEdits(
-		_vueDocument: NonNullable<typeof vueDocument>,
+		document: TextDocument,
 		_script: typeof sfc['script'],
 		_scriptSetup: NonNullable<typeof sfc['scriptSetup']>,
 		_scriptAst: ts.SourceFile | undefined,
@@ -346,8 +339,6 @@ async function unuseSetupSugar(
 
 		const ranges = scriptSetupConvertRanges.parseUnuseScriptSetupRanges(ts, _scriptSetupAst);
 		const scriptRanges = _scriptAst ? scriptSetupConvertRanges.parseUseScriptSetupRanges(ts, _scriptAst) : undefined;
-
-		const document = _vueDocument.getDocument();
 		const edits: vscode.TextEdit[] = [];
 		const removeSetupTextRanges: TextRange[] = [...ranges.imports];
 
@@ -575,12 +566,11 @@ async function unuseSetupSugar(
 }
 
 export async function getAddMissingImportsEdits(
-	_vueDocument: SourceFileDocument,
+	document: TextDocument,
 	doCodeActions: (uri: string, range: vscode.Range, codeActionContext: vscode.CodeActionContext) => Promise<vscode.CodeAction[] | undefined>,
 	doCodeActionResolve: (item: vscode.CodeAction) => Promise<vscode.CodeAction>,
 ) {
 
-	const document = _vueDocument.getDocument();
 	const codeActions = await doCodeActions(document.uri, {
 		start: document.positionAt(0),
 		end: document.positionAt(document.getText().length),

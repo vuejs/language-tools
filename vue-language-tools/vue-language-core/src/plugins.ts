@@ -16,10 +16,8 @@ import * as CompilerVue2 from './utils/vue2TemplateCompiler';
 
 export function getDefaultVueLanguagePlugins(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	rootDir: string,
 	compilerOptions: ts.CompilerOptions,
 	_vueCompilerOptions: VueCompilerOptions,
-	extraPlugins: VueLanguagePlugin[] = [],
 ) {
 
 	const _plugins: VueLanguagePlugin[] = [
@@ -32,14 +30,13 @@ export function getDefaultVueLanguagePlugins(
 		useVueSfcScriptsFormat,
 		useVueSfcTemplate,
 		useVueTsx,
-		...extraPlugins,
 	];
 	const pluginPaths = new Map<number, string>();
 	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);
 	if (typeof require?.resolve === 'function') {
 		for (const pluginPath of vueCompilerOptions.plugins) {
 			try {
-				const importPath = require.resolve(pluginPath, { paths: [rootDir] });
+				const importPath = require.resolve(pluginPath);
 				const plugin = require(importPath);
 				pluginPaths.set(_plugins.length, pluginPath);
 				_plugins.push(plugin);

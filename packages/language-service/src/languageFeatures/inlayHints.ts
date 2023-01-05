@@ -23,23 +23,23 @@ export function register(context: LanguageServiceRuntimeContext) {
 			context,
 			uri,
 			range,
-			(arg, sourceMap) => {
+			(_arg, map, file) => {
 
 				/**
 				 * copy from ./codeActions.ts
 				 */
 
-				if (!sourceMap.embeddedFile.capabilities.inlayHint)
+				if (!file.capabilities.inlayHint)
 					return [];
 
 				let minStart: number | undefined;
 				let maxEnd: number | undefined;
 
-				for (const mapping of sourceMap.mappings) {
+				for (const mapping of map.map.mappings) {
 					const overlapRange = getOverlapRange(offsetRange.start, offsetRange.end, mapping.sourceRange[0], mapping.sourceRange[1]);
 					if (overlapRange) {
-						const start = sourceMap.toGeneratedOffset(overlapRange.start)?.[0];
-						const end = sourceMap.toGeneratedOffset(overlapRange.end)?.[0];
+						const start = map.map.toGeneratedOffset(overlapRange.start)?.[0];
+						const end = map.map.toGeneratedOffset(overlapRange.end)?.[0];
 						if (start !== undefined && end !== undefined) {
 							minStart = minStart === undefined ? start : Math.min(start, minStart);
 							maxEnd = maxEnd === undefined ? end : Math.max(end, maxEnd);
@@ -49,24 +49,24 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				if (minStart !== undefined && maxEnd !== undefined) {
 					return [vscode.Range.create(
-						sourceMap.mappedDocument.positionAt(minStart),
-						sourceMap.mappedDocument.positionAt(maxEnd),
+						map.virtualFileDocument.positionAt(minStart),
+						map.virtualFileDocument.positionAt(maxEnd),
 					)];
 				}
 
 				return [];
 			},
-			(plugin, document, arg, sourceMap) => {
+			(plugin, document, arg) => {
 				return plugin.inlayHints?.on?.(document, arg);
 			},
-			(inlayHints, sourceMap) => inlayHints.map(_inlayHint => {
+			(inlayHints, map) => inlayHints.map(_inlayHint => {
 
-				if (!sourceMap)
+				if (!map)
 					return _inlayHint;
 
-				const position = sourceMap.toSourcePosition(_inlayHint.position);
+				const position = map.toSourcePosition(_inlayHint.position);
 				const edits = _inlayHint.textEdits
-					?.map(textEdit => transformTextEdit(textEdit, range => sourceMap!.toSourceRange(range)))
+					?.map(textEdit => transformTextEdit(textEdit, range => map!.toSourceRange(range), map.virtualFileDocument))
 					.filter(shared.notEmpty);
 
 				if (position) {

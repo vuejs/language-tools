@@ -1,30 +1,30 @@
-import type { DocumentServiceRuntimeContext } from '../types';
-import { documentArgFeatureWorker } from '../utils/featureWorkers';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
+import type { LanguageServiceRuntimeContext } from '../types';
+import { languageFeatureWorker } from '../utils/featureWorkers';
 import { transformSelectionRanges } from '@volar/transforms';
 import * as vscode from 'vscode-languageserver-protocol';
 import * as shared from '@volar/shared';
 
-export function register(context: DocumentServiceRuntimeContext) {
+export function register(context: LanguageServiceRuntimeContext) {
 
-	return (document: TextDocument, positions: vscode.Position[]) => {
+	return (uri: string, positions: vscode.Position[]) => {
 
-		return documentArgFeatureWorker(
+		return languageFeatureWorker(
 			context,
-			document,
+			uri,
 			positions,
-			sourceMap => !!sourceMap.embeddedFile.capabilities.documentFormatting,
-			(positions, sourceMap) => {
-				const result = positions
-					.map(position => sourceMap.toGeneratedPosition(position))
-					.filter(shared.notEmpty);
-				if (result.length) {
-					return [result];
+			(positions, map, file) => {
+				if (file.capabilities.documentFormatting) {
+					const result = positions
+						.map(position => map.toGeneratedPosition(position))
+						.filter(shared.notEmpty);
+					if (result.length) {
+						return [result];
+					}
 				}
 				return [];
 			},
 			(plugin, document, positions) => plugin.getSelectionRanges?.(document, positions),
-			(item, sourceMap) => transformSelectionRanges(item, range => sourceMap.toSourceRange(range)),
+			(item, map) => map ? transformSelectionRanges(item, range => map.toSourceRange(range)) : item,
 			results => {
 				for (let i = 0; i < results[0].length; i++) {
 					const first = results[0][i];

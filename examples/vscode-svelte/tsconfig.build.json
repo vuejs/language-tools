@@ -15,6 +15,9 @@
 	],
 	"references": [
 		{
+			"path": "../../packages/vscode-language-client/tsconfig.build.json"
+		},
+		{
 			"path": "../svelte-language-server/tsconfig.build.json"
 		}
 	]

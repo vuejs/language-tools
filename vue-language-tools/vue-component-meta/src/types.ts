@@ -46,8 +46,13 @@ export type PropertyMetaSchema = string
 	| { kind: 'object', type: string, schema?: Record<string, PropertyMeta>; };
 
 export type MetaCheckerSchemaOptions = boolean | {
-	ignore?: string[];
+	/**
+	 * A list of type names to be ignored in expending in schema.
+	 * Can be functions to ignore types dynamically.
+	 */
+	ignore?: (string | ((name: string, type: ts.Type, typeChecker: ts.TypeChecker) => boolean | void | undefined | null))[];
 };
+
 export interface MetaCheckerOptions {
 	schema?: MetaCheckerSchemaOptions;
 	forceUseTs?: boolean;

@@ -1,4 +1,4 @@
-import { createLanguageService, LanguageServiceHost } from '../..';
+import { createLanguageService, VueLanguageServiceHost } from '../..';
 import * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path';
 import * as shared from '@volar/shared';
@@ -23,7 +23,7 @@ function createTester(root: string) {
 	parsedCommandLine.fileNames = parsedCommandLine.fileNames.map(shared.normalizeFileName);
 	const scriptVersions = new Map<string, string>();
 	const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
-	const host: LanguageServiceHost = {
+	const host: VueLanguageServiceHost = {
 		// ts
 		getNewLine: () => ts.sys.newLine,
 		useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,
@@ -62,7 +62,7 @@ function createTester(root: string) {
 		{
 			rootUri,
 			configurationHost: {
-				async getConfiguration<T>(section: string) {
+				async getConfiguration(section: string) {
 					const keys = section.split('.');
 					let settings = vscodeSettings;
 					for (const key of keys) {

@@ -31,14 +31,14 @@ export function register(context: LanguageServiceRuntimeContext) {
 			context,
 			uri,
 			offsetRange,
-			function* (offsetRange, sourceMap) {
+			function* (offsetRange, map) {
 
 				if (cancelToken?.isCancellationRequested)
 					return;
 
 				let range: [number, number] | undefined;
 
-				for (const mapping of sourceMap.mappings) {
+				for (const mapping of map.map.mappings) {
 
 					if (
 						mapping.data.semanticTokens
@@ -64,12 +64,12 @@ export function register(context: LanguageServiceRuntimeContext) {
 				vscode.Range.create(document.positionAt(offsetRange[0]), document.positionAt(offsetRange[1])),
 				legend,
 			),
-			(tokens, sourceMap) => tokens.map<SemanticToken | undefined>(_token => {
+			(tokens, map) => tokens.map<SemanticToken | undefined>(_token => {
 
-				if (!sourceMap)
+				if (!map)
 					return _token;
 
-				const range = sourceMap.toSourceRange({
+				const range = map.toSourceRange({
 					start: { line: _token[0], character: _token[1] },
 					end: { line: _token[0], character: _token[1] + _token[2] },
 				}, data => !!data.semanticTokens);

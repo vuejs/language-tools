@@ -15,6 +15,15 @@
 			{{ exactType(num, {} as number) }}
 		</template>
 	</Self>
+	
+	<!-- typed slot key -->
+	<slot :name="baz" str="str" :num="1"></slot>
+	<Self>
+		<template #baz="{ str, num }">
+			{{ exactType(str, {} as string) }}
+			{{ exactType(num, {} as number) }}
+		</template>
+	</Self>
 </template>
 
 <script lang="ts">
@@ -29,6 +38,8 @@ declare const Comp: new <T>(props: { value: T; }) => {
 </script>
 
 <script lang="ts" setup>
-import { VNode } from 'vue';
+import { ref, VNode } from 'vue';
 import { exactType } from '../shared';
+
+const baz = ref('baz' as const);
 </script>

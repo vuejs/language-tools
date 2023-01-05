@@ -1,0 +1,29 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"noEmit": false,
+		"outDir": "out",
+		"rootDir": "src",
+	},
+	"include": [
+		"src"
+	],
+	"exclude": [
+		"node_modules",
+		".vscode-test",
+	],
+	"references": [
+		{
+			"path": "../../packages/shared/tsconfig.build.json"
+		},
+		{
+			"path": "../../packages/source-map/tsconfig.build.json"
+		},
+		{
+			"path": "../../packages/language-service/tsconfig.build.json"
+		},
+		{
+			"path": "../../packages/transforms/tsconfig.build.json"
+		},
+	],
+}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import * as path from 'path';
-import { rootUri, tester } from './utils/createTester';
+import { tester } from './utils/createTester';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as shared from '@volar/shared';
 import * as fs from 'fs';
@@ -18,7 +18,7 @@ for (const dirName of testDirs) {
 		for (const file in inputFiles) {
 
 			const filePath = path.join(dir, file);
-			const uri = shared.getUriByPath(rootUri, filePath);
+			const uri = shared.getUriByPath(filePath);
 			const fileText = inputFiles[file];
 			const document = TextDocument.create('', '', 0, fileText);
 			const actions = findActions(fileText);
@@ -45,7 +45,7 @@ for (const dirName of testDirs) {
 					expect(locations).toBeDefined();
 
 					const location = locations?.find(loc =>
-						loc.targetUri === shared.getUriByPath(rootUri, targetFile)
+						loc.targetUri === shared.getUriByPath(targetFile)
 						&& loc.targetSelectionRange.start.line === targetRange.start.line
 						&& loc.targetSelectionRange.start.character === targetRange.start.character
 						&& loc.targetSelectionRange.end.line === targetRange.end.line

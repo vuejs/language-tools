@@ -21,11 +21,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 			const originalItem = data.originalItem;
 
-			if (data.sourceMap) {
+			if (data.map) {
 
-				const sourceMap = context.documents.sourceMapFromEmbeddedDocumentUri(data.sourceMap.embeddedDocumentUri);
-
-				if (sourceMap) {
+				for (const [_, map] of context.documents.getMapsByVirtualFileUri(data.map.embeddedDocumentUri)) {
 
 					const resolvedItem = await plugin.complete.resolve(originalItem);
 
@@ -48,8 +46,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 						embeddedRange => {
 							let range = plugin.resolveEmbeddedRange?.(embeddedRange);
 							if (range) return range;
-							return sourceMap.toSourceRange(embeddedRange);
+							return map.toSourceRange(embeddedRange);
 						},
+						map.virtualFileDocument,
 					);
 				}
 			}

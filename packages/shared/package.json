@@ -1,6 +1,6 @@
 {
 	"name": "@volar/shared",
-	"version": "1.0.9",
+	"version": "1.0.22",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -14,6 +14,6 @@
 	},
 	"dependencies": {
 		"typesafe-path": "^0.2.2",
-		"vscode-uri": "^3.0.6"
+		"vscode-uri": "^3.0.7"
 	}
 }

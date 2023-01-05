@@ -7,7 +7,7 @@ import { VueEmbeddedFile } from './sourceFile';
 
 export type { SFCParseResult } from '@vue/compiler-sfc';
 
-export type LanguageServiceHost = embedded.LanguageServiceHost & {
+export type VueLanguageServiceHost = embedded.LanguageServiceHost & {
 	getVueCompilationSettings(): VueCompilerOptions,
 };
 
@@ -19,19 +19,20 @@ export interface ResolvedVueCompilerOptions {
 	jsxTemplates: boolean;
 	strictTemplates: boolean;
 	skipTemplateCodegen: boolean;
+	nativeTags: string[];
 	dataAttributes: string[];
 	htmlAttributes: string[];
 	optionsWrapper: [string, string] | [];
 	plugins: string[];
+	hooks: string[];
 	narrowingTypesInInlineHandlers: boolean;
-	bypassDefineComponentToExposePropsAndEmitsForJsScriptSetupComponents: boolean;
 
 	// experimental
-	experimentalRuntimeMode: 'runtime-dom' | 'runtime-uni-app';
 	experimentalResolveStyleCssClasses: 'scoped' | 'always' | 'never';
 	experimentalRfc436: boolean;
 	experimentalModelPropName: Record<string, Record<string, boolean | Record<string, string> | Record<string, string>[]>>;
 	experimentalUseElementAccessInTemplate: boolean;
+	experimentalAdditionalLanguageModules: string[];
 }
 
 export type VueLanguagePlugin = (ctx: {
@@ -83,7 +84,12 @@ export interface Sfc {
 	})[];
 
 	// ast
-	getTemplateAst: () => CompilerDom.RootNode | undefined;
+	templateAst: CompilerDom.RootNode | undefined;
 	scriptAst: ts.SourceFile | undefined;
 	scriptSetupAst: ts.SourceFile | undefined;
+}
+
+export interface TextRange {
+	start: number,
+	end: number,
 }

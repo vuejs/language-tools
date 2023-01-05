@@ -1,26 +1,23 @@
 import type * as embedded from '@volar/language-core';
 import { posix as path } from 'path';
 import { getDefaultVueLanguagePlugins } from './plugins';
-import { VueSourceFile } from './sourceFile';
-import { VueLanguagePlugin, VueCompilerOptions } from './types';
+import { VueFile } from './sourceFile';
+import { VueCompilerOptions } from './types';
 import * as localTypes from './utils/localTypes';
 import { resolveVueCompilerOptions } from './utils/ts';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 
-export function createLanguageModule(
+export function createLanguageModules(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	rootDir: string,
 	compilerOptions: ts.CompilerOptions,
 	_vueCompilerOptions: VueCompilerOptions,
-	extraPlugins: VueLanguagePlugin[] = [],
-): embedded.LanguageModule {
+): embedded.LanguageModule[] {
 
 	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);
 	const vueLanguagePlugin = getDefaultVueLanguagePlugins(
 		ts,
-		rootDir,
 		compilerOptions,
 		_vueCompilerOptions,
-		extraPlugins,
 	);
 
 	// from https://github.com/johnsoncodehk/volar/pull/1543
@@ -37,12 +34,12 @@ export function createLanguageModule(
 
 	const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(vueCompilerOptions.target, vueCompilerOptions));
 	const languageModule: embedded.LanguageModule = {
-		createSourceFile(fileName, snapshot) {
+		createFile(fileName, snapshot) {
 			if (vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))) {
-				return new VueSourceFile(fileName, snapshot, ts, vueLanguagePlugin);
+				return new VueFile(fileName, snapshot, ts, vueLanguagePlugin);
 			}
 		},
-		updateSourceFile(sourceFile: VueSourceFile, snapshot) {
+		updateFile(sourceFile: VueFile, snapshot) {
 			sourceFile.update(snapshot);
 		},
 		proxyLanguageServiceHost(host) {
@@ -96,7 +93,10 @@ export function createLanguageModule(
 		},
 	};
 
-	return languageModule;
+	return [
+		languageModule,
+		...vueCompilerOptions.experimentalAdditionalLanguageModules?.map(module => require(module)) ?? [],
+	];
 
 	function getSharedTypesFiles(fileNames: string[]) {
 		const moduleFiles = fileNames.filter(fileName => vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext)));

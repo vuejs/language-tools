@@ -1,8 +1,9 @@
+import { FileRangeCapabilities } from '@volar/language-core';
 import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { EmbeddedDocumentSourceMap } from '../documents';
+import { SourceMapWithDocuments } from '../documents';
 import type { LanguageServiceRuntimeContext } from '../types';
 import * as dedupe from '../utils/dedupe';
 import { languageFeatureWorker } from '../utils/featureWorkers';
@@ -190,12 +191,12 @@ export function register(context: LanguageServiceRuntimeContext) {
 				context,
 				uri,
 				true,
-				function* (arg, sourceMap) {
-					if (sourceMap.embeddedFile.capabilities.diagnostic) {
+				function* (arg, _, file) {
+					if (file.capabilities.diagnostic) {
 						yield arg;
 					}
 				},
-				async (plugin, document, arg, sourceMap) => {
+				async (plugin, document) => {
 
 					if (token) {
 
@@ -211,7 +212,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					const pluginId = context.plugins.indexOf(plugin);
 					const pluginCache = cacheMap.get(pluginId) ?? cacheMap.set(pluginId, new Map()).get(pluginId)!;
 					const cache = pluginCache.get(document.uri);
-					const tsProjectVersion = (mode === 'onDeclaration' || mode === 'onSemantic') ? context.core.typescriptLanguageServiceHost.getProjectVersion?.() : undefined;
+					const tsProjectVersion = (mode === 'onDeclaration' || mode === 'onSemantic') ? context.core.typescript.languageServiceHost.getProjectVersion?.() : undefined;
 
 					if (mode === 'onDeclaration' || mode === 'onSemantic') {
 						if (cache && cache.documentVersion === document.version && cache.tsProjectVersion === tsProjectVersion) {
@@ -236,7 +237,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 					return errors;
 				},
-				(errors, sourceMap) => transformErrorRange(sourceMap, errors),
+				(errors, map) => transformErrorRange(map, errors),
 				arr => dedupe.withDiagnostics(arr.flat()),
 			);
 
@@ -247,7 +248,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 		}
 	};
 
-	function transformErrorRange(sourceMap: EmbeddedDocumentSourceMap | undefined, errors: vscode.Diagnostic[]) {
+	function transformErrorRange(map: SourceMapWithDocuments<FileRangeCapabilities> | undefined, errors: vscode.Diagnostic[]) {
 
 		const result: vscode.Diagnostic[] = [];
 
@@ -256,8 +257,8 @@ export function register(context: LanguageServiceRuntimeContext) {
 			// clone it to avoid modify cache
 			let _error: vscode.Diagnostic = { ...error };
 
-			if (sourceMap) {
-				const range = sourceMap.toSourceRange(error.range, data => !!data.diagnostic);
+			if (map) {
+				const range = map.toSourceRange(error.range, data => !!data.diagnostic);
 				if (!range) {
 					continue;
 				}
@@ -269,17 +270,18 @@ export function register(context: LanguageServiceRuntimeContext) {
 				const relatedInfos: vscode.DiagnosticRelatedInformation[] = [];
 
 				for (const info of _error.relatedInformation) {
-					const map = context.documents.sourceMapFromEmbeddedDocumentUri(info.location.uri);
-					if (map) {
-						const range = map.toSourceRange(info.location.range, data => !!data.diagnostic);
-						if (range) {
-							relatedInfos.push({
-								location: {
-									uri: map.sourceDocument.uri,
-									range,
-								},
-								message: info.message,
-							});
+					if (context.documents.getVirtualFileByUri(info.location.uri)) {
+						for (const [_, map] of context.documents.getMapsByVirtualFileUri(info.location.uri)) {
+							const range = map.toSourceRange(info.location.range, data => !!data.diagnostic);
+							if (range) {
+								relatedInfos.push({
+									location: {
+										uri: map.sourceFileDocument.uri,
+										range,
+									},
+									message: info.message,
+								});
+							}
 						}
 					}
 					else {

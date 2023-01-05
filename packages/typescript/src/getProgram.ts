@@ -3,7 +3,7 @@ import type * as embedded from '@volar/language-core';
 
 export function getProgram(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	core: embedded.EmbeddedLanguageContext,
+	core: embedded.LanguageContext,
 	ls: ts.LanguageService,
 ) {
 
@@ -35,7 +35,7 @@ export function getProgram(
 	}
 
 	function getRootFileNames() {
-		return getProgram().getRootFileNames().filter(fileName => core.typescriptLanguageServiceHost.fileExists?.(fileName));
+		return getProgram().getRootFileNames().filter(fileName => core.typescript.languageServiceHost.fileExists?.(fileName));
 	}
 
 	// for vue-tsc --noEmit --watch
@@ -59,11 +59,11 @@ export function getProgram(
 
 		if (sourceFile) {
 
-			const mapped = core.mapper.fromEmbeddedFileName(sourceFile.fileName);
+			const source = core.virtualFiles.getSourceByVirtualFileName(sourceFile.fileName);
 
-			if (mapped) {
+			if (source) {
 
-				if (!mapped.embedded.capabilities.diagnostic)
+				if (!source[2].capabilities.diagnostic)
 					return [] as any;
 
 				const errors = transformDiagnostics(ls.getProgram()?.[api](sourceFile, cancellationToken) ?? []);
@@ -79,7 +79,7 @@ export function getProgram(
 		return transformDiagnostics(getProgram().getGlobalDiagnostics(cancellationToken) ?? []);
 	}
 	function emit(targetSourceFile?: ts.SourceFile, _writeFile?: ts.WriteFileCallback, cancellationToken?: ts.CancellationToken, emitOnlyDtsFiles?: boolean, customTransformers?: ts.CustomTransformers): ts.EmitResult {
-		const scriptResult = getProgram().emit(targetSourceFile, (core.typescriptLanguageServiceHost.writeFile ?? ts.sys.writeFile), cancellationToken, emitOnlyDtsFiles, customTransformers);
+		const scriptResult = getProgram().emit(targetSourceFile, (core.typescript.languageServiceHost.writeFile ?? ts.sys.writeFile), cancellationToken, emitOnlyDtsFiles, customTransformers);
 		return {
 			emitSkipped: scriptResult.emitSkipped,
 			emittedFiles: scriptResult.emittedFiles,
@@ -98,32 +98,44 @@ export function getProgram(
 				&& diagnostic.length !== undefined
 			) {
 
-				for (const start of core.mapper.fromEmbeddedLocation(diagnostic.file.fileName, diagnostic.start)) {
+				const source = core.virtualFiles.getSourceByVirtualFileName(diagnostic.file.fileName);
 
-					if (start.mapping && !start.mapping.data.diagnostic)
+				if (source) {
+
+					if (core.typescript.languageServiceHost.fileExists?.(source[0]) === false)
 						continue;
 
-					if (!core.typescriptLanguageServiceHost.fileExists?.(start.fileName))
-						continue;
+					for (const [sourceFileName, map] of core.virtualFiles.getMaps(source[2])) {
 
-					for (const end of core.mapper.fromEmbeddedLocation(
-						diagnostic.file.fileName,
-						diagnostic.start + diagnostic.length,
-					)) {
-
-						if (end.mapping && !end.mapping.data.diagnostic)
+						if (sourceFileName !== source[0])
 							continue;
 
-						onMapping(diagnostic, start.fileName, start.offset, end.offset, core.mapper.get(start.fileName)?.[0].text);
+						for (const start of map.toSourceOffsets(diagnostic.start)) {
 
-						break;
+							if (!start[1].data.diagnostic)
+								continue;
+
+							for (const end of map.toSourceOffsets(diagnostic.start + diagnostic.length, true)) {
+
+								if (!end[1].data.diagnostic)
+									continue;
+
+								onMapping(diagnostic, source[0], start[0], end[0], source[1].getText(0, source[1].getLength()));
+								break;
+							}
+							break;
+						}
 					}
-					break;
+				}
+				else {
+
+					if (core.typescript.languageServiceHost.fileExists?.(diagnostic.file.fileName) === false)
+						continue;
+
+					onMapping(diagnostic, diagnostic.file.fileName, diagnostic.start, diagnostic.start + diagnostic.length, diagnostic.file.text);
 				}
 			}
-			else if (
-				diagnostic.file === undefined
-			) {
+			else if (diagnostic.file === undefined) {
 				result.push(diagnostic);
 			}
 		}
@@ -138,7 +150,7 @@ export function getProgram(
 			if (!file) {
 
 				if (docText === undefined) {
-					const snapshot = core.typescriptLanguageServiceHost.getScriptSnapshot(fileName);
+					const snapshot = core.typescript.languageServiceHost.getScriptSnapshot(fileName);
 					if (snapshot) {
 						docText = snapshot.getText(0, snapshot.getLength());
 					}

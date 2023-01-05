@@ -184,7 +184,7 @@ export function register(
 			}
 		}
 		function transformCodeFix(codeFix: ts.CodeFixAction, diagnostics: vscode.Diagnostic[], kind: vscode.CodeActionKind) {
-			const edit = fileTextChangesToWorkspaceEdit(rootUri, codeFix.changes, getTextDocument);
+			const edit = fileTextChangesToWorkspaceEdit(codeFix.changes, getTextDocument);
 			const codeActions: vscode.CodeAction[] = [];
 			const fix = vscode.CodeAction.create(
 				codeFix.description,

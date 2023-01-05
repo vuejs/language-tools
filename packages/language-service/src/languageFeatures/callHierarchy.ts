@@ -9,7 +9,7 @@ export interface PluginCallHierarchyData {
 	uri: string,
 	originalItem: vscode.CallHierarchyItem,
 	pluginId: number,
-	sourceMap: {
+	map: {
 		embeddedDocumentUri: string;
 	} | undefined,
 }
@@ -24,8 +24,8 @@ export function register(context: LanguageServiceRuntimeContext) {
 				context,
 				uri,
 				position,
-				(position, sourceMap) => sourceMap.toGeneratedPositions(position, data => !!data.references),
-				async (plugin, document, position, sourceMap) => {
+				(position, map) => map.toGeneratedPositions(position, data => !!data.references),
+				async (plugin, document, position, map) => {
 
 					const items = await plugin.callHierarchy?.prepare(document, position);
 
@@ -36,8 +36,8 @@ export function register(context: LanguageServiceRuntimeContext) {
 								uri,
 								originalItem: item,
 								pluginId: context.plugins.indexOf(plugin),
-								sourceMap: sourceMap ? {
-									embeddedDocumentUri: sourceMap.mappedDocument.uri,
+								map: map ? {
+									embeddedDocumentUri: map.virtualFileDocument.uri,
 								} : undefined,
 							} satisfies PluginCallHierarchyData,
 						};
@@ -67,11 +67,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				const originalItem = data.originalItem;
 
-				if (data.sourceMap) {
+				if (data.map) {
 
-					const sourceMap = context.documents.sourceMapFromEmbeddedDocumentUri(data.sourceMap.embeddedDocumentUri);
-
-					if (sourceMap) {
+					if (context.documents.getVirtualFileByUri(data.map.embeddedDocumentUri)) {
 
 						const _calls = await plugin.callHierarchy.onIncomingCalls(originalItem);
 
@@ -128,11 +126,9 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				const originalItem = data.originalItem;
 
-				if (data.sourceMap) {
+				if (data.map) {
 
-					const sourceMap = context.documents.sourceMapFromEmbeddedDocumentUri(data.sourceMap.embeddedDocumentUri);
-
-					if (sourceMap) {
+					if (context.documents.getVirtualFileByUri(data.map.embeddedDocumentUri)) {
 
 						const _calls = await plugin.callHierarchy.onOutgoingCalls(originalItem);
 
@@ -175,41 +171,43 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 	function transformCallHierarchyItem(tsItem: vscode.CallHierarchyItem, tsRanges: vscode.Range[]): [vscode.CallHierarchyItem, vscode.Range[]] | undefined {
 
-		const sourceMap = context.documents.sourceMapFromEmbeddedDocumentUri(tsItem.uri);
-		if (!sourceMap)
-			return [tsItem, tsRanges]; // not virtual file
+		if (!context.documents.getVirtualFileByUri(tsItem.uri))
+			return [tsItem, tsRanges];
 
-		let range = sourceMap.toSourceRange(tsItem.range);
-		if (!range) {
-			// TODO: <script> range
-			range = {
-				start: sourceMap.sourceDocument.positionAt(0),
-				end: sourceMap.sourceDocument.positionAt(sourceMap.sourceDocument.getText().length),
+		for (const [_, map] of context.documents.getMapsByVirtualFileUri(tsItem.uri)) {
+
+			let range = map.toSourceRange(tsItem.range);
+			if (!range) {
+				// TODO: <script> range
+				range = {
+					start: map.sourceFileDocument.positionAt(0),
+					end: map.sourceFileDocument.positionAt(map.sourceFileDocument.getText().length),
+				};
+			}
+
+			const selectionRange = map.toSourceRange(tsItem.selectionRange);
+			if (!selectionRange)
+				continue;
+
+			const vueRanges = tsRanges.map(tsRange => map.toSourceRange(tsRange)).filter(shared.notEmpty);
+			const vueItem: vscode.CallHierarchyItem = {
+				...tsItem,
+				name: tsItem.name === path.basename(shared.getPathOfUri(map.virtualFileDocument.uri)) ? path.basename(shared.getPathOfUri(map.sourceFileDocument.uri)) : tsItem.name,
+				uri: map.sourceFileDocument.uri,
+				// TS Bug: `range: range` not works
+				range: {
+					start: range.start,
+					end: range.end,
+				},
+				selectionRange: {
+					start: selectionRange.start,
+					end: selectionRange.end,
+				},
 			};
+
+			selectionRange.end;
+
+			return [vueItem, vueRanges];
 		}
-
-		const selectionRange = sourceMap.toSourceRange(tsItem.selectionRange);
-		if (!selectionRange)
-			return;
-
-		const vueRanges = tsRanges.map(tsRange => sourceMap.toSourceRange(tsRange)).filter(shared.notEmpty);
-		const vueItem: vscode.CallHierarchyItem = {
-			...tsItem,
-			name: tsItem.name === path.basename(shared.getPathOfUri(sourceMap.mappedDocument.uri)) ? path.basename(shared.getPathOfUri(sourceMap.sourceDocument.uri)) : tsItem.name,
-			uri: sourceMap.sourceDocument.uri,
-			// TS Bug: `range: range` not works
-			range: {
-				start: range.start,
-				end: range.end,
-			},
-			selectionRange: {
-				start: selectionRange.start,
-				end: selectionRange.end,
-			},
-		};
-
-		selectionRange.end;
-
-		return [vueItem, vueRanges];
 	}
 }

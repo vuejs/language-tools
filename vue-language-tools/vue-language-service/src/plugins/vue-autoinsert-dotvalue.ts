@@ -4,17 +4,17 @@ import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { hyphenate } from '@vue/shared';
 import { isTsDocument } from '@volar-plugins/typescript';
-import { LanguageServicePlugin, LanguageServicePluginContext } from '@volar/language-service';
+import { LanguageServicePluginInstance } from '@volar/language-service';
+import { VueLanguageServicePlugin } from '../types';
 
-export default function (): LanguageServicePlugin {
+const plugin: VueLanguageServicePlugin = (context) => {
 
-	let context: LanguageServicePluginContext;
+	if (!context.typescript)
+		return {};
+
+	const _ts = context.typescript;
 
 	return {
-
-		setup(_context) {
-			context = _context;
-		},
 
 		async doAutoInsert(document, position, insertContext) {
 
@@ -28,7 +28,7 @@ export default function (): LanguageServicePlugin {
 			if (!enabled)
 				return;
 
-			const program = context.typescript.languageService.getProgram();
+			const program = _ts.languageService.getProgram();
 			if (!program)
 				return;
 
@@ -36,16 +36,16 @@ export default function (): LanguageServicePlugin {
 			if (!sourceFile)
 				return;
 
-			if (isBlacklistNode(context.typescript.module, sourceFile, document.offsetAt(position), false))
+			if (isBlacklistNode(_ts.module, sourceFile, document.offsetAt(position), false))
 				return;
 
 			const node = findPositionIdentifier(sourceFile, sourceFile, document.offsetAt(position));
 			if (!node)
 				return;
 
-			const token = context.typescript.languageServiceHost.getCancellationToken?.();
+			const token = _ts.languageServiceHost.getCancellationToken?.();
 			if (token) {
-				context.typescript.languageService.getQuickInfoAtPosition(shared.getPathOfUri(document.uri), node.end);
+				_ts.languageService.getQuickInfoAtPosition(shared.getPathOfUri(document.uri), node.end);
 				if (token?.isCancellationRequested()) {
 					return; // check cancel here because type checker do not use cancel token
 				}
@@ -65,7 +65,7 @@ export default function (): LanguageServicePlugin {
 
 				node.forEachChild(child => {
 					if (!result) {
-						if (child.end === offset && context.typescript.module.isIdentifier(child)) {
+						if (child.end === offset && _ts.module.isIdentifier(child)) {
 							result = child;
 						}
 						else if (child.end >= offset && child.getStart(sourceFile) < offset) {
@@ -78,9 +78,11 @@ export default function (): LanguageServicePlugin {
 			}
 		},
 	};
-}
+};
 
-export function isCharacterTyping(document: TextDocument, options: Parameters<NonNullable<LanguageServicePlugin['doAutoInsert']>>[2]) {
+export default () => plugin;
+
+export function isCharacterTyping(document: TextDocument, options: Parameters<NonNullable<LanguageServicePluginInstance['doAutoInsert']>>[2]) {
 
 	const lastCharacter = options.lastChange.text[options.lastChange.text.length - 1];
 	const rangeStart = options.lastChange.range.start;

@@ -1,0 +1,55 @@
+{
+	"private": true,
+	"name": "vscode-pug",
+	"version": "1.0.22",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/johnsoncodehk/volar.git",
+		"directory": "pug-language-tools/vscode-pug"
+	},
+	"displayName": "Pug Language Features (Volar)",
+	"description": "Pug Language Features (Volar)",
+	"author": "johnsoncodehk",
+	"publisher": "johnsoncodehk",
+	"engines": {
+		"vscode": "^1.67.0"
+	},
+	"activationEvents": [
+		"onLanguage:jade"
+	],
+	"main": "client",
+	"contributes": {
+		"configuration": {
+			"type": "object",
+			"title": "Volar-Pug",
+			"properties": {
+				"volar-pug-language-server.trace.server": {
+					"scope": "window",
+					"type": "string",
+					"enum": [
+						"off",
+						"messages",
+						"verbose"
+					],
+					"default": "off",
+					"description": "Traces the communication between VS Code and the language server."
+				}
+			}
+		}
+	},
+	"scripts": {
+		"prebuild": "cd ../.. && npm run build",
+		"build": "node scripts/build -- --minify",
+		"pack": "npm run build && vsce package --pre-release",
+		"release": "npm run build && vsce publish --pre-release"
+	},
+	"devDependencies": {
+		"@types/vscode": "1.67.0",
+		"@volar/language-server": "1.0.22",
+		"@volar/pug-language-server": "1.0.22",
+		"esbuild": "latest",
+		"typesafe-path": "^0.2.2",
+		"vsce": "latest",
+		"vscode-languageclient": "^8.0.2"
+	}
+}
