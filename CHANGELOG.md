@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.22 (2022/1/5)
+
+- fix: document folding ranges not working in .ts
+
 ## 1.0.21 (2022/1/5)
 
 - fix: cannot jump to .vue definition from .ts with takeover mode
