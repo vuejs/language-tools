@@ -16,11 +16,6 @@ export default function (settings?: json.LanguageSettings): LanguageServicePlugi
 
 		return {
 
-			setup(_context) {
-				context = _context;
-
-			},
-
 			complete: {
 
 				// https://github.com/microsoft/vscode/blob/09850876e652688fb142e2e19fd00fd38c0bc4ba/extensions/json-language-features/server/src/jsonServer.ts#L150

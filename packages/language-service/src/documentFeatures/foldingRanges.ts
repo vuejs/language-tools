@@ -12,7 +12,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			uri,
 			file => !!file.capabilities.foldingRange,
 			(plugin, document) => plugin.getFoldingRanges?.(document),
-			(data, sourceMap) => transformFoldingRanges(data, range => sourceMap?.toSourceRange(range)),
+			(data, map) => map ? transformFoldingRanges(data, range => map.toSourceRange(range)) : data,
 			arr => arr.flat(),
 		);
 	};
