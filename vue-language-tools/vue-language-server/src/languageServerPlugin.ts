@@ -30,7 +30,7 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.VueLangua
 	return {
 		extraFileExtensions,
 		resolveLanguageServiceHost(ts, sys, tsConfig, host) {
-			let vueOptions: vue.VueCompilerOptions = {};
+			let vueOptions: Partial<vue.VueCompilerOptions> = {};
 			if (typeof tsConfig === 'string') {
 				vueOptions = vue2.createParsedCommandLine(ts, sys, tsConfig, []).vueOptions;
 			}
@@ -46,13 +46,13 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.VueLangua
 				const vueLanguageModules = vue2.createLanguageModules(
 					ts,
 					host.getCompilationSettings(),
-					host.getVueCompilationSettings(),
+					vue2.resolveVueCompilerOptions(host.getVueCompilationSettings()),
 				);
 				return vueLanguageModules;
 			}
 			return [];
 		},
-		getLanguageServicePlugins(_, context) {
+		getLanguageServicePlugins(host, context) {
 			const settings: vue.Settings = {};
 			if (initOptions.json) {
 				settings.json = { schemas: [] };
@@ -64,7 +64,7 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.VueLangua
 					});
 				}
 			}
-			return vue.getLanguageServicePlugins(settings);
+			return vue.getLanguageServicePlugins(vue2.resolveVueCompilerOptions(host.getVueCompilationSettings()), settings);
 		},
 		onInitialize(connection, getService) {
 

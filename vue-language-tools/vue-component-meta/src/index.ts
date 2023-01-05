@@ -168,10 +168,11 @@ export function baseCreate(
 			return _host[prop as keyof typeof _host];
 		},
 	}) as vue.VueLanguageServiceHost;
+	const vueCompilerOptions = vue.resolveVueCompilerOptions(host.getVueCompilationSettings());
 	const vueLanguageModules = ts ? vue.createLanguageModules(
 		ts,
 		host.getCompilationSettings(),
-		host.getVueCompilationSettings(),
+		vueCompilerOptions,
 	) : [];
 	const core = embedded.createLanguageContext(host, vueLanguageModules);
 	const proxyApis: Partial<ts.LanguageServiceHost> = checkerOptions.forceUseTs ? {
@@ -279,7 +280,7 @@ export function baseCreate(
 
 			const vueSourceFile = core.virtualFiles.get(componentPath)?.[1];
 			const vueDefaults = vueSourceFile && exportName === 'default'
-				? (vueSourceFile instanceof vue.VueFile ? readVueComponentDefaultProps(vueSourceFile, printer, ts) : {})
+				? (vueSourceFile instanceof vue.VueFile ? readVueComponentDefaultProps(vueSourceFile, printer, ts, vueCompilerOptions) : {})
 				: {};
 			const tsDefaults = !vueSourceFile ? readTsComponentDefaultProps(
 				componentPath.substring(componentPath.lastIndexOf('.') + 1), // ts | js | tsx | jsx
@@ -332,8 +333,7 @@ export function baseCreate(
 
 		function getSlots() {
 
-			const target = _host.getVueCompilationSettings().target ?? 3;
-			const propertyName = target < 3 ? '$scopedSlots' : '$slots';
+			const propertyName = vueCompilerOptions.target < 3 ? '$scopedSlots' : '$slots';
 			const $slots = symbolProperties.find(prop => prop.escapedName === propertyName);
 
 			if ($slots) {
@@ -588,6 +588,7 @@ function readVueComponentDefaultProps(
 	vueSourceFile: vue.VueFile,
 	printer: ts.Printer | undefined,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
+	vueCompilerOptions: vue.VueCompilerOptions,
 ) {
 	let result: Record<string, { default?: string, required?: boolean; }> = {};
 
@@ -599,7 +600,7 @@ function readVueComponentDefaultProps(
 	function scriptSetupWorker() {
 
 		const descriptor = vueSourceFile.sfc;
-		const scriptSetupRanges = descriptor.scriptSetupAst ? vue.parseScriptSetupRanges(ts, descriptor.scriptSetupAst) : undefined;
+		const scriptSetupRanges = descriptor.scriptSetupAst ? vue.parseScriptSetupRanges(ts, descriptor.scriptSetupAst, vueCompilerOptions) : undefined;
 
 		if (descriptor.scriptSetup && scriptSetupRanges?.withDefaultsArg) {
 

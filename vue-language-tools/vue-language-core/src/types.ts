@@ -8,12 +8,10 @@ import { VueEmbeddedFile } from './sourceFile';
 export type { SFCParseResult } from '@vue/compiler-sfc';
 
 export type VueLanguageServiceHost = embedded.LanguageServiceHost & {
-	getVueCompilationSettings(): VueCompilerOptions,
+	getVueCompilationSettings(): Partial<VueCompilerOptions>,
 };
 
-export type VueCompilerOptions = Partial<ResolvedVueCompilerOptions>;
-
-export interface ResolvedVueCompilerOptions {
+export interface VueCompilerOptions {
 	target: 2 | 2.7 | 3;
 	extensions: string[];
 	jsxTemplates: boolean;
@@ -23,6 +21,12 @@ export interface ResolvedVueCompilerOptions {
 	dataAttributes: string[];
 	htmlAttributes: string[];
 	optionsWrapper: [string, string] | [];
+	macros: {
+		defineProps: string[],
+		defineEmits: string[],
+		defineExpose: string[],
+		withDefaults: string[],
+	};
 	plugins: string[];
 	hooks: string[];
 	narrowingTypesInInlineHandlers: boolean;
@@ -41,7 +45,7 @@ export type VueLanguagePlugin = (ctx: {
 		'@vue/compiler-dom': typeof import('@vue/compiler-dom');
 	},
 	compilerOptions: ts.CompilerOptions,
-	vueCompilerOptions: ResolvedVueCompilerOptions,
+	vueCompilerOptions: VueCompilerOptions,
 }) => {
 	name?: string;
 	version: 1;

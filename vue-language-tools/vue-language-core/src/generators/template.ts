@@ -3,7 +3,7 @@ import { FileRangeCapabilities } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { ResolvedVueCompilerOptions } from '../types';
+import { VueCompilerOptions } from '../types';
 import { colletVars, walkInterpolationFragment } from '../utils/transform';
 import * as minimatch from 'minimatch';
 
@@ -48,7 +48,7 @@ const transformContext: CompilerDOM.TransformContext = {
 export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	compilerOptions: ts.CompilerOptions,
-	vueCompilerOptions: ResolvedVueCompilerOptions,
+	vueCompilerOptions: VueCompilerOptions,
 	sourceTemplate: string,
 	sourceLang: string,
 	templateAst: CompilerDOM.RootNode,
@@ -1839,7 +1839,7 @@ function getRenameApply(oldName: string) {
 function noEditApply(n: string) {
 	return n;
 }
-function getModelValuePropName(node: CompilerDOM.ElementNode, vueVersion: number, vueCompilerOptions: ResolvedVueCompilerOptions) {
+function getModelValuePropName(node: CompilerDOM.ElementNode, vueVersion: number, vueCompilerOptions: VueCompilerOptions) {
 
 	for (const modelName in vueCompilerOptions.experimentalModelPropName) {
 		const tags = vueCompilerOptions.experimentalModelPropName[modelName];

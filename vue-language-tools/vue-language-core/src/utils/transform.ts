@@ -1,6 +1,6 @@
 import { isGloballyWhitelisted } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { ResolvedVueCompilerOptions } from '../types';
+import { VueCompilerOptions } from '../types';
 
 export function walkInterpolationFragment(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -9,7 +9,7 @@ export function walkInterpolationFragment(
 	cb: (fragment: string, offset: number | undefined, isJustForErrorMapping?: boolean) => void,
 	localVars: Record<string, number>,
 	identifiers: Set<string>,
-	vueOptions: ResolvedVueCompilerOptions,
+	vueOptions: VueCompilerOptions,
 ) {
 
 	let ctxVars: {

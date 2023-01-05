@@ -6,6 +6,7 @@ import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import useHtmlPlugin from '@volar-plugins/html';
 import * as vue from '@volar/vue-language-core';
+import { VueCompilerOptions } from '../types';
 
 const dataProvider: html.IHTMLDataProvider = {
 	getId: () => 'vue',
@@ -112,7 +113,8 @@ const dataProvider: html.IHTMLDataProvider = {
 		return [];
 	},
 };
-const plugin: LanguageServicePlugin = (context, service) => {
+
+export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin => (context, service) => {
 
 	if (!context.typescript)
 		return {};
@@ -141,7 +143,7 @@ const plugin: LanguageServicePlugin = (context, service) => {
 					const sfc = vueSourceFile.sfc;
 
 					if (sfc.scriptSetup && sfc.scriptSetupAst) {
-						const scriptSetupRanges = parseScriptSetupRanges(_ts.module, sfc.scriptSetupAst);
+						const scriptSetupRanges = parseScriptSetupRanges(_ts.module, sfc.scriptSetupAst, vueCompilerOptions);
 						for (const range of scriptSetupRanges.notOnTopTypeExports) {
 							result.push(vscode.Diagnostic.create(
 								{
@@ -314,8 +316,6 @@ const plugin: LanguageServicePlugin = (context, service) => {
 		}
 	}
 };
-
-export default () => plugin;
 
 function createEmptyBlocksDocument(document: TextDocument, vueSourceFile: vue.VueFile) {
 	return TextDocument.create(document.uri, document.languageId, document.version, clearSFCBlocksContents(document.getText(), vueSourceFile));

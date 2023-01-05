@@ -1,9 +1,13 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import type { TextRange } from '../types';
+import type { VueCompilerOptions, TextRange } from '../types';
 
 export interface ScriptSetupRanges extends ReturnType<typeof parseScriptSetupRanges> { }
 
-export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserverlibrary'), ast: ts.SourceFile) {
+export function parseScriptSetupRanges(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ast: ts.SourceFile,
+	vueCompilerOptions: VueCompilerOptions,
+) {
 
 	let foundNonImportExportNode = false;
 	let notOnTopTypeExports: TextRange[] = [];
@@ -67,34 +71,38 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 			&& ts.isIdentifier(node.expression)
 		) {
 			const callText = node.expression.getText(ast);
-			if (callText === 'defineProps' || callText === 'defineEmits' || callText === 'defineExpose') {
+			if (
+				vueCompilerOptions.macros.defineProps.includes(callText)
+				|| vueCompilerOptions.macros.defineEmits.includes(callText)
+				|| vueCompilerOptions.macros.defineExpose.includes(callText)
+			) {
 				if (node.arguments.length) {
 					const runtimeArg = node.arguments[0];
-					if (callText === 'defineProps') {
+					if (vueCompilerOptions.macros.defineProps.includes(callText)) {
 						propsRuntimeArg = _getStartEnd(runtimeArg);
 						if (ts.isVariableDeclaration(parent)) {
 							propsAssignName = parent.name.getText(ast);
 						}
 					}
-					else if (callText === 'defineEmits') {
+					else if (vueCompilerOptions.macros.defineEmits.includes(callText)) {
 						emitsRuntimeArg = _getStartEnd(runtimeArg);
 						if (ts.isVariableDeclaration(parent)) {
 							emitsAssignName = parent.name.getText(ast);
 						}
 					}
-					else if (callText === 'defineExpose') {
+					else if (vueCompilerOptions.macros.defineExpose.includes(callText)) {
 						exposeRuntimeArg = _getStartEnd(runtimeArg);
 					}
 				}
 				if (node.typeArguments?.length) {
 					const typeArg = node.typeArguments[0];
-					if (callText === 'defineProps') {
+					if (vueCompilerOptions.macros.defineProps.includes(callText)) {
 						propsTypeArg = _getStartEnd(typeArg);
 						if (ts.isVariableDeclaration(parent)) {
 							propsAssignName = parent.name.getText(ast);
 						}
 					}
-					else if (callText === 'defineEmits') {
+					else if (vueCompilerOptions.macros.defineEmits.includes(callText)) {
 						emitsTypeArg = _getStartEnd(typeArg);
 						if (ts.isTypeLiteralNode(typeArg)) {
 							emitsTypeNums = typeArg.members.length;
@@ -103,12 +111,12 @@ export function parseScriptSetupRanges(ts: typeof import('typescript/lib/tsserve
 							emitsAssignName = parent.name.getText(ast);
 						}
 					}
-					else if (callText === 'defineExpose') {
+					else if (vueCompilerOptions.macros.defineExpose.includes(callText)) {
 						exposeTypeArg = _getStartEnd(typeArg);
 					}
 				}
 			}
-			else if (callText === 'withDefaults') {
+			else if (vueCompilerOptions.macros.withDefaults.includes(callText)) {
 				if (node.arguments.length >= 2) {
 					const arg = node.arguments[1];
 					withDefaultsArg = _getStartEnd(arg);

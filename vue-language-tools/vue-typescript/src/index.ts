@@ -5,6 +5,6 @@ export function createLanguageService(host: vue.VueLanguageServiceHost) {
 	return base.createLanguageService(host, vue.createLanguageModules(
 		host.getTypeScriptModule()!,
 		host.getCompilationSettings(),
-		host.getVueCompilationSettings(),
+		vue.resolveVueCompilerOptions(host.getVueCompilationSettings()),
 	));
 }

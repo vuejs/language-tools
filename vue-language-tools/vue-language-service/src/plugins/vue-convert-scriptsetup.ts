@@ -1,4 +1,4 @@
-import type { TextRange, VueLanguageServicePlugin } from '../types';
+import type { VueCompilerOptions, TextRange, VueLanguageServicePlugin } from '../types';
 import { ExecuteCommandContext } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-core';
@@ -19,7 +19,7 @@ export interface ReferencesCodeLensData {
 
 type CommandArgs = [string];
 
-export default function (): VueLanguageServicePlugin {
+export default (vueCompilerOptions: VueCompilerOptions): VueLanguageServicePlugin => {
 
 	return (context, service) => {
 
@@ -95,7 +95,7 @@ export default function (): VueLanguageServicePlugin {
 
 					return worker(uri, (vueFile) => {
 						const document = context.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
-						return unuseSetupSugar(_ts.module, document, vueFile, commandContext, service.doCodeActions, service.doCodeActionResolve);
+						return unuseSetupSugar(_ts.module, document, vueFile, commandContext, service.doCodeActions, service.doCodeActionResolve, vueCompilerOptions);
 					});
 				}
 			},
@@ -110,7 +110,7 @@ export default function (): VueLanguageServicePlugin {
 			return callback(virtualFile);
 		}
 	};
-}
+};
 
 async function useSetupSugar(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -286,6 +286,7 @@ async function unuseSetupSugar(
 	context: ExecuteCommandContext,
 	doCodeActions: (uri: string, range: vscode.Range, codeActionContext: vscode.CodeActionContext) => Promise<vscode.CodeAction[] | undefined>,
 	doCodeActionResolve: (item: vscode.CodeAction) => Promise<vscode.CodeAction>,
+	vueCompilerOptions: VueCompilerOptions,
 ) {
 
 	const sfc = vueSourceFile.sfc;
@@ -337,7 +338,7 @@ async function unuseSetupSugar(
 		_scriptSetupAst: ts.SourceFile,
 	) {
 
-		const ranges = scriptSetupConvertRanges.parseUnuseScriptSetupRanges(ts, _scriptSetupAst);
+		const ranges = scriptSetupConvertRanges.parseUnuseScriptSetupRanges(ts, _scriptSetupAst, vueCompilerOptions);
 		const scriptRanges = _scriptAst ? scriptSetupConvertRanges.parseUseScriptSetupRanges(ts, _scriptAst) : undefined;
 		const edits: vscode.TextEdit[] = [];
 		const removeSetupTextRanges: TextRange[] = [...ranges.imports];

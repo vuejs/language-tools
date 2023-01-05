@@ -7,7 +7,7 @@ import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { checkComponentNames, checkEventsOfTag, checkPropsOfTag, getElementAttrs } from '../helpers';
 import * as casing from '../ideFeatures/nameCasing';
-import { AttrNameCasing, TagNameCasing, VueLanguageServicePlugin } from '../types';
+import { AttrNameCasing, VueCompilerOptions, TagNameCasing, VueLanguageServicePlugin } from '../types';
 
 const globalDirectives = html.newHTMLDataProvider('vue-global-directive', {
 	version: 1.1,
@@ -37,6 +37,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 	getScanner(document: TextDocument, t: ReturnType<T>): html.Scanner | undefined,
 	templateLanguagePlugin: T,
 	isSupportedDocument: (document: TextDocument) => boolean,
+	vueCompilerOptions: VueCompilerOptions,
 }): T {
 
 	const plugin: VueLanguageServicePlugin = (_context, service) => {
@@ -234,7 +235,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					provideTags: () => {
 
 						const components = checkComponentNames(_ts.module, _ts.languageService, vueSourceFile);
-						const scriptSetupRanges = vueSourceFile.sfc.scriptSetupAst ? vue.parseScriptSetupRanges(_ts.module, vueSourceFile.sfc.scriptSetupAst) : undefined;
+						const scriptSetupRanges = vueSourceFile.sfc.scriptSetupAst ? vue.parseScriptSetupRanges(_ts.module, vueSourceFile.sfc.scriptSetupAst, vueCompilerOptions) : undefined;
 						const names = new Set<string>();
 						const tags: html.ITagData[] = [];
 

@@ -1,9 +1,9 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path';
-import type { VueCompilerOptions, ResolvedVueCompilerOptions } from '../types';
+import type { VueCompilerOptions } from '../types';
 
 export type ParsedCommandLine = ts.ParsedCommandLine & {
-	vueOptions: VueCompilerOptions;
+	vueOptions: Partial<VueCompilerOptions>;
 };
 
 export function createParsedCommandLineByJson(
@@ -74,11 +74,11 @@ function createParsedCommandLineBase(
 		}
 	}
 
-	const vueOptions: Partial<ResolvedVueCompilerOptions> = {
+	const vueOptions: Partial<VueCompilerOptions> = {
 		...extendsVueOptions,
 		...content.raw.vueCompilerOptions,
 	};
-	
+
 	vueOptions.plugins = vueOptions.plugins?.map(plugin => {
 		try {
 			plugin = require.resolve(plugin, { paths: [folder] });
@@ -138,7 +138,7 @@ const SVG_TAGS =
 	'polygon,polyline,radialGradient,rect,set,solidcolor,stop,switch,symbol,' +
 	'text,textPath,title,tspan,unknown,use,view';
 
-export function resolveVueCompilerOptions(vueOptions: VueCompilerOptions): ResolvedVueCompilerOptions {
+export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions>): VueCompilerOptions {
 	const target = vueOptions.target ?? 3;
 	return {
 		...vueOptions,
@@ -163,6 +163,12 @@ export function resolveVueCompilerOptions(vueOptions: VueCompilerOptions): Resol
 				? [`(await import('vue')).defineComponent(`, `)`]
 				: [`(await import('vue')).default.extend(`, `)`]
 		),
+		macros: vueOptions.macros ?? {
+			defineProps: ['defineProps'],
+			defineEmits: ['defineEmits'],
+			defineExpose: ['defineExpose'],
+			withDefaults: ['withDefaults'],
+		},
 		narrowingTypesInInlineHandlers: vueOptions.narrowingTypesInInlineHandlers ?? false,
 		plugins: vueOptions.plugins ?? [],
 		hooks: vueOptions.hooks ?? [],

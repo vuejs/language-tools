@@ -10,7 +10,7 @@ const plugin: LanguageServerPlugin<LanguageServerInitializationOptions, vue.VueL
 			{ extension: 'svelte', isMixedContent: true, scriptKind: 7 },
 		],
 		resolveLanguageServiceHost(ts, sys, tsConfig, host) {
-			let vueOptions: vue.VueCompilerOptions = {};
+			let vueOptions: Partial<vue.VueCompilerOptions> = {};
 			if (typeof tsConfig === 'string') {
 				vueOptions = vue.createParsedCommandLine(ts, sys, tsConfig, []).vueOptions;
 			}
@@ -29,7 +29,7 @@ const plugin: LanguageServerPlugin<LanguageServerInitializationOptions, vue.VueL
 					...vue.createLanguageModules(
 						ts,
 						host.getCompilationSettings(),
-						host.getVueCompilationSettings(),
+						vue.resolveVueCompilerOptions(host.getVueCompilationSettings()),
 					),
 				];
 			}

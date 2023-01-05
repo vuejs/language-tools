@@ -88,7 +88,7 @@ export function createProgram(
 		program = vueTsLs.getProgram() as (ts.Program & { __vue: ProgramContext; });
 		program.__vue = ctx;
 
-		function getVueCompilerOptions(): vue.VueCompilerOptions {
+		function getVueCompilerOptions(): Partial<vue.VueCompilerOptions> {
 			const tsConfig = ctx.options.options.configFilePath;
 			if (typeof tsConfig === 'string') {
 				return vue.createParsedCommandLine(ts as any, ts.sys, tsConfig, []).vueOptions;

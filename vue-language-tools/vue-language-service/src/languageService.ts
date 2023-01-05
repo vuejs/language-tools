@@ -26,12 +26,13 @@ import { LanguageServicePlugin } from '@volar/language-service';
 import createPugFormatPlugin from '@volar-plugins/pug-beautify';
 import createAutoWrapParenthesesPlugin from './plugins/vue-autoinsert-parentheses';
 import createAutoAddSpacePlugin from './plugins/vue-autoinsert-space';
+import { VueCompilerOptions } from './types';
 
 export interface Settings {
 	json?: Parameters<typeof createJsonPlugin>[0];
 }
 
-export function getLanguageServicePlugins(settings?: Settings) {
+export function getLanguageServicePlugins(vueCompilerOptions: VueCompilerOptions, settings?: Settings) {
 
 	const tsPlugin = createTsPlugin();
 	const tsPluginPatchAutoImport: embeddedLS.LanguageServicePlugin = (_context, service) => {
@@ -157,6 +158,7 @@ export function getLanguageServicePlugins(settings?: Settings) {
 			return htmlPlugin.getHtmlLs().createScanner(document.getText());
 		},
 		isSupportedDocument: (document) => document.languageId === 'html',
+		vueCompilerOptions,
 	});
 	const pugPlugin = createVueTemplateLanguagePlugin({
 		templateLanguagePlugin: createPugPlugin(),
@@ -167,17 +169,18 @@ export function getLanguageServicePlugins(settings?: Settings) {
 			}
 		},
 		isSupportedDocument: (document) => document.languageId === 'jade',
+		vueCompilerOptions,
 	});
 
 	return [
-		createVuePlugin(),
+		createVuePlugin(vueCompilerOptions),
 		createCssPlugin(),
 		htmlPlugin,
 		pugPlugin,
 		createJsonPlugin(settings?.json),
 		createReferencesCodeLensPlugin(),
 		createHtmlPugConversionsPlugin(),
-		createScriptSetupConversionsPlugin(),
+		createScriptSetupConversionsPlugin(vueCompilerOptions),
 		createRefSugarConversionsPlugin(),
 		tsPluginPatchAutoImport,
 		createAutoDotValuePlugin(),
@@ -199,10 +202,11 @@ export function createLanguageService(
 ) {
 
 	const ts = host.getTypeScriptModule();
+	const vueCompilerOptions = vue.resolveVueCompilerOptions(host.getVueCompilationSettings());
 	const vueLanguageModules = ts ? vue.createLanguageModules(
 		ts,
 		host.getCompilationSettings(),
-		host.getVueCompilationSettings(),
+		vueCompilerOptions,
 	) : [];
 	const core = embedded.createLanguageContext(host, vueLanguageModules);
 	const languageServiceContext = embeddedLS.createLanguageServiceContext({
@@ -210,7 +214,7 @@ export function createLanguageService(
 		host,
 		context: core,
 		documentRegistry,
-		getPlugins: () => getLanguageServicePlugins(settings),
+		getPlugins: () => getLanguageServicePlugins(vueCompilerOptions, settings),
 		getLanguageService: () => languageService,
 	});
 	const languageService = embeddedLS.createLanguageService(languageServiceContext);

@@ -10,7 +10,7 @@ import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { collectCssVars, collectStyleCssClasses } from '../plugins/vue-tsx';
 import { Sfc } from '../types';
-import type { ResolvedVueCompilerOptions } from '../types';
+import type { VueCompilerOptions } from '../types';
 import { getSlotsPropertyName, getVueLibraryName } from '../utils/shared';
 import { walkInterpolationFragment } from '../utils/transform';
 
@@ -26,7 +26,7 @@ export function generate(
 	cssScopedClasses: ReturnType<typeof collectStyleCssClasses>,
 	htmlGen: ReturnType<typeof templateGen['generate']> | undefined,
 	compilerOptions: ts.CompilerOptions,
-	vueCompilerOptions: ResolvedVueCompilerOptions,
+	vueCompilerOptions: VueCompilerOptions,
 	codeGen: Segment<FileRangeCapabilities>[] = [],
 	mirrorBehaviorMappings: SourceMaps.Mapping<[MirrorBehaviorCapabilities, MirrorBehaviorCapabilities]>[] = [],
 ) {

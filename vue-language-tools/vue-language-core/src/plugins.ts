@@ -8,16 +8,14 @@ import * as useVueSfcStyles from './plugins/vue-sfc-styles';
 import * as useVueSfcTemplate from './plugins/vue-sfc-template';
 import * as useHtmlPlugin from './plugins/vue-template-html';
 import useVueTsx from './plugins/vue-tsx';
-import { VueLanguagePlugin } from './types';
-import { VueCompilerOptions } from './types';
-import { resolveVueCompilerOptions } from './utils/ts';
+import { VueCompilerOptions, VueLanguagePlugin } from './types';
 import * as CompilerDOM from '@vue/compiler-dom';
 import * as CompilerVue2 from './utils/vue2TemplateCompiler';
 
 export function getDefaultVueLanguagePlugins(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	compilerOptions: ts.CompilerOptions,
-	_vueCompilerOptions: VueCompilerOptions,
+	vueCompilerOptions: VueCompilerOptions,
 ) {
 
 	const _plugins: VueLanguagePlugin[] = [
@@ -32,7 +30,6 @@ export function getDefaultVueLanguagePlugins(
 		useVueTsx,
 	];
 	const pluginPaths = new Map<number, string>();
-	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);
 	if (typeof require?.resolve === 'function') {
 		for (const pluginPath of vueCompilerOptions.plugins) {
 			try {

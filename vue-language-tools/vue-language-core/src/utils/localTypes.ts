@@ -1,11 +1,11 @@
-import { ResolvedVueCompilerOptions } from '../types';
+import { VueCompilerOptions } from '../types';
 import { getSlotsPropertyName, getVueLibraryName } from './shared';
 
 export const typesFileName = '__VLS_types.ts';
 
 export function getTypesCode(
 	vueVersion: number,
-	vueCompilerOptions: ResolvedVueCompilerOptions,
+	vueCompilerOptions: VueCompilerOptions,
 ) {
 	const libName = getVueLibraryName(vueVersion);
 	const slots = getSlotsPropertyName(vueVersion);

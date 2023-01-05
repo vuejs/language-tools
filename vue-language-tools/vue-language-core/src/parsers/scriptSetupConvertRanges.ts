@@ -1,6 +1,6 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { getStartEnd, parseBindingRanges } from './scriptSetupRanges';
-import type { TextRange } from '../types';
+import type { VueCompilerOptions, TextRange } from '../types';
 
 export interface ScriptSetupRanges extends ReturnType<typeof parseUnuseScriptSetupRanges> { }
 
@@ -16,7 +16,11 @@ interface EmitTypeArg {
 	restArgs: TextRange | undefined,
 };
 
-export function parseUnuseScriptSetupRanges(ts: typeof import('typescript/lib/tsserverlibrary'), ast: ts.SourceFile) {
+export function parseUnuseScriptSetupRanges(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ast: ts.SourceFile,
+	vueCompilerOptions: VueCompilerOptions,
+) {
 
 	const imports: TextRange[] = [];
 	const bindings = parseBindingRanges(ts, ast, false);
@@ -90,14 +94,14 @@ export function parseUnuseScriptSetupRanges(ts: typeof import('typescript/lib/ts
 			const binding = declaration ? _getStartEnd(declaration.name) : undefined;
 			const typeArg = node.typeArguments?.length && ts.isTypeLiteralNode(node.typeArguments[0]) ? node.typeArguments[0] : undefined;
 
-			if (callText === 'defineProps' && node.arguments.length) {
+			if (vueCompilerOptions.macros.defineProps.includes(callText) && node.arguments.length) {
 				defineProps = {
 					range: _getStartEnd(fullNode),
 					binding,
 					args: _getStartEnd(node.arguments[0]),
 				};
 			}
-			if (callText === 'defineEmits' && node.arguments.length) {
+			if (vueCompilerOptions.macros.defineEmits.includes(callText) && node.arguments.length) {
 				defineEmits = {
 					range: _getStartEnd(fullNode),
 					binding,
@@ -116,7 +120,7 @@ export function parseUnuseScriptSetupRanges(ts: typeof import('typescript/lib/ts
 					binding,
 				};
 			}
-			if (callText === 'defineProps' && typeArg) {
+			if (vueCompilerOptions.macros.defineProps.includes(callText) && typeArg) {
 				defineProps = {
 					range: _getStartEnd(fullNode),
 					binding,
@@ -139,7 +143,7 @@ export function parseUnuseScriptSetupRanges(ts: typeof import('typescript/lib/ts
 					}
 				}
 			}
-			if (callText === 'defineEmits' && typeArg) {
+			if (vueCompilerOptions.macros.defineEmits.includes(callText) && typeArg) {
 				defineEmits = {
 					range: _getStartEnd(fullNode),
 					binding,
@@ -179,7 +183,7 @@ export function parseUnuseScriptSetupRanges(ts: typeof import('typescript/lib/ts
 		if (
 			ts.isCallExpression(node)
 			&& ts.isIdentifier(node.expression)
-			&& node.expression.getText(ast) === 'withDefaults'
+			&& vueCompilerOptions.macros.withDefaults.includes(node.expression.getText(ast))
 		) {
 			if (node.arguments.length >= 2) {
 
