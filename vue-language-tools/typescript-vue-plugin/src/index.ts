@@ -57,7 +57,10 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 				getDefaultLibFileName: () => info.project.getDefaultLibFileName(),
 				getProjectVersion: () => info.project.getProjectVersion(),
 				getProjectReferences: () => info.project.getProjectReferences(),
-				getScriptFileNames: () => info.project.getScriptFileNames(),
+				getScriptFileNames: () => [
+					...info.project.getScriptFileNames(),
+					...vueFileNames,
+				],
 				getScriptVersion: (fileName) => info.project.getScriptVersion(fileName),
 				getScriptSnapshot: (fileName) => info.project.getScriptSnapshot(fileName),
 				getTypeScriptModule: () => ts,
