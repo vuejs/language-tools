@@ -17,7 +17,7 @@ import { walkInterpolationFragment } from '../utils/transform';
 export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	fileName: string,
-	sfc: Sfc,
+	_sfc: Sfc,
 	lang: string,
 	scriptRanges: ScriptRanges | undefined,
 	scriptSetupRanges: ScriptSetupRanges | undefined,
@@ -30,6 +30,41 @@ export function generate(
 	codeGen: Segment<FileRangeCapabilities>[] = [],
 	mirrorBehaviorMappings: SourceMaps.Mapping<[MirrorBehaviorCapabilities, MirrorBehaviorCapabilities]>[] = [],
 ) {
+
+	// monkey fix for https://github.com/johnsoncodehk/volar/pull/2113
+	const sfc = {
+		script: _sfc.script,
+		scriptSetup: _sfc.scriptSetup,
+	};
+	if (!sfc.script && !sfc.scriptSetup) {
+		sfc.scriptSetup = {
+			content: '',
+			lang: 'ts',
+			name: '',
+			start: 0,
+			end: 0,
+			startTagEnd: 0,
+			endTagStart: 0,
+			generic: undefined,
+			genericOffset: 0,
+		};
+		scriptSetupRanges = {
+			bindings: [],
+			emitsAssignName: undefined,
+			emitsRuntimeArg: undefined,
+			emitsTypeArg: undefined,
+			emitsTypeNums: 0,
+			exposeRuntimeArg: undefined,
+			exposeTypeArg: undefined,
+			importSectionEndOffset: 0,
+			notOnTopTypeExports: [],
+			propsAssignName: undefined,
+			propsRuntimeArg: undefined,
+			propsTypeArg: undefined,
+			typeBindings: [],
+			withDefaultsArg: undefined,
+		};
+	}
 
 	const bypassDefineComponent = lang === 'js' || lang === 'jsx';
 	const vueVersion = vueCompilerOptions.target ?? 3;
