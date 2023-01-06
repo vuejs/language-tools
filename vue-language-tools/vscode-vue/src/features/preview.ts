@@ -244,13 +244,13 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 	context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(e => {
 		updateSelectionHighlights(e.textEditor);
 	}));
-	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(() => {
-		if (vscode.window.activeTextEditor) {
+	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((e) => {
+		if (vscode.window.activeTextEditor?.document === e.document) {
 			updateSelectionHighlights(vscode.window.activeTextEditor);
 		}
 	}));
-	context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(() => {
-		if (vscode.window.activeTextEditor) {
+	context.subscriptions.push(vscode.workspace.onDidSaveTextDocument((document) => {
+		if (vscode.window.activeTextEditor?.document === document) {
 			updateSelectionHighlights(vscode.window.activeTextEditor);
 		}
 	}));
