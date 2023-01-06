@@ -8,22 +8,12 @@ import type {
 	ComponentMeta,
 	EventMeta,
 	ExposeMeta,
-	MetaCheckerSchemaOptions,
 	PropertyMeta,
 	PropertyMetaSchema,
 	SlotMeta
 } from './types';
 
-export type {
-	MetaCheckerOptions,
-	ComponentMeta,
-	EventMeta,
-	ExposeMeta,
-	MetaCheckerSchemaOptions,
-	PropertyMeta,
-	PropertyMetaSchema,
-	SlotMeta
-};
+export * from './types';
 
 const extraFileExtensions: ts.FileExtensionInfo[] = [{
 	extension: 'vue',
@@ -131,9 +121,6 @@ export function baseCreate(
 	globalComponentName: string,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {
-	/**
-	 * Meta
-	 */
 	const globalComponentSnapshot = ts.ScriptSnapshot.fromString('<script setup lang="ts"></script>');
 	const metaSnapshots: Record<string, ts.IScriptSnapshot> = {};
 	const host = new Proxy<Partial<vue.VueLanguageServiceHost>>({

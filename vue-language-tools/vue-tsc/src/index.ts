@@ -3,6 +3,8 @@ import * as vue from '@volar/vue-language-core';
 import * as vueTs from '@volar/vue-typescript';
 import { state } from './shared';
 
+export type Hook = (program: _Program) => void;
+
 export type _Program = ts.Program & { __vue: ProgramContext; };
 
 interface ProgramContext {
@@ -139,7 +141,7 @@ export function createProgram(
 		const index = (state.hook?.index ?? -1) + 1;
 		if (index < vueCompilerOptions.hooks.length) {
 			const hookPath = vueCompilerOptions.hooks[index];
-			const hook = require(hookPath);
+			const hook: Hook = require(hookPath);
 			state.hook = {
 				program,
 				index,

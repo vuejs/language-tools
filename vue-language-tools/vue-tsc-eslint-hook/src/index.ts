@@ -1,9 +1,9 @@
 import { ESLint, Linter } from 'eslint';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import type { createProgram } from 'vue-tsc';
+import type { _Program } from 'vue-tsc';
 
 export = async function (
-	program: ReturnType<typeof createProgram>,
+	program: _Program,
 	resolveConfig: (tsProgram: ts.Program) => Linter.Config,
 ) {
 
