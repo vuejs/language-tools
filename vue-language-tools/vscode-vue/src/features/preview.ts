@@ -284,10 +284,10 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 	}
 
 	async function updateSelectionHighlights(textEditor: vscode.TextEditor) {
-		if (textEditor.document.languageId === 'vue' && highlightDomElements) {
+		if (connection && textEditor.document.languageId === 'vue' && highlightDomElements) {
 			const sfc = await getSfc(textEditor.document);
 			const offset = sfc.descriptor.template?.loc.start.offset ?? 0;
-			connection?.highlight(
+			connection.highlight(
 				textEditor.document.fileName,
 				textEditor.selections.map(selection => ({
 					start: textEditor.document.offsetAt(selection.start) - offset,
