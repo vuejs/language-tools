@@ -53,7 +53,8 @@ export function register(
 		const end = document.offsetAt(range.end);
 		let result: vscode.CodeAction[] = [];
 
-		if (!context.only || matchOnlyKind(vscode.CodeActionKind.QuickFix)) {
+		const onlyQuickFix = matchOnlyKind(`${vscode.CodeActionKind.QuickFix}.ts`);
+		if (!context.only || onlyQuickFix) {
 			for (const error of context.diagnostics) {
 				try {
 					const codeFixes = languageService.getCodeFixesAtPosition(
@@ -65,7 +66,7 @@ export function register(
 						preferences,
 					);
 					for (const codeFix of codeFixes) {
-						result = result.concat(transformCodeFix(codeFix, [error], context.only ? vscode.CodeActionKind.QuickFix : vscode.CodeActionKind.Empty));
+						result = result.concat(transformCodeFix(codeFix, [error], onlyQuickFix ?? vscode.CodeActionKind.Empty));
 					}
 				} catch { }
 			}
@@ -92,8 +93,9 @@ export function register(
 			} catch { }
 		}
 
-		if (matchOnlyKind(vscode.CodeActionKind.SourceOrganizeImports)) {
-			const action = vscode.CodeAction.create('Organize Imports', vscode.CodeActionKind.SourceOrganizeImports);
+		const onlySourceOrganizeImports = matchOnlyKind(`${vscode.CodeActionKind.SourceOrganizeImports}.ts`);
+		if (onlySourceOrganizeImports) {
+			const action = vscode.CodeAction.create('Organize Imports', onlySourceOrganizeImports);
 			action.data = {
 				type: 'organizeImports',
 				uri,
@@ -102,8 +104,9 @@ export function register(
 			result.push(action);
 		}
 
-		if (matchOnlyKind(`${vscode.CodeActionKind.SourceFixAll}.ts`)) {
-			const action = vscode.CodeAction.create('Fix All', vscode.CodeActionKind.SourceFixAll);
+		const onlySourceFixAll = matchOnlyKind(`${vscode.CodeActionKind.SourceFixAll}.ts`);
+		if (onlySourceFixAll) {
+			const action = vscode.CodeAction.create('Fix All', onlySourceFixAll);
 			action.data = {
 				uri,
 				type: 'fixAll',
@@ -117,8 +120,9 @@ export function register(
 			result.push(action);
 		}
 
-		if (matchOnlyKind(`${vscode.CodeActionKind.Source}.removeUnused.ts`)) {
-			const action = vscode.CodeAction.create('Remove all unused code', vscode.CodeActionKind.SourceFixAll);
+		const onlyRemoveUnused = matchOnlyKind(`${vscode.CodeActionKind.Source}.removeUnused.ts`);
+		if (onlyRemoveUnused) {
+			const action = vscode.CodeAction.create('Remove all unused code', onlyRemoveUnused);
 			action.data = {
 				uri,
 				type: 'fixAll',
@@ -136,8 +140,9 @@ export function register(
 			result.push(action);
 		}
 
-		if (matchOnlyKind(`${vscode.CodeActionKind.Source}.addMissingImports.ts`)) {
-			const action = vscode.CodeAction.create('Add all missing imports', vscode.CodeActionKind.SourceFixAll);
+		const onlyAddMissingImports = matchOnlyKind(`${vscode.CodeActionKind.Source}.addMissingImports.ts`);
+		if (onlyAddMissingImports) {
+			const action = vscode.CodeAction.create('Add all missing imports', onlyAddMissingImports);
 			action.data = {
 				uri,
 				type: 'fixAll',
@@ -178,7 +183,7 @@ export function register(
 						}
 
 						if (matchNums === a.length)
-							return true;
+							return only;
 					}
 				}
 			}
