@@ -506,11 +506,13 @@ function createSchemaResolvers(
 	}
 
 	function resolveCallbackSchema(signature: ts.Signature): PropertyMetaSchema {
+		let schema: PropertyMetaSchema[] | undefined;
+
 		return {
 			kind: 'event',
 			type: typeChecker.signatureToString(signature),
 			get schema() {
-				return (this as any)._schema ??= signature.parameters.length > 0
+				return schema ??= signature.parameters.length > 0
 					? typeChecker
 						.getTypeArguments(typeChecker.getTypeOfSymbolAtLocation(signature.parameters[0], symbolNode) as ts.TypeReference)
 						.map(resolveSchema)
