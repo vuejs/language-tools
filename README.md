@@ -19,7 +19,9 @@
 
 - [language-tools-starter](https://github.com/volarjs/language-tools-starter) \
 *A template for creating embedded language tools based on Volar framework*
-- [volar-plugins](https://github.com/johnsoncodehk/volar-plugins) \
+- [ecosystem-ci](https://github.com/volarjs/ecosystem-ci) \
+*Run integration tests for volar ecosystem projects*
+- [plugins](https://github.com/volarjs/plugins) \
 *Common plugins to change language server behavior*
 
 Discord: https://discord.gg/5bnSSSSBbK
