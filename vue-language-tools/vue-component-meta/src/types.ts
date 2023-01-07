@@ -56,6 +56,6 @@ export type MetaCheckerSchemaOptions = boolean | {
 export interface MetaCheckerOptions {
 	schema?: MetaCheckerSchemaOptions;
 	forceUseTs?: boolean;
-	printer?: import('typescript').PrinterOptions;
+	printer?: ts.PrinterOptions;
 	rawType?: boolean;
 }

@@ -409,8 +409,7 @@ function createSchemaResolvers(
 	{ rawType, schema: options }: MetaCheckerOptions,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {
-	const enabled = !!options;
-	const ignore = typeof options === 'object' ? [...options?.ignore ?? []] : [];
+	const visited = new Set<ts.Type>();;
 
 	function shouldIgnore(subtype: ts.Type) {
 		const name = typeChecker.typeToString(subtype);
@@ -418,27 +417,24 @@ function createSchemaResolvers(
 			return true;
 		}
 
-		if (ignore.length === 0) {
-			return false;
+		if (visited.has(subtype)) {
+			return true;
 		}
 
-		for (const item of ignore) {
-			if (typeof item === 'function') {
-				const result = item(name, subtype, typeChecker);
-				if (result != null)
-					return result;
-			}
-			else if (name === item) {
-				return true;
+		if (typeof options === 'object') {
+			for (const item of options.ignore ?? []) {
+				if (typeof item === 'function') {
+					const result = item(name, subtype, typeChecker);
+					if (typeof result === 'boolean')
+						return result;
+				}
+				else if (name === item) {
+					return true;
+				}
 			}
 		}
 
 		return false;
-	}
-
-	function setVisited(subtype: ts.Type) {
-		const type = typeChecker.typeToString(subtype);
-		ignore.push(type);
 	}
 
 	function reducer(acc: any, cur: any) {
@@ -448,7 +444,7 @@ function createSchemaResolvers(
 
 	function resolveNestedProperties(prop: ts.Symbol): PropertyMeta {
 		const subtype = typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!);
-		const schema = enabled ? resolveSchema(subtype) : undefined;
+		let schema: PropertyMetaSchema;
 
 		return {
 			name: prop.getEscapedName().toString(),
@@ -456,90 +452,101 @@ function createSchemaResolvers(
 			description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
 			tags: prop.getJsDocTags(typeChecker).map(tag => ({
 				name: tag.name,
-				text: tag.text?.map(part => part.text).join(''),
+				text: tag.text !== undefined ? ts.displayPartsToString(tag.text) : undefined,
 			})),
 			required: !(prop.flags & ts.SymbolFlags.Optional),
 			type: typeChecker.typeToString(subtype),
 			rawType: rawType ? subtype : undefined,
-			schema,
+			get schema() {
+				return schema ??= resolveSchema(subtype);
+			},
 		};
 	}
 	function resolveSlotProperties(prop: ts.Symbol): SlotMeta {
 		const subtype = typeChecker.getTypeOfSymbolAtLocation(typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!).getCallSignatures()[0].parameters[0], symbolNode!);
-		const schema = enabled ? resolveSchema(subtype) : undefined;
+		let schema: PropertyMetaSchema;
 
 		return {
 			name: prop.getName(),
 			type: typeChecker.typeToString(subtype),
 			rawType: rawType ? subtype : undefined,
 			description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
-			schema,
+			get schema() {
+				return schema ??= resolveSchema(subtype);
+			},
 		};
 	}
 	function resolveExposedProperties(expose: ts.Symbol): ExposeMeta {
 		const subtype = typeChecker.getTypeOfSymbolAtLocation(expose, symbolNode!);
-		const schema = enabled ? resolveSchema(subtype) : undefined;
+		let schema: PropertyMetaSchema;
 
 		return {
 			name: expose.getName(),
 			type: typeChecker.typeToString(subtype),
 			rawType: rawType ? subtype : undefined,
 			description: ts.displayPartsToString(expose.getDocumentationComment(typeChecker)),
-			schema,
+			get schema() {
+				return schema ??= resolveSchema(subtype);
+			},
 		};
 	}
 	function resolveEventSignature(call: ts.Signature): EventMeta {
 		const subtype = typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode!);
-		const schema = enabled
-			? typeChecker.getTypeArguments(subtype as ts.TypeReference).map(resolveSchema)
-			: undefined;
+		let schema: PropertyMetaSchema[];
 
 		return {
 			name: (typeChecker.getTypeOfSymbolAtLocation(call.parameters[0], symbolNode!) as ts.StringLiteralType).value,
 			type: typeChecker.typeToString(subtype),
 			rawType: rawType ? subtype : undefined,
 			signature: typeChecker.signatureToString(call),
-			schema,
+			get schema() {
+				return schema ??= typeChecker.getTypeArguments(subtype as ts.TypeReference).map(resolveSchema);
+			},
 		};
 	}
 
 	function resolveCallbackSchema(signature: ts.Signature): PropertyMetaSchema {
-		const schema = enabled && signature.parameters.length > 0
-			? typeChecker
-				.getTypeArguments(typeChecker.getTypeOfSymbolAtLocation(signature.parameters[0], symbolNode) as ts.TypeReference)
-				.map(resolveSchema)
-			: undefined;
-
 		return {
 			kind: 'event',
 			type: typeChecker.signatureToString(signature),
-			schema,
+			get schema() {
+				return (this as any)._schema ??= signature.parameters.length > 0
+					? typeChecker
+						.getTypeArguments(typeChecker.getTypeOfSymbolAtLocation(signature.parameters[0], symbolNode) as ts.TypeReference)
+						.map(resolveSchema)
+					: undefined;
+			},
 		};
 	}
 	function resolveSchema(subtype: ts.Type): PropertyMetaSchema {
 		const type = typeChecker.typeToString(subtype);
-		let schema: PropertyMetaSchema = type;
 
 		if (shouldIgnore(subtype)) {
 			return type;
 		}
 
-		setVisited(subtype);
+		visited.add(subtype);
 
 		if (subtype.isUnion()) {
-			schema = {
+			let schema: PropertyMetaSchema[];
+			return {
 				kind: 'enum',
 				type,
-				schema: subtype.types.map(resolveSchema)
+				get schema() {
+					return schema ??= subtype.types.map(resolveSchema);
+				},
 			};
 		}
 
 		// @ts-ignore - typescript internal, isArrayLikeType exists
 		else if (typeChecker.isArrayLikeType(subtype)) {
-			schema = {
+			let schema: PropertyMetaSchema[];
+			return {
 				kind: 'array',
 				type,
-				schema: typeChecker.getTypeArguments(subtype as ts.TypeReference).map(resolveSchema)
+				get schema() {
+					return schema ??= typeChecker.getTypeArguments(subtype as ts.TypeReference).map(resolveSchema);
+				},
 			};
 		}
 
@@ -547,19 +554,21 @@ function createSchemaResolvers(
 			subtype.getCallSignatures().length === 0 &&
 			(subtype.isClassOrInterface() || subtype.isIntersection() || (subtype as ts.ObjectType).objectFlags & ts.ObjectFlags.Anonymous)
 		) {
-			// setVisited(subtype);
-			schema = {
+			let schema: Record<string, PropertyMeta>;
+			return {
 				kind: 'object',
 				type,
-				schema: subtype.getProperties().map(resolveNestedProperties).reduce(reducer, {})
+				get schema() {
+					return schema ??= subtype.getProperties().map(resolveNestedProperties).reduce(reducer, {});
+				},
 			};
 		}
 
 		else if (subtype.getCallSignatures().length === 1) {
-			schema = resolveCallbackSchema(subtype.getCallSignatures()[0]);
+			return resolveCallbackSchema(subtype.getCallSignatures()[0]);
 		}
 
-		return schema;
+		return type;
 	}
 
 	return {
