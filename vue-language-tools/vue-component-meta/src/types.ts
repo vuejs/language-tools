@@ -15,28 +15,28 @@ export interface PropertyMeta {
 	type: string;
 	rawType?: ts.Type;
 	tags: { name: string, text?: string; }[];
-	schema?: PropertyMetaSchema;
+	schema: PropertyMetaSchema;
 };
 export interface EventMeta {
 	name: string;
 	type: string;
 	rawType?: ts.Type;
 	signature: string;
-	schema?: PropertyMetaSchema[];
+	schema: PropertyMetaSchema[];
 }
 export interface SlotMeta {
 	name: string;
 	type: string;
 	rawType?: ts.Type;
 	description: string;
-	schema?: PropertyMetaSchema;
+	schema: PropertyMetaSchema;
 }
 export interface ExposeMeta {
 	name: string;
 	description: string;
 	type: string;
 	rawType?: ts.Type;
-	schema?: PropertyMetaSchema;
+	schema: PropertyMetaSchema;
 }
 
 export type PropertyMetaSchema = string
