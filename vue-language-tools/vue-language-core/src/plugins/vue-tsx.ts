@@ -4,7 +4,7 @@ import * as templateGen from '../generators/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { Sfc, VueLanguagePlugin } from '../types';
-import { FileKind } from '@volar/language-core';
+import { FileCapabilities, FileKind } from '@volar/language-core';
 import { TextRange } from '../types';
 import { parseCssClassNames } from '../utils/parseCssClassNames';
 import { parseCssVars } from '../utils/parseCssVars';
@@ -43,12 +43,10 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 			if (suffix === '.' + _tsx.lang.value) {
 				embeddedFile.kind = FileKind.TypeScriptHostFile;
 				embeddedFile.capabilities = {
-					diagnostic: true,
+					...FileCapabilities.full,
 					foldingRange: false,
 					documentFormatting: false,
 					documentSymbol: false,
-					codeAction: true,
-					inlayHint: true,
 				};
 				const tsx = _tsx.tsxGen.value;
 				if (tsx) {
@@ -61,10 +59,9 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 
 				embeddedFile.parentFileName = fileName + '.template.' + sfc.template?.lang;
 				embeddedFile.capabilities = {
+					...FileCapabilities.full,
 					diagnostic: false,
 					foldingRange: false,
-					documentFormatting: true,
-					documentSymbol: true,
 					codeAction: false,
 					inlayHint: false,
 				};

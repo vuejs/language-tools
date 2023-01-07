@@ -1,5 +1,5 @@
 import { getLength, Segment, toString } from '@volar/source-map';
-import type { FileRangeCapabilities, MirrorBehaviorCapabilities } from '@volar/language-core';
+import { FileRangeCapabilities, MirrorBehaviorCapabilities } from '@volar/language-core';
 import type { TextRange } from '../types';
 import * as SourceMaps from '@volar/source-map';
 import { hyphenate } from '@vue/shared';
@@ -218,15 +218,7 @@ export function generate(
 			sfc[vueTag]!.content.substring(start, end),
 			vueTag,
 			start,
-			{
-				hover: true,
-				references: true,
-				definition: true,
-				rename: true,
-				diagnostic: true, // also working for setup() returns unused in template checking
-				completion: true,
-				semanticTokens: true,
-			},
+			FileRangeCapabilities.full, // diagnostic also working for setup() returns unused in template checking
 		]);
 	}
 	function addExtraReferenceVirtualCode(vueTag: 'script' | 'scriptSetup', start: number, end: number) {
@@ -253,15 +245,7 @@ export function generate(
 			sfc.scriptSetup.content.substring(0, scriptSetupRanges.importSectionEndOffset),
 			'scriptSetup',
 			0,
-			{
-				hover: true,
-				references: true,
-				definition: true,
-				diagnostic: true,
-				rename: true,
-				completion: true,
-				semanticTokens: true,
-			},
+			FileRangeCapabilities.full,
 		]);
 	}
 	function writeTemplateIfNoScriptSetup() {
@@ -291,15 +275,7 @@ export function generate(
 					sfc.scriptSetup.generic,
 					sfc.scriptSetup.name,
 					sfc.scriptSetup.genericOffset,
-					{
-						hover: true,
-						references: true,
-						definition: true,
-						rename: true,
-						diagnostic: true,
-						completion: true,
-						semanticTokens: true,
-					},
+					FileRangeCapabilities.full,
 				]);
 				codeGen.push(`>`);
 			}
@@ -579,16 +555,8 @@ export function generate(
 						sourceRange: [scriptStart, scriptEnd],
 						generatedRange: [templateStart, templateEnd],
 						data: [
-							{
-								definition: true,
-								references: true,
-								rename: true,
-							},
-							{
-								definition: true,
-								references: true,
-								rename: true,
-							},
+							MirrorBehaviorCapabilities.full,
+							MirrorBehaviorCapabilities.full,
 						],
 					});
 				}
@@ -753,7 +721,7 @@ export function generate(
 						ts,
 						code,
 						ts.createSourceFile('/a.txt', code, ts.ScriptTarget.ESNext),
-						(frag, fragOffset, isJustForErrorMapping) => {
+						(frag, fragOffset, onlyForErrorMapping) => {
 							if (fragOffset === undefined) {
 								codeGen.push(frag);
 							}
@@ -762,17 +730,9 @@ export function generate(
 									frag,
 									cssVar.style.name,
 									cssBind.start + fragOffset,
-									isJustForErrorMapping ? {
-										diagnostic: true,
-									} : {
-										hover: true,
-										references: true,
-										definition: true,
-										diagnostic: true,
-										rename: true,
-										completion: true,
-										semanticTokens: true,
-									},
+									onlyForErrorMapping
+										? { diagnostic: true }
+										: FileRangeCapabilities.full,
 								]);
 							}
 						},

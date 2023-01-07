@@ -1,3 +1,4 @@
+import { FileCapabilities, FileRangeCapabilities } from '@volar/language-core';
 import { VueLanguagePlugin } from '../types';
 
 const presetInitialIndentBrackets: Record<string, [string, string] | undefined> = {
@@ -29,28 +30,16 @@ const plugin: VueLanguagePlugin = () => {
 				const customBlock = sfc.customBlocks[index];
 
 				embeddedFile.capabilities = {
-					diagnostic: true,
-					foldingRange: true,
+					...FileCapabilities.full,
 					documentFormatting: {
 						initialIndentBracket: presetInitialIndentBrackets[customBlock.lang],
 					},
-					documentSymbol: true,
-					codeAction: true,
-					inlayHint: true,
 				};
 				embeddedFile.content.push([
 					customBlock.content,
 					customBlock.name,
 					0,
-					{
-						hover: true,
-						references: true,
-						definition: true,
-						diagnostic: true,
-						rename: true,
-						completion: true,
-						semanticTokens: true,
-					},
+					FileRangeCapabilities.full,
 				]);
 			}
 		},

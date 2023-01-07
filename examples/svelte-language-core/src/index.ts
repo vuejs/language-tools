@@ -1,5 +1,5 @@
 import { decode } from '@jridgewell/sourcemap-codec';
-import { VirtualFile, FileKind, LanguageModule } from '@volar/language-core';
+import { VirtualFile, FileKind, LanguageModule, FileCapabilities, FileRangeCapabilities } from '@volar/language-core';
 import { svelte2tsx } from 'svelte2tsx';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
@@ -14,14 +14,7 @@ export const languageModule: LanguageModule = {
 				snapshot,
 				kind: FileKind.TextFile,
 				embeddedFiles: getEmbeddeds(fileName, snapshot.getText(0, snapshot.getLength())),
-				capabilities: {
-					diagnostic: true,
-					foldingRange: true,
-					documentFormatting: true,
-					documentSymbol: true,
-					codeAction: true,
-					inlayHint: true,
-				},
+				capabilities: FileCapabilities.full,
 				mappings: [],
 			};
 		}
@@ -79,15 +72,7 @@ function getEmbeddeds(fileName: string, text: string) {
 							mappings.push({
 								sourceRange: [current.sourceOffset, current.sourceOffset + length],
 								generatedRange: [current.genOffset, current.genOffset + length],
-								data: {
-									hover: true,
-									references: true,
-									definition: true,
-									rename: true,
-									completion: true,
-									diagnostic: true,
-									semanticTokens: true,
-								},
+								data: FileRangeCapabilities.full,
 							});
 						}
 					}
@@ -120,11 +105,9 @@ function getEmbeddeds(fileName: string, text: string) {
 			},
 			kind: FileKind.TypeScriptHostFile,
 			capabilities: {
-				diagnostic: true,
+				...FileCapabilities.full,
 				foldingRange: false,
 				documentSymbol: false,
-				codeAction: true,
-				inlayHint: true,
 				documentFormatting: false,
 			},
 			mappings: mappings,

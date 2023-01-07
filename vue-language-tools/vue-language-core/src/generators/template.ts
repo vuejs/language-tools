@@ -8,8 +8,8 @@ import { colletVars, walkInterpolationFragment } from '../utils/transform';
 import * as minimatch from 'minimatch';
 
 const capabilitiesSet = {
-	all: { hover: true, diagnostic: true, references: true, definition: true, rename: true, completion: true, semanticTokens: true } satisfies FileRangeCapabilities,
-	noDiagnostic: { hover: true, references: true, definition: true, rename: true, completion: true, semanticTokens: true } satisfies FileRangeCapabilities,
+	all: FileRangeCapabilities.full,
+	noDiagnostic: { ...FileRangeCapabilities.full, diagnostic: false } satisfies FileRangeCapabilities,
 	diagnosticOnly: { diagnostic: true } satisfies FileRangeCapabilities,
 	tagHover: { hover: true } satisfies FileRangeCapabilities,
 	event: { hover: true, diagnostic: true } satisfies FileRangeCapabilities,
@@ -1234,15 +1234,7 @@ export function generate(
 					content,
 					'template',
 					prop.arg.loc.start.offset + start,
-					{
-						hover: true,
-						references: true,
-						definition: true,
-						diagnostic: true,
-						rename: true,
-						completion: true,
-						semanticTokens: true,
-					},
+					capabilitiesSet.all,
 				]);
 				cssCodeGen.push(` }\n`);
 			}

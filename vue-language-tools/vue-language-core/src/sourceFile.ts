@@ -33,14 +33,7 @@ export class VueFile implements VirtualFile {
 		plugin: ReturnType<VueLanguagePlugin>,
 	} | undefined;
 
-	capabilities: FileCapabilities = {
-		diagnostic: true,
-		foldingRange: true,
-		documentFormatting: true,
-		documentSymbol: true,
-		codeAction: true,
-		inlayHint: true,
-	};
+	capabilities = FileCapabilities.full;
 
 	kind = FileKind.TextFile;
 
@@ -349,15 +342,7 @@ export class VueFile implements VirtualFile {
 		this.mappings = [{
 			sourceRange: [0, this.snapshot.getLength()],
 			generatedRange: [0, this.snapshot.getLength()],
-			data: {
-				hover: true,
-				references: true,
-				definition: true,
-				rename: true,
-				completion: true,
-				diagnostic: true,
-				semanticTokens: true,
-			},
+			data: FileRangeCapabilities.full,
 		}];
 
 		const parsedSfc = this.parseSfc();

@@ -38,6 +38,37 @@ export interface MirrorBehaviorCapabilities {
 	rename?: boolean,
 }
 
+export namespace FileCapabilities {
+	export const full: FileCapabilities = {
+		diagnostic: true,
+		foldingRange: true,
+		documentFormatting: true,
+		documentSymbol: true,
+		codeAction: true,
+		inlayHint: true,
+	};
+}
+
+export namespace FileRangeCapabilities {
+	export const full: FileRangeCapabilities = {
+		hover: true,
+		references: true,
+		definition: true,
+		rename: true,
+		completion: true,
+		diagnostic: true,
+		semanticTokens: true,
+	};
+}
+
+export namespace MirrorBehaviorCapabilities {
+	export const full: MirrorBehaviorCapabilities = {
+		references: true,
+		definition: true,
+		rename: true,
+	};
+}
+
 export enum FileKind {
 	TextFile = 0,
 	TypeScriptHostFile = 1,

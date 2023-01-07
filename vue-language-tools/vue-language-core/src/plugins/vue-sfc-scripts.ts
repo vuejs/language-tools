@@ -1,3 +1,4 @@
+import { FileCapabilities } from '@volar/language-core';
 import { VueLanguagePlugin } from '../types';
 
 const plugin: VueLanguagePlugin = () => {
@@ -23,12 +24,11 @@ const plugin: VueLanguagePlugin = () => {
 			const script = scriptMatch ? sfc.script : scriptSetupMatch ? sfc.scriptSetup : undefined;
 			if (script) {
 				embeddedFile.capabilities = {
+					...FileCapabilities.full,
 					diagnostic: false,
-					foldingRange: true,
 					documentFormatting: {
 						initialIndentBracket: ['{', '}'],
 					},
-					documentSymbol: true,
 					codeAction: false,
 					inlayHint: false,
 				};
