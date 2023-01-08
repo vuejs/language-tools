@@ -195,26 +195,36 @@ export class VueFile implements VirtualFile {
 	_pluginEmbeddedFiles = this.plugins.map((plugin) => {
 		const embeddedFiles: Record<string, ComputedRef<VueEmbeddedFile>> = {};
 		const files = computed(() => {
-			if (plugin.getEmbeddedFileNames) {
-				const embeddedFileNames = plugin.getEmbeddedFileNames(this.fileName, this.sfc);
-				for (const oldFileName of Object.keys(embeddedFiles)) {
-					if (!embeddedFileNames.includes(oldFileName)) {
-						delete embeddedFiles[oldFileName];
+			try {
+				if (plugin.getEmbeddedFileNames) {
+					const embeddedFileNames = plugin.getEmbeddedFileNames(this.fileName, this.sfc);
+					for (const oldFileName of Object.keys(embeddedFiles)) {
+						if (!embeddedFileNames.includes(oldFileName)) {
+							delete embeddedFiles[oldFileName];
+						}
 					}
-				}
-				for (const embeddedFileName of embeddedFileNames) {
-					if (!embeddedFiles[embeddedFileName]) {
-						embeddedFiles[embeddedFileName] = computed(() => {
-							const file = new VueEmbeddedFile(embeddedFileName);
-							for (const plugin of this.plugins) {
-								if (plugin.resolveEmbeddedFile) {
-									plugin.resolveEmbeddedFile(this.fileName, this.sfc, file);
+					for (const embeddedFileName of embeddedFileNames) {
+						if (!embeddedFiles[embeddedFileName]) {
+							embeddedFiles[embeddedFileName] = computed(() => {
+								const file = new VueEmbeddedFile(embeddedFileName);
+								for (const plugin of this.plugins) {
+									if (plugin.resolveEmbeddedFile) {
+										try {
+											plugin.resolveEmbeddedFile(this.fileName, this.sfc, file);
+										}
+										catch (e) {
+											console.error(e);
+										}
+									}
 								}
-							}
-							return file;
-						});
+								return file;
+							});
+						}
 					}
 				}
+			}
+			catch (e) {
+				console.error(e);
 			}
 			return Object.values(embeddedFiles);
 		});
