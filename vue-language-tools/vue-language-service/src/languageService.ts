@@ -53,8 +53,16 @@ export function getLanguageServicePlugins(vueCompilerOptions: VueCompilerOptions
 			complete: {
 				...base.complete,
 				async on(document, position, context) {
-					const result = await base.complete!.on!(document, position, context);
+					const result = await base.complete?.on?.(document, position, context);
 					if (result) {
+
+						// filter __VLS_
+						result.items = result.items.filter(item =>
+							item.label.indexOf('__VLS_') === -1
+							&& (!item.labelDetails?.description || item.labelDetails.description.indexOf('__VLS_') === -1)
+						);
+
+						// handle component auto-import patch
 						for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
 							const virtualFile = _context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
 							if (virtualFile instanceof vue.VueFile) {
@@ -148,6 +156,13 @@ export function getLanguageServicePlugins(vueCompilerOptions: VueCompilerOptions
 					return item;
 				},
 			},
+			codeAction: {
+				...base.codeAction,
+				async on(document, range, context) {
+					const result = await base.codeAction?.on?.(document, range, context);
+					return result?.filter(codeAction => codeAction.title.indexOf('__VLS_') === -1);
+				},
+			}
 		};
 	};
 

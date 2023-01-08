@@ -255,10 +255,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			return {
 				isIncomplete: lists.some(list => list.isIncomplete),
 				itemDefaults: lists.find(list => list.itemDefaults)?.itemDefaults,
-				items: lists.map(list => list.items).flat().filter((result: vscode.CompletionItem) =>
-					result.label.indexOf('__VLS_') === -1
-					&& (!result.labelDetails?.description || result.labelDetails.description.indexOf('__VLS_') === -1)
-				),
+				items: lists.map(list => list.items).flat(),
 			};
 		}
 	};

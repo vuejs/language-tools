@@ -19,7 +19,6 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 		organizeImports,
 
 		// only support for .ts for now, not support for .vue
-		getCompletionsAtPosition,
 		getDefinitionAtPosition,
 		getDefinitionAndBoundSpan,
 		getTypeDefinitionAtPosition,
@@ -74,13 +73,6 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 			return ls.organizeImports(args, formatOptions, preferences);
 		}
 		return edits.map(transformFileTextChanges).filter(notEmpty);
-	}
-	function getCompletionsAtPosition(fileName: string, position: number, options: ts.GetCompletionsAtPositionOptions | undefined): ReturnType<ts.LanguageService['getCompletionsAtPosition']> {
-		const finalResult = ls.getCompletionsAtPosition(fileName, position, options);
-		if (finalResult) {
-			finalResult.entries = finalResult.entries.filter(entry => entry.name.indexOf('__VLS_') === -1);
-		}
-		return finalResult;
 	}
 	function getReferencesAtPosition(fileName: string, position: number): ReturnType<ts.LanguageService['getReferencesAtPosition']> {
 		return findLocations(fileName, position, 'references') as ts.ReferenceEntry[];
