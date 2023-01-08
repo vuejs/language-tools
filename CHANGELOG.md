@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.0.24 (2023/1/8)
+
+- feat: add `vueCompilerOptions.macros` setting for vue-macros plugins
+- feat(framework): expose `FileCapabilities.full`, `FileRangeCapabilities.full`, `MirrorBehaviorCapabilities.full`
+- feat: renamed `normalizeComponentAutoImportName` setting to `normalizeComponentImportName`
+- feat: support normalize component name for import statement completion ([#2286](https://github.com/johnsoncodehk/volar/issues/2286))
+- feat: normalize `Index` to folder name when `normalizeComponentImportName` enabled (https://github.com/johnsoncodehk/volar/issues/2071#issuecomment-1373701277)
+- feat: support update imports on multiple files move
+- fix(typescript-plugin): fixed `Projects must list all files or use an 'include' pattern` error ([#2271](https://github.com/johnsoncodehk/volar/issues/2271))
+- fix: language client sending `parseSfc` requests when not a vue document changed
+- fix: typescript actions not working for `codeActionsOnSave` setting ([#2188](https://github.com/johnsoncodehk/volar/issues/2188))
+- fix: fixed `c is not iterable` error edge case ([#2282](https://github.com/johnsoncodehk/volar/issues/2282))
+- fix: cannot select workspace tsdk on status bar with takeover mode
+- fix(plugin-api): cannot catch errors for `getEmbeddedFileNames()`, `resolveEmbeddedFile()`
+- fix(component-meta): cannot detection of slots in script-less SFC ([#2113](https://github.com/johnsoncodehk/volar/issues/2113))
+- perf(component-meta): resolve schema on demand ([#2288](https://github.com/johnsoncodehk/volar/issues/2288))
+
 ## 1.0.22 (2023/1/5)
 
 - fix: document folding ranges not working in .ts
