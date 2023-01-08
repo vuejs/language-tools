@@ -1,8 +1,10 @@
 import type { LanguageServicePlugin } from '@volar/language-service';
 import type * as html from 'vscode-html-languageservice';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import * as pug from '@volar/pug-language-service';
+import * as pug from './languageService';
 import useHtmlPlugin from '@volar-plugins/html';
+
+export * from './languageService'; // TODO
 
 const plugin: LanguageServicePlugin<{
 	getHtmlLs: () => html.LanguageService,

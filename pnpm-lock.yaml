@@ -161,14 +161,26 @@ importers:
   plugins/pug:
     specifiers:
       '@volar-plugins/html': 1.0.24
-      '@volar/pug-language-service': 1.0.24
+      '@volar/language-service': 1.0.24
+      '@volar/shared': 1.0.24
+      '@volar/source-map': 1.0.24
+      muggle-string: ^0.1.0
+      pug-lexer: ^5.0.1
+      pug-parser: ^6.0.0
       vscode-html-languageservice: ^5.0.3
       vscode-languageserver-textdocument: ^1.0.8
+      vscode-languageserver-types: ^3.17.2
     dependencies:
       '@volar-plugins/html': link:../html
-      '@volar/pug-language-service': link:../../pug-language-tools/pug-language-service
+      '@volar/language-service': link:../../packages/language-service
+      '@volar/shared': link:../../packages/shared
+      '@volar/source-map': link:../../packages/source-map
+      muggle-string: 0.1.0
+      pug-lexer: 5.0.1
+      pug-parser: 6.0.0
       vscode-html-languageservice: 5.0.3
       vscode-languageserver-textdocument: 1.0.8
+      vscode-languageserver-types: 3.17.2
 
   plugins/pug-beautify:
     specifiers:
@@ -214,29 +226,6 @@ importers:
       '@volar-plugins/pug': link:../../plugins/pug
       '@volar-plugins/pug-beautify': link:../../plugins/pug-beautify
       '@volar/language-server': link:../../packages/language-server
-
-  pug-language-tools/pug-language-service:
-    specifiers:
-      '@volar/language-service': 1.0.24
-      '@volar/shared': 1.0.24
-      '@volar/source-map': 1.0.24
-      muggle-string: ^0.1.0
-      pug-lexer: ^5.0.1
-      pug-parser: ^6.0.0
-      vscode-html-languageservice: ^5.0.3
-      vscode-languageserver-textdocument: ^1.0.8
-      vscode-languageserver-types: ^3.17.2
-    dependencies:
-      '@volar/language-service': link:../../packages/language-service
-      '@volar/shared': link:../../packages/shared
-      '@volar/source-map': link:../../packages/source-map
-      muggle-string: 0.1.0
-      pug-lexer: 5.0.1
-      pug-parser: 6.0.0
-      vscode-languageserver-textdocument: 1.0.8
-      vscode-languageserver-types: 3.17.2
-    devDependencies:
-      vscode-html-languageservice: 5.0.3
 
   pug-language-tools/vscode-pug:
     specifiers:
@@ -363,11 +352,11 @@ importers:
 
   vue-language-tools/vue-language-plugin-pug:
     specifiers:
-      '@volar/pug-language-service': 1.0.24
+      '@volar-plugins/pug': 1.0.24
       '@volar/source-map': 1.0.24
       '@volar/vue-language-core': 1.0.24
     dependencies:
-      '@volar/pug-language-service': link:../../pug-language-tools/pug-language-service
+      '@volar-plugins/pug': link:../../plugins/pug
       '@volar/source-map': link:../../packages/source-map
     devDependencies:
       '@volar/vue-language-core': link:../vue-language-core
@@ -1363,6 +1352,7 @@ packages:
 
   /@vscode/l10n/0.0.10:
     resolution: {integrity: sha512-E1OCmDcDWa0Ya7vtSjp/XfHFGqYJfh+YPC1RkATU71fTac+j1JjCcB3qwSzmlKAighx2WxhLlfhS0RwAN++PFQ==}
+    dev: false
 
   /@vscode/test-web/0.0.33:
     resolution: {integrity: sha512-bnL5yZZk7fVkQzSxtjXqdVOTOEOhRkrePVCILON8qr2ddmVMRLY1vo4HLmVkmkBRrk1cuZCEgD4+EA9QD+h4oA==}
@@ -6053,6 +6043,7 @@ packages:
       vscode-languageserver-textdocument: 1.0.8
       vscode-languageserver-types: 3.17.2
       vscode-uri: 3.0.7
+    dev: false
 
   /vscode-json-languageservice/5.1.3:
     resolution: {integrity: sha512-p0O1Ql5+zyWFIBU4cSxnDcuq9OnbE0MmvNKDYYvz4EPsZ9EHBT3I6KJb5Gk3snkj+jQTFILEZ06cfY7WZxxqPw==}
@@ -6084,6 +6075,7 @@ packages:
 
   /vscode-languageserver-textdocument/1.0.8:
     resolution: {integrity: sha512-1bonkGqQs5/fxGT5UchTgjGVnfysL0O8v1AYMBjqTbWQTFn721zaPGDYFkOKtfDgFiSgXM3KwaG3FMGfW4Ed9Q==}
+    dev: false
 
   /vscode-languageserver-types/3.17.2:
     resolution: {integrity: sha512-zHhCWatviizPIq9B7Vh9uvrH6x3sK8itC84HkamnBWoDFJtzBf7SWlpLCZUit72b3os45h6RWQNC9xHRDF8dRA==}
@@ -6104,6 +6096,7 @@ packages:
 
   /vscode-uri/3.0.7:
     resolution: {integrity: sha512-eOpPHogvorZRobNqJGhapa0JdwaxpjVvyBp0QIUMRMSf8ZAlqOdEquKuRmw9Qwu0qXtJIWqFtMkmvJjUZmMjVA==}
+    dev: false
 
   /vue-template-compiler/2.7.14:
     resolution: {integrity: sha512-zyA5Y3ArvVG0NacJDkkzJuPQDF8RFeRlzV2vLeSnhSpieO6LK2OVbdLPi5MPPs09Ii+gMO8nY4S3iKQxBxDmWQ==}

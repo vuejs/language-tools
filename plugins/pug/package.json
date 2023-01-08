@@ -14,9 +14,15 @@
 	},
 	"dependencies": {
 		"@volar-plugins/html": "1.0.24",
-		"@volar/pug-language-service": "1.0.24",
+		"@volar/language-service": "1.0.24",
+		"@volar/shared": "1.0.24",
+		"@volar/source-map": "1.0.24",
+		"muggle-string": "^0.1.0",
+		"pug-lexer": "^5.0.1",
+		"pug-parser": "^6.0.0",
 		"vscode-html-languageservice": "^5.0.3",
-		"vscode-languageserver-textdocument": "^1.0.8"
+		"vscode-languageserver-textdocument": "^1.0.8",
+		"vscode-languageserver-types": "^3.17.2"
 	},
 	"browser": {
 		"./out/index.js": "./out/empty.js"

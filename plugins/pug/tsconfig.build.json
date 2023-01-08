@@ -13,10 +13,13 @@
 			"path": "../html/tsconfig.build.json"
 		},
 		{
-			"path": "../../packages/language-service/tsconfig.build.json"
+			"path": "../../packages/shared/tsconfig.build.json"
 		},
 		{
-			"path": "../../pug-language-tools/pug-language-service/tsconfig.build.json"
+			"path": "../../packages/source-map/tsconfig.build.json"
+		},
+		{
+			"path": "../../packages/language-service/tsconfig.build.json"
 		},
 	],
 }
