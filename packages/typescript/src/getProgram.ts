@@ -59,11 +59,11 @@ export function getProgram(
 
 		if (sourceFile) {
 
-			const source = core.virtualFiles.getSourceByVirtualFileName(sourceFile.fileName);
+			const [virtualFile, source] = core.virtualFiles.getVirtualFile(sourceFile.fileName);
 
-			if (source) {
+			if (virtualFile && source) {
 
-				if (!source[2].capabilities.diagnostic)
+				if (!virtualFile.capabilities.diagnostic)
 					return [] as any;
 
 				const errors = transformDiagnostics(ls.getProgram()?.[api](sourceFile, cancellationToken) ?? []);
@@ -98,16 +98,16 @@ export function getProgram(
 				&& diagnostic.length !== undefined
 			) {
 
-				const source = core.virtualFiles.getSourceByVirtualFileName(diagnostic.file.fileName);
+				const [virtualFile, source] = core.virtualFiles.getVirtualFile(diagnostic.file.fileName);
 
-				if (source) {
+				if (virtualFile && source) {
 
-					if (core.typescript.languageServiceHost.fileExists?.(source[0]) === false)
+					if (core.typescript.languageServiceHost.fileExists?.(source.fileName) === false)
 						continue;
 
-					for (const [sourceFileName, map] of core.virtualFiles.getMaps(source[2])) {
+					for (const [sourceFileName, map] of core.virtualFiles.getMaps(virtualFile)) {
 
-						if (sourceFileName !== source[0])
+						if (sourceFileName !== source.fileName)
 							continue;
 
 						for (const start of map.toSourceOffsets(diagnostic.start)) {
@@ -120,7 +120,7 @@ export function getProgram(
 								if (!end[1].data.diagnostic)
 									continue;
 
-								onMapping(diagnostic, source[0], start[0], end[0], source[1].getText(0, source[1].getLength()));
+								onMapping(diagnostic, source.fileName, start[0], end[0], source.snapshot.getText(0, source.snapshot.getLength()));
 								break;
 							}
 							break;

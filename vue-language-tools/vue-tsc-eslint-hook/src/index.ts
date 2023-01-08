@@ -18,7 +18,7 @@ export = async function (
 
 	for (const fileName of fileNames) {
 
-		const vueFile = mapper.get(fileName)?.[1];
+		const vueFile = mapper.getSource(fileName)?.root;
 
 		if (vueFile) {
 

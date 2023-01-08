@@ -163,21 +163,19 @@ export function createDocumentsAndSourceMaps(mapper: VirtualFiles) {
 	return {
 		getSourceByUri(sourceFileUri: string) {
 			const fileName = shared.getPathOfUri(sourceFileUri);
-			return mapper.get(fileName);
+			return mapper.getSource(fileName);
 		},
 		getRootFileBySourceFileUri(sourceFileUri: string) {
 			const fileName = shared.getPathOfUri(sourceFileUri);
-			const rootFile = mapper.get(fileName);
-			if (rootFile) {
-				return rootFile[1];
-			}
+			return mapper.getSource(fileName)?.root;
 		},
 		getVirtualFileByUri(virtualFileUri: string) {
-			return mapper.getSourceByVirtualFileName(shared.getPathOfUri(virtualFileUri))?.[2];
+			const [virtualFile] = mapper.getVirtualFile(shared.getPathOfUri(virtualFileUri));
+			return virtualFile;
 		},
 		getMirrorMapByUri(virtualFileUri: string) {
 			const fileName = shared.getPathOfUri(virtualFileUri);
-			const virtualFile = mapper.getSourceByVirtualFileName(fileName)?.[2];
+			const [virtualFile] = mapper.getVirtualFile(fileName);
 			if (virtualFile) {
 				const map = mapper.getMirrorMap(virtualFile);
 				if (map) {
@@ -195,17 +193,17 @@ export function createDocumentsAndSourceMaps(mapper: VirtualFiles) {
 			return this.getMapsBySourceFileName(shared.getPathOfUri(uri));
 		},
 		getMapsBySourceFileName(fileName: string) {
-			const source = mapper.get(fileName);
+			const source = mapper.getSource(fileName);
 			if (source) {
 				const result: [VirtualFile, SourceMapWithDocuments<FileRangeCapabilities>][] = [];
-				forEachEmbeddedFile(source[1], (embedded) => {
+				forEachEmbeddedFile(source.root, (embedded) => {
 					for (const [sourceFileName, map] of mapper.getMaps(embedded)) {
 						if (sourceFileName === fileName) {
 							if (!_maps.has(map)) {
 								_maps.set(map, [
 									embedded,
 									new SourceMapWithDocuments(
-										getDocumentByFileName(source[0], sourceFileName),
+										getDocumentByFileName(source.snapshot, sourceFileName),
 										getDocumentByFileName(embedded.snapshot, fileName),
 										map,
 									)
@@ -218,7 +216,7 @@ export function createDocumentsAndSourceMaps(mapper: VirtualFiles) {
 					}
 				});
 				return {
-					snapshot: source[0],
+					snapshot: source.snapshot,
 					maps: result,
 				};
 			}
@@ -227,11 +225,11 @@ export function createDocumentsAndSourceMaps(mapper: VirtualFiles) {
 			return this.getMapsByVirtualFileName(shared.getPathOfUri(virtualFileUri));
 		},
 		*getMapsByVirtualFileName(virtualFileName: string): IterableIterator<[VirtualFile, SourceMapWithDocuments<FileRangeCapabilities>]> {
-			const virtualFile = mapper.getSourceByVirtualFileName(virtualFileName)?.[2];
+			const [virtualFile] = mapper.getVirtualFile(virtualFileName);
 			if (virtualFile) {
 				for (const [sourceFileName, map] of mapper.getMaps(virtualFile)) {
 					if (!_maps.has(map)) {
-						const sourceSnapshot = mapper.get(sourceFileName)?.[0];
+						const sourceSnapshot = mapper.getSource(sourceFileName)?.snapshot;
 						if (sourceSnapshot) {
 							_maps.set(map, [virtualFile, new SourceMapWithDocuments(
 								getDocumentByFileName(sourceSnapshot, sourceFileName),

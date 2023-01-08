@@ -1,6 +1,6 @@
 import { posix as path } from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { createVirtualFiles, forEachEmbeddedFile } from './documentRegistry';
+import { createVirtualFiles, forEachEmbeddedFile } from './virtualFiles';
 import { LanguageModule, LanguageServiceHost, FileKind } from './types';
 
 export type LanguageContext = ReturnType<typeof createLanguageContext>;
@@ -37,20 +37,33 @@ export function createLanguageContext(
 		fileExists: host.fileExists
 			? fileName => {
 
-				// .vue.js -> .vue
-				// .vue.ts -> .vue
-				// .vue.d.ts -> [ignored]
-				const vueFileName = fileName.substring(0, fileName.lastIndexOf('.'));
+				const ext = fileName.substring(fileName.lastIndexOf('.'));
+				if (
+					ext === '.js'
+					|| ext === '.ts'
+					|| ext === '.jsx'
+					|| ext === '.tsx'
+				) {
 
-				if (!virtualFiles.hasSourceFile(vueFileName)) {
-					// create virtual files
-					const scriptSnapshot = host.getScriptSnapshot(vueFileName);
-					if (scriptSnapshot) {
-						virtualFiles.update(vueFileName, scriptSnapshot);
+					/**
+					 * If try to access a external .vue file that outside of the project,
+					 * the file will not process by language service host,
+					 * so virtual file will not be created.
+					 * 
+					 * We try to create virtual file here.
+					 */
+
+					const sourceFileName = fileName.substring(0, fileName.lastIndexOf('.'));
+
+					if (!virtualFiles.hasSource(sourceFileName)) {
+						const scriptSnapshot = host.getScriptSnapshot(sourceFileName);
+						if (scriptSnapshot) {
+							virtualFiles.updateSource(sourceFileName, scriptSnapshot);
+						}
 					}
 				}
 
-				if (virtualFiles.getSourceByVirtualFileName(fileName)) {
+				if (virtualFiles.hasVirtualFile(fileName)) {
 					return true;
 				}
 
@@ -65,7 +78,7 @@ export function createLanguageContext(
 		getScriptSnapshot,
 		readDirectory: (_path, extensions, exclude, include, depth) => {
 			const result = host.readDirectory?.(_path, extensions, exclude, include, depth) ?? [];
-			for (const [, [fileName]] of virtualFiles.all) {
+			for (const { fileName } of virtualFiles.allSources()) {
 				const vuePath2 = path.join(_path, path.basename(fileName));
 				if (path.relative(_path.toLowerCase(), fileName.toLowerCase()).startsWith('..')) {
 					continue;
@@ -82,7 +95,7 @@ export function createLanguageContext(
 		getScriptKind(fileName) {
 
 			if (ts) {
-				if (virtualFiles.hasSourceFile(fileName))
+				if (virtualFiles.hasSource(fileName))
 					return ts.ScriptKind.Deferred;
 
 				switch (path.extname(fileName)) {
@@ -132,13 +145,13 @@ export function createLanguageContext(
 		const remainRootFiles = new Set(host.getScriptFileNames());
 
 		// .vue
-		for (const [_, [fileName]] of virtualFiles.all) {
+		for (const { fileName } of virtualFiles.allSources()) {
 			remainRootFiles.delete(fileName);
 
 			const snapshot = host.getScriptSnapshot(fileName);
 			if (!snapshot) {
 				// delete
-				virtualFiles.delete(fileName);
+				virtualFiles.deleteSource(fileName);
 				shouldUpdateTsProject = true;
 				virtualFilesUpdatedNum++;
 				continue;
@@ -148,7 +161,7 @@ export function createLanguageContext(
 			if (sourceFileVersions.get(fileName) !== newVersion) {
 				// update
 				sourceFileVersions.set(fileName, newVersion);
-				virtualFiles.update(fileName, snapshot);
+				virtualFiles.updateSource(fileName, snapshot);
 				virtualFilesUpdatedNum++;
 			}
 		}
@@ -162,7 +175,7 @@ export function createLanguageContext(
 		for (const fileName of [...remainRootFiles]) {
 			const snapshot = host.getScriptSnapshot(fileName);
 			if (snapshot) {
-				const virtualFile = virtualFiles.update(fileName, snapshot);
+				const virtualFile = virtualFiles.updateSource(fileName, snapshot);
 				if (virtualFile) {
 					remainRootFiles.delete(fileName);
 				}
@@ -194,9 +207,9 @@ export function createLanguageContext(
 			}
 		}
 
-		for (const [_, [_1, _2, virtualFile]] of virtualFiles.all) {
+		for (const { root: rootVirtualFile } of virtualFiles.allSources()) {
 			if (!shouldUpdateTsProject) {
-				forEachEmbeddedFile(virtualFile, embedded => {
+				forEachEmbeddedFile(rootVirtualFile, embedded => {
 					if (embedded.kind === FileKind.TypeScriptHostFile) {
 						if (virtualFileVersions.has(embedded.fileName) && virtualFileVersions.get(embedded.fileName)?.virtualFileSnapshot !== embedded.snapshot) {
 							shouldUpdateTsProject = true;
@@ -214,8 +227,8 @@ export function createLanguageContext(
 
 		const tsFileNames = new Set<string>();
 
-		for (const [_, [_1, _2, sourceFile]] of virtualFiles.all) {
-			forEachEmbeddedFile(sourceFile, embedded => {
+		for (const { root: rootVirtualFile } of virtualFiles.allSources()) {
+			forEachEmbeddedFile(rootVirtualFile, embedded => {
 				if (embedded.kind === FileKind.TypeScriptHostFile) {
 					tsFileNames.add(embedded.fileName); // virtual .ts
 				}
@@ -223,7 +236,7 @@ export function createLanguageContext(
 		}
 
 		for (const fileName of host.getScriptFileNames()) {
-			if (!virtualFiles.hasSourceFile(fileName)) {
+			if (!virtualFiles.hasSource(fileName)) {
 				tsFileNames.add(fileName); // .ts
 			}
 		}
@@ -231,24 +244,24 @@ export function createLanguageContext(
 		return [...tsFileNames];
 	}
 	function getScriptVersion(fileName: string) {
-		let source = virtualFiles.getSourceByVirtualFileName(fileName);
-		if (source) {
-			let version = virtualFileVersions.get(source[2].fileName);
+		let [virtualFile, source] = virtualFiles.getVirtualFile(fileName);
+		if (virtualFile && source) {
+			let version = virtualFileVersions.get(virtualFile.fileName);
 			if (!version) {
 				version = {
 					value: 0,
-					virtualFileSnapshot: source[2].snapshot,
-					sourceFileSnapshot: source[1],
+					virtualFileSnapshot: virtualFile.snapshot,
+					sourceFileSnapshot: source.snapshot,
 				};
-				virtualFileVersions.set(source[2].fileName, version);
+				virtualFileVersions.set(virtualFile.fileName, version);
 			}
 			else if (
-				version.virtualFileSnapshot !== source[2].snapshot
-				|| (host.isTsc && version.sourceFileSnapshot !== source[1]) // fix https://github.com/johnsoncodehk/volar/issues/1082
+				version.virtualFileSnapshot !== virtualFile.snapshot
+				|| (host.isTsc && version.sourceFileSnapshot !== source.snapshot) // fix https://github.com/johnsoncodehk/volar/issues/1082
 			) {
 				version.value++;
-				version.virtualFileSnapshot = source[2].snapshot;
-				version.sourceFileSnapshot = source[1];
+				version.virtualFileSnapshot = virtualFile.snapshot;
+				version.sourceFileSnapshot = source.snapshot;
 			}
 			return version.value.toString();
 		}
@@ -260,9 +273,9 @@ export function createLanguageContext(
 		if (cache && cache[0] === version) {
 			return cache[1];
 		}
-		const source = virtualFiles.getSourceByVirtualFileName(fileName);
-		if (source) {
-			const snapshot = source[2].snapshot;
+		const [virtualFile] = virtualFiles.getVirtualFile(fileName);
+		if (virtualFile) {
+			const snapshot = virtualFile.snapshot;
 			scriptSnapshots.set(fileName.toLowerCase(), [version, snapshot]);
 			return snapshot;
 		}

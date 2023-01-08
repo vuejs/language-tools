@@ -265,7 +265,7 @@ export function baseCreate(
 			const printer = ts.createPrinter(checkerOptions.printer);
 			const snapshot = host.getScriptSnapshot(componentPath)!;
 
-			const vueSourceFile = core.virtualFiles.get(componentPath)?.[1];
+			const vueSourceFile = core.virtualFiles.getSource(componentPath)?.root;
 			const vueDefaults = vueSourceFile && exportName === 'default'
 				? (vueSourceFile instanceof vue.VueFile ? readVueComponentDefaultProps(vueSourceFile, printer, ts, vueCompilerOptions) : {})
 				: {};

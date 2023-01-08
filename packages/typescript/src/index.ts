@@ -58,7 +58,7 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 	// apis
 	function organizeImports(args: ts.OrganizeImportsArgs, formatOptions: ts.FormatCodeSettings, preferences: ts.UserPreferences | undefined): ReturnType<ts.LanguageService['organizeImports']> {
 		let edits: readonly ts.FileTextChanges[] = [];
-		const file = core.virtualFiles.get(args.fileName)?.[1];
+		const file = core.virtualFiles.getSource(args.fileName)?.root;
 		if (file) {
 			embedded.forEachEmbeddedFile(file, embedded => {
 				if (embedded.kind && embedded.capabilities.codeAction) {
@@ -120,7 +120,7 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 			for (const ref of _symbols) {
 				loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
 
-				const virtualFile = core.virtualFiles.getSourceByVirtualFileName(ref.fileName)?.[2];
+				const [virtualFile] = core.virtualFiles.getVirtualFile(ref.fileName);
 				if (!virtualFile)
 					continue;
 
@@ -171,7 +171,7 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 
 				loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
 
-				const virtualFile = core.virtualFiles.getSourceByVirtualFileName(ref.fileName)?.[2];
+				const [virtualFile] = core.virtualFiles.getVirtualFile(ref.fileName);
 				if (!virtualFile)
 					continue;
 
@@ -210,7 +210,7 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 
 					loopChecker.add(ref.fileName + ':' + ref.textSpan.start);
 
-					const virtualFile = core.virtualFiles.getSourceByVirtualFileName(ref.fileName)?.[2];
+					const [virtualFile] = core.virtualFiles.getVirtualFile(ref.fileName);
 					if (!virtualFile)
 						continue;
 
@@ -232,11 +232,11 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 
 	// transforms
 	function transformFileTextChanges(changes: ts.FileTextChanges): ts.FileTextChanges | undefined {
-		const source = core.virtualFiles.getSourceByVirtualFileName(changes.fileName);
+		const [_, source] = core.virtualFiles.getVirtualFile(changes.fileName);
 		if (source) {
 			return {
 				...changes,
-				fileName: source[0],
+				fileName: source.fileName,
 				textChanges: changes.textChanges.map(c => {
 					const span = transformSpan(changes.fileName, c.span);
 					if (span) {
@@ -291,17 +291,17 @@ export function createLanguageService(host: embedded.LanguageServiceHost, mods: 
 	function transformSpan(fileName: string | undefined, textSpan: ts.TextSpan | undefined) {
 		if (!fileName) return;
 		if (!textSpan) return;
-		const source = core.virtualFiles.getSourceByVirtualFileName(fileName);
-		if (source) {
-			for (const [sourceFileName, map] of core.virtualFiles.getMaps(source[2])) {
+		const [virtualFile, source] = core.virtualFiles.getVirtualFile(fileName);
+		if (virtualFile && source) {
+			for (const [sourceFileName, map] of core.virtualFiles.getMaps(virtualFile)) {
 
-				if (source[0] !== sourceFileName)
+				if (source.fileName !== sourceFileName)
 					continue;
 
 				const sourceLoc = map.toSourceOffset(textSpan.start);
 				if (sourceLoc) {
 					return {
-						fileName: source[0],
+						fileName: source.fileName,
 						textSpan: {
 							start: sourceLoc[0],
 							length: textSpan.length,

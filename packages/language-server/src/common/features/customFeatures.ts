@@ -74,9 +74,9 @@ export function register(
 		const project = await projects.getProject(document.uri);
 		const fileNames: string[] = [];
 		if (project) {
-			const sourceFile = project.project?.getLanguageService().context.core.virtualFiles.get(shared.getPathOfUri(document.uri))?.[1];
-			if (sourceFile) {
-				forEachEmbeddedFile(sourceFile, e => {
+			const rootVirtualFile = project.project?.getLanguageService().context.core.virtualFiles.getSource(shared.getPathOfUri(document.uri))?.root;
+			if (rootVirtualFile) {
+				forEachEmbeddedFile(rootVirtualFile, e => {
 					if (e.snapshot.getLength() && e.kind === 1) {
 						fileNames.push(e.fileName);
 					}
@@ -88,12 +88,11 @@ export function register(
 	connection.onRequest(GetVirtualFileRequest.type, async params => {
 		const project = await projects.getProject(params.sourceFileUri);
 		if (project) {
-			const sourceAndVirtual = project.project?.getLanguageService().context.core.virtualFiles.getSourceByVirtualFileName(params.virtualFileName);
-			if (sourceAndVirtual) {
-				const virtualFile = sourceAndVirtual[2];
+			const [virtualFile, source] = project.project?.getLanguageService().context.core.virtualFiles.getVirtualFile(params.virtualFileName) ?? [];
+			if (virtualFile && source) {
 				const mappings: Record<string, any[]> = {};
 				for (const mapping of virtualFile.mappings) {
-					const sourceUri = shared.getUriByPath(mapping.source ?? sourceAndVirtual[0]);
+					const sourceUri = shared.getUriByPath(mapping.source ?? source.fileName);
 					mappings[sourceUri] ??= [];
 					mappings[sourceUri].push(mapping);
 				}

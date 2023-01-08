@@ -30,8 +30,8 @@ export function register(context: LanguageServiceRuntimeContext) {
 				: await tryFormat(document, range, undefined);
 		}
 
-		const originalSnapshot = source[0];
-		const rootVirtualFile = source[1];
+		const originalSnapshot = source.snapshot;
+		const rootVirtualFile = source.root;
 		const originalDocument = document;
 		const initialIndentLanguageId = await context.env.configurationHost?.getConfiguration<Record<string, boolean>>('volar.format.initialIndent') ?? { html: true };
 
@@ -128,7 +128,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			if (edits.length > 0) {
 				const newText = TextDocument.applyEdits(document, edits);
 				document = TextDocument.create(document.uri, document.languageId, document.version + 1, newText);
-				context.core.virtualFiles.update(shared.getPathOfUri(document.uri), stringToSnapshot(document.getText()));
+				context.core.virtualFiles.updateSource(shared.getPathOfUri(document.uri), stringToSnapshot(document.getText()));
 				edited = true;
 			}
 
@@ -141,7 +141,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					if (indentEdits.length > 0) {
 						const newText = TextDocument.applyEdits(document, indentEdits);
 						document = TextDocument.create(document.uri, document.languageId, document.version + 1, newText);
-						context.core.virtualFiles.update(shared.getPathOfUri(document.uri), stringToSnapshot(document.getText()));
+						context.core.virtualFiles.updateSource(shared.getPathOfUri(document.uri), stringToSnapshot(document.getText()));
 						edited = true;
 					}
 				}
@@ -150,7 +150,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 		if (edited) {
 			// recover
-			context.core.virtualFiles.update(shared.getPathOfUri(document.uri), originalSnapshot);
+			context.core.virtualFiles.updateSource(shared.getPathOfUri(document.uri), originalSnapshot);
 		}
 
 		if (document.getText() === originalDocument.getText())
