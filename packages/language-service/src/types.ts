@@ -11,10 +11,6 @@ import { LanguageService } from '@volar/language-service';
 export * from 'vscode-languageserver-protocol';
 
 export interface LanguageServiceRuntimeContext<Host extends LanguageServiceHost = LanguageServiceHost> {
-	host: Host;
-	core: LanguageContext;
-	documents: DocumentsAndSourceMaps;
-	plugins: LanguageServicePluginInstance[];
 	typescript: {
 		module: typeof import('typescript/lib/tsserverlibrary');
 		languageServiceHost: ts.LanguageServiceHost;
@@ -27,6 +23,16 @@ export interface LanguageServiceRuntimeContext<Host extends LanguageServiceHost 
 		fileSystemProvider?: FileSystemProvider;
 		schemaRequestService?: SchemaRequestService;
 	};
+
+	/** @private */
+	host: Host;
+	/** @private */
+	core: LanguageContext;
+	/** @private */
+	documents: DocumentsAndSourceMaps;
+	/** @private */
+	plugins: LanguageServicePluginInstance[];
+	/** @private */
 	getTextDocument(uri: string): TextDocument | undefined;
 };
 
