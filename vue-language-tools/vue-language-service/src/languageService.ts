@@ -86,6 +86,16 @@ export function getLanguageServicePlugins(vueCompilerOptions: VueCompilerOptions
 					) {
 						let newName = item.textEdit.newText.slice(0, -'Vue'.length);
 						newName = newName[0].toUpperCase() + newName.substring(1);
+						if (newName === 'Index') {
+							const tsItem = (item.data as Data).originalItem;
+							if (tsItem.source) {
+								const dirs = tsItem.source.split('/');
+								if (dirs.length >= 3) {
+									newName = dirs[dirs.length - 2];
+									newName = newName[0].toUpperCase() + newName.substring(1);
+								}
+							}
+						}
 						item.additionalTextEdits[0].newText = item.additionalTextEdits[0].newText.replace(
 							'import ' + item.textEdit.newText + ' from ',
 							'import ' + newName + ' from ',
