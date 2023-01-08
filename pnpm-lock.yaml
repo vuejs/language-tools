@@ -27,77 +27,6 @@ importers:
     optionalDependencies:
       vitepress: 1.0.0-alpha.35
 
-  examples/svelte-language-core:
-    specifiers:
-      '@jridgewell/sourcemap-codec': ^1.4.14
-      '@volar/language-core': 1.0.22
-      svelte: ^3.53.1
-      svelte2tsx: ^0.5.20
-      vscode-languageserver-textdocument: ^1.0.8
-      vscode-uri: ^3.0.7
-    dependencies:
-      '@jridgewell/sourcemap-codec': 1.4.14
-      '@volar/language-core': link:../../packages/language-core
-      svelte: 3.55.0
-      svelte2tsx: 0.5.22_svelte@3.55.0
-      vscode-languageserver-textdocument: 1.0.8
-      vscode-uri: 3.0.7
-
-  examples/svelte-language-server:
-    specifiers:
-      '@volar-examples/svelte-language-core': 1.0.22
-      '@volar-plugins/typescript': 1.0.22
-      '@volar/language-server': 1.0.22
-    dependencies:
-      '@volar-examples/svelte-language-core': link:../svelte-language-core
-      '@volar-plugins/typescript': link:../../plugins/typescript
-      '@volar/language-server': link:../../packages/language-server
-
-  examples/svelte-tsc:
-    specifiers:
-      '@volar-examples/svelte-language-core': 1.0.22
-      '@volar-examples/svelte-typescript': 1.0.22
-    dependencies:
-      '@volar-examples/svelte-language-core': link:../svelte-language-core
-      '@volar-examples/svelte-typescript': link:../svelte-typescript
-
-  examples/svelte-typescript:
-    specifiers:
-      '@volar-examples/svelte-language-core': 1.0.22
-      '@volar/typescript': 1.0.22
-    dependencies:
-      '@volar-examples/svelte-language-core': link:../svelte-language-core
-      '@volar/typescript': link:../../packages/typescript
-
-  examples/vscode-svelte:
-    specifiers:
-      '@types/vscode': 1.67.0
-      '@volar-examples/svelte-language-server': 1.0.22
-      '@volar/vscode-language-client': 1.0.22
-      typesafe-path: ^0.2.2
-      vsce: latest
-      vscode-languageclient: ^8.0.2
-    dependencies:
-      '@volar-examples/svelte-language-server': link:../svelte-language-server
-      '@volar/vscode-language-client': link:../../packages/vscode-language-client
-      typesafe-path: 0.2.2
-      vscode-languageclient: 8.0.2
-    devDependencies:
-      '@types/vscode': 1.67.0
-      vsce: 2.15.0
-
-  examples/vue-and-svelte-language-server:
-    specifiers:
-      '@volar-examples/svelte-language-core': 1.0.22
-      '@volar-plugins/typescript': 1.0.22
-      '@volar/language-server': 1.0.22
-      '@volar/vue-language-core': 1.0.22
-    dependencies:
-      '@volar-examples/svelte-language-core': link:../svelte-language-core
-      '@volar-plugins/typescript': link:../../plugins/typescript
-      '@volar/language-server': link:../../packages/language-server
-      '@volar/vue-language-core': link:../../vue-language-tools/vue-language-core
-
   packages/language-core:
     specifiers:
       '@volar/source-map': 1.0.22
@@ -978,10 +907,6 @@ packages:
 
   /@johnsoncodehk/pug-beautify/0.2.2:
     resolution: {integrity: sha512-qqNS/YD0Nck5wtQLCPHAfGVgWbbGafxSPjNh0ekYPFSNNqnDH2kamnduzYly8IiADmeVx/MfAE1njMEjVeHTMA==}
-    dev: false
-
-  /@jridgewell/sourcemap-codec/1.4.14:
-    resolution: {integrity: sha512-XPSJHWmi394fuUuzDnGz1wiKqWfo1yXecHQMRf2l6hztTO+nPru658AyDngaBe7isIxEkRsPR3FZh+s7iVa4Uw==}
     dev: false
 
   /@koa/cors/4.0.0:
@@ -2690,10 +2615,6 @@ packages:
     dev: false
     optional: true
 
-  /dedent-js/1.0.1:
-    resolution: {integrity: sha512-OUepMozQULMLUmhxS95Vudo0jb0UchLimi3+pQ2plj61Fcy8axbP9hbiD4Sz6DPqn6XG3kfmziVfQ1rSys5AJQ==}
-    dev: false
-
   /dedent/0.7.0:
     resolution: {integrity: sha512-Q6fKUPqnAHAyhiUgFU7BUzLiv0kd8saH9al7tnu5Q/okj6dnupxyTgFIBjVzJATdfIAm9NAsvXNzjaKa+bxVyA==}
     dev: false
@@ -4106,12 +4027,6 @@ packages:
       get-func-name: 2.0.0
     dev: true
 
-  /lower-case/2.0.2:
-    resolution: {integrity: sha512-7fm3l3NAF9WfN6W3JOmf5drwpVqX78JtoGJ3A6W0a6ZnldM41w2fV5D490psKFTpMds8TJse/eHLFFsNHHjHgg==}
-    dependencies:
-      tslib: 2.4.1
-    dev: false
-
   /lru-cache/6.0.0:
     resolution: {integrity: sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==}
     engines: {node: '>=10'}
@@ -4508,13 +4423,6 @@ packages:
       type-fest: 0.4.1
     dev: false
     optional: true
-
-  /no-case/3.0.4:
-    resolution: {integrity: sha512-fgAN3jGAh+RoxUGZHTSOLJIqUc2wmoBwGR4tbpNAKmmovFoWq0OdRkb0VkldReO2a2iBT/OEulG9XSUc10r3zg==}
-    dependencies:
-      lower-case: 2.0.2
-      tslib: 2.4.1
-    dev: false
 
   /node-abi/3.30.0:
     resolution: {integrity: sha512-qWO5l3SCqbwQavymOmtTVuCWZE23++S+rxyoHjXqUmPyzRcaoI4lA2gO55/drddGnedAyjA7sk76SfQ5lfUMnw==}
@@ -4987,13 +4895,6 @@ packages:
     engines: {node: '>= 0.8'}
     dev: false
     optional: true
-
-  /pascal-case/3.1.2:
-    resolution: {integrity: sha512-uWlGT3YSnK9x3BQJaOdcZwrnV6hPpd8jFH1/ucpiLRPh/2zCVJKS19E4GvYHvaCcACn3foXZ0cLB9Wrx1KGe5g==}
-    dependencies:
-      no-case: 3.0.4
-      tslib: 2.4.1
-    dev: false
 
   /path-browserify/1.0.1:
     resolution: {integrity: sha512-b7uo2UCUOYZcnF/3ID0lulOJi/bafxa1xPe7ZPsammBSpjSWQkjNxlt635YGS2MiR9GjvuXCtz2emr3jbsz98g==}
@@ -5910,22 +5811,6 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
-  /svelte/3.55.0:
-    resolution: {integrity: sha512-uGu2FVMlOuey4JoKHKrpZFkoYyj0VLjJdz47zX5+gVK5odxHM40RVhar9/iK2YFRVxvfg9FkhfVlR0sjeIrOiA==}
-    engines: {node: '>= 8'}
-    dev: false
-
-  /svelte2tsx/0.5.22_svelte@3.55.0:
-    resolution: {integrity: sha512-OytIql7Bv53oFuL0jjsnp/gNvR4ngAUdAjswgibmIQT2Lj2OIQYn2J3gKqRd+wSj/n3M/wrz4zJpudQRSfncZw==}
-    peerDependencies:
-      svelte: ^3.24
-      typescript: ^4.1.2
-    dependencies:
-      dedent-js: 1.0.1
-      pascal-case: 3.1.2
-      svelte: 3.55.0
-    dev: false
-
   /tar-fs/2.1.1:
     resolution: {integrity: sha512-V0r2Y9scmbDRLCNex/+hYzvp/zyYjvFbHPNgVTKfQvVrb6guiE/fxP+XblDNR011utopbkex2nM4dHNV6GDsng==}
     dependencies:
@@ -6079,6 +5964,7 @@ packages:
   /tslib/2.4.1:
     resolution: {integrity: sha512-tGyy4dAjRIEwI7BzsB0lynWgOpfqjUdq91XXAlIWD2OwKBH7oCl/GZG/HT4BOHrTlPMOASlMQ7veyTqpmRcrNA==}
     dev: false
+    optional: true
 
   /tsscmp/1.0.6:
     resolution: {integrity: sha512-LxhtAkPDTkVCMQjt2h6eBVY28KCjikZqZfMcC15YBeNjkgUpdCfBu5HoiOTDu86v6smE8yOjyEktJ8hlbANHQA==}

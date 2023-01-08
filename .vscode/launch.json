@@ -37,23 +37,6 @@
 			}
 		},
 		{
-			"name": "Launch Svelte",
-			"type": "extensionHost",
-			"request": "launch",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-				"--disable-extensions",
-				"--extensionDevelopmentPath=${workspaceRoot}/examples/vscode-svelte"
-			],
-			"outFiles": [
-				"${workspaceRoot}/*/*/out/**/*.js"
-			],
-			"preLaunchTask": {
-				"type": "npm",
-				"script": "watch"
-			}
-		},
-		{
 			"type": "extensionHost",
 			"request": "launch",
 			"name": "Launch TypeScript Vue Plugin",
