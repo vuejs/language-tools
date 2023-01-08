@@ -1,26 +1,22 @@
 {
-	"name": "vue-tsc-eslint-hook",
+	"name": "@volar/vue-language-plugin-pug",
 	"version": "1.0.24",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
-		"bin",
 		"out/**/*.js",
 		"out/**/*.d.ts"
 	],
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
-		"directory": "vue-language-tools/vue-tsc-eslint"
+		"directory": "packages/vue-language-plugin-pug"
 	},
 	"devDependencies": {
-		"@types/eslint": "latest",
-		"vue-tsc": "1.0.24"
-	},
-	"peerDependencies": {
-		"eslint": "*"
+		"@volar/vue-language-core": "1.0.24"
 	},
 	"dependencies": {
-		"vscode-languageserver-textdocument": "^1.0.8"
+		"@volar/pug-language-service": "1.0.24",
+		"@volar/source-map": "1.0.24"
 	}
 }

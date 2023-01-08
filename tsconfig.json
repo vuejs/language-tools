@@ -22,14 +22,11 @@
 			"@volar/*": [
 				"packages/*/src"
 			],
-			"@volar/vue-*": [
-				"vue-language-tools/vue-*/src"
-			],
 			"vue-tsc": [
-				"vue-language-tools/vue-tsc/src"
+				"packages/vue-tsc/src"
 			],
 			"vue-component-meta": [
-				"vue-language-tools/vue-component-meta/src"
+				"packages/vue-component-meta/src"
 			],
 		},
 		"noEmit": true,
