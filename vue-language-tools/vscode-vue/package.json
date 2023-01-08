@@ -324,6 +324,9 @@
 			"type": "object",
 			"title": "Volar",
 			"properties": {
+				"typescript.tsdk": {
+					"type": "string"
+				},
 				"vue-semantic-server.trace.server": {
 					"scope": "window",
 					"type": "string",
