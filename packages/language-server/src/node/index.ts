@@ -46,7 +46,7 @@ export function startLanguageServer(connection: vscode.Connection, ...plugins: L
 			fileSystemProvide: {
 				stat: (uri) => {
 					return new Promise<html.FileStat>((resolve, reject) => {
-						fs.stat(shared.getPathOfUri(uri), (err, stats) => {
+						fs.stat(shared.uriToFileName(uri), (err, stats) => {
 							if (stats) {
 								resolve({
 									type: stats.isFile() ? html.FileType.File
@@ -66,7 +66,7 @@ export function startLanguageServer(connection: vscode.Connection, ...plugins: L
 				},
 				readDirectory: (uri) => {
 					return new Promise<[string, html.FileType][]>((resolve, reject) => {
-						fs.readdir(shared.getPathOfUri(uri), (err, files) => {
+						fs.readdir(shared.uriToFileName(uri), (err, files) => {
 							if (files) {
 								resolve(files.map(file => [file, html.FileType.File]));
 							}

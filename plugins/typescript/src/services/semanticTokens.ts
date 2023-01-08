@@ -14,7 +14,7 @@ export function register(
 		const document = getTextDocument(uri);
 		if (!document) return;
 
-		const file = shared.getPathOfUri(uri);
+		const file = shared.uriToFileName(uri);
 		const start = range ? document.offsetAt(range.start) : 0;
 		const length = range ? (document.offsetAt(range.end) - start) : document.getText().length;
 

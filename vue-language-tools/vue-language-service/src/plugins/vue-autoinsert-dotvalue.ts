@@ -32,7 +32,7 @@ const plugin: VueLanguageServicePlugin = (context) => {
 			if (!program)
 				return;
 
-			const sourceFile = program.getSourceFile(shared.getPathOfUri(document.uri));
+			const sourceFile = program.getSourceFile(shared.uriToFileName(document.uri));
 			if (!sourceFile)
 				return;
 
@@ -45,7 +45,7 @@ const plugin: VueLanguageServicePlugin = (context) => {
 
 			const token = _ts.languageServiceHost.getCancellationToken?.();
 			if (token) {
-				_ts.languageService.getQuickInfoAtPosition(shared.getPathOfUri(document.uri), node.end);
+				_ts.languageService.getQuickInfoAtPosition(shared.uriToFileName(document.uri), node.end);
 				if (token?.isCancellationRequested()) {
 					return; // check cancel here because type checker do not use cancel token
 				}

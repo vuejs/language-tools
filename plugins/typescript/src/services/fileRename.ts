@@ -22,8 +22,8 @@ export function register(
 			getUserPreferences(getConfiguration, document.uri, rootUri),
 		]) : [{}, {}];
 
-		const fileToRename = shared.getPathOfUri(oldUri);
-		const newFilePath = shared.getPathOfUri(newUri);
+		const fileToRename = shared.uriToFileName(oldUri);
+		const newFilePath = shared.uriToFileName(newUri);
 
 		let response: ReturnType<typeof languageService.getEditsForFileRename> | undefined;
 		try { response = languageService.getEditsForFileRename(fileToRename, newFilePath, formatOptions, preferences); } catch { }

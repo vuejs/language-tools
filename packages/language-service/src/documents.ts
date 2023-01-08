@@ -162,16 +162,16 @@ export function createDocumentsAndSourceMaps(mapper: VirtualFiles) {
 
 	return {
 		getSourceByUri(sourceFileUri: string) {
-			return mapper.getSource(shared.getPathOfUri(sourceFileUri));
+			return mapper.getSource(shared.uriToFileName(sourceFileUri));
 		},
 		hasVirtualFileByUri(virtualFileUri: string) {
-			return mapper.hasVirtualFile(shared.getPathOfUri(virtualFileUri));
+			return mapper.hasVirtualFile(shared.uriToFileName(virtualFileUri));
 		},
 		getVirtualFileByUri(virtualFileUri: string) {
-			return mapper.getVirtualFile(shared.getPathOfUri(virtualFileUri));
+			return mapper.getVirtualFile(shared.uriToFileName(virtualFileUri));
 		},
 		getMirrorMapByUri(virtualFileUri: string) {
-			const fileName = shared.getPathOfUri(virtualFileUri);
+			const fileName = shared.uriToFileName(virtualFileUri);
 			const [virtualFile] = mapper.getVirtualFile(fileName);
 			if (virtualFile) {
 				const map = mapper.getMirrorMap(virtualFile);
@@ -187,7 +187,7 @@ export function createDocumentsAndSourceMaps(mapper: VirtualFiles) {
 			}
 		},
 		getMapsBySourceFileUri(uri: string) {
-			return this.getMapsBySourceFileName(shared.getPathOfUri(uri));
+			return this.getMapsBySourceFileName(shared.uriToFileName(uri));
 		},
 		getMapsBySourceFileName(fileName: string) {
 			const source = mapper.getSource(fileName);
@@ -219,7 +219,7 @@ export function createDocumentsAndSourceMaps(mapper: VirtualFiles) {
 			}
 		},
 		getMapsByVirtualFileUri(virtualFileUri: string) {
-			return this.getMapsByVirtualFileName(shared.getPathOfUri(virtualFileUri));
+			return this.getMapsByVirtualFileName(shared.uriToFileName(virtualFileUri));
 		},
 		*getMapsByVirtualFileName(virtualFileName: string): IterableIterator<[VirtualFile, SourceMapWithDocuments<FileRangeCapabilities>]> {
 			const [virtualFile] = mapper.getVirtualFile(virtualFileName);
@@ -242,7 +242,7 @@ export function createDocumentsAndSourceMaps(mapper: VirtualFiles) {
 			}
 		},
 		getDocumentByUri(snapshot: ts.IScriptSnapshot, uri: string) {
-			return this.getDocumentByFileName(snapshot, shared.getPathOfUri(uri));
+			return this.getDocumentByFileName(snapshot, shared.uriToFileName(uri));
 		},
 		getDocumentByFileName,
 	};
@@ -254,7 +254,7 @@ export function createDocumentsAndSourceMaps(mapper: VirtualFiles) {
 		const map = _documents.get(snapshot)!;
 		if (!map.has(fileName)) {
 			map.set(fileName, TextDocument.create(
-				shared.getUriByPath(fileName),
+				shared.fileNameToUri(fileName),
 				shared.syntaxToLanguageId(fileName.substring(fileName.lastIndexOf('.') + 1)),
 				version++,
 				snapshot.getText(0, snapshot.getLength()),

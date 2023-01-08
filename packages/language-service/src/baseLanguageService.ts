@@ -97,7 +97,7 @@ export function createLanguageServiceContext(options: {
 
 	function getTextDocument(uri: string) {
 
-		const fileName = shared.getPathOfUri(uri);
+		const fileName = shared.uriToFileName(uri);
 		const scriptSnapshot = options.host.getScriptSnapshot(fileName);
 
 		if (scriptSnapshot) {

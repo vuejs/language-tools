@@ -79,7 +79,7 @@ export function createLanguageService(
 	};
 
 	function getTextDocument(uri: string) {
-		const fileName = shared.getPathOfUri(uri);
+		const fileName = shared.uriToFileName(uri);
 		const version = host.getScriptVersion(fileName);
 		const oldDoc = documents.get(uri);
 		if (!oldDoc || oldDoc[0] !== version) {

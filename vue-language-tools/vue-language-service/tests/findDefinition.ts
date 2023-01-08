@@ -18,7 +18,7 @@ for (const dirName of testDirs) {
 		for (const file in inputFiles) {
 
 			const filePath = path.join(dir, file);
-			const uri = shared.getUriByPath(filePath);
+			const uri = shared.fileNameToUri(filePath);
 			const fileText = inputFiles[file];
 			const document = TextDocument.create('', '', 0, fileText);
 			const actions = findActions(fileText);
@@ -45,7 +45,7 @@ for (const dirName of testDirs) {
 					expect(locations).toBeDefined();
 
 					const location = locations?.find(loc =>
-						loc.targetUri === shared.getUriByPath(targetFile)
+						loc.targetUri === shared.fileNameToUri(targetFile)
 						&& loc.targetSelectionRange.start.line === targetRange.start.line
 						&& loc.targetSelectionRange.start.character === targetRange.start.character
 						&& loc.targetSelectionRange.end.line === targetRange.end.line

@@ -16,7 +16,7 @@ export function register(
 			const document = getTextDocument(uri);
 			if (!document) return [];
 
-			const fileName = shared.getPathOfUri(document.uri);
+			const fileName = shared.uriToFileName(document.uri);
 			const tsOptions = await getFormatCodeSettings(getConfiguration, document.uri, options);
 			if (typeof (tsOptions.indentSize) === "boolean" || typeof (tsOptions.indentSize) === "string") {
 				tsOptions.indentSize = undefined;
@@ -49,7 +49,7 @@ export function register(
 			const document = getTextDocument(uri);
 			if (!document) return [];
 
-			const fileName = shared.getPathOfUri(document.uri);
+			const fileName = shared.uriToFileName(document.uri);
 			const tsOptions = await getFormatCodeSettings(getConfiguration, document.uri, options);
 
 			let scriptEdits: ReturnType<typeof languageService.getFormattingEditsForRange> | undefined;

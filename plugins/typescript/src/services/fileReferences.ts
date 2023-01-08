@@ -12,7 +12,7 @@ export function register(
 		const document = getTextDocument(uri);
 		if (!document) return [];
 
-		const fileName = shared.getPathOfUri(document.uri);
+		const fileName = shared.uriToFileName(document.uri);
 
 		let entries: ReturnType<typeof languageService.getFileReferences> | undefined;
 		try { entries = languageService.getFileReferences(fileName); } catch { }

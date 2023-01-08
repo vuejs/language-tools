@@ -40,7 +40,7 @@ export async function createProject(context: ProjectContext) {
 	let projectVersion = 0;
 	let projectVersionUpdateTime = context.workspace.workspaces.cancelTokenHost.getMtime();
 	let languageService: embeddedLS.LanguageService | undefined;
-	let parsedCommandLine = createParsedCommandLine(context.workspace.workspaces.ts, sys, shared.getPathOfUri(context.rootUri.toString()), context.tsConfig, context.workspace.workspaces.plugins);
+	let parsedCommandLine = createParsedCommandLine(context.workspace.workspaces.ts, sys, shared.uriToFileName(context.rootUri.toString()), context.tsConfig, context.workspace.workspaces.plugins);
 
 	const scripts = createUriMap<{
 		version: number,
@@ -140,7 +140,7 @@ export async function createProject(context: ProjectContext) {
 		const deletes = changes.filter(change => change.type === vscode.FileChangeType.Deleted);
 
 		if (creates.length || deletes.length) {
-			parsedCommandLine = createParsedCommandLine(context.workspace.workspaces.ts, sys, shared.getPathOfUri(context.rootUri.toString()), context.tsConfig, context.workspace.workspaces.plugins);
+			parsedCommandLine = createParsedCommandLine(context.workspace.workspaces.ts, sys, shared.uriToFileName(context.rootUri.toString()), context.tsConfig, context.workspace.workspaces.plugins);
 			projectVersion++;
 			typeRootVersion++;
 		}
@@ -168,7 +168,7 @@ export async function createProject(context: ProjectContext) {
 			readDirectory: sys.readDirectory,
 			realpath: sys.realpath,
 			fileExists: sys.fileExists,
-			getCurrentDirectory: () => shared.getPathOfUri(context.rootUri.toString()),
+			getCurrentDirectory: () => shared.uriToFileName(context.rootUri.toString()),
 			getProjectReferences: () => parsedCommandLine.projectReferences, // if circular, broken with provide `getParsedCommandLine: () => parsedCommandLine`
 			getCancellationToken: () => token,
 			// custom
@@ -318,7 +318,7 @@ function getHTMLDocumentContext(
 			const isUri = base.indexOf('://') >= 0;
 			const resolveResult = ts.resolveModuleName(
 				ref,
-				isUri ? shared.getPathOfUri(base) : base,
+				isUri ? shared.uriToFileName(base) : base,
 				host.getCompilationSettings(),
 				host,
 			);
@@ -337,12 +337,12 @@ function getHTMLDocumentContext(
 					continue;
 				}
 				if (host.fileExists(failed)) {
-					return isUri ? shared.getUriByPath(failed) : failed;
+					return isUri ? shared.fileNameToUri(failed) : failed;
 				}
 			}
 			for (const dir of dirs) {
 				if (host.directoryExists?.(dir) ?? true) {
-					return isUri ? shared.getUriByPath(dir) : dir;
+					return isUri ? shared.fileNameToUri(dir) : dir;
 				}
 			}
 

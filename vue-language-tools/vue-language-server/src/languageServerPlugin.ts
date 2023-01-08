@@ -117,7 +117,7 @@ const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.VueLangua
 					);
 					checkers.set(languageService.context.host, checker);
 				}
-				return checker.getComponentMeta(shared.getPathOfUri(params.uri));
+				return checker.getComponentMeta(shared.uriToFileName(params.uri));
 			});
 		},
 	};

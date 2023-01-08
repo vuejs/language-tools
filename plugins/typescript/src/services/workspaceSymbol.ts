@@ -39,7 +39,7 @@ export function register(
 
 		function toSymbolInformation(item: ts.NavigateToItem) {
 			const label = getLabel(item);
-			const uri = shared.getUriByPath(item.fileName);
+			const uri = shared.fileNameToUri(item.fileName);
 			const document = getTextDocument2(uri);
 			if (document) {
 				const range = vscode.Range.create(document.positionAt(item.textSpan.start), document.positionAt(item.textSpan.start + item.textSpan.length));

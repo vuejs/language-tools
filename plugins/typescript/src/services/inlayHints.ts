@@ -19,7 +19,7 @@ export function register(
 		if (!document) return;
 
 		const preferences = await getUserPreferences(getConfiguration, document.uri, rootUri);
-		const fileName = shared.getPathOfUri(document.uri);
+		const fileName = shared.uriToFileName(document.uri);
 		const start = document.offsetAt(range.start);
 		const end = document.offsetAt(range.end);
 		let inlayHints: ts.InlayHint[] = [];

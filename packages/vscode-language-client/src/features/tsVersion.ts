@@ -120,7 +120,7 @@ export function getTsdk(context: vscode.ExtensionContext) {
 	}
 	const vscodeTsdkUri = getVScodeTsdkUri();
 	return {
-		tsdk: shared.getPathOfUri(vscodeTsdkUri.toString()),
+		tsdk: shared.uriToFileName(vscodeTsdkUri.toString()),
 		uri: vscodeTsdkUri,
 		isWorkspacePath: false,
 	};

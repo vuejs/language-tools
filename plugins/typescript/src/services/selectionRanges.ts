@@ -12,7 +12,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const result: vscode.SelectionRange[] = [];
 
 		for (const position of positions) {
-			const fileName = shared.getPathOfUri(document.uri);
+			const fileName = shared.uriToFileName(document.uri);
 			const offset = document.offsetAt(position);
 
 			let range: ReturnType<typeof languageService.getSmartSelectionRange> | undefined;

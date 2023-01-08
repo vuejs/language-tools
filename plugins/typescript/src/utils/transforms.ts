@@ -6,7 +6,7 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 export function entriesToLocations(entries: { fileName: string, textSpan: ts.TextSpan; }[], getTextDocument: (uri: string) => TextDocument | undefined) {
 	const locations: vscode.Location[] = [];
 	for (const entry of entries) {
-		const entryUri = shared.getUriByPath(entry.fileName);
+		const entryUri = shared.fileNameToUri(entry.fileName);
 		const doc = getTextDocument(entryUri);
 		if (!doc) continue;
 		const range = vscode.Range.create(
@@ -21,7 +21,7 @@ export function entriesToLocations(entries: { fileName: string, textSpan: ts.Tex
 export function entriesToLocationLinks<T extends ts.DocumentSpan>(entries: T[], getTextDocument: (uri: string) => TextDocument | undefined): vscode.LocationLink[] {
 	const locations: vscode.LocationLink[] = [];
 	for (const entry of entries) {
-		const entryUri = shared.getUriByPath(entry.fileName);
+		const entryUri = shared.fileNameToUri(entry.fileName);
 		const doc = getTextDocument(entryUri);
 		if (!doc) continue;
 		const targetSelectionRange = vscode.Range.create(
@@ -49,7 +49,7 @@ export function boundSpanToLocationLinks(info: ts.DefinitionInfoAndBoundSpan, or
 		originalDoc.positionAt(info.textSpan.start + info.textSpan.length),
 	);
 	for (const entry of info.definitions) {
-		const entryUri = shared.getUriByPath(entry.fileName);
+		const entryUri = shared.fileNameToUri(entry.fileName);
 		const doc = getTextDocument(entryUri);
 		if (!doc) continue;
 		const targetSelectionRange = vscode.Range.create(

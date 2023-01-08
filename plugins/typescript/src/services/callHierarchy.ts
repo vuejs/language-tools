@@ -16,7 +16,7 @@ export function register(
 		const document = getTextDocument(uri);
 		if (!document) return [];
 
-		const fileName = shared.getPathOfUri(document.uri);
+		const fileName = shared.uriToFileName(document.uri);
 		const offset = document.offsetAt(position);
 
 		let calls: ReturnType<typeof languageService.prepareCallHierarchy> | undefined;
@@ -31,7 +31,7 @@ export function register(
 		const document = getTextDocument(item.uri);
 		if (!document) return [];
 
-		const fileName = shared.getPathOfUri(item.uri);
+		const fileName = shared.uriToFileName(item.uri);
 		const offset = document.offsetAt(item.selectionRange.start);
 
 		let calls: ReturnType<typeof languageService.provideCallHierarchyIncomingCalls> | undefined;
@@ -46,7 +46,7 @@ export function register(
 		const document = getTextDocument(item.uri);
 		if (!document) return [];
 
-		const fileName = shared.getPathOfUri(item.uri);
+		const fileName = shared.uriToFileName(item.uri);
 		const offset = document.offsetAt(item.selectionRange.start);
 
 		let calls: ReturnType<typeof languageService.provideCallHierarchyOutgoingCalls> | undefined;
@@ -69,7 +69,7 @@ export function register(
 
 	function fromProtocolCallHierarchyItem(item: ts.CallHierarchyItem): vscode.CallHierarchyItem {
 		const rootPath = languageService.getProgram()?.getCompilerOptions().rootDir ?? '';
-		const document = getTextDocument(shared.getUriByPath(item.file))!; // TODO
+		const document = getTextDocument(shared.fileNameToUri(item.file))!; // TODO
 		const useFileName = isSourceFileItem(item);
 		const name = useFileName ? path.basename(item.file) : item.name;
 		const detail = useFileName ? path.relative(rootPath, path.dirname(item.file)) : item.containerName ?? '';
@@ -77,7 +77,7 @@ export function register(
 			kind: typeConverters.SymbolKind.fromProtocolScriptElementKind(item.kind),
 			name,
 			detail,
-			uri: shared.getUriByPath(item.file),
+			uri: shared.fileNameToUri(item.file),
 			range: {
 				start: document.positionAt(item.span.start),
 				end: document.positionAt(item.span.start + item.span.length),
@@ -96,7 +96,7 @@ export function register(
 	}
 
 	function fromProtocolCallHierchyIncomingCall(item: ts.CallHierarchyIncomingCall): vscode.CallHierarchyIncomingCall {
-		const document = getTextDocument(shared.getUriByPath(item.from.file))!;
+		const document = getTextDocument(shared.fileNameToUri(item.from.file))!;
 		return {
 			from: fromProtocolCallHierarchyItem(item.from),
 			fromRanges: item.fromSpans.map(fromSpan => ({

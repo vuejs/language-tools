@@ -54,7 +54,7 @@ const plugin: LanguageServicePlugin = (context) => {
 				const config = context.env.configurationHost?.getConfiguration<boolean>(configName) ?? true;
 				if (config) {
 					const tsLs = context.typescript.languageService;
-					const close = tsLs.getJsxClosingTagAtPosition(shared.getPathOfUri(document.uri), document.offsetAt(position));
+					const close = tsLs.getJsxClosingTagAtPosition(shared.uriToFileName(document.uri), document.offsetAt(position));
 					if (close) {
 						return '$0' + close.newText;
 					}

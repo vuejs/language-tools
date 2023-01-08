@@ -32,7 +32,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const document = getTextDocument(uri);
 		if (!document) return [];
 
-		const fileName = shared.getPathOfUri(document.uri);
+		const fileName = shared.uriToFileName(document.uri);
 
 		let barItems: ReturnType<typeof languageService.getNavigationTree> | undefined;
 		try { barItems = languageService.getNavigationTree(fileName); } catch { }

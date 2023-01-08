@@ -55,7 +55,7 @@ export function createNodeFileSystemHost(
 		rootUri: URI,
 	): [FileSystem, Map<string, any>[]] {
 
-		const rootPath = shared.getPathOfUri(rootUri.toString());
+		const rootPath = shared.uriToFileName(rootUri.toString());
 		const workspaceSys = new Proxy(ts.sys, {
 			get(target, prop) {
 				const fn = target[prop as keyof typeof target];

@@ -22,7 +22,7 @@ export function register(
 		const document = getTextDocument(uri);
 		if (!document) return [];
 
-		const fileName = shared.getPathOfUri(document.uri);
+		const fileName = shared.uriToFileName(document.uri);
 		const program = languageService.getProgram();
 		const sourceFile = program?.getSourceFile(fileName);
 		if (!program || !sourceFile) return [];
@@ -93,7 +93,7 @@ export function register(
 
 			let document: TextDocument | undefined;
 			if (diag.file) {
-				document = getTextDocument(shared.getUriByPath(diag.file.fileName));
+				document = getTextDocument(shared.fileNameToUri(diag.file.fileName));
 			}
 			if (!document) return;
 

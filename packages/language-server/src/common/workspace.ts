@@ -7,6 +7,7 @@ import { createProject, Project } from './project';
 import { getInferredCompilerOptions } from './utils/inferredCompilerOptions';
 import { loadServerConfig } from './utils/serverConfig';
 import { createUriMap } from './utils/uriMap';
+import { isFileInDir } from './utils/isFileInDir';
 import { WorkspacesContext } from './workspaces';
 
 export const rootTsConfigNames = ['tsconfig.json', 'jsconfig.json'];
@@ -20,22 +21,22 @@ export async function createWorkspace(context: WorkspaceContext) {
 
 	let inferredProject: Project | undefined;
 
-	const serverConfig = loadServerConfig(shared.getPathOfUri(context.rootUri.toString()), context.workspaces.initOptions.configFilePath);
+	const serverConfig = loadServerConfig(shared.uriToFileName(context.rootUri.toString()), context.workspaces.initOptions.configFilePath);
 	const sys = context.workspaces.fileSystemHost?.getWorkspaceFileSystem(context.rootUri);
-	const documentRegistry = sys ? context.workspaces.ts?.createDocumentRegistry(sys.useCaseSensitiveFileNames, shared.getPathOfUri(context.rootUri.toString())) : undefined;
+	const documentRegistry = sys ? context.workspaces.ts?.createDocumentRegistry(sys.useCaseSensitiveFileNames, shared.uriToFileName(context.rootUri.toString())) : undefined;
 	const projects = createUriMap<Project>();
-	const rootTsConfigs = new Set(sys?.readDirectory(shared.getPathOfUri(context.rootUri.toString()), rootTsConfigNames, undefined, ['**/*']).map(fileName => shared.normalizeFileName(fileName)));
+	const rootTsConfigs = new Set(sys?.readDirectory(shared.uriToFileName(context.rootUri.toString()), rootTsConfigNames, undefined, ['**/*']).map(fileName => shared.normalizeFileName(fileName)));
 	const disposeTsConfigWatch = context.workspaces.fileSystemHost?.onDidChangeWatchedFiles(({ changes }) => {
 		for (const change of changes) {
 			if (rootTsConfigNames.includes(change.uri.substring(change.uri.lastIndexOf('/') + 1))) {
 				if (change.type === vscode.FileChangeType.Created) {
-					if (shared.isFileInDir(shared.getPathOfUri(change.uri), shared.getPathOfUri(context.rootUri.toString()))) {
-						rootTsConfigs.add(shared.getPathOfUri(change.uri));
+					if (isFileInDir(shared.uriToFileName(change.uri), shared.uriToFileName(context.rootUri.toString()))) {
+						rootTsConfigs.add(shared.uriToFileName(change.uri));
 					}
 				}
 				else if ((change.type === vscode.FileChangeType.Changed || change.type === vscode.FileChangeType.Deleted) && projects.uriHas(change.uri)) {
 					if (change.type === vscode.FileChangeType.Deleted) {
-						rootTsConfigs.delete(shared.getPathOfUri(change.uri));
+						rootTsConfigs.delete(shared.uriToFileName(change.uri));
 					}
 					const project = projects.uriGet(change.uri);
 					projects.uriDelete(change.uri);
@@ -106,12 +107,12 @@ export async function createWorkspace(context: WorkspaceContext) {
 			let matches: path.PosixPath[] = [];
 
 			for (const rootTsConfig of rootTsConfigs) {
-				if (shared.isFileInDir(shared.getPathOfUri(uri.toString()), path.dirname(rootTsConfig))) {
+				if (isFileInDir(shared.uriToFileName(uri.toString()), path.dirname(rootTsConfig))) {
 					matches.push(rootTsConfig);
 				}
 			}
 
-			matches = matches.sort((a, b) => sortTsConfigs(shared.getPathOfUri(uri.toString()), a, b));
+			matches = matches.sort((a, b) => sortTsConfigs(shared.uriToFileName(uri.toString()), a, b));
 
 			if (matches.length) {
 				await getParsedCommandLine(matches[0]);
@@ -131,7 +132,7 @@ export async function createWorkspace(context: WorkspaceContext) {
 			return findTsconfig(async tsconfig => {
 				const project = await projects.pathGet(tsconfig);
 				const ls = project?.getLanguageServiceDontCreate();
-				const validDoc = ls?.context.typescript?.languageService.getProgram()?.getSourceFile(shared.getPathOfUri(uri.toString()));
+				const validDoc = ls?.context.typescript?.languageService.getProgram()?.getSourceFile(shared.uriToFileName(uri.toString()));
 				return !!validDoc;
 			});
 		}
@@ -140,7 +141,7 @@ export async function createWorkspace(context: WorkspaceContext) {
 			const checked = new Set<string>();
 
 
-			for (const rootTsConfig of [...rootTsConfigs].sort((a, b) => sortTsConfigs(shared.getPathOfUri(uri.toString()), a, b))) {
+			for (const rootTsConfig of [...rootTsConfigs].sort((a, b) => sortTsConfigs(shared.uriToFileName(uri.toString()), a, b))) {
 				const project = await projects.pathGet(rootTsConfig);
 				if (project) {
 
@@ -221,7 +222,7 @@ export async function createWorkspace(context: WorkspaceContext) {
 			project = createProject({
 				workspace: context,
 				serverConfig,
-				rootUri: URI.parse(shared.getUriByPath(path.dirname(tsConfig))),
+				rootUri: URI.parse(shared.fileNameToUri(path.dirname(tsConfig))),
 				tsConfig,
 				documentRegistry,
 			});
@@ -233,8 +234,8 @@ export async function createWorkspace(context: WorkspaceContext) {
 
 export function sortTsConfigs(file: path.PosixPath, a: path.PosixPath, b: path.PosixPath) {
 
-	const inA = shared.isFileInDir(file, path.dirname(a));
-	const inB = shared.isFileInDir(file, path.dirname(b));
+	const inA = isFileInDir(file, path.dirname(a));
+	const inB = isFileInDir(file, path.dirname(b));
 
 	if (inA !== inB) {
 		const aWeight = inA ? 1 : 0;

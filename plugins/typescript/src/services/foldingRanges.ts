@@ -9,7 +9,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 		const document = getTextDocument(uri);
 		if (!document) return [];
 
-		const fileName = shared.getPathOfUri(document.uri);
+		const fileName = shared.uriToFileName(document.uri);
 
 		let outliningSpans: ReturnType<typeof languageService.getOutliningSpans> | undefined;
 		try { outliningSpans = languageService.getOutliningSpans(fileName); } catch { }

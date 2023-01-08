@@ -13,7 +13,7 @@ export function register(
 		const document = getTextDocument(uri);
 		if (!document) return;
 
-		const fileName = shared.getPathOfUri(document.uri);
+		const fileName = shared.uriToFileName(document.uri);
 		const offset = document.offsetAt(position);
 
 		let info: ReturnType<typeof languageService.getQuickInfoAtPosition> | undefined;
@@ -45,7 +45,7 @@ export function register(
 		};
 
 		function toResource(path: string) {
-			return shared.getUriByPath(path);
+			return shared.fileNameToUri(path);
 		}
 	};
 }

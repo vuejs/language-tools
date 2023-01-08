@@ -12,7 +12,7 @@ export function register(
 		const document = getTextDocument(uri);
 		if (!document) return [];
 
-		const fileName = shared.getPathOfUri(document.uri);
+		const fileName = shared.uriToFileName(document.uri);
 		const offset = document.offsetAt(position);
 
 		let entries: ReturnType<typeof languageService.getReferencesAtPosition>;

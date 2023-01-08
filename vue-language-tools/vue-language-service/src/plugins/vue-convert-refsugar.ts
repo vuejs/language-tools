@@ -240,7 +240,7 @@ async function useRefSugar(
 		for (const typeDefine of typeDefs) {
 			const uri = vscode.Location.is(typeDefine) ? typeDefine.uri : typeDefine.targetUri;
 			const range = vscode.Location.is(typeDefine) ? typeDefine.range : typeDefine.targetSelectionRange;
-			const snapshot = tsHost.getScriptSnapshot(shared.getPathOfUri(uri));
+			const snapshot = tsHost.getScriptSnapshot(shared.uriToFileName(uri));
 			if (!snapshot)
 				continue;
 			const defineDoc = TextDocument.create(uri, 'typescript', 0, snapshot.getText(0, snapshot.getLength()));

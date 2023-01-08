@@ -8,6 +8,7 @@ import { CancellationTokenHost } from './cancellationPipe';
 import { createDocuments } from './documents';
 import { ServerContext } from './server';
 import { createWorkspace, rootTsConfigNames, sortTsConfigs } from './workspace';
+import { isFileInDir } from './utils/isFileInDir';
 
 export interface WorkspacesContext {
 	server: ServerContext;
@@ -168,8 +169,8 @@ export function createWorkspaces(context: WorkspacesContext) {
 	async function getProjectAndTsConfig(uri: string) {
 
 		const rootUris = [...workspaces.keys()]
-			.filter(rootUri => shared.isFileInDir(shared.getPathOfUri(uri), shared.getPathOfUri(rootUri)))
-			.sort((a, b) => sortTsConfigs(shared.getPathOfUri(uri), shared.getPathOfUri(a), shared.getPathOfUri(b)));
+			.filter(rootUri => isFileInDir(shared.uriToFileName(uri), shared.uriToFileName(rootUri)))
+			.sort((a, b) => sortTsConfigs(shared.uriToFileName(uri), shared.uriToFileName(a), shared.uriToFileName(b)));
 
 		if (context.initOptions.serverMode !== ServerMode.Syntactic) {
 			for (const rootUri of rootUris) {
@@ -183,7 +184,7 @@ export function createWorkspaces(context: WorkspacesContext) {
 
 		if (rootUris.length) {
 			const project = await (await workspaces.get(rootUris[0]))?.getInferredProject();
-			project?.tryAddFile(shared.getPathOfUri(uri));
+			project?.tryAddFile(shared.uriToFileName(uri));
 			return {
 				tsconfig: undefined,
 				project,

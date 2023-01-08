@@ -27,7 +27,7 @@ export function register(languageService: ts.LanguageService, getTextDocument: (
 			};
 		}
 
-		const fileName = shared.getPathOfUri(document.uri);
+		const fileName = shared.uriToFileName(document.uri);
 		const offset = document.offsetAt(position);
 
 		let helpItems: ReturnType<typeof languageService.getSignatureHelpItems> | undefined;

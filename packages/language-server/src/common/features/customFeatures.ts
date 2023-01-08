@@ -67,14 +67,14 @@ export function register(
 	connection.onRequest(GetMatchTsConfigRequest.type, async params => {
 		const project = (await projects.getProject(params.uri));
 		if (project?.tsconfig) {
-			return { uri: shared.getUriByPath(project.tsconfig) };
+			return { uri: shared.fileNameToUri(project.tsconfig) };
 		}
 	});
 	connection.onRequest(GetVirtualFileNamesRequest.type, async document => {
 		const project = await projects.getProject(document.uri);
 		const fileNames: string[] = [];
 		if (project) {
-			const rootVirtualFile = project.project?.getLanguageService().context.core.virtualFiles.getSource(shared.getPathOfUri(document.uri))?.root;
+			const rootVirtualFile = project.project?.getLanguageService().context.core.virtualFiles.getSource(shared.uriToFileName(document.uri))?.root;
 			if (rootVirtualFile) {
 				forEachEmbeddedFile(rootVirtualFile, e => {
 					if (e.snapshot.getLength() && e.kind === 1) {
@@ -92,7 +92,7 @@ export function register(
 			if (virtualFile && source) {
 				const mappings: Record<string, any[]> = {};
 				for (const mapping of virtualFile.mappings) {
-					const sourceUri = shared.getUriByPath(mapping.source ?? source.fileName);
+					const sourceUri = shared.fileNameToUri(mapping.source ?? source.fileName);
 					mappings[sourceUri] ??= [];
 					mappings[sourceUri].push(mapping);
 				}

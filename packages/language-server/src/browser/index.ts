@@ -28,7 +28,7 @@ export function startLanguageServer(connection: vscode.Connection, ...plugins: L
 			},
 			async loadTypescriptLocalized(tsdk, locale) {
 				try {
-					const uri = shared.getUriByPath(`${tsdk}/${locale}/diagnosticMessages.generated.json`);
+					const uri = shared.fileNameToUri(`${tsdk}/${locale}/diagnosticMessages.generated.json`);
 					const json = await httpSchemaRequestHandler(uri);
 					return JSON.parse(json);
 				}

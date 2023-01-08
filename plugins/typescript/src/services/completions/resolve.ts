@@ -115,7 +115,7 @@ export function register(
 		return item;
 
 		function toResource(path: string) {
-			return shared.getUriByPath(path);
+			return shared.fileNameToUri(path);
 		}
 	};
 }

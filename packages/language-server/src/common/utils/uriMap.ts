@@ -37,7 +37,7 @@ export function createUriMap<T>(map: Options<T> = new Map<string, T>()) {
 	}
 	function getUriByPath(path: string) {
 		if (!pathToUri.has(path)) {
-			pathToUri.set(path, shared.getUriByPath(path).toLowerCase());
+			pathToUri.set(path, shared.fileNameToUri(path).toLowerCase());
 		}
 		return pathToUri.get(path)!;
 	}

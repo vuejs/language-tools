@@ -34,7 +34,7 @@ export function register(
 			return;
 
 		const preferences = await getUserPreferences(getConfiguration, document.uri, rootUri);
-		const fileName = shared.getPathOfUri(document.uri);
+		const fileName = shared.uriToFileName(document.uri);
 		const offset = document.offsetAt(position);
 
 		let completionContext: ReturnType<typeof languageService.getCompletionsAtPosition> | undefined;
