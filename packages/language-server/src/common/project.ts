@@ -322,10 +322,14 @@ function getHTMLDocumentContext(
 				host.getCompilationSettings(),
 				host,
 			);
-			const failedLookupLocations: path.PosixPath[] = (resolveResult as any).failedLookupLocations;
+			const failedLookupLocations: path.PosixPath[] | undefined = typeof resolveResult === 'object' ? (resolveResult as any).failedLookupLocations : [];
 			const dirs = new Set<string>();
 
-			for (let failed of failedLookupLocations) {
+			if (!failedLookupLocations) {
+				console.warn(`[volar] failedLookupLocations not exists, ts: ${ts.version}`);
+			}
+
+			for (let failed of failedLookupLocations ?? []) {
 				const fileName = path.basename(failed);
 				if (fileName === 'index.d.ts' || fileName === '*.d.ts') {
 					dirs.add(path.dirname(failed));
