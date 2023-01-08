@@ -568,7 +568,7 @@
 					"default": "auto-kebab",
 					"description": "Preferred attr name case."
 				},
-				"volar.completion.normalizeComponentAutoImportName": {
+				"volar.completion.normalizeComponentImportName": {
 					"type": "boolean",
 					"default": true,
 					"description": "Normalize import name for auto import. (\"myCompVue\" -> \"MyComp\")"

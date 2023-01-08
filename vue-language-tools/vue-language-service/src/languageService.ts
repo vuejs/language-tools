@@ -82,7 +82,7 @@ export function getLanguageServicePlugins(vueCompilerOptions: VueCompilerOptions
 					if (
 						item.textEdit?.newText && /\w*Vue$/.test(item.textEdit.newText)
 						&& item.additionalTextEdits?.length === 1 && item.additionalTextEdits[0].newText.indexOf('import ' + item.textEdit.newText + ' from ') >= 0
-						&& (await _context.env.configurationHost?.getConfiguration<boolean>('volar.completion.normalizeComponentAutoImportName') ?? true)
+						&& (await _context.env.configurationHost?.getConfiguration<boolean>('volar.completion.normalizeComponentImportName') ?? true)
 					) {
 						let newName = item.textEdit.newText.slice(0, -'Vue'.length);
 						newName = newName[0].toUpperCase() + newName.substring(1);
@@ -91,6 +91,13 @@ export function getLanguageServicePlugins(vueCompilerOptions: VueCompilerOptions
 							'import ' + newName + ' from ',
 						);
 						item.textEdit.newText = newName;
+					}
+					else if (
+						item.textEdit?.newText && /import \w*Vue\$1 from \S*/.test(item.textEdit.newText)
+						&& !item.additionalTextEdits?.length
+					) {
+						// https://github.com/johnsoncodehk/volar/issues/2286
+						item.textEdit.newText = item.textEdit.newText.replace('Vue$1', '');
 					}
 
 					const data: Data = item.data;
