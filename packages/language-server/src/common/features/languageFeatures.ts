@@ -291,15 +291,19 @@ export function register(
 			return null;
 		}
 
-		if (params.files.length !== 1) {
-			return null;
+		const _edits = await Promise.all(params.files.map(async file => {
+			return await worker(file.oldUri, vueLs => {
+				return vueLs.getEditsForFileRename(file.oldUri, file.newUri) ?? null;
+			}) ?? null;
+		}));
+		const edits = _edits.filter(shared.notEmpty);
+
+		if (edits.length) {
+			embedded.mergeWorkspaceEdits(edits[0], ...edits.slice(1));
+			return edits[0];
 		}
 
-		const file = params.files[0];
-
-		return await worker(file.oldUri, vueLs => {
-			return vueLs.getEditsForFileRename(file.oldUri, file.newUri) ?? null;
-		}) ?? null;
+		return null;
 	});
 	connection.onRequest(AutoInsertRequest.type, async params => {
 		return worker(params.textDocument.uri, vueLs => {
