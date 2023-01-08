@@ -19,12 +19,6 @@
 		},
 		{
 			"path": "../preview/tsconfig.build.json"
-		},
-		{
-			"path": "../../packages/shared/tsconfig.build.json"
-		},
-		{
-			"path": "../../packages/vscode-language-client/tsconfig.build.json"
 		}
 	]
 }
