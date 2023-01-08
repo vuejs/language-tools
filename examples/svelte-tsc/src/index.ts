@@ -2,22 +2,16 @@ import * as ts from 'typescript/lib/tsserverlibrary';
 import * as svelte from '@volar-examples/svelte-language-core';
 import * as svelteTs from '@volar-examples/svelte-typescript';
 
-export function createProgramProxy(
-	options: ts.CreateProgramOptions, // rootNamesOrOptions: readonly string[] | CreateProgramOptions,
-	_options?: ts.CompilerOptions,
-	_host?: ts.CompilerHost,
-	_oldProgram?: ts.Program,
-	_configFileParsingDiagnostics?: readonly ts.Diagnostic[],
-) {
+export function createProgram(options: ts.CreateProgramOptions) {
 
 	if (!options.options.noEmit && !options.options.emitDeclarationOnly)
-		return doThrow('js emit is not supported');
+		throw toThrow('js emit is not supported');
 
 	if (!options.options.noEmit && options.options.noEmitOnError)
-		return doThrow('noEmitOnError is not supported');
+		throw toThrow('noEmitOnError is not supported');
 
 	if (!options.host)
-		return doThrow('!options.host');
+		throw toThrow('!options.host');
 
 	let program = options.oldProgram as any;
 
@@ -107,11 +101,7 @@ export function createProgramProxy(
 	return program;
 }
 
-export function loadTsLib() {
-	return ts;
-}
-
-function doThrow(msg: string) {
+function toThrow(msg: string) {
 	console.error(msg);
-	throw msg;
+	return msg;
 }

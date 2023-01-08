@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 const fs = require('fs');
-
 const readFileSync = fs.readFileSync;
 const tscPath = require.resolve('typescript/lib/tsc');
-const proxyPath = require.resolve('../out/proxy');
+const proxyPath = require.resolve('../out/index.js');
 
 fs.readFileSync = (...args) => {
 	if (args[0] === tscPath) {
@@ -14,11 +13,8 @@ fs.readFileSync = (...args) => {
 		tryReplace(/supportedJSExtensions = .*(?=;)/, s => s + '.concat([[".svelte"]])');
 		tryReplace(/allSupportedExtensions = .*(?=;)/, s => s + '.concat([[".svelte"]])');
 
-		// proxy startTracing, dumpTracingLegend
-		tryReplace(/ = tracingEnabled\./g, ` = require(${JSON.stringify(proxyPath)}).loadTsLib().`);
-
 		// proxy createProgram apis
-		tryReplace(/function createProgram\(.+\) {/, s => s + ` return require(${JSON.stringify(proxyPath)}).createProgramProxy(...arguments);`);
+		tryReplace(/function createProgram\(.+\) {/, s => s + ` return require(${JSON.stringify(proxyPath)}).createProgram(...arguments);`);
 
 		return tsc;
 

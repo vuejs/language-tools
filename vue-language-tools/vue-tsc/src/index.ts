@@ -14,13 +14,7 @@ interface ProgramContext {
 	languageService: ReturnType<typeof vueTs.createLanguageService>,
 }
 
-export function createProgram(
-	options: ts.CreateProgramOptions, // rootNamesOrOptions: readonly string[] | CreateProgramOptions,
-	_options?: ts.CompilerOptions,
-	_host?: ts.CompilerHost,
-	_oldProgram?: ts.Program,
-	_configFileParsingDiagnostics?: readonly ts.Diagnostic[],
-) {
+export function createProgram(options: ts.CreateProgramOptions) {
 
 	if (!options.options.noEmit && !options.options.emitDeclarationOnly)
 		throw toThrow('js emit is not supported');

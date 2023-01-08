@@ -13,7 +13,7 @@ export const languageModule: LanguageModule = {
 				fileName,
 				snapshot,
 				kind: FileKind.TextFile,
-				embeddedFiles: getEmbeddeds(fileName, snapshot.getText(0, snapshot.getLength())),
+				embeddedFiles: getEmbeddedFiles(fileName, snapshot.getText(0, snapshot.getLength())),
 				capabilities: FileCapabilities.full,
 				mappings: [],
 			};
@@ -21,11 +21,11 @@ export const languageModule: LanguageModule = {
 	},
 	updateFile(sourceFile, snapshot) {
 		sourceFile.snapshot = snapshot;
-		sourceFile.embeddedFiles = getEmbeddeds(sourceFile.fileName, sourceFile.snapshot.getText(0, sourceFile.snapshot.getLength()));
+		sourceFile.embeddedFiles = getEmbeddedFiles(sourceFile.fileName, sourceFile.snapshot.getText(0, sourceFile.snapshot.getLength()));
 	},
 };
 
-function getEmbeddeds(fileName: string, text: string) {
+function getEmbeddedFiles(fileName: string, text: string) {
 
 	try {
 		const tsx = svelte2tsx(text, {
@@ -88,9 +88,9 @@ function getEmbeddeds(fileName: string, text: string) {
 			}
 		}
 
-		const embeddeds: VirtualFile[] = [];
+		const embeddedFiles: VirtualFile[] = [];
 
-		embeddeds.push({
+		embeddedFiles.push({
 			fileName: fileName + '.ts',
 			snapshot: {
 				getText(start, end) {
@@ -114,7 +114,7 @@ function getEmbeddeds(fileName: string, text: string) {
 			embeddedFiles: [],
 		});
 
-		return embeddeds;
+		return embeddedFiles;
 	}
 	catch {
 		return [];
