@@ -104,7 +104,7 @@ export default function (): VueLanguageServicePlugin {
 
 		function worker<T>(uri: string, callback: (vueSourceFile: VueFile) => T) {
 
-			const virtualFile = context.documents.getVirtualFileByUri(uri);
+			const [virtualFile] = context.documents.getVirtualFileByUri(uri);
 			if (!(virtualFile instanceof VueFile))
 				return;
 

@@ -304,7 +304,7 @@ export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin =
 
 	function worker<T>(document: TextDocument, callback: (emptyBlocksDocument: TextDocument, vueSourceFile: vue.VueFile) => T) {
 
-		const vueFile = context.documents.getVirtualFileByUri(document.uri);
+		const [vueFile] = context.documents.getVirtualFileByUri(document.uri);
 		if (vueFile instanceof vue.VueFile) {
 
 			let cache = emptyBlocksDocument.get(document);

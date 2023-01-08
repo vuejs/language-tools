@@ -115,7 +115,7 @@ export function register(
 					link.targetSelectionRange = targetSelectionRange;
 				}
 
-				if (context.documents.getVirtualFileByUri(link.targetUri) && !foundTargetSelectionRange) {
+				if (context.documents.hasVirtualFileByUri(link.targetUri) && !foundTargetSelectionRange) {
 					return;
 				}
 

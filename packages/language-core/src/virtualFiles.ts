@@ -66,7 +66,7 @@ export function createVirtualFiles(languageModules: LanguageModule[]) {
 			if (sourceAndVirtual) {
 				return [sourceAndVirtual.virtualFile, sourceAndVirtual.source] as const;
 			}
-			return [];
+			return [undefined, undefined] as const;
 		},
 	};
 

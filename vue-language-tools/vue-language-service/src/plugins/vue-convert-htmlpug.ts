@@ -92,7 +92,7 @@ const plugin: VueLanguageServicePlugin = (context) => {
 
 	function worker<T>(uri: string, callback: (vueSourceFile: vue.VueFile) => T) {
 
-		const virtualFile = context.documents.getVirtualFileByUri(uri);
+		const [virtualFile] = context.documents.getVirtualFileByUri(uri);
 		if (!(virtualFile instanceof vue.VueFile))
 			return;
 

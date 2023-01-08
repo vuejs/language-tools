@@ -162,16 +162,13 @@ export function createDocumentsAndSourceMaps(mapper: VirtualFiles) {
 
 	return {
 		getSourceByUri(sourceFileUri: string) {
-			const fileName = shared.getPathOfUri(sourceFileUri);
-			return mapper.getSource(fileName);
+			return mapper.getSource(shared.getPathOfUri(sourceFileUri));
 		},
-		getRootFileBySourceFileUri(sourceFileUri: string) {
-			const fileName = shared.getPathOfUri(sourceFileUri);
-			return mapper.getSource(fileName)?.root;
+		hasVirtualFileByUri(virtualFileUri: string) {
+			return mapper.hasVirtualFile(shared.getPathOfUri(virtualFileUri));
 		},
 		getVirtualFileByUri(virtualFileUri: string) {
-			const [virtualFile] = mapper.getVirtualFile(shared.getPathOfUri(virtualFileUri));
-			return virtualFile;
+			return mapper.getVirtualFile(shared.getPathOfUri(virtualFileUri));
 		},
 		getMirrorMapByUri(virtualFileUri: string) {
 			const fileName = shared.getPathOfUri(virtualFileUri);

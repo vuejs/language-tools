@@ -40,7 +40,7 @@ export async function languageFeatureWorker<T, K>(
 ) {
 
 	const document = context.getTextDocument(uri);
-	const virtualFile = context.documents.getRootFileBySourceFileUri(uri);
+	const virtualFile = context.documents.getSourceByUri(uri)?.root;
 
 	let results: NonNullable<Awaited<T>>[] = [];
 

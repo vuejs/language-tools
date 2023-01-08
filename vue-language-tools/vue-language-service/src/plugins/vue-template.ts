@@ -67,7 +67,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 						return;
 
 					for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
-						const virtualFile = _context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
+						const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
 						if (virtualFile && virtualFile instanceof vue.VueFile) {
 							await provideHtmlData(map, virtualFile);
 						}
@@ -78,7 +78,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 						return;
 
 					for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
-						const virtualFile = _context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
+						const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
 						if (virtualFile && virtualFile instanceof vue.VueFile) {
 							afterHtmlCompletion(htmlComplete, map, virtualFile);
 						}
@@ -93,7 +93,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				if (!options.isSupportedDocument(document))
 					return;
 
-				if (_context.documents.getVirtualFileByUri(document.uri))
+				if (_context.documents.hasVirtualFileByUri(document.uri))
 					templatePlugin.updateCustomData([]);
 
 				return templatePlugin.doHover?.(document, position);
@@ -109,7 +109,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 					for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
 
-						const virtualFile = _context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
+						const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
 						if (!virtualFile || !(virtualFile instanceof vue.VueFile))
 							continue;
 
@@ -167,7 +167,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 				for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
 
-					const virtualFile = _context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
+					const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
 					if (!virtualFile || !(virtualFile instanceof vue.VueFile))
 						continue;
 

@@ -24,7 +24,7 @@ const plugin: VueLanguageServicePlugin = (context) => {
 			if (!isCharacterTyping(document, options_2))
 				return;
 
-			const vueFile = context.documents.getVirtualFileByUri(document.uri);
+			const [vueFile] = context.documents.getVirtualFileByUri(document.uri);
 			if (!(vueFile instanceof VueFile))
 				return;
 

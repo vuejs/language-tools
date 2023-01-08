@@ -64,7 +64,7 @@ export function getLanguageServicePlugins(vueCompilerOptions: VueCompilerOptions
 
 						// handle component auto-import patch
 						for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
-							const virtualFile = _context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
+							const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
 							if (virtualFile instanceof vue.VueFile) {
 								if (map.toSourcePosition(position, data => typeof data.completion === 'object' && !!data.completion.autoImportOnly)) {
 									result.items.forEach(item => {
@@ -96,7 +96,7 @@ export function getLanguageServicePlugins(vueCompilerOptions: VueCompilerOptions
 					const data: Data = item.data;
 					if (item.data?.__isComponentAutoImport && data && item.additionalTextEdits?.length && item.textEdit) {
 						for (const [_, map] of _context.documents.getMapsByVirtualFileUri(data.uri)) {
-							const virtualFile = _context.documents.getRootFileBySourceFileUri(map.sourceFileDocument.uri);
+							const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
 							if (virtualFile instanceof vue.VueFile) {
 								const sfc = virtualFile.sfc;
 								const componentName = item.textEdit.newText;
