@@ -1,4 +1,4 @@
-import { transformSymbolInformations } from '@volar/transforms';
+import * as transformer from '../transformer';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
 
@@ -18,7 +18,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			if (!embeddedSymbols)
 				continue;
 
-			const symbols = transformSymbolInformations(embeddedSymbols, loc => {
+			const symbols = transformer.asSymbolInformations(embeddedSymbols, loc => {
 				if (context.documents.getVirtualFileByUri(loc.uri)) {
 					for (const [_, map] of context.documents.getMapsByVirtualFileUri(loc.uri)) {
 						const range = map.toSourceRange(loc.range);

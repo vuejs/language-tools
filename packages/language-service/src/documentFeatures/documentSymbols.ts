@@ -1,6 +1,6 @@
 import type { LanguageServiceRuntimeContext } from '../types';
 import { documentFeatureWorker } from '../utils/featureWorkers';
-import { transformSymbolInformations } from '@volar/transforms';
+import * as transformer from '../transformer';
 import * as vscode from 'vscode-languageserver-protocol';
 
 export function register(context: LanguageServiceRuntimeContext) {
@@ -12,7 +12,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			uri,
 			file => !!file.capabilities.documentSymbol, // TODO: add color capabilitie setting
 			(plugin, document) => plugin.findDocumentSymbols?.(document),
-			(data, map) => map ? transformSymbolInformations(
+			(data, map) => map ? transformer.asSymbolInformations(
 				data,
 				location => {
 					const range = map.toSourceRange(location.range);

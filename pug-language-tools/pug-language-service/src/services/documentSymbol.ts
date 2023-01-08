@@ -1,4 +1,4 @@
-import { transformSymbolInformations } from '@volar/transforms';
+import { transformer } from '@volar/language-service';
 import type * as html from 'vscode-html-languageservice';
 import type { PugDocument } from '../pugDocument';
 
@@ -10,7 +10,7 @@ export function register(htmlLs: html.LanguageService) {
 			pugDoc.htmlDocument,
 		);
 
-		return transformSymbolInformations(
+		return transformer.asSymbolInformations(
 			htmlResult,
 			htmlLocation => {
 				const range = pugDoc.map.toSourceRange(htmlLocation.range);

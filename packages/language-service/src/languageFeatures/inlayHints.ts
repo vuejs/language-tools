@@ -1,5 +1,5 @@
 import * as shared from '@volar/shared';
-import { transformTextEdit } from '@volar/transforms';
+import * as transformer from '../transformer';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
 import { getOverlapRange } from '../utils/common';
@@ -66,7 +66,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 
 				const position = map.toSourcePosition(_inlayHint.position);
 				const edits = _inlayHint.textEdits
-					?.map(textEdit => transformTextEdit(textEdit, range => map!.toSourceRange(range), map.virtualFileDocument))
+					?.map(textEdit => transformer.asTextEdit(textEdit, range => map!.toSourceRange(range), map.virtualFileDocument))
 					.filter(shared.notEmpty);
 
 				if (position) {

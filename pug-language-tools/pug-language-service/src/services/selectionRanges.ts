@@ -1,5 +1,5 @@
 import * as shared from '@volar/shared';
-import { transformLocations } from '@volar/transforms';
+import { transformer } from '@volar/language-service';
 import type * as html from 'vscode-html-languageservice';
 import { MappingKind } from '../baseParse';
 import type { PugDocument } from '../pugDocument';
@@ -16,6 +16,6 @@ export function register(htmlLs: html.LanguageService) {
 			htmlPosArr,
 		);
 
-		return transformLocations(htmlResult, htmlRange => pugDoc.map.toSourceRange(htmlRange));
+		return transformer.asLocations(htmlResult, htmlRange => pugDoc.map.toSourceRange(htmlRange));
 	};
 }

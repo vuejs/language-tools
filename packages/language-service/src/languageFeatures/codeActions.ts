@@ -1,5 +1,5 @@
 import * as shared from '@volar/shared';
-import { transformLocations } from '@volar/transforms';
+import * as transformer from '../transformer';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
 import { getOverlapRange } from '../utils/common';
@@ -40,7 +40,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 					return [];
 
 				const _codeActionContext: vscode.CodeActionContext = {
-					diagnostics: transformLocations(
+					diagnostics: transformer.asLocations(
 						codeActionContext.diagnostics,
 						range => map.toGeneratedRange(range),
 					),

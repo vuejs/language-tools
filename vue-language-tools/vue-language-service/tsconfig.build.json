@@ -51,9 +51,6 @@
 		{
 			"path": "../../packages/source-map/tsconfig.build.json"
 		},
-		{
-			"path": "../../packages/transforms/tsconfig.build.json"
-		},
 		// vue-language-tools
 		{
 			"path": "../vue-language-core/tsconfig.build.json"

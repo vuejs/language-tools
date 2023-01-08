@@ -1,6 +1,6 @@
 import type { LanguageServiceRuntimeContext } from '../types';
 import { documentFeatureWorker } from '../utils/featureWorkers';
-import { transformFoldingRanges } from '@volar/transforms';
+import * as transformer from '../transformer';
 import type * as _ from 'vscode-languageserver-protocol';
 
 export function register(context: LanguageServiceRuntimeContext) {
@@ -12,7 +12,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 			uri,
 			file => !!file.capabilities.foldingRange,
 			(plugin, document) => plugin.getFoldingRanges?.(document),
-			(data, map) => map ? transformFoldingRanges(data, range => map.toSourceRange(range)) : data,
+			(data, map) => map ? transformer.asFoldingRanges(data, range => map.toSourceRange(range)) : data,
 			arr => arr.flat(),
 		);
 	};

@@ -1,4 +1,4 @@
-import { transformHover } from '@volar/transforms';
+import { transformer } from '@volar/language-service';
 import type * as html from 'vscode-html-languageservice';
 import { MappingKind } from '../baseParse';
 import type { PugDocument } from '../pugDocument';
@@ -18,6 +18,6 @@ export function register(htmlLs: html.LanguageService) {
 		);
 		if (!htmlResult) return;
 
-		return transformHover(htmlResult, htmlRange => pugDoc.map.toSourceRange(htmlRange));
+		return transformer.asHover(htmlResult, htmlRange => pugDoc.map.toSourceRange(htmlRange));
 	};
 }

@@ -22,8 +22,5 @@
 		{
 			"path": "../../packages/language-service/tsconfig.build.json"
 		},
-		{
-			"path": "../../packages/transforms/tsconfig.build.json"
-		},
 	],
 }

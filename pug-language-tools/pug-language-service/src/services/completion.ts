@@ -1,4 +1,4 @@
-import { transformCompletionList } from '@volar/transforms';
+import { transformer } from '@volar/language-service';
 import type * as html from 'vscode-html-languageservice';
 import { MappingKind } from '../baseParse';
 import type { PugDocument } from '../pugDocument';
@@ -23,6 +23,6 @@ export function register(htmlLs: html.LanguageService) {
 			options,
 		);
 
-		return transformCompletionList(htmlComplete, htmlRange => pugDoc.map.toSourceRange(htmlRange), pugDoc.map.virtualFileDocument);
+		return transformer.asCompletionList(htmlComplete, htmlRange => pugDoc.map.toSourceRange(htmlRange), pugDoc.map.virtualFileDocument);
 	};
 }

@@ -1,4 +1,4 @@
-import type * as vscode from 'vscode-languageserver-types';
+import * as vscode from 'vscode-languageserver-protocol';
 import { transform as transformCompletionItem } from './completionItem';
 
 export function transform<T extends vscode.CompletionList>(

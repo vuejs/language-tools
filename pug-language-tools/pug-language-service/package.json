@@ -19,7 +19,6 @@
 		"@volar/language-service": "1.0.22",
 		"@volar/shared": "1.0.22",
 		"@volar/source-map": "1.0.22",
-		"@volar/transforms": "1.0.22",
 		"muggle-string": "^0.1.0",
 		"pug-lexer": "^5.0.1",
 		"pug-parser": "^6.0.0",

@@ -1,4 +1,4 @@
-import { transformCompletionItem } from '@volar/transforms';
+import * as transformer from '../transformer';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServiceRuntimeContext } from '../types';
 import { PluginCompletionData } from './complete';
@@ -41,7 +41,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 						}
 					}
 
-					item = transformCompletionItem(
+					item = transformer.asCompletionItem(
 						resolvedItem,
 						embeddedRange => {
 							let range = plugin.resolveEmbeddedRange?.(embeddedRange);

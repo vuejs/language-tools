@@ -1,4 +1,4 @@
-import { transformCompletionList } from '@volar/transforms';
+import * as transformer from '../transformer';
 import type { FileRangeCapabilities } from '@volar/language-service';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
@@ -60,7 +60,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 								continue;
 							}
 
-							cacheData.list = transformCompletionList(
+							cacheData.list = transformer.asCompletionList(
 								embeddedCompletionList,
 								range => map.toSourceRange(range),
 								map.virtualFileDocument,
@@ -162,7 +162,7 @@ export function register(context: LanguageServiceRuntimeContext) {
 								cache!.mainCompletion = { documentUri: map.virtualFileDocument.uri };
 							}
 
-							const completionList = transformCompletionList(
+							const completionList = transformer.asCompletionList(
 								embeddedCompletionList,
 								range => map.toSourceRange(range),
 								map.virtualFileDocument,

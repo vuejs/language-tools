@@ -1,4 +1,4 @@
-import * as vscode from 'vscode-languageserver-types';
+import * as vscode from 'vscode-languageserver-protocol';
 import { transform as transformTextEdit } from './textEdit';
 import * as shared from '@volar/shared';
 

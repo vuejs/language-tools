@@ -1,4 +1,4 @@
-import * as vscode from 'vscode-languageserver-types';
+import * as vscode from 'vscode-languageserver-protocol';
 
 export function transform<T extends vscode.TextEdit | vscode.InsertReplaceEdit>(
 	textEdit: T,
