@@ -9,3 +9,6 @@ export * from './types';
 export * as localTypes from './utils/localTypes';
 export * from './utils/ts';
 export * from './utils/parseSfc';
+
+export * from '@volar/language-core';
+export * from '@volar/source-map';

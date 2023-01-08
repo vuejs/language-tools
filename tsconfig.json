@@ -19,8 +19,8 @@
 		"noUnusedParameters": true,
 		"baseUrl": "./",
 		"paths": {
-			"@volar/*": [
-				"packages/*/src"
+			"@volar/vue-": [
+				"packages/vue-*/src"
 			],
 			"vue-tsc": [
 				"packages/vue-tsc/src"
