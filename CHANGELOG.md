@@ -17,19 +17,6 @@
 - fix(component-meta): cannot detection of slots in script-less SFC ([#2113](https://github.com/johnsoncodehk/volar/issues/2113))
 - perf(component-meta): resolve schema on demand ([#2288](https://github.com/johnsoncodehk/volar/issues/2288))
 
-## 1.0.22 (2023/1/5)
-
-- fix: document folding ranges not working in .ts
-
-## 1.0.21 (2023/1/5)
-
-- fix: cannot jump to .vue definition from .ts with takeover mode
-- fix: cannot detect `@volar/vue-language-plugin-pug` installed ([#2272](https://github.com/johnsoncodehk/volar/issues/2272))
-- fix: ignore incremental update for v-for expression ([#2266](https://github.com/johnsoncodehk/volar/issues/2266))
-- fix: auto insert spaces for `{{}}` not working
-- fix: completion in template inserts stray leading dot ([#2155](https://github.com/johnsoncodehk/volar/issues/2155))
-- fix: if source document EOL is `\r\n`, virtual document mapping decorations range incorrect
-
 ### Our Gold Sponsors
 
 <table><tr>
@@ -43,6 +30,19 @@
 	<td align="center" valign="middle"><a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/prefect.svg" height="50" /></a></td>
 	<td align="center" valign="middle"><a href="https://github.com/365talents"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/365talents.png" height="70" /></a></td>
 </tr></table>
+
+## 1.0.22 (2023/1/5)
+
+- fix: document folding ranges not working in .ts
+
+## 1.0.21 (2023/1/5)
+
+- fix: cannot jump to .vue definition from .ts with takeover mode
+- fix: cannot detect `@volar/vue-language-plugin-pug` installed ([#2272](https://github.com/johnsoncodehk/volar/issues/2272))
+- fix: ignore incremental update for v-for expression ([#2266](https://github.com/johnsoncodehk/volar/issues/2266))
+- fix: auto insert spaces for `{{}}` not working
+- fix: completion in template inserts stray leading dot ([#2155](https://github.com/johnsoncodehk/volar/issues/2155))
+- fix: if source document EOL is `\r\n`, virtual document mapping decorations range incorrect
 
 ## 1.0.20 (2023/1/4)
 
