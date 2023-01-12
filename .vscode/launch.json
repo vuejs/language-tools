@@ -3,7 +3,7 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Launch Vue",
+			"name": "Launch Client",
 			"type": "extensionHost",
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
@@ -20,26 +20,9 @@
 			}
 		},
 		{
-			"name": "Launch Pug",
 			"type": "extensionHost",
 			"request": "launch",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-				"--disable-extensions",
-				"--extensionDevelopmentPath=${workspaceRoot}/pug-language-tools/vscode-pug"
-			],
-			"outFiles": [
-				"${workspaceRoot}/*/*/out/**/*.js"
-			],
-			"preLaunchTask": {
-				"type": "npm",
-				"script": "watch"
-			}
-		},
-		{
-			"type": "extensionHost",
-			"request": "launch",
-			"name": "Launch TypeScript Vue Plugin",
+			"name": "Launch TypeScript Plugin",
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"--disable-extensions",
@@ -54,7 +37,7 @@
 			}
 		},
 		{
-			"name": "Launch Vue (Web)",
+			"name": "Launch Web Client",
 			"type": "pwa-extensionHost",
 			"debugWebWorkerHost": true,
 			"request": "launch",

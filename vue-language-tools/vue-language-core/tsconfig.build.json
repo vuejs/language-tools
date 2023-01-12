@@ -12,12 +12,4 @@
 		"node_modules",
 		".vscode-test"
 	],
-	"references": [
-		{
-			"path": "../../packages/language-core/tsconfig.build.json"
-		},
-		{
-			"path": "../../packages/source-map/tsconfig.build.json"
-		},
-	],
 }

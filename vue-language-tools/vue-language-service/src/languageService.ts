@@ -19,7 +19,7 @@ import createRefSugarConversionsPlugin from './plugins/vue-convert-refsugar';
 import createScriptSetupConversionsPlugin from './plugins/vue-convert-scriptsetup';
 import createTwoslashQueries from './plugins/vue-twoslash-queries';
 import createVueTemplateLanguagePlugin from './plugins/vue-template';
-import type { Data } from '@volar-plugins/typescript/src/services/completions/basic';
+import type { Data } from '@volar-plugins/typescript/out/services/completions/basic';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { LanguageServicePlugin } from '@volar/language-service';
 

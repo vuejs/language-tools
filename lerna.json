@@ -2,10 +2,6 @@
 	"$schema": "https://raw.githubusercontent.com/lerna/lerna/main/core/lerna/schemas/lerna-schema.json",
 	"npmClient": "pnpm",
 	"packages": [
-		"examples/*",
-		"packages/*",
-		"plugins/*",
-		"pug-language-tools/*",
 		"vue-language-tools/*"
 	],
 	"version": "1.0.24"

@@ -1,7 +1,2 @@
 packages:
-  - 'docs'
-  - 'examples/*'
-  - 'packages/*'
-  - 'plugins/*'
-  - 'pug-language-tools/*'
   - 'vue-language-tools/*'

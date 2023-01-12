@@ -9,9 +9,6 @@
 		{
 			"path": "./vue-language-tools/vscode-typescript-vue-plugin/tsconfig.build.json"
 		},
-		{
-			"path": "./pug-language-tools/vscode-pug/tsconfig.build.json"
-		},
 		// Extra Pkgs
 		{
 			"path": "./vue-language-tools/vue-language-plugin-pug/tsconfig.build.json"

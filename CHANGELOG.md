@@ -17,14 +17,19 @@
 - fix(component-meta): cannot detection of slots in script-less SFC ([#2113](https://github.com/johnsoncodehk/volar/issues/2113))
 - perf(component-meta): resolve schema on demand ([#2288](https://github.com/johnsoncodehk/volar/issues/2288))
 
-### Our Gold Sponsors
+### Platinum Sponsors
 
 <table><tr>
-	<td align="center" valign="middle"><a href="https://vuejs.org/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/vue.png" height="80" /></a></td>
 	<td align="center" valign="middle"><a href="https://volta.net/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/volta.svg" height="60" /></a></td>
 </tr></table>
 
-### Our Silver Sponsors
+### Gold Sponsors
+
+<table><tr>
+	<td align="center" valign="middle"><a href="https://vuejs.org/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/vue.png" height="80" /></a></td>
+</tr></table>
+
+### Silver Sponsors
 
 <table><tr>
 	<td align="center" valign="middle"><a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/prefect.svg" height="50" /></a></td>

@@ -11,25 +11,20 @@
 		"version:test": "lerna version --exact --force-publish --yes --sync-workspace-lock --no-push --no-git-tag-version",
 		"release": "npm run release:base && npm run release:vue && npm run release:pug && npm run release:typescript-vue-plugin",
 		"release:base": "lerna publish --exact --force-publish --yes --sync-workspace-lock",
-		"release:base-next": "lerna publish --exact --force-publish --yes --sync-workspace-lock --dist-tag next",
 		"release:vue": "cd ./vue-language-tools/vscode-vue && npm run release",
-		"release:pug": "cd ./pug-language-tools/vscode-pug && npm run release",
 		"release:typescript-vue-plugin": "cd ./vue-language-tools/vscode-typescript-vue-plugin && npm run release",
 		"test": "vitest run",
-		"docs:dev": "cd docs && npm run dev",
-		"docs:build": "cd docs && npm run build",
-		"docs:serve": "cd docs && npm run serve",
 		"chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=./vue-language-tools/vscode-vue ../volar-starter"
 	},
 	"devDependencies": {
 		"@types/node": "latest",
+		"@volar/language-service": "1.0.24",
 		"typescript": "latest",
 		"vite": "latest",
 		"vitest": "0.25.8"
 	},
 	"optionalDependencies": {
 		"@lerna-lite/cli": "latest",
-		"@vscode/test-web": "latest",
-		"vue": "^3.2.45"
+		"@vscode/test-web": "latest"
 	}
 }

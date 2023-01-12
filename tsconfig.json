@@ -19,23 +19,29 @@
 		"noUnusedParameters": true,
 		"baseUrl": "./",
 		"paths": {
-			"@volar/*": [
-				"packages/*/src"
+			"preview": [
+				"vue-language-tools/preview/src"
 			],
-			"@volar-plugins/*": [
-				"plugins/*/src"
-			],
-			"@volar-examples/*": [
-				"examples/*/src"
-			],
-			"@volar/vue-*": [
-				"vue-language-tools/vue-*/src"
-			],
-			"vue-tsc": [
-				"vue-language-tools/vue-tsc/src"
+			"typescript-vue-plugin": [
+				"vue-language-tools/typescript-vue-plugin/src"
 			],
 			"vue-component-meta": [
 				"vue-language-tools/vue-component-meta/src"
+			],
+			"@volar/vue-language-core": [
+				"vue-language-tools/vue-language-core/src"
+			],
+			"@volar/vue-language-plugin-pug": [
+				"vue-language-tools/vue-language-plugin-pug/src"
+			],
+			"@volar/vue-language-server": [
+				"vue-language-tools/vue-language-server/src"
+			],
+			"@volar/vue-language-service": [
+				"vue-language-tools/vue-language-service/src"
+			],
+			"vue-tsc": [
+				"vue-language-tools/vue-tsc/src"
 			],
 		},
 		"noEmit": true,
