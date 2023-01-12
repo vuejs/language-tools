@@ -15,8 +15,10 @@
 - [vite-plugin-vue-component-preview](https://github.com/johnsoncodehk/vite-plugin-vue-component-preview) \
 *Vite plugin for support Vue component preview view with `Vue Language Features`*
 
-### Common
+### Core
 
+- [framework](https://github.com/volarjs/framework) \
+*The core framework of language server.*
 - [language-tools-starter](https://github.com/volarjs/language-tools-starter) \
 *A template for creating embedded language tools based on Volar framework*
 - [ecosystem-ci](https://github.com/volarjs/ecosystem-ci) \
