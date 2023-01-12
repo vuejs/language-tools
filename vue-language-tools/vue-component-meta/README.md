@@ -40,7 +40,7 @@ const componentPath = path.join(__dirname, 'path-to-component');
 const meta = checker.getComponentMeta(componentPath);
 ```
 
-This meta contains really useful stuff like component props, slots, events and more. You can refer to its [type definition](https://github.com/johnsoncodehk/volar/blob/master/packages/vue-component-meta/src/types.ts) for more details.
+This meta contains really useful stuff like component props, slots, events and more. You can refer to its [type definition](https://github.com/johnsoncodehk/volar/blob/master/vue-language-tools/vue-component-meta/src/types.ts) for more details.
 
 ### Extracting prop meta
 
@@ -166,7 +166,7 @@ You need to add `as const` to variable definition:
 
 ## Reference 📚
 
-- [tests](https://github.com/johnsoncodehk/volar/blob/master/packages/vue-component-meta/tests/index.spec.ts)
+- [tests](https://github.com/johnsoncodehk/volar/blob/master/vue-language-tools/vue-component-meta/tests/index.spec.ts)
 - [Anu's components' API automation](https://github.com/jd-solanki/anu/blob/main/scripts/gen-component-meta.ts)
 - [Discord chat for dynamic usage](https://discord.com/channels/793943652350427136/1027819645677350912)
 

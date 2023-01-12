@@ -20,7 +20,7 @@
 				"extensions": {
 					"type": "array",
 					"default": [ ".vue" ],
-					"markdownDescription": "Valid file extensions that should be considered as regular Vue SFC, please note that you should not use this option separately for additional file extensions IDE support, see https://github.com/johnsoncodehk/volar/tree/master/packages/vscode-vue/README.md#custom-file-extensions."
+					"markdownDescription": "Valid file extensions that should be considered as regular Vue SFC, please note that you should not use this option separately for additional file extensions IDE support, see https://github.com/johnsoncodehk/volar/tree/master/vue-language-tools/vscode-vue/README.md#custom-file-extensions."
 				},
 				"jsxTemplates": {
 					"type": "boolean",

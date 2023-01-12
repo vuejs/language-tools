@@ -1,5 +1,5 @@
 {
-	"name": "vue-tsc-eslint-hook",
+	"name": "vue-tsc",
 	"version": "1.0.24",
 	"main": "out/index.js",
 	"license": "MIT",
@@ -11,16 +11,16 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
-		"directory": "packages/vue-tsc-eslint"
+		"directory": "vue-language-tools/vue-tsc"
 	},
-	"devDependencies": {
-		"@types/eslint": "latest",
-		"vue-tsc": "1.0.24"
-	},
-	"peerDependencies": {
-		"eslint": "*"
+	"bin": {
+		"vue-tsc": "./bin/vue-tsc.js"
 	},
 	"dependencies": {
-		"vscode-languageserver-textdocument": "^1.0.8"
+		"@volar/vue-language-core": "1.0.24",
+		"@volar/vue-typescript": "1.0.24"
+	},
+	"peerDependencies": {
+		"typescript": "*"
 	}
 }
