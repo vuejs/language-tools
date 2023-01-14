@@ -79,38 +79,24 @@ function createParsedCommandLineBase(
 		...content.raw.vueCompilerOptions,
 	};
 
-	vueOptions.plugins = vueOptions.plugins?.map(plugin => {
-		try {
-			plugin = require.resolve(plugin, { paths: [folder] });
-		}
-		catch (error) {
-			console.error(error);
-		}
-		return plugin;
-	});
-	vueOptions.hooks = vueOptions.hooks?.map(hook => {
-		try {
-			hook = require.resolve(hook, { paths: [folder] });
-		}
-		catch (error) {
-			console.error(error);
-		}
-		return hook;
-	});
-	vueOptions.experimentalAdditionalLanguageModules = vueOptions.experimentalAdditionalLanguageModules?.map(module => {
-		try {
-			module = require.resolve(module, { paths: [folder] });
-		}
-		catch (error) {
-			console.error(error);
-		}
-		return module;
-	});
+	vueOptions.plugins = vueOptions.plugins?.map(resolvePath);
+	vueOptions.hooks = vueOptions.hooks?.map(resolvePath);
+	vueOptions.experimentalAdditionalLanguageModules = vueOptions.experimentalAdditionalLanguageModules?.map(resolvePath);
 
 	return {
 		...content,
 		vueOptions,
 	};
+
+	function resolvePath(scriptPath: string) {
+		try {
+			scriptPath = require.resolve(scriptPath, { paths: [folder] });
+		}
+		catch (error) {
+			console.error(error);
+		}
+		return scriptPath;
+	}
 }
 
 // https://developer.mozilla.org/en-US/docs/Web/HTML/Element
@@ -181,15 +167,15 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 		// https://v3.vuejs.org/guide/forms.html#basic-usage
 		experimentalModelPropName: vueOptions.experimentalModelPropName ?? {
 			'': {
-				'input': { type: 'radio' },
+				input: { type: 'radio' },
 			},
-			'checked': {
-				'input': { type: 'checkbox' },
+			checked: {
+				input: { type: 'checkbox' },
 			},
-			'value': {
-				'input': true,
-				'textarea': true,
-				'select': true,
+			value: {
+				input: true,
+				textarea: true,
+				select: true,
 			},
 		},
 		experimentalUseElementAccessInTemplate: vueOptions.experimentalUseElementAccessInTemplate ?? false,
