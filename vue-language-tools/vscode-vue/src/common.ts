@@ -1,14 +1,14 @@
 import {
-	registerAutoInsertion,
-	registerShowVirtualFiles,
-	registerWriteVirtualFiles,
-	registerFileReferences,
-	registerReloadProjects,
-	registerServerStats,
-	registerTsConfig,
-	registerShowReferences,
-	registerServerSys,
-	registerTsVersion,
+	activateAutoInsertion,
+	activateShowVirtualFiles,
+	activateWriteVirtualFiles,
+	activateFindFileReferences,
+	activateReloadProjects,
+	activateServerStats,
+	activateTsConfigStatusItem,
+	activateShowReferences,
+	activateServerSys,
+	activateTsVersionStatusItem,
 	getTsdk,
 	takeOverModeActive,
 } from '@volar/vscode-language-client';
@@ -69,27 +69,30 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 	vscode.commands.executeCommand('setContext', 'volar.activated', true);
 
-	semanticClient = createLc(
-		'vue-semantic-server',
-		'Vue Semantic Server',
-		getDocumentSelector(context, ServerMode.Semantic),
-		getInitializationOptions(ServerMode.Semantic, context),
-		getFillInitializeParams([LanguageFeaturesKind.Semantic]),
-		6009,
-	);
-	syntacticClient = createLc(
-		'vue-syntactic-server',
-		'Vue Syntactic Server',
-		getDocumentSelector(context, ServerMode.Syntactic),
-		getInitializationOptions(ServerMode.Syntactic, context),
-		getFillInitializeParams([LanguageFeaturesKind.Syntactic]),
-		6011,
-	);
+	[semanticClient, syntacticClient] = await Promise.all([
+		createLc(
+			'vue-semantic-server',
+			'Vue Semantic Server',
+			getDocumentSelector(context, ServerMode.Semantic),
+			getInitializationOptions(ServerMode.Semantic, context),
+			getFillInitializeParams([LanguageFeaturesKind.Semantic]),
+			6009,
+		),
+		createLc(
+			'vue-syntactic-server',
+			'Vue Syntactic Server',
+			getDocumentSelector(context, ServerMode.Syntactic),
+			getInitializationOptions(ServerMode.Syntactic, context),
+			getFillInitializeParams([LanguageFeaturesKind.Syntactic]),
+			6011,
+		)
+	]);
+
 	const clients = [semanticClient, syntacticClient];
 
-	registerServerMaxOldSpaceSizeChange();
-	registerRestartRequest();
-	registerClientRequests();
+	activateServerMaxOldSpaceSizeChange();
+	activateRestartRequest();
+	activateClientRequests();
 
 	splitEditors.register(context, syntacticClient);
 	doctor.register(context, semanticClient);
@@ -104,11 +107,11 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		typescriptreact: true,
 	};
 
-	registerAutoInsertion(context, [syntacticClient, semanticClient], document => supportedLanguages[document.languageId]);
-	registerShowVirtualFiles('volar.action.showVirtualFiles', context, semanticClient);
-	registerWriteVirtualFiles('volar.action.writeVirtualFiles', context, semanticClient);
-	registerFileReferences('volar.vue.findAllFileReferences', context, semanticClient);
-	registerTsConfig('volar.openTsconfig', context, semanticClient,
+	activateAutoInsertion([syntacticClient, semanticClient], document => supportedLanguages[document.languageId]);
+	activateShowVirtualFiles('volar.action.showVirtualFiles', semanticClient);
+	activateWriteVirtualFiles('volar.action.writeVirtualFiles', semanticClient);
+	activateFindFileReferences('volar.vue.findAllFileReferences', semanticClient);
+	activateTsConfigStatusItem('volar.openTsconfig', semanticClient,
 		document => {
 			return document.languageId === 'vue'
 				|| (processMd() && document.languageId === 'markdown')
@@ -119,9 +122,9 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 				);
 		},
 	);
-	registerReloadProjects('volar.action.reloadProject', context, [semanticClient]);
-	registerServerStats('volar.action.serverStats', context, [semanticClient]);
-	registerTsVersion('volar.selectTypeScriptVersion', context, semanticClient,
+	activateReloadProjects('volar.action.reloadProject', [semanticClient]);
+	activateServerStats('volar.action.serverStats', [semanticClient]);
+	activateTsVersionStatusItem('volar.selectTypeScriptVersion', context, semanticClient,
 		document => {
 			return document.languageId === 'vue'
 				|| (processMd() && document.languageId === 'markdown')
@@ -141,8 +144,8 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	);
 
 	for (const client of clients) {
-		registerShowReferences(context, client);
-		registerServerSys(context, client);
+		activateShowReferences(client);
+		activateServerSys(client);
 	}
 
 	async function requestReloadVscode() {
@@ -153,7 +156,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		if (reload === undefined) return; // cancel
 		vscode.commands.executeCommand('workbench.action.reloadWindow');
 	}
-	function registerServerMaxOldSpaceSizeChange() {
+	function activateServerMaxOldSpaceSizeChange() {
 		vscode.workspace.onDidChangeConfiguration((e) => {
 			if (
 				e.affectsConfiguration('volar.vueserver.maxOldSpaceSize')
@@ -171,14 +174,14 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			}
 		});
 	}
-	async function registerRestartRequest() {
+	async function activateRestartRequest() {
 		context.subscriptions.push(vscode.commands.registerCommand('volar.action.restartServer', async () => {
 			await Promise.all(clients.map(client => client.stop()));
 			await Promise.all(clients.map(client => client.start()));
-			registerClientRequests();
+			activateClientRequests();
 		}));
 	}
-	function registerClientRequests() {
+	function activateClientRequests() {
 		nameCasing.activate(context, semanticClient);
 	}
 }

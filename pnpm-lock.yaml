@@ -9,7 +9,7 @@ importers:
     specifiers:
       '@lerna-lite/cli': latest
       '@types/node': latest
-      '@volar/language-service': 1.1.0-alpha.0
+      '@volar/language-service': 1.1.0-alpha.1
       '@vscode/test-web': latest
       typescript: latest
       vite: latest
@@ -19,7 +19,7 @@ importers:
       '@vscode/test-web': 0.0.34
     devDependencies:
       '@types/node': 18.11.18
-      '@volar/language-service': 1.1.0-alpha.0
+      '@volar/language-service': 1.1.0-alpha.1
       typescript: 4.9.4
       vite: 4.0.4_@types+node@18.11.18
       vitest: 0.25.8
@@ -35,11 +35,11 @@ importers:
 
   vue-language-tools/typescript-vue-plugin:
     specifiers:
-      '@volar/typescript-faster': 1.1.0-alpha.0
+      '@volar/typescript-faster': 1.1.0-alpha.1
       '@volar/vue-language-core': 1.0.24
       '@volar/vue-typescript': 1.0.24
     dependencies:
-      '@volar/typescript-faster': 1.1.0-alpha.0
+      '@volar/typescript-faster': 1.1.0-alpha.1
       '@volar/vue-language-core': link:../vue-language-core
       '@volar/vue-typescript': link:../vue-typescript
 
@@ -61,9 +61,9 @@ importers:
       '@types/semver': ^7.3.13
       '@types/vscode': 1.67.0
       '@volar/preview': 1.0.24
-      '@volar/shared': 1.1.0-alpha.0
-      '@volar/source-map': 1.1.0-alpha.0
-      '@volar/vscode-language-client': 1.1.0-alpha.0
+      '@volar/shared': 1.1.0-alpha.1
+      '@volar/source-map': 1.1.0-alpha.1
+      '@volar/vscode-language-client': 1.1.0-alpha.1
       '@volar/vue-language-core': 1.0.24
       '@volar/vue-language-server': 1.0.24
       esbuild: 0.15.18
@@ -80,9 +80,9 @@ importers:
       '@types/semver': 7.3.13
       '@types/vscode': 1.67.0
       '@volar/preview': link:../preview
-      '@volar/shared': 1.1.0-alpha.0
-      '@volar/source-map': 1.1.0-alpha.0
-      '@volar/vscode-language-client': 1.1.0-alpha.0
+      '@volar/shared': 1.1.0-alpha.1
+      '@volar/source-map': 1.1.0-alpha.1
+      '@volar/vscode-language-client': 1.1.0-alpha.1_lr35k6ga5htpxuznotx4jg7nl4
       '@volar/vue-language-core': link:../vue-language-core
       '@volar/vue-language-server': link:../vue-language-server
       esbuild: 0.15.18
@@ -98,19 +98,19 @@ importers:
 
   vue-language-tools/vue-component-meta:
     specifiers:
-      '@volar/language-core': 1.1.0-alpha.0
+      '@volar/language-core': 1.1.0-alpha.1
       '@volar/vue-language-core': 1.0.24
       typesafe-path: ^0.2.2
     dependencies:
-      '@volar/language-core': 1.1.0-alpha.0
+      '@volar/language-core': 1.1.0-alpha.1
       '@volar/vue-language-core': link:../vue-language-core
       typesafe-path: 0.2.2
 
   vue-language-tools/vue-language-core:
     specifiers:
       '@types/minimatch': ^5.1.2
-      '@volar/language-core': 1.1.0-alpha.0
-      '@volar/source-map': 1.1.0-alpha.0
+      '@volar/language-core': 1.1.0-alpha.1
+      '@volar/source-map': 1.1.0-alpha.1
       '@vue/compiler-dom': ^3.2.45
       '@vue/compiler-sfc': ^3.2.45
       '@vue/reactivity': ^3.2.45
@@ -118,8 +118,8 @@ importers:
       minimatch: ^5.1.1
       vue-template-compiler: ^2.7.14
     dependencies:
-      '@volar/language-core': 1.1.0-alpha.0
-      '@volar/source-map': 1.1.0-alpha.0
+      '@volar/language-core': 1.1.0-alpha.1
+      '@volar/source-map': 1.1.0-alpha.1
       '@vue/compiler-dom': 3.2.45
       '@vue/compiler-sfc': 3.2.45
       '@vue/reactivity': 3.2.45
@@ -142,17 +142,17 @@ importers:
 
   vue-language-tools/vue-language-server:
     specifiers:
-      '@volar/language-core': 1.1.0-alpha.0
-      '@volar/language-server': 1.1.0-alpha.0
-      '@volar/shared': 1.1.0-alpha.0
+      '@volar/language-core': 1.1.0-alpha.1
+      '@volar/language-server': 1.1.0-alpha.1
+      '@volar/shared': 1.1.0-alpha.1
       '@volar/vue-language-core': 1.0.24
       '@volar/vue-language-service': 1.0.24
       vscode-languageserver-protocol: ^3.17.2
       vue-component-meta: 1.0.24
     dependencies:
-      '@volar/language-core': 1.1.0-alpha.0
-      '@volar/language-server': 1.1.0-alpha.0
-      '@volar/shared': 1.1.0-alpha.0
+      '@volar/language-core': 1.1.0-alpha.1
+      '@volar/language-server': 1.1.0-alpha.1
+      '@volar/shared': 1.1.0-alpha.1
       '@volar/vue-language-core': link:../vue-language-core
       '@volar/vue-language-service': link:../vue-language-service
       vscode-languageserver-protocol: 3.17.2
@@ -169,10 +169,10 @@ importers:
       '@volar-plugins/pug-beautify': 1.1.0
       '@volar-plugins/typescript': 1.1.0
       '@volar-plugins/typescript-twoslash-queries': 1.1.0
-      '@volar/language-core': 1.1.0-alpha.0
-      '@volar/language-service': 1.1.0-alpha.0
-      '@volar/shared': 1.1.0-alpha.0
-      '@volar/source-map': 1.1.0-alpha.0
+      '@volar/language-core': 1.1.0-alpha.1
+      '@volar/language-service': 1.1.0-alpha.1
+      '@volar/shared': 1.1.0-alpha.1
+      '@volar/source-map': 1.1.0-alpha.1
       '@volar/vue-language-core': 1.0.24
       '@vue/compiler-dom': ^3.2.45
       '@vue/reactivity': ^3.2.45
@@ -184,18 +184,18 @@ importers:
       vscode-uri: ^3.0.7
     dependencies:
       '@johnsoncodehk/html2pug': 1.0.0
-      '@volar-plugins/css': 1.1.0_e6p75eed47mja32giuj6psyw2m
-      '@volar-plugins/emmet': 1.1.0_e6p75eed47mja32giuj6psyw2m
-      '@volar-plugins/html': 1.1.1_e6p75eed47mja32giuj6psyw2m
-      '@volar-plugins/json': 1.1.0_e6p75eed47mja32giuj6psyw2m
+      '@volar-plugins/css': 1.1.0_ew6uzmk4pxvuf7qrgprnebtu44
+      '@volar-plugins/emmet': 1.1.0_ew6uzmk4pxvuf7qrgprnebtu44
+      '@volar-plugins/html': 1.1.1_ew6uzmk4pxvuf7qrgprnebtu44
+      '@volar-plugins/json': 1.1.0_ew6uzmk4pxvuf7qrgprnebtu44
       '@volar-plugins/pug': 1.1.0
-      '@volar-plugins/pug-beautify': 1.1.0_e6p75eed47mja32giuj6psyw2m
-      '@volar-plugins/typescript': 1.1.0_e6p75eed47mja32giuj6psyw2m
-      '@volar-plugins/typescript-twoslash-queries': 1.1.0_e6p75eed47mja32giuj6psyw2m
-      '@volar/language-core': 1.1.0-alpha.0
-      '@volar/language-service': 1.1.0-alpha.0
-      '@volar/shared': 1.1.0-alpha.0
-      '@volar/source-map': 1.1.0-alpha.0
+      '@volar-plugins/pug-beautify': 1.1.0_ew6uzmk4pxvuf7qrgprnebtu44
+      '@volar-plugins/typescript': 1.1.0_ew6uzmk4pxvuf7qrgprnebtu44
+      '@volar-plugins/typescript-twoslash-queries': 1.1.0_ew6uzmk4pxvuf7qrgprnebtu44
+      '@volar/language-core': 1.1.0-alpha.1
+      '@volar/language-service': 1.1.0-alpha.1
+      '@volar/shared': 1.1.0-alpha.1
+      '@volar/source-map': 1.1.0-alpha.1
       '@volar/vue-language-core': link:../vue-language-core
       '@vue/compiler-dom': 3.2.45
       '@vue/reactivity': 3.2.45
@@ -233,10 +233,10 @@ importers:
 
   vue-language-tools/vue-typescript:
     specifiers:
-      '@volar/typescript': 1.1.0-alpha.0
+      '@volar/typescript': 1.1.0-alpha.1
       '@volar/vue-language-core': 1.0.24
     dependencies:
-      '@volar/typescript': 1.1.0-alpha.0
+      '@volar/typescript': 1.1.0-alpha.1
       '@volar/vue-language-core': link:../vue-language-core
 
 packages:
@@ -939,7 +939,7 @@ packages:
       '@types/node': 18.11.18
     dev: true
 
-  /@volar-plugins/css/1.1.0_e6p75eed47mja32giuj6psyw2m:
+  /@volar-plugins/css/1.1.0_ew6uzmk4pxvuf7qrgprnebtu44:
     resolution: {integrity: sha512-oBz7z8s2sFiif++P5uhTt64P+RHq5spx09luIGIXPF0B6MpRW0waNsHPxY9Pkq3VkTUDuQDDRsWQxSOb2D9EAw==}
     peerDependencies:
       '@volar/language-service': '*'
@@ -947,13 +947,13 @@ packages:
       '@volar/language-service':
         optional: true
     dependencies:
-      '@volar/language-service': 1.1.0-alpha.0
+      '@volar/language-service': 1.1.0-alpha.1
       vscode-css-languageservice: 6.2.1
       vscode-languageserver-protocol: 3.17.2
       vscode-languageserver-textdocument: 1.0.8
     dev: false
 
-  /@volar-plugins/emmet/1.1.0_e6p75eed47mja32giuj6psyw2m:
+  /@volar-plugins/emmet/1.1.0_ew6uzmk4pxvuf7qrgprnebtu44:
     resolution: {integrity: sha512-VlQAeU7MbdtC8512hjAzYSTy2S7Zj3k6TlQNBDPevW726ofzNGtOWWGnyausp6QFpiy/AdH0NValrpILOgRWuQ==}
     peerDependencies:
       '@volar/language-service': '*'
@@ -961,11 +961,11 @@ packages:
       '@volar/language-service':
         optional: true
     dependencies:
-      '@volar/language-service': 1.1.0-alpha.0
+      '@volar/language-service': 1.1.0-alpha.1
       '@vscode/emmet-helper': 2.8.4
     dev: false
 
-  /@volar-plugins/html/1.1.1_e6p75eed47mja32giuj6psyw2m:
+  /@volar-plugins/html/1.1.1_ew6uzmk4pxvuf7qrgprnebtu44:
     resolution: {integrity: sha512-7bV9ehqeczQNv20QGjR5/YQLNav4vQ1G+vySimaBoSsZtEiyogQQsM+iDsrz8UysUJ8tfqt0o8iB3uR2UGUf8g==}
     peerDependencies:
       '@volar/language-service': '*'
@@ -973,7 +973,7 @@ packages:
       '@volar/language-service':
         optional: true
     dependencies:
-      '@volar/language-service': 1.1.0-alpha.0
+      '@volar/language-service': 1.1.0-alpha.1
       vscode-html-languageservice: 5.0.3
       vscode-languageserver-protocol: 3.17.2
       vscode-languageserver-textdocument: 1.0.8
@@ -993,7 +993,7 @@ packages:
       vscode-languageserver-textdocument: 1.0.8
     dev: false
 
-  /@volar-plugins/json/1.1.0_e6p75eed47mja32giuj6psyw2m:
+  /@volar-plugins/json/1.1.0_ew6uzmk4pxvuf7qrgprnebtu44:
     resolution: {integrity: sha512-KZCteX5W/sscGGJ2XUrBTdtkSvecC8F4fUm8AkcGS0dGnWVxOZJG7Ko6bIKMit2bqnVGTLk6YgpyTfLHiHLpeQ==}
     peerDependencies:
       '@volar/language-service': '*'
@@ -1001,13 +1001,13 @@ packages:
       '@volar/language-service':
         optional: true
     dependencies:
-      '@volar/language-service': 1.1.0-alpha.0
+      '@volar/language-service': 1.1.0-alpha.1
       vscode-json-languageservice: 5.1.3
       vscode-languageserver-protocol: 3.17.2
       vscode-languageserver-textdocument: 1.0.8
     dev: false
 
-  /@volar-plugins/pug-beautify/1.1.0_e6p75eed47mja32giuj6psyw2m:
+  /@volar-plugins/pug-beautify/1.1.0_ew6uzmk4pxvuf7qrgprnebtu44:
     resolution: {integrity: sha512-BEEd7/am68I9oEOczHOm3saBDN/EUiXT49i3ZUTJWpVLpMS2z5xAvDoPzE8Jg3e/ciFoanc3bUd3Ljz8RLYyKA==}
     peerDependencies:
       '@volar/language-service': '*'
@@ -1016,7 +1016,7 @@ packages:
         optional: true
     dependencies:
       '@johnsoncodehk/pug-beautify': 0.2.2
-      '@volar/language-service': 1.1.0-alpha.0
+      '@volar/language-service': 1.1.0-alpha.1
       vscode-languageserver-types: 3.17.2
     dev: false
 
@@ -1035,7 +1035,7 @@ packages:
       vscode-languageserver-types: 3.17.2
     dev: false
 
-  /@volar-plugins/typescript-twoslash-queries/1.1.0_e6p75eed47mja32giuj6psyw2m:
+  /@volar-plugins/typescript-twoslash-queries/1.1.0_ew6uzmk4pxvuf7qrgprnebtu44:
     resolution: {integrity: sha512-/nDZkMJo3W3+9al3lcTm/vtnieAMjBDHLlB6Zg8uo22eLHtp9EvaY7KSWkOiSDynHyO6Uu4b2XxAsKkra4wpJA==}
     peerDependencies:
       '@volar/language-service': '*'
@@ -1043,12 +1043,12 @@ packages:
       '@volar/language-service':
         optional: true
     dependencies:
-      '@volar/language-service': 1.1.0-alpha.0
+      '@volar/language-service': 1.1.0-alpha.1
       '@volar/shared': 1.0.24
       vscode-languageserver-textdocument: 1.0.8
     dev: false
 
-  /@volar-plugins/typescript/1.1.0_e6p75eed47mja32giuj6psyw2m:
+  /@volar-plugins/typescript/1.1.0_ew6uzmk4pxvuf7qrgprnebtu44:
     resolution: {integrity: sha512-WqHDeYd6a7asGEF1/k26DWy9yJNu+aTFzrU19S5GF5GV6yc1LN8HE+IcbOTwb77lGn63GVcUpk7QSzgb6eeixA==}
     peerDependencies:
       '@volar/language-service': '*'
@@ -1056,7 +1056,7 @@ packages:
       '@volar/language-service':
         optional: true
     dependencies:
-      '@volar/language-service': 1.1.0-alpha.0
+      '@volar/language-service': 1.1.0-alpha.1
       '@volar/shared': 1.0.24
       semver: 7.3.8
       vscode-languageserver-protocol: 3.17.2
@@ -1072,18 +1072,18 @@ packages:
       muggle-string: 0.1.0
     dev: false
 
-  /@volar/language-core/1.1.0-alpha.0:
-    resolution: {integrity: sha512-sSTFvRaOxbuVJViHet8YLc9afzjeJDY1AQXMYoxQq+rkNmWZ/cdumL86i3Oi/lU90b1Kp4Fc8yda+oS20xmNmA==}
+  /@volar/language-core/1.1.0-alpha.1:
+    resolution: {integrity: sha512-6vPwhdWuP0Ly3u5DmPsaZ6qWEyc7j69i57BnmuJRBPobweRgqEwr7olddHR6LoRwHDuNUGKU7R/jmKD5EOTzAw==}
     dependencies:
-      '@volar/source-map': 1.1.0-alpha.0
+      '@volar/source-map': 1.1.0-alpha.1
       muggle-string: 0.1.0
 
-  /@volar/language-server/1.1.0-alpha.0:
-    resolution: {integrity: sha512-D8C019cmwmNpRCFW2GokPwJ15YG9gGI4yLUJuiTY6SorKc2jZzlXx5D25Chaf3eGCn4F9fJDHUS8gCEhYbaukQ==}
+  /@volar/language-server/1.1.0-alpha.1:
+    resolution: {integrity: sha512-goTwXmc258QcRZpK9U8o0vNLOpvSR07gHgFaSy8Z9JYSGgu8GltAhHewcSMvDexAGwAQHpix50eAvxt+QdTP1A==}
     dependencies:
-      '@volar/language-core': 1.1.0-alpha.0
-      '@volar/language-service': 1.1.0-alpha.0
-      '@volar/shared': 1.1.0-alpha.0
+      '@volar/language-core': 1.1.0-alpha.1
+      '@volar/language-service': 1.1.0-alpha.1
+      '@volar/shared': 1.1.0-alpha.1
       '@vscode/l10n': 0.0.10
       request-light: 0.6.0
       typesafe-path: 0.2.2
@@ -1107,13 +1107,13 @@ packages:
       vscode-uri: 3.0.7
     dev: false
 
-  /@volar/language-service/1.1.0-alpha.0:
-    resolution: {integrity: sha512-EjBdwy98ktR50yOnunsYavWB2nxLK7Z705d/Io7CA425O+1IJ/rKpH7N6oathtNV9KDhcbMZIeIGp/BeBwfKtQ==}
+  /@volar/language-service/1.1.0-alpha.1:
+    resolution: {integrity: sha512-yD6KYmHj1x5ylB9Wqlk8l2GivJ7EPRiuXUTFzaLJKUFKmB1zoLyWE/SDMLBeUoG2SPAEs/6TUTxre5ZIANAaKQ==}
     dependencies:
-      '@volar/language-core': 1.1.0-alpha.0
-      '@volar/shared': 1.1.0-alpha.0
-      '@volar/source-map': 1.1.0-alpha.0
-      '@volar/typescript-faster': 1.1.0-alpha.0
+      '@volar/language-core': 1.1.0-alpha.1
+      '@volar/shared': 1.1.0-alpha.1
+      '@volar/source-map': 1.1.0-alpha.1
+      '@volar/typescript-faster': 1.1.0-alpha.1
       vscode-html-languageservice: 5.0.3
       vscode-json-languageservice: 5.1.3
       vscode-languageserver-protocol: 3.17.2
@@ -1127,8 +1127,8 @@ packages:
       vscode-uri: 3.0.7
     dev: false
 
-  /@volar/shared/1.1.0-alpha.0:
-    resolution: {integrity: sha512-YpIaVbZaUcSof2ByNEoHK16YW79rnUOEARyH5V88l3yYYuFUdeg0h7RR/c+GSI62dHcq/yuhXzp3BfVU0+LPxQ==}
+  /@volar/shared/1.1.0-alpha.1:
+    resolution: {integrity: sha512-bFy6N+Nj1QDWsPqC14UparH4ynHNs6qMJ035hrLS5oJ0pZ/97kpt/rWlptT6RMs3EQ2yBTraO6UhnVtLZoyoVw==}
     dependencies:
       typesafe-path: 0.2.2
       vscode-uri: 3.0.7
@@ -1139,8 +1139,8 @@ packages:
       muggle-string: 0.1.0
     dev: false
 
-  /@volar/source-map/1.1.0-alpha.0:
-    resolution: {integrity: sha512-kzTSPzVmAqIhRsHxZjNgkGOdIcQ1LnUQFnbUmK+svbl2Ma6DWbDwf3YKJFLmRx7sVM/gEhs8EMNc0FJ3+o0/Iw==}
+  /@volar/source-map/1.1.0-alpha.1:
+    resolution: {integrity: sha512-SUQwiJRhl2TfA1Syg5ekqewLVLV4W+aS3oZ8GF8RloyD1QSq5wXiRb86nziDfBHVWNtf21qwibyjUh1AsIR4ug==}
     dependencies:
       muggle-string: 0.1.0
 
@@ -1150,24 +1150,27 @@ packages:
       semver: 7.3.8
     dev: false
 
-  /@volar/typescript-faster/1.1.0-alpha.0:
-    resolution: {integrity: sha512-6srnOBaiz2Koi2LJcD5gReJai1v/YJdmzVEhcOOUWtmuQT63wlagwglJjeJMkbudGZx7RbgUJX0SWAvwp9Z6aA==}
+  /@volar/typescript-faster/1.1.0-alpha.1:
+    resolution: {integrity: sha512-Xg8VOCTJtjiGPNgWbmn8Ym/OJwbniG0LTN0QpODLA2UHYRrkHME0OuuAPR4A/phc4L+eI5I7F8TIPLRClYpR9Q==}
     dependencies:
       semver: 7.3.8
 
-  /@volar/typescript/1.1.0-alpha.0:
-    resolution: {integrity: sha512-toGoOv2QX8C9ObFokDUbz/CcFcf8nYwTEcXCCpsQZcgcrioB0Yss7uW2hUubVan+MGJT1EwzKPwAMF28mh7EPA==}
+  /@volar/typescript/1.1.0-alpha.1:
+    resolution: {integrity: sha512-f+Cu79M8nuT79WwmuWWOV5wgfY/omRGXqMOKIkFIHr8Q+/uvc88EoitNAXIZDmDgR/nXKQcceQ4vrmX9K6bMtg==}
     dependencies:
-      '@volar/language-core': 1.1.0-alpha.0
+      '@volar/language-core': 1.1.0-alpha.1
     dev: false
 
-  /@volar/vscode-language-client/1.1.0-alpha.0:
-    resolution: {integrity: sha512-o42aPg+HByJhhMvKuUPe8QRYcg3E5fC5KimMasiivKdsEJbMY6kTV/SLZzTedvT43QIu8NwZb2dvoFnxymzF9g==}
+  /@volar/vscode-language-client/1.1.0-alpha.1_lr35k6ga5htpxuznotx4jg7nl4:
+    resolution: {integrity: sha512-dVEhU/IMhCGMLx28Lu4dnRgR5OIfRy8E4D4m9U4wWzNLLM52rYMTn972DPxbnSbzYxyeJWVlYF3Fzn/k7aXKZw==}
+    peerDependencies:
+      '@types/vscode': '*'
+      vscode-languageclient: '*'
     dependencies:
       '@types/vscode': 1.67.0
-      '@volar/language-server': 1.1.0-alpha.0
-      '@volar/shared': 1.1.0-alpha.0
-      '@volar/source-map': 1.1.0-alpha.0
+      '@volar/language-server': 1.1.0-alpha.1
+      '@volar/shared': 1.1.0-alpha.1
+      '@volar/source-map': 1.1.0-alpha.1
       typesafe-path: 0.2.2
       vscode-languageclient: 8.0.2
       vscode-nls: 5.2.0
