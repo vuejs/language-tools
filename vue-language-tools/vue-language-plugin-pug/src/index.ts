@@ -1,5 +1,5 @@
 import type { VueLanguagePlugin } from '@volar/vue-language-core';
-import * as pug from '@volar/pug-language-service';
+import * as pug from '@volar-plugins/pug/out/languageService';
 import { SourceMap } from '@volar/source-map';
 
 const plugin: VueLanguagePlugin = ({ modules }) => {

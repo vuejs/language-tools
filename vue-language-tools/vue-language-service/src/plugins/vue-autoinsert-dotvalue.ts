@@ -3,7 +3,6 @@ import * as vscode from 'vscode-languageserver-protocol';
 import * as shared from '@volar/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { hyphenate } from '@vue/shared';
-import { isTsDocument } from '@volar-plugins/typescript';
 import { LanguageServicePluginInstance } from '@volar/language-service';
 import { VueLanguageServicePlugin } from '../types';
 
@@ -81,6 +80,13 @@ const plugin: VueLanguageServicePlugin = (context) => {
 };
 
 export default () => plugin;
+
+function isTsDocument(document: TextDocument) {
+	return document.languageId === 'javascript' ||
+		document.languageId === 'typescript' ||
+		document.languageId === 'javascriptreact' ||
+		document.languageId === 'typescriptreact';
+}
 
 export function isCharacterTyping(document: TextDocument, options: Parameters<NonNullable<LanguageServicePluginInstance['doAutoInsert']>>[2]) {
 

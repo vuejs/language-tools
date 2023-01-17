@@ -16,9 +16,9 @@
 		"directory": "vue-language-tools/vue-language-server"
 	},
 	"dependencies": {
-		"@volar/language-core": "1.0.24",
-		"@volar/language-server": "1.0.24",
-		"@volar/shared": "1.0.24",
+		"@volar/language-core": "1.1.0-alpha.0",
+		"@volar/language-server": "1.1.0-alpha.0",
+		"@volar/shared": "1.1.0-alpha.0",
 		"@volar/vue-language-core": "1.0.24",
 		"@volar/vue-language-service": "1.0.24",
 		"vscode-languageserver-protocol": "^3.17.2",

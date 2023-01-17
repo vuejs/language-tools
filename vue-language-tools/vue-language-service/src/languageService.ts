@@ -1,10 +1,10 @@
-import createCssPlugin from '@volar-plugins/css';
-import createEmmetPlugin from '@volar-plugins/emmet';
-import createHtmlPlugin from '@volar-plugins/html';
-import createJsonPlugin from '@volar-plugins/json';
-import createPugPlugin from '@volar-plugins/pug';
-import createTsPlugin from '@volar-plugins/typescript';
-import createTsTqPlugin from '@volar-plugins/typescript-twoslash-queries';
+import * as createCssPlugin from '@volar-plugins/css';
+import * as createEmmetPlugin from '@volar-plugins/emmet';
+import * as createHtmlPlugin from '@volar-plugins/html';
+import * as createJsonPlugin from '@volar-plugins/json';
+import * as createPugPlugin from '@volar-plugins/pug';
+import * as createTsPlugin from '@volar-plugins/typescript';
+import * as createTsTqPlugin from '@volar-plugins/typescript-twoslash-queries';
 import * as embedded from '@volar/language-core';
 import * as embeddedLS from '@volar/language-service';
 import * as vue from '@volar/vue-language-core';
@@ -23,7 +23,7 @@ import type { Data } from '@volar-plugins/typescript/out/services/completions/ba
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { LanguageServicePlugin } from '@volar/language-service';
 
-import createPugFormatPlugin from '@volar-plugins/pug-beautify';
+import * as createPugFormatPlugin from '@volar-plugins/pug-beautify';
 import createAutoWrapParenthesesPlugin from './plugins/vue-autoinsert-parentheses';
 import createAutoAddSpacePlugin from './plugins/vue-autoinsert-space';
 import { VueCompilerOptions } from './types';
@@ -193,11 +193,11 @@ export function getLanguageServicePlugins(vueCompilerOptions: VueCompilerOptions
 		vueCompilerOptions,
 	});
 	const pugPlugin = createVueTemplateLanguagePlugin({
-		templateLanguagePlugin: createPugPlugin(),
+		templateLanguagePlugin: createPugPlugin() as any,
 		getScanner: (document, pugPlugin): html.Scanner | undefined => {
-			const pugDocument = pugPlugin.getPugDocument(document);
+			const pugDocument = (pugPlugin as ReturnType<ReturnType<typeof createPugPlugin>>).getPugDocument(document);
 			if (pugDocument) {
-				return pugPlugin.getPugLs().createScanner(pugDocument);
+				return (pugPlugin as ReturnType<ReturnType<typeof createPugPlugin>>).getPugLs().createScanner(pugDocument);
 			}
 		},
 		isSupportedDocument: (document) => document.languageId === 'jade',

@@ -4,7 +4,7 @@ import { LanguageServicePlugin } from '@volar/language-service';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import useHtmlPlugin from '@volar-plugins/html';
+import * as createHtmlPlugin from '@volar-plugins/html';
 import * as vue from '@volar/vue-language-core';
 import { VueCompilerOptions } from '../types';
 
@@ -120,7 +120,7 @@ export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin =
 		return {};
 
 	const _ts = context.typescript;
-	const htmlPlugin = useHtmlPlugin({
+	const htmlPlugin = createHtmlPlugin({
 		validLang: 'vue',
 		disableCustomData: true,
 	})(context, service);

@@ -1,4 +1,4 @@
-import useHtmlPlugin from '@volar-plugins/html';
+import * as createHtmlPlugin from '@volar-plugins/html';
 import { FileRangeCapabilities, SourceMapWithDocuments } from '@volar/language-service';
 import * as vue from '@volar/vue-language-core';
 import { hyphenate } from '@vue/shared';
@@ -33,7 +33,7 @@ const eventModifiers: Record<string, string> = {
 	passive: 'attaches a DOM event with { passive: true }.',
 };
 
-export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof useHtmlPlugin>>(options: {
+export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof createHtmlPlugin>>(options: {
 	getScanner(document: TextDocument, t: ReturnType<T>): html.Scanner | undefined,
 	templateLanguagePlugin: T,
 	isSupportedDocument: (document: TextDocument) => boolean,
