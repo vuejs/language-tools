@@ -13,24 +13,38 @@ export function createServerPlugin(connection: Connection) {
 
 	const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.VueLanguageServiceHost> = (initOptions) => {
 
-		const extraFileExtensions: ts.FileExtensionInfo[] = [{ extension: 'vue', isMixedContent: true, scriptKind: 7 }];
+		const vueFileExtensions: string[] = ['vue'];
 
 		if (initOptions.petiteVue?.processHtmlFile) {
-			extraFileExtensions.push({ extension: 'html', isMixedContent: true, scriptKind: 7 });
+			vueFileExtensions.push('html');
 		}
 
 		if (initOptions.vitePress?.processMdFile) {
-			extraFileExtensions.push({ extension: 'md', isMixedContent: true, scriptKind: 7 });
+			vueFileExtensions.push('md');
 		}
 
 		if (initOptions.additionalExtensions) {
 			for (const additionalExtension of initOptions.additionalExtensions) {
-				extraFileExtensions.push({ extension: additionalExtension, isMixedContent: true, scriptKind: 7 });
+				vueFileExtensions.push(additionalExtension);
 			}
 		}
 
 		return {
-			extraFileExtensions,
+			tsconfigExtraFileExtensions: vueFileExtensions.map<ts.FileExtensionInfo>(ext => ({ extension: ext, isMixedContent: true, scriptKind: 7 })),
+			diagnosticDocumentSelector: [
+				{ pattern: `**/*.{${['js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', ...vueFileExtensions].join(',')}}` },
+				{ language: 'javascript' },
+				{ language: 'typescript' },
+				{ language: 'javascriptreact' },
+				{ language: 'typescriptreact' },
+				{ language: 'vue' },
+			],
+			extensions: {
+				fileRenameOperationFilter:
+					['js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json', ...vueFileExtensions],
+				fileWatcher:
+					['js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json', ...vueFileExtensions],
+			},
 			resolveLanguageServiceHost(ts, sys, tsConfig, host) {
 				let vueOptions: Partial<vue.VueCompilerOptions> = {};
 				if (typeof tsConfig === 'string') {
@@ -142,7 +156,7 @@ export function createServerPlugin(connection: Connection) {
 		function getVueExts(baseExts: string[]) {
 			const set = new Set([
 				...baseExts,
-				...extraFileExtensions.map(ext => '.' + ext.extension),
+				...vueFileExtensions.map(ext => '.' + ext),
 			]);
 			return [...set];
 		}
