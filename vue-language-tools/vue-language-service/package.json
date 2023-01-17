@@ -15,10 +15,10 @@
 	"dependencies": {
 		"@johnsoncodehk/html2pug": "^1.0.0",
 		"@volar-plugins/css": "1.1.0",
-		"@volar-plugins/emmet": "1.1.0",
+		"@volar-plugins/emmet": "1.1.1",
 		"@volar-plugins/html": "1.1.1",
 		"@volar-plugins/json": "1.1.0",
-		"@volar-plugins/pug": "1.1.0",
+		"@volar-plugins/pug": "1.1.1",
 		"@volar-plugins/pug-beautify": "1.1.0",
 		"@volar-plugins/typescript": "1.1.0",
 		"@volar-plugins/typescript-twoslash-queries": "1.1.0",
