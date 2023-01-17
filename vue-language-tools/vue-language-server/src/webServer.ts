@@ -1,4 +1,7 @@
 import { createConnection, startLanguageServer } from '@volar/language-server/browser';
-import * as plugin from './languageServerPlugin';
+import { createServerPlugin } from './languageServerPlugin';
 
-startLanguageServer(createConnection(), plugin);
+const connection = createConnection();
+const plugin = createServerPlugin(connection);
+
+startLanguageServer(connection, plugin);

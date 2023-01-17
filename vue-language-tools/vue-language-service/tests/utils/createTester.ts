@@ -77,7 +77,12 @@ function createTester(root: string) {
 					return settings;
 				},
 				onDidChangeConfiguration() { },
-			}
+			},
+			documentContext: {
+				resolveReference: (ref, _base) => {
+					return ref;
+				},
+			},
 		});
 
 	return {
