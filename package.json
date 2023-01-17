@@ -26,5 +26,10 @@
 	"optionalDependencies": {
 		"@lerna-lite/cli": "latest",
 		"@vscode/test-web": "latest"
+	},
+	"pnpm": {
+		"overrides": {
+			"esbuild": "0.15.18"
+		}
 	}
 }

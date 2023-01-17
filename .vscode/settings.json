@@ -5,7 +5,7 @@
 	"json.format.keepLines": true,
 	"typescript.tsdk": "node_modules/typescript/lib",
 	"[typescript]": {
-		"editor.defaultFormatter": "Vue.volar"
+		"editor.defaultFormatter": "vscode.typescript-language-features"
 	},
 	"[javascript]": {
 		"editor.defaultFormatter": "vscode.typescript-language-features"
