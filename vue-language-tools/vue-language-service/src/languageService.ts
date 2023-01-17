@@ -233,7 +233,7 @@ export function createLanguageService(
 	settings?: Settings,
 ) {
 
-	const ts = host.getTypeScriptModule();
+	const ts = host.getTypeScriptModule?.();
 	const vueCompilerOptions = vue.resolveVueCompilerOptions(host.getVueCompilationSettings());
 	const vueLanguageModules = ts ? vue.createLanguageModules(
 		ts,

@@ -57,7 +57,7 @@ export function createServerPlugin(connection: Connection) {
 				};
 			},
 			getLanguageModules(host) {
-				const ts = host.getTypeScriptModule();
+				const ts = host.getTypeScriptModule?.();
 				if (ts) {
 					const vueLanguageModules = vue2.createLanguageModules(
 						ts,

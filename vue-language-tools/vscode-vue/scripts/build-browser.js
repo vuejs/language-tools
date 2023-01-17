@@ -60,6 +60,11 @@ require('esbuild').build({
 					const pathEsm = pathUmdMay.replace('/umd/', '/esm/')
 					return { path: pathEsm }
 				})
+				build.onResolve({ filter: /^@vscode\/l10n/ }, args => {
+					const pathUmdMay = require.resolve(args.path, { paths: [args.resolveDir] })
+					const pathEsm = pathUmdMay.replace('main.js', 'browser.esm.js')
+					return { path: pathEsm }
+				})
 				build.onResolve({ filter: /^\@vue\/.*$/ }, args => {
 					const pathUmdMay = require.resolve(args.path, { paths: [args.resolveDir] })
 					const pathEsm = pathUmdMay.replace('.cjs.', '.esm-browser.')

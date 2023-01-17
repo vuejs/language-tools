@@ -1,14 +1,18 @@
 import { VueLanguagePlugin } from '../types';
 import { parse } from '../utils/parseSfc';
 
-const plugin: VueLanguagePlugin = (ctx) => {
+const plugin: VueLanguagePlugin = (_ctx) => {
 
 	return {
 
 		version: 1,
 
 		parseSFC(fileName, content) {
-			if (!fileName.endsWith('.html') && !fileName.endsWith('.md') &&  ctx.vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))) {
+			if (
+				!fileName.endsWith('.html')
+				&& !fileName.endsWith('.md')
+				// && ctx.vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))
+			) {
 				return parse(content);
 			}
 		},
