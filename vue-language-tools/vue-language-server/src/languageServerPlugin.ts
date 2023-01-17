@@ -32,7 +32,6 @@ export function createServerPlugin(connection: Connection) {
 		return {
 			tsconfigExtraFileExtensions: vueFileExtensions.map<ts.FileExtensionInfo>(ext => ({ extension: ext, isMixedContent: true, scriptKind: 7 })),
 			diagnosticDocumentSelector: [
-				{ pattern: `**/*.{${['js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', ...vueFileExtensions].join(',')}}` },
 				{ language: 'javascript' },
 				{ language: 'typescript' },
 				{ language: 'javascriptreact' },
