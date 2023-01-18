@@ -31,15 +31,15 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 			externalFiles.set(info.project, vueFileNames);
 
 			// fix: https://github.com/johnsoncodehk/volar/issues/205
-			// @ts-expect-error
-			info.project.__vue_getScriptKind = info.project.getScriptKind;
-			info.project.getScriptKind = fileName => {
-				switch (fileName.substring(fileName.lastIndexOf('.'))) {
-					case '.vue': return ts.ScriptKind.Deferred;
-				}
-				// @ts-expect-error
-				return info.project.__vue_getScriptKind(fileName);
-			};
+			if (!(info.project as any).__vue_getScriptKind) {
+				(info.project as any).__vue_getScriptKind = info.project.getScriptKind;
+				info.project.getScriptKind = fileName => {
+					if (fileName.endsWith('.vue')) {
+						return ts.ScriptKind.Deferred;
+					}
+					return (info.project as any).__vue_getScriptKind(fileName);
+				};
+			}
 
 			const vueTsLsHost: vue.VueLanguageServiceHost = {
 				getNewLine: () => info.project.getNewLine(),
