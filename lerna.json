@@ -1,5 +1,5 @@
 {
-	"$schema": "https://raw.githubusercontent.com/lerna/lerna/main/core/lerna/schemas/lerna-schema.json",
+	"$schema": "https://raw.githubusercontent.com/lerna-lite/lerna-lite/main/packages/cli/schemas/lerna-schema.json",
 	"npmClient": "pnpm",
 	"packages": [
 		"vue-language-tools/*"
