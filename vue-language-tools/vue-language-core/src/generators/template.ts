@@ -25,7 +25,8 @@ const formatBrackets = {
 	empty: ['', ''] as [string, string],
 	round: ['(', ')'] as [string, string],
 	// fix https://github.com/johnsoncodehk/volar/issues/1210
-	curly: ['({', '})'] as [string, string],
+	// fix https://github.com/johnsoncodehk/volar/issues/2305
+	curly: ['0 +', '+ 0;'] as [string, string],
 	square: ['[', ']'] as [string, string],
 };
 const validTsVar = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
