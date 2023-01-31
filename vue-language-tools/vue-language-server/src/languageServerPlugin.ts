@@ -8,12 +8,14 @@ import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTa
 import { VueServerInitializationOptions } from './types';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as meta from 'vue-component-meta';
+import type { VueCompilerOptions } from '@volar/vue-language-core';
 
 export function createServerPlugin(connection: Connection) {
 
-	const plugin: LanguageServerPlugin<VueServerInitializationOptions, vue.VueLanguageServiceHost> = (initOptions) => {
+	const plugin: LanguageServerPlugin<VueServerInitializationOptions> = (initOptions) => {
 
 		const vueFileExtensions: string[] = ['vue'];
+		const hostToVueOptions = new WeakMap<embedded.LanguageServiceHost, VueCompilerOptions>();
 
 		if (initOptions.petiteVue?.processHtmlFile) {
 			vueFileExtensions.push('html');
@@ -44,30 +46,29 @@ export function createServerPlugin(connection: Connection) {
 				fileWatcher:
 					['js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json', ...vueFileExtensions],
 			},
-			resolveLanguageServiceHost(ts, sys, tsConfig, host) {
+			resolveConfig(config, ctx) {
+
+				const ts = ctx.project.workspace.workspaces.ts;
+				const tsConfig = ctx.project.tsConfig;
+				const sys = ctx.sys;
+				const host = ctx.host;
+				const rootUri = ctx.project.rootUri;
+
 				let vueOptions: Partial<vue.VueCompilerOptions> = {};
-				if (typeof tsConfig === 'string') {
+				if (ts && typeof tsConfig === 'string') {
 					vueOptions = vue2.createParsedCommandLine(ts, sys, tsConfig, []).vueOptions;
 				}
 				vueOptions.extensions = getVueExts(vueOptions.extensions ?? ['.vue']);
-				return {
-					...host,
-					getVueCompilationSettings: () => vueOptions,
-				};
-			},
-			getLanguageModules(host) {
-				const ts = host.getTypeScriptModule?.();
+				const resolvedVueOptions = vue2.resolveVueCompilerOptions(vueOptions);
+				hostToVueOptions.set(host, resolvedVueOptions);
+
 				if (ts) {
-					const vueLanguageModules = vue2.createLanguageModules(
+					config.languages = Object.assign({}, vue2.createLanguageModules(
 						ts,
 						host.getCompilationSettings(),
-						vue2.resolveVueCompilerOptions(host.getVueCompilationSettings()),
-					);
-					return vueLanguageModules;
+						resolvedVueOptions,
+					), config.languages);
 				}
-				return [];
-			},
-			getLanguageServicePlugins(host, context) {
 				const settings: vue.Settings = {};
 				if (initOptions.json) {
 					settings.json = { schemas: [] };
@@ -75,11 +76,11 @@ export function createServerPlugin(connection: Connection) {
 						const url = initOptions.json.customBlockSchemaUrls[blockType];
 						settings.json.schemas?.push({
 							fileMatch: [`*.customBlock_${blockType}_*.json*`],
-							uri: new URL(url, context.env.rootUri.toString() + '/').toString(),
+							uri: new URL(url, rootUri.toString() + '/').toString(),
 						});
 					}
 				}
-				return vue.getLanguageServicePlugins(vue2.resolveVueCompilerOptions(host.getVueCompilationSettings()), settings);
+				config.plugins = vue.getLanguageServicePlugins(config, resolvedVueOptions, settings);
 			},
 			onInitialize(initResult) {
 				if (initResult.capabilities.completionProvider?.triggerCharacters) {
@@ -104,8 +105,7 @@ export function createServerPlugin(connection: Connection) {
 
 				connection.onRequest(GetVueCompilerOptionsRequest.type, async params => {
 					const languageService = await getService(params.uri);
-					const host = languageService.context.host as vue.VueLanguageServiceHost;
-					return host.getVueCompilationSettings?.();
+					return hostToVueOptions.get(languageService.context.host);
 				});
 
 				connection.onRequest(DetectNameCasingRequest.type, async params => {

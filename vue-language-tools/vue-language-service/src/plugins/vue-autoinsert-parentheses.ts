@@ -1,11 +1,11 @@
-import * as vscode from 'vscode-languageserver-protocol';
-import { isCharacterTyping } from './vue-autoinsert-dotvalue';
 import * as embedded from '@volar/language-core';
 import { VirtualFile } from '@volar/language-core';
+import { LanguageServicePlugin } from '@volar/language-service';
 import { VueFile } from '@volar/vue-language-core';
-import { VueLanguageServicePlugin } from '../types';
+import * as vscode from 'vscode-languageserver-protocol';
+import { isCharacterTyping } from './vue-autoinsert-dotvalue';
 
-const plugin: VueLanguageServicePlugin = (context) => {
+const plugin: LanguageServicePlugin = (context) => {
 
 	if (!context.typescript) {
 		return {};

@@ -1,12 +1,11 @@
-import type { TextDocument } from 'vscode-languageserver-textdocument';
-import * as vscode from 'vscode-languageserver-protocol';
+import { LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
 import * as shared from '@volar/shared';
-import type * as ts from 'typescript/lib/tsserverlibrary';
 import { hyphenate } from '@vue/shared';
-import { LanguageServicePluginInstance } from '@volar/language-service';
-import { VueLanguageServicePlugin } from '../types';
+import type * as ts from 'typescript/lib/tsserverlibrary';
+import * as vscode from 'vscode-languageserver-protocol';
+import type { TextDocument } from 'vscode-languageserver-textdocument';
 
-const plugin: VueLanguageServicePlugin = (context) => {
+const plugin: LanguageServicePlugin = (context) => {
 
 	if (!context.typescript)
 		return {};

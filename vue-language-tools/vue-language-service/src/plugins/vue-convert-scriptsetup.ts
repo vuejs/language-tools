@@ -1,11 +1,11 @@
-import type { VueCompilerOptions, TextRange, VueLanguageServicePlugin } from '../types';
-import { ExecuteCommandContext } from '@volar/language-service';
+import { ExecuteCommandContext, LanguageServicePlugin } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-core';
 import { scriptSetupConvertRanges } from '@volar/vue-language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import type { TextRange, VueCompilerOptions } from '../types';
 
 enum Commands {
 	USE_SETUP_SUGAR = 'scriptSetupConversions.use',
@@ -19,7 +19,7 @@ export interface ReferencesCodeLensData {
 
 type CommandArgs = [string];
 
-export default (vueCompilerOptions: VueCompilerOptions): VueLanguageServicePlugin => {
+export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin => {
 
 	return (context, service) => {
 

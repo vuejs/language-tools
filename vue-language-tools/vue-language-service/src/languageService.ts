@@ -5,7 +5,6 @@ import * as createJsonPlugin from '@volar-plugins/json';
 import * as createPugPlugin from '@volar-plugins/pug';
 import * as createTsPlugin from '@volar-plugins/typescript';
 import * as createTsTqPlugin from '@volar-plugins/typescript-twoslash-queries';
-import * as embedded from '@volar/language-core';
 import * as embeddedLS from '@volar/language-service';
 import * as vue from '@volar/vue-language-core';
 import { VueLanguageServiceHost } from '@volar/vue-language-core';
@@ -21,7 +20,7 @@ import createTwoslashQueries from './plugins/vue-twoslash-queries';
 import createVueTemplateLanguagePlugin from './plugins/vue-template';
 import type { Data } from '@volar-plugins/typescript/out/services/completions/basic';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { LanguageServicePlugin } from '@volar/language-service';
+import { LanguageServiceConfig } from '@volar/language-service';
 
 import * as createPugFormatPlugin from '@volar-plugins/pug-beautify';
 import createAutoWrapParenthesesPlugin from './plugins/vue-autoinsert-parentheses';
@@ -32,16 +31,20 @@ export interface Settings {
 	json?: Parameters<typeof createJsonPlugin>[0];
 }
 
-export function getLanguageServicePlugins(vueCompilerOptions: VueCompilerOptions, settings?: Settings) {
+export function getLanguageServicePlugins(
+	config: LanguageServiceConfig, // volar.config.js
+	vueCompilerOptions: VueCompilerOptions,
+	settings?: Settings,
+) {
 
-	const tsPlugin = createTsPlugin();
-	const tsPluginPatchAutoImport: embeddedLS.LanguageServicePlugin = (_context, service) => {
+	const baseTsPlugin = config.plugins?.typescript ?? createTsPlugin();
+	const tsPlugin: embeddedLS.LanguageServicePlugin = (_context, service) => {
 
 		if (!_context.typescript)
 			return {};
 
 		const ts = _context.typescript.module;
-		const base = tsPlugin(_context, service);
+		const base = baseTsPlugin(_context, service);
 		const autoImportPositions = new WeakSet<vscode.Position>();
 
 		return {
@@ -204,30 +207,33 @@ export function getLanguageServicePlugins(vueCompilerOptions: VueCompilerOptions
 		vueCompilerOptions,
 	});
 
-	return [
-		createVuePlugin(vueCompilerOptions),
-		createCssPlugin(),
-		htmlPlugin,
-		pugPlugin,
-		createJsonPlugin(settings?.json),
-		createReferencesCodeLensPlugin(),
-		createHtmlPugConversionsPlugin(),
-		createScriptSetupConversionsPlugin(vueCompilerOptions),
-		createRefSugarConversionsPlugin(),
-		tsPluginPatchAutoImport,
-		createAutoDotValuePlugin(),
-		createTsTqPlugin(),
-		createTwoslashQueries(),
-		createPugFormatPlugin(),
-		createAutoWrapParenthesesPlugin(),
-		createAutoAddSpacePlugin(),
+	return {
+		vue: createVuePlugin(vueCompilerOptions),
+		css: createCssPlugin(),
+		html: htmlPlugin,
+		pug: pugPlugin,
+		'pug-beautify': createPugFormatPlugin(),
+		json: createJsonPlugin(settings?.json),
+		'typescript/twoslash-queries': createTsTqPlugin(),
+		'vue/referencesCodeLens': createReferencesCodeLensPlugin(),
+		'vue/htmlPugConvert': createHtmlPugConversionsPlugin(),
+		'vue/scriptSetupConvert': createScriptSetupConversionsPlugin(vueCompilerOptions),
+		'vue/refSugarConvert': createRefSugarConversionsPlugin(),
+		'vue/autoInsertDotValue': createAutoDotValuePlugin(),
+		'vue/twoslash-queries': createTwoslashQueries(),
+		'vue/autoInsertParentheses': createAutoWrapParenthesesPlugin(),
+		'vue/autoInsertSpaces': createAutoAddSpacePlugin(),
 		// put emmet plugin at last to fix https://github.com/johnsoncodehk/volar/issues/1088
-		createEmmetPlugin(),
-	] as LanguageServicePlugin[];
+		emmet: createEmmetPlugin(),
+
+		...config.plugins,
+		typescript: tsPlugin, // override config.plugins.typescript
+	};
 }
 
 export function createLanguageService(
 	host: VueLanguageServiceHost,
+	config: LanguageServiceConfig, // volar.config.js
 	env: embeddedLS.LanguageServiceRuntimeContext['env'],
 	documentRegistry?: ts.DocumentRegistry,
 	settings?: Settings,
@@ -240,16 +246,11 @@ export function createLanguageService(
 		host.getCompilationSettings(),
 		vueCompilerOptions,
 	) : [];
-	const core = embedded.createLanguageContext(host, vueLanguageModules);
-	const languageServiceContext = embeddedLS.createLanguageServiceContext({
-		env,
-		host,
-		context: core,
-		documentRegistry,
-		getPlugins: () => getLanguageServicePlugins(vueCompilerOptions, settings),
-		getLanguageService: () => languageService,
-	});
-	const languageService = embeddedLS.createLanguageService(languageServiceContext);
+	const languageService = embeddedLS.createLanguageService(host, {
+		...config,
+		languages: Object.assign({}, vueLanguageModules, config.languages),
+		plugins: getLanguageServicePlugins(config.plugins ?? {}, vueCompilerOptions, settings),
+	}, env, documentRegistry);
 
 	return languageService;
 }

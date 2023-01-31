@@ -1,6 +1,6 @@
-import * as vscode from 'vscode-languageserver-protocol';
+import { LanguageServicePlugin } from '@volar/language-service';
 import { VueFile } from '@volar/vue-language-core';
-import { VueLanguageServicePlugin } from '../types';
+import * as vscode from 'vscode-languageserver-protocol';
 
 const showReferencesCommand = 'volar.show-references';
 
@@ -13,7 +13,7 @@ export interface ReferencesCodeLensData {
 	position: vscode.Position,
 }
 
-export default function (): VueLanguageServicePlugin {
+export default function (): LanguageServicePlugin {
 
 	return (context, service) => {
 

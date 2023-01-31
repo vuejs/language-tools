@@ -1,7 +1,7 @@
-import * as vscode from 'vscode-languageserver-protocol';
 import { htmlToPug, pugToHtml } from '@johnsoncodehk/html2pug';
+import { LanguageServicePlugin } from '@volar/language-service';
 import * as vue from '@volar/vue-language-core';
-import { VueLanguageServicePlugin } from '../types';
+import * as vscode from 'vscode-languageserver-protocol';
 
 const toggleConvertCommand = 'htmlPugConversions.toggle';
 
@@ -12,7 +12,7 @@ export interface ReferencesCodeLensData {
 
 type CommandArgs = [string];
 
-const plugin: VueLanguageServicePlugin = (context) => {
+const plugin: LanguageServicePlugin = (context) => {
 
 	return {
 

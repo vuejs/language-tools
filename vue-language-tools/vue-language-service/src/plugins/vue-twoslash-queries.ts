@@ -1,9 +1,8 @@
-import { FileKind, forEachEmbeddedFile } from '@volar/language-service';
+import { FileKind, forEachEmbeddedFile, LanguageServicePlugin } from '@volar/language-service';
 import * as vue from '@volar/vue-language-core';
 import * as vscode from 'vscode-languageserver-protocol';
-import { VueLanguageServicePlugin } from '../types';
 
-const plugin: VueLanguageServicePlugin = (context) => {
+const plugin: LanguageServicePlugin = (context) => {
 
 	if (!context.typescript)
 		return {};

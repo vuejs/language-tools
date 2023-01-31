@@ -1,6 +1,6 @@
-import { VueLanguageServicePlugin } from '../types';
+import { LanguageServicePlugin } from '@volar/language-service';
 
-const plugin: VueLanguageServicePlugin = (context) => {
+const plugin: LanguageServicePlugin = (context) => {
 
 	return {
 

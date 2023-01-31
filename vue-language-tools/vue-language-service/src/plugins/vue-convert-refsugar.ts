@@ -1,13 +1,12 @@
-import { ExecuteCommandContext, mergeWorkspaceEdits, LanguageServiceRuntimeContext } from '@volar/language-service';
+import { ExecuteCommandContext, LanguageServicePlugin, LanguageServiceRuntimeContext, mergeWorkspaceEdits } from '@volar/language-service';
 import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as refSugarRanges from '../utils/refSugarRanges';
 import { isBlacklistNode } from './vue-autoinsert-dotvalue';
 import { getAddMissingImportsEdits } from './vue-convert-scriptsetup';
-import { TextDocument } from 'vscode-languageserver-textdocument';
-import { VueLanguageServicePlugin } from '../types';
 
 enum Commands {
 	USE_REF_SUGAR = 'refSugarConversions.use',
@@ -21,7 +20,7 @@ export interface ReferencesCodeLensData {
 
 type CommandArgs = [string];
 
-export default function (): VueLanguageServicePlugin {
+export default function (): LanguageServicePlugin {
 
 	return (context, service) => {
 

@@ -1,5 +1,5 @@
 import * as createHtmlPlugin from '@volar-plugins/html';
-import { FileRangeCapabilities, SourceMapWithDocuments } from '@volar/language-service';
+import { FileRangeCapabilities, LanguageServicePlugin, SourceMapWithDocuments } from '@volar/language-service';
 import * as vue from '@volar/vue-language-core';
 import { hyphenate } from '@vue/shared';
 import * as html from 'vscode-html-languageservice';
@@ -7,7 +7,7 @@ import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { checkComponentNames, checkEventsOfTag, checkPropsOfTag, getElementAttrs } from '../helpers';
 import * as casing from '../ideFeatures/nameCasing';
-import { AttrNameCasing, VueCompilerOptions, TagNameCasing, VueLanguageServicePlugin } from '../types';
+import { AttrNameCasing, VueCompilerOptions, TagNameCasing } from '../types';
 
 const globalDirectives = html.newHTMLDataProvider('vue-global-directive', {
 	version: 1.1,
@@ -40,14 +40,13 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 	vueCompilerOptions: VueCompilerOptions,
 }): T {
 
-	const plugin: VueLanguageServicePlugin = (_context, service) => {
+	const plugin: LanguageServicePlugin = (_context, service) => {
 
 		if (!_context.typescript)
 			return {};
 
 		const _ts = _context.typescript;
-		const vueCompilerOptions = vue.resolveVueCompilerOptions(_context.host.getVueCompilationSettings());
-		const nativeTags = new Set(vueCompilerOptions.nativeTags);
+		const nativeTags = new Set(options.vueCompilerOptions.nativeTags);
 		const templatePlugin = options.templateLanguagePlugin(_context, service);
 
 		return {
@@ -235,7 +234,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					provideTags: () => {
 
 						const components = checkComponentNames(_ts.module, _ts.languageService, vueSourceFile);
-						const scriptSetupRanges = vueSourceFile.sfc.scriptSetupAst ? vue.parseScriptSetupRanges(_ts.module, vueSourceFile.sfc.scriptSetupAst, vueCompilerOptions) : undefined;
+						const scriptSetupRanges = vueSourceFile.sfc.scriptSetupAst ? vue.parseScriptSetupRanges(_ts.module, vueSourceFile.sfc.scriptSetupAst, options.vueCompilerOptions) : undefined;
 						const names = new Set<string>();
 						const tags: html.ITagData[] = [];
 

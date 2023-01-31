@@ -59,6 +59,7 @@ function createTester(root: string) {
 	};
 	const languageService = createLanguageService(
 		host,
+		{},
 		{
 			rootUri,
 			configurationHost: {
