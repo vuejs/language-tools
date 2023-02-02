@@ -18,14 +18,6 @@ function __createAppProxy(...args) {
         ...highlightApis,
     };
 
-    var href = '';
-    setInterval(function () {
-        if (href !== location.href) {
-            href = location.href;
-            parent.postMessage({ command: 'urlChanged', data: href }, '*');
-        }
-    }, 200);
-
     return app;
 
     function installSelectionHighlight() {

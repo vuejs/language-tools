@@ -9,15 +9,6 @@ export default app => {
 	const finderApis = installGoToCode();
 	const highlightApis = installSelectionHighlight();
 
-	let href = '';
-
-	setInterval(function () {
-		if (href !== location.href) {
-			href = location.href;
-			parent.postMessage({ command: 'urlChanged', data: href }, '*');
-		}
-	}, 200);
-
 	return {
 		provide: {
 			volar: {
