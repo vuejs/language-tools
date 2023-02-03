@@ -80,7 +80,14 @@ export function getLanguageServicePlugins(
 					return result;
 				},
 				async resolve(item) {
+
 					item = await base.complete!.resolve!(item);
+
+					const itemData = item.data as { uri?: string; } | undefined;
+
+					if (itemData?.uri && item.additionalTextEdits) {
+						patchAdditionalTextEdits(itemData.uri, item.additionalTextEdits);
+					}
 
 					if (
 						item.textEdit?.newText && /\w*Vue$/.test(item.textEdit.newText)
@@ -182,6 +189,28 @@ export function getLanguageServicePlugins(
 					const result = await base.codeAction?.on?.(document, range, context);
 					return result?.filter(codeAction => codeAction.title.indexOf('__VLS_') === -1);
 				},
+				async resolve(item) {
+
+					const result = await base.codeAction?.resolve?.(item);
+
+					if (result?.edit?.changes) {
+						for (const uri in result.edit.changes) {
+							const edits = result.edit.changes[uri];
+							if (edits) {
+								patchAdditionalTextEdits(uri, edits);
+							}
+						}
+					}
+					if (result?.edit?.documentChanges) {
+						for (const documentChange of result.edit.documentChanges) {
+							if (vscode.TextDocumentEdit.is(documentChange)) {
+								patchAdditionalTextEdits(documentChange.textDocument.uri, documentChange.edits);
+							}
+						}
+					}
+
+					return result;
+				},
 			}
 		};
 	};
@@ -229,6 +258,27 @@ export function getLanguageServicePlugins(
 		...config.plugins,
 		typescript: tsPlugin, // override config.plugins.typescript
 	};
+}
+
+// fix https://github.com/johnsoncodehk/volar/issues/916
+function patchAdditionalTextEdits(uri: string, edits: vscode.TextEdit[]) {
+	if (
+		uri.endsWith('.vue.js')
+		|| uri.endsWith('.vue.ts')
+		|| uri.endsWith('.vue.jsx')
+		|| uri.endsWith('.vue.tsx')
+	) {
+		for (const edit of edits) {
+			if (
+				edit.range.start.line === 0
+				&& edit.range.start.character === 0
+				&& edit.range.end.line === 0
+				&& edit.range.end.character === 0
+			) {
+				edit.newText = '\n' + edit.newText;
+			}
+		}
+	}
 }
 
 export function createLanguageService(
