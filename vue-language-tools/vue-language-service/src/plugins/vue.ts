@@ -135,6 +135,18 @@ export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin =
 
 		...htmlPlugin,
 
+		rules: {
+			prepare(context) {
+				return worker(context.document, (document, vueSourceFile) => {
+					context.vue = {
+						version: 'alpha',
+						sfc: vueSourceFile.sfc,
+						blocksClearedDocument: document,
+					};
+				});
+			},
+		},
+
 		validation: {
 			onSyntactic(document) {
 				return worker(document, (document, vueSourceFile) => {

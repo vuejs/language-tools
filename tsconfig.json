@@ -47,6 +47,7 @@
 		"noEmit": true,
 	},
 	"include": [
+		"*/*/rules.d.ts",
 		"*/*/src",
 		"*/*/tests",
 	],

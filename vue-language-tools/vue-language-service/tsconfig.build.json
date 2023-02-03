@@ -6,7 +6,8 @@
 		"rootDir": "src",
 	},
 	"include": [
-		"src"
+		"src",
+		"rules.d.ts",
 	],
 	"exclude": [
 		"node_modules",
