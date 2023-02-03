@@ -205,6 +205,7 @@ export function generate(
 			}
 			codeGen.push('\n');
 
+			codeGen.push('// @ts-ignore\n'); // #2304
 			codeGen.push(`[`);
 			for (const tagRange of tagRanges) {
 				codeGen.push([
@@ -1756,6 +1757,7 @@ export function generate(
 		if (!tempVars.length)
 			return;
 
+		codeGen.push('// @ts-ignore\n'); // #2304
 		codeGen.push('[');
 		for (const _vars of tempVars) {
 			for (const v of _vars) {
