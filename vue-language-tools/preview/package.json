@@ -18,9 +18,9 @@
 		"volar-preview-nuxi": "./bin/nuxi.js"
 	},
 	"devDependencies": {
-		"@types/ws": "^8.5.3"
+		"@types/ws": "^8.5.4"
 	},
 	"dependencies": {
-		"ws": "^8.11.0"
+		"ws": "^8.12.0"
 	}
 }

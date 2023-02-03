@@ -137,13 +137,14 @@ export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin =
 
 		rules: {
 			prepare(context) {
-				return worker(context.document, (document, vueSourceFile) => {
+				worker(context.document, (document, vueSourceFile) => {
 					context.vue = {
 						version: 'alpha',
 						sfc: vueSourceFile.sfc,
 						blocksClearedDocument: document,
 					};
 				});
+				return context;
 			},
 		},
 

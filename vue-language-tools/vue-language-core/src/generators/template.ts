@@ -5,7 +5,7 @@ import { camelize, capitalize, hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { VueCompilerOptions } from '../types';
 import { colletVars, walkInterpolationFragment } from '../utils/transform';
-import * as minimatch from 'minimatch';
+import minimatch from 'minimatch';
 
 const capabilitiesSet = {
 	all: FileRangeCapabilities.full,

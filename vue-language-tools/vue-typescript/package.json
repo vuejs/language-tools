@@ -13,7 +13,7 @@
 		"directory": "vue-language-tools/vue-typescript"
 	},
 	"dependencies": {
-		"@volar/typescript": "1.2.0-alpha.7",
+		"@volar/typescript": "1.2.0-alpha.8",
 		"@volar/vue-language-core": "1.0.24"
 	}
 }
