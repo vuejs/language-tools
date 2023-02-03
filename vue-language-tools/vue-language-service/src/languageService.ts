@@ -20,7 +20,7 @@ import createTwoslashQueries from './plugins/vue-twoslash-queries';
 import createVueTemplateLanguagePlugin from './plugins/vue-template';
 import type { Data } from '@volar-plugins/typescript/out/services/completions/basic';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { LanguageServiceConfig } from '@volar/language-service';
+import { Config } from '@volar/language-service';
 
 import * as createPugFormatPlugin from '@volar-plugins/pug-beautify';
 import createAutoWrapParenthesesPlugin from './plugins/vue-autoinsert-parentheses';
@@ -32,7 +32,7 @@ export interface Settings {
 }
 
 export function getLanguageServicePlugins(
-	config: LanguageServiceConfig, // volar.config.js
+	config: Config, // volar.config.js
 	vueCompilerOptions: VueCompilerOptions,
 	settings?: Settings,
 ) {
@@ -44,7 +44,7 @@ export function getLanguageServicePlugins(
 			return {};
 
 		const ts = _context.typescript.module;
-		const base = baseTsPlugin(_context, service);
+		const base = typeof baseTsPlugin === 'function' ? baseTsPlugin(_context, service) : baseTsPlugin;
 		const autoImportPositions = new WeakSet<vscode.Position>();
 
 		return {
@@ -233,7 +233,7 @@ export function getLanguageServicePlugins(
 
 export function createLanguageService(
 	host: VueLanguageServiceHost,
-	config: LanguageServiceConfig, // volar.config.js
+	config: Config, // volar.config.js
 	env: embeddedLS.LanguageServiceRuntimeContext['env'],
 	documentRegistry?: ts.DocumentRegistry,
 	settings?: Settings,
