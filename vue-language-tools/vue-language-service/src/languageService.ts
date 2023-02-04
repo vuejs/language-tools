@@ -55,13 +55,13 @@ function getLanguageServicePlugins(
 ) {
 
 	const baseTsPlugin = config.plugins?.typescript ?? createTsPlugin();
-	const tsPlugin: embeddedLS.LanguageServicePlugin = (_context, service) => {
+	const tsPlugin: embeddedLS.LanguageServicePlugin = (_context) => {
 
 		if (!_context.typescript)
 			return {};
 
 		const ts = _context.typescript.module;
-		const base = typeof baseTsPlugin === 'function' ? baseTsPlugin(_context, service) : baseTsPlugin;
+		const base = typeof baseTsPlugin === 'function' ? baseTsPlugin(_context) : baseTsPlugin;
 		const autoImportPositions = new WeakSet<vscode.Position>();
 
 		return {

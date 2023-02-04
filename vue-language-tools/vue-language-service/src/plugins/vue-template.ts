@@ -40,14 +40,14 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 	vueCompilerOptions: VueCompilerOptions,
 }): T {
 
-	const plugin: LanguageServicePlugin = (_context, service) => {
+	const plugin: LanguageServicePlugin = (_context) => {
 
 		if (!_context.typescript)
 			return {};
 
 		const _ts = _context.typescript;
 		const nativeTags = new Set(options.vueCompilerOptions.nativeTags);
-		const templatePlugin = options.templateLanguagePlugin(_context, service);
+		const templatePlugin = options.templateLanguagePlugin(_context);
 
 		return {
 

@@ -2,34 +2,19 @@ import { LanguageServicePlugin } from '@volar/language-service';
 import { VueFile } from '@volar/vue-language-core';
 import * as vscode from 'vscode-languageserver-protocol';
 
-const showReferencesCommand = 'volar.show-references';
-
-export const commands = [showReferencesCommand];
-
-type CommandArgs = [string, vscode.Position, vscode.Location[]];
-
-export interface ReferencesCodeLensData {
-	uri: string,
-	position: vscode.Position,
-}
-
 export default function (): LanguageServicePlugin {
 
-	return (context, service) => {
+	return (context) => {
 
 		return {
 
-			codeLens: {
+			referencesCodeLens: {
 
 				on(document) {
+
 					return worker(document.uri, async () => {
 
-						const isEnabled = await context.env.configurationHost?.getConfiguration<boolean>('volar.codeLens.references') ?? true;
-
-						if (!isEnabled)
-							return;
-
-						const result: vscode.CodeLens[] = [];
+						const result: vscode.Location[] = [];
 
 						for (const [_, map] of context.documents.getMapsBySourceFileUri(document.uri)?.maps ?? []) {
 							for (const mapping of map.map.mappings) {
@@ -38,14 +23,11 @@ export default function (): LanguageServicePlugin {
 									continue;
 
 								result.push({
+									uri: document.uri,
 									range: {
 										start: document.positionAt(mapping.sourceRange[0]),
 										end: document.positionAt(mapping.sourceRange[1]),
 									},
-									data: {
-										uri: document.uri,
-										position: document.positionAt(mapping.sourceRange[0]),
-									} satisfies ReferencesCodeLensData,
 								});
 							}
 						}
@@ -54,14 +36,12 @@ export default function (): LanguageServicePlugin {
 					});
 				},
 
-				async resolve(codeLens) {
+				async resolve(document, codeLens, references) {
 
-					const data: ReferencesCodeLensData = codeLens.data;
-
-					await worker(data.uri, async (vueFile) => {
+					await worker(document.uri, async (vueFile) => {
 
 						const document = context.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
-						const offset = document.offsetAt(data.position);
+						const offset = document.offsetAt(codeLens.range.start);
 						const blocks = [
 							vueFile.sfc.script,
 							vueFile.sfc.scriptSetup,
@@ -69,36 +49,15 @@ export default function (): LanguageServicePlugin {
 							...vueFile.sfc.styles,
 							...vueFile.sfc.customBlocks,
 						];
-						const allRefs = await service.findReferences?.(data.uri, data.position) ?? [];
 						const sourceBlock = blocks.find(block => block && offset >= block.startTagEnd && offset <= block.endTagStart);
-						const diffDocRefs = allRefs.filter(reference =>
-							reference.uri !== data.uri // different file
+						references = references.filter(reference =>
+							reference.uri !== document.uri // different file
 							|| sourceBlock !== blocks.find(block => block && document.offsetAt(reference.range.start) >= block.startTagEnd && document.offsetAt(reference.range.end) <= block.endTagStart) // different block
 						);
-
-						codeLens.command = {
-							title: diffDocRefs.length === 1 ? '1 reference' : `${diffDocRefs.length} references`,
-							command: showReferencesCommand,
-							arguments: <CommandArgs>[data.uri, codeLens.range.start, diffDocRefs],
-						};
 					});
 
-					return codeLens;
+					return references;
 				},
-			},
-
-			doExecuteCommand(command, args, context) {
-
-				if (command === showReferencesCommand) {
-
-					const [uri, position, references] = args as CommandArgs;
-
-					context.showReferences({
-						textDocument: { uri },
-						position,
-						references,
-					});
-				}
 			},
 		};
 

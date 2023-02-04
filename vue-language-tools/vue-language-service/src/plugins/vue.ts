@@ -114,7 +114,7 @@ const dataProvider: html.IHTMLDataProvider = {
 	},
 };
 
-export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin => (context, service) => {
+export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin => (context) => {
 
 	if (!context.typescript)
 		return {};
@@ -123,7 +123,7 @@ export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin =
 	const htmlPlugin = createHtmlPlugin({
 		validLang: 'vue',
 		disableCustomData: true,
-	})(context, service);
+	})(context);
 	htmlPlugin.getHtmlLs().setDataProviders(false, [dataProvider]);
 	const emptyBlocksDocument = new WeakMap<TextDocument, [number, TextDocument]>();
 
