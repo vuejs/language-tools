@@ -13,7 +13,6 @@ import * as vscode from 'vscode-languageserver-protocol';
 import createVuePlugin from './plugins/vue';
 import createAutoDotValuePlugin from './plugins/vue-autoinsert-dotvalue';
 import createReferencesCodeLensPlugin from './plugins/vue-codelens-references';
-import createRefSugarConversionsPlugin from './plugins/vue-convert-refsugar';
 import createScriptSetupConversionsPlugin from './plugins/vue-convert-scriptsetup';
 import createTwoslashQueries from './plugins/vue-twoslash-queries';
 import createVueTemplateLanguagePlugin from './plugins/vue-template';
@@ -265,7 +264,6 @@ function getLanguageServicePlugins(
 		'typescript/twoslash-queries': createTsTqPlugin(),
 		'vue/referencesCodeLens': createReferencesCodeLensPlugin(),
 		'vue/scriptSetupConvert': createScriptSetupConversionsPlugin(vueCompilerOptions),
-		'vue/refSugarConvert': createRefSugarConversionsPlugin(),
 		'vue/autoInsertDotValue': createAutoDotValuePlugin(),
 		'vue/twoslash-queries': createTwoslashQueries(),
 		'vue/autoInsertParentheses': createAutoWrapParenthesesPlugin(),
