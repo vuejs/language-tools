@@ -305,10 +305,14 @@ export function generate(
 				node.content.loc,
 			);
 			writeInterpolationVarsExtraCompletion();
+			const lines = content.split('\n');
 			appendFormattingCode(
 				content,
 				start,
-				formatBrackets.curly,
+				lines.length <= 1 ? formatBrackets.curly : [
+					formatBrackets.curly[0],
+					lines[lines.length - 1].trim() === '' ? '' : formatBrackets.curly[1],
+				],
 			);
 		}
 		else if (node.type === CompilerDOM.NodeTypes.IF) {
