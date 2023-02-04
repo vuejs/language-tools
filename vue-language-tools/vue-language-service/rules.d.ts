@@ -6,7 +6,6 @@ import { VueLanguagePlugin } from '@volar/vue-language-core';
 declare module '@volar/language-service' {
 	interface RuleContext {
 		vue?: {
-			version: 'alpha',
 			modules: {
 				typescript: typeof import('typescript/lib/tsserverlibrary');
 			},
