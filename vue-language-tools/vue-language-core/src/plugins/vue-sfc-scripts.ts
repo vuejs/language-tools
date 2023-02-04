@@ -26,9 +26,6 @@ const plugin: VueLanguagePlugin = () => {
 				embeddedFile.capabilities = {
 					...FileCapabilities.full,
 					diagnostic: false,
-					documentFormatting: {
-						initialIndentBracket: ['{', '}'],
-					},
 					codeAction: false,
 					inlayHint: false,
 				};

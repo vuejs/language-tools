@@ -1,12 +1,6 @@
 import { FileCapabilities, FileRangeCapabilities } from '@volar/language-core';
 import { VueLanguagePlugin } from '../types';
 
-const presetInitialIndentBrackets: Record<string, [string, string] | undefined> = {
-	css: ['{', '}'],
-	scss: ['{', '}'],
-	less: ['{', '}'],
-};
-
 const plugin: VueLanguagePlugin = () => {
 
 	return {
@@ -28,12 +22,7 @@ const plugin: VueLanguagePlugin = () => {
 				const index = parseInt(match[2]);
 				const style = sfc.styles[index];
 
-				embeddedFile.capabilities = {
-					...FileCapabilities.full,
-					documentFormatting: {
-						initialIndentBracket: presetInitialIndentBrackets[style.lang],
-					},
-				};
+				embeddedFile.capabilities = FileCapabilities.full;
 				embeddedFile.content.push([
 					style.content,
 					style.name,

@@ -19,15 +19,6 @@ const plugin: VueLanguagePlugin = (_ctx) => {
 
 		updateSFC(sfc, change) {
 
-			/**
-			 * ./utils/parseSfc don't use cache anymore
-			 */
-			// // avoid broken @vue/compiler-sfc cache
-			// if (!(sfc as any).__volar_clone) {
-			// 	sfc = JSON.parse(JSON.stringify(sfc));
-			// 	(sfc as any).__volar_clone = true;
-			// }
-
 			const blocks = [
 				sfc.descriptor.template,
 				sfc.descriptor.script,
