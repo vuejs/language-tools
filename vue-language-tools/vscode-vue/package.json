@@ -508,6 +508,14 @@
 							"type": "boolean",
 							"default": false
 						},
+						"sass": {
+							"type": "boolean",
+							"default": false
+						},
+						"jade": {
+							"type": "boolean",
+							"default": false
+						},
 						"json": {
 							"type": "boolean",
 							"default": false
