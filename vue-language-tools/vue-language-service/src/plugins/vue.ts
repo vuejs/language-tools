@@ -140,6 +140,11 @@ export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin =
 				worker(context.document, (document, vueSourceFile) => {
 					context.vue = {
 						version: 'alpha',
+						modules: {
+							typescript: _ts.module,
+						},
+						compilerOptions: _ts.languageServiceHost.getCompilationSettings(),
+						vueCompilerOptions,
 						sfc: vueSourceFile.sfc,
 						blocksClearedDocument: document,
 					};

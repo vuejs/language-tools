@@ -454,11 +454,6 @@
 					"default": false,
 					"description": "Check vue-tsc version."
 				},
-				"volar.codeLens.scriptSetupTools": {
-					"type": "boolean",
-					"default": false,
-					"description": "[ref sugar ☐] code lens."
-				},
 				"volar.autoWrapParentheses": {
 					"type": "boolean",
 					"default": true,

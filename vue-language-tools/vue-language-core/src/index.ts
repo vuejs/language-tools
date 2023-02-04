@@ -1,7 +1,6 @@
 export * from './generators/template';
 export * from './languageModule';
 export * as scriptRanges from './parsers/scriptRanges';
-export * as scriptSetupConvertRanges from './parsers/scriptSetupConvertRanges';
 export * from './parsers/scriptSetupRanges';
 export * from './plugins';
 export * from './sourceFile';
