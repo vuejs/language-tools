@@ -434,11 +434,6 @@
 					"default": true,
 					"description": "[references] code lens."
 				},
-				"volar.codeLens.pugTools": {
-					"type": "boolean",
-					"default": false,
-					"description": "[pug ☐] code lens."
-				},
 				"volar.icon.splitEditors": {
 					"type": "boolean",
 					"default": false,

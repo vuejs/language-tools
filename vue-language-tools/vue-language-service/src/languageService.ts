@@ -264,7 +264,6 @@ function getLanguageServicePlugins(
 		json: createJsonPlugin(settings?.json),
 		'typescript/twoslash-queries': createTsTqPlugin(),
 		'vue/referencesCodeLens': createReferencesCodeLensPlugin(),
-		'vue/htmlPugConvert': createHtmlPugConversionsPlugin(),
 		'vue/scriptSetupConvert': createScriptSetupConversionsPlugin(vueCompilerOptions),
 		'vue/refSugarConvert': createRefSugarConversionsPlugin(),
 		'vue/autoInsertDotValue': createAutoDotValuePlugin(),
