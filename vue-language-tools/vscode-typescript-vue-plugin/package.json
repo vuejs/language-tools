@@ -39,7 +39,7 @@
 		"typescript-vue-plugin-forward": "file:typescript-vue-plugin-forward"
 	},
 	"devDependencies": {
-		"esbuild": "latest",
+		"esbuild": "0.15.18",
 		"typescript-vue-plugin": "1.0.24",
 		"vsce": "latest"
 	}
