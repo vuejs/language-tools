@@ -7,13 +7,12 @@ import * as createTsPlugin from '@volar-plugins/typescript';
 import * as createTsTqPlugin from '@volar-plugins/typescript-twoslash-queries';
 import * as embeddedLS from '@volar/language-service';
 import * as vue from '@volar/vue-language-core';
-import { VueLanguageServiceHost } from '@volar/vue-language-core';
+import { LanguageServiceHost } from '@volar/language-core';
 import type * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import createVuePlugin from './plugins/vue';
 import createAutoDotValuePlugin from './plugins/vue-autoinsert-dotvalue';
 import createReferencesCodeLensPlugin from './plugins/vue-codelens-references';
-import createHtmlPugConversionsPlugin from './plugins/vue-convert-htmlpug';
 import createRefSugarConversionsPlugin from './plugins/vue-convert-refsugar';
 import createScriptSetupConversionsPlugin from './plugins/vue-convert-scriptsetup';
 import createTwoslashQueries from './plugins/vue-twoslash-queries';
@@ -31,7 +30,27 @@ export interface Settings {
 	json?: Parameters<typeof createJsonPlugin>[0];
 }
 
-export function getLanguageServicePlugins(
+export function resolveLanguageServiceConfig(
+	host: LanguageServiceHost,
+	vueCompilerOptions: VueCompilerOptions,
+	config: Config, // volar.config.js
+	settings?: Settings,
+) {
+
+	const ts = host.getTypeScriptModule?.();
+	const vueLanguageModules = ts ? vue.createLanguageModules(
+		ts,
+		host.getCompilationSettings(),
+		vueCompilerOptions,
+	) : [];
+
+	config.languages = Object.assign({}, vueLanguageModules, config.languages);
+	config.plugins = getLanguageServicePlugins(config.plugins ?? {}, vueCompilerOptions, settings);
+
+	return config;
+}
+
+function getLanguageServicePlugins(
 	config: Config, // volar.config.js
 	vueCompilerOptions: VueCompilerOptions,
 	settings?: Settings,
@@ -279,28 +298,4 @@ function patchAdditionalTextEdits(uri: string, edits: vscode.TextEdit[]) {
 			}
 		}
 	}
-}
-
-export function createLanguageService(
-	host: VueLanguageServiceHost,
-	config: Config, // volar.config.js
-	env: embeddedLS.LanguageServiceRuntimeContext['env'],
-	documentRegistry?: ts.DocumentRegistry,
-	settings?: Settings,
-) {
-
-	const ts = host.getTypeScriptModule?.();
-	const vueCompilerOptions = vue.resolveVueCompilerOptions(host.getVueCompilationSettings());
-	const vueLanguageModules = ts ? vue.createLanguageModules(
-		ts,
-		host.getCompilationSettings(),
-		vueCompilerOptions,
-	) : [];
-	const languageService = embeddedLS.createLanguageService(host, {
-		...config,
-		languages: Object.assign({}, vueLanguageModules, config.languages),
-		plugins: getLanguageServicePlugins(config.plugins ?? {}, vueCompilerOptions, settings),
-	}, env, documentRegistry);
-
-	return languageService;
 }

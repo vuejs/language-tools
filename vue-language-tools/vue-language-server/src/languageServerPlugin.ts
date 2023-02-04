@@ -80,7 +80,7 @@ export function createServerPlugin(connection: Connection) {
 						});
 					}
 				}
-				config.plugins = vue.getLanguageServicePlugins(config, resolvedVueOptions, settings);
+				vue.resolveLanguageServiceConfig(host, resolvedVueOptions, config, settings);
 			},
 			onInitialize(initResult) {
 				if (initResult.capabilities.completionProvider?.triggerCharacters) {

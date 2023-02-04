@@ -1,8 +1,10 @@
-import { createLanguageService, VueLanguageServiceHost } from '../..';
+import { resolveLanguageServiceConfig, VueLanguageServiceHost } from '../..';
 import * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path';
 import * as shared from '@volar/shared';
 import { URI } from 'vscode-uri';
+import * as vue from '@volar/vue-language-core';
+import { createLanguageService } from '@volar/language-service';
 
 const testRoot = path.resolve(__dirname, '../../../vue-test-workspace');
 export const rootUri = URI.file(testRoot);
@@ -57,34 +59,36 @@ function createTester(root: string) {
 			},
 		},
 	};
-	const languageService = createLanguageService(
+	const languageServiceConfig = resolveLanguageServiceConfig(
 		host,
+		vue.resolveVueCompilerOptions({}),
 		{},
-		{
-			rootUri,
-			configurationHost: {
-				async getConfiguration(section: string) {
-					const keys = section.split('.');
-					let settings = vscodeSettings;
-					for (const key of keys) {
-						if (key in settings) {
-							settings = settings[key];
-						}
-						else {
-							settings = undefined;
-							break;
-						}
+	);
+	const languageService = createLanguageService(host, languageServiceConfig, {
+		rootUri,
+		configurationHost: {
+			async getConfiguration(section: string) {
+				const keys = section.split('.');
+				let settings = vscodeSettings;
+				for (const key of keys) {
+					if (key in settings) {
+						settings = settings[key];
 					}
-					return settings;
-				},
-				onDidChangeConfiguration() { },
+					else {
+						settings = undefined;
+						break;
+					}
+				}
+				return settings;
 			},
-			documentContext: {
-				resolveReference: (ref, _base) => {
-					return ref;
-				},
+			onDidChangeConfiguration() { },
+		},
+		documentContext: {
+			resolveReference: (ref, _base) => {
+				return ref;
 			},
-		});
+		},
+	});
 
 	return {
 		host,
