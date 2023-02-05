@@ -1417,7 +1417,7 @@ export function generate(
 					},
 				]);
 				identifiers.add(camelize('v-' + prop.name));
-				codeGen.push(`)(`);
+				codeGen.push(`)`);
 				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					writeInterpolation(
 						prop.exp.content,
@@ -1433,7 +1433,6 @@ export function generate(
 						formatBrackets.round,
 					);
 				}
-				codeGen.push(`)`);
 				codeGen.push([
 					'',
 					'template',
