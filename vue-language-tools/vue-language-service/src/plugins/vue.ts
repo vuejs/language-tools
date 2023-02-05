@@ -137,16 +137,15 @@ export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin =
 
 		rules: {
 			prepare(context) {
-				worker(context.document, (document, vueSourceFile) => {
-					context.vue = {
-						modules: {
-							typescript: _ts.module,
-						},
-						compilerOptions: _ts.languageServiceHost.getCompilationSettings(),
-						vueCompilerOptions,
-						sfc: vueSourceFile.sfc,
-						blocksClearedDocument: document,
-					};
+				worker(context.document, (_, vueSourceFile) => {
+					if (vueSourceFile.parsedSfc) {
+						context.vue = {
+							sfc: vueSourceFile.parsedSfc,
+							templateAst: vueSourceFile.sfc.templateAst,
+							scriptAst: vueSourceFile.sfc.scriptAst,
+							scriptSetupAst: vueSourceFile.sfc.scriptSetupAst,
+						};
+					}
 				});
 				return context;
 			},

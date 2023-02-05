@@ -6,13 +6,10 @@ import { VueLanguagePlugin } from '@volar/vue-language-core';
 declare module '@volar/language-service' {
 	interface RuleContext {
 		vue?: {
-			modules: {
-				typescript: typeof import('typescript/lib/tsserverlibrary');
-			},
-			sfc: vue.Sfc;
-			compilerOptions: ts.CompilerOptions;
-			vueCompilerOptions: vue.VueCompilerOptions;
-			blocksClearedDocument: TextDocument;
+			sfc: NonNullable<vue.VueFile['parsedSfc']>;
+			templateAst: vue.Sfc['templateAst'];
+			scriptAst: vue.Sfc['scriptAst'];
+			scriptSetupAst: vue.Sfc['scriptSetupAst'];
 		};
 	}
 }

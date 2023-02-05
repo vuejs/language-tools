@@ -51,6 +51,8 @@ export class VueFile implements VirtualFile {
 		return this._embeddedFiles.value;
 	}
 
+	public parsedSfc: SFCParseResult | undefined;
+
 	// refs
 	public sfc = reactive<Sfc>({
 		template: null,
@@ -355,13 +357,13 @@ export class VueFile implements VirtualFile {
 			data: FileRangeCapabilities.full,
 		}];
 
-		const parsedSfc = this.parseSfc();
-		if (parsedSfc) {
-			this.updateTemplate(parsedSfc.descriptor.template);
-			this.updateScript(parsedSfc.descriptor.script);
-			this.updateScriptSetup(parsedSfc.descriptor.scriptSetup);
-			this.updateStyles(parsedSfc.descriptor.styles);
-			this.updateCustomBlocks(parsedSfc.descriptor.customBlocks);
+		this.parsedSfc = this.parseSfc();
+		if (this.parsedSfc) {
+			this.updateTemplate(this.parsedSfc.descriptor.template);
+			this.updateScript(this.parsedSfc.descriptor.script);
+			this.updateScriptSetup(this.parsedSfc.descriptor.scriptSetup);
+			this.updateStyles(this.parsedSfc.descriptor.styles);
+			this.updateCustomBlocks(this.parsedSfc.descriptor.customBlocks);
 		}
 		else {
 			this.updateTemplate(null);
