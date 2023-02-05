@@ -1,13 +1,13 @@
 import { hyphenate } from '@vue/shared';
-import { LanguageServiceRuntimeContext, VirtualFile } from '@volar/language-service';
+import { LanguageServicePluginContext, VirtualFile } from '@volar/language-service';
 import { checkComponentNames, getTemplateTagsAndAttrs, checkPropsOfTag } from '../helpers';
 import * as vue from '@volar/vue-language-core';
 import * as vscode from 'vscode-languageserver-protocol';
 import { AttrNameCasing, TagNameCasing } from '../types';
 
 export async function convertTagName(
-	context: LanguageServiceRuntimeContext,
-	_ts: NonNullable<LanguageServiceRuntimeContext['typescript']>,
+	context: LanguageServicePluginContext,
+	_ts: NonNullable<LanguageServicePluginContext['typescript']>,
 	uri: string,
 	casing: TagNameCasing,
 ) {
@@ -47,8 +47,8 @@ export async function convertTagName(
 }
 
 export async function convertAttrName(
-	context: LanguageServiceRuntimeContext,
-	_ts: NonNullable<LanguageServiceRuntimeContext['typescript']>,
+	context: LanguageServicePluginContext,
+	_ts: NonNullable<LanguageServicePluginContext['typescript']>,
 	uri: string,
 	casing: AttrNameCasing,
 ) {
@@ -94,8 +94,8 @@ export async function convertAttrName(
 }
 
 export function detect(
-	context: LanguageServiceRuntimeContext,
-	_ts: NonNullable<LanguageServiceRuntimeContext['typescript']>,
+	context: LanguageServicePluginContext,
+	_ts: NonNullable<LanguageServicePluginContext['typescript']>,
 	uri: string,
 ): {
 	tag: TagNameCasing[],

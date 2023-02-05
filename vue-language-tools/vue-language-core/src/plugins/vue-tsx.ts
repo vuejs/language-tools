@@ -58,6 +58,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 			else if (suffix.match(/^\.__VLS_template_format\.ts$/)) {
 
 				embeddedFile.parentFileName = fileName + '.template.' + sfc.template?.lang;
+				embeddedFile.kind = FileKind.TypeScriptHostFile;
 				embeddedFile.capabilities = {
 					...FileCapabilities.full,
 					diagnostic: false,
