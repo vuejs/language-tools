@@ -120,15 +120,16 @@ export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin =
 		return {};
 
 	const _ts = context.typescript;
-	const htmlPlugin = createHtmlPlugin({
-		validLang: 'vue',
-		disableCustomData: true,
-	})(context);
+	const htmlPlugin = createHtmlPlugin({ validLang: 'vue', disableCustomData: true })(context);
 	htmlPlugin.getHtmlLs().setDataProviders(false, [dataProvider]);
 	const emptyBlocksDocument = new WeakMap<TextDocument, [number, TextDocument]>();
 
 	if (htmlPlugin.complete?.on) {
 		htmlPlugin.complete.on = apiWithEmptyBlocksDocument(htmlPlugin.complete.on);
+	}
+
+	if (htmlPlugin.findDocumentLinks) {
+		htmlPlugin.findDocumentLinks = apiWithEmptyBlocksDocument(htmlPlugin.findDocumentLinks);
 	}
 
 	return {
