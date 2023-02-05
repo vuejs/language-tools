@@ -5,9 +5,7 @@ import * as createJsonPlugin from '@volar-plugins/json';
 import * as createPugPlugin from '@volar-plugins/pug';
 import * as createTsPlugin from '@volar-plugins/typescript';
 import * as createTsTqPlugin from '@volar-plugins/typescript-twoslash-queries';
-import * as embeddedLS from '@volar/language-service';
 import * as vue from '@volar/vue-language-core';
-import { LanguageServiceHost } from '@volar/language-core';
 import type * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import createVuePlugin from './plugins/vue';
@@ -28,40 +26,41 @@ export interface Settings {
 	json?: Parameters<typeof createJsonPlugin>[0];
 }
 
-export function resolveLanguageServiceConfig(
-	host: LanguageServiceHost,
-	vueCompilerOptions: VueCompilerOptions,
+export function createConfig(
 	config: Config, // volar.config.js
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	compilerOptions: ts.CompilerOptions,
+	vueCompilerOptions: Partial<VueCompilerOptions>,
 	settings?: Settings,
 ) {
 
-	const ts = host.getTypeScriptModule?.();
-	const vueLanguageModules = ts ? vue.createLanguageModules(
-		ts,
-		host.getCompilationSettings(),
-		vueCompilerOptions,
-	) : [];
+	const resolvedVueOptions = vue.resolveVueCompilerOptions(vueCompilerOptions);
+	const vueLanguageModules = vue.createLanguageModules(ts, compilerOptions, resolvedVueOptions);
 
 	config.languages = Object.assign({}, vueLanguageModules, config.languages);
-	config.plugins = getLanguageServicePlugins(config.plugins ?? {}, vueCompilerOptions, settings);
+
+	resolvePlugins(config, resolvedVueOptions, settings);
 
 	return config;
 }
 
-function getLanguageServicePlugins(
+function resolvePlugins(
 	config: Config, // volar.config.js
 	vueCompilerOptions: VueCompilerOptions,
 	settings?: Settings,
 ) {
 
-	const baseTsPlugin = config.plugins?.typescript ?? createTsPlugin();
-	const tsPlugin: embeddedLS.LanguageServicePlugin = (_context) => {
+	const originalTsPlugin = config.plugins?.typescript ?? createTsPlugin();
+
+	config.plugins ??= {};
+
+	config.plugins.typescript = (_context) => {
 
 		if (!_context.typescript)
 			return {};
 
 		const ts = _context.typescript.module;
-		const base = typeof baseTsPlugin === 'function' ? baseTsPlugin(_context) : baseTsPlugin;
+		const base = typeof originalTsPlugin === 'function' ? originalTsPlugin(_context) : originalTsPlugin;
 		const autoImportPositions = new WeakSet<vscode.Position>();
 
 		return {
@@ -231,9 +230,7 @@ function getLanguageServicePlugins(
 			}
 		};
 	};
-
-	// template plugins
-	const htmlPlugin = createVueTemplateLanguagePlugin({
+	config.plugins.html ??= createVueTemplateLanguagePlugin({
 		templateLanguagePlugin: createHtmlPlugin(),
 		getScanner: (document, htmlPlugin): html.Scanner | undefined => {
 			return htmlPlugin.getHtmlLs().createScanner(document.getText());
@@ -241,7 +238,7 @@ function getLanguageServicePlugins(
 		isSupportedDocument: (document) => document.languageId === 'html',
 		vueCompilerOptions,
 	});
-	const pugPlugin = createVueTemplateLanguagePlugin({
+	config.plugins.pug ??= createVueTemplateLanguagePlugin({
 		templateLanguagePlugin: createPugPlugin() as any,
 		getScanner: (document, pugPlugin): html.Scanner | undefined => {
 			const pugDocument = (pugPlugin as ReturnType<ReturnType<typeof createPugPlugin>>).getPugDocument(document);
@@ -253,25 +250,17 @@ function getLanguageServicePlugins(
 		vueCompilerOptions,
 	});
 
-	return {
-		vue: createVuePlugin(vueCompilerOptions),
-		css: createCssPlugin(),
-		html: htmlPlugin,
-		pug: pugPlugin,
-		'pug-beautify': createPugFormatPlugin(),
-		json: createJsonPlugin(settings?.json),
-		'typescript/twoslash-queries': createTsTqPlugin(),
-		'vue/referencesCodeLens': createReferencesCodeLensPlugin(),
-		'vue/autoInsertDotValue': createAutoDotValuePlugin(),
-		'vue/twoslash-queries': createTwoslashQueries(),
-		'vue/autoInsertParentheses': createAutoWrapParenthesesPlugin(),
-		'vue/autoInsertSpaces': createAutoAddSpacePlugin(),
-		// put emmet plugin at last to fix https://github.com/johnsoncodehk/volar/issues/1088
-		emmet: createEmmetPlugin(),
-
-		...config.plugins,
-		typescript: tsPlugin, // override config.plugins.typescript
-	};
+	config.plugins.vue ??= createVuePlugin(vueCompilerOptions);
+	config.plugins.css ??= createCssPlugin();
+	config.plugins['pug-beautify'] ??= createPugFormatPlugin();
+	config.plugins.json ??= createJsonPlugin(settings?.json);
+	config.plugins['typescript/twoslash-queries'] ??= createTsTqPlugin();
+	config.plugins['vue/referencesCodeLens'] ??= createReferencesCodeLensPlugin();
+	config.plugins['vue/autoInsertDotValue'] ??= createAutoDotValuePlugin();
+	config.plugins['vue/twoslash-queries'] ??= createTwoslashQueries();
+	config.plugins['vue/autoInsertParentheses'] ??= createAutoWrapParenthesesPlugin();
+	config.plugins['vue/autoInsertSpaces'] ??= createAutoAddSpacePlugin();
+	config.plugins.emmet ??= createEmmetPlugin();
 }
 
 // fix https://github.com/johnsoncodehk/volar/issues/916

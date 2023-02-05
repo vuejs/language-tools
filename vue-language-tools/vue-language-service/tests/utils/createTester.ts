@@ -1,9 +1,8 @@
-import { resolveLanguageServiceConfig, VueLanguageServiceHost } from '../..';
+import { createConfig, VueLanguageServiceHost } from '../..';
 import * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path';
 import * as shared from '@volar/shared';
 import { URI } from 'vscode-uri';
-import * as vue from '@volar/vue-language-core';
 import { createLanguageService } from '@volar/language-service';
 
 const testRoot = path.resolve(__dirname, '../../../vue-test-workspace');
@@ -59,11 +58,7 @@ function createTester(root: string) {
 			},
 		},
 	};
-	const languageServiceConfig = resolveLanguageServiceConfig(
-		host,
-		vue.resolveVueCompilerOptions({}),
-		{},
-	);
+	const languageServiceConfig = createConfig({}, ts, {}, {});
 	const languageService = createLanguageService(host, languageServiceConfig, {
 		rootUri,
 		configurationHost: {

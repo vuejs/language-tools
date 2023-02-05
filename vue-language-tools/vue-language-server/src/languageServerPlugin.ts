@@ -15,7 +15,7 @@ export function createServerPlugin(connection: Connection) {
 	const plugin: LanguageServerPlugin<VueServerInitializationOptions> = (initOptions) => {
 
 		const vueFileExtensions: string[] = ['vue'];
-		const hostToVueOptions = new WeakMap<embedded.LanguageServiceHost, VueCompilerOptions>();
+		const hostToVueOptions = new WeakMap<embedded.LanguageServiceHost, Partial<VueCompilerOptions>>();
 
 		if (initOptions.petiteVue?.processHtmlFile) {
 			vueFileExtensions.push('html');
@@ -49,38 +49,32 @@ export function createServerPlugin(connection: Connection) {
 			resolveConfig(config, ctx) {
 
 				const ts = ctx.project.workspace.workspaces.ts;
-				const tsConfig = ctx.project.tsConfig;
-				const sys = ctx.sys;
-				const host = ctx.host;
-				const rootUri = ctx.project.rootUri;
-
-				let vueOptions: Partial<vue.VueCompilerOptions> = {};
-				if (ts && typeof tsConfig === 'string') {
-					vueOptions = vue2.createParsedCommandLine(ts, sys, tsConfig, []).vueOptions;
+				if (!ts) {
+					return;
 				}
-				vueOptions.extensions = getVueExts(vueOptions.extensions ?? ['.vue']);
-				const resolvedVueOptions = vue2.resolveVueCompilerOptions(vueOptions);
-				hostToVueOptions.set(host, resolvedVueOptions);
 
-				if (ts) {
-					config.languages = Object.assign({}, vue2.createLanguageModules(
-						ts,
-						host.getCompilationSettings(),
-						resolvedVueOptions,
-					), config.languages);
-				}
 				const settings: vue.Settings = {};
+
 				if (initOptions.json) {
 					settings.json = { schemas: [] };
 					for (const blockType in initOptions.json.customBlockSchemaUrls) {
 						const url = initOptions.json.customBlockSchemaUrls[blockType];
 						settings.json.schemas?.push({
 							fileMatch: [`*.customBlock_${blockType}_*.json*`],
-							uri: new URL(url, rootUri.toString() + '/').toString(),
+							uri: new URL(url, ctx.project.rootUri.toString() + '/').toString(),
 						});
 					}
 				}
-				vue.resolveLanguageServiceConfig(host, resolvedVueOptions, config, settings);
+
+				let vueOptions: Partial<vue.VueCompilerOptions> = {};
+				if (typeof ctx.project.tsConfig === 'string') {
+					vueOptions = vue2.createParsedCommandLine(ts, ctx.sys, ctx.project.tsConfig, []).vueOptions;
+				}
+				vueOptions.extensions = getVueExts(vueOptions.extensions);
+
+				hostToVueOptions.set(ctx.host, vueOptions);
+
+				vue.createConfig(config, ts, ctx.host.getCompilationSettings(), vueOptions, settings);
 			},
 			onInitialize(initResult) {
 				if (initResult.capabilities.completionProvider?.triggerCharacters) {
@@ -152,9 +146,9 @@ export function createServerPlugin(connection: Connection) {
 			},
 		};
 
-		function getVueExts(baseExts: string[]) {
+		function getVueExts(baseExts: string[] | undefined) {
 			const set = new Set([
-				...baseExts,
+				...baseExts ?? ['.vue'],
 				...vueFileExtensions.map(ext => '.' + ext),
 			]);
 			return [...set];
