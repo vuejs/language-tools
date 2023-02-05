@@ -7,7 +7,7 @@ import { VueCompilerOptions } from '../types';
 import { colletVars, walkInterpolationFragment } from '../utils/transform';
 import minimatch from 'minimatch';
 
-const capabilitiesSet = {
+const capabilitiesPresets = {
 	all: FileRangeCapabilities.full,
 	noDiagnostic: { ...FileRangeCapabilities.full, diagnostic: false } satisfies FileRangeCapabilities,
 	diagnosticOnly: { diagnostic: true } satisfies FileRangeCapabilities,
@@ -115,7 +115,7 @@ export function generate(
 				name,
 				slot.loc, // TODO: SourceMaps.MappingKind.Expand
 				{
-					...capabilitiesSet.slotNameExport,
+					...capabilitiesPresets.slotNameExport,
 					referencesCodeLens: hasScriptSetup,
 				},
 				slot.nodeLoc,
@@ -133,7 +133,7 @@ export function generate(
 				className,
 				offset,
 				{
-					...capabilitiesSet.scopedClassName,
+					...capabilitiesPresets.scopedClassName,
 					displayWithLink: cssScopedClassesSet.has(className),
 				},
 			);
@@ -193,9 +193,9 @@ export function generate(
 						name,
 						tagRange,
 						{
-							...capabilitiesSet.tagReference,
+							...capabilitiesPresets.tagReference,
 							rename: {
-								normalize: tagName === name ? capabilitiesSet.tagReference.rename.normalize : unHyphenatComponentName,
+								normalize: tagName === name ? capabilitiesPresets.tagReference.rename.normalize : camelizeComponentName,
 								apply: getRenameApply(tagName),
 							},
 						},
@@ -299,7 +299,7 @@ export function generate(
 			writeInterpolation(
 				content,
 				start,
-				capabilitiesSet.all,
+				capabilitiesPresets.all,
 				'(',
 				');\n',
 				node.content.loc,
@@ -338,7 +338,7 @@ export function generate(
 					writeInterpolation(
 						branch.condition.content,
 						branch.condition.loc.start.offset,
-						capabilitiesSet.all,
+						capabilitiesPresets.all,
 						'(',
 						')',
 						branch.condition.loc,
@@ -379,21 +379,21 @@ export function generate(
 			codeGen.push(`for (const [`);
 			if (leftExpressionRange && leftExpressionText) {
 
-				const collentAst = createTsAst(node.parseResult, `const [${leftExpressionText}]`);
-				colletVars(ts, collentAst, forBlockVars);
+				const collectAst = createTsAst(node.parseResult, `const [${leftExpressionText}]`);
+				colletVars(ts, collectAst, forBlockVars);
 
 				for (const varName of forBlockVars)
 					localVars[varName] = (localVars[varName] ?? 0) + 1;
 
-				codeGen.push([leftExpressionText, 'template', leftExpressionRange.start, capabilitiesSet.all]);
+				codeGen.push([leftExpressionText, 'template', leftExpressionRange.start, capabilitiesPresets.all]);
 				appendFormattingCode(leftExpressionText, leftExpressionRange.start, formatBrackets.square);
 			}
-			codeGen.push(`] of (await import('./__VLS_types.js')).getVforSourceType`);
+			codeGen.push(`] of (await import('./__VLS_types.js')).getVForSourceType`);
 			if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 				writeInterpolation(
 					source.content,
 					source.loc.start.offset,
-					capabilitiesSet.all,
+					capabilitiesPresets.all,
 					'(',
 					')',
 					source.loc,
@@ -451,7 +451,7 @@ export function generate(
 
 		const tagOffsets = endTagOffset !== undefined ? [startTagOffset, endTagOffset] : [startTagOffset];
 
-		let _unwritedExps: CompilerDOM.SimpleExpressionNode[];
+		let _unWriteExps: CompilerDOM.SimpleExpressionNode[];
 
 		const _isIntrinsicElement = nativeTags.has(node.tag);
 		const _isNamespacedTag = node.tag.indexOf('.') >= 0;
@@ -462,11 +462,11 @@ export function generate(
 				'',
 				'template',
 				node.loc.start.offset,
-				capabilitiesSet.diagnosticOnly,
+				capabilitiesPresets.diagnosticOnly,
 			]);
-			const tagCapabilities: FileRangeCapabilities = _isIntrinsicElement || _isNamespacedTag ? capabilitiesSet.all : {
-				...capabilitiesSet.diagnosticOnly,
-				...capabilitiesSet.tagHover,
+			const tagCapabilities: FileRangeCapabilities = _isIntrinsicElement || _isNamespacedTag ? capabilitiesPresets.all : {
+				...capabilitiesPresets.diagnosticOnly,
+				...capabilitiesPresets.tagHover,
 			};
 
 			codeGen.push(`<`);
@@ -475,7 +475,7 @@ export function generate(
 					'',
 					'template',
 					startTagOffset,
-					capabilitiesSet.diagnosticOnly,
+					capabilitiesPresets.diagnosticOnly,
 				]);
 				codeGen.push(`__VLS_templateComponents.`);
 			}
@@ -486,8 +486,8 @@ export function generate(
 				tagCapabilities,
 			]);
 			codeGen.push(` `);
-			const { unwritedExps } = writeProps(node, 'jsx', 'props');
-			_unwritedExps = unwritedExps;
+			const { unWriteExps: unWriteExps } = writeProps(node, 'jsx', 'props');
+			_unWriteExps = unWriteExps;
 
 			if (endTagOffset === undefined) {
 				codeGen.push(`/>`);
@@ -521,7 +521,7 @@ export function generate(
 				'',
 				'template',
 				startTagEnd,
-				capabilitiesSet.diagnosticOnly,
+				capabilitiesPresets.diagnosticOnly,
 			]);
 			codeGen.push(`\n`);
 		}
@@ -535,8 +535,8 @@ export function generate(
 						node.tag,
 						offset,
 						{
-							...capabilitiesSet.tagReference,
-							...capabilitiesSet.tagHover,
+							...capabilitiesPresets.tagReference,
+							...capabilitiesPresets.tagHover,
 						},
 					);
 					codeGen.push(`;\n`);
@@ -551,7 +551,7 @@ export function generate(
 						node.tag,
 						'template',
 						[offset, offset + node.tag.length],
-						capabilitiesSet.all,
+						capabilitiesPresets.all,
 					]);
 					codeGen.push(`;\n`);
 				}
@@ -568,7 +568,7 @@ export function generate(
 						componentVars[node.tag] ?? node.tag,
 						'template',
 						[endTagOffset, endTagOffset + node.tag.length],
-						capabilitiesSet.tagHover,
+						capabilitiesPresets.tagHover,
 					]);
 					codeGen.push(`;\n`);
 				}
@@ -581,25 +581,25 @@ export function generate(
 					componentVars[node.tag] ?? node.tag,
 					'template',
 					[startTagOffset, startTagOffset + node.tag.length],
-					capabilitiesSet.tagHover,
+					capabilitiesPresets.tagHover,
 				]);
 				codeGen.push(`> } = { `);
 			}
 
-			writeObjectProperty(node.tag, startTagOffset, capabilitiesSet.diagnosticOnly, node);
+			writeObjectProperty(node.tag, startTagOffset, capabilitiesPresets.diagnosticOnly, node);
 			codeGen.push(` : { `);
-			const { unwritedExps } = writeProps(node, 'class', 'props');
-			_unwritedExps = unwritedExps;
+			const { unWriteExps } = writeProps(node, 'class', 'props');
+			_unWriteExps = unWriteExps;
 			codeGen.push(` } };\n`);
 		}
 		{
 
 			// fix https://github.com/johnsoncodehk/volar/issues/1775
-			for (const failedExp of _unwritedExps) {
+			for (const failedExp of _unWriteExps) {
 				writeInterpolation(
 					failedExp.loc.source,
 					failedExp.loc.start.offset,
-					capabilitiesSet.all,
+					capabilitiesPresets.all,
 					'(',
 					')',
 					failedExp.loc,
@@ -639,7 +639,7 @@ export function generate(
 					vScope.exp.loc.source,
 					'template',
 					vScope.exp.loc.start.offset,
-					capabilitiesSet.all,
+					capabilitiesPresets.all,
 				]);
 				codeGen.push(';\n');
 				codeGen.push(`if (${condition}) {\n`);
@@ -649,7 +649,7 @@ export function generate(
 
 			writeDirectives(node);
 			writeElReferences(node); // <el ref="foo" />
-			if (cssScopedClasses.length) writeClassScopeds(node);
+			if (cssScopedClasses.length) writeClassScoped(node);
 			writeEvents(node);
 			writeSlots(node, startTagOffset);
 
@@ -699,7 +699,7 @@ export function generate(
 					key_2,
 					[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
 					{
-						...capabilitiesSet.attrReference,
+						...capabilitiesPresets.attrReference,
 						rename: {
 							normalize(newName) {
 								return camelize('on-' + newName);
@@ -719,7 +719,7 @@ export function generate(
 					writeObjectProperty(
 						prop.arg.loc.source,
 						prop.arg.loc.start.offset,
-						capabilitiesSet.event,
+						capabilitiesPresets.event,
 						prop.arg.loc,
 					);
 					codeGen.push(`: `);
@@ -738,7 +738,7 @@ export function generate(
 				writeInterpolation(
 					prop.exp.content,
 					prop.exp.loc.start.offset,
-					capabilitiesSet.all,
+					capabilitiesPresets.all,
 					'$event => {(',
 					')}',
 					prop.exp.loc,
@@ -755,22 +755,22 @@ export function generate(
 				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 
 					const ast = createTsAst(prop.exp, prop.exp.content);
-					let isCompoundExpession = true;
+					let isCompoundExpression = true;
 
 					if (ast.getChildCount() === 2) { // with EOF 
 						ast.forEachChild(child_1 => {
 							if (ts.isExpressionStatement(child_1)) {
 								child_1.forEachChild(child_2 => {
 									if (ts.isArrowFunction(child_2)) {
-										isCompoundExpession = false;
+										isCompoundExpression = false;
 									}
 									else if (ts.isIdentifier(child_2)) {
-										isCompoundExpession = false;
+										isCompoundExpression = false;
 									}
 								});
 							}
 							else if (ts.isFunctionDeclaration(child_1)) {
-								isCompoundExpession = false;
+								isCompoundExpression = false;
 							}
 						});
 					}
@@ -778,7 +778,7 @@ export function generate(
 					let prefix = '(';
 					let suffix = ')';
 
-					if (isCompoundExpession) {
+					if (isCompoundExpression) {
 
 						prefix = '$event => {\n';
 						if (blockConditions.length) {
@@ -792,7 +792,7 @@ export function generate(
 					writeInterpolation(
 						prop.exp.content,
 						prop.exp.loc.start.offset,
-						capabilitiesSet.all,
+						capabilitiesPresets.all,
 						prefix,
 						suffix,
 						prop.exp.loc,
@@ -835,9 +835,9 @@ export function generate(
 	}
 	function writeProps(node: CompilerDOM.ElementNode, format: 'jsx' | 'class', mode: 'props' | 'slots') {
 
-		let styleAttrNums = 0;
-		let classAttrNums = 0;
-		const unwritedExps: CompilerDOM.SimpleExpressionNode[] = [];
+		let styleAttrNum = 0;
+		let classAttrNum = 0;
+		const unWriteExps: CompilerDOM.SimpleExpressionNode[] = [];
 
 		if (node.props.some(prop =>
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -846,8 +846,8 @@ export function generate(
 			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 		)) {
 			// fix https://github.com/johnsoncodehk/volar/issues/2166
-			styleAttrNums++;
-			classAttrNums++;
+			styleAttrNum++;
+			classAttrNum++;
 		}
 
 		for (const prop of node.props) {
@@ -872,11 +872,11 @@ export function generate(
 				if (
 					attrNameText === undefined
 					|| vueCompilerOptions.dataAttributes.some(pattern => minimatch(attrNameText!, pattern))
-					|| (attrNameText === 'style' && ++styleAttrNums >= 2)
-					|| (attrNameText === 'class' && ++classAttrNums >= 2)
+					|| (attrNameText === 'style' && ++styleAttrNum >= 2)
+					|| (attrNameText === 'class' && ++classAttrNum >= 2)
 				) {
 					if (prop.exp && prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
-						unwritedExps.push(prop.exp);
+						unWriteExps.push(prop.exp);
 					}
 					continue;
 				}
@@ -898,14 +898,14 @@ export function generate(
 					'',
 					'template',
 					prop.loc.start.offset,
-					getCaps(capabilitiesSet.diagnosticOnly),
+					getCaps(capabilitiesPresets.diagnosticOnly),
 				]);
 				if (!prop.arg) {
 					writePropName(
 						attrNameText,
 						isStatic,
 						[prop.loc.start.offset, prop.loc.start.offset + prop.loc.source.indexOf('=')],
-						getCaps(capabilitiesSet.attr),
+						getCaps(capabilitiesPresets.attr),
 						(prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}),
 					);
 				}
@@ -915,7 +915,7 @@ export function generate(
 						isStatic,
 						[prop.arg.loc.start.offset, prop.arg.loc.start.offset + attrNameText.length], // patch style attr,
 						{
-							...getCaps(capabilitiesSet.attr),
+							...getCaps(capabilitiesPresets.attr),
 							rename: {
 								normalize: camelize,
 								apply: getRenameApply(attrNameText),
@@ -930,7 +930,7 @@ export function generate(
 						isStatic,
 						[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
 						{
-							...getCaps(capabilitiesSet.attr),
+							...getCaps(capabilitiesPresets.attr),
 							rename: {
 								normalize: camelize,
 								apply: getRenameApply(attrNameText),
@@ -944,7 +944,7 @@ export function generate(
 					writeInterpolation(
 						prop.exp.loc.source,
 						prop.exp.loc.start.offset,
-						getCaps(capabilitiesSet.all),
+						getCaps(capabilitiesPresets.all),
 						'(',
 						')',
 						prop.exp.loc,
@@ -966,7 +966,7 @@ export function generate(
 					'',
 					'template',
 					prop.loc.end.offset,
-					getCaps(capabilitiesSet.diagnosticOnly),
+					getCaps(capabilitiesPresets.diagnosticOnly),
 				]);
 				writePropEnd(isStatic);
 				// original name
@@ -977,7 +977,7 @@ export function generate(
 						isStatic,
 						[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
 						{
-							...getCaps(capabilitiesSet.attr),
+							...getCaps(capabilitiesPresets.attr),
 							rename: {
 								normalize: camelize,
 								apply: getRenameApply(attrNameText),
@@ -1011,8 +1011,8 @@ export function generate(
 
 				if (
 					vueCompilerOptions.dataAttributes.some(pattern => minimatch(attrNameText!, pattern))
-					|| (attrNameText === 'style' && ++styleAttrNums >= 2)
-					|| (attrNameText === 'class' && ++classAttrNums >= 2)
+					|| (attrNameText === 'style' && ++styleAttrNum >= 2)
+					|| (attrNameText === 'class' && ++classAttrNum >= 2)
 				) {
 					continue;
 				}
@@ -1032,14 +1032,14 @@ export function generate(
 					'',
 					'template',
 					prop.loc.start.offset,
-					getCaps(capabilitiesSet.diagnosticOnly),
+					getCaps(capabilitiesPresets.diagnosticOnly),
 				]);
 				writePropName(
 					propName,
 					true,
 					[prop.loc.start.offset, prop.loc.start.offset + prop.name.length],
 					{
-						...getCaps(capabilitiesSet.attr),
+						...getCaps(capabilitiesPresets.attr),
 						rename: {
 							normalize: camelize,
 							apply: getRenameApply(prop.name),
@@ -1059,7 +1059,7 @@ export function generate(
 					'',
 					'template',
 					prop.loc.end.offset,
-					getCaps(capabilitiesSet.diagnosticOnly),
+					getCaps(capabilitiesPresets.diagnosticOnly),
 				]);
 				writePropEnd(true);
 				// original name
@@ -1070,7 +1070,7 @@ export function generate(
 						true,
 						prop.loc.start.offset,
 						{
-							...getCaps(capabilitiesSet.attr),
+							...getCaps(capabilitiesPresets.attr),
 							rename: {
 								normalize: camelize,
 								apply: getRenameApply(prop.name),
@@ -1102,7 +1102,7 @@ export function generate(
 				writeInterpolation(
 					prop.exp.content,
 					prop.exp.loc.start.offset,
-					getCaps(capabilitiesSet.all),
+					getCaps(capabilitiesPresets.all),
 					'(',
 					')',
 					prop.exp.loc,
@@ -1126,7 +1126,7 @@ export function generate(
 			}
 		}
 
-		return { unwritedExps };
+		return { unWriteExps };
 
 		function writePropName(name: string, isStatic: boolean, sourceRange: number | [number, number], data: FileRangeCapabilities, cacheOn: any) {
 			if (format === 'jsx' && isStatic) {
@@ -1215,7 +1215,7 @@ export function generate(
 				toUnicodeIfNeed(content),
 				'template',
 				[start, end],
-				getCaps(capabilitiesSet.all),
+				getCaps(capabilitiesPresets.all),
 			]);
 			codeGen.push(char);
 		}
@@ -1240,7 +1240,7 @@ export function generate(
 					content,
 					'template',
 					prop.arg.loc.start.offset + start,
-					capabilitiesSet.all,
+					capabilitiesPresets.all,
 				]);
 				cssCodeGen.push(` }\n`);
 			}
@@ -1274,14 +1274,14 @@ export function generate(
 				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					codeGen.push(`const `);
 
-					const collentAst = createTsAst(prop, `const ${prop.exp.content}`);
-					colletVars(ts, collentAst, slotBlockVars);
+					const collectAst = createTsAst(prop, `const ${prop.exp.content}`);
+					colletVars(ts, collectAst, slotBlockVars);
 
 					codeGen.push([
 						prop.exp.content,
 						'template',
 						prop.exp.loc.start.offset,
-						capabilitiesSet.all,
+						capabilitiesPresets.all,
 					]);
 					appendFormattingCode(
 						prop.exp.content,
@@ -1311,7 +1311,7 @@ export function generate(
 					'',
 					'template',
 					argRange[0],
-					capabilitiesSet.diagnosticOnly,
+					capabilitiesPresets.diagnosticOnly,
 				]);
 				codeGen.push(varSlots);
 				if (isStatic) {
@@ -1321,7 +1321,7 @@ export function generate(
 							slotName,
 							argRange,
 							{
-								...capabilitiesSet.slotName,
+								...capabilitiesPresets.slotName,
 								completion: !!prop.arg,
 							},
 						);
@@ -1332,7 +1332,7 @@ export function generate(
 							slotName,
 							argRange,
 							{
-								...capabilitiesSet.slotName,
+								...capabilitiesPresets.slotName,
 								completion: !!prop.arg,
 							},
 						);
@@ -1344,7 +1344,7 @@ export function generate(
 					writeInterpolation(
 						slotName,
 						argRange[0] + 1,
-						capabilitiesSet.all,
+						capabilitiesPresets.all,
 						'',
 						'',
 						(prop.loc as any).slot_name ?? ((prop.loc as any).slot_name = {}),
@@ -1356,7 +1356,7 @@ export function generate(
 					'',
 					'template',
 					argRange[1],
-					capabilitiesSet.diagnosticOnly,
+					capabilitiesPresets.diagnosticOnly,
 				]);
 				codeGen.push(`;\n`);
 
@@ -1397,7 +1397,7 @@ export function generate(
 					'',
 					'template',
 					prop.loc.start.offset,
-					capabilitiesSet.diagnosticOnly,
+					capabilitiesPresets.diagnosticOnly,
 				]);
 				codeGen.push(`(await import('./__VLS_types.js')).directiveFunction(__VLS_ctx.`);
 				codeGen.push([
@@ -1405,7 +1405,7 @@ export function generate(
 					'template',
 					[prop.loc.start.offset, prop.loc.start.offset + 'v-'.length + prop.name.length],
 					{
-						...capabilitiesSet.noDiagnostic,
+						...capabilitiesPresets.noDiagnostic,
 						completion: {
 							// fix https://github.com/johnsoncodehk/volar/issues/1905
 							additional: true,
@@ -1422,7 +1422,7 @@ export function generate(
 					writeInterpolation(
 						prop.exp.content,
 						prop.exp.loc.start.offset,
-						capabilitiesSet.all,
+						capabilitiesPresets.all,
 						'(',
 						')',
 						prop.exp.loc,
@@ -1438,7 +1438,7 @@ export function generate(
 					'',
 					'template',
 					prop.loc.end.offset,
-					capabilitiesSet.diagnosticOnly,
+					capabilitiesPresets.diagnosticOnly,
 				]);
 				codeGen.push(`;\n`);
 				writeInterpolationVarsExtraCompletion();
@@ -1456,7 +1456,7 @@ export function generate(
 				writeInterpolation(
 					prop.value.content,
 					prop.value.loc.start.offset + 1,
-					capabilitiesSet.refAttr,
+					capabilitiesPresets.refAttr,
 					'(',
 					')',
 					prop.value.loc,
@@ -1466,7 +1466,7 @@ export function generate(
 			}
 		}
 	}
-	function writeClassScopeds(node: CompilerDOM.ElementNode) {
+	function writeClassScoped(node: CompilerDOM.ElementNode) {
 		for (const prop of node.props) {
 			if (
 				prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
@@ -1502,7 +1502,7 @@ export function generate(
 					prop.exp.content,
 					'template',
 					prop.exp.loc.start.offset,
-					capabilitiesSet.scopedClassName,
+					capabilitiesPresets.scopedClassName,
 				]);
 				codeGen.push(`);\n`);
 			}
@@ -1529,7 +1529,7 @@ export function generate(
 				writeInterpolation(
 					prop.exp.content,
 					prop.exp.loc.start.offset,
-					capabilitiesSet.attrReference,
+					capabilitiesPresets.attrReference,
 					'(',
 					')',
 					prop.exp.loc,
@@ -1552,7 +1552,7 @@ export function generate(
 					prop.arg.content,
 					[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
 					{
-						...capabilitiesSet.attrReference,
+						...capabilitiesPresets.attrReference,
 						rename: {
 							normalize: camelize,
 							apply: getRenameApply(prop.arg.content),
@@ -1564,7 +1564,7 @@ export function generate(
 				writeInterpolation(
 					prop.exp.content,
 					prop.exp.loc.start.offset,
-					capabilitiesSet.attrReference,
+					capabilitiesPresets.attrReference,
 					'(',
 					')',
 					prop.exp.loc,
@@ -1580,7 +1580,7 @@ export function generate(
 					prop.name,
 					prop.loc.start.offset,
 					{
-						...capabilitiesSet.attr,
+						...capabilitiesPresets.attr,
 						rename: {
 							normalize: camelize,
 							apply: getRenameApply(prop.name),
@@ -1720,10 +1720,10 @@ export function generate(
 			}
 			else {
 				fragOffset -= prefix.length;
-				let addSubfix = '';
+				let addSuffix = '';
 				const overLength = fragOffset + frag.length - mapCode.length;
 				if (overLength > 0) {
-					addSubfix = frag.substring(frag.length - overLength);
+					addSuffix = frag.substring(frag.length - overLength);
 					frag = frag.substring(0, frag.length - overLength);
 				}
 				if (fragOffset < 0) {
@@ -1737,14 +1737,14 @@ export function generate(
 						'template',
 						sourceOffset + fragOffset,
 						isJustForErrorMapping
-							? capabilitiesSet.diagnosticOnly
+							? capabilitiesPresets.diagnosticOnly
 							: data,
 					]);
 				}
 				else {
 					codeGen.push(frag);
 				}
-				codeGen.push(addSubfix);
+				codeGen.push(addSuffix);
 			}
 		}, localVars, identifiers, vueCompilerOptions);
 		if (sourceOffset !== undefined) {
@@ -1829,7 +1829,7 @@ function toUnicode(str: string) {
 		return value;
 	}).join('');
 }
-function unHyphenatComponentName(newName: string) {
+function camelizeComponentName(newName: string) {
 	return camelize('-' + newName);
 }
 function getRenameApply(oldName: string) {
