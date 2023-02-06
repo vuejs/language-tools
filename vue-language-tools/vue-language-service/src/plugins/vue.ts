@@ -122,15 +122,6 @@ export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin =
 	const _ts = context.typescript;
 	const htmlPlugin = createHtmlPlugin({ validLang: 'vue', disableCustomData: true })(context);
 	htmlPlugin.getHtmlLs().setDataProviders(false, [dataProvider]);
-	const emptyBlocksDocument = new WeakMap<TextDocument, [number, TextDocument]>();
-
-	if (htmlPlugin.complete?.on) {
-		htmlPlugin.complete.on = apiWithEmptyBlocksDocument(htmlPlugin.complete.on);
-	}
-
-	if (htmlPlugin.findDocumentLinks) {
-		htmlPlugin.findDocumentLinks = apiWithEmptyBlocksDocument(htmlPlugin.findDocumentLinks);
-	}
 
 	return {
 
@@ -138,7 +129,7 @@ export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin =
 
 		rules: {
 			prepare(context) {
-				worker(context.document, (_, vueSourceFile) => {
+				worker(context.document, (vueSourceFile) => {
 					if (vueSourceFile.parsedSfc) {
 						context.vue = {
 							sfc: vueSourceFile.parsedSfc,
@@ -154,7 +145,7 @@ export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin =
 
 		validation: {
 			onSyntactic(document) {
-				return worker(document, (document, vueSourceFile) => {
+				return worker(document, (vueSourceFile) => {
 
 					const result: vscode.Diagnostic[] = [];
 					const sfc = vueSourceFile.sfc;
@@ -203,7 +194,7 @@ export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin =
 		},
 
 		findDocumentSymbols(document) {
-			return worker(document, (document, vueSourceFile) => {
+			return worker(document, (vueSourceFile) => {
 
 				const result: vscode.SymbolInformation[] = [];
 				const descriptor = vueSourceFile.sfc;
@@ -263,20 +254,8 @@ export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin =
 			});
 		},
 
-		getFoldingRanges(document) {
-			return worker(document, (document) => {
-				return htmlPlugin.getHtmlLs().getFoldingRanges(document);
-			});
-		},
-
-		getSelectionRanges(document, positions) {
-			return worker(document, (document) => {
-				return htmlPlugin.getHtmlLs().getSelectionRanges(document, positions);
-			});
-		},
-
 		format(document) {
-			return worker(document, (document, vueSourceFile) => {
+			return worker(document, (vueSourceFile) => {
 
 				const blocks = [
 					vueSourceFile.sfc.script,
@@ -310,51 +289,10 @@ export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin =
 		},
 	};
 
-	function apiWithEmptyBlocksDocument<T extends (doc: TextDocument, ...args: any[]) => any>(api: T): T {
-		const fn = (doc: TextDocument, ...args: any[]) => {
-			return worker(doc, (doc) => {
-				return api(doc, ...args);
-			});
-		};
-		return fn as T;
-	}
-
-	function worker<T>(document: TextDocument, callback: (emptyBlocksDocument: TextDocument, vueSourceFile: vue.VueFile) => T) {
-
+	function worker<T>(document: TextDocument, callback: (vueSourceFile: vue.VueFile) => T) {
 		const [vueFile] = context.documents.getVirtualFileByUri(document.uri);
 		if (vueFile instanceof vue.VueFile) {
-
-			let cache = emptyBlocksDocument.get(document);
-			if (!cache || cache[0] !== document.version) {
-				cache = [document.version, createEmptyBlocksDocument(document, vueFile)];
-			}
-
-			return callback(cache[1], vueFile);
+			return callback(vueFile);
 		}
 	}
 };
-
-function createEmptyBlocksDocument(document: TextDocument, vueSourceFile: vue.VueFile) {
-	return TextDocument.create(document.uri, document.languageId, document.version, clearSFCBlocksContents(document.getText(), vueSourceFile));
-}
-
-function clearSFCBlocksContents(sfcCode: string, vueSourceFile: vue.VueFile) {
-
-	const descriptor = vueSourceFile.sfc;
-	const blocks = [
-		descriptor.template,
-		descriptor.script,
-		descriptor.scriptSetup,
-		...descriptor.styles,
-		...descriptor.customBlocks,
-	].filter(shared.notEmpty);
-
-	for (const block of blocks) {
-		const content = sfcCode.substring(block.startTagEnd, block.startTagEnd + block.content.length);
-		sfcCode = sfcCode.substring(0, block.startTagEnd)
-			+ content.split('\n').map(line => ' '.repeat(line.length)).join('\n')
-			+ sfcCode.substring(block.startTagEnd + block.content.length);
-	}
-
-	return sfcCode;
-}

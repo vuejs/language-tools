@@ -5,6 +5,7 @@ import { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlo
 import { computed, ComputedRef, reactive, pauseTracking, resetTracking } from '@vue/reactivity';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { Sfc, SfcBlock, VueLanguagePlugin } from './types';
+import * as muggle from 'muggle-string';
 
 export class VueEmbeddedFile {
 
@@ -351,13 +352,8 @@ export class VueFile implements VirtualFile {
 	update(newScriptSnapshot: ts.IScriptSnapshot) {
 
 		this.snapshot = newScriptSnapshot;
-		this.mappings = [{
-			sourceRange: [0, this.snapshot.getLength()],
-			generatedRange: [0, this.snapshot.getLength()],
-			data: FileRangeCapabilities.full,
-		}];
-
 		this.parsedSfc = this.parseSfc();
+
 		if (this.parsedSfc) {
 			this.updateTemplate(this.parsedSfc.descriptor.template);
 			this.updateScript(this.parsedSfc.descriptor.script);
@@ -372,6 +368,29 @@ export class VueFile implements VirtualFile {
 			this.updateStyles([]);
 			this.updateCustomBlocks([]);
 		}
+
+		const str = muggle.create(this.snapshot.getText(0, this.snapshot.getLength()));
+		for (const block of [
+			this.sfc.script,
+			this.sfc.scriptSetup,
+			this.sfc.template,
+			...this.sfc.styles,
+			...this.sfc.customBlocks,
+		]) {
+			if (block) {
+				muggle.replaceSourceRange(str, undefined, block.startTagEnd, block.endTagStart);
+			}
+		}
+		this.mappings = str.map<Mapping<FileRangeCapabilities>>((m) => {
+			const text = m[0];
+			const start = m[2] as number;
+			const end = start + text.length;
+			return {
+				sourceRange: [start, end],
+				generatedRange: [start, end],
+				data: FileRangeCapabilities.full,
+			};
+		});
 	}
 
 	parseSfc() {
