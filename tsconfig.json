@@ -20,28 +20,28 @@
 		"baseUrl": "./",
 		"paths": {
 			"preview": [
-				"vue-language-tools/preview/src"
+				"packages/preview/src"
 			],
 			"typescript-vue-plugin": [
-				"vue-language-tools/typescript-vue-plugin/src"
+				"packages/typescript-vue-plugin/src"
 			],
 			"vue-component-meta": [
-				"vue-language-tools/vue-component-meta/src"
+				"packages/vue-component-meta/src"
 			],
 			"@volar/vue-language-core": [
-				"vue-language-tools/vue-language-core/src"
+				"packages/vue-language-core/src"
 			],
 			"@volar/vue-language-plugin-pug": [
-				"vue-language-tools/vue-language-plugin-pug/src"
+				"packages/vue-language-plugin-pug/src"
 			],
 			"@volar/vue-language-server": [
-				"vue-language-tools/vue-language-server/src"
+				"packages/vue-language-server/src"
 			],
 			"@volar/vue-language-service": [
-				"vue-language-tools/vue-language-service/src"
+				"packages/vue-language-service/src"
 			],
 			"vue-tsc": [
-				"vue-language-tools/vue-tsc/src"
+				"packages/vue-tsc/src"
 			],
 		},
 		"noEmit": true,

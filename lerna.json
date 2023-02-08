@@ -2,7 +2,7 @@
 	"$schema": "https://raw.githubusercontent.com/lerna-lite/lerna-lite/main/packages/cli/schemas/lerna-schema.json",
 	"npmClient": "pnpm",
 	"packages": [
-		"vue-language-tools/*"
+		"packages/*"
 	],
 	"version": "1.0.24"
 }

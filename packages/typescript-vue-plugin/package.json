@@ -1,26 +1,20 @@
 {
-	"name": "vue-tsc",
+	"name": "typescript-vue-plugin",
 	"version": "1.0.24",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
-		"bin",
 		"out/**/*.js",
 		"out/**/*.d.ts"
 	],
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
-		"directory": "vue-language-tools/vue-tsc"
-	},
-	"bin": {
-		"vue-tsc": "./bin/vue-tsc.js"
+		"directory": "packages/typescript-vue-plugin"
 	},
 	"dependencies": {
+		"@volar/typescript-faster": "1.2.0-alpha.9",
 		"@volar/vue-language-core": "1.0.24",
 		"@volar/vue-typescript": "1.0.24"
-	},
-	"peerDependencies": {
-		"typescript": "*"
 	}
 }

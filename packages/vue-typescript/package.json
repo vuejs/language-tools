@@ -10,7 +10,7 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
-		"directory": "vue-language-tools/vue-typescript"
+		"directory": "packages/vue-typescript"
 	},
 	"dependencies": {
 		"@volar/typescript": "1.2.0-alpha.9",
