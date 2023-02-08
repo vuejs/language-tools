@@ -10,7 +10,7 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
-		"directory": "vue-language-tools/vue-language-plugin-pug"
+		"directory": "packages/vue-language-plugin-pug"
 	},
 	"devDependencies": {
 		"@volar/vue-language-core": "1.0.24"

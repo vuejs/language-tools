@@ -11,7 +11,7 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/johnsoncodehk/volar.git",
-		"directory": "vue-language-tools/vue-tsc"
+		"directory": "packages/vue-tsc"
 	},
 	"bin": {
 		"vue-tsc": "./bin/vue-tsc.js"
