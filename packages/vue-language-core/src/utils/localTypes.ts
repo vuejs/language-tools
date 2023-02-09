@@ -141,7 +141,7 @@ export function genConstructorOverloads(name = 'ConstructorOverloads', nums?: nu
 			gen(i);
 		}
 	}
-	else {
+	else if (nums > 0) {
 		gen(nums);
 	}
 	code += `// 0\n`;
