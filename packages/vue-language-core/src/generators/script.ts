@@ -13,6 +13,7 @@ import { Sfc } from '../types';
 import type { VueCompilerOptions } from '../types';
 import { getSlotsPropertyName, getVueLibraryName } from '../utils/shared';
 import { walkInterpolationFragment } from '../utils/transform';
+import { genConstructorOverloads } from '../utils/localTypes';
 
 export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -779,37 +780,6 @@ export function generate(
 		}
 
 		return usageVars;
-	}
-}
-
-// TODO: not working for overloads > n (n = 8)
-// see: https://github.com/johnsoncodehk/volar/issues/60
-function genConstructorOverloads(name = 'ConstructorOverloads', nums?: number) {
-	let code = `type ${name}<T> =\n`;
-	if (nums === undefined) {
-		for (let i = 8; i >= 1; i--) {
-			gen(i);
-		}
-	}
-	else if (nums > 0) {
-		gen(nums);
-	}
-	code += `// 0\n`;
-	code += `{};\n`;
-	return code;
-
-	function gen(i: number) {
-		code += `// ${i}\n`;
-		code += `T extends {\n`;
-		for (let j = 1; j <= i; j++) {
-			code += `(event: infer E${j}, ...payload: infer P${j}): void;\n`;
-		}
-		code += `} ? (\n`;
-		for (let j = 1; j <= i; j++) {
-			if (j > 1) code += '& ';
-			code += `(E${j} extends string ? { [K${j} in E${j}]: (...payload: P${j}) => void } : {})\n`;
-		}
-		code += `) :\n`;
 	}
 }
 
