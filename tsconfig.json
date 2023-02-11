@@ -49,6 +49,7 @@
 	"include": [
 		"*/*/rules.d.ts",
 		"*/*/src",
+		"*/*/src/**/*.json",
 		"*/*/tests",
 	],
 	"exclude": [

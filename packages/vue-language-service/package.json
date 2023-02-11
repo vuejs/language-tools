@@ -12,6 +12,9 @@
 		"url": "https://github.com/johnsoncodehk/volar.git",
 		"directory": "packages/vue-language-service"
 	},
+	"scripts": {
+		"update-data": "node ./scripts/update-data.js"
+	},
 	"dependencies": {
 		"@volar-plugins/css": "2.0.0-alpha.2",
 		"@volar-plugins/emmet": "2.0.0-alpha.2",

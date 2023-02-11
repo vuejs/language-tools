@@ -8,17 +8,23 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { checkComponentNames, checkEventsOfTag, checkPropsOfTag, getElementAttrs } from '../helpers';
 import * as casing from '../ideFeatures/nameCasing';
 import { AttrNameCasing, VueCompilerOptions, TagNameCasing } from '../types';
+import * as _builtInDirectives from '../data/builtInDirectives.json';
+
+const builtInDirectives = [..._builtInDirectives];
+const vOn = _builtInDirectives.find(d => d.name === 'v-on');
+const vSlot = _builtInDirectives.find(d => d.name === 'v-slot');
+const vBind = _builtInDirectives.find(d => d.name === 'v-bind');
+
+if (vOn) builtInDirectives.push({ ...vOn, name: '@' });
+if (vSlot) builtInDirectives.push({ ...vSlot, name: '#' });
+if (vBind) builtInDirectives.push({ ...vBind, name: ':' });
 
 const globalDirectives = html.newHTMLDataProvider('vue-global-directive', {
 	version: 1.1,
 	tags: [],
-	globalAttributes: [
-		{ name: 'v-if' },
-		{ name: 'v-else-if' },
-		{ name: 'v-else', valueSet: 'v' },
-		{ name: 'v-for' },
-	],
+	globalAttributes: builtInDirectives as any,
 });
+
 // https://v3.vuejs.org/api/directives.html#v-on
 const eventModifiers: Record<string, string> = {
 	stop: 'call event.stopPropagation().',
