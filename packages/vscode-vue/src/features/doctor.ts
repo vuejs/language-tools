@@ -96,14 +96,6 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			message: string;
 		}[] = [];
 
-		// check vue module exist
-		if (!vueMod) {
-			problems.push({
-				title: '`vue` module not found',
-				message: 'Vue module not found from workspace, you may not have installed `node_modules` yet.',
-			});
-		}
-
 		// check vue version < 3 but missing vueCompilerOptions.target
 		if (vueMod) {
 			const vueVersionNumber = semver.gte(vueMod.json.version, '3.0.0') ? 3 : semver.gte(vueMod.json.version, '2.7.0') ? 2.7 : 2;
