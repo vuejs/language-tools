@@ -486,7 +486,7 @@ export function generate(
 				tagCapabilities,
 			]);
 			codeGen.push(` `);
-			const { unWriteExps: unWriteExps } = writeProps(node, 'jsx', 'props');
+			const { unWriteExps } = writeProps(node, 'jsx', 'props');
 			_unWriteExps = unWriteExps;
 
 			if (endTagOffset === undefined) {
@@ -874,6 +874,7 @@ export function generate(
 					|| vueCompilerOptions.dataAttributes.some(pattern => minimatch(attrNameText!, pattern))
 					|| (attrNameText === 'style' && ++styleAttrNum >= 2)
 					|| (attrNameText === 'class' && ++classAttrNum >= 2)
+					|| (attrNameText === 'name' && node.tag === 'slot') // #2308
 				) {
 					if (prop.exp && prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
 						unWriteExps.push(prop.exp);
@@ -1013,6 +1014,7 @@ export function generate(
 					vueCompilerOptions.dataAttributes.some(pattern => minimatch(attrNameText!, pattern))
 					|| (attrNameText === 'style' && ++styleAttrNum >= 2)
 					|| (attrNameText === 'class' && ++classAttrNum >= 2)
+					|| (attrNameText === 'name' && node.tag === 'slot') // #2308
 				) {
 					continue;
 				}
