@@ -153,10 +153,6 @@ export function createProgram(options: ts.CreateProgramOptions) {
 	return program;
 }
 
-export function loadTsLib() {
-	return ts;
-}
-
 function toThrow(msg: string) {
 	console.error(msg);
 	return msg;

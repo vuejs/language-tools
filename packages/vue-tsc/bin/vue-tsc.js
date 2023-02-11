@@ -14,9 +14,6 @@ fs.readFileSync = (...args) => {
 		tryReplace(/supportedJSExtensions = .*(?=;)/, s => s + '.concat([[".vue"]])');
 		tryReplace(/allSupportedExtensions = .*(?=;)/, s => s + '.concat([[".vue"]])');
 
-		// proxy startTracing, dumpTracingLegend
-		tryReplace(/ = tracingEnabled\./g, ` = require(${JSON.stringify(proxyApiPath)}).loadTsLib().`);
-
 		// proxy createProgram apis
 		tryReplace(/function createProgram\(.+\) {/, s => s + ` return require(${JSON.stringify(proxyApiPath)}).createProgram(...arguments);`);
 
