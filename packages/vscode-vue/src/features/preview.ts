@@ -38,7 +38,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 				return 'vscode://files:/' + fileName;
 			},
 		});
-		statusBar.text = 'Preview Port: ' + previewTerminal.name.split(':')[1];
+		statusBar.text = 'Preview Port: ' + previewTerminal.name.split(':')[2];
 		statusBar.show();
 	}
 	vscode.window.onDidOpenTerminal(e => {
@@ -51,7 +51,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 					return 'vscode://files:/' + fileName;
 				},
 			});
-			statusBar.text = 'Preview Port: ' + e.name.split(':')[1];
+			statusBar.text = 'Preview Port: ' + e.name.split(':')[2];
 			statusBar.show();
 		}
 	});
@@ -118,7 +118,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 					return;
 
 				if (terminal) {
-					port = Number(terminal.name.split(':')[1]);
+					port = Number(terminal.name.split(':')[2]);
 				}
 				else {
 					const configDir = path.dirname(configFile);
@@ -180,7 +180,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			}
 		}
 		if (key === 'browser') {
-			vscode.env.openExternal(vscode.Uri.parse('http://localhost:' + statusBar.text.split(':')[1].trim()));
+			vscode.env.openExternal(vscode.Uri.parse('http://localhost:' + statusBar.text.split(':')[2].trim()));
 		}
 		if (key === 'highlight-on') {
 			highlightDomElements = true;
@@ -321,7 +321,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		let port: number;
 
 		if (terminal) {
-			port = Number(terminal.name.split(':')[1]);
+			port = Number(terminal.name.split(':')[2]);
 		}
 		else {
 			const configDir = path.dirname(configFile);
@@ -441,7 +441,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		}
 
 		const terminal = vscode.window.createTerminal({
-			name: 'volar-preview:' + port,
+			name: 'volar-preview:' + type + ':' + port,
 			isTransient: true,
 		});
 		terminal.sendText(`cd ${JSON.stringify(viteDir)}`);
