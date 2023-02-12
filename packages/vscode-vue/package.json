@@ -28,8 +28,7 @@
 		"onLanguage:javascript",
 		"onLanguage:typescript",
 		"onLanguage:javascriptreact",
-		"onLanguage:typescriptreact",
-		"onWebviewPanel:preview"
+		"onLanguage:typescriptreact"
 	],
 	"main": "client",
 	"browser": "dist/browser/client",
@@ -45,16 +44,6 @@
 		}
 	},
 	"contributes": {
-		"views": {
-			"explorer": [
-				{
-					"id": "vueComponentPreview",
-					"name": "Vue Component Preview",
-					"type": "webview",
-					"when": "volar.foundViteDir || volar.foundNuxtDir"
-				}
-			]
-		},
 		"jsonValidation": [
 			{
 				"fileMatch": "tsconfig.json",
@@ -439,11 +428,6 @@
 					"default": false,
 					"description": "Show split editor icon in title area of editor."
 				},
-				"volar.icon.preview": {
-					"type": "boolean",
-					"default": true,
-					"description": "Show Vite / Nuxt App preview icon."
-				},
 				"volar.doctor.statusBarItem": {
 					"type": "boolean",
 					"default": true,
@@ -573,34 +557,6 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Normalize import name for auto import. (\"myCompVue\" -> \"MyComp\")"
-				},
-				"volar.preview.script.vite": {
-					"type": "string",
-					"default": "node {VITE_BIN} --port={PORT}"
-				},
-				"volar.preview.script.nuxi": {
-					"type": "string",
-					"default": "node {NUXI_BIN} dev --port {PORT}"
-				},
-				"volar.preview.port": {
-					"type": "number",
-					"default": 3333,
-					"description": "Default port for component preview server."
-				},
-				"volar.preview.root": {
-					"type": "string",
-					"default": ".",
-					"description": "Component preview root directory. (For Nuxt, it should be \"./src\" by default.)"
-				},
-				"volar.preview.backgroundColor": {
-					"type": "string",
-					"default": "#fff",
-					"description": "Component preview background color."
-				},
-				"volar.preview.transparentGrid": {
-					"type": "boolean",
-					"default": false,
-					"description": "Component preview background style."
 				},
 				"volar.splitEditors.layout.left": {
 					"type": "array",
@@ -738,16 +694,6 @@
 					"command": "volar.action.splitEditors",
 					"when": "resourceLangId == vue && config.volar.icon.splitEditors",
 					"group": "navigation"
-				},
-				{
-					"command": "volar.action.vite",
-					"when": "editorLangId == vue && config.volar.icon.preview && volar.foundViteDir",
-					"group": "navigation"
-				},
-				{
-					"command": "volar.action.nuxt",
-					"when": "editorLangId == vue && config.volar.icon.preview && volar.foundNuxtDir",
-					"group": "navigation"
 				}
 			],
 			"explorer/context": [
@@ -817,7 +763,6 @@
 	"devDependencies": {
 		"@types/semver": "^7.3.13",
 		"@types/vscode": "1.67.0",
-		"@volar/preview": "1.0.24",
 		"@volar/shared": "1.2.0-alpha.9",
 		"@volar/source-map": "1.2.0-alpha.9",
 		"@volar/vscode-language-client": "1.2.0-alpha.9",

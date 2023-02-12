@@ -7,6 +7,9 @@
 			"path": "./packages/vscode-vue/tsconfig.build.json"
 		},
 		{
+			"path": "./packages/vscode-vue-preview/tsconfig.build.json"
+		},
+		{
 			"path": "./packages/vscode-typescript-vue-plugin/tsconfig.build.json"
 		},
 		// Extra Pkgs

@@ -7,15 +7,10 @@
 	},
 	"include": [
 		"src",
-		"src/**/*.json"
-	],
-	"exclude": [
-		"node_modules",
-		".vscode-test"
 	],
 	"references": [
 		{
-			"path": "../vue-language-server/tsconfig.build.json"
+			"path": "../preview/tsconfig.build.json"
 		}
 	]
 }

@@ -20,6 +20,23 @@
 			}
 		},
 		{
+			"name": "Launch Preview",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"--disable-extensions",
+				"--extensionDevelopmentPath=${workspaceRoot}/packages/vscode-vue-preview"
+			],
+			"outFiles": [
+				"${workspaceRoot}/*/*/out/**/*.js"
+			],
+			"preLaunchTask": {
+				"type": "npm",
+				"script": "watch"
+			}
+		},
+		{
 			"type": "extensionHost",
 			"request": "launch",
 			"name": "Launch TypeScript Plugin",

@@ -1,20 +1,12 @@
-const path = require('path');
-const fs = require('fs');
-
 require('esbuild').build({
-	entryPoints: process.argv.includes('--empty') ? {
-		client: './scripts/empty.js',
-		server: './scripts/empty.js',
-	} : {
-		client: './out/nodeClientMain.js',
-		server: './node_modules/@volar/vue-language-server/out/nodeServer.js',
+	entryPoints: {
+		extension: './out/extension.js',
 	},
 	bundle: true,
 	metafile: process.argv.includes('--metafile'),
-	outdir: './dist/node',
+	outdir: './dist',
 	external: [
 		'vscode',
-		'typescript', // vue-component-meta
 	],
 	format: 'cjs',
 	platform: 'node',
@@ -37,23 +29,10 @@ require('esbuild').build({
 		require('esbuild-plugin-copy').copy({
 			resolveFrom: 'cwd',
 			assets: {
-				from: ['./node_modules/@volar/vue-language-core/schemas/**/*'],
-				to: ['./dist/schemas'],
+				from: ['./node_modules/@volar/preview/bin/**/*'],
+				to: ['./dist/bin'],
 			},
 			keepStructure: true,
 		}),
-		{
-			name: 'meta',
-			setup(build) {
-				build.onEnd((result) => {
-					if (result.metafile && result.errors.length === 0) {
-						fs.writeFileSync(
-							path.resolve(__dirname, '../meta.json'),
-							JSON.stringify(result.metafile),
-						);
-					}
-				});
-			},
-		},
 	],
 }).catch(() => process.exit(1))

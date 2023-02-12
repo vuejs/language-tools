@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
 import * as path from 'typesafe-path';
-import * as fs from '../utils/fs';
-import * as shared from '@volar/shared';
+import * as fs from './utils/fs';
 import { quickPick } from '@volar/vscode-language-client/out/common';
 import * as preview from '@volar/preview';
-import { getLocalHostAvailablePort } from '../utils/http';
-import { BaseLanguageClient } from 'vscode-languageclient';
-import { ParseSFCRequest } from '@volar/vue-language-server';
+import { getLocalHostAvailablePort } from './utils/http';
+import * as html from 'vscode-html-languageservice';
+
+const htmlLs = html.getLanguageService();
 
 const enum PreviewType {
 	Webview = 'volar-webview',
@@ -14,7 +14,7 @@ const enum PreviewType {
 	ExternalBrowser_Component = 'volar-component-preview',
 }
 
-export async function register(context: vscode.ExtensionContext, client: BaseLanguageClient) {
+export async function activate(context: vscode.ExtensionContext) {
 
 	let _loadingPanel: vscode.WebviewPanel | undefined;
 	let avoidUpdateOnDidChangeActiveTextEditor = false;
@@ -63,7 +63,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		}
 	});
 
-	const sfcs = new WeakMap<vscode.TextDocument, { version: number, sfc: ParseSFCRequest.ResponseType; }>();
+	const templateOffsets = new WeakMap<vscode.TextDocument, { version: number, offset: number; }>();
 
 	class VueComponentPreview implements vscode.WebviewViewProvider {
 
@@ -138,7 +138,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 				}
 
 				const root = vscode.workspace.getConfiguration('volar').get<path.PosixPath>('preview.root')!;
-				const relativePath = shared.normalizeFileName(path.relative(path.resolve(path.dirname(configFile), root), fileName));
+				const relativePath = path.relative(path.resolve(path.dirname(configFile), root), fileName).replace(/\\/g, '/');
 				let url = `http://localhost:${port}/__preview${relativePath}#`;
 
 				if (lastPreviewDocument.isDirty) {
@@ -279,17 +279,20 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 
 	updatePreviewIconStatus();
 
-	async function getSfc(document: vscode.TextDocument) {
-		let cache = sfcs.get(document);
+	function getTemplateOffset(document: vscode.TextDocument) {
+		let cache = templateOffsets.get(document);
 		if (!cache || cache.version !== document.version) {
-			const parsed = await client.sendRequest(ParseSFCRequest.type, document.getText());
-			cache = {
-				version: document.version,
-				sfc: parsed,
-			};
-			sfcs.set(document, cache);
+			templateOffsets.delete(document);
+			const htmlDocument = htmlLs.parseHTMLDocument(html.TextDocument.create(document.uri.toString(), document.languageId, document.version, document.getText()));
+			const template = htmlDocument.roots.find(node => node.tag === 'template');
+			if (template?.startTagEnd !== undefined) {
+				templateOffsets.set(document, {
+					version: document.version,
+					offset: template.startTagEnd,
+				});
+			}
 		}
-		return cache.sfc;
+		return templateOffsets.get(document)?.offset ?? 0;
 	}
 
 	async function updatePreviewIconStatus() {
@@ -305,8 +308,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 
 	async function updateSelectionHighlights(textEditor: vscode.TextEditor) {
 		if (connection && textEditor.document.languageId === 'vue' && highlightDomElements) {
-			const sfc = await getSfc(textEditor.document);
-			const offset = sfc.descriptor.template?.loc.start.offset ?? 0;
+			const offset = await getTemplateOffset(textEditor.document);
 			connection.highlight(
 				textEditor.document.fileName,
 				textEditor.selections.map(selection => ({
@@ -369,7 +371,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		}
 		else if (previewType === PreviewType.ExternalBrowser_Component) {
 			const root = vscode.workspace.getConfiguration('volar').get<path.PosixPath>('preview.root')!;
-			const relativePath = shared.normalizeFileName(path.relative(path.resolve(path.dirname(configFile), root), fileName));
+			const relativePath = path.relative(path.resolve(path.dirname(configFile), root), fileName).replace(/\\/g, '/');
 			loadingPanel.webview.html = getWebviewContent(`http://localhost:${port}/__preview${relativePath}`, undefined, 'openExternal');
 		}
 		else if (previewType === PreviewType.Webview) {
@@ -419,8 +421,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		if (cancelToken.isCancelled)
 			return;
 
-		const sfc = await getSfc(doc);
-		const offset = sfc.descriptor.template?.loc.start.offset ?? 0;
+		const offset = await getTemplateOffset(doc);
 		const start = doc.positionAt(range[0] + offset);
 		const end = doc.positionAt(range[1] + offset);
 		await vscode.window.showTextDocument(doc, vscode.ViewColumn.One);
@@ -441,10 +442,10 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		let script = await vscode.workspace.getConfiguration('volar').get<string>('preview.script.' + (type === 'nuxt' ? 'nuxi' : 'vite')) ?? '';
 
 		if (script.indexOf('{VITE_BIN}') >= 0) {
-			script = script.replace('{VITE_BIN}', JSON.stringify(require.resolve('./dist/preview-bin/vite', { paths: [context.extensionPath] })));
+			script = script.replace('{VITE_BIN}', JSON.stringify(require.resolve('./dist/bin/vite', { paths: [context.extensionPath] })));
 		}
 		if (script.indexOf('{NUXI_BIN}') >= 0) {
-			script = script.replace('{NUXI_BIN}', JSON.stringify(require.resolve('./dist/preview-bin/nuxi', { paths: [context.extensionPath] })));
+			script = script.replace('{NUXI_BIN}', JSON.stringify(require.resolve('./dist/bin/nuxi', { paths: [context.extensionPath] })));
 		}
 		if (script.indexOf('{PORT}') >= 0) {
 			script = script.replace('{PORT}', port.toString());

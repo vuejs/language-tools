@@ -1,0 +1,135 @@
+{
+	"private": true,
+	"name": "vscode-vue-preview",
+	"version": "1.0.24",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/johnsoncodehk/volar.git",
+		"directory": "packages/vscode-vue-preview"
+	},
+	"sponsor": {
+		"url": "https://github.com/sponsors/johnsoncodehk"
+	},
+	"displayName": "Vue and Nuxt Preview (from Volar)",
+	"description": "Component and App Preview For Vue and Nuxt",
+	"author": "johnsoncodehk",
+	"publisher": "johnsoncodehk",
+	"engines": {
+		"vscode": "^1.67.0"
+	},
+	"activationEvents": [
+		"onLanguage:vue",
+		"onWebviewPanel:preview"
+	],
+	"main": "./dist/extension.js",
+	"contributes": {
+		"views": {
+			"explorer": [
+				{
+					"id": "vueComponentPreview",
+					"name": "Vue Component Preview",
+					"type": "webview",
+					"when": "volar.foundViteDir || volar.foundNuxtDir"
+				}
+			]
+		},
+		"languages": [
+			{
+				"id": "vue",
+				"extensions": [
+					".vue"
+				]
+			}
+		],
+		"configuration": {
+			"type": "object",
+			"title": "Volar",
+			"properties": {
+				"volar.preview.script.vite": {
+					"type": "string",
+					"default": "node {VITE_BIN} --port={PORT}"
+				},
+				"volar.preview.script.nuxi": {
+					"type": "string",
+					"default": "node {NUXI_BIN} dev --port {PORT}"
+				},
+				"volar.preview.port": {
+					"type": "number",
+					"default": 3333,
+					"description": "Default port for component preview server."
+				},
+				"volar.preview.root": {
+					"type": "string",
+					"default": ".",
+					"description": "Component preview root directory. (For Nuxt, it should be \"./src\" by default.)"
+				},
+				"volar.preview.backgroundColor": {
+					"type": "string",
+					"default": "#fff",
+					"description": "Component preview background color."
+				},
+				"volar.preview.transparentGrid": {
+					"type": "boolean",
+					"default": false,
+					"description": "Component preview background style."
+				}
+			}
+		},
+		"commands": [
+			{
+				"command": "volar.action.vite",
+				"title": "Experimental Features for Vite",
+				"category": "Volar",
+				"icon": "images/vite-logo.svg"
+			},
+			{
+				"command": "volar.action.nuxt",
+				"title": "Experimental Features for Nuxt",
+				"category": "Volar",
+				"icon": "images/nuxt-logo.svg"
+			}
+		],
+		"menus": {
+			"commandPalette": [
+				{
+					"command": "volar.action.vite",
+					"when": "editorLangId == vue"
+				},
+				{
+					"command": "volar.action.nuxt",
+					"when": "editorLangId == vue"
+				}
+			],
+			"editor/title": [
+				{
+					"command": "volar.action.vite",
+					"when": "editorLangId == vue && config.volar.icon.preview && volar.foundViteDir",
+					"group": "navigation"
+				},
+				{
+					"command": "volar.action.nuxt",
+					"when": "editorLangId == vue && config.volar.icon.preview && volar.foundNuxtDir",
+					"group": "navigation"
+				}
+			]
+		}
+	},
+	"scripts": {
+		"prebuild": "cd ../.. && npm run build",
+		"build": "node scripts/build",
+		"watch": "npm run build -- --watch",
+		"prepack": "npm run prebuild && npm run build -- --minify",
+		"pack": "npm run prepack && vsce package",
+		"release": "npm run prepack && vsce publish"
+	},
+	"devDependencies": {
+		"@types/vscode": "1.67.0",
+		"@volar/preview": "1.0.24",
+		"@volar/vscode-language-client": "1.2.0-alpha.9",
+		"esbuild": "0.15.18",
+		"esbuild-plugin-copy": "latest",
+		"typesafe-path": "^0.2.2",
+		"vscode-html-languageservice": "^5.0.4",
+		"vsce": "latest"
+	}
+}
