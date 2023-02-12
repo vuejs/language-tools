@@ -7,9 +7,11 @@ const workspace = process.cwd();
 const vitePkgPath = require.resolve('vite/package.json', { paths: [workspace] });
 const viteDir = path.dirname(vitePkgPath);
 const viteBinPath = require.resolve('./bin/vite.js', { paths: [viteDir] });
-const vuePluginPath = require.resolve('@vitejs/plugin-vue', { paths: [workspace] });
 const viteVersion = require(vitePkgPath).version;
-const viteExtraCode = `
+
+try {
+	const vuePluginPath = require.resolve('@vitejs/plugin-vue', { paths: [workspace] });
+	const viteExtraCode = `
 function __proxyExport(rawOptions = {}) {
 
   if (!rawOptions)
@@ -65,13 +67,16 @@ const __originalExport = module.exports;
 module.exports = __proxyExport;
 `;
 
-const readFileSync = fs.readFileSync;
-fs.readFileSync = (...args) => {
-	if (args[0] === vuePluginPath) {
-		return readFileSync(...args) + viteExtraCode;
-	}
-	return readFileSync(...args);
-};
+	const readFileSync = fs.readFileSync;
+	fs.readFileSync = (...args) => {
+		if (args[0] === vuePluginPath) {
+			return readFileSync(...args) + viteExtraCode;
+		}
+		return readFileSync(...args);
+	};
+} catch (e) {
+	console.warn('Volar: @vitejs/plugin-vue not found, skip vite extra code. (vue@2 only)')
+}
 
 createViteConfig();
 
@@ -83,7 +88,7 @@ else {
 }
 
 function createViteConfig() {
-	let proxyConfigContent = readFileSync(path.resolve(__dirname, 'vite', 'config.ts'), { encoding: 'utf8' });
+	let proxyConfigContent = fs.readFileSync(path.resolve(__dirname, 'vite', 'config.ts'), { encoding: 'utf8' });
 	proxyConfigContent = proxyConfigContent.replace('{CONFIG_PATH}', JSON.stringify(path.resolve(workspace, 'vite.config')));
 
 	if (!fs.existsSync(path.resolve(workspace, 'node_modules', '.volar'))) {
