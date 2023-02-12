@@ -74,6 +74,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		) {
 
 			let lastPreviewDocument: vscode.TextDocument | undefined;
+			let updating: Promise<void> | undefined;
 
 			webviewView.webview.options = {
 				enableScripts: true,
@@ -93,7 +94,16 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 
 			webviewView.onDidChangeVisibility(() => updateWebView(false));
 
-			async function updateWebView(refresh: boolean) {
+			function updateWebView(refresh: boolean) {
+				if (updating) {
+					updating = updating.then(() => updateWebViewWorker(refresh));
+				}
+				else {
+					updating = updateWebViewWorker(refresh);
+				}
+			}
+
+			async function updateWebViewWorker(refresh: boolean) {
 
 				if (!webviewView.visible)
 					return;
