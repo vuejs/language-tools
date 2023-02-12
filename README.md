@@ -132,8 +132,6 @@ flowchart LR
 	VOLAR_VUE_SERVICE["@volar/vue-language-service"]
 	VOLAR_PUG_SERVICE["@volar/pug-language-service"]
 	VOLAR_TS_SERVICE["@volar/typescript-language-service"]
-	%% VOLAR_TS_FASTER["@volar/typescript-faster"]
-	%% VOLAR_PREVIEW["@volar/preview"]
 	VUE_TSC[vue-tsc]
 	VUE_COMPONENT_META[vue-component-meta]
 	TS_VUE_PLUGIN[typescript-vue-plugin]
@@ -148,7 +146,6 @@ flowchart LR
 	click VOLAR_PUG_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/pug-language-service"
 	click VOLAR_TS_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/typescript-language-service"
 	click VOLAR_TS_FASTER "https://github.com/johnsoncodehk/volar/tree/master/packages/typescript-faster"
-	click VOLAR_PREVIEW "https://github.com/johnsoncodehk/volar/tree/master/packages/preview"
 
 	%% Extrnal Packages
 	HTML_SERVICE[vscode-html-languageservice]
@@ -208,9 +205,6 @@ flowchart LR
 	NOVA_VUE --> VUE_CLIENTS
 	VIM_VUE --> VUE_CLIENTS
 	LAPCE_VUE --> VUE_CLIENTS
-
-	%% VSC_VUE --> VOLAR_PREVIEW
-	%% COC_VUE --> VOLAR_PREVIEW
 
 	VUE_CLIENTS -- Language Server Protocol --> VOLAR_VUE_SERVER
 

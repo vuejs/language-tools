@@ -19,9 +19,6 @@
 		"noUnusedParameters": true,
 		"baseUrl": "./",
 		"paths": {
-			"preview": [
-				"packages/preview/src"
-			],
 			"typescript-vue-plugin": [
 				"packages/typescript-vue-plugin/src"
 			],
