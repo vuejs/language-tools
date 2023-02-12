@@ -27,7 +27,7 @@ module.exports.default.vue.compilerOptions.nodeTransforms.push(
 if (!module.exports.default.plugins)
 	module.exports.default.plugins = [];
 
-module.exports.default.plugins.push({ src: '{PLUGIN_PATH}', ssr: false });
+module.exports.default.plugins.push({ src: './node_modules/.volar/nuxt.plugin.ts', ssr: false });
 
 function addEvent(node, name: string, exp: string) {
 	node.props.push({
