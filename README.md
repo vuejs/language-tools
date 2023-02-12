@@ -132,8 +132,6 @@ flowchart LR
 	VOLAR_VUE_SERVICE["@volar/vue-language-service"]
 	VOLAR_PUG_SERVICE["@volar/pug-language-service"]
 	VOLAR_TS_SERVICE["@volar/typescript-language-service"]
-	%% VOLAR_TS_FASTER["@volar/typescript-faster"]
-	%% VOLAR_PREVIEW["@volar/preview"]
 	VUE_TSC[vue-tsc]
 	VUE_COMPONENT_META[vue-component-meta]
 	TS_VUE_PLUGIN[typescript-vue-plugin]

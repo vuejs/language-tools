@@ -3,10 +3,9 @@
 	"scripts": {
 		"build": "tsc -b tsconfig.build.json",
 		"build-ci": "tsc -b tsconfig.build-ci.json",
-		"watch": "npm run build && (npm run watch:base & npm run watch:vue & npm run watch:vue-preview & npm run watch:typescript-vue-plugin)",
+		"watch": "npm run build && (npm run watch:base & npm run watch:vue & npm run watch:typescript-vue-plugin)",
 		"watch:base": "tsc -b tsconfig.build.json -w",
 		"watch:vue": "cd ./packages/vscode-vue && npm run watch",
-		"watch:vue-preview": "cd ./packages/vscode-vue-preview && npm run watch",
 		"watch:typescript-vue-plugin": "cd ./packages/vscode-typescript-vue-plugin && npm run watch",
 		"prerelease": "npm run build && npm run test",
 		"version:test": "lerna version --exact --force-publish --yes --sync-workspace-lock --no-push --no-git-tag-version",
