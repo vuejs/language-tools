@@ -51,7 +51,7 @@
 					"id": "vueComponentPreview",
 					"name": "Vue Component Preview",
 					"type": "webview",
-					"when": "volar.foundViteDir"
+					"when": "volar.foundViteDir || volar.foundNuxtDir"
 				}
 			]
 		},
@@ -586,6 +586,11 @@
 					"type": "number",
 					"default": 3333,
 					"description": "Default port for component preview server."
+				},
+				"volar.preview.root": {
+					"type": "string",
+					"default": ".",
+					"description": "Component preview root directory. (For Nuxt, it should be \"./src\" by default.)"
 				},
 				"volar.preview.backgroundColor": {
 					"type": "string",

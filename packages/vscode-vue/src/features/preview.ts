@@ -107,8 +107,13 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 				const fileName = lastPreviewDocument.fileName as path.OsPath;
 				let terminal = vscode.window.terminals.find(terminal => terminal.name.startsWith('volar-preview:'));
 				let port: number;
+				let configFile = await getConfigFile(fileName, 'vite');
+				let previewMode: 'vite' | 'nuxt' = 'vite';
 
-				const configFile = await getConfigFile(fileName, 'vite');
+				if (!configFile) {
+					configFile = await getConfigFile(fileName, 'nuxt');
+					previewMode = 'nuxt';
+				}
 				if (!configFile)
 					return;
 
@@ -116,14 +121,14 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 					port = Number(terminal.name.split(':')[1]);
 				}
 				else {
-
 					const configDir = path.dirname(configFile);
-					const server = await startPreviewServer(configDir, 'vite');
+					const server = await startPreviewServer(configDir, previewMode);
 					terminal = server.terminal;
 					port = server.port;
 				}
 
-				const relativePath = shared.normalizeFileName(path.relative(path.dirname(configFile), fileName));
+				const root = vscode.workspace.getConfiguration('volar').get<path.PosixPath>('preview.root')!;
+				const relativePath = shared.normalizeFileName(path.relative(path.resolve(path.dirname(configFile), root), fileName));
 				let url = `http://localhost:${port}/__preview${relativePath}#`;
 
 				if (lastPreviewDocument.isDirty) {
@@ -225,6 +230,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			return;
 
 		const viteConfigFile = await getConfigFile(editor.document.fileName as path.OsPath, 'nuxt');
+		const root = vscode.workspace.getConfiguration('volar').get<path.PosixPath>('preview.root')!;
 		const select = await quickPick({
 			[PreviewType.Webview]: {
 				label: 'Preview Nuxt App',
@@ -234,6 +240,10 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 				label: 'Preview Nuxt App in External Browser',
 				detail: vscode.workspace.rootPath && viteConfigFile ? path.relative(vscode.workspace.rootPath as path.OsPath, viteConfigFile) : viteConfigFile,
 				description: 'Press `Alt` to use go to code in Browser',
+			},
+			[PreviewType.ExternalBrowser_Component]: {
+				label: `Preview Component in External Browser`,
+				detail: vscode.workspace.rootPath ? path.relative(path.resolve(vscode.workspace.rootPath as path.OsPath, root), editor.document.fileName as path.OsPath) : editor.document.fileName,
 			},
 		});
 		if (select === undefined)
@@ -348,7 +358,8 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			loadingPanel.webview.html = getWebviewContent(`http://localhost:${port}`, undefined, 'openExternal');
 		}
 		else if (previewType === PreviewType.ExternalBrowser_Component) {
-			const relativePath = shared.normalizeFileName(path.relative(path.dirname(configFile), fileName));
+			const root = vscode.workspace.getConfiguration('volar').get<path.PosixPath>('preview.root')!;
+			const relativePath = shared.normalizeFileName(path.relative(path.resolve(path.dirname(configFile), root), fileName));
 			loadingPanel.webview.html = getWebviewContent(`http://localhost:${port}/__preview${relativePath}`, undefined, 'openExternal');
 		}
 		else if (previewType === PreviewType.Webview) {
