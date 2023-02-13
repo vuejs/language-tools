@@ -1,0 +1,762 @@
+{
+  "version": 1.1,
+  "tags": [
+    {
+      "name": "Transition",
+      "description": {
+        "kind": "markdown",
+        "value": "\n**単一の**要素またはコンポーネントにアニメーションのトランジションを提供します。\n\n- **プロパティ**\n\n  ```ts\n  interface TransitionProps {\n    /**\n     * トランジションの CSS クラス名を自動生成するために使用します。\n     * 例: `name: 'fade'` は `.fade-enter` や `.fade-enter-active`\n     * などに自動展開されます。\n     */\n    name?: string\n    /**\n     * CSS のトランジションクラスを適用するかどうか。\n     * デフォルト: true\n     */\n    css?: boolean\n    /**\n     * トランジション終了タイミングを決定するために待機する、\n     * トランジションイベントの種類を指定します。\n     * デフォルトの動作は、持続時間がより長い方のタイプを\n     * 自動検出します。\n     */\n    type?: 'transition' | 'animation'\n    /**\n     * トランジションの持続時間を明示的に指定します。\n     * デフォルトの動作は、ルートトランジション要素の最初の\n     * `transitionend` または `animationend` イベントを待ちます。\n     */\n    duration?: number | { enter: number; leave: number }\n    /**\n     * leaving/entering トランジションのタイミングシーケンスを制御。\n     * デフォルトの動作は同時です。\n     */\n    mode?: 'in-out' | 'out-in' | 'default'\n    /**\n     * 初回レンダリング時にトランジションを適用するかどうか。\n     * デフォルト: false\n     */\n    appear?: boolean\n\n    /**\n     * トランジションクラスをカスタマイズするためのプロパティ。\n     * テンプレートでは kebab-case を使用（例: enter-from-class=\"xxx\"）\n     */\n    enterFromClass?: string\n    enterActiveClass?: string\n    enterToClass?: string\n    appearFromClass?: string\n    appearActiveClass?: string\n    appearToClass?: string\n    leaveFromClass?: string\n    leaveActiveClass?: string\n    leaveToClass?: string\n  }\n  ```\n\n- **イベント**\n\n  - `@before-enter`\n  - `@before-leave`\n  - `@enter`\n  - `@leave`\n  - `@appear`\n  - `@after-enter`\n  - `@after-leave`\n  - `@after-appear`\n  - `@enter-cancelled`\n  - `@leave-cancelled`（`v-show` のみ）\n  - `@appear-cancelled`\n\n- **例**\n\n  シンプルな要素:\n\n  ```html\n  <Transition>\n    <div v-if=\"ok\">toggled content</div>\n  </Transition>\n  ```\n\n  トランジションモードと出現時のアニメーションを備えているダイナミックコンポーネント:\n\n  ```html\n  <Transition name=\"fade\" mode=\"out-in\" appear>\n    <component :is=\"view\"></component>\n  </Transition>\n  ```\n\n  トランジションイベントを購読する:\n\n  ```html\n  <Transition @after-enter=\"onTransitionComplete\">\n    <div v-show=\"ok\">toggled content</div>\n  </Transition>\n  ```\n\n- **参照:** [`<Transition>` ガイド](https://ja.vuejs.org/guide/built-ins/transition.html)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-components.html#transition"
+        }
+      ]
+    },
+    {
+      "name": "TransitionGroup",
+      "description": {
+        "kind": "markdown",
+        "value": "\nリスト内の**複数**の要素またはコンポーネントにトランジション効果を提供する。\n\n- **プロパティ**\n\n  `<TransitionGroup>` は `<Transition>` と同じプロパティ（`mode` 以外）と追加の 2 つのプロパティを受け取ります:\n\n  ```ts\n  interface TransitionGroupProps extends Omit<TransitionProps, 'mode'> {\n    /**\n     * 未定義の場合はフラグメントとしてレンダリングされます。\n     */\n    tag?: string\n    /**\n     * 移動のトランジション中に適用される CSS クラスのカスタマイズ。\n     * テンプレートでは kebab-case を使用（例: move-class=\"xxx\"）\n     */\n    moveClass?: string\n  }\n  ```\n\n- **イベント**\n\n  `<TransitionGroup>` は `<Transition>` と同じイベントを発行します。\n\n- **詳細**\n\n  デフォルトでは、`<TransitionGroup>` はラッパー DOM 要素をレンダリングしませんが、 `tag` プロパティによって定義できます。\n\n  アニメーションが正しく動作するためには、`<transition-group>` 内のすべての子に[**一意なキーを指定**](https://ja.vuejs.org/guide/essentials/list.html#maintaining-state-with-key)する必要があることに注意してください。\n\n  `<TransitionGroup>` は CSS の transform による移動トランジションに対応しています。更新後に画面上の子の位置が変化した場合、移動用の CSS クラス（`name` 属性から自動生成されるか、`move-class` プロパティで設定）が適用されます。移動用のクラスが適用されたときに、CSS の `transform` プロパティが「トランジション可能」であれば、その要素は [FLIP テクニック](https://aerotwist.com/blog/flip-your-animations/)を使って移動先までスムーズにアニメーションします。\n\n- **例**\n\n  ```html\n  <TransitionGroup tag=\"ul\" name=\"slide\">\n    <li v-for=\"item in items\" :key=\"item.id\">\n      {{ item.text }}\n    </li>\n  </TransitionGroup>\n  ```\n\n- **参照:** [ガイド - TransitionGroup](https://ja.vuejs.org/guide/built-ins/transition-group.html)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-components.html#transitiongroup"
+        }
+      ]
+    },
+    {
+      "name": "KeepAlive",
+      "description": {
+        "kind": "markdown",
+        "value": "\n動的に切り替えられる、内側のコンポーネントをキャッシュします。\n\n- **プロパティ**\n\n  ```ts\n  interface KeepAliveProps {\n    /**\n     * 指定された場合、`include` でマッチした名前の\n     * コンポーネントのみがキャッシュされます。\n     */\n    include?: MatchPattern\n    /**\n     * `exclude` でマッチした名前のコンポーネントは\n     * キャッシュされません。\n     */\n    exclude?: MatchPattern\n    /**\n     * キャッシュするコンポーネントインスタンスの最大数。\n     */\n    max?: number | string\n  }\n\n  type MatchPattern = string | RegExp | (string | RegExp)[]\n  ```\n\n- **詳細**\n\n  動的コンポーネントをラップすると、`<KeepAlive>` は非アクティブなコンポーネントインスタンスを破棄せずにキャッシュします。\n\n  `<KeepAlive>` の直接の子として、アクティブなコンポーネントのインスタンスは常に 1 つだけです。\n\n  `<KeepAlive>` の内部でコンポーネントが切り替えられると、その `activated` と `deactivated` ライフサイクルフックが呼び出されます（`mounted` と `unmounted` は呼び出されず、その代わりとして提供されています）。これは `<KeepAlive>` の直接の子だけでなく、そのすべての子孫にも適用されます。\n\n- **例**\n\n  基本的な使い方:\n\n  ```html\n  <KeepAlive>\n    <component :is=\"view\"></component>\n  </KeepAlive>\n  ```\n\n  `v-if` / `v-else` の分岐を使用する場合、一度にレンダリングされるコンポーネントは 1 つだけである必要があります:\n\n  ```html\n  <KeepAlive>\n    <comp-a v-if=\"a > 1\"></comp-a>\n    <comp-b v-else></comp-b>\n  </KeepAlive>\n  ```\n\n  `<Transition>` と共に使用:\n\n  ```html\n  <Transition>\n    <KeepAlive>\n      <component :is=\"view\"></component>\n    </KeepAlive>\n  </Transition>\n  ```\n\n  `include` / `exclude` の使用:\n\n  ```html\n  <!-- カンマ区切りの文字列 -->\n  <KeepAlive include=\"a,b\">\n    <component :is=\"view\"></component>\n  </KeepAlive>\n\n  <!-- 正規表現（`v-bind` を使用） -->\n  <KeepAlive :include=\"/a|b/\">\n    <component :is=\"view\"></component>\n  </KeepAlive>\n\n  <!-- 配列（`v-bind` を使用） -->\n  <KeepAlive :include=\"['a', 'b']\">\n    <component :is=\"view\"></component>\n  </KeepAlive>\n  ```\n\n  `max` の使用:\n\n  ```html\n  <KeepAlive :max=\"10\">\n    <component :is=\"view\"></component>\n  </KeepAlive>\n  ```\n\n- **参照:** [ガイド - KeepAlive](https://ja.vuejs.org/guide/built-ins/keep-alive.html)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-components.html#keepalive"
+        }
+      ]
+    },
+    {
+      "name": "Teleport",
+      "description": {
+        "kind": "markdown",
+        "value": "\nスロットの内容を DOM の別の場所にレンダリングします。\n\n- **プロパティ**\n\n  ```ts\n  interface TeleportProps {\n    /**\n     * 必須。ターゲットコンテナーを指定します。\n     * セレクターまたは実際の要素のいずれかを指定できます。\n     */\n    to: string | HTMLElement\n    /**\n     * `true` の場合、コンテンツはターゲットコンテナーに\n     * 移動せずに元の場所に残ります。\n     * 動的に変更できます。\n     */\n    disabled?: boolean\n  }\n  ```\n\n- **例**\n\n  ターゲットコンテナーの指定:\n\n  ```html\n  <teleport to=\"#some-id\" />\n  <teleport to=\".some-class\" />\n  <teleport to=\"[data-teleport]\" />\n  ```\n\n  条件によって無効化:\n\n  ```html\n  <teleport to=\"#popup\" :disabled=\"displayVideoInline\">\n    <video src=\"./my-movie.mp4\">\n  </teleport>\n  ```\n\n- **参照:** [ガイド - Teleport](https://ja.vuejs.org/guide/built-ins/teleport.html)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-components.html#teleport"
+        }
+      ]
+    },
+    {
+      "name": "Suspense",
+      "description": {
+        "kind": "markdown",
+        "value": "\nコンポーネントツリー内のネストした非同期な依存関係を管理するために使用します。\n\n- **プロパティ**\n\n  ```ts\n  interface SuspenseProps {\n    timeout?: string | number\n  }\n  ```\n\n- **イベント**\n\n  - `@resolve`\n  - `@pending`\n  - `@fallback`\n\n- **詳細**\n\n  `<Suspense>` は `#default` スロットと `#fallback` スロットの 2 つのスロットを受け付けます。default スロットをメモリー内にレンダリングする間、fallback スロットの内容を表示します。\n\n  デフォルトスロットのレンダリング中に非同期な依存関係（[非同期コンポーネント](https://ja.vuejs.org/guide/components/async.html)や [`async setup()`](https://ja.vuejs.org/guide/built-ins/suspense.html#async-setup) のコンポーネント）が発生すると、それらが全て解決するまで待ってからデフォルトスロットを表示します。\n\n- **参照:** [ガイド - Suspense](https://ja.vuejs.org/guide/built-ins/suspense.html)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-components.html#suspense"
+        }
+      ]
+    },
+    {
+      "name": "component",
+      "description": {
+        "kind": "markdown",
+        "value": "\n動的コンポーネントや動的な要素をレンダリングするための「メタ・コンポーネント」です。\n\n- **プロパティ**\n\n  ```ts\n  interface DynamicComponentProps {\n    is: string | Component\n  }\n  ```\n\n- **詳細**\n\n  実際にレンダリングするコンポーネントは `is` プロパティによって決定されます。\n\n  - `is` が文字列の場合、HTML タグ名か、コンポーネントの登録名となります。\n\n  - また、`is` はコンポーネントの定義に直接バインドもできます。\n\n- **例**\n\n  登録名によるコンポーネントのレンダリング（Options API）:\n\n  ```vue\n  <script>\n  import Foo from './Foo.vue'\n  import Bar from './Bar.vue'\n\n  export default {\n    components: { Foo, Bar },\n    data() {\n      return {\n        view: 'Foo'\n      }\n    }\n  }\n  </script>\n\n  <template>\n    <component :is=\"view\" />\n  </template>\n  ```\n\n  定義によるコンポーネントのレンダリング（`<script setup>` の Composition API）:\n\n  ```vue\n  <script setup>\n  import Foo from './Foo.vue'\n  import Bar from './Bar.vue'\n  </script>\n\n  <template>\n    <component :is=\"Math.random() > 0.5 ? Foo : Bar\" />\n  </template>\n  ```\n\n  HTML 要素のレンダリング:\n\n  ```html\n  <component :is=\"href ? 'a' : 'span'\"></component>\n  ```\n\n  [ビルトインのコンポーネント](./built-in-components.html)はすべて `is` に渡すことができますが、名前で渡したい場合は登録しなければなりません。例えば:\n\n  ```vue\n  <script>\n  import { Transition, TransitionGroup } from 'vue'\n\n  export default {\n    components: {\n      Transition,\n      TransitionGroup\n    }\n  }\n  </script>\n\n  <template>\n    <component :is=\"isGroup ? 'TransitionGroup' : 'Transition'\">\n      ...\n    </component>\n  </template>\n  ```\n\n  例えば `<script setup>` などで、コンポーネント名ではなく、コンポーネント自体を `is` に渡す場合は、登録は必要ありません。\n\n  もし `v-model` が `<component>` タグで使用された場合、テンプレートコンパイラーは他のコンポーネントと同じように、`modelValue` プロパティと `update:modelValue` イベントリスナーに展開されます。しかし、これは `<input>` や `<select>` のようなネイティブ HTML 要素とは互換性がありません。そのため、動的に生成されるネイティブ要素に対して `v-model` を使用しても動作しません:\n\n  ```vue\n  <script setup>\n  import { ref } from 'vue'\n  \n  const tag = ref('input')\n  const username = ref('')\n  </script>\n\n  <template>\n    <!-- 'input' はネイティブ HTML 要素なので、動作しません -->\n    <component :is=\"tag\" v-model=\"username\" />\n  </template>\n  ```\n\n  実際のアプリケーションでは、ネイティブのフォームフィールドはコンポーネントでラップされるのが一般的なので、このようなエッジケースはあまりありません。もし、ネイティブ要素を直接使用する必要がある場合は、 `v-model` を属性とイベントに手動で分割できます。\n\n- **参照:** [動的コンポーネント](https://ja.vuejs.org/guide/essentials/component-basics.html#dynamic-components)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-special-elements.html#component"
+        }
+      ]
+    },
+    {
+      "name": "slot",
+      "description": {
+        "kind": "markdown",
+        "value": "\nテンプレート内でスロットコンテンツのアウトレットを表します。\n\n- **プロパティ**\n\n  ```ts\n  interface SlotProps {\n    /**\n     * <slot> に渡されたすべてのプロパティは、スコープ付き\n     * スロットの引数として渡されます\n     */\n    [key: string]: any\n    /**\n     * スロット名を指定するために予約済み。\n     */\n    name?: string\n  }\n  ```\n\n- **詳細**\n\n  `<slot>` 要素では `name` 属性を使用してスロット名を指定できます。`name` が指定されない場合は、デフォルトのスロットがレンダリングされます。slot 要素に渡された追加の属性は、親で定義されたスコープ付きスロットにスロットプロパティとして渡されます。\n\n  この要素そのものは、一致したスロットの内容に置き換えられます。\n\n  Vue テンプレートの `<slot>` 要素は JavaScript にコンパイルされているので、[ネイティブの `<slot>` 要素](https://developer.mozilla.org/ja/docs/Web/HTML/Element/slot)と混同しないように注意してください。\n\n- **参照:** [コンポーネント - スロット](https://ja.vuejs.org/guide/components/slots.html)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-special-elements.html#slot"
+        }
+      ]
+    },
+    {
+      "name": "template",
+      "description": {
+        "kind": "markdown",
+        "value": "\nDOM に要素をレンダリングせずに組み込みディレクティブを使用したい場合、`<template>` タグをプレースホルダーとして使用します。\n\n- **詳細:**\n\n  `<template>` の特別な処理は、以下のディレクティブと一緒に使われた場合のみ発生します:\n\n  - `v-if`、`v-else-if`、または `v-else`\n  - `v-for`\n  - `v-slot`\n\n  これらのディレクティブが存在しない場合は、代わりに[ネイティブの `<template>` 要素](https://developer.mozilla.org/ja/docs/Web/HTML/Element/template)としてレンダリングされます。\n\n  `v-for` を持つ `<template>` は [`key` 属性](https://ja.vuejs.org/api/built-in-special-attributes.html#key)を持たせることができます。それ以外の属性やディレクティブは、対応する要素がなければ意味をなさないので、すべて破棄されます。\n\n  単一ファイルコンポーネントは、テンプレート全体をラップするために[トップレベルの `<template>` タグ](https://ja.vuejs.org/api/sfc-spec.html#language-blocks)を使用します。この使い方は、上記で説明した `<template>` の使い方とは別のものです。このトップレベルタグはテンプレート自体の一部ではなく、ディレクティブのようなテンプレートの構文もサポートしていません。 \n\n- **参照:**\n  - [ガイド - `<template>` に `v-if` を適用する](https://ja.vuejs.org/guide/essentials/conditional.html#v-if-on-template) \n  - [ガイド - `<template>` に `v-for` を適用する](https://ja.vuejs.org/guide/essentials/list.html#v-for-on-template) \n  - [ガイド - 名前付きスロット](https://ja.vuejs.org/guide/components/slots.html#named-slots) \n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-special-elements.html#template"
+        }
+      ]
+    }
+  ],
+  "globalAttributes": [
+    {
+      "name": "v-text",
+      "description": {
+        "kind": "markdown",
+        "value": "\n要素のテキスト内容を更新します。\n\n- **期待する値:** `string`\n\n- **詳細**\n\n  `v-text` は要素の [textContent](https://developer.mozilla.org/ja/docs/Web/API/Node/textContent) プロパティをセットする動作なので、要素内の既存のコンテンツはすべて上書きされます。`textContent` の一部を更新する必要がある場合は、代わりに[マスタッシュ展開](https://ja.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)を使用します。\n\n- **例**\n\n  ```html\n  <span v-text=\"msg\"></span>\n  <!-- same as -->\n  <span>{{msg}}</span>\n  ```\n\n- **参照:** [テンプレート構文 - テキスト展開](https://ja.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-text"
+        }
+      ]
+    },
+    {
+      "name": "v-html",
+      "description": {
+        "kind": "markdown",
+        "value": "\n要素の [innerHTML](https://developer.mozilla.org/ja/docs/Web/API/Element/innerHTML) を更新します。\n\n- **期待する値:** `string`\n\n- **詳細:**\n\n  `v-html` の内容は、プレーンな HTML として挿入されます - Vue テンプレートの構文は処理されません。もし、`v-html` を使ってテンプレートを構成しようとしているのであれば、代わりにコンポーネントを使うなどして解決策を見直してみてください。\n\n  ::: warning セキュリティーに関する注意\n  ウェブサイト上で任意の HTML を動的にレンダリングすることは、[XSS 攻撃](https://ja.wikipedia.org/wiki/%E3%82%AF%E3%83%AD%E3%82%B9%E3%82%B5%E3%82%A4%E3%83%88%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%97%E3%83%86%E3%82%A3%E3%83%B3%E3%82%B0)につながりやすいため、非常に危険です。信頼できるコンテンツにのみ `v-html` を使用し、ユーザーが提供するコンテンツには**絶対に**使用しないでください。\n  :::\n\n  [単一ファイルコンポーネント](https://ja.vuejs.org/guide/scaling-up/sfc.html)では、`scoped` スタイルは `v-html` 内のコンテンツには適用されません。これは、その HTML が Vue のテンプレートコンパイラーによって処理されないからです。もし `v-html` のコンテンツにスコープ付き CSS を適用したい場合は、代わりに [CSS modules](./sfc-css-features.html#css-modules) を使ったり、BEM などの手動スコープ戦略を持つ追加のグローバル `<style>` 要素を使用可能です。\n\n- **例:**\n\n  ```html\n  <div v-html=\"html\"></div>\n  ```\n\n- **参照:** [テンプレート構文 - 生の HTML](https://ja.vuejs.org/guide/essentials/template-syntax.html#raw-html)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-html"
+        }
+      ]
+    },
+    {
+      "name": "v-show",
+      "description": {
+        "kind": "markdown",
+        "value": "\n式の値の真偽に基づいて、要素の可視性を切り替えます。\n\n- **期待する値:** `any`\n\n- **詳細**\n\n  `v-show` はインラインスタイルで `display` CSS プロパティをセットする動作で、要素が表示されている場合は `display` の初期値を尊重しようとします。また、その状態が変化したときにトランジションを引き起こします。\n\n- **参照:** [条件付きレンダリング - v-show](https://ja.vuejs.org/guide/essentials/conditional.html#v-show)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-show"
+        }
+      ]
+    },
+    {
+      "name": "v-if",
+      "description": {
+        "kind": "markdown",
+        "value": "\n式の値の真偽に基づいて、要素またはテンプレートフラグメントを条件付きでレンダリングします。\n\n- **期待する値:** `any`\n\n- **詳細**\n\n  `v-if` 要素がトグルされると、要素とそれに含まれるディレクティブ/コンポーネントは破棄され、再構築されます。初期条件が falsy な場合、内部のコンテンツは全くレンダリングされません。\n\n  `<template>` に使用すると、テキストのみ、または複数の要素を含む条件ブロックを表すことができます。\n\n  このディレクティブは、条件が変化したときにトランジションをトリガーします。\n\n  一緒に使用した場合、 `v-if` は `v-for` よりも高い優先度を持ちます。この 2 つのディレクティブを 1 つの要素で同時に使うことはお勧めしません。詳しくは [リストレンダリングガイド](https://ja.vuejs.org/guide/essentials/list.html#v-for-with-v-if) を参照してください。\n\n- **参照:** [条件付きレンダリング - v-if](https://ja.vuejs.org/guide/essentials/conditional.html#v-if)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-if"
+        }
+      ]
+    },
+    {
+      "name": "v-else",
+      "valueSet": "v",
+      "description": {
+        "kind": "markdown",
+        "value": "\n`v-if` または `v-if` / `v-else-if` チェーンの「else ブロック」を表します。\n\n- **式を受け取りません**\n\n- **詳細**\n\n  - 制限: 直前の兄弟要素には `v-if` または `v-else-if` が必要です。\n\n  - `<template>` に使用すると、テキストのみ、または複数の要素を含む条件ブロックを表すことができます。\n\n- **例**\n\n  ```html\n  <div v-if=\"Math.random() > 0.5\">\n    Now you see me\n  </div>\n  <div v-else>\n    Now you don't\n  </div>\n  ```\n\n- **参照:** [条件付きレンダリング - v-else](https://ja.vuejs.org/guide/essentials/conditional.html#v-else)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-else"
+        }
+      ]
+    },
+    {
+      "name": "v-else-if",
+      "description": {
+        "kind": "markdown",
+        "value": "\n`v-if` の「else if ブロック」を表します。連鎖させることができます。\n\n- **期待する値:** `any`\n\n- **詳細**\n\n  - 制限: 直前の兄弟要素には `v-if` または `v-else-if` が必要です。\n\n  - `<template>` に使用すると、テキストのみ、または複数の要素を含む条件ブロックを表すことができます。\n\n- **例**\n\n  ```html\n  <div v-if=\"type === 'A'\">\n    A\n  </div>\n  <div v-else-if=\"type === 'B'\">\n    B\n  </div>\n  <div v-else-if=\"type === 'C'\">\n    C\n  </div>\n  <div v-else>\n    Not A/B/C\n  </div>\n  ```\n\n- **参照:** [条件付きレンダリング - v-else-if](https://ja.vuejs.org/guide/essentials/conditional.html#v-else-if)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-else-if"
+        }
+      ]
+    },
+    {
+      "name": "v-for",
+      "description": {
+        "kind": "markdown",
+        "value": "\n元となるデータに基づいて、要素またはテンプレートブロックを複数回レンダリングします。\n\n- **期待する値:** `Array | Object | number | string | Iterable`\n\n- **詳細**\n\n  ディレクティブの値は、反復処理されている現在の要素のエイリアスを提供するために、特別な構文 `エイリアス in 式` を使用する必要があります:\n\n  ```html\n  <div v-for=\"item in items\">\n    {{ item.text }}\n  </div>\n  ```\n\n  または、インデックス（Object で使用する場合はキー）のエイリアスも指定できます:\n\n  ```html\n  <div v-for=\"(item, index) in items\"></div>\n  <div v-for=\"(value, key) in object\"></div>\n  <div v-for=\"(value, name, index) in object\"></div>\n  ```\n\n  `v-for` のデフォルトの動作は、要素を移動することなく、その場でパッチを適用しようとします。強制的に要素を並べ替えるには、特別な属性 `key` で順番のヒントを指定する必要があります:\n\n  ```html\n  <div v-for=\"item in items\" :key=\"item.id\">\n    {{ item.text }}\n  </div>\n  ```\n\n  また、`v-for` はネイティブの `Map` や `Set` を含む、[反復処理プロトコル](https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Iteration_protocols#The_iterable_protocol)を実装した値に対しても動作させることができます。\n\n- **参照:**\n  - [リストレンダリング](https://ja.vuejs.org/guide/essentials/list.html)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-for"
+        }
+      ]
+    },
+    {
+      "name": "v-on",
+      "description": {
+        "kind": "markdown",
+        "value": "\n要素にイベントリスナーを追加します。\n\n- **省略記法:** `@`\n\n- **期待する値:** `Function | Inline Statement | Object (without argument)`\n\n- **引数:** `event`（オブジェクト構文を使用する場合は省略可能）\n\n- **修飾子:**\n\n  - `.stop` - `event.stopPropagation()` を呼び出します。\n  - `.prevent` - `event.preventDefault()` を呼び出します。\n  - `.capture` - キャプチャーモードでイベントリスナーを追加します。\n  - `.self` - イベントがこの要素からディスパッチされた場合にのみハンドラーをトリガーします。\n  - `.{keyAlias}` - 特定のキーでのみハンドラーをトリガーします。\n  - `.once` - 一度だけハンドラーをトリガーします。\n  - `.left` - 左ボタンのマウスイベントに対してのみ、ハンドラーをトリガーします。\n  - `.right` - 右ボタンのマウスイベントに対してのみ、ハンドラーをトリガーします。\n  - `.middle` - 中央ボタンのマウスイベントに対してのみ、ハンドラーをトリガーします。\n  - `.passive` - DOM イベントを `{ passive: true }` で追加します。\n\n- **詳細**\n\n  イベントの種類は引数で示されます。式はメソッド名かインラインステートメントで、修飾子が存在する場合は省略可能です。\n\n  通常の要素で使用する場合、[**ネイティブ DOM イベント**](https://developer.mozilla.org/ja/docs/Web/Events)のみを購読します。カスタム要素コンポーネントで使用された場合、その子コンポーネントで発行された**カスタムイベント**を購読します。\n\n  ネイティブ DOM イベントを購読する場合、このメソッドは唯一の引数としてネイティブイベントを受け取ります。インラインステートメントを使用する場合、ステートメントは特別な `$event` プロパティにアクセスできます: `v-on:click=\"handle('ok', $event)\"`\n\n  `v-on` は引数なしで、イベントとリスナーのペアのオブジェクトにバインドすることもサポートしています。オブジェクト構文を使用する場合、修飾子をサポートしないことに注意してください。\n\n- **例:**\n\n  ```html\n  <!-- メソッドハンドラー -->\n  <button v-on:click=\"doThis\"></button>\n\n  <!-- 動的イベント -->\n  <button v-on:[event]=\"doThis\"></button>\n\n  <!-- インラインステートメント -->\n  <button v-on:click=\"doThat('hello', $event)\"></button>\n\n  <!-- 省略記法 -->\n  <button @click=\"doThis\"></button>\n\n  <!-- 動的イベントの省略記法 -->\n  <button @[event]=\"doThis\"></button>\n\n  <!-- stop propagation -->\n  <button @click.stop=\"doThis\"></button>\n\n  <!-- prevent default -->\n  <button @click.prevent=\"doThis\"></button>\n\n  <!-- 式なしで prevent default -->\n  <form @submit.prevent></form>\n\n  <!-- 修飾子の連鎖 -->\n  <button @click.stop.prevent=\"doThis\"></button>\n\n  <!-- キーのエイリアスを用いたキー修飾子 -->\n  <input @keyup.enter=\"onEnter\" />\n\n  <!-- 一度だけトリガーされるクリックイベント -->\n  <button v-on:click.once=\"doThis\"></button>\n\n  <!-- オブジェクト構文 -->\n  <button v-on=\"{ mousedown: doThis, mouseup: doThat }\"></button>\n  ```\n\n  子コンポーネントのカスタムイベントを購読する（子コンポーネントで \"my-event\" が発行されたときにハンドラーが呼び出される）:\n\n  ```html\n  <MyComponent @my-event=\"handleThis\" />\n\n  <!-- インラインステートメント -->\n  <MyComponent @my-event=\"handleThis(123, $event)\" />\n  ```\n\n- **参照:**\n  - [イベントハンドリング](https://ja.vuejs.org/guide/essentials/event-handling.html)\n  - [コンポーネント - カスタムイベント](https://ja.vuejs.org/guide/essentials/component-basics.html#listening-to-events)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-on"
+        }
+      ]
+    },
+    {
+      "name": "v-bind",
+      "description": {
+        "kind": "markdown",
+        "value": "\n1 つ以上の属性やコンポーネントのプロパティを式に動的にバインドします。\n\n- **省略記法:** `:` or `.`（`.prop` 修飾子使用時）\n\n- **期待する値:** `any（引数ありの場合） | Object（引数なしの場合）`\n\n- **引数:** `attrOrProp（省略可能）`\n\n- **修飾子:**\n\n  - `.camel` - kebab-case の属性名を camelCase に変換します。\n  - `.prop` - バインディングを DOM プロパティとして設定するよう強制します。<sup class=\"vt-badge\">3.2+</sup>\n  - `.attr` - バインディングを DOM 属性として設定するよう強制します。<sup class=\"vt-badge\">3.2+</sup>\n\n- **使用法:**\n\n  `class` や `style` 属性をバインドする際に使用する `v-bind` は、Array や Object などの追加の値の型をサポートします。詳しくは、以下のリンク先のガイドを参照してください。\n\n  要素にバインディングを設定するとき、Vue はデフォルトで、`in` 演算子チェックを使用して、プロパティとして定義されたキーが要素にあるかどうかを確認します。プロパティが定義されている場合、Vue はその値を属性ではなく DOM プロパティとして設定します。これはほとんどの場合において有効ですが、`.prop` や `.attr` という修飾子を明示的に使用することでこの動作をオーバーライドできます。これは、特に[カスタム要素を扱う](https://ja.vuejs.org/guide/extras/web-components.html#passing-dom-properties)ときに必要になることがあります。\n\n  コンポーネントのプロパティをバインドするために使用する場合、そのプロパティは子コンポーネントで適切に宣言されている必要があります。\n\n  引数なしで使用する場合、属性の名前と値のペアを含むオブジェクトをバインドするために使用できます。\n\n- **例:**\n\n  ```html\n  <!-- 属性をバインドする -->\n  <img v-bind:src=\"imageSrc\" />\n\n  <!-- 動的な属性名 -->\n  <button v-bind:[key]=\"value\"></button>\n\n  <!-- 省略記法 -->\n  <img :src=\"imageSrc\" />\n\n  <!-- 動的な属性名の省略記法 -->\n  <button :[key]=\"value\"></button>\n\n  <!-- インラインの文字列連結 -->\n  <img :src=\"'/path/to/images/' + fileName\" />\n\n  <!-- クラスのバインド -->\n  <div :class=\"{ red: isRed }\"></div>\n  <div :class=\"[classA, classB]\"></div>\n  <div :class=\"[classA, { classB: isB, classC: isC }]\"></div>\n\n  <!-- スタイルのバインド -->\n  <div :style=\"{ fontSize: size + 'px' }\"></div>\n  <div :style=\"[styleObjectA, styleObjectB]\"></div>\n\n  <!-- 属性のオブジェクトをバインド -->\n  <div v-bind=\"{ id: someProp, 'other-attr': otherProp }\"></div>\n\n  <!-- プロパティのバインド。\"prop\" は子コンポーネントで宣言する必要があります。 -->\n  <MyComponent :prop=\"someThing\" />\n\n  <!-- 親のプロパティを子コンポーネントと共有するために渡す -->\n  <MyComponent v-bind=\"$props\" />\n\n  <!-- XLink -->\n  <svg><a :xlink:special=\"foo\"></a></svg>\n  ```\n\n  `.prop` 修飾子には、専用の短縮形 `.` もあります:\n\n  ```html\n  <div :someProperty.prop=\"someObject\"></div>\n\n  <!-- 以下とと同じ -->\n  <div .someProperty=\"someObject\"></div>\n  ```\n\n  `.camel` 修飾子は、DOM 内テンプレートを使用する際に、 `v-bind` 属性名をキャメル化できます（例: SVG の `viewBox` 属性）:\n\n  ```html\n  <svg :view-box.camel=\"viewBox\"></svg>\n  ```\n\n  文字列テンプレートを使用する場合や、ビルドステップでテンプレートを事前コンパイルする場合は、`.camel` は必要ありません。\n\n- **参照:**\n  - [クラスとスタイルのバインディング](https://ja.vuejs.org/guide/essentials/class-and-style.html)\n  - [コンポーネント - プロパティ渡しの詳細](https://ja.vuejs.org/guide/components/props.html#prop-passing-details)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-bind"
+        }
+      ]
+    },
+    {
+      "name": "v-model",
+      "description": {
+        "kind": "markdown",
+        "value": "\nフォーム入力要素またはコンポーネントに双方向バインディングを作成します。\n\n- **期待する値:** フォームの入力要素の値や構成要素の出力によって異なります\n\n- **以下に限定:**\n\n  - `<input>`\n  - `<select>`\n  - `<textarea>`\n  - コンポーネント\n\n- **修飾子:**\n\n  - [`.lazy`](https://ja.vuejs.org/guide/essentials/forms.html#lazy) - `input` の代わりに `change` イベントを購読する\n  - [`.number`](https://ja.vuejs.org/guide/essentials/forms.html#number) - 有効な入力文字列を数値に変換する\n  - [`.trim`](https://ja.vuejs.org/guide/essentials/forms.html#trim) - 入力をトリムする\n\n- **参照:**\n\n  - [フォーム入力バインディング](https://ja.vuejs.org/guide/essentials/forms.html)\n  - [コンポーネントのイベント - `v-model` での使用](https://ja.vuejs.org/guide/components/v-model.html)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-model"
+        }
+      ]
+    },
+    {
+      "name": "v-slot",
+      "description": {
+        "kind": "markdown",
+        "value": "\nprops の受け取りを期待する名前付きスロットまたはスコープ付きスロットを表します。\n\n- **省略記法:** `#`\n\n- **期待する値:** 関数の引数の位置で有効な JavaScript 式（分割代入のサポートを含む）。省略可能 - props がスロットに渡されることを期待している場合のみ必要です。\n\n- **引数:** スロット名（省略可能で、デフォルトは `default`）\n\n- **以下に限定:**\n\n  - `<template>`\n  - [コンポーネント](https://ja.vuejs.org/guide/components/slots.html#scoped-slots)（props ありの単独のデフォルトスロット用）\n\n- **例:**\n\n  ```html\n  <!-- 名前付きスロット -->\n  <BaseLayout>\n    <template v-slot:header>\n      Header content\n    </template>\n\n    <template v-slot:default>\n      Default slot content\n    </template>\n\n    <template v-slot:footer>\n      Footer content\n    </template>\n  </BaseLayout>\n\n  <!-- props を受け取る名前付きスロット -->\n  <InfiniteScroll>\n    <template v-slot:item=\"slotProps\">\n      <div class=\"item\">\n        {{ slotProps.item.text }}\n      </div>\n    </template>\n  </InfiniteScroll>\n\n  <!-- props を受け取るデフォルトスロット、分割代入あり -->\n  <Mouse v-slot=\"{ x, y }\">\n    Mouse position: {{ x }}, {{ y }}\n  </Mouse>\n  ```\n\n- **参照:**\n  - [コンポーネント - スロット](https://ja.vuejs.org/guide/components/slots.html)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-slot"
+        }
+      ]
+    },
+    {
+      "name": "v-pre",
+      "description": {
+        "kind": "markdown",
+        "value": "\nこの要素とすべての子要素のコンパイルをスキップします。\n\n- **式を受け取りません**\n\n- **詳細**\n\n  `v-pre` を指定した要素の内部では、Vue テンプレートの構文はすべて維持され、そのままレンダリングされます。この最も一般的な使用例は、未加工のマスタッシュタグを表示することです。\n\n- **例:**\n\n  ```html\n  <span v-pre>{{ this will not be compiled }}</span>\n  ```\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-pre"
+        }
+      ]
+    },
+    {
+      "name": "v-once",
+      "description": {
+        "kind": "markdown",
+        "value": "\n要素やコンポーネントを一度だけレンダリングし、その後の更新はスキップします。\n\n- **式を受け取りません**\n\n- **詳細**\n\n  その後の再レンダリングでは、要素/コンポーネントとそのすべての子要素は静的コンテンツとして扱われ、スキップされます。これは、更新のパフォーマンスを最適化するために使用できます。\n\n  ```html\n  <!-- 単一要素 -->\n  <span v-once>This will never change: {{msg}}</span>\n  <!-- 子要素を持つ要素 -->\n  <div v-once>\n    <h1>comment</h1>\n    <p>{{msg}}</p>\n  </div>\n  <!-- コンポーネント -->\n  <MyComponent v-once :comment=\"msg\"></MyComponent>\n  <!-- `v-for` ディレクティブ -->\n  <ul>\n    <li v-for=\"i in list\" v-once>{{i}}</li>\n  </ul>\n  ```\n\n  3.2 以降では、[`v-memo`](#v-memo) を使って、テンプレートの一部を無効化する条件付きでメモ化できます。\n\n- **参照:**\n  - [データバインディング構文 - 展開](https://ja.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n  - [v-memo](#v-memo)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-once"
+        }
+      ]
+    },
+    {
+      "name": "v-memo",
+      "description": {
+        "kind": "markdown",
+        "value": "\n- **期待する値:** `any[]`\n\n- **詳細**\n\n  テンプレートのサブツリーをメモ化します。要素とコンポーネントの両方で使用できます。このディレクティブは、メモ化のために比較する依存関係の値の固定長の配列を受け取ります。配列内のすべての値が直前のレンダリングと同じであった場合、サブツリー全体の更新はスキップされます。たとえば:\n\n  ```html\n  <div v-memo=\"[valueA, valueB]\">\n    ...\n  </div>\n  ```\n\n  コンポーネントの再レンダリング時に、 `valueA` と `valueB` の両方が同じであれば、この `<div>` とその子のすべての更新はスキップされます。実際には、仮想 DOM の VNode の生成もスキップされます。なぜなら、サブツリーのメモ化されたコピーを再利用できるからです。\n\n  メモ化の配列を正しく指定することは重要であり、そうでない場合は、実際に適用されるべき更新をスキップしてしまう可能性があります。依存関係の配列を空にした `v-memo`（`v-memo=\"[]\"`）は、機能的には `v-once` と同等です。\n\n  **`v-for` での使用**\n\n  `v-memo` は、パフォーマンスが重要なシナリオでのミクロな最適化を行うためにのみ提供されており、ほとんど必要ありません。この機能が役に立つ最も一般的なケースは、大きな `v-for` リスト（`length > 1000`）をレンダリングするときです:\n\n  ```html\n  <div v-for=\"item in list\" :key=\"item.id\" v-memo=\"[item.id === selected]\">\n    <p>ID: {{ item.id }} - selected: {{ item.id === selected }}</p>\n    <p>...more child nodes</p>\n  </div>\n  ```\n\n  コンポーネントの `selected` 状態が変化すると、ほとんどの項目がまったく同じままであっても、大量の VNode が作成されます。ここでの `v-memo` の使い方は、基本的に「非選択状態から選択状態になった場合のみ、またはその逆の場合のみ、この項目を更新する」というものです。これにより、影響を受けない項目はすべて以前の VNode を再利用し、差分を完全にスキップできます。メモの依存関係の配列に `item.id` を含める必要はないことに注意してください。Vue は自動的に項目の `:key` から推測します。\n\n  :::warning\n  `v-memo` と `v-for` を併用する場合は、同じ要素で使用されているか確認してください。**`v-memo` は `v-for` の中では動作しません。**\n  :::\n\n  子コンポーネントの更新チェックが最適化されていない特定のエッジケースで、不要な更新を手動で防ぐために `v-memo` をコンポーネントに使用できます。しかし、ここでも、必要な更新をスキップしないように正しい依存関係を指定するのは、開発者の責任です。\n\n- **参照:**\n  - [v-once](#v-once)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-memo"
+        }
+      ]
+    },
+    {
+      "name": "v-cloak",
+      "description": {
+        "kind": "markdown",
+        "value": "\nコンパイルされていないテンプレートを、準備が整うまで非表示にするために使用します。\n\n- **式を受け取りません**\n\n- **詳細**\n\n  **このディレクティブは、ビルドステップがないセットアップでのみ必要です。**\n\n  DOM 内テンプレートを使用する場合、「コンパイルされていないテンプレートのフラッシュ」が発生することがあります。マウントされたコンポーネントがそれをレンダリングされたコンテンツに置き換えるまで、未加工のマスタッシュタグがユーザーに表示される場合があります。\n\n  `v-cloak` は関連するコンポーネントインスタンスがマウントされるまで、その要素に残ります。`[v-cloak] { display: none }` のような CSS ルールと組み合わせることで、コンポーネントの準備が整うまで未加工のテンプレートを非表示にできます。\n\n- **例:**\n\n  ```css\n  [v-cloak] {\n    display: none;\n  }\n  ```\n\n  ```html\n  <div v-cloak>\n    {{ message }}\n  </div>\n  ```\n\n  この `<div>` はコンパイルが完了するまで表示されません。\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-cloak"
+        }
+      ]
+    },
+    {
+      "name": "key",
+      "description": {
+        "kind": "markdown",
+        "value": "\n特別な属性 `key` は、主に Vue の仮想 DOM アルゴリズムが新しいノードリストを古いリストに対して差分する際に、vnode を識別するためのヒントとして使用されます。\n\n- **期待する値:** `number | string | symbol`\n\n- **詳細**\n\n  キーがない場合、Vue は要素の移動を最小限に抑え、同じタイプの要素をできるだけその場でパッチ/再利用しようとするアルゴリズムを使用します。キーがある場合は、キーの順序変更に基づいて要素を並べ替え、存在しなくなったキーを持つ要素は常に削除/破棄されます。\n\n  共通の同じ親を持つ子は、**ユニークなキー**を持つ必要があります。キーが重複するとレンダリングエラーになります。\n\n  `v-for` と組み合わせるのが最も一般的な使用例です:\n\n  ```html\n  <ul>\n    <li v-for=\"item in items\" :key=\"item.id\">...</li>\n  </ul>\n  ```\n\n  また、要素/コンポーネントを再利用するのではなく、強制的に置き換えるためにも使用できます。これは、次のような場合に便利です:\n\n  - コンポーネントのライフサイクルフックを適切にトリガーする\n  - トランジションをトリガーする\n\n  例えば:\n\n  ```html\n  <transition>\n    <span :key=\"text\">{{ text }}</span>\n  </transition>\n  ```\n\n  `text` が変更されると、`<span>` はパッチされるのではなく、常に置き換えられるので、トランジションがトリガーされます。\n\n- **参照:** [ガイド - リストレンダリング - `key` による状態管理](https://ja.vuejs.org/guide/essentials/list.html#maintaining-state-with-key)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-special-attributes.html#key"
+        }
+      ]
+    },
+    {
+      "name": "ref",
+      "description": {
+        "kind": "markdown",
+        "value": "\n[テンプレート参照](https://ja.vuejs.org/guide/essentials/template-refs.html)を表します。\n\n- **期待する値:** `string | Function`\n\n- **詳細**\n\n  `ref` は、要素や子コンポーネントへの参照を登録するために使用します。\n\n  Options API では、この参照はコンポーネントの `this.$refs` オブジェクトの下に登録されます:\n\n  ```html\n  <!-- this.$refs.p として格納される -->\n  <p ref=\"p\">hello</p>\n  ```\n\n  Composition API では、一致する名前の ref に参照が格納されます:\n\n  ```vue\n  <script setup>\n  import { ref } from 'vue'\n\n  const p = ref()\n  </script>\n\n  <template>\n    <p ref=\"p\">hello</p>\n  </template>\n  ```\n\n  もしプレーンな DOM 要素で使用された場合、その要素への参照になります。もし子コンポーネントで使用された場合は、そのコンポーネントのインスタンスへの参照になります。\n\n  また、`ref` には関数も受け付けるので、参照を保存する場所を完全に制御できます:\n\n  ```html\n  <ChildComponent :ref=\"(el) => child = el\" />\n  ```\n\n  ref の登録タイミングに関する重要な注意点として、ref 自体はレンダー関数の結果として作成されるので、コンポーネントがマウントされるまで待ってからアクセスする必要があります。\n\n  `this.$refs` はリアクティブではないので、テンプレート内でデータバインディングのために使わないでください。\n\n- **参照:**\n  - [ガイド - テンプレート参照](https://ja.vuejs.org/guide/essentials/template-refs.html)\n  - [ガイド - テンプレート参照の型付け](https://ja.vuejs.org/guide/typescript/composition-api.html#typing-template-refs) <sup class=\"vt-badge ts\" />\n  - [ガイド - コンポーネントのテンプレート参照の型付け](https://ja.vuejs.org/guide/typescript/composition-api.html#typing-component-template-refs) <sup class=\"vt-badge ts\" />\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-special-attributes.html#ref"
+        }
+      ]
+    },
+    {
+      "name": "is",
+      "description": {
+        "kind": "markdown",
+        "value": "\n[動的コンポーネント](https://ja.vuejs.org/guide/essentials/component-basics.html#dynamic-components)のバインディングに使用します。\n\n- **期待する値:** `string | Component`\n\n- **ネイティブ要素での使用** <sup class=\"vt-badge\">3.1+</sup>\n\n  ネイティブの HTML 要素で `is` 属性が使われている場合、[Customized built-in element](https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-customized-builtin-example) として解釈されます。これは、ネイティブの Web プラットフォームの機能です。\n\n  しかし、[DOM テンプレート解析の注意点](https://ja.vuejs.org/guide/essentials/component-basics.html#dom-template-parsing-caveats)で説明したように、ネイティブ要素を Vue コンポーネントに置き換えるためには Vue が必要になる場合があります。`is` 属性の値の前に `vue:` を付けると、Vue はその要素を Vue コンポーネントとしてレンダリングします:\n\n  ```html\n  <table>\n    <tr is=\"vue:my-row-component\"></tr>\n  </table>\n  ```\n\n- **参照:**\n\n  - [ビルトインの特別な要素 - `<component>`](https://ja.vuejs.org/api/built-in-special-elements.html#component)\n  - [動的コンポーネント](https://ja.vuejs.org/guide/essentials/component-basics.html#dynamic-components)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-special-attributes.html#is"
+        }
+      ]
+    }
+  ]
+}

@@ -1,14 +1,14 @@
 import * as createHtmlPlugin from '@volar-plugins/html';
 import { FileRangeCapabilities, LanguageServicePlugin, SourceMapWithDocuments } from '@volar/language-service';
 import * as vue from '@volar/vue-language-core';
-import { hyphenate } from '@vue/shared';
+import { hyphenate, capitalize, camelize } from '@vue/shared';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { checkComponentNames, checkEventsOfTag, checkPropsOfTag, getElementAttrs } from '../helpers';
 import * as casing from '../ideFeatures/nameCasing';
 import { AttrNameCasing, VueCompilerOptions, TagNameCasing } from '../types';
-import { loadBuiltInDirectives } from './data';
+import { loadTemplateData } from './data';
 
 // https://v3.vuejs.org/api/directives.html#v-on
 const eventModifiers: Record<string, string> = {
@@ -39,11 +39,6 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		const _ts = _context.typescript;
 		const nativeTags = new Set(options.vueCompilerOptions.nativeTags);
 		const templatePlugin = options.templateLanguagePlugin(_context);
-		const globalDirectives = html.newHTMLDataProvider('vue-global-directive', {
-			version: 1.1,
-			tags: [],
-			globalAttributes: loadBuiltInDirectives(_context.env.locale ?? 'en'),
-		});
 
 		return {
 
@@ -221,15 +216,40 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			]);
 			const tagNameCasing = detected.tag.length === 1 && (tag === 'auto-pascal' || tag === 'auto-kebab') ? detected.tag[0] : (tag === 'auto-kebab' || tag === 'kebab') ? TagNameCasing.Kebab : TagNameCasing.Pascal;
 			const attrNameCasing = detected.attr.length === 1 && (attr === 'auto-camel' || attr === 'auto-kebab') ? detected.attr[0] : (attr === 'auto-camel' || attr === 'camel') ? AttrNameCasing.Camel : AttrNameCasing.Kebab;
+			const builtInData = loadTemplateData(_context.env.locale ?? 'en');
+
+			if (builtInData.tags) {
+				for (const tag of builtInData.tags) {
+					if (tag.name === 'slot')
+						continue;
+					if (tag.name === 'component')
+						continue;
+					if (tag.name === 'template')
+						continue;
+					if (tagNameCasing === TagNameCasing.Kebab) {
+						tag.name = hyphenate(tag.name);
+					}
+					else {
+						tag.name = camelize(capitalize(tag.name));
+					}
+				}
+			}
 
 			templatePlugin.updateCustomData([
-				globalDirectives,
+				html.newHTMLDataProvider('vue-template-built-in', builtInData),
 				{
 					getId: () => 'vue-template',
 					isApplicable: () => true,
 					provideTags: () => {
 
-						const components = checkComponentNames(_ts.module, _ts.languageService, vueSourceFile);
+						const components = checkComponentNames(_ts.module, _ts.languageService, vueSourceFile)
+							.filter(name =>
+								name !== 'Transition'
+								&& name !== 'TransitionGroup'
+								&& name !== 'KeepAlive'
+								&& name !== 'Suspense'
+								&& name !== 'Teleport'
+							);
 						const scriptSetupRanges = vueSourceFile.sfc.scriptSetupAst ? vue.parseScriptSetupRanges(_ts.module, vueSourceFile.sfc.scriptSetupAst, options.vueCompilerOptions) : undefined;
 						const names = new Set<string>();
 						const tags: html.ITagData[] = [];

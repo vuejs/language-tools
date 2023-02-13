@@ -35,11 +35,11 @@ const langs = [
 ];
 
 for (const lang of langs) {
-	builtInDirectivesWorker(lang);
-	languageBlocksWorker(lang);
+	templateWorker(lang);
+	sfcWorker(lang);
 }
 
-async function languageBlocksWorker(lang) {
+async function sfcWorker(lang) {
 
 	const sfcDoc = await fetch(lang.repoUrl + 'main/src/api/sfc-spec.md', lang.url);
 	const scriptSetupDoc = await fetch(lang.repoUrl + 'main/src/api/sfc-script-setup.md', lang.url);
@@ -92,7 +92,7 @@ async function languageBlocksWorker(lang) {
 			const lines = section.split('\n');
 			let name = lines[0].trim();
 			if (name.startsWith('`<')) {
-				name = name.slice(2, -2);
+				name = name.split('`<')[1].split('>`')[0];
 			}
 			/**
 			 * @type {import('vscode-html-languageservice').ITagData}
@@ -106,7 +106,7 @@ async function languageBlocksWorker(lang) {
 				},
 				references: langs.map(lang => ({
 					name: lang.name,
-					url: `${lang.url}api/sfc-spec.html#${name.replace(/ /g, '-').toLowerCase()}`,
+					url: `${lang.url}api/sfc-spec.html#${normalizeHash(name)}`,
 				})),
 			};
 			if (name === 'template') {
@@ -204,10 +204,14 @@ async function languageBlocksWorker(lang) {
 	}
 }
 
-async function builtInDirectivesWorker(lang) {
+async function templateWorker(lang) {
 
-	const text = await fetch(lang.repoUrl + 'main/src/api/built-in-directives.md', lang.url);
-	const json = text
+	const directivesDoc = await fetch(lang.repoUrl + 'main/src/api/built-in-directives.md', lang.url);
+	const attributesDoc = await fetch(lang.repoUrl + 'main/src/api/built-in-special-attributes.md', lang.url);
+	const componentsDoc = await fetch(lang.repoUrl + 'main/src/api/built-in-components.md', lang.url);
+	const elementsDoc = await fetch(lang.repoUrl + 'main/src/api/built-in-special-elements.md', lang.url);
+
+	const directives = directivesDoc
 		.split('\n## ')
 		.slice(1)
 		.map((section) => {
@@ -225,18 +229,105 @@ async function builtInDirectivesWorker(lang) {
 				},
 				references: langs.map(lang => ({
 					name: lang.name,
-					url: `${lang.url}api/built-in-directives.html#${name}`,
+					url: `${lang.url}api/built-in-directives.html#${normalizeHash(name)}`,
+				})),
+			};
+			return data;
+		});
+	const attributes = attributesDoc
+		.split('\n## ')
+		.slice(1)
+		.map((section) => {
+			const lines = section.split('\n');
+			const name = lines[0].trim().split(' ')[0];
+			/**
+			 * @type {import('vscode-html-languageservice').IAttributeData}
+			 */
+			const data = {
+				name,
+				description: {
+					kind: 'markdown',
+					value: lines.slice(1).join('\n'),
+				},
+				references: langs.map(lang => ({
+					name: lang.name,
+					url: `${lang.url}api/built-in-special-attributes.html#${normalizeHash(name)}`,
+				})),
+			};
+			return data;
+		});
+	const components = componentsDoc
+		.split('\n## ')
+		.slice(1)
+		.map((section) => {
+			const lines = section.split('\n');
+			let name = lines[0].trim();
+			if (name.startsWith('`<')) {
+				name = name.split('`<')[1].split('>`')[0];
+			}
+			/**
+			 * @type {import('vscode-html-languageservice').ITagData}
+			 */
+			const data = {
+				name,
+				description: {
+					kind: 'markdown',
+					value: lines.slice(1).join('\n'),
+				},
+				references: langs.map(lang => ({
+					name: lang.name,
+					url: `${lang.url}api/built-in-components.html#${normalizeHash(name)}`,
+				})),
+			};
+			return data;
+		});
+	const elements = elementsDoc
+		.split('\n## ')
+		.slice(1)
+		.map((section) => {
+			const lines = section.split('\n');
+			let name = lines[0].trim();
+			if (name.startsWith('`<')) {
+				name = name.split('`<')[1].split('>`')[0];
+			}
+			/**
+			 * @type {import('vscode-html-languageservice').ITagData}
+			 */
+			const data = {
+				name,
+				description: {
+					kind: 'markdown',
+					value: lines.slice(1).join('\n'),
+				},
+				references: langs.map(lang => ({
+					name: lang.name,
+					url: `${lang.url}api/built-in-special-elements.html#${normalizeHash(name)}`,
 				})),
 			};
 			return data;
 		});
 
+	/**
+	 * @type {import('vscode-html-languageservice').HTMLDataV1}
+	 */
+	const data = {
+		version: 1.1,
+		tags: [
+			...components,
+			...elements,
+		],
+		globalAttributes: [
+			...directives,
+			...attributes
+		],
+	};
+
 	const writePath = path.resolve(__dirname, '../data/built-in-directives/' + lang.name + '.json');
-	fs.writeFileSync(writePath, JSON.stringify(json, null, 2));
+	fs.writeFileSync(writePath, JSON.stringify(data, null, 2));
 	console.log(writePath);
 
 	if (lang.name === 'zh-cn') {
-		converter.convertPromise(JSON.stringify(json, null, 2)).then(converted => {
+		converter.convertPromise(JSON.stringify(data, null, 2)).then(converted => {
 			const writePath = path.resolve(__dirname, '../data/built-in-directives/zh-tw.json');
 			fs.writeFileSync(writePath, converted);
 			console.log(writePath);
@@ -264,4 +355,8 @@ function resolveMarkdownLinks(text, url) {
 		p2 = p2Parts.join('#');
 		return `[${p1}](${url}${p2})`;
 	});
+}
+
+function normalizeHash(str) {
+	return str.replace(/ /g, '-').toLowerCase();
 }
