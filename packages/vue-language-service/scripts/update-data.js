@@ -20,12 +20,12 @@ const langs = [
 ];
 
 for (const lang of langs) {
-	worker(lang);
+	builtInDirectivesWorker(lang);
 }
 
-async function worker(lang) {
+async function builtInDirectivesWorker(lang) {
 
-	const builtInDirectives = await fetchBuiltInDirectives(lang.builtInDirectivesMdUrl);
+	const builtInDirectives = await fetchText(lang.builtInDirectivesMdUrl);
 	const builtInDirectivesJson = builtInDirectives
 		.replace(/```vue-html/g, '```html')
 		.replace(/\]\(\//g, `](${lang.url}`)
@@ -48,7 +48,7 @@ async function worker(lang) {
 		});
 
 	// write json to file
-	const writePath = path.resolve(__dirname, '../src/data/built-in-directives/' + lang.name + '.json');
+	const writePath = path.resolve(__dirname, '../data/built-in-directives/' + lang.name + '.json');
 	fs.writeFileSync(writePath, JSON.stringify(builtInDirectivesJson, null, 2));
 
 	console.log('Built-in directives updated successfully!');
@@ -56,7 +56,7 @@ async function worker(lang) {
 }
 
 // fetch markdown content from vuejs.org
-function fetchBuiltInDirectives(url) {
+function fetchText(url) {
 	return new Promise((resolve, reject) => {
 		https.get(
 			url,

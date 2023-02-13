@@ -466,16 +466,16 @@ function loadBuiltInDirectives(lang: string): html.IAttributeData[] {
 
 	lang = lang.toLowerCase();
 
-	let json: typeof import('../data/built-in-directives/en.json');
+	let json: html.IAttributeData[];
 
 	if (lang === 'ja') {
-		json = require('../data/built-in-directives/ja.json');
+		json = require('../../data/built-in-directives/ja.json');
 	}
 	else if (lang.startsWith('zh-')) {
-		json = require('../data/built-in-directives/zh-cn.json');
+		json = require('../../data/built-in-directives/zh-cn.json');
 	}
 	else {
-		json = require('../data/built-in-directives/en.json');
+		json = require('../../data/built-in-directives/en.json');
 	}
 
 	const data = [...json];
