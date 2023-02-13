@@ -7,12 +7,15 @@ const path = require('path');
 	const builtInDirectives = await fetchBuiltInDirectives();
 	const builtInDirectivesJson = builtInDirectives
 		.replace(/```vue-html/g, '```html')
+		.replace(/\]\(\//g, '](https://vuejs.org/')
 		.split('\n##')
 		.slice(1)
 		.map((section) => {
 			const lines = section.split('\n');
 			const name = lines[0].trim().split(' ')[0];
-			lines[0] = '##' + lines[0].split(' ').slice(0, -1).join(' ');
+			const firstLine = lines[0].trim().split(' ').slice(0, -1);
+			firstLine[0] = `[${firstLine[0]}](https://vuejs.org/api/built-in-directives.html#${name})`;
+			lines[0] = '## ' + firstLine.join(' ');
 			return {
 				name,
 				valueSet: name === 'v-else' ? 'v' : undefined,
