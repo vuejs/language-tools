@@ -4,6 +4,8 @@
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
+const OpenCC = require('opencc');
+const converter = new OpenCC('s2t.json');
 const langs = [
 	{
 		name: 'en',
@@ -191,8 +193,15 @@ async function languageBlocksWorker(lang) {
 
 	const writePath = path.resolve(__dirname, '../data/language-blocks/' + lang.name + '.json');
 	fs.writeFileSync(writePath, JSON.stringify(data, null, 2));
-
 	console.log(writePath);
+
+	if (lang.name === 'zh-cn') {
+		converter.convertPromise(JSON.stringify(data, null, 2)).then(converted => {
+			const writePath = path.resolve(__dirname, '../data/language-blocks/zh-tw.json');
+			fs.writeFileSync(writePath, converted);
+			console.log(writePath);
+		});
+	}
 }
 
 async function builtInDirectivesWorker(lang) {
@@ -224,8 +233,15 @@ async function builtInDirectivesWorker(lang) {
 
 	const writePath = path.resolve(__dirname, '../data/built-in-directives/' + lang.name + '.json');
 	fs.writeFileSync(writePath, JSON.stringify(json, null, 2));
-
 	console.log(writePath);
+
+	if (lang.name === 'zh-cn') {
+		converter.convertPromise(JSON.stringify(json, null, 2)).then(converted => {
+			const writePath = path.resolve(__dirname, '../data/built-in-directives/zh-tw.json');
+			fs.writeFileSync(writePath, converted);
+			console.log(writePath);
+		});
+	}
 }
 
 async function fetch(url, baseUrl) {

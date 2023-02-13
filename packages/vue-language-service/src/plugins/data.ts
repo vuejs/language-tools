@@ -15,8 +15,11 @@ export function loadBuiltInDirectives(lang: string) {
 	else if (lang === 'fr') {
 		json = require('../../data/built-in-directives/fr.json');
 	}
-	else if (lang.startsWith('zh-')) {
+	else if (lang === 'zh-cn') {
 		json = require('../../data/built-in-directives/zh-cn.json');
+	}
+	else if (lang === 'zh-tw') {
+		json = require('../../data/built-in-directives/zh-tw.json');
 	}
 	else {
 		json = require('../../data/built-in-directives/en.json');
@@ -49,8 +52,11 @@ export function loadLanguageBlocks(lang: string) {
 	else if (lang === 'fr') {
 		json = require('../../data/language-blocks/fr.json');
 	}
-	else if (lang.startsWith('zh-')) {
+	else if (lang === 'zh-cn') {
 		json = require('../../data/language-blocks/zh-cn.json');
+	}
+	else if (lang === 'zh-tw') {
+		json = require('../../data/language-blocks/zh-tw.json');
 	}
 	else {
 		json = require('../../data/language-blocks/en.json');
