@@ -8,22 +8,6 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { checkComponentNames, checkEventsOfTag, checkPropsOfTag, getElementAttrs } from '../helpers';
 import * as casing from '../ideFeatures/nameCasing';
 import { AttrNameCasing, VueCompilerOptions, TagNameCasing } from '../types';
-import * as _builtInDirectives from '../data/builtInDirectives.json';
-
-const builtInDirectives = [..._builtInDirectives];
-const vOn = _builtInDirectives.find(d => d.name === 'v-on');
-const vSlot = _builtInDirectives.find(d => d.name === 'v-slot');
-const vBind = _builtInDirectives.find(d => d.name === 'v-bind');
-
-if (vOn) builtInDirectives.push({ ...vOn, name: '@' });
-if (vSlot) builtInDirectives.push({ ...vSlot, name: '#' });
-if (vBind) builtInDirectives.push({ ...vBind, name: ':' });
-
-const globalDirectives = html.newHTMLDataProvider('vue-global-directive', {
-	version: 1.1,
-	tags: [],
-	globalAttributes: builtInDirectives as any,
-});
 
 // https://v3.vuejs.org/api/directives.html#v-on
 const eventModifiers: Record<string, string> = {
@@ -54,6 +38,11 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		const _ts = _context.typescript;
 		const nativeTags = new Set(options.vueCompilerOptions.nativeTags);
 		const templatePlugin = options.templateLanguagePlugin(_context);
+		const globalDirectives = html.newHTMLDataProvider('vue-global-directive', {
+			version: 1.1,
+			tags: [],
+			globalAttributes: loadBuiltInDirectives(_context.env.locale ?? 'en'),
+		});
 
 		return {
 
@@ -471,6 +460,34 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 	};
 
 	return plugin as T;
+}
+
+function loadBuiltInDirectives(lang: string): html.IAttributeData[] {
+
+	lang = lang.toLowerCase();
+
+	let json: typeof import('../data/built-in-directives/en.json');
+
+	if (lang === 'ja') {
+		json = require('../data/built-in-directives/ja.json');
+	}
+	else if (lang.startsWith('zh-')) {
+		json = require('../data/built-in-directives/ja.json');
+	}
+	else {
+		json = require('../data/built-in-directives/en.json');
+	}
+
+	const data = [...json];
+	const vOn = json.find(d => d.name === 'v-on');
+	const vSlot = json.find(d => d.name === 'v-slot');
+	const vBind = json.find(d => d.name === 'v-bind');
+
+	if (vOn) data.push({ ...vOn, name: '@' });
+	if (vSlot) data.push({ ...vSlot, name: '#' });
+	if (vBind) data.push({ ...vBind, name: ':' });
+
+	return data as any;
 }
 
 function createInternalItemId(type: 'vueDirective' | 'componentEvent' | 'componentProp', args: string[]) {
