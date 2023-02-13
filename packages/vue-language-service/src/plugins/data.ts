@@ -48,3 +48,22 @@ export function loadLanguageBlocks(lang: string) {
 
 	return data;
 }
+
+export function loadLanguageBlocksAttributes(lang: string) {
+
+	lang = lang.toLowerCase();
+
+	let json: html.ITagData[];
+
+	if (lang === 'ja') {
+		json = require('../../data/language-blocks-attributes/ja.json');
+	}
+	else if (lang.startsWith('zh-')) {
+		json = require('../../data/language-blocks-attributes/zh-cn.json');
+	}
+	else {
+		json = require('../../data/language-blocks-attributes/en.json');
+	}
+
+	return json;
+}

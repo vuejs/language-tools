@@ -3,7 +3,7 @@
     "name": "template",
     "description": {
       "kind": "markdown",
-      "value": "## `<template>`\n\n- Each `*.vue` file can contain at most one top-level `<template>` block at a time.\n\n- Contents will be extracted and passed on to `@vue/compiler-dom`, pre-compiled into JavaScript render functions, and attached to the exported component as its `render` option.\n"
+      "value": "\n- Each `*.vue` file can contain at most one top-level `<template>` block at a time.\n\n- Contents will be extracted and passed on to `@vue/compiler-dom`, pre-compiled into JavaScript render functions, and attached to the exported component as its `render` option.\n"
     },
     "references": [
       {
@@ -24,7 +24,7 @@
     "name": "script",
     "description": {
       "kind": "markdown",
-      "value": "## `<script>`\n\n- Each `*.vue` file can contain at most one `<script>` block at a time (excluding [`<script setup>`](https://vuejs.org/api/sfc-script-setup.html)).\n\n- The script is executed as an ES Module.\n\n- The **default export** should be a Vue component options object, either as a plain object or as the return value of [defineComponent](https://vuejs.org/api/general.html#definecomponent).\n"
+      "value": "\n- Each `*.vue` file can contain at most one `<script>` block at a time (excluding [`<script setup>`](https://vuejs.org/api/sfc-script-setup.html)).\n\n- The script is executed as an ES Module.\n\n- The **default export** should be a Vue component options object, either as a plain object or as the return value of [defineComponent](https://vuejs.org/api/general.html#definecomponent).\n"
     },
     "references": [
       {
@@ -45,7 +45,7 @@
     "name": "script setup",
     "description": {
       "kind": "markdown",
-      "value": "## `<script setup>`\n\n- Each `*.vue` file can contain at most one `<script setup>` block at a time (excluding normal `<script>`).\n\n- The script is pre-processed and used as the component's `setup()` function, which means it will be executed **for each instance of the component**. Top-level bindings in `<script setup>` are automatically exposed to the template. For more details, see [dedicated documentation on `<script setup>`](https://vuejs.org/api/sfc-script-setup.html).\n"
+      "value": "\n- Each `*.vue` file can contain at most one `<script setup>` block at a time (excluding normal `<script>`).\n\n- The script is pre-processed and used as the component's `setup()` function, which means it will be executed **for each instance of the component**. Top-level bindings in `<script setup>` are automatically exposed to the template. For more details, see [dedicated documentation on `<script setup>`](https://vuejs.org/api/sfc-script-setup.html).\n"
     },
     "references": [
       {
@@ -66,7 +66,7 @@
     "name": "style",
     "description": {
       "kind": "markdown",
-      "value": "## `<style>`\n\n- A single `*.vue` file can contain multiple `<style>` tags.\n\n- A `<style>` tag can have `scoped` or `module` attributes (see [SFC Style Features](https://vuejs.org/api/sfc-css-features.html) for more details) to help encapsulate the styles to the current component. Multiple `<style>` tags with different encapsulation modes can be mixed in the same component.\n"
+      "value": "\n- A single `*.vue` file can contain multiple `<style>` tags.\n\n- A `<style>` tag can have `scoped` or `module` attributes (see [SFC Style Features](https://vuejs.org/api/sfc-css-features.html) for more details) to help encapsulate the styles to the current component. Multiple `<style>` tags with different encapsulation modes can be mixed in the same component.\n"
     },
     "references": [
       {
@@ -87,7 +87,7 @@
     "name": "Custom Blocks",
     "description": {
       "kind": "markdown",
-      "value": "## Custom Blocks\n\nAdditional custom blocks can be included in a `*.vue` file for any project-specific needs, for example a `<docs>` block. Some real-world examples of custom blocks include:\n\n- [Gridsome: `<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql: `<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n: `<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\nHandling of Custom Blocks will depend on tooling - if you want to build your own custom block integrations, see [relevant tooling section](https://vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations) for more details.\n"
+      "value": "\nAdditional custom blocks can be included in a `*.vue` file for any project-specific needs, for example a `<docs>` block. Some real-world examples of custom blocks include:\n\n- [Gridsome: `<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql: `<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n: `<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\nHandling of Custom Blocks will depend on tooling - if you want to build your own custom block integrations, see [relevant tooling section](https://vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations) for more details.\n"
     },
     "references": [
       {

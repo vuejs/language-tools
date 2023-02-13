@@ -7,7 +7,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as createHtmlPlugin from '@volar-plugins/html';
 import * as vue from '@volar/vue-language-core';
 import { VueCompilerOptions } from '../types';
-import { loadLanguageBlocks } from './data';
+import { loadLanguageBlocks, loadLanguageBlocksAttributes } from './data';
 
 export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin => (context) => {
 
@@ -19,33 +19,22 @@ export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin =
 		isApplicable: () => true,
 		provideTags: () => loadLanguageBlocks(context.env.locale ?? 'en'),
 		provideAttributes: (tag) => {
-			if (tag === 'template') {
+			if (tag === 'script') {
 				return [
-					{ name: 'src' },
-					{ name: 'lang' },
-				];
-			}
-			else if (tag === 'script') {
-				return [
-					{ name: 'src' },
-					{ name: 'lang' },
+					...loadLanguageBlocksAttributes(context.env.locale ?? 'en'),
 					{ name: 'setup', valueSet: 'v' },
 					{ name: 'generic' },
 				];
 			}
 			else if (tag === 'style') {
 				return [
-					{ name: 'src' },
-					{ name: 'lang' },
+					...loadLanguageBlocksAttributes(context.env.locale ?? 'en'),
 					{ name: 'scoped', valueSet: 'v' },
 					{ name: 'module', valueSet: 'v' },
 				];
 			}
 			else {
-				return [
-					{ name: 'src' },
-					{ name: 'lang' }
-				];
+				return loadLanguageBlocksAttributes(context.env.locale ?? 'en');
 			}
 		},
 		provideValues: (tag, attribute) => {

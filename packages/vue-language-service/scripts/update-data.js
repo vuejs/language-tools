@@ -30,9 +30,10 @@ for (const lang of langs) {
 async function languageBlocksWorker(lang) {
 
 	let text = (await axios.get(lang.languageBlocksMdUrl)).data;
+	text = text.replace(/```vue-html/g, '```html');
 	text = resolveMarkdownLinks(text, lang.url);
-	const json = text
-		.replace(/```vue-html/g, '```html')
+
+	const languageBlocksJson = text
 		.split('\n## ')[2]
 		.split('\n### ')
 		.slice(1)
@@ -42,12 +43,11 @@ async function languageBlocksWorker(lang) {
 			if (name.startsWith('`<')) {
 				name = name.slice(2, -2);
 			}
-			lines[0] = '## ' + lines[0].trim().split(' ').slice(0, -1).join(' ');
 			return {
 				name,
 				description: {
 					kind: 'markdown',
-					value: lines.join('\n'),
+					value: lines.slice(1).join('\n'),
 				},
 				references: langs.map(lang => ({
 					name: lang.name,
@@ -55,33 +55,64 @@ async function languageBlocksWorker(lang) {
 				})),
 			};
 		});
+	const attrsJson = [
+		{
+			name: 'lang',
+			description: {
+				kind: 'markdown',
+				value: text.split('\n## ')[4].split('\n').slice(1).join('\n'),
+			},
+			references: langs.map(lang => ({
+				name: lang.name,
+				url: `${lang.url}api/sfc-spec.html#pre-processors`,
+			})),
+		},
+		{
+			name: 'src',
+			description: {
+				kind: 'markdown',
+				value: text.split('\n## ')[5].split('\n').slice(1).join('\n'),
+			},
+			references: langs.map(lang => ({
+				name: lang.name,
+				url: `${lang.url}api/sfc-spec.html#src-imports`,
+			})),
+		},
+	];
 
-	// write json to file
-	const writePath = path.resolve(__dirname, '../data/language-blocks/' + lang.name + '.json');
-	fs.writeFileSync(writePath, JSON.stringify(json, null, 2));
+	{
+		const writePath = path.resolve(__dirname, '../data/language-blocks/' + lang.name + '.json');
+		fs.writeFileSync(writePath, JSON.stringify(languageBlocksJson, null, 2));
 
-	console.log('Built-in directives updated successfully!');
-	console.log('Path: ' + writePath);
+		console.log(writePath);
+	}
+
+	{
+		const writePath = path.resolve(__dirname, '../data/language-blocks-attributes/' + lang.name + '.json');
+		fs.writeFileSync(writePath, JSON.stringify(attrsJson, null, 2));
+
+		console.log(writePath);
+	}
 }
 
 async function builtInDirectivesWorker(lang) {
 
 	let text = (await axios.get(lang.builtInDirectivesMdUrl)).data;
+	text = text.replace(/```vue-html/g, '```html');
 	text = resolveMarkdownLinks(text, lang.url);
+
 	const json = text
-		.replace(/```vue-html/g, '```html')
 		.split('\n## ')
 		.slice(1)
 		.map((section) => {
 			const lines = section.split('\n');
 			const name = lines[0].trim().split(' ')[0];
-			lines[0] = '## ' + lines[0].trim().split(' ').slice(0, -1).join(' ');
 			return {
 				name,
 				valueSet: name === 'v-else' ? 'v' : undefined,
 				description: {
 					kind: 'markdown',
-					value: lines.join('\n'),
+					value: lines.slice(1).join('\n'),
 				},
 				references: langs.map(lang => ({
 					name: lang.name,
@@ -90,12 +121,10 @@ async function builtInDirectivesWorker(lang) {
 			};
 		});
 
-	// write json to file
 	const writePath = path.resolve(__dirname, '../data/built-in-directives/' + lang.name + '.json');
 	fs.writeFileSync(writePath, JSON.stringify(json, null, 2));
 
-	console.log('Built-in directives updated successfully!');
-	console.log('Path: ' + writePath);
+	console.log(writePath);
 }
 
 function resolveMarkdownLinks(text, url) {

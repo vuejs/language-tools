@@ -1,0 +1,44 @@
+[
+  {
+    "name": "lang",
+    "description": {
+      "kind": "markdown",
+      "value": "\nBlocks can declare pre-processor languages using the `lang` attribute. The most common case is using TypeScript for the `<script>` block:\n\n```html\n<script lang=\"ts\">\n  // use TypeScript\n</script>\n```\n\n`lang` can be applied to any block - for example we can use `<style>` with [Sass](https://sass-lang.com/) and `<template>` with [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nNote that integration with various pre-processors may differ by toolchain. Check out the respective documentation for examples:\n\n- [Vite](https://vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/sfc-spec.html#pre-processors"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
+      }
+    ]
+  },
+  {
+    "name": "src",
+    "description": {
+      "kind": "markdown",
+      "value": "\nIf you prefer splitting up your `*.vue` components into multiple files, you can use the `src` attribute to import an external file for a language block:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nBeware that `src` imports follow the same path resolution rules as webpack module requests, which means:\n\n- Relative paths need to start with `./`\n- You can import resources from npm dependencies:\n\n```vue\n<!-- import a file from the installed \"todomvc-app-css\" npm package -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` imports also work with custom blocks, e.g.:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/sfc-spec.html#src-imports"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
+      }
+    ]
+  }
+]
