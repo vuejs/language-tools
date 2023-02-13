@@ -8,26 +8,27 @@ const langs = [
 	{
 		name: 'en',
 		url: 'https://vuejs.org/',
-		sfcDocumentUrl: 'https://raw.githubusercontent.com/vuejs/docs/main/src/api/sfc-spec.md',
-		scriptSetupDocumentUrl: 'https://raw.githubusercontent.com/vuejs/docs/main/src/api/sfc-script-setup.md',
-		cssFeaturesDocumentUrl: 'https://raw.githubusercontent.com/vuejs/docs/main/src/api/sfc-css-features.md',
-		builtInDirectivesDocumentUrl: 'https://raw.githubusercontent.com/vuejs/docs/main/src/api/built-in-directives.md',
+		repoUrl: 'https://raw.githubusercontent.com/vuejs/docs/',
 	},
 	{
 		name: 'zh-cn',
 		url: 'https://cn.vuejs.org/',
-		sfcDocumentUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-zh-cn/main/src/api/sfc-spec.md',
-		scriptSetupDocumentUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-zh-cn/main/src/api/sfc-script-setup.md',
-		cssFeaturesDocumentUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-zh-cn/main/src/api/sfc-css-features.md',
-		builtInDirectivesDocumentUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-zh-cn/main/src/api/built-in-directives.md',
+		repoUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-zh-cn/',
 	},
 	{
 		name: 'ja',
 		url: 'https://ja.vuejs.org/',
-		sfcDocumentUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-ja/main/src/api/sfc-spec.md',
-		scriptSetupDocumentUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-ja/main/src/api/sfc-script-setup.md',
-		cssFeaturesDocumentUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-ja/main/src/api/sfc-css-features.md',
-		builtInDirectivesDocumentUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-ja/main/src/api/built-in-directives.md',
+		repoUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-ja/',
+	},
+	{
+		name: 'ua',
+		url: 'https://ua.vuejs.org/',
+		repoUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-ua/',
+	},
+	{
+		name: 'fr',
+		url: 'https://fr.vuejs.org/',
+		repoUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-fr/',
 	},
 ];
 
@@ -38,9 +39,9 @@ for (const lang of langs) {
 
 async function languageBlocksWorker(lang) {
 
-	const sfcDoc = await fetch(lang.sfcDocumentUrl, lang.url);
-	const scriptSetupDoc = await fetch(lang.scriptSetupDocumentUrl, lang.url);
-	const cssFeaturesDoc = await fetch(lang.cssFeaturesDocumentUrl, lang.url);
+	const sfcDoc = await fetch(lang.repoUrl + 'main/src/api/sfc-spec.md', lang.url);
+	const scriptSetupDoc = await fetch(lang.repoUrl + 'main/src/api/sfc-script-setup.md', lang.url);
+	const cssFeaturesDoc = await fetch(lang.repoUrl + 'main/src/api/sfc-css-features.md', lang.url);
 
 	/**
 	 * @type {import('vscode-html-languageservice').IAttributeData}
@@ -196,7 +197,7 @@ async function languageBlocksWorker(lang) {
 
 async function builtInDirectivesWorker(lang) {
 
-	const text = await fetch(lang.builtInDirectivesDocumentUrl, lang.url);
+	const text = await fetch(lang.repoUrl + 'main/src/api/built-in-directives.md', lang.url);
 	const json = text
 		.split('\n## ')
 		.slice(1)

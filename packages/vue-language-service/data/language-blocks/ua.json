@@ -8,7 +8,7 @@
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "\nIf you prefer splitting up your `*.vue` components into multiple files, you can use the `src` attribute to import an external file for a language block:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nBeware that `src` imports follow the same path resolution rules as webpack module requests, which means:\n\n- Relative paths need to start with `./`\n- You can import resources from npm dependencies:\n\n```vue\n<!-- import a file from the installed \"todomvc-app-css\" npm package -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` imports also work with custom blocks, e.g.:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+            "value": "\nЯкщо ви віддаєте перевагу розділенню ваших компонентів `*.vue` на кілька файлів, ви можете використовувати атрибут `src`, щоб імпортувати зовнішній файл для мовного блоку:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nПам’ятайте, що імпорт `src` дотримується тих самих правил вирішення шляху, що й запити модуля webpack, що означає:\n\n- Відносні шляхи повинні починатися з `./`\n- Ви можете імпортувати ресурси із залежностей npm:\n\n```vue\n<!-- імпорт файлу із встановленого npm-пакету \"todomvc-app-css\" -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` імпорт також працює з користувацькими блоками, напр.:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
           },
           "references": [
             {
@@ -37,7 +37,7 @@
           "name": "lang",
           "description": {
             "kind": "markdown",
-            "value": "\nBlocks can declare pre-processor languages using the `lang` attribute. The most common case is using TypeScript for the `<script>` block:\n\n```html\n<script lang=\"ts\">\n  // use TypeScript\n</script>\n```\n\n`lang` can be applied to any block - for example we can use `<style>` with [Sass](https://sass-lang.com/) and `<template>` with [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nNote that integration with various pre-processors may differ by toolchain. Check out the respective documentation for examples:\n\n- [Vite](https://vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
+            "value": "\nУ блоках можна оголосити мову пре-процесора за допомогою атрибуту `lang`. Найпоширенішим випадком є використання TypeScript для блоку `<script>`:\n\n```html\n<script lang=\"ts\">\n  // використовуємо TypeScript\n</script>\n```\n\n`lang` можна застосувати до будь-якого блоку - наприклад, ми можемо використовувати `<style>` з [Sass](https://sass-lang.com/) і `<template>` з [Pug](https:/ /pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nЗауважте, що інтеграція з різними пре-процесорами може відрізнятися залежно від ланцюжка інструментів. Перегляньте відповідну документацію для прикладів:\n\n- [Vite](https://vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
           },
           "values": [
             {
@@ -73,7 +73,7 @@
       ],
       "description": {
         "kind": "markdown",
-        "value": "\n- Each `*.vue` file can contain at most one top-level `<template>` block at a time.\n\n- Contents will be extracted and passed on to `@vue/compiler-dom`, pre-compiled into JavaScript render functions, and attached to the exported component as its `render` option.\n"
+        "value": "\n- Кожен файл `*.vue` може містити не більше одного блоку `<template>` верхнього рівня.\n\n- Вміст буде витягнуто та передано до `@vue/compiler-dom`, де попередньо скомпілюється в JavaScript функцію рендерингу і приєднано до компонента, що експортується, як його опція `render`.\n"
       },
       "references": [
         {
@@ -105,7 +105,7 @@
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "\nIf you prefer splitting up your `*.vue` components into multiple files, you can use the `src` attribute to import an external file for a language block:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nBeware that `src` imports follow the same path resolution rules as webpack module requests, which means:\n\n- Relative paths need to start with `./`\n- You can import resources from npm dependencies:\n\n```vue\n<!-- import a file from the installed \"todomvc-app-css\" npm package -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` imports also work with custom blocks, e.g.:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+            "value": "\nЯкщо ви віддаєте перевагу розділенню ваших компонентів `*.vue` на кілька файлів, ви можете використовувати атрибут `src`, щоб імпортувати зовнішній файл для мовного блоку:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nПам’ятайте, що імпорт `src` дотримується тих самих правил вирішення шляху, що й запити модуля webpack, що означає:\n\n- Відносні шляхи повинні починатися з `./`\n- Ви можете імпортувати ресурси із залежностей npm:\n\n```vue\n<!-- імпорт файлу із встановленого npm-пакету \"todomvc-app-css\" -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` імпорт також працює з користувацькими блоками, напр.:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
           },
           "references": [
             {
@@ -134,7 +134,7 @@
           "name": "lang",
           "description": {
             "kind": "markdown",
-            "value": "\nBlocks can declare pre-processor languages using the `lang` attribute. The most common case is using TypeScript for the `<script>` block:\n\n```html\n<script lang=\"ts\">\n  // use TypeScript\n</script>\n```\n\n`lang` can be applied to any block - for example we can use `<style>` with [Sass](https://sass-lang.com/) and `<template>` with [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nNote that integration with various pre-processors may differ by toolchain. Check out the respective documentation for examples:\n\n- [Vite](https://vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
+            "value": "\nУ блоках можна оголосити мову пре-процесора за допомогою атрибуту `lang`. Найпоширенішим випадком є використання TypeScript для блоку `<script>`:\n\n```html\n<script lang=\"ts\">\n  // використовуємо TypeScript\n</script>\n```\n\n`lang` можна застосувати до будь-якого блоку - наприклад, ми можемо використовувати `<style>` з [Sass](https://sass-lang.com/) і `<template>` з [Pug](https:/ /pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nЗауважте, що інтеграція з різними пре-процесорами може відрізнятися залежно від ланцюжка інструментів. Перегляньте відповідну документацію для прикладів:\n\n- [Vite](https://vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
           },
           "values": [
             {
@@ -209,7 +209,7 @@
       ],
       "description": {
         "kind": "markdown",
-        "value": "\n- Each `*.vue` file can contain at most one `<script>` block at a time (excluding [`<script setup>`](https://vuejs.org/api/sfc-script-setup.html)).\n\n- The script is executed as an ES Module.\n\n- The **default export** should be a Vue component options object, either as a plain object or as the return value of [defineComponent](https://vuejs.org/api/general.html#definecomponent).\n"
+        "value": "\n- Кожен файл `*.vue` може містити не більше одного блоку `<script>` (за винятком [`<script setup>`](https://ua.vuejs.org/api/sfc-script-setup.html)).\n\n- Сценарій виконується як ES модуль.\n\n- **Експорт за промовчанням** повинен бути об'єктом опцій компонента Vue, або звичайним об'єктом, або як значення, що повертається [defineComponent](https://ua.vuejs.org/api/general.html#definecomponent).\n"
       },
       "references": [
         {
@@ -241,7 +241,7 @@
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "\nIf you prefer splitting up your `*.vue` components into multiple files, you can use the `src` attribute to import an external file for a language block:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nBeware that `src` imports follow the same path resolution rules as webpack module requests, which means:\n\n- Relative paths need to start with `./`\n- You can import resources from npm dependencies:\n\n```vue\n<!-- import a file from the installed \"todomvc-app-css\" npm package -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` imports also work with custom blocks, e.g.:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+            "value": "\nЯкщо ви віддаєте перевагу розділенню ваших компонентів `*.vue` на кілька файлів, ви можете використовувати атрибут `src`, щоб імпортувати зовнішній файл для мовного блоку:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nПам’ятайте, що імпорт `src` дотримується тих самих правил вирішення шляху, що й запити модуля webpack, що означає:\n\n- Відносні шляхи повинні починатися з `./`\n- Ви можете імпортувати ресурси із залежностей npm:\n\n```vue\n<!-- імпорт файлу із встановленого npm-пакету \"todomvc-app-css\" -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` імпорт також працює з користувацькими блоками, напр.:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
           },
           "references": [
             {
@@ -269,7 +269,7 @@
       ],
       "description": {
         "kind": "markdown",
-        "value": "\n- Each `*.vue` file can contain at most one `<script setup>` block at a time (excluding normal `<script>`).\n\n- The script is pre-processed and used as the component's `setup()` function, which means it will be executed **for each instance of the component**. Top-level bindings in `<script setup>` are automatically exposed to the template. For more details, see [dedicated documentation on `<script setup>`](https://vuejs.org/api/sfc-script-setup.html).\n"
+        "value": "\n- Кожен файл `*.vue` може містити не більше одного блоку `<script setup>` (за винятком звичайного `<script>`).\n\n- Сценарій попередньо обробляється і використовується як функція компонента `setup()`, що означає, що вона виконуватиметься **для кожного екземпляра компонента**. Прив'язки верхнього рівня `<script setup>` автоматично оголошуються в шаблоні. Більш детальну інформацію можна знайти [на спеціальній сторінці документації `<script setup>`](https://ua.vuejs.org/api/sfc-script-setup.html)\n"
       },
       "references": [
         {
@@ -301,7 +301,7 @@
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "\nIf you prefer splitting up your `*.vue` components into multiple files, you can use the `src` attribute to import an external file for a language block:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nBeware that `src` imports follow the same path resolution rules as webpack module requests, which means:\n\n- Relative paths need to start with `./`\n- You can import resources from npm dependencies:\n\n```vue\n<!-- import a file from the installed \"todomvc-app-css\" npm package -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` imports also work with custom blocks, e.g.:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+            "value": "\nЯкщо ви віддаєте перевагу розділенню ваших компонентів `*.vue` на кілька файлів, ви можете використовувати атрибут `src`, щоб імпортувати зовнішній файл для мовного блоку:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nПам’ятайте, що імпорт `src` дотримується тих самих правил вирішення шляху, що й запити модуля webpack, що означає:\n\n- Відносні шляхи повинні починатися з `./`\n- Ви можете імпортувати ресурси із залежностей npm:\n\n```vue\n<!-- імпорт файлу із встановленого npm-пакету \"todomvc-app-css\" -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` імпорт також працює з користувацькими блоками, напр.:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
           },
           "references": [
             {
@@ -330,7 +330,7 @@
           "name": "lang",
           "description": {
             "kind": "markdown",
-            "value": "\nBlocks can declare pre-processor languages using the `lang` attribute. The most common case is using TypeScript for the `<script>` block:\n\n```html\n<script lang=\"ts\">\n  // use TypeScript\n</script>\n```\n\n`lang` can be applied to any block - for example we can use `<style>` with [Sass](https://sass-lang.com/) and `<template>` with [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nNote that integration with various pre-processors may differ by toolchain. Check out the respective documentation for examples:\n\n- [Vite](https://vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
+            "value": "\nУ блоках можна оголосити мову пре-процесора за допомогою атрибуту `lang`. Найпоширенішим випадком є використання TypeScript для блоку `<script>`:\n\n```html\n<script lang=\"ts\">\n  // використовуємо TypeScript\n</script>\n```\n\n`lang` можна застосувати до будь-якого блоку - наприклад, ми можемо використовувати `<style>` з [Sass](https://sass-lang.com/) і `<template>` з [Pug](https:/ /pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nЗауважте, що інтеграція з різними пре-процесорами може відрізнятися залежно від ланцюжка інструментів. Перегляньте відповідну документацію для прикладів:\n\n- [Vite](https://vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
           },
           "values": [
             {
@@ -438,7 +438,7 @@
       ],
       "description": {
         "kind": "markdown",
-        "value": "\n- A single `*.vue` file can contain multiple `<style>` tags.\n\n- A `<style>` tag can have `scoped` or `module` attributes (see [SFC Style Features](https://vuejs.org/api/sfc-css-features.html) for more details) to help encapsulate the styles to the current component. Multiple `<style>` tags with different encapsulation modes can be mixed in the same component.\n"
+        "value": "\n- Один файл `*.vue` може містити кілька тегів `<style>`.\n\n- Тег `<style>` може мати атрибути `scoped` або `module` (додаткову інформацію див. у розділі [можливості стилів одно-файлового компонента](https://ua.vuejs.org/api/sfc-css-features.html), щоб допомогти інкапсулювати стилі в поточний компонент. В одному компоненті можна змішувати кілька тегів `<style>` з різними режимами інкапсуляції.\n"
       },
       "references": [
         {
@@ -464,13 +464,13 @@
       ]
     },
     {
-      "name": "Custom Blocks",
+      "name": "Користувацькі блоки",
       "attributes": [
         {
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "\nIf you prefer splitting up your `*.vue` components into multiple files, you can use the `src` attribute to import an external file for a language block:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nBeware that `src` imports follow the same path resolution rules as webpack module requests, which means:\n\n- Relative paths need to start with `./`\n- You can import resources from npm dependencies:\n\n```vue\n<!-- import a file from the installed \"todomvc-app-css\" npm package -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` imports also work with custom blocks, e.g.:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+            "value": "\nЯкщо ви віддаєте перевагу розділенню ваших компонентів `*.vue` на кілька файлів, ви можете використовувати атрибут `src`, щоб імпортувати зовнішній файл для мовного блоку:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nПам’ятайте, що імпорт `src` дотримується тих самих правил вирішення шляху, що й запити модуля webpack, що означає:\n\n- Відносні шляхи повинні починатися з `./`\n- Ви можете імпортувати ресурси із залежностей npm:\n\n```vue\n<!-- імпорт файлу із встановленого npm-пакету \"todomvc-app-css\" -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` імпорт також працює з користувацькими блоками, напр.:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
           },
           "references": [
             {
@@ -498,28 +498,28 @@
       ],
       "description": {
         "kind": "markdown",
-        "value": "\nAdditional custom blocks can be included in a `*.vue` file for any project-specific needs, for example a `<docs>` block. Some real-world examples of custom blocks include:\n\n- [Gridsome: `<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql: `<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n: `<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\nHandling of Custom Blocks will depend on tooling - if you want to build your own custom block integrations, see [relevant tooling section](https://vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations) for more details.\n"
+        "value": "\nДодаткові користувацькі блоки можна включити у файл `*.vue` для будь-яких потреб конкретного проекту, наприклад, блок `<docs>`. Деякі реальні приклади спеціальних блоків включають:\n\n- [Gridsome: `<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql: `<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n: `<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\nОбробка користувацьких блоків залежатиме від інструментів. Якщо ви хочете створити власні користувацькі інтеграції блоків, див. [відповідний розділ інструментів](https://ua.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations), щоб отримати докладнішу інформацію.\n"
       },
       "references": [
         {
           "name": "en",
-          "url": "https://vuejs.org/api/sfc-spec.html#custom-blocks"
+          "url": "https://vuejs.org/api/sfc-spec.html#користувацькі-блоки"
         },
         {
           "name": "zh-cn",
-          "url": "https://cn.vuejs.org/api/sfc-spec.html#custom-blocks"
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#користувацькі-блоки"
         },
         {
           "name": "ja",
-          "url": "https://ja.vuejs.org/api/sfc-spec.html#custom-blocks"
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#користувацькі-блоки"
         },
         {
           "name": "ua",
-          "url": "https://ua.vuejs.org/api/sfc-spec.html#custom-blocks"
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#користувацькі-блоки"
         },
         {
           "name": "fr",
-          "url": "https://fr.vuejs.org/api/sfc-spec.html#custom-blocks"
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#користувацькі-блоки"
         }
       ]
     }
@@ -529,7 +529,7 @@
       "name": "lang",
       "description": {
         "kind": "markdown",
-        "value": "\nBlocks can declare pre-processor languages using the `lang` attribute. The most common case is using TypeScript for the `<script>` block:\n\n```html\n<script lang=\"ts\">\n  // use TypeScript\n</script>\n```\n\n`lang` can be applied to any block - for example we can use `<style>` with [Sass](https://sass-lang.com/) and `<template>` with [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nNote that integration with various pre-processors may differ by toolchain. Check out the respective documentation for examples:\n\n- [Vite](https://vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
+        "value": "\nУ блоках можна оголосити мову пре-процесора за допомогою атрибуту `lang`. Найпоширенішим випадком є використання TypeScript для блоку `<script>`:\n\n```html\n<script lang=\"ts\">\n  // використовуємо TypeScript\n</script>\n```\n\n`lang` можна застосувати до будь-якого блоку - наприклад, ми можемо використовувати `<style>` з [Sass](https://sass-lang.com/) і `<template>` з [Pug](https:/ /pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nЗауважте, що інтеграція з різними пре-процесорами може відрізнятися залежно від ланцюжка інструментів. Перегляньте відповідну документацію для прикладів:\n\n- [Vite](https://vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
       },
       "values": [],
       "references": [
@@ -559,7 +559,7 @@
       "name": "src",
       "description": {
         "kind": "markdown",
-        "value": "\nIf you prefer splitting up your `*.vue` components into multiple files, you can use the `src` attribute to import an external file for a language block:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nBeware that `src` imports follow the same path resolution rules as webpack module requests, which means:\n\n- Relative paths need to start with `./`\n- You can import resources from npm dependencies:\n\n```vue\n<!-- import a file from the installed \"todomvc-app-css\" npm package -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` imports also work with custom blocks, e.g.:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+        "value": "\nЯкщо ви віддаєте перевагу розділенню ваших компонентів `*.vue` на кілька файлів, ви можете використовувати атрибут `src`, щоб імпортувати зовнішній файл для мовного блоку:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nПам’ятайте, що імпорт `src` дотримується тих самих правил вирішення шляху, що й запити модуля webpack, що означає:\n\n- Відносні шляхи повинні починатися з `./`\n- Ви можете імпортувати ресурси із залежностей npm:\n\n```vue\n<!-- імпорт файлу із встановленого npm-пакету \"todomvc-app-css\" -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` імпорт також працює з користувацькими блоками, напр.:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
       },
       "references": [
         {

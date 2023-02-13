@@ -9,6 +9,12 @@ export function loadBuiltInDirectives(lang: string) {
 	if (lang === 'ja') {
 		json = require('../../data/built-in-directives/ja.json');
 	}
+	else if (lang === 'ua') {
+		json = require('../../data/built-in-directives/ua.json');
+	}
+	else if (lang === 'fr') {
+		json = require('../../data/built-in-directives/fr.json');
+	}
 	else if (lang.startsWith('zh-')) {
 		json = require('../../data/built-in-directives/zh-cn.json');
 	}
@@ -36,6 +42,12 @@ export function loadLanguageBlocks(lang: string) {
 
 	if (lang === 'ja') {
 		json = require('../../data/language-blocks/ja.json');
+	}
+	else if (lang === 'ua') {
+		json = require('../../data/language-blocks/ua.json');
+	}
+	else if (lang === 'fr') {
+		json = require('../../data/language-blocks/fr.json');
 	}
 	else if (lang.startsWith('zh-')) {
 		json = require('../../data/language-blocks/zh-cn.json');

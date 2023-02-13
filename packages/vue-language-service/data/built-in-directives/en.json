@@ -17,6 +17,14 @@
       {
         "name": "ja",
         "url": "https://ja.vuejs.org/api/built-in-directives.html#v-text"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-text"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-text"
       }
     ]
   },
@@ -38,6 +46,14 @@
       {
         "name": "ja",
         "url": "https://ja.vuejs.org/api/built-in-directives.html#v-html"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-html"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-html"
       }
     ]
   },
@@ -59,6 +75,14 @@
       {
         "name": "ja",
         "url": "https://ja.vuejs.org/api/built-in-directives.html#v-show"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-show"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-show"
       }
     ]
   },
@@ -80,6 +104,14 @@
       {
         "name": "ja",
         "url": "https://ja.vuejs.org/api/built-in-directives.html#v-if"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-if"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-if"
       }
     ]
   },
@@ -102,6 +134,14 @@
       {
         "name": "ja",
         "url": "https://ja.vuejs.org/api/built-in-directives.html#v-else"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-else"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-else"
       }
     ]
   },
@@ -123,6 +163,14 @@
       {
         "name": "ja",
         "url": "https://ja.vuejs.org/api/built-in-directives.html#v-else-if"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-else-if"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-else-if"
       }
     ]
   },
@@ -144,6 +192,14 @@
       {
         "name": "ja",
         "url": "https://ja.vuejs.org/api/built-in-directives.html#v-for"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-for"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-for"
       }
     ]
   },
@@ -165,6 +221,14 @@
       {
         "name": "ja",
         "url": "https://ja.vuejs.org/api/built-in-directives.html#v-on"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-on"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-on"
       }
     ]
   },
@@ -186,6 +250,14 @@
       {
         "name": "ja",
         "url": "https://ja.vuejs.org/api/built-in-directives.html#v-bind"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-bind"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-bind"
       }
     ]
   },
@@ -207,6 +279,14 @@
       {
         "name": "ja",
         "url": "https://ja.vuejs.org/api/built-in-directives.html#v-model"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-model"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-model"
       }
     ]
   },
@@ -228,6 +308,14 @@
       {
         "name": "ja",
         "url": "https://ja.vuejs.org/api/built-in-directives.html#v-slot"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-slot"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-slot"
       }
     ]
   },
@@ -249,6 +337,14 @@
       {
         "name": "ja",
         "url": "https://ja.vuejs.org/api/built-in-directives.html#v-pre"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-pre"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-pre"
       }
     ]
   },
@@ -270,6 +366,14 @@
       {
         "name": "ja",
         "url": "https://ja.vuejs.org/api/built-in-directives.html#v-once"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-once"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-once"
       }
     ]
   },
@@ -291,6 +395,14 @@
       {
         "name": "ja",
         "url": "https://ja.vuejs.org/api/built-in-directives.html#v-memo"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-memo"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-memo"
       }
     ]
   },
@@ -312,6 +424,14 @@
       {
         "name": "ja",
         "url": "https://ja.vuejs.org/api/built-in-directives.html#v-cloak"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-cloak"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-cloak"
       }
     ]
   }

@@ -1,0 +1,438 @@
+[
+  {
+    "name": "v-text",
+    "description": {
+      "kind": "markdown",
+      "value": "\nMet à jour le contenu texte d'un élément.\n\n- **Attendu :** `string`\n\n- **Détails**\n\n  `v-text` fonctionne en définissant la propriété [textContent](https://developer.mozilla.org/fr/docs/Web/API/Node/textContent) de l'élément, de sorte qu'elle écrasera tout contenu existant dans l'élément. Si vous devez mettre à jour `textContent`, vous devez utiliser les [interpolations moustaches](https://fr.vuejs.org/guide/essentials/template-syntax.html#text-interpolation) à la place.\n\n- **Exemple**\n\n  ```html\n  <span v-text=\"msg\"></span>\n  <!-- same as -->\n  <span>{{msg}}</span>\n  ```\n\n- **Voir aussi :** [Syntaxe de template - Interpolation de texte](https://fr.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-text"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-text"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-text"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-text"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-text"
+      }
+    ]
+  },
+  {
+    "name": "v-html",
+    "description": {
+      "kind": "markdown",
+      "value": "\nMet à jour [innerHTML](https://developer.mozilla.org/fr/docs/Web/API/Element/innerHTML) de l'élément.\n\n- **Attendu :** `string`\n\n- **Détails :**\n\n  Le contenu de `v-html` est inséré en tant qu'HTML simple - la syntaxe des templates de Vue ne sera pas traitée. Si vous vous retrouvez à essayer de composer des templates en utilisant `v-html`, essayez de repenser la solution en utilisant plutôt des composants.\n\n  ::: warning Remarque sur la sécurité\n  Rendre dynamiquement du HTML arbitraire sur votre site web peut être très dangereux car cela peut facilement conduire à des [attaques XSS](https://fr.wikipedia.org/wiki/Cross-site_scripting). N'utilisez `v-html` que sur du contenu de confiance et **jamais** sur du contenu fourni par l'utilisateur.\n  :::\n\n  Dans les [composants monofichiers](https://fr.vuejs.org/guide/scaling-up/sfc.html), les styles `scoped` ne s'appliqueront pas au contenu de `v-html`, car ce HTML n'est pas traité par le compilateur de templates de Vue. Si vous souhaitez cibler le contenu de `v-html` avec un CSS scopé, vous pouvez utiliser des [modules CSS](./sfc-css-features.html#css-modules) ou un élément `<style>` global supplémentaire avec une stratégie de scoping manuelle telle que BEM.\n\n- **Exemple**\n\n  ```html\n  <div v-html=\"html\"></div>\n  ```\n\n- **Voir aussi :** [Syntaxe de template - HTML brut](https://fr.vuejs.org/guide/essentials/template-syntax.html#raw-html)\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-html"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-html"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-html"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-html"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-html"
+      }
+    ]
+  },
+  {
+    "name": "v-show",
+    "description": {
+      "kind": "markdown",
+      "value": "\nFait basculer la visibilité de l'élément en fonction de la valeur évaluée à vrai ou faux de l'expression.\n\n- **Attendu :** `any`\n\n- **Détails**\n\n  `v-show` fonctionne en fixant la propriété CSS `display` via des styles littéraux, et essaiera de respecter la valeur initiale `display` lorsque l'élément est visible. Elle déclenche également des transitions lorsque sa condition change.\n\n- **Voir aussi :** [Rendu conditionnel - v-show](https://fr.vuejs.org/guide/essentials/conditional.html#v-show)\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-show"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-show"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-show"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-show"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-show"
+      }
+    ]
+  },
+  {
+    "name": "v-if",
+    "description": {
+      "kind": "markdown",
+      "value": "\nRend conditionnellement un élément ou un fragment de template en fonction de la valeur de l'expression, évaluée à vrai ou faux.\n\n- **Attendu :** `any`\n\n- **Détails**\n\n  Lorsqu'un élément comportant `v-if` est activé / désactivé, l'élément et les directives / composants qu'il contient sont détruits et reconstruits. Si la condition initiale est fausse, le contenu interne ne sera pas rendu du tout.\n\n  Peut être utilisée sur `<template>` pour désigner un bloc conditionnel contenant uniquement du texte ou plusieurs éléments.\n\n  Cette directive déclenche des transitions lorsque sa condition change.\n\n  Lorsqu'elles sont utilisées ensemble, `v-if' a une priorité plus élevée que `v-for'. Il est déconseillé d'utiliser ces deux directives ensemble sur un même élément - voir le [guide du rendu de liste](https://fr.vuejs.org/guide/essentials/list.html#v-for-with-v-if) pour plus de détails.\n\n- **Voir aussi :** [Rendu conditionnel - v-if](https://fr.vuejs.org/guide/essentials/conditional.html#v-if)\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-if"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-if"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-if"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-if"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-if"
+      }
+    ]
+  },
+  {
+    "name": "v-else",
+    "valueSet": "v",
+    "description": {
+      "kind": "markdown",
+      "value": "\nReprésente le bloc \"else\" pour `v-if` ou une chaîne `v-if` / `v-else-if`.\n\n- **N'attend pas d'expression**\n\n- **Détails**\n\n  - Restriction : l'élément frère précédent doit posséder `v-if` ou `v-else-if`.\n\n  - Peut être utilisée sur `<template>` pour désigner un bloc conditionnel contenant uniquement du texte ou plusieurs éléments.\n\n- **Exemple**\n\n  ```html\n  <div v-if=\"Math.random() > 0.5\">\n    Now you see me\n  </div>\n  <div v-else>\n    Now you don't\n  </div>\n  ```\n\n- **Voir aussi :** [Rendu conditionnel - v-else](https://fr.vuejs.org/guide/essentials/conditional.html#v-else)\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-else"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-else"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-else"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-else"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-else"
+      }
+    ]
+  },
+  {
+    "name": "v-else-if",
+    "description": {
+      "kind": "markdown",
+      "value": "\nDésigne le bloc \"else if\" pour `v-if`. Peut être chaîné.\n\n- **Attendu :** `any`\n\n- **Détails**\n\n  - Restriction : l'élément frère précédent doit avoir `v-if` ou `v-else-if`.\n\n  - Peut être utilisé sur `<template>` pour désigner un bloc conditionnel contenant uniquement du texte ou plusieurs éléments.\n\n- **Exemple**\n\n  ```html\n  <div v-if=\"type === 'A'\">\n    A\n  </div>\n  <div v-else-if=\"type === 'B'\">\n    B\n  </div>\n  <div v-else-if=\"type === 'C'\">\n    C\n  </div>\n  <div v-else>\n    Not A/B/C\n  </div>\n  ```\n\n- **Voir aussi :** [Rendu conditionnel - v-else-if](https://fr.vuejs.org/guide/essentials/conditional.html#v-else-if)\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-else-if"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-else-if"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-else-if"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-else-if"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-else-if"
+      }
+    ]
+  },
+  {
+    "name": "v-for",
+    "description": {
+      "kind": "markdown",
+      "value": "\nRend l'élément ou le bloc d'un template plusieurs fois en fonction des données sources.\n\n- **Attendu :** `Array | Object | number | string | Iterable`\n\n- **Détails**\n\n  La valeur de la directive doit utiliser la syntaxe spéciale `alias in expression` pour fournir un alias pour l'élément courant sur lequel on itère :\n\n  ```html\n  <div v-for=\"item in items\">\n    {{ item.text }}\n  </div>\n  ```\n\n  De manière alternative, vous pouvez également spécifier un alias pour l'index (ou la clé si elle est utilisée sur un objet) :\n\n  ```html\n  <div v-for=\"(item, index) in items\"></div>\n  <div v-for=\"(value, key) in object\"></div>\n  <div v-for=\"(value, name, index) in object\"></div>\n  ```\n\n  Le comportement par défaut de `v-for` essaiera de corriger les éléments en place sans les déplacer. Pour forcer la réorganisation des éléments, vous devez fournir un indice d'ordre avec l'attribut spécial `key` :\n\n  ```html\n  <div v-for=\"item in items\" :key=\"item.id\">\n    {{ item.text }}\n  </div>\n  ```\n\n  `v-for` peut également fonctionner sur les valeurs qui implémentent le [protocole d'itération](https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Iteration_protocols#The_iterable_protocol), y compris les `Map` et `Set` natifs.\n\n- **Voir aussi :**\n  - [Rendu de liste](https://fr.vuejs.org/guide/essentials/list.html)\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-for"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-for"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-for"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-for"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-for"
+      }
+    ]
+  },
+  {
+    "name": "v-on",
+    "description": {
+      "kind": "markdown",
+      "value": "\nAttache un écouteur d'événements à l'élément.\n\n- **Raccourci :** `@`\n\n- **Attendu :** `Function | Inline Statement | Object (sans argument)`\n\n- **Argument :** `event` (optionnel lors de l'utilisation de la syntaxe objet)\n\n- **Modificateurs :**\n\n  - `.stop` - appelle `event.stopPropagation()`.\n  - `.prevent` - appelle `event.preventDefault()`.\n  - `.capture` - ajoute un écouteur d'événements en mode capture.\n  - `.self` - ne déclenche le gestionnaire que si l'événement a été envoyé par cet élément.\n  - `.{keyAlias}` - ne déclenche le gestionnaire que sur certaines clés.\n  - `.once` - déclenche le gestionnaire au moins une fois.\n  - `.left` - ne déclenche le gestionnaire que pour les événements liés au bouton gauche de la souris.\n  - `.right` - ne déclenche le gestionnaire que pour les événements liés au bouton droit de la souris.\n  - `.middle` - ne déclenche le gestionnaire que pour les événements liés au bouton du milieu de la souris.\n  - `.passive` - attache un événement DOM avec `{ passive : true }`.\n\n- **Détails**\n\n  Le type d'événement est indiqué par l'argument. L'expression peut être un nom de méthode, une déclaration littérale, ou omise si des modificateurs sont présents.\n\n  Lorsqu'elle est utilisée sur un élément normal, elle écoute uniquement les [**événements natifs du DOM**](https://developer.mozilla.org/fr/docs/Web/Events). Lorsqu'elle est utilisée sur un composant d'éléments personnalisés, elle écoute les **événements personnalisés** émis sur ce composant enfant.\n\n  Lorsqu'elle écoute les événements natifs du DOM, la méthode reçoit l'événement natif comme seul argument. Si vous utilisez une déclaration en ligne, la déclaration a accès à la propriété spéciale `$event` : `v-on:click=\"handle('ok', $event)\"`.\n\n  `v-on` supporte également la liaison à un objet de paires événement / écouteur sans argument. Notez que lorsque vous utilisez la syntaxe objet, elle ne supporte aucun modificateur.\n\n- **Exemple**\n\n  ```html\n  <!-- méthode gestionnaire -->\n  <button v-on:click=\"doThis\"></button>\n\n  <!-- événement dynamique -->\n  <button v-on:[event]=\"doThis\"></button>\n\n  <!-- expression littérale -->\n  <button v-on:click=\"doThat('hello', $event)\"></button>\n\n  <!-- raccourci -->\n  <button @click=\"doThis\"></button>\n\n  <!-- raccourci d'un événement dynamique -->\n  <button @[event]=\"doThis\"></button>\n\n  <!-- arrête la propagation -->\n  <button @click.stop=\"doThis\"></button>\n\n  <!-- empêche le comportement par défaut -->\n  <button @click.prevent=\"doThis\"></button>\n\n  <!-- empêche le comportement par défaut sans expression -->\n  <form @submit.prevent></form>\n\n  <!-- modificateurs enchaînés -->\n  <button @click.stop.prevent=\"doThis\"></button>\n\n  <!-- modificateur de clé en utilisant keyAlias -->\n  <input @keyup.enter=\"onEnter\" />\n\n  <!-- l'événement de clic sera déclenché seulement une fois -->\n  <button v-on:click.once=\"doThis\"></button>\n\n  <!-- syntaxe objet -->\n  <button v-on=\"{ mousedown: doThis, mouseup: doThat }\"></button>\n  ```\n\n  Écoute des événements personnalisés sur un composant enfant (le gestionnaire est appelé lorsque \"my-event\" est émis sur l'enfant) :\n\n  ```html\n  <MyComponent @my-event=\"handleThis\" />\n\n  <!-- expression en ligne -->\n  <MyComponent @my-event=\"handleThis(123, $event)\" />\n  ```\n\n- **Voir aussi :**\n  - [Gestion d'événement](https://fr.vuejs.org/guide/essentials/event-handling.html)\n  - [Composants - Événements personnalisés](https://fr.vuejs.org/guide/essentials/component-basics.html#listening-to-events)\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-on"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-on"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-on"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-on"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-on"
+      }
+    ]
+  },
+  {
+    "name": "v-bind",
+    "description": {
+      "kind": "markdown",
+      "value": "\nLie dynamiquement un ou plusieurs attributs, ou une prop d'un composant à une expression.\n\n- **Raccourci :** `:` ou `.` (lorsqu'on utilise le modificateur `.prop`)\n\n- **Attendu :** `any (avec argument) | Object (sans argument)`\n\n- **Argument :** `attrOrProp (optionnel)`\n\n- **Modificateurs :**\n\n  - `.camel` - transforme le nom de l'attribut kebab-case en camelCase.\n  - `.prop` - force une liaison à être définie comme une propriété du DOM. <sup class=\"vt-badge\">3.2+</sup>\n  - `.attr` - force une liaison à être définie comme un attribut du DOM. <sup class=\"vt-badge\">3.2+</sup>\n\n- **Utilisation :**\n\n  Lorsqu'elle est utilisée pour lier l'attribut `class` ou `style`, `v-bind` supporte des types de valeurs supplémentaires comme Array ou Objects. Voir la section du guide lié ci-dessous pour plus de détails.\n\n  Lors de la mise en place d'une liaison sur un élément, Vue va vérifier par défaut si l'élément a la clé définie comme une propriété en faisant une vérification de l'opérateur `in`. Si la propriété est définie, Vue définira la valeur comme une propriété du DOM au lieu d'un attribut. Cela devrait fonctionner dans la plupart des cas, mais vous pouvez outrepasser ce comportement en utilisant explicitement les modificateurs `.prop` ou `.attr`. Cela est parfois nécessaire, notamment lorsque vous [travaillez avec des éléments personnalisés](https://fr.vuejs.org/guide/extras/web-components.html#passing-dom-properties).\n\n  Lorsqu'elle est utilisée pour lier les props du composant, la prop doit être correctement déclarée dans le composant enfant.\n\n  Lorsqu'elle est utilisée sans argument, elle peut être utilisée pour lier un objet contenant des paires nom-valeur d'attributs.\n\n- **Exemple**\n\n  ```html\n  <!-- lie un attribut -->\n  <img v-bind:src=\"imageSrc\" />\n\n  <!-- nom d'attribut dynamique -->\n  <button v-bind:[key]=\"value\"></button>\n\n  <!-- raccourci -->\n  <img :src=\"imageSrc\" />\n\n  <!-- raccourci d'un nom d'attribut dynamique -->\n  <button :[key]=\"value\"></button>\n\n  <!-- avec une concaténation de chaînes de caractères en ligne -->\n  <img :src=\"'/path/to/images/' + fileName\" />\n\n  <!-- liaison de classe -->\n  <div :class=\"{ red: isRed }\"></div>\n  <div :class=\"[classA, classB]\"></div>\n  <div :class=\"[classA, { classB: isB, classC: isC }]\"></div>\n\n  <!-- liaison de style -->\n  <div :style=\"{ fontSize: size + 'px' }\"></div>\n  <div :style=\"[styleObjectA, styleObjectB]\"></div>\n\n  <!-- liaison d'un objet d'attributs -->\n  <div v-bind=\"{ id: someProp, 'other-attr': otherProp }\"></div>\n\n  <!-- liaison de prop. \"prop\" doit être déclaré dans le composant enfant. -->\n  <MyComponent :prop=\"someThing\" />\n\n  <!-- transmet les props du parent en commun avec un composant enfant -->\n  <MyComponent v-bind=\"$props\" />\n\n  <!-- XLink -->\n  <svg><a :xlink:special=\"foo\"></a></svg>\n  ```\n\n  Le modificateur `.prop` a également un raccourci dédié, `.` :\n\n  ```html\n  <div :someProperty.prop=\"someObject\"></div>\n\n  <!-- équivalent à -->\n  <div .someProperty=\"someObject\"></div>\n  ```\n\n  Le modificateur `.camel` permet de formatter un nom d'attribut `v-bind` en camelCase lors de l'utilisation de templates à l'intérieur du DOM, par exemple l'attribut SVG `viewBox` :\n\n  ```html\n  <svg :view-box.camel=\"viewBox\"></svg>\n  ```\n\n  `.camel` n'est pas nécessaire si vous utilisez des templates en chaînes de caractères, ou si vous pré-compilez le template avec un outil de build.\n\n- **Voir aussi :**\n  - [Liaison de classes et de styles](https://fr.vuejs.org/guide/essentials/class-and-style.html)\n  - [Composant - Détails sur le passage de props](https://fr.vuejs.org/guide/components/props.html#prop-passing-details)\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-bind"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-bind"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-bind"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-bind"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-bind"
+      }
+    ]
+  },
+  {
+    "name": "v-model",
+    "description": {
+      "kind": "markdown",
+      "value": "\nCrée une liaison bidirectionnelle sur un élément de saisie de formulaire ou un composant.\n\n- **Attendu :** varie en fonction de la valeur de l'élément d'entrée du formulaire ou de la sortie des composants\n\n- **Limitée à :**\n\n  - `<input>`\n  - `<select>`\n  - `<textarea>`\n  - composants\n\n- **Modificateurs :**\n\n  - [`.lazy`](https://fr.vuejs.org/guide/essentials/forms.html#lazy) - écoute les événements `change` au lieu de `input`.\n  - [`.number`](https://fr.vuejs.org/guide/essentials/forms.html#number) - convertit une entrée valide en chaînes de caractères en nombres\n  - [`.trim`](https://fr.vuejs.org/guide/essentials/forms.html#trim) - élague l'entrée\n\n- **Voir aussi :**\n\n  - [Liaisons des entrées d'un formulaire](https://fr.vuejs.org/guide/essentials/forms.html)\n  - [Événements du composant - Utilisation avec `v-model`](https://fr.vuejs.org/guide/components/v-model.html)\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-model"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-model"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-model"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-model"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-model"
+      }
+    ]
+  },
+  {
+    "name": "v-slot",
+    "description": {
+      "kind": "markdown",
+      "value": "\nDésigne les slots nommés ou les slots scopés qui s'attendent à recevoir des props.\n\n- **Raccourci :** `#`\n\n- **Attendu :** Une expression JavaScript valide en tant qu'argument de fonction, y compris concernant la déstructuration. Facultatif - uniquement nécessaire si l'on s'attend à ce que des props soient passés au slot.\n\n- **Argument :** nom du slot (facultatif, la valeur par défaut est `default`)\n\n- **Limitée à :**\n\n  - `<template>`\n  - [composants](https://fr.vuejs.org/guide/components/slots.html#scoped-slots) (pour un seul slot par défaut avec des props)\n\n- **Exemple**\n\n  ```html\n  <!-- Slots nommés -->\n  <BaseLayout>\n    <template v-slot:header>\n      Header content\n    </template>\n\n    <template v-slot:default>\n      Default slot content\n    </template>\n\n    <template v-slot:footer>\n      Footer content\n    </template>\n  </BaseLayout>\n\n  <!-- Slot nommé recevant des props -->\n  <InfiniteScroll>\n    <template v-slot:item=\"slotProps\">\n      <div class=\"item\">\n        {{ slotProps.item.text }}\n      </div>\n    </template>\n  </InfiniteScroll>\n\n  <!-- Slot par défaut recevant des props, via la déstructuration -->\n  <Mouse v-slot=\"{ x, y }\">\n    Mouse position: {{ x }}, {{ y }}\n  </Mouse>\n  ```\n\n- **Voir aussi :**\n  - [Composants - Slots](https://fr.vuejs.org/guide/components/slots.html)\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-slot"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-slot"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-slot"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-slot"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-slot"
+      }
+    ]
+  },
+  {
+    "name": "v-pre",
+    "description": {
+      "kind": "markdown",
+      "value": "\nIgnore la compilation pour cet élément et tous ses enfants.\n\n- **N'attend pas d'expression**\n\n- **Détails**\n\n  À l'intérieur de l'élément contenant `v-pre`, toute la syntaxe du template Vue sera préservée et rendue telle quelle. Le cas d'utilisation le plus courant est l'affichage brut des balises moustaches.\n\n- **Exemple**\n\n  ```html\n  <span v-pre>{{ this will not be compiled }}</span>\n  ```\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-pre"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-pre"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-pre"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-pre"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-pre"
+      }
+    ]
+  },
+  {
+    "name": "v-once",
+    "description": {
+      "kind": "markdown",
+      "value": "\nRend l'élément et le composant une seule fois, et ignore les mises à jour futures.\n\n- **N'attend pas d'expression**\n\n- **Détails**\n\n  Lors des rendus suivants, l'élément/composant et tous ses enfants seront traités comme du contenu statique et ignorés. Cela peut être utilisé pour optimiser les performances de mise à jour.\n\n  ```html\n  <!-- élément simple -->\n  <span v-once>This will never change: {{msg}}</span>\n  <!-- l'élément a des enfants -->\n  <div v-once>\n    <h1>comment</h1>\n    <p>{{msg}}</p>\n  </div>\n  <!-- composant -->\n  <MyComponent v-once :comment=\"msg\"></MyComponent>\n  <!-- directive `v-for` -->\n  <ul>\n    <li v-for=\"i in list\" v-once>{{i}}</li>\n  </ul>\n  ```\n\n  Depuis la version 3.2, vous pouvez également mémoriser une partie du template avec des conditions d'invalidation en utilisant [`v-memo`](#v-memo).\n\n- **Voir aussi :**\n  - [Syntaxe de la liaison bidirectionnelle - interpolations](https://fr.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n  - [v-memo](#v-memo)\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-once"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-once"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-once"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-once"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-once"
+      }
+    ]
+  },
+  {
+    "name": "v-memo",
+    "description": {
+      "kind": "markdown",
+      "value": "\n- **Attendu :** `any[]`\n\n- **Détails**\n\n  Mémorise une sous-arborescence du template. Peut être utilisée à la fois sur les éléments et les composants. La directive attend un tableau de longueur connue composé de valeurs de dépendances à comparer pour la mémorisation. Si toutes les valeurs du tableau sont identiques à celles du dernier rendu, les mises à jour de l'ensemble du sous-arbre seront ignorées. Par exemple :\n\n  ```html\n  <div v-memo=\"[valueA, valueB]\">\n    ...\n  </div>\n  ```\n\n  Lors du rendu du composant, si `valueA` et `valueB` restent les mêmes, toutes les mises à jour de cette `<div>` et de ses enfants seront ignorées. En fait, même la création du VNode du DOM virtuel sera ignorée puisque la copie mémorisée de la sous-arborescence peut être réutilisée.\n\n  Il est important de spécifier le tableau de mémorisation correctement, sinon nous pourrions sauter des mises à jour qui devraient normalement être appliquées. `v-memo` avec un tableau de dépendances vide (`v-memo=\"[]\"`) serait fonctionnellement équivalent à `v-once`.\n\n  **Utilisation avec `v-for`**\n\n  `v-memo` est fourni uniquement pour des micro-optimisations dans des scénarios de performances critiques et devrait être rarement utilisée. Le cas le plus courant où cela peut s'avérer utile est lors du rendu de grandes listes `v-for` (où `length > 1000`) :\n\n  ```html\n  <div v-for=\"item in list\" :key=\"item.id\" v-memo=\"[item.id === selected]\">\n    <p>ID: {{ item.id }} - selected: {{ item.id === selected }}</p>\n    <p>...more child nodes</p>\n  </div>\n  ```\n\n  Lorsque l'état `selected` du composant change, une grande quantité de VNodes sera créée même si la plupart des éléments restent exactement les mêmes. L'utilisation de `v-memo` ici consiste essentiellement à dire \"met à jour cet élément seulement s'il est passé de non sélectionné à sélectionné, ou vice-versa\". Cela permet à chaque élément non affecté de réutiliser son précédent VNode et d'éviter de changer entièrement. Notez que nous n'avons pas besoin d'inclure `item.id` dans le tableau de dépendances des mémos ici puisque Vue le déduit automatiquement à partir de `:key`.\n\n  :::warning\n  Lorsque vous utilisez les directives `v-memo` avec `v-for`, assurez-vous qu'elles sont utilisées sur le même élément. **`v-memo` ne fonctionne pas à l'intérieur de `v-for`.**\n  :::\n\n  `v-memo` peut également être utilisée sur les composants pour empêcher manuellement les mises à jour non désirées dans certains cas limites où la vérification de la mise à jour du composant enfant n'est pas optimisée. Mais une fois de plus, il est de la responsabilité du développeur de spécifier des tableaux de dépendances corrects pour éviter d'ignorer des mises à jour nécessaires.\n\n- **Voir aussi :**\n  - [v-once](#v-once)\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-memo"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-memo"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-memo"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-memo"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-memo"
+      }
+    ]
+  },
+  {
+    "name": "v-cloak",
+    "description": {
+      "kind": "markdown",
+      "value": "\nUtilisée pour cacher un template non compilé jusqu'à ce qu'il soit prêt.\n\n- **N'attend pas d'expression**\n\n- **Détails**\n\n  **Cette directive n'est nécessaire que dans les configurations sans étape de build.**\n\n  Lors de l'utilisation de templates à l'intérieur du DOM, il peut y avoir un \"flash de templates non compilés\" : l'utilisateur peut voir des balises moustaches brutes jusqu'à ce que le composant monté les remplace par du contenu rendu.\n\n  `v-cloak` restera sur l'élément jusqu'à ce que l'instance du composant associé soit montée. Combiné à des règles CSS telles que `[v-cloak] { display : none }`, elle peut être utilisée pour masquer les templates bruts jusqu'à ce que le composant soit prêt.\n\n- **Exemple**\n\n  ```css\n  [v-cloak] {\n    display: none;\n  }\n  ```\n\n  ```html\n  <div v-cloak>\n    {{ message }}\n  </div>\n  ```\n\n  La `<div>` ne sera pas visible tant que la compilation n'est pas terminée.\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-cloak"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-cloak"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-cloak"
+      },
+      {
+        "name": "ua",
+        "url": "https://ua.vuejs.org/api/built-in-directives.html#v-cloak"
+      },
+      {
+        "name": "fr",
+        "url": "https://fr.vuejs.org/api/built-in-directives.html#v-cloak"
+      }
+    ]
+  }
+]
