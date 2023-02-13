@@ -1,3 +1,6 @@
+/**
+ * @type {import('axios').AxiosInstance}
+ */
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
@@ -5,20 +8,26 @@ const langs = [
 	{
 		name: 'en',
 		url: 'https://vuejs.org/',
-		languageBlocksMdUrl: 'https://raw.githubusercontent.com/vuejs/docs/main/src/api/sfc-spec.md',
-		builtInDirectivesMdUrl: 'https://raw.githubusercontent.com/vuejs/docs/main/src/api/built-in-directives.md',
+		sfcDocumentUrl: 'https://raw.githubusercontent.com/vuejs/docs/main/src/api/sfc-spec.md',
+		scriptSetupDocumentUrl: 'https://raw.githubusercontent.com/vuejs/docs/main/src/api/sfc-script-setup.md',
+		cssFeaturesDocumentUrl: 'https://raw.githubusercontent.com/vuejs/docs/main/src/api/sfc-css-features.md',
+		builtInDirectivesDocumentUrl: 'https://raw.githubusercontent.com/vuejs/docs/main/src/api/built-in-directives.md',
 	},
 	{
 		name: 'zh-cn',
 		url: 'https://cn.vuejs.org/',
-		languageBlocksMdUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-zh-cn/main/src/api/sfc-spec.md',
-		builtInDirectivesMdUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-zh-cn/main/src/api/built-in-directives.md',
+		sfcDocumentUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-zh-cn/main/src/api/sfc-spec.md',
+		scriptSetupDocumentUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-zh-cn/main/src/api/sfc-script-setup.md',
+		cssFeaturesDocumentUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-zh-cn/main/src/api/sfc-css-features.md',
+		builtInDirectivesDocumentUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-zh-cn/main/src/api/built-in-directives.md',
 	},
 	{
 		name: 'ja',
 		url: 'https://ja.vuejs.org/',
-		languageBlocksMdUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-ja/main/src/api/sfc-spec.md',
-		builtInDirectivesMdUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-ja/main/src/api/built-in-directives.md',
+		sfcDocumentUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-ja/main/src/api/sfc-spec.md',
+		scriptSetupDocumentUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-ja/main/src/api/sfc-script-setup.md',
+		cssFeaturesDocumentUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-ja/main/src/api/sfc-css-features.md',
+		builtInDirectivesDocumentUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-ja/main/src/api/built-in-directives.md',
 	},
 ];
 
@@ -29,22 +38,65 @@ for (const lang of langs) {
 
 async function languageBlocksWorker(lang) {
 
-	let text = (await axios.get(lang.languageBlocksMdUrl)).data;
-	text = text.replace(/```vue-html/g, '```html');
-	text = resolveMarkdownLinks(text, lang.url);
+	const sfcDoc = await fetch(lang.sfcDocumentUrl, lang.url);
+	const scriptSetupDoc = await fetch(lang.scriptSetupDocumentUrl, lang.url);
+	const cssFeaturesDoc = await fetch(lang.cssFeaturesDocumentUrl, lang.url);
 
-	const languageBlocksJson = text
+	/**
+	 * @type {import('vscode-html-languageservice').IAttributeData}
+	 */
+	const langAttr = {
+		name: 'lang',
+		description: {
+			kind: 'markdown',
+			value: sfcDoc.split('\n## ')[4].split('\n').slice(1).join('\n'),
+		},
+		values: [
+			// // custom block
+			// { name: 'md' },
+			// { name: 'json' },
+			// { name: 'jsonc' },
+			// { name: 'json5' },
+			// { name: 'yaml' },
+			// { name: 'toml' },
+			// { name: 'gql' },
+			// { name: 'graphql' },
+		],
+		references: langs.map(lang => ({
+			name: lang.name,
+			url: `${lang.url}api/sfc-spec.html#pre-processors`,
+		})),
+	};
+	/**
+	 * @type {import('vscode-html-languageservice').IAttributeData}
+	 */
+	const srcAttr = {
+		name: 'src',
+		description: {
+			kind: 'markdown',
+			value: sfcDoc.split('\n## ')[5].split('\n').slice(1).join('\n'),
+		},
+		references: langs.map(lang => ({
+			name: lang.name,
+			url: `${lang.url}api/sfc-spec.html#src-imports`,
+		})),
+	};
+	const languageBlocks = sfcDoc
 		.split('\n## ')[2]
 		.split('\n### ')
 		.slice(1)
 		.map((section) => {
 			const lines = section.split('\n');
-			let name = lines[0].trim().split(' ').slice(0, -1).join(' ');
+			let name = lines[0].trim();
 			if (name.startsWith('`<')) {
 				name = name.slice(2, -2);
 			}
-			return {
+			/**
+			 * @type {import('vscode-html-languageservice').ITagData}
+			 */
+			const data = {
 				name,
+				attributes: [srcAttr],
 				description: {
 					kind: 'markdown',
 					value: lines.slice(1).join('\n'),
@@ -54,60 +106,107 @@ async function languageBlocksWorker(lang) {
 					url: `${lang.url}api/sfc-spec.html#${name.replace(/ /g, '-').toLowerCase()}`,
 				})),
 			};
+			if (name === 'template') {
+				data.attributes.push({
+					...langAttr,
+					values: [
+						{ name: 'html' },
+						{ name: 'pug' },
+					],
+				});
+			}
+			if (name === 'script') {
+				data.attributes.push({
+					...langAttr,
+					values: [
+						{ name: 'ts' },
+						{ name: 'js' },
+						{ name: 'tsx' },
+						{ name: 'jsx' },
+					],
+				});
+				data.attributes.push({
+					name: 'setup',
+					valueSet: 'v',
+					description: {
+						kind: 'markdown',
+						value: scriptSetupDoc.split('\n## ')[0].split('\n').slice(1).join('\n'),
+					},
+					references: langs.map(lang => ({
+						name: lang.name,
+						url: `${lang.url}api/sfc-script-setup.html`,
+					})),
+				});
+				data.attributes.push({ name: 'generic' });
+			}
+			if (name === 'style') {
+				data.attributes.push({
+					...langAttr,
+					values: [
+						{ name: 'css' },
+						{ name: 'scss' },
+						{ name: 'less' },
+						{ name: 'stylus' },
+						{ name: 'postcss' },
+						{ name: 'sass' },
+					],
+				});
+				data.attributes.push({
+					name: 'scoped',
+					valueSet: 'v',
+					description: {
+						kind: 'markdown',
+						value: cssFeaturesDoc.split('\n## ')[1].split('\n').slice(1).join('\n'),
+					},
+					references: langs.map(lang => ({
+						name: lang.name,
+						url: `${lang.url}api/sfc-css-features.html#scoped-css`,
+					})),
+				});
+				data.attributes.push({
+					name: 'module',
+					valueSet: 'v',
+					description: {
+						kind: 'markdown',
+						value: cssFeaturesDoc.split('\n## ')[2].split('\n').slice(1).join('\n'),
+					},
+					references: langs.map(lang => ({
+						name: lang.name,
+						url: `${lang.url}api/sfc-css-features.html#css-modules`,
+					})),
+				});
+			}
+			return data;
 		});
-	const attrsJson = [
-		{
-			name: 'lang',
-			description: {
-				kind: 'markdown',
-				value: text.split('\n## ')[4].split('\n').slice(1).join('\n'),
-			},
-			references: langs.map(lang => ({
-				name: lang.name,
-				url: `${lang.url}api/sfc-spec.html#pre-processors`,
-			})),
-		},
-		{
-			name: 'src',
-			description: {
-				kind: 'markdown',
-				value: text.split('\n## ')[5].split('\n').slice(1).join('\n'),
-			},
-			references: langs.map(lang => ({
-				name: lang.name,
-				url: `${lang.url}api/sfc-spec.html#src-imports`,
-			})),
-		},
-	];
 
-	{
-		const writePath = path.resolve(__dirname, '../data/language-blocks/' + lang.name + '.json');
-		fs.writeFileSync(writePath, JSON.stringify(languageBlocksJson, null, 2));
+	/**
+	 * @type {import('vscode-html-languageservice').HTMLDataV1}
+	 */
+	const data = {
+		version: 1.1,
+		tags: languageBlocks,
+		globalAttributes: [langAttr, srcAttr],
+	};
 
-		console.log(writePath);
-	}
+	const writePath = path.resolve(__dirname, '../data/language-blocks/' + lang.name + '.json');
+	fs.writeFileSync(writePath, JSON.stringify(data, null, 2));
 
-	{
-		const writePath = path.resolve(__dirname, '../data/language-blocks-attributes/' + lang.name + '.json');
-		fs.writeFileSync(writePath, JSON.stringify(attrsJson, null, 2));
-
-		console.log(writePath);
-	}
+	console.log(writePath);
 }
 
 async function builtInDirectivesWorker(lang) {
 
-	let text = (await axios.get(lang.builtInDirectivesMdUrl)).data;
-	text = text.replace(/```vue-html/g, '```html');
-	text = resolveMarkdownLinks(text, lang.url);
-
+	const text = await fetch(lang.builtInDirectivesDocumentUrl, lang.url);
 	const json = text
 		.split('\n## ')
 		.slice(1)
 		.map((section) => {
 			const lines = section.split('\n');
 			const name = lines[0].trim().split(' ')[0];
-			return {
+			/**
+			 * @type {import('vscode-html-languageservice').IAttributeData}
+			 */
+			const data = {
 				name,
 				valueSet: name === 'v-else' ? 'v' : undefined,
 				description: {
@@ -119,12 +218,24 @@ async function builtInDirectivesWorker(lang) {
 					url: `${lang.url}api/built-in-directives.html#${name}`,
 				})),
 			};
+			return data;
 		});
 
 	const writePath = path.resolve(__dirname, '../data/built-in-directives/' + lang.name + '.json');
 	fs.writeFileSync(writePath, JSON.stringify(json, null, 2));
 
 	console.log(writePath);
+}
+
+async function fetch(url, baseUrl) {
+	/**
+	 * @type {string}
+	 */
+	let text = (await axios.get(url)).data;
+	text = text.replace(/```vue-html/g, '```html');
+	text = text.replace(/\{\#.*?\}/g, '')
+	text = resolveMarkdownLinks(text, baseUrl);
+	return text;
 }
 
 function resolveMarkdownLinks(text, url) {

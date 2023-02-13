@@ -7,98 +7,98 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as createHtmlPlugin from '@volar-plugins/html';
 import * as vue from '@volar/vue-language-core';
 import { VueCompilerOptions } from '../types';
-import { loadLanguageBlocks, loadLanguageBlocksAttributes } from './data';
+import { loadLanguageBlocks } from './data';
 
 export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin => (context) => {
 
 	if (!context.typescript)
 		return {};
 
-	const dataProvider: html.IHTMLDataProvider = {
-		getId: () => 'vue',
-		isApplicable: () => true,
-		provideTags: () => loadLanguageBlocks(context.env.locale ?? 'en'),
-		provideAttributes: (tag) => {
-			if (tag === 'script') {
-				return [
-					...loadLanguageBlocksAttributes(context.env.locale ?? 'en'),
-					{ name: 'setup', valueSet: 'v' },
-					{ name: 'generic' },
-				];
-			}
-			else if (tag === 'style') {
-				return [
-					...loadLanguageBlocksAttributes(context.env.locale ?? 'en'),
-					{ name: 'scoped', valueSet: 'v' },
-					{ name: 'module', valueSet: 'v' },
-				];
-			}
-			else {
-				return loadLanguageBlocksAttributes(context.env.locale ?? 'en');
-			}
-		},
-		provideValues: (tag, attribute) => {
-			if (attribute === 'lang') {
-				if (tag === 'template') {
-					return [
-						{ name: 'html' },
-						{ name: 'pug' },
-					];
-				}
-				else if (tag === 'script') {
-					return [
-						{ name: 'js' },
-						{ name: 'ts' },
-						{ name: 'jsx' },
-						{ name: 'tsx' },
-					];
-				}
-				else if (tag === 'style') {
-					return [
-						{ name: 'css' },
-						{ name: 'scss' },
-						{ name: 'less' },
-						{ name: 'stylus' },
-						{ name: 'postcss' },
-						{ name: 'sass' },
-					];
-				}
-				else {
-					return [
-						// template
-						{ name: 'html' },
-						{ name: 'pug' },
-						// script
-						{ name: 'js' },
-						{ name: 'ts' },
-						{ name: 'jsx' },
-						{ name: 'tsx' },
-						// style
-						{ name: 'css' },
-						{ name: 'scss' },
-						{ name: 'less' },
-						{ name: 'stylus' },
-						{ name: 'postcss' },
-						{ name: 'sass' },
-						// custom block
-						{ name: 'md' },
-						{ name: 'json' },
-						{ name: 'jsonc' },
-						{ name: 'json5' },
-						{ name: 'yaml' },
-						{ name: 'toml' },
-						{ name: 'gql' },
-						{ name: 'graphql' },
-					];
-				}
-			}
-			return [];
-		},
-	};
-
+	// const dataProvider: html.IHTMLDataProvider = {
+	// 	getId: () => 'vue',
+	// 	isApplicable: () => true,
+	// 	provideTags: () => loadLanguageBlocks(context.env.locale ?? 'en'),
+	// 	provideAttributes: (tag) => {
+	// 		if (tag === 'script') {
+	// 			return [
+	// 				...loadLanguageBlocksAttributes(context.env.locale ?? 'en'),
+	// 				{ name: 'setup', valueSet: 'v' },
+	// 				{ name: 'generic' },
+	// 			];
+	// 		}
+	// 		else if (tag === 'style') {
+	// 			return [
+	// 				...loadLanguageBlocksAttributes(context.env.locale ?? 'en'),
+	// 				{ name: 'scoped', valueSet: 'v' },
+	// 				{ name: 'module', valueSet: 'v' },
+	// 			];
+	// 		}
+	// 		else {
+	// 			return loadLanguageBlocksAttributes(context.env.locale ?? 'en');
+	// 		}
+	// 	},
+	// 	provideValues: (tag, attribute) => {
+	// 		if (attribute === 'lang') {
+	// 			if (tag === 'template') {
+	// 				return [
+	// 					{ name: 'html' },
+	// 					{ name: 'pug' },
+	// 				];
+	// 			}
+	// 			else if (tag === 'script') {
+	// 				return [
+	// 					{ name: 'js' },
+	// 					{ name: 'ts' },
+	// 					{ name: 'jsx' },
+	// 					{ name: 'tsx' },
+	// 				];
+	// 			}
+	// 			else if (tag === 'style') {
+	// 				return [
+	// 					{ name: 'css' },
+	// 					{ name: 'scss' },
+	// 					{ name: 'less' },
+	// 					{ name: 'stylus' },
+	// 					{ name: 'postcss' },
+	// 					{ name: 'sass' },
+	// 				];
+	// 			}
+	// 			else {
+	// 				return [
+	// 					// template
+	// 					{ name: 'html' },
+	// 					{ name: 'pug' },
+	// 					// script
+	// 					{ name: 'js' },
+	// 					{ name: 'ts' },
+	// 					{ name: 'jsx' },
+	// 					{ name: 'tsx' },
+	// 					// style
+	// 					{ name: 'css' },
+	// 					{ name: 'scss' },
+	// 					{ name: 'less' },
+	// 					{ name: 'stylus' },
+	// 					{ name: 'postcss' },
+	// 					{ name: 'sass' },
+	// 					// custom block
+	// 					{ name: 'md' },
+	// 					{ name: 'json' },
+	// 					{ name: 'jsonc' },
+	// 					{ name: 'json5' },
+	// 					{ name: 'yaml' },
+	// 					{ name: 'toml' },
+	// 					{ name: 'gql' },
+	// 					{ name: 'graphql' },
+	// 				];
+	// 			}
+	// 		}
+	// 		return [];
+	// 	},
+	// };
 	const _ts = context.typescript;
 	const htmlPlugin = createHtmlPlugin({ validLang: 'vue', disableCustomData: true })(context);
-	htmlPlugin.getHtmlLs().setDataProviders(false, [dataProvider]);
+	const sfcDataProvider = html.newHTMLDataProvider('vue', loadLanguageBlocks(context.env.locale ?? 'en'));
+	htmlPlugin.getHtmlLs().setDataProviders(false, [sfcDataProvider]);
 
 	return {
 
