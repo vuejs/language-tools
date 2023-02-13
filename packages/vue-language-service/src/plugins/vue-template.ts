@@ -24,6 +24,8 @@ const eventModifiers: Record<string, string> = {
 	passive: 'attaches a DOM event with { passive: true }.',
 };
 
+let builtInData: html.HTMLDataV1;
+
 export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof createHtmlPlugin>>(options: {
 	getScanner(document: TextDocument, t: ReturnType<T>): html.Scanner | undefined,
 	templateLanguagePlugin: T,
@@ -35,6 +37,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 		if (!_context.typescript)
 			return {};
+
+		builtInData ??= loadTemplateData(_context.env.locale ?? 'en');
 
 		const _ts = _context.typescript;
 		const nativeTags = new Set(options.vueCompilerOptions.nativeTags);
@@ -216,7 +220,6 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			]);
 			const tagNameCasing = detected.tag.length === 1 && (tag === 'auto-pascal' || tag === 'auto-kebab') ? detected.tag[0] : (tag === 'auto-kebab' || tag === 'kebab') ? TagNameCasing.Kebab : TagNameCasing.Pascal;
 			const attrNameCasing = detected.attr.length === 1 && (attr === 'auto-camel' || attr === 'auto-kebab') ? detected.attr[0] : (attr === 'auto-camel' || attr === 'camel') ? AttrNameCasing.Camel : AttrNameCasing.Kebab;
-			const builtInData = loadTemplateData(_context.env.locale ?? 'en');
 
 			if (builtInData.tags) {
 				for (const tag of builtInData.tags) {

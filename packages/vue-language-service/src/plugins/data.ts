@@ -33,6 +33,12 @@ export function loadTemplateData(lang: string) {
 	if (vSlot) data.globalAttributes?.push({ ...vSlot, name: '#' });
 	if (vBind) data.globalAttributes?.push({ ...vBind, name: ':' });
 
+	for (const attr of [...data.globalAttributes ?? []]) {
+		if (!attr.name.startsWith('v-')) {
+			data.globalAttributes?.push({ ...attr, name: `:${attr.name}` });
+		}
+	}
+
 	return data;
 }
 
