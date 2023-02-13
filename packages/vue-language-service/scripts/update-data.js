@@ -34,9 +34,7 @@ async function builtInDirectivesWorker(lang) {
 		.map((section) => {
 			const lines = section.split('\n');
 			const name = lines[0].trim().split(' ')[0];
-			const firstLine = lines[0].trim().split(' ').slice(0, -1);
-			firstLine[0] = `[${firstLine[0]}](${lang.url}api/built-in-directives.html#${name})`;
-			lines[0] = '## ' + firstLine.join(' ');
+			lines[0] = '## ' + lines[0].trim().split(' ').slice(0, -1).join(' ');
 			return {
 				name,
 				valueSet: name === 'v-else' ? 'v' : undefined,
@@ -44,6 +42,10 @@ async function builtInDirectivesWorker(lang) {
 					kind: 'markdown',
 					value: lines.join('\n'),
 				},
+				references: langs.map(lang => ({
+					name: lang.name,
+					url: `${lang.url}api/built-in-directives.html#${name}`,
+				})),
 			};
 		});
 

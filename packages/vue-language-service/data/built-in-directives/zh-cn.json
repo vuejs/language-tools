@@ -3,106 +3,316 @@
     "name": "v-text",
     "description": {
       "kind": "markdown",
-      "value": "## [v-text](https://cn.vuejs.org/api/built-in-directives.html#v-text)\n\n更新元素的文本内容。\n\n- **期望的绑定值类型：**`string`\n\n- **详细信息**\n\n  `v-text` 通过设置元素的 [textContent](https://developer.mozilla.org/en-US/docs/Web/API/Node/textContent) 属性来工作，因此它将覆盖元素中所有现有的内容。如果你需要更新 `textContent` 的部分，应该使用 [mustache interpolations](https://cn.vuejs.org/guide/essentials/template-syntax.html#text-interpolation) 代替。\n\n- **示例**\n\n  ```html\n  <span v-text=\"msg\"></span>\n  <!-- 等同于 -->\n  <span>{{msg}}</span>\n  ```\n\n- **参考**：[模板语法 - 文本插值](https://cn.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n"
-    }
+      "value": "## v-text\n\n更新元素的文本内容。\n\n- **期望的绑定值类型：**`string`\n\n- **详细信息**\n\n  `v-text` 通过设置元素的 [textContent](https://developer.mozilla.org/en-US/docs/Web/API/Node/textContent) 属性来工作，因此它将覆盖元素中所有现有的内容。如果你需要更新 `textContent` 的部分，应该使用 [mustache interpolations](https://cn.vuejs.org/guide/essentials/template-syntax.html#text-interpolation) 代替。\n\n- **示例**\n\n  ```html\n  <span v-text=\"msg\"></span>\n  <!-- 等同于 -->\n  <span>{{msg}}</span>\n  ```\n\n- **参考**：[模板语法 - 文本插值](https://cn.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-text"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-text"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-text"
+      }
+    ]
   },
   {
     "name": "v-html",
     "description": {
       "kind": "markdown",
-      "value": "## [v-html](https://cn.vuejs.org/api/built-in-directives.html#v-html)\n\n更新元素的 [innerHTML](https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML)。\n\n- **期望的绑定值类型：**`string`\n\n- **详细信息**\n\n `v-html` 的内容直接作为普通 HTML 插入—— Vue 模板语法是不会被解析的。如果你发现自己正打算用 `v-html` 来编写模板，不如重新想想怎么使用组件来代替。\n\n ::: warning 安全说明\n 在你的站点上动态渲染任意的 HTML 是非常危险的，因为它很容易导致 [XSS 攻击](https://en.wikipedia.org/wiki/Cross-site_scripting)。请只对可信内容使用 HTML 插值，**绝不要**将用户提供的内容作为插值\n  :::\n\n 在[单文件组件](https://cn.vuejs.org/guide/scaling-up/sfc)，`scoped` 样式将不会作用于 `v-html` 里的内容，因为 HTML 内容不会被 Vue 的模板编译器解析。如果你想让 `v-html` 的内容也支持 scoped CSS，你可以使用 [CSS modules](./sfc-css-features.html#css-modules) 或使用一个额外的全局 `<style>` 元素，手动设置类似 BEM 的作用域策略。\n\n- **示例：**\n\n  ```html\n  <div v-html=\"html\"></div>\n  ```\n\n- **参考**：[模板语法 - 原始 HTML](https://cn.vuejs.org/guide/essentials/template-syntax.html#raw-html)\n"
-    }
+      "value": "## v-html\n\n更新元素的 [innerHTML](https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML)。\n\n- **期望的绑定值类型：**`string`\n\n- **详细信息**\n\n `v-html` 的内容直接作为普通 HTML 插入—— Vue 模板语法是不会被解析的。如果你发现自己正打算用 `v-html` 来编写模板，不如重新想想怎么使用组件来代替。\n\n ::: warning 安全说明\n 在你的站点上动态渲染任意的 HTML 是非常危险的，因为它很容易导致 [XSS 攻击](https://en.wikipedia.org/wiki/Cross-site_scripting)。请只对可信内容使用 HTML 插值，**绝不要**将用户提供的内容作为插值\n  :::\n\n 在[单文件组件](https://cn.vuejs.org/guide/scaling-up/sfc)，`scoped` 样式将不会作用于 `v-html` 里的内容，因为 HTML 内容不会被 Vue 的模板编译器解析。如果你想让 `v-html` 的内容也支持 scoped CSS，你可以使用 [CSS modules](./sfc-css-features.html#css-modules) 或使用一个额外的全局 `<style>` 元素，手动设置类似 BEM 的作用域策略。\n\n- **示例：**\n\n  ```html\n  <div v-html=\"html\"></div>\n  ```\n\n- **参考**：[模板语法 - 原始 HTML](https://cn.vuejs.org/guide/essentials/template-syntax.html#raw-html)\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-html"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-html"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-html"
+      }
+    ]
   },
   {
     "name": "v-show",
     "description": {
       "kind": "markdown",
-      "value": "## [v-show](https://cn.vuejs.org/api/built-in-directives.html#v-show)\n\n基于表达式值的真假性，来改变元素的可见性。\n\n- **期望的绑定值类型：**`any`\n\n- **详细信息**\n\n  `v-show` 通过设置内联样式的 `display` CSS 属性来工作，当元素可见时将使用初始 `display` 值。当条件改变时，也会触发过渡效果。\n\n- **参考**：[条件渲染 - v-show](https://cn.vuejs.org/guide/essentials/conditional.html#v-show)\n"
-    }
+      "value": "## v-show\n\n基于表达式值的真假性，来改变元素的可见性。\n\n- **期望的绑定值类型：**`any`\n\n- **详细信息**\n\n  `v-show` 通过设置内联样式的 `display` CSS 属性来工作，当元素可见时将使用初始 `display` 值。当条件改变时，也会触发过渡效果。\n\n- **参考**：[条件渲染 - v-show](https://cn.vuejs.org/guide/essentials/conditional.html#v-show)\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-show"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-show"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-show"
+      }
+    ]
   },
   {
     "name": "v-if",
     "description": {
       "kind": "markdown",
-      "value": "## [v-if](https://cn.vuejs.org/api/built-in-directives.html#v-if)\n\n基于表达式值的真假性，来条件性地渲染元素或者模板片段。\n\n- **期望的绑定值类型：**`any`\n\n- **详细信息**\n\n  当 `v-if` 元素被触发，元素及其所包含的指令/组件都会销毁和重构。如果初始条件是假，那么其内部的内容根本都不会被渲染。\n\n  可用于 `<template>` 表示仅包含文本或多个元素的条件块。\n\n  当条件改变��会触发过渡效果。\n\n  当同时使用时，`v-if` 比 `v-for` 优先级更高。我们并不推荐在一元素上同时使用这两个指令 — 查看[列表渲染指南](https://cn.vuejs.org/guide/essentials/list.html#v-for-with-v-if)详情。\n\n- **参考**：[条件渲染 - v-if](https://cn.vuejs.org/guide/essentials/conditional.html#v-if)\n"
-    }
+      "value": "## v-if\n\n基于表达式值的真假性，来条件性地渲染元素或者模板片段。\n\n- **期望的绑定值类型：**`any`\n\n- **详细信息**\n\n  当 `v-if` 元素被触发，元素及其所包含的指令/组件都会销毁和重构。如果初始条件是假，那么其内部的内容根本都不会被渲染。\n\n  可用于 `<template>` 表示仅包含文本或多个元素的条件块。\n\n  当条件改变��会触发过渡效果。\n\n  当同时使用时，`v-if` 比 `v-for` 优先级更高。我们并不推荐在一元素上同时使用这两个指令 — 查看[列表渲染指南](https://cn.vuejs.org/guide/essentials/list.html#v-for-with-v-if)详情。\n\n- **参考**：[条件渲染 - v-if](https://cn.vuejs.org/guide/essentials/conditional.html#v-if)\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-if"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-if"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-if"
+      }
+    ]
   },
   {
     "name": "v-else",
     "valueSet": "v",
     "description": {
       "kind": "markdown",
-      "value": "## [v-else](https://cn.vuejs.org/api/built-in-directives.html#v-else)\n\n表示 `v-if` 或 `v-if` / `v-else-if` 链式调用的“else 块”。\n\n- **无需传入表达式**\n\n- **详细信息**\n\n  - 限定：上一个兄弟元素必须有 `v-if` 或 `v-else-if`。\n\n  - 可用于 `<template>` 表示仅包含文本或多个元素的条件块。\n\n- **示例**\n\n  ```html\n  <div v-if=\"Math.random() > 0.5\">\n    Now you see me\n  </div>\n  <div v-else>\n    Now you don't\n  </div>\n  ```\n\n- **参考**：[条件渲染 - v-else](https://cn.vuejs.org/guide/essentials/conditional.html#v-else)\n"
-    }
+      "value": "## v-else\n\n表示 `v-if` 或 `v-if` / `v-else-if` 链式调用的“else 块”。\n\n- **无需传入表达式**\n\n- **详细信息**\n\n  - 限定：上一个兄弟元素必须有 `v-if` 或 `v-else-if`。\n\n  - 可用于 `<template>` 表示仅包含文本或多个元素的条件块。\n\n- **示例**\n\n  ```html\n  <div v-if=\"Math.random() > 0.5\">\n    Now you see me\n  </div>\n  <div v-else>\n    Now you don't\n  </div>\n  ```\n\n- **参考**：[条件渲染 - v-else](https://cn.vuejs.org/guide/essentials/conditional.html#v-else)\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-else"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-else"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-else"
+      }
+    ]
   },
   {
     "name": "v-else-if",
     "description": {
       "kind": "markdown",
-      "value": "## [v-else-if](https://cn.vuejs.org/api/built-in-directives.html#v-else-if)\n\n表示 `v-if` 的“else if 块”。可以进行链式调用。\n\n- **期望的绑定值类型：**`any`\n\n- **详细信息**\n\n  - 限定：上一个兄弟元素必须有 `v-if` 或 `v-else-if`。\n\n  - 可用于 `<template>` 表示仅包含文本或多个元素的条件块。\n\n- **示例**\n\n  ```html\n  <div v-if=\"type === 'A'\">\n    A\n  </div>\n  <div v-else-if=\"type === 'B'\">\n    B\n  </div>\n  <div v-else-if=\"type === 'C'\">\n    C\n  </div>\n  <div v-else>\n    Not A/B/C\n  </div>\n  ```\n\n- **参考**：[条件渲染 - v-else-if](https://cn.vuejs.org/guide/essentials/conditional.html#v-else-if)\n"
-    }
+      "value": "## v-else-if\n\n表示 `v-if` 的“else if 块”。可以进行链式调用。\n\n- **期望的绑定值类型：**`any`\n\n- **详细信息**\n\n  - 限定：上一个兄弟元素必须有 `v-if` 或 `v-else-if`。\n\n  - 可用于 `<template>` 表示仅包含文本或多个元素的条件块。\n\n- **示例**\n\n  ```html\n  <div v-if=\"type === 'A'\">\n    A\n  </div>\n  <div v-else-if=\"type === 'B'\">\n    B\n  </div>\n  <div v-else-if=\"type === 'C'\">\n    C\n  </div>\n  <div v-else>\n    Not A/B/C\n  </div>\n  ```\n\n- **参考**：[条件渲染 - v-else-if](https://cn.vuejs.org/guide/essentials/conditional.html#v-else-if)\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-else-if"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-else-if"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-else-if"
+      }
+    ]
   },
   {
     "name": "v-for",
     "description": {
       "kind": "markdown",
-      "value": "## [v-for](https://cn.vuejs.org/api/built-in-directives.html#v-for)\n\n基于原始数据多次渲染元素或模板块。\n\n- **期望的绑定值类型：**`Array | Object | number | string | Iterable`\n\n- **详细信息**\n\n  指令值必须使用特殊语法 `alias in expression` 为正在迭代的元素提供一个别名：\n\n  ```html\n  <div v-for=\"item in items\">\n    {{ item.text }}\n  </div>\n  ```\n\n  或者，你也可以为索引指定别名 (如果用在对象，则是键值)：\n\n  ```html\n  <div v-for=\"(item, index) in items\"></div>\n  <div v-for=\"(value, key) in object\"></div>\n  <div v-for=\"(value, name, index) in object\"></div>\n  ```\n\n  `v-for` 的默认方式是尝试就地更新元素而不移动它们。要强制其重新排序元素，你需要用特殊 attribute `key` 来提供一个排序提示：\n\n  ```html\n  <div v-for=\"item in items\" :key=\"item.id\">\n    {{ item.text }}\n  </div>\n  ```\n\n  `v-for` 也可以用于 [Iterable Protocol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#The_iterable_protocol) 的实现，包括原生 `Map` 和 `Set`。\n\n- **参考：**\n  - [列表渲染](https://cn.vuejs.org/guide/essentials/list.html)\n"
-    }
+      "value": "## v-for\n\n基于原始数据多次渲染元素或模板块。\n\n- **期望的绑定值类型：**`Array | Object | number | string | Iterable`\n\n- **详细信息**\n\n  指令值必须使用特殊语法 `alias in expression` 为正在迭代的元素提供一个别名：\n\n  ```html\n  <div v-for=\"item in items\">\n    {{ item.text }}\n  </div>\n  ```\n\n  或者，你也可以为索引指定别名 (如果用在对象，则是键值)：\n\n  ```html\n  <div v-for=\"(item, index) in items\"></div>\n  <div v-for=\"(value, key) in object\"></div>\n  <div v-for=\"(value, name, index) in object\"></div>\n  ```\n\n  `v-for` 的默认方式是尝试就地更新元素而不移动它们。要强制其重新排序元素，你需要用特殊 attribute `key` 来提供一个排序提示：\n\n  ```html\n  <div v-for=\"item in items\" :key=\"item.id\">\n    {{ item.text }}\n  </div>\n  ```\n\n  `v-for` 也可以用于 [Iterable Protocol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#The_iterable_protocol) 的实现，包括原生 `Map` 和 `Set`。\n\n- **参考：**\n  - [列表渲染](https://cn.vuejs.org/guide/essentials/list.html)\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-for"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-for"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-for"
+      }
+    ]
   },
   {
     "name": "v-on",
     "description": {
       "kind": "markdown",
-      "value": "## [v-on](https://cn.vuejs.org/api/built-in-directives.html#v-on)\n\n给元素绑定事件监听器。\n\n- **缩写：**`@`\n\n- **期望的绑定值类型：**`Function | Inline Statement | Object (不带参数)`\n\n- **参数：**`event` (使用对象语法则为可选项)\n\n- **修饰符：**\n\n  - `.stop` - 调用 `event.stopPropagation()`。\n  - `.prevent` - 调用 `event.preventDefault()`。\n  - `.capture` - 在捕获模式添加事件监听器。\n  - `.self` - 只有事件从元素本身发出才触发处理函数。\n  - `.{keyAlias}` - 只在某些按键下触发处理函数。\n  - `.once` - 最多触发一次处理函数。\n  - `.left` - 只在鼠标左键事件触发处理函数。\n  - `.right` - 只在鼠标右键事件触发处理函数。\n  - `.middle` - 只在鼠标中键事件触发处理函数。\n  - `.passive` - 通过 `{ passive: true }` 附加一个 DOM 事件。\n\n- **详细信息**\n\n  事件类型由参数来指定。表达式可以是一个方法名，一个内联声明，如果有修饰符则可省略。\n\n  当用于普通元素，只监听[**原生 DOM 事件**](https://developer.mozilla.org/en-US/docs/Web/Events)。当用于自定义元素组件，则监听子组件触发的**自定义事件**。\n\n  当监听原生 DOM 事件时，方法接收原生事件作为唯一参数。如果使用内联声明，声明可以访问一个特殊的 `$event` 变量：`v-on:click=\"handle('ok', $event)\"`。\n\n  `v-on` 还支持绑定不带参数的事件/监听器对的对象。请注意，当使用对象语法时，不支持任何修饰符。\n\n- **示例：**\n\n  ```html\n  <!-- 方���处理函数 -->\n  <button v-on:click=\"doThis\"></button>\n\n  <!-- 动态事件 -->\n  <button v-on:[event]=\"doThis\"></button>\n\n  <!-- 内联声明 -->\n  <button v-on:click=\"doThat('hello', $event)\"></button>\n\n  <!-- 缩写 -->\n  <button @click=\"doThis\"></button>\n\n  <!-- 使用缩写的动态事件 -->\n  <button @[event]=\"doThis\"></button>\n\n  <!-- 停止传播 -->\n  <button @click.stop=\"doThis\"></button>\n\n  <!-- 阻止默认事件 -->\n  <button @click.prevent=\"doThis\"></button>\n\n  <!-- 不带表达式地阻止默认事件 -->\n  <form @submit.prevent></form>\n\n  <!-- 链式调用修饰符 -->\n  <button @click.stop.prevent=\"doThis\"></button>\n\n  <!-- 按键用于 keyAlias 修饰符-->\n  <input @keyup.enter=\"onEnter\" />\n\n  <!-- 点击事件将最多触发一次 -->\n  <button v-on:click.once=\"doThis\"></button>\n\n  <!-- 对象语法 -->\n  <button v-on=\"{ mousedown: doThis, mouseup: doThat }\"></button>\n  ```\n\n  监听子组件的自定义事件 (当子组件的“my-event”事件被触发，处理函数将被调用)：\n\n  ```html\n  <MyComponent @my-event=\"handleThis\" />\n\n  <!-- 内联声明 -->\n  <MyComponent @my-event=\"handleThis(123, $event)\" />\n  ```\n\n- **参考：**\n  - [事件处理](https://cn.vuejs.org/guide/essentials/event-handling.html)\n  - [组件 - 自定义事件](https://cn.vuejs.org/guide/essentials/component-basics.html#listening-to-events)\n"
-    }
+      "value": "## v-on\n\n给元素绑定事件监听器。\n\n- **缩写：**`@`\n\n- **期望的绑定值类型：**`Function | Inline Statement | Object (不带参数)`\n\n- **参数：**`event` (使用对象语法则为可选项)\n\n- **修饰符：**\n\n  - `.stop` - 调用 `event.stopPropagation()`。\n  - `.prevent` - 调用 `event.preventDefault()`。\n  - `.capture` - 在捕获模式添加事件监听器。\n  - `.self` - 只有事件从元素本身发出才触发处理函数。\n  - `.{keyAlias}` - 只在某些按键下触发处理函数。\n  - `.once` - 最多触发一次处理函数。\n  - `.left` - 只在鼠标左键事件触发处理函数。\n  - `.right` - 只在鼠标右键事件触发处理函数。\n  - `.middle` - 只在鼠标中键事件触发处理函数。\n  - `.passive` - 通过 `{ passive: true }` 附加一个 DOM 事件。\n\n- **详细信息**\n\n  事件类型由参数来指定。表达式可以是一个方法名，一个内联声明，如果有修饰符则可省略。\n\n  当用于普通元素，只监听[**原生 DOM 事件**](https://developer.mozilla.org/en-US/docs/Web/Events)。当用于自定义元素组件，则监听子组件触发的**自定义事件**。\n\n  当监听原生 DOM 事件时，方法接收原生事件作为唯一参数。如果使用内联声明，声明可以访问一个特殊的 `$event` 变量：`v-on:click=\"handle('ok', $event)\"`。\n\n  `v-on` 还支持绑定不带参数的事件/监听器对的对象。请注意，当使用对象语法时，不支持任何修饰符。\n\n- **示例：**\n\n  ```html\n  <!-- 方���处理函数 -->\n  <button v-on:click=\"doThis\"></button>\n\n  <!-- 动态事件 -->\n  <button v-on:[event]=\"doThis\"></button>\n\n  <!-- 内联声明 -->\n  <button v-on:click=\"doThat('hello', $event)\"></button>\n\n  <!-- 缩写 -->\n  <button @click=\"doThis\"></button>\n\n  <!-- 使用缩写的动态事件 -->\n  <button @[event]=\"doThis\"></button>\n\n  <!-- 停止传播 -->\n  <button @click.stop=\"doThis\"></button>\n\n  <!-- 阻止默认事件 -->\n  <button @click.prevent=\"doThis\"></button>\n\n  <!-- 不带表达式地阻止默认事件 -->\n  <form @submit.prevent></form>\n\n  <!-- 链式调用修饰符 -->\n  <button @click.stop.prevent=\"doThis\"></button>\n\n  <!-- 按键用于 keyAlias 修饰符-->\n  <input @keyup.enter=\"onEnter\" />\n\n  <!-- 点击事件将最多触发一次 -->\n  <button v-on:click.once=\"doThis\"></button>\n\n  <!-- 对象语法 -->\n  <button v-on=\"{ mousedown: doThis, mouseup: doThat }\"></button>\n  ```\n\n  监听子组件的自定义事件 (当子组件的“my-event”事件被触发，处理函数将被调用)：\n\n  ```html\n  <MyComponent @my-event=\"handleThis\" />\n\n  <!-- 内联声明 -->\n  <MyComponent @my-event=\"handleThis(123, $event)\" />\n  ```\n\n- **参考：**\n  - [事件处理](https://cn.vuejs.org/guide/essentials/event-handling.html)\n  - [组件 - 自定义事件](https://cn.vuejs.org/guide/essentials/component-basics.html#listening-to-events)\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-on"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-on"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-on"
+      }
+    ]
   },
   {
     "name": "v-bind",
     "description": {
       "kind": "markdown",
-      "value": "## [v-bind](https://cn.vuejs.org/api/built-in-directives.html#v-bind)\n\n动态的绑定一个���多个 attribute，也可以是组件的 prop。\n\n- **缩写：**`:` 或者 `.` (当使用 `.prop` 修饰符)\n\n- **期望：**`any (带参数) | Object (不带参数)`\n\n- **参数：**`attrOrProp (可选的)`\n\n- **修饰符：**\n\n  - `.camel` - 将短横线命名的 attribute 转变为驼峰式命名。\n  - `.prop` - 强制绑定为 DOM property。<sup class=\"vt-badge\">3.2+</sup>\n  - `.attr` - 强制绑定为 DOM attribute。<sup class=\"vt-badge\">3.2+</sup>\n\n- **用途：**\n\n  当用于绑定 `class` 或 `style` attribute，`v-bind` 支持额外的值类型如数组或对象。详见下方的指南链接。\n\n  在处理绑定时，Vue 默认会利用 `in` 操作符来检查该元素上是否定义了和绑定的 key 同名的 DOM property。如果存在同名的 property，则 Vue 会把作为 DOM property 赋值，而不是作为 attribute 设置。这个行为在大多数情况都符合期望的绑定值类型，但是你也可以显式用 `.prop` 和 `.attr` 修饰符来强制绑定方式。有时这是必要的，特别是在和[自定义元素](https://cn.vuejs.org/guide/extras/web-components.html#passing-dom-properties)打交道时。\n\n  当用于组件 props 绑定时，所绑定的 props 必须在子组件中已被正确声明。\n\n  当不带参数使用时，可以用于绑定一个包含了多个 attribute 名称-绑定值对的对象。\n\n- **示例：**\n\n  ```html\n  <!-- 绑定 attribute -->\n  <img v-bind:src=\"imageSrc\" />\n\n  <!-- 动态 attribute 名 -->\n  <button v-bind:[key]=\"value\"></button>\n\n  <!-- 缩写 -->\n  <img :src=\"imageSrc\" />\n\n  <!-- 缩写形式的动态 attribute 名 -->\n  <button :[key]=\"value\"></button>\n\n  <!-- 内联字符串拼接 -->\n  <img :src=\"'/path/to/images/' + fileName\" />\n\n  <!-- class 绑定 -->\n  <div :class=\"{ red: isRed }\"></div>\n  <div :class=\"[classA, classB]\"></div>\n  <div :class=\"[classA, { classB: isB, classC: isC }]\"></div>\n\n  <!-- style 绑定 -->\n  <div :style=\"{ fontSize: size + 'px' }\"></div>\n  <div :style=\"[styleObjectA, styleObjectB]\"></div>\n\n  <!-- 绑定对象形式的 attribute -->\n  <div v-bind=\"{ id: someProp, 'other-attr': otherProp }\"></div>\n\n  <!-- prop 绑定。“prop” 必须在子组件中已声明。 -->\n  <MyComponent :prop=\"someThing\" />\n\n  <!-- 传递子父组件共有的 prop -->\n  <MyComponent v-bind=\"$props\" />\n\n  <!-- XLink -->\n  <svg><a :xlink:special=\"foo\"></a></svg>\n  ```\n\n  `.prop` 修饰符也有专门的缩写，`.`：\n\n  ```html\n  <div :someProperty.prop=\"someObject\"></div>\n\n  <!-- 等同于 -->\n  <div .someProperty=\"someObject\"></div>\n  ```\n\n  当在 DOM 内模板使用 `.camel` 修饰符，可以驼峰化 `v-bind` attribute 的名称，例如 SVG `viewBox` attribute：\n\n  ```html\n  <svg :view-box.camel=\"viewBox\"></svg>\n  ```\n\n  如果使用字符串模板或使用构建步骤预编译模板，则不需要 `.camel`。\n\n- **参考：**\n  - [Class 与 Style 绑定](https://cn.vuejs.org/guide/essentials/class-and-style.html)\n  - [组件 -  Prop 传递细节](https://cn.vuejs.org/guide/components/props.html#prop-passing-details)\n"
-    }
+      "value": "## v-bind\n\n动态的绑定一个���多个 attribute，也可以是组件的 prop。\n\n- **缩写：**`:` 或者 `.` (当使用 `.prop` 修饰符)\n\n- **期望：**`any (带参数) | Object (不带参数)`\n\n- **参数：**`attrOrProp (可选的)`\n\n- **修饰符：**\n\n  - `.camel` - 将短横线命名的 attribute 转变为驼峰式命名。\n  - `.prop` - 强制绑定为 DOM property。<sup class=\"vt-badge\">3.2+</sup>\n  - `.attr` - 强制绑定为 DOM attribute。<sup class=\"vt-badge\">3.2+</sup>\n\n- **用途：**\n\n  当用于绑定 `class` 或 `style` attribute，`v-bind` 支持额外的值类型如数组或对象。详见下方的指南链接。\n\n  在处理绑定时，Vue 默认会利用 `in` 操作符来检查该元素上是否定义了和绑定的 key 同名的 DOM property。如果存在同名的 property，则 Vue 会把作为 DOM property 赋值，而不是作为 attribute 设置。这个行为在大多数情况都符合期望的绑定值类型，但是你也可以显式用 `.prop` 和 `.attr` 修饰符来强制绑定方式。有时这是必要的，特别是在和[自定义元素](https://cn.vuejs.org/guide/extras/web-components.html#passing-dom-properties)打交道时。\n\n  当用于组件 props 绑定时，所绑定的 props 必须在子组件中已被正确声明。\n\n  当不带参数使用时，可以用于绑定一个包含了多个 attribute 名称-绑定值对的对象。\n\n- **示例：**\n\n  ```html\n  <!-- 绑定 attribute -->\n  <img v-bind:src=\"imageSrc\" />\n\n  <!-- 动态 attribute 名 -->\n  <button v-bind:[key]=\"value\"></button>\n\n  <!-- 缩写 -->\n  <img :src=\"imageSrc\" />\n\n  <!-- 缩写形式的动态 attribute 名 -->\n  <button :[key]=\"value\"></button>\n\n  <!-- 内联字符串拼接 -->\n  <img :src=\"'/path/to/images/' + fileName\" />\n\n  <!-- class 绑定 -->\n  <div :class=\"{ red: isRed }\"></div>\n  <div :class=\"[classA, classB]\"></div>\n  <div :class=\"[classA, { classB: isB, classC: isC }]\"></div>\n\n  <!-- style 绑定 -->\n  <div :style=\"{ fontSize: size + 'px' }\"></div>\n  <div :style=\"[styleObjectA, styleObjectB]\"></div>\n\n  <!-- 绑定对象形式的 attribute -->\n  <div v-bind=\"{ id: someProp, 'other-attr': otherProp }\"></div>\n\n  <!-- prop 绑定。“prop” 必须在子组件中已声明。 -->\n  <MyComponent :prop=\"someThing\" />\n\n  <!-- 传递子父组件共有的 prop -->\n  <MyComponent v-bind=\"$props\" />\n\n  <!-- XLink -->\n  <svg><a :xlink:special=\"foo\"></a></svg>\n  ```\n\n  `.prop` 修饰符也有专门的缩写，`.`：\n\n  ```html\n  <div :someProperty.prop=\"someObject\"></div>\n\n  <!-- 等同于 -->\n  <div .someProperty=\"someObject\"></div>\n  ```\n\n  当在 DOM 内模板使用 `.camel` 修饰符，可以驼峰化 `v-bind` attribute 的名称，例如 SVG `viewBox` attribute：\n\n  ```html\n  <svg :view-box.camel=\"viewBox\"></svg>\n  ```\n\n  如果使用字符串模板或使用构建步骤预编译模板，则不需要 `.camel`。\n\n- **参考：**\n  - [Class 与 Style 绑定](https://cn.vuejs.org/guide/essentials/class-and-style.html)\n  - [组件 -  Prop 传递细节](https://cn.vuejs.org/guide/components/props.html#prop-passing-details)\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-bind"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-bind"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-bind"
+      }
+    ]
   },
   {
     "name": "v-model",
     "description": {
       "kind": "markdown",
-      "value": "## [v-model](https://cn.vuejs.org/api/built-in-directives.html#v-model)\n\n在表单输入元素或组件上创建双向绑定。\n\n- **期望的绑定值类型**：根据表单输入元素或组件输出的值而变化\n\n- **仅限：**\n\n  - `<input>`\n  - `<select>`\n  - `<textarea>`\n  - components\n\n- **修饰符：**\n\n  - [`.lazy`](https://cn.vuejs.org/guide/essentials/forms.html#lazy) - 监听 `change` 事件而不是 `input`\n  - [`.number`](https://cn.vuejs.org/guide/essentials/forms.html#number) - 将输入的合法符串转为数字\n  - [`.trim`](https://cn.vuejs.org/guide/essentials/forms.html#trim) - 移除输入内容两端空格\n\n- **参考：**\n\n  - [表单输入绑定](https://cn.vuejs.org/guide/essentials/forms.html)\n  - [组件事件 - 配合 `v-model` 使用](https://cn.vuejs.org/guide/components/v-model.html)\n"
-    }
+      "value": "## v-model\n\n在表单输入元素或组件上创建双向绑定。\n\n- **期望的绑定值类型**：根据表单输入元素或组件输出的值而变化\n\n- **仅限：**\n\n  - `<input>`\n  - `<select>`\n  - `<textarea>`\n  - components\n\n- **修饰符：**\n\n  - [`.lazy`](https://cn.vuejs.org/guide/essentials/forms.html#lazy) - 监听 `change` 事件而不是 `input`\n  - [`.number`](https://cn.vuejs.org/guide/essentials/forms.html#number) - 将输入的合法符串转为数字\n  - [`.trim`](https://cn.vuejs.org/guide/essentials/forms.html#trim) - 移除输入内容两端空格\n\n- **参考：**\n\n  - [表单输入绑定](https://cn.vuejs.org/guide/essentials/forms.html)\n  - [组件事件 - 配合 `v-model` 使用](https://cn.vuejs.org/guide/components/v-model.html)\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-model"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-model"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-model"
+      }
+    ]
   },
   {
     "name": "v-slot",
     "description": {
       "kind": "markdown",
-      "value": "## [v-slot](https://cn.vuejs.org/api/built-in-directives.html#v-slot)\n\n用于声明具名插槽或是期望接收 props 的作用域插槽。\n\n- **缩写：**`#`\n\n- **期望的绑定值类型**：能够合法在函数参数位置使用的 JavaScript 表达式。支持解构语法。绑定值是可选的——只有在给作用域插槽传递 props 才需要。\n\n- **参数**：插槽名 (可选，默认是 `default`)\n\n- **仅限：**\n\n  - `<template>`\n  - [components](https://cn.vuejs.org/guide/components/slots.html#scoped-slots) (用于带有 prop 的单个默认插槽)\n\n- **示例：**\n\n  ```html\n  <!-- 具名插槽 -->\n  <BaseLayout>\n    <template v-slot:header>\n      Header content\n    </template>\n\n    <template v-slot:default>\n      Default slot content\n    </template>\n\n    <template v-slot:footer>\n      Footer content\n    </template>\n  </BaseLayout>\n\n  <!-- 接收 prop 的具名插槽 -->\n  <InfiniteScroll>\n    <template v-slot:item=\"slotProps\">\n      <div class=\"item\">\n        {{ slotProps.item.text }}\n      </div>\n    </template>\n  </InfiniteScroll>\n\n  <!-- 接收 prop 的默认插槽，并解构 -->\n  <Mouse v-slot=\"{ x, y }\">\n    Mouse position: {{ x }}, {{ y }}\n  </Mouse>\n  ```\n\n- **参考：**\n  - [组件 - 插槽](https://cn.vuejs.org/guide/components/slots.html)\n"
-    }
+      "value": "## v-slot\n\n用于声明具名插槽或是期望接收 props 的作用域插槽。\n\n- **缩写：**`#`\n\n- **期望的绑定值类型**：能够合法在函数参数位置使用的 JavaScript 表达式。支持解构语法。绑定值是可选的——只有在给作用域插槽传递 props 才需要。\n\n- **参数**：插槽名 (可选，默认是 `default`)\n\n- **仅限：**\n\n  - `<template>`\n  - [components](https://cn.vuejs.org/guide/components/slots.html#scoped-slots) (用于带有 prop 的单个默认插槽)\n\n- **示例：**\n\n  ```html\n  <!-- 具名插槽 -->\n  <BaseLayout>\n    <template v-slot:header>\n      Header content\n    </template>\n\n    <template v-slot:default>\n      Default slot content\n    </template>\n\n    <template v-slot:footer>\n      Footer content\n    </template>\n  </BaseLayout>\n\n  <!-- 接收 prop 的具名插槽 -->\n  <InfiniteScroll>\n    <template v-slot:item=\"slotProps\">\n      <div class=\"item\">\n        {{ slotProps.item.text }}\n      </div>\n    </template>\n  </InfiniteScroll>\n\n  <!-- 接收 prop 的默认插槽，并解构 -->\n  <Mouse v-slot=\"{ x, y }\">\n    Mouse position: {{ x }}, {{ y }}\n  </Mouse>\n  ```\n\n- **参考：**\n  - [组件 - 插槽](https://cn.vuejs.org/guide/components/slots.html)\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-slot"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-slot"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-slot"
+      }
+    ]
   },
   {
     "name": "v-pre",
     "description": {
       "kind": "markdown",
-      "value": "## [v-pre](https://cn.vuejs.org/api/built-in-directives.html#v-pre)\n\n跳过该元素及其所有子元素的编译。\n\n- **无需传入**\n\n- **详细信息**\n\n  元素内具有 `v-pre`，所有 Vue 模板语法都会被保留并按原样渲染。最常见的用例就是显示原始双大括号标签及内容。\n\n- **示例：**\n\n  ```html\n  <span v-pre>{{ this will not be compiled }}</span>\n  ```\n"
-    }
+      "value": "## v-pre\n\n跳过该元素及其所有子元素的编译。\n\n- **无需传入**\n\n- **详细信息**\n\n  元素内具有 `v-pre`，所有 Vue 模板语法都会被保留并按原样渲染。最常见的用例就是显示原始双大括号标签及内容。\n\n- **示例：**\n\n  ```html\n  <span v-pre>{{ this will not be compiled }}</span>\n  ```\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-pre"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-pre"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-pre"
+      }
+    ]
   },
   {
     "name": "v-once",
     "description": {
       "kind": "markdown",
-      "value": "## [v-once](https://cn.vuejs.org/api/built-in-directives.html#v-once)\n\n仅渲染元素和组件一次，并跳过之后的更新。\n\n- **无需传入**\n\n- **详细信息**\n\n  在随后的重新渲染，元素/组件及其所有子项将被当作静态内容并跳过渲染。这可以用来优���更新时的性能。\n\n  ```html\n  <!-- 单个元素 -->\n  <span v-once>This will never change: {{msg}}</span>\n  <!-- 带有子元素的元素 -->\n  <div v-once>\n    <h1>comment</h1>\n    <p>{{msg}}</p>\n  </div>\n  <!-- 组件 -->\n  <MyComponent v-once :comment=\"msg\" />\n  <!-- `v-for` 指令 -->\n  <ul>\n    <li v-for=\"i in list\" v-once>{{i}}</li>\n  </ul>\n  ```\n\n  从 3.2 起，你也可以搭配 [`v-memo`](#v-memo) 的无效条件来缓存部分模板。\n\n- **参考：**\n  - [数据绑定语法 - 插值](https://cn.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n  - [v-memo](#v-memo)\n"
-    }
+      "value": "## v-once\n\n仅渲染元素和组件一次，并跳过之后的更新。\n\n- **无需传入**\n\n- **详细信息**\n\n  在随后的重新渲染，元素/组件及其所有子项将被当作静态内容并跳过渲染。这可以用来优���更新时的性能。\n\n  ```html\n  <!-- 单个元素 -->\n  <span v-once>This will never change: {{msg}}</span>\n  <!-- 带有子元素的元素 -->\n  <div v-once>\n    <h1>comment</h1>\n    <p>{{msg}}</p>\n  </div>\n  <!-- 组件 -->\n  <MyComponent v-once :comment=\"msg\" />\n  <!-- `v-for` 指令 -->\n  <ul>\n    <li v-for=\"i in list\" v-once>{{i}}</li>\n  </ul>\n  ```\n\n  从 3.2 起，你也可以搭配 [`v-memo`](#v-memo) 的无效条件来缓存部分模板。\n\n- **参考：**\n  - [数据绑定语法 - 插值](https://cn.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n  - [v-memo](#v-memo)\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-once"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-once"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-once"
+      }
+    ]
   },
   {
     "name": "v-memo",
     "description": {
       "kind": "markdown",
-      "value": "## [v-memo](https://cn.vuejs.org/api/built-in-directives.html#v-memo) <sup class=\"vt-badge\" data-text=\"3.2+\" />\n\n- **期望的绑定值类型：**`any[]`\n\n- **详细信息**\n\n  缓存一个模板的子树。在元素和组件上都可以使用。为了实现缓存，该指令需要传入一个固定长度的依赖值数组进行比较。如果数组里的每个值都与最后一次的渲染相同，那么整个子树的更新将被跳过。举例来说：\n\n  ```html\n  <div v-memo=\"[valueA, valueB]\">\n    ...\n  </div>\n  ```\n\n  当组件重新渲染，如果 `valueA` 和 `valueB` 都保持不变，这个 `<div>` 及其子项的所有更新都将被跳过。实际上，甚至虚拟 DOM 的 vnode 创建也将被跳过，因为缓存的子树副本可以被重新使用。\n\n  正确指定缓存数组很重要，否则应该���效的更新可能被跳过。`v-memo` 传入空依赖数组 (`v-memo=\"[]\"`) 将与 `v-once` 效果相同。\n\n  **与 `v-for` 一起使用**\n\n  `v-memo` 仅用于性能至上场景中的微小优化，应该很少需要。最常见的情况可能是有助于渲染海量 `v-for` 列表 (长度超过 1000 的情况)：\n\n  ```html\n  <div v-for=\"item in list\" :key=\"item.id\" v-memo=\"[item.id === selected]\">\n    <p>ID: {{ item.id }} - selected: {{ item.id === selected }}</p>\n    <p>...more child nodes</p>\n  </div>\n  ```\n\n  当组件的 `selected` 状态改变，默认会重新创建大量的 vnode，尽管绝大部分都跟之前是一模一样的。`v-memo` 用在这里本质上是在说“只有当该项的被选中状态改变时才需要更新”。这使得每个选中状态没有变的项能完全重用之前的 vnode 并跳过差异比较。注意这里 memo 依赖数组中并不需要包含 `item.id`，因为 Vue 也会根据 item 的 `:key` 进行判断。\n\n  :::warning 警告\n  当搭配 `v-for` 使用 `v-memo`，确保两者都绑定在同一个元素上。**`v-memo` 不能用在 `v-for` 内部。**\n  :::\n\n  `v-memo` 也能被用于在一些默认优化失败的边际情况下，手动避免子组件出现不需要的更新。但是一样的，开发者需要负责指定正确的依赖数组以免跳过必要的更新。\n\n- **参考：**\n  - [v-once](#v-once)\n"
-    }
+      "value": "## v-memo <sup class=\"vt-badge\" data-text=\"3.2+\" />\n\n- **期望的绑定值类型：**`any[]`\n\n- **详细信息**\n\n  缓存一个模板的子树。在元素和组件上都可以使用。为了实现缓存，该指令需要传入一个固定长度的依赖值数组进行比较。如果数组里的每个值都与最后一次的渲染相同，那么整个子树的更新将被跳过。举例来说：\n\n  ```html\n  <div v-memo=\"[valueA, valueB]\">\n    ...\n  </div>\n  ```\n\n  当组件重新渲染，如果 `valueA` 和 `valueB` 都保持不变，这个 `<div>` 及其子项的所有更新都将被跳过。实际上，甚至虚拟 DOM 的 vnode 创建也将被跳过，因为缓存的子树副本可以被重新使用。\n\n  正确指定缓存数组很重要，否则应该���效的更新可能被跳过。`v-memo` 传入空依赖数组 (`v-memo=\"[]\"`) 将与 `v-once` 效果相同。\n\n  **与 `v-for` 一起使用**\n\n  `v-memo` 仅用于性能至上场景中的微小优化，应该很少需要。最常见的情况可能是有助于渲染海量 `v-for` 列表 (长度超过 1000 的情况)：\n\n  ```html\n  <div v-for=\"item in list\" :key=\"item.id\" v-memo=\"[item.id === selected]\">\n    <p>ID: {{ item.id }} - selected: {{ item.id === selected }}</p>\n    <p>...more child nodes</p>\n  </div>\n  ```\n\n  当组件的 `selected` 状态改变，默认会重新创建大量的 vnode，尽管绝大部分都跟之前是一模一样的。`v-memo` 用在这里本质上是在说“只有当该项的被选中状态改变时才需要更新”。这使得每个选中状态没有变的项能完全重用之前的 vnode 并跳过差异比较。注意这里 memo 依赖数组中并不需要包含 `item.id`，因为 Vue 也会根据 item 的 `:key` 进行判断。\n\n  :::warning 警告\n  当搭配 `v-for` 使用 `v-memo`，确保两者都绑定在同一个元素上。**`v-memo` 不能用在 `v-for` 内部。**\n  :::\n\n  `v-memo` 也能被用于在一些默认优化失败的边际情况下，手动避免子组件出现不需要的更新。但是一样的，开发者需要负责指定正确的依赖数组以免跳过必要的更新。\n\n- **参考：**\n  - [v-once](#v-once)\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-memo"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-memo"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-memo"
+      }
+    ]
   },
   {
     "name": "v-cloak",
     "description": {
       "kind": "markdown",
-      "value": "## [v-cloak](https://cn.vuejs.org/api/built-in-directives.html#v-cloak)\n\n用于隐藏尚未完成编译的 DOM 模板。\n\n- **无需传入**\n\n- **详细信息**\n\n  **该指令只在没有构建步骤的环境下需要使用。**\n\n  当使用直接在 DOM 中书写的模板时，可能会出现一种叫做“未编译模板闪现”的情况：用户可能先看到的是还没编译完成的双大括号���签，直到挂载的组件将它们替换为实际渲染的内容。\n\n  `v-cloak` 会保留在所绑定的元素上，直到相关组件实例被挂载后才移除。配合像 `[v-cloak] { display: none }` 这样的 CSS 规则，它可以在组件编译完毕前隐藏原始模板。\n\n- **示例：**\n\n  ```css\n  [v-cloak] {\n    display: none;\n  }\n  ```\n\n  ```html\n  <div v-cloak>\n    {{ message }}\n  </div>\n  ```\n\n  直到编译完成前，`<div>` 将不可见。\n"
-    }
+      "value": "## v-cloak\n\n用于隐藏尚未完成编译的 DOM 模板。\n\n- **无需传入**\n\n- **详细信息**\n\n  **该指令只在没有构建步骤的环境下需要使用。**\n\n  当使用直接在 DOM 中书写的模板时，可能会出现一种叫做“未编译模板闪现”的情况：用户可能先看到的是还没编译完成的双大括号标签，直到挂载的组件将它们替换为实际渲染的内容。\n\n  `v-cloak` 会保留在所绑定的元素上，直到相关组件实例被挂载后才移除。配合像 `[v-cloak] { display: none }` 这样的 CSS 规则，它可以在组件编译完毕前隐藏原始模板。\n\n- **示例：**\n\n  ```css\n  [v-cloak] {\n    display: none;\n  }\n  ```\n\n  ```html\n  <div v-cloak>\n    {{ message }}\n  </div>\n  ```\n\n  直到编译完成前，`<div>` 将不可见。\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/built-in-directives.html#v-cloak"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/built-in-directives.html#v-cloak"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/built-in-directives.html#v-cloak"
+      }
+    ]
   }
 ]
