@@ -1,0 +1,107 @@
+[
+  {
+    "name": "template",
+    "description": {
+      "kind": "markdown",
+      "value": "## `<template>`\n\n- 每个 `*.vue` 文件最多可以包含一个顶层 `<template>` 块。\n\n- 语块包裹的内容将会被提取、传递给 `@vue/compiler-dom`，预编译为 JavaScript 渲染函数，并附在导出的组件上作为其 `render` 选项。\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/sfc-spec.html#template"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/sfc-spec.html#template"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/sfc-spec.html#template"
+      }
+    ]
+  },
+  {
+    "name": "script",
+    "description": {
+      "kind": "markdown",
+      "value": "## `<script>`\n\n- 每个 `*.vue` 文件最多可以包含一个 `<script>` 块。(使用 [`<script setup>`](https://cn.vuejs.org/api/sfc-script-setup.html) 的情况除外)\n\n- 这个脚本代码块将作为 ES 模块执行。\n\n- **默认导出**应该是 Vue 的组件选项对象，可以是一个对象字面量或是 [defineComponent](https://cn.vuejs.org/api/general.html#definecomponent) 函数的返回值。\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/sfc-spec.html#script"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/sfc-spec.html#script"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/sfc-spec.html#script"
+      }
+    ]
+  },
+  {
+    "name": "script setup",
+    "description": {
+      "kind": "markdown",
+      "value": "## `<script setup>`\n\n- 每个 `*.vue` 文件最多可以包含一个 `<script setup>`。(不包括一般的 `<script>`)\n\n- 这个脚本块将被预处理为组件的 `setup()` 函数，这意味着它将**为每一个组件实例**都执行。`<script setup>` 中的顶层绑定都将自动暴露给模板。要了解更多细节，请看 [`<script setup>` 的专门文档](https://cn.vuejs.org/api/sfc-script-setup.html)。\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/sfc-spec.html#script-setup"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/sfc-spec.html#script-setup"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/sfc-spec.html#script-setup"
+      }
+    ]
+  },
+  {
+    "name": "style",
+    "description": {
+      "kind": "markdown",
+      "value": "## `<style>`\n\n- 每个 `*.vue` 文件可以包含多个 `<style>` 标签。\n\n- 一个 `<style>` 标签可以使用 `scoped` 或 `module` attribute (查看 [SFC 样式功能](https://cn.vuejs.org/api/sfc-css-features.html)了解更多细节) 来帮助封装当前组件的样式。使用了不同封装模式的多个 `<style>` 标签可以被混合入同一个组件。\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/sfc-spec.html#style"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/sfc-spec.html#style"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/sfc-spec.html#style"
+      }
+    ]
+  },
+  {
+    "name": "自定义块",
+    "description": {
+      "kind": "markdown",
+      "value": "## 自定义块\n\n在一个 `*.vue` 文件中可以为任何项目特定需求使用额外的自定义块。举例来说，一个用作写文档的 `<docs>` 块。这里是一些自定义块的真实用例：\n\n- [Gridsome：`<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql：`<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n：`<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\n自定义块的处理需要依赖工具链。如果你想要在构建中集成你的自定义语块，请参见[相关工具链指南](https://cn.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations)获取更多细节。\n"
+    },
+    "references": [
+      {
+        "name": "en",
+        "url": "https://vuejs.org/api/sfc-spec.html#自定义块"
+      },
+      {
+        "name": "zh-cn",
+        "url": "https://cn.vuejs.org/api/sfc-spec.html#自定义块"
+      },
+      {
+        "name": "ja",
+        "url": "https://ja.vuejs.org/api/sfc-spec.html#自定义块"
+      }
+    ]
+  }
+]

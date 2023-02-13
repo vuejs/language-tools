@@ -7,117 +7,105 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as createHtmlPlugin from '@volar-plugins/html';
 import * as vue from '@volar/vue-language-core';
 import { VueCompilerOptions } from '../types';
-
-const dataProvider: html.IHTMLDataProvider = {
-	getId: () => 'vue',
-	isApplicable: () => true,
-	provideTags: () => [
-		{
-			name: 'template',
-			attributes: [],
-		},
-		{
-			name: 'script',
-			attributes: [],
-		},
-		{
-			name: 'style',
-			attributes: [],
-		},
-	],
-	provideAttributes: (tag) => {
-		if (tag === 'template') {
-			return [
-				{ name: 'src' },
-				{ name: 'lang' },
-			];
-		}
-		else if (tag === 'script') {
-			return [
-				{ name: 'src' },
-				{ name: 'lang' },
-				{ name: 'setup', valueSet: 'v' },
-				{ name: 'generic' },
-			];
-		}
-		else if (tag === 'style') {
-			return [
-				{ name: 'src' },
-				{ name: 'lang' },
-				{ name: 'scoped', valueSet: 'v' },
-				{ name: 'module', valueSet: 'v' },
-			];
-		}
-		else {
-			return [
-				{ name: 'src' },
-				{ name: 'lang' }
-			];
-		}
-	},
-	provideValues: (tag, attribute) => {
-		if (attribute === 'lang') {
-			if (tag === 'template') {
-				return [
-					{ name: 'html' },
-					{ name: 'pug' },
-				];
-			}
-			else if (tag === 'script') {
-				return [
-					{ name: 'js' },
-					{ name: 'ts' },
-					{ name: 'jsx' },
-					{ name: 'tsx' },
-				];
-			}
-			else if (tag === 'style') {
-				return [
-					{ name: 'css' },
-					{ name: 'scss' },
-					{ name: 'less' },
-					{ name: 'stylus' },
-					{ name: 'postcss' },
-					{ name: 'sass' },
-				];
-			}
-			else {
-				return [
-					// template
-					{ name: 'html' },
-					{ name: 'pug' },
-					// script
-					{ name: 'js' },
-					{ name: 'ts' },
-					{ name: 'jsx' },
-					{ name: 'tsx' },
-					// style
-					{ name: 'css' },
-					{ name: 'scss' },
-					{ name: 'less' },
-					{ name: 'stylus' },
-					{ name: 'postcss' },
-					{ name: 'sass' },
-					// custom block
-					{ name: 'md' },
-					{ name: 'json' },
-					{ name: 'jsonc' },
-					{ name: 'json5' },
-					{ name: 'yaml' },
-					{ name: 'toml' },
-					{ name: 'gql' },
-					{ name: 'graphql' },
-				];
-			}
-		}
-		return [];
-	},
-};
+import { loadLanguageBlocks } from './data';
 
 export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin => (context) => {
 
 	if (!context.typescript)
 		return {};
+
+	const dataProvider: html.IHTMLDataProvider = {
+		getId: () => 'vue',
+		isApplicable: () => true,
+		provideTags: () => loadLanguageBlocks(context.env.locale ?? 'en'),
+		provideAttributes: (tag) => {
+			if (tag === 'template') {
+				return [
+					{ name: 'src' },
+					{ name: 'lang' },
+				];
+			}
+			else if (tag === 'script') {
+				return [
+					{ name: 'src' },
+					{ name: 'lang' },
+					{ name: 'setup', valueSet: 'v' },
+					{ name: 'generic' },
+				];
+			}
+			else if (tag === 'style') {
+				return [
+					{ name: 'src' },
+					{ name: 'lang' },
+					{ name: 'scoped', valueSet: 'v' },
+					{ name: 'module', valueSet: 'v' },
+				];
+			}
+			else {
+				return [
+					{ name: 'src' },
+					{ name: 'lang' }
+				];
+			}
+		},
+		provideValues: (tag, attribute) => {
+			if (attribute === 'lang') {
+				if (tag === 'template') {
+					return [
+						{ name: 'html' },
+						{ name: 'pug' },
+					];
+				}
+				else if (tag === 'script') {
+					return [
+						{ name: 'js' },
+						{ name: 'ts' },
+						{ name: 'jsx' },
+						{ name: 'tsx' },
+					];
+				}
+				else if (tag === 'style') {
+					return [
+						{ name: 'css' },
+						{ name: 'scss' },
+						{ name: 'less' },
+						{ name: 'stylus' },
+						{ name: 'postcss' },
+						{ name: 'sass' },
+					];
+				}
+				else {
+					return [
+						// template
+						{ name: 'html' },
+						{ name: 'pug' },
+						// script
+						{ name: 'js' },
+						{ name: 'ts' },
+						{ name: 'jsx' },
+						{ name: 'tsx' },
+						// style
+						{ name: 'css' },
+						{ name: 'scss' },
+						{ name: 'less' },
+						{ name: 'stylus' },
+						{ name: 'postcss' },
+						{ name: 'sass' },
+						// custom block
+						{ name: 'md' },
+						{ name: 'json' },
+						{ name: 'jsonc' },
+						{ name: 'json5' },
+						{ name: 'yaml' },
+						{ name: 'toml' },
+						{ name: 'gql' },
+						{ name: 'graphql' },
+					];
+				}
+			}
+			return [];
+		},
+	};
 
 	const _ts = context.typescript;
 	const htmlPlugin = createHtmlPlugin({ validLang: 'vue', disableCustomData: true })(context);

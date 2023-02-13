@@ -8,6 +8,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { checkComponentNames, checkEventsOfTag, checkPropsOfTag, getElementAttrs } from '../helpers';
 import * as casing from '../ideFeatures/nameCasing';
 import { AttrNameCasing, VueCompilerOptions, TagNameCasing } from '../types';
+import { loadBuiltInDirectives } from './data';
 
 // https://v3.vuejs.org/api/directives.html#v-on
 const eventModifiers: Record<string, string> = {
@@ -460,34 +461,6 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 	};
 
 	return plugin as T;
-}
-
-function loadBuiltInDirectives(lang: string): html.IAttributeData[] {
-
-	lang = lang.toLowerCase();
-
-	let json: html.IAttributeData[];
-
-	if (lang === 'ja') {
-		json = require('../../data/built-in-directives/ja.json');
-	}
-	else if (lang.startsWith('zh-')) {
-		json = require('../../data/built-in-directives/zh-cn.json');
-	}
-	else {
-		json = require('../../data/built-in-directives/en.json');
-	}
-
-	const data = [...json];
-	const vOn = json.find(d => d.name === 'v-on');
-	const vSlot = json.find(d => d.name === 'v-slot');
-	const vBind = json.find(d => d.name === 'v-bind');
-
-	if (vOn) data.push({ ...vOn, name: '@' });
-	if (vSlot) data.push({ ...vSlot, name: '#' });
-	if (vBind) data.push({ ...vBind, name: ':' });
-
-	return data as any;
 }
 
 function createInternalItemId(type: 'vueDirective' | 'componentEvent' | 'componentProp', args: string[]) {
