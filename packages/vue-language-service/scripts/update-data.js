@@ -133,7 +133,7 @@ async function languageBlocksWorker(lang) {
 					valueSet: 'v',
 					description: {
 						kind: 'markdown',
-						value: scriptSetupDoc.split('\n## ')[0].split('\n').slice(1).join('\n'),
+						value: scriptSetupDoc.split('\n').slice(1).join('\n'),
 					},
 					references: langs.map(lang => ({
 						name: lang.name,
