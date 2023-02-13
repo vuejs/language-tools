@@ -1,4 +1,4 @@
-const https = require('https');
+const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 const langs = [
@@ -29,7 +29,7 @@ for (const lang of langs) {
 
 async function languageBlocksWorker(lang) {
 
-	let text = (await require('axios').get(lang.languageBlocksMdUrl)).data;
+	let text = (await axios.get(lang.languageBlocksMdUrl)).data;
 	text = resolveMarkdownLinks(text, lang.url);
 	const json = text
 		.replace(/```vue-html/g, '```html')
@@ -66,7 +66,7 @@ async function languageBlocksWorker(lang) {
 
 async function builtInDirectivesWorker(lang) {
 
-	let text = (await require('axios').get(lang.builtInDirectivesMdUrl)).data;
+	let text = (await axios.get(lang.builtInDirectivesMdUrl)).data;
 	text = resolveMarkdownLinks(text, lang.url);
 	const json = text
 		.replace(/```vue-html/g, '```html')
