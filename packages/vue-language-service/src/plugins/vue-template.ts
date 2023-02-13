@@ -472,7 +472,7 @@ function loadBuiltInDirectives(lang: string): html.IAttributeData[] {
 		json = require('../data/built-in-directives/ja.json');
 	}
 	else if (lang.startsWith('zh-')) {
-		json = require('../data/built-in-directives/ja.json');
+		json = require('../data/built-in-directives/zh-cn.json');
 	}
 	else {
 		json = require('../data/built-in-directives/en.json');
