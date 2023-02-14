@@ -22,6 +22,12 @@ export function loadTemplateData(lang: string) {
 		data = require('../../data/template/en.json');
 	}
 
+	for (const attr of [...data.globalAttributes ?? []]) {
+		if (!attr.name.startsWith('v-')) {
+			data.globalAttributes?.push({ ...attr, name: `:${attr.name}` });
+		}
+	}
+
 	const vOn = data.globalAttributes?.find(d => d.name === 'v-on');
 	const vSlot = data.globalAttributes?.find(d => d.name === 'v-slot');
 	const vBind = data.globalAttributes?.find(d => d.name === 'v-bind');
@@ -29,12 +35,6 @@ export function loadTemplateData(lang: string) {
 	if (vOn) data.globalAttributes?.push({ ...vOn, name: '@' });
 	if (vSlot) data.globalAttributes?.push({ ...vSlot, name: '#' });
 	if (vBind) data.globalAttributes?.push({ ...vBind, name: ':' });
-
-	for (const attr of [...data.globalAttributes ?? []]) {
-		if (!attr.name.startsWith('v-')) {
-			data.globalAttributes?.push({ ...attr, name: `:${attr.name}` });
-		}
-	}
 
 	return data;
 }

@@ -10,20 +10,6 @@ import * as casing from '../ideFeatures/nameCasing';
 import { AttrNameCasing, VueCompilerOptions, TagNameCasing } from '../types';
 import { loadTemplateData } from './data';
 
-// https://v3.vuejs.org/api/directives.html#v-on
-const eventModifiers: Record<string, string> = {
-	stop: 'call event.stopPropagation().',
-	prevent: 'call event.preventDefault().',
-	capture: 'add event listener in capture mode.',
-	self: 'only trigger handler if event was dispatched from this element.',
-	// {keyAlias}: 'only trigger handler on certain keys.',
-	once: 'trigger handler at most once.',
-	left: 'only trigger handler for left button mouse events.',
-	right: 'only trigger handler for right button mouse events.',
-	middle: 'only trigger handler for middle button mouse events.',
-	passive: 'attaches a DOM event with { passive: true }.',
-};
-
 let builtInData: html.HTMLDataV1;
 
 export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof createHtmlPlugin>>(options: {
@@ -39,6 +25,36 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			return {};
 
 		builtInData ??= loadTemplateData(_context.env.locale ?? 'en');
+
+		// https://vuejs.org/api/built-in-directives.html#v-on
+		// https://vuejs.org/api/built-in-directives.html#v-bind
+		const eventModifiers: Record<string, string> = {};
+		const propModifiers: Record<string, string> = {};
+		const vOn = builtInData.globalAttributes?.find(x => x.name === 'v-on');
+		const vBind = builtInData.globalAttributes?.find(x => x.name === 'v-bind');
+
+		if (vOn) {
+			const markdown = (typeof vOn.description === 'string' ? vOn.description : vOn.description?.value) ?? '';
+			const modifiers = markdown
+				.split('\n- ')[4]
+				.split('\n').slice(2, -1);
+			for (let text of modifiers) {
+				text = text.substring('  - `.'.length);
+				const [name, disc] = text.split('` - ');
+				eventModifiers[name] = disc;
+			}
+		}
+		if (vBind) {
+			const markdown = (typeof vBind.description === 'string' ? vBind.description : vBind.description?.value) ?? '';
+			const modifiers = markdown
+				.split('\n- ')[4]
+				.split('\n').slice(2, -1);
+			for (let text of modifiers) {
+				text = text.substring('  - `.'.length);
+				const [name, disc] = text.split('` - ');
+				propModifiers[name] = disc;
+			}
+		}
 
 		const _ts = _context.typescript;
 		const nativeTags = new Set(options.vueCompilerOptions.nativeTags);
@@ -399,23 +415,28 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			if (replacement) {
 
 				const isEvent = replacement.text.startsWith('@') || replacement.text.startsWith('v-on:');
+				const isProp = replacement.text.startsWith(':') || replacement.text.startsWith('v-bind:');
 				const hasModifier = replacement.text.includes('.');
 
-				if (isEvent && hasModifier) {
+				if ((isEvent || isProp) && hasModifier) {
 
 					const modifiers = replacement.text.split('.').slice(1);
 					const textWithoutModifier = replacement.text.split('.')[0];
+					const allModifiers = isEvent ? eventModifiers : propModifiers;
 
-					for (const modifier in eventModifiers) {
+					for (const modifier in allModifiers) {
 
 						if (modifiers.includes(modifier))
 							continue;
 
-						const modifierDes = eventModifiers[modifier];
+						const modifierDes = allModifiers[modifier];
 						const newItem: html.CompletionItem = {
 							label: modifier,
 							filterText: textWithoutModifier + '.' + modifier,
-							documentation: modifierDes,
+							documentation: {
+								kind: 'markdown',
+								value: modifierDes,
+							},
 							textEdit: {
 								range: replacement.textEdit.range,
 								newText: textWithoutModifier + '.' + modifier,
