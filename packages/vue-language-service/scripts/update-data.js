@@ -11,32 +11,39 @@ const langs = [
 		name: 'en',
 		url: 'https://vuejs.org/',
 		repoUrl: 'https://raw.githubusercontent.com/vuejs/docs/',
+		supported: true,
 	},
 	{
 		name: 'zh-cn',
 		url: 'https://cn.vuejs.org/',
 		repoUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-zh-cn/',
+		supported: true,
 	},
 	{
 		name: 'ja',
 		url: 'https://ja.vuejs.org/',
 		repoUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-ja/',
+		supported: true,
 	},
 	{
 		name: 'ua',
 		url: 'https://ua.vuejs.org/',
 		repoUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-ua/',
+		supported: false,
 	},
 	{
 		name: 'fr',
 		url: 'https://fr.vuejs.org/',
 		repoUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-fr/',
+		supported: true,
 	},
 ];
 
 for (const lang of langs) {
-	templateWorker(lang);
-	sfcWorker(lang);
+	if (lang.supported) {
+		templateWorker(lang);
+		sfcWorker(lang);
+	}
 }
 
 async function sfcWorker(lang) {

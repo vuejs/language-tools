@@ -9,9 +9,6 @@ export function loadTemplateData(lang: string) {
 	if (lang === 'ja') {
 		data = require('../../data/template/ja.json');
 	}
-	else if (lang === 'ua') {
-		data = require('../../data/template/ua.json');
-	}
 	else if (lang === 'fr') {
 		data = require('../../data/template/fr.json');
 	}
@@ -50,9 +47,6 @@ export function loadLanguageBlocks(lang: string) {
 
 	if (lang === 'ja') {
 		data = require('../../data/language-blocks/ja.json');
-	}
-	else if (lang === 'ua') {
-		data = require('../../data/language-blocks/ua.json');
 	}
 	else if (lang === 'fr') {
 		data = require('../../data/language-blocks/fr.json');
