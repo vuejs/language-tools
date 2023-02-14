@@ -42,7 +42,6 @@ for (const lang of langs) {
 async function sfcWorker(lang) {
 
 	const sfcDoc = await fetch(lang.repoUrl + 'main/src/api/sfc-spec.md', lang.url);
-	const scriptSetupDoc = await fetch(lang.repoUrl + 'main/src/api/sfc-script-setup.md', lang.url);
 	const cssFeaturesDoc = await fetch(lang.repoUrl + 'main/src/api/sfc-css-features.md', lang.url);
 
 	/**
@@ -99,7 +98,7 @@ async function sfcWorker(lang) {
 			 */
 			const data = {
 				name,
-				attributes: [srcAttr],
+				attributes: name === 'script setup' ? [] : [srcAttr],
 				description: {
 					kind: 'markdown',
 					value: lines.slice(1).join('\n'),
@@ -127,18 +126,6 @@ async function sfcWorker(lang) {
 						{ name: 'tsx' },
 						{ name: 'jsx' },
 					],
-				});
-				data.attributes.push({
-					name: 'setup',
-					valueSet: 'v',
-					description: {
-						kind: 'markdown',
-						value: scriptSetupDoc.split('\n').slice(1).join('\n'),
-					},
-					references: langs.map(lang => ({
-						name: lang.name,
-						url: `${lang.url}api/sfc-script-setup.html`,
-					})),
 				});
 				data.attributes.push({ name: 'generic' });
 			}
@@ -181,6 +168,16 @@ async function sfcWorker(lang) {
 			}
 			return data;
 		});
+
+	const scriptBlock = languageBlocks.find(b => b.name === 'script');
+	const scriptSetupBlock = languageBlocks.find(b => b.name === 'script setup');
+
+	scriptBlock.attributes.push({
+		name: 'setup',
+		valueSet: 'v',
+		description: scriptSetupBlock.description,
+		references: scriptSetupBlock.references,
+	});
 
 	/**
 	 * @type {import('vscode-html-languageservice').HTMLDataV1}
@@ -322,13 +319,13 @@ async function templateWorker(lang) {
 		],
 	};
 
-	const writePath = path.resolve(__dirname, '../data/built-in-directives/' + lang.name + '.json');
+	const writePath = path.resolve(__dirname, '../data/template/' + lang.name + '.json');
 	fs.writeFileSync(writePath, JSON.stringify(data, null, 2));
 	console.log(writePath);
 
 	if (lang.name === 'zh-cn') {
 		converter.convertPromise(JSON.stringify(data, null, 2)).then(converted => {
-			const writePath = path.resolve(__dirname, '../data/built-in-directives/zh-tw.json');
+			const writePath = path.resolve(__dirname, '../data/template/zh-tw.json');
 			fs.writeFileSync(writePath, converted);
 			console.log(writePath);
 		});

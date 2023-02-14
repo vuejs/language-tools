@@ -174,37 +174,37 @@
           ]
         },
         {
+          "name": "generic"
+        },
+        {
           "name": "setup",
           "valueSet": "v",
           "description": {
             "kind": "markdown",
-            "value": "\n`<script setup>` は単一ファイルコンポーネント（SFC）内で Composition API を使用するコンパイル時のシンタックスシュガー（糖衣構文）です。SFC と Composition API の両方を使うならば、おすすめの構文です。これは通常の `<script>` 構文よりも、多くの利点があります:\n\n- ボイラープレートが少なくて、より簡潔なコード\n- 純粋な TypeScript を使ってプロパティと発行されたイベントを宣言する機能\n- 実行時のパフォーマンスの向上（テンプレートは中間プロキシなしに同じスコープ内のレンダー関数にコンパイルされます）\n- IDE で型推論のパフォーマンス向上（言語サーバーがコードから型を抽出する作業が減ります）\n\n## 基本の構文 \n\nこの構文を導入するには、`setup` 属性を `<script>` ブロックに追加します:\n\n```vue\n<script setup>\nconsole.log('hello script setup')\n</script>\n```\n\n内部のコードは、コンポーネントの `setup()` 関数の内容としてコンパイルされます。これはつまり、通常の `<script>` とは違って、コンポーネントが最初にインポートされたときに一度だけ実行されるのではなく、`<script setup>` 内のコードは **コンポーネントのインスタンスが作成されるたびに実行される** ということです。\n\n### トップレベルのバインディングはテンプレートに公開 \n\n`<script setup>` を使用する場合、`<script setup>` 内で宣言されたトップレベルのバインディング（変数、関数宣言、インポートを含む）は、テンプレートで直接使用できます:\n\n```vue\n<script setup>\n// 変数\nconst msg = 'Hello!'\n\n// 関数\nfunction log() {\n  console.log(msg)\n}\n</script>\n\n<template>\n  <button @click=\"log\">{{ msg }}</button>\n</template>\n```\n\nインポートも同じように公開されます。これはつまり、インポートされたヘルパー関数を `methods` オプションで公開することなくテンプレート内の式で直接使用できます:\n\n```vue\n<script setup>\nimport { capitalize } from './helpers'\n</script>\n\n<template>\n  <div>{{ capitalize('hello') }}</div>\n</template>\n```\n\n## リアクティビティー \n\nリアクティブな状態は [リアクティビティー API](./reactivity-core.html) を使って明示的に作成する必要があります。`setup()` 関数から返された値と同じように、テンプレート内で参照されるときに ref は自動的にアンラップされます:\n\n```vue\n<script setup>\nimport { ref } from 'vue'\n\nconst count = ref(0)\n</script>\n\n<template>\n  <button @click=\"count++\">{{ count }}</button>\n</template>\n```\n\n## コンポーネントの使用 \n\n`<script setup>` のスコープ内の値は、カスタムコンポーネントのタグ名としても直接使用できます:\n\n```vue\n<script setup>\nimport MyComponent from './MyComponent.vue'\n</script>\n\n<template>\n  <MyComponent />\n</template>\n```\n\n`MyComponent` を変数として参照していると考えてください。JSX を使ったことがあれば、このメンタルモデルは似ています。ケバブケースの `<my-component>` も同じようにテンプレートで動作します。しかし、一貫性を保つために、パスカルケースのコンポーネントタグを強く推奨します。これはネイティブのカスタム要素と区別するのにも役立ちます。\n\n### 動的コンポーネント \n\nコンポーネントは、文字列キーで登録されるのではなく変数として参照されるため、`<script setup>` 内で動的コンポーネントを使う場合は、動的な `:is` バインディングを使う必要があります:\n\n```vue\n<script setup>\nimport Foo from './Foo.vue'\nimport Bar from './Bar.vue'\n</script>\n\n<template>\n  <component :is=\"Foo\" />\n  <component :is=\"someCondition ? Foo : Bar\" />\n</template>\n```\n\n三項演算子で変数としてコンポーネントをどのように使うことができるかに注意してください。\n\n### 再帰的コンポーネント \n\nSFC はそのファイル名を介して、暗黙的に自身を参照できます。例えば、`FooBar.vue` というファイル名は、そのテンプレート内で `<FooBar/>` として自身を参照できます。\n\nこれはインポートされたコンポーネントよりも優先度が低いことに注意してください。コンポーネントの推論された名前と競合する名前付きインポートがある場合、インポートでエイリアスを作成できます:\n\n```js\nimport { FooBar as FooBarChild } from './components'\n```\n\n### 名前空間付きコンポーネント \n\n`<Foo.Bar>` のようにドット付きのコンポーネントタグを使って、オブジェクトプロパティの下にネストしたコンポーネントを参照できます。これは単一のファイルから複数のコンポーネントをインポートするときに便利です:\n\n```vue\n<script setup>\nimport * as Form from './form-components'\n</script>\n\n<template>\n  <Form.Input>\n    <Form.Label>label</Form.Label>\n  </Form.Input>\n</template>\n```\n\n## カスタムディレクティブの使用 \n\nグローバルに登録されたカスタムディレクティブは通常通りに動作します。`<script setup>` ではローカルのカスタムディレクティブは明示的に登録する必要はありませんが、`vNameOfDirective` という命名規則に従う必要があります:\n\n```vue\n<script setup>\nconst vMyDirective = {\n  beforeMount: (el) => {\n    // 要素を使って何かする\n  }\n}\n</script>\n<template>\n  <h1 v-my-directive>This is a Heading</h1>\n</template>\n```\n\n他の場所からディレクティブをインポートする場合、必須の命名規則に合うようにリネームすることができます:\n\n```vue\n<script setup>\nimport { myDirective as vMyDirective } from './MyDirective.js'\n</script>\n```\n\n## defineProps() & defineEmits() \n\n完全な型推論のサポートつきで `props` と `emits` のようなオプションを宣言するために、`defineProps` と `defineEmits` の API を使用できます。これらは `<script setup>` の中で自動的に利用できるようになっています:\n\n```vue\n<script setup>\nconst props = defineProps({\n  foo: String\n})\n\nconst emit = defineEmits(['change', 'delete'])\n// セットアップのコード\n</script>\n```\n\n- `defineProps` と `defineEmits` は、`<script setup>` 内でのみ使用可能な**コンパイラーマクロ**です。インポートする必要はなく、`<script setup>` が処理されるときにコンパイルされます。\n\n- `defineProps` は `props` オプションと同じ値を受け取り、`defineEmits` は `emits` オプションと同じ値を受け取ります。\n\n- `defineProps` と `defineEmits` は、渡されたオプションに基づいて、適切な型の推論を行います。\n\n- `defineProps` および `defineEmits` に渡されたオプションは、setup のスコープからモジュールのスコープに引き上げられます。そのため、オプションは setup のスコープで宣言されたローカル変数を参照できません。参照するとコンパイルエラーになります。しかし、インポートされたバインディングはモジュールのスコープに入っているので、参照できます。\n\nTypeScript を使用している場合は、[純粋な型アノテーションを使って props や emits を宣言](#typescript-のみの機能)することも可能です。\n\n## defineExpose() \n\n`<script setup>` を使用したコンポーネントは、**デフォルトで閉じられています**。つまり、テンプレート参照や `$parent` チェーンを介して取得されるコンポーネントのパブリックインスタンスは、`<script setup>` 内で宣言されたバインディングを公開**しません**。\n\n`<script setup>` コンポーネントのプロパティを明示的に公開するには、`defineExpose` コンパイラーマクロを使用します:\n\n```vue\n<script setup>\nimport { ref } from 'vue'\n\nconst a = 1\nconst b = ref(2)\n\ndefineExpose({\n  a,\n  b\n})\n</script>\n```\n\n親がテンプレート参照を介してこのコンポーネントのインスタンスを取得すると、取得されたインスタンスは `{ a: number, b: number }` という形状になります（ref は通常のインスタンスと同様、自動的にアンラップされます）。\n\n## `useSlots()` & `useAttrs()` \n\n`<script setup>` 内で `slots` や `attrs` を使用することは比較的少ないはずです。なぜなら、テンプレート内で `$slots` と `$attrs` として直接アクセスできるからです。万が一、必要になった場合には、それぞれ `useSlots` と `useAttrs` ヘルパーを使用してください:\n\n```vue\n<script setup>\nimport { useSlots, useAttrs } from 'vue'\n\nconst slots = useSlots()\nconst attrs = useAttrs()\n</script>\n```\n\n`useSlots` と `useAttrs` は、`setupContext.slots` と `setupContext.attrs` と同等のものを返す実際のランタイム関数です。これらは通常の Composition API の関数内でも使用できます。\n\n## 通常の `<script>` との併用 \n\n`<script setup>` は、通常の `<script>` と一緒に使うことができます。次のことが必要な場合は、通常の `<script>` が必要になることがあります:\n\n- `inheritAttrs` や、プラグインで有効になるカスタムオプションなど、`<script setup>` では表現できないオプションを宣言する\n- 名前付きのエクスポートを宣言する\n- 副作用を実行したり、一度しか実行してはいけないオブジェクトを作成する\n\n```vue\n<script>\n// 通常の <script>、モジュールのスコープで実行される（1 回だけ）\nrunSideEffectOnce()\n\n// 追加のオプションを宣言\nexport default {\n  inheritAttrs: false,\n  customOptions: {}\n}\n</script>\n\n<script setup>\n// setup() のスコープで実行される(インスタンスごとに)\n</script>\n```\n\n同じコンポーネント内で `<script setup>` と `<script>` を組み合わせることは、上記のシナリオに限定してサポートします。具体的には:\n\n- `props` や `emits` のような `<script setup>` で定義できるオプションは、`<script>` セクションで定義**しない**でください。\n- `<script setup>` 内で作成された変数は、コンポーネントインスタンスのプロパティとして追加されないので、Options API からはアクセスできません。このように API を混在させることは、強くお勧めしません。\n\nもし、サポートされていないシナリオに遭遇した場合は、`<script setup>` の代わりに、明示的な [`setup()`](https://ja.vuejs.org/api/composition-api-setup.html) 関数に切り替えることを検討する必要があります。\n\n## トップレベルの `await` \n\n`<script setup>` の中ではトップレベルの `await` を使うことができます。その結果、コードは `async setup()` としてコンパイルされます:\n\n```vue\n<script setup>\nconst post = await fetch(`/api/post/1`).then((r) => r.json())\n</script>\n```\n\nさらに、await の対象の式は、`await` 後の現在のコンポーネントのインスタンスのコンテキストを保持する形式で自動的にコンパイルされます。\n\n:::warning Note\n`async setup()` は、現在まだ実験的な機能である `Suspense` と組み合わせて使用する必要があります。将来のリリースで完成させてドキュメント化する予定ですが、もし今興味があるのであれば、その[テスト](https://github.com/vuejs/core/blob/main/packages/runtime-core/__tests__/components/Suspense.spec.ts)を参照することで、どのように動作するかを確認できます。\n:::\n\n## TypeScript のみの機能 <sup class=\"vt-badge ts\" /> \n\n### 型のみの props/emit 宣言 \n\n`defineProps` や `defineEmits` にリテラル型の引数を渡すことで、純粋な型の構文を使って props や emits を宣言することもできます:\n\n```ts\nconst props = defineProps<{\n  foo: string\n  bar?: number\n}>()\n\nconst emit = defineEmits<{\n  (e: 'change', id: number): void\n  (e: 'update', value: string): void\n}>()\n```\n\n- `defineProps` または `defineEmits` は、実行時の宣言か型宣言のどちらかしか使用できません。両方を同時に使用すると、コンパイルエラーになります。\n\n- 型宣言を使用する場合は、同等の実行時宣言が静的解析から自動的に生成されるため、二重の宣言を行う必要がなくなり、実行時の正しい動作が保証されます。\n\n  - 開発モードでは、コンパイラーは型から対応する実行時バリデーションを推測しようとします。上記の例では `foo: string` という型からは `foo: String` が推測されます。もし型がインポートされた型への参照である場合、コンパイラーは外部ファイルの情報を持っていないので、推測される結果は `foo: null`（`any` 型と同じ）になります。\n\n  - プロダクションモードでは、バンドルサイズを小さくするために、コンパイラーが配列形式の宣言を生成します（上記の props は `['foo', 'bar']` にコンパイルされます）。\n\n  - 生成されるコードは有効な型付けがなされた TypeScript であり、他のツールを使ってさらに処理できます。\n\n- 現在のところ、正しく静的解析を行うためには、型宣言の引数は以下のいずれかでなければなりません:\n\n  - 型リテラル\n  - 同一ファイル内のインタフェースか型リテラルへの参照\n\n  現在、複雑な型や他のファイルからの型のインポートはサポートされていません。将来的には型のインポートをサポートする可能性があります。\n\n### 型宣言を使用時のデフォルトの props 値 \n\n型のみの `defineProps` 宣言の欠点は、props のデフォルト値を提供する方法がないことです。この問題を解決するために、`withDefaults` コンパイラーマクロも用意されています:\n\n```ts\nexport interface Props {\n  msg?: string\n  labels?: string[]\n}\n\nconst props = withDefaults(defineProps<Props>(), {\n  msg: 'hello',\n  labels: () => ['one', 'two']\n})\n```\n\nこれは、同等な実行時の props の `default` オプションにコンパイルされます。さらに、`withDefaults` ヘルパーは、デフォルト値の型チェックを行います。また、返される `props` の型が、デフォルト値が宣言されているプロパティに対して、省略可能フラグが削除されていることを保証します。\n\n## 制限 \n\nモジュールの実行セマンティクスの違いにより、`<script setup>` 内のコードは、SFC のコンテキストに依存しています。外部の `.js` や `.ts` ファイルに移動すると、開発者とツールの両方に混乱を招く可能性があります。そのため、**`<script setup>`** は、`src` 属性と一緒に使うことはできません。\n"
+            "value": "\n- 各 `*.vue` ファイルには、一度に最大 1 つの `<script setup>` ブロックを含めることができます（通常の `<script>` は除く）。\n\n- スクリプトは前処理され、コンポーネントの `setup()` 関数として使用されます。これは、**コンポーネントの各インスタンスに対して**実行されることを意味します。`<script setup>` のトップレベルのバインディングは、自動的にテンプレートに公開されます。詳細は [`<script setup>` に関する専用のドキュメント](https://ja.vuejs.org/api/sfc-script-setup.html)を参照してください。\n"
           },
           "references": [
             {
               "name": "en",
-              "url": "https://vuejs.org/api/sfc-script-setup.html"
+              "url": "https://vuejs.org/api/sfc-spec.html#script-setup"
             },
             {
               "name": "zh-cn",
-              "url": "https://cn.vuejs.org/api/sfc-script-setup.html"
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#script-setup"
             },
             {
               "name": "ja",
-              "url": "https://ja.vuejs.org/api/sfc-script-setup.html"
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#script-setup"
             },
             {
               "name": "ua",
-              "url": "https://ua.vuejs.org/api/sfc-script-setup.html"
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#script-setup"
             },
             {
               "name": "fr",
-              "url": "https://fr.vuejs.org/api/sfc-script-setup.html"
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#script-setup"
             }
           ]
-        },
-        {
-          "name": "generic"
         }
       ],
       "description": {
@@ -236,37 +236,7 @@
     },
     {
       "name": "script setup",
-      "attributes": [
-        {
-          "name": "src",
-          "description": {
-            "kind": "markdown",
-            "value": "\n`*.vue` コンポーネントを複数のファイルに分割したい場合は、`src` 属性を使用して言語ブロックに外部ファイルをインポートできます:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n`src` でのインポートは webpack のモジュールリクエストと同じパス解決ルールに従うので注意してください。つまり:\n\n- 相対パスは `./` で始める必要があります\n- npm の依存関係からリソースをインポートできます:\n\n```vue\n<!-- インストール済みの \"todomvc-app-css\" npm パッケージからファイルをインポート -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` でのインポートは、カスタムブロックでも動作します。例:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
-          },
-          "references": [
-            {
-              "name": "en",
-              "url": "https://vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "zh-cn",
-              "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "ja",
-              "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "ua",
-              "url": "https://ua.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "fr",
-              "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
-            }
-          ]
-        }
-      ],
+      "attributes": [],
       "description": {
         "kind": "markdown",
         "value": "\n- 各 `*.vue` ファイルには、一度に最大 1 つの `<script setup>` ブロックを含めることができます（通常の `<script>` は除く）。\n\n- スクリプトは前処理され、コンポーネントの `setup()` 関数として使用されます。これは、**コンポーネントの各インスタンスに対して**実行されることを意味します。`<script setup>` のトップレベルのバインディングは、自動的にテンプレートに公開されます。詳細は [`<script setup>` に関する専用のドキュメント](https://ja.vuejs.org/api/sfc-script-setup.html)を参照してください。\n"
