@@ -135,7 +135,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 				);
 		},
 		text => {
-			text += ' (vue)';
+			text += ' (takeover)';
 			if (noProjectReferences()) {
 				text += ' (noProjectReferences)';
 			}
