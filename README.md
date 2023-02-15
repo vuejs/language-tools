@@ -4,34 +4,6 @@
 
 Discord: https://discord.gg/5bnSSSSBbK
 
-## Support by Companies
-
-
-<table>
-	<tr width="100%">
-		<td align="center" valign="middle"><a href="https://volta.net/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/volta.svg" height="60" width="50%" /></a></td>
-	</tr>
-</table>
-
-
-### Platinum Sponsors
-
-<table><tr>
-	<td align="center" valign="middle"><a href="https://volta.net/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/volta.svg" height="60" /></a></td>
-</tr></table>
-
-### Gold Sponsors
-
-<table><tr>
-	<td align="center" valign="middle"><a href="https://vuejs.org/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/vue.png" height="80" /></a></td>
-</tr></table>
-
-### Silver Sponsors
-
-<table><tr>
-	<td align="center" valign="middle"><a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/prefect.svg" height="50" /></a></td>
-</tr></table>
-
 ## Packages
 
 - [Vue Language Features](https://github.com/johnsoncodehk/volar/tree/master/packages/vscode-vue) \
