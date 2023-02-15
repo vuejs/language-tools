@@ -80,8 +80,6 @@ export function generate(
 	let hasSlot = false;
 	let elementIndex = 0;
 
-	formatCodeGen.push('export { };\n');
-
 	const componentVars = writeComponentVars();
 
 	visitNode(templateAst, undefined);

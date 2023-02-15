@@ -31,7 +31,7 @@ const plugin: LanguageServicePlugin = (context) => {
 			let templateFormatScript: VirtualFile | undefined;
 
 			embedded.forEachEmbeddedFile(vueFile, embedded => {
-				if (embedded.fileName.endsWith('.__VLS_template_format.ts')) {
+				if (embedded.fileName.endsWith('.template_format.ts')) {
 					templateFormatScript = embedded;
 				}
 			});

@@ -27,7 +27,7 @@ export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin =
 		...htmlPlugin,
 
 		rules: {
-			prepare(context) {
+			onAny(context) {
 				worker(context.document, (vueSourceFile) => {
 					if (vueSourceFile.parsedSfc) {
 						context.vue = {

@@ -38,23 +38,21 @@ export function createConfig(
 	const vueLanguageModules = vue.createLanguageModules(ts, compilerOptions, resolvedVueOptions);
 
 	config.languages = Object.assign({}, vueLanguageModules, config.languages);
-
-	resolvePlugins(config, resolvedVueOptions, settings);
+	config.plugins = resolvePlugins(config.plugins, resolvedVueOptions, settings);
 
 	return config;
 }
 
 function resolvePlugins(
-	config: Config, // volar.config.js
+	plugins: Config['plugins'],
 	vueCompilerOptions: VueCompilerOptions,
 	settings?: Settings,
 ) {
 
-	const originalTsPlugin = config.plugins?.typescript ?? createTsPlugin();
+	const originalTsPlugin = plugins?.typescript ?? createTsPlugin();
 
-	config.plugins ??= {};
-
-	config.plugins.typescript = (_context) => {
+	plugins ??= {};
+	plugins.typescript = (_context) => {
 
 		if (!_context.typescript)
 			return {};
@@ -230,7 +228,7 @@ function resolvePlugins(
 			}
 		};
 	};
-	config.plugins.html ??= createVueTemplateLanguagePlugin({
+	plugins.html ??= createVueTemplateLanguagePlugin({
 		templateLanguagePlugin: createHtmlPlugin(),
 		getScanner: (document, htmlPlugin): html.Scanner | undefined => {
 			return htmlPlugin.getHtmlLs().createScanner(document.getText());
@@ -238,7 +236,7 @@ function resolvePlugins(
 		isSupportedDocument: (document) => document.languageId === 'html',
 		vueCompilerOptions,
 	});
-	config.plugins.pug ??= createVueTemplateLanguagePlugin({
+	plugins.pug ??= createVueTemplateLanguagePlugin({
 		templateLanguagePlugin: createPugPlugin() as any,
 		getScanner: (document, pugPlugin): html.Scanner | undefined => {
 			const pugDocument = (pugPlugin as ReturnType<ReturnType<typeof createPugPlugin>>).getPugDocument(document);
@@ -249,18 +247,19 @@ function resolvePlugins(
 		isSupportedDocument: (document) => document.languageId === 'jade',
 		vueCompilerOptions,
 	});
+	plugins.vue ??= createVuePlugin(vueCompilerOptions);
+	plugins.css ??= createCssPlugin();
+	plugins['pug-beautify'] ??= createPugFormatPlugin();
+	plugins.json ??= createJsonPlugin(settings?.json);
+	plugins['typescript/twoslash-queries'] ??= createTsTqPlugin();
+	plugins['vue/referencesCodeLens'] ??= createReferencesCodeLensPlugin();
+	plugins['vue/autoInsertDotValue'] ??= createAutoDotValuePlugin();
+	plugins['vue/twoslash-queries'] ??= createTwoslashQueries();
+	plugins['vue/autoInsertParentheses'] ??= createAutoWrapParenthesesPlugin();
+	plugins['vue/autoInsertSpaces'] ??= createAutoAddSpacePlugin();
+	plugins.emmet ??= createEmmetPlugin();
 
-	config.plugins.vue ??= createVuePlugin(vueCompilerOptions);
-	config.plugins.css ??= createCssPlugin();
-	config.plugins['pug-beautify'] ??= createPugFormatPlugin();
-	config.plugins.json ??= createJsonPlugin(settings?.json);
-	config.plugins['typescript/twoslash-queries'] ??= createTsTqPlugin();
-	config.plugins['vue/referencesCodeLens'] ??= createReferencesCodeLensPlugin();
-	config.plugins['vue/autoInsertDotValue'] ??= createAutoDotValuePlugin();
-	config.plugins['vue/twoslash-queries'] ??= createTwoslashQueries();
-	config.plugins['vue/autoInsertParentheses'] ??= createAutoWrapParenthesesPlugin();
-	config.plugins['vue/autoInsertSpaces'] ??= createAutoAddSpacePlugin();
-	config.plugins.emmet ??= createEmmetPlugin();
+	return plugins;
 }
 
 // fix https://github.com/johnsoncodehk/volar/issues/916

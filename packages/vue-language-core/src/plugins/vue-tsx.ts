@@ -28,8 +28,8 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 			}
 
 			if (sfc.template) {
-				fileNames.push(fileName + '.__VLS_template_format.ts');
-				fileNames.push(fileName + '.__VLS_template_style.css');
+				fileNames.push(fileName + '.template_format.ts');
+				fileNames.push(fileName + '.template_style.css');
 			}
 
 			return fileNames;
@@ -55,12 +55,13 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 					embeddedFile.mirrorBehaviorMappings = [...tsx.mirrorBehaviorMappings];
 				}
 			}
-			else if (suffix.match(/^\.__VLS_template_format\.ts$/)) {
+			else if (suffix.match(/^\.template_format\.ts$/)) {
 
 				embeddedFile.parentFileName = fileName + '.template.' + sfc.template?.lang;
-				embeddedFile.kind = FileKind.TypeScriptHostFile;
+				embeddedFile.kind = FileKind.TextFile;
 				embeddedFile.capabilities = {
 					...FileCapabilities.full,
+					documentFormatting: {}, // no onTypeFormat, insertFirstNewline, insertFinalNewline
 					diagnostic: false,
 					foldingRange: false,
 					codeAction: false,
@@ -85,7 +86,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 					}
 				}
 			}
-			else if (suffix.match(/^\.__VLS_template_style\.css$/)) {
+			else if (suffix.match(/^\.template_style\.css$/)) {
 
 				embeddedFile.parentFileName = fileName + '.template.' + sfc.template?.lang;
 
