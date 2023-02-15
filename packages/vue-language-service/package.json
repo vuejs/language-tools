@@ -39,7 +39,7 @@
 		"vscode-languageserver-textdocument": "^1.0.8",
 		"vscode-uri": "^3.0.7"
 	},
-	"devDependencies": {
+	"optionalDependencies": {
 		"axios": "latest",
 		"opencc": "latest"
 	}
