@@ -12,6 +12,7 @@ export function checkPropsOfTag(
 	tsLs: ts.LanguageService,
 	sourceFile: embedded.VirtualFile,
 	tag: string,
+	requiredOnly = false,
 ) {
 
 	const checker = tsLs.getProgram()!.getTypeChecker();
@@ -47,7 +48,9 @@ export function checkPropsOfTag(
 			const propsType = checker.getTypeOfSymbolAtLocation(propParam, components.componentsNode);
 			const props = propsType.getProperties();
 			for (const prop of props) {
-				result.add(prop.name);
+				if (!requiredOnly || !(prop.flags & ts.SymbolFlags.Optional)) {
+					result.add(prop.name);
+				}
 			}
 		}
 	}
@@ -59,7 +62,9 @@ export function checkPropsOfTag(
 			const propsType = checker.getTypeOfSymbolAtLocation(propsSymbol, components.componentsNode);
 			const props = propsType.getProperties();
 			for (const prop of props) {
-				result.add(prop.name);
+				if (!requiredOnly || !(prop.flags & ts.SymbolFlags.Optional)) {
+					result.add(prop.name);
+				}
 			}
 		}
 	}

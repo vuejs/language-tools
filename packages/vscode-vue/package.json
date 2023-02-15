@@ -423,6 +423,11 @@
 					"default": true,
 					"description": "[references] code lens."
 				},
+				"volar.inlayHints.missingRequiredProps": {
+					"type": "boolean",
+					"default": false,
+					"description": "Show inlay hints for missing required props."
+				},
 				"volar.icon.splitEditors": {
 					"type": "boolean",
 					"default": false,

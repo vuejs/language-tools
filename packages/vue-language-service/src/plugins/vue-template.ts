@@ -98,6 +98,92 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				},
 			},
 
+			inlayHints: {
+				async on(document) {
+
+					if (!options.isSupportedDocument(document))
+						return;
+
+					const enabled = await _context.env.configurationHost?.getConfiguration<boolean>('volar.inlayHints.missingRequiredProps');
+					if (!enabled)
+						return;
+
+					const result: vscode.InlayHint[] = [];
+
+					for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
+						const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
+						const scanner = options.getScanner(document, templatePlugin as ReturnType<T>);
+						if (virtualFile && virtualFile instanceof vue.VueFile && scanner) {
+							const casing = await getNameCasing(map.sourceFileDocument.uri);
+							const components = checkComponentNames(_ts.module, _ts.languageService, virtualFile);
+							const componentProps: Record<string, string[]> = {};
+							let token: html.TokenType;
+							let current: {
+								unburnedRequiredProps: string[];
+								labelOffset: number;
+								insertOffset: number;
+							} | undefined;
+							while ((token = scanner.scan()) !== html.TokenType.EOS) {
+								if (token === html.TokenType.StartTag) {
+									const tagName = scanner.getTokenText();
+									const component = components.find(component => component === tagName || hyphenate(component) === tagName);
+									if (component) {
+										componentProps[component] ??= checkPropsOfTag(_ts.module, _ts.languageService, virtualFile, component, true);
+										current = {
+											unburnedRequiredProps: [...componentProps[component]],
+											labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
+											insertOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
+										};
+									}
+								}
+								else if (token === html.TokenType.AttributeName) {
+									if (current) {
+										const attrText = scanner.getTokenText();
+										current.unburnedRequiredProps = current.unburnedRequiredProps.filter(propName => {
+											const propName2 = hyphenate(propName);
+											return attrText !== propName
+												&& attrText !== `:${propName}`
+												&& attrText !== `v-bind:${propName}`
+												&& attrText !== propName2
+												&& attrText !== `:${propName2}`
+												&& attrText !== `v-bind:${propName2}`
+												&& attrText !== `v-bind`;
+										});
+									}
+								}
+								else if (token === html.TokenType.StartTagSelfClose || token === html.TokenType.StartTagClose) {
+									if (current) {
+										for (const requiredProp of current.unburnedRequiredProps) {
+											result.push({
+												label: `${requiredProp}!`,
+												paddingLeft: true,
+												position: document.positionAt(current.labelOffset),
+												kind: vscode.InlayHintKind.Parameter,
+												textEdits: [{
+													range: {
+														start: document.positionAt(current.insertOffset),
+														end: document.positionAt(current.insertOffset),
+													},
+													newText: ` :${casing.attr === AttrNameCasing.Kebab ? hyphenate(requiredProp) : requiredProp}=""`,
+												}],
+											});
+										}
+										current = undefined;
+									}
+								}
+								if (token === html.TokenType.AttributeName || token === html.TokenType.AttributeValue) {
+									if (current) {
+										current.insertOffset = scanner.getTokenOffset() + scanner.getTokenLength();
+									}
+								}
+							}
+						}
+					}
+
+					return result;
+				},
+			},
+
 			doHover(document, position) {
 
 				if (!options.isSupportedDocument(document))
@@ -229,13 +315,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 		async function provideHtmlData(map: SourceMapWithDocuments<FileRangeCapabilities>, vueSourceFile: vue.VueFile) {
 
-			const detected = casing.detect(_context, _ts, map.sourceFileDocument.uri);
-			const [attr, tag] = await Promise.all([
-				_context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('volar.completion.preferredAttrNameCase', map.sourceFileDocument.uri),
-				_context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-pascal' | 'kebab' | 'pascal'>('volar.completion.preferredTagNameCase', map.sourceFileDocument.uri),
-			]);
-			const tagNameCasing = detected.tag.length === 1 && (tag === 'auto-pascal' || tag === 'auto-kebab') ? detected.tag[0] : (tag === 'auto-kebab' || tag === 'kebab') ? TagNameCasing.Kebab : TagNameCasing.Pascal;
-			const attrNameCasing = detected.attr.length === 1 && (attr === 'auto-camel' || attr === 'auto-kebab') ? detected.attr[0] : (attr === 'auto-camel' || attr === 'camel') ? AttrNameCasing.Camel : AttrNameCasing.Kebab;
+			const casing = await getNameCasing(map.sourceFileDocument.uri);
 
 			if (builtInData.tags) {
 				for (const tag of builtInData.tags) {
@@ -245,7 +325,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 						continue;
 					if (tag.name === 'template')
 						continue;
-					if (tagNameCasing === TagNameCasing.Kebab) {
+					if (casing.tag === TagNameCasing.Kebab) {
 						tag.name = hyphenate(tag.name);
 					}
 					else {
@@ -274,20 +354,20 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 						const tags: html.ITagData[] = [];
 
 						for (const tag of components) {
-							if (tagNameCasing === TagNameCasing.Kebab) {
+							if (casing.tag === TagNameCasing.Kebab) {
 								names.add(hyphenate(tag));
 							}
-							else if (tagNameCasing === TagNameCasing.Pascal) {
+							else if (casing.tag === TagNameCasing.Pascal) {
 								names.add(tag);
 							}
 						}
 
 						for (const binding of scriptSetupRanges?.bindings ?? []) {
 							const name = vueSourceFile.sfc.scriptSetup!.content.substring(binding.start, binding.end);
-							if (tagNameCasing === TagNameCasing.Kebab) {
+							if (casing.tag === TagNameCasing.Kebab) {
 								names.add(hyphenate(name));
 							}
-							else if (tagNameCasing === TagNameCasing.Pascal) {
+							else if (casing.tag === TagNameCasing.Pascal) {
 								names.add(name);
 							}
 						}
@@ -311,7 +391,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 						for (const prop of [...props, ...attrs]) {
 
 							const isGlobal = !props.has(prop);
-							const name = attrNameCasing === AttrNameCasing.Camel ? prop : hyphenate(prop);
+							const name = casing.attr === AttrNameCasing.Camel ? prop : hyphenate(prop);
 
 							if (hyphenate(name).startsWith('on-')) {
 
@@ -355,7 +435,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 						for (const event of events) {
 
-							const name = attrNameCasing === AttrNameCasing.Camel ? event : hyphenate(event);
+							const name = casing.attr === AttrNameCasing.Camel ? event : hyphenate(event);
 							const propKey = createInternalItemId('componentEvent', [tag, name]);
 
 							attributes.push({
@@ -384,7 +464,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 						for (const [isGlobal, model] of models) {
 
-							const name = attrNameCasing === AttrNameCasing.Camel ? model : hyphenate(model);
+							const name = casing.attr === AttrNameCasing.Camel ? model : hyphenate(model);
 							const propKey = createInternalItemId('componentProp', [isGlobal ? '*' : tag, name]);
 
 							attributes.push({
@@ -405,6 +485,22 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					provideValues: () => [],
 				},
 			]);
+		}
+
+		async function getNameCasing(uri: string) {
+
+			const detected = casing.detect(_context, _ts, uri);
+			const [attr, tag] = await Promise.all([
+				_context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('volar.completion.preferredAttrNameCase', uri),
+				_context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-pascal' | 'kebab' | 'pascal'>('volar.completion.preferredTagNameCase', uri),
+			]);
+			const tagNameCasing = detected.tag.length === 1 && (tag === 'auto-pascal' || tag === 'auto-kebab') ? detected.tag[0] : (tag === 'auto-kebab' || tag === 'kebab') ? TagNameCasing.Kebab : TagNameCasing.Pascal;
+			const attrNameCasing = detected.attr.length === 1 && (attr === 'auto-camel' || attr === 'auto-kebab') ? detected.attr[0] : (attr === 'auto-camel' || attr === 'camel') ? AttrNameCasing.Camel : AttrNameCasing.Kebab;
+
+			return {
+				tag: tagNameCasing,
+				attr: attrNameCasing,
+			};
 		}
 
 		function afterHtmlCompletion(completionList: vscode.CompletionList, map: SourceMapWithDocuments<FileRangeCapabilities>, vueSourceFile: vue.VueFile) {
