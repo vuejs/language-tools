@@ -369,7 +369,7 @@ export class VueFile implements VirtualFile {
 			this.updateCustomBlocks([]);
 		}
 
-		const str = muggle.create(this.snapshot.getText(0, this.snapshot.getLength()));
+		const str: Segment<FileRangeCapabilities>[] = [[this.snapshot.getText(0, this.snapshot.getLength()), undefined, 0, FileRangeCapabilities.full]];
 		for (const block of [
 			this.sfc.script,
 			this.sfc.scriptSetup,
@@ -378,7 +378,10 @@ export class VueFile implements VirtualFile {
 			...this.sfc.customBlocks,
 		]) {
 			if (block) {
-				muggle.replaceSourceRange(str, undefined, block.startTagEnd, block.endTagStart);
+				muggle.replaceSourceRange(
+					str, undefined, block.startTagEnd, block.endTagStart,
+					[block.content, undefined, block.startTagEnd, {}],
+				);
 			}
 		}
 		this.mappings = str.map<Mapping<FileRangeCapabilities>>((m) => {
@@ -388,7 +391,7 @@ export class VueFile implements VirtualFile {
 			return {
 				sourceRange: [start, end],
 				generatedRange: [start, end],
-				data: FileRangeCapabilities.full,
+				data: m[3] as FileRangeCapabilities,
 			};
 		});
 	}
