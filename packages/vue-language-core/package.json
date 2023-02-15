@@ -1,6 +1,6 @@
 {
 	"name": "@volar/vue-language-core",
-	"version": "1.0.24",
+	"version": "1.1.0",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -19,8 +19,8 @@
 		"@vue/compiler-sfc": "^3.2.47",
 		"@vue/reactivity": "^3.2.47",
 		"@vue/shared": "^3.2.47",
-		"muggle-string": "^0.2.2",
 		"minimatch": "^6.1.6",
+		"muggle-string": "^0.2.2",
 		"vue-template-compiler": "^2.7.14"
 	},
 	"devDependencies": {

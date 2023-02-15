@@ -24,8 +24,8 @@ importers:
   packages/typescript-vue-plugin:
     specifiers:
       '@volar/typescript-faster': 1.2.0-alpha.11
-      '@volar/vue-language-core': 1.0.24
-      '@volar/vue-typescript': 1.0.24
+      '@volar/vue-language-core': 1.1.0
+      '@volar/vue-typescript': 1.1.0
     dependencies:
       '@volar/typescript-faster': 1.2.0-alpha.11
       '@volar/vue-language-core': link:../vue-language-core
@@ -34,7 +34,7 @@ importers:
   packages/vscode-typescript-vue-plugin:
     specifiers:
       esbuild: 0.15.18
-      typescript-vue-plugin: 1.0.24
+      typescript-vue-plugin: 1.1.0
       typescript-vue-plugin-forward: file:typescript-vue-plugin-forward
       vsce: latest
     dependencies:
@@ -51,8 +51,8 @@ importers:
       '@volar/shared': 1.2.0-alpha.11
       '@volar/source-map': 1.2.0-alpha.11
       '@volar/vscode-language-client': 1.2.0-alpha.11
-      '@volar/vue-language-core': 1.0.24
-      '@volar/vue-language-server': 1.0.24
+      '@volar/vue-language-core': 1.1.0
+      '@volar/vue-language-server': 1.1.0
       esbuild: 0.15.18
       esbuild-plugin-copy: latest
       esbuild-visualizer: latest
@@ -85,7 +85,7 @@ importers:
   packages/vue-component-meta:
     specifiers:
       '@volar/language-core': 1.2.0-alpha.11
-      '@volar/vue-language-core': 1.0.24
+      '@volar/vue-language-core': 1.1.0
       typesafe-path: ^0.2.2
     dependencies:
       '@volar/language-core': 1.2.0-alpha.11
@@ -121,7 +121,7 @@ importers:
     specifiers:
       '@volar-plugins/pug': 2.0.0-alpha.4
       '@volar/source-map': 1.0.24
-      '@volar/vue-language-core': 1.0.24
+      '@volar/vue-language-core': 1.1.0
     dependencies:
       '@volar-plugins/pug': 2.0.0-alpha.4
       '@volar/source-map': 1.0.24
@@ -133,10 +133,10 @@ importers:
       '@volar/language-core': 1.2.0-alpha.11
       '@volar/language-server': 1.2.0-alpha.11
       '@volar/shared': 1.2.0-alpha.11
-      '@volar/vue-language-core': 1.0.24
-      '@volar/vue-language-service': 1.0.24
+      '@volar/vue-language-core': 1.1.0
+      '@volar/vue-language-service': 1.1.0
       vscode-languageserver-protocol: ^3.17.3
-      vue-component-meta: 1.0.24
+      vue-component-meta: 1.1.0
     dependencies:
       '@volar/language-core': 1.2.0-alpha.11
       '@volar/language-server': 1.2.0-alpha.11
@@ -160,7 +160,7 @@ importers:
       '@volar/language-service': 1.2.0-alpha.11
       '@volar/shared': 1.2.0-alpha.11
       '@volar/source-map': 1.2.0-alpha.11
-      '@volar/vue-language-core': 1.0.24
+      '@volar/vue-language-core': 1.1.0
       '@vue/compiler-dom': ^3.2.47
       '@vue/reactivity': ^3.2.47
       '@vue/shared': ^3.2.47
@@ -205,8 +205,8 @@ importers:
 
   packages/vue-tsc:
     specifiers:
-      '@volar/vue-language-core': 1.0.24
-      '@volar/vue-typescript': 1.0.24
+      '@volar/vue-language-core': 1.1.0
+      '@volar/vue-typescript': 1.1.0
     dependencies:
       '@volar/vue-language-core': link:../vue-language-core
       '@volar/vue-typescript': link:../vue-typescript
@@ -215,7 +215,7 @@ importers:
     specifiers:
       '@types/eslint': latest
       vscode-languageserver-textdocument: ^1.0.8
-      vue-tsc: 1.0.24
+      vue-tsc: 1.1.0
     dependencies:
       vscode-languageserver-textdocument: 1.0.8
     devDependencies:
@@ -225,7 +225,7 @@ importers:
   packages/vue-typescript:
     specifiers:
       '@volar/typescript': 1.2.0-alpha.11
-      '@volar/vue-language-core': 1.0.24
+      '@volar/vue-language-core': 1.1.0
     dependencies:
       '@volar/typescript': 1.2.0-alpha.11
       '@volar/vue-language-core': link:../vue-language-core
