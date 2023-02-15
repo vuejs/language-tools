@@ -48,8 +48,8 @@ for (const lang of langs) {
 
 async function sfcWorker(lang) {
 
-	const sfcDoc = await fetch(lang.repoUrl + 'main/src/api/sfc-spec.md', lang.url);
-	const cssFeaturesDoc = await fetch(lang.repoUrl + 'main/src/api/sfc-css-features.md', lang.url);
+	const sfcDoc = await fetch(lang.repoUrl + 'HEAD/src/api/sfc-spec.md', lang.url);
+	const cssFeaturesDoc = await fetch(lang.repoUrl + 'HEAD/src/api/sfc-css-features.md', lang.url);
 
 	/**
 	 * @type {import('vscode-html-languageservice').IAttributeData}
@@ -210,10 +210,10 @@ async function sfcWorker(lang) {
 
 async function templateWorker(lang) {
 
-	const directivesDoc = await fetch(lang.repoUrl + 'main/src/api/built-in-directives.md', lang.url);
-	const attributesDoc = await fetch(lang.repoUrl + 'main/src/api/built-in-special-attributes.md', lang.url);
-	const componentsDoc = await fetch(lang.repoUrl + 'main/src/api/built-in-components.md', lang.url);
-	const elementsDoc = await fetch(lang.repoUrl + 'main/src/api/built-in-special-elements.md', lang.url);
+	const directivesDoc = await fetch(lang.repoUrl + 'HEAD/src/api/built-in-directives.md', lang.url);
+	const attributesDoc = await fetch(lang.repoUrl + 'HEAD/src/api/built-in-special-attributes.md', lang.url);
+	const componentsDoc = await fetch(lang.repoUrl + 'HEAD/src/api/built-in-components.md', lang.url);
+	const elementsDoc = await fetch(lang.repoUrl + 'HEAD/src/api/built-in-special-elements.md', lang.url);
 
 	const directives = directivesDoc
 		.split('\n## ')
