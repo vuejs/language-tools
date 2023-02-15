@@ -1,8 +1,38 @@
-# Volar
+# Vue Language Tools (Volar)
 
 > ⚡ Explore high-performance tooling for Vue
 
-### Vue.js
+Discord: https://discord.gg/5bnSSSSBbK
+
+## Support by Companies
+
+
+<table>
+	<tr width="100%">
+		<td align="center" valign="middle"><a href="https://volta.net/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/volta.svg" height="60" width="50%" /></a></td>
+	</tr>
+</table>
+
+
+### Platinum Sponsors
+
+<table><tr>
+	<td align="center" valign="middle"><a href="https://volta.net/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/volta.svg" height="60" /></a></td>
+</tr></table>
+
+### Gold Sponsors
+
+<table><tr>
+	<td align="center" valign="middle"><a href="https://vuejs.org/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/vue.png" height="80" /></a></td>
+</tr></table>
+
+### Silver Sponsors
+
+<table><tr>
+	<td align="center" valign="middle"><a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/prefect.svg" height="50" /></a></td>
+</tr></table>
+
+## Packages
 
 - [Vue Language Features](https://github.com/johnsoncodehk/volar/tree/master/packages/vscode-vue) \
 *Vue, Vitepress, petite-vue language support extension for VSCode*
@@ -14,19 +44,6 @@
 *Component props, events, slots types information extract tool*
 - [vite-plugin-vue-component-preview](https://github.com/johnsoncodehk/vite-plugin-vue-component-preview) \
 *Vite plugin for support Vue component preview view with `Vue Language Features`*
-
-### Core
-
-- [framework](https://github.com/volarjs/framework) \
-*The core framework of language server.*
-- [language-tools-starter](https://github.com/volarjs/language-tools-starter) \
-*A template for creating embedded language tools based on Volar framework*
-- [ecosystem-ci](https://github.com/volarjs/ecosystem-ci) \
-*Run integration tests for volar ecosystem projects*
-- [plugins](https://github.com/volarjs/plugins) \
-*Common plugins to change language server behavior*
-
-Discord: https://discord.gg/5bnSSSSBbK
 
 ## IDE Supports by Community
 

@@ -1,5 +1,65 @@
 # Changelog
 
+## 1.1.0 (2023/2/16)
+
+- feat: support `initialIndent` for `pug` and `sass`
+- feat: add description for built-in directives, attributes, component, and elements
+- feat: support localization for event modifiers and props modifiers
+- feat: missing required props inlay hints (needs enabled `volar.inlayHints.missingRequiredProps`)
+- feat: show `(takeover)` instead of `(vue)` in status bar for takeover mode ([#2365](https://github.com/johnsoncodehk/volar/issues/2365))
+- feat: more reliable formatting edits combine
+- fix(doctor): update source code link ([#2307](https://github.com/johnsoncodehk/volar/issues/2307))
+- fix(typescript-plugin): tsserver multiple initializations lead to infinite loop (https://github.com/microsoft/vscode/issues/171591)
+- fix: syntactic features not working for untitled vue document
+- fix: spaces removed from ternary operator inside `{{ }}` ([#2305](https://github.com/johnsoncodehk/volar/issues/2305))
+- fix: `source.addMissingImports` accidentally made imports for properties used the template ([#2304](https://github.com/johnsoncodehk/volar/issues/2304))
+- fix: code action auto import should not append to the same line with the script tag ([#916](https://github.com/johnsoncodehk/volar/issues/916))
+- fix: multi-line interpolation last line indent incorrect
+- fix: declaring empty emits like defineEmits<{}>() would fail the type-checking process ([#2370](https://github.com/johnsoncodehk/volar/issues/2370))
+- fix: ignore `name` prop / attr for slot ([#2308](https://github.com/johnsoncodehk/volar/issues/2308))
+
+**Breaking changes**
+
+- Removed pug convert tool
+- Removed script setup convert tool
+- Unsupported tracing for vue-tsc ([#2378](https://github.com/johnsoncodehk/volar/issues/2378))
+- Extract Vite, Nuxt and component preview features to [Vue and Nuxt Preview](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.vscode-vue-preview)
+	- feat: support `vite-plugin-vue-component-preview` for nuxt 3.2
+	- feat: add `volar.preview.root` setting for Nuxt component preview
+	- fix: prevent random creation of multiple preview terminals
+	- fix: support nuxt preview without vite serving allow list ([#2287](https://github.com/johnsoncodehk/volar/issues/2287))
+
+---
+
+<h3 align="center">Full-time Support by</h3>
+<br />
+
+<p align="center">
+	<span>
+		<a href="https://stackblitz.com/"><img src="./.github/sponsors/StackBlitz.png" height="80" /></a>
+		<h4 align="center">Just click, and start coding.</h4>
+	</span>
+</p>
+<br />
+
+<h3 align="center">Our Sponsors ⭐✨</h3>
+<br />
+
+<p align="center">
+	<a href="https://volta.net/"><img src="./.github/sponsors/volta.svg" height="60" /></a>
+    <a href="https://vuejs.org/"><img src="./.github/sponsors/vue.png" height="80" /></a>
+</p>
+<br />
+
+<p align="center">
+    <a href="https://www.prefect.io/"><img src="./.github/sponsors/prefect.svg" height="40" /></a>
+</p>
+<br />
+
+<p align="center">
+	<h5 align="center"><a href="https://github.com/sponsors/johnsoncodehk">Adding You</a></h5>
+</p>
+
 ## 1.0.24 (2023/1/8)
 
 - feat: add `vueCompilerOptions.macros` setting for vue-macros plugins
@@ -16,25 +76,6 @@
 - fix(plugin-api): cannot catch errors for `getEmbeddedFileNames()`, `resolveEmbeddedFile()`
 - fix(component-meta): cannot detection of slots in script-less SFC ([#2113](https://github.com/johnsoncodehk/volar/issues/2113))
 - perf(component-meta): resolve schema on demand ([#2288](https://github.com/johnsoncodehk/volar/issues/2288))
-
-### Platinum Sponsors
-
-<table><tr>
-	<td align="center" valign="middle"><a href="https://volta.net/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/volta.svg" height="60" /></a></td>
-</tr></table>
-
-### Gold Sponsors
-
-<table><tr>
-	<td align="center" valign="middle"><a href="https://vuejs.org/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/vue.png" height="80" /></a></td>
-</tr></table>
-
-### Silver Sponsors
-
-<table><tr>
-	<td align="center" valign="middle"><a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/prefect.svg" height="50" /></a></td>
-	<td align="center" valign="middle"><a href="https://github.com/365talents"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/master/.github/sponsors/365talents.png" height="70" /></a></td>
-</tr></table>
 
 ## 1.0.22 (2023/1/5)
 
