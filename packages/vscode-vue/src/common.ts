@@ -135,7 +135,9 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 				);
 		},
 		text => {
-			text += ' (takeover)';
+			if (takeOverModeActive(context)) {
+				text += ' (takeover)';
+			}
 			if (noProjectReferences()) {
 				text += ' (noProjectReferences)';
 			}
