@@ -36,7 +36,7 @@
 
 <p align="center">
 	<span>
-		<a href="https://stackblitz.com/"><img src="./.github/sponsors/StackBlitz.png" height="80" /></a>
+		<a href="https://stackblitz.com/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/HEAD/.github/sponsors/StackBlitz.png" height="80" /></a>
 		<h4 align="center">Just click, and start coding.</h4>
 	</span>
 </p>
@@ -46,13 +46,13 @@
 <br />
 
 <p align="center">
-	<a href="https://volta.net/"><img src="./.github/sponsors/volta.svg" height="60" /></a>
-    <a href="https://vuejs.org/"><img src="./.github/sponsors/vue.png" height="80" /></a>
+	<a href="https://volta.net/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/HEAD/.github/sponsors/volta.svg" height="60" /></a>
+    <a href="https://vuejs.org/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/HEAD/.github/sponsors/vue.png" height="80" /></a>
 </p>
 <br />
 
 <p align="center">
-    <a href="https://www.prefect.io/"><img src="./.github/sponsors/prefect.svg" height="40" /></a>
+    <a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/HEAD/.github/sponsors/prefect.svg" height="40" /></a>
 </p>
 <br />
 
