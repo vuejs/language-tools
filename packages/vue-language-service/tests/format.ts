@@ -18,8 +18,11 @@ for (const dirName of testDirs) {
 		const input = fs.readFileSync(inputFileName, 'utf8');
 		const output = fs.readFileSync(outputFileName, 'utf8');
 		const document = TextDocument.create(shared.fileNameToUri(inputFileName), 'vue', 0, input);
+		const vscodeSettings = fs.existsSync(path.join(dir, 'settings.json')) ? JSON.parse(fs.readFileSync(path.join(dir, 'settings.json'), 'utf8')) : undefined;
 
 		it(`format`, async () => {
+
+			tester.setVSCodeSettings(vscodeSettings);
 
 			const edit = await tester.languageService.format(
 				document.uri,

@@ -46,35 +46,18 @@ function createTester(root: string) {
 		getVueCompilationSettings: () => ({}),
 		getTypeScriptModule: () => ts,
 	};
-	const vscodeSettings: any = {
-		typescript: {
-			preferences: {
-				quoteStyle: 'single',
-			},
-		},
-		javascript: {
-			preferences: {
-				quoteStyle: 'single',
-			},
-		},
+	const defaultVSCodeSettings: any = {
+		'typescript.preferences.quoteStyle': 'single',
+		'javascript.preferences.quoteStyle': 'single',
 	};
+	let currentVSCodeSettings: any;
 	const languageServiceConfig = createConfig({}, ts, {}, {});
 	const languageService = createLanguageService(host, languageServiceConfig, {
 		rootUri,
 		configurationHost: {
 			async getConfiguration(section: string) {
-				const keys = section.split('.');
-				let settings = vscodeSettings;
-				for (const key of keys) {
-					if (key in settings) {
-						settings = settings[key];
-					}
-					else {
-						settings = undefined;
-						break;
-					}
-				}
-				return settings;
+				const settings = currentVSCodeSettings ?? defaultVSCodeSettings;
+				return settings[section];
 			},
 			onDidChangeConfiguration() { },
 		},
@@ -88,8 +71,12 @@ function createTester(root: string) {
 	return {
 		host,
 		languageService,
+		setVSCodeSettings,
 	};
 
+	function setVSCodeSettings(settings: any = undefined) {
+		currentVSCodeSettings = settings;
+	}
 	function getScriptVersion(fileName: string) {
 		return scriptVersions.get(fileName) ?? '';
 	}
