@@ -1,1 +1,3 @@
-<template>{{title}}</template>
+<template>
+	{{title}}
+</template>

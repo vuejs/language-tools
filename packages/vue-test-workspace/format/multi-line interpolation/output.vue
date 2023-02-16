@@ -1,3 +1,5 @@
 <template>
-	{{ a ? b : c }}
+	{{
+		title
+	}}
 </template>

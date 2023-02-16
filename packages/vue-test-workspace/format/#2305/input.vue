@@ -1,1 +1,3 @@
-<template>{{a?b:c}}</template>
+<template>
+	{{a?b:c}}
+</template>

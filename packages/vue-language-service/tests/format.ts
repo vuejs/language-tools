@@ -29,7 +29,12 @@ for (const dirName of testDirs) {
 				{ insertSpaces: false, tabSize: 4 },
 			);
 
-			expect(edit).toBeDefined();
+			tester.setVSCodeSettings();
+
+			if (input === output) {
+				expect(edit).toBeUndefined();
+				return;
+			}
 
 			const newText = TextDocument.applyEdits(document, edit!);
 
