@@ -38,7 +38,7 @@ for (const dirName of testDirs) {
 
 			const newText = TextDocument.applyEdits(document, edit!);
 
-			expect(newText).toBe(output);
+			expect(newText.replace(/\r\n/g, '\n')).toBe(output.replace(/\r\n/g, '\n'));
 		});
 	});
 }
