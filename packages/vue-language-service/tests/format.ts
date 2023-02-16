@@ -31,12 +31,7 @@ for (const dirName of testDirs) {
 
 			tester.setVSCodeSettings();
 
-			if (input === output) {
-				expect(edit).toBeUndefined();
-				return;
-			}
-
-			const newText = TextDocument.applyEdits(document, edit!);
+			const newText = TextDocument.applyEdits(document, edit ?? []);
 
 			expect(newText.replace(/\r\n/g, '\n')).toBe(output.replace(/\r\n/g, '\n'));
 		});
