@@ -1,6 +1,6 @@
-# Vue Language Tools (Volar)
+# Vue Language Tools
 
-> ⚡ Explore high-performance tooling for Vue
+> ⚡ High-performance Vue language tooling base-on [Volar.js](https://volarjs.github.io/)
 
 Discord: https://discord.gg/5bnSSSSBbK
 
@@ -18,8 +18,6 @@ Discord: https://discord.gg/5bnSSSSBbK
 *Vite plugin for support Vue component preview view with `Vue Language Features`*
 
 ## IDE Supports by Community
-
-### Vue.js
 
 [yaegassy/coc-volar](https://github.com/yaegassy/coc-volar) ⚡ 🤝 🅿️ \
 *Vue language client for coc.nvim*

@@ -15,7 +15,7 @@
 - fix: `source.addMissingImports` accidentally made imports for properties used the template ([#2304](https://github.com/johnsoncodehk/volar/issues/2304))
 - fix: code action auto import should not append to the same line with the script tag ([#916](https://github.com/johnsoncodehk/volar/issues/916))
 - fix: multi-line interpolation last line indent incorrect
-- fix: declaring empty emits like defineEmits<{}>() would fail the type-checking process ([#2370](https://github.com/johnsoncodehk/volar/issues/2370))
+- fix: declaring empty emits like `defineEmits<{}>()` would fail the type-checking process ([#2370](https://github.com/johnsoncodehk/volar/issues/2370))
 - fix: ignore `name` prop / attr for slot ([#2308](https://github.com/johnsoncodehk/volar/issues/2308))
 
 **Breaking changes**
@@ -25,7 +25,7 @@
 - Unsupported tracing for vue-tsc ([#2378](https://github.com/johnsoncodehk/volar/issues/2378))
 - Extract Vite, Nuxt and component preview features to [Vue and Nuxt Preview](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.vscode-vue-preview)
 	- feat: support `vite-plugin-vue-component-preview` for nuxt 3.2
-	- feat: add `volar.preview.root` setting for Nuxt component preview
+	- feat: add `vue-preview.root` setting for Nuxt component preview
 	- fix: prevent random creation of multiple preview terminals
 	- fix: support nuxt preview without vite serving allow list ([#2287](https://github.com/johnsoncodehk/volar/issues/2287))
 
