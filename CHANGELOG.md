@@ -1,33 +1,15 @@
 # Changelog
 
-## 1.1.0 (2023/2/16)
+## 1.1.2 (2023/2/17)
 
-- feat: support `initialIndent` for `pug` and `sass`
-- feat: add description for built-in directives, attributes, component, and elements
-- feat: support localization for event modifiers and props modifiers
-- feat: missing required props inlay hints (needs enabled `volar.inlayHints.missingRequiredProps`)
-- feat: show `(takeover)` instead of `(vue)` in status bar for takeover mode ([#2365](https://github.com/johnsoncodehk/volar/issues/2365))
-- feat: more reliable formatting edits combine
-- fix(doctor): update source code link ([#2307](https://github.com/johnsoncodehk/volar/issues/2307))
-- fix(typescript-plugin): tsserver multiple initializations lead to infinite loop (https://github.com/microsoft/vscode/issues/171591)
-- fix: syntactic features not working for untitled vue document
-- fix: spaces removed from ternary operator inside `{{ }}` ([#2305](https://github.com/johnsoncodehk/volar/issues/2305))
-- fix: `source.addMissingImports` accidentally made imports for properties used the template ([#2304](https://github.com/johnsoncodehk/volar/issues/2304))
-- fix: code action auto import should not append to the same line with the script tag ([#916](https://github.com/johnsoncodehk/volar/issues/916))
-- fix: multi-line interpolation last line indent incorrect
-- fix: declaring empty emits like `defineEmits<{}>()` would fail the type-checking process ([#2370](https://github.com/johnsoncodehk/volar/issues/2370))
-- fix: ignore `name` prop / attr for slot ([#2308](https://github.com/johnsoncodehk/volar/issues/2308))
-
-**Breaking changes**
-
-- Removed pug convert tool
-- Removed script setup convert tool
-- Unsupported tracing for vue-tsc ([#2378](https://github.com/johnsoncodehk/volar/issues/2378))
-- Extract Vite, Nuxt and component preview features to [Vue and Nuxt Preview](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.vscode-vue-preview)
-	- feat: support `vite-plugin-vue-component-preview` for nuxt 3.2
-	- feat: add `vue-preview.root` setting for Nuxt component preview
-	- fix: prevent random creation of multiple preview terminals
-	- fix: support nuxt preview without vite serving allow list ([#2287](https://github.com/johnsoncodehk/volar/issues/2287))
+- fix: format adding unnecessary newline to CRLF document ([#2385](https://github.com/johnsoncodehk/volar/issues/2385))
+- fix: incidentally inserting indents when inserting new lines when if `editor.formatOnType` ([#2394](https://github.com/johnsoncodehk/volar/issues/2394))
+- fix: template formatting last line indent incorrect ([#2393](https://github.com/johnsoncodehk/volar/issues/2393))
+- fix: template start tag got deleting if first line is comment ([#2390](https://github.com/johnsoncodehk/volar/issues/2390))
+- fix: takeover statue incorrect in display ([#2389](https://github.com/johnsoncodehk/volar/issues/2389))
+- fix: diff window's document was unexpectedly diagnosed ([#2391](https://github.com/johnsoncodehk/volar/issues/2391))
+- fix: emmet completions appear inside open tag ([#1329](https://github.com/johnsoncodehk/volar/issues/1329))
+- fix: `opencc` is depended on by language server ([#2388](https://github.com/johnsoncodehk/volar/issues/2388))
 
 ---
 
@@ -59,6 +41,35 @@
 <p align="center">
 	<h5 align="center"><a href="https://github.com/sponsors/johnsoncodehk">Adding You</a></h5>
 </p>
+
+## 1.1.0 (2023/2/16)
+
+- feat: support `initialIndent` for `pug` and `sass`
+- feat: add description for built-in directives, attributes, component, and elements
+- feat: support localization for event modifiers and props modifiers
+- feat: missing required props inlay hints (needs enabled `volar.inlayHints.missingRequiredProps`)
+- feat: show `(takeover)` instead of `(vue)` in status bar for takeover mode ([#2365](https://github.com/johnsoncodehk/volar/issues/2365))
+- feat: more reliable formatting edits combine
+- fix(doctor): update source code link ([#2307](https://github.com/johnsoncodehk/volar/issues/2307))
+- fix(typescript-plugin): tsserver multiple initializations lead to infinite loop (https://github.com/microsoft/vscode/issues/171591)
+- fix: syntactic features not working for untitled vue document
+- fix: spaces removed from ternary operator inside `{{ }}` ([#2305](https://github.com/johnsoncodehk/volar/issues/2305))
+- fix: `source.addMissingImports` accidentally made imports for properties used the template ([#2304](https://github.com/johnsoncodehk/volar/issues/2304))
+- fix: code action auto import should not append to the same line with the script tag ([#916](https://github.com/johnsoncodehk/volar/issues/916))
+- fix: multi-line interpolation last line indent incorrect
+- fix: declaring empty emits like `defineEmits<{}>()` would fail the type-checking process ([#2370](https://github.com/johnsoncodehk/volar/issues/2370))
+- fix: ignore `name` prop / attr for slot ([#2308](https://github.com/johnsoncodehk/volar/issues/2308))
+
+**Breaking changes**
+
+- Removed pug convert tool
+- Removed script setup convert tool
+- Unsupported tracing for vue-tsc ([#2378](https://github.com/johnsoncodehk/volar/issues/2378))
+- Extract Vite, Nuxt and component preview features to [Vue and Nuxt Preview](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.vscode-vue-preview)
+	- feat: support `vite-plugin-vue-component-preview` for nuxt 3.2
+	- feat: add `vue-preview.root` setting for Nuxt component preview
+	- fix: prevent random creation of multiple preview terminals
+	- fix: support nuxt preview without vite serving allow list ([#2287](https://github.com/johnsoncodehk/volar/issues/2287))
 
 ## 1.0.24 (2023/1/8)
 
