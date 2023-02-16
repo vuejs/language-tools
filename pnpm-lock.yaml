@@ -149,7 +149,7 @@ importers:
   packages/vue-language-service:
     specifiers:
       '@volar-plugins/css': 2.0.0-alpha.6
-      '@volar-plugins/emmet': 2.0.0-alpha.6
+      '@volar-plugins/emmet': 2.0.0-alpha.6-patch.1
       '@volar-plugins/html': 2.0.0-alpha.6
       '@volar-plugins/json': 2.0.0-alpha.6
       '@volar-plugins/pug': 2.0.0-alpha.6
@@ -173,7 +173,7 @@ importers:
       vscode-uri: ^3.0.7
     dependencies:
       '@volar-plugins/css': 2.0.0-alpha.6_odghsc6bm3ztzs5g5iqhtlhthi
-      '@volar-plugins/emmet': 2.0.0-alpha.6_odghsc6bm3ztzs5g5iqhtlhthi
+      '@volar-plugins/emmet': 2.0.0-alpha.6-patch.1_odghsc6bm3ztzs5g5iqhtlhthi
       '@volar-plugins/html': 2.0.0-alpha.6_odghsc6bm3ztzs5g5iqhtlhthi
       '@volar-plugins/json': 2.0.0-alpha.6_odghsc6bm3ztzs5g5iqhtlhthi
       '@volar-plugins/pug': 2.0.0-alpha.6
@@ -1121,8 +1121,8 @@ packages:
       vscode-languageserver-textdocument: 1.0.8
     dev: false
 
-  /@volar-plugins/emmet/2.0.0-alpha.6_odghsc6bm3ztzs5g5iqhtlhthi:
-    resolution: {integrity: sha512-6+ZnIhdjvd40QjpPUoLbHnHk3wj+sLHd1kQPB5QK28dIE1g5sj4/TPyQEjXbz+IX4Es03InQkqyhrkAHTAc1nA==}
+  /@volar-plugins/emmet/2.0.0-alpha.6-patch.1_odghsc6bm3ztzs5g5iqhtlhthi:
+    resolution: {integrity: sha512-Qx8pyr5MQTSoHZfZMNxIaLGul/y5zzsQM+diZxe0/Tw6rcS7C7lIDh+rxNfMv344n+7szusG/Vpllx6JgNpOKw==}
     peerDependencies:
       '@volar/language-service': '*'
     peerDependenciesMeta:

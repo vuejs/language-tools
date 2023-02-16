@@ -18,7 +18,7 @@
 	},
 	"dependencies": {
 		"@volar-plugins/css": "2.0.0-alpha.6",
-		"@volar-plugins/emmet": "2.0.0-alpha.6",
+		"@volar-plugins/emmet": "2.0.0-alpha.6-patch.1",
 		"@volar-plugins/html": "2.0.0-alpha.6",
 		"@volar-plugins/json": "2.0.0-alpha.6",
 		"@volar-plugins/pug": "2.0.0-alpha.6",
