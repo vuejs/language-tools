@@ -104,7 +104,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					if (!options.isSupportedDocument(document))
 						return;
 
-					const enabled = await _context.env.configurationHost?.getConfiguration<boolean>('volar.inlayHints.missingRequiredProps');
+					const enabled = await _context.env.configurationHost?.getConfiguration<boolean>('volar.inlayHints.missingRequiredProps') ?? true;
 					if (!enabled)
 						return;
 
