@@ -61,7 +61,6 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				embeddedFile.kind = FileKind.TextFile;
 				embeddedFile.capabilities = {
 					...FileCapabilities.full,
-					documentFormatting: {}, // no onTypeFormat, insertFirstNewline, insertFinalNewline
 					diagnostic: false,
 					foldingRange: false,
 					codeAction: false,
