@@ -1,6 +1,6 @@
 {
 	"name": "@volar/vue-language-service",
-	"version": "1.1.0",
+	"version": "1.1.2",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -29,7 +29,7 @@
 		"@volar/language-service": "1.2.0-alpha.13",
 		"@volar/shared": "1.2.0-alpha.13",
 		"@volar/source-map": "1.2.0-alpha.13",
-		"@volar/vue-language-core": "1.1.0",
+		"@volar/vue-language-core": "1.1.2",
 		"@vue/compiler-dom": "^3.2.47",
 		"@vue/reactivity": "^3.2.47",
 		"@vue/shared": "^3.2.47",
