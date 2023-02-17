@@ -1,0 +1,92 @@
+{
+  "version": 1.1,
+  "globalAttributes": [
+    {
+      "name": "lazy",
+      "description": {
+        "kind": "markdown",
+        "value": "\nBy default, `v-model` syncs the input with the data after each `input` event (with the exception of IME composition as [stated above](#vmodel-ime-tip)). You can add the `lazy` modifier to instead sync after `change` events:\n\n```html\n<!-- synced after \"change\" instead of \"input\" -->\n<input v-model.lazy=\"msg\" />\n```\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/guide/essentials/forms.html#lazy"
+        }
+      ]
+    },
+    {
+      "name": "number",
+      "description": {
+        "kind": "markdown",
+        "value": "\nIf you want user input to be automatically typecast as a number, you can add the `number` modifier to your `v-model` managed inputs:\n\n```html\n<input v-model.number=\"age\" />\n```\n\nIf the value cannot be parsed with `parseFloat()`, then the original value is used instead.\n\nThe `number` modifier is applied automatically if the input has `type=\"number\"`.\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/guide/essentials/forms.html#number"
+        }
+      ]
+    },
+    {
+      "name": "trim",
+      "description": {
+        "kind": "markdown",
+        "value": "\nIf you want whitespace from user input to be trimmed automatically, you can add the `trim` modifier to your `v-model`-managed inputs:\n\n```html\n<input v-model.trim=\"msg\" />\n```\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/guide/essentials/forms.html#trim"
+        }
+      ]
+    }
+  ]
+}

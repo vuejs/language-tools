@@ -43,6 +43,7 @@ for (const lang of langs) {
 	if (lang.supported) {
 		templateWorker(lang);
 		sfcWorker(lang);
+		modelWorker(lang);
 	}
 }
 
@@ -202,6 +203,55 @@ async function sfcWorker(lang) {
 	if (lang.name === 'zh-cn') {
 		converter.convertPromise(JSON.stringify(data, null, 2)).then(converted => {
 			const writePath = path.resolve(__dirname, '../data/language-blocks/zh-tw.json');
+			fs.writeFileSync(writePath, converted);
+			console.log(writePath);
+		});
+	}
+}
+
+async function modelWorker(lang) {
+
+	const formsDoc = await fetch(lang.repoUrl + 'HEAD/src/guide/essentials/forms.md', lang.url);
+	const modifiers = formsDoc
+		.split('\n## ')[3]
+		.split('\n### ')
+		.slice(1)
+		.map((section) => {
+			const lines = section.split('\n');
+			let name = lines[0].trim();
+			name = name.split('`.')[1].split('`')[0];
+			/**
+			 * @type {import('vscode-html-languageservice').IAttributeData}
+			 */
+			const data = {
+				name,
+				description: {
+					kind: 'markdown',
+					value: lines.slice(1).join('\n'),
+				},
+				references: langs.map(lang => ({
+					name: lang.name,
+					url: `${lang.url}guide/essentials/forms.html#${normalizeHash(name)}`,
+				})),
+			};
+			return data;
+		});
+
+	/**
+	 * @type {import('vscode-html-languageservice').HTMLDataV1}
+	 */
+	const data = {
+		version: 1.1,
+		globalAttributes: modifiers,
+	};
+
+	const writePath = path.resolve(__dirname, '../data/model-modifiers/' + lang.name + '.json');
+	fs.writeFileSync(writePath, JSON.stringify(data, null, 2));
+	console.log(writePath);
+
+	if (lang.name === 'zh-cn') {
+		converter.convertPromise(JSON.stringify(data, null, 2)).then(converted => {
+			const writePath = path.resolve(__dirname, '../data/model-modifiers/zh-tw.json');
 			fs.writeFileSync(writePath, converted);
 			console.log(writePath);
 		});

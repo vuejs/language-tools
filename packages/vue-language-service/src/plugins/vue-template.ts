@@ -8,9 +8,10 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { checkComponentNames, checkEventsOfTag, checkPropsOfTag, getElementAttrs } from '../helpers';
 import * as casing from '../ideFeatures/nameCasing';
 import { AttrNameCasing, VueCompilerOptions, TagNameCasing } from '../types';
-import { loadTemplateData } from './data';
+import { loadTemplateData, loadModelModifiersData } from './data';
 
 let builtInData: html.HTMLDataV1;
+let modelData: html.HTMLDataV1;
 
 export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof createHtmlPlugin>>(options: {
 	getScanner(document: TextDocument, t: ReturnType<T>): html.Scanner | undefined,
@@ -25,6 +26,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			return {};
 
 		builtInData ??= loadTemplateData(_context.env.locale ?? 'en');
+		modelData ??= loadModelModifiersData(_context.env.locale ?? 'en');
 
 		// https://vuejs.org/api/built-in-directives.html#v-on
 		// https://vuejs.org/api/built-in-directives.html#v-bind
@@ -164,7 +166,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 											current.unburnedRequiredProps = current.unburnedRequiredProps.filter(propName => {
 												return attrText !== propName
-													&& attrText !== hyphenate(propName)
+													&& attrText !== hyphenate(propName);
 											});
 										}
 									}
@@ -528,32 +530,62 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 			if (replacement) {
 
-				const isEvent = replacement.text.startsWith('@') || replacement.text.startsWith('v-on:');
-				const isProp = replacement.text.startsWith(':') || replacement.text.startsWith('v-bind:');
+				const isEvent = replacement.text.startsWith('v-on:') || replacement.text.startsWith('@');
+				const isProp = replacement.text.startsWith('v-bind:') || replacement.text.startsWith(':');
+				const isModel = replacement.text.startsWith('v-model:') || replacement.text.split('.')[0] === 'v-model';
 				const hasModifier = replacement.text.includes('.');
+				const validModifiers =
+					isEvent ? eventModifiers
+						: isProp ? propModifiers
+							: undefined;
+				const modifiers = replacement.text.split('.').slice(1);
+				const textWithoutModifier = replacement.text.split('.')[0];
 
-				if ((isEvent || isProp) && hasModifier) {
+				if (validModifiers && hasModifier) {
 
-					const modifiers = replacement.text.split('.').slice(1);
-					const textWithoutModifier = replacement.text.split('.')[0];
-					const allModifiers = isEvent ? eventModifiers : propModifiers;
-
-					for (const modifier in allModifiers) {
+					for (const modifier in validModifiers) {
 
 						if (modifiers.includes(modifier))
 							continue;
 
-						const modifierDes = allModifiers[modifier];
+						const modifierDes = validModifiers[modifier];
+						const insertText = textWithoutModifier + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier;
 						const newItem: html.CompletionItem = {
 							label: modifier,
-							filterText: textWithoutModifier + '.' + modifier,
+							filterText: insertText,
 							documentation: {
 								kind: 'markdown',
 								value: modifierDes,
 							},
 							textEdit: {
 								range: replacement.textEdit.range,
-								newText: textWithoutModifier + '.' + modifier,
+								newText: insertText,
+							},
+							kind: vscode.CompletionItemKind.EnumMember,
+						};
+
+						completionList.items.push(newItem);
+					}
+				}
+				else if (hasModifier && isModel) {
+
+					for (const modifier of modelData.globalAttributes ?? []) {
+
+						if (modifiers.includes(modifier.name))
+							continue;
+
+						const insertText = textWithoutModifier + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier.name;
+						const newItem: html.CompletionItem = {
+							label: modifier.name,
+							filterText: insertText,
+							documentation: {
+								kind: 'markdown',
+								value: (typeof modifier.description === 'object' ? modifier.description.value : modifier.description)
+									+ '\n\n' + modifier.references?.map(ref => `[${ref.name}](${ref.url})`).join(' | '),
+							},
+							textEdit: {
+								range: replacement.textEdit.range,
+								newText: insertText,
 							},
 							kind: vscode.CompletionItemKind.EnumMember,
 						};

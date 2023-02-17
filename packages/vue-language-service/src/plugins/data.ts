@@ -63,3 +63,28 @@ export function loadLanguageBlocks(lang: string) {
 
 	return data;
 }
+
+export function loadModelModifiersData(lang: string) {
+
+	lang = lang.toLowerCase();
+
+	let data: html.HTMLDataV1;
+
+	if (lang === 'ja') {
+		data = require('../../data/model-modifiers/ja.json');
+	}
+	else if (lang === 'fr') {
+		data = require('../../data/model-modifiers/fr.json');
+	}
+	else if (lang === 'zh-cn') {
+		data = require('../../data/model-modifiers/zh-cn.json');
+	}
+	else if (lang === 'zh-tw') {
+		data = require('../../data/model-modifiers/zh-tw.json');
+	}
+	else {
+		data = require('../../data/model-modifiers/en.json');
+	}
+
+	return data;
+}

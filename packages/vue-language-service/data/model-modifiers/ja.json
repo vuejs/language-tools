@@ -1,0 +1,92 @@
+{
+  "version": 1.1,
+  "globalAttributes": [
+    {
+      "name": "lazy",
+      "description": {
+        "kind": "markdown",
+        "value": "\nデフォルトでは、 `v-model` は各 `input` イベントの後に、入力とデータを同期します ([上記](#vmodel-ime-tip) の IME による入力は例外とします)。 代わりに `change` イベント後に同期する `lazy` 修飾子を追加することができます。\n\n```html\n<!-- \"input\" の代わりに \"change\" イベント後に同期されます -->\n<input v-model.lazy=\"msg\" />\n```\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/guide/essentials/forms.html#lazy"
+        }
+      ]
+    },
+    {
+      "name": "number",
+      "description": {
+        "kind": "markdown",
+        "value": "\nユーザー入力を自動で数値として型変換したい場合、 `v-model` で管理している入力に `number` 修飾子を追加することができます。\n\n```html\n<input v-model.number=\"age\" />\n```\n\nもし値が `parseFloat()` で解析できない場合は、代わりに元の値が使用されます。\n\ninput が `type=\"number\"` を持つ場合は `number` 修飾子が自動で適用されます。\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/guide/essentials/forms.html#number"
+        }
+      ]
+    },
+    {
+      "name": "trim",
+      "description": {
+        "kind": "markdown",
+        "value": "\nユーザー入力から自動で空白を取り除きたい場合、 `v-model` で管理している入力に `trim` 修飾子を追加することができます。\n\n```html\n<input v-model.trim=\"msg\" />\n```\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/guide/essentials/forms.html#trim"
+        }
+      ]
+    }
+  ]
+}
