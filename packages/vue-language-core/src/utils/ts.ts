@@ -164,19 +164,22 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 		experimentalResolveStyleCssClasses: vueOptions.experimentalResolveStyleCssClasses ?? 'scoped',
 		experimentalRfc436: vueOptions.experimentalRfc436 ?? false,
 		// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
-		// https://v3.vuejs.org/guide/forms.html#basic-usage
+		// https://vuejs.org/guide/essentials/forms.html#form-input-bindings
 		experimentalModelPropName: vueOptions.experimentalModelPropName ?? {
 			'': {
-				input: { type: 'radio' },
+				input: true
 			},
 			checked: {
-				input: { type: 'checkbox' },
+				input: [
+					{ type: 'checkbox' },
+					{ type: 'radio' }
+				]
 			},
 			value: {
-				input: true,
+				input: { type: 'text' },
 				textarea: true,
-				select: true,
-			},
+				select: true
+			}
 		},
 		experimentalUseElementAccessInTemplate: vueOptions.experimentalUseElementAccessInTemplate ?? false,
 	};

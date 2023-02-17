@@ -107,13 +107,16 @@
 					"type": "object",
 					"default": {
 						"": {
-							"input": { "type": "radio" }
+							"input": true
 						},
 						"checked": {
-							"input": { "type": "checkbox" }
+							"input": [
+								{ "type": "checkbox" },
+								{ "type": "radio" }
+							]
 						},
 						"value": {
-							"input": true,
+							"input": { "type": "text" },
 							"textarea": true,
 							"select": true
 						}
