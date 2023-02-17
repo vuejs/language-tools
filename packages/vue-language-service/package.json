@@ -14,7 +14,7 @@
 		"directory": "packages/vue-language-service"
 	},
 	"scripts": {
-		"update-data": "node ./scripts/update-data.js"
+		"update-html-data": "node ./scripts/update-html-data.js"
 	},
 	"dependencies": {
 		"@volar-plugins/css": "2.0.0-alpha.6",
