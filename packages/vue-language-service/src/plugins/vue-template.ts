@@ -138,17 +138,35 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 								}
 								else if (token === html.TokenType.AttributeName) {
 									if (current) {
-										const attrText = scanner.getTokenText();
-										current.unburnedRequiredProps = current.unburnedRequiredProps.filter(propName => {
-											const propName2 = hyphenate(propName);
-											return attrText !== propName
-												&& attrText !== `:${propName}`
-												&& attrText !== `v-bind:${propName}`
-												&& attrText !== propName2
-												&& attrText !== `:${propName2}`
-												&& attrText !== `v-bind:${propName2}`
-												&& attrText !== `v-bind`;
-										});
+										let attrText = scanner.getTokenText();
+
+										if (attrText === 'v-bind') {
+											current.unburnedRequiredProps = [];
+										}
+										else {
+											// remove modifiers
+											if (attrText.indexOf('.') >= 0) {
+												attrText = attrText.split('.')[0];
+											}
+											// normalize
+											if (attrText.startsWith('v-bind:')) {
+												attrText = attrText.substring('v-bind:'.length);
+											}
+											else if (attrText.startsWith(':')) {
+												attrText = attrText.substring(':'.length);
+											}
+											else if (attrText.startsWith('v-model:')) {
+												attrText = attrText.substring('v-model:'.length);
+											}
+											else if (attrText === 'v-model') {
+												attrText = 'modelValue'; // TODO: support for experimentalModelPropName?
+											}
+
+											current.unburnedRequiredProps = current.unburnedRequiredProps.filter(propName => {
+												return attrText !== propName
+													&& attrText !== hyphenate(propName)
+											});
+										}
 									}
 								}
 								else if (token === html.TokenType.StartTagSelfClose || token === html.TokenType.StartTagClose) {
