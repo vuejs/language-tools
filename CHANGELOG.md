@@ -1,15 +1,18 @@
 # Changelog
 
-## 1.1.2 (2023/2/17)
+## 1.1.3 (2023/2/18)
 
-- fix: format adding unnecessary newline to CRLF document ([#2385](https://github.com/johnsoncodehk/volar/issues/2385))
-- fix: incidentally inserting indents when inserting new lines when if `editor.formatOnType` ([#2394](https://github.com/johnsoncodehk/volar/issues/2394))
-- fix: template formatting last line indent incorrect ([#2393](https://github.com/johnsoncodehk/volar/issues/2393))
-- fix: template start tag got deleting if first line is comment ([#2390](https://github.com/johnsoncodehk/volar/issues/2390))
-- fix: takeover statue incorrect in display ([#2389](https://github.com/johnsoncodehk/volar/issues/2389))
-- fix: diff window's document was unexpectedly diagnosed ([#2391](https://github.com/johnsoncodehk/volar/issues/2391))
-- fix: emmet completions appear inside open tag ([#1329](https://github.com/johnsoncodehk/volar/issues/1329))
-- fix: `opencc` is depended on by language server ([#2388](https://github.com/johnsoncodehk/volar/issues/2388))
+- feat: visualize event argument in inline handlers
+- feat: add description for model modifiers ([#2405](https://github.com/johnsoncodehk/volar/issues/2405))
+- fix: remove deprecated preview commands ([#2402](https://github.com/johnsoncodehk/volar/issues/2402))
+- fix: missing required props hint not working with v-model ([#2407](https://github.com/johnsoncodehk/volar/issues/2407))
+- fix: cannot collapse code in .js / .ts files with takeover mode ([#2408](https://github.com/johnsoncodehk/volar/issues/2408))
+- fix: symbols view stopped working for .js / .ts files with takeover mode ([#2404](https://github.com/johnsoncodehk/volar/issues/2404))
+- fix: cannot rename html tags ([#2410](https://github.com/johnsoncodehk/volar/issues/2410))
+- fix: cannot display rename fail message
+- fix: format on type cannot working for code blocks that enabled `volar.format.initialIndent` ([#2401](https://github.com/johnsoncodehk/volar/issues/2401))
+- fix: vue-tsc crashes in watch mode when file changed ([#2403](https://github.com/johnsoncodehk/volar/issues/2403))
+- fix: prop type definition inaccurate for `v-model` directive on native input ([#2399](https://github.com/johnsoncodehk/volar/issues/2399))
 
 ---
 
@@ -41,6 +44,17 @@
 <p align="center">
 	<h5 align="center"><a href="https://github.com/sponsors/johnsoncodehk">Adding You</a></h5>
 </p>
+
+## 1.1.2 (2023/2/17)
+
+- fix: format adding unnecessary newline to CRLF document ([#2385](https://github.com/johnsoncodehk/volar/issues/2385))
+- fix: incidentally inserting indents when inserting new lines when if `editor.formatOnType` ([#2394](https://github.com/johnsoncodehk/volar/issues/2394))
+- fix: template formatting last line indent incorrect ([#2393](https://github.com/johnsoncodehk/volar/issues/2393))
+- fix: template start tag got deleting if first line is comment ([#2390](https://github.com/johnsoncodehk/volar/issues/2390))
+- fix: takeover statue incorrect in display ([#2389](https://github.com/johnsoncodehk/volar/issues/2389))
+- fix: diff window's document was unexpectedly diagnosed ([#2391](https://github.com/johnsoncodehk/volar/issues/2391))
+- fix: emmet completions appear inside open tag ([#1329](https://github.com/johnsoncodehk/volar/issues/1329))
+- fix: `opencc` is depended on by language server ([#2388](https://github.com/johnsoncodehk/volar/issues/2388))
 
 ## 1.1.0 (2023/2/16)
 
