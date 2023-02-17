@@ -633,18 +633,6 @@
 				"icon": "images/split-editors.png"
 			},
 			{
-				"command": "volar.action.vite",
-				"title": "Experimental Features for Vite",
-				"category": "Volar",
-				"icon": "images/vite-logo.svg"
-			},
-			{
-				"command": "volar.action.nuxt",
-				"title": "Experimental Features for Nuxt",
-				"category": "Volar",
-				"icon": "images/nuxt-logo.svg"
-			},
-			{
 				"command": "volar.selectTypeScriptVersion",
 				"title": "Select TypeScript Version...",
 				"category": "Volar"
@@ -679,14 +667,6 @@
 				},
 				{
 					"command": "volar.action.splitEditors",
-					"when": "editorLangId == vue"
-				},
-				{
-					"command": "volar.action.vite",
-					"when": "editorLangId == vue"
-				},
-				{
-					"command": "volar.action.nuxt",
 					"when": "editorLangId == vue"
 				},
 				{
