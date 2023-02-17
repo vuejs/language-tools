@@ -1,6 +1,6 @@
 # Vue Language Tools
 
-> ⚡ High-performance Vue language tooling base-on [Volar.js](https://volarjs.github.io/)
+> ⚡ High-performance Vue language tooling based-on [Volar.js](https://volarjs.github.io/)
 
 Discord: https://discord.gg/5bnSSSSBbK
 
@@ -17,7 +17,7 @@ Discord: https://discord.gg/5bnSSSSBbK
 - [vite-plugin-vue-component-preview](https://github.com/johnsoncodehk/vite-plugin-vue-component-preview) \
 *Vite plugin for support Vue component preview view with `Vue Language Features`*
 
-## IDE Supports by Community
+## IDE Support by the Community
 
 [yaegassy/coc-volar](https://github.com/yaegassy/coc-volar) ⚡ 🤝 🅿️ \
 *Vue language client for coc.nvim*
@@ -69,7 +69,7 @@ Alternatively, you can run one of the scripts defined in the [package.json](http
 
 ❗ You should always use the debug launch configs or package.json scripts defined in the root of the project.
 
-Additional info for contributing to open source projects is here: https://docs.github.com/en/get-started/quickstart/contributing-to-projects
+Additional info for contributing to open source projects can be found here: https://docs.github.com/en/get-started/quickstart/contributing-to-projects
 
 ## High Level System Overview
 
