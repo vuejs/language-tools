@@ -8,7 +8,7 @@
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "\n如果你更喜歡將 `*.vue` 組件分散到多個文件中，可以爲一個語塊使用 `src` 這個 attribute 來導入一個外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n請注意 `src` 導入和 JS 模塊導入遵循相同的路徑解析規則，這意味着：\n\n- 相對路徑需要以 `./` 開頭\n- 你也可以從 npm 依賴中導入資源\n\n```vue\n<!-- 從所安裝的 \"todomvc-app-css\" npm 包中導入一個文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 導入對自定義語塊也同樣適用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+            "value": "\n如果你更喜歡將 `*.vue` 組件分散到多個文件中，可以為一個語塊使用 `src` 這個 attribute 來導入一個外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n請注意 `src` 導入和 JS 模塊導入遵循相同的路徑解析規則，這意味著：\n\n- 相對路徑需要以 `./` 開頭\n- 你也可以從 npm 依賴中導入資源\n\n```vue\n<!-- 從所安裝的 \"todomvc-app-css\" npm 包中導入一個文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 導入對自定義語塊也同樣適用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
           },
           "references": [
             {
@@ -73,7 +73,7 @@
       ],
       "description": {
         "kind": "markdown",
-        "value": "\n- 每個 `*.vue` 文件最多可以包含一個頂層 `<template>` 塊。\n\n- 語塊包裹的內容將會被提取、傳遞給 `@vue/compiler-dom`，預編譯爲 JavaScript 渲染函數，並附在導出的組件上作爲其 `render` 選項。\n"
+        "value": "\n- 每個 `*.vue` 文件最多可以包含一個頂層 `<template>` 塊。\n\n- 語塊包裹的內容將會被提取、傳遞給 `@vue/compiler-dom`，預編譯為 JavaScript 渲染函數，並附在導出的組件上作為其 `render` 選項。\n"
       },
       "references": [
         {
@@ -105,7 +105,7 @@
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "\n如果你更喜歡將 `*.vue` 組件分散到多個文件中，可以爲一個語塊使用 `src` 這個 attribute 來導入一個外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n請注意 `src` 導入和 JS 模塊導入遵循相同的路徑解析規則，這意味着：\n\n- 相對路徑需要以 `./` 開頭\n- 你也可以從 npm 依賴中導入資源\n\n```vue\n<!-- 從所安裝的 \"todomvc-app-css\" npm 包中導入一個文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 導入對自定義語塊也同樣適用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+            "value": "\n如果你更喜歡將 `*.vue` 組件分散到多個文件中，可以為一個語塊使用 `src` 這個 attribute 來導入一個外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n請注意 `src` 導入和 JS 模塊導入遵循相同的路徑解析規則，這意味著：\n\n- 相對路徑需要以 `./` 開頭\n- 你也可以從 npm 依賴中導入資源\n\n```vue\n<!-- 從所安裝的 \"todomvc-app-css\" npm 包中導入一個文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 導入對自定義語塊也同樣適用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
           },
           "references": [
             {
@@ -181,7 +181,7 @@
           "valueSet": "v",
           "description": {
             "kind": "markdown",
-            "value": "\n- 每個 `*.vue` 文件最多可以包含一個 `<script setup>`。(不包括一般的 `<script>`)\n\n- 這個腳本塊將被預處理爲組件的 `setup()` 函數，這意味着它將**爲每一個組件實例**都執行。`<script setup>` 中的頂層綁定都將自動暴露給模板。要了解更多細節，請看 [`<script setup>` 的專門文檔](https://cn.vuejs.org/api/sfc-script-setup.html)。\n"
+            "value": "\n- 每個 `*.vue` 文件最多可以包含一個 `<script setup>`。(不包括一般的 `<script>`)\n\n- 這個腳本塊將被預處理為組件的 `setup()` 函數，這意味著它將**為每一個組件實例**都執行。`<script setup>` 中的頂層綁定都將自動暴露給模板。要了解更多細節，請看 [`<script setup>` 的專門文檔](https://cn.vuejs.org/api/sfc-script-setup.html)。\n"
           },
           "references": [
             {
@@ -209,7 +209,7 @@
       ],
       "description": {
         "kind": "markdown",
-        "value": "\n- 每個 `*.vue` 文件最多可以包含一個 `<script>` 塊。(使用 [`<script setup>`](https://cn.vuejs.org/api/sfc-script-setup.html) 的情況除外)\n\n- 這個腳本代碼塊將作爲 ES 模塊執行。\n\n- **默認導出**應該是 Vue 的組件選項對象，可以是一個對象字面量或是 [defineComponent](https://cn.vuejs.org/api/general.html#definecomponent) 函數的返回值。\n"
+        "value": "\n- 每個 `*.vue` 文件最多可以包含一個 `<script>` 塊。(使用 [`<script setup>`](https://cn.vuejs.org/api/sfc-script-setup.html) 的情況除外)\n\n- 這個腳本代碼塊將作為 ES 模塊執行。\n\n- **默認導出**應該是 Vue 的組件選項對象，可以是一個對象字面量或是 [defineComponent](https://cn.vuejs.org/api/general.html#definecomponent) 函數的返回值。\n"
       },
       "references": [
         {
@@ -239,7 +239,7 @@
       "attributes": [],
       "description": {
         "kind": "markdown",
-        "value": "\n- 每個 `*.vue` 文件最多可以包含一個 `<script setup>`。(不包括一般的 `<script>`)\n\n- 這個腳本塊將被預處理爲組件的 `setup()` 函數，這意味着它將**爲每一個組件實例**都執行。`<script setup>` 中的頂層綁定都將自動暴露給模板。要了解更多細節，請看 [`<script setup>` 的專門文檔](https://cn.vuejs.org/api/sfc-script-setup.html)。\n"
+        "value": "\n- 每個 `*.vue` 文件最多可以包含一個 `<script setup>`。(不包括一般的 `<script>`)\n\n- 這個腳本塊將被預處理為組件的 `setup()` 函數，這意味著它將**為每一個組件實例**都執行。`<script setup>` 中的頂層綁定都將自動暴露給模板。要了解更多細節，請看 [`<script setup>` 的專門文檔](https://cn.vuejs.org/api/sfc-script-setup.html)。\n"
       },
       "references": [
         {
@@ -271,7 +271,7 @@
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "\n如果你更喜歡將 `*.vue` 組件分散到多個文件中，可以爲一個語塊使用 `src` 這個 attribute 來導入一個外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n請注意 `src` 導入和 JS 模塊導入遵循相同的路徑解析規則，這意味着：\n\n- 相對路徑需要以 `./` 開頭\n- 你也可以從 npm 依賴中導入資源\n\n```vue\n<!-- 從所安裝的 \"todomvc-app-css\" npm 包中導入一個文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 導入對自定義語塊也同樣適用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+            "value": "\n如果你更喜歡將 `*.vue` 組件分散到多個文件中，可以為一個語塊使用 `src` 這個 attribute 來導入一個外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n請注意 `src` 導入和 JS 模塊導入遵循相同的路徑解析規則，這意味著：\n\n- 相對路徑需要以 `./` 開頭\n- 你也可以從 npm 依賴中導入資源\n\n```vue\n<!-- 從所安裝的 \"todomvc-app-css\" npm 包中導入一個文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 導入對自定義語塊也同樣適用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
           },
           "references": [
             {
@@ -350,7 +350,7 @@
           "valueSet": "v",
           "description": {
             "kind": "markdown",
-            "value": "\n當 `<style>` 標籤帶有 `scoped` attribute 的時候，它的 CSS 只會影響當前組件的元素，和 Shadow DOM 中的樣式封裝類似。使用時有一些注意事項，不過好處是不需要任何的 polyfill。它的實現方式是通過 PostCSS 將以下內容：\n\n```vue\n<style scoped>\n.example {\n  color: red;\n}\n</style>\n\n<template>\n  <div class=\"example\">hi</div>\n</template>\n```\n\n轉換爲：\n\n```vue\n<style>\n.example[data-v-f3f3eg9] {\n  color: red;\n}\n</style>\n\n<template>\n  <div class=\"example\" data-v-f3f3eg9>hi</div>\n</template>\n```\n\n### 子組件的根元素 \n\n使用 `scoped` 後，父組件的樣式將不會滲透到子組件中。不過，子組件的根節點會同時被父組件的作用域樣式和子組件的作用域樣式影響。這樣設計是爲了讓父組件可以從佈局的角度出發，調整其子組件根元素的樣式。\n\n### 深度選擇器 \n\n處於 `scoped` 樣式中的選擇器如果想要做更“深度”的選擇，也即：影響到子組件，可以使用 `:deep()` 這個僞類：\n\n```vue\n<style scoped>\n.a :deep(.b) {\n  /* ... */\n}\n</style>\n```\n\n上面的代碼會被編譯成：\n\n```css\n.a[data-v-f3f3eg9] .b {\n  /* ... */\n}\n```\n\n:::tip\n通過 `v-html` 創建的 DOM 內容不會被作用域樣式影響，但你仍然可以使用深度選擇器來設置其樣式。\n:::\n\n### 插槽選擇器 \n\n默認情況下，作用域樣式不會影響到 `<slot/>` 渲染出來的內容，因爲它們被認爲是父組件所持有並傳遞進來的。使用 `:slotted` 僞類以明確地將插槽內容作爲選擇器的目標：\n\n```vue\n<style scoped>\n:slotted(div) {\n  color: red;\n}\n</style>\n```\n\n### 全局選擇器 \n\n如果想讓其中一個樣式規則應用到全局，比起另外創建一個 `<style>`，可以使用 `:global` 僞類來實現 (看下面的代碼)：\n\n```vue\n<style scoped>\n:global(.red) {\n  color: red;\n}\n</style>\n```\n\n### 混合使用局部與全局樣式 \n\n你也可以在同一個組件中同時包含作用域樣式和非作用域樣式：\n\n```vue\n<style>\n/* 全局樣式 */\n</style>\n\n<style scoped>\n/* 局部樣式 */\n</style>\n```\n\n### 作用域樣式須知 \n\n- **作用域樣式並沒有消除對 class 的需求**。由於瀏覽器渲染各種各樣 CSS 選擇器的方式，`p { color: red }` 結合作用域樣式使用時 (即當與 attribute 選擇器組合的時候) 會慢很多倍。如果你使用 class 或者 id 來替代，例如 `.example { color: red }`，那你幾乎就可以避免性能的損失。\n\n- **小心遞歸組件中的後代選擇器**！對於一個使用了 `.a .b` 選擇器的樣式規則來說，如果匹配到 `.a` 的元素包含了一個遞歸的子組件，那麼所有的在那個子組件中的 `.b` 都會匹配到這條樣式規則。\n"
+            "value": "\n當 `<style>` 標籤帶有 `scoped` attribute 的時候，它的 CSS 只會影響當前組件的元素，和 Shadow DOM 中的樣式封裝類似。使用時有一些注意事項，不過好處是不需要任何的 polyfill。它的實現方式是通過 PostCSS 將以下內容：\n\n```vue\n<style scoped>\n.example {\n  color: red;\n}\n</style>\n\n<template>\n  <div class=\"example\">hi</div>\n</template>\n```\n\n轉換為：\n\n```vue\n<style>\n.example[data-v-f3f3eg9] {\n  color: red;\n}\n</style>\n\n<template>\n  <div class=\"example\" data-v-f3f3eg9>hi</div>\n</template>\n```\n\n### 子組件的根元素 \n\n使用 `scoped` 後，父組件的樣式將不會滲透到子組件中。不過，子組件的根節點會同時被父組件的作用域樣式和子組件的作用域樣式影響。這樣設計是為了讓父組件可以從佈局的角度出發，調整其子組件根元素的樣式。\n\n### 深度選擇器 \n\n處於 `scoped` 樣式中的選擇器如果想要做更“深度”的選擇，也即：影響到子組件，可以使用 `:deep()` 這個偽類：\n\n```vue\n<style scoped>\n.a :deep(.b) {\n  /* ... */\n}\n</style>\n```\n\n上面的代碼會被編譯成：\n\n```css\n.a[data-v-f3f3eg9] .b {\n  /* ... */\n}\n```\n\n:::tip\n通過 `v-html` 創建的 DOM 內容不會被作用域樣式影響，但你仍然可以使用深度選擇器來設置其樣式。\n:::\n\n### 插槽選擇器 \n\n默認情況下，作用域樣式不會影響到 `<slot/>` 渲染出來的內容，因為它們被認為是父組件所持有並傳遞進來的。使用 `:slotted` 偽類以明確地將插槽內容作為選擇器的目標：\n\n```vue\n<style scoped>\n:slotted(div) {\n  color: red;\n}\n</style>\n```\n\n### 全局選擇器 \n\n如果想讓其中一個樣式規則應用到全局，比起另外創建一個 `<style>`，可以使用 `:global` 偽類來實現 (看下面的代碼)：\n\n```vue\n<style scoped>\n:global(.red) {\n  color: red;\n}\n</style>\n```\n\n### 混合使用局部與全局樣式 \n\n你也可以在同一個組件中同時包含作用域樣式和非作用域樣式：\n\n```vue\n<style>\n/* 全局樣式 */\n</style>\n\n<style scoped>\n/* 局部樣式 */\n</style>\n```\n\n### 作用域樣式須知 \n\n- **作用域樣式並沒有消除對 class 的需求**。由於瀏覽器渲染各種各樣 CSS 選擇器的方式，`p { color: red }` 結合作用域樣式使用時 (即當與 attribute 選擇器組合的時候) 會慢很多倍。如果你使用 class 或者 id 來替代，例如 `.example { color: red }`，那你幾乎就可以避免性能的損失。\n\n- **小心遞歸組件中的後代選擇器**！對於一個使用了 `.a .b` 選擇器的樣式規則來說，如果匹配到 `.a` 的元素包含了一個遞歸的子組件，那麼所有的在那個子組件中的 `.b` 都會匹配到這條樣式規則。\n"
           },
           "references": [
             {
@@ -380,7 +380,7 @@
           "valueSet": "v",
           "description": {
             "kind": "markdown",
-            "value": "\n一個 `<style module>` 標籤會被編譯爲 [CSS Modules](https://github.com/css-modules/css-modules) 並且將生成的 CSS class 作爲 `$style` 對象暴露給組件：\n\n```vue\n<template>\n  <p :class=\"$style.red\">This should be red</p>\n</template>\n\n<style module>\n.red {\n  color: red;\n}\n</style>\n```\n\n得出的 class 將被哈希化以避免衝突，實現了同樣的將 CSS 僅作用於當前組件的效果。\n\n參考 [CSS Modules spec](https://github.com/css-modules/css-modules) 以查看更多詳情，例如 [global exceptions](https://github.com/css-modules/css-modules#exceptions) 和 [composition](https://github.com/css-modules/css-modules#composition)。\n\n### 自定義注入名稱 \n\n你可以通過給 `module` attribute 一個值來自定義注入 class 對象的屬性名：\n\n```vue\n<template>\n  <p :class=\"classes.red\">red</p>\n</template>\n\n<style module=\"classes\">\n.red {\n  color: red;\n}\n</style>\n```\n\n### 與組合式 API 一同使用 \n\n可以通過 `useCssModule` API 在 `setup()` 和 `<script setup>` 中訪問注入的 class。對於使用了自定義注入名稱的 `<style module>` 塊，`useCssModule` 接收一個匹配的 `module` attribute 值作爲第一個參數：\n\n```js\nimport { useCssModule } from 'vue'\n\n// 在 setup() 作用域中...\n// 默認情況下, 返回 <style module> 的 class\nuseCssModule()\n\n// 具名情況下, 返回 <style module=\"classes\"> 的 class\nuseCssModule('classes')\n```\n"
+            "value": "\n一個 `<style module>` 標籤會被編譯為 [CSS Modules](https://github.com/css-modules/css-modules) 並且將生成的 CSS class 作為 `$style` 對象暴露給組件：\n\n```vue\n<template>\n  <p :class=\"$style.red\">This should be red</p>\n</template>\n\n<style module>\n.red {\n  color: red;\n}\n</style>\n```\n\n得出的 class 將被哈希化以避免衝突，實現了同樣的將 CSS 僅作用於當前組件的效果。\n\n參考 [CSS Modules spec](https://github.com/css-modules/css-modules) 以查看更多詳情，例如 [global exceptions](https://github.com/css-modules/css-modules#exceptions) 和 [composition](https://github.com/css-modules/css-modules#composition)。\n\n### 自定義注入名稱 \n\n你可以通過給 `module` attribute 一個值來自定義注入 class 對象的屬性名：\n\n```vue\n<template>\n  <p :class=\"classes.red\">red</p>\n</template>\n\n<style module=\"classes\">\n.red {\n  color: red;\n}\n</style>\n```\n\n### 與組合式 API 一同使用 \n\n可以通過 `useCssModule` API 在 `setup()` 和 `<script setup>` 中訪問注入的 class。對於使用了自定義注入名稱的 `<style module>` 塊，`useCssModule` 接收一個匹配的 `module` attribute 值作為第一個參數：\n\n```js\nimport { useCssModule } from 'vue'\n\n// 在 setup() 作用域中...\n// 默認情況下, 返回 <style module> 的 class\nuseCssModule()\n\n// 具名情況下, 返回 <style module=\"classes\"> 的 class\nuseCssModule('classes')\n```\n"
           },
           "references": [
             {
@@ -440,7 +440,7 @@
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "\n如果你更喜歡將 `*.vue` 組件分散到多個文件中，可以爲一個語塊使用 `src` 這個 attribute 來導入一個外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n請注意 `src` 導入和 JS 模塊導入遵循相同的路徑解析規則，這意味着：\n\n- 相對路徑需要以 `./` 開頭\n- 你也可以從 npm 依賴中導入資源\n\n```vue\n<!-- 從所安裝的 \"todomvc-app-css\" npm 包中導入一個文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 導入對自定義語塊也同樣適用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+            "value": "\n如果你更喜歡將 `*.vue` 組件分散到多個文件中，可以為一個語塊使用 `src` 這個 attribute 來導入一個外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n請注意 `src` 導入和 JS 模塊導入遵循相同的路徑解析規則，這意味著：\n\n- 相對路徑需要以 `./` 開頭\n- 你也可以從 npm 依賴中導入資源\n\n```vue\n<!-- 從所安裝的 \"todomvc-app-css\" npm 包中導入一個文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 導入對自定義語塊也同樣適用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
           },
           "references": [
             {
@@ -468,7 +468,7 @@
       ],
       "description": {
         "kind": "markdown",
-        "value": "\n在一個 `*.vue` 文件中可以爲任何項目特定需求使用額外的自定義塊。舉例來說，一個用作寫文檔的 `<docs>` 塊。這裏是一些自定義塊的真實用例：\n\n- [Gridsome：`<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql：`<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n：`<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\n自定義塊的處理需要依賴工具鏈。如果你想要在構建中集成你的自定義語塊，請參見[相關工具鏈指南](https://cn.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations)獲取更多細節。\n"
+        "value": "\n在一個 `*.vue` 文件中可以為任何項目特定需求使用額外的自定義塊。舉例來說，一個用作寫文檔的 `<docs>` 塊。這裡是一些自定義塊的真實用例：\n\n- [Gridsome：`<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql：`<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n：`<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\n自定義塊的處理需要依賴工具鏈。如果你想要在構建中集成你的自定義語塊，請參見[相關工具鏈指南](https://cn.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations)獲取更多細節。\n"
       },
       "references": [
         {
@@ -529,7 +529,7 @@
       "name": "src",
       "description": {
         "kind": "markdown",
-        "value": "\n如果你更喜歡將 `*.vue` 組件分散到多個文件中，可以爲一個語塊使用 `src` 這個 attribute 來導入一個外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n請注意 `src` 導入和 JS 模塊導入遵循相同的路徑解析規則，這意味着：\n\n- 相對路徑需要以 `./` 開頭\n- 你也可以從 npm 依賴中導入資源\n\n```vue\n<!-- 從所安裝的 \"todomvc-app-css\" npm 包中導入一個文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 導入對自定義語塊也同樣適用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+        "value": "\n如果你更喜歡將 `*.vue` 組件分散到多個文件中，可以為一個語塊使用 `src` 這個 attribute 來導入一個外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n請注意 `src` 導入和 JS 模塊導入遵循相同的路徑解析規則，這意味著：\n\n- 相對路徑需要以 `./` 開頭\n- 你也可以從 npm 依賴中導入資源\n\n```vue\n<!-- 從所安裝的 \"todomvc-app-css\" npm 包中導入一個文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 導入對自定義語塊也同樣適用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
       },
       "references": [
         {

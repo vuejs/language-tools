@@ -5,7 +5,7 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 const OpenCC = require('opencc');
-const converter = new OpenCC('s2t.json');
+const converter = new OpenCC('s2tw.json');
 const langs = [
 	{
 		name: 'en',

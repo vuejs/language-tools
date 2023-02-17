@@ -5,7 +5,7 @@
       "name": "lazy",
       "description": {
         "kind": "markdown",
-        "value": "\n默認情況下，`v-model` 會在每次 `input` 事件後更新數據 ([IME 拼字階段的狀態](#vmodel-ime-tip)例外)。你可以添加 `lazy` 修飾符來改爲在每次 `change` 事件後更新數據：\n\n```html\n<!-- 在 \"change\" 事件後同步更新而不是 \"input\" -->\n<input v-model.lazy=\"msg\" />\n```\n"
+        "value": "\n默認情況下，`v-model` 會在每次 `input` 事件後更新數據 ([IME 拼字階段的狀態](#vmodel-ime-tip)例外)。你可以添加 `lazy` 修飾符來改為在每次 `change` 事件後更新數據：\n\n```html\n<!-- 在 \"change\" 事件後同步更新而不是 \"input\" -->\n<input v-model.lazy=\"msg\" />\n```\n"
       },
       "references": [
         {
@@ -34,7 +34,7 @@
       "name": "number",
       "description": {
         "kind": "markdown",
-        "value": "\n如果你想讓用戶輸入自動轉換爲數字，你可以在 `v-model` 後添加 `.number` 修飾符來管理輸入：\n\n```html\n<input v-model.number=\"age\" />\n```\n\n如果該值無法被 `parseFloat()` 處理，那麼將返回原始值。\n\n`number` 修飾符會在輸入框有 `type=\"number\"` 時自動啓用。\n"
+        "value": "\n如果你想讓用戶輸入自動轉換為數字，你可以在 `v-model` 後添加 `.number` 修飾符來管理輸入：\n\n```html\n<input v-model.number=\"age\" />\n```\n\n如果該值無法被 `parseFloat()` 處理，那麼將返回原始值。\n\n`number` 修飾符會在輸入框有 `type=\"number\"` 時自動啟用。\n"
       },
       "references": [
         {
