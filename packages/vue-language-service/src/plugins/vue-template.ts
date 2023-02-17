@@ -116,6 +116,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 						const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
 						const scanner = options.getScanner(document, templatePlugin as ReturnType<T>);
 						if (virtualFile && virtualFile instanceof vue.VueFile && scanner) {
+
+							// visualize missing required props
 							const casing = await getNameCasing(map.sourceFileDocument.uri);
 							const components = checkComponentNames(_ts.module, _ts.languageService, virtualFile);
 							const componentProps: Record<string, string[]> = {};

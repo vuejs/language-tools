@@ -13,6 +13,7 @@ import createAutoDotValuePlugin from './plugins/vue-autoinsert-dotvalue';
 import createReferencesCodeLensPlugin from './plugins/vue-codelens-references';
 import createTwoslashQueries from './plugins/vue-twoslash-queries';
 import createVueTemplateLanguagePlugin from './plugins/vue-template';
+import createVisualizeHiddenCallbackParamPlugin from './plugins/vue-visualize-hidden-callback-param';
 import type { Data } from '@volar-plugins/typescript/out/services/completions/basic';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { Config } from '@volar/language-service';
@@ -257,6 +258,7 @@ function resolvePlugins(
 	plugins['vue/twoslash-queries'] ??= createTwoslashQueries();
 	plugins['vue/autoInsertParentheses'] ??= createAutoWrapParenthesesPlugin();
 	plugins['vue/autoInsertSpaces'] ??= createAutoAddSpacePlugin();
+	plugins['vue/visualizeHiddenCallbackParam'] ??= createVisualizeHiddenCallbackParamPlugin();
 	plugins.emmet ??= createEmmetPlugin();
 
 	return plugins;

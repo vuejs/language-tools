@@ -9,6 +9,7 @@ import minimatch from 'minimatch';
 
 const capabilitiesPresets = {
 	all: FileRangeCapabilities.full,
+	allWithHiddenParam: { ...FileRangeCapabilities.full, __hiddenParam: true /* TODO */ } as FileRangeCapabilities,
 	noDiagnostic: { ...FileRangeCapabilities.full, diagnostic: false } satisfies FileRangeCapabilities,
 	diagnosticOnly: { diagnostic: true } satisfies FileRangeCapabilities,
 	tagHover: { hover: true } satisfies FileRangeCapabilities,
@@ -787,10 +788,18 @@ export function generate(
 						suffix = '\n}';
 					}
 
+					let isFirstMapping = true;
+
 					writeInterpolation(
 						prop.exp.content,
 						prop.exp.loc.start.offset,
-						capabilitiesPresets.all,
+						() => {
+							if (isCompoundExpression && isFirstMapping) {
+								isFirstMapping = false;
+								return capabilitiesPresets.allWithHiddenParam;
+							}
+							return capabilitiesPresets.all;
+						},
 						prefix,
 						suffix,
 						prop.exp.loc,
@@ -1707,7 +1716,7 @@ export function generate(
 	function writeInterpolation(
 		mapCode: string,
 		sourceOffset: number | undefined,
-		data: FileRangeCapabilities | undefined,
+		data: FileRangeCapabilities | (() => FileRangeCapabilities) | undefined,
 		prefix: string,
 		suffix: string,
 		cacheOn: any,
@@ -1737,7 +1746,7 @@ export function generate(
 						sourceOffset + fragOffset,
 						isJustForErrorMapping
 							? capabilitiesPresets.diagnosticOnly
-							: data,
+							: typeof data === 'function' ? data() : data,
 					]);
 				}
 				else {
