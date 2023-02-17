@@ -13,8 +13,8 @@ for (const dirName of testDirs) {
 	describe(`format: ${dirName}`, async () => {
 
 		const dir = path.join(baseDir, dirName);
-		const inputFileName = path.join(dir, 'input.vue');
-		const outputFileName = path.join(dir, 'output.vue');
+		const inputFileName = fs.existsSync(path.join(dir, 'input.vue')) ? path.join(dir, 'input.vue') : path.join(dir, 'input.ts');
+		const outputFileName = fs.existsSync(path.join(dir, 'output.vue')) ? path.join(dir, 'output.vue') : path.join(dir, 'output.ts');
 		const input = fs.readFileSync(inputFileName, 'utf8');
 		const output = fs.readFileSync(outputFileName, 'utf8');
 		const document = TextDocument.create(shared.fileNameToUri(inputFileName), 'vue', 0, input);
