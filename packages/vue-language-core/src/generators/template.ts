@@ -144,7 +144,7 @@ export function generate(
 
 		const data: Record<string, string> = {};
 
-		codeGen.push(`let __VLS_templateComponents!: {\n`);
+		codeGen.push(`let __VLS_templateComponents!: {}\n`);
 
 		for (const tagName in tagNames) {
 
@@ -163,12 +163,12 @@ export function generate(
 			]);
 			const varName = validTsVar.test(tagName) ? tagName : capitalize(camelize(tagName.replace(/:/g, '-')));
 
-			codeGen.push(`${varName}: import('./__VLS_types.js').GetComponents<typeof __VLS_components, ${[...names].map(name => `'${name}'`).join(', ')}>;\n`);
+			codeGen.push(`& import('./__VLS_types.js').WithComponent<'${varName}', typeof __VLS_components, ${[...names].map(name => `'${name}'`).join(', ')}>\n`);
 
 			data[tagName] = varName;
 		}
 
-		codeGen.push(`};\n`);
+		codeGen.push(`;\n`);
 
 		for (const tagName in tagNames) {
 
@@ -541,7 +541,13 @@ export function generate(
 					codeGen.push(`;\n`);
 				}
 
-				codeGen.push(`let __VLS_${elementIndex++}: JSX.IntrinsicElements = { `);
+				codeGen.push(`(__VLS_x as JSX.IntrinsicElements)[`);
+				writeCodeWithQuotes(
+					node.tag,
+					tagOffsets[0],
+					capabilitiesPresets.diagnosticOnly,
+				);
+				codeGen.push(`] = `);
 			}
 			else if (_isNamespacedTag) {
 
@@ -555,7 +561,7 @@ export function generate(
 					codeGen.push(`;\n`);
 				}
 
-				codeGen.push(`const __VLS_${elementIndex++}: import('./__VLS_types.js').ComponentProps<typeof ${node.tag}> = { `);
+				codeGen.push(`(__VLS_x as import('./__VLS_types.js').ComponentProps<typeof ${node.tag}>) = `);
 			}
 			else {
 
@@ -567,12 +573,15 @@ export function generate(
 						componentVars[node.tag] ?? node.tag,
 						'template',
 						[endTagOffset, endTagOffset + node.tag.length],
-						capabilitiesPresets.tagHover,
+						{
+							...capabilitiesPresets.tagHover,
+							...capabilitiesPresets.diagnosticOnly,
+						},
 					]);
 					codeGen.push(`;\n`);
 				}
 
-				codeGen.push(`const __VLS_${elementIndex++}: { '${node.tag}': import('./__VLS_types.js').ComponentProps<typeof `);
+				codeGen.push(`(__VLS_x as import('./__VLS_types.js').ComponentProps<typeof `);
 				if (componentVars[node.tag]) {
 					codeGen.push(`__VLS_templateComponents.`);
 				}
@@ -580,16 +589,18 @@ export function generate(
 					componentVars[node.tag] ?? node.tag,
 					'template',
 					[startTagOffset, startTagOffset + node.tag.length],
-					capabilitiesPresets.tagHover,
+					{
+						...capabilitiesPresets.tagHover,
+						...capabilitiesPresets.diagnosticOnly,
+					},
 				]);
-				codeGen.push(`> } = { `);
+				codeGen.push(`>) = `);
 			}
 
-			writeObjectProperty(node.tag, startTagOffset, capabilitiesPresets.diagnosticOnly, node);
-			codeGen.push(` : { `);
+			codeGen.push(`{ `);
 			const { unWriteExps } = writeProps(node, 'class', 'props');
 			_unWriteExps = unWriteExps;
-			codeGen.push(` } };\n`);
+			codeGen.push(`};\n`);
 		}
 		{
 

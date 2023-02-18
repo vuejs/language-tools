@@ -102,11 +102,11 @@ export type FirstFunction<F0 = void, F1 = void, F2 = void, F3 = void, F4 = void>
 	NonNullable<F4> extends (Function | AnyArray<Function>) ? F4 :
 	unknown;
 export type SelfComponent<N, C> = string extends N ? {} : N extends string ? { [P in N]: C } : {};
-export type GetComponents<Components, N1, N2 = unknown, N3 = unknown> =
-	N1 extends keyof Components ? Components[N1] :
-	N2 extends keyof Components ? Components[N2] :
-	N3 extends keyof Components ? Components[N3] :
-	${vueCompilerOptions.strictTemplates ? 'unknown' : 'any'};
+export type WithComponent<N0, Components, N1, N2 = unknown, N3 = unknown> =
+	N1 extends keyof Components ? { [K in N0]: Components[N1] } :
+	N2 extends keyof Components ? { [K in N0]: Components[N2] } :
+	N3 extends keyof Components ? { [K in N0]: Components[N3] } :
+	${vueCompilerOptions.strictTemplates ? '{}' : '{ [K in N0]: any }'};
 export type ComponentProps<T> =
 	${vueCompilerOptions.strictTemplates ? '' : 'Record<string, unknown> &'}
 	(
