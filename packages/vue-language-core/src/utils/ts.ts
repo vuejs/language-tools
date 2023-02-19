@@ -169,12 +169,6 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 			'': {
 				input: true
 			},
-			checked: {
-				input: [
-					{ type: 'checkbox' },
-					{ type: 'radio' }
-				]
-			},
 			value: {
 				input: { type: 'text' },
 				textarea: true,
