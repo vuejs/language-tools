@@ -172,7 +172,38 @@ export function generate(
 
 		if (!src.endsWith('.js') && !src.endsWith('.jsx')) src = src + '.js';
 
-		codeGen.push(`export * from '${src}';\n`);
+		codeGen.push(`export * from `);
+		console.log(src === sfc.script.src);
+		codeGen.push([
+			`'${src}'`,
+			'script',
+			[sfc.script.srcOffset - 1, sfc.script.srcOffset + sfc.script.src.length + 1],
+			{
+				...FileRangeCapabilities.full,
+				rename: src === sfc.script.src ? true : {
+					normalize: undefined,
+					apply(newName) {
+						if (
+							newName.endsWith('.jsx')
+							|| newName.endsWith('.js')
+						) {
+							newName = newName.split('.').slice(0, -1).join('.');
+						}
+						if (sfc.script?.src?.endsWith('.d.ts')) {
+							newName = newName + '.d.ts';
+						}
+						else if (sfc.script?.src?.endsWith('.ts')) {
+							newName = newName + '.ts';
+						}
+						else if (sfc.script?.src?.endsWith('.tsx')) {
+							newName = newName + '.tsx';
+						}
+						return newName;
+					},
+				},
+			},
+		]);
+		codeGen.push(`;\n`);
 		codeGen.push(`export { default } from '${src}';\n`);
 	}
 	function writeScriptContentBeforeExportDefault() {

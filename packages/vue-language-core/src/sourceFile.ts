@@ -461,6 +461,7 @@ export class VueFile implements VirtualFile {
 			content: block.content,
 			lang: block.lang ?? 'js',
 			src: block.src,
+			srcOffset: block.src ? this.snapshot.getText(0, block.loc.start.offset).lastIndexOf(block.src) - block.loc.start.offset : -1,
 		} : null;
 
 		if (this.sfc.script && newData) {

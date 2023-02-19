@@ -73,6 +73,7 @@ export interface Sfc {
 	template: SfcBlock | null;
 	script: (SfcBlock & {
 		src: string | undefined;
+		srcOffset: number;
 	}) | null;
 	scriptSetup: SfcBlock & {
 		// https://github.com/vuejs/rfcs/discussions/436
