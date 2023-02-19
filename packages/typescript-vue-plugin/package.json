@@ -13,7 +13,7 @@
 		"directory": "packages/typescript-vue-plugin"
 	},
 	"dependencies": {
-		"@volar/typescript-faster": "1.2.0-alpha.14",
+		"@volar/typescript-faster": "1.2.0-alpha.15",
 		"@volar/vue-language-core": "1.1.3",
 		"@volar/vue-typescript": "1.1.3"
 	}
