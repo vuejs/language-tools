@@ -171,6 +171,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 				|| e.affectsConfiguration('volar.vueserver.additionalExtensions')
 				|| e.affectsConfiguration('volar.vueserver.maxFileSize')
 				|| e.affectsConfiguration('volar.vueserver.configFilePath')
+				|| e.affectsConfiguration('volar.vueserver.fullCompletionList')
 			) {
 				requestReloadVscode();
 			}
@@ -244,6 +245,10 @@ export function diagnosticModel() {
 
 function additionalExtensions() {
 	return vscode.workspace.getConfiguration('volar').get<string[]>('vueserver.additionalExtensions') ?? [];
+}
+
+function fullCompletionList() {
+	return vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.fullCompletionList');
 }
 
 function getFillInitializeParams(featuresKinds: LanguageFeaturesKind[]) {
@@ -328,6 +333,7 @@ function getInitializationOptions(
 			tokenTypes: ['component'],
 			tokenModifiers: [],
 		},
+		fullCompletionList: fullCompletionList(),
 	};
 	return initializationOptions;
 }
