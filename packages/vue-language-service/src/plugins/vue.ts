@@ -92,6 +92,8 @@ export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin =
 			},
 		},
 
+		findDocumentLinks: false,
+
 		findDocumentSymbols(document) {
 			return worker(document, (vueSourceFile) => {
 
