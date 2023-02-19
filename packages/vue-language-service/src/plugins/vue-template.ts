@@ -6,7 +6,7 @@ import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { checkComponentNames, checkEventsOfTag, checkPropsOfTag, getElementAttrs } from '../helpers';
-import * as casing from '../ideFeatures/nameCasing';
+import { getNameCasing } from '../ideFeatures/nameCasing';
 import { AttrNameCasing, VueCompilerOptions, TagNameCasing } from '../types';
 import { loadTemplateData, loadModelModifiersData } from './data';
 
@@ -118,7 +118,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 						if (virtualFile && virtualFile instanceof vue.VueFile && scanner) {
 
 							// visualize missing required props
-							const casing = await getNameCasing(map.sourceFileDocument.uri);
+							const casing = await getNameCasing(_context, _ts, map.sourceFileDocument.uri);
 							const components = checkComponentNames(_ts.module, _ts.languageService, virtualFile);
 							const componentProps: Record<string, string[]> = {};
 							let token: html.TokenType;
@@ -337,7 +337,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 		async function provideHtmlData(map: SourceMapWithDocuments<FileRangeCapabilities>, vueSourceFile: vue.VueFile) {
 
-			const casing = await getNameCasing(map.sourceFileDocument.uri);
+			const casing = await getNameCasing(_context, _ts, map.sourceFileDocument.uri);
 
 			if (builtInData.tags) {
 				for (const tag of builtInData.tags) {
@@ -507,22 +507,6 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					provideValues: () => [],
 				},
 			]);
-		}
-
-		async function getNameCasing(uri: string) {
-
-			const detected = casing.detect(_context, _ts, uri);
-			const [attr, tag] = await Promise.all([
-				_context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('volar.completion.preferredAttrNameCase', uri),
-				_context.env.configurationHost?.getConfiguration<'auto-kebab' | 'auto-pascal' | 'kebab' | 'pascal'>('volar.completion.preferredTagNameCase', uri),
-			]);
-			const tagNameCasing = detected.tag.length === 1 && (tag === 'auto-pascal' || tag === 'auto-kebab') ? detected.tag[0] : (tag === 'auto-kebab' || tag === 'kebab') ? TagNameCasing.Kebab : TagNameCasing.Pascal;
-			const attrNameCasing = detected.attr.length === 1 && (attr === 'auto-camel' || attr === 'auto-kebab') ? detected.attr[0] : (attr === 'auto-camel' || attr === 'camel') ? AttrNameCasing.Camel : AttrNameCasing.Kebab;
-
-			return {
-				tag: tagNameCasing,
-				attr: attrNameCasing,
-			};
 		}
 
 		function afterHtmlCompletion(completionList: vscode.CompletionList, map: SourceMapWithDocuments<FileRangeCapabilities>, vueSourceFile: vue.VueFile) {

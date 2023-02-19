@@ -17,11 +17,13 @@ import createVisualizeHiddenCallbackParamPlugin from './plugins/vue-visualize-hi
 import type { Data } from '@volar-plugins/typescript/out/services/completions/basic';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { Config } from '@volar/language-service';
+import { hyphenate } from '@vue/shared';
 
 import * as createPugFormatPlugin from '@volar-plugins/pug-beautify';
 import createAutoWrapParenthesesPlugin from './plugins/vue-autoinsert-parentheses';
 import createAutoAddSpacePlugin from './plugins/vue-autoinsert-space';
-import { VueCompilerOptions } from './types';
+import { TagNameCasing, VueCompilerOptions } from './types';
+import { getNameCasing } from './ideFeatures/nameCasing';
 
 export interface Settings {
 	json?: Parameters<typeof createJsonPlugin>[0];
@@ -105,7 +107,9 @@ function resolvePlugins(
 					}
 
 					if (
-						item.textEdit?.newText && /\w*Vue$/.test(item.textEdit.newText)
+						itemData?.uri
+						&& _context.typescript
+						&& item.textEdit?.newText && /\w*Vue$/.test(item.textEdit.newText)
 						&& item.additionalTextEdits?.length === 1 && item.additionalTextEdits[0].newText.indexOf('import ' + item.textEdit.newText + ' from ') >= 0
 						&& (await _context.env.configurationHost?.getConfiguration<boolean>('volar.completion.normalizeComponentImportName') ?? true)
 					) {
@@ -126,6 +130,13 @@ function resolvePlugins(
 							'import ' + newName + ' from ',
 						);
 						item.textEdit.newText = newName;
+						const source = _context.documents.getVirtualFileByUri(itemData.uri)[1];
+						if (source) {
+							const casing = await getNameCasing(_context, _context.typescript, _context.fileNameToUri(source.fileName));
+							if (casing.tag === TagNameCasing.Kebab) {
+								item.textEdit.newText = hyphenate(item.textEdit.newText);
+							}
+						}
 					}
 					else if (
 						item.textEdit?.newText && /import \w*Vue\$1 from \S*/.test(item.textEdit.newText)
