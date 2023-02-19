@@ -1,18 +1,16 @@
 # Changelog
 
-## 1.1.3 (2023/2/18)
+## 1.1.4 (2023/2/20)
 
-- feat: visualize event argument in inline handlers
-- feat: add description for model modifiers ([#2405](https://github.com/johnsoncodehk/volar/issues/2405))
-- fix: remove deprecated preview commands ([#2402](https://github.com/johnsoncodehk/volar/issues/2402))
-- fix: missing required props hint not working with v-model ([#2407](https://github.com/johnsoncodehk/volar/issues/2407))
-- fix: cannot collapse code in .js / .ts files with takeover mode ([#2408](https://github.com/johnsoncodehk/volar/issues/2408))
-- fix: symbols view stopped working for .js / .ts files with takeover mode ([#2404](https://github.com/johnsoncodehk/volar/issues/2404))
-- fix: cannot rename html tags ([#2410](https://github.com/johnsoncodehk/volar/issues/2410))
-- fix: cannot display rename fail message
-- fix: format on type cannot working for code blocks that enabled `volar.format.initialIndent` ([#2401](https://github.com/johnsoncodehk/volar/issues/2401))
-- fix: vue-tsc crashes in watch mode when file changed ([#2403](https://github.com/johnsoncodehk/volar/issues/2403))
-- fix: prop type definition inaccurate for `v-model` directive on native input ([#2399](https://github.com/johnsoncodehk/volar/issues/2399))
+- feat: support for script src path intellisense ([#2331](https://github.com/johnsoncodehk/volar/issues/2331))
+- feat: support name casing setting for component auto import ([#2362](https://github.com/johnsoncodehk/volar/issues/2362))
+- feat: add `volar.vueserver.fullCompletionList` setting ([#2422](https://github.com/johnsoncodehk/volar/issues/2422))
+- perf: filter completion items in language server for better performance ([#2306](https://github.com/johnsoncodehk/volar/issues/2306))
+- fix: `strictTemplates` did not check for unknown components ([#2291](https://github.com/johnsoncodehk/volar/issues/2291))
+- fix: duplicate document links in the template ([#2291](https://github.com/johnsoncodehk/volar/issues/2291))
+- fix: completion not working for namespace components ([#2382](https://github.com/johnsoncodehk/volar/issues/2382))
+- fix: html comments and js template strings format indent incorrect ([#2420](https://github.com/johnsoncodehk/volar/issues/2420))
+- fix: do not correspond `v-model` to `checked` prop for checkbox and radio input tags ([#2415](https://github.com/johnsoncodehk/volar/issues/2415))
 
 ---
 
@@ -44,6 +42,20 @@
 <p align="center">
 	<h5 align="center"><a href="https://github.com/sponsors/johnsoncodehk">Adding You</a></h5>
 </p>
+
+## 1.1.3 (2023/2/18)
+
+- feat: visualize event argument in inline handlers
+- feat: add description for model modifiers ([#2405](https://github.com/johnsoncodehk/volar/issues/2405))
+- fix: remove deprecated preview commands ([#2402](https://github.com/johnsoncodehk/volar/issues/2402))
+- fix: missing required props hint not working with v-model ([#2407](https://github.com/johnsoncodehk/volar/issues/2407))
+- fix: cannot collapse code in .js / .ts files with takeover mode ([#2408](https://github.com/johnsoncodehk/volar/issues/2408))
+- fix: symbols view stopped working for .js / .ts files with takeover mode ([#2404](https://github.com/johnsoncodehk/volar/issues/2404))
+- fix: cannot rename html tags ([#2410](https://github.com/johnsoncodehk/volar/issues/2410))
+- fix: cannot display rename fail message
+- fix: format on type cannot working for code blocks that enabled `volar.format.initialIndent` ([#2401](https://github.com/johnsoncodehk/volar/issues/2401))
+- fix: vue-tsc crashes in watch mode when file changed ([#2403](https://github.com/johnsoncodehk/volar/issues/2403))
+- fix: prop type definition inaccurate for `v-model` directive on native input ([#2399](https://github.com/johnsoncodehk/volar/issues/2399))
 
 ## 1.1.2 (2023/2/17)
 
