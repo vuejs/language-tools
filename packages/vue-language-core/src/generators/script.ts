@@ -801,7 +801,7 @@ export function generate(
 			}
 			for (const tag of Object.keys(htmlGen.tagNames)) {
 				if (tag.indexOf('.') >= 0) {
-					usageVars.add(tag);
+					usageVars.add(tag.split('.')[0]);
 				}
 			}
 			for (const _id of htmlGen.identifiers) {
