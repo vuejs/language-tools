@@ -7,7 +7,7 @@
 - feat: add `volar.vueserver.fullCompletionList` setting ([#2422](https://github.com/johnsoncodehk/volar/issues/2422))
 - perf: filter completion items in language server for better performance ([#2306](https://github.com/johnsoncodehk/volar/issues/2306))
 - fix: `strictTemplates` did not check for unknown components ([#2291](https://github.com/johnsoncodehk/volar/issues/2291))
-- fix: duplicate document links in the template ([#2291](https://github.com/johnsoncodehk/volar/issues/2291))
+- fix: duplicate document links in the template
 - fix: completion not working for namespace components ([#2382](https://github.com/johnsoncodehk/volar/issues/2382))
 - fix: html comments and js template strings format indent incorrect ([#2420](https://github.com/johnsoncodehk/volar/issues/2420))
 - fix: do not correspond `v-model` to `checked` prop for checkbox and radio input tags ([#2415](https://github.com/johnsoncodehk/volar/issues/2415))
@@ -63,7 +63,7 @@
 - fix: incidentally inserting indents when inserting new lines when if `editor.formatOnType` ([#2394](https://github.com/johnsoncodehk/volar/issues/2394))
 - fix: template formatting last line indent incorrect ([#2393](https://github.com/johnsoncodehk/volar/issues/2393))
 - fix: template start tag got deleting if first line is comment ([#2390](https://github.com/johnsoncodehk/volar/issues/2390))
-- fix: takeover statue incorrect in display ([#2389](https://github.com/johnsoncodehk/volar/issues/2389))
+- fix: takeover mode status incorrect in display ([#2389](https://github.com/johnsoncodehk/volar/issues/2389))
 - fix: diff window's document was unexpectedly diagnosed ([#2391](https://github.com/johnsoncodehk/volar/issues/2391))
 - fix: emmet completions appear inside open tag ([#1329](https://github.com/johnsoncodehk/volar/issues/1329))
 - fix: `opencc` is depended on by language server ([#2388](https://github.com/johnsoncodehk/volar/issues/2388))
