@@ -1,6 +1,6 @@
 {
 	"name": "@volar/vue-language-server",
-	"version": "1.1.4",
+	"version": "1.1.5",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -19,9 +19,9 @@
 		"@volar/language-core": "1.2.0-alpha.17",
 		"@volar/language-server": "1.2.0-alpha.17",
 		"@volar/shared": "1.2.0-alpha.17",
-		"@volar/vue-language-core": "1.1.4",
-		"@volar/vue-language-service": "1.1.4",
+		"@volar/vue-language-core": "1.1.5",
+		"@volar/vue-language-service": "1.1.5",
 		"vscode-languageserver-protocol": "^3.17.3",
-		"vue-component-meta": "1.1.4"
+		"vue-component-meta": "1.1.5"
 	}
 }
