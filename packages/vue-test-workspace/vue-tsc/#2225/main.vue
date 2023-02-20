@@ -14,7 +14,7 @@ const searchFunction2 = () => {
 </script>
 
 <template>
-  <TestComp
+  <component
     @reset="
       () => {
         resetFunction()

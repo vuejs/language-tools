@@ -3,6 +3,10 @@
 	"compilerOptions": {
 		"noPropertyAccessFromIndexSignature": true,
 	},
+	"vueCompilerOptions": {
+		"strictTemplates": true,
+		"plugins": ["../../vue-language-plugin-pug"]
+	},
 	"include": [
 		"**/*.vue",
 		"**/*.html",

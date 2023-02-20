@@ -38,9 +38,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 								if (prop === 'offset') {
 									const htmlOffset = target.offset;
 									for (const mapped of map.toSourceOffsets(htmlOffset)) {
-										if (mapped[1].data !== pug.MappingKind.EmptyTagCompletion) {
-											return mapped[0];
-										}
+										return mapped[0];
 									}
 									return -1;
 								}

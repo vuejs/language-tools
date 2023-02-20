@@ -1,6 +1,8 @@
 <template>
-	<Comp>
+	<component>
 		<template #actions></template>
+	</component>
+	<component>
 		<template v-slot:actions></template>
-	</Comp>
+	</component>
 </template>
