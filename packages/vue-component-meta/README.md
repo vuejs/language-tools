@@ -23,7 +23,7 @@ const checkerOptions: MetaCheckerOptions = {
 
 const tsconfigChecker = createComponentMetaChecker(
   // Write your tsconfig path
-  path.join(__dirname, 'path-to-tsconfig')
+  path.join(__dirname, 'path-to-tsconfig'),
   checkerOptions,
 )
 ```
