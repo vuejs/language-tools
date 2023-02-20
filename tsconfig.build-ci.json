@@ -11,5 +11,8 @@
 		{
 			"path": "./packages/vue-component-meta/tsconfig.build.json"
 		},
+		{
+			"path": "./packages/vue-language-plugin-pug/tsconfig.build.json"
+		},
 	]
 }
