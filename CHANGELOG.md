@@ -1,16 +1,14 @@
 # Changelog
 
-## 1.1.4 (2023/2/20)
+## 1.1.5 (2023/2/21)
 
-- feat: support for script src path intellisense ([#2331](https://github.com/johnsoncodehk/volar/issues/2331))
-- feat: support name casing setting for component auto import ([#2362](https://github.com/johnsoncodehk/volar/issues/2362))
-- feat: add `volar.vueserver.fullCompletionList` setting ([#2422](https://github.com/johnsoncodehk/volar/issues/2422))
-- perf: filter completion items in language server for better performance ([#2306](https://github.com/johnsoncodehk/volar/issues/2306))
-- fix: `strictTemplates` did not check for unknown components ([#2291](https://github.com/johnsoncodehk/volar/issues/2291))
-- fix: duplicate document links in the template
-- fix: completion not working for namespace components ([#2382](https://github.com/johnsoncodehk/volar/issues/2382))
-- fix: html comments and js template strings format indent incorrect ([#2420](https://github.com/johnsoncodehk/volar/issues/2420))
-- fix: do not correspond `v-model` to `checked` prop for checkbox and radio input tags ([#2415](https://github.com/johnsoncodehk/volar/issues/2415))
+- feat: prettify type for css module `$style`
+- fix: only generate component with function type when use `generic` attribute
+- fix: document links feature broken ([#2426](https://github.com/johnsoncodehk/volar/issues/2426))
+- fix: missing props inlay hints not working for namespace components
+- fix: component tags type-check not working
+- fix: pug template reporting TS2339 when `strictTemplates` enabled ([#2431](https://github.com/johnsoncodehk/volar/issues/2431))
+- fix: pug tag completion not working at empty lines
 
 ---
 
@@ -42,6 +40,18 @@
 <p align="center">
 	<h5 align="center"><a href="https://github.com/sponsors/johnsoncodehk">Adding You</a></h5>
 </p>
+
+## 1.1.4 (2023/2/20)
+
+- feat: support for script src path intellisense ([#2331](https://github.com/johnsoncodehk/volar/issues/2331))
+- feat: support name casing setting for component auto import ([#2362](https://github.com/johnsoncodehk/volar/issues/2362))
+- feat: add `volar.vueserver.fullCompletionList` setting ([#2422](https://github.com/johnsoncodehk/volar/issues/2422))
+- perf: filter completion items in language server for better performance ([#2306](https://github.com/johnsoncodehk/volar/issues/2306))
+- fix: `strictTemplates` did not check for unknown components ([#2291](https://github.com/johnsoncodehk/volar/issues/2291))
+- fix: duplicate document links in the template
+- fix: completion not working for namespace components ([#2382](https://github.com/johnsoncodehk/volar/issues/2382))
+- fix: html comments and js template strings format indent incorrect ([#2420](https://github.com/johnsoncodehk/volar/issues/2420))
+- fix: do not correspond `v-model` to `checked` prop for checkbox and radio input tags ([#2415](https://github.com/johnsoncodehk/volar/issues/2415))
 
 ## 1.1.3 (2023/2/18)
 
