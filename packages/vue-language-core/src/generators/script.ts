@@ -650,7 +650,7 @@ export function generate(
 
 		/* CSS Module */
 		for (const cssModule of cssModuleClasses) {
-			codeGen.push(`${cssModule.style.module}: Record<string, string>`);
+			codeGen.push(`${cssModule.style.module}: Record<string, string> & import('./__VLS_types.js').Prettify<{}`);
 			for (const classNameRange of cssModule.classNameRanges) {
 				writeCssClassProperty(
 					cssModule.index,
@@ -660,7 +660,7 @@ export function generate(
 					false,
 				);
 			}
-			codeGen.push(';\n');
+			codeGen.push('>;\n');
 		}
 		codeGen.push(`};\n`);
 

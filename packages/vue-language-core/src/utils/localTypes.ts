@@ -29,6 +29,10 @@ type ForableSource<T> = [
 	typeof Symbol.iterator extends keyof T ? undefined : number, // index
 ][];
 
+export type Prettify<T> = {
+	[K in keyof T]: T[K];
+} & {};
+
 export type GlobalComponents =
 	// @ts-ignore
 	PickNotAny<import('vue').GlobalComponents, {}>
