@@ -25,6 +25,8 @@
 	},
 	"optionalDependencies": {
 		"@lerna-lite/cli": "latest",
-		"@vscode/test-web": "latest"
+		"@vscode/test-web": "latest",
+		"axios": "latest",
+		"opencc": "latest"
 	}
 }
