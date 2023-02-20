@@ -130,11 +130,15 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 							while ((token = scanner.scan()) !== html.TokenType.EOS) {
 								if (token === html.TokenType.StartTag) {
 									const tagName = scanner.getTokenText();
-									const component = components.find(component => component === tagName || hyphenate(component) === tagName);
-									if (component) {
-										componentProps[component] ??= checkPropsOfTag(_ts.module, _ts.languageService, virtualFile, component, true);
+									const component =
+										tagName.indexOf('.') >= 0
+											? components.find(component => component === tagName.split('.')[0])
+											: components.find(component => component === tagName || hyphenate(component) === tagName);
+									const checkTag = tagName.indexOf('.') >= 0 ? tagName : component;
+									if (checkTag) {
+										componentProps[checkTag] ??= checkPropsOfTag(_ts.module, _ts.languageService, virtualFile, checkTag, true);
 										current = {
-											unburnedRequiredProps: [...componentProps[component]],
+											unburnedRequiredProps: [...componentProps[checkTag]],
 											labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
 											insertOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
 										};
