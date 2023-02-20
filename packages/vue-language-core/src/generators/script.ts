@@ -76,6 +76,7 @@ export function generate(
 		ConstructorOverloads: false,
 		WithTemplateSlots: false,
 	};
+	const generateFunctionType = !!vueCompilerOptions.experimentalRfc436 && !!sfc.scriptSetup?.generic;
 
 	writeScriptSrc();
 	writeScriptSetupImportsSegment();
@@ -300,7 +301,7 @@ export function generate(
 				codeGen.push('export default ');
 			}
 			codeGen.push('(');
-			if (vueCompilerOptions.experimentalRfc436 && sfc.scriptSetup.generic) {
+			if (generateFunctionType && sfc.scriptSetup.generic) {
 				codeGen.push(`<`);
 				codeGen.push([
 					sfc.scriptSetup.generic,
@@ -311,13 +312,13 @@ export function generate(
 				codeGen.push(`>`);
 			}
 			codeGen.push('(');
-			if (vueCompilerOptions.experimentalRfc436 && scriptSetupRanges.propsTypeArg) {
+			if (generateFunctionType && scriptSetupRanges.propsTypeArg) {
 				codeGen.push('__VLS_props: ');
 				addVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
 			}
 			codeGen.push(') => {\n');
 			codeGen.push('const __VLS_setup = async () => {\n');
-			if (vueCompilerOptions.experimentalRfc436 && scriptSetupRanges.propsTypeArg) {
+			if (generateFunctionType && scriptSetupRanges.propsTypeArg) {
 				addVirtualCode('scriptSetup', scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.propsTypeArg.start);
 				codeGen.push('typeof __VLS_props');
 				addVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.end);
@@ -357,7 +358,7 @@ export function generate(
 						}
 
 						codeGen.push(`__VLS_TypePropsToRuntimeProps<`);
-						if (vueCompilerOptions.experimentalRfc436) {
+						if (generateFunctionType) {
 							codeGen.push(`typeof __VLS_props`);
 						}
 						else {
@@ -443,7 +444,7 @@ export function generate(
 
 			writeTemplate();
 
-			if (vueCompilerOptions.experimentalRfc436) {
+			if (generateFunctionType) {
 				codeGen.push(`return {} as Omit<JSX.Element, 'props' | 'children'> & Omit<InstanceType<typeof __VLS_publicComponent>, '$slots' | '$emit'>`);
 				codeGen.push(` & {\n`);
 				if (scriptSetupRanges.propsTypeArg) {
@@ -480,7 +481,7 @@ export function generate(
 			codeGen.push(`};\n`);
 			codeGen.push(`return {} as typeof __VLS_setup extends () => Promise<infer T> ? T : never;\n`);
 			codeGen.push(`})`);
-			if (!vueCompilerOptions.experimentalRfc436) {
+			if (!generateFunctionType) {
 				codeGen.push(`({} as any)`);
 			}
 			if (scriptRanges?.exportDefault && scriptRanges.exportDefault.expression.end !== scriptRanges.exportDefault.end) {
