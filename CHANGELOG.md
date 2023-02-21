@@ -1,14 +1,10 @@
 # Changelog
 
-## 1.1.5 (2023/2/21)
+## 1.1.6 (2023/2/22)
 
-- feat: prettify type for css module `$style`
-- fix: only generate component with function type when use `generic` attribute
-- fix: document links feature broken ([#2426](https://github.com/johnsoncodehk/volar/issues/2426))
-- fix: missing props inlay hints not working for namespace components
-- fix: component tags type-check not working
-- fix: pug template reporting TS2339 when `strictTemplates` enabled ([#2431](https://github.com/johnsoncodehk/volar/issues/2431))
-- fix: pug tag completion not working at empty lines
+- fix: template comments were trimmed with formatting in production mode ([#2435](https://github.com/johnsoncodehk/volar/issues/2435))
+- fix: inaccurate outline view of script content
+- fix: takeover mode causes IDE to get stuck in large `.ts` files due to a long list in the outline view
 
 ---
 
@@ -40,6 +36,16 @@
 <p align="center">
 	<h5 align="center"><a href="https://github.com/sponsors/johnsoncodehk">Adding You</a></h5>
 </p>
+
+## 1.1.5 (2023/2/21)
+
+- feat: prettify type for css module `$style`
+- fix: only generate component with function type when use `generic` attribute
+- fix: document links feature broken ([#2426](https://github.com/johnsoncodehk/volar/issues/2426))
+- fix: missing props inlay hints not working for namespace components
+- fix: component tags type-check not working
+- fix: pug template reporting TS2339 when `strictTemplates` enabled ([#2431](https://github.com/johnsoncodehk/volar/issues/2431))
+- fix: pug tag completion not working at empty lines
 
 ## 1.1.4 (2023/2/20)
 
