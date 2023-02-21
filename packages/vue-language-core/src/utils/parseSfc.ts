@@ -33,6 +33,7 @@ export function parse(source: string): SFCParseResult {
 		onError: e => {
 			errors.push(e);
 		},
+		comments: true,
 	});
 	const descriptor: SFCDescriptor = {
 		filename: 'anonymous.vue',
