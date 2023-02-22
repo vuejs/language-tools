@@ -57,16 +57,23 @@ function createParsedCommandLineBase(
 	extendsSet: Set<string>,
 ): ParsedCommandLine {
 
-	let extendsVueOptions = {};
-	const folder = path.dirname(tsConfigPath);
-
 	extendsSet.add(tsConfigPath);
 
-	if (content.raw.extends) {
+	const folder = path.dirname(tsConfigPath);
+	const extendsArr = Array.isArray(content.raw.extends)
+		? content.raw.extends
+		: (content.raw.extends ? [content.raw.extends] : []);
+
+	let extendsVueOptions = {};
+
+	for (let extendsPath of extendsArr) {
 		try {
-			const extendsPath = require.resolve(content.raw.extends, { paths: [folder] });
+			extendsPath = require.resolve(extendsPath, { paths: [folder] });
 			if (!extendsSet.has(extendsPath)) {
-				extendsVueOptions = createParsedCommandLine(ts, parseConfigHost, extendsPath, extraFileExtensions, extendsSet).vueOptions;
+				extendsVueOptions = {
+					...extendsVueOptions,
+					...createParsedCommandLine(ts, parseConfigHost, extendsPath, extraFileExtensions, extendsSet).vueOptions,
+				};
 			}
 		}
 		catch (error) {
