@@ -74,12 +74,23 @@ function createParsedCommandLineBase(
 		}
 	}
 
+	if (content.raw.vueCompilerOptions?.plugins) {
+		content.raw.vueCompilerOptions.plugins = content.raw.vueCompilerOptions.plugins.map((pluginPath: string) => {
+			try {
+				pluginPath = resolvePath(pluginPath);
+				return require(pluginPath);
+			}
+			catch (error) {
+				console.warn('Load plugin failed', pluginPath, error);
+			}
+		});
+	}
+
 	const vueOptions: Partial<VueCompilerOptions> = {
 		...extendsVueOptions,
 		...content.raw.vueCompilerOptions,
 	};
 
-	vueOptions.plugins = vueOptions.plugins?.map(resolvePath);
 	vueOptions.hooks = vueOptions.hooks?.map(resolvePath);
 	vueOptions.experimentalAdditionalLanguageModules = vueOptions.experimentalAdditionalLanguageModules?.map(resolvePath);
 

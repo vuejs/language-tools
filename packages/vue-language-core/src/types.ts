@@ -27,7 +27,7 @@ export interface VueCompilerOptions {
 		defineExpose: string[],
 		withDefaults: string[],
 	};
-	plugins: string[];
+	plugins: VueLanguagePlugin[];
 	hooks: string[];
 	narrowingTypesInInlineHandlers: boolean;
 

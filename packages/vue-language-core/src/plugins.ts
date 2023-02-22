@@ -18,7 +18,7 @@ export function getDefaultVueLanguagePlugins(
 	vueCompilerOptions: VueCompilerOptions,
 ) {
 
-	const _plugins: VueLanguagePlugin[] = [
+	const plugins: VueLanguagePlugin[] = [
 		useVueFilePlugin,
 		useMdFilePlugin,
 		useHtmlFilePlugin,
@@ -28,24 +28,8 @@ export function getDefaultVueLanguagePlugins(
 		useVueSfcScriptsFormat,
 		useVueSfcTemplate,
 		useVueTsx,
+		...vueCompilerOptions.plugins,
 	];
-	const pluginPaths = new Map<number, string>();
-	if (typeof require?.resolve === 'function') {
-		for (const pluginPath of vueCompilerOptions.plugins) {
-			try {
-				const importPath = require.resolve(pluginPath);
-				const plugin = require(importPath);
-				pluginPaths.set(_plugins.length, pluginPath);
-				_plugins.push(plugin);
-			}
-			catch (error) {
-				console.log('Load plugin failed', pluginPath, error);
-			}
-		}
-	}
-	else {
-		console.log('vueCompilerOptions.plugins is not available in Web.');
-	}
 	const pluginCtx: Parameters<VueLanguagePlugin>[0] = {
 		modules: {
 			'@vue/compiler-dom': vueCompilerOptions.target < 3 ? CompilerVue2 : CompilerDOM,
@@ -54,16 +38,18 @@ export function getDefaultVueLanguagePlugins(
 		compilerOptions,
 		vueCompilerOptions,
 	};
-	const plugins = _plugins.map(plugin => plugin(pluginCtx)).sort((a, b) => {
-		const aOrder = a.order ?? 0;
-		const bOrder = b.order ?? 0;
-		return aOrder - bOrder;
-	});
+	const pluginInstances = plugins
+		.map(plugin => plugin(pluginCtx))
+		.sort((a, b) => {
+			const aOrder = a.order ?? 0;
+			const bOrder = b.order ?? 0;
+			return aOrder - bOrder;
+		});
 
-	return plugins.filter((plugin, i) => {
+	return pluginInstances.filter((plugin) => {
 		const valid = plugin.version >= 1 && plugin.version < 2;
 		if (!valid) {
-			console.warn(`Plugin ${JSON.stringify(pluginPaths.get(i) ?? plugin.name)} API version incompatible, expected 1.x but got ${JSON.stringify(plugin.version)}`);
+			console.warn(`Plugin ${JSON.stringify(plugin.name)} API version incompatible, expected 1.x but got ${JSON.stringify(plugin.version)}`);
 		}
 		return valid;
 	});
