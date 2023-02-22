@@ -2,7 +2,7 @@
 
 ## 1.1.7 (2023/2/22)
 
-- fix: document symbols request crash with arrow function declaration ([#2435](https://github.com/johnsoncodehk/volar/issues/2435))
+- fix: document symbols request crash with arrow function declaration ([#2438](https://github.com/johnsoncodehk/volar/issues/2438))
 - fix: document symbols child node range incorrect
 - fix: SFC document symbols tree incorrect
 
