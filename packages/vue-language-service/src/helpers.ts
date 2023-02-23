@@ -4,6 +4,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { computed, ComputedRef } from '@vue/reactivity';
 import { typesFileName } from '@volar/vue-language-core/out/utils/localTypes';
 import { camelize, capitalize } from '@vue/shared';
+import type { VueCompilerOptions } from './types';
 
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
@@ -12,6 +13,7 @@ export function checkPropsOfTag(
 	tsLs: ts.LanguageService,
 	sourceFile: embedded.VirtualFile,
 	tag: string,
+	vueCompilerOptions: VueCompilerOptions,
 	requiredOnly = false,
 ) {
 
@@ -20,18 +22,22 @@ export function checkPropsOfTag(
 	if (!components)
 		return [];
 
-	const links = tag.split('.');
-	let componentSymbol = components.componentsType.getProperty(links[0])
-		?? components.componentsType.getProperty(camelize(links[0]))
-		?? components.componentsType.getProperty(capitalize(camelize(links[0])));
+	const name = tag.split('.');
+
+	let componentSymbol = components.componentsType.getProperty(name[0]);
+
+	if (!componentSymbol && !vueCompilerOptions.nativeTags.includes(name[0])) {
+		componentSymbol = components.componentsType.getProperty(camelize(name[0]))
+			?? components.componentsType.getProperty(capitalize(camelize(name[0])));
+	}
 
 	if (!componentSymbol)
 		return [];
 
 	let componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.componentsNode);
 
-	for (let i = 1; i < links.length; i++) {
-		componentSymbol = componentType.getProperty(links[i]);
+	for (let i = 1; i < name.length; i++) {
+		componentSymbol = componentType.getProperty(name[i]);
 		if (componentSymbol) {
 			componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.componentsNode);
 		}
@@ -77,6 +83,7 @@ export function checkEventsOfTag(
 	tsLs: ts.LanguageService,
 	sourceFile: embedded.VirtualFile,
 	tag: string,
+	vueCompilerOptions: VueCompilerOptions,
 ) {
 
 	const checker = tsLs.getProgram()!.getTypeChecker();
@@ -84,18 +91,22 @@ export function checkEventsOfTag(
 	if (!components)
 		return [];
 
-	const links = tag.split('.');
-	let componentSymbol = components.componentsType.getProperty(links[0])
-		?? components.componentsType.getProperty(camelize(links[0]))
-		?? components.componentsType.getProperty(capitalize(camelize(links[0])));
+	const name = tag.split('.');
+
+	let componentSymbol = components.componentsType.getProperty(name[0]);
+
+	if (!componentSymbol && !vueCompilerOptions.nativeTags.includes(name[0])) {
+		componentSymbol = components.componentsType.getProperty(camelize(name[0]))
+			?? components.componentsType.getProperty(capitalize(camelize(name[0])));
+	}
 
 	if (!componentSymbol)
 		return [];
 
 	let componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.componentsNode);
 
-	for (let i = 1; i < links.length; i++) {
-		componentSymbol = componentType.getProperty(links[i]);
+	for (let i = 1; i < name.length; i++) {
+		componentSymbol = componentType.getProperty(name[i]);
 		if (componentSymbol) {
 			componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.componentsNode);
 		}

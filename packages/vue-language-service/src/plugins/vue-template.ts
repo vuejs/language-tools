@@ -136,7 +136,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 											: components.find(component => component === tagName || hyphenate(component) === tagName);
 									const checkTag = tagName.indexOf('.') >= 0 ? tagName : component;
 									if (checkTag) {
-										componentProps[checkTag] ??= checkPropsOfTag(_ts.module, _ts.languageService, virtualFile, checkTag, true);
+										componentProps[checkTag] ??= checkPropsOfTag(_ts.module, _ts.languageService, virtualFile, checkTag, options.vueCompilerOptions, true);
 										current = {
 											unburnedRequiredProps: [...componentProps[checkTag]],
 											labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
@@ -410,8 +410,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					provideAttributes: (tag) => {
 
 						const attrs = getElementAttrs(_ts.module, _ts.languageService, vueSourceFile.fileName, tag);
-						const props = new Set(checkPropsOfTag(_ts.module, _ts.languageService, vueSourceFile, tag));
-						const events = checkEventsOfTag(_ts.module, _ts.languageService, vueSourceFile, tag);
+						const props = new Set(checkPropsOfTag(_ts.module, _ts.languageService, vueSourceFile, tag, options.vueCompilerOptions));
+						const events = checkEventsOfTag(_ts.module, _ts.languageService, vueSourceFile, tag, options.vueCompilerOptions);
 						const attributes: html.IAttributeData[] = [];
 
 						for (const prop of [...props, ...attrs]) {
