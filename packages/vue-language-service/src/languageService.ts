@@ -29,7 +29,7 @@ export interface Settings {
 	json?: Parameters<typeof createJsonPlugin>[0];
 }
 
-export function createConfig(
+export function resolveConfig(
 	config: Config, // volar.config.js
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	compilerOptions: ts.CompilerOptions,

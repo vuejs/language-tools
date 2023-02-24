@@ -74,7 +74,7 @@ export function createServerPlugin(connection: Connection) {
 
 				hostToVueOptions.set(ctx.host, vueOptions);
 
-				vue.createConfig(config, ts, ctx.host.getCompilationSettings(), vueOptions, settings);
+				vue.resolveConfig(config, ts, ctx.host.getCompilationSettings(), vueOptions, settings);
 			},
 			onInitialize(initResult) {
 				if (initResult.capabilities.completionProvider?.triggerCharacters) {

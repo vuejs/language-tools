@@ -111,7 +111,7 @@ function createParsedCommandLineBase(
 			scriptPath = require.resolve(scriptPath, { paths: [folder] });
 		}
 		catch (error) {
-			console.error(error);
+			console.warn(error);
 		}
 		return scriptPath;
 	}

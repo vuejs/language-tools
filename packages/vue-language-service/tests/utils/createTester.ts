@@ -1,4 +1,4 @@
-import { createConfig, VueLanguageServiceHost } from '../..';
+import { resolveConfig, VueLanguageServiceHost } from '../..';
 import * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path';
 import * as shared from '@volar/shared';
@@ -51,7 +51,7 @@ function createTester(root: string) {
 		'javascript.preferences.quoteStyle': 'single',
 	};
 	let currentVSCodeSettings: any;
-	const languageServiceConfig = createConfig({}, ts, {}, {});
+	const languageServiceConfig = resolveConfig({}, ts, {}, {});
 	const languageService = createLanguageService(host, languageServiceConfig, {
 		rootUri,
 		configurationHost: {

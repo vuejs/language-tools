@@ -97,57 +97,77 @@ export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin =
 		findDocumentSymbols(document) {
 			return worker(document, (vueSourceFile) => {
 
-				const result: vscode.SymbolInformation[] = [];
+				const result: vscode.DocumentSymbol[] = [];
 				const descriptor = vueSourceFile.sfc;
 
 				if (descriptor.template) {
 					result.push({
 						name: 'template',
 						kind: vscode.SymbolKind.Module,
-						location: vscode.Location.create(document.uri, vscode.Range.create(
+						range: vscode.Range.create(
 							document.positionAt(descriptor.template.start),
 							document.positionAt(descriptor.template.end),
-						)),
+						),
+						selectionRange: vscode.Range.create(
+							document.positionAt(descriptor.template.start),
+							document.positionAt(descriptor.template.startTagEnd),
+						),
 					});
 				}
 				if (descriptor.script) {
 					result.push({
 						name: 'script',
 						kind: vscode.SymbolKind.Module,
-						location: vscode.Location.create(document.uri, vscode.Range.create(
+						range: vscode.Range.create(
 							document.positionAt(descriptor.script.start),
 							document.positionAt(descriptor.script.end),
-						)),
+						),
+						selectionRange: vscode.Range.create(
+							document.positionAt(descriptor.script.start),
+							document.positionAt(descriptor.script.startTagEnd),
+						),
 					});
 				}
 				if (descriptor.scriptSetup) {
 					result.push({
 						name: 'script setup',
 						kind: vscode.SymbolKind.Module,
-						location: vscode.Location.create(document.uri, vscode.Range.create(
+						range: vscode.Range.create(
 							document.positionAt(descriptor.scriptSetup.start),
 							document.positionAt(descriptor.scriptSetup.end),
-						)),
+						),
+						selectionRange: vscode.Range.create(
+							document.positionAt(descriptor.scriptSetup.start),
+							document.positionAt(descriptor.scriptSetup.startTagEnd),
+						),
 					});
 				}
 				for (const style of descriptor.styles) {
 					result.push({
 						name: `${['style', style.scoped ? 'scoped' : undefined, style.module ? 'module' : undefined].filter(shared.notEmpty).join(' ')}`,
 						kind: vscode.SymbolKind.Module,
-						location: vscode.Location.create(document.uri, vscode.Range.create(
+						range: vscode.Range.create(
 							document.positionAt(style.start),
 							document.positionAt(style.end),
-						)),
+						),
+						selectionRange: vscode.Range.create(
+							document.positionAt(style.start),
+							document.positionAt(style.startTagEnd),
+						),
 					});
 				}
 				for (const customBlock of descriptor.customBlocks) {
 					result.push({
 						name: `${customBlock.type}`,
 						kind: vscode.SymbolKind.Module,
-						location: vscode.Location.create(document.uri, vscode.Range.create(
+						range: vscode.Range.create(
 							document.positionAt(customBlock.start),
 							document.positionAt(customBlock.end),
-						)),
+						),
+						selectionRange: vscode.Range.create(
+							document.positionAt(customBlock.start),
+							document.positionAt(customBlock.startTagEnd),
+						),
 					});
 				}
 
