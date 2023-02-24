@@ -68,6 +68,9 @@ export function checkPropsOfTag(
 			const propsType = checker.getTypeOfSymbolAtLocation(propsSymbol, components.componentsNode);
 			const props = propsType.getProperties();
 			for (const prop of props) {
+				if (prop.flags & ts.SymbolFlags.Method) { // #2443
+					continue;
+				}
 				if (!requiredOnly || !(prop.flags & ts.SymbolFlags.Optional)) {
 					result.add(prop.name);
 				}
