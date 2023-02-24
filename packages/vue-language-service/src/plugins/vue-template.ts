@@ -190,7 +190,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 														start: document.positionAt(current.insertOffset),
 														end: document.positionAt(current.insertOffset),
 													},
-													newText: ` :${casing.attr === AttrNameCasing.Kebab ? hyphenate(requiredProp) : requiredProp}=""`,
+													newText: ` :${casing.attr === AttrNameCasing.Kebab ? hyphenate(requiredProp) : requiredProp}=`,
 												}],
 											});
 										}
