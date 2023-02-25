@@ -1,16 +1,14 @@
 # Changelog
 
-## 1.1.7 (2023/2/22)
+## 1.2.0 (2023/2/25)
 
-- fix: document symbols request crash with arrow function declaration ([#2438](https://github.com/johnsoncodehk/volar/issues/2438))
-- fix: document symbols child node range incorrect
-- fix: SFC document symbols tree incorrect
-
-## 1.1.6 (2023/2/22)
-
-- fix: template comments were trimmed with formatting in production mode ([#2435](https://github.com/johnsoncodehk/volar/issues/2435))
-- fix: inaccurate outline view of script content
-- fix: takeover mode causes IDE to get stuck in large `.ts` files due to a long list in the outline view
+- feat: compatible with upstream monaco integration (https://github.com/volarjs/volar.js/pull/10)
+- feat: support array extends for tsconfig ([#2344](https://github.com/johnsoncodehk/volar/issues/2344))
+- feat: make cursor inside quotes when insert missing required props edit ([#2414](https://github.com/johnsoncodehk/volar/issues/2414))
+- feat: support mixin child nodes for pug ([#2447](https://github.com/johnsoncodehk/volar/issues/2447))
+- fix: ignore native tags for missing required props hint
+- fix: ignore methods for missing required props hint ([#2443](https://github.com/johnsoncodehk/volar/issues/2443))
+- fix: SFC outline not show child nodes ([#2446](https://github.com/johnsoncodehk/volar/issues/2446))
 
 ---
 
@@ -42,6 +40,18 @@
 <p align="center">
 	<h5 align="center"><a href="https://github.com/sponsors/johnsoncodehk">Adding You</a></h5>
 </p>
+
+## 1.1.7 (2023/2/22)
+
+- fix: document symbols request crash with arrow function declaration ([#2438](https://github.com/johnsoncodehk/volar/issues/2438))
+- fix: document symbols child node range incorrect
+- fix: SFC document symbols tree incorrect
+
+## 1.1.6 (2023/2/22)
+
+- fix: template comments were trimmed with formatting in production mode ([#2435](https://github.com/johnsoncodehk/volar/issues/2435))
+- fix: inaccurate outline view of script content
+- fix: takeover mode causes IDE to get stuck in large `.ts` files due to a long list in the outline view
 
 ## 1.1.5 (2023/2/21)
 
