@@ -1,6 +1,5 @@
 import * as base from '@volar/typescript';
 import * as vue from '@volar/vue-language-core';
-import * as _ from 'typescript/lib/tsserverlibrary';
 
 export function createLanguageService(host: vue.VueLanguageServiceHost) {
 	const ts = host.getTypeScriptModule?.();

@@ -12,24 +12,13 @@ export function createLanguageModules(
 	vueCompilerOptions: VueCompilerOptions,
 ): embedded.LanguageModule[] {
 
+	patchResolveModuleNames(ts, vueCompilerOptions);
+
 	const vueLanguagePlugin = getDefaultVueLanguagePlugins(
 		ts,
 		compilerOptions,
 		vueCompilerOptions,
 	);
-
-	// from https://github.com/johnsoncodehk/volar/pull/1543
-	if (!((ts as any).__VLS_pitched_resolveModuleNames)) {
-		(ts as any).__VLS_pitched_resolveModuleNames = true;
-		const resolveModuleNames = ts.resolveModuleName;
-		ts.resolveModuleName = (...args) => {
-			if (args[6] === ts.ModuleKind.ESNext && vueCompilerOptions.extensions.some(ext => args[0].endsWith(ext))) {
-				args[6] = ts.ModuleKind.CommonJS;
-			}
-			return resolveModuleNames(...args);
-		};
-	}
-
 	const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(vueCompilerOptions.target, vueCompilerOptions));
 	const languageModule: embedded.LanguageModule = {
 		createFile(fileName, snapshot, languageId) {
@@ -103,5 +92,27 @@ export function createLanguageModules(
 		const moduleFiles = fileNames.filter(fileName => vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext)));
 		const moduleFileDirs = [...new Set(moduleFiles.map(path.dirname))];
 		return moduleFileDirs.map(dir => path.join(dir, localTypes.typesFileName));
+	}
+}
+
+function patchResolveModuleNames(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	vueCompilerOptions: VueCompilerOptions,
+) {
+	try {
+		// from https://github.com/johnsoncodehk/volar/pull/1543
+		if (!((ts as any).__vuePatchResolveModuleNames)) {
+			(ts as any).__vuePatchResolveModuleNames = true;
+			const resolveModuleNames = ts.resolveModuleName;
+			ts.resolveModuleName = (...args) => {
+				if (args[6] === ts.ModuleKind.ESNext && vueCompilerOptions.extensions.some(ext => args[0].endsWith(ext))) {
+					args[6] = ts.ModuleKind.CommonJS;
+				}
+				return resolveModuleNames(...args);
+			};
+		}
+	}
+	catch (e) {
+		console.warn('[volar] patchResolveModuleNames failed', e);
 	}
 }
