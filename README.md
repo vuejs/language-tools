@@ -53,12 +53,12 @@ Discord: https://discord.gg/5bnSSSSBbK
 
 ## Contribution Guide
 
-If you want to work on the volar extension follow these commands to set up your local development environment. 
+If you want to work on the volar extension follow these commands to set up your local development environment.
 
 🔎 Note that you will need pnpm - you can download it here: https://pnpm.io/installation.
 
 ```bash
-git clone https://github.com/johnsoncodehk/volar.git
+git clone https://github.com/vuejs/language-tools.git
 cd volar
 pnpm install
 pnpm run build
