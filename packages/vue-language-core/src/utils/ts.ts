@@ -1,6 +1,6 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path';
-import type { VueCompilerOptions } from '../types';
+import type { VueCompilerOptions, VueLanguagePlugin } from '../types';
 
 export type ParsedCommandLine = ts.ParsedCommandLine & {
 	vueOptions: Partial<VueCompilerOptions>;
@@ -82,15 +82,21 @@ function createParsedCommandLineBase(
 	}
 
 	if (content.raw.vueCompilerOptions?.plugins) {
-		content.raw.vueCompilerOptions.plugins = content.raw.vueCompilerOptions.plugins.map((pluginPath: string) => {
-			try {
-				pluginPath = resolvePath(pluginPath);
-				return require(pluginPath);
-			}
-			catch (error) {
-				console.warn('Load plugin failed', pluginPath, error);
-			}
-		});
+
+		const pluginPaths: string[] = content.raw.vueCompilerOptions.plugins;
+		const plugins = pluginPaths
+			.map<VueLanguagePlugin | undefined>((pluginPath: string) => {
+				try {
+					pluginPath = resolvePath(pluginPath);
+					return require(pluginPath);
+				}
+				catch (error) {
+					console.warn('Load plugin failed', pluginPath, error);
+				}
+			})
+			.filter((plugin): plugin is NonNullable<typeof plugin> => !!plugin);
+
+		content.raw.vueCompilerOptions.plugins = plugins;
 	}
 
 	const vueOptions: Partial<VueCompilerOptions> = {
