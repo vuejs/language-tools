@@ -87,8 +87,10 @@ function createParsedCommandLineBase(
 		const plugins = pluginPaths
 			.map<VueLanguagePlugin | undefined>((pluginPath: string) => {
 				try {
-					pluginPath = resolvePath(pluginPath);
-					return require(pluginPath);
+					const resolvedPath = resolvePath(pluginPath);
+					if (resolvedPath) {
+						return require(resolvedPath);
+					}
 				}
 				catch (error) {
 					console.warn('Load plugin failed', pluginPath, error);
@@ -104,22 +106,31 @@ function createParsedCommandLineBase(
 		...content.raw.vueCompilerOptions,
 	};
 
-	vueOptions.hooks = vueOptions.hooks?.map(resolvePath);
-	vueOptions.experimentalAdditionalLanguageModules = vueOptions.experimentalAdditionalLanguageModules?.map(resolvePath);
+	vueOptions.hooks = vueOptions.hooks
+		?.map(resolvePath)
+		.filter((hook): hook is NonNullable<typeof hook> => !!hook);
+	vueOptions.experimentalAdditionalLanguageModules = vueOptions.experimentalAdditionalLanguageModules
+		?.map(resolvePath)
+		.filter((module): module is NonNullable<typeof module> => !!module);
 
 	return {
 		...content,
 		vueOptions,
 	};
 
-	function resolvePath(scriptPath: string) {
+	function resolvePath(scriptPath: string): string | undefined {
 		try {
-			scriptPath = require.resolve(scriptPath, { paths: [folder] });
+			if (require?.resolve) {
+				scriptPath = require.resolve(scriptPath, { paths: [folder] });
+			}
+			else {
+				console.log('failed to resolve path:', scriptPath, 'require.resolve is not supported in web');
+			}
 		}
 		catch (error) {
 			console.warn(error);
 		}
-		return scriptPath;
+		return;
 	}
 }
 
