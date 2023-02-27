@@ -135,49 +135,45 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 			let detected: Awaited<ReturnType<typeof detect>> | undefined;
 			let attrNameCasing = attrNameCasings.get(document.uri.toString());
 			let tagNameCasing = tagNameCasings.get(document.uri.toString());
-
-			if (!attrNameCasing) {
-				const attrNameCasingSetting = vscode.workspace.getConfiguration('volar').get<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('completion.preferredAttrNameCase');
-				if (attrNameCasingSetting === 'kebab') {
-					attrNameCasing = AttrNameCasing.Kebab;
+			const attrNameCasingSetting = vscode.workspace.getConfiguration('volar').get<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('completion.preferredAttrNameCase');
+			const tagMode = vscode.workspace.getConfiguration('volar').get<'auto-kebab' | 'auto-pascal' | 'kebab' | 'pascal'>('completion.preferredTagNameCase');
+			
+			if (attrNameCasingSetting === 'kebab') {
+				attrNameCasing = AttrNameCasing.Kebab;
+			}
+			else if (attrNameCasingSetting === 'camel') {
+				attrNameCasing = AttrNameCasing.Camel;
+			}
+			else {
+				detected ??= await detect(document);
+				if (detected?.attr.length === 1) {
+					attrNameCasing = detected.attr[0];
 				}
-				else if (attrNameCasingSetting === 'camel') {
+				else if (attrNameCasingSetting === 'auto-camel') {
 					attrNameCasing = AttrNameCasing.Camel;
 				}
 				else {
-					detected ??= await detect(document);
-					if (detected?.attr.length === 1) {
-						attrNameCasing = detected.attr[0];
-					}
-					else if (attrNameCasingSetting === 'auto-camel') {
-						attrNameCasing = AttrNameCasing.Camel;
-					}
-					else {
-						attrNameCasing = AttrNameCasing.Kebab;
-					}
+					attrNameCasing = AttrNameCasing.Kebab;
 				}
-				attrNameCasings.set(document.uri.toString(), attrNameCasing);
 			}
+			attrNameCasings.set(document.uri.toString(), attrNameCasing);
 
-			if (!tagNameCasing) {
-				const tagMode = vscode.workspace.getConfiguration('volar').get<'auto-kebab' | 'auto-pascal' | 'kebab' | 'pascal'>('completion.preferredTagNameCase');
-				if (tagMode === 'kebab') {
-					tagNameCasing = TagNameCasing.Kebab;
-				}
-				else if (tagMode === 'pascal') {
-					tagNameCasing = TagNameCasing.Pascal;
+			if (tagMode === 'kebab') {
+				tagNameCasing = TagNameCasing.Kebab;
+			}
+			else if (tagMode === 'pascal') {
+				tagNameCasing = TagNameCasing.Pascal;
+			}
+			else {
+				detected ??= await detect(document);
+				if (detected?.tag.length === 1) {
+					tagNameCasing = detected.tag[0];
 				}
 				else {
-					detected ??= await detect(document);
-					if (detected?.tag.length === 1) {
-						tagNameCasing = detected.tag[0];
-					}
-					else {
-						tagNameCasing = TagNameCasing.Pascal;
-					}
+					tagNameCasing = TagNameCasing.Pascal;
 				}
-				tagNameCasings.set(document.uri.toString(), tagNameCasing);
 			}
+			tagNameCasings.set(document.uri.toString(), tagNameCasing);
 
 			updateStatusBarText();
 			statusBar.show();
