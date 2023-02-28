@@ -68,6 +68,11 @@ function createParsedCommandLineBase(
 
 	for (let extendsPath of extendsArr) {
 		try {
+			 // Workaround: https://github.com/pnpm/pnpm/issues/5237
+			if (process?.env?.npm_config_user_agent?.startsWith('pnpm/')) {
+				extendsPath = `./node_modules/${extendsPath}/package.json`;
+			}
+
 			extendsPath = require.resolve(extendsPath, { paths: [folder] });
 			if (!extendsSet.has(extendsPath)) {
 				extendsVueOptions = {
