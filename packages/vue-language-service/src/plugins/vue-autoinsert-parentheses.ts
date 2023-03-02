@@ -17,7 +17,7 @@ const plugin: LanguageServicePlugin = (context) => {
 
 		async doAutoInsert(document, position, options_2) {
 
-			const enabled = await context.env.configurationHost?.getConfiguration<boolean>('volar.autoWrapParentheses') ?? false;
+			const enabled = await context.configurationHost?.getConfiguration<boolean>('volar.autoWrapParentheses') ?? false;
 			if (!enabled)
 				return;
 

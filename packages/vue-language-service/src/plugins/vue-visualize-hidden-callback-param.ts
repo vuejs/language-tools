@@ -9,7 +9,7 @@ const plugin: LanguageServicePlugin = (context) => {
 
 			async on(document, range) {
 
-				const enabled = await context.env.configurationHost?.getConfiguration<boolean>('volar.inlayHints.eventArgumentInInlineHandlers') ?? true;
+				const enabled = await context.configurationHost?.getConfiguration<boolean>('volar.inlayHints.eventArgumentInInlineHandlers') ?? true;
 				if (!enabled)
 					return;
 

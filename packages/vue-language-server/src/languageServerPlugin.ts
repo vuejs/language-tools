@@ -1,6 +1,5 @@
 import * as embedded from '@volar/language-core';
 import { LanguageServerPlugin, Connection } from '@volar/language-server';
-import * as shared from '@volar/shared';
 import * as vue from '@volar/vue-language-service';
 import * as vue2 from '@volar/vue-language-core';
 import * as nameCasing from '@volar/vue-language-service';
@@ -12,7 +11,7 @@ import { resolveVueCompilerOptions, VueCompilerOptions } from '@volar/vue-langua
 
 export function createServerPlugin(connection: Connection) {
 
-	const plugin: LanguageServerPlugin<VueServerInitializationOptions> = (initOptions) => {
+	const plugin: LanguageServerPlugin = (initOptions: VueServerInitializationOptions): ReturnType<LanguageServerPlugin> => {
 
 		const vueFileExtensions: string[] = ['vue'];
 		const hostToVueOptions = new WeakMap<embedded.LanguageServiceHost, Partial<VueCompilerOptions>>();
@@ -91,7 +90,7 @@ export function createServerPlugin(connection: Connection) {
 					initResult.capabilities.completionProvider.triggerCharacters = initResult.capabilities.completionProvider.triggerCharacters.filter(c => triggerCharacters.has(c));
 				}
 			},
-			onInitialized(getService) {
+			onInitialized(getService, env) {
 
 				connection.onRequest(ParseSFCRequest.type, params => {
 					return vue2.parse(params);
@@ -99,26 +98,28 @@ export function createServerPlugin(connection: Connection) {
 
 				connection.onRequest(GetVueCompilerOptionsRequest.type, async params => {
 					const languageService = await getService(params.uri);
-					return hostToVueOptions.get(languageService.context.host);
+					if (languageService) {
+						return hostToVueOptions.get(languageService.context.host);
+					}
 				});
 
 				connection.onRequest(DetectNameCasingRequest.type, async params => {
 					const languageService = await getService(params.textDocument.uri);
-					if (languageService.context.typescript) {
+					if (languageService?.context.typescript) {
 						return nameCasing.detect(languageService.context, languageService.context.typescript, params.textDocument.uri);
 					}
 				});
 
 				connection.onRequest(GetConvertTagCasingEditsRequest.type, async params => {
 					const languageService = await getService(params.textDocument.uri);
-					if (languageService.context.typescript) {
+					if (languageService?.context.typescript) {
 						return nameCasing.convertTagName(languageService.context, languageService.context.typescript, params.textDocument.uri, params.casing);
 					}
 				});
 
 				connection.onRequest(GetConvertAttrCasingEditsRequest.type, async params => {
 					const languageService = await getService(params.textDocument.uri);
-					if (languageService.context.typescript) {
+					if (languageService?.context.typescript) {
 						const vueOptions = hostToVueOptions.get(languageService.context.host);
 						if (vueOptions) {
 							return nameCasing.convertAttrName(languageService.context, languageService.context.typescript, params.textDocument.uri, params.casing, resolveVueCompilerOptions(vueOptions));
@@ -131,7 +132,7 @@ export function createServerPlugin(connection: Connection) {
 				connection.onRequest(GetComponentMeta.type, async params => {
 
 					const languageService = await getService(params.uri);
-					if (!languageService.context.typescript)
+					if (!languageService?.context.typescript)
 						return;
 
 					let checker = checkers.get(languageService.context.host);
@@ -144,7 +145,7 @@ export function createServerPlugin(connection: Connection) {
 						);
 						checkers.set(languageService.context.host, checker);
 					}
-					return checker.getComponentMeta(shared.uriToFileName(params.uri));
+					return checker.getComponentMeta(env.uriToFileName(params.uri));
 				});
 			},
 		};

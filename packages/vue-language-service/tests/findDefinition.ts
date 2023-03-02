@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import * as path from 'path';
 import { tester } from './utils/createTester';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import * as shared from '@volar/shared';
 import * as fs from 'fs';
 
 const baseDir = path.resolve(__dirname, '../../vue-test-workspace/find-definition');
@@ -18,7 +17,7 @@ for (const dirName of testDirs) {
 		for (const file in inputFiles) {
 
 			const filePath = path.join(dir, file);
-			const uri = shared.fileNameToUri(filePath);
+			const uri = tester.fileNameToUri(filePath);
 			const fileText = inputFiles[file];
 			const document = TextDocument.create('', '', 0, fileText);
 			const actions = findActions(fileText);
@@ -45,7 +44,7 @@ for (const dirName of testDirs) {
 					expect(locations).toBeDefined();
 
 					const location = locations?.find(loc =>
-						loc.targetUri === shared.fileNameToUri(targetFile)
+						loc.targetUri === tester.fileNameToUri(targetFile)
 						&& loc.targetSelectionRange.start.line === targetRange.start.line
 						&& loc.targetSelectionRange.start.character === targetRange.start.character
 						&& loc.targetSelectionRange.end.line === targetRange.end.line

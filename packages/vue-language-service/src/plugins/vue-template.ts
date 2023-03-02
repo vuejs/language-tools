@@ -25,8 +25,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		if (!_context.typescript)
 			return {};
 
-		builtInData ??= loadTemplateData(_context.env.locale ?? 'en');
-		modelData ??= loadModelModifiersData(_context.env.locale ?? 'en');
+		builtInData ??= loadTemplateData(_context.locale ?? 'en');
+		modelData ??= loadModelModifiersData(_context.locale ?? 'en');
 
 		// https://vuejs.org/api/built-in-directives.html#v-on
 		// https://vuejs.org/api/built-in-directives.html#v-bind
@@ -106,7 +106,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					if (!options.isSupportedDocument(document))
 						return;
 
-					const enabled = await _context.env.configurationHost?.getConfiguration<boolean>('volar.inlayHints.missingRequiredProps') ?? true;
+					const enabled = await _context.configurationHost?.getConfiguration<boolean>('volar.inlayHints.missingRequiredProps') ?? true;
 					if (!enabled)
 						return;
 

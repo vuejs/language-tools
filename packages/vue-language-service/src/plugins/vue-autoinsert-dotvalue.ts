@@ -1,5 +1,4 @@
 import { LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
-import * as shared from '@volar/shared';
 import { hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
@@ -22,7 +21,7 @@ const plugin: LanguageServicePlugin = (context) => {
 			if (!isCharacterTyping(document, insertContext))
 				return;
 
-			const enabled = await context.env.configurationHost?.getConfiguration<boolean>('volar.autoCompleteRefs') ?? true;
+			const enabled = await context.configurationHost?.getConfiguration<boolean>('volar.autoCompleteRefs') ?? true;
 			if (!enabled)
 				return;
 
@@ -30,7 +29,7 @@ const plugin: LanguageServicePlugin = (context) => {
 			if (!program)
 				return;
 
-			const sourceFile = program.getSourceFile(shared.uriToFileName(document.uri));
+			const sourceFile = program.getSourceFile(context.uriToFileName(document.uri));
 			if (!sourceFile)
 				return;
 
@@ -43,7 +42,7 @@ const plugin: LanguageServicePlugin = (context) => {
 
 			const token = _ts.languageServiceHost.getCancellationToken?.();
 			if (token) {
-				_ts.languageService.getQuickInfoAtPosition(shared.uriToFileName(document.uri), node.end);
+				_ts.languageService.getQuickInfoAtPosition(context.uriToFileName(document.uri), node.end);
 				if (token?.isCancellationRequested()) {
 					return; // check cancel here because type checker do not use cancel token
 				}

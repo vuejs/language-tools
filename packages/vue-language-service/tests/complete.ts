@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import * as path from 'path';
 import { tester } from './utils/createTester';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import * as shared from '@volar/shared';
 import * as fs from 'fs';
 import * as vscode from 'vscode-languageserver-protocol';
 
@@ -20,7 +19,7 @@ for (const dirName of testDirs) {
 		for (const file in inputFiles) {
 
 			const filePath = path.join(dir, 'input', file);
-			const uri = shared.fileNameToUri(filePath);
+			const uri = tester.fileNameToUri(filePath);
 			const fileText = inputFiles[file];
 			const document = TextDocument.create('', '', 0, fileText);
 			const actions = findCompleteActions(fileText);

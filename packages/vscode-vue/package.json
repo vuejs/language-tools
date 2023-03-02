@@ -758,9 +758,9 @@
 	"devDependencies": {
 		"@types/semver": "^7.3.13",
 		"@types/vscode": "1.67.0",
-		"@volar/shared": "1.3.0-alpha.0",
-		"@volar/source-map": "1.3.0-alpha.0",
-		"@volar/vscode-language-client": "1.3.0-alpha.0",
+		"@volar/shared": "1.3.0-alpha.1",
+		"@volar/source-map": "1.3.0-alpha.1",
+		"@volar/vscode-language-client": "1.3.0-alpha.1",
 		"@volar/vue-language-core": "1.2.0",
 		"@volar/vue-language-server": "1.2.0",
 		"esbuild": "0.15.18",

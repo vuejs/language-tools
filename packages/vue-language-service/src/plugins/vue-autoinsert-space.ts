@@ -8,7 +8,7 @@ const plugin: LanguageServicePlugin = (context) => {
 
 			if (document.languageId === 'html' || document.languageId === 'jade') {
 
-				const enabled = await context.env.configurationHost?.getConfiguration<boolean>('volar.addSpaceBetweenDoubleCurlyBrackets') ?? true;
+				const enabled = await context.configurationHost?.getConfiguration<boolean>('volar.addSpaceBetweenDoubleCurlyBrackets') ?? true;
 				if (!enabled)
 					return;
 

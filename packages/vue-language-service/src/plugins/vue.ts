@@ -16,7 +16,7 @@ export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin =
 	if (!context.typescript)
 		return {};
 
-	sfcDataProvider ??= html.newHTMLDataProvider('vue', loadLanguageBlocks(context.env.locale ?? 'en'));
+	sfcDataProvider ??= html.newHTMLDataProvider('vue', loadLanguageBlocks(context.locale ?? 'en'));
 
 	const _ts = context.typescript;
 	const htmlPlugin = createHtmlPlugin({ validLang: 'vue', disableCustomData: true })(context);
