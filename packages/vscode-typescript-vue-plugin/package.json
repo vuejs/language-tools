@@ -33,7 +33,8 @@
 		"watch": "npm run esbuild -- --watch",
 		"esbuild": "node scripts/build-node",
 		"pack": "vsce package",
-		"release": "vsce publish"
+		"release": "vsce publish",
+		"release:next": "vsce publish --pre-release"
 	},
 	"dependencies": {
 		"typescript-vue-plugin-forward": "file:typescript-vue-plugin-forward"

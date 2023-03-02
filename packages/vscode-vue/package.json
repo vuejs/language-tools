@@ -749,6 +749,7 @@
 		"prepack": "npm run prebuild && npm run build -- --minify",
 		"pack": "npm run prepack && vsce package",
 		"release": "npm run prepack && vsce publish",
+		"release:next": "npm run release -- --pre-release",
 		"bundle-size": "npm run prepack:bundle-size && esbuild-visualizer --metadata ./meta.json && open ./stats.html"
 	},
 	"devDependencies": {
