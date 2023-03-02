@@ -30,6 +30,10 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
             }
           ]
         },
@@ -67,6 +71,10 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
             }
           ]
         }
@@ -95,6 +103,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#template"
         }
       ]
     },
@@ -127,6 +139,10 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
             }
           ]
         },
@@ -170,6 +186,10 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
             }
           ]
         },
@@ -203,6 +223,10 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#script-setup"
             }
           ]
         }
@@ -231,6 +255,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#script"
         }
       ]
     },
@@ -261,6 +289,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#script-setup"
         }
       ]
     },
@@ -293,6 +325,10 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
             }
           ]
         },
@@ -342,6 +378,10 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
             }
           ]
         },
@@ -372,6 +412,10 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-css-features.html#scoped-css"
             }
           ]
         },
@@ -402,6 +446,10 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-css-features.html#css-modules"
             }
           ]
         }
@@ -430,6 +478,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#style"
         }
       ]
     },
@@ -462,6 +514,10 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
             }
           ]
         }
@@ -490,6 +546,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/sfc-spec.html#自定義塊"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#自定義塊"
         }
       ]
     }
@@ -522,6 +582,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
         }
       ]
     },
@@ -551,6 +615,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
         }
       ]
     }
