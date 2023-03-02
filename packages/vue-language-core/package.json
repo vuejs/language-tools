@@ -1,6 +1,6 @@
 {
 	"name": "@volar/vue-language-core",
-	"version": "1.2.0",
+	"version": "1.2.1",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
