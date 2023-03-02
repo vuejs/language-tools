@@ -4,12 +4,12 @@ import * as path from 'path';
 import { URI } from 'vscode-uri';
 import { createLanguageService } from '@volar/language-service';
 
-const testRoot = path.resolve(__dirname, '../../../vue-test-workspace');
-export const rootUri = URI.file(testRoot);
-export const tester = createTester(testRoot);
-
 const uriToFileName = (uri: string) => URI.parse(uri).fsPath.replace(/\\/g, '/');
 const fileNameToUri = (fileName: string) => URI.file(fileName).toString();
+const testRoot = path.resolve(__dirname, '../../../vue-test-workspace');
+
+export const rootUri = URI.file(testRoot);
+export const tester = createTester(testRoot);
 
 function createTester(root: string) {
 

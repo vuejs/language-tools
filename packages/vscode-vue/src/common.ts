@@ -148,7 +148,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 	for (const client of clients) {
 		activateShowReferences(client);
-		activateServerSys(context, client);
+		activateServerSys(context, client, undefined);
 	}
 
 	async function requestReloadVscode() {

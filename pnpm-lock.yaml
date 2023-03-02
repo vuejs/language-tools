@@ -60,8 +60,6 @@ importers:
       esbuild: 0.15.18
       esbuild-plugin-copy: latest
       esbuild-visualizer: latest
-      path-browserify: ^1.0.1
-      punycode: ^2.3.0
       semver: ^7.3.8
       typesafe-path: ^0.2.2
       vsce: latest
@@ -78,8 +76,6 @@ importers:
       esbuild: 0.15.18
       esbuild-plugin-copy: 2.0.2_esbuild@0.15.18
       esbuild-visualizer: 0.4.0
-      path-browserify: 1.0.1
-      punycode: 2.3.0
       semver: 7.3.8
       typesafe-path: 0.2.2
       vsce: 2.15.0
@@ -5005,10 +5001,6 @@ packages:
     dev: false
     optional: true
 
-  /path-browserify/1.0.1:
-    resolution: {integrity: sha512-b7uo2UCUOYZcnF/3ID0lulOJi/bafxa1xPe7ZPsammBSpjSWQkjNxlt635YGS2MiR9GjvuXCtz2emr3jbsz98g==}
-    dev: true
-
   /path-exists/3.0.0:
     resolution: {integrity: sha512-bpC7GYwiDYQ4wYLe+FA8lhRjhQCMcQGuSgGGqDkg/QerRWw9CmGRT0iSOVRSZJ29NMLZgIzqaljJ63oaL4NIJQ==}
     engines: {node: '>=4'}
@@ -5257,11 +5249,6 @@ packages:
     dependencies:
       end-of-stream: 1.4.4
       once: 1.4.0
-    dev: true
-
-  /punycode/2.3.0:
-    resolution: {integrity: sha512-rRV+zQD8tVFys26lAGR9WUuS4iUAngJScM+ZRSKtvl5tKeZ2t5bvdNFdNHBW9FWR4guGHlgmsZ1G7BSm2wTbuA==}
-    engines: {node: '>=6'}
     dev: true
 
   /q/1.5.1:
