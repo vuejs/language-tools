@@ -1,29 +1,19 @@
 import * as html from 'vscode-html-languageservice';
 
+const dataMap: Record<string, string> = {
+	en: 'en', 
+	fr: 'fr',  
+	ja: 'ja', 
+	ko: 'ko', 
+	'zh-cn': 'zn-cn', 
+	'zh-tw': 'zh-tw',
+};
+
 export function loadTemplateData(lang: string) {
 
 	lang = lang.toLowerCase();
 
-	let data: html.HTMLDataV1;
-
-	if (lang === 'ja') {
-		data = require('../../data/template/ja.json');
-	}
-	else if (lang === 'fr') {
-		data = require('../../data/template/fr.json');
-	}
-	else if (lang === 'ko') {
-		data = require('../../data/template/ko.json');
-	}
-	else if (lang === 'zh-cn') {
-		data = require('../../data/template/zh-cn.json');
-	}
-	else if (lang === 'zh-tw') {
-		data = require('../../data/template/zh-tw.json');
-	}
-	else {
-		data = require('../../data/template/en.json');
-	}
+	let data: html.HTMLDataV1 = require(`../../data/template/${dataMap[lang] ?? 'en'}.json`)
 
 	for (const attr of [...data.globalAttributes ?? []]) {
 		if (!attr.name.startsWith('v-')) {
@@ -46,26 +36,7 @@ export function loadLanguageBlocks(lang: string) {
 
 	lang = lang.toLowerCase();
 
-	let data: html.HTMLDataV1;
-
-	if (lang === 'ja') {
-		data = require('../../data/language-blocks/ja.json');
-	}
-	else if (lang === 'fr') {
-		data = require('../../data/language-blocks/fr.json');
-	}
-	else if (lang === 'ko') {
-		data = require('../../data/language-blocks/ko.json');
-	}
-	else if (lang === 'zh-cn') {
-		data = require('../../data/language-blocks/zh-cn.json');
-	}
-	else if (lang === 'zh-tw') {
-		data = require('../../data/language-blocks/zh-tw.json');
-	}
-	else {
-		data = require('../../data/language-blocks/en.json');
-	}
+	let data: html.HTMLDataV1 = require(`../../data/language-blocks/${dataMap[lang] ?? 'en'}.json`)
 
 	return data;
 }
@@ -74,26 +45,7 @@ export function loadModelModifiersData(lang: string) {
 
 	lang = lang.toLowerCase();
 
-	let data: html.HTMLDataV1;
-
-	if (lang === 'ja') {
-		data = require('../../data/model-modifiers/ja.json');
-	}
-	else if (lang === 'fr') {
-		data = require('../../data/model-modifiers/fr.json');
-	}
-	else if (lang === 'ko') {
-		data = require('../../data/model-modifiers/ko.json');
-	}
-	else if (lang === 'zh-cn') {
-		data = require('../../data/model-modifiers/zh-cn.json');
-	}
-	else if (lang === 'zh-tw') {
-		data = require('../../data/model-modifiers/zh-tw.json');
-	}
-	else {
-		data = require('../../data/model-modifiers/en.json');
-	}
+	let data: html.HTMLDataV1 = require(`../../data/model-modifiers/${dataMap[lang] ?? 'en'}.json`)
 
 	return data;
 }
