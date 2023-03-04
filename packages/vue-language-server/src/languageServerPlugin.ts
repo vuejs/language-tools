@@ -138,7 +138,10 @@ export function createServerPlugin(connection: Connection) {
 					let checker = checkers.get(languageService.context.host);
 					if (!checker) {
 						checker = meta.baseCreate(
-							languageService.context.host as vue.VueLanguageServiceHost,
+							{
+								...languageService.context.host,
+								getVueCompilationSettings: () => resolveVueCompilerOptions(hostToVueOptions.get(languageService.context.host) ?? {}),
+							},
 							{},
 							languageService.context.host.getCurrentDirectory() + '/tsconfig.json.global.vue',
 							languageService.context.typescript.module,
