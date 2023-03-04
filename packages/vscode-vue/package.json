@@ -446,7 +446,7 @@
 					"default": false,
 					"description": "Show split editor icon in title area of editor."
 				},
-				"volar.doctor.statusBarItem": {
+				"volar.doctor.status": {
 					"type": "boolean",
 					"default": true,
 					"description": "Show known problems in status bar."

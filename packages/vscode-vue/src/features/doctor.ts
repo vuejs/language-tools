@@ -60,7 +60,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 
 	async function updateStatusBar(editor: vscode.TextEditor | undefined) {
 		if (
-			vscode.workspace.getConfiguration('volar').get<boolean>('doctor.statusBarItem')
+			vscode.workspace.getConfiguration('volar').get<boolean>('doctor.status')
 			&& editor
 			&& editor.document.languageId === 'vue'
 			&& editor.document.uri.scheme === 'file'
