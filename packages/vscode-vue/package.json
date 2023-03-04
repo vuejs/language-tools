@@ -451,11 +451,6 @@
 					"default": true,
 					"description": "Show known problems in status bar."
 				},
-				"volar.doctor.checkVueTsc": {
-					"type": "boolean",
-					"default": false,
-					"description": "Check vue-tsc version."
-				},
 				"volar.autoWrapParentheses": {
 					"type": "boolean",
 					"default": true,

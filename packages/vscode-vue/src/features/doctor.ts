@@ -145,21 +145,6 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			});
 		}
 
-		// check vue-tsc version same with extension version
-		if (vscode.workspace.getConfiguration('volar').get<boolean>('doctor.checkVueTsc')) {
-			const vueTscMod = getPackageJsonOfWorkspacePackage(fileUri.fsPath, 'vue-tsc');
-			if (vueTscMod && vueTscMod.json.version !== context.extension.packageJSON.version) {
-				problems.push({
-					title: 'Different `vue-tsc` version',
-					message: [
-						`The \`${context.extension.packageJSON.displayName}\`\'s version is \`${context.extension.packageJSON.version}\`, but the workspace\'s \`vue-tsc\` version is \`${vueTscMod.json.version}\`. This may produce different type checking behavior.`,
-						'',
-						'- vue-tsc: ' + vueTscMod.path,
-					].join('\n'),
-				});
-			}
-		}
-
 		// check @types/node > 18.8.0 && < 18.11.1
 		const typesNodeMod = getPackageJsonOfWorkspacePackage(fileUri.fsPath, '@types/node');
 		if (typesNodeMod && semver.gte(typesNodeMod.json.version, '18.8.1') && semver.lte(typesNodeMod.json.version, '18.11.0')) {
