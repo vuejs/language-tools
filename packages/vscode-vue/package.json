@@ -30,7 +30,8 @@
 		"onLanguage:javascriptreact",
 		"onLanguage:typescriptreact"
 	],
-	"main": "client",
+	"main": "./client.js",
+	"browser": "./web.js",
 	"capabilities": {
 		"virtualWorkspaces": {
 			"supported": "limited",
