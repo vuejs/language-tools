@@ -29,7 +29,6 @@
 	},
 	"optionalDependencies": {
 		"@lerna-lite/cli": "latest",
-		"axios": "latest",
 		"opencc": "latest"
 	}
 }

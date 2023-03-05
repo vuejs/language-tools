@@ -1,7 +1,3 @@
-/**
- * @type {import('axios').AxiosInstance}
- */
-const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 const OpenCC = require('opencc');
@@ -55,8 +51,8 @@ for (const lang of langs) {
 
 async function sfcWorker(lang) {
 
-	const sfcDoc = await fetch(lang.repoUrl + 'HEAD/src/api/sfc-spec.md', lang.url);
-	const cssFeaturesDoc = await fetch(lang.repoUrl + 'HEAD/src/api/sfc-css-features.md', lang.url);
+	const sfcDoc = await fetchText(lang.repoUrl + 'HEAD/src/api/sfc-spec.md', lang.url);
+	const cssFeaturesDoc = await fetchText(lang.repoUrl + 'HEAD/src/api/sfc-css-features.md', lang.url);
 
 	/**
 	 * @type {import('vscode-html-languageservice').IAttributeData}
@@ -217,7 +213,7 @@ async function sfcWorker(lang) {
 
 async function modelWorker(lang) {
 
-	const formsDoc = await fetch(lang.repoUrl + 'HEAD/src/guide/essentials/forms.md', lang.url);
+	const formsDoc = await fetchText(lang.repoUrl + 'HEAD/src/guide/essentials/forms.md', lang.url);
 	const modifiers = formsDoc
 		.split('\n## ')[3]
 		.split('\n### ')
@@ -266,10 +262,10 @@ async function modelWorker(lang) {
 
 async function templateWorker(lang) {
 
-	const directivesDoc = await fetch(lang.repoUrl + 'HEAD/src/api/built-in-directives.md', lang.url);
-	const attributesDoc = await fetch(lang.repoUrl + 'HEAD/src/api/built-in-special-attributes.md', lang.url);
-	const componentsDoc = await fetch(lang.repoUrl + 'HEAD/src/api/built-in-components.md', lang.url);
-	const elementsDoc = await fetch(lang.repoUrl + 'HEAD/src/api/built-in-special-elements.md', lang.url);
+	const directivesDoc = await fetchText(lang.repoUrl + 'HEAD/src/api/built-in-directives.md', lang.url);
+	const attributesDoc = await fetchText(lang.repoUrl + 'HEAD/src/api/built-in-special-attributes.md', lang.url);
+	const componentsDoc = await fetchText(lang.repoUrl + 'HEAD/src/api/built-in-components.md', lang.url);
+	const elementsDoc = await fetchText(lang.repoUrl + 'HEAD/src/api/built-in-special-elements.md', lang.url);
 
 	const directives = directivesDoc
 		.split('\n## ')
@@ -395,11 +391,8 @@ async function templateWorker(lang) {
 	}
 }
 
-async function fetch(url, baseUrl) {
-	/**
-	 * @type {string}
-	 */
-	let text = (await axios.get(url)).data;
+async function fetchText(url, baseUrl) {
+	let text = await (await fetch(url)).text();
 	text = text.replace(/```vue-html/g, '```html');
 	text = text.replace(/\{\#.*?\}/g, '')
 	text = resolveMarkdownLinks(text, baseUrl);
