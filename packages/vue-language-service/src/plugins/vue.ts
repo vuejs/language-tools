@@ -8,17 +8,18 @@ import * as vue from '@volar/vue-language-core';
 import { VueCompilerOptions } from '../types';
 import { loadLanguageBlocks } from './data';
 
-let sfcDataProvider: html.IHTMLDataProvider;
+let sfcDataProvider: html.IHTMLDataProvider | undefined;
 
 export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin => (context) => {
 
 	const htmlPlugin = createHtmlPlugin({ validLang: 'vue', disableCustomData: true })(context);
-	htmlPlugin.getHtmlLs().setDataProviders(false, [sfcDataProvider]);
 
 	if (!context?.typescript)
 		return htmlPlugin;
 
 	sfcDataProvider ??= html.newHTMLDataProvider('vue', loadLanguageBlocks(context.locale ?? 'en'));
+
+	htmlPlugin.getHtmlLs().setDataProviders(false, [sfcDataProvider]);
 
 	const _ts = context.typescript;
 
