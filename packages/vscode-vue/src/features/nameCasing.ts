@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { quickPick } from '@volar/vscode-language-client/out/common';
+import { quickPick } from '@volar/vscode/out/common';
 import { BaseLanguageClient, State } from 'vscode-languageclient';
 import { AttrNameCasing, TagNameCasing, DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest } from '@volar/vue-language-server';
 import { processHtml, processMd } from '../common';

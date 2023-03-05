@@ -1,4 +1,4 @@
-import { LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
+import { AutoInsertionContext, LanguageServicePlugin } from '@volar/language-service';
 import { hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
@@ -6,14 +6,14 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 
 const plugin: LanguageServicePlugin = (context) => {
 
-	if (!context.typescript)
+	if (!context?.typescript)
 		return {};
 
 	const _ts = context.typescript;
 
 	return {
 
-		async doAutoInsert(document, position, insertContext) {
+		async provideAutoInsertionEdit(document, position, insertContext) {
 
 			if (!isTsDocument(document))
 				return;
@@ -86,7 +86,7 @@ function isTsDocument(document: TextDocument) {
 		document.languageId === 'typescriptreact';
 }
 
-export function isCharacterTyping(document: TextDocument, options: Parameters<NonNullable<LanguageServicePluginInstance['doAutoInsert']>>[2]) {
+export function isCharacterTyping(document: TextDocument, options: AutoInsertionContext) {
 
 	const lastCharacter = options.lastChange.text[options.lastChange.text.length - 1];
 	const rangeStart = options.lastChange.range.start;

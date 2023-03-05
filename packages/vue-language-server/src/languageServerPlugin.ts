@@ -31,63 +31,68 @@ export function createServerPlugin(connection: Connection) {
 		}
 
 		return {
-			tsconfigExtraFileExtensions: vueFileExtensions.map<ts.FileExtensionInfo>(ext => ({ extension: ext, isMixedContent: true, scriptKind: 7 })),
-			diagnosticDocumentSelector: [
-				{ language: 'javascript' },
-				{ language: 'typescript' },
-				{ language: 'javascriptreact' },
-				{ language: 'typescriptreact' },
-				{ language: 'vue' },
-			],
-			extensions: {
-				fileRenameOperationFilter:
-					['js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json', ...vueFileExtensions],
-				fileWatcher:
-					['js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json', ...vueFileExtensions],
-			},
-			resolveConfig(config, ctx) {
+			extraFileExtensions: vueFileExtensions.map<ts.FileExtensionInfo>(ext => ({ extension: ext, isMixedContent: true, scriptKind: 7 })),
+			watchFileExtensions: ['js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json', ...vueFileExtensions],
+			resolveConfig(config, modules, ctx) {
 
-				const ts = ctx.project.workspace.workspaces.ts;
+				const ts = modules.typescript;
 				if (!ts) {
-					return;
+					return config;
 				}
 
-				const settings: vue.Settings = {};
+				const vueOptions = getVueCompilerOptions();
+				const vueLanguageServiceSettings = getVueLanguageServiceSettings();
 
-				if (initOptions.json) {
-					settings.json = { schemas: [] };
-					for (const blockType in initOptions.json.customBlockSchemaUrls) {
-						const url = initOptions.json.customBlockSchemaUrls[blockType];
-						settings.json.schemas?.push({
-							fileMatch: [`*.customBlock_${blockType}_*.json*`],
-							uri: new URL(url, ctx.project.rootUri.toString() + '/').toString(),
-						});
+				if (ctx) {
+					hostToVueOptions.set(ctx.host, vueOptions);
+				}
+
+				return vue.resolveConfig(
+					config,
+					ts,
+					ctx?.host.getCompilationSettings() ?? {},
+					vueOptions,
+					vueLanguageServiceSettings,
+				);
+
+				function getVueCompilerOptions() {
+
+					const ts = modules.typescript;
+					if (!ts) {
+						return {};
 					}
+
+					let vueOptions: Partial<vue.VueCompilerOptions> = {};
+
+					if (typeof ctx?.project.tsConfig === 'string') {
+						vueOptions = vue2.createParsedCommandLine(ts, ctx.sys, ctx.project.tsConfig, []).vueOptions;
+					}
+
+					vueOptions.extensions = [
+						...vueOptions.extensions ?? ['.vue'],
+						...vueFileExtensions.map(ext => '.' + ext),
+					];
+					vueOptions.extensions = [...new Set(vueOptions.extensions)];
+
+					return vueOptions;
 				}
 
-				let vueOptions: Partial<vue.VueCompilerOptions> = {};
-				if (typeof ctx.project.tsConfig === 'string') {
-					vueOptions = vue2.createParsedCommandLine(ts, ctx.sys, ctx.project.tsConfig, []).vueOptions;
-				}
-				vueOptions.extensions = getVueExts(vueOptions.extensions);
+				function getVueLanguageServiceSettings() {
 
-				hostToVueOptions.set(ctx.host, vueOptions);
+					const settings: vue.Settings = {};
 
-				vue.resolveConfig(config, ts, ctx.host.getCompilationSettings(), vueOptions, settings);
-			},
-			onInitialize(initResult) {
-				if (initResult.capabilities.completionProvider?.triggerCharacters) {
-					const triggerCharacters = new Set([
-						'/', '-', ':', // css
-						...'>+^*()#.[]$@-{}'.split(''), // emmet
-						'.', ':', '<', '"', '=', '/', // html, vue
-						'@', // vue-event
-						'"', ':', // json
-						'.', '"', '\'', '`', '/', '<', '@', '#', ' ', // typescript
-						'*', // typescript-jsdoc
-						'@', // typescript-comment
-					]);
-					initResult.capabilities.completionProvider.triggerCharacters = initResult.capabilities.completionProvider.triggerCharacters.filter(c => triggerCharacters.has(c));
+					if (initOptions.json && ctx) {
+						settings.json = { schemas: [] };
+						for (const blockType in initOptions.json.customBlockSchemaUrls) {
+							const url = initOptions.json.customBlockSchemaUrls[blockType];
+							settings.json.schemas?.push({
+								fileMatch: [`*.customBlock_${blockType}_*.json*`],
+								uri: new URL(url, ctx.project.rootUri.toString() + '/').toString(),
+							});
+						}
+					}
+
+					return settings;
 				}
 			},
 			onInitialized(getService, env) {
@@ -140,7 +145,7 @@ export function createServerPlugin(connection: Connection) {
 						checker = meta.baseCreate(
 							{
 								...languageService.context.host,
-								getVueCompilationSettings: () => resolveVueCompilerOptions(hostToVueOptions.get(languageService.context.host) ?? {}),
+								getVueCompilationSettings: () => hostToVueOptions.get(languageService.context.host) ?? {},
 							},
 							{},
 							languageService.context.host.getCurrentDirectory() + '/tsconfig.json.global.vue',
@@ -152,14 +157,6 @@ export function createServerPlugin(connection: Connection) {
 				});
 			},
 		};
-
-		function getVueExts(baseExts: string[] | undefined) {
-			const set = new Set([
-				...baseExts ?? ['.vue'],
-				...vueFileExtensions.map(ext => '.' + ext),
-			]);
-			return [...set];
-		}
 	};
 
 	return plugin;

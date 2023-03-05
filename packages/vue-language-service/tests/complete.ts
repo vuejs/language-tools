@@ -37,6 +37,8 @@ for (const dirName of testDirs) {
 					const complete = await tester.languageService.doComplete(
 						uri,
 						position,
+						{ triggerKind: vscode.CompletionTriggerKind.Invoked },
+						vscode.CancellationToken.None,
 					);
 
 					expect(complete).toBeDefined();
@@ -45,7 +47,7 @@ for (const dirName of testDirs) {
 
 					expect(item).toBeDefined();
 
-					item = await tester.languageService.doCompletionResolve(item);
+					item = await tester.languageService.doCompletionResolve(item, vscode.CancellationToken.None);
 
 					const expectedFileText = outputFiles[file];
 

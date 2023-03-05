@@ -1,4 +1,3 @@
-import { ServerMode } from '@volar/vue-language-server';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -10,7 +9,7 @@ import { middleware } from './middleware';
 export function activate(context: vscode.ExtensionContext) {
 
 	const cancellationPipeName = path.join(os.tmpdir(), `vscode-${context.extension.id}-cancellation-pipe.tmp`);
-	const langs = getDocumentSelector(context, ServerMode.Semantic);
+	const langs = getDocumentSelector(context);
 	let cancellationPipeUpdateKey: string | undefined;
 
 	vscode.workspace.onDidChangeTextDocument((e) => {
@@ -30,7 +29,6 @@ export function activate(context: vscode.ExtensionContext) {
 		name,
 		langs,
 		initOptions,
-		fillInitializeParams,
 		port,
 	) => {
 
@@ -38,7 +36,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 		class _LanguageClient extends lsp.LanguageClient {
 			fillInitializeParams(params: lsp.InitializeParams) {
-				fillInitializeParams(params);
+				// fix https://github.com/johnsoncodehk/volar/issues/1959
+				params.locale = vscode.env.language;
 			}
 		}
 

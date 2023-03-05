@@ -11,7 +11,7 @@ import {
 	activateTsVersionStatusItem,
 	getTsdk,
 	takeOverModeActive,
-} from '@volar/vscode-language-client';
+} from '@volar/vscode';
 import { DiagnosticModel, ServerMode, VueServerInitializationOptions } from '@volar/vue-language-server';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient';
@@ -19,11 +19,6 @@ import * as componentMeta from './features/componentMeta';
 import * as doctor from './features/doctor';
 import * as nameCasing from './features/nameCasing';
 import * as splitEditors from './features/splitEditors';
-
-enum LanguageFeaturesKind {
-	Semantic,
-	Syntactic,
-}
 
 let semanticClient: lsp.BaseLanguageClient;
 let syntacticClient: lsp.BaseLanguageClient;
@@ -33,7 +28,6 @@ type CreateLanguageClient = (
 	name: string,
 	langs: string[],
 	initOptions: VueServerInitializationOptions,
-	fillInitializeParams: (params: lsp.InitializeParams) => void,
 	port: number,
 ) => lsp.BaseLanguageClient;
 
@@ -73,17 +67,15 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		createLc(
 			'vue-semantic-server',
 			'Vue Semantic Server',
-			getDocumentSelector(context, ServerMode.Semantic),
-			getInitializationOptions(ServerMode.Semantic, context),
-			getFillInitializeParams([LanguageFeaturesKind.Semantic]),
+			getDocumentSelector(context),
+			getInitializationOptions(ServerMode.PartialSemantic, context),
 			6009,
 		),
 		createLc(
 			'vue-syntactic-server',
 			'Vue Syntactic Server',
-			getDocumentSelector(context, ServerMode.Syntactic),
+			getDocumentSelector(context),
 			getInitializationOptions(ServerMode.Syntactic, context),
-			getFillInitializeParams([LanguageFeaturesKind.Syntactic]),
 			6011,
 		)
 	]);
@@ -197,7 +189,7 @@ export function deactivate(): Thenable<any> | undefined {
 	]);
 }
 
-export function getDocumentSelector(context: vscode.ExtensionContext, serverMode: ServerMode) {
+export function getDocumentSelector(context: vscode.ExtensionContext) {
 	const takeOverMode = takeOverModeActive(context);
 	const langs = takeOverMode ? [
 		'vue',
@@ -208,7 +200,7 @@ export function getDocumentSelector(context: vscode.ExtensionContext, serverMode
 	] : [
 		'vue',
 	];
-	if (takeOverMode && serverMode === ServerMode.Semantic) {
+	if (takeOverMode) {
 		langs.push('json');
 	}
 	if (processHtml()) {
@@ -252,52 +244,6 @@ function fullCompletionList() {
 	return vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.fullCompletionList');
 }
 
-function getFillInitializeParams(featuresKinds: LanguageFeaturesKind[]) {
-	return function (params: lsp.InitializeParams) {
-
-		// fix https://github.com/johnsoncodehk/volar/issues/1959
-		params.locale = vscode.env.language;
-
-		if (params.capabilities.textDocument) {
-			if (!featuresKinds.includes(LanguageFeaturesKind.Semantic)) {
-				params.capabilities.textDocument.references = undefined;
-				params.capabilities.textDocument.implementation = undefined;
-				params.capabilities.textDocument.definition = undefined;
-				params.capabilities.textDocument.typeDefinition = undefined;
-				params.capabilities.textDocument.callHierarchy = undefined;
-				params.capabilities.textDocument.hover = undefined;
-				params.capabilities.textDocument.rename = undefined;
-				params.capabilities.textDocument.signatureHelp = undefined;
-				params.capabilities.textDocument.codeAction = undefined;
-				params.capabilities.textDocument.completion = undefined;
-				// Tardy
-				params.capabilities.textDocument.documentHighlight = undefined;
-				params.capabilities.textDocument.documentLink = undefined;
-				params.capabilities.textDocument.codeLens = undefined;
-				params.capabilities.textDocument.semanticTokens = undefined;
-				params.capabilities.textDocument.inlayHint = undefined;
-				params.capabilities.textDocument.diagnostic = undefined;
-			}
-			if (!featuresKinds.includes(LanguageFeaturesKind.Syntactic)) {
-				params.capabilities.textDocument.selectionRange = undefined;
-				params.capabilities.textDocument.foldingRange = undefined;
-				params.capabilities.textDocument.linkedEditingRange = undefined;
-				params.capabilities.textDocument.documentSymbol = undefined;
-				params.capabilities.textDocument.colorProvider = undefined;
-				params.capabilities.textDocument.formatting = undefined;
-				params.capabilities.textDocument.rangeFormatting = undefined;
-				params.capabilities.textDocument.onTypeFormatting = undefined;
-			}
-		}
-		if (params.capabilities.workspace) {
-			if (!featuresKinds.includes(LanguageFeaturesKind.Semantic)) {
-				params.capabilities.workspace.symbol = undefined;
-				params.capabilities.workspace.fileOperations = undefined;
-			}
-		}
-	};
-}
-
 function getInitializationOptions(
 	serverMode: ServerMode,
 	context: vscode.ExtensionContext,
@@ -306,7 +252,6 @@ function getInitializationOptions(
 	const initializationOptions: VueServerInitializationOptions = {
 		// volar
 		configFilePath: vscode.workspace.getConfiguration('volar').get<string>('vueserver.configFilePath'),
-		respectClientCapabilities: true,
 		serverMode,
 		diagnosticModel: serverMode === ServerMode.Syntactic ? DiagnosticModel.None : diagnosticModel() === 'pull' ? DiagnosticModel.Pull : DiagnosticModel.Push,
 		textDocumentSync: textDocumentSync ? {

@@ -132,7 +132,6 @@ flowchart LR
 	click TS_VUE_PLUGIN "https://github.com/johnsoncodehk/volar/tree/master/packages/typescript-vue-plugin"
 	click VOLAR_PUG_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/pug-language-service"
 	click VOLAR_TS_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/typescript-language-service"
-	click VOLAR_TS_FASTER "https://github.com/johnsoncodehk/volar/tree/master/packages/typescript-faster"
 
 	%% Extrnal Packages
 	HTML_SERVICE[vscode-html-languageservice]
@@ -206,9 +205,6 @@ flowchart LR
 
 	VUE_REPL --> MONACO_VOLAR
 	MONACO_VOLAR --> VOLAR_VUE_SERVICE
-
-	%% TS_VUE_PLUGIN --> VOLAR_TS_FASTER
-	%% VOLAR_VUE_SERVICE --> VOLAR_TS_FASTER
 
 	%% VOLAR_VUE_TS --> TS
 	VUE_COMPONENT_META --> VOLAR_VUE_CORE

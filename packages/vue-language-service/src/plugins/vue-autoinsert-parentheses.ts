@@ -7,7 +7,7 @@ import { isCharacterTyping } from './vue-autoinsert-dotvalue';
 
 const plugin: LanguageServicePlugin = (context) => {
 
-	if (!context.typescript) {
+	if (!context?.typescript) {
 		return {};
 	}
 
@@ -15,7 +15,7 @@ const plugin: LanguageServicePlugin = (context) => {
 
 	return {
 
-		async doAutoInsert(document, position, options_2) {
+		async provideAutoInsertionEdit(document, position, options_2) {
 
 			const enabled = await context.configurationHost?.getConfiguration<boolean>('volar.autoWrapParentheses') ?? false;
 			if (!enabled)

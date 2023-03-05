@@ -3,6 +3,7 @@ import * as path from 'path';
 import { tester } from './utils/createTester';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as fs from 'fs';
+import { CancellationToken } from 'vscode-languageserver-protocol';
 
 const baseDir = path.resolve(__dirname, '../../vue-test-workspace/format');
 const testDirs = fs.readdirSync(baseDir);
@@ -26,6 +27,9 @@ for (const dirName of testDirs) {
 			const edit = await tester.languageService.format(
 				document.uri,
 				{ insertSpaces: false, tabSize: 4 },
+				undefined,
+				undefined,
+				CancellationToken.None,
 			);
 
 			tester.setVSCodeSettings();

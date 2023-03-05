@@ -4,62 +4,59 @@ import * as vscode from 'vscode-languageserver-protocol';
 
 const plugin: LanguageServicePlugin = (context) => {
 
-	if (!context.typescript)
+	if (!context?.typescript)
 		return {};
 
 	const _ts = context.typescript;
 
 	return {
 
-		inlayHints: {
+		provideInlayHints(document, range) {
+			return worker(document.uri, (vueFile) => {
 
-			on(document, range) {
-				return worker(document.uri, (vueFile) => {
+				const hoverOffsets: [vscode.Position, number][] = [];
+				const inlayHints: vscode.InlayHint[] = [];
 
-					const hoverOffsets: [vscode.Position, number][] = [];
-					const inlayHints: vscode.InlayHint[] = [];
+				for (const pointer of document.getText(range).matchAll(/<!--\s*\^\?\s*-->/g)) {
+					const offset = pointer.index! + pointer[0].indexOf('^?') + document.offsetAt(range.start);
+					const position = document.positionAt(offset);
+					hoverOffsets.push([position, document.offsetAt({
+						line: position.line - 1,
+						character: position.character,
+					})]);
+				}
 
-					for (const pointer of document.getText(range).matchAll(/<!--\s*\^\?\s*-->/g)) {
-						const offset = pointer.index! + pointer[0].indexOf('^?') + document.offsetAt(range.start);
-						const position = document.positionAt(offset);
-						hoverOffsets.push([position, document.offsetAt({
-							line: position.line - 1,
-							character: position.character,
-						})]);
-					}
-
-					forEachEmbeddedFile(vueFile, (embedded) => {
-						if (embedded.kind === FileKind.TypeScriptHostFile) {
-							for (const [_, map] of context.documents.getMapsByVirtualFileUri(document.uri)) {
-								for (const [pointerPosition, hoverOffset] of hoverOffsets) {
-									for (const [tsOffset, mapping] of map.map.toGeneratedOffsets(hoverOffset)) {
-										if (mapping.data.hover) {
-											const quickInfo = _ts.languageService.getQuickInfoAtPosition(embedded.fileName, tsOffset);
-											if (quickInfo) {
-												inlayHints.push({
-													position: { line: pointerPosition.line, character: pointerPosition.character + 2 },
-													label: _ts.module.displayPartsToString(quickInfo.displayParts),
-													paddingLeft: true,
-													paddingRight: false,
-												});
-											}
-											break;
+				forEachEmbeddedFile(vueFile, (embedded) => {
+					if (embedded.kind === FileKind.TypeScriptHostFile) {
+						for (const [_, map] of context.documents.getMapsByVirtualFileUri(document.uri)) {
+							for (const [pointerPosition, hoverOffset] of hoverOffsets) {
+								for (const [tsOffset, mapping] of map.map.toGeneratedOffsets(hoverOffset)) {
+									if (mapping.data.hover) {
+										const quickInfo = _ts.languageService.getQuickInfoAtPosition(embedded.fileName, tsOffset);
+										if (quickInfo) {
+											inlayHints.push({
+												position: { line: pointerPosition.line, character: pointerPosition.character + 2 },
+												label: _ts.module.displayPartsToString(quickInfo.displayParts),
+												paddingLeft: true,
+												paddingRight: false,
+											});
 										}
+										break;
 									}
 								}
 							}
 						}
-					});
-
-					return inlayHints;
+					}
 				});
-			},
+
+				return inlayHints;
+			});
 		},
 	};
 
 	function worker<T>(uri: string, callback: (vueSourceFile: vue.VueFile) => T) {
 
-		const [virtualFile] = context.documents.getVirtualFileByUri(uri);
+		const [virtualFile] = context!.documents.getVirtualFileByUri(uri);
 		if (!(virtualFile instanceof vue.VueFile))
 			return;
 

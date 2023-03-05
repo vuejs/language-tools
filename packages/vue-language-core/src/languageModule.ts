@@ -22,10 +22,13 @@ export function createLanguageModules(
 	const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(vueCompilerOptions.target, vueCompilerOptions));
 	const languageModule: embedded.LanguageModule = {
 		createFile(fileName, snapshot, languageId) {
-			if (vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))) {
-				return new VueFile(fileName, snapshot, ts, vueLanguagePlugin);
-			}
-			else if (languageId === 'vue') {
+			if (
+				languageId === 'vue'
+				|| (
+					!languageId
+					&& vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))
+				)
+			) {
 				return new VueFile(fileName, snapshot, ts, vueLanguagePlugin);
 			}
 		},

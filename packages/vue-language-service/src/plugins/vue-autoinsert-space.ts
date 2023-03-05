@@ -1,10 +1,13 @@
-import { LanguageServicePlugin } from '@volar/language-service';
+import { LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
 
-const plugin: LanguageServicePlugin = (context) => {
+const plugin: LanguageServicePlugin = (context): LanguageServicePluginInstance => {
+
+	if (!context)
+		return {};
 
 	return {
 
-		async doAutoInsert(document, _, { lastChange }) {
+		async provideAutoInsertionEdit(document, _, { lastChange }) {
 
 			if (document.languageId === 'html' || document.languageId === 'jade') {
 
