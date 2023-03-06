@@ -218,10 +218,21 @@ flowchart LR
 	VOLAR_VUE_SERVICE --> JSON_SERVICE
 ```
 
-## Sponsors
+---
+
+<h3 align="center">Full-time Support by</h3>
+<br />
+
+<p align="center">
+	<span>
+		<a href="https://stackblitz.com/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/HEAD/.github/sponsors/StackBlitz.png" height="80" /></a>
+		<h4 align="center">Just click, and start coding.</h4>
+	</span>
+</p>
+<br />
 
 <p align="center">
 	<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg">
-		<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg"/>
+		<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.png"/>
 	</a>
 </p>
