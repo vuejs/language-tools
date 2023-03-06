@@ -12,6 +12,8 @@ export function createLanguageModules(
 	vueCompilerOptions: VueCompilerOptions,
 ): embedded.LanguageModule[] {
 
+	const patchSnapshots = new WeakMap<ts.IScriptSnapshot, ts.IScriptSnapshot>();
+
 	patchResolveModuleNames(ts, vueCompilerOptions);
 
 	const vueLanguagePlugin = getDefaultVueLanguagePlugins(
@@ -71,13 +73,16 @@ export function createLanguageModules(
 							// for vue 2.7
 							basename === 'jsx.d.ts'
 						)) {
-							// allow arbitrary attributes
-							let tsScriptText = snapshot.getText(0, snapshot.getLength());
-							tsScriptText = tsScriptText.replace(
-								'type ReservedProps = {',
-								'type ReservedProps = { [name: string]: any',
-							);
-							snapshot = ts.ScriptSnapshot.fromString(tsScriptText);
+							if (!patchSnapshots.has(snapshot)) {
+								// allow arbitrary attributes
+								let tsScriptText = snapshot.getText(0, snapshot.getLength());
+								tsScriptText = tsScriptText.replace(
+									'type ReservedProps = {',
+									'type ReservedProps = { [name: string]: any',
+								);
+								patchSnapshots.set(snapshot, ts.ScriptSnapshot.fromString(tsScriptText));
+							}
+							snapshot = patchSnapshots.get(snapshot)!;
 						}
 					}
 					return snapshot;
