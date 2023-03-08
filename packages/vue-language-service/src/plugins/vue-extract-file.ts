@@ -91,7 +91,7 @@ export default function (): LanguageServicePlugin {
 							const checker = typescript.languageService.getProgram()!.getTypeChecker()!;
 							const type = checker.getTypeAtLocation(node);
 							const signatures = checker.getSignaturesOfType(type, ts.SignatureKind.Call);
-							const typeString = checker.typeToString(type);
+							const typeString = checker.typeToString(type, node, ts.TypeFormatFlags.NoTruncation);
 							return {
 								name,
 								type: typeString.startsWith('__VLS_') ? 'any' : typeString,
