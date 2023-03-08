@@ -75,17 +75,17 @@ export default function (): LanguageServicePlugin {
 				const toExtract = compact(
 					ranges.map(generatedRanges => {
 						const nodes = generatedRanges.map(({ generatedRange }) => {
-							return findChildContainingPosition(ts, sourceFile, generatedRange[0] - 1);
+							return findChildContainingPosition(ts, sourceFile, generatedRange[0]);
 						});
-						const node = nodes.filter(node => node && ts.isPropertyAccessExpression(node))[0] as ts.PropertyAccessExpression | undefined;
+						const node = nodes.find(node => node && !ts.isArrayLiteralExpression(node.parent)) as ts.Identifier | undefined;
 						if (!node) return;
 						// if (!ts.isIdentifier(node.name)) return
 						const checker = typescript.languageService.getProgram()!.getTypeChecker()!;
-						const type = checker.getTypeAtLocation(node.name);
+						const type = checker.getTypeAtLocation(node);
 						const signatures = checker.getSignaturesOfType(type, ts.SignatureKind.Call);
 						const typeString = checker.typeToString(type);
 						return {
-							name: node.name.text,
+							name: node.text,
 							type: typeString.startsWith('__VLS_') ? 'any' : typeString,
 							isMethod: signatures.length > 0,
 						};
