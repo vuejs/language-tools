@@ -63,32 +63,41 @@ export default function (): LanguageServicePlugin {
 					const [start, end] = mapping.sourceRange;
 					return start > startOffset && end < endOffset;
 				});
+				const isRangeInside = (outerRange: [number, number], innerRange: [number, number]) => {
+					const [outerStart, outerEnd] = outerRange;
+					const [innerStart, innerEnd] = innerRange;
+					return innerStart >= outerStart && innerEnd <= outerEnd;
+				};
 				const ranges = appliableMappings.map(({ sourceRange }) => {
 					return virtualFile.mappings
-						.filter(mapping => mapping.sourceRange[0] === sourceRange[0])
+						.filter(mapping => isRangeInside(sourceRange, mapping.sourceRange))
 						.filter(({ generatedRange: [start, end] }) => !!virtualFile.snapshot.getText(start, end).trim());
 				});
 				const typescript = ctx!.typescript!;
 				const ts = typescript.module;
 				const sourceFile = typescript.languageService.getProgram()!.getSourceFile(virtualFile.fileName)!;
 				const compact = <T>(arr: (T | undefined)[]) => arr.filter(Boolean) as T[];
+				const handledProps = new Set<string>();
 				const toExtract = compact(
-					ranges.map(generatedRanges => {
+					ranges.flatMap(generatedRanges => {
 						const nodes = generatedRanges.map(({ generatedRange }) => {
 							return findChildContainingPosition(ts, sourceFile, generatedRange[0]);
+						}).filter(node => node && !ts.isArrayLiteralExpression(node));
+						return nodes.map(node => {
+							if (!node || !ts.isIdentifier(node)) return;
+							const name = node.text;
+							if (handledProps.has(name)) return;
+							handledProps.add(name);
+							const checker = typescript.languageService.getProgram()!.getTypeChecker()!;
+							const type = checker.getTypeAtLocation(node);
+							const signatures = checker.getSignaturesOfType(type, ts.SignatureKind.Call);
+							const typeString = checker.typeToString(type);
+							return {
+								name,
+								type: typeString.startsWith('__VLS_') ? 'any' : typeString,
+								isMethod: signatures.length > 0,
+							};
 						});
-						const node = nodes.find(node => node && !ts.isArrayLiteralExpression(node.parent)) as ts.Identifier | undefined;
-						if (!node) return;
-						// if (!ts.isIdentifier(node.name)) return
-						const checker = typescript.languageService.getProgram()!.getTypeChecker()!;
-						const type = checker.getTypeAtLocation(node);
-						const signatures = checker.getSignaturesOfType(type, ts.SignatureKind.Call);
-						const typeString = checker.typeToString(type);
-						return {
-							name: node.text,
-							type: typeString.startsWith('__VLS_') ? 'any' : typeString,
-							isMethod: signatures.length > 0,
-						};
 					}),
 				);
 				const props = toExtract.filter(e => !e.isMethod);
