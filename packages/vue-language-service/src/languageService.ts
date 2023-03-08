@@ -12,6 +12,7 @@ import createVuePlugin from './plugins/vue';
 import createAutoDotValuePlugin from './plugins/vue-autoinsert-dotvalue';
 import createReferencesCodeLensPlugin from './plugins/vue-codelens-references';
 import createTwoslashQueries from './plugins/vue-twoslash-queries';
+import createVueExtractFilePlugin from './plugins/vue-extract-file';
 import createVueTemplateLanguagePlugin from './plugins/vue-template';
 import createVisualizeHiddenCallbackParamPlugin from './plugins/vue-visualize-hidden-callback-param';
 import type { Data } from '@volar-plugins/typescript/out/services/completions/basic';
@@ -256,6 +257,7 @@ function resolvePlugins(
 	});
 	plugins.vue ??= createVuePlugin(vueCompilerOptions);
 	plugins.css ??= createCssPlugin();
+	plugins.extractFile ??= createVueExtractFilePlugin();
 	plugins['pug-beautify'] ??= createPugFormatPlugin();
 	plugins.json ??= createJsonPlugin(settings?.json);
 	plugins['typescript/twoslash-queries'] ??= createTsTqPlugin();
