@@ -31,6 +31,13 @@ type CreateLanguageClient = (
 	port: number,
 ) => lsp.BaseLanguageClient;
 
+export const overrideApplyingCodeActionData = {
+	command: undefined as undefined | {
+		command: string;
+		arguments?: any[];
+	}
+};
+
 export async function activate(context: vscode.ExtensionContext, createLc: CreateLanguageClient) {
 
 	const stopCheck = vscode.window.onDidChangeActiveTextEditor(tryActivate);
@@ -84,6 +91,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 	activateServerMaxOldSpaceSizeChange();
 	activateRestartRequest();
+	activateApplyCodeAction();
 	activateClientRequests();
 
 	splitEditors.register(context, syntacticClient);
@@ -176,6 +184,15 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			await Promise.all(clients.map(client => client.start()));
 			activateClientRequests();
 		}));
+	}
+	function activateApplyCodeAction() {
+		context.subscriptions.push(
+			vscode.commands.registerCommand('_volar.applyRefactor', async () => {
+				const { command } = overrideApplyingCodeActionData;
+				if (!command) return;
+				await vscode.commands.executeCommand(command.command, ...command.arguments ?? []);
+			})
+		);
 	}
 	function activateClientRequests() {
 		nameCasing.activate(context, semanticClient);
