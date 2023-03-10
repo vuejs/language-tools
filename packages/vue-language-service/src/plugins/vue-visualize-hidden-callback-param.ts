@@ -30,7 +30,14 @@ const plugin: LanguageServicePlugin = (context) => {
 							paddingRight: true,
 							position: document.positionAt(mapping.generatedRange[0]),
 							kind: vscode.InlayHintKind.Parameter,
-							tooltip: 'Set `"volar.inlayHints.eventArgumentInInlineHandlers": false` to hide Event Argument in Inline Handlers.',
+							tooltip: {
+								kind: 'markdown',
+								value: [
+									'`$event` is a hidden parameter, you can use it in this callback.',
+									'To hide this hint, set `volar.inlayHints.eventArgumentInInlineHandlers` to `false` in IDE settings.',
+									'[More info](https://github.com/vuejs/language-tools/issues/2445#issuecomment-1444771420)',
+								].join('\n\n'),
+							},
 						});
 					}
 				}
