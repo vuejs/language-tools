@@ -241,6 +241,38 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		}
 
 		// check outdated language services plugins
+		const knownPlugins = [
+			// '@volar-plugins/css',
+			// '@volar-plugins/emmet',
+			'@volar-plugins/eslint',
+			// '@volar-plugins/html',
+			// '@volar-plugins/json',
+			'@volar-plugins/prettier',
+			'@volar-plugins/prettyhtml',
+			'@volar-plugins/pug-beautify',
+			'@volar-plugins/sass-formatter',
+			'@volar-plugins/tslint',
+			// '@volar-plugins/typescript',
+			// '@volar-plugins/typescript-twoslash-queries',
+			'@volar-plugins/vetur',
+		];
+		for (const plugin of knownPlugins) {
+			const pluginMod = await getPackageJsonOfWorkspacePackage(fileUri.fsPath, plugin);
+			if (!pluginMod) continue;
+			if (semver.lt(pluginMod.json.version, '2.0.0')) {
+				problems.push({
+					title: `Outdated ${plugin}`,
+					message: [
+						`The ${plugin} plugin is outdated. Please update it to the latest version.`,
+						'',
+						'- plugin package.json: ' + pluginMod.path,
+						'- plugin version: ' + pluginMod.json.version,
+						'- expected version: >= 2.0.0',
+					].join('\n'),
+				});
+			}
+		}
+
 		// check outdated vue language plugins
 		// check node_modules has more than one vue versions
 		// check ESLint, Prettier...
