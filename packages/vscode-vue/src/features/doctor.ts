@@ -259,7 +259,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		for (const plugin of knownPlugins) {
 			const pluginMod = await getPackageJsonOfWorkspacePackage(fileUri.fsPath, plugin);
 			if (!pluginMod) continue;
-			if (semver.lt(pluginMod.json.version, '2.0.0')) {
+			if (!pluginMod.json.version.startsWith('2.')) {
 				problems.push({
 					title: `Outdated ${plugin}`,
 					message: [
