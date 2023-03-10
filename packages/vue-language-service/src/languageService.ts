@@ -85,10 +85,22 @@ function resolvePlugins(
 					for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
 						const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
 						if (virtualFile instanceof vue.VueFile) {
-							if (map.toSourcePosition(position, data => typeof data.completion === 'object' && !!data.completion.autoImportOnly)) {
+							const isAutoImport = !!map.toSourcePosition(position, data => typeof data.completion === 'object' && !!data.completion.autoImportOnly);
+							if (isAutoImport) {
 								result.items.forEach(item => {
 									item.data.__isComponentAutoImport = true;
 								});
+
+								// fix #2458
+								const source = _context.documents.getVirtualFileByUri(document.uri)[1];
+								if (source && _context.typescript) {
+									const casing = await getNameCasing(_context, _context.typescript, _context.fileNameToUri(source.fileName));
+									if (casing.tag === TagNameCasing.Kebab) {
+										result.items.forEach(item => {
+											item.filterText = hyphenate(item.filterText ?? item.label);
+										});
+									}
+								}
 							}
 						}
 					}
