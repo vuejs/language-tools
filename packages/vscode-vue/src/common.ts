@@ -68,14 +68,14 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			'vue-semantic-server',
 			'Vue Semantic Server',
 			getDocumentSelector(context),
-			getInitializationOptions(ServerMode.PartialSemantic, context),
+			await getInitializationOptions(ServerMode.PartialSemantic, context),
 			6009,
 		),
 		createLc(
 			'vue-syntactic-server',
 			'Vue Syntactic Server',
 			getDocumentSelector(context),
-			getInitializationOptions(ServerMode.Syntactic, context),
+			await getInitializationOptions(ServerMode.Syntactic, context),
 			6011,
 		)
 	]);
@@ -244,7 +244,7 @@ function fullCompletionList() {
 	return vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.fullCompletionList');
 }
 
-function getInitializationOptions(
+async function getInitializationOptions(
 	serverMode: ServerMode,
 	context: vscode.ExtensionContext,
 ) {
@@ -259,7 +259,7 @@ function getInitializationOptions(
 			full: lsp.TextDocumentSyncKind.Full,
 			none: lsp.TextDocumentSyncKind.None,
 		}[textDocumentSync] : lsp.TextDocumentSyncKind.Incremental,
-		typescript: { tsdk: getTsdk(context).tsdk },
+		typescript: { tsdk: (await getTsdk(context)).tsdk },
 		noProjectReferences: noProjectReferences(),
 		reverseConfigFilePriority: reverseConfigFilePriority(),
 		disableFileWatcher: disableFileWatcher(),

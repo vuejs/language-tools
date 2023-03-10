@@ -4,7 +4,7 @@ import { BaseLanguageClient } from 'vscode-languageclient';
 import { GetMatchTsConfigRequest, ParseSFCRequest, GetVueCompilerOptionsRequest } from '@volar/vue-language-server';
 
 const scheme = 'vue-doctor';
-const knownValidSyntanxHighlightExtensions = {
+const knownValidSyntaxHighlightExtensions = {
 	postcss: ['cpylua.language-postcss', 'vunguyentuan.vscode-postcss', 'csstools.postcss'],
 	stylus: ['sysoev.language-stylus'],
 	sass: ['Syler.sass-indented'],
@@ -41,7 +41,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 				}
 
 				content += '---\n\n';
-				content += `> Have any questions about the report message? You can see how it is composed by inspecting the [source code](https://github.com/johnsoncodehk/volar/blob/master/packages/vscode-vue/src/features/doctor.ts).\n\n`;
+				content += `> Have any questions about the report message? You can see how it is composed by inspecting the [source code](https://github.com/vuejs/language-tools/blob/master/packages/vscode-vue/src/features/doctor.ts).\n\n`;
 
 				return content.trim();
 			}
@@ -49,7 +49,11 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 	));
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.doctor', () => {
 		const doc = vscode.window.activeTextEditor?.document;
-		if (doc?.languageId === 'vue' && doc.uri.scheme === 'file') {
+		if (
+			doc
+			&& (doc.languageId === 'vue' || doc.uri.toString().endsWith('.vue'))
+			&& doc.uri.scheme === 'file'
+		) {
 			vscode.commands.executeCommand('markdown.showPreviewToSide', getDoctorUri(doc.uri));
 		}
 	}));
@@ -62,7 +66,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		if (
 			vscode.workspace.getConfiguration('volar').get<boolean>('doctor.status')
 			&& editor
-			&& editor.document.languageId === 'vue'
+			&& (editor.document.languageId === 'vue' || editor.document.uri.toString().endsWith('.vue'))
 			&& editor.document.uri.scheme === 'file'
 		) {
 			const problems = await getProblems(editor.document.uri);
@@ -173,7 +177,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		// check using pug but don't install @volar/vue-language-plugin-pug
 		if (
 			sfc?.descriptor.template?.lang === 'pug'
-			&& !vueOptions?.plugins?.some((pluginPath: string) => pluginPath.indexOf('vue-language-plugin-pug') >= 0)
+			&& !await getPackageJsonOfWorkspacePackage(fileUri.fsPath, '@volar/vue-language-plugin-pug')
 		) {
 			problems.push({
 				title: '`@volar/vue-language-plugin-pug` missing',
@@ -204,8 +208,8 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			];
 			for (const block of blocks) {
 				if (!block) continue;
-				if (block.lang && block.lang in knownValidSyntanxHighlightExtensions) {
-					const validExts = knownValidSyntanxHighlightExtensions[block.lang as keyof typeof knownValidSyntanxHighlightExtensions];
+				if (block.lang && block.lang in knownValidSyntaxHighlightExtensions) {
+					const validExts = knownValidSyntaxHighlightExtensions[block.lang as keyof typeof knownValidSyntaxHighlightExtensions];
 					const someInstalled = validExts.some(ext => !!vscode.extensions.getExtension(ext));
 					if (!someInstalled) {
 						problems.push({
@@ -216,6 +220,24 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 					}
 				}
 			}
+		}
+
+		// emmet.includeLanguages
+		const emmetIncludeLanguages = vscode.workspace.getConfiguration('emmet').get<{ [lang: string]: string; }>('includeLanguages');
+		if (emmetIncludeLanguages?.['vue']) {
+			problems.push({
+				title: 'Unnecessary `emmet.includeLanguages.vue`',
+				message: 'Vue language server already supports Emmet. You can remove `emmet.includeLanguages.vue` from `.vscode/settings.json`.',
+			});
+		}
+
+		// files.associations
+		const filesAssociations = vscode.workspace.getConfiguration('files').get<{ [pattern: string]: string; }>('associations');
+		if (filesAssociations?.['*.vue'] === 'html') {
+			problems.push({
+				title: 'Unnecessary `files.associations["*.vue"]`',
+				message: 'With `"files.associations": { "*.vue": html }`, language server cannot to recognize Vue files. You can remove `files.associations["*.vue"]` from `.vscode/settings.json`.',
+			});
 		}
 
 		// check outdated language services plugins
