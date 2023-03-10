@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import * as path from 'path';
 import { tester } from './utils/createTester';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import * as shared from '@volar/shared';
 import * as fs from 'fs';
+import { CancellationToken } from 'vscode-languageserver-protocol';
 
 const baseDir = path.resolve(__dirname, '../../vue-test-workspace/format');
 const testDirs = fs.readdirSync(baseDir);
@@ -17,7 +17,7 @@ for (const dirName of testDirs) {
 		const outputFileName = fs.existsSync(path.join(dir, 'output.vue')) ? path.join(dir, 'output.vue') : path.join(dir, 'output.ts');
 		const input = fs.readFileSync(inputFileName, 'utf8');
 		const output = fs.readFileSync(outputFileName, 'utf8');
-		const document = TextDocument.create(shared.fileNameToUri(inputFileName), 'vue', 0, input);
+		const document = TextDocument.create(tester.fileNameToUri(inputFileName), 'vue', 0, input);
 		const vscodeSettings = fs.existsSync(path.join(dir, 'settings.json')) ? JSON.parse(fs.readFileSync(path.join(dir, 'settings.json'), 'utf8')) : undefined;
 
 		it(`format`, async () => {
@@ -27,6 +27,9 @@ for (const dirName of testDirs) {
 			const edit = await tester.languageService.format(
 				document.uri,
 				{ insertSpaces: false, tabSize: 4 },
+				undefined,
+				undefined,
+				CancellationToken.None,
 			);
 
 			tester.setVSCodeSettings();

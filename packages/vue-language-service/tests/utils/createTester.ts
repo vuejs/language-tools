@@ -1,11 +1,13 @@
 import { resolveConfig, VueLanguageServiceHost } from '../..';
 import * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path';
-import * as shared from '@volar/shared';
 import { URI } from 'vscode-uri';
 import { createLanguageService } from '@volar/language-service';
 
+const uriToFileName = (uri: string) => URI.parse(uri).fsPath.replace(/\\/g, '/');
+const fileNameToUri = (fileName: string) => URI.file(fileName).toString();
 const testRoot = path.resolve(__dirname, '../../../vue-test-workspace');
+
 export const rootUri = URI.file(testRoot);
 export const tester = createTester(testRoot);
 
@@ -18,10 +20,10 @@ function createTester(root: string) {
 		},
 	};
 
-	const realTsConfig = shared.normalizeFileName(path.join(root, 'tsconfig.json'));
+	const realTsConfig = path.join(root, 'tsconfig.json').replace(/\\/g, '/');
 	const config = ts.readJsonConfigFile(realTsConfig, ts.sys.readFile);
 	const parsedCommandLine = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(realTsConfig), {}, realTsConfig);
-	parsedCommandLine.fileNames = parsedCommandLine.fileNames.map(shared.normalizeFileName);
+	parsedCommandLine.fileNames = parsedCommandLine.fileNames.map(fileName => fileName.replace(/\\/g, '/'));
 	const scriptVersions = new Map<string, string>();
 	const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
 	const host: VueLanguageServiceHost = {
@@ -52,7 +54,11 @@ function createTester(root: string) {
 	};
 	let currentVSCodeSettings: any;
 	const languageServiceConfig = resolveConfig({}, ts, {}, {});
-	const languageService = createLanguageService(host, languageServiceConfig, {
+	const languageService = createLanguageService({
+		host,
+		config: languageServiceConfig,
+		uriToFileName,
+		fileNameToUri,
 		rootUri,
 		configurationHost: {
 			async getConfiguration(section: string) {
@@ -69,6 +75,8 @@ function createTester(root: string) {
 	});
 
 	return {
+		uriToFileName,
+		fileNameToUri,
 		host,
 		languageService,
 		setVSCodeSettings,

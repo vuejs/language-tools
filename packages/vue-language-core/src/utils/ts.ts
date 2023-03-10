@@ -1,6 +1,6 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path';
-import type { VueCompilerOptions } from '../types';
+import type { VueCompilerOptions, VueLanguagePlugin } from '../types';
 
 export type ParsedCommandLine = ts.ParsedCommandLine & {
 	vueOptions: Partial<VueCompilerOptions>;
@@ -82,15 +82,23 @@ function createParsedCommandLineBase(
 	}
 
 	if (content.raw.vueCompilerOptions?.plugins) {
-		content.raw.vueCompilerOptions.plugins = content.raw.vueCompilerOptions.plugins.map((pluginPath: string) => {
-			try {
-				pluginPath = resolvePath(pluginPath);
-				return require(pluginPath);
-			}
-			catch (error) {
-				console.warn('Load plugin failed', pluginPath, error);
-			}
-		});
+
+		const pluginPaths: string[] = content.raw.vueCompilerOptions.plugins;
+		const plugins = pluginPaths
+			.map<VueLanguagePlugin | undefined>((pluginPath: string) => {
+				try {
+					const resolvedPath = resolvePath(pluginPath);
+					if (resolvedPath) {
+						return require(resolvedPath);
+					}
+				}
+				catch (error) {
+					console.warn('Load plugin failed', pluginPath, error);
+				}
+			})
+			.filter((plugin): plugin is NonNullable<typeof plugin> => !!plugin);
+
+		content.raw.vueCompilerOptions.plugins = plugins;
 	}
 
 	const vueOptions: Partial<VueCompilerOptions> = {
@@ -98,22 +106,31 @@ function createParsedCommandLineBase(
 		...content.raw.vueCompilerOptions,
 	};
 
-	vueOptions.hooks = vueOptions.hooks?.map(resolvePath);
-	vueOptions.experimentalAdditionalLanguageModules = vueOptions.experimentalAdditionalLanguageModules?.map(resolvePath);
+	vueOptions.hooks = vueOptions.hooks
+		?.map(resolvePath)
+		.filter((hook): hook is NonNullable<typeof hook> => !!hook);
+	vueOptions.experimentalAdditionalLanguageModules = vueOptions.experimentalAdditionalLanguageModules
+		?.map(resolvePath)
+		.filter((module): module is NonNullable<typeof module> => !!module);
 
 	return {
 		...content,
 		vueOptions,
 	};
 
-	function resolvePath(scriptPath: string) {
+	function resolvePath(scriptPath: string): string | undefined {
 		try {
-			scriptPath = require.resolve(scriptPath, { paths: [folder] });
+			if (require?.resolve) {
+				scriptPath = require.resolve(scriptPath, { paths: [folder] });
+			}
+			else {
+				console.log('failed to resolve path:', scriptPath, 'require.resolve is not supported in web');
+			}
 		}
 		catch (error) {
 			console.warn(error);
 		}
-		return scriptPath;
+		return;
 	}
 }
 

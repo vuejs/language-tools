@@ -5,7 +5,7 @@
       "name": "lazy",
       "description": {
         "kind": "markdown",
-        "value": "\n默認情況下，`v-model` 會在每次 `input` 事件後更新數據 ([IME 拼字階段的狀態](#vmodel-ime-tip)例外)。你可以添加 `lazy` 修飾符來改為在每次 `change` 事件後更新數據：\n\n```html\n<!-- 在 \"change\" 事件後同步更新而不是 \"input\" -->\n<input v-model.lazy=\"msg\" />\n```\n"
+        "value": "\n기본적으로 `v-model`은 각 `input` 이벤트 이후 데이터와 입력을 동기화합니다([위에 언급된 IME 구성 제외](#vmodel-ime-tip)).\n대신 `change` 이벤트 이후에 동기화하기 위해 `.lazy` 수식어를 추가할 수 있습니다.\n\n```html\n<!-- \"input\" 대신 \"change\" 이벤트 후에 동기화됨 -->\n<input v-model.lazy=\"msg\" />\n```\n"
       },
       "references": [
         {
@@ -38,7 +38,7 @@
       "name": "number",
       "description": {
         "kind": "markdown",
-        "value": "\n如果你想讓用戶輸入自動轉換為數字，你可以在 `v-model` 後添加 `.number` 修飾符來管理輸入：\n\n```html\n<input v-model.number=\"age\" />\n```\n\n如果該值無法被 `parseFloat()` 處理，那麼將返回原始值。\n\n`number` 修飾符會在輸入框有 `type=\"number\"` 時自動啟用。\n"
+        "value": "\n사용자 입력이 자동으로 숫자로 유형 변환되도록 하려면, `v-model` 수식어로 `.number`를 추가하면 됩니다:\n\n```html\n<input v-model.number=\"age\" />\n```\n\n값을 `parseFloat()`로 파싱할 수 없으면 원래 값이 대신 사용됩니다.\n\n인풋에 `type=\"number\"`가 있으면 `.number` 수식어가 자동으로 적용됩니다.\n"
       },
       "references": [
         {
@@ -71,7 +71,7 @@
       "name": "trim",
       "description": {
         "kind": "markdown",
-        "value": "\n如果你想要默認自動去除用戶輸入內容中兩端的空格，你可以在 `v-model` 後添加 `.trim` 修飾符：\n\n```html\n<input v-model.trim=\"msg\" />\n```\n"
+        "value": "\n사용자 입력의 공백이 자동으로 트리밍되도록 하려면 `v-model` 수식어로 `.trim`을 추가하면 됩니다:\n\n```html\n<input v-model.trim=\"msg\" />\n```\n"
       },
       "references": [
         {

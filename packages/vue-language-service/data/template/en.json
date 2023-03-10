@@ -27,6 +27,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-components.html#transition"
         }
       ]
     },
@@ -56,6 +60,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-components.html#transitiongroup"
         }
       ]
     },
@@ -85,6 +93,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-components.html#keepalive"
         }
       ]
     },
@@ -114,6 +126,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-components.html#teleport"
         }
       ]
     },
@@ -143,6 +159,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-components.html#suspense"
         }
       ]
     },
@@ -150,7 +170,7 @@
       "name": "component",
       "description": {
         "kind": "markdown",
-        "value": "\nA \"meta component\" for rendering dynamic components or elements.\n\n- **Props**\n\n  ```ts\n  interface DynamicComponentProps {\n    is: string | Component\n  }\n  ```\n\n- **Details**\n\n  The actual component to render is determined by the `is` prop.\n\n  - When `is` is a string, it could be either an HTML tag name or a component's registered name.\n\n  - Alternatively, `is` can also be directly bound to the definition of a component.\n\n- **Example**\n\n  Rendering components by registered name (Options API):\n\n  ```vue\n  <script>\n  import Foo from './Foo.vue'\n  import Bar from './Bar.vue'\n\n  export default {\n    components: { Foo, Bar },\n    data() {\n      return {\n        view: 'Foo'\n      }\n    }\n  }\n  </script>\n\n  <template>\n    <component :is=\"view\" />\n  </template>\n  ```\n\n  Rendering components by definition (Composition API with `<script setup>`):\n\n  ```vue\n  <script setup>\n  import Foo from './Foo.vue'\n  import Bar from './Bar.vue'\n  </script>\n\n  <template>\n    <component :is=\"Math.random() > 0.5 ? Foo : Bar\" />\n  </template>\n  ```\n\n  Rendering HTML elements:\n\n  ```html\n  <component :is=\"href ? 'a' : 'span'\"></component>\n  ```\n\n  The [built-in components](./built-in-components.html) can all be passed to `is`, but you must register them if you want to pass them by name. For example:\n\n  ```vue\n  <script>\n  import { Transition, TransitionGroup } from 'vue'\n\n  export default {\n    components: {\n      Transition,\n      TransitionGroup\n    }\n  }\n  </script>\n\n  <template>\n    <component :is=\"isGroup ? 'TransitionGroup' : 'Transition'\">\n      ...\n    </component>\n  </template>\n  ```\n\n  Registration is not required if you pass the component itself to `is` rather than its name, e.g. in `<script setup>`.\n\n  If `v-model` is used on a `<component>` tag, the template compiler will expand it to a `modelValue` prop and `update:modelValue` event listener, much like it would for any other component. However, this won't be compatible with native HTML elements, such as `<input>` or `<select>`. As a result, using `v-model` with a dynamically created native element won't work: \n\n  ```vue\n  <script setup>\n  import { ref } from 'vue'\n  \n  const tag = ref('input')\n  const username = ref('')\n  </script>\n\n  <template>\n    <!-- This won't work as 'input' is a native HTML element -->\n    <component :is=\"tag\" v-model=\"username\" />\n  </template>\n  ```\n\n  In practice, this edge case isn't common as native form fields are typically wrapped in components in real applications. If you do need to use a native element directly then you can split the `v-model` into an attribute and event manually.\n\n- **See also:** [Dynamic Components](https://vuejs.org/guide/essentials/component-basics.html#dynamic-components)\n"
+        "value": "\nA \"meta component\" for rendering dynamic components or elements.\n\n- **Props**\n\n  ```ts\n  interface DynamicComponentProps {\n    is: string | Component\n  }\n  ```\n\n- **Details**\n\n  The actual component to render is determined by the `is` prop.\n\n  - When `is` is a string, it could be either an HTML tag name or a component's registered name.\n\n  - Alternatively, `is` can also be directly bound to the definition of a component.\n\n- **Example**\n\n  Rendering components by registered name (Options API):\n\n  ```vue\n  <script>\n  import Foo from './Foo.vue'\n  import Bar from './Bar.vue'\n\n  export default {\n    components: { Foo, Bar },\n    data() {\n      return {\n        view: 'Foo'\n      }\n    }\n  }\n  </script>\n\n  <template>\n    <component :is=\"view\" />\n  </template>\n  ```\n\n  Rendering components by definition (Composition API with `<script setup>`):\n\n  ```vue\n  <script setup>\n  import Foo from './Foo.vue'\n  import Bar from './Bar.vue'\n  </script>\n\n  <template>\n    <component :is=\"Math.random() > 0.5 ? Foo : Bar\" />\n  </template>\n  ```\n\n  Rendering HTML elements:\n\n  ```html\n  <component :is=\"href ? 'a' : 'span'\"></component>\n  ```\n\n  The [built-in components](./built-in-components) can all be passed to `is`, but you must register them if you want to pass them by name. For example:\n\n  ```vue\n  <script>\n  import { Transition, TransitionGroup } from 'vue'\n\n  export default {\n    components: {\n      Transition,\n      TransitionGroup\n    }\n  }\n  </script>\n\n  <template>\n    <component :is=\"isGroup ? 'TransitionGroup' : 'Transition'\">\n      ...\n    </component>\n  </template>\n  ```\n\n  Registration is not required if you pass the component itself to `is` rather than its name, e.g. in `<script setup>`.\n\n  If `v-model` is used on a `<component>` tag, the template compiler will expand it to a `modelValue` prop and `update:modelValue` event listener, much like it would for any other component. However, this won't be compatible with native HTML elements, such as `<input>` or `<select>`. As a result, using `v-model` with a dynamically created native element won't work:\n\n  ```vue\n  <script setup>\n  import { ref } from 'vue'\n\n  const tag = ref('input')\n  const username = ref('')\n  </script>\n\n  <template>\n    <!-- This won't work as 'input' is a native HTML element -->\n    <component :is=\"tag\" v-model=\"username\" />\n  </template>\n  ```\n\n  In practice, this edge case isn't common as native form fields are typically wrapped in components in real applications. If you do need to use a native element directly then you can split the `v-model` into an attribute and event manually.\n\n- **See also:** [Dynamic Components](https://vuejs.org/guide/essentials/component-basics.html#dynamic-components)\n"
       },
       "references": [
         {
@@ -172,6 +192,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-elements.html#component"
         }
       ]
     },
@@ -201,6 +225,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-elements.html#slot"
         }
       ]
     },
@@ -208,7 +236,7 @@
       "name": "template",
       "description": {
         "kind": "markdown",
-        "value": "\nThe `<template>` tag is used as a placeholder when we want to use a built-in directive without rendering an element in the DOM.\n\n- **Details:**\n\n  The special handling for `<template>` is only triggered if it is used with one of these directives:\n\n  - `v-if`, `v-else-if`, or `v-else`\n  - `v-for`\n  - `v-slot`\n  \n  If none of those directives are present then it will be rendered as a [native `<template>` element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template) instead.\n\n  A `<template>` with a `v-for` can also have a [`key` attribute](https://vuejs.org/api/built-in-special-attributes.html#key). All other attributes and directives will be discarded, as they aren't meaningful without a corresponding element.\n\n  Single-file components use a [top-level `<template>` tag](https://vuejs.org/api/sfc-spec.html#language-blocks) to wrap the entire template. That usage is separate from the use of `<template>` described above. That top-level tag is not part of the template itself and doesn't support template syntax, such as directives.  \n\n- **See also:**\n  - [Guide - `v-if` on `<template>`](https://vuejs.org/guide/essentials/conditional.html#v-if-on-template) \n  - [Guide - `v-for` on `<template>`](https://vuejs.org/guide/essentials/list.html#v-for-on-template) \n  - [Guide - Named slots](https://vuejs.org/guide/components/slots.html#named-slots) \n"
+        "value": "\nThe `<template>` tag is used as a placeholder when we want to use a built-in directive without rendering an element in the DOM.\n\n- **Details:**\n\n  The special handling for `<template>` is only triggered if it is used with one of these directives:\n\n  - `v-if`, `v-else-if`, or `v-else`\n  - `v-for`\n  - `v-slot`\n\n  If none of those directives are present then it will be rendered as a [native `<template>` element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template) instead.\n\n  A `<template>` with a `v-for` can also have a [`key` attribute](https://vuejs.org/api/built-in-special-attributes.html#key). All other attributes and directives will be discarded, as they aren't meaningful without a corresponding element.\n\n  Single-file components use a [top-level `<template>` tag](https://vuejs.org/api/sfc-spec.html#language-blocks) to wrap the entire template. That usage is separate from the use of `<template>` described above. That top-level tag is not part of the template itself and doesn't support template syntax, such as directives.\n\n- **See also:**\n  - [Guide - `v-if` on `<template>`](https://vuejs.org/guide/essentials/conditional.html#v-if-on-template)\n  - [Guide - `v-for` on `<template>`](https://vuejs.org/guide/essentials/list.html#v-for-on-template)\n  - [Guide - Named slots](https://vuejs.org/guide/components/slots.html#named-slots)\n"
       },
       "references": [
         {
@@ -230,6 +258,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-elements.html#template"
         }
       ]
     }
@@ -261,6 +293,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-text"
         }
       ]
     },
@@ -268,7 +304,7 @@
       "name": "v-html",
       "description": {
         "kind": "markdown",
-        "value": "\nUpdate the element's [innerHTML](https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML).\n\n- **Expects:** `string`\n\n- **Details:**\n\n  Contents of `v-html` are inserted as plain HTML - Vue template syntax will not be processed. If you find yourself trying to compose templates using `v-html`, try to rethink the solution by using components instead.\n\n  ::: warning Security Note\n  Dynamically rendering arbitrary HTML on your website can be very dangerous because it can easily lead to [XSS attacks](https://en.wikipedia.org/wiki/Cross-site_scripting). Only use `v-html` on trusted content and **never** on user-provided content.\n  :::\n\n  In [Single-File Components](https://vuejs.org/guide/scaling-up/sfc.html), `scoped` styles will not apply to content inside `v-html`, because that HTML is not processed by Vue's template compiler. If you want to target `v-html` content with scoped CSS, you can instead use [CSS modules](./sfc-css-features.html#css-modules) or an additional, global `<style>` element with a manual scoping strategy such as BEM.\n\n- **Example:**\n\n  ```html\n  <div v-html=\"html\"></div>\n  ```\n\n- **See also:** [Template Syntax - Raw HTML](https://vuejs.org/guide/essentials/template-syntax.html#raw-html)\n"
+        "value": "\nUpdate the element's [innerHTML](https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML).\n\n- **Expects:** `string`\n\n- **Details:**\n\n  Contents of `v-html` are inserted as plain HTML - Vue template syntax will not be processed. If you find yourself trying to compose templates using `v-html`, try to rethink the solution by using components instead.\n\n  ::: warning Security Note\n  Dynamically rendering arbitrary HTML on your website can be very dangerous because it can easily lead to [XSS attacks](https://en.wikipedia.org/wiki/Cross-site_scripting). Only use `v-html` on trusted content and **never** on user-provided content.\n  :::\n\n  In [Single-File Components](https://vuejs.org/guide/scaling-up/sfc.html), `scoped` styles will not apply to content inside `v-html`, because that HTML is not processed by Vue's template compiler. If you want to target `v-html` content with scoped CSS, you can instead use [CSS modules](./sfc-css-features#css-modules) or an additional, global `<style>` element with a manual scoping strategy such as BEM.\n\n- **Example:**\n\n  ```html\n  <div v-html=\"html\"></div>\n  ```\n\n- **See also:** [Template Syntax - Raw HTML](https://vuejs.org/guide/essentials/template-syntax.html#raw-html)\n"
       },
       "references": [
         {
@@ -290,6 +326,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-html"
         }
       ]
     },
@@ -319,6 +359,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-show"
         }
       ]
     },
@@ -348,6 +392,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-if"
         }
       ]
     },
@@ -378,6 +426,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-else"
         }
       ]
     },
@@ -407,6 +459,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-else-if"
         }
       ]
     },
@@ -436,6 +492,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-for"
         }
       ]
     },
@@ -465,6 +525,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-on"
         }
       ]
     },
@@ -494,6 +558,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-bind"
         }
       ]
     },
@@ -523,6 +591,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-model"
         }
       ]
     },
@@ -552,6 +624,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-slot"
         }
       ]
     },
@@ -581,6 +657,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-pre"
         }
       ]
     },
@@ -610,6 +690,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-once"
         }
       ]
     },
@@ -639,6 +723,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-memo"
         }
       ]
     },
@@ -668,6 +756,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-cloak"
         }
       ]
     },
@@ -697,6 +789,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-attributes.html#key"
         }
       ]
     },
@@ -726,6 +822,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-attributes.html#ref"
         }
       ]
     },
@@ -755,6 +855,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-attributes.html#is"
         }
       ]
     }
