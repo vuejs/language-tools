@@ -183,7 +183,7 @@ export function baseCreate(
 	});
 	const tsLs = ts.createLanguageService(proxyHost);
 	let globalPropNames: string[] = [];
-	globalPropNames = getComponentMeta(globalComponentName).props.map(prop => prop.name);
+	globalPropNames = checkerOptions.globalPropNames ?? getComponentMeta(globalComponentName).props.map(prop => prop.name);
 
 	return {
 		getExportNames,
