@@ -182,8 +182,7 @@ export function baseCreate(
 		}
 	});
 	const tsLs = ts.createLanguageService(proxyHost);
-	let globalPropNames: string[] = [];
-	globalPropNames = checkerOptions.globalPropNames ?? getComponentMeta(globalComponentName).props.map(prop => prop.name);
+	let globalPropNames: string[] | undefined;
 
 	return {
 		getExportNames,
@@ -257,8 +256,11 @@ export function baseCreate(
 			}
 
 			// fill global
-			for (const prop of result) {
-				prop.global = globalPropNames.includes(prop.name);
+			if (componentPath !== globalComponentName) {
+				globalPropNames ??= getComponentMeta(globalComponentName).props.map(prop => prop.name);
+				for (const prop of result) {
+					prop.global = globalPropNames.includes(prop.name);
+				}
 			}
 
 			// fill defaults

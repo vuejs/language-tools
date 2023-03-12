@@ -58,5 +58,4 @@ export interface MetaCheckerOptions {
 	forceUseTs?: boolean;
 	printer?: ts.PrinterOptions;
 	rawType?: boolean;
-	globalPropNames?: string[];
 }
