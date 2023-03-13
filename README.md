@@ -59,7 +59,7 @@ If you want to work on the volar extension follow these commands to set up your 
 
 ```bash
 git clone https://github.com/vuejs/language-tools.git
-cd volar
+cd language-tools
 pnpm install
 pnpm run build
 ```

@@ -1,14 +1,26 @@
 # Changelog
 
-## 1.2.0 (2023/2/25)
+## 1.3.0 (2023/3/10) - pre-release
 
-- feat: compatible with upstream monaco integration (https://github.com/volarjs/volar.js/pull/10)
-- feat: support array extends for tsconfig ([#2344](https://github.com/johnsoncodehk/volar/issues/2344))
-- feat: make cursor inside quotes when insert missing required props edit ([#2414](https://github.com/johnsoncodehk/volar/issues/2414))
-- feat: support mixin child nodes for pug ([#2447](https://github.com/johnsoncodehk/volar/issues/2447))
-- fix: ignore native tags for missing required props hint
-- fix: ignore methods for missing required props hint ([#2443](https://github.com/johnsoncodehk/volar/issues/2443))
-- fix: SFC outline not show child nodes ([#2446](https://github.com/johnsoncodehk/volar/issues/2446))
+- feat: support for korean html data
+- feat(doctor): remove `vue-tsc` version check
+- feat(doctor): rename setting from `volar.doctor.statusBarItem` to `volar.doctor.status`
+- feat(doctor): check VSCode settings `emmet.includeLanguages`, `files.associations` ([#2487](https://github.com/johnsoncodehk/volar/issues/2487))
+- feat(doctor): check plugins version for `volar.config.js`
+- feat: add description link for `$event =>` hint ([#2445](https://github.com/johnsoncodehk/volar/issues/2445))
+- feat(language-server): support for `ServerMode.PartialSemantic`
+- fix: `Show Component Meta` command not working
+- fix: name casing status do not update with changed settings ([#2460](https://github.com/johnsoncodehk/volar/issues/2460))
+- fix: component auto import not working with kebab case ([#2458](https://github.com/johnsoncodehk/volar/issues/2458))
+- fix: missing props hints do not recognize `@xxx` ([#4568](https://github.com/johnsoncodehk/volar/issues/4568))
+- fix: code action document version incorrect (https://github.com/yaegassy/coc-volar/issues/254)
+
+**Breaking changes**
+
+- Remove built-in web intellisense support and recommended [TypeScript IntelliSense for Web](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.vscode-typescript-web) instead of ([#2475](https://github.com/johnsoncodehk/volar/issues/2475))
+- Upgrade required version of `@volar-plugins/*` to `>= 2.0.0`
+  - After upgrade, you need to access `default` property with `require('@volar-plugins/xxx').default` in `volar.config.js`
+- Upgrade build target from ES2016 to ES2021 ([#2489](https://github.com/johnsoncodehk/volar/issues/2489))
 
 ---
 
@@ -18,7 +30,7 @@
 <p align="center">
 	<span>
 		<a href="https://stackblitz.com/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/HEAD/.github/sponsors/StackBlitz.png" height="80" /></a>
-		<h4 align="center">Just click, and start coding.</h4>
+		<h4 align="center"><a href="https://blog.stackblitz.com/posts/webcontainer-api-is-here/">WebContainer API is here.</a></h4>
 	</span>
 </p>
 <br />
@@ -38,8 +50,24 @@
 <br />
 
 <p align="center">
-	<h5 align="center"><a href="https://github.com/sponsors/johnsoncodehk">Adding You</a></h5>
+	<h5 align="center">
+		Add you via
+		<a href="https://github.com/sponsors/johnsoncodehk">GitHub Sponsors</a>
+		or
+		<a href="https://opencollective.com/volarjs">Open Collective</a>
+	</h5>
 </p>
+
+
+## 1.2.0 (2023/2/25)
+
+- feat: compatible with upstream monaco integration (https://github.com/volarjs/volar.js/pull/10)
+- feat: support array extends for tsconfig ([#2344](https://github.com/johnsoncodehk/volar/issues/2344))
+- feat: make cursor inside quotes when insert missing required props edit ([#2414](https://github.com/johnsoncodehk/volar/issues/2414))
+- feat: support mixin child nodes for pug ([#2447](https://github.com/johnsoncodehk/volar/issues/2447))
+- fix: ignore native tags for missing required props hint
+- fix: ignore methods for missing required props hint ([#2443](https://github.com/johnsoncodehk/volar/issues/2443))
+- fix: SFC outline not show child nodes ([#2446](https://github.com/johnsoncodehk/volar/issues/2446))
 
 ## 1.1.7 (2023/2/22)
 

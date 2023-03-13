@@ -169,6 +169,9 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 										else if (attrText === 'v-model') {
 											attrText = 'modelValue'; // TODO: support for experimentalModelPropName?
 										}
+										else if (attrText.startsWith('@')) {
+											attrText = 'on-' + hyphenate(attrText.substring('@'.length));
+										}
 
 										current.unburnedRequiredProps = current.unburnedRequiredProps.filter(propName => {
 											return attrText !== propName
