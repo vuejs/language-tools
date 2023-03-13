@@ -1,9 +1,11 @@
 import { AttrNameCasing, TagNameCasing } from '@volar/vue-language-server';
+import { middleware as baseMiddleware } from '@volar/vscode';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient';
 import { attrNameCasings, tagNameCasings } from './features/nameCasing';
 
 export const middleware: lsp.Middleware = {
+	...baseMiddleware,
 	workspace: {
 		configuration(params, token, next) {
 			if (params.items.some(item => item.section === 'volar.completion.preferredAttrNameCase' || item.section === 'volar.completion.preferredTagNameCase')) {
@@ -33,5 +35,5 @@ export const middleware: lsp.Middleware = {
 			}
 			return next(params, token);
 		},
-	}
+	},
 };
