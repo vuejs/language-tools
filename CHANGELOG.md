@@ -1,26 +1,12 @@
 # Changelog
 
-## 1.3.0 (2023/3/10) - pre-release
+## 1.3.1 (2023/3/14) - pre-release
 
-- feat: support for korean html data
-- feat(doctor): remove `vue-tsc` version check
-- feat(doctor): rename setting from `volar.doctor.statusBarItem` to `volar.doctor.status`
-- feat(doctor): check VSCode settings `emmet.includeLanguages`, `files.associations` ([#2487](https://github.com/johnsoncodehk/volar/issues/2487))
-- feat(doctor): check plugins version for `volar.config.js`
-- feat: add description link for `$event =>` hint ([#2445](https://github.com/johnsoncodehk/volar/issues/2445))
-- feat(language-server): support for `ServerMode.PartialSemantic`
-- fix: `Show Component Meta` command not working
-- fix: name casing status do not update with changed settings ([#2460](https://github.com/johnsoncodehk/volar/issues/2460))
-- fix: component auto import not working with kebab case ([#2458](https://github.com/johnsoncodehk/volar/issues/2458))
-- fix: missing props hints do not recognize `@xxx` ([#4568](https://github.com/johnsoncodehk/volar/issues/4568))
-- fix: code action document version incorrect (https://github.com/yaegassy/coc-volar/issues/254)
-
-**Breaking changes**
-
-- Remove built-in web intellisense support and recommended [TypeScript IntelliSense for Web](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.vscode-typescript-web) instead of ([#2475](https://github.com/johnsoncodehk/volar/issues/2475))
-- Upgrade required version of `@volar-plugins/*` to `>= 2.0.0`
-  - After upgrade, you need to access `default` property with `require('@volar-plugins/xxx').default` in `volar.config.js`
-- Upgrade build target from ES2016 to ES2021 ([#2489](https://github.com/johnsoncodehk/volar/issues/2489))
+- feat(language-server): declare workspaceFolders support in server capabilities for IDEs (https://github.com/volarjs/volar.js/pull/18) - thanks @the-mikedavis
+- feat(vue-tsc): supports incremental emit (https://github.com/volarjs/volar.js/pull/17) - thanks @blake-newman
+- feat: allow code actions to run rename command after applying ([#2498](https://github.com/johnsoncodehk/volar/issues/2498)) (https://github.com/volarjs/plugins/pull/29) - thanks @zardoy
+- perf(vue-component-meta): faster initialization ([#2506](https://github.com/johnsoncodehk/volar/issues/2506)) - thanks @stafyniaksacha
+- perf: search tsconfig on demand (https://github.com/volarjs/volar.js/pull/16)
 
 ---
 
@@ -57,6 +43,28 @@
 		<a href="https://opencollective.com/volarjs">Open Collective</a>
 	</h5>
 </p>
+
+## 1.3.0 (2023/3/10) - pre-release
+
+- feat: support for korean html data
+- feat(doctor): remove `vue-tsc` version check
+- feat(doctor): rename setting from `volar.doctor.statusBarItem` to `volar.doctor.status`
+- feat(doctor): check VSCode settings `emmet.includeLanguages`, `files.associations` ([#2487](https://github.com/johnsoncodehk/volar/issues/2487))
+- feat(doctor): check plugins version for `volar.config.js`
+- feat: add description link for `$event =>` hint ([#2445](https://github.com/johnsoncodehk/volar/issues/2445))
+- feat(language-server): support for `ServerMode.PartialSemantic`
+- fix: `Show Component Meta` command not working
+- fix: name casing status do not update with changed settings ([#2460](https://github.com/johnsoncodehk/volar/issues/2460))
+- fix: component auto import not working with kebab case ([#2458](https://github.com/johnsoncodehk/volar/issues/2458))
+- fix: missing props hints do not recognize `@xxx` ([#4568](https://github.com/johnsoncodehk/volar/issues/4568))
+- fix: code action document version incorrect (https://github.com/yaegassy/coc-volar/issues/254)
+
+**Breaking changes**
+
+- Remove built-in web intellisense support and recommended [TypeScript IntelliSense for Web](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.vscode-typescript-web) instead of ([#2475](https://github.com/johnsoncodehk/volar/issues/2475))
+- Upgrade required version of `@volar-plugins/*` to `>= 2.0.0`
+  - After upgrade, you need to access `default` property with `require('@volar-plugins/xxx').default` in `volar.config.js`
+- Upgrade build target from ES2016 to ES2021 ([#2489](https://github.com/johnsoncodehk/volar/issues/2489))
 
 
 ## 1.2.0 (2023/2/25)
