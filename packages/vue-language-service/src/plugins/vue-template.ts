@@ -217,7 +217,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				if (!options.isSupportedDocument(document))
 					return;
 
-				if (_context.documents.hasVirtualFileByUri(document.uri))
+				if (_context.documents.isVirtualFileUri(document.uri))
 					templatePlugin.updateCustomData([]);
 
 				return templatePlugin.provideHover?.(document, position, token);
