@@ -11,11 +11,11 @@ export default function (): LanguageServicePlugin {
 
 		return {
 
-			provideReferencesCodeLenses(document) {
+			provideReferencesCodeLensRanges(document) {
 
 				return worker(document.uri, async () => {
 
-					const result: vscode.Location[] = [];
+					const result: vscode.Range[] = [];
 
 					for (const [_, map] of context.documents.getMapsBySourceFileUri(document.uri)?.maps ?? []) {
 						for (const mapping of map.map.mappings) {
@@ -24,11 +24,8 @@ export default function (): LanguageServicePlugin {
 								continue;
 
 							result.push({
-								uri: document.uri,
-								range: {
-									start: document.positionAt(mapping.sourceRange[0]),
-									end: document.positionAt(mapping.sourceRange[1]),
-								},
+								start: document.positionAt(mapping.sourceRange[0]),
+								end: document.positionAt(mapping.sourceRange[1]),
 							});
 						}
 					}
@@ -37,12 +34,12 @@ export default function (): LanguageServicePlugin {
 				});
 			},
 
-			async resolveReferencesCodeLens(document, codeLens, references) {
+			async resolveReferencesCodeLensLocations(document, range, references) {
 
 				await worker(document.uri, async (vueFile) => {
 
 					const document = context.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
-					const offset = document.offsetAt(codeLens.range.start);
+					const offset = document.offsetAt(range.start);
 					const blocks = [
 						vueFile.sfc.script,
 						vueFile.sfc.scriptSetup,
