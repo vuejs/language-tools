@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.3.1 (2023/3/14) - pre-release
+## 1.3.2 (2023/3/14) - pre-release
 
 - feat(language-server): declare workspaceFolders support in server capabilities for IDEs (https://github.com/volarjs/volar.js/pull/18) - thanks @the-mikedavis
 - feat(vue-tsc): supports incremental emit (https://github.com/volarjs/volar.js/pull/17) - thanks @blake-newman
