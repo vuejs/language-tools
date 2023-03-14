@@ -27,9 +27,9 @@ jobs:
 
       # commit
       - name: Commit
-        uses: EndBug/add-and-commit@v4
+        uses: EndBug/add-and-commit@v9
         with:
           message: "chore(language-service): update html data"
-          add: "packages/vue-language-service/data/**/*"
+          add: "packages/vue-language-service/data"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
