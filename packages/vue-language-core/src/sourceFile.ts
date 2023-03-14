@@ -247,9 +247,44 @@ export class VueFile implements VirtualFile {
 						}
 					}
 				}
+				const newText = toString(file.content);
+				const changeRanges = new Map<ts.IScriptSnapshot, ts.TextChangeRange | undefined>();
+				const snapshot: ts.IScriptSnapshot = {
+					getText: (start, end) => newText.slice(start, end),
+					getLength: () => newText.length,
+					getChangeRange(oldSnapshot) {
+						if (!changeRanges.has(oldSnapshot)) {
+							changeRanges.set(oldSnapshot, undefined);
+							const oldText = oldSnapshot.getText(0, oldSnapshot.getLength());
+							for (let start = 0; start < oldText.length && start < newText.length; start++) {
+								if (oldText[start] !== newText[start]) {
+									let end = start;
+									for (let i = oldText.length - 1; i > start; i--) {
+										if (oldText[i] !== newText[i + (newText.length - oldText.length)]) {
+											end = i;
+											break;
+										}
+									}
+									let length = end - start;
+									let newLength = length + (newText.length - oldText.length);
+									if (newLength < 0) {
+										length -= newLength;
+										newLength = 0;
+									}
+									changeRanges.set(oldSnapshot, {
+										span: { start, length },
+										newLength,
+									});
+									break;
+								}
+							}
+						}
+						return changeRanges.get(oldSnapshot);
+					},
+				};
 				return {
 					file,
-					snapshot: this.ts.ScriptSnapshot.fromString(toString(file.content)),
+					snapshot,
 					mappings,
 				};
 			});
