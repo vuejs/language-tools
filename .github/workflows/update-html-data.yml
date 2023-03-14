@@ -1,0 +1,35 @@
+name: update-html-data
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+  push:
+    branches: [ master ]
+
+jobs:
+  update-html-data:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      # install deps
+      - run: npm i -g pnpm
+      - run: pnpm i
+
+      # update data
+      - name: Update HTML Data
+        run: cd packages/vue-language-service && npm run update-html-data
+
+      # commit
+      - name: Commit
+        uses: EndBug/add-and-commit@v4
+        with:
+          message: "chore(language-service): update html data"
+          add: "packages/vue-language-service/data/**/*"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
