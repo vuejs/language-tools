@@ -41,7 +41,7 @@
           "name": "lang",
           "description": {
             "kind": "markdown",
-            "value": "\n블록은 `lang` 속성을 사용하여 전처리기 언어를 선언할 수 있습니다.\n가장 일반적인 경우는 `<script>` 블록에 TypeScript를 사용하는 것입니다:\n\n```html\n<script lang=\"ts\">\n  // TypeScript 사용\n</script>\n```\n\n`lang`은 모든 블록에 적용할 수 있습니다.\n예를 들어 `<style>`에서는 [Sass](https://sass-lang.com/)를, `<template>`에서는 [Pug](https://pugjs.org/api/getting-started.html)를 사용할 수 있습니다:\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n다양한 전처리기와의 통합은 툴체인에 따라 다를 수 있습니다.\n예제를 보려면 해당 문서를 확인하십시오:\n\n- [Vite](https://vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
+            "value": "\n블록은 `lang` 속성을 사용하여 전처리기 언어를 선언할 수 있습니다.\n가장 일반적인 경우는 `<script>` 블록에 TypeScript를 사용하는 것입니다:\n\n```html\n<script lang=\"ts\">\n  // TypeScript 사용\n</script>\n```\n\n`lang`은 모든 블록에 적용할 수 있습니다.\n예를 들어 `<style>`에서는 [Sass](https://sass-lang.com/)를, `<template>`에서는 [Pug](https://pugjs.org/api/getting-started)를 사용할 수 있습니다:\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n다양한 전처리기와의 통합은 툴체인에 따라 다를 수 있습니다.\n예제를 보려면 해당 문서를 확인하십시오:\n\n- [Vite](https://vitejs.dev/guide/features#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors#using-pre-processors)\n"
           },
           "values": [
             {
@@ -81,7 +81,7 @@
       ],
       "description": {
         "kind": "markdown",
-        "value": "\n- `*.vue` 파일은 최상위 `<template>` 블록은 하나만 포함할 수 있습니다.\n\n- 컨텐츠는 추출되어 `@vue/compiler-dom`으로 전달되고,\n  JavaScript 렌더 함수로 사전 컴파일되며,\n  내보낸 컴포넌트에 `render` 옵션으로 첨부됩니다.\n"
+        "value": "\n- 각 `*.vue` 파일은 최상위 `<template>` 블록을 하나만 포함할 수 있습니다.\n\n- 컨텐츠는 추출되어 `@vue/compiler-dom`으로 전달되고,\n  JavaScript 렌더 함수로 사전 컴파일되며,\n  내보낸 컴포넌트에 `render` 옵션으로 첨부됩니다.\n"
       },
       "references": [
         {
@@ -150,7 +150,7 @@
           "name": "lang",
           "description": {
             "kind": "markdown",
-            "value": "\n블록은 `lang` 속성을 사용하여 전처리기 언어를 선언할 수 있습니다.\n가장 일반적인 경우는 `<script>` 블록에 TypeScript를 사용하는 것입니다:\n\n```html\n<script lang=\"ts\">\n  // TypeScript 사용\n</script>\n```\n\n`lang`은 모든 블록에 적용할 수 있습니다.\n예를 들어 `<style>`에서는 [Sass](https://sass-lang.com/)를, `<template>`에서는 [Pug](https://pugjs.org/api/getting-started.html)를 사용할 수 있습니다:\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n다양한 전처리기와의 통합은 툴체인에 따라 다를 수 있습니다.\n예제를 보려면 해당 문서를 확인하십시오:\n\n- [Vite](https://vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
+            "value": "\n블록은 `lang` 속성을 사용하여 전처리기 언어를 선언할 수 있습니다.\n가장 일반적인 경우는 `<script>` 블록에 TypeScript를 사용하는 것입니다:\n\n```html\n<script lang=\"ts\">\n  // TypeScript 사용\n</script>\n```\n\n`lang`은 모든 블록에 적용할 수 있습니다.\n예를 들어 `<style>`에서는 [Sass](https://sass-lang.com/)를, `<template>`에서는 [Pug](https://pugjs.org/api/getting-started)를 사용할 수 있습니다:\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n다양한 전처리기와의 통합은 툴체인에 따라 다를 수 있습니다.\n예제를 보려면 해당 문서를 확인하십시오:\n\n- [Vite](https://vitejs.dev/guide/features#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors#using-pre-processors)\n"
           },
           "values": [
             {
@@ -201,7 +201,7 @@
           "valueSet": "v",
           "description": {
             "kind": "markdown",
-            "value": "\n- `*.vue` 파일은 하나의 `<script setup>` 블록만 포함할 수 있습니다(일반 `<script>` 제외).\n\n- 스크립트는 전처리되어 컴포넌트의 `setup()` 함수로 사용됩니다.\n  즉, **컴포넌트의 각 인스턴스**에 대해 실행됩니다.\n  `<script setup>` 내에 최상위 바인딩은 템플릿에 자동으로 노출됩니다.\n  자세한 내용은 [`<script setup>` 전용 문서](https://ko.vuejs.org/api/sfc-script-setup.html)를 참고하십시오.\n"
+            "value": "\n- 각 `*.vue` 파일은 하나의 `<script setup>` 블록만 포함할 수 있습니다(일반 `<script>` 제외).\n\n- 스크립트는 전처리되어 컴포넌트의 `setup()` 함수로 사용됩니다.\n  즉, **컴포넌트의 각 인스턴스**에 대해 실행됩니다.\n  `<script setup>` 내에 최상위 바인딩은 템플릿에 자동으로 노출됩니다.\n  자세한 내용은 [`<script setup>` 전용 문서](https://ko.vuejs.org/api/sfc-script-setup.html)를 참고하십시오.\n"
           },
           "references": [
             {
@@ -233,7 +233,7 @@
       ],
       "description": {
         "kind": "markdown",
-        "value": "\n- `*.vue` 파일은 하나의 `<script>` 블록만 포함할 수 있습니다([`<script setup>`](https://ko.vuejs.org/api/sfc-script-setup.html) 제외).\n\n- 스크립트는 ES 모듈로 실행됩니다.\n\n- **기본 내보내기**는 일반 객체 또는 [defineComponent](https://ko.vuejs.org/api/general.html#definecomponent)의 반환 값으로 Vue 컴포넌트 옵션 객체여야 합니다.\n"
+        "value": "\n- 각 `*.vue` 파일은 하나의 `<script>` 블록만 포함할 수 있습니다([`<script setup>`](https://ko.vuejs.org/api/sfc-script-setup.html) 제외).\n\n- 스크립트는 ES 모듈로 실행됩니다.\n\n- **기본 내보내기**는 일반 객체 또는 [defineComponent](https://ko.vuejs.org/api/general.html#definecomponent)의 반환 값으로 Vue 컴포넌트 옵션 객체여야 합니다.\n"
       },
       "references": [
         {
@@ -267,7 +267,7 @@
       "attributes": [],
       "description": {
         "kind": "markdown",
-        "value": "\n- `*.vue` 파일은 하나의 `<script setup>` 블록만 포함할 수 있습니다(일반 `<script>` 제외).\n\n- 스크립트는 전처리되어 컴포넌트의 `setup()` 함수로 사용됩니다.\n  즉, **컴포넌트의 각 인스턴스**에 대해 실행됩니다.\n  `<script setup>` 내에 최상위 바인딩은 템플릿에 자동으로 노출됩니다.\n  자세한 내용은 [`<script setup>` 전용 문서](https://ko.vuejs.org/api/sfc-script-setup.html)를 참고하십시오.\n"
+        "value": "\n- 각 `*.vue` 파일은 하나의 `<script setup>` 블록만 포함할 수 있습니다(일반 `<script>` 제외).\n\n- 스크립트는 전처리되어 컴포넌트의 `setup()` 함수로 사용됩니다.\n  즉, **컴포넌트의 각 인스턴스**에 대해 실행됩니다.\n  `<script setup>` 내에 최상위 바인딩은 템플릿에 자동으로 노출됩니다.\n  자세한 내용은 [`<script setup>` 전용 문서](https://ko.vuejs.org/api/sfc-script-setup.html)를 참고하십시오.\n"
       },
       "references": [
         {
@@ -336,7 +336,7 @@
           "name": "lang",
           "description": {
             "kind": "markdown",
-            "value": "\n블록은 `lang` 속성을 사용하여 전처리기 언어를 선언할 수 있습니다.\n가장 일반적인 경우는 `<script>` 블록에 TypeScript를 사용하는 것입니다:\n\n```html\n<script lang=\"ts\">\n  // TypeScript 사용\n</script>\n```\n\n`lang`은 모든 블록에 적용할 수 있습니다.\n예를 들어 `<style>`에서는 [Sass](https://sass-lang.com/)를, `<template>`에서는 [Pug](https://pugjs.org/api/getting-started.html)를 사용할 수 있습니다:\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n다양한 전처리기와의 통합은 툴체인에 따라 다를 수 있습니다.\n예제를 보려면 해당 문서를 확인하십시오:\n\n- [Vite](https://vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
+            "value": "\n블록은 `lang` 속성을 사용하여 전처리기 언어를 선언할 수 있습니다.\n가장 일반적인 경우는 `<script>` 블록에 TypeScript를 사용하는 것입니다:\n\n```html\n<script lang=\"ts\">\n  // TypeScript 사용\n</script>\n```\n\n`lang`은 모든 블록에 적용할 수 있습니다.\n예를 들어 `<style>`에서는 [Sass](https://sass-lang.com/)를, `<template>`에서는 [Pug](https://pugjs.org/api/getting-started)를 사용할 수 있습니다:\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n다양한 전처리기와의 통합은 툴체인에 따라 다를 수 있습니다.\n예제를 보려면 해당 문서를 확인하십시오:\n\n- [Vite](https://vitejs.dev/guide/features#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors#using-pre-processors)\n"
           },
           "values": [
             {
@@ -524,7 +524,7 @@
       ],
       "description": {
         "kind": "markdown",
-        "value": "\n프로젝트별 요구 사항에 따라 `*.vue` 파일에 추가 커스텀 블록을 포함할 수 있습니다(예: `<docs>` 블록).\n커스텀 블록의 실제 예는 다음과 같습니다:\n\n- [Gridsome: `<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql: `<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n: `<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\n커스텀 블록 처리는 도구에 따라 다릅니다.\n자체 커스텀 블록 통합을 구축하려는 경우 자세한 내용은 [도구 섹션](https://ko.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations)을 참고하십시오.\n"
+        "value": "\n프로젝트별 요구 사항에 따라 `*.vue` 파일에 추가 커스텀 블록을 포함할 수 있습니다(예: `<docs>` 블록).\n커스텀 블록의 실제 예는 다음과 같습니다:\n\n- [Gridsome: `<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql: `<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n: `<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\n커스텀 블록 처리는 도구에 따라 다릅니다.\n자체 커스텀 블록 통합을 구축하려는 경우 자세한 내용은 [SFC 커스텀 블록 통합 도구 섹션](https://ko.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations)을 참고하십시오.\n"
       },
       "references": [
         {
@@ -559,7 +559,7 @@
       "name": "lang",
       "description": {
         "kind": "markdown",
-        "value": "\n블록은 `lang` 속성을 사용하여 전처리기 언어를 선언할 수 있습니다.\n가장 일반적인 경우는 `<script>` 블록에 TypeScript를 사용하는 것입니다:\n\n```html\n<script lang=\"ts\">\n  // TypeScript 사용\n</script>\n```\n\n`lang`은 모든 블록에 적용할 수 있습니다.\n예를 들어 `<style>`에서는 [Sass](https://sass-lang.com/)를, `<template>`에서는 [Pug](https://pugjs.org/api/getting-started.html)를 사용할 수 있습니다:\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n다양한 전처리기와의 통합은 툴체인에 따라 다를 수 있습니다.\n예제를 보려면 해당 문서를 확인하십시오:\n\n- [Vite](https://vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
+        "value": "\n블록은 `lang` 속성을 사용하여 전처리기 언어를 선언할 수 있습니다.\n가장 일반적인 경우는 `<script>` 블록에 TypeScript를 사용하는 것입니다:\n\n```html\n<script lang=\"ts\">\n  // TypeScript 사용\n</script>\n```\n\n`lang`은 모든 블록에 적용할 수 있습니다.\n예를 들어 `<style>`에서는 [Sass](https://sass-lang.com/)를, `<template>`에서는 [Pug](https://pugjs.org/api/getting-started)를 사용할 수 있습니다:\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n다양한 전처리기와의 통합은 툴체인에 따라 다를 수 있습니다.\n예제를 보려면 해당 문서를 확인하십시오:\n\n- [Vite](https://vitejs.dev/guide/features#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors#using-pre-processors)\n"
       },
       "values": [],
       "references": [
