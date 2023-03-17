@@ -344,8 +344,8 @@ export function baseCreate(
 		function getExposed() {
 
 			const exposed = symbolProperties.filter(prop =>
-				// only exposed props will have a syntheticOrigin
-				Boolean((prop as any).syntheticOrigin)
+				// only exposed props will not have a valueDeclaration
+				!(prop as any).valueDeclaration
 			);
 
 			if (exposed.length) {

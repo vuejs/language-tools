@@ -1,4 +1,5 @@
 import { ESLint, Linter } from 'eslint';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import type { _Program } from 'vue-tsc';
 
