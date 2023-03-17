@@ -569,7 +569,7 @@
       "name": "v-model",
       "description": {
         "kind": "markdown",
-        "value": "\n在表单输入元素或组件上创建双向绑定。\n\n- **期望的绑定值类型**：根据表单输入元素或组件输出的值而变化\n\n- **仅限：**\n\n  - `<input>`\n  - `<select>`\n  - `<textarea>`\n  - components\n\n- **修饰符：**\n\n  - [`.lazy`](https://cn.vuejs.org/guide/essentials/forms.html#lazy) - 监听 `change` 事件而不是 `input`\n  - [`.number`](https://cn.vuejs.org/guide/essentials/forms.html#number) - 将输入的合法符串转为数字\n  - [`.trim`](https://cn.vuejs.org/guide/essentials/forms.html#trim) - 移除输入内容两端空格\n\n- **参考：**\n\n  - [表单输入绑定](https://cn.vuejs.org/guide/essentials/forms.html)\n  - [组件事件 - 配合 `v-model` 使用](https://cn.vuejs.org/guide/components/v-model.html)\n"
+        "value": "\n在表单输入元素或组件上创建双向绑定。\n\n- **期望的绑定值类型**：根据表单输入元素或组件输出的值而变化\n\n- **仅限：**\n\n  - `<input>`\n  - `<select>`\n  - `<textarea>`\n  - components\n\n- **修饰符：**\n\n  - [`.lazy`](https://cn.vuejs.org/guide/essentials/forms.html#lazy) - 监听 `change` 事件而不是 `input`\n  - [`.number`](https://cn.vuejs.org/guide/essentials/forms.html#number) - 将输入的合法字符串转为数字\n  - [`.trim`](https://cn.vuejs.org/guide/essentials/forms.html#trim) - 移除输入内容两端空格\n\n- **参考：**\n\n  - [表单输入绑定](https://cn.vuejs.org/guide/essentials/forms.html)\n  - [组件事件 - 配合 `v-model` 使用](https://cn.vuejs.org/guide/components/v-model.html)\n"
       },
       "references": [
         {
