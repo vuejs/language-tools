@@ -4,7 +4,7 @@ import { BaseLanguageClient } from 'vscode-languageclient';
 import { GetMatchTsConfigRequest, ParseSFCRequest, GetVueCompilerOptionsRequest } from '@volar/vue-language-server';
 
 const scheme = 'vue-doctor';
-const knownValidSyntanxHighlightExtensions = {
+const knownValidSyntaxHighlightExtensions = {
 	postcss: ['cpylua.language-postcss', 'vunguyentuan.vscode-postcss', 'csstools.postcss'],
 	stylus: ['sysoev.language-stylus'],
 	sass: ['Syler.sass-indented'],
@@ -41,7 +41,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 				}
 
 				content += '---\n\n';
-				content += `> Have any questions about the report message? You can see how it is composed by inspecting the [source code](https://github.com/johnsoncodehk/volar/blob/master/packages/vscode-vue/src/features/doctor.ts).\n\n`;
+				content += `> Have any questions about the report message? You can see how it is composed by inspecting the [source code](https://github.com/vuejs/language-tools/blob/master/packages/vscode-vue/src/features/doctor.ts).\n\n`;
 
 				return content.trim();
 			}
@@ -49,7 +49,11 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 	));
 	context.subscriptions.push(vscode.commands.registerCommand('volar.action.doctor', () => {
 		const doc = vscode.window.activeTextEditor?.document;
-		if (doc?.languageId === 'vue' && doc.uri.scheme === 'file') {
+		if (
+			doc
+			&& (doc.languageId === 'vue' || doc.uri.toString().endsWith('.vue'))
+			&& doc.uri.scheme === 'file'
+		) {
 			vscode.commands.executeCommand('markdown.showPreviewToSide', getDoctorUri(doc.uri));
 		}
 	}));
@@ -60,9 +64,9 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 
 	async function updateStatusBar(editor: vscode.TextEditor | undefined) {
 		if (
-			vscode.workspace.getConfiguration('volar').get<boolean>('doctor.statusBarItem')
+			vscode.workspace.getConfiguration('volar').get<boolean>('doctor.status')
 			&& editor
-			&& editor.document.languageId === 'vue'
+			&& (editor.document.languageId === 'vue' || editor.document.uri.toString().endsWith('.vue'))
 			&& editor.document.uri.scheme === 'file'
 		) {
 			const problems = await getProblems(editor.document.uri);
@@ -145,21 +149,6 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			});
 		}
 
-		// check vue-tsc version same with extension version
-		if (vscode.workspace.getConfiguration('volar').get<boolean>('doctor.checkVueTsc')) {
-			const vueTscMod = getPackageJsonOfWorkspacePackage(fileUri.fsPath, 'vue-tsc');
-			if (vueTscMod && vueTscMod.json.version !== context.extension.packageJSON.version) {
-				problems.push({
-					title: 'Different `vue-tsc` version',
-					message: [
-						`The \`${context.extension.packageJSON.displayName}\`\'s version is \`${context.extension.packageJSON.version}\`, but the workspace\'s \`vue-tsc\` version is \`${vueTscMod.json.version}\`. This may produce different type checking behavior.`,
-						'',
-						'- vue-tsc: ' + vueTscMod.path,
-					].join('\n'),
-				});
-			}
-		}
-
 		// check @types/node > 18.8.0 && < 18.11.1
 		const typesNodeMod = getPackageJsonOfWorkspacePackage(fileUri.fsPath, '@types/node');
 		if (typesNodeMod && semver.gte(typesNodeMod.json.version, '18.8.1') && semver.lte(typesNodeMod.json.version, '18.11.0')) {
@@ -188,7 +177,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		// check using pug but don't install @volar/vue-language-plugin-pug
 		if (
 			sfc?.descriptor.template?.lang === 'pug'
-			&& !vueOptions?.plugins?.some((pluginPath: string) => pluginPath.indexOf('vue-language-plugin-pug') >= 0)
+			&& !await getPackageJsonOfWorkspacePackage(fileUri.fsPath, '@volar/vue-language-plugin-pug')
 		) {
 			problems.push({
 				title: '`@volar/vue-language-plugin-pug` missing',
@@ -219,8 +208,8 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			];
 			for (const block of blocks) {
 				if (!block) continue;
-				if (block.lang && block.lang in knownValidSyntanxHighlightExtensions) {
-					const validExts = knownValidSyntanxHighlightExtensions[block.lang as keyof typeof knownValidSyntanxHighlightExtensions];
+				if (block.lang && block.lang in knownValidSyntaxHighlightExtensions) {
+					const validExts = knownValidSyntaxHighlightExtensions[block.lang as keyof typeof knownValidSyntaxHighlightExtensions];
 					const someInstalled = validExts.some(ext => !!vscode.extensions.getExtension(ext));
 					if (!someInstalled) {
 						problems.push({
@@ -233,7 +222,57 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			}
 		}
 
+		// emmet.includeLanguages
+		const emmetIncludeLanguages = vscode.workspace.getConfiguration('emmet').get<{ [lang: string]: string; }>('includeLanguages');
+		if (emmetIncludeLanguages?.['vue']) {
+			problems.push({
+				title: 'Unnecessary `emmet.includeLanguages.vue`',
+				message: 'Vue language server already supports Emmet. You can remove `emmet.includeLanguages.vue` from `.vscode/settings.json`.',
+			});
+		}
+
+		// files.associations
+		const filesAssociations = vscode.workspace.getConfiguration('files').get<{ [pattern: string]: string; }>('associations');
+		if (filesAssociations?.['*.vue'] === 'html') {
+			problems.push({
+				title: 'Unnecessary `files.associations["*.vue"]`',
+				message: 'With `"files.associations": { "*.vue": html }`, language server cannot to recognize Vue files. You can remove `files.associations["*.vue"]` from `.vscode/settings.json`.',
+			});
+		}
+
 		// check outdated language services plugins
+		const knownPlugins = [
+			// '@volar-plugins/css',
+			// '@volar-plugins/emmet',
+			'@volar-plugins/eslint',
+			// '@volar-plugins/html',
+			// '@volar-plugins/json',
+			'@volar-plugins/prettier',
+			'@volar-plugins/prettyhtml',
+			'@volar-plugins/pug-beautify',
+			'@volar-plugins/sass-formatter',
+			'@volar-plugins/tslint',
+			// '@volar-plugins/typescript',
+			// '@volar-plugins/typescript-twoslash-queries',
+			'@volar-plugins/vetur',
+		];
+		for (const plugin of knownPlugins) {
+			const pluginMod = await getPackageJsonOfWorkspacePackage(fileUri.fsPath, plugin);
+			if (!pluginMod) continue;
+			if (!pluginMod.json.version.startsWith('2.')) {
+				problems.push({
+					title: `Outdated ${plugin}`,
+					message: [
+						`The ${plugin} plugin is outdated. Please update it to the latest version.`,
+						'',
+						'- plugin package.json: ' + pluginMod.path,
+						'- plugin version: ' + pluginMod.json.version,
+						'- expected version: >= 2.0.0',
+					].join('\n'),
+				});
+			}
+		}
+
 		// check outdated vue language plugins
 		// check node_modules has more than one vue versions
 		// check ESLint, Prettier...

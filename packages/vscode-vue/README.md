@@ -177,14 +177,6 @@ In your tsconfig.json file you will need to make sure your custom extension is i
 
 Finally you need to make VS Code recognize your new extension and automatically associate it with the Vue language format. To do this you need to configure your File Associations setting to map `*.ext` to the language value `vue`. This can be done under Text Editor &gt; Files, or with the key `files.associations`.
 
-## Sponsors
-
-<p align="center">
-  <a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg">
-    <img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.png"/>
-  </a>
-</p>
-
 ## Credits
 
 - [vscode-extension-samples](https://github.com/microsoft/vscode-extension-samples) shows all the knowledge required to develop the extension.
@@ -196,3 +188,22 @@ Finally you need to make VS Code recognize your new extension and automatically 
   - [vscode-css-languageservice](https://github.com/microsoft/vscode-css-languageservice): css, less, scss, postcss
   - [pug-beautify](https://github.com/vingorius/pug-beautify): pug
   - [typescript](https://github.com/microsoft/TypeScript): js, ts, jsx, tsx
+
+---
+
+<h3 align="center">Full-time Support by</h3>
+<br />
+
+<p align="center">
+	<span>
+		<a href="https://stackblitz.com/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/HEAD/.github/sponsors/StackBlitz.png" height="80" /></a>
+		<h4 align="center">Just click, and start coding.</h4>
+	</span>
+</p>
+<br />
+
+<p align="center">
+	<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg">
+		<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.png"/>
+	</a>
+</p>

@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import * as path from 'path';
 import { tester } from './utils/createTester';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import * as shared from '@volar/shared';
 import * as fs from 'fs';
+import { CancellationToken } from 'vscode-languageserver-protocol';
 
 const baseDir = path.resolve(__dirname, '../../vue-test-workspace/rename');
 const testDirs = fs.readdirSync(baseDir);
@@ -19,7 +19,7 @@ for (const dirName of testDirs) {
 		for (const file in inputFiles) {
 
 			const filePath = path.join(dir, 'input', file);
-			const uri = shared.fileNameToUri(filePath);
+			const uri = tester.fileNameToUri(filePath);
 			const fileText = inputFiles[file];
 			const document = TextDocument.create('', '', 0, fileText);
 			const actions = findRenameActions(fileText);
@@ -40,6 +40,7 @@ for (const dirName of testDirs) {
 							uri,
 							position,
 							action.newName,
+							CancellationToken.None,
 						);
 
 						expect(edit).toBeDefined();

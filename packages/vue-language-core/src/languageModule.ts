@@ -12,6 +12,8 @@ export function createLanguageModules(
 	vueCompilerOptions: VueCompilerOptions,
 ): embedded.LanguageModule[] {
 
+	const patchSnapshots = new WeakMap<ts.IScriptSnapshot, ts.IScriptSnapshot>();
+
 	patchResolveModuleNames(ts, vueCompilerOptions);
 
 	const vueLanguagePlugin = getDefaultVueLanguagePlugins(
@@ -22,10 +24,13 @@ export function createLanguageModules(
 	const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(vueCompilerOptions.target, vueCompilerOptions));
 	const languageModule: embedded.LanguageModule = {
 		createFile(fileName, snapshot, languageId) {
-			if (vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))) {
-				return new VueFile(fileName, snapshot, ts, vueLanguagePlugin);
-			}
-			else if (languageId === 'vue') {
+			if (
+				languageId === 'vue'
+				|| (
+					!languageId
+					&& vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))
+				)
+			) {
 				return new VueFile(fileName, snapshot, ts, vueLanguagePlugin);
 			}
 		},
@@ -68,13 +73,16 @@ export function createLanguageModules(
 							// for vue 2.7
 							basename === 'jsx.d.ts'
 						)) {
-							// allow arbitrary attributes
-							let tsScriptText = snapshot.getText(0, snapshot.getLength());
-							tsScriptText = tsScriptText.replace(
-								'type ReservedProps = {',
-								'type ReservedProps = { [name: string]: any',
-							);
-							snapshot = ts.ScriptSnapshot.fromString(tsScriptText);
+							if (!patchSnapshots.has(snapshot)) {
+								// allow arbitrary attributes
+								let tsScriptText = snapshot.getText(0, snapshot.getLength());
+								tsScriptText = tsScriptText.replace(
+									'type ReservedProps = {',
+									'type ReservedProps = { [name: string]: any',
+								);
+								patchSnapshots.set(snapshot, ts.ScriptSnapshot.fromString(tsScriptText));
+							}
+							snapshot = patchSnapshots.get(snapshot)!;
 						}
 					}
 					return snapshot;
@@ -113,6 +121,6 @@ function patchResolveModuleNames(
 		}
 	}
 	catch (e) {
-		console.warn('[volar] patchResolveModuleNames failed', e);
+		// console.warn('[volar] patchResolveModuleNames failed', e);
 	}
 }

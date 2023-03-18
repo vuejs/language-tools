@@ -5,7 +5,7 @@
       "name": "Transition",
       "description": {
         "kind": "markdown",
-        "value": "\n**単一の**要素またはコンポーネントにアニメーションのトランジションを提供します。\n\n- **プロパティ**\n\n  ```ts\n  interface TransitionProps {\n    /**\n     * トランジションの CSS クラス名を自動生成するために使用します。\n     * 例: `name: 'fade'` は `.fade-enter` や `.fade-enter-active`\n     * などに自動展開されます。\n     */\n    name?: string\n    /**\n     * CSS のトランジションクラスを適用するかどうか。\n     * デフォルト: true\n     */\n    css?: boolean\n    /**\n     * トランジション終了タイミングを決定するために待機する、\n     * トランジションイベントの種類を指定します。\n     * デフォルトの動作は、持続時間がより長い方のタイプを\n     * 自動検出します。\n     */\n    type?: 'transition' | 'animation'\n    /**\n     * トランジションの持続時間を明示的に指定します。\n     * デフォルトの動作は、ルートトランジション要素の最初の\n     * `transitionend` または `animationend` イベントを待ちます。\n     */\n    duration?: number | { enter: number; leave: number }\n    /**\n     * leaving/entering トランジションのタイミングシーケンスを制御。\n     * デフォルトの動作は同時です。\n     */\n    mode?: 'in-out' | 'out-in' | 'default'\n    /**\n     * 初回レンダリング時にトランジションを適用するかどうか。\n     * デフォルト: false\n     */\n    appear?: boolean\n\n    /**\n     * トランジションクラスをカスタマイズするためのプロパティ。\n     * テンプレートでは kebab-case を使用（例: enter-from-class=\"xxx\"）\n     */\n    enterFromClass?: string\n    enterActiveClass?: string\n    enterToClass?: string\n    appearFromClass?: string\n    appearActiveClass?: string\n    appearToClass?: string\n    leaveFromClass?: string\n    leaveActiveClass?: string\n    leaveToClass?: string\n  }\n  ```\n\n- **イベント**\n\n  - `@before-enter`\n  - `@before-leave`\n  - `@enter`\n  - `@leave`\n  - `@appear`\n  - `@after-enter`\n  - `@after-leave`\n  - `@after-appear`\n  - `@enter-cancelled`\n  - `@leave-cancelled`（`v-show` のみ）\n  - `@appear-cancelled`\n\n- **例**\n\n  シンプルな要素:\n\n  ```html\n  <Transition>\n    <div v-if=\"ok\">toggled content</div>\n  </Transition>\n  ```\n\n  トランジションモードと出現時のアニメーションを備えているダイナミックコンポーネント:\n\n  ```html\n  <Transition name=\"fade\" mode=\"out-in\" appear>\n    <component :is=\"view\"></component>\n  </Transition>\n  ```\n\n  トランジションイベントを購読する:\n\n  ```html\n  <Transition @after-enter=\"onTransitionComplete\">\n    <div v-show=\"ok\">toggled content</div>\n  </Transition>\n  ```\n\n- **参照:** [`<Transition>` ガイド](https://ja.vuejs.org/guide/built-ins/transition.html)\n"
+        "value": "\n**単一の**要素またはコンポーネントにアニメーションのトランジションを提供します。\n\n- **プロパティ**\n\n  ```ts\n  interface TransitionProps {\n    /**\n     * トランジションの CSS クラス名を自動生成するために使用します。\n     * 例: `name: 'fade'` は `.fade-enter` や `.fade-enter-active`\n     * などに自動展開されます。\n     */\n    name?: string\n    /**\n     * CSS のトランジションクラスを適用するかどうか。\n     * デフォルト: true\n     */\n    css?: boolean\n    /**\n     * トランジション終了タイミングを決定するために待機する、\n     * トランジションイベントの種類を指定します。\n     * デフォルトの動作は、持続時間がより長い方のタイプを\n     * 自動検出します。\n     */\n    type?: 'transition' | 'animation'\n    /**\n     * トランジションの持続時間を明示的に指定します。\n     * デフォルトの動作は、ルートトランジション要素の最初の\n     * `transitionend` または `animationend` イベントを待ちます。\n     */\n    duration?: number | { enter: number; leave: number }\n    /**\n     * leaving/entering トランジションのタイミングシーケンスを制御。\n     * デフォルトの動作は同時です。\n     */\n    mode?: 'in-out' | 'out-in' | 'default'\n    /**\n     * 初回レンダリング時にトランジションを適用するかどうか。\n     * デフォルト: false\n     */\n    appear?: boolean\n\n    /**\n     * トランジションクラスをカスタマイズするためのプロパティ。\n     * テンプレートでは kebab-case を使用（例: enter-from-class=\"xxx\"）\n     */\n    enterFromClass?: string\n    enterActiveClass?: string\n    enterToClass?: string\n    appearFromClass?: string\n    appearActiveClass?: string\n    appearToClass?: string\n    leaveFromClass?: string\n    leaveActiveClass?: string\n    leaveToClass?: string\n  }\n  ```\n\n- **イベント**\n\n  - `@before-enter`\n  - `@before-leave`\n  - `@enter`\n  - `@leave`\n  - `@appear`\n  - `@after-enter`\n  - `@after-leave`\n  - `@after-appear`\n  - `@enter-cancelled`\n  - `@leave-cancelled`（`v-show` のみ）\n  - `@appear-cancelled`\n\n- **例**\n\n  シンプルな要素:\n\n  ```html\n  <Transition>\n    <div v-if=\"ok\">toggled content</div>\n  </Transition>\n  ```\n\n  `key` 属性を変更することで強制的にトランジションさせる:\n  \n  ```html\n  <Transition>\n    <div :key=\"text\">{{ text }}</div>\n  </Transition>\n  ```\n\n  トランジションモードと出現時のアニメーションを備えているダイナミックコンポーネント:\n\n  ```html\n  <Transition name=\"fade\" mode=\"out-in\" appear>\n    <component :is=\"view\"></component>\n  </Transition>\n  ```\n\n  トランジションイベントを購読する:\n\n  ```html\n  <Transition @after-enter=\"onTransitionComplete\">\n    <div v-show=\"ok\">toggled content</div>\n  </Transition>\n  ```\n\n- **参照:** [`<Transition>` ガイド](https://ja.vuejs.org/guide/built-ins/transition.html)\n"
       },
       "references": [
         {
@@ -27,6 +27,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-components.html#transition"
         }
       ]
     },
@@ -56,6 +60,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-components.html#transitiongroup"
         }
       ]
     },
@@ -85,6 +93,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-components.html#keepalive"
         }
       ]
     },
@@ -114,6 +126,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-components.html#teleport"
         }
       ]
     },
@@ -143,6 +159,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-components.html#suspense"
         }
       ]
     },
@@ -150,7 +170,7 @@
       "name": "component",
       "description": {
         "kind": "markdown",
-        "value": "\n動的コンポーネントや動的な要素をレンダリングするための「メタ・コンポーネント」です。\n\n- **プロパティ**\n\n  ```ts\n  interface DynamicComponentProps {\n    is: string | Component\n  }\n  ```\n\n- **詳細**\n\n  実際にレンダリングするコンポーネントは `is` プロパティによって決定されます。\n\n  - `is` が文字列の場合、HTML タグ名か、コンポーネントの登録名となります。\n\n  - また、`is` はコンポーネントの定義に直接バインドもできます。\n\n- **例**\n\n  登録名によるコンポーネントのレンダリング（Options API）:\n\n  ```vue\n  <script>\n  import Foo from './Foo.vue'\n  import Bar from './Bar.vue'\n\n  export default {\n    components: { Foo, Bar },\n    data() {\n      return {\n        view: 'Foo'\n      }\n    }\n  }\n  </script>\n\n  <template>\n    <component :is=\"view\" />\n  </template>\n  ```\n\n  定義によるコンポーネントのレンダリング（`<script setup>` の Composition API）:\n\n  ```vue\n  <script setup>\n  import Foo from './Foo.vue'\n  import Bar from './Bar.vue'\n  </script>\n\n  <template>\n    <component :is=\"Math.random() > 0.5 ? Foo : Bar\" />\n  </template>\n  ```\n\n  HTML 要素のレンダリング:\n\n  ```html\n  <component :is=\"href ? 'a' : 'span'\"></component>\n  ```\n\n  [ビルトインのコンポーネント](./built-in-components.html)はすべて `is` に渡すことができますが、名前で渡したい場合は登録しなければなりません。例えば:\n\n  ```vue\n  <script>\n  import { Transition, TransitionGroup } from 'vue'\n\n  export default {\n    components: {\n      Transition,\n      TransitionGroup\n    }\n  }\n  </script>\n\n  <template>\n    <component :is=\"isGroup ? 'TransitionGroup' : 'Transition'\">\n      ...\n    </component>\n  </template>\n  ```\n\n  例えば `<script setup>` などで、コンポーネント名ではなく、コンポーネント自体を `is` に渡す場合は、登録は必要ありません。\n\n  もし `v-model` が `<component>` タグで使用された場合、テンプレートコンパイラーは他のコンポーネントと同じように、`modelValue` プロパティと `update:modelValue` イベントリスナーに展開されます。しかし、これは `<input>` や `<select>` のようなネイティブ HTML 要素とは互換性がありません。そのため、動的に生成されるネイティブ要素に対して `v-model` を使用しても動作しません:\n\n  ```vue\n  <script setup>\n  import { ref } from 'vue'\n  \n  const tag = ref('input')\n  const username = ref('')\n  </script>\n\n  <template>\n    <!-- 'input' はネイティブ HTML 要素なので、動作しません -->\n    <component :is=\"tag\" v-model=\"username\" />\n  </template>\n  ```\n\n  実際のアプリケーションでは、ネイティブのフォームフィールドはコンポーネントでラップされるのが一般的なので、このようなエッジケースはあまりありません。もし、ネイティブ要素を直接使用する必要がある場合は、 `v-model` を属性とイベントに手動で分割できます。\n\n- **参照:** [動的コンポーネント](https://ja.vuejs.org/guide/essentials/component-basics.html#dynamic-components)\n"
+        "value": "\n動的コンポーネントや動的な要素をレンダリングするための「メタ・コンポーネント」です。\n\n- **プロパティ**\n\n  ```ts\n  interface DynamicComponentProps {\n    is: string | Component\n  }\n  ```\n\n- **詳細**\n\n  実際にレンダリングするコンポーネントは `is` プロパティによって決定されます。\n\n  - `is` が文字列の場合、HTML タグ名か、コンポーネントの登録名となります。\n\n  - また、`is` はコンポーネントの定義に直接バインドもできます。\n\n- **例**\n\n  登録名によるコンポーネントのレンダリング（Options API）:\n\n  ```vue\n  <script>\n  import Foo from './Foo.vue'\n  import Bar from './Bar.vue'\n\n  export default {\n    components: { Foo, Bar },\n    data() {\n      return {\n        view: 'Foo'\n      }\n    }\n  }\n  </script>\n\n  <template>\n    <component :is=\"view\" />\n  </template>\n  ```\n\n  定義によるコンポーネントのレンダリング（`<script setup>` の Composition API）:\n\n  ```vue\n  <script setup>\n  import Foo from './Foo.vue'\n  import Bar from './Bar.vue'\n  </script>\n\n  <template>\n    <component :is=\"Math.random() > 0.5 ? Foo : Bar\" />\n  </template>\n  ```\n\n  HTML 要素のレンダリング:\n\n  ```html\n  <component :is=\"href ? 'a' : 'span'\"></component>\n  ```\n\n  [ビルトインのコンポーネント](./built-in-components)はすべて `is` に渡すことができますが、名前で渡したい場合は登録しなければなりません。例えば:\n\n  ```vue\n  <script>\n  import { Transition, TransitionGroup } from 'vue'\n\n  export default {\n    components: {\n      Transition,\n      TransitionGroup\n    }\n  }\n  </script>\n\n  <template>\n    <component :is=\"isGroup ? 'TransitionGroup' : 'Transition'\">\n      ...\n    </component>\n  </template>\n  ```\n\n  例えば `<script setup>` などで、コンポーネント名ではなく、コンポーネント自体を `is` に渡す場合は、登録は必要ありません。\n\n  もし `v-model` が `<component>` タグで使用された場合、テンプレートコンパイラーは他のコンポーネントと同じように、`modelValue` プロパティと `update:modelValue` イベントリスナーに展開されます。しかし、これは `<input>` や `<select>` のようなネイティブ HTML 要素とは互換性がありません。そのため、動的に生成されるネイティブ要素に対して `v-model` を使用しても動作しません:\n\n  ```vue\n  <script setup>\n  import { ref } from 'vue'\n  \n  const tag = ref('input')\n  const username = ref('')\n  </script>\n\n  <template>\n    <!-- 'input' はネイティブ HTML 要素なので、動作しません -->\n    <component :is=\"tag\" v-model=\"username\" />\n  </template>\n  ```\n\n  実際のアプリケーションでは、ネイティブのフォームフィールドはコンポーネントでラップされるのが一般的なので、このようなエッジケースはあまりありません。もし、ネイティブ要素を直接使用する必要がある場合は、 `v-model` を属性とイベントに手動で分割できます。\n\n- **参照:** [動的コンポーネント](https://ja.vuejs.org/guide/essentials/component-basics.html#dynamic-components)\n"
       },
       "references": [
         {
@@ -172,6 +192,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-elements.html#component"
         }
       ]
     },
@@ -201,6 +225,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-elements.html#slot"
         }
       ]
     },
@@ -230,6 +258,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-elements.html#template"
         }
       ]
     }
@@ -261,6 +293,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-text"
         }
       ]
     },
@@ -268,7 +304,7 @@
       "name": "v-html",
       "description": {
         "kind": "markdown",
-        "value": "\n要素の [innerHTML](https://developer.mozilla.org/ja/docs/Web/API/Element/innerHTML) を更新します。\n\n- **期待する値:** `string`\n\n- **詳細:**\n\n  `v-html` の内容は、プレーンな HTML として挿入されます - Vue テンプレートの構文は処理されません。もし、`v-html` を使ってテンプレートを構成しようとしているのであれば、代わりにコンポーネントを使うなどして解決策を見直してみてください。\n\n  ::: warning セキュリティーに関する注意\n  ウェブサイト上で任意の HTML を動的にレンダリングすることは、[XSS 攻撃](https://ja.wikipedia.org/wiki/%E3%82%AF%E3%83%AD%E3%82%B9%E3%82%B5%E3%82%A4%E3%83%88%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%97%E3%83%86%E3%82%A3%E3%83%B3%E3%82%B0)につながりやすいため、非常に危険です。信頼できるコンテンツにのみ `v-html` を使用し、ユーザーが提供するコンテンツには**絶対に**使用しないでください。\n  :::\n\n  [単一ファイルコンポーネント](https://ja.vuejs.org/guide/scaling-up/sfc.html)では、`scoped` スタイルは `v-html` 内のコンテンツには適用されません。これは、その HTML が Vue のテンプレートコンパイラーによって処理されないからです。もし `v-html` のコンテンツにスコープ付き CSS を適用したい場合は、代わりに [CSS modules](./sfc-css-features.html#css-modules) を使ったり、BEM などの手動スコープ戦略を持つ追加のグローバル `<style>` 要素を使用可能です。\n\n- **例:**\n\n  ```html\n  <div v-html=\"html\"></div>\n  ```\n\n- **参照:** [テンプレート構文 - 生の HTML](https://ja.vuejs.org/guide/essentials/template-syntax.html#raw-html)\n"
+        "value": "\n要素の [innerHTML](https://developer.mozilla.org/ja/docs/Web/API/Element/innerHTML) を更新します。\n\n- **期待する値:** `string`\n\n- **詳細:**\n\n  `v-html` の内容は、プレーンな HTML として挿入されます - Vue テンプレートの構文は処理されません。もし、`v-html` を使ってテンプレートを構成しようとしているのであれば、代わりにコンポーネントを使うなどして解決策を見直してみてください。\n\n  ::: warning セキュリティーに関する注意\n  ウェブサイト上で任意の HTML を動的にレンダリングすることは、[XSS 攻撃](https://ja.wikipedia.org/wiki/%E3%82%AF%E3%83%AD%E3%82%B9%E3%82%B5%E3%82%A4%E3%83%88%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%97%E3%83%86%E3%82%A3%E3%83%B3%E3%82%B0)につながりやすいため、非常に危険です。信頼できるコンテンツにのみ `v-html` を使用し、ユーザーが提供するコンテンツには**絶対に**使用しないでください。\n  :::\n\n  [単一ファイルコンポーネント](https://ja.vuejs.org/guide/scaling-up/sfc.html)では、`scoped` スタイルは `v-html` 内のコンテンツには適用されません。これは、その HTML が Vue のテンプレートコンパイラーによって処理されないからです。もし `v-html` のコンテンツにスコープ付き CSS を適用したい場合は、代わりに [CSS modules](./sfc-css-features#css-modules) を使ったり、BEM などの手動スコープ戦略を持つ追加のグローバル `<style>` 要素を使用可能です。\n\n- **例:**\n\n  ```html\n  <div v-html=\"html\"></div>\n  ```\n\n- **参照:** [テンプレート構文 - 生の HTML](https://ja.vuejs.org/guide/essentials/template-syntax.html#raw-html)\n"
       },
       "references": [
         {
@@ -290,6 +326,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-html"
         }
       ]
     },
@@ -319,6 +359,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-show"
         }
       ]
     },
@@ -348,6 +392,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-if"
         }
       ]
     },
@@ -378,6 +426,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-else"
         }
       ]
     },
@@ -407,6 +459,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-else-if"
         }
       ]
     },
@@ -436,6 +492,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-for"
         }
       ]
     },
@@ -465,6 +525,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-on"
         }
       ]
     },
@@ -494,6 +558,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-bind"
         }
       ]
     },
@@ -523,6 +591,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-model"
         }
       ]
     },
@@ -530,7 +602,7 @@
       "name": "v-slot",
       "description": {
         "kind": "markdown",
-        "value": "\nprops の受け取りを期待する名前付きスロットまたはスコープ付きスロットを表します。\n\n- **省略記法:** `#`\n\n- **期待する値:** 関数の引数の位置で有効な JavaScript 式（分割代入のサポートを含む）。省略可能 - props がスロットに渡されることを期待している場合のみ必要です。\n\n- **引数:** スロット名（省略可能で、デフォルトは `default`）\n\n- **以下に限定:**\n\n  - `<template>`\n  - [コンポーネント](https://ja.vuejs.org/guide/components/slots.html#scoped-slots)（props ありの単独のデフォルトスロット用）\n\n- **例:**\n\n  ```html\n  <!-- 名前付きスロット -->\n  <BaseLayout>\n    <template v-slot:header>\n      Header content\n    </template>\n\n    <template v-slot:default>\n      Default slot content\n    </template>\n\n    <template v-slot:footer>\n      Footer content\n    </template>\n  </BaseLayout>\n\n  <!-- props を受け取る名前付きスロット -->\n  <InfiniteScroll>\n    <template v-slot:item=\"slotProps\">\n      <div class=\"item\">\n        {{ slotProps.item.text }}\n      </div>\n    </template>\n  </InfiniteScroll>\n\n  <!-- props を受け取るデフォルトスロット、分割代入あり -->\n  <Mouse v-slot=\"{ x, y }\">\n    Mouse position: {{ x }}, {{ y }}\n  </Mouse>\n  ```\n\n- **参照:**\n  - [コンポーネント - スロット](https://ja.vuejs.org/guide/components/slots.html)\n"
+        "value": "\nプロパティの受け取りを期待する名前付きスロットまたはスコープ付きスロットを表します。\n\n- **省略記法:** `#`\n\n- **期待する値:** 関数の引数の位置で有効な JavaScript 式（分割代入のサポートを含む）。省略可能 - プロパティがスロットに渡されることを期待している場合のみ必要です。\n\n- **引数:** スロット名（省略可能で、デフォルトは `default`）\n\n- **以下に限定:**\n\n  - `<template>`\n  - [コンポーネント](https://ja.vuejs.org/guide/components/slots.html#scoped-slots)（プロパティのある単独のデフォルトスロット用）\n\n- **例:**\n\n  ```html\n  <!-- 名前付きスロット -->\n  <BaseLayout>\n    <template v-slot:header>\n      Header content\n    </template>\n\n    <template v-slot:default>\n      Default slot content\n    </template>\n\n    <template v-slot:footer>\n      Footer content\n    </template>\n  </BaseLayout>\n\n  <!-- プロパティを受け取る名前付きスロット -->\n  <InfiniteScroll>\n    <template v-slot:item=\"slotProps\">\n      <div class=\"item\">\n        {{ slotProps.item.text }}\n      </div>\n    </template>\n  </InfiniteScroll>\n\n  <!-- プロパティを受け取るデフォルトスロット、分割代入あり -->\n  <Mouse v-slot=\"{ x, y }\">\n    Mouse position: {{ x }}, {{ y }}\n  </Mouse>\n  ```\n\n- **参照:**\n  - [コンポーネント - スロット](https://ja.vuejs.org/guide/components/slots.html)\n"
       },
       "references": [
         {
@@ -552,6 +624,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-slot"
         }
       ]
     },
@@ -581,6 +657,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-pre"
         }
       ]
     },
@@ -610,6 +690,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-once"
         }
       ]
     },
@@ -639,6 +723,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-memo"
         }
       ]
     },
@@ -668,6 +756,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-cloak"
         }
       ]
     },
@@ -697,6 +789,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-attributes.html#key"
         }
       ]
     },
@@ -726,6 +822,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-attributes.html#ref"
         }
       ]
     },
@@ -755,6 +855,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-attributes.html#is"
         }
       ]
     }

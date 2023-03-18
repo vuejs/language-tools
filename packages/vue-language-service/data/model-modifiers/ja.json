@@ -27,6 +27,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/guide/essentials/forms.html#lazy"
         }
       ]
     },
@@ -56,6 +60,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/guide/essentials/forms.html#number"
         }
       ]
     },
@@ -85,6 +93,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/guide/essentials/forms.html#trim"
         }
       ]
     }

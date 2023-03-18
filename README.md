@@ -59,7 +59,7 @@ If you want to work on the volar extension follow these commands to set up your 
 
 ```bash
 git clone https://github.com/vuejs/language-tools.git
-cd volar
+cd language-tools
 pnpm install
 pnpm run build
 ```
@@ -132,7 +132,6 @@ flowchart LR
 	click TS_VUE_PLUGIN "https://github.com/johnsoncodehk/volar/tree/master/packages/typescript-vue-plugin"
 	click VOLAR_PUG_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/pug-language-service"
 	click VOLAR_TS_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/typescript-language-service"
-	click VOLAR_TS_FASTER "https://github.com/johnsoncodehk/volar/tree/master/packages/typescript-faster"
 
 	%% Extrnal Packages
 	HTML_SERVICE[vscode-html-languageservice]
@@ -207,9 +206,6 @@ flowchart LR
 	VUE_REPL --> MONACO_VOLAR
 	MONACO_VOLAR --> VOLAR_VUE_SERVICE
 
-	%% TS_VUE_PLUGIN --> VOLAR_TS_FASTER
-	%% VOLAR_VUE_SERVICE --> VOLAR_TS_FASTER
-
 	%% VOLAR_VUE_TS --> TS
 	VUE_COMPONENT_META --> VOLAR_VUE_CORE
 	VOLAR_VUE_TS --> VOLAR_VUE_CORE
@@ -222,10 +218,21 @@ flowchart LR
 	VOLAR_VUE_SERVICE --> JSON_SERVICE
 ```
 
-## Sponsors
+---
+
+<h3 align="center">Full-time Support by</h3>
+<br />
+
+<p align="center">
+	<span>
+		<a href="https://stackblitz.com/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/HEAD/.github/sponsors/StackBlitz.png" height="80" /></a>
+		<h4 align="center">Just click, and start coding.</h4>
+	</span>
+</p>
+<br />
 
 <p align="center">
 	<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg">
-		<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg"/>
+		<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.png"/>
 	</a>
 </p>

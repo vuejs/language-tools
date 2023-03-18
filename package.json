@@ -13,20 +13,22 @@
 		"release:base": "lerna publish --exact --force-publish --yes --sync-workspace-lock",
 		"release:vue": "cd ./packages/vscode-vue && npm run release",
 		"release:typescript-vue-plugin": "cd ./packages/vscode-typescript-vue-plugin && npm run release",
+		"release:next": "npm run release:next-base && npm run release:next-vue && npm run release:next-typescript-vue-plugin",
+		"release:next-base": "npm run release:base -- --dist-tag next",
+		"release:next-vue": "cd ./packages/vscode-vue && npm run release:next",
+		"release:next-typescript-vue-plugin": "cd ./packages/vscode-typescript-vue-plugin && npm run release:next",
 		"test": "vitest run",
 		"chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=./packages/vscode-vue ../volar-starter"
 	},
 	"devDependencies": {
 		"@types/node": "latest",
-		"@volar/language-service": "1.3.0-alpha.0",
+		"@volar/language-service": "1.4.0-alpha.3",
 		"typescript": "latest",
 		"vite": "latest",
 		"vitest": "0.25.8"
 	},
 	"optionalDependencies": {
 		"@lerna-lite/cli": "latest",
-		"@vscode/test-web": "latest",
-		"axios": "latest",
 		"opencc": "latest"
 	}
 }

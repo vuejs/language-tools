@@ -2,16 +2,13 @@ const path = require('path');
 const fs = require('fs');
 
 require('esbuild').build({
-	entryPoints: process.argv.includes('--empty') ? {
-		client: './scripts/empty.js',
-		server: './scripts/empty.js',
-	} : {
+	entryPoints: {
 		client: './out/nodeClientMain.js',
 		server: './node_modules/@volar/vue-language-server/out/nodeServer.js',
 	},
 	bundle: true,
 	metafile: process.argv.includes('--metafile'),
-	outdir: './dist/node',
+	outdir: './dist',
 	external: [
 		'vscode',
 		'typescript', // vue-component-meta

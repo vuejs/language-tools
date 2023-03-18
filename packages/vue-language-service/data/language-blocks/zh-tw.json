@@ -30,6 +30,10 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
             }
           ]
         },
@@ -67,6 +71,10 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
             }
           ]
         }
@@ -95,6 +103,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#template"
         }
       ]
     },
@@ -127,6 +139,10 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
             }
           ]
         },
@@ -170,6 +186,10 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
             }
           ]
         },
@@ -203,6 +223,10 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#script-setup"
             }
           ]
         }
@@ -231,6 +255,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#script"
         }
       ]
     },
@@ -261,6 +289,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#script-setup"
         }
       ]
     },
@@ -293,6 +325,10 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
             }
           ]
         },
@@ -342,6 +378,10 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
             }
           ]
         },
@@ -372,6 +412,10 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-css-features.html#scoped-css"
             }
           ]
         },
@@ -402,6 +446,10 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-css-features.html#css-modules"
             }
           ]
         }
@@ -430,6 +478,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#style"
         }
       ]
     },
@@ -462,13 +514,17 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
             }
           ]
         }
       ],
       "description": {
         "kind": "markdown",
-        "value": "\n在一個 `*.vue` 文件中可以為任何項目特定需求使用額外的自定義塊。舉例來說，一個用作寫文檔的 `<docs>` 塊。這裡是一些自定義塊的真實用例：\n\n- [Gridsome：`<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql：`<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n：`<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\n自定義塊的處理需要依賴工具鏈。如果你想要在構建中集成你的自定義語塊，請參見[相關工具鏈指南](https://cn.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations)獲取更多細節。\n"
+        "value": "\n在一個 `*.vue` 文件中可以為任何項目特定需求使用額外的自定義塊。舉例來說，一個用作寫文檔的 `<docs>` 塊。這裡是一些自定義塊的真實用例：\n\n- [Gridsome：`<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql：`<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n：`<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\n自定義塊的處理需要依賴工具鏈。如果你想要在構建中集成你的自定義語塊，請參見 [SFC 自定義塊集成工具鏈指南](https://cn.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations)獲取更多細節。\n"
       },
       "references": [
         {
@@ -490,6 +546,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/sfc-spec.html#自定義塊"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#自定義塊"
         }
       ]
     }
@@ -522,6 +582,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
         }
       ]
     },
@@ -551,6 +615,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
         }
       ]
     }

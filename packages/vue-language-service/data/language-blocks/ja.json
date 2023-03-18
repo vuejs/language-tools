@@ -30,6 +30,10 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
             }
           ]
         },
@@ -67,13 +71,17 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
             }
           ]
         }
       ],
       "description": {
         "kind": "markdown",
-        "value": "\n- 各 `*.vue` ファイルには、一度に最大 1 つのトップレベル `<template>` ブロックを含めることができます。\n\n- コンテンツは抽出されて `@vue/compiler-dom` に渡され、JavaScript のレンダー関数に事前コンパイルされ、エクスポートされたコンポーネントに `render` オプションとしてアタッチされます。\n"
+        "value": "\n- 各 `*.vue` ファイルには、最大 1 つのトップレベル `<template>` ブロックを含めることができます。\n\n- コンテンツは抽出されて `@vue/compiler-dom` に渡され、JavaScript のレンダー関数に事前コンパイルされ、エクスポートされたコンポーネントに `render` オプションとしてアタッチされます。\n"
       },
       "references": [
         {
@@ -95,6 +103,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#template"
         }
       ]
     },
@@ -127,6 +139,10 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
             }
           ]
         },
@@ -170,6 +186,10 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
             }
           ]
         },
@@ -181,7 +201,7 @@
           "valueSet": "v",
           "description": {
             "kind": "markdown",
-            "value": "\n- 各 `*.vue` ファイルには、一度に最大 1 つの `<script setup>` ブロックを含めることができます（通常の `<script>` は除く）。\n\n- スクリプトは前処理され、コンポーネントの `setup()` 関数として使用されます。これは、**コンポーネントの各インスタンスに対して**実行されることを意味します。`<script setup>` のトップレベルのバインディングは、自動的にテンプレートに公開されます。詳細は [`<script setup>` に関する専用のドキュメント](https://ja.vuejs.org/api/sfc-script-setup.html)を参照してください。\n"
+            "value": "\n- 各 `*.vue` ファイルには、最大 1 つの `<script setup>` ブロックを含めることができます（通常の `<script>` は除く）。\n\n- スクリプトは前処理され、コンポーネントの `setup()` 関数として使用されます。これは、**コンポーネントの各インスタンスに対して**実行されることを意味します。`<script setup>` のトップレベルのバインディングは、自動的にテンプレートに公開されます。詳細は [`<script setup>` に関する専用のドキュメント](https://ja.vuejs.org/api/sfc-script-setup.html)を参照してください。\n"
           },
           "references": [
             {
@@ -203,13 +223,17 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#script-setup"
             }
           ]
         }
       ],
       "description": {
         "kind": "markdown",
-        "value": "\n- 各 `*.vue` ファイルには、一度に最大 1 つの `<script>` ブロックを含めることができます（[`<script setup>`](https://ja.vuejs.org/api/sfc-script-setup.html) は除く）。\n\n- スクリプトは、ES モジュールとして実行されます。\n\n- **default export** は、プレーンオブジェクトか [defineComponent](https://ja.vuejs.org/api/general.html#definecomponent) の戻り値のどちらかで、Vue のコンポーネントオプションオブジェクトになっている必要があります。\n"
+        "value": "\n- 各 `*.vue` ファイルには、最大 1 つの `<script>` ブロックを含めることができます（[`<script setup>`](https://ja.vuejs.org/api/sfc-script-setup.html) は除く）。\n\n- スクリプトは、ES モジュールとして実行されます。\n\n- **default export** は、プレーンオブジェクトか [defineComponent](https://ja.vuejs.org/api/general.html#definecomponent) の戻り値のどちらかで、Vue のコンポーネントオプションオブジェクトになっている必要があります。\n"
       },
       "references": [
         {
@@ -231,6 +255,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#script"
         }
       ]
     },
@@ -239,7 +267,7 @@
       "attributes": [],
       "description": {
         "kind": "markdown",
-        "value": "\n- 各 `*.vue` ファイルには、一度に最大 1 つの `<script setup>` ブロックを含めることができます（通常の `<script>` は除く）。\n\n- スクリプトは前処理され、コンポーネントの `setup()` 関数として使用されます。これは、**コンポーネントの各インスタンスに対して**実行されることを意味します。`<script setup>` のトップレベルのバインディングは、自動的にテンプレートに公開されます。詳細は [`<script setup>` に関する専用のドキュメント](https://ja.vuejs.org/api/sfc-script-setup.html)を参照してください。\n"
+        "value": "\n- 各 `*.vue` ファイルには、最大 1 つの `<script setup>` ブロックを含めることができます（通常の `<script>` は除く）。\n\n- スクリプトは前処理され、コンポーネントの `setup()` 関数として使用されます。これは、**コンポーネントの各インスタンスに対して**実行されることを意味します。`<script setup>` のトップレベルのバインディングは、自動的にテンプレートに公開されます。詳細は [`<script setup>` に関する専用のドキュメント](https://ja.vuejs.org/api/sfc-script-setup.html)を参照してください。\n"
       },
       "references": [
         {
@@ -261,6 +289,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#script-setup"
         }
       ]
     },
@@ -293,6 +325,10 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
             }
           ]
         },
@@ -342,6 +378,10 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
             }
           ]
         },
@@ -372,6 +412,10 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-css-features.html#scoped-css"
             }
           ]
         },
@@ -402,6 +446,10 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-css-features.html#css-modules"
             }
           ]
         }
@@ -430,6 +478,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#style"
         }
       ]
     },
@@ -462,13 +514,17 @@
             {
               "name": "fr",
               "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
             }
           ]
         }
       ],
       "description": {
         "kind": "markdown",
-        "value": "\nプロジェクト固有のニーズに応じて、`*.vue` ファイルに `<docs>` ブロックのような追加のカスタムブロックを含めることができます。カスタムブロックの実際の例としては、以下のようなものがあります:\n\n- [Gridsome: `<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql: `<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n: `<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\nカスタムブロックの扱いはツールに依存します - 独自のカスタムブロック統合を構築したい場合は、[関連するツールのセクション](https://ja.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations)で詳細を確認してください。\n"
+        "value": "\nプロジェクト固有のニーズに応じて、`*.vue` ファイルに `<docs>` ブロックのような追加のカスタムブロックを含めることができます。カスタムブロックの実際の例としては、以下のようなものがあります:\n\n- [Gridsome: `<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql: `<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n: `<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\nカスタムブロックの扱いはツールに依存します - 独自のカスタムブロック統合を構築したい場合は、[SFC カスタムブロック統合ツールのセクション](https://ja.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations)で詳細を確認してください。\n"
       },
       "references": [
         {
@@ -490,6 +546,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/sfc-spec.html#カスタムブロック"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#カスタムブロック"
         }
       ]
     }
@@ -522,6 +582,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
         }
       ]
     },
@@ -551,6 +615,10 @@
         {
           "name": "fr",
           "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
         }
       ]
     }

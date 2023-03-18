@@ -1,0 +1,626 @@
+{
+  "version": 1.1,
+  "tags": [
+    {
+      "name": "template",
+      "attributes": [
+        {
+          "name": "src",
+          "description": {
+            "kind": "markdown",
+            "value": "\n`*.vue` 컴포넌트를 여러 파일로 분할하는 것을 선호하는 경우,\n`src` 속성을 사용하여 언어 블록에서 외부 파일을 가져올 수 있습니다:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n`src` 가져오기는 웹팩 모듈 요청과 동일한 경로 확인 규칙을 따릅니다.\n즉, 다음을 의미합니다:\n\n- 상대 경로는 `./`로 시작해야 함.\n- npm 의존성에서 리소스를 가져올 수 있음.\n\n```vue\n<!-- 설치된 \"todomvc-app-css\" npm 패키지에서 파일 가져오기 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 가져오기는 커스텀 블록에서도 작동합니다. 예를들어:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
+            }
+          ]
+        },
+        {
+          "name": "lang",
+          "description": {
+            "kind": "markdown",
+            "value": "\n블록은 `lang` 속성을 사용하여 전처리기 언어를 선언할 수 있습니다.\n가장 일반적인 경우는 `<script>` 블록에 TypeScript를 사용하는 것입니다:\n\n```html\n<script lang=\"ts\">\n  // TypeScript 사용\n</script>\n```\n\n`lang`은 모든 블록에 적용할 수 있습니다.\n예를 들어 `<style>`에서는 [Sass](https://sass-lang.com/)를, `<template>`에서는 [Pug](https://pugjs.org/api/getting-started)를 사용할 수 있습니다:\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n다양한 전처리기와의 통합은 툴체인에 따라 다를 수 있습니다.\n예제를 보려면 해당 문서를 확인하십시오:\n\n- [Vite](https://vitejs.dev/guide/features#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors#using-pre-processors)\n"
+          },
+          "values": [
+            {
+              "name": "html"
+            },
+            {
+              "name": "pug"
+            }
+          ],
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
+            }
+          ]
+        }
+      ],
+      "description": {
+        "kind": "markdown",
+        "value": "\n- 각 `*.vue` 파일은 최상위 `<template>` 블록을 하나만 포함할 수 있습니다.\n\n- 컨텐츠는 추출되어 `@vue/compiler-dom`으로 전달되고,\n  JavaScript 렌더 함수로 사전 컴파일되며,\n  내보낸 컴포넌트에 `render` 옵션으로 첨부됩니다.\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#template"
+        }
+      ]
+    },
+    {
+      "name": "script",
+      "attributes": [
+        {
+          "name": "src",
+          "description": {
+            "kind": "markdown",
+            "value": "\n`*.vue` 컴포넌트를 여러 파일로 분할하는 것을 선호하는 경우,\n`src` 속성을 사용하여 언어 블록에서 외부 파일을 가져올 수 있습니다:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n`src` 가져오기는 웹팩 모듈 요청과 동일한 경로 확인 규칙을 따릅니다.\n즉, 다음을 의미합니다:\n\n- 상대 경로는 `./`로 시작해야 함.\n- npm 의존성에서 리소스를 가져올 수 있음.\n\n```vue\n<!-- 설치된 \"todomvc-app-css\" npm 패키지에서 파일 가져오기 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 가져오기는 커스텀 블록에서도 작동합니다. 예를들어:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
+            }
+          ]
+        },
+        {
+          "name": "lang",
+          "description": {
+            "kind": "markdown",
+            "value": "\n블록은 `lang` 속성을 사용하여 전처리기 언어를 선언할 수 있습니다.\n가장 일반적인 경우는 `<script>` 블록에 TypeScript를 사용하는 것입니다:\n\n```html\n<script lang=\"ts\">\n  // TypeScript 사용\n</script>\n```\n\n`lang`은 모든 블록에 적용할 수 있습니다.\n예를 들어 `<style>`에서는 [Sass](https://sass-lang.com/)를, `<template>`에서는 [Pug](https://pugjs.org/api/getting-started)를 사용할 수 있습니다:\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n다양한 전처리기와의 통합은 툴체인에 따라 다를 수 있습니다.\n예제를 보려면 해당 문서를 확인하십시오:\n\n- [Vite](https://vitejs.dev/guide/features#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors#using-pre-processors)\n"
+          },
+          "values": [
+            {
+              "name": "ts"
+            },
+            {
+              "name": "js"
+            },
+            {
+              "name": "tsx"
+            },
+            {
+              "name": "jsx"
+            }
+          ],
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
+            }
+          ]
+        },
+        {
+          "name": "generic"
+        },
+        {
+          "name": "setup",
+          "valueSet": "v",
+          "description": {
+            "kind": "markdown",
+            "value": "\n- 각 `*.vue` 파일은 하나의 `<script setup>` 블록만 포함할 수 있습니다(일반 `<script>` 제외).\n\n- 스크립트는 전처리되어 컴포넌트의 `setup()` 함수로 사용됩니다.\n  즉, **컴포넌트의 각 인스턴스**에 대해 실행됩니다.\n  `<script setup>` 내에 최상위 바인딩은 템플릿에 자동으로 노출됩니다.\n  자세한 내용은 [`<script setup>` 전용 문서](https://ko.vuejs.org/api/sfc-script-setup.html)를 참고하십시오.\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#script-setup"
+            }
+          ]
+        }
+      ],
+      "description": {
+        "kind": "markdown",
+        "value": "\n- 각 `*.vue` 파일은 하나의 `<script>` 블록만 포함할 수 있습니다([`<script setup>`](https://ko.vuejs.org/api/sfc-script-setup.html) 제외).\n\n- 스크립트는 ES 모듈로 실행됩니다.\n\n- **기본 내보내기**는 일반 객체 또는 [defineComponent](https://ko.vuejs.org/api/general.html#definecomponent)의 반환 값으로 Vue 컴포넌트 옵션 객체여야 합니다.\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#script"
+        }
+      ]
+    },
+    {
+      "name": "script setup",
+      "attributes": [],
+      "description": {
+        "kind": "markdown",
+        "value": "\n- 각 `*.vue` 파일은 하나의 `<script setup>` 블록만 포함할 수 있습니다(일반 `<script>` 제외).\n\n- 스크립트는 전처리되어 컴포넌트의 `setup()` 함수로 사용됩니다.\n  즉, **컴포넌트의 각 인스턴스**에 대해 실행됩니다.\n  `<script setup>` 내에 최상위 바인딩은 템플릿에 자동으로 노출됩니다.\n  자세한 내용은 [`<script setup>` 전용 문서](https://ko.vuejs.org/api/sfc-script-setup.html)를 참고하십시오.\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#script-setup"
+        }
+      ]
+    },
+    {
+      "name": "style",
+      "attributes": [
+        {
+          "name": "src",
+          "description": {
+            "kind": "markdown",
+            "value": "\n`*.vue` 컴포넌트를 여러 파일로 분할하는 것을 선호하는 경우,\n`src` 속성을 사용하여 언어 블록에서 외부 파일을 가져올 수 있습니다:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n`src` 가져오기는 웹팩 모듈 요청과 동일한 경로 확인 규칙을 따릅니다.\n즉, 다음을 의미합니다:\n\n- 상대 경로는 `./`로 시작해야 함.\n- npm 의존성에서 리소스를 가져올 수 있음.\n\n```vue\n<!-- 설치된 \"todomvc-app-css\" npm 패키지에서 파일 가져오기 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 가져오기는 커스텀 블록에서도 작동합니다. 예를들어:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
+            }
+          ]
+        },
+        {
+          "name": "lang",
+          "description": {
+            "kind": "markdown",
+            "value": "\n블록은 `lang` 속성을 사용하여 전처리기 언어를 선언할 수 있습니다.\n가장 일반적인 경우는 `<script>` 블록에 TypeScript를 사용하는 것입니다:\n\n```html\n<script lang=\"ts\">\n  // TypeScript 사용\n</script>\n```\n\n`lang`은 모든 블록에 적용할 수 있습니다.\n예를 들어 `<style>`에서는 [Sass](https://sass-lang.com/)를, `<template>`에서는 [Pug](https://pugjs.org/api/getting-started)를 사용할 수 있습니다:\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n다양한 전처리기와의 통합은 툴체인에 따라 다를 수 있습니다.\n예제를 보려면 해당 문서를 확인하십시오:\n\n- [Vite](https://vitejs.dev/guide/features#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors#using-pre-processors)\n"
+          },
+          "values": [
+            {
+              "name": "css"
+            },
+            {
+              "name": "scss"
+            },
+            {
+              "name": "less"
+            },
+            {
+              "name": "stylus"
+            },
+            {
+              "name": "postcss"
+            },
+            {
+              "name": "sass"
+            }
+          ],
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
+            }
+          ]
+        },
+        {
+          "name": "scoped",
+          "valueSet": "v",
+          "description": {
+            "kind": "markdown",
+            "value": "\n`<style>` 태그에 `scoped` 속성이 있으면,\n해당 CSS는 현재 컴포넌트의 엘리먼트에만 적용됩니다.\n이것은 Shadow DOM에서 발견되는 스타일 캡슐화와 유사합니다.\n몇 가지 주의 사항이 있지만,\n폴리필이 필요하지 않습니다.\nPostCSS를 사용하여 다음을 변환함으로써 달성됩니다:\n\n```vue\n<style scoped>\n.example {\n  color: red;\n}\n</style>\n\n<template>\n  <div class=\"example\">안녕!</div>\n</template>\n```\n\n다음으로:\n\n```vue\n<style>\n.example[data-v-f3f3eg9] {\n  color: red;\n}\n</style>\n\n<template>\n  <div class=\"example\" data-v-f3f3eg9>안녕!</div>\n</template>\n```\n\n### 자식 컴포넌트 루트 엘리먼트 \n\n`scoped`를 사용하면 부모 컴포넌트의 스타일이 자식 컴포넌트로 누출되지 않습니다.\n그러나 자식 컴포넌트의 루트 노드는 부모의 범위가 지정된 CSS와 자식의 범위가 지정된 CSS 모두의 영향을 받습니다.\n이것은 부모가 레이아웃 목적으로 자식 루트 엘리먼트의 스타일을 지정할 수 있도록 의도적으로 설계된 것입니다:\n\n### 깊은 셀렉터 \n\n`scoped` 스타일의 셀렉터를 \"깊게\"(즉, 자식 컴포넌트에 영향을 미치게 하려면) `:deep()` 의사 클래스를 사용할 수 있습니다:\n\n```vue\n<style scoped>\n.a :deep(.b) {\n  /* ... */\n}\n</style>\n```\n\n위의 내용은 다음과 같이 컴파일됩니다:\n\n```css\n.a[data-v-f3f3eg9] .b {\n  /* ... */\n}\n```\n\n:::tip\n`v-html`로 만든 DOM 컨텐츠는 범위가 지정된 스타일의 영향을 받지 않지만,\n깊은 셀렉터를 사용하여 스타일을 지정할 수 있습니다.\n:::\n\n### 슬롯형 셀렉터 \n\n기본적으로 범위가 지정된 스타일은 `<slot/>`에 의해 렌더링된 컨텐츠에 영향을 미치지 않습니다.\n스타일을 전달하는 부모 컴포넌트가 소유한 것으로 간주되기 때문입니다.\n슬롯 컨텐츠를 명시적으로 대상으로 지정하려면,\n`:slotted` 의사 클래스를 사용해야 합니다:\n\n```vue\n<style scoped>\n:slotted(div) {\n  color: red;\n}\n</style>\n```\n\n### 전역 셀렉터 \n\n하나의 규칙만 전역적으로 적용하려면,\n다른 `<style>`을 만드는 대신 `:global` 의사 클래스를 사용할 수 있습니다(아래 참고):\n\n```vue\n<style scoped>\n:global(.red) {\n  color: red;\n}\n</style>\n```\n\n### 로컬 및 전역 스타일 혼합 \n\n동일한 컴포넌트에 범위가 지정된 스타일과 범위가 지정되지 않은 스타일을 모두 포함할 수도 있습니다:\n\n```vue\n<style>\n/* 전역 스타일 */\n</style>\n\n<style scoped>\n/* 로컬 스타일 */\n</style>\n```\n\n### 범위가 지정된 스타일 팁 \n\n- **범위가 지정된 스타일은 클래스의 필요성을 제거하지 않습니다**.\n  브라우저가 다양한 CSS 셀렉터를 렌더링하는 방식 때문에,\n  `p { color: red }`처럼 범위를 지정할 때(즉, 속성 셀렉터와 결합될 때) 속도가 몇 배 느려집니다.\n  `.example { color: red }`와 같이 클래스나 ID를 사용하면,\n  성능 저하를 거의 제거할 수 있습니다.\n\n- **재귀적 컴포넌트의 자손 셀렉터에 주의해야 합니다!**\n  셀렉터가 `.a .b`인 CSS 규칙의 경우,\n  `.a`와 일치하는 엘리먼트가 재귀적인 자식 컴포넌트를 포함한다면,\n  해당 자식 컴포넌트의 모든 `.b`는 규칙과 일치하게 됩니다.\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-css-features.html#scoped-css"
+            }
+          ]
+        },
+        {
+          "name": "module",
+          "valueSet": "v",
+          "description": {
+            "kind": "markdown",
+            "value": "\n`<style module>` 태그는 [CSS 모듈](https://github.com/css-modules/css-modules)로 컴파일되고,\n결과적으로 CSS 클래스를 `$style` 키(key) 내부에 객체로 컴포넌트에 노출합니다:\n\n```vue\n<template>\n  <p :class=\"$style.red\">이것은 빨간색이어야 합니다.</p>\n</template>\n\n<style module>\n.red {\n  color: red;\n}\n</style>\n```\n\n결과적인 클래스는 충돌을 피하기 위해 해시되어,\nCSS 범위를 현재 컴포넌트로만 지정하는 것과 동일한 효과를 얻습니다.\n\n[전역 예외](https://github.com/css-modules/css-modules#exceptions), [구성](https://github.com/css-modules/css-modules#composition) 등의 자세한 사항은 [CSS 모듈 스팩](https://github.com/css-modules/css-modules)을 참고하십시오.\n\n### 커스텀 이름 삽입 \n\n`module` 속성에 값을 지정하여,\n주입된 클래스 객체의 속성 키를 커스텀할 수 있습니다:\n\n```vue\n<template>\n  <p :class=\"classes.red\">red</p>\n</template>\n\n<style module=\"classes\">\n.red {\n  color: red;\n}\n</style>\n```\n\n### 컴포지션 API와 함께 사용 \n\n주입된 클래스는 `useCssModule` API를 통해 `setup()` 및 `<script setup>`에서 접근할 수 있습니다.\n커스텀 주입 이름이 있는 `<style module>` 블록의 경우 `useCssModule`은 일치하는 `module` 속성 값을 첫 번째 인자로 받습니다:\n\n```js\nimport { useCssModule } from 'vue'\n\n// setup() 내부에서...\n// 기본값은, <style module>의 클래스 반환\nuseCssModule()\n\n// 이름을 지정한 경우, <style module=\"classes\">의 클래스 반환\nuseCssModule('classes')\n```\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-css-features.html#css-modules"
+            }
+          ]
+        }
+      ],
+      "description": {
+        "kind": "markdown",
+        "value": "\n- `*.vue` 파일에는 여러 `<style>` 태그가 포함될 수 있습니다.\n\n- `<style>` 태그는 현재 컴포넌트에 스타일을 캡슐화하는 데 도움이 되도록,\n  `scoped` 또는 `module` 속성(자세한 내용은 [SFC 스타일 특징](https://ko.vuejs.org/api/sfc-css-features.html) 참고)을 가질 수 있습니다.\n  캡슐화 모드가 다른 여러 `<style>` 태그를 동일한 컴포넌트에 혼합할 수 있습니다.\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#style"
+        }
+      ]
+    },
+    {
+      "name": "커스텀 블럭",
+      "attributes": [
+        {
+          "name": "src",
+          "description": {
+            "kind": "markdown",
+            "value": "\n`*.vue` 컴포넌트를 여러 파일로 분할하는 것을 선호하는 경우,\n`src` 속성을 사용하여 언어 블록에서 외부 파일을 가져올 수 있습니다:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n`src` 가져오기는 웹팩 모듈 요청과 동일한 경로 확인 규칙을 따릅니다.\n즉, 다음을 의미합니다:\n\n- 상대 경로는 `./`로 시작해야 함.\n- npm 의존성에서 리소스를 가져올 수 있음.\n\n```vue\n<!-- 설치된 \"todomvc-app-css\" npm 패키지에서 파일 가져오기 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 가져오기는 커스텀 블록에서도 작동합니다. 예를들어:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
+            }
+          ]
+        }
+      ],
+      "description": {
+        "kind": "markdown",
+        "value": "\n프로젝트별 요구 사항에 따라 `*.vue` 파일에 추가 커스텀 블록을 포함할 수 있습니다(예: `<docs>` 블록).\n커스텀 블록의 실제 예는 다음과 같습니다:\n\n- [Gridsome: `<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql: `<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n: `<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\n커스텀 블록 처리는 도구에 따라 다릅니다.\n자체 커스텀 블록 통합을 구축하려는 경우 자세한 내용은 [SFC 커스텀 블록 통합 도구 섹션](https://ko.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations)을 참고하십시오.\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#커스텀-블럭"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#커스텀-블럭"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#커스텀-블럭"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#커스텀-블럭"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#커스텀-블럭"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#커스텀-블럭"
+        }
+      ]
+    }
+  ],
+  "globalAttributes": [
+    {
+      "name": "lang",
+      "description": {
+        "kind": "markdown",
+        "value": "\n블록은 `lang` 속성을 사용하여 전처리기 언어를 선언할 수 있습니다.\n가장 일반적인 경우는 `<script>` 블록에 TypeScript를 사용하는 것입니다:\n\n```html\n<script lang=\"ts\">\n  // TypeScript 사용\n</script>\n```\n\n`lang`은 모든 블록에 적용할 수 있습니다.\n예를 들어 `<style>`에서는 [Sass](https://sass-lang.com/)를, `<template>`에서는 [Pug](https://pugjs.org/api/getting-started)를 사용할 수 있습니다:\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n다양한 전처리기와의 통합은 툴체인에 따라 다를 수 있습니다.\n예제를 보려면 해당 문서를 확인하십시오:\n\n- [Vite](https://vitejs.dev/guide/features#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors#using-pre-processors)\n"
+      },
+      "values": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
+        }
+      ]
+    },
+    {
+      "name": "src",
+      "description": {
+        "kind": "markdown",
+        "value": "\n`*.vue` 컴포넌트를 여러 파일로 분할하는 것을 선호하는 경우,\n`src` 속성을 사용하여 언어 블록에서 외부 파일을 가져올 수 있습니다:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n`src` 가져오기는 웹팩 모듈 요청과 동일한 경로 확인 규칙을 따릅니다.\n즉, 다음을 의미합니다:\n\n- 상대 경로는 `./`로 시작해야 함.\n- npm 의존성에서 리소스를 가져올 수 있음.\n\n```vue\n<!-- 설치된 \"todomvc-app-css\" npm 패키지에서 파일 가져오기 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 가져오기는 커스텀 블록에서도 작동합니다. 예를들어:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
+        }
+      ]
+    }
+  ]
+}

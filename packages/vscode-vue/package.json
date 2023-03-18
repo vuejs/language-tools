@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "1.2.0",
+	"version": "1.3.2",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
@@ -30,9 +30,13 @@
 		"onLanguage:javascriptreact",
 		"onLanguage:typescriptreact"
 	],
-	"main": "client",
-	"browser": "dist/browser/client",
+	"main": "./client.js",
+	"browser": "./web.js",
 	"capabilities": {
+		"virtualWorkspaces": {
+			"supported": "limited",
+			"description": "Install https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.vscode-typescript-web to have IntelliSense for .vue files in Web IDE."
+		},
 		"untrustedWorkspaces": {
 			"supported": "limited",
 			"description": "%volar.workspaceTrust.description%",
@@ -443,15 +447,10 @@
 					"default": false,
 					"description": "Show split editor icon in title area of editor."
 				},
-				"volar.doctor.statusBarItem": {
+				"volar.doctor.status": {
 					"type": "boolean",
 					"default": true,
 					"description": "Show known problems in status bar."
-				},
-				"volar.doctor.checkVueTsc": {
-					"type": "boolean",
-					"default": false,
-					"description": "Check vue-tsc version."
 				},
 				"volar.autoWrapParentheses": {
 					"type": "boolean",
@@ -741,33 +740,24 @@
 	},
 	"scripts": {
 		"prebuild": "cd ../.. && npm run build",
-		"build": "npm run build:node && npm run build:browser",
-		"watch": "npm run build:node -- --watch & npm run build:browser -- --watch",
-		"build:node": "node scripts/build-node",
-		"build:browser": "node scripts/build-browser",
-		"prepack:bundle-size": "npm run prebuild && npm run build:node -- --minify --metafile && npm run build:browser -- --empty",
-		"prepack:node": "npm run prebuild && npm run build:node -- --minify && npm run build:browser -- --empty",
-		"prepack:browser": "npm run prebuild && npm run build:browser -- --minify && npm run build:node -- --empty",
-		"pack:node": "npm run prepack:node && vsce package",
-		"pack:browser": "npm run prepack:browser && vsce package",
-		"release:node": "npm run prepack:node && vsce publish --target win32-x64 win32-ia32 win32-arm64 linux-x64 linux-arm64 linux-armhf darwin-x64 darwin-arm64 alpine-x64 alpine-arm64",
-		"release:browser": "npm run prepack:browser && vsce publish --target web",
-		"release": "npm run release:node && npm run release:browser",
+		"build": "node scripts/build",
+		"watch": "npm run build -- --watch",
+		"prepack": "npm run prebuild && npm run build -- --minify",
+		"pack": "npm run prepack && vsce package",
+		"release": "npm run prepack && vsce publish",
+		"release:next": "npm run release -- --pre-release",
 		"bundle-size": "npm run prepack:bundle-size && esbuild-visualizer --metadata ./meta.json && open ./stats.html"
 	},
 	"devDependencies": {
 		"@types/semver": "^7.3.13",
 		"@types/vscode": "1.67.0",
-		"@volar/shared": "1.3.0-alpha.0",
-		"@volar/source-map": "1.3.0-alpha.0",
-		"@volar/vscode-language-client": "1.3.0-alpha.0",
-		"@volar/vue-language-core": "1.2.0",
-		"@volar/vue-language-server": "1.2.0",
+		"@volar/source-map": "1.4.0-alpha.3",
+		"@volar/vscode": "1.4.0-alpha.3",
+		"@volar/vue-language-core": "1.3.2",
+		"@volar/vue-language-server": "1.3.2",
 		"esbuild": "0.15.18",
 		"esbuild-plugin-copy": "latest",
 		"esbuild-visualizer": "latest",
-		"path-browserify": "^1.0.1",
-		"punycode": "^2.3.0",
 		"semver": "^7.3.8",
 		"typesafe-path": "^0.2.2",
 		"vsce": "latest",

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { quickPick } from '@volar/vscode-language-client/out/common';
+import { quickPick } from '@volar/vscode/out/common';
 import { BaseLanguageClient, State } from 'vscode-languageclient';
 import { AttrNameCasing, TagNameCasing, DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest } from '@volar/vue-language-server';
 import { processHtml, processMd } from '../common';
@@ -19,11 +19,16 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 	const d_1 = vscode.window.onDidChangeActiveTextEditor(e => {
 		update(e?.document);
 	});
-	const d_2 = vscode.workspace.onDidCloseTextDocument((doc) => {
+	const d_2 = vscode.workspace.onDidChangeConfiguration(() => {
+		attrNameCasings.clear();
+		tagNameCasings.clear();
+		update(vscode.window.activeTextEditor?.document);
+	});
+	const d_3 = vscode.workspace.onDidCloseTextDocument((doc) => {
 		attrNameCasings.delete(doc.uri.toString());
 		tagNameCasings.delete(doc.uri.toString());
 	});
-	const d_3 = vscode.commands.registerCommand('volar.action.nameCasing', async () => {
+	const d_4 = vscode.commands.registerCommand('volar.action.nameCasing', async () => {
 
 		if (!vscode.window.activeTextEditor?.document) return;
 
@@ -82,6 +87,7 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 			d_1.dispose();
 			d_2.dispose();
 			d_3.dispose();
+			d_4.dispose();
 			statusBar.dispose();
 		}
 	});

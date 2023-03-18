@@ -1,5 +1,5 @@
-import * as createHtmlPlugin from '@volar-plugins/html';
-import { FileRangeCapabilities, LanguageServicePlugin, SourceMapWithDocuments } from '@volar/language-service';
+import createHtmlPlugin from '@volar-plugins/html';
+import { FileRangeCapabilities, LanguageServicePlugin, LanguageServicePluginInstance, SourceMapWithDocuments } from '@volar/language-service';
 import * as vue from '@volar/vue-language-core';
 import { hyphenate, capitalize, camelize } from '@vue/shared';
 import * as html from 'vscode-html-languageservice';
@@ -20,13 +20,21 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 	vueCompilerOptions: VueCompilerOptions,
 }): T {
 
-	const plugin: LanguageServicePlugin = (_context) => {
+	const plugin: LanguageServicePlugin = (_context): LanguageServicePluginInstance => {
 
-		if (!_context.typescript)
-			return {};
+		const templatePlugin = options.templateLanguagePlugin(_context);
+		const triggerCharacters: LanguageServicePluginInstance = {
+			triggerCharacters: [
+				...templatePlugin.triggerCharacters ?? [],
+				'@', // vue event shorthand
+			],
+		};
 
-		builtInData ??= loadTemplateData(_context.env.locale ?? 'en');
-		modelData ??= loadModelModifiersData(_context.env.locale ?? 'en');
+		if (!_context?.typescript)
+			return triggerCharacters;
+
+		builtInData ??= loadTemplateData(_context.locale ?? 'en');
+		modelData ??= loadModelModifiersData(_context.locale ?? 'en');
 
 		// https://vuejs.org/api/built-in-directives.html#v-on
 		// https://vuejs.org/api/built-in-directives.html#v-bind
@@ -60,229 +68,221 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 		const _ts = _context.typescript;
 		const nativeTags = new Set(options.vueCompilerOptions.nativeTags);
-		const templatePlugin = options.templateLanguagePlugin(_context);
 
 		return {
 
 			...templatePlugin,
 
-			complete: {
+			...triggerCharacters,
 
-				triggerCharacters: [
-					...templatePlugin.complete?.triggerCharacters ?? [],
-					'@', // vue event shorthand
-				],
-
-				async on(document, position, context) {
-
-					if (!options.isSupportedDocument(document))
-						return;
-
-					for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
-						const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
-						if (virtualFile && virtualFile instanceof vue.VueFile) {
-							await provideHtmlData(map, virtualFile);
-						}
-					}
-
-					const htmlComplete = await templatePlugin.complete?.on?.(document, position, context);
-					if (!htmlComplete)
-						return;
-
-					for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
-						const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
-						if (virtualFile && virtualFile instanceof vue.VueFile) {
-							afterHtmlCompletion(htmlComplete, map, virtualFile);
-						}
-					}
-
-					return htmlComplete;
-				},
-			},
-
-			inlayHints: {
-				async on(document) {
-
-					if (!options.isSupportedDocument(document))
-						return;
-
-					const enabled = await _context.env.configurationHost?.getConfiguration<boolean>('volar.inlayHints.missingRequiredProps') ?? true;
-					if (!enabled)
-						return;
-
-					const result: vscode.InlayHint[] = [];
-
-					for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
-						const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
-						const scanner = options.getScanner(document, templatePlugin as ReturnType<T>);
-						if (virtualFile && virtualFile instanceof vue.VueFile && scanner) {
-
-							// visualize missing required props
-							const casing = await getNameCasing(_context, _ts, map.sourceFileDocument.uri);
-							const components = checkComponentNames(_ts.module, _ts.languageService, virtualFile);
-							const componentProps: Record<string, string[]> = {};
-							let token: html.TokenType;
-							let current: {
-								unburnedRequiredProps: string[];
-								labelOffset: number;
-								insertOffset: number;
-							} | undefined;
-							while ((token = scanner.scan()) !== html.TokenType.EOS) {
-								if (token === html.TokenType.StartTag) {
-									const tagName = scanner.getTokenText();
-									const component =
-										tagName.indexOf('.') >= 0
-											? components.find(component => component === tagName.split('.')[0])
-											: components.find(component => component === tagName || hyphenate(component) === tagName);
-									const checkTag = tagName.indexOf('.') >= 0 ? tagName : component;
-									if (checkTag) {
-										componentProps[checkTag] ??= checkPropsOfTag(_ts.module, _ts.languageService, virtualFile, checkTag, options.vueCompilerOptions, true);
-										current = {
-											unburnedRequiredProps: [...componentProps[checkTag]],
-											labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
-											insertOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
-										};
-									}
-								}
-								else if (token === html.TokenType.AttributeName) {
-									if (current) {
-										let attrText = scanner.getTokenText();
-
-										if (attrText === 'v-bind') {
-											current.unburnedRequiredProps = [];
-										}
-										else {
-											// remove modifiers
-											if (attrText.indexOf('.') >= 0) {
-												attrText = attrText.split('.')[0];
-											}
-											// normalize
-											if (attrText.startsWith('v-bind:')) {
-												attrText = attrText.substring('v-bind:'.length);
-											}
-											else if (attrText.startsWith(':')) {
-												attrText = attrText.substring(':'.length);
-											}
-											else if (attrText.startsWith('v-model:')) {
-												attrText = attrText.substring('v-model:'.length);
-											}
-											else if (attrText === 'v-model') {
-												attrText = 'modelValue'; // TODO: support for experimentalModelPropName?
-											}
-
-											current.unburnedRequiredProps = current.unburnedRequiredProps.filter(propName => {
-												return attrText !== propName
-													&& attrText !== hyphenate(propName);
-											});
-										}
-									}
-								}
-								else if (token === html.TokenType.StartTagSelfClose || token === html.TokenType.StartTagClose) {
-									if (current) {
-										for (const requiredProp of current.unburnedRequiredProps) {
-											result.push({
-												label: `${requiredProp}!`,
-												paddingLeft: true,
-												position: document.positionAt(current.labelOffset),
-												kind: vscode.InlayHintKind.Parameter,
-												textEdits: [{
-													range: {
-														start: document.positionAt(current.insertOffset),
-														end: document.positionAt(current.insertOffset),
-													},
-													newText: ` :${casing.attr === AttrNameCasing.Kebab ? hyphenate(requiredProp) : requiredProp}=`,
-												}],
-											});
-										}
-										current = undefined;
-									}
-								}
-								if (token === html.TokenType.AttributeName || token === html.TokenType.AttributeValue) {
-									if (current) {
-										current.insertOffset = scanner.getTokenOffset() + scanner.getTokenLength();
-									}
-								}
-							}
-						}
-					}
-
-					return result;
-				},
-			},
-
-			doHover(document, position) {
+			async provideCompletionItems(document, position, context, token) {
 
 				if (!options.isSupportedDocument(document))
 					return;
 
-				if (_context.documents.hasVirtualFileByUri(document.uri))
+				for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
+					const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
+					if (virtualFile && virtualFile instanceof vue.VueFile) {
+						await provideHtmlData(map, virtualFile);
+					}
+				}
+
+				const htmlComplete = await templatePlugin.provideCompletionItems?.(document, position, context, token);
+				if (!htmlComplete)
+					return;
+
+				for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
+					const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
+					if (virtualFile && virtualFile instanceof vue.VueFile) {
+						afterHtmlCompletion(htmlComplete, map, virtualFile);
+					}
+				}
+
+				return htmlComplete;
+			},
+
+			async provideInlayHints(document) {
+
+				if (!options.isSupportedDocument(document))
+					return;
+
+				const enabled = await _context.configurationHost?.getConfiguration<boolean>('volar.inlayHints.missingRequiredProps') ?? true;
+				if (!enabled)
+					return;
+
+				const result: vscode.InlayHint[] = [];
+
+				for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
+					const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
+					const scanner = options.getScanner(document, templatePlugin as ReturnType<T>);
+					if (virtualFile && virtualFile instanceof vue.VueFile && scanner) {
+
+						// visualize missing required props
+						const casing = await getNameCasing(_context, _ts, map.sourceFileDocument.uri);
+						const components = checkComponentNames(_ts.module, _ts.languageService, virtualFile);
+						const componentProps: Record<string, string[]> = {};
+						let token: html.TokenType;
+						let current: {
+							unburnedRequiredProps: string[];
+							labelOffset: number;
+							insertOffset: number;
+						} | undefined;
+						while ((token = scanner.scan()) !== html.TokenType.EOS) {
+							if (token === html.TokenType.StartTag) {
+								const tagName = scanner.getTokenText();
+								const component =
+									tagName.indexOf('.') >= 0
+										? components.find(component => component === tagName.split('.')[0])
+										: components.find(component => component === tagName || hyphenate(component) === tagName);
+								const checkTag = tagName.indexOf('.') >= 0 ? tagName : component;
+								if (checkTag) {
+									componentProps[checkTag] ??= checkPropsOfTag(_ts.module, _ts.languageService, virtualFile, checkTag, options.vueCompilerOptions, true);
+									current = {
+										unburnedRequiredProps: [...componentProps[checkTag]],
+										labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
+										insertOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
+									};
+								}
+							}
+							else if (token === html.TokenType.AttributeName) {
+								if (current) {
+									let attrText = scanner.getTokenText();
+
+									if (attrText === 'v-bind') {
+										current.unburnedRequiredProps = [];
+									}
+									else {
+										// remove modifiers
+										if (attrText.indexOf('.') >= 0) {
+											attrText = attrText.split('.')[0];
+										}
+										// normalize
+										if (attrText.startsWith('v-bind:')) {
+											attrText = attrText.substring('v-bind:'.length);
+										}
+										else if (attrText.startsWith(':')) {
+											attrText = attrText.substring(':'.length);
+										}
+										else if (attrText.startsWith('v-model:')) {
+											attrText = attrText.substring('v-model:'.length);
+										}
+										else if (attrText === 'v-model') {
+											attrText = 'modelValue'; // TODO: support for experimentalModelPropName?
+										}
+										else if (attrText.startsWith('@')) {
+											attrText = 'on-' + hyphenate(attrText.substring('@'.length));
+										}
+
+										current.unburnedRequiredProps = current.unburnedRequiredProps.filter(propName => {
+											return attrText !== propName
+												&& attrText !== hyphenate(propName);
+										});
+									}
+								}
+							}
+							else if (token === html.TokenType.StartTagSelfClose || token === html.TokenType.StartTagClose) {
+								if (current) {
+									for (const requiredProp of current.unburnedRequiredProps) {
+										result.push({
+											label: `${requiredProp}!`,
+											paddingLeft: true,
+											position: document.positionAt(current.labelOffset),
+											kind: vscode.InlayHintKind.Parameter,
+											textEdits: [{
+												range: {
+													start: document.positionAt(current.insertOffset),
+													end: document.positionAt(current.insertOffset),
+												},
+												newText: ` :${casing.attr === AttrNameCasing.Kebab ? hyphenate(requiredProp) : requiredProp}=`,
+											}],
+										});
+									}
+									current = undefined;
+								}
+							}
+							if (token === html.TokenType.AttributeName || token === html.TokenType.AttributeValue) {
+								if (current) {
+									current.insertOffset = scanner.getTokenOffset() + scanner.getTokenLength();
+								}
+							}
+						}
+					}
+				}
+
+				return result;
+			},
+
+			provideHover(document, position, token) {
+
+				if (!options.isSupportedDocument(document))
+					return;
+
+				if (_context.documents.isVirtualFileUri(document.uri))
 					templatePlugin.updateCustomData([]);
 
-				return templatePlugin.doHover?.(document, position);
+				return templatePlugin.provideHover?.(document, position, token);
 			},
 
-			validation: {
-				async onSyntactic(document) {
-
-					if (!options.isSupportedDocument(document))
-						return;
-
-					const originalResult = await templatePlugin.validation?.onSyntactic?.(document);
-
-					for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
-
-						const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
-						if (!virtualFile || !(virtualFile instanceof vue.VueFile))
-							continue;
-
-						const templateErrors: vscode.Diagnostic[] = [];
-						const sfcVueTemplateCompiled = virtualFile.compiledSFCTemplate;
-
-						if (sfcVueTemplateCompiled) {
-
-							for (const error of sfcVueTemplateCompiled.errors) {
-								onCompilerError(error, vscode.DiagnosticSeverity.Error);
-							}
-
-							for (const warning of sfcVueTemplateCompiled.warnings) {
-								onCompilerError(warning, vscode.DiagnosticSeverity.Warning);
-							}
-
-							function onCompilerError(error: NonNullable<typeof sfcVueTemplateCompiled>['errors'][number], severity: vscode.DiagnosticSeverity) {
-
-								const templateHtmlRange = {
-									start: error.loc?.start.offset ?? 0,
-									end: error.loc?.end.offset ?? 0,
-								};
-								let errorMessage = error.message;
-
-								templateErrors.push({
-									range: {
-										start: document.positionAt(templateHtmlRange.start),
-										end: document.positionAt(templateHtmlRange.end),
-									},
-									severity,
-									code: error.code,
-									source: 'vue',
-									message: errorMessage,
-								});
-							}
-						}
-
-						return [
-							...originalResult ?? [],
-							...templateErrors,
-						];
-					}
-				},
-			},
-
-			async findDocumentSemanticTokens(document, range, legend) {
+			async provideSyntacticDiagnostics(document, token) {
 
 				if (!options.isSupportedDocument(document))
 					return;
 
-				const result = await templatePlugin.findDocumentSemanticTokens?.(document, range, legend) ?? [];
+				const originalResult = await templatePlugin.provideSyntacticDiagnostics?.(document, token);
+
+				for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
+
+					const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
+					if (!virtualFile || !(virtualFile instanceof vue.VueFile))
+						continue;
+
+					const templateErrors: vscode.Diagnostic[] = [];
+					const sfcVueTemplateCompiled = virtualFile.compiledSFCTemplate;
+
+					if (sfcVueTemplateCompiled) {
+
+						for (const error of sfcVueTemplateCompiled.errors) {
+							onCompilerError(error, vscode.DiagnosticSeverity.Error);
+						}
+
+						for (const warning of sfcVueTemplateCompiled.warnings) {
+							onCompilerError(warning, vscode.DiagnosticSeverity.Warning);
+						}
+
+						function onCompilerError(error: NonNullable<typeof sfcVueTemplateCompiled>['errors'][number], severity: vscode.DiagnosticSeverity) {
+
+							const templateHtmlRange = {
+								start: error.loc?.start.offset ?? 0,
+								end: error.loc?.end.offset ?? 0,
+							};
+							let errorMessage = error.message;
+
+							templateErrors.push({
+								range: {
+									start: document.positionAt(templateHtmlRange.start),
+									end: document.positionAt(templateHtmlRange.end),
+								},
+								severity,
+								code: error.code,
+								source: 'vue',
+								message: errorMessage,
+							});
+						}
+					}
+
+					return [
+						...originalResult ?? [],
+						...templateErrors,
+					];
+				}
+			},
+
+			async provideDocumentSemanticTokens(document, range, legend, token) {
+
+				if (!options.isSupportedDocument(document))
+					return;
+
+				const result = await templatePlugin.provideDocumentSemanticTokens?.(document, range, legend, token) ?? [];
 				const scanner = options.getScanner(document, templatePlugin as ReturnType<T>);
 				if (!scanner)
 					return;
@@ -341,7 +341,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 		async function provideHtmlData(map: SourceMapWithDocuments<FileRangeCapabilities>, vueSourceFile: vue.VueFile) {
 
-			const casing = await getNameCasing(_context, _ts, map.sourceFileDocument.uri);
+			const casing = await getNameCasing(_context!, _ts, map.sourceFileDocument.uri);
 
 			if (builtInData.tags) {
 				for (const tag of builtInData.tags) {
