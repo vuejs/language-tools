@@ -15,9 +15,22 @@ export function createParsedCommandLineByJson(
 ): ParsedCommandLine {
 
 	const tsConfigPath = path.join(rootDir, 'jsconfig.json');
-	const content = ts.parseJsonConfigFileContent(json, parseConfigHost, rootDir, {}, tsConfigPath, undefined, extraFileExtensions);
+	const proxyHost = proxyParseConfigHostForExtendConfigPaths(parseConfigHost);
+	const content = ts.parseJsonConfigFileContent(json, proxyHost.host, rootDir, {}, tsConfigPath, undefined, extraFileExtensions);
 
-	return createParsedCommandLineBase(ts, parseConfigHost, content, tsConfigPath, extraFileExtensions, new Set());
+	let vueOptions: Partial<VueCompilerOptions> = {};
+
+	for (const extendPath of proxyHost.extendConfigPaths.reverse()) {
+		vueOptions = {
+			...vueOptions,
+			...getVueCompilerOptions(ts, ts.readJsonConfigFile(extendPath, proxyHost.host.readFile)),
+		};
+	}
+
+	return {
+		...content,
+		vueOptions,
+	};
 }
 
 export function createParsedCommandLine(
@@ -25,20 +38,32 @@ export function createParsedCommandLine(
 	parseConfigHost: ts.ParseConfigHost,
 	tsConfigPath: string,
 	extraFileExtensions: ts.FileExtensionInfo[],
-	extendsSet = new Set<string>(),
 ): ParsedCommandLine {
 	try {
-		const config = ts.readJsonConfigFile(tsConfigPath, parseConfigHost.readFile);
-		const content = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(tsConfigPath), {}, tsConfigPath, undefined, extraFileExtensions);
+		const proxyHost = proxyParseConfigHostForExtendConfigPaths(parseConfigHost);
+		const config = ts.readJsonConfigFile(tsConfigPath, proxyHost.host.readFile);
+		const content = ts.parseJsonSourceFileConfigFileContent(config, proxyHost.host, path.dirname(tsConfigPath), {}, tsConfigPath, undefined, extraFileExtensions);
 		// fix https://github.com/johnsoncodehk/volar/issues/1786
 		// https://github.com/microsoft/TypeScript/issues/30457
 		// patching ts server broke with outDir + rootDir + composite/incremental
 		content.options.outDir = undefined;
 
-		return createParsedCommandLineBase(ts, parseConfigHost, content, tsConfigPath, extraFileExtensions, extendsSet);
+		let vueOptions: Partial<VueCompilerOptions> = {};
+
+		for (const extendPath of proxyHost.extendConfigPaths.reverse()) {
+			vueOptions = {
+				...vueOptions,
+				...getVueCompilerOptions(ts, ts.readJsonConfigFile(extendPath, proxyHost.host.readFile)),
+			};
+		}
+
+		return {
+			...content,
+			vueOptions,
+		};
 	}
 	catch (err) {
-		console.log('Failed to resolve tsconfig path:', tsConfigPath);
+		console.warn('Failed to resolve tsconfig path:', tsConfigPath);
 		return {
 			fileNames: [],
 			options: {},
@@ -48,42 +73,36 @@ export function createParsedCommandLine(
 	}
 }
 
-function createParsedCommandLineBase(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
-	parseConfigHost: ts.ParseConfigHost,
-	content: ts.ParsedCommandLine,
-	tsConfigPath: string,
-	extraFileExtensions: ts.FileExtensionInfo[],
-	extendsSet: Set<string>,
-): ParsedCommandLine {
-
-	extendsSet.add(tsConfigPath);
-
-	const folder = path.dirname(tsConfigPath);
-	const extendsArr = Array.isArray(content.raw.extends)
-		? content.raw.extends
-		: (content.raw.extends ? [content.raw.extends] : []);
-
-	let extendsVueOptions = {};
-
-	for (let extendsPath of extendsArr) {
-		try {
-			extendsPath = require.resolve(extendsPath, { paths: [folder] });
-			if (!extendsSet.has(extendsPath)) {
-				extendsVueOptions = {
-					...extendsVueOptions,
-					...createParsedCommandLine(ts, parseConfigHost, extendsPath, extraFileExtensions, extendsSet).vueOptions,
-				};
+function proxyParseConfigHostForExtendConfigPaths(parseConfigHost: ts.ParseConfigHost) {
+	const extendConfigPaths = new Set<string>();
+	const host = {
+		...parseConfigHost,
+		readFile: (fileName: string) => {
+			if (!fileName.endsWith('/package.json')) {
+				extendConfigPaths.add(fileName);
 			}
-		}
-		catch (error) {
-			console.error(error);
-		}
-	}
+			return parseConfigHost.readFile(fileName);
+		},
+	};
+	return {
+		host,
+		get extendConfigPaths() {
+			return [...extendConfigPaths];
+		},
+	};
+}
 
-	if (content.raw.vueCompilerOptions?.plugins) {
+function getVueCompilerOptions(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	tsConfigSourceFile: ts.TsConfigSourceFile,
+): Partial<VueCompilerOptions> {
 
-		const pluginPaths: string[] = content.raw.vueCompilerOptions.plugins;
+	const folder = path.dirname(tsConfigSourceFile.fileName);
+	const obj = ts.convertToObject(tsConfigSourceFile, []);
+	const vueOptions: Partial<VueCompilerOptions> = obj?.vueCompilerOptions ?? {};
+
+	if (vueOptions.plugins) {
+		const pluginPaths = vueOptions.plugins as unknown as string[];
 		const plugins = pluginPaths
 			.map<VueLanguagePlugin | undefined>((pluginPath: string) => {
 				try {
@@ -98,14 +117,8 @@ function createParsedCommandLineBase(
 			})
 			.filter((plugin): plugin is NonNullable<typeof plugin> => !!plugin);
 
-		content.raw.vueCompilerOptions.plugins = plugins;
+		vueOptions.plugins = plugins;
 	}
-
-	const vueOptions: Partial<VueCompilerOptions> = {
-		...extendsVueOptions,
-		...content.raw.vueCompilerOptions,
-	};
-
 	vueOptions.hooks = vueOptions.hooks
 		?.map(resolvePath)
 		.filter((hook): hook is NonNullable<typeof hook> => !!hook);
@@ -113,10 +126,7 @@ function createParsedCommandLineBase(
 		?.map(resolvePath)
 		.filter((module): module is NonNullable<typeof module> => !!module);
 
-	return {
-		...content,
-		vueOptions,
-	};
+	return vueOptions;
 
 	function resolvePath(scriptPath: string): string | undefined {
 		try {
