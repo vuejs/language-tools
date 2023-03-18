@@ -12,14 +12,33 @@ export default function (): LanguageServicePlugin {
 		return {
 
 			provideCodeActions(document, range, _context) {
+
 				const startOffset = document.offsetAt(range.start);
 				const endOffset = document.offsetAt(range.end);
-				if (startOffset === endOffset || !document.uri.endsWith('.vue')) return;
+				if (startOffset === endOffset) {
+					return;
+				}
+
 				// if (context.triggerKind !== 1) return
-				const [virtualFile, source] = ctx!.documents.getVirtualFileByUri(document.uri + '.ts');
-				if (!source) return;
+				const source = ctx!.documents.getSourceByUri(document.uri);
+				if (!source || !(source.root instanceof VueFile)) {
+					return;
+				}
+				const vueFile = source.root;
+
+				let virtualFile: VirtualFile | undefined;
+
+				forEachEmbeddedFile(vueFile, embedded => {
+					if (embedded.fileName === vueFile.mainScriptName) {
+						virtualFile = embedded;
+					}
+				});
+				if (!virtualFile) {
+					return;
+				}
+
 				// require explicit whole tag selection
-				const { templateAst, template, script, scriptSetup } = (source.root as VueFile).sfc;
+				const { templateAst, template, script, scriptSetup } = vueFile.sfc;
 				// todo both can be defined, pick nearest
 				const scriptStartOffset = script?.startTagEnd ?? scriptSetup?.startTagEnd!;
 				// todo handle when both null scripts
@@ -70,9 +89,9 @@ export default function (): LanguageServicePlugin {
 					return innerStart >= outerStart && innerEnd <= outerEnd;
 				};
 				const ranges = appliableMappings.map(({ sourceRange }) => {
-					return virtualFile.mappings
+					return virtualFile!.mappings
 						.filter(mapping => isRangeInside(sourceRange, mapping.sourceRange))
-						.filter(({ generatedRange: [start, end] }) => !!virtualFile.snapshot.getText(start, end).trim());
+						.filter(({ generatedRange: [start, end] }) => !!virtualFile!.snapshot.getText(start, end).trim());
 				});
 				const typescript = ctx!.typescript!;
 				const ts = typescript.module;
