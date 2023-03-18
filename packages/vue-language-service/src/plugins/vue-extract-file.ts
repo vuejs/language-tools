@@ -1,8 +1,9 @@
 import { LanguageServicePlugin } from '@volar/language-service';
 import { forEachEmbeddedFile, VirtualFile, VueFile } from '@volar/vue-language-core';
+import { join } from 'path';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 // import * as vscode from 'vscode-languageserver-protocol';
 import dedent = require('string-dedent');
-import { join } from 'path';
 
 export default function (): LanguageServicePlugin {
 
