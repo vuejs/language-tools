@@ -524,7 +524,7 @@
       ],
       "description": {
         "kind": "markdown",
-        "value": "\n在一個 `*.vue` 文件中可以為任何項目特定需求使用額外的自定義塊。舉例來說，一個用作寫文檔的 `<docs>` 塊。這裡是一些自定義塊的真實用例：\n\n- [Gridsome：`<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql：`<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n：`<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\n自定義塊的處理需要依賴工具鏈。如果你想要在構建中集成你的自定義語塊，請參見[相關工具鏈指南](https://cn.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations)獲取更多細節。\n"
+        "value": "\n在一個 `*.vue` 文件中可以為任何項目特定需求使用額外的自定義塊。舉例來說，一個用作寫文檔的 `<docs>` 塊。這裡是一些自定義塊的真實用例：\n\n- [Gridsome：`<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql：`<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n：`<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\n自定義塊的處理需要依賴工具鏈。如果你想要在構建中集成你的自定義語塊，請參見 [SFC 自定義塊集成工具鏈指南](https://cn.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations)獲取更多細節。\n"
       },
       "references": [
         {

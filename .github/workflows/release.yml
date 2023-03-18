@@ -13,11 +13,11 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
 
       - run: npm i -g pnpm ovsx
       - run: pnpm install --frozen-lockfile --no-optional
-      - run: pnpm run prepack:node && pnpm ovsx publish
+      - run: pnpm run prepack && pnpm ovsx publish
         working-directory: packages/vscode-vue
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}

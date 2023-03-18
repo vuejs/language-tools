@@ -121,6 +121,6 @@ function patchResolveModuleNames(
 		}
 	}
 	catch (e) {
-		console.warn('[volar] patchResolveModuleNames failed', e);
+		// console.warn('[volar] patchResolveModuleNames failed', e);
 	}
 }

@@ -11,7 +11,6 @@
 		"declaration": true,
 		"strict": true,
 		"alwaysStrict": false,
-		"noImplicitUseStrict": true,
 		"resolveJsonModule": true,
 		"skipLibCheck": true,
 		"noUnusedLocals": true,

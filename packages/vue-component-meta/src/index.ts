@@ -182,8 +182,7 @@ export function baseCreate(
 		}
 	});
 	const tsLs = ts.createLanguageService(proxyHost);
-	let globalPropNames: string[] = [];
-	globalPropNames = getComponentMeta(globalComponentName).props.map(prop => prop.name);
+	let globalPropNames: string[] | undefined;
 
 	return {
 		getExportNames,
@@ -228,11 +227,24 @@ export function baseCreate(
 		const componentType = typeChecker.getTypeOfSymbolAtLocation(_export, symbolNode!);
 		const symbolProperties = componentType.getProperties() ?? [];
 
+		let _props: ReturnType<typeof getProps> | undefined;
+		let _events: ReturnType<typeof getEvents> | undefined;
+		let _slots: ReturnType<typeof getSlots> | undefined;
+		let _exposed: ReturnType<typeof getExposed> | undefined;
+
 		return {
-			props: getProps(),
-			events: getEvents(),
-			slots: getSlots(),
-			exposed: getExposed(),
+			get props() {
+				return _props ?? (_props = getProps());
+			},
+			get events() {
+				return _events ?? (_events = getEvents());
+			},
+			get slots() {
+				return _slots ?? (_slots = getSlots());
+			},
+			get exposed() {
+				return _exposed ?? (_exposed = getExposed());
+			},
 		};
 
 		function getProps() {
@@ -257,8 +269,11 @@ export function baseCreate(
 			}
 
 			// fill global
-			for (const prop of result) {
-				prop.global = globalPropNames.includes(prop.name);
+			if (componentPath !== globalComponentName) {
+				globalPropNames ??= getComponentMeta(globalComponentName).props.map(prop => prop.name);
+				for (const prop of result) {
+					prop.global = globalPropNames.includes(prop.name);
+				}
 			}
 
 			// fill defaults
@@ -342,8 +357,8 @@ export function baseCreate(
 		function getExposed() {
 
 			const exposed = symbolProperties.filter(prop =>
-				// only exposed props will have a syntheticOrigin
-				Boolean((prop as any).syntheticOrigin)
+				// only exposed props will not have a valueDeclaration
+				!(prop as any).valueDeclaration
 			);
 
 			if (exposed.length) {
