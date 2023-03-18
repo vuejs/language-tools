@@ -20,7 +20,7 @@ export default function (): LanguageServicePlugin {
 				}
 
 				// if (context.triggerKind !== 1) return
-				const vueFile = ctx!.documents.getVirtualFileByUri(document.uri);
+				const [vueFile] = ctx!.documents.getVirtualFileByUri(document.uri);
 				if (!vueFile || !(vueFile instanceof VueFile)) {
 					return;
 				}
