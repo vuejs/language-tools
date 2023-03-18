@@ -20,11 +20,10 @@ export default function (): LanguageServicePlugin {
 				}
 
 				// if (context.triggerKind !== 1) return
-				const source = ctx!.documents.getSourceByUri(document.uri);
-				if (!source || !(source.root instanceof VueFile)) {
+				const vueFile = ctx!.documents.getVirtualFileByUri(document.uri);
+				if (!vueFile || !(vueFile instanceof VueFile)) {
 					return;
 				}
-				const vueFile = source.root;
 
 				let virtualFile: VirtualFile | undefined;
 
@@ -73,7 +72,7 @@ export default function (): LanguageServicePlugin {
 				};
 				if (!isExactTagSelection()) return;
 				let templateFormatScript: VirtualFile | undefined;
-				forEachEmbeddedFile(source.root, embedded => {
+				forEachEmbeddedFile(vueFile, embedded => {
 					if (embedded.fileName.endsWith('.template_format.ts')) {
 						templateFormatScript = embedded;
 					}
