@@ -227,11 +227,24 @@ export function baseCreate(
 		const componentType = typeChecker.getTypeOfSymbolAtLocation(_export, symbolNode!);
 		const symbolProperties = componentType.getProperties() ?? [];
 
+		let _props: ReturnType<typeof getProps> | undefined;
+		let _events: ReturnType<typeof getEvents> | undefined;
+		let _slots: ReturnType<typeof getSlots> | undefined;
+		let _exposed: ReturnType<typeof getExposed> | undefined;
+
 		return {
-			props: getProps(),
-			events: getEvents(),
-			slots: getSlots(),
-			exposed: getExposed(),
+			get props() {
+				return _props ?? (_props = getProps());
+			},
+			get events() {
+				return _events ?? (_events = getEvents());
+			},
+			get slots() {
+				return _slots ?? (_slots = getSlots());
+			},
+			get exposed() {
+				return _exposed ?? (_exposed = getExposed());
+			},
 		};
 
 		function getProps() {

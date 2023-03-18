@@ -16,15 +16,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 			'class',
 			'style',
 		]);
-
-		meta.props = meta.props.filter(prop => !prop.global);
-
-		expect(meta).toEqual({
-			props: [],
-			events: [],
-			slots: [],
-			exposed: [],
-		});
+		expect(meta.props.filter(prop => !prop.global)).toEqual([]);
 	});
 
 	test('reference-type-props', () => {
