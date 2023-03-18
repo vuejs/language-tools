@@ -1,12 +1,12 @@
 # Changelog
 
-## 1.3.2 (2023/3/14) - pre-release
+## 1.3.3 (2023/3/19) - pre-release
 
-- feat(language-server): declare workspaceFolders support in server capabilities for IDEs (https://github.com/volarjs/volar.js/pull/18) - thanks @the-mikedavis
-- feat(vue-tsc): supports incremental emit (https://github.com/volarjs/volar.js/pull/17) - thanks @blake-newman
-- feat: allow code actions to run rename command after applying ([#2498](https://github.com/johnsoncodehk/volar/issues/2498)) (https://github.com/volarjs/plugins/pull/29) - thanks @zardoy
-- perf(vue-component-meta): faster initialization ([#2506](https://github.com/johnsoncodehk/volar/issues/2506)) - thanks @stafyniaksacha
-- perf: search tsconfig on demand (https://github.com/volarjs/volar.js/pull/16)
+- feat: disable `missingRequiredProps`, `eventArgumentInInlineHandlers` by default
+- fix: `vueCompilerOptions` cannot extends from non-relative paths([#2345](https://github.com/johnsoncodehk/volar/issues/2345)) - thanks @dschmidt
+- fix(vue-component-meta): `exposed` missing when use TS 5.0
+- perf(vue-component-meta): `props`, `events`, `slots`, `exposed` lazy calculation
+- perf: provide change range of virtual file snapshot for typescript program
 
 ---
 
@@ -43,6 +43,14 @@
 		<a href="https://opencollective.com/volarjs">Open Collective</a>
 	</h5>
 </p>
+
+## 1.3.2 (2023/3/14) - pre-release
+
+- feat(language-server): declare workspaceFolders support in server capabilities for IDEs (https://github.com/volarjs/volar.js/pull/18) - thanks @the-mikedavis
+- feat(vue-tsc): supports incremental emit (https://github.com/volarjs/volar.js/pull/17) - thanks @blake-newman
+- feat: allow code actions to run rename command after applying ([#2498](https://github.com/johnsoncodehk/volar/issues/2498)) (https://github.com/volarjs/plugins/pull/29) - thanks @zardoy
+- perf(vue-component-meta): faster initialization ([#2506](https://github.com/johnsoncodehk/volar/issues/2506)) - thanks @stafyniaksacha
+- perf: search tsconfig on demand (https://github.com/volarjs/volar.js/pull/16)
 
 ## 1.3.0 (2023/3/10) - pre-release
 
