@@ -1,6 +1,7 @@
 import { LanguageServicePlugin } from '@volar/language-service';
-import { VueFile } from '@volar/vue-language-core';
+import { VueFile, walkElementNodes } from '@volar/vue-language-core';
 import { AttributeNode, NodeTypes, RootNode } from 'packages/vue-language-core/src/utils/vue2TemplateCompiler';
+import type * as vscode from 'vscode-languageserver-protocol';
 
 export default function (): LanguageServicePlugin {
 	return (ctx) => {
@@ -21,31 +22,38 @@ export default function (): LanguageServicePlugin {
 				if (!templateAst) return;
 
 				const templateStartOffset = template!.startTagEnd;
-				const templateNode = findTemplateNode(templateAst.children, startOffset - templateStartOffset, endOffset - templateStartOffset);
-				if (
-					templateNode &&
-					templateNode.type === NodeTypes.ATTRIBUTE &&
-					templateNode.value
-				) {
-					const addVBindPos = document.positionAt(templateStartOffset + templateNode.loc.start.offset);
-					return [{
-						title: 'Add v-bind to attribute',
-						kind: 'refactor.rewrite.addVBind',
-						edit: {
-							changes: {
-								[document.uri]: [{
-									newText: ':',
-									range: {
-										start: addVBindPos,
-										end: addVBindPos
-									},
-								}]
-							},
-						},
-					}];
-				}
+				const result: vscode.CodeAction[] = [];
 
-				return [];
+				walkElementNodes(templateAst, node => {
+					for (const prop of node.props) {
+						if (
+							prop.type === NodeTypes.ATTRIBUTE
+							&& prop.value
+							&& startOffset - templateStartOffset >= prop.loc.start.offset
+							&& endOffset - templateStartOffset <= prop.loc.end.offset
+						) {
+							console.log('in');
+							const addVBindPos = document.positionAt(templateStartOffset + prop.loc.start.offset);
+							result.push({
+								title: 'Add v-bind to attribute',
+								kind: 'refactor.rewrite.addVBind',
+								edit: {
+									changes: {
+										[document.uri]: [{
+											newText: ':',
+											range: {
+												start: addVBindPos,
+												end: addVBindPos
+											},
+										}]
+									},
+								},
+							});
+						}
+					}
+				});
+
+				return result;
 			}
 		};
 	};
