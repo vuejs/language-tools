@@ -272,7 +272,7 @@ function resolvePlugins(
 	plugins['pug-beautify'] ??= createPugFormatPlugin();
 	plugins.json ??= createJsonPlugin(settings?.json);
 	plugins['typescript/twoslash-queries'] ??= createTsTqPlugin();
-	plugins['vue/toggleVBindCodeaction'] = createToggleVBindCodeaction();
+	plugins['vue/toggleVBindCodeaction'] ??= createToggleVBindCodeaction();
 	plugins['vue/referencesCodeLens'] ??= createReferencesCodeLensPlugin();
 	plugins['vue/autoInsertDotValue'] ??= createAutoDotValuePlugin();
 	plugins['vue/twoslash-queries'] ??= createTwoslashQueries();
