@@ -32,7 +32,6 @@ export default function (): LanguageServicePlugin {
 							&& startOffset - templateStartOffset >= prop.loc.start.offset
 							&& endOffset - templateStartOffset <= prop.loc.end.offset
 						) {
-							console.log('in');
 							const addVBindPos = document.positionAt(templateStartOffset + prop.loc.start.offset);
 							result.push({
 								title: 'Add v-bind to attribute',
