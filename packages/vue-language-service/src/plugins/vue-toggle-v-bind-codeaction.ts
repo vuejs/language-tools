@@ -25,6 +25,9 @@ export default function (): LanguageServicePlugin {
 				const result: vscode.CodeAction[] = [];
 
 				walkElementNodes(templateAst, node => {
+					if (startOffset > templateStartOffset + node.loc.end.offset || endOffset < templateStartOffset + node.loc.start.offset) {
+						return;
+					}
 					for (const prop of node.props) {
 						if (
 							prop.type === NodeTypes.ATTRIBUTE
