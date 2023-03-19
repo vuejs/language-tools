@@ -1,6 +1,6 @@
 import { LanguageServicePlugin } from '@volar/language-service';
 import { VueFile, walkElementNodes } from '@volar/vue-language-core';
-import { AttributeNode, NodeTypes, RootNode } from 'packages/vue-language-core/src/utils/vue2TemplateCompiler';
+import { NodeTypes } from 'packages/vue-language-core/src/utils/vue2TemplateCompiler';
 import type * as vscode from 'vscode-languageserver-protocol';
 
 export default function (): LanguageServicePlugin {
@@ -28,11 +28,21 @@ export default function (): LanguageServicePlugin {
 					for (const prop of node.props) {
 						if (
 							prop.type === NodeTypes.ATTRIBUTE
-							&& prop.value
 							&& startOffset - templateStartOffset >= prop.loc.start.offset
 							&& endOffset - templateStartOffset <= prop.loc.end.offset
 						) {
 							const addVBindPos = document.positionAt(templateStartOffset + prop.loc.start.offset);
+							let addValueEdit: vscode.TextEdit | undefined;
+							if (!prop.value) {
+								const addValuePos = document.positionAt(templateStartOffset + prop.loc.end.offset);
+								addValueEdit = {
+									newText: '=""',
+									range: {
+										start: addValuePos,
+										end: addValuePos
+									},
+								};
+							}
 							result.push({
 								title: 'Add v-bind to attribute',
 								kind: 'refactor.rewrite.addVBind',
@@ -44,7 +54,7 @@ export default function (): LanguageServicePlugin {
 												start: addVBindPos,
 												end: addVBindPos
 											},
-										}]
+										}, ...addValueEdit ? [addValueEdit] : []]
 									},
 								},
 							});
@@ -56,36 +66,4 @@ export default function (): LanguageServicePlugin {
 			}
 		};
 	};
-}
-
-type Children = RootNode['children'];
-
-function getNodeChildren(node: Children[number]) {
-	switch (node.type) {
-		case NodeTypes.ELEMENT:
-			return [...node.props, ...node.children];
-		case NodeTypes.ELEMENT:
-		case NodeTypes.IF_BRANCH:
-		case NodeTypes.FOR:
-			return node.children;
-		case NodeTypes.IF:
-			return node.branches;
-	}
-}
-
-export function findTemplateNode(children: Children, startOffset: number, endOffset: number): Children[number] | AttributeNode | void {
-	for (const child of children) {
-		const {
-			start: { offset: start },
-			end: { offset: end },
-		} = child.loc;
-		if (startOffset >= start && endOffset <= end) {
-			const children = getNodeChildren(child);
-			if (children) {
-				return findTemplateNode(children as typeof child & any[], startOffset, endOffset) ?? child;
-			} else {
-				return child;
-			}
-		}
-	}
 }
