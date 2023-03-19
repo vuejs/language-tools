@@ -22,11 +22,10 @@ export default function (): LanguageServicePlugin {
 
 				const templateStartOffset = template!.startTagEnd;
 				const templateNode = findTemplateNode(templateAst.children, startOffset - templateStartOffset, endOffset - templateStartOffset);
-				const propInterpolationStart = [':', 'v-', '@'];
 				if (
 					templateNode &&
 					templateNode.type === NodeTypes.ATTRIBUTE &&
-					(!templateNode.value || propInterpolationStart.every(start => !templateNode.value!.content.startsWith(start)))
+					templateNode.value
 				) {
 					const addVBindPos = document.positionAt(templateStartOffset + templateNode.loc.start.offset);
 					return [{
