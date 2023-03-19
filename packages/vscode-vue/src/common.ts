@@ -251,7 +251,7 @@ async function getInitializationOptions(
 		// volar
 		configFilePath: vscode.workspace.getConfiguration('volar').get<string>('vueserver.configFilePath'),
 		serverMode,
-		diagnosticModel: serverMode === ServerMode.Syntactic ? DiagnosticModel.None : diagnosticModel() === 'pull' ? DiagnosticModel.Pull : DiagnosticModel.Push,
+		diagnosticModel: diagnosticModel() === 'pull' ? DiagnosticModel.Pull : DiagnosticModel.Push,
 		textDocumentSync: textDocumentSync ? {
 			incremental: lsp.TextDocumentSyncKind.Incremental,
 			full: lsp.TextDocumentSyncKind.Full,
