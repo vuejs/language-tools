@@ -22,6 +22,7 @@ import { hyphenate } from '@vue/shared';
 import createPugFormatPlugin from '@volar-plugins/pug-beautify';
 import createAutoWrapParenthesesPlugin from './plugins/vue-autoinsert-parentheses';
 import createAutoAddSpacePlugin from './plugins/vue-autoinsert-space';
+import createToggleVBindCodeaction from './plugins/vue-toggle-v-bind-codeaction';
 import { TagNameCasing, VueCompilerOptions } from './types';
 import { getNameCasing } from './ideFeatures/nameCasing';
 
@@ -271,6 +272,7 @@ function resolvePlugins(
 	plugins['pug-beautify'] ??= createPugFormatPlugin();
 	plugins.json ??= createJsonPlugin(settings?.json);
 	plugins['typescript/twoslash-queries'] ??= createTsTqPlugin();
+	plugins['vue/toggleVBindCodeaction'] = createToggleVBindCodeaction();
 	plugins['vue/referencesCodeLens'] ??= createReferencesCodeLensPlugin();
 	plugins['vue/autoInsertDotValue'] ??= createAutoDotValuePlugin();
 	plugins['vue/twoslash-queries'] ??= createTwoslashQueries();
