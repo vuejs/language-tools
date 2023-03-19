@@ -1,6 +1,6 @@
 import { LanguageServicePlugin } from '@volar/language-service';
 import { VueFile } from '@volar/vue-language-core';
-import { AttributeNode, NodeTypes } from 'packages/vue-language-core/src/utils/vue2TemplateCompiler';
+import { AttributeNode, NodeTypes, RootNode } from 'packages/vue-language-core/src/utils/vue2TemplateCompiler';
 
 export default function (): LanguageServicePlugin {
 	return (ctx) => {
@@ -19,26 +19,9 @@ export default function (): LanguageServicePlugin {
 				const { templateAst, template } = vueFile.sfc;
 
 				if (!templateAst) return;
-				type Children = typeof templateAst.children;
 
 				const templateStartOffset = template!.startTagEnd;
-				function find(children: Children): Children[number] | AttributeNode | void {
-					for (const child of children) {
-						const {
-							start: { offset: start },
-							end: { offset: end },
-						} = child.loc;
-						if (startOffset >= start + templateStartOffset && endOffset <= end + templateStartOffset) {
-							const children = child.type === NodeTypes.ELEMENT ? [...child.props, ...child.children] : 'children' in child && typeof child.children === 'object' && Array.isArray(child.children) && child.children;
-							if (children) {
-								return find(children as typeof child & any[]) ?? child;
-							} else {
-								return child;
-							}
-						}
-					}
-				}
-				const templateNode = find(templateAst.children);
+				const templateNode = findTemplateNode(templateAst.children, startOffset - templateStartOffset, endOffset - templateStartOffset);
 				const propInterpolationStart = [':', 'v-', '@'];
 				if (
 					templateNode &&
@@ -67,4 +50,36 @@ export default function (): LanguageServicePlugin {
 			}
 		};
 	};
+}
+
+type Children = RootNode['children'];
+
+function getNodeChildren(node: Children[number]) {
+	switch (node.type) {
+		case NodeTypes.ELEMENT:
+			return [...node.props, ...node.children];
+		case NodeTypes.ELEMENT:
+		case NodeTypes.IF_BRANCH:
+		case NodeTypes.FOR:
+			return node.children;
+		case NodeTypes.IF:
+			return node.branches;
+	}
+}
+
+export function findTemplateNode(children: Children, startOffset: number, endOffset: number): Children[number] | AttributeNode | void {
+	for (const child of children) {
+		const {
+			start: { offset: start },
+			end: { offset: end },
+		} = child.loc;
+		if (startOffset >= start && endOffset <= end) {
+			const children = getNodeChildren(child);
+			if (children) {
+				return findTemplateNode(children as typeof child & any[], startOffset, endOffset) ?? child;
+			} else {
+				return child;
+			}
+		}
+	}
 }
