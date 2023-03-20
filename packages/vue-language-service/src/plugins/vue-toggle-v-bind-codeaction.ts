@@ -1,6 +1,6 @@
 import { LanguageServicePlugin } from '@volar/language-service';
 import { VueFile, walkElementNodes } from '@volar/vue-language-core';
-import { NodeTypes } from 'packages/vue-language-core/src/utils/vue2TemplateCompiler';
+import { NodeTypes } from 'packages/vue-language-core/out/utils/vue2TemplateCompiler';
 import type * as vscode from 'vscode-languageserver-protocol';
 
 export default function (): LanguageServicePlugin {
