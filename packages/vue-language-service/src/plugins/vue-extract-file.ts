@@ -1,9 +1,8 @@
 import { LanguageServicePlugin } from '@volar/language-service';
-import { forEachEmbeddedFile, VirtualFile, VueFile } from '@volar/vue-language-core';
+import { forEachEmbeddedFile, VirtualFile, VueFile, walkElementNodes } from '@volar/vue-language-core';
+import { ElementNode } from 'packages/vue-language-core/src/utils/vue2TemplateCompiler';
 import { join } from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-// import * as vscode from 'vscode-languageserver-protocol';
-import dedent = require('string-dedent');
 
 export default function (): LanguageServicePlugin {
 
@@ -19,7 +18,6 @@ export default function (): LanguageServicePlugin {
 					return;
 				}
 
-				// if (context.triggerKind !== 1) return
 				const [vueFile] = ctx!.documents.getVirtualFileByUri(document.uri);
 				if (!vueFile || !(vueFile instanceof VueFile)) {
 					return;
@@ -38,36 +36,28 @@ export default function (): LanguageServicePlugin {
 
 				// require explicit whole tag selection
 				const { templateAst, template, script, scriptSetup } = vueFile.sfc;
-				// todo both can be defined, pick nearest
-				const scriptStartOffset = script?.startTagEnd ?? scriptSetup?.startTagEnd!;
+				const scriptStartOffset = scriptSetup?.startTagEnd ?? script?.startTagEnd!;
 				// todo handle when both null scripts
 				if (!templateAst) return;
-				type Children = typeof templateAst.children;
 
 				const templateStartOffset = template!.startTagEnd;
-				function find(children: Children): Children[number] | void {
-					for (const child of children) {
-						const {
-							start: { offset: start },
-							end: { offset: end },
-						} = child.loc;
-						if (start + templateStartOffset >= startOffset && end + templateStartOffset <= endOffset) {
-							if (start + templateStartOffset === startOffset && end + templateStartOffset === endOffset) return child;
-							if ('children' in child && typeof child.children === 'object' && Array.isArray(child.children)) {
-								return find(child.children as typeof child.children & any[]) ?? child;
-							} else {
-								return child;
-							}
-						}
+
+				let templateNode: ElementNode | undefined;
+				walkElementNodes(templateAst, (node) => {
+					const {
+						start: { offset: start },
+						end: { offset: end },
+					} = node.loc;
+					if (start + templateStartOffset === startOffset && end + templateStartOffset === endOffset) {
+						templateNode = node;
 					}
-				}
-				const templateNode = find(templateAst.children);
+				});
 				if (!templateNode) return;
 				const isExactTagSelection = () => {
 					const {
 						start: { offset: start },
 						end: { offset: end },
-					} = templateNode.loc;
+					} = templateNode!.loc;
 					return start + templateStartOffset === startOffset && end + templateStartOffset === endOffset;
 				};
 				if (!isExactTagSelection()) return;
@@ -92,22 +82,22 @@ export default function (): LanguageServicePlugin {
 						.filter(mapping => isRangeInside(sourceRange, mapping.sourceRange))
 						.filter(({ generatedRange: [start, end] }) => !!virtualFile!.snapshot.getText(start, end).trim());
 				});
-				const typescript = ctx!.typescript!;
-				const ts = typescript.module;
-				const sourceFile = typescript.languageService.getProgram()!.getSourceFile(virtualFile.fileName)!;
-				const compact = <T>(arr: (T | undefined)[]) => arr.filter(Boolean) as T[];
+				const { languageService, languageServiceHost } = ctx!.typescript!;
+				const ts = ctx!.typescript!.module;
+				const sourceFile = virtualFile && languageService.getProgram()!.getSourceFile(virtualFile.fileName)!;
+				const sourceFileKind = virtualFile && languageServiceHost.getScriptKind?.(virtualFile.fileName);
 				const handledProps = new Set<string>();
-				const toExtract = compact(
+				const toExtract = sourceFile && compact(
 					ranges.flatMap(generatedRanges => {
 						const nodes = generatedRanges.map(({ generatedRange }) => {
-							return findChildContainingPosition(ts, sourceFile, generatedRange[0]);
+							return findTypeScriptNode(ts, sourceFile, generatedRange[0]);
 						}).filter(node => node && !ts.isArrayLiteralExpression(node));
 						return nodes.map(node => {
 							if (!node || !ts.isIdentifier(node)) return;
 							const name = node.text;
 							if (handledProps.has(name)) return;
 							handledProps.add(name);
-							const checker = typescript.languageService.getProgram()!.getTypeChecker()!;
+							const checker = languageService.getProgram()!.getTypeChecker()!;
 							const type = checker.getTypeAtLocation(node);
 							const signatures = checker.getSignaturesOfType(type, ts.SignatureKind.Call);
 							const typeString = checker.typeToString(type, node, ts.TypeFormatFlags.NoTruncation);
@@ -119,25 +109,38 @@ export default function (): LanguageServicePlugin {
 						});
 					}),
 				);
-				const props = toExtract.filter(e => !e.isMethod);
+				const props = toExtract?.filter(e => !e.isMethod);
 				const propTypes = props.map(p => `${p.name}: ${p.type}`);
 				const propNames = props.map(p => p.name);
-				const emits = toExtract.filter(e => e.isMethod);
+				const emits = toExtract?.filter(e => e.isMethod);
 				const emitTypes = emits.map(p => `${p.name}: ${p.type}`);
 				const emitNames = emits.map(p => p.name);
-				const newFileContents = (dedent as any)`
-					<script setup lang="ts">
-					const { ${propNames.join(', ')} } = defineProps<{
+				// todo if script not defined, then what to use?
+				const scriptAttributes = compact([
+					scriptSetup && 'setup',
+					`lang="${sourceFileKind === ts.ScriptKind.JS ? 'js' : sourceFileKind === ts.ScriptKind.TSX ? 'tsx' : 'ts'}"`
+				]);
+				const scriptContents = compact([
+					props?.length && `const { ${propNames.join(', ')} } = defineProps<{
 						${propTypes.join('\n\t\t')}
-					}>()
-					const { ${emitNames.join(', ')} } = defineEmits<{
+					}>()`,
+					emits?.length && `const { ${emitNames.join(', ')} } = defineEmits<{
 						${emitTypes.join('\n\t\t')}
-					}>()
-					</script>
-					<template>
-						${templateNode.loc.source}
-					</template>
-					`;
+					}>()`
+				]);
+
+				const newScriptTag = scriptContents.length ? `
+				<script${scriptAttributes.length ? ` ${scriptAttributes.join(' ')}` : ''}>
+				${scriptContents.map(s => `\t${s}`).join('\n')}
+				</script>` : '';
+
+				const newTemplateContents = `
+				<template>
+				${templateNode.loc.source.split('\n').map(line => `\t${line}`).join('\n')}
+				</template>`;
+
+				// todo replace \t with current editor indentation
+				const newFileContents = dedentString(templateStartOffset > scriptStartOffset ? `${newScriptTag}${newTemplateContents}` : `${newTemplateContents}${newScriptTag}`);
 				let lastImportNode: ts.Node = sourceFile;
 
 				for (const statement of sourceFile.statements) {
@@ -205,13 +208,26 @@ export default function (): LanguageServicePlugin {
 	};
 }
 
-function findChildContainingPosition(typescript: typeof import("typescript/lib/tsserverlibrary"), sourceFile: ts.SourceFile, position: number): ts.Node | undefined {
+function findTypeScriptNode(ts: typeof import("typescript/lib/tsserverlibrary"), sourceFile: ts.SourceFile, position: number): ts.Node | undefined {
 	function find(node: ts.Node): ts.Node | undefined {
 		if (position >= node.getStart() && position < node.getEnd()) {
-			return typescript.forEachChild(node, find) || node;
+			return ts.forEachChild(node, find) || node;
 		}
 
 		return;
 	}
 	return find(sourceFile);
+}
+
+/** Also removes leading empty lines */
+function dedentString(input: string) {
+	let lines = input.split(/\n/g);
+	const firstNonEmptyLineIndex = lines.findIndex(line => line) ?? 0;
+	lines = lines.slice(firstNonEmptyLineIndex);
+	const initialIndentation = lines[0]!.match(/\s*/)![0];
+	return lines.map(line => initialIndentation && line.startsWith(initialIndentation) ? line.slice(initialIndentation.length) : line).join('\n');
+}
+
+function compact<T>(arr: (T | undefined | null | false)[]) {
+	return arr.filter(Boolean) as T[];
 }
