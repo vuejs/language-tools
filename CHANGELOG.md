@@ -1,12 +1,10 @@
 # Changelog
 
-## 1.3.3 (2023/3/19) - pre-release
+## 1.3.4 (2023/3/20) - pre-release
 
-- feat: disable `missingRequiredProps`, `eventArgumentInInlineHandlers` by default
-- fix: `vueCompilerOptions` cannot extends from non-relative paths([#2345](https://github.com/johnsoncodehk/volar/issues/2345)) - thanks @dschmidt
-- fix(vue-component-meta): `exposed` missing when use TS 5.0
-- perf(vue-component-meta): `props`, `events`, `slots`, `exposed` lazy calculation
-- perf: provide change range of virtual file snapshot for typescript program
+- fix: some environments throws `Failed to resolve tsconfig path` (https://github.com/vuejs/language-tools/pull/2471#issuecomment-1475350770)
+- fix: diagnostics break when changing code (https://github.com/yaegassy/coc-volar/pull/262#issuecomment-1475468100)
+- fix: all server capabilities loss in IDEs other than VSCode ([#2526](https://github.com/johnsoncodehk/volar/issues/2526))
 
 ---
 
@@ -43,6 +41,14 @@
 		<a href="https://opencollective.com/volarjs">Open Collective</a>
 	</h5>
 </p>
+
+## 1.3.3 (2023/3/19) - pre-release
+
+- feat: disable `missingRequiredProps`, `eventArgumentInInlineHandlers` by default
+- fix: `vueCompilerOptions` cannot extends from non-relative paths ([#2345](https://github.com/johnsoncodehk/volar/issues/2345)) - thanks @dschmidt
+- fix(vue-component-meta): `exposed` missing when use TS 5.0
+- perf(vue-component-meta): `props`, `events`, `slots`, `exposed` lazy calculation
+- perf: provide change range of virtual file snapshot for typescript program
 
 ## 1.3.2 (2023/3/14) - pre-release
 
