@@ -32,7 +32,6 @@
 		"@vue/compiler-dom": "^3.2.47",
 		"@vue/reactivity": "^3.2.47",
 		"@vue/shared": "^3.2.47",
-		"string-dedent": "^3.0.1",
 		"vscode-html-languageservice": "^5.0.4",
 		"vscode-json-languageservice": "^5.2.0",
 		"vscode-languageserver-protocol": "^3.17.3",

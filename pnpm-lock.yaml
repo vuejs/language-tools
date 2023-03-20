@@ -155,7 +155,6 @@ importers:
       '@vue/compiler-dom': ^3.2.47
       '@vue/reactivity': ^3.2.47
       '@vue/shared': ^3.2.47
-      string-dedent: ^3.0.1
       vscode-html-languageservice: ^5.0.4
       vscode-json-languageservice: ^5.2.0
       vscode-languageserver-protocol: ^3.17.3
@@ -177,7 +176,6 @@ importers:
       '@vue/compiler-dom': 3.2.47
       '@vue/reactivity': 3.2.47
       '@vue/shared': 3.2.47
-      string-dedent: 3.0.1
       vscode-html-languageservice: 5.0.4
       vscode-json-languageservice: 5.3.2
       vscode-languageserver-protocol: 3.17.3
@@ -5172,11 +5170,6 @@ packages:
       minipass: 3.3.6
     dev: false
     optional: true
-
-  /string-dedent/3.0.1:
-    resolution: {integrity: sha512-A2zCXSgpPrpFi1lDJlDwIPYakBWeDtQZ8ZBKssB8M/WbtNEKTzsl1yCDRmHx55jSB27xZDQ6NOtRYekESWx6fw==}
-    engines: {node: '>=0.12.0'}
-    dev: false
 
   /string-width/1.0.2:
     resolution: {integrity: sha512-0XsVpQLnVCXHJfyEs8tC0zpTVIr5PKKsQtkT29IwupnPTjtPmQ3xT/4yCREF9hYkV/3M3kzcUTSAZT6a6h81tw==}
