@@ -258,12 +258,12 @@ export class VueFile implements VirtualFile {
 							const oldText = oldSnapshot.getText(0, oldSnapshot.getLength());
 							for (let start = 0; start < oldText.length && start < newText.length; start++) {
 								if (oldText[start] !== newText[start]) {
-									let end = start;
-									for (let i = oldText.length - 1; i > start; i--) {
-										if (oldText[i] !== newText[i + (newText.length - oldText.length)]) {
-											end = i;
+									let end = oldText.length;
+									for (let i = 0; i < oldText.length - start && i < newText.length - start; i++) {
+										if (oldText[oldText.length - i - 1] !== newText[newText.length - i - 1]) {
 											break;
 										}
+										end--;
 									}
 									let length = end - start;
 									let newLength = length + (newText.length - oldText.length);
