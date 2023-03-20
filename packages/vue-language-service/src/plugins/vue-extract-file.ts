@@ -1,7 +1,7 @@
 import { LanguageServicePlugin } from '@volar/language-service';
 import { forEachEmbeddedFile, VirtualFile, VueFile, walkElementNodes } from '@volar/vue-language-core';
-import { ElementNode } from 'packages/vue-language-core/src/utils/vue2TemplateCompiler';
 import { join } from 'path';
+import type { ElementNode } from 'packages/vue-language-core/src/utils/vue2TemplateCompiler';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
 export default function (): LanguageServicePlugin {
@@ -118,8 +118,8 @@ export default function (): LanguageServicePlugin {
 					`lang="${sourceFileKind === ts.ScriptKind.JS ? 'js' : sourceFileKind === ts.ScriptKind.TSX ? 'tsx' : 'ts'}"`
 				]);
 				const scriptContents = compact([
-					props?.length && `const { ${propNames.join(', ')} } = defineProps<{ \n\t${propTypes.join('\n\t\t')}\n}>()`,
-					emits?.length && `const { ${emitNames.join(', ')} } = defineEmits<{ \n\t${emitTypes.join('\n\t\t')}\n}>()`
+					props?.length && `const { ${propNames.join(', ')} } = defineProps<{ \n\t${propTypes.join('\n\t')}\n}>()`,
+					emits?.length && `const { ${emitNames.join(', ')} } = defineEmits<{ \n\t${emitTypes.join('\n\t')}\n}>()`
 				]);
 
 				const initialIndentSetting = await ctx!.configurationHost!.getConfiguration('volar.format.initialIndent') as Record<string, boolean>;
