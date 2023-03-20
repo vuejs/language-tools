@@ -10,7 +10,7 @@ export default function (): LanguageServicePlugin {
 
 		return {
 
-			provideCodeActions(document, range, _context) {
+			async provideCodeActions(document, range, _context) {
 
 				const startOffset = document.offsetAt(range.start);
 				const endOffset = document.offsetAt(range.end);
@@ -34,10 +34,8 @@ export default function (): LanguageServicePlugin {
 					return;
 				}
 
-				// require explicit whole tag selection
 				const { templateAst, template, script, scriptSetup } = vueFile.sfc;
 				const scriptStartOffset = scriptSetup?.startTagEnd ?? script?.startTagEnd!;
-				// todo handle when both null scripts
 				if (!templateAst) return;
 
 				const templateStartOffset = template!.startTagEnd;
@@ -77,7 +75,7 @@ export default function (): LanguageServicePlugin {
 					const [innerStart, innerEnd] = innerRange;
 					return innerStart >= outerStart && innerEnd <= outerEnd;
 				};
-				const ranges = appliableMappings.map(({ sourceRange }) => {
+				const interpolationRanges = virtualFile && appliableMappings.map(({ sourceRange }) => {
 					return virtualFile!.mappings
 						.filter(mapping => isRangeInside(sourceRange, mapping.sourceRange))
 						.filter(({ generatedRange: [start, end] }) => !!virtualFile!.snapshot.getText(start, end).trim());
@@ -87,8 +85,8 @@ export default function (): LanguageServicePlugin {
 				const sourceFile = virtualFile && languageService.getProgram()!.getSourceFile(virtualFile.fileName)!;
 				const sourceFileKind = virtualFile && languageServiceHost.getScriptKind?.(virtualFile.fileName);
 				const handledProps = new Set<string>();
-				const toExtract = sourceFile && compact(
-					ranges.flatMap(generatedRanges => {
+				const toExtract = interpolationRanges && compact(
+					interpolationRanges.flatMap(generatedRanges => {
 						const nodes = generatedRanges.map(({ generatedRange }) => {
 							return findTypeScriptNode(ts, sourceFile, generatedRange[0]);
 						}).filter(node => node && !ts.isArrayLiteralExpression(node));
@@ -103,7 +101,7 @@ export default function (): LanguageServicePlugin {
 							const typeString = checker.typeToString(type, node, ts.TypeFormatFlags.NoTruncation);
 							return {
 								name,
-								type: typeString.startsWith('__VLS_') ? 'any' : typeString,
+								type: typeString.includes('__VLS_') ? 'any' : typeString,
 								isMethod: signatures.length > 0,
 							};
 						});
@@ -115,32 +113,24 @@ export default function (): LanguageServicePlugin {
 				const emits = toExtract?.filter(e => e.isMethod);
 				const emitTypes = emits.map(p => `${p.name}: ${p.type}`);
 				const emitNames = emits.map(p => p.name);
-				// todo if script not defined, then what to use?
 				const scriptAttributes = compact([
 					scriptSetup && 'setup',
 					`lang="${sourceFileKind === ts.ScriptKind.JS ? 'js' : sourceFileKind === ts.ScriptKind.TSX ? 'tsx' : 'ts'}"`
 				]);
 				const scriptContents = compact([
-					props?.length && `const { ${propNames.join(', ')} } = defineProps<{
-						${propTypes.join('\n\t\t')}
-					}>()`,
-					emits?.length && `const { ${emitNames.join(', ')} } = defineEmits<{
-						${emitTypes.join('\n\t\t')}
-					}>()`
+					props?.length && `const { ${propNames.join(', ')} } = defineProps<{ \n\t${propTypes.join('\n\t\t')}\n}>()`,
+					emits?.length && `const { ${emitNames.join(', ')} } = defineEmits<{ \n\t${emitTypes.join('\n\t\t')}\n}>()`
 				]);
 
-				const newScriptTag = scriptContents.length ? `
-				<script${scriptAttributes.length ? ` ${scriptAttributes.join(' ')}` : ''}>
-				${scriptContents.map(s => `\t${s}`).join('\n')}
-				</script>` : '';
+				const initialIndentSetting = await ctx!.configurationHost!.getConfiguration('volar.format.initialIndent') as Record<string, boolean>;
 
-				const newTemplateContents = `
-				<template>
-				${templateNode.loc.source.split('\n').map(line => `\t${line}`).join('\n')}
-				</template>`;
+				const newScriptTag = scriptContents.length
+					? constructTag('script', scriptAttributes, isInitialIndentNeeded(ts, sourceFileKind!, initialIndentSetting), scriptContents.join('\n'))
+					: '';
 
-				// todo replace \t with current editor indentation
-				const newFileContents = dedentString(templateStartOffset > scriptStartOffset ? `${newScriptTag}${newTemplateContents}` : `${newTemplateContents}${newScriptTag}`);
+				const newTemplateTag = constructTag('template', [], initialIndentSetting.html, templateNode.loc.source);
+
+				const newFileContents = dedentString(templateStartOffset > scriptStartOffset ? `${newScriptTag}${newTemplateTag}` : `${newTemplateTag}${newScriptTag}`);
 				let lastImportNode: ts.Node = sourceFile;
 
 				for (const statement of sourceFile.statements) {
@@ -228,6 +218,22 @@ function dedentString(input: string) {
 	return lines.map(line => initialIndentation && line.startsWith(initialIndentation) ? line.slice(initialIndentation.length) : line).join('\n');
 }
 
-function compact<T>(arr: (T | undefined | null | false)[]) {
+function compact<T>(arr: (T | undefined | null | false | 0)[]) {
 	return arr.filter(Boolean) as T[];
+}
+
+function constructTag(name: string, attributes: string[], initialIndent: boolean, content: string) {
+	if (initialIndent) content = content.split('\n').map(line => `\t${line}`).join('\n');
+	const attributesString = attributes.length ? ` ${attributes.join(' ')}` : '';
+	return `<${name}${attributesString}>\n${content}\n</${name}>\n`;
+}
+
+function isInitialIndentNeeded(ts: typeof import("typescript/lib/tsserverlibrary"), languageKind: ts.ScriptKind, initialIndentSetting: Record<string, boolean>) {
+	const languageKindIdMap = {
+		[ts.ScriptKind.JS]: 'javascript',
+		[ts.ScriptKind.TS]: 'typescript',
+		[ts.ScriptKind.JSX]: 'javascriptreact',
+		[ts.ScriptKind.TSX]: 'typescriptreact',
+	} as Record<ts.ScriptKind, string>;
+	return initialIndentSetting[languageKindIdMap[languageKind]] ?? true;
 }
