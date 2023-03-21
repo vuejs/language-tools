@@ -35,31 +35,36 @@ export default function (): LanguageServicePlugin {
 							&& endOffset - templateStartOffset <= prop.loc.end.offset
 						) {
 							const addVBindPos = document.positionAt(templateStartOffset + prop.loc.start.offset);
-							let addValueEdit: vscode.TextEdit | undefined;
+							const edits: vscode.TextEdit[] = [];
+							let newPosition: vscode.Position | undefined;
+							edits.push({
+								newText: ':',
+								range: {
+									start: addVBindPos,
+									end: addVBindPos
+								},
+							});
 							if (!prop.value) {
 								const addValuePos = document.positionAt(templateStartOffset + prop.loc.end.offset);
-								addValueEdit = {
+								edits.push({
 									newText: '=""',
 									range: {
 										start: addValuePos,
 										end: addValuePos
 									},
+								});
+								newPosition = {
+									line: addValuePos.line,
+									character: addValuePos.character + ':'.length + '="'.length,
 								};
 							}
 							result.push({
 								title: 'Add v-bind to attribute',
 								kind: 'refactor.rewrite.addVBind',
 								edit: {
-									changes: {
-										[document.uri]: [{
-											newText: ':',
-											range: {
-												start: addVBindPos,
-												end: addVBindPos
-											},
-										}, ...addValueEdit ? [addValueEdit] : []]
-									},
+									changes: { [document.uri]: edits },
 								},
+								command: newPosition ? ctx?.commands.createSetSelectionCommand(newPosition) : undefined,
 							});
 						}
 					}
