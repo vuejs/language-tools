@@ -63,7 +63,7 @@ export function createParsedCommandLine(
 		};
 	}
 	catch (err) {
-		console.warn('Failed to resolve tsconfig path:', tsConfigPath);
+		console.warn('Failed to resolve tsconfig path:', tsConfigPath, err);
 		return {
 			fileNames: [],
 			options: {},
@@ -75,15 +75,19 @@ export function createParsedCommandLine(
 
 function proxyParseConfigHostForExtendConfigPaths(parseConfigHost: ts.ParseConfigHost) {
 	const extendConfigPaths = new Set<string>();
-	const host = {
-		...parseConfigHost,
-		readFile: (fileName: string) => {
-			if (!fileName.endsWith('/package.json')) {
-				extendConfigPaths.add(fileName);
+	const host = new Proxy(parseConfigHost, {
+		get(target, key) {
+			if (key === 'readFile') {
+				return (fileName: string) => {
+					if (!fileName.endsWith('/package.json')) {
+						extendConfigPaths.add(fileName);
+					}
+					return target.readFile(fileName);
+				};
 			}
-			return parseConfigHost.readFile(fileName);
-		},
-	};
+			return target[key as keyof typeof target];
+		}
+	});
 	return {
 		host,
 		get extendConfigPaths() {

@@ -262,6 +262,11 @@ async function getInitializationOptions(
 		reverseConfigFilePriority: reverseConfigFilePriority(),
 		disableFileWatcher: disableFileWatcher(),
 		maxFileSize: vscode.workspace.getConfiguration('volar').get<number>('vueserver.maxFileSize'),
+		semanticTokensLegend: {
+			tokenTypes: ['component'],
+			tokenModifiers: [],
+		},
+		fullCompletionList: fullCompletionList(),
 		// vue
 		petiteVue: {
 			processHtmlFile: processHtml(),
@@ -273,11 +278,6 @@ async function getInitializationOptions(
 			customBlockSchemaUrls: vscode.workspace.getConfiguration('volar').get<Record<string, string>>('vueserver.json.customBlockSchemaUrls'),
 		},
 		additionalExtensions: additionalExtensions(),
-		semanticTokensLegend: {
-			tokenTypes: ['component'],
-			tokenModifiers: [],
-		},
-		fullCompletionList: fullCompletionList(),
 	};
 	return initializationOptions;
 }
