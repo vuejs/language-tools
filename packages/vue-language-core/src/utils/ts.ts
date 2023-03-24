@@ -74,13 +74,13 @@ export function createParsedCommandLine(
 }
 
 function proxyParseConfigHostForExtendConfigPaths(parseConfigHost: ts.ParseConfigHost) {
-	const extendConfigPaths = new Set<string>();
+	const extendConfigPaths: string[] = [];
 	const host = new Proxy(parseConfigHost, {
 		get(target, key) {
 			if (key === 'readFile') {
 				return (fileName: string) => {
-					if (!fileName.endsWith('/package.json')) {
-						extendConfigPaths.add(fileName);
+					if (!fileName.endsWith('/package.json') && !extendConfigPaths.includes(fileName)) {
+						extendConfigPaths.push(fileName);
 					}
 					return target.readFile(fileName);
 				};
@@ -90,9 +90,7 @@ function proxyParseConfigHostForExtendConfigPaths(parseConfigHost: ts.ParseConfi
 	});
 	return {
 		host,
-		get extendConfigPaths() {
-			return [...extendConfigPaths];
-		},
+		extendConfigPaths,
 	};
 }
 
