@@ -309,6 +309,9 @@ export function generate(
 					sfc.scriptSetup.genericOffset,
 					FileRangeCapabilities.full,
 				]);
+				if (!sfc.scriptSetup.generic.endsWith(',')) {
+					codeGen.push(`,`);
+				}
 				codeGen.push(`>`);
 			}
 			codeGen.push('(');
