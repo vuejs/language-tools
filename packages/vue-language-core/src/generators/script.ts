@@ -76,7 +76,7 @@ export function generate(
 		ConstructorOverloads: false,
 		WithTemplateSlots: false,
 	};
-	const generateFunctionType = !!vueCompilerOptions.experimentalRfc436 && !!sfc.scriptSetup?.generic;
+	const generateFunctionType = !!sfc.scriptSetup?.generic;
 
 	writeScriptSrc();
 	writeScriptSetupImportsSegment();

@@ -211,7 +211,6 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 		// experimental
 		experimentalAdditionalLanguageModules: vueOptions.experimentalAdditionalLanguageModules ?? [],
 		experimentalResolveStyleCssClasses: vueOptions.experimentalResolveStyleCssClasses ?? 'scoped',
-		experimentalRfc436: vueOptions.experimentalRfc436 ?? false,
 		// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
 		// https://vuejs.org/guide/essentials/forms.html#form-input-bindings
 		experimentalModelPropName: vueOptions.experimentalModelPropName ?? {
