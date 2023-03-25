@@ -1,10 +1,11 @@
 # Changelog
 
-## 1.3.4 (2023/3/20) - pre-release
+## 1.3.5 (2023/3/25) - pre-release
 
-- fix: some environments throws `Failed to resolve tsconfig path` (https://github.com/vuejs/language-tools/pull/2471#issuecomment-1475350770)
-- fix: diagnostics break when changing code (https://github.com/yaegassy/coc-volar/pull/262#issuecomment-1475468100)
-- fix: all server capabilities loss in IDEs other than VSCode ([#2526](https://github.com/johnsoncodehk/volar/issues/2526))
+- feat: RFC 436 leaves experimental ([#2545](https://github.com/johnsoncodehk/volar/issues/2545))
+- feat: auto resolve `vueCompilerOptions.target` by default
+- feat: auto append `/** @jsxImportSource vue */` when `jsxTemplates` enabled and target >= 3.3 for avoid #592
+- feat(doctor): remove target check for `vueCompilerOptions`
 
 ---
 
@@ -41,6 +42,12 @@
 		<a href="https://opencollective.com/volarjs">Open Collective</a>
 	</h5>
 </p>
+
+## 1.3.4 (2023/3/20) - pre-release
+
+- fix: some environments throws `Failed to resolve tsconfig path` (https://github.com/vuejs/language-tools/pull/2471#issuecomment-1475350770)
+- fix: diagnostics break when changing code (https://github.com/yaegassy/coc-volar/pull/262#issuecomment-1475468100)
+- fix: all server capabilities loss in IDEs other than VSCode ([#2526](https://github.com/johnsoncodehk/volar/issues/2526))
 
 ## 1.3.3 (2023/3/19) - pre-release
 
