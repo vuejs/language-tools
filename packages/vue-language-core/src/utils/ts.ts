@@ -105,9 +105,23 @@ function getVueCompilerOptions(
 	const result: Partial<VueCompilerOptions> = {
 		...rawOptions as any,
 	};
+	const target = rawOptions.target ?? 'auto';
 
-	if (rawOptions.target) {
-		result.target = rawOptions.target;
+	if (target === 'auto') {
+		try {
+			const resolvedPath = resolvePath('vue/package.json');
+			if (resolvedPath) {
+				const vuePackageJson = require(resolvedPath);
+				const versionNumbers = vuePackageJson.version.split('.');
+				result.target = Number(versionNumbers[0] + '.' + versionNumbers[1]);
+			}
+		}
+		catch (error) {
+			console.warn('Load vue package.json failed', error);
+		}
+	}
+	else {
+		result.target = target;
 	}
 	if (rawOptions.plugins) {
 		const plugins = rawOptions.plugins
@@ -142,16 +156,15 @@ function getVueCompilerOptions(
 	function resolvePath(scriptPath: string): string | undefined {
 		try {
 			if (require?.resolve) {
-				scriptPath = require.resolve(scriptPath, { paths: [folder] });
+				return require.resolve(scriptPath, { paths: [folder] });
 			}
 			else {
-				console.log('failed to resolve path:', scriptPath, 'require.resolve is not supported in web');
+				console.warn('failed to resolve path:', scriptPath, 'require.resolve is not supported in web');
 			}
 		}
 		catch (error) {
 			console.warn(error);
 		}
-		return;
 	}
 }
 

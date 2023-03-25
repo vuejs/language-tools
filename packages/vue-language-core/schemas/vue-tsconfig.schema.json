@@ -4,16 +4,12 @@
 			"type": "object",
 			"properties": {
 				"target": {
-					"type": "number",
-					"default": 3,
-					"anyOf": [
-						{
-							"enum": [
-								2,
-								2.7,
-								3
-							]
-						}
+					"default": "auto",
+					"enum": [
+						"auto",
+						2,
+						2.7,
+						3
 					],
 					"markdownDescription": "Target version of Vue."
 				},

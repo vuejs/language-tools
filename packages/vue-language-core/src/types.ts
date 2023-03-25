@@ -12,7 +12,7 @@ export type VueLanguageServiceHost = embedded.LanguageServiceHost & {
 };
 
 export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 'plugins'>> & {
-	target?: 2 | 2.7 | 3;
+	target?: 'auto' | 2 | 2.7 | 3;
 	plugins?: string[];
 };
 
