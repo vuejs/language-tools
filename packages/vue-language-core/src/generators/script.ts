@@ -68,8 +68,7 @@ export function generate(
 	}
 
 	const bypassDefineComponent = lang === 'js' || lang === 'jsx';
-	const vueVersion = vueCompilerOptions.target ?? 3;
-	const vueLibName = getVueLibraryName(vueVersion);
+	const vueLibName = getVueLibraryName(vueCompilerOptions.target);
 	const usedTypes = {
 		DefinePropsToOptions: false,
 		mergePropDefaults: false,
@@ -77,6 +76,10 @@ export function generate(
 		WithTemplateSlots: false,
 	};
 	const generateFunctionType = !!sfc.scriptSetup?.generic;
+
+	if (vueCompilerOptions.jsxTemplates) {
+		codeGen.push(`/** @jsxImportSource vue */\n`);
+	}
 
 	writeScriptSrc();
 	writeScriptSetupImportsSegment();

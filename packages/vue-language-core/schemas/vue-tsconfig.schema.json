@@ -9,7 +9,8 @@
 						"auto",
 						2,
 						2.7,
-						3
+						3,
+						3.3
 					],
 					"markdownDescription": "Target version of Vue."
 				},
