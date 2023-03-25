@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as semver from 'semver';
 import { BaseLanguageClient } from 'vscode-languageclient';
-import { GetMatchTsConfigRequest, ParseSFCRequest, GetVueCompilerOptionsRequest } from '@volar/vue-language-server';
+import { ParseSFCRequest } from '@volar/vue-language-server';
 
 const scheme = 'vue-doctor';
 const knownValidSyntaxHighlightExtensions = {
@@ -84,45 +84,13 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 	async function getProblems(fileUri: vscode.Uri) {
 
 		const vueDoc = vscode.workspace.textDocuments.find(doc => doc.fileName === fileUri.fsPath);
-		const [
-			tsconfig,
-			vueOptions,
-			sfc,
-		] = await Promise.all([
-			client.sendRequest(GetMatchTsConfigRequest.type, { uri: fileUri.toString() }),
-			client.sendRequest(GetVueCompilerOptionsRequest.type, { uri: fileUri.toString() }),
-			vueDoc ? client.sendRequest(ParseSFCRequest.type, vueDoc.getText()) : undefined,
-		]);
+		const sfc = await (vueDoc ? client.sendRequest(ParseSFCRequest.type, vueDoc.getText()) : undefined);
 		const vueMod = getPackageJsonOfWorkspacePackage(fileUri.fsPath, 'vue');
 		const domMod = getPackageJsonOfWorkspacePackage(fileUri.fsPath, '@vue/runtime-dom');
 		const problems: {
 			title: string;
 			message: string;
 		}[] = [];
-
-		// check vue version < 3 but missing vueCompilerOptions.target
-		if (vueMod) {
-			const vueVersionNumber = semver.gte(vueMod.json.version, '3.0.0') ? 3 : semver.gte(vueMod.json.version, '2.7.0') ? 2.7 : 2;
-			const targetVersionNumber = vueOptions?.target ?? 3;
-			const lines = [
-				`Target version mismatch. You can specify the target version in \`vueCompilerOptions.target\` in tsconfig.json / jsconfig.json. (Expected \`"target": ${vueVersionNumber}\`)`,
-				'',
-				'- vue version: ' + vueMod.json.version,
-				'- tsconfig target: ' + targetVersionNumber + (vueOptions?.target !== undefined ? '' : ' (default)'),
-				'- vue: ' + vueMod.path,
-				'- tsconfig: ' + (tsconfig?.uri ?? 'Not found'),
-				'- vueCompilerOptions:',
-				'  ```json',
-				JSON.stringify(vueOptions, undefined, 2).split('\n').map(line => '  ' + line).join('\n'),
-				'  ```',
-			];
-			if (vueVersionNumber !== targetVersionNumber) {
-				problems.push({
-					title: 'Incorrect Target',
-					message: lines.join('\n'),
-				});
-			}
-		}
 
 		// check vue version < 2.7 but @vue/runtime-dom missing
 		if (vueMod && semver.lt(vueMod.json.version, '2.7.0') && !domMod) {
