@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.3.5 (2023/3/25) - pre-release
+## 1.3.6 (2023/3/25) - pre-release
 
 - feat: RFC 436 leaves experimental ([#2545](https://github.com/johnsoncodehk/volar/issues/2545))
 - feat: auto resolve `vueCompilerOptions.target` by default
