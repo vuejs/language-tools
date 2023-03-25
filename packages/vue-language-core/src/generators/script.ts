@@ -77,7 +77,7 @@ export function generate(
 	};
 	const generateFunctionType = !!sfc.scriptSetup?.generic;
 
-	if (vueCompilerOptions.jsxTemplates) {
+	if (vueCompilerOptions.jsxTemplates && vueCompilerOptions.target >= 3.3) {
 		codeGen.push(`/** @jsxImportSource vue */\n`);
 	}
 
