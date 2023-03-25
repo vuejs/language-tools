@@ -246,17 +246,11 @@ async function getInitializationOptions(
 	serverMode: ServerMode,
 	context: vscode.ExtensionContext,
 ) {
-	const textDocumentSync = vscode.workspace.getConfiguration('volar').get<'incremental' | 'full' | 'none'>('vueserver.textDocumentSync');
 	const initializationOptions: VueServerInitializationOptions = {
 		// volar
 		configFilePath: vscode.workspace.getConfiguration('volar').get<string>('vueserver.configFilePath'),
 		serverMode,
 		diagnosticModel: diagnosticModel() === 'pull' ? DiagnosticModel.Pull : DiagnosticModel.Push,
-		textDocumentSync: textDocumentSync ? {
-			incremental: lsp.TextDocumentSyncKind.Incremental,
-			full: lsp.TextDocumentSyncKind.Full,
-			none: lsp.TextDocumentSyncKind.None,
-		}[textDocumentSync] : lsp.TextDocumentSyncKind.Incremental,
 		typescript: { tsdk: (await getTsdk(context)).tsdk },
 		noProjectReferences: noProjectReferences(),
 		reverseConfigFilePriority: reverseConfigFilePriority(),

@@ -3,7 +3,7 @@ import { LanguageServerPlugin, Connection } from '@volar/language-server';
 import * as vue from '@volar/vue-language-service';
 import * as vue2 from '@volar/vue-language-core';
 import * as nameCasing from '@volar/vue-language-service';
-import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest, GetVueCompilerOptionsRequest, GetComponentMeta } from './protocol';
+import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest, GetComponentMeta } from './protocol';
 import { VueServerInitializationOptions } from './types';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as meta from 'vue-component-meta';
@@ -99,13 +99,6 @@ export function createServerPlugin(connection: Connection) {
 
 				connection.onRequest(ParseSFCRequest.type, params => {
 					return vue2.parse(params);
-				});
-
-				connection.onRequest(GetVueCompilerOptionsRequest.type, async params => {
-					const languageService = await getService(params.uri);
-					if (languageService) {
-						return hostToVueOptions.get(languageService.context.host);
-					}
 				});
 
 				connection.onRequest(DetectNameCasingRequest.type, async params => {

@@ -4,16 +4,13 @@
 			"type": "object",
 			"properties": {
 				"target": {
-					"type": "number",
-					"default": 3,
-					"anyOf": [
-						{
-							"enum": [
-								2,
-								2.7,
-								3
-							]
-						}
+					"default": "auto",
+					"enum": [
+						"auto",
+						2,
+						2.7,
+						3,
+						3.3
 					],
 					"markdownDescription": "Target version of Vue."
 				},
@@ -92,11 +89,6 @@
 						"never"
 					],
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1038, https://github.com/johnsoncodehk/volar/issues/1121"
-				},
-				"experimentalRfc436": {
-					"type": "boolean",
-					"default": false,
-					"markdownDescription": "https://github.com/vuejs/rfcs/discussions/436"
 				},
 				"experimentalUseElementAccessInTemplate": {
 					"type": "boolean",

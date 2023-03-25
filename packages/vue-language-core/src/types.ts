@@ -11,8 +11,13 @@ export type VueLanguageServiceHost = embedded.LanguageServiceHost & {
 	getVueCompilationSettings(): Partial<VueCompilerOptions>,
 };
 
+export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 'plugins'>> & {
+	target?: 'auto' | 2 | 2.7 | 3 | 3.3;
+	plugins?: string[];
+};
+
 export interface VueCompilerOptions {
-	target: 2 | 2.7 | 3;
+	target: number;
 	extensions: string[];
 	jsxTemplates: boolean;
 	strictTemplates: boolean;
@@ -33,7 +38,6 @@ export interface VueCompilerOptions {
 
 	// experimental
 	experimentalResolveStyleCssClasses: 'scoped' | 'always' | 'never';
-	experimentalRfc436: boolean;
 	experimentalModelPropName: Record<string, Record<string, boolean | Record<string, string> | Record<string, string>[]>>;
 	experimentalUseElementAccessInTemplate: boolean;
 	experimentalAdditionalLanguageModules: string[];

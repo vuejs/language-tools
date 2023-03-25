@@ -1,13 +1,6 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import { TagNameCasing, AttrNameCasing, SFCParseResult, VueCompilerOptions } from '@volar/vue-language-service';
+import { TagNameCasing, AttrNameCasing, SFCParseResult } from '@volar/vue-language-service';
 import { ComponentMeta } from 'vue-component-meta';
-
-export namespace GetVueCompilerOptionsRequest {
-	export type ParamsType = vscode.TextDocumentIdentifier;
-	export type ResponseType = VueCompilerOptions | null | undefined;
-	export type ErrorType = never;
-	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('volar/vueCompilerOptions');
-}
 
 export namespace GetComponentMeta {
 	export type ParamsType = vscode.TextDocumentIdentifier;
