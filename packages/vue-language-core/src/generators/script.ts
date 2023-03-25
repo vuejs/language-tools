@@ -76,7 +76,7 @@ export function generate(
 		ConstructorOverloads: false,
 		WithTemplateSlots: false,
 	};
-	const generateFunctionType = !!vueCompilerOptions.experimentalRfc436 && !!sfc.scriptSetup?.generic;
+	const generateFunctionType = !!sfc.scriptSetup?.generic;
 
 	writeScriptSrc();
 	writeScriptSetupImportsSegment();
@@ -309,6 +309,9 @@ export function generate(
 					sfc.scriptSetup.genericOffset,
 					FileRangeCapabilities.full,
 				]);
+				if (!sfc.scriptSetup.generic.endsWith(',')) {
+					codeGen.push(`,`);
+				}
 				codeGen.push(`>`);
 			}
 			codeGen.push('(');

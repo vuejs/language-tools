@@ -33,7 +33,6 @@ export interface VueCompilerOptions {
 
 	// experimental
 	experimentalResolveStyleCssClasses: 'scoped' | 'always' | 'never';
-	experimentalRfc436: boolean;
 	experimentalModelPropName: Record<string, Record<string, boolean | Record<string, string> | Record<string, string>[]>>;
 	experimentalUseElementAccessInTemplate: boolean;
 	experimentalAdditionalLanguageModules: string[];
