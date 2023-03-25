@@ -11,8 +11,13 @@ export type VueLanguageServiceHost = embedded.LanguageServiceHost & {
 	getVueCompilationSettings(): Partial<VueCompilerOptions>,
 };
 
+export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 'plugins'>> & {
+	target?: 2 | 2.7 | 3;
+	plugins?: string[];
+};
+
 export interface VueCompilerOptions {
-	target: 2 | 2.7 | 3;
+	target: number;
 	extensions: string[];
 	jsxTemplates: boolean;
 	strictTemplates: boolean;

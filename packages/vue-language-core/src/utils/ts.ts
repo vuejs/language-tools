@@ -1,6 +1,6 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path';
-import type { VueCompilerOptions, VueLanguagePlugin } from '../types';
+import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
 
 export type ParsedCommandLine = ts.ParsedCommandLine & {
 	vueOptions: Partial<VueCompilerOptions>;
@@ -101,11 +101,16 @@ function getVueCompilerOptions(
 
 	const folder = path.dirname(tsConfigSourceFile.fileName);
 	const obj = ts.convertToObject(tsConfigSourceFile, []);
-	const vueOptions: Partial<VueCompilerOptions> = obj?.vueCompilerOptions ?? {};
+	const rawOptions: RawVueCompilerOptions = obj?.vueCompilerOptions ?? {};
+	const result: Partial<VueCompilerOptions> = {
+		...rawOptions as any,
+	};
 
-	if (vueOptions.plugins) {
-		const pluginPaths = vueOptions.plugins as unknown as string[];
-		const plugins = pluginPaths
+	if (rawOptions.target) {
+		result.target = rawOptions.target;
+	}
+	if (rawOptions.plugins) {
+		const plugins = rawOptions.plugins
 			.map<VueLanguagePlugin | undefined>((pluginPath: string) => {
 				try {
 					const resolvedPath = resolvePath(pluginPath);
@@ -119,16 +124,20 @@ function getVueCompilerOptions(
 			})
 			.filter((plugin): plugin is NonNullable<typeof plugin> => !!plugin);
 
-		vueOptions.plugins = plugins;
+		result.plugins = plugins;
 	}
-	vueOptions.hooks = vueOptions.hooks
-		?.map(resolvePath)
-		.filter((hook): hook is NonNullable<typeof hook> => !!hook);
-	vueOptions.experimentalAdditionalLanguageModules = vueOptions.experimentalAdditionalLanguageModules
-		?.map(resolvePath)
-		.filter((module): module is NonNullable<typeof module> => !!module);
+	if (rawOptions.hooks) {
+		result.hooks = rawOptions.hooks
+			.map(resolvePath)
+			.filter((hook): hook is NonNullable<typeof hook> => !!hook);
+	}
+	if (rawOptions.experimentalAdditionalLanguageModules) {
+		result.experimentalAdditionalLanguageModules = rawOptions.experimentalAdditionalLanguageModules
+			.map(resolvePath)
+			.filter((module): module is NonNullable<typeof module> => !!module);
+	}
 
-	return vueOptions;
+	return result;
 
 	function resolvePath(scriptPath: string): string | undefined {
 		try {
@@ -172,10 +181,9 @@ const SVG_TAGS =
 	'text,textPath,title,tspan,unknown,use,view';
 
 export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions>): VueCompilerOptions {
-	const target = vueOptions.target ?? 3;
+	const target = vueOptions.target ?? 3.3;
 	return {
 		...vueOptions,
-
 		target,
 		extensions: vueOptions.extensions ?? ['.vue'],
 		jsxTemplates: vueOptions.jsxTemplates ?? false,
