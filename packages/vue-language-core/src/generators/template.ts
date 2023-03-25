@@ -590,17 +590,16 @@ export function generate(
 				{
 					codeGen.push(`(__VLS_x as import('./__VLS_types.js').ComponentProps<typeof `);
 					if (componentVars[node.tag]) {
-						codeGen.push(`__VLS_templateComponents.`);
+						codeGen.push(`__VLS_templateComponents`);
 					}
-					codeGen.push([
+					writePropertyAccess(
 						componentVars[node.tag] ?? node.tag,
-						'template',
 						[startTagOffset, startTagOffset + node.tag.length],
 						{
 							...capabilitiesPresets.tagHover,
 							...capabilitiesPresets.diagnosticOnly,
 						},
-					]);
+					);
 					codeGen.push(`>)`);
 				}
 				codeGen.push(['', 'template', startTagOffset + node.tag.length, capabilitiesPresets.diagnosticOnly]); // diagnostic end
