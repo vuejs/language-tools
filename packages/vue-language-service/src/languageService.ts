@@ -17,7 +17,7 @@ import createVisualizeHiddenCallbackParamPlugin from './plugins/vue-visualize-hi
 import type { Data } from '@volar-plugins/typescript/out/services/completions/basic';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { Config, LanguageServicePluginInstance } from '@volar/language-service';
-import { hyphenate } from '@vue/shared';
+import { hyphenate, capitalize } from '@vue/shared';
 
 import createPugFormatPlugin from '@volar-plugins/pug-beautify';
 import createAutoWrapParenthesesPlugin from './plugins/vue-autoinsert-parentheses';
@@ -117,44 +117,47 @@ function resolvePlugins(
 					patchAdditionalTextEdits(itemData.uri, item.additionalTextEdits);
 				}
 
-				if (
-					itemData?.uri
-					&& _context.typescript
-					&& item.textEdit?.newText && /\w*Vue$/.test(item.textEdit.newText)
-					&& item.additionalTextEdits?.length === 1 && item.additionalTextEdits[0].newText.indexOf('import ' + item.textEdit.newText + ' from ') >= 0
-					&& (await _context.configurationHost?.getConfiguration<boolean>('volar.completion.normalizeComponentImportName') ?? true)
-				) {
-					let newName = item.textEdit.newText.slice(0, -'Vue'.length);
-					newName = newName[0].toUpperCase() + newName.substring(1);
-					if (newName === 'Index') {
-						const tsItem = (item.data as Data).originalItem;
-						if (tsItem.source) {
-							const dirs = tsItem.source.split('/');
-							if (dirs.length >= 3) {
-								newName = dirs[dirs.length - 2];
-								newName = newName[0].toUpperCase() + newName.substring(1);
+				for (const ext of vueCompilerOptions.extensions) {
+					const suffix = capitalize(ext.substring('.'.length)); // .vue -> Vue
+					if (
+						itemData?.uri
+						&& _context.typescript
+						&& item.textEdit?.newText.endsWith(suffix)
+						&& item.additionalTextEdits?.length === 1 && item.additionalTextEdits[0].newText.indexOf('import ' + item.textEdit.newText + ' from ') >= 0
+						&& (await _context.configurationHost?.getConfiguration<boolean>('volar.completion.normalizeComponentImportName') ?? true)
+					) {
+						let newName = item.textEdit.newText.slice(0, -suffix.length);
+						newName = newName[0].toUpperCase() + newName.substring(1);
+						if (newName === 'Index') {
+							const tsItem = (item.data as Data).originalItem;
+							if (tsItem.source) {
+								const dirs = tsItem.source.split('/');
+								if (dirs.length >= 3) {
+									newName = dirs[dirs.length - 2];
+									newName = newName[0].toUpperCase() + newName.substring(1);
+								}
+							}
+						}
+						item.additionalTextEdits[0].newText = item.additionalTextEdits[0].newText.replace(
+							'import ' + item.textEdit.newText + ' from ',
+							'import ' + newName + ' from ',
+						);
+						item.textEdit.newText = newName;
+						const source = _context.documents.getVirtualFileByUri(itemData.uri)[1];
+						if (source) {
+							const casing = await getNameCasing(_context, _context.typescript, _context.fileNameToUri(source.fileName));
+							if (casing.tag === TagNameCasing.Kebab) {
+								item.textEdit.newText = hyphenate(item.textEdit.newText);
 							}
 						}
 					}
-					item.additionalTextEdits[0].newText = item.additionalTextEdits[0].newText.replace(
-						'import ' + item.textEdit.newText + ' from ',
-						'import ' + newName + ' from ',
-					);
-					item.textEdit.newText = newName;
-					const source = _context.documents.getVirtualFileByUri(itemData.uri)[1];
-					if (source) {
-						const casing = await getNameCasing(_context, _context.typescript, _context.fileNameToUri(source.fileName));
-						if (casing.tag === TagNameCasing.Kebab) {
-							item.textEdit.newText = hyphenate(item.textEdit.newText);
-						}
+					else if (
+						item.textEdit?.newText && new RegExp(`import \w*${suffix}\$1 from \S*`).test(item.textEdit.newText)
+						&& !item.additionalTextEdits?.length
+					) {
+						// https://github.com/johnsoncodehk/volar/issues/2286
+						item.textEdit.newText = item.textEdit.newText.replace(`${suffix}$1`, '');
 					}
-				}
-				else if (
-					item.textEdit?.newText && /import \w*Vue\$1 from \S*/.test(item.textEdit.newText)
-					&& !item.additionalTextEdits?.length
-				) {
-					// https://github.com/johnsoncodehk/volar/issues/2286
-					item.textEdit.newText = item.textEdit.newText.replace('Vue$1', '');
 				}
 
 				const data: Data = item.data;
