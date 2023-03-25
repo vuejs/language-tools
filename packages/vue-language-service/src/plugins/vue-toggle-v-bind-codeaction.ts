@@ -41,6 +41,7 @@ export default function (): LanguageServicePlugin {
 									const stringNode = sourceFile.statements[0];
 									const removeTextRanges: [number, number][] = [
 										[prop.loc.start.offset, prop.loc.start.offset + 1],
+										// Work correctly with trivias for cases like <input :type=" 'password' " />
 										[prop.exp.loc.start.offset, prop.exp.loc.start.offset + stringNode.pos + stringNode.getLeadingTriviaWidth() + 1],
 										[prop.exp.loc.start.offset + stringNode.end - 1, prop.exp.loc.end.offset],
 									];
