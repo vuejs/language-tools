@@ -68,15 +68,18 @@ export function generate(
 	}
 
 	const bypassDefineComponent = lang === 'js' || lang === 'jsx';
-	const vueVersion = vueCompilerOptions.target ?? 3;
-	const vueLibName = getVueLibraryName(vueVersion);
+	const vueLibName = getVueLibraryName(vueCompilerOptions.target);
 	const usedTypes = {
 		DefinePropsToOptions: false,
 		mergePropDefaults: false,
 		ConstructorOverloads: false,
 		WithTemplateSlots: false,
 	};
-	const generateFunctionType = !!vueCompilerOptions.experimentalRfc436 && !!sfc.scriptSetup?.generic;
+	const generateFunctionType = !!sfc.scriptSetup?.generic;
+
+	if (vueCompilerOptions.jsxTemplates && vueCompilerOptions.target >= 3.3) {
+		codeGen.push(`/** @jsxImportSource vue */\n`);
+	}
 
 	writeScriptSrc();
 	writeScriptSetupImportsSegment();
@@ -309,6 +312,9 @@ export function generate(
 					sfc.scriptSetup.genericOffset,
 					FileRangeCapabilities.full,
 				]);
+				if (!sfc.scriptSetup.generic.endsWith(',')) {
+					codeGen.push(`,`);
+				}
 				codeGen.push(`>`);
 			}
 			codeGen.push('(');

@@ -1,6 +1,6 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path';
-import type { VueCompilerOptions, VueLanguagePlugin } from '../types';
+import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
 
 export type ParsedCommandLine = ts.ParsedCommandLine & {
 	vueOptions: Partial<VueCompilerOptions>;
@@ -63,7 +63,7 @@ export function createParsedCommandLine(
 		};
 	}
 	catch (err) {
-		console.warn('Failed to resolve tsconfig path:', tsConfigPath);
+		console.warn('Failed to resolve tsconfig path:', tsConfigPath, err);
 		return {
 			fileNames: [],
 			options: {},
@@ -74,21 +74,23 @@ export function createParsedCommandLine(
 }
 
 function proxyParseConfigHostForExtendConfigPaths(parseConfigHost: ts.ParseConfigHost) {
-	const extendConfigPaths = new Set<string>();
-	const host = {
-		...parseConfigHost,
-		readFile: (fileName: string) => {
-			if (!fileName.endsWith('/package.json')) {
-				extendConfigPaths.add(fileName);
+	const extendConfigPaths: string[] = [];
+	const host = new Proxy(parseConfigHost, {
+		get(target, key) {
+			if (key === 'readFile') {
+				return (fileName: string) => {
+					if (!fileName.endsWith('/package.json') && !extendConfigPaths.includes(fileName)) {
+						extendConfigPaths.push(fileName);
+					}
+					return target.readFile(fileName);
+				};
 			}
-			return parseConfigHost.readFile(fileName);
-		},
-	};
+			return target[key as keyof typeof target];
+		}
+	});
 	return {
 		host,
-		get extendConfigPaths() {
-			return [...extendConfigPaths];
-		},
+		extendConfigPaths,
 	};
 }
 
@@ -99,11 +101,30 @@ function getVueCompilerOptions(
 
 	const folder = path.dirname(tsConfigSourceFile.fileName);
 	const obj = ts.convertToObject(tsConfigSourceFile, []);
-	const vueOptions: Partial<VueCompilerOptions> = obj?.vueCompilerOptions ?? {};
+	const rawOptions: RawVueCompilerOptions = obj?.vueCompilerOptions ?? {};
+	const result: Partial<VueCompilerOptions> = {
+		...rawOptions as any,
+	};
+	const target = rawOptions.target ?? 'auto';
 
-	if (vueOptions.plugins) {
-		const pluginPaths = vueOptions.plugins as unknown as string[];
-		const plugins = pluginPaths
+	if (target === 'auto') {
+		try {
+			const resolvedPath = resolvePath('vue/package.json');
+			if (resolvedPath) {
+				const vuePackageJson = require(resolvedPath);
+				const versionNumbers = vuePackageJson.version.split('.');
+				result.target = Number(versionNumbers[0] + '.' + versionNumbers[1]);
+			}
+		}
+		catch (error) {
+			console.warn('Load vue package.json failed', error);
+		}
+	}
+	else {
+		result.target = target;
+	}
+	if (rawOptions.plugins) {
+		const plugins = rawOptions.plugins
 			.map<VueLanguagePlugin | undefined>((pluginPath: string) => {
 				try {
 					const resolvedPath = resolvePath(pluginPath);
@@ -117,30 +138,33 @@ function getVueCompilerOptions(
 			})
 			.filter((plugin): plugin is NonNullable<typeof plugin> => !!plugin);
 
-		vueOptions.plugins = plugins;
+		result.plugins = plugins;
 	}
-	vueOptions.hooks = vueOptions.hooks
-		?.map(resolvePath)
-		.filter((hook): hook is NonNullable<typeof hook> => !!hook);
-	vueOptions.experimentalAdditionalLanguageModules = vueOptions.experimentalAdditionalLanguageModules
-		?.map(resolvePath)
-		.filter((module): module is NonNullable<typeof module> => !!module);
+	if (rawOptions.hooks) {
+		result.hooks = rawOptions.hooks
+			.map(resolvePath)
+			.filter((hook): hook is NonNullable<typeof hook> => !!hook);
+	}
+	if (rawOptions.experimentalAdditionalLanguageModules) {
+		result.experimentalAdditionalLanguageModules = rawOptions.experimentalAdditionalLanguageModules
+			.map(resolvePath)
+			.filter((module): module is NonNullable<typeof module> => !!module);
+	}
 
-	return vueOptions;
+	return result;
 
 	function resolvePath(scriptPath: string): string | undefined {
 		try {
 			if (require?.resolve) {
-				scriptPath = require.resolve(scriptPath, { paths: [folder] });
+				return require.resolve(scriptPath, { paths: [folder] });
 			}
 			else {
-				console.log('failed to resolve path:', scriptPath, 'require.resolve is not supported in web');
+				console.warn('failed to resolve path:', scriptPath, 'require.resolve is not supported in web');
 			}
 		}
 		catch (error) {
 			console.warn(error);
 		}
-		return;
 	}
 }
 
@@ -170,10 +194,9 @@ const SVG_TAGS =
 	'text,textPath,title,tspan,unknown,use,view';
 
 export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions>): VueCompilerOptions {
-	const target = vueOptions.target ?? 3;
+	const target = vueOptions.target ?? 3.3;
 	return {
 		...vueOptions,
-
 		target,
 		extensions: vueOptions.extensions ?? ['.vue'],
 		jsxTemplates: vueOptions.jsxTemplates ?? false,
@@ -207,7 +230,6 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 		// experimental
 		experimentalAdditionalLanguageModules: vueOptions.experimentalAdditionalLanguageModules ?? [],
 		experimentalResolveStyleCssClasses: vueOptions.experimentalResolveStyleCssClasses ?? 'scoped',
-		experimentalRfc436: vueOptions.experimentalRfc436 ?? false,
 		// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
 		// https://vuejs.org/guide/essentials/forms.html#form-input-bindings
 		experimentalModelPropName: vueOptions.experimentalModelPropName ?? {
