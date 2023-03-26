@@ -19,6 +19,10 @@ import type {
 	ObjectDirective,
 	FunctionDirective,
 } from '${libName}';
+${vueCompilerOptions.target >= 3.3 ? `import { JSX } from 'vue/jsx-runtime';` : ''}
+
+export type IntrinsicElements = JSX.IntrinsicElements;
+export type Element = JSX.Element;
 
 type IsAny<T> = boolean extends (T extends never ? true : false) ? true : false;
 export type PickNotAny<A, B> = IsAny<A> extends true ? B : A;

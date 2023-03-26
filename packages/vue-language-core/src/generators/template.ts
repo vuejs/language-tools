@@ -531,7 +531,7 @@ export function generate(
 			if (_isIntrinsicElement) {
 
 				for (const offset of tagOffsets) {
-					codeGen.push(`({} as JSX.IntrinsicElements)`);
+					codeGen.push(`({} as import('./__VLS_types.js').IntrinsicElements)`);
 					writePropertyAccess(
 						node.tag,
 						offset,
@@ -543,7 +543,7 @@ export function generate(
 					codeGen.push(`;\n`);
 				}
 
-				codeGen.push(`(__VLS_any as JSX.IntrinsicElements)[`);
+				codeGen.push(`(__VLS_any as import('./__VLS_types.js').IntrinsicElements)[`);
 				writeCodeWithQuotes(
 					node.tag,
 					tagOffsets[0],
@@ -699,7 +699,7 @@ export function generate(
 
 				codeGen.push(`type ${varInstanceProps} = `);
 				if (!varComponentInstance) {
-					codeGen.push(`JSX.IntrinsicElements['${node.tag}'];\n`);
+					codeGen.push(`import('./__VLS_types.js').IntrinsicElements['${node.tag}'];\n`);
 				}
 				else {
 					codeGen.push(`import('./__VLS_types.js').InstanceProps<typeof ${varComponentInstance}, ${componentVar ? 'typeof __VLS_templateComponents.' + componentVar : '{}'}>;\n`);;
