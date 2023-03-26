@@ -142,10 +142,14 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 						}
 					}
 					else if (node.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-						if (withinChangeRange(node.loc) && node.isStatic) { // TODO: review this (slot name?)
-							return false;
+						if (withinChangeRange(node.loc)) { // TODO: review this (slot name?)
+							if (node.isStatic) {
+								return false;
+							}
+							else {
+								node.content = node.loc.source;
+							}
 						}
-						node.content = node.loc.source;
 					}
 
 					return true;

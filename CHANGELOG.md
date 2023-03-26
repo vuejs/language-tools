@@ -1,11 +1,22 @@
 # Changelog
 
-## 1.3.6 (2023/3/25) - pre-release
+## 1.3.7 (2023/3/26) - pre-release
 
-- feat: RFC 436 leaves experimental ([#2545](https://github.com/johnsoncodehk/volar/issues/2545))
-- feat: auto resolve `vueCompilerOptions.target` by default
-- feat: auto append `/** @jsxImportSource vue */` when `jsxTemplates` enabled and target >= 3.3 for avoid #592
-- feat(doctor): remove target check for `vueCompilerOptions`
+- feat: support `normalizeComponentImportName` for `additionalExtensions` ([#2481](https://github.com/johnsoncodehk/volar/issues/2481))
+- feat: support generic component without `jsxTemplates`
+- feat: support slot references for anonymous default slot ([#2547](https://github.com/johnsoncodehk/volar/issues/2547))
+- feat: recognize slots property with `JSX.ElementChildrenAttribute` ([#2472](https://github.com/johnsoncodehk/volar/issues/2472))
+- feat: support slot required checking when enabled `strictTemplates` ([#1820](https://github.com/johnsoncodehk/volar/issues/1820))
+- fix: handle edge tag name casing `<xxx--yyy>` ([#2463](https://github.com/johnsoncodehk/volar/issues/2463))
+- fix: incremental update causes multi-line style node damage ([#2519](https://github.com/johnsoncodehk/volar/issues/2519))
+- fix: formatting break multi-line attribute value indent ([#2519](https://github.com/johnsoncodehk/volar/issues/2519))
+- fix: formatting break `<pre>` tag contents indent ([#2520](https://github.com/johnsoncodehk/volar/issues/2520))
+- fix: typescript `labelDetails` in completions not processed (https://github.com/volarjs/plugins/issues/31) - thanks @zardoy
+
+**Breaking changes**
+
+- deprecated `volar.vueserver.textDocumentSync` setting
+- deprecated `narrowingTypesInInlineHandlers` for `vueCompilerOptions` and always enabled now
 
 ---
 
@@ -42,6 +53,13 @@
 		<a href="https://opencollective.com/volarjs">Open Collective</a>
 	</h5>
 </p>
+
+## 1.3.6 (2023/3/25) - pre-release
+
+- feat: RFC 436 leaves experimental ([#2545](https://github.com/johnsoncodehk/volar/issues/2545))
+- feat: auto resolve `vueCompilerOptions.target` by default
+- feat: auto append `/** @jsxImportSource vue */` when `jsxTemplates` enabled and target >= 3.3 for avoid #592
+- feat(doctor): remove target check for `vueCompilerOptions`
 
 ## 1.3.4 (2023/3/20) - pre-release
 

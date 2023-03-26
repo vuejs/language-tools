@@ -451,7 +451,7 @@ export function generate(
 			writeTemplate();
 
 			if (generateFunctionType) {
-				codeGen.push(`return {} as Omit<JSX.Element, 'props' | 'children'> & Omit<InstanceType<typeof __VLS_publicComponent>, '$slots' | '$emit'>`);
+				codeGen.push(`return {} as Omit<import('./__VLS_types.js').Element, 'props' | 'children'> & Omit<InstanceType<typeof __VLS_publicComponent>, '$slots' | '$emit'>`);
 				codeGen.push(` & {\n`);
 				if (scriptSetupRanges.propsTypeArg) {
 					codeGen.push(`props: typeof __VLS_props,\n`);
@@ -648,6 +648,8 @@ export function generate(
 	function writeTemplateContext() {
 
 		const useGlobalThisTypeInCtx = fileName.endsWith('.html');
+
+		codeGen.push(`let __VLS_any: any;\n`);
 
 		codeGen.push(`let __VLS_ctx!: ${useGlobalThisTypeInCtx ? 'typeof globalThis &' : ''}`);
 		if (sfc.scriptSetup) {

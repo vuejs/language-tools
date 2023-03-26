@@ -19,6 +19,10 @@ import type {
 	ObjectDirective,
 	FunctionDirective,
 } from '${libName}';
+${vueCompilerOptions.target >= 3.3 ? `import { JSX } from 'vue/jsx-runtime';` : ''}
+
+export type IntrinsicElements = JSX.IntrinsicElements;
+export type Element = JSX.Element;
 
 type IsAny<T> = boolean extends (T extends never ? true : false) ? true : false;
 export type PickNotAny<A, B> = IsAny<A> extends true ? B : A;
@@ -60,8 +64,9 @@ export declare function makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
 // TODO: make it stricter between class component type and functional component type
 export type ExtractComponentSlots<T> =
 	IsAny<T> extends true ? Record<string, any>
-	: T extends { ${slots}?: infer S } ? { [K in keyof S]-?: S[K] extends ((obj: infer O) => any) | undefined ? O : any }
-	: T extends { children?: infer S } ? { [K in keyof S]-?: S[K] extends ((obj: infer O) => any) | undefined ? O : any }
+	: T extends { ${slots}?: infer S } ? S
+	: T extends { children?: infer S } ? S
+	: T extends { [K in keyof PickNotAny<JSX.ElementChildrenAttribute, {}>]?: infer S } ? S
 	: Record<string, any>;
 
 export type FillingEventArg_ParametersLength<E extends (...args: any) => any> = IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];
@@ -111,15 +116,15 @@ export type WithComponent<N0, Components, N1, N2 = unknown, N3 = unknown> =
 	N2 extends keyof Components ? { [K in N0]: Components[N2] } :
 	N3 extends keyof Components ? { [K in N0]: Components[N3] } :
 	${vueCompilerOptions.strictTemplates ? '{}' : '{ [K in N0]: any }'};
-export type ComponentProps<T> =
+export type asFunctionalComponent<T> =
 	${vueCompilerOptions.strictTemplates ? '' : 'Record<string, unknown> &'}
 	(
-		T extends new (...args: any) => { $props: infer Props } ? Props
-		: T extends (props: infer Props, ...args: any) => any ? Props
-		: T extends (...args: any) => { props: infer Props } ? Props
-		: T extends new (...args: any) => any ? {}
-		: T extends (...args: any) => any ? {}
-		: T // IntrinsicElement
+		T extends new (...args: any) => { $props: infer Props } ? (_: Props) => any
+		: T extends (props: infer Props, ...args: any) => any ? T
+		: T extends (...args: any) => { props: infer Props } ? (_: Props) => any
+		: T extends new (...args: any) => any ? (_: {}) => any
+		: T extends (...args: any) => any ? (_: {}) => any
+		: (_: T) => any // IntrinsicElement
 	);
 export type InstanceProps<I, C> = I extends { $props: infer Props } ? Props & Record<string, unknown> : C & Record<string, unknown>;
 export type EventObject<I, K1 extends string, C, E1> = {
@@ -131,8 +136,6 @@ export type EventObject<I, K1 extends string, C, E1> = {
 		>
 	>
 };
-
-type IntrinsicElements = JSX.IntrinsicElements;
 `.trim();
 }
 
