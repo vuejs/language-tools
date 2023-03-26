@@ -1322,7 +1322,19 @@ export function generate(
 					: undefined;
 
 			if (!slotDir || !argRange) {
+				codeGen.push([
+					'',
+					'template',
+					Math.min(...nodes.map(node => node.loc.start.offset)),
+					{ references: true },
+				]);
 				codeGen.push(slotName);
+				codeGen.push([
+					'',
+					'template',
+					Math.max(...nodes.map(node => node.loc.end.offset)),
+					{ references: true },
+				]);
 			}
 			else if (isStatic) {
 				writeObjectProperty(
@@ -1370,7 +1382,7 @@ export function generate(
 				);
 			}
 
-			codeGen.push(`): any {`);
+			codeGen.push(`): any {\n`);
 			for (const blockCondition of blockConditions) {
 				codeGen.push(`if (!(${blockCondition})) return;\n`);
 			}
