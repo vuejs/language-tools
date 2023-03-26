@@ -541,7 +541,7 @@ export function generate(
 					codeGen.push(`;\n`);
 				}
 
-				codeGen.push(`(__VLS_x as JSX.IntrinsicElements)[`);
+				codeGen.push(`(__VLS_any as JSX.IntrinsicElements)[`);
 				writeCodeWithQuotes(
 					node.tag,
 					tagOffsets[0],
@@ -563,7 +563,7 @@ export function generate(
 
 				codeGen.push(['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]); // diagnostic start
 				{
-					codeGen.push(`(__VLS_x as import('./__VLS_types.js').ComponentProps<typeof ${node.tag}>)`);
+					codeGen.push(`(__VLS_any as import('./__VLS_types.js').ComponentProps<typeof ${node.tag}>)`);
 				}
 				codeGen.push(['', 'template', startTagOffset + node.tag.length, capabilitiesPresets.diagnosticOnly]); // diagnostic end
 				codeGen.push(` = `);
@@ -588,7 +588,7 @@ export function generate(
 
 				codeGen.push(['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]); // diagnostic start
 				{
-					codeGen.push(`(__VLS_x as import('./__VLS_types.js').ComponentProps<typeof `);
+					codeGen.push(`(__VLS_any as import('./__VLS_types.js').ComponentProps<typeof `);
 					if (componentVars[node.tag]) {
 						codeGen.push(`__VLS_templateComponents`);
 					}
@@ -1307,7 +1307,7 @@ export function generate(
 					capabilitiesPresets.diagnosticOnly,
 				]);
 			}
-			codeGen.push(`(__VLS_x as import('./__VLS_types.js').ExtractComponentSlots<import('./__VLS_types.js').PickNotAny<typeof ${varComponentInstanceA}, typeof ${varComponentInstanceB}>>)`);
+			codeGen.push(`(__VLS_any as import('./__VLS_types.js').ExtractComponentSlots<import('./__VLS_types.js').PickNotAny<typeof ${varComponentInstanceA}, typeof ${varComponentInstanceB}>>)`);
 			if (vueCompilerOptions.strictTemplates) {
 				codeGen.push([
 					'',
@@ -1318,7 +1318,7 @@ export function generate(
 			}
 		}
 		else {
-			codeGen.push(`(__VLS_x as Record<string, any>)`);
+			codeGen.push(`(__VLS_any as Record<string, any>)`);
 		}
 		codeGen.push(` = {\n`);
 
