@@ -105,7 +105,7 @@ export function generate(
 		codeGen.push(`declare var __VLS_slots:\n`);
 		for (const [exp, slot] of slotExps) {
 			hasSlot = true;
-			codeGen.push(`Record<NonNullable<typeof ${exp}>, (_: typeof ${slot.varName}) => any> &\n`);
+			codeGen.push(`Partial<Record<NonNullable<typeof ${exp}>, (_: typeof ${slot.varName}) => any>> &\n`);
 		}
 		codeGen.push(`{\n`);
 		for (const [name, slot] of slots) {
