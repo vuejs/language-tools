@@ -55,10 +55,10 @@
 					"deprecated": true
 				},
 				"experimentalRfc436": {
-					"deprecated": true,
-					"type": "boolean",
-					"default": false,
-					"markdownDescription": "This flag is no longer needed after v1.4.0.\n\n[RFC](https://github.com/vuejs/rfcs/discussions/436)"
+					"deprecated": true
+				},
+				"narrowingTypesInInlineHandlers": {
+					"deprecated": true
 				}
 			}
 		}

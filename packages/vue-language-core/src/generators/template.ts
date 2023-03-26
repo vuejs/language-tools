@@ -793,10 +793,8 @@ export function generate(
 					if (isCompoundExpression) {
 
 						prefix = '$event => {\n';
-						if (vueCompilerOptions.narrowingTypesInInlineHandlers) {
-							for (const blockCondition of blockConditions) {
-								prefix += `if (!(${blockCondition})) return;\n`;
-							}
+						for (const blockCondition of blockConditions) {
+							prefix += `if (!(${blockCondition})) return;\n`;
 						}
 						suffix = '\n}';
 					}

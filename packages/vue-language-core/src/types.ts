@@ -34,7 +34,6 @@ export interface VueCompilerOptions {
 	};
 	plugins: VueLanguagePlugin[];
 	hooks: string[];
-	narrowingTypesInInlineHandlers: boolean;
 
 	// experimental
 	experimentalResolveStyleCssClasses: 'scoped' | 'always' | 'never';

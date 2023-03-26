@@ -223,7 +223,6 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 			defineExpose: ['defineExpose'],
 			withDefaults: ['withDefaults'],
 		},
-		narrowingTypesInInlineHandlers: vueOptions.narrowingTypesInInlineHandlers ?? false,
 		plugins: vueOptions.plugins ?? [],
 		hooks: vueOptions.hooks ?? [],
 
