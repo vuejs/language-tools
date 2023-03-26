@@ -119,7 +119,7 @@ export function generate(
 				},
 				slot.nodeLoc,
 			);
-			codeGen.push(`: (_: typeof ${slot.varName}) => any,\n`);
+			codeGen.push(`?(_: typeof ${slot.varName}): any,\n`);
 		}
 		codeGen.push(`};\n`);
 	}
@@ -1269,12 +1269,13 @@ export function generate(
 			return;
 		}
 
-		let varSlots: string | undefined;
-
 		const componentVar = parentEl ? componentVars[parentEl.tag] : undefined;
 		const slotAndChildNodes: Record<string, { nodes: CompilerDOM.TemplateChildNode[], slotDir: CompilerDOM.DirectiveNode | undefined; }> = {};
 
 		for (const child of node.children) {
+			if (child.type === CompilerDOM.NodeTypes.COMMENT) {
+				continue;
+			}
 			if (child.type !== CompilerDOM.NodeTypes.ELEMENT) {
 				slotAndChildNodes.default ??= { nodes: [], slotDir: undefined };
 				slotAndChildNodes.default.nodes.push(child);
@@ -1288,27 +1289,40 @@ export function generate(
 			}
 		}
 
-		for (const [slotName, { nodes, slotDir }] of Object.entries(slotAndChildNodes)) {
-
-			if (!varSlots) {
-				varSlots = `__VLS_${elementIndex++}`;
-				if (componentVar && parentEl) {
-					const varComponentInstanceA = `__VLS_${elementIndex++}`;
-					const varComponentInstanceB = `__VLS_${elementIndex++}`;
-					codeGen.push(`const ${varComponentInstanceA} = new __VLS_templateComponents.${componentVar}({ `);
-					writeProps(parentEl, 'class', 'slots');
-					codeGen.push(`});\n`);
-					codeGen.push(`const ${varComponentInstanceB} = __VLS_templateComponents.${componentVar}({ `);
-					writeProps(parentEl, 'class', 'slots');
-					codeGen.push(`});\n`);
-					writeInterpolationVarsExtraCompletion();
-					codeGen.push(`const ${varSlots}: import('./__VLS_types.js').ExtractComponentSlots<import('./__VLS_types.js').PickNotAny<typeof ${varComponentInstanceA}, typeof ${varComponentInstanceB}>>`);
-				}
-				else {
-					codeGen.push(`const ${varSlots}: Record<string, any>`);
-				}
-				codeGen.push(` = {\n`);
+		if (componentVar && parentEl) {
+			const varComponentInstanceA = `__VLS_${elementIndex++}`;
+			const varComponentInstanceB = `__VLS_${elementIndex++}`;
+			codeGen.push(`const ${varComponentInstanceA} = new __VLS_templateComponents.${componentVar}({ `);
+			writeProps(parentEl, 'class', 'slots');
+			codeGen.push(`});\n`);
+			codeGen.push(`const ${varComponentInstanceB} = __VLS_templateComponents.${componentVar}({ `);
+			writeProps(parentEl, 'class', 'slots');
+			codeGen.push(`});\n`);
+			writeInterpolationVarsExtraCompletion();
+			if (vueCompilerOptions.strictTemplates) {
+				codeGen.push([
+					'',
+					'template',
+					parentEl.loc.start.offset,
+					capabilitiesPresets.diagnosticOnly,
+				]);
 			}
+			codeGen.push(`(__VLS_x as import('./__VLS_types.js').ExtractComponentSlots<import('./__VLS_types.js').PickNotAny<typeof ${varComponentInstanceA}, typeof ${varComponentInstanceB}>>)`);
+			if (vueCompilerOptions.strictTemplates) {
+				codeGen.push([
+					'',
+					'template',
+					parentEl.loc.end.offset,
+					capabilitiesPresets.diagnosticOnly,
+				]);
+			}
+		}
+		else {
+			codeGen.push(`(__VLS_x as Record<string, any>)`);
+		}
+		codeGen.push(` = {\n`);
+
+		for (const [slotName, { nodes, slotDir }] of Object.entries(slotAndChildNodes)) {
 
 			let isStatic = true;
 			if (slotDir?.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
@@ -1418,9 +1432,7 @@ export function generate(
 			}
 		}
 
-		if (varSlots) {
-			codeGen.push(`};\n`);
-		}
+		codeGen.push(`};\n`);
 	}
 	function writeDirectives(node: CompilerDOM.ElementNode) {
 		for (const prop of node.props) {
