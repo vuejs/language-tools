@@ -6,6 +6,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import { VueCompilerOptions } from '../types';
 import { colletVars, walkInterpolationFragment } from '../utils/transform';
 import minimatch from 'minimatch';
+import * as muggle from 'muggle-string';
 
 const capabilitiesPresets = {
 	all: FileRangeCapabilities.full,
@@ -49,7 +50,6 @@ const transformContext: CompilerDOM.TransformContext = {
 
 export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
 	sourceTemplate: string,
 	sourceLang: string,
@@ -334,6 +334,7 @@ export function generate(
 
 				if (branch.condition?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					codeGen.push(` `);
+					const beforeCodeLength = codeGen.length;
 					writeInterpolation(
 						branch.condition.content,
 						branch.condition.loc.start.offset,
@@ -342,16 +343,15 @@ export function generate(
 						')',
 						branch.condition.loc,
 					);
+					const afterCodeLength = codeGen.length;
 					appendFormattingCode(
 						branch.condition.content,
 						branch.condition.loc.start.offset,
 						formatBrackets.round,
 					);
 
-					if (vueCompilerOptions.narrowingTypesInInlineHandlers) {
-						blockConditions.push(branch.condition.content);
-						addedBlockCondition = true;
-					}
+					blockConditions.push(muggle.toString(codeGen.slice(beforeCodeLength, afterCodeLength)));
+					addedBlockCondition = true;
 				}
 
 				codeGen.push(` {\n`);
@@ -611,81 +611,66 @@ export function generate(
 			_unWriteExps = unWriteExps;
 			codeGen.push(`};\n`);
 		}
-		{
 
-			// fix https://github.com/johnsoncodehk/volar/issues/1775
-			for (const failedExp of _unWriteExps) {
-				writeInterpolation(
+		//#region 
+		// fix https://github.com/johnsoncodehk/volar/issues/1775
+		for (const failedExp of _unWriteExps) {
+			writeInterpolation(
+				failedExp.loc.source,
+				failedExp.loc.start.offset,
+				capabilitiesPresets.all,
+				'(',
+				')',
+				failedExp.loc,
+			);
+			const fb = formatBrackets.round;
+			if (fb) {
+				appendFormattingCode(
 					failedExp.loc.source,
 					failedExp.loc.start.offset,
-					capabilitiesPresets.all,
-					'(',
-					')',
-					failedExp.loc,
+					fb,
 				);
-				const fb = formatBrackets.round;
-				if (fb) {
-					appendFormattingCode(
-						failedExp.loc.source,
-						failedExp.loc.start.offset,
-						fb,
-					);
-				}
-				codeGen.push(';\n');
 			}
-
-			let slotBlockVars: string[] | undefined;
-
-			writeInlineCss(node);
-
-			slotBlockVars = [];
-			writeImportSlots(node, parentEl, slotBlockVars);
-
-			for (const varName of slotBlockVars)
-				localVars[varName] = (localVars[varName] ?? 0) + 1;
-
-			const vScope = node.props.find(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && (prop.name === 'scope' || prop.name === 'data'));
-			let inScope = false;
-			let originalConditionsNum = blockConditions.length;
-
-			if (vScope?.type === CompilerDOM.NodeTypes.DIRECTIVE && vScope.exp) {
-
-				const scopeVar = `__VLS_${elementIndex++}`;
-				const condition = `(await import('./__VLS_types.js')).withScope(__VLS_ctx, ${scopeVar})`;
-
-				codeGen.push(`const ${scopeVar} = `);
-				codeGen.push([
-					vScope.exp.loc.source,
-					'template',
-					vScope.exp.loc.start.offset,
-					capabilitiesPresets.all,
-				]);
-				codeGen.push(';\n');
-				codeGen.push(`if (${condition}) {\n`);
-				blockConditions.push(condition);
-				inScope = true;
-			}
-
-			writeDirectives(node);
-			writeElReferences(node); // <el ref="foo" />
-			if (cssScopedClasses.length) writeClassScoped(node);
-			writeEvents(node);
-			writeSlots(node, startTagOffset);
-
-			for (const childNode of node.children) {
-				visitNode(childNode, parentEl);
-			}
-
-			if (slotBlockVars) {
-				for (const varName of slotBlockVars)
-					localVars[varName]--;
-			}
-
-			if (inScope) {
-				codeGen.push('}\n');
-				blockConditions.length = originalConditionsNum;
-			}
+			codeGen.push(';\n');
 		}
+
+		writeInlineCss(node);
+
+		const vScope = node.props.find(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && (prop.name === 'scope' || prop.name === 'data'));
+		let inScope = false;
+		let originalConditionsNum = blockConditions.length;
+
+		if (vScope?.type === CompilerDOM.NodeTypes.DIRECTIVE && vScope.exp) {
+
+			const scopeVar = `__VLS_${elementIndex++}`;
+			const condition = `(await import('./__VLS_types.js')).withScope(__VLS_ctx, ${scopeVar})`;
+
+			codeGen.push(`const ${scopeVar} = `);
+			codeGen.push([
+				vScope.exp.loc.source,
+				'template',
+				vScope.exp.loc.start.offset,
+				capabilitiesPresets.all,
+			]);
+			codeGen.push(';\n');
+			codeGen.push(`if (${condition}) {\n`);
+			blockConditions.push(condition);
+			inScope = true;
+		}
+
+		writeDirectives(node);
+		writeElReferences(node); // <el ref="foo" />
+		if (cssScopedClasses.length) writeClassScoped(node);
+		writeEvents(node);
+		writeSlots(node, startTagOffset);
+		writeChildren(node, parentEl);
+
+		if (inScope) {
+			codeGen.push('}\n');
+			blockConditions.length = originalConditionsNum;
+		}
+		//#endregion
+
 		codeGen.push(`}\n`);
 	}
 	function writeEvents(node: CompilerDOM.ElementNode) {
@@ -800,7 +785,7 @@ export function generate(
 					if (isCompoundExpression) {
 
 						prefix = '$event => {\n';
-						if (blockConditions.length) {
+						if (vueCompilerOptions.narrowingTypesInInlineHandlers) {
 							for (const blockCondition of blockConditions) {
 								prefix += `if (!(${blockCondition})) return;\n`;
 							}
@@ -1275,21 +1260,41 @@ export function generate(
 			}
 		}
 	}
-	function writeImportSlots(node: CompilerDOM.ElementNode, parentEl: CompilerDOM.ElementNode | undefined, slotBlockVars: string[]) {
+	function writeChildren(node: CompilerDOM.ElementNode, parentEl: CompilerDOM.ElementNode | undefined) {
+
+		if (!parentEl) {
+			for (const childNode of node.children) {
+				visitNode(childNode, undefined);
+			}
+			return;
+		}
+
+		let varSlots: string | undefined;
 
 		const componentVar = parentEl ? componentVars[parentEl.tag] : undefined;
+		const slotAndChildNodes: Record<string, { nodes: CompilerDOM.TemplateChildNode[], slotDir: CompilerDOM.DirectiveNode | undefined; }> = {};
 
-		for (const prop of node.props) {
-			if (
-				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-				&& prop.name === 'slot'
-			) {
+		for (const child of node.children) {
+			if (child.type !== CompilerDOM.NodeTypes.ELEMENT) {
+				slotAndChildNodes.default ??= { nodes: [], slotDir: undefined };
+				slotAndChildNodes.default.nodes.push(child);
+			}
+			else {
+				const slotDir = child.props.find(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'slot') as CompilerDOM.DirectiveNode | undefined;
+				const slotName = (slotDir?.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content) || 'default';
+				slotAndChildNodes[slotName] ??= { nodes: [], slotDir: undefined };
+				slotAndChildNodes[slotName].nodes.push(child);
+				slotAndChildNodes[slotName].slotDir ??= slotDir;
+			}
+		}
 
-				const varComponentInstanceA = `__VLS_${elementIndex++}`;
-				const varComponentInstanceB = `__VLS_${elementIndex++}`;
-				const varSlots = `__VLS_${elementIndex++}`;
+		for (const [slotName, { nodes, slotDir }] of Object.entries(slotAndChildNodes)) {
 
+			if (!varSlots) {
+				varSlots = `__VLS_${elementIndex++}`;
 				if (componentVar && parentEl) {
+					const varComponentInstanceA = `__VLS_${elementIndex++}`;
+					const varComponentInstanceB = `__VLS_${elementIndex++}`;
 					codeGen.push(`const ${varComponentInstanceA} = new __VLS_templateComponents.${componentVar}({ `);
 					writeProps(parentEl, 'class', 'slots');
 					codeGen.push(`});\n`);
@@ -1297,118 +1302,112 @@ export function generate(
 					writeProps(parentEl, 'class', 'slots');
 					codeGen.push(`});\n`);
 					writeInterpolationVarsExtraCompletion();
-					codeGen.push(`let ${varSlots}!: import('./__VLS_types.js').ExtractComponentSlots<import('./__VLS_types.js').PickNotAny<typeof ${varComponentInstanceA}, typeof ${varComponentInstanceB}>>;\n`);
-				}
-
-				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-					codeGen.push(`const `);
-
-					const collectAst = createTsAst(prop, `const ${prop.exp.content}`);
-					colletVars(ts, collectAst, slotBlockVars);
-
-					codeGen.push([
-						prop.exp.content,
-						'template',
-						prop.exp.loc.start.offset,
-						capabilitiesPresets.all,
-					]);
-					appendFormattingCode(
-						prop.exp.content,
-						prop.exp.loc.start.offset,
-						formatBrackets.round,
-					);
-
-					codeGen.push(` = `);
-				}
-
-				if (!componentVar || !parentEl) {
-					// fix https://github.com/johnsoncodehk/volar/issues/1425
-					codeGen.push(`{} as any;\n`);
-					continue;
-				}
-
-				let slotName = 'default';
-				let isStatic = true;
-				if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.content !== '') {
-					isStatic = prop.arg.isStatic;
-					slotName = prop.arg.content;
-				}
-				const argRange: [number, number] = prop.arg
-					? [prop.arg.loc.start.offset, prop.arg.loc.end.offset]
-					: [prop.loc.start.offset, prop.loc.start.offset + prop.loc.source.split('=')[0].length];
-				codeGen.push([
-					'',
-					'template',
-					argRange[0],
-					capabilitiesPresets.diagnosticOnly,
-				]);
-				codeGen.push(varSlots);
-				if (isStatic) {
-					// https://github.com/johnsoncodehk/volar/issues/2236
-					if (!compilerOptions.noPropertyAccessFromIndexSignature) {
-						writePropertyAccess(
-							slotName,
-							argRange,
-							{
-								...capabilitiesPresets.slotName,
-								completion: !!prop.arg,
-							},
-						);
-					}
-					else {
-						codeGen.push(`[`);
-						writeCodeWithQuotes(
-							slotName,
-							argRange,
-							{
-								...capabilitiesPresets.slotName,
-								completion: !!prop.arg,
-							},
-						);
-						codeGen.push(`]`);
-					}
+					codeGen.push(`const ${varSlots}: import('./__VLS_types.js').ExtractComponentSlots<import('./__VLS_types.js').PickNotAny<typeof ${varComponentInstanceA}, typeof ${varComponentInstanceB}>>`);
 				}
 				else {
-					codeGen.push(`[`);
-					writeInterpolation(
-						slotName,
-						argRange[0] + 1,
-						capabilitiesPresets.all,
-						'',
-						'',
-						(prop.loc as any).slot_name ?? ((prop.loc as any).slot_name = {}),
-					);
-					codeGen.push(`]`);
-					writeInterpolationVarsExtraCompletion();
+					codeGen.push(`const ${varSlots}: Record<string, any>`);
 				}
+				codeGen.push(` = {\n`);
+			}
+
+			let isStatic = true;
+			if (slotDir?.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+				isStatic = slotDir.arg.isStatic;
+			}
+			const argRange: [number, number] | undefined =
+				slotDir
+					? slotDir.arg
+						? [slotDir.arg.loc.start.offset, slotDir.arg.loc.end.offset]
+						: [slotDir.loc.start.offset, slotDir.loc.start.offset + slotDir.loc.source.split('=')[0].length]
+					: undefined;
+
+			if (!slotDir || !argRange) {
+				codeGen.push(slotName);
+			}
+			else if (isStatic) {
+				writeObjectProperty(
+					slotName,
+					argRange,
+					{
+						...capabilitiesPresets.slotName,
+						completion: !!slotDir.arg,
+					},
+					slotDir.arg?.loc ?? slotDir.loc,
+				);
+			}
+			else {
+				codeGen.push(`[`);
+				writeInterpolation(
+					slotName,
+					argRange[0] + 1,
+					capabilitiesPresets.all,
+					'',
+					'',
+					(slotDir.loc as any).slot_name ?? ((slotDir.loc as any).slot_name = {}),
+				);
+				codeGen.push(`]`);
+				writeInterpolationVarsExtraCompletion();
+			}
+			codeGen.push(`(`);
+
+			const slotBlockVars: string[] = [];
+
+			if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+
+				const collectAst = createTsAst(slotDir, `(${slotDir.exp.content}) => {}`);
+				colletVars(ts, collectAst, slotBlockVars);
+
+				codeGen.push([
+					slotDir.exp.content,
+					'template',
+					slotDir.exp.loc.start.offset,
+					capabilitiesPresets.all,
+				]);
+				appendFormattingCode(
+					slotDir.exp.content,
+					slotDir.exp.loc.start.offset,
+					formatBrackets.round,
+				);
+			}
+
+			codeGen.push(`): any {`);
+			for (const blockCondition of blockConditions) {
+				codeGen.push(`if (!(${blockCondition})) return;\n`);
+			}
+			slotBlockVars.forEach(varName => {
+				localVars[varName] ??= 0;
+				localVars[varName]++;
+			});
+			for (const childNode of nodes) {
+				visitNode(childNode, undefined);
+			}
+			slotBlockVars.forEach(varName => {
+				localVars[varName]--;
+			});
+			codeGen.push(`},\n`);
+
+			if (isStatic && slotDir && !slotDir.arg) {
+
+				let offset = slotDir.loc.start.offset;
+
+				if (slotDir.loc.source.startsWith('#'))
+					offset += '#'.length;
+				else if (slotDir.loc.source.startsWith('v-slot:'))
+					offset += 'v-slot:'.length;
+
+				codeGen.push(`'`);
 				codeGen.push([
 					'',
 					'template',
-					argRange[1],
-					capabilitiesPresets.diagnosticOnly,
+					offset,
+					{ completion: true },
 				]);
-				codeGen.push(`;\n`);
-
-				if (isStatic && !prop.arg) {
-
-					let offset = prop.loc.start.offset;
-
-					if (prop.loc.source.startsWith('#'))
-						offset += '#'.length;
-					else if (prop.loc.source.startsWith('v-slot:'))
-						offset += 'v-slot:'.length;
-
-					codeGen.push(varSlots);
-					codeGen.push(`['`);
-					codeGen.push([
-						'',
-						'template',
-						offset,
-						{ completion: true },
-					]);
-					codeGen.push(`'];\n`);
-				}
+				codeGen.push(`'/* empty slot name completion */\n`);
 			}
+		}
+
+		if (varSlots) {
+			codeGen.push(`};\n`);
 		}
 	}
 	function writeDirectives(node: CompilerDOM.ElementNode) {
