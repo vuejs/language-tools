@@ -526,6 +526,8 @@ export function generate(
 		}
 		else {
 
+			let isFunctionCall = false;
+
 			if (_isIntrinsicElement) {
 
 				for (const offset of tagOffsets) {
@@ -563,10 +565,11 @@ export function generate(
 
 				codeGen.push(['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]); // diagnostic start
 				{
-					codeGen.push(`(__VLS_any as import('./__VLS_types.js').ComponentProps<typeof ${node.tag}>)`);
+					codeGen.push(`(__VLS_any as import('./__VLS_types.js').asFunctionalComponent<typeof ${node.tag}>)`);
 				}
 				codeGen.push(['', 'template', startTagOffset + node.tag.length, capabilitiesPresets.diagnosticOnly]); // diagnostic end
-				codeGen.push(` = `);
+				codeGen.push(`(`);
+				isFunctionCall = true;
 			}
 			else {
 
@@ -588,7 +591,7 @@ export function generate(
 
 				codeGen.push(['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]); // diagnostic start
 				{
-					codeGen.push(`(__VLS_any as import('./__VLS_types.js').ComponentProps<typeof `);
+					codeGen.push(`(__VLS_any as import('./__VLS_types.js').asFunctionalComponent<typeof `);
 					if (componentVars[node.tag]) {
 						codeGen.push(`__VLS_templateComponents`);
 					}
@@ -603,13 +606,18 @@ export function generate(
 					codeGen.push(`>)`);
 				}
 				codeGen.push(['', 'template', startTagOffset + node.tag.length, capabilitiesPresets.diagnosticOnly]); // diagnostic end
-				codeGen.push(` = `);
+				codeGen.push(`(`);
+				isFunctionCall = true;
 			}
 
 			codeGen.push(`{ `);
 			const { unWriteExps } = writeProps(node, 'class', 'props');
 			_unWriteExps = unWriteExps;
-			codeGen.push(`};\n`);
+			codeGen.push(`}`);
+			if (isFunctionCall) {
+				codeGen.push(`)`);
+			}
+			codeGen.push(`;\n`);
 		}
 
 		//#region 

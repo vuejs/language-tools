@@ -111,15 +111,15 @@ export type WithComponent<N0, Components, N1, N2 = unknown, N3 = unknown> =
 	N2 extends keyof Components ? { [K in N0]: Components[N2] } :
 	N3 extends keyof Components ? { [K in N0]: Components[N3] } :
 	${vueCompilerOptions.strictTemplates ? '{}' : '{ [K in N0]: any }'};
-export type ComponentProps<T> =
+export type asFunctionalComponent<T> =
 	${vueCompilerOptions.strictTemplates ? '' : 'Record<string, unknown> &'}
 	(
-		T extends new (...args: any) => { $props: infer Props } ? Props
-		: T extends (props: infer Props, ...args: any) => any ? Props
-		: T extends (...args: any) => { props: infer Props } ? Props
-		: T extends new (...args: any) => any ? {}
-		: T extends (...args: any) => any ? {}
-		: T // IntrinsicElement
+		T extends new (...args: any) => { $props: infer Props } ? (_: Props) => any
+		: T extends (props: infer Props, ...args: any) => any ? T
+		: T extends (...args: any) => { props: infer Props } ? (_: Props) => any
+		: T extends new (...args: any) => any ? (_: {}) => any
+		: T extends (...args: any) => any ? (_: {}) => any
+		: (_: T) => any // IntrinsicElement
 	);
 export type InstanceProps<I, C> = I extends { $props: infer Props } ? Props & Record<string, unknown> : C & Record<string, unknown>;
 export type EventObject<I, K1 extends string, C, E1> = {
