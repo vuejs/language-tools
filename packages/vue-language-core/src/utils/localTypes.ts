@@ -64,8 +64,9 @@ export declare function makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
 // TODO: make it stricter between class component type and functional component type
 export type ExtractComponentSlots<T> =
 	IsAny<T> extends true ? Record<string, any>
-	: T extends { ${slots}?: infer S } ? { [K in keyof S]-?: S[K] extends ((obj: infer O) => any) | undefined ? O : any }
-	: T extends { children?: infer S } ? { [K in keyof S]-?: S[K] extends ((obj: infer O) => any) | undefined ? O : any }
+	: T extends { ${slots}?: infer S } ? S
+	: T extends { children?: infer S } ? S
+	: T extends { [K in keyof PickNotAny<JSX.ElementChildrenAttribute, {}>]?: infer S } ? S
 	: Record<string, any>;
 
 export type FillingEventArg_ParametersLength<E extends (...args: any) => any> = IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];
@@ -135,8 +136,6 @@ export type EventObject<I, K1 extends string, C, E1> = {
 		>
 	>
 };
-
-type IntrinsicElements = JSX.IntrinsicElements;
 `.trim();
 }
 

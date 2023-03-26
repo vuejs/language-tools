@@ -478,7 +478,10 @@ function createSchemaResolvers(
 		};
 	}
 	function resolveSlotProperties(prop: ts.Symbol): SlotMeta {
-		const subtype = typeChecker.getTypeOfSymbolAtLocation(typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!).getCallSignatures()[0].parameters[0], symbolNode!);
+		const propType = typeChecker.getNonNullableType(typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!));
+		const signatures = propType.getCallSignatures();
+		const paramType = signatures[0].parameters[0];
+		const subtype = typeChecker.getTypeOfSymbolAtLocation(paramType, symbolNode!);
 		let schema: PropertyMetaSchema;
 
 		return {
