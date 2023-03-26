@@ -320,6 +320,9 @@ export function generate(
 			codeGen.push('(');
 			if (generateFunctionType && scriptSetupRanges.propsTypeArg) {
 				codeGen.push('__VLS_props: ');
+				if (!vueCompilerOptions.strictTemplates) {
+					codeGen.push(`Record<string, unknown> & `);
+				}
 				addVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
 			}
 			codeGen.push(') => {\n');

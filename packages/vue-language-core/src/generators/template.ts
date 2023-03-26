@@ -526,8 +526,6 @@ export function generate(
 		}
 		else {
 
-			let isFunctionCall = false;
-
 			if (_isIntrinsicElement) {
 
 				for (const offset of tagOffsets) {
@@ -543,13 +541,13 @@ export function generate(
 					codeGen.push(`;\n`);
 				}
 
-				codeGen.push(`(__VLS_any as import('./__VLS_types.js').IntrinsicElements)[`);
+				codeGen.push(`(await import('./__VLS_types.js')).asFunctionalComponent(({} as import('./__VLS_types.js').IntrinsicElements)[`);
 				writeCodeWithQuotes(
 					node.tag,
 					tagOffsets[0],
 					capabilitiesPresets.diagnosticOnly,
 				);
-				codeGen.push(`] = `);
+				codeGen.push(`])`);
 			}
 			else if (_isNamespacedTag) {
 
@@ -563,13 +561,7 @@ export function generate(
 					codeGen.push(`;\n`);
 				}
 
-				codeGen.push(['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]); // diagnostic start
-				{
-					codeGen.push(`(__VLS_any as import('./__VLS_types.js').asFunctionalComponent<typeof ${node.tag}>)`);
-				}
-				codeGen.push(['', 'template', startTagOffset + node.tag.length, capabilitiesPresets.diagnosticOnly]); // diagnostic end
-				codeGen.push(`(`);
-				isFunctionCall = true;
+				codeGen.push(`(await import('./__VLS_types.js')).asFunctionalComponent(${node.tag})`);
 			}
 			else {
 
@@ -589,34 +581,29 @@ export function generate(
 					codeGen.push(`;\n`);
 				}
 
-				codeGen.push(['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]); // diagnostic start
-				{
-					codeGen.push(`(__VLS_any as import('./__VLS_types.js').asFunctionalComponent<typeof `);
-					if (componentVars[node.tag]) {
-						codeGen.push(`__VLS_templateComponents`);
-					}
-					writePropertyAccess(
-						componentVars[node.tag] ?? node.tag,
-						[startTagOffset, startTagOffset + node.tag.length],
-						{
-							...capabilitiesPresets.tagHover,
-							...capabilitiesPresets.diagnosticOnly,
-						},
-					);
-					codeGen.push(`>)`);
+				codeGen.push(`(await import('./__VLS_types.js')).asFunctionalComponent(`);
+				if (componentVars[node.tag]) {
+					codeGen.push(`__VLS_templateComponents`);
 				}
-				codeGen.push(['', 'template', startTagOffset + node.tag.length, capabilitiesPresets.diagnosticOnly]); // diagnostic end
-				codeGen.push(`(`);
-				isFunctionCall = true;
+				writePropertyAccess(
+					componentVars[node.tag] ?? node.tag,
+					[startTagOffset, startTagOffset + node.tag.length],
+					{
+						...capabilitiesPresets.tagHover,
+						...capabilitiesPresets.diagnosticOnly,
+					},
+				);
+				codeGen.push(`)`);
 			}
 
+			codeGen.push(`(`);
+			codeGen.push(['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]); // diagnostic start
 			codeGen.push(`{ `);
 			const { unWriteExps } = writeProps(node, 'class', 'props');
 			_unWriteExps = unWriteExps;
 			codeGen.push(`}`);
-			if (isFunctionCall) {
-				codeGen.push(`)`);
-			}
+			codeGen.push(['', 'template', startTagOffset + node.tag.length, capabilitiesPresets.diagnosticOnly]); // diagnostic end
+			codeGen.push(`)`);
 			codeGen.push(`;\n`);
 		}
 
