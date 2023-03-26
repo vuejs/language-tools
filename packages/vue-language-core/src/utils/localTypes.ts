@@ -66,7 +66,7 @@ export type ExtractComponentSlots<T> =
 	IsAny<T> extends true ? Record<string, any>
 	: T extends { ${slots}?: infer S } ? S
 	: T extends { children?: infer S } ? S
-	: T extends { [K in keyof JSX.ElementChildrenAttribute]?: infer S } ? S
+	: T extends { [K in keyof PickNotAny<JSX.ElementChildrenAttribute, {}>]?: infer S } ? S
 	: Record<string, any>;
 
 export type FillingEventArg_ParametersLength<E extends (...args: any) => any> = IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];
