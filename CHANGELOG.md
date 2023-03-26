@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.8 (2023/3/27) - pre-release
+
+- fix: missing props type check stop working
+
 ## 1.3.7 (2023/3/26) - pre-release
 
 - feat: support `normalizeComponentImportName` for `additionalExtensions` ([#2481](https://github.com/johnsoncodehk/volar/issues/2481))
