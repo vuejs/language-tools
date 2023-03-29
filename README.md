@@ -71,6 +71,8 @@ Alternatively, you can run one of the scripts defined in the [package.json](http
 
 Additional info for contributing to open source projects can be found here: https://docs.github.com/en/get-started/quickstart/contributing-to-projects
 
+To develop with upstream Volar.js modules, you can setup workspace with https://github.com/volarjs/workspace.
+
 ## High Level System Overview
 
 ```mermaid
