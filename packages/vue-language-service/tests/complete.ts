@@ -71,7 +71,9 @@ for (const dirName of testDirs) {
 						edits = edits.concat(item.additionalTextEdits);
 					}
 
-					const result = TextDocument.applyEdits(TextDocument.create('', '', 0, fileText), edits);
+					let result = TextDocument.applyEdits(TextDocument.create('', '', 0, fileText), edits);
+
+					result = result.replaceAll('$0', '').replaceAll('$1', '');
 
 					expect(result.replace(/\r\n/g, '\n')).toBe(expectedFileText.replace(/\r\n/g, '\n'));
 				});

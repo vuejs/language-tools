@@ -151,12 +151,9 @@ function resolvePlugins(
 							}
 						}
 					}
-					else if (
-						item.textEdit?.newText && new RegExp(`import \w*${suffix}\$1 from \S*`).test(item.textEdit.newText)
-						&& !item.additionalTextEdits?.length
-					) {
+					else if (item.textEdit?.newText && new RegExp(`import \\w*${suffix}\\$1 from [\\S\\s]*`).test(item.textEdit.newText)) {
 						// https://github.com/johnsoncodehk/volar/issues/2286
-						item.textEdit.newText = item.textEdit.newText.replace(`${suffix}$1`, '');
+						item.textEdit.newText = item.textEdit.newText.replace(`${suffix}$1`, '$1');
 					}
 				}
 
