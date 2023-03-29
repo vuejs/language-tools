@@ -24,12 +24,11 @@ const capabilitiesPresets = {
 	refAttr: { references: true, definition: true, rename: true } satisfies FileRangeCapabilities,
 };
 const formatBrackets = {
-	empty: ['', ''] as [string, string],
-	round: ['(', ')'] as [string, string],
+	empty: ['', ';'] as [string, string],
 	// fix https://github.com/johnsoncodehk/volar/issues/1210
 	// fix https://github.com/johnsoncodehk/volar/issues/2305
 	curly: ['0 +', '+ 0;'] as [string, string],
-	square: ['[', ']'] as [string, string],
+	square: ['[', '];'] as [string, string],
 };
 const validTsVar = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 // @ts-ignore
@@ -347,7 +346,7 @@ export function generate(
 					appendFormattingCode(
 						branch.condition.content,
 						branch.condition.loc.start.offset,
-						formatBrackets.round,
+						formatBrackets.empty,
 					);
 
 					blockConditions.push(muggle.toString(codeGen.slice(beforeCodeLength, afterCodeLength)));
@@ -618,7 +617,7 @@ export function generate(
 				')',
 				failedExp.loc,
 			);
-			const fb = formatBrackets.round;
+			const fb = formatBrackets.empty;
 			if (fb) {
 				appendFormattingCode(
 					failedExp.loc.source,
@@ -745,7 +744,7 @@ export function generate(
 				appendFormattingCode(
 					prop.exp.content,
 					prop.exp.loc.start.offset,
-					formatBrackets.round,
+					formatBrackets.empty,
 				);
 				codeGen.push(`;\n`);
 			}
@@ -805,7 +804,7 @@ export function generate(
 					appendFormattingCode(
 						prop.exp.content,
 						prop.exp.loc.start.offset,
-						formatBrackets.round,
+						formatBrackets.empty,
 					);
 				}
 				else {
@@ -955,7 +954,7 @@ export function generate(
 						')',
 						prop.exp.loc,
 					);
-					const fb = getFormatBrackets(formatBrackets.round);
+					const fb = getFormatBrackets(formatBrackets.empty);
 					if (fb) {
 						appendFormattingCode(
 							prop.exp.loc.source,
@@ -1114,7 +1113,7 @@ export function generate(
 					')',
 					prop.exp.loc,
 				);
-				const fb = getFormatBrackets(formatBrackets.round);
+				const fb = getFormatBrackets(formatBrackets.empty);
 				if (fb) {
 					appendFormattingCode(
 						prop.exp.content,
@@ -1385,7 +1384,7 @@ export function generate(
 				appendFormattingCode(
 					slotDir.exp.content,
 					slotDir.exp.loc.start.offset,
-					formatBrackets.round,
+					formatBrackets.empty,
 				);
 			}
 
@@ -1475,7 +1474,7 @@ export function generate(
 					appendFormattingCode(
 						prop.exp.content,
 						prop.exp.loc.start.offset,
-						formatBrackets.round,
+						formatBrackets.empty,
 					);
 				}
 				codeGen.push([
@@ -1820,7 +1819,7 @@ export function generate(
 		formatCodeGen.push(formatWrapper[0]);
 		formatCodeGen.push([mapCode, 'template', sourceOffset, {}]);
 		formatCodeGen.push(formatWrapper[1]);
-		formatCodeGen.push(`\n;\n`);
+		formatCodeGen.push(`\n`);
 	}
 };
 
