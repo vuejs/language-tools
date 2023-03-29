@@ -54,7 +54,10 @@ export function createProgram(options: ts.CreateProgramOptions) {
 			version: string,
 		}>();
 		const vueLsHost = new Proxy(<vue.VueLanguageServiceHost>{
-			resolveModuleNames: undefined, // avoid failed with tsc built-in fileExists
+			// avoid failed with tsc built-in fileExists
+			resolveModuleNames: undefined,
+			resolveModuleNameLiterals: undefined,
+
 			writeFile: (fileName, content) => {
 				if (fileName.indexOf('__VLS_') === -1) {
 					ctx.options.host!.writeFile(fileName, content, false);
