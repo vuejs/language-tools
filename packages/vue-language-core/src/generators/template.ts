@@ -714,12 +714,26 @@ export function generate(
 				);
 				codeGen.push(`]> = {\n`);
 				{
-					writeObjectProperty(
-						prop.arg.loc.source,
-						prop.arg.loc.start.offset,
-						capabilitiesPresets.event,
-						prop.arg.loc,
-					);
+					if (prop.arg.loc.source.startsWith('[') && prop.arg.loc.source.endsWith(']')) {
+						codeGen.push(`[(`);
+						writeInterpolation(
+							prop.arg.loc.source.slice(1, -1),
+							prop.arg.loc.start.offset + 1,
+							capabilitiesPresets.all,
+							'',
+							'',
+							prop.arg.loc,
+						);
+						codeGen.push(`)!]`);
+					}
+					else {
+						writeObjectProperty(
+							prop.arg.loc.source,
+							prop.arg.loc.start.offset,
+							capabilitiesPresets.event,
+							prop.arg.loc,
+						);
+					}
 					codeGen.push(`: `);
 					appendExpressionNode(prop);
 				}
