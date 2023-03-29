@@ -159,15 +159,19 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 			}
 			function tryUpdateNodeLoc(loc: Loc) {
 
+				delete (loc as any).__endOffset;
+
 				if (withinChangeRange(loc)) {
 					loc.source =
 						loc.source.substring(0, change.start - loc.start.offset)
 						+ change.newText
 						+ loc.source.substring(change.end - loc.start.offset);
+					(loc as any).__endOffset = loc.end.offset;
 					loc.end.offset += lengthDiff;
 					return true;
 				}
 				else if (change.end <= loc.start.offset) {
+					(loc as any).__endOffset = loc.end.offset;
 					loc.start.offset += lengthDiff;
 					loc.end.offset += lengthDiff;
 					return true;
@@ -179,7 +183,8 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 				return false;
 			}
 			function withinChangeRange(loc: Loc) {
-				return change.start >= loc.start.offset && change.end <= loc.end.offset;
+				const originalLocEnd = (loc as any).__endOffset ?? loc.end.offset;
+				return change.start >= loc.start.offset && change.end <= originalLocEnd;
 			}
 		},
 	};
