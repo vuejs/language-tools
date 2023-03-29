@@ -135,7 +135,7 @@ function getVueCompilerOptions(
 	function resolvePath(scriptPath: string): string | undefined {
 		try {
 			if (require?.resolve) {
-				scriptPath = require.resolve(scriptPath, { paths: [folder] });
+				return require.resolve(scriptPath, { paths: [folder] });
 			}
 			else {
 				console.log('failed to resolve path:', scriptPath, 'require.resolve is not supported in web');
