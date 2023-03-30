@@ -28,7 +28,7 @@ const plugin: LanguageServicePlugin = (context) => {
 
 				forEachEmbeddedFile(vueFile, (embedded) => {
 					if (embedded.kind === FileKind.TypeScriptHostFile) {
-						for (const [_, map] of context.documents.getMapsByVirtualFileUri(document.uri)) {
+						for (const [_, map] of context.documents.getMapsByVirtualFileName(embedded.fileName)) {
 							for (const [pointerPosition, hoverOffset] of hoverOffsets) {
 								for (const [tsOffset, mapping] of map.map.toGeneratedOffsets(hoverOffset)) {
 									if (mapping.data.hover) {
