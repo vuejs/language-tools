@@ -72,7 +72,10 @@ export function generate(
 	const cssScopedClassesSet = new Set(cssScopedClasses);
 	const tagNames = collectTagOffsets();
 	const localVars: Record<string, number> = {};
-	const tempVars: ReturnType<typeof walkInterpolationFragment>[] = [];
+	const tempVars: {
+		text: string;
+		offset: number | [number, number];
+	}[][] = [];
 	const identifiers = new Set<string>();
 	const scopedClasses: { className: string, offset: number; }[] = [];
 	const blockConditions: string[] = [];
@@ -1458,23 +1461,22 @@ export function generate(
 					capabilitiesPresets.diagnosticOnly,
 				]);
 				codeGen.push(`(await import('./__VLS_types.js')).directiveFunction(__VLS_ctx.`);
+				const dirAttrName = 'v-' + prop.name; // v-foo
+				const dirVarName = camelize(dirAttrName); // vFoo
 				codeGen.push([
-					camelize('v-' + prop.name),
+					dirVarName,
 					'template',
-					[prop.loc.start.offset, prop.loc.start.offset + 'v-'.length + prop.name.length],
+					[prop.loc.start.offset, prop.loc.start.offset + dirAttrName.length],
 					{
 						...capabilitiesPresets.noDiagnostic,
-						completion: {
-							// fix https://github.com/johnsoncodehk/volar/issues/1905
-							additional: true,
-						},
+						completion: false,
 						rename: {
 							normalize: camelize,
-							apply: getRenameApply(prop.name),
+							apply: hyphenate,
 						},
 					},
 				]);
-				identifiers.add(camelize('v-' + prop.name));
+				identifiers.add(dirVarName);
 				codeGen.push(`)`);
 				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					writeInterpolation(
