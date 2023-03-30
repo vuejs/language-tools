@@ -195,12 +195,11 @@ export function getDocumentSelector(context: vscode.ExtensionContext) {
 		'typescript',
 		'javascriptreact',
 		'typescriptreact',
+		'json',
+		// 'jsonc',
 	] : [
 		'vue',
 	];
-	if (takeOverMode) {
-		langs.push('json');
-	}
 	if (processHtml()) {
 		langs.push('html');
 	}

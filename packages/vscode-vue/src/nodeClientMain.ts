@@ -43,11 +43,12 @@ export function activate(context: vscode.ExtensionContext) {
 
 		const serverModule = vscode.Uri.joinPath(context.extensionUri, 'server.js');
 		const maxOldSpaceSize = vscode.workspace.getConfiguration('volar').get<number | null>('vueserver.maxOldSpaceSize');
-		const runOptions = { execArgv: <string[]>[] };
+		const runOptions: lsp.ForkOptions = {};
 		if (maxOldSpaceSize) {
+			runOptions.execArgv ??= [];
 			runOptions.execArgv.push("--max-old-space-size=" + maxOldSpaceSize);
 		}
-		const debugOptions = { execArgv: ['--nolazy', '--inspect=' + port] };
+		const debugOptions: lsp.ForkOptions = { execArgv: ['--nolazy', '--inspect=' + port] };
 		const serverOptions: lsp.ServerOptions = {
 			run: {
 				module: serverModule.fsPath,
