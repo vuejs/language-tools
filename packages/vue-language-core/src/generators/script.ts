@@ -317,9 +317,11 @@ export function generate(
 				addVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
 				codes.push(',\n');
 			}
-			// else if (scriptSetupRanges.propsRuntimeArg) {
-			// 	// TODO
-			// }
+			else if (scriptSetupRanges.emitsRuntimeArg) {
+				codes.push(`(await import('vue')).defineEmits(`);
+				addVirtualCode('scriptSetup', scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end);
+				codes.push('),\n');
+			}
 			else {
 				codes.push('{} as any,\n');
 			}
