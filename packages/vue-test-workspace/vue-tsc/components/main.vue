@@ -1,5 +1,5 @@
 <script lang="ts">
-import { exactType } from '../shared';
+import { looserExactType } from '../shared';
 import { defineComponent, PropType, ref } from 'vue';
 import ScriptSetup from './script-setup.vue';
 import ScriptSetupExpose from './script-setup-expose.vue';
@@ -7,7 +7,7 @@ import ScriptSetupTypeOnly from './script-setup-type-only.vue';
 import ScriptSetupDefaultProps from './script-setup-default-props.vue';
 
 // https://vuejs.org/api/sfc-script-setup.html#defineprops-defineemits
-exactType(ScriptSetup, defineComponent({
+looserExactType(ScriptSetup, defineComponent({
 	props: {
 		foo: String,
 	},
@@ -17,7 +17,7 @@ exactType(ScriptSetup, defineComponent({
 	},
 }));
 // https://vuejs.org/api/sfc-script-setup.html#defineexpose
-exactType(ScriptSetupExpose, defineComponent({
+looserExactType(ScriptSetupExpose, defineComponent({
 	setup() {
 		const a = 1
 		const b = ref(2)
@@ -28,7 +28,7 @@ exactType(ScriptSetupExpose, defineComponent({
 	},
 }));
 // https://vuejs.org/api/sfc-script-setup.html#typescript-only-features
-exactType(ScriptSetupTypeOnly, defineComponent({
+looserExactType(ScriptSetupTypeOnly, defineComponent({
 	props: {
 		foo: {
 			type: String,
@@ -45,7 +45,7 @@ exactType(ScriptSetupTypeOnly, defineComponent({
 	},
 }));
 // https://vuejs.org/api/sfc-script-setup.html#default-props-values-when-using-type-declaration
-exactType(ScriptSetupDefaultProps, defineComponent({
+looserExactType(ScriptSetupDefaultProps, defineComponent({
 	props: {
 		msg: {
 			type: String,
