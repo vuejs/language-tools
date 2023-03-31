@@ -3,10 +3,11 @@ import { FileRangeCapabilities } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { VueCompilerOptions } from '../types';
+import { Sfc, VueCompilerOptions } from '../types';
 import { colletVars, walkInterpolationFragment } from '../utils/transform';
 import minimatch from 'minimatch';
 import * as muggle from 'muggle-string';
+import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 
 const capabilitiesPresets = {
 	all: FileRangeCapabilities.full,
@@ -53,8 +54,9 @@ export function generate(
 	sourceTemplate: string,
 	sourceLang: string,
 	templateAst: CompilerDOM.RootNode,
-	hasScriptSetup: boolean,
+	scriptSetupRanges: ReturnType<typeof parseScriptSetupRanges> | undefined,
 	cssScopedClasses: string[] = [],
+	sfc: Sfc,
 ) {
 
 	const nativeTags = new Set(vueCompilerOptions.nativeTags);
@@ -101,26 +103,37 @@ export function generate(
 
 	function declareSlots() {
 
-		codeGen.push(`declare var __VLS_slots:\n`);
-		for (const [exp, slot] of slotExps) {
-			hasSlot = true;
-			codeGen.push(`Partial<Record<NonNullable<typeof ${exp}>, (_: typeof ${slot.varName}) => any>> &\n`);
+		codeGen.push(`var __VLS_slots!: `);
+		if (scriptSetupRanges?.slotsTypeArg && sfc.scriptSetup) {
+			codeGen.push([
+				sfc.scriptSetup.content.substring(scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end),
+				sfc.scriptSetup.name,
+				[scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end],
+				capabilitiesPresets.all,
+			]);
 		}
-		codeGen.push(`{\n`);
-		for (const [name, slot] of slots) {
-			hasSlot = true;
-			writeObjectProperty(
-				name,
-				slot.loc, // TODO: SourceMaps.MappingKind.Expand
-				{
-					...capabilitiesPresets.slotNameExport,
-					referencesCodeLens: hasScriptSetup,
-				},
-				slot.nodeLoc,
-			);
-			codeGen.push(`?(_: typeof ${slot.varName}): any,\n`);
+		else {
+			for (const [exp, slot] of slotExps) {
+				hasSlot = true;
+				codeGen.push(`Partial<Record<NonNullable<typeof ${exp}>, (_: typeof ${slot.varName}) => any>> &\n`);
+			}
+			codeGen.push(`{\n`);
+			for (const [name, slot] of slots) {
+				hasSlot = true;
+				writeObjectProperty(
+					name,
+					slot.loc, // TODO: SourceMaps.MappingKind.Expand
+					{
+						...capabilitiesPresets.slotNameExport,
+						referencesCodeLens: !!scriptSetupRanges,
+					},
+					slot.nodeLoc,
+				);
+				codeGen.push(`?(_: typeof ${slot.varName}): any,\n`);
+			}
+			codeGen.push(`}`);
 		}
-		codeGen.push(`};\n`);
+		codeGen.push(`;\n`);
 	}
 	function writeStyleScopedClasses() {
 
@@ -1296,15 +1309,11 @@ export function generate(
 		}
 
 		if (componentVar && parentEl) {
-			const varComponentInstanceA = `__VLS_${elementIndex++}`;
-			const varComponentInstanceB = `__VLS_${elementIndex++}`;
-			codeGen.push(`const ${varComponentInstanceA} = new __VLS_templateComponents.${componentVar}({ `);
+			codeGen.push(`(await import('./__VLS_types.js')).asFunctionalComponent(__VLS_templateComponents.${componentVar}, new __VLS_templateComponents.${componentVar}({ `);
 			writeProps(parentEl, 'class', 'slots');
-			codeGen.push(`});\n`);
-			codeGen.push(`const ${varComponentInstanceB} = __VLS_templateComponents.${componentVar}({ `);
+			codeGen.push(`}))({ `);
 			writeProps(parentEl, 'class', 'slots');
-			codeGen.push(`});\n`);
-			writeInterpolationVarsExtraCompletion();
+			codeGen.push(`}, { attrs: {} as any, expose: {} as any, emit: {} as any, `);
 			if (vueCompilerOptions.strictTemplates) {
 				codeGen.push([
 					'',
@@ -1313,7 +1322,7 @@ export function generate(
 					capabilitiesPresets.diagnosticOnly,
 				]);
 			}
-			codeGen.push(`(__VLS_any as import('./__VLS_types.js').ExtractComponentSlots<import('./__VLS_types.js').PickNotAny<typeof ${varComponentInstanceA}, typeof ${varComponentInstanceB}>>)`);
+			codeGen.push(`slots`);
 			if (vueCompilerOptions.strictTemplates) {
 				codeGen.push([
 					'',
@@ -1322,11 +1331,12 @@ export function generate(
 					capabilitiesPresets.diagnosticOnly,
 				]);
 			}
+			codeGen.push(`: {\n`);
 		}
 		else {
 			codeGen.push(`(__VLS_any as Record<string, any>)`);
+			codeGen.push(` = {\n`);
 		}
-		codeGen.push(` = {\n`);
 
 		for (const [slotName, { nodes, slotDir }] of Object.entries(slotAndChildNodes)) {
 
@@ -1438,7 +1448,15 @@ export function generate(
 			}
 		}
 
-		codeGen.push(`};\n`);
+		if (componentVar && parentEl) {
+			codeGen.push(`},\n`);
+			codeGen.push(`});\n`);
+		}
+		else {
+			codeGen.push(`};\n`);
+		}
+
+		writeInterpolationVarsExtraCompletion();
 	}
 	function writeDirectives(node: CompilerDOM.ElementNode) {
 		for (const prop of node.props) {
@@ -1570,19 +1588,30 @@ export function generate(
 		if (node.tag !== 'slot')
 			return;
 
-		const varDefaultBind = `__VLS_${elementIndex++}`;
-		const varBinds = `__VLS_${elementIndex++}`;
 		const varSlot = `__VLS_${elementIndex++}`;
-		let hasDefaultBind = false;
+		const slotNameExpNode = getSlotNameExpNode();
 
+		if (scriptSetupRanges?.slotsTypeArg) {
+			const slotNameExp = typeof slotNameExpNode === 'object' ? slotNameExpNode.content : slotNameExpNode;
+			codeGen.push(['', 'template', node.loc.start.offset, capabilitiesPresets.diagnosticOnly]);
+			codeGen.push(`__VLS_slots[`);
+			codeGen.push(['', 'template', node.loc.start.offset, capabilitiesPresets.diagnosticOnly]);
+			codeGen.push(slotNameExp);
+			codeGen.push(['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly]);
+			codeGen.push(`]`);
+			codeGen.push(['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly]);
+			codeGen.push(`({\n`);
+		}
+		else {
+			codeGen.push(`var ${varSlot} = {\n`);
+		}
 		for (const prop of node.props) {
 			if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 				&& !prop.arg
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
-				hasDefaultBind = true;
-				codeGen.push(`const ${varDefaultBind} = `);
+				codeGen.push(`...`);
 				writeInterpolation(
 					prop.exp.content,
 					prop.exp.loc.start.offset,
@@ -1591,15 +1620,9 @@ export function generate(
 					')',
 					prop.exp.loc,
 				);
-				codeGen.push(`;\n`);
-				writeInterpolationVarsExtraCompletion();
-				break;
+				codeGen.push(`,\n`);
 			}
-		}
-
-		codeGen.push(`const ${varBinds} = {\n`);
-		for (const prop of node.props) {
-			if (
+			else if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
@@ -1650,22 +1673,17 @@ export function generate(
 				codeGen.push(`),\n`);
 			}
 		}
-		codeGen.push(`};\n`);
+		codeGen.push(scriptSetupRanges?.slotsTypeArg ? `});\n` : `};\n`);
 
 		writeInterpolationVarsExtraCompletion();
 
-		if (hasDefaultBind) {
-			codeGen.push(`var ${varSlot}!: typeof ${varDefaultBind} & typeof ${varBinds};\n`);
-		}
-		else {
-			codeGen.push(`var ${varSlot}!: typeof ${varBinds};\n`);
+		if (scriptSetupRanges?.slotsTypeArg) {
+			return;
 		}
 
-		const slotNameExpNode = getSlotNameExpNode();
 		if (slotNameExpNode) {
 			const varSlotExp = `__VLS_${elementIndex++}`;
-			const varSlotExp2 = `__VLS_${elementIndex++}`;
-			codeGen.push(`const ${varSlotExp} = `);
+			codeGen.push(`var ${varSlotExp} = `);
 			if (typeof slotNameExpNode === 'string') {
 				codeGen.push(slotNameExpNode);
 			}
@@ -1673,8 +1691,7 @@ export function generate(
 				writeInterpolation(slotNameExpNode.content, undefined, undefined, '(', ')', slotNameExpNode);
 			}
 			codeGen.push(`;\n`);
-			codeGen.push(`var ${varSlotExp2}!: typeof ${varSlotExp};\n`);
-			slotExps.set(varSlotExp2, {
+			slotExps.set(varSlotExp, {
 				varName: varSlot,
 			});
 		}
@@ -1703,11 +1720,9 @@ export function generate(
 					if (prop2.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 						return prop2.exp;
 					}
-					else {
-						return `('default' as const)`;
-					}
 				}
 			}
+			return `('${getSlotName()}' as const)`;
 		}
 	}
 	function writeObjectProperty(mapCode: string, sourceRange: number | [number, number], data: FileRangeCapabilities, cacheOn: any) {

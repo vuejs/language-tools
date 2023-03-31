@@ -16,11 +16,11 @@ export function parseScriptSetupRanges(
 	let propsAssignName: string | undefined;
 	let propsRuntimeArg: TextRange | undefined;
 	let propsTypeArg: TextRange | undefined;
+	let slotsTypeArg: TextRange | undefined;
 	let emitsAssignName: string | undefined;
 	let emitsRuntimeArg: TextRange | undefined;
 	let emitsTypeArg: TextRange | undefined;
 	let exposeRuntimeArg: TextRange | undefined;
-	let exposeTypeArg: TextRange | undefined;
 	let emitsTypeNums = -1;
 
 	const bindings = parseBindingRanges(ts, ast, false);
@@ -54,12 +54,12 @@ export function parseScriptSetupRanges(
 		propsAssignName,
 		propsRuntimeArg,
 		propsTypeArg,
+		slotsTypeArg,
 		emitsAssignName,
 		emitsRuntimeArg,
 		emitsTypeArg,
 		emitsTypeNums,
 		exposeRuntimeArg,
-		exposeTypeArg,
 	};
 
 	function _getStartEnd(node: ts.Node) {
@@ -73,6 +73,7 @@ export function parseScriptSetupRanges(
 			const callText = node.expression.getText(ast);
 			if (
 				vueCompilerOptions.macros.defineProps.includes(callText)
+				|| vueCompilerOptions.macros.defineSlots.includes(callText)
 				|| vueCompilerOptions.macros.defineEmits.includes(callText)
 				|| vueCompilerOptions.macros.defineExpose.includes(callText)
 			) {
@@ -102,6 +103,9 @@ export function parseScriptSetupRanges(
 							propsAssignName = parent.name.getText(ast);
 						}
 					}
+					if (vueCompilerOptions.macros.defineSlots.includes(callText)) {
+						slotsTypeArg = _getStartEnd(typeArg);
+					}
 					else if (vueCompilerOptions.macros.defineEmits.includes(callText)) {
 						emitsTypeArg = _getStartEnd(typeArg);
 						if (ts.isTypeLiteralNode(typeArg)) {
@@ -110,9 +114,6 @@ export function parseScriptSetupRanges(
 						if (ts.isVariableDeclaration(parent)) {
 							emitsAssignName = parent.name.getText(ast);
 						}
-					}
-					else if (vueCompilerOptions.macros.defineExpose.includes(callText)) {
-						exposeTypeArg = _getStartEnd(typeArg);
 					}
 				}
 			}

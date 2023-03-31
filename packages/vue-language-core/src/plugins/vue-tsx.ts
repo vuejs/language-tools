@@ -149,8 +149,9 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				_sfc.template?.content ?? '',
 				_sfc.template?.lang ?? 'html',
 				templateAst,
-				!!_sfc.scriptSetup,
+				scriptSetupRanges.value,
 				Object.values(cssScopedClasses.value).map(style => style.classNames).flat(),
+				_sfc,
 			);
 		});
 		const tsxGen = computed(() => genScript(

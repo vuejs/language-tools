@@ -217,6 +217,7 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 		),
 		macros: vueOptions.macros ?? {
 			defineProps: ['defineProps'],
+			defineSlots: ['defineSlots'],
 			defineEmits: ['defineEmits'],
 			defineExpose: ['defineExpose'],
 			withDefaults: ['withDefaults'],

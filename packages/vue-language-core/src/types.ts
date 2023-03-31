@@ -28,6 +28,7 @@ export interface VueCompilerOptions {
 	optionsWrapper: [string, string] | [];
 	macros: {
 		defineProps: string[],
+		defineSlots: string[],
 		defineEmits: string[],
 		defineExpose: string[],
 		withDefaults: string[],

@@ -1,5 +1,5 @@
 import { VueCompilerOptions } from '../types';
-import { getSlotsPropertyName, getVueLibraryName } from './shared';
+import { getVueLibraryName } from './shared';
 
 export const typesFileName = '__VLS_types.ts';
 
@@ -8,7 +8,6 @@ export function getTypesCode(
 	vueCompilerOptions: VueCompilerOptions,
 ) {
 	const libName = getVueLibraryName(vueVersion);
-	const slots = getSlotsPropertyName(vueVersion);
 	return `
 // @ts-nocheck
 import type {
@@ -61,14 +60,6 @@ export declare function directiveFunction<T>(dir: T):
 export declare function withScope<T, K>(ctx: T, scope: K): ctx is T & K;
 export declare function makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
 
-// TODO: make it stricter between class component type and functional component type
-export type ExtractComponentSlots<T> =
-	IsAny<T> extends true ? Record<string, any>
-	: T extends { ${slots}?: infer S } ? S
-	: T extends { children?: infer S } ? S
-	: T extends { [K in keyof PickNotAny<JSX.ElementChildrenAttribute, {}>]?: infer S } ? S
-	: Record<string, any>;
-
 export type FillingEventArg_ParametersLength<E extends (...args: any) => any> = IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];
 export type FillingEventArg<E> = E extends (...args: any) => any ? FillingEventArg_ParametersLength<E> extends 0 ? ($event?: undefined) => ReturnType<E> : E : E;
 
@@ -116,12 +107,9 @@ export type WithComponent<N0 extends string, Components, N1, N2 = unknown, N3 = 
 	N2 extends keyof Components ? { [K in N0]: Components[N2] } :
 	N3 extends keyof Components ? { [K in N0]: Components[N3] } :
 	${vueCompilerOptions.strictTemplates ? '{}' : '{ [K in N0]: any }'};
-export declare function asFunctionalComponent<T>(t: T):
-	T extends new (...args: any) => { $props: infer Props } ? (_: ${vueCompilerOptions.strictTemplates ? '' : 'Record<string, unknown> &'} Props) => any
-	: T extends (props: infer Props, ...args: any) => any ? T
-	: T extends (...args: any) => { props: infer Props } ? (_: ${vueCompilerOptions.strictTemplates ? '' : 'Record<string, unknown> &'} Props) => any
-	: T extends new (...args: any) => any ? (_: ${vueCompilerOptions.strictTemplates ? '' : 'Record<string, unknown> &'} {}) => any
-	: T extends (...args: any) => any ? (_: ${vueCompilerOptions.strictTemplates ? '' : 'Record<string, unknown> &'} {}) => any
+export declare function asFunctionalComponent<T, K>(t: T, instance?: K):
+	T extends (...args: any) => any ? T
+	: K extends { $props?: infer Props, $slots?: infer Slots, $emit: infer Emit } ? (_: Props, ctx: { slots: Slots, emit: Emit }) => any
 	: (_: T) => any; // IntrinsicElement
 export type InstanceProps<I, C> = I extends { $props: infer Props } ? Props & Record<string, unknown> : C & Record<string, unknown>;
 export type EventObject<I, K1 extends string, C, E1> = {
