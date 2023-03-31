@@ -1,9 +1,10 @@
 <script lang="ts">
 import { exactType } from '../shared';
-import { defineComponent, ref } from 'vue';
+import { defineComponent, PropType, ref } from 'vue';
 import ScriptSetup from './script-setup.vue';
 import ScriptSetupExpose from './script-setup-expose.vue';
 import ScriptSetupTypeOnly from './script-setup-type-only.vue';
+import ScriptSetupDefaultProps from './script-setup-default-props.vue';
 
 // https://vuejs.org/api/sfc-script-setup.html#defineprops-defineemits
 exactType(ScriptSetup, defineComponent({
@@ -33,14 +34,27 @@ exactType(ScriptSetupTypeOnly, defineComponent({
 			type: String,
 			required: true
 		},
-		bar: {
-			type: Number,
-			required: false
-		},
+		bar: Number
 	},
 	emits: {
 		change(_id: number) {},
 		update(_value: string) {},
+	},
+	setup() {
+		return {};
+	},
+}));
+// https://vuejs.org/api/sfc-script-setup.html#default-props-values-when-using-type-declaration
+exactType(ScriptSetupDefaultProps, defineComponent({
+	props: {
+		msg: {
+			type: String,
+			default: 'hello'
+		},
+		labels: {
+			type: Array as PropType<string[]>,
+			default: () => ['one', 'two']
+		},
 	},
 	setup() {
 		return {};
