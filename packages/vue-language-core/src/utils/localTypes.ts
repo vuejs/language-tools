@@ -140,8 +140,7 @@ export type EventObject<I, K1 extends string, C, E1> = {
 // see: https://github.com/johnsoncodehk/volar/issues/60
 export function genConstructorOverloads(name = 'ConstructorOverloads', nums?: number) {
 	let code = '';
-	code += `type ${name}_Prettify<T> = { [K in keyof T]: T[K]; } & {};\n`;
-	code += `type ${name}<T> = ${name}_Prettify<\n`;
+	code += `type ${name}<T> =\n`;
 	if (nums === undefined) {
 		for (let i = 8; i >= 1; i--) {
 			gen(i);
@@ -151,7 +150,7 @@ export function genConstructorOverloads(name = 'ConstructorOverloads', nums?: nu
 		gen(nums);
 	}
 	code += `// 0\n`;
-	code += `{}>;\n`;
+	code += `{};\n`;
 	return code;
 
 	function gen(i: number) {

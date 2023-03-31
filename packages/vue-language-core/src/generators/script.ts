@@ -133,6 +133,7 @@ export function generate(
 	};
 
 	function writeScriptSetupTypes() {
+		let usedPrettify = false;
 		if (usedTypes.DefinePropsToOptions) {
 			if (compilerOptions.exactOptionalPropertyTypes) {
 				codeGen.push(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueLibName}').PropType<T[K]> } : { type: import('${vueLibName}').PropType<T[K]>, required: true } };\n`);
@@ -145,14 +146,16 @@ export function generate(
 		if (usedTypes.mergePropDefaults) {
 			codeGen.push(`type __VLS_WithDefaults<P, D> = {
 					// use 'keyof Pick<P, keyof P>' instead of 'keyof P' to keep props jsdoc
-					[K in keyof Pick<P, keyof P>]: K extends keyof D ? P[K] & {
+					[K in keyof Pick<P, keyof P>]: K extends keyof D ? __VLS_Prettify<P[K] & {
 						default: D[K]
-					} : P[K]
+					}> : P[K]
 				};\n`);
+			usedPrettify = true;
 		}
 		if (usedTypes.ConstructorOverloads) {
 			// fix https://github.com/johnsoncodehk/volar/issues/926
-			codeGen.push('type __VLS_UnionToIntersection<U> = (U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never;\n');
+			codeGen.push('type __VLS_UnionToIntersection<U> = __VLS_Prettify<(U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never>;\n');
+			usedPrettify = true;
 			if (scriptSetupRanges && scriptSetupRanges.emitsTypeNums !== -1) {
 				codeGen.push(genConstructorOverloads('__VLS_ConstructorOverloads', scriptSetupRanges.emitsTypeNums));
 			}
@@ -162,6 +165,9 @@ export function generate(
 		}
 		if (usedTypes.WithTemplateSlots) {
 			codeGen.push(`type __VLS_WithTemplateSlots<T, S> = T & { new(): { $slots: S } };\n`);
+		}
+		if (usedPrettify) {
+			codeGen.push(`type __VLS_Prettify<T> = { [K in keyof T]: T[K]; } & {};\n`);
 		}
 	}
 	function writeScriptSrc() {
