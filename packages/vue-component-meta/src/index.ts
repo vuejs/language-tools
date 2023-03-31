@@ -202,9 +202,28 @@ export function baseCreate(
 
 	function getMetaScriptContent(fileName: string) {
 		return `
-			import * as Components from '${fileName.substring(0, fileName.length - '.meta.ts'.length)}';
-			export default {} as { [K in keyof typeof Components]: InstanceType<typeof Components[K]>; };
-		`;
+import * as Components from '${fileName.substring(0, fileName.length - '.meta.ts'.length)}';
+export default {} as { [K in keyof typeof Components]: ComponentMeta<typeof Components[K]>; };
+
+type ComponentMeta<T> = {
+	props:
+		T extends new () => { $props: infer P } ? P :
+		T extends (props: infer P) => any ? P :
+		{};
+	emit:
+		T extends new () => { $emit: infer E } ? E :
+		T extends (props: any, ctx: { emit: infer E }) => any ? E :
+		{};
+	slots:
+		T extends new () => { ${vueCompilerOptions.target < 3 ? '$scopedSlots' : '$slots'}: infer S } ? S :
+		T extends (props: any, ctx: { slots: infer S }) => any ? S :
+		{};
+	exposed:
+		T extends new () => infer E ? E :
+		T extends (props: any, ctx: { exposed: infer E }) => any ? E :
+		{};
+};
+		`.trim();
 	}
 
 	function getExportNames(componentPath: string) {
@@ -249,7 +268,7 @@ export function baseCreate(
 
 		function getProps() {
 
-			const $props = symbolProperties.find(prop => prop.escapedName === '$props');
+			const $props = symbolProperties.find(prop => prop.escapedName === 'props');
 			const propEventRegex = /^(on[A-Z])/;
 			let result: PropertyMeta[] = [];
 
@@ -314,7 +333,8 @@ export function baseCreate(
 		}
 
 		function getEvents() {
-			const $emit = symbolProperties.find(prop => prop.escapedName === '$emit');
+
+			const $emit = symbolProperties.find(prop => prop.escapedName === 'emit');
 
 			if ($emit) {
 				const type = typeChecker.getTypeOfSymbolAtLocation($emit, symbolNode!);
@@ -335,8 +355,7 @@ export function baseCreate(
 
 		function getSlots() {
 
-			const propertyName = vueCompilerOptions.target < 3 ? '$scopedSlots' : '$slots';
-			const $slots = symbolProperties.find(prop => prop.escapedName === propertyName);
+			const $slots = symbolProperties.find(prop => prop.escapedName === 'slots');
 
 			if ($slots) {
 				const type = typeChecker.getTypeOfSymbolAtLocation($slots, symbolNode!);
@@ -356,13 +375,16 @@ export function baseCreate(
 
 		function getExposed() {
 
-			const exposed = symbolProperties.filter(prop =>
-				// only exposed props will not have a valueDeclaration
-				!(prop as any).valueDeclaration
-			);
+			const $exposed = symbolProperties.find(prop => prop.escapedName === 'exposed');
 
-			if (exposed.length) {
-				return exposed.map((prop) => {
+			if ($exposed) {
+				const type = typeChecker.getTypeOfSymbolAtLocation($exposed, symbolNode!);
+				const properties = type.getProperties().filter(prop =>
+					// only exposed props will not have a valueDeclaration
+					!(prop as any).valueDeclaration
+				);
+
+				return properties.map((prop) => {
 					const {
 						resolveExposedProperties,
 					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts);
