@@ -1,5 +1,5 @@
 <script lang="ts">
-import { looserExactType } from '../shared';
+import { exactType } from '../shared';
 import { defineComponent, PropType, ref } from 'vue';
 import ScriptSetup from './script-setup.vue';
 import ScriptSetupExpose from './script-setup-expose.vue';
@@ -7,7 +7,7 @@ import ScriptSetupTypeOnly from './script-setup-type-only.vue';
 import ScriptSetupDefaultProps from './script-setup-default-props.vue';
 
 // https://vuejs.org/api/sfc-script-setup.html#defineprops-defineemits
-looserExactType(ScriptSetup, defineComponent({
+const ScriptSetupExact = defineComponent({
 	props: {
 		foo: String,
 	},
@@ -15,9 +15,9 @@ looserExactType(ScriptSetup, defineComponent({
 	setup() {
 		return {};
 	},
-}));
+});
 // https://vuejs.org/api/sfc-script-setup.html#defineexpose
-looserExactType(ScriptSetupExpose, defineComponent({
+const ScriptSetupExposeExact = defineComponent({
 	setup() {
 		const a = 1
 		const b = ref(2)
@@ -26,9 +26,9 @@ looserExactType(ScriptSetupExpose, defineComponent({
 			b
 		};
 	},
-}));
+});
 // https://vuejs.org/api/sfc-script-setup.html#typescript-only-features
-looserExactType(ScriptSetupTypeOnly, defineComponent({
+const ScriptSetupTypeOnlyExact = defineComponent({
 	props: {
 		foo: {
 			type: String,
@@ -37,15 +37,15 @@ looserExactType(ScriptSetupTypeOnly, defineComponent({
 		bar: Number
 	},
 	emits: {
-		change(_id: number) {},
-		update(_value: string) {},
+		change(_id: number) { },
+		update(_value: string) { },
 	},
 	setup() {
 		return {};
 	},
-}));
+});
 // https://vuejs.org/api/sfc-script-setup.html#default-props-values-when-using-type-declaration
-looserExactType(ScriptSetupDefaultProps, defineComponent({
+const ScriptSetupDefaultPropsExact = defineComponent({
 	props: {
 		msg: {
 			type: String,
@@ -59,5 +59,10 @@ looserExactType(ScriptSetupDefaultProps, defineComponent({
 	setup() {
 		return {};
 	},
-}));
+});
+
+exactType(ScriptSetup, ScriptSetupExact);
+exactType(ScriptSetupExpose, ScriptSetupExposeExact);
+exactType(ScriptSetupTypeOnly, ScriptSetupTypeOnlyExact);
+exactType(ScriptSetupDefaultProps, ScriptSetupDefaultPropsExact);
 </script>
