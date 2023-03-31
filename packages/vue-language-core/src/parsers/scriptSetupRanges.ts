@@ -14,6 +14,7 @@ export function parseScriptSetupRanges(
 	let importSectionEndOffset = 0;
 	let withDefaultsArg: TextRange | undefined;
 	let propsAssignName: string | undefined;
+	let defineProps: TextRange | undefined;
 	let propsRuntimeArg: TextRange | undefined;
 	let propsTypeArg: TextRange | undefined;
 	let slotsTypeArg: TextRange | undefined;
@@ -51,6 +52,7 @@ export function parseScriptSetupRanges(
 		bindings,
 		typeBindings,
 		withDefaultsArg,
+		defineProps,
 		propsAssignName,
 		propsRuntimeArg,
 		propsTypeArg,
@@ -77,6 +79,9 @@ export function parseScriptSetupRanges(
 				|| vueCompilerOptions.macros.defineEmits.includes(callText)
 				|| vueCompilerOptions.macros.defineExpose.includes(callText)
 			) {
+				if (vueCompilerOptions.macros.defineProps.includes(callText)) {
+					defineProps = _getStartEnd(node);
+				}
 				if (node.arguments.length) {
 					const runtimeArg = node.arguments[0];
 					if (vueCompilerOptions.macros.defineProps.includes(callText)) {

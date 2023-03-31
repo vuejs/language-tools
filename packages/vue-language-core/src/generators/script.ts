@@ -58,6 +58,7 @@ export function generate(
 			exposeRuntimeArg: undefined,
 			importSectionEndOffset: 0,
 			notOnTopTypeExports: [],
+			defineProps: undefined,
 			propsAssignName: undefined,
 			propsRuntimeArg: undefined,
 			propsTypeArg: undefined,
@@ -295,13 +296,20 @@ export function generate(
 			}
 			codes.push(`>`);
 			codes.push('(\n');
-			codes.push(`__VLS_props: import('vue').VNodeProps`);
-			if (scriptSetupRanges.propsTypeArg) {
-				codes.push(' & ');
-				addVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
+			if (scriptSetupRanges.propsRuntimeArg && scriptSetupRanges.defineProps) {
+				codes.push(`__VLS_props = (() => {\n`);
+				codes.push(`const __VLS_return = (await import('vue')).`);
+				addVirtualCode('scriptSetup', scriptSetupRanges.defineProps.start, scriptSetupRanges.defineProps.end);
+				codes.push(`;\n`);
+				codes.push(`return {} as typeof __VLS_return & import('vue').VNodeProps;\n`);
+				codes.push(`})()`);
 			}
-			else if (scriptSetupRanges.propsRuntimeArg) {
-				// TODO
+			else {
+				codes.push(`__VLS_props: import('vue').VNodeProps`);
+				if (scriptSetupRanges.propsTypeArg) {
+					codes.push(' & ');
+					addVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
+				}
 			}
 			codes.push(',\n');
 			codes.push('__VLS_ctx = (() => {\n');
@@ -362,7 +370,20 @@ export function generate(
 		}
 
 		codes.push('const __VLS_setup = async () => {\n');
-		addVirtualCode('scriptSetup', scriptSetupRanges.importSectionEndOffset);
+
+		if (scriptSetupRanges.propsRuntimeArg && scriptSetupRanges.defineProps) {
+			addVirtualCode('scriptSetup', scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.defineProps.start);
+			codes.push('__VLS_props');
+			addVirtualCode('scriptSetup', scriptSetupRanges.defineProps.end);
+		}
+		else if (scriptSetupRanges.propsTypeArg) {
+			addVirtualCode('scriptSetup', scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.propsTypeArg.start);
+			codes.push('typeof __VLS_props');
+			addVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.end);
+		}
+		else {
+			addVirtualCode('scriptSetup', scriptSetupRanges.importSectionEndOffset);
+		}
 
 		if (scriptSetupRanges.propsTypeArg && scriptSetupRanges.withDefaultsArg) {
 			// fix https://github.com/johnsoncodehk/volar/issues/1187
