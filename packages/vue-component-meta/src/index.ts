@@ -220,7 +220,7 @@ type ComponentMeta<T> = {
 		{};
 	exposed:
 		T extends new () => infer E ? E :
-		T extends (props: any, ctx: { exposed: infer E }) => any ? E :
+		T extends (props: any, ctx: { expose(exposed?: infer E): any }) => any ? E :
 		{};
 };
 		`.trim();
