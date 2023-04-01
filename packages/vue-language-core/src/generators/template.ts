@@ -460,14 +460,77 @@ export function generate(
 			endTagOffset = undefined;
 		}
 
+
+		let propsFailedExps: CompilerDOM.SimpleExpressionNode[] = [];
+
 		const tagOffsets = endTagOffset !== undefined ? [startTagOffset, endTagOffset] : [startTagOffset];
+		const isIntrinsicElement = nativeTags.has(node.tag);
+		const isNamespacedTag = node.tag.indexOf('.') >= 0;
+		const componentVar = `__VLS_${elementIndex++}`;
 
-		let _unWriteExps: CompilerDOM.SimpleExpressionNode[];
+		if (isIntrinsicElement) {
+			codes.push(`const ${componentVar} = (await import('./__VLS_types.js')).asFunctionalComponent(({} as import('./__VLS_types.js').IntrinsicElements)[`);
+			writeCodeWithQuotes(
+				node.tag,
+				tagOffsets[0],
+				capabilitiesPresets.diagnosticOnly,
+			);
+			codes.push(`]);\n`);
+		}
+		else if (isNamespacedTag) {
+			codes.push(`const ${componentVar} = (await import('./__VLS_types.js')).asFunctionalComponent(${node.tag}, new ${node.tag}({`);
+			writeProps(node, 'class', 'slots');
+			codes.push(`}));\n`);;
+		}
+		else {
+			codes.push(`const ${componentVar} = (await import('./__VLS_types.js')).asFunctionalComponent(`);
+			codes.push(`__VLS_templateComponents['${componentVars[node.tag] ?? node.tag}'], `);
+			codes.push(`new __VLS_templateComponents['${componentVars[node.tag] ?? node.tag}']({`);
+			writeProps(node, 'class', 'slots');
+			codes.push(`}));\n`);;
+		}
 
-		const _isIntrinsicElement = nativeTags.has(node.tag);
-		const _isNamespacedTag = node.tag.indexOf('.') >= 0;
-
-		if (vueCompilerOptions.jsxTemplates) {
+		if (!vueCompilerOptions.jsxTemplates) {
+			for (const offset of tagOffsets) {
+				if (isIntrinsicElement) {
+					codes.push(`({} as import('./__VLS_types.js').IntrinsicElements)`);
+					writePropertyAccess(
+						node.tag,
+						offset,
+						{
+							...capabilitiesPresets.tagReference,
+							...capabilitiesPresets.tagHover,
+						},
+					);
+					codes.push(`;\n`);
+				}
+				else if (isNamespacedTag) {
+					codes.push([
+						node.tag,
+						'template',
+						[offset, offset + node.tag.length],
+						capabilitiesPresets.all,
+					]);
+					codes.push(`;\n`);
+				}
+				else {
+					if (componentVars[node.tag]) {
+						codes.push(`__VLS_templateComponents.`);
+					}
+					codes.push([
+						componentVars[node.tag] ?? node.tag,
+						'template',
+						[offset, offset + node.tag.length],
+						{
+							...capabilitiesPresets.tagHover,
+							...capabilitiesPresets.diagnosticOnly,
+						},
+					]);
+					codes.push(`;\n`);
+				}
+			}
+		}
+		else {
 
 			codes.push([
 				'',
@@ -475,7 +538,7 @@ export function generate(
 				node.loc.start.offset,
 				capabilitiesPresets.diagnosticOnly,
 			]);
-			const tagCapabilities: FileRangeCapabilities = _isIntrinsicElement || _isNamespacedTag ? capabilitiesPresets.all : {
+			const tagCapabilities: FileRangeCapabilities = isIntrinsicElement || isNamespacedTag ? capabilitiesPresets.all : {
 				...capabilitiesPresets.diagnosticOnly,
 				...capabilitiesPresets.tagHover,
 			};
@@ -498,7 +561,7 @@ export function generate(
 			]);
 			codes.push(` `);
 			const { unWriteExps } = writeProps(node, 'jsx', 'props');
-			_unWriteExps = unWriteExps;
+			propsFailedExps = unWriteExps;
 
 			if (endTagOffset === undefined) {
 				codes.push(`/>`);
@@ -536,92 +599,37 @@ export function generate(
 			]);
 			codes.push(`\n`);
 		}
-		else {
 
-			if (_isIntrinsicElement) {
 
-				for (const offset of tagOffsets) {
-					codes.push(`({} as import('./__VLS_types.js').IntrinsicElements)`);
-					writePropertyAccess(
-						node.tag,
-						offset,
-						{
-							...capabilitiesPresets.tagReference,
-							...capabilitiesPresets.tagHover,
-						},
-					);
-					codes.push(`;\n`);
-				}
-
-				codes.push(`(await import('./__VLS_types.js')).asFunctionalComponent(({} as import('./__VLS_types.js').IntrinsicElements)[`);
-				writeCodeWithQuotes(
-					node.tag,
-					tagOffsets[0],
-					capabilitiesPresets.diagnosticOnly,
-				);
-				codes.push(`])`);
-			}
-			else if (_isNamespacedTag) {
-
-				for (const offset of tagOffsets) {
-					codes.push([
-						node.tag,
-						'template',
-						[offset, offset + node.tag.length],
-						capabilitiesPresets.all,
-					]);
-					codes.push(`;\n`);
-				}
-
-				codes.push(`(await import('./__VLS_types.js')).asFunctionalComponent(${node.tag})`);
+		if (parentEl) {
+			codes.push(`${componentVar}(`);
+			if (vueCompilerOptions.jsxTemplates) {
+				codes.push(`{ `);
+				writeProps(node, 'class', 'slots');
+				codes.push(`}`);
 			}
 			else {
-
-				if (endTagOffset !== undefined) {
-					if (componentVars[node.tag]) {
-						codes.push(`__VLS_templateComponents.`);
-					}
-					codes.push([
-						componentVars[node.tag] ?? node.tag,
-						'template',
-						[endTagOffset, endTagOffset + node.tag.length],
-						{
-							...capabilitiesPresets.tagHover,
-							...capabilitiesPresets.diagnosticOnly,
-						},
-					]);
-					codes.push(`;\n`);
-				}
-
-				codes.push(`(await import('./__VLS_types.js')).asFunctionalComponent(`);
-				if (componentVars[node.tag]) {
-					codes.push(`__VLS_templateComponents`);
-				}
-				writePropertyAccess(
-					componentVars[node.tag] ?? node.tag,
-					[startTagOffset, startTagOffset + node.tag.length],
-					{
-						...capabilitiesPresets.tagHover,
-						...capabilitiesPresets.diagnosticOnly,
-					},
-				);
-				codes.push(`)`);
+				codes.push(['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]); // diagnostic start
+				codes.push(`{ `);
+				const { unWriteExps } = writeProps(node, 'class', 'props');
+				propsFailedExps = unWriteExps;
+				codes.push(`}`);
+				codes.push(['', 'template', startTagOffset + node.tag.length, capabilitiesPresets.diagnosticOnly]); // diagnostic end
 			}
-
-			codes.push(`(`);
-			codes.push(['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]); // diagnostic start
-			codes.push(`{ `);
-			const { unWriteExps } = writeProps(node, 'class', 'props');
-			_unWriteExps = unWriteExps;
-			codes.push(`}`);
-			codes.push(['', 'template', startTagOffset + node.tag.length, capabilitiesPresets.diagnosticOnly]); // diagnostic end
-			codes.push(`)`);
-			codes.push(`;\n`);
+			codes.push(', {\n');
+			writeChildren(node, parentEl);
+			codes.push(`});\n`);
 		}
+		else {
+			for (const childNode of node.children) {
+				visitNode(childNode, undefined);
+			}
+		}
+		writeInterpolationVarsExtraCompletion();
 
 		//#region 
 		// fix https://github.com/johnsoncodehk/volar/issues/1775
-		for (const failedExp of _unWriteExps) {
+		for (const failedExp of propsFailedExps) {
 			writeInterpolation(
 				failedExp.loc.source,
 				failedExp.loc.start.offset,
@@ -670,7 +678,6 @@ export function generate(
 		if (cssScopedClasses.length) writeClassScoped(node);
 		writeEvents(node);
 		writeSlots(node, startTagOffset);
-		writeChildren(node, parentEl);
 
 		if (inScope) {
 			codes.push('}\n');
@@ -1279,16 +1286,8 @@ export function generate(
 			}
 		}
 	}
-	function writeChildren(node: CompilerDOM.ElementNode, parentEl: CompilerDOM.ElementNode | undefined) {
+	function writeChildren(node: CompilerDOM.ElementNode, parentEl: CompilerDOM.ElementNode) {
 
-		if (!parentEl) {
-			for (const childNode of node.children) {
-				visitNode(childNode, undefined);
-			}
-			return;
-		}
-
-		const componentVar = parentEl ? componentVars[parentEl.tag] : undefined;
 		const slotAndChildNodes: Record<string, { nodes: CompilerDOM.TemplateChildNode[], slotDir: CompilerDOM.DirectiveNode | undefined; }> = {};
 
 		for (const child of node.children) {
@@ -1308,35 +1307,15 @@ export function generate(
 			}
 		}
 
-		if (componentVar && parentEl) {
-			codes.push(`(await import('./__VLS_types.js')).asFunctionalComponent(__VLS_templateComponents.${componentVar}, new __VLS_templateComponents.${componentVar}({ `);
-			writeProps(parentEl, 'class', 'slots');
-			codes.push(`}))({ `);
-			writeProps(parentEl, 'class', 'slots');
-			codes.push(`}, { attrs: {} as any, expose: {} as any, emit: {} as any, `);
-			if (vueCompilerOptions.strictTemplates) {
-				codes.push([
-					'',
-					'template',
-					parentEl.loc.start.offset,
-					capabilitiesPresets.diagnosticOnly,
-				]);
-			}
+		if (vueCompilerOptions.strictTemplates) {
+			codes.push(['', 'template', parentEl.loc.start.offset, capabilitiesPresets.diagnosticOnly]);
 			codes.push(`slots`);
-			if (vueCompilerOptions.strictTemplates) {
-				codes.push([
-					'',
-					'template',
-					parentEl.loc.end.offset,
-					capabilitiesPresets.diagnosticOnly,
-				]);
-			}
-			codes.push(`: {\n`);
+			codes.push(['', 'template', parentEl.loc.end.offset, capabilitiesPresets.diagnosticOnly]);
 		}
 		else {
-			codes.push(`(__VLS_any as Record<string, any>)`);
-			codes.push(` = {\n`);
+			codes.push(`slots`);
 		}
+		codes.push(`: {\n`);
 
 		for (const [slotName, { nodes, slotDir }] of Object.entries(slotAndChildNodes)) {
 
@@ -1448,15 +1427,7 @@ export function generate(
 			}
 		}
 
-		if (componentVar && parentEl) {
-			codes.push(`},\n`);
-			codes.push(`});\n`);
-		}
-		else {
-			codes.push(`};\n`);
-		}
-
-		writeInterpolationVarsExtraCompletion();
+		codes.push(`},\n`);
 	}
 	function writeDirectives(node: CompilerDOM.ElementNode) {
 		for (const prop of node.props) {

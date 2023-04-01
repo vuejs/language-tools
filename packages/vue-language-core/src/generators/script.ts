@@ -371,12 +371,12 @@ export function generate(
 
 		codes.push('const __VLS_setup = async () => {\n');
 
-		if (scriptSetupRanges.propsRuntimeArg && scriptSetupRanges.defineProps) {
+		if (sfc.scriptSetup.generic && scriptSetupRanges.propsRuntimeArg && scriptSetupRanges.defineProps) {
 			addVirtualCode('scriptSetup', scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.defineProps.start);
 			codes.push('__VLS_props');
 			addVirtualCode('scriptSetup', scriptSetupRanges.defineProps.end);
 		}
-		else if (scriptSetupRanges.propsTypeArg) {
+		else if (sfc.scriptSetup.generic && scriptSetupRanges.propsTypeArg) {
 			addVirtualCode('scriptSetup', scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.propsTypeArg.start);
 			codes.push('typeof __VLS_props');
 			addVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.end);
