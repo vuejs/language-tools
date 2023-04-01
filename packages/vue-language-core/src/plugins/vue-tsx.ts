@@ -1,4 +1,4 @@
-import { computed } from '@vue/reactivity';
+import { computed, shallowRef as ref } from '@vue/reactivity';
 import { generate as genScript } from '../generators/script';
 import * as templateGen from '../generators/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
@@ -138,9 +138,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 		}));
 		const htmlGen = computed(() => {
 
-			const templateAst = _sfc.templateAst;
-
-			if (!templateAst)
+			if (!_sfc.templateAst)
 				return;
 
 			return templateGen.generate(
@@ -148,26 +146,29 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				vueCompilerOptions,
 				_sfc.template?.content ?? '',
 				_sfc.template?.lang ?? 'html',
-				templateAst,
-				scriptSetupRanges.value,
+				_sfc.templateAst,
+				hasScriptSetupSlots.value,
 				Object.values(cssScopedClasses.value).map(style => style.classNames).flat(),
-				_sfc,
 			);
 		});
-		const tsxGen = computed(() => genScript(
-			ts,
-			fileName,
-			_sfc,
-			lang.value,
-			scriptRanges.value,
-			scriptSetupRanges.value,
-			cssVars.value,
-			cssModuleClasses.value,
-			cssScopedClasses.value,
-			htmlGen.value,
-			compilerOptions,
-			vueCompilerOptions,
-		));
+		const hasScriptSetupSlots = ref(false); // remove when https://github.com/vuejs/core/pull/5912 merged
+		const tsxGen = computed(() => {
+			hasScriptSetupSlots.value = !!scriptSetupRanges.value?.slotsTypeArg;
+			return genScript(
+				ts,
+				fileName,
+				_sfc,
+				lang.value,
+				scriptRanges.value,
+				scriptSetupRanges.value,
+				cssVars.value,
+				cssModuleClasses.value,
+				cssScopedClasses.value,
+				htmlGen.value,
+				compilerOptions,
+				vueCompilerOptions,
+			);
+		});
 
 		return {
 			lang,

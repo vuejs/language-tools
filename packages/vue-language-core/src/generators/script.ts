@@ -538,6 +538,17 @@ export function generate(
 			generateExportOptions();
 			generateConstNameOption();
 
+			if (scriptSetupRanges?.slotsTypeArg && sfc.scriptSetup) {
+				codes.push(`var __VLS_slots!: `);
+				codes.push([
+					sfc.scriptSetup.content.substring(scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end),
+					sfc.scriptSetup.name,
+					[scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end],
+					FileRangeCapabilities.full,
+				]);
+				codes.push(';\n');
+			};
+
 			codes.push(`function __VLS_template() {\n`);
 
 			const templateGened = generateTemplateContext();

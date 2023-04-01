@@ -3,11 +3,10 @@ import { FileRangeCapabilities } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { Sfc, VueCompilerOptions } from '../types';
+import { VueCompilerOptions } from '../types';
 import { colletVars, walkInterpolationFragment } from '../utils/transform';
 import minimatch from 'minimatch';
 import * as muggle from 'muggle-string';
-import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 
 const capabilitiesPresets = {
 	all: FileRangeCapabilities.full,
@@ -55,9 +54,8 @@ export function generate(
 	sourceTemplate: string,
 	sourceLang: string,
 	templateAst: CompilerDOM.RootNode,
-	scriptSetupRanges: ReturnType<typeof parseScriptSetupRanges> | undefined,
+	hasScriptSetupSlots: boolean,
 	cssScopedClasses: string[] = [],
-	sfc: Sfc,
 ) {
 
 	const nativeTags = new Set(vueCompilerOptions.nativeTags);
@@ -104,36 +102,30 @@ export function generate(
 
 	function declareSlots() {
 
+		if (hasScriptSetupSlots) {
+			return;
+		}
+
 		codes.push(`var __VLS_slots!: `);
-		if (scriptSetupRanges?.slotsTypeArg && sfc.scriptSetup) {
-			codes.push([
-				sfc.scriptSetup.content.substring(scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end),
-				sfc.scriptSetup.name,
-				[scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end],
-				capabilitiesPresets.all,
-			]);
+		for (const [exp, slot] of slotExps) {
+			hasSlot = true;
+			codes.push(`Partial<Record<NonNullable<typeof ${exp}>, (_: typeof ${slot.varName}) => any>> &\n`);
 		}
-		else {
-			for (const [exp, slot] of slotExps) {
-				hasSlot = true;
-				codes.push(`Partial<Record<NonNullable<typeof ${exp}>, (_: typeof ${slot.varName}) => any>> &\n`);
-			}
-			codes.push(`{\n`);
-			for (const [name, slot] of slots) {
-				hasSlot = true;
-				writeObjectProperty(
-					name,
-					slot.loc, // TODO: SourceMaps.MappingKind.Expand
-					{
-						...capabilitiesPresets.slotNameExport,
-						referencesCodeLens: !!scriptSetupRanges,
-					},
-					slot.nodeLoc,
-				);
-				codes.push(`?(_: typeof ${slot.varName}): any,\n`);
-			}
-			codes.push(`}`);
+		codes.push(`{\n`);
+		for (const [name, slot] of slots) {
+			hasSlot = true;
+			writeObjectProperty(
+				name,
+				slot.loc, // TODO: SourceMaps.MappingKind.Expand
+				{
+					...capabilitiesPresets.slotNameExport,
+					referencesCodeLens: true,
+				},
+				slot.nodeLoc,
+			);
+			codes.push(`?(_: typeof ${slot.varName}): any,\n`);
 		}
+		codes.push(`}`);
 		codes.push(`;\n`);
 	}
 	function writeStyleScopedClasses() {
@@ -1526,7 +1518,7 @@ export function generate(
 		const varSlot = `__VLS_${elementIndex++}`;
 		const slotNameExpNode = getSlotNameExpNode();
 
-		if (scriptSetupRanges?.slotsTypeArg) {
+		if (hasScriptSetupSlots) {
 			const slotNameExp = typeof slotNameExpNode === 'object' ? slotNameExpNode.content : slotNameExpNode;
 			codes.push(['', 'template', node.loc.start.offset, capabilitiesPresets.diagnosticOnly]);
 			codes.push(`__VLS_slots[`);
@@ -1608,11 +1600,11 @@ export function generate(
 				codes.push(`),\n`);
 			}
 		}
-		codes.push(scriptSetupRanges?.slotsTypeArg ? `});\n` : `};\n`);
+		codes.push(hasScriptSetupSlots ? `});\n` : `};\n`);
 
 		writeInterpolationVarsExtraCompletion();
 
-		if (scriptSetupRanges?.slotsTypeArg) {
+		if (hasScriptSetupSlots) {
 			return;
 		}
 
