@@ -19,6 +19,7 @@ const capabilitiesPresets = {
 	tagReference: { references: true, definition: true, rename: { normalize: undefined, apply: noEditApply } } satisfies FileRangeCapabilities,
 	attr: { hover: true, diagnostic: true, references: true, definition: true, rename: true } satisfies FileRangeCapabilities,
 	attrReference: { references: true, definition: true, rename: true } satisfies FileRangeCapabilities,
+	slotProp: { references: true, definition: true, rename: true, diagnostic: true } satisfies FileRangeCapabilities,
 	scopedClassName: { references: true, definition: true, rename: true, completion: true } satisfies FileRangeCapabilities,
 	slotName: { hover: true, diagnostic: true, references: true, definition: true, completion: true } satisfies FileRangeCapabilities,
 	slotNameExport: { hover: true, diagnostic: true, references: true, definition: true, /* referencesCodeLens: true */ } satisfies FileRangeCapabilities,
@@ -1566,7 +1567,7 @@ export function generate(
 					prop.arg.content,
 					[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
 					{
-						...capabilitiesPresets.attrReference,
+						...capabilitiesPresets.slotProp,
 						rename: {
 							normalize: camelize,
 							apply: getRenameApply(prop.arg.content),

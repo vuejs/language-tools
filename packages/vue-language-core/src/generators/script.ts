@@ -161,7 +161,10 @@ export function generate(
 			}
 		}
 		if (usedHelperTypes.WithTemplateSlots) {
-			codes.push(`type __VLS_WithTemplateSlots<T, S> = T & { new(): { $slots: S } };\n`);
+			codes.push(`type __VLS_WithTemplateSlots<T, S> = T & { new(): {
+				$slots: S;
+				$props: { [K in keyof JSX.ElementChildrenAttribute]: S; };
+			} };\n`);
 		}
 		if (usedPrettify) {
 			codes.push(`type __VLS_Prettify<T> = { [K in keyof T]: T[K]; } & {};\n`);
@@ -306,6 +309,11 @@ export function generate(
 			}
 			else {
 				codes.push(`__VLS_props: import('vue').VNodeProps`);
+				if (scriptSetupRanges.slotsTypeArg) {
+					codes.push(` & { [K in keyof JSX.ElementChildrenAttribute]: `);
+					addVirtualCode('scriptSetup', scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end);
+					codes.push(`; }`);
+				}
 				if (scriptSetupRanges.propsTypeArg) {
 					codes.push(' & ');
 					addVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
