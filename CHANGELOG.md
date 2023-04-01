@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.3.9 (2023/4/1) - pre-release
+## 1.3.10 (2023/4/1) - pre-release
 
 - feat: support for vue 3.3 `defineProps()` API ([#2568](https://github.com/johnsoncodehk/volar/issues/2568))
 - feat(vue-tsc): prettify script setup props, emits type in emit
