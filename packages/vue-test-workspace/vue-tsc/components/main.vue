@@ -70,7 +70,10 @@ declare const ScriptSetupGenericExact: <T, >(
 		emit: { (e: 'bar', data: T): void },
 		expose(_exposed: { baz: T }): void,
 	}
-) => any;
+) => JSX.Element & {
+	__props?: typeof _props;
+	__ctx?: typeof _ctx;
+};
 
 exactType(ScriptSetup, ScriptSetupExact);
 exactType(ScriptSetupExpose, ScriptSetupExposeExact);
