@@ -341,7 +341,7 @@ export function generate(
 
 			codes.push('};\n');
 			codes.push('})(),\n');
-			codes.push(') => ({} as any))');
+			codes.push(') => ({} as JSX.Element & { __ctx?: typeof __VLS_ctx }))');
 		}
 		else {
 			codes.push('(() => {\n');

@@ -9,7 +9,6 @@ export function getTypesCode(
 ) {
 	const libName = getVueLibraryName(vueVersion);
 	return `
-// @ts-nocheck
 import type {
 	FunctionalComponent,
 	EmitsOptions,
@@ -66,19 +65,19 @@ export type FillingEventArg<E> = E extends (...args: any) => any ? FillingEventA
 export type ReturnVoid<T> = T extends (...payload: infer P) => any ? (...payload: P) => void : (...args: any) => void;
 export type EmitEvent2<F, E> =
 	F extends {
-		(event: E, ...payload: infer P): infer R
+		(event: E, ...payload: infer P): any
 	} ? (...payload: P) => void
 	: F extends {
-		(event: E, ...payload: infer P): infer R
+		(event: E, ...payload: infer P): any
 		(...args: any): any
 	} ? (...payload: P) => void
 	: F extends {
-		(event: E, ...payload: infer P): infer R
+		(event: E, ...payload: infer P): any
 		(...args: any): any
 		(...args: any): any
 	} ? (...payload: P) => void
 	: F extends {
-		(event: E, ...payload: infer P): infer R
+		(event: E, ...payload: infer P): any
 		(...args: any): any
 		(...args: any): any
 		(...args: any): any
@@ -109,8 +108,9 @@ export type WithComponent<N0 extends string, Components, N1, N2 = unknown, N3 = 
 	${vueCompilerOptions.strictTemplates ? '{}' : '{ [K in N0]: any }'};
 export declare function asFunctionalComponent<T, K>(t: T, instance?: K):
 	T extends (...args: any) => any ? T
-	: K extends { $props?: infer Props, $slots?: infer Slots, $emit: infer Emit } ? (_: Props, ctx: { slots: Slots, emit: Emit }) => any
-	: (_: T) => any; // IntrinsicElement
+	: K extends { $props?: infer Props, $slots?: infer Slots, $emit?: infer Emit }
+		? (_: Props, ctx?: { attrs?: any, expose?: any, slots?: Slots, emit?: Emit }) => JSX.Element & { __ctx?: typeof ctx }
+		: (_: T) => any; // IntrinsicElement
 export type InstanceProps<I, C> = I extends { $props: infer Props } ? Props & Record<string, unknown> : C & Record<string, unknown>;
 export type EventObject<I, K1 extends string, C, E1> = {
 	[K in K1]: FillingEventArg<
