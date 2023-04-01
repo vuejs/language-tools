@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="T">
 defineSlots<{
-  activator(props: { isActive: boolean }): void
+  activator?(props: { isActive: boolean }): void
 }>();
 </script>
 

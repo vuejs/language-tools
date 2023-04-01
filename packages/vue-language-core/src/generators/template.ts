@@ -829,6 +829,10 @@ export function generate(
 	}
 	function writeProps(node: CompilerDOM.ElementNode, format: 'jsx' | 'class', mode: 'props' | 'slots') {
 
+		if (format === 'class') {
+			codes.push(`[{} as keyof JSX.ElementChildrenAttribute]: {} as any,\n`);
+		}
+
 		let styleAttrNum = 0;
 		let classAttrNum = 0;
 		const propsFailedExps: CompilerDOM.SimpleExpressionNode[] = [];
@@ -1527,7 +1531,7 @@ export function generate(
 			codes.push(['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly]);
 			codes.push(`]`);
 			codes.push(['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly]);
-			codes.push(`({\n`);
+			codes.push(`?.({\n`);
 		}
 		else {
 			codes.push(`var ${varSlot} = {\n`);
