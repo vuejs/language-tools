@@ -467,6 +467,7 @@ export function generate(
 		const isIntrinsicElement = nativeTags.has(node.tag);
 		const isNamespacedTag = node.tag.indexOf('.') >= 0;
 		const componentVar = `__VLS_${elementIndex++}`;
+		const componentInstanceVar = `__VLS_${elementIndex++}`;
 
 		if (isIntrinsicElement) {
 			codes.push(`const ${componentVar} = (await import('./__VLS_types.js')).asFunctionalComponent(({} as import('./__VLS_types.js').IntrinsicElements)[`);
@@ -560,7 +561,7 @@ export function generate(
 				tagCapabilities,
 			]);
 			codes.push(` `);
-			const { unWriteExps } = writeProps(node, 'jsx', 'props');
+			const { propsFailedExps: unWriteExps } = writeProps(node, 'jsx', 'props');
 			propsFailedExps = unWriteExps;
 
 			if (endTagOffset === undefined) {
@@ -599,28 +600,28 @@ export function generate(
 			]);
 			codes.push(`\n`);
 		}
+		writeInterpolationVarsExtraCompletion();
 
-
+		codes.push(`const ${componentInstanceVar} = ${componentVar}(`);
+		if (vueCompilerOptions.jsxTemplates) {
+			codes.push(`{ `);
+			writeProps(node, 'class', 'slots');
+			codes.push(`}`);
+		}
+		else {
+			codes.push(['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]); // diagnostic start
+			codes.push(`{ `);
+			propsFailedExps = writeProps(node, 'class', 'props').propsFailedExps;
+			codes.push(`}`);
+			codes.push(['', 'template', startTagOffset + node.tag.length, capabilitiesPresets.diagnosticOnly]); // diagnostic end
+		}
 		if (parentEl) {
-			codes.push(`${componentVar}(`);
-			if (vueCompilerOptions.jsxTemplates) {
-				codes.push(`{ `);
-				writeProps(node, 'class', 'slots');
-				codes.push(`}`);
-			}
-			else {
-				codes.push(['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]); // diagnostic start
-				codes.push(`{ `);
-				const { unWriteExps } = writeProps(node, 'class', 'props');
-				propsFailedExps = unWriteExps;
-				codes.push(`}`);
-				codes.push(['', 'template', startTagOffset + node.tag.length, capabilitiesPresets.diagnosticOnly]); // diagnostic end
-			}
 			codes.push(', {\n');
 			writeChildren(node, parentEl);
 			codes.push(`});\n`);
 		}
 		else {
+			codes.push(`);\n`);
 			for (const childNode of node.children) {
 				visitNode(childNode, undefined);
 			}
@@ -676,7 +677,7 @@ export function generate(
 		writeDirectives(node);
 		writeElReferences(node); // <el ref="foo" />
 		if (cssScopedClasses.length) writeClassScoped(node);
-		writeEvents(node);
+		writeEvents(node, componentVar, componentInstanceVar);
 		writeSlots(node, startTagOffset);
 
 		if (inScope) {
@@ -687,9 +688,7 @@ export function generate(
 
 		codes.push(`}\n`);
 	}
-	function writeEvents(node: CompilerDOM.ElementNode) {
-
-		let _varComponentInstance: string | undefined;
+	function writeEvents(node: CompilerDOM.ElementNode, componentVar: string, componentInstanceVar: string) {
 
 		for (const prop of node.props) {
 			if (
@@ -697,24 +696,11 @@ export function generate(
 				&& prop.name === 'on'
 				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
-
-				const varComponentInstance = tryWriteInstance();
-				const componentVar = componentVars[node.tag];
-				const varInstanceProps = `__VLS_${elementIndex++}`;
-				const key_2 = camelize('on-' + prop.arg.loc.source); // onClickOutside
-
-				codes.push(`type ${varInstanceProps} = `);
-				if (!varComponentInstance) {
-					codes.push(`import('./__VLS_types.js').IntrinsicElements['${node.tag}'];\n`);
-				}
-				else {
-					codes.push(`import('./__VLS_types.js').InstanceProps<typeof ${varComponentInstance}, ${componentVar ? 'typeof __VLS_templateComponents.' + componentVar : '{}'}>;\n`);;
-				}
-				codes.push(`const __VLS_${elementIndex++}: import('./__VLS_types.js').EventObject<typeof ${varComponentInstance}, '${prop.arg.loc.source}', ${componentVar ? 'typeof __VLS_templateComponents.' + componentVar : '{}'}, `);
-
-				codes.push(`${varInstanceProps}[`);
-				writeCodeWithQuotes(
-					key_2,
+				const eventVar = `__VLS_${elementIndex++}`;
+				codes.push(`let ${eventVar} = { '${prop.arg.loc.source}': `);
+				codes.push(`(await import('./__VLS_types.js')).pickEvent((await import('./__VLS_types.js')).pickFunctionalComponentCtx(${componentVar}, ${componentInstanceVar})!.emit!, '${prop.arg.loc.source}' as const, ${componentInstanceVar}.__props!`);
+				writePropertyAccess(
+					camelize('on-' + prop.arg.loc.source), // onClickOutside
 					[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
 					{
 						...capabilitiesPresets.attrReference,
@@ -732,31 +718,30 @@ export function generate(
 						},
 					},
 				);
-				codes.push(`]> = {\n`);
-				{
-					if (prop.arg.loc.source.startsWith('[') && prop.arg.loc.source.endsWith(']')) {
-						codes.push(`[(`);
-						writeInterpolation(
-							prop.arg.loc.source.slice(1, -1),
-							prop.arg.loc.start.offset + 1,
-							capabilitiesPresets.all,
-							'',
-							'',
-							prop.arg.loc,
-						);
-						codes.push(`)!]`);
-					}
-					else {
-						writeObjectProperty(
-							prop.arg.loc.source,
-							prop.arg.loc.start.offset,
-							capabilitiesPresets.event,
-							prop.arg.loc,
-						);
-					}
-					codes.push(`: `);
-					appendExpressionNode(prop);
+				codes.push(`) };\n`);
+				codes.push(`${eventVar} = {\n`);
+				if (prop.arg.loc.source.startsWith('[') && prop.arg.loc.source.endsWith(']')) {
+					codes.push(`[(`);
+					writeInterpolation(
+						prop.arg.loc.source.slice(1, -1),
+						prop.arg.loc.start.offset + 1,
+						capabilitiesPresets.all,
+						'',
+						'',
+						prop.arg.loc,
+					);
+					codes.push(`)!]`);
 				}
+				else {
+					writeObjectProperty(
+						prop.arg.loc.source,
+						prop.arg.loc.start.offset,
+						capabilitiesPresets.event,
+						prop.arg.loc,
+					);
+				}
+				codes.push(`: `);
+				appendExpressionNode(prop);
 				codes.push(`};\n`);
 				writeInterpolationVarsExtraCompletion();
 			}
@@ -848,34 +833,12 @@ export function generate(
 		}
 
 		writeInterpolationVarsExtraCompletion();
-
-		function tryWriteInstance() {
-
-			if (!_varComponentInstance) {
-				const componentVar = componentVars[node.tag];
-
-				if (componentVar) {
-					const _varComponentInstanceA = `__VLS_${elementIndex++}`;
-					const _varComponentInstanceB = `__VLS_${elementIndex++}`;
-					_varComponentInstance = `__VLS_${elementIndex++}`;
-					codes.push(`const ${_varComponentInstanceA} = new __VLS_templateComponents.${componentVar}({ `);
-					writeProps(node, 'class', 'slots');
-					codes.push(`});\n`);
-					codes.push(`const ${_varComponentInstanceB} = __VLS_templateComponents.${componentVar}({ `);
-					writeProps(node, 'class', 'slots');
-					codes.push(`});\n`);
-					codes.push(`let ${_varComponentInstance}!: import('./__VLS_types.js').PickNotAny<typeof ${_varComponentInstanceA}, typeof ${_varComponentInstanceB}>;\n`);
-				}
-			}
-
-			return _varComponentInstance;
-		}
 	}
 	function writeProps(node: CompilerDOM.ElementNode, format: 'jsx' | 'class', mode: 'props' | 'slots') {
 
 		let styleAttrNum = 0;
 		let classAttrNum = 0;
-		const unWriteExps: CompilerDOM.SimpleExpressionNode[] = [];
+		const propsFailedExps: CompilerDOM.SimpleExpressionNode[] = [];
 
 		if (node.props.some(prop =>
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -915,7 +878,7 @@ export function generate(
 					|| (attrNameText === 'name' && node.tag === 'slot') // #2308
 				) {
 					if (prop.exp && prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
-						unWriteExps.push(prop.exp);
+						propsFailedExps.push(prop.exp);
 					}
 					continue;
 				}
@@ -1166,7 +1129,7 @@ export function generate(
 			}
 		}
 
-		return { unWriteExps };
+		return { propsFailedExps };
 
 		function writePropName(name: string, isStatic: boolean, sourceRange: number | [number, number], data: FileRangeCapabilities, cacheOn: any) {
 			if (format === 'jsx' && isStatic) {
