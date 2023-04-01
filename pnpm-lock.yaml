@@ -113,7 +113,7 @@ importers:
         version: 0.2.2
       typescript:
         specifier: '*'
-        version: 5.0.2
+        version: 5.0.3
 
   packages/vue-language-core:
     dependencies:
@@ -262,7 +262,7 @@ importers:
         version: link:../vue-typescript
       typescript:
         specifier: '*'
-        version: 5.0.2
+        version: 5.0.3
 
   packages/vue-tsc-eslint-hook:
     dependencies:
@@ -5762,17 +5762,10 @@ packages:
     dependencies:
       semver: 7.3.8
 
-  /typescript@5.0.2:
-    resolution: {integrity: sha512-wVORMBGO/FAs/++blGNeAVdbNKtIh1rbBL2EyQ1+J9lClJ93KiiKe8PmFIVdXhHcyv44SL9oglmfeSsndo0jRw==}
-    engines: {node: '>=12.20'}
-    hasBin: true
-    dev: false
-
   /typescript@5.0.3:
     resolution: {integrity: sha512-xv8mOEDnigb/tN9PSMTwSEqAnUvkoXMQlicOb0IUVDBSQCgBSaAAROUZYy2IcUy5qU6XajK5jjjO7TMWqBTKZA==}
     engines: {node: '>=12.20'}
     hasBin: true
-    dev: true
 
   /uc.micro@1.0.6:
     resolution: {integrity: sha512-8Y75pvTYkLJW2hWQHXxoqRgV7qb9B+9vFEtidML+7koHUFapnVJAZ6cKs+Qjz5Aw3aZWHMC6u0wJE3At+nSGwA==}
