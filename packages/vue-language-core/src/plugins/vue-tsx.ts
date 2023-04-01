@@ -50,7 +50,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				};
 				const tsx = _tsx.tsxGen.value;
 				if (tsx) {
-					embeddedFile.content = [...tsx.codeGen];
+					embeddedFile.content = [...tsx.codes];
 					embeddedFile.extraMappings = [...tsx.extraMappings];
 					embeddedFile.mirrorBehaviorMappings = [...tsx.mirrorBehaviorMappings];
 				}
@@ -68,7 +68,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				};
 
 				if (_tsx.htmlGen.value) {
-					embeddedFile.content = [..._tsx.htmlGen.value.formatCodeGen];
+					embeddedFile.content = [..._tsx.htmlGen.value.formatCodes];
 				}
 
 				for (const cssVar of _tsx.cssVars.value) {
@@ -90,7 +90,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				embeddedFile.parentFileName = fileName + '.template.' + sfc.template?.lang;
 
 				if (_tsx.htmlGen.value) {
-					embeddedFile.content = [..._tsx.htmlGen.value.cssCodeGen];
+					embeddedFile.content = [..._tsx.htmlGen.value.cssCodes];
 				}
 			}
 		},

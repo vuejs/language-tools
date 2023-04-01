@@ -60,9 +60,9 @@ export function generate(
 ) {
 
 	const nativeTags = new Set(vueCompilerOptions.nativeTags);
-	const codeGen: Segment<FileRangeCapabilities>[] = [];
-	const formatCodeGen: Segment<FileRangeCapabilities>[] = [];
-	const cssCodeGen: Segment<FileRangeCapabilities>[] = [];
+	const codes: Segment<FileRangeCapabilities>[] = [];
+	const formatCodes: Segment<FileRangeCapabilities>[] = [];
+	const cssCodes: Segment<FileRangeCapabilities>[] = [];
 	const slots = new Map<string, {
 		varName: string,
 		loc: [number, number],
@@ -93,9 +93,9 @@ export function generate(
 	writeInterpolationVarsExtraCompletion();
 
 	return {
-		codeGen,
-		formatCodeGen,
-		cssCodeGen,
+		codes,
+		formatCodes,
+		cssCodes,
 		tagNames,
 		identifiers,
 		hasSlot,
@@ -103,9 +103,9 @@ export function generate(
 
 	function declareSlots() {
 
-		codeGen.push(`var __VLS_slots!: `);
+		codes.push(`var __VLS_slots!: `);
 		if (scriptSetupRanges?.slotsTypeArg && sfc.scriptSetup) {
-			codeGen.push([
+			codes.push([
 				sfc.scriptSetup.content.substring(scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end),
 				sfc.scriptSetup.name,
 				[scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end],
@@ -115,9 +115,9 @@ export function generate(
 		else {
 			for (const [exp, slot] of slotExps) {
 				hasSlot = true;
-				codeGen.push(`Partial<Record<NonNullable<typeof ${exp}>, (_: typeof ${slot.varName}) => any>> &\n`);
+				codes.push(`Partial<Record<NonNullable<typeof ${exp}>, (_: typeof ${slot.varName}) => any>> &\n`);
 			}
-			codeGen.push(`{\n`);
+			codes.push(`{\n`);
 			for (const [name, slot] of slots) {
 				hasSlot = true;
 				writeObjectProperty(
@@ -129,17 +129,17 @@ export function generate(
 					},
 					slot.nodeLoc,
 				);
-				codeGen.push(`?(_: typeof ${slot.varName}): any,\n`);
+				codes.push(`?(_: typeof ${slot.varName}): any,\n`);
 			}
-			codeGen.push(`}`);
+			codes.push(`}`);
 		}
-		codeGen.push(`;\n`);
+		codes.push(`;\n`);
 	}
 	function writeStyleScopedClasses() {
 
-		codeGen.push(`if (typeof __VLS_styleScopedClasses === 'object' && !Array.isArray(__VLS_styleScopedClasses)) {\n`);
+		codes.push(`if (typeof __VLS_styleScopedClasses === 'object' && !Array.isArray(__VLS_styleScopedClasses)) {\n`);
 		for (const { className, offset } of scopedClasses) {
-			codeGen.push(`__VLS_styleScopedClasses[`);
+			codes.push(`__VLS_styleScopedClasses[`);
 			writeCodeWithQuotes(
 				className,
 				offset,
@@ -148,15 +148,15 @@ export function generate(
 					displayWithLink: cssScopedClassesSet.has(className),
 				},
 			);
-			codeGen.push(`];\n`);
+			codes.push(`];\n`);
 		}
-		codeGen.push('}\n');
+		codes.push('}\n');
 	}
 	function writeComponentVars() {
 
 		const data: Record<string, string> = {};
 
-		codeGen.push(`let __VLS_templateComponents!: {}\n`);
+		codes.push(`let __VLS_templateComponents!: {}\n`);
 
 		for (const tagName in tagNames) {
 
@@ -175,12 +175,12 @@ export function generate(
 			]);
 			const varName = validTsVar.test(tagName) ? tagName : capitalize(camelize(tagName.replace(/:/g, '-')));
 
-			codeGen.push(`& import('./__VLS_types.js').WithComponent<'${varName}', typeof __VLS_components, ${[...names].map(name => `'${name}'`).join(', ')}>\n`);
+			codes.push(`& import('./__VLS_types.js').WithComponent<'${varName}', typeof __VLS_components, ${[...names].map(name => `'${name}'`).join(', ')}>\n`);
 
 			data[tagName] = varName;
 		}
 
-		codeGen.push(`;\n`);
+		codes.push(`;\n`);
 
 		for (const tagName in tagNames) {
 
@@ -199,7 +199,7 @@ export function generate(
 
 			for (const name of names) {
 				for (const tagRange of tagRanges) {
-					codeGen.push('__VLS_components');
+					codes.push('__VLS_components');
 					writePropertyAccess(
 						name,
 						tagRange,
@@ -211,15 +211,15 @@ export function generate(
 							},
 						},
 					);
-					codeGen.push(';');
+					codes.push(';');
 				}
 			}
-			codeGen.push('\n');
+			codes.push('\n');
 
-			codeGen.push('// @ts-ignore\n'); // #2304
-			codeGen.push(`[`);
+			codes.push('// @ts-ignore\n'); // #2304
+			codes.push(`[`);
 			for (const tagRange of tagRanges) {
-				codeGen.push([
+				codes.push([
 					varName,
 					'template',
 					tagRange,
@@ -230,9 +230,9 @@ export function generate(
 						},
 					},
 				]);
-				codeGen.push(',');
+				codes.push(',');
 			}
-			codeGen.push(`];\n`);
+			codes.push(`];\n`);
 		}
 
 		return data;
@@ -336,17 +336,17 @@ export function generate(
 				const branch = node.branches[i];
 
 				if (i === 0)
-					codeGen.push('if');
+					codes.push('if');
 				else if (branch.condition)
-					codeGen.push('else if');
+					codes.push('else if');
 				else
-					codeGen.push('else');
+					codes.push('else');
 
 				let addedBlockCondition = false;
 
 				if (branch.condition?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-					codeGen.push(` `);
-					const beforeCodeLength = codeGen.length;
+					codes.push(` `);
+					const beforeCodeLength = codes.length;
 					writeInterpolation(
 						branch.condition.content,
 						branch.condition.loc.start.offset,
@@ -355,23 +355,23 @@ export function generate(
 						')',
 						branch.condition.loc,
 					);
-					const afterCodeLength = codeGen.length;
+					const afterCodeLength = codes.length;
 					appendFormattingCode(
 						branch.condition.content,
 						branch.condition.loc.start.offset,
 						formatBrackets.empty,
 					);
 
-					blockConditions.push(muggle.toString(codeGen.slice(beforeCodeLength, afterCodeLength)));
+					blockConditions.push(muggle.toString(codes.slice(beforeCodeLength, afterCodeLength)));
 					addedBlockCondition = true;
 				}
 
-				codeGen.push(` {\n`);
+				codes.push(` {\n`);
 				writeInterpolationVarsExtraCompletion();
 				for (const childNode of branch.children) {
 					visitNode(childNode, parentEl);
 				}
-				codeGen.push('}\n');
+				codes.push('}\n');
 
 				if (addedBlockCondition) {
 					blockConditions[blockConditions.length - 1] = `!(${blockConditions[blockConditions.length - 1]})`;
@@ -387,7 +387,7 @@ export function generate(
 			const leftExpressionText = leftExpressionRange ? node.loc.source.substring(leftExpressionRange.start - node.loc.start.offset, leftExpressionRange.end - node.loc.start.offset) : undefined;
 			const forBlockVars: string[] = [];
 
-			codeGen.push(`for (const [`);
+			codes.push(`for (const [`);
 			if (leftExpressionRange && leftExpressionText) {
 
 				const collectAst = createTsAst(node.parseResult, `const [${leftExpressionText}]`);
@@ -396,10 +396,10 @@ export function generate(
 				for (const varName of forBlockVars)
 					localVars[varName] = (localVars[varName] ?? 0) + 1;
 
-				codeGen.push([leftExpressionText, 'template', leftExpressionRange.start, capabilitiesPresets.all]);
+				codes.push([leftExpressionText, 'template', leftExpressionRange.start, capabilitiesPresets.all]);
 				appendFormattingCode(leftExpressionText, leftExpressionRange.start, formatBrackets.square);
 			}
-			codeGen.push(`] of (await import('./__VLS_types.js')).getVForSourceType`);
+			codes.push(`] of (await import('./__VLS_types.js')).getVForSourceType`);
 			if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 				writeInterpolation(
 					source.content,
@@ -415,7 +415,7 @@ export function generate(
 					formatBrackets.empty,
 				);
 
-				codeGen.push(`) {\n`);
+				codes.push(`) {\n`);
 
 				writeInterpolationVarsExtraCompletion();
 
@@ -423,7 +423,7 @@ export function generate(
 					visitNode(childNode, parentEl);
 				}
 
-				codeGen.push('}\n');
+				codes.push('}\n');
 			}
 
 			for (const varName of forBlockVars)
@@ -436,7 +436,7 @@ export function generate(
 			// not needed progress
 		}
 		else {
-			codeGen.push(`// Unprocessed node type: ${node.type} json: ${JSON.stringify(node.loc)}\n`);
+			codes.push(`// Unprocessed node type: ${node.type} json: ${JSON.stringify(node.loc)}\n`);
 		}
 	};
 	function visitElementNode(node: CompilerDOM.ElementNode, parentEl: CompilerDOM.ElementNode | undefined) {
@@ -451,7 +451,7 @@ export function generate(
 			parentEl = node;
 		}
 
-		codeGen.push(`{\n`);
+		codes.push(`{\n`);
 
 		const startTagOffset = node.loc.start.offset + sourceTemplate.substring(node.loc.start.offset).indexOf(node.tag);
 		let endTagOffset = !node.isSelfClosing && sourceLang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
@@ -469,7 +469,7 @@ export function generate(
 
 		if (vueCompilerOptions.jsxTemplates) {
 
-			codeGen.push([
+			codes.push([
 				'',
 				'template',
 				node.loc.start.offset,
@@ -480,41 +480,41 @@ export function generate(
 				...capabilitiesPresets.tagHover,
 			};
 
-			codeGen.push(`<`);
+			codes.push(`<`);
 			if (componentVars[node.tag]) {
-				codeGen.push([
+				codes.push([
 					'',
 					'template',
 					startTagOffset,
 					capabilitiesPresets.diagnosticOnly,
 				]);
-				codeGen.push(`__VLS_templateComponents.`);
+				codes.push(`__VLS_templateComponents.`);
 			}
-			codeGen.push([
+			codes.push([
 				componentVars[node.tag] ?? node.tag,
 				'template',
 				[startTagOffset, startTagOffset + node.tag.length],
 				tagCapabilities,
 			]);
-			codeGen.push(` `);
+			codes.push(` `);
 			const { unWriteExps } = writeProps(node, 'jsx', 'props');
 			_unWriteExps = unWriteExps;
 
 			if (endTagOffset === undefined) {
-				codeGen.push(`/>`);
+				codes.push(`/>`);
 			}
 			else {
-				codeGen.push(`></`);
+				codes.push(`></`);
 				if (componentVars[node.tag]) {
-					codeGen.push(`__VLS_templateComponents.`);
+					codes.push(`__VLS_templateComponents.`);
 				}
-				codeGen.push([
+				codes.push([
 					componentVars[node.tag] ?? node.tag,
 					'template',
 					[endTagOffset, endTagOffset + node.tag.length],
 					tagCapabilities,
 				]);
-				codeGen.push(`>;\n`);
+				codes.push(`>;\n`);
 			}
 
 			// fix https://github.com/johnsoncodehk/volar/issues/705#issuecomment-974773353
@@ -528,20 +528,20 @@ export function generate(
 			else {
 				startTagEnd = node.loc.start.offset + node.loc.source.substring(0, node.loc.source.lastIndexOf('</')).lastIndexOf('>') + 1;
 			}
-			codeGen.push([
+			codes.push([
 				'',
 				'template',
 				startTagEnd,
 				capabilitiesPresets.diagnosticOnly,
 			]);
-			codeGen.push(`\n`);
+			codes.push(`\n`);
 		}
 		else {
 
 			if (_isIntrinsicElement) {
 
 				for (const offset of tagOffsets) {
-					codeGen.push(`({} as import('./__VLS_types.js').IntrinsicElements)`);
+					codes.push(`({} as import('./__VLS_types.js').IntrinsicElements)`);
 					writePropertyAccess(
 						node.tag,
 						offset,
@@ -550,38 +550,38 @@ export function generate(
 							...capabilitiesPresets.tagHover,
 						},
 					);
-					codeGen.push(`;\n`);
+					codes.push(`;\n`);
 				}
 
-				codeGen.push(`(await import('./__VLS_types.js')).asFunctionalComponent(({} as import('./__VLS_types.js').IntrinsicElements)[`);
+				codes.push(`(await import('./__VLS_types.js')).asFunctionalComponent(({} as import('./__VLS_types.js').IntrinsicElements)[`);
 				writeCodeWithQuotes(
 					node.tag,
 					tagOffsets[0],
 					capabilitiesPresets.diagnosticOnly,
 				);
-				codeGen.push(`])`);
+				codes.push(`])`);
 			}
 			else if (_isNamespacedTag) {
 
 				for (const offset of tagOffsets) {
-					codeGen.push([
+					codes.push([
 						node.tag,
 						'template',
 						[offset, offset + node.tag.length],
 						capabilitiesPresets.all,
 					]);
-					codeGen.push(`;\n`);
+					codes.push(`;\n`);
 				}
 
-				codeGen.push(`(await import('./__VLS_types.js')).asFunctionalComponent(${node.tag})`);
+				codes.push(`(await import('./__VLS_types.js')).asFunctionalComponent(${node.tag})`);
 			}
 			else {
 
 				if (endTagOffset !== undefined) {
 					if (componentVars[node.tag]) {
-						codeGen.push(`__VLS_templateComponents.`);
+						codes.push(`__VLS_templateComponents.`);
 					}
-					codeGen.push([
+					codes.push([
 						componentVars[node.tag] ?? node.tag,
 						'template',
 						[endTagOffset, endTagOffset + node.tag.length],
@@ -590,12 +590,12 @@ export function generate(
 							...capabilitiesPresets.diagnosticOnly,
 						},
 					]);
-					codeGen.push(`;\n`);
+					codes.push(`;\n`);
 				}
 
-				codeGen.push(`(await import('./__VLS_types.js')).asFunctionalComponent(`);
+				codes.push(`(await import('./__VLS_types.js')).asFunctionalComponent(`);
 				if (componentVars[node.tag]) {
-					codeGen.push(`__VLS_templateComponents`);
+					codes.push(`__VLS_templateComponents`);
 				}
 				writePropertyAccess(
 					componentVars[node.tag] ?? node.tag,
@@ -605,18 +605,18 @@ export function generate(
 						...capabilitiesPresets.diagnosticOnly,
 					},
 				);
-				codeGen.push(`)`);
+				codes.push(`)`);
 			}
 
-			codeGen.push(`(`);
-			codeGen.push(['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]); // diagnostic start
-			codeGen.push(`{ `);
+			codes.push(`(`);
+			codes.push(['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]); // diagnostic start
+			codes.push(`{ `);
 			const { unWriteExps } = writeProps(node, 'class', 'props');
 			_unWriteExps = unWriteExps;
-			codeGen.push(`}`);
-			codeGen.push(['', 'template', startTagOffset + node.tag.length, capabilitiesPresets.diagnosticOnly]); // diagnostic end
-			codeGen.push(`)`);
-			codeGen.push(`;\n`);
+			codes.push(`}`);
+			codes.push(['', 'template', startTagOffset + node.tag.length, capabilitiesPresets.diagnosticOnly]); // diagnostic end
+			codes.push(`)`);
+			codes.push(`;\n`);
 		}
 
 		//#region 
@@ -638,7 +638,7 @@ export function generate(
 					fb,
 				);
 			}
-			codeGen.push(';\n');
+			codes.push(';\n');
 		}
 
 		writeInlineCss(node);
@@ -652,15 +652,15 @@ export function generate(
 			const scopeVar = `__VLS_${elementIndex++}`;
 			const condition = `(await import('./__VLS_types.js')).withScope(__VLS_ctx, ${scopeVar})`;
 
-			codeGen.push(`const ${scopeVar} = `);
-			codeGen.push([
+			codes.push(`const ${scopeVar} = `);
+			codes.push([
 				vScope.exp.loc.source,
 				'template',
 				vScope.exp.loc.start.offset,
 				capabilitiesPresets.all,
 			]);
-			codeGen.push(';\n');
-			codeGen.push(`if (${condition}) {\n`);
+			codes.push(';\n');
+			codes.push(`if (${condition}) {\n`);
 			blockConditions.push(condition);
 			inScope = true;
 		}
@@ -673,12 +673,12 @@ export function generate(
 		writeChildren(node, parentEl);
 
 		if (inScope) {
-			codeGen.push('}\n');
+			codes.push('}\n');
 			blockConditions.length = originalConditionsNum;
 		}
 		//#endregion
 
-		codeGen.push(`}\n`);
+		codes.push(`}\n`);
 	}
 	function writeEvents(node: CompilerDOM.ElementNode) {
 
@@ -696,16 +696,16 @@ export function generate(
 				const varInstanceProps = `__VLS_${elementIndex++}`;
 				const key_2 = camelize('on-' + prop.arg.loc.source); // onClickOutside
 
-				codeGen.push(`type ${varInstanceProps} = `);
+				codes.push(`type ${varInstanceProps} = `);
 				if (!varComponentInstance) {
-					codeGen.push(`import('./__VLS_types.js').IntrinsicElements['${node.tag}'];\n`);
+					codes.push(`import('./__VLS_types.js').IntrinsicElements['${node.tag}'];\n`);
 				}
 				else {
-					codeGen.push(`import('./__VLS_types.js').InstanceProps<typeof ${varComponentInstance}, ${componentVar ? 'typeof __VLS_templateComponents.' + componentVar : '{}'}>;\n`);;
+					codes.push(`import('./__VLS_types.js').InstanceProps<typeof ${varComponentInstance}, ${componentVar ? 'typeof __VLS_templateComponents.' + componentVar : '{}'}>;\n`);;
 				}
-				codeGen.push(`const __VLS_${elementIndex++}: import('./__VLS_types.js').EventObject<typeof ${varComponentInstance}, '${prop.arg.loc.source}', ${componentVar ? 'typeof __VLS_templateComponents.' + componentVar : '{}'}, `);
+				codes.push(`const __VLS_${elementIndex++}: import('./__VLS_types.js').EventObject<typeof ${varComponentInstance}, '${prop.arg.loc.source}', ${componentVar ? 'typeof __VLS_templateComponents.' + componentVar : '{}'}, `);
 
-				codeGen.push(`${varInstanceProps}[`);
+				codes.push(`${varInstanceProps}[`);
 				writeCodeWithQuotes(
 					key_2,
 					[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
@@ -725,10 +725,10 @@ export function generate(
 						},
 					},
 				);
-				codeGen.push(`]> = {\n`);
+				codes.push(`]> = {\n`);
 				{
 					if (prop.arg.loc.source.startsWith('[') && prop.arg.loc.source.endsWith(']')) {
-						codeGen.push(`[(`);
+						codes.push(`[(`);
 						writeInterpolation(
 							prop.arg.loc.source.slice(1, -1),
 							prop.arg.loc.start.offset + 1,
@@ -737,7 +737,7 @@ export function generate(
 							'',
 							prop.arg.loc,
 						);
-						codeGen.push(`)!]`);
+						codes.push(`)!]`);
 					}
 					else {
 						writeObjectProperty(
@@ -747,10 +747,10 @@ export function generate(
 							prop.arg.loc,
 						);
 					}
-					codeGen.push(`: `);
+					codes.push(`: `);
 					appendExpressionNode(prop);
 				}
-				codeGen.push(`};\n`);
+				codes.push(`};\n`);
 				writeInterpolationVarsExtraCompletion();
 			}
 			else if (
@@ -773,7 +773,7 @@ export function generate(
 					prop.exp.loc.start.offset,
 					formatBrackets.empty,
 				);
-				codeGen.push(`;\n`);
+				codes.push(`;\n`);
 			}
 
 			function appendExpressionNode(prop: CompilerDOM.DirectiveNode) {
@@ -835,7 +835,7 @@ export function generate(
 					);
 				}
 				else {
-					codeGen.push(`() => {}`);
+					codes.push(`() => {}`);
 				}
 			}
 		}
@@ -851,13 +851,13 @@ export function generate(
 					const _varComponentInstanceA = `__VLS_${elementIndex++}`;
 					const _varComponentInstanceB = `__VLS_${elementIndex++}`;
 					_varComponentInstance = `__VLS_${elementIndex++}`;
-					codeGen.push(`const ${_varComponentInstanceA} = new __VLS_templateComponents.${componentVar}({ `);
+					codes.push(`const ${_varComponentInstanceA} = new __VLS_templateComponents.${componentVar}({ `);
 					writeProps(node, 'class', 'slots');
-					codeGen.push(`});\n`);
-					codeGen.push(`const ${_varComponentInstanceB} = __VLS_templateComponents.${componentVar}({ `);
+					codes.push(`});\n`);
+					codes.push(`const ${_varComponentInstanceB} = __VLS_templateComponents.${componentVar}({ `);
 					writeProps(node, 'class', 'slots');
-					codeGen.push(`});\n`);
-					codeGen.push(`let ${_varComponentInstance}!: import('./__VLS_types.js').PickNotAny<typeof ${_varComponentInstanceA}, typeof ${_varComponentInstanceB}>;\n`);
+					codes.push(`});\n`);
+					codes.push(`let ${_varComponentInstance}!: import('./__VLS_types.js').PickNotAny<typeof ${_varComponentInstanceA}, typeof ${_varComponentInstanceB}>;\n`);
 				}
 			}
 
@@ -926,7 +926,7 @@ export function generate(
 
 				// camelize name
 				writePropStart(isStatic);
-				codeGen.push([
+				codes.push([
 					'',
 					'template',
 					prop.loc.start.offset,
@@ -991,10 +991,10 @@ export function generate(
 					}
 				}
 				else {
-					codeGen.push('{}');
+					codes.push('{}');
 				}
 				writePropValueSuffix(isStatic);
-				codeGen.push([
+				codes.push([
 					'',
 					'template',
 					prop.loc.end.offset,
@@ -1029,7 +1029,7 @@ export function generate(
 						);
 					}
 					else {
-						codeGen.push('undefined');
+						codes.push('undefined');
 					}
 					writePropValueSuffix(isStatic);
 					writePropEnd(isStatic);
@@ -1061,7 +1061,7 @@ export function generate(
 
 				// camelize name
 				writePropStart(true);
-				codeGen.push([
+				codes.push([
 					'',
 					'template',
 					prop.loc.start.offset,
@@ -1085,10 +1085,10 @@ export function generate(
 					writeAttrValue(prop.value);
 				}
 				else {
-					codeGen.push('true');
+					codes.push('true');
 				}
 				writePropValueSuffix(true);
-				codeGen.push([
+				codes.push([
 					'',
 					'template',
 					prop.loc.end.offset,
@@ -1116,7 +1116,7 @@ export function generate(
 						writeAttrValue(prop.value);
 					}
 					else {
-						codeGen.push('true');
+						codes.push('true');
 					}
 					writePropValueSuffix(true);
 					writePropEnd(true);
@@ -1129,9 +1129,9 @@ export function generate(
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
 				if (format === 'jsx')
-					codeGen.push('{...');
+					codes.push('{...');
 				else
-					codeGen.push('...');
+					codes.push('...');
 				writeInterpolation(
 					prop.exp.content,
 					prop.exp.loc.start.offset,
@@ -1149,9 +1149,9 @@ export function generate(
 					);
 				}
 				if (format === 'jsx')
-					codeGen.push('} ');
+					codes.push('} ');
 				else
-					codeGen.push(', ');
+					codes.push(', ');
 			}
 			else {
 				// comment this line to avoid affecting comments in prop expressions
@@ -1163,7 +1163,7 @@ export function generate(
 
 		function writePropName(name: string, isStatic: boolean, sourceRange: number | [number, number], data: FileRangeCapabilities, cacheOn: any) {
 			if (format === 'jsx' && isStatic) {
-				codeGen.push([
+				codes.push([
 					name,
 					'template',
 					sourceRange,
@@ -1181,34 +1181,34 @@ export function generate(
 		}
 		function writePropValuePrefix(isStatic: boolean) {
 			if (format === 'jsx' && isStatic) {
-				codeGen.push('={');
+				codes.push('={');
 			}
 			else {
-				codeGen.push(': (');
+				codes.push(': (');
 			}
 		}
 		function writePropValueSuffix(isStatic: boolean) {
 			if (format === 'jsx' && isStatic) {
-				codeGen.push('}');
+				codes.push('}');
 			}
 			else {
-				codeGen.push(')');
+				codes.push(')');
 			}
 		}
 		function writePropStart(isStatic: boolean) {
 			if (format === 'jsx' && !isStatic) {
-				codeGen.push('{...{');
+				codes.push('{...{');
 			}
 		}
 		function writePropEnd(isStatic: boolean) {
 			if (format === 'jsx' && isStatic) {
-				codeGen.push(' ');
+				codes.push(' ');
 			}
 			else if (format === 'jsx' && !isStatic) {
-				codeGen.push('}} ');
+				codes.push('}} ');
 			}
 			else {
-				codeGen.push(', ');
+				codes.push(', ');
 			}
 		}
 		function getCaps(caps: FileRangeCapabilities): FileRangeCapabilities {
@@ -1232,7 +1232,7 @@ export function generate(
 		}
 		function writeAttrValue(attrNode: CompilerDOM.TextNode) {
 			const char = attrNode.loc.source.startsWith("'") ? "'" : '"';
-			codeGen.push(char);
+			codes.push(char);
 			let start = attrNode.loc.start.offset;
 			let end = attrNode.loc.end.offset;
 			let content = attrNode.loc.source;
@@ -1244,13 +1244,13 @@ export function generate(
 				end--;
 				content = content.slice(1, -1);
 			}
-			codeGen.push([
+			codes.push([
 				toUnicodeIfNeed(content),
 				'template',
 				[start, end],
 				getCaps(capabilitiesPresets.all),
 			]);
-			codeGen.push(char);
+			codes.push(char);
 		}
 	}
 	function writeInlineCss(node: CompilerDOM.ElementNode) {
@@ -1268,14 +1268,14 @@ export function generate(
 				const end = prop.arg.loc.source.lastIndexOf(endCrt);
 				const content = prop.arg.loc.source.substring(start, end);
 
-				cssCodeGen.push(`${node.tag} { `);
-				cssCodeGen.push([
+				cssCodes.push(`${node.tag} { `);
+				cssCodes.push([
 					content,
 					'template',
 					prop.arg.loc.start.offset + start,
 					capabilitiesPresets.all,
 				]);
-				cssCodeGen.push(` }\n`);
+				cssCodes.push(` }\n`);
 			}
 		}
 	}
@@ -1309,33 +1309,33 @@ export function generate(
 		}
 
 		if (componentVar && parentEl) {
-			codeGen.push(`(await import('./__VLS_types.js')).asFunctionalComponent(__VLS_templateComponents.${componentVar}, new __VLS_templateComponents.${componentVar}({ `);
+			codes.push(`(await import('./__VLS_types.js')).asFunctionalComponent(__VLS_templateComponents.${componentVar}, new __VLS_templateComponents.${componentVar}({ `);
 			writeProps(parentEl, 'class', 'slots');
-			codeGen.push(`}))({ `);
+			codes.push(`}))({ `);
 			writeProps(parentEl, 'class', 'slots');
-			codeGen.push(`}, { attrs: {} as any, expose: {} as any, emit: {} as any, `);
+			codes.push(`}, { attrs: {} as any, expose: {} as any, emit: {} as any, `);
 			if (vueCompilerOptions.strictTemplates) {
-				codeGen.push([
+				codes.push([
 					'',
 					'template',
 					parentEl.loc.start.offset,
 					capabilitiesPresets.diagnosticOnly,
 				]);
 			}
-			codeGen.push(`slots`);
+			codes.push(`slots`);
 			if (vueCompilerOptions.strictTemplates) {
-				codeGen.push([
+				codes.push([
 					'',
 					'template',
 					parentEl.loc.end.offset,
 					capabilitiesPresets.diagnosticOnly,
 				]);
 			}
-			codeGen.push(`: {\n`);
+			codes.push(`: {\n`);
 		}
 		else {
-			codeGen.push(`(__VLS_any as Record<string, any>)`);
-			codeGen.push(` = {\n`);
+			codes.push(`(__VLS_any as Record<string, any>)`);
+			codes.push(` = {\n`);
 		}
 
 		for (const [slotName, { nodes, slotDir }] of Object.entries(slotAndChildNodes)) {
@@ -1352,14 +1352,14 @@ export function generate(
 					: undefined;
 
 			if (!slotDir || !argRange) {
-				codeGen.push([
+				codes.push([
 					'',
 					'template',
 					Math.min(...nodes.map(node => node.loc.start.offset)),
 					{ references: true },
 				]);
-				codeGen.push(slotName);
-				codeGen.push([
+				codes.push(slotName);
+				codes.push([
 					'',
 					'template',
 					Math.max(...nodes.map(node => node.loc.end.offset)),
@@ -1378,7 +1378,7 @@ export function generate(
 				);
 			}
 			else {
-				codeGen.push(`[`);
+				codes.push(`[`);
 				writeInterpolation(
 					slotName,
 					argRange[0] + 1,
@@ -1387,10 +1387,10 @@ export function generate(
 					'',
 					(slotDir.loc as any).slot_name ?? ((slotDir.loc as any).slot_name = {}),
 				);
-				codeGen.push(`]`);
+				codes.push(`]`);
 				writeInterpolationVarsExtraCompletion();
 			}
-			codeGen.push(`(`);
+			codes.push(`(`);
 
 			const slotBlockVars: string[] = [];
 
@@ -1399,7 +1399,7 @@ export function generate(
 				const collectAst = createTsAst(slotDir, `(${slotDir.exp.content}) => {}`);
 				colletVars(ts, collectAst, slotBlockVars);
 
-				codeGen.push([
+				codes.push([
 					slotDir.exp.content,
 					'template',
 					slotDir.exp.loc.start.offset,
@@ -1412,9 +1412,9 @@ export function generate(
 				);
 			}
 
-			codeGen.push(`): any {\n`);
+			codes.push(`): any {\n`);
 			for (const blockCondition of blockConditions) {
-				codeGen.push(`if (!(${blockCondition})) return;\n`);
+				codes.push(`if (!(${blockCondition})) return;\n`);
 			}
 			slotBlockVars.forEach(varName => {
 				localVars[varName] ??= 0;
@@ -1426,7 +1426,7 @@ export function generate(
 			slotBlockVars.forEach(varName => {
 				localVars[varName]--;
 			});
-			codeGen.push(`},\n`);
+			codes.push(`},\n`);
 
 			if (isStatic && slotDir && !slotDir.arg) {
 
@@ -1437,23 +1437,23 @@ export function generate(
 				else if (slotDir.loc.source.startsWith('v-slot:'))
 					offset += 'v-slot:'.length;
 
-				codeGen.push(`'`);
-				codeGen.push([
+				codes.push(`'`);
+				codes.push([
 					'',
 					'template',
 					offset,
 					{ completion: true },
 				]);
-				codeGen.push(`'/* empty slot name completion */\n`);
+				codes.push(`'/* empty slot name completion */\n`);
 			}
 		}
 
 		if (componentVar && parentEl) {
-			codeGen.push(`},\n`);
-			codeGen.push(`});\n`);
+			codes.push(`},\n`);
+			codes.push(`});\n`);
 		}
 		else {
-			codeGen.push(`};\n`);
+			codes.push(`};\n`);
 		}
 
 		writeInterpolationVarsExtraCompletion();
@@ -1469,14 +1469,14 @@ export function generate(
 				&& (prop.name !== 'scope' && prop.name !== 'data')
 			) {
 
-				codeGen.push([
+				codes.push([
 					'',
 					'template',
 					prop.loc.start.offset,
 					capabilitiesPresets.diagnosticOnly,
 				]);
-				codeGen.push(`(await import('./__VLS_types.js')).directiveFunction(__VLS_ctx.`);
-				codeGen.push([
+				codes.push(`(await import('./__VLS_types.js')).directiveFunction(__VLS_ctx.`);
+				codes.push([
 					camelize('v-' + prop.name),
 					'template',
 					[prop.loc.start.offset, prop.loc.start.offset + 'v-'.length + prop.name.length],
@@ -1493,7 +1493,7 @@ export function generate(
 					},
 				]);
 				identifiers.add(camelize('v-' + prop.name));
-				codeGen.push(`)`);
+				codes.push(`)`);
 				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					writeInterpolation(
 						prop.exp.content,
@@ -1509,13 +1509,13 @@ export function generate(
 						formatBrackets.empty,
 					);
 				}
-				codeGen.push([
+				codes.push([
 					'',
 					'template',
 					prop.loc.end.offset,
 					capabilitiesPresets.diagnosticOnly,
 				]);
-				codeGen.push(`;\n`);
+				codes.push(`;\n`);
 				writeInterpolationVarsExtraCompletion();
 			}
 		}
@@ -1527,7 +1527,7 @@ export function generate(
 				&& prop.name === 'ref'
 				&& prop.value
 			) {
-				codeGen.push(`// @ts-ignore\n`);
+				codes.push(`// @ts-ignore\n`);
 				writeInterpolation(
 					prop.value.content,
 					prop.value.loc.start.offset + 1,
@@ -1536,7 +1536,7 @@ export function generate(
 					')',
 					prop.value.loc,
 				);
-				codeGen.push(`;\n`);
+				codes.push(`;\n`);
 				writeInterpolationVarsExtraCompletion();
 			}
 		}
@@ -1572,14 +1572,14 @@ export function generate(
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 				&& prop.arg.content === 'class'
 			) {
-				codeGen.push(`__VLS_styleScopedClasses = (`);
-				codeGen.push([
+				codes.push(`__VLS_styleScopedClasses = (`);
+				codes.push([
 					prop.exp.content,
 					'template',
 					prop.exp.loc.start.offset,
 					capabilitiesPresets.scopedClassName,
 				]);
-				codeGen.push(`);\n`);
+				codes.push(`);\n`);
 			}
 		}
 	}
@@ -1593,17 +1593,17 @@ export function generate(
 
 		if (scriptSetupRanges?.slotsTypeArg) {
 			const slotNameExp = typeof slotNameExpNode === 'object' ? slotNameExpNode.content : slotNameExpNode;
-			codeGen.push(['', 'template', node.loc.start.offset, capabilitiesPresets.diagnosticOnly]);
-			codeGen.push(`__VLS_slots[`);
-			codeGen.push(['', 'template', node.loc.start.offset, capabilitiesPresets.diagnosticOnly]);
-			codeGen.push(slotNameExp);
-			codeGen.push(['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly]);
-			codeGen.push(`]`);
-			codeGen.push(['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly]);
-			codeGen.push(`({\n`);
+			codes.push(['', 'template', node.loc.start.offset, capabilitiesPresets.diagnosticOnly]);
+			codes.push(`__VLS_slots[`);
+			codes.push(['', 'template', node.loc.start.offset, capabilitiesPresets.diagnosticOnly]);
+			codes.push(slotNameExp);
+			codes.push(['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly]);
+			codes.push(`]`);
+			codes.push(['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly]);
+			codes.push(`({\n`);
 		}
 		else {
-			codeGen.push(`var ${varSlot} = {\n`);
+			codes.push(`var ${varSlot} = {\n`);
 		}
 		for (const prop of node.props) {
 			if (
@@ -1611,7 +1611,7 @@ export function generate(
 				&& !prop.arg
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
-				codeGen.push(`...`);
+				codes.push(`...`);
 				writeInterpolation(
 					prop.exp.content,
 					prop.exp.loc.start.offset,
@@ -1620,7 +1620,7 @@ export function generate(
 					')',
 					prop.exp.loc,
 				);
-				codeGen.push(`,\n`);
+				codes.push(`,\n`);
 			}
 			else if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -1640,7 +1640,7 @@ export function generate(
 					},
 					prop.arg.loc,
 				);
-				codeGen.push(`: `);
+				codes.push(`: `);
 				writeInterpolation(
 					prop.exp.content,
 					prop.exp.loc.start.offset,
@@ -1649,7 +1649,7 @@ export function generate(
 					')',
 					prop.exp.loc,
 				);
-				codeGen.push(`,\n`);
+				codes.push(`,\n`);
 			}
 			else if (
 				prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
@@ -1668,12 +1668,12 @@ export function generate(
 					},
 					prop.loc,
 				);
-				codeGen.push(`: (`);
-				codeGen.push(propValue);
-				codeGen.push(`),\n`);
+				codes.push(`: (`);
+				codes.push(propValue);
+				codes.push(`),\n`);
 			}
 		}
-		codeGen.push(scriptSetupRanges?.slotsTypeArg ? `});\n` : `};\n`);
+		codes.push(scriptSetupRanges?.slotsTypeArg ? `});\n` : `};\n`);
 
 		writeInterpolationVarsExtraCompletion();
 
@@ -1683,14 +1683,14 @@ export function generate(
 
 		if (slotNameExpNode) {
 			const varSlotExp = `__VLS_${elementIndex++}`;
-			codeGen.push(`var ${varSlotExp} = `);
+			codes.push(`var ${varSlotExp} = `);
 			if (typeof slotNameExpNode === 'string') {
-				codeGen.push(slotNameExpNode);
+				codes.push(slotNameExpNode);
 			}
 			else {
 				writeInterpolation(slotNameExpNode.content, undefined, undefined, '(', ')', slotNameExpNode);
 			}
-			codeGen.push(`;\n`);
+			codes.push(`;\n`);
 			slotExps.set(varSlotExp, {
 				varName: varSlot,
 			});
@@ -1727,7 +1727,7 @@ export function generate(
 	}
 	function writeObjectProperty(mapCode: string, sourceRange: number | [number, number], data: FileRangeCapabilities, cacheOn: any) {
 		if (validTsVar.test(mapCode)) {
-			codeGen.push([mapCode, 'template', sourceRange, data]);
+			codes.push([mapCode, 'template', sourceRange, data]);
 			return 1;
 		}
 		else if (mapCode.startsWith('[') && mapCode.endsWith(']')) {
@@ -1748,29 +1748,29 @@ export function generate(
 	}
 	function writePropertyAccess(mapCode: string, sourceRange: number | [number, number], data: FileRangeCapabilities) {
 		if (validTsVar.test(mapCode)) {
-			codeGen.push(`.`);
-			codeGen.push([mapCode, 'template', sourceRange, data]);
+			codes.push(`.`);
+			codes.push([mapCode, 'template', sourceRange, data]);
 		}
 		else if (mapCode.startsWith('[') && mapCode.endsWith(']')) {
-			codeGen.push([mapCode, 'template', sourceRange, data]);
+			codes.push([mapCode, 'template', sourceRange, data]);
 		}
 		else {
-			codeGen.push(`[`);
+			codes.push(`[`);
 			writeCodeWithQuotes(mapCode, sourceRange, data);
-			codeGen.push(`]`);
+			codes.push(`]`);
 		}
 	}
 	function writeCodeWithQuotes(mapCode: string, sourceRange: number | [number, number], data: FileRangeCapabilities) {
-		codeGen.push([
+		codes.push([
 			'',
 			'template',
 			typeof sourceRange === 'number' ? sourceRange : sourceRange[0],
 			data,
 		]);
-		codeGen.push(`'`);
-		codeGen.push([mapCode, 'template', sourceRange, data]);
-		codeGen.push(`'`);
-		codeGen.push([
+		codes.push(`'`);
+		codes.push([mapCode, 'template', sourceRange, data]);
+		codes.push(`'`);
+		codes.push([
 			'',
 			'template',
 			typeof sourceRange === 'number' ? sourceRange : sourceRange[1],
@@ -1788,7 +1788,7 @@ export function generate(
 		const ast = createTsAst(cacheOn, prefix + mapCode + suffix);
 		const vars = walkInterpolationFragment(ts, prefix + mapCode + suffix, ast, (frag, fragOffset, isJustForErrorMapping) => {
 			if (fragOffset === undefined) {
-				codeGen.push(frag);
+				codes.push(frag);
 			}
 			else {
 				fragOffset -= prefix.length;
@@ -1799,12 +1799,12 @@ export function generate(
 					frag = frag.substring(0, frag.length - overLength);
 				}
 				if (fragOffset < 0) {
-					codeGen.push(frag.substring(0, -fragOffset));
+					codes.push(frag.substring(0, -fragOffset));
 					frag = frag.substring(-fragOffset);
 					fragOffset = 0;
 				}
 				if (sourceOffset !== undefined && data !== undefined) {
-					codeGen.push([
+					codes.push([
 						frag,
 						'template',
 						sourceOffset + fragOffset,
@@ -1814,9 +1814,9 @@ export function generate(
 					]);
 				}
 				else {
-					codeGen.push(frag);
+					codes.push(frag);
 				}
-				codeGen.push(addSuffix);
+				codes.push(addSuffix);
 			}
 		}, localVars, identifiers, vueCompilerOptions);
 		if (sourceOffset !== undefined) {
@@ -1833,22 +1833,22 @@ export function generate(
 		if (!tempVars.length)
 			return;
 
-		codeGen.push('// @ts-ignore\n'); // #2304
-		codeGen.push('[');
+		codes.push('// @ts-ignore\n'); // #2304
+		codes.push('[');
 		for (const _vars of tempVars) {
 			for (const v of _vars) {
-				codeGen.push([v.text, 'template', v.offset, { completion: { additional: true } }]);
-				codeGen.push(',');
+				codes.push([v.text, 'template', v.offset, { completion: { additional: true } }]);
+				codes.push(',');
 			}
 		}
-		codeGen.push('];\n');
+		codes.push('];\n');
 		tempVars.length = 0;
 	}
 	function appendFormattingCode(mapCode: string, sourceOffset: number, formatWrapper: [string, string]) {
-		formatCodeGen.push(formatWrapper[0]);
-		formatCodeGen.push([mapCode, 'template', sourceOffset, {}]);
-		formatCodeGen.push(formatWrapper[1]);
-		formatCodeGen.push(`\n`);
+		formatCodes.push(formatWrapper[0]);
+		formatCodes.push([mapCode, 'template', sourceOffset, {}]);
+		formatCodes.push(formatWrapper[1]);
+		formatCodes.push(`\n`);
 	}
 };
 

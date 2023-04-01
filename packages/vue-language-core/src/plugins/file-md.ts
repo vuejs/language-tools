@@ -22,13 +22,13 @@ const plugin: VueLanguagePlugin = () => {
 					.replace(/\\\<[\s\S]+?\>\n?/g, match => ' '.repeat(match.length));
 
 				const sfcBlockReg = /\<(script|style)\b[\s\S]*?\>([\s\S]*?)\<\/\1\>/g;
-				const codeGen: Segment[] = [];
+				const codes: Segment[] = [];
 
 				for (const match of content.matchAll(sfcBlockReg)) {
 					if (match.index !== undefined) {
 						const matchText = match[0];
-						codeGen.push([matchText, undefined, match.index]);
-						codeGen.push('\n\n');
+						codes.push([matchText, undefined, match.index]);
+						codes.push('\n\n');
 						content = content.substring(0, match.index) + ' '.repeat(matchText.length) + content.substring(match.index + matchText.length);
 					}
 				}
@@ -39,12 +39,12 @@ const plugin: VueLanguagePlugin = () => {
 					// [foo](http://foo.com)
 					.replace(/\[[\s\S]*?\]\([\s\S]*?\)/g, match => ' '.repeat(match.length));
 
-				codeGen.push('<template>\n');
-				codeGen.push([content, undefined, 0]);
-				codeGen.push('\n</template>');
+				codes.push('<template>\n');
+				codes.push([content, undefined, 0]);
+				codes.push('\n</template>');
 
-				const file2VueSourceMap = new SourceMap(buildMappings(codeGen));
-				const sfc = parse(toString(codeGen));
+				const file2VueSourceMap = new SourceMap(buildMappings(codes));
+				const sfc = parse(toString(codes));
 
 				if (sfc.descriptor.template) {
 					transformRange(sfc.descriptor.template);

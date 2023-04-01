@@ -124,7 +124,7 @@ export function generate(
 	];
 
 	return {
-		codeGen: codes,
+		codes,
 		extraMappings,
 		mirrorBehaviorMappings,
 	};
@@ -706,7 +706,7 @@ export function generate(
 		codes.push(`/* CSS variable injection end */\n`);
 
 		if (htmlGen) {
-			for (const s of htmlGen.codeGen) {
+			for (const s of htmlGen.codes) {
 				codes.push(s);
 			}
 		}
