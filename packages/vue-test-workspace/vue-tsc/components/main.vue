@@ -5,6 +5,7 @@ import ScriptSetup from './script-setup.vue';
 import ScriptSetupExpose from './script-setup-expose.vue';
 import ScriptSetupTypeOnly from './script-setup-type-only.vue';
 import ScriptSetupDefaultProps from './script-setup-default-props.vue';
+import ScriptSetupGeneric from './script-setup-generic.vue';
 
 // https://vuejs.org/api/sfc-script-setup.html#defineprops-defineemits
 const ScriptSetupExact = defineComponent({
@@ -60,9 +61,23 @@ const ScriptSetupDefaultPropsExact = defineComponent({
 		return {};
 	},
 });
+// vue 3.3 generic
+declare const ScriptSetupGenericExact: <T, >(
+	_props: import('vue').VNodeProps & { [K in keyof JSX.ElementChildrenAttribute]: { default(data: T): any } } & { foo: T },
+	_ctx?: {
+		attrs: any,
+		slots: { default(data: T): any },
+		emit: { (e: 'bar', data: T): void },
+		expose(_exposed: { baz: T }): void,
+	}
+) => JSX.Element & {
+	__props?: typeof _props;
+	__ctx?: typeof _ctx;
+};
 
 exactType(ScriptSetup, ScriptSetupExact);
 exactType(ScriptSetupExpose, ScriptSetupExposeExact);
 exactType(ScriptSetupTypeOnly, ScriptSetupTypeOnlyExact);
 exactType(ScriptSetupDefaultProps, ScriptSetupDefaultPropsExact);
+exactType(ScriptSetupGeneric, ScriptSetupGenericExact);
 </script>

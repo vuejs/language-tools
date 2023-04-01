@@ -73,6 +73,7 @@
 					"type": "object",
 					"default": {
 						"defineProps": [ "defineProps" ],
+						"defineSlots": [ "defineSlots" ],
 						"defineEmits": [ "defineEmits" ],
 						"defineExpose": [ "defineExpose" ],
 						"withDefaults": [ "withDefaults" ]
