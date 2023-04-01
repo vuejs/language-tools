@@ -1,26 +1,23 @@
 # Changelog
 
-## 1.3.8 (2023/3/27) - pre-release
+## 1.3.9 (2023/4/1) - pre-release
 
-- fix: missing props type check stop working
-
-## 1.3.7 (2023/3/26) - pre-release
-
-- feat: support `normalizeComponentImportName` for `additionalExtensions` ([#2481](https://github.com/johnsoncodehk/volar/issues/2481))
-- feat: support generic component without `jsxTemplates`
-- feat: support slot references for anonymous default slot ([#2547](https://github.com/johnsoncodehk/volar/issues/2547))
-- feat: recognize slots property with `JSX.ElementChildrenAttribute` ([#2472](https://github.com/johnsoncodehk/volar/issues/2472))
-- feat: support slot required checking when enabled `strictTemplates` ([#1820](https://github.com/johnsoncodehk/volar/issues/1820))
-- fix: handle edge tag name casing `<xxx--yyy>` ([#2463](https://github.com/johnsoncodehk/volar/issues/2463))
-- fix: incremental update causes multi-line style node damage ([#2519](https://github.com/johnsoncodehk/volar/issues/2519))
-- fix: formatting break multi-line attribute value indent ([#2519](https://github.com/johnsoncodehk/volar/issues/2519))
-- fix: formatting break `<pre>` tag contents indent ([#2520](https://github.com/johnsoncodehk/volar/issues/2520))
-- fix: typescript `labelDetails` in completions not processed (https://github.com/volarjs/plugins/issues/31) - thanks @zardoy
-
-**Breaking changes**
-
-- deprecated `volar.vueserver.textDocumentSync` setting
-- deprecated `narrowingTypesInInlineHandlers` for `vueCompilerOptions` and always enabled now
+- feat: support for vue 3.3 `defineProps()` API ([#2568](https://github.com/johnsoncodehk/volar/issues/2568))
+- feat(vue-tsc): prettify script setup props, emits type in emit
+- fix: `plugins`, `hooks`, `experimentalAdditionalLanguageModules` options of `vueCompilerOptions` not working ([#2558](https://github.com/johnsoncodehk/volar/issues/2558)) - thanks @rchl
+- fix(vue-tsc): fixed typescript 5 support ([#2555](https://github.com/johnsoncodehk/volar/issues/2555)) - thanks @blake-newman
+- fix: incorrectly incremented end offset when deleting the last text in an directive expression
+- fix: `"typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis": true` caused formatting issues with v-bind expressions ([#2507](https://github.com/johnsoncodehk/volar/issues/2507))
+- fix: `normalizeComponentAutoImportName` not working for import statement completion ([#2511](https://github.com/johnsoncodehk/volar/issues/2511))
+- fix: ignore `null` type for dynamic argument ([#2514](https://github.com/johnsoncodehk/volar/issues/2514))
+- fix: `vue-twoslash-queries` plugin not working
+- fix: redo `JSX.ElementChildrenAttribute` implement ([#2472](https://github.com/johnsoncodehk/volar/issues/2472))
+- fix(component-meta): support for functional component ([#1992](https://github.com/johnsoncodehk/volar/issues/1992))
+- fix: avoid crash when `chdir()` ([#2480](https://github.com/johnsoncodehk/volar/issues/2480))
+- fix: expand selection ranges incorrect ([#2477](https://github.com/johnsoncodehk/volar/issues/2477))
+- fix: directive semanticTokens display range incorrect ([#2454](https://github.com/johnsoncodehk/volar/issues/2454))
+- fix: `<textarea>` formatting indent incorrect
+- perf(vue-tsc): streamline virtual code to improve emit performance
 
 ---
 
@@ -57,6 +54,28 @@
 		<a href="https://opencollective.com/volarjs">Open Collective</a>
 	</h5>
 </p>
+
+## 1.3.8 (2023/3/27) - pre-release
+
+- fix: missing props type check stop working
+
+## 1.3.7 (2023/3/26) - pre-release
+
+- feat: support `normalizeComponentImportName` for `additionalExtensions` ([#2481](https://github.com/johnsoncodehk/volar/issues/2481))
+- feat: support generic component without `jsxTemplates`
+- feat: support slot references for anonymous default slot ([#2547](https://github.com/johnsoncodehk/volar/issues/2547))
+- feat: recognize slots property with `JSX.ElementChildrenAttribute` ([#2472](https://github.com/johnsoncodehk/volar/issues/2472))
+- feat: support slot required checking when enabled `strictTemplates` ([#1820](https://github.com/johnsoncodehk/volar/issues/1820))
+- fix: handle edge tag name casing `<xxx--yyy>` ([#2463](https://github.com/johnsoncodehk/volar/issues/2463))
+- fix: incremental update causes multi-line style node damage ([#2519](https://github.com/johnsoncodehk/volar/issues/2519))
+- fix: formatting break multi-line attribute value indent ([#2519](https://github.com/johnsoncodehk/volar/issues/2519))
+- fix: formatting break `<pre>` tag contents indent ([#2520](https://github.com/johnsoncodehk/volar/issues/2520))
+- fix: typescript `labelDetails` in completions not processed (https://github.com/volarjs/plugins/issues/31) - thanks @zardoy
+
+**Breaking changes**
+
+- deprecated `volar.vueserver.textDocumentSync` setting
+- deprecated `narrowingTypesInInlineHandlers` for `vueCompilerOptions` and always enabled now
 
 ## 1.3.6 (2023/3/25) - pre-release
 
