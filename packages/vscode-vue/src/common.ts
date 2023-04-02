@@ -129,9 +129,6 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			if (takeOverModeActive(context)) {
 				text += ' (takeover)';
 			}
-			if (noProjectReferences()) {
-				text += ' (noProjectReferences)';
-			}
 			return text;
 		},
 		false,
@@ -154,7 +151,6 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			if (
 				e.affectsConfiguration('volar.vueserver.maxOldSpaceSize')
 				|| e.affectsConfiguration('volar.vueserver.diagnosticModel')
-				|| e.affectsConfiguration('volar.vueserver.noProjectReferences')
 				|| e.affectsConfiguration('volar.vueserver.reverseConfigFilePriority')
 				|| e.affectsConfiguration('volar.vueserver.disableFileWatcher')
 				|| e.affectsConfiguration('volar.vueserver.petiteVue.processHtmlFile')
@@ -217,10 +213,6 @@ export function processMd() {
 	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.vitePress.processMdFile');
 }
 
-export function noProjectReferences() {
-	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.noProjectReferences');
-}
-
 export function reverseConfigFilePriority() {
 	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.reverseConfigFilePriority');
 }
@@ -251,7 +243,6 @@ async function getInitializationOptions(
 		serverMode,
 		diagnosticModel: diagnosticModel() === 'pull' ? DiagnosticModel.Pull : DiagnosticModel.Push,
 		typescript: { tsdk: (await getTsdk(context)).tsdk },
-		noProjectReferences: noProjectReferences(),
 		reverseConfigFilePriority: reverseConfigFilePriority(),
 		disableFileWatcher: disableFileWatcher(),
 		maxFileSize: vscode.workspace.getConfiguration('volar').get<number>('vueserver.maxFileSize'),
