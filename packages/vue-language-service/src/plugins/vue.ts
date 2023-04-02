@@ -41,7 +41,7 @@ export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin =
 			return context;
 		},
 
-		provideSyntacticDiagnostics(document) {
+		provideSemanticDiagnostics(document) {
 			return worker(document, (vueSourceFile) => {
 
 				const result: vscode.Diagnostic[] = [];
@@ -76,7 +76,7 @@ export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin =
 								start: document.positionAt(script.start),
 								end: document.positionAt(script.startTagEnd),
 							},
-							'Virtual script not found, may missing <script lang="ts"> / "allowJs": true / jsconfig.json.',
+							`Virtual script ${JSON.stringify(vueSourceFile.mainScriptName)} not found, may missing <script lang="ts"> / "allowJs": true / jsconfig.json.`,
 							vscode.DiagnosticSeverity.Information,
 							undefined,
 							'volar',
