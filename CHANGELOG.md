@@ -2,8 +2,8 @@
 
 ## 1.3.11 (2023/4/2) - pre-release
 
-- feat: support goto source file definition for project references (https://github.com/volarjs/volar.js/pull/24) ([#1344](https://github.com/johnsoncodehk/volar/issues/1344)) ([#2296](https://github.com/johnsoncodehk/volar/issues/2296)) ([#2340](https://github.com/johnsoncodehk/volar/issues/2568)) ([#1815](https://github.com/johnsoncodehk/volar/issues/1815))
-- feat: support auto imports for unused modules (https://github.com/volarjs/volar.js/pull/24) (https://github.com/volarjs/volar.js/issues/19) ([#963](https://github.com/johnsoncodehk/volar/issues/963))
+- feat: support goto source file definition for project references for TS 5.0 (https://github.com/volarjs/volar.js/pull/24) ([#1344](https://github.com/johnsoncodehk/volar/issues/1344)) ([#2296](https://github.com/johnsoncodehk/volar/issues/2296)) ([#2340](https://github.com/johnsoncodehk/volar/issues/2568)) ([#1815](https://github.com/johnsoncodehk/volar/issues/1815))
+- feat: support auto imports for unused modules for TS 5.0 (https://github.com/volarjs/volar.js/pull/24) (https://github.com/volarjs/volar.js/issues/19) ([#963](https://github.com/johnsoncodehk/volar/issues/963))
 
 ## 1.3.10 (2023/4/1) - pre-release
 
