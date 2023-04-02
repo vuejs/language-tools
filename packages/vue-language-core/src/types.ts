@@ -51,8 +51,8 @@ export type VueLanguagePlugin = (ctx: {
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
 }) => {
-	name?: string;
 	version: 1;
+	name?: string;
 	order?: number;
 	parseSFC?(fileName: string, content: string): SFCParseResult | undefined;
 	updateSFC?(oldResult: SFCParseResult, textChange: { start: number, end: number, newText: string; }): SFCParseResult | undefined;
