@@ -442,7 +442,14 @@ export function generate(
 			return;
 		}
 
-		if (vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition') {
+
+		const definePropProposalA = sfc.scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition') || vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition';
+		const definePropProposalB = sfc.scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition') || vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
+
+		if (definePropProposalA) {
+			// TODO
+		}
+		if (definePropProposalB) {
 			codes.push(`
 declare function defineProp<T>(value: T | (() => T), required?: boolean, rest?: any): import('vue').ComputedRef<T>;
 declare function defineProp<T>(value: T | (() => T) | undefined, required: true, rest?: any): import('vue').ComputedRef<T>;

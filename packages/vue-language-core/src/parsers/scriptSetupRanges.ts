@@ -24,6 +24,8 @@ export function parseScriptSetupRanges(
 	let exposeRuntimeArg: TextRange | undefined;
 	let emitsTypeNums = -1;
 
+	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition' || ast.getFullText().trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition');
+	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' || ast.getFullText().trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition');
 	const defineProp: {
 		name: TextRange;
 		type: TextRange | undefined;
@@ -79,16 +81,16 @@ export function parseScriptSetupRanges(
 		) {
 			const callText = node.expression.getText(ast);
 			if (callText === 'defineProp') {
-				if (vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' && ts.isVariableDeclaration(parent)) {
+				if (definePropProposalA) {
+					// TODO
+				}
+				else if (definePropProposalB && ts.isVariableDeclaration(parent)) {
 					defineProp.push({
 						name: _getStartEnd(parent.name),
 						defaultValue: node.arguments.length >= 1 ? _getStartEnd(node.arguments[0]) : undefined,
 						type: node.typeArguments?.length ? _getStartEnd(node.typeArguments[0]) : undefined,
 						required: node.arguments.length >= 2 && node.arguments[1].kind === ts.SyntaxKind.TrueKeyword,
 					});
-				}
-				else if (vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' && ts.isVariableDeclaration(parent)) {
-					// TODO
 				}
 			}
 			if (
