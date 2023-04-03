@@ -1,0 +1,15 @@
+{
+	"extends": "../tsconfig.json",
+	"compilerOptions": {
+		"jsx": "preserve",
+		"noPropertyAccessFromIndexSignature": true,
+	},
+	"vueCompilerOptions": {
+		"target": 2.7
+	},
+	"include": [
+		"**/*.ts",
+		"**/*.vue",
+		"**/*.html",
+	]
+}

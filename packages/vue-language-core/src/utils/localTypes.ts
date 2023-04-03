@@ -86,7 +86,7 @@ export type EmitEvent<F, E> =
 export declare function asFunctionalComponent<T, K>(t: T, instance?: K):
 	T extends (...args: any) => any ? T
 	: K extends { $props?: infer Props, $slots?: infer Slots, $emit?: infer Emit }
-		? (props: Props, ctx?: { attrs?: any, expose?: any, slots?: Slots, emit?: Emit }) => JSX.Element & { __ctx?: typeof ctx, __props?: typeof props }
+		? (props: Props, ctx?: { attrs?: any, expose?: any, slots?: Slots, emit?: Emit }) => JSX.Element & { __ctx?: typeof ctx, __props?: typeof props } 
 		: (_: T) => { __ctx?: { attrs?: undefined, expose?: undefined, slots?: undefined, emit?: undefined }, __props?: T }; // IntrinsicElement
 export declare function pickEvent<Emit, K, E>(emit: Emit, emitKey: K, event: E): FillingEventArg<
 	PickNotAny<
