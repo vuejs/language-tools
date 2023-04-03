@@ -226,6 +226,7 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 		hooks: vueOptions.hooks ?? [],
 
 		// experimental
+		experimentalDefinePropProposal: vueOptions.experimentalDefinePropProposal ?? false,
 		experimentalAdditionalLanguageModules: vueOptions.experimentalAdditionalLanguageModules ?? [],
 		experimentalResolveStyleCssClasses: vueOptions.experimentalResolveStyleCssClasses ?? 'scoped',
 		// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51

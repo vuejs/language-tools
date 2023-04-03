@@ -24,8 +24,13 @@ export function parseScriptSetupRanges(
 	let exposeRuntimeArg: TextRange | undefined;
 	let emitsTypeNums = -1;
 
+	const defineProp: {
+		name: TextRange;
+		type: TextRange | undefined;
+		defaultValue: TextRange | undefined;
+		required: boolean;
+	}[] = [];
 	const bindings = parseBindingRanges(ts, ast, false);
-	const typeBindings = parseBindingRanges(ts, ast, true);
 
 	ast.forEachChild(node => {
 		const isTypeExport = (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) && node.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword);
@@ -50,7 +55,6 @@ export function parseScriptSetupRanges(
 		importSectionEndOffset,
 		notOnTopTypeExports,
 		bindings,
-		typeBindings,
 		withDefaultsArg,
 		defineProps,
 		propsAssignName,
@@ -62,6 +66,7 @@ export function parseScriptSetupRanges(
 		emitsTypeArg,
 		emitsTypeNums,
 		exposeRuntimeArg,
+		defineProp,
 	};
 
 	function _getStartEnd(node: ts.Node) {
@@ -73,6 +78,19 @@ export function parseScriptSetupRanges(
 			&& ts.isIdentifier(node.expression)
 		) {
 			const callText = node.expression.getText(ast);
+			if (callText === 'defineProp') {
+				if (vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' && ts.isVariableDeclaration(parent)) {
+					defineProp.push({
+						name: _getStartEnd(parent.name),
+						defaultValue: node.arguments.length >= 1 ? _getStartEnd(node.arguments[0]) : undefined,
+						type: node.typeArguments?.length ? _getStartEnd(node.typeArguments[0]) : undefined,
+						required: node.arguments.length >= 2 && node.arguments[1].kind === ts.SyntaxKind.TrueKeyword,
+					});
+				}
+				else if (vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' && ts.isVariableDeclaration(parent)) {
+					// TODO
+				}
+			}
 			if (
 				vueCompilerOptions.macros.defineProps.includes(callText)
 				|| vueCompilerOptions.macros.defineSlots.includes(callText)

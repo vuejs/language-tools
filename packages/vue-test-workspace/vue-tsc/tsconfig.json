@@ -6,6 +6,7 @@
 	},
 	"vueCompilerOptions": {
 		"strictTemplates": true,
+		"experimentalDefinePropProposal": "johnsonEdition",
 		"plugins": ["../../vue-language-plugin-pug"]
 	},
 	"include": [

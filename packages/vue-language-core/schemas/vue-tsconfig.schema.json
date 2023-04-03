@@ -109,6 +109,13 @@
 				"experimentalAdditionalLanguageModules": {
 					"type": "array",
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/pull/2267"
+				},
+				"experimentalDefinePropProposal": {
+					"enum": [
+						"kevinEdition",
+						"johnsonEdition",
+						false
+					]
 				}
 			}
 		}
