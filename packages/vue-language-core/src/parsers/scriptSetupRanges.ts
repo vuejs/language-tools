@@ -27,7 +27,7 @@ export function parseScriptSetupRanges(
 	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition' || ast.getFullText().trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition');
 	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' || ast.getFullText().trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition');
 	const defineProp: {
-		name: TextRange;
+		name: TextRange | undefined;
 		nameIsString: boolean;
 		type: TextRange | undefined;
 		defaultValue: TextRange | undefined;
@@ -81,7 +81,39 @@ export function parseScriptSetupRanges(
 			&& ts.isIdentifier(node.expression)
 		) {
 			const callText = node.expression.getText(ast);
-			if (callText === 'defineProp') {
+			if (callText === 'defineModel') {
+				let name: TextRange | undefined;
+				let options: ts.Node | undefined;
+				if (node.arguments.length >= 2) {
+					name = _getStartEnd(node.arguments[0]);
+					options = node.arguments[1];
+				}
+				else if (node.arguments.length >= 1) {
+					if (ts.isStringLiteral(node.arguments[0])) {
+						name = _getStartEnd(node.arguments[0]);
+					}
+					else {
+						options = node.arguments[0];
+					}
+				}
+				let required = false;
+				if (options && ts.isObjectLiteralExpression(options)) {
+					for (const property of options.properties) {
+						if (ts.isPropertyAssignment(property) && ts.isIdentifier(property.name) && property.name.getText(ast) === 'required' && property.initializer.kind === ts.SyntaxKind.TrueKeyword) {
+							required = true;
+							break;
+						}
+					}
+				}
+				defineProp.push({
+					name,
+					nameIsString: true,
+					type: node.typeArguments?.length ? _getStartEnd(node.typeArguments[0]) : undefined,
+					defaultValue: undefined,
+					required,
+				});
+			}
+			else if (callText === 'defineProp') {
 				if (definePropProposalA) {
 					let required = false;
 					if (node.arguments.length >= 2) {

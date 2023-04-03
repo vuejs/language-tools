@@ -318,7 +318,12 @@ export function generate(
 					codes.push(`const __VLS_defaults = {\n`);
 					for (const defineProp of scriptSetupRanges.defineProp) {
 						if (defineProp.defaultValue) {
-							codes.push(sfc.scriptSetup.content.substring(defineProp.name.start, defineProp.name.end));
+							if (defineProp.name) {
+								codes.push(sfc.scriptSetup.content.substring(defineProp.name.start, defineProp.name.end));
+							}
+							else {
+								codes.push('modelValue');
+							}
 							codes.push(`: `);
 							codes.push(sfc.scriptSetup.content.substring(defineProp.defaultValue.start, defineProp.defaultValue.end));
 							codes.push(`,\n`);
@@ -327,9 +332,12 @@ export function generate(
 					codes.push(`};\n`);
 					codes.push(`return {} as {\n`);
 					for (const defineProp of scriptSetupRanges.defineProp) {
-						const propName = sfc.scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
-						const propMirrorStart = muggle.getLength(codes);
-						definePropMirrors[propName] = [propMirrorStart, propMirrorStart];
+						let propName = 'modelValue';
+						if (defineProp.name) {
+							propName = sfc.scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
+							const propMirrorStart = muggle.getLength(codes);
+							definePropMirrors[propName] = [propMirrorStart, propMirrorStart + propName.length];
+						}
 						codes.push(`${propName}${defineProp.required ? '' : '?'}: `);
 						if (defineProp.type) {
 							codes.push(sfc.scriptSetup.content.substring(defineProp.type.start, defineProp.type.end));
@@ -408,6 +416,9 @@ export function generate(
 
 		if (scriptSetupGeneratedOffset !== undefined) {
 			for (const defineProp of scriptSetupRanges.defineProp) {
+				if (!defineProp.name) {
+					continue;
+				}
 				const propName = sfc.scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
 				const propMirror = definePropMirrors[propName];
 				if (propMirror) {
@@ -446,6 +457,9 @@ export function generate(
 		const definePropProposalA = sfc.scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition') || vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition';
 		const definePropProposalB = sfc.scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition') || vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
 
+		if (vueCompilerOptions.target >= 3.3) {
+			codes.push(`const { defineProps, defineEmits, defineSlots, defineModel } = await import('vue');\n`);
+		}
 		if (definePropProposalA) {
 			codes.push(`
 declare function defineProp<T>(name: string, options: { required: true } & Record<string, unknown>): import('vue').ComputedRef<T>;
@@ -496,18 +510,22 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			codes.push(`const __VLS_publicComponent = (await import('${vueLibName}')).defineComponent({\n`);
 		}
 
-		if (scriptSetupRanges.defineProp.length && (definePropProposalA || (definePropProposalB && !functional))) {
+		if (scriptSetupRanges.defineProp.length) {
 			codes.push(`props: {} as {\n`);
 			for (const defineProp of scriptSetupRanges.defineProp) {
 
-				const nameText = sfc.scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
-				const start = muggle.getLength(codes);
-				definePropMirrors[nameText] = [start, start + nameText.length];
-				codes.push(`${nameText}: `);
+				let propName = 'modelValue';
+
+				if (defineProp.name) {
+					propName = sfc.scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
+					const start = muggle.getLength(codes);
+					definePropMirrors[propName] = [start, start + propName.length];
+				}
+				codes.push(`${propName}: `);
 
 				let type = 'any';
 				if (!defineProp.nameIsString) {
-					type = `NonNullable<typeof ${nameText}['value']>`;
+					type = `NonNullable<typeof ${propName}['value']>`;
 				}
 				else if (defineProp.type) {
 					type = sfc.scriptSetup.content.substring(defineProp.type.start, defineProp.type.end);
