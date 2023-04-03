@@ -1,22 +1,32 @@
 <script setup lang="ts">
 // @experimentalDefinePropProposal=kevinEdition
-// import { exactType } from '../shared';
+import { exactType } from '../shared';
 
-// const a = defineProp<string>();
-// const b = defineProp('', true);
-// const c = defineProp(1, true);
-// const d = defineProp(1, false);
-// const e = defineProp<string>(undefined);
-// const f = defineProp<string>(undefined, true);
-// const g = defineProp<string>(undefined, false);
+interface Qux { qux: true };
+
+const foo = defineProp<string>('foo');
+const bar = defineProp<string>('bar', {
+    type: String,
+    required: true,
+    default: 'bar',
+});
+const baz = defineProp<string | number>('baz', {
+    required: true,
+    default: () => [1, 2, 3],
+});
+defineProp<Qux>('qux')
+defineProp<boolean>('quux', { default: true })
+
+// infer prop name from variable name
+const quuz = defineProp();
+console.log(quuz);
 </script>
 
 <template>
-    <!-- {{ exactType(a, {} as string | undefined) }}
-    {{ exactType(b, {} as string) }}
-    {{ exactType(c, {} as number) }}
-    {{ exactType(d, {} as number) }}
-    {{ exactType(e, {} as string | undefined) }}
-    {{ exactType(f, {} as string) }}
-    {{ exactType(g, {} as string | undefined) }} -->
+    {{ exactType(foo, {} as string | undefined) }}
+    {{ exactType(bar, {} as string) }}
+    {{ exactType(baz, {} as string | number) }}
+    {{ exactType(qux, {} as Qux | undefined) }}
+    {{ exactType(quux, {} as boolean | undefined) }}
+    {{ exactType($props.quuz, {} as {} | undefined) }}
 </template>

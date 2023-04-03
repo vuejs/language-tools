@@ -447,7 +447,11 @@ export function generate(
 		const definePropProposalB = sfc.scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition') || vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
 
 		if (definePropProposalA) {
-			// TODO
+			codes.push(`
+declare function defineProp<T>(name: string, options: { required: true } & Record<string, unknown>): import('vue').ComputedRef<T>;
+declare function defineProp<T>(name: string, options: { default: any } & Record<string, unknown>): import('vue').ComputedRef<T>;
+declare function defineProp<T>(name?: string, options?: any): import('vue').ComputedRef<T | undefined>;
+`.trim() + '\n');
 		}
 		if (definePropProposalB) {
 			codes.push(`
@@ -492,20 +496,28 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			codes.push(`const __VLS_publicComponent = (await import('${vueLibName}')).defineComponent({\n`);
 		}
 
-		if (scriptSetupRanges.defineProp.length && !functional) {
+		if (scriptSetupRanges.defineProp.length && (definePropProposalA || (definePropProposalB && !functional))) {
 			codes.push(`props: {} as {\n`);
-			for (const definePropDefine of scriptSetupRanges.defineProp) {
+			for (const defineProp of scriptSetupRanges.defineProp) {
 
-				const nameText = sfc.scriptSetup.content.substring(definePropDefine.name.start, definePropDefine.name.end);
+				const nameText = sfc.scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
 				const start = muggle.getLength(codes);
 				definePropMirrors[nameText] = [start, start + nameText.length];
-
 				codes.push(`${nameText}: `);
-				if (definePropDefine.required) {
-					codes.push(`{ required: true, type: import('vue').PropType<NonNullable<typeof ${nameText}['value']>> },\n`);
+
+				let type = 'any';
+				if (!defineProp.nameIsString) {
+					type = `NonNullable<typeof ${nameText}['value']>`;
+				}
+				else if (defineProp.type) {
+					type = sfc.scriptSetup.content.substring(defineProp.type.start, defineProp.type.end);
+				}
+
+				if (defineProp.required) {
+					codes.push(`{ required: true, type: import('vue').PropType<${type}> },\n`);
 				}
 				else {
-					codes.push(`import('vue').PropType<NonNullable<typeof ${nameText}['value']>>,\n`);
+					codes.push(`import('vue').PropType<${type}>,\n`);
 				}
 			}
 			codes.push(`},\n`);

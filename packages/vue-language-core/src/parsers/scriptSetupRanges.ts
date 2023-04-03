@@ -28,6 +28,7 @@ export function parseScriptSetupRanges(
 	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' || ast.getFullText().trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition');
 	const defineProp: {
 		name: TextRange;
+		nameIsString: boolean;
 		type: TextRange | undefined;
 		defaultValue: TextRange | undefined;
 		required: boolean;
@@ -82,11 +83,41 @@ export function parseScriptSetupRanges(
 			const callText = node.expression.getText(ast);
 			if (callText === 'defineProp') {
 				if (definePropProposalA) {
-					// TODO
+					let required = false;
+					if (node.arguments.length >= 2) {
+						const secondArg = node.arguments[1];
+						if (ts.isObjectLiteralExpression(secondArg)) {
+							for (const property of secondArg.properties) {
+								if (ts.isPropertyAssignment(property) && ts.isIdentifier(property.name) && property.name.getText(ast) === 'required' && property.initializer.kind === ts.SyntaxKind.TrueKeyword) {
+									required = true;
+									break;
+								}
+							}
+						}
+					}
+					if (node.arguments.length >= 1) {
+						defineProp.push({
+							name: _getStartEnd(node.arguments[0]),
+							nameIsString: true,
+							type: node.typeArguments?.length ? _getStartEnd(node.typeArguments[0]) : undefined,
+							defaultValue: undefined,
+							required,
+						});
+					}
+					else if (ts.isVariableDeclaration(parent)) {
+						defineProp.push({
+							name: _getStartEnd(parent.name),
+							nameIsString: false,
+							type: node.typeArguments?.length ? _getStartEnd(node.typeArguments[0]) : undefined,
+							defaultValue: undefined,
+							required,
+						});
+					}
 				}
 				else if (definePropProposalB && ts.isVariableDeclaration(parent)) {
 					defineProp.push({
 						name: _getStartEnd(parent.name),
+						nameIsString: false,
 						defaultValue: node.arguments.length >= 1 ? _getStartEnd(node.arguments[0]) : undefined,
 						type: node.typeArguments?.length ? _getStartEnd(node.typeArguments[0]) : undefined,
 						required: node.arguments.length >= 2 && node.arguments[1].kind === ts.SyntaxKind.TrueKeyword,
