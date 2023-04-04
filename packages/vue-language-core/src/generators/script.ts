@@ -321,8 +321,9 @@ export function generate(
 			}
 			codes.push(`>`);
 			codes.push('(\n');
-			codes.push(`__VLS_props: NonNullable<typeof __VLS_ctx['__props']> & import('vue').VNodeProps,\n`);
-			codes.push('__VLS_ctx = (() => {\n');
+			codes.push(`__VLS_props: typeof __VLS_setup['props'] & import('vue').VNodeProps,\n`);
+			codes.push(`__VLS_ctx: Pick<typeof __VLS_setup, 'expose' | 'attrs' | 'emit' | 'slots'>,\n`);
+			codes.push('__VLS_setup = (() => {\n');
 			scriptSetupGeneratedOffset = generateSetupFunction(true, 'none', definePropMirrors);
 
 			//#region exposed
@@ -428,14 +429,14 @@ export function generate(
 			//#endregion
 
 			codes.push('return {} as {\n');
-			codes.push(`__props?: typeof __VLS_props,\n`);
-			codes.push('expose?(exposed: typeof __VLS_exposed): void,\n');
-			codes.push('attrs?: any,\n');
-			codes.push('slots?: ReturnType<typeof __VLS_template>,\n');
-			codes.push('emit?: typeof __VLS_emit');
+			codes.push(`props: typeof __VLS_props,\n`);
+			codes.push('expose(exposed: typeof __VLS_exposed): void,\n');
+			codes.push('attrs: any,\n');
+			codes.push('slots: ReturnType<typeof __VLS_template>,\n');
+			codes.push('emit: typeof __VLS_emit');
 			codes.push('};\n');
 			codes.push('})(),\n');
-			codes.push(') => ({} as JSX.Element & { __ctx?: typeof __VLS_ctx, __props?: typeof __VLS_props }))');
+			codes.push(') => ({} as any))');
 		}
 		else if (!sfc.script) {
 			// no script block, generate script setup code at root

@@ -19,23 +19,21 @@ const ScriptSetupExact = defineComponent({
 	},
 });
 declare const ScriptSetupGenericExact: <T, >(
-	_props: import('vue').VNodeProps & NonNullable<NonNullable<typeof _ctx>['__props']>,
-	_ctx?: {
-		__props?: {
+	_props: import('vue').VNodeProps & NonNullable<typeof _setup>['props'],
+	_ctx: Pick<NonNullable<typeof _setup>, 'expose' | 'attrs' | 'emit' | 'slots'>,
+	_setup?: {
+		props: {
 			a?: T | undefined;
 			b?: T | undefined;
 			c?: T | undefined;
 			d: T;
 		},
-		attrs?: any,
-		slots?: {},
-		emit?: any,
-		expose?(_exposed: {}): void,
+		attrs: any,
+		slots: {},
+		emit: any,
+		expose(_exposed: {}): void,
 	}
-) => JSX.Element & {
-	__props?: typeof _props;
-	__ctx?: typeof _ctx;
-};
+) => any;
 
 exactType(ScriptSetup, ScriptSetupExact);
 exactType(ScriptSetupGeneric, ScriptSetupGenericExact);
