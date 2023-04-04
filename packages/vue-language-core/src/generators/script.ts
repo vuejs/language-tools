@@ -343,7 +343,7 @@ export function generate(
 			) {
 				if (scriptSetupRanges.propsRuntimeArg && scriptSetupRanges.defineProps) {
 					codes.push(`const __VLS_props = `);
-					addVirtualCode('scriptSetup', scriptSetupRanges.defineProps.start, scriptSetupRanges.defineProps.end);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.defineProps.start, scriptSetupRanges.defineProps.end);
 					codes.push(`;\n`);
 				}
 				else if (scriptSetupRanges.defineProp.length) {
@@ -389,7 +389,7 @@ export function generate(
 				if (scriptSetupRanges.slotsTypeArg) {
 					usedHelperTypes.ToTemplateSlots = true;
 					codes.push(` & { [K in keyof JSX.ElementChildrenAttribute]: __VLS_ToTemplateSlots<`);
-					addVirtualCode('scriptSetup', scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end);
 					codes.push(`>; }`);
 				}
 				codes.push(`;\n`);
@@ -399,12 +399,12 @@ export function generate(
 				if (scriptSetupRanges.slotsTypeArg) {
 					usedHelperTypes.ToTemplateSlots = true;
 					codes.push(` & { [K in keyof JSX.ElementChildrenAttribute]: __VLS_ToTemplateSlots<`);
-					addVirtualCode('scriptSetup', scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end);
 					codes.push(`>; }`);
 				}
 				if (scriptSetupRanges.propsTypeArg) {
 					codes.push(' & ');
-					addVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
 				}
 				codes.push(`;\n`);
 			}
@@ -414,12 +414,12 @@ export function generate(
 			codes.push(`const __VLS_emit = `);
 			if (scriptSetupRanges.emitsTypeArg) {
 				codes.push('{} as ');
-				addVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
+				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
 				codes.push(';\n');
 			}
 			else if (scriptSetupRanges.emitsRuntimeArg) {
 				codes.push(`(await import('vue')).defineEmits(`);
-				addVirtualCode('scriptSetup', scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end);
+				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end);
 				codes.push(');\n');
 			}
 			else {
