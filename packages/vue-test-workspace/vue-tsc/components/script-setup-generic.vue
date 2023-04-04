@@ -1,7 +1,7 @@
 <script setup lang="ts" generic="T">
-const props: { foo: T } = defineProps<{ foo: T }>();
+defineProps<{ foo: T }>();
 defineEmits<{ (e: 'bar', data: T): void }>();
-defineExpose({ baz: props.foo });
+defineExpose({ baz: {} as T });
 defineSlots<{ default(data: T): any }>();
 </script>
 

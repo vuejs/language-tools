@@ -58,7 +58,6 @@ export function generate(
 			emitsTypeNums: 0,
 			exposeRuntimeArg: undefined,
 			importSectionEndOffset: 0,
-			notOnTopTypeExports: [],
 			defineProps: undefined,
 			propsAssignName: undefined,
 			propsRuntimeArg: undefined,
@@ -274,27 +273,42 @@ export function generate(
 			FileRangeCapabilities.full,
 		]);
 	}
+	function generateExportDefault() {
+		// fix https://github.com/johnsoncodehk/volar/issues/1127
+		codes.push([
+			'',
+			'scriptSetup',
+			0,
+			{ diagnostic: true },
+		]);
+		codes.push('export default ');
+	}
+	function generateExportDefaultEndMapping() {
+		if (!sfc.scriptSetup) {
+			return;
+		}
+		// fix https://github.com/johnsoncodehk/volar/issues/1127
+		codes.push([
+			'',
+			'scriptSetup',
+			sfc.scriptSetup.content.length,
+			{ diagnostic: true },
+		]);
+		codes.push(`\n`);
+	}
 	function generateScriptSetupAndTemplate() {
 
 		if (!sfc.scriptSetup || !scriptSetupRanges) {
 			return;
 		}
 
-		if (!scriptRanges?.exportDefault) {
-			// fix https://github.com/johnsoncodehk/volar/issues/1127
-			codes.push([
-				'',
-				'scriptSetup',
-				0,
-				{ diagnostic: true },
-			]);
-			codes.push('export default ');
-		}
-
 		const definePropMirrors: Record<string, [number, number]> = {};
 		let scriptSetupGeneratedOffset: number | undefined;
 
 		if (sfc.scriptSetup.generic) {
+			if (!scriptRanges?.exportDefault) {
+				generateExportDefault();
+			}
 			codes.push(`(<`);
 			codes.push([
 				sfc.scriptSetup.generic,
@@ -307,16 +321,30 @@ export function generate(
 			}
 			codes.push(`>`);
 			codes.push('(\n');
+			codes.push(`__VLS_props: NonNullable<typeof __VLS_ctx['__props']> & import('vue').VNodeProps,\n`);
+			codes.push('__VLS_ctx = (() => {\n');
+			scriptSetupGeneratedOffset = generateSetupFunction(true, 'none', definePropMirrors);
+
+			//#region exposed
+			codes.push(`const __VLS_exposed = `);
+			if (scriptSetupRanges.exposeRuntimeArg) {
+				addVirtualCode('scriptSetup', scriptSetupRanges.exposeRuntimeArg.start, scriptSetupRanges.exposeRuntimeArg.end);
+			}
+			else {
+				codes.push(`{}`);
+			}
+			codes.push(';\n');
+			//#endregion
+
+			//#region props
 			if (
 				(scriptSetupRanges.propsRuntimeArg && scriptSetupRanges.defineProps)
 				|| scriptSetupRanges.defineProp.length
 			) {
-				codes.push(`__VLS_props = (() => {\n`);
 				if (scriptSetupRanges.propsRuntimeArg && scriptSetupRanges.defineProps) {
-					codes.push(`const __VLS_return = (await import('vue')).`);
+					codes.push(`const __VLS_props = `);
 					addVirtualCode('scriptSetup', scriptSetupRanges.defineProps.start, scriptSetupRanges.defineProps.end);
 					codes.push(`;\n`);
-					codes.push(`return {} as typeof __VLS_return`);
 				}
 				else if (scriptSetupRanges.defineProp.length) {
 					codes.push(`const __VLS_defaults = {\n`);
@@ -334,7 +362,7 @@ export function generate(
 						}
 					}
 					codes.push(`};\n`);
-					codes.push(`return {} as {\n`);
+					codes.push(`let __VLS_props!: {\n`);
 					for (const defineProp of scriptSetupRanges.defineProp) {
 						let propName = 'modelValue';
 						if (defineProp.name) {
@@ -356,9 +384,8 @@ export function generate(
 						}
 						codes.push(',\n');
 					}
-					codes.push(`}`);
+					codes.push(`};\n`);
 				}
-				codes.push(` & import('vue').VNodeProps`);;
 				if (scriptSetupRanges.slotsTypeArg) {
 					usedHelperTypes.ToTemplateSlots = true;
 					codes.push(` & { [K in keyof JSX.ElementChildrenAttribute]: __VLS_ToTemplateSlots<`);
@@ -366,10 +393,9 @@ export function generate(
 					codes.push(`>; }`);
 				}
 				codes.push(`;\n`);
-				codes.push(`})()`);
 			}
 			else {
-				codes.push(`__VLS_props: import('vue').VNodeProps`);
+				codes.push(`const __VLS_props: {}`);
 				if (scriptSetupRanges.slotsTypeArg) {
 					usedHelperTypes.ToTemplateSlots = true;
 					codes.push(` & { [K in keyof JSX.ElementChildrenAttribute]: __VLS_ToTemplateSlots<`);
@@ -380,45 +406,54 @@ export function generate(
 					codes.push(' & ');
 					addVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
 				}
+				codes.push(`;\n`);
 			}
-			codes.push(',\n');
-			codes.push('__VLS_ctx = (() => {\n');
-			scriptSetupGeneratedOffset = generateSetupFunction(true, definePropMirrors);
-			codes.push('return {\n');
-			codes.push('attrs: {} as any,\n');
-			codes.push('slots: {} as typeof __VLS_setup extends () => Promise<{ slots: infer T }> ? T : never,\n');
+			//#endregion
 
-			//#region emit
-			codes.push('emit: ');
+			//#region emits
+			codes.push(`const __VLS_emit = `);
 			if (scriptSetupRanges.emitsTypeArg) {
 				codes.push('{} as ');
 				addVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
-				codes.push(',\n');
+				codes.push(';\n');
 			}
 			else if (scriptSetupRanges.emitsRuntimeArg) {
 				codes.push(`(await import('vue')).defineEmits(`);
 				addVirtualCode('scriptSetup', scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end);
-				codes.push('),\n');
+				codes.push(');\n');
 			}
 			else {
-				codes.push('{} as any,\n');
+				codes.push('{} as any;\n');
 			}
 			//#endregion
 
-			//#region expose
-			codes.push('expose(__VLS_exposed: typeof __VLS_setup extends () => Promise<{ exposed: infer T }> ? T : never) { },\n');
-			//#endregion
-
+			codes.push('return {} as {\n');
+			codes.push(`__props?: typeof __VLS_props,\n`);
+			codes.push('expose?(exposed: typeof __VLS_exposed): void,\n');
+			codes.push('attrs?: any,\n');
+			codes.push('slots?: ReturnType<typeof __VLS_template>,\n');
+			codes.push('emit?: typeof __VLS_emit');
 			codes.push('};\n');
 			codes.push('})(),\n');
 			codes.push(') => ({} as JSX.Element & { __ctx?: typeof __VLS_ctx, __props?: typeof __VLS_props }))');
 		}
+		else if (!sfc.script) {
+			// no script block, generate script setup code at root
+			scriptSetupGeneratedOffset = generateSetupFunction(false, 'export', definePropMirrors);
+		}
 		else {
+			if (!scriptRanges?.exportDefault) {
+				generateExportDefault();
+			}
 			codes.push('(() => {\n');
-			scriptSetupGeneratedOffset = generateSetupFunction(false, definePropMirrors);
-			codes.push(`return {} as typeof __VLS_setup extends () => Promise<infer T> ? T : never;\n`);
+			scriptSetupGeneratedOffset = generateSetupFunction(false, 'return', definePropMirrors);
 			codes.push(`})()`);
 		}
+
+		if (scriptRanges?.exportDefault && scriptRanges.exportDefault.expression.end !== scriptRanges.exportDefault.end) {
+			addVirtualCode('script', scriptRanges.exportDefault.expression.end, scriptRanges.exportDefault.end);
+		}
+		generateExportDefaultEndMapping();
 
 		if (scriptSetupGeneratedOffset !== undefined) {
 			for (const defineProp of scriptSetupRanges.defineProp) {
@@ -439,26 +474,12 @@ export function generate(
 				}
 			}
 		}
-
-		if (scriptRanges?.exportDefault && scriptRanges.exportDefault.expression.end !== scriptRanges.exportDefault.end) {
-			addVirtualCode('script', scriptRanges.exportDefault.expression.end, scriptRanges.exportDefault.end);
-		}
-		codes.push(`;`);
-		// fix https://github.com/johnsoncodehk/volar/issues/1127
-		codes.push([
-			'',
-			'scriptSetup',
-			sfc.scriptSetup.content.length,
-			{ diagnostic: true },
-		]);
-		codes.push(`\n`);
 	}
-	function generateSetupFunction(functional: boolean, definePropMirrors: Record<string, [number, number]>) {
+	function generateSetupFunction(functional: boolean, mode: 'return' | 'export' | 'none', definePropMirrors: Record<string, [number, number]>) {
 
 		if (!scriptSetupRanges || !sfc.scriptSetup) {
 			return;
 		}
-
 
 		const definePropProposalA = sfc.scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition') || vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition';
 		const definePropProposalB = sfc.scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition') || vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
@@ -481,23 +502,9 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 `.trim() + '\n');
 		}
 
-		codes.push('const __VLS_setup = async () => {\n');
-
 		const scriptSetupGeneratedOffset = muggle.getLength(codes) - scriptSetupRanges.importSectionEndOffset;
 
-		if (sfc.scriptSetup.generic && scriptSetupRanges.propsRuntimeArg && scriptSetupRanges.defineProps) {
-			addVirtualCode('scriptSetup', scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.defineProps.start);
-			codes.push('__VLS_props');
-			addVirtualCode('scriptSetup', scriptSetupRanges.defineProps.end);
-		}
-		else if (sfc.scriptSetup.generic && scriptSetupRanges.propsTypeArg) {
-			addVirtualCode('scriptSetup', scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.propsTypeArg.start);
-			codes.push('typeof __VLS_props');
-			addVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.end);
-		}
-		else {
-			addVirtualCode('scriptSetup', scriptSetupRanges.importSectionEndOffset);
-		}
+		addVirtualCode('scriptSetup', scriptSetupRanges.importSectionEndOffset);
 
 		if (scriptSetupRanges.propsTypeArg && scriptSetupRanges.withDefaultsArg) {
 			// fix https://github.com/johnsoncodehk/volar/issues/1187
@@ -642,29 +649,24 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 		generateTemplate();
 
-		if (functional) {
-			codes.push('return {\n');
-			codes.push('slots: __VLS_template(),\n');
-			codes.push('exposed: ');
-			if (scriptSetupRanges.exposeRuntimeArg) {
-				addVirtualCode('scriptSetup', scriptSetupRanges.exposeRuntimeArg.start, scriptSetupRanges.exposeRuntimeArg.end);
-			}
-			else {
-				codes.push(`{}`);
-			}
-			codes.push(',\n');
-			codes.push('};\n');
+		if (mode === 'return') {
+			codes.push(`return `);
 		}
-		else {
+		else if (mode === 'export') {
+			generateExportDefault();
+		}
+		if (mode === 'return' || mode === 'export') {
 			if (!vueCompilerOptions.skipTemplateCodegen && (htmlGen?.hasSlot || scriptSetupRanges?.slotsTypeArg)) {
 				usedHelperTypes.WithTemplateSlots = true;
-				codes.push(`return {} as __VLS_WithTemplateSlots<typeof __VLS_publicComponent, ReturnType<typeof __VLS_template>>;\n`);
+				codes.push(`{} as __VLS_WithTemplateSlots<typeof __VLS_publicComponent, ReturnType<typeof __VLS_template>>;`);
 			}
 			else {
-				codes.push(`return {} as typeof __VLS_publicComponent;\n`);
+				codes.push(`{} as typeof __VLS_publicComponent;`);
 			}
 		}
-		codes.push(`};\n`);
+		if (mode === 'export') {
+			generateExportDefaultEndMapping();
+		}
 
 		return scriptSetupGeneratedOffset;
 	}

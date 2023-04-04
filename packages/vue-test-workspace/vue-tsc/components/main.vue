@@ -64,12 +64,13 @@ const ScriptSetupDefaultPropsExact = defineComponent({
 });
 // vue 3.3 generic
 declare const ScriptSetupGenericExact: <T, >(
-	_props: import('vue').VNodeProps & { [K in keyof JSX.ElementChildrenAttribute]: { default(data: T): any } } & { foo: T },
+	_props: import('vue').VNodeProps & NonNullable<NonNullable<typeof _ctx>['__props']>,
 	_ctx?: {
-		attrs: any,
-		slots: { default(data: T): any },
-		emit: { (e: 'bar', data: T): void },
-		expose(_exposed: { baz: T }): void,
+		__props?: { foo: T } & { [K in keyof JSX.ElementChildrenAttribute]: { default(data: T): any } },
+		attrs?: any,
+		slots?: { default(data: T): any },
+		emit?: { (e: 'bar', data: T): void },
+		expose?(_exposed: { baz: T }): void,
 	}
 ) => JSX.Element & {
 	__props?: typeof _props;

@@ -266,7 +266,7 @@ function resolvePlugins(
 		isSupportedDocument: (document) => document.languageId === 'jade',
 		vueCompilerOptions,
 	});
-	plugins.vue ??= createVuePlugin(vueCompilerOptions);
+	plugins.vue ??= createVuePlugin();
 	plugins.css ??= createCssPlugin();
 	plugins['pug-beautify'] ??= createPugFormatPlugin();
 	plugins.json ??= createJsonPlugin(settings?.json);
