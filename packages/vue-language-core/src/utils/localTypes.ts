@@ -1,7 +1,7 @@
 import { VueCompilerOptions } from '../types';
 import { getVueLibraryName } from './shared';
 
-export const typesFileName = '__VLS_types.ts';
+export const typesFileName = '__VLS_types.d.ts';
 
 export function getTypesCode(
 	vueVersion: number,
