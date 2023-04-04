@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.12 (2023/4/4) - pre-release
+
+- feat: Support for Vue 3.3 experimental `defineModel()` API ([#2579](https://github.com/johnsoncodehk/volar/issues/2579))
+- feat: Support for vue-macros `defineProp()` API ([#2579](https://github.com/johnsoncodehk/volar/issues/2579))
+- feat: support short define for `defineSlots()`
+- feat: new `<script setup>` codegen implement for DX improve ([#2582](https://github.com/johnsoncodehk/volar/issues/2582)) ([#2421](https://github.com/johnsoncodehk/volar/issues/2421))
+- fix: falsely reports "Virtual script not found"
+- fix(vue-tsc): emit declaration throws TS4060 ([#2581](https://github.com/johnsoncodehk/volar/issues/2581)) - thanks @blake-newman
+
 ## 1.3.11 (2023/4/2) - pre-release
 
 - feat: support goto source file definition for project references for TS 5.0 (https://github.com/volarjs/volar.js/pull/24) ([#1344](https://github.com/johnsoncodehk/volar/issues/1344)) ([#2296](https://github.com/johnsoncodehk/volar/issues/2296)) ([#2340](https://github.com/johnsoncodehk/volar/issues/2568)) ([#1815](https://github.com/johnsoncodehk/volar/issues/1815)) - thanks @blake-newman
