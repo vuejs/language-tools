@@ -10,7 +10,6 @@ export function parseScriptSetupRanges(
 ) {
 
 	let foundNonImportExportNode = false;
-	let notOnTopTypeExports: TextRange[] = [];
 	let importSectionEndOffset = 0;
 	let withDefaultsArg: TextRange | undefined;
 	let propsAssignName: string | undefined;
@@ -48,15 +47,11 @@ export function parseScriptSetupRanges(
 			importSectionEndOffset = node.getStart(ast, true);
 			foundNonImportExportNode = true;
 		}
-		else if (isTypeExport && foundNonImportExportNode) {
-			notOnTopTypeExports.push(_getStartEnd(node));
-		}
 	});
 	ast.forEachChild(child => visitNode(child, ast));
 
 	return {
 		importSectionEndOffset,
-		notOnTopTypeExports,
 		bindings,
 		withDefaultsArg,
 		defineProps,
