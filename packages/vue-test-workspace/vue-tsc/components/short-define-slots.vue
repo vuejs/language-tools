@@ -4,3 +4,7 @@ defineSlots<{
   bar: { id: number }
 }>();
 </script>
+
+<script lang="ts">
+declare function defineSlots<T>(): void;
+</script>
