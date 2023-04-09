@@ -77,6 +77,7 @@ export function generate(
 		ConstructorOverloads: false,
 		WithTemplateSlots: false,
 		ToTemplateSlots: false,
+		PropsChildren: false,
 	};
 
 	if (vueCompilerOptions.jsxTemplates && vueCompilerOptions.target >= 3.3) {
@@ -162,13 +163,17 @@ export function generate(
 			}
 		}
 		if (usedHelperTypes.WithTemplateSlots) {
+			usedHelperTypes.PropsChildren = true;
 			codes.push(`type __VLS_WithTemplateSlots<T, S> = T & { new(): {
 				$slots: S;
-				$props: { [K in keyof JSX.ElementChildrenAttribute]: S; };
+				$props: __VLS_PropsChildren<S>;
 			} };\n`);
 		}
 		if (usedHelperTypes.ToTemplateSlots) {
 			codes.push(`type __VLS_ToTemplateSlots<T> = { [K in keyof T]: NonNullable<T[K]> extends (...args: any[]) => any ? T[K] : (props: T[K]) => any };\n`);
+		}
+		if (usedHelperTypes.PropsChildren) {
+			codes.push(`type __VLS_PropsChildren<S> = { [K in keyof (boolean extends (JSX.ElementChildrenAttribute extends never ? true : false) ? never : JSX.ElementChildrenAttribute)]?: S; };\n`);
 		}
 		if (usedPrettify) {
 			codes.push(`type __VLS_Prettify<T> = { [K in keyof T]: T[K]; } & {};\n`);
@@ -389,9 +394,10 @@ export function generate(
 				}
 				if (scriptSetupRanges.slotsTypeArg) {
 					usedHelperTypes.ToTemplateSlots = true;
-					codes.push(` & { [K in keyof JSX.ElementChildrenAttribute]: __VLS_ToTemplateSlots<`);
+					usedHelperTypes.PropsChildren = true;
+					codes.push(` & __VLS_PropsChildren<__VLS_ToTemplateSlots<`);
 					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end);
-					codes.push(`>; }`);
+					codes.push(`>>`);
 				}
 				codes.push(`;\n`);
 			}
@@ -399,9 +405,10 @@ export function generate(
 				codes.push(`const __VLS_props: {}`);
 				if (scriptSetupRanges.slotsTypeArg) {
 					usedHelperTypes.ToTemplateSlots = true;
-					codes.push(` & { [K in keyof JSX.ElementChildrenAttribute]: __VLS_ToTemplateSlots<`);
+					usedHelperTypes.PropsChildren = true;
+					codes.push(` & __VLS_PropsChildren<__VLS_ToTemplateSlots<`);
 					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end);
-					codes.push(`>; }`);
+					codes.push(`>>`);
 				}
 				if (scriptSetupRanges.propsTypeArg) {
 					codes.push(' & ');
@@ -683,12 +690,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			if (scriptSetupRanges?.slotsTypeArg && sfc.scriptSetup) {
 				usedHelperTypes.ToTemplateSlots = true;
 				codes.push(`var __VLS_slots!: __VLS_ToTemplateSlots<`);
-				codes.push([
-					sfc.scriptSetup.content.substring(scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end),
-					sfc.scriptSetup.name,
-					[scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end],
-					FileRangeCapabilities.full,
-				]);
+				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end);
 				codes.push('>;\n');
 			};
 

@@ -461,6 +461,7 @@ export function generate(
 		const isNamespacedTag = node.tag.indexOf('.') >= 0;
 		const componentVar = `__VLS_${elementIndex++}`;
 		const componentInstanceVar = `__VLS_${elementIndex++}`;
+		const componentCtxVar = `__VLS_${elementIndex++}`;
 
 		if (isIntrinsicElement) {
 			codes.push(`const ${componentVar} = (await import('./__VLS_types.js')).asFunctionalComponent(({} as import('./__VLS_types.js').IntrinsicElements)[`);
@@ -596,6 +597,9 @@ export function generate(
 		writeInterpolationVarsExtraCompletion();
 
 		codes.push(`const ${componentInstanceVar} = ${componentVar}(`);
+
+		let slotAndChildNodes: ReturnType<typeof writeChildren> | undefined;
+
 		if (vueCompilerOptions.jsxTemplates) {
 			codes.push(`{ `);
 			writeProps(node, 'class', 'slots');
@@ -610,7 +614,7 @@ export function generate(
 		}
 		if (parentEl) {
 			codes.push(', {\n');
-			writeChildren(node, parentEl);
+			slotAndChildNodes = writeChildren(node, parentEl);
 			codes.push(`});\n`);
 		}
 		else {
@@ -619,6 +623,74 @@ export function generate(
 				visitNode(childNode, undefined);
 			}
 		}
+
+		codes.push(`const ${componentCtxVar} = (await import('./__VLS_types.js')).pickFunctionalComponentCtx(${componentVar}, ${componentInstanceVar})!;\n`);
+
+		for (const [slotName, { nodes, slotDir }] of Object.entries(slotAndChildNodes ?? {})) {
+
+			const slotBlockVars: string[] = [];
+
+			codes.push(`{\n`);
+
+			codes.push(`declare const [`);
+
+			if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+
+				const collectAst = createTsAst(slotDir, `(${slotDir.exp.content}) => {}`);
+				colletVars(ts, collectAst, slotBlockVars);
+
+				codes.push([
+					slotDir.exp.content,
+					'template',
+					slotDir.exp.loc.start.offset,
+					capabilitiesPresets.all,
+				]);
+				appendFormattingCode(
+					slotDir.exp.content,
+					slotDir.exp.loc.start.offset,
+					formatBrackets.empty,
+				);
+			}
+
+			codes.push(`]: Parameters<NonNullable<NonNullable<typeof ${componentCtxVar}.slots>['${slotName}']>>;\n`);
+
+			slotBlockVars.forEach(varName => {
+				localVars[varName] ??= 0;
+				localVars[varName]++;
+			});
+			for (const childNode of nodes) {
+				visitNode(childNode, undefined);
+			}
+			slotBlockVars.forEach(varName => {
+				localVars[varName]--;
+			});
+
+			let isStatic = true;
+			if (slotDir?.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+				isStatic = slotDir.arg.isStatic;
+			}
+
+			if (isStatic && slotDir && !slotDir.arg) {
+
+				let offset = slotDir.loc.start.offset;
+
+				if (slotDir.loc.source.startsWith('#'))
+					offset += '#'.length;
+				else if (slotDir.loc.source.startsWith('v-slot:'))
+					offset += 'v-slot:'.length;
+
+				codes.push(`'`);
+				codes.push([
+					'',
+					'template',
+					offset,
+					{ completion: true },
+				]);
+				codes.push(`'/* empty slot name completion */\n`);
+			}
+			codes.push(`}\n`);
+		}
+
 		writeInterpolationVarsExtraCompletion();
 
 		//#region 
@@ -670,7 +742,7 @@ export function generate(
 		writeDirectives(node);
 		writeElReferences(node); // <el ref="foo" />
 		if (cssScopedClasses.length) writeClassScoped(node);
-		writeEvents(node, componentVar, componentInstanceVar);
+		writeEvents(node, componentInstanceVar, componentCtxVar);
 		writeSlots(node, startTagOffset);
 
 		if (inScope) {
@@ -681,7 +753,7 @@ export function generate(
 
 		codes.push(`}\n`);
 	}
-	function writeEvents(node: CompilerDOM.ElementNode, componentVar: string, componentInstanceVar: string) {
+	function writeEvents(node: CompilerDOM.ElementNode, componentInstanceVar: string, componentCtxVar: string) {
 
 		for (const prop of node.props) {
 			if (
@@ -691,7 +763,7 @@ export function generate(
 			) {
 				const eventVar = `__VLS_${elementIndex++}`;
 				codes.push(`let ${eventVar} = { '${prop.arg.loc.source}': `);
-				codes.push(`(await import('./__VLS_types.js')).pickEvent((await import('./__VLS_types.js')).pickFunctionalComponentCtx(${componentVar}, ${componentInstanceVar})!.emit!, '${prop.arg.loc.source}' as const, ${componentInstanceVar}.__props!`);
+				codes.push(`(await import('./__VLS_types.js')).pickEvent(${componentCtxVar}.emit!, '${prop.arg.loc.source}' as const, ${componentInstanceVar}.__props!`);
 				writePropertyAccess(
 					camelize('on-' + prop.arg.loc.source), // onClickOutside
 					[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
@@ -828,10 +900,6 @@ export function generate(
 		writeInterpolationVarsExtraCompletion();
 	}
 	function writeProps(node: CompilerDOM.ElementNode, format: 'jsx' | 'class', mode: 'props' | 'slots') {
-
-		if (format === 'class') {
-			codes.push(`[{} as keyof JSX.ElementChildrenAttribute]: {} as any,\n`);
-		}
 
 		let styleAttrNum = 0;
 		let classAttrNum = 0;
@@ -1329,65 +1397,13 @@ export function generate(
 				codes.push(`]`);
 				writeInterpolationVarsExtraCompletion();
 			}
-			codes.push(`(`);
 
-			const slotBlockVars: string[] = [];
-
-			if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-
-				const collectAst = createTsAst(slotDir, `(${slotDir.exp.content}) => {}`);
-				colletVars(ts, collectAst, slotBlockVars);
-
-				codes.push([
-					slotDir.exp.content,
-					'template',
-					slotDir.exp.loc.start.offset,
-					capabilitiesPresets.all,
-				]);
-				appendFormattingCode(
-					slotDir.exp.content,
-					slotDir.exp.loc.start.offset,
-					formatBrackets.empty,
-				);
-			}
-
-			codes.push(`): any {\n`);
-			for (const blockCondition of blockConditions) {
-				codes.push(`if (!(${blockCondition})) return;\n`);
-			}
-			slotBlockVars.forEach(varName => {
-				localVars[varName] ??= 0;
-				localVars[varName]++;
-			});
-			for (const childNode of nodes) {
-				visitNode(childNode, undefined);
-			}
-			slotBlockVars.forEach(varName => {
-				localVars[varName]--;
-			});
-			codes.push(`},\n`);
-
-			if (isStatic && slotDir && !slotDir.arg) {
-
-				let offset = slotDir.loc.start.offset;
-
-				if (slotDir.loc.source.startsWith('#'))
-					offset += '#'.length;
-				else if (slotDir.loc.source.startsWith('v-slot:'))
-					offset += 'v-slot:'.length;
-
-				codes.push(`'`);
-				codes.push([
-					'',
-					'template',
-					offset,
-					{ completion: true },
-				]);
-				codes.push(`'/* empty slot name completion */\n`);
-			}
+			codes.push(': {} as any,\n');
 		}
 
 		codes.push(`},\n`);
+
+		return slotAndChildNodes;
 	}
 	function writeDirectives(node: CompilerDOM.ElementNode) {
 		for (const prop of node.props) {
