@@ -901,10 +901,6 @@ export function generate(
 	}
 	function writeProps(node: CompilerDOM.ElementNode, format: 'jsx' | 'class', mode: 'props' | 'slots') {
 
-		if (format === 'class') {
-			codes.push(`[{} as keyof JSX.ElementChildrenAttribute]: {} as any,\n`);
-		}
-
 		let styleAttrNum = 0;
 		let classAttrNum = 0;
 		const propsFailedExps: CompilerDOM.SimpleExpressionNode[] = [];

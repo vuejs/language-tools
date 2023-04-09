@@ -4,10 +4,6 @@ defineSlots<{
 }>();
 </script>
 
-<script lang="ts">
-declare function defineSlots<T>(): T;
-</script>
-
 <template>
   <slot name="activator" :isActive="false" />
 </template>
