@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.13 (2023/4/10) - pre-release
+
+- feat: add `vue-component-type-helpers` package ([#2590](https://github.com/johnsoncodehk/volar/issues/2590))
+- feat(component-meta): integrated `vue-component-type-helpers`
+- feat: upgrade to lerna-lite 2.0 ([#2597](https://github.com/johnsoncodehk/volar/issues/2597)) - thanks @ghiscoding
+- feat: support prop renaming for defineModel and defineProp
+- fix: template-based slots type incorrect ([#2590](https://github.com/johnsoncodehk/volar/issues/2590))
+- fix(vue-tsc): patch build info roots for TS 5.0 ([#2580](https://github.com/johnsoncodehk/volar/issues/2580)) - thanks @blake-newman
+
 ## 1.3.12 (2023/4/4) - pre-release
 
 - feat: Support for Vue 3.3 experimental `defineModel()` API ([#2579](https://github.com/johnsoncodehk/volar/issues/2579))
