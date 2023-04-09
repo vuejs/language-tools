@@ -5,7 +5,6 @@ const tsPkg = require('typescript/package.json');
 const readFileSync = fs.readFileSync;
 const tscPath = require.resolve('typescript/lib/tsc');
 const proxyApiPath = require.resolve('../out/index');
-const buildInfoRootsPath = require.resolve('../out/buildInfoRoots')
 const { state } = require('../out/shared');
 
 fs.readFileSync = (...args) => {
@@ -22,7 +21,10 @@ fs.readFileSync = (...args) => {
 
 		// patches logic for checking root file existance in build program for incremental builds
 		if (semver.gt(tsPkg.version, '5.0.0')) {
-			tryReplace(/for \(const existingRoot of buildInfoVersionMap.roots\) {/, `for (const existingRoot of require(${JSON.stringify(buildInfoRootsPath)}).patchBuildInfoRoots(buildInfoVersionMap.roots)) {`);
+			tryReplace(`for (const existingRoot of buildInfoVersionMap.roots) {`, `for (const existingRoot of buildInfoVersionMap.roots
+				.filter(file => !file.toLowerCase().includes('__vls_'))
+				.map(file => file.replace(/\.vue\.(j|t)sx?$/i, '.vue'))
+			) {`);
 		}
 
 		return tsc;
