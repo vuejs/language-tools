@@ -248,6 +248,9 @@ importers:
       vue:
         specifier: 3.3.0-alpha.6
         version: 3.3.0-alpha.6
+      vue-type-helpers:
+        specifier: 1.3.12
+        version: link:../vue-type-helpers
 
   packages/vue-tsc:
     dependencies:
@@ -270,6 +273,8 @@ importers:
       vue-tsc:
         specifier: 1.3.12
         version: link:../vue-tsc
+
+  packages/vue-type-helpers: {}
 
   packages/vue-typescript:
     dependencies:

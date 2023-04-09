@@ -4,6 +4,7 @@
 	"version": "1.3.12",
 	"license": "MIT",
 	"devDependencies": {
-		"vue": "3.3.0-alpha.6"
+		"vue": "3.3.0-alpha.6",
+		"vue-type-helpers": "1.3.12"
 	}
 }
