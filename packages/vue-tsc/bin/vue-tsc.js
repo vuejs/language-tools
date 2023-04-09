@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const semver = require('semver')
 const fs = require('fs');
-const ts = require('typescript/lib/typescript');
+const tsPkg = require('typescript/package.json');
 const readFileSync = fs.readFileSync;
 const tscPath = require.resolve('typescript/lib/tsc');
 const proxyApiPath = require.resolve('../out/index');
@@ -21,7 +21,7 @@ fs.readFileSync = (...args) => {
 		tryReplace(/function createProgram\(.+\) {/, s => s + ` return require(${JSON.stringify(proxyApiPath)}).createProgram(...arguments);`);
 
 		// patches logic for checking root file existance in build program for incremental builds
-		if (semver.gt(ts.version, '5.0.0')) {
+		if (semver.gt(tsPkg.version, '5.0.0')) {
 			tryReplace(/for \(const existingRoot of buildInfoVersionMap.roots\) {/, `for (const existingRoot of require(${JSON.stringify(buildInfoRootsPath)}).patchBuildInfoRoots(buildInfoVersionMap.roots)) {`);
 		}
 
