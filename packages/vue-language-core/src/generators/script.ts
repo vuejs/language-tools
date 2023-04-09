@@ -537,12 +537,20 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 				let propName = 'modelValue';
 
-				if (defineProp.name) {
+				if (defineProp.name && defineProp.nameIsString) {
+					// renaming support
+					addExtraReferenceVirtualCode('scriptSetup', defineProp.name.start, defineProp.name.end);
+				}
+				else if (defineProp.name) {
 					propName = sfc.scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
 					const start = muggle.getLength(codes);
 					definePropMirrors[propName] = [start, start + propName.length];
+					codes.push(propName);
 				}
-				codes.push(`${propName}: `);
+				else {
+					codes.push(propName);
+				}
+				codes.push(`: `);
 
 				let type = 'any';
 				if (!defineProp.nameIsString) {
