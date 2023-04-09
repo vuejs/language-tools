@@ -205,23 +205,11 @@ export function baseCreate(
 import * as Components from '${fileName.substring(0, fileName.length - '.meta.ts'.length)}';
 export default {} as { [K in keyof typeof Components]: ComponentMeta<typeof Components[K]>; };
 
-type ComponentMeta<T> = {
-	props:
-		T extends new () => { $props: infer P } ? P :
-		T extends (props: infer P) => any ? P :
-		{};
-	emit:
-		T extends new () => { $emit: infer E } ? E :
-		T extends (props: any, ctx: { emit: infer E }) => any ? E :
-		{};
-	slots:
-		T extends new () => { ${vueCompilerOptions.target < 3 ? '$scopedSlots' : '$slots'}: infer S } ? S :
-		T extends (props: any, ctx: { slots: infer S }) => any ? S :
-		{};
-	exposed:
-		T extends new () => infer E ? E :
-		T extends (props: any, ctx: { expose(exposed?: infer E): any }) => any ? E :
-		{};
+interface ComponentMeta<T> {
+	props: import('vue-component-type-helpers').ComponentProps<T>;
+	emit: import('vue-component-type-helpers').ComponentEmit<T>;
+	slots: import('vue-component-type-helpers').${vueCompilerOptions.target < 3 ? 'Vue2ComponentSlots' : 'ComponentSlots'}<T>;
+	exposed: import('vue-component-type-helpers').ComponentExposed<T>;
 };
 		`.trim();
 	}
