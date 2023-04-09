@@ -263,6 +263,9 @@ importers:
       '@volar/vue-typescript':
         specifier: 1.3.12
         version: link:../vue-typescript
+      semver:
+        specifier: ^7.3.8
+        version: 7.3.8
 
   packages/vue-tsc-eslint-hook:
     dependencies:
