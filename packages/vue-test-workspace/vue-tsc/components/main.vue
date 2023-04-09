@@ -67,7 +67,7 @@ declare const ScriptSetupGenericExact: <T, >(
 	_props: import('vue').VNodeProps & NonNullable<typeof _setup>['props'],
 	_ctx: Pick<NonNullable<typeof _setup>, 'expose' | 'attrs' | 'emit' | 'slots'>,
 	_setup?: {
-		props: { foo: T } & { [K in keyof JSX.ElementChildrenAttribute]: { default(data: T): any } },
+		props: { foo: T } & { [K in keyof JSX.ElementChildrenAttribute]?: { default(data: T): any } },
 		attrs: any,
 		slots: { default(data: T): any },
 		emit: { (e: 'bar', data: T): void },

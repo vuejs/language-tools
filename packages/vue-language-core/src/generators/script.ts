@@ -164,7 +164,7 @@ export function generate(
 		if (usedHelperTypes.WithTemplateSlots) {
 			codes.push(`type __VLS_WithTemplateSlots<T, S> = T & { new(): {
 				$slots: S;
-				$props: { [K in keyof JSX.ElementChildrenAttribute]: S; };
+				$props: { [K in keyof JSX.ElementChildrenAttribute]?: S; };
 			} };\n`);
 		}
 		if (usedHelperTypes.ToTemplateSlots) {
@@ -389,7 +389,7 @@ export function generate(
 				}
 				if (scriptSetupRanges.slotsTypeArg) {
 					usedHelperTypes.ToTemplateSlots = true;
-					codes.push(` & { [K in keyof JSX.ElementChildrenAttribute]: __VLS_ToTemplateSlots<`);
+					codes.push(` & { [K in keyof JSX.ElementChildrenAttribute]?: __VLS_ToTemplateSlots<`);
 					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end);
 					codes.push(`>; }`);
 				}
@@ -399,7 +399,7 @@ export function generate(
 				codes.push(`const __VLS_props: {}`);
 				if (scriptSetupRanges.slotsTypeArg) {
 					usedHelperTypes.ToTemplateSlots = true;
-					codes.push(` & { [K in keyof JSX.ElementChildrenAttribute]: __VLS_ToTemplateSlots<`);
+					codes.push(` & { [K in keyof JSX.ElementChildrenAttribute]?: __VLS_ToTemplateSlots<`);
 					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end);
 					codes.push(`>; }`);
 				}
