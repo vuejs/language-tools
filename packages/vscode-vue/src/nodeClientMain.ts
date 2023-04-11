@@ -49,7 +49,7 @@ export function activate(context: vscode.ExtensionContext) {
 			runOptions.execArgv.push("--max-old-space-size=" + maxOldSpaceSize);
 		}
 		const debugOptions: lsp.ForkOptions = { execArgv: ['--nolazy', '--inspect=' + port] };
-		const serverOptions: lsp.ServerOptions = {
+		let serverOptions: lsp.ServerOptions = {
 			run: {
 				module: serverModule.fsPath,
 				transport: lsp.TransportKind.ipc,
@@ -61,6 +61,29 @@ export function activate(context: vscode.ExtensionContext) {
 				options: debugOptions
 			},
 		};
+		const bunPath: string | undefined = undefined; // path to .bun/bin/bun
+		if (bunPath) {
+			serverOptions = {
+				run: {
+					transport: {
+						kind: lsp.TransportKind.socket,
+						port: port + 10,
+					},
+					options: runOptions,
+					command: bunPath,
+					args: ['run', serverModule.fsPath],
+				},
+				debug: {
+					transport: {
+						kind: lsp.TransportKind.socket,
+						port: port + 10,
+					},
+					options: debugOptions,
+					command: bunPath,
+					args: ['run', serverModule.fsPath],
+				},
+			};
+		}
 		const clientOptions: lsp.LanguageClientOptions = {
 			middleware,
 			documentSelector: langs.map<lsp.DocumentFilter>(lang => ({ language: lang })),
