@@ -19,7 +19,7 @@ defineProps<{
 
 ```ts
 import HelloWorld from './HelloWorld.vue'
-import { ComponentProps, ComponentSlots } from 'vue-component-type-helpers'
+import type { ComponentProps, ComponentSlots } from 'vue-component-type-helpers'
 
 type Props = ComponentProps<typeof HelloWorld> // { msg: string }
 type Slots = ComponentSlots<typeof HelloWorld> // { header(_: { num: number; }): any; footer(_: { str: string; }): any; }
