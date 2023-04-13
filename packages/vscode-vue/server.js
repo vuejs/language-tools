@@ -1,5 +1,6 @@
 try {
 	module.exports = require('@volar/vue-language-server/bin/vue-language-server');
-} catch { }
+} catch {
+	module.exports = require('./dist/server');
+}
 
-module.exports = require('./dist/server');
