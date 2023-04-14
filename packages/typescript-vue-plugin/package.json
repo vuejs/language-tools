@@ -15,6 +15,6 @@
 	"dependencies": {
 		"@volar/vue-language-core": "1.3.14",
 		"@volar/vue-typescript": "1.3.14",
-		"typescript-auto-import-cache": "^0.1.0"
+		"typescript-auto-import-cache": "^0.0.1"
 	}
 }

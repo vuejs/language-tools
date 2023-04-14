@@ -67,7 +67,7 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 			};
 			const vueTsLs = vueTs.createLanguageService(vueTsLsHost);
 
-			tsFaster.createLanguageService(ts, vueTsLsHost, ts.createLanguageService, info.project.getCurrentDirectory());
+			tsFaster.decorate(ts, vueTsLsHost, vueTsLs);
 
 			return new Proxy(info.languageService, {
 				get: (target: any, property: keyof ts.LanguageService) => {
