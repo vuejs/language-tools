@@ -6,7 +6,7 @@ import * as nameCasing from '@volar/vue-language-service';
 import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest, GetComponentMeta } from './protocol';
 import { VueServerInitializationOptions } from './types';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import * as meta from 'vue-component-meta';
+import * as componentMeta from 'vue-component-meta';
 import { resolveVueCompilerOptions, VueCompilerOptions } from '@volar/vue-language-core';
 
 export function createServerPlugin(connection: Connection) {
@@ -125,7 +125,7 @@ export function createServerPlugin(connection: Connection) {
 					}
 				});
 
-				const checkers = new WeakMap<embedded.LanguageServiceHost, meta.ComponentMetaChecker>();
+				const checkers = new WeakMap<embedded.LanguageServiceHost, componentMeta.ComponentMetaChecker>();
 
 				connection.onRequest(GetComponentMeta.type, async params => {
 
@@ -135,7 +135,7 @@ export function createServerPlugin(connection: Connection) {
 
 					let checker = checkers.get(languageService.context.host);
 					if (!checker) {
-						checker = meta.baseCreate(
+						checker = componentMeta.baseCreate(
 							{
 								...languageService.context.host,
 								getVueCompilationSettings: () => hostToVueOptions.get(languageService.context.host) ?? {},
@@ -143,6 +143,7 @@ export function createServerPlugin(connection: Connection) {
 							{},
 							languageService.context.host.getCurrentDirectory() + '/tsconfig.json.global.vue',
 							languageService.context.typescript.module,
+							true,
 						);
 						checkers.set(languageService.context.host, checker);
 					}

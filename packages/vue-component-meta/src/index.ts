@@ -90,7 +90,7 @@ function createComponentMetaCheckerWorker(
 	};
 
 	return {
-		...baseCreate(_host, checkerOptions, globalComponentName, ts),
+		...baseCreate(_host, checkerOptions, globalComponentName, ts, false),
 		updateFile(fileName: string, text: string) {
 			fileName = (fileName as path.OsPath).replace(/\\/g, '/') as path.PosixPath;
 			scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(text));
@@ -120,6 +120,7 @@ export function baseCreate(
 	checkerOptions: MetaCheckerOptions,
 	globalComponentName: string,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
+	embeddedTypes: boolean,
 ) {
 	const globalComponentSnapshot = ts.ScriptSnapshot.fromString('<script setup lang="ts"></script>');
 	const metaSnapshots: Record<string, ts.IScriptSnapshot> = {};
@@ -136,7 +137,7 @@ export function baseCreate(
 		getScriptSnapshot: fileName => {
 			if (isMetaFileName(fileName)) {
 				if (!metaSnapshots[fileName]) {
-					metaSnapshots[fileName] = ts.ScriptSnapshot.fromString(getMetaScriptContent(fileName));
+					metaSnapshots[fileName] = ts.ScriptSnapshot.fromString(getMetaScriptContent(fileName, embeddedTypes));
 				}
 				return metaSnapshots[fileName];
 			}
@@ -200,18 +201,50 @@ export function baseCreate(
 		return (fileName.endsWith('.vue') ? fileName : fileName.substring(0, fileName.lastIndexOf('.'))) + '.meta.ts';
 	}
 
-	function getMetaScriptContent(fileName: string) {
-		return `
+	function getMetaScriptContent(fileName: string, embeddedTypes: boolean) {
+		const importCode = embeddedTypes ? '' : `import('vue-component-type-helpers').`;
+		let code = `
 import * as Components from '${fileName.substring(0, fileName.length - '.meta.ts'.length)}';
 export default {} as { [K in keyof typeof Components]: ComponentMeta<typeof Components[K]>; };
 
 interface ComponentMeta<T> {
-	props: import('vue-component-type-helpers').ComponentProps<T>;
-	emit: import('vue-component-type-helpers').ComponentEmit<T>;
-	slots: import('vue-component-type-helpers').${vueCompilerOptions.target < 3 ? 'Vue2ComponentSlots' : 'ComponentSlots'}<T>;
-	exposed: import('vue-component-type-helpers').ComponentExposed<T>;
-};
-		`.trim();
+	props: ${importCode}ComponentProps<T>;
+	emit: ${importCode}ComponentEmit<T>;
+	slots: ${importCode}${vueCompilerOptions.target < 3 ? 'Vue2ComponentSlots' : 'ComponentSlots'}<T>;
+	exposed: ${importCode}ComponentExposed<T>;
+};`.trim();
+		if (embeddedTypes) {
+			code += `
+type ComponentProps<T> =
+T extends (props: infer P, ...args: any) => any ? P :
+T extends new () => { $props: infer P } ? NonNullable<P> :
+{};
+
+type ComponentSlots<T> =
+T extends (props: any, ctx: { slots: infer S }, ...args: any) => any ? NonNullable<S> :
+T extends new () => { $slots: infer S } ? NonNullable<S> :
+{};
+
+type ComponentEmit<T> =
+T extends (props: any, ctx: { emit: infer E }, ...args: any) => any ? NonNullable<E> :
+T extends new () => { $emit: infer E } ? NonNullable<E> :
+{};
+
+type ComponentExposed<T> =
+T extends (props: any, ctx: { expose(exposed: infer E): any }, ...args: any) => any ? NonNullable<E> :
+T extends new () => infer E ? E :
+{};
+
+/**
+* Vue 2.x
+*/
+
+type Vue2ComponentSlots<T> =
+T extends (props: any, ctx: { slots: infer S }, ...args: any) => any ? NonNullable<S> :
+T extends new () => { $scopedSlots: infer S } ? NonNullable<S> :
+{};`;
+		}
+		return code;
 	}
 
 	function getExportNames(componentPath: string) {
