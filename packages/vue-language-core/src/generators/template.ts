@@ -25,11 +25,10 @@ const capabilitiesPresets = {
 	refAttr: { references: true, definition: true, rename: true } satisfies FileRangeCapabilities,
 };
 const formatBrackets = {
-	empty: ['', ';'] as [string, string],
+	normal: ['`${', '}`'] as [string, string],
 	// fix https://github.com/johnsoncodehk/volar/issues/1210
 	// fix https://github.com/johnsoncodehk/volar/issues/2305
 	curly: ['0 +', '+ 0;'] as [string, string],
-	square: ['(', ') => {}'] as [string, string],
 };
 const validTsVar = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 // @ts-ignore
@@ -352,7 +351,7 @@ export function generate(
 					appendFormattingCode(
 						branch.condition.content,
 						branch.condition.loc.start.offset,
-						formatBrackets.empty,
+						formatBrackets.normal,
 					);
 
 					blockConditions.push(muggle.toString(codes.slice(beforeCodeLength, afterCodeLength)));
@@ -390,7 +389,7 @@ export function generate(
 					localVars[varName] = (localVars[varName] ?? 0) + 1;
 
 				codes.push([leftExpressionText, 'template', leftExpressionRange.start, capabilitiesPresets.all]);
-				appendFormattingCode(leftExpressionText, leftExpressionRange.start, formatBrackets.square);
+				appendFormattingCode(leftExpressionText, leftExpressionRange.start, formatBrackets.normal);
 			}
 			codes.push(`] of (await import('./__VLS_types.js')).getVForSourceType`);
 			if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
@@ -405,7 +404,7 @@ export function generate(
 				appendFormattingCode(
 					source.content,
 					source.loc.start.offset,
-					formatBrackets.empty,
+					formatBrackets.normal,
 				);
 
 				codes.push(`) {\n`);
@@ -648,7 +647,7 @@ export function generate(
 				appendFormattingCode(
 					slotDir.exp.content,
 					slotDir.exp.loc.start.offset,
-					formatBrackets.empty,
+					formatBrackets.normal,
 				);
 			}
 
@@ -704,7 +703,7 @@ export function generate(
 				')',
 				failedExp.loc,
 			);
-			const fb = formatBrackets.empty;
+			const fb = formatBrackets.normal;
 			if (fb) {
 				appendFormattingCode(
 					failedExp.loc.source,
@@ -828,7 +827,7 @@ export function generate(
 				appendFormattingCode(
 					prop.exp.content,
 					prop.exp.loc.start.offset,
-					formatBrackets.empty,
+					formatBrackets.normal,
 				);
 				codes.push(`;\n`);
 			}
@@ -888,7 +887,7 @@ export function generate(
 					appendFormattingCode(
 						prop.exp.content,
 						prop.exp.loc.start.offset,
-						formatBrackets.empty,
+						formatBrackets.normal,
 					);
 				}
 				else {
@@ -1016,7 +1015,7 @@ export function generate(
 						')',
 						prop.exp.loc,
 					);
-					const fb = getFormatBrackets(formatBrackets.empty);
+					const fb = getFormatBrackets(formatBrackets.normal);
 					if (fb) {
 						appendFormattingCode(
 							prop.exp.loc.source,
@@ -1175,7 +1174,7 @@ export function generate(
 					')',
 					prop.exp.loc,
 				);
-				const fb = getFormatBrackets(formatBrackets.empty);
+				const fb = getFormatBrackets(formatBrackets.normal);
 				if (fb) {
 					appendFormattingCode(
 						prop.exp.content,
@@ -1453,7 +1452,7 @@ export function generate(
 					appendFormattingCode(
 						prop.exp.content,
 						prop.exp.loc.start.offset,
-						formatBrackets.empty,
+						formatBrackets.normal,
 					);
 				}
 				codes.push([
