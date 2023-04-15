@@ -1,13 +1,11 @@
 # Changelog
 
-## 1.3.14 (2023/4/10) - pre-release
+## 1.3.15 (2023/4/10) - pre-release
 
-- feat: add `vue-component-type-helpers` package ([#2590](https://github.com/johnsoncodehk/volar/issues/2590))
-- feat(component-meta): integrated `vue-component-type-helpers`
-- feat: upgrade to lerna-lite 2.0 ([#2597](https://github.com/johnsoncodehk/volar/issues/2597)) - thanks @ghiscoding
-- feat: support prop renaming for defineModel and defineProp
-- fix: template-based slots type incorrect ([#2590](https://github.com/johnsoncodehk/volar/issues/2590))
-- fix(vue-tsc): patch build info roots for TS 5.0 ([#2580](https://github.com/johnsoncodehk/volar/issues/2580)) - thanks @blake-newman
+- perf: fixed TS auto import performance regression since v1.13.11 (https://github.com/volarjs/typescript-auto-import-cache/pull/2)
+- fix(language-server): show component meta command not working
+- fix: `v-for` item adds spaces if enabled `insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets` ([#2571](https://github.com/johnsoncodehk/volar/issues/2571))
+- fix: when the takeover mode is enabled, json documents shows duplicate outline ([#2573](https://github.com/johnsoncodehk/volar/issues/2573))
 
 ---
 
@@ -44,6 +42,15 @@
 		<a href="https://opencollective.com/volarjs">Open Collective</a>
 	</h5>
 </p>
+
+## 1.3.14 (2023/4/10) - pre-release
+
+- feat: add `vue-component-type-helpers` package ([#2590](https://github.com/johnsoncodehk/volar/issues/2590))
+- feat(component-meta): integrated `vue-component-type-helpers`
+- feat: upgrade to lerna-lite 2.0 ([#2597](https://github.com/johnsoncodehk/volar/issues/2597)) - thanks @ghiscoding
+- feat: support prop renaming for defineModel and defineProp
+- fix: template-based slots type incorrect ([#2590](https://github.com/johnsoncodehk/volar/issues/2590))
+- fix(vue-tsc): patch build info roots for TS 5.0 ([#2580](https://github.com/johnsoncodehk/volar/issues/2580)) - thanks @blake-newman
 
 ## 1.3.12 (2023/4/4) - pre-release
 
