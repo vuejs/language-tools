@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.3.15 (2023/4/10) - pre-release
+## 1.3.15 (2023/4/16) - pre-release
 
 - perf: fixed TS auto import performance regression since v1.13.11 (https://github.com/volarjs/typescript-auto-import-cache/pull/2)
 - fix(language-server): show component meta command not working
