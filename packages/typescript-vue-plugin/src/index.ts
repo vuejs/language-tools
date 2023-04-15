@@ -1,7 +1,6 @@
 import * as vue from '@volar/vue-language-core';
 import * as vueTs from '@volar/vue-typescript';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import * as tsFaster from 'typescript-auto-import-cache';
 
 const init: ts.server.PluginModuleFactory = (modules) => {
 	const { typescript: ts } = modules;
@@ -66,8 +65,6 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 				getTypeScriptModule: () => ts,
 			};
 			const vueTsLs = vueTs.createLanguageService(vueTsLsHost);
-
-			tsFaster.decorate(ts, vueTsLsHost, vueTsLs);
 
 			return new Proxy(info.languageService, {
 				get: (target: any, property: keyof ts.LanguageService) => {
