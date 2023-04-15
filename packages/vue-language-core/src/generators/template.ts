@@ -1394,7 +1394,6 @@ export function generate(
 					(slotDir.loc as any).slot_name ?? ((slotDir.loc as any).slot_name = {}),
 				);
 				codes.push(`]`);
-				writeInterpolationVarsExtraCompletion();
 			}
 
 			codes.push(': {} as any,\n');
