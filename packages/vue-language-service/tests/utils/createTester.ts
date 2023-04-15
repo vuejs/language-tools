@@ -63,7 +63,18 @@ function createTester(root: string) {
 		configurationHost: {
 			async getConfiguration(section: string) {
 				const settings = currentVSCodeSettings ?? defaultVSCodeSettings;
-				return settings[section];
+				if (settings[section]) {
+					return settings[section];
+				}
+				let result: Record<string, any> | undefined;
+				for (const key in settings) {
+					if (key.startsWith(section + '.')) {
+						const newKey = key.slice(section.length + 1);
+						result ??= {};
+						result[newKey] = settings[key];
+					}
+				}
+				return result;
 			},
 			onDidChangeConfiguration() { },
 		},

@@ -29,7 +29,7 @@ const formatBrackets = {
 	// fix https://github.com/johnsoncodehk/volar/issues/1210
 	// fix https://github.com/johnsoncodehk/volar/issues/2305
 	curly: ['0 +', '+ 0;'] as [string, string],
-	square: ['[', '];'] as [string, string],
+	square: ['(', ') => {}'] as [string, string],
 };
 const validTsVar = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 // @ts-ignore
