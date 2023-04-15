@@ -5,11 +5,12 @@ import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient/node';
 import { activate as commonActivate, deactivate as commonDeactivate, getDocumentSelector } from './common';
 import { middleware } from './middleware';
+import { ServerMode } from '@volar/vue-language-server';
 
 export function activate(context: vscode.ExtensionContext) {
 
 	const cancellationPipeName = path.join(os.tmpdir(), `vscode-${context.extension.id}-cancellation-pipe.tmp`);
-	const langs = getDocumentSelector(context);
+	const langs = getDocumentSelector(context, ServerMode.Semantic);
 	let cancellationPipeUpdateKey: string | undefined;
 
 	vscode.workspace.onDidChangeTextDocument((e) => {

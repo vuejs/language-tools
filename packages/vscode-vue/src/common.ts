@@ -66,14 +66,14 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		createLc(
 			'vue-semantic-server',
 			'Vue Semantic Server',
-			getDocumentSelector(context),
+			getDocumentSelector(context, ServerMode.PartialSemantic),
 			await getInitializationOptions(ServerMode.PartialSemantic, context),
 			6009,
 		),
 		createLc(
 			'vue-syntactic-server',
 			'Vue Syntactic Server',
-			getDocumentSelector(context),
+			getDocumentSelector(context, ServerMode.Syntactic),
 			await getInitializationOptions(ServerMode.Syntactic, context),
 			6011,
 		)
@@ -183,7 +183,7 @@ export function deactivate(): Thenable<any> | undefined {
 	]);
 }
 
-export function getDocumentSelector(context: vscode.ExtensionContext) {
+export function getDocumentSelector(context: vscode.ExtensionContext, serverMode: ServerMode) {
 	const takeOverMode = takeOverModeActive(context);
 	const langs = takeOverMode ? [
 		'vue',
@@ -191,11 +191,19 @@ export function getDocumentSelector(context: vscode.ExtensionContext) {
 		'typescript',
 		'javascriptreact',
 		'typescriptreact',
-		'json',
-		// 'jsonc',
 	] : [
 		'vue',
 	];
+	if (
+		takeOverMode
+		&& (
+			serverMode === ServerMode.Semantic
+			|| serverMode === ServerMode.PartialSemantic
+		)
+	) { // #2573
+		langs.push('json');
+		// langs.push('jsonc');
+	}
 	if (processHtml()) {
 		langs.push('html');
 	}
