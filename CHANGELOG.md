@@ -1,7 +1,8 @@
 # Changelog
 
-## 1.3.15 (2023/4/16) - pre-release
+## 1.3.16 (2023/4/16) - pre-release
 
+- feat(component-meta): expose definition location information as `declarations` property
 - perf: fixed TS auto import performance regression since v1.13.11 (https://github.com/volarjs/typescript-auto-import-cache/pull/2)
 - fix(language-server): show component meta command not working
 - fix: `v-for` item adds spaces if enabled `insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets` ([#2571](https://github.com/johnsoncodehk/volar/issues/2571))
