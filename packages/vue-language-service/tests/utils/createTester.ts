@@ -1,5 +1,5 @@
 import { resolveConfig, VueLanguageServiceHost } from '../..';
-import * as ts from 'typescript/lib/tsserverlibrary';
+import * as ts from 'typescript';
 import * as path from 'path';
 import { URI } from 'vscode-uri';
 import { createLanguageService } from '@volar/language-service';
@@ -46,15 +46,15 @@ function createTester(root: string) {
 		getScriptVersion,
 		getScriptSnapshot,
 		getVueCompilationSettings: () => ({}),
-		getTypeScriptModule: () => ts,
 	};
 	const defaultVSCodeSettings: any = {
 		'typescript.preferences.quoteStyle': 'single',
 		'javascript.preferences.quoteStyle': 'single',
 	};
 	let currentVSCodeSettings: any;
-	const languageServiceConfig = resolveConfig({}, ts, {}, {});
+	const languageServiceConfig = resolveConfig({}, ts as any, {}, {});
 	const languageService = createLanguageService({
+		modules: { typescript: ts as any },
 		host,
 		config: languageServiceConfig,
 		uriToFileName,

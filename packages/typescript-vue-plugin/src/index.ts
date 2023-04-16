@@ -62,7 +62,6 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 				],
 				getScriptVersion: (fileName) => info.project.getScriptVersion(fileName),
 				getScriptSnapshot: (fileName) => info.project.getScriptSnapshot(fileName),
-				getTypeScriptModule: () => ts,
 			};
 			const vueTsLs = vueTs.createLanguageService(vueTsLsHost);
 

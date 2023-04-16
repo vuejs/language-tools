@@ -85,7 +85,6 @@ function createComponentMetaCheckerWorker(
 			}
 			return scriptSnapshots.get(fileName);
 		},
-		getTypeScriptModule: () => ts,
 		getVueCompilationSettings: () => parsedCommandLine.vueOptions,
 	};
 
@@ -162,7 +161,7 @@ export function baseCreate(
 		host.getCompilationSettings(),
 		vueCompilerOptions,
 	) : [];
-	const core = embedded.createLanguageContext(host, vueLanguageModules);
+	const core = embedded.createLanguageContext(host, { typescript: ts }, vueLanguageModules);
 	const proxyApis: Partial<ts.LanguageServiceHost> = checkerOptions.forceUseTs ? {
 		getScriptKind: (fileName) => {
 			if (fileName.endsWith('.vue.js')) {

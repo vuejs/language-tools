@@ -74,8 +74,6 @@ export function createProgram(options: ts.CreateProgramOptions) {
 				return ctx.projectVersion.toString();
 			},
 			getProjectReferences: () => ctx.options.projectReferences,
-
-			getTypeScriptModule: () => ts,
 			isTsc: true,
 		}, {
 			get: (target, property) => {
