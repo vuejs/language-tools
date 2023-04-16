@@ -1,11 +1,17 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
+export interface Declaration {
+	file: string;
+	range: [number, number];
+}
+
 export interface ComponentMeta {
 	props: PropertyMeta[];
 	events: EventMeta[];
 	slots: SlotMeta[];
 	exposed: ExposeMeta[];
 }
+
 export interface PropertyMeta {
 	name: string;
 	default?: string;
@@ -15,27 +21,34 @@ export interface PropertyMeta {
 	type: string;
 	rawType?: ts.Type;
 	tags: { name: string, text?: string; }[];
+	declarations: Declaration[];
 	schema: PropertyMetaSchema;
-};
+}
+
 export interface EventMeta {
 	name: string;
 	type: string;
 	rawType?: ts.Type;
 	signature: string;
+	declarations: Declaration[];
 	schema: PropertyMetaSchema[];
 }
+
 export interface SlotMeta {
 	name: string;
 	type: string;
 	rawType?: ts.Type;
 	description: string;
+	declarations: Declaration[];
 	schema: PropertyMetaSchema;
 }
+
 export interface ExposeMeta {
 	name: string;
 	description: string;
 	type: string;
 	rawType?: ts.Type;
+	declarations: Declaration[];
 	schema: PropertyMetaSchema;
 }
 
@@ -58,4 +71,5 @@ export interface MetaCheckerOptions {
 	forceUseTs?: boolean;
 	printer?: ts.PrinterOptions;
 	rawType?: boolean;
+	noDeclarations?: boolean;
 }

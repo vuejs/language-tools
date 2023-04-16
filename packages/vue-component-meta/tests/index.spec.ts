@@ -136,6 +136,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 					global: false,
 					required: true,
 					type: 'string',
+					declarations: [],
 					schema: 'string'
 				}
 			}
@@ -157,6 +158,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 					global: false,
 					required: true,
 					type: 'string',
+					declarations: [],
 					schema: 'string'
 				},
 				additionalProp: {
@@ -166,6 +168,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 					global: false,
 					required: true,
 					type: 'string',
+					declarations: [],
 					schema: 'string'
 				}
 			}
@@ -192,6 +195,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 							global: false,
 							required: true,
 							type: 'string',
+							declarations: [],
 							schema: 'string'
 						}
 					}
@@ -220,6 +224,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 							global: false,
 							required: true,
 							type: 'string',
+							declarations: [],
 							schema: 'string'
 						}
 					}
@@ -252,6 +257,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 									global: false,
 									required: true,
 									type: 'string',
+									declarations: [],
 									schema: 'string'
 								}
 							}
@@ -286,6 +292,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 					global: false,
 					required: true,
 					type: 'string',
+					declarations: [],
 					schema: 'string'
 				}
 			}
@@ -324,6 +331,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 					global: false,
 					required: true,
 					type: 'MyNestedRecursiveProps',
+					declarations: [],
 					schema: 'MyNestedRecursiveProps'
 				}
 			}
@@ -472,6 +480,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 								global: false,
 								required: true,
 								type: 'string',
+								declarations: [],
 								schema: 'string'
 							}
 						}
@@ -495,6 +504,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 						global: false,
 						required: true,
 						type: 'number',
+						declarations: [],
 						schema: 'number'
 					},
 					arg2: {
@@ -504,6 +514,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 						global: false,
 						required: false,
 						type: 'any',
+						declarations: [],
 						schema: 'any'
 					},
 				}
@@ -696,6 +707,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 
 const checkerOptions: MetaCheckerOptions = {
 	forceUseTs: true,
+	noDeclarations: true,
 	schema: { ignore: ['MyIgnoredNestedProps'] },
 	printer: { newLine: 1 },
 };
