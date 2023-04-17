@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.17 (2023/4/17) - pre-release
+
+- feat: support document links for tsconfig when takeover mode is actived ([#2467](https://github.com/johnsoncodehk/volar/issues/2467))
+- fix: avoid server crash when tsconfig extends path invalid
+- fix: auto import should not appending `.js` ([#1763](https://github.com/johnsoncodehk/volar/issues/1763)) ([#2518](https://github.com/johnsoncodehk/volar/issues/2518))
+- fix: inhibit unknown props error when if `strictTemplates` is disabled
+- fix: absolute SCSS import resolving inconsistency ([#2517](https://github.com/johnsoncodehk/volar/issues/2517))
+- fix: `<template>` multi-line comments shift with each format ([#2505](https://github.com/johnsoncodehk/volar/issues/2505))
+
 ## 1.3.16 (2023/4/16) - pre-release
 
 - feat(component-meta): expose definition location information as `declarations` property
