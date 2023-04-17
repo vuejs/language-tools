@@ -10,7 +10,7 @@ import { ServerMode } from '@volar/vue-language-server';
 export function activate(context: vscode.ExtensionContext) {
 
 	const cancellationPipeName = path.join(os.tmpdir(), `vscode-${context.extension.id}-cancellation-pipe.tmp`);
-	const langs = getDocumentSelector(context, ServerMode.Semantic);
+	const documentSelector = getDocumentSelector(context, ServerMode.Semantic);
 	let cancellationPipeUpdateKey: string | undefined;
 
 	vscode.workspace.onDidChangeTextDocument((e) => {
@@ -19,7 +19,7 @@ export function activate(context: vscode.ExtensionContext) {
 			cancellationPipeUpdateKey = key;
 			return;
 		}
-		if (langs.includes(e.document.languageId) && cancellationPipeUpdateKey !== key) {
+		if (documentSelector.some(filter => filter.language === e.document.languageId) && cancellationPipeUpdateKey !== key) {
 			cancellationPipeUpdateKey = key;
 			fs.writeFileSync(cancellationPipeName, '');
 		}
@@ -28,7 +28,7 @@ export function activate(context: vscode.ExtensionContext) {
 	return commonActivate(context, (
 		id,
 		name,
-		langs,
+		documentSelector,
 		initOptions,
 		port,
 	) => {
@@ -87,7 +87,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 		const clientOptions: lsp.LanguageClientOptions = {
 			middleware,
-			documentSelector: langs.map<lsp.DocumentFilter>(lang => ({ language: lang })),
+			documentSelector: documentSelector,
 			initializationOptions: initOptions,
 			progressOnInitialization: true,
 		};

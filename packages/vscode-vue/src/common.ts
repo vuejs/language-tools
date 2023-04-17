@@ -25,7 +25,7 @@ let syntacticClient: lsp.BaseLanguageClient;
 type CreateLanguageClient = (
 	id: string,
 	name: string,
-	langs: string[],
+	langs: lsp.DocumentFilter[],
 	initOptions: VueServerInitializationOptions,
 	port: number,
 ) => lsp.BaseLanguageClient;
@@ -183,34 +183,30 @@ export function deactivate(): Thenable<any> | undefined {
 	]);
 }
 
-export function getDocumentSelector(context: vscode.ExtensionContext, serverMode: ServerMode) {
+export function getDocumentSelector(context: vscode.ExtensionContext, serverMode: ServerMode): lsp.DocumentFilter[] {
 	const takeOverMode = takeOverModeActive(context);
-	const langs = takeOverMode ? [
-		'vue',
-		'javascript',
-		'typescript',
-		'javascriptreact',
-		'typescriptreact',
-	] : [
-		'vue',
-	];
-	if (
-		takeOverMode
-		&& (
-			serverMode === ServerMode.Semantic
-			|| serverMode === ServerMode.PartialSemantic
-		)
-	) { // #2573
-		langs.push('json');
-		// langs.push('jsonc');
+	const selectors: lsp.DocumentFilter[] = [];
+	selectors.push({ language: 'vue' });
+	if (takeOverMode) {
+		selectors.push({ language: 'javascript' });
+		selectors.push({ language: 'typescript' });
+		selectors.push({ language: 'javascriptreact' });
+		selectors.push({ language: 'typescriptreact' });
+		if (serverMode === ServerMode.Semantic || serverMode === ServerMode.PartialSemantic) { // #2573
+			// support find references for .json files
+			selectors.push({ language: 'json' });
+			// support document links for tsconfig.json
+			selectors.push({ language: 'jsonc', pattern: '**/[jt]sconfig.json' });
+			selectors.push({ language: 'jsonc', pattern: '**/[jt]sconfig.*.json' });
+		}
 	}
 	if (processHtml()) {
-		langs.push('html');
+		selectors.push({ language: 'html' });
 	}
 	if (processMd()) {
-		langs.push('markdown');
+		selectors.push({ language: 'markdown' });
 	}
-	return langs;
+	return selectors;
 }
 
 export function processHtml() {
