@@ -17,6 +17,6 @@
 	},
 	"dependencies": {
 		"@volar-plugins/pug": "2.0.0-alpha.21",
-		"@volar/source-map": "1.4.0-alpha.9"
+		"@volar/source-map": "1.4.0-alpha.10"
 	}
 }

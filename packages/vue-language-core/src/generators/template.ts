@@ -5,7 +5,7 @@ import { camelize, capitalize, hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { VueCompilerOptions } from '../types';
 import { colletVars, walkInterpolationFragment } from '../utils/transform';
-import minimatch from 'minimatch';
+import { minimatch } from 'minimatch';
 import * as muggle from 'muggle-string';
 
 const capabilitiesPresets = {

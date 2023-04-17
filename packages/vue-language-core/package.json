@@ -13,13 +13,13 @@
 		"directory": "packages/vue-language-core"
 	},
 	"dependencies": {
-		"@volar/language-core": "1.4.0-alpha.9",
-		"@volar/source-map": "1.4.0-alpha.9",
+		"@volar/language-core": "1.4.0-alpha.10",
+		"@volar/source-map": "1.4.0-alpha.10",
 		"@vue/compiler-dom": "^3.2.0",
 		"@vue/compiler-sfc": "^3.2.0",
 		"@vue/reactivity": "^3.2.0",
 		"@vue/shared": "^3.2.0",
-		"minimatch": "^6.1.6",
+		"minimatch": "^9.0.0",
 		"muggle-string": "^0.2.2",
 		"vue-template-compiler": "^2.7.14"
 	},

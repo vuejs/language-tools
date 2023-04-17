@@ -11,8 +11,14 @@ import { resolveVueCompilerOptions, VueCompilerOptions } from '@volar/vue-langua
 
 export function createServerPlugin(connection: Connection) {
 
-	const plugin: LanguageServerPlugin = (initOptions: VueServerInitializationOptions): ReturnType<LanguageServerPlugin> => {
+	const plugin: LanguageServerPlugin = (initOptions: VueServerInitializationOptions, modules): ReturnType<LanguageServerPlugin> => {
 
+		if (!modules.typescript) {
+			console.warn('No typescript found, vue-language-server will not work.');
+			return {};
+		}
+
+		const ts = modules.typescript;
 		const vueFileExtensions: string[] = ['vue'];
 		const hostToVueOptions = new WeakMap<embedded.LanguageServiceHost, Partial<VueCompilerOptions>>();
 
@@ -31,14 +37,9 @@ export function createServerPlugin(connection: Connection) {
 		}
 
 		return {
-			extraFileExtensions: vueFileExtensions.map<ts.FileExtensionInfo>(ext => ({ extension: ext, isMixedContent: true, scriptKind: 7 })),
+			extraFileExtensions: vueFileExtensions.map<ts.FileExtensionInfo>(ext => ({ extension: ext, isMixedContent: true, scriptKind: ts.ScriptKind.Deferred })),
 			watchFileExtensions: ['js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json', ...vueFileExtensions],
-			resolveConfig(config, modules, ctx) {
-
-				const ts = modules.typescript;
-				if (!ts) {
-					return config;
-				}
+			resolveConfig(config, ctx) {
 
 				const vueOptions = getVueCompilerOptions();
 				const vueLanguageServiceSettings = getVueLanguageServiceSettings();
