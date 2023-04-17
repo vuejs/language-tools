@@ -90,15 +90,15 @@ export declare function asFunctionalComponent<T, K = T extends new (...args: any
 		: (_: T, ctx?: any) => { __ctx?: { attrs?: undefined, expose?: undefined, slots?: undefined, emit?: undefined }, __props?: T }; // IntrinsicElement
 export declare function pickEvent<Emit, K, E>(emit: Emit, emitKey: K, event: E): FillingEventArg<
 	PickNotAny<
-		asFunctionOrAny<E>,
-		asFunctionOrAny<EmitEvent<Emit, K>>
+		asFunctionOrAny<NonNullable<E>>,
+		asFunctionOrAny<NonNullable<EmitEvent<Emit, K>>>
 	>
 >;
 export declare function pickFunctionalComponentCtx<T, K>(comp: T, compInstance: K): PickNotAny<
 	K extends { __ctx?: infer Ctx } ? Ctx : any,
 	T extends (props: any, ctx: infer Ctx) => any ? Ctx : any
 >;
-type asFunctionOrAny<F> = ((...args: any) => any) extends F ? F : any;
+type asFunctionOrAny<F> = F extends ((...args: any) => any) ? F : any;
 `.trim();
 }
 
