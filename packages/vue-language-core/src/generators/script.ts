@@ -622,13 +622,13 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			// fill $props
 			if (scriptSetupRanges.propsTypeArg) {
 				// NOTE: defineProps is inaccurate for $props
-				codes.push(`$props: (await import('./__VLS_types.js')).makeOptional(defineProps<`);
+				codes.push(`$props: (await import('./__VLS_types')).makeOptional(defineProps<`);
 				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
 				codes.push(`>()),\n`);
 			}
 			else if (scriptSetupRanges.propsRuntimeArg) {
 				// NOTE: defineProps is inaccurate for $props
-				codes.push(`$props: (await import('./__VLS_types.js')).makeOptional(defineProps(`);
+				codes.push(`$props: (await import('./__VLS_types')).makeOptional(defineProps(`);
 				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
 				codes.push(`)),\n`);
 			}
@@ -829,13 +829,13 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 		codes.push(`let __VLS_ctx!: ${useGlobalThisTypeInCtx ? 'typeof globalThis &' : ''}`);
 		if (sfc.scriptSetup) {
-			codes.push(`InstanceType<import('./__VLS_types.js').PickNotAny<typeof __VLS_publicComponent, new () => {}>> & `);
+			codes.push(`InstanceType<import('./__VLS_types').PickNotAny<typeof __VLS_publicComponent, new () => {}>> & `);
 		}
-		codes.push(`InstanceType<import('./__VLS_types.js').PickNotAny<typeof __VLS_internalComponent, new () => {}>> & {\n`);
+		codes.push(`InstanceType<import('./__VLS_types').PickNotAny<typeof __VLS_internalComponent, new () => {}>> & {\n`);
 
 		/* CSS Module */
 		for (const cssModule of cssModuleClasses) {
-			codes.push(`${cssModule.style.module}: Record<string, string> & import('./__VLS_types.js').Prettify<{}`);
+			codes.push(`${cssModule.style.module}: Record<string, string> & import('./__VLS_types').Prettify<{}`);
 			for (const classNameRange of cssModule.classNameRanges) {
 				generateCssClassProperty(
 					cssModule.index,
@@ -852,8 +852,8 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		/* Components */
 		codes.push('/* Components */\n');
 		codes.push(`let __VLS_localComponents!: NonNullable<typeof __VLS_internalComponent extends { components: infer C } ? C : {}> & typeof __VLS_componentsOption & typeof __VLS_ctx;\n`);
-		codes.push(`let __VLS_otherComponents!: typeof __VLS_localComponents & import('./__VLS_types.js').GlobalComponents;\n`);
-		codes.push(`let __VLS_own!: import('./__VLS_types.js').SelfComponent<typeof __VLS_name, typeof __VLS_internalComponent & typeof __VLS_publicComponent & (new () => { ${getSlotsPropertyName(vueCompilerOptions.target ?? 3)}: typeof __VLS_slots })>;\n`);
+		codes.push(`let __VLS_otherComponents!: typeof __VLS_localComponents & import('./__VLS_types').GlobalComponents;\n`);
+		codes.push(`let __VLS_own!: import('./__VLS_types').SelfComponent<typeof __VLS_name, typeof __VLS_internalComponent & typeof __VLS_publicComponent & (new () => { ${getSlotsPropertyName(vueCompilerOptions.target ?? 3)}: typeof __VLS_slots })>;\n`);
 		codes.push(`let __VLS_components!: typeof __VLS_otherComponents & Omit<typeof __VLS_own, keyof typeof __VLS_otherComponents>;\n`);
 
 		/* Style Scoped */

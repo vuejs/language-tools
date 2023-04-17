@@ -167,7 +167,7 @@ export function generate(
 			]);
 			const varName = validTsVar.test(tagName) ? tagName : capitalize(camelize(tagName.replace(/:/g, '-')));
 
-			codes.push(`& import('./__VLS_types.js').WithComponent<'${varName}', typeof __VLS_components, ${[...names].map(name => `'${name}'`).join(', ')}>\n`);
+			codes.push(`& import('./__VLS_types').WithComponent<'${varName}', typeof __VLS_components, ${[...names].map(name => `'${name}'`).join(', ')}>\n`);
 
 			data[tagName] = varName;
 		}
@@ -391,7 +391,7 @@ export function generate(
 				codes.push([leftExpressionText, 'template', leftExpressionRange.start, capabilitiesPresets.all]);
 				appendFormattingCode(leftExpressionText, leftExpressionRange.start, formatBrackets.normal);
 			}
-			codes.push(`] of (await import('./__VLS_types.js')).getVForSourceType`);
+			codes.push(`] of (await import('./__VLS_types')).getVForSourceType`);
 			if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 				writeInterpolation(
 					source.content,
@@ -463,7 +463,7 @@ export function generate(
 		const componentCtxVar = `__VLS_${elementIndex++}`;
 
 		if (isIntrinsicElement) {
-			codes.push(`const ${componentVar} = (await import('./__VLS_types.js')).asFunctionalComponent(({} as import('./__VLS_types.js').IntrinsicElements)[`);
+			codes.push(`const ${componentVar} = (await import('./__VLS_types')).asFunctionalComponent(({} as import('./__VLS_types').IntrinsicElements)[`);
 			writeCodeWithQuotes(
 				node.tag,
 				tagOffsets[0],
@@ -472,12 +472,12 @@ export function generate(
 			codes.push(`]);\n`);
 		}
 		else if (isNamespacedTag) {
-			codes.push(`const ${componentVar} = (await import('./__VLS_types.js')).asFunctionalComponent(${node.tag}, new ${node.tag}({`);
+			codes.push(`const ${componentVar} = (await import('./__VLS_types')).asFunctionalComponent(${node.tag}, new ${node.tag}({`);
 			writeProps(node, 'class', 'slots');
 			codes.push(`}));\n`);;
 		}
 		else {
-			codes.push(`const ${componentVar} = (await import('./__VLS_types.js')).asFunctionalComponent(`);
+			codes.push(`const ${componentVar} = (await import('./__VLS_types')).asFunctionalComponent(`);
 			codes.push(`__VLS_templateComponents['${componentVars[node.tag] ?? node.tag}'], `);
 			codes.push(`new __VLS_templateComponents['${componentVars[node.tag] ?? node.tag}']({`);
 			writeProps(node, 'class', 'slots');
@@ -487,7 +487,7 @@ export function generate(
 		if (!vueCompilerOptions.jsxTemplates) {
 			for (const offset of tagOffsets) {
 				if (isIntrinsicElement) {
-					codes.push(`({} as import('./__VLS_types.js').IntrinsicElements)`);
+					codes.push(`({} as import('./__VLS_types').IntrinsicElements)`);
 					writePropertyAccess(
 						node.tag,
 						offset,
@@ -623,7 +623,7 @@ export function generate(
 			}
 		}
 
-		codes.push(`const ${componentCtxVar} = (await import('./__VLS_types.js')).pickFunctionalComponentCtx(${componentVar}, ${componentInstanceVar})!;\n`);
+		codes.push(`const ${componentCtxVar} = (await import('./__VLS_types')).pickFunctionalComponentCtx(${componentVar}, ${componentInstanceVar})!;\n`);
 
 		for (const [slotName, { nodes, slotDir }] of Object.entries(slotAndChildNodes ?? {})) {
 
@@ -723,7 +723,7 @@ export function generate(
 		if (vScope?.type === CompilerDOM.NodeTypes.DIRECTIVE && vScope.exp) {
 
 			const scopeVar = `__VLS_${elementIndex++}`;
-			const condition = `(await import('./__VLS_types.js')).withScope(__VLS_ctx, ${scopeVar})`;
+			const condition = `(await import('./__VLS_types')).withScope(__VLS_ctx, ${scopeVar})`;
 
 			codes.push(`const ${scopeVar} = `);
 			codes.push([
@@ -762,7 +762,7 @@ export function generate(
 			) {
 				const eventVar = `__VLS_${elementIndex++}`;
 				codes.push(`let ${eventVar} = { '${prop.arg.loc.source}': `);
-				codes.push(`(await import('./__VLS_types.js')).pickEvent(${componentCtxVar}.emit!, '${prop.arg.loc.source}' as const, ${componentInstanceVar}.__props!`);
+				codes.push(`(await import('./__VLS_types')).pickEvent(${componentCtxVar}.emit!, '${prop.arg.loc.source}' as const, ${componentInstanceVar}.__props!`);
 				writePropertyAccess(
 					camelize('on-' + prop.arg.loc.source), // onClickOutside
 					[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
@@ -1420,7 +1420,7 @@ export function generate(
 					prop.loc.start.offset,
 					capabilitiesPresets.diagnosticOnly,
 				]);
-				codes.push(`(await import('./__VLS_types.js')).directiveFunction(__VLS_ctx.`);
+				codes.push(`(await import('./__VLS_types')).directiveFunction(__VLS_ctx.`);
 				codes.push([
 					camelize('v-' + prop.name),
 					'template',
