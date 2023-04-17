@@ -21,10 +21,12 @@ export function createParsedCommandLineByJson(
 	let vueOptions: Partial<VueCompilerOptions> = {};
 
 	for (const extendPath of proxyHost.extendConfigPaths.reverse()) {
-		vueOptions = {
-			...vueOptions,
-			...getVueCompilerOptions(ts, ts.readJsonConfigFile(extendPath, proxyHost.host.readFile)),
-		};
+		try {
+			vueOptions = {
+				...vueOptions,
+				...getVueCompilerOptions(ts, ts.readJsonConfigFile(extendPath, proxyHost.host.readFile)),
+			};
+		} catch (err) { }
 	}
 
 	return {
@@ -51,10 +53,12 @@ export function createParsedCommandLine(
 		let vueOptions: Partial<VueCompilerOptions> = {};
 
 		for (const extendPath of proxyHost.extendConfigPaths.reverse()) {
-			vueOptions = {
-				...vueOptions,
-				...getVueCompilerOptions(ts, ts.readJsonConfigFile(extendPath, proxyHost.host.readFile)),
-			};
+			try {
+				vueOptions = {
+					...vueOptions,
+					...getVueCompilerOptions(ts, ts.readJsonConfigFile(extendPath, proxyHost.host.readFile)),
+				};
+			} catch (err) { }
 		}
 
 		return {
