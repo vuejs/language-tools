@@ -1,82 +1,83 @@
 import * as vscode from 'vscode';
 
-const _configs = vscode.workspace.getConfiguration('volar');
+const volarConfigs = vscode.workspace.getConfiguration('volar');
+const vueConfigs = vscode.workspace.getConfiguration('vue');
 
 export const config = {
 	splitEditors: {
 		get layout() {
-			return _configs.get<{ left: string[], right: string[]; }>('splitEditors.layout') ?? { left: [], right: [] };
+			return volarConfigs.get<{ left: string[], right: string[]; }>('splitEditors.layout') ?? { left: [], right: [] };
 		}
 	},
 	features: {
 		updateImportsOnFileMove: {
 			get enable() {
-				return _configs.get<boolean>('features.updateImportsOnFileMove.enable');
+				return vueConfigs.get<boolean>('features.updateImportsOnFileMove.enable');
 			},
 		},
 		codeActions: {
 			get enable() {
-				return _configs.get<boolean>('features.codeActions.enable');
+				return vueConfigs.get<boolean>('features.codeActions.enable');
 			},
 		},
 		codeLens: {
 			get enable() {
-				return _configs.get<boolean>('features.codeLens.enable');
+				return vueConfigs.get<boolean>('features.codeLens.enable');
 			},
 		},
 		complete: {
 			get attrNameCasing() {
-				return _configs.get<'autoKebab' | 'autoCamel' | 'kebab' | 'camel'>('features.complete.propNameCasing');
+				return vueConfigs.get<'autoKebab' | 'autoCamel' | 'kebab' | 'camel'>('features.complete.propNameCasing');
 			},
 			get tagNameCasing() {
-				return _configs.get<'autoKebab' | 'autoPascal' | 'kebab' | 'pascal'>('features.complete.tagNameCasing');
+				return vueConfigs.get<'autoKebab' | 'autoPascal' | 'kebab' | 'pascal'>('features.complete.tagNameCasing');
 			},
 		},
 	},
 	json: {
 		get customBlockSchemaUrls() {
-			return _configs.get<Record<string, string>>('json.customBlockSchemaUrls');
+			return volarConfigs.get<Record<string, string>>('json.customBlockSchemaUrls');
 		}
 	},
 	vueserver: {
 		get maxOldSpaceSize() {
-			return _configs.get<number>('vueserver.maxOldSpaceSize');
+			return volarConfigs.get<number>('vueserver.maxOldSpaceSize');
 		},
 		get maxFileSize() {
-			return _configs.get<number>('vueserver.maxFileSize');
+			return volarConfigs.get<number>('vueserver.maxFileSize');
 		},
 		get reverseConfigFilePriority() {
-			return _configs.get<boolean>('vueserver.reverseConfigFilePriority');
+			return volarConfigs.get<boolean>('vueserver.reverseConfigFilePriority');
 		},
 		get diagnosticModel() {
-			return _configs.get<'push' | 'pull'>('vueserver.diagnosticModel');
+			return volarConfigs.get<'push' | 'pull'>('vueserver.diagnosticModel');
 		},
 		get additionalExtensions() {
-			return _configs.get<string[]>('vueserver.additionalExtensions') ?? [];
+			return volarConfigs.get<string[]>('vueserver.additionalExtensions') ?? [];
 		},
 		get fullCompletionList() {
-			return _configs.get<boolean>('vueserver.fullCompletionList');
+			return volarConfigs.get<boolean>('vueserver.fullCompletionList');
 		},
 		get configFilePath() {
-			return _configs.get<string>('vueserver.configFilePath');
+			return volarConfigs.get<string>('vueserver.configFilePath');
 		},
 		get fileWatches() {
-			return _configs.get<boolean>('volar.vueserver.fileWatchers');
+			return volarConfigs.get<boolean>('volar.vueserver.fileWatchers');
 		},
 		petiteVue: {
 			get processHtmlFile() {
-				return _configs.get<boolean>('vueserver.petiteVue.processHtmlFile');
+				return volarConfigs.get<boolean>('vueserver.petiteVue.processHtmlFile');
 			},
 		},
 		vitePress: {
 			get processMdFile() {
-				return _configs.get<boolean>('vueserver.vitePress.processMdFile');
+				return volarConfigs.get<boolean>('vueserver.vitePress.processMdFile');
 			},
 		},
 	},
 	doctor: {
 		get status() {
-			return _configs.get<boolean>('doctor.status');
+			return volarConfigs.get<boolean>('doctor.status');
 		}
 	}
 };

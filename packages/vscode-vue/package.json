@@ -498,22 +498,22 @@
 						"customBlocks"
 					]
 				},
-				"volar.features.updateImportsOnFileMove.enable": {
+				"vue.features.updateImportsOnFileMove.enable": {
 					"type": "boolean",
 					"default": false,
 					"description": "Enabled update imports on file move."
 				},
-				"volar.features.codeActions.enable": {
+				"vue.features.codeActions.enable": {
 					"type": "boolean",
 					"default": false,
 					"description": "Enabled code actions."
 				},
-				"volar.features.codeLens": {
+				"vue.features.codeLens": {
 					"type": "boolean",
 					"default": true,
 					"description": "Enabled code lens."
 				},
-				"volar.features.complete.tagNameCasing": {
+				"vue.features.complete.tagNameCasing": {
 					"type": "string",
 					"enum": [
 						"autoKebab",
@@ -530,7 +530,7 @@
 					"default": "autoPascal",
 					"description": "Preferred tag name case."
 				},
-				"volar.features.complete.propNameCasing": {
+				"vue.features.complete.propNameCasing": {
 					"type": "string",
 					"enum": [
 						"autoKebab",
@@ -547,32 +547,32 @@
 					"default": "autoKebab",
 					"description": "Preferred attr name case."
 				},
-				"volar.features.complete.normalizeComponentImportName": {
+				"vue.features.complete.normalizeComponentImportName": {
 					"type": "boolean",
 					"default": true,
 					"description": "Normalize import name for auto import. (\"myCompVue\" -> \"MyComp\")"
 				},
-				"volar.features.autoInsert.parentheses": {
+				"vue.features.autoInsert.parentheses": {
 					"type": "boolean",
 					"default": true,
 					"description": "Auto-wrap `()` to As Expression in interpolations for fix issue #520."
 				},
-				"volar.features.autoInsert.dotValue": {
+				"vue.features.autoInsert.dotValue": {
 					"type": "boolean",
 					"default": false,
 					"description": "Auto-complete Ref value with `.value`."
 				},
-				"volar.features.autoInsert.bracketSpacing": {
+				"vue.features.autoInsert.bracketSpacing": {
 					"type": "boolean",
 					"default": true,
 					"description": "Auto add space between double curly brackets: {{|}} -> {{ | }}"
 				},
-				"volar.features.inlayHints.missingProps": {
+				"vue.features.inlayHints.missingProps": {
 					"type": "boolean",
 					"default": false,
 					"description": "Show inlay hints for missing required props."
 				},
-				"volar.features.inlayHints.inlineHandlerLeading": {
+				"vue.features.inlayHints.inlineHandlerLeading": {
 					"type": "boolean",
 					"default": false,
 					"description": "Show inlay hints for event argument in inline handlers."
