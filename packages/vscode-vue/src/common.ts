@@ -149,18 +149,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	}
 	function activateServerMaxOldSpaceSizeChange() {
 		vscode.workspace.onDidChangeConfiguration((e) => {
-			if (
-				e.affectsConfiguration('volar.vueserver.maxOldSpaceSize')
-				|| e.affectsConfiguration('volar.vueserver.diagnosticModel')
-				|| e.affectsConfiguration('volar.vueserver.reverseConfigFilePriority')
-				|| e.affectsConfiguration('volar.features.fileWatches')
-				|| e.affectsConfiguration('volar.vueserver.petiteVue.processHtmlFile')
-				|| e.affectsConfiguration('volar.vueserver.vitePress.processMdFile')
-				|| e.affectsConfiguration('volar.vueserver.additionalExtensions')
-				|| e.affectsConfiguration('volar.vueserver.maxFileSize')
-				|| e.affectsConfiguration('volar.vueserver.configFilePath')
-				|| e.affectsConfiguration('volar.vueserver.fullCompletionList')
-			) {
+			if (e.affectsConfiguration('volar.vueserver') || e.affectsConfiguration('vue.features')) {
 				requestReloadVscode();
 			}
 		});

@@ -155,7 +155,7 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 					if (detected?.attr.length === 1) {
 						attrNameCasing = detected.attr[0];
 					}
-					else if (attrNameCasingSetting === 'auto-camel') {
+					else if (attrNameCasingSetting === 'autoCamel') {
 						attrNameCasing = AttrNameCasing.Camel;
 					}
 					else {
