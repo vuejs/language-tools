@@ -402,11 +402,6 @@
 					"default": false,
 					"description": "Enable this option if you want to get complete CompletionList in language client. (Disable for better performance)"
 				},
-				"volar.vueserver.fileWatchers": {
-					"type": "boolean",
-					"default": true,
-					"description": "Enable file watcher in language server."
-				},
 				"volar.icon.splitEditors": {
 					"type": "boolean",
 					"default": false,

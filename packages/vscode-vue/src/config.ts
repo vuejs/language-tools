@@ -61,9 +61,6 @@ export const config = {
 		get configFilePath() {
 			return volarConfigs.get<string>('vueserver.configFilePath');
 		},
-		get fileWatches() {
-			return volarConfigs.get<boolean>('volar.vueserver.fileWatchers');
-		},
 		petiteVue: {
 			get processHtmlFile() {
 				return volarConfigs.get<boolean>('vueserver.petiteVue.processHtmlFile');

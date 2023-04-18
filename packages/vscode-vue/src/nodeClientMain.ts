@@ -38,13 +38,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 		class _LanguageClient extends lsp.LanguageClient {
 			fillInitializeParams(params: lsp.InitializeParams) {
-
 				// fix https://github.com/johnsoncodehk/volar/issues/1959
 				params.locale = vscode.env.language;
-
-				if (!config.vueserver.fileWatches && params.capabilities.workspace?.didChangeWatchedFiles) {
-					params.capabilities.workspace.didChangeWatchedFiles = undefined;
-				}
 			}
 		}
 
