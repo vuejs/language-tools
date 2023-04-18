@@ -6,6 +6,7 @@ import * as lsp from 'vscode-languageclient/node';
 import { activate as commonActivate, deactivate as commonDeactivate, getDocumentSelector } from './common';
 import { middleware } from './middleware';
 import { ServerMode } from '@volar/vue-language-server';
+import { config } from './config';
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -37,17 +38,21 @@ export function activate(context: vscode.ExtensionContext) {
 
 		class _LanguageClient extends lsp.LanguageClient {
 			fillInitializeParams(params: lsp.InitializeParams) {
+
 				// fix https://github.com/johnsoncodehk/volar/issues/1959
 				params.locale = vscode.env.language;
+
+				if (!config.vueserver.fileWatches && params.capabilities.workspace?.didChangeWatchedFiles) {
+					params.capabilities.workspace.didChangeWatchedFiles = undefined;
+				}
 			}
 		}
 
 		const serverModule = vscode.Uri.joinPath(context.extensionUri, 'server.js');
-		const maxOldSpaceSize = vscode.workspace.getConfiguration('volar').get<number | null>('vueserver.maxOldSpaceSize');
 		const runOptions: lsp.ForkOptions = {};
-		if (maxOldSpaceSize) {
+		if (config.vueserver.maxOldSpaceSize) {
 			runOptions.execArgv ??= [];
-			runOptions.execArgv.push("--max-old-space-size=" + maxOldSpaceSize);
+			runOptions.execArgv.push("--max-old-space-size=" + config.vueserver.maxOldSpaceSize);
 		}
 		const debugOptions: lsp.ForkOptions = { execArgv: ['--nolazy', '--inspect=' + port] };
 		let serverOptions: lsp.ServerOptions = {
@@ -89,7 +94,6 @@ export function activate(context: vscode.ExtensionContext) {
 			middleware,
 			documentSelector: documentSelector,
 			initializationOptions: initOptions,
-			progressOnInitialization: true,
 		};
 		const client = new _LanguageClient(
 			id,
@@ -99,10 +103,33 @@ export function activate(context: vscode.ExtensionContext) {
 		);
 		client.start();
 
+		updateProviders(client);
+
 		return client;
 	});
 }
 
 export function deactivate(): Thenable<any> | undefined {
 	return commonDeactivate();
+}
+
+function updateProviders(client: lsp.LanguageClient) {
+
+	const initializeFeatures = (client as any).initializeFeatures;
+
+	(client as any).initializeFeatures = (...args: any) => {
+		const capabilities = (client as any)._capabilities as lsp.ServerCapabilities;
+
+		if (!config.features.codeActions.enable) {
+			capabilities.codeActionProvider = undefined;
+		}
+		if (!config.features.codeLens.enable) {
+			capabilities.codeLensProvider = undefined;
+		}
+		if (!config.features.updateImportsOnFileMove.enable && capabilities.workspace?.fileOperations?.willRename) {
+			capabilities.workspace.fileOperations.willRename = undefined;
+		}
+
+		return initializeFeatures.call(client, ...args);
+	};
 }

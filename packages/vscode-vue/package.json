@@ -389,11 +389,6 @@
 					"default": false,
 					"description": "Reverse priority for tsconfig pickup."
 				},
-				"volar.vueserver.disableFileWatcher": {
-					"type": "boolean",
-					"default": false,
-					"description": "Disable file watcher in language server for better performance."
-				},
 				"volar.vueserver.additionalExtensions": {
 					"type": "array",
 					"items": {
@@ -407,20 +402,10 @@
 					"default": false,
 					"description": "Enable this option if you want to get complete CompletionList in language client. (Disable for better performance)"
 				},
-				"volar.codeLens.references": {
+				"volar.vueserver.fileWatchers": {
 					"type": "boolean",
 					"default": true,
-					"description": "[references] code lens."
-				},
-				"volar.inlayHints.missingRequiredProps": {
-					"type": "boolean",
-					"default": false,
-					"description": "Show inlay hints for missing required props."
-				},
-				"volar.inlayHints.eventArgumentInInlineHandlers": {
-					"type": "boolean",
-					"default": false,
-					"description": "Show inlay hints for event argument in inline handlers."
+					"description": "Enable file watcher in language server."
 				},
 				"volar.icon.splitEditors": {
 					"type": "boolean",
@@ -431,21 +416,6 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Show known problems in status bar."
-				},
-				"volar.autoWrapParentheses": {
-					"type": "boolean",
-					"default": true,
-					"description": "Auto-wrap `()` to As Expression in interpolations for fix issue #520."
-				},
-				"volar.autoCompleteRefs": {
-					"type": "boolean",
-					"default": false,
-					"description": "Auto-complete Ref value with `.value`."
-				},
-				"volar.addSpaceBetweenDoubleCurlyBrackets": {
-					"type": "boolean",
-					"default": true,
-					"description": "Auto add space between double curly brackets: {{|}} -> {{ | }}"
 				},
 				"volar.format.initialIndent": {
 					"type": "object",
@@ -513,45 +483,6 @@
 					"default": "Vue.volar",
 					"description": "The extension that take over language support for *.ts."
 				},
-				"volar.completion.preferredTagNameCase": {
-					"type": "string",
-					"enum": [
-						"auto-kebab",
-						"auto-pascal",
-						"kebab",
-						"pascal"
-					],
-					"enumDescriptions": [
-						"Auto Detect from Content (Preferred <kebab-case>)",
-						"Auto Detect from Content (Preferred <PascalCase>)",
-						"<kebab-case>",
-						"<PascalCase>"
-					],
-					"default": "auto-pascal",
-					"description": "Preferred tag name case."
-				},
-				"volar.completion.preferredAttrNameCase": {
-					"type": "string",
-					"enum": [
-						"auto-kebab",
-						"auto-camel",
-						"kebab",
-						"camel"
-					],
-					"enumDescriptions": [
-						"Auto Detect from Content (Preferred :kebab-case=\"...\")",
-						"Auto Detect from Content (Preferred :camelCase=\"...\")",
-						":kebab-case=\"...\"",
-						":camelCase=\"...\""
-					],
-					"default": "auto-kebab",
-					"description": "Preferred attr name case."
-				},
-				"volar.completion.normalizeComponentImportName": {
-					"type": "boolean",
-					"default": true,
-					"description": "Normalize import name for auto import. (\"myCompVue\" -> \"MyComp\")"
-				},
 				"volar.splitEditors.layout.left": {
 					"type": "array",
 					"default": [
@@ -567,15 +498,84 @@
 						"customBlocks"
 					]
 				},
-				"volar.updateImportsOnFileMove.enabled": {
+				"volar.features.updateImportsOnFileMove.enable": {
 					"type": "boolean",
-					"default": true,
+					"default": false,
 					"description": "Enabled update imports on file move."
 				},
-				"volar.diagnostics.delay": {
-					"type": "number",
-					"default": 200,
-					"description": "Delay time for diagnostics."
+				"volar.features.codeActions.enable": {
+					"type": "boolean",
+					"default": false,
+					"description": "Enabled code actions."
+				},
+				"volar.features.codeLens": {
+					"type": "boolean",
+					"default": true,
+					"description": "Enabled code lens."
+				},
+				"volar.features.complete.tagNameCasing": {
+					"type": "string",
+					"enum": [
+						"autoKebab",
+						"autoPascal",
+						"kebab",
+						"pascal"
+					],
+					"enumDescriptions": [
+						"Auto Detect from Content (Fallback to <kebab-case> if detect failed)",
+						"Auto Detect from Content  (Fallback to <PascalCase> if detect failed)",
+						"<kebab-case>",
+						"<PascalCase>"
+					],
+					"default": "autoPascal",
+					"description": "Preferred tag name case."
+				},
+				"volar.features.complete.propNameCasing": {
+					"type": "string",
+					"enum": [
+						"autoKebab",
+						"autoCamel",
+						"kebab",
+						"camel"
+					],
+					"enumDescriptions": [
+						"Auto Detect from Content (Fallback to :kebab-case=\"...\" if detect failed)",
+						"Auto Detect from Content (Fallback to :camelCase=\"...\" if detect failed)",
+						":kebab-case=\"...\"",
+						":camelCase=\"...\""
+					],
+					"default": "autoKebab",
+					"description": "Preferred attr name case."
+				},
+				"volar.features.complete.normalizeComponentImportName": {
+					"type": "boolean",
+					"default": true,
+					"description": "Normalize import name for auto import. (\"myCompVue\" -> \"MyComp\")"
+				},
+				"volar.features.autoInsert.parentheses": {
+					"type": "boolean",
+					"default": true,
+					"description": "Auto-wrap `()` to As Expression in interpolations for fix issue #520."
+				},
+				"volar.features.autoInsert.dotValue": {
+					"type": "boolean",
+					"default": false,
+					"description": "Auto-complete Ref value with `.value`."
+				},
+				"volar.features.autoInsert.bracketSpacing": {
+					"type": "boolean",
+					"default": true,
+					"description": "Auto add space between double curly brackets: {{|}} -> {{ | }}"
+				},
+				"volar.features.inlayHints.missingProps": {
+					"type": "boolean",
+					"default": false,
+					"description": "Show inlay hints for missing required props."
+				},
+				"volar.features.inlayHints.inlineHandlerLeading": {
+					"type": "boolean",
+					"default": false,
+					"description": "Show inlay hints for event argument in inline handlers."
 				}
 			}
 		},

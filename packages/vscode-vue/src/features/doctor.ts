@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as semver from 'semver';
 import { BaseLanguageClient } from 'vscode-languageclient';
 import { ParseSFCRequest } from '@volar/vue-language-server';
+import { config } from '../config';
 
 const scheme = 'vue-doctor';
 const knownValidSyntaxHighlightExtensions = {
@@ -64,7 +65,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 
 	async function updateStatusBar(editor: vscode.TextEditor | undefined) {
 		if (
-			vscode.workspace.getConfiguration('volar').get<boolean>('doctor.status')
+			config.doctor.status
 			&& editor
 			&& (editor.document.languageId === 'vue' || editor.document.uri.toString().endsWith('.vue'))
 			&& editor.document.uri.scheme === 'file'
