@@ -18,6 +18,7 @@ import * as componentMeta from './features/componentMeta';
 import * as doctor from './features/doctor';
 import * as nameCasing from './features/nameCasing';
 import * as splitEditors from './features/splitEditors';
+import { config } from './config';
 
 let semanticClient: lsp.BaseLanguageClient;
 let syntacticClient: lsp.BaseLanguageClient;
@@ -45,7 +46,7 @@ export async function activate(context: vscode.ExtensionContext, createLc: Creat
 		}
 
 		const currentLangId = vscode.window.activeTextEditor.document.languageId;
-		if (currentLangId === 'vue' || (currentLangId === 'markdown' && processMd()) || (currentLangId === 'html' && processHtml())) {
+		if (currentLangId === 'vue' || (currentLangId === 'markdown' && config.vueserver.vitePress.processMdFile) || (currentLangId === 'html' && config.vueserver.petiteVue.processHtmlFile)) {
 			doActivate(context, createLc);
 			stopCheck.dispose();
 		}
@@ -105,8 +106,8 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	activateTsConfigStatusItem('volar.openTsconfig', semanticClient,
 		document => {
 			return document.languageId === 'vue'
-				|| (processMd() && document.languageId === 'markdown')
-				|| (processHtml() && document.languageId === 'html')
+				|| (config.vueserver.vitePress.processMdFile && document.languageId === 'markdown')
+				|| (config.vueserver.petiteVue.processHtmlFile && document.languageId === 'html')
 				|| (
 					takeOverModeActive(context)
 					&& ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(document.languageId)
@@ -118,8 +119,8 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	activateTsVersionStatusItem('volar.selectTypeScriptVersion', context, semanticClient,
 		document => {
 			return document.languageId === 'vue'
-				|| (processMd() && document.languageId === 'markdown')
-				|| (processHtml() && document.languageId === 'html')
+				|| (config.vueserver.vitePress.processMdFile && document.languageId === 'markdown')
+				|| (config.vueserver.petiteVue.processHtmlFile && document.languageId === 'html')
 				|| (
 					takeOverModeActive(context)
 					&& ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(document.languageId)
@@ -152,7 +153,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 				e.affectsConfiguration('volar.vueserver.maxOldSpaceSize')
 				|| e.affectsConfiguration('volar.vueserver.diagnosticModel')
 				|| e.affectsConfiguration('volar.vueserver.reverseConfigFilePriority')
-				|| e.affectsConfiguration('volar.vueserver.disableFileWatcher')
+				|| e.affectsConfiguration('volar.features.fileWatches')
 				|| e.affectsConfiguration('volar.vueserver.petiteVue.processHtmlFile')
 				|| e.affectsConfiguration('volar.vueserver.vitePress.processMdFile')
 				|| e.affectsConfiguration('volar.vueserver.additionalExtensions')
@@ -200,41 +201,13 @@ export function getDocumentSelector(context: vscode.ExtensionContext, serverMode
 			selectors.push({ language: 'jsonc', pattern: '**/[jt]sconfig.*.json' });
 		}
 	}
-	if (processHtml()) {
+	if (config.vueserver.petiteVue.processHtmlFile) {
 		selectors.push({ language: 'html' });
 	}
-	if (processMd()) {
+	if (config.vueserver.vitePress.processMdFile) {
 		selectors.push({ language: 'markdown' });
 	}
 	return selectors;
-}
-
-export function processHtml() {
-	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.petiteVue.processHtmlFile');
-}
-
-export function processMd() {
-	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.vitePress.processMdFile');
-}
-
-export function reverseConfigFilePriority() {
-	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.reverseConfigFilePriority');
-}
-
-export function disableFileWatcher() {
-	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.disableFileWatcher');
-}
-
-export function diagnosticModel() {
-	return vscode.workspace.getConfiguration('volar').get<'push' | 'pull'>('vueserver.diagnosticModel');
-}
-
-function additionalExtensions() {
-	return vscode.workspace.getConfiguration('volar').get<string[]>('vueserver.additionalExtensions') ?? [];
-}
-
-function fullCompletionList() {
-	return vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.fullCompletionList');
 }
 
 async function getInitializationOptions(
@@ -243,29 +216,28 @@ async function getInitializationOptions(
 ) {
 	const initializationOptions: VueServerInitializationOptions = {
 		// volar
-		configFilePath: vscode.workspace.getConfiguration('volar').get<string>('vueserver.configFilePath'),
+		configFilePath: config.vueserver.configFilePath,
 		serverMode,
-		diagnosticModel: diagnosticModel() === 'pull' ? DiagnosticModel.Pull : DiagnosticModel.Push,
+		diagnosticModel: config.vueserver.diagnosticModel === 'pull' ? DiagnosticModel.Pull : DiagnosticModel.Push,
 		typescript: { tsdk: (await getTsdk(context)).tsdk },
-		reverseConfigFilePriority: reverseConfigFilePriority(),
-		disableFileWatcher: disableFileWatcher(),
-		maxFileSize: vscode.workspace.getConfiguration('volar').get<number>('vueserver.maxFileSize'),
+		reverseConfigFilePriority: config.vueserver.reverseConfigFilePriority,
+		maxFileSize: config.vueserver.maxFileSize,
 		semanticTokensLegend: {
 			tokenTypes: ['component'],
 			tokenModifiers: [],
 		},
-		fullCompletionList: fullCompletionList(),
+		fullCompletionList: config.vueserver.fullCompletionList,
 		// vue
 		petiteVue: {
-			processHtmlFile: processHtml(),
+			processHtmlFile: !!config.vueserver.petiteVue.processHtmlFile,
 		},
 		vitePress: {
-			processMdFile: processMd(),
+			processMdFile: !!config.vueserver.vitePress.processMdFile,
 		},
 		json: {
-			customBlockSchemaUrls: vscode.workspace.getConfiguration('volar').get<Record<string, string>>('vueserver.json.customBlockSchemaUrls'),
+			customBlockSchemaUrls: config.json.customBlockSchemaUrls,
 		},
-		additionalExtensions: additionalExtensions(),
+		additionalExtensions: config.vueserver.additionalExtensions,
 	};
 	return initializationOptions;
 }
