@@ -26,6 +26,20 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
+	if (config.features.codeActions.enable) {
+		let start = Date.now();
+		vscode.workspace.onWillSaveTextDocument(() => {
+			start = Date.now();
+		});
+		vscode.workspace.onDidSaveTextDocument(() => {
+			const end = Date.now();
+			if (end - start > config.features.codeActions.saveTimeLimit) {
+				config.features.codeActions.enable = false;
+				vscode.window.showInformationMessage(`Code Actions is disabled in this workspace, because saving time is too long. (time > ${config.features.codeActions.saveTimeLimit} ms)`);
+			}
+		});
+	}
+
 	return commonActivate(context, (
 		id,
 		name,
