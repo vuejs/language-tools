@@ -149,8 +149,11 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	}
 	function activateServerMaxOldSpaceSizeChange() {
 		vscode.workspace.onDidChangeConfiguration((e) => {
-			if (e.affectsConfiguration('volar.vueserver') || e.affectsConfiguration('vue.features')) {
+			if (e.affectsConfiguration('volar.vueserver')) {
 				requestReloadVscode();
+			}
+			if (e.affectsConfiguration('vue.features')) {
+				vscode.commands.executeCommand('volar.action.restartServer');
 			}
 		});
 	}
