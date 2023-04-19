@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.19 (2023/4/19) - pre-release
+
+- feat: change `vue.features.codeActions.enable` default value to `true`
+- feat: auto disable `vue.features.codeActions.enable` when document saving time is too long
+- feat: changing `vue.features.*` settings no longer requires reload vscode
+
 ## 1.3.18 (2023/4/18) - pre-release
 
 Extension settings refactoring
