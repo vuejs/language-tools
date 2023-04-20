@@ -30,9 +30,10 @@ for (const dirName of testDirs) {
 				position.line--;
 
 				const targetFile = path.resolve(dir, action.targetFile);
+				const targetDocument = TextDocument.create('', '', 0, fs.readFileSync(targetFile, 'utf8'));
 				const targetRange = {
-					start: document.positionAt(action.targeRange.start),
-					end: document.positionAt(action.targeRange.end),
+					start: targetDocument.positionAt(action.targeRange.start),
+					end: targetDocument.positionAt(action.targeRange.end),
 				};
 
 				it(`${filePath}:${position.line + 1}:${position.character + 1} => ${targetFile}:${targetRange.start.line + 1}:${targetRange.start.character + 1}`, async () => {

@@ -107,11 +107,12 @@ export function generate(
 		]);
 	}
 
-	// fix https://github.com/johnsoncodehk/volar/issues/1048
-	// fix https://github.com/johnsoncodehk/volar/issues/435
+	// fix https://github.com/vuejs/language-tools/issues/1048
+	// fix https://github.com/vuejs/language-tools/issues/435
 	const text = toString(codes);
 	const start = text.length - text.trimStart().length;
-	const end = text.trimEnd().length;
+	const end1 = text.trimEnd().length;
+	const end2 = text.length;
 	const extraMappings: SourceMaps.Mapping[] = [
 		{
 			sourceRange: [0, 0],
@@ -120,10 +121,18 @@ export function generate(
 		},
 		{
 			sourceRange: [0, 0],
-			generatedRange: [end, end],
+			generatedRange: [end1, end1],
 			data: {},
 		},
 	];
+	// https://github.com/vuejs/language-tools/issues/2600
+	if (end2 !== end1) {
+		extraMappings.push({
+			sourceRange: [0, 0],
+			generatedRange: [end2, end2],
+			data: {},
+		});
+	}
 
 	return {
 		codes,
