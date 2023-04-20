@@ -1,20 +1,21 @@
 # Changelog
 
-## 1.3.19 (2023/4/19) - pre-release
+## 1.4.0 (2023/4/21)
 
-- feat: change `vue.features.codeActions.enable` default value to `true`
-- feat: auto disable `vue.features.codeActions.enable` when document saving time is too long
-- feat: changing `vue.features.*` settings no longer requires reload vscode
-
-## 1.3.18 (2023/4/18) - pre-release
-
-Extension settings refactoring
-
-- `codeActions` disabled by default
-- `updateImportsOnFileMove` disable by default
-- missing props hint, event argument hint disabled by default
-
-For more details, see [#2620](https://github.com/johnsoncodehk/volar/issues/2620).
+- feat: support intellisense for directive arg expression ([#2588](https://github.com/johnsoncodehk/volar/issues/2588))
+- feat: asking disable codeActions if saving time is too long
+- feat: file definition cross file mapping result fall back to 0:0
+- fix: fixed dynamic slot arg expression virtual code ([#2586](https://github.com/johnsoncodehk/volar/issues/2586)) ([#2617](https://github.com/johnsoncodehk/volar/issues/2617)) ([#2592](https://github.com/johnsoncodehk/volar/issues/2592))
+- fix: add hack support for v-if + v-slot template ([#625](https://github.com/johnsoncodehk/volar/issues/625))
+- fix: goto definition not working for alias path without script setup ([#2600](https://github.com/johnsoncodehk/volar/issues/2600))
+- fix: avoid missing prop hint for native tags ([#2616](https://github.com/johnsoncodehk/volar/issues/2616))
+- fix: vue-language-plugin-pug broken with yarn ([#2608](https://github.com/johnsoncodehk/volar/issues/2608))
+- fix: native tags reporting missing prop error ([#2629](https://github.com/johnsoncodehk/volar/issues/2629))
+- fix(vue-tsc): add throw message if composite / incremental enabled ([#2622](https://github.com/johnsoncodehk/volar/issues/2622))
+- fix: slot props are not recognized at the root component ([#2554](https://github.com/johnsoncodehk/volar/issues/2554))
+- fix: missing props hint incorrect for model property for vue 2 ([#2635](https://github.com/johnsoncodehk/volar/issues/2635))
+- fix: cannot show css hover message ([#2634](https://github.com/johnsoncodehk/volar/issues/2634))
+- fix: duplicate ts unused reports if noUnusedLocals is enabled ([#2627](https://github.com/johnsoncodehk/volar/issues/2627))
 
 ---
 
@@ -51,6 +52,22 @@ For more details, see [#2620](https://github.com/johnsoncodehk/volar/issues/2620
 		<a href="https://opencollective.com/volarjs">Open Collective</a>
 	</h5>
 </p>
+
+## 1.3.19 (2023/4/19) - pre-release
+
+- feat: change `vue.features.codeActions.enable` default value to `true`
+- feat: auto disable `vue.features.codeActions.enable` when document saving time is too long
+- feat: changing `vue.features.*` settings no longer requires reload vscode
+
+## 1.3.18 (2023/4/18) - pre-release
+
+Extension settings refactoring
+
+- `codeActions` disabled by default
+- `updateImportsOnFileMove` disable by default
+- missing props hint, event argument hint disabled by default
+
+For more details, see [#2620](https://github.com/johnsoncodehk/volar/issues/2620).
 
 ## 1.3.17 (2023/4/17) - pre-release
 
