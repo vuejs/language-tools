@@ -51,7 +51,6 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				const tsx = _tsx.tsxGen.value;
 				if (tsx) {
 					embeddedFile.content = [...tsx.codes];
-					embeddedFile.extraMappings = [...tsx.extraMappings];
 					embeddedFile.mirrorBehaviorMappings = [...tsx.mirrorBehaviorMappings];
 				}
 			}

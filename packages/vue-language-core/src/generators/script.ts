@@ -1,4 +1,4 @@
-import { getLength, Segment, toString } from '@volar/source-map';
+import { getLength, Segment } from '@volar/source-map';
 import { FileRangeCapabilities, MirrorBehaviorCapabilities } from '@volar/language-core';
 import type { TextRange } from '../types';
 import * as SourceMaps from '@volar/source-map';
@@ -107,36 +107,8 @@ export function generate(
 		]);
 	}
 
-	// fix https://github.com/vuejs/language-tools/issues/1048
-	// fix https://github.com/vuejs/language-tools/issues/435
-	const text = toString(codes);
-	const start = text.length - text.trimStart().length;
-	const end1 = text.trimEnd().length;
-	const end2 = text.length;
-	const extraMappings: SourceMaps.Mapping[] = [
-		{
-			sourceRange: [0, 0],
-			generatedRange: [start, start],
-			data: {},
-		},
-		{
-			sourceRange: [0, 0],
-			generatedRange: [end1, end1],
-			data: {},
-		},
-	];
-	// https://github.com/vuejs/language-tools/issues/2600
-	if (end2 !== end1) {
-		extraMappings.push({
-			sourceRange: [0, 0],
-			generatedRange: [end2, end2],
-			data: {},
-		});
-	}
-
 	return {
 		codes,
-		extraMappings,
 		mirrorBehaviorMappings,
 	};
 
