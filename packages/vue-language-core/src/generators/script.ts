@@ -83,6 +83,9 @@ export function generate(
 	if (vueCompilerOptions.jsxTemplates && vueCompilerOptions.target >= 3.3) {
 		codes.push(`/** @jsxImportSource vue */\n`);
 	}
+	else {
+		codes.push('/** __vue_virtual_code_placeholder */\n');
+	}
 
 	let generatedTemplate = false;
 
@@ -210,13 +213,6 @@ export function generate(
 			return;
 
 		if (!!sfc.scriptSetup && scriptRanges?.exportDefault) {
-			// fix https://github.com/johnsoncodehk/volar/issues/1127
-			codes.push([
-				'',
-				'scriptSetup',
-				0,
-				{ diagnostic: true },
-			]);
 			addVirtualCode('script', 0, scriptRanges.exportDefault.expression.start);
 		}
 		else {
@@ -259,16 +255,6 @@ export function generate(
 			FileRangeCapabilities.full,
 		]);
 	}
-	function generateExportDefault() {
-		// fix https://github.com/johnsoncodehk/volar/issues/1127
-		codes.push([
-			'',
-			'scriptSetup',
-			0,
-			{ diagnostic: true },
-		]);
-		codes.push('export default ');
-	}
 	function generateExportDefaultEndMapping() {
 		if (!sfc.scriptSetup) {
 			return;
@@ -293,7 +279,7 @@ export function generate(
 
 		if (sfc.scriptSetup.generic) {
 			if (!scriptRanges?.exportDefault) {
-				generateExportDefault();
+				codes.push('export default ');
 			}
 			codes.push(`(<`);
 			codes.push([
@@ -432,16 +418,13 @@ export function generate(
 		}
 		else {
 			if (!scriptRanges?.exportDefault) {
-				generateExportDefault();
+				codes.push('export default ');
 			}
 			codes.push('(() => {\n');
 			scriptSetupGeneratedOffset = generateSetupFunction(false, 'return', definePropMirrors);
 			codes.push(`})()`);
 		}
 
-		if (scriptRanges?.exportDefault && scriptRanges.exportDefault.expression.end !== scriptRanges.exportDefault.end) {
-			addVirtualCode('script', scriptRanges.exportDefault.expression.end, scriptRanges.exportDefault.end);
-		}
 		generateExportDefaultEndMapping();
 
 		if (scriptSetupGeneratedOffset !== undefined) {
@@ -650,7 +633,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			codes.push(`return `);
 		}
 		else if (mode === 'export') {
-			generateExportDefault();
+			codes.push('export default ');
 		}
 		if (mode === 'return' || mode === 'export') {
 			if (!vueCompilerOptions.skipTemplateCodegen && (htmlGen?.hasSlot || scriptSetupRanges?.slotsTypeArg)) {
