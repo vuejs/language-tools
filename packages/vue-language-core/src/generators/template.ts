@@ -1421,31 +1421,55 @@ export function generate(
 				&& (prop.name !== 'scope' && prop.name !== 'data')
 			) {
 
-				codes.push([
-					'',
-					'template',
-					prop.loc.start.offset,
-					capabilitiesPresets.diagnosticOnly,
-				]);
-				codes.push(`(await import('./__VLS_types')).directiveFunction(__VLS_ctx.`);
-				codes.push([
-					camelize('v-' + prop.name),
-					'template',
-					[prop.loc.start.offset, prop.loc.start.offset + 'v-'.length + prop.name.length],
-					{
-						...capabilitiesPresets.noDiagnostic,
-						completion: {
-							// fix https://github.com/johnsoncodehk/volar/issues/1905
-							additional: true,
-						},
-						rename: {
-							normalize: camelize,
-							apply: getRenameApply(prop.name),
-						},
-					},
-				]);
 				identifiers.add(camelize('v-' + prop.name));
-				codes.push(`)`);
+
+				if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+					codes.push(
+						...createInterpolationCode(
+							prop.arg.content,
+							prop.arg.loc,
+							prop.arg.loc.start.offset + prop.arg.loc.source.indexOf(prop.arg.content),
+							capabilitiesPresets.all,
+							'(',
+							')',
+						),
+						';\n',
+					);
+					formatCodes.push(
+						...createFormatCode(
+							prop.arg.content,
+							prop.arg.loc.start.offset,
+							formatBrackets.normal,
+						),
+					);
+				}
+
+				codes.push(
+					[
+						'',
+						'template',
+						prop.loc.start.offset,
+						capabilitiesPresets.diagnosticOnly,
+					],
+					`(await import('./__VLS_types')).directiveFunction(__VLS_ctx.`,
+					[
+						camelize('v-' + prop.name),
+						'template',
+						[prop.loc.start.offset, prop.loc.start.offset + 'v-'.length + prop.name.length],
+						{
+							...capabilitiesPresets.noDiagnostic,
+							completion: {
+								// fix https://github.com/johnsoncodehk/volar/issues/1905
+								additional: true,
+							},
+							rename: {
+								normalize: camelize,
+								apply: getRenameApply(prop.name),
+							},
+						},
+					],
+					')',
+				);
 				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					codes.push(
 						...createInterpolationCode(
@@ -1465,13 +1489,17 @@ export function generate(
 						),
 					);
 				}
-				codes.push([
-					'',
-					'template',
-					prop.loc.end.offset,
-					capabilitiesPresets.diagnosticOnly,
-				]);
-				codes.push(`;\n`);
+				codes.push(
+					[
+						'',
+						'template',
+						prop.loc.end.offset,
+						capabilitiesPresets.diagnosticOnly,
+					],
+					';\n',
+				);
+
+
 			}
 		}
 	}
