@@ -73,6 +73,7 @@
 					"type": "object",
 					"default": {
 						"defineProps": [ "defineProps" ],
+						"defineSlots": [ "defineSlots" ],
 						"defineEmits": [ "defineEmits" ],
 						"defineExpose": [ "defineExpose" ],
 						"withDefaults": [ "withDefaults" ]
@@ -108,6 +109,13 @@
 				"experimentalAdditionalLanguageModules": {
 					"type": "array",
 					"markdownDescription": "https://github.com/johnsoncodehk/volar/pull/2267"
+				},
+				"experimentalDefinePropProposal": {
+					"enum": [
+						"kevinEdition",
+						"johnsonEdition",
+						false
+					]
 				}
 			}
 		}

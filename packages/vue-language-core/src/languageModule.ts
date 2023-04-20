@@ -66,24 +66,22 @@ export function createLanguageModules(
 						return sharedTypesSnapshot;
 					}
 					let snapshot = host.getScriptSnapshot(fileName);
-					if (snapshot) {
-						if (!vueCompilerOptions.strictTemplates && (
-							// for vue 2.6 and vue 3
-							basename === 'runtime-dom.d.ts' ||
-							// for vue 2.7
-							basename === 'jsx.d.ts'
-						)) {
-							if (!patchSnapshots.has(snapshot)) {
-								// allow arbitrary attributes
-								let tsScriptText = snapshot.getText(0, snapshot.getLength());
-								tsScriptText = tsScriptText.replace(
-									'type ReservedProps = {',
-									'type ReservedProps = { [name: string]: any',
-								);
-								patchSnapshots.set(snapshot, ts.ScriptSnapshot.fromString(tsScriptText));
-							}
-							snapshot = patchSnapshots.get(snapshot)!;
+					if (
+						snapshot
+						&& !vueCompilerOptions.strictTemplates
+						&& (
+							// vue 3
+							fileName.endsWith('/node_modules/@vue/runtime-core/dist/runtime-core.d.ts')
+							// vue 2.7
+							|| fileName.endsWith('/node_modules/vue/types/v3-component-proxy.d.ts')
+						)
+					) {
+						if (!patchSnapshots.has(snapshot)) {
+							let text = snapshot.getText(0, snapshot.getLength());
+							text = text.replace(/\$props: [^;]*/g, match => `$props: Record<string, unknown> & (${match.slice('$props: '.length)})`);
+							patchSnapshots.set(snapshot, ts.ScriptSnapshot.fromString(text));
 						}
+						snapshot = patchSnapshots.get(snapshot)!;
 					}
 					return snapshot;
 				},

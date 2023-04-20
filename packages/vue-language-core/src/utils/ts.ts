@@ -21,10 +21,12 @@ export function createParsedCommandLineByJson(
 	let vueOptions: Partial<VueCompilerOptions> = {};
 
 	for (const extendPath of proxyHost.extendConfigPaths.reverse()) {
-		vueOptions = {
-			...vueOptions,
-			...getVueCompilerOptions(ts, ts.readJsonConfigFile(extendPath, proxyHost.host.readFile)),
-		};
+		try {
+			vueOptions = {
+				...vueOptions,
+				...getVueCompilerOptions(ts, ts.readJsonConfigFile(extendPath, proxyHost.host.readFile)),
+			};
+		} catch (err) { }
 	}
 
 	return {
@@ -51,10 +53,12 @@ export function createParsedCommandLine(
 		let vueOptions: Partial<VueCompilerOptions> = {};
 
 		for (const extendPath of proxyHost.extendConfigPaths.reverse()) {
-			vueOptions = {
-				...vueOptions,
-				...getVueCompilerOptions(ts, ts.readJsonConfigFile(extendPath, proxyHost.host.readFile)),
-			};
+			try {
+				vueOptions = {
+					...vueOptions,
+					...getVueCompilerOptions(ts, ts.readJsonConfigFile(extendPath, proxyHost.host.readFile)),
+				};
+			} catch (err) { }
 		}
 
 		return {
@@ -108,16 +112,14 @@ function getVueCompilerOptions(
 	const target = rawOptions.target ?? 'auto';
 
 	if (target === 'auto') {
-		try {
-			const resolvedPath = resolvePath('vue/package.json');
-			if (resolvedPath) {
-				const vuePackageJson = require(resolvedPath);
-				const versionNumbers = vuePackageJson.version.split('.');
-				result.target = Number(versionNumbers[0] + '.' + versionNumbers[1]);
-			}
+		const resolvedPath = resolvePath('vue/package.json');
+		if (resolvedPath) {
+			const vuePackageJson = require(resolvedPath);
+			const versionNumbers = vuePackageJson.version.split('.');
+			result.target = Number(versionNumbers[0] + '.' + versionNumbers[1]);
 		}
-		catch (error) {
-			console.warn('Load vue package.json failed', error);
+		else {
+			// console.warn('Load vue/package.json failed from', folder);
 		}
 	}
 	else {
@@ -159,11 +161,11 @@ function getVueCompilerOptions(
 				return require.resolve(scriptPath, { paths: [folder] });
 			}
 			else {
-				console.warn('failed to resolve path:', scriptPath, 'require.resolve is not supported in web');
+				// console.warn('failed to resolve path:', scriptPath, 'require.resolve is not supported in web');
 			}
 		}
 		catch (error) {
-			console.warn(error);
+			// console.warn(error);
 		}
 	}
 }
@@ -219,6 +221,7 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 		),
 		macros: vueOptions.macros ?? {
 			defineProps: ['defineProps'],
+			defineSlots: ['defineSlots'],
 			defineEmits: ['defineEmits'],
 			defineExpose: ['defineExpose'],
 			withDefaults: ['withDefaults'],
@@ -227,6 +230,7 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 		hooks: vueOptions.hooks ?? [],
 
 		// experimental
+		experimentalDefinePropProposal: vueOptions.experimentalDefinePropProposal ?? false,
 		experimentalAdditionalLanguageModules: vueOptions.experimentalAdditionalLanguageModules ?? [],
 		experimentalResolveStyleCssClasses: vueOptions.experimentalResolveStyleCssClasses ?? 'scoped',
 		// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51

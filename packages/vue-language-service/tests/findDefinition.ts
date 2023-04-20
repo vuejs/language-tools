@@ -30,12 +30,9 @@ for (const dirName of testDirs) {
 				position.line--;
 
 				const targetFile = path.resolve(dir, action.targetFile);
-				const targetRange = {
-					start: document.positionAt(action.targeRange.start),
-					end: document.positionAt(action.targeRange.end),
-				};
+				const targetDocument = TextDocument.create('', '', 0, fs.readFileSync(targetFile, 'utf8'));
 
-				it(`${filePath}:${position.line + 1}:${position.character + 1} => ${targetFile}:${targetRange.start.line + 1}:${targetRange.start.character + 1}`, async () => {
+				it(`${filePath}:${position.line + 1}:${position.character + 1} => ${targetFile}:${action.targeRange.start}`, async () => {
 
 					const locations = await tester.languageService.findDefinition(
 						uri,
@@ -47,11 +44,14 @@ for (const dirName of testDirs) {
 
 					const location = locations?.find(loc =>
 						loc.targetUri === tester.fileNameToUri(targetFile)
-						&& loc.targetSelectionRange.start.line === targetRange.start.line
-						&& loc.targetSelectionRange.start.character === targetRange.start.character
-						&& loc.targetSelectionRange.end.line === targetRange.end.line
-						&& loc.targetSelectionRange.end.character === targetRange.end.character
+						&& targetDocument.offsetAt(loc.targetSelectionRange.start) === action.targeRange.start
+						&& targetDocument.offsetAt(loc.targetSelectionRange.end) === action.targeRange.end
 					);
+
+					if (!location) {
+						console.log(JSON.stringify(locations, null, 2));
+						console.log(action.targeRange);
+					}
 
 					expect(location).toBeDefined();
 				});

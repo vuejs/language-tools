@@ -6,7 +6,7 @@ export namespace GetComponentMeta {
 	export type ParamsType = vscode.TextDocumentIdentifier;
 	export type ResponseType = ComponentMeta | null | undefined;
 	export type ErrorType = never;
-	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('volar/meta');
+	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('vue/componentMeta');
 }
 
 export namespace DetectNameCasingRequest {
@@ -18,7 +18,7 @@ export namespace DetectNameCasingRequest {
 		attr: AttrNameCasing[],
 	} | null | undefined;
 	export type ErrorType = never;
-	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('volar/detectTagCasing');
+	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('vue/detectTagCasing');
 }
 
 export namespace GetConvertTagCasingEditsRequest {
@@ -28,7 +28,7 @@ export namespace GetConvertTagCasingEditsRequest {
 	};
 	export type ResponseType = vscode.TextEdit[] | null | undefined;
 	export type ErrorType = never;
-	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('volar/convertTagNameCasing');
+	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('vue/convertTagNameCasing');
 }
 
 export namespace GetConvertAttrCasingEditsRequest {
@@ -38,12 +38,12 @@ export namespace GetConvertAttrCasingEditsRequest {
 	};
 	export type ResponseType = vscode.TextEdit[] | null | undefined;
 	export type ErrorType = never;
-	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('volar/convertAttrNameCasing');
+	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('vue/convertPropNameCasing');
 }
 
 export namespace ParseSFCRequest {
 	export type ParamsType = string;
 	export type ResponseType = SFCParseResult;
 	export type ErrorType = never;
-	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('volar/parseSfc');
+	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('vue/parseSfc');
 }

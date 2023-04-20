@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { BaseLanguageClient } from 'vscode-languageclient';
 import { ParseSFCRequest } from '@volar/vue-language-server';
+import { config } from '../config';
 
 type SFCBlock = ParseSFCRequest.ResponseType['descriptor']['customBlocks'][number];
 
@@ -15,8 +16,7 @@ export function register(context: vscode.ExtensionContext, client: BaseLanguageC
 		const editor = vscode.window.activeTextEditor;
 		if (!editor) return;
 
-		const layout = await vscode.workspace.getConfiguration('volar').get<{ left: string[], right: string[]; }>('splitEditors.layout') ?? { left: [], right: [] };
-
+		const layout = config.splitEditors.layout;
 		const doc = editor.document;
 		const { descriptor } = await getDocDescriptor(doc.getText());
 		let leftBlocks: SFCBlock[] = [];

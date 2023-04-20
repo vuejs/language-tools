@@ -28,6 +28,7 @@ export interface VueCompilerOptions {
 	optionsWrapper: [string, string] | [];
 	macros: {
 		defineProps: string[],
+		defineSlots: string[],
 		defineEmits: string[],
 		defineExpose: string[],
 		withDefaults: string[],
@@ -36,6 +37,7 @@ export interface VueCompilerOptions {
 	hooks: string[];
 
 	// experimental
+	experimentalDefinePropProposal: 'kevinEdition' | 'johnsonEdition' | false;
 	experimentalResolveStyleCssClasses: 'scoped' | 'always' | 'never';
 	experimentalModelPropName: Record<string, Record<string, boolean | Record<string, string> | Record<string, string>[]>>;
 	experimentalUseElementAccessInTemplate: boolean;
@@ -50,8 +52,8 @@ export type VueLanguagePlugin = (ctx: {
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
 }) => {
-	name?: string;
 	version: 1;
+	name?: string;
 	order?: number;
 	parseSFC?(fileName: string, content: string): SFCParseResult | undefined;
 	updateSFC?(oldResult: SFCParseResult, textChange: { start: number, end: number, newText: string; }): SFCParseResult | undefined;

@@ -22,6 +22,9 @@ export function createProgram(options: ts.CreateProgramOptions) {
 	if (!options.options.noEmit && options.options.noEmitOnError)
 		throw toThrow('noEmitOnError is not supported');
 
+	if (options.options.composite || options.options.incremental)
+		throw toThrow('composite / incremental is not supported');
+
 	if (options.options.extendedDiagnostics || options.options.generateTrace)
 		throw toThrow('--extendedDiagnostics / --generateTrace is not supported, please run `Write Virtual Files` in VSCode to write virtual files and use `--extendedDiagnostics` / `--generateTrace` via tsc instead of vue-tsc to debug.');
 
@@ -54,7 +57,10 @@ export function createProgram(options: ts.CreateProgramOptions) {
 			version: string,
 		}>();
 		const vueLsHost = new Proxy(<vue.VueLanguageServiceHost>{
-			resolveModuleNames: undefined, // avoid failed with tsc built-in fileExists
+			// avoid failed with tsc built-in fileExists
+			resolveModuleNames: undefined,
+			resolveModuleNameLiterals: undefined,
+
 			writeFile: (fileName, content) => {
 				if (fileName.indexOf('__VLS_') === -1) {
 					ctx.options.host!.writeFile(fileName, content, false);
@@ -71,8 +77,6 @@ export function createProgram(options: ts.CreateProgramOptions) {
 				return ctx.projectVersion.toString();
 			},
 			getProjectReferences: () => ctx.options.projectReferences,
-
-			getTypeScriptModule: () => ts,
 			isTsc: true,
 		}, {
 			get: (target, property) => {

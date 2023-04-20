@@ -1,13 +1,14 @@
 {
 	"extends": "../tsconfig.json",
 	"compilerOptions": {
+		"jsx": "preserve",
 		"noPropertyAccessFromIndexSignature": true,
 	},
 	"vueCompilerOptions": {
-		"strictTemplates": true,
 		"plugins": ["../../vue-language-plugin-pug"]
 	},
 	"include": [
+		"**/*.ts",
 		"**/*.vue",
 		"**/*.html",
 	]

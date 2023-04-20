@@ -106,7 +106,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				if (!options.isSupportedDocument(document))
 					return;
 
-				const enabled = await _context.configurationHost?.getConfiguration<boolean>('volar.inlayHints.missingRequiredProps') ?? true;
+				const enabled = await _context.configurationHost?.getConfiguration<boolean>('vue.features.inlayHints.missingProps') ?? false;
 				if (!enabled)
 					return;
 
@@ -133,7 +133,10 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 								const component =
 									tagName.indexOf('.') >= 0
 										? components.find(component => component === tagName.split('.')[0])
-										: components.find(component => component === tagName || hyphenate(component) === tagName);
+										: components.find(component =>
+											component === tagName
+											|| (!options.vueCompilerOptions.nativeTags.includes(hyphenate(component)) && hyphenate(component) === tagName)
+										);
 								const checkTag = tagName.indexOf('.') >= 0 ? tagName : component;
 								if (checkTag) {
 									componentProps[checkTag] ??= checkPropsOfTag(_ts.module, _ts.languageService, virtualFile, checkTag, options.vueCompilerOptions, true);
@@ -167,10 +170,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 											attrText = attrText.substring('v-model:'.length);
 										}
 										else if (attrText === 'v-model') {
-											attrText = 'modelValue'; // TODO: support for experimentalModelPropName?
-										}
-										else if (attrText.startsWith('@')) {
-											attrText = 'on-' + hyphenate(attrText.substring('@'.length));
+											attrText = options.vueCompilerOptions.target >= 3 ? 'modelValue' : 'value'; // TODO: support for experimentalModelPropName?
 										}
 
 										current.unburnedRequiredProps = current.unburnedRequiredProps.filter(propName => {

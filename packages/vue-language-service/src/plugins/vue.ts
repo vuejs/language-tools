@@ -1,16 +1,14 @@
-import { parseScriptSetupRanges } from '@volar/vue-language-core';
 import { LanguageServicePlugin } from '@volar/language-service';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import createHtmlPlugin from '@volar-plugins/html';
 import * as vue from '@volar/vue-language-core';
-import { VueCompilerOptions } from '../types';
 import { loadLanguageBlocks } from './data';
 
 let sfcDataProvider: html.IHTMLDataProvider | undefined;
 
-export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin => (context) => {
+export default (): LanguageServicePlugin => (context) => {
 
 	const htmlPlugin = createHtmlPlugin({ validLang: 'vue', disableCustomData: true })(context);
 
@@ -41,28 +39,11 @@ export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin =
 			return context;
 		},
 
-		provideSyntacticDiagnostics(document) {
+		provideSemanticDiagnostics(document) {
 			return worker(document, (vueSourceFile) => {
 
 				const result: vscode.Diagnostic[] = [];
 				const sfc = vueSourceFile.sfc;
-
-				if (sfc.scriptSetup && sfc.scriptSetupAst) {
-					const scriptSetupRanges = parseScriptSetupRanges(_ts.module, sfc.scriptSetupAst, vueCompilerOptions);
-					for (const range of scriptSetupRanges.notOnTopTypeExports) {
-						result.push(vscode.Diagnostic.create(
-							{
-								start: document.positionAt(range.start + sfc.scriptSetup.startTagEnd),
-								end: document.positionAt(range.end + sfc.scriptSetup.startTagEnd),
-							},
-							'type and interface export statements must be on the top in <script setup>',
-							vscode.DiagnosticSeverity.Warning,
-							undefined,
-							'volar',
-						));
-					}
-				}
-
 				const program = _ts.languageService.getProgram();
 
 				if (program && !program.getSourceFile(vueSourceFile.mainScriptName)) {
@@ -76,7 +57,7 @@ export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin =
 								start: document.positionAt(script.start),
 								end: document.positionAt(script.startTagEnd),
 							},
-							'Virtual script not found, may missing <script lang="ts"> / "allowJs": true / jsconfig.json.',
+							`Virtual script ${JSON.stringify(vueSourceFile.mainScriptName)} not found, may missing <script lang="ts"> / "allowJs": true / jsconfig.json.`,
 							vscode.DiagnosticSeverity.Information,
 							undefined,
 							'volar',

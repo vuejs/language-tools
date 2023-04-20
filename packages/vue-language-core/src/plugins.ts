@@ -6,7 +6,7 @@ import * as useVueSfcCustomBlocks from './plugins/vue-sfc-customblocks';
 import * as useVueSfcScriptsFormat from './plugins/vue-sfc-scripts';
 import * as useVueSfcStyles from './plugins/vue-sfc-styles';
 import * as useVueSfcTemplate from './plugins/vue-sfc-template';
-import * as useHtmlPlugin from './plugins/vue-template-html';
+import * as useHtmlTemplatePlugin from './plugins/vue-template-html';
 import useVueTsx from './plugins/vue-tsx';
 import { VueCompilerOptions, VueLanguagePlugin } from './types';
 import * as CompilerDOM from '@vue/compiler-dom';
@@ -19,10 +19,10 @@ export function getDefaultVueLanguagePlugins(
 ) {
 
 	const plugins: VueLanguagePlugin[] = [
-		useVueFilePlugin,
-		useMdFilePlugin,
-		useHtmlFilePlugin,
-		useHtmlPlugin,
+		useMdFilePlugin, // .md for VitePress
+		useHtmlFilePlugin, // .html for PetiteVue
+		useVueFilePlugin, // .vue and others for Vue
+		useHtmlTemplatePlugin,
 		useVueSfcStyles,
 		useVueSfcCustomBlocks,
 		useVueSfcScriptsFormat,

@@ -13,7 +13,6 @@ export class VueEmbeddedFile {
 	public kind = FileKind.TextFile;
 	public capabilities: FileCapabilities = {};
 	public content: Segment<FileRangeCapabilities>[] = [];
-	public extraMappings: Mapping<FileRangeCapabilities>[] = [];
 	public mirrorBehaviorMappings: Mapping<[MirrorBehaviorCapabilities, MirrorBehaviorCapabilities]>[] = [];
 
 	constructor(public fileName: string) { }
@@ -234,7 +233,7 @@ export class VueFile implements VirtualFile {
 		return computed(() => {
 			return files.value.map(_file => {
 				const file = _file.value;
-				const mappings = [...buildMappings(file.content), ...file.extraMappings];
+				const mappings = buildMappings(file.content);
 				for (const mapping of mappings) {
 					if (mapping.source !== undefined) {
 						const block = this._sfcBlocks.value[mapping.source];

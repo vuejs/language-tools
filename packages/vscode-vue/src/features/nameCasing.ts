@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { quickPick } from '@volar/vscode/out/common';
 import { BaseLanguageClient, State } from 'vscode-languageclient';
 import { AttrNameCasing, TagNameCasing, DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest } from '@volar/vue-language-server';
-import { processHtml, processMd } from '../common';
+import { config } from '../config';
 
 export const attrNameCasings = new Map<string, AttrNameCasing>();
 export const tagNameCasings = new Map<string, TagNameCasing>();
@@ -135,15 +135,15 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 	async function update(document: vscode.TextDocument | undefined) {
 		if (
 			document?.languageId === 'vue'
-			|| (processMd() && document?.languageId === 'markdown')
-			|| (processHtml() && document?.languageId === 'html')
+			|| (config.vueserver.vitePress.processMdFile && document?.languageId === 'markdown')
+			|| (config.vueserver.petiteVue.processHtmlFile && document?.languageId === 'html')
 		) {
 			let detected: Awaited<ReturnType<typeof detect>> | undefined;
 			let attrNameCasing = attrNameCasings.get(document.uri.toString());
 			let tagNameCasing = tagNameCasings.get(document.uri.toString());
 
 			if (!attrNameCasing) {
-				const attrNameCasingSetting = vscode.workspace.getConfiguration('volar').get<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('completion.preferredAttrNameCase');
+				const attrNameCasingSetting = config.features.complete.attrNameCasing;
 				if (attrNameCasingSetting === 'kebab') {
 					attrNameCasing = AttrNameCasing.Kebab;
 				}
@@ -155,7 +155,7 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 					if (detected?.attr.length === 1) {
 						attrNameCasing = detected.attr[0];
 					}
-					else if (attrNameCasingSetting === 'auto-camel') {
+					else if (attrNameCasingSetting === 'autoCamel') {
 						attrNameCasing = AttrNameCasing.Camel;
 					}
 					else {
@@ -166,7 +166,7 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 			}
 
 			if (!tagNameCasing) {
-				const tagMode = vscode.workspace.getConfiguration('volar').get<'auto-kebab' | 'auto-pascal' | 'kebab' | 'pascal'>('completion.preferredTagNameCase');
+				const tagMode = config.features.complete.tagNameCasing;
 				if (tagMode === 'kebab') {
 					tagNameCasing = TagNameCasing.Kebab;
 				}
