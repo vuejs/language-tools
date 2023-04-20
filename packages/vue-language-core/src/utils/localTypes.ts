@@ -9,6 +9,7 @@ export function getTypesCode(
 ) {
 	const libName = getVueLibraryName(vueVersion);
 	return `
+// @ts-nocheck
 import type {
 	ObjectDirective,
 	FunctionDirective,
