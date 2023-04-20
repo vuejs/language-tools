@@ -30,10 +30,20 @@ export function activate(context: vscode.ExtensionContext) {
 	vscode.workspace.onWillSaveTextDocument(() => {
 		start = Date.now();
 	});
-	vscode.workspace.onDidSaveTextDocument(() => {
-		if (config.features.codeActions.enable && Date.now() - start > config.features.codeActions.saveTimeLimit) {
-			config.features.codeActions.enable = false;
-			vscode.window.showInformationMessage(`Code Actions is disabled in this workspace, because saving time is too long. (time > ${config.features.codeActions.saveTimeLimit} ms)`);
+	vscode.workspace.onDidSaveTextDocument(async () => {
+		if (config.features.codeActions.enable && Date.now() - start > config.features.codeActions.savingTimeLimit) {
+			const result = await vscode.window.showInformationMessage(
+				`Saving time is too long. (> ${config.features.codeActions.savingTimeLimit} ms), `,
+				'Disable codeActions',
+				'Increase saveTimeLimit',
+			);
+			if (result === 'Disable codeActions') {
+				config.features.codeActions.enable = false;
+				vscode.window.showInformationMessage('Code Actions is disabled. (You can enable it in .vscode/settings.json)');
+			}
+			else if (result === 'Increase saveTimeLimit') {
+				vscode.commands.executeCommand('workbench.action.openSettings2', { query: 'vue.features.codeActions.savingTimeLimit' });
+			}
 		}
 	});
 

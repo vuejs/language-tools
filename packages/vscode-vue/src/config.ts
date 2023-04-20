@@ -22,8 +22,8 @@ export const config = {
 			set enable(value) {
 				vueConfigs().update('features.codeActions.enable', value);
 			},
-			get saveTimeLimit() {
-				return vueConfigs().get<number>('features.codeActions.saveTimeLimit') ?? -1;
+			get savingTimeLimit() {
+				return vueConfigs().get<number>('features.codeActions.savingTimeLimit') ?? -1;
 			},
 		},
 		codeLens: {

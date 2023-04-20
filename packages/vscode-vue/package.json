@@ -503,7 +503,7 @@
 					"default": true,
 					"description": "Enabled code actions."
 				},
-				"vue.features.codeActions.saveTimeLimit": {
+				"vue.features.codeActions.savingTimeLimit": {
 					"type": "number",
 					"default": 500,
 					"description": "Time limit for code actions on save (ms)."
