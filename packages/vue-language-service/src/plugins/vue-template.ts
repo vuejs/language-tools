@@ -133,7 +133,10 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 								const component =
 									tagName.indexOf('.') >= 0
 										? components.find(component => component === tagName.split('.')[0])
-										: components.find(component => component === tagName || hyphenate(component) === tagName);
+										: components.find(component =>
+											component === tagName
+											|| (!options.vueCompilerOptions.nativeTags.includes(hyphenate(component)) && hyphenate(component) === tagName)
+										);
 								const checkTag = tagName.indexOf('.') >= 0 ? tagName : component;
 								if (checkTag) {
 									componentProps[checkTag] ??= checkPropsOfTag(_ts.module, _ts.languageService, virtualFile, checkTag, options.vueCompilerOptions, true);
