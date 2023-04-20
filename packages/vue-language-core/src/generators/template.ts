@@ -174,9 +174,9 @@ export function generate(
 			const varName = validTsVar.test(tagName) ? tagName : capitalize(camelize(tagName.replace(/:/g, '-')));
 
 			codes.push(
-				'& import("./__VLS_types").WithComponent<',
+				'& import("./__VLS_types").WithComponent<"',
 				varName,
-				', typeof __VLS_components, ',
+				'", typeof __VLS_components, ',
 				[...names].map(name => `'${name}'`).join(', '),
 				'>\n',
 			);
