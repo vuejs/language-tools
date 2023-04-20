@@ -47,6 +47,8 @@ export type GlobalComponents =
 	>;
 
 export declare function getVForSourceType<T>(source: T): ForableSource<NonNullable<T extends number ? number[] : T extends string ? string[] : T>>;
+export declare function getSlotParams<T>(slot: T): Parameters<NonNullable<T>>;
+export declare function getSlotParam<T>(slot: T): Parameters<NonNullable<T>>[0];
 export declare function directiveFunction<T>(dir: T):
 	T extends ObjectDirective<infer E, infer V> ? undefined extends V ? (value?: V) => void : (value: V) => void
 	: T extends FunctionDirective<infer E, infer V> ? undefined extends V ? (value?: V) => void : (value: V) => void
