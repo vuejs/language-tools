@@ -3,7 +3,8 @@
 		"blockComment": [
 			"<!--",
 			"-->"
-		]
+		],
+		"lineComment": "//"
 	},
 	"brackets": [
 		[
