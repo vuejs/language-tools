@@ -170,7 +170,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 											attrText = attrText.substring('v-model:'.length);
 										}
 										else if (attrText === 'v-model') {
-											attrText = 'modelValue'; // TODO: support for experimentalModelPropName?
+											attrText = options.vueCompilerOptions.target >= 3 ? 'modelValue' : 'value'; // TODO: support for experimentalModelPropName?
 										}
 
 										current.unburnedRequiredProps = current.unburnedRequiredProps.filter(propName => {
