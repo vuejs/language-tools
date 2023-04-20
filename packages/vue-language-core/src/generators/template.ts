@@ -47,6 +47,8 @@ const transformContext: CompilerDOM.TransformContext = {
 	expressionPlugins: ['typescript'],
 };
 
+type Code = Segment<FileRangeCapabilities>;
+
 export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	vueCompilerOptions: VueCompilerOptions,
@@ -58,9 +60,9 @@ export function generate(
 ) {
 
 	const nativeTags = new Set(vueCompilerOptions.nativeTags);
-	const codes: Segment<FileRangeCapabilities>[] = [];
-	const formatCodes: Segment<FileRangeCapabilities>[] = [];
-	const cssCodes: Segment<FileRangeCapabilities>[] = [];
+	const codes: Code[] = [];
+	const formatCodes: Code[] = [];
+	const cssCodes: Code[] = [];
 	const slots = new Map<string, {
 		varName: string,
 		loc: [number, number],
@@ -80,15 +82,21 @@ export function generate(
 	let hasSlot = false;
 	let elementIndex = 0;
 
-	const componentVars = writeComponentVars();
+	const componentVars = generateComponentVars();
 
 	visitNode(templateAst, undefined);
 
-	writeStyleScopedClasses();
+	generateStyleScopedClasses();
 
-	declareSlots();
+	if (!hasScriptSetupSlots) {
+		codes.push(
+			'var __VLS_slots!:',
+			...createSlotsTypeCode(),
+			';\n',
+		);
+	}
 
-	writeInterpolationVarsExtraCompletion();
+	generateAutoImportCompletionCode();
 
 	return {
 		codes,
@@ -99,13 +107,8 @@ export function generate(
 		hasSlot,
 	};
 
-	function declareSlots() {
-
-		if (hasScriptSetupSlots) {
-			return;
-		}
-
-		codes.push(`var __VLS_slots!: `);
+	function createSlotsTypeCode(): Code[] {
+		const codes: Code[] = [];
 		for (const [exp, slot] of slotExps) {
 			hasSlot = true;
 			codes.push(`Partial<Record<NonNullable<typeof ${exp}>, (_: typeof ${slot.varName}) => any>> &\n`);
@@ -113,38 +116,41 @@ export function generate(
 		codes.push(`{\n`);
 		for (const [name, slot] of slots) {
 			hasSlot = true;
-			writeObjectProperty(
+			createObjectPropertyCode([
 				name,
-				slot.loc, // TODO: SourceMaps.MappingKind.Expand
+				'template',
+				slot.loc,
 				{
 					...capabilitiesPresets.slotNameExport,
 					referencesCodeLens: true,
 				},
-				slot.nodeLoc,
-			);
+			], slot.nodeLoc);
 			codes.push(`?(_: typeof ${slot.varName}): any,\n`);
 		}
 		codes.push(`}`);
-		codes.push(`;\n`);
+		return codes;
 	}
-	function writeStyleScopedClasses() {
+
+	function generateStyleScopedClasses() {
 
 		codes.push(`if (typeof __VLS_styleScopedClasses === 'object' && !Array.isArray(__VLS_styleScopedClasses)) {\n`);
 		for (const { className, offset } of scopedClasses) {
 			codes.push(`__VLS_styleScopedClasses[`);
-			writeCodeWithQuotes(
+			codes.push(...createStringLiteralKeyCode([
 				className,
+				'template',
 				offset,
 				{
 					...capabilitiesPresets.scopedClassName,
 					displayWithLink: cssScopedClassesSet.has(className),
 				},
-			);
+			]));
 			codes.push(`];\n`);
 		}
 		codes.push('}\n');
 	}
-	function writeComponentVars() {
+
+	function generateComponentVars() {
 
 		const data: Record<string, string> = {};
 
@@ -167,7 +173,13 @@ export function generate(
 			]);
 			const varName = validTsVar.test(tagName) ? tagName : capitalize(camelize(tagName.replace(/:/g, '-')));
 
-			codes.push(`& import('./__VLS_types').WithComponent<'${varName}', typeof __VLS_components, ${[...names].map(name => `'${name}'`).join(', ')}>\n`);
+			codes.push(
+				'& import("./__VLS_types").WithComponent<',
+				varName,
+				', typeof __VLS_components, ',
+				[...names].map(name => `'${name}'`).join(', '),
+				'>\n',
+			);
 
 			data[tagName] = varName;
 		}
@@ -191,25 +203,30 @@ export function generate(
 
 			for (const name of names) {
 				for (const tagRange of tagRanges) {
-					codes.push('__VLS_components');
-					writePropertyAccess(
-						name,
-						tagRange,
-						{
-							...capabilitiesPresets.tagReference,
-							rename: {
-								normalize: tagName === name ? capabilitiesPresets.tagReference.rename.normalize : camelizeComponentName,
-								apply: getRenameApply(tagName),
+					codes.push(
+						'__VLS_components',
+						...createPropertyAccessCode([
+							name,
+							'template',
+							tagRange,
+							{
+								...capabilitiesPresets.tagReference,
+								rename: {
+									normalize: tagName === name ? capabilitiesPresets.tagReference.rename.normalize : camelizeComponentName,
+									apply: getRenameApply(tagName),
+								},
 							},
-						},
+						]),
+						';',
 					);
-					codes.push(';');
 				}
 			}
 			codes.push('\n');
 
-			codes.push('// @ts-ignore\n'); // #2304
-			codes.push(`[`);
+			codes.push(
+				'// @ts-ignore\n', // #2304
+				'[',
+			);
 			for (const tagRange of tagRanges) {
 				codes.push([
 					varName,
@@ -229,6 +246,7 @@ export function generate(
 
 		return data;
 	}
+
 	function collectTagOffsets() {
 
 		const tagOffsetsMap: Record<string, number[]> = {};
@@ -241,8 +259,8 @@ export function generate(
 
 			const offsets = tagOffsetsMap[node.tag];
 			const source = sourceTemplate.substring(node.loc.start.offset);
-
 			const startTagOffset = node.loc.start.offset + source.indexOf(node.tag);
+
 			offsets.push(startTagOffset); // start tag
 			if (!node.isSelfClosing && sourceLang === 'html') {
 				const endTagOffset = node.loc.start.offset + node.loc.source.lastIndexOf(node.tag);
@@ -254,13 +272,7 @@ export function generate(
 
 		return tagOffsetsMap;
 	}
-	function createTsAst(cacheTo: any, text: string) {
-		if (cacheTo.__volar_ast_text !== text) {
-			cacheTo.__volar_ast_text = text;
-			cacheTo.__volar_ast = ts.createSourceFile('/a.ts', text, ts.ScriptTarget.ESNext);
-		}
-		return cacheTo.__volar_ast as ts.SourceFile;
-	}
+
 	function visitNode(node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode, parentEl: CompilerDOM.ElementNode | undefined): void {
 		if (node.type === CompilerDOM.NodeTypes.ROOT) {
 			for (const childNode of node.children) {
@@ -299,23 +311,27 @@ export function generate(
 				content = content + rightCharacter;
 			}
 
-			writeInterpolation(
-				content,
-				start,
-				capabilitiesPresets.all,
-				'(',
-				');\n',
-				node.content.loc,
+			codes.push(
+				...createInterpolationCode(
+					content,
+					node.content.loc,
+					start,
+					capabilitiesPresets.all,
+					'(',
+					');\n',
+				),
 			);
-			writeInterpolationVarsExtraCompletion();
+			generateAutoImportCompletionCode();
 			const lines = content.split('\n');
-			appendFormattingCode(
-				content,
-				start,
-				lines.length <= 1 ? formatBrackets.curly : [
-					formatBrackets.curly[0],
-					lines[lines.length - 1].trim() === '' ? '' : formatBrackets.curly[1],
-				],
+			formatCodes.push(
+				...createFormatCode(
+					content,
+					start,
+					lines.length <= 1 ? formatBrackets.curly : [
+						formatBrackets.curly[0],
+						lines[lines.length - 1].trim() === '' ? '' : formatBrackets.curly[1],
+					],
+				),
 			);
 		}
 		else if (node.type === CompilerDOM.NodeTypes.IF) {
@@ -339,19 +355,23 @@ export function generate(
 				if (branch.condition?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					codes.push(` `);
 					const beforeCodeLength = codes.length;
-					writeInterpolation(
-						branch.condition.content,
-						branch.condition.loc.start.offset,
-						capabilitiesPresets.all,
-						'(',
-						')',
-						branch.condition.loc,
+					codes.push(
+						...createInterpolationCode(
+							branch.condition.content,
+							branch.condition.loc,
+							branch.condition.loc.start.offset,
+							capabilitiesPresets.all,
+							'(',
+							')',
+						),
 					);
 					const afterCodeLength = codes.length;
-					appendFormattingCode(
-						branch.condition.content,
-						branch.condition.loc.start.offset,
-						formatBrackets.normal,
+					formatCodes.push(
+						...createFormatCode(
+							branch.condition.content,
+							branch.condition.loc.start.offset,
+							formatBrackets.normal,
+						),
 					);
 
 					blockConditions.push(muggle.toString(codes.slice(beforeCodeLength, afterCodeLength)));
@@ -359,7 +379,7 @@ export function generate(
 				}
 
 				codes.push(` {\n`);
-				writeInterpolationVarsExtraCompletion();
+				generateAutoImportCompletionCode();
 				for (const childNode of branch.children) {
 					visitNode(childNode, parentEl);
 				}
@@ -389,33 +409,37 @@ export function generate(
 					localVars[varName] = (localVars[varName] ?? 0) + 1;
 
 				codes.push([leftExpressionText, 'template', leftExpressionRange.start, capabilitiesPresets.all]);
-				appendFormattingCode(leftExpressionText, leftExpressionRange.start, formatBrackets.normal);
+				formatCodes.push(...createFormatCode(leftExpressionText, leftExpressionRange.start, formatBrackets.normal));
 			}
 			codes.push(`] of (await import('./__VLS_types')).getVForSourceType`);
 			if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-				writeInterpolation(
-					source.content,
-					source.loc.start.offset,
-					capabilitiesPresets.all,
-					'(',
-					')',
-					source.loc,
-				);
-				appendFormattingCode(
-					source.content,
-					source.loc.start.offset,
-					formatBrackets.normal,
+				codes.push(
+					...createInterpolationCode(
+						source.content,
+						source.loc,
+						source.loc.start.offset,
+						capabilitiesPresets.all,
+						'(',
+						')',
+					),
+					') {\n',
 				);
 
-				codes.push(`) {\n`);
-
-				writeInterpolationVarsExtraCompletion();
+				generateAutoImportCompletionCode();
 
 				for (const childNode of node.children) {
 					visitNode(childNode, parentEl);
 				}
 
 				codes.push('}\n');
+
+				formatCodes.push(
+					...createFormatCode(
+						source.content,
+						source.loc.start.offset,
+						formatBrackets.normal,
+					),
+				);
 			}
 
 			for (const varName of forBlockVars)
@@ -431,6 +455,7 @@ export function generate(
 			codes.push(`// Unprocessed node type: ${node.type} json: ${JSON.stringify(node.loc)}\n`);
 		}
 	};
+
 	function visitElementNode(node: CompilerDOM.ElementNode, parentEl: CompilerDOM.ElementNode | undefined) {
 
 		const patchForNode = getPatchForSlotNode(node);
@@ -463,40 +488,48 @@ export function generate(
 		const componentCtxVar = `__VLS_${elementIndex++}`;
 
 		if (isIntrinsicElement) {
-			codes.push(`const ${componentVar} = (await import('./__VLS_types')).asFunctionalComponent(({} as import('./__VLS_types').IntrinsicElements)[`);
-			writeCodeWithQuotes(
-				node.tag,
-				tagOffsets[0],
-				capabilitiesPresets.diagnosticOnly,
+			codes.push(
+				'const ',
+				componentVar,
+				` = (await import('./__VLS_types')).asFunctionalComponent(({} as import('./__VLS_types').IntrinsicElements)[`,
+				...createStringLiteralKeyCode([
+					node.tag,
+					'template',
+					tagOffsets[0],
+					capabilitiesPresets.diagnosticOnly,
+				]),
+				']);\n',
 			);
-			codes.push(`]);\n`);
 		}
 		else if (isNamespacedTag) {
 			codes.push(`const ${componentVar} = (await import('./__VLS_types')).asFunctionalComponent(${node.tag}, new ${node.tag}({`);
-			writeProps(node, 'class', 'slots');
+			generateProps(node, 'class', 'slots');
 			codes.push(`}));\n`);;
 		}
 		else {
 			codes.push(`const ${componentVar} = (await import('./__VLS_types')).asFunctionalComponent(`);
 			codes.push(`__VLS_templateComponents['${componentVars[node.tag] ?? node.tag}'], `);
 			codes.push(`new __VLS_templateComponents['${componentVars[node.tag] ?? node.tag}']({`);
-			writeProps(node, 'class', 'slots');
+			generateProps(node, 'class', 'slots');
 			codes.push(`}));\n`);;
 		}
 
 		if (!vueCompilerOptions.jsxTemplates) {
 			for (const offset of tagOffsets) {
 				if (isIntrinsicElement) {
-					codes.push(`({} as import('./__VLS_types').IntrinsicElements)`);
-					writePropertyAccess(
-						node.tag,
-						offset,
-						{
-							...capabilitiesPresets.tagReference,
-							...capabilitiesPresets.tagHover,
-						},
+					codes.push(
+						`({} as import('./__VLS_types').IntrinsicElements)`,
+						...createPropertyAccessCode([
+							node.tag,
+							'template',
+							offset,
+							{
+								...capabilitiesPresets.tagReference,
+								...capabilitiesPresets.tagHover,
+							},
+						]),
+						';\n',
 					);
-					codes.push(`;\n`);
 				}
 				else if (isNamespacedTag) {
 					codes.push([
@@ -554,7 +587,7 @@ export function generate(
 				tagCapabilities,
 			]);
 			codes.push(` `);
-			const { propsFailedExps: unWriteExps } = writeProps(node, 'jsx', 'props');
+			const { propsFailedExps: unWriteExps } = generateProps(node, 'jsx', 'props');
 			propsFailedExps = unWriteExps;
 
 			if (endTagOffset === undefined) {
@@ -593,27 +626,27 @@ export function generate(
 			]);
 			codes.push(`\n`);
 		}
-		writeInterpolationVarsExtraCompletion();
+		generateAutoImportCompletionCode();
 
 		codes.push(`const ${componentInstanceVar} = ${componentVar}(`);
 
-		let slotAndChildNodes: ReturnType<typeof writeChildren> | undefined;
+		let slotAndChildNodes: ReturnType<typeof generateChildren> | undefined;
 
 		if (vueCompilerOptions.jsxTemplates) {
 			codes.push(`{ `);
-			writeProps(node, 'class', 'slots');
+			generateProps(node, 'class', 'slots');
 			codes.push(`}`);
 		}
 		else {
 			codes.push(['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]); // diagnostic start
 			codes.push(`{ `);
-			propsFailedExps = writeProps(node, 'class', 'props').propsFailedExps;
+			propsFailedExps = generateProps(node, 'class', 'props').propsFailedExps;
 			codes.push(`}`);
 			codes.push(['', 'template', startTagOffset + node.tag.length, capabilitiesPresets.diagnosticOnly]); // diagnostic end
 		}
 		if (parentEl) {
 			codes.push(', {\n');
-			slotAndChildNodes = writeChildren(node, parentEl);
+			slotAndChildNodes = generateChildren(node, parentEl);
 			codes.push(`});\n`);
 		}
 		else {
@@ -644,10 +677,12 @@ export function generate(
 					slotDir.exp.loc.start.offset,
 					capabilitiesPresets.all,
 				]);
-				appendFormattingCode(
-					slotDir.exp.content,
-					slotDir.exp.loc.start.offset,
-					formatBrackets.normal,
+				formatCodes.push(
+					...createFormatCode(
+						slotDir.exp.content,
+						slotDir.exp.loc.start.offset,
+						formatBrackets.normal,
+					),
 				);
 			}
 
@@ -690,31 +725,35 @@ export function generate(
 			codes.push(`}\n`);
 		}
 
-		writeInterpolationVarsExtraCompletion();
+		generateAutoImportCompletionCode();
 
 		//#region 
 		// fix https://github.com/johnsoncodehk/volar/issues/1775
 		for (const failedExp of propsFailedExps) {
-			writeInterpolation(
-				failedExp.loc.source,
-				failedExp.loc.start.offset,
-				capabilitiesPresets.all,
-				'(',
-				')',
-				failedExp.loc,
+			codes.push(
+				...createInterpolationCode(
+					failedExp.loc.source,
+					failedExp.loc,
+					failedExp.loc.start.offset,
+					capabilitiesPresets.all,
+					'(',
+					')',
+				),
+				';\n',
 			);
 			const fb = formatBrackets.normal;
 			if (fb) {
-				appendFormattingCode(
-					failedExp.loc.source,
-					failedExp.loc.start.offset,
-					fb,
+				formatCodes.push(
+					...createFormatCode(
+						failedExp.loc.source,
+						failedExp.loc.start.offset,
+						fb,
+					),
 				);
 			}
-			codes.push(';\n');
 		}
 
-		writeInlineCss(node);
+		generateInlineCss(node);
 
 		const vScope = node.props.find(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && (prop.name === 'scope' || prop.name === 'data'));
 		let inScope = false;
@@ -738,11 +777,11 @@ export function generate(
 			inScope = true;
 		}
 
-		writeDirectives(node);
-		writeElReferences(node); // <el ref="foo" />
-		if (cssScopedClasses.length) writeClassScoped(node);
-		writeEvents(node, componentInstanceVar, componentCtxVar);
-		writeSlots(node, startTagOffset);
+		generateDirectives(node);
+		generateElReferences(node); // <el ref="foo" />
+		if (cssScopedClasses.length) generateClassScoped(node);
+		generateEvents(node, componentInstanceVar, componentCtxVar);
+		generateSlots(node, startTagOffset);
 
 		if (inScope) {
 			codes.push('}\n');
@@ -752,7 +791,8 @@ export function generate(
 
 		codes.push(`}\n`);
 	}
-	function writeEvents(node: CompilerDOM.ElementNode, componentInstanceVar: string, componentCtxVar: string) {
+
+	function generateEvents(node: CompilerDOM.ElementNode, componentInstanceVar: string, componentCtxVar: string) {
 
 		for (const prop of node.props) {
 			if (
@@ -761,53 +801,60 @@ export function generate(
 				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
 				const eventVar = `__VLS_${elementIndex++}`;
-				codes.push(`let ${eventVar} = { '${prop.arg.loc.source}': `);
-				codes.push(`(await import('./__VLS_types')).pickEvent(${componentCtxVar}.emit!, '${prop.arg.loc.source}' as const, ${componentInstanceVar}.__props!`);
-				writePropertyAccess(
-					camelize('on-' + prop.arg.loc.source), // onClickOutside
-					[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
-					{
-						...capabilitiesPresets.attrReference,
-						rename: {
-							normalize(newName) {
-								return camelize('on-' + newName);
-							},
-							apply(newName) {
-								const hName = hyphenate(newName);
-								if (hyphenate(newName).startsWith('on-')) {
-									return camelize(hName.slice('on-'.length));
-								}
-								return newName;
+				codes.push(
+					`let ${eventVar} = { '${prop.arg.loc.source}': `,
+					`(await import('./__VLS_types')).pickEvent(${componentCtxVar}.emit!, '${prop.arg.loc.source}' as const, ${componentInstanceVar}.__props!`,
+					...createPropertyAccessCode([
+						camelize('on-' + prop.arg.loc.source), // onClickOutside
+						'template',
+						[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
+						{
+							...capabilitiesPresets.attrReference,
+							rename: {
+								normalize(newName) {
+									return camelize('on-' + newName);
+								},
+								apply(newName) {
+									const hName = hyphenate(newName);
+									if (hyphenate(newName).startsWith('on-')) {
+										return camelize(hName.slice('on-'.length));
+									}
+									return newName;
+								},
 							},
 						},
-					},
+					]),
+					`) };\n`,
+					`${eventVar} = {\n`,
 				);
-				codes.push(`) };\n`);
-				codes.push(`${eventVar} = {\n`);
 				if (prop.arg.loc.source.startsWith('[') && prop.arg.loc.source.endsWith(']')) {
-					codes.push(`[(`);
-					writeInterpolation(
-						prop.arg.loc.source.slice(1, -1),
-						prop.arg.loc.start.offset + 1,
-						capabilitiesPresets.all,
-						'',
-						'',
-						prop.arg.loc,
+					codes.push(
+						'[(',
+						...createInterpolationCode(
+							prop.arg.loc.source.slice(1, -1),
+							prop.arg.loc,
+							prop.arg.loc.start.offset + 1,
+							capabilitiesPresets.all,
+							'',
+							'',
+						),
+						')!]',
 					);
-					codes.push(`)!]`);
 				}
 				else {
-					writeObjectProperty(
-						prop.arg.loc.source,
-						prop.arg.loc.start.offset,
-						capabilitiesPresets.event,
-						prop.arg.loc,
+					codes.push(
+						...createObjectPropertyCode([
+							prop.arg.loc.source,
+							'template',
+							prop.arg.loc.start.offset,
+							capabilitiesPresets.event,
+						], prop.arg.loc)
 					);
 				}
 				codes.push(`: `);
 				appendExpressionNode(prop);
 				codes.push(`};\n`);
-				writeInterpolationVarsExtraCompletion();
+				generateAutoImportCompletionCode();
 			}
 			else if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -816,20 +863,24 @@ export function generate(
 			) {
 				// for vue 2 nameless event
 				// https://github.com/johnsoncodehk/vue-tsc/issues/67
-				writeInterpolation(
-					prop.exp.content,
-					prop.exp.loc.start.offset,
-					capabilitiesPresets.all,
-					'$event => {(',
-					')}',
-					prop.exp.loc,
+				codes.push(
+					...createInterpolationCode(
+						prop.exp.content,
+						prop.exp.loc,
+						prop.exp.loc.start.offset,
+						capabilitiesPresets.all,
+						'$event => {(',
+						')}',
+					),
+					';\n',
 				);
-				appendFormattingCode(
-					prop.exp.content,
-					prop.exp.loc.start.offset,
-					formatBrackets.normal,
+				formatCodes.push(
+					...createFormatCode(
+						prop.exp.content,
+						prop.exp.loc.start.offset,
+						formatBrackets.normal,
+					),
 				);
-				codes.push(`;\n`);
 			}
 
 			function appendExpressionNode(prop: CompilerDOM.DirectiveNode) {
@@ -870,24 +921,28 @@ export function generate(
 
 					let isFirstMapping = true;
 
-					writeInterpolation(
-						prop.exp.content,
-						prop.exp.loc.start.offset,
-						() => {
-							if (isCompoundExpression && isFirstMapping) {
-								isFirstMapping = false;
-								return capabilitiesPresets.allWithHiddenParam;
-							}
-							return capabilitiesPresets.all;
-						},
-						prefix,
-						suffix,
-						prop.exp.loc,
+					codes.push(
+						...createInterpolationCode(
+							prop.exp.content,
+							prop.exp.loc,
+							prop.exp.loc.start.offset,
+							() => {
+								if (isCompoundExpression && isFirstMapping) {
+									isFirstMapping = false;
+									return capabilitiesPresets.allWithHiddenParam;
+								}
+								return capabilitiesPresets.all;
+							},
+							prefix,
+							suffix,
+						),
 					);
-					appendFormattingCode(
-						prop.exp.content,
-						prop.exp.loc.start.offset,
-						formatBrackets.normal,
+					formatCodes.push(
+						...createFormatCode(
+							prop.exp.content,
+							prop.exp.loc.start.offset,
+							formatBrackets.normal,
+						),
 					);
 				}
 				else {
@@ -896,9 +951,10 @@ export function generate(
 			}
 		}
 
-		writeInterpolationVarsExtraCompletion();
+		generateAutoImportCompletionCode();
 	}
-	function writeProps(node: CompilerDOM.ElementNode, format: 'jsx' | 'class', mode: 'props' | 'slots') {
+
+	function generateProps(node: CompilerDOM.ElementNode, format: 'jsx' | 'class', mode: 'props' | 'slots') {
 
 		let styleAttrNum = 0;
 		let classAttrNum = 0;
@@ -959,7 +1015,7 @@ export function generate(
 				}
 
 				// camelize name
-				writePropStart(isStatic);
+				generatePropStart(isStatic);
 				codes.push([
 					'',
 					'template',
@@ -967,7 +1023,7 @@ export function generate(
 					getCaps(capabilitiesPresets.diagnosticOnly),
 				]);
 				if (!prop.arg) {
-					writePropName(
+					generatePropName(
 						attrNameText,
 						isStatic,
 						[prop.loc.start.offset, prop.loc.start.offset + prop.loc.source.indexOf('=')],
@@ -976,7 +1032,7 @@ export function generate(
 					);
 				}
 				else if (prop.exp?.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
-					writePropName(
+					generatePropName(
 						propName,
 						isStatic,
 						[prop.arg.loc.start.offset, prop.arg.loc.start.offset + attrNameText.length], // patch style attr,
@@ -991,7 +1047,7 @@ export function generate(
 					);
 				}
 				else {
-					writePropName(
+					generatePropName(
 						propName,
 						isStatic,
 						[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
@@ -1005,40 +1061,44 @@ export function generate(
 						(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
 					);
 				}
-				writePropValuePrefix(isStatic);
+				generatePropValuePrefix(isStatic);
 				if (prop.exp && !(prop.exp.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY)) { // style='z-index: 2' will compile to {'z-index':'2'}
-					writeInterpolation(
-						prop.exp.loc.source,
-						prop.exp.loc.start.offset,
-						getCaps(capabilitiesPresets.all),
-						'(',
-						')',
-						prop.exp.loc,
+					codes.push(
+						...createInterpolationCode(
+							prop.exp.loc.source,
+							prop.exp.loc,
+							prop.exp.loc.start.offset,
+							getCaps(capabilitiesPresets.all),
+							'(',
+							')',
+						),
 					);
 					const fb = getFormatBrackets(formatBrackets.normal);
 					if (fb) {
-						appendFormattingCode(
-							prop.exp.loc.source,
-							prop.exp.loc.start.offset,
-							fb,
+						formatCodes.push(
+							...createFormatCode(
+								prop.exp.loc.source,
+								prop.exp.loc.start.offset,
+								fb,
+							),
 						);
 					}
 				}
 				else {
 					codes.push('{}');
 				}
-				writePropValueSuffix(isStatic);
+				generatePropValueSuffix(isStatic);
 				codes.push([
 					'',
 					'template',
 					prop.loc.end.offset,
 					getCaps(capabilitiesPresets.diagnosticOnly),
 				]);
-				writePropEnd(isStatic);
+				generatePropEnd(isStatic);
 				// original name
 				if (prop.arg && attrNameText !== propName) {
-					writePropStart(isStatic);
-					writePropName(
+					generatePropStart(isStatic);
+					generatePropName(
 						attrNameText,
 						isStatic,
 						[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
@@ -1051,22 +1111,24 @@ export function generate(
 						},
 						(prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}),
 					);
-					writePropValuePrefix(isStatic);
+					generatePropValuePrefix(isStatic);
 					if (prop.exp) {
-						writeInterpolation(
-							prop.exp.loc.source,
-							undefined,
-							undefined,
-							'(',
-							')',
-							prop.exp.loc,
+						codes.push(
+							...createInterpolationCode(
+								prop.exp.loc.source,
+								prop.exp.loc,
+								undefined,
+								undefined,
+								'(',
+								')',
+							),
 						);
 					}
 					else {
 						codes.push('undefined');
 					}
-					writePropValueSuffix(isStatic);
-					writePropEnd(isStatic);
+					generatePropValueSuffix(isStatic);
+					generatePropEnd(isStatic);
 				}
 			}
 			else if (
@@ -1094,14 +1156,14 @@ export function generate(
 				}
 
 				// camelize name
-				writePropStart(true);
+				generatePropStart(true);
 				codes.push([
 					'',
 					'template',
 					prop.loc.start.offset,
 					getCaps(capabilitiesPresets.diagnosticOnly),
 				]);
-				writePropName(
+				generatePropName(
 					propName,
 					true,
 					[prop.loc.start.offset, prop.loc.start.offset + prop.name.length],
@@ -1114,25 +1176,25 @@ export function generate(
 					},
 					(prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}),
 				);
-				writePropValuePrefix(true);
+				generatePropValuePrefix(true);
 				if (prop.value) {
-					writeAttrValue(prop.value);
+					generateAttrValue(prop.value);
 				}
 				else {
 					codes.push('true');
 				}
-				writePropValueSuffix(true);
+				generatePropValueSuffix(true);
 				codes.push([
 					'',
 					'template',
 					prop.loc.end.offset,
 					getCaps(capabilitiesPresets.diagnosticOnly),
 				]);
-				writePropEnd(true);
+				generatePropEnd(true);
 				// original name
 				if (attrNameText !== propName) {
-					writePropStart(true);
-					writePropName(
+					generatePropStart(true);
+					generatePropName(
 						attrNameText,
 						true,
 						prop.loc.start.offset,
@@ -1145,15 +1207,15 @@ export function generate(
 						},
 						(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
 					);
-					writePropValuePrefix(true);
+					generatePropValuePrefix(true);
 					if (prop.value) {
-						writeAttrValue(prop.value);
+						generateAttrValue(prop.value);
 					}
 					else {
 						codes.push('true');
 					}
-					writePropValueSuffix(true);
-					writePropEnd(true);
+					generatePropValueSuffix(true);
+					generatePropEnd(true);
 				}
 			}
 			else if (
@@ -1162,30 +1224,28 @@ export function generate(
 				&& !prop.arg
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
-				if (format === 'jsx')
-					codes.push('{...');
-				else
-					codes.push('...');
-				writeInterpolation(
-					prop.exp.content,
-					prop.exp.loc.start.offset,
-					getCaps(capabilitiesPresets.all),
-					'(',
-					')',
-					prop.exp.loc,
+				codes.push(
+					format === 'jsx' ? '{...' : '...',
+					...createInterpolationCode(
+						prop.exp.content,
+						prop.exp.loc,
+						prop.exp.loc.start.offset,
+						getCaps(capabilitiesPresets.all),
+						'(',
+						')',
+					),
+					format === 'jsx' ? '} ' : ', ',
 				);
 				const fb = getFormatBrackets(formatBrackets.normal);
 				if (fb) {
-					appendFormattingCode(
-						prop.exp.content,
-						prop.exp.loc.start.offset,
-						fb,
+					formatCodes.push(
+						...createFormatCode(
+							prop.exp.content,
+							prop.exp.loc.start.offset,
+							fb,
+						),
 					);
 				}
-				if (format === 'jsx')
-					codes.push('} ');
-				else
-					codes.push(', ');
 			}
 			else {
 				// comment this line to avoid affecting comments in prop expressions
@@ -1195,7 +1255,7 @@ export function generate(
 
 		return { propsFailedExps };
 
-		function writePropName(name: string, isStatic: boolean, sourceRange: number | [number, number], data: FileRangeCapabilities, cacheOn: any) {
+		function generatePropName(name: string, isStatic: boolean, sourceRange: number | [number, number], data: FileRangeCapabilities, cacheOn: any) {
 			if (format === 'jsx' && isStatic) {
 				codes.push([
 					name,
@@ -1205,15 +1265,17 @@ export function generate(
 				]);
 			}
 			else {
-				writeObjectProperty(
-					name,
-					sourceRange,
-					data,
-					cacheOn,
+				codes.push(
+					...createObjectPropertyCode([
+						name,
+						'template',
+						sourceRange,
+						data,
+					], cacheOn)
 				);
 			}
 		}
-		function writePropValuePrefix(isStatic: boolean) {
+		function generatePropValuePrefix(isStatic: boolean) {
 			if (format === 'jsx' && isStatic) {
 				codes.push('={');
 			}
@@ -1221,7 +1283,7 @@ export function generate(
 				codes.push(': (');
 			}
 		}
-		function writePropValueSuffix(isStatic: boolean) {
+		function generatePropValueSuffix(isStatic: boolean) {
 			if (format === 'jsx' && isStatic) {
 				codes.push('}');
 			}
@@ -1229,12 +1291,12 @@ export function generate(
 				codes.push(')');
 			}
 		}
-		function writePropStart(isStatic: boolean) {
+		function generatePropStart(isStatic: boolean) {
 			if (format === 'jsx' && !isStatic) {
 				codes.push('{...{');
 			}
 		}
-		function writePropEnd(isStatic: boolean) {
+		function generatePropEnd(isStatic: boolean) {
 			if (format === 'jsx' && isStatic) {
 				codes.push(' ');
 			}
@@ -1264,7 +1326,7 @@ export function generate(
 				return undefined;
 			}
 		}
-		function writeAttrValue(attrNode: CompilerDOM.TextNode) {
+		function generateAttrValue(attrNode: CompilerDOM.TextNode) {
 			const char = attrNode.loc.source.startsWith("'") ? "'" : '"';
 			codes.push(char);
 			let start = attrNode.loc.start.offset;
@@ -1287,7 +1349,8 @@ export function generate(
 			codes.push(char);
 		}
 	}
-	function writeInlineCss(node: CompilerDOM.ElementNode) {
+
+	function generateInlineCss(node: CompilerDOM.ElementNode) {
 		for (const prop of node.props) {
 			if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -1313,7 +1376,8 @@ export function generate(
 			}
 		}
 	}
-	function writeChildren(node: CompilerDOM.ElementNode, parentEl: CompilerDOM.ElementNode) {
+
+	function generateChildren(node: CompilerDOM.ElementNode, parentEl: CompilerDOM.ElementNode) {
 
 		const slotAndChildNodes: Record<string, { nodes: CompilerDOM.TemplateChildNode[], slotDir: CompilerDOM.DirectiveNode | undefined; }> = {};
 
@@ -1373,27 +1437,31 @@ export function generate(
 				]);
 			}
 			else if (isStatic) {
-				writeObjectProperty(
-					slotName,
-					argRange,
-					{
-						...capabilitiesPresets.slotName,
-						completion: !!slotDir.arg,
-					},
-					slotDir.arg?.loc ?? slotDir.loc,
+				codes.push(
+					...createObjectPropertyCode([
+						slotName,
+						'template',
+						argRange,
+						{
+							...capabilitiesPresets.slotName,
+							completion: !!slotDir.arg,
+						},
+					], slotDir.arg?.loc ?? slotDir.loc)
 				);
 			}
 			else {
-				codes.push(`[`);
-				writeInterpolation(
-					slotName,
-					argRange[0] + 1,
-					capabilitiesPresets.all,
-					'',
-					'',
-					(slotDir.loc as any).slot_name ?? ((slotDir.loc as any).slot_name = {}),
+				codes.push(
+					'[',
+					...createInterpolationCode(
+						slotName,
+						(slotDir.loc as any).slot_name ?? ((slotDir.loc as any).slot_name = {}),
+						argRange[0] + 1,
+						capabilitiesPresets.all,
+						'',
+						'',
+					),
+					']',
 				);
-				codes.push(`]`);
 			}
 
 			codes.push(': {} as any,\n');
@@ -1403,7 +1471,8 @@ export function generate(
 
 		return slotAndChildNodes;
 	}
-	function writeDirectives(node: CompilerDOM.ElementNode) {
+
+	function generateDirectives(node: CompilerDOM.ElementNode) {
 		for (const prop of node.props) {
 			if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -1440,18 +1509,22 @@ export function generate(
 				identifiers.add(camelize('v-' + prop.name));
 				codes.push(`)`);
 				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-					writeInterpolation(
-						prop.exp.content,
-						prop.exp.loc.start.offset,
-						capabilitiesPresets.all,
-						'(',
-						')',
-						prop.exp.loc,
+					codes.push(
+						...createInterpolationCode(
+							prop.exp.content,
+							prop.exp.loc,
+							prop.exp.loc.start.offset,
+							capabilitiesPresets.all,
+							'(',
+							')',
+						),
 					);
-					appendFormattingCode(
-						prop.exp.content,
-						prop.exp.loc.start.offset,
-						formatBrackets.normal,
+					formatCodes.push(
+						...createFormatCode(
+							prop.exp.content,
+							prop.exp.loc.start.offset,
+							formatBrackets.normal,
+						),
 					);
 				}
 				codes.push([
@@ -1461,32 +1534,36 @@ export function generate(
 					capabilitiesPresets.diagnosticOnly,
 				]);
 				codes.push(`;\n`);
-				writeInterpolationVarsExtraCompletion();
+				generateAutoImportCompletionCode();
 			}
 		}
 	}
-	function writeElReferences(node: CompilerDOM.ElementNode) {
+
+	function generateElReferences(node: CompilerDOM.ElementNode) {
 		for (const prop of node.props) {
 			if (
 				prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
 				&& prop.name === 'ref'
 				&& prop.value
 			) {
-				codes.push(`// @ts-ignore\n`);
-				writeInterpolation(
-					prop.value.content,
-					prop.value.loc.start.offset + 1,
-					capabilitiesPresets.refAttr,
-					'(',
-					')',
-					prop.value.loc,
+				codes.push(
+					'// @ts-ignore\n',
+					...createInterpolationCode(
+						prop.value.content,
+						prop.value.loc,
+						prop.value.loc.start.offset + 1,
+						capabilitiesPresets.refAttr,
+						'(',
+						')',
+					),
+					';\n',
 				);
-				codes.push(`;\n`);
-				writeInterpolationVarsExtraCompletion();
+				generateAutoImportCompletionCode();
 			}
 		}
 	}
-	function writeClassScoped(node: CompilerDOM.ElementNode) {
+
+	function generateClassScoped(node: CompilerDOM.ElementNode) {
 		for (const prop of node.props) {
 			if (
 				prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
@@ -1528,7 +1605,8 @@ export function generate(
 			}
 		}
 	}
-	function writeSlots(node: CompilerDOM.ElementNode, startTagOffset: number) {
+
+	function generateSlots(node: CompilerDOM.ElementNode, startTagOffset: number) {
 
 		if (node.tag !== 'slot')
 			return;
@@ -1537,15 +1615,16 @@ export function generate(
 		const slotNameExpNode = getSlotNameExpNode();
 
 		if (hasScriptSetupSlots) {
-			const slotNameExp = typeof slotNameExpNode === 'object' ? slotNameExpNode.content : slotNameExpNode;
-			codes.push(['', 'template', node.loc.start.offset, capabilitiesPresets.diagnosticOnly]);
-			codes.push(`__VLS_slots[`);
-			codes.push(['', 'template', node.loc.start.offset, capabilitiesPresets.diagnosticOnly]);
-			codes.push(slotNameExp);
-			codes.push(['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly]);
-			codes.push(`]`);
-			codes.push(['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly]);
-			codes.push(`?.({\n`);
+			codes.push(
+				['', 'template', node.loc.start.offset, capabilitiesPresets.diagnosticOnly],
+				'__VLS_slots[',
+				['', 'template', node.loc.start.offset, capabilitiesPresets.diagnosticOnly],
+				typeof slotNameExpNode === 'object' ? slotNameExpNode.content : slotNameExpNode,
+				['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly],
+				']',
+				['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly],
+				'?.({\n',
+			);
 		}
 		else {
 			codes.push(`var ${varSlot} = {\n`);
@@ -1556,16 +1635,18 @@ export function generate(
 				&& !prop.arg
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
-				codes.push(`...`);
-				writeInterpolation(
-					prop.exp.content,
-					prop.exp.loc.start.offset,
-					capabilitiesPresets.attrReference,
-					'(',
-					')',
-					prop.exp.loc,
+				codes.push(
+					'...',
+					...createInterpolationCode(
+						prop.exp.content,
+						prop.exp.loc,
+						prop.exp.loc.start.offset,
+						capabilitiesPresets.attrReference,
+						'(',
+						')',
+					),
+					',\n',
 				);
-				codes.push(`,\n`);
 			}
 			else if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -1573,54 +1654,57 @@ export function generate(
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 				&& prop.arg.content !== 'name'
 			) {
-				writeObjectProperty(
-					prop.arg.content,
-					[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
-					{
-						...capabilitiesPresets.slotProp,
-						rename: {
-							normalize: camelize,
-							apply: getRenameApply(prop.arg.content),
+				codes.push(
+					...createObjectPropertyCode([
+						prop.arg.content,
+						'template',
+						[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
+						{
+							...capabilitiesPresets.slotProp,
+							rename: {
+								normalize: camelize,
+								apply: getRenameApply(prop.arg.content),
+							},
 						},
-					},
-					prop.arg.loc,
+					], prop.arg.loc),
+					': ',
+					...createInterpolationCode(
+						prop.exp.content,
+						prop.exp.loc,
+						prop.exp.loc.start.offset,
+						capabilitiesPresets.attrReference,
+						'(',
+						')',
+					),
+					',\n',
 				);
-				codes.push(`: `);
-				writeInterpolation(
-					prop.exp.content,
-					prop.exp.loc.start.offset,
-					capabilitiesPresets.attrReference,
-					'(',
-					')',
-					prop.exp.loc,
-				);
-				codes.push(`,\n`);
 			}
 			else if (
 				prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
 				&& prop.name !== 'name' // slot name
 			) {
-				const propValue = prop.value !== undefined ? `"${toUnicodeIfNeed(prop.value.content)}"` : 'true';
-				writeObjectProperty(
-					prop.name,
-					prop.loc.start.offset,
-					{
-						...capabilitiesPresets.attr,
-						rename: {
-							normalize: camelize,
-							apply: getRenameApply(prop.name),
+				codes.push(
+					...createObjectPropertyCode([
+						prop.name,
+						'template',
+						prop.loc.start.offset,
+						{
+							...capabilitiesPresets.attr,
+							rename: {
+								normalize: camelize,
+								apply: getRenameApply(prop.name),
+							},
 						},
-					},
-					prop.loc,
+					], prop.loc),
+					': (',
+					prop.value !== undefined ? `"${toUnicodeIfNeed(prop.value.content)}"` : 'true',
+					'),\n',
 				);
-				codes.push(`: (`);
-				codes.push(propValue);
-				codes.push(`),\n`);
 			}
 		}
 		codes.push(hasScriptSetupSlots ? `});\n` : `};\n`);
 
-		writeInterpolationVarsExtraCompletion();
+		generateAutoImportCompletionCode();
 
 		if (hasScriptSetupSlots) {
 			return;
@@ -1633,7 +1717,15 @@ export function generate(
 				codes.push(slotNameExpNode);
 			}
 			else {
-				writeInterpolation(slotNameExpNode.content, undefined, undefined, '(', ')', slotNameExpNode);
+				codes.push(
+					...createInterpolationCode(
+						slotNameExpNode.content,
+						slotNameExpNode,
+						undefined, undefined,
+						'(',
+						')',
+					),
+				);
 			}
 			codes.push(`;\n`);
 			slotExps.set(varSlotExp, {
@@ -1670,110 +1762,8 @@ export function generate(
 			return `('${getSlotName()}' as const)`;
 		}
 	}
-	function writeObjectProperty(mapCode: string, sourceRange: number | [number, number], data: FileRangeCapabilities, cacheOn: any) {
-		if (validTsVar.test(mapCode)) {
-			codes.push([mapCode, 'template', sourceRange, data]);
-			return 1;
-		}
-		else if (mapCode.startsWith('[') && mapCode.endsWith(']')) {
-			writeInterpolation(
-				mapCode,
-				typeof sourceRange === 'number' ? sourceRange : sourceRange[0],
-				data,
-				'',
-				'',
-				cacheOn,
-			);
-			return 1;
-		}
-		else {
-			writeCodeWithQuotes(mapCode, sourceRange, data);
-			return 2;
-		}
-	}
-	function writePropertyAccess(mapCode: string, sourceRange: number | [number, number], data: FileRangeCapabilities) {
-		if (validTsVar.test(mapCode)) {
-			codes.push(`.`);
-			codes.push([mapCode, 'template', sourceRange, data]);
-		}
-		else if (mapCode.startsWith('[') && mapCode.endsWith(']')) {
-			codes.push([mapCode, 'template', sourceRange, data]);
-		}
-		else {
-			codes.push(`[`);
-			writeCodeWithQuotes(mapCode, sourceRange, data);
-			codes.push(`]`);
-		}
-	}
-	function writeCodeWithQuotes(mapCode: string, sourceRange: number | [number, number], data: FileRangeCapabilities) {
-		codes.push([
-			'',
-			'template',
-			typeof sourceRange === 'number' ? sourceRange : sourceRange[0],
-			data,
-		]);
-		codes.push(`'`);
-		codes.push([mapCode, 'template', sourceRange, data]);
-		codes.push(`'`);
-		codes.push([
-			'',
-			'template',
-			typeof sourceRange === 'number' ? sourceRange : sourceRange[1],
-			data,
-		]);
-	}
-	function writeInterpolation(
-		mapCode: string,
-		sourceOffset: number | undefined,
-		data: FileRangeCapabilities | (() => FileRangeCapabilities) | undefined,
-		prefix: string,
-		suffix: string,
-		cacheOn: any,
-	) {
-		const ast = createTsAst(cacheOn, prefix + mapCode + suffix);
-		const vars = walkInterpolationFragment(ts, prefix + mapCode + suffix, ast, (frag, fragOffset, isJustForErrorMapping) => {
-			if (fragOffset === undefined) {
-				codes.push(frag);
-			}
-			else {
-				fragOffset -= prefix.length;
-				let addSuffix = '';
-				const overLength = fragOffset + frag.length - mapCode.length;
-				if (overLength > 0) {
-					addSuffix = frag.substring(frag.length - overLength);
-					frag = frag.substring(0, frag.length - overLength);
-				}
-				if (fragOffset < 0) {
-					codes.push(frag.substring(0, -fragOffset));
-					frag = frag.substring(-fragOffset);
-					fragOffset = 0;
-				}
-				if (sourceOffset !== undefined && data !== undefined) {
-					codes.push([
-						frag,
-						'template',
-						sourceOffset + fragOffset,
-						isJustForErrorMapping
-							? capabilitiesPresets.diagnosticOnly
-							: typeof data === 'function' ? data() : data,
-					]);
-				}
-				else {
-					codes.push(frag);
-				}
-				codes.push(addSuffix);
-			}
-		}, localVars, identifiers, vueCompilerOptions);
-		if (sourceOffset !== undefined) {
-			for (const v of vars) {
-				v.offset = sourceOffset + v.offset - prefix.length;
-			}
-			if (vars.length) {
-				tempVars.push(vars);
-			}
-		}
-	}
-	function writeInterpolationVarsExtraCompletion() {
+
+	function generateAutoImportCompletionCode() {
 
 		if (!tempVars.length)
 			return;
@@ -1789,11 +1779,127 @@ export function generate(
 		codes.push('];\n');
 		tempVars.length = 0;
 	}
-	function appendFormattingCode(mapCode: string, sourceOffset: number, formatWrapper: [string, string]) {
-		formatCodes.push(formatWrapper[0]);
-		formatCodes.push([mapCode, 'template', sourceOffset, {}]);
-		formatCodes.push(formatWrapper[1]);
-		formatCodes.push(`\n`);
+
+	// functional like
+
+	function createFormatCode(mapCode: string, sourceOffset: number, formatWrapper: [string, string]): Code[] {
+		return [
+			formatWrapper[0],
+			[mapCode, 'template', sourceOffset, {}],
+			formatWrapper[1],
+			'\n',
+		];
+	}
+
+	function createObjectPropertyCode(a: Code, astHolder: any): Code[] {
+		const aStr = typeof a === 'string' ? a : a[0];
+		if (validTsVar.test(aStr)) {
+			return [a];
+		}
+		else if (aStr.startsWith('[') && aStr.endsWith(']')) {
+			const range = typeof a === 'object' ? a[2] : undefined;
+			const data = typeof a === 'object' ? a[3] : undefined;
+			return createInterpolationCode(
+				aStr,
+				astHolder,
+				range && typeof range === 'object' ? range[0] : range,
+				data,
+				'',
+				'',
+			);
+		}
+		else {
+			return createStringLiteralKeyCode(a);
+		}
+	}
+
+	function createInterpolationCode(
+		code: string,
+		astHolder: any,
+		start: number | undefined,
+		data: FileRangeCapabilities | (() => FileRangeCapabilities) | undefined,
+		prefix: string,
+		suffix: string,
+	): Code[] {
+		const ast = createTsAst(astHolder, prefix + code + suffix);
+		const codes: Code[] = [];
+		const vars = walkInterpolationFragment(ts, prefix + code + suffix, ast, (frag, fragOffset, isJustForErrorMapping) => {
+			if (fragOffset === undefined) {
+				codes.push(frag);
+			}
+			else {
+				fragOffset -= prefix.length;
+				let addSuffix = '';
+				const overLength = fragOffset + frag.length - code.length;
+				if (overLength > 0) {
+					addSuffix = frag.substring(frag.length - overLength);
+					frag = frag.substring(0, frag.length - overLength);
+				}
+				if (fragOffset < 0) {
+					codes.push(frag.substring(0, -fragOffset));
+					frag = frag.substring(-fragOffset);
+					fragOffset = 0;
+				}
+				if (start !== undefined && data !== undefined) {
+					codes.push([
+						frag,
+						'template',
+						start + fragOffset,
+						isJustForErrorMapping
+							? capabilitiesPresets.diagnosticOnly
+							: typeof data === 'function' ? data() : data,
+					]);
+				}
+				else {
+					codes.push(frag);
+				}
+				codes.push(addSuffix);
+			}
+		}, localVars, identifiers, vueCompilerOptions);
+		if (start !== undefined) {
+			for (const v of vars) {
+				v.offset = start + v.offset - prefix.length;
+			}
+			if (vars.length) {
+				tempVars.push(vars);
+			}
+		}
+		return codes;
+	}
+
+	function createTsAst(astHolder: any, text: string) {
+		if (astHolder.__volar_ast_text !== text) {
+			astHolder.__volar_ast_text = text;
+			astHolder.__volar_ast = ts.createSourceFile('/a.ts', text, ts.ScriptTarget.ESNext);
+		}
+		return astHolder.__volar_ast as ts.SourceFile;
+	}
+
+	function createPropertyAccessCode(a: Code): Code[] {
+		const aStr = typeof a === 'string' ? a : a[0];
+		if (validTsVar.test(aStr)) {
+			return ['.', a];
+		}
+		else if (aStr.startsWith('[') && aStr.endsWith(']')) {
+			return [a];
+		}
+		else {
+			return ['[', ...createStringLiteralKeyCode(a), ']'];
+		}
+	}
+
+	function createStringLiteralKeyCode(a: Code): Code[] {
+		let codes: Code[] = ['"', a, '"'];
+		if (typeof a === 'object') {
+			const start = typeof a[2] === 'number' ? a[2] : a[2][0];
+			const end = typeof a[2] === 'number' ? a[2] : a[2][1];
+			codes = [
+				['', 'template', start, a[3]],
+				...codes,
+				['', 'template', end, a[3]],
+			];
+		}
+		return codes;
 	}
 };
 
@@ -1837,6 +1943,7 @@ function toUnicodeIfNeed(str: string) {
 	}
 	return toUnicode(str);
 }
+
 function toUnicode(str: string) {
 	return str.split('').map(value => {
 		const temp = value.charCodeAt(0).toString(16).padStart(4, '0');
@@ -1846,15 +1953,19 @@ function toUnicode(str: string) {
 		return value;
 	}).join('');
 }
+
 function camelizeComponentName(newName: string) {
 	return camelize('-' + newName);
 }
+
 function getRenameApply(oldName: string) {
 	return oldName === hyphenate(oldName) ? hyphenate : noEditApply;
 }
+
 function noEditApply(n: string) {
 	return n;
 }
+
 function getModelValuePropName(node: CompilerDOM.ElementNode, vueVersion: number, vueCompilerOptions: VueCompilerOptions) {
 
 	for (const modelName in vueCompilerOptions.experimentalModelPropName) {
