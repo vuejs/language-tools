@@ -285,8 +285,12 @@ export function generate(
 		}
 		else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 			const vForNode = getVForNode(node);
+			const vIfNode = getVIfNode(node);
 			if (vForNode) {
 				visitVForNode(vForNode, parentEl, componentCtxVar);
+			}
+			else if (vIfNode) {
+				visitVIfNode(vIfNode, parentEl, componentCtxVar);
 			}
 			else {
 				const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
@@ -347,8 +351,9 @@ export function generate(
 						),
 					);
 					if (hasProps) {
-						codes.push(');\n');
+						codes.push(')');
 					}
+					codes.push(';\n');
 
 					slotBlockVars.forEach(varName => {
 						localVars[varName] ??= 0;
@@ -437,62 +442,7 @@ export function generate(
 		}
 		else if (node.type === CompilerDOM.NodeTypes.IF) {
 			// v-if / v-else-if / v-else
-
-			let originalBlockConditionsLength = blockConditions.length;
-
-			for (let i = 0; i < node.branches.length; i++) {
-
-				const branch = node.branches[i];
-
-				if (i === 0)
-					codes.push('if');
-				else if (branch.condition)
-					codes.push('else if');
-				else
-					codes.push('else');
-
-				let addedBlockCondition = false;
-
-				if (branch.condition?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-					codes.push(` `);
-					const beforeCodeLength = codes.length;
-					codes.push(
-						...createInterpolationCode(
-							branch.condition.content,
-							branch.condition.loc,
-							branch.condition.loc.start.offset,
-							capabilitiesPresets.all,
-							'(',
-							')',
-						),
-					);
-					const afterCodeLength = codes.length;
-
-					formatCodes.push(
-						...createFormatCode(
-							branch.condition.content,
-							branch.condition.loc.start.offset,
-							formatBrackets.normal,
-						),
-					);
-
-					blockConditions.push(muggle.toString(codes.slice(beforeCodeLength, afterCodeLength)));
-					addedBlockCondition = true;
-				}
-
-				codes.push(` {\n`);
-				for (const childNode of branch.children) {
-					visitNode(childNode, parentEl, componentCtxVar);
-				}
-				generateAutoImportCompletionCode();
-				codes.push('}\n');
-
-				if (addedBlockCondition) {
-					blockConditions[blockConditions.length - 1] = `!(${blockConditions[blockConditions.length - 1]})`;
-				}
-			}
-
-			blockConditions.length = originalBlockConditionsLength;
+			visitVIfNode(node, parentEl, componentCtxVar);
 		}
 		else if (node.type === CompilerDOM.NodeTypes.FOR) {
 			// v-for
@@ -507,6 +457,65 @@ export function generate(
 		else {
 			codes.push(`// Unprocessed node type: ${node.type} json: ${JSON.stringify(node.loc)}\n`);
 		}
+	}
+
+	function visitVIfNode(node: CompilerDOM.IfNode, parentEl: CompilerDOM.ElementNode | undefined, componentCtxVar: string | undefined) {
+
+		let originalBlockConditionsLength = blockConditions.length;
+
+		for (let i = 0; i < node.branches.length; i++) {
+
+			const branch = node.branches[i];
+
+			if (i === 0)
+				codes.push('if');
+			else if (branch.condition)
+				codes.push('else if');
+			else
+				codes.push('else');
+
+			let addedBlockCondition = false;
+
+			if (branch.condition?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+				codes.push(` `);
+				const beforeCodeLength = codes.length;
+				codes.push(
+					...createInterpolationCode(
+						branch.condition.content,
+						branch.condition.loc,
+						branch.condition.loc.start.offset,
+						capabilitiesPresets.all,
+						'(',
+						')',
+					),
+				);
+				const afterCodeLength = codes.length;
+
+				formatCodes.push(
+					...createFormatCode(
+						branch.condition.content,
+						branch.condition.loc.start.offset,
+						formatBrackets.normal,
+					),
+				);
+
+				blockConditions.push(muggle.toString(codes.slice(beforeCodeLength, afterCodeLength)));
+				addedBlockCondition = true;
+			}
+
+			codes.push(` {\n`);
+			for (const childNode of branch.children) {
+				visitNode(childNode, parentEl, componentCtxVar);
+			}
+			generateAutoImportCompletionCode();
+			codes.push('}\n');
+
+			if (addedBlockCondition) {
+				blockConditions[blockConditions.length - 1] = `!(${blockConditions[blockConditions.length - 1]})`;
+			}
+		}
+
+		blockConditions.length = originalBlockConditionsLength;
 	}
 
 	function visitVForNode(node: CompilerDOM.ForNode, parentEl: CompilerDOM.ElementNode | undefined, componentCtxVar: string | undefined) {
@@ -1948,7 +1957,7 @@ function getModelValuePropName(node: CompilerDOM.ElementNode, vueVersion: number
 }
 
 // TODO: track https://github.com/vuejs/vue-next/issues/3498
-export function getVForNode(node: CompilerDOM.ElementNode) {
+function getVForNode(node: CompilerDOM.ElementNode) {
 	const forDirective = node.props.find(
 		(prop): prop is CompilerDOM.DirectiveNode =>
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -1966,6 +1975,30 @@ export function getVForNode(node: CompilerDOM.ElementNode) {
 				props: node.props.filter(prop => prop !== forDirective),
 			}];
 			return forNode;
+		}
+	}
+}
+
+function getVIfNode(node: CompilerDOM.ElementNode) {
+	const forDirective = node.props.find(
+		(prop): prop is CompilerDOM.DirectiveNode =>
+			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+			&& prop.name === 'if'
+	);
+	if (forDirective) {
+		let ifNode: CompilerDOM.IfNode | undefined;
+		CompilerDOM.processIf(node, forDirective, transformContext, _ifNode => {
+			ifNode = { ..._ifNode };
+			return undefined;
+		});
+		if (ifNode) {
+			for (const branch of ifNode.branches) {
+				branch.children = [{
+					...node,
+					props: node.props.filter(prop => prop !== forDirective),
+				}];
+			}
+			return ifNode;
 		}
 	}
 }
