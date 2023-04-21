@@ -124,7 +124,7 @@ function resolvePlugins(
 						&& _context.typescript
 						&& item.textEdit?.newText.endsWith(suffix)
 						&& item.additionalTextEdits?.length === 1 && item.additionalTextEdits[0].newText.indexOf('import ' + item.textEdit.newText + ' from ') >= 0
-						&& (await _context.configurationHost?.getConfiguration<boolean>('volar.features.complete.normalizeComponentImportName') ?? true)
+						&& (await _context.configurationHost?.getConfiguration<boolean>('vue.features.complete.normalizeComponentImportName') ?? true)
 					) {
 						let newName = item.textEdit.newText.slice(0, -suffix.length);
 						newName = newName[0].toUpperCase() + newName.substring(1);
