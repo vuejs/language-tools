@@ -33,7 +33,7 @@ declare const ScriptSetupGenericExact: <T, >(
 		emit: any,
 		expose(_exposed: {}): void,
 	}
-) => any;
+) => import('vue').VNode & { __props?: typeof _props, __ctx?: typeof _ctx };
 
 exactType(ScriptSetup, ScriptSetupExact);
 exactType(ScriptSetupGeneric, ScriptSetupGenericExact);

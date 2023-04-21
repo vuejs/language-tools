@@ -410,7 +410,7 @@ export function generate(
 			codes.push('emit: typeof __VLS_emit');
 			codes.push('};\n');
 			codes.push('})(),\n');
-			codes.push(') => ({} as any))');
+			codes.push(') => ({} as import("vue").VNode & { __props?: typeof __VLS_props, __ctx?: typeof __VLS_ctx }))');
 		}
 		else if (!sfc.script) {
 			// no script block, generate script setup code at root
