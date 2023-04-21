@@ -87,7 +87,8 @@ export type EmitEvent<F, E> =
 	} ? (...payload: P) => void
 	: unknown | '[Type Warning] Volar could not infer $emit event more than 4 overloads without DefineComponent. see https://github.com/johnsoncodehk/volar/issues/60';
 export declare function asFunctionalComponent<T, K = T extends new (...args: any) => any ? InstanceType<T> : unknown>(t: T, instance?: K):
-	T extends (...args: any) => any ? T
+	T extends () => any ? (props: {}) => ReturnType<T>
+	: T extends (...args: any) => any ? T
 	: K extends { $props?: infer Props, $slots?: infer Slots, $emit?: infer Emit }
 		? (props: Props ${vueCompilerOptions.strictTemplates ? '' : '& Record<string, unknown>'}, ctx?: { attrs?: any, expose?(exposed: K): void, slots?: Slots, emit?: Emit }) => JSX.Element & { __ctx?: typeof ctx, __props?: typeof props }
 		: (_: T & Record<string, unknown>, ctx?: any) => { __ctx?: { attrs?: undefined, expose?: undefined, slots?: undefined, emit?: undefined }, __props?: T & Record<string, unknown> }; // IntrinsicElement
