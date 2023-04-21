@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.2 (2023/4/21)
+
+- fix: cannot disable auto insert `.value` feature
+- fix: avoid slot props reporting error if component does not have `$slots` type ([#2646](https://github.com/johnsoncodehk/volar/issues/2646))
+- fix: prefer component constructor signature instead of call signature ([#2647](https://github.com/johnsoncodehk/volar/issues/2647))
+- fix: avoid tsconfig reporting "Comments are not permitted" when takeover mode enabled ([#2648](https://github.com/johnsoncodehk/volar/issues/2648))
+
 ## 1.4.1 (2023/4/21)
 
 - fix: generic slot props type not incorrect ([#2639](https://github.com/johnsoncodehk/volar/issues/2639))
