@@ -1,6 +1,6 @@
 {
 	"name": "vue-component-type-helpers",
-	"version": "1.4.0",
+	"version": "1.4.1",
 	"license": "MIT",
 	"files": [
 		"*.d.ts"
