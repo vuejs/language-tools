@@ -31,9 +31,10 @@ export function activate(context: vscode.ExtensionContext) {
 		start = Date.now();
 	});
 	vscode.workspace.onDidSaveTextDocument(async () => {
-		if (config.features.codeActions.enable && Date.now() - start > config.features.codeActions.savingTimeLimit) {
+		const time = Date.now() - start;
+		if (config.features.codeActions.enable && time > config.features.codeActions.savingTimeLimit) {
 			const result = await vscode.window.showInformationMessage(
-				`Saving time is too long. (> ${config.features.codeActions.savingTimeLimit} ms), `,
+				`Saving time is too long. (${time} ms > ${config.features.codeActions.savingTimeLimit} ms), `,
 				'Disable codeActions',
 				'Increase saveTimeLimit',
 			);
