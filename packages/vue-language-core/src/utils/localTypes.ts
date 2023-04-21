@@ -91,18 +91,18 @@ export declare function asFunctionalComponent<T, K = T extends new (...args: any
 	: T extends (...args: any) => any ? T
 	: K extends { $props?: infer Props, $slots?: infer Slots, $emit?: infer Emit }
 		? (props: Props ${vueCompilerOptions.strictTemplates ? '' : '& Record<string, unknown>'}, ctx?: { attrs?: any, expose?(exposed: K): void, slots?: Slots, emit?: Emit }) => JSX.Element & { __ctx?: typeof ctx, __props?: typeof props }
-		: (_: T & Record<string, unknown>, ctx?: any) => { __ctx?: { attrs?: undefined, expose?: undefined, slots?: undefined, emit?: undefined }, __props?: T & Record<string, unknown> }; // IntrinsicElement
+		: (_: T & Record<string, unknown>, ctx?: any) => { __ctx?: { attrs?: unknown, expose?: unknown, slots?: unknown, emit?: unknown }, __props?: T & Record<string, unknown> }; // IntrinsicElement
 export declare function pickEvent<Emit, K, E>(emit: Emit, emitKey: K, event: E): FillingEventArg<
 	PickNotAny<
-		asFunctionOrAny<NonNullable<E>>,
-		asFunctionOrAny<NonNullable<EmitEvent<Emit, K>>>
+		AsFunctionOrAny<NonNullable<E>>,
+		AsFunctionOrAny<NonNullable<EmitEvent<Emit, K>>>
 	>
 >;
 export declare function pickFunctionalComponentCtx<T, K>(comp: T, compInstance: K): PickNotAny<
 	K extends { __ctx?: infer Ctx } ? Ctx : any,
 	T extends (props: any, ctx: infer Ctx) => any ? Ctx : any
 >;
-type asFunctionOrAny<F> = F extends ((...args: any) => any) ? F : any;
+type AsFunctionOrAny<F> = F extends ((...args: any) => any) ? F : any;
 `.trim();
 }
 
