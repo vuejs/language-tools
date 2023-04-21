@@ -505,7 +505,7 @@
 				},
 				"vue.features.codeActions.savingTimeLimit": {
 					"type": "number",
-					"default": 500,
+					"default": 1000,
 					"description": "Time limit for code actions on save (ms)."
 				},
 				"vue.features.codeLens.enable": {
