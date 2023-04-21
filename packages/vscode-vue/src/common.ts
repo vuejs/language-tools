@@ -188,9 +188,10 @@ export function getDocumentSelector(context: vscode.ExtensionContext, serverMode
 		if (serverMode === ServerMode.Semantic || serverMode === ServerMode.PartialSemantic) { // #2573
 			// support find references for .json files
 			selectors.push({ language: 'json' });
-			// support document links for tsconfig.json
-			selectors.push({ language: 'jsonc', pattern: '**/[jt]sconfig.json' });
-			selectors.push({ language: 'jsonc', pattern: '**/[jt]sconfig.*.json' });
+			// comment out to avoid #2648 for now
+			// // support document links for tsconfig.json
+			// selectors.push({ language: 'jsonc', pattern: '**/[jt]sconfig.json' });
+			// selectors.push({ language: 'jsonc', pattern: '**/[jt]sconfig.*.json' });
 		}
 	}
 	if (config.vueserver.petiteVue.processHtmlFile) {
