@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.1 (2023/4/21)
+
+- fix: generic slot props type not incorrect ([#2639](https://github.com/johnsoncodehk/volar/issues/2639))
+- fix: third-party library components cannot accept unknown props ([#2636](https://github.com/johnsoncodehk/volar/issues/2636))
+- fix: allow props less functional component ([#2638](https://github.com/johnsoncodehk/volar/issues/2638))
+- fix: native tags event type become never ([#2640](https://github.com/johnsoncodehk/volar/issues/2640))
+- fix: cannot resolve tsdk on windows ([#2637](https://github.com/johnsoncodehk/volar/issues/2637))
+
 ## 1.4.0 (2023/4/21)
 
 - feat: support intellisense for directive arg expression ([#2588](https://github.com/johnsoncodehk/volar/issues/2588))
