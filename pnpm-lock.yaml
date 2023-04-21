@@ -33,10 +33,10 @@ importers:
   packages/typescript-vue-plugin:
     dependencies:
       '@volar/vue-language-core':
-        specifier: 1.4.1
+        specifier: 1.4.2
         version: link:../vue-language-core
       '@volar/vue-typescript':
-        specifier: 1.4.1
+        specifier: 1.4.2
         version: link:../vue-typescript
 
   packages/vscode-typescript-vue-plugin:
@@ -49,7 +49,7 @@ importers:
         specifier: 0.15.18
         version: 0.15.18
       typescript-vue-plugin:
-        specifier: 1.4.1
+        specifier: 1.4.2
         version: link:../typescript-vue-plugin
       vsce:
         specifier: latest
@@ -70,10 +70,10 @@ importers:
         specifier: 1.4.0
         version: 1.4.0(@types/vscode@1.67.0)(vscode-languageclient@8.1.0)
       '@volar/vue-language-core':
-        specifier: 1.4.1
+        specifier: 1.4.2
         version: link:../vue-language-core
       '@volar/vue-language-server':
-        specifier: 1.4.1
+        specifier: 1.4.2
         version: link:../vue-language-server
       esbuild:
         specifier: 0.15.18
@@ -106,7 +106,7 @@ importers:
         specifier: 1.4.0
         version: 1.4.0
       '@volar/vue-language-core':
-        specifier: 1.4.1
+        specifier: 1.4.2
         version: link:../vue-language-core
       typesafe-path:
         specifier: ^0.2.2
@@ -161,7 +161,7 @@ importers:
         version: 1.4.0
     devDependencies:
       '@volar/vue-language-core':
-        specifier: 1.4.1
+        specifier: 1.4.2
         version: link:../vue-language-core
 
   packages/vue-language-server:
@@ -173,16 +173,16 @@ importers:
         specifier: 1.4.0
         version: 1.4.0
       '@volar/vue-language-core':
-        specifier: 1.4.1
+        specifier: 1.4.2
         version: link:../vue-language-core
       '@volar/vue-language-service':
-        specifier: 1.4.1
+        specifier: 1.4.2
         version: link:../vue-language-service
       vscode-languageserver-protocol:
         specifier: ^3.17.3
         version: 3.17.3
       vue-component-meta:
-        specifier: 1.4.1
+        specifier: 1.4.2
         version: link:../vue-component-meta
 
   packages/vue-language-service:
@@ -221,7 +221,7 @@ importers:
         specifier: 1.4.0
         version: 1.4.0
       '@volar/vue-language-core':
-        specifier: 1.4.1
+        specifier: 1.4.2
         version: link:../vue-language-core
       '@vue/compiler-dom':
         specifier: ^3.2.0
@@ -254,16 +254,16 @@ importers:
         specifier: ^3.2.0
         version: 3.2.47
       vue-component-type-helpers:
-        specifier: 1.4.1
+        specifier: 1.4.2
         version: link:../vue-component-type-helpers
 
   packages/vue-tsc:
     dependencies:
       '@volar/vue-language-core':
-        specifier: 1.4.1
+        specifier: 1.4.2
         version: link:../vue-language-core
       '@volar/vue-typescript':
-        specifier: 1.4.1
+        specifier: 1.4.2
         version: link:../vue-typescript
       semver:
         specifier: ^7.3.8
@@ -279,7 +279,7 @@ importers:
         specifier: latest
         version: 8.37.0
       vue-tsc:
-        specifier: 1.4.1
+        specifier: 1.4.2
         version: link:../vue-tsc
 
   packages/vue-typescript:
@@ -288,7 +288,7 @@ importers:
         specifier: 1.4.0
         version: 1.4.0(typescript@5.0.4)
       '@volar/vue-language-core':
-        specifier: 1.4.1
+        specifier: 1.4.2
         version: link:../vue-language-core
 
 packages:
@@ -805,7 +805,7 @@ packages:
       hosted-git-info: 6.1.1
       json-parse-even-better-errors: 3.0.0
       json-stringify-nice: 1.1.4
-      minimatch: 7.4.5
+      minimatch: 7.4.6
       nopt: 7.1.0
       npm-install-checks: 6.1.0
       npm-package-arg: 10.1.0
@@ -878,7 +878,7 @@ packages:
     dependencies:
       '@npmcli/name-from-folder': 2.0.0
       glob: 9.3.4
-      minimatch: 7.4.5
+      minimatch: 7.4.6
       read-package-json-fast: 3.0.2
     dev: false
     optional: true
@@ -1113,14 +1113,6 @@ packages:
   /@tufjs/canonical-json@1.0.0:
     resolution: {integrity: sha512-QTnf++uxunWvG2z3UFNzAoQPHxnSXOwtaI3iJ+AohhV+5vONuArPjJE7aPXPVXfXJsqrVbZBu9b81AJoSd09IQ==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
-    dev: false
-    optional: true
-
-  /@tufjs/models@1.0.1:
-    resolution: {integrity: sha512-AY0VoG/AXdlSOocuREfPoEW4SNhOPp/7fw6mpAxfVIny1uZ+0fEtMoCi7NhELSlqQIRLMu7RgfKhkxT+AJ+EXg==}
-    engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
-    dependencies:
-      minimatch: 7.4.5
     dev: false
     optional: true
 
@@ -3315,7 +3307,7 @@ packages:
     resolution: {integrity: sha512-ezmQ1Dg2b3jVZh2Dh+ar6Eu2MqNSTkyb32HU2MAQQQX9tKM3q/UQ/9lf03lQ5hW+fOeoMnwxwkleZ0xcNp0/qg==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
     dependencies:
-      minimatch: 7.4.5
+      minimatch: 7.4.6
     dev: false
     optional: true
 
@@ -3696,7 +3688,7 @@ packages:
       npm-registry-fetch: 14.0.4
       proc-log: 3.0.0
       semver: 7.5.0
-      sigstore: 1.2.0
+      sigstore: 1.3.2
       ssri: 10.0.3
     transitivePeerDependencies:
       - bluebird
@@ -3961,14 +3953,6 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       brace-expansion: 2.0.1
-
-  /minimatch@7.4.5:
-    resolution: {integrity: sha512-OzOamaOmNBJZUv2qqY1OSWa+++4YPpOkLgkc0w30Oov5ufKlWWXnFUl0l4dgmSv5Shq/zRVkEOXAe2NaqO4l5Q==}
-    engines: {node: '>=10'}
-    dependencies:
-      brace-expansion: 2.0.1
-    dev: false
-    optional: true
 
   /minimatch@7.4.6:
     resolution: {integrity: sha512-sBz8G/YjVniEz6lKPNpKxXwazJe4c19fEfV2GDMX6AjFz+MX9uDWIZW8XreVhkFW3fkIdTv/gxWr/Kks5FFAVw==}
@@ -5320,20 +5304,6 @@ packages:
     dev: false
     optional: true
 
-  /sigstore@1.2.0:
-    resolution: {integrity: sha512-Fr9+W1nkBSIZCkJQR7jDn/zI0UXNsVpp+7mDQkCnZOIxG9p6yNXBx9xntHsfUyYHE55XDkkVV3+rYbrkzAeesA==}
-    engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
-    hasBin: true
-    dependencies:
-      '@sigstore/protobuf-specs': 0.1.0
-      make-fetch-happen: 11.0.3
-      tuf-js: 1.1.2
-    transitivePeerDependencies:
-      - bluebird
-      - supports-color
-    dev: false
-    optional: true
-
   /sigstore@1.3.2:
     resolution: {integrity: sha512-0KT1DjpVB11FK15ep7BIsZQV6j1jBm4SnXIInbBCRvql6II39IKONOMO+j036sGsArU/+2xqa1NDJwJkic0neA==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
@@ -5751,18 +5721,6 @@ packages:
 
   /tslib@2.5.0:
     resolution: {integrity: sha512-336iVw3rtn2BUK7ORdIAHTyxHGRIHVReokCR3XjbckJMK7ms8FysBfhLR8IXnAgy7T0PTPNBWKiH514FOW/WSg==}
-    dev: false
-    optional: true
-
-  /tuf-js@1.1.2:
-    resolution: {integrity: sha512-gBfbnS6khluxjvoFCpRV0fhWT265xNfpiNXOcBX0Ze6HGbPhe93UG5V5DdKcgm/aXsMadnY76l/h6j63GmJS5g==}
-    engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
-    dependencies:
-      '@tufjs/models': 1.0.1
-      make-fetch-happen: 11.0.3
-    transitivePeerDependencies:
-      - bluebird
-      - supports-color
     dev: false
     optional: true
 
