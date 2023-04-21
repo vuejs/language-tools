@@ -12,8 +12,6 @@ export function createLanguageModules(
 	vueCompilerOptions: VueCompilerOptions,
 ): embedded.LanguageModule[] {
 
-	const patchSnapshots = new WeakMap<ts.IScriptSnapshot, ts.IScriptSnapshot>();
-
 	patchResolveModuleNames(ts, vueCompilerOptions);
 
 	const vueLanguagePlugin = getDefaultVueLanguagePlugins(
@@ -65,25 +63,7 @@ export function createLanguageModules(
 					if (basename === localTypes.typesFileName) {
 						return sharedTypesSnapshot;
 					}
-					let snapshot = host.getScriptSnapshot(fileName);
-					if (
-						snapshot
-						&& !vueCompilerOptions.strictTemplates
-						&& (
-							// vue 3
-							fileName.endsWith('/node_modules/@vue/runtime-core/dist/runtime-core.d.ts')
-							// vue 2.7
-							|| fileName.endsWith('/node_modules/vue/types/v3-component-proxy.d.ts')
-						)
-					) {
-						if (!patchSnapshots.has(snapshot)) {
-							let text = snapshot.getText(0, snapshot.getLength());
-							text = text.replace(/\$props: [^;]*/g, match => `$props: Record<string, unknown> & (${match.slice('$props: '.length)})`);
-							patchSnapshots.set(snapshot, ts.ScriptSnapshot.fromString(text));
-						}
-						snapshot = patchSnapshots.get(snapshot)!;
-					}
-					return snapshot;
+					return host.getScriptSnapshot(fileName);
 				},
 			};
 		},
