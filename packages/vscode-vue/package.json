@@ -412,6 +412,11 @@
 					"default": true,
 					"description": "Show known problems in status bar."
 				},
+				"volar.nameCasing.status": {
+					"type": "boolean",
+					"default": true,
+					"description": "Show name casing in status bar."
+				},
 				"volar.format.initialIndent": {
 					"type": "object",
 					"description": "Whether to have initial indent.",

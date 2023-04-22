@@ -134,9 +134,12 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 
 	async function update(document: vscode.TextDocument | undefined) {
 		if (
-			document?.languageId === 'vue'
-			|| (config.vueserver.vitePress.processMdFile && document?.languageId === 'markdown')
-			|| (config.vueserver.petiteVue.processHtmlFile && document?.languageId === 'html')
+			config.nameCasing.status
+			&& (
+				document?.languageId === 'vue'
+				|| (config.vueserver.vitePress.processMdFile && document?.languageId === 'markdown')
+				|| (config.vueserver.petiteVue.processHtmlFile && document?.languageId === 'html')
+			)
 		) {
 			let detected: Awaited<ReturnType<typeof detect>> | undefined;
 			let attrNameCasing = attrNameCasings.get(document.uri.toString());

@@ -81,6 +81,11 @@ export const config = {
 	doctor: {
 		get status() {
 			return volarConfigs().get<boolean>('doctor.status');
-		}
-	}
+		},
+	},
+	nameCasing: {
+		get status() {
+			return volarConfigs().get<boolean>('nameCasing.status');
+		},
+	},
 };
