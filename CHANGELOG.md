@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.0 (2023/4/23) - pre-release
+
+- refactor: deprecate `jsxTemplates` option ([#2677](https://github.com/johnsoncodehk/volar/issues/2677))
+
 ## 1.4.4 (2023/4/23)
 
 - fix: missing FunctionalComponent props are no longer reported in the template ([#2676](https://github.com/johnsoncodehk/volar/issues/2676))
