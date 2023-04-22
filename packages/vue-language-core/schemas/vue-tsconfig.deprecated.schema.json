@@ -59,6 +59,9 @@
 				},
 				"narrowingTypesInInlineHandlers": {
 					"deprecated": true
+				},
+				"jsxTemplates": {
+					"deprecated": true
 				}
 			}
 		}

@@ -19,7 +19,6 @@ export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 
 export interface VueCompilerOptions {
 	target: number;
 	extensions: string[];
-	jsxTemplates: boolean;
 	strictTemplates: boolean;
 	skipTemplateCodegen: boolean;
 	nativeTags: string[];

@@ -201,7 +201,6 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 		...vueOptions,
 		target,
 		extensions: vueOptions.extensions ?? ['.vue'],
-		jsxTemplates: vueOptions.jsxTemplates ?? false,
 		strictTemplates: vueOptions.strictTemplates ?? false,
 		skipTemplateCodegen: vueOptions.skipTemplateCodegen ?? false,
 		nativeTags: vueOptions.nativeTags ?? [...new Set([

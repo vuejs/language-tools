@@ -515,7 +515,7 @@ export function generate(
 		else if (isNamespacedTag) {
 			codes.push(
 				`const ${componentVar} = (await import('./__VLS_types')).asFunctionalComponent(${node.tag}, new ${node.tag}({`,
-				...createPropsCode(node, 'class', 'slots'),
+				...createPropsCode(node, 'slots'),
 				'}));\n',
 			);
 		}
@@ -524,143 +524,61 @@ export function generate(
 				`const ${componentVar} = (await import('./__VLS_types')).asFunctionalComponent(`,
 				`__VLS_templateComponents['${componentVars[node.tag] ?? node.tag}'], `,
 				`new __VLS_templateComponents['${componentVars[node.tag] ?? node.tag}']({`,
-				...createPropsCode(node, 'class', 'slots'),
+				...createPropsCode(node, 'slots'),
 				'}));\n',
 			);
 		}
 
-		if (!vueCompilerOptions.jsxTemplates) {
-			for (const offset of tagOffsets) {
-				if (isIntrinsicElement) {
-					codes.push(
-						`({} as import('./__VLS_types').IntrinsicElements)`,
-						...createPropertyAccessCode([
-							node.tag,
-							'template',
-							offset,
-							{
-								...capabilitiesPresets.tagReference,
-								...capabilitiesPresets.tagHover,
-							},
-						]),
-						';\n',
-					);
-				}
-				else if (isNamespacedTag) {
-					codes.push(
-						[node.tag, 'template', [offset, offset + node.tag.length], capabilitiesPresets.all],
-						';\n',
-					);
-				}
-				else {
-					if (componentVars[node.tag]) {
-						codes.push(`__VLS_templateComponents.`);
-					}
-					codes.push(
-						[
-							componentVars[node.tag] ?? node.tag,
-							'template',
-							[offset, offset + node.tag.length],
-							{
-								...capabilitiesPresets.tagHover,
-								...capabilitiesPresets.diagnosticOnly,
-							},
-						],
-						';\n',
-					);
-				}
+		for (const offset of tagOffsets) {
+			if (isIntrinsicElement) {
+				codes.push(
+					`({} as import('./__VLS_types').IntrinsicElements)`,
+					...createPropertyAccessCode([
+						node.tag,
+						'template',
+						offset,
+						{
+							...capabilitiesPresets.tagReference,
+							...capabilitiesPresets.tagHover,
+						},
+					]),
+					';\n',
+				);
 			}
-		}
-		else {
-
-			codes.push([
-				'',
-				'template',
-				node.loc.start.offset,
-				capabilitiesPresets.diagnosticOnly,
-			]);
-			const tagCapabilities: FileRangeCapabilities = isIntrinsicElement || isNamespacedTag ? capabilitiesPresets.all : {
-				...capabilitiesPresets.diagnosticOnly,
-				...capabilitiesPresets.tagHover,
-			};
-
-			codes.push(`<`);
-			if (componentVars[node.tag]) {
-				codes.push([
-					'',
-					'template',
-					startTagOffset,
-					capabilitiesPresets.diagnosticOnly,
-				]);
-				codes.push(`__VLS_templateComponents.`);
-			}
-			codes.push(
-				[
-					componentVars[node.tag] ?? node.tag,
-					'template',
-					[startTagOffset, startTagOffset + node.tag.length],
-					tagCapabilities,
-				],
-				' ',
-				...createPropsCode(node, 'jsx', 'props', propsFailedExps),
-			);
-
-			if (endTagOffset === undefined) {
-				codes.push(`/>`);
+			else if (isNamespacedTag) {
+				codes.push(
+					[node.tag, 'template', [offset, offset + node.tag.length], capabilitiesPresets.all],
+					';\n',
+				);
 			}
 			else {
-				codes.push(`></`);
 				if (componentVars[node.tag]) {
 					codes.push(`__VLS_templateComponents.`);
 				}
-				codes.push([
-					componentVars[node.tag] ?? node.tag,
-					'template',
-					[endTagOffset, endTagOffset + node.tag.length],
-					tagCapabilities,
-				]);
-				codes.push(`>;\n`);
+				codes.push(
+					[
+						componentVars[node.tag] ?? node.tag,
+						'template',
+						[offset, offset + node.tag.length],
+						{
+							...capabilitiesPresets.tagHover,
+							...capabilitiesPresets.diagnosticOnly,
+						},
+					],
+					';\n',
+				);
 			}
-
-			// fix https://github.com/johnsoncodehk/volar/issues/705#issuecomment-974773353
-			let startTagEnd: number;
-			if (node.loc.source.endsWith('/>')) {
-				startTagEnd = node.loc.end.offset;
-			}
-			else if (node.children.length) {
-				startTagEnd = node.loc.start.offset + node.loc.source.substring(0, node.children[0].loc.start.offset - node.loc.start.offset).lastIndexOf('>') + 1;
-			}
-			else {
-				startTagEnd = node.loc.start.offset + node.loc.source.substring(0, node.loc.source.lastIndexOf('</')).lastIndexOf('>') + 1;
-			}
-			codes.push([
-				'',
-				'template',
-				startTagEnd,
-				capabilitiesPresets.diagnosticOnly,
-			]);
-			codes.push(`\n`);
 		}
 
-		codes.push(`const ${componentInstanceVar} = ${componentVar}(`);
-
-		if (vueCompilerOptions.jsxTemplates) {
-			codes.push(
-				'{ ',
-				...createPropsCode(node, 'class', 'slots'),
-				'}',
-			);
-		}
-		else {
-			codes.push(
-				['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly], // diagnostic start
-				'{ ',
-				...createPropsCode(node, 'class', 'props', propsFailedExps),
-				'}',
-				['', 'template', startTagOffset + node.tag.length, capabilitiesPresets.diagnosticOnly], // diagnostic end
-			);
-		}
-		codes.push(`, {} as any);\n`);
+		codes.push(
+			`const ${componentInstanceVar} = ${componentVar}(`,
+			['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly], // diagnostic start
+			'{ ',
+			...createPropsCode(node, 'props', propsFailedExps),
+			'}',
+			['', 'template', startTagOffset + node.tag.length, capabilitiesPresets.diagnosticOnly], // diagnostic end
+			', {} as any);\n',
+		);
 
 		if (node.tag !== 'template') {
 			componentCtxVar = `__VLS_${elementIndex++}`;
@@ -994,7 +912,7 @@ export function generate(
 		}
 	}
 
-	function createPropsCode(node: CompilerDOM.ElementNode, format: 'jsx' | 'class', mode: 'props' | 'slots', propsFailedExps?: CompilerDOM.SimpleExpressionNode[]): Code[] {
+	function createPropsCode(node: CompilerDOM.ElementNode, mode: 'props' | 'slots', propsFailedExps?: CompilerDOM.SimpleExpressionNode[]): Code[] {
 
 		let styleAttrNum = 0;
 		let classAttrNum = 0;
@@ -1056,7 +974,6 @@ export function generate(
 				}
 
 				// camelize name
-				generatePropStart(isStatic);
 				codes.push([
 					'',
 					'template',
@@ -1064,45 +981,48 @@ export function generate(
 					getCaps(capabilitiesPresets.diagnosticOnly),
 				]);
 				if (!prop.arg) {
-					generatePropName(
-						attrNameText,
-						isStatic,
-						[prop.loc.start.offset, prop.loc.start.offset + prop.loc.source.indexOf('=')],
-						getCaps(capabilitiesPresets.attr),
-						(prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}),
+					codes.push(
+						...createObjectPropertyCode([
+							attrNameText,
+							'template',
+							[prop.loc.start.offset, prop.loc.start.offset + prop.loc.source.indexOf('=')],
+							getCaps(capabilitiesPresets.attr),
+						], (prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {})),
 					);
 				}
 				else if (prop.exp?.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
-					generatePropName(
-						propName,
-						isStatic,
-						[prop.arg.loc.start.offset, prop.arg.loc.start.offset + attrNameText.length], // patch style attr,
-						{
-							...getCaps(capabilitiesPresets.attr),
-							rename: {
-								normalize: camelize,
-								apply: getRenameApply(attrNameText),
+					codes.push(
+						...createObjectPropertyCode([
+							propName,
+							'template',
+							[prop.arg.loc.start.offset, prop.arg.loc.start.offset + attrNameText.length], // patch style attr,
+							{
+								...getCaps(capabilitiesPresets.attr),
+								rename: {
+									normalize: camelize,
+									apply: getRenameApply(attrNameText),
+								},
 							},
-						},
-						(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
+						], (prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {})),
 					);
 				}
 				else {
-					generatePropName(
-						propName,
-						isStatic,
-						[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
-						{
-							...getCaps(capabilitiesPresets.attr),
-							rename: {
-								normalize: camelize,
-								apply: getRenameApply(attrNameText),
+					codes.push(
+						...createObjectPropertyCode([
+							propName,
+							'template',
+							[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
+							{
+								...getCaps(capabilitiesPresets.attr),
+								rename: {
+									normalize: camelize,
+									apply: getRenameApply(attrNameText),
+								},
 							},
-						},
-						(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
+						], (prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {})),
 					);
 				}
-				generatePropValuePrefix(isStatic);
+				codes.push(': (');
 				if (prop.exp && !(prop.exp.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY)) { // style='z-index: 2' will compile to {'z-index':'2'}
 					codes.push(
 						...createInterpolationCode(
@@ -1128,31 +1048,31 @@ export function generate(
 				else {
 					codes.push('{}');
 				}
-				generatePropValueSuffix(isStatic);
+				codes.push(')');
 				codes.push([
 					'',
 					'template',
 					prop.loc.end.offset,
 					getCaps(capabilitiesPresets.diagnosticOnly),
 				]);
-				generatePropEnd(isStatic);
+				codes.push(', ');
 				// original name
 				if (prop.arg && attrNameText !== propName) {
-					generatePropStart(isStatic);
-					generatePropName(
-						attrNameText,
-						isStatic,
-						[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
-						{
-							...getCaps(capabilitiesPresets.attr),
-							rename: {
-								normalize: camelize,
-								apply: getRenameApply(attrNameText),
+					codes.push(
+						...createObjectPropertyCode([
+							attrNameText,
+							'template',
+							[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
+							{
+								...getCaps(capabilitiesPresets.attr),
+								rename: {
+									normalize: camelize,
+									apply: getRenameApply(attrNameText),
+								},
 							},
-						},
-						(prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}),
+						], (prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}))
 					);
-					generatePropValuePrefix(isStatic);
+					codes.push(': (');
 					if (prop.exp) {
 						codes.push(
 							...createInterpolationCode(
@@ -1168,8 +1088,8 @@ export function generate(
 					else {
 						codes.push('undefined');
 					}
-					generatePropValueSuffix(isStatic);
-					generatePropEnd(isStatic);
+					codes.push(')');
+					codes.push(', ');
 				}
 			}
 			else if (
@@ -1197,48 +1117,17 @@ export function generate(
 				}
 
 				// camelize name
-				generatePropStart(true);
 				codes.push([
 					'',
 					'template',
 					prop.loc.start.offset,
 					getCaps(capabilitiesPresets.diagnosticOnly),
 				]);
-				generatePropName(
-					propName,
-					true,
-					[prop.loc.start.offset, prop.loc.start.offset + prop.name.length],
-					{
-						...getCaps(capabilitiesPresets.attr),
-						rename: {
-							normalize: camelize,
-							apply: getRenameApply(prop.name),
-						},
-					},
-					(prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}),
-				);
-				generatePropValuePrefix(true);
-				if (prop.value) {
-					generateAttrValue(prop.value);
-				}
-				else {
-					codes.push('true');
-				}
-				generatePropValueSuffix(true);
-				codes.push([
-					'',
-					'template',
-					prop.loc.end.offset,
-					getCaps(capabilitiesPresets.diagnosticOnly),
-				]);
-				generatePropEnd(true);
-				// original name
-				if (attrNameText !== propName) {
-					generatePropStart(true);
-					generatePropName(
-						attrNameText,
-						true,
-						prop.loc.start.offset,
+				codes.push(
+					...createObjectPropertyCode([
+						propName,
+						'template',
+						[prop.loc.start.offset, prop.loc.start.offset + prop.name.length],
 						{
 							...getCaps(capabilitiesPresets.attr),
 							rename: {
@@ -1246,17 +1135,48 @@ export function generate(
 								apply: getRenameApply(prop.name),
 							},
 						},
-						(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
+					], (prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}))
+				);
+				codes.push(': (');
+				if (prop.value) {
+					generateAttrValue(prop.value);
+				}
+				else {
+					codes.push('true');
+				}
+				codes.push(')');
+				codes.push([
+					'',
+					'template',
+					prop.loc.end.offset,
+					getCaps(capabilitiesPresets.diagnosticOnly),
+				]);
+				codes.push(', ');
+				// original name
+				if (attrNameText !== propName) {
+					codes.push(
+						...createObjectPropertyCode([
+							attrNameText,
+							'template',
+							prop.loc.start.offset,
+							{
+								...getCaps(capabilitiesPresets.attr),
+								rename: {
+									normalize: camelize,
+									apply: getRenameApply(prop.name),
+								},
+							},
+						], (prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}))
 					);
-					generatePropValuePrefix(true);
+					codes.push(': (');
 					if (prop.value) {
 						generateAttrValue(prop.value);
 					}
 					else {
 						codes.push('true');
 					}
-					generatePropValueSuffix(true);
-					generatePropEnd(true);
+					codes.push(')');
+					codes.push(', ');
 				}
 			}
 			else if (
@@ -1266,7 +1186,7 @@ export function generate(
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
 				codes.push(
-					format === 'jsx' ? '{...' : '...',
+					'...',
 					...createInterpolationCode(
 						prop.exp.content,
 						prop.exp.loc,
@@ -1275,7 +1195,7 @@ export function generate(
 						'(',
 						')',
 					),
-					format === 'jsx' ? '} ' : ', ',
+					', ',
 				);
 				const fb = getFormatBrackets(formatBrackets.normal);
 				if (fb) {
@@ -1296,53 +1216,6 @@ export function generate(
 
 		return codes;
 
-		function generatePropName(name: string, isStatic: boolean, sourceRange: number | [number, number], data: FileRangeCapabilities, cacheOn: any) {
-			if (format === 'jsx' && isStatic) {
-				codes.push([name, 'template', sourceRange, data]);
-			}
-			else {
-				codes.push(
-					...createObjectPropertyCode([
-						name,
-						'template',
-						sourceRange,
-						data,
-					], cacheOn)
-				);
-			}
-		}
-		function generatePropValuePrefix(isStatic: boolean) {
-			if (format === 'jsx' && isStatic) {
-				codes.push('={');
-			}
-			else {
-				codes.push(': (');
-			}
-		}
-		function generatePropValueSuffix(isStatic: boolean) {
-			if (format === 'jsx' && isStatic) {
-				codes.push('}');
-			}
-			else {
-				codes.push(')');
-			}
-		}
-		function generatePropStart(isStatic: boolean) {
-			if (format === 'jsx' && !isStatic) {
-				codes.push('{...{');
-			}
-		}
-		function generatePropEnd(isStatic: boolean) {
-			if (format === 'jsx' && isStatic) {
-				codes.push(' ');
-			}
-			else if (format === 'jsx' && !isStatic) {
-				codes.push('}} ');
-			}
-			else {
-				codes.push(', ');
-			}
-		}
 		function getCaps(caps: FileRangeCapabilities): FileRangeCapabilities {
 			if (mode === 'props') {
 				return caps;

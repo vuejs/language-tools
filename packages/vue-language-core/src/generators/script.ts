@@ -80,12 +80,7 @@ export function generate(
 		PropsChildren: false,
 	};
 
-	if (vueCompilerOptions.jsxTemplates && vueCompilerOptions.target >= 3.3) {
-		codes.push(`/** @jsxImportSource vue */\n`);
-	}
-	else {
-		codes.push('/** __vue_virtual_code_placeholder */\n');
-	}
+	codes.push('/** __vue_virtual_code_placeholder */\n');
 
 	let generatedTemplate = false;
 

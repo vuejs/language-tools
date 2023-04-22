@@ -105,19 +105,10 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 	function createTsx(fileName: string, _sfc: Sfc) {
 
 		const lang = computed(() => {
-			let lang = !_sfc.script && !_sfc.scriptSetup ? 'ts'
+			return !_sfc.script && !_sfc.scriptSetup ? 'ts'
 				: _sfc.scriptSetup && _sfc.scriptSetup.lang !== 'js' ? _sfc.scriptSetup.lang
 					: _sfc.script && _sfc.script.lang !== 'js' ? _sfc.script.lang
 						: 'js';
-			if (vueCompilerOptions.jsxTemplates) {
-				if (lang === 'js') {
-					lang = 'jsx';
-				}
-				else if (lang === 'ts') {
-					lang = 'tsx';
-				}
-			}
-			return lang;
 		});
 		const cssVars = computed(() => collectCssVars(_sfc));
 		const scriptRanges = computed(() =>
