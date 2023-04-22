@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.3 (2023/4/22)
+
+- feat: add `volar.nameCasing.status` setting to disable nameCasing status
+- fix(vue-typescript): add missing peer dependency `typescript` ([#2665](https://github.com/johnsoncodehk/volar/issues/2665)) - thanks @merceyz
+- fix: slots references codeLens, renaming not working
+- fix: pug multiline attribute values are marked as error ([#2413](https://github.com/johnsoncodehk/volar/issues/2413))
+- fix: incorrect extra inlay hints inside template when enabled `typescript.inlayHints.parameterNames` ([#2670](https://github.com/johnsoncodehk/volar/issues/2670))
+- fix: failed to resolve tsdk path for "JavaScript and TypeScript Nightly" ([#2663](https://github.com/johnsoncodehk/volar/issues/2663))
+- revert: "fix(vue-tsc): add throw message if composite / incremental enabled" (https://github.com/vuejs/language-tools/commit/b596a60154a0f2a6345244a90868b5cc67eb9ff8)
+
 ## 1.4.2 (2023/4/21)
 
 - fix: cannot disable auto insert `.value` feature
