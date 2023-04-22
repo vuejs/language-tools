@@ -660,7 +660,7 @@ export function generate(
 				['', 'template', startTagOffset + node.tag.length, capabilitiesPresets.diagnosticOnly], // diagnostic end
 			);
 		}
-		codes.push(`);\n`);
+		codes.push(`, {} as any);\n`);
 
 		if (node.tag !== 'template') {
 			componentCtxVar = `__VLS_${elementIndex++}`;

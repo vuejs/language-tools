@@ -91,7 +91,7 @@ export declare function asFunctionalComponent<T, K = T extends new (...args: any
 		K extends { $props?: infer Props, $slots?: infer Slots, $emit?: infer Emit }
 			? (props: Props ${vueCompilerOptions.strictTemplates ? '' : '& Record<string, unknown>'}, ctx?: { attrs?: any, expose?(exposed: K): void, slots?: Slots, emit?: Emit }) => JSX.Element & { __ctx?: typeof ctx, __props?: typeof props }
 			: never
-	: T extends () => any ? (props: {}) => ReturnType<T>
+	: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 	: T extends (...args: any) => any ? T
 	: (_: T & Record<string, unknown>, ctx?: any) => { __ctx?: { attrs?: unknown, expose?: unknown, slots?: unknown, emit?: unknown }, __props?: T & Record<string, unknown> }; // IntrinsicElement
 export declare function pickEvent<Emit, K, E>(emit: Emit, emitKey: K, event: E): FillingEventArg<
