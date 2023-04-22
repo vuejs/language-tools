@@ -294,7 +294,7 @@ export function generate(
 			codes.push(`>`);
 			codes.push('(\n');
 			codes.push(`__VLS_props: typeof __VLS_setup['props'] & import('vue').VNodeProps,\n`);
-			codes.push(`__VLS_ctx: Pick<typeof __VLS_setup, 'expose' | 'attrs' | 'emit' | 'slots'>,\n`);
+			codes.push(`__VLS_ctx?: Pick<typeof __VLS_setup, 'expose' | 'attrs' | 'emit' | 'slots'>,\n`);
 			codes.push('__VLS_setup = (() => {\n');
 			scriptSetupGeneratedOffset = generateSetupFunction(true, 'none', definePropMirrors);
 
