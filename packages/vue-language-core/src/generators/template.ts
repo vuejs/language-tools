@@ -116,15 +116,17 @@ export function generate(
 		codes.push(`{\n`);
 		for (const [name, slot] of slots) {
 			hasSlot = true;
-			createObjectPropertyCode([
-				name,
-				'template',
-				slot.loc,
-				{
-					...capabilitiesPresets.slotNameExport,
-					referencesCodeLens: true,
-				},
-			], slot.nodeLoc);
+			codes.push(
+				...createObjectPropertyCode([
+					name,
+					'template',
+					slot.loc,
+					{
+						...capabilitiesPresets.slotNameExport,
+						referencesCodeLens: true,
+					},
+				], slot.nodeLoc),
+			);
 			codes.push(`?(_: typeof ${slot.varName}): any,\n`);
 		}
 		codes.push(`}`);
@@ -776,7 +778,7 @@ export function generate(
 				}
 			}
 			codes.push(
-				`${componentCtxVar}.slots`,
+				`${componentCtxVar}.slots!`,
 				...(
 					(slotDir?.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content)
 						? createPropertyAccessCode([
@@ -1584,7 +1586,7 @@ export function generate(
 				['', 'template', node.loc.start.offset, capabilitiesPresets.diagnosticOnly],
 				'__VLS_slots[',
 				['', 'template', node.loc.start.offset, capabilitiesPresets.diagnosticOnly],
-				typeof slotNameExpNode === 'object' ? slotNameExpNode.content : slotNameExpNode,
+				slotNameExpNode?.content ?? `('${getSlotName()}' as const)`,
 				['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly],
 				']',
 				['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly],
@@ -1722,7 +1724,6 @@ export function generate(
 					}
 				}
 			}
-			return `('${getSlotName()}' as const)`;
 		}
 	}
 

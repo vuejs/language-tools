@@ -19,7 +19,7 @@ fs.readFileSync = (...args) => {
 		// proxy createProgram apis
 		tryReplace(/function createProgram\(.+\) {/, s => s + ` return require(${JSON.stringify(proxyApiPath)}).createProgram(...arguments);`);
 
-		// patches logic for checking root file existance in build program for incremental builds
+		// patches logic for checking root file extension in build program for incremental builds
 		if (semver.gt(tsPkg.version, '5.0.0')) {
 			tryReplace(`for (const existingRoot of buildInfoVersionMap.roots) {`, `for (const existingRoot of buildInfoVersionMap.roots
 				.filter(file => !file.toLowerCase().includes('__vls_'))
