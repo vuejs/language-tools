@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.4 (2023/4/23)
+
+- fix: missing FunctionalComponent props are no longer reported in the template ([#2676](https://github.com/johnsoncodehk/volar/issues/2676))
+
 ## 1.4.3 (2023/4/22)
 
 - feat: add `volar.nameCasing.status` setting to disable nameCasing status
