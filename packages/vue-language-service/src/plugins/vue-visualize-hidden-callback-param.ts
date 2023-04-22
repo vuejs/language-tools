@@ -34,7 +34,7 @@ const plugin: LanguageServicePlugin = (context) => {
 								kind: 'markdown',
 								value: [
 									'`$event` is a hidden parameter, you can use it in this callback.',
-									'To hide this hint, set `volar.inlayHints.eventArgumentInInlineHandlers` to `false` in IDE settings.',
+									'To hide this hint, set `vue.features.inlayHints.inlineHandlerLeading` to `false` in IDE settings.',
 									'[More info](https://github.com/vuejs/language-tools/issues/2445#issuecomment-1444771420)',
 								].join('\n\n'),
 							},
