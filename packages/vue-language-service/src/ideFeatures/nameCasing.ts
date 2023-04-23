@@ -3,7 +3,7 @@ import { LanguageServicePluginContext, VirtualFile } from '@volar/language-servi
 import { checkComponentNames, getTemplateTagsAndAttrs, checkPropsOfTag } from '../helpers';
 import * as vue from '@volar/vue-language-core';
 import * as vscode from 'vscode-languageserver-protocol';
-import { AttrNameCasing, TagNameCasing, VueCompilerOptions } from '../types';
+import { AttrNameCasing, TagNameCasing } from '../types';
 
 export async function convertTagName(
 	context: LanguageServicePluginContext,
@@ -51,7 +51,6 @@ export async function convertAttrName(
 	_ts: NonNullable<LanguageServicePluginContext['typescript']>,
 	uri: string,
 	casing: AttrNameCasing,
-	vueCompilerOptions: VueCompilerOptions,
 ) {
 
 	const rootFile = context.documents.getSourceByUri(uri)?.root;
@@ -71,7 +70,7 @@ export async function convertAttrName(
 	for (const [tagName, { attrs }] of tags) {
 		const componentName = components.find(component => component === tagName || hyphenate(component) === tagName);
 		if (componentName) {
-			const props = checkPropsOfTag(_ts.module, _ts.languageService, rootFile, componentName, vueCompilerOptions);
+			const props = checkPropsOfTag(_ts.module, _ts.languageService, rootFile, componentName);
 			for (const [attrName, { offsets }] of attrs) {
 				const propName = props.find(prop => prop === attrName || hyphenate(prop) === attrName);
 				if (propName) {

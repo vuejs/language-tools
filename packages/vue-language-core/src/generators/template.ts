@@ -59,7 +59,6 @@ export function generate(
 	cssScopedClasses: string[] = [],
 ) {
 
-	const nativeTags = new Set(vueCompilerOptions.nativeTags);
 	const codes: Code[] = [];
 	const formatCodes: Code[] = [];
 	const cssCodes: Code[] = [];
@@ -160,26 +159,18 @@ export function generate(
 
 		for (const tagName in tagNames) {
 
-			if (nativeTags.has(tagName))
-				continue;
-
 			const isNamespacedTag = tagName.indexOf('.') >= 0;
 			if (isNamespacedTag)
 				continue;
 
-			const names = new Set([
-				// order is important: https://github.com/johnsoncodehk/volar/issues/2010
-				capitalize(camelize(tagName)),
-				camelize(tagName),
-				tagName,
-			]);
 			const varName = validTsVar.test(tagName) ? tagName : capitalize(camelize(tagName.replace(/:/g, '-')));
 
 			codes.push(
-				'& import("./__VLS_types").WithComponent<"',
-				varName,
-				'", typeof __VLS_components, ',
-				[...names].map(name => `'${name}'`).join(', '),
+				'& import("./__VLS_types").WithComponent<typeof __VLS_components, ',
+				// order is important: https://github.com/johnsoncodehk/volar/issues/2010
+				`"${capitalize(camelize(tagName))}", `,
+				`"${camelize(tagName)}", `,
+				`"${tagName}"`,
 				'>\n',
 			);
 
@@ -206,7 +197,7 @@ export function generate(
 			for (const name of names) {
 				for (const tagRange of tagRanges) {
 					codes.push(
-						'__VLS_components',
+						name === tagName ? '__VLS_templateComponents' : '__VLS_components',
 						...createPropertyAccessCode([
 							name,
 							'template',
@@ -493,26 +484,11 @@ export function generate(
 
 		const propsFailedExps: CompilerDOM.SimpleExpressionNode[] = [];
 		const tagOffsets = endTagOffset !== undefined ? [startTagOffset, endTagOffset] : [startTagOffset];
-		const isIntrinsicElement = nativeTags.has(node.tag);
 		const isNamespacedTag = node.tag.indexOf('.') >= 0;
 		const componentVar = `__VLS_${elementIndex++}`;
 		const componentInstanceVar = `__VLS_${elementIndex++}`;
 
-		if (isIntrinsicElement) {
-			codes.push(
-				'const ',
-				componentVar,
-				` = (await import('./__VLS_types')).asFunctionalComponent(({} as import('./__VLS_types').IntrinsicElements)[`,
-				...createStringLiteralKeyCode([
-					node.tag,
-					'template',
-					tagOffsets[0],
-					capabilitiesPresets.diagnosticOnly,
-				]),
-				']);\n',
-			);
-		}
-		else if (isNamespacedTag) {
+		if (isNamespacedTag) {
 			codes.push(
 				`const ${componentVar} = (await import('./__VLS_types')).asFunctionalComponent(${node.tag}, new ${node.tag}({`,
 				...createPropsCode(node, 'slots'),
@@ -530,22 +506,7 @@ export function generate(
 		}
 
 		for (const offset of tagOffsets) {
-			if (isIntrinsicElement) {
-				codes.push(
-					`({} as import('./__VLS_types').IntrinsicElements)`,
-					...createPropertyAccessCode([
-						node.tag,
-						'template',
-						offset,
-						{
-							...capabilitiesPresets.tagReference,
-							...capabilitiesPresets.tagHover,
-						},
-					]),
-					';\n',
-				);
-			}
-			else if (isNamespacedTag) {
+			if (isNamespacedTag) {
 				codes.push(
 					[node.tag, 'template', [offset, offset + node.tag.length], capabilitiesPresets.all],
 					';\n',

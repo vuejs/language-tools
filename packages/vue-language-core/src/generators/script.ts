@@ -812,7 +812,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		codes.push('/* Components */\n');
 		codes.push(`let __VLS_localComponents!: NonNullable<typeof __VLS_internalComponent extends { components: infer C } ? C : {}> & typeof __VLS_componentsOption & typeof __VLS_ctx;\n`);
 		codes.push(`let __VLS_otherComponents!: typeof __VLS_localComponents & import('./__VLS_types').GlobalComponents;\n`);
-		codes.push(`let __VLS_own!: import('./__VLS_types').SelfComponent<typeof __VLS_name, typeof __VLS_internalComponent & typeof __VLS_publicComponent & (new () => { ${getSlotsPropertyName(vueCompilerOptions.target ?? 3)}: typeof __VLS_slots })>;\n`);
+		codes.push(`let __VLS_own!: import('./__VLS_types').SelfComponent<typeof __VLS_name, typeof __VLS_internalComponent & typeof __VLS_publicComponent & (new () => { ${getSlotsPropertyName(vueCompilerOptions.target)}: typeof __VLS_slots })>;\n`);
 		codes.push(`let __VLS_components!: typeof __VLS_otherComponents & Omit<typeof __VLS_own, keyof typeof __VLS_otherComponents>;\n`);
 
 		/* Style Scoped */
