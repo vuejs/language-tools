@@ -1260,7 +1260,7 @@ export function generate(
 
 				identifiers.add(camelize('v-' + prop.name));
 
-				if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+				if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && !prop.arg.isStatic) {
 					codes.push(
 						...createInterpolationCode(
 							prop.arg.content,
