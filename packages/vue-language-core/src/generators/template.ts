@@ -538,7 +538,7 @@ export function generate(
 			...createPropsCode(node, 'props', propsFailedExps),
 			'}',
 			['', 'template', startTagOffset + node.tag.length, capabilitiesPresets.diagnosticOnly], // diagnostic end
-			', {} as any);\n',
+			`, ...(await import('./__VLS_types')).functionalComponentArgsRest(${componentVar}));\n`,
 		);
 
 		if (node.tag !== 'template') {
