@@ -95,7 +95,7 @@ export declare function asFunctionalComponent<T, K = T extends new (...args: any
 	: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 	: T extends (...args: any) => any ? T
 	: (_: T & Record<string, unknown>, ctx?: any) => { __ctx?: { attrs?: unknown, expose?: unknown, slots?: unknown, emit?: unknown }, __props?: T & Record<string, unknown> }; // IntrinsicElement
-declare function functionalComponentArgsRest<T>(t: T): Parameters<T>['length'] extends 2 ? [any] : [];
+declare function functionalComponentArgsRest<T extends (...args: any) => any>(t: T): Parameters<T>['length'] extends 2 ? [any] : [];
 export declare function pickEvent<Emit, K, E>(emit: Emit, emitKey: K, event: E): FillingEventArg<
 	PickNotAny<
 		AsFunctionOrAny<NonNullable<E>>,
