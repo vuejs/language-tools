@@ -136,7 +136,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 										: components.find(component => component === tagName || hyphenate(component) === tagName);
 								const checkTag = tagName.indexOf('.') >= 0 ? tagName : component;
 								if (checkTag) {
-									componentProps[checkTag] ??= checkPropsOfTag(_ts.module, _ts.languageService, virtualFile, checkTag, nativeTags);
+									componentProps[checkTag] ??= checkPropsOfTag(_ts.module, _ts.languageService, virtualFile, checkTag, nativeTags, true);
 									current = {
 										unburnedRequiredProps: [...componentProps[checkTag]],
 										labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
