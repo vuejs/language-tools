@@ -1,6 +1,6 @@
 import { hyphenate } from '@vue/shared';
 import { LanguageServicePluginContext, VirtualFile } from '@volar/language-service';
-import { checkComponentNames, getTemplateTagsAndAttrs, checkPropsOfTag } from '../helpers';
+import { checkComponentNames, getTemplateTagsAndAttrs, checkPropsOfTag, checkNativeTags } from '../helpers';
 import * as vue from '@volar/vue-language-core';
 import * as vscode from 'vscode-languageserver-protocol';
 import { AttrNameCasing, TagNameCasing } from '../types';
@@ -23,7 +23,8 @@ export async function convertTagName(
 	const template = desc.template;
 	const document = context.documents.getDocumentByFileName(rootFile.snapshot, rootFile.fileName);
 	const edits: vscode.TextEdit[] = [];
-	const components = checkComponentNames(_ts.module, _ts.languageService, rootFile);
+	const nativeTags = checkNativeTags(_ts.module, _ts.languageService, rootFile.fileName);
+	const components = checkComponentNames(_ts.module, _ts.languageService, rootFile, nativeTags);
 	const tags = getTemplateTagsAndAttrs(rootFile);
 
 	for (const [tagName, { offsets }] of tags) {
@@ -64,13 +65,14 @@ export async function convertAttrName(
 	const template = desc.template;
 	const document = context.documents.getDocumentByFileName(rootFile.snapshot, rootFile.fileName);
 	const edits: vscode.TextEdit[] = [];
-	const components = checkComponentNames(_ts.module, _ts.languageService, rootFile);
+	const nativeTags = checkNativeTags(_ts.module, _ts.languageService, rootFile.fileName);
+	const components = checkComponentNames(_ts.module, _ts.languageService, rootFile, nativeTags);
 	const tags = getTemplateTagsAndAttrs(rootFile);
 
 	for (const [tagName, { attrs }] of tags) {
 		const componentName = components.find(component => component === tagName || hyphenate(component) === tagName);
 		if (componentName) {
-			const props = checkPropsOfTag(_ts.module, _ts.languageService, rootFile, componentName);
+			const props = checkPropsOfTag(_ts.module, _ts.languageService, rootFile, componentName, nativeTags);
 			for (const [attrName, { offsets }] of attrs) {
 				const propName = props.find(prop => prop === attrName || hyphenate(prop) === attrName);
 				if (propName) {
@@ -161,7 +163,8 @@ export function detect(
 	}
 	function getTagNameCase(file: VirtualFile): TagNameCasing[] {
 
-		const components = checkComponentNames(_ts.module, _ts.languageService, file);
+		const nativeTags = checkNativeTags(_ts.module, _ts.languageService, file.fileName);
+		const components = checkComponentNames(_ts.module, _ts.languageService, file, nativeTags);
 		const tagNames = getTemplateTagsAndAttrs(file);
 		const result: TagNameCasing[] = [];
 
