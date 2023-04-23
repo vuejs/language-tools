@@ -7,7 +7,7 @@ import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTa
 import { VueServerInitializationOptions } from './types';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as componentMeta from 'vue-component-meta';
-import { resolveVueCompilerOptions, VueCompilerOptions } from '@volar/vue-language-core';
+import { VueCompilerOptions } from '@volar/vue-language-core';
 
 export function createServerPlugin(connection: Connection) {
 
@@ -121,7 +121,7 @@ export function createServerPlugin(connection: Connection) {
 					if (languageService?.context.typescript) {
 						const vueOptions = hostToVueOptions.get(languageService.context.host);
 						if (vueOptions) {
-							return nameCasing.convertAttrName(languageService.context, languageService.context.typescript, params.textDocument.uri, params.casing, resolveVueCompilerOptions(vueOptions));
+							return nameCasing.convertAttrName(languageService.context, languageService.context.typescript, params.textDocument.uri, params.casing);
 						}
 					}
 				});

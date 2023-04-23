@@ -21,7 +21,6 @@ export interface VueCompilerOptions {
 	extensions: string[];
 	strictTemplates: boolean;
 	skipTemplateCodegen: boolean;
-	nativeTags: string[];
 	dataAttributes: string[];
 	htmlAttributes: string[];
 	optionsWrapper: [string, string] | [];

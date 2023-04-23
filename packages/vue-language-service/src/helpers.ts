@@ -4,7 +4,6 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { computed, ComputedRef } from '@vue/reactivity';
 import { typesFileName } from '@volar/vue-language-core/out/utils/localTypes';
 import { camelize, capitalize } from '@vue/shared';
-import type { VueCompilerOptions } from './types';
 
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
@@ -13,7 +12,7 @@ export function checkPropsOfTag(
 	tsLs: ts.LanguageService,
 	sourceFile: embedded.VirtualFile,
 	tag: string,
-	vueCompilerOptions: VueCompilerOptions,
+	nativeTags: Set<string>,
 	requiredOnly = false,
 ) {
 
@@ -26,7 +25,7 @@ export function checkPropsOfTag(
 
 	let componentSymbol = components.componentsType.getProperty(name[0]);
 
-	if (!componentSymbol && !vueCompilerOptions.nativeTags.includes(name[0])) {
+	if (!componentSymbol && !nativeTags.has(name[0])) {
 		componentSymbol = components.componentsType.getProperty(camelize(name[0]))
 			?? components.componentsType.getProperty(capitalize(camelize(name[0])));
 	}
@@ -86,7 +85,7 @@ export function checkEventsOfTag(
 	tsLs: ts.LanguageService,
 	sourceFile: embedded.VirtualFile,
 	tag: string,
-	vueCompilerOptions: VueCompilerOptions,
+	nativeTags: Set<string>,
 ) {
 
 	const checker = tsLs.getProgram()!.getTypeChecker();
@@ -98,7 +97,7 @@ export function checkEventsOfTag(
 
 	let componentSymbol = components.componentsType.getProperty(name[0]);
 
-	if (!componentSymbol && !vueCompilerOptions.nativeTags.includes(name[0])) {
+	if (!componentSymbol && !nativeTags.has(name[0])) {
 		componentSymbol = components.componentsType.getProperty(camelize(name[0]))
 			?? components.componentsType.getProperty(capitalize(camelize(name[0])));
 	}
@@ -151,13 +150,45 @@ export function checkComponentNames(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
 	sourceFile: embedded.VirtualFile,
+	nativeTags: Set<string>,
 ) {
 	return getComponentsType(ts, tsLs, sourceFile)
 		?.componentsType
 		?.getProperties()
 		.map(c => c.name)
 		.filter(entry => entry.indexOf('$') === -1 && !entry.startsWith('_'))
+		.filter(entry => !nativeTags.has(entry))
 		?? [];
+}
+
+export function checkNativeTags(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	tsLs: ts.LanguageService,
+	fileName: string,
+) {
+
+	const sharedTypesFileName = fileName.substring(0, fileName.lastIndexOf('/')) + '/' + typesFileName;
+	const result = new Set<string>();
+
+	let tsSourceFile: ts.SourceFile | undefined;
+
+	if (tsSourceFile = tsLs.getProgram()?.getSourceFile(sharedTypesFileName)) {
+
+		const typeNode = tsSourceFile.statements.find((node): node is ts.TypeAliasDeclaration => ts.isTypeAliasDeclaration(node) && node.name.getText() === 'IntrinsicElements');
+		const checker = tsLs.getProgram()?.getTypeChecker();
+
+		if (checker && typeNode) {
+
+			const type = checker.getTypeFromTypeNode(typeNode.type);
+			const props = type.getProperties();
+
+			for (const prop of props) {
+				result.add(prop.name);
+			}
+		}
+	}
+
+	return result;
 }
 
 export function getElementAttrs(
