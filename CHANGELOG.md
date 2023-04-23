@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.1 (2023/4/23) - pre-release
+
+- refactor: deprecate `nativeTags` option ([#2685](https://github.com/johnsoncodehk/volar/issues/2685))
+- fix: props type-check not working for one argument functional component ([#2686](https://github.com/johnsoncodehk/volar/issues/2686))
+- fix: `<Suspense>` default slot reporting error ([#2683](https://github.com/johnsoncodehk/volar/issues/2683))
+- fix: cannot infer slots type in vue2 project ([#2682](https://github.com/johnsoncodehk/volar/issues/2682))
+- fix: static directive arg should not recognize as expression ([#2678](https://github.com/johnsoncodehk/volar/issues/2678))
+
 ## 1.5.0 (2023/4/23) - pre-release
 
 - refactor: deprecate `jsxTemplates` option ([#2677](https://github.com/johnsoncodehk/volar/issues/2677))
