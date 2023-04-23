@@ -1,4 +1,5 @@
 import { VueCompilerOptions } from '../types';
+import { getSlotsPropertyName } from './shared';
 import { getVueLibraryName } from './shared';
 
 export const typesFileName = '__VLS_types.d.ts';
@@ -92,7 +93,7 @@ export declare function asFunctionalComponent<T, K = T extends new (...args: any
 	? (props: (K extends { $props: infer Props } ? Props : any)${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}, ctx?: {
 		attrs?: any,
 		expose?(exposed: K): void,
-		slots?: K extends { $slots: infer Slots } ? Slots : any,
+		slots?: K extends { ${getSlotsPropertyName(vueCompilerOptions.target)}: infer Slots } ? Slots : any,
 		emit?: K extends { $emit: infer Emit } ? Emit : any
 	}) => JSX.Element & { __ctx?: typeof ctx, __props?: typeof props }
 	: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
