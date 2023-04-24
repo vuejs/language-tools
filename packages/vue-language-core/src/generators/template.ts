@@ -245,20 +245,29 @@ export function generate(
 		const tagOffsetsMap: Record<string, number[]> = {};
 
 		walkElementNodes(templateAst, node => {
-
-			if (!tagOffsetsMap[node.tag]) {
-				tagOffsetsMap[node.tag] = [];
+			if (node.tag === 'component' || node.tag === 'Component') {
+				for (const prop of node.props) {
+					if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE && prop.name === 'is' && prop.value) {
+						const tag = prop.value.content;
+						tagOffsetsMap[tag] ??= [];
+						tagOffsetsMap[tag].push(prop.value.loc.start.offset + prop.value.loc.source.lastIndexOf(tag));
+						break;
+					}
+				}
 			}
+			else {
+				tagOffsetsMap[node.tag] ??= [];
 
-			const offsets = tagOffsetsMap[node.tag];
-			const source = sourceTemplate.substring(node.loc.start.offset);
-			const startTagOffset = node.loc.start.offset + source.indexOf(node.tag);
+				const offsets = tagOffsetsMap[node.tag];
+				const source = sourceTemplate.substring(node.loc.start.offset);
+				const startTagOffset = node.loc.start.offset + source.indexOf(node.tag);
 
-			offsets.push(startTagOffset); // start tag
-			if (!node.isSelfClosing && sourceLang === 'html') {
-				const endTagOffset = node.loc.start.offset + node.loc.source.lastIndexOf(node.tag);
-				if (endTagOffset !== startTagOffset) {
-					offsets.push(endTagOffset); // end tag
+				offsets.push(startTagOffset); // start tag
+				if (!node.isSelfClosing && sourceLang === 'html') {
+					const endTagOffset = node.loc.start.offset + node.loc.source.lastIndexOf(node.tag);
+					if (endTagOffset !== startTagOffset) {
+						offsets.push(endTagOffset); // end tag
+					}
 				}
 			}
 		});
@@ -475,32 +484,68 @@ export function generate(
 
 		codes.push(`{\n`);
 
-		const startTagOffset = node.loc.start.offset + sourceTemplate.substring(node.loc.start.offset).indexOf(node.tag);
-		let endTagOffset = !node.isSelfClosing && sourceLang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
+		const _startTagOffset = node.loc.start.offset + sourceTemplate.substring(node.loc.start.offset).indexOf(node.tag);
+		let _endTagOffset = !node.isSelfClosing && sourceLang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
 
-		if (endTagOffset === startTagOffset) {
-			endTagOffset = undefined;
+		if (_endTagOffset === _startTagOffset) {
+			_endTagOffset = undefined;
 		}
 
 		const propsFailedExps: CompilerDOM.SimpleExpressionNode[] = [];
-		const tagOffsets = endTagOffset !== undefined ? [startTagOffset, endTagOffset] : [startTagOffset];
-		const isNamespacedTag = node.tag.indexOf('.') >= 0;
+		let tag = node.tag;
+		let tagOffsets = _endTagOffset !== undefined ? [_startTagOffset, _endTagOffset] : [_startTagOffset];
+		let props = node.props;
+		const isNamespacedTag = tag.indexOf('.') >= 0;
 		const componentVar = `__VLS_${elementIndex++}`;
 		const componentInstanceVar = `__VLS_${elementIndex++}`;
 
+		let dynamicTagExp: CompilerDOM.ExpressionNode | undefined;
+
+		if (tag === 'component' || tag === 'Component') {
+			tagOffsets.length = 0;
+			for (const prop of node.props) {
+				if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE && prop.name === 'is' && prop.value) {
+					tag = prop.value.content;
+					tagOffsets = [prop.value.loc.start.offset + prop.value.loc.source.lastIndexOf(tag)];
+					props = props.filter(p => p !== prop);
+					break;
+				}
+				else if (prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'bind' && prop.arg?.loc.source === 'is' && prop.exp) {
+					dynamicTagExp = prop.exp;
+					props = props.filter(p => p !== prop);
+					break;
+				}
+			}
+		}
+
 		if (isNamespacedTag) {
 			codes.push(
-				`const ${componentVar} = (await import('./__VLS_types')).asFunctionalComponent(${node.tag}, new ${node.tag}({`,
-				...createPropsCode(node, 'slots'),
+				`const ${componentVar} = (await import('./__VLS_types')).asFunctionalComponent(${tag}, new ${tag}({`,
+				...createPropsCode(node, props, 'slots'),
+				'}));\n',
+			);
+		}
+		else if (dynamicTagExp) {
+			const dynamicTagVar = `__VLS_${elementIndex++}`;
+			codes.push(
+				`const ${dynamicTagVar} = `,
+				...createInterpolationCode(dynamicTagExp.loc.source, dynamicTagExp.loc, dynamicTagExp.loc.start.offset, capabilitiesPresets.all, '', ''),
+				';\n',
+			);
+			codes.push(
+				`const ${componentVar} = (await import('./__VLS_types')).asFunctionalComponent(`,
+				`${dynamicTagVar}, `,
+				`new ${dynamicTagVar}({`,
+				...createPropsCode(node, props, 'slots'),
 				'}));\n',
 			);
 		}
 		else {
 			codes.push(
 				`const ${componentVar} = (await import('./__VLS_types')).asFunctionalComponent(`,
-				`__VLS_templateComponents['${componentVars[node.tag] ?? node.tag}'], `,
-				`new __VLS_templateComponents['${componentVars[node.tag] ?? node.tag}']({`,
-				...createPropsCode(node, 'slots'),
+				`__VLS_templateComponents['${componentVars[tag] ?? tag}'], `,
+				`new __VLS_templateComponents['${componentVars[tag] ?? tag}']({`,
+				...createPropsCode(node, props, 'slots'),
 				'}));\n',
 			);
 		}
@@ -508,19 +553,22 @@ export function generate(
 		for (const offset of tagOffsets) {
 			if (isNamespacedTag) {
 				codes.push(
-					[node.tag, 'template', [offset, offset + node.tag.length], capabilitiesPresets.all],
+					[tag, 'template', [offset, offset + tag.length], capabilitiesPresets.all],
 					';\n',
 				);
 			}
+			else if (dynamicTagExp) {
+				continue;
+			}
 			else {
-				if (componentVars[node.tag]) {
+				if (componentVars[tag]) {
 					codes.push(`__VLS_templateComponents.`);
 				}
 				codes.push(
 					[
-						componentVars[node.tag] ?? node.tag,
+						componentVars[tag] ?? tag,
 						'template',
-						[offset, offset + node.tag.length],
+						[offset, offset + tag.length],
 						{
 							...capabilitiesPresets.tagHover,
 							...capabilitiesPresets.diagnosticOnly,
@@ -533,15 +581,15 @@ export function generate(
 
 		codes.push(
 			`const ${componentInstanceVar} = ${componentVar}(`,
-			['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly], // diagnostic start
+			tagOffsets.length ? ['', 'template', tagOffsets[0], capabilitiesPresets.diagnosticOnly] : '', // diagnostic start
 			'{ ',
-			...createPropsCode(node, 'props', propsFailedExps),
+			...createPropsCode(node, props, 'props', propsFailedExps),
 			'}',
-			['', 'template', startTagOffset + node.tag.length, capabilitiesPresets.diagnosticOnly], // diagnostic end
+			tagOffsets.length ? ['', 'template', tagOffsets[0] + tag.length, capabilitiesPresets.diagnosticOnly] : '', // diagnostic end
 			`, ...(await import('./__VLS_types')).functionalComponentArgsRest(${componentVar}));\n`,
 		);
 
-		if (node.tag !== 'template') {
+		if (tag !== 'template') {
 			componentCtxVar = `__VLS_${elementIndex++}`;
 			codes.push(`const ${componentCtxVar} = (await import('./__VLS_types')).pickFunctionalComponentCtx(${componentVar}, ${componentInstanceVar})!;\n`);
 			parentEl = node;
@@ -573,9 +621,9 @@ export function generate(
 			}
 		}
 
-		generateInlineCss(node);
+		generateInlineCss(props);
 
-		const vScope = node.props.find(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && (prop.name === 'scope' || prop.name === 'data'));
+		const vScope = props.find(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && (prop.name === 'scope' || prop.name === 'data'));
 		let inScope = false;
 		let originalConditionsNum = blockConditions.length;
 
@@ -605,7 +653,9 @@ export function generate(
 		if (componentCtxVar) {
 			generateEvents(node, componentVar, componentInstanceVar, componentCtxVar);
 		}
-		generateSlot(node, startTagOffset);
+		if (tagOffsets.length) {
+			generateSlot(node, tagOffsets[0]);
+		}
 
 		if (inScope) {
 			codes.push('}\n');
@@ -873,12 +923,12 @@ export function generate(
 		}
 	}
 
-	function createPropsCode(node: CompilerDOM.ElementNode, mode: 'props' | 'slots', propsFailedExps?: CompilerDOM.SimpleExpressionNode[]): Code[] {
+	function createPropsCode(node: CompilerDOM.ElementNode, props: CompilerDOM.ElementNode['props'], mode: 'props' | 'slots', propsFailedExps?: CompilerDOM.SimpleExpressionNode[]): Code[] {
 
 		let styleAttrNum = 0;
 		let classAttrNum = 0;
 
-		if (node.props.some(prop =>
+		if (props.some(prop =>
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 			&& prop.name === 'bind'
 			&& !prop.arg
@@ -891,7 +941,7 @@ export function generate(
 
 		const codes: Code[] = [];
 
-		for (const prop of node.props) {
+		for (const prop of props) {
 			if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 				&& (prop.name === 'bind' || prop.name === 'model')
@@ -1220,8 +1270,8 @@ export function generate(
 		}
 	}
 
-	function generateInlineCss(node: CompilerDOM.ElementNode) {
-		for (const prop of node.props) {
+	function generateInlineCss(props: CompilerDOM.ElementNode['props']) {
+		for (const prop of props) {
 			if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 				&& prop.name === 'bind'
@@ -1235,7 +1285,7 @@ export function generate(
 				const end = prop.arg.loc.source.lastIndexOf(endCrt);
 				const content = prop.arg.loc.source.substring(start, end);
 
-				cssCodes.push(`${node.tag} { `);
+				cssCodes.push(`x { `);
 				cssCodes.push([
 					content,
 					'template',
