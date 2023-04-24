@@ -651,7 +651,7 @@ export function generate(
 			inScope = true;
 		}
 
-		generateDirectives(node);
+		generateDirectives(node, componentVar);
 		generateElReferences(node); // <el ref="foo" />
 		if (cssScopedClasses.length) {
 			generateClassScoped(node);
@@ -1303,7 +1303,7 @@ export function generate(
 		}
 	}
 
-	function generateDirectives(node: CompilerDOM.ElementNode) {
+	function generateDirectives(node: CompilerDOM.ElementNode, componentVar: string) {
 		for (const prop of node.props) {
 			if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -1362,9 +1362,15 @@ export function generate(
 						},
 					],
 					')',
+					'(',
+					['', 'template', prop.loc.start.offset, capabilitiesPresets.diagnosticOnly],
+					componentVar,
+					['', 'template', prop.loc.start.offset + 'v-'.length + prop.name.length, capabilitiesPresets.diagnosticOnly],
+					', ',
 				);
 				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					codes.push(
+						['', 'template', prop.exp.loc.start.offset, capabilitiesPresets.diagnosticOnly],
 						...createInterpolationCode(
 							prop.exp.content,
 							prop.exp.loc,
@@ -1373,6 +1379,7 @@ export function generate(
 							'(',
 							')',
 						),
+						['', 'template', prop.exp.loc.end.offset, capabilitiesPresets.diagnosticOnly],
 					);
 					formatCodes.push(
 						...createFormatCode(
@@ -1383,16 +1390,10 @@ export function generate(
 					);
 				}
 				codes.push(
-					[
-						'',
-						'template',
-						prop.loc.end.offset,
-						capabilitiesPresets.diagnosticOnly,
-					],
+					')',
+					['', 'template', prop.loc.end.offset, capabilitiesPresets.diagnosticOnly],
 					';\n',
 				);
-
-
 			}
 		}
 	}

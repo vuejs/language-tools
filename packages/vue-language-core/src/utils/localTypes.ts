@@ -51,8 +51,7 @@ export declare function getVForSourceType<T>(source: T): ForableSource<NonNullab
 export declare function getSlotParams<T>(slot: T): Parameters<PickNotAny<NonNullable<T>, (...args: any[]) => any>>;
 export declare function getSlotParam<T>(slot: T): Parameters<PickNotAny<NonNullable<T>, (...args: any[]) => any>>[0];
 export declare function directiveFunction<T>(dir: T):
-	T extends ObjectDirective<infer E, infer V> ? undefined extends V ? (value?: V) => void : (value: V) => void
-	: T extends FunctionDirective<infer E, infer V> ? undefined extends V ? (value?: V) => void : (value: V) => void
+	T extends ObjectDirective<infer E, infer V> | FunctionDirective<infer E, infer V> ? (el: E, value: V) => void
 	: T;
 export declare function withScope<T, K>(ctx: T, scope: K): ctx is T & K;
 export declare function makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
