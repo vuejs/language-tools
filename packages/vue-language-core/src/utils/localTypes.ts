@@ -58,11 +58,11 @@ export declare function withScope<T, K>(ctx: T, scope: K): ctx is T & K;
 export declare function makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
 
 export type SelfComponent<N, C> = string extends N ? {} : N extends string ? { [P in N]: C } : {};
-export type WithComponent<Components, N1 extends string, N2 extends string, N0 extends string> =
+export type WithComponent<N0 extends string, Components, N1 extends string, N2 extends string, N3 extends string> =
 	IsAny<IntrinsicElements[N0]> extends true ? (
 		N1 extends keyof Components ? N1 extends N0 ? Pick<Components, N0> : { [K in N0]: Components[N1] } :
 		N2 extends keyof Components ? N2 extends N0 ? Pick<Components, N0> : { [K in N0]: Components[N2] } :
-		N0 extends keyof Components ? Pick<Components, N0> :
+		N3 extends keyof Components ? N3 extends N0 ? Pick<Components, N0> : { [K in N0]: Components[N3] } :
 		${vueCompilerOptions.strictTemplates ? '{}' : '{ [K in N0]: any }'}
 	) : Pick<IntrinsicElements, N0>;
 

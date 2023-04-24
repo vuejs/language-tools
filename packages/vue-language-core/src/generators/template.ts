@@ -166,7 +166,7 @@ export function generate(
 			const varName = validTsVar.test(tagName) ? tagName : capitalize(camelize(tagName.replace(/:/g, '-')));
 
 			codes.push(
-				'& import("./__VLS_types").WithComponent<typeof __VLS_components, ',
+				`& import("./__VLS_types").WithComponent<"${varName}", typeof __VLS_components, `,
 				// order is important: https://github.com/johnsoncodehk/volar/issues/2010
 				`"${capitalize(camelize(tagName))}", `,
 				`"${camelize(tagName)}", `,
