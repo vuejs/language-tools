@@ -102,15 +102,20 @@ export declare function asFunctionalComponent<T, K = T extends new (...args: any
 declare function functionalComponentArgsRest<T extends (...args: any) => any>(t: T): Parameters<T>['length'] extends 2 ? [any] : [];
 export declare function pickEvent<Emit, K, E>(emit: Emit, emitKey: K, event: E): FillingEventArg<
 	PickNotAny<
-		AsFunctionOrAny<NonNullable<E>>,
-		AsFunctionOrAny<NonNullable<EmitEvent<Emit, K>>>
+		AsFunctionOrAny<E>,
+		AsFunctionOrAny<EmitEvent<Emit, K>>
 	>
 >;
 export declare function pickFunctionalComponentCtx<T, K>(comp: T, compInstance: K): PickNotAny<
 	K extends { __ctx?: infer Ctx } ? Ctx : any,
 	T extends (props: any, ctx: infer Ctx) => any ? Ctx : any
 >;
-type AsFunctionOrAny<F> = F extends ((...args: any) => any) ? F : any;
+type AsFunctionOrAny<F> = unknown extends F ? any : ((...args: any) => any) extends F ? F : any;
+
+export declare function componentProps<T, K>(comp: T, fnReturn: K):
+	PickNotAny<K, {}> extends { __props: infer P } ? NonNullable<P>
+	: T extends (props: infer P, ...args: any) => any ? NonNullable<P> :
+	{};
 `.trim();
 }
 

@@ -603,7 +603,7 @@ export function generate(
 			generateClassScoped(node);
 		}
 		if (componentCtxVar) {
-			generateEvents(node, componentInstanceVar, componentCtxVar);
+			generateEvents(node, componentVar, componentInstanceVar, componentCtxVar);
 		}
 		generateSlot(node, startTagOffset);
 
@@ -714,7 +714,7 @@ export function generate(
 		codes.push(`}\n`);
 	}
 
-	function generateEvents(node: CompilerDOM.ElementNode, componentInstanceVar: string, componentCtxVar: string) {
+	function generateEvents(node: CompilerDOM.ElementNode, componentVar: string, componentInstanceVar: string, componentCtxVar: string) {
 
 		for (const prop of node.props) {
 			if (
@@ -725,7 +725,7 @@ export function generate(
 				const eventVar = `__VLS_${elementIndex++}`;
 				codes.push(
 					`let ${eventVar} = { '${prop.arg.loc.source}': `,
-					`(await import('./__VLS_types')).pickEvent(${componentCtxVar}.emit!, '${prop.arg.loc.source}' as const, ${componentInstanceVar}.__props!`,
+					`(await import('./__VLS_types')).pickEvent(${componentCtxVar}.emit!, '${prop.arg.loc.source}' as const, (await import('./__VLS_types')).componentProps(${componentVar}, ${componentInstanceVar})`,
 					...createPropertyAccessCode([
 						camelize('on-' + prop.arg.loc.source), // onClickOutside
 						'template',
