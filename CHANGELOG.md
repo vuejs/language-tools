@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.2 (2023/4/24) - pre-release
+
+fix: cannot recognize hyphenate tag name ([#2688](https://github.com/johnsoncodehk/volar/issues/2688))
+
 ## 1.5.1 (2023/4/23) - pre-release
 
 - refactor: deprecate `nativeTags` option ([#2685](https://github.com/johnsoncodehk/volar/issues/2685))
