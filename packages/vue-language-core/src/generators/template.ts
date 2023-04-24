@@ -484,16 +484,16 @@ export function generate(
 
 		codes.push(`{\n`);
 
-		const _startTagOffset = node.loc.start.offset + sourceTemplate.substring(node.loc.start.offset).indexOf(node.tag);
-		let _endTagOffset = !node.isSelfClosing && sourceLang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
+		const startTagOffset = node.loc.start.offset + sourceTemplate.substring(node.loc.start.offset).indexOf(node.tag);
+		let endTagOffset = !node.isSelfClosing && sourceLang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
 
-		if (_endTagOffset === _startTagOffset) {
-			_endTagOffset = undefined;
+		if (endTagOffset === startTagOffset) {
+			endTagOffset = undefined;
 		}
 
 		const propsFailedExps: CompilerDOM.SimpleExpressionNode[] = [];
 		let tag = node.tag;
-		let tagOffsets = _endTagOffset !== undefined ? [_startTagOffset, _endTagOffset] : [_startTagOffset];
+		let tagOffsets = endTagOffset !== undefined ? [startTagOffset, endTagOffset] : [startTagOffset];
 		let props = node.props;
 		const isNamespacedTag = tag.indexOf('.') >= 0;
 		const componentVar = `__VLS_${elementIndex++}`;
@@ -581,11 +581,17 @@ export function generate(
 
 		codes.push(
 			`const ${componentInstanceVar} = ${componentVar}(`,
-			tagOffsets.length ? ['', 'template', tagOffsets[0], capabilitiesPresets.diagnosticOnly] : '', // diagnostic start
+			// diagnostic start
+			tagOffsets.length ? ['', 'template', tagOffsets[0], capabilitiesPresets.diagnosticOnly]
+				: dynamicTagExp ? ['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]
+					: '',
 			'{ ',
 			...createPropsCode(node, props, 'props', propsFailedExps),
 			'}',
-			tagOffsets.length ? ['', 'template', tagOffsets[0] + tag.length, capabilitiesPresets.diagnosticOnly] : '', // diagnostic end
+			// diagnostic end
+			tagOffsets.length ? ['', 'template', tagOffsets[0] + tag.length, capabilitiesPresets.diagnosticOnly]
+				: dynamicTagExp ? ['', 'template', startTagOffset + tag.length, capabilitiesPresets.diagnosticOnly]
+					: '',
 			`, ...(await import('./__VLS_types')).functionalComponentArgsRest(${componentVar}));\n`,
 		);
 
