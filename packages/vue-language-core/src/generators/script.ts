@@ -421,7 +421,7 @@ export function generate(
 			if (!scriptRanges?.exportDefault) {
 				codes.push('export default ');
 			}
-			codes.push('(() => {\n');
+			codes.push('await (async () => {\n');
 			scriptSetupGeneratedOffset = generateSetupFunction(false, 'return', definePropMirrors);
 			codes.push(`})()`);
 		}
