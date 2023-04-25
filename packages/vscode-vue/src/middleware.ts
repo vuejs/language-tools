@@ -8,10 +8,10 @@ export const middleware: lsp.Middleware = {
 	...baseMiddleware,
 	workspace: {
 		configuration(params, token, next) {
-			if (params.items.some(item => item.section === 'volar.completion.preferredAttrNameCase' || item.section === 'volar.completion.preferredTagNameCase')) {
+			if (params.items.some(item => item.section === 'vue.features.complete.propNameCasing' || item.section === 'vue.features.complete.tagNameCasing')) {
 				return params.items.map(item => {
 					if (item.scopeUri) {
-						if (item.section === 'volar.completion.preferredTagNameCase') {
+						if (item.section === 'vue.features.complete.tagNameCasing') {
 							const tagNameCasing = tagNameCasings.get(item.scopeUri);
 							if (tagNameCasing === TagNameCasing.Kebab) {
 								return 'kebab';
@@ -20,7 +20,7 @@ export const middleware: lsp.Middleware = {
 								return 'pascal';
 							}
 						}
-						if (item.section === 'volar.completion.preferredAttrNameCase') {
+						if (item.section === 'vue.features.complete.propNameCasing') {
 							const attrCase = attrNameCasings.get(item.scopeUri);
 							if (attrCase === AttrNameCasing.Kebab) {
 								return 'kebab';
