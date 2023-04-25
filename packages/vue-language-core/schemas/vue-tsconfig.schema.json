@@ -19,6 +19,11 @@
 					"default": [ ".vue" ],
 					"markdownDescription": "Valid file extensions that should be considered as regular Vue SFC, please note that you should not use this option separately for additional file extensions IDE support, see https://github.com/johnsoncodehk/volar/tree/master/packages/vscode-vue/README.md#custom-file-extensions."
 				},
+				"jsxSlots": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Generate slots type for `JSX.ElementChildrenAttribute`."
+				},
 				"strictTemplates": {
 					"type": "boolean",
 					"default": false,
