@@ -1,5 +1,54 @@
 # Changelog
 
+## 1.5.3 (2023/4/26) - pre-release
+
+- feat: support type-checking for dynamic components
+- feat: support element type-checking for directives
+- fix: cannot infer event type for `<Transition>` ([#2700](https://github.com/johnsoncodehk/volar/issues/2700))
+- fix: tag / prop casing status not working
+- fix: slot name accidentally included modifiers in virtual code
+- fix: avoid always pop "Saving time is too long" edge case
+- fix: only generate `JSX.ElementChildrenAttribute` type when `vueCompilerOptions.jsxSlots` enabled ([#2714](https://github.com/johnsoncodehk/volar/issues/2714))
+- fix: top level await error in SFC if two script blocks are present ([#2712](https://github.com/johnsoncodehk/volar/issues/2712))
+- fix: cannot use generic components inside defineComponent ([#2709](https://github.com/johnsoncodehk/volar/issues/2709))
+- fix: intellisense not working in es module project ([#2661](https://github.com/johnsoncodehk/volar/issues/2661))
+
+---
+
+<h3 align="center">Full-time Support by</h3>
+<br />
+
+<p align="center">
+	<span>
+		<a href="https://stackblitz.com/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/HEAD/.github/sponsors/StackBlitz.png" height="80" /></a>
+		<h4 align="center"><a href="https://blog.stackblitz.com/posts/webcontainer-api-is-here/">WebContainer API is here.</a></h4>
+	</span>
+</p>
+<br />
+
+<h3 align="center">Our Sponsors ⭐✨</h3>
+<br />
+
+<p align="center">
+	<a href="https://volta.net/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/HEAD/.github/sponsors/volta.svg" height="60" /></a>
+    <a href="https://vuejs.org/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/HEAD/.github/sponsors/vue.png" height="80" /></a>
+</p>
+<br />
+
+<p align="center">
+    <a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/HEAD/.github/sponsors/prefect.svg" height="40" /></a>
+</p>
+<br />
+
+<p align="center">
+	<h5 align="center">
+		Add you via
+		<a href="https://github.com/sponsors/johnsoncodehk">GitHub Sponsors</a>
+		or
+		<a href="https://opencollective.com/volarjs">Open Collective</a>
+	</h5>
+</p>
+
 ## 1.5.2 (2023/4/24) - pre-release
 
 - fix: cannot recognize hyphenate tag name ([#2688](https://github.com/johnsoncodehk/volar/issues/2688))
@@ -62,42 +111,6 @@
 - fix: cannot show css hover message ([#2634](https://github.com/johnsoncodehk/volar/issues/2634))
 - fix: duplicate ts unused reports if noUnusedLocals is enabled ([#2627](https://github.com/johnsoncodehk/volar/issues/2627))
 
----
-
-<h3 align="center">Full-time Support by</h3>
-<br />
-
-<p align="center">
-	<span>
-		<a href="https://stackblitz.com/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/HEAD/.github/sponsors/StackBlitz.png" height="80" /></a>
-		<h4 align="center"><a href="https://blog.stackblitz.com/posts/webcontainer-api-is-here/">WebContainer API is here.</a></h4>
-	</span>
-</p>
-<br />
-
-<h3 align="center">Our Sponsors ⭐✨</h3>
-<br />
-
-<p align="center">
-	<a href="https://volta.net/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/HEAD/.github/sponsors/volta.svg" height="60" /></a>
-    <a href="https://vuejs.org/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/HEAD/.github/sponsors/vue.png" height="80" /></a>
-</p>
-<br />
-
-<p align="center">
-    <a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/HEAD/.github/sponsors/prefect.svg" height="40" /></a>
-</p>
-<br />
-
-<p align="center">
-	<h5 align="center">
-		Add you via
-		<a href="https://github.com/sponsors/johnsoncodehk">GitHub Sponsors</a>
-		or
-		<a href="https://opencollective.com/volarjs">Open Collective</a>
-	</h5>
-</p>
-
 ## 1.3.19 (2023/4/19) - pre-release
 
 - feat: change `vue.features.codeActions.enable` default value to `true`
@@ -156,7 +169,7 @@ For more details, see [#2620](https://github.com/johnsoncodehk/volar/issues/2620
 
 ## 1.3.10 (2023/4/1) - pre-release
 
-- feat: support for vue 3.3 `defineProps()` API ([#2568](https://github.com/johnsoncodehk/volar/issues/2568))
+- feat: support for vue 3.3 `defineSlots()` API ([#2568](https://github.com/johnsoncodehk/volar/issues/2568))
 - feat(vue-tsc): prettify script setup props, emits type in emit
 - fix: `plugins`, `hooks`, `experimentalAdditionalLanguageModules` options of `vueCompilerOptions` not working ([#2558](https://github.com/johnsoncodehk/volar/issues/2558)) - thanks @rchl
 - fix(vue-tsc): fixed typescript 5 support ([#2555](https://github.com/johnsoncodehk/volar/issues/2555)) - thanks @blake-newman
