@@ -26,12 +26,19 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	let start = Date.now();
+	let start: number | undefined;
 	vscode.workspace.onWillSaveTextDocument(() => {
 		start = Date.now();
 	});
 	vscode.workspace.onDidSaveTextDocument(async () => {
+
+		if (start === undefined) {
+			return;
+		}
+
 		const time = Date.now() - start;
+		start = undefined;
+
 		if (config.features.codeActions.enable && time > config.features.codeActions.savingTimeLimit) {
 			const result = await vscode.window.showInformationMessage(
 				`Saving time is too long. (${time} ms > ${config.features.codeActions.savingTimeLimit} ms), `,
