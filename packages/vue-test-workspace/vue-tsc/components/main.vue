@@ -65,7 +65,7 @@ const ScriptSetupDefaultPropsExact = defineComponent({
 // vue 3.3 generic
 declare const ScriptSetupGenericExact: <T, >(
 	_props: import('vue').VNodeProps & NonNullable<typeof _setup>['props'],
-	_ctx?: Pick<NonNullable<typeof _setup>, 'expose' | 'attrs' | 'emit' | 'slots'>,
+	_ctx?: Pick<NonNullable<typeof _setup>, 'attrs' | 'emit' | 'slots'>,
 	_setup?: {
 		props: { foo: T } & { [K in keyof JSX.ElementChildrenAttribute]?: { default(data: T): any } },
 		attrs: any,
@@ -73,7 +73,7 @@ declare const ScriptSetupGenericExact: <T, >(
 		emit: { (e: 'bar', data: T): void },
 		expose(_exposed: { baz: T }): void,
 	}
-) => import('vue').VNode & { __props?: typeof _props, __ctx?: typeof _ctx };
+) => import('vue').VNode & { __ctx?: typeof _setup };
 
 exactType(ScriptSetup, ScriptSetupExact);
 exactType(ScriptSetupExpose, ScriptSetupExposeExact);

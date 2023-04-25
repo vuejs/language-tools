@@ -20,7 +20,7 @@ const ScriptSetupExact = defineComponent({
 });
 declare const ScriptSetupGenericExact: <T, >(
 	_props: import('vue').VNodeProps & NonNullable<typeof _setup>['props'],
-	_ctx?: Pick<NonNullable<typeof _setup>, 'expose' | 'attrs' | 'emit' | 'slots'>,
+	_ctx?: Pick<NonNullable<typeof _setup>, 'attrs' | 'emit' | 'slots'>,
 	_setup?: {
 		props: {
 			a?: T | undefined;
@@ -33,7 +33,7 @@ declare const ScriptSetupGenericExact: <T, >(
 		emit: any,
 		expose(_exposed: {}): void,
 	}
-) => import('vue').VNode & { __props?: typeof _props, __ctx?: typeof _ctx };
+) => import('vue').VNode & { __ctx?: typeof _setup };
 
 exactType(ScriptSetup, ScriptSetupExact);
 exactType(ScriptSetupGeneric, ScriptSetupGenericExact);

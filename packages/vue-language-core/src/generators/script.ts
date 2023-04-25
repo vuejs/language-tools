@@ -295,7 +295,7 @@ export function generate(
 			codes.push(`>`);
 			codes.push('(\n');
 			codes.push(`__VLS_props: typeof __VLS_setup['props'] & import('vue').VNodeProps,\n`);
-			codes.push(`__VLS_ctx?: Pick<typeof __VLS_setup, 'expose' | 'attrs' | 'emit' | 'slots'>,\n`);
+			codes.push(`__VLS_ctx?: Pick<typeof __VLS_setup, 'attrs' | 'emit' | 'slots'>,\n`);
 			codes.push('__VLS_setup = (() => {\n');
 			scriptSetupGeneratedOffset = generateSetupFunction(true, 'none', definePropMirrors);
 
@@ -411,7 +411,7 @@ export function generate(
 			codes.push('emit: typeof __VLS_emit');
 			codes.push('};\n');
 			codes.push('})(),\n');
-			codes.push(') => ({} as import("vue").VNode & { __props?: typeof __VLS_props, __ctx?: typeof __VLS_ctx }))');
+			codes.push(') => ({} as import("vue").VNode & { __ctx?: typeof __VLS_setup }))');
 		}
 		else if (!sfc.script) {
 			// no script block, generate script setup code at root
