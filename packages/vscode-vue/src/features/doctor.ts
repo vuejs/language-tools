@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as semver from 'semver';
 import { BaseLanguageClient } from 'vscode-languageclient';
 import { ParseSFCRequest } from '@volar/vue-language-server';
+import { getTsdk } from '@volar/vscode';
 import { config } from '../config';
 
 const scheme = 'vue-doctor';
@@ -240,6 +241,19 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 					].join('\n'),
 				});
 			}
+		}
+
+		// check tsdk version should not be 4.9
+		const tsdk = await getTsdk(context);
+		if (tsdk?.version?.startsWith('4.9')) {
+			problems.push({
+				title: 'Bad TypeScript version',
+				message: [
+					'TS 4.9 has a bug that will cause auto import to fail. Please downgrade to TS 4.8 or upgrade to TS 5.0+.',
+					'',
+					'Issue: https://github.com/vuejs/language-tools/issues/2190',
+				].join('\n'),
+			});
 		}
 
 		// check outdated vue language plugins
