@@ -3,6 +3,7 @@
 	"version": "1.5.3",
 	"license": "MIT",
 	"files": [
+		"*.js",
 		"*.d.ts"
 	],
 	"repository": {

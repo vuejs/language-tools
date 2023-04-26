@@ -144,7 +144,6 @@ export function createServerPlugin(connection: Connection) {
 							{},
 							languageService.context.host.getCurrentDirectory() + '/tsconfig.json.global.vue',
 							languageService.context.typescript.module,
-							true,
 						);
 						checkers.set(languageService.context.host, checker);
 					}
