@@ -320,6 +320,72 @@
 				"typescript.tsdk": {
 					"type": "string"
 				},
+				"volar.format.initialIndent": {
+					"type": "object",
+					"description": "Whether to have initial indent.",
+					"default": {
+						"html": true
+					},
+					"properties": {
+						"html": {
+							"type": "boolean",
+							"default": true
+						},
+						"typescript": {
+							"type": "boolean",
+							"default": false
+						},
+						"javascript": {
+							"type": "boolean",
+							"default": false
+						},
+						"typescriptreact": {
+							"type": "boolean",
+							"default": false
+						},
+						"javascriptreact": {
+							"type": "boolean",
+							"default": false
+						},
+						"css": {
+							"type": "boolean",
+							"default": false
+						},
+						"scss": {
+							"type": "boolean",
+							"default": false
+						},
+						"less": {
+							"type": "boolean",
+							"default": false
+						},
+						"sass": {
+							"type": "boolean",
+							"default": false
+						},
+						"jade": {
+							"type": "boolean",
+							"default": false
+						},
+						"json": {
+							"type": "boolean",
+							"default": false
+						},
+						"jsonc": {
+							"type": "boolean",
+							"default": false
+						},
+						"json5": {
+							"type": "boolean",
+							"default": false
+						}
+					}
+				},
+				"volar.takeOverMode.extension": {
+					"type": "string",
+					"default": "Vue.volar",
+					"description": "The extension that take over language support for *.ts."
+				},
 				"vue-semantic-server.trace.server": {
 					"scope": "window",
 					"type": "string",
@@ -402,83 +468,17 @@
 					"default": false,
 					"description": "Enable this option if you want to get complete CompletionList in language client. (Disable for better performance)"
 				},
-				"volar.icon.splitEditors": {
-					"type": "boolean",
-					"default": false,
-					"description": "Show split editor icon in title area of editor."
-				},
-				"volar.doctor.status": {
+				"vue.doctor.status": {
 					"type": "boolean",
 					"default": true,
 					"description": "Show known problems in status bar."
 				},
-				"volar.format.initialIndent": {
-					"type": "object",
-					"description": "Whether to have initial indent.",
-					"default": {
-						"html": true
-					},
-					"properties": {
-						"html": {
-							"type": "boolean",
-							"default": true
-						},
-						"typescript": {
-							"type": "boolean",
-							"default": false
-						},
-						"javascript": {
-							"type": "boolean",
-							"default": false
-						},
-						"typescriptreact": {
-							"type": "boolean",
-							"default": false
-						},
-						"javascriptreact": {
-							"type": "boolean",
-							"default": false
-						},
-						"css": {
-							"type": "boolean",
-							"default": false
-						},
-						"scss": {
-							"type": "boolean",
-							"default": false
-						},
-						"less": {
-							"type": "boolean",
-							"default": false
-						},
-						"sass": {
-							"type": "boolean",
-							"default": false
-						},
-						"jade": {
-							"type": "boolean",
-							"default": false
-						},
-						"json": {
-							"type": "boolean",
-							"default": false
-						},
-						"jsonc": {
-							"type": "boolean",
-							"default": false
-						},
-						"json5": {
-							"type": "boolean",
-							"default": false
-						}
-					}
+				"vue.splitEditors.icon": {
+					"type": "boolean",
+					"default": false,
+					"description": "Show split editor icon in title area of editor."
 				},
-				"volar.takeOverMode.extension": {
-					"type": "string",
-					"default": "Vue.volar",
-					"description": "The extension that take over language support for *.ts."
-				},
-				"volar.splitEditors.layout.left": {
+				"vue.splitEditors.layout.left": {
 					"type": "array",
 					"default": [
 						"script",
@@ -486,7 +486,7 @@
 						"styles"
 					]
 				},
-				"volar.splitEditors.layout.right": {
+				"vue.splitEditors.layout.right": {
 					"type": "array",
 					"default": [
 						"template",
@@ -671,7 +671,7 @@
 			"editor/title": [
 				{
 					"command": "volar.action.splitEditors",
-					"when": "resourceLangId == vue && config.volar.icon.splitEditors",
+					"when": "resourceLangId == vue && config.vue.splitEditors.icon",
 					"group": "navigation"
 				}
 			],

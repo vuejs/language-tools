@@ -4,10 +4,16 @@ const volarConfigs = () => vscode.workspace.getConfiguration('volar');
 const vueConfigs = () => vscode.workspace.getConfiguration('vue');
 
 export const config = {
-	splitEditors: {
-		get layout() {
-			return volarConfigs().get<{ left: string[], right: string[]; }>('splitEditors.layout') ?? { left: [], right: [] };
-		}
+	get splitEditors() {
+		return vueConfigs().get<{
+			icon: boolean;
+			layout: { left: string[], right: string[]; };
+		}>('splitEditors')!;
+	},
+	get doctor() {
+		return vueConfigs().get<{
+			status: boolean;
+		}>('doctor')!;
 	},
 	features: {
 		updateImportsOnFileMove: {
@@ -81,11 +87,6 @@ export const config = {
 			get supportMdFile() {
 				return vueConfigs().get<boolean>('server.vitePress.supportMdFile');
 			},
-		},
-	},
-	doctor: {
-		get status() {
-			return volarConfigs().get<boolean>('doctor.status');
 		},
 	},
 };
