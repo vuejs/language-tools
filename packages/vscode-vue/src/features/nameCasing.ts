@@ -137,7 +137,7 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 			config.features.complete.casing.status
 			&& (
 				document?.languageId === 'vue'
-				|| (config.server.vitePress.processMdFile && document?.languageId === 'markdown')
+				|| (config.server.vitePress.supportMdFile && document?.languageId === 'markdown')
 				|| (config.server.petiteVue.supportHtmlFile && document?.languageId === 'html')
 			)
 		) {

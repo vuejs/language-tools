@@ -356,7 +356,7 @@
 					"type": "boolean",
 					"default": false
 				},
-				"vue.server.vitePress.processMdFile": {
+				"vue.server.vitePress.supportMdFile": {
 					"type": "boolean",
 					"default": false
 				},

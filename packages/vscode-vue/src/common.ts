@@ -46,7 +46,7 @@ export async function activate(context: vscode.ExtensionContext, createLc: Creat
 		}
 
 		const currentLangId = vscode.window.activeTextEditor.document.languageId;
-		if (currentLangId === 'vue' || (currentLangId === 'markdown' && config.server.vitePress.processMdFile) || (currentLangId === 'html' && config.server.petiteVue.supportHtmlFile)) {
+		if (currentLangId === 'vue' || (currentLangId === 'markdown' && config.server.vitePress.supportMdFile) || (currentLangId === 'html' && config.server.petiteVue.supportHtmlFile)) {
 			doActivate(context, createLc);
 			stopCheck.dispose();
 		}
@@ -106,7 +106,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	activateTsConfigStatusItem('volar.openTsconfig', semanticClient,
 		document => {
 			return document.languageId === 'vue'
-				|| (config.server.vitePress.processMdFile && document.languageId === 'markdown')
+				|| (config.server.vitePress.supportMdFile && document.languageId === 'markdown')
 				|| (config.server.petiteVue.supportHtmlFile && document.languageId === 'html')
 				|| (
 					takeOverModeActive(context)
@@ -119,7 +119,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	activateTsVersionStatusItem('volar.selectTypeScriptVersion', context, semanticClient,
 		document => {
 			return document.languageId === 'vue'
-				|| (config.server.vitePress.processMdFile && document.languageId === 'markdown')
+				|| (config.server.vitePress.supportMdFile && document.languageId === 'markdown')
 				|| (config.server.petiteVue.supportHtmlFile && document.languageId === 'html')
 				|| (
 					takeOverModeActive(context)
@@ -197,7 +197,7 @@ export function getDocumentSelector(context: vscode.ExtensionContext, serverMode
 	if (config.server.petiteVue.supportHtmlFile) {
 		selectors.push({ language: 'html' });
 	}
-	if (config.server.vitePress.processMdFile) {
+	if (config.server.vitePress.supportMdFile) {
 		selectors.push({ language: 'markdown' });
 	}
 	return selectors;
@@ -227,7 +227,7 @@ async function getInitializationOptions(
 		additionalExtensions: [
 			...config.server.additionalExtensions,
 			...!config.server.petiteVue.supportHtmlFile ? [] : ['html'],
-			...!config.server.vitePress.processMdFile ? [] : ['md'],
+			...!config.server.vitePress.supportMdFile ? [] : ['md'],
 		],
 	};
 	return initializationOptions;

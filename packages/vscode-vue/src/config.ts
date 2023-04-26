@@ -78,8 +78,8 @@ export const config = {
 			},
 		},
 		vitePress: {
-			get processMdFile() {
-				return vueConfigs().get<boolean>('server.vitePress.processMdFile');
+			get supportMdFile() {
+				return vueConfigs().get<boolean>('server.vitePress.supportMdFile');
 			},
 		},
 	},
