@@ -458,7 +458,7 @@ export function generate(
 		const definePropProposalB = sfc.scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition') || vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
 
 		if (vueCompilerOptions.target >= 3.3) {
-			codes.push(`const { defineProps, defineEmits, defineSlots, defineModel, defineOptions, withDefaults } = await import('vue');\n`);
+			codes.push(`const { defineProps, defineEmits, defineExpose, defineOptions, defineSlots, defineModel, withDefaults } = await import('vue');\n`);
 		}
 		if (definePropProposalA) {
 			codes.push(`
