@@ -27,10 +27,20 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	let start: number | undefined;
+	let isSavingMultiple = false;
+
 	vscode.workspace.onWillSaveTextDocument(() => {
+		if (start !== undefined) {
+			isSavingMultiple = true;
+		}
 		start = Date.now();
 	});
 	vscode.workspace.onDidSaveTextDocument(async () => {
+
+		if (isSavingMultiple) {
+			isSavingMultiple = false;
+			start = undefined;
+		}
 
 		if (start === undefined) {
 			return;
