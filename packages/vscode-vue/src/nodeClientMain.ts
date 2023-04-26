@@ -49,14 +49,14 @@ export function activate(context: vscode.ExtensionContext) {
 		const time = Date.now() - start;
 		start = undefined;
 
-		if (config.features.codeActions.enable && time > config.features.codeActions.savingTimeLimit) {
+		if (config.codeActions.enabled && time > config.codeActions.savingTimeLimit) {
 			const result = await vscode.window.showInformationMessage(
-				`Saving time is too long. (${time} ms > ${config.features.codeActions.savingTimeLimit} ms), `,
+				`Saving time is too long. (${time} ms > ${config.codeActions.savingTimeLimit} ms), `,
 				'Disable codeActions',
 				'Increase saveTimeLimit',
 			);
 			if (result === 'Disable codeActions') {
-				config.features.codeActions.enable = false;
+				config.update('codeActions.enabled', false);
 				vscode.window.showInformationMessage('Code Actions is disabled. (You can enable it in .vscode/settings.json)');
 			}
 			else if (result === 'Increase saveTimeLimit') {
@@ -154,13 +154,13 @@ function updateProviders(client: lsp.LanguageClient) {
 	(client as any).initializeFeatures = (...args: any) => {
 		const capabilities = (client as any)._capabilities as lsp.ServerCapabilities;
 
-		if (!config.features.codeActions.enable) {
+		if (!config.codeActions.enabled) {
 			capabilities.codeActionProvider = undefined;
 		}
-		if (!config.features.codeLens.enable) {
+		if (!config.codeLens.enabled) {
 			capabilities.codeLensProvider = undefined;
 		}
-		if (!config.features.updateImportsOnFileMove.enable && capabilities.workspace?.fileOperations?.willRename) {
+		if (!config.updateImportsOnFileMove.enabled && capabilities.workspace?.fileOperations?.willRename) {
 			capabilities.workspace.fileOperations.willRename = undefined;
 		}
 

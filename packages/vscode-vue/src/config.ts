@@ -1,92 +1,63 @@
 import * as vscode from 'vscode';
 
-const volarConfigs = () => vscode.workspace.getConfiguration('volar');
-const vueConfigs = () => vscode.workspace.getConfiguration('vue');
+const _config = () => vscode.workspace.getConfiguration('vue');
 
 export const config = {
-	get splitEditors() {
-		return vueConfigs().get<{
-			icon: boolean;
-			layout: { left: string[], right: string[]; };
-		}>('splitEditors')!;
+	update: (section: string, value: any) => _config().update(section, value),
+	get splitEditors(): Readonly<{
+		icon: boolean;
+		layout: { left: string[], right: string[]; };
+	}> {
+		return _config().get('splitEditors')!;
 	},
-	get doctor() {
-		return vueConfigs().get<{
-			status: boolean;
-		}>('doctor')!;
+	get doctor(): Readonly<{
+		status: boolean;
+	}> {
+		return _config().get('doctor')!;
 	},
-	features: {
-		updateImportsOnFileMove: {
-			get enable() {
-				return vueConfigs().get<boolean>('features.updateImportsOnFileMove.enable');
-			},
-		},
-		codeActions: {
-			get enable() {
-				return vueConfigs().get<boolean>('features.codeActions.enable');
-			},
-			set enable(value) {
-				vueConfigs().update('features.codeActions.enable', value);
-			},
-			get savingTimeLimit() {
-				return vueConfigs().get<number>('features.codeActions.savingTimeLimit') ?? -1;
-			},
-		},
-		codeLens: {
-			get enable() {
-				return vueConfigs().get<boolean>('features.codeLens.enable');
-			},
-		},
-		complete: {
-			casing: {
-				get status() {
-					return vueConfigs().get<boolean>('features.complete.casing.status');
-				},
-				get props() {
-					return vueConfigs().get<'autoKebab' | 'autoCamel' | 'kebab' | 'camel'>('features.complete.casing.props');
-				},
-				get tags() {
-					return vueConfigs().get<'autoKebab' | 'autoPascal' | 'kebab' | 'pascal'>('features.complete.casing.tags');
-				},
-			},
-		},
-	},
-	json: {
-		get customBlockSchemaUrls() {
-			return volarConfigs().get<Record<string, string>>('json.customBlockSchemaUrls');
-		}
-	},
-	server: {
-		get maxOldSpaceSize() {
-			return vueConfigs().get<number>('server.maxOldSpaceSize');
-		},
-		get maxFileSize() {
-			return vueConfigs().get<number>('server.maxFileSize');
-		},
-		get reverseConfigFilePriority() {
-			return vueConfigs().get<boolean>('server.reverseConfigFilePriority');
-		},
-		get diagnosticModel() {
-			return vueConfigs().get<'push' | 'pull'>('server.diagnosticModel');
-		},
-		get additionalExtensions() {
-			return vueConfigs().get<string[]>('server.additionalExtensions') ?? [];
-		},
-		get fullCompletionList() {
-			return vueConfigs().get<boolean>('server.fullCompletionList');
-		},
-		get configFilePath() {
-			return vueConfigs().get<string>('server.configFilePath');
-		},
-		petiteVue: {
-			get supportHtmlFile() {
-				return vueConfigs().get<boolean>('server.petiteVue.supportHtmlFile');
-			},
-		},
+	get server(): Readonly<{
+		maxOldSpaceSize: number;
+		maxFileSize: number;
+		reverseConfigFilePriority: boolean;
+		diagnosticModel: 'push' | 'pull';
+		additionalExtensions: string[];
+		fullCompletionList: boolean;
+		configFilePath: string;
 		vitePress: {
-			get supportMdFile() {
-				return vueConfigs().get<boolean>('server.vitePress.supportMdFile');
-			},
-		},
+			supportMdFile: boolean;
+		};
+		petiteVue: {
+			supportHtmlFile: boolean;
+		};
+		json: {
+			customBlockSchemaUrls: Record<string, string>;
+		};
+	}> {
+		return _config().get('server')!;
+	},
+	get updateImportsOnFileMove(): Readonly<{
+		enabled: boolean;
+	}> {
+		return _config().get('updateImportsOnFileMove')!;
+	},
+	get codeActions(): Readonly<{
+		enabled: boolean;
+		savingTimeLimit: number;
+	}> {
+		return _config().get('codeActions')!;
+	},
+	get codeLens(): Readonly<{
+		enabled: boolean;
+	}> {
+		return _config().get('codeLens')!;
+	},
+	get complete(): Readonly<{
+		casing: {
+			status: boolean;
+			props: 'autoKebab' | 'autoCamel' | 'kebab' | 'camel';
+			tags: 'autoKebab' | 'autoPascal' | 'kebab' | 'pascal';
+		};
+	}> {
+		return _config().get('complete')!;
 	},
 };

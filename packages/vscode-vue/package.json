@@ -493,27 +493,27 @@
 						"customBlocks"
 					]
 				},
-				"vue.features.updateImportsOnFileMove.enable": {
+				"vue.updateImportsOnFileMove.enabled": {
 					"type": "boolean",
 					"default": false,
 					"description": "Enabled update imports on file move."
 				},
-				"vue.features.codeActions.enable": {
+				"vue.codeActions.enabled": {
 					"type": "boolean",
 					"default": true,
 					"description": "Enabled code actions."
 				},
-				"vue.features.codeActions.savingTimeLimit": {
+				"vue.codeActions.savingTimeLimit": {
 					"type": "number",
 					"default": 1000,
 					"description": "Time limit for code actions on save (ms)."
 				},
-				"vue.features.codeLens.enable": {
+				"vue.codeLens.enabled": {
 					"type": "boolean",
 					"default": true,
 					"description": "Enabled code lens."
 				},
-				"vue.features.complete.casing.tags": {
+				"vue.complete.casing.tags": {
 					"type": "string",
 					"enum": [
 						"autoKebab",
@@ -530,7 +530,7 @@
 					"default": "autoPascal",
 					"description": "Preferred tag name case."
 				},
-				"vue.features.complete.casing.props": {
+				"vue.complete.casing.props": {
 					"type": "string",
 					"enum": [
 						"autoKebab",
@@ -547,37 +547,37 @@
 					"default": "autoKebab",
 					"description": "Preferred attr name case."
 				},
-				"vue.features.complete.casing.status": {
+				"vue.complete.casing.status": {
 					"type": "boolean",
 					"default": true,
 					"description": "Show name casing in status bar."
 				},
-				"vue.features.complete.normalizeComponentImportName": {
+				"vue.complete.normalizeComponentImportName": {
 					"type": "boolean",
 					"default": true,
 					"description": "Normalize import name for auto import. (\"myCompVue\" -> \"MyComp\")"
 				},
-				"vue.features.autoInsert.parentheses": {
+				"vue.autoInsert.parentheses": {
 					"type": "boolean",
 					"default": true,
 					"description": "Auto-wrap `()` to As Expression in interpolations for fix issue #520."
 				},
-				"vue.features.autoInsert.dotValue": {
+				"vue.autoInsert.dotValue": {
 					"type": "boolean",
 					"default": false,
 					"description": "Auto-complete Ref value with `.value`."
 				},
-				"vue.features.autoInsert.bracketSpacing": {
+				"vue.autoInsert.bracketSpacing": {
 					"type": "boolean",
 					"default": true,
 					"description": "Auto add space between double curly brackets: {{|}} -> {{ | }}"
 				},
-				"vue.features.inlayHints.missingProps": {
+				"vue.inlayHints.missingProps": {
 					"type": "boolean",
 					"default": false,
 					"description": "Show inlay hints for missing required props."
 				},
-				"vue.features.inlayHints.inlineHandlerLeading": {
+				"vue.inlayHints.inlineHandlerLeading": {
 					"type": "boolean",
 					"default": false,
 					"description": "Show inlay hints for event argument in inline handlers."

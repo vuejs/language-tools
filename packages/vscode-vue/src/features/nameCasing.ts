@@ -134,7 +134,7 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 
 	async function update(document: vscode.TextDocument | undefined) {
 		if (
-			config.features.complete.casing.status
+			config.complete.casing.status
 			&& (
 				document?.languageId === 'vue'
 				|| (config.server.vitePress.supportMdFile && document?.languageId === 'markdown')
@@ -146,7 +146,7 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 			let tagNameCasing = tagNameCasings.get(document.uri.toString());
 
 			if (!attrNameCasing) {
-				const attrNameCasingSetting = config.features.complete.casing.props;
+				const attrNameCasingSetting = config.complete.casing.props;
 				if (attrNameCasingSetting === 'kebab') {
 					attrNameCasing = AttrNameCasing.Kebab;
 				}
@@ -169,7 +169,7 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 			}
 
 			if (!tagNameCasing) {
-				const tagMode = config.features.complete.casing.tags;
+				const tagMode = config.complete.casing.tags;
 				if (tagMode === 'kebab') {
 					tagNameCasing = TagNameCasing.Kebab;
 				}

@@ -222,7 +222,7 @@ async function getInitializationOptions(
 		fullCompletionList: config.server.fullCompletionList,
 		// vue
 		json: {
-			customBlockSchemaUrls: config.json.customBlockSchemaUrls,
+			customBlockSchemaUrls: config.server.json.customBlockSchemaUrls,
 		},
 		additionalExtensions: [
 			...config.server.additionalExtensions,
