@@ -32,11 +32,13 @@ export const config = {
 			},
 		},
 		complete: {
-			get attrNameCasing() {
-				return vueConfigs().get<'autoKebab' | 'autoCamel' | 'kebab' | 'camel'>('features.complete.propNameCasing');
-			},
-			get tagNameCasing() {
-				return vueConfigs().get<'autoKebab' | 'autoPascal' | 'kebab' | 'pascal'>('features.complete.tagNameCasing');
+			casing: {
+				get props() {
+					return vueConfigs().get<'autoKebab' | 'autoCamel' | 'kebab' | 'camel'>('features.complete.casing.props');
+				},
+				get tags() {
+					return vueConfigs().get<'autoKebab' | 'autoPascal' | 'kebab' | 'pascal'>('features.complete.casing.tags');
+				},
 			},
 		},
 	},

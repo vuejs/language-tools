@@ -518,7 +518,7 @@
 					"default": true,
 					"description": "Enabled code lens."
 				},
-				"vue.features.complete.tagNameCasing": {
+				"vue.features.complete.casing.tags": {
 					"type": "string",
 					"enum": [
 						"autoKebab",
@@ -535,7 +535,7 @@
 					"default": "autoPascal",
 					"description": "Preferred tag name case."
 				},
-				"vue.features.complete.propNameCasing": {
+				"vue.features.complete.casing.props": {
 					"type": "string",
 					"enum": [
 						"autoKebab",

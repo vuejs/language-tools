@@ -146,7 +146,7 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 			let tagNameCasing = tagNameCasings.get(document.uri.toString());
 
 			if (!attrNameCasing) {
-				const attrNameCasingSetting = config.features.complete.attrNameCasing;
+				const attrNameCasingSetting = config.features.complete.casing.props;
 				if (attrNameCasingSetting === 'kebab') {
 					attrNameCasing = AttrNameCasing.Kebab;
 				}
@@ -169,7 +169,7 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 			}
 
 			if (!tagNameCasing) {
-				const tagMode = config.features.complete.tagNameCasing;
+				const tagMode = config.features.complete.casing.tags;
 				if (tagMode === 'kebab') {
 					tagNameCasing = TagNameCasing.Kebab;
 				}
