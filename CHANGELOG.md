@@ -1,10 +1,19 @@
 # Changelog
 
-## 1.5.4 (2023/4/26) - pre-release
+## 1.6.0 (2023/4/27)
 
-- fix: `defineExpose` macro missing for Vue 3.3
-- fix(component-meta): meta info is empty if missing `vue-component-type-helpers` dependency
-- fix: don't check time for codeActions when saving multiple files
+- feat(doctor): show warning for TS 4.9 ([#2190](https://github.com/johnsoncodehk/volar/issues/2190))
+- feat: support inlayHints for `vueCompilerOptions.optionsWrapper`
+- fix: avoid props type-checking for `VNode` ([#2720](https://github.com/johnsoncodehk/volar/issues/2720))
+- fix: revert "fix: trim modifiers for slot name"
+- refactor: update extension settings from `volar.*` to `vue.*`
+- refactor(language-server): remove `petiteVue`, `vitePress` from server init options 
+  > for IDEs other than VSCode, use `additionalExtensions: ['html', 'md']` instead of
+
+**Breaking changes**
+
+- deprecated `vueCompilerOptions.jsxTemplates` ([#2677](https://github.com/johnsoncodehk/volar/issues/2677))
+- deprecated `vueCompilerOptions.nativeTags` ([#2685](https://github.com/johnsoncodehk/volar/issues/2685))
 
 ---
 
@@ -41,6 +50,12 @@
 		<a href="https://opencollective.com/volarjs">Open Collective</a>
 	</h5>
 </p>
+
+## 1.5.4 (2023/4/26) - pre-release
+
+- fix: `defineExpose` macro missing for Vue 3.3
+- fix(component-meta): meta info is empty if missing `vue-component-type-helpers` dependency
+- fix: don't check time for codeActions when saving multiple files
 
 ## 1.5.3 (2023/4/26) - pre-release
 
