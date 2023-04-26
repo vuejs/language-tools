@@ -581,6 +581,11 @@
 					"type": "boolean",
 					"default": false,
 					"description": "Show inlay hints for event argument in inline handlers."
+				},
+				"vue.inlayHints.optionsWrapper": {
+					"type": "boolean",
+					"default": true,
+					"description": "Show inlay hints for component options wrapper for type support."
 				}
 			}
 		},

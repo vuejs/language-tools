@@ -11,7 +11,7 @@ const plugin: LanguageServicePlugin = (context): LanguageServicePluginInstance =
 
 			if (document.languageId === 'html' || document.languageId === 'jade') {
 
-				const enabled = await context.configurationHost?.getConfiguration<boolean>('vue.features.autoInsert.bracketSpacing') ?? true;
+				const enabled = await context.configurationHost?.getConfiguration<boolean>('vue.autoInsert.bracketSpacing') ?? true;
 				if (!enabled)
 					return;
 

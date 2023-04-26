@@ -10,7 +10,18 @@ import * as muggle from 'muggle-string';
 
 const capabilitiesPresets = {
 	all: FileRangeCapabilities.full,
-	allWithHiddenParam: { ...FileRangeCapabilities.full, __hiddenParam: true /* TODO */ } as FileRangeCapabilities,
+	allWithHiddenParam: {
+		...FileRangeCapabilities.full, __hint: {
+			setting: 'vue.inlayHints.inlineHandlerLeading',
+			label: '$event =>',
+			tooltip: [
+				'`$event` is a hidden parameter, you can use it in this callback.',
+				'To hide this hint, set `vue.inlayHints.inlineHandlerLeading` to `false` in IDE settings.',
+				'[More info](https://github.com/vuejs/language-tools/issues/2445#issuecomment-1444771420)',
+			].join('\n\n'),
+			paddingRight: true,
+		} /* TODO */
+	} as FileRangeCapabilities,
 	noDiagnostic: { ...FileRangeCapabilities.full, diagnostic: false } satisfies FileRangeCapabilities,
 	diagnosticOnly: { diagnostic: true } satisfies FileRangeCapabilities,
 	tagHover: { hover: true } satisfies FileRangeCapabilities,

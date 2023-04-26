@@ -105,7 +105,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				if (!options.isSupportedDocument(document))
 					return;
 
-				const enabled = await _context.configurationHost?.getConfiguration<boolean>('vue.features.inlayHints.missingProps') ?? false;
+				const enabled = await _context.configurationHost?.getConfiguration<boolean>('vue.inlayHints.missingProps') ?? false;
 				if (!enabled)
 					return;
 

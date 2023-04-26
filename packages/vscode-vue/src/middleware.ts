@@ -8,10 +8,10 @@ export const middleware: lsp.Middleware = {
 	...baseMiddleware,
 	workspace: {
 		configuration(params, token, next) {
-			if (params.items.some(item => item.section === 'vue.features.complete.casing.props' || item.section === 'vue.features.complete.casing.tags')) {
+			if (params.items.some(item => item.section === 'vue.complete.casing.props' || item.section === 'vue.complete.casing.tags')) {
 				return params.items.map(item => {
 					if (item.scopeUri) {
-						if (item.section === 'vue.features.complete.casing.tags') {
+						if (item.section === 'vue.complete.casing.tags') {
 							const tagNameCasing = tagNameCasings.get(item.scopeUri);
 							if (tagNameCasing === TagNameCasing.Kebab) {
 								return 'kebab';
@@ -20,7 +20,7 @@ export const middleware: lsp.Middleware = {
 								return 'pascal';
 							}
 						}
-						if (item.section === 'vue.features.complete.casing.props') {
+						if (item.section === 'vue.complete.casing.props') {
 							const attrCase = attrNameCasings.get(item.scopeUri);
 							if (attrCase === AttrNameCasing.Kebab) {
 								return 'kebab';

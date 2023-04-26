@@ -80,7 +80,7 @@ export function generate(
 		PropsChildren: false,
 	};
 
-	codes.push('/** __vue_virtual_code_placeholder */\n');
+	codes.push('/* __vue_virtual_code_placeholder__ */\n');
 
 	let generatedTemplate = false;
 
@@ -221,10 +221,29 @@ export function generate(
 			if (scriptRanges?.exportDefault) {
 				isExportRawObject = sfc.script.content.substring(scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end).startsWith('{');
 			}
-			if (isExportRawObject && vueCompilerOptions.optionsWrapper.length && scriptRanges?.exportDefault) {
+			if (isExportRawObject && vueCompilerOptions.optionsWrapper.length === 2 && scriptRanges?.exportDefault) {
 				addVirtualCode('script', 0, scriptRanges.exportDefault.expression.start);
 				codes.push(vueCompilerOptions.optionsWrapper[0]);
-				addVirtualCode('script', scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end);
+				{
+					codes.push(['', 'script', scriptRanges.exportDefault.expression.start, {
+						__hint: {
+							setting: 'vue.inlayHints.optionsWrapper',
+							label: vueCompilerOptions.optionsWrapper[0],
+							tooltip: [
+								'This is virtual code that is automatically wrapped for type support, it does not affect your runtime behavior, you can customize it via `vueCompilerOptions.optionsWrapper` option in tsconfig / jsconfig.',
+								'To hide it, you can set `"vue.inlayHints.optionsWrapper": false` in IDE settings.',
+							].join('\n\n'),
+						}
+					} as any]);
+					addVirtualCode('script', scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end);
+					codes.push(['', 'script', scriptRanges.exportDefault.expression.end, {
+						__hint: {
+							setting: 'vue.inlayHints.optionsWrapper',
+							label: vueCompilerOptions.optionsWrapper[1],
+							tooltip: '',
+						}
+					} as any]);
+				}
 				codes.push(vueCompilerOptions.optionsWrapper[1]);
 				addVirtualCode('script', scriptRanges.exportDefault.expression.end, sfc.script.content.length);
 			}

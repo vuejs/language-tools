@@ -17,7 +17,7 @@ const plugin: LanguageServicePlugin = (context) => {
 
 		async provideAutoInsertionEdit(document, position, options_2) {
 
-			const enabled = await context.configurationHost?.getConfiguration<boolean>('vue.features.autoInsert.parentheses') ?? false;
+			const enabled = await context.configurationHost?.getConfiguration<boolean>('vue.autoInsert.parentheses') ?? false;
 			if (!enabled)
 				return;
 

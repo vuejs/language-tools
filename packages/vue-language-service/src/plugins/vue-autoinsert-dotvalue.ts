@@ -21,7 +21,7 @@ const plugin: LanguageServicePlugin = (context) => {
 			if (!isCharacterTyping(document, insertContext))
 				return;
 
-			const enabled = await context.configurationHost?.getConfiguration<boolean>('vue.features.autoInsert.dotValue') ?? true;
+			const enabled = await context.configurationHost?.getConfiguration<boolean>('vue.autoInsert.dotValue') ?? true;
 			if (!enabled)
 				return;
 
