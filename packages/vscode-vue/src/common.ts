@@ -46,7 +46,7 @@ export async function activate(context: vscode.ExtensionContext, createLc: Creat
 		}
 
 		const currentLangId = vscode.window.activeTextEditor.document.languageId;
-		if (currentLangId === 'vue' || (currentLangId === 'markdown' && config.vueserver.vitePress.processMdFile) || (currentLangId === 'html' && config.vueserver.petiteVue.processHtmlFile)) {
+		if (currentLangId === 'vue' || (currentLangId === 'markdown' && config.server.vitePress.processMdFile) || (currentLangId === 'html' && config.server.petiteVue.processHtmlFile)) {
 			doActivate(context, createLc);
 			stopCheck.dispose();
 		}
@@ -106,8 +106,8 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	activateTsConfigStatusItem('volar.openTsconfig', semanticClient,
 		document => {
 			return document.languageId === 'vue'
-				|| (config.vueserver.vitePress.processMdFile && document.languageId === 'markdown')
-				|| (config.vueserver.petiteVue.processHtmlFile && document.languageId === 'html')
+				|| (config.server.vitePress.processMdFile && document.languageId === 'markdown')
+				|| (config.server.petiteVue.processHtmlFile && document.languageId === 'html')
 				|| (
 					takeOverModeActive(context)
 					&& ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(document.languageId)
@@ -119,8 +119,8 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	activateTsVersionStatusItem('volar.selectTypeScriptVersion', context, semanticClient,
 		document => {
 			return document.languageId === 'vue'
-				|| (config.vueserver.vitePress.processMdFile && document.languageId === 'markdown')
-				|| (config.vueserver.petiteVue.processHtmlFile && document.languageId === 'html')
+				|| (config.server.vitePress.processMdFile && document.languageId === 'markdown')
+				|| (config.server.petiteVue.processHtmlFile && document.languageId === 'html')
 				|| (
 					takeOverModeActive(context)
 					&& ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(document.languageId)
@@ -194,10 +194,10 @@ export function getDocumentSelector(context: vscode.ExtensionContext, serverMode
 			// selectors.push({ language: 'jsonc', pattern: '**/[jt]sconfig.*.json' });
 		}
 	}
-	if (config.vueserver.petiteVue.processHtmlFile) {
+	if (config.server.petiteVue.processHtmlFile) {
 		selectors.push({ language: 'html' });
 	}
-	if (config.vueserver.vitePress.processMdFile) {
+	if (config.server.vitePress.processMdFile) {
 		selectors.push({ language: 'markdown' });
 	}
 	return selectors;
@@ -209,28 +209,28 @@ async function getInitializationOptions(
 ) {
 	const initializationOptions: VueServerInitializationOptions = {
 		// volar
-		configFilePath: config.vueserver.configFilePath,
+		configFilePath: config.server.configFilePath,
 		serverMode,
-		diagnosticModel: config.vueserver.diagnosticModel === 'pull' ? DiagnosticModel.Pull : DiagnosticModel.Push,
+		diagnosticModel: config.server.diagnosticModel === 'pull' ? DiagnosticModel.Pull : DiagnosticModel.Push,
 		typescript: { tsdk: (await getTsdk(context)).tsdk },
-		reverseConfigFilePriority: config.vueserver.reverseConfigFilePriority,
-		maxFileSize: config.vueserver.maxFileSize,
+		reverseConfigFilePriority: config.server.reverseConfigFilePriority,
+		maxFileSize: config.server.maxFileSize,
 		semanticTokensLegend: {
 			tokenTypes: ['component'],
 			tokenModifiers: [],
 		},
-		fullCompletionList: config.vueserver.fullCompletionList,
+		fullCompletionList: config.server.fullCompletionList,
 		// vue
 		petiteVue: {
-			processHtmlFile: !!config.vueserver.petiteVue.processHtmlFile,
+			processHtmlFile: !!config.server.petiteVue.processHtmlFile,
 		},
 		vitePress: {
-			processMdFile: !!config.vueserver.vitePress.processMdFile,
+			processMdFile: !!config.server.vitePress.processMdFile,
 		},
 		json: {
 			customBlockSchemaUrls: config.json.customBlockSchemaUrls,
 		},
-		additionalExtensions: config.vueserver.additionalExtensions,
+		additionalExtensions: config.server.additionalExtensions,
 	};
 	return initializationOptions;
 }

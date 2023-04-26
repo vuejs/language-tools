@@ -84,9 +84,9 @@ export function activate(context: vscode.ExtensionContext) {
 
 		const serverModule = vscode.Uri.joinPath(context.extensionUri, 'server.js');
 		const runOptions: lsp.ForkOptions = {};
-		if (config.vueserver.maxOldSpaceSize) {
+		if (config.server.maxOldSpaceSize) {
 			runOptions.execArgv ??= [];
-			runOptions.execArgv.push("--max-old-space-size=" + config.vueserver.maxOldSpaceSize);
+			runOptions.execArgv.push("--max-old-space-size=" + config.server.maxOldSpaceSize);
 		}
 		const debugOptions: lsp.ForkOptions = { execArgv: ['--nolazy', '--inspect=' + port] };
 		let serverOptions: lsp.ServerOptions = {

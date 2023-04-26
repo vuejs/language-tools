@@ -342,28 +342,28 @@
 					"default": "off",
 					"description": "Traces the communication between VS Code and the language server."
 				},
-				"volar.vueserver.configFilePath": {
+				"vue.server.configFilePath": {
 					"type": "string",
 					"default": "./volar.config.js",
 					"description": "Path to volar.config.js."
 				},
-				"volar.vueserver.maxFileSize": {
+				"vue.server.maxFileSize": {
 					"type": "number",
 					"default": 20971520,
 					"description": "Maximum file size for Vue Server to load. (default: 20MB)"
 				},
-				"volar.vueserver.petiteVue.processHtmlFile": {
+				"vue.server.petiteVue.processHtmlFile": {
 					"type": "boolean",
 					"default": false
 				},
-				"volar.vueserver.vitePress.processMdFile": {
+				"vue.server.vitePress.processMdFile": {
 					"type": "boolean",
 					"default": false
 				},
-				"volar.vueserver.json.customBlockSchemaUrls": {
+				"vue.server.json.customBlockSchemaUrls": {
 					"type": "object"
 				},
-				"volar.vueserver.diagnosticModel": {
+				"vue.server.diagnosticModel": {
 					"type": "string",
 					"default": "push",
 					"enum": [
@@ -376,7 +376,7 @@
 					],
 					"description": "Diagnostic update model."
 				},
-				"volar.vueserver.maxOldSpaceSize": {
+				"vue.server.maxOldSpaceSize": {
 					"type": [
 						"number",
 						"null"
@@ -384,12 +384,12 @@
 					"default": null,
 					"description": "Set --max-old-space-size option on server process. If you have problem on frequently \"Request textDocument/** failed.\" error, try setting higher memory(MB) on it."
 				},
-				"volar.vueserver.reverseConfigFilePriority": {
+				"vue.server.reverseConfigFilePriority": {
 					"type": "boolean",
 					"default": false,
 					"description": "Reverse priority for tsconfig pickup."
 				},
-				"volar.vueserver.additionalExtensions": {
+				"vue.server.additionalExtensions": {
 					"type": "array",
 					"items": {
 						"type": "string"
@@ -397,7 +397,7 @@
 					"default": [],
 					"description": "List any additional file extensions that should be processed as Vue files (requires restart)."
 				},
-				"volar.vueserver.fullCompletionList": {
+				"vue.server.fullCompletionList": {
 					"type": "boolean",
 					"default": false,
 					"description": "Enable this option if you want to get complete CompletionList in language client. (Disable for better performance)"

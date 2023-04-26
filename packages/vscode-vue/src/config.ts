@@ -50,36 +50,36 @@ export const config = {
 			return volarConfigs().get<Record<string, string>>('json.customBlockSchemaUrls');
 		}
 	},
-	vueserver: {
+	server: {
 		get maxOldSpaceSize() {
-			return volarConfigs().get<number>('vueserver.maxOldSpaceSize');
+			return vueConfigs().get<number>('server.maxOldSpaceSize');
 		},
 		get maxFileSize() {
-			return volarConfigs().get<number>('vueserver.maxFileSize');
+			return vueConfigs().get<number>('server.maxFileSize');
 		},
 		get reverseConfigFilePriority() {
-			return volarConfigs().get<boolean>('vueserver.reverseConfigFilePriority');
+			return vueConfigs().get<boolean>('server.reverseConfigFilePriority');
 		},
 		get diagnosticModel() {
-			return volarConfigs().get<'push' | 'pull'>('vueserver.diagnosticModel');
+			return vueConfigs().get<'push' | 'pull'>('server.diagnosticModel');
 		},
 		get additionalExtensions() {
-			return volarConfigs().get<string[]>('vueserver.additionalExtensions') ?? [];
+			return vueConfigs().get<string[]>('server.additionalExtensions') ?? [];
 		},
 		get fullCompletionList() {
-			return volarConfigs().get<boolean>('vueserver.fullCompletionList');
+			return vueConfigs().get<boolean>('server.fullCompletionList');
 		},
 		get configFilePath() {
-			return volarConfigs().get<string>('vueserver.configFilePath');
+			return vueConfigs().get<string>('server.configFilePath');
 		},
 		petiteVue: {
 			get processHtmlFile() {
-				return volarConfigs().get<boolean>('vueserver.petiteVue.processHtmlFile');
+				return vueConfigs().get<boolean>('server.petiteVue.processHtmlFile');
 			},
 		},
 		vitePress: {
 			get processMdFile() {
-				return volarConfigs().get<boolean>('vueserver.vitePress.processMdFile');
+				return vueConfigs().get<boolean>('server.vitePress.processMdFile');
 			},
 		},
 	},
