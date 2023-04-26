@@ -73,8 +73,8 @@ export const config = {
 			return vueConfigs().get<string>('server.configFilePath');
 		},
 		petiteVue: {
-			get processHtmlFile() {
-				return vueConfigs().get<boolean>('server.petiteVue.processHtmlFile');
+			get supportHtmlFile() {
+				return vueConfigs().get<boolean>('server.petiteVue.supportHtmlFile');
 			},
 		},
 		vitePress: {

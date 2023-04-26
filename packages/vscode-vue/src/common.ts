@@ -46,7 +46,7 @@ export async function activate(context: vscode.ExtensionContext, createLc: Creat
 		}
 
 		const currentLangId = vscode.window.activeTextEditor.document.languageId;
-		if (currentLangId === 'vue' || (currentLangId === 'markdown' && config.server.vitePress.processMdFile) || (currentLangId === 'html' && config.server.petiteVue.processHtmlFile)) {
+		if (currentLangId === 'vue' || (currentLangId === 'markdown' && config.server.vitePress.processMdFile) || (currentLangId === 'html' && config.server.petiteVue.supportHtmlFile)) {
 			doActivate(context, createLc);
 			stopCheck.dispose();
 		}
@@ -107,7 +107,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		document => {
 			return document.languageId === 'vue'
 				|| (config.server.vitePress.processMdFile && document.languageId === 'markdown')
-				|| (config.server.petiteVue.processHtmlFile && document.languageId === 'html')
+				|| (config.server.petiteVue.supportHtmlFile && document.languageId === 'html')
 				|| (
 					takeOverModeActive(context)
 					&& ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(document.languageId)
@@ -120,7 +120,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		document => {
 			return document.languageId === 'vue'
 				|| (config.server.vitePress.processMdFile && document.languageId === 'markdown')
-				|| (config.server.petiteVue.processHtmlFile && document.languageId === 'html')
+				|| (config.server.petiteVue.supportHtmlFile && document.languageId === 'html')
 				|| (
 					takeOverModeActive(context)
 					&& ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(document.languageId)
@@ -194,7 +194,7 @@ export function getDocumentSelector(context: vscode.ExtensionContext, serverMode
 			// selectors.push({ language: 'jsonc', pattern: '**/[jt]sconfig.*.json' });
 		}
 	}
-	if (config.server.petiteVue.processHtmlFile) {
+	if (config.server.petiteVue.supportHtmlFile) {
 		selectors.push({ language: 'html' });
 	}
 	if (config.server.vitePress.processMdFile) {
@@ -226,7 +226,7 @@ async function getInitializationOptions(
 		},
 		additionalExtensions: [
 			...config.server.additionalExtensions,
-			...!config.server.petiteVue.processHtmlFile ? [] : ['html'],
+			...!config.server.petiteVue.supportHtmlFile ? [] : ['html'],
 			...!config.server.vitePress.processMdFile ? [] : ['md'],
 		],
 	};

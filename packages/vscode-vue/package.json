@@ -352,7 +352,7 @@
 					"default": 20971520,
 					"description": "Maximum file size for Vue Server to load. (default: 20MB)"
 				},
-				"vue.server.petiteVue.processHtmlFile": {
+				"vue.server.petiteVue.supportHtmlFile": {
 					"type": "boolean",
 					"default": false
 				},

@@ -138,7 +138,7 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 			&& (
 				document?.languageId === 'vue'
 				|| (config.server.vitePress.processMdFile && document?.languageId === 'markdown')
-				|| (config.server.petiteVue.processHtmlFile && document?.languageId === 'html')
+				|| (config.server.petiteVue.supportHtmlFile && document?.languageId === 'html')
 			)
 		) {
 			let detected: Awaited<ReturnType<typeof detect>> | undefined;
