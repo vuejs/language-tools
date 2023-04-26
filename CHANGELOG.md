@@ -1,17 +1,10 @@
 # Changelog
 
-## 1.5.3 (2023/4/26) - pre-release
+## 1.5.4 (2023/4/26) - pre-release
 
-- feat: support type-checking for dynamic components
-- feat: support element type-checking for directives
-- fix: cannot infer event type for `<Transition>` ([#2700](https://github.com/johnsoncodehk/volar/issues/2700))
-- fix: tag / prop casing status not working
-- fix: slot name accidentally included modifiers in virtual code
-- fix: avoid always pop "Saving time is too long" edge case
-- fix: only generate `JSX.ElementChildrenAttribute` type when `vueCompilerOptions.jsxSlots` enabled ([#2714](https://github.com/johnsoncodehk/volar/issues/2714))
-- fix: top level await error in SFC if two script blocks are present ([#2712](https://github.com/johnsoncodehk/volar/issues/2712))
-- fix: cannot use generic components inside defineComponent ([#2709](https://github.com/johnsoncodehk/volar/issues/2709))
-- fix: intellisense not working in es module project ([#2661](https://github.com/johnsoncodehk/volar/issues/2661))
+- fix: `defineExpose` macro missing for Vue 3.3
+- fix(component-meta): meta info is empty if missing `vue-component-type-helpers` dependency
+- fix: don't check time for codeActions when saving multiple files
 
 ---
 
@@ -48,6 +41,19 @@
 		<a href="https://opencollective.com/volarjs">Open Collective</a>
 	</h5>
 </p>
+
+## 1.5.3 (2023/4/26) - pre-release
+
+- feat: support type-checking for dynamic components
+- feat: support element type-checking for directives
+- fix: cannot infer event type for `<Transition>` ([#2700](https://github.com/johnsoncodehk/volar/issues/2700))
+- fix: tag / prop casing status not working
+- fix: slot name accidentally included modifiers in virtual code
+- fix: avoid always pop "Saving time is too long" edge case
+- fix: only generate `JSX.ElementChildrenAttribute` type when `vueCompilerOptions.jsxSlots` enabled ([#2714](https://github.com/johnsoncodehk/volar/issues/2714))
+- fix: top level await error in SFC if two script blocks are present ([#2712](https://github.com/johnsoncodehk/volar/issues/2712))
+- fix: cannot use generic components inside defineComponent ([#2709](https://github.com/johnsoncodehk/volar/issues/2709))
+- fix: intellisense not working in es module project ([#2661](https://github.com/johnsoncodehk/volar/issues/2661))
 
 ## 1.5.2 (2023/4/24) - pre-release
 
