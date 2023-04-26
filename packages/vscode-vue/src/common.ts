@@ -221,16 +221,14 @@ async function getInitializationOptions(
 		},
 		fullCompletionList: config.server.fullCompletionList,
 		// vue
-		petiteVue: {
-			processHtmlFile: !!config.server.petiteVue.processHtmlFile,
-		},
-		vitePress: {
-			processMdFile: !!config.server.vitePress.processMdFile,
-		},
 		json: {
 			customBlockSchemaUrls: config.json.customBlockSchemaUrls,
 		},
-		additionalExtensions: config.server.additionalExtensions,
+		additionalExtensions: [
+			...config.server.additionalExtensions,
+			...!config.server.petiteVue.processHtmlFile ? [] : ['html'],
+			...!config.server.vitePress.processMdFile ? [] : ['md'],
+		],
 	};
 	return initializationOptions;
 }

@@ -22,14 +22,6 @@ export function createServerPlugin(connection: Connection) {
 		const vueFileExtensions: string[] = ['vue'];
 		const hostToVueOptions = new WeakMap<embedded.LanguageServiceHost, Partial<VueCompilerOptions>>();
 
-		if (initOptions.petiteVue?.processHtmlFile) {
-			vueFileExtensions.push('html');
-		}
-
-		if (initOptions.vitePress?.processMdFile) {
-			vueFileExtensions.push('md');
-		}
-
 		if (initOptions.additionalExtensions) {
 			for (const additionalExtension of initOptions.additionalExtensions) {
 				vueFileExtensions.push(additionalExtension);
