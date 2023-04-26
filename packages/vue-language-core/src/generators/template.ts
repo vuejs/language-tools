@@ -717,7 +717,7 @@ export function generate(
 				...(
 					(slotDir?.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content)
 						? createPropertyAccessCode([
-							slotDir.arg.loc.source.split('.')[0], // remove modifiers
+							slotDir.arg.loc.source,
 							'template',
 							slotDir.arg.loc.start.offset,
 							slotDir.arg.isStatic ? capabilitiesPresets.slotName : capabilitiesPresets.all
