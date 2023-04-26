@@ -134,7 +134,7 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 
 	async function update(document: vscode.TextDocument | undefined) {
 		if (
-			config.nameCasing.status
+			config.features.complete.casing.status
 			&& (
 				document?.languageId === 'vue'
 				|| (config.vueserver.vitePress.processMdFile && document?.languageId === 'markdown')

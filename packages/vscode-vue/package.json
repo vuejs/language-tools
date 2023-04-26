@@ -412,11 +412,6 @@
 					"default": true,
 					"description": "Show known problems in status bar."
 				},
-				"volar.nameCasing.status": {
-					"type": "boolean",
-					"default": true,
-					"description": "Show name casing in status bar."
-				},
 				"volar.format.initialIndent": {
 					"type": "object",
 					"description": "Whether to have initial indent.",
@@ -551,6 +546,11 @@
 					],
 					"default": "autoKebab",
 					"description": "Preferred attr name case."
+				},
+				"vue.features.complete.casing.status": {
+					"type": "boolean",
+					"default": true,
+					"description": "Show name casing in status bar."
 				},
 				"vue.features.complete.normalizeComponentImportName": {
 					"type": "boolean",

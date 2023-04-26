@@ -33,6 +33,9 @@ export const config = {
 		},
 		complete: {
 			casing: {
+				get status() {
+					return vueConfigs().get<boolean>('features.complete.casing.status');
+				},
 				get props() {
 					return vueConfigs().get<'autoKebab' | 'autoCamel' | 'kebab' | 'camel'>('features.complete.casing.props');
 				},
@@ -83,11 +86,6 @@ export const config = {
 	doctor: {
 		get status() {
 			return volarConfigs().get<boolean>('doctor.status');
-		},
-	},
-	nameCasing: {
-		get status() {
-			return volarConfigs().get<boolean>('nameCasing.status');
 		},
 	},
 };
