@@ -29,7 +29,10 @@ export function activate(context: vscode.ExtensionContext) {
 	let start: number | undefined;
 	let isSavingMultiple = false;
 
-	vscode.workspace.onWillSaveTextDocument(() => {
+	vscode.workspace.onWillSaveTextDocument((e) => {
+		if (e.document.languageId !== 'vue') {
+			return;
+		}
 		if (start !== undefined) {
 			isSavingMultiple = true;
 		}
