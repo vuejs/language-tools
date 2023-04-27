@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.6.1 (2023/4/28)
 
 - feat: support for specify vue library name by `vueCompilerOptions.lib` option ([#2730](https://github.com/johnsoncodehk/volar/issues/2730))
 - fix: avoid `<component :is>` type checking with string literal assignment ([#2725](https://github.com/johnsoncodehk/volar/issues/2725))
@@ -10,21 +10,6 @@
 - fix: component intellisense not working in template if TS version < 5.0 ([#2742](https://github.com/johnsoncodehk/volar/issues/2742))
 - fix: class is not assignable to generic components ([#2744](https://github.com/johnsoncodehk/volar/issues/2744))
 - fix: components options is not set correctly when component name is kebab-case and auto-importing ([#2745](https://github.com/johnsoncodehk/volar/issues/2745))
-
-## 1.6.0 (2023/4/27)
-
-- feat(doctor): show warning for TS 4.9 ([#2190](https://github.com/johnsoncodehk/volar/issues/2190))
-- feat: support inlayHints for `vueCompilerOptions.optionsWrapper`
-- fix: avoid props type-checking for `VNode` ([#2720](https://github.com/johnsoncodehk/volar/issues/2720))
-- fix: revert "fix: trim modifiers for slot name"
-- refactor: update extension settings from `volar.*` to `vue.*`
-- refactor(language-server): remove `petiteVue`, `vitePress` from server init options 
-  > for IDEs other than VSCode, use `additionalExtensions: ['html', 'md']` instead of
-
-**Breaking changes**
-
-- deprecated `vueCompilerOptions.jsxTemplates` ([#2677](https://github.com/johnsoncodehk/volar/issues/2677))
-- deprecated `vueCompilerOptions.nativeTags` ([#2685](https://github.com/johnsoncodehk/volar/issues/2685))
 
 ---
 
@@ -61,6 +46,21 @@
 		<a href="https://opencollective.com/volarjs">Open Collective</a>
 	</h5>
 </p>
+## 1.6.0 (2023/4/27)
+
+- feat(doctor): show warning for TS 4.9 ([#2190](https://github.com/johnsoncodehk/volar/issues/2190))
+- feat: support inlayHints for `vueCompilerOptions.optionsWrapper`
+- fix: avoid props type-checking for `VNode` ([#2720](https://github.com/johnsoncodehk/volar/issues/2720))
+- fix: revert "fix: trim modifiers for slot name"
+- refactor: update extension settings from `volar.*` to `vue.*`
+- refactor(language-server): remove `petiteVue`, `vitePress` from server init options 
+  > for IDEs other than VSCode, use `additionalExtensions: ['html', 'md']` instead of
+
+**Breaking changes**
+
+- deprecated `vueCompilerOptions.jsxTemplates` ([#2677](https://github.com/johnsoncodehk/volar/issues/2677))
+- deprecated `vueCompilerOptions.nativeTags` ([#2685](https://github.com/johnsoncodehk/volar/issues/2685))
+
 
 ## 1.5.4 (2023/4/26) - pre-release
 
