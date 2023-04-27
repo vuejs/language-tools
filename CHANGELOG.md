@@ -7,6 +7,7 @@
 - fix: error using custom directive: `Expected 2 arguments, but got 1.` ([#2730](https://github.com/johnsoncodehk/volar/issues/2730))
 - fix: namespaced tag not working without script setup
 - fix: component intellisense not working in template if TS version < 5.0 ([#2742](https://github.com/johnsoncodehk/volar/issues/2742))
+- fix: class is not assignable to generic components ([#2744](https://github.com/johnsoncodehk/volar/issues/2744))
 
 ## 1.6.0 (2023/4/27)
 

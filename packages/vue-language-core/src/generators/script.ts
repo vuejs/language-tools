@@ -315,7 +315,12 @@ export function generate(
 			}
 			codes.push(`>`);
 			codes.push('(\n');
-			codes.push(`__VLS_props: typeof __VLS_setup['props'] & import('vue').VNodeProps,\n`);
+			codes.push(
+				`__VLS_props: typeof __VLS_setup['props']`,
+				`& import('${vueLibName}').VNodeProps`,
+				`& import('${vueLibName}').AllowedComponentProps`,
+				`& import('${vueLibName}').ComponentCustomProps,\n`,
+			);
 			codes.push(`__VLS_ctx?: Pick<typeof __VLS_setup, 'attrs' | 'emit' | 'slots'>,\n`);
 			codes.push('__VLS_setup = (() => {\n');
 			scriptSetupGeneratedOffset = generateSetupFunction(true, 'none', definePropMirrors);
@@ -415,7 +420,7 @@ export function generate(
 				codes.push(';\n');
 			}
 			else if (scriptSetupRanges.emitsRuntimeArg) {
-				codes.push(`(await import('vue')).defineEmits(`);
+				codes.push(`defineEmits(`);
 				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end);
 				codes.push(');\n');
 			}
@@ -432,7 +437,7 @@ export function generate(
 			codes.push('emit: typeof __VLS_emit');
 			codes.push('};\n');
 			codes.push('})(),\n');
-			codes.push(') => ({} as import("vue").VNode & { __ctx?: typeof __VLS_setup }))');
+			codes.push(`) => ({} as import('${vueLibName}').VNode & { __ctx?: typeof __VLS_setup }))`);
 		}
 		else if (!sfc.script) {
 			// no script block, generate script setup code at root
@@ -479,20 +484,20 @@ export function generate(
 		const definePropProposalB = sfc.scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition') || vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
 
 		if (vueCompilerOptions.target >= 3.3) {
-			codes.push(`const { defineProps, defineEmits, defineExpose, defineOptions, defineSlots, defineModel, withDefaults } = await import('vue');\n`);
+			codes.push(`const { defineProps, defineEmits, defineExpose, defineOptions, defineSlots, defineModel, withDefaults } = await import('${vueLibName}');\n`);
 		}
 		if (definePropProposalA) {
 			codes.push(`
-declare function defineProp<T>(name: string, options: { required: true } & Record<string, unknown>): import('vue').ComputedRef<T>;
-declare function defineProp<T>(name: string, options: { default: any } & Record<string, unknown>): import('vue').ComputedRef<T>;
-declare function defineProp<T>(name?: string, options?: any): import('vue').ComputedRef<T | undefined>;
+declare function defineProp<T>(name: string, options: { required: true } & Record<string, unknown>): import('${vueLibName}').ComputedRef<T>;
+declare function defineProp<T>(name: string, options: { default: any } & Record<string, unknown>): import('${vueLibName}').ComputedRef<T>;
+declare function defineProp<T>(name?: string, options?: any): import('${vueLibName}').ComputedRef<T | undefined>;
 `.trim() + '\n');
 		}
 		if (definePropProposalB) {
 			codes.push(`
-declare function defineProp<T>(value: T | (() => T), required?: boolean, rest?: any): import('vue').ComputedRef<T>;
-declare function defineProp<T>(value: T | (() => T) | undefined, required: true, rest?: any): import('vue').ComputedRef<T>;
-declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?: any): import('vue').ComputedRef<T | undefined>;
+declare function defineProp<T>(value: T | (() => T), required?: boolean, rest?: any): import('${vueLibName}').ComputedRef<T>;
+declare function defineProp<T>(value: T | (() => T) | undefined, required: true, rest?: any): import('${vueLibName}').ComputedRef<T>;
+declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?: any): import('${vueLibName}').ComputedRef<T | undefined>;
 `.trim() + '\n');
 		}
 
@@ -547,10 +552,10 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				}
 
 				if (defineProp.required) {
-					codes.push(`{ required: true, type: import('vue').PropType<${type}> },\n`);
+					codes.push(`{ required: true, type: import('${vueLibName}').PropType<${type}> },\n`);
 				}
 				else {
-					codes.push(`import('vue').PropType<${type}>,\n`);
+					codes.push(`import('${vueLibName}').PropType<${type}>,\n`);
 				}
 			}
 			codes.push(`},\n`);
