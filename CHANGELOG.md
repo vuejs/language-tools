@@ -2,7 +2,7 @@
 
 ## 1.6.1 (2023/4/28)
 
-- feat: support for specify vue library name by `vueCompilerOptions.lib` option ([#2730](https://github.com/johnsoncodehk/volar/issues/2730))
+- feat: support for specify vue library name by `vueCompilerOptions.lib` option ([#2722](https://github.com/johnsoncodehk/volar/issues/2722))
 - fix: avoid `<component :is>` type checking with string literal assignment ([#2725](https://github.com/johnsoncodehk/volar/issues/2725))
 - fix: `<slot>` reporting false positive error when `strictTemplates` enabled ([#2726](https://github.com/johnsoncodehk/volar/issues/2726)) ([#2723](https://github.com/johnsoncodehk/volar/issues/2723))
 - fix: error using custom directive: `Expected 2 arguments, but got 1.` ([#2730](https://github.com/johnsoncodehk/volar/issues/2730))
@@ -46,6 +46,7 @@
 		<a href="https://opencollective.com/volarjs">Open Collective</a>
 	</h5>
 </p>
+
 ## 1.6.0 (2023/4/27)
 
 - feat(doctor): show warning for TS 4.9 ([#2190](https://github.com/johnsoncodehk/volar/issues/2190))
@@ -103,7 +104,7 @@
 
 ## 1.4.3 (2023/4/22)
 
-- feat: add `volar.nameCasing.status` setting to disable nameCasing status
+- feat: add `volar.nameCasing.status` setting to disable nameCasing status ([#2453](https://github.com/johnsoncodehk/volar/issues/2453))
 - fix(vue-typescript): add missing peer dependency `typescript` ([#2665](https://github.com/johnsoncodehk/volar/issues/2665)) - thanks @merceyz
 - fix: slots references codeLens, renaming not working
 - fix: pug multiline attribute values are marked as error ([#2413](https://github.com/johnsoncodehk/volar/issues/2413))
