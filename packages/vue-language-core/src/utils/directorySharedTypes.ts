@@ -1,8 +1,16 @@
 import { VueCompilerOptions } from '../types';
 import { getSlotsPropertyName } from './shared';
 import { getVueLibraryName } from './shared';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 
-export const typesFileName = '__VLS_types.d.ts';
+export const baseName = '__VLS_types.d.ts';
+
+export function getImportName(compilerOptions: ts.CompilerOptions) {
+	if (!compilerOptions.module || compilerOptions.module === 1) {
+		return './__VLS_types';
+	}
+	return './__VLS_types.js';
+};
 
 export function getTypesCode(
 	vueVersion: number,

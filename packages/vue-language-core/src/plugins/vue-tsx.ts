@@ -8,11 +8,13 @@ import { FileCapabilities, FileKind } from '@volar/language-core';
 import { TextRange } from '../types';
 import { parseCssClassNames } from '../utils/parseCssClassNames';
 import { parseCssVars } from '../utils/parseCssVars';
+import * as sharedTypes from '../utils/directorySharedTypes';
 
 const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOptions }) => {
 
 	const ts = modules.typescript;
 	const instances = new WeakMap<Sfc, ReturnType<typeof createTsx>>();
+	const sharedTypesImport = sharedTypes.getImportName(compilerOptions);
 
 	return {
 
@@ -138,6 +140,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				_sfc.template?.lang ?? 'html',
 				_sfc.templateAst,
 				hasScriptSetupSlots.value,
+				sharedTypesImport,
 				Object.values(cssScopedClasses.value).map(style => style.classNames).flat(),
 			);
 		});
@@ -157,6 +160,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				htmlGen.value,
 				compilerOptions,
 				vueCompilerOptions,
+				sharedTypesImport,
 			);
 		});
 

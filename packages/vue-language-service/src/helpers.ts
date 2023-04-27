@@ -2,7 +2,7 @@ import * as vue from '@volar/vue-language-core';
 import * as embedded from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { computed, ComputedRef } from '@vue/reactivity';
-import { typesFileName } from '@volar/vue-language-core/out/utils/localTypes';
+import { sharedTypes } from '@volar/vue-language-core';
 import { camelize, capitalize } from '@vue/shared';
 
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -167,7 +167,7 @@ export function checkNativeTags(
 	fileName: string,
 ) {
 
-	const sharedTypesFileName = fileName.substring(0, fileName.lastIndexOf('/')) + '/' + typesFileName;
+	const sharedTypesFileName = fileName.substring(0, fileName.lastIndexOf('/')) + '/' + sharedTypes.baseName;
 	const result = new Set<string>();
 
 	let tsSourceFile: ts.SourceFile | undefined;
@@ -198,7 +198,7 @@ export function getElementAttrs(
 	tagName: string,
 ) {
 
-	const sharedTypesFileName = fileName.substring(0, fileName.lastIndexOf('/')) + '/' + typesFileName;
+	const sharedTypesFileName = fileName.substring(0, fileName.lastIndexOf('/')) + '/' + sharedTypes.baseName;
 
 	let tsSourceFile: ts.SourceFile | undefined;
 

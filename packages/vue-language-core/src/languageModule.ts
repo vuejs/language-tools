@@ -3,7 +3,7 @@ import { posix as path } from 'path';
 import { getDefaultVueLanguagePlugins } from './plugins';
 import { VueFile } from './sourceFile';
 import { VueCompilerOptions } from './types';
-import * as localTypes from './utils/localTypes';
+import * as sharedTypes from './utils/directorySharedTypes';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
 export function createLanguageModules(
@@ -19,7 +19,7 @@ export function createLanguageModules(
 		compilerOptions,
 		vueCompilerOptions,
 	);
-	const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(localTypes.getTypesCode(vueCompilerOptions.target, vueCompilerOptions));
+	const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(sharedTypes.getTypesCode(vueCompilerOptions.target, vueCompilerOptions));
 	const languageModule: embedded.LanguageModule = {
 		createFile(fileName, snapshot, languageId) {
 			if (
@@ -39,7 +39,7 @@ export function createLanguageModules(
 			return {
 				fileExists(fileName) {
 					const basename = path.basename(fileName);
-					if (basename === localTypes.typesFileName) {
+					if (basename === sharedTypes.baseName) {
 						return true;
 					}
 					return host.fileExists(fileName);
@@ -53,14 +53,14 @@ export function createLanguageModules(
 				},
 				getScriptVersion(fileName) {
 					const basename = path.basename(fileName);
-					if (basename === localTypes.typesFileName) {
+					if (basename === sharedTypes.baseName) {
 						return '';
 					}
 					return host.getScriptVersion(fileName);
 				},
 				getScriptSnapshot(fileName) {
 					const basename = path.basename(fileName);
-					if (basename === localTypes.typesFileName) {
+					if (basename === sharedTypes.baseName) {
 						return sharedTypesSnapshot;
 					}
 					return host.getScriptSnapshot(fileName);
@@ -77,7 +77,7 @@ export function createLanguageModules(
 	function getSharedTypesFiles(fileNames: string[]) {
 		const moduleFiles = fileNames.filter(fileName => vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext)));
 		const moduleFileDirs = [...new Set(moduleFiles.map(path.dirname))];
-		return moduleFileDirs.map(dir => path.join(dir, localTypes.typesFileName));
+		return moduleFileDirs.map(dir => path.join(dir, sharedTypes.baseName));
 	}
 }
 
