@@ -5,6 +5,7 @@
 		"noPropertyAccessFromIndexSignature": true,
 	},
 	"vueCompilerOptions": {
+		"target": 3.3,
 		"jsxSlots": true,
 		"plugins": ["../../vue-language-plugin-pug"]
 	},
