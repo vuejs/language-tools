@@ -505,13 +505,15 @@ export function generate(
 			endTagOffset = undefined;
 		}
 
-		const propsFailedExps: CompilerDOM.SimpleExpressionNode[] = [];
 		let tag = node.tag;
 		let tagOffsets = endTagOffset !== undefined ? [startTagOffset, endTagOffset] : [startTagOffset];
 		let props = node.props;
+
+		const propsFailedExps: CompilerDOM.SimpleExpressionNode[] = [];
 		const isNamespacedTag = tag.indexOf('.') >= 0;
-		const componentVar = `__VLS_${elementIndex++}`;
-		const componentInstanceVar = `__VLS_${elementIndex++}`;
+		const var_originalComponent = `__VLS_${elementIndex++}`;
+		const var_functionalComponent = `__VLS_${elementIndex++}`;
+		const var_componentInstance = `__VLS_${elementIndex++}`;
 
 		let dynamicTagExp: CompilerDOM.ExpressionNode | undefined;
 
@@ -535,40 +537,34 @@ export function generate(
 			}
 		}
 
-		if (node.tag === 'slot') {
-			codes.push(`const ${componentVar} = {} as any;\n`);
-		}
-		else if (isNamespacedTag) {
+		if (isNamespacedTag) {
 			codes.push(
-				`const ${componentVar} = (await import('./__VLS_types.d.ts')).asFunctionalComponent(${tag}, new ${tag}({`,
-				...createPropsCode(node, props, 'slots'),
-				'}));\n',
+				`const ${var_originalComponent} = `,
+				...createInterpolationCode(tag, node.loc, startTagOffset, capabilitiesPresets.all, '', ''),
+				';\n',
 			);
 		}
 		else if (dynamicTagExp) {
-			const dynamicTagVar = `__VLS_${elementIndex++}`;
 			codes.push(
-				`const ${dynamicTagVar} = `,
+				`const ${var_originalComponent} = `,
 				...createInterpolationCode(dynamicTagExp.loc.source, dynamicTagExp.loc, dynamicTagExp.loc.start.offset, capabilitiesPresets.all, '', ''),
 				';\n',
 			);
-			codes.push(
-				`const ${componentVar} = (await import('./__VLS_types.d.ts')).asFunctionalComponent(`,
-				`${dynamicTagVar}, `,
-				`new ${dynamicTagVar}({`,
-				...createPropsCode(node, props, 'slots'),
-				'}));\n',
-			);
+		}
+		else if (componentVars[tag]) {
+			codes.push(`const ${var_originalComponent} = __VLS_templateComponents['${componentVars[tag]}'];\n`);
 		}
 		else {
-			codes.push(
-				`const ${componentVar} = (await import('./__VLS_types.d.ts')).asFunctionalComponent(`,
-				`__VLS_templateComponents['${componentVars[tag] ?? tag}'], `,
-				`new __VLS_templateComponents['${componentVars[tag] ?? tag}']({`,
-				...createPropsCode(node, props, 'slots'),
-				'}));\n',
-			);
+			codes.push(`const ${var_originalComponent} = {} as any;\n`);
 		}
+
+		codes.push(
+			`const ${var_functionalComponent} = (await import('./__VLS_types.d.ts')).asFunctionalComponent(`,
+			`${var_originalComponent}, `,
+			`new ${var_originalComponent}({`,
+			...createPropsCode(node, props, 'slots'),
+			'}));\n',
+		);
 
 		for (const offset of tagOffsets) {
 			if (isNamespacedTag) {
@@ -600,7 +596,7 @@ export function generate(
 		}
 
 		codes.push(
-			`const ${componentInstanceVar} = ${componentVar}(`,
+			`const ${var_componentInstance} = ${var_functionalComponent}(`,
 			// diagnostic start
 			tagOffsets.length ? ['', 'template', tagOffsets[0], capabilitiesPresets.diagnosticOnly]
 				: dynamicTagExp ? ['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]
@@ -612,12 +608,12 @@ export function generate(
 			tagOffsets.length ? ['', 'template', tagOffsets[0] + tag.length, capabilitiesPresets.diagnosticOnly]
 				: dynamicTagExp ? ['', 'template', startTagOffset + tag.length, capabilitiesPresets.diagnosticOnly]
 					: '',
-			`, ...(await import('./__VLS_types.d.ts')).functionalComponentArgsRest(${componentVar}));\n`,
+			`, ...(await import('./__VLS_types.d.ts')).functionalComponentArgsRest(${var_functionalComponent}));\n`,
 		);
 
 		if (tag !== 'template' && tag !== 'slot') {
 			componentCtxVar = `__VLS_${elementIndex++}`;
-			codes.push(`const ${componentCtxVar} = (await import('./__VLS_types.d.ts')).pickFunctionalComponentCtx(${componentVar}, ${componentInstanceVar})!;\n`);
+			codes.push(`const ${componentCtxVar} = (await import('./__VLS_types.d.ts')).pickFunctionalComponentCtx(${var_originalComponent}, ${var_componentInstance})!;\n`);
 			parentEl = node;
 		}
 
@@ -671,13 +667,13 @@ export function generate(
 			inScope = true;
 		}
 
-		generateDirectives(node, componentVar);
+		generateDirectives(node, var_originalComponent);
 		generateElReferences(node); // <el ref="foo" />
 		if (cssScopedClasses.length) {
 			generateClassScoped(node);
 		}
 		if (componentCtxVar) {
-			generateEvents(node, componentVar, componentInstanceVar, componentCtxVar);
+			generateEvents(node, var_functionalComponent, var_componentInstance, componentCtxVar);
 		}
 		if (node.tag === 'slot') {
 			generateSlot(node, startTagOffset);
@@ -1385,6 +1381,7 @@ export function generate(
 					'(',
 					['', 'template', prop.loc.start.offset, capabilitiesPresets.diagnosticOnly],
 					componentVar,
+					vueCompilerOptions.strictTemplates ? '' : ' as any',
 					['', 'template', prop.loc.start.offset + 'v-'.length + prop.name.length, capabilitiesPresets.diagnosticOnly],
 					', ',
 				);
@@ -1408,6 +1405,9 @@ export function generate(
 							formatBrackets.normal,
 						),
 					);
+				}
+				else {
+					codes.push('undefined');
 				}
 				codes.push(
 					')',
