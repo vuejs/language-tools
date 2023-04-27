@@ -11,7 +11,7 @@ import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { collectCssVars, collectStyleCssClasses } from '../plugins/vue-tsx';
 import { Sfc } from '../types';
 import type { VueCompilerOptions } from '../types';
-import { getSlotsPropertyName, getVueLibraryName } from '../utils/shared';
+import { getSlotsPropertyName } from '../utils/shared';
 import { walkInterpolationFragment } from '../utils/transform';
 import * as sharedTypes from '../utils/directorySharedTypes';
 import * as muggle from 'muggle-string';
@@ -72,7 +72,6 @@ export function generate(
 	//#endregion
 
 	const bypassDefineComponent = lang === 'js' || lang === 'jsx';
-	const vueLibName = getVueLibraryName(vueCompilerOptions.target);
 	const usedHelperTypes = {
 		DefinePropsToOptions: false,
 		mergePropDefaults: false,
@@ -116,11 +115,11 @@ export function generate(
 		let usedPrettify = false;
 		if (usedHelperTypes.DefinePropsToOptions) {
 			if (compilerOptions.exactOptionalPropertyTypes) {
-				codes.push(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueLibName}').PropType<T[K]> } : { type: import('${vueLibName}').PropType<T[K]>, required: true } };\n`);
+				codes.push(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueCompilerOptions.lib}').PropType<T[K]> } : { type: import('${vueCompilerOptions.lib}').PropType<T[K]>, required: true } };\n`);
 			}
 			else {
 				codes.push(`type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;\n`);
-				codes.push(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueLibName}').PropType<__VLS_NonUndefinedable<T[K]>> } : { type: import('${vueLibName}').PropType<T[K]>, required: true } };\n`);
+				codes.push(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueCompilerOptions.lib}').PropType<__VLS_NonUndefinedable<T[K]>> } : { type: import('${vueCompilerOptions.lib}').PropType<T[K]>, required: true } };\n`);
 			}
 		}
 		if (usedHelperTypes.mergePropDefaults) {
@@ -317,9 +316,9 @@ export function generate(
 			codes.push('(\n');
 			codes.push(
 				`__VLS_props: typeof __VLS_setup['props']`,
-				`& import('${vueLibName}').VNodeProps`,
-				`& import('${vueLibName}').AllowedComponentProps`,
-				`& import('${vueLibName}').ComponentCustomProps,\n`,
+				`& import('${vueCompilerOptions.lib}').VNodeProps`,
+				`& import('${vueCompilerOptions.lib}').AllowedComponentProps`,
+				`& import('${vueCompilerOptions.lib}').ComponentCustomProps,\n`,
 			);
 			codes.push(`__VLS_ctx?: Pick<typeof __VLS_setup, 'attrs' | 'emit' | 'slots'>,\n`);
 			codes.push('__VLS_setup = (() => {\n');
@@ -437,7 +436,7 @@ export function generate(
 			codes.push('emit: typeof __VLS_emit');
 			codes.push('};\n');
 			codes.push('})(),\n');
-			codes.push(`) => ({} as import('${vueLibName}').VNode & { __ctx?: typeof __VLS_setup }))`);
+			codes.push(`) => ({} as import('${vueCompilerOptions.lib}').VNode & { __ctx?: typeof __VLS_setup }))`);
 		}
 		else if (!sfc.script) {
 			// no script block, generate script setup code at root
@@ -484,20 +483,20 @@ export function generate(
 		const definePropProposalB = sfc.scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition') || vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
 
 		if (vueCompilerOptions.target >= 3.3) {
-			codes.push(`const { defineProps, defineEmits, defineExpose, defineOptions, defineSlots, defineModel, withDefaults } = await import('${vueLibName}');\n`);
+			codes.push(`const { defineProps, defineEmits, defineExpose, defineOptions, defineSlots, defineModel, withDefaults } = await import('${vueCompilerOptions.lib}');\n`);
 		}
 		if (definePropProposalA) {
 			codes.push(`
-declare function defineProp<T>(name: string, options: { required: true } & Record<string, unknown>): import('${vueLibName}').ComputedRef<T>;
-declare function defineProp<T>(name: string, options: { default: any } & Record<string, unknown>): import('${vueLibName}').ComputedRef<T>;
-declare function defineProp<T>(name?: string, options?: any): import('${vueLibName}').ComputedRef<T | undefined>;
+declare function defineProp<T>(name: string, options: { required: true } & Record<string, unknown>): import('${vueCompilerOptions.lib}').ComputedRef<T>;
+declare function defineProp<T>(name: string, options: { default: any } & Record<string, unknown>): import('${vueCompilerOptions.lib}').ComputedRef<T>;
+declare function defineProp<T>(name?: string, options?: any): import('${vueCompilerOptions.lib}').ComputedRef<T | undefined>;
 `.trim() + '\n');
 		}
 		if (definePropProposalB) {
 			codes.push(`
-declare function defineProp<T>(value: T | (() => T), required?: boolean, rest?: any): import('${vueLibName}').ComputedRef<T>;
-declare function defineProp<T>(value: T | (() => T) | undefined, required: true, rest?: any): import('${vueLibName}').ComputedRef<T>;
-declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?: any): import('${vueLibName}').ComputedRef<T | undefined>;
+declare function defineProp<T>(value: T | (() => T), required?: boolean, rest?: any): import('${vueCompilerOptions.lib}').ComputedRef<T>;
+declare function defineProp<T>(value: T | (() => T) | undefined, required: true, rest?: any): import('${vueCompilerOptions.lib}').ComputedRef<T>;
+declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?: any): import('${vueCompilerOptions.lib}').ComputedRef<T | undefined>;
 `.trim() + '\n');
 		}
 
@@ -519,7 +518,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			codes.push(`{\n`);
 		}
 		else {
-			codes.push(`const __VLS_publicComponent = (await import('${vueLibName}')).defineComponent({\n`);
+			codes.push(`const __VLS_publicComponent = (await import('${vueCompilerOptions.lib}')).defineComponent({\n`);
 		}
 
 		if (scriptSetupRanges.defineProp.length) {
@@ -552,10 +551,10 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				}
 
 				if (defineProp.required) {
-					codes.push(`{ required: true, type: import('${vueLibName}').PropType<${type}> },\n`);
+					codes.push(`{ required: true, type: import('${vueCompilerOptions.lib}').PropType<${type}> },\n`);
 				}
 				else {
-					codes.push(`import('${vueLibName}').PropType<${type}>,\n`);
+					codes.push(`import('${vueCompilerOptions.lib}').PropType<${type}>,\n`);
 				}
 			}
 			codes.push(`},\n`);
@@ -714,7 +713,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 		if (sfc.scriptSetup && scriptSetupRanges) {
 
-			codes.push(`const __VLS_internalComponent = (await import('${vueLibName}')).defineComponent({\n`);
+			codes.push(`const __VLS_internalComponent = (await import('${vueCompilerOptions.lib}')).defineComponent({\n`);
 			codes.push(`setup() {\n`);
 			codes.push(`return {\n`);
 			// fill ctx from props
@@ -776,7 +775,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			codes.push(`let __VLS_internalComponent!: typeof import('./${path.basename(fileName)}')['default'];\n`);
 		}
 		else {
-			codes.push(`const __VLS_internalComponent = (await import('${vueLibName}')).defineComponent({});\n`);
+			codes.push(`const __VLS_internalComponent = (await import('${vueCompilerOptions.lib}')).defineComponent({});\n`);
 		}
 	}
 	function generateExportOptions() {

@@ -19,6 +19,10 @@
 					"default": [ ".vue" ],
 					"markdownDescription": "Valid file extensions that should be considered as regular Vue SFC, please note that you should not use this option separately for additional file extensions IDE support, see https://github.com/johnsoncodehk/volar/tree/master/packages/vscode-vue/README.md#custom-file-extensions."
 				},
+				"lib": {
+					"default": "",
+					"markdownDescription": "Specify module name for import regular types. (If empty, will use `@vue/runtime-dom` for target < 2.7, `vue` for target >= 2.7)"
+				},
 				"jsxSlots": {
 					"type": "boolean",
 					"default": false,

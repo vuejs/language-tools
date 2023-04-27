@@ -176,6 +176,7 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 		...vueOptions,
 		target,
 		extensions: vueOptions.extensions ?? ['.vue'],
+		lib: vueOptions.lib || (target < 2.7 ? '@vue/runtime-dom' : 'vue'),
 		jsxSlots: vueOptions.jsxSlots ?? false,
 		strictTemplates: vueOptions.strictTemplates ?? false,
 		skipTemplateCodegen: vueOptions.skipTemplateCodegen ?? false,

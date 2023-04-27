@@ -19,7 +19,7 @@ export function createLanguageModules(
 		compilerOptions,
 		vueCompilerOptions,
 	);
-	const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(sharedTypes.getTypesCode(vueCompilerOptions.target, vueCompilerOptions));
+	const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(sharedTypes.getTypesCode(vueCompilerOptions));
 	const languageModule: embedded.LanguageModule = {
 		createFile(fileName, snapshot, languageId) {
 			if (

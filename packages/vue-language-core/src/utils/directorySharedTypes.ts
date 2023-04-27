@@ -1,6 +1,5 @@
 import { VueCompilerOptions } from '../types';
 import { getSlotsPropertyName } from './shared';
-import { getVueLibraryName } from './shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
 export const baseName = '__VLS_types.d.ts';
@@ -12,18 +11,14 @@ export function getImportName(compilerOptions: ts.CompilerOptions) {
 	return './__VLS_types.js';
 };
 
-export function getTypesCode(
-	vueVersion: number,
-	vueCompilerOptions: VueCompilerOptions,
-) {
-	const libName = getVueLibraryName(vueVersion);
+export function getTypesCode(vueCompilerOptions: VueCompilerOptions) {
 	return `
 // @ts-nocheck
 import type {
 	ObjectDirective,
 	FunctionDirective,
 	VNode,
-} from '${libName}';
+} from '${vueCompilerOptions.lib}';
 
 export type IntrinsicElements = PickNotAny<import('vue/jsx-runtime').JSX.IntrinsicElements, PickNotAny<JSX.IntrinsicElements, Record<string, any>>>;
 export type Element = PickNotAny<import('vue/jsx-runtime').JSX.Element, JSX.Element>;
@@ -47,7 +42,7 @@ export type GlobalComponents =
 	& PickNotAny<import('@vue/runtime-core').GlobalComponents, {}>
 	// @ts-ignore
 	& PickNotAny<import('@vue/runtime-dom').GlobalComponents, {}>
-	& Pick<typeof import('${libName}'),
+	& Pick<typeof import('${vueCompilerOptions.lib}'),
 		// @ts-ignore
 		'Transition'
 		| 'TransitionGroup'
