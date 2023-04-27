@@ -50,17 +50,24 @@ export function activate(context: vscode.ExtensionContext) {
 		start = undefined;
 
 		if (config.codeActions.enabled && time > config.codeActions.savingTimeLimit) {
-			const result = await vscode.window.showInformationMessage(
-				`Saving time is too long. (${time} ms > ${config.codeActions.savingTimeLimit} ms), `,
+			const options = [
 				'Disable codeActions',
 				'Increase saveTimeLimit',
+				'What is this?',
+			];;
+			const result = await vscode.window.showInformationMessage(
+				`Saving time is too long. (${time} ms > ${config.codeActions.savingTimeLimit} ms), `,
+				...options,
 			);
-			if (result === 'Disable codeActions') {
+			if (result === options[0]) {
 				config.update('codeActions.enabled', false);
 				vscode.window.showInformationMessage('Code Actions is disabled. (You can enable it in .vscode/settings.json)');
 			}
-			else if (result === 'Increase saveTimeLimit') {
+			else if (result === options[1]) {
 				vscode.commands.executeCommand('workbench.action.openSettings2', { query: 'vue.codeActions.savingTimeLimit' });
+			}
+			else if (result === options[2]) {
+				vscode.env.openExternal(vscode.Uri.parse('https://github.com/vuejs/language-tools/discussions/2740'));
 			}
 		}
 	});
