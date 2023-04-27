@@ -172,11 +172,12 @@ function getVueCompilerOptions(
 
 export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions>): VueCompilerOptions {
 	const target = vueOptions.target ?? 3.3;
+	const lib = vueOptions.lib || (target < 2.7 ? '@vue/runtime-dom' : 'vue');
 	return {
 		...vueOptions,
 		target,
 		extensions: vueOptions.extensions ?? ['.vue'],
-		lib: vueOptions.lib || (target < 2.7 ? '@vue/runtime-dom' : 'vue'),
+		lib,
 		jsxSlots: vueOptions.jsxSlots ?? false,
 		strictTemplates: vueOptions.strictTemplates ?? false,
 		skipTemplateCodegen: vueOptions.skipTemplateCodegen ?? false,
@@ -184,7 +185,7 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 		htmlAttributes: vueOptions.htmlAttributes ?? ['aria-*'],
 		optionsWrapper: vueOptions.optionsWrapper ?? (
 			target >= 2.7
-				? [`(await import('vue')).defineComponent(`, `)`]
+				? [`(await import('${lib}')).defineComponent(`, `)`]
 				: [`(await import('vue')).default.extend(`, `)`]
 		),
 		macros: vueOptions.macros ?? {
