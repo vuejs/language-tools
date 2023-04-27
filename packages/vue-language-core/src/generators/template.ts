@@ -568,10 +568,7 @@ export function generate(
 
 		for (const offset of tagOffsets) {
 			if (isNamespacedTag) {
-				codes.push(
-					[tag, 'template', [offset, offset + tag.length], capabilitiesPresets.all],
-					';\n',
-				);
+				continue;
 			}
 			else if (dynamicTagExp) {
 				continue;
