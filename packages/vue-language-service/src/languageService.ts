@@ -113,6 +113,8 @@ function resolvePlugins(
 
 				const itemData = item.data as { uri?: string; } | undefined;
 
+				let newName: string | undefined;
+
 				if (itemData?.uri && item.additionalTextEdits) {
 					patchAdditionalTextEdits(itemData.uri, item.additionalTextEdits);
 				}
@@ -126,7 +128,7 @@ function resolvePlugins(
 						&& item.additionalTextEdits?.length === 1 && item.additionalTextEdits[0].newText.indexOf('import ' + item.textEdit.newText + ' from ') >= 0
 						&& (await _context.configurationHost?.getConfiguration<boolean>('vue.complete.normalizeComponentImportName') ?? true)
 					) {
-						let newName = item.textEdit.newText.slice(0, -suffix.length);
+						newName = item.textEdit.newText.slice(0, -suffix.length);
 						newName = newName[0].toUpperCase() + newName.substring(1);
 						if (newName === 'Index') {
 							const tsItem = (item.data as Data).originalItem;
@@ -163,7 +165,7 @@ function resolvePlugins(
 						const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
 						if (virtualFile instanceof vue.VueFile) {
 							const sfc = virtualFile.sfc;
-							const componentName = item.textEdit.newText;
+							const componentName = newName ?? item.textEdit.newText;
 							const textDoc = _context.documents.getDocumentByFileName(virtualFile.snapshot, virtualFile.fileName);
 							if (sfc.scriptAst && sfc.script) {
 								const _scriptRanges = vue.scriptRanges.parseScriptRanges(ts, sfc.scriptAst, !!sfc.scriptSetup, true);

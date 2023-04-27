@@ -8,6 +8,7 @@
 - fix: namespaced tag not working without script setup
 - fix: component intellisense not working in template if TS version < 5.0 ([#2742](https://github.com/johnsoncodehk/volar/issues/2742))
 - fix: class is not assignable to generic components ([#2744](https://github.com/johnsoncodehk/volar/issues/2744))
+- fix: components options is not set correctly when component name is kebab-case and auto-importing ([#2745](https://github.com/johnsoncodehk/volar/issues/2745))
 
 ## 1.6.0 (2023/4/27)
 
