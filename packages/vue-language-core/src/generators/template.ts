@@ -256,7 +256,10 @@ export function generate(
 		const tagOffsetsMap: Record<string, number[]> = {};
 
 		walkElementNodes(templateAst, node => {
-			if (node.tag === 'component' || node.tag === 'Component') {
+			if (node.tag === 'slot') {
+				// ignore
+			}
+			else if (node.tag === 'component' || node.tag === 'Component') {
 				for (const prop of node.props) {
 					if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE && prop.name === 'is' && prop.value) {
 						const tag = prop.value.content;
@@ -512,7 +515,10 @@ export function generate(
 
 		let dynamicTagExp: CompilerDOM.ExpressionNode | undefined;
 
-		if (tag === 'component' || tag === 'Component') {
+		if (tag === 'slot') {
+			tagOffsets.length = 0;
+		}
+		else if (tag === 'component' || tag === 'Component') {
 			tagOffsets.length = 0;
 			for (const prop of node.props) {
 				if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE && prop.name === 'is' && prop.value) {
@@ -529,7 +535,10 @@ export function generate(
 			}
 		}
 
-		if (isNamespacedTag) {
+		if (node.tag === 'slot') {
+			codes.push(`const ${componentVar} = {} as any;\n`);
+		}
+		else if (isNamespacedTag) {
 			codes.push(
 				`const ${componentVar} = (await import('./__VLS_types.d.ts')).asFunctionalComponent(${tag}, new ${tag}({`,
 				...createPropsCode(node, props, 'slots'),
@@ -606,7 +615,7 @@ export function generate(
 			`, ...(await import('./__VLS_types.d.ts')).functionalComponentArgsRest(${componentVar}));\n`,
 		);
 
-		if (tag !== 'template') {
+		if (tag !== 'template' && tag !== 'slot') {
 			componentCtxVar = `__VLS_${elementIndex++}`;
 			codes.push(`const ${componentCtxVar} = (await import('./__VLS_types.d.ts')).pickFunctionalComponentCtx(${componentVar}, ${componentInstanceVar})!;\n`);
 			parentEl = node;
@@ -670,8 +679,8 @@ export function generate(
 		if (componentCtxVar) {
 			generateEvents(node, componentVar, componentInstanceVar, componentCtxVar);
 		}
-		if (tagOffsets.length) {
-			generateSlot(node, tagOffsets[0]);
+		if (node.tag === 'slot') {
+			generateSlot(node, startTagOffset);
 		}
 
 		if (inScope) {
@@ -1476,9 +1485,6 @@ export function generate(
 	}
 
 	function generateSlot(node: CompilerDOM.ElementNode, startTagOffset: number) {
-
-		if (node.tag !== 'slot')
-			return;
 
 		const varSlot = `__VLS_${elementIndex++}`;
 		const slotNameExpNode = getSlotNameExpNode();

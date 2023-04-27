@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- fix: avoid `<component>` type checking with string literal assignment ([#2725](https://github.com/johnsoncodehk/volar/issues/2725))
+- fix: `<slot>` reporting false positive error when `strictTemplates` enabled ([#2726](https://github.com/johnsoncodehk/volar/issues/2726)) ([#2723](https://github.com/johnsoncodehk/volar/issues/2723))
+
 ## 1.6.0 (2023/4/27)
 
 - feat(doctor): show warning for TS 4.9 ([#2190](https://github.com/johnsoncodehk/volar/issues/2190))
