@@ -97,7 +97,7 @@ export declare function asFunctionalComponent<T, K = T extends new (...args: any
 	}) => JSX.Element & { __ctx?: typeof ctx & { props?: typeof props; expose?(exposed: K): void; } }
 	: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 	: T extends (...args: any) => any ? T
-	: (_: T extends import('vue').VNode ? {}: T & Record<string, unknown>, ctx?: any) => { __ctx?: { attrs?: unknown, expose?: unknown, slots?: unknown, emit?: unknown, props?: T & Record<string, unknown> } }; // IntrinsicElement
+	: (_: T extends VNode | VNode[] | string ? {}: T & Record<string, unknown>, ctx?: any) => { __ctx?: { attrs?: unknown, expose?: unknown, slots?: unknown, emit?: unknown, props?: T & Record<string, unknown> } }; // IntrinsicElement
 declare function functionalComponentArgsRest<T extends (...args: any) => any>(t: T): Parameters<T>['length'] extends 2 ? [any] : [];
 export declare function pickEvent<Emit, K, E>(emit: Emit, emitKey: K, event: E): FillingEventArg<
 	PickNotAny<
