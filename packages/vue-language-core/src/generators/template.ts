@@ -563,7 +563,7 @@ export function generate(
 			`const ${var_functionalComponent} = (await import('${sharedTypesImport}')).asFunctionalComponent(`,
 			`${var_originalComponent}, `,
 			`new ${var_originalComponent}({`,
-			...createPropsCode(node, props, 'slots'),
+			...createPropsCode(node, props, 'extraReferences'),
 			'}));\n',
 		);
 
@@ -600,7 +600,7 @@ export function generate(
 				: dynamicTagExp ? ['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]
 					: '',
 			'{ ',
-			...createPropsCode(node, props, 'props', propsFailedExps),
+			...createPropsCode(node, props, 'normal', propsFailedExps),
 			'}',
 			// diagnostic end
 			tagOffsets.length ? ['', 'template', tagOffsets[0] + tag.length, capabilitiesPresets.diagnosticOnly]
@@ -943,7 +943,7 @@ export function generate(
 		}
 	}
 
-	function createPropsCode(node: CompilerDOM.ElementNode, props: CompilerDOM.ElementNode['props'], mode: 'props' | 'slots', propsFailedExps?: CompilerDOM.SimpleExpressionNode[]): Code[] {
+	function createPropsCode(node: CompilerDOM.ElementNode, props: CompilerDOM.ElementNode['props'], mode: 'normal' | 'extraReferences', propsFailedExps?: CompilerDOM.SimpleExpressionNode[]): Code[] {
 
 		let styleAttrNum = 0;
 		let classAttrNum = 0;
@@ -960,6 +960,25 @@ export function generate(
 		}
 
 		const codes: Code[] = [];
+
+		let caps_all: FileRangeCapabilities = capabilitiesPresets.all;
+		let caps_diagnosticOnly: FileRangeCapabilities = capabilitiesPresets.diagnosticOnly;
+		let caps_attr: FileRangeCapabilities = capabilitiesPresets.attr;
+
+		if (mode === 'extraReferences') {
+			caps_all = {
+				references: caps_all.references,
+				rename: caps_all.rename,
+			};
+			caps_diagnosticOnly = {
+				references: caps_diagnosticOnly.references,
+				rename: caps_diagnosticOnly.rename,
+			};
+			caps_attr = {
+				references: caps_attr.references,
+				rename: caps_attr.rename,
+			};
+		}
 
 		for (const prop of props) {
 			if (
@@ -1009,7 +1028,7 @@ export function generate(
 					'',
 					'template',
 					prop.loc.start.offset,
-					getCaps(capabilitiesPresets.diagnosticOnly),
+					caps_diagnosticOnly,
 				]);
 				if (!prop.arg) {
 					codes.push(
@@ -1017,7 +1036,7 @@ export function generate(
 							attrNameText,
 							'template',
 							[prop.loc.start.offset, prop.loc.start.offset + prop.loc.source.indexOf('=')],
-							getCaps(capabilitiesPresets.attr),
+							caps_attr,
 						], (prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {})),
 					);
 				}
@@ -1028,7 +1047,7 @@ export function generate(
 							'template',
 							[prop.arg.loc.start.offset, prop.arg.loc.start.offset + attrNameText.length], // patch style attr,
 							{
-								...getCaps(capabilitiesPresets.attr),
+								...caps_attr,
 								rename: {
 									normalize: camelize,
 									apply: getRenameApply(attrNameText),
@@ -1044,7 +1063,7 @@ export function generate(
 							'template',
 							[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
 							{
-								...getCaps(capabilitiesPresets.attr),
+								...caps_attr,
 								rename: {
 									normalize: camelize,
 									apply: getRenameApply(attrNameText),
@@ -1060,18 +1079,17 @@ export function generate(
 							prop.exp.loc.source,
 							prop.exp.loc,
 							prop.exp.loc.start.offset,
-							getCaps(capabilitiesPresets.all),
+							caps_all,
 							'(',
 							')',
 						),
 					);
-					const fb = getFormatBrackets(formatBrackets.normal);
-					if (fb) {
+					if (mode === 'normal') {
 						formatCodes.push(
 							...createFormatCode(
 								prop.exp.loc.source,
 								prop.exp.loc.start.offset,
-								fb,
+								formatBrackets.normal,
 							),
 						);
 					}
@@ -1084,7 +1102,7 @@ export function generate(
 					'',
 					'template',
 					prop.loc.end.offset,
-					getCaps(capabilitiesPresets.diagnosticOnly),
+					caps_diagnosticOnly,
 				]);
 				codes.push(', ');
 				// original name
@@ -1095,7 +1113,7 @@ export function generate(
 							'template',
 							[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
 							{
-								...getCaps(capabilitiesPresets.attr),
+								...caps_attr,
 								rename: {
 									normalize: camelize,
 									apply: getRenameApply(attrNameText),
@@ -1123,9 +1141,7 @@ export function generate(
 					codes.push(', ');
 				}
 			}
-			else if (
-				prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
-			) {
+			else if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
 
 				let attrNameText = prop.name;
 
@@ -1152,7 +1168,7 @@ export function generate(
 					'',
 					'template',
 					prop.loc.start.offset,
-					getCaps(capabilitiesPresets.diagnosticOnly),
+					caps_diagnosticOnly,
 				]);
 				codes.push(
 					...createObjectPropertyCode([
@@ -1160,7 +1176,7 @@ export function generate(
 						'template',
 						[prop.loc.start.offset, prop.loc.start.offset + prop.name.length],
 						{
-							...getCaps(capabilitiesPresets.attr),
+							...caps_attr,
 							rename: {
 								normalize: camelize,
 								apply: getRenameApply(prop.name),
@@ -1180,7 +1196,7 @@ export function generate(
 					'',
 					'template',
 					prop.loc.end.offset,
-					getCaps(capabilitiesPresets.diagnosticOnly),
+					caps_diagnosticOnly,
 				]);
 				codes.push(', ');
 				// original name
@@ -1191,7 +1207,7 @@ export function generate(
 							'template',
 							prop.loc.start.offset,
 							{
-								...getCaps(capabilitiesPresets.attr),
+								...caps_attr,
 								rename: {
 									normalize: camelize,
 									apply: getRenameApply(prop.name),
@@ -1222,19 +1238,18 @@ export function generate(
 						prop.exp.content,
 						prop.exp.loc,
 						prop.exp.loc.start.offset,
-						getCaps(capabilitiesPresets.all),
+						caps_all,
 						'(',
 						')',
 					),
 					', ',
 				);
-				const fb = getFormatBrackets(formatBrackets.normal);
-				if (fb) {
+				if (mode === 'normal') {
 					formatCodes.push(
 						...createFormatCode(
 							prop.exp.content,
 							prop.exp.loc.start.offset,
-							fb,
+							formatBrackets.normal,
 						),
 					);
 				}
@@ -1247,25 +1262,6 @@ export function generate(
 
 		return codes;
 
-		function getCaps(caps: FileRangeCapabilities): FileRangeCapabilities {
-			if (mode === 'props') {
-				return caps;
-			}
-			else {
-				return {
-					references: caps.references,
-					rename: caps.rename,
-				};
-			}
-		}
-		function getFormatBrackets(b: [string, string]) {
-			if (mode === 'props') {
-				return b;
-			}
-			else {
-				return undefined;
-			}
-		}
 		function generateAttrValue(attrNode: CompilerDOM.TextNode) {
 			const char = attrNode.loc.source.startsWith("'") ? "'" : '"';
 			codes.push(char);
@@ -1284,7 +1280,7 @@ export function generate(
 				toUnicodeIfNeed(content),
 				'template',
 				[start, end],
-				getCaps(capabilitiesPresets.all),
+				caps_all,
 			]);
 			codes.push(char);
 		}
