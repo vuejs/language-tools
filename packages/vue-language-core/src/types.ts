@@ -91,6 +91,7 @@ export interface Sfc {
 	})[];
 	customBlocks: (SfcBlock & {
 		type: string;
+		attrs: Record<string, string | true>;
 	})[];
 
 	// ast

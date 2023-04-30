@@ -569,6 +569,7 @@ export class VueFile implements VirtualFile {
 				content: block.content,
 				lang: block.lang ?? 'txt',
 				type: block.type,
+				attrs: block.attrs,
 			};
 
 			if (this.sfc.customBlocks.length > i) {
