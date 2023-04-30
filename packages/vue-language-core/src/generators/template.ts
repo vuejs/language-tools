@@ -980,6 +980,8 @@ export function generate(
 			};
 		}
 
+
+		codes.push(`...{ `);
 		for (const prop of props) {
 			if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -991,7 +993,11 @@ export function generate(
 					': {} as any, ',
 				);
 			}
-			else if (
+		}
+		codes.push(`}, `);
+
+		for (const prop of props) {
+			if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 				&& (prop.name === 'bind' || prop.name === 'model')
 				&& (prop.name === 'model' || prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
