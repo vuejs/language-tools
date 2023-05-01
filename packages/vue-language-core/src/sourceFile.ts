@@ -474,6 +474,7 @@ export class VueFile implements VirtualFile {
 			endTagStart: block.loc.end.offset,
 			content: block.content,
 			lang: block.lang ?? 'html',
+			attrs: block.attrs,
 		} : null;
 
 		if (this.sfc.template && newData) {
@@ -496,6 +497,7 @@ export class VueFile implements VirtualFile {
 			lang: block.lang ?? 'js',
 			src: block.src,
 			srcOffset: block.src ? this.snapshot.getText(0, block.loc.start.offset).lastIndexOf(block.src) - block.loc.start.offset : -1,
+			attrs: block.attrs,
 		} : null;
 
 		if (this.sfc.script && newData) {
@@ -518,6 +520,7 @@ export class VueFile implements VirtualFile {
 			lang: block.lang ?? 'js',
 			generic: typeof block.attrs.generic === 'string' ? block.attrs.generic : undefined,
 			genericOffset: typeof block.attrs.generic === 'string' ? this.snapshot.getText(0, block.loc.start.offset).lastIndexOf(block.attrs.generic) - block.loc.start.offset : -1,
+			attrs: block.attrs,
 		} : null;
 
 		if (this.sfc.scriptSetup && newData) {
@@ -542,6 +545,7 @@ export class VueFile implements VirtualFile {
 				lang: block.lang ?? 'css',
 				module: typeof block.module === 'string' ? block.module : block.module ? '$style' : undefined,
 				scoped: !!block.scoped,
+				attrs: block.attrs,
 			};
 
 			if (this.sfc.styles.length > i) {
