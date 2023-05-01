@@ -989,7 +989,7 @@ export function generate(
 				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
 				codes.push(
-					camelize('on-' + prop.arg.loc.source),
+					...createObjectPropertyCode(camelize('on-' + prop.arg.loc.source)),
 					': {} as any, ',
 				);
 			}
@@ -1508,7 +1508,9 @@ export function generate(
 				['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly],
 				']',
 				['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly],
-				'?.({\n',
+				'?.(',
+				['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly],
+				'{\n',
 			);
 		}
 		else {
@@ -1587,7 +1589,11 @@ export function generate(
 				);
 			}
 		}
-		codes.push(hasScriptSetupSlots ? `});\n` : `};\n`);
+		codes.push(
+			'}',
+			hasScriptSetupSlots ? ['', 'template', startTagOffset + node.tag.length, capabilitiesPresets.diagnosticOnly] : '',
+			hasScriptSetupSlots ? `);\n` : `;\n`
+		);
 
 		if (hasScriptSetupSlots) {
 			return;
@@ -1673,12 +1679,12 @@ export function generate(
 		];
 	}
 
-	function createObjectPropertyCode(a: Code, astHolder: any): Code[] {
+	function createObjectPropertyCode(a: Code, astHolder?: any): Code[] {
 		const aStr = typeof a === 'string' ? a : a[0];
 		if (validTsVar.test(aStr)) {
 			return [a];
 		}
-		else if (aStr.startsWith('[') && aStr.endsWith(']')) {
+		else if (aStr.startsWith('[') && aStr.endsWith(']') && astHolder) {
 			const range = typeof a === 'object' ? a[2] : undefined;
 			const data = typeof a === 'object' ? a[3] : undefined;
 			return createInterpolationCode(

@@ -156,7 +156,7 @@ export function generate(
 			);
 		}
 		if (usedHelperTypes.ToTemplateSlots) {
-			codes.push(`type __VLS_ToTemplateSlots<T> = { [K in keyof T]: NonNullable<T[K]> extends (...args: any[]) => any ? T[K] : (props: T[K]) => any };\n`);
+			codes.push(`type __VLS_ToTemplateSlots<T> = { [K in keyof T]?: NonNullable<T[K]> extends (...args: any[]) => any ? T[K] : (props: T[K]) => any };\n`);
 		}
 		if (usedHelperTypes.PropsChildren) {
 			codes.push(`type __VLS_PropsChildren<S> = { [K in keyof (boolean extends (JSX.ElementChildrenAttribute extends never ? true : false) ? never : JSX.ElementChildrenAttribute)]?: S; };\n`);
@@ -337,13 +337,11 @@ export function generate(
 
 			//#region props
 			if (
-				(scriptSetupRanges.propsRuntimeArg && scriptSetupRanges.defineProps)
+				scriptSetupRanges.propsRuntimeArg
 				|| scriptSetupRanges.defineProp.length
 			) {
-				if (scriptSetupRanges.propsRuntimeArg && scriptSetupRanges.defineProps) {
-					codes.push(`const __VLS_props = `);
-					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.defineProps.start, scriptSetupRanges.defineProps.end);
-					codes.push(`;\n`);
+				if (scriptSetupRanges.propsRuntimeArg) {
+					codes.push(`const __VLS_props = (new __VLS_publicComponent()).$props;\n`);
 				}
 				else if (scriptSetupRanges.defineProp.length) {
 					codes.push(`const __VLS_defaults = {\n`);
