@@ -67,9 +67,9 @@ declare const ScriptSetupGenericExact: <T, >(
 	_props: NonNullable<typeof _setup>['props'] & import('vue').VNodeProps & import('vue').AllowedComponentProps & import('vue').ComponentCustomProps,
 	_ctx?: Pick<NonNullable<typeof _setup>, 'attrs' | 'emit' | 'slots'>,
 	_setup?: {
-		props: { foo: T } & { [K in keyof JSX.ElementChildrenAttribute]?: { default(data: T): any } },
+		props: { foo: T } & { [K in keyof JSX.ElementChildrenAttribute]?: { default?(data: T): any } },
 		attrs: any,
-		slots: { default(data: T): any },
+		slots: { default?(data: T): any },
 		emit: { (e: 'bar', data: T): void },
 		expose(_exposed: { baz: T }): void,
 	}
@@ -83,7 +83,7 @@ exactType(ScriptSetupGeneric, ScriptSetupGenericExact);
 exactType((new ShortDefineSlots()).$slots.foo, {} as ((props: {
 	id: string;
 } | undefined) => any) | undefined);
-exactType((new ShortDefineSlots()).$slots.bar, {} as (props: {
+exactType((new ShortDefineSlots()).$slots.bar, {} as ((props: {
 	id: number;
-}) => any);
+}) => any) | undefined);
 </script>

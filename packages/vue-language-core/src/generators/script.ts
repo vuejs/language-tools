@@ -156,7 +156,7 @@ export function generate(
 			);
 		}
 		if (usedHelperTypes.ToTemplateSlots) {
-			codes.push(`type __VLS_ToTemplateSlots<T> = { [K in keyof T]: NonNullable<T[K]> extends (...args: any[]) => any ? T[K] : (props: T[K]) => any };\n`);
+			codes.push(`type __VLS_ToTemplateSlots<T> = { [K in keyof T]?: NonNullable<T[K]> extends (...args: any[]) => any ? T[K] : (props: T[K]) => any };\n`);
 		}
 		if (usedHelperTypes.PropsChildren) {
 			codes.push(`type __VLS_PropsChildren<S> = { [K in keyof (boolean extends (JSX.ElementChildrenAttribute extends never ? true : false) ? never : JSX.ElementChildrenAttribute)]?: S; };\n`);
