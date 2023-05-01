@@ -1,7 +1,7 @@
 <template>
 	<div v-for="(val, key) in ({} as T)">
-		{{ exactType(val, {} as T extends any ? T[keyof T] : never) }}
-		{{ exactType(key, {} as T extends any ? keyof T : never) }}
+		{{ exactType(val, {} as T[keyof T]) }}
+		{{ exactType(key, {} as keyof T) }}
 	</div>
 </template>
 

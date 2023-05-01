@@ -36,9 +36,11 @@
   </div>
   <!-- objUnion -->
   <div v-for="(val, key) in objUnion">
-    {{ exactType(val, {} as string | number) }}
+    <!-- {{ exactType(val, {} as string | number) }} -->
+    {{ exactType(val, {} as string) }}
     {{ isNotAnyOrUndefined(val) }}
-    {{ exactType(key, {} as 'a' | 'b') }}
+    <!-- {{ exactType(key, {} as 'a' | 'b') }} -->
+    {{ exactType(key, {} as 'a') }}
     {{ isNotAnyOrUndefined(key) }}
   </div>
   <!-- record -->

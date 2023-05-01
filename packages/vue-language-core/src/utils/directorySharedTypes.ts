@@ -55,8 +55,8 @@ export declare function getVForSourceType<T extends { [Symbol.iterator](): Itera
 	undefined, // index
 ][];
 export declare function getVForSourceType<T>(source: T): [
-	T extends any ? T[keyof T] : never, // item
-	T extends any ? keyof T : never, // key
+	T[keyof T], // item
+	keyof T, // key
 	number, // index
 ][];
 
