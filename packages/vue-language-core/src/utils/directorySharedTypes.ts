@@ -25,11 +25,6 @@ export type Element = PickNotAny<import('vue/jsx-runtime').JSX.Element, JSX.Elem
 
 type IsAny<T> = boolean extends (T extends never ? true : false) ? true : false;
 export type PickNotAny<A, B> = IsAny<A> extends true ? B : A;
-type ForableSource<T> = [
-	T extends { [Symbol.iterator](): Iterator<infer T1> } ? T1 : T[keyof T], // item
-	typeof Symbol.iterator extends keyof T ? number : T extends T ? keyof T : never, // key
-	typeof Symbol.iterator extends keyof T ? undefined : number, // index
-][];
 
 export type Prettify<T> = {
 	[K in keyof T]: T[K];
@@ -51,7 +46,20 @@ export type GlobalComponents =
 		| 'Teleport'
 	>;
 
-export declare function getVForSourceType<T>(source: T): ForableSource<NonNullable<T extends number ? number[] : T extends string ? string[] : T>>;
+// v-for
+export declare function getVForSourceType(source: number): [number, number, number][];
+export declare function getVForSourceType(source: string): [string, number, number][];
+export declare function getVForSourceType<T extends { [Symbol.iterator](): Iterator<any> }>(source: T): [
+	T extends { [Symbol.iterator](): Iterator<infer T1> } ? T1 : never, // item 
+	number, // key
+	undefined, // index
+][];
+export declare function getVForSourceType<T>(source: T): [
+	T extends any ? T[keyof T] : never, // item
+	T extends any ? keyof T : never, // key
+	number, // index
+][];
+
 export declare function getSlotParams<T>(slot: T): Parameters<PickNotAny<NonNullable<T>, (...args: any[]) => any>>;
 export declare function getSlotParam<T>(slot: T): Parameters<PickNotAny<NonNullable<T>, (...args: any[]) => any>>[0];
 export declare function directiveFunction<T>(dir: T):
