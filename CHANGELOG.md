@@ -1,13 +1,12 @@
 # Changelog
 
-## 1.6.2 (2023/5/1)
+## 1.6.3 (2023/5/2)
 
-- fix: consume required props for events ([#2468](https://github.com/johnsoncodehk/volar/issues/2468))
-- fix: support infer v-for types for generic ([#2758](https://github.com/johnsoncodehk/volar/issues/2758))
-- fix: slot missing props don't report error
-- fix: cannot assign generic component to components option of defineComponent
-- fix: "TS1002: Unterminated string literal" in slots edge case ([#2710](https://github.com/johnsoncodehk/volar/issues/2710))
-- fix: generic component prop with default type incorrect ([#2754](https://github.com/johnsoncodehk/volar/issues/2754))
+- feat: expose custom blocks attrs ([#3099](https://github.com/johnsoncodehk/volar/issues/3099))
+- fix: event "@update:" syntax causes TS error ([#3100](https://github.com/johnsoncodehk/volar/issues/3100))
+- fix: generic attr unexpectedly trimmed when formatting if attr value includes "<" ([#3101](https://github.com/johnsoncodehk/volar/issues/3101))
+- fix: required event props always shows in missing props hint
+- fix: exclude null / undefined from `v-for` source type ([#3102](https://github.com/johnsoncodehk/volar/issues/3102))
 
 ---
 
@@ -44,6 +43,15 @@
 		<a href="https://opencollective.com/volarjs">Open Collective</a>
 	</h5>
 </p>
+
+## 1.6.2 (2023/5/1)
+
+- fix: consume required props for events ([#2468](https://github.com/johnsoncodehk/volar/issues/2468))
+- fix: support infer v-for types for generic ([#2758](https://github.com/johnsoncodehk/volar/issues/2758))
+- fix: slot missing props don't report error
+- fix: cannot assign generic component to components option of defineComponent
+- fix: "TS1002: Unterminated string literal" in slots edge case ([#2710](https://github.com/johnsoncodehk/volar/issues/2710))
+- fix: generic component prop with default type incorrect ([#2754](https://github.com/johnsoncodehk/volar/issues/2754))
 
 ## 1.6.1 (2023/4/28)
 

@@ -468,12 +468,13 @@ export class VueFile implements VirtualFile {
 
 		const newData: Sfc['template'] | null = block ? {
 			name: 'template',
-			start: this.snapshot.getText(0, block.loc.start.offset).lastIndexOf('<'),
+			start: this.snapshot.getText(0, block.loc.start.offset).lastIndexOf('<' + block.type),
 			end: block.loc.end.offset + this.snapshot.getText(block.loc.end.offset, this.snapshot.getLength()).indexOf('>') + 1,
 			startTagEnd: block.loc.start.offset,
 			endTagStart: block.loc.end.offset,
 			content: block.content,
 			lang: block.lang ?? 'html',
+			attrs: block.attrs,
 		} : null;
 
 		if (this.sfc.template && newData) {
@@ -488,7 +489,7 @@ export class VueFile implements VirtualFile {
 
 		const newData: Sfc['script'] | null = block ? {
 			name: 'script',
-			start: this.snapshot.getText(0, block.loc.start.offset).lastIndexOf('<'),
+			start: this.snapshot.getText(0, block.loc.start.offset).lastIndexOf('<' + block.type),
 			end: block.loc.end.offset + this.snapshot.getText(block.loc.end.offset, this.snapshot.getLength()).indexOf('>') + 1,
 			startTagEnd: block.loc.start.offset,
 			endTagStart: block.loc.end.offset,
@@ -496,6 +497,7 @@ export class VueFile implements VirtualFile {
 			lang: block.lang ?? 'js',
 			src: block.src,
 			srcOffset: block.src ? this.snapshot.getText(0, block.loc.start.offset).lastIndexOf(block.src) - block.loc.start.offset : -1,
+			attrs: block.attrs,
 		} : null;
 
 		if (this.sfc.script && newData) {
@@ -510,7 +512,7 @@ export class VueFile implements VirtualFile {
 
 		const newData: Sfc['scriptSetup'] | null = block ? {
 			name: 'scriptSetup',
-			start: this.snapshot.getText(0, block.loc.start.offset).lastIndexOf('<'),
+			start: this.snapshot.getText(0, block.loc.start.offset).lastIndexOf('<' + block.type),
 			end: block.loc.end.offset + this.snapshot.getText(block.loc.end.offset, this.snapshot.getLength()).indexOf('>') + 1,
 			startTagEnd: block.loc.start.offset,
 			endTagStart: block.loc.end.offset,
@@ -518,6 +520,7 @@ export class VueFile implements VirtualFile {
 			lang: block.lang ?? 'js',
 			generic: typeof block.attrs.generic === 'string' ? block.attrs.generic : undefined,
 			genericOffset: typeof block.attrs.generic === 'string' ? this.snapshot.getText(0, block.loc.start.offset).lastIndexOf(block.attrs.generic) - block.loc.start.offset : -1,
+			attrs: block.attrs,
 		} : null;
 
 		if (this.sfc.scriptSetup && newData) {
@@ -534,7 +537,7 @@ export class VueFile implements VirtualFile {
 			const block = blocks[i];
 			const newData: Sfc['styles'][number] = {
 				name: 'style_' + i,
-				start: this.snapshot.getText(0, block.loc.start.offset).lastIndexOf('<'),
+				start: this.snapshot.getText(0, block.loc.start.offset).lastIndexOf('<' + block.type),
 				end: block.loc.end.offset + this.snapshot.getText(block.loc.end.offset, this.snapshot.getLength()).indexOf('>') + 1,
 				startTagEnd: block.loc.start.offset,
 				endTagStart: block.loc.end.offset,
@@ -542,6 +545,7 @@ export class VueFile implements VirtualFile {
 				lang: block.lang ?? 'css',
 				module: typeof block.module === 'string' ? block.module : block.module ? '$style' : undefined,
 				scoped: !!block.scoped,
+				attrs: block.attrs,
 			};
 
 			if (this.sfc.styles.length > i) {
@@ -562,13 +566,14 @@ export class VueFile implements VirtualFile {
 			const block = blocks[i];
 			const newData: Sfc['customBlocks'][number] = {
 				name: 'customBlock_' + i,
-				start: this.snapshot.getText(0, block.loc.start.offset).lastIndexOf('<'),
+				start: this.snapshot.getText(0, block.loc.start.offset).lastIndexOf('<' + block.type),
 				end: block.loc.end.offset + this.snapshot.getText(block.loc.end.offset, this.snapshot.getLength()).indexOf('>') + 1,
 				startTagEnd: block.loc.start.offset,
 				endTagStart: block.loc.end.offset,
 				content: block.content,
 				lang: block.lang ?? 'txt',
 				type: block.type,
+				attrs: block.attrs,
 			};
 
 			if (this.sfc.customBlocks.length > i) {
@@ -583,9 +588,19 @@ export class VueFile implements VirtualFile {
 		}
 	}
 
-	updateBlock<T>(oldBlock: T, newBlock: T) {
-		for (let key in newBlock) {
-			oldBlock[key] = newBlock[key];
+	updateBlock<T extends object>(oldBlock: T, newBlock: T) {
+		for (const key in newBlock) {
+			if (typeof oldBlock[key] === 'object' && typeof newBlock[key] === 'object') {
+				this.updateBlock(oldBlock[key] as object, newBlock[key] as object);
+			}
+			else {
+				oldBlock[key] = newBlock[key];
+			}
+		}
+		for (const key in oldBlock) {
+			if (!(key in newBlock)) {
+				delete oldBlock[key];
+			}
 		}
 	}
 }
