@@ -41,8 +41,8 @@ export function createServerPlugin(connection: Connection) {
 				}
 
 				return vue.resolveConfig(
-					config,
 					ts,
+					config,
 					ctx?.host.getCompilationSettings() ?? {},
 					vueOptions,
 					vueLanguageServiceSettings,
@@ -97,14 +97,14 @@ export function createServerPlugin(connection: Connection) {
 				connection.onRequest(DetectNameCasingRequest.type, async params => {
 					const languageService = await getService(params.textDocument.uri);
 					if (languageService?.context.typescript) {
-						return nameCasing.detect(languageService.context, languageService.context.typescript, params.textDocument.uri);
+						return nameCasing.detect(ts, languageService.context, params.textDocument.uri);
 					}
 				});
 
 				connection.onRequest(GetConvertTagCasingEditsRequest.type, async params => {
 					const languageService = await getService(params.textDocument.uri);
 					if (languageService?.context.typescript) {
-						return nameCasing.convertTagName(languageService.context, languageService.context.typescript, params.textDocument.uri, params.casing);
+						return nameCasing.convertTagName(ts, languageService.context, params.textDocument.uri, params.casing);
 					}
 				});
 
@@ -113,7 +113,7 @@ export function createServerPlugin(connection: Connection) {
 					if (languageService?.context.typescript) {
 						const vueOptions = hostToVueOptions.get(languageService.context.host);
 						if (vueOptions) {
-							return nameCasing.convertAttrName(languageService.context, languageService.context.typescript, params.textDocument.uri, params.casing);
+							return nameCasing.convertAttrName(ts, languageService.context, params.textDocument.uri, params.casing);
 						}
 					}
 				});
@@ -123,6 +123,7 @@ export function createServerPlugin(connection: Connection) {
 				connection.onRequest(GetComponentMeta.type, async params => {
 
 					const languageService = await getService(params.uri);
+
 					if (!languageService?.context.typescript)
 						return;
 
@@ -135,7 +136,7 @@ export function createServerPlugin(connection: Connection) {
 							},
 							{},
 							languageService.context.host.getCurrentDirectory() + '/tsconfig.json.global.vue',
-							languageService.context.typescript.module,
+							ts,
 						);
 						checkers.set(languageService.context.host, checker);
 					}

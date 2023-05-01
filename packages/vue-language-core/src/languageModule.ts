@@ -1,4 +1,4 @@
-import type * as embedded from '@volar/language-core';
+import type { Language } from '@volar/language-core';
 import { posix as path } from 'path';
 import { getDefaultVueLanguagePlugins } from './plugins';
 import { VueFile } from './sourceFile';
@@ -6,11 +6,11 @@ import { VueCompilerOptions } from './types';
 import * as sharedTypes from './utils/directorySharedTypes';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
-export function createLanguageModules(
+export function createLanguages(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
-): embedded.LanguageModule[] {
+): Language[] {
 
 	patchResolveModuleNames(ts, vueCompilerOptions);
 
@@ -20,8 +20,8 @@ export function createLanguageModules(
 		vueCompilerOptions,
 	);
 	const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(sharedTypes.getTypesCode(vueCompilerOptions));
-	const languageModule: embedded.LanguageModule = {
-		createFile(fileName, snapshot, languageId) {
+	const languageModule: Language = {
+		createVirtualFile(fileName, snapshot, languageId) {
 			if (
 				languageId === 'vue'
 				|| (
@@ -32,11 +32,12 @@ export function createLanguageModules(
 				return new VueFile(fileName, snapshot, ts, vueLanguagePlugin);
 			}
 		},
-		updateFile(sourceFile: VueFile, snapshot) {
+		updateVirtualFile(sourceFile: VueFile, snapshot) {
 			sourceFile.update(snapshot);
 		},
-		proxyLanguageServiceHost(host) {
+		resolveHost(host) {
 			return {
+				...host,
 				fileExists(fileName) {
 					const basename = path.basename(fileName);
 					if (basename === sharedTypes.baseName) {

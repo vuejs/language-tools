@@ -1,21 +1,21 @@
-import { LanguageServicePlugin } from '@volar/language-service';
+import { Service } from '@volar/language-service';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import createHtmlPlugin from '@volar-plugins/html';
+import createHtmlPlugin from 'volar-service-html';
 import * as vue from '@volar/vue-language-core';
 import { loadLanguageBlocks } from './data';
 
 let sfcDataProvider: html.IHTMLDataProvider | undefined;
 
-export default (): LanguageServicePlugin => (context) => {
+export default (): Service => (context) => {
 
 	const htmlPlugin = createHtmlPlugin({ validLang: 'vue', disableCustomData: true })(context);
 
 	if (!context?.typescript)
 		return htmlPlugin;
 
-	sfcDataProvider ??= html.newHTMLDataProvider('vue', loadLanguageBlocks(context.locale ?? 'en'));
+	sfcDataProvider ??= html.newHTMLDataProvider('vue', loadLanguageBlocks(context.env.locale ?? 'en'));
 
 	htmlPlugin.getHtmlLs().setDataProviders(false, [sfcDataProvider]);
 

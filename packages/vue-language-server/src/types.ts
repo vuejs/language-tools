@@ -1,6 +1,6 @@
-import { LanguageServerInitializationOptions } from "@volar/language-server";
+import { InitializationOptions } from "@volar/language-server";
 
-export type VueServerInitializationOptions = LanguageServerInitializationOptions & {
+export type VueServerInitializationOptions = InitializationOptions & {
 	json?: {
 		customBlockSchemaUrls?: Record<string, string>;
 	};

@@ -1,6 +1,6 @@
-import { LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
+import { Service } from '@volar/language-service';
 
-const plugin: LanguageServicePlugin = (context): LanguageServicePluginInstance => {
+const plugin: Service = (context): ReturnType<Service> => {
 
 	if (!context)
 		return {};
@@ -11,7 +11,7 @@ const plugin: LanguageServicePlugin = (context): LanguageServicePluginInstance =
 
 			if (document.languageId === 'html' || document.languageId === 'jade') {
 
-				const enabled = await context.configurationHost?.getConfiguration<boolean>('vue.autoInsert.bracketSpacing') ?? true;
+				const enabled = await context.env.getConfiguration?.<boolean>('vue.autoInsert.bracketSpacing') ?? true;
 				if (!enabled)
 					return;
 

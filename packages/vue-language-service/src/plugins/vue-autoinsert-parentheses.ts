@@ -1,23 +1,27 @@
 import * as embedded from '@volar/language-core';
 import { VirtualFile } from '@volar/language-core';
-import { LanguageServicePlugin } from '@volar/language-service';
+import { Service } from '@volar/language-service';
 import { VueFile } from '@volar/vue-language-core';
 import * as vscode from 'vscode-languageserver-protocol';
 import { isCharacterTyping } from './vue-autoinsert-dotvalue';
 
-const plugin: LanguageServicePlugin = (context) => {
+const plugin: Service = (context, modules) => {
 
-	if (!context?.typescript) {
+	if (!context) {
 		return {};
 	}
 
-	const ts = context.typescript.module;
+	if (!modules?.typescript) {
+		return {};
+	}
+
+	const ts = modules.typescript;
 
 	return {
 
 		async provideAutoInsertionEdit(document, position, options_2) {
 
-			const enabled = await context.configurationHost?.getConfiguration<boolean>('vue.autoInsert.parentheses') ?? false;
+			const enabled = await context.env.getConfiguration?.<boolean>('vue.autoInsert.parentheses') ?? false;
 			if (!enabled)
 				return;
 

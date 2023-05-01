@@ -139,8 +139,8 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		const vetur = vscode.extensions.getExtension('octref.vetur');
 		if (vetur?.isActive) {
 			problems.push({
-				title: 'Use @volar-plugins/vetur instead of Vetur',
-				message: 'Detected Vetur enabled. Consider disabling Vetur and use [@volar-plugins/vetur](https://github.com/johnsoncodehk/volar-plugins/tree/master/packages/vetur) instead.',
+				title: 'Use volar-service-vetur instead of Vetur',
+				message: 'Detected Vetur enabled. Consider disabling Vetur and use [volar-service-vetur](https://github.com/volarjs/services/tree/master/packages/vetur) instead.',
 			});
 		}
 
@@ -210,6 +210,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			});
 		}
 
+		/*
 		// check outdated language services plugins
 		const knownPlugins = [
 			// '@volar-plugins/css',
@@ -242,6 +243,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 				});
 			}
 		}
+		*/
 
 		// check tsdk version should not be 4.9
 		const tsdk = await getTsdk(context);

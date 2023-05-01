@@ -1,14 +1,18 @@
-import { AutoInsertionContext, LanguageServicePlugin } from '@volar/language-service';
+import { AutoInsertionContext, Service } from '@volar/language-service';
 import { hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 
-const plugin: LanguageServicePlugin = (context) => {
+const plugin: Service = (context, modules) => {
+
+	if (!modules?.typescript)
+		return {};
 
 	if (!context?.typescript)
 		return {};
 
+	const ts = modules.typescript;
 	const _ts = context.typescript;
 
 	return {
@@ -21,7 +25,7 @@ const plugin: LanguageServicePlugin = (context) => {
 			if (!isCharacterTyping(document, insertContext))
 				return;
 
-			const enabled = await context.configurationHost?.getConfiguration<boolean>('vue.autoInsert.dotValue') ?? true;
+			const enabled = await context.env.getConfiguration?.<boolean>('vue.autoInsert.dotValue') ?? true;
 			if (!enabled)
 				return;
 
@@ -29,11 +33,11 @@ const plugin: LanguageServicePlugin = (context) => {
 			if (!program)
 				return;
 
-			const sourceFile = program.getSourceFile(context.uriToFileName(document.uri));
+			const sourceFile = program.getSourceFile(context.env.uriToFileName(document.uri));
 			if (!sourceFile)
 				return;
 
-			if (isBlacklistNode(_ts.module, sourceFile, document.offsetAt(position), false))
+			if (isBlacklistNode(ts, sourceFile, document.offsetAt(position), false))
 				return;
 
 			const node = findPositionIdentifier(sourceFile, sourceFile, document.offsetAt(position));
@@ -42,7 +46,7 @@ const plugin: LanguageServicePlugin = (context) => {
 
 			const token = _ts.languageServiceHost.getCancellationToken?.();
 			if (token) {
-				_ts.languageService.getQuickInfoAtPosition(context.uriToFileName(document.uri), node.end);
+				_ts.languageService.getQuickInfoAtPosition(context.env.uriToFileName(document.uri), node.end);
 				if (token?.isCancellationRequested()) {
 					return; // check cancel here because type checker do not use cancel token
 				}
@@ -62,7 +66,7 @@ const plugin: LanguageServicePlugin = (context) => {
 
 				node.forEachChild(child => {
 					if (!result) {
-						if (child.end === offset && _ts.module.isIdentifier(child)) {
+						if (child.end === offset && ts.isIdentifier(child)) {
 							result = child;
 						}
 						else if (child.end >= offset && child.getStart(sourceFile) < offset) {

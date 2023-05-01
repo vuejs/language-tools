@@ -1,5 +1,5 @@
-import createHtmlPlugin from '@volar-plugins/html';
-import { FileRangeCapabilities, LanguageServicePlugin, LanguageServicePluginInstance, SourceMapWithDocuments } from '@volar/language-service';
+import createHtmlPlugin from 'volar-service-html';
+import { FileRangeCapabilities, Service, SourceMapWithDocuments } from '@volar/language-service';
 import * as vue from '@volar/vue-language-core';
 import { hyphenate, capitalize, camelize } from '@vue/shared';
 import * as html from 'vscode-html-languageservice';
@@ -20,21 +20,19 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 	vueCompilerOptions: VueCompilerOptions,
 }): T {
 
-	const plugin: LanguageServicePlugin = (_context): LanguageServicePluginInstance => {
+	const plugin: Service = (_context, modules): ReturnType<Service> => {
 
 		const templatePlugin = options.templateLanguagePlugin(_context);
-		const triggerCharacters: LanguageServicePluginInstance = {
-			triggerCharacters: [
-				...templatePlugin.triggerCharacters ?? [],
-				'@', // vue event shorthand
-			],
-		};
+		const triggerCharacters = [
+			...templatePlugin.triggerCharacters ?? [],
+			'@', // vue event shorthand
+		];
 
-		if (!_context?.typescript)
-			return triggerCharacters;
+		if (!_context?.typescript || !modules?.typescript)
+			return { triggerCharacters };
 
-		builtInData ??= loadTemplateData(_context.locale ?? 'en');
-		modelData ??= loadModelModifiersData(_context.locale ?? 'en');
+		builtInData ??= loadTemplateData(_context.env.locale ?? 'en');
+		modelData ??= loadModelModifiersData(_context.env.locale ?? 'en');
 
 		// https://vuejs.org/api/built-in-directives.html#v-on
 		// https://vuejs.org/api/built-in-directives.html#v-bind
@@ -66,13 +64,14 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			}
 		}
 
+		const ts = modules.typescript;
 		const _ts = _context.typescript;
 
 		return {
 
 			...templatePlugin,
 
-			...triggerCharacters,
+			triggerCharacters,
 
 			async provideCompletionItems(document, position, context, token) {
 
@@ -105,7 +104,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				if (!options.isSupportedDocument(document))
 					return;
 
-				const enabled = await _context.configurationHost?.getConfiguration<boolean>('vue.inlayHints.missingProps') ?? false;
+				const enabled = await _context.env.getConfiguration?.<boolean>('vue.inlayHints.missingProps') ?? false;
 				if (!enabled)
 					return;
 
@@ -117,9 +116,9 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					if (virtualFile && virtualFile instanceof vue.VueFile && scanner) {
 
 						// visualize missing required props
-						const casing = await getNameCasing(_context, _ts, map.sourceFileDocument.uri);
-						const nativeTags = checkNativeTags(_ts.module, _ts.languageService, virtualFile.fileName);
-						const components = checkComponentNames(_ts.module, _ts.languageService, virtualFile, nativeTags);
+						const casing = await getNameCasing(ts, _context, map.sourceFileDocument.uri);
+						const nativeTags = checkNativeTags(ts, _ts.languageService, virtualFile.fileName);
+						const components = checkComponentNames(ts, _ts.languageService, virtualFile, nativeTags);
 						const componentProps: Record<string, string[]> = {};
 						let token: html.TokenType;
 						let current: {
@@ -136,7 +135,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 										: components.find(component => component === tagName || hyphenate(component) === tagName);
 								const checkTag = tagName.indexOf('.') >= 0 ? tagName : component;
 								if (checkTag) {
-									componentProps[checkTag] ??= checkPropsOfTag(_ts.module, _ts.languageService, virtualFile, checkTag, nativeTags, true);
+									componentProps[checkTag] ??= checkPropsOfTag(ts, _ts.languageService, virtualFile, checkTag, nativeTags, true);
 									current = {
 										unburnedRequiredProps: [...componentProps[checkTag]],
 										labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
@@ -220,12 +219,12 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				return templatePlugin.provideHover?.(document, position, token);
 			},
 
-			async provideSyntacticDiagnostics(document, token) {
+			async provideDiagnostics(document, token) {
 
 				if (!options.isSupportedDocument(document))
 					return;
 
-				const originalResult = await templatePlugin.provideSyntacticDiagnostics?.(document, token);
+				const originalResult = await templatePlugin.provideDiagnostics?.(document, token);
 
 				for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
 
@@ -290,8 +289,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					if (!virtualFile || !(virtualFile instanceof vue.VueFile))
 						continue;
 
-					const nativeTags = checkNativeTags(_ts.module, _ts.languageService, virtualFile.fileName);
-					const templateScriptData = checkComponentNames(_ts.module, _ts.languageService, virtualFile, nativeTags);
+					const nativeTags = checkNativeTags(ts, _ts.languageService, virtualFile.fileName);
+					const templateScriptData = checkComponentNames(ts, _ts.languageService, virtualFile, nativeTags);
 					const components = new Set([
 						...templateScriptData,
 						...templateScriptData.map(hyphenate),
@@ -339,7 +338,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 		async function provideHtmlData(map: SourceMapWithDocuments<FileRangeCapabilities>, vueSourceFile: vue.VueFile) {
 
-			const casing = await getNameCasing(_context!, _ts, map.sourceFileDocument.uri);
+			const casing = await getNameCasing(ts, _context!, map.sourceFileDocument.uri);
 
 			if (builtInData.tags) {
 				for (const tag of builtInData.tags) {
@@ -358,7 +357,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				}
 			}
 
-			const nativeTags = checkNativeTags(_ts.module, _ts.languageService, vueSourceFile.fileName);
+			const nativeTags = checkNativeTags(ts, _ts.languageService, vueSourceFile.fileName);
 			templatePlugin.updateCustomData([
 				html.newHTMLDataProvider('vue-template-built-in', builtInData),
 				{
@@ -366,7 +365,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					isApplicable: () => true,
 					provideTags: () => {
 
-						const components = checkComponentNames(_ts.module, _ts.languageService, vueSourceFile, nativeTags)
+						const components = checkComponentNames(ts, _ts.languageService, vueSourceFile, nativeTags)
 							.filter(name =>
 								name !== 'Transition'
 								&& name !== 'TransitionGroup'
@@ -374,7 +373,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 								&& name !== 'Suspense'
 								&& name !== 'Teleport'
 							);
-						const scriptSetupRanges = vueSourceFile.sfc.scriptSetupAst ? vue.parseScriptSetupRanges(_ts.module, vueSourceFile.sfc.scriptSetupAst, options.vueCompilerOptions) : undefined;
+						const scriptSetupRanges = vueSourceFile.sfc.scriptSetupAst ? vue.parseScriptSetupRanges(ts, vueSourceFile.sfc.scriptSetupAst, options.vueCompilerOptions) : undefined;
 						const names = new Set<string>();
 						const tags: html.ITagData[] = [];
 
@@ -408,9 +407,9 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					},
 					provideAttributes: (tag) => {
 
-						const attrs = getElementAttrs(_ts.module, _ts.languageService, vueSourceFile.fileName, tag);
-						const props = new Set(checkPropsOfTag(_ts.module, _ts.languageService, vueSourceFile, tag, nativeTags));
-						const events = checkEventsOfTag(_ts.module, _ts.languageService, vueSourceFile, tag, nativeTags);
+						const attrs = getElementAttrs(ts, _ts.languageService, vueSourceFile.fileName, tag);
+						const props = new Set(checkPropsOfTag(ts, _ts.languageService, vueSourceFile, tag, nativeTags));
+						const events = checkEventsOfTag(ts, _ts.languageService, vueSourceFile, tag, nativeTags);
 						const attributes: html.IAttributeData[] = [];
 
 						for (const prop of [...props, ...attrs]) {
@@ -515,8 +514,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		function afterHtmlCompletion(completionList: vscode.CompletionList, map: SourceMapWithDocuments<FileRangeCapabilities>, vueSourceFile: vue.VueFile) {
 
 			const replacement = getReplacement(completionList, map.sourceFileDocument);
-			const nativeTags = checkNativeTags(_ts.module, _ts.languageService, vueSourceFile.fileName);
-			const componentNames = new Set(checkComponentNames(_ts.module, _ts.languageService, vueSourceFile, nativeTags).map(hyphenate));
+			const nativeTags = checkNativeTags(ts, _ts.languageService, vueSourceFile.fileName);
+			const componentNames = new Set(checkComponentNames(ts, _ts.languageService, vueSourceFile, nativeTags).map(hyphenate));
 
 			if (replacement) {
 

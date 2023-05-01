@@ -157,12 +157,12 @@ export function baseCreate(
 		},
 	}) as vue.VueLanguageServiceHost;
 	const vueCompilerOptions = vue.resolveVueCompilerOptions(host.getVueCompilationSettings());
-	const vueLanguageModules = ts ? vue.createLanguageModules(
+	const vueLanguages = ts ? vue.createLanguages(
 		ts,
 		host.getCompilationSettings(),
 		vueCompilerOptions,
 	) : [];
-	const core = createLanguageContext(host, { typescript: ts }, vueLanguageModules);
+	const core = createLanguageContext({ typescript: ts }, host, vueLanguages);
 	const proxyApis: Partial<ts.LanguageServiceHost> = checkerOptions.forceUseTs ? {
 		getScriptKind: (fileName) => {
 			if (fileName.endsWith('.vue.js')) {

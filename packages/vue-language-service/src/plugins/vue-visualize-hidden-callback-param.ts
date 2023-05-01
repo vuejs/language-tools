@@ -1,7 +1,7 @@
-import { LanguageServicePlugin } from '@volar/language-service';
+import { Service } from '@volar/language-service';
 import * as vscode from 'vscode-languageserver-protocol';
 
-const plugin: LanguageServicePlugin = (context) => {
+const plugin: Service = (context) => {
 
 	if (!context)
 		return {};
@@ -32,7 +32,7 @@ const plugin: LanguageServicePlugin = (context) => {
 						&& hint
 					) {
 
-						settings[hint.setting] ??= await context.configurationHost?.getConfiguration<boolean>(hint.setting) ?? false;
+						settings[hint.setting] ??= await context.env.getConfiguration?.<boolean>(hint.setting) ?? false;
 
 						if (!settings[hint.setting])
 							continue;

@@ -52,15 +52,12 @@ function createTester(root: string) {
 		'javascript.preferences.quoteStyle': 'single',
 	};
 	let currentVSCodeSettings: any;
-	const languageServiceConfig = resolveConfig({}, ts as any, {}, {});
-	const languageService = createLanguageService({
-		modules: { typescript: ts as any },
-		host,
-		config: languageServiceConfig,
-		uriToFileName,
-		fileNameToUri,
-		rootUri,
-		configurationHost: {
+	const languageService = createLanguageService(
+		{ typescript: ts as any },
+		{
+			rootUri,
+			uriToFileName,
+			fileNameToUri,
 			async getConfiguration(section: string) {
 				const settings = currentVSCodeSettings ?? defaultVSCodeSettings;
 				if (settings[section]) {
@@ -77,13 +74,15 @@ function createTester(root: string) {
 				return result;
 			},
 			onDidChangeConfiguration() { },
-		},
-		documentContext: {
-			resolveReference: (ref, _base) => {
-				return ref;
+			documentContext: {
+				resolveReference: (ref, _base) => {
+					return ref;
+				},
 			},
 		},
-	});
+		resolveConfig(ts as any, {}, {}, {}),
+		host,
+	);
 
 	return {
 		uriToFileName,

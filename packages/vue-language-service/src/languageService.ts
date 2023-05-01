@@ -1,10 +1,10 @@
-import createCssPlugin from '@volar-plugins/css';
-import createEmmetPlugin from '@volar-plugins/emmet';
-import createHtmlPlugin from '@volar-plugins/html';
-import createJsonPlugin from '@volar-plugins/json';
-import createPugPlugin from '@volar-plugins/pug';
-import createTsPlugin from '@volar-plugins/typescript';
-import createTsTqPlugin from '@volar-plugins/typescript-twoslash-queries';
+import createCssPlugin from 'volar-service-css';
+import createEmmetPlugin from 'volar-service-emmet';
+import createHtmlPlugin from 'volar-service-html';
+import createJsonPlugin from 'volar-service-json';
+import createPugPlugin from 'volar-service-pug';
+import createTsPlugin from 'volar-service-typescript';
+import createTsTqPlugin from 'volar-service-typescript-twoslash-queries';
 import * as vue from '@volar/vue-language-core';
 import type * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
@@ -14,12 +14,12 @@ import createReferencesCodeLensPlugin from './plugins/vue-codelens-references';
 import createTwoslashQueries from './plugins/vue-twoslash-queries';
 import createVueTemplateLanguagePlugin from './plugins/vue-template';
 import createVisualizeHiddenCallbackParamPlugin from './plugins/vue-visualize-hidden-callback-param';
-import type { Data } from '@volar-plugins/typescript/out/services/completions/basic';
+import type { Data } from 'volar-service-typescript/out/services/completions/basic';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { Config, LanguageServicePluginInstance } from '@volar/language-service';
+import { Config, Service } from '@volar/language-service';
 import { hyphenate, capitalize } from '@vue/shared';
 
-import createPugFormatPlugin from '@volar-plugins/pug-beautify';
+import createPugFormatPlugin from 'volar-service-pug-beautify';
 import createAutoWrapParenthesesPlugin from './plugins/vue-autoinsert-parentheses';
 import createAutoAddSpacePlugin from './plugins/vue-autoinsert-space';
 import { TagNameCasing, VueCompilerOptions } from './types';
@@ -30,39 +30,39 @@ export interface Settings {
 }
 
 export function resolveConfig(
-	config: Config, // volar.config.js
 	ts: typeof import('typescript/lib/tsserverlibrary'),
+	config: Config, // volar.config.js
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: Partial<VueCompilerOptions>,
 	settings?: Settings,
 ) {
 
 	const resolvedVueOptions = vue.resolveVueCompilerOptions(vueCompilerOptions);
-	const vueLanguageModules = vue.createLanguageModules(ts, compilerOptions, resolvedVueOptions);
+	const vueLanguageModules = vue.createLanguages(ts, compilerOptions, resolvedVueOptions);
 
 	config.languages = Object.assign({}, vueLanguageModules, config.languages);
-	config.plugins = resolvePlugins(config.plugins, resolvedVueOptions, settings);
+	config.services = resolvePlugins(config.services, resolvedVueOptions, settings);
 
 	return config;
 }
 
 function resolvePlugins(
-	plugins: Config['plugins'],
+	services: Config['services'],
 	vueCompilerOptions: VueCompilerOptions,
 	settings?: Settings,
 ) {
 
-	const originalTsPlugin = plugins?.typescript ?? createTsPlugin();
+	const originalTsPlugin = services?.typescript ?? createTsPlugin();
 
-	plugins ??= {};
-	plugins.typescript = (_context): LanguageServicePluginInstance => {
+	services ??= {};
+	services.typescript = (_context, modules): ReturnType<Service> => {
 
-		const base = typeof originalTsPlugin === 'function' ? originalTsPlugin(_context) : originalTsPlugin;
+		const base = typeof originalTsPlugin === 'function' ? originalTsPlugin(_context, modules) : originalTsPlugin;
 
-		if (!_context?.typescript)
+		if (!_context || !modules?.typescript)
 			return base;
 
-		const ts = _context.typescript.module;
+		const ts = modules.typescript;
 		const autoImportPositions = new WeakSet<vscode.Position>();
 
 		return {
@@ -94,7 +94,7 @@ function resolvePlugins(
 								// fix #2458
 								const source = _context.documents.getVirtualFileByUri(document.uri)[1];
 								if (source && _context.typescript) {
-									const casing = await getNameCasing(_context, _context.typescript, _context.fileNameToUri(source.fileName));
+									const casing = await getNameCasing(ts, _context, _context.env.fileNameToUri(source.fileName));
 									if (casing.tag === TagNameCasing.Kebab) {
 										result.items.forEach(item => {
 											item.filterText = hyphenate(item.filterText ?? item.label);
@@ -126,7 +126,7 @@ function resolvePlugins(
 						&& _context.typescript
 						&& item.textEdit?.newText.endsWith(suffix)
 						&& item.additionalTextEdits?.length === 1 && item.additionalTextEdits[0].newText.indexOf('import ' + item.textEdit.newText + ' from ') >= 0
-						&& (await _context.configurationHost?.getConfiguration<boolean>('vue.complete.normalizeComponentImportName') ?? true)
+						&& (await _context.env.getConfiguration?.<boolean>('vue.complete.normalizeComponentImportName') ?? true)
 					) {
 						newName = item.textEdit.newText.slice(0, -suffix.length);
 						newName = newName[0].toUpperCase() + newName.substring(1);
@@ -147,7 +147,7 @@ function resolvePlugins(
 						item.textEdit.newText = newName;
 						const source = _context.documents.getVirtualFileByUri(itemData.uri)[1];
 						if (source) {
-							const casing = await getNameCasing(_context, _context.typescript, _context.fileNameToUri(source.fileName));
+							const casing = await getNameCasing(ts, _context, _context.env.fileNameToUri(source.fileName));
 							if (casing.tag === TagNameCasing.Kebab) {
 								item.textEdit.newText = hyphenate(item.textEdit.newText);
 							}
@@ -249,7 +249,7 @@ function resolvePlugins(
 			},
 		};
 	};
-	plugins.html ??= createVueTemplateLanguagePlugin({
+	services.html ??= createVueTemplateLanguagePlugin({
 		templateLanguagePlugin: createHtmlPlugin(),
 		getScanner: (document, htmlPlugin): html.Scanner | undefined => {
 			return htmlPlugin.getHtmlLs().createScanner(document.getText());
@@ -257,7 +257,7 @@ function resolvePlugins(
 		isSupportedDocument: (document) => document.languageId === 'html',
 		vueCompilerOptions,
 	});
-	plugins.pug ??= createVueTemplateLanguagePlugin({
+	services.pug ??= createVueTemplateLanguagePlugin({
 		templateLanguagePlugin: createPugPlugin() as any,
 		getScanner: (document, pugPlugin): html.Scanner | undefined => {
 			const pugDocument = (pugPlugin as ReturnType<ReturnType<typeof createPugPlugin>>).getPugDocument(document);
@@ -268,20 +268,20 @@ function resolvePlugins(
 		isSupportedDocument: (document) => document.languageId === 'jade',
 		vueCompilerOptions,
 	});
-	plugins.vue ??= createVuePlugin();
-	plugins.css ??= createCssPlugin();
-	plugins['pug-beautify'] ??= createPugFormatPlugin();
-	plugins.json ??= createJsonPlugin(settings?.json);
-	plugins['typescript/twoslash-queries'] ??= createTsTqPlugin();
-	plugins['vue/referencesCodeLens'] ??= createReferencesCodeLensPlugin();
-	plugins['vue/autoInsertDotValue'] ??= createAutoDotValuePlugin();
-	plugins['vue/twoslash-queries'] ??= createTwoslashQueries();
-	plugins['vue/autoInsertParentheses'] ??= createAutoWrapParenthesesPlugin();
-	plugins['vue/autoInsertSpaces'] ??= createAutoAddSpacePlugin();
-	plugins['vue/visualizeHiddenCallbackParam'] ??= createVisualizeHiddenCallbackParamPlugin();
-	plugins.emmet ??= createEmmetPlugin();
+	services.vue ??= createVuePlugin();
+	services.css ??= createCssPlugin();
+	services['pug-beautify'] ??= createPugFormatPlugin();
+	services.json ??= createJsonPlugin(settings?.json);
+	services['typescript/twoslash-queries'] ??= createTsTqPlugin();
+	services['vue/referencesCodeLens'] ??= createReferencesCodeLensPlugin();
+	services['vue/autoInsertDotValue'] ??= createAutoDotValuePlugin();
+	services['vue/twoslash-queries'] ??= createTwoslashQueries();
+	services['vue/autoInsertParentheses'] ??= createAutoWrapParenthesesPlugin();
+	services['vue/autoInsertSpaces'] ??= createAutoAddSpacePlugin();
+	services['vue/visualizeHiddenCallbackParam'] ??= createVisualizeHiddenCallbackParamPlugin();
+	services.emmet ??= createEmmetPlugin();
 
-	return plugins;
+	return services;
 }
 
 // fix https://github.com/johnsoncodehk/volar/issues/916

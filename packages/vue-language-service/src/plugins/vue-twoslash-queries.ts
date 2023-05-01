@@ -1,12 +1,16 @@
-import { FileKind, forEachEmbeddedFile, LanguageServicePlugin } from '@volar/language-service';
+import { FileKind, forEachEmbeddedFile, Service } from '@volar/language-service';
 import * as vue from '@volar/vue-language-core';
 import * as vscode from 'vscode-languageserver-protocol';
 
-const plugin: LanguageServicePlugin = (context) => {
+const plugin: Service = (context, modules) => {
+
+	if (!modules?.typescript)
+		return {};
 
 	if (!context?.typescript)
 		return {};
 
+	const ts = modules.typescript;
 	const _ts = context.typescript;
 
 	return {
@@ -36,7 +40,7 @@ const plugin: LanguageServicePlugin = (context) => {
 										if (quickInfo) {
 											inlayHints.push({
 												position: { line: pointerPosition.line, character: pointerPosition.character + 2 },
-												label: _ts.module.displayPartsToString(quickInfo.displayParts),
+												label: ts.displayPartsToString(quickInfo.displayParts),
 												paddingLeft: true,
 												paddingRight: false,
 											});

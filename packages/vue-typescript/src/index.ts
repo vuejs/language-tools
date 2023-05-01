@@ -7,7 +7,7 @@ export function createLanguageService(
 ) {
 	const languageService = base.createLanguageService(
 		host,
-		vue.createLanguageModules(
+		vue.createLanguages(
 			ts,
 			host.getCompilationSettings(),
 			vue.resolveVueCompilerOptions(host.getVueCompilationSettings()),
