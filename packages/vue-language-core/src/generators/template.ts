@@ -464,6 +464,7 @@ export function generate(
 		codes.push(`] of (await import('${sharedTypesImport}')).getVForSourceType`);
 		if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 			codes.push(
+				'(',
 				...createInterpolationCode(
 					source.content,
 					source.loc,
@@ -472,6 +473,7 @@ export function generate(
 					'(',
 					')',
 				),
+				'!)', // #3102
 				') {\n',
 			);
 
