@@ -8,11 +8,11 @@ const foo = ref('bar');
 defineSlots<{
 	default: {
 		foo: string;
-		buz: number;
+		buz?: number;
 	};
 }>();
 </script>
 
 <template>
-	<slot v-bind="{ foo }" />
+	<slot v-bind="{ foo: foo }" />
 </template>

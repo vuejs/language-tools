@@ -1508,7 +1508,9 @@ export function generate(
 				['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly],
 				']',
 				['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly],
-				'?.({\n',
+				'?.(',
+				['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly],
+				'{\n',
 			);
 		}
 		else {
@@ -1587,7 +1589,11 @@ export function generate(
 				);
 			}
 		}
-		codes.push(hasScriptSetupSlots ? `});\n` : `};\n`);
+		codes.push(
+			'}',
+			hasScriptSetupSlots ? ['', 'template', startTagOffset + node.tag.length, capabilitiesPresets.diagnosticOnly] : '',
+			hasScriptSetupSlots ? `);\n` : `;\n`
+		);
 
 		if (hasScriptSetupSlots) {
 			return;
