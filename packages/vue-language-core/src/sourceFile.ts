@@ -468,7 +468,7 @@ export class VueFile implements VirtualFile {
 
 		const newData: Sfc['template'] | null = block ? {
 			name: 'template',
-			start: this.snapshot.getText(0, block.loc.start.offset).lastIndexOf('<'),
+			start: this.snapshot.getText(0, block.loc.start.offset).lastIndexOf('<template'),
 			end: block.loc.end.offset + this.snapshot.getText(block.loc.end.offset, this.snapshot.getLength()).indexOf('>') + 1,
 			startTagEnd: block.loc.start.offset,
 			endTagStart: block.loc.end.offset,
@@ -488,7 +488,7 @@ export class VueFile implements VirtualFile {
 
 		const newData: Sfc['script'] | null = block ? {
 			name: 'script',
-			start: this.snapshot.getText(0, block.loc.start.offset).lastIndexOf('<'),
+			start: this.snapshot.getText(0, block.loc.start.offset).lastIndexOf('<script'),
 			end: block.loc.end.offset + this.snapshot.getText(block.loc.end.offset, this.snapshot.getLength()).indexOf('>') + 1,
 			startTagEnd: block.loc.start.offset,
 			endTagStart: block.loc.end.offset,
@@ -510,7 +510,7 @@ export class VueFile implements VirtualFile {
 
 		const newData: Sfc['scriptSetup'] | null = block ? {
 			name: 'scriptSetup',
-			start: this.snapshot.getText(0, block.loc.start.offset).lastIndexOf('<'),
+			start: this.snapshot.getText(0, block.loc.start.offset).lastIndexOf('<script'),
 			end: block.loc.end.offset + this.snapshot.getText(block.loc.end.offset, this.snapshot.getLength()).indexOf('>') + 1,
 			startTagEnd: block.loc.start.offset,
 			endTagStart: block.loc.end.offset,
@@ -534,7 +534,7 @@ export class VueFile implements VirtualFile {
 			const block = blocks[i];
 			const newData: Sfc['styles'][number] = {
 				name: 'style_' + i,
-				start: this.snapshot.getText(0, block.loc.start.offset).lastIndexOf('<'),
+				start: this.snapshot.getText(0, block.loc.start.offset).lastIndexOf('<style'),
 				end: block.loc.end.offset + this.snapshot.getText(block.loc.end.offset, this.snapshot.getLength()).indexOf('>') + 1,
 				startTagEnd: block.loc.start.offset,
 				endTagStart: block.loc.end.offset,
