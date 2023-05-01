@@ -337,13 +337,11 @@ export function generate(
 
 			//#region props
 			if (
-				(scriptSetupRanges.propsRuntimeArg && scriptSetupRanges.defineProps)
+				scriptSetupRanges.propsRuntimeArg
 				|| scriptSetupRanges.defineProp.length
 			) {
-				if (scriptSetupRanges.propsRuntimeArg && scriptSetupRanges.defineProps) {
-					codes.push(`const __VLS_props = `);
-					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.defineProps.start, scriptSetupRanges.defineProps.end);
-					codes.push(`;\n`);
+				if (scriptSetupRanges.propsRuntimeArg) {
+					codes.push(`const __VLS_props = (new __VLS_publicComponent()).$props;\n`);
 				}
 				else if (scriptSetupRanges.defineProp.length) {
 					codes.push(`const __VLS_defaults = {\n`);
