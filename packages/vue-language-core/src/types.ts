@@ -72,6 +72,7 @@ export interface SfcBlock {
 	endTagStart: number;
 	lang: string;
 	content: string;
+	attrs: Record<string, string | true>;
 }
 
 export interface Sfc {
