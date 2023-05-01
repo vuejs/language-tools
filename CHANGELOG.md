@@ -1,15 +1,13 @@
 # Changelog
 
-## 1.6.1 (2023/4/28)
+## 1.6.2 (2023/5/1)
 
-- feat: support for specify vue library name by `vueCompilerOptions.lib` option ([#2722](https://github.com/johnsoncodehk/volar/issues/2722))
-- fix: avoid `<component :is>` type checking with string literal assignment ([#2725](https://github.com/johnsoncodehk/volar/issues/2725))
-- fix: `<slot>` reporting false positive error when `strictTemplates` enabled ([#2726](https://github.com/johnsoncodehk/volar/issues/2726)) ([#2723](https://github.com/johnsoncodehk/volar/issues/2723))
-- fix: error using custom directive: `Expected 2 arguments, but got 1.` ([#2730](https://github.com/johnsoncodehk/volar/issues/2730))
-- fix: namespaced tag not working without script setup
-- fix: component intellisense not working in template if TS version < 5.0 ([#2742](https://github.com/johnsoncodehk/volar/issues/2742))
-- fix: class is not assignable to generic components ([#2744](https://github.com/johnsoncodehk/volar/issues/2744))
-- fix: components options is not set correctly when component name is kebab-case and auto-importing ([#2745](https://github.com/johnsoncodehk/volar/issues/2745))
+- fix: consume required props for events ([#2468](https://github.com/johnsoncodehk/volar/issues/2468))
+- fix: support infer v-for types for generic ([#2758](https://github.com/johnsoncodehk/volar/issues/2758))
+- fix: slot missing props don't report error
+- fix: cannot assign generic component to components option of defineComponent
+- fix: "TS1002: Unterminated string literal" in slots edge case ([#2710](https://github.com/johnsoncodehk/volar/issues/2710))
+- fix: generic component prop with default type incorrect ([#2754](https://github.com/johnsoncodehk/volar/issues/2754))
 
 ---
 
@@ -46,6 +44,17 @@
 		<a href="https://opencollective.com/volarjs">Open Collective</a>
 	</h5>
 </p>
+
+## 1.6.1 (2023/4/28)
+
+- feat: support for specify vue library name by `vueCompilerOptions.lib` option ([#2722](https://github.com/johnsoncodehk/volar/issues/2722))
+- fix: avoid `<component :is>` type checking with string literal assignment ([#2725](https://github.com/johnsoncodehk/volar/issues/2725))
+- fix: `<slot>` reporting false positive error when `strictTemplates` enabled ([#2726](https://github.com/johnsoncodehk/volar/issues/2726)) ([#2723](https://github.com/johnsoncodehk/volar/issues/2723))
+- fix: error using custom directive: `Expected 2 arguments, but got 1.` ([#2730](https://github.com/johnsoncodehk/volar/issues/2730))
+- fix: namespaced tag not working without script setup
+- fix: component intellisense not working in template if TS version < 5.0 ([#2742](https://github.com/johnsoncodehk/volar/issues/2742))
+- fix: class is not assignable to generic components ([#2744](https://github.com/johnsoncodehk/volar/issues/2744))
+- fix: components options is not set correctly when component name is kebab-case and auto-importing ([#2745](https://github.com/johnsoncodehk/volar/issues/2745))
 
 ## 1.6.0 (2023/4/27)
 
