@@ -33,10 +33,10 @@ importers:
   packages/typescript-vue-plugin:
     dependencies:
       '@volar/vue-language-core':
-        specifier: 1.6.1
+        specifier: 1.6.2
         version: link:../vue-language-core
       '@volar/vue-typescript':
-        specifier: 1.6.1
+        specifier: 1.6.2
         version: link:../vue-typescript
 
   packages/vscode-typescript-vue-plugin:
@@ -49,7 +49,7 @@ importers:
         specifier: 0.15.18
         version: 0.15.18
       typescript-vue-plugin:
-        specifier: 1.6.1
+        specifier: 1.6.2
         version: link:../typescript-vue-plugin
       vsce:
         specifier: latest
@@ -70,10 +70,10 @@ importers:
         specifier: 1.4.1
         version: 1.4.1(@types/vscode@1.67.0)(vscode-languageclient@8.1.0)
       '@volar/vue-language-core':
-        specifier: 1.6.1
+        specifier: 1.6.2
         version: link:../vue-language-core
       '@volar/vue-language-server':
-        specifier: 1.6.1
+        specifier: 1.6.2
         version: link:../vue-language-server
       esbuild:
         specifier: 0.15.18
@@ -106,13 +106,13 @@ importers:
         specifier: 1.4.1
         version: 1.4.1
       '@volar/vue-language-core':
-        specifier: 1.6.1
+        specifier: 1.6.2
         version: link:../vue-language-core
       typesafe-path:
         specifier: ^0.2.2
         version: 0.2.2
       vue-component-type-helpers:
-        specifier: 1.6.1
+        specifier: 1.6.2
         version: link:../vue-component-type-helpers
 
   packages/vue-component-type-helpers: {}
@@ -164,7 +164,7 @@ importers:
         version: 1.4.1
     devDependencies:
       '@volar/vue-language-core':
-        specifier: 1.6.1
+        specifier: 1.6.2
         version: link:../vue-language-core
 
   packages/vue-language-server:
@@ -176,16 +176,16 @@ importers:
         specifier: 1.4.1
         version: 1.4.1
       '@volar/vue-language-core':
-        specifier: 1.6.1
+        specifier: 1.6.2
         version: link:../vue-language-core
       '@volar/vue-language-service':
-        specifier: 1.6.1
+        specifier: 1.6.2
         version: link:../vue-language-service
       vscode-languageserver-protocol:
         specifier: ^3.17.3
         version: 3.17.3
       vue-component-meta:
-        specifier: 1.6.1
+        specifier: 1.6.2
         version: link:../vue-component-meta
 
   packages/vue-language-service:
@@ -224,7 +224,7 @@ importers:
         specifier: 1.4.1
         version: 1.4.1
       '@volar/vue-language-core':
-        specifier: 1.6.1
+        specifier: 1.6.2
         version: link:../vue-language-core
       '@vue/compiler-dom':
         specifier: ^3.3.0-beta.3
@@ -257,16 +257,16 @@ importers:
         specifier: ^3.3.0-beta.3
         version: 3.3.0-beta.3
       vue-component-type-helpers:
-        specifier: 1.6.1
+        specifier: 1.6.2
         version: link:../vue-component-type-helpers
 
   packages/vue-tsc:
     dependencies:
       '@volar/vue-language-core':
-        specifier: 1.6.1
+        specifier: 1.6.2
         version: link:../vue-language-core
       '@volar/vue-typescript':
-        specifier: 1.6.1
+        specifier: 1.6.2
         version: link:../vue-typescript
       semver:
         specifier: ^7.3.8
@@ -282,7 +282,7 @@ importers:
         specifier: latest
         version: 8.37.0
       vue-tsc:
-        specifier: 1.6.1
+        specifier: 1.6.2
         version: link:../vue-tsc
 
   packages/vue-typescript:
@@ -291,7 +291,7 @@ importers:
         specifier: 1.4.1
         version: 1.4.1(typescript@5.0.4)
       '@volar/vue-language-core':
-        specifier: 1.6.1
+        specifier: 1.6.2
         version: link:../vue-language-core
 
 packages:

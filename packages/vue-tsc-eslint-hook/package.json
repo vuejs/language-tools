@@ -1,6 +1,6 @@
 {
 	"name": "vue-tsc-eslint-hook",
-	"version": "1.6.1",
+	"version": "1.6.2",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -15,7 +15,7 @@
 	},
 	"devDependencies": {
 		"@types/eslint": "latest",
-		"vue-tsc": "1.6.1"
+		"vue-tsc": "1.6.2"
 	},
 	"peerDependencies": {
 		"eslint": "*"
