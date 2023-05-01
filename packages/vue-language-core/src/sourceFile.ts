@@ -584,9 +584,19 @@ export class VueFile implements VirtualFile {
 		}
 	}
 
-	updateBlock<T>(oldBlock: T, newBlock: T) {
-		for (let key in newBlock) {
-			oldBlock[key] = newBlock[key];
+	updateBlock<T extends object>(oldBlock: T, newBlock: T) {
+		for (const key in newBlock) {
+			if (typeof oldBlock[key] === 'object' && typeof newBlock[key] === 'object') {
+				this.updateBlock(oldBlock[key] as object, newBlock[key] as object);
+			}
+			else {
+				oldBlock[key] = newBlock[key];
+			}
+		}
+		for (const key in oldBlock) {
+			if (!(key in newBlock)) {
+				delete oldBlock[key];
+			}
 		}
 	}
 }
