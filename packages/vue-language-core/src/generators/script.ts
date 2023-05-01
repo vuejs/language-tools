@@ -51,6 +51,7 @@ export function generate(
 			endTagStart: 0,
 			generic: undefined,
 			genericOffset: 0,
+			attrs: {},
 		};
 		scriptSetupRanges = {
 			bindings: [],
