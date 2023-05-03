@@ -1,4 +1,6 @@
-export default string;
+declare const text: string;
+
+export default text;
 
 export type ComponentProps<T> =
 	T extends new () => { $props: infer P } ? NonNullable<P> :
