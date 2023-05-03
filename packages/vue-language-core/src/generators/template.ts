@@ -36,10 +36,11 @@ const capabilitiesPresets = {
 	refAttr: { references: true, definition: true, rename: true } satisfies FileRangeCapabilities,
 };
 const formatBrackets = {
-	normal: ['`${', '}`'] as [string, string],
+	normal: ['`${', '}`;'] as [string, string],
 	// fix https://github.com/johnsoncodehk/volar/issues/1210
 	// fix https://github.com/johnsoncodehk/volar/issues/2305
 	curly: ['0 +', '+ 0;'] as [string, string],
+	event: ['() => ', ';'] as [string, string],
 };
 const validTsVar = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 // @ts-ignore
@@ -939,7 +940,7 @@ export function generate(
 						...createFormatCode(
 							prop.exp.content,
 							prop.exp.loc.start.offset,
-							formatBrackets.normal,
+							isCompoundExpression ? formatBrackets.event : formatBrackets.normal,
 						),
 					);
 				}
