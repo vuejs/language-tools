@@ -12,9 +12,9 @@
 <script lang="ts" setup generic="T extends Record<string, string>">
 defineSlots<
 	{
-		[K in `cell:${string}`]: { value: T[keyof T] };
+		[K in `cell:${string}`]?: (_: { value: T[keyof T] }) => any;
 	} & {
-		default: Record<string, any>;
+		default?: (_: Record<string, any>) => any;
 	}
 >();
 </script>

@@ -6,10 +6,10 @@ import { ref } from 'vue';
 const foo = ref('bar');
 
 defineSlots<{
-	default: {
+	default: (_: {
 		foo: string;
 		buz?: number;
-	};
+	}) => any;
 }>();
 </script>
 
