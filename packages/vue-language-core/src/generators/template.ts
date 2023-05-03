@@ -62,6 +62,7 @@ type Code = Segment<FileRangeCapabilities>;
 
 export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
+	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
 	sourceTemplate: string,
 	sourceLang: string,
@@ -1767,7 +1768,7 @@ export function generate(
 
 	function createPropertyAccessCode(a: Code, astHolder?: any): Code[] {
 		const aStr = typeof a === 'string' ? a : a[0];
-		if (validTsVar.test(aStr)) {
+		if (!compilerOptions.noPropertyAccessFromIndexSignature && validTsVar.test(aStr)) {
 			return ['.', a];
 		}
 		else if (aStr.startsWith('[') && aStr.endsWith(']')) {
