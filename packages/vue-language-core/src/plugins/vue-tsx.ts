@@ -93,6 +93,9 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				if (_tsx.htmlGen.value) {
 					embeddedFile.content = [..._tsx.htmlGen.value.cssCodes];
 				}
+
+				// for color pickers support
+				embeddedFile.capabilities.documentSymbol = true;
 			}
 		},
 	};
