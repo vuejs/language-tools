@@ -730,6 +730,7 @@ export function generate(
 				}
 			}
 			codes.push(
+				['', 'template', (slotDir.arg ?? slotDir).loc.start.offset, capabilitiesPresets.diagnosticOnly],
 				`${componentCtxVar}.slots!`,
 				...(
 					(slotDir?.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content)
@@ -739,8 +740,14 @@ export function generate(
 							slotDir.arg.loc.start.offset,
 							slotDir.arg.isStatic ? capabilitiesPresets.slotName : capabilitiesPresets.all
 						], slotDir.arg.loc)
-						: ['.default']
+						: createPropertyAccessCode([
+							'default',
+							'template',
+							[slotDir.loc.start.offset, slotDir.loc.start.offset + (slotDir.loc.source.startsWith('#') ? '#'.length : slotDir.loc.source.startsWith('v-slot:') ? 'v-slot:'.length : 0)],
+							capabilitiesPresets.slotName,
+						])
 				),
+				['', 'template', (slotDir.arg ?? slotDir).loc.end.offset, capabilitiesPresets.diagnosticOnly],
 			);
 			if (hasProps) {
 				codes.push(')');
@@ -762,17 +769,12 @@ export function generate(
 				isStatic = slotDir.arg.isStatic;
 			}
 			if (isStatic && slotDir && !slotDir.arg) {
-				let offset = slotDir.loc.start.offset;
-				if (slotDir.loc.source.startsWith('#'))
-					offset += '#'.length;
-				else if (slotDir.loc.source.startsWith('v-slot:'))
-					offset += 'v-slot:'.length;
 				codes.push(
 					`${componentCtxVar}.slots!['`,
 					[
 						'',
 						'template',
-						offset,
+						slotDir.loc.start.offset + (slotDir.loc.source.startsWith('#') ? '#'.length : slotDir.loc.source.startsWith('v-slot:') ? 'v-slot:'.length : 0),
 						{ completion: true },
 					],
 					`'/* empty slot name completion */]\n`,
