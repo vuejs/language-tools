@@ -767,14 +767,16 @@ export function generate(
 					offset += '#'.length;
 				else if (slotDir.loc.source.startsWith('v-slot:'))
 					offset += 'v-slot:'.length;
-				codes.push(`'`);
-				codes.push([
-					'',
-					'template',
-					offset,
-					{ completion: true },
-				]);
-				codes.push(`'/* empty slot name completion */\n`);
+				codes.push(
+					`${componentCtxVar}.slots!['`,
+					[
+						'',
+						'template',
+						offset,
+						{ completion: true },
+					],
+					`'/* empty slot name completion */]\n`,
+				);
 			}
 			codes.push(`}\n`);
 		}
