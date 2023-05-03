@@ -49,6 +49,11 @@ export type GlobalComponents =
 // v-for
 export declare function getVForSourceType(source: number): [number, number, number][];
 export declare function getVForSourceType(source: string): [string, number, number][];
+export declare function getVForSourceType<T extends any[]>(source: T): [
+	T[number], // item
+	number, // key
+	number, // index
+][];
 export declare function getVForSourceType<T extends { [Symbol.iterator](): Iterator<any> }>(source: T): [
 	T extends { [Symbol.iterator](): Iterator<infer T1> } ? T1 : never, // item 
 	number, // key
