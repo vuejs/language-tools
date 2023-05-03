@@ -9,6 +9,6 @@ let Comp: new () => {
 
 <template>
 	<Comp>
-		<template v-slot:slot-name></template>
+		<template v-slot:slotName></template>
 	</Comp>
 </template>
