@@ -1,4 +1,4 @@
-import { Service } from '@volar/language-service';
+import { InjectionKey, Service } from '@volar/language-service';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -7,6 +7,10 @@ import * as vue from '@volar/vue-language-core';
 import { loadLanguageBlocks } from './data';
 
 let sfcDataProvider: html.IHTMLDataProvider | undefined;
+
+export const rulesInjectionKey: InjectionKey<{
+	vueFile: vue.VueFile;
+}> = Symbol();
 
 export default (): Service => (context) => {
 
@@ -23,21 +27,21 @@ export default (): Service => (context) => {
 
 	return {
 
-		...htmlPlugin,
-
-		resolveRuleContext(context) {
-			worker(context.document, (vueSourceFile) => {
-				if (vueSourceFile.parsedSfc) {
-					context.vue = {
-						sfc: vueSourceFile.parsedSfc,
-						templateAst: vueSourceFile.sfc.templateAst,
-						scriptAst: vueSourceFile.sfc.scriptAst,
-						scriptSetupAst: vueSourceFile.sfc.scriptSetupAst,
-					};
-				}
-			});
-			return context;
+		rules: {
+			provide: {
+				vue(document) {
+					return worker(document, (vueSourceFile) => {
+						if (vueSourceFile) {
+							return {
+								vueFile: vueSourceFile,
+							};
+						}
+					});
+				},
+			}
 		},
+
+		...htmlPlugin,
 
 		provideSemanticDiagnostics(document) {
 			return worker(document, (vueSourceFile) => {
