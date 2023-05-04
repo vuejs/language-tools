@@ -6,10 +6,10 @@ importers:
     optionalDependencies:
       '@lerna-lite/cli':
         specifier: latest
-        version: 2.1.0(@lerna-lite/publish@2.1.0)(@lerna-lite/version@2.1.0)
+        version: 2.2.0(@lerna-lite/publish@2.2.0)(@lerna-lite/version@2.2.0)
       '@lerna-lite/publish':
         specifier: latest
-        version: 2.1.0
+        version: 2.2.0
       opencc:
         specifier: latest
         version: 1.1.3
@@ -25,7 +25,7 @@ importers:
         version: 5.0.4
       vite:
         specifier: latest
-        version: 4.3.3(@types/node@18.16.3)
+        version: 4.3.4(@types/node@18.16.3)
       vitest:
         specifier: 0.25.8
         version: 0.25.8
@@ -33,10 +33,10 @@ importers:
   packages/typescript-vue-plugin:
     dependencies:
       '@volar/vue-language-core':
-        specifier: 1.6.3
+        specifier: 1.6.4
         version: link:../vue-language-core
       '@volar/vue-typescript':
-        specifier: 1.6.3
+        specifier: 1.6.4
         version: link:../vue-typescript
 
   packages/vscode-typescript-vue-plugin:
@@ -49,7 +49,7 @@ importers:
         specifier: 0.15.18
         version: 0.15.18
       typescript-vue-plugin:
-        specifier: 1.6.3
+        specifier: 1.6.4
         version: link:../typescript-vue-plugin
       vsce:
         specifier: latest
@@ -70,10 +70,10 @@ importers:
         specifier: 1.4.1
         version: 1.4.1(@types/vscode@1.67.0)(vscode-languageclient@8.1.0)
       '@volar/vue-language-core':
-        specifier: 1.6.3
+        specifier: 1.6.4
         version: link:../vue-language-core
       '@volar/vue-language-server':
-        specifier: 1.6.3
+        specifier: 1.6.4
         version: link:../vue-language-server
       esbuild:
         specifier: 0.15.18
@@ -106,13 +106,13 @@ importers:
         specifier: 1.4.1
         version: 1.4.1
       '@volar/vue-language-core':
-        specifier: 1.6.3
+        specifier: 1.6.4
         version: link:../vue-language-core
       typesafe-path:
         specifier: ^0.2.2
         version: 0.2.2
       vue-component-type-helpers:
-        specifier: 1.6.3
+        specifier: 1.6.4
         version: link:../vue-component-type-helpers
 
   packages/vue-component-type-helpers: {}
@@ -164,7 +164,7 @@ importers:
         version: 1.4.1
     devDependencies:
       '@volar/vue-language-core':
-        specifier: 1.6.3
+        specifier: 1.6.4
         version: link:../vue-language-core
 
   packages/vue-language-server:
@@ -176,16 +176,16 @@ importers:
         specifier: 1.4.1
         version: 1.4.1
       '@volar/vue-language-core':
-        specifier: 1.6.3
+        specifier: 1.6.4
         version: link:../vue-language-core
       '@volar/vue-language-service':
-        specifier: 1.6.3
+        specifier: 1.6.4
         version: link:../vue-language-service
       vscode-languageserver-protocol:
         specifier: ^3.17.3
         version: 3.17.3
       vue-component-meta:
-        specifier: 1.6.3
+        specifier: 1.6.4
         version: link:../vue-component-meta
 
   packages/vue-language-service:
@@ -224,7 +224,7 @@ importers:
         specifier: 1.4.1
         version: 1.4.1
       '@volar/vue-language-core':
-        specifier: 1.6.3
+        specifier: 1.6.4
         version: link:../vue-language-core
       '@vue/compiler-dom':
         specifier: ^3.3.0-beta.3
@@ -257,16 +257,16 @@ importers:
         specifier: ^3.3.0-beta.3
         version: 3.3.0-beta.3
       vue-component-type-helpers:
-        specifier: 1.6.3
+        specifier: 1.6.4
         version: link:../vue-component-type-helpers
 
   packages/vue-tsc:
     dependencies:
       '@volar/vue-language-core':
-        specifier: 1.6.3
+        specifier: 1.6.4
         version: link:../vue-language-core
       '@volar/vue-typescript':
-        specifier: 1.6.3
+        specifier: 1.6.4
         version: link:../vue-typescript
       semver:
         specifier: ^7.3.8
@@ -282,7 +282,7 @@ importers:
         specifier: latest
         version: 8.37.0
       vue-tsc:
-        specifier: 1.6.3
+        specifier: 1.6.4
         version: link:../vue-tsc
 
   packages/vue-typescript:
@@ -291,7 +291,7 @@ importers:
         specifier: 1.4.1
         version: 1.4.1(typescript@5.0.4)
       '@volar/vue-language-core':
-        specifier: 1.6.3
+        specifier: 1.6.4
         version: link:../vue-language-core
 
 packages:
@@ -592,8 +592,8 @@ packages:
   /@jridgewell/sourcemap-codec@1.4.15:
     resolution: {integrity: sha512-eF2rxCRulEKXHTRiDrDy6erMYWqNw4LPdQ8UQA4huuxaQsVeRPFl2oM8oDGxMFhJUWZf9McpLtJasDDZb/Bpeg==}
 
-  /@lerna-lite/cli@2.1.0(@lerna-lite/publish@2.1.0)(@lerna-lite/version@2.1.0):
-    resolution: {integrity: sha512-eyC5V6eYvdKHOUZ6roJNuouR5Koa2mRWDdZr9DtnreEdTAvF4FSOjaHCLTHeHuqmjqslA6oUoJCL5nw8brOFgQ==}
+  /@lerna-lite/cli@2.2.0(@lerna-lite/publish@2.2.0)(@lerna-lite/version@2.2.0):
+    resolution: {integrity: sha512-UJ8Z+KWy31b5sGbb5dQBPOhOo8dUTuw0gPSyLSvjB5aCh25igD7V6h1PjLNkJOlD6X277CequpBjBWzGvUpl1Q==}
     engines: {node: '>=16.15.0', npm: '>=8.5.0'}
     hasBin: true
     peerDependencies:
@@ -617,27 +617,27 @@ packages:
       '@lerna-lite/watch':
         optional: true
     dependencies:
-      '@lerna-lite/core': 2.1.0
-      '@lerna-lite/init': 2.1.0
-      '@lerna-lite/publish': 2.1.0
-      '@lerna-lite/version': 2.1.0(@lerna-lite/publish@2.1.0)
+      '@lerna-lite/core': 2.2.0
+      '@lerna-lite/init': 2.2.0
+      '@lerna-lite/publish': 2.2.0
+      '@lerna-lite/version': 2.2.0(@lerna-lite/publish@2.2.0)
       dedent: 0.7.0
       dotenv: 16.0.3
       import-local: 3.1.0
       load-json-file: 7.0.1
       npmlog: 7.0.1
-      yargs: 17.7.1
+      yargs: 17.7.2
     transitivePeerDependencies:
       - bluebird
       - supports-color
     dev: false
     optional: true
 
-  /@lerna-lite/core@2.1.0:
-    resolution: {integrity: sha512-RpyFTewpwIpgZzt4KGp2uxX9W6XqCHUpIqkhRrmrthKQP01bLZG75TKBMrHFYRwfCuqSWvWss6V0SIaHQKc8nA==}
+  /@lerna-lite/core@2.2.0:
+    resolution: {integrity: sha512-BbBNfVd2eV2YdKpPWVAP/AwiGX6aeo4yJQJ+nIhLeITyn11kFRlwYQZ2LgWIVhiqwk8T7IwzlhRearH20WzLkA==}
     engines: {node: '>=16.15.0', npm: '>=8.5.0'}
     dependencies:
-      '@npmcli/run-script': 6.0.0
+      '@npmcli/run-script': 6.0.1
       chalk: 5.2.0
       clone-deep: 4.0.1
       config-chain: 1.1.13
@@ -647,19 +647,20 @@ packages:
       fs-extra: 11.1.1
       glob-parent: 6.0.2
       globby: 13.1.4
-      inquirer: 9.1.5
+      inquirer: 9.2.0
       is-ci: 3.0.1
+      json5: 2.2.3
       load-json-file: 7.0.1
       minimatch: 9.0.0
       npm-package-arg: 10.1.0
       npmlog: 7.0.1
-      p-map: 5.5.0
+      p-map: 6.0.0
       p-queue: 7.3.4
       resolve-from: 5.0.0
       semver: 7.5.0
-      slash: 5.0.0
+      slash: 5.0.1
       strong-log-transformer: 2.1.0
-      write-file-atomic: 5.0.0
+      write-file-atomic: 5.0.1
       write-json-file: 5.0.0
       write-pkg: 5.1.0
     transitivePeerDependencies:
@@ -668,13 +669,13 @@ packages:
     dev: false
     optional: true
 
-  /@lerna-lite/init@2.1.0:
-    resolution: {integrity: sha512-Q+E+FXEI5yHVN55miTFb9lzhAy6vghATDjQ4TspX7WF97gIKFt6u5N5h6+BIPzENfEoB0j3mcyQAA4H25YxyHQ==}
+  /@lerna-lite/init@2.2.0:
+    resolution: {integrity: sha512-772quONll3jNfol7f0Uk2c+9lLY5yXb+CPCrMK35IEFFjeOv5iM+gj+MELum9s2syjYinYe9lLwdVzrJrBj0AQ==}
     engines: {node: '>=16.15.0', npm: '>=8.5.0'}
     dependencies:
-      '@lerna-lite/core': 2.1.0
+      '@lerna-lite/core': 2.2.0
       fs-extra: 11.1.1
-      p-map: 5.5.0
+      p-map: 6.0.0
       write-json-file: 5.0.0
     transitivePeerDependencies:
       - bluebird
@@ -682,35 +683,35 @@ packages:
     dev: false
     optional: true
 
-  /@lerna-lite/publish@2.1.0:
-    resolution: {integrity: sha512-6Z873ZC8JTPo/LAEIop4s4AEhazpzhVMsx+ycr8icih3/IaqCCIacyc+HwaEo3TxhSfPY0G5DnK29YTJ4AHNOA==}
+  /@lerna-lite/publish@2.2.0:
+    resolution: {integrity: sha512-O3IEMZ8d2gJd/3lMo2V3xl/2uaZP5GYP5npnbn7nLKMWh1y9ozVm0VirLH2OGz7BqSLEBx3fCJ1PYjpq0EMWVg==}
     engines: {node: '>=16.15.0', npm: '>=8.5.0'}
     requiresBuild: true
     dependencies:
-      '@lerna-lite/cli': 2.1.0(@lerna-lite/publish@2.1.0)(@lerna-lite/version@2.1.0)
-      '@lerna-lite/core': 2.1.0
-      '@lerna-lite/version': 2.1.0(@lerna-lite/publish@2.1.0)
+      '@lerna-lite/cli': 2.2.0(@lerna-lite/publish@2.2.0)(@lerna-lite/version@2.2.0)
+      '@lerna-lite/core': 2.2.0
+      '@lerna-lite/version': 2.2.0(@lerna-lite/publish@2.2.0)
       '@npmcli/arborist': 6.2.8
       byte-size: 8.1.0
       chalk: 5.2.0
       columnify: 1.6.0
       fs-extra: 11.1.1
-      glob: 10.2.1
+      glob: 10.2.2
       has-unicode: 2.0.1
       libnpmaccess: 7.0.2
       libnpmpublish: 7.1.3
       normalize-path: 3.0.0
       npm-package-arg: 10.1.0
       npm-packlist: 7.0.4
-      npm-registry-fetch: 14.0.4
+      npm-registry-fetch: 14.0.5
       npmlog: 7.0.1
-      p-map: 5.5.0
+      p-map: 6.0.0
       p-pipe: 4.0.0
-      pacote: 15.1.2
+      pacote: 15.1.3
       pify: 6.1.0
-      read-package-json: 6.0.1
+      read-package-json: 6.0.3
       semver: 7.5.0
-      ssri: 10.0.3
+      ssri: 10.0.4
       tar: 6.1.13
       temp-dir: 3.0.0
     transitivePeerDependencies:
@@ -724,12 +725,12 @@ packages:
     dev: false
     optional: true
 
-  /@lerna-lite/version@2.1.0(@lerna-lite/publish@2.1.0):
-    resolution: {integrity: sha512-eYnPB6YrAGDARvg32asZoaAvxdMb9gRrcZEnCYWcQlMS7SqlpWOtVZRPdg7V1SlAufvb6o42TaAkVTe+FIuA2g==}
+  /@lerna-lite/version@2.2.0(@lerna-lite/publish@2.2.0):
+    resolution: {integrity: sha512-T/hMpXusy0nHhoh0o0h2sZ0CLtYma/rIu/bdPJIfIv6d7rLlEqlL7PO2tvpA/UrQBI4c/Mnkt3D8HBCkgtl57A==}
     engines: {node: '>=16.15.0', npm: '>=8.5.0'}
     dependencies:
-      '@lerna-lite/cli': 2.1.0(@lerna-lite/publish@2.1.0)(@lerna-lite/version@2.1.0)
-      '@lerna-lite/core': 2.1.0
+      '@lerna-lite/cli': 2.2.0(@lerna-lite/publish@2.2.0)(@lerna-lite/version@2.2.0)
+      '@lerna-lite/core': 2.2.0
       '@octokit/plugin-enterprise-rest': 6.0.1
       '@octokit/rest': 19.0.7
       chalk: 5.2.0
@@ -751,12 +752,12 @@ packages:
       node-fetch: 3.3.1
       npm-package-arg: 10.1.0
       npmlog: 7.0.1
-      p-map: 5.5.0
+      p-map: 6.0.0
       p-pipe: 4.0.0
       p-reduce: 3.0.0
       pify: 6.1.0
       semver: 7.5.0
-      slash: 5.0.0
+      slash: 5.0.1
       temp-dir: 3.0.0
       uuid: 9.0.0
       write-json-file: 5.0.0
@@ -816,16 +817,16 @@ packages:
       npm-install-checks: 6.1.0
       npm-package-arg: 10.1.0
       npm-pick-manifest: 8.0.1
-      npm-registry-fetch: 14.0.4
+      npm-registry-fetch: 14.0.5
       npmlog: 7.0.1
-      pacote: 15.1.2
+      pacote: 15.1.3
       parse-conflict-json: 3.0.1
       proc-log: 3.0.0
       promise-all-reject-late: 1.0.1
       promise-call-limit: 1.0.2
       read-package-json-fast: 3.0.2
       semver: 7.5.0
-      ssri: 10.0.3
+      ssri: 10.0.4
       treeverse: 3.0.0
       walk-up-path: 3.0.1
     transitivePeerDependencies:
@@ -895,7 +896,7 @@ packages:
     dependencies:
       cacache: 17.0.5
       json-parse-even-better-errors: 3.0.0
-      pacote: 15.1.2
+      pacote: 15.1.3
       semver: 7.5.0
     transitivePeerDependencies:
       - bluebird
@@ -951,6 +952,21 @@ packages:
 
   /@npmcli/run-script@6.0.0:
     resolution: {integrity: sha512-ql+AbRur1TeOdl1FY+RAwGW9fcr4ZwiVKabdvm93mujGREVuVLbdkXRJDrkTXSdCjaxYydr1wlA2v67jxWG5BQ==}
+    engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
+    dependencies:
+      '@npmcli/node-gyp': 3.0.0
+      '@npmcli/promise-spawn': 6.0.2
+      node-gyp: 9.3.1
+      read-package-json-fast: 3.0.2
+      which: 3.0.0
+    transitivePeerDependencies:
+      - bluebird
+      - supports-color
+    dev: false
+    optional: true
+
+  /@npmcli/run-script@6.0.1:
+    resolution: {integrity: sha512-Yi04ZSold8jcbBJD/ahKMJSQCQifH8DAbMwkBvoLaTpGFxzHC3B/5ZyoVR69q/4xedz84tvi9DJOJjNe17h+LA==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
     dependencies:
       '@npmcli/node-gyp': 3.0.0
@@ -1521,15 +1537,6 @@ packages:
     dev: false
     optional: true
 
-  /aggregate-error@4.0.1:
-    resolution: {integrity: sha512-0poP0T7el6Vq3rstR8Mn4V/IQrpBLO6POkUSrN7RhyY+GF/InCFShQzsQ39T25gkHhLgSLByyAz+Kjb+c2L98w==}
-    engines: {node: '>=12'}
-    dependencies:
-      clean-stack: 4.2.0
-      indent-string: 5.0.0
-    dev: false
-    optional: true
-
   /ansi-escapes@6.1.0:
     resolution: {integrity: sha512-bQyg9bzRntwR/8b89DOEhGwctcwCrbWW/TuqTQnpqpy5Fz3aovcOTj5i8NJV6AHc8OGNdMaqdxAWww8pz2kiKg==}
     engines: {node: '>=14.16'}
@@ -1664,7 +1671,7 @@ packages:
       cmd-shim: 6.0.1
       npm-normalize-package-bin: 3.0.0
       read-cmd-shim: 4.0.0
-      write-file-atomic: 5.0.0
+      write-file-atomic: 5.0.1
     dev: false
     optional: true
 
@@ -1789,7 +1796,7 @@ packages:
       minipass-pipeline: 1.2.4
       p-map: 4.0.0
       promise-inflight: 1.0.1
-      ssri: 10.0.3
+      ssri: 10.0.4
       tar: 6.1.13
       unique-filename: 3.0.0
     transitivePeerDependencies:
@@ -1932,14 +1939,6 @@ packages:
   /clean-stack@2.2.0:
     resolution: {integrity: sha512-4diC9HaTE+KRAMWhDhrGOECgWZxoevMc5TlkObMqNSsVU62PYzXZ/SMTjzyGAFF1YusgxGcSWTEXBhp0CPwQ1A==}
     engines: {node: '>=6'}
-    dev: false
-    optional: true
-
-  /clean-stack@4.2.0:
-    resolution: {integrity: sha512-LYv6XPxoyODi36Dp976riBtSY27VmFo+MKqEU9QCCWyTrdEPDog+RWA7xQWHi6Vbp61j5c4cdzzX1NidnwtUWg==}
-    engines: {node: '>=12'}
-    dependencies:
-      escape-string-regexp: 5.0.0
     dev: false
     optional: true
 
@@ -3084,13 +3083,12 @@ packages:
     dev: false
     optional: true
 
-  /glob@10.2.1:
-    resolution: {integrity: sha512-ngom3wq2UhjdbmRE/krgkD8BQyi1KZ5l+D2dVm4+Yj+jJIBp74/ZGunL6gNGc/CYuQmvUBiavWEXIotRiv5R6A==}
+  /glob@10.2.2:
+    resolution: {integrity: sha512-Xsa0BcxIC6th9UwNjZkhrMtNo/MnyRL8jGCP+uEwhA5oFOCY1f2s1/oNKY47xQ0Bg5nkjsfAEIej1VeH62bDDQ==}
     engines: {node: '>=16 || 14 >=14.17'}
     hasBin: true
     dependencies:
       foreground-child: 3.1.1
-      fs.realpath: 1.0.0
       jackspeak: 2.0.3
       minimatch: 9.0.0
       minipass: 5.0.0
@@ -3352,12 +3350,6 @@ packages:
     dev: false
     optional: true
 
-  /indent-string@5.0.0:
-    resolution: {integrity: sha512-m6FAo/spmsW2Ab2fU35JTYwtOKa2yAwXSwgjSv1TJzh4Mh7mC3lzAOVLBprb72XsTrgkEIsl7YrFNAiDiRhIGg==}
-    engines: {node: '>=12'}
-    dev: false
-    optional: true
-
   /infer-owner@1.0.4:
     resolution: {integrity: sha512-IClj+Xz94+d7irH5qRyfJonOdfTzuDaifE6ZPWfx0N0+/ATZCbuTPq2prFl526urkQd90WyUKIh1DfBQ2hMz9A==}
     dev: false
@@ -3375,8 +3367,8 @@ packages:
   /ini@1.3.8:
     resolution: {integrity: sha512-JV/yugV2uzW5iMRSiZAyDtQd+nxtUnjeLt0acNdw98kKLrvuRVyB80tsREOE7yvGVgalhZ6RNXCmEHkUKBKxew==}
 
-  /inquirer@9.1.5:
-    resolution: {integrity: sha512-3ygAIh8gcZavV9bj6MTdYddG2zPSYswP808fKS46NOwlF0zZljVpnLCHODDqItWJDbDpLb3aouAxGaJbkxoppA==}
+  /inquirer@9.2.0:
+    resolution: {integrity: sha512-WWERbVqjsTXjXub1ZW0ZHDit1dyHqy0T9XIkky9TnmKAPrjU9Jkd59nZPK0dUuM3s73GZAZu2Jo4iFU3XSPVLA==}
     engines: {node: '>=14.18.0'}
     dependencies:
       ansi-escapes: 6.1.0
@@ -3623,6 +3615,13 @@ packages:
     dev: false
     optional: true
 
+  /json5@2.2.3:
+    resolution: {integrity: sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==}
+    engines: {node: '>=6'}
+    hasBin: true
+    dev: false
+    optional: true
+
   /jsonc-parser@2.3.1:
     resolution: {integrity: sha512-H8jvkz1O50L3dMZCsLqiuB2tA7muqbSg1AtGEkN0leAqGjsUzDJir3Zwr02BhqdcITPg3ei3mZ+HjMocAknhhg==}
     dev: false
@@ -3677,7 +3676,7 @@ packages:
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
     dependencies:
       npm-package-arg: 10.1.0
-      npm-registry-fetch: 14.0.4
+      npm-registry-fetch: 14.0.5
     transitivePeerDependencies:
       - bluebird
       - supports-color
@@ -3691,11 +3690,11 @@ packages:
       ci-info: 3.8.0
       normalize-package-data: 5.0.0
       npm-package-arg: 10.1.0
-      npm-registry-fetch: 14.0.4
+      npm-registry-fetch: 14.0.5
       proc-log: 3.0.0
       semver: 7.5.0
       sigstore: 1.3.2
-      ssri: 10.0.3
+      ssri: 10.0.4
     transitivePeerDependencies:
       - bluebird
       - supports-color
@@ -3853,7 +3852,7 @@ packages:
       negotiator: 0.6.3
       promise-retry: 2.0.1
       socks-proxy-agent: 7.0.0
-      ssri: 10.0.3
+      ssri: 10.0.4
     transitivePeerDependencies:
       - bluebird
       - supports-color
@@ -4414,12 +4413,12 @@ packages:
     dev: false
     optional: true
 
-  /npm-registry-fetch@14.0.4:
-    resolution: {integrity: sha512-pMS2DRkwg+M44ct65zrN/Cr9IHK1+n6weuefAo6Er4lc+/8YBCU0Czq04H3ZiSigluh7pb2rMM5JpgcytctB+Q==}
+  /npm-registry-fetch@14.0.5:
+    resolution: {integrity: sha512-kIDMIo4aBm6xg7jOttupWZamsZRkAqMqwqqbVXnUqstY5+tapvv6bkH/qMR76jdgV+YljEUCyWx3hRYMrJiAgA==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
     dependencies:
       make-fetch-happen: 11.0.3
-      minipass: 4.2.5
+      minipass: 5.0.0
       minipass-fetch: 3.0.1
       minipass-json-stream: 1.0.1
       minizlib: 2.1.2
@@ -4610,11 +4609,9 @@ packages:
     dev: false
     optional: true
 
-  /p-map@5.5.0:
-    resolution: {integrity: sha512-VFqfGDHlx87K66yZrNdI4YGtD70IRyd+zSvgks6mzHPRNkoKy+9EKP4SFC77/vTTQYmRmti7dvqC+m5jBrBAcg==}
-    engines: {node: '>=12'}
-    dependencies:
-      aggregate-error: 4.0.1
+  /p-map@6.0.0:
+    resolution: {integrity: sha512-T8BatKGY+k5rU+Q/GTYgrEf2r4xRMevAN5mtXc2aPc4rS1j3s+vWTaO2Wag94neXuCAUAs8cxBL9EeB5EA6diw==}
+    engines: {node: '>=16'}
     dev: false
     optional: true
 
@@ -4657,28 +4654,28 @@ packages:
     dev: false
     optional: true
 
-  /pacote@15.1.2:
-    resolution: {integrity: sha512-EAGJrMiIjBTBB6tWGrx9hFJTOo14B3HSAoa/W9SawFEBhUqjxN7qqaFlGVF9jfY/mIri8Mb2xafmkRgWxYXxIQ==}
+  /pacote@15.1.3:
+    resolution: {integrity: sha512-aRts8cZqxiJVDitmAh+3z+FxuO3tLNWEmwDRPEpDDiZJaRz06clP4XX112ynMT5uF0QNoMPajBBHnaStUEPJXA==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
     hasBin: true
     dependencies:
       '@npmcli/git': 4.0.4
       '@npmcli/installed-package-contents': 2.0.2
       '@npmcli/promise-spawn': 6.0.2
-      '@npmcli/run-script': 6.0.0
+      '@npmcli/run-script': 6.0.1
       cacache: 17.0.5
       fs-minipass: 3.0.1
-      minipass: 4.2.5
+      minipass: 5.0.0
       npm-package-arg: 10.1.0
       npm-packlist: 7.0.4
       npm-pick-manifest: 8.0.1
-      npm-registry-fetch: 14.0.4
+      npm-registry-fetch: 14.0.5
       proc-log: 3.0.0
       promise-retry: 2.0.1
-      read-package-json: 6.0.1
+      read-package-json: 6.0.3
       read-package-json-fast: 3.0.2
       sigstore: 1.3.2
-      ssri: 10.0.3
+      ssri: 10.0.4
       tar: 6.1.13
     transitivePeerDependencies:
       - bluebird
@@ -5016,11 +5013,11 @@ packages:
     dev: false
     optional: true
 
-  /read-package-json@6.0.1:
-    resolution: {integrity: sha512-AaHqXxfAVa+fNL07x8iAghfKOds/XXsu7zoouIVsbm7PEbQ3nMWXlvjcbrNLjElnUHWQtAo4QEa0RXuvD4XlpA==}
+  /read-package-json@6.0.3:
+    resolution: {integrity: sha512-4QbpReW4kxFgeBQ0vPAqh2y8sXEB3D4t3jsXbJKIhBiF80KT6XRo45reqwtftju5J6ru1ax06A2Gb/wM1qCOEQ==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
     dependencies:
-      glob: 9.3.4
+      glob: 10.2.2
       json-parse-even-better-errors: 3.0.0
       normalize-package-data: 5.0.0
       npm-normalize-package-bin: 3.0.0
@@ -5349,8 +5346,8 @@ packages:
     dev: false
     optional: true
 
-  /slash@5.0.0:
-    resolution: {integrity: sha512-n6KkmvKS0623igEVj3FF0OZs1gYYJ0o0Hj939yc1fyxl2xt+xYpLnzJB6xBSqOfV9ZFLEWodBBN/heZJahuIJQ==}
+  /slash@5.0.1:
+    resolution: {integrity: sha512-ywNzUOiXwetmLvTUiCBZpLi+vxqN3i+zDqjs2HHfUSV3wN4UJxVVKWrS1JZDeiJIeBFNgB5pmioC2g0IUTL+rQ==}
     engines: {node: '>=14.16'}
     dev: false
     optional: true
@@ -5438,11 +5435,11 @@ packages:
     dev: false
     optional: true
 
-  /ssri@10.0.3:
-    resolution: {integrity: sha512-lJtX/BFPI/VEtxZmLfeh7pzisIs6micwZ3eruD3+ds9aPsXKlYpwDS2Q7omD6WC42WO9+bnUSzlMmfv8uK8meg==}
+  /ssri@10.0.4:
+    resolution: {integrity: sha512-12+IR2CB2C28MMAw0Ncqwj5QbTcs0nGIhgJzYWzDkb21vWmfNI83KS4f3Ci6GI98WreIfG7o9UXp3C0qbpA8nQ==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
     dependencies:
-      minipass: 4.2.5
+      minipass: 5.0.0
     dev: false
     optional: true
 
@@ -5905,8 +5902,8 @@ packages:
     dev: false
     optional: true
 
-  /vite@4.3.3(@types/node@18.16.3):
-    resolution: {integrity: sha512-MwFlLBO4udZXd+VBcezo3u8mC77YQk+ik+fbc0GZWGgzfbPP+8Kf0fldhARqvSYmtIWoAJ5BXPClUbMTlqFxrA==}
+  /vite@4.3.4(@types/node@18.16.3):
+    resolution: {integrity: sha512-f90aqGBoxSFxWph2b39ae2uHAxm5jFBBdnfueNxZAT1FTpM13ccFQExCaKbR2xFW5atowjleRniQ7onjJ22QEg==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
     peerDependencies:
@@ -5973,7 +5970,7 @@ packages:
       tinybench: 2.4.0
       tinypool: 0.3.1
       tinyspy: 1.1.1
-      vite: 4.3.3(@types/node@18.16.3)
+      vite: 4.3.4(@types/node@18.16.3)
     transitivePeerDependencies:
       - less
       - sass
@@ -6187,12 +6184,12 @@ packages:
     dev: false
     optional: true
 
-  /write-file-atomic@5.0.0:
-    resolution: {integrity: sha512-R7NYMnHSlV42K54lwY9lvW6MnSm1HSJqZL3xiSgi9E7//FYaI74r2G0rd+/X6VAMkHEdzxQaU5HUOXWUz5kA/w==}
+  /write-file-atomic@5.0.1:
+    resolution: {integrity: sha512-+QU2zd6OTD8XWIJCbffaiQeH9U73qIqafo1x6V1snCWYGJf6cVE0cDR4D8xRzcEnfI21IFrUPzPGtcPf8AC+Rw==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
     dependencies:
       imurmurhash: 0.1.4
-      signal-exit: 3.0.7
+      signal-exit: 4.0.1
     dev: false
     optional: true
 
@@ -6283,6 +6280,21 @@ packages:
       string-width: 4.2.3
       y18n: 5.0.8
       yargs-parser: 21.1.1
+    dev: true
+
+  /yargs@17.7.2:
+    resolution: {integrity: sha512-7dSzzRQ++CKnNI/krKnYRV7JKKPUXMEh61soaHKg9mrWEhzFWhFnxPxGl+69cD1Ou63C13NUPCnmIcrvqCuM6w==}
+    engines: {node: '>=12'}
+    dependencies:
+      cliui: 8.0.1
+      escalade: 3.1.1
+      get-caller-file: 2.0.5
+      require-directory: 2.1.1
+      string-width: 4.2.3
+      y18n: 5.0.8
+      yargs-parser: 21.1.1
+    dev: false
+    optional: true
 
   /yauzl@2.10.0:
     resolution: {integrity: sha512-p4a9I6X6nu6IhoGmBqAcbJy1mlC4j27vEPZX9F4L4/vZT3Lyq1VkFHw/V/PUcB9Buo+DG3iHkT0x3Qya58zc3g==}
