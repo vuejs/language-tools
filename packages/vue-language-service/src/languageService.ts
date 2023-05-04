@@ -154,7 +154,7 @@ function resolvePlugins(
 						}
 					}
 					else if (item.textEdit?.newText && new RegExp(`import \\w*${suffix}\\$1 from [\\S\\s]*`).test(item.textEdit.newText)) {
-						// https://github.com/johnsoncodehk/volar/issues/2286
+						// https://github.com/vuejs/language-tools/issues/2286
 						item.textEdit.newText = item.textEdit.newText.replace(`${suffix}$1`, '$1');
 					}
 				}
@@ -284,7 +284,7 @@ function resolvePlugins(
 	return services;
 }
 
-// fix https://github.com/johnsoncodehk/volar/issues/916
+// fix https://github.com/vuejs/language-tools/issues/916
 function patchAdditionalTextEdits(uri: string, edits: vscode.TextEdit[]) {
 	if (
 		uri.endsWith('.vue.js')

@@ -6,13 +6,13 @@ Discord: https://discord.gg/5bnSSSSBbK
 
 ## Packages
 
-- [Vue Language Features](https://github.com/johnsoncodehk/volar/tree/master/packages/vscode-vue) \
+- [Vue Language Features](https://github.com/vuejs/language-tools/tree/master/packages/vscode-vue) \
 *Vue, Vitepress, petite-vue language support extension for VSCode*
-- [TypeScript Vue Plugin](https://github.com/johnsoncodehk/volar/tree/master/packages/vscode-typescript-vue-plugin) \
+- [TypeScript Vue Plugin](https://github.com/vuejs/language-tools/tree/master/packages/vscode-typescript-vue-plugin) \
 *VSCode extension to support Vue in TS server*
-- [vue-tsc](https://github.com/johnsoncodehk/volar/tree/master/packages/vue-tsc) \
+- [vue-tsc](https://github.com/vuejs/language-tools/tree/master/packages/vue-tsc) \
 *Type-check and dts build command line tool*
-- [vue-component-meta](https://github.com/johnsoncodehk/volar/tree/master/packages/vue-component-meta) \
+- [vue-component-meta](https://github.com/vuejs/language-tools/tree/master/packages/vue-component-meta) \
 *Component props, events, slots types information extract tool*
 - [vite-plugin-vue-component-preview](https://github.com/johnsoncodehk/vite-plugin-vue-component-preview) \
 *Vite plugin for support Vue component preview view with `Vue Language Features`*
@@ -24,7 +24,7 @@ Discord: https://discord.gg/5bnSSSSBbK
 
 [neovim/nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) ⚡ 🤝 \
 *Vue language server configuration for Neovim* \
-[[Multiple servers set up tutorial](https://github.com/johnsoncodehk/volar/discussions/606)]
+[[Multiple servers set up tutorial](https://github.com/vuejs/language-tools/discussions/606)]
 
 [mattn/vim-lsp-settings](https://github.com/mattn/vim-lsp-settings) ⚡ \
 *Vue language server auto configuration for vim-lsp*
@@ -47,8 +47,8 @@ Discord: https://discord.gg/5bnSSSSBbK
 [Kingwl/monaco-volar](https://github.com/Kingwl/monaco-volar) \
 *Vue language support for Monaco on Browser*
 
-\* ⚡ support [multiple servers](https://github.com/johnsoncodehk/volar/discussions/393#discussioncomment-1213736) \
-\* 🤝 support [take over mode](https://github.com/johnsoncodehk/volar/discussions/471) \
+\* ⚡ support [multiple servers](https://github.com/vuejs/language-tools/discussions/393#discussioncomment-1213736) \
+\* 🤝 support [take over mode](https://github.com/vuejs/language-tools/discussions/471) \
 \* 🅿️ support [extra preview features](https://twitter.com/johnsoncodehk/status/1507024137901916161)
 
 ## Contribution Guide
@@ -65,7 +65,7 @@ pnpm run build
 ```
 
 The recommended way to develop the volar extension is to use the [Debug Tools](https://code.visualstudio.com/Docs/editor/debugging) provided by VSCode.
-Alternatively, you can run one of the scripts defined in the [package.json](https://github.com/johnsoncodehk/volar/blob/master/package.json) file.
+Alternatively, you can run one of the scripts defined in the [package.json](https://github.com/vuejs/language-tools/blob/master/package.json) file.
 
 ❗ You should always use the debug launch configs or package.json scripts defined in the root of the project.
 
@@ -111,8 +111,8 @@ flowchart LR
 	VSC_VUE[vscode-vue]
 	VSC_TSVP[vscode-typescript-vue-plugin]
 
-	click VSC_VUE "https://github.com/johnsoncodehk/volar/tree/master/packages/vscode-vue"
-	click VSC_TSVP "https://github.com/johnsoncodehk/volar/tree/master/packages/vscode-typescript-vue-plugin"
+	click VSC_VUE "https://github.com/vuejs/language-tools/tree/master/packages/vscode-vue"
+	click VSC_TSVP "https://github.com/vuejs/language-tools/tree/master/packages/vscode-typescript-vue-plugin"
 
 	%% Volar - Packages
 	VOLAR_VUE_SERVER["@volar/vue-language-server"]
@@ -125,15 +125,15 @@ flowchart LR
 	VUE_COMPONENT_META[vue-component-meta]
 	TS_VUE_PLUGIN[typescript-vue-plugin]
 
-	click VOLAR_VUE_SERVER "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-language-server"
-	click VOLAR_VUE_TS "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-typescript"
-	click VOLAR_VUE_CORE "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-language-core"
-	click VOLAR_VUE_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-language-service"
-	click VUE_TSC "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-tsc"
-	click VUE_COMPONENT_META "https://github.com/johnsoncodehk/volar/tree/master/packages/vue-component-meta"
-	click TS_VUE_PLUGIN "https://github.com/johnsoncodehk/volar/tree/master/packages/typescript-vue-plugin"
-	click VOLAR_PUG_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/pug-language-service"
-	click VOLAR_TS_SERVICE "https://github.com/johnsoncodehk/volar/tree/master/packages/typescript-language-service"
+	click VOLAR_VUE_SERVER "https://github.com/vuejs/language-tools/tree/master/packages/vue-language-server"
+	click VOLAR_VUE_TS "https://github.com/vuejs/language-tools/tree/master/packages/vue-typescript"
+	click VOLAR_VUE_CORE "https://github.com/vuejs/language-tools/tree/master/packages/vue-language-core"
+	click VOLAR_VUE_SERVICE "https://github.com/vuejs/language-tools/tree/master/packages/vue-language-service"
+	click VUE_TSC "https://github.com/vuejs/language-tools/tree/master/packages/vue-tsc"
+	click VUE_COMPONENT_META "https://github.com/vuejs/language-tools/tree/master/packages/vue-component-meta"
+	click TS_VUE_PLUGIN "https://github.com/vuejs/language-tools/tree/master/packages/typescript-vue-plugin"
+	click VOLAR_PUG_SERVICE "https://github.com/vuejs/language-tools/tree/master/packages/pug-language-service"
+	click VOLAR_TS_SERVICE "https://github.com/vuejs/language-tools/tree/master/packages/typescript-language-service"
 
 	%% Extrnal Packages
 	HTML_SERVICE[vscode-html-languageservice]
@@ -162,8 +162,8 @@ flowchart LR
 	  VUE_CLIENT_SYNTACTIC[Syntactic Features]
 	end
 
-	click VUE_CLIENT_SEMANTIC "https://github.com/johnsoncodehk/volar/discussions/393#discussioncomment-1213736"
-	click VUE_CLIENT_SYNTACTIC "https://github.com/johnsoncodehk/volar/discussions/393#discussioncomment-1213736"
+	click VUE_CLIENT_SEMANTIC "https://github.com/vuejs/language-tools/discussions/393#discussioncomment-1213736"
+	click VUE_CLIENT_SYNTACTIC "https://github.com/vuejs/language-tools/discussions/393#discussioncomment-1213736"
 
 	subgraph Embedded Language Services
 	  direction LR
@@ -227,7 +227,7 @@ flowchart LR
 
 <p align="center">
 	<span>
-		<a href="https://stackblitz.com/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/HEAD/.github/sponsors/StackBlitz.png" height="80" /></a>
+		<a href="https://stackblitz.com/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/StackBlitz.png" height="80" /></a>
 		<h4 align="center">Just click, and start coding.</h4>
 	</span>
 </p>

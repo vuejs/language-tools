@@ -17,7 +17,7 @@
 				"extensions": {
 					"type": "array",
 					"default": [ ".vue" ],
-					"markdownDescription": "Valid file extensions that should be considered as regular Vue SFC, please note that you should not use this option separately for additional file extensions IDE support, see https://github.com/johnsoncodehk/volar/tree/master/packages/vscode-vue/README.md#custom-file-extensions."
+					"markdownDescription": "Valid file extensions that should be considered as regular Vue SFC, please note that you should not use this option separately for additional file extensions IDE support, see https://github.com/vuejs/language-tools/tree/master/packages/vscode-vue/README.md#custom-file-extensions."
 				},
 				"lib": {
 					"default": "",
@@ -35,7 +35,7 @@
 				},
 				"skipTemplateCodegen": {
 					"type": "boolean",
-					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/577"
+					"markdownDescription": "https://github.com/vuejs/language-tools/issues/577"
 				},
 				"dataAttributes": {
 					"type": "array",
@@ -54,7 +54,7 @@
 				},
 				"hooks": {
 					"type": "array",
-					"markdownDescription": "https://github.com/johnsoncodehk/volar/pull/2217"
+					"markdownDescription": "https://github.com/vuejs/language-tools/pull/2217"
 				},
 				"optionsWrapper": {
 					"type": "array",
@@ -80,12 +80,12 @@
 						"always",
 						"never"
 					],
-					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1038, https://github.com/johnsoncodehk/volar/issues/1121"
+					"markdownDescription": "https://github.com/vuejs/language-tools/issues/1038, https://github.com/vuejs/language-tools/issues/1121"
 				},
 				"experimentalUseElementAccessInTemplate": {
 					"type": "boolean",
 					"default": false,
-					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/997"
+					"markdownDescription": "https://github.com/vuejs/language-tools/issues/997"
 				},
 				"experimentalModelPropName": {
 					"type": "object",
@@ -99,11 +99,11 @@
 							"select": true
 						}
 					},
-					"markdownDescription": "https://github.com/johnsoncodehk/volar/issues/1969"
+					"markdownDescription": "https://github.com/vuejs/language-tools/issues/1969"
 				},
 				"experimentalAdditionalLanguageModules": {
 					"type": "array",
-					"markdownDescription": "https://github.com/johnsoncodehk/volar/pull/2267"
+					"markdownDescription": "https://github.com/vuejs/language-tools/pull/2267"
 				},
 				"experimentalDefinePropProposal": {
 					"enum": [

@@ -41,7 +41,7 @@ export function parseScriptSetupRanges(
 			&& !ts.isImportDeclaration(node)
 			&& !isTypeExport
 			&& !ts.isEmptyStatement(node)
-			// fix https://github.com/johnsoncodehk/volar/issues/1223
+			// fix https://github.com/vuejs/language-tools/issues/1223
 			&& !ts.isImportEqualsDeclaration(node)
 		) {
 			importSectionEndOffset = node.getStart(ast, true);

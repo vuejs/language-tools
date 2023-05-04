@@ -37,8 +37,8 @@ const capabilitiesPresets = {
 };
 const formatBrackets = {
 	normal: ['`${', '}`;'] as [string, string],
-	// fix https://github.com/johnsoncodehk/volar/issues/1210
-	// fix https://github.com/johnsoncodehk/volar/issues/2305
+	// fix https://github.com/vuejs/language-tools/issues/1210
+	// fix https://github.com/vuejs/language-tools/issues/2305
 	curly: ['0 +', '+ 0;'] as [string, string],
 	event: ['() => ', ';'] as [string, string],
 };
@@ -181,7 +181,7 @@ export function generate(
 
 			codes.push(
 				`& import('${sharedTypesImport}').WithComponent<'${varName}', typeof __VLS_components, `,
-				// order is important: https://github.com/johnsoncodehk/volar/issues/2010
+				// order is important: https://github.com/vuejs/language-tools/issues/2010
 				`"${capitalize(camelize(tagName))}", `,
 				`"${camelize(tagName)}", `,
 				`"${tagName}"`,
@@ -202,7 +202,7 @@ export function generate(
 			const tagOffsets = tagNames[tagName];
 			const tagRanges: [number, number][] = tagOffsets.map(offset => [offset, offset + tagName.length]);
 			const names = new Set([
-				// order is important: https://github.com/johnsoncodehk/volar/issues/2010
+				// order is important: https://github.com/vuejs/language-tools/issues/2010
 				capitalize(camelize(tagName)),
 				camelize(tagName),
 				tagName,
@@ -335,7 +335,7 @@ export function generate(
 			let leftCharacter: string;
 			let rightCharacter: string;
 
-			// fix https://github.com/johnsoncodehk/volar/issues/1787
+			// fix https://github.com/vuejs/language-tools/issues/1787
 			while ((leftCharacter = sourceTemplate.substring(start - 1, start)).trim() === '' && leftCharacter.length) {
 				start--;
 				content = leftCharacter + content;
@@ -620,7 +620,7 @@ export function generate(
 		}
 
 		//#region
-		// fix https://github.com/johnsoncodehk/volar/issues/1775
+		// fix https://github.com/vuejs/language-tools/issues/1775
 		for (const failedExp of propsFailedExps) {
 			codes.push(
 				...createInterpolationCode(
@@ -962,7 +962,7 @@ export function generate(
 			&& !prop.arg
 			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 		)) {
-			// fix https://github.com/johnsoncodehk/volar/issues/2166
+			// fix https://github.com/vuejs/language-tools/issues/2166
 			styleAttrNum++;
 			classAttrNum++;
 		}
@@ -1386,7 +1386,7 @@ export function generate(
 						{
 							...capabilitiesPresets.noDiagnostic,
 							completion: {
-								// fix https://github.com/johnsoncodehk/volar/issues/1905
+								// fix https://github.com/vuejs/language-tools/issues/1905
 								additional: true,
 							},
 							rename: {

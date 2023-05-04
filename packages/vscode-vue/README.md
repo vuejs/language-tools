@@ -6,7 +6,7 @@
 
 Vue Language Features is a language support extension built for Vue, Vitepress and petite-vue. this is based on [`@vue/reactivity`](https://www.npmjs.com/package/@vue/reactivity) to calculate everything on-demand, to implement native TypeScript language service level performance.
 
-[[Tips](https://github.com/johnsoncodehk/volar/issues/53)]
+[[Tips](https://github.com/vuejs/language-tools/issues/53)]
 
 ## Quick Start
 
@@ -14,7 +14,7 @@ Vue Language Features is a language support extension built for Vue, Vitepress a
 - [Vitesse](https://github.com/antfu/vitesse)
 - [petite](https://github.com/JessicaSachs/petite)
 - [vue3-eslint-stylelint-demo](https://github.com/sethidden/vue3-eslint-stylelint-demo) (Volar + ESLint + stylelint + husky)
-- [volar-starter](https://github.com/johnsoncodehk/volar-starter) (For bug report and experiment features testing)
+- [volar-starter](https://github.com/vuejs/language-tools-starter) (For bug report and experiment features testing)
 
 ## Usage
 
@@ -49,7 +49,7 @@ Here is a compatibility table for different ways of writing the script blocks:
 | `export default Vue.extend({ ... })` with JS | Not supported                             | Not supported                               | Not supported                       |
 | `export default Vue.extend({ ... })` with TS | Limited (supports `data` types but not `props` types) | Limited                         | Not supported                       |
 | `export default defineComponent({ ... })` | Supported                                    | Supported                                   | Supported                           |
-| Class component                          | Supported                                     | Supported with additional code ([#21](https://github.com/johnsoncodehk/volar/issues/21)) |  Supported with [additional code](https://github.com/johnsoncodehk/volar/pull/750#issuecomment-1023947885)     |
+| Class component                          | Supported                                     | Supported with additional code ([#21](https://github.com/vuejs/language-tools/issues/21)) |  Supported with [additional code](https://github.com/vuejs/language-tools/pull/750#issuecomment-1023947885)     |
 
 Note that you can use `defineComponent` even for components that are using the `Options API`.
 
@@ -130,8 +130,8 @@ If VSCode gives an error for `class` and `slot` like this:
 This is because one of the packages installed in your project uses `@types/react` which breaks some parts of Volar.
 
 Please see the following solutions:
-- https://github.com/johnsoncodehk/volar/discussions/592
-- https://github.com/johnsoncodehk/volar/discussions/592#discussioncomment-1763880
+- https://github.com/vuejs/language-tools/discussions/592
+- https://github.com/vuejs/language-tools/discussions/592#discussioncomment-1763880
 
 ### Recursive components
 
@@ -183,7 +183,7 @@ Finally you need to make VS Code recognize your new extension and automatically 
 - [angular](https://github.com/angular/angular) shows how TS server plugin working with language service.
 - Syntax highlight is rewritten base on [vue-syntax-highlight](https://github.com/vuejs/vue-syntax-highlight).
 - [vscode-fenced-code-block-grammar-injection-example](https://github.com/mjbvz/vscode-fenced-code-block-grammar-injection-example) shows how to inject vue syntax highlight to markdown.
-- Out of the box formatting working by (If you would like to use other formatters, checkout https://github.com/johnsoncodehk/volar-plugins):
+- Out of the box formatting working by (If you would like to use other formatters, checkout https://github.com/vuejs/language-tools-plugins):
   - [vscode-html-languageservice](https://github.com/microsoft/vscode-html-languageservice): html
   - [vscode-css-languageservice](https://github.com/microsoft/vscode-css-languageservice): css, less, scss, postcss
   - [pug-beautify](https://github.com/vingorius/pug-beautify): pug
@@ -196,7 +196,7 @@ Finally you need to make VS Code recognize your new extension and automatically 
 
 <p align="center">
 	<span>
-		<a href="https://stackblitz.com/"><img src="https://raw.githubusercontent.com/johnsoncodehk/volar/HEAD/.github/sponsors/StackBlitz.png" height="80" /></a>
+		<a href="https://stackblitz.com/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/StackBlitz.png" height="80" /></a>
 		<h4 align="center">Just click, and start coding.</h4>
 	</span>
 </p>

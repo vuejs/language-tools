@@ -15,7 +15,7 @@ export function compile(
 	options.onError = (error) => {
 		if (
 			error.code === CompilerDom.ErrorCodes.X_V_FOR_TEMPLATE_KEY_PLACEMENT // :key binding allowed in v-for template child in vue 2
-			|| error.code === CompilerDom.ErrorCodes.X_V_IF_SAME_KEY // fix https://github.com/johnsoncodehk/volar/issues/1638
+			|| error.code === CompilerDom.ErrorCodes.X_V_IF_SAME_KEY // fix https://github.com/vuejs/language-tools/issues/1638
 		) {
 			return;
 		}

@@ -130,7 +130,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 					'You can update `@types/node` to `18.11.1` or later to resolve.',
 					'',
 					'- @types/node: ' + typesNodeMod.path,
-					'- Issue: https://github.com/johnsoncodehk/volar/issues/1985',
+					'- Issue: https://github.com/vuejs/language-tools/issues/1985',
 				].join('\n'),
 			});
 		}

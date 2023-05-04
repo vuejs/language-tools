@@ -29,7 +29,7 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 
 			externalFiles.set(info.project, vueFileNames);
 
-			// fix: https://github.com/johnsoncodehk/volar/issues/205
+			// fix: https://github.com/vuejs/language-tools/issues/205
 			if (!(info.project as any).__vue_getScriptKind) {
 				(info.project as any).__vue_getScriptKind = info.project.getScriptKind;
 				info.project.getScriptKind = fileName => {
