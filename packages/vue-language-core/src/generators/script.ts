@@ -35,7 +35,7 @@ export function generate(
 	const codes: Segment<FileRangeCapabilities>[] = [];
 	const mirrorBehaviorMappings: SourceMaps.Mapping<[MirrorBehaviorCapabilities, MirrorBehaviorCapabilities]>[] = [];
 
-	//#region monkey fix: https://github.com/johnsoncodehk/volar/pull/2113
+	//#region monkey fix: https://github.com/vuejs/language-tools/pull/2113
 	const sfc = {
 		script: _sfc.script,
 		scriptSetup: _sfc.scriptSetup,
@@ -132,7 +132,7 @@ export function generate(
 			usedPrettify = true;
 		}
 		if (usedHelperTypes.ConstructorOverloads) {
-			// fix https://github.com/johnsoncodehk/volar/issues/926
+			// fix https://github.com/vuejs/language-tools/issues/926
 			codes.push('type __VLS_UnionToIntersection<U> = __VLS_Prettify<(U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never>;\n');
 			usedPrettify = true;
 			if (scriptSetupRanges && scriptSetupRanges.emitsTypeNums !== -1) {
@@ -277,7 +277,7 @@ export function generate(
 		if (!sfc.scriptSetup) {
 			return;
 		}
-		// fix https://github.com/johnsoncodehk/volar/issues/1127
+		// fix https://github.com/vuejs/language-tools/issues/1127
 		codes.push([
 			'',
 			'scriptSetup',
@@ -498,7 +498,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		addVirtualCode('scriptSetup', scriptSetupRanges.importSectionEndOffset);
 
 		if (scriptSetupRanges.propsTypeArg && scriptSetupRanges.withDefaultsArg) {
-			// fix https://github.com/johnsoncodehk/volar/issues/1187
+			// fix https://github.com/vuejs/language-tools/issues/1187
 			codes.push(`const __VLS_withDefaultsArg = (function <T>(t: T) { return t })(`);
 			addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.withDefaultsArg.start, scriptSetupRanges.withDefaultsArg.end);
 			codes.push(`);\n`);

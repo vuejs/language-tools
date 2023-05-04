@@ -103,7 +103,7 @@ export type EmitEvent<F, E> =
 		(...args: any): any
 		(...args: any): any
 	} ? (...payload: P) => void
-	: unknown | '[Type Warning] Volar could not infer $emit event more than 4 overloads without DefineComponent. see https://github.com/johnsoncodehk/volar/issues/60';
+	: unknown | '[Type Warning] Volar could not infer $emit event more than 4 overloads without DefineComponent. see https://github.com/vuejs/language-tools/issues/60';
 export declare function asFunctionalComponent<T, K = T extends new (...args: any) => any ? InstanceType<T> : unknown>(t: T, instance?: K):
 	T extends new (...args: any) => any
 	? (props: (K extends { $props: infer Props } ? Props : any)${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}, ctx?: {
@@ -135,7 +135,7 @@ export declare function componentProps<T, K>(comp: T, fnReturn: K):
 }
 
 // TODO: not working for overloads > n (n = 8)
-// see: https://github.com/johnsoncodehk/volar/issues/60
+// see: https://github.com/vuejs/language-tools/issues/60
 export function genConstructorOverloads(name = 'ConstructorOverloads', nums?: number) {
 	let code = '';
 	code += `type ${name}<T> =\n`;

@@ -45,7 +45,7 @@ export function createParsedCommandLine(
 		const proxyHost = proxyParseConfigHostForExtendConfigPaths(parseConfigHost);
 		const config = ts.readJsonConfigFile(tsConfigPath, proxyHost.host.readFile);
 		const content = ts.parseJsonSourceFileConfigFileContent(config, proxyHost.host, path.dirname(tsConfigPath), {}, tsConfigPath, undefined, extraFileExtensions);
-		// fix https://github.com/johnsoncodehk/volar/issues/1786
+		// fix https://github.com/vuejs/language-tools/issues/1786
 		// https://github.com/microsoft/TypeScript/issues/30457
 		// patching ts server broke with outDir + rootDir + composite/incremental
 		content.options.outDir = undefined;

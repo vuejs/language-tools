@@ -1,1 +1,1 @@
-For a full change history, refer to the [CHANGELOG](https://github.com/johnsoncodehk/volar/blob/master/CHANGELOG.md) on the Volar GitHub site.
+For a full change history, refer to the [CHANGELOG](https://github.com/vuejs/language-tools/blob/master/CHANGELOG.md) on the Volar GitHub site.

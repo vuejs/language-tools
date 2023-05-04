@@ -53,8 +53,8 @@ export function walkInterpolationFragment(
 
 		for (let i = 0; i < ctxVars.length - 1; i++) {
 
-			// fix https://github.com/johnsoncodehk/volar/issues/1205
-			// fix https://github.com/johnsoncodehk/volar/issues/1264
+			// fix https://github.com/vuejs/language-tools/issues/1205
+			// fix https://github.com/vuejs/language-tools/issues/1264
 			cb('', ctxVars[i + 1].offset, true);
 			if (vueOptions.experimentalUseElementAccessInTemplate) {
 				const varStart = ctxVars[i].offset;
@@ -161,17 +161,17 @@ function walkIdentifiers(
 	else if (ts.isObjectLiteralExpression(node)) {
 		for (const prop of node.properties) {
 			if (ts.isPropertyAssignment(prop)) {
-				// fix https://github.com/johnsoncodehk/volar/issues/1176
+				// fix https://github.com/vuejs/language-tools/issues/1176
 				if (ts.isComputedPropertyName(prop.name)) {
 					walkIdentifiers(ts, prop.name.expression, cb, localVars);
 				}
 				walkIdentifiers(ts, prop.initializer, cb, localVars);
 			}
-			// fix https://github.com/johnsoncodehk/volar/issues/1156
+			// fix https://github.com/vuejs/language-tools/issues/1156
 			else if (ts.isShorthandPropertyAssignment(prop)) {
 				walkIdentifiers(ts, prop, cb, localVars);
 			}
-			// fix https://github.com/johnsoncodehk/volar/issues/1148#issuecomment-1094378126
+			// fix https://github.com/vuejs/language-tools/issues/1148#issuecomment-1094378126
 			else if (ts.isSpreadAssignment(prop)) {
 				// TODO: cannot report "Spread types may only be created from object types.ts(2698)"
 				walkIdentifiers(ts, prop.expression, cb, localVars);
@@ -179,7 +179,7 @@ function walkIdentifiers(
 		}
 	}
 	else if (ts.isTypeReferenceNode(node)) {
-		// fix https://github.com/johnsoncodehk/volar/issues/1422
+		// fix https://github.com/vuejs/language-tools/issues/1422
 		node.forEachChild(node => walkIdentifiersInTypeReference(ts, node, cb));
 	}
 	else {

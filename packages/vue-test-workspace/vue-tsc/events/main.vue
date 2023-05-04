@@ -23,7 +23,7 @@
 	<C8 @click="exactType($event, {} as number)" />
 	<C8 :onClick="arg => exactType(arg, {} as number)" />
 
-	<!-- https://github.com/johnsoncodehk/volar/issues/1023 -->
+	<!-- https://github.com/vuejs/language-tools/issues/1023 -->
 	<!-- <C10 @foo-bar="exactType($event, {} as number)"></C10> -->
 
 	<!-- invalid component type don't fallback to native event type -->

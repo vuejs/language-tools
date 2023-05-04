@@ -87,7 +87,7 @@ function patchResolveModuleNames(
 	vueCompilerOptions: VueCompilerOptions,
 ) {
 	try {
-		// from https://github.com/johnsoncodehk/volar/pull/1543
+		// from https://github.com/vuejs/language-tools/pull/1543
 		if (!((ts as any).__vuePatchResolveModuleNames)) {
 			(ts as any).__vuePatchResolveModuleNames = true;
 			const resolveModuleNames = ts.resolveModuleName;
