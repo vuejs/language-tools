@@ -1,6 +1,6 @@
 {
 	"name": "typescript-vue-plugin",
-	"version": "1.6.3",
+	"version": "1.6.4",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -13,7 +13,7 @@
 		"directory": "packages/typescript-vue-plugin"
 	},
 	"dependencies": {
-		"@volar/vue-language-core": "1.6.3",
-		"@volar/vue-typescript": "1.6.3"
+		"@volar/vue-language-core": "1.6.4",
+		"@volar/vue-typescript": "1.6.4"
 	}
 }

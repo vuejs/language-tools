@@ -1,12 +1,20 @@
 # Changelog
 
-## 1.6.3 (2023/5/2)
+## 1.6.4 (2023/5/4)
 
-- feat: expose custom blocks attrs ([#3099](https://github.com/johnsoncodehk/volar/issues/3099))
-- fix: event "@update:" syntax causes TS error ([#3100](https://github.com/johnsoncodehk/volar/issues/3100))
-- fix: generic attr unexpectedly trimmed when formatting if attr value includes "<" ([#3101](https://github.com/johnsoncodehk/volar/issues/3101))
-- fix: required event props always shows in missing props hint
-- fix: exclude null / undefined from `v-for` source type ([#3102](https://github.com/johnsoncodehk/volar/issues/3102))
+- feat: support color pickers for inline css
+- feat: support `lang="vue"` ([#3105](https://github.com/johnsoncodehk/volar/issues/3105)) - thanks @HunYan-io
+- fix: when the source type of `v-for` is `any`, the item type should be `any` ([#3108](https://github.com/johnsoncodehk/volar/issues/3108)) ([#3112](https://github.com/johnsoncodehk/volar/issues/3112))
+- fix: avoid slots report error when `noPropertyAccessFromIndexSignature` enabled ([#3106](https://github.com/johnsoncodehk/volar/issues/3106))
+- fix(component-type-helpers): import module causes tsc error ([#3114](https://github.com/johnsoncodehk/volar/issues/3114))
+- fix: empty slot name auto-complete not working
+- fix: accessing an unknown slot name does not report an error
+- fix: format adds spaces to `v-for` if nested template element assigns type to slot props ([#2750](https://github.com/johnsoncodehk/volar/issues/2750)) ([#2757](https://github.com/johnsoncodehk/volar/issues/2757))
+- fix: parentheses auto insert not working in template
+
+**Breaking changes**
+
+- drop support for Vue 3.3 slots short definition ([#3116](https://github.com/johnsoncodehk/volar/issues/3116))
 
 ---
 
@@ -43,6 +51,14 @@
 		<a href="https://opencollective.com/volarjs">Open Collective</a>
 	</h5>
 </p>
+
+## 1.6.3 (2023/5/2)
+
+- feat: expose custom blocks attrs ([#3099](https://github.com/johnsoncodehk/volar/issues/3099)) - thanks @HunYan-io
+- fix: event "@update:" syntax causes TS error ([#3100](https://github.com/johnsoncodehk/volar/issues/3100))
+- fix: generic attr unexpectedly trimmed when formatting if attr value includes "<" ([#3101](https://github.com/johnsoncodehk/volar/issues/3101))
+- fix: required event props always shows in missing props hint
+- fix: exclude null / undefined from `v-for` source type ([#3102](https://github.com/johnsoncodehk/volar/issues/3102))
 
 ## 1.6.2 (2023/5/1)
 

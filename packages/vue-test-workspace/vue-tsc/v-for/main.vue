@@ -50,6 +50,12 @@
     {{ exactType(key, {} as string) }}
     {{ isNotAnyOrUndefined(key) }}
   </div>
+  <!-- any -->
+  <div v-for="(val, key) in _any">
+    {{ exactType(val, {} as any) }}
+    {{ exactType(key, {} as number) }}
+    {{ isNotAnyOrUndefined(key) }}
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -60,4 +66,5 @@ const map = new Map<string, number>();
 const obj = { a: '', b: 0 };
 const objUnion = { a: '' } as { a: string } | { a: string, b: number };
 const record: Record<string, string> = { a: '' };
+const _any = {} as any;
 </script>

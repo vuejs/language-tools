@@ -36,10 +36,11 @@ const capabilitiesPresets = {
 	refAttr: { references: true, definition: true, rename: true } satisfies FileRangeCapabilities,
 };
 const formatBrackets = {
-	normal: ['`${', '}`'] as [string, string],
+	normal: ['`${', '}`;'] as [string, string],
 	// fix https://github.com/johnsoncodehk/volar/issues/1210
 	// fix https://github.com/johnsoncodehk/volar/issues/2305
 	curly: ['0 +', '+ 0;'] as [string, string],
+	event: ['() => ', ';'] as [string, string],
 };
 const validTsVar = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 // @ts-ignore
@@ -62,6 +63,7 @@ type Code = Segment<FileRangeCapabilities>;
 
 export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
+	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
 	sourceTemplate: string,
 	sourceLang: string,
@@ -729,6 +731,7 @@ export function generate(
 				}
 			}
 			codes.push(
+				['', 'template', (slotDir.arg ?? slotDir).loc.start.offset, capabilitiesPresets.diagnosticOnly],
 				`${componentCtxVar}.slots!`,
 				...(
 					(slotDir?.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content)
@@ -738,8 +741,14 @@ export function generate(
 							slotDir.arg.loc.start.offset,
 							slotDir.arg.isStatic ? capabilitiesPresets.slotName : capabilitiesPresets.all
 						], slotDir.arg.loc)
-						: ['.default']
+						: createPropertyAccessCode([
+							'default',
+							'template',
+							[slotDir.loc.start.offset, slotDir.loc.start.offset + (slotDir.loc.source.startsWith('#') ? '#'.length : slotDir.loc.source.startsWith('v-slot:') ? 'v-slot:'.length : 0)],
+							capabilitiesPresets.slotName,
+						])
 				),
+				['', 'template', (slotDir.arg ?? slotDir).loc.end.offset, capabilitiesPresets.diagnosticOnly],
 			);
 			if (hasProps) {
 				codes.push(')');
@@ -761,19 +770,16 @@ export function generate(
 				isStatic = slotDir.arg.isStatic;
 			}
 			if (isStatic && slotDir && !slotDir.arg) {
-				let offset = slotDir.loc.start.offset;
-				if (slotDir.loc.source.startsWith('#'))
-					offset += '#'.length;
-				else if (slotDir.loc.source.startsWith('v-slot:'))
-					offset += 'v-slot:'.length;
-				codes.push(`'`);
-				codes.push([
-					'',
-					'template',
-					offset,
-					{ completion: true },
-				]);
-				codes.push(`'/* empty slot name completion */\n`);
+				codes.push(
+					`${componentCtxVar}.slots!['`,
+					[
+						'',
+						'template',
+						slotDir.loc.start.offset + (slotDir.loc.source.startsWith('#') ? '#'.length : slotDir.loc.source.startsWith('v-slot:') ? 'v-slot:'.length : 0),
+						{ completion: true },
+					],
+					`'/* empty slot name completion */]\n`,
+				);
 			}
 			codes.push(`}\n`);
 		}
@@ -934,7 +940,7 @@ export function generate(
 						...createFormatCode(
 							prop.exp.content,
 							prop.exp.loc.start.offset,
-							formatBrackets.normal,
+							isCompoundExpression ? formatBrackets.event : formatBrackets.normal,
 						),
 					);
 				}
@@ -1767,7 +1773,7 @@ export function generate(
 
 	function createPropertyAccessCode(a: Code, astHolder?: any): Code[] {
 		const aStr = typeof a === 'string' ? a : a[0];
-		if (validTsVar.test(aStr)) {
+		if (!compilerOptions.noPropertyAccessFromIndexSignature && validTsVar.test(aStr)) {
 			return ['.', a];
 		}
 		else if (aStr.startsWith('[') && aStr.endsWith(']')) {

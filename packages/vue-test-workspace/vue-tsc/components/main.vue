@@ -6,7 +6,6 @@ import ScriptSetupExpose from './script-setup-expose.vue';
 import ScriptSetupTypeOnly from './script-setup-type-only.vue';
 import ScriptSetupDefaultProps from './script-setup-default-props.vue';
 import ScriptSetupGeneric from './script-setup-generic.vue';
-import ShortDefineSlots from './short-define-slots.vue';
 
 // https://vuejs.org/api/sfc-script-setup.html#defineprops-defineemits
 const ScriptSetupExact = defineComponent({
@@ -80,10 +79,4 @@ exactType(ScriptSetupExpose, ScriptSetupExposeExact);
 exactType(ScriptSetupTypeOnly, ScriptSetupTypeOnlyExact);
 exactType(ScriptSetupDefaultProps, ScriptSetupDefaultPropsExact);
 exactType(ScriptSetupGeneric, ScriptSetupGenericExact);
-exactType((new ShortDefineSlots()).$slots.foo, {} as ((props: {
-	id: string;
-} | undefined) => any) | undefined);
-exactType((new ShortDefineSlots()).$slots.bar, {} as ((props: {
-	id: number;
-}) => any) | undefined);
 </script>

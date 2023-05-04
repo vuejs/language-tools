@@ -414,7 +414,14 @@ export class VueFile implements VirtualFile {
 			if (block) {
 				muggle.replaceSourceRange(
 					str, undefined, block.startTagEnd, block.endTagStart,
-					[block.content, undefined, block.startTagEnd, {}],
+					[
+						block.content,
+						undefined,
+						block.startTagEnd,
+						block.name === 'template'
+							? { completion: true } // fix vue-autoinsert-parentheses not working
+							: {},
+					],
 				);
 			}
 		}
