@@ -133,8 +133,8 @@ export function createProgram(options: ts.CreateProgramOptions) {
 		ctx.projectVersion++;
 	}
 
-	const vueCompilerOptions = program.__vue.languageServiceHost.getVueCompilationSettings() ?? vue.resolveVueCompilerOptions({});
-	if (vueCompilerOptions.hooks) {
+	const vueCompilerOptions = program.__vue.languageServiceHost.getVueCompilationSettings();
+	if (vueCompilerOptions?.hooks) {
 		const index = (state.hook?.index ?? -1) + 1;
 		if (index < vueCompilerOptions.hooks.length) {
 			const hookPath = vueCompilerOptions.hooks[index];
