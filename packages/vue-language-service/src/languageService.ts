@@ -30,18 +30,17 @@ export interface Settings {
 }
 
 export function resolveConfig(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
 	config: Config, // volar.config.js
-	compilerOptions: ts.CompilerOptions,
-	vueCompilerOptions: Partial<VueCompilerOptions>,
+	compilerOptions: ts.CompilerOptions = {},
+	vueCompilerOptions = vue.resolveVueCompilerOptions({}),
 	settings?: Settings,
+	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
 ) {
 
-	const resolvedVueOptions = vue.resolveVueCompilerOptions(vueCompilerOptions);
-	const vueLanguageModules = vue.createLanguages(ts, compilerOptions, resolvedVueOptions);
+	const vueLanguageModules = vue.createLanguages(ts, compilerOptions, vueCompilerOptions);
 
 	config.languages = Object.assign({}, vueLanguageModules, config.languages);
-	config.services = resolvePlugins(config.services, resolvedVueOptions, settings);
+	config.services = resolvePlugins(config.services, vueCompilerOptions, settings);
 
 	return config;
 }

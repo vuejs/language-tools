@@ -80,7 +80,7 @@ function createTester(root: string) {
 				},
 			},
 		},
-		resolveConfig(ts as any, {}, {}, {}),
+		resolveConfig({}),
 		host,
 	);
 
