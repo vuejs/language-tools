@@ -1,5 +1,5 @@
 {
-	"name": "@volar/vue-language-plugin-pug",
+	"name": "@vue/language-plugin-pug",
 	"version": "1.6.4",
 	"main": "out/index.js",
 	"license": "MIT",

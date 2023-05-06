@@ -29,7 +29,7 @@
 			"@volar/vue-language-core": [
 				"packages/vue-language-core/src"
 			],
-			"@volar/vue-language-plugin-pug": [
+			"@vue/language-plugin-pug": [
 				"packages/vue-language-plugin-pug/src"
 			],
 			"@vue/language-server": [
