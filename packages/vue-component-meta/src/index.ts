@@ -17,12 +17,6 @@ import type {
 
 export * from './types';
 
-const extraFileExtensions: ts.FileExtensionInfo[] = [{
-	extension: 'vue',
-	isMixedContent: true,
-	scriptKind: 7 /* ts.ScriptKind.Deferred */,
-}];
-
 export type ComponentMetaChecker = ReturnType<typeof baseCreate>;
 
 export function createComponentMetaCheckerByJsonConfig(
@@ -32,7 +26,7 @@ export function createComponentMetaCheckerByJsonConfig(
 	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
 ) {
 	return createComponentMetaCheckerWorker(
-		() => vue.createParsedCommandLineByJson(ts, ts.sys, root, json, extraFileExtensions),
+		() => vue.createParsedCommandLineByJson(ts, ts.sys, root, json),
 		checkerOptions,
 		path.join((root as path.OsPath).replace(/\\/g, '/') as path.PosixPath, 'jsconfig.json.global.vue' as path.PosixPath),
 		ts,
@@ -45,7 +39,7 @@ export function createComponentMetaChecker(
 	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
 ) {
 	return createComponentMetaCheckerWorker(
-		() => vue.createParsedCommandLine(ts, ts.sys, tsconfigPath, extraFileExtensions),
+		() => vue.createParsedCommandLine(ts, ts.sys, tsconfigPath),
 		checkerOptions,
 		(tsconfigPath as path.OsPath).replace(/\\/g, '/') as path.PosixPath + '.global.vue',
 		ts,
@@ -156,7 +150,7 @@ export function baseCreate(
 			return _host[prop as keyof typeof _host];
 		},
 	}) as vue.VueLanguageServiceHost;
-	const vueCompilerOptions = vue.resolveVueCompilerOptions(host.getVueCompilationSettings());
+	const vueCompilerOptions = host.getVueCompilationSettings() ?? vue.resolveVueCompilerOptions({});
 	const vueLanguages = ts ? vue.createLanguages(
 		ts,
 		host.getCompilationSettings(),

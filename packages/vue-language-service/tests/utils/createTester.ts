@@ -45,7 +45,7 @@ function createTester(root: string) {
 		getCompilationSettings: () => parsedCommandLine.options,
 		getScriptVersion,
 		getScriptSnapshot,
-		getVueCompilationSettings: () => ({}),
+		getVueCompilationSettings: () => undefined,
 	};
 	const defaultVSCodeSettings: any = {
 		'typescript.preferences.quoteStyle': 'single',

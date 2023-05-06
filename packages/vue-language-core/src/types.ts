@@ -7,9 +7,9 @@ import { VueEmbeddedFile } from './sourceFile';
 
 export type { SFCParseResult } from '@vue/compiler-sfc';
 
-export type VueLanguageServiceHost = embedded.LanguageServiceHost & {
-	getVueCompilationSettings(): Partial<VueCompilerOptions>,
-};
+export interface VueLanguageServiceHost extends embedded.LanguageServiceHost {
+	getVueCompilationSettings(): VueCompilerOptions | undefined;
+}
 
 export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 'plugins'>> & {
 	target?: 'auto' | 2 | 2.7 | 3 | 3.3;

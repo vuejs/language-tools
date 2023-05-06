@@ -20,7 +20,7 @@ export function createServerPlugin(connection: Connection) {
 
 		const ts = modules.typescript;
 		const vueFileExtensions: string[] = ['vue'];
-		const hostToVueOptions = new WeakMap<embedded.LanguageServiceHost, Partial<VueCompilerOptions>>();
+		const hostToVueOptions = new WeakMap<embedded.LanguageServiceHost, VueCompilerOptions>();
 
 		if (initOptions.additionalExtensions) {
 			for (const additionalExtension of initOptions.additionalExtensions) {
@@ -51,18 +51,21 @@ export function createServerPlugin(connection: Connection) {
 				function getVueCompilerOptions() {
 
 					const ts = modules.typescript;
-					if (!ts) {
-						return {};
+
+					let vueOptions: vue.VueCompilerOptions;
+
+					if (typeof ctx?.project.tsConfig === 'string' && ts) {
+						vueOptions = vue2.createParsedCommandLine(ts, ctx.sys, ctx.project.tsConfig).vueOptions;
 					}
-
-					let vueOptions: Partial<vue.VueCompilerOptions> = {};
-
-					if (typeof ctx?.project.tsConfig === 'string') {
-						vueOptions = vue2.createParsedCommandLine(ts, ctx.sys, ctx.project.tsConfig, []).vueOptions;
+					else if (typeof ctx?.project.tsConfig === 'object' && ts) {
+						vueOptions = vue2.createParsedCommandLineByJson(ts, ctx.sys, ctx.host.getCurrentDirectory(), ctx.project.tsConfig).vueOptions;
+					}
+					else {
+						vueOptions = vue2.resolveVueCompilerOptions({});
 					}
 
 					vueOptions.extensions = [
-						...vueOptions.extensions ?? ['.vue'],
+						...vueOptions.extensions,
 						...vueFileExtensions.map(ext => '.' + ext),
 					];
 					vueOptions.extensions = [...new Set(vueOptions.extensions)];
@@ -132,7 +135,7 @@ export function createServerPlugin(connection: Connection) {
 						checker = componentMeta.baseCreate(
 							{
 								...languageService.context.host,
-								getVueCompilationSettings: () => hostToVueOptions.get(languageService.context.host) ?? {},
+								getVueCompilationSettings: () => hostToVueOptions.get(languageService.context.host)!,
 							},
 							{},
 							languageService.context.host.getCurrentDirectory() + '/tsconfig.json.global.vue',

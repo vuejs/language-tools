@@ -15,12 +15,7 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 				return info.languageService;
 			}
 
-			const extraFileExtensions: ts.FileExtensionInfo[] = [{
-				extension: 'vue',
-				isMixedContent: true,
-				scriptKind: ts.ScriptKind.Deferred,
-			}];
-			const parsed = vue.createParsedCommandLine(ts, ts.sys, projectName, extraFileExtensions);
+			const parsed = vue.createParsedCommandLine(ts, ts.sys, projectName);
 			const vueFileNames = parsed.fileNames.filter(fileName => fileName.endsWith('.vue'));
 			if (!vueFileNames.length) {
 				// no vue file

@@ -5,11 +5,12 @@ import { VueFile } from './sourceFile';
 import { VueCompilerOptions } from './types';
 import * as sharedTypes from './utils/directorySharedTypes';
 import type * as ts from 'typescript/lib/tsserverlibrary';
+import { resolveVueCompilerOptions } from './utils/ts';
 
 export function createLanguages(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	compilerOptions: ts.CompilerOptions,
-	vueCompilerOptions: VueCompilerOptions,
+	vueCompilerOptions = resolveVueCompilerOptions({}),
 ): Language[] {
 
 	patchResolveModuleNames(ts, vueCompilerOptions);

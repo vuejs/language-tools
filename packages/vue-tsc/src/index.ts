@@ -88,12 +88,11 @@ export function createProgram(options: ts.CreateProgramOptions) {
 		program = vueTsLs.getProgram() as (ts.Program & { __vue: ProgramContext; });
 		program.__vue = ctx;
 
-		function getVueCompilerOptions(): Partial<vue.VueCompilerOptions> {
+		function getVueCompilerOptions(): vue.VueCompilerOptions | undefined {
 			const tsConfig = ctx.options.options.configFilePath;
 			if (typeof tsConfig === 'string') {
-				return vue.createParsedCommandLine(ts as any, ts.sys, tsConfig, []).vueOptions;
+				return vue.createParsedCommandLine(ts as any, ts.sys, tsConfig).vueOptions;
 			}
-			return {};
 		}
 		function getScriptVersion(fileName: string) {
 			return getScript(fileName)?.version ?? '';
@@ -134,7 +133,7 @@ export function createProgram(options: ts.CreateProgramOptions) {
 		ctx.projectVersion++;
 	}
 
-	const vueCompilerOptions = program.__vue.languageServiceHost.getVueCompilationSettings();
+	const vueCompilerOptions = program.__vue.languageServiceHost.getVueCompilationSettings() ?? vue.resolveVueCompilerOptions({});
 	if (vueCompilerOptions.hooks) {
 		const index = (state.hook?.index ?? -1) + 1;
 		if (index < vueCompilerOptions.hooks.length) {

@@ -3,7 +3,7 @@ import * as path from 'path';
 import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
 
 export type ParsedCommandLine = ts.ParsedCommandLine & {
-	vueOptions: Partial<VueCompilerOptions>;
+	vueOptions: VueCompilerOptions;
 };
 
 export function createParsedCommandLineByJson(
@@ -11,12 +11,11 @@ export function createParsedCommandLineByJson(
 	parseConfigHost: ts.ParseConfigHost,
 	rootDir: string,
 	json: any,
-	extraFileExtensions: ts.FileExtensionInfo[],
 ): ParsedCommandLine {
 
 	const tsConfigPath = path.join(rootDir, 'jsconfig.json');
 	const proxyHost = proxyParseConfigHostForExtendConfigPaths(parseConfigHost);
-	const content = ts.parseJsonConfigFileContent(json, proxyHost.host, rootDir, {}, tsConfigPath, undefined, extraFileExtensions);
+	ts.parseJsonConfigFileContent(json, proxyHost.host, rootDir, {}, tsConfigPath);
 
 	let vueOptions: Partial<VueCompilerOptions> = {};
 
@@ -24,14 +23,22 @@ export function createParsedCommandLineByJson(
 		try {
 			vueOptions = {
 				...vueOptions,
-				...getVueCompilerOptions(ts, ts.readJsonConfigFile(extendPath, proxyHost.host.readFile)),
+				...getPartialVueCompilerOptions(ts, ts.readJsonConfigFile(extendPath, proxyHost.host.readFile)),
 			};
 		} catch (err) { }
 	}
 
+	const resolvedVueOptions = resolveVueCompilerOptions(vueOptions);
+	const parsed = ts.parseJsonConfigFileContent(json, proxyHost.host, path.dirname(tsConfigPath), {}, tsConfigPath, undefined, resolvedVueOptions.extensions.map(extension => ({ extension, isMixedContent: true, scriptKind: ts.ScriptKind.Deferred })));
+
+	// fix https://github.com/vuejs/language-tools/issues/1786
+	// https://github.com/microsoft/TypeScript/issues/30457
+	// patching ts server broke with outDir + rootDir + composite/incremental
+	parsed.options.outDir = undefined;
+
 	return {
-		...content,
-		vueOptions,
+		...parsed,
+		vueOptions: resolvedVueOptions,
 	};
 }
 
@@ -39,16 +46,11 @@ export function createParsedCommandLine(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	parseConfigHost: ts.ParseConfigHost,
 	tsConfigPath: string,
-	extraFileExtensions: ts.FileExtensionInfo[],
 ): ParsedCommandLine {
 	try {
 		const proxyHost = proxyParseConfigHostForExtendConfigPaths(parseConfigHost);
 		const config = ts.readJsonConfigFile(tsConfigPath, proxyHost.host.readFile);
-		const content = ts.parseJsonSourceFileConfigFileContent(config, proxyHost.host, path.dirname(tsConfigPath), {}, tsConfigPath, undefined, extraFileExtensions);
-		// fix https://github.com/vuejs/language-tools/issues/1786
-		// https://github.com/microsoft/TypeScript/issues/30457
-		// patching ts server broke with outDir + rootDir + composite/incremental
-		content.options.outDir = undefined;
+		ts.parseJsonSourceFileConfigFileContent(config, proxyHost.host, path.dirname(tsConfigPath), {}, tsConfigPath);
 
 		let vueOptions: Partial<VueCompilerOptions> = {};
 
@@ -56,14 +58,22 @@ export function createParsedCommandLine(
 			try {
 				vueOptions = {
 					...vueOptions,
-					...getVueCompilerOptions(ts, ts.readJsonConfigFile(extendPath, proxyHost.host.readFile)),
+					...getPartialVueCompilerOptions(ts, ts.readJsonConfigFile(extendPath, proxyHost.host.readFile)),
 				};
 			} catch (err) { }
 		}
 
+		const resolvedVueOptions = resolveVueCompilerOptions(vueOptions);
+		const parsed = ts.parseJsonSourceFileConfigFileContent(config, proxyHost.host, path.dirname(tsConfigPath), {}, tsConfigPath, undefined, resolvedVueOptions.extensions.map(extension => ({ extension, isMixedContent: true, scriptKind: ts.ScriptKind.Deferred })));
+
+		// fix https://github.com/vuejs/language-tools/issues/1786
+		// https://github.com/microsoft/TypeScript/issues/30457
+		// patching ts server broke with outDir + rootDir + composite/incremental
+		parsed.options.outDir = undefined;
+
 		return {
-			...content,
-			vueOptions,
+			...parsed,
+			vueOptions: resolvedVueOptions,
 		};
 	}
 	catch (err) {
@@ -71,7 +81,7 @@ export function createParsedCommandLine(
 		return {
 			fileNames: [],
 			options: {},
-			vueOptions: {},
+			vueOptions: resolveVueCompilerOptions({}),
 			errors: [],
 		};
 	}
@@ -98,7 +108,7 @@ function proxyParseConfigHostForExtendConfigPaths(parseConfigHost: ts.ParseConfi
 	};
 }
 
-function getVueCompilerOptions(
+function getPartialVueCompilerOptions(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsConfigSourceFile: ts.TsConfigSourceFile,
 ): Partial<VueCompilerOptions> {
