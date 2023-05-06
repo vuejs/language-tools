@@ -1,6 +1,6 @@
 import createHtmlPlugin from 'volar-service-html';
 import { FileRangeCapabilities, Service, SourceMapWithDocuments } from '@volar/language-service';
-import * as vue from '@volar/vue-language-core';
+import * as vue from '@vue/language-core';
 import { hyphenate, capitalize, camelize } from '@vue/shared';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';

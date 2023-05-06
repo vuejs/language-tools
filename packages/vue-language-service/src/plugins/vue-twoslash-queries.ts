@@ -1,5 +1,5 @@
 import { FileKind, forEachEmbeddedFile, Service } from '@volar/language-service';
-import * as vue from '@volar/vue-language-core';
+import * as vue from '@vue/language-core';
 import * as vscode from 'vscode-languageserver-protocol';
 
 const plugin: Service = (context, modules) => {

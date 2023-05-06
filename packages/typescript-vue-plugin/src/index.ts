@@ -1,4 +1,4 @@
-import * as vue from '@volar/vue-language-core';
+import * as vue from '@vue/language-core';
 import * as vueTs from '@volar/vue-typescript';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 

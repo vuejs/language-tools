@@ -34,7 +34,7 @@ require('esbuild').build({
 		require('esbuild-plugin-copy').copy({
 			resolveFrom: 'cwd',
 			assets: {
-				from: ['./node_modules/@volar/vue-language-core/schemas/**/*'],
+				from: ['./node_modules/@vue/language-core/schemas/**/*'],
 				to: ['./dist/schemas'],
 			},
 			keepStructure: true,

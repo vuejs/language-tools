@@ -18,7 +18,7 @@
 	"dependencies": {
 		"@volar/language-core": "1.5.3",
 		"@volar/language-server": "1.5.3",
-		"@volar/vue-language-core": "1.6.4",
+		"@vue/language-core": "1.6.4",
 		"@vue/language-service": "1.6.4",
 		"vscode-languageserver-protocol": "^3.17.3",
 		"vue-component-meta": "1.6.4"

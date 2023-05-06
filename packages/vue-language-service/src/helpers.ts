@@ -1,8 +1,8 @@
-import * as vue from '@volar/vue-language-core';
+import * as vue from '@vue/language-core';
 import * as embedded from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { computed, ComputedRef } from '@vue/reactivity';
-import { sharedTypes } from '@volar/vue-language-core';
+import { sharedTypes } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 
 import type * as ts from 'typescript/lib/tsserverlibrary';

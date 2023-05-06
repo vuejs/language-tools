@@ -1,7 +1,7 @@
 import { hyphenate } from '@vue/shared';
 import { ServiceContext, VirtualFile } from '@volar/language-service';
 import { checkComponentNames, getTemplateTagsAndAttrs, checkPropsOfTag, checkNativeTags } from '../helpers';
-import * as vue from '@volar/vue-language-core';
+import * as vue from '@vue/language-core';
 import * as vscode from 'vscode-languageserver-protocol';
 import { AttrNameCasing, TagNameCasing } from '../types';
 

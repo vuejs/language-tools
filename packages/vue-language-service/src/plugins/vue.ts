@@ -3,7 +3,7 @@ import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import createHtmlPlugin from 'volar-service-html';
-import * as vue from '@volar/vue-language-core';
+import * as vue from '@vue/language-core';
 import { loadLanguageBlocks } from './data';
 
 let sfcDataProvider: html.IHTMLDataProvider | undefined;
