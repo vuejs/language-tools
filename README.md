@@ -118,7 +118,7 @@ flowchart LR
 	VOLAR_VUE_SERVER["@vue/language-server"]
 	VOLAR_VUE_TS["@volar/vue-typescript"]
 	VOLAR_VUE_CORE["@volar/vue-language-core"]
-	VOLAR_VUE_SERVICE["@volar/vue-language-service"]
+	VOLAR_VUE_SERVICE["@vue/language-service"]
 	VOLAR_PUG_SERVICE["@volar/pug-language-service"]
 	VOLAR_TS_SERVICE["@volar/typescript-language-service"]
 	VUE_TSC[vue-tsc]

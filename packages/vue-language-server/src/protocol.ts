@@ -1,5 +1,5 @@
 import * as vscode from 'vscode-languageserver-protocol';
-import { TagNameCasing, AttrNameCasing, SFCParseResult } from '@volar/vue-language-service';
+import { TagNameCasing, AttrNameCasing, SFCParseResult } from '@vue/language-service';
 import { ComponentMeta } from 'vue-component-meta';
 
 export namespace GetComponentMeta {

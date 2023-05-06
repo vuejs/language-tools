@@ -1,5 +1,5 @@
 {
-	"name": "@volar/vue-language-service",
+	"name": "@vue/language-service",
 	"version": "1.6.4",
 	"main": "out/index.js",
 	"license": "MIT",

@@ -178,7 +178,7 @@ importers:
       '@volar/vue-language-core':
         specifier: 1.6.4
         version: link:../vue-language-core
-      '@volar/vue-language-service':
+      '@vue/language-service':
         specifier: 1.6.4
         version: link:../vue-language-service
       vscode-languageserver-protocol:

@@ -35,7 +35,7 @@
 			"@vue/language-server": [
 				"packages/vue-language-server/src"
 			],
-			"@volar/vue-language-service": [
+			"@vue/language-service": [
 				"packages/vue-language-service/src"
 			],
 			"vue-tsc": [
