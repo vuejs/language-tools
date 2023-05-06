@@ -25,7 +25,7 @@
 		"@volar/language-service": "1.5.3",
 		"typescript": "latest",
 		"vite": "latest",
-		"vitest": "0.25.8"
+		"vitest": "latest"
 	},
 	"optionalDependencies": {
 		"@lerna-lite/cli": "latest",
