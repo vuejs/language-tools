@@ -115,7 +115,7 @@ flowchart LR
 	click VSC_TSVP "https://github.com/vuejs/language-tools/tree/master/packages/vscode-typescript-vue-plugin"
 
 	%% Volar - Packages
-	VOLAR_VUE_SERVER["@volar/vue-language-server"]
+	VOLAR_VUE_SERVER["@vue/language-server"]
 	VOLAR_VUE_TS["@volar/vue-typescript"]
 	VOLAR_VUE_CORE["@volar/vue-language-core"]
 	VOLAR_VUE_SERVICE["@volar/vue-language-service"]

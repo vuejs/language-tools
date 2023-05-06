@@ -4,7 +4,7 @@ const fs = require('fs');
 require('esbuild').build({
 	entryPoints: {
 		client: './out/nodeClientMain.js',
-		server: './node_modules/@volar/vue-language-server/out/nodeServer.js',
+		server: './node_modules/@vue/language-server/out/nodeServer.js',
 	},
 	bundle: true,
 	metafile: process.argv.includes('--metafile'),

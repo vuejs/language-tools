@@ -1,4 +1,4 @@
-import { AttrNameCasing, TagNameCasing } from '@volar/vue-language-server';
+import { AttrNameCasing, TagNameCasing } from '@vue/language-server';
 import { middleware as baseMiddleware } from '@volar/vscode';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient';

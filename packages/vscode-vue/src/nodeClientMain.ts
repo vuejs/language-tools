@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient/node';
 import { activate as commonActivate, deactivate as commonDeactivate, getDocumentSelector } from './common';
 import { middleware } from './middleware';
-import { ServerMode } from '@volar/vue-language-server';
+import { ServerMode } from '@vue/language-server';
 import { config } from './config';
 
 export function activate(context: vscode.ExtensionContext) {

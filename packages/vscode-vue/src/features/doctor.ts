@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as semver from 'semver';
 import { BaseLanguageClient } from 'vscode-languageclient';
-import { ParseSFCRequest } from '@volar/vue-language-server';
+import { ParseSFCRequest } from '@vue/language-server';
 import { getTsdk } from '@volar/vscode';
 import { config } from '../config';
 

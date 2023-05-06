@@ -72,7 +72,7 @@ importers:
       '@volar/vue-language-core':
         specifier: 1.6.4
         version: link:../vue-language-core
-      '@volar/vue-language-server':
+      '@vue/language-server':
         specifier: 1.6.4
         version: link:../vue-language-server
       esbuild:

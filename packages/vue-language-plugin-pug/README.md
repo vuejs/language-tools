@@ -1,4 +1,4 @@
-A `VueLanguagePlugin` to support `<template lang="pug">` for `@volar/vue-language-server`.
+A `VueLanguagePlugin` to support `<template lang="pug">` for `@vue/language-server`.
 
 ## Usage
 

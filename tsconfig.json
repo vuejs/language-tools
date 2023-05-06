@@ -32,7 +32,7 @@
 			"@volar/vue-language-plugin-pug": [
 				"packages/vue-language-plugin-pug/src"
 			],
-			"@volar/vue-language-server": [
+			"@vue/language-server": [
 				"packages/vue-language-server/src"
 			],
 			"@volar/vue-language-service": [

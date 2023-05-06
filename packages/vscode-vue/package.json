@@ -744,7 +744,7 @@
 		"@volar/source-map": "1.5.3",
 		"@volar/vscode": "1.5.3",
 		"@volar/vue-language-core": "1.6.4",
-		"@volar/vue-language-server": "1.6.4",
+		"@vue/language-server": "1.6.4",
 		"esbuild": "0.15.18",
 		"esbuild-plugin-copy": "latest",
 		"esbuild-visualizer": "latest",
