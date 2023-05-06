@@ -1,9 +1,9 @@
 # Changelog
 
-## 1.7.0 (2023/5/6) - pre-release
+## 1.7.0 (2023/5/7) - pre-release
 
 - feat(language-service): compatible with Volar.js 1.5 Scripts API, Rules API
-- fix: `volar.config.js` does not load on Windows
+- fix: `volar.config.js` does not load on Windows (https://github.com/volarjs/volar.js/issues/36)
 
 **Breaking changes**
 
