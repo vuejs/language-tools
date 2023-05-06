@@ -8,9 +8,9 @@ export function createLanguageService(
 	const languageService = base.createLanguageService(
 		host,
 		vue.createLanguages(
-			ts,
 			host.getCompilationSettings(),
 			host.getVueCompilationSettings(),
+			ts,
 		),
 	);
 	const getCompletionsAtPosition = languageService.getCompletionsAtPosition;

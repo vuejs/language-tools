@@ -152,9 +152,9 @@ export function baseCreate(
 	}) as vue.VueLanguageServiceHost;
 	const vueCompilerOptions = host.getVueCompilationSettings() ?? vue.resolveVueCompilerOptions({});
 	const vueLanguages = ts ? vue.createLanguages(
-		ts,
 		host.getCompilationSettings(),
 		vueCompilerOptions,
+		ts,
 	) : [];
 	const core = createLanguageContext({ typescript: ts }, host, vueLanguages);
 	const proxyApis: Partial<ts.LanguageServiceHost> = checkerOptions.forceUseTs ? {

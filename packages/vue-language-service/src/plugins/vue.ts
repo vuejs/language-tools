@@ -1,4 +1,4 @@
-import { InjectionKey, Service } from '@volar/language-service';
+import { InjectionKey, Service, defineProvide } from '@volar/language-service';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -8,9 +8,11 @@ import { loadLanguageBlocks } from './data';
 
 let sfcDataProvider: html.IHTMLDataProvider | undefined;
 
-export const rulesInjectionKey: InjectionKey<{
-	vueFile: vue.VueFile;
-}> = Symbol();
+export const injectionKeys: {
+	vueFile: InjectionKey<[TextDocument], vue.VueFile>;
+} = {
+	vueFile: 'vue/vueFile',
+};
 
 export default (): Service => (context) => {
 
@@ -27,19 +29,11 @@ export default (): Service => (context) => {
 
 	return {
 
-		rules: {
-			provide: {
-				vue(document) {
-					return worker(document, (vueSourceFile) => {
-						if (vueSourceFile) {
-							return {
-								vueFile: vueSourceFile,
-							};
-						}
-					});
-				},
-			}
-		},
+		provide: defineProvide(injectionKeys.vueFile, document => {
+			return worker(document, (vueFile) => {
+				return vueFile;
+			});
+		}),
 
 		...htmlPlugin,
 

@@ -7,11 +7,11 @@ import * as sharedTypes from './utils/directorySharedTypes';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { resolveVueCompilerOptions } from './utils/ts';
 
-export function createLanguages(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
-	compilerOptions: ts.CompilerOptions,
+export function createLanguage(
+	compilerOptions: ts.CompilerOptions = {},
 	vueCompilerOptions = resolveVueCompilerOptions({}),
-): Language[] {
+	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
+): Language {
 
 	patchResolveModuleNames(ts, vueCompilerOptions);
 
@@ -71,16 +71,24 @@ export function createLanguages(
 		},
 	};
 
-	return [
-		languageModule,
-		...vueCompilerOptions.experimentalAdditionalLanguageModules?.map(module => require(module)) ?? [],
-	];
+	return languageModule;
 
 	function getSharedTypesFiles(fileNames: string[]) {
 		const moduleFiles = fileNames.filter(fileName => vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext)));
 		const moduleFileDirs = [...new Set(moduleFiles.map(path.dirname))];
 		return moduleFileDirs.map(dir => path.join(dir, sharedTypes.baseName));
 	}
+}
+
+export function createLanguages(
+	compilerOptions: ts.CompilerOptions = {},
+	vueCompilerOptions = resolveVueCompilerOptions({}),
+	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
+): Language[] {
+	return [
+		createLanguage(compilerOptions, vueCompilerOptions, ts),
+		...vueCompilerOptions.experimentalAdditionalLanguageModules?.map(module => require(module)) ?? [],
+	];
 }
 
 function patchResolveModuleNames(

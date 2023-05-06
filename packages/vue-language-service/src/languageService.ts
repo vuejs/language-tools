@@ -37,7 +37,7 @@ export function resolveConfig(
 	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
 ) {
 
-	const vueLanguageModules = vue.createLanguages(ts, compilerOptions, vueCompilerOptions);
+	const vueLanguageModules = vue.createLanguages(compilerOptions, vueCompilerOptions, ts);
 
 	config.languages = Object.assign({}, vueLanguageModules, config.languages);
 	config.services = resolvePlugins(config.services, vueCompilerOptions, settings);
