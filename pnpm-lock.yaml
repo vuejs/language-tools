@@ -35,7 +35,7 @@ importers:
       '@vue/language-core':
         specifier: 1.6.4
         version: link:../vue-language-core
-      '@volar/vue-typescript':
+      '@vue/typescript':
         specifier: 1.6.4
         version: link:../vue-typescript
 
@@ -269,7 +269,7 @@ importers:
       '@vue/language-core':
         specifier: 1.6.4
         version: link:../vue-language-core
-      '@volar/vue-typescript':
+      '@vue/typescript':
         specifier: 1.6.4
         version: link:../vue-typescript
       semver:

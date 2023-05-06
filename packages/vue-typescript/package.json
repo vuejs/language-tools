@@ -1,5 +1,5 @@
 {
-	"name": "@volar/vue-typescript",
+	"name": "@vue/typescript",
 	"version": "1.6.4",
 	"main": "out/index.js",
 	"license": "MIT",

@@ -1,5 +1,5 @@
 import * as vue from '@vue/language-core';
-import * as vueTs from '@volar/vue-typescript';
+import * as vueTs from '@vue/typescript';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
 const init: ts.server.PluginModuleFactory = (modules) => {

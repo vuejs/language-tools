@@ -1,6 +1,6 @@
 import * as ts from 'typescript';
 import * as vue from '@vue/language-core';
-import * as vueTs from '@volar/vue-typescript';
+import * as vueTs from '@vue/typescript';
 import { state } from './shared';
 
 export type Hook = (program: _Program) => void;

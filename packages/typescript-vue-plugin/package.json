@@ -14,6 +14,6 @@
 	},
 	"dependencies": {
 		"@vue/language-core": "1.6.4",
-		"@volar/vue-typescript": "1.6.4"
+		"@vue/typescript": "1.6.4"
 	}
 }
