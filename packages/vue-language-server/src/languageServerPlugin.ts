@@ -1,13 +1,13 @@
 import * as embedded from '@volar/language-core';
 import { LanguageServerPlugin, Connection } from '@volar/language-server';
-import * as vue from '@volar/vue-language-service';
-import * as vue2 from '@volar/vue-language-core';
-import * as nameCasing from '@volar/vue-language-service';
+import * as vue from '@vue/language-service';
+import * as vue2 from '@vue/language-core';
+import * as nameCasing from '@vue/language-service';
 import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest, GetComponentMeta } from './protocol';
 import { VueServerInitializationOptions } from './types';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as componentMeta from 'vue-component-meta';
-import { VueCompilerOptions } from '@volar/vue-language-core';
+import { VueCompilerOptions } from '@vue/language-core';
 
 export function createServerPlugin(connection: Connection) {
 

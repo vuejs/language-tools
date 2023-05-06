@@ -32,10 +32,10 @@ importers:
 
   packages/typescript-vue-plugin:
     dependencies:
-      '@volar/vue-language-core':
+      '@vue/language-core':
         specifier: 1.6.4
         version: link:../vue-language-core
-      '@volar/vue-typescript':
+      '@vue/typescript':
         specifier: 1.6.4
         version: link:../vue-typescript
 
@@ -69,10 +69,10 @@ importers:
       '@volar/vscode':
         specifier: 1.5.3
         version: 1.5.3(@types/vscode@1.67.0)(vscode-languageclient@8.1.0)
-      '@volar/vue-language-core':
+      '@vue/language-core':
         specifier: 1.6.4
         version: link:../vue-language-core
-      '@volar/vue-language-server':
+      '@vue/language-server':
         specifier: 1.6.4
         version: link:../vue-language-server
       esbuild:
@@ -105,7 +105,7 @@ importers:
       '@volar/language-core':
         specifier: 1.5.3
         version: 1.5.3
-      '@volar/vue-language-core':
+      '@vue/language-core':
         specifier: 1.6.4
         version: link:../vue-language-core
       typesafe-path:
@@ -163,7 +163,7 @@ importers:
         specifier: 0.0.1
         version: 0.0.1(@volar/language-service@1.5.3)(@volar/source-map@1.5.3)
     devDependencies:
-      '@volar/vue-language-core':
+      '@vue/language-core':
         specifier: 1.6.4
         version: link:../vue-language-core
 
@@ -175,10 +175,10 @@ importers:
       '@volar/language-server':
         specifier: 1.5.3
         version: 1.5.3
-      '@volar/vue-language-core':
+      '@vue/language-core':
         specifier: 1.6.4
         version: link:../vue-language-core
-      '@volar/vue-language-service':
+      '@vue/language-service':
         specifier: 1.6.4
         version: link:../vue-language-service
       vscode-languageserver-protocol:
@@ -199,7 +199,7 @@ importers:
       '@volar/source-map':
         specifier: 1.5.3
         version: 1.5.3
-      '@volar/vue-language-core':
+      '@vue/language-core':
         specifier: 1.6.4
         version: link:../vue-language-core
       '@vue/compiler-dom':
@@ -266,10 +266,10 @@ importers:
 
   packages/vue-tsc:
     dependencies:
-      '@volar/vue-language-core':
+      '@vue/language-core':
         specifier: 1.6.4
         version: link:../vue-language-core
-      '@volar/vue-typescript':
+      '@vue/typescript':
         specifier: 1.6.4
         version: link:../vue-typescript
       semver:
@@ -294,7 +294,7 @@ importers:
       '@volar/typescript':
         specifier: 1.5.3
         version: 1.5.3(typescript@5.0.4)
-      '@volar/vue-language-core':
+      '@vue/language-core':
         specifier: 1.6.4
         version: link:../vue-language-core
 

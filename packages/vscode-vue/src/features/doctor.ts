@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as semver from 'semver';
 import { BaseLanguageClient } from 'vscode-languageclient';
-import { ParseSFCRequest } from '@volar/vue-language-server';
+import { ParseSFCRequest } from '@vue/language-server';
 import { getTsdk } from '@volar/vscode';
 import { config } from '../config';
 
@@ -144,24 +144,24 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			});
 		}
 
-		// check using pug but don't install @volar/vue-language-plugin-pug
+		// check using pug but don't install @vue/language-plugin-pug
 		if (
 			sfc?.descriptor.template?.lang === 'pug'
-			&& !await getPackageJsonOfWorkspacePackage(fileUri.fsPath, '@volar/vue-language-plugin-pug')
+			&& !await getPackageJsonOfWorkspacePackage(fileUri.fsPath, '@vue/language-plugin-pug')
 		) {
 			problems.push({
-				title: '`@volar/vue-language-plugin-pug` missing',
+				title: '`@vue/language-plugin-pug` missing',
 				message: [
-					'For `<template lang="pug">`, the `@volar/vue-language-plugin-pug` plugin is required. Install it using `$ npm install -D @volar/vue-language-plugin-pug` and add it to `vueCompilerOptions.plugins` to support TypeScript intellisense in Pug templates.',
+					'For `<template lang="pug">`, the `@vue/language-plugin-pug` plugin is required. Install it using `$ npm install -D @vue/language-plugin-pug` and add it to `vueCompilerOptions.plugins` to support TypeScript intellisense in Pug templates.',
 					'',
 					'- package.json',
 					'```json',
-					JSON.stringify({ devDependencies: { "@volar/vue-language-plugin-pug": "latest" } }, undefined, 2),
+					JSON.stringify({ devDependencies: { "@vue/language-plugin-pug": "latest" } }, undefined, 2),
 					'```',
 					'',
 					'- tsconfig.json / jsconfig.json',
 					'```jsonc',
-					JSON.stringify({ vueCompilerOptions: { plugins: ["@volar/vue-language-plugin-pug"] } }, undefined, 2),
+					JSON.stringify({ vueCompilerOptions: { plugins: ["@vue/language-plugin-pug"] } }, undefined, 2),
 					'```',
 				].join('\n'),
 			});

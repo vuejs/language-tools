@@ -5,7 +5,7 @@ import createJsonPlugin from 'volar-service-json';
 import createPugPlugin from 'volar-service-pug';
 import createTsPlugin from 'volar-service-typescript';
 import createTsTqPlugin from 'volar-service-typescript-twoslash-queries';
-import * as vue from '@volar/vue-language-core';
+import * as vue from '@vue/language-core';
 import type * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import createVuePlugin from './plugins/vue';

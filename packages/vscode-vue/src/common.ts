@@ -11,7 +11,7 @@ import {
 	getTsdk,
 	takeOverModeActive,
 } from '@volar/vscode';
-import { DiagnosticModel, ServerMode, VueServerInitializationOptions } from '@volar/vue-language-server';
+import { DiagnosticModel, ServerMode, VueServerInitializationOptions } from '@vue/language-server';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient';
 import * as componentMeta from './features/componentMeta';

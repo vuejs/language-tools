@@ -26,16 +26,16 @@
 			"vue-component-type-helpers": [
 				"packages/vue-component-type-helpers/src"
 			],
-			"@volar/vue-language-core": [
+			"@vue/language-core": [
 				"packages/vue-language-core/src"
 			],
-			"@volar/vue-language-plugin-pug": [
+			"@vue/language-plugin-pug": [
 				"packages/vue-language-plugin-pug/src"
 			],
-			"@volar/vue-language-server": [
+			"@vue/language-server": [
 				"packages/vue-language-server/src"
 			],
-			"@volar/vue-language-service": [
+			"@vue/language-service": [
 				"packages/vue-language-service/src"
 			],
 			"vue-tsc": [

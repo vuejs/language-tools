@@ -1,4 +1,4 @@
-import type { VueLanguagePlugin } from '@volar/vue-language-core';
+import type { VueLanguagePlugin } from '@vue/language-core';
 import * as pug from 'volar-service-pug/out/languageService';
 import { SourceMap } from '@volar/source-map';
 

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { quickPick } from '@volar/vscode/out/common';
 import { BaseLanguageClient, State } from 'vscode-languageclient';
-import { AttrNameCasing, TagNameCasing, DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest } from '@volar/vue-language-server';
+import { AttrNameCasing, TagNameCasing, DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest } from '@vue/language-server';
 import { config } from '../config';
 
 export const attrNameCasings = new Map<string, AttrNameCasing>();

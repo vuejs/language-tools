@@ -1,5 +1,5 @@
 import { Service } from '@volar/language-service';
-import { VueFile } from '@volar/vue-language-core';
+import { VueFile } from '@vue/language-core';
 import * as vscode from 'vscode-languageserver-protocol';
 
 export default function (): Service {

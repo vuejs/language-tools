@@ -1,5 +1,5 @@
 import * as base from '@volar/typescript';
-import * as vue from '@volar/vue-language-core';
+import * as vue from '@vue/language-core';
 
 export function createLanguageService(
 	host: vue.VueLanguageServiceHost,

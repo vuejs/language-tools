@@ -14,7 +14,7 @@
 	},
 	"dependencies": {
 		"@volar/language-core": "1.5.3",
-		"@volar/vue-language-core": "1.6.4",
+		"@vue/language-core": "1.6.4",
 		"typesafe-path": "^0.2.2",
 		"vue-component-type-helpers": "1.6.4"
 	},

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import type { BaseLanguageClient } from 'vscode-languageclient';
-import { GetComponentMeta } from '@volar/vue-language-server';
+import { GetComponentMeta } from '@vue/language-server';
 
 const scheme = 'vue-component-meta';
 

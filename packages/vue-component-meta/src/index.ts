@@ -1,4 +1,4 @@
-import * as vue from '@volar/vue-language-core';
+import * as vue from '@vue/language-core';
 import { createLanguageContext } from '@volar/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'typesafe-path/posix';
