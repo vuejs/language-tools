@@ -1,20 +1,14 @@
 # Changelog
 
-## 1.6.4 (2023/5/4)
+## 1.7.0 (2023/5/6) - pre-release
 
-- feat: support color pickers for inline css
-- feat: support `lang="vue"` ([#3105](https://github.com/vuejs/language-tools/issues/3105)) - thanks @HunYan-io
-- fix: when the source type of `v-for` is `any`, the item type should be `any` ([#3108](https://github.com/vuejs/language-tools/issues/3108)) ([#3112](https://github.com/vuejs/language-tools/issues/3112))
-- fix: avoid slots report error when `noPropertyAccessFromIndexSignature` enabled ([#3106](https://github.com/vuejs/language-tools/issues/3106))
-- fix(component-type-helpers): import module causes tsc error ([#3114](https://github.com/vuejs/language-tools/issues/3114))
-- fix: empty slot name auto-complete not working
-- fix: accessing an unknown slot name does not report an error
-- fix: format adds spaces to `v-for` if nested template element assigns type to slot props ([#2750](https://github.com/vuejs/language-tools/issues/2750)) ([#2757](https://github.com/vuejs/language-tools/issues/2757))
-- fix: parentheses auto insert not working in template
+- feat(language-service): compatible with Volar.js 1.5 Scripts API, Rules API
+- fix: `volar.config.js` does not load on Windows
 
 **Breaking changes**
 
-- drop support for Vue 3.3 slots short definition ([#3116](https://github.com/vuejs/language-tools/issues/3116))
+- rename packages from `@volar/vue-*` to `@vue/*` ([#3134](https://github.com/vuejs/language-tools/issues/3134))
+- `volar.config.js` specification update (base on Volar.js v1.5)
 
 ---
 
@@ -51,6 +45,22 @@
 		<a href="https://opencollective.com/volarjs">Open Collective</a>
 	</h5>
 </p>
+
+## 1.6.4 (2023/5/4)
+
+- feat: support color pickers for inline css
+- feat: support `lang="vue"` ([#3105](https://github.com/vuejs/language-tools/issues/3105)) - thanks @HunYan-io
+- fix: when the source type of `v-for` is `any`, the item type should be `any` ([#3108](https://github.com/vuejs/language-tools/issues/3108)) ([#3112](https://github.com/vuejs/language-tools/issues/3112))
+- fix: avoid slots report error when `noPropertyAccessFromIndexSignature` enabled ([#3106](https://github.com/vuejs/language-tools/issues/3106))
+- fix(component-type-helpers): import module causes tsc error ([#3114](https://github.com/vuejs/language-tools/issues/3114))
+- fix: empty slot name auto-complete not working
+- fix: accessing an unknown slot name does not report an error
+- fix: format adds spaces to `v-for` if nested template element assigns type to slot props ([#2750](https://github.com/vuejs/language-tools/issues/2750)) ([#2757](https://github.com/vuejs/language-tools/issues/2757))
+- fix: parentheses auto insert not working in template
+
+**Breaking changes**
+
+- drop support for Vue 3.3 slots short definition ([#3116](https://github.com/vuejs/language-tools/issues/3116))
 
 ## 1.6.3 (2023/5/2)
 
