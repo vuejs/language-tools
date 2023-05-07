@@ -1,7 +1,7 @@
 import { FileCapabilities, VirtualFile, FileKind, FileRangeCapabilities, MirrorBehaviorCapabilities } from '@volar/language-core';
 import { buildMappings, Mapping, Segment, toString } from '@volar/source-map';
 import * as CompilerDom from '@vue/compiler-dom';
-import { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
+import type { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
 import { computed, ComputedRef, reactive, pauseTracking, resetTracking } from '@vue/reactivity';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { Sfc, SfcBlock, VueLanguagePlugin } from './types';
@@ -50,8 +50,6 @@ export class VueFile implements VirtualFile {
 	get embeddedFiles() {
 		return this._embeddedFiles.value;
 	}
-
-	public parsedSfc: SFCParseResult | undefined;
 
 	// refs
 	public sfc = reactive<Sfc>({
@@ -366,8 +364,6 @@ export class VueFile implements VirtualFile {
 		}
 	});
 
-	// functions
-
 	constructor(
 		public fileName: string,
 		public snapshot: ts.IScriptSnapshot,
@@ -380,14 +376,15 @@ export class VueFile implements VirtualFile {
 	update(newScriptSnapshot: ts.IScriptSnapshot) {
 
 		this.snapshot = newScriptSnapshot;
-		this.parsedSfc = this.parseSfc();
+
+		const parsedSfc = this.parseSfc();
 
 		updateObj(this.sfc, {
-			template: this.parsedSfc?.descriptor.template ? this.parseTemplateBlock(this.parsedSfc.descriptor.template) : null,
-			script: this.parsedSfc?.descriptor.script ? this.parseScriptBlock(this.parsedSfc.descriptor.script) : null,
-			scriptSetup: this.parsedSfc?.descriptor.scriptSetup ? this.parseScriptSetupBlock(this.parsedSfc.descriptor.scriptSetup) : null,
-			styles: this.parsedSfc?.descriptor.styles.map(this.parseStyleBlock.bind(this)) ?? [],
-			customBlocks: this.parsedSfc?.descriptor.customBlocks.map(this.parseCustomBlock.bind(this)) ?? [],
+			template: parsedSfc?.descriptor.template ? this.parseTemplateBlock(parsedSfc.descriptor.template) : null,
+			script: parsedSfc?.descriptor.script ? this.parseScriptBlock(parsedSfc.descriptor.script) : null,
+			scriptSetup: parsedSfc?.descriptor.scriptSetup ? this.parseScriptSetupBlock(parsedSfc.descriptor.scriptSetup) : null,
+			styles: parsedSfc?.descriptor.styles.map(this.parseStyleBlock.bind(this)) ?? [],
+			customBlocks: parsedSfc?.descriptor.customBlocks.map(this.parseCustomBlock.bind(this)) ?? [],
 			templateAst: '__IGNORE__' as any,
 			scriptAst: '__IGNORE__' as any,
 			scriptSetupAst: '__IGNORE__' as any,

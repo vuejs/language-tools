@@ -128,9 +128,6 @@ importers:
       '@vue/compiler-dom':
         specifier: ^3.3.0-beta.3
         version: 3.3.0-beta.3
-      '@vue/compiler-sfc':
-        specifier: ^3.3.0-beta.3
-        version: 3.3.0-beta.3
       '@vue/reactivity':
         specifier: ^3.3.0-beta.3
         version: 3.3.0-beta.3
@@ -150,6 +147,9 @@ importers:
       '@types/minimatch':
         specifier: ^5.1.2
         version: 5.1.2
+      '@vue/compiler-sfc':
+        specifier: ^3.3.0-beta.3
+        version: 3.3.0-beta.3
 
   packages/vue-language-plugin-pug:
     dependencies:
@@ -595,6 +595,7 @@ packages:
 
   /@jridgewell/sourcemap-codec@1.4.15:
     resolution: {integrity: sha512-eF2rxCRulEKXHTRiDrDy6erMYWqNw4LPdQ8UQA4huuxaQsVeRPFl2oM8oDGxMFhJUWZf9McpLtJasDDZb/Bpeg==}
+    dev: true
 
   /@lerna-lite/cli@2.3.0(@lerna-lite/publish@2.3.0)(@lerna-lite/version@2.3.0):
     resolution: {integrity: sha512-TuZQrfRtEq39SlFz1dDUmiFLa/9gCPTuKvTZxjX2hBff91+mc+K9+3FzSgPqb2kMkJyYr43TlVsu+Jnl/i+M+A==}
@@ -1337,12 +1338,14 @@ packages:
       magic-string: 0.30.0
       postcss: 8.4.23
       source-map-js: 1.0.2
+    dev: true
 
   /@vue/compiler-ssr@3.3.0-beta.3:
     resolution: {integrity: sha512-egJ0lEVAod3Hpnw96cJ/0a9qv5f5h5/VCBpKYT8scqkzoMsikh8AJant2omokBCL/Ut5UAMLVQlA5b66+2Ys/g==}
     dependencies:
       '@vue/compiler-dom': 3.3.0-beta.3
       '@vue/shared': 3.3.0-beta.3
+    dev: true
 
   /@vue/reactivity-transform@3.3.0-beta.3:
     resolution: {integrity: sha512-aM3TgBca9QMMu/9B9ASRVvckeZpAdJO9nmQh5UCznhoDYjVxQPS+sCQvH6TLOjPB1MDQMVQYg4ZiPqfVVo7NbA==}
@@ -1352,6 +1355,7 @@ packages:
       '@vue/shared': 3.3.0-beta.3
       estree-walker: 2.0.2
       magic-string: 0.30.0
+    dev: true
 
   /@vue/reactivity@3.3.0-beta.3:
     resolution: {integrity: sha512-9VjWfWgZJ18YXEkfnDfZr33RyLBa6zc0RARLkMqMApWvM26eusZAZ4hhyxlgODBU/mEFk4XOGIAtwwSQedA0MQ==}
@@ -3776,6 +3780,7 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       '@jridgewell/sourcemap-codec': 1.4.15
+    dev: true
 
   /make-dir@3.1.0:
     resolution: {integrity: sha512-g3FeP20LNwhALb/6Cz6Dd4F2ngze0jz7tbzrD2wAV+o9FeNHe4rL+yK2md0J/fiSf1sa1ADhXqi5+oVwOM/eGw==}
@@ -4152,6 +4157,7 @@ packages:
     resolution: {integrity: sha512-BGcqMMJuToF7i1rt+2PWSNVnWIkGCU78jBG3RxO/bZlnZPK2Cmi2QaffxGO/2RvWi9sL+FAiRiXMgsyxQ1DIDA==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
+    dev: true
 
   /napi-build-utils@1.0.2:
     resolution: {integrity: sha512-ONmRUqK7zj7DWX0D9ADe03wbwOBZxNAfF20PlGfCWQcD3+/MakShIHrMqx9YwPTfxDdF1zLeL+RGZiR9kGMLdg==}
@@ -4822,6 +4828,7 @@ packages:
 
   /picocolors@1.0.0:
     resolution: {integrity: sha512-1fygroTLlHu66zi26VoTDv8yRgm0Fccecssto+MhsZ0D/DGW2sm8E8AjW7NU5VVTRt5GxbeZ5qBuJr+HyLYkjQ==}
+    dev: true
 
   /picomatch@2.3.1:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
@@ -4877,6 +4884,7 @@ packages:
       nanoid: 3.3.6
       picocolors: 1.0.0
       source-map-js: 1.0.2
+    dev: true
 
   /prebuild-install@7.1.1:
     resolution: {integrity: sha512-jAXscXWMcCK8GgCoHOfIr0ODh5ai8mj63L2nWrjuAgXE6tDyYGnx4/8o/rCgU+B4JSyZBKbeZqzhtwtC3ovxjw==}

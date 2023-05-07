@@ -1,5 +1,5 @@
 import * as embedded from '@volar/language-core';
-import { SFCParseResult } from '@vue/compiler-sfc';
+import type { SFCParseResult } from '@vue/compiler-sfc';
 
 import * as CompilerDom from '@vue/compiler-dom';
 import type * as ts from 'typescript/lib/tsserverlibrary';
