@@ -73,12 +73,6 @@ export class VueFile implements VirtualFile {
 				return this.ts.createSourceFile(this.fileName + '.' + this.sfc.scriptSetup.lang, this.sfc.scriptSetup.content, this.ts.ScriptTarget.Latest);
 			}
 		}) as unknown as Sfc['scriptSetupAst'],
-		...{
-			// backward compatible
-			getTemplateAst: () => {
-				return this.compiledSFCTemplate?.ast;
-			},
-		},
 	}) as Sfc /* avoid Sfc unwrap in .d.ts by reactive */;
 
 	// computed
@@ -388,20 +382,16 @@ export class VueFile implements VirtualFile {
 		this.snapshot = newScriptSnapshot;
 		this.parsedSfc = this.parseSfc();
 
-		if (this.parsedSfc) {
-			this.updateTemplate(this.parsedSfc.descriptor.template);
-			this.updateScript(this.parsedSfc.descriptor.script);
-			this.updateScriptSetup(this.parsedSfc.descriptor.scriptSetup);
-			this.updateStyles(this.parsedSfc.descriptor.styles);
-			this.updateCustomBlocks(this.parsedSfc.descriptor.customBlocks);
-		}
-		else {
-			this.updateTemplate(null);
-			this.updateScript(null);
-			this.updateScriptSetup(null);
-			this.updateStyles([]);
-			this.updateCustomBlocks([]);
-		}
+		updateObj(this.sfc, {
+			template: this.parsedSfc?.descriptor.template ? this.parseTemplateBlock(this.parsedSfc.descriptor.template) : null,
+			script: this.parsedSfc?.descriptor.script ? this.parseScriptBlock(this.parsedSfc.descriptor.script) : null,
+			scriptSetup: this.parsedSfc?.descriptor.scriptSetup ? this.parseScriptSetupBlock(this.parsedSfc.descriptor.scriptSetup) : null,
+			styles: this.parsedSfc?.descriptor.styles.map(this.parseStyleBlock.bind(this)) ?? [],
+			customBlocks: this.parsedSfc?.descriptor.customBlocks.map(this.parseCustomBlock.bind(this)) ?? [],
+			templateAst: '__IGNORE__' as any,
+			scriptAst: '__IGNORE__' as any,
+			scriptSetupAst: '__IGNORE__' as any,
+		});
 
 		const str: Segment<FileRangeCapabilities>[] = [[this.snapshot.getText(0, this.snapshot.getLength()), undefined, 0, FileRangeCapabilities.full]];
 		for (const block of [
@@ -471,142 +461,94 @@ export class VueFile implements VirtualFile {
 		}
 	}
 
-	updateTemplate(block: SFCTemplateBlock | null) {
-
-		const newData: Sfc['template'] | null = block ? {
+	parseTemplateBlock(block: SFCTemplateBlock): NonNullable<Sfc['template']> {
+		return {
+			...this.parseBlock(block),
 			name: 'template',
-			start: this.snapshot.getText(0, block.loc.start.offset).lastIndexOf('<' + block.type),
-			end: block.loc.end.offset + this.snapshot.getText(block.loc.end.offset, this.snapshot.getLength()).indexOf('>') + 1,
-			startTagEnd: block.loc.start.offset,
-			endTagStart: block.loc.end.offset,
-			content: block.content,
 			lang: block.lang ?? 'html',
-			attrs: block.attrs,
-		} : null;
-
-		if (this.sfc.template && newData) {
-			this.updateBlock(this.sfc.template, newData);
-		}
-		else {
-			this.sfc.template = newData;
-		}
+		};
 	}
 
-	updateScript(block: SFCScriptBlock | null) {
-
-		const newData: Sfc['script'] | null = block ? {
+	parseScriptBlock(block: SFCScriptBlock): NonNullable<Sfc['script']> {
+		return {
+			...this.parseBlock(block),
 			name: 'script',
-			start: this.snapshot.getText(0, block.loc.start.offset).lastIndexOf('<' + block.type),
-			end: block.loc.end.offset + this.snapshot.getText(block.loc.end.offset, this.snapshot.getLength()).indexOf('>') + 1,
-			startTagEnd: block.loc.start.offset,
-			endTagStart: block.loc.end.offset,
-			content: block.content,
 			lang: block.lang ?? 'js',
 			src: block.src,
 			srcOffset: block.src ? this.snapshot.getText(0, block.loc.start.offset).lastIndexOf(block.src) - block.loc.start.offset : -1,
-			attrs: block.attrs,
-		} : null;
-
-		if (this.sfc.script && newData) {
-			this.updateBlock(this.sfc.script, newData);
-		}
-		else {
-			this.sfc.script = newData;
-		}
+		};
 	}
 
-	updateScriptSetup(block: SFCScriptBlock | null) {
-
-		const newData: Sfc['scriptSetup'] | null = block ? {
+	parseScriptSetupBlock(block: SFCScriptBlock): NonNullable<Sfc['scriptSetup']> {
+		return {
+			...this.parseBlock(block),
 			name: 'scriptSetup',
+			lang: block.lang ?? 'js',
+			generic: typeof block.attrs.generic === 'string' ? block.attrs.generic : undefined,
+			genericOffset: typeof block.attrs.generic === 'string' ? this.snapshot.getText(0, block.loc.start.offset).lastIndexOf(block.attrs.generic) - block.loc.start.offset : -1,
+		};
+	}
+
+	parseStyleBlock(block: SFCStyleBlock, i: number): Sfc['styles'][number] {
+		return {
+			...this.parseBlock(block),
+			name: 'style_' + i,
+			lang: block.lang ?? 'css',
+			module: typeof block.module === 'string' ? block.module : block.module ? '$style' : undefined,
+			scoped: !!block.scoped,
+		};
+	}
+
+	parseCustomBlock(block: SFCBlock, i: number): Sfc['customBlocks'][number] {
+		return {
+			...this.parseBlock(block),
+			name: 'customBlock_' + i,
+			lang: block.lang ?? 'txt',
+			type: block.type,
+		};
+	}
+
+	parseBlock(block: SFCBlock): Omit<SfcBlock, 'name' | 'lang'> {
+		return {
 			start: this.snapshot.getText(0, block.loc.start.offset).lastIndexOf('<' + block.type),
 			end: block.loc.end.offset + this.snapshot.getText(block.loc.end.offset, this.snapshot.getLength()).indexOf('>') + 1,
 			startTagEnd: block.loc.start.offset,
 			endTagStart: block.loc.end.offset,
 			content: block.content,
-			lang: block.lang ?? 'js',
-			generic: typeof block.attrs.generic === 'string' ? block.attrs.generic : undefined,
-			genericOffset: typeof block.attrs.generic === 'string' ? this.snapshot.getText(0, block.loc.start.offset).lastIndexOf(block.attrs.generic) - block.loc.start.offset : -1,
 			attrs: block.attrs,
-		} : null;
-
-		if (this.sfc.scriptSetup && newData) {
-			this.updateBlock(this.sfc.scriptSetup, newData);
-		}
-		else {
-			this.sfc.scriptSetup = newData;
-		}
+		};
 	}
+}
 
-	updateStyles(blocks: SFCStyleBlock[]) {
-		for (let i = 0; i < blocks.length; i++) {
-
-			const block = blocks[i];
-			const newData: Sfc['styles'][number] = {
-				name: 'style_' + i,
-				start: this.snapshot.getText(0, block.loc.start.offset).lastIndexOf('<' + block.type),
-				end: block.loc.end.offset + this.snapshot.getText(block.loc.end.offset, this.snapshot.getLength()).indexOf('>') + 1,
-				startTagEnd: block.loc.start.offset,
-				endTagStart: block.loc.end.offset,
-				content: block.content,
-				lang: block.lang ?? 'css',
-				module: typeof block.module === 'string' ? block.module : block.module ? '$style' : undefined,
-				scoped: !!block.scoped,
-				attrs: block.attrs,
-			};
-
-			if (this.sfc.styles.length > i) {
-				this.updateBlock(this.sfc.styles[i], newData);
+function updateObj<T extends object>(oldObj: T, newObj: T) {
+	if (Array.isArray(oldObj) && Array.isArray(newObj)) {
+		for (let i = 0; i < newObj.length; i++) {
+			if (oldObj.length > i) {
+				updateObj(oldObj[i], newObj[i]);
 			}
 			else {
-				this.sfc.styles.push(newData);
+				oldObj.push(newObj[i]);
 			}
 		}
-		while (this.sfc.styles.length > blocks.length) {
-			this.sfc.styles.pop();
-		}
-	}
-
-	updateCustomBlocks(blocks: SFCBlock[]) {
-		for (let i = 0; i < blocks.length; i++) {
-
-			const block = blocks[i];
-			const newData: Sfc['customBlocks'][number] = {
-				name: 'customBlock_' + i,
-				start: this.snapshot.getText(0, block.loc.start.offset).lastIndexOf('<' + block.type),
-				end: block.loc.end.offset + this.snapshot.getText(block.loc.end.offset, this.snapshot.getLength()).indexOf('>') + 1,
-				startTagEnd: block.loc.start.offset,
-				endTagStart: block.loc.end.offset,
-				content: block.content,
-				lang: block.lang ?? 'txt',
-				type: block.type,
-				attrs: block.attrs,
-			};
-
-			if (this.sfc.customBlocks.length > i) {
-				this.updateBlock(this.sfc.customBlocks[i], newData);
-			}
-			else {
-				this.sfc.customBlocks.push(newData);
-			}
-		}
-		while (this.sfc.customBlocks.length > blocks.length) {
-			this.sfc.customBlocks.pop();
+		if (oldObj.length > newObj.length) {
+			oldObj.splice(newObj.length, oldObj.length - newObj.length);
 		}
 	}
-
-	updateBlock<T extends object>(oldBlock: T, newBlock: T) {
-		for (const key in newBlock) {
-			if (typeof oldBlock[key] === 'object' && typeof newBlock[key] === 'object') {
-				this.updateBlock(oldBlock[key] as object, newBlock[key] as object);
+	else {
+		for (const key in newObj) {
+			if (newObj[key] === '__IGNORE__') {
+				continue;
+			}
+			else if (oldObj[key] !== null && newObj[key] !== null && typeof oldObj[key] === 'object' && typeof newObj[key] === 'object') {
+				updateObj(oldObj[key] as object, newObj[key] as object);
 			}
 			else {
-				oldBlock[key] = newBlock[key];
+				oldObj[key] = newObj[key];
 			}
 		}
-		for (const key in oldBlock) {
-			if (!(key in newBlock)) {
-				delete oldBlock[key];
+		for (const key in oldObj) {
+			if (!(key in newObj)) {
+				delete oldObj[key];
 			}
 		}
 	}
