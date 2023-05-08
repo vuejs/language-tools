@@ -133,10 +133,8 @@ export function createServerPlugin(connection: Connection) {
 					let checker = checkers.get(languageService.context.host);
 					if (!checker) {
 						checker = componentMeta.baseCreate(
-							{
-								...languageService.context.host,
-								getVueCompilationSettings: () => hostToVueOptions.get(languageService.context.host)!,
-							},
+							languageService.context.host,
+							hostToVueOptions.get(languageService.context.host)!,
 							{},
 							languageService.context.host.getCurrentDirectory() + '/tsconfig.json.global.vue',
 							ts,

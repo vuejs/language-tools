@@ -1,4 +1,4 @@
-import { resolveConfig, VueLanguageServiceHost } from '../..';
+import { resolveConfig, LanguageServiceHost } from '../..';
 import * as ts from 'typescript';
 import * as path from 'path';
 import { URI } from 'vscode-uri';
@@ -26,7 +26,7 @@ function createTester(root: string) {
 	parsedCommandLine.fileNames = parsedCommandLine.fileNames.map(fileName => fileName.replace(/\\/g, '/'));
 	const scriptVersions = new Map<string, string>();
 	const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
-	const host: VueLanguageServiceHost = {
+	const host: LanguageServiceHost = {
 		// ts
 		getNewLine: () => ts.sys.newLine,
 		useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,
@@ -45,7 +45,6 @@ function createTester(root: string) {
 		getCompilationSettings: () => parsedCommandLine.options,
 		getScriptVersion,
 		getScriptSnapshot,
-		getVueCompilationSettings: () => undefined,
 	};
 	const defaultVSCodeSettings: any = {
 		'typescript.preferences.quoteStyle': 'single',

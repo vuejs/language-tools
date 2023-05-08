@@ -35,7 +35,7 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 				};
 			}
 
-			const vueTsLsHost: vue.VueLanguageServiceHost = {
+			const vueTsLsHost: vue.LanguageServiceHost = {
 				getNewLine: () => info.project.getNewLine(),
 				useCaseSensitiveFileNames: () => info.project.useCaseSensitiveFileNames(),
 				readFile: path => info.project.readFile(path),
@@ -46,7 +46,6 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 				readDirectory: (path, extensions, exclude, include, depth) => info.project.readDirectory(path, extensions, exclude, include, depth),
 				realpath: info.project.realpath ? path => info.project.realpath!(path) : undefined,
 				getCompilationSettings: () => info.project.getCompilationSettings(),
-				getVueCompilationSettings: () => parsed.vueOptions,
 				getCurrentDirectory: () => info.project.getCurrentDirectory(),
 				getDefaultLibFileName: () => info.project.getDefaultLibFileName(),
 				getProjectVersion: () => info.project.getProjectVersion(),
@@ -58,7 +57,7 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 				getScriptVersion: (fileName) => info.project.getScriptVersion(fileName),
 				getScriptSnapshot: (fileName) => info.project.getScriptSnapshot(fileName),
 			};
-			const vueTsLs = vueTs.createLanguageService(vueTsLsHost);
+			const vueTsLs = vueTs.createLanguageService(vueTsLsHost, parsed.vueOptions, ts);
 
 			return new Proxy(info.languageService, {
 				get: (target: any, property: keyof ts.LanguageService) => {

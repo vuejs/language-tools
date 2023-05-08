@@ -2,14 +2,15 @@ import * as base from '@volar/typescript';
 import * as vue from '@vue/language-core';
 
 export function createLanguageService(
-	host: vue.VueLanguageServiceHost,
-	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
+	host: vue.LanguageServiceHost,
+	vueCompilerOptions?: vue.VueCompilerOptions,
+	ts?: typeof import('typescript/lib/tsserverlibrary'),
 ) {
 	const languageService = base.createLanguageService(
 		host,
 		vue.createLanguages(
 			host.getCompilationSettings(),
-			host.getVueCompilationSettings(),
+			vueCompilerOptions,
 			ts,
 		),
 	);

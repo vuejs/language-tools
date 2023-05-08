@@ -10,7 +10,8 @@ export type _Program = ts.Program & { __vue: ProgramContext; };
 interface ProgramContext {
 	projectVersion: number,
 	options: ts.CreateProgramOptions,
-	languageServiceHost: vue.VueLanguageServiceHost,
+	languageServiceHost: vue.LanguageServiceHost,
+	vueCompilerOptions: vue.VueCompilerOptions | undefined,
 	languageService: ReturnType<typeof vueTs.createLanguageService>,
 }
 
@@ -42,6 +43,9 @@ export function createProgram(options: ts.CreateProgramOptions) {
 			get languageServiceHost() {
 				return vueLsHost;
 			},
+			get vueCompilerOptions() {
+				return vueCompilerOptions;
+			},
 			get languageService() {
 				return vueTsLs;
 			},
@@ -53,7 +57,7 @@ export function createProgram(options: ts.CreateProgramOptions) {
 			scriptSnapshot: ts.IScriptSnapshot,
 			version: string,
 		}>();
-		const vueLsHost = new Proxy(<vue.VueLanguageServiceHost>{
+		const vueLsHost = new Proxy(<vue.LanguageServiceHost>{
 			// avoid failed with tsc built-in fileExists
 			resolveModuleNames: undefined,
 			resolveModuleNameLiterals: undefined,
@@ -64,7 +68,6 @@ export function createProgram(options: ts.CreateProgramOptions) {
 				}
 			},
 			getCompilationSettings: () => ctx.options.options,
-			getVueCompilationSettings: () => vueCompilerOptions,
 			getScriptFileNames: () => {
 				return ctx.options.rootNames as string[];
 			},
@@ -78,12 +81,12 @@ export function createProgram(options: ts.CreateProgramOptions) {
 		}, {
 			get: (target, property) => {
 				if (property in target) {
-					return target[property as keyof vue.VueLanguageServiceHost];
+					return target[property as keyof vue.LanguageServiceHost];
 				}
 				return ctx.options.host![property as keyof ts.CompilerHost];
 			},
 		});
-		const vueTsLs = vueTs.createLanguageService(vueLsHost);
+		const vueTsLs = vueTs.createLanguageService(vueLsHost, vueCompilerOptions);
 
 		program = vueTsLs.getProgram() as (ts.Program & { __vue: ProgramContext; });
 		program.__vue = ctx;
@@ -133,7 +136,7 @@ export function createProgram(options: ts.CreateProgramOptions) {
 		ctx.projectVersion++;
 	}
 
-	const vueCompilerOptions = program.__vue.languageServiceHost.getVueCompilationSettings();
+	const vueCompilerOptions = program.__vue.vueCompilerOptions;
 	if (vueCompilerOptions?.hooks) {
 		const index = (state.hook?.index ?? -1) + 1;
 		if (index < vueCompilerOptions.hooks.length) {

@@ -38,6 +38,9 @@
 			"@vue/language-service": [
 				"packages/vue-language-service/src"
 			],
+			"@vue/typescript": [
+				"packages/vue-typescript/src"
+			],
 			"vue-tsc": [
 				"packages/vue-tsc/src"
 			],

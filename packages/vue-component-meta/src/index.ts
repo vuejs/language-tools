@@ -63,7 +63,7 @@ function createComponentMetaCheckerWorker(
 
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
 	const scriptVersions = new Map<string, number>();
-	const _host: vue.VueLanguageServiceHost = {
+	const _host: vue.LanguageServiceHost = {
 		...ts.sys,
 		getProjectVersion: () => projectVersion.toString(),
 		getDefaultLibFileName: (options) => ts.getDefaultLibFilePath(options), // should use ts.getDefaultLibFilePath not ts.getDefaultLibFileName
@@ -81,11 +81,10 @@ function createComponentMetaCheckerWorker(
 			}
 			return scriptSnapshots.get(fileName);
 		},
-		getVueCompilationSettings: () => parsedCommandLine.vueOptions,
 	};
 
 	return {
-		...baseCreate(_host, checkerOptions, globalComponentName, ts),
+		...baseCreate(_host, parsedCommandLine.vueOptions, checkerOptions, globalComponentName, ts),
 		updateFile(fileName: string, text: string) {
 			fileName = (fileName as path.OsPath).replace(/\\/g, '/') as path.PosixPath;
 			scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(text));
@@ -111,14 +110,15 @@ function createComponentMetaCheckerWorker(
 }
 
 export function baseCreate(
-	_host: vue.VueLanguageServiceHost,
+	_host: vue.LanguageServiceHost,
+	vueCompilerOptions: vue.VueCompilerOptions,
 	checkerOptions: MetaCheckerOptions,
 	globalComponentName: string,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {
 	const globalComponentSnapshot = ts.ScriptSnapshot.fromString('<script setup lang="ts"></script>');
 	const metaSnapshots: Record<string, ts.IScriptSnapshot> = {};
-	const host = new Proxy<Partial<vue.VueLanguageServiceHost>>({
+	const host = new Proxy<Partial<vue.LanguageServiceHost>>({
 		getScriptFileNames: () => {
 			const names = _host.getScriptFileNames();
 			return [
@@ -149,8 +149,7 @@ export function baseCreate(
 			}
 			return _host[prop as keyof typeof _host];
 		},
-	}) as vue.VueLanguageServiceHost;
-	const vueCompilerOptions = host.getVueCompilationSettings() ?? vue.resolveVueCompilerOptions({});
+	}) as vue.LanguageServiceHost;
 	const vueLanguages = ts ? vue.createLanguages(
 		host.getCompilationSettings(),
 		vueCompilerOptions,

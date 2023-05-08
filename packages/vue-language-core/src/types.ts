@@ -1,4 +1,3 @@
-import * as embedded from '@volar/language-core';
 import type { SFCParseResult } from '@vue/compiler-sfc';
 
 import * as CompilerDom from '@vue/compiler-dom';
@@ -6,10 +5,6 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import { VueEmbeddedFile } from './sourceFile';
 
 export type { SFCParseResult } from '@vue/compiler-sfc';
-
-export interface VueLanguageServiceHost extends embedded.LanguageServiceHost {
-	getVueCompilationSettings(): VueCompilerOptions | undefined;
-}
 
 export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 'plugins'>> & {
 	target?: 'auto' | 2 | 2.7 | 3 | 3.3;
