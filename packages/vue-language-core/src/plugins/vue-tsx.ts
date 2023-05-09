@@ -9,8 +9,9 @@ import { TextRange } from '../types';
 import { parseCssClassNames } from '../utils/parseCssClassNames';
 import { parseCssVars } from '../utils/parseCssVars';
 import * as sharedTypes from '../utils/directorySharedTypes';
+import * as muggle from 'muggle-string';
 
-const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOptions }) => {
+const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOptions, codegenStack }) => {
 
 	const ts = modules.typescript;
 	const instances = new WeakMap<Sfc, ReturnType<typeof createTsx>>();
@@ -52,7 +53,9 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				};
 				const tsx = _tsx.tsxGen.value;
 				if (tsx) {
-					embeddedFile.content = [...tsx.codes];
+					const [content, contentStacks] = codegenStack ? muggle.track([...tsx.codes], [...tsx.codeStacks]) : [[...tsx.codes], [...tsx.codeStacks]];
+					embeddedFile.content = content;
+					embeddedFile.contentStacks = contentStacks;
 					embeddedFile.mirrorBehaviorMappings = [...tsx.mirrorBehaviorMappings];
 				}
 			}
@@ -69,7 +72,9 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				};
 
 				if (_tsx.htmlGen.value) {
-					embeddedFile.content = [..._tsx.htmlGen.value.formatCodes];
+					const [content, contentStacks] = codegenStack ? muggle.track([..._tsx.htmlGen.value.formatCodes], [..._tsx.htmlGen.value.formatCodeStacks]) : [[..._tsx.htmlGen.value.formatCodes], [..._tsx.htmlGen.value.formatCodeStacks]];
+					embeddedFile.content = content;
+					embeddedFile.contentStacks = contentStacks;
 				}
 
 				for (const cssVar of _tsx.cssVars.value) {
@@ -91,7 +96,9 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				embeddedFile.parentFileName = fileName + '.template.' + sfc.template?.lang;
 
 				if (_tsx.htmlGen.value) {
-					embeddedFile.content = [..._tsx.htmlGen.value.cssCodes];
+					const [content, contentStacks] = codegenStack ? muggle.track([..._tsx.htmlGen.value.cssCodes], [..._tsx.htmlGen.value.cssCodeStacks]) : [[..._tsx.htmlGen.value.cssCodes], [..._tsx.htmlGen.value.cssCodeStacks]];
+					embeddedFile.content = content;
+					embeddedFile.contentStacks = contentStacks;
 				}
 
 				// for color pickers support
@@ -146,6 +153,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				hasScriptSetupSlots.value,
 				sharedTypesImport,
 				Object.values(cssScopedClasses.value).map(style => style.classNames).flat(),
+				codegenStack,
 			);
 		});
 		const hasScriptSetupSlots = ref(false); // remove when https://github.com/vuejs/core/pull/5912 merged
@@ -165,6 +173,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				compilerOptions,
 				vueCompilerOptions,
 				sharedTypesImport,
+				codegenStack,
 			);
 		});
 

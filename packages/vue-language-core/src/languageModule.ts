@@ -11,6 +11,7 @@ export function createLanguage(
 	compilerOptions: ts.CompilerOptions = {},
 	vueCompilerOptions = resolveVueCompilerOptions({}),
 	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
+	codegenStack: boolean = false,
 ): Language {
 
 	patchResolveModuleNames(ts, vueCompilerOptions);
@@ -19,6 +20,7 @@ export function createLanguage(
 		ts,
 		compilerOptions,
 		vueCompilerOptions,
+		codegenStack,
 	);
 	const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(sharedTypes.getTypesCode(vueCompilerOptions));
 	const languageModule: Language = {
@@ -30,7 +32,7 @@ export function createLanguage(
 					&& vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))
 				)
 			) {
-				return new VueFile(fileName, snapshot, ts, vueLanguagePlugin);
+				return new VueFile(fileName, snapshot, ts, vueLanguagePlugin, codegenStack);
 			}
 		},
 		updateVirtualFile(sourceFile: VueFile, snapshot) {
@@ -84,9 +86,10 @@ export function createLanguages(
 	compilerOptions: ts.CompilerOptions = {},
 	vueCompilerOptions = resolveVueCompilerOptions({}),
 	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
+	codegenStack: boolean = false,
 ): Language[] {
 	return [
-		createLanguage(compilerOptions, vueCompilerOptions, ts),
+		createLanguage(compilerOptions, vueCompilerOptions, ts, codegenStack),
 		...vueCompilerOptions.experimentalAdditionalLanguageModules?.map(module => require(module)) ?? [],
 	];
 }

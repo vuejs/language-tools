@@ -1,5 +1,5 @@
 import { FileCapabilities, VirtualFile, FileKind, FileRangeCapabilities, MirrorBehaviorCapabilities } from '@volar/language-core';
-import { buildMappings, Mapping, Segment, toString } from '@volar/source-map';
+import { buildMappings, buildStacks, Mapping, Segment, toString, StackNode, Stack } from '@volar/source-map';
 import * as CompilerDom from '@vue/compiler-dom';
 import type { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
 import { computed, ComputedRef, reactive, pauseTracking, resetTracking } from '@vue/reactivity';
@@ -12,10 +12,13 @@ export class VueEmbeddedFile {
 	public parentFileName?: string;
 	public kind = FileKind.TextFile;
 	public capabilities: FileCapabilities = {};
-	public content: Segment<FileRangeCapabilities>[] = [];
 	public mirrorBehaviorMappings: Mapping<[MirrorBehaviorCapabilities, MirrorBehaviorCapabilities]>[] = [];
 
-	constructor(public fileName: string) { }
+	constructor(
+		public fileName: string,
+		public content: Segment<FileRangeCapabilities>[],
+		public contentStacks: StackNode[],
+	) { }
 }
 
 export class VueFile implements VirtualFile {
@@ -38,6 +41,8 @@ export class VueFile implements VirtualFile {
 	kind = FileKind.TextFile;
 
 	mappings: Mapping<FileRangeCapabilities>[] = [];
+
+	codegenStacks: Stack[] = [];
 
 	get compiledSFCTemplate() {
 		return this._compiledSfcTemplate.value;
@@ -200,7 +205,8 @@ export class VueFile implements VirtualFile {
 					for (const embeddedFileName of embeddedFileNames) {
 						if (!embeddedFiles[embeddedFileName]) {
 							embeddedFiles[embeddedFileName] = computed(() => {
-								const file = new VueEmbeddedFile(embeddedFileName);
+								const [content, stacks] = this.codegenStack ? muggle.track([]) : [[], []];
+								const file = new VueEmbeddedFile(embeddedFileName, content, stacks);
 								for (const plugin of this.plugins) {
 									if (plugin.resolveEmbeddedFile) {
 										try {
@@ -277,6 +283,7 @@ export class VueFile implements VirtualFile {
 					file,
 					snapshot,
 					mappings,
+					codegenStacks: buildStacks(file.content, file.contentStacks),
 				};
 			});
 		});
@@ -288,6 +295,7 @@ export class VueFile implements VirtualFile {
 			file: VueEmbeddedFile;
 			snapshot: ts.IScriptSnapshot;
 			mappings: Mapping<FileRangeCapabilities>[];
+			codegenStacks: Stack[];
 		}[] = [];
 
 		for (const embeddedFiles of this._pluginEmbeddedFiles) {
@@ -313,11 +321,12 @@ export class VueFile implements VirtualFile {
 			}
 		}
 
-		for (const { file, snapshot, mappings } of remain) {
+		for (const { file, snapshot, mappings, codegenStacks } of remain) {
 			embeddedFiles.push({
 				...file,
 				snapshot,
 				mappings,
+				codegenStacks,
 				embeddedFiles: [],
 			});
 			console.error('Unable to resolve embedded: ' + file.parentFileName + ' -> ' + file.fileName);
@@ -327,12 +336,13 @@ export class VueFile implements VirtualFile {
 
 		function consumeRemain() {
 			for (let i = remain.length - 1; i >= 0; i--) {
-				const { file, snapshot, mappings } = remain[i];
+				const { file, snapshot, mappings, codegenStacks } = remain[i];
 				if (!file.parentFileName) {
 					embeddedFiles.push({
 						...file,
 						snapshot,
 						mappings,
+						codegenStacks,
 						embeddedFiles: [],
 					});
 					remain.splice(i, 1);
@@ -344,6 +354,7 @@ export class VueFile implements VirtualFile {
 							...file,
 							snapshot,
 							mappings,
+							codegenStacks,
 							embeddedFiles: [],
 						});
 						remain.splice(i, 1);
@@ -369,6 +380,7 @@ export class VueFile implements VirtualFile {
 		public snapshot: ts.IScriptSnapshot,
 		private ts: typeof import('typescript/lib/tsserverlibrary'),
 		private plugins: ReturnType<VueLanguagePlugin>[],
+		private codegenStack: boolean,
 	) {
 		this.update(snapshot);
 	}

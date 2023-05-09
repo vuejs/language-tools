@@ -30,9 +30,10 @@ export function generate(
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
 	sharedTypesImport: string,
+	codegenStack: boolean,
 ) {
 
-	const codes: Segment<FileRangeCapabilities>[] = [];
+	const [codes, codeStacks] = codegenStack ? muggle.track([] as Segment<FileRangeCapabilities>[]) : [[], []];
 	const mirrorBehaviorMappings: SourceMaps.Mapping<[MirrorBehaviorCapabilities, MirrorBehaviorCapabilities]>[] = [];
 
 	//#region monkey fix: https://github.com/vuejs/language-tools/pull/2113
@@ -108,6 +109,7 @@ export function generate(
 
 	return {
 		codes,
+		codeStacks,
 		mirrorBehaviorMappings,
 	};
 
@@ -860,8 +862,13 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		codes.push(`/* CSS variable injection end */\n`);
 
 		if (htmlGen) {
+			muggle.setTracking(false);
 			for (const s of htmlGen.codes) {
 				codes.push(s);
+			}
+			muggle.setTracking(true);
+			for (const s of htmlGen.codeStacks) {
+				codeStacks.push(s);
 			}
 		}
 
@@ -987,14 +994,17 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		return usageVars;
 	}
 	function addVirtualCode(vueTag: 'script' | 'scriptSetup', start: number, end?: number) {
+		muggle.offsetStack();
 		codes.push([
 			sfc[vueTag]!.content.substring(start, end),
 			vueTag,
 			start,
 			FileRangeCapabilities.full, // diagnostic also working for setup() returns unused in template checking
 		]);
+		muggle.resetOffsetStack();
 	}
 	function addExtraReferenceVirtualCode(vueTag: 'script' | 'scriptSetup', start: number, end: number) {
+		muggle.offsetStack();
 		codes.push([
 			sfc[vueTag]!.content.substring(start, end),
 			vueTag,
@@ -1005,6 +1015,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				rename: true,
 			},
 		]);
+		muggle.resetOffsetStack();
 	}
 }
 

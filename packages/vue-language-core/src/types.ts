@@ -43,9 +43,10 @@ export type VueLanguagePlugin = (ctx: {
 	modules: {
 		typescript: typeof import('typescript/lib/tsserverlibrary');
 		'@vue/compiler-dom': typeof import('@vue/compiler-dom');
-	},
-	compilerOptions: ts.CompilerOptions,
-	vueCompilerOptions: VueCompilerOptions,
+	};
+	compilerOptions: ts.CompilerOptions;
+	vueCompilerOptions: VueCompilerOptions;
+	codegenStack: boolean;
 }) => {
 	version: 1;
 	name?: string;

@@ -71,11 +71,12 @@ export function generate(
 	hasScriptSetupSlots: boolean,
 	sharedTypesImport: string,
 	cssScopedClasses: string[] = [],
+	codegenStack: boolean,
 ) {
 
-	const codes: Code[] = [];
-	const formatCodes: Code[] = [];
-	const cssCodes: Code[] = [];
+	const [codes, codeStacks] = codegenStack ? muggle.track([] as Code[]) : [[], []];
+	const [formatCodes, formatCodeStacks] = codegenStack ? muggle.track([] as Code[]) : [[], []];
+	const [cssCodes, cssCodeStacks] = codegenStack ? muggle.track([] as Code[]) : [[], []];
 	const slots = new Map<string, {
 		varName: string,
 		loc: [number, number],
@@ -113,8 +114,11 @@ export function generate(
 
 	return {
 		codes,
+		codeStacks,
 		formatCodes,
+		formatCodeStacks,
 		cssCodes,
+		cssCodeStacks,
 		tagNames,
 		identifiers,
 		hasSlot,

@@ -611,11 +611,6 @@
 				"category": "Volar (Debug)"
 			},
 			{
-				"command": "volar.action.showVirtualFiles",
-				"title": "Show Virtual Files",
-				"category": "Volar (Debug)"
-			},
-			{
 				"command": "volar.action.serverStats",
 				"title": "Server Stats",
 				"category": "Volar (Debug)"
@@ -658,10 +653,6 @@
 				},
 				{
 					"command": "volar.action.writeVirtualFiles",
-					"when": "volar.activated"
-				},
-				{
-					"command": "volar.action.showVirtualFiles",
 					"when": "volar.activated"
 				},
 				{
@@ -741,8 +732,8 @@
 	"devDependencies": {
 		"@types/semver": "^7.3.13",
 		"@types/vscode": "1.67.0",
-		"@volar/source-map": "1.5.4",
-		"@volar/vscode": "1.5.4",
+		"@volar/source-map": "1.6.0",
+		"@volar/vscode": "1.6.0",
 		"@vue/language-core": "1.7.0",
 		"@vue/language-server": "1.7.0",
 		"esbuild": "0.15.18",
