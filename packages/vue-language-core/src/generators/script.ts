@@ -8,7 +8,6 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import type * as templateGen from '../generators/template';
 import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
-import { collectCssVars, collectStyleCssClasses } from '../plugins/vue-tsx';
 import { Sfc } from '../types';
 import type { VueCompilerOptions } from '../types';
 import { getSlotsPropertyName } from '../utils/shared';
@@ -23,9 +22,6 @@ export function generate(
 	lang: string,
 	scriptRanges: ScriptRanges | undefined,
 	scriptSetupRanges: ScriptSetupRanges | undefined,
-	cssVars: ReturnType<typeof collectCssVars>,
-	cssModuleClasses: ReturnType<typeof collectStyleCssClasses>,
-	cssScopedClasses: ReturnType<typeof collectStyleCssClasses>,
 	htmlGen: ReturnType<typeof templateGen['generate']> | undefined,
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
@@ -818,13 +814,15 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		codes.push(`InstanceType<import('${sharedTypesImport}').PickNotAny<typeof __VLS_internalComponent, new () => {}>> & {\n`);
 
 		/* CSS Module */
-		for (const cssModule of cssModuleClasses) {
-			codes.push(`${cssModule.style.module}: Record<string, string> & import('${sharedTypesImport}').Prettify<{}`);
-			for (const classNameRange of cssModule.classNameRanges) {
+		for (let i = 0; i < _sfc.styles.length; i++) {
+			const style = _sfc.styles[i];
+			if (!style.module) continue;
+			codes.push(`${style.module}: Record<string, string> & import('${sharedTypesImport}').Prettify<{}`);
+			for (const className of style.classNames) {
 				generateCssClassProperty(
-					cssModule.index,
-					cssModule.style.content.substring(classNameRange.start + 1, classNameRange.end),
-					classNameRange,
+					i,
+					className.text.substring(1),
+					{ start: className.offset, end: className.offset + className.text.length },
 					'string',
 					false,
 				);
@@ -843,12 +841,14 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		/* Style Scoped */
 		codes.push('/* Style Scoped */\n');
 		codes.push('type __VLS_StyleScopedClasses = {}');
-		for (const scopedCss of cssScopedClasses) {
-			for (const classNameRange of scopedCss.classNameRanges) {
+		for (let i = 0; i < _sfc.styles.length; i++) {
+			const style = _sfc.styles[i];
+			if (!style.scoped) continue;
+			for (const className of style.classNames) {
 				generateCssClassProperty(
-					scopedCss.index,
-					scopedCss.style.content.substring(classNameRange.start + 1, classNameRange.end),
-					classNameRange,
+					i,
+					className.text.substring(1),
+					{ start: className.offset, end: className.offset + className.text.length },
 					'boolean',
 					true,
 				);
@@ -927,13 +927,12 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			const emptyLocalVars: Record<string, number> = {};
 			const identifiers = new Set<string>();
 
-			for (const cssVar of cssVars) {
-				for (const cssBind of cssVar.ranges) {
-					const code = cssVar.style.content.substring(cssBind.start, cssBind.end);
+			for (const style of _sfc.styles) {
+				for (const cssBind of style.cssVars) {
 					walkInterpolationFragment(
 						ts,
-						code,
-						ts.createSourceFile('/a.txt', code, ts.ScriptTarget.ESNext),
+						cssBind.text,
+						ts.createSourceFile('/a.txt', cssBind.text, ts.ScriptTarget.ESNext),
 						(frag, fragOffset, onlyForErrorMapping) => {
 							if (fragOffset === undefined) {
 								codes.push(frag);
@@ -941,8 +940,8 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 							else {
 								codes.push([
 									frag,
-									cssVar.style.name,
-									cssBind.start + fragOffset,
+									style.name,
+									cssBind.offset + fragOffset,
 									onlyForErrorMapping
 										? { diagnostic: true }
 										: FileRangeCapabilities.full,

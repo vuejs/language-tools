@@ -85,6 +85,14 @@ export interface Sfc {
 	styles: (SfcBlock & {
 		module: string | undefined;
 		scoped: boolean;
+		cssVars: {
+			text: string;
+			offset: number;
+		}[];
+		classNames: {
+			text: string;
+			offset: number;
+		}[];
 	})[];
 	customBlocks: (SfcBlock & {
 		type: string;

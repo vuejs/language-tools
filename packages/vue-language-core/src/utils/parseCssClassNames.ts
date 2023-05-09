@@ -8,7 +8,7 @@ export function* parseCssClassNames(styleContent: string) {
 		if (match.index !== undefined) {
 			const matchText = match[1];
 			if (matchText !== undefined) {
-				yield { start: match.index, end: match.index + matchText.length };
+				yield { offset: match.index, text: matchText };
 			}
 		}
 	}

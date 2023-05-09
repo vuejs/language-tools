@@ -6,6 +6,9 @@ import { computed, ComputedRef, reactive, pauseTracking, resetTracking } from '@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { Sfc, SfcBlock, VueLanguagePlugin } from './types';
 import * as muggle from 'muggle-string';
+import { parseCssVars } from './utils/parseCssVars';
+import { parseCssClassNames } from './utils/parseCssClassNames';
+import { VueCompilerOptions } from './types';
 
 export class VueEmbeddedFile {
 
@@ -378,9 +381,10 @@ export class VueFile implements VirtualFile {
 	constructor(
 		public fileName: string,
 		public snapshot: ts.IScriptSnapshot,
-		private ts: typeof import('typescript/lib/tsserverlibrary'),
-		private plugins: ReturnType<VueLanguagePlugin>[],
-		private codegenStack: boolean,
+		public vueCompilerOptions: VueCompilerOptions,
+		public plugins: ReturnType<VueLanguagePlugin>[],
+		public ts: typeof import('typescript/lib/tsserverlibrary'),
+		public codegenStack: boolean,
 	) {
 		this.update(snapshot);
 	}
@@ -499,12 +503,16 @@ export class VueFile implements VirtualFile {
 	}
 
 	parseStyleBlock(block: SFCStyleBlock, i: number): Sfc['styles'][number] {
+		const setting = this.vueCompilerOptions.experimentalResolveStyleCssClasses;
+		const shouldParseClassNames = block.module || (setting === 'scoped' && block.scoped) || setting === 'always';
 		return {
 			...this.parseBlock(block),
 			name: 'style_' + i,
 			lang: block.lang ?? 'css',
 			module: typeof block.module === 'string' ? block.module : block.module ? '$style' : undefined,
 			scoped: !!block.scoped,
+			cssVars: [...parseCssVars(block.content)],
+			classNames: shouldParseClassNames ? [...parseCssClassNames(block.content)] : [],
 		};
 	}
 

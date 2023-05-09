@@ -32,7 +32,7 @@ export function createLanguage(
 					&& vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))
 				)
 			) {
-				return new VueFile(fileName, snapshot, ts, vueLanguagePlugin, codegenStack);
+				return new VueFile(fileName, snapshot, vueCompilerOptions, vueLanguagePlugin, ts, codegenStack);
 			}
 		},
 		updateVirtualFile(sourceFile: VueFile, snapshot) {
