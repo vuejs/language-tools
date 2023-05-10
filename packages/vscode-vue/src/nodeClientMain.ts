@@ -109,7 +109,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	});
 
 	return createExports({
-		devtools: true,
 		codegenStackSupport: true,
 		languageClients,
 		serverLib: serverLib as any,
