@@ -46,6 +46,7 @@ export function createServerPlugin(connection: Connection) {
 					vueOptions,
 					vueLanguageServiceSettings,
 					ts,
+					initOptions.codegenStack,
 				);
 
 				function getVueCompilerOptions() {

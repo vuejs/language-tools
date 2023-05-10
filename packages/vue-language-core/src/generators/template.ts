@@ -3,7 +3,7 @@ import { FileRangeCapabilities } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { VueCompilerOptions } from '../types';
+import { Sfc, VueCompilerOptions } from '../types';
 import { colletVars, walkInterpolationFragment } from '../utils/transform';
 import { minimatch } from 'minimatch';
 import * as muggle from 'muggle-string';
@@ -67,15 +67,15 @@ export function generate(
 	vueCompilerOptions: VueCompilerOptions,
 	sourceTemplate: string,
 	sourceLang: string,
-	templateAst: CompilerDOM.RootNode,
+	sfc: Sfc,
 	hasScriptSetupSlots: boolean,
 	sharedTypesImport: string,
-	cssScopedClasses: string[] = [],
+	codegenStack: boolean,
 ) {
 
-	const codes: Code[] = [];
-	const formatCodes: Code[] = [];
-	const cssCodes: Code[] = [];
+	const [codes, codeStacks] = codegenStack ? muggle.track([] as Code[]) : [[], []];
+	const [formatCodes, formatCodeStacks] = codegenStack ? muggle.track([] as Code[]) : [[], []];
+	const [cssCodes, cssCodeStacks] = codegenStack ? muggle.track([] as Code[]) : [[], []];
 	const slots = new Map<string, {
 		varName: string,
 		loc: [number, number],
@@ -84,7 +84,6 @@ export function generate(
 	const slotExps = new Map<string, {
 		varName: string,
 	}>();
-	const cssScopedClassesSet = new Set(cssScopedClasses);
 	const tagNames = collectTagOffsets();
 	const localVars: Record<string, number> = {};
 	const tempVars: ReturnType<typeof walkInterpolationFragment>[] = [];
@@ -97,7 +96,9 @@ export function generate(
 
 	const componentVars = generateComponentVars();
 
-	visitNode(templateAst, undefined, undefined);
+	if (sfc.templateAst) {
+		visitNode(sfc.templateAst, undefined, undefined);
+	}
 
 	generateStyleScopedClasses();
 
@@ -113,8 +114,11 @@ export function generate(
 
 	return {
 		codes,
+		codeStacks,
 		formatCodes,
+		formatCodeStacks,
 		cssCodes,
+		cssCodeStacks,
 		tagNames,
 		identifiers,
 		hasSlot,
@@ -148,6 +152,16 @@ export function generate(
 
 	function generateStyleScopedClasses() {
 
+		const allClasses = new Set<string>();
+
+		for (const block of sfc.styles) {
+			if (block.scoped) {
+				for (const className of block.classNames) {
+					allClasses.add(className.text.substring(1));
+				}
+			}
+		}
+
 		codes.push(`if (typeof __VLS_styleScopedClasses === 'object' && !Array.isArray(__VLS_styleScopedClasses)) {\n`);
 		for (const { className, offset } of scopedClasses) {
 			codes.push(`__VLS_styleScopedClasses[`);
@@ -157,7 +171,7 @@ export function generate(
 				offset,
 				{
 					...capabilitiesPresets.scopedClassName,
-					displayWithLink: cssScopedClassesSet.has(className),
+					displayWithLink: allClasses.has(className),
 				},
 			]));
 			codes.push(`];\n`);
@@ -258,7 +272,11 @@ export function generate(
 
 		const tagOffsetsMap: Record<string, number[]> = {};
 
-		walkElementNodes(templateAst, node => {
+		if (!sfc.templateAst) {
+			return tagOffsetsMap;
+		}
+
+		walkElementNodes(sfc.templateAst, node => {
 			if (node.tag === 'slot') {
 				// ignore
 			}
@@ -671,7 +689,7 @@ export function generate(
 
 		generateDirectives(node, var_originalComponent);
 		generateElReferences(node); // <el ref="foo" />
-		if (cssScopedClasses.length) {
+		if (sfc.styles.some(s => s.scoped)) {
 			generateClassScoped(node);
 		}
 		if (componentCtxVar) {

@@ -1,25 +1,24 @@
 import {
 	activateAutoInsertion,
-	activateShowVirtualFiles,
-	activateWriteVirtualFiles,
 	activateFindFileReferences,
 	activateReloadProjects,
 	activateServerStats,
-	activateTsConfigStatusItem,
 	activateServerSys,
+	activateTsConfigStatusItem,
 	activateTsVersionStatusItem,
+	activateWriteVirtualFiles,
 	getTsdk,
-	takeOverModeActive,
+	takeOverModeActive
 } from '@volar/vscode';
 import { DiagnosticModel, ServerMode, VueServerInitializationOptions } from '@vue/language-server';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient';
+import { config } from './config';
 import * as componentMeta from './features/componentMeta';
 import * as doctor from './features/doctor';
 import * as nameCasing from './features/nameCasing';
 import * as savingTime from './features/savingTime';
 import * as splitEditors from './features/splitEditors';
-import { config } from './config';
 
 let semanticClient: lsp.BaseLanguageClient;
 let syntacticClient: lsp.BaseLanguageClient;
@@ -102,7 +101,6 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	};
 
 	activateAutoInsertion([syntacticClient, semanticClient], document => supportedLanguages[document.languageId]);
-	activateShowVirtualFiles('volar.action.showVirtualFiles', semanticClient);
 	activateWriteVirtualFiles('volar.action.writeVirtualFiles', semanticClient);
 	activateFindFileReferences('volar.vue.findAllFileReferences', semanticClient);
 	activateTsConfigStatusItem('volar.openTsconfig', semanticClient,

@@ -16,6 +16,7 @@ export function getDefaultVueLanguagePlugins(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
+	codegenStack: boolean,
 ) {
 
 	const plugins: VueLanguagePlugin[] = [
@@ -37,6 +38,7 @@ export function getDefaultVueLanguagePlugins(
 		},
 		compilerOptions,
 		vueCompilerOptions,
+		codegenStack,
 	};
 	const pluginInstances = plugins
 		.map(plugin => plugin(pluginCtx))
