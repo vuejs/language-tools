@@ -1,14 +1,15 @@
 # Changelog
 
-## 1.7.0 (2023/5/7) - pre-release
+## 1.7.1 (2023/5/10) - pre-release
 
-- feat(language-service): compatible with Volar.js 1.5 Scripts API, Rules API
-- fix: `volar.config.js` does not load on Windows (https://github.com/volarjs/volar.js/issues/36)
+- ⭐ feat: support for [Volar.js Labs](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volarjs-labs)
+- fix(language-core): add missing peer dependency `typescript` ([#3145](https://github.com/vuejs/language-tools/issues/3145)) - thanks @HunYan-io
+- perf: style code change should not increase ts virtual script version
+- perf: avoid virtual file version always increase due to source map update
 
 **Breaking changes**
 
-- rename packages from `@volar/vue-*` to `@vue/*` ([#3134](https://github.com/vuejs/language-tools/issues/3134))
-- `volar.config.js` specification update (base on Volar.js v1.5)
+- Removed the `VueLanguageServiceHost` interface
 
 ---
 
@@ -45,6 +46,16 @@
 		<a href="https://opencollective.com/volarjs">Open Collective</a>
 	</h5>
 </p>
+
+## 1.7.0 (2023/5/7) - pre-release
+
+- feat(language-service): compatible with Volar.js 1.5 Scripts API, Rules API
+- fix: `volar.config.js` does not load on Windows (https://github.com/volarjs/volar.js/issues/36)
+
+**Breaking changes**
+
+- rename packages from `@volar/vue-*` to `@vue/*` ([#3134](https://github.com/vuejs/language-tools/issues/3134))
+- `volar.config.js` specification update (base on Volar.js v1.5)
 
 ## 1.6.4 (2023/5/4)
 
