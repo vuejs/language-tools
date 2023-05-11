@@ -7,7 +7,7 @@ import { activate as commonActivate, deactivate as commonDeactivate, getDocument
 import { middleware } from './middleware';
 import * as serverLib from '@vue/language-server';
 import { config } from './config';
-import { createExports } from '@volar/vscode';
+import type { ExportsInfoForLabs } from '@volar/vscode';
 
 export async function activate(context: vscode.ExtensionContext) {
 
@@ -108,11 +108,14 @@ export async function activate(context: vscode.ExtensionContext) {
 		return client;
 	});
 
-	return createExports({
-		codegenStackSupport: true,
-		languageClients,
-		serverLib: serverLib as any,
-	});
+	return {
+		volarLabs: {
+			version: '1.6.2',
+			codegenStackSupport: true,
+			languageClients,
+			languageServerProtocol: serverLib,
+		},
+	} satisfies ExportsInfoForLabs;
 }
 
 export function deactivate(): Thenable<any> | undefined {
