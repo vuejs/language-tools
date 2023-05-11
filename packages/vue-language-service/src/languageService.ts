@@ -82,7 +82,6 @@ function resolvePlugins(
 							&& (!item.labelDetails?.description || item.labelDetails.description.indexOf('__VLS_') === -1)
 						) {
 							if (item.labelDetails?.description?.endsWith('.vue.js')) {
-								console.log(item);
 								// remove .js from .vue files
 								item.labelDetails.description = item.labelDetails.description.slice(0, -3);
 							}
