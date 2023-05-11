@@ -82,28 +82,30 @@ function resolvePlugins(
 					);
 
 					// handle component auto-import patch
+					let sourceIsKebabCasing: boolean | null = null;
 					for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
 						const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
 						if (virtualFile instanceof vue.VueFile) {
 							const isAutoImport = !!map.toSourcePosition(position, data => typeof data.completion === 'object' && !!data.completion.autoImportOnly);
 							if (isAutoImport) {
-								result.items.forEach(item => {
-									item.data.__isComponentAutoImport = true;
-								});
-
-								// fix #2458
 								const source = _context.documents.getVirtualFileByUri(document.uri)[1];
-								if (source && _context.typescript) {
-									const casing = await getNameCasing(_context, _context.typescript, _context.fileNameToUri(source.fileName));
-									if (casing.tag === TagNameCasing.Kebab) {
-										result.items.forEach(item => {
+								for (const item of result.items) {
+									item.data.__isComponentAutoImport = true;
+									// fix #2458
+									if (source && _context.typescript) {
+										if (sourceIsKebabCasing === null) {
+											const casing = await getNameCasing(_context, _context.typescript, _context.fileNameToUri(source.fileName));
+											sourceIsKebabCasing = casing.tag === TagNameCasing.Kebab;
+										}
+										if (sourceIsKebabCasing) {
 											item.filterText = hyphenate(item.filterText ?? item.label);
-										});
+										}
 									}
 								}
 							}
 						}
 					}
+					await Promise.all(nameCasingPromises);
 				}
 				return result;
 			},
