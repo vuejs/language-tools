@@ -75,11 +75,21 @@ function resolvePlugins(
 				const result = await base.provideCompletionItems?.(document, position, context, item);
 				if (result) {
 
-					// filter __VLS_
-					result.items = result.items.filter(item =>
-						item.label.indexOf('__VLS_') === -1
-						&& (!item.labelDetails?.description || item.labelDetails.description.indexOf('__VLS_') === -1)
-					);
+					const changedItems = [];
+					for (const item of result.items) {
+						// filter __VLS_
+						if (item.label.indexOf('__VLS_') === -1
+							&& (!item.labelDetails?.description || item.labelDetails.description.indexOf('__VLS_') === -1)
+						) {
+							if (item.labelDetails?.description?.endsWith('.vue.js')) {
+								console.log(item);
+								// remove .js from .vue files
+								item.labelDetails.description = item.labelDetails.description.slice(0, -3);
+							}
+							changedItems.push(item);
+						}
+					}
+					result.items = changedItems;
 
 					// handle component auto-import patch
 					for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
@@ -157,6 +167,10 @@ function resolvePlugins(
 						// https://github.com/johnsoncodehk/volar/issues/2286
 						item.textEdit.newText = item.textEdit.newText.replace(`${suffix}$1`, '$1');
 					}
+				}
+
+				if (item.additionalTextEdits?.length === 1 && item.additionalTextEdits[0].newText.includes('.vue.js')) {
+					item.additionalTextEdits[0].newText = item.additionalTextEdits[0].newText.replace('.vue.js', '.vue');
 				}
 
 				const data: Data = item.data;
