@@ -15,10 +15,10 @@
 	"dependencies": {
 		"@volar/language-core": "1.4.1",
 		"@volar/source-map": "1.4.1",
-		"@vue/compiler-dom": "^3.3.0-beta.3",
-		"@vue/compiler-sfc": "^3.3.0-beta.3",
-		"@vue/reactivity": "^3.3.0-beta.3",
-		"@vue/shared": "^3.3.0-beta.3",
+		"@vue/compiler-dom": "^3.3.1",
+		"@vue/compiler-sfc": "^3.3.1",
+		"@vue/reactivity": "^3.3.1",
+		"@vue/shared": "^3.3.1",
 		"minimatch": "^9.0.0",
 		"muggle-string": "^0.2.2",
 		"vue-template-compiler": "^2.7.14"
