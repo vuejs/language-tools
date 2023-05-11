@@ -41,7 +41,7 @@ export function resolveConfig(
 	const vueLanguageModules = vue.createLanguageModules(ts, compilerOptions, resolvedVueOptions);
 
 	config.languages = Object.assign({}, vueLanguageModules, config.languages);
-	config.plugins = resolvePlugins(config.plugins, resolvedVueOptions, settings);
+	config.plugins = resolvePlugins(config.plugins, resolvedVueOptions, settings, compilerOptions);
 
 	return config;
 }
@@ -50,6 +50,7 @@ function resolvePlugins(
 	plugins: Config['plugins'],
 	vueCompilerOptions: VueCompilerOptions,
 	settings?: Settings,
+	compilerOptions?: ts.CompilerOptions,
 ) {
 
 	const originalTsPlugin = plugins?.typescript ?? createTsPlugin();
@@ -75,11 +76,23 @@ function resolvePlugins(
 				const result = await base.provideCompletionItems?.(document, position, context, item);
 				if (result) {
 
-					// filter __VLS_
-					result.items = result.items.filter(item =>
-						item.label.indexOf('__VLS_') === -1
-						&& (!item.labelDetails?.description || item.labelDetails.description.indexOf('__VLS_') === -1)
-					);
+					const changedItems = [];
+					for (const item of result.items) {
+						// filter __VLS_
+						if (item.label.indexOf('__VLS_') === -1
+							&& (!item.labelDetails?.description || item.labelDetails.description.indexOf('__VLS_') === -1)
+						) {
+							if (compilerOptions?.allowImportingTsExtensions
+								&& item.data?.originalItem?.data?.fileName.endsWith('.ts')
+								&& item.labelDetails?.description?.includes('.js')
+							) {
+								// replace .js to .ts
+								item.labelDetails.description = item.labelDetails.description.replace('.js', '.ts');
+							}
+							changedItems.push(item);
+						}
+					}
+					result.items = changedItems;
 
 					// handle component auto-import patch
 					for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
@@ -157,6 +170,14 @@ function resolvePlugins(
 						// https://github.com/johnsoncodehk/volar/issues/2286
 						item.textEdit.newText = item.textEdit.newText.replace(`${suffix}$1`, '$1');
 					}
+				}
+
+				if (compilerOptions?.allowImportingTsExtensions
+					&& item.data?.originalItem?.data?.fileName.endsWith('.ts')
+					&& item.additionalTextEdits?.length === 1
+					&& item.additionalTextEdits[0].newText.includes('.js')
+				) {
+					item.additionalTextEdits[0].newText = item.additionalTextEdits[0].newText.replace('.js', '.ts');
 				}
 
 				const data: Data = item.data;
