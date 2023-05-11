@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.2 (2023/5/11) - pre-release
+
+- feat: compatible with the latest Labs
+
 ## 1.7.1 (2023/5/10) - pre-release
 
 - ⭐ feat: support for [Volar.js Labs](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volarjs-labs)
