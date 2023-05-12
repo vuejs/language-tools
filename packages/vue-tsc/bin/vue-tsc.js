@@ -25,6 +25,8 @@ fs.readFileSync = (...args) => {
 				.filter(file => !file.toLowerCase().includes('__vls_'))
 				.map(file => file.replace(/\.vue\.(j|t)sx?$/i, '.vue'))
 			) {`);
+
+			tryReplace(`relativeToBuildInfo(file.resolvedPath)`, `relativeToBuildInfo(file.resolvedPath || file.fileName)`);
 		}
 
 		return tsc;
