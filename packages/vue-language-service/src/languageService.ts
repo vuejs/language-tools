@@ -95,8 +95,8 @@ function resolvePlugins(
 								}
 
 								// fix #2458
-								if (source && _context.typescript) {
-									casing ??= await getNameCasing(_context, _context.typescript, _context.fileNameToUri(source.fileName));
+								if (source) {
+									casing ??= await getNameCasing(ts, _context, _context.env.fileNameToUri(source.fileName));
 									if (casing.tag === TagNameCasing.Kebab) {
 										for (const item of result.items) {
 											item.filterText = hyphenate(item.filterText ?? item.label);

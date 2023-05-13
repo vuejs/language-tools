@@ -9,8 +9,6 @@
 
 ## 1.7.2 (2023/5/11) - pre-release
 
-## 1.6.4 (2023/5/4)
-
 - feat: compatible with the latest Labs
 
 ## 1.7.1 (2023/5/10) - pre-release
