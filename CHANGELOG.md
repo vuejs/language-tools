@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.6.5 (2023/5/13)
+## 1.6.5 (2023/5/13), 1.7.3 (2023/5/13) - pre-release
 
 - chore: bump vue deps to 3.3 stable ([#3167](https://github.com/johnsoncodehk/volar/issues/3167)) - thanks @ferferga
 - fix(vue-tsc): avoid throw when composite is enabled ([#2622](https://github.com/johnsoncodehk/volar/issues/2622))
