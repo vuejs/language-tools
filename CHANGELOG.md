@@ -7,21 +7,6 @@
 - perf(language-service): avoid request name casing from language client multiple times ([#3158](https://github.com/johnsoncodehk/volar/issues/3158)) - thanks @kalvenschraut
 - fix: avoid slot name report TS8013 in js component ([#3121](https://github.com/johnsoncodehk/volar/issues/3121))
 
-## 1.7.2 (2023/5/11) - pre-release
-
-- feat: compatible with the latest Labs
-
-## 1.7.1 (2023/5/10) - pre-release
-
-- ⭐ feat: support for [Volar.js Labs](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volarjs-labs)
-- fix(language-core): add missing peer dependency `typescript` ([#3145](https://github.com/vuejs/language-tools/issues/3145)) - thanks @HunYan-io
-- perf: style code change should not increase ts virtual script version
-- perf: avoid virtual file version always increase due to source map update
-
-**Breaking changes**
-
-- Removed the `VueLanguageServiceHost` interface
-
 ---
 
 <h3 align="center">Full-time Support by</h3>
@@ -57,6 +42,21 @@
 		<a href="https://opencollective.com/volarjs">Open Collective</a>
 	</h5>
 </p>
+
+## 1.7.2 (2023/5/11) - pre-release
+
+- feat: compatible with the latest Labs
+
+## 1.7.1 (2023/5/10) - pre-release
+
+- ⭐ feat: support for [Volar.js Labs](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volarjs-labs)
+- fix(language-core): add missing peer dependency `typescript` ([#3145](https://github.com/vuejs/language-tools/issues/3145)) - thanks @HunYan-io
+- perf: style code change should not increase ts virtual script version
+- perf: avoid virtual file version always increase due to source map update
+
+**Breaking changes**
+
+- Removed the `VueLanguageServiceHost` interface
 
 ## 1.7.0 (2023/5/7) - pre-release
 
