@@ -288,8 +288,8 @@ importers:
   packages/vue-typescript:
     dependencies:
       '@volar/typescript':
-        specifier: 1.4.1-patch.1
-        version: 1.4.1-patch.1(typescript@5.0.4)
+        specifier: 1.4.1-patch.2
+        version: 1.4.1-patch.2(typescript@5.0.4)
       '@volar/vue-language-core':
         specifier: 1.6.4
         version: link:../vue-language-core
@@ -1329,8 +1329,8 @@ packages:
     dependencies:
       muggle-string: 0.2.2
 
-  /@volar/typescript@1.4.1-patch.1(typescript@5.0.4):
-    resolution: {integrity: sha512-oBFudGqb666bsF2UOU3CAgN+dWtF/mJftMe97qQMmZw9E3n1kP0+nxltV0qkUTVFbxY0Pm9pP93PhsP0QjaROQ==}
+  /@volar/typescript@1.4.1-patch.2(typescript@5.0.4):
+    resolution: {integrity: sha512-lPFYaGt8OdMEzNGJJChF40uYqMO4Z/7Q9fHPQC/NRVtht43KotSXLrkPandVVMf9aPbiJ059eAT+fwHGX16k4w==}
     peerDependencies:
       typescript: '*'
     dependencies:
