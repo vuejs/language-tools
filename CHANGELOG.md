@@ -1,6 +1,15 @@
 # Changelog
 
+## 1.6.5 (2023/5/13)
+
+- chore: bump vue deps to 3.3 stable ([#3167](https://github.com/johnsoncodehk/volar/issues/3167)) - thanks @ferferga
+- fix(vue-tsc): avoid throw when composite is enabled ([#2622](https://github.com/johnsoncodehk/volar/issues/2622))
+- perf(language-service): avoid request name casing from language client multiple times ([#3158](https://github.com/johnsoncodehk/volar/issues/3158)) - thanks @kalvenschraut
+- fix: avoid slot name report TS8013 in js component ([#3121](https://github.com/johnsoncodehk/volar/issues/3121))
+
 ## 1.7.2 (2023/5/11) - pre-release
+
+## 1.6.4 (2023/5/4)
 
 - feat: compatible with the latest Labs
 
