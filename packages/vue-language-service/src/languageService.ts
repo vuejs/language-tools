@@ -82,7 +82,8 @@ function resolvePlugins(
 					);
 
 					// handle component auto-import patch
-					let sourceIsKebabCasing: boolean | null = null;
+					let casing: Awaited<ReturnType<typeof getNameCasing>> | undefined;
+
 					for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
 						const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
 						if (virtualFile instanceof vue.VueFile) {
@@ -91,13 +92,13 @@ function resolvePlugins(
 								const source = _context.documents.getVirtualFileByUri(document.uri)[1];
 								for (const item of result.items) {
 									item.data.__isComponentAutoImport = true;
-									// fix #2458
-									if (source && _context.typescript) {
-										if (sourceIsKebabCasing === null) {
-											const casing = await getNameCasing(_context, _context.typescript, _context.fileNameToUri(source.fileName));
-											sourceIsKebabCasing = casing.tag === TagNameCasing.Kebab;
-										}
-										if (sourceIsKebabCasing) {
+								}
+
+								// fix #2458
+								if (source && _context.typescript) {
+									casing ??= await getNameCasing(_context, _context.typescript, _context.fileNameToUri(source.fileName));
+									if (casing.tag === TagNameCasing.Kebab) {
+										for (const item of result.items) {
 											item.filterText = hyphenate(item.filterText ?? item.label);
 										}
 									}
