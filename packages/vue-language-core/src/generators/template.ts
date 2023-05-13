@@ -732,7 +732,7 @@ export function generate(
 			}
 			codes.push(
 				['', 'template', (slotDir.arg ?? slotDir).loc.start.offset, capabilitiesPresets.diagnosticOnly],
-				`${componentCtxVar}.slots!`,
+				`(${componentCtxVar}.slots!)`,
 				...(
 					(slotDir?.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content)
 						? createPropertyAccessCode([
