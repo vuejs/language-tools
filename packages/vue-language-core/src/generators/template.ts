@@ -69,7 +69,6 @@ export function generate(
 	sourceLang: string,
 	sfc: Sfc,
 	hasScriptSetupSlots: boolean,
-	sharedTypesImport: string,
 	codegenStack: boolean,
 ) {
 
@@ -194,7 +193,7 @@ export function generate(
 			const varName = validTsVar.test(tagName) ? tagName : capitalize(camelize(tagName.replace(/:/g, '-')));
 
 			codes.push(
-				`& import('${sharedTypesImport}').WithComponent<'${varName}', typeof __VLS_components, `,
+				`& __VLS_WithComponent<'${varName}', typeof __VLS_components, `,
 				// order is important: https://github.com/vuejs/language-tools/issues/2010
 				`"${capitalize(camelize(tagName))}", `,
 				`"${camelize(tagName)}", `,
@@ -481,7 +480,7 @@ export function generate(
 			codes.push([leftExpressionText, 'template', leftExpressionRange.start, capabilitiesPresets.all]);
 			formatCodes.push(...createFormatCode(leftExpressionText, leftExpressionRange.start, formatBrackets.normal));
 		}
-		codes.push(`] of (await import('${sharedTypesImport}')).getVForSourceType`);
+		codes.push(`] of __VLS_getVForSourceType`);
 		if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 			codes.push(
 				'(',
@@ -582,7 +581,7 @@ export function generate(
 		}
 
 		codes.push(
-			`const ${var_functionalComponent} = (await import('${sharedTypesImport}')).asFunctionalComponent(`,
+			`const ${var_functionalComponent} = __VLS_asFunctionalComponent(`,
 			`${var_originalComponent}, `,
 			`new ${var_originalComponent}({`,
 			...createPropsCode(node, props, 'extraReferences'),
@@ -628,12 +627,12 @@ export function generate(
 			tagOffsets.length ? ['', 'template', tagOffsets[0] + tag.length, capabilitiesPresets.diagnosticOnly]
 				: dynamicTagExp ? ['', 'template', startTagOffset + tag.length, capabilitiesPresets.diagnosticOnly]
 					: '',
-			`, ...(await import('${sharedTypesImport}')).functionalComponentArgsRest(${var_functionalComponent}));\n`,
+			`, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}));\n`,
 		);
 
 		if (tag !== 'template' && tag !== 'slot') {
 			componentCtxVar = `__VLS_${elementIndex++}`;
-			codes.push(`const ${componentCtxVar} = (await import('${sharedTypesImport}')).pickFunctionalComponentCtx(${var_originalComponent}, ${var_componentInstance})!;\n`);
+			codes.push(`const ${componentCtxVar} = __VLS_pickFunctionalComponentCtx(${var_originalComponent}, ${var_componentInstance})!;\n`);
 			parentEl = node;
 		}
 
@@ -672,7 +671,7 @@ export function generate(
 		if (vScope?.type === CompilerDOM.NodeTypes.DIRECTIVE && vScope.exp) {
 
 			const scopeVar = `__VLS_${elementIndex++}`;
-			const condition = `(await import('${sharedTypesImport}')).withScope(__VLS_ctx, ${scopeVar})`;
+			const condition = `__VLS_withScope(__VLS_ctx, ${scopeVar})`;
 
 			codes.push(`const ${scopeVar} = `);
 			codes.push([
@@ -732,7 +731,7 @@ export function generate(
 							slotDir.exp.loc.start.offset,
 							capabilitiesPresets.all,
 						],
-						`] = (await import('${sharedTypesImport}')).getSlotParams(`,
+						`] = __VLS_getSlotParams(`,
 					);
 				}
 				else {
@@ -744,7 +743,7 @@ export function generate(
 							slotDir.exp.loc.start.offset,
 							capabilitiesPresets.all,
 						],
-						` = (await import('${sharedTypesImport}')).getSlotParam(`,
+						` = __VLS_getSlotParam(`,
 					);
 				}
 			}
@@ -821,7 +820,7 @@ export function generate(
 				const eventVar = `__VLS_${elementIndex++}`;
 				codes.push(
 					`let ${eventVar} = { '${prop.arg.loc.source}': `,
-					`(await import('${sharedTypesImport}')).pickEvent(${componentCtxVar}.emit!, '${prop.arg.loc.source}' as const, (await import('${sharedTypesImport}')).componentProps(${componentVar}, ${componentInstanceVar})`,
+					`__VLS_pickEvent(${componentCtxVar}.emit!, '${prop.arg.loc.source}' as const, __VLS_componentProps(${componentVar}, ${componentInstanceVar})`,
 					...createPropertyAccessCode([
 						camelize('on-' + prop.arg.loc.source), // onClickOutside
 						'template',
@@ -1396,7 +1395,7 @@ export function generate(
 						prop.loc.start.offset,
 						capabilitiesPresets.diagnosticOnly,
 					],
-					`(await import('${sharedTypesImport}')).directiveFunction(__VLS_ctx.`,
+					`__VLS_directiveFunction(__VLS_ctx.`,
 					[
 						camelize('v-' + prop.name),
 						'template',

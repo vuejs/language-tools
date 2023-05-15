@@ -49,10 +49,9 @@ export function createLanguage(
 					return host.fileExists(fileName);
 				},
 				getScriptFileNames() {
-					const fileNames = host.getScriptFileNames();
 					return [
-						...getSharedTypesFiles(fileNames),
-						...fileNames,
+						path.join(host.getCurrentDirectory(), sharedTypes.baseName),
+						...host.getScriptFileNames(),
 					];
 				},
 				getScriptVersion(fileName) {
@@ -74,12 +73,6 @@ export function createLanguage(
 	};
 
 	return languageModule;
-
-	function getSharedTypesFiles(fileNames: string[]) {
-		const moduleFiles = fileNames.filter(fileName => vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext)));
-		const moduleFileDirs = [...new Set(moduleFiles.map(path.dirname))];
-		return moduleFileDirs.map(dir => path.join(dir, sharedTypes.baseName));
-	}
 }
 
 export function createLanguages(

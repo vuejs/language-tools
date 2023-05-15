@@ -164,17 +164,17 @@ export function checkComponentNames(
 export function checkNativeTags(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
-	fileName: string,
+	tsLsHost: ts.LanguageServiceHost,
 ) {
 
-	const sharedTypesFileName = fileName.substring(0, fileName.lastIndexOf('/')) + '/' + sharedTypes.baseName;
+	const sharedTypesFileName = tsLsHost.getCurrentDirectory() + '/' + sharedTypes.baseName;
 	const result = new Set<string>();
 
 	let tsSourceFile: ts.SourceFile | undefined;
 
 	if (tsSourceFile = tsLs.getProgram()?.getSourceFile(sharedTypesFileName)) {
 
-		const typeNode = tsSourceFile.statements.find((node): node is ts.TypeAliasDeclaration => ts.isTypeAliasDeclaration(node) && node.name.getText() === 'IntrinsicElements');
+		const typeNode = tsSourceFile.statements.find((node): node is ts.TypeAliasDeclaration => ts.isTypeAliasDeclaration(node) && node.name.getText() === '__VLS_IntrinsicElements');
 		const checker = tsLs.getProgram()?.getTypeChecker();
 
 		if (checker && typeNode) {
@@ -194,17 +194,17 @@ export function checkNativeTags(
 export function getElementAttrs(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
-	fileName: string,
+	tsLsHost: ts.LanguageServiceHost,
 	tagName: string,
 ) {
 
-	const sharedTypesFileName = fileName.substring(0, fileName.lastIndexOf('/')) + '/' + sharedTypes.baseName;
+	const sharedTypesFileName = tsLsHost.getCurrentDirectory() + '/' + sharedTypes.baseName;
 
 	let tsSourceFile: ts.SourceFile | undefined;
 
 	if (tsSourceFile = tsLs.getProgram()?.getSourceFile(sharedTypesFileName)) {
 
-		const typeNode = tsSourceFile.statements.find((node): node is ts.TypeAliasDeclaration => ts.isTypeAliasDeclaration(node) && node.name.getText() === 'IntrinsicElements');
+		const typeNode = tsSourceFile.statements.find((node): node is ts.TypeAliasDeclaration => ts.isTypeAliasDeclaration(node) && node.name.getText() === '__VLS_IntrinsicElements');
 		const checker = tsLs.getProgram()?.getTypeChecker();
 
 		if (checker && typeNode) {

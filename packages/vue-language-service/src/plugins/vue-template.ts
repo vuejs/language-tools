@@ -117,7 +117,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 						// visualize missing required props
 						const casing = await getNameCasing(ts, _context, map.sourceFileDocument.uri);
-						const nativeTags = checkNativeTags(ts, _ts.languageService, virtualFile.fileName);
+						const nativeTags = checkNativeTags(ts, _ts.languageService, _ts.languageServiceHost);
 						const components = checkComponentNames(ts, _ts.languageService, virtualFile, nativeTags);
 						const componentProps: Record<string, string[]> = {};
 						let token: html.TokenType;
@@ -292,7 +292,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					if (!virtualFile || !(virtualFile instanceof vue.VueFile))
 						continue;
 
-					const nativeTags = checkNativeTags(ts, _ts.languageService, virtualFile.fileName);
+					const nativeTags = checkNativeTags(ts, _ts.languageService, _ts.languageServiceHost);
 					const templateScriptData = checkComponentNames(ts, _ts.languageService, virtualFile, nativeTags);
 					const components = new Set([
 						...templateScriptData,
@@ -360,7 +360,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				}
 			}
 
-			const nativeTags = checkNativeTags(ts, _ts.languageService, vueSourceFile.fileName);
+			const nativeTags = checkNativeTags(ts, _ts.languageService, _ts.languageServiceHost);
 			templatePlugin.updateCustomData([
 				html.newHTMLDataProvider('vue-template-built-in', builtInData),
 				{
@@ -410,7 +410,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					},
 					provideAttributes: (tag) => {
 
-						const attrs = getElementAttrs(ts, _ts.languageService, vueSourceFile.fileName, tag);
+						const attrs = getElementAttrs(ts, _ts.languageService, _ts.languageServiceHost, tag);
 						const props = new Set(checkPropsOfTag(ts, _ts.languageService, vueSourceFile, tag, nativeTags));
 						const events = checkEventsOfTag(ts, _ts.languageService, vueSourceFile, tag, nativeTags);
 						const attributes: html.IAttributeData[] = [];
@@ -517,7 +517,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 		function afterHtmlCompletion(completionList: vscode.CompletionList, map: SourceMapWithDocuments<FileRangeCapabilities>, vueSourceFile: vue.VueFile) {
 
 			const replacement = getReplacement(completionList, map.sourceFileDocument);
-			const nativeTags = checkNativeTags(ts, _ts.languageService, vueSourceFile.fileName);
+			const nativeTags = checkNativeTags(ts, _ts.languageService, _ts.languageServiceHost);
 			const componentNames = new Set(checkComponentNames(ts, _ts.languageService, vueSourceFile, nativeTags).map(hyphenate));
 
 			if (replacement) {

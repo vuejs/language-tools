@@ -26,7 +26,7 @@ export async function convertTagName(
 	const template = desc.template;
 	const document = context.documents.getDocumentByFileName(rootFile.snapshot, rootFile.fileName);
 	const edits: vscode.TextEdit[] = [];
-	const nativeTags = checkNativeTags(ts, context.typescript.languageService, rootFile.fileName);
+	const nativeTags = checkNativeTags(ts, context.typescript.languageService, context.typescript.languageServiceHost);
 	const components = checkComponentNames(ts, context.typescript.languageService, rootFile, nativeTags);
 	const tags = getTemplateTagsAndAttrs(rootFile);
 
@@ -71,7 +71,7 @@ export async function convertAttrName(
 	const template = desc.template;
 	const document = context.documents.getDocumentByFileName(rootFile.snapshot, rootFile.fileName);
 	const edits: vscode.TextEdit[] = [];
-	const nativeTags = checkNativeTags(ts, context.typescript.languageService, rootFile.fileName);
+	const nativeTags = checkNativeTags(ts, context.typescript.languageService, context.typescript.languageServiceHost);
 	const components = checkComponentNames(ts, context.typescript.languageService, rootFile, nativeTags);
 	const tags = getTemplateTagsAndAttrs(rootFile);
 
@@ -180,7 +180,7 @@ export function detect(
 			return [];
 		}
 
-		const nativeTags = checkNativeTags(ts, context.typescript.languageService, file.fileName);
+		const nativeTags = checkNativeTags(ts, context.typescript.languageService, context.typescript.languageServiceHost);
 		const components = checkComponentNames(ts, context.typescript.languageService, file, nativeTags);
 		const tagNames = getTemplateTagsAndAttrs(file);
 		const result: TagNameCasing[] = [];

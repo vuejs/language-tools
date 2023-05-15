@@ -1,42 +1,29 @@
 import { VueCompilerOptions } from '../types';
 import { getSlotsPropertyName } from './shared';
-import type * as ts from 'typescript/lib/tsserverlibrary';
 
 export const baseName = '__VLS_types.d.ts';
-
-export function getImportName(compilerOptions: ts.CompilerOptions) {
-	if (!compilerOptions.module || compilerOptions.module === 1) {
-		return './__VLS_types';
-	}
-	return './__VLS_types.js';
-};
 
 export function getTypesCode(vueCompilerOptions: VueCompilerOptions) {
 	return `
 // @ts-nocheck
-import type {
-	ObjectDirective,
-	FunctionDirective,
-	VNode,
-} from '${vueCompilerOptions.lib}';
 
-export type IntrinsicElements = PickNotAny<import('vue/jsx-runtime').JSX.IntrinsicElements, PickNotAny<JSX.IntrinsicElements, Record<string, any>>>;
-export type Element = PickNotAny<import('vue/jsx-runtime').JSX.Element, JSX.Element>;
+type __VLS_IntrinsicElements = __VLS_PickNotAny<import('vue/jsx-runtime').JSX.IntrinsicElements, __VLS_PickNotAny<JSX.IntrinsicElements, Record<string, any>>>;
+type __VLS_Element = __VLS_PickNotAny<import('vue/jsx-runtime').JSX.Element, JSX.Element>;
 
-type IsAny<T> = boolean extends (T extends never ? true : false) ? true : false;
-export type PickNotAny<A, B> = IsAny<A> extends true ? B : A;
+type __VLS_IsAny<T> = boolean extends (T extends never ? true : false) ? true : false;
+type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
 
-export type Prettify<T> = {
+type __VLS_Prettify<T> = {
 	[K in keyof T]: T[K];
 } & {};
 
-export type GlobalComponents =
+type __VLS_GlobalComponents =
 	// @ts-ignore
-	PickNotAny<import('vue').GlobalComponents, {}>
+	__VLS_PickNotAny<import('vue').GlobalComponents, {}>
 	// @ts-ignore
-	& PickNotAny<import('@vue/runtime-core').GlobalComponents, {}>
+	& __VLS_PickNotAny<import('@vue/runtime-core').GlobalComponents, {}>
 	// @ts-ignore
-	& PickNotAny<import('@vue/runtime-dom').GlobalComponents, {}>
+	& __VLS_PickNotAny<import('@vue/runtime-dom').GlobalComponents, {}>
 	& Pick<typeof import('${vueCompilerOptions.lib}'),
 		// @ts-ignore
 		'Transition'
@@ -47,44 +34,44 @@ export type GlobalComponents =
 	>;
 
 // v-for
-export declare function getVForSourceType(source: number): [number, number, number][];
-export declare function getVForSourceType(source: string): [string, number, number][];
-export declare function getVForSourceType<T extends any[]>(source: T): [
+declare function __VLS_getVForSourceType(source: number): [number, number, number][];
+declare function __VLS_getVForSourceType(source: string): [string, number, number][];
+declare function __VLS_getVForSourceType<T extends any[]>(source: T): [
 	T[number], // item
 	number, // key
 	number, // index
 ][];
-export declare function getVForSourceType<T extends { [Symbol.iterator](): Iterator<any> }>(source: T): [
+declare function __VLS_getVForSourceType<T extends { [Symbol.iterator](): Iterator<any> }>(source: T): [
 	T extends { [Symbol.iterator](): Iterator<infer T1> } ? T1 : never, // item 
 	number, // key
 	undefined, // index
 ][];
-export declare function getVForSourceType<T>(source: T): [
+declare function __VLS_getVForSourceType<T>(source: T): [
 	T[keyof T], // item
 	keyof T, // key
 	number, // index
 ][];
 
-export declare function getSlotParams<T>(slot: T): Parameters<PickNotAny<NonNullable<T>, (...args: any[]) => any>>;
-export declare function getSlotParam<T>(slot: T): Parameters<PickNotAny<NonNullable<T>, (...args: any[]) => any>>[0];
-export declare function directiveFunction<T>(dir: T):
-	T extends ObjectDirective<infer E, infer V> | FunctionDirective<infer E, infer V> ? (el: E, value: V) => void
+declare function __VLS_getSlotParams<T>(slot: T): Parameters<__VLS_PickNotAny<NonNullable<T>, (...args: any[]) => any>>;
+declare function __VLS_getSlotParam<T>(slot: T): Parameters<__VLS_PickNotAny<NonNullable<T>, (...args: any[]) => any>>[0];
+declare function __VLS_directiveFunction<T>(dir: T):
+	T extends import('${vueCompilerOptions.lib}').ObjectDirective<infer E, infer V> | import('${vueCompilerOptions.lib}').FunctionDirective<infer E, infer V> ? (el: E, value: V) => void
 	: T;
-export declare function withScope<T, K>(ctx: T, scope: K): ctx is T & K;
-export declare function makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
+declare function __VLS_withScope<T, K>(ctx: T, scope: K): ctx is T & K;
+declare function __VLS_makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
 
-export type SelfComponent<N, C> = string extends N ? {} : N extends string ? { [P in N]: C } : {};
-export type WithComponent<N0 extends string, Components, N1 extends string, N2 extends string, N3 extends string> =
-	IsAny<IntrinsicElements[N0]> extends true ? (
+type __VLS_SelfComponent<N, C> = string extends N ? {} : N extends string ? { [P in N]: C } : {};
+type __VLS_WithComponent<N0 extends string, Components, N1 extends string, N2 extends string, N3 extends string> =
+	__VLS_IsAny<__VLS_IntrinsicElements[N0]> extends true ? (
 		N1 extends keyof Components ? N1 extends N0 ? Pick<Components, N0> : { [K in N0]: Components[N1] } :
 		N2 extends keyof Components ? N2 extends N0 ? Pick<Components, N0> : { [K in N0]: Components[N2] } :
 		N3 extends keyof Components ? N3 extends N0 ? Pick<Components, N0> : { [K in N0]: Components[N3] } :
 		${vueCompilerOptions.strictTemplates ? '{}' : '{ [K in N0]: any }'}
-	) : Pick<IntrinsicElements, N0>;
+	) : Pick<__VLS_IntrinsicElements, N0>;
 
-export type FillingEventArg_ParametersLength<E extends (...args: any) => any> = IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];
-export type FillingEventArg<E> = E extends (...args: any) => any ? FillingEventArg_ParametersLength<E> extends 0 ? ($event?: undefined) => ReturnType<E> : E : E;
-export type EmitEvent<F, E> =
+type __VLS_FillingEventArg_ParametersLength<E extends (...args: any) => any> = __VLS_IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];
+type __VLS_FillingEventArg<E> = E extends (...args: any) => any ? __VLS_FillingEventArg_ParametersLength<E> extends 0 ? ($event?: undefined) => ReturnType<E> : E : E;
+type __VLS_EmitEvent<F, E> =
 	F extends {
 		(event: E, ...payload: infer P): any
 	} ? (...payload: P) => void
@@ -104,7 +91,7 @@ export type EmitEvent<F, E> =
 		(...args: any): any
 	} ? (...payload: P) => void
 	: unknown | '[Type Warning] Volar could not infer $emit event more than 4 overloads without DefineComponent. see https://github.com/vuejs/language-tools/issues/60';
-export declare function asFunctionalComponent<T, K = T extends new (...args: any) => any ? InstanceType<T> : unknown>(t: T, instance?: K):
+declare function __VLS_asFunctionalComponent<T, K = T extends new (...args: any) => any ? InstanceType<T> : unknown>(t: T, instance?: K):
 	T extends new (...args: any) => any
 	? (props: (K extends { $props: infer Props } ? Props : any)${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}, ctx?: {
 		attrs?: any,
@@ -113,22 +100,22 @@ export declare function asFunctionalComponent<T, K = T extends new (...args: any
 	}) => JSX.Element & { __ctx?: typeof ctx & { props?: typeof props; expose?(exposed: K): void; } }
 	: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 	: T extends (...args: any) => any ? T
-	: (_: T extends VNode | VNode[] | string ? {}: T & Record<string, unknown>, ctx?: any) => { __ctx?: { attrs?: unknown, expose?: unknown, slots?: unknown, emit?: unknown, props?: T & Record<string, unknown> } }; // IntrinsicElement
-declare function functionalComponentArgsRest<T extends (...args: any) => any>(t: T): Parameters<T>['length'] extends 2 ? [any] : [];
-export declare function pickEvent<Emit, K, E>(emit: Emit, emitKey: K, event: E): FillingEventArg<
-	PickNotAny<
-		AsFunctionOrAny<E>,
-		AsFunctionOrAny<EmitEvent<Emit, K>>
+	: (_: T extends import('${vueCompilerOptions.lib}').VNode | import('${vueCompilerOptions.lib}').VNode[] | string ? {}: T & Record<string, unknown>, ctx?: any) => { __ctx?: { attrs?: unknown, expose?: unknown, slots?: unknown, emit?: unknown, props?: T & Record<string, unknown> } }; // IntrinsicElement
+declare function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(t: T): Parameters<T>['length'] extends 2 ? [any] : [];
+declare function __VLS_pickEvent<Emit, K, E>(emit: Emit, emitKey: K, event: E): __VLS_FillingEventArg<
+	__VLS_PickNotAny<
+		__VLS_AsFunctionOrAny<E>,
+		__VLS_AsFunctionOrAny<__VLS_EmitEvent<Emit, K>>
 	>
 >;
-export declare function pickFunctionalComponentCtx<T, K>(comp: T, compInstance: K): PickNotAny<
+declare function __VLS_pickFunctionalComponentCtx<T, K>(comp: T, compInstance: K): __VLS_PickNotAny<
 	K extends { __ctx?: infer Ctx } ? Ctx : any,
 	T extends (props: any, ctx: infer Ctx) => any ? Ctx : any
 >;
-type AsFunctionOrAny<F> = unknown extends F ? any : ((...args: any) => any) extends F ? F : any;
+type __VLS_AsFunctionOrAny<F> = unknown extends F ? any : ((...args: any) => any) extends F ? F : any;
 
-export declare function componentProps<T, K>(comp: T, fnReturn: K):
-	PickNotAny<K, {}> extends { __ctx: { props: infer P } } ? NonNullable<P>
+declare function __VLS_componentProps<T, K>(comp: T, fnReturn: K):
+	__VLS_PickNotAny<K, {}> extends { __ctx: { props: infer P } } ? NonNullable<P>
 	: T extends (props: infer P, ...args: any) => any ? NonNullable<P> :
 	{};
 `.trim();

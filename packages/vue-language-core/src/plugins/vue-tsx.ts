@@ -5,14 +5,12 @@ import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { Sfc, VueLanguagePlugin } from '../types';
 import { FileCapabilities, FileKind } from '@volar/language-core';
-import * as sharedTypes from '../utils/directorySharedTypes';
 import * as muggle from 'muggle-string';
 
 const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOptions, codegenStack }) => {
 
 	const ts = modules.typescript;
 	const instances = new WeakMap<Sfc, ReturnType<typeof createTsx>>();
-	const sharedTypesImport = sharedTypes.getImportName(compilerOptions);
 
 	return {
 
@@ -142,7 +140,6 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				_sfc.template?.lang ?? 'html',
 				_sfc,
 				hasScriptSetupSlots.value,
-				sharedTypesImport,
 				codegenStack,
 			);
 		});
@@ -159,7 +156,6 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				htmlGen.value,
 				compilerOptions,
 				vueCompilerOptions,
-				sharedTypesImport,
 				codegenStack,
 			);
 		});
