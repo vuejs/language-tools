@@ -1,32 +1,31 @@
-import createCssPlugin from 'volar-service-css';
-import createEmmetPlugin from 'volar-service-emmet';
-import createHtmlPlugin from 'volar-service-html';
-import createJsonPlugin from 'volar-service-json';
-import createPugPlugin from 'volar-service-pug';
-import createTsPlugin from 'volar-service-typescript';
-import createTsTqPlugin from 'volar-service-typescript-twoslash-queries';
+import { Config, Service } from '@volar/language-service';
 import * as vue from '@vue/language-core';
+import { capitalize, hyphenate } from '@vue/shared';
+import type * as ts from 'typescript/lib/tsserverlibrary';
+import createCssService from 'volar-service-css';
+import createEmmetService from 'volar-service-emmet';
+import createHtmlService from 'volar-service-html';
+import createJsonService from 'volar-service-json';
+import createPugService from 'volar-service-pug';
+import createPugFormatService from 'volar-service-pug-beautify';
+import createTsService from 'volar-service-typescript';
+import createTsTqService from 'volar-service-typescript-twoslash-queries';
+import type { Data } from 'volar-service-typescript/out/services/completions/basic';
 import type * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
-import createVuePlugin from './plugins/vue';
-import createAutoDotValuePlugin from './plugins/vue-autoinsert-dotvalue';
-import createReferencesCodeLensPlugin from './plugins/vue-codelens-references';
-import createTwoslashQueries from './plugins/vue-twoslash-queries';
-import createVueTemplateLanguagePlugin from './plugins/vue-template';
-import createVisualizeHiddenCallbackParamPlugin from './plugins/vue-visualize-hidden-callback-param';
-import type { Data } from 'volar-service-typescript/out/services/completions/basic';
-import type * as ts from 'typescript/lib/tsserverlibrary';
-import { Config, Service } from '@volar/language-service';
-import { hyphenate, capitalize } from '@vue/shared';
-
-import createPugFormatPlugin from 'volar-service-pug-beautify';
-import createAutoWrapParenthesesPlugin from './plugins/vue-autoinsert-parentheses';
-import createAutoAddSpacePlugin from './plugins/vue-autoinsert-space';
-import { TagNameCasing, VueCompilerOptions } from './types';
 import { getNameCasing } from './ideFeatures/nameCasing';
+import createVueService from './plugins/vue';
+import createAutoDotValueService from './plugins/vue-autoinsert-dotvalue';
+import createAutoWrapParenthesesService from './plugins/vue-autoinsert-parentheses';
+import createAutoAddSpaceService from './plugins/vue-autoinsert-space';
+import createReferencesCodeLensService from './plugins/vue-codelens-references';
+import createVueTemplateLanguageService from './plugins/vue-template';
+import createVueTqService from './plugins/vue-twoslash-queries';
+import createVisualizeHiddenCallbackParamService from './plugins/vue-visualize-hidden-callback-param';
+import { TagNameCasing, VueCompilerOptions } from './types';
 
 export interface Settings {
-	json?: Parameters<typeof createJsonPlugin>[0];
+	json?: Parameters<typeof createJsonService>[0];
 }
 
 export function resolveConfig(
@@ -52,7 +51,7 @@ function resolvePlugins(
 	settings?: Settings,
 ) {
 
-	const originalTsPlugin = services?.typescript ?? createTsPlugin();
+	const originalTsPlugin = services?.typescript ?? createTsService();
 
 	services ??= {};
 	services.typescript = (_context, modules): ReturnType<Service> => {
@@ -251,37 +250,43 @@ function resolvePlugins(
 			},
 		};
 	};
-	services.html ??= createVueTemplateLanguagePlugin({
-		templateLanguagePlugin: createHtmlPlugin(),
-		getScanner: (document, htmlPlugin): html.Scanner | undefined => {
-			return htmlPlugin.getHtmlLs().createScanner(document.getText());
+	services.html ??= createVueTemplateLanguageService({
+		baseService: createHtmlService(),
+		getScanner: (htmlService, document): html.Scanner | undefined => {
+			return htmlService.provide['html/languageService']().createScanner(document.getText());
+		},
+		updateCustomData(htmlService, extraData) {
+			htmlService.provide['html/updateCustomData'](extraData);
 		},
 		isSupportedDocument: (document) => document.languageId === 'html',
 		vueCompilerOptions,
 	});
-	services.pug ??= createVueTemplateLanguagePlugin({
-		templateLanguagePlugin: createPugPlugin() as any,
-		getScanner: (document, pugPlugin): html.Scanner | undefined => {
-			const pugDocument = (pugPlugin as ReturnType<ReturnType<typeof createPugPlugin>>).getPugDocument(document);
+	services.pug ??= createVueTemplateLanguageService({
+		baseService: createPugService(),
+		getScanner: (pugService, document): html.Scanner | undefined => {
+			const pugDocument = pugService.provide['pug/pugDocument'](document);
 			if (pugDocument) {
-				return (pugPlugin as ReturnType<ReturnType<typeof createPugPlugin>>).getPugLs().createScanner(pugDocument);
+				return pugService.provide['pug/languageService']().createScanner(pugDocument);
 			}
+		},
+		updateCustomData(pugService, extraData) {
+			pugService.provide['pug/updateCustomData'](extraData);
 		},
 		isSupportedDocument: (document) => document.languageId === 'jade',
 		vueCompilerOptions,
 	});
-	services.vue ??= createVuePlugin();
-	services.css ??= createCssPlugin();
-	services['pug-beautify'] ??= createPugFormatPlugin();
-	services.json ??= createJsonPlugin(settings?.json);
-	services['typescript/twoslash-queries'] ??= createTsTqPlugin();
-	services['vue/referencesCodeLens'] ??= createReferencesCodeLensPlugin();
-	services['vue/autoInsertDotValue'] ??= createAutoDotValuePlugin();
-	services['vue/twoslash-queries'] ??= createTwoslashQueries();
-	services['vue/autoInsertParentheses'] ??= createAutoWrapParenthesesPlugin();
-	services['vue/autoInsertSpaces'] ??= createAutoAddSpacePlugin();
-	services['vue/visualizeHiddenCallbackParam'] ??= createVisualizeHiddenCallbackParamPlugin();
-	services.emmet ??= createEmmetPlugin();
+	services.vue ??= createVueService();
+	services.css ??= createCssService();
+	services['pug-beautify'] ??= createPugFormatService();
+	services.json ??= createJsonService(settings?.json);
+	services['typescript/twoslash-queries'] ??= createTsTqService();
+	services['vue/referencesCodeLens'] ??= createReferencesCodeLensService();
+	services['vue/autoInsertDotValue'] ??= createAutoDotValueService();
+	services['vue/twoslash-queries'] ??= createVueTqService();
+	services['vue/autoInsertParentheses'] ??= createAutoWrapParenthesesService();
+	services['vue/autoInsertSpaces'] ??= createAutoAddSpaceService();
+	services['vue/visualizeHiddenCallbackParam'] ??= createVisualizeHiddenCallbackParamService();
+	services.emmet ??= createEmmetService();
 
 	return services;
 }

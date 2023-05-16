@@ -1,4 +1,4 @@
-import { InjectionKey, Service, defineProvide } from '@volar/language-service';
+import type { Service } from '@volar/language-service';
 import * as html from 'vscode-html-languageservice';
 import * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -8,34 +8,34 @@ import { loadLanguageBlocks } from './data';
 
 let sfcDataProvider: html.IHTMLDataProvider | undefined;
 
-export const injectionKeys: {
-	vueFile: InjectionKey<[TextDocument], vue.VueFile>;
-} = {
-	vueFile: 'vue/vueFile',
-};
+export interface Provide {
+	'vue/vueFile': (document: TextDocument) => vue.VueFile | undefined;
+}
 
-export default (): Service => (context) => {
+export default (): Service<Provide> => (context, modules): ReturnType<Service<Provide>> => {
 
-	const htmlPlugin = createHtmlPlugin({ validLang: 'vue', disableCustomData: true })(context);
+	const htmlPlugin = createHtmlPlugin({ validLang: 'vue', disableCustomData: true })(context, modules);
 
 	if (!context?.typescript)
-		return htmlPlugin;
+		return htmlPlugin as any;
 
 	sfcDataProvider ??= html.newHTMLDataProvider('vue', loadLanguageBlocks(context.env.locale ?? 'en'));
 
-	htmlPlugin.getHtmlLs().setDataProviders(false, [sfcDataProvider]);
+	htmlPlugin.provide['html/languageService']().setDataProviders(false, [sfcDataProvider]);
 
 	const _ts = context.typescript;
 
 	return {
 
-		provide: defineProvide(injectionKeys.vueFile, document => {
-			return worker(document, (vueFile) => {
-				return vueFile;
-			});
-		}),
-
 		...htmlPlugin,
+
+		provide: {
+			'vue/vueFile': document => {
+				return worker(document, (vueFile) => {
+					return vueFile;
+				});
+			},
+		},
 
 		provideSemanticDiagnostics(document) {
 			return worker(document, (vueSourceFile) => {
@@ -68,7 +68,7 @@ export default (): Service => (context) => {
 			});
 		},
 
-		findDocumentLinks: undefined,
+		provideDocumentLinks: undefined,
 
 		provideDocumentSymbols(document) {
 			return worker(document, (vueSourceFile) => {

@@ -1,4 +1,3 @@
-import createHtmlPlugin from 'volar-service-html';
 import { FileRangeCapabilities, Service, SourceMapWithDocuments } from '@volar/language-service';
 import * as vue from '@vue/language-core';
 import { hyphenate, capitalize, camelize } from '@vue/shared';
@@ -13,18 +12,17 @@ import { loadTemplateData, loadModelModifiersData } from './data';
 let builtInData: html.HTMLDataV1;
 let modelData: html.HTMLDataV1;
 
-export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof createHtmlPlugin>>(options: {
-	getScanner(document: TextDocument, t: ReturnType<T>): html.Scanner | undefined,
-	templateLanguagePlugin: T,
+export default <S extends Service>(options: {
+	getScanner(service: ReturnType<S>, document: TextDocument): html.Scanner | undefined,
+	updateCustomData(service: ReturnType<S>, extraData: html.IHTMLDataProvider[]): void,
+	baseService: S,
 	isSupportedDocument: (document: TextDocument) => boolean,
 	vueCompilerOptions: VueCompilerOptions,
-}): T {
+}): Service => (_context, modules): ReturnType<Service> => {
 
-	const plugin: Service = (_context, modules): ReturnType<Service> => {
-
-		const templatePlugin = options.templateLanguagePlugin(_context);
+		const htmlOrPugService = options.baseService(_context, modules) as ReturnType<S>;
 		const triggerCharacters = [
-			...templatePlugin.triggerCharacters ?? [],
+			...htmlOrPugService.triggerCharacters ?? [],
 			'@', // vue event shorthand
 		];
 
@@ -69,7 +67,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 		return {
 
-			...templatePlugin,
+			...htmlOrPugService,
 
 			triggerCharacters,
 
@@ -85,7 +83,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					}
 				}
 
-				const htmlComplete = await templatePlugin.provideCompletionItems?.(document, position, context, token);
+				const htmlComplete = await htmlOrPugService.provideCompletionItems?.(document, position, context, token);
 				if (!htmlComplete)
 					return;
 
@@ -112,7 +110,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 
 				for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
 					const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
-					const scanner = options.getScanner(document, templatePlugin as ReturnType<T>);
+					const scanner = options.getScanner(htmlOrPugService, document);
 					if (virtualFile && virtualFile instanceof vue.VueFile && scanner) {
 
 						// visualize missing required props
@@ -217,9 +215,9 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 					return;
 
 				if (_context.documents.isVirtualFileUri(document.uri))
-					templatePlugin.updateCustomData([]);
+					options.updateCustomData(htmlOrPugService, []);
 
-				return templatePlugin.provideHover?.(document, position, token);
+				return htmlOrPugService.provideHover?.(document, position, token);
 			},
 
 			async provideDiagnostics(document, token) {
@@ -227,7 +225,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				if (!options.isSupportedDocument(document))
 					return;
 
-				const originalResult = await templatePlugin.provideDiagnostics?.(document, token);
+				const originalResult = await htmlOrPugService.provideDiagnostics?.(document, token);
 
 				for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
 
@@ -281,8 +279,8 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				if (!options.isSupportedDocument(document))
 					return;
 
-				const result = await templatePlugin.provideDocumentSemanticTokens?.(document, range, legend, token) ?? [];
-				const scanner = options.getScanner(document, templatePlugin as ReturnType<T>);
+				const result = await htmlOrPugService.provideDocumentSemanticTokens?.(document, range, legend, token) ?? [];
+				const scanner = options.getScanner(htmlOrPugService, document);
 				if (!scanner)
 					return;
 
@@ -361,7 +359,7 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 			}
 
 			const nativeTags = checkNativeTags(ts, _ts.languageService, _ts.languageServiceHost);
-			templatePlugin.updateCustomData([
+			options.updateCustomData(htmlOrPugService, [
 				html.newHTMLDataProvider('vue-template-built-in', builtInData),
 				{
 					getId: () => 'vue-template',
@@ -638,12 +636,9 @@ export default function useVueTemplateLanguagePlugin<T extends ReturnType<typeof
 				}
 			}
 
-			templatePlugin.updateCustomData([]);
+			options.updateCustomData(htmlOrPugService, []);
 		}
-	};
-
-	return plugin as T;
-}
+};
 
 function createInternalItemId(type: 'vueDirective' | 'componentEvent' | 'componentProp', args: string[]) {
 	return '__VLS_::' + type + '::' + args.join(',');
