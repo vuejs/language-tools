@@ -17,7 +17,7 @@ Discord: https://discord.gg/5bnSSSSBbK
 - [vite-plugin-vue-component-preview](https://github.com/johnsoncodehk/vite-plugin-vue-component-preview) \
 *Vite plugin for support Vue component preview view with `Vue Language Features`*
 
-## IDE Support by the Community
+## Community Integration
 
 [yaegassy/coc-volar](https://github.com/yaegassy/coc-volar) ⚡ 🤝 🅿️ \
 *Vue language client for coc.nvim*
@@ -46,6 +46,9 @@ Discord: https://discord.gg/5bnSSSSBbK
 
 [Kingwl/monaco-volar](https://github.com/Kingwl/monaco-volar) \
 *Vue language support for Monaco on Browser*
+
+[WebStorm](https://www.jetbrains.com/webstorm/) \
+*Built-in integration for `@vue/language-server`*
 
 \* ⚡ support [multiple servers](https://github.com/vuejs/language-tools/discussions/393#discussioncomment-1213736) \
 \* 🤝 support [take over mode](https://github.com/vuejs/language-tools/discussions/471) \
