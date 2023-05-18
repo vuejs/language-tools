@@ -29,11 +29,11 @@ export interface Settings {
 }
 
 export function resolveConfig(
-	config: Config, // volar.config.js
+	config: Config,
 	compilerOptions: ts.CompilerOptions = {},
 	vueCompilerOptions = vue.resolveVueCompilerOptions({}),
-	settings?: Settings,
 	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
+	settings?: Settings,
 	codegenStack: boolean = false,
 ) {
 
@@ -51,7 +51,7 @@ function resolvePlugins(
 	settings?: Settings,
 ) {
 
-	const originalTsPlugin = services?.typescript ?? createTsService();
+	const originalTsPlugin: Service = services?.typescript ?? createTsService();
 
 	services ??= {};
 	services.typescript = (_context, modules): ReturnType<Service> => {
