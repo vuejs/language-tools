@@ -1,6 +1,6 @@
 {
 	"name": "vue-component-meta",
-	"version": "1.7.4",
+	"version": "1.7.5",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -14,9 +14,9 @@
 	},
 	"dependencies": {
 		"@volar/language-core": "1.6.6",
-		"@vue/language-core": "1.7.4",
+		"@vue/language-core": "1.7.5",
 		"typesafe-path": "^0.2.2",
-		"vue-component-type-helpers": "1.7.4"
+		"vue-component-type-helpers": "1.7.5"
 	},
 	"peerDependencies": {
 		"typescript": "*"
