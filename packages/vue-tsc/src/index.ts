@@ -11,7 +11,7 @@ interface ProgramContext {
 	projectVersion: number,
 	options: ts.CreateProgramOptions,
 	languageServiceHost: vue.LanguageServiceHost,
-	vueCompilerOptions: vue.VueCompilerOptions | undefined,
+	vueCompilerOptions: Partial<vue.VueCompilerOptions>,
 	languageService: ReturnType<typeof vueTs.createLanguageService>,
 }
 
@@ -91,11 +91,12 @@ export function createProgram(options: ts.CreateProgramOptions) {
 		program = vueTsLs.getProgram() as (ts.Program & { __vue: ProgramContext; });
 		program.__vue = ctx;
 
-		function getVueCompilerOptions(): vue.VueCompilerOptions | undefined {
+		function getVueCompilerOptions(): Partial<vue.VueCompilerOptions> {
 			const tsConfig = ctx.options.options.configFilePath;
 			if (typeof tsConfig === 'string') {
 				return vue.createParsedCommandLine(ts as any, ts.sys, tsConfig).vueOptions;
 			}
+			return {};
 		}
 		function getScriptVersion(fileName: string) {
 			return getScript(fileName)?.version ?? '';

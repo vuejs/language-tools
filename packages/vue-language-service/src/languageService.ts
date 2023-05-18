@@ -31,16 +31,17 @@ export interface Settings {
 export function resolveConfig(
 	config: Config,
 	compilerOptions: ts.CompilerOptions = {},
-	vueCompilerOptions = vue.resolveVueCompilerOptions({}),
+	vueCompilerOptions: Partial<vue.VueCompilerOptions> = {},
 	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
 	settings?: Settings,
 	codegenStack: boolean = false,
 ) {
 
-	const vueLanguageModules = vue.createLanguages(compilerOptions, vueCompilerOptions, ts, codegenStack);
+	const resolvedVueCompilerOptions = vue.resolveVueCompilerOptions(vueCompilerOptions);
+	const vueLanguageModules = vue.createLanguages(compilerOptions, resolvedVueCompilerOptions, ts, codegenStack);
 
 	config.languages = Object.assign({}, vueLanguageModules, config.languages);
-	config.services = resolvePlugins(config.services, vueCompilerOptions, settings);
+	config.services = resolvePlugins(config.services, resolvedVueCompilerOptions, settings);
 
 	return config;
 }

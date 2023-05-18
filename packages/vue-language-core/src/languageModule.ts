@@ -9,10 +9,12 @@ import { resolveVueCompilerOptions } from './utils/ts';
 
 export function createLanguage(
 	compilerOptions: ts.CompilerOptions = {},
-	vueCompilerOptions = resolveVueCompilerOptions({}),
+	_vueCompilerOptions: Partial<VueCompilerOptions> = {},
 	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
 	codegenStack: boolean = false,
 ): Language {
+
+	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);
 
 	patchResolveModuleNames(ts, vueCompilerOptions);
 
@@ -77,7 +79,7 @@ export function createLanguage(
 
 export function createLanguages(
 	compilerOptions: ts.CompilerOptions = {},
-	vueCompilerOptions = resolveVueCompilerOptions({}),
+	vueCompilerOptions: Partial<VueCompilerOptions> = {},
 	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
 	codegenStack: boolean = false,
 ): Language[] {

@@ -20,7 +20,7 @@ export function createServerPlugin(connection: Connection) {
 
 		const ts = modules.typescript;
 		const vueFileExtensions: string[] = ['vue'];
-		const hostToVueOptions = new WeakMap<embedded.LanguageServiceHost, VueCompilerOptions>();
+		const hostToVueOptions = new WeakMap<embedded.LanguageServiceHost, Partial<VueCompilerOptions>>();
 
 		if (initOptions.additionalExtensions) {
 			for (const additionalExtension of initOptions.additionalExtensions) {
@@ -44,8 +44,8 @@ export function createServerPlugin(connection: Connection) {
 					config,
 					ctx?.host.getCompilationSettings() ?? {},
 					vueOptions,
-					vueLanguageServiceSettings,
 					ts,
+					vueLanguageServiceSettings,
 					initOptions.codegenStack,
 				);
 
@@ -53,7 +53,7 @@ export function createServerPlugin(connection: Connection) {
 
 					const ts = modules.typescript;
 
-					let vueOptions: vue.VueCompilerOptions;
+					let vueOptions: Partial<vue.VueCompilerOptions>;
 
 					if (typeof ctx?.project.tsConfig === 'string' && ts) {
 						vueOptions = vue2.createParsedCommandLine(ts, ctx.sys, ctx.project.tsConfig).vueOptions;
@@ -62,11 +62,11 @@ export function createServerPlugin(connection: Connection) {
 						vueOptions = vue2.createParsedCommandLineByJson(ts, ctx.sys, ctx.host.getCurrentDirectory(), ctx.project.tsConfig).vueOptions;
 					}
 					else {
-						vueOptions = vue2.resolveVueCompilerOptions({});
+						vueOptions = {};
 					}
 
 					vueOptions.extensions = [
-						...vueOptions.extensions,
+						...vueOptions.extensions ?? ['.vue'],
 						...vueFileExtensions.map(ext => '.' + ext),
 					];
 					vueOptions.extensions = [...new Set(vueOptions.extensions)];

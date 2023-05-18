@@ -3,7 +3,7 @@ import * as path from 'path';
 import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
 
 export type ParsedCommandLine = ts.ParsedCommandLine & {
-	vueOptions: VueCompilerOptions;
+	vueOptions: Partial<VueCompilerOptions>;
 };
 
 export function createParsedCommandLineByJson(
@@ -28,8 +28,19 @@ export function createParsedCommandLineByJson(
 		} catch (err) { }
 	}
 
-	const resolvedVueOptions = resolveVueCompilerOptions(vueOptions);
-	const parsed = ts.parseJsonConfigFileContent(json, proxyHost.host, path.dirname(tsConfigPath), {}, tsConfigPath, undefined, resolvedVueOptions.extensions.map(extension => ({ extension, isMixedContent: true, scriptKind: ts.ScriptKind.Deferred })));
+	const parsed = ts.parseJsonConfigFileContent(
+		json,
+		proxyHost.host,
+		path.dirname(tsConfigPath),
+		{},
+		tsConfigPath,
+		undefined,
+		(vueOptions.extensions ?? ['.vue']).map(extension => ({
+			extension: extension.slice(1),
+			isMixedContent: true,
+			scriptKind: ts.ScriptKind.Deferred,
+		})),
+	);
 
 	// fix https://github.com/vuejs/language-tools/issues/1786
 	// https://github.com/microsoft/TypeScript/issues/30457
@@ -38,7 +49,7 @@ export function createParsedCommandLineByJson(
 
 	return {
 		...parsed,
-		vueOptions: resolvedVueOptions,
+		vueOptions,
 	};
 }
 
@@ -63,8 +74,19 @@ export function createParsedCommandLine(
 			} catch (err) { }
 		}
 
-		const resolvedVueOptions = resolveVueCompilerOptions(vueOptions);
-		const parsed = ts.parseJsonSourceFileConfigFileContent(config, proxyHost.host, path.dirname(tsConfigPath), {}, tsConfigPath, undefined, resolvedVueOptions.extensions.map(extension => ({ extension, isMixedContent: true, scriptKind: ts.ScriptKind.Deferred })));
+		const parsed = ts.parseJsonSourceFileConfigFileContent(
+			config,
+			proxyHost.host,
+			path.dirname(tsConfigPath),
+			{},
+			tsConfigPath,
+			undefined,
+			(vueOptions.extensions ?? ['.vue']).map(extension => ({
+				extension: extension.slice(1),
+				isMixedContent: true,
+				scriptKind: ts.ScriptKind.Deferred,
+			})),
+		);
 
 		// fix https://github.com/vuejs/language-tools/issues/1786
 		// https://github.com/microsoft/TypeScript/issues/30457
@@ -73,7 +95,7 @@ export function createParsedCommandLine(
 
 		return {
 			...parsed,
-			vueOptions: resolvedVueOptions,
+			vueOptions,
 		};
 	}
 	catch (err) {

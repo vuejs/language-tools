@@ -111,11 +111,12 @@ function createComponentMetaCheckerWorker(
 
 export function baseCreate(
 	_host: vue.LanguageServiceHost,
-	vueCompilerOptions: vue.VueCompilerOptions,
+	_vueCompilerOptions: Partial<vue.VueCompilerOptions>,
 	checkerOptions: MetaCheckerOptions,
 	globalComponentName: string,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {
+	const vueCompilerOptions = vue.resolveVueCompilerOptions(_vueCompilerOptions);
 	const globalComponentSnapshot = ts.ScriptSnapshot.fromString('<script setup lang="ts"></script>');
 	const metaSnapshots: Record<string, ts.IScriptSnapshot> = {};
 	const host = new Proxy<Partial<vue.LanguageServiceHost>>({

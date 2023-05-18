@@ -3,7 +3,7 @@ import * as vue from '@vue/language-core';
 
 export function createLanguageService(
 	host: vue.LanguageServiceHost,
-	vueCompilerOptions?: vue.VueCompilerOptions,
+	vueCompilerOptions?: Partial<vue.VueCompilerOptions>,
 	ts?: typeof import('typescript/lib/tsserverlibrary'),
 ) {
 	const languageService = base.createLanguageService(
