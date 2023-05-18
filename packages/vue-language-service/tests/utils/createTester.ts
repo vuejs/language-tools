@@ -74,7 +74,7 @@ function createTester(root: string) {
 			},
 			onDidChangeConfiguration() { },
 			documentContext: {
-				resolveReference: (ref, _base) => {
+				resolveReference: (ref: any, _base: any) => {
 					return ref;
 				},
 			},
