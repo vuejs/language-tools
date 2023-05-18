@@ -106,8 +106,8 @@ export function createLanguage(
 					options,
 					sourceFile
 				) {
-					return moduleLiterals.map((_, index) => {
-						let moduleName = moduleLiterals[index].text;
+					return moduleLiterals.map((moduleLiteral) => {
+						let moduleName = moduleLiteral.text;
 						if (sourceFile.impliedNodeFormat === ts.ModuleKind.ESNext && moduleName.endsWith('.vue')) {
 							moduleName = `${moduleName}.js`;
 						}
