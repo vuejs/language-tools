@@ -732,8 +732,8 @@
 	"devDependencies": {
 		"@types/semver": "^7.3.13",
 		"@types/vscode": "1.67.0",
-		"@volar/source-map": "1.6.5",
-		"@volar/vscode": "1.6.5",
+		"@volar/source-map": "1.6.6",
+		"@volar/vscode": "1.6.6",
 		"@vue/language-core": "1.7.4",
 		"@vue/language-server": "1.7.4",
 		"esbuild": "0.15.18",
