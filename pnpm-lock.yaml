@@ -33,10 +33,10 @@ importers:
   packages/typescript-vue-plugin:
     dependencies:
       '@vue/language-core':
-        specifier: 1.7.3
+        specifier: 1.7.4
         version: link:../vue-language-core
       '@vue/typescript':
-        specifier: 1.7.3
+        specifier: 1.7.4
         version: link:../vue-typescript
 
   packages/vscode-typescript-vue-plugin:
@@ -49,7 +49,7 @@ importers:
         specifier: 0.15.18
         version: 0.15.18
       typescript-vue-plugin:
-        specifier: 1.7.3
+        specifier: 1.7.4
         version: link:../typescript-vue-plugin
       vsce:
         specifier: latest
@@ -70,10 +70,10 @@ importers:
         specifier: 1.6.5
         version: 1.6.5(@types/vscode@1.67.0)(vscode-languageclient@8.1.0)
       '@vue/language-core':
-        specifier: 1.7.3
+        specifier: 1.7.4
         version: link:../vue-language-core
       '@vue/language-server':
-        specifier: 1.7.3
+        specifier: 1.7.4
         version: link:../vue-language-server
       esbuild:
         specifier: 0.15.18
@@ -106,13 +106,13 @@ importers:
         specifier: 1.6.5
         version: 1.6.5
       '@vue/language-core':
-        specifier: 1.7.3
+        specifier: 1.7.4
         version: link:../vue-language-core
       typesafe-path:
         specifier: ^0.2.2
         version: 0.2.2
       vue-component-type-helpers:
-        specifier: 1.7.3
+        specifier: 1.7.4
         version: link:../vue-component-type-helpers
 
   packages/vue-component-type-helpers: {}
@@ -164,7 +164,7 @@ importers:
         version: 0.0.3(@volar/language-service@1.6.5)(@volar/source-map@1.6.5)
     devDependencies:
       '@vue/language-core':
-        specifier: 1.7.3
+        specifier: 1.7.4
         version: link:../vue-language-core
 
   packages/vue-language-server:
@@ -176,16 +176,16 @@ importers:
         specifier: 1.6.5
         version: 1.6.5
       '@vue/language-core':
-        specifier: 1.7.3
+        specifier: 1.7.4
         version: link:../vue-language-core
       '@vue/language-service':
-        specifier: 1.7.3
+        specifier: 1.7.4
         version: link:../vue-language-service
       vscode-languageserver-protocol:
         specifier: ^3.17.3
         version: 3.17.3
       vue-component-meta:
-        specifier: 1.7.3
+        specifier: 1.7.4
         version: link:../vue-component-meta
 
   packages/vue-language-service:
@@ -203,7 +203,7 @@ importers:
         specifier: ^3.3.0
         version: 3.3.1
       '@vue/language-core':
-        specifier: 1.7.3
+        specifier: 1.7.4
         version: link:../vue-language-core
       '@vue/reactivity':
         specifier: ^3.3.0
@@ -261,16 +261,16 @@ importers:
         specifier: ^3.3.0
         version: 3.3.1
       vue-component-type-helpers:
-        specifier: 1.7.3
+        specifier: 1.7.4
         version: link:../vue-component-type-helpers
 
   packages/vue-tsc:
     dependencies:
       '@vue/language-core':
-        specifier: 1.7.3
+        specifier: 1.7.4
         version: link:../vue-language-core
       '@vue/typescript':
-        specifier: 1.7.3
+        specifier: 1.7.4
         version: link:../vue-typescript
       semver:
         specifier: ^7.3.8
@@ -286,7 +286,7 @@ importers:
         specifier: latest
         version: 8.37.0
       vue-tsc:
-        specifier: 1.7.3
+        specifier: 1.7.4
         version: link:../vue-tsc
 
   packages/vue-typescript:
@@ -295,7 +295,7 @@ importers:
         specifier: 1.6.5
         version: 1.6.5(typescript@5.0.4)
       '@vue/language-core':
-        specifier: 1.7.3
+        specifier: 1.7.4
         version: link:../vue-language-core
 
 packages:
@@ -810,7 +810,7 @@ packages:
       '@npmcli/node-gyp': 3.0.0
       '@npmcli/package-json': 3.0.0
       '@npmcli/query': 3.0.0
-      '@npmcli/run-script': 6.0.1
+      '@npmcli/run-script': 6.0.2
       bin-links: 4.0.1
       cacache: 17.0.5
       common-ancestor-path: 1.0.1
@@ -955,21 +955,6 @@ packages:
     dev: false
     optional: true
 
-  /@npmcli/run-script@6.0.1:
-    resolution: {integrity: sha512-Yi04ZSold8jcbBJD/ahKMJSQCQifH8DAbMwkBvoLaTpGFxzHC3B/5ZyoVR69q/4xedz84tvi9DJOJjNe17h+LA==}
-    engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
-    dependencies:
-      '@npmcli/node-gyp': 3.0.0
-      '@npmcli/promise-spawn': 6.0.2
-      node-gyp: 9.3.1
-      read-package-json-fast: 3.0.2
-      which: 3.0.0
-    transitivePeerDependencies:
-      - bluebird
-      - supports-color
-    dev: false
-    optional: true
-
   /@npmcli/run-script@6.0.2:
     resolution: {integrity: sha512-NCcr1uQo1k5U+SYlnIrbAh3cxy+OQT1VtqiAbxdymSlptbzBb62AjH2xXgjNCoP073hoa1CfCAcwoZ8k96C4nA==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
@@ -1001,7 +986,7 @@ packages:
       '@octokit/graphql': 5.0.5
       '@octokit/request': 6.2.3
       '@octokit/request-error': 3.0.3
-      '@octokit/types': 9.0.0
+      '@octokit/types': 9.2.2
       before-after-hook: 2.2.3
       universal-user-agent: 6.0.0
     transitivePeerDependencies:
@@ -1028,11 +1013,6 @@ packages:
       universal-user-agent: 6.0.0
     transitivePeerDependencies:
       - encoding
-    dev: false
-    optional: true
-
-  /@octokit/openapi-types@16.0.0:
-    resolution: {integrity: sha512-JbFWOqTJVLHZSUUoF4FzAZKYtqdxWu9Z5m2QQnOyEa04fOFljvyh7D3GYKbfuaSWisqehImiVIMG4eyJeP5VEA==}
     dev: false
     optional: true
 
@@ -1113,13 +1093,6 @@ packages:
       '@octokit/plugin-rest-endpoint-methods': 7.1.1(@octokit/core@4.2.0)
     transitivePeerDependencies:
       - encoding
-    dev: false
-    optional: true
-
-  /@octokit/types@9.0.0:
-    resolution: {integrity: sha512-LUewfj94xCMH2rbD5YJ+6AQ4AVjFYTgpp6rboWM5T7N3IsIF65SBEOVcYMGAEzO/kKNiNaW4LoWtoThOhH06gw==}
-    dependencies:
-      '@octokit/openapi-types': 16.0.0
     dev: false
     optional: true
 
@@ -4666,7 +4639,7 @@ packages:
       '@npmcli/git': 4.0.4
       '@npmcli/installed-package-contents': 2.0.2
       '@npmcli/promise-spawn': 6.0.2
-      '@npmcli/run-script': 6.0.1
+      '@npmcli/run-script': 6.0.2
       cacache: 17.0.5
       fs-minipass: 3.0.1
       minipass: 5.0.0
