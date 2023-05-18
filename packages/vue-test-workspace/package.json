@@ -1,10 +1,10 @@
 {
 	"private": true,
 	"name": "@volar/vue-test-workspace",
-	"version": "1.7.5",
+	"version": "1.7.6",
 	"license": "MIT",
 	"devDependencies": {
 		"vue": "^3.3.0",
-		"vue-component-type-helpers": "1.7.5"
+		"vue-component-type-helpers": "1.7.6"
 	}
 }
