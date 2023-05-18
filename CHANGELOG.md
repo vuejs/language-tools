@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.5 (2023/5/19) - pre-release
+
+- refactor(language-service): fewer runtime dependencies
+- chore: low-level API adjustment
+
 ## 1.7.4 (2023/5/18) - pre-release
 
 - feat: more reliable intellisense for monaco
