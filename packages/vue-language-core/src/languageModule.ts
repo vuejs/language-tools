@@ -1,4 +1,4 @@
-import type { Language } from '@volar/language-core';
+import type { Language, LanguageServiceHost } from '@volar/language-core';
 import { posix as path } from 'path';
 import { getDefaultVueLanguagePlugins } from './plugins';
 import { VueFile } from './sourceFile';
@@ -27,11 +27,12 @@ export function createGetCanonicalFileName(useCaseSensitiveFileNames: boolean) {
 let moduleCache: ts.ModuleResolutionCache | null = null;
 function getModuleResolutionCache(
 	ts: typeof import("typescript/lib/tsserverlibrary"),
-	options: ts.CompilerOptions
+	options: ts.CompilerOptions,
+	host: LanguageServiceHost
 ) {
 	if (moduleCache === null) {
 		moduleCache = ts.createModuleResolutionCache(
-			process.cwd(),
+			host.getCurrentDirectory(),
 			createGetCanonicalFileName(ts.sys.useCaseSensitiveFileNames),
 			options
 		);
@@ -115,7 +116,7 @@ export function createLanguage(
 							containingFile,
 							options,
 							this,
-							getModuleResolutionCache(ts, options),
+							getModuleResolutionCache(ts, options, this),
 							redirectedReference,
 							sourceFile.impliedNodeFormat
 						)
