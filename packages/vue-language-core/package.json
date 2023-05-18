@@ -13,8 +13,8 @@
 		"directory": "packages/vue-language-core"
 	},
 	"dependencies": {
-		"@volar/language-core": "1.6.4",
-		"@volar/source-map": "1.6.4",
+		"@volar/language-core": "1.6.5",
+		"@volar/source-map": "1.6.5",
 		"@vue/compiler-dom": "^3.3.0",
 		"@vue/reactivity": "^3.3.0",
 		"@vue/shared": "^3.3.0",
