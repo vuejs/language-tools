@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.4 (2023/5/18) - pre-release
+
+- feat: more reliable intellisense for monaco
+- fix: avoid adds ".js" extension when auto importing components ([#3150](https://github.com/johnsoncodehk/volar/issues/3150))
+
 ## 1.6.5 (2023/5/13), 1.7.3 (2023/5/13) - pre-release
 
 - chore: bump vue deps to 3.3 stable ([#3167](https://github.com/johnsoncodehk/volar/issues/3167)) - thanks @ferferga
