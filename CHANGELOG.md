@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.7.5 (2023/5/19) - pre-release
+## 1.7.6 (2023/5/19) - pre-release
 
 - refactor(language-service): fewer runtime dependencies
 - chore: low-level API adjustment
