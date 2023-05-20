@@ -1,6 +1,6 @@
 import type { Service } from '@volar/language-service';
 import * as html from 'vscode-html-languageservice';
-import * as vscode from 'vscode-languageserver-protocol';
+import type * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import createHtmlPlugin from 'volar-service-html';
 import * as vue from '@vue/language-core';
@@ -50,16 +50,15 @@ export default (): Service<Provide> => (context, modules): ReturnType<Service<Pr
 						if (!script || script.content === '')
 							continue;
 
-						const error = vscode.Diagnostic.create(
-							{
+						const error: vscode.Diagnostic = {
+							range: {
 								start: document.positionAt(script.start),
 								end: document.positionAt(script.startTagEnd),
 							},
-							`Virtual script ${JSON.stringify(vueSourceFile.mainScriptName)} not found, may missing <script lang="ts"> / "allowJs": true / jsconfig.json.`,
-							vscode.DiagnosticSeverity.Information,
-							undefined,
-							'volar',
-						);
+							message: `Virtual script ${JSON.stringify(vueSourceFile.mainScriptName)} not found, may missing <script lang="ts"> / "allowJs": true / jsconfig.json.`,
+							severity: 3 satisfies typeof vscode.DiagnosticSeverity.Information,
+							source: 'volar',
+						};
 						result.push(error);
 					}
 				}
@@ -79,43 +78,43 @@ export default (): Service<Provide> => (context, modules): ReturnType<Service<Pr
 				if (descriptor.template) {
 					result.push({
 						name: 'template',
-						kind: vscode.SymbolKind.Module,
-						range: vscode.Range.create(
-							document.positionAt(descriptor.template.start),
-							document.positionAt(descriptor.template.end),
-						),
-						selectionRange: vscode.Range.create(
-							document.positionAt(descriptor.template.start),
-							document.positionAt(descriptor.template.startTagEnd),
-						),
+						kind: 2 satisfies typeof vscode.SymbolKind.Module,
+						range: {
+							start: document.positionAt(descriptor.template.start),
+							end: document.positionAt(descriptor.template.end),
+						},
+						selectionRange: {
+							start: document.positionAt(descriptor.template.start),
+							end: document.positionAt(descriptor.template.startTagEnd),
+						},
 					});
 				}
 				if (descriptor.script) {
 					result.push({
 						name: 'script',
-						kind: vscode.SymbolKind.Module,
-						range: vscode.Range.create(
-							document.positionAt(descriptor.script.start),
-							document.positionAt(descriptor.script.end),
-						),
-						selectionRange: vscode.Range.create(
-							document.positionAt(descriptor.script.start),
-							document.positionAt(descriptor.script.startTagEnd),
-						),
+						kind: 2 satisfies typeof vscode.SymbolKind.Module,
+						range: {
+							start: document.positionAt(descriptor.script.start),
+							end: document.positionAt(descriptor.script.end),
+						},
+						selectionRange: {
+							start: document.positionAt(descriptor.script.start),
+							end: document.positionAt(descriptor.script.startTagEnd),
+						},
 					});
 				}
 				if (descriptor.scriptSetup) {
 					result.push({
 						name: 'script setup',
-						kind: vscode.SymbolKind.Module,
-						range: vscode.Range.create(
-							document.positionAt(descriptor.scriptSetup.start),
-							document.positionAt(descriptor.scriptSetup.end),
-						),
-						selectionRange: vscode.Range.create(
-							document.positionAt(descriptor.scriptSetup.start),
-							document.positionAt(descriptor.scriptSetup.startTagEnd),
-						),
+						kind: 2 satisfies typeof vscode.SymbolKind.Module,
+						range: {
+							start: document.positionAt(descriptor.scriptSetup.start),
+							end: document.positionAt(descriptor.scriptSetup.end),
+						},
+						selectionRange: {
+							start: document.positionAt(descriptor.scriptSetup.start),
+							end: document.positionAt(descriptor.scriptSetup.startTagEnd),
+						},
 					});
 				}
 				for (const style of descriptor.styles) {
@@ -126,29 +125,29 @@ export default (): Service<Provide> => (context, modules): ReturnType<Service<Pr
 						name += ' module';
 					result.push({
 						name,
-						kind: vscode.SymbolKind.Module,
-						range: vscode.Range.create(
-							document.positionAt(style.start),
-							document.positionAt(style.end),
-						),
-						selectionRange: vscode.Range.create(
-							document.positionAt(style.start),
-							document.positionAt(style.startTagEnd),
-						),
+						kind: 2 satisfies typeof vscode.SymbolKind.Module,
+						range: {
+							start: document.positionAt(style.start),
+							end: document.positionAt(style.end),
+						},
+						selectionRange: {
+							start: document.positionAt(style.start),
+							end: document.positionAt(style.startTagEnd),
+						},
 					});
 				}
 				for (const customBlock of descriptor.customBlocks) {
 					result.push({
 						name: `${customBlock.type}`,
-						kind: vscode.SymbolKind.Module,
-						range: vscode.Range.create(
-							document.positionAt(customBlock.start),
-							document.positionAt(customBlock.end),
-						),
-						selectionRange: vscode.Range.create(
-							document.positionAt(customBlock.start),
-							document.positionAt(customBlock.startTagEnd),
-						),
+						kind: 2 satisfies typeof vscode.SymbolKind.Module,
+						range: {
+							start: document.positionAt(customBlock.start),
+							end: document.positionAt(customBlock.end),
+						},
+						selectionRange: {
+							start: document.positionAt(customBlock.start),
+							end: document.positionAt(customBlock.startTagEnd),
+						},
 					});
 				}
 

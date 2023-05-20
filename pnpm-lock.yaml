@@ -220,9 +220,6 @@ importers:
       vscode-html-languageservice:
         specifier: ^5.0.4
         version: 5.0.4
-      vscode-languageserver-protocol:
-        specifier: ^3.17.3
-        version: 3.17.3
       vscode-languageserver-textdocument:
         specifier: ^1.0.8
         version: 1.0.8
@@ -230,6 +227,9 @@ importers:
       '@volar/kit':
         specifier: 1.6.7
         version: 1.6.7(typescript@5.0.4)(vscode-languageserver-protocol@3.17.3)
+      vscode-languageserver-protocol:
+        specifier: ^3.17.3
+        version: 3.17.3
       vscode-uri:
         specifier: ^3.0.7
         version: 3.0.7

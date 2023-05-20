@@ -2,7 +2,7 @@ import { FileRangeCapabilities, Service, SourceMapWithDocuments } from '@volar/l
 import * as vue from '@vue/language-core';
 import { hyphenate, capitalize, camelize } from '@vue/shared';
 import * as html from 'vscode-html-languageservice';
-import * as vscode from 'vscode-languageserver-protocol';
+import type * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { checkComponentNames, checkEventsOfTag, checkPropsOfTag, getElementAttrs, checkNativeTags } from '../helpers';
 import { getNameCasing } from '../ideFeatures/nameCasing';
@@ -184,7 +184,7 @@ export default <S extends Service>(options: {
 										label: `${requiredProp}!`,
 										paddingLeft: true,
 										position: document.positionAt(current.labelOffset),
-										kind: vscode.InlayHintKind.Parameter,
+										kind: 2 satisfies typeof vscode.InlayHintKind.Parameter,
 										textEdits: [{
 											range: {
 												start: document.positionAt(current.insertOffset),
@@ -239,11 +239,11 @@ export default <S extends Service>(options: {
 				if (sfcVueTemplateCompiled) {
 
 					for (const error of sfcVueTemplateCompiled.errors) {
-						onCompilerError(error, vscode.DiagnosticSeverity.Error);
+						onCompilerError(error, 1 satisfies typeof vscode.DiagnosticSeverity.Error);
 					}
 
 					for (const warning of sfcVueTemplateCompiled.warnings) {
-						onCompilerError(warning, vscode.DiagnosticSeverity.Warning);
+						onCompilerError(warning, 2 satisfies typeof vscode.DiagnosticSeverity.Warning);
 					}
 
 					function onCompilerError(error: NonNullable<typeof sfcVueTemplateCompiled>['errors'][number], severity: vscode.DiagnosticSeverity) {
@@ -551,7 +551,7 @@ export default <S extends Service>(options: {
 							range: replacement.textEdit.range,
 							newText: insertText,
 						},
-						kind: vscode.CompletionItemKind.EnumMember,
+						kind: 20 satisfies typeof vscode.CompletionItemKind.EnumMember,
 					};
 
 					completionList.items.push(newItem);
@@ -577,7 +577,7 @@ export default <S extends Service>(options: {
 							range: replacement.textEdit.range,
 							newText: insertText,
 						},
-						kind: vscode.CompletionItemKind.EnumMember,
+						kind: 20 satisfies typeof vscode.CompletionItemKind.EnumMember,
 					};
 
 					completionList.items.push(newItem);
@@ -606,11 +606,11 @@ export default <S extends Service>(options: {
 
 					if (itemId.type === 'componentProp') {
 						if (componentName !== '*') {
-							item.kind = vscode.CompletionItemKind.Field;
+							item.kind = 5 satisfies typeof vscode.CompletionItemKind.Field;
 						}
 					}
 					else {
-						item.kind = componentName !== '*' ? vscode.CompletionItemKind.Function : vscode.CompletionItemKind.Event;
+						item.kind = componentName !== '*' ? 3 satisfies typeof vscode.CompletionItemKind.Function : 23 satisfies typeof vscode.CompletionItemKind.Event;
 					}
 				}
 				else if (
@@ -619,19 +619,19 @@ export default <S extends Service>(options: {
 					|| item.label === 'v-else'
 					|| item.label === 'v-for'
 				) {
-					item.kind = vscode.CompletionItemKind.Method;
+					item.kind = 2 satisfies typeof vscode.CompletionItemKind.Method;
 					item.sortText = '\u0003' + (item.sortText ?? item.label);
 				}
 				else if (item.label.startsWith('v-')) {
-					item.kind = vscode.CompletionItemKind.Function;
+					item.kind = 3 satisfies typeof vscode.CompletionItemKind.Function;
 					item.sortText = '\u0002' + (item.sortText ?? item.label);
 				}
 				else {
 					item.sortText = '\u0001' + (item.sortText ?? item.label);
 				}
 			}
-			else if (item.kind === vscode.CompletionItemKind.Property && componentNames.has(hyphenate(item.label))) {
-				item.kind = vscode.CompletionItemKind.Variable;
+			else if (item.kind === 10 satisfies typeof vscode.CompletionItemKind.Property && componentNames.has(hyphenate(item.label))) {
+				item.kind = 6 satisfies typeof vscode.CompletionItemKind.Variable;
 				item.sortText = '\u0000' + (item.sortText ?? item.label);
 			}
 		}

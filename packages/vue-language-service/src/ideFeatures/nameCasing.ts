@@ -2,7 +2,7 @@ import { hyphenate } from '@vue/shared';
 import { ServiceContext, VirtualFile } from '@volar/language-service';
 import { checkComponentNames, getTemplateTagsAndAttrs, checkPropsOfTag, checkNativeTags } from '../helpers';
 import * as vue from '@vue/language-core';
-import * as vscode from 'vscode-languageserver-protocol';
+import type * as vscode from 'vscode-languageserver-protocol';
 import { AttrNameCasing, TagNameCasing } from '../types';
 
 export async function convertTagName(
@@ -36,12 +36,12 @@ export async function convertTagName(
 			for (const offset of offsets) {
 				const start = document.positionAt(template.startTagEnd + offset);
 				const end = document.positionAt(template.startTagEnd + offset + tagName.length);
-				const range = vscode.Range.create(start, end);
+				const range: vscode.Range = { start, end };
 				if (casing === TagNameCasing.Kebab && tagName !== hyphenate(componentName)) {
-					edits.push(vscode.TextEdit.replace(range, hyphenate(componentName)));
+					edits.push({ range, newText: hyphenate(componentName) });
 				}
 				if (casing === TagNameCasing.Pascal && tagName !== componentName) {
-					edits.push(vscode.TextEdit.replace(range, componentName));
+					edits.push({ range, newText: componentName });
 				}
 			}
 		}
@@ -85,12 +85,12 @@ export async function convertAttrName(
 					for (const offset of offsets) {
 						const start = document.positionAt(template.startTagEnd + offset);
 						const end = document.positionAt(template.startTagEnd + offset + attrName.length);
-						const range = vscode.Range.create(start, end);
+						const range: vscode.Range = { start, end };
 						if (casing === AttrNameCasing.Kebab && attrName !== hyphenate(propName)) {
-							edits.push(vscode.TextEdit.replace(range, hyphenate(propName)));
+							edits.push({ range, newText: hyphenate(propName) });
 						}
 						if (casing === AttrNameCasing.Camel && attrName !== propName) {
-							edits.push(vscode.TextEdit.replace(range, propName));
+							edits.push({ range, newText: propName });
 						}
 					}
 				}

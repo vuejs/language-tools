@@ -3,7 +3,6 @@ import * as path from 'path';
 import { tester } from './utils/createTester';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as fs from 'fs';
-import { CancellationToken } from 'vscode-languageserver-protocol';
 
 const baseDir = path.resolve(__dirname, '../../vue-test-workspace/find-definition');
 const testDirs = fs.readdirSync(baseDir);
@@ -37,7 +36,6 @@ for (const dirName of testDirs) {
 					const locations = await tester.languageService.findDefinition(
 						uri,
 						position,
-						CancellationToken.None,
 					);
 
 					expect(locations).toBeDefined();

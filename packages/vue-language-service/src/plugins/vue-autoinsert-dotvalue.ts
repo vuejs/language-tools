@@ -1,7 +1,7 @@
 import { AutoInsertionContext, Service } from '@volar/language-service';
 import { hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import * as vscode from 'vscode-languageserver-protocol';
+import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 
 const plugin: Service = (context, modules) => {
@@ -94,8 +94,14 @@ export function isCharacterTyping(document: TextDocument, options: AutoInsertion
 
 	const lastCharacter = options.lastChange.text[options.lastChange.text.length - 1];
 	const rangeStart = options.lastChange.range.start;
-	const position = vscode.Position.create(rangeStart.line, rangeStart.character + options.lastChange.text.length);
-	const nextCharacter = document.getText(vscode.Range.create(position, document.positionAt(document.offsetAt(position) + 1)));
+	const position: vscode.Position = {
+		line: rangeStart.line,
+		character: rangeStart.character + options.lastChange.text.length,
+	};
+	const nextCharacter = document.getText({
+		start: position,
+		end: { line: position.line, character: position.character + 1 },
+	});
 
 	if (lastCharacter === undefined) { // delete text
 		return false;

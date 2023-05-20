@@ -12,7 +12,7 @@ import createTsService from 'volar-service-typescript';
 import createTsTqService from 'volar-service-typescript-twoslash-queries';
 import type { Data } from 'volar-service-typescript/out/services/completions/basic';
 import type * as html from 'vscode-html-languageservice';
-import * as vscode from 'vscode-languageserver-protocol';
+import type * as vscode from 'vscode-languageserver-protocol';
 import { getNameCasing } from './ideFeatures/nameCasing';
 import createVueService from './plugins/vue';
 import createAutoDotValueService from './plugins/vue-autoinsert-dotvalue';
@@ -184,16 +184,16 @@ function resolvePlugins(
 											] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
 										};
 										const printText = printer.printNode(ts.EmitHint.Expression, newNode, sfc.scriptAst);
-										const editRange = vscode.Range.create(
-											textDoc.positionAt(sfc.script.startTagEnd + exportDefault.componentsOption.start),
-											textDoc.positionAt(sfc.script.startTagEnd + exportDefault.componentsOption.end),
-										);
+										const editRange: vscode.Range = {
+											start: textDoc.positionAt(sfc.script.startTagEnd + exportDefault.componentsOption.start),
+											end: textDoc.positionAt(sfc.script.startTagEnd + exportDefault.componentsOption.end),
+										};
 										autoImportPositions.add(editRange.start);
 										autoImportPositions.add(editRange.end);
-										item.additionalTextEdits.push(vscode.TextEdit.replace(
-											editRange,
-											unescape(printText.replace(/\\u/g, '%u')),
-										));
+										item.additionalTextEdits.push({
+											range: editRange,
+											newText: unescape(printText.replace(/\\u/g, '%u')),	
+										});
 									}
 									else if (exportDefault.args && exportDefault.argsNode) {
 										const newNode: typeof exportDefault.argsNode = {
@@ -204,16 +204,16 @@ function resolvePlugins(
 											] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
 										};
 										const printText = printer.printNode(ts.EmitHint.Expression, newNode, sfc.scriptAst);
-										const editRange = vscode.Range.create(
-											textDoc.positionAt(sfc.script.startTagEnd + exportDefault.args.start),
-											textDoc.positionAt(sfc.script.startTagEnd + exportDefault.args.end),
-										);
+										const editRange: vscode.Range = {
+											start: textDoc.positionAt(sfc.script.startTagEnd + exportDefault.args.start),
+											end: textDoc.positionAt(sfc.script.startTagEnd + exportDefault.args.end),
+										};
 										autoImportPositions.add(editRange.start);
 										autoImportPositions.add(editRange.end);
-										item.additionalTextEdits.push(vscode.TextEdit.replace(
-											editRange,
-											unescape(printText.replace(/\\u/g, '%u')),
-										));
+										item.additionalTextEdits.push({
+											range: editRange,
+											newText: unescape(printText.replace(/\\u/g, '%u')),
+										});
 									}
 								}
 							}
@@ -241,7 +241,7 @@ function resolvePlugins(
 				}
 				if (result?.edit?.documentChanges) {
 					for (const documentChange of result.edit.documentChanges) {
-						if (vscode.TextDocumentEdit.is(documentChange)) {
+						if ('textDocument' in documentChange) {
 							patchAdditionalTextEdits(documentChange.textDocument.uri, documentChange.edits);
 						}
 					}

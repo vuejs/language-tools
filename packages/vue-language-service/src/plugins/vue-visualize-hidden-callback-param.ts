@@ -1,5 +1,5 @@
 import { Service } from '@volar/language-service';
-import * as vscode from 'vscode-languageserver-protocol';
+import type * as vscode from 'vscode-languageserver-protocol';
 
 const plugin: Service = (context) => {
 
@@ -42,7 +42,7 @@ const plugin: Service = (context) => {
 							paddingRight: hint.paddingRight,
 							paddingLeft: hint.paddingLeft,
 							position: document.positionAt(mapping.generatedRange[0]),
-							kind: vscode.InlayHintKind.Parameter,
+							kind: 2 satisfies typeof vscode.InlayHintKind.Parameter,
 							tooltip: {
 								kind: 'markdown',
 								value: hint.tooltip,
