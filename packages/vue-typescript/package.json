@@ -15,8 +15,5 @@
 	"dependencies": {
 		"@volar/typescript": "1.6.7",
 		"@vue/language-core": "1.7.6"
-	},
-	"peerDependencies": {
-		"typescript": "*"
 	}
 }

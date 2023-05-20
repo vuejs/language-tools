@@ -3,8 +3,8 @@ import * as vue from '@vue/language-core';
 
 export function createLanguageService(
 	host: vue.LanguageServiceHost,
-	vueCompilerOptions?: Partial<vue.VueCompilerOptions>,
-	ts?: typeof import('typescript/lib/tsserverlibrary'),
+	vueCompilerOptions: Partial<vue.VueCompilerOptions>,
+	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {
 	const languageService = base.createLanguageService(
 		host,
@@ -13,6 +13,7 @@ export function createLanguageService(
 			vueCompilerOptions,
 			ts,
 		),
+		ts,
 	);
 	const getCompletionsAtPosition = languageService.getCompletionsAtPosition;
 	languageService.getCompletionsAtPosition = (fileName, position, options) => {

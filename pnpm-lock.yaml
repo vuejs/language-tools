@@ -63,15 +63,9 @@ importers:
       '@types/vscode':
         specifier: 1.67.0
         version: 1.67.0
-      '@volar/source-map':
-        specifier: 1.6.7
-        version: 1.6.7
       '@volar/vscode':
         specifier: 1.6.7
         version: 1.6.7(@types/vscode@1.67.0)(vscode-languageclient@8.1.0)
-      '@vue/language-core':
-        specifier: 1.7.6
-        version: link:../vue-language-core
       '@vue/language-server':
         specifier: 1.7.6
         version: link:../vue-language-server
@@ -87,18 +81,12 @@ importers:
       semver:
         specifier: ^7.3.8
         version: 7.3.8
-      typesafe-path:
-        specifier: ^0.2.2
-        version: 0.2.2
       vsce:
         specifier: latest
         version: 2.15.0
       vscode-languageclient:
         specifier: ^8.1.0
         version: 8.1.0
-      vscode-nls:
-        specifier: ^5.2.0
-        version: 5.2.0
 
   packages/vue-component-meta:
     dependencies:
@@ -153,9 +141,6 @@ importers:
 
   packages/vue-language-plugin-pug:
     dependencies:
-      '@volar/language-service':
-        specifier: 1.6.7
-        version: 1.6.7(vscode-languageserver-protocol@3.17.3)
       '@volar/source-map':
         specifier: 1.6.7
         version: 1.6.7
@@ -196,9 +181,6 @@ importers:
       '@volar/language-service':
         specifier: 1.6.7
         version: 1.6.7(vscode-languageserver-protocol@3.17.3)
-      '@volar/source-map':
-        specifier: 1.6.7
-        version: 1.6.7
       '@vue/compiler-dom':
         specifier: ^3.3.0
         version: 3.3.1
@@ -238,22 +220,19 @@ importers:
       vscode-html-languageservice:
         specifier: ^5.0.4
         version: 5.0.4
-      vscode-json-languageservice:
-        specifier: ^5.2.0
-        version: 5.2.0
       vscode-languageserver-protocol:
         specifier: ^3.17.3
         version: 3.17.3
       vscode-languageserver-textdocument:
         specifier: ^1.0.8
         version: 1.0.8
-      vscode-uri:
-        specifier: ^3.0.7
-        version: 3.0.7
     devDependencies:
       '@volar/kit':
         specifier: 1.6.7
         version: 1.6.7(typescript@5.0.4)(vscode-languageserver-protocol@3.17.3)
+      vscode-uri:
+        specifier: ^3.0.7
+        version: 3.0.7
 
   packages/vue-test-workspace:
     devDependencies:

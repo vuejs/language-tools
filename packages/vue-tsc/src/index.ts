@@ -86,7 +86,7 @@ export function createProgram(options: ts.CreateProgramOptions) {
 				return ctx.options.host![property as keyof ts.CompilerHost];
 			},
 		});
-		const vueTsLs = vueTs.createLanguageService(vueLsHost, vueCompilerOptions);
+		const vueTsLs = vueTs.createLanguageService(vueLsHost, vueCompilerOptions, ts as any);
 
 		program = vueTsLs.getProgram() as (ts.Program & { __vue: ProgramContext; });
 		program.__vue = ctx;
