@@ -334,7 +334,10 @@ export function generate(
 
 		if (prevNode?.type === CompilerDOM.NodeTypes.COMMENT) {
 			const commentText = prevNode.content.trim();
-			if (commentText === '@vue-ignore') {
+			if (commentText === '@vue-skip') {
+				return;
+			}
+			else if (commentText === '@vue-ignore') {
 				ignoreStart = codes.length;
 			}
 		}
