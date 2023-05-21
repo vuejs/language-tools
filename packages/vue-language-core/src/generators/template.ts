@@ -75,14 +75,8 @@ export function generate(
 	const [codes, codeStacks] = codegenStack ? muggle.track([] as Code[]) : [[], []];
 	const [formatCodes, formatCodeStacks] = codegenStack ? muggle.track([] as Code[]) : [[], []];
 	const [cssCodes, cssCodeStacks] = codegenStack ? muggle.track([] as Code[]) : [[], []];
-	const slots = new Map<string, {
-		varName: string,
-		loc: [number, number],
-		nodeLoc: any,
-	}>();
-	const slotExps = new Map<string, {
-		varName: string,
-	}>();
+	const slots = new Map<string, { varName: string; loc: [number, number]; nodeLoc: any; }>();
+	const slotExps = new Map<string, { varName: string; }>();
 	const tagNames = collectTagOffsets();
 	const localVars: Record<string, number> = {};
 	const tempVars: ReturnType<typeof walkInterpolationFragment>[] = [];
@@ -92,11 +86,12 @@ export function generate(
 
 	let hasSlot = false;
 	let elementIndex = 0;
+	let ignoreStart: undefined | number;
 
 	const componentVars = generateComponentVars();
 
 	if (sfc.templateAst) {
-		visitNode(sfc.templateAst, undefined, undefined);
+		visitNode(sfc.templateAst, undefined, undefined, undefined);
 	}
 
 	generateStyleScopedClasses();
@@ -309,15 +304,48 @@ export function generate(
 		return tagOffsetsMap;
 	}
 
+	function resetIgnore() {
+		if (ignoreStart !== undefined) {
+			for (let i = ignoreStart; i < codes.length; i++) {
+				const code = codes[i];
+				if (typeof code === 'string') {
+					continue;
+				}
+				const cap = code[3];
+				if (cap.diagnostic) {
+					code[3] = {
+						...cap,
+						diagnostic: false,
+					};
+				}
+			}
+			ignoreStart = undefined;
+		}
+	}
+
 	function visitNode(
-		node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode,
+		node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.InterpolationNode | CompilerDOM.CompoundExpressionNode | CompilerDOM.TextNode | CompilerDOM.SimpleExpressionNode,
 		parentEl: CompilerDOM.ElementNode | undefined,
+		prevNode: CompilerDOM.TemplateChildNode | undefined,
 		componentCtxVar: string | undefined,
 	): void {
-		if (node.type === CompilerDOM.NodeTypes.ROOT) {
-			for (const childNode of node.children) {
-				visitNode(childNode, parentEl, componentCtxVar);
+
+		resetIgnore();
+
+		if (prevNode?.type === CompilerDOM.NodeTypes.COMMENT) {
+			const commentText = prevNode.content.trim();
+			if (commentText === '@vue-ignore') {
+				ignoreStart = codes.length;
 			}
+		}
+
+		if (node.type === CompilerDOM.NodeTypes.ROOT) {
+			let prev: CompilerDOM.TemplateChildNode | undefined;
+			for (const childNode of node.children) {
+				visitNode(childNode, parentEl, prev, componentCtxVar);
+				prev = childNode;
+			}
+			resetIgnore();
 		}
 		else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 			const vForNode = getVForNode(node);
@@ -334,13 +362,13 @@ export function generate(
 		}
 		else if (node.type === CompilerDOM.NodeTypes.TEXT_CALL) {
 			// {{ var }}
-			visitNode(node.content, parentEl, componentCtxVar);
+			visitNode(node.content, parentEl, prevNode, componentCtxVar);
 		}
 		else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
 			// {{ ... }} {{ ... }}
 			for (const childNode of node.children) {
 				if (typeof childNode === 'object') {
-					visitNode(childNode as CompilerDOM.TemplateChildNode, parentEl, componentCtxVar);
+					visitNode(childNode, parentEl, prevNode, componentCtxVar);
 				}
 			}
 		}
@@ -394,9 +422,6 @@ export function generate(
 		else if (node.type === CompilerDOM.NodeTypes.TEXT) {
 			// not needed progress
 		}
-		else if (node.type === CompilerDOM.NodeTypes.COMMENT) {
-			// not needed progress
-		}
 		else {
 			codes.push(`// Unprocessed node type: ${node.type} json: ${JSON.stringify(node.loc)}\n`);
 		}
@@ -447,9 +472,14 @@ export function generate(
 			}
 
 			codes.push(` {\n`);
+
+			let prev: CompilerDOM.TemplateChildNode | undefined;
 			for (const childNode of branch.children) {
-				visitNode(childNode, parentEl, componentCtxVar);
+				visitNode(childNode, parentEl, prev, componentCtxVar);
+				prev = childNode;
 			}
+			resetIgnore();
+
 			generateAutoImportCompletionCode();
 			codes.push('}\n');
 
@@ -496,9 +526,12 @@ export function generate(
 				') {\n',
 			);
 
+			let prev: CompilerDOM.TemplateChildNode | undefined;
 			for (const childNode of node.children) {
-				visitNode(childNode, parentEl, componentCtxVar);
+				visitNode(childNode, parentEl, prev, componentCtxVar);
+				prev = childNode;
 			}
+			resetIgnore();
 
 			generateAutoImportCompletionCode();
 			codes.push('}\n');
@@ -776,9 +809,14 @@ export function generate(
 				localVars[varName] ??= 0;
 				localVars[varName]++;
 			});
+
+			let prev: CompilerDOM.TemplateChildNode | undefined;
 			for (const childNode of node.children) {
-				visitNode(childNode, parentEl, componentCtxVar);
+				visitNode(childNode, parentEl, prev, componentCtxVar);
+				prev = childNode;
 			}
+			resetIgnore();
+
 			slotBlockVars.forEach(varName => {
 				localVars[varName]--;
 			});
@@ -801,9 +839,12 @@ export function generate(
 			codes.push(`}\n`);
 		}
 		else {
+			let prev: CompilerDOM.TemplateChildNode | undefined;
 			for (const childNode of node.children) {
-				visitNode(childNode, parentEl, componentCtxVar);
+				visitNode(childNode, parentEl, prev, componentCtxVar);
+				prev = childNode;
 			}
+			resetIgnore();
 		}
 
 		codes.push(`}\n`);
