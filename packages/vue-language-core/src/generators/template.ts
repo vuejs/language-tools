@@ -87,6 +87,8 @@ export function generate(
 	let hasSlot = false;
 	let elementIndex = 0;
 	let ignoreStart: undefined | number;
+	let expectedErrorStart: undefined | number;
+	let expectedErrorNode: CompilerDOM.CommentNode | undefined;
 
 	const componentVars = generateComponentVars();
 
@@ -304,7 +306,7 @@ export function generate(
 		return tagOffsetsMap;
 	}
 
-	function resetIgnore() {
+	function resolveComment() {
 		if (ignoreStart !== undefined) {
 			for (let i = ignoreStart; i < codes.length; i++) {
 				const code = codes[i];
@@ -321,6 +323,43 @@ export function generate(
 			}
 			ignoreStart = undefined;
 		}
+		if (expectedErrorStart !== undefined && expectedErrorStart !== codes.length && expectedErrorNode) {
+			let errors = 0;
+			const suppressError = () => {
+				errors++;
+				return false;
+			};
+			for (let i = expectedErrorStart; i < codes.length; i++) {
+				const code = codes[i];
+				if (typeof code === 'string') {
+					continue;
+				}
+				const cap = code[3];
+				if (cap.diagnostic) {
+					code[3] = {
+						...cap,
+						diagnostic: {
+							shouldReport: suppressError,
+						},
+					};
+				}
+			}
+			codes.push(
+				[
+					'// @ts-expect-error',
+					'template',
+					[expectedErrorNode.loc.start.offset, expectedErrorNode.loc.end.offset],
+					{
+						diagnostic: {
+							shouldReport: () => errors === 0,
+						},
+					},
+				],
+				'\n{};\n',
+			);
+			expectedErrorStart = undefined;
+			expectedErrorNode = undefined;
+		}
 	}
 
 	function visitNode(
@@ -330,7 +369,7 @@ export function generate(
 		componentCtxVar: string | undefined,
 	): void {
 
-		resetIgnore();
+		resolveComment();
 
 		if (prevNode?.type === CompilerDOM.NodeTypes.COMMENT) {
 			const commentText = prevNode.content.trim();
@@ -340,6 +379,10 @@ export function generate(
 			else if (commentText === '@vue-ignore') {
 				ignoreStart = codes.length;
 			}
+			else if (commentText === '@vue-expected-error') {
+				expectedErrorStart = codes.length;
+				expectedErrorNode = prevNode;
+			}
 		}
 
 		if (node.type === CompilerDOM.NodeTypes.ROOT) {
@@ -348,7 +391,7 @@ export function generate(
 				visitNode(childNode, parentEl, prev, componentCtxVar);
 				prev = childNode;
 			}
-			resetIgnore();
+			resolveComment();
 		}
 		else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 			const vForNode = getVForNode(node);
@@ -365,13 +408,13 @@ export function generate(
 		}
 		else if (node.type === CompilerDOM.NodeTypes.TEXT_CALL) {
 			// {{ var }}
-			visitNode(node.content, parentEl, prevNode, componentCtxVar);
+			visitNode(node.content, parentEl, undefined, componentCtxVar);
 		}
 		else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
 			// {{ ... }} {{ ... }}
 			for (const childNode of node.children) {
 				if (typeof childNode === 'object') {
-					visitNode(childNode, parentEl, prevNode, componentCtxVar);
+					visitNode(childNode, parentEl, undefined, componentCtxVar);
 				}
 			}
 		}
@@ -424,9 +467,6 @@ export function generate(
 		}
 		else if (node.type === CompilerDOM.NodeTypes.TEXT) {
 			// not needed progress
-		}
-		else {
-			codes.push(`// Unprocessed node type: ${node.type} json: ${JSON.stringify(node.loc)}\n`);
 		}
 	}
 
@@ -481,7 +521,7 @@ export function generate(
 				visitNode(childNode, parentEl, prev, componentCtxVar);
 				prev = childNode;
 			}
-			resetIgnore();
+			resolveComment();
 
 			generateAutoImportCompletionCode();
 			codes.push('}\n');
@@ -534,7 +574,7 @@ export function generate(
 				visitNode(childNode, parentEl, prev, componentCtxVar);
 				prev = childNode;
 			}
-			resetIgnore();
+			resolveComment();
 
 			generateAutoImportCompletionCode();
 			codes.push('}\n');
@@ -818,7 +858,7 @@ export function generate(
 				visitNode(childNode, parentEl, prev, componentCtxVar);
 				prev = childNode;
 			}
-			resetIgnore();
+			resolveComment();
 
 			slotBlockVars.forEach(varName => {
 				localVars[varName]--;
@@ -847,7 +887,7 @@ export function generate(
 				visitNode(childNode, parentEl, prev, componentCtxVar);
 				prev = childNode;
 			}
-			resetIgnore();
+			resolveComment();
 		}
 
 		codes.push(`}\n`);
