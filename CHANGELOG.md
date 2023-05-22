@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.8 (2023/5/22) - pre-release
+
+- fix: directive comments not working in production builds
+
 ## 1.7.7 (2023/5/22) - pre-release
 
 - feat: support for `@vue-ignore`, `@vue-skip`, `@vue-expected-error` directive comments ([#3215](https://github.com/johnsoncodehk/volar/issues/3215))
