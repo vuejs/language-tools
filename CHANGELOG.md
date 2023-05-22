@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.7 (2023/5/22) - pre-release
+
+- feat: support for `@vue-ignore`, `@vue-skip`, `@vue-expected-error` directive comments ([#3215](https://github.com/johnsoncodehk/volar/issues/3215))
+- refactor(language-service): removed `vscode-languageserver-protocol` runtime dependency
+- perf(monaco): much faster first time intellisense
+- fix: ts project not updated when virtual ts file created / deleted
+
 ## 1.7.6 (2023/5/19) - pre-release
 
 - refactor(language-service): fewer runtime dependencies
