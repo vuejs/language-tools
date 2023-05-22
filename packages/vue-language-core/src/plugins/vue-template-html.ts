@@ -20,7 +20,10 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 
 				const compiler = modules['@vue/compiler-dom'];
 
-				return compiler.compile(template, options);
+				return compiler.compile(template, {
+					...options,
+					comments: true,
+				});
 			}
 		},
 
