@@ -355,7 +355,7 @@ export function generate(
 						},
 					},
 				],
-				'\n{};\n',
+				'\n;\n',
 			);
 			expectedErrorStart = undefined;
 			expectedErrorNode = undefined;
