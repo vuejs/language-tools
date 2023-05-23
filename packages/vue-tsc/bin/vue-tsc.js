@@ -26,7 +26,7 @@ fs.readFileSync = (...args) => {
 				.map(file => file.replace(/\.vue\.(j|t)sx?$/i, '.vue'))
 			) {`);
 		}
-		if (semver.gt(tsPkg.version, '5.0.4')) {
+		if (semver.gte(tsPkg.version, '5.0.4')) {
 			tryReplace(
 				`return createBuilderProgramUsingProgramBuildInfo(buildInfo, buildInfoPath, host);`,
 				`buildInfo.program.fileNames = buildInfo.program.fileNames
