@@ -1,8 +1,8 @@
 import * as vue from '@vue/language-core';
-import { createLanguageContext } from '@volar/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'typesafe-path/posix';
 import typeHelpersCode from 'vue-component-type-helpers';
+import { createLanguageService } from '@volar/typescript';
 
 import type {
 	MetaCheckerOptions,
@@ -156,7 +156,6 @@ export function baseCreate(
 		vueCompilerOptions,
 		ts,
 	) : [];
-	const core = createLanguageContext({ typescript: ts }, host, vueLanguages);
 	const proxyApis: Partial<ts.LanguageServiceHost> = checkerOptions.forceUseTs ? {
 		getScriptKind: (fileName) => {
 			if (fileName.endsWith('.vue.js')) {
@@ -165,10 +164,10 @@ export function baseCreate(
 			if (fileName.endsWith('.vue.jsx')) {
 				return ts.ScriptKind.TSX;
 			}
-			return core.typescript.languageServiceHost.getScriptKind!(fileName);
+			return host.getScriptKind!(fileName);
 		},
 	} : {};
-	const proxyHost = new Proxy(core.typescript.languageServiceHost, {
+	const proxyHost = new Proxy(host, {
 		get(target, propKey: keyof ts.LanguageServiceHost) {
 			if (propKey in proxyApis) {
 				return proxyApis[propKey];
@@ -176,7 +175,8 @@ export function baseCreate(
 			return target[propKey];
 		}
 	});
-	const tsLs = ts.createLanguageService(proxyHost);
+	const core = vue.createLanguageContext(proxyHost, vueLanguages);
+	const tsLs = createLanguageService(core, ts);
 	let globalPropNames: string[] | undefined;
 
 	return {
@@ -432,7 +432,7 @@ function createSchemaResolvers(
 	symbolNode: ts.Expression,
 	{ rawType, schema: options, noDeclarations }: MetaCheckerOptions,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	core: ReturnType<typeof createLanguageContext>,
+	core: vue.LanguageContext,
 ) {
 	const visited = new Set<ts.Type>();;
 

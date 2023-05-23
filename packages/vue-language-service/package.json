@@ -19,6 +19,7 @@
 	"dependencies": {
 		"@volar/language-core": "1.6.9",
 		"@volar/language-service": "1.6.9",
+		"@volar/typescript": "1.6.9",
 		"@vue/compiler-dom": "^3.3.0",
 		"@vue/language-core": "1.7.8",
 		"@vue/reactivity": "^3.3.0",

@@ -7,11 +7,13 @@ export function createLanguageService(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {
 	const languageService = base.createLanguageService(
-		host,
-		vue.createLanguages(
-			host.getCompilationSettings(),
-			vueCompilerOptions,
-			ts,
+		vue.createLanguageContext(
+			host,
+			vue.createLanguages(
+				host.getCompilationSettings(),
+				vueCompilerOptions,
+				ts,
+			),
 		),
 		ts,
 	);

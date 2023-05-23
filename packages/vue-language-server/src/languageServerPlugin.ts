@@ -100,22 +100,22 @@ export function createServerPlugin(connection: Connection) {
 
 				connection.onRequest(DetectNameCasingRequest.type, async params => {
 					const languageService = await getService(params.textDocument.uri);
-					if (languageService?.context.typescript) {
+					if (languageService) {
 						return nameCasing.detect(ts, languageService.context, params.textDocument.uri);
 					}
 				});
 
 				connection.onRequest(GetConvertTagCasingEditsRequest.type, async params => {
 					const languageService = await getService(params.textDocument.uri);
-					if (languageService?.context.typescript) {
+					if (languageService) {
 						return nameCasing.convertTagName(ts, languageService.context, params.textDocument.uri, params.casing);
 					}
 				});
 
 				connection.onRequest(GetConvertAttrCasingEditsRequest.type, async params => {
 					const languageService = await getService(params.textDocument.uri);
-					if (languageService?.context.typescript) {
-						const vueOptions = hostToVueOptions.get(languageService.context.host);
+					if (languageService) {
+						const vueOptions = hostToVueOptions.get(languageService.context.core.host);
 						if (vueOptions) {
 							return nameCasing.convertAttrName(ts, languageService.context, params.textDocument.uri, params.casing);
 						}
@@ -127,20 +127,19 @@ export function createServerPlugin(connection: Connection) {
 				connection.onRequest(GetComponentMeta.type, async params => {
 
 					const languageService = await getService(params.uri);
-
-					if (!languageService?.context.typescript)
+					if (!languageService)
 						return;
 
-					let checker = checkers.get(languageService.context.host);
+					let checker = checkers.get(languageService.context.core.host);
 					if (!checker) {
 						checker = componentMeta.baseCreate(
-							languageService.context.host,
-							hostToVueOptions.get(languageService.context.host)!,
+							languageService.context.core.host,
+							hostToVueOptions.get(languageService.context.core.host)!,
 							{},
-							languageService.context.host.getCurrentDirectory() + '/tsconfig.json.global.vue',
+							languageService.context.core.host.getCurrentDirectory() + '/tsconfig.json.global.vue',
 							ts,
 						);
-						checkers.set(languageService.context.host, checker);
+						checkers.set(languageService.context.core.host, checker);
 					}
 					return checker.getComponentMeta(env.uriToFileName(params.uri));
 				});

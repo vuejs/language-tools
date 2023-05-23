@@ -1,4 +1,3 @@
-import { defineComponent } from 'vue';
 <template>
    {{ bar }}
  <!-- ^^^rename: bar -->

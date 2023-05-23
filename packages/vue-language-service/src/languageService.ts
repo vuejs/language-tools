@@ -125,7 +125,6 @@ function resolvePlugins(
 					const suffix = capitalize(ext.substring('.'.length)); // .vue -> Vue
 					if (
 						itemData?.uri
-						&& _context.typescript
 						&& item.textEdit?.newText.endsWith(suffix)
 						&& item.additionalTextEdits?.length === 1 && item.additionalTextEdits[0].newText.indexOf('import ' + item.textEdit.newText + ' from ') >= 0
 						&& (await _context.env.getConfiguration?.<boolean>('vue.complete.normalizeComponentImportName') ?? true)

@@ -2,7 +2,6 @@ import {
 	activateAutoInsertion,
 	activateFindFileReferences,
 	activateReloadProjects,
-	activateServerStats,
 	activateServerSys,
 	activateTsConfigStatusItem,
 	activateTsVersionStatusItem,
@@ -115,7 +114,6 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		},
 	);
 	activateReloadProjects('volar.action.reloadProject', [semanticClient]);
-	activateServerStats('volar.action.serverStats', [semanticClient]);
 	activateTsVersionStatusItem('volar.selectTypeScriptVersion', context, semanticClient,
 		document => {
 			return document.languageId === 'vue'

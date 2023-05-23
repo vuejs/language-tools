@@ -1,4 +1,4 @@
-import type { Service } from '@volar/language-service';
+import type { Service, ServiceContext } from '@volar/language-service';
 import * as html from 'vscode-html-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -12,18 +12,16 @@ export interface Provide {
 	'vue/vueFile': (document: TextDocument) => vue.VueFile | undefined;
 }
 
-export default (): Service<Provide> => (context, modules): ReturnType<Service<Provide>> => {
+export default (): Service<Provide> => (context: ServiceContext<import('volar-service-typescript').Provide> | undefined, modules): ReturnType<Service<Provide>> => {
 
 	const htmlPlugin = createHtmlPlugin({ validLang: 'vue', disableCustomData: true })(context, modules);
 
-	if (!context?.typescript)
+	if (!context)
 		return htmlPlugin as any;
 
 	sfcDataProvider ??= html.newHTMLDataProvider('vue', loadLanguageBlocks(context.env.locale ?? 'en'));
 
 	htmlPlugin.provide['html/languageService']().setDataProviders(false, [sfcDataProvider]);
-
-	const _ts = context.typescript;
 
 	return {
 
@@ -42,7 +40,7 @@ export default (): Service<Provide> => (context, modules): ReturnType<Service<Pr
 
 				const result: vscode.Diagnostic[] = [];
 				const sfc = vueSourceFile.sfc;
-				const program = _ts.languageService.getProgram();
+				const program = context.inject('typescript/languageService').getProgram();
 
 				if (program && !program.getSourceFile(vueSourceFile.mainScriptName)) {
 					for (const script of [sfc.script, sfc.scriptSetup]) {

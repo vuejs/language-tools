@@ -1,17 +1,13 @@
-import { FileKind, forEachEmbeddedFile, Service } from '@volar/language-service';
+import { FileKind, forEachEmbeddedFile, Service, ServiceContext } from '@volar/language-service';
 import * as vue from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 
-const plugin: Service = (context, modules) => {
+const plugin: Service = (context: ServiceContext<import('volar-service-typescript').Provide> | undefined, modules) => {
 
-	if (!modules?.typescript)
-		return {};
-
-	if (!context?.typescript)
+	if (!context || !modules?.typescript)
 		return {};
 
 	const ts = modules.typescript;
-	const _ts = context.typescript;
 
 	return {
 
@@ -20,6 +16,7 @@ const plugin: Service = (context, modules) => {
 
 				const hoverOffsets: [vscode.Position, number][] = [];
 				const inlayHints: vscode.InlayHint[] = [];
+				const languageService = context.inject('typescript/languageService');
 
 				for (const pointer of document.getText(range).matchAll(/<!--\s*\^\?\s*-->/g)) {
 					const offset = pointer.index! + pointer[0].indexOf('^?') + document.offsetAt(range.start);
@@ -36,7 +33,7 @@ const plugin: Service = (context, modules) => {
 							for (const [pointerPosition, hoverOffset] of hoverOffsets) {
 								for (const [tsOffset, mapping] of map.map.toGeneratedOffsets(hoverOffset)) {
 									if (mapping.data.hover) {
-										const quickInfo = _ts.languageService.getQuickInfoAtPosition(embedded.fileName, tsOffset);
+										const quickInfo = languageService.getQuickInfoAtPosition(embedded.fileName, tsOffset);
 										if (quickInfo) {
 											inlayHints.push({
 												position: { line: pointerPosition.line, character: pointerPosition.character + 2 },

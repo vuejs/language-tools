@@ -1,4 +1,4 @@
-import { FileRangeCapabilities, Service, SourceMapWithDocuments } from '@volar/language-service';
+import { FileRangeCapabilities, Service, ServiceContext, SourceMapWithDocuments } from '@volar/language-service';
 import * as vue from '@vue/language-core';
 import { hyphenate, capitalize, camelize } from '@vue/shared';
 import * as html from 'vscode-html-languageservice';
@@ -18,7 +18,7 @@ export default <S extends Service>(options: {
 	baseService: S,
 	isSupportedDocument: (document: TextDocument) => boolean,
 	vueCompilerOptions: VueCompilerOptions,
-}): Service => (_context, modules): ReturnType<Service> => {
+}): Service => (_context: ServiceContext<import('volar-service-typescript').Provide> | undefined, modules): ReturnType<Service> => {
 
 	const htmlOrPugService = options.baseService(_context, modules) as ReturnType<S>;
 	const triggerCharacters = [
@@ -26,7 +26,7 @@ export default <S extends Service>(options: {
 		'@', // vue event shorthand
 	];
 
-	if (!_context?.typescript || !modules?.typescript)
+	if (!_context || !modules?.typescript)
 		return { triggerCharacters };
 
 	builtInData ??= loadTemplateData(_context.env.locale ?? 'en');
@@ -63,7 +63,6 @@ export default <S extends Service>(options: {
 	}
 
 	const ts = modules.typescript;
-	const _ts = _context.typescript;
 
 	return {
 
@@ -106,6 +105,8 @@ export default <S extends Service>(options: {
 			if (!enabled)
 				return;
 
+			const languageService = _context.inject('typescript/languageService');
+			const languageServiceHost = _context.inject('typescript/languageServiceHost');
 			const result: vscode.InlayHint[] = [];
 
 			for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
@@ -115,8 +116,8 @@ export default <S extends Service>(options: {
 
 					// visualize missing required props
 					const casing = await getNameCasing(ts, _context, map.sourceFileDocument.uri);
-					const nativeTags = checkNativeTags(ts, _ts.languageService, _ts.languageServiceHost);
-					const components = checkComponentNames(ts, _ts.languageService, virtualFile, nativeTags);
+					const nativeTags = checkNativeTags(ts, languageService, languageServiceHost);
+					const components = checkComponentNames(ts, languageService, virtualFile, nativeTags);
 					const componentProps: Record<string, string[]> = {};
 					let token: html.TokenType;
 					let current: {
@@ -133,7 +134,7 @@ export default <S extends Service>(options: {
 									: components.find(component => component === tagName || hyphenate(component) === tagName);
 							const checkTag = tagName.indexOf('.') >= 0 ? tagName : component;
 							if (checkTag) {
-								componentProps[checkTag] ??= checkPropsOfTag(ts, _ts.languageService, virtualFile, checkTag, nativeTags, true);
+								componentProps[checkTag] ??= checkPropsOfTag(ts, languageService, virtualFile, checkTag, nativeTags, true);
 								current = {
 									unburnedRequiredProps: [...componentProps[checkTag]],
 									labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
@@ -284,14 +285,17 @@ export default <S extends Service>(options: {
 			if (!scanner)
 				return;
 
+			const languageService = _context.inject('typescript/languageService');
+			const languageServiceHost = _context.inject('typescript/languageServiceHost');
+
 			for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
 
 				const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
 				if (!virtualFile || !(virtualFile instanceof vue.VueFile))
 					continue;
 
-				const nativeTags = checkNativeTags(ts, _ts.languageService, _ts.languageServiceHost);
-				const templateScriptData = checkComponentNames(ts, _ts.languageService, virtualFile, nativeTags);
+				const nativeTags = checkNativeTags(ts, languageService, languageServiceHost);
+				const templateScriptData = checkComponentNames(ts, languageService, virtualFile, nativeTags);
 				const components = new Set([
 					...templateScriptData,
 					...templateScriptData.map(hyphenate),
@@ -339,6 +343,8 @@ export default <S extends Service>(options: {
 
 	async function provideHtmlData(map: SourceMapWithDocuments<FileRangeCapabilities>, vueSourceFile: vue.VueFile) {
 
+		const languageService = _context!.inject('typescript/languageService');
+		const languageServiceHost = _context!.inject('typescript/languageServiceHost');
 		const casing = await getNameCasing(ts, _context!, map.sourceFileDocument.uri);
 
 		if (builtInData.tags) {
@@ -358,7 +364,7 @@ export default <S extends Service>(options: {
 			}
 		}
 
-		const nativeTags = checkNativeTags(ts, _ts.languageService, _ts.languageServiceHost);
+		const nativeTags = checkNativeTags(ts, languageService, languageServiceHost);
 		options.updateCustomData(htmlOrPugService, [
 			html.newHTMLDataProvider('vue-template-built-in', builtInData),
 			{
@@ -366,7 +372,7 @@ export default <S extends Service>(options: {
 				isApplicable: () => true,
 				provideTags: () => {
 
-					const components = checkComponentNames(ts, _ts.languageService, vueSourceFile, nativeTags)
+					const components = checkComponentNames(ts, languageService, vueSourceFile, nativeTags)
 						.filter(name =>
 							name !== 'Transition'
 							&& name !== 'TransitionGroup'
@@ -408,9 +414,9 @@ export default <S extends Service>(options: {
 				},
 				provideAttributes: (tag) => {
 
-					const attrs = getElementAttrs(ts, _ts.languageService, _ts.languageServiceHost, tag);
-					const props = new Set(checkPropsOfTag(ts, _ts.languageService, vueSourceFile, tag, nativeTags));
-					const events = checkEventsOfTag(ts, _ts.languageService, vueSourceFile, tag, nativeTags);
+					const attrs = getElementAttrs(ts, languageService, languageServiceHost, tag);
+					const props = new Set(checkPropsOfTag(ts, languageService, vueSourceFile, tag, nativeTags));
+					const events = checkEventsOfTag(ts, languageService, vueSourceFile, tag, nativeTags);
 					const attributes: html.IAttributeData[] = [];
 
 					for (const prop of [...props, ...attrs]) {
@@ -514,9 +520,11 @@ export default <S extends Service>(options: {
 
 	function afterHtmlCompletion(completionList: vscode.CompletionList, map: SourceMapWithDocuments<FileRangeCapabilities>, vueSourceFile: vue.VueFile) {
 
+		const languageService = _context!.inject('typescript/languageService');
+		const languageServiceHost = _context!.inject('typescript/languageServiceHost');
 		const replacement = getReplacement(completionList, map.sourceFileDocument);
-		const nativeTags = checkNativeTags(ts, _ts.languageService, _ts.languageServiceHost);
-		const componentNames = new Set(checkComponentNames(ts, _ts.languageService, vueSourceFile, nativeTags).map(hyphenate));
+		const nativeTags = checkNativeTags(ts, languageService, languageServiceHost);
+		const componentNames = new Set(checkComponentNames(ts, languageService, vueSourceFile, nativeTags).map(hyphenate));
 
 		if (replacement) {
 

@@ -4,16 +4,14 @@ import { checkComponentNames, getTemplateTagsAndAttrs, checkPropsOfTag, checkNat
 import * as vue from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { AttrNameCasing, TagNameCasing } from '../types';
+import type { Provide } from 'volar-service-typescript';
 
 export async function convertTagName(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	context: ServiceContext,
+	context: ServiceContext<Provide>,
 	uri: string,
 	casing: TagNameCasing,
 ) {
-
-	if (!context.typescript)
-		return;
 
 	const rootFile = context.documents.getSourceByUri(uri)?.root;
 	if (!(rootFile instanceof vue.VueFile))
@@ -23,11 +21,13 @@ export async function convertTagName(
 	if (!desc.template)
 		return;
 
+	const languageService = context.inject('typescript/languageService');
+	const languageServiceHost = context.inject('typescript/languageServiceHost');
 	const template = desc.template;
 	const document = context.documents.getDocumentByFileName(rootFile.snapshot, rootFile.fileName);
 	const edits: vscode.TextEdit[] = [];
-	const nativeTags = checkNativeTags(ts, context.typescript.languageService, context.typescript.languageServiceHost);
-	const components = checkComponentNames(ts, context.typescript.languageService, rootFile, nativeTags);
+	const nativeTags = checkNativeTags(ts, languageService, languageServiceHost);
+	const components = checkComponentNames(ts, languageService, rootFile, nativeTags);
 	const tags = getTemplateTagsAndAttrs(rootFile);
 
 	for (const [tagName, { offsets }] of tags) {
@@ -57,9 +57,6 @@ export async function convertAttrName(
 	casing: AttrNameCasing,
 ) {
 
-	if (!context.typescript)
-		return;
-
 	const rootFile = context.documents.getSourceByUri(uri)?.root;
 	if (!(rootFile instanceof vue.VueFile))
 		return;
@@ -68,17 +65,19 @@ export async function convertAttrName(
 	if (!desc.template)
 		return;
 
+	const languageService = context.inject('typescript/languageService');
+	const languageServiceHost = context.inject('typescript/languageServiceHost');
 	const template = desc.template;
 	const document = context.documents.getDocumentByFileName(rootFile.snapshot, rootFile.fileName);
 	const edits: vscode.TextEdit[] = [];
-	const nativeTags = checkNativeTags(ts, context.typescript.languageService, context.typescript.languageServiceHost);
-	const components = checkComponentNames(ts, context.typescript.languageService, rootFile, nativeTags);
+	const nativeTags = checkNativeTags(ts, languageService, languageServiceHost);
+	const components = checkComponentNames(ts, languageService, rootFile, nativeTags);
 	const tags = getTemplateTagsAndAttrs(rootFile);
 
 	for (const [tagName, { attrs }] of tags) {
 		const componentName = components.find(component => component === tagName || hyphenate(component) === tagName);
 		if (componentName) {
-			const props = checkPropsOfTag(ts, context.typescript.languageService, rootFile, componentName, nativeTags);
+			const props = checkPropsOfTag(ts, languageService, rootFile, componentName, nativeTags);
 			for (const [attrName, { offsets }] of attrs) {
 				const propName = props.find(prop => prop === attrName || hyphenate(prop) === attrName);
 				if (propName) {
@@ -130,13 +129,6 @@ export function detect(
 	attr: AttrNameCasing[],
 } {
 
-	if (!context.typescript) {
-		return {
-			tag: [],
-			attr: [],
-		};
-	}
-
 	const rootFile = context.documents.getSourceByUri(uri)?.root;
 	if (!(rootFile instanceof vue.VueFile)) {
 		return {
@@ -144,6 +136,9 @@ export function detect(
 			attr: [],
 		};
 	}
+
+	const languageService = context.inject('typescript/languageService');
+	const languageServiceHost = context.inject('typescript/languageServiceHost');
 
 	return {
 		tag: getTagNameCase(rootFile),
@@ -176,12 +171,8 @@ export function detect(
 	}
 	function getTagNameCase(file: VirtualFile): TagNameCasing[] {
 
-		if (!context.typescript) {
-			return [];
-		}
-
-		const nativeTags = checkNativeTags(ts, context.typescript.languageService, context.typescript.languageServiceHost);
-		const components = checkComponentNames(ts, context.typescript.languageService, file, nativeTags);
+		const nativeTags = checkNativeTags(ts, languageService, languageServiceHost);
+		const components = checkComponentNames(ts, languageService, file, nativeTags);
 		const tagNames = getTemplateTagsAndAttrs(file);
 		const result: TagNameCasing[] = [];
 
