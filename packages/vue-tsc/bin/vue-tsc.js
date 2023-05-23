@@ -29,7 +29,7 @@ fs.readFileSync = (...args) => {
 		if (semver.gt(tsPkg.version, '5.0.4')) {
 			tryReplace(
 				`return createBuilderProgramUsingProgramBuildInfo(buildInfo, buildInfoPath, host);`,
-				`buildInfo.program.fileNames = buildInfo.program.fileNames.map(file => file.replace(/\.md\.(j|t)sx?$/i, '.md'));
+				`buildInfo.program.fileNames = buildInfo.program.fileNames.map(file => file.replace(/\.vue\.(j|t)sx?$/i, '.vue'));
         return createBuilderProgramUsingProgramBuildInfo(buildInfo, buildInfoPath, host);`
 			);
 		}
