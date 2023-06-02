@@ -17,9 +17,9 @@
 		"update-html-data": "node ./scripts/update-html-data.js"
 	},
 	"dependencies": {
-		"@volar/language-core": "1.6.9",
-		"@volar/language-service": "1.6.9",
-		"@volar/typescript": "1.6.9",
+		"@volar/language-core": "1.7.0",
+		"@volar/language-service": "1.7.0",
+		"@volar/typescript": "1.7.0",
 		"@vue/compiler-dom": "^3.3.0",
 		"@vue/language-core": "1.7.8",
 		"@vue/reactivity": "^3.3.0",
@@ -36,7 +36,7 @@
 		"vscode-languageserver-textdocument": "^1.0.8"
 	},
 	"devDependencies": {
-		"@volar/kit": "1.6.9",
+		"@volar/kit": "1.7.0",
 		"vscode-languageserver-protocol": "^3.17.3",
 		"vscode-uri": "^3.0.7"
 	}
