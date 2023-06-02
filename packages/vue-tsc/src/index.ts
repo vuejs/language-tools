@@ -10,7 +10,7 @@ export type _Program = ts.Program & { __vue: ProgramContext; };
 interface ProgramContext {
 	projectVersion: number,
 	options: ts.CreateProgramOptions,
-	languageServiceHost: vue.LanguageServiceHost,
+	languageHost: vue.TypeScriptLanguageHost,
 	vueCompilerOptions: Partial<vue.VueCompilerOptions>,
 	languageService: ReturnType<typeof vueTs.createLanguageService>,
 }
@@ -40,8 +40,8 @@ export function createProgram(options: ts.CreateProgramOptions) {
 		const ctx: ProgramContext = {
 			projectVersion: 0,
 			options,
-			get languageServiceHost() {
-				return vueLsHost;
+			get languageHost() {
+				return languageHost;
 			},
 			get vueCompilerOptions() {
 				return vueCompilerOptions;
@@ -55,38 +55,32 @@ export function createProgram(options: ts.CreateProgramOptions) {
 			projectVersion: number,
 			modifiedTime: number,
 			scriptSnapshot: ts.IScriptSnapshot,
-			version: string,
 		}>();
-		const vueLsHost = new Proxy(<vue.LanguageServiceHost>{
-			// avoid failed with tsc built-in fileExists
-			resolveModuleNames: undefined,
-			resolveModuleNameLiterals: undefined,
+		const languageHost: vue.TypeScriptLanguageHost = {
+			getCompilationSettings: () => ctx.options.options,
+			getScriptFileNames: () => {
+				return ctx.options.rootNames as string[];
+			},
+			getScriptVersion: (fileName) => {
+				return ts.sys.getModifiedTime?.(fileName)?.valueOf().toString();
 
+			},
+			getScriptSnapshot,
+			getProjectVersion: () => {
+				return ctx.projectVersion;
+			},
+			getProjectReferences: () => ctx.options.projectReferences,
+			getCurrentDirectory: () => ctx.options.host!.getCurrentDirectory(),
+			getCancellationToken: ctx.options.host!.getCancellationToken ? () => ctx.options.host!.getCancellationToken!() : undefined,
+		};
+		const vueTsLs = vueTs.createLanguageService(languageHost, vueCompilerOptions, ts as any, {
+			...ts.sys,
 			writeFile: (fileName, content) => {
 				if (fileName.indexOf('__VLS_') === -1) {
 					ctx.options.host!.writeFile(fileName, content, false);
 				}
 			},
-			getCompilationSettings: () => ctx.options.options,
-			getScriptFileNames: () => {
-				return ctx.options.rootNames as string[];
-			},
-			getScriptVersion,
-			getScriptSnapshot,
-			getProjectVersion: () => {
-				return ctx.projectVersion.toString();
-			},
-			getProjectReferences: () => ctx.options.projectReferences,
-			isTsc: true,
-		}, {
-			get: (target, property) => {
-				if (property in target) {
-					return target[property as keyof vue.LanguageServiceHost];
-				}
-				return ctx.options.host![property as keyof ts.CompilerHost];
-			},
 		});
-		const vueTsLs = vueTs.createLanguageService(vueLsHost, vueCompilerOptions, ts as any);
 
 		program = vueTsLs.getProgram() as (ts.Program & { __vue: ProgramContext; });
 		program.__vue = ctx;
@@ -97,9 +91,6 @@ export function createProgram(options: ts.CreateProgramOptions) {
 				return vue.createParsedCommandLine(ts as any, ts.sys, tsConfig).vueOptions;
 			}
 			return {};
-		}
-		function getScriptVersion(fileName: string) {
-			return getScript(fileName)?.version ?? '';
 		}
 		function getScriptSnapshot(fileName: string) {
 			return getScript(fileName)?.scriptSnapshot;

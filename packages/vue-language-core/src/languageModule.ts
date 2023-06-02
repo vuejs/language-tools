@@ -12,7 +12,7 @@ export function createLanguage(
 	_vueCompilerOptions: Partial<VueCompilerOptions> = {},
 	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
 	codegenStack: boolean = false,
-): Language {
+) {
 
 	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);
 
@@ -24,8 +24,7 @@ export function createLanguage(
 		vueCompilerOptions,
 		codegenStack,
 	);
-	const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(sharedTypes.getTypesCode(vueCompilerOptions));
-	const languageModule: Language = {
+	const languageModule: Language<VueFile> = {
 		createVirtualFile(fileName, snapshot, languageId) {
 			if (
 				languageId === 'vue'
@@ -37,35 +36,22 @@ export function createLanguage(
 				return new VueFile(fileName, snapshot, vueCompilerOptions, vueLanguagePlugin, ts, codegenStack);
 			}
 		},
-		updateVirtualFile(sourceFile: VueFile, snapshot) {
+		updateVirtualFile(sourceFile, snapshot) {
 			sourceFile.update(snapshot);
 		},
 		resolveHost(host) {
+			const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(sharedTypes.getTypesCode(vueCompilerOptions));
+			const sharedTypesFileName = path.join(host.getCurrentDirectory(), sharedTypes.baseName);
 			return {
 				...host,
-				fileExists(fileName) {
-					const basename = path.basename(fileName);
-					if (basename === sharedTypes.baseName) {
-						return true;
-					}
-					return host.fileExists(fileName);
-				},
 				getScriptFileNames() {
 					return [
-						path.join(host.getCurrentDirectory(), sharedTypes.baseName),
+						sharedTypesFileName,
 						...host.getScriptFileNames(),
 					];
 				},
-				getScriptVersion(fileName) {
-					const basename = path.basename(fileName);
-					if (basename === sharedTypes.baseName) {
-						return '';
-					}
-					return host.getScriptVersion(fileName);
-				},
 				getScriptSnapshot(fileName) {
-					const basename = path.basename(fileName);
-					if (basename === sharedTypes.baseName) {
+					if (fileName === sharedTypesFileName) {
 						return sharedTypesSnapshot;
 					}
 					return host.getScriptSnapshot(fileName);

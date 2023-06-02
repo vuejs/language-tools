@@ -1,8 +1,9 @@
-import { resolveConfig, LanguageServiceHost } from '../..';
+import { resolveConfig } from '../..';
 import * as ts from 'typescript';
+import * as fs from 'fs';
 import * as path from 'path';
 import { URI } from 'vscode-uri';
-import { createLanguageService } from '@volar/language-service';
+import { FileType, TypeScriptLanguageHost, createLanguageService } from '@volar/language-service';
 
 const uriToFileName = (uri: string) => URI.parse(uri).fsPath.replace(/\\/g, '/');
 const fileNameToUri = (fileName: string) => URI.file(fileName).toString();
@@ -24,26 +25,15 @@ function createTester(root: string) {
 	const config = ts.readJsonConfigFile(realTsConfig, ts.sys.readFile);
 	const parsedCommandLine = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(realTsConfig), {}, realTsConfig);
 	parsedCommandLine.fileNames = parsedCommandLine.fileNames.map(fileName => fileName.replace(/\\/g, '/'));
-	const scriptVersions = new Map<string, string>();
-	const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
-	const host: LanguageServiceHost = {
-		// ts
-		getNewLine: () => ts.sys.newLine,
-		useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,
-		readFile: ts.sys.readFile,
-		writeFile: ts.sys.writeFile,
-		fileExists: ts.sys.fileExists,
-		directoryExists: ts.sys.directoryExists,
-		getDirectories: ts.sys.getDirectories,
-		readDirectory: ts.sys.readDirectory,
-		realpath: ts.sys.realpath,
-		// custom
-		getDefaultLibFileName: options => ts.getDefaultLibFilePath(options),
-		getProjectVersion: () => '0',
+	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
+	const host: TypeScriptLanguageHost = {
+		getProjectVersion: () => 0,
 		getScriptFileNames: () => parsedCommandLine.fileNames,
 		getCurrentDirectory: () => root,
 		getCompilationSettings: () => parsedCommandLine.options,
-		getScriptVersion,
+		getScriptVersion: () => {
+			return undefined;
+		},
 		getScriptSnapshot,
 	};
 	const defaultVSCodeSettings: any = {
@@ -72,12 +62,42 @@ function createTester(root: string) {
 				}
 				return result;
 			},
-			onDidChangeConfiguration() { },
-			documentContext: {
-				resolveReference: (ref: any, _base: any) => {
-					return ref;
+			fs: {
+				stat(uri) {
+					if (uri.startsWith('file://')) {
+						const stats = fs.statSync(uriToFileName(uri), { throwIfNoEntry: false });
+						if (stats) {
+							return {
+								type: stats.isFile() ? FileType.File
+									: stats.isDirectory() ? FileType.Directory
+										: stats.isSymbolicLink() ? FileType.SymbolicLink
+											: FileType.Unknown,
+								ctime: stats.ctimeMs,
+								mtime: stats.mtimeMs,
+								size: stats.size,
+							};
+						}
+					}
 				},
-			},
+				readFile(uri, encoding) {
+					if (uri.startsWith('file://')) {
+						return fs.readFileSync(uriToFileName(uri), { encoding: encoding as 'utf-8' ?? 'utf-8' });
+					}
+				},
+				readDirectory(uri) {
+					if (uri.startsWith('file://')) {
+						const dirName = uriToFileName(uri);
+						const files = fs.existsSync(dirName) ? fs.readdirSync(dirName, { withFileTypes: true }) : [];
+						return files.map<[string, FileType]>(file => {
+							return [file.name, file.isFile() ? FileType.File
+								: file.isDirectory() ? FileType.Directory
+									: file.isSymbolicLink() ? FileType.SymbolicLink
+										: FileType.Unknown];
+						});
+					}
+					return [];
+				},
+			}
 		},
 		resolveConfig({}),
 		host,
@@ -94,19 +114,15 @@ function createTester(root: string) {
 	function setVSCodeSettings(settings: any = undefined) {
 		currentVSCodeSettings = settings;
 	}
-	function getScriptVersion(fileName: string) {
-		return scriptVersions.get(fileName) ?? '';
-	}
 	function getScriptSnapshot(fileName: string) {
-		const version = getScriptVersion(fileName);
-		const cache = scriptSnapshots.get(fileName);
-		if (cache && cache[0] === version) {
-			return cache[1];
+		const snapshot = scriptSnapshots.get(fileName);
+		if (snapshot) {
+			return snapshot;
 		}
 		const text = getScriptText(fileName);
 		if (text !== undefined) {
 			const snapshot = ts.ScriptSnapshot.fromString(text);
-			scriptSnapshots.set(fileName, [version.toString(), snapshot]);
+			scriptSnapshots.set(fileName, snapshot);
 			return snapshot;
 		}
 	}
