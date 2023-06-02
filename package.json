@@ -25,7 +25,8 @@
 		"@volar/language-service": "1.7.0",
 		"typescript": "latest",
 		"vite": "latest",
-		"vitest": "latest"
+		"vitest": "latest",
+		"vscode-languageserver-protocol": "^3.17.3"
 	},
 	"optionalDependencies": {
 		"@lerna-lite/cli": "latest",
