@@ -14,16 +14,9 @@ export const tester = createTester(testRoot);
 
 function createTester(root: string) {
 
-	const parseConfigHost: ts.ParseConfigHost = {
-		...ts.sys,
-		readDirectory: (path, extensions, exclude, include, depth) => {
-			return ts.sys.readDirectory(path, [...extensions, '.vue'], exclude, include, depth);
-		},
-	};
-
 	const realTsConfig = path.join(root, 'tsconfig.json').replace(/\\/g, '/');
 	const config = ts.readJsonConfigFile(realTsConfig, ts.sys.readFile);
-	const parsedCommandLine = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(realTsConfig), {}, realTsConfig);
+	const parsedCommandLine = ts.parseJsonSourceFileConfigFileContent(config, ts.sys, path.dirname(realTsConfig), {}, realTsConfig, undefined, [{ extension: 'vue', isMixedContent: true, scriptKind: ts.ScriptKind.Deferred }]);
 	parsedCommandLine.fileNames = parsedCommandLine.fileNames.map(fileName => fileName.replace(/\\/g, '/'));
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
 	const host: TypeScriptLanguageHost = {
@@ -31,9 +24,6 @@ function createTester(root: string) {
 		getScriptFileNames: () => parsedCommandLine.fileNames,
 		getCurrentDirectory: () => root,
 		getCompilationSettings: () => parsedCommandLine.options,
-		getScriptVersion: () => {
-			return undefined;
-		},
 		getScriptSnapshot,
 	};
 	const defaultVSCodeSettings: any = {

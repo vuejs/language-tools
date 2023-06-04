@@ -61,10 +61,6 @@ export function createProgram(options: ts.CreateProgramOptions) {
 			getScriptFileNames: () => {
 				return ctx.options.rootNames as string[];
 			},
-			getScriptVersion: (fileName) => {
-				return ts.sys.getModifiedTime?.(fileName)?.valueOf().toString();
-
-			},
 			getScriptSnapshot,
 			getProjectVersion: () => {
 				return ctx.projectVersion;

@@ -67,16 +67,12 @@ function createComponentMetaCheckerWorker(
 	let projectVersion = 0;
 
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
-	const scriptVersions = new Map<string, number>();
 	const _host: vue.TypeScriptLanguageHost = {
 		getCurrentDirectory: () => rootPath,
 		getProjectVersion: () => projectVersion,
 		getCompilationSettings: () => parsedCommandLine.options,
 		getScriptFileNames: () => fileNames,
 		getProjectReferences: () => parsedCommandLine.projectReferences,
-		getScriptVersion: (fileName) => {
-			return scriptVersions.get(fileName)?.toString();
-		},
 		getScriptSnapshot: (fileName) => {
 			if (!scriptSnapshots.has(fileName)) {
 				const fileText = ts.sys.readFile(fileName);
@@ -91,13 +87,11 @@ function createComponentMetaCheckerWorker(
 	return {
 		...baseCreate(_host, parsedCommandLine.vueOptions, checkerOptions, globalComponentName, ts),
 		updateFile(fileName: string, text: string) {
-			scriptVersions.set(fileName, (scriptVersions.get(fileName) ?? 0) + 1);
 			fileName = (fileName as path.OsPath).replace(/\\/g, '/') as path.PosixPath;
 			scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(text));
 			projectVersion++;
 		},
 		deleteFile(fileName: string) {
-			scriptVersions.set(fileName, (scriptVersions.get(fileName) ?? 0) + 1);
 			fileName = (fileName as path.OsPath).replace(/\\/g, '/') as path.PosixPath;
 			fileNames = fileNames.filter(f => f !== fileName);
 			projectVersion++;
@@ -108,7 +102,6 @@ function createComponentMetaCheckerWorker(
 			this.clearCache();
 		},
 		clearCache() {
-			scriptVersions.clear();
 			scriptSnapshots.clear();
 			projectVersion++;
 		},
