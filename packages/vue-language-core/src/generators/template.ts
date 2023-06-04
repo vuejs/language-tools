@@ -838,7 +838,7 @@ export function generate(
 							'default',
 							'template',
 							[slotDir.loc.start.offset, slotDir.loc.start.offset + (slotDir.loc.source.startsWith('#') ? '#'.length : slotDir.loc.source.startsWith('v-slot:') ? 'v-slot:'.length : 0)],
-							capabilitiesPresets.slotName,
+							{ ...capabilitiesPresets.slotName, completion: false },
 						])
 				),
 				['', 'template', (slotDir.arg ?? slotDir).loc.end.offset, capabilitiesPresets.diagnosticOnly],
