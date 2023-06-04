@@ -1,6 +1,7 @@
+// @ts-check
 const fs = require('fs');
 const path = require('path');
-const OpenCC = require('opencc');
+const OpenCC = require('opencc').OpenCC;
 const converter = new OpenCC('s2tw.json');
 const langs = [
 	{
@@ -330,6 +331,7 @@ async function templateWorker(lang) {
 					kind: 'markdown',
 					value: lines.slice(1).join('\n'),
 				},
+				attributes: [],
 				references: langs.map(lang => ({
 					name: lang.name,
 					url: `${lang.url}api/built-in-components.html#${normalizeHash(name)}`,
@@ -355,6 +357,7 @@ async function templateWorker(lang) {
 					kind: 'markdown',
 					value: lines.slice(1).join('\n'),
 				},
+				attributes: [],
 				references: langs.map(lang => ({
 					name: lang.name,
 					url: `${lang.url}api/built-in-special-elements.html#${normalizeHash(name)}`,
