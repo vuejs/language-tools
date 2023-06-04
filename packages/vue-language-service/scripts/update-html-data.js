@@ -1,8 +1,6 @@
 // @ts-check
 const fs = require('fs');
 const path = require('path');
-const OpenCC = require('opencc').OpenCC;
-const converter = new OpenCC('s2tw.json');
 const langs = [
 	{
 		name: 'en',
@@ -202,14 +200,6 @@ async function sfcWorker(lang) {
 	const writePath = path.resolve(__dirname, '../data/language-blocks/' + lang.name + '.json');
 	fs.writeFileSync(writePath, JSON.stringify(data, null, 2));
 	console.log(writePath);
-
-	if (lang.name === 'zh-cn') {
-		converter.convertPromise(JSON.stringify(data, null, 2)).then(converted => {
-			const writePath = path.resolve(__dirname, '../data/language-blocks/zh-tw.json');
-			fs.writeFileSync(writePath, converted);
-			console.log(writePath);
-		});
-	}
 }
 
 async function modelWorker(lang) {
@@ -251,14 +241,6 @@ async function modelWorker(lang) {
 	const writePath = path.resolve(__dirname, '../data/model-modifiers/' + lang.name + '.json');
 	fs.writeFileSync(writePath, JSON.stringify(data, null, 2));
 	console.log(writePath);
-
-	if (lang.name === 'zh-cn') {
-		converter.convertPromise(JSON.stringify(data, null, 2)).then(converted => {
-			const writePath = path.resolve(__dirname, '../data/model-modifiers/zh-tw.json');
-			fs.writeFileSync(writePath, converted);
-			console.log(writePath);
-		});
-	}
 }
 
 async function templateWorker(lang) {
@@ -384,14 +366,6 @@ async function templateWorker(lang) {
 	const writePath = path.resolve(__dirname, '../data/template/' + lang.name + '.json');
 	fs.writeFileSync(writePath, JSON.stringify(data, null, 2));
 	console.log(writePath);
-
-	if (lang.name === 'zh-cn') {
-		converter.convertPromise(JSON.stringify(data, null, 2)).then(converted => {
-			const writePath = path.resolve(__dirname, '../data/template/zh-tw.json');
-			fs.writeFileSync(writePath, converted);
-			console.log(writePath);
-		});
-	}
 }
 
 async function fetchText(url, baseUrl) {

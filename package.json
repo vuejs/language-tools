@@ -30,7 +30,6 @@
 	},
 	"optionalDependencies": {
 		"@lerna-lite/cli": "latest",
-		"@lerna-lite/publish": "latest",
-		"opencc": "latest"
+		"@lerna-lite/publish": "latest"
 	}
 }
