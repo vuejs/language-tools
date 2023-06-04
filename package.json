@@ -23,7 +23,7 @@
 	"devDependencies": {
 		"@types/node": "latest",
 		"@volar/language-service": "1.7.0",
-		"typescript": "latest",
+		"typescript": "~5.0.4",
 		"vite": "latest",
 		"vitest": "latest",
 		"vscode-languageserver-protocol": "^3.17.3"
