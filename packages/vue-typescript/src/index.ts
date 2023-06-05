@@ -1,22 +1,24 @@
 import * as base from '@volar/typescript';
 import * as vue from '@vue/language-core';
-import type * as ts from 'typescript/lib/tsserverlibrary';
+import type { ServiceEnvironment } from '@volar/language-service';
 
 export function createLanguageService(
 	host: vue.TypeScriptLanguageHost,
 	vueCompilerOptions: Partial<vue.VueCompilerOptions>,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	sys: ts.System,
+	env: ServiceEnvironment,
 ) {
-	const languageService = base.createLanguageService(
-		vue.createLanguageContext(
-			host,
-			vue.createLanguages(
-				host.getCompilationSettings(),
-				vueCompilerOptions,
-				ts,
-			),
+	const languageContext = vue.createLanguageContext(
+		host,
+		vue.createLanguages(
+			host.getCompilationSettings(),
+			vueCompilerOptions,
+			ts,
 		),
+	);
+	const sys = base.createSys(languageContext, ts, env);
+	const languageService = base.createLanguageService(
+		languageContext,
 		ts,
 		sys,
 	);

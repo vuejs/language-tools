@@ -19,7 +19,8 @@
 	"dependencies": {
 		"@vue/language-core": "1.7.8",
 		"@vue/typescript": "1.7.8",
-		"semver": "^7.3.8"
+		"semver": "^7.3.8",
+		"vscode-uri": "^3.0.7"
 	},
 	"peerDependencies": {
 		"typescript": "*"

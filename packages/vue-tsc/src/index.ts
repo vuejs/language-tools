@@ -2,6 +2,9 @@ import * as ts from 'typescript';
 import * as vue from '@vue/language-core';
 import * as vueTs from '@vue/typescript';
 import { state } from './shared';
+import { URI } from 'vscode-uri';
+import * as fs from 'fs';
+import type { FileType } from '@volar/language-service';
 
 export type Hook = (program: _Program) => void;
 
@@ -69,12 +72,47 @@ export function createProgram(options: ts.CreateProgramOptions) {
 			getCurrentDirectory: () => ctx.options.host!.getCurrentDirectory(),
 			getCancellationToken: ctx.options.host!.getCancellationToken ? () => ctx.options.host!.getCancellationToken!() : undefined,
 		};
+		const uriToFileName = (uri: string) => URI.parse(uri).fsPath.replace(/\\/g, '/');
+		const fileNameToUri = (fileName: string) => URI.file(fileName).toString();
 		const vueTsLs = vueTs.createLanguageService(languageHost, vueCompilerOptions, ts as any, {
-			...ts.sys,
-			writeFile: (fileName, content) => {
-				if (fileName.indexOf('__VLS_') === -1) {
-					ctx.options.host!.writeFile(fileName, content, false);
-				}
+			uriToFileName,
+			fileNameToUri,
+			rootUri: URI.parse(fileNameToUri(languageHost.getCurrentDirectory())),
+			fs: {
+				stat(uri) {
+					if (uri.startsWith('file://')) {
+						const stats = fs.statSync(uriToFileName(uri), { throwIfNoEntry: false });
+						if (stats) {
+							return {
+								type: stats.isFile() ? 1 satisfies FileType.File
+									: stats.isDirectory() ? 2 satisfies FileType.Directory
+										: stats.isSymbolicLink() ? 64 satisfies FileType.SymbolicLink
+											: 0 satisfies FileType.Unknown,
+								ctime: stats.ctimeMs,
+								mtime: stats.mtimeMs,
+								size: stats.size,
+							};
+						}
+					}
+				},
+				readFile(uri, encoding) {
+					if (uri.startsWith('file://')) {
+						return fs.readFileSync(uriToFileName(uri), { encoding: encoding as 'utf-8' ?? 'utf-8' });
+					}
+				},
+				readDirectory(uri) {
+					if (uri.startsWith('file://')) {
+						const dirName = uriToFileName(uri);
+						const files = fs.existsSync(dirName) ? fs.readdirSync(dirName, { withFileTypes: true }) : [];
+						return files.map<[string, FileType]>(file => {
+							return [file.name, file.isFile() ? 1 satisfies FileType.File
+								: file.isDirectory() ? 2 satisfies FileType.Directory
+									: file.isSymbolicLink() ? 64 satisfies FileType.SymbolicLink
+										: 0 satisfies FileType.Unknown];
+						});
+					}
+					return [];
+				},
 			},
 		});
 
