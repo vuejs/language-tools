@@ -69,7 +69,7 @@ export function createProgram(options: ts.CreateProgramOptions) {
 				return ctx.projectVersion;
 			},
 			getProjectReferences: () => ctx.options.projectReferences,
-			getCurrentDirectory: () => ctx.options.host!.getCurrentDirectory(),
+			getCurrentDirectory: () => ctx.options.host!.getCurrentDirectory().replace(/\\/g, '/'),
 			getCancellationToken: ctx.options.host!.getCancellationToken ? () => ctx.options.host!.getCancellationToken!() : undefined,
 		};
 		const uriToFileName = (uri: string) => URI.parse(uri).fsPath.replace(/\\/g, '/');
