@@ -21,18 +21,20 @@ fs.readFileSync = (...args) => {
 
 		// patches logic for checking root file extension in build program for incremental builds
 		if (semver.gt(tsPkg.version, '5.0.0')) {
-			tryReplace(`for (const existingRoot of buildInfoVersionMap.roots) {`, `for (const existingRoot of buildInfoVersionMap.roots
-				.filter(file => !file.toLowerCase().includes('__vls_'))
-				.map(file => file.replace(/\.vue\.(j|t)sx?$/i, '.vue'))
-			) {`);
+			tryReplace(
+				`for (const existingRoot of buildInfoVersionMap.roots) {`,
+				`for (const existingRoot of buildInfoVersionMap.roots
+					.filter(file => !file.toLowerCase().includes('__vls_'))
+					.map(file => file.replace(/\.vue\.(j|t)sx?$/i, '.vue'))
+				) {`
+			);
 		}
 		if (semver.gte(tsPkg.version, '5.0.4')) {
 			tryReplace(
 				`return createBuilderProgramUsingProgramBuildInfo(buildInfo, buildInfoPath, host);`,
-				`buildInfo.program.fileNames = buildInfo.program.fileNames
+				s => `buildInfo.program.fileNames = buildInfo.program.fileNames
 					.filter(file => !file.toLowerCase().includes('__vls_'))
-					.map(file => file.replace(/\.vue\.(j|t)sx?$/i, '.vue'));
-        return createBuilderProgramUsingProgramBuildInfo(buildInfo, buildInfoPath, host);`
+					.map(file => file.replace(/\.vue\.(j|t)sx?$/i, '.vue'));\n` + s
 			);
 		}
 
