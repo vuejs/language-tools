@@ -22,7 +22,7 @@ function createTester(root: string) {
 	const host: TypeScriptLanguageHost = {
 		getProjectVersion: () => 0,
 		getScriptFileNames: () => parsedCommandLine.fileNames,
-		getCurrentDirectory: () => root,
+		getCurrentDirectory: () => root.replace(/\\/g, '/'),
 		getCompilationSettings: () => parsedCommandLine.options,
 		getScriptSnapshot,
 	};
