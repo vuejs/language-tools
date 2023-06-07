@@ -30,9 +30,6 @@ importers:
       vitest:
         specifier: latest
         version: 0.32.0
-      vscode-languageserver-protocol:
-        specifier: ^3.17.3
-        version: 3.17.3
 
   packages/typescript-vue-plugin:
     dependencies:
