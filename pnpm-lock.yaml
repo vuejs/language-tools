@@ -70,6 +70,9 @@ importers:
       '@volar/vscode':
         specifier: 1.7.2
         version: 1.7.2
+      '@vue/language-core':
+        specifier: 1.7.8
+        version: link:../vue-language-core
       '@vue/language-server':
         specifier: 1.7.8
         version: link:../vue-language-server
