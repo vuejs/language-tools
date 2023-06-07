@@ -2,6 +2,9 @@ import * as ts from 'typescript';
 import * as vue from '@vue/language-core';
 import * as vueTs from '@vue/typescript';
 import { state } from './shared';
+import { URI } from 'vscode-uri';
+import * as fs from 'fs';
+import type { FileType } from '@volar/language-service';
 
 export type Hook = (program: _Program) => void;
 
@@ -10,7 +13,7 @@ export type _Program = ts.Program & { __vue: ProgramContext; };
 interface ProgramContext {
 	projectVersion: number,
 	options: ts.CreateProgramOptions,
-	languageServiceHost: vue.LanguageServiceHost,
+	languageHost: vue.TypeScriptLanguageHost,
 	vueCompilerOptions: Partial<vue.VueCompilerOptions>,
 	languageService: ReturnType<typeof vueTs.createLanguageService>,
 }
@@ -40,8 +43,8 @@ export function createProgram(options: ts.CreateProgramOptions) {
 		const ctx: ProgramContext = {
 			projectVersion: 0,
 			options,
-			get languageServiceHost() {
-				return vueLsHost;
+			get languageHost() {
+				return languageHost;
 			},
 			get vueCompilerOptions() {
 				return vueCompilerOptions;
@@ -55,38 +58,63 @@ export function createProgram(options: ts.CreateProgramOptions) {
 			projectVersion: number,
 			modifiedTime: number,
 			scriptSnapshot: ts.IScriptSnapshot,
-			version: string,
 		}>();
-		const vueLsHost = new Proxy(<vue.LanguageServiceHost>{
-			// avoid failed with tsc built-in fileExists
-			resolveModuleNames: undefined,
-			resolveModuleNameLiterals: undefined,
-
-			writeFile: (fileName, content) => {
-				if (fileName.indexOf('__VLS_') === -1) {
-					ctx.options.host!.writeFile(fileName, content, false);
-				}
-			},
+		const languageHost: vue.TypeScriptLanguageHost = {
 			getCompilationSettings: () => ctx.options.options,
 			getScriptFileNames: () => {
 				return ctx.options.rootNames as string[];
 			},
-			getScriptVersion,
 			getScriptSnapshot,
 			getProjectVersion: () => {
-				return ctx.projectVersion.toString();
+				return ctx.projectVersion;
 			},
 			getProjectReferences: () => ctx.options.projectReferences,
-			isTsc: true,
-		}, {
-			get: (target, property) => {
-				if (property in target) {
-					return target[property as keyof vue.LanguageServiceHost];
-				}
-				return ctx.options.host![property as keyof ts.CompilerHost];
+			getCurrentDirectory: () => ctx.options.host!.getCurrentDirectory().replace(/\\/g, '/'),
+			getCancellationToken: ctx.options.host!.getCancellationToken ? () => ctx.options.host!.getCancellationToken!() : undefined,
+		};
+		const uriToFileName = (uri: string) => URI.parse(uri).fsPath.replace(/\\/g, '/');
+		const fileNameToUri = (fileName: string) => URI.file(fileName).toString();
+		const vueTsLs = vueTs.createLanguageService(languageHost, vueCompilerOptions, ts as any, {
+			uriToFileName,
+			fileNameToUri,
+			rootUri: URI.parse(fileNameToUri(languageHost.getCurrentDirectory())),
+			fs: {
+				stat(uri) {
+					if (uri.startsWith('file://')) {
+						const stats = fs.statSync(uriToFileName(uri), { throwIfNoEntry: false });
+						if (stats) {
+							return {
+								type: stats.isFile() ? 1 satisfies FileType.File
+									: stats.isDirectory() ? 2 satisfies FileType.Directory
+										: stats.isSymbolicLink() ? 64 satisfies FileType.SymbolicLink
+											: 0 satisfies FileType.Unknown,
+								ctime: stats.ctimeMs,
+								mtime: stats.mtimeMs,
+								size: stats.size,
+							};
+						}
+					}
+				},
+				readFile(uri, encoding) {
+					if (uri.startsWith('file://')) {
+						return fs.readFileSync(uriToFileName(uri), { encoding: encoding as 'utf-8' ?? 'utf-8' });
+					}
+				},
+				readDirectory(uri) {
+					if (uri.startsWith('file://')) {
+						const dirName = uriToFileName(uri);
+						const files = fs.existsSync(dirName) ? fs.readdirSync(dirName, { withFileTypes: true }) : [];
+						return files.map<[string, FileType]>(file => {
+							return [file.name, file.isFile() ? 1 satisfies FileType.File
+								: file.isDirectory() ? 2 satisfies FileType.Directory
+									: file.isSymbolicLink() ? 64 satisfies FileType.SymbolicLink
+										: 0 satisfies FileType.Unknown];
+						});
+					}
+					return [];
+				},
 			},
 		});
-		const vueTsLs = vueTs.createLanguageService(vueLsHost, vueCompilerOptions, ts as any);
 
 		program = vueTsLs.getProgram() as (ts.Program & { __vue: ProgramContext; });
 		program.__vue = ctx;
@@ -97,9 +125,6 @@ export function createProgram(options: ts.CreateProgramOptions) {
 				return vue.createParsedCommandLine(ts as any, ts.sys, tsConfig).vueOptions;
 			}
 			return {};
-		}
-		function getScriptVersion(fileName: string) {
-			return getScript(fileName)?.version ?? '';
 		}
 		function getScriptSnapshot(fileName: string) {
 			return getScript(fileName)?.scriptSnapshot;
