@@ -379,7 +379,7 @@ export function generate(
 			else if (commentText === '@vue-ignore') {
 				ignoreStart = codes.length;
 			}
-			else if (commentText === '@vue-expected-error') {
+			else if (commentText === '@vue-expect-error') {
 				expectedErrorStart = codes.length;
 				expectedErrorNode = prevNode;
 			}
