@@ -46,14 +46,14 @@ export function createLanguage(
 	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
 	codegenStack: boolean = false,
 ): Language {
+	patchResolveModuleNames(ts, vueCompilerOptions);
+
 	const vueLanguagePlugin = getDefaultVueLanguagePlugins(
 		ts,
 		compilerOptions,
 		vueCompilerOptions,
 		codegenStack,
 	);
-	patchResolveModuleNames(ts, vueCompilerOptions);
-
 	const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(sharedTypes.getTypesCode(vueCompilerOptions));
 	const languageModule: Language = {
 		createVirtualFile(fileName, snapshot, languageId) {
