@@ -8,6 +8,7 @@ import { VueServerInitializationOptions } from './types';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as componentMeta from 'vue-component-meta';
 import { VueCompilerOptions } from '@vue/language-core';
+import { createSys } from '@volar/typescript';
 
 export function createServerPlugin(connection: Connection) {
 
@@ -20,7 +21,7 @@ export function createServerPlugin(connection: Connection) {
 
 		const ts = modules.typescript;
 		const vueFileExtensions: string[] = ['vue'];
-		const hostToVueOptions = new WeakMap<embedded.LanguageServiceHost, Partial<VueCompilerOptions>>();
+		const hostToVueOptions = new WeakMap<embedded.TypeScriptLanguageHost, Partial<VueCompilerOptions>>();
 
 		if (initOptions.additionalExtensions) {
 			for (const additionalExtension of initOptions.additionalExtensions) {
@@ -31,9 +32,9 @@ export function createServerPlugin(connection: Connection) {
 		return {
 			extraFileExtensions: vueFileExtensions.map<ts.FileExtensionInfo>(ext => ({ extension: ext, isMixedContent: true, scriptKind: ts.ScriptKind.Deferred })),
 			watchFileExtensions: ['js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json', ...vueFileExtensions],
-			resolveConfig(config, ctx) {
+			async resolveConfig(config, ctx) {
 
-				const vueOptions = getVueCompilerOptions();
+				const vueOptions = await getVueCompilerOptions();
 				const vueLanguageServiceSettings = getVueLanguageServiceSettings();
 
 				if (ctx) {
@@ -49,20 +50,27 @@ export function createServerPlugin(connection: Connection) {
 					initOptions.codegenStack,
 				);
 
-				function getVueCompilerOptions() {
+				async function getVueCompilerOptions() {
 
 					const ts = modules.typescript;
 
-					let vueOptions: Partial<vue.VueCompilerOptions>;
+					let vueOptions: Partial<vue.VueCompilerOptions> = {};
 
-					if (typeof ctx?.project.tsConfig === 'string' && ts) {
-						vueOptions = vue2.createParsedCommandLine(ts, ctx.sys, ctx.project.tsConfig).vueOptions;
-					}
-					else if (typeof ctx?.project.tsConfig === 'object' && ts) {
-						vueOptions = vue2.createParsedCommandLineByJson(ts, ctx.sys, ctx.host.getCurrentDirectory(), ctx.project.tsConfig).vueOptions;
-					}
-					else {
-						vueOptions = {};
+					if (ts && ctx) {
+						const sys = createSys(undefined, ts, ctx.env);
+						let sysVersion: number | undefined;
+						let newSysVersion = await sys.sync();
+
+						while (sysVersion !== newSysVersion) {
+							sysVersion = newSysVersion;
+							if (typeof ctx?.project.tsConfig === 'string' && ts) {
+								vueOptions = vue2.createParsedCommandLine(ts, sys, ctx.project.tsConfig).vueOptions;
+							}
+							else if (typeof ctx?.project.tsConfig === 'object' && ts) {
+								vueOptions = vue2.createParsedCommandLineByJson(ts, sys, ctx.host.getCurrentDirectory(), ctx.project.tsConfig).vueOptions;
+							}
+							newSysVersion = await sys.sync();
+						}
 					}
 
 					vueOptions.extensions = [
@@ -115,14 +123,14 @@ export function createServerPlugin(connection: Connection) {
 				connection.onRequest(GetConvertAttrCasingEditsRequest.type, async params => {
 					const languageService = await getService(params.textDocument.uri);
 					if (languageService) {
-						const vueOptions = hostToVueOptions.get(languageService.context.core.host);
+						const vueOptions = hostToVueOptions.get(languageService.context.host);
 						if (vueOptions) {
 							return nameCasing.convertAttrName(ts, languageService.context, params.textDocument.uri, params.casing);
 						}
 					}
 				});
 
-				const checkers = new WeakMap<embedded.LanguageServiceHost, componentMeta.ComponentMetaChecker>();
+				const checkers = new WeakMap<embedded.TypeScriptLanguageHost, componentMeta.ComponentMetaChecker>();
 
 				connection.onRequest(GetComponentMeta.type, async params => {
 
@@ -130,16 +138,18 @@ export function createServerPlugin(connection: Connection) {
 					if (!languageService)
 						return;
 
-					let checker = checkers.get(languageService.context.core.host);
+					const host = languageService.context.host;
+
+					let checker = checkers.get(host);
 					if (!checker) {
 						checker = componentMeta.baseCreate(
-							languageService.context.core.host,
-							hostToVueOptions.get(languageService.context.core.host)!,
+							host,
+							hostToVueOptions.get(host)!,
 							{},
-							languageService.context.core.host.getCurrentDirectory() + '/tsconfig.json.global.vue',
+							host.getCurrentDirectory() + '/tsconfig.json.global.vue',
 							ts,
 						);
-						checkers.set(languageService.context.core.host, checker);
+						checkers.set(host, checker);
 					}
 					return checker.getComponentMeta(env.uriToFileName(params.uri));
 				});

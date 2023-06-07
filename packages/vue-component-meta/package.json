@@ -13,7 +13,7 @@
 		"directory": "packages/vue-component-meta"
 	},
 	"dependencies": {
-		"@volar/typescript": "1.6.9",
+		"@volar/typescript": "1.7.2",
 		"@vue/language-core": "1.7.8",
 		"typesafe-path": "^0.2.2",
 		"vue-component-type-helpers": "1.7.8"

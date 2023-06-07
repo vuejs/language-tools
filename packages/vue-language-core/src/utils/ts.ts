@@ -13,9 +13,8 @@ export function createParsedCommandLineByJson(
 	json: any,
 ): ParsedCommandLine {
 
-	const tsConfigPath = path.join(rootDir, 'jsconfig.json');
 	const proxyHost = proxyParseConfigHostForExtendConfigPaths(parseConfigHost);
-	ts.parseJsonConfigFileContent(json, proxyHost.host, rootDir, {}, tsConfigPath);
+	ts.parseJsonConfigFileContent(json, proxyHost.host, rootDir, {}, rootDir + '/jsconfig.json');
 
 	let vueOptions: Partial<VueCompilerOptions> = {};
 
@@ -31,9 +30,9 @@ export function createParsedCommandLineByJson(
 	const parsed = ts.parseJsonConfigFileContent(
 		json,
 		proxyHost.host,
-		path.dirname(tsConfigPath),
+		rootDir,
 		{},
-		tsConfigPath,
+		rootDir + '/jsconfig.json',
 		undefined,
 		(vueOptions.extensions ?? ['.vue']).map(extension => ({
 			extension: extension.slice(1),

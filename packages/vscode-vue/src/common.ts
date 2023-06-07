@@ -134,7 +134,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	);
 
 	for (const client of clients) {
-		activateServerSys(context, client, undefined);
+		activateServerSys(client);
 	}
 
 	async function requestReloadVscode() {

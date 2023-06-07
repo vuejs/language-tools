@@ -379,7 +379,7 @@ export function generate(
 			else if (commentText === '@vue-ignore') {
 				ignoreStart = codes.length;
 			}
-			else if (commentText === '@vue-expected-error') {
+			else if (commentText === '@vue-expect-error') {
 				expectedErrorStart = codes.length;
 				expectedErrorNode = prevNode;
 			}
@@ -838,7 +838,7 @@ export function generate(
 							'default',
 							'template',
 							[slotDir.loc.start.offset, slotDir.loc.start.offset + (slotDir.loc.source.startsWith('#') ? '#'.length : slotDir.loc.source.startsWith('v-slot:') ? 'v-slot:'.length : 0)],
-							capabilitiesPresets.slotName,
+							{ ...capabilitiesPresets.slotName, completion: false },
 						])
 				),
 				['', 'template', (slotDir.arg ?? slotDir).loc.end.offset, capabilitiesPresets.diagnosticOnly],
