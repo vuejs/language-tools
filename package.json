@@ -22,7 +22,7 @@
 	},
 	"devDependencies": {
 		"@types/node": "latest",
-		"@volar/language-service": "1.7.1",
+		"@volar/language-service": "1.7.2",
 		"typescript": "~5.0.4",
 		"vite": "latest",
 		"vitest": "latest",
@@ -31,10 +31,5 @@
 	"optionalDependencies": {
 		"@lerna-lite/cli": "latest",
 		"@lerna-lite/publish": "latest"
-	},
-	"pnpm": {
-	  "overrides": {
-		"@volar/typescript": "1.7.1-patch.1"
-	  }
 	}
 }
