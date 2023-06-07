@@ -2,6 +2,7 @@ import type { Language, LanguageServiceHost } from '@volar/language-core';
 import { posix as path } from 'path';
 import { getDefaultVueLanguagePlugins } from './plugins';
 import { VueFile } from './sourceFile';
+import { VueCompilerOptions } from './types';
 import * as sharedTypes from './utils/directorySharedTypes';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { resolveVueCompilerOptions } from './utils/ts';
