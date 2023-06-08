@@ -138,7 +138,7 @@ export function createServerPlugin(connection: Connection) {
 					if (!languageService)
 						return;
 
-					const host = languageService.context.host;
+					const host = languageService.context.rawHost;
 
 					let checker = checkers.get(host);
 					if (!checker) {
