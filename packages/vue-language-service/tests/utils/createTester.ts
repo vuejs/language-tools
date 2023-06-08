@@ -55,18 +55,20 @@ function createTester(root: string) {
 			fs: {
 				stat(uri) {
 					if (uri.startsWith('file://')) {
-						const stats = fs.statSync(uriToFileName(uri), { throwIfNoEntry: false });
-						if (stats) {
-							return {
-								type: stats.isFile() ? FileType.File
-									: stats.isDirectory() ? FileType.Directory
-										: stats.isSymbolicLink() ? FileType.SymbolicLink
-											: FileType.Unknown,
-								ctime: stats.ctimeMs,
-								mtime: stats.mtimeMs,
-								size: stats.size,
-							};
-						}
+						try {
+							const stats = fs.statSync(uriToFileName(uri), { throwIfNoEntry: false });
+							if (stats) {
+								return {
+									type: stats.isFile() ? FileType.File
+										: stats.isDirectory() ? FileType.Directory
+											: stats.isSymbolicLink() ? FileType.SymbolicLink
+												: FileType.Unknown,
+									ctime: stats.ctimeMs,
+									mtime: stats.mtimeMs,
+									size: stats.size,
+								};
+							}
+						} catch { }
 					}
 				},
 				readFile(uri, encoding) {

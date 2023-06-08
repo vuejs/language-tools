@@ -81,18 +81,20 @@ export function createProgram(options: ts.CreateProgramOptions) {
 			fs: {
 				stat(uri) {
 					if (uri.startsWith('file://')) {
-						const stats = fs.statSync(uriToFileName(uri), { throwIfNoEntry: false });
-						if (stats) {
-							return {
-								type: stats.isFile() ? 1 satisfies FileType.File
-									: stats.isDirectory() ? 2 satisfies FileType.Directory
-										: stats.isSymbolicLink() ? 64 satisfies FileType.SymbolicLink
-											: 0 satisfies FileType.Unknown,
-								ctime: stats.ctimeMs,
-								mtime: stats.mtimeMs,
-								size: stats.size,
-							};
-						}
+						try {
+							const stats = fs.statSync(uriToFileName(uri), { throwIfNoEntry: false });
+							if (stats) {
+								return {
+									type: stats.isFile() ? 1 satisfies FileType.File
+										: stats.isDirectory() ? 2 satisfies FileType.Directory
+											: stats.isSymbolicLink() ? 64 satisfies FileType.SymbolicLink
+												: 0 satisfies FileType.Unknown,
+									ctime: stats.ctimeMs,
+									mtime: stats.mtimeMs,
+									size: stats.size,
+								};
+							}
+						} catch { }
 					}
 				},
 				readFile(uri, encoding) {
