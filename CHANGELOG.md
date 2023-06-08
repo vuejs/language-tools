@@ -1,32 +1,18 @@
 # Changelog
 
-## 1.7.8 (2023/5/22) - pre-release
+## 1.7.10 (2023/6/9) - pre-release
 
-- fix: directive comments not working in production builds
+- feat: upgrade framework to v1.7 ([#3248](https://github.com/johnsoncodehk/volar/issues/3248))
+- fix: `strictTemplates` not working for IntrinsicElement ([#3214](https://github.com/johnsoncodehk/volar/issues/3214))
+- fix: failed to load tsconfig json schema ([#3224](https://github.com/johnsoncodehk/volar/issues/3224)) ([#3228](https://github.com/johnsoncodehk/volar/issues/3228)) - thanks @tjx666
+- fix(vue-tsc): `vue-tsc` ignores type errors in `.vue` files if the incremental setting is true ([#2756](https://github.com/johnsoncodehk/volar/issues/2756)) ([#3218](https://github.com/johnsoncodehk/volar/issues/3218)) - thanks @lucasavila00
+- fix: properly merge `defineModel` and `defineProps` types ([#3164](https://github.com/johnsoncodehk/volar/issues/3164))
+- fix(language-server): show component meta command not working
 
-## 1.7.7 (2023/5/22) - pre-release
+**Breaking changes**
 
-- feat: support for `@vue-ignore`, `@vue-skip`, `@vue-expected-error` directive comments ([#3215](https://github.com/johnsoncodehk/volar/issues/3215))
-- refactor(language-service): removed `vscode-languageserver-protocol` runtime dependency
-- perf(monaco): much faster first time intellisense
-- fix: ts project not updated when virtual ts file created / deleted
-
-## 1.7.6 (2023/5/19) - pre-release
-
-- refactor(language-service): fewer runtime dependencies
-- chore: low-level API adjustment
-
-## 1.7.4 (2023/5/18) - pre-release
-
-- feat: more reliable intellisense for monaco
-- fix: avoid adds ".js" extension when auto importing components ([#3150](https://github.com/johnsoncodehk/volar/issues/3150))
-
-## 1.6.5 (2023/5/13), 1.7.3 (2023/5/13) - pre-release
-
-- chore: bump vue deps to 3.3 stable ([#3167](https://github.com/johnsoncodehk/volar/issues/3167)) - thanks @ferferga
-- fix(vue-tsc): avoid throw when composite is enabled ([#2622](https://github.com/johnsoncodehk/volar/issues/2622))
-- perf(language-service): avoid request name casing from language client multiple times ([#3158](https://github.com/johnsoncodehk/volar/issues/3158)) - thanks @kalvenschraut
-- fix: avoid slot name report TS8013 in js component ([#3121](https://github.com/johnsoncodehk/volar/issues/3121))
+- Simplify `JSX.IntrinsicElements` type inference for better TS performance ([#3259](https://github.com/johnsoncodehk/volar/issues/3259))
+- Update `@vue-expected-error` to `@vue-expect-error` (https://github.com/vuejs/language-tools/pull/3215#issuecomment-1560355284)
 
 ---
 
@@ -63,6 +49,34 @@
 		<a href="https://opencollective.com/volarjs">Open Collective</a>
 	</h5>
 </p>
+
+## 1.7.8 (2023/5/22) - pre-release
+
+- fix: directive comments not working in production builds
+
+## 1.7.7 (2023/5/22) - pre-release
+
+- feat: support for `@vue-ignore`, `@vue-skip`, `@vue-expected-error` directive comments ([#3215](https://github.com/johnsoncodehk/volar/issues/3215))
+- refactor(language-service): removed `vscode-languageserver-protocol` runtime dependency
+- perf(monaco): much faster first time intellisense
+- fix: ts project not updated when virtual ts file created / deleted
+
+## 1.7.6 (2023/5/19) - pre-release
+
+- refactor(language-service): fewer runtime dependencies
+- chore: low-level API adjustment
+
+## 1.7.4 (2023/5/18) - pre-release
+
+- feat: more reliable intellisense for monaco
+- fix: avoid adds ".js" extension when auto importing components ([#3150](https://github.com/johnsoncodehk/volar/issues/3150))
+
+## 1.6.5 (2023/5/13), 1.7.3 (2023/5/13) - pre-release
+
+- chore: bump vue deps to 3.3 stable ([#3167](https://github.com/johnsoncodehk/volar/issues/3167)) - thanks @ferferga
+- fix(vue-tsc): avoid throw when composite is enabled ([#2622](https://github.com/johnsoncodehk/volar/issues/2622))
+- perf(language-service): avoid request name casing from language client multiple times ([#3158](https://github.com/johnsoncodehk/volar/issues/3158)) - thanks @kalvenschraut
+- fix: avoid slot name report TS8013 in js component ([#3121](https://github.com/johnsoncodehk/volar/issues/3121))
 
 ## 1.7.2 (2023/5/11) - pre-release
 
