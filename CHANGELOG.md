@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.11 (2023/6/9) - pre-release
+
+- fix: ignore errors for `statSync` ([#3260](https://github.com/johnsoncodehk/volar/issues/3260))
+
 ## 1.7.10 (2023/6/9) - pre-release
 
 - feat: upgrade framework to v1.7 ([#3248](https://github.com/johnsoncodehk/volar/issues/3248))
