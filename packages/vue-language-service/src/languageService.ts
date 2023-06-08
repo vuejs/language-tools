@@ -63,13 +63,14 @@ function resolvePlugins(
 			return base;
 
 		const ts = modules.typescript;
-		const autoImportPositions = new WeakSet<vscode.Position>();
+		const transformedItem = new WeakSet<vscode.CompletionItem>();
 
 		return {
 			...base,
-			resolveEmbeddedRange(range) {
-				if (autoImportPositions.has(range.start) && autoImportPositions.has(range.end))
-					return range;
+			transformCompletionItem(item) {
+				if (transformedItem.has(item)) {
+					return item;
+				}
 			},
 			async provideCompletionItems(document, position, context, item) {
 				const result = await base.provideCompletionItems?.(document, position, context, item);
@@ -162,6 +163,7 @@ function resolvePlugins(
 
 				const data: Data = item.data;
 				if (item.data?.__isComponentAutoImport && data && item.additionalTextEdits?.length && item.textEdit) {
+					let transformed = false;
 					for (const [_, map] of _context.documents.getMapsByVirtualFileUri(data.uri)) {
 						const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
 						if (virtualFile instanceof vue.VueFile) {
@@ -187,11 +189,10 @@ function resolvePlugins(
 											start: textDoc.positionAt(sfc.script.startTagEnd + exportDefault.componentsOption.start),
 											end: textDoc.positionAt(sfc.script.startTagEnd + exportDefault.componentsOption.end),
 										};
-										autoImportPositions.add(editRange.start);
-										autoImportPositions.add(editRange.end);
+										transformed = true;
 										item.additionalTextEdits.push({
 											range: editRange,
-											newText: unescape(printText.replace(/\\u/g, '%u')),	
+											newText: unescape(printText.replace(/\\u/g, '%u')),
 										});
 									}
 									else if (exportDefault.args && exportDefault.argsNode) {
@@ -207,8 +208,7 @@ function resolvePlugins(
 											start: textDoc.positionAt(sfc.script.startTagEnd + exportDefault.args.start),
 											end: textDoc.positionAt(sfc.script.startTagEnd + exportDefault.args.end),
 										};
-										autoImportPositions.add(editRange.start);
-										autoImportPositions.add(editRange.end);
+										transformed = true;
 										item.additionalTextEdits.push({
 											range: editRange,
 											newText: unescape(printText.replace(/\\u/g, '%u')),
@@ -217,6 +217,9 @@ function resolvePlugins(
 								}
 							}
 						}
+					}
+					if (transformed) {
+						transformedItem.add(item);
 					}
 				}
 
