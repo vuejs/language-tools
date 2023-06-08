@@ -17,6 +17,6 @@
 	},
 	"dependencies": {
 		"@volar/source-map": "1.7.3",
-		"volar-service-pug": "0.0.6"
+		"volar-service-pug": "0.0.7"
 	}
 }
