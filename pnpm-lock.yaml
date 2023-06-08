@@ -34,10 +34,10 @@ importers:
   packages/typescript-vue-plugin:
     dependencies:
       '@vue/language-core':
-        specifier: 1.7.8
+        specifier: 1.7.10
         version: link:../vue-language-core
       '@vue/typescript':
-        specifier: 1.7.8
+        specifier: 1.7.10
         version: link:../vue-typescript
       vscode-uri:
         specifier: ^3.0.7
@@ -53,7 +53,7 @@ importers:
         specifier: 0.15.18
         version: 0.15.18
       typescript-vue-plugin:
-        specifier: 1.7.8
+        specifier: 1.7.10
         version: link:../typescript-vue-plugin
       vsce:
         specifier: latest
@@ -71,10 +71,10 @@ importers:
         specifier: 1.7.3
         version: 1.7.3
       '@vue/language-core':
-        specifier: 1.7.8
+        specifier: 1.7.10
         version: link:../vue-language-core
       '@vue/language-server':
-        specifier: 1.7.8
+        specifier: 1.7.10
         version: link:../vue-language-server
       esbuild:
         specifier: 0.15.18
@@ -101,13 +101,13 @@ importers:
         specifier: 1.7.3
         version: 1.7.3
       '@vue/language-core':
-        specifier: 1.7.8
+        specifier: 1.7.10
         version: link:../vue-language-core
       typesafe-path:
         specifier: ^0.2.2
         version: 0.2.2
       vue-component-type-helpers:
-        specifier: 1.7.8
+        specifier: 1.7.10
         version: link:../vue-component-type-helpers
 
   packages/vue-component-type-helpers: {}
@@ -156,7 +156,7 @@ importers:
         version: 0.0.7
     devDependencies:
       '@vue/language-core':
-        specifier: 1.7.8
+        specifier: 1.7.10
         version: link:../vue-language-core
 
   packages/vue-language-server:
@@ -171,16 +171,16 @@ importers:
         specifier: 1.7.3
         version: 1.7.3
       '@vue/language-core':
-        specifier: 1.7.8
+        specifier: 1.7.10
         version: link:../vue-language-core
       '@vue/language-service':
-        specifier: 1.7.8
+        specifier: 1.7.10
         version: link:../vue-language-service
       vscode-languageserver-protocol:
         specifier: ^3.17.3
         version: 3.17.3
       vue-component-meta:
-        specifier: 1.7.8
+        specifier: 1.7.10
         version: link:../vue-component-meta
 
   packages/vue-language-service:
@@ -198,7 +198,7 @@ importers:
         specifier: ^3.3.0
         version: 3.3.4
       '@vue/language-core':
-        specifier: 1.7.8
+        specifier: 1.7.10
         version: link:../vue-language-core
       '@vue/reactivity':
         specifier: ^3.3.0
@@ -253,16 +253,16 @@ importers:
         specifier: ^3.3.0
         version: 3.3.4
       vue-component-type-helpers:
-        specifier: 1.7.8
+        specifier: 1.7.10
         version: link:../vue-component-type-helpers
 
   packages/vue-tsc:
     dependencies:
       '@vue/language-core':
-        specifier: 1.7.8
+        specifier: 1.7.10
         version: link:../vue-language-core
       '@vue/typescript':
-        specifier: 1.7.8
+        specifier: 1.7.10
         version: link:../vue-typescript
       semver:
         specifier: ^7.3.8
@@ -281,7 +281,7 @@ importers:
         specifier: latest
         version: 8.40.0
       vue-tsc:
-        specifier: 1.7.8
+        specifier: 1.7.10
         version: link:../vue-tsc
 
   packages/vue-typescript:
@@ -290,7 +290,7 @@ importers:
         specifier: 1.7.3
         version: 1.7.3
       '@vue/language-core':
-        specifier: 1.7.8
+        specifier: 1.7.10
         version: link:../vue-language-core
 
 packages:
