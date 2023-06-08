@@ -179,7 +179,7 @@ export function generate(
 
 		const data: Record<string, string> = {};
 
-		codes.push(`let __VLS_templateComponents!: {}\n`);
+		codes.push(`let __VLS_templateComponents!: __VLS_IntrinsicElements\n`);
 
 		for (const tagName in tagNames) {
 
