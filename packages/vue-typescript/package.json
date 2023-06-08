@@ -1,6 +1,6 @@
 {
 	"name": "@vue/typescript",
-	"version": "1.7.10",
+	"version": "1.7.11",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -14,6 +14,6 @@
 	},
 	"dependencies": {
 		"@volar/typescript": "1.7.4",
-		"@vue/language-core": "1.7.10"
+		"@vue/language-core": "1.7.11"
 	}
 }
