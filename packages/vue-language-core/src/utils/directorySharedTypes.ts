@@ -18,16 +18,16 @@ type __VLS_Prettify<T> = {
 } & {};
 
 // @ts-ignore
-type VueGlobalComponents = import('vue').GlobalComponents;
+type __VLS_VueGlobalComponents = import('vue').GlobalComponents;
 // @ts-ignore
-type VueRuntimeCoreGlobalComponents = import('@vue/runtime-core').GlobalComponents;
+type __VLS_VueRuntimeCoreGlobalComponents = import('@vue/runtime-core').GlobalComponents;
 // @ts-ignore
-type VueRuntimeDomGlobalComponents = import('@vue/runtime-dom').GlobalComponents;
+type __VLS_VueRuntimeDomGlobalComponents = import('@vue/runtime-dom').GlobalComponents;
 
 type __VLS_GlobalComponents =
-	& __VLS_PickNotAny<VueGlobalComponents & VueGlobalComponents, {}>
-	& __VLS_PickNotAny<VueRuntimeCoreGlobalComponents & VueRuntimeCoreGlobalComponents, {}>
-	& __VLS_PickNotAny<VueRuntimeDomGlobalComponents & VueRuntimeDomGlobalComponents, {}>
+	& __VLS_PickNotAny<__VLS_VueGlobalComponents & __VLS_VueGlobalComponents, {}>
+	& __VLS_PickNotAny<__VLS_VueRuntimeCoreGlobalComponents & __VLS_VueRuntimeCoreGlobalComponents, {}>
+	& __VLS_PickNotAny<__VLS_VueRuntimeDomGlobalComponents & __VLS_VueRuntimeDomGlobalComponents, {}>
 	& Pick<typeof import('${vueCompilerOptions.lib}'),
 		// @ts-ignore
 		'Transition'
