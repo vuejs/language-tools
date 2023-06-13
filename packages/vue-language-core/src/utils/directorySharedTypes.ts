@@ -7,20 +7,20 @@ export function getTypesCode(vueCompilerOptions: VueCompilerOptions) {
 	return `
 // @ts-nocheck
 
-type __VLS_IntrinsicElements = __VLS_PickNotAny<import('vue/jsx-runtime').JSX.IntrinsicElements & {}, __VLS_PickNotAny<JSX.IntrinsicElements, Record<string, any>>>;
-type __VLS_Element = __VLS_PickNotAny<import('vue/jsx-runtime').JSX.Element & {}, JSX.Element>;
+type __VLS_IntrinsicElements = __VLS_PickNotAny<import('vue/jsx-runtime').JSX.IntrinsicElements, __VLS_PickNotAny<JSX.IntrinsicElements, Record<string, any>>>;
+type __VLS_Element = __VLS_PickNotAny<import('vue/jsx-runtime').JSX.Element, JSX.Element>;
 
 type __VLS_IsAny<T> = boolean extends (T extends never ? true : false) ? true : false;
-type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
+type __VLS_PickNotAny<A, B> = __VLS_IsAny<A & {}> extends true ? B : A;
 
 type __VLS_Prettify<T> = {
 	[K in keyof T]: T[K];
 } & {};
 
 type __VLS_GlobalComponents =
-	__VLS_PickNotAny<import('vue').GlobalComponents & {}, {}>
-	& __VLS_PickNotAny<import('@vue/runtime-core').GlobalComponents & {}, {}>
-	& __VLS_PickNotAny<import('@vue/runtime-dom').GlobalComponents & {}, {}>
+	__VLS_PickNotAny<import('vue').GlobalComponents, {}>
+	& __VLS_PickNotAny<import('@vue/runtime-core').GlobalComponents, {}>
+	& __VLS_PickNotAny<import('@vue/runtime-dom').GlobalComponents, {}>
 	& Pick<typeof import('${vueCompilerOptions.lib}'),
 		'Transition'
 		| 'TransitionGroup'
