@@ -17,22 +17,17 @@ type __VLS_Prettify<T> = {
 	[K in keyof T]: T[K];
 } & {};
 
-declare module 'vue' {
-	export interface GlobalComponents {}
-}
-
-declare module '@vue/runtime-core' {
-	export interface GlobalComponents {}
-}
-
-declare module '@vue/runtime-dom' {
-	export interface GlobalComponents {}
-}
+// @ts-ignore
+type VueGlobalComponents = import('vue').GlobalComponents;
+// @ts-ignore
+type VueRuntimeCoreGlobalComponents = import('@vue/runtime-core').GlobalComponents;
+// @ts-ignore
+type VueRuntimeDomGlobalComponents = import('@vue/runtime-dom').GlobalComponents;
 
 type __VLS_GlobalComponents =
-	& __VLS_PickNotAny<import('vue').GlobalComponents, {}>
-	& __VLS_PickNotAny<import('@vue/runtime-core').GlobalComponents, {}>
-	& __VLS_PickNotAny<import('@vue/runtime-dom').GlobalComponents, {}>
+	& __VLS_PickNotAny<VueGlobalComponents & VueGlobalComponents, {}>
+	& __VLS_PickNotAny<VueRuntimeCoreGlobalComponents & VueRuntimeCoreGlobalComponents, {}>
+	& __VLS_PickNotAny<VueRuntimeDomGlobalComponents & VueRuntimeDomGlobalComponents, {}>
 	& Pick<typeof import('${vueCompilerOptions.lib}'),
 		// @ts-ignore
 		'Transition'
