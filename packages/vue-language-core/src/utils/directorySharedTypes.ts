@@ -27,15 +27,15 @@ type __VLS_VueRuntimeDomGlobalComponents = import('@vue/runtime-dom').GlobalComp
 // Hack: \`Type & Type\` is a hack to make unresolved imports' type to be "real any" in TS 5.1.3.
 // Since typescript 5.1.3, the behavior of unresolved imports has changed.
 // For example, the following code:
-// ```ts
+// \`\`\`ts
 // type A = import('foo').NotExist extends any ? true : false;
 // type B = A extends any ? true : false;
-// ```
-// In typescript 5.0.4, A and B are both `true`.
-// However, in 5.1.3, A becomes `any` and B becomes `any` too!
-// Actually, any type which includes unresolved imports will be turned into `any`.
+// \`\`\`
+// In typescript 5.0.4, A and B are both \`true\`.
+// However, in 5.1.3, A becomes \`any\` and B becomes \`any\` too!
+// Actually, any type which includes unresolved imports will be turned into \`any\`.
 // Even only a reference, like B.
-// So we need to turn it into a `real any` and avoid pollution.
+// So we need to turn it into a \`real any\` and avoid pollution.
 // This hack does it by intersect itself with itself 
 // Ref: #3274
 type __VLS_GlobalComponents =
