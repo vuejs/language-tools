@@ -17,6 +17,7 @@ type __VLS_Prettify<T> = {
 	[K in keyof T]: T[K];
 } & {};
 
+// TODO: revert this once microsoft/TypeScript#54630 is fixed
 // @ts-ignore
 type __VLS_VueGlobalComponents = import('vue').GlobalComponents;
 // @ts-ignore
