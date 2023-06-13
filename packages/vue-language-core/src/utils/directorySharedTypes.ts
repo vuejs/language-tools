@@ -11,7 +11,7 @@ type __VLS_IntrinsicElements = __VLS_PickNotAny<import('vue/jsx-runtime').JSX.In
 type __VLS_Element = __VLS_PickNotAny<import('vue/jsx-runtime').JSX.Element, JSX.Element>;
 
 type __VLS_IsAny<T> = boolean extends (T extends never ? true : false) ? true : false;
-type __VLS_PickNotAny<A, B> = __VLS_IsAny<A & {}> extends true ? B : A;
+type __VLS_PickNotAny<A, B> = __VLS_IsAny<A & {}> extends true ? B : A; // & {} for https://github.com/microsoft/TypeScript/issues/54630
 
 type __VLS_Prettify<T> = {
 	[K in keyof T]: T[K];
