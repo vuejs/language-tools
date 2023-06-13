@@ -36,7 +36,7 @@ type __VLS_VueRuntimeDomGlobalComponents = import('@vue/runtime-dom').GlobalComp
 // However, in 5.1.3, A becomes any and B becomes any too!
 // Actually, any type which includes unresolved imports will be turned into any.
 // Even only a reference, like B.
-// So we need to turn it into a \`real any\` and avoid pollution.
+// So we need to turn it into a real any and avoid pollution.
 // This hack does it by intersect itself with itself.
 // Ref: #3274
 type __VLS_GlobalComponents =
