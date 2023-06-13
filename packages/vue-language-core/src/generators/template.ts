@@ -912,9 +912,11 @@ export function generate(
 						{
 							...capabilitiesPresets.attrReference,
 							rename: {
+								// @click-outside -> onClickOutside
 								normalize(newName) {
 									return camelize('on-' + newName);
 								},
+								// onClickOutside -> @click-outside
 								apply(newName) {
 									const hName = hyphenate(newName);
 									if (hyphenate(newName).startsWith('on-')) {
@@ -1137,15 +1139,15 @@ export function generate(
 					continue;
 				}
 
-				const isStatic = !prop.arg || (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic);
-				const propName = isStatic
+				let camelized = false;
+
+				if (
+					(!prop.arg || (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)) // isStatic
 					&& hyphenate(attrNameText) === attrNameText
 					&& !vueCompilerOptions.htmlAttributes.some(pattern => minimatch(attrNameText!, pattern))
-					? camelize(attrNameText)
-					: attrNameText;
-
-				if (vueCompilerOptions.strictTemplates) {
-					attrNameText = propName;
+				) {
+					attrNameText = camelize(attrNameText);
+					camelized = true;
 				}
 
 				// camelize name
@@ -1168,14 +1170,14 @@ export function generate(
 				else if (prop.exp?.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
 					codes.push(
 						...createObjectPropertyCode([
-							propName,
+							attrNameText,
 							'template',
 							[prop.arg.loc.start.offset, prop.arg.loc.start.offset + attrNameText.length], // patch style attr,
 							{
 								...caps_attr,
 								rename: {
 									normalize: camelize,
-									apply: getRenameApply(attrNameText),
+									apply: camelized ? hyphenate : noEditApply,
 								},
 							},
 						], (prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {})),
@@ -1184,14 +1186,14 @@ export function generate(
 				else {
 					codes.push(
 						...createObjectPropertyCode([
-							propName,
+							attrNameText,
 							'template',
 							[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
 							{
 								...caps_attr,
 								rename: {
 									normalize: camelize,
-									apply: getRenameApply(attrNameText),
+									apply: camelized ? hyphenate : noEditApply,
 								},
 							},
 						], (prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {})),
@@ -1230,41 +1232,6 @@ export function generate(
 					caps_diagnosticOnly,
 				]);
 				codes.push(', ');
-				// original name
-				if (prop.arg && attrNameText !== propName) {
-					codes.push(
-						...createObjectPropertyCode([
-							attrNameText,
-							'template',
-							[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
-							{
-								...caps_attr,
-								rename: {
-									normalize: camelize,
-									apply: getRenameApply(attrNameText),
-								},
-							},
-						], (prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}))
-					);
-					codes.push(': (');
-					if (prop.exp) {
-						codes.push(
-							...createInterpolationCode(
-								prop.exp.loc.source,
-								prop.exp.loc,
-								undefined,
-								undefined,
-								'(',
-								')',
-							),
-						);
-					}
-					else {
-						codes.push('undefined');
-					}
-					codes.push(')');
-					codes.push(', ');
-				}
 			}
 			else if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
 
