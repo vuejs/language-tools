@@ -18,14 +18,10 @@ type __VLS_Prettify<T> = {
 } & {};
 
 type __VLS_GlobalComponents =
-	// @ts-ignore
 	__VLS_PickNotAny<import('vue').GlobalComponents & {}, {}>
-	// @ts-ignore
 	& __VLS_PickNotAny<import('@vue/runtime-core').GlobalComponents & {}, {}>
-	// @ts-ignore
 	& __VLS_PickNotAny<import('@vue/runtime-dom').GlobalComponents & {}, {}>
 	& Pick<typeof import('${vueCompilerOptions.lib}'),
-		// @ts-ignore
 		'Transition'
 		| 'TransitionGroup'
 		| 'KeepAlive'
