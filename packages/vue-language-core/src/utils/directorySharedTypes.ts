@@ -24,6 +24,8 @@ type __VLS_VueRuntimeCoreGlobalComponents = import('@vue/runtime-core').GlobalCo
 // @ts-ignore
 type __VLS_VueRuntimeDomGlobalComponents = import('@vue/runtime-dom').GlobalComponents;
 
+// Hack: `Type & Type` is a hack to make unresolved imports' type work.
+// Ref: #3274
 type __VLS_GlobalComponents =
 	& __VLS_PickNotAny<__VLS_VueGlobalComponents & __VLS_VueGlobalComponents, {}>
 	& __VLS_PickNotAny<__VLS_VueRuntimeCoreGlobalComponents & __VLS_VueRuntimeCoreGlobalComponents, {}>
