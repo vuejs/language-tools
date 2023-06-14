@@ -10,6 +10,6 @@ const x = ref(0);
 		x
 	}"></button>
 	<button @click="() => {
-		x.toLocaleString(); // should unwrap
+		x.toFixed(); // should unwrap
 	}"></button>
 </template>
