@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="T">
 // @experimentalDefinePropProposal=johnsonEdition
-import { exactType } from '../shared';
+import { exactType } from '../../shared';
 
 const a = defineProp<T>();
 const b = defineProp<T>(undefined);

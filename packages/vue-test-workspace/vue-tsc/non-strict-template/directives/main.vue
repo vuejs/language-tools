@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { FunctionDirective } from 'vue';
-import { exactType } from '../shared';
+import { exactType } from '../../shared';
 
 let Foo: (_: { foo?: string }) => void;
 

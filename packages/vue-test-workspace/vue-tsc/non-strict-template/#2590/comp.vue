@@ -11,5 +11,5 @@
 </template>
 
 <script setup lang="ts">
-import { exactType } from '../shared';
+import { exactType } from '../../shared';
 </script>

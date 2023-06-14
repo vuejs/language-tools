@@ -1,5 +1,5 @@
 <script lang="ts">
-import { exactType } from '../shared';
+import { exactType } from '../../shared';
 import { defineComponent, PropType, ref } from 'vue';
 import ScriptSetup from './script-setup.vue';
 import ScriptSetupExpose from './script-setup-expose.vue';

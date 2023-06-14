@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { ComponentProps, ComponentSlots, ComponentEmit, ComponentExposed } from 'vue-component-type-helpers';
-import { exactType } from '../shared';
+import { exactType } from '../../shared';
 import ScriptSetup from '../components/script-setup.vue';
 
 exactType((new ScriptSetup()).$props, {} as ComponentProps<typeof ScriptSetup>);

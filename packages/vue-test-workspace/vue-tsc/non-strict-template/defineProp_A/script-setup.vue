@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // @experimentalDefinePropProposal=kevinEdition
-import { exactType } from '../shared';
+import { exactType } from '../../shared';
 
 interface Qux { qux: true };
 

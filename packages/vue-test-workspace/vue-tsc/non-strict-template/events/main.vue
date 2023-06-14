@@ -32,7 +32,7 @@
 
 <script lang="ts" setup>
 import { defineComponent, FunctionalComponent, PropType } from 'vue';
-import { exactType } from '../shared';
+import { exactType } from '../../shared';
 import C5 from './union_type.vue';
 
 const C1 = defineComponent({ emits: { fooBar: (_num: number) => true, 'bar-baz': (_num: number) => true } });

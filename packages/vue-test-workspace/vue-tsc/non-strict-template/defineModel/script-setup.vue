@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // @ts-nocheck wait for 3.3 added defineModel
-import { exactType } from '../shared';
+import { exactType } from '../../shared';
 
 const a = defineModel<string>(); // modelValue
 // const b = defineModel<string>({ required: true });

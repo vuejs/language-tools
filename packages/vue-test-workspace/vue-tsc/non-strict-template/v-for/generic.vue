@@ -6,5 +6,5 @@
 </template>
 
 <script lang="ts" setup generic="T extends Record<string, string>">
-import { exactType } from '../shared';
+import { exactType } from '../../shared';
 </script>

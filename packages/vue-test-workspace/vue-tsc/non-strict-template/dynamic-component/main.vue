@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { exactType } from '../shared';
+import { exactType } from '../../shared';
 
 let Foo: new () => { $props: { foo: (_: string) => void; }; };
 let Bar: new () => { $props: { bar: (_: number) => void; }; };

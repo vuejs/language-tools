@@ -39,7 +39,7 @@ declare const Comp: new <T>(props: { value: T; }) => {
 
 <script lang="ts" setup>
 import { ref, VNode } from 'vue';
-import { exactType } from '../shared';
+import { exactType } from '../../shared';
 
 const baz = ref('baz' as const);
 </script>
