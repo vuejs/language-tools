@@ -194,6 +194,7 @@ import * as Components from '${fileName.substring(0, fileName.length - '.meta.ts
 export default {} as { [K in keyof typeof Components]: ComponentMeta<typeof Components[K]>; };
 
 interface ComponentMeta<T> {
+	type: ComponentType<T>;
 	props: ComponentProps<T>;
 	emit: ComponentEmit<T>;
 	slots: ${vueCompilerOptions.target < 3 ? 'Vue2ComponentSlots' : 'ComponentSlots'}<T>;
@@ -225,12 +226,16 @@ ${typeHelpersCode}
 		const componentType = typeChecker.getTypeOfSymbolAtLocation(_export, symbolNode!);
 		const symbolProperties = componentType.getProperties() ?? [];
 
+		let _type: ReturnType<typeof getType> | undefined;
 		let _props: ReturnType<typeof getProps> | undefined;
 		let _events: ReturnType<typeof getEvents> | undefined;
 		let _slots: ReturnType<typeof getSlots> | undefined;
 		let _exposed: ReturnType<typeof getExposed> | undefined;
 
 		return {
+			get type() {
+				return _type ?? (_type = getType());
+			},
 			get props() {
 				return _props ?? (_props = getProps());
 			},
@@ -244,6 +249,18 @@ ${typeHelpersCode}
 				return _exposed ?? (_exposed = getExposed());
 			},
 		};
+
+		function getType() {
+
+			const $type = symbolProperties.find(prop => prop.escapedName === 'type');
+
+			if ($type) {
+				const type = typeChecker.getTypeOfSymbolAtLocation($type, symbolNode!);
+				return Number(typeChecker.typeToString(type));
+			}
+
+			return 0;
+		}
 
 		function getProps() {
 
