@@ -1,7 +1,6 @@
 {
 	"extends": "../tsconfig.json",
 	"compilerOptions": {
-		"jsx": "preserve",
 		"noPropertyAccessFromIndexSignature": true,
 	},
 	"vueCompilerOptions": {
@@ -9,9 +8,5 @@
 		"jsxSlots": true,
 		"plugins": ["../../vue-language-plugin-pug"]
 	},
-	"include": [
-		"**/*.ts",
-		"**/*.vue",
-		"**/*.html",
-	]
+	"include": []
 }
