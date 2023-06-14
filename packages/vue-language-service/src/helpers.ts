@@ -12,7 +12,7 @@ export function checkPropsOfTag(
 	tsLs: ts.LanguageService,
 	sourceFile: embedded.VirtualFile,
 	tag: string,
-	nativeTags: Set<string>,
+	vueCompilerOptions: vue.VueCompilerOptions,
 	requiredOnly = false,
 ) {
 
@@ -25,7 +25,7 @@ export function checkPropsOfTag(
 
 	let componentSymbol = components.componentsType.getProperty(name[0]);
 
-	if (!componentSymbol && !nativeTags.has(name[0])) {
+	if (!componentSymbol && !vueCompilerOptions.nativeTags.includes(name[0])) {
 		componentSymbol = components.componentsType.getProperty(camelize(name[0]))
 			?? components.componentsType.getProperty(capitalize(camelize(name[0])));
 	}
@@ -85,7 +85,7 @@ export function checkEventsOfTag(
 	tsLs: ts.LanguageService,
 	sourceFile: embedded.VirtualFile,
 	tag: string,
-	nativeTags: Set<string>,
+	vueCompilerOptions: vue.VueCompilerOptions,
 ) {
 
 	const checker = tsLs.getProgram()!.getTypeChecker();
@@ -97,7 +97,7 @@ export function checkEventsOfTag(
 
 	let componentSymbol = components.componentsType.getProperty(name[0]);
 
-	if (!componentSymbol && !nativeTags.has(name[0])) {
+	if (!componentSymbol && !vueCompilerOptions.nativeTags.includes(name[0])) {
 		componentSymbol = components.componentsType.getProperty(camelize(name[0]))
 			?? components.componentsType.getProperty(capitalize(camelize(name[0])));
 	}
@@ -150,45 +150,15 @@ export function checkComponentNames(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
 	sourceFile: embedded.VirtualFile,
-	nativeTags: Set<string>,
+	vueCompilerOptions: vue.VueCompilerOptions,
 ) {
 	return getComponentsType(ts, tsLs, sourceFile)
 		?.componentsType
 		?.getProperties()
 		.map(c => c.name)
 		.filter(entry => entry.indexOf('$') === -1 && !entry.startsWith('_'))
-		.filter(entry => !nativeTags.has(entry))
+		.filter(entry => !vueCompilerOptions.nativeTags.includes(entry))
 		?? [];
-}
-
-export function checkNativeTags(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
-	tsLs: ts.LanguageService,
-	tsLsHost: ts.LanguageServiceHost,
-) {
-
-	const sharedTypesFileName = tsLsHost.getCurrentDirectory() + '/' + sharedTypes.baseName;
-	const result = new Set<string>();
-
-	let tsSourceFile: ts.SourceFile | undefined;
-
-	if (tsSourceFile = tsLs.getProgram()?.getSourceFile(sharedTypesFileName)) {
-
-		const typeNode = tsSourceFile.statements.find((node): node is ts.TypeAliasDeclaration => ts.isTypeAliasDeclaration(node) && node.name.getText() === '__VLS_IntrinsicElements');
-		const checker = tsLs.getProgram()?.getTypeChecker();
-
-		if (checker && typeNode) {
-
-			const type = checker.getTypeFromTypeNode(typeNode.type);
-			const props = type.getProperties();
-
-			for (const prop of props) {
-				result.add(prop.name);
-			}
-		}
-	}
-
-	return result;
 }
 
 export function getElementAttrs(

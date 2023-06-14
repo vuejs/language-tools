@@ -21,7 +21,7 @@ export function createServerPlugin(connection: Connection) {
 
 		const ts = modules.typescript;
 		const vueFileExtensions: string[] = ['vue'];
-		const hostToVueOptions = new WeakMap<embedded.TypeScriptLanguageHost, Partial<VueCompilerOptions>>();
+		const hostToVueOptions = new WeakMap<embedded.TypeScriptLanguageHost, VueCompilerOptions>();
 
 		if (initOptions.additionalExtensions) {
 			for (const additionalExtension of initOptions.additionalExtensions) {
@@ -38,7 +38,7 @@ export function createServerPlugin(connection: Connection) {
 				const vueLanguageServiceSettings = getVueLanguageServiceSettings();
 
 				if (ctx) {
-					hostToVueOptions.set(ctx.host, vueOptions);
+					hostToVueOptions.set(ctx.host, vue.resolveVueCompilerOptions(vueOptions));
 				}
 
 				return vue.resolveConfig(
@@ -109,14 +109,14 @@ export function createServerPlugin(connection: Connection) {
 				connection.onRequest(DetectNameCasingRequest.type, async params => {
 					const languageService = await getService(params.textDocument.uri);
 					if (languageService) {
-						return nameCasing.detect(ts, languageService.context, params.textDocument.uri);
+						return nameCasing.detect(ts, languageService.context, params.textDocument.uri, hostToVueOptions.get(languageService.context.rawHost)!);
 					}
 				});
 
 				connection.onRequest(GetConvertTagCasingEditsRequest.type, async params => {
 					const languageService = await getService(params.textDocument.uri);
 					if (languageService) {
-						return nameCasing.convertTagName(ts, languageService.context, params.textDocument.uri, params.casing);
+						return nameCasing.convertTagName(ts, languageService.context, params.textDocument.uri, params.casing, hostToVueOptions.get(languageService.context.rawHost)!);
 					}
 				});
 
@@ -125,7 +125,7 @@ export function createServerPlugin(connection: Connection) {
 					if (languageService) {
 						const vueOptions = hostToVueOptions.get(languageService.context.host);
 						if (vueOptions) {
-							return nameCasing.convertAttrName(ts, languageService.context, params.textDocument.uri, params.casing);
+							return nameCasing.convertAttrName(ts, languageService.context, params.textDocument.uri, params.casing, hostToVueOptions.get(languageService.context.rawHost)!);
 						}
 					}
 				});

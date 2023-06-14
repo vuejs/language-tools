@@ -63,10 +63,6 @@
 				"jsxTemplates": {
 					"deprecated": true,
 					"description": "Deprecated since v1.5.0."
-				},
-				"nativeTags": {
-					"deprecated": true,
-					"description": "Deprecated since v1.5.1."
 				}
 			}
 		}
