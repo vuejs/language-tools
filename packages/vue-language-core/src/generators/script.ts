@@ -578,6 +578,8 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				usedHelperTypes.ConstructorOverloads = true;
 				codes.push(`emits: ({} as __VLS_UnionToIntersection<__VLS_ConstructorOverloads<`);
 				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
+				codes.push(`> & __VLS_NormalizeEmits<`);
+				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
 				codes.push(`>>),\n`);
 			}
 			else if (scriptSetupRanges.emitsRuntimeArg) {
