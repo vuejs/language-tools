@@ -72,6 +72,7 @@ export function generate(
 	codegenStack: boolean,
 ) {
 
+	const nativeTags = new Set(vueCompilerOptions.nativeTags);
 	const [codes, codeStacks] = codegenStack ? muggle.track([] as Code[]) : [[], []];
 	const [formatCodes, formatCodeStacks] = codegenStack ? muggle.track([] as Code[]) : [[], []];
 	const [cssCodes, cssCodeStacks] = codegenStack ? muggle.track([] as Code[]) : [[], []];
@@ -179,18 +180,21 @@ export function generate(
 
 		const data: Record<string, string> = {};
 
-		codes.push(`let __VLS_templateComponents!: __VLS_IntrinsicElements\n`);
+		codes.push(`let __VLS_templateComponents!: {}\n`);
 
 		for (const tagName in tagNames) {
+
+			if (nativeTags.has(tagName))
+				continue;
 
 			const isNamespacedTag = tagName.indexOf('.') >= 0;
 			if (isNamespacedTag)
 				continue;
 
-			const varName = validTsVar.test(tagName) ? tagName : capitalize(camelize(tagName.replace(/:/g, '-')));
+			const validName = validTsVar.test(tagName) ? tagName : capitalize(camelize(tagName.replace(/:/g, '-')));
 
 			codes.push(
-				`& __VLS_WithComponent<'${varName}', typeof __VLS_components, `,
+				`& __VLS_WithComponent<'${validName}', typeof __VLS_components, `,
 				// order is important: https://github.com/vuejs/language-tools/issues/2010
 				`"${capitalize(camelize(tagName))}", `,
 				`"${camelize(tagName)}", `,
@@ -198,20 +202,16 @@ export function generate(
 				'>\n',
 			);
 
-			data[tagName] = varName;
+			data[tagName] = validName;
 		}
 
 		codes.push(`;\n`);
 
 		for (const tagName in tagNames) {
 
-			const varName = data[tagName];
-			if (!varName)
-				continue;
-
 			const tagOffsets = tagNames[tagName];
 			const tagRanges: [number, number][] = tagOffsets.map(offset => [offset, offset + tagName.length]);
-			const names = new Set([
+			const names = new Set(nativeTags.has(tagName) ? [tagName] : [
 				// order is important: https://github.com/vuejs/language-tools/issues/2010
 				capitalize(camelize(tagName)),
 				camelize(tagName),
@@ -221,7 +221,7 @@ export function generate(
 			for (const name of names) {
 				for (const tagRange of tagRanges) {
 					codes.push(
-						name === tagName ? '__VLS_templateComponents' : '__VLS_components',
+						nativeTags.has(tagName) ? '({} as __VLS_IntrinsicElements)' : '__VLS_components',
 						...createPropertyAccessCode([
 							name,
 							'template',
@@ -240,25 +240,29 @@ export function generate(
 			}
 			codes.push('\n');
 
-			codes.push(
-				'// @ts-ignore\n', // #2304
-				'[',
-			);
-			for (const tagRange of tagRanges) {
-				codes.push([
-					varName,
-					'template',
-					tagRange,
-					{
-						completion: {
-							additional: true,
-							autoImportOnly: true,
+			const validName = data[tagName];
+
+			if (validName) {
+				codes.push(
+					'// @ts-ignore\n', // #2304
+					'[',
+				);
+				for (const tagRange of tagRanges) {
+					codes.push([
+						validName,
+						'template',
+						tagRange,
+						{
+							completion: {
+								additional: true,
+								autoImportOnly: true,
+							},
 						},
-					},
-				]);
-				codes.push(',');
+					]);
+					codes.push(',');
+				}
+				codes.push(`];\n`);
 			}
-			codes.push(`];\n`);
 		}
 
 		return data;
@@ -635,7 +639,23 @@ export function generate(
 			}
 		}
 
-		if (isNamespacedTag) {
+		const isIntrinsicElement = nativeTags.has(tag) && tagOffsets.length;
+
+		if (isIntrinsicElement) {
+			codes.push(
+				'const ',
+				var_originalComponent,
+				` = ({} as __VLS_IntrinsicElements)[`,
+				...createStringLiteralKeyCode([
+					tag,
+					'template',
+					tagOffsets[0],
+					capabilitiesPresets.diagnosticOnly,
+				]),
+				'];\n',
+			);
+		}
+		else if (isNamespacedTag) {
 			codes.push(
 				`const ${var_originalComponent} = `,
 				...createInterpolationCode(tag, node.loc, startTagOffset, capabilitiesPresets.all, '', ''),
@@ -659,10 +679,18 @@ export function generate(
 		codes.push(
 			`const ${var_functionalComponent} = __VLS_asFunctionalComponent(`,
 			`${var_originalComponent}, `,
-			`new ${var_originalComponent}({`,
-			...createPropsCode(node, props, 'extraReferences'),
-			'}));\n',
 		);
+		if (isIntrinsicElement) {
+			codes.push('{}');
+		}
+		else {
+			codes.push(
+				`new ${var_originalComponent}({`,
+				...createPropsCode(node, props, 'extraReferences'),
+				'})',
+			);
+		}
+		codes.push(');\n');
 
 		for (const offset of tagOffsets) {
 			if (isNamespacedTag) {
@@ -672,7 +700,10 @@ export function generate(
 				continue;
 			}
 			else {
-				if (componentVars[tag]) {
+				if (isIntrinsicElement) {
+					codes.push(`({} as __VLS_IntrinsicElements).`);
+				}
+				else {
 					codes.push(`__VLS_templateComponents.`);
 				}
 				codes.push(

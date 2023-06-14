@@ -4,7 +4,7 @@ import { hyphenate, capitalize, camelize } from '@vue/shared';
 import * as html from 'vscode-html-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { checkComponentNames, checkEventsOfTag, checkPropsOfTag, getElementAttrs, checkNativeTags } from '../helpers';
+import { checkComponentNames, checkEventsOfTag, checkPropsOfTag, getElementAttrs } from '../helpers';
 import { getNameCasing } from '../ideFeatures/nameCasing';
 import { AttrNameCasing, VueCompilerOptions, TagNameCasing } from '../types';
 import { loadTemplateData, loadModelModifiersData } from './data';
@@ -106,7 +106,6 @@ export default <S extends Service>(options: {
 				return;
 
 			const languageService = _context.inject('typescript/languageService');
-			const languageServiceHost = _context.inject('typescript/languageServiceHost');
 			const result: vscode.InlayHint[] = [];
 
 			for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
@@ -115,9 +114,8 @@ export default <S extends Service>(options: {
 				if (virtualFile && virtualFile instanceof vue.VueFile && scanner) {
 
 					// visualize missing required props
-					const casing = await getNameCasing(ts, _context, map.sourceFileDocument.uri);
-					const nativeTags = checkNativeTags(ts, languageService, languageServiceHost);
-					const components = checkComponentNames(ts, languageService, virtualFile, nativeTags);
+					const casing = await getNameCasing(ts, _context, map.sourceFileDocument.uri, options.vueCompilerOptions);
+					const components = checkComponentNames(ts, languageService, virtualFile, options.vueCompilerOptions);
 					const componentProps: Record<string, string[]> = {};
 					let token: html.TokenType;
 					let current: {
@@ -134,7 +132,7 @@ export default <S extends Service>(options: {
 									: components.find(component => component === tagName || hyphenate(component) === tagName);
 							const checkTag = tagName.indexOf('.') >= 0 ? tagName : component;
 							if (checkTag) {
-								componentProps[checkTag] ??= checkPropsOfTag(ts, languageService, virtualFile, checkTag, nativeTags, true);
+								componentProps[checkTag] ??= checkPropsOfTag(ts, languageService, virtualFile, checkTag, options.vueCompilerOptions, true);
 								current = {
 									unburnedRequiredProps: [...componentProps[checkTag]],
 									labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
@@ -286,7 +284,6 @@ export default <S extends Service>(options: {
 				return;
 
 			const languageService = _context.inject('typescript/languageService');
-			const languageServiceHost = _context.inject('typescript/languageServiceHost');
 
 			for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
 
@@ -294,8 +291,7 @@ export default <S extends Service>(options: {
 				if (!virtualFile || !(virtualFile instanceof vue.VueFile))
 					continue;
 
-				const nativeTags = checkNativeTags(ts, languageService, languageServiceHost);
-				const templateScriptData = checkComponentNames(ts, languageService, virtualFile, nativeTags);
+				const templateScriptData = checkComponentNames(ts, languageService, virtualFile, options.vueCompilerOptions);
 				const components = new Set([
 					...templateScriptData,
 					...templateScriptData.map(hyphenate),
@@ -345,7 +341,7 @@ export default <S extends Service>(options: {
 
 		const languageService = _context!.inject('typescript/languageService');
 		const languageServiceHost = _context!.inject('typescript/languageServiceHost');
-		const casing = await getNameCasing(ts, _context!, map.sourceFileDocument.uri);
+		const casing = await getNameCasing(ts, _context!, map.sourceFileDocument.uri, options.vueCompilerOptions);
 
 		if (builtInData.tags) {
 			for (const tag of builtInData.tags) {
@@ -364,7 +360,6 @@ export default <S extends Service>(options: {
 			}
 		}
 
-		const nativeTags = checkNativeTags(ts, languageService, languageServiceHost);
 		options.updateCustomData(htmlOrPugService, [
 			html.newHTMLDataProvider('vue-template-built-in', builtInData),
 			{
@@ -372,7 +367,7 @@ export default <S extends Service>(options: {
 				isApplicable: () => true,
 				provideTags: () => {
 
-					const components = checkComponentNames(ts, languageService, vueSourceFile, nativeTags)
+					const components = checkComponentNames(ts, languageService, vueSourceFile, options.vueCompilerOptions)
 						.filter(name =>
 							name !== 'Transition'
 							&& name !== 'TransitionGroup'
@@ -415,8 +410,8 @@ export default <S extends Service>(options: {
 				provideAttributes: (tag) => {
 
 					const attrs = getElementAttrs(ts, languageService, languageServiceHost, tag);
-					const props = new Set(checkPropsOfTag(ts, languageService, vueSourceFile, tag, nativeTags));
-					const events = checkEventsOfTag(ts, languageService, vueSourceFile, tag, nativeTags);
+					const props = new Set(checkPropsOfTag(ts, languageService, vueSourceFile, tag, options.vueCompilerOptions));
+					const events = checkEventsOfTag(ts, languageService, vueSourceFile, tag, options.vueCompilerOptions);
 					const attributes: html.IAttributeData[] = [];
 
 					for (const prop of [...props, ...attrs]) {
@@ -521,10 +516,8 @@ export default <S extends Service>(options: {
 	function afterHtmlCompletion(completionList: vscode.CompletionList, map: SourceMapWithDocuments<FileRangeCapabilities>, vueSourceFile: vue.VueFile) {
 
 		const languageService = _context!.inject('typescript/languageService');
-		const languageServiceHost = _context!.inject('typescript/languageServiceHost');
 		const replacement = getReplacement(completionList, map.sourceFileDocument);
-		const nativeTags = checkNativeTags(ts, languageService, languageServiceHost);
-		const componentNames = new Set(checkComponentNames(ts, languageService, vueSourceFile, nativeTags).map(hyphenate));
+		const componentNames = new Set(checkComponentNames(ts, languageService, vueSourceFile, options.vueCompilerOptions).map(hyphenate));
 
 		if (replacement) {
 

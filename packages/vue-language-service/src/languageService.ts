@@ -97,7 +97,7 @@ function resolvePlugins(
 
 								// fix #2458
 								if (source) {
-									casing ??= await getNameCasing(ts, _context, _context.env.fileNameToUri(source.fileName));
+									casing ??= await getNameCasing(ts, _context, _context.env.fileNameToUri(source.fileName), vueCompilerOptions);
 									if (casing.tag === TagNameCasing.Kebab) {
 										for (const item of result.items) {
 											item.filterText = hyphenate(item.filterText ?? item.label);
@@ -149,7 +149,7 @@ function resolvePlugins(
 						item.textEdit.newText = newName;
 						const source = _context.documents.getVirtualFileByUri(itemData.uri)[1];
 						if (source) {
-							const casing = await getNameCasing(ts, _context, _context.env.fileNameToUri(source.fileName));
+							const casing = await getNameCasing(ts, _context, _context.env.fileNameToUri(source.fileName), vueCompilerOptions);
 							if (casing.tag === TagNameCasing.Kebab) {
 								item.textEdit.newText = hyphenate(item.textEdit.newText);
 							}
