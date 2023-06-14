@@ -117,7 +117,7 @@ function walkIdentifiers(
 	cb: (varNode: ts.Identifier, isShorthand: boolean) => void,
 	localVars: Record<string, number>,
 	blockVars: string[] = [],
-	isRootBlock: boolean = true,
+	isRoot: boolean = true,
 ) {
 
 	if (ts.isIdentifier(node)) {
@@ -184,14 +184,22 @@ function walkIdentifiers(
 		node.forEachChild(node => walkIdentifiersInTypeReference(ts, node, cb));
 	}
 	else {
+		const _blockVars = blockVars;
 		if (ts.isBlock(node)) {
 			blockVars = [];
 		}
 		node.forEachChild(node => walkIdentifiers(ts, node, cb, localVars, blockVars, false));
-		if (isRootBlock || ts.isBlock(node)) {
+		if (ts.isBlock(node)) {
 			for (const varName of blockVars) {
 				localVars[varName]--;
 			}
+		}
+		blockVars = _blockVars;
+	}
+
+	if (isRoot) {
+		for (const varName of blockVars) {
+			localVars[varName]--;
 		}
 	}
 }
