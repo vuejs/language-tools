@@ -574,7 +574,7 @@
 				},
 				"vue.inlayHints.missingProps": {
 					"type": "boolean",
-					"default": true,
+					"default": false,
 					"description": "Show inlay hints for missing required props."
 				},
 				"vue.inlayHints.inlineHandlerLeading": {
