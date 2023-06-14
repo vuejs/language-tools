@@ -3,9 +3,5 @@
 	"vueCompilerOptions": {
 		"strictTemplates": true
 	},
-	"include": [
-		"**/*.ts",
-		"**/*.vue",
-		"**/*.html",
-	]
+	"include": ["**/*"]
 }
