@@ -376,14 +376,14 @@ export function generate(
 		resolveComment();
 
 		if (prevNode?.type === CompilerDOM.NodeTypes.COMMENT) {
-			const commentText = prevNode.content.trim();
-			if (commentText === '@vue-skip') {
+			const commentText = prevNode.content.trim().split(' ')[0];
+			if (commentText.match(/^@vue-skip\b[\s\S]*/)) {
 				return;
 			}
-			else if (commentText === '@vue-ignore') {
+			else if (commentText.match(/^@vue-ignore\b[\s\S]*/)) {
 				ignoreStart = codes.length;
 			}
-			else if (commentText === '@vue-expect-error') {
+			else if (commentText.match(/^@vue-expect-error\b[\s\S]*/)) {
 				expectedErrorStart = codes.length;
 				expectedErrorNode = prevNode;
 			}
