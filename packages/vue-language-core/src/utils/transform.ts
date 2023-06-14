@@ -39,7 +39,10 @@ export function walkInterpolationFragment(
 	};
 	ast.forEachChild(node => walkIdentifiers(ts, node, varCb, localVars));
 
-	ctxVars = ctxVars.sort((a, b) => a.offset - b.offset);
+	// Avoid duplicate ctx vars
+	// Fixes https://github.com/vuejs/language-tools/issues/3258
+	const localVarsKeys = Object.keys(localVars);
+	ctxVars = ctxVars.filter(v => !localVarsKeys.includes(v.text)).sort((a, b) => a.offset - b.offset);
 
 	if (ctxVars.length) {
 
@@ -130,7 +133,6 @@ function walkIdentifiers(
 		walkIdentifiers(ts, node.expression, cb, localVars);
 	}
 	else if (ts.isVariableDeclaration(node)) {
-
 		colletVars(ts, node.name, blockVars);
 
 		for (const varName of blockVars)
