@@ -1277,13 +1277,14 @@ export function generate(
 					continue;
 				}
 
-				const propName = hyphenate(prop.name) === prop.name
-					&& !vueCompilerOptions.htmlAttributes.some(pattern => minimatch(attrNameText, pattern))
-					? camelize(prop.name)
-					: prop.name;
+				let camelized = false;
 
-				if (vueCompilerOptions.strictTemplates) {
-					attrNameText = propName;
+				if (
+					hyphenate(prop.name) === prop.name
+					&& !vueCompilerOptions.htmlAttributes.some(pattern => minimatch(attrNameText!, pattern))
+				) {
+					attrNameText = camelize(prop.name);
+					camelized = true;
 				}
 
 				// camelize name
@@ -1295,14 +1296,14 @@ export function generate(
 				]);
 				codes.push(
 					...createObjectPropertyCode([
-						propName,
+						attrNameText,
 						'template',
 						[prop.loc.start.offset, prop.loc.start.offset + prop.name.length],
 						{
 							...caps_attr,
 							rename: {
 								normalize: camelize,
-								apply: getRenameApply(prop.name),
+								apply: camelized ? hyphenate : noEditApply,
 							},
 						},
 					], (prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}))
@@ -1322,32 +1323,6 @@ export function generate(
 					caps_diagnosticOnly,
 				]);
 				codes.push(', ');
-				// original name
-				if (attrNameText !== propName) {
-					codes.push(
-						...createObjectPropertyCode([
-							attrNameText,
-							'template',
-							prop.loc.start.offset,
-							{
-								...caps_attr,
-								rename: {
-									normalize: camelize,
-									apply: getRenameApply(prop.name),
-								},
-							},
-						], (prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}))
-					);
-					codes.push(': (');
-					if (prop.value) {
-						generateAttrValue(prop.value);
-					}
-					else {
-						codes.push('true');
-					}
-					codes.push(')');
-					codes.push(', ');
-				}
 			}
 			else if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
