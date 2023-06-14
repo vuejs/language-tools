@@ -722,12 +722,13 @@
 	"scripts": {
 		"prebuild": "cd ../.. && npm run build",
 		"build": "node scripts/build",
+		"build:minify": "npm run build -- --minify",
 		"watch": "npm run build -- --watch",
-		"pack": "npm run build -- --minify && vsce package",
+		"pack": "npm run build:minify && vsce package",
 		"pack:next": "npm run build && vsce package",
-		"release": "npm run build -- --minify && vsce publish",
+		"release": "npm run build:minify && vsce publish",
 		"release:next": "npm run build && vsce publish --pre-release",
-		"bundle-size": "npm run build -- --minify --metafile && esbuild-visualizer --metadata ./meta.json && open ./stats.html"
+		"bundle-size": "npm run build:minify --metafile && esbuild-visualizer --metadata ./meta.json && open ./stats.html"
 	},
 	"devDependencies": {
 		"@types/semver": "^7.3.13",
