@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { exactType } from '../shared';
+import { exactType } from '../../shared';
 import Comp from './Comp.vue';
 </script>
 
