@@ -21,6 +21,7 @@ export function walkInterpolationFragment(
 	const varCb = (id: ts.Identifier, isShorthand: boolean) => {
 		if (
 			!!localVars[id.text] ||
+			localVars[id.text] === 0 ||
 			// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/compiler-core/src/transforms/transformExpression.ts#L342-L352
 			isGloballyWhitelisted(id.text) ||
 			id.text === 'require' ||
@@ -39,10 +40,7 @@ export function walkInterpolationFragment(
 	};
 	ast.forEachChild(node => walkIdentifiers(ts, node, varCb, localVars));
 
-	// Avoid duplicate ctx vars
-	// Fixes https://github.com/vuejs/language-tools/issues/3258
-	const localVarsKeys = Object.keys(localVars);
-	ctxVars = ctxVars.filter(v => !localVarsKeys.includes(v.text)).sort((a, b) => a.offset - b.offset);
+	ctxVars = ctxVars.sort((a, b) => a.offset - b.offset);
 
 	if (ctxVars.length) {
 
