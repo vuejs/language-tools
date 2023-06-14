@@ -1,5 +1,3 @@
-<!-- TODO: This problem only happens when strictTemplates is enabled -->
-
 <script lang="ts" setup>
 import { ref } from 'vue';
 
