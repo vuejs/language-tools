@@ -3,7 +3,6 @@ import * as path from 'path';
 import { tester } from './utils/createTester';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as fs from 'fs';
-import { CancellationToken } from 'vscode-languageserver-protocol';
 
 const baseDir = path.resolve(__dirname, '../../vue-test-workspace/rename');
 const testDirs = fs.readdirSync(baseDir);
@@ -40,7 +39,6 @@ for (const dirName of testDirs) {
 							uri,
 							position,
 							action.newName,
-							CancellationToken.None,
 						);
 
 						expect(edit).toBeDefined();

@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "1.7.0",
+	"version": "1.7.12",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
@@ -611,11 +611,6 @@
 				"category": "Volar (Debug)"
 			},
 			{
-				"command": "volar.action.showVirtualFiles",
-				"title": "Show Virtual Files",
-				"category": "Volar (Debug)"
-			},
-			{
 				"command": "volar.action.serverStats",
 				"title": "Server Stats",
 				"category": "Volar (Debug)"
@@ -658,10 +653,6 @@
 				},
 				{
 					"command": "volar.action.writeVirtualFiles",
-					"when": "volar.activated"
-				},
-				{
-					"command": "volar.action.showVirtualFiles",
 					"when": "volar.activated"
 				},
 				{
@@ -732,26 +723,23 @@
 		"prebuild": "cd ../.. && npm run build",
 		"build": "node scripts/build",
 		"watch": "npm run build -- --watch",
-		"prepack": "npm run prebuild && npm run build -- --minify",
-		"pack": "npm run prepack && vsce package",
-		"release": "npm run prepack && vsce publish",
-		"release:next": "npm run release -- --pre-release",
-		"bundle-size": "npm run prepack:bundle-size && esbuild-visualizer --metadata ./meta.json && open ./stats.html"
+		"pack": "npm run build -- --minify && vsce package",
+		"pack:next": "npm run build && vsce package",
+		"release": "npm run build -- --minify && vsce publish",
+		"release:next": "npm run build && vsce publish --pre-release",
+		"bundle-size": "npm run build -- --minify --metafile && esbuild-visualizer --metadata ./meta.json && open ./stats.html"
 	},
 	"devDependencies": {
 		"@types/semver": "^7.3.13",
 		"@types/vscode": "1.67.0",
-		"@volar/source-map": "1.5.4",
-		"@volar/vscode": "1.5.4",
-		"@vue/language-core": "1.7.0",
-		"@vue/language-server": "1.7.0",
+		"@volar/vscode": "1.7.5",
+		"@vue/language-core": "1.7.12",
+		"@vue/language-server": "1.7.12",
 		"esbuild": "0.15.18",
 		"esbuild-plugin-copy": "latest",
 		"esbuild-visualizer": "latest",
 		"semver": "^7.3.8",
-		"typesafe-path": "^0.2.2",
 		"vsce": "latest",
-		"vscode-languageclient": "^8.1.0",
-		"vscode-nls": "^5.2.0"
+		"vscode-languageclient": "^8.1.0"
 	}
 }

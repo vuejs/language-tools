@@ -3,15 +3,16 @@ import { describe, it } from 'vitest';
 import { fork } from 'child_process';
 
 const binPath = require.resolve('../bin/vue-tsc.js');
+const workspace = path.resolve(__dirname, '../../vue-test-workspace/vue-tsc')
 
-describe(`vue-tsc`, () => {
-	it(`vue-tsc no errors`, () => new Promise((resolve, reject) => {
+function runVueTsc(cwd: string) {
+	return new Promise((resolve, reject) => {
 		const cp = fork(
 			binPath,
 			['--noEmit'],
 			{
 				silent: true,
-				cwd: path.resolve(__dirname, '../../vue-test-workspace/vue-tsc')
+				cwd
 			},
 		);
 
@@ -31,5 +32,10 @@ describe(`vue-tsc`, () => {
 				reject(new Error(`Exited with code ${code}`));
 			}
 		});
-	}), 40_000);
+	})
+}
+
+describe(`vue-tsc`, () => {
+	it(`vue-tsc no errors (non-strict-template)`, () => runVueTsc(path.resolve(workspace, './non-strict-template')), 40_000);
+	it(`vue-tsc no errors (strict-template)`, () => runVueTsc(path.resolve(workspace, './strict-template')), 40_000);
 });

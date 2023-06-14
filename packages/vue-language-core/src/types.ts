@@ -18,6 +18,7 @@ export interface VueCompilerOptions {
 	jsxSlots: boolean;
 	strictTemplates: boolean;
 	skipTemplateCodegen: boolean;
+	nativeTags: string[];
 	dataAttributes: string[];
 	htmlAttributes: string[];
 	optionsWrapper: [string, string] | [];
@@ -43,9 +44,10 @@ export type VueLanguagePlugin = (ctx: {
 	modules: {
 		typescript: typeof import('typescript/lib/tsserverlibrary');
 		'@vue/compiler-dom': typeof import('@vue/compiler-dom');
-	},
-	compilerOptions: ts.CompilerOptions,
-	vueCompilerOptions: VueCompilerOptions,
+	};
+	compilerOptions: ts.CompilerOptions;
+	vueCompilerOptions: VueCompilerOptions;
+	codegenStack: boolean;
 }) => {
 	version: 1;
 	name?: string;
@@ -84,6 +86,14 @@ export interface Sfc {
 	styles: (SfcBlock & {
 		module: string | undefined;
 		scoped: boolean;
+		cssVars: {
+			text: string;
+			offset: number;
+		}[];
+		classNames: {
+			text: string;
+			offset: number;
+		}[];
 	})[];
 	customBlocks: (SfcBlock & {
 		type: string;

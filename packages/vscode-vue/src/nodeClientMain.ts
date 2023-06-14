@@ -5,14 +5,17 @@ import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient/node';
 import { activate as commonActivate, deactivate as commonDeactivate, getDocumentSelector } from './common';
 import { middleware } from './middleware';
-import { ServerMode } from '@vue/language-server';
+import * as serverLib from '@vue/language-server';
 import { config } from './config';
+import type { ExportsInfoForLabs } from '@volar/vscode';
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
 
 	const cancellationPipeName = path.join(os.tmpdir(), `vscode-${context.extension.id}-cancellation-pipe.tmp`);
-	const documentSelector = getDocumentSelector(context, ServerMode.Semantic);
+	const documentSelector = getDocumentSelector(context, serverLib.ServerMode.Semantic);
 	let cancellationPipeUpdateKey: string | undefined;
+
+	const languageClients: lsp.LanguageClient[] = [];
 
 	vscode.workspace.onDidChangeTextDocument((e) => {
 		let key = e.document.uri.toString() + '|' + e.document.version;
@@ -26,7 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	return commonActivate(context, (
+	await commonActivate(context, (
 		id,
 		name,
 		documentSelector,
@@ -98,10 +101,21 @@ export function activate(context: vscode.ExtensionContext) {
 		);
 		client.start();
 
+		languageClients.push(client);
+
 		updateProviders(client);
 
 		return client;
 	});
+
+	return {
+		volarLabs: {
+			version: '1.6.2',
+			codegenStackSupport: true,
+			languageClients,
+			languageServerProtocol: serverLib,
+		},
+	} satisfies ExportsInfoForLabs;
 }
 
 export function deactivate(): Thenable<any> | undefined {

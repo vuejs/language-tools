@@ -3,7 +3,7 @@ import * as path from 'path';
 import { tester } from './utils/createTester';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as fs from 'fs';
-import * as vscode from 'vscode-languageserver-protocol';
+import type * as vscode from 'vscode-languageserver-protocol';
 
 const baseDir = path.resolve(__dirname, '../../vue-test-workspace/complete');
 const testDirs = fs.readdirSync(baseDir);
@@ -37,8 +37,7 @@ for (const dirName of testDirs) {
 					const complete = await tester.languageService.doComplete(
 						uri,
 						position,
-						{ triggerKind: vscode.CompletionTriggerKind.Invoked },
-						vscode.CancellationToken.None,
+						{ triggerKind: 1 satisfies typeof vscode.CompletionTriggerKind.Invoked },
 					);
 
 					expect(complete).toBeDefined();
@@ -47,7 +46,7 @@ for (const dirName of testDirs) {
 
 					expect(item).toBeDefined();
 
-					item = await tester.languageService.doCompletionResolve(item, vscode.CancellationToken.None);
+					item = await tester.languageService.doCompletionResolve(item);
 
 					const expectedFileText = outputFiles[file];
 
@@ -56,15 +55,15 @@ for (const dirName of testDirs) {
 					let edits: vscode.TextEdit[] = [];
 
 					if (item.textEdit) {
-						if (vscode.InsertReplaceEdit.is(item.textEdit)) {
-							edits.push(vscode.TextEdit.replace(item.textEdit.replace, item.textEdit.newText));
+						if ('replace' in item.textEdit) {
+							edits.push({ range: item.textEdit.replace, newText: item.textEdit.newText });
 						}
 						else {
 							edits.push(item.textEdit);
 						}
 					}
 					else {
-						edits.push(vscode.TextEdit.insert(position, item.insertText ?? item.label));
+						edits.push({ range: { start: position, end: position }, newText: item.insertText ?? item.label });
 					}
 
 					if (item.additionalTextEdits) {
