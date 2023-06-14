@@ -725,6 +725,13 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		expect(propArrayDefault).toBeDefined();
 		expect(propArrayDefault?.default).toEqual(`[1, 2, 3]`);
 	});
+
+	test('non-component', () => {
+		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/non-component/component.ts');
+		const meta = checker.getComponentMeta(componentPath);
+
+		expect(meta.type).toEqual(TypeMeta.Unknown);
+	});
 });
 
 const checkerOptions: MetaCheckerOptions = {
