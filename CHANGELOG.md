@@ -1,22 +1,10 @@
 # Changelog
 
-## 1.7.11 (2023/6/9) - pre-release
+## 1.7.12 (2023/6/14) - pre-release
 
-- fix: ignore errors for `statSync` ([#3260](https://github.com/johnsoncodehk/volar/issues/3260))
-
-## 1.7.10 (2023/6/9) - pre-release
-
-- feat: upgrade framework to v1.7 ([#3248](https://github.com/johnsoncodehk/volar/issues/3248))
-- fix: `strictTemplates` not working for IntrinsicElement ([#3214](https://github.com/johnsoncodehk/volar/issues/3214))
-- fix: failed to load tsconfig json schema ([#3224](https://github.com/johnsoncodehk/volar/issues/3224)) ([#3228](https://github.com/johnsoncodehk/volar/issues/3228)) - thanks @tjx666
-- fix(vue-tsc): `vue-tsc` ignores type errors in `.vue` files if the incremental setting is true ([#2756](https://github.com/johnsoncodehk/volar/issues/2756)) ([#3218](https://github.com/johnsoncodehk/volar/issues/3218)) - thanks @lucasavila00
-- fix: properly merge `defineModel` and `defineProps` types ([#3164](https://github.com/johnsoncodehk/volar/issues/3164))
-- fix(language-server): show component meta command not working
-
-**Breaking changes**
-
-- Simplify `JSX.IntrinsicElements` type inference for better TS performance ([#3259](https://github.com/johnsoncodehk/volar/issues/3259))
-- Update `@vue-expected-error` to `@vue-expect-error` (https://github.com/vuejs/language-tools/pull/3215#issuecomment-1560355284)
+- feat: reintroduce `nativeTags` ([#3279](https://github.com/johnsoncodehk/volar/issues/3279))
+- fix: compatible with TS 5.1.3 ([#3274](https://github.com/johnsoncodehk/volar/issues/3274)) ([#3277](https://github.com/johnsoncodehk/volar/issues/3277)) - thanks @so1ve
+- perf(vue-tsc): addressed a performance regression since 1.5.1 by reintroducing `nativeTags` ([#3148](https://github.com/johnsoncodehk/volar/issues/3148))
 
 ---
 
@@ -53,6 +41,24 @@
 		<a href="https://opencollective.com/volarjs">Open Collective</a>
 	</h5>
 </p>
+
+## 1.7.11 (2023/6/9) - pre-release
+
+- fix: ignore errors for `statSync` ([#3260](https://github.com/johnsoncodehk/volar/issues/3260))
+
+## 1.7.10 (2023/6/9) - pre-release
+
+- feat: upgrade framework to v1.7 ([#3248](https://github.com/johnsoncodehk/volar/issues/3248))
+- fix: `strictTemplates` not working for IntrinsicElement ([#3214](https://github.com/johnsoncodehk/volar/issues/3214))
+- fix: failed to load tsconfig json schema ([#3224](https://github.com/johnsoncodehk/volar/issues/3224)) ([#3228](https://github.com/johnsoncodehk/volar/issues/3228)) - thanks @tjx666
+- fix(vue-tsc): `vue-tsc` ignores type errors in `.vue` files if the incremental setting is true ([#2756](https://github.com/johnsoncodehk/volar/issues/2756)) ([#3218](https://github.com/johnsoncodehk/volar/issues/3218)) - thanks @lucasavila00
+- fix: properly merge `defineModel` and `defineProps` types ([#3164](https://github.com/johnsoncodehk/volar/issues/3164))
+- fix(language-server): show component meta command not working
+
+**Breaking changes**
+
+- Simplify `JSX.IntrinsicElements` type inference for better TS performance ([#3259](https://github.com/johnsoncodehk/volar/issues/3259))
+- Update `@vue-expected-error` to `@vue-expect-error` (https://github.com/vuejs/language-tools/pull/3215#issuecomment-1560355284)
 
 ## 1.7.8 (2023/5/22) - pre-release
 
