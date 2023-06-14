@@ -723,11 +723,11 @@
 		"prebuild": "cd ../.. && npm run build",
 		"build": "node scripts/build",
 		"watch": "npm run build -- --watch",
-		"prepack": "npm run prebuild && npm run build -- --minify",
-		"pack": "npm run prepack && vsce package",
-		"release": "npm run prepack && vsce publish",
-		"release:next": "npm run release -- --pre-release",
-		"bundle-size": "npm run prepack -- --metafile && esbuild-visualizer --metadata ./meta.json && open ./stats.html"
+		"pack": "npm run build -- --minify && vsce package",
+		"pack:next": "npm run build && vsce package",
+		"release": "npm run build -- --minify && vsce publish",
+		"release:next": "npm run build && vsce publish --pre-release",
+		"bundle-size": "npm run build -- --minify --metafile && esbuild-visualizer --metadata ./meta.json && open ./stats.html"
 	},
 	"devDependencies": {
 		"@types/semver": "^7.3.13",
