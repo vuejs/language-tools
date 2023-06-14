@@ -133,6 +133,7 @@ function walkIdentifiers(
 		walkIdentifiers(ts, node.expression, cb, localVars);
 	}
 	else if (ts.isVariableDeclaration(node)) {
+
 		colletVars(ts, node.name, blockVars);
 
 		for (const varName of blockVars)
