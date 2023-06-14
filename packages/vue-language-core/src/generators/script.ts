@@ -138,6 +138,9 @@ export function generate(
 			else {
 				codes.push(sharedTypes.genConstructorOverloads('__VLS_ConstructorOverloads'));
 			}
+			codes.push(`type __VLS_NormalizeEmits<T> = __VLS_ConstructorOverloads<T> & {
+				[K in keyof T]: T[K] extends any[] ? { (...args: T[K]): void } : never
+			}`);;
 		}
 		if (usedHelperTypes.WithTemplateSlots) {
 			codes.push(
@@ -576,9 +579,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			}
 			if (scriptSetupRanges.emitsTypeArg) {
 				usedHelperTypes.ConstructorOverloads = true;
-				codes.push(`emits: ({} as __VLS_UnionToIntersection<__VLS_ConstructorOverloads<`);
-				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
-				codes.push(`> & __VLS_NormalizeEmits<`);
+				codes.push(`emits: ({} as __VLS_UnionToIntersection<__VLS_NormalizeEmits<`);
 				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
 				codes.push(`>>),\n`);
 			}

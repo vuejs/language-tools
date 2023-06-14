@@ -17,10 +17,6 @@ type __VLS_Prettify<T> = {
 	[K in keyof T]: T[K];
 } & {};
 
-type __VLS_NormalizeEmits<T> = {
-	[K in keyof T]: T[K] extends any[] ? { (...args: T[K]): void } : never
-}
-
 type __VLS_GlobalComponents =
 	__VLS_PickNotAny<import('vue').GlobalComponents, {}>
 	& __VLS_PickNotAny<import('@vue/runtime-core').GlobalComponents, {}>
