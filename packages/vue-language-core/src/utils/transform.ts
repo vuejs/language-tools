@@ -20,8 +20,7 @@ export function walkInterpolationFragment(
 
 	const varCb = (id: ts.Identifier, isShorthand: boolean) => {
 		if (
-			!!localVars[id.text] ||
-			localVars[id.text] === 0 ||
+			localVars[id.text] !== undefined ||
 			// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/compiler-core/src/transforms/transformExpression.ts#L342-L352
 			isGloballyWhitelisted(id.text) ||
 			id.text === 'require' ||
