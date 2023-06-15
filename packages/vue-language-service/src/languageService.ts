@@ -10,7 +10,7 @@ import createPugService from 'volar-service-pug';
 import createPugFormatService from 'volar-service-pug-beautify';
 import createTsService from 'volar-service-typescript';
 import createTsTqService from 'volar-service-typescript-twoslash-queries';
-import type { Data } from 'volar-service-typescript/out/services/completions/basic';
+import type { Data } from 'volar-service-typescript/out/features/completions/basic';
 import type * as html from 'vscode-html-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { getNameCasing } from './ideFeatures/nameCasing';
