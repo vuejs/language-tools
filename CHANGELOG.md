@@ -1,20 +1,6 @@
 # Changelog
 
-## 1.7.14 (2023/6/16) - pre-release
-
-- perf: intellisense is very slow when referencing lots of external .vue files ([#3264](https://github.com/vuejs/language-tools/issues/3264))
-- fix: read directory infinite recursion on Darwin os ([#3282](https://github.com/vuejs/language-tools/issues/3282))
-
-## 1.7.13 (2023/6/15) - pre-release
-
-- feat: support Vue 3.3 `defineEmits` shorthand ([#3169](https://github.com/vuejs/language-tools/issues/3169)) ([#3283](https://github.com/vuejs/language-tools/issues/3283)) - thanks @so1ve
-- feat: allow trailing text for directive comments (https://github.com/vuejs/language-tools/pull/3215#issuecomment-1591397008)
-- feat: switch `vue.inlayHints.optionsWrapper` to disabled by default ([#3147](https://github.com/vuejs/language-tools/issues/3147)) - thanks @wenfangdu
-- feat(component-meta): expose component type ([#3151](https://github.com/vuejs/language-tools/issues/3151)) ([#3286](https://github.com/vuejs/language-tools/issues/3286))
-- fix: can't define variables in inline event handler ([#3258](https://github.com/vuejs/language-tools/issues/3258)) ([#3280](https://github.com/vuejs/language-tools/issues/3280)) - thanks @so1ve
-- fix(vue-tsc): `--emitDeclarationOnly` not working since 1.7.9
-- fix(vue-tsc): `@vue-expect-error`, `@vue-ignore` not working for vue-tsc ([#3284](https://github.com/vuejs/language-tools/issues/3284)) - thanks @sapphi-red
-- fix: compatible functional component typecheck with TS 5.1.3 ([#3255](https://github.com/vuejs/language-tools/issues/3255))
+## 1.8.0 (2023/6/17) ([Highlights](https://github.com/vuejs/language-tools/releases/tags/v1.8.0))
 
 ---
 
@@ -51,6 +37,22 @@
 		<a href="https://opencollective.com/volarjs">Open Collective</a>
 	</h5>
 </p>
+
+## 1.7.14 (2023/6/16) - pre-release
+
+- perf: intellisense is very slow when referencing lots of external .vue files ([#3264](https://github.com/vuejs/language-tools/issues/3264))
+- fix: read directory infinite recursion on Darwin os ([#3282](https://github.com/vuejs/language-tools/issues/3282))
+
+## 1.7.13 (2023/6/15) - pre-release
+
+- feat: support Vue 3.3 `defineEmits` shorthand ([#3169](https://github.com/vuejs/language-tools/issues/3169)) ([#3283](https://github.com/vuejs/language-tools/issues/3283)) - thanks @so1ve
+- feat: allow trailing text for directive comments (https://github.com/vuejs/language-tools/pull/3215#issuecomment-1591397008)
+- feat: switch `vue.inlayHints.optionsWrapper` to disabled by default ([#3147](https://github.com/vuejs/language-tools/issues/3147)) - thanks @wenfangdu
+- feat(component-meta): expose component type ([#3151](https://github.com/vuejs/language-tools/issues/3151)) ([#3286](https://github.com/vuejs/language-tools/issues/3286))
+- fix: can't define variables in inline event handler ([#3258](https://github.com/vuejs/language-tools/issues/3258)) ([#3280](https://github.com/vuejs/language-tools/issues/3280)) - thanks @so1ve
+- fix(vue-tsc): `--emitDeclarationOnly` not working since 1.7.9
+- fix(vue-tsc): `@vue-expect-error`, `@vue-ignore` not working for vue-tsc ([#3284](https://github.com/vuejs/language-tools/issues/3284)) - thanks @sapphi-red
+- fix: compatible functional component typecheck with TS 5.1.3 ([#3255](https://github.com/vuejs/language-tools/issues/3255))
 
 ## 1.7.12 (2023/6/14) - pre-release
 
