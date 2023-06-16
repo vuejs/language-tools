@@ -1,8 +1,6 @@
 # Changelog
 
-## 1.8.0 (2023/6/17) ([Highlights](https://github.com/vuejs/language-tools/releases/tags/v1.8.0))
-
----
+## 1.8.0 (2023/6/17) ([Highlights](https://github.com/vuejs/language-tools/releases/tag/v1.8.0))
 
 <h3 align="center">Full-time Support by</h3>
 <br />
