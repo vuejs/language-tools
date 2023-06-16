@@ -27,14 +27,14 @@
 		]
 	},
 	"scripts": {
-		"vscode:prepublish": "npm run build",
+		"vscode:prepublish": "npm run build && sed -i '' '/\"typescript-vue-plugin-forward\": \"file:typescript-vue-plugin-forward\"/d' package.json",
 		"prebuild": "cd ../.. && npm run build",
-		"build": "npm run esbuild",
-		"watch": "npm run esbuild -- --watch",
-		"esbuild": "node scripts/build-node",
-		"pack": "vsce package",
-		"release": "vsce publish",
-		"release:next": "vsce publish --pre-release"
+		"build": "node scripts/build",
+		"watch": "node scripts/build --watch",
+		"pack": "vsce package && npm run reset",
+		"release": "vsce publish && npm run reset",
+		"release:next": "vsce publish --pre-release && npm run reset",
+		"reset": "git checkout package.json"
 	},
 	"dependencies": {
 		"typescript-vue-plugin-forward": "file:typescript-vue-plugin-forward"
