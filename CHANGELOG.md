@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.14 (2023/6/16) - pre-release
+
+- perf: intellisense is very slow when referencing lots of external .vue files ([#3264](https://github.com/vuejs/language-tools/issues/3264))
+- fix: read directory infinite recursion Darwin os ([#3282](https://github.com/vuejs/language-tools/issues/3282))
+
 ## 1.7.13 (2023/6/15) - pre-release
 
 - feat: support Vue 3.3 `defineEmits` shorthand ([#3169](https://github.com/vuejs/language-tools/issues/3169)) ([#3283](https://github.com/vuejs/language-tools/issues/3283)) - thanks @so1ve
