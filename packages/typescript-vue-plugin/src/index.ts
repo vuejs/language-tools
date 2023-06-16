@@ -71,24 +71,37 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 										size: stats.size,
 									};
 								}
-							} catch { }
+							}
+							catch {
+								return undefined;
+							}
 						}
 					},
 					readFile(uri, encoding) {
 						if (uri.startsWith('file://')) {
-							return fs.readFileSync(uriToFileName(uri), { encoding: encoding as 'utf-8' ?? 'utf-8' });
+							try {
+								return fs.readFileSync(uriToFileName(uri), { encoding: encoding as 'utf-8' ?? 'utf-8' });
+							}
+							catch {
+								return undefined;
+							}
 						}
 					},
 					readDirectory(uri) {
 						if (uri.startsWith('file://')) {
-							const dirName = uriToFileName(uri);
-							const files = fs.existsSync(dirName) ? fs.readdirSync(dirName, { withFileTypes: true }) : [];
-							return files.map<[string, FileType]>(file => {
-								return [file.name, file.isFile() ? 1 satisfies FileType.File
-									: file.isDirectory() ? 2 satisfies FileType.Directory
-										: file.isSymbolicLink() ? 64 satisfies FileType.SymbolicLink
-											: 0 satisfies FileType.Unknown];
-							});
+							try {
+								const dirName = uriToFileName(uri);
+								const files = fs.readdirSync(dirName, { withFileTypes: true });
+								return files.map<[string, FileType]>(file => {
+									return [file.name, file.isFile() ? 1 satisfies FileType.File
+										: file.isDirectory() ? 2 satisfies FileType.Directory
+											: file.isSymbolicLink() ? 64 satisfies FileType.SymbolicLink
+												: 0 satisfies FileType.Unknown];
+								});
+							}
+							catch {
+								return [];
+							}
 						}
 						return [];
 					},

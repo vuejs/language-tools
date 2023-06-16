@@ -68,24 +68,37 @@ function createTester(root: string) {
 									size: stats.size,
 								};
 							}
-						} catch { }
+						}
+						catch {
+							return undefined;
+						}
 					}
 				},
 				readFile(uri, encoding) {
 					if (uri.startsWith('file://')) {
-						return fs.readFileSync(uriToFileName(uri), { encoding: encoding as 'utf-8' ?? 'utf-8' });
+						try {
+							return fs.readFileSync(uriToFileName(uri), { encoding: encoding as 'utf-8' ?? 'utf-8' });
+						}
+						catch {
+							return undefined;
+						}
 					}
 				},
 				readDirectory(uri) {
 					if (uri.startsWith('file://')) {
-						const dirName = uriToFileName(uri);
-						const files = fs.existsSync(dirName) ? fs.readdirSync(dirName, { withFileTypes: true }) : [];
-						return files.map<[string, FileType]>(file => {
-							return [file.name, file.isFile() ? FileType.File
-								: file.isDirectory() ? FileType.Directory
-									: file.isSymbolicLink() ? FileType.SymbolicLink
-										: FileType.Unknown];
-						});
+						try {
+							const dirName = uriToFileName(uri);
+							const files = fs.readdirSync(dirName, { withFileTypes: true });
+							return files.map<[string, FileType]>(file => {
+								return [file.name, file.isFile() ? FileType.File
+									: file.isDirectory() ? FileType.Directory
+										: file.isSymbolicLink() ? FileType.SymbolicLink
+											: FileType.Unknown];
+							});
+						}
+						catch {
+							return [];
+						}
 					}
 					return [];
 				},
