@@ -737,7 +737,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 					codes.push(`: `);
 
 					const scriptStart = getLength(codes);
-					codes.push(varName);
+					codes.push(varName, ` as typeof `, varName);
 					const scriptEnd = getLength(codes);
 					codes.push(',\n');
 
