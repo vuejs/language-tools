@@ -8,6 +8,7 @@ export function createLanguageService(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	env: ServiceEnvironment,
 ) {
+	const sys = base.createSys(ts, env);
 	const languageContext = vue.createLanguageContext(
 		host,
 		vue.createLanguages(
@@ -16,7 +17,6 @@ export function createLanguageService(
 			ts,
 		),
 	);
-	const sys = base.createSys(languageContext, ts, env);
 	const languageService = base.createLanguageService(
 		languageContext,
 		ts,

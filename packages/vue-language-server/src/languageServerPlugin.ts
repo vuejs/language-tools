@@ -57,7 +57,7 @@ export function createServerPlugin(connection: Connection) {
 					let vueOptions: Partial<vue.VueCompilerOptions> = {};
 
 					if (ts && ctx) {
-						const sys = createSys(undefined, ts, ctx.env);
+						const sys = createSys(ts, ctx.env);
 						let sysVersion: number | undefined;
 						let newSysVersion = await sys.sync();
 
