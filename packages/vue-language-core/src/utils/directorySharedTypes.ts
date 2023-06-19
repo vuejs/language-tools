@@ -10,8 +10,8 @@ export function getTypesCode(vueCompilerOptions: VueCompilerOptions) {
 type __VLS_IntrinsicElements = __VLS_PickNotAny<import('vue/jsx-runtime').JSX.IntrinsicElements, __VLS_PickNotAny<JSX.IntrinsicElements, Record<string, any>>>;
 type __VLS_Element = __VLS_PickNotAny<import('vue/jsx-runtime').JSX.Element, JSX.Element>;
 
-type __VLS_IsAny<T> = boolean extends (T extends never ? true : false) ? true : false;
-type __VLS_PickNotAny<A, B> = __VLS_IsAny<A & {}> extends true ? B : A; // & {} for https://github.com/microsoft/TypeScript/issues/54630
+type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
+type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
 
 type __VLS_Prettify<T> = {
 	[K in keyof T]: T[K];
