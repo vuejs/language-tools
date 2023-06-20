@@ -1,14 +1,15 @@
-import * as base from '@volar/typescript';
+import { createLanguageServiceHost, getDocumentRegistry, decorateLanguageService as _decorateLanguageService } from '@volar/typescript';
 import * as vue from '@vue/language-core';
-import type { ServiceEnvironment } from '@volar/language-service';
+import type * as ts from 'typescript/lib/tsserverlibrary';
+
+export { getProgram, decorateLanguageServiceHost } from '@volar/typescript';
 
 export function createLanguageService(
 	host: vue.TypeScriptLanguageHost,
 	vueCompilerOptions: Partial<vue.VueCompilerOptions>,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	env: ServiceEnvironment,
+	sys: ts.System,
 ) {
-	const sys = base.createSys(ts, env);
 	const languageContext = vue.createLanguageContext(
 		host,
 		vue.createLanguages(
@@ -17,18 +18,27 @@ export function createLanguageService(
 			ts,
 		),
 	);
-	const languageService = base.createLanguageService(
-		languageContext,
-		ts,
-		sys,
-	);
-	const getCompletionsAtPosition = languageService.getCompletionsAtPosition;
-	languageService.getCompletionsAtPosition = (fileName, position, options) => {
+	const languageServiceHost = createLanguageServiceHost(languageContext, ts, sys);
+	const languageService = ts.createLanguageService(languageServiceHost, getDocumentRegistry(ts, sys.useCaseSensitiveFileNames, host.getCurrentDirectory()));
+	decorateLanguageService(languageContext.virtualFiles, languageService, false);
+	return {
+		...languageService,
+		__internal__: {
+			context: languageContext,
+		},
+	};
+}
+
+export function decorateLanguageService(virtualFiles: vue.VirtualFiles, ls: ts.LanguageService, isTsPlugin: boolean) {
+
+	_decorateLanguageService(virtualFiles, ls, isTsPlugin);
+
+	const getCompletionsAtPosition = ls.getCompletionsAtPosition.bind(ls);
+	ls.getCompletionsAtPosition = (fileName, position, options) => {
 		const result = getCompletionsAtPosition(fileName, position, options);
 		if (result) {
 			result.entries = result.entries.filter(entry => entry.name.indexOf('__VLS_') === -1);
 		}
 		return result;
 	};
-	return languageService;
 }
