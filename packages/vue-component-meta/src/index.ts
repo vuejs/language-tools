@@ -2,7 +2,7 @@ import * as vue from '@vue/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'typesafe-path/posix';
 import typeHelpersCode from 'vue-component-type-helpers';
-import { createLanguageService } from '@volar/typescript';
+import { createLanguageServiceHost, decorateLanguageService } from '@volar/typescript';
 
 import type {
 	MetaCheckerOptions,
@@ -155,11 +155,14 @@ export function baseCreate(
 		ts,
 	) : [];
 	const core = vue.createLanguageContext(host, vueLanguages);
-	const tsLs = createLanguageService(core, ts, ts.sys);
+	const tsLsHost = createLanguageServiceHost(core, ts, ts.sys);
+	const tsLs = ts.createLanguageService(tsLsHost);
+
+	decorateLanguageService(core.virtualFiles, tsLs, false);
 
 	if (checkerOptions.forceUseTs) {
-		const getScriptKind = tsLs.__internal__.languageServiceHost.getScriptKind;
-		tsLs.__internal__.languageServiceHost.getScriptKind = (fileName) => {
+		const getScriptKind = tsLsHost.getScriptKind;
+		tsLsHost.getScriptKind = (fileName) => {
 			if (fileName.endsWith('.vue.js')) {
 				return ts.ScriptKind.TS;
 			}

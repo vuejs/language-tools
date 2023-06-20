@@ -8,7 +8,7 @@ export = async function (
 	resolveConfig: (tsProgram: ts.Program) => Linter.Config,
 ) {
 
-	const tsProgram = program.__vue.languageService.__internal__.languageService.getProgram()!;
+	const tsProgram = program.__vue.languageService.getProgram()!;
 	const eslint = new ESLint({
 		baseConfig: resolveConfig(tsProgram),
 		useEslintrc: false,
