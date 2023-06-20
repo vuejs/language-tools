@@ -1,6 +1,12 @@
 # Changelog
 
-## 1.8.0 (2023/6/17) ([Highlights](https://github.com/vuejs/language-tools/releases/tag/v1.8.0))
+## 1.8.1 (2023/6/20)
+
+- fix(language-server): 3 consecutive directories with the same name cause infinite recursion ([#3282](https://github.com/vuejs/language-tools/issues/3282)) - thanks @FelipeAzambuja
+- fix(language-server): diagnostics were not properly refreshed when creating files
+- fix(monaco): unrecognized relative path file
+- types: simplify `__VLS_IsAny` - thanks @so1ve
+- perf(typescript-plugin): work without overriding language service instance to reduce half of memory usage ([#3282](https://github.com/vuejs/language-tools/issues/3282))
 
 <h3 align="center">Full-time Support by</h3>
 <br />
@@ -35,6 +41,8 @@
 		<a href="https://opencollective.com/volarjs">Open Collective</a>
 	</h5>
 </p>
+
+## 1.8.0 (2023/6/17) ([Highlights](https://github.com/vuejs/language-tools/releases/tag/v1.8.0))
 
 ## 1.7.14 (2023/6/16) - pre-release
 
