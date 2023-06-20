@@ -6,7 +6,9 @@
 - fix(language-server): diagnostics were not properly refreshed when creating files
 - fix(monaco): unrecognized relative path file
 - types: simplify `__VLS_IsAny` - thanks @so1ve
-- perf(typescript-plugin): work without overriding language service instance to reduce half of memory usage ([#3282](https://github.com/vuejs/language-tools/issues/3282))
+- perf(typescript-plugin): work without overriding language service instance to reduce half of memory usage ([#3221](https://github.com/vuejs/language-tools/issues/3221))
+
+---
 
 <h3 align="center">Full-time Support by</h3>
 <br />
