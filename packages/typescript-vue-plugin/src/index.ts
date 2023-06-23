@@ -7,11 +7,13 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 	const pluginModule: ts.server.PluginModule = {
 		create(info) {
 
-			const virtualFiles = vue.createVirtualFiles(vue.createLanguages(
-				info.languageServiceHost.getCompilationSettings(),
-				getVueCompilerOptions(),
-				ts,
-			));
+			const virtualFiles = vue.createVirtualFiles(
+				vue.createLanguages(
+					info.languageServiceHost.getCompilationSettings(),
+					getVueCompilerOptions(),
+					ts,
+				),
+			);
 
 			decorateLanguageService(virtualFiles, info.languageService, true);
 			decorateLanguageServiceHost(virtualFiles, info.languageServiceHost, ts, ['.vue']);
