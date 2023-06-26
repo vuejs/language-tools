@@ -4,8 +4,6 @@ import { getSlotsPropertyName } from './shared';
 export const baseName = '__VLS_types.d.ts';
 
 export function getTypesCode(vueCompilerOptions: VueCompilerOptions) {
-	const looseProps = vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>';
-
 	return `
 // @ts-nocheck
 
@@ -65,13 +63,6 @@ type __VLS_WithComponent<N0 extends string, Components, N1 extends string, N2 ex
 	N3 extends keyof Components ? N3 extends N0 ? Pick<Components, N0> : { [K in N0]: Components[N3] } :
 	${vueCompilerOptions.strictTemplates ? '{}' : '{ [K in N0]: unknown }'}
 
-type __VLS_IsDefineComponentOrConstructor<T> = T extends {
-	__isFragment?: any;
-	__isTeleport?: any;
-	__isSuspense?: any;
-} | (new (...args: any) => any) ? true : false;
-type __VLS_EnsureDefineComponent<I, D> = __VLS_IsDefineComponentOrConstructor<I> extends true ? I : D;
-
 type __VLS_FillingEventArg_ParametersLength<E extends (...args: any) => any> = __VLS_IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];
 type __VLS_FillingEventArg<E> = E extends (...args: any) => any ? __VLS_FillingEventArg_ParametersLength<E> extends 0 ? ($event?: undefined) => ReturnType<E> : E : E;
 type __VLS_EmitEvent<F, E> =
@@ -96,14 +87,14 @@ type __VLS_EmitEvent<F, E> =
 	: unknown | '[Type Warning] Volar could not infer $emit event more than 4 overloads without DefineComponent. see https://github.com/vuejs/language-tools/issues/60';
 declare function __VLS_asFunctionalComponent<T, K = T extends new (...args: any) => any ? InstanceType<T> : unknown>(t: T, instance?: K):
 	T extends new (...args: any) => any
-	? (props: (K extends { $props: infer Props } ? Props : any)${looseProps}, ctx?: {
+	? (props: (K extends { $props: infer Props } ? Props : any)${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}, ctx?: {
 		attrs?: any,
 		slots?: K extends { ${getSlotsPropertyName(vueCompilerOptions.target)}: infer Slots } ? Slots : any,
 		emit?: K extends { $emit: infer Emit } ? Emit : any
 	}) => JSX.Element & { __ctx?: typeof ctx & { props?: typeof props; expose?(exposed: K): void; } }
 	: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 	: T extends (...args: any) => any ? T
-	: (_: T extends import('${vueCompilerOptions.lib}').VNode | import('${vueCompilerOptions.lib}').VNode[] | string ? {}: T${looseProps}, ctx?: any) => { __ctx?: { attrs?: any, expose?: any, slots?: any, emit?: any, props?: T${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'} } }; // IntrinsicElement
+	: (_: T extends import('${vueCompilerOptions.lib}').VNode | import('${vueCompilerOptions.lib}').VNode[] | string ? {}: T${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}, ctx?: any) => { __ctx?: { attrs?: any, expose?: any, slots?: any, emit?: any, props?: T${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'} } }; // IntrinsicElement
 declare function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(t: T): Parameters<T>['length'] extends 2 ? [any] : [];
 declare function __VLS_pickEvent<Emit, K, E>(emit: Emit, emitKey: K, event: E): __VLS_FillingEventArg<
 	__VLS_PickNotAny<

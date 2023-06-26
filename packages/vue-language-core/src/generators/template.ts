@@ -614,8 +614,6 @@ export function generate(
 		const propsFailedExps: CompilerDOM.SimpleExpressionNode[] = [];
 		const isNamespacedTag = tag.indexOf('.') >= 0;
 		const var_originalComponent = `__VLS_${elementIndex++}`;
-		const var_originalComponentInterpolation = `__VLS_${elementIndex++}`;
-		const var_originalComponentDefineComponent = `__VLS_${elementIndex++}`;
 		const var_functionalComponent = `__VLS_${elementIndex++}`;
 		const var_componentInstance = `__VLS_${elementIndex++}`;
 
@@ -666,15 +664,9 @@ export function generate(
 		}
 		else if (dynamicTagExp) {
 			codes.push(
-				`const ${var_originalComponentInterpolation} = `,
+				`const ${var_originalComponent} = `,
 				...createInterpolationCode(dynamicTagExp.loc.source, dynamicTagExp.loc, dynamicTagExp.loc.start.offset, capabilitiesPresets.all, '(', ')'),
 				';\n',
-			);
-			codes.push(
-				`const ${var_originalComponentDefineComponent} = defineComponent(${var_originalComponentInterpolation});\n`,
-			);
-			codes.push(
-				`const ${var_originalComponent} = {} as __VLS_EnsureDefineComponent<typeof ${var_originalComponentInterpolation}, typeof ${var_originalComponentDefineComponent}>;\n`,
 			);
 		}
 		else if (componentVars[tag]) {
