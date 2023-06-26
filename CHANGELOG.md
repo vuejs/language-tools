@@ -1,12 +1,19 @@
 # Changelog
 
-## 1.8.1 (2023/6/20)
+## 1.8.2 (2023/6/27)
 
-- fix(language-server): 3 consecutive directories with the same name cause infinite recursion ([#3282](https://github.com/vuejs/language-tools/issues/3282)) - thanks @FelipeAzambuja
-- fix(language-server): diagnostics were not properly refreshed when creating files
-- fix(monaco): unrecognized relative path file
-- types: simplify `__VLS_IsAny` - thanks @so1ve
-- perf(typescript-plugin): work without overriding language service instance to reduce half of memory usage ([#3221](https://github.com/vuejs/language-tools/issues/3221))
+- fix: should not auto closing `<img>` tag ([#3217](https://github.com/vuejs/language-tools/issues/3217))
+- fix: allow passing undefined as events ([#3122](https://github.com/vuejs/language-tools/issues/3122)) ([#3217](https://github.com/vuejs/language-tools/issues/3217)) - thanks @so1ve
+- fix: fixes object literal parsing for <component :is> ([#3324](https://github.com/vuejs/language-tools/issues/3324)) ([#3171](https://github.com/vuejs/language-tools/issues/3171)) - thanks @so1ve
+- fix: symbol types are lost ([#3300](https://github.com/vuejs/language-tools/issues/3300)) ([#3295](https://github.com/vuejs/language-tools/issues/3295)) - thanks @so1ve
+- fix(ts-plugin): suppress errors when `composite` is enabled `composite`
+- fix(language-server): trigger characters missing on web IDE
+- perf(language-server): debounce for `isCancellationRequested()`
+- perf(typescript): caching `getScriptFileNames()` result
+
+**Breaking changes**
+
+- no longer parse vue files outside tsconfig `include` option to avoid TS performance concerns ([#3326](https://github.com/vuejs/language-tools/issues/3326))
 
 ---
 
@@ -43,6 +50,14 @@
 		<a href="https://opencollective.com/volarjs">Open Collective</a>
 	</h5>
 </p>
+
+## 1.8.1 (2023/6/20)
+
+- fix(language-server): 3 consecutive directories with the same name cause infinite recursion ([#3282](https://github.com/vuejs/language-tools/issues/3282)) - thanks @FelipeAzambuja
+- fix(language-server): diagnostics were not properly refreshed when creating files
+- fix(monaco): unrecognized relative path file
+- types: simplify `__VLS_IsAny` - thanks @so1ve
+- perf(ts-plugin): work without overriding language service instance to reduce half of memory usage ([#3221](https://github.com/vuejs/language-tools/issues/3221))
 
 ## 1.8.0 (2023/6/17) ([Highlights](https://github.com/vuejs/language-tools/releases/tag/v1.8.0))
 
@@ -507,7 +522,7 @@ For more details, see [#2620](https://github.com/vuejs/language-tools/issues/262
 - feat: show `(takeover)` instead of `(vue)` in status bar for takeover mode ([#2365](https://github.com/vuejs/language-tools/issues/2365))
 - feat: more reliable formatting edits combine
 - fix(doctor): update source code link ([#2307](https://github.com/vuejs/language-tools/issues/2307))
-- fix(typescript-plugin): tsserver multiple initializations lead to infinite loop (https://github.com/microsoft/vscode/issues/171591)
+- fix(ts-plugin): tsserver multiple initializations lead to infinite loop (https://github.com/microsoft/vscode/issues/171591)
 - fix: syntactic features not working for untitled vue document
 - fix: spaces removed from ternary operator inside `{{ }}` ([#2305](https://github.com/vuejs/language-tools/issues/2305))
 - fix: `source.addMissingImports` accidentally made imports for properties used the template ([#2304](https://github.com/vuejs/language-tools/issues/2304))
@@ -535,7 +550,7 @@ For more details, see [#2620](https://github.com/vuejs/language-tools/issues/262
 - feat: support normalize component name for import statement completion ([#2286](https://github.com/vuejs/language-tools/issues/2286))
 - feat: normalize `Index` to folder name when `normalizeComponentImportName` enabled (https://github.com/vuejs/language-tools/issues/2071#issuecomment-1373701277)
 - feat: support update imports on multiple files move
-- fix(typescript-plugin): fixed `Projects must list all files or use an 'include' pattern` error ([#2271](https://github.com/vuejs/language-tools/issues/2271))
+- fix(ts-plugin): fixed `Projects must list all files or use an 'include' pattern` error ([#2271](https://github.com/vuejs/language-tools/issues/2271))
 - fix: language client sending `parseSfc` requests when not a vue document changed
 - fix: typescript actions not working for `codeActionsOnSave` setting ([#2188](https://github.com/vuejs/language-tools/issues/2188))
 - fix: fixed `c is not iterable` error edge case ([#2282](https://github.com/vuejs/language-tools/issues/2282))
