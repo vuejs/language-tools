@@ -195,7 +195,7 @@ export class VueFile implements VirtualFile {
 	});
 
 	_pluginEmbeddedFiles = this.plugins.map((plugin) => {
-		const embeddedFiles: Record<string, ComputedRef<{ file: VueEmbeddedFile; snapshot: ts.IScriptSnapshot }>> = {};
+		const embeddedFiles: Record<string, ComputedRef<{ file: VueEmbeddedFile; snapshot: ts.IScriptSnapshot; }>> = {};
 		const files = computed(() => {
 			try {
 				if (plugin.getEmbeddedFileNames) {
@@ -428,9 +428,7 @@ export class VueFile implements VirtualFile {
 						block.content,
 						undefined,
 						block.startTagEnd,
-						block.name === 'template'
-							? { completion: true } // fix vue-autoinsert-parentheses not working
-							: {},
+						{},
 					],
 				);
 			}

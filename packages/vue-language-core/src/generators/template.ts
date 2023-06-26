@@ -1755,7 +1755,7 @@ export function generate(
 	function createFormatCode(mapCode: string, sourceOffset: number, formatWrapper: [string, string]): Code[] {
 		return [
 			formatWrapper[0],
-			[mapCode, 'template', sourceOffset, {}],
+			[mapCode, 'template', sourceOffset, { completion: true /* fix vue-autoinsert-parentheses not working */ }],
 			formatWrapper[1],
 			'\n',
 		];
