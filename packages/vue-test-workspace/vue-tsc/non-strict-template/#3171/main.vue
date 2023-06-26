@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { defineComponent, h } from 'vue';
+import { h } from 'vue';
 
 const eventSummary = () => h('div');
 </script>
 
 <template>
 	<div>
-		<component :is="defineComponent({ render: eventSummary })" />
+		<component :is="{ render: eventSummary }" :render="({} as any)" />
 	</div>
 </template>
