@@ -6,7 +6,7 @@
 - fix: allow passing undefined as events ([#3122](https://github.com/vuejs/language-tools/issues/3122)) ([#3217](https://github.com/vuejs/language-tools/issues/3217)) - thanks @so1ve
 - fix: fixes object literal parsing for <component :is> ([#3324](https://github.com/vuejs/language-tools/issues/3324)) ([#3171](https://github.com/vuejs/language-tools/issues/3171)) - thanks @so1ve
 - fix: symbol types are lost ([#3300](https://github.com/vuejs/language-tools/issues/3300)) ([#3295](https://github.com/vuejs/language-tools/issues/3295)) - thanks @so1ve
-- fix(ts-plugin): suppress errors when `composite` is enabled `composite`
+- fix(ts-plugin): suppress errors when `composite` is enabled
 - fix(language-server): trigger characters missing on web IDE
 - perf(language-server): debounce for `isCancellationRequested()`
 - perf(typescript): caching `getScriptFileNames()` result
@@ -59,7 +59,7 @@
 - types: simplify `__VLS_IsAny` - thanks @so1ve
 - perf(ts-plugin): work without overriding language service instance to reduce half of memory usage ([#3221](https://github.com/vuejs/language-tools/issues/3221))
 
-## 1.8.0 (2023/6/17) ([Highlights](https://github.com/vuejs/language-tools/releases/tag/v1.8.0))
+## 1.8.0 (2023/6/17) ([Release notes](https://github.com/vuejs/language-tools/releases/tag/v1.8.0))
 
 ## 1.7.14 (2023/6/16) - pre-release
 
