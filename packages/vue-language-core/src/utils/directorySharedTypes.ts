@@ -29,7 +29,7 @@ type __VLS_GlobalComponents =
 		| 'Teleport'
 	>;
 
-type __VLS_AccessComponent<L, G, T, K> =
+type __VLS_GetComponent<L, G, T, K> =
 	K extends keyof L ? L[K] :
 	K extends keyof G ? G[K] :
 	K extends keyof T ? T[K] :
