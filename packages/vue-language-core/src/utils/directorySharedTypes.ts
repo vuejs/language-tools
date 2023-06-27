@@ -29,6 +29,12 @@ type __VLS_GlobalComponents =
 		| 'Teleport'
 	>;
 
+type __VLS_AccessComponent<L, G, T, K> =
+	K extends keyof L ? L[K] :
+	K extends keyof G ? G[K] :
+	K extends keyof T ? T[K] :
+	any;
+
 // v-for
 declare function __VLS_getVForSourceType(source: number): [number, number, number][];
 declare function __VLS_getVForSourceType(source: string): [string, number, number][];

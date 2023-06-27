@@ -670,7 +670,7 @@ export function generate(
 			);
 		}
 		else if (componentVars[tag]) {
-			codes.push(`const ${var_originalComponent} = __VLS_templateComponents['${componentVars[tag]}'];\n`);
+			codes.push(`const ${var_originalComponent} = {} as __VLS_AccessComponent<typeof __VLS_localComponents, __VLS_GlobalComponents, typeof __VLS_templateComponents, '${componentVars[tag]}'>;\n`);
 		}
 		else {
 			codes.push(`const ${var_originalComponent} = {} as any;\n`);
