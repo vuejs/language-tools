@@ -1,19 +1,9 @@
 # Changelog
 
-## 1.8.2 (2023/6/27)
+## 1.8.3 (2023/6/28)
 
-- fix: should not auto closing `<img>` tag ([#3217](https://github.com/vuejs/language-tools/issues/3217))
-- fix: allow passing undefined as events ([#3122](https://github.com/vuejs/language-tools/issues/3122)) ([#3217](https://github.com/vuejs/language-tools/issues/3217)) - thanks @so1ve
-- fix: fixes object literal parsing for <component :is> ([#3324](https://github.com/vuejs/language-tools/issues/3324)) ([#3171](https://github.com/vuejs/language-tools/issues/3171)) - thanks @so1ve
-- fix: symbol types are lost ([#3300](https://github.com/vuejs/language-tools/issues/3300)) ([#3295](https://github.com/vuejs/language-tools/issues/3295)) - thanks @so1ve
-- fix(ts-plugin): suppress errors when `composite` is enabled
-- fix(language-server): trigger characters missing on web IDE
-- perf(language-server): debounce for `isCancellationRequested()`
-- perf(typescript): caching `getScriptFileNames()` result
-
-**Breaking changes**
-
-- no longer parse vue files outside tsconfig `include` option to avoid TS performance concerns ([#3326](https://github.com/vuejs/language-tools/issues/3326))
+- fix(ts-plugin): tsserver crashes when import > 4MB .vue file ([#3332](https://github.com/vuejs/language-tools/issues/3332))
+- fix(language-server): in specific os `fileExists()` throws ([#3336](https://github.com/vuejs/language-tools/issues/3336))
 
 ---
 
@@ -50,6 +40,21 @@
 		<a href="https://opencollective.com/volarjs">Open Collective</a>
 	</h5>
 </p>
+
+## 1.8.2 (2023/6/27)
+
+- fix: should not auto closing `<img>` tag ([#3217](https://github.com/vuejs/language-tools/issues/3217))
+- fix: allow passing undefined as events ([#3122](https://github.com/vuejs/language-tools/issues/3122)) ([#3217](https://github.com/vuejs/language-tools/issues/3217)) - thanks @so1ve
+- fix: fixes object literal parsing for <component :is> ([#3324](https://github.com/vuejs/language-tools/issues/3324)) ([#3171](https://github.com/vuejs/language-tools/issues/3171)) - thanks @so1ve
+- fix: symbol types are lost ([#3300](https://github.com/vuejs/language-tools/issues/3300)) ([#3295](https://github.com/vuejs/language-tools/issues/3295)) - thanks @so1ve
+- fix(ts-plugin): suppress errors when `composite` is enabled
+- fix(language-server): trigger characters missing on web IDE
+- perf(language-server): debounce for `isCancellationRequested()`
+- perf(typescript): caching `getScriptFileNames()` result
+
+**Breaking changes**
+
+- no longer parse vue files outside tsconfig `include` option to avoid TS performance concerns ([#3326](https://github.com/vuejs/language-tools/issues/3326))
 
 ## 1.8.1 (2023/6/20)
 
