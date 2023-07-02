@@ -113,11 +113,13 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 
 		const lang = computed(() => {
 			let lang = 'ts';
+
 			if (_sfc.scriptSetup && _sfc.scriptSetup.lang !== 'js') {
 				lang = _sfc.scriptSetup.lang;
 			} else if (_sfc.script && _sfc.script.lang !== 'js') {
 				lang = _sfc.script.lang;
 			}
+
 			// Normalize 'js*' to 'ts*' as generated files are technically written in TypeScript.
 			return lang.replace(/^js/, 'ts');
 		});
