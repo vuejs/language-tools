@@ -21,7 +21,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 			const tsx = useTsx(fileName, sfc);
 			const fileNames: string[] = [];
 
-			if (['js', 'ts', 'jsx', 'tsx'].includes(tsx.lang.value)) {
+			if (['ts', 'tsx'].includes(tsx.lang.value)) {
 				fileNames.push(fileName + '.' + tsx.lang.value);
 			}
 
@@ -112,10 +112,12 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 	function createTsx(fileName: string, _sfc: Sfc) {
 
 		const lang = computed(() => {
-			return !_sfc.script && !_sfc.scriptSetup ? 'ts'
+			const lang = !_sfc.script && !_sfc.scriptSetup ? 'ts'
 				: _sfc.scriptSetup && _sfc.scriptSetup.lang !== 'js' ? _sfc.scriptSetup.lang
 					: _sfc.script && _sfc.script.lang !== 'js' ? _sfc.script.lang
 						: 'js';
+			// Normalize 'js*' to 'ts*' as generated files are technically written in TypeScript.
+			return lang.replace(/^js/, 'ts');
 		});
 		const scriptRanges = computed(() =>
 			_sfc.scriptAst

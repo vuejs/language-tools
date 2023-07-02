@@ -4,8 +4,10 @@
       v-for="col in slotFilters"
       :key="col"
       #[`filter-cell-${col}`]="{ column }"
-    ></template>
+    >{{ column }}</template>
   </Foo>
 </template>
 
-<script setup></script>
+<script setup>
+const slotFilters = [1, 2]
+</script>
