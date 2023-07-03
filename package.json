@@ -22,7 +22,7 @@
 	},
 	"devDependencies": {
 		"@types/node": "latest",
-		"@volar/language-service": "1.7.10",
+		"@volar/language-service": "1.8.0",
 		"typescript": "latest",
 		"vite": "latest",
 		"vitest": "latest"
