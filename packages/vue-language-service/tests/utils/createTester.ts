@@ -20,7 +20,7 @@ function createTester(root: string) {
 	parsedCommandLine.fileNames = parsedCommandLine.fileNames.map(fileName => fileName.replace(/\\/g, '/'));
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
 	const host: TypeScriptLanguageHost = {
-		getProjectVersion: () => 0,
+		getProjectVersion: () => '0',
 		getScriptFileNames: () => parsedCommandLine.fileNames,
 		getCurrentDirectory: () => root.replace(/\\/g, '/'),
 		getCompilationSettings: () => parsedCommandLine.options,
