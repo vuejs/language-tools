@@ -10,7 +10,8 @@ export function parseScriptSetupRanges(
 ) {
 
 	let foundNonImportExportNode = false;
-	let importSectionEndOffset = 0;
+	let importSectionEndOffsetWithComment = 0;
+	let importSectionEndOffsetWithoutComment = 0;
 	let withDefaultsArg: TextRange | undefined;
 	let propsAssignName: string | undefined;
 	let defineProps: TextRange | undefined;
@@ -34,7 +35,12 @@ export function parseScriptSetupRanges(
 	}[] = [];
 	const bindings = parseBindingRanges(ts, ast, false);
 
+	let lastImportNode: ts.Node | undefined;
+
 	ast.forEachChild(node => {
+		if (ts.isImportDeclaration(node) || (ts.isImportEqualsDeclaration(node) && !!node.moduleReference.getText(ast))) {
+			lastImportNode = node;
+		}
 		const isTypeExport = (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) && node.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword);
 		if (
 			!foundNonImportExportNode
@@ -44,14 +50,16 @@ export function parseScriptSetupRanges(
 			// fix https://github.com/vuejs/language-tools/issues/1223
 			&& !ts.isImportEqualsDeclaration(node)
 		) {
-			importSectionEndOffset = node.getStart(ast, true);
+			importSectionEndOffsetWithComment = node.getStart(ast, true);
+			importSectionEndOffsetWithoutComment = lastImportNode?.getEnd() ?? 0;
 			foundNonImportExportNode = true;
 		}
 	});
 	ast.forEachChild(child => visitNode(child, ast));
 
 	return {
-		importSectionEndOffset,
+		importSectionEndOffsetWithComment,
+		importSectionEndOffsetWithoutComment,
 		bindings,
 		withDefaultsArg,
 		defineProps,

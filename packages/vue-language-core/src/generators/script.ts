@@ -56,7 +56,8 @@ export function generate(
 			emitsTypeArg: undefined,
 			emitsTypeNums: 0,
 			exposeRuntimeArg: undefined,
-			importSectionEndOffset: 0,
+			importSectionEndOffsetWithComment: 0,
+			importSectionEndOffsetWithoutComment: 0,
 			defineProps: undefined,
 			propsAssignName: undefined,
 			propsRuntimeArg: undefined,
@@ -267,7 +268,7 @@ export function generate(
 			return;
 
 		codes.push([
-			sfc.scriptSetup.content.substring(0, scriptSetupRanges.importSectionEndOffset),
+			sfc.scriptSetup.content.substring(0, scriptSetupRanges.importSectionEndOffsetWithComment),
 			'scriptSetup',
 			0,
 			FileRangeCapabilities.full,
@@ -480,9 +481,12 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 `.trim() + '\n');
 		}
 
-		const scriptSetupGeneratedOffset = muggle.getLength(codes) - scriptSetupRanges.importSectionEndOffset;
+		const scriptSetupGeneratedOffset = muggle.getLength(codes) - scriptSetupRanges.importSectionEndOffsetWithComment;
+		console.log(muggle.toString(codes))
 
-		addVirtualCode('scriptSetup', scriptSetupRanges.importSectionEndOffset);
+		addVirtualCode('scriptSetup', scriptSetupRanges.importSectionEndOffsetWithComment);
+
+		console.log(muggle.toString(codes))
 
 		if (scriptSetupRanges.propsTypeArg && scriptSetupRanges.withDefaultsArg) {
 			// fix https://github.com/vuejs/language-tools/issues/1187
