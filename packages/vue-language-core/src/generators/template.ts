@@ -91,7 +91,7 @@ export function generate(
 	let expectedErrorStart: undefined | number;
 	let expectedErrorNode: CompilerDOM.CommentNode | undefined;
 
-	const componentVars = generateComponentVars();
+	generatePreResolveComponents();
 
 	if (sfc.templateAst) {
 		visitNode(sfc.templateAst, undefined, undefined, undefined);
@@ -176,11 +176,22 @@ export function generate(
 		codes.push('}\n');
 	}
 
-	function generateComponentVars() {
+	function toCanonicalComponentName(tagText: string) {
+		return validTsVar.test(tagText) ? tagText : capitalize(camelize(tagText.replace(/:/g, '-')));
+	}
 
-		const data: Record<string, string> = {};
+	function getPossibleOriginalComponentName(tagText: string) {
+		return [...new Set([
+			// order is important: https://github.com/vuejs/language-tools/issues/2010
+			capitalize(camelize(tagText)),
+			camelize(tagText),
+			tagText,
+		])];
+	}
 
-		codes.push(`let __VLS_templateComponents!: {}\n`);
+	function generatePreResolveComponents() {
+
+		codes.push(`let __VLS_resolvedLocalAndGlobalComponents!: {}\n`);
 
 		for (const tagName in tagNames) {
 
@@ -191,18 +202,14 @@ export function generate(
 			if (isNamespacedTag)
 				continue;
 
-			const validName = validTsVar.test(tagName) ? tagName : capitalize(camelize(tagName.replace(/:/g, '-')));
-
 			codes.push(
-				`& __VLS_WithComponent<'${validName}', typeof __VLS_localComponents, `,
+				`& __VLS_WithComponent<'${toCanonicalComponentName(tagName)}', typeof __VLS_localComponents, `,
 				// order is important: https://github.com/vuejs/language-tools/issues/2010
 				`"${capitalize(camelize(tagName))}", `,
 				`"${camelize(tagName)}", `,
 				`"${tagName}"`,
 				'>\n',
 			);
-
-			data[tagName] = validName;
 		}
 
 		codes.push(`;\n`);
@@ -211,12 +218,7 @@ export function generate(
 
 			const tagOffsets = tagNames[tagName];
 			const tagRanges: [number, number][] = tagOffsets.map(offset => [offset, offset + tagName.length]);
-			const names = new Set(nativeTags.has(tagName) ? [tagName] : [
-				// order is important: https://github.com/vuejs/language-tools/issues/2010
-				capitalize(camelize(tagName)),
-				camelize(tagName),
-				tagName,
-			]);
+			const names = nativeTags.has(tagName) ? [tagName] : getPossibleOriginalComponentName(tagName);
 
 			for (const name of names) {
 				for (const tagRange of tagRanges) {
@@ -240,32 +242,34 @@ export function generate(
 			}
 			codes.push('\n');
 
-			const validName = data[tagName];
+			if (nativeTags.has(tagName))
+				continue;
 
-			if (validName) {
-				codes.push(
-					'// @ts-ignore\n', // #2304
-					'[',
-				);
-				for (const tagRange of tagRanges) {
-					codes.push([
-						validName,
-						'template',
-						tagRange,
-						{
-							completion: {
-								additional: true,
-								autoImportOnly: true,
-							},
+			const isNamespacedTag = tagName.indexOf('.') >= 0;
+			if (isNamespacedTag)
+				continue;
+
+			codes.push(
+				'// @ts-ignore\n', // #2304
+				'[',
+			);
+			const validName = toCanonicalComponentName(tagName);
+			for (const tagRange of tagRanges) {
+				codes.push([
+					validName,
+					'template',
+					tagRange,
+					{
+						completion: {
+							additional: true,
+							autoImportOnly: true,
 						},
-					]);
-					codes.push(',');
-				}
-				codes.push(`];\n`);
+					},
+				]);
+				codes.push(',');
 			}
+			codes.push(`];\n`);
 		}
-
-		return data;
 	}
 
 	function collectTagOffsets() {
@@ -669,11 +673,12 @@ export function generate(
 				';\n',
 			);
 		}
-		else if (componentVars[tag]) {
-			codes.push(`const ${var_originalComponent} = __VLS_templateComponents['${componentVars[tag]}'];\n`);
-		}
 		else {
-			codes.push(`const ${var_originalComponent} = {} as any;\n`);
+			codes.push(`let ${var_originalComponent}!: `);
+			for (const componentName of getPossibleOriginalComponentName(tag)) {
+				codes.push(`'${componentName}' extends keyof typeof __VLS_ctx ? typeof __VLS_ctx${validTsVar.test(componentName) ? `.${componentName}` : `['${componentName}']`} : `);
+			}
+			codes.push(`typeof __VLS_resolvedLocalAndGlobalComponents['${toCanonicalComponentName(tag)}'];\n`);
 		}
 
 		codes.push(
@@ -693,22 +698,30 @@ export function generate(
 		codes.push(');\n');
 
 		for (const offset of tagOffsets) {
-			if (isNamespacedTag) {
+			if (isNamespacedTag || dynamicTagExp) {
 				continue;
 			}
-			else if (dynamicTagExp) {
-				continue;
-			}
-			else {
-				if (isIntrinsicElement) {
-					codes.push(`({} as __VLS_IntrinsicElements).`);
-				}
-				else {
-					codes.push(`__VLS_templateComponents.`);
-				}
+			else if (isIntrinsicElement) {
+				codes.push(`({} as __VLS_IntrinsicElements).`);
 				codes.push(
 					[
-						componentVars[tag] ?? tag,
+						tag,
+						'template',
+						[offset, offset + tag.length],
+						{
+							...capabilitiesPresets.tagHover,
+							...capabilitiesPresets.diagnosticOnly,
+						},
+					],
+					';\n',
+				);
+			}
+			else {
+				const key = toCanonicalComponentName(tag);
+				codes.push(`({} as { ${key}: typeof ${var_originalComponent} }).`);
+				codes.push(
+					[
+						key,
 						'template',
 						[offset, offset + tag.length],
 						{
