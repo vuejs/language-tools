@@ -3,11 +3,11 @@ import { exactType } from 'vue-tsc/shared';
 
 declare module 'vue' {
 	export interface GlobalComponents {
-		ComponentWithinTestIssue1886: any;
+		ComponentForIssue1886: any;
 	}
 }
 
-declare const ComponentWithinTestIssue1886: new () => {
+declare const ComponentForIssue1886: new () => {
 	$slots: {
 		foo: (props: { bar: string }) => any;
 	}
@@ -15,9 +15,9 @@ declare const ComponentWithinTestIssue1886: new () => {
 </script>
 
 <template>
-	<ComponentWithinTestIssue1886>
+	<ComponentForIssue1886>
 		<template #foo="{ bar }">
 			{{ exactType(bar, {} as string) }}
 		</template>
-	</ComponentWithinTestIssue1886>
+	</ComponentForIssue1886>
 </template>
