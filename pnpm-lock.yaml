@@ -19,7 +19,7 @@ importers:
         specifier: latest
         version: 20.3.3
       '@volar/language-service':
-        specifier: 1.8.0
+        specifier: ~1.8.0
         version: 1.8.0
       typescript:
         specifier: latest
@@ -64,7 +64,7 @@ importers:
         specifier: 1.67.0
         version: 1.67.0
       '@volar/vscode':
-        specifier: 1.8.0
+        specifier: ~1.8.0
         version: 1.8.0
       '@vue/language-core':
         specifier: 1.8.3
@@ -94,7 +94,7 @@ importers:
   packages/vue-component-meta:
     dependencies:
       '@volar/typescript':
-        specifier: 1.8.0
+        specifier: ~1.8.0
         version: 1.8.0
       '@vue/language-core':
         specifier: 1.8.3
@@ -111,10 +111,10 @@ importers:
   packages/vue-language-core:
     dependencies:
       '@volar/language-core':
-        specifier: 1.8.0
+        specifier: ~1.8.0
         version: 1.8.0
       '@volar/source-map':
-        specifier: 1.8.0
+        specifier: ~1.8.0
         version: 1.8.0
       '@vue/compiler-dom':
         specifier: ^3.3.0
@@ -145,7 +145,7 @@ importers:
   packages/vue-language-plugin-pug:
     dependencies:
       '@volar/source-map':
-        specifier: 1.8.0
+        specifier: ~1.8.0
         version: 1.8.0
       volar-service-pug:
         specifier: 0.0.9
@@ -158,13 +158,13 @@ importers:
   packages/vue-language-server:
     dependencies:
       '@volar/language-core':
-        specifier: 1.8.0
+        specifier: ~1.8.0
         version: 1.8.0
       '@volar/language-server':
-        specifier: 1.8.0
+        specifier: ~1.8.0
         version: 1.8.0
       '@volar/typescript':
-        specifier: 1.8.0
+        specifier: ~1.8.0
         version: 1.8.0
       '@vue/language-core':
         specifier: 1.8.3
@@ -182,13 +182,13 @@ importers:
   packages/vue-language-service:
     dependencies:
       '@volar/language-core':
-        specifier: 1.8.0
+        specifier: ~1.8.0
         version: 1.8.0
       '@volar/language-service':
-        specifier: 1.8.0
+        specifier: ~1.8.0
         version: 1.8.0
       '@volar/typescript':
-        specifier: 1.8.0
+        specifier: ~1.8.0
         version: 1.8.0
       '@vue/compiler-dom':
         specifier: ^3.3.0
@@ -234,7 +234,7 @@ importers:
         version: 1.0.8
     devDependencies:
       '@volar/kit':
-        specifier: 1.8.0
+        specifier: ~1.8.0
         version: 1.8.0(typescript@5.1.6)
       vscode-languageserver-protocol:
         specifier: ^3.17.3
@@ -280,7 +280,7 @@ importers:
   packages/vue-typescript:
     dependencies:
       '@volar/typescript':
-        specifier: 1.8.0
+        specifier: ~1.8.0
         version: 1.8.0
       '@vue/language-core':
         specifier: 1.8.3
