@@ -63,7 +63,7 @@ export function createProgram(options: ts.CreateProgramOptions) {
 			},
 			getScriptSnapshot,
 			getProjectVersion: () => {
-				return ctx.projectVersion;
+				return ctx.projectVersion.toString();
 			},
 			getProjectReferences: () => ctx.options.projectReferences,
 			getCurrentDirectory: () => ctx.options.host!.getCurrentDirectory().replace(/\\/g, '/'),
