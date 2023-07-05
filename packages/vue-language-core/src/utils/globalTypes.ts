@@ -59,10 +59,10 @@ declare function __VLS_makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
 type __VLS_SelfComponent<N, C> = string extends N ? {} : N extends string ? { [P in N]: C } : {};
 type __VLS_WithComponent<N0 extends string, LocalComponents, N1 extends string, N2 extends string, N3 extends string> =
 	N1 extends keyof LocalComponents ? N1 extends N0 ? Pick<LocalComponents, N0> : { [K in N0]: LocalComponents[N1] } :
-	N1 extends keyof __VLS_GlobalComponents ? N1 extends N0 ? Pick<__VLS_GlobalComponents, N0> : { [K in N0]: __VLS_GlobalComponents[N1] } :
 	N2 extends keyof LocalComponents ? N2 extends N0 ? Pick<LocalComponents, N0> : { [K in N0]: LocalComponents[N2] } :
-	N2 extends keyof __VLS_GlobalComponents ? N2 extends N0 ? Pick<__VLS_GlobalComponents, N0> : { [K in N0]: __VLS_GlobalComponents[N2] } :
 	N3 extends keyof LocalComponents ? N3 extends N0 ? Pick<LocalComponents, N0> : { [K in N0]: LocalComponents[N3] } :
+	N1 extends keyof __VLS_GlobalComponents ? N1 extends N0 ? Pick<__VLS_GlobalComponents, N0> : { [K in N0]: __VLS_GlobalComponents[N1] } :
+	N2 extends keyof __VLS_GlobalComponents ? N2 extends N0 ? Pick<__VLS_GlobalComponents, N0> : { [K in N0]: __VLS_GlobalComponents[N2] } :
 	N3 extends keyof __VLS_GlobalComponents ? N3 extends N0 ? Pick<__VLS_GlobalComponents, N0> : { [K in N0]: __VLS_GlobalComponents[N3] } :
 	${vueCompilerOptions.strictTemplates ? '{}' : '{ [K in N0]: unknown }'}
 
