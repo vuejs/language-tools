@@ -101,7 +101,7 @@ declare function __VLS_pickEvent<Emit, K, E>(emit: Emit, emitKey: K, event: E): 
 		__VLS_AsFunctionOrAny<E>,
 		__VLS_AsFunctionOrAny<__VLS_EmitEvent<Emit, K>>
 	>
->;
+> | undefined;
 declare function __VLS_pickFunctionalComponentCtx<T, K>(comp: T, compInstance: K): __VLS_PickNotAny<
 	K extends { __ctx?: infer Ctx } ? Ctx : any,
 	T extends (props: any, ctx: infer Ctx) => any ? Ctx : any

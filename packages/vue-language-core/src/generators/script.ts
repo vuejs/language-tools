@@ -141,7 +141,7 @@ export function generate(
 			}
 			codes.push(`type __VLS_NormalizeEmits<T> = __VLS_ConstructorOverloads<T> & {
 				[K in keyof T]: T[K] extends any[] ? { (...args: T[K]): void } : never
-			}`);;
+			}\n`);;
 		}
 		if (usedHelperTypes.WithTemplateSlots) {
 			codes.push(
@@ -738,7 +738,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 					const templateStart = getLength(codes);
 					codes.push(varName);
 					const templateEnd = getLength(codes);
-					codes.push(`: `);
+					codes.push(`: {} as typeof `);
 
 					const scriptStart = getLength(codes);
 					codes.push(varName);

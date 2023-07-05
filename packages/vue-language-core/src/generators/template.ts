@@ -665,7 +665,7 @@ export function generate(
 		else if (dynamicTagExp) {
 			codes.push(
 				`const ${var_originalComponent} = `,
-				...createInterpolationCode(dynamicTagExp.loc.source, dynamicTagExp.loc, dynamicTagExp.loc.start.offset, capabilitiesPresets.all, '', ''),
+				...createInterpolationCode(dynamicTagExp.loc.source, dynamicTagExp.loc, dynamicTagExp.loc.start.offset, capabilitiesPresets.all, '(', ')'),
 				';\n',
 			);
 		}
@@ -1755,7 +1755,7 @@ export function generate(
 	function createFormatCode(mapCode: string, sourceOffset: number, formatWrapper: [string, string]): Code[] {
 		return [
 			formatWrapper[0],
-			[mapCode, 'template', sourceOffset, {}],
+			[mapCode, 'template', sourceOffset, { completion: true /* fix vue-autoinsert-parentheses not working */ }],
 			formatWrapper[1],
 			'\n',
 		];
@@ -1784,23 +1784,24 @@ export function generate(
 	}
 
 	function createInterpolationCode(
-		code: string,
+		_code: string,
 		astHolder: any,
 		start: number | undefined,
 		data: FileRangeCapabilities | (() => FileRangeCapabilities) | undefined,
 		prefix: string,
 		suffix: string,
 	): Code[] {
-		const ast = createTsAst(astHolder, prefix + code + suffix);
+		const code = prefix + _code + suffix;
+		const ast = createTsAst(astHolder, code);
 		const codes: Code[] = [];
-		const vars = walkInterpolationFragment(ts, prefix + code + suffix, ast, (frag, fragOffset, isJustForErrorMapping) => {
+		const vars = walkInterpolationFragment(ts, code, ast, (frag, fragOffset, isJustForErrorMapping) => {
 			if (fragOffset === undefined) {
 				codes.push(frag);
 			}
 			else {
 				fragOffset -= prefix.length;
 				let addSuffix = '';
-				const overLength = fragOffset + frag.length - code.length;
+				const overLength = fragOffset + frag.length - _code.length;
 				if (overLength > 0) {
 					addSuffix = frag.substring(frag.length - overLength);
 					frag = frag.substring(0, frag.length - overLength);
