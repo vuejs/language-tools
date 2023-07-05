@@ -3,7 +3,7 @@ import { posix as path } from 'path';
 import { getDefaultVueLanguagePlugins } from './plugins';
 import { VueFile } from './sourceFile';
 import { VueCompilerOptions } from './types';
-import * as sharedTypes from './utils/directorySharedTypes';
+import * as sharedTypes from './utils/globalTypes';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { resolveVueCompilerOptions } from './utils/ts';
 

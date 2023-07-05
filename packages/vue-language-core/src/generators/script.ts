@@ -12,7 +12,7 @@ import { Sfc } from '../types';
 import type { VueCompilerOptions } from '../types';
 import { getSlotsPropertyName } from '../utils/shared';
 import { walkInterpolationFragment } from '../utils/transform';
-import * as sharedTypes from '../utils/directorySharedTypes';
+import * as sharedTypes from '../utils/globalTypes';
 import * as muggle from 'muggle-string';
 
 export function generate(
