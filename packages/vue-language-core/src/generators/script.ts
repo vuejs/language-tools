@@ -12,7 +12,7 @@ import { Sfc } from '../types';
 import type { VueCompilerOptions } from '../types';
 import { getSlotsPropertyName } from '../utils/shared';
 import { walkInterpolationFragment } from '../utils/transform';
-import * as sharedTypes from '../utils/directorySharedTypes';
+import * as sharedTypes from '../utils/globalTypes';
 import * as muggle from 'muggle-string';
 
 export function generate(
@@ -827,10 +827,10 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 		/* Components */
 		codes.push('/* Components */\n');
-		codes.push(`let __VLS_localComponents!: NonNullable<typeof __VLS_internalComponent extends { components: infer C } ? C : {}> & typeof __VLS_componentsOption & typeof __VLS_ctx;\n`);
-		codes.push(`let __VLS_otherComponents!: typeof __VLS_localComponents & __VLS_GlobalComponents;\n`);
+		codes.push(`let __VLS_otherComponents!: NonNullable<typeof __VLS_internalComponent extends { components: infer C } ? C : {}> & typeof __VLS_componentsOption & typeof __VLS_ctx;\n`);
 		codes.push(`let __VLS_own!: __VLS_SelfComponent<typeof __VLS_name, typeof __VLS_internalComponent & typeof __VLS_publicComponent & (new () => { ${getSlotsPropertyName(vueCompilerOptions.target)}: typeof __VLS_slots })>;\n`);
-		codes.push(`let __VLS_components!: typeof __VLS_otherComponents & Omit<typeof __VLS_own, keyof typeof __VLS_otherComponents>;\n`);
+		codes.push(`let __VLS_localComponents!: typeof __VLS_otherComponents & Omit<typeof __VLS_own, keyof typeof __VLS_otherComponents>;\n`);
+		codes.push(`let __VLS_components!: typeof __VLS_localComponents & __VLS_GlobalComponents;\n`); // for html completion, TS references...
 
 		/* Style Scoped */
 		codes.push('/* Style Scoped */\n');

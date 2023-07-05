@@ -194,7 +194,7 @@ export function generate(
 			const validName = validTsVar.test(tagName) ? tagName : capitalize(camelize(tagName.replace(/:/g, '-')));
 
 			codes.push(
-				`& __VLS_WithComponent<'${validName}', typeof __VLS_components, `,
+				`& __VLS_WithComponent<'${validName}', typeof __VLS_localComponents, `,
 				// order is important: https://github.com/vuejs/language-tools/issues/2010
 				`"${capitalize(camelize(tagName))}", `,
 				`"${camelize(tagName)}", `,
