@@ -481,12 +481,9 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 `.trim() + '\n');
 		}
 
-		const scriptSetupGeneratedOffset = muggle.getLength(codes) - scriptSetupRanges.importSectionEndOffsetWithComment;
-		console.log(muggle.toString(codes))
+		const scriptSetupGeneratedOffset = muggle.getLength(codes) - scriptSetupRanges.importSectionEndOffsetWithoutComment;
 
-		addVirtualCode('scriptSetup', scriptSetupRanges.importSectionEndOffsetWithComment);
-
-		console.log(muggle.toString(codes))
+		addVirtualCode('scriptSetup', scriptSetupRanges.importSectionEndOffsetWithoutComment);
 
 		if (scriptSetupRanges.propsTypeArg && scriptSetupRanges.withDefaultsArg) {
 			// fix https://github.com/vuejs/language-tools/issues/1187
