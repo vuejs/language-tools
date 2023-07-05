@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-server",
-	"version": "1.8.3",
+	"version": "1.8.4",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -19,9 +19,9 @@
 		"@volar/language-core": "~1.8.0",
 		"@volar/language-server": "~1.8.0",
 		"@volar/typescript": "~1.8.0",
-		"@vue/language-core": "1.8.3",
-		"@vue/language-service": "1.8.3",
+		"@vue/language-core": "1.8.4",
+		"@vue/language-service": "1.8.4",
 		"vscode-languageserver-protocol": "^3.17.3",
-		"vue-component-meta": "1.8.3"
+		"vue-component-meta": "1.8.4"
 	}
 }
