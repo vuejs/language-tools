@@ -47,6 +47,8 @@ export function resolveConfig(
 	return config;
 }
 
+const unicodeReg = /\\u/g;
+
 function resolvePlugins(
 	services: Config['services'],
 	vueCompilerOptions: VueCompilerOptions,
@@ -193,7 +195,7 @@ function resolvePlugins(
 										transformed = true;
 										item.additionalTextEdits.push({
 											range: editRange,
-											newText: unescape(printText.replace(/\\u/g, '%u')),
+											newText: unescape(printText.replace(unicodeReg, '%u')),
 										});
 									}
 									else if (exportDefault.args && exportDefault.argsNode) {
@@ -212,7 +214,7 @@ function resolvePlugins(
 										transformed = true;
 										item.additionalTextEdits.push({
 											range: editRange,
-											newText: unescape(printText.replace(/\\u/g, '%u')),
+											newText: unescape(printText.replace(unicodeReg, '%u')),
 										});
 									}
 								}

@@ -1,6 +1,9 @@
 import { FileCapabilities, FileKind } from '@volar/language-core';
 import { VueLanguagePlugin } from '../types';
 
+const scriptFormatReg = /^(.*)\.script_format\.([^.]+)$/;
+const scriptSetupFormatReg = /^(.*)\.scriptSetup_format\.([^.]+)$/;
+
 const plugin: VueLanguagePlugin = () => {
 
 	return {
@@ -19,8 +22,8 @@ const plugin: VueLanguagePlugin = () => {
 		},
 
 		resolveEmbeddedFile(_fileName, sfc, embeddedFile) {
-			const scriptMatch = embeddedFile.fileName.match(/^(.*)\.script_format\.([^.]+)$/);
-			const scriptSetupMatch = embeddedFile.fileName.match(/^(.*)\.scriptSetup_format\.([^.]+)$/);
+			const scriptMatch = embeddedFile.fileName.match(scriptFormatReg);
+			const scriptSetupMatch = embeddedFile.fileName.match(scriptSetupFormatReg);
 			const script = scriptMatch ? sfc.script : scriptSetupMatch ? sfc.scriptSetup : undefined;
 			if (script) {
 				embeddedFile.kind = FileKind.TextFile;

@@ -19,13 +19,15 @@ export * from './types';
 
 export type ComponentMetaChecker = ReturnType<typeof baseCreate>;
 
+const windowsPathReg = /\\/g;
+
 export function createComponentMetaCheckerByJsonConfig(
 	root: string,
 	json: any,
 	checkerOptions: MetaCheckerOptions = {},
 	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
 ) {
-	const rootPath = (root as path.OsPath).replace(/\\/g, '/') as path.PosixPath;
+	const rootPath = (root as path.OsPath).replace(windowsPathReg, '/') as path.PosixPath;
 	return createComponentMetaCheckerWorker(
 		() => vue.createParsedCommandLineByJson(ts, ts.sys, root, json),
 		checkerOptions,
@@ -40,7 +42,7 @@ export function createComponentMetaChecker(
 	checkerOptions: MetaCheckerOptions = {},
 	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
 ) {
-	const tsconfig = (tsconfigPath as path.OsPath).replace(/\\/g, '/') as path.PosixPath;
+	const tsconfig = (tsconfigPath as path.OsPath).replace(windowsPathReg, '/') as path.PosixPath;
 	return createComponentMetaCheckerWorker(
 		() => vue.createParsedCommandLine(ts, ts.sys, tsconfigPath),
 		checkerOptions,
@@ -63,7 +65,7 @@ function createComponentMetaCheckerWorker(
 	 */
 
 	let parsedCommandLine = loadParsedCommandLine();
-	let fileNames = (parsedCommandLine.fileNames as path.OsPath[]).map<path.PosixPath>(path => path.replace(/\\/g, '/') as path.PosixPath);
+	let fileNames = (parsedCommandLine.fileNames as path.OsPath[]).map<path.PosixPath>(path => path.replace(windowsPathReg, '/') as path.PosixPath);
 	let projectVersion = 0;
 
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
@@ -87,18 +89,18 @@ function createComponentMetaCheckerWorker(
 	return {
 		...baseCreate(_host, vue.resolveVueCompilerOptions(parsedCommandLine.vueOptions), checkerOptions, globalComponentName, ts),
 		updateFile(fileName: string, text: string) {
-			fileName = (fileName as path.OsPath).replace(/\\/g, '/') as path.PosixPath;
+			fileName = (fileName as path.OsPath).replace(windowsPathReg, '/') as path.PosixPath;
 			scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(text));
 			projectVersion++;
 		},
 		deleteFile(fileName: string) {
-			fileName = (fileName as path.OsPath).replace(/\\/g, '/') as path.PosixPath;
+			fileName = (fileName as path.OsPath).replace(windowsPathReg, '/') as path.PosixPath;
 			fileNames = fileNames.filter(f => f !== fileName);
 			projectVersion++;
 		},
 		reload() {
 			parsedCommandLine = loadParsedCommandLine();
-			fileNames = (parsedCommandLine.fileNames as path.OsPath[]).map<path.PosixPath>(path => path.replace(/\\/g, '/') as path.PosixPath);
+			fileNames = (parsedCommandLine.fileNames as path.OsPath[]).map<path.PosixPath>(path => path.replace(windowsPathReg, '/') as path.PosixPath);
 			this.clearCache();
 		},
 		clearCache() {
