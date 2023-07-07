@@ -1,9 +1,11 @@
 <script setup lang="ts">
-defineSlots<{ content(): any; }>();
+defineSlots<{
+	content(): any;
+	prop(props: { foo: string }): any;
+}>();
 </script>
 
 <template>
-	<div class="hello-world">
-		<slot name="content" />
-	</div>
+	<slot name="content" />
+	<slot name="prop" :foo="''" />
 </template>
