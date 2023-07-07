@@ -671,9 +671,9 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			generateConstNameOption();
 
 			if (scriptSetupRanges?.slotsTypeArg && sfc.scriptSetup) {
-				codes.push(`var __VLS_slots!: `);
+				codes.push(`var __VLS_slots!: __VLS_NormalizeSlots<`);
 				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end);
-				codes.push(';\n');
+				codes.push('>;\n');
 			};
 
 			codes.push(`function __VLS_template() {\n`);
