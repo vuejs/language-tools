@@ -1,9 +1,9 @@
 <script setup lang="ts">
-defineSlots<{ content(): any }>()
+defineSlots<{ content(): any; }>();
 </script>
 
 <template>
-  <div class="hello-world">
-    <slot name="content" />
-  </div>
+	<div class="hello-world">
+		<slot name="content" />
+	</div>
 </template>
