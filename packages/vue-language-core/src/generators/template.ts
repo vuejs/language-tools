@@ -176,8 +176,11 @@ export function generate(
 		codes.push('}\n');
 	}
 
-	function toCanonicalComponentName(tagText: string) {
-		return validTsVar.test(tagText) ? tagText : capitalize(camelize(tagText.replace(/:/g, '-')));
+	function toCanonicalComponentNames(tagText: string) {
+		return validTsVar.test(tagText) ? [tagText] : [
+			capitalize(camelize(tagText.replace(/:/g, '-'))),
+			camelize(tagText.replace(/:/g, '-'))
+		];
 	}
 
 	function getPossibleOriginalComponentName(tagText: string) {
@@ -203,7 +206,7 @@ export function generate(
 				continue;
 
 			codes.push(
-				`& __VLS_WithComponent<'${toCanonicalComponentName(tagName)}', typeof __VLS_localComponents, `,
+				`& __VLS_WithComponent<'${toCanonicalComponentNames(tagName)[0]}', typeof __VLS_localComponents, `,
 				// order is important: https://github.com/vuejs/language-tools/issues/2010
 				`"${capitalize(camelize(tagName))}", `,
 				`"${camelize(tagName)}", `,
@@ -253,22 +256,25 @@ export function generate(
 				'// @ts-ignore\n', // #2304
 				'[',
 			);
-			const validName = toCanonicalComponentName(tagName);
+			const validNames = toCanonicalComponentNames(tagName);
 			for (const tagRange of tagRanges) {
-				codes.push([
-					validName,
-					'template',
-					tagRange,
-					{
-						completion: {
-							additional: true,
-							autoImportOnly: true,
+				for (const validName of validNames) {
+					codes.push([
+						validName,
+						'template',
+						tagRange,
+						{
+							completion: {
+								additional: true,
+								autoImportOnly: true,
+							},
 						},
-					},
-				]);
-				codes.push(',');
+					]);
+					codes.push(',');
+				}
 			}
 			codes.push(`];\n`);
+			console.log(muggle.toString(codes))
 		}
 	}
 
@@ -678,7 +684,7 @@ export function generate(
 			for (const componentName of getPossibleOriginalComponentName(tag)) {
 				codes.push(`'${componentName}' extends keyof typeof __VLS_ctx ? typeof __VLS_ctx${validTsVar.test(componentName) ? `.${componentName}` : `['${componentName}']`} : `);
 			}
-			codes.push(`typeof __VLS_resolvedLocalAndGlobalComponents['${toCanonicalComponentName(tag)}'];\n`);
+			codes.push(`typeof __VLS_resolvedLocalAndGlobalComponents['${toCanonicalComponentNames(tag)[0]}'];\n`);
 		}
 
 		codes.push(
@@ -717,7 +723,7 @@ export function generate(
 				);
 			}
 			else {
-				const key = toCanonicalComponentName(tag);
+				const key = toCanonicalComponentNames(tag)[0];
 				codes.push(`({} as { ${key}: typeof ${var_originalComponent} }).`);
 				codes.push(
 					[

@@ -1,6 +1,7 @@
 {
 	"extends": "../tsconfig.json",
 	"compilerOptions": {
-		"importsNotUsedAsValues": "error"
+		"importsNotUsedAsValues": "error",
+		"ignoreDeprecations": "5.0"
 	}
 }
