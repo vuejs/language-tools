@@ -837,7 +837,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		codes.push('type __VLS_StyleScopedClasses = {}');
 		for (let i = 0; i < _sfc.styles.length; i++) {
 			const style = _sfc.styles[i];
-			if (!style.scoped) continue;
+			if (!style.scoped && vueCompilerOptions.experimentalResolveStyleCssClasses !== 'always') continue;
 			for (const className of style.classNames) {
 				generateCssClassProperty(
 					i,
