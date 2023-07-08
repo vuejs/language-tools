@@ -732,6 +732,27 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 
 		expect(meta.type).toEqual(TypeMeta.Unknown);
 	});
+
+	test('ts-component.tsx', () => {
+		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/ts-component/component.tsx');
+		const meta = checker.getComponentMeta(componentPath);
+
+		expect(meta.type).toEqual(TypeMeta.Function);
+
+		const a = meta.props.find(prop =>
+			prop.name === 'foo'
+			&& prop.required === true
+			&& prop.type === 'string'
+		);
+		const b = meta.props.find(prop =>
+			prop.name === 'bar'
+			&& prop.required === false
+			&& prop.type === 'number | undefined'
+		);
+
+		expect(a).toBeDefined();
+		expect(b).toBeDefined();
+	});
 });
 
 const checkerOptions: MetaCheckerOptions = {
