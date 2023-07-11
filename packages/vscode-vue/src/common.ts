@@ -143,7 +143,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			'Reload Window'
 		);
 		if (reload === undefined) return; // cancel
-		vscode.commands.executeCommand('workbench.action.reloadWindow');
+		vscode.commands.executeCommand('workbench.action.restartExtensionHost');
 	}
 	function activateServerMaxOldSpaceSizeChange() {
 		vscode.workspace.onDidChangeConfiguration((e) => {
