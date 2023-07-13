@@ -274,7 +274,6 @@ export function generate(
 				}
 			}
 			codes.push(`];\n`);
-			console.log(muggle.toString(codes))
 		}
 	}
 
