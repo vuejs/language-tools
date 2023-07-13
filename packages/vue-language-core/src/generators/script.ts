@@ -819,6 +819,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 					{ start: className.offset, end: className.offset + className.text.length },
 					'string',
 					false,
+					true,
 				);
 			}
 			codes.push('>;\n');
@@ -845,6 +846,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 					{ start: className.offset, end: className.offset + className.text.length },
 					'boolean',
 					true,
+					!style.module,
 				);
 			}
 		}
@@ -882,7 +884,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 		return { cssIds };
 
-		function generateCssClassProperty(styleIndex: number, className: string, classRange: TextRange, propertyType: string, optional: boolean) {
+		function generateCssClassProperty(styleIndex: number, className: string, classRange: TextRange, propertyType: string, optional: boolean, referencesCodeLens: boolean) {
 			codes.push(`\n & { `);
 			codes.push([
 				'',
@@ -890,7 +892,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				classRange.start,
 				{
 					references: true,
-					referencesCodeLens: true,
+					referencesCodeLens,
 				},
 			]);
 			codes.push(`'`);

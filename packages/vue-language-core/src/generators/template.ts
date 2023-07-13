@@ -808,7 +808,7 @@ export function generate(
 
 		generateDirectives(node, var_originalComponent);
 		generateElReferences(node); // <el ref="foo" />
-		if (sfc.styles.some(s => s.scoped) || vueCompilerOptions.experimentalResolveStyleCssClasses === 'always') {
+		if (sfc.styles.some(s => s.scoped || vueCompilerOptions.experimentalResolveStyleCssClasses === 'always')) {
 			generateClassScoped(node);
 		}
 		if (componentCtxVar) {
