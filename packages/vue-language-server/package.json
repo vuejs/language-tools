@@ -16,9 +16,9 @@
 		"directory": "packages/vue-language-server"
 	},
 	"dependencies": {
-		"@volar/language-core": "~1.8.0",
-		"@volar/language-server": "~1.8.0",
-		"@volar/typescript": "~1.8.0",
+		"@volar/language-core": "~1.8.3",
+		"@volar/language-server": "~1.8.3",
+		"@volar/typescript": "~1.8.3",
 		"@vue/language-core": "1.8.4",
 		"@vue/language-service": "1.8.4",
 		"vscode-languageserver-protocol": "^3.17.3",
