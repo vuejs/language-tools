@@ -426,9 +426,6 @@
 					"type": "boolean",
 					"default": false
 				},
-				"vue.server.json.customBlockSchemaUrls": {
-					"type": "object"
-				},
 				"vue.server.diagnosticModel": {
 					"type": "string",
 					"default": "push",

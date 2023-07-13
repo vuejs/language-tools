@@ -34,7 +34,6 @@ export function resolveConfig(
 	compilerOptions: ts.CompilerOptions = {},
 	vueCompilerOptions: Partial<vue.VueCompilerOptions> = {},
 	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
-	settings?: Settings,
 	codegenStack: boolean = false,
 ) {
 
@@ -42,7 +41,7 @@ export function resolveConfig(
 	const vueLanguageModules = vue.createLanguages(compilerOptions, resolvedVueCompilerOptions, ts, codegenStack);
 
 	config.languages = Object.assign({}, vueLanguageModules, config.languages);
-	config.services = resolvePlugins(config.services, resolvedVueCompilerOptions, settings);
+	config.services = resolvePlugins(config.services, resolvedVueCompilerOptions);
 
 	return config;
 }
@@ -52,7 +51,6 @@ const unicodeReg = /\\u/g;
 function resolvePlugins(
 	services: Config['services'],
 	vueCompilerOptions: VueCompilerOptions,
-	settings?: Settings,
 ) {
 
 	const originalTsPlugin: Service = services?.typescript ?? createTsService();
@@ -284,7 +282,7 @@ function resolvePlugins(
 	services.vue ??= createVueService();
 	services.css ??= createCssService();
 	services['pug-beautify'] ??= createPugFormatService();
-	services.json ??= createJsonService(settings?.json);
+	services.json ??= createJsonService();
 	services['typescript/twoslash-queries'] ??= createTsTqService();
 	services['vue/referencesCodeLens'] ??= createReferencesCodeLensService();
 	services['vue/autoInsertDotValue'] ??= createAutoDotValueService();

@@ -214,11 +214,7 @@ async function getInitializationOptions(
 			tokenTypes: ['component'],
 			tokenModifiers: [],
 		};
-	options.fullCompletionList = config.server.fullCompletionList,
-		// vue
-		options.json = {
-			customBlockSchemaUrls: config.server.json.customBlockSchemaUrls,
-		};
+	options.fullCompletionList = config.server.fullCompletionList;
 	options.additionalExtensions = [
 		...config.server.additionalExtensions,
 		...!config.server.petiteVue.supportHtmlFile ? [] : ['html'],
