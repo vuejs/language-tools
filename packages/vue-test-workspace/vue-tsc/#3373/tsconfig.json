@@ -1,6 +1,6 @@
 {
 	"extends": "../tsconfig.base.json",
-	"vueCompilerOptions": {
+	"compilerOptions": {
 		"importsNotUsedAsValues": "error",
 		"ignoreDeprecations": "5.0"
 	},
