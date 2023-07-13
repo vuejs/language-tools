@@ -10,8 +10,7 @@ export function parseScriptSetupRanges(
 ) {
 
 	let foundNonImportExportNode = false;
-	let importSectionEndOffsetWithComment = 0;
-	let importSectionEndOffsetWithoutComment = 0;
+	let importSectionEndOffset = 0;
 	let withDefaultsArg: TextRange | undefined;
 	let propsAssignName: string | undefined;
 	let defineProps: TextRange | undefined;
@@ -45,16 +44,21 @@ export function parseScriptSetupRanges(
 			// fix https://github.com/vuejs/language-tools/issues/1223
 			&& !ts.isImportEqualsDeclaration(node)
 		) {
-			importSectionEndOffsetWithComment = node.getStart(ast, true);
-			importSectionEndOffsetWithoutComment = node.getFullStart();
+			const commentRagnes = ts.getLeadingCommentRanges(ast.getFullText(), node.getFullStart());
+			if (commentRagnes?.length) {
+				const commentRange = commentRagnes.sort((a, b) => a.pos - b.pos)[0];
+				importSectionEndOffset = commentRange.pos;
+			}
+			else {
+				importSectionEndOffset = node.getStart(ast);
+			}
 			foundNonImportExportNode = true;
 		}
 	});
 	ast.forEachChild(child => visitNode(child, ast));
 
 	return {
-		importSectionEndOffsetWithComment,
-		importSectionEndOffsetWithoutComment,
+		importSectionEndOffset,
 		bindings,
 		withDefaultsArg,
 		defineProps,
