@@ -1,6 +1,8 @@
 import { FileCapabilities, FileRangeCapabilities } from '@volar/language-core';
 import { VueLanguagePlugin } from '../types';
 
+const styleReg = /^(.*)\.style_(\d+)\.([^.]+)$/;
+
 const plugin: VueLanguagePlugin = () => {
 
 	return {
@@ -17,7 +19,7 @@ const plugin: VueLanguagePlugin = () => {
 		},
 
 		resolveEmbeddedFile(_fileName, sfc, embeddedFile) {
-			const match = embeddedFile.fileName.match(/^(.*)\.style_(\d+)\.([^.]+)$/);
+			const match = embeddedFile.fileName.match(styleReg);
 			if (match) {
 				const index = parseInt(match[2]);
 				const style = sfc.styles[index];

@@ -6,6 +6,8 @@ const cmds = [
 	'vue-expect-error',
 ];
 
+const directiveCommentReg = /<!--\s+@/;
+
 const plugin: Service = (): ReturnType<Service> => {
 
 	return {
@@ -18,7 +20,7 @@ const plugin: Service = (): ReturnType<Service> => {
 				return;
 
 			const line = document.getText({ start: { line: position.line, character: 0 }, end: position });
-			const cmdStart = line.match(/<!--\s+@/);
+			const cmdStart = line.match(directiveCommentReg);
 			if (!cmdStart)
 				return;
 

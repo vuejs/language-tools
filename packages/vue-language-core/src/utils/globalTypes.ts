@@ -111,6 +111,7 @@ declare function __VLS_pickFunctionalComponentCtx<T, K>(comp: T, compInstance: K
 >;
 type __VLS_AsFunctionOrAny<F> = unknown extends F ? any : ((...args: any) => any) extends F ? F : any;
 
+declare function __VLS_normalizeSlot<S>(s: S): S extends () => infer R ? (props: {}) => R : S;
 declare function __VLS_componentProps<T, K>(comp: T, fnReturn: K):
 	__VLS_PickNotAny<K, {}> extends { __ctx: { props: infer P } } ? NonNullable<P>
 	: T extends (props: infer P, ...args: any) => any ? NonNullable<P> :

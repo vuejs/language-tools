@@ -98,7 +98,7 @@ export function createParsedCommandLine(
 		};
 	}
 	catch (err) {
-		console.warn('Failed to resolve tsconfig path:', tsConfigPath, err);
+		// console.warn('Failed to resolve tsconfig path:', tsConfigPath, err);
 		return {
 			fileNames: [],
 			options: {},

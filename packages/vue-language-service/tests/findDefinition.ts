@@ -71,9 +71,11 @@ function readFiles(dir: string) {
 	return filesText;
 }
 
+const definitionReg = /(\^*)definition:\s*([\S]*),\s*([\S]*),\s*([\S]*)/g;
+
 function findActions(text: string) {
 
-	return [...text.matchAll(/(\^*)definition:\s*([\S]*),\s*([\S]*),\s*([\S]*)/g)].map(flag => {
+	return [...text.matchAll(definitionReg)].map(flag => {
 
 		const offset = flag.index!;
 		const targetFile = flag[2];

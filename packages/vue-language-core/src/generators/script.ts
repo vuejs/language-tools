@@ -734,7 +734,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 					const templateStart = getLength(codes);
 					codes.push(varName);
 					const templateEnd = getLength(codes);
-					codes.push(`: {} as typeof `);
+					codes.push(`: ${varName} as typeof `);
 
 					const scriptStart = getLength(codes);
 					codes.push(varName);

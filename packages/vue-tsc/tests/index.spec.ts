@@ -38,4 +38,5 @@ function runVueTsc(cwd: string) {
 describe(`vue-tsc`, () => {
 	it(`vue-tsc no errors (non-strict-template)`, () => runVueTsc(path.resolve(workspace, './non-strict-template')), 40_000);
 	it(`vue-tsc no errors (strict-template)`, () => runVueTsc(path.resolve(workspace, './strict-template')), 40_000);
+	it(`vue-tsc no errors (#3373)`, () => runVueTsc(path.resolve(workspace, './#3373')), 40_000);
 });

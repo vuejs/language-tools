@@ -86,6 +86,8 @@ function isTsDocument(document: TextDocument) {
 		document.languageId === 'typescriptreact';
 }
 
+const charReg = /\w/;
+
 export function isCharacterTyping(document: TextDocument, options: AutoInsertionContext) {
 
 	const lastCharacter = options.lastChange.text[options.lastChange.text.length - 1];
@@ -106,7 +108,7 @@ export function isCharacterTyping(document: TextDocument, options: AutoInsertion
 		return false;
 	}
 
-	return /\w/.test(lastCharacter) && !/\w/.test(nextCharacter);
+	return charReg.test(lastCharacter) && !charReg.test(nextCharacter);
 }
 
 export function isBlacklistNode(ts: typeof import('typescript/lib/tsserverlibrary'), node: ts.Node, pos: number, allowAccessDotValue: boolean) {
