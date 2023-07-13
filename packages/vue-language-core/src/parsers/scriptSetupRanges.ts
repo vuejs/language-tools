@@ -35,12 +35,7 @@ export function parseScriptSetupRanges(
 	}[] = [];
 	const bindings = parseBindingRanges(ts, ast, false);
 
-	let lastImportNode: ts.Node | undefined;
-
 	ast.forEachChild(node => {
-		if (ts.isImportDeclaration(node) || (ts.isImportEqualsDeclaration(node) && !!node.moduleReference.getText(ast))) {
-			lastImportNode = node;
-		}
 		const isTypeExport = (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) && node.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword);
 		if (
 			!foundNonImportExportNode
@@ -51,7 +46,7 @@ export function parseScriptSetupRanges(
 			&& !ts.isImportEqualsDeclaration(node)
 		) {
 			importSectionEndOffsetWithComment = node.getStart(ast, true);
-			importSectionEndOffsetWithoutComment = lastImportNode?.getEnd() ?? 0;
+			importSectionEndOffsetWithoutComment = node.getFullStart();
 			foundNonImportExportNode = true;
 		}
 	});
