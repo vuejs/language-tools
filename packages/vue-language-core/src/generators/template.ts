@@ -153,7 +153,7 @@ export function generate(
 		const allClasses = new Set<string>();
 
 		for (const block of sfc.styles) {
-			if (block.scoped) {
+			if (block.scoped || vueCompilerOptions.experimentalResolveStyleCssClasses === 'always') {
 				for (const className of block.classNames) {
 					allClasses.add(className.text.substring(1));
 				}
@@ -809,7 +809,7 @@ export function generate(
 
 		generateDirectives(node, var_originalComponent);
 		generateElReferences(node); // <el ref="foo" />
-		if (sfc.styles.some(s => s.scoped)) {
+		if (sfc.styles.some(s => s.scoped || vueCompilerOptions.experimentalResolveStyleCssClasses === 'always')) {
 			generateClassScoped(node);
 		}
 		if (componentCtxVar) {

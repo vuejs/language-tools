@@ -819,6 +819,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 					{ start: className.offset, end: className.offset + className.text.length },
 					'string',
 					false,
+					true,
 				);
 			}
 			codes.push('>;\n');
@@ -837,7 +838,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		codes.push('type __VLS_StyleScopedClasses = {}');
 		for (let i = 0; i < _sfc.styles.length; i++) {
 			const style = _sfc.styles[i];
-			if (!style.scoped) continue;
+			if (!style.scoped && vueCompilerOptions.experimentalResolveStyleCssClasses !== 'always') continue;
 			for (const className of style.classNames) {
 				generateCssClassProperty(
 					i,
@@ -845,6 +846,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 					{ start: className.offset, end: className.offset + className.text.length },
 					'boolean',
 					true,
+					!style.module,
 				);
 			}
 		}
@@ -882,7 +884,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 		return { cssIds };
 
-		function generateCssClassProperty(styleIndex: number, className: string, classRange: TextRange, propertyType: string, optional: boolean) {
+		function generateCssClassProperty(styleIndex: number, className: string, classRange: TextRange, propertyType: string, optional: boolean, referencesCodeLens: boolean) {
 			codes.push(`\n & { `);
 			codes.push([
 				'',
@@ -890,7 +892,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				classRange.start,
 				{
 					references: true,
-					referencesCodeLens: true,
+					referencesCodeLens,
 				},
 			]);
 			codes.push(`'`);
