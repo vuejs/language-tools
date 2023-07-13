@@ -44,9 +44,9 @@ export function parseScriptSetupRanges(
 			// fix https://github.com/vuejs/language-tools/issues/1223
 			&& !ts.isImportEqualsDeclaration(node)
 		) {
-			const commentRagnes = ts.getLeadingCommentRanges(ast.getFullText(), node.getFullStart());
-			if (commentRagnes?.length) {
-				const commentRange = commentRagnes.sort((a, b) => a.pos - b.pos)[0];
+			const commentRanges = ts.getLeadingCommentRanges(ast.getFullText(), node.getFullStart());
+			if (commentRanges?.length) {
+				const commentRange = commentRanges.sort((a, b) => a.pos - b.pos)[0];
 				importSectionEndOffset = commentRange.pos;
 			}
 			else {
