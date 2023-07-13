@@ -1,6 +1,8 @@
 import * as vue from '@vue/language-core';
-import { decorateLanguageService, decorateLanguageServiceHost } from '@vue/typescript';
+import { decorateLanguageService, decorateLanguageServiceHost, getExternalFiles } from '@vue/typescript';
 import type * as ts from 'typescript/lib/tsserverlibrary';
+
+const externalFiles = new WeakMap<ts.server.Project, string[]>();
 
 const init: ts.server.PluginModuleFactory = (modules) => {
 	const { typescript: ts } = modules;
@@ -21,14 +23,20 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 			return info.languageService;
 
 			function getVueCompilerOptions() {
-				const projectName = info.project.getProjectName();
-				if (info.project.fileExists(projectName)) {
-					return vue.createParsedCommandLine(ts, ts.sys, projectName).vueOptions;
+				if (info.project.projectKind === ts.server.ProjectKind.Configured) {
+					const tsconfig = info.project.getProjectName();
+					return vue.createParsedCommandLine(ts, ts.sys, tsconfig).vueOptions;
 				}
 				else {
 					return vue.createParsedCommandLineByJson(ts, ts.sys, info.languageServiceHost.getCurrentDirectory(), {}).vueOptions;
 				}
 			}
+		},
+		getExternalFiles(project) {
+			if (!externalFiles.has(project)) {
+				externalFiles.set(project, getExternalFiles(ts, project, ['.vue']));
+			}
+			return externalFiles.get(project)!;
 		},
 	};
 	return pluginModule;

@@ -2,7 +2,7 @@ import { createLanguageServiceHost, getDocumentRegistry, decorateLanguageService
 import * as vue from '@vue/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
-export { getProgram, decorateLanguageServiceHost } from '@volar/typescript';
+export { getProgram, decorateLanguageServiceHost, getExternalFiles } from '@volar/typescript';
 
 export function createLanguageService(
 	host: vue.TypeScriptLanguageHost,

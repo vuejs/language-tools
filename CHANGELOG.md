@@ -1,9 +1,11 @@
 # Changelog
 
-## 1.8.3 (2023/6/28)
+## 1.8.4 (2023/7/5)
 
-- fix(ts-plugin): tsserver crashes when import > 4MB .vue file ([#3332](https://github.com/vuejs/language-tools/issues/3332))
-- fix(language-server): in specific os `fileExists()` throws ([#3336](https://github.com/vuejs/language-tools/issues/3336))
+- feat(monaco): support for custom file system provider (https://github.com/volarjs/volar.js/pull/50)
+- feat: support auto-complete for template directive comments
+- fix: local component type should override a global component ([#1886](https://github.com/vuejs/language-tools/issues/1886)) ([#3333](https://github.com/vuejs/language-tools/issues/3333)) - thanks @so1ve
+- fix: support type narrowing for components define in script setup ([#3138](https://github.com/vuejs/language-tools/issues/3138)) ([#3350](https://github.com/vuejs/language-tools/issues/3350)) - thanks @so1ve
 
 ---
 
@@ -40,6 +42,11 @@
 		<a href="https://opencollective.com/volarjs">Open Collective</a>
 	</h5>
 </p>
+
+## 1.8.3 (2023/6/28)
+
+- fix(ts-plugin): tsserver crashes when import > 4MB .vue file ([#3332](https://github.com/vuejs/language-tools/issues/3332))
+- fix(language-server): in specific os `fileExists()` throws ([#3336](https://github.com/vuejs/language-tools/issues/3336))
 
 ## 1.8.2 (2023/6/27)
 
