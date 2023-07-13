@@ -15,6 +15,8 @@ interface ProgramContext {
 	languageService: ReturnType<typeof vueTs.createLanguageService>,
 }
 
+const windowsPathReg = /\\/g;
+
 export function createProgram(options: ts.CreateProgramOptions) {
 
 	if (!options.options.noEmit && !options.options.emitDeclarationOnly)
@@ -66,7 +68,7 @@ export function createProgram(options: ts.CreateProgramOptions) {
 				return ctx.projectVersion.toString();
 			},
 			getProjectReferences: () => ctx.options.projectReferences,
-			getCurrentDirectory: () => ctx.options.host!.getCurrentDirectory().replace(/\\/g, '/'),
+			getCurrentDirectory: () => ctx.options.host!.getCurrentDirectory().replace(windowsPathReg, '/'),
 			getCancellationToken: ctx.options.host!.getCancellationToken ? () => ctx.options.host!.getCancellationToken!() : undefined,
 		};
 		const vueTsLs = vueTs.createLanguageService(languageHost, vueCompilerOptions, ts as any, ts.sys);

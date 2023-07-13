@@ -2,6 +2,8 @@ import { FileKind, forEachEmbeddedFile, Service, ServiceContext } from '@volar/l
 import * as vue from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 
+const twoslashReg = /<!--\s*\^\?\s*-->/g;
+
 const plugin: Service = (context: ServiceContext<import('volar-service-typescript').Provide> | undefined, modules) => {
 
 	if (!context || !modules?.typescript)
@@ -18,7 +20,7 @@ const plugin: Service = (context: ServiceContext<import('volar-service-typescrip
 				const inlayHints: vscode.InlayHint[] = [];
 				const languageService = context.inject('typescript/languageService');
 
-				for (const pointer of document.getText(range).matchAll(/<!--\s*\^\?\s*-->/g)) {
+				for (const pointer of document.getText(range).matchAll(twoslashReg)) {
 					const offset = pointer.index! + pointer[0].indexOf('^?') + document.offsetAt(range.start);
 					const position = document.positionAt(offset);
 					hoverOffsets.push([position, document.offsetAt({

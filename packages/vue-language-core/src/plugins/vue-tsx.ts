@@ -7,6 +7,9 @@ import { Sfc, VueLanguagePlugin } from '../types';
 import { FileCapabilities, FileKind } from '@volar/language-core';
 import * as muggle from 'muggle-string';
 
+const templateFormatReg = /^\.template_format\.ts$/;
+const templateStyleCssReg = /^\.template_style\.css$/;
+
 const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOptions, codegenStack }) => {
 
 	const ts = modules.typescript;
@@ -54,7 +57,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 					embeddedFile.mirrorBehaviorMappings = [...tsx.mirrorBehaviorMappings];
 				}
 			}
-			else if (suffix.match(/^\.template_format\.ts$/)) {
+			else if (suffix.match(templateFormatReg)) {
 
 				embeddedFile.parentFileName = fileName + '.template.' + sfc.template?.lang;
 				embeddedFile.kind = FileKind.TextFile;
@@ -86,7 +89,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 					}
 				}
 			}
-			else if (suffix.match(/^\.template_style\.css$/)) {
+			else if (suffix.match(templateStyleCssReg)) {
 
 				embeddedFile.parentFileName = fileName + '.template.' + sfc.template?.lang;
 

@@ -42,7 +42,8 @@ const formatBrackets = {
 	curly: ['0 +', '+ 0;'] as [string, string],
 	event: ['() => ', ';'] as [string, string],
 };
-const validTsVar = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
+const validTsVarReg = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
+const colonReg = /:/g;
 // @ts-ignore
 const transformContext: CompilerDOM.TransformContext = {
 	onError: () => { },
@@ -177,7 +178,7 @@ export function generate(
 	}
 
 	function toCanonicalComponentName(tagText: string) {
-		return validTsVar.test(tagText) ? tagText : capitalize(camelize(tagText.replace(/:/g, '-')));
+		return validTsVarReg.test(tagText) ? tagText : capitalize(camelize(tagText.replace(colonReg, '-')));
 	}
 
 	function getPossibleOriginalComponentName(tagText: string) {
@@ -676,7 +677,7 @@ export function generate(
 		else {
 			codes.push(`let ${var_originalComponent}!: `);
 			for (const componentName of getPossibleOriginalComponentName(tag)) {
-				codes.push(`'${componentName}' extends keyof typeof __VLS_ctx ? typeof __VLS_ctx${validTsVar.test(componentName) ? `.${componentName}` : `['${componentName}']`} : `);
+				codes.push(`'${componentName}' extends keyof typeof __VLS_ctx ? typeof __VLS_ctx${validTsVarReg.test(componentName) ? `.${componentName}` : `['${componentName}']`} : `);
 			}
 			codes.push(`typeof __VLS_resolvedLocalAndGlobalComponents['${toCanonicalComponentName(tag)}'];\n`);
 		}
@@ -1777,7 +1778,7 @@ export function generate(
 
 	function createObjectPropertyCode(a: Code, astHolder?: any): Code[] {
 		const aStr = typeof a === 'string' ? a : a[0];
-		if (validTsVar.test(aStr)) {
+		if (validTsVarReg.test(aStr)) {
 			return [a];
 		}
 		else if (aStr.startsWith('[') && aStr.endsWith(']') && astHolder) {
@@ -1862,7 +1863,7 @@ export function generate(
 
 	function createPropertyAccessCode(a: Code, astHolder?: any): Code[] {
 		const aStr = typeof a === 'string' ? a : a[0];
-		if (!compilerOptions.noPropertyAccessFromIndexSignature && validTsVar.test(aStr)) {
+		if (!compilerOptions.noPropertyAccessFromIndexSignature && validTsVarReg.test(aStr)) {
 			return ['.', a];
 		}
 		else if (aStr.startsWith('[') && aStr.endsWith(']')) {

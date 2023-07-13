@@ -10,6 +10,8 @@ import { parseCssVars } from './utils/parseCssVars';
 import { parseCssClassNames } from './utils/parseCssClassNames';
 import { VueCompilerOptions } from './types';
 
+const jsxReg = /^\.(js|ts)x?$/;
+
 export class VueEmbeddedFile {
 
 	public parentFileName?: string;
@@ -52,7 +54,7 @@ export class VueFile implements VirtualFile {
 	}
 
 	get mainScriptName() {
-		return this._allEmbeddedFiles.value.find(e => e.file.fileName.replace(this.fileName, '').match(/^\.(js|ts)x?$/))?.file.fileName ?? '';
+		return this._allEmbeddedFiles.value.find(e => e.file.fileName.replace(this.fileName, '').match(jsxReg))?.file.fileName ?? '';
 	}
 
 	get embeddedFiles() {
