@@ -1601,6 +1601,7 @@ export function generate(
 
 		if (hasScriptSetupSlots) {
 			codes.push(
+				'__VLS_normalizeSlot(',
 				['', 'template', node.loc.start.offset, capabilitiesPresets.diagnosticOnly],
 				'__VLS_slots[',
 				['', 'template', node.loc.start.offset, capabilitiesPresets.diagnosticOnly],
@@ -1608,7 +1609,7 @@ export function generate(
 				['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly],
 				']',
 				['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly],
-				'?.(',
+				')?.(',
 				['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly],
 				'{\n',
 			);

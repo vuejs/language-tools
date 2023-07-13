@@ -44,7 +44,14 @@ export function parseScriptSetupRanges(
 			// fix https://github.com/vuejs/language-tools/issues/1223
 			&& !ts.isImportEqualsDeclaration(node)
 		) {
-			importSectionEndOffset = node.getStart(ast, true);
+			const commentRagnes = ts.getLeadingCommentRanges(ast.getFullText(), node.getFullStart());
+			if (commentRagnes?.length) {
+				const commentRange = commentRagnes.sort((a, b) => a.pos - b.pos)[0];
+				importSectionEndOffset = commentRange.pos;
+			}
+			else {
+				importSectionEndOffset = node.getStart(ast);
+			}
 			foundNonImportExportNode = true;
 		}
 	});
