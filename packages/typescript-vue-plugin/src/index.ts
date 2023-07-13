@@ -23,9 +23,9 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 			return info.languageService;
 
 			function getVueCompilerOptions() {
-				const projectName = info.project.getProjectName();
-				if (info.project.fileExists(projectName)) {
-					return vue.createParsedCommandLine(ts, ts.sys, projectName).vueOptions;
+				if (info.project.projectKind === ts.server.ProjectKind.Configured) {
+					const tsconfig = info.project.getProjectName();
+					return vue.createParsedCommandLine(ts, ts.sys, tsconfig).vueOptions;
 				}
 				else {
 					return vue.createParsedCommandLineByJson(ts, ts.sys, info.languageServiceHost.getCurrentDirectory(), {}).vueOptions;
