@@ -1,47 +1,83 @@
 # Changelog
 
+## 1.8.5 (2023/7/14)
+
+- 🔥 feat(labs): support for TS memory usage treemap
+- 🔥 perf: properly support TS DocumentRegistry to drastically reduce memory usage in monorepo projects
+- feat(ts-plugin): re-support auto-import
+- fix: remove invalid `volar.action.serverStats` command ([#3366](https://github.com/vuejs/language-tools/issues/3366)) - thanks @yaegassy
+- fix: don't remove comments when comment is in the first line ([#3365](https://github.com/vuejs/language-tools/issues/3365)) - thanks @so1ve
+- fix: allow slots to have no arguments ([#3376](https://github.com/vuejs/language-tools/issues/3376)) - thanks @so1ve
+- fix: camel case components is not recognized as used ([#3377](https://github.com/vuejs/language-tools/issues/3377)) - thanks @so1ve
+- perf: hoist regexp if possible ([#3378](https://github.com/vuejs/language-tools/issues/3378)) - thanks @so1ve
+- fix: non scoped classes resolution regression ([#3381](https://github.com/vuejs/language-tools/issues/3381)) - thanks @maIIady
+- feat: don't to request reload editor when server options changed ([#3393](https://github.com/vuejs/language-tools/issues/3393)) - thanks @zardoy
+- feat: don't hide output channel on server restart ([#3401](https://github.com/vuejs/language-tools/issues/3401)) - thanks @zardoy
+
+**Breaking changes**
+
+- Deprecate language server `json.customBlockSchemaUrls` option ([#3398](https://github.com/vuejs/language-tools/issues/3398))
+
+### Full-time Support by
+
+<table>
+<tbody>
+  <tr>
+    <td>
+		<a href="https://stackblitz.com/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/StackBlitz.png" height="80" /></a>
+	</td>
+    <td><h4><a href="https://blog.stackblitz.com/posts/webcontainer-api-is-here/">WebContainer API is here.</a></h4></td>
+  </tr>
+</tbody>
+</table>
+
+### Our Platinum Sponsors
+
+<table>
+<tbody>
+  <tr>
+    <td>
+		<a href="https://volta.net/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/volta.svg" height="60" /></a>
+	</td>
+    <td>Supercharged GitHub experience</td>
+  </tr>
+  <tr>
+    <td>
+		<a href="https://vuejs.org/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/vue.png" height="80" /></a>
+	</td>
+    <td>The Progressive
+JavaScript Framework</td>
+  </tr>
+</tbody>
+</table>
+
+### Our Silver Sponsors
+
+<table>
+<tbody>
+  <tr>
+    <td>
+		<p align="center">
+    <a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/prefect.svg" height="40" /></a>
+</p>
+	</td>
+  </tr>
+</tbody>
+</table>
+
+<h5>
+	Add you via
+	<a href="https://github.com/sponsors/johnsoncodehk">GitHub Sponsors</a>
+	or
+	<a href="https://opencollective.com/volarjs">Open Collective</a>
+</h5>
+
 ## 1.8.4 (2023/7/5)
 
 - feat(monaco): support for custom file system provider (https://github.com/volarjs/volar.js/pull/50)
 - feat: support auto-complete for template directive comments
 - fix: local component type should override a global component ([#1886](https://github.com/vuejs/language-tools/issues/1886)) ([#3333](https://github.com/vuejs/language-tools/issues/3333)) - thanks @so1ve
 - fix: support type narrowing for components define in script setup ([#3138](https://github.com/vuejs/language-tools/issues/3138)) ([#3350](https://github.com/vuejs/language-tools/issues/3350)) - thanks @so1ve
-
----
-
-<h3 align="center">Full-time Support by</h3>
-<br />
-
-<p align="center">
-	<span>
-		<a href="https://stackblitz.com/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/StackBlitz.png" height="80" /></a>
-		<h4 align="center"><a href="https://blog.stackblitz.com/posts/webcontainer-api-is-here/">WebContainer API is here.</a></h4>
-	</span>
-</p>
-<br />
-
-<h3 align="center">Our Sponsors ⭐✨</h3>
-<br />
-
-<p align="center">
-	<a href="https://volta.net/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/volta.svg" height="60" /></a>
-    <a href="https://vuejs.org/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/vue.png" height="80" /></a>
-</p>
-<br />
-
-<p align="center">
-    <a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/prefect.svg" height="40" /></a>
-</p>
-<br />
-
-<p align="center">
-	<h5 align="center">
-		Add you via
-		<a href="https://github.com/sponsors/johnsoncodehk">GitHub Sponsors</a>
-		or
-		<a href="https://opencollective.com/volarjs">Open Collective</a>
-	</h5>
-</p>
 
 ## 1.8.3 (2023/6/28)
 
