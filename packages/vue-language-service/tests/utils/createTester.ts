@@ -7,7 +7,7 @@ import { FileType, TypeScriptLanguageHost, createLanguageService } from '@volar/
 
 const uriToFileName = (uri: string) => URI.parse(uri).fsPath.replace(/\\/g, '/');
 const fileNameToUri = (fileName: string) => URI.file(fileName).toString();
-const testRoot = path.resolve(__dirname, '../../../vue-test-workspace');
+const testRoot = path.resolve(__dirname, '../../../vue-test-workspace').replace(/\\/g, '/');
 
 export const rootUri = URI.file(testRoot);
 export const tester = createTester(testRoot);
