@@ -28,6 +28,7 @@ type CreateLanguageClient = (
 	langs: lsp.DocumentFilter[],
 	initOptions: VueServerInitializationOptions,
 	port: number,
+	outputChannel: vscode.OutputChannel,
 ) => lsp.BaseLanguageClient;
 
 export async function activate(context: vscode.ExtensionContext, createLc: CreateLanguageClient) {
@@ -62,6 +63,9 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 	vscode.commands.executeCommand('setContext', 'volar.activated', true);
 
+	const semanticOutputChannel = vscode.window.createOutputChannel('Vue Semantic Server');
+	const syntacticOutputChannel = vscode.window.createOutputChannel('Vue Syntactic Server');
+
 	[semanticClient, syntacticClient] = await Promise.all([
 		createLc(
 			'vue-semantic-server',
@@ -69,6 +73,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			getDocumentSelector(context, ServerMode.PartialSemantic),
 			await getInitializationOptions(ServerMode.PartialSemantic, context),
 			6009,
+			semanticOutputChannel
 		),
 		createLc(
 			'vue-syntactic-server',
@@ -76,6 +81,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			getDocumentSelector(context, ServerMode.Syntactic),
 			await getInitializationOptions(ServerMode.Syntactic, context),
 			6011,
+			syntacticOutputChannel
 		)
 	]);
 
@@ -149,6 +155,9 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		context.subscriptions.push(vscode.commands.registerCommand('volar.action.restartServer', async () => {
 
 			await Promise.all(clients.map(client => client.stop()));
+
+			semanticOutputChannel.clear();
+			syntacticOutputChannel.clear();
 
 			semanticClient.clientOptions.initializationOptions = await getInitializationOptions(ServerMode.PartialSemantic, context, semanticClient.clientOptions.initializationOptions);
 			syntacticClient.clientOptions.initializationOptions = await getInitializationOptions(ServerMode.Syntactic, context, syntacticClient.clientOptions.initializationOptions);

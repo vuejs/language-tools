@@ -35,6 +35,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		documentSelector,
 		initOptions,
 		port,
+		outputChannel
 	) => {
 
 		initOptions.cancellationPipeName = cancellationPipeName;
@@ -92,6 +93,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			middleware,
 			documentSelector: documentSelector,
 			initializationOptions: initOptions,
+			outputChannel
 		};
 		const client = new _LanguageClient(
 			id,
