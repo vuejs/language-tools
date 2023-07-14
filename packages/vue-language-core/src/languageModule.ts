@@ -41,7 +41,7 @@ export function createLanguage(
 		},
 		resolveHost(host) {
 			const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(sharedTypes.getTypesCode(vueCompilerOptions));
-			const sharedTypesFileName = path.join(host.getCurrentDirectory(), sharedTypes.baseName);
+			const sharedTypesFileName = path.join(host.rootPath, sharedTypes.baseName);
 			return {
 				...host,
 				getScriptFileNames() {

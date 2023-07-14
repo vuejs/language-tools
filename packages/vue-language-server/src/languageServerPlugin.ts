@@ -65,7 +65,7 @@ export function createServerPlugin(connection: Connection) {
 								vueOptions = vue2.createParsedCommandLine(ts, sys, ctx.project.tsConfig).vueOptions;
 							}
 							else if (typeof ctx?.project.tsConfig === 'object' && ts) {
-								vueOptions = vue2.createParsedCommandLineByJson(ts, sys, ctx.host.getCurrentDirectory(), ctx.project.tsConfig).vueOptions;
+								vueOptions = vue2.createParsedCommandLineByJson(ts, sys, ctx.host.rootPath, ctx.project.tsConfig).vueOptions;
 							}
 							newSysVersion = await sys.sync();
 						}
@@ -126,7 +126,7 @@ export function createServerPlugin(connection: Connection) {
 							host,
 							hostToVueOptions.get(host)!,
 							{},
-							host.getCurrentDirectory() + '/tsconfig.json.global.vue',
+							host.rootPath + '/tsconfig.json.global.vue',
 							ts,
 						);
 						checkers.set(host, checker);

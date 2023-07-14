@@ -59,6 +59,8 @@ export function createProgram(options: ts.CreateProgramOptions) {
 			scriptSnapshot: ts.IScriptSnapshot,
 		}>();
 		const languageHost: vue.TypeScriptLanguageHost = {
+			workspacePath: ctx.options.host!.getCurrentDirectory().replace(windowsPathReg, '/'),
+			rootPath: ctx.options.host!.getCurrentDirectory().replace(windowsPathReg, '/'),
 			getCompilationSettings: () => ctx.options.options,
 			getScriptFileNames: () => {
 				return ctx.options.rootNames as string[];
@@ -68,7 +70,6 @@ export function createProgram(options: ts.CreateProgramOptions) {
 				return ctx.projectVersion.toString();
 			},
 			getProjectReferences: () => ctx.options.projectReferences,
-			getCurrentDirectory: () => ctx.options.host!.getCurrentDirectory().replace(windowsPathReg, '/'),
 			getCancellationToken: ctx.options.host!.getCancellationToken ? () => ctx.options.host!.getCancellationToken!() : undefined,
 		};
 		const vueTsLs = vueTs.createLanguageService(languageHost, vueCompilerOptions, ts as any, ts.sys);

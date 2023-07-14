@@ -7,7 +7,7 @@ import { activate as commonActivate, deactivate as commonDeactivate, getDocument
 import { middleware } from './middleware';
 import * as serverLib from '@vue/language-server';
 import { config } from './config';
-import type { ExportsInfoForLabs } from '@volar/vscode';
+import { ExportsInfoForLabs, supportLabsVersion } from '@volar/vscode';
 
 export async function activate(context: vscode.ExtensionContext) {
 
@@ -112,7 +112,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	return {
 		volarLabs: {
-			version: '1.6.2',
+			version: supportLabsVersion,
 			codegenStackSupport: true,
 			languageClients,
 			languageServerProtocol: serverLib,

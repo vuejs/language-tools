@@ -20,9 +20,10 @@ function createTester(root: string) {
 	parsedCommandLine.fileNames = parsedCommandLine.fileNames.map(fileName => fileName.replace(/\\/g, '/'));
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
 	const host: TypeScriptLanguageHost = {
+		workspacePath: root,
+		rootPath: root,
 		getProjectVersion: () => '0',
 		getScriptFileNames: () => parsedCommandLine.fileNames,
-		getCurrentDirectory: () => root.replace(/\\/g, '/'),
 		getCompilationSettings: () => parsedCommandLine.options,
 		getScriptSnapshot,
 	};
@@ -34,6 +35,7 @@ function createTester(root: string) {
 	const languageService = createLanguageService(
 		{ typescript: ts as any },
 		{
+			workspaceUri: rootUri,
 			rootUri,
 			uriToFileName,
 			fileNameToUri,

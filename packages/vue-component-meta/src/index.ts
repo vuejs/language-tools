@@ -70,7 +70,8 @@ function createComponentMetaCheckerWorker(
 
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
 	const _host: vue.TypeScriptLanguageHost = {
-		getCurrentDirectory: () => rootPath,
+		workspacePath: rootPath,
+		rootPath: rootPath,
 		getProjectVersion: () => projectVersion.toString(),
 		getCompilationSettings: () => parsedCommandLine.options,
 		getScriptFileNames: () => fileNames,
