@@ -1,12 +1,18 @@
-import { LanguageServicePlugin } from '@volar/language-service';
-import { forEachEmbeddedFile, VirtualFile, VueFile, walkElementNodes } from '@volar/vue-language-core';
-import { join } from 'path';
-import type { ElementNode } from 'packages/vue-language-core/src/utils/vue2TemplateCompiler';
+import { Service, ServiceContext } from '@volar/language-service';
+import type { ElementNode } from '@vue/compiler-dom';
+import { VirtualFile, VueFile, forEachEmbeddedFile, walkElementNodes } from '@vue/language-core';
+import { posix as path } from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
+import type { Provide } from 'volar-service-typescript';
 
-export default function (): LanguageServicePlugin {
+export default function (): Service {
 
-	return (ctx) => {
+	return (ctx: ServiceContext<Provide> | undefined, modules): ReturnType<Service> => {
+
+		if (!modules?.typescript)
+			return {};
+
+		const ts = modules.typescript;
 
 		return {
 
@@ -80,8 +86,8 @@ export default function (): LanguageServicePlugin {
 						.filter(mapping => isRangeInside(sourceRange, mapping.sourceRange))
 						.filter(({ generatedRange: [start, end] }) => !!virtualFile!.snapshot.getText(start, end).trim());
 				});
-				const { languageService, languageServiceHost } = ctx!.typescript!;
-				const ts = ctx!.typescript!.module;
+				const languageService = ctx!.inject('typescript/languageService');
+				const languageServiceHost = ctx!.inject('typescript/languageServiceHost');
 				const sourceFile = virtualFile && languageService.getProgram()!.getSourceFile(virtualFile.fileName)!;
 				const sourceFileKind = virtualFile && languageServiceHost.getScriptKind?.(virtualFile.fileName);
 				const handledProps = new Set<string>();
@@ -122,7 +128,7 @@ export default function (): LanguageServicePlugin {
 					emits?.length && `const { ${emitNames.join(', ')} } = defineEmits<{ \n\t${emitTypes.join('\n\t')}\n}>()`
 				]);
 
-				const initialIndentSetting = await ctx!.configurationHost!.getConfiguration('volar.format.initialIndent') as Record<string, boolean>;
+				const initialIndentSetting = await ctx!.env.getConfiguration!('volar.format.initialIndent') as Record<string, boolean>;
 
 				const newScriptTag = scriptContents.length
 					? constructTag('script', scriptAttributes, isInitialIndentNeeded(ts, sourceFileKind!, initialIndentSetting), scriptContents.join('\n'))
@@ -142,7 +148,7 @@ export default function (): LanguageServicePlugin {
 				}
 				const extractedComponentName = `Extracted`;
 				const extractedFileName = `${extractedComponentName}.vue`;
-				const newUri = join(document.uri, '..', extractedFileName);
+				const newUri = path.join(document.uri, '..', extractedFileName);
 				return [
 					{
 						title: 'Extract into new dumb component',
