@@ -24,11 +24,20 @@ export function createLanguage(
 		vueCompilerOptions,
 		codegenStack,
 	);
+	const allowLanguageIds = new Set(['vue']);
+
+	if (vueCompilerOptions.extensions.includes('.md')) {
+		allowLanguageIds.add('markdown');
+	}
+	if (vueCompilerOptions.extensions.includes('.html')) {
+		allowLanguageIds.add('html');
+	}
+
 	const languageModule: Language<VueFile> = {
 		createVirtualFile(fileName, snapshot, languageId) {
 			if (
-				languageId === 'vue'
-				|| vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))
+				(languageId && allowLanguageIds.has(languageId))
+				|| (!languageId && vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext)))
 			) {
 				return new VueFile(fileName, snapshot, vueCompilerOptions, vueLanguagePlugin, ts, codegenStack);
 			}
