@@ -18,5 +18,8 @@
 	"dependencies": {
 		"@volar/source-map": "~1.9.0",
 		"volar-service-pug": "0.0.10"
+	},
+	"engines": {
+		"node": ">=16.0.0"
 	}
 }

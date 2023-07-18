@@ -22,5 +22,8 @@
 	},
 	"dependencies": {
 		"vscode-languageserver-textdocument": "^1.0.8"
+	},
+	"engines": {
+		"node": ">=16.0.0"
 	}
 }

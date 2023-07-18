@@ -39,5 +39,8 @@
 		"@volar/kit": "~1.9.0",
 		"vscode-languageserver-protocol": "^3.17.3",
 		"vscode-uri": "^3.0.7"
+	},
+	"engines": {
+		"node": ">=16.0.0"
 	}
 }
