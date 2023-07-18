@@ -28,10 +28,7 @@ export function createLanguage(
 		createVirtualFile(fileName, snapshot, languageId) {
 			if (
 				languageId === 'vue'
-				|| (
-					!languageId
-					&& vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))
-				)
+				|| vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))
 			) {
 				return new VueFile(fileName, snapshot, vueCompilerOptions, vueLanguagePlugin, ts, codegenStack);
 			}
