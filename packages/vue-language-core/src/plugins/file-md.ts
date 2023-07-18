@@ -1,7 +1,14 @@
 import { buildMappings, Segment, SourceMap, toString } from '@volar/source-map';
-import { SFCBlock } from '@vue/compiler-sfc';
+import type { SFCBlock } from '@vue/compiler-sfc';
 import { VueLanguagePlugin } from '../types';
 import { parse } from '../utils/parseSfc';
+
+const codeblockReg = /```[\s\S]+?```/g;
+const inlineCodeblockReg = /`[^\n`]+?`/g;
+const scriptSetupReg = /\\\<[\s\S]+?\>\n?/g;
+const sfcBlockReg = /\<(script|style)\b[\s\S]*?\>([\s\S]*?)\<\/\1\>/g;
+const angleBracketReg = /\<\S*\:\S*\>/g;
+const linkReg = /\[[\s\S]*?\]\([\s\S]*?\)/g;
 
 const plugin: VueLanguagePlugin = () => {
 
@@ -15,36 +22,35 @@ const plugin: VueLanguagePlugin = () => {
 
 				content = content
 					// code block
-					.replace(/```[\s\S]+?```/g, match => '```' + ' '.repeat(match.length - 6) + '```')
+					.replace(codeblockReg, match => '```' + ' '.repeat(match.length - 6) + '```')
 					// inline code block
-					.replace(/`[^\n`]+?`/g, match => `\`${' '.repeat(match.length - 2)}\``)
+					.replace(inlineCodeblockReg, match => `\`${' '.repeat(match.length - 2)}\``)
 					// # \<script setup>
-					.replace(/\\\<[\s\S]+?\>\n?/g, match => ' '.repeat(match.length));
+					.replace(scriptSetupReg, match => ' '.repeat(match.length));
 
-				const sfcBlockReg = /\<(script|style)\b[\s\S]*?\>([\s\S]*?)\<\/\1\>/g;
-				const codeGen: Segment[] = [];
+				const codes: Segment[] = [];
 
 				for (const match of content.matchAll(sfcBlockReg)) {
 					if (match.index !== undefined) {
 						const matchText = match[0];
-						codeGen.push([matchText, undefined, match.index]);
-						codeGen.push('\n\n');
+						codes.push([matchText, undefined, match.index]);
+						codes.push('\n\n');
 						content = content.substring(0, match.index) + ' '.repeat(matchText.length) + content.substring(match.index + matchText.length);
 					}
 				}
 
 				content = content
 					// angle bracket: <http://foo.com>
-					.replace(/\<\S*\:\S*\>/g, match => ' '.repeat(match.length))
+					.replace(angleBracketReg, match => ' '.repeat(match.length))
 					// [foo](http://foo.com)
-					.replace(/\[[\s\S]*?\]\([\s\S]*?\)/g, match => ' '.repeat(match.length));
+					.replace(linkReg, match => ' '.repeat(match.length));
 
-				codeGen.push('<template>\n');
-				codeGen.push([content, undefined, 0]);
-				codeGen.push('\n</template>');
+				codes.push('<template>\n');
+				codes.push([content, undefined, 0]);
+				codes.push('\n</template>');
 
-				const file2VueSourceMap = new SourceMap(buildMappings(codeGen));
-				const sfc = parse(toString(codeGen));
+				const file2VueSourceMap = new SourceMap(buildMappings(codes));
+				const sfc = parse(toString(codes));
 
 				if (sfc.descriptor.template) {
 					transformRange(sfc.descriptor.template);

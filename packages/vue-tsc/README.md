@@ -4,7 +4,7 @@ Install: `npm i vue-tsc -D`
 
 Usage: `vue-tsc --noEmit && vite build`
 
-Vue 3 command line Type-Checking tool base on IDE plugin [Volar](https://github.com/johnsoncodehk/volar).
+Vue 3 command line Type-Checking tool base on IDE plugin [Volar](https://github.com/vuejs/language-tools).
 
 Roadmap:
 
@@ -25,7 +25,7 @@ Build dts:
 
 `vue-tsc --declaration --emitDeclarationOnly`
 
-Check out https://github.com/johnsoncodehk/volar/discussions/640#discussioncomment-1555479 for example repo.
+Check out https://github.com/vuejs/language-tools/discussions/640#discussioncomment-1555479 for example repo.
 
 ## Sponsors
 

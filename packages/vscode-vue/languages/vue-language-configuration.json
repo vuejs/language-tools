@@ -135,10 +135,10 @@
 			}
 		}
 	],
-	// https://github.com/johnsoncodehk/volar/issues/1762
+	// https://github.com/vuejs/language-tools/issues/1762
 	"indentationRules": {
 		// "increaseIndentPattern": "<(?!\\?|(?:area|base|br|col|frame|hr|html|img|input|keygen|link|menuitem|meta|param|source|track|wbr|script|style)\\b|[^>]*\\/>)([-_\\.A-Za-z0-9]+)(?=\\s|>)\\b[^>]*>(?!.*<\\/\\1>)|<!--(?!.*-->)|\\{[^}\"']*$",
-		// add (?!\\s*\\() to fix https://github.com/johnsoncodehk/volar/issues/1847#issuecomment-1246101071
+		// add (?!\\s*\\() to fix https://github.com/vuejs/language-tools/issues/1847#issuecomment-1246101071
 		"increaseIndentPattern": "<(?!\\?|(?:area|base|br|col|frame|hr|html|img|input|keygen|link|menuitem|meta|param|source|track|wbr|script|style)\\b|[^>]*\\/>)([-_\\.A-Za-z0-9]+)(?=\\s|>)\\b[^>]*>(?!\\s*\\()(?!.*<\\/\\1>)|<!--(?!.*-->)|\\{[^}\"']*$",
 		"decreaseIndentPattern": "^\\s*(<\\/(?!html)[-_\\.A-Za-z0-9]+\\b[^>]*>|-->|\\})"
 	}

@@ -1,76 +1,77 @@
-import createCssPlugin from '@volar-plugins/css';
-import createEmmetPlugin from '@volar-plugins/emmet';
-import createHtmlPlugin from '@volar-plugins/html';
-import createJsonPlugin from '@volar-plugins/json';
-import createPugPlugin from '@volar-plugins/pug';
-import createTsPlugin from '@volar-plugins/typescript';
-import createTsTqPlugin from '@volar-plugins/typescript-twoslash-queries';
-import * as vue from '@volar/vue-language-core';
-import type * as html from 'vscode-html-languageservice';
-import * as vscode from 'vscode-languageserver-protocol';
-import createVuePlugin from './plugins/vue';
-import createAutoDotValuePlugin from './plugins/vue-autoinsert-dotvalue';
-import createReferencesCodeLensPlugin from './plugins/vue-codelens-references';
-import createTwoslashQueries from './plugins/vue-twoslash-queries';
-import createVueExtractFilePlugin from './plugins/vue-extract-file';
-import createVueTemplateLanguagePlugin from './plugins/vue-template';
-import createVisualizeHiddenCallbackParamPlugin from './plugins/vue-visualize-hidden-callback-param';
-import type { Data } from '@volar-plugins/typescript/out/services/completions/basic';
+import { Config, Service } from '@volar/language-service';
+import * as vue from '@vue/language-core';
+import { capitalize, hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { Config, LanguageServicePluginInstance } from '@volar/language-service';
-import { hyphenate } from '@vue/shared';
-
-import createPugFormatPlugin from '@volar-plugins/pug-beautify';
-import createAutoWrapParenthesesPlugin from './plugins/vue-autoinsert-parentheses';
-import createAutoAddSpacePlugin from './plugins/vue-autoinsert-space';
-import { TagNameCasing, VueCompilerOptions } from './types';
+import createCssService from 'volar-service-css';
+import createEmmetService from 'volar-service-emmet';
+import createHtmlService from 'volar-service-html';
+import createJsonService from 'volar-service-json';
+import createPugService from 'volar-service-pug';
+import createPugFormatService from 'volar-service-pug-beautify';
+import createTsService from 'volar-service-typescript';
+import createTsTqService from 'volar-service-typescript-twoslash-queries';
+import type { Data } from 'volar-service-typescript/out/features/completions/basic';
+import type * as html from 'vscode-html-languageservice';
+import type * as vscode from 'vscode-languageserver-protocol';
 import { getNameCasing } from './ideFeatures/nameCasing';
+import createVueService from './plugins/vue';
+import createAutoDotValueService from './plugins/vue-autoinsert-dotvalue';
+import createAutoWrapParenthesesService from './plugins/vue-autoinsert-parentheses';
+import createAutoAddSpaceService from './plugins/vue-autoinsert-space';
+import createReferencesCodeLensService from './plugins/vue-codelens-references';
+import createVueTemplateLanguageService from './plugins/vue-template';
+import createVueTqService from './plugins/vue-twoslash-queries';
+import createVisualizeHiddenCallbackParamService from './plugins/vue-visualize-hidden-callback-param';
+import createDirectiveCommentsService from './plugins/vue-directive-comments';
+import { TagNameCasing, VueCompilerOptions } from './types';
 
 export interface Settings {
-	json?: Parameters<typeof createJsonPlugin>[0];
+	json?: Parameters<typeof createJsonService>[0];
 }
 
 export function resolveConfig(
-	config: Config, // volar.config.js
-	ts: typeof import('typescript/lib/tsserverlibrary'),
-	compilerOptions: ts.CompilerOptions,
-	vueCompilerOptions: Partial<VueCompilerOptions>,
-	settings?: Settings,
+	config: Config,
+	compilerOptions: ts.CompilerOptions = {},
+	vueCompilerOptions: Partial<vue.VueCompilerOptions> = {},
+	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
+	codegenStack: boolean = false,
 ) {
 
-	const resolvedVueOptions = vue.resolveVueCompilerOptions(vueCompilerOptions);
-	const vueLanguageModules = vue.createLanguageModules(ts, compilerOptions, resolvedVueOptions);
+	const resolvedVueCompilerOptions = vue.resolveVueCompilerOptions(vueCompilerOptions);
+	const vueLanguageModules = vue.createLanguages(compilerOptions, resolvedVueCompilerOptions, ts, codegenStack);
 
 	config.languages = Object.assign({}, vueLanguageModules, config.languages);
-	config.plugins = resolvePlugins(config.plugins, resolvedVueOptions, settings);
+	config.services = resolvePlugins(config.services, resolvedVueCompilerOptions);
 
 	return config;
 }
 
+const unicodeReg = /\\u/g;
+
 function resolvePlugins(
-	plugins: Config['plugins'],
+	services: Config['services'],
 	vueCompilerOptions: VueCompilerOptions,
-	settings?: Settings,
 ) {
 
-	const originalTsPlugin = plugins?.typescript ?? createTsPlugin();
+	const originalTsPlugin: Service = services?.typescript ?? createTsService();
 
-	plugins ??= {};
-	plugins.typescript = (_context): LanguageServicePluginInstance => {
+	services ??= {};
+	services.typescript = (_context, modules): ReturnType<Service> => {
 
-		const base = typeof originalTsPlugin === 'function' ? originalTsPlugin(_context) : originalTsPlugin;
+		const base = typeof originalTsPlugin === 'function' ? originalTsPlugin(_context, modules) : originalTsPlugin;
 
-		if (!_context?.typescript)
+		if (!_context || !modules?.typescript)
 			return base;
 
-		const ts = _context.typescript.module;
-		const autoImportPositions = new WeakSet<vscode.Position>();
+		const ts = modules.typescript;
+		const transformedItem = new WeakSet<vscode.CompletionItem>();
 
 		return {
 			...base,
-			resolveEmbeddedRange(range) {
-				if (autoImportPositions.has(range.start) && autoImportPositions.has(range.end))
-					return range;
+			transformCompletionItem(item) {
+				if (transformedItem.has(item)) {
+					return item;
+				}
 			},
 			async provideCompletionItems(document, position, context, item) {
 				const result = await base.provideCompletionItems?.(document, position, context, item);
@@ -83,23 +84,25 @@ function resolvePlugins(
 					);
 
 					// handle component auto-import patch
+					let casing: Awaited<ReturnType<typeof getNameCasing>> | undefined;
+
 					for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
 						const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
 						if (virtualFile instanceof vue.VueFile) {
 							const isAutoImport = !!map.toSourcePosition(position, data => typeof data.completion === 'object' && !!data.completion.autoImportOnly);
 							if (isAutoImport) {
-								result.items.forEach(item => {
+								const source = _context.documents.getVirtualFileByUri(document.uri)[1];
+								for (const item of result.items) {
 									item.data.__isComponentAutoImport = true;
-								});
+								}
 
 								// fix #2458
-								const source = _context.documents.getVirtualFileByUri(document.uri)[1];
-								if (source && _context.typescript) {
-									const casing = await getNameCasing(_context, _context.typescript, _context.fileNameToUri(source.fileName));
+								if (source) {
+									casing ??= await getNameCasing(ts, _context, _context.env.fileNameToUri(source.fileName), vueCompilerOptions);
 									if (casing.tag === TagNameCasing.Kebab) {
-										result.items.forEach(item => {
+										for (const item of result.items) {
 											item.filterText = hyphenate(item.filterText ?? item.label);
-										});
+										}
 									}
 								}
 							}
@@ -114,57 +117,59 @@ function resolvePlugins(
 
 				const itemData = item.data as { uri?: string; } | undefined;
 
+				let newName: string | undefined;
+
 				if (itemData?.uri && item.additionalTextEdits) {
 					patchAdditionalTextEdits(itemData.uri, item.additionalTextEdits);
 				}
 
-				if (
-					itemData?.uri
-					&& _context.typescript
-					&& item.textEdit?.newText && /\w*Vue$/.test(item.textEdit.newText)
-					&& item.additionalTextEdits?.length === 1 && item.additionalTextEdits[0].newText.indexOf('import ' + item.textEdit.newText + ' from ') >= 0
-					&& (await _context.configurationHost?.getConfiguration<boolean>('volar.completion.normalizeComponentImportName') ?? true)
-				) {
-					let newName = item.textEdit.newText.slice(0, -'Vue'.length);
-					newName = newName[0].toUpperCase() + newName.substring(1);
-					if (newName === 'Index') {
-						const tsItem = (item.data as Data).originalItem;
-						if (tsItem.source) {
-							const dirs = tsItem.source.split('/');
-							if (dirs.length >= 3) {
-								newName = dirs[dirs.length - 2];
-								newName = newName[0].toUpperCase() + newName.substring(1);
+				for (const ext of vueCompilerOptions.extensions) {
+					const suffix = capitalize(ext.substring('.'.length)); // .vue -> Vue
+					if (
+						itemData?.uri
+						&& item.textEdit?.newText.endsWith(suffix)
+						&& item.additionalTextEdits?.length === 1 && item.additionalTextEdits[0].newText.indexOf('import ' + item.textEdit.newText + ' from ') >= 0
+						&& (await _context.env.getConfiguration?.<boolean>('vue.complete.normalizeComponentImportName') ?? true)
+					) {
+						newName = item.textEdit.newText.slice(0, -suffix.length);
+						newName = newName[0].toUpperCase() + newName.substring(1);
+						if (newName === 'Index') {
+							const tsItem = (item.data as Data).originalItem;
+							if (tsItem.source) {
+								const dirs = tsItem.source.split('/');
+								if (dirs.length >= 3) {
+									newName = dirs[dirs.length - 2];
+									newName = newName[0].toUpperCase() + newName.substring(1);
+								}
+							}
+						}
+						item.additionalTextEdits[0].newText = item.additionalTextEdits[0].newText.replace(
+							'import ' + item.textEdit.newText + ' from ',
+							'import ' + newName + ' from ',
+						);
+						item.textEdit.newText = newName;
+						const source = _context.documents.getVirtualFileByUri(itemData.uri)[1];
+						if (source) {
+							const casing = await getNameCasing(ts, _context, _context.env.fileNameToUri(source.fileName), vueCompilerOptions);
+							if (casing.tag === TagNameCasing.Kebab) {
+								item.textEdit.newText = hyphenate(item.textEdit.newText);
 							}
 						}
 					}
-					item.additionalTextEdits[0].newText = item.additionalTextEdits[0].newText.replace(
-						'import ' + item.textEdit.newText + ' from ',
-						'import ' + newName + ' from ',
-					);
-					item.textEdit.newText = newName;
-					const source = _context.documents.getVirtualFileByUri(itemData.uri)[1];
-					if (source) {
-						const casing = await getNameCasing(_context, _context.typescript, _context.fileNameToUri(source.fileName));
-						if (casing.tag === TagNameCasing.Kebab) {
-							item.textEdit.newText = hyphenate(item.textEdit.newText);
-						}
+					else if (item.textEdit?.newText && new RegExp(`import \\w*${suffix}\\$1 from [\\S\\s]*`).test(item.textEdit.newText)) {
+						// https://github.com/vuejs/language-tools/issues/2286
+						item.textEdit.newText = item.textEdit.newText.replace(`${suffix}$1`, '$1');
 					}
-				}
-				else if (
-					item.textEdit?.newText && /import \w*Vue\$1 from \S*/.test(item.textEdit.newText)
-					&& !item.additionalTextEdits?.length
-				) {
-					// https://github.com/johnsoncodehk/volar/issues/2286
-					item.textEdit.newText = item.textEdit.newText.replace('Vue$1', '');
 				}
 
 				const data: Data = item.data;
 				if (item.data?.__isComponentAutoImport && data && item.additionalTextEdits?.length && item.textEdit) {
+					let transformed = false;
 					for (const [_, map] of _context.documents.getMapsByVirtualFileUri(data.uri)) {
 						const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
 						if (virtualFile instanceof vue.VueFile) {
 							const sfc = virtualFile.sfc;
-							const componentName = item.textEdit.newText;
+							const componentName = newName ?? item.textEdit.newText;
 							const textDoc = _context.documents.getDocumentByFileName(virtualFile.snapshot, virtualFile.fileName);
 							if (sfc.scriptAst && sfc.script) {
 								const _scriptRanges = vue.scriptRanges.parseScriptRanges(ts, sfc.scriptAst, !!sfc.scriptSetup, true);
@@ -181,16 +186,15 @@ function resolvePlugins(
 											] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
 										};
 										const printText = printer.printNode(ts.EmitHint.Expression, newNode, sfc.scriptAst);
-										const editRange = vscode.Range.create(
-											textDoc.positionAt(sfc.script.startTagEnd + exportDefault.componentsOption.start),
-											textDoc.positionAt(sfc.script.startTagEnd + exportDefault.componentsOption.end),
-										);
-										autoImportPositions.add(editRange.start);
-										autoImportPositions.add(editRange.end);
-										item.additionalTextEdits.push(vscode.TextEdit.replace(
-											editRange,
-											unescape(printText.replace(/\\u/g, '%u')),
-										));
+										const editRange: vscode.Range = {
+											start: textDoc.positionAt(sfc.script.startTagEnd + exportDefault.componentsOption.start),
+											end: textDoc.positionAt(sfc.script.startTagEnd + exportDefault.componentsOption.end),
+										};
+										transformed = true;
+										item.additionalTextEdits.push({
+											range: editRange,
+											newText: unescape(printText.replace(unicodeReg, '%u')),
+										});
 									}
 									else if (exportDefault.args && exportDefault.argsNode) {
 										const newNode: typeof exportDefault.argsNode = {
@@ -201,20 +205,22 @@ function resolvePlugins(
 											] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
 										};
 										const printText = printer.printNode(ts.EmitHint.Expression, newNode, sfc.scriptAst);
-										const editRange = vscode.Range.create(
-											textDoc.positionAt(sfc.script.startTagEnd + exportDefault.args.start),
-											textDoc.positionAt(sfc.script.startTagEnd + exportDefault.args.end),
-										);
-										autoImportPositions.add(editRange.start);
-										autoImportPositions.add(editRange.end);
-										item.additionalTextEdits.push(vscode.TextEdit.replace(
-											editRange,
-											unescape(printText.replace(/\\u/g, '%u')),
-										));
+										const editRange: vscode.Range = {
+											start: textDoc.positionAt(sfc.script.startTagEnd + exportDefault.args.start),
+											end: textDoc.positionAt(sfc.script.startTagEnd + exportDefault.args.end),
+										};
+										transformed = true;
+										item.additionalTextEdits.push({
+											range: editRange,
+											newText: unescape(printText.replace(unicodeReg, '%u')),
+										});
 									}
 								}
 							}
 						}
+					}
+					if (transformed) {
+						transformedItem.add(item);
 					}
 				}
 
@@ -238,7 +244,7 @@ function resolvePlugins(
 				}
 				if (result?.edit?.documentChanges) {
 					for (const documentChange of result.edit.documentChanges) {
-						if (vscode.TextDocumentEdit.is(documentChange)) {
+						if ('textDocument' in documentChange) {
 							patchAdditionalTextEdits(documentChange.textDocument.uri, documentChange.edits);
 						}
 					}
@@ -248,43 +254,49 @@ function resolvePlugins(
 			},
 		};
 	};
-	plugins.html ??= createVueTemplateLanguagePlugin({
-		templateLanguagePlugin: createHtmlPlugin(),
-		getScanner: (document, htmlPlugin): html.Scanner | undefined => {
-			return htmlPlugin.getHtmlLs().createScanner(document.getText());
+	services.html ??= createVueTemplateLanguageService({
+		baseService: createHtmlService(),
+		getScanner: (htmlService, document): html.Scanner | undefined => {
+			return htmlService.provide['html/languageService']().createScanner(document.getText());
+		},
+		updateCustomData(htmlService, extraData) {
+			htmlService.provide['html/updateCustomData'](extraData);
 		},
 		isSupportedDocument: (document) => document.languageId === 'html',
 		vueCompilerOptions,
 	});
-	plugins.pug ??= createVueTemplateLanguagePlugin({
-		templateLanguagePlugin: createPugPlugin() as any,
-		getScanner: (document, pugPlugin): html.Scanner | undefined => {
-			const pugDocument = (pugPlugin as ReturnType<ReturnType<typeof createPugPlugin>>).getPugDocument(document);
+	services.pug ??= createVueTemplateLanguageService({
+		baseService: createPugService(),
+		getScanner: (pugService, document): html.Scanner | undefined => {
+			const pugDocument = pugService.provide['pug/pugDocument'](document);
 			if (pugDocument) {
-				return (pugPlugin as ReturnType<ReturnType<typeof createPugPlugin>>).getPugLs().createScanner(pugDocument);
+				return pugService.provide['pug/languageService']().createScanner(pugDocument);
 			}
+		},
+		updateCustomData(pugService, extraData) {
+			pugService.provide['pug/updateCustomData'](extraData);
 		},
 		isSupportedDocument: (document) => document.languageId === 'jade',
 		vueCompilerOptions,
 	});
-	plugins.vue ??= createVuePlugin(vueCompilerOptions);
-	plugins.css ??= createCssPlugin();
-	plugins.extractFile ??= createVueExtractFilePlugin();
-	plugins['pug-beautify'] ??= createPugFormatPlugin();
-	plugins.json ??= createJsonPlugin(settings?.json);
-	plugins['typescript/twoslash-queries'] ??= createTsTqPlugin();
-	plugins['vue/referencesCodeLens'] ??= createReferencesCodeLensPlugin();
-	plugins['vue/autoInsertDotValue'] ??= createAutoDotValuePlugin();
-	plugins['vue/twoslash-queries'] ??= createTwoslashQueries();
-	plugins['vue/autoInsertParentheses'] ??= createAutoWrapParenthesesPlugin();
-	plugins['vue/autoInsertSpaces'] ??= createAutoAddSpacePlugin();
-	plugins['vue/visualizeHiddenCallbackParam'] ??= createVisualizeHiddenCallbackParamPlugin();
-	plugins.emmet ??= createEmmetPlugin();
+	services.vue ??= createVueService();
+	services.css ??= createCssService();
+	services['pug-beautify'] ??= createPugFormatService();
+	services.json ??= createJsonService();
+	services['typescript/twoslash-queries'] ??= createTsTqService();
+	services['vue/referencesCodeLens'] ??= createReferencesCodeLensService();
+	services['vue/autoInsertDotValue'] ??= createAutoDotValueService();
+	services['vue/twoslash-queries'] ??= createVueTqService();
+	services['vue/autoInsertParentheses'] ??= createAutoWrapParenthesesService();
+	services['vue/autoInsertSpaces'] ??= createAutoAddSpaceService();
+	services['vue/visualizeHiddenCallbackParam'] ??= createVisualizeHiddenCallbackParamService();
+	services['vue/directiveComments'] ??= createDirectiveCommentsService();
+	services.emmet ??= createEmmetService();
 
-	return plugins;
+	return services;
 }
 
-// fix https://github.com/johnsoncodehk/volar/issues/916
+// fix https://github.com/vuejs/language-tools/issues/916
 function patchAdditionalTextEdits(uri: string, edits: vscode.TextEdit[]) {
 	if (
 		uri.endsWith('.vue.js')

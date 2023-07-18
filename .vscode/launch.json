@@ -8,7 +8,7 @@
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
-				"--disable-extensions",
+				// "--disable-extensions",
 				"--extensionDevelopmentPath=${workspaceRoot}/packages/vscode-vue"
 			],
 			"outFiles": [

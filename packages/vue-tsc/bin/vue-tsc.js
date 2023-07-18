@@ -1,5 +1,7 @@
 #!/usr/bin/env node
+const semver = require('semver')
 const fs = require('fs');
+const tsPkg = require('typescript/package.json');
 const readFileSync = fs.readFileSync;
 const tscPath = require.resolve('typescript/lib/tsc');
 const proxyApiPath = require.resolve('../out/index');
@@ -16,6 +18,25 @@ fs.readFileSync = (...args) => {
 
 		// proxy createProgram apis
 		tryReplace(/function createProgram\(.+\) {/, s => s + ` return require(${JSON.stringify(proxyApiPath)}).createProgram(...arguments);`);
+
+		// patches logic for checking root file extension in build program for incremental builds
+		if (semver.gt(tsPkg.version, '5.0.0')) {
+			tryReplace(
+				`for (const existingRoot of buildInfoVersionMap.roots) {`,
+				`for (const existingRoot of buildInfoVersionMap.roots
+					.filter(file => !file.toLowerCase().includes('__vls_'))
+					.map(file => file.replace(/\.vue\.(j|t)sx?$/i, '.vue'))
+				) {`
+			);
+		}
+		if (semver.gte(tsPkg.version, '5.0.4')) {
+			tryReplace(
+				`return createBuilderProgramUsingProgramBuildInfo(buildInfo, buildInfoPath, host);`,
+				s => `buildInfo.program.fileNames = buildInfo.program.fileNames
+					.filter(file => !file.toLowerCase().includes('__vls_'))
+					.map(file => file.replace(/\.vue\.(j|t)sx?$/i, '.vue'));\n` + s
+			);
+		}
 
 		return tsc;
 

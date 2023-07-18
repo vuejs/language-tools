@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { describe, expect, test } from 'vitest';
-import { createComponentMetaChecker, createComponentMetaCheckerByJsonConfig, MetaCheckerOptions, ComponentMetaChecker } from '..';
+import { createComponentMetaChecker, createComponentMetaCheckerByJsonConfig, MetaCheckerOptions, ComponentMetaChecker, TypeMeta } from '..';
 
 const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describe(`vue-component-meta ${withTsconfig ? 'with tsconfig' : 'without tsconfig'}`, () => {
 
@@ -22,6 +22,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 	test('reference-type-props', () => {
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-props/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
+
+		expect(meta.type).toEqual(TypeMeta.Class);
 
 		const foo = meta.props.find(prop => prop.name === 'foo');
 		const bar = meta.props.find(prop => prop.name === 'bar');
@@ -136,6 +138,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 					global: false,
 					required: true,
 					type: 'string',
+					declarations: [],
 					schema: 'string'
 				}
 			}
@@ -157,6 +160,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 					global: false,
 					required: true,
 					type: 'string',
+					declarations: [],
 					schema: 'string'
 				},
 				additionalProp: {
@@ -166,6 +170,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 					global: false,
 					required: true,
 					type: 'string',
+					declarations: [],
 					schema: 'string'
 				}
 			}
@@ -192,6 +197,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 							global: false,
 							required: true,
 							type: 'string',
+							declarations: [],
 							schema: 'string'
 						}
 					}
@@ -220,6 +226,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 							global: false,
 							required: true,
 							type: 'string',
+							declarations: [],
 							schema: 'string'
 						}
 					}
@@ -252,6 +259,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 									global: false,
 									required: true,
 									type: 'string',
+									declarations: [],
 									schema: 'string'
 								}
 							}
@@ -286,6 +294,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 					global: false,
 					required: true,
 					type: 'string',
+					declarations: [],
 					schema: 'string'
 				}
 			}
@@ -324,6 +333,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 					global: false,
 					required: true,
 					type: 'MyNestedRecursiveProps',
+					declarations: [],
 					schema: 'MyNestedRecursiveProps'
 				}
 			}
@@ -333,6 +343,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 	test('reference-type-props-js', () => {
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-props/component-js.vue');
 		const meta = checker.getComponentMeta(componentPath);
+
+		expect(meta.type).toEqual(TypeMeta.Class);
 
 		const foo = meta.props.find(prop => prop.name === 'foo');
 		const bar = meta.props.find(prop => prop.name === 'bar');
@@ -375,6 +387,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 	test('reference-type-props-js-setup', () => {
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-props/component-js-setup.vue');
 		const meta = checker.getComponentMeta(componentPath);
+
+		expect(meta.type).toEqual(TypeMeta.Class);
 
 		const foo = meta.props.find(prop => prop.name === 'foo');
 		const bar = meta.props.find(prop => prop.name === 'bar');
@@ -448,6 +462,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-events/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
 
+		expect(meta.type).toEqual(TypeMeta.Class);
+
 		const onFoo = meta.events.find(event => event.name === 'foo');
 		const onBar = meta.events.find(event => event.name === 'bar');
 		const onBaz = meta.events.find(event => event.name === 'baz');
@@ -472,6 +488,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 								global: false,
 								required: true,
 								type: 'string',
+								declarations: [],
 								schema: 'string'
 							}
 						}
@@ -495,6 +512,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 						global: false,
 						required: true,
 						type: 'number',
+						declarations: [],
 						schema: 'number'
 					},
 					arg2: {
@@ -504,6 +522,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 						global: false,
 						required: false,
 						type: 'any',
+						declarations: [],
 						schema: 'any'
 					},
 				}
@@ -519,6 +538,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 	test('template-slots', () => {
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/template-slots/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
+
+		expect(meta.type).toEqual(TypeMeta.Class);
 
 		const a = meta.slots.find(slot =>
 			slot.name === 'default'
@@ -546,6 +567,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/template-slots/component-no-script.vue');
 		const meta = checker.getComponentMeta(componentPath);
 
+		expect(meta.type).toEqual(TypeMeta.Class);
+
 		const a = meta.slots.find(slot =>
 			slot.name === 'default'
 			&& slot.type === '{ num: number; }'
@@ -572,6 +595,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/class-slots/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
 
+		expect(meta.type).toEqual(TypeMeta.Class);
+
 		const a = meta.slots.find(slot =>
 			slot.name === 'default'
 			&& slot.type === '{ num: number; }'
@@ -589,6 +614,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-exposed/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
 
+		expect(meta.type).toEqual(TypeMeta.Class);
+
 		const counter = meta.exposed.find(exposed =>
 			exposed.name === 'counter'
 			&& exposed.type === 'string'
@@ -601,6 +628,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 	test('ts-component', () => {
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/ts-component/component.ts');
 		const meta = checker.getComponentMeta(componentPath);
+
+		expect(meta.type).toEqual(TypeMeta.Function);
 
 		const a = meta.props.find(prop =>
 			prop.name === 'foo'
@@ -623,6 +652,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		const Foo = checker.getComponentMeta(componentPath, 'Foo');
 		const Bar = checker.getComponentMeta(componentPath, 'Bar');
 
+		expect(Foo.type).toEqual(TypeMeta.Function);
+		expect(Bar.type).toEqual(TypeMeta.Function);
 		expect(exportNames).toEqual(['Foo', 'Bar']);
 
 		const a = Foo.props.find(prop =>
@@ -644,6 +675,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 
 		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/options-api/component.ts');
 		const meta = checker.getComponentMeta(componentPath);
+
+		expect(meta.type).toEqual(TypeMeta.Class);
 
 		// const submitEvent = meta.events.find(evt => evt.name === 'submit');
 
@@ -692,10 +725,39 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		expect(propArrayDefault).toBeDefined();
 		expect(propArrayDefault?.default).toEqual(`[1, 2, 3]`);
 	});
+
+	test('non-component', () => {
+		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/non-component/component.ts');
+		const meta = checker.getComponentMeta(componentPath);
+
+		expect(meta.type).toEqual(TypeMeta.Unknown);
+	});
+
+	test('ts-component.tsx', () => {
+		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/ts-component/component.tsx');
+		const meta = checker.getComponentMeta(componentPath);
+
+		expect(meta.type).toEqual(TypeMeta.Function);
+
+		const a = meta.props.find(prop =>
+			prop.name === 'foo'
+			&& prop.required === true
+			&& prop.type === 'string'
+		);
+		const b = meta.props.find(prop =>
+			prop.name === 'bar'
+			&& prop.required === false
+			&& prop.type === 'number | undefined'
+		);
+
+		expect(a).toBeDefined();
+		expect(b).toBeDefined();
+	});
 });
 
 const checkerOptions: MetaCheckerOptions = {
 	forceUseTs: true,
+	noDeclarations: true,
 	schema: { ignore: ['MyIgnoredNestedProps'] },
 	printer: { newLine: 1 },
 };

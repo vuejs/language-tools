@@ -3,7 +3,6 @@ import * as path from 'path';
 import { tester } from './utils/createTester';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as fs from 'fs';
-import { CancellationToken } from 'vscode-languageserver-protocol';
 
 const baseDir = path.resolve(__dirname, '../../vue-test-workspace/rename');
 const testDirs = fs.readdirSync(baseDir);
@@ -40,7 +39,6 @@ for (const dirName of testDirs) {
 							uri,
 							position,
 							action.newName,
-							CancellationToken.None,
 						);
 
 						expect(edit).toBeDefined();
@@ -81,9 +79,11 @@ function readFiles(dir: string) {
 	return filesText;
 }
 
+const renameReg = /(\^*)rename:\s*([\S]*)/g;
+
 function findRenameActions(text: string) {
 
-	return [...text.matchAll(/(\^*)rename:\s*([\S]*)/g)].map(flag => {
+	return [...text.matchAll(renameReg)].map(flag => {
 
 		const start = flag.index!;
 		const end = start + flag[1].length;

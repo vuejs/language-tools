@@ -7,6 +7,7 @@
         "kind": "markdown",
         "value": "\n为**单个**元素或组件提供动画过渡效果。\n\n- **Props**\n\n  ```ts\n  interface TransitionProps {\n    /**\n     * 用于自动生成过渡 CSS class 名。\n     * 例如 `name: 'fade'` 将自动扩展为 `.fade-enter`、\n     * `.fade-enter-active` 等。\n     */\n    name?: string\n    /**\n     * 是否应用 CSS 过渡 class。\n     * 默认：true\n     */\n    css?: boolean\n    /**\n     * 指定要等待的过渡事件类型\n     * 来确定过渡结束的时间。\n     * 默认情况下会自动检测\n     * 持续时间较长的类型。\n     */\n    type?: 'transition' | 'animation'\n    /**\n     * 显式指定过渡的持续时间。\n     * 默认情况下是等待过渡效果的根元素的第一个 `transitionend`\n     * 或`animationend`事件。\n     */\n    duration?: number | { enter: number; leave: number }\n    /**\n     * 控制离开/进入过渡的时序。\n     * 默认情况下是同时的。\n     */\n    mode?: 'in-out' | 'out-in' | 'default'\n    /**\n     * 是否对初始渲染使用过渡。\n     * 默认：false\n     */\n    appear?: boolean\n\n    /**\n     * 用于自定义过渡 class 的 prop。\n     * 在模板中使用短横线命名，例如：enter-from-class=\"xxx\"\n     */\n    enterFromClass?: string\n    enterActiveClass?: string\n    enterToClass?: string\n    appearFromClass?: string\n    appearActiveClass?: string\n    appearToClass?: string\n    leaveFromClass?: string\n    leaveActiveClass?: string\n    leaveToClass?: string\n  }\n  ```\n\n- **事件**\n\n  - `@before-enter`\n  - `@before-leave`\n  - `@enter`\n  - `@leave`\n  - `@appear`\n  - `@after-enter`\n  - `@after-leave`\n  - `@after-appear`\n  - `@enter-cancelled`\n  - `@leave-cancelled` (`v-show` only)\n  - `@appear-cancelled`\n\n- **示例**\n\n  简单元素：\n\n  ```html\n  <Transition>\n    <div v-if=\"ok\">toggled content</div>\n  </Transition>\n  ```\n\n  通过改变 `key` 属性来强制过度执行：\n  \n  ```html\n  <Transition>\n    <div :key=\"text\">{{ text }}</div>\n  </Transition>\n  ```\n\n  动态组件，初始渲染时带有过渡模式 + 动画出现：\n\n  ```html\n  <Transition name=\"fade\" mode=\"out-in\" appear>\n    <component :is=\"view\"></component>\n  </Transition>\n  ```\n\n  监听过渡事件：\n\n  ```html\n  <Transition @after-enter=\"onTransitionComplete\">\n    <div v-show=\"ok\">toggled content</div>\n  </Transition>\n  ```\n\n- **参考**：[`<Transition>` 指南](https://cn.vuejs.org/guide/built-ins/transition.html)\n"
       },
+      "attributes": [],
       "references": [
         {
           "name": "en",
@@ -40,6 +41,7 @@
         "kind": "markdown",
         "value": "\n为列表中的**多个**元素或组件提供过渡效果。\n\n- **Props**\n\n  `<TransitionGroup>` 拥有与 `<Transition>` 除了 `mode` 以外所有的 props，并增加了两个额外的 props：\n\n  ```ts\n  interface TransitionGroupProps extends Omit<TransitionProps, 'mode'> {\n    /**\n     * 如果未定义，则渲染为片段 (fragment)。\n     */\n    tag?: string\n    /**\n     * 用于自定义过渡期间被应用的 CSS class。\n     * 在模板中使用 kebab-case，例如 move-class=\"xxx\"\n     */\n    moveClass?: string\n  }\n  ```\n\n- **事件**\n\n  `<TransitionGroup>` 抛出与 `<Transition>` 相同的事件。\n\n- **详细信息**\n\n  默认情况下，`<TransitionGroup>` 不会渲染一个容器 DOM 元素，但是可以通过 `tag` prop 启用。\n\n  注意，每个 `<transition-group>` 的子节点必须有[**独立的 key**](https://cn.vuejs.org/guide/essentials/list.html#maintaining-state-with-key)，动画才能正常工作。\n\n  `<TransitionGroup>` 支持通过 CSS transform 控制移动效果。当一个子节点在屏幕上的位置在更新之后发生变化时，它会被添加一个使其位移的 CSS class (基于 `name` attribute 推导，或使用 `move-class` prop 显式配置)。如果使其位移的 class 被添加时 CSS 的 `transform` 属性是“可过渡的”，那么该元素会基于 [FLIP 技巧](https://aerotwist.com/blog/flip-your-animations/)平滑地到达动画终点。\n\n- **示例**\n\n  ```html\n  <TransitionGroup tag=\"ul\" name=\"slide\">\n    <li v-for=\"item in items\" :key=\"item.id\">\n      {{ item.text }}\n    </li>\n  </TransitionGroup>\n  ```\n\n- **参考**：[指南 - TransitionGroup](https://cn.vuejs.org/guide/built-ins/transition-group.html)\n"
       },
+      "attributes": [],
       "references": [
         {
           "name": "en",
@@ -73,6 +75,7 @@
         "kind": "markdown",
         "value": "\n缓存包裹在其中的动态切换组件。\n\n- **Props**\n\n  ```ts\n  interface KeepAliveProps {\n    /**\n     * 如果指定，则只有与 `include` 名称\n     * 匹配的组件才会被缓存。\n     */\n    include?: MatchPattern\n    /**\n     * 任何名称与 `exclude`\n     * 匹配的组件都不会被缓存。\n     */\n    exclude?: MatchPattern\n    /**\n     * 最多可以缓存多少组件实例。\n     */\n    max?: number | string\n  }\n\n  type MatchPattern = string | RegExp | (string | RegExp)[]\n  ```\n\n- **详细信息**\n\n  `<KeepAlive>` 包裹动态组件时，会缓存不活跃的组件实例，而不是销毁它们。\n\n  任何时候都只能有一个活跃组件实例作为 `<KeepAlive>` 的直接子节点。\n\n  当一个组件在 `<KeepAlive>` 中被切换时，它的 `activated` 和 `deactivated` 生命周期钩子将被调用，用来替代 `mounted` 和 `unmounted`。这适用于 `<KeepAlive>` 的直接子节点及其所有子孙节点。\n\n- **示例**\n\n  基本用法：\n\n  ```html\n  <KeepAlive>\n    <component :is=\"view\"></component>\n  </KeepAlive>\n  ```\n\n  与 `v-if` / `v-else` 分支一起使用时，同一时间只能有一个组件被渲染：\n\n  ```html\n  <KeepAlive>\n    <comp-a v-if=\"a > 1\"></comp-a>\n    <comp-b v-else></comp-b>\n  </KeepAlive>\n  ```\n\n  与 `<Transition>` 一起使用：\n\n  ```html\n  <Transition>\n    <KeepAlive>\n      <component :is=\"view\"></component>\n    </KeepAlive>\n  </Transition>\n  ```\n\n  使用 `include` / `exclude`：\n\n  ```html\n  <!-- 用逗号分隔的字符串 -->\n  <KeepAlive include=\"a,b\">\n    <component :is=\"view\"></component>\n  </KeepAlive>\n\n  <!-- 正则表达式 (使用 `v-bind`) -->\n  <KeepAlive :include=\"/a|b/\">\n    <component :is=\"view\"></component>\n  </KeepAlive>\n\n  <!-- 数组 (使用 `v-bind`) -->\n  <KeepAlive :include=\"['a', 'b']\">\n    <component :is=\"view\"></component>\n  </KeepAlive>\n  ```\n\n  使用 `max`：\n\n  ```html\n  <KeepAlive :max=\"10\">\n    <component :is=\"view\"></component>\n  </KeepAlive>\n  ```\n\n- **参考**：[指南 - KeepAlive](https://cn.vuejs.org/guide/built-ins/keep-alive.html)\n"
       },
+      "attributes": [],
       "references": [
         {
           "name": "en",
@@ -106,6 +109,7 @@
         "kind": "markdown",
         "value": "\n将其插槽内容渲染到 DOM 中的另一个位置。\n\n- **Props**\n\n  ```ts\n  interface TeleportProps {\n    /**\n     * 必填项。指定目标容器。\n     * 可以是选择器或实际元素。\n     */\n    to: string | HTMLElement\n    /**\n     * 当值为 `true` 时，内容将保留在其原始位置\n     * 而不是移动到目标容器中。\n     * 可以动态更改。\n     */\n    disabled?: boolean\n  }\n  ```\n\n- **示例**\n\n  指定目标容器：\n\n  ```html\n  <teleport to=\"#some-id\" />\n  <teleport to=\".some-class\" />\n  <teleport to=\"[data-teleport]\" />\n  ```\n\n  有条件地禁用：\n\n  ```html\n  <teleport to=\"#popup\" :disabled=\"displayVideoInline\">\n    <video src=\"./my-movie.mp4\">\n  </teleport>\n  ```\n\n- **参考**：[指南 - Teleport](https://cn.vuejs.org/guide/built-ins/teleport.html)\n"
       },
+      "attributes": [],
       "references": [
         {
           "name": "en",
@@ -139,6 +143,7 @@
         "kind": "markdown",
         "value": "\n用于协调对组件树中嵌套的异步依赖的处理。\n\n- **Props**\n\n  ```ts\n  interface SuspenseProps {\n    timeout?: string | number\n  }\n  ```\n\n- **事件**\n\n  - `@resolve`\n  - `@pending`\n  - `@fallback`\n\n- **详细信息**\n\n  `<Suspense>` 接受两个插槽：`#default` 和 `#fallback`。它将在内存中渲染默认插槽的同时展示后备插槽内容。\n\n  如果在渲染时遇到异步依赖项 ([异步组件](https://cn.vuejs.org/guide/components/async.html)和具有 [`async setup()`](https://cn.vuejs.org/guide/built-ins/suspense.html#async-setup) 的组件)，它将等到所有异步依赖项解析完成时再显示默认插槽。\n\n- **参考**：[指南 - Suspense](https://cn.vuejs.org/guide/built-ins/suspense.html)\n"
       },
+      "attributes": [],
       "references": [
         {
           "name": "en",
@@ -172,6 +177,7 @@
         "kind": "markdown",
         "value": "\n一个用于渲染动态组件或元素的“元组件”。\n\n- **Props**\n\n  ```ts\n  interface DynamicComponentProps {\n    is: string | Component\n  }\n  ```\n\n- **详细信息**\n\n  要渲染的实际组件由 `is` prop 决定。\n\n  - 当 `is` 是字符串，它既可以是 HTML 标签名也可以是组件的注册名。\n\n  - 或者，`is` 也可以直接绑定到组件的定义。\n\n- **示例**\n\n  按注册名渲染组件 (选项式 API)：\n\n  ```vue\n  <script>\n  import Foo from './Foo.vue'\n  import Bar from './Bar.vue'\n\n  export default {\n    components: { Foo, Bar },\n    data() {\n      return {\n        view: 'Foo'\n      }\n    }\n  }\n  </script>\n\n  <template>\n    <component :is=\"view\" />\n  </template>\n  ```\n\n  按定义渲染组件 (`<script setup>` 组合式 API)：\n\n  ```vue\n  <script setup>\n  import Foo from './Foo.vue'\n  import Bar from './Bar.vue'\n  </script>\n\n  <template>\n    <component :is=\"Math.random() > 0.5 ? Foo : Bar\" />\n  </template>\n  ```\n\n  渲染 HTML 元素：\n\n  ```html\n  <component :is=\"href ? 'a' : 'span'\"></component>\n  ```\n\n  [内置组件](./built-in-components)都可以传递给 `is`，但是如果想通过名称传递则必须先对其进行注册。举例来说：\n\n  ```vue\n  <script>\n  import { Transition, TransitionGroup } from 'vue'\n\n  export default {\n    components: {\n      Transition,\n      TransitionGroup\n    }\n  }\n  </script>\n\n  <template>\n    <component :is=\"isGroup ? 'TransitionGroup' : 'Transition'\">\n      ...\n    </component>\n  </template>\n  ```\n\n  如果将组件本身传递给 `is` 而不是其名称，则不需要注册，例如在 `<script setup>` 中。\n\n  如果在 `<component>` 标签上使用 `v-model`，模板编译器会将其扩展为 `modelValue` prop 和 `update:modelValue` 事件监听器，就像对任何其他组件一样。但是，这与原生 HTML 元素不兼容，例如 `<input>` 或 `<select>`。因此，在动态创建的原生元素上使用 `v-model` 将不起作用：\n\n  ```vue\n  <script setup>\n  import { ref } from 'vue'\n\n  const tag = ref('input')\n  const username = ref('')\n  </script>\n\n  <template>\n    <!-- 由于 'input' 是原生 HTML 元素，因此这个 v-model 不起作用 -->\n    <component :is=\"tag\" v-model=\"username\" />\n  </template>\n  ```\n\n  在实践中，这种极端情况并不常见，因为原生表单字段通常包裹在实际应用的组件中。如果确实需要直接使用原生元素，那么你可以手动将 `v-model` 拆分为 attribute 和事件。\n\n- **参考**：[动态组件](https://cn.vuejs.org/guide/essentials/component-basics.html#dynamic-components)\n"
       },
+      "attributes": [],
       "references": [
         {
           "name": "en",
@@ -205,6 +211,7 @@
         "kind": "markdown",
         "value": "\n表示模板中的插槽内容出口。\n\n- **Props**\n\n  ```ts\n  interface SlotProps {\n    /**\n     * 任何传递给 <slot> 的 prop 都可以作为作用域插槽\n     * 的参数传递\n     */\n    [key: string]: any\n    /**\n     * 保留，用于指定插槽名。\n     */\n    name?: string\n  }\n  ```\n\n- **详细信息**\n\n  `<slot>` 元素可以使用 `name` attribute 来指定插槽名。当没有指定 `name` 时，将会渲染默认插槽。传递给插槽元素的附加 attributes 将作为插槽 props，传递给父级中定义的作用域插槽。\n\n  元素本身将被其所匹配的插槽内容替换。\n\n  Vue 模板里的 `<slot>` 元素会被编译到 JavaScript，因此不要与[原生 `<slot>` 元素](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/slot)进行混淆。\n\n- **参考**：[组件 - 插槽](https://cn.vuejs.org/guide/components/slots.html)\n"
       },
+      "attributes": [],
       "references": [
         {
           "name": "en",
@@ -238,6 +245,7 @@
         "kind": "markdown",
         "value": "\n当我们想要使用内置指令而不在 DOM 中渲染元素时，`<template>` 标签可以作为占位符使用。\n\n- **详细信息**：\n\n  对 `<template>` 的特殊处理只有在它与以下任一指令一起使用时才会被触发：\n\n  - `v-if`、`v-else-if` 或 `v-else`\n  - `v-for`\n  - `v-slot`\n\n  如果这些指令都不存在，那么它将被渲染成一个[原生的 `<template>` 元素](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template)。\n\n  带有 `v-for` 的 `<template>` 也可以有一个 [`key` 属性](https://cn.vuejs.org/api/built-in-special-attributes.html#key)。所有其他的属性和指令都将被丢弃，因为没有相应的元素，它们就没有意义。\n\n  单文件组件使用[顶层的 `<template>` 标签](https://cn.vuejs.org/api/sfc-spec.html#language-blocks)来包裹整个模板。这种用法与上面描述的 `<template>` 使用方式是有区别的。该顶层标签不是模板本身的一部分，不支持指令等模板语法。\n\n- **参考**：\n  - [指南 - `<template>` 上的 `v-if`](https://cn.vuejs.org/guide/essentials/conditional.html#v-if-on-template)\n  - [指南 - `<template>` 上的 `v-for`](https://cn.vuejs.org/guide/essentials/list.html#v-for-on-template)\n  - [指南 - 具名插槽](https://cn.vuejs.org/guide/components/slots.html#named-slots)\n"
       },
+      "attributes": [],
       "references": [
         {
           "name": "en",

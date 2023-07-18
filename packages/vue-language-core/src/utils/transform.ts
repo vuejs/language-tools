@@ -53,8 +53,8 @@ export function walkInterpolationFragment(
 
 		for (let i = 0; i < ctxVars.length - 1; i++) {
 
-			// fix https://github.com/johnsoncodehk/volar/issues/1205
-			// fix https://github.com/johnsoncodehk/volar/issues/1264
+			// fix https://github.com/vuejs/language-tools/issues/1205
+			// fix https://github.com/vuejs/language-tools/issues/1264
 			cb('', ctxVars[i + 1].offset, true);
 			if (vueOptions.experimentalUseElementAccessInTemplate) {
 				const varStart = ctxVars[i].offset;
@@ -116,9 +116,9 @@ function walkIdentifiers(
 	node: ts.Node,
 	cb: (varNode: ts.Identifier, isShorthand: boolean) => void,
 	localVars: Record<string, number>,
+	blockVars: string[] = [],
+	isRoot: boolean = true,
 ) {
-
-	const blockVars: string[] = [];
 
 	if (ts.isIdentifier(node)) {
 		cb(node, false);
@@ -127,17 +127,18 @@ function walkIdentifiers(
 		cb(node.name, true);
 	}
 	else if (ts.isPropertyAccessExpression(node)) {
-		walkIdentifiers(ts, node.expression, cb, localVars);
+		walkIdentifiers(ts, node.expression, cb, localVars, blockVars, false);
 	}
 	else if (ts.isVariableDeclaration(node)) {
 
 		colletVars(ts, node.name, blockVars);
 
-		for (const varName of blockVars)
+		for (const varName of blockVars) {
 			localVars[varName] = (localVars[varName] ?? 0) + 1;
+		}
 
 		if (node.initializer)
-			walkIdentifiers(ts, node.initializer, cb, localVars);
+			walkIdentifiers(ts, node.initializer, cb, localVars, blockVars, false);
 	}
 	else if (ts.isArrowFunction(node)) {
 
@@ -146,14 +147,14 @@ function walkIdentifiers(
 		for (const param of node.parameters) {
 			colletVars(ts, param.name, functionArgs);
 			if (param.type) {
-				walkIdentifiers(ts, param.type, cb, localVars);
+				walkIdentifiers(ts, param.type, cb, localVars, blockVars, false);
 			}
 		}
 
 		for (const varName of functionArgs)
 			localVars[varName] = (localVars[varName] ?? 0) + 1;
 
-		walkIdentifiers(ts, node.body, cb, localVars);
+		walkIdentifiers(ts, node.body, cb, localVars, blockVars, false);
 
 		for (const varName of functionArgs)
 			localVars[varName]--;
@@ -161,33 +162,46 @@ function walkIdentifiers(
 	else if (ts.isObjectLiteralExpression(node)) {
 		for (const prop of node.properties) {
 			if (ts.isPropertyAssignment(prop)) {
-				// fix https://github.com/johnsoncodehk/volar/issues/1176
+				// fix https://github.com/vuejs/language-tools/issues/1176
 				if (ts.isComputedPropertyName(prop.name)) {
-					walkIdentifiers(ts, prop.name.expression, cb, localVars);
+					walkIdentifiers(ts, prop.name.expression, cb, localVars, blockVars, false);
 				}
-				walkIdentifiers(ts, prop.initializer, cb, localVars);
+				walkIdentifiers(ts, prop.initializer, cb, localVars, blockVars, false);
 			}
-			// fix https://github.com/johnsoncodehk/volar/issues/1156
+			// fix https://github.com/vuejs/language-tools/issues/1156
 			else if (ts.isShorthandPropertyAssignment(prop)) {
-				walkIdentifiers(ts, prop, cb, localVars);
+				walkIdentifiers(ts, prop, cb, localVars, blockVars, false);
 			}
-			// fix https://github.com/johnsoncodehk/volar/issues/1148#issuecomment-1094378126
+			// fix https://github.com/vuejs/language-tools/issues/1148#issuecomment-1094378126
 			else if (ts.isSpreadAssignment(prop)) {
 				// TODO: cannot report "Spread types may only be created from object types.ts(2698)"
-				walkIdentifiers(ts, prop.expression, cb, localVars);
+				walkIdentifiers(ts, prop.expression, cb, localVars, blockVars, false);
 			}
 		}
 	}
 	else if (ts.isTypeReferenceNode(node)) {
-		// fix https://github.com/johnsoncodehk/volar/issues/1422
+		// fix https://github.com/vuejs/language-tools/issues/1422
 		node.forEachChild(node => walkIdentifiersInTypeReference(ts, node, cb));
 	}
 	else {
-		node.forEachChild(node => walkIdentifiers(ts, node, cb, localVars));
+		const _blockVars = blockVars;
+		if (ts.isBlock(node)) {
+			blockVars = [];
+		}
+		node.forEachChild(node => walkIdentifiers(ts, node, cb, localVars, blockVars, false));
+		if (ts.isBlock(node)) {
+			for (const varName of blockVars) {
+				localVars[varName]--;
+			}
+		}
+		blockVars = _blockVars;
 	}
 
-	for (const varName of blockVars)
-		localVars[varName]--;
+	if (isRoot) {
+		for (const varName of blockVars) {
+			localVars[varName]--;
+		}
+	}
 }
 
 function walkIdentifiersInTypeReference(

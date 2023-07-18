@@ -1,69 +1,46 @@
-import { parseScriptSetupRanges } from '@volar/vue-language-core';
-import { LanguageServicePlugin } from '@volar/language-service';
+import type { Service, ServiceContext } from '@volar/language-service';
 import * as html from 'vscode-html-languageservice';
-import * as vscode from 'vscode-languageserver-protocol';
+import type * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import createHtmlPlugin from '@volar-plugins/html';
-import * as vue from '@volar/vue-language-core';
-import { VueCompilerOptions } from '../types';
+import createHtmlPlugin from 'volar-service-html';
+import * as vue from '@vue/language-core';
 import { loadLanguageBlocks } from './data';
 
 let sfcDataProvider: html.IHTMLDataProvider | undefined;
 
-export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin => (context) => {
+export interface Provide {
+	'vue/vueFile': (document: TextDocument) => vue.VueFile | undefined;
+}
 
-	const htmlPlugin = createHtmlPlugin({ validLang: 'vue', disableCustomData: true })(context);
+export default (): Service<Provide> => (context: ServiceContext<import('volar-service-typescript').Provide> | undefined, modules): ReturnType<Service<Provide>> => {
 
-	if (!context?.typescript)
-		return htmlPlugin;
+	const htmlPlugin = createHtmlPlugin({ validLang: 'vue', disableCustomData: true })(context, modules);
 
-	sfcDataProvider ??= html.newHTMLDataProvider('vue', loadLanguageBlocks(context.locale ?? 'en'));
+	if (!context)
+		return htmlPlugin as any;
 
-	htmlPlugin.getHtmlLs().setDataProviders(false, [sfcDataProvider]);
+	sfcDataProvider ??= html.newHTMLDataProvider('vue', loadLanguageBlocks(context.env.locale ?? 'en'));
 
-	const _ts = context.typescript;
+	htmlPlugin.provide['html/languageService']().setDataProviders(false, [sfcDataProvider]);
 
 	return {
 
 		...htmlPlugin,
 
-		resolveRuleContext(context) {
-			worker(context.document, (vueSourceFile) => {
-				if (vueSourceFile.parsedSfc) {
-					context.vue = {
-						sfc: vueSourceFile.parsedSfc,
-						templateAst: vueSourceFile.sfc.templateAst,
-						scriptAst: vueSourceFile.sfc.scriptAst,
-						scriptSetupAst: vueSourceFile.sfc.scriptSetupAst,
-					};
-				}
-			});
-			return context;
+		provide: {
+			'vue/vueFile': document => {
+				return worker(document, (vueFile) => {
+					return vueFile;
+				});
+			},
 		},
 
-		provideSyntacticDiagnostics(document) {
+		provideSemanticDiagnostics(document) {
 			return worker(document, (vueSourceFile) => {
 
 				const result: vscode.Diagnostic[] = [];
 				const sfc = vueSourceFile.sfc;
-
-				if (sfc.scriptSetup && sfc.scriptSetupAst) {
-					const scriptSetupRanges = parseScriptSetupRanges(_ts.module, sfc.scriptSetupAst, vueCompilerOptions);
-					for (const range of scriptSetupRanges.notOnTopTypeExports) {
-						result.push(vscode.Diagnostic.create(
-							{
-								start: document.positionAt(range.start + sfc.scriptSetup.startTagEnd),
-								end: document.positionAt(range.end + sfc.scriptSetup.startTagEnd),
-							},
-							'type and interface export statements must be on the top in <script setup>',
-							vscode.DiagnosticSeverity.Warning,
-							undefined,
-							'volar',
-						));
-					}
-				}
-
-				const program = _ts.languageService.getProgram();
+				const program = context.inject('typescript/languageService').getProgram();
 
 				if (program && !program.getSourceFile(vueSourceFile.mainScriptName)) {
 					for (const script of [sfc.script, sfc.scriptSetup]) {
@@ -71,16 +48,15 @@ export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin =
 						if (!script || script.content === '')
 							continue;
 
-						const error = vscode.Diagnostic.create(
-							{
+						const error: vscode.Diagnostic = {
+							range: {
 								start: document.positionAt(script.start),
 								end: document.positionAt(script.startTagEnd),
 							},
-							'Virtual script not found, may missing <script lang="ts"> / "allowJs": true / jsconfig.json.',
-							vscode.DiagnosticSeverity.Information,
-							undefined,
-							'volar',
-						);
+							message: `Virtual script ${JSON.stringify(vueSourceFile.mainScriptName)} not found, may missing <script lang="ts"> / "allowJs": true / jsconfig.json.`,
+							severity: 3 satisfies typeof vscode.DiagnosticSeverity.Information,
+							source: 'volar',
+						};
 						result.push(error);
 					}
 				}
@@ -89,7 +65,7 @@ export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin =
 			});
 		},
 
-		findDocumentLinks: undefined,
+		provideDocumentLinks: undefined,
 
 		provideDocumentSymbols(document) {
 			return worker(document, (vueSourceFile) => {
@@ -100,43 +76,43 @@ export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin =
 				if (descriptor.template) {
 					result.push({
 						name: 'template',
-						kind: vscode.SymbolKind.Module,
-						range: vscode.Range.create(
-							document.positionAt(descriptor.template.start),
-							document.positionAt(descriptor.template.end),
-						),
-						selectionRange: vscode.Range.create(
-							document.positionAt(descriptor.template.start),
-							document.positionAt(descriptor.template.startTagEnd),
-						),
+						kind: 2 satisfies typeof vscode.SymbolKind.Module,
+						range: {
+							start: document.positionAt(descriptor.template.start),
+							end: document.positionAt(descriptor.template.end),
+						},
+						selectionRange: {
+							start: document.positionAt(descriptor.template.start),
+							end: document.positionAt(descriptor.template.startTagEnd),
+						},
 					});
 				}
 				if (descriptor.script) {
 					result.push({
 						name: 'script',
-						kind: vscode.SymbolKind.Module,
-						range: vscode.Range.create(
-							document.positionAt(descriptor.script.start),
-							document.positionAt(descriptor.script.end),
-						),
-						selectionRange: vscode.Range.create(
-							document.positionAt(descriptor.script.start),
-							document.positionAt(descriptor.script.startTagEnd),
-						),
+						kind: 2 satisfies typeof vscode.SymbolKind.Module,
+						range: {
+							start: document.positionAt(descriptor.script.start),
+							end: document.positionAt(descriptor.script.end),
+						},
+						selectionRange: {
+							start: document.positionAt(descriptor.script.start),
+							end: document.positionAt(descriptor.script.startTagEnd),
+						},
 					});
 				}
 				if (descriptor.scriptSetup) {
 					result.push({
 						name: 'script setup',
-						kind: vscode.SymbolKind.Module,
-						range: vscode.Range.create(
-							document.positionAt(descriptor.scriptSetup.start),
-							document.positionAt(descriptor.scriptSetup.end),
-						),
-						selectionRange: vscode.Range.create(
-							document.positionAt(descriptor.scriptSetup.start),
-							document.positionAt(descriptor.scriptSetup.startTagEnd),
-						),
+						kind: 2 satisfies typeof vscode.SymbolKind.Module,
+						range: {
+							start: document.positionAt(descriptor.scriptSetup.start),
+							end: document.positionAt(descriptor.scriptSetup.end),
+						},
+						selectionRange: {
+							start: document.positionAt(descriptor.scriptSetup.start),
+							end: document.positionAt(descriptor.scriptSetup.startTagEnd),
+						},
 					});
 				}
 				for (const style of descriptor.styles) {
@@ -147,29 +123,29 @@ export default (vueCompilerOptions: VueCompilerOptions): LanguageServicePlugin =
 						name += ' module';
 					result.push({
 						name,
-						kind: vscode.SymbolKind.Module,
-						range: vscode.Range.create(
-							document.positionAt(style.start),
-							document.positionAt(style.end),
-						),
-						selectionRange: vscode.Range.create(
-							document.positionAt(style.start),
-							document.positionAt(style.startTagEnd),
-						),
+						kind: 2 satisfies typeof vscode.SymbolKind.Module,
+						range: {
+							start: document.positionAt(style.start),
+							end: document.positionAt(style.end),
+						},
+						selectionRange: {
+							start: document.positionAt(style.start),
+							end: document.positionAt(style.startTagEnd),
+						},
 					});
 				}
 				for (const customBlock of descriptor.customBlocks) {
 					result.push({
 						name: `${customBlock.type}`,
-						kind: vscode.SymbolKind.Module,
-						range: vscode.Range.create(
-							document.positionAt(customBlock.start),
-							document.positionAt(customBlock.end),
-						),
-						selectionRange: vscode.Range.create(
-							document.positionAt(customBlock.start),
-							document.positionAt(customBlock.startTagEnd),
-						),
+						kind: 2 satisfies typeof vscode.SymbolKind.Module,
+						range: {
+							start: document.positionAt(customBlock.start),
+							end: document.positionAt(customBlock.end),
+						},
+						selectionRange: {
+							start: document.positionAt(customBlock.start),
+							end: document.positionAt(customBlock.startTagEnd),
+						},
 					});
 				}
 

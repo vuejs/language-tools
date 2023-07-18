@@ -1,6 +1,8 @@
 import { FileCapabilities, FileRangeCapabilities } from '@volar/language-core';
 import { VueLanguagePlugin } from '../types';
 
+const templateReg = /^(.*)\.template\.([^.]+)$/;
+
 const plugin: VueLanguagePlugin = () => {
 
 	return {
@@ -15,7 +17,7 @@ const plugin: VueLanguagePlugin = () => {
 		},
 
 		resolveEmbeddedFile(_fileName, sfc, embeddedFile) {
-			const match = embeddedFile.fileName.match(/^(.*)\.template\.([^.]+)$/);
+			const match = embeddedFile.fileName.match(templateReg);
 			if (match && sfc.template) {
 				embeddedFile.capabilities = FileCapabilities.full;
 				embeddedFile.content.push([
