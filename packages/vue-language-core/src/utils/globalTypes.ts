@@ -51,7 +51,7 @@ declare function __VLS_getVForSourceType<T>(source: T): [
 declare function __VLS_getSlotParams<T>(slot: T): Parameters<__VLS_PickNotAny<NonNullable<T>, (...args: any[]) => any>>;
 declare function __VLS_getSlotParam<T>(slot: T): Parameters<__VLS_PickNotAny<NonNullable<T>, (...args: any[]) => any>>[0];
 declare function __VLS_directiveFunction<T>(dir: T):
-	T extends import('${vueCompilerOptions.lib}').ObjectDirective<infer E, infer V> | import('${vueCompilerOptions.lib}').FunctionDirective<infer E, infer V> ? (el: E, value: V) => void
+	T extends import('${vueCompilerOptions.lib}').ObjectDirective<infer E, infer V> | import('${vueCompilerOptions.lib}').FunctionDirective<infer E, infer V> ? (value: V) => void
 	: T;
 declare function __VLS_withScope<T, K>(ctx: T, scope: K): ctx is T & K;
 declare function __VLS_makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
