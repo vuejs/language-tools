@@ -14,7 +14,7 @@ const cacheStringFunction = (fn: (str: string) => string) => {
 
 export const hyphenate = cacheStringFunction((str: string) => {
 	let hyphencase = _hyphenate(str);
-	// If it begins with capital letter
+	// Fix https://github.com/vuejs/core/issues/8811
 	if (str[0] === str[0].toUpperCase()) {
 		hyphencase = '-' + hyphencase;
 	}
