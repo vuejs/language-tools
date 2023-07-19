@@ -53,9 +53,7 @@ export function parseScriptSetupRanges(
 			if (commentRanges) {
 				const firstCommentRange = commentRanges[0];
 				const commentText = text.slice(firstCommentRange.pos, firstCommentRange.end);
-				if (tsNoCheckRe.test(commentText)) {
-					hasTsNoCheck = true;
-				}
+				hasTsNoCheck = tsNoCheckRe.test(commentText);
 			}
 			if (commentRanges?.length) {
 				const commentRange = commentRanges.sort((a, b) => a.pos - b.pos)[0];
