@@ -1,7 +1,6 @@
 import { Config, Service } from '@volar/language-service';
 import * as vue from '@vue/language-core';
-import { hyphenate } from '@vue/language-core';
-import { capitalize } from '@vue/shared';
+import { capitalize, hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import createCssService from 'volar-service-css';
 import createEmmetService from 'volar-service-emmet';

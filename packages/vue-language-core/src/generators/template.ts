@@ -1,11 +1,10 @@
 import { Segment } from '@volar/source-map';
 import { FileRangeCapabilities } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
-import { camelize, capitalize } from '@vue/shared';
+import { camelize, capitalize, hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { Sfc, VueCompilerOptions } from '../types';
 import { colletVars, walkInterpolationFragment } from '../utils/transform';
-import { hyphenate } from '../utils/shared';
 import { minimatch } from 'minimatch';
 import * as muggle from 'muggle-string';
 
