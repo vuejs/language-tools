@@ -3,6 +3,8 @@ import type { VueCompilerOptions, TextRange } from '../types';
 
 export interface ScriptSetupRanges extends ReturnType<typeof parseScriptSetupRanges> { }
 
+const tsNoCheckRe = /\/\/ *@ts-nocheck/g;
+
 export function parseScriptSetupRanges(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	ast: ts.SourceFile,
@@ -11,6 +13,7 @@ export function parseScriptSetupRanges(
 
 	let foundNonImportExportNode = false;
 	let importSectionEndOffset = 0;
+	let hasTsNoCheck = false;
 	let withDefaultsArg: TextRange | undefined;
 	let propsAssignName: string | undefined;
 	let defineProps: TextRange | undefined;
@@ -34,6 +37,8 @@ export function parseScriptSetupRanges(
 	}[] = [];
 	const bindings = parseBindingRanges(ts, ast, false);
 
+	const text = ast.getFullText();
+
 	ast.forEachChild(node => {
 		const isTypeExport = (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) && node.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword);
 		if (
@@ -44,7 +49,14 @@ export function parseScriptSetupRanges(
 			// fix https://github.com/vuejs/language-tools/issues/1223
 			&& !ts.isImportEqualsDeclaration(node)
 		) {
-			const commentRanges = ts.getLeadingCommentRanges(ast.getFullText(), node.getFullStart());
+			const commentRanges = ts.getLeadingCommentRanges(text, node.getFullStart());
+			if (commentRanges) {
+				const firstCommentRange = commentRanges[0];
+				const commentText = text.slice(firstCommentRange.pos, firstCommentRange.end);
+				if (tsNoCheckRe.test(commentText)) {
+					hasTsNoCheck = true;
+				}
+			}
 			if (commentRanges?.length) {
 				const commentRange = commentRanges.sort((a, b) => a.pos - b.pos)[0];
 				importSectionEndOffset = commentRange.pos;
@@ -59,6 +71,7 @@ export function parseScriptSetupRanges(
 
 	return {
 		importSectionEndOffset,
+		hasTsNoCheck,
 		bindings,
 		withDefaultsArg,
 		defineProps,

@@ -1,4 +1,4 @@
 <script setup lang="ts">
-// @ts-nocheck
+// @ts-nocheck comment
 foo;
 </script>

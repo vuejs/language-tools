@@ -57,6 +57,7 @@ export function generate(
 			emitsTypeNums: 0,
 			exposeRuntimeArg: undefined,
 			importSectionEndOffset: 0,
+			hasTsNoCheck: false,
 			defineProps: undefined,
 			propsAssignName: undefined,
 			propsRuntimeArg: undefined,
@@ -266,12 +267,16 @@ export function generate(
 		if (!scriptSetupRanges)
 			return;
 
+		if (scriptSetupRanges.hasTsNoCheck)
+			codes.push(`// @ts-nocheck\n`);
+
 		codes.push([
 			sfc.scriptSetup.content.substring(0, scriptSetupRanges.importSectionEndOffset),
 			'scriptSetup',
 			0,
 			FileRangeCapabilities.full,
 		]);
+
 	}
 	function generateExportDefaultEndMapping() {
 		if (!sfc.scriptSetup) {
