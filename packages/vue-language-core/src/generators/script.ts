@@ -276,7 +276,6 @@ export function generate(
 			0,
 			FileRangeCapabilities.full,
 		]);
-
 	}
 	function generateExportDefaultEndMapping() {
 		if (!sfc.scriptSetup) {
