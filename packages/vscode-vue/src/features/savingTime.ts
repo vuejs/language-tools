@@ -5,6 +5,7 @@ export function register() {
 
 	let start: number | undefined;
 	let isSavingMultiple = false;
+	let exceededTimes = 0;
 
 	return [
 		vscode.workspace.onWillSaveTextDocument((e) => {
@@ -31,6 +32,13 @@ export function register() {
 			start = undefined;
 
 			if (config.codeActions.enabled && time > config.codeActions.savingTimeLimit) {
+				exceededTimes++;
+			}
+			else {
+				exceededTimes = 0;
+			}
+
+			if (exceededTimes >= 2) {
 				const options = [
 					'Disable codeActions',
 					'Increase saveTimeLimit',

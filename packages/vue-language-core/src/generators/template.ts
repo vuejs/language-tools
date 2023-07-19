@@ -807,7 +807,7 @@ export function generate(
 			inScope = true;
 		}
 
-		generateDirectives(node, var_originalComponent);
+		generateDirectives(node);
 		generateElReferences(node); // <el ref="foo" />
 		if (sfc.styles.some(s => s.scoped || vueCompilerOptions.experimentalResolveStyleCssClasses === 'always')) {
 			generateClassScoped(node);
@@ -1425,7 +1425,7 @@ export function generate(
 		}
 	}
 
-	function generateDirectives(node: CompilerDOM.ElementNode, componentVar: string) {
+	function generateDirectives(node: CompilerDOM.ElementNode) {
 		for (const prop of node.props) {
 			if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -1485,11 +1485,6 @@ export function generate(
 					],
 					')',
 					'(',
-					['', 'template', prop.loc.start.offset, capabilitiesPresets.diagnosticOnly],
-					componentVar,
-					vueCompilerOptions.strictTemplates ? '' : ' as any',
-					['', 'template', prop.loc.start.offset + 'v-'.length + prop.name.length, capabilitiesPresets.diagnosticOnly],
-					', ',
 				);
 				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					codes.push(
