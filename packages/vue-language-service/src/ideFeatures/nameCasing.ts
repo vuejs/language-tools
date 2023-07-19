@@ -1,4 +1,4 @@
-import { hyphenate } from '@vue/shared';
+import { hyphenate } from '@vue/language-core';
 import { ServiceContext, VirtualFile } from '@volar/language-service';
 import { checkComponentNames, getTemplateTagsAndAttrs, checkPropsOfTag } from '../helpers';
 import * as vue from '@vue/language-core';

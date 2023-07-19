@@ -1,6 +1,7 @@
 import { FileRangeCapabilities, Service, ServiceContext, SourceMapWithDocuments } from '@volar/language-service';
 import * as vue from '@vue/language-core';
-import { hyphenate, capitalize, camelize } from '@vue/shared';
+import { hyphenate } from '@vue/language-core';
+import { capitalize, camelize } from '@vue/shared';
 import * as html from 'vscode-html-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';

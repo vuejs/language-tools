@@ -10,5 +10,7 @@ export * from './utils/parseSfc';
 export * as scriptRanges from './parsers/scriptRanges';
 export * as sharedTypes from './utils/globalTypes';
 
+export { hyphenate } from './utils/shared';
+
 export * from '@volar/language-core';
 export * from '@volar/source-map';

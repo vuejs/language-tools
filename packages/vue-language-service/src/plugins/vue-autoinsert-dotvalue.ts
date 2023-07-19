@@ -1,5 +1,5 @@
 import { AutoInsertionContext, Service, ServiceContext } from '@volar/language-service';
-import { hyphenate } from '@vue/shared';
+import { hyphenate } from '@vue/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
