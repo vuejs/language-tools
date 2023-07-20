@@ -52,7 +52,7 @@ export function parseScriptSetupRanges(
 			const commentRanges = ts.getLeadingCommentRanges(text, node.getFullStart());
 			if (commentRanges?.length) {
 				const commentRange = commentRanges.sort((a, b) => a.pos - b.pos)[0];
-				const commentText = text.slice(commentRange, commentRange.end);
+				const commentText = text.slice(commentRange.pos, commentRange.end);
 				hasTsNoCheck = tsNoCheckRe.test(commentText);
 				importSectionEndOffset = commentRange.pos;
 			}
