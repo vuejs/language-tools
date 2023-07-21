@@ -23,6 +23,7 @@ import createVueTemplateLanguageService from './plugins/vue-template';
 import createVueTqService from './plugins/vue-twoslash-queries';
 import createVisualizeHiddenCallbackParamService from './plugins/vue-visualize-hidden-callback-param';
 import createDirectiveCommentsService from './plugins/vue-directive-comments';
+import createExtractComponentService from './plugins/vue-extract-file';
 import { TagNameCasing, VueCompilerOptions } from './types';
 
 export interface Settings {
@@ -291,6 +292,7 @@ function resolvePlugins(
 	services['vue/autoInsertSpaces'] ??= createAutoAddSpaceService();
 	services['vue/visualizeHiddenCallbackParam'] ??= createVisualizeHiddenCallbackParamService();
 	services['vue/directiveComments'] ??= createDirectiveCommentsService();
+	services['vue/extractComponent'] ??= createExtractComponentService();
 	services.emmet ??= createEmmetService();
 
 	return services;
