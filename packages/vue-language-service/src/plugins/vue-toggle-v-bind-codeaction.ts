@@ -67,21 +67,52 @@ export default function (): Service {
 									});
 								}
 							}
-							if (
-								prop.type === NodeTypes.ATTRIBUTE
-							) {
-								const addVBindPos = document.positionAt(templateStartOffset + prop.loc.start.offset);
+							if (prop.type === NodeTypes.ATTRIBUTE) {
+
 								const edits: vscode.TextEdit[] = [];
-								let newPosition: vscode.Position | undefined;
+								const addVBindPos = document.positionAt(templateStartOffset + prop.loc.start.offset);
 								edits.push({
 									newText: ':',
 									range: {
 										start: addVBindPos,
-										end: addVBindPos
+										end: addVBindPos,
 									},
 								});
-								if (!prop.value) {
+
+								let newPosition: vscode.Position | undefined;
+
+								if (prop.value) {
+									const valueStart = document.positionAt(templateStartOffset + prop.value.loc.start.offset);
+									const valueEnd = document.positionAt(templateStartOffset + prop.value.loc.end.offset);
+
+									if (prop.value.loc.end.offset - prop.value.loc.start.offset !== prop.value.content.length) {
+										valueStart.character++;
+										valueEnd.character--;
+									}
+
+									edits.push({
+										newText: "'",
+										range: {
+											start: valueStart,
+											end: valueStart,
+										},
+									});
+									edits.push({
+										newText: "'",
+										range: {
+											start: valueEnd,
+											end: valueEnd,
+										},
+									});
+								}
+								else {
 									const addValuePos = document.positionAt(templateStartOffset + prop.loc.end.offset);
+
+									newPosition = {
+										line: addValuePos.line,
+										character: addValuePos.character + ':'.length + '="'.length,
+									};
+
 									edits.push({
 										newText: '=""',
 										range: {
@@ -89,11 +120,9 @@ export default function (): Service {
 											end: addValuePos
 										},
 									});
-									newPosition = {
-										line: addValuePos.line,
-										character: addValuePos.character + ':'.length + '="'.length,
-									};
+
 								}
+
 								result.push({
 									title: 'Add v-bind to attribute',
 									kind: 'refactor.rewrite.addVBind',
@@ -108,7 +137,11 @@ export default function (): Service {
 				});
 
 				return result;
-			}
+			},
+
+			transformCodeAction(item) {
+				return item; // ignore mapping
+			},
 		};
 	};
 }
