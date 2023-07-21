@@ -56,8 +56,8 @@ export function generate(
 			emitsTypeArg: undefined,
 			emitsTypeNums: 0,
 			exposeRuntimeArg: undefined,
+			leadingCommentEndOffset: 0,
 			importSectionEndOffset: 0,
-			hasTsNoCheck: false,
 			defineProps: undefined,
 			propsAssignName: undefined,
 			propsRuntimeArg: undefined,
@@ -267,11 +267,8 @@ export function generate(
 		if (!scriptSetupRanges)
 			return;
 
-		if (scriptSetupRanges.hasTsNoCheck)
-			codes.push(`// @ts-nocheck\n`);
-
 		codes.push([
-			sfc.scriptSetup.content.substring(0, scriptSetupRanges.importSectionEndOffset),
+			sfc.scriptSetup.content.substring(0, Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset)),
 			'scriptSetup',
 			0,
 			FileRangeCapabilities.full,

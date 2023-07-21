@@ -3,8 +3,6 @@ import type { VueCompilerOptions, TextRange } from '../types';
 
 export interface ScriptSetupRanges extends ReturnType<typeof parseScriptSetupRanges> { }
 
-const tsNoCheckRe = /\/\/ *@ts-nocheck/g;
-
 export function parseScriptSetupRanges(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	ast: ts.SourceFile,
@@ -13,7 +11,6 @@ export function parseScriptSetupRanges(
 
 	let foundNonImportExportNode = false;
 	let importSectionEndOffset = 0;
-	let hasTsNoCheck = false;
 	let withDefaultsArg: TextRange | undefined;
 	let propsAssignName: string | undefined;
 	let defineProps: TextRange | undefined;
@@ -36,8 +33,8 @@ export function parseScriptSetupRanges(
 		required: boolean;
 	}[] = [];
 	const bindings = parseBindingRanges(ts, ast, false);
-
 	const text = ast.getFullText();
+	const leadingCommentEndOffset = ts.getLeadingCommentRanges(text, 0)?.reverse()[0].end ?? 0;
 
 	ast.forEachChild(node => {
 		const isTypeExport = (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) && node.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword);
@@ -52,8 +49,6 @@ export function parseScriptSetupRanges(
 			const commentRanges = ts.getLeadingCommentRanges(text, node.getFullStart());
 			if (commentRanges?.length) {
 				const commentRange = commentRanges.sort((a, b) => a.pos - b.pos)[0];
-				const commentText = text.slice(commentRange.pos, commentRange.end);
-				hasTsNoCheck = tsNoCheckRe.test(commentText);
 				importSectionEndOffset = commentRange.pos;
 			}
 			else {
@@ -65,8 +60,8 @@ export function parseScriptSetupRanges(
 	ast.forEachChild(child => visitNode(child, ast));
 
 	return {
+		leadingCommentEndOffset,
 		importSectionEndOffset,
-		hasTsNoCheck,
 		bindings,
 		withDefaultsArg,
 		defineProps,
