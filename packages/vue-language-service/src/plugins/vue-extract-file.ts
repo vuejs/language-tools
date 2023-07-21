@@ -4,6 +4,12 @@ import { SfcBlock, VueFile, walkElementNodes } from '@vue/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { Provide } from 'volar-service-typescript';
 
+interface ActionData {
+	uri: string;
+	range: [number, number];
+	newName: string;
+}
+
 export default function (): Service {
 
 	return (ctx: ServiceContext<Provide> | undefined, modules): ReturnType<Service> => {
@@ -45,15 +51,17 @@ export default function (): Service {
 						data: {
 							uri: document.uri,
 							range: [startOffset, endOffset],
-						},
+							newName: 'NewComponent',
+						} satisfies ActionData,
 					},
 				];
 			},
 
 			async resolveCodeAction(codeAction) {
 
-				const document = ctx!.getTextDocument(codeAction.data.uri)!;
-				const [startOffset, endOffset]: [number, number] = codeAction.data.range;
+				const { uri, range, newName } = codeAction.data as ActionData;
+				const document = ctx!.getTextDocument(uri)!;
+				const [startOffset, endOffset]: [number, number] = range;
 				const [vueFile] = ctx!.documents.getVirtualFileByUri(document.uri) as [VueFile, any];
 				const { sfc } = vueFile;
 				const script = sfc.scriptSetup ?? sfc.script;
@@ -72,15 +80,23 @@ export default function (): Service {
 				const sourceFileKind = languageServiceHost.getScriptKind?.(vueFile.mainScriptName);
 				const toExtract = collectExtractProps();
 				const initialIndentSetting = await ctx!.env.getConfiguration!('volar.format.initialIndent') as Record<string, boolean>;
-				const newScriptTag = toExtract.length
-					? constructTag('script', ['setup', 'lang="ts"'], isInitialIndentNeeded(ts, sourceFileKind!, initialIndentSetting), generateNewScriptContents())
-					: undefined;
-				const newTemplateTag = constructTag('template', [], initialIndentSetting.html, sfc.template.content.substring(templateCodeRange[0], templateCodeRange[1]));
-				const newFileContents = dedentString(sfc.template.startTagEnd > script.startTagEnd ? `${newScriptTag}\n${newTemplateTag}` : `${newTemplateTag}\n${newScriptTag}`);
-				const extractedComponentName = `Extracted`;
-				const extractedFileName = `${extractedComponentName}.vue`;
-				const newUri = document.uri.substring(0, document.uri.lastIndexOf('/') + 1) + extractedFileName;
+				const newUri = document.uri.substring(0, document.uri.lastIndexOf('/') + 1) + `${newName}.vue`;
 				const lastImportNode = getLastImportNode(scriptAst);
+
+				let newFileTags = [];
+
+				newFileTags.push(
+					constructTag('template', [], initialIndentSetting.html, sfc.template.content.substring(templateCodeRange[0], templateCodeRange[1]))
+				);
+
+				if (toExtract.length) {
+					newFileTags.push(
+						constructTag('script', ['setup', 'lang="ts"'], isInitialIndentNeeded(ts, sourceFileKind!, initialIndentSetting), generateNewScriptContents())
+					);
+				}
+				if (sfc.template.startTagEnd > script.startTagEnd) {
+					newFileTags = newFileTags.reverse();
+				}
 
 				return {
 					...codeAction,
@@ -108,7 +124,7 @@ export default function (): Service {
 											start: document.positionAt(script.startTagEnd),
 											end: document.positionAt(script.startTagEnd),
 										},
-										newText: `\nimport ${extractedComponentName} from './${extractedFileName}'`,
+										newText: `\nimport ${newName} from './${newName}.vue'`,
 									} satisfies TextEdit,
 								],
 							} satisfies TextDocumentEdit,
@@ -129,7 +145,7 @@ export default function (): Service {
 											start: { line: 0, character: 0 },
 											end: { line: 0, character: 0 },
 										},
-										newText: newFileContents,
+										newText: newFileTags.join('\n'),
 									} satisfies TextEdit,
 								],
 							} satisfies TextDocumentEdit,
@@ -214,7 +230,7 @@ export default function (): Service {
 					const props = [...toExtract.values()].filter(p => !p.model);
 					const models = [...toExtract.values()].filter(p => p.model);
 					return [
-						`<${extractedComponentName}`,
+						`<${newName}`,
 						...props.map(p => `:${p.name}="${p.name}"`),
 						...models.map(p => `v-model:${p.name}="${p.name}"`),
 						`/>`,
@@ -250,15 +266,6 @@ function selectTemplateCode(startOffset: number, endOffset: number, templateBloc
 		const last = insideNodes.sort((a, b) => b.loc.end.offset - a.loc.end.offset)[0];
 		return [first.loc.start.offset, last.loc.end.offset];
 	}
-}
-
-/** Also removes leading empty lines */
-function dedentString(input: string) {
-	let lines = input.split(/\n/g);
-	const firstNonEmptyLineIndex = lines.findIndex(line => line) ?? 0;
-	lines = lines.slice(firstNonEmptyLineIndex);
-	const initialIndentation = lines[0]!.match(/\s*/)![0];
-	return lines.map(line => initialIndentation && line.startsWith(initialIndentation) ? line.slice(initialIndentation.length) : line).join('\n');
 }
 
 function constructTag(name: string, attributes: string[], initialIndent: boolean, content: string) {

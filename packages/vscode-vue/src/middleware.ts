@@ -6,6 +6,16 @@ import { attrNameCasings, tagNameCasings } from './features/nameCasing';
 
 export const middleware: lsp.Middleware = {
 	...baseMiddleware,
+	async resolveCodeAction(item, token, next) {
+		if (item.kind?.value === 'refactor.move.newFile.dumb') {
+			const inputName = await vscode.window.showInputBox({ value: (item as any).data.original.data.newName });
+			if (!inputName) {
+				return item; // cancel
+			}
+			(item as any).data.original.data.newName = inputName;
+		}
+		return await (baseMiddleware.resolveCodeAction?.(item, token, next) ?? next(item, token));
+	},
 	workspace: {
 		configuration(params, token, next) {
 			if (params.items.some(item => item.section === 'vue.complete.casing.props' || item.section === 'vue.complete.casing.tags')) {
