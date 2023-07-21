@@ -1,5 +1,5 @@
-import type { VueLanguagePlugin } from '@volar/vue-language-core';
-import * as pug from '@volar-plugins/pug/out/languageService';
+import type { VueLanguagePlugin } from '@vue/language-core';
+import * as pug from 'volar-service-pug/out/languageService';
 import { SourceMap } from '@volar/source-map';
 
 const plugin: VueLanguagePlugin = ({ modules }) => {
@@ -22,6 +22,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 					const compiler = modules['@vue/compiler-dom'];
 					const completed = compiler.compile(pugFile.htmlCode, {
 						...options,
+						comments: true,
 						onWarn(warning) {
 							options?.onWarn?.(createProxyObject(warning));
 						},

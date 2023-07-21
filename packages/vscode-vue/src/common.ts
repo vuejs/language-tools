@@ -1,22 +1,22 @@
 import {
 	activateAutoInsertion,
-	activateShowVirtualFiles,
-	activateWriteVirtualFiles,
 	activateFindFileReferences,
 	activateReloadProjects,
-	activateServerStats,
-	activateTsConfigStatusItem,
 	activateServerSys,
+	activateTsConfigStatusItem,
 	activateTsVersionStatusItem,
+	activateWriteVirtualFiles,
 	getTsdk,
-	takeOverModeActive,
+	takeOverModeActive
 } from '@volar/vscode';
-import { DiagnosticModel, ServerMode, VueServerInitializationOptions } from '@volar/vue-language-server';
+import { DiagnosticModel, ServerMode, VueServerInitializationOptions } from '@vue/language-server';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient';
+import { config } from './config';
 import * as componentMeta from './features/componentMeta';
 import * as doctor from './features/doctor';
 import * as nameCasing from './features/nameCasing';
+import * as savingTime from './features/savingTime';
 import * as splitEditors from './features/splitEditors';
 
 let semanticClient: lsp.BaseLanguageClient;
@@ -25,9 +25,10 @@ let syntacticClient: lsp.BaseLanguageClient;
 type CreateLanguageClient = (
 	id: string,
 	name: string,
-	langs: string[],
+	langs: lsp.DocumentFilter[],
 	initOptions: VueServerInitializationOptions,
 	port: number,
+	outputChannel: vscode.OutputChannel,
 ) => lsp.BaseLanguageClient;
 
 export async function activate(context: vscode.ExtensionContext, createLc: CreateLanguageClient) {
@@ -45,7 +46,7 @@ export async function activate(context: vscode.ExtensionContext, createLc: Creat
 		}
 
 		const currentLangId = vscode.window.activeTextEditor.document.languageId;
-		if (currentLangId === 'vue' || (currentLangId === 'markdown' && processMd()) || (currentLangId === 'html' && processHtml())) {
+		if (currentLangId === 'vue' || (currentLangId === 'markdown' && config.server.vitePress.supportMdFile) || (currentLangId === 'html' && config.server.petiteVue.supportHtmlFile)) {
 			doActivate(context, createLc);
 			stopCheck.dispose();
 		}
@@ -62,20 +63,25 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 	vscode.commands.executeCommand('setContext', 'volar.activated', true);
 
+	const semanticOutputChannel = vscode.window.createOutputChannel('Vue Semantic Server');
+	const syntacticOutputChannel = vscode.window.createOutputChannel('Vue Syntactic Server');
+
 	[semanticClient, syntacticClient] = await Promise.all([
 		createLc(
 			'vue-semantic-server',
 			'Vue Semantic Server',
-			getDocumentSelector(context),
+			getDocumentSelector(context, ServerMode.PartialSemantic),
 			await getInitializationOptions(ServerMode.PartialSemantic, context),
 			6009,
+			semanticOutputChannel
 		),
 		createLc(
 			'vue-syntactic-server',
 			'Vue Syntactic Server',
-			getDocumentSelector(context),
+			getDocumentSelector(context, ServerMode.Syntactic),
 			await getInitializationOptions(ServerMode.Syntactic, context),
 			6011,
+			syntacticOutputChannel
 		)
 	]);
 
@@ -84,6 +90,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	activateServerMaxOldSpaceSizeChange();
 	activateRestartRequest();
 	activateClientRequests();
+	context.subscriptions.push(...savingTime.register());
 
 	splitEditors.register(context, syntacticClient);
 	doctor.register(context, semanticClient);
@@ -99,14 +106,13 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	};
 
 	activateAutoInsertion([syntacticClient, semanticClient], document => supportedLanguages[document.languageId]);
-	activateShowVirtualFiles('volar.action.showVirtualFiles', semanticClient);
 	activateWriteVirtualFiles('volar.action.writeVirtualFiles', semanticClient);
 	activateFindFileReferences('volar.vue.findAllFileReferences', semanticClient);
 	activateTsConfigStatusItem('volar.openTsconfig', semanticClient,
 		document => {
 			return document.languageId === 'vue'
-				|| (processMd() && document.languageId === 'markdown')
-				|| (processHtml() && document.languageId === 'html')
+				|| (config.server.vitePress.supportMdFile && document.languageId === 'markdown')
+				|| (config.server.petiteVue.supportHtmlFile && document.languageId === 'html')
 				|| (
 					takeOverModeActive(context)
 					&& ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(document.languageId)
@@ -114,12 +120,11 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		},
 	);
 	activateReloadProjects('volar.action.reloadProject', [semanticClient]);
-	activateServerStats('volar.action.serverStats', [semanticClient]);
 	activateTsVersionStatusItem('volar.selectTypeScriptVersion', context, semanticClient,
 		document => {
 			return document.languageId === 'vue'
-				|| (processMd() && document.languageId === 'markdown')
-				|| (processHtml() && document.languageId === 'html')
+				|| (config.server.vitePress.supportMdFile && document.languageId === 'markdown')
+				|| (config.server.petiteVue.supportHtmlFile && document.languageId === 'html')
 				|| (
 					takeOverModeActive(context)
 					&& ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(document.languageId)
@@ -129,52 +134,40 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			if (takeOverModeActive(context)) {
 				text += ' (takeover)';
 			}
-			if (noProjectReferences()) {
-				text += ' (noProjectReferences)';
-			}
 			return text;
 		},
 		false,
 	);
 
 	for (const client of clients) {
-		activateServerSys(context, client, undefined);
+		activateServerSys(client);
 	}
 
-	async function requestReloadVscode() {
-		const reload = await vscode.window.showInformationMessage(
-			'Please reload VSCode to restart language servers.',
-			'Reload Window'
-		);
-		if (reload === undefined) return; // cancel
-		vscode.commands.executeCommand('workbench.action.reloadWindow');
-	}
 	function activateServerMaxOldSpaceSizeChange() {
 		vscode.workspace.onDidChangeConfiguration((e) => {
-			if (
-				e.affectsConfiguration('volar.vueserver.maxOldSpaceSize')
-				|| e.affectsConfiguration('volar.vueserver.diagnosticModel')
-				|| e.affectsConfiguration('volar.vueserver.noProjectReferences')
-				|| e.affectsConfiguration('volar.vueserver.reverseConfigFilePriority')
-				|| e.affectsConfiguration('volar.vueserver.disableFileWatcher')
-				|| e.affectsConfiguration('volar.vueserver.petiteVue.processHtmlFile')
-				|| e.affectsConfiguration('volar.vueserver.vitePress.processMdFile')
-				|| e.affectsConfiguration('volar.vueserver.additionalExtensions')
-				|| e.affectsConfiguration('volar.vueserver.maxFileSize')
-				|| e.affectsConfiguration('volar.vueserver.configFilePath')
-				|| e.affectsConfiguration('volar.vueserver.fullCompletionList')
-			) {
-				requestReloadVscode();
+			if (e.affectsConfiguration('vue')) {
+				vscode.commands.executeCommand('volar.action.restartServer');
 			}
 		});
 	}
+
 	async function activateRestartRequest() {
 		context.subscriptions.push(vscode.commands.registerCommand('volar.action.restartServer', async () => {
+
 			await Promise.all(clients.map(client => client.stop()));
+
+			semanticOutputChannel.clear();
+			syntacticOutputChannel.clear();
+
+			semanticClient.clientOptions.initializationOptions = await getInitializationOptions(ServerMode.PartialSemantic, context, semanticClient.clientOptions.initializationOptions);
+			syntacticClient.clientOptions.initializationOptions = await getInitializationOptions(ServerMode.Syntactic, context, syntacticClient.clientOptions.initializationOptions);
+
 			await Promise.all(clients.map(client => client.start()));
+
 			activateClientRequests();
 		}));
 	}
+
 	function activateClientRequests() {
 		nameCasing.activate(context, semanticClient);
 	}
@@ -187,91 +180,54 @@ export function deactivate(): Thenable<any> | undefined {
 	]);
 }
 
-export function getDocumentSelector(context: vscode.ExtensionContext) {
+export function getDocumentSelector(context: vscode.ExtensionContext, serverMode: ServerMode): lsp.DocumentFilter[] {
 	const takeOverMode = takeOverModeActive(context);
-	const langs = takeOverMode ? [
-		'vue',
-		'javascript',
-		'typescript',
-		'javascriptreact',
-		'typescriptreact',
-	] : [
-		'vue',
-	];
+	const selectors: lsp.DocumentFilter[] = [];
+	selectors.push({ language: 'vue' });
 	if (takeOverMode) {
-		langs.push('json');
+		selectors.push({ language: 'javascript' });
+		selectors.push({ language: 'typescript' });
+		selectors.push({ language: 'javascriptreact' });
+		selectors.push({ language: 'typescriptreact' });
+		if (serverMode === ServerMode.Semantic || serverMode === ServerMode.PartialSemantic) { // #2573
+			// support find references for .json files
+			selectors.push({ language: 'json' });
+			// comment out to avoid #2648 for now
+			// // support document links for tsconfig.json
+			// selectors.push({ language: 'jsonc', pattern: '**/[jt]sconfig.json' });
+			// selectors.push({ language: 'jsonc', pattern: '**/[jt]sconfig.*.json' });
+		}
 	}
-	if (processHtml()) {
-		langs.push('html');
+	if (config.server.petiteVue.supportHtmlFile) {
+		selectors.push({ language: 'html' });
 	}
-	if (processMd()) {
-		langs.push('markdown');
+	if (config.server.vitePress.supportMdFile) {
+		selectors.push({ language: 'markdown' });
 	}
-	return langs;
-}
-
-export function processHtml() {
-	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.petiteVue.processHtmlFile');
-}
-
-export function processMd() {
-	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.vitePress.processMdFile');
-}
-
-export function noProjectReferences() {
-	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.noProjectReferences');
-}
-
-export function reverseConfigFilePriority() {
-	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.reverseConfigFilePriority');
-}
-
-export function disableFileWatcher() {
-	return !!vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.disableFileWatcher');
-}
-
-export function diagnosticModel() {
-	return vscode.workspace.getConfiguration('volar').get<'push' | 'pull'>('vueserver.diagnosticModel');
-}
-
-function additionalExtensions() {
-	return vscode.workspace.getConfiguration('volar').get<string[]>('vueserver.additionalExtensions') ?? [];
-}
-
-function fullCompletionList() {
-	return vscode.workspace.getConfiguration('volar').get<boolean>('vueserver.fullCompletionList');
+	return selectors;
 }
 
 async function getInitializationOptions(
 	serverMode: ServerMode,
 	context: vscode.ExtensionContext,
+	options: VueServerInitializationOptions = {},
 ) {
-	const initializationOptions: VueServerInitializationOptions = {
-		// volar
-		configFilePath: vscode.workspace.getConfiguration('volar').get<string>('vueserver.configFilePath'),
-		serverMode,
-		diagnosticModel: diagnosticModel() === 'pull' ? DiagnosticModel.Pull : DiagnosticModel.Push,
-		typescript: { tsdk: (await getTsdk(context)).tsdk },
-		noProjectReferences: noProjectReferences(),
-		reverseConfigFilePriority: reverseConfigFilePriority(),
-		disableFileWatcher: disableFileWatcher(),
-		maxFileSize: vscode.workspace.getConfiguration('volar').get<number>('vueserver.maxFileSize'),
-		semanticTokensLegend: {
+	// volar
+	options.configFilePath = config.server.configFilePath;
+	options.serverMode = serverMode,
+		options.diagnosticModel = config.server.diagnosticModel === 'pull' ? DiagnosticModel.Pull : DiagnosticModel.Push,
+		options.typescript = { tsdk: (await getTsdk(context)).tsdk },
+		options.reverseConfigFilePriority = config.server.reverseConfigFilePriority,
+		options.maxFileSize = config.server.maxFileSize,
+		options.semanticTokensLegend = {
 			tokenTypes: ['component'],
 			tokenModifiers: [],
-		},
-		fullCompletionList: fullCompletionList(),
-		// vue
-		petiteVue: {
-			processHtmlFile: processHtml(),
-		},
-		vitePress: {
-			processMdFile: processMd(),
-		},
-		json: {
-			customBlockSchemaUrls: vscode.workspace.getConfiguration('volar').get<Record<string, string>>('vueserver.json.customBlockSchemaUrls'),
-		},
-		additionalExtensions: additionalExtensions(),
-	};
-	return initializationOptions;
+		};
+	options.fullCompletionList = config.server.fullCompletionList;
+	options.additionalExtensions = [
+		...config.server.additionalExtensions,
+		...!config.server.petiteVue.supportHtmlFile ? [] : ['html'],
+		...!config.server.vitePress.supportMdFile ? [] : ['md'],
+	];
+	return options;
 }

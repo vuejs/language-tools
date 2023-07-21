@@ -1,7 +1,7 @@
-import { LanguageServicePlugin } from '@volar/language-service';
-import * as vscode from 'vscode-languageserver-protocol';
+import { Service } from '@volar/language-service';
+import type * as vscode from 'vscode-languageserver-protocol';
 
-const plugin: LanguageServicePlugin = (context) => {
+const plugin: Service = (context) => {
 
 	if (!context)
 		return {};
@@ -10,33 +10,42 @@ const plugin: LanguageServicePlugin = (context) => {
 
 		async provideInlayHints(document, range) {
 
-			const enabled = await context.configurationHost?.getConfiguration<boolean>('volar.inlayHints.eventArgumentInInlineHandlers') ?? true;
-			if (!enabled)
-				return;
-
+			const settings: Record<string, boolean> = {};
 			const result: vscode.InlayHint[] = [];
 			const [file] = context.documents.getVirtualFileByUri(document.uri);
 			if (file) {
 				const start = document.offsetAt(range.start);
 				const end = document.offsetAt(range.end);
 				for (const mapping of file.mappings) {
+
+					const hint: {
+						setting: string;
+						label: string;
+						tooltip: string;
+						paddingRight?: boolean;
+						paddingLeft?: boolean;
+					} | undefined = (mapping.data as any).__hint;
+
 					if (
 						mapping.generatedRange[0] >= start
 						&& mapping.generatedRange[1] <= end
-						&& (mapping.data as any).__hiddenParam
+						&& hint
 					) {
+
+						settings[hint.setting] ??= await context.env.getConfiguration?.<boolean>(hint.setting) ?? false;
+
+						if (!settings[hint.setting])
+							continue;
+
 						result.push({
-							label: '$event =>',
-							paddingRight: true,
+							label: hint.label,
+							paddingRight: hint.paddingRight,
+							paddingLeft: hint.paddingLeft,
 							position: document.positionAt(mapping.generatedRange[0]),
-							kind: vscode.InlayHintKind.Parameter,
+							kind: 2 satisfies typeof vscode.InlayHintKind.Parameter,
 							tooltip: {
 								kind: 'markdown',
-								value: [
-									'`$event` is a hidden parameter, you can use it in this callback.',
-									'To hide this hint, set `volar.inlayHints.eventArgumentInInlineHandlers` to `false` in IDE settings.',
-									'[More info](https://github.com/vuejs/language-tools/issues/2445#issuecomment-1444771420)',
-								].join('\n\n'),
+								value: hint.tooltip,
 							},
 						});
 					}

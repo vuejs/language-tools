@@ -1,7 +1,8 @@
-import * as vue from '@volar/vue-language-core';
-import * as embedded from '@volar/language-core';
+import * as vue from '@vue/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'typesafe-path/posix';
+import typeHelpersCode from 'vue-component-type-helpers';
+import { createLanguageServiceHost, decorateLanguageService } from '@volar/typescript';
 
 import type {
 	MetaCheckerOptions,
@@ -10,18 +11,15 @@ import type {
 	ExposeMeta,
 	PropertyMeta,
 	PropertyMetaSchema,
-	SlotMeta
+	SlotMeta,
+	Declaration
 } from './types';
 
 export * from './types';
 
-const extraFileExtensions: ts.FileExtensionInfo[] = [{
-	extension: 'vue',
-	isMixedContent: true,
-	scriptKind: 7 /* ts.ScriptKind.Deferred */,
-}];
-
 export type ComponentMetaChecker = ReturnType<typeof baseCreate>;
+
+const windowsPathReg = /\\/g;
 
 export function createComponentMetaCheckerByJsonConfig(
 	root: string,
@@ -29,10 +27,12 @@ export function createComponentMetaCheckerByJsonConfig(
 	checkerOptions: MetaCheckerOptions = {},
 	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
 ) {
+	const rootPath = (root as path.OsPath).replace(windowsPathReg, '/') as path.PosixPath;
 	return createComponentMetaCheckerWorker(
-		() => vue.createParsedCommandLineByJson(ts, ts.sys, root, json, extraFileExtensions),
+		() => vue.createParsedCommandLineByJson(ts, ts.sys, root, json),
 		checkerOptions,
-		path.join((root as path.OsPath).replace(/\\/g, '/') as path.PosixPath, 'jsconfig.json.global.vue' as path.PosixPath),
+		rootPath,
+		path.join(rootPath, 'jsconfig.json.global.vue' as path.PosixPath),
 		ts,
 	);
 }
@@ -42,10 +42,12 @@ export function createComponentMetaChecker(
 	checkerOptions: MetaCheckerOptions = {},
 	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
 ) {
+	const tsconfig = (tsconfigPath as path.OsPath).replace(windowsPathReg, '/') as path.PosixPath;
 	return createComponentMetaCheckerWorker(
-		() => vue.createParsedCommandLine(ts, ts.sys, tsconfigPath, extraFileExtensions),
+		() => vue.createParsedCommandLine(ts, ts.sys, tsconfigPath),
 		checkerOptions,
-		(tsconfigPath as path.OsPath).replace(/\\/g, '/') as path.PosixPath + '.global.vue',
+		path.dirname(tsconfig),
+		tsconfig + '.global.vue',
 		ts,
 	);
 }
@@ -53,6 +55,7 @@ export function createComponentMetaChecker(
 function createComponentMetaCheckerWorker(
 	loadParsedCommandLine: () => vue.ParsedCommandLine,
 	checkerOptions: MetaCheckerOptions,
+	rootPath: string,
 	globalComponentName: string,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {
@@ -62,20 +65,17 @@ function createComponentMetaCheckerWorker(
 	 */
 
 	let parsedCommandLine = loadParsedCommandLine();
-	let fileNames = (parsedCommandLine.fileNames as path.OsPath[]).map<path.PosixPath>(path => path.replace(/\\/g, '/') as path.PosixPath);
+	let fileNames = (parsedCommandLine.fileNames as path.OsPath[]).map<path.PosixPath>(path => path.replace(windowsPathReg, '/') as path.PosixPath);
 	let projectVersion = 0;
 
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
-	const scriptVersions = new Map<string, number>();
-	const _host: vue.VueLanguageServiceHost = {
-		...ts.sys,
+	const _host: vue.TypeScriptLanguageHost = {
+		workspacePath: rootPath,
+		rootPath: rootPath,
 		getProjectVersion: () => projectVersion.toString(),
-		getDefaultLibFileName: (options) => ts.getDefaultLibFilePath(options), // should use ts.getDefaultLibFilePath not ts.getDefaultLibFileName
-		useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,
 		getCompilationSettings: () => parsedCommandLine.options,
 		getScriptFileNames: () => fileNames,
 		getProjectReferences: () => parsedCommandLine.projectReferences,
-		getScriptVersion: (fileName) => scriptVersions.get(fileName)?.toString() ?? '',
 		getScriptSnapshot: (fileName) => {
 			if (!scriptSnapshots.has(fileName)) {
 				const fileText = ts.sys.readFile(fileName);
@@ -85,45 +85,42 @@ function createComponentMetaCheckerWorker(
 			}
 			return scriptSnapshots.get(fileName);
 		},
-		getTypeScriptModule: () => ts,
-		getVueCompilationSettings: () => parsedCommandLine.vueOptions,
 	};
 
 	return {
-		...baseCreate(_host, checkerOptions, globalComponentName, ts),
+		...baseCreate(_host, vue.resolveVueCompilerOptions(parsedCommandLine.vueOptions), checkerOptions, globalComponentName, ts),
 		updateFile(fileName: string, text: string) {
-			fileName = (fileName as path.OsPath).replace(/\\/g, '/') as path.PosixPath;
+			fileName = (fileName as path.OsPath).replace(windowsPathReg, '/') as path.PosixPath;
 			scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(text));
-			scriptVersions.set(fileName, scriptVersions.has(fileName) ? scriptVersions.get(fileName)! + 1 : 1);
 			projectVersion++;
 		},
 		deleteFile(fileName: string) {
-			fileName = (fileName as path.OsPath).replace(/\\/g, '/') as path.PosixPath;
+			fileName = (fileName as path.OsPath).replace(windowsPathReg, '/') as path.PosixPath;
 			fileNames = fileNames.filter(f => f !== fileName);
 			projectVersion++;
 		},
 		reload() {
 			parsedCommandLine = loadParsedCommandLine();
-			fileNames = (parsedCommandLine.fileNames as path.OsPath[]).map<path.PosixPath>(path => path.replace(/\\/g, '/') as path.PosixPath);
+			fileNames = (parsedCommandLine.fileNames as path.OsPath[]).map<path.PosixPath>(path => path.replace(windowsPathReg, '/') as path.PosixPath);
 			this.clearCache();
 		},
 		clearCache() {
 			scriptSnapshots.clear();
-			scriptVersions.clear();
 			projectVersion++;
 		},
 	};
 }
 
 export function baseCreate(
-	_host: vue.VueLanguageServiceHost,
+	_host: vue.TypeScriptLanguageHost,
+	vueCompilerOptions: vue.VueCompilerOptions,
 	checkerOptions: MetaCheckerOptions,
 	globalComponentName: string,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {
 	const globalComponentSnapshot = ts.ScriptSnapshot.fromString('<script setup lang="ts"></script>');
 	const metaSnapshots: Record<string, ts.IScriptSnapshot> = {};
-	const host = new Proxy<Partial<vue.VueLanguageServiceHost>>({
+	const host = new Proxy<Partial<vue.TypeScriptLanguageHost>>({
 		getScriptFileNames: () => {
 			const names = _host.getScriptFileNames();
 			return [
@@ -154,34 +151,31 @@ export function baseCreate(
 			}
 			return _host[prop as keyof typeof _host];
 		},
-	}) as vue.VueLanguageServiceHost;
-	const vueCompilerOptions = vue.resolveVueCompilerOptions(host.getVueCompilationSettings());
-	const vueLanguageModules = ts ? vue.createLanguageModules(
-		ts,
+	}) as vue.TypeScriptLanguageHost;
+	const vueLanguages = ts ? vue.createLanguages(
 		host.getCompilationSettings(),
 		vueCompilerOptions,
+		ts,
 	) : [];
-	const core = embedded.createLanguageContext(host, vueLanguageModules);
-	const proxyApis: Partial<ts.LanguageServiceHost> = checkerOptions.forceUseTs ? {
-		getScriptKind: (fileName) => {
+	const core = vue.createLanguageContext(host, vueLanguages);
+	const tsLsHost = createLanguageServiceHost(core, ts, ts.sys);
+	const tsLs = ts.createLanguageService(tsLsHost);
+
+	decorateLanguageService(core.virtualFiles, tsLs, false);
+
+	if (checkerOptions.forceUseTs) {
+		const getScriptKind = tsLsHost.getScriptKind;
+		tsLsHost.getScriptKind = (fileName) => {
 			if (fileName.endsWith('.vue.js')) {
 				return ts.ScriptKind.TS;
 			}
 			if (fileName.endsWith('.vue.jsx')) {
 				return ts.ScriptKind.TSX;
 			}
-			return core.typescript.languageServiceHost.getScriptKind!(fileName);
-		},
-	} : {};
-	const proxyHost = new Proxy(core.typescript.languageServiceHost, {
-		get(target, propKey: keyof ts.LanguageServiceHost) {
-			if (propKey in proxyApis) {
-				return proxyApis[propKey];
-			}
-			return target[propKey];
-		}
-	});
-	const tsLs = ts.createLanguageService(proxyHost);
+			return getScriptKind!(fileName);
+		};
+	}
+
 	let globalPropNames: string[] | undefined;
 
 	return {
@@ -201,10 +195,21 @@ export function baseCreate(
 	}
 
 	function getMetaScriptContent(fileName: string) {
-		return `
-			import * as Components from '${fileName.substring(0, fileName.length - '.meta.ts'.length)}';
-			export default {} as { [K in keyof typeof Components]: InstanceType<typeof Components[K]>; };
-		`;
+		let code = `
+import * as Components from '${fileName.substring(0, fileName.length - '.meta.ts'.length)}';
+export default {} as { [K in keyof typeof Components]: ComponentMeta<typeof Components[K]>; };
+
+interface ComponentMeta<T> {
+	type: ComponentType<T>;
+	props: ComponentProps<T>;
+	emit: ComponentEmit<T>;
+	slots: ${vueCompilerOptions.target < 3 ? 'Vue2ComponentSlots' : 'ComponentSlots'}<T>;
+	exposed: ComponentExposed<T>;
+};
+
+${typeHelpersCode}
+`.trim();
+		return code;
 	}
 
 	function getExportNames(componentPath: string) {
@@ -227,12 +232,16 @@ export function baseCreate(
 		const componentType = typeChecker.getTypeOfSymbolAtLocation(_export, symbolNode!);
 		const symbolProperties = componentType.getProperties() ?? [];
 
+		let _type: ReturnType<typeof getType> | undefined;
 		let _props: ReturnType<typeof getProps> | undefined;
 		let _events: ReturnType<typeof getEvents> | undefined;
 		let _slots: ReturnType<typeof getSlots> | undefined;
 		let _exposed: ReturnType<typeof getExposed> | undefined;
 
 		return {
+			get type() {
+				return _type ?? (_type = getType());
+			},
 			get props() {
 				return _props ?? (_props = getProps());
 			},
@@ -247,9 +256,21 @@ export function baseCreate(
 			},
 		};
 
+		function getType() {
+
+			const $type = symbolProperties.find(prop => prop.escapedName === 'type');
+
+			if ($type) {
+				const type = typeChecker.getTypeOfSymbolAtLocation($type, symbolNode!);
+				return Number(typeChecker.typeToString(type));
+			}
+
+			return 0;
+		}
+
 		function getProps() {
 
-			const $props = symbolProperties.find(prop => prop.escapedName === '$props');
+			const $props = symbolProperties.find(prop => prop.escapedName === 'props');
 			const propEventRegex = /^(on[A-Z])/;
 			let result: PropertyMeta[] = [];
 
@@ -261,7 +282,7 @@ export function baseCreate(
 					.map((prop) => {
 						const {
 							resolveNestedProperties,
-						} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts);
+						} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts, core);
 
 						return resolveNestedProperties(prop);
 					})
@@ -314,7 +335,8 @@ export function baseCreate(
 		}
 
 		function getEvents() {
-			const $emit = symbolProperties.find(prop => prop.escapedName === '$emit');
+
+			const $emit = symbolProperties.find(prop => prop.escapedName === 'emit');
 
 			if ($emit) {
 				const type = typeChecker.getTypeOfSymbolAtLocation($emit, symbolNode!);
@@ -324,7 +346,7 @@ export function baseCreate(
 
 					const {
 						resolveEventSignature,
-					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts);
+					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts, core);
 
 					return resolveEventSignature(call);
 				}).filter(event => event.name);
@@ -335,8 +357,7 @@ export function baseCreate(
 
 		function getSlots() {
 
-			const propertyName = vueCompilerOptions.target < 3 ? '$scopedSlots' : '$slots';
-			const $slots = symbolProperties.find(prop => prop.escapedName === propertyName);
+			const $slots = symbolProperties.find(prop => prop.escapedName === 'slots');
 
 			if ($slots) {
 				const type = typeChecker.getTypeOfSymbolAtLocation($slots, symbolNode!);
@@ -345,7 +366,7 @@ export function baseCreate(
 				return properties.map((prop) => {
 					const {
 						resolveSlotProperties,
-					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts);
+					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts, core);
 
 					return resolveSlotProperties(prop);
 				});
@@ -356,16 +377,19 @@ export function baseCreate(
 
 		function getExposed() {
 
-			const exposed = symbolProperties.filter(prop =>
-				// only exposed props will not have a valueDeclaration
-				!(prop as any).valueDeclaration
-			);
+			const $exposed = symbolProperties.find(prop => prop.escapedName === 'exposed');
 
-			if (exposed.length) {
-				return exposed.map((prop) => {
+			if ($exposed) {
+				const type = typeChecker.getTypeOfSymbolAtLocation($exposed, symbolNode!);
+				const properties = type.getProperties().filter(prop =>
+					// only exposed props will not have a valueDeclaration
+					!(prop as any).valueDeclaration
+				);
+
+				return properties.map((prop) => {
 					const {
 						resolveExposedProperties,
-					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts);
+					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts, core);
 
 					return resolveExposedProperties(prop);
 				});
@@ -418,11 +442,13 @@ export function baseCreate(
 	}
 }
 
+
 function createSchemaResolvers(
 	typeChecker: ts.TypeChecker,
 	symbolNode: ts.Expression,
-	{ rawType, schema: options }: MetaCheckerOptions,
+	{ rawType, schema: options, noDeclarations }: MetaCheckerOptions,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
+	core: vue.LanguageContext,
 ) {
 	const visited = new Set<ts.Type>();;
 
@@ -460,6 +486,7 @@ function createSchemaResolvers(
 	function resolveNestedProperties(prop: ts.Symbol): PropertyMeta {
 		const subtype = typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!);
 		let schema: PropertyMetaSchema;
+		let declarations: Declaration[];
 
 		return {
 			name: prop.getEscapedName().toString(),
@@ -472,6 +499,9 @@ function createSchemaResolvers(
 			required: !(prop.flags & ts.SymbolFlags.Optional),
 			type: typeChecker.typeToString(subtype),
 			rawType: rawType ? subtype : undefined,
+			get declarations() {
+				return declarations ??= getDeclarations(prop.declarations ?? []);
+			},
 			get schema() {
 				return schema ??= resolveSchema(subtype);
 			},
@@ -483,12 +513,16 @@ function createSchemaResolvers(
 		const paramType = signatures[0].parameters[0];
 		const subtype = typeChecker.getTypeOfSymbolAtLocation(paramType, symbolNode!);
 		let schema: PropertyMetaSchema;
+		let declarations: Declaration[];
 
 		return {
 			name: prop.getName(),
 			type: typeChecker.typeToString(subtype),
 			rawType: rawType ? subtype : undefined,
 			description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
+			get declarations() {
+				return declarations ??= getDeclarations(prop.declarations ?? []);
+			},
 			get schema() {
 				return schema ??= resolveSchema(subtype);
 			},
@@ -497,12 +531,16 @@ function createSchemaResolvers(
 	function resolveExposedProperties(expose: ts.Symbol): ExposeMeta {
 		const subtype = typeChecker.getTypeOfSymbolAtLocation(expose, symbolNode!);
 		let schema: PropertyMetaSchema;
+		let declarations: Declaration[];
 
 		return {
 			name: expose.getName(),
 			type: typeChecker.typeToString(subtype),
 			rawType: rawType ? subtype : undefined,
 			description: ts.displayPartsToString(expose.getDocumentationComment(typeChecker)),
+			get declarations() {
+				return declarations ??= getDeclarations(expose.declarations ?? []);
+			},
 			get schema() {
 				return schema ??= resolveSchema(subtype);
 			},
@@ -511,18 +549,21 @@ function createSchemaResolvers(
 	function resolveEventSignature(call: ts.Signature): EventMeta {
 		const subtype = typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode!);
 		let schema: PropertyMetaSchema[];
+		let declarations: Declaration[];
 
 		return {
 			name: (typeChecker.getTypeOfSymbolAtLocation(call.parameters[0], symbolNode!) as ts.StringLiteralType).value,
 			type: typeChecker.typeToString(subtype),
 			rawType: rawType ? subtype : undefined,
 			signature: typeChecker.signatureToString(call),
+			get declarations() {
+				return declarations ??= call.declaration ? getDeclarations([call.declaration]) : [];
+			},
 			get schema() {
 				return schema ??= typeChecker.getTypeArguments(subtype as ts.TypeReference).map(resolveSchema);
 			},
 		};
 	}
-
 	function resolveCallbackSchema(signature: ts.Signature): PropertyMetaSchema {
 		let schema: PropertyMetaSchema[] | undefined;
 
@@ -589,6 +630,34 @@ function createSchemaResolvers(
 		}
 
 		return type;
+	}
+	function getDeclarations(declaration: ts.Declaration[]): Declaration[] {
+		if (noDeclarations) {
+			return [];
+		}
+		return declaration.map(getDeclaration).filter(d => !!d) as Declaration[];
+	}
+	function getDeclaration(declaration: ts.Declaration): Declaration | undefined {
+		const fileName = declaration.getSourceFile().fileName;
+		const [virtualFile] = core.virtualFiles.getVirtualFile(fileName);
+		if (virtualFile) {
+			const maps = core.virtualFiles.getMaps(virtualFile);
+			for (const [source, [_, map]] of maps) {
+				const start = map.toSourceOffset(declaration.getStart());
+				const end = map.toSourceOffset(declaration.getEnd());
+				if (start && end) {
+					return {
+						file: source,
+						range: [start[0], end[0]],
+					};
+				};
+			}
+			return undefined;
+		}
+		return {
+			file: declaration.getSourceFile().fileName,
+			range: [declaration.getStart(), declaration.getEnd()],
+		};
 	}
 
 	return {

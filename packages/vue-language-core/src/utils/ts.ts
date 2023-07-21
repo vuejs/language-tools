@@ -11,24 +11,43 @@ export function createParsedCommandLineByJson(
 	parseConfigHost: ts.ParseConfigHost,
 	rootDir: string,
 	json: any,
-	extraFileExtensions: ts.FileExtensionInfo[],
 ): ParsedCommandLine {
 
-	const tsConfigPath = path.join(rootDir, 'jsconfig.json');
 	const proxyHost = proxyParseConfigHostForExtendConfigPaths(parseConfigHost);
-	const content = ts.parseJsonConfigFileContent(json, proxyHost.host, rootDir, {}, tsConfigPath, undefined, extraFileExtensions);
+	ts.parseJsonConfigFileContent(json, proxyHost.host, rootDir, {}, rootDir + '/jsconfig.json');
 
 	let vueOptions: Partial<VueCompilerOptions> = {};
 
 	for (const extendPath of proxyHost.extendConfigPaths.reverse()) {
-		vueOptions = {
-			...vueOptions,
-			...getVueCompilerOptions(ts, ts.readJsonConfigFile(extendPath, proxyHost.host.readFile)),
-		};
+		try {
+			vueOptions = {
+				...vueOptions,
+				...getPartialVueCompilerOptions(ts, ts.readJsonConfigFile(extendPath, proxyHost.host.readFile)),
+			};
+		} catch (err) { }
 	}
 
+	const parsed = ts.parseJsonConfigFileContent(
+		json,
+		proxyHost.host,
+		rootDir,
+		{},
+		rootDir + '/jsconfig.json',
+		undefined,
+		(vueOptions.extensions ?? ['.vue']).map(extension => ({
+			extension: extension.slice(1),
+			isMixedContent: true,
+			scriptKind: ts.ScriptKind.Deferred,
+		})),
+	);
+
+	// fix https://github.com/vuejs/language-tools/issues/1786
+	// https://github.com/microsoft/TypeScript/issues/30457
+	// patching ts server broke with outDir + rootDir + composite/incremental
+	parsed.options.outDir = undefined;
+
 	return {
-		...content,
+		...parsed,
 		vueOptions,
 	};
 }
@@ -37,37 +56,53 @@ export function createParsedCommandLine(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	parseConfigHost: ts.ParseConfigHost,
 	tsConfigPath: string,
-	extraFileExtensions: ts.FileExtensionInfo[],
 ): ParsedCommandLine {
 	try {
 		const proxyHost = proxyParseConfigHostForExtendConfigPaths(parseConfigHost);
 		const config = ts.readJsonConfigFile(tsConfigPath, proxyHost.host.readFile);
-		const content = ts.parseJsonSourceFileConfigFileContent(config, proxyHost.host, path.dirname(tsConfigPath), {}, tsConfigPath, undefined, extraFileExtensions);
-		// fix https://github.com/johnsoncodehk/volar/issues/1786
-		// https://github.com/microsoft/TypeScript/issues/30457
-		// patching ts server broke with outDir + rootDir + composite/incremental
-		content.options.outDir = undefined;
+		ts.parseJsonSourceFileConfigFileContent(config, proxyHost.host, path.dirname(tsConfigPath), {}, tsConfigPath);
 
 		let vueOptions: Partial<VueCompilerOptions> = {};
 
 		for (const extendPath of proxyHost.extendConfigPaths.reverse()) {
-			vueOptions = {
-				...vueOptions,
-				...getVueCompilerOptions(ts, ts.readJsonConfigFile(extendPath, proxyHost.host.readFile)),
-			};
+			try {
+				vueOptions = {
+					...vueOptions,
+					...getPartialVueCompilerOptions(ts, ts.readJsonConfigFile(extendPath, proxyHost.host.readFile)),
+				};
+			} catch (err) { }
 		}
 
+		const parsed = ts.parseJsonSourceFileConfigFileContent(
+			config,
+			proxyHost.host,
+			path.dirname(tsConfigPath),
+			{},
+			tsConfigPath,
+			undefined,
+			(vueOptions.extensions ?? ['.vue']).map(extension => ({
+				extension: extension.slice(1),
+				isMixedContent: true,
+				scriptKind: ts.ScriptKind.Deferred,
+			})),
+		);
+
+		// fix https://github.com/vuejs/language-tools/issues/1786
+		// https://github.com/microsoft/TypeScript/issues/30457
+		// patching ts server broke with outDir + rootDir + composite/incremental
+		parsed.options.outDir = undefined;
+
 		return {
-			...content,
+			...parsed,
 			vueOptions,
 		};
 	}
 	catch (err) {
-		console.warn('Failed to resolve tsconfig path:', tsConfigPath, err);
+		// console.warn('Failed to resolve tsconfig path:', tsConfigPath, err);
 		return {
 			fileNames: [],
 			options: {},
-			vueOptions: {},
+			vueOptions: resolveVueCompilerOptions({}),
 			errors: [],
 		};
 	}
@@ -94,7 +129,7 @@ function proxyParseConfigHostForExtendConfigPaths(parseConfigHost: ts.ParseConfi
 	};
 }
 
-function getVueCompilerOptions(
+function getPartialVueCompilerOptions(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsConfigSourceFile: ts.TsConfigSourceFile,
 ): Partial<VueCompilerOptions> {
@@ -108,16 +143,14 @@ function getVueCompilerOptions(
 	const target = rawOptions.target ?? 'auto';
 
 	if (target === 'auto') {
-		try {
-			const resolvedPath = resolvePath('vue/package.json');
-			if (resolvedPath) {
-				const vuePackageJson = require(resolvedPath);
-				const versionNumbers = vuePackageJson.version.split('.');
-				result.target = Number(versionNumbers[0] + '.' + versionNumbers[1]);
-			}
+		const resolvedPath = resolvePath('vue/package.json');
+		if (resolvedPath) {
+			const vuePackageJson = require(resolvedPath);
+			const versionNumbers = vuePackageJson.version.split('.');
+			result.target = Number(versionNumbers[0] + '.' + versionNumbers[1]);
 		}
-		catch (error) {
-			console.warn('Load vue package.json failed', error);
+		else {
+			// console.warn('Load vue/package.json failed from', folder);
 		}
 	}
 	else {
@@ -159,11 +192,11 @@ function getVueCompilerOptions(
 				return require.resolve(scriptPath, { paths: [folder] });
 			}
 			else {
-				console.warn('failed to resolve path:', scriptPath, 'require.resolve is not supported in web');
+				// console.warn('failed to resolve path:', scriptPath, 'require.resolve is not supported in web');
 			}
 		}
 		catch (error) {
-			console.warn(error);
+			// console.warn(error);
 		}
 	}
 }
@@ -195,11 +228,13 @@ const SVG_TAGS =
 
 export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions>): VueCompilerOptions {
 	const target = vueOptions.target ?? 3.3;
+	const lib = vueOptions.lib || (target < 2.7 ? '@vue/runtime-dom' : 'vue');
 	return {
 		...vueOptions,
 		target,
 		extensions: vueOptions.extensions ?? ['.vue'],
-		jsxTemplates: vueOptions.jsxTemplates ?? false,
+		lib,
+		jsxSlots: vueOptions.jsxSlots ?? false,
 		strictTemplates: vueOptions.strictTemplates ?? false,
 		skipTemplateCodegen: vueOptions.skipTemplateCodegen ?? false,
 		nativeTags: vueOptions.nativeTags ?? [...new Set([
@@ -214,11 +249,12 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 		htmlAttributes: vueOptions.htmlAttributes ?? ['aria-*'],
 		optionsWrapper: vueOptions.optionsWrapper ?? (
 			target >= 2.7
-				? [`(await import('vue')).defineComponent(`, `)`]
+				? [`(await import('${lib}')).defineComponent(`, `)`]
 				: [`(await import('vue')).default.extend(`, `)`]
 		),
 		macros: vueOptions.macros ?? {
 			defineProps: ['defineProps'],
+			defineSlots: ['defineSlots'],
 			defineEmits: ['defineEmits'],
 			defineExpose: ['defineExpose'],
 			withDefaults: ['withDefaults'],
@@ -227,6 +263,7 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 		hooks: vueOptions.hooks ?? [],
 
 		// experimental
+		experimentalDefinePropProposal: vueOptions.experimentalDefinePropProposal ?? false,
 		experimentalAdditionalLanguageModules: vueOptions.experimentalAdditionalLanguageModules ?? [],
 		experimentalResolveStyleCssClasses: vueOptions.experimentalResolveStyleCssClasses ?? 'scoped',
 		// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51

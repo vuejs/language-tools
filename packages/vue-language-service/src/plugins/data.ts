@@ -18,9 +18,6 @@ export function loadTemplateData(lang: string) {
 	else if (lang === 'zh-cn') {
 		data = require('../../data/template/zh-cn.json');
 	}
-	else if (lang === 'zh-tw') {
-		data = require('../../data/template/zh-tw.json');
-	}
 	else {
 		data = require('../../data/template/en.json');
 	}
@@ -60,9 +57,6 @@ export function loadLanguageBlocks(lang: string) {
 	else if (lang === 'zh-cn') {
 		data = require('../../data/language-blocks/zh-cn.json');
 	}
-	else if (lang === 'zh-tw') {
-		data = require('../../data/language-blocks/zh-tw.json');
-	}
 	else {
 		data = require('../../data/language-blocks/en.json');
 	}
@@ -87,9 +81,6 @@ export function loadModelModifiersData(lang: string) {
 	}
 	else if (lang === 'zh-cn') {
 		data = require('../../data/model-modifiers/zh-cn.json');
-	}
-	else if (lang === 'zh-tw') {
-		data = require('../../data/model-modifiers/zh-tw.json');
 	}
 	else {
 		data = require('../../data/model-modifiers/en.json');

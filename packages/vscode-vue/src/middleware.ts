@@ -1,4 +1,4 @@
-import { AttrNameCasing, TagNameCasing } from '@volar/vue-language-server';
+import { AttrNameCasing, TagNameCasing } from '@vue/language-server';
 import { middleware as baseMiddleware } from '@volar/vscode';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient';
@@ -6,12 +6,22 @@ import { attrNameCasings, tagNameCasings } from './features/nameCasing';
 
 export const middleware: lsp.Middleware = {
 	...baseMiddleware,
+	async resolveCodeAction(item, token, next) {
+		if (item.kind?.value === 'refactor.move.newFile.dumb') {
+			const inputName = await vscode.window.showInputBox({ value: (item as any).data.original.data.newName });
+			if (!inputName) {
+				return item; // cancel
+			}
+			(item as any).data.original.data.newName = inputName;
+		}
+		return await (baseMiddleware.resolveCodeAction?.(item, token, next) ?? next(item, token));
+	},
 	workspace: {
 		configuration(params, token, next) {
-			if (params.items.some(item => item.section === 'volar.completion.preferredAttrNameCase' || item.section === 'volar.completion.preferredTagNameCase')) {
+			if (params.items.some(item => item.section === 'vue.complete.casing.props' || item.section === 'vue.complete.casing.tags')) {
 				return params.items.map(item => {
 					if (item.scopeUri) {
-						if (item.section === 'volar.completion.preferredTagNameCase') {
+						if (item.section === 'vue.complete.casing.tags') {
 							const tagNameCasing = tagNameCasings.get(item.scopeUri);
 							if (tagNameCasing === TagNameCasing.Kebab) {
 								return 'kebab';
@@ -20,7 +30,7 @@ export const middleware: lsp.Middleware = {
 								return 'pascal';
 							}
 						}
-						if (item.section === 'volar.completion.preferredAttrNameCase') {
+						if (item.section === 'vue.complete.casing.props') {
 							const attrCase = attrNameCasings.get(item.scopeUri);
 							if (attrCase === AttrNameCasing.Kebab) {
 								return 'kebab';

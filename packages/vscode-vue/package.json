@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "1.3.7",
+	"version": "1.8.5",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
@@ -320,138 +320,6 @@
 				"typescript.tsdk": {
 					"type": "string"
 				},
-				"vue-semantic-server.trace.server": {
-					"scope": "window",
-					"type": "string",
-					"enum": [
-						"off",
-						"messages",
-						"verbose"
-					],
-					"default": "off",
-					"description": "Traces the communication between VS Code and the language server."
-				},
-				"vue-syntactic-server.trace.server": {
-					"scope": "window",
-					"type": "string",
-					"enum": [
-						"off",
-						"messages",
-						"verbose"
-					],
-					"default": "off",
-					"description": "Traces the communication between VS Code and the language server."
-				},
-				"volar.vueserver.configFilePath": {
-					"type": "string",
-					"default": "./volar.config.js",
-					"description": "Path to volar.config.js."
-				},
-				"volar.vueserver.maxFileSize": {
-					"type": "number",
-					"default": 20971520,
-					"description": "Maximum file size for Vue Server to load. (default: 20MB)"
-				},
-				"volar.vueserver.petiteVue.processHtmlFile": {
-					"type": "boolean",
-					"default": false
-				},
-				"volar.vueserver.vitePress.processMdFile": {
-					"type": "boolean",
-					"default": false
-				},
-				"volar.vueserver.json.customBlockSchemaUrls": {
-					"type": "object"
-				},
-				"volar.vueserver.diagnosticModel": {
-					"type": "string",
-					"default": "push",
-					"enum": [
-						"push",
-						"pull"
-					],
-					"enumDescriptions": [
-						"Diagnostic push by language server.",
-						"Diagnostic pull by language client."
-					],
-					"description": "Diagnostic update model."
-				},
-				"volar.vueserver.maxOldSpaceSize": {
-					"type": [
-						"number",
-						"null"
-					],
-					"default": null,
-					"description": "Set --max-old-space-size option on server process. If you have problem on frequently \"Request textDocument/** failed.\" error, try setting higher memory(MB) on it."
-				},
-				"volar.vueserver.noProjectReferences": {
-					"type": "boolean",
-					"default": false,
-					"description": "Ignore project references settings of tsconfig in language server for resolve issue #1916."
-				},
-				"volar.vueserver.reverseConfigFilePriority": {
-					"type": "boolean",
-					"default": false,
-					"description": "Reverse priority for tsconfig pickup."
-				},
-				"volar.vueserver.disableFileWatcher": {
-					"type": "boolean",
-					"default": false,
-					"description": "Disable file watcher in language server for better performance."
-				},
-				"volar.vueserver.additionalExtensions": {
-					"type": "array",
-					"items": {
-						"type": "string"
-					},
-					"default": [],
-					"description": "List any additional file extensions that should be processed as Vue files (requires restart)."
-				},
-				"volar.vueserver.fullCompletionList": {
-					"type": "boolean",
-					"default": false,
-					"description": "Enable this option if you want to get complete CompletionList in language client. (Disable for better performance)"
-				},
-				"volar.codeLens.references": {
-					"type": "boolean",
-					"default": true,
-					"description": "[references] code lens."
-				},
-				"volar.inlayHints.missingRequiredProps": {
-					"type": "boolean",
-					"default": false,
-					"description": "Show inlay hints for missing required props."
-				},
-				"volar.inlayHints.eventArgumentInInlineHandlers": {
-					"type": "boolean",
-					"default": false,
-					"description": "Show inlay hints for event argument in inline handlers."
-				},
-				"volar.icon.splitEditors": {
-					"type": "boolean",
-					"default": false,
-					"description": "Show split editor icon in title area of editor."
-				},
-				"volar.doctor.status": {
-					"type": "boolean",
-					"default": true,
-					"description": "Show known problems in status bar."
-				},
-				"volar.autoWrapParentheses": {
-					"type": "boolean",
-					"default": true,
-					"description": "Auto-wrap `()` to As Expression in interpolations for fix issue #520."
-				},
-				"volar.autoCompleteRefs": {
-					"type": "boolean",
-					"default": false,
-					"description": "Auto-complete Ref value with `.value`."
-				},
-				"volar.addSpaceBetweenDoubleCurlyBrackets": {
-					"type": "boolean",
-					"default": true,
-					"description": "Auto add space between double curly brackets: {{|}} -> {{ | }}"
-				},
 				"volar.format.initialIndent": {
 					"type": "object",
 					"description": "Whether to have initial indent.",
@@ -518,46 +386,96 @@
 					"default": "Vue.volar",
 					"description": "The extension that take over language support for *.ts."
 				},
-				"volar.completion.preferredTagNameCase": {
+				"vue-semantic-server.trace.server": {
+					"scope": "window",
 					"type": "string",
 					"enum": [
-						"auto-kebab",
-						"auto-pascal",
-						"kebab",
-						"pascal"
+						"off",
+						"messages",
+						"verbose"
 					],
-					"enumDescriptions": [
-						"Auto Detect from Content (Preferred <kebab-case>)",
-						"Auto Detect from Content (Preferred <PascalCase>)",
-						"<kebab-case>",
-						"<PascalCase>"
-					],
-					"default": "auto-pascal",
-					"description": "Preferred tag name case."
+					"default": "off",
+					"description": "Traces the communication between VS Code and the language server."
 				},
-				"volar.completion.preferredAttrNameCase": {
+				"vue-syntactic-server.trace.server": {
+					"scope": "window",
 					"type": "string",
 					"enum": [
-						"auto-kebab",
-						"auto-camel",
-						"kebab",
-						"camel"
+						"off",
+						"messages",
+						"verbose"
+					],
+					"default": "off",
+					"description": "Traces the communication between VS Code and the language server."
+				},
+				"vue.server.configFilePath": {
+					"type": "string",
+					"default": "./volar.config.js",
+					"description": "Path to volar.config.js."
+				},
+				"vue.server.maxFileSize": {
+					"type": "number",
+					"default": 20971520,
+					"description": "Maximum file size for Vue Server to load. (default: 20MB)"
+				},
+				"vue.server.petiteVue.supportHtmlFile": {
+					"type": "boolean",
+					"default": false
+				},
+				"vue.server.vitePress.supportMdFile": {
+					"type": "boolean",
+					"default": false
+				},
+				"vue.server.diagnosticModel": {
+					"type": "string",
+					"default": "push",
+					"enum": [
+						"push",
+						"pull"
 					],
 					"enumDescriptions": [
-						"Auto Detect from Content (Preferred :kebab-case=\"...\")",
-						"Auto Detect from Content (Preferred :camelCase=\"...\")",
-						":kebab-case=\"...\"",
-						":camelCase=\"...\""
+						"Diagnostic push by language server.",
+						"Diagnostic pull by language client."
 					],
-					"default": "auto-kebab",
-					"description": "Preferred attr name case."
+					"description": "Diagnostic update model."
 				},
-				"volar.completion.normalizeComponentImportName": {
+				"vue.server.maxOldSpaceSize": {
+					"type": [
+						"number",
+						"null"
+					],
+					"default": null,
+					"description": "Set --max-old-space-size option on server process. If you have problem on frequently \"Request textDocument/** failed.\" error, try setting higher memory(MB) on it."
+				},
+				"vue.server.reverseConfigFilePriority": {
+					"type": "boolean",
+					"default": false,
+					"description": "Reverse priority for tsconfig pickup."
+				},
+				"vue.server.additionalExtensions": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": [],
+					"description": "List any additional file extensions that should be processed as Vue files (requires restart)."
+				},
+				"vue.server.fullCompletionList": {
+					"type": "boolean",
+					"default": false,
+					"description": "Enable this option if you want to get complete CompletionList in language client. (Disable for better performance)"
+				},
+				"vue.doctor.status": {
 					"type": "boolean",
 					"default": true,
-					"description": "Normalize import name for auto import. (\"myCompVue\" -> \"MyComp\")"
+					"description": "Show known problems in status bar."
 				},
-				"volar.splitEditors.layout.left": {
+				"vue.splitEditors.icon": {
+					"type": "boolean",
+					"default": false,
+					"description": "Show split editor icon in title area of editor."
+				},
+				"vue.splitEditors.layout.left": {
 					"type": "array",
 					"default": [
 						"script",
@@ -565,22 +483,106 @@
 						"styles"
 					]
 				},
-				"volar.splitEditors.layout.right": {
+				"vue.splitEditors.layout.right": {
 					"type": "array",
 					"default": [
 						"template",
 						"customBlocks"
 					]
 				},
-				"volar.updateImportsOnFileMove.enabled": {
+				"vue.updateImportsOnFileMove.enabled": {
 					"type": "boolean",
-					"default": true,
+					"default": false,
 					"description": "Enabled update imports on file move."
 				},
-				"volar.diagnostics.delay": {
+				"vue.codeActions.enabled": {
+					"type": "boolean",
+					"default": true,
+					"description": "Enabled code actions."
+				},
+				"vue.codeActions.savingTimeLimit": {
 					"type": "number",
-					"default": 200,
-					"description": "Delay time for diagnostics."
+					"default": 1000,
+					"description": "Time limit for code actions on save (ms)."
+				},
+				"vue.codeLens.enabled": {
+					"type": "boolean",
+					"default": true,
+					"description": "Enabled code lens."
+				},
+				"vue.complete.casing.tags": {
+					"type": "string",
+					"enum": [
+						"autoKebab",
+						"autoPascal",
+						"kebab",
+						"pascal"
+					],
+					"enumDescriptions": [
+						"Auto Detect from Content (Fallback to <kebab-case> if detect failed)",
+						"Auto Detect from Content  (Fallback to <PascalCase> if detect failed)",
+						"<kebab-case>",
+						"<PascalCase>"
+					],
+					"default": "autoPascal",
+					"description": "Preferred tag name case."
+				},
+				"vue.complete.casing.props": {
+					"type": "string",
+					"enum": [
+						"autoKebab",
+						"autoCamel",
+						"kebab",
+						"camel"
+					],
+					"enumDescriptions": [
+						"Auto Detect from Content (Fallback to :kebab-case=\"...\" if detect failed)",
+						"Auto Detect from Content (Fallback to :camelCase=\"...\" if detect failed)",
+						":kebab-case=\"...\"",
+						":camelCase=\"...\""
+					],
+					"default": "autoKebab",
+					"description": "Preferred attr name case."
+				},
+				"vue.complete.casing.status": {
+					"type": "boolean",
+					"default": true,
+					"description": "Show name casing in status bar."
+				},
+				"vue.complete.normalizeComponentImportName": {
+					"type": "boolean",
+					"default": true,
+					"description": "Normalize import name for auto import. (\"myCompVue\" -> \"MyComp\")"
+				},
+				"vue.autoInsert.parentheses": {
+					"type": "boolean",
+					"default": true,
+					"description": "Auto-wrap `()` to As Expression in interpolations for fix issue #520."
+				},
+				"vue.autoInsert.dotValue": {
+					"type": "boolean",
+					"default": false,
+					"description": "Auto-complete Ref value with `.value`."
+				},
+				"vue.autoInsert.bracketSpacing": {
+					"type": "boolean",
+					"default": true,
+					"description": "Auto add space between double curly brackets: {{|}} -> {{ | }}"
+				},
+				"vue.inlayHints.missingProps": {
+					"type": "boolean",
+					"default": false,
+					"description": "Show inlay hints for missing required props."
+				},
+				"vue.inlayHints.inlineHandlerLeading": {
+					"type": "boolean",
+					"default": false,
+					"description": "Show inlay hints for event argument in inline handlers."
+				},
+				"vue.inlayHints.optionsWrapper": {
+					"type": "boolean",
+					"default": false,
+					"description": "Show inlay hints for component options wrapper for type support."
 				}
 			}
 		},
@@ -603,16 +605,6 @@
 			{
 				"command": "volar.action.writeVirtualFiles",
 				"title": "Write Virtual Files",
-				"category": "Volar (Debug)"
-			},
-			{
-				"command": "volar.action.showVirtualFiles",
-				"title": "Show Virtual Files",
-				"category": "Volar (Debug)"
-			},
-			{
-				"command": "volar.action.serverStats",
-				"title": "Server Stats",
 				"category": "Volar (Debug)"
 			},
 			{
@@ -656,10 +648,6 @@
 					"when": "volar.activated"
 				},
 				{
-					"command": "volar.action.showVirtualFiles",
-					"when": "volar.activated"
-				},
-				{
 					"command": "volar.action.splitEditors",
 					"when": "editorLangId == vue"
 				},
@@ -671,7 +659,7 @@
 			"editor/title": [
 				{
 					"command": "volar.action.splitEditors",
-					"when": "resourceLangId == vue && config.volar.icon.splitEditors",
+					"when": "resourceLangId == vue && config.vue.splitEditors.icon",
 					"group": "navigation"
 				}
 			],
@@ -726,27 +714,25 @@
 	"scripts": {
 		"prebuild": "cd ../.. && npm run build",
 		"build": "node scripts/build",
+		"build:minify": "npm run build -- --minify",
 		"watch": "npm run build -- --watch",
-		"prepack": "npm run prebuild && npm run build -- --minify",
-		"pack": "npm run prepack && vsce package",
-		"release": "npm run prepack && vsce publish",
-		"release:next": "npm run release -- --pre-release",
-		"bundle-size": "npm run prepack:bundle-size && esbuild-visualizer --metadata ./meta.json && open ./stats.html"
+		"pack": "npm run build:minify && vsce package",
+		"pack:next": "npm run build && vsce package",
+		"release": "npm run build:minify && vsce publish",
+		"release:next": "npm run build && vsce publish --pre-release",
+		"bundle-size": "npm run build:minify --metafile && esbuild-visualizer --metadata ./meta.json && open ./stats.html"
 	},
 	"devDependencies": {
 		"@types/semver": "^7.3.13",
 		"@types/vscode": "1.67.0",
-		"@volar/source-map": "1.4.0-alpha.5",
-		"@volar/vscode": "1.4.0-alpha.5",
-		"@volar/vue-language-core": "1.3.7",
-		"@volar/vue-language-server": "1.3.7",
+		"@volar/vscode": "~1.9.0",
+		"@vue/language-core": "1.8.5",
+		"@vue/language-server": "1.8.5",
 		"esbuild": "0.15.18",
 		"esbuild-plugin-copy": "latest",
 		"esbuild-visualizer": "latest",
 		"semver": "^7.3.8",
-		"typesafe-path": "^0.2.2",
 		"vsce": "latest",
-		"vscode-languageclient": "^8.1.0",
-		"vscode-nls": "^5.2.0"
+		"vscode-languageclient": "^8.1.0"
 	}
 }

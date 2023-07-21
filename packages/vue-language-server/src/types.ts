@@ -1,15 +1,6 @@
-import { LanguageServerInitializationOptions } from "@volar/language-server";
+import { InitializationOptions } from "@volar/language-server";
 
-export type VueServerInitializationOptions = LanguageServerInitializationOptions & {
-	petiteVue?: {
-		processHtmlFile: boolean;
-	};
-	vitePress?: {
-		processMdFile: boolean;
-	};
-	json?: {
-		customBlockSchemaUrls?: Record<string, string>;
-	};
+export type VueServerInitializationOptions = InitializationOptions & {
 	/**
 	 * @example ['vue1', 'vue2']
 	 */

@@ -1,10 +1,9 @@
-import * as vue from '@volar/vue-language-core';
+import * as vue from '@vue/language-core';
 import * as embedded from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { computed, ComputedRef } from '@vue/reactivity';
-import { typesFileName } from '@volar/vue-language-core/out/utils/localTypes';
+import { sharedTypes } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
-import type { VueCompilerOptions } from './types';
 
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
@@ -13,7 +12,7 @@ export function checkPropsOfTag(
 	tsLs: ts.LanguageService,
 	sourceFile: embedded.VirtualFile,
 	tag: string,
-	vueCompilerOptions: VueCompilerOptions,
+	vueCompilerOptions: vue.VueCompilerOptions,
 	requiredOnly = false,
 ) {
 
@@ -86,7 +85,7 @@ export function checkEventsOfTag(
 	tsLs: ts.LanguageService,
 	sourceFile: embedded.VirtualFile,
 	tag: string,
-	vueCompilerOptions: VueCompilerOptions,
+	vueCompilerOptions: vue.VueCompilerOptions,
 ) {
 
 	const checker = tsLs.getProgram()!.getTypeChecker();
@@ -151,29 +150,31 @@ export function checkComponentNames(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
 	sourceFile: embedded.VirtualFile,
+	vueCompilerOptions: vue.VueCompilerOptions,
 ) {
 	return getComponentsType(ts, tsLs, sourceFile)
 		?.componentsType
 		?.getProperties()
 		.map(c => c.name)
 		.filter(entry => entry.indexOf('$') === -1 && !entry.startsWith('_'))
+		.filter(entry => !vueCompilerOptions.nativeTags.includes(entry))
 		?? [];
 }
 
 export function getElementAttrs(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
-	fileName: string,
+	tsLsHost: ts.LanguageServiceHost,
 	tagName: string,
 ) {
 
-	const sharedTypesFileName = fileName.substring(0, fileName.lastIndexOf('/')) + '/' + typesFileName;
+	const sharedTypesFileName = tsLsHost.getCurrentDirectory() + '/' + sharedTypes.baseName;
 
 	let tsSourceFile: ts.SourceFile | undefined;
 
 	if (tsSourceFile = tsLs.getProgram()?.getSourceFile(sharedTypesFileName)) {
 
-		const typeNode = tsSourceFile.statements.find((node): node is ts.TypeAliasDeclaration => ts.isTypeAliasDeclaration(node) && node.name.getText() === 'IntrinsicElements');
+		const typeNode = tsSourceFile.statements.find((node): node is ts.TypeAliasDeclaration => ts.isTypeAliasDeclaration(node) && node.name.getText() === '__VLS_IntrinsicElements');
 		const checker = tsLs.getProgram()?.getTypeChecker();
 
 		if (checker && typeNode) {

@@ -1,15 +1,17 @@
 import { hyphenate } from '@vue/shared';
-import { LanguageServicePluginContext, VirtualFile } from '@volar/language-service';
+import { ServiceContext, VirtualFile } from '@volar/language-service';
 import { checkComponentNames, getTemplateTagsAndAttrs, checkPropsOfTag } from '../helpers';
-import * as vue from '@volar/vue-language-core';
-import * as vscode from 'vscode-languageserver-protocol';
-import { AttrNameCasing, TagNameCasing, VueCompilerOptions } from '../types';
+import * as vue from '@vue/language-core';
+import type * as vscode from 'vscode-languageserver-protocol';
+import { AttrNameCasing, TagNameCasing } from '../types';
+import type { Provide } from 'volar-service-typescript';
 
 export async function convertTagName(
-	context: LanguageServicePluginContext,
-	_ts: NonNullable<LanguageServicePluginContext['typescript']>,
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	context: ServiceContext<Provide>,
 	uri: string,
 	casing: TagNameCasing,
+	vueCompilerOptions: vue.VueCompilerOptions,
 ) {
 
 	const rootFile = context.documents.getSourceByUri(uri)?.root;
@@ -20,10 +22,11 @@ export async function convertTagName(
 	if (!desc.template)
 		return;
 
+	const languageService = context.inject('typescript/languageService');
 	const template = desc.template;
 	const document = context.documents.getDocumentByFileName(rootFile.snapshot, rootFile.fileName);
 	const edits: vscode.TextEdit[] = [];
-	const components = checkComponentNames(_ts.module, _ts.languageService, rootFile);
+	const components = checkComponentNames(ts, languageService, rootFile, vueCompilerOptions);
 	const tags = getTemplateTagsAndAttrs(rootFile);
 
 	for (const [tagName, { offsets }] of tags) {
@@ -32,12 +35,12 @@ export async function convertTagName(
 			for (const offset of offsets) {
 				const start = document.positionAt(template.startTagEnd + offset);
 				const end = document.positionAt(template.startTagEnd + offset + tagName.length);
-				const range = vscode.Range.create(start, end);
+				const range: vscode.Range = { start, end };
 				if (casing === TagNameCasing.Kebab && tagName !== hyphenate(componentName)) {
-					edits.push(vscode.TextEdit.replace(range, hyphenate(componentName)));
+					edits.push({ range, newText: hyphenate(componentName) });
 				}
 				if (casing === TagNameCasing.Pascal && tagName !== componentName) {
-					edits.push(vscode.TextEdit.replace(range, componentName));
+					edits.push({ range, newText: componentName });
 				}
 			}
 		}
@@ -47,11 +50,11 @@ export async function convertTagName(
 }
 
 export async function convertAttrName(
-	context: LanguageServicePluginContext,
-	_ts: NonNullable<LanguageServicePluginContext['typescript']>,
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	context: ServiceContext,
 	uri: string,
 	casing: AttrNameCasing,
-	vueCompilerOptions: VueCompilerOptions,
+	vueCompilerOptions: vue.VueCompilerOptions,
 ) {
 
 	const rootFile = context.documents.getSourceByUri(uri)?.root;
@@ -62,28 +65,29 @@ export async function convertAttrName(
 	if (!desc.template)
 		return;
 
+	const languageService = context.inject('typescript/languageService');
 	const template = desc.template;
 	const document = context.documents.getDocumentByFileName(rootFile.snapshot, rootFile.fileName);
 	const edits: vscode.TextEdit[] = [];
-	const components = checkComponentNames(_ts.module, _ts.languageService, rootFile);
+	const components = checkComponentNames(ts, languageService, rootFile, vueCompilerOptions);
 	const tags = getTemplateTagsAndAttrs(rootFile);
 
 	for (const [tagName, { attrs }] of tags) {
 		const componentName = components.find(component => component === tagName || hyphenate(component) === tagName);
 		if (componentName) {
-			const props = checkPropsOfTag(_ts.module, _ts.languageService, rootFile, componentName, vueCompilerOptions);
+			const props = checkPropsOfTag(ts, languageService, rootFile, componentName, vueCompilerOptions);
 			for (const [attrName, { offsets }] of attrs) {
 				const propName = props.find(prop => prop === attrName || hyphenate(prop) === attrName);
 				if (propName) {
 					for (const offset of offsets) {
 						const start = document.positionAt(template.startTagEnd + offset);
 						const end = document.positionAt(template.startTagEnd + offset + attrName.length);
-						const range = vscode.Range.create(start, end);
+						const range: vscode.Range = { start, end };
 						if (casing === AttrNameCasing.Kebab && attrName !== hyphenate(propName)) {
-							edits.push(vscode.TextEdit.replace(range, hyphenate(propName)));
+							edits.push({ range, newText: hyphenate(propName) });
 						}
 						if (casing === AttrNameCasing.Camel && attrName !== propName) {
-							edits.push(vscode.TextEdit.replace(range, propName));
+							edits.push({ range, newText: propName });
 						}
 					}
 				}
@@ -95,18 +99,19 @@ export async function convertAttrName(
 }
 
 export async function getNameCasing(
-	context: LanguageServicePluginContext,
-	_ts: NonNullable<LanguageServicePluginContext['typescript']>,
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	context: ServiceContext,
 	uri: string,
+	vueCompilerOptions: vue.VueCompilerOptions,
 ) {
 
-	const detected = detect(context, _ts, uri);
+	const detected = detect(ts, context, uri, vueCompilerOptions);
 	const [attr, tag] = await Promise.all([
-		context.configurationHost?.getConfiguration<'auto-kebab' | 'auto-camel' | 'kebab' | 'camel'>('volar.completion.preferredAttrNameCase', uri),
-		context.configurationHost?.getConfiguration<'auto-kebab' | 'auto-pascal' | 'kebab' | 'pascal'>('volar.completion.preferredTagNameCase', uri),
+		context.env.getConfiguration?.<'autoKebab' | 'autoCamel' | 'kebab' | 'camel'>('vue.complete.casing.props', uri),
+		context.env.getConfiguration?.<'autoKebab' | 'autoPascal' | 'kebab' | 'pascal'>('vue.complete.casing.tags', uri),
 	]);
-	const tagNameCasing = detected.tag.length === 1 && (tag === 'auto-pascal' || tag === 'auto-kebab') ? detected.tag[0] : (tag === 'auto-kebab' || tag === 'kebab') ? TagNameCasing.Kebab : TagNameCasing.Pascal;
-	const attrNameCasing = detected.attr.length === 1 && (attr === 'auto-camel' || attr === 'auto-kebab') ? detected.attr[0] : (attr === 'auto-camel' || attr === 'camel') ? AttrNameCasing.Camel : AttrNameCasing.Kebab;
+	const tagNameCasing = detected.tag.length === 1 && (tag === 'autoPascal' || tag === 'autoKebab') ? detected.tag[0] : (tag === 'autoKebab' || tag === 'kebab') ? TagNameCasing.Kebab : TagNameCasing.Pascal;
+	const attrNameCasing = detected.attr.length === 1 && (attr === 'autoCamel' || attr === 'autoKebab') ? detected.attr[0] : (attr === 'autoCamel' || attr === 'camel') ? AttrNameCasing.Camel : AttrNameCasing.Kebab;
 
 	return {
 		tag: tagNameCasing,
@@ -115,9 +120,10 @@ export async function getNameCasing(
 }
 
 export function detect(
-	context: LanguageServicePluginContext,
-	_ts: NonNullable<LanguageServicePluginContext['typescript']>,
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	context: ServiceContext,
 	uri: string,
+	vueCompilerOptions: vue.VueCompilerOptions,
 ): {
 	tag: TagNameCasing[],
 	attr: AttrNameCasing[],
@@ -130,6 +136,8 @@ export function detect(
 			attr: [],
 		};
 	}
+
+	const languageService = context.inject('typescript/languageService');
 
 	return {
 		tag: getTagNameCase(rootFile),
@@ -162,7 +170,7 @@ export function detect(
 	}
 	function getTagNameCase(file: VirtualFile): TagNameCasing[] {
 
-		const components = checkComponentNames(_ts.module, _ts.languageService, file);
+		const components = checkComponentNames(ts, languageService, file, vueCompilerOptions);
 		const tagNames = getTemplateTagsAndAttrs(file);
 		const result: TagNameCasing[] = [];
 
