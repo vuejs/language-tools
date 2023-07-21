@@ -1,4 +1,4 @@
-import * as ts from 'typescript';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vue from '@vue/language-core';
 import * as vueTs from '@vue/typescript';
 import { state } from './shared';
@@ -30,6 +30,8 @@ export function createProgram(options: ts.CreateProgramOptions) {
 
 	if (!options.host)
 		throw toThrow('!options.host');
+
+	const ts = require('typescript') as typeof import('typescript/lib/tsserverlibrary');
 
 	let program = options.oldProgram as _Program | undefined;
 

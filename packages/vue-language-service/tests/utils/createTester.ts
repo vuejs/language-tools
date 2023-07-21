@@ -1,9 +1,9 @@
-import { resolveConfig } from '../..';
-import * as ts from 'typescript';
+import { FileType, TypeScriptLanguageHost, createLanguageService } from '@volar/language-service';
 import * as fs from 'fs';
 import * as path from 'path';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import { URI } from 'vscode-uri';
-import { FileType, TypeScriptLanguageHost, createLanguageService } from '@volar/language-service';
+import { resolveConfig } from '../..';
 
 const uriToFileName = (uri: string) => URI.parse(uri).fsPath.replace(/\\/g, '/');
 const fileNameToUri = (fileName: string) => URI.file(fileName).toString();
@@ -14,6 +14,7 @@ export const tester = createTester(testRoot);
 
 function createTester(root: string) {
 
+	const ts = require('typescript') as typeof import('typescript/lib/tsserverlibrary');
 	const realTsConfig = path.join(root, 'tsconfig.json').replace(/\\/g, '/');
 	const config = ts.readJsonConfigFile(realTsConfig, ts.sys.readFile);
 	const parsedCommandLine = ts.parseJsonSourceFileConfigFileContent(config, ts.sys, path.dirname(realTsConfig), {}, realTsConfig, undefined, [{ extension: 'vue', isMixedContent: true, scriptKind: ts.ScriptKind.Deferred }]);
