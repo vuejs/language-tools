@@ -1,6 +1,7 @@
 import { Service } from '@volar/language-service';
 import { VueFile, walkElementNodes } from '@vue/language-core';
 import { NodeTypes } from 'packages/vue-language-core/out/utils/vue2TemplateCompiler';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import type * as vscode from 'vscode-languageserver-protocol';
 
 export default function (): Service {
@@ -11,6 +12,8 @@ export default function (): Service {
 			return {};
 
 		const ts = modules.typescript;
+
+		let astCache: [string, ts.SourceFile] | undefined;
 
 		return {
 
@@ -40,8 +43,15 @@ export default function (): Service {
 							&& endOffset - templateStartOffset <= prop.loc.end.offset
 						) {
 							if (prop.type === NodeTypes.DIRECTIVE && prop.exp) {
-								const sourceFile = ts.createSourceFile('/a.ts', prop.exp.loc.source, ts.ScriptTarget.Latest, true);
+
+								const sourceFile = astCache?.[0] === prop.exp.loc.source
+									? astCache[1]
+									: ts.createSourceFile('/a.ts', prop.exp.loc.source, ts.ScriptTarget.Latest, true);
+
+								astCache = [prop.exp.loc.source, sourceFile];
+
 								const firstStatement = sourceFile.statements[0];
+
 								if (sourceFile.statements.length === 1 && ts.isExpressionStatement(firstStatement) && ts.isStringLiteralLike(firstStatement.expression)) {
 									const stringNode = sourceFile.statements[0];
 									const removeTextRanges: [number, number][] = [
@@ -120,7 +130,6 @@ export default function (): Service {
 											end: addValuePos
 										},
 									});
-
 								}
 
 								result.push({
