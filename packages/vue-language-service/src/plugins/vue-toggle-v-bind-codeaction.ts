@@ -1,10 +1,16 @@
-import { LanguageServicePlugin } from '@volar/language-service';
-import { VueFile, walkElementNodes } from '@volar/vue-language-core';
+import { Service } from '@volar/language-service';
+import { VueFile, walkElementNodes } from '@vue/language-core';
 import { NodeTypes } from 'packages/vue-language-core/out/utils/vue2TemplateCompiler';
 import type * as vscode from 'vscode-languageserver-protocol';
 
-export default function (): LanguageServicePlugin {
-	return (ctx) => {
+export default function (): Service {
+
+	return (ctx, modules): ReturnType<Service> => {
+
+		if (!modules?.typescript)
+			return {};
+
+		const ts = modules.typescript;
 
 		return {
 
@@ -34,7 +40,6 @@ export default function (): LanguageServicePlugin {
 							&& endOffset - templateStartOffset <= prop.loc.end.offset
 						) {
 							if (prop.type === NodeTypes.DIRECTIVE && prop.exp) {
-								const ts = ctx!.typescript!.module;
 								const sourceFile = ts.createSourceFile('/a.ts', prop.exp.loc.source, ts.ScriptTarget.Latest, true);
 								const firstStatement = sourceFile.statements[0];
 								if (sourceFile.statements.length === 1 && ts.isExpressionStatement(firstStatement) && ts.isStringLiteralLike(firstStatement.expression)) {
@@ -95,7 +100,7 @@ export default function (): LanguageServicePlugin {
 									edit: {
 										changes: { [document.uri]: edits },
 									},
-									command: newPosition ? ctx?.commands.createSetSelectionCommand(newPosition) : undefined,
+									command: newPosition ? ctx?.commands.setSelection.create(newPosition) : undefined,
 								});
 							}
 						}
