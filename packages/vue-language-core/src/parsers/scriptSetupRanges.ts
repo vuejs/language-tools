@@ -33,6 +33,8 @@ export function parseScriptSetupRanges(
 		required: boolean;
 	}[] = [];
 	const bindings = parseBindingRanges(ts, ast, false);
+	const text = ast.getFullText();
+	const leadingCommentEndOffset = ts.getLeadingCommentRanges(text, 0)?.reverse()[0].end ?? 0;
 
 	ast.forEachChild(node => {
 		const isTypeExport = (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) && node.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword);
@@ -44,7 +46,7 @@ export function parseScriptSetupRanges(
 			// fix https://github.com/vuejs/language-tools/issues/1223
 			&& !ts.isImportEqualsDeclaration(node)
 		) {
-			const commentRanges = ts.getLeadingCommentRanges(ast.getFullText(), node.getFullStart());
+			const commentRanges = ts.getLeadingCommentRanges(text, node.getFullStart());
 			if (commentRanges?.length) {
 				const commentRange = commentRanges.sort((a, b) => a.pos - b.pos)[0];
 				importSectionEndOffset = commentRange.pos;
@@ -58,6 +60,7 @@ export function parseScriptSetupRanges(
 	ast.forEachChild(child => visitNode(child, ast));
 
 	return {
+		leadingCommentEndOffset,
 		importSectionEndOffset,
 		bindings,
 		withDefaultsArg,
