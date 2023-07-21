@@ -24,6 +24,7 @@ import createVueTqService from './plugins/vue-twoslash-queries';
 import createVisualizeHiddenCallbackParamService from './plugins/vue-visualize-hidden-callback-param';
 import createDirectiveCommentsService from './plugins/vue-directive-comments';
 import createExtractComponentService from './plugins/vue-extract-file';
+import createToggleVBindService from './plugins/vue-toggle-v-bind-codeaction';
 import { TagNameCasing, VueCompilerOptions } from './types';
 
 export interface Settings {
@@ -293,6 +294,7 @@ function resolvePlugins(
 	services['vue/visualizeHiddenCallbackParam'] ??= createVisualizeHiddenCallbackParamService();
 	services['vue/directiveComments'] ??= createDirectiveCommentsService();
 	services['vue/extractComponent'] ??= createExtractComponentService();
+	services['vue/toggleVBind'] ??= createToggleVBindService();
 	services.emmet ??= createEmmetService();
 
 	return services;
