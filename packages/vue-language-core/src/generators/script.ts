@@ -388,6 +388,7 @@ export function generate(
 				usedHelperTypes.PropsChildren = true;
 				codes.push(` & __VLS_PropsChildren<`);
 				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end);
+				codes.push('>');
 			}
 			codes.push(`;\n`);
 			//#endregion
