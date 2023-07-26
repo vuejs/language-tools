@@ -23,7 +23,7 @@ import createVueTemplateLanguageService from './plugins/vue-template';
 import createVueTqService from './plugins/vue-twoslash-queries';
 import createVisualizeHiddenCallbackParamService from './plugins/vue-visualize-hidden-callback-param';
 import createDirectiveCommentsService from './plugins/vue-directive-comments';
-import createExtractComponentService from './plugins/vue-extract-file';
+import createExtractComponentService, { createAddComponentToOptionEdit } from './plugins/vue-extract-file';
 import createToggleVBindService from './plugins/vue-toggle-v-bind-codeaction';
 import { TagNameCasing, VueCompilerOptions } from './types';
 
@@ -47,8 +47,6 @@ export function resolveConfig(
 
 	return config;
 }
-
-const unicodeReg = /\\u/g;
 
 function resolvePlugins(
 	services: Config['services'],
@@ -167,41 +165,15 @@ function resolvePlugins(
 					const exportDefault = ast ? vue.scriptRanges.parseScriptRanges(ts, ast, false, true).exportDefault : undefined;
 					if (virtualFile && ast && exportDefault) {
 						const componentName = newName ?? item.textEdit.newText;
-						const textDoc = ctx.documents.getDocumentByFileName(virtualFile.snapshot, virtualFile.fileName);
-						// https://github.com/microsoft/TypeScript/issues/36174
-						const printer = ts.createPrinter();
-						if (exportDefault.componentsOption && exportDefault.componentsOptionNode) {
-							const newNode: typeof exportDefault.componentsOptionNode = {
-								...exportDefault.componentsOptionNode,
-								properties: [
-									...exportDefault.componentsOptionNode.properties,
-									ts.factory.createShorthandPropertyAssignment(componentName),
-								] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
-							};
-							const printText = printer.printNode(ts.EmitHint.Expression, newNode, ast);
+						const optionEdit = createAddComponentToOptionEdit(ts, ast, componentName);
+						if (optionEdit) {
+							const textDoc = ctx.documents.getDocumentByFileName(virtualFile.snapshot, virtualFile.fileName);
 							item.additionalTextEdits.push({
 								range: {
-									start: textDoc.positionAt(exportDefault.componentsOption.start),
-									end: textDoc.positionAt(exportDefault.componentsOption.end),
+									start: textDoc.positionAt(optionEdit.range.start),
+									end: textDoc.positionAt(optionEdit.range.end),
 								},
-								newText: unescape(printText.replace(unicodeReg, '%u')),
-							});
-						}
-						else if (exportDefault.args && exportDefault.argsNode) {
-							const newNode: typeof exportDefault.argsNode = {
-								...exportDefault.argsNode,
-								properties: [
-									...exportDefault.argsNode.properties,
-									ts.factory.createShorthandPropertyAssignment(`components: { ${componentName} }`),
-								] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
-							};
-							const printText = printer.printNode(ts.EmitHint.Expression, newNode, ast);
-							item.additionalTextEdits.push({
-								range: {
-									start: textDoc.positionAt(exportDefault.args.start),
-									end: textDoc.positionAt(exportDefault.args.end),
-								},
-								newText: unescape(printText.replace(unicodeReg, '%u')),
+								newText: optionEdit.newText,
 							});
 						}
 					}

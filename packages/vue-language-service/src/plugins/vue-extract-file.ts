@@ -1,14 +1,17 @@
 import { CreateFile, Service, ServiceContext, TextDocumentEdit, TextEdit } from '@volar/language-service';
 import { ExpressionNode, type RootNode, type TemplateChildNode } from '@vue/compiler-dom';
-import { SfcBlock, VueFile } from '@vue/language-core';
+import { SfcBlock, VueFile, scriptRanges } from '@vue/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { Provide } from 'volar-service-typescript';
+import type * as vscode from 'vscode-languageserver-protocol';
 
 interface ActionData {
 	uri: string;
 	range: [number, number];
 	newName: string;
 }
+
+const unicodeReg = /\\u/g;
 
 export default function (): Service {
 
@@ -98,6 +101,39 @@ export default function (): Service {
 					newFileTags = newFileTags.reverse();
 				}
 
+				const currentFileEdits: vscode.TextEdit[] = [
+					{
+						range: {
+							start: document.positionAt(sfc.template.startTagEnd + templateCodeRange[0]),
+							end: document.positionAt(sfc.template.startTagEnd + templateCodeRange[1]),
+						},
+						newText: generateReplaceTemplate(),
+					},
+					{
+						range: lastImportNode ? {
+							start: document.positionAt(script.startTagEnd + lastImportNode.end),
+							end: document.positionAt(script.startTagEnd + lastImportNode.end),
+						} : {
+							start: document.positionAt(script.startTagEnd),
+							end: document.positionAt(script.startTagEnd),
+						},
+						newText: `\nimport ${newName} from './${newName}.vue'`,
+					},
+				];
+
+				if (sfc.script && sfc.scriptAst) {
+					const edit = createAddComponentToOptionEdit(ts, sfc.scriptAst, newName);
+					if (edit) {
+						currentFileEdits.push({
+							range: {
+								start: document.positionAt(sfc.script.startTagEnd + edit.range.start),
+								end: document.positionAt(sfc.script.startTagEnd + edit.range.end),
+							},
+							newText: edit.newText,
+						});
+					}
+				}
+
 				return {
 					...codeAction,
 					edit: {
@@ -108,25 +144,7 @@ export default function (): Service {
 									uri: document.uri,
 									version: null,
 								},
-								edits: [
-									{
-										range: {
-											start: document.positionAt(sfc.template.startTagEnd + templateCodeRange[0]),
-											end: document.positionAt(sfc.template.startTagEnd + templateCodeRange[1]),
-										},
-										newText: generateReplaceTemplate(),
-									} satisfies TextEdit,
-									{
-										range: lastImportNode ? {
-											start: document.positionAt(script.startTagEnd + lastImportNode.end),
-											end: document.positionAt(script.startTagEnd + lastImportNode.end),
-										} : {
-											start: document.positionAt(script.startTagEnd),
-											end: document.positionAt(script.startTagEnd),
-										},
-										newText: `\nimport ${newName} from './${newName}.vue'`,
-									} satisfies TextEdit,
-								],
+								edits: currentFileEdits,
 							} satisfies TextDocumentEdit,
 
 							// creating new file with content
@@ -297,4 +315,42 @@ function isInitialIndentNeeded(ts: typeof import("typescript/lib/tsserverlibrary
 		[ts.ScriptKind.TSX]: 'typescriptreact',
 	} as Record<ts.ScriptKind, string>;
 	return initialIndentSetting[languageKindIdMap[languageKind]] ?? false;
+}
+
+export function createAddComponentToOptionEdit(ts: typeof import('typescript/lib/tsserverlibrary'), ast: ts.SourceFile, componentName: string) {
+
+	const exportDefault = scriptRanges.parseScriptRanges(ts, ast, false, true).exportDefault;
+	if (!exportDefault)
+		return;
+
+	// https://github.com/microsoft/TypeScript/issues/36174
+	const printer = ts.createPrinter();
+	if (exportDefault.componentsOption && exportDefault.componentsOptionNode) {
+		const newNode: typeof exportDefault.componentsOptionNode = {
+			...exportDefault.componentsOptionNode,
+			properties: [
+				...exportDefault.componentsOptionNode.properties,
+				ts.factory.createShorthandPropertyAssignment(componentName),
+			] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
+		};
+		const printText = printer.printNode(ts.EmitHint.Expression, newNode, ast);
+		return {
+			range: exportDefault.componentsOption,
+			newText: unescape(printText.replace(unicodeReg, '%u')),
+		};
+	}
+	else if (exportDefault.args && exportDefault.argsNode) {
+		const newNode: typeof exportDefault.argsNode = {
+			...exportDefault.argsNode,
+			properties: [
+				...exportDefault.argsNode.properties,
+				ts.factory.createShorthandPropertyAssignment(`components: { ${componentName} }`),
+			] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
+		};
+		const printText = printer.printNode(ts.EmitHint.Expression, newNode, ast);
+		return {
+			range: exportDefault.args,
+			newText: unescape(printText.replace(unicodeReg, '%u')),
+		};
+	}
 }
