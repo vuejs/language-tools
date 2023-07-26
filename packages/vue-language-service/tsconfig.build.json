@@ -7,8 +7,6 @@
 	},
 	"include": [
 		"src",
-		"src/**/*.json",
-		"rules.d.ts",
 	],
 	"exclude": [
 		"node_modules",

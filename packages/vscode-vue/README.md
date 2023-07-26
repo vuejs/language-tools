@@ -14,7 +14,7 @@ Vue Language Features is a language support extension built for Vue, Vitepress a
 - [Vitesse](https://github.com/antfu/vitesse)
 - [petite](https://github.com/JessicaSachs/petite)
 - [vue3-eslint-stylelint-demo](https://github.com/sethidden/vue3-eslint-stylelint-demo) (Volar + ESLint + stylelint + husky)
-- [volar-starter](https://github.com/vuejs/language-tools-starter) (For bug report and experiment features testing)
+- [volar-starter](https://github.com/johnsoncodehk/volar-starter) (For bug report and experiment features testing)
 
 ## Usage
 

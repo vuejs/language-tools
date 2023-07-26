@@ -1,5 +1,208 @@
 # Changelog
 
+## 1.8.6 (2023/7/22)
+
+- feat: add support for extract component code action ([#2496](https://github.com/vuejs/language-tools/issues/2496)) - thanks @zardoy
+- feat: add support for `v-bind` toggle code action ([#2524](https://github.com/vuejs/language-tools/issues/2524)) - thanks @zardoy
+- feat: more dull "Saving time is too long" popup
+- fix: `vue.server.petiteVue.supportHtmlFile`, `vue.server.vitePress.supportMdFile` settings not working ([#3238](https://github.com/vuejs/language-tools/issues/3238))
+- fix: don't check element type for directives ([#3140](https://github.com/vuejs/language-tools/issues/3140))
+- fix: `@ts-nocheck` cannot work from script setup ([#3420](https://github.com/vuejs/language-tools/issues/3420)) - thanks @so1ve
+- fix(ts-plugin): module resolving should be able to fallback to `.d.ts` ([#3419](https://github.com/vuejs/language-tools/issues/3419))
+- fix(language-plugin-pug): `@vue-ignore`, `@vue-skip`, `@vue-expected-error` not working for pug template
+
+### Full-time Support by
+
+<table>
+<tbody>
+  <tr>
+    <td>
+		<a href="https://stackblitz.com/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/StackBlitz.png" height="80" /></a>
+	</td>
+    <td><h4><a href="https://blog.stackblitz.com/posts/webcontainer-api-is-here/">WebContainer API is here.</a></h4></td>
+  </tr>
+</tbody>
+</table>
+
+### Our Platinum Sponsors
+
+<table>
+<tbody>
+  <tr>
+    <td>
+		<a href="https://volta.net/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/volta.svg" height="60" /></a>
+	</td>
+    <td>Supercharged GitHub experience</td>
+  </tr>
+  <tr>
+    <td>
+		<a href="https://vuejs.org/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/vue.png" height="80" /></a>
+	</td>
+    <td>The Progressive
+JavaScript Framework</td>
+  </tr>
+</tbody>
+</table>
+
+### Our Silver Sponsors
+
+<table>
+<tbody>
+  <tr>
+    <td>
+		<p align="center">
+    <a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/prefect.svg" height="40" /></a>
+</p>
+	</td>
+  </tr>
+</tbody>
+</table>
+
+<h5>
+	Add you via
+	<a href="https://github.com/sponsors/johnsoncodehk">GitHub Sponsors</a>
+	or
+	<a href="https://opencollective.com/volarjs">Open Collective</a>
+</h5>
+
+## 1.8.5 (2023/7/14)
+
+- 🔥 feat(labs): support for TS memory usage treemap
+- 🔥 perf: properly support TS DocumentRegistry to drastically reduce memory usage in monorepo projects
+- feat(ts-plugin): re-support auto-import
+- fix: remove invalid `volar.action.serverStats` command ([#3366](https://github.com/vuejs/language-tools/issues/3366)) - thanks @yaegassy
+- fix: don't remove comments when comment is in the first line ([#3365](https://github.com/vuejs/language-tools/issues/3365)) - thanks @so1ve
+- fix: allow slots to have no arguments ([#3376](https://github.com/vuejs/language-tools/issues/3376)) - thanks @so1ve
+- fix: camel case components is not recognized as used ([#3377](https://github.com/vuejs/language-tools/issues/3377)) - thanks @so1ve
+- perf: hoist regexp if possible ([#3378](https://github.com/vuejs/language-tools/issues/3378)) - thanks @so1ve
+- fix: non scoped classes resolution regression ([#3381](https://github.com/vuejs/language-tools/issues/3381)) - thanks @maIIady
+- feat: don't to request reload editor when server options changed ([#3393](https://github.com/vuejs/language-tools/issues/3393)) - thanks @zardoy
+- feat: don't hide output channel on server restart ([#3401](https://github.com/vuejs/language-tools/issues/3401)) - thanks @zardoy
+
+**Breaking changes**
+
+- Deprecate language server `json.customBlockSchemaUrls` option ([#3398](https://github.com/vuejs/language-tools/issues/3398))
+
+## 1.8.4 (2023/7/5)
+
+- feat(monaco): support for custom file system provider (https://github.com/volarjs/volar.js/pull/50)
+- feat: support auto-complete for template directive comments
+- fix: local component type should override a global component ([#1886](https://github.com/vuejs/language-tools/issues/1886)) ([#3333](https://github.com/vuejs/language-tools/issues/3333)) - thanks @so1ve
+- fix: support type narrowing for components define in script setup ([#3138](https://github.com/vuejs/language-tools/issues/3138)) ([#3350](https://github.com/vuejs/language-tools/issues/3350)) - thanks @so1ve
+
+## 1.8.3 (2023/6/28)
+
+- fix(ts-plugin): tsserver crashes when import > 4MB .vue file ([#3332](https://github.com/vuejs/language-tools/issues/3332))
+- fix(language-server): in specific os `fileExists()` throws ([#3336](https://github.com/vuejs/language-tools/issues/3336))
+
+## 1.8.2 (2023/6/27)
+
+- fix: should not auto closing `<img>` tag ([#3217](https://github.com/vuejs/language-tools/issues/3217))
+- fix: allow passing undefined as events ([#3122](https://github.com/vuejs/language-tools/issues/3122)) ([#3217](https://github.com/vuejs/language-tools/issues/3217)) - thanks @so1ve
+- fix: fixes object literal parsing for <component :is> ([#3324](https://github.com/vuejs/language-tools/issues/3324)) ([#3171](https://github.com/vuejs/language-tools/issues/3171)) - thanks @so1ve
+- fix: symbol types are lost ([#3300](https://github.com/vuejs/language-tools/issues/3300)) ([#3295](https://github.com/vuejs/language-tools/issues/3295)) - thanks @so1ve
+- fix(ts-plugin): suppress errors when `composite` is enabled
+- fix(language-server): trigger characters missing on web IDE
+- perf(language-server): debounce for `isCancellationRequested()`
+- perf(typescript): caching `getScriptFileNames()` result
+
+**Breaking changes**
+
+- no longer parse vue files outside tsconfig `include` option to avoid TS performance concerns ([#3326](https://github.com/vuejs/language-tools/issues/3326))
+
+## 1.8.1 (2023/6/20)
+
+- fix(language-server): 3 consecutive directories with the same name cause infinite recursion ([#3282](https://github.com/vuejs/language-tools/issues/3282)) - thanks @FelipeAzambuja
+- fix(language-server): diagnostics were not properly refreshed when creating files
+- fix(monaco): unrecognized relative path file
+- types: simplify `__VLS_IsAny` - thanks @so1ve
+- perf(ts-plugin): work without overriding language service instance to reduce half of memory usage ([#3221](https://github.com/vuejs/language-tools/issues/3221))
+
+## 1.8.0 (2023/6/17) ([Release notes](https://github.com/vuejs/language-tools/releases/tag/v1.8.0))
+
+## 1.7.14 (2023/6/16) - pre-release
+
+- perf: intellisense is very slow when referencing lots of external .vue files ([#3264](https://github.com/vuejs/language-tools/issues/3264))
+- fix: read directory infinite recursion on Darwin os ([#3282](https://github.com/vuejs/language-tools/issues/3282))
+
+## 1.7.13 (2023/6/15) - pre-release
+
+- feat: support Vue 3.3 `defineEmits` shorthand ([#3169](https://github.com/vuejs/language-tools/issues/3169)) ([#3283](https://github.com/vuejs/language-tools/issues/3283)) - thanks @so1ve
+- feat: allow trailing text for directive comments (https://github.com/vuejs/language-tools/pull/3215#issuecomment-1591397008)
+- feat: switch `vue.inlayHints.optionsWrapper` to disabled by default ([#3147](https://github.com/vuejs/language-tools/issues/3147)) - thanks @wenfangdu
+- feat(component-meta): expose component type ([#3151](https://github.com/vuejs/language-tools/issues/3151)) ([#3286](https://github.com/vuejs/language-tools/issues/3286))
+- fix: can't define variables in inline event handler ([#3258](https://github.com/vuejs/language-tools/issues/3258)) ([#3280](https://github.com/vuejs/language-tools/issues/3280)) - thanks @so1ve
+- fix(vue-tsc): `--emitDeclarationOnly` not working since 1.7.9
+- fix(vue-tsc): `@vue-expect-error`, `@vue-ignore` not working for vue-tsc ([#3284](https://github.com/vuejs/language-tools/issues/3284)) - thanks @sapphi-red
+- fix: compatible functional component typecheck with TS 5.1.3 ([#3255](https://github.com/vuejs/language-tools/issues/3255))
+
+## 1.7.12 (2023/6/14) - pre-release
+
+- feat: reintroduce `nativeTags` ([#3279](https://github.com/vuejs/language-tools/issues/3279))
+- fix: compatible with TS 5.1.3 ([#3274](https://github.com/vuejs/language-tools/issues/3274)) ([#3277](https://github.com/vuejs/language-tools/issues/3277)) - thanks @so1ve
+- perf(vue-tsc): addressed a performance regression since 1.5.1 by reintroducing `nativeTags` ([#3148](https://github.com/vuejs/language-tools/issues/3148))
+
+## 1.7.11 (2023/6/9) - pre-release
+
+- fix: ignore errors for `statSync` ([#3260](https://github.com/vuejs/language-tools/issues/3260))
+
+## 1.7.10 (2023/6/9) - pre-release
+
+- feat: upgrade framework to v1.7 ([#3248](https://github.com/vuejs/language-tools/issues/3248))
+- fix: `strictTemplates` not working for IntrinsicElement ([#3214](https://github.com/vuejs/language-tools/issues/3214))
+- fix: failed to load tsconfig json schema ([#3224](https://github.com/vuejs/language-tools/issues/3224)) ([#3228](https://github.com/vuejs/language-tools/issues/3228)) - thanks @tjx666
+- fix(vue-tsc): `vue-tsc` ignores type errors in `.vue` files if the incremental setting is true ([#2756](https://github.com/vuejs/language-tools/issues/2756)) ([#3218](https://github.com/vuejs/language-tools/issues/3218)) - thanks @lucasavila00
+- fix: properly merge `defineModel` and `defineProps` types ([#3164](https://github.com/vuejs/language-tools/issues/3164))
+- fix(language-server): show component meta command not working
+
+**Breaking changes**
+
+- Simplify `JSX.IntrinsicElements` type inference for better TS performance ([#3259](https://github.com/vuejs/language-tools/issues/3259))
+- Update `@vue-expected-error` to `@vue-expect-error` (https://github.com/vuejs/language-tools/pull/3215#issuecomment-1560355284)
+
+## 1.7.8 (2023/5/22) - pre-release
+
+- fix: directive comments not working in production builds
+
+## 1.7.7 (2023/5/22) - pre-release
+
+- feat: support for `@vue-ignore`, `@vue-skip`, `@vue-expected-error` directive comments ([#3215](https://github.com/vuejs/language-tools/issues/3215))
+- refactor(language-service): removed `vscode-languageserver-protocol` runtime dependency
+- perf(monaco): much faster first time intellisense
+- fix: ts project not updated when virtual ts file created / deleted
+
+## 1.7.6 (2023/5/19) - pre-release
+
+- refactor(language-service): fewer runtime dependencies
+- chore: low-level API adjustment
+
+## 1.7.4 (2023/5/18) - pre-release
+
+- feat: more reliable intellisense for monaco
+- fix: avoid adds ".js" extension when auto importing components ([#3150](https://github.com/vuejs/language-tools/issues/3150))
+
+## 1.6.5 (2023/5/13), 1.7.3 (2023/5/13) - pre-release
+
+- chore: bump vue deps to 3.3 stable ([#3167](https://github.com/vuejs/language-tools/issues/3167)) - thanks @ferferga
+- fix(vue-tsc): avoid throw when composite is enabled ([#2622](https://github.com/vuejs/language-tools/issues/2622))
+- perf(language-service): avoid request name casing from language client multiple times ([#3158](https://github.com/vuejs/language-tools/issues/3158)) - thanks @kalvenschraut
+- fix: avoid slot name report TS8013 in js component ([#3121](https://github.com/vuejs/language-tools/issues/3121))
+
+## 1.7.2 (2023/5/11) - pre-release
+
+- feat: compatible with the latest Labs
+
+## 1.7.1 (2023/5/10) - pre-release
+
+- ⭐ feat: support for [Volar.js Labs](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volarjs-labs)
+- fix(language-core): add missing peer dependency `typescript` ([#3145](https://github.com/vuejs/language-tools/issues/3145)) - thanks @HunYan-io
+- perf: style code change should not increase ts virtual script version
+- perf: avoid virtual file version always increase due to source map update
+
+**Breaking changes**
+
+- Removed the `VueLanguageServiceHost` interface
+
 ## 1.7.0 (2023/5/7) - pre-release
 
 - feat(language-service): compatible with Volar.js 1.5 Scripts API, Rules API
@@ -9,42 +212,6 @@
 
 - rename packages from `@volar/vue-*` to `@vue/*` ([#3134](https://github.com/vuejs/language-tools/issues/3134))
 - `volar.config.js` specification update (base on Volar.js v1.5)
-
----
-
-<h3 align="center">Full-time Support by</h3>
-<br />
-
-<p align="center">
-	<span>
-		<a href="https://stackblitz.com/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/StackBlitz.png" height="80" /></a>
-		<h4 align="center"><a href="https://blog.stackblitz.com/posts/webcontainer-api-is-here/">WebContainer API is here.</a></h4>
-	</span>
-</p>
-<br />
-
-<h3 align="center">Our Sponsors ⭐✨</h3>
-<br />
-
-<p align="center">
-	<a href="https://volta.net/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/volta.svg" height="60" /></a>
-    <a href="https://vuejs.org/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/vue.png" height="80" /></a>
-</p>
-<br />
-
-<p align="center">
-    <a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/prefect.svg" height="40" /></a>
-</p>
-<br />
-
-<p align="center">
-	<h5 align="center">
-		Add you via
-		<a href="https://github.com/sponsors/johnsoncodehk">GitHub Sponsors</a>
-		or
-		<a href="https://opencollective.com/volarjs">Open Collective</a>
-	</h5>
-</p>
 
 ## 1.6.4 (2023/5/4)
 
@@ -414,7 +581,7 @@ For more details, see [#2620](https://github.com/vuejs/language-tools/issues/262
 - feat: show `(takeover)` instead of `(vue)` in status bar for takeover mode ([#2365](https://github.com/vuejs/language-tools/issues/2365))
 - feat: more reliable formatting edits combine
 - fix(doctor): update source code link ([#2307](https://github.com/vuejs/language-tools/issues/2307))
-- fix(typescript-plugin): tsserver multiple initializations lead to infinite loop (https://github.com/microsoft/vscode/issues/171591)
+- fix(ts-plugin): tsserver multiple initializations lead to infinite loop (https://github.com/microsoft/vscode/issues/171591)
 - fix: syntactic features not working for untitled vue document
 - fix: spaces removed from ternary operator inside `{{ }}` ([#2305](https://github.com/vuejs/language-tools/issues/2305))
 - fix: `source.addMissingImports` accidentally made imports for properties used the template ([#2304](https://github.com/vuejs/language-tools/issues/2304))
@@ -442,7 +609,7 @@ For more details, see [#2620](https://github.com/vuejs/language-tools/issues/262
 - feat: support normalize component name for import statement completion ([#2286](https://github.com/vuejs/language-tools/issues/2286))
 - feat: normalize `Index` to folder name when `normalizeComponentImportName` enabled (https://github.com/vuejs/language-tools/issues/2071#issuecomment-1373701277)
 - feat: support update imports on multiple files move
-- fix(typescript-plugin): fixed `Projects must list all files or use an 'include' pattern` error ([#2271](https://github.com/vuejs/language-tools/issues/2271))
+- fix(ts-plugin): fixed `Projects must list all files or use an 'include' pattern` error ([#2271](https://github.com/vuejs/language-tools/issues/2271))
 - fix: language client sending `parseSfc` requests when not a vue document changed
 - fix: typescript actions not working for `codeActionsOnSave` setting ([#2188](https://github.com/vuejs/language-tools/issues/2188))
 - fix: fixed `c is not iterable` error edge case ([#2282](https://github.com/vuejs/language-tools/issues/2282))

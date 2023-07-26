@@ -3,7 +3,7 @@ import { posix as path } from 'path';
 import { getDefaultVueLanguagePlugins } from './plugins';
 import { VueFile } from './sourceFile';
 import { VueCompilerOptions } from './types';
-import * as sharedTypes from './utils/directorySharedTypes';
+import * as sharedTypes from './utils/globalTypes';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { resolveVueCompilerOptions } from './utils/ts';
 
@@ -43,10 +43,12 @@ function getModuleResolutionCache(
 
 export function createLanguage(
 	compilerOptions: ts.CompilerOptions = {},
-	vueCompilerOptions = resolveVueCompilerOptions({}),
+	_vueCompilerOptions: Partial<VueCompilerOptions> = {},
 	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
 	codegenStack: boolean = false,
-): Language {
+) {
+
+	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);
 
 	patchResolveModuleNames(ts, vueCompilerOptions);
 
@@ -56,49 +58,40 @@ export function createLanguage(
 		vueCompilerOptions,
 		codegenStack,
 	);
-	const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(sharedTypes.getTypesCode(vueCompilerOptions));
-	const languageModule: Language = {
+	const allowLanguageIds = new Set(['vue']);
+
+	if (vueCompilerOptions.extensions.includes('.md')) {
+		allowLanguageIds.add('markdown');
+	}
+	if (vueCompilerOptions.extensions.includes('.html')) {
+		allowLanguageIds.add('html');
+	}
+
+	const languageModule: Language<VueFile> = {
 		createVirtualFile(fileName, snapshot, languageId) {
 			if (
-				languageId === 'vue'
-				|| (
-					!languageId
-					&& vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))
-				)
+				(languageId && allowLanguageIds.has(languageId))
+				|| (!languageId && vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext)))
 			) {
-				return new VueFile(fileName, snapshot, ts, vueLanguagePlugin, codegenStack);
+				return new VueFile(fileName, snapshot, vueCompilerOptions, vueLanguagePlugin, ts, codegenStack);
 			}
 		},
-		updateVirtualFile(sourceFile: VueFile, snapshot) {
+		updateVirtualFile(sourceFile, snapshot) {
 			sourceFile.update(snapshot);
 		},
 		resolveHost(host) {
+			const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(sharedTypes.getTypesCode(vueCompilerOptions));
+			const sharedTypesFileName = path.join(host.rootPath, sharedTypes.baseName);
 			return {
 				...host,
-				fileExists(fileName) {
-					const basename = path.basename(fileName);
-					if (basename === sharedTypes.baseName) {
-						return true;
-					}
-					return host.fileExists(fileName);
-				},
 				getScriptFileNames() {
-					const fileNames = host.getScriptFileNames();
 					return [
-						...getSharedTypesFiles(fileNames),
-						...fileNames,
+						sharedTypesFileName,
+						...host.getScriptFileNames(),
 					];
 				},
-				getScriptVersion(fileName) {
-					const basename = path.basename(fileName);
-					if (basename === sharedTypes.baseName) {
-						return '';
-					}
-					return host.getScriptVersion(fileName);
-				},
 				getScriptSnapshot(fileName) {
-					const basename = path.basename(fileName);
-					if (basename === sharedTypes.baseName) {
+					if (fileName === sharedTypesFileName) {
 						return sharedTypesSnapshot;
 					}
 					return host.getScriptSnapshot(fileName);
@@ -131,17 +124,11 @@ export function createLanguage(
 	};
 
 	return languageModule;
-
-	function getSharedTypesFiles(fileNames: string[]) {
-		const moduleFiles = fileNames.filter(fileName => vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext)));
-		const moduleFileDirs = [...new Set(moduleFiles.map(path.dirname))];
-		return moduleFileDirs.map(dir => path.join(dir, sharedTypes.baseName));
-	}
 }
 
 export function createLanguages(
 	compilerOptions: ts.CompilerOptions = {},
-	vueCompilerOptions = resolveVueCompilerOptions({}),
+	vueCompilerOptions: Partial<VueCompilerOptions> = {},
 	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
 	codegenStack: boolean = false,
 ): Language[] {

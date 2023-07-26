@@ -22,6 +22,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 					const compiler = modules['@vue/compiler-dom'];
 					const completed = compiler.compile(pugFile.htmlCode, {
 						...options,
+						comments: true,
 						onWarn(warning) {
 							options?.onWarn?.(createProxyObject(warning));
 						},

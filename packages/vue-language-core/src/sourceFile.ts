@@ -6,6 +6,11 @@ import { computed, ComputedRef, reactive, pauseTracking, resetTracking } from '@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { Sfc, SfcBlock, VueLanguagePlugin } from './types';
 import * as muggle from 'muggle-string';
+import { parseCssVars } from './utils/parseCssVars';
+import { parseCssClassNames } from './utils/parseCssClassNames';
+import { VueCompilerOptions } from './types';
+
+const jsxReg = /^\.(js|ts)x?$/;
 
 export class VueEmbeddedFile {
 
@@ -49,7 +54,7 @@ export class VueFile implements VirtualFile {
 	}
 
 	get mainScriptName() {
-		return this._allEmbeddedFiles.value.find(e => e.file.fileName.replace(this.fileName, '').match(/^\.(js|ts)x?$/))?.file.fileName ?? '';
+		return this._allEmbeddedFiles.value.find(e => e.file.fileName.replace(this.fileName, '').match(jsxReg))?.file.fileName ?? '';
 	}
 
 	get embeddedFiles() {
@@ -192,7 +197,7 @@ export class VueFile implements VirtualFile {
 	});
 
 	_pluginEmbeddedFiles = this.plugins.map((plugin) => {
-		const embeddedFiles: Record<string, ComputedRef<VueEmbeddedFile>> = {};
+		const embeddedFiles: Record<string, ComputedRef<{ file: VueEmbeddedFile; snapshot: ts.IScriptSnapshot; }>> = {};
 		const files = computed(() => {
 			try {
 				if (plugin.getEmbeddedFileNames) {
@@ -217,7 +222,45 @@ export class VueFile implements VirtualFile {
 										}
 									}
 								}
-								return file;
+								const newText = toString(file.content);
+								const changeRanges = new Map<ts.IScriptSnapshot, ts.TextChangeRange | undefined>();
+								const snapshot: ts.IScriptSnapshot = {
+									getText: (start, end) => newText.slice(start, end),
+									getLength: () => newText.length,
+									getChangeRange(oldSnapshot) {
+										if (!changeRanges.has(oldSnapshot)) {
+											changeRanges.set(oldSnapshot, undefined);
+											const oldText = oldSnapshot.getText(0, oldSnapshot.getLength());
+											for (let start = 0; start < oldText.length && start < newText.length; start++) {
+												if (oldText[start] !== newText[start]) {
+													let end = oldText.length;
+													for (let i = 0; i < oldText.length - start && i < newText.length - start; i++) {
+														if (oldText[oldText.length - i - 1] !== newText[newText.length - i - 1]) {
+															break;
+														}
+														end--;
+													}
+													let length = end - start;
+													let newLength = length + (newText.length - oldText.length);
+													if (newLength < 0) {
+														length -= newLength;
+														newLength = 0;
+													}
+													changeRanges.set(oldSnapshot, {
+														span: { start, length },
+														newLength,
+													});
+													break;
+												}
+											}
+										}
+										return changeRanges.get(oldSnapshot);
+									},
+								};
+								return {
+									file,
+									snapshot,
+								};
 							});
 						}
 					}
@@ -230,7 +273,8 @@ export class VueFile implements VirtualFile {
 		});
 		return computed(() => {
 			return files.value.map(_file => {
-				const file = _file.value;
+				const file = _file.value.file;
+				const snapshot = _file.value.snapshot;
 				const mappings = buildMappings(file.content);
 				for (const mapping of mappings) {
 					if (mapping.source !== undefined) {
@@ -240,45 +284,13 @@ export class VueFile implements VirtualFile {
 								mapping.sourceRange[0] + block.startTagEnd,
 								mapping.sourceRange[1] + block.startTagEnd,
 							];
-							mapping.source = undefined;
 						}
+						else {
+							// ignore
+						}
+						mapping.source = undefined;
 					}
 				}
-				const newText = toString(file.content);
-				const changeRanges = new Map<ts.IScriptSnapshot, ts.TextChangeRange | undefined>();
-				const snapshot: ts.IScriptSnapshot = {
-					getText: (start, end) => newText.slice(start, end),
-					getLength: () => newText.length,
-					getChangeRange(oldSnapshot) {
-						if (!changeRanges.has(oldSnapshot)) {
-							changeRanges.set(oldSnapshot, undefined);
-							const oldText = oldSnapshot.getText(0, oldSnapshot.getLength());
-							for (let start = 0; start < oldText.length && start < newText.length; start++) {
-								if (oldText[start] !== newText[start]) {
-									let end = oldText.length;
-									for (let i = 0; i < oldText.length - start && i < newText.length - start; i++) {
-										if (oldText[oldText.length - i - 1] !== newText[newText.length - i - 1]) {
-											break;
-										}
-										end--;
-									}
-									let length = end - start;
-									let newLength = length + (newText.length - oldText.length);
-									if (newLength < 0) {
-										length -= newLength;
-										newLength = 0;
-									}
-									changeRanges.set(oldSnapshot, {
-										span: { start, length },
-										newLength,
-									});
-									break;
-								}
-							}
-						}
-						return changeRanges.get(oldSnapshot);
-					},
-				};
 				return {
 					file,
 					snapshot,
@@ -378,9 +390,10 @@ export class VueFile implements VirtualFile {
 	constructor(
 		public fileName: string,
 		public snapshot: ts.IScriptSnapshot,
-		private ts: typeof import('typescript/lib/tsserverlibrary'),
-		private plugins: ReturnType<VueLanguagePlugin>[],
-		private codegenStack: boolean,
+		public vueCompilerOptions: VueCompilerOptions,
+		public plugins: ReturnType<VueLanguagePlugin>[],
+		public ts: typeof import('typescript/lib/tsserverlibrary'),
+		public codegenStack: boolean,
 	) {
 		this.update(snapshot);
 	}
@@ -417,9 +430,7 @@ export class VueFile implements VirtualFile {
 						block.content,
 						undefined,
 						block.startTagEnd,
-						block.name === 'template'
-							? { completion: true } // fix vue-autoinsert-parentheses not working
-							: {},
+						{},
 					],
 				);
 			}
@@ -499,12 +510,16 @@ export class VueFile implements VirtualFile {
 	}
 
 	parseStyleBlock(block: SFCStyleBlock, i: number): Sfc['styles'][number] {
+		const setting = this.vueCompilerOptions.experimentalResolveStyleCssClasses;
+		const shouldParseClassNames = block.module || (setting === 'scoped' && block.scoped) || setting === 'always';
 		return {
 			...this.parseBlock(block),
 			name: 'style_' + i,
 			lang: block.lang ?? 'css',
 			module: typeof block.module === 'string' ? block.module : block.module ? '$style' : undefined,
 			scoped: !!block.scoped,
+			cssVars: [...parseCssVars(block.content)],
+			classNames: shouldParseClassNames ? [...parseCssClassNames(block.content)] : [],
 		};
 	}
 

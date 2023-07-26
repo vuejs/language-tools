@@ -1,6 +1,8 @@
 import { FileCapabilities, FileRangeCapabilities } from '@volar/language-core';
 import { VueLanguagePlugin } from '../types';
 
+const customBlockReg = /^(.*)\.customBlock_([^_]+)_(\d+)\.([^.]+)$/;
+
 const plugin: VueLanguagePlugin = () => {
 
 	return {
@@ -17,7 +19,7 @@ const plugin: VueLanguagePlugin = () => {
 		},
 
 		resolveEmbeddedFile(_fileName, sfc, embeddedFile) {
-			const match = embeddedFile.fileName.match(/^(.*)\.customBlock_([^_]+)_(\d+)\.([^.]+)$/);
+			const match = embeddedFile.fileName.match(customBlockReg);
 			if (match) {
 				const index = parseInt(match[3]);
 				const customBlock = sfc.customBlocks[index];

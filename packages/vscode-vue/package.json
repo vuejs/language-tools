@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "1.7.0",
+	"version": "1.8.6",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
@@ -426,9 +426,6 @@
 					"type": "boolean",
 					"default": false
 				},
-				"vue.server.json.customBlockSchemaUrls": {
-					"type": "object"
-				},
 				"vue.server.diagnosticModel": {
 					"type": "string",
 					"default": "push",
@@ -584,7 +581,7 @@
 				},
 				"vue.inlayHints.optionsWrapper": {
 					"type": "boolean",
-					"default": true,
+					"default": false,
 					"description": "Show inlay hints for component options wrapper for type support."
 				}
 			}
@@ -608,11 +605,6 @@
 			{
 				"command": "volar.action.writeVirtualFiles",
 				"title": "Write Virtual Files",
-				"category": "Volar (Debug)"
-			},
-			{
-				"command": "volar.action.serverStats",
-				"title": "Server Stats",
 				"category": "Volar (Debug)"
 			},
 			{
@@ -722,27 +714,25 @@
 	"scripts": {
 		"prebuild": "cd ../.. && npm run build",
 		"build": "node scripts/build",
+		"build:minify": "npm run build -- --minify",
 		"watch": "npm run build -- --watch",
-		"prepack": "npm run prebuild && npm run build -- --minify",
-		"pack": "npm run prepack && vsce package",
-		"release": "npm run prepack && vsce publish",
-		"release:next": "npm run release -- --pre-release",
-		"bundle-size": "npm run prepack:bundle-size && esbuild-visualizer --metadata ./meta.json && open ./stats.html"
+		"pack": "npm run build:minify && vsce package",
+		"pack:next": "npm run build && vsce package",
+		"release": "npm run build:minify && vsce publish",
+		"release:next": "npm run build && vsce publish --pre-release",
+		"bundle-size": "npm run build:minify --metafile && esbuild-visualizer --metadata ./meta.json && open ./stats.html"
 	},
 	"devDependencies": {
 		"@types/semver": "^7.3.13",
 		"@types/vscode": "1.67.0",
-		"@volar/source-map": "1.6.0",
-		"@volar/vscode": "1.6.0",
-		"@vue/language-core": "1.7.0",
-		"@vue/language-server": "1.7.0",
+		"@volar/vscode": "~1.9.0",
+		"@vue/language-core": "1.8.6",
+		"@vue/language-server": "1.8.6",
 		"esbuild": "0.15.18",
 		"esbuild-plugin-copy": "latest",
 		"esbuild-visualizer": "latest",
 		"semver": "^7.3.8",
-		"typesafe-path": "^0.2.2",
 		"vsce": "latest",
-		"vscode-languageclient": "^8.1.0",
-		"vscode-nls": "^5.2.0"
+		"vscode-languageclient": "^8.1.0"
 	}
 }

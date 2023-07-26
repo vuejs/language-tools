@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-service",
-	"version": "1.7.0",
+	"version": "1.8.6",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -17,28 +17,27 @@
 		"update-html-data": "node ./scripts/update-html-data.js"
 	},
 	"dependencies": {
-		"@volar/language-core": "1.6.0",
-		"@volar/language-service": "1.6.0",
-		"@volar/source-map": "1.6.0",
-		"@vue/compiler-dom": "^3.3.0-beta.3",
-		"@vue/language-core": "1.7.0",
-		"@vue/reactivity": "^3.3.0-beta.3",
-		"@vue/shared": "^3.3.0-beta.3",
-		"volar-service-css": "0.0.2",
-		"volar-service-emmet": "0.0.2",
-		"volar-service-html": "0.0.2",
-		"volar-service-json": "0.0.2",
-		"volar-service-pug": "0.0.2",
-		"volar-service-pug-beautify": "0.0.2",
-		"volar-service-typescript": "0.0.2",
-		"volar-service-typescript-twoslash-queries": "0.0.2",
+		"@volar/language-core": "~1.9.0",
+		"@volar/language-service": "~1.9.0",
+		"@volar/typescript": "~1.9.0",
+		"@vue/compiler-dom": "^3.3.0",
+		"@vue/language-core": "1.8.6",
+		"@vue/reactivity": "^3.3.0",
+		"@vue/shared": "^3.3.0",
+		"volar-service-css": "0.0.10",
+		"volar-service-emmet": "0.0.10",
+		"volar-service-html": "0.0.10",
+		"volar-service-json": "0.0.10",
+		"volar-service-pug": "0.0.10",
+		"volar-service-pug-beautify": "0.0.10",
+		"volar-service-typescript": "0.0.10",
+		"volar-service-typescript-twoslash-queries": "0.0.10",
 		"vscode-html-languageservice": "^5.0.4",
-		"vscode-json-languageservice": "^5.2.0",
-		"vscode-languageserver-protocol": "^3.17.3",
-		"vscode-languageserver-textdocument": "^1.0.8",
-		"vscode-uri": "^3.0.7"
+		"vscode-languageserver-textdocument": "^1.0.8"
 	},
 	"devDependencies": {
-		"@volar/kit": "1.6.0"
+		"@volar/kit": "~1.9.0",
+		"vscode-languageserver-protocol": "^3.17.3",
+		"vscode-uri": "^3.0.7"
 	}
 }

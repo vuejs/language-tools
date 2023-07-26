@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-core",
-	"version": "1.7.0",
+	"version": "1.8.6",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -13,17 +13,25 @@
 		"directory": "packages/vue-language-core"
 	},
 	"dependencies": {
-		"@volar/language-core": "1.6.0",
-		"@volar/source-map": "1.6.0",
-		"@vue/compiler-dom": "^3.3.0-beta.3",
-		"@vue/reactivity": "^3.3.0-beta.3",
-		"@vue/shared": "^3.3.0-beta.3",
+		"@volar/language-core": "~1.9.0",
+		"@volar/source-map": "~1.9.0",
+		"@vue/compiler-dom": "^3.3.0",
+		"@vue/reactivity": "^3.3.0",
+		"@vue/shared": "^3.3.0",
 		"minimatch": "^9.0.0",
 		"muggle-string": "^0.3.1",
 		"vue-template-compiler": "^2.7.14"
 	},
 	"devDependencies": {
-		"@vue/compiler-sfc": "^3.3.0-beta.3",
-		"@types/minimatch": "^5.1.2"
+		"@types/minimatch": "^5.1.2",
+		"@vue/compiler-sfc": "^3.3.0"
+	},
+	"peerDependencies": {
+		"typescript": "*"
+	},
+	"peerDependenciesMeta": {
+		"typescript": {
+			"optional": true
+		}
 	}
 }

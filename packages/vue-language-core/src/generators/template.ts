@@ -3,7 +3,7 @@ import { FileRangeCapabilities } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { VueCompilerOptions } from '../types';
+import { Sfc, VueCompilerOptions } from '../types';
 import { colletVars, walkInterpolationFragment } from '../utils/transform';
 import { minimatch } from 'minimatch';
 import * as muggle from 'muggle-string';
@@ -42,7 +42,8 @@ const formatBrackets = {
 	curly: ['0 +', '+ 0;'] as [string, string],
 	event: ['() => ', ';'] as [string, string],
 };
-const validTsVar = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
+const validTsVarReg = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
+const colonReg = /:/g;
 // @ts-ignore
 const transformContext: CompilerDOM.TransformContext = {
 	onError: () => { },
@@ -67,25 +68,17 @@ export function generate(
 	vueCompilerOptions: VueCompilerOptions,
 	sourceTemplate: string,
 	sourceLang: string,
-	templateAst: CompilerDOM.RootNode,
+	sfc: Sfc,
 	hasScriptSetupSlots: boolean,
-	sharedTypesImport: string,
-	cssScopedClasses: string[] = [],
 	codegenStack: boolean,
 ) {
 
+	const nativeTags = new Set(vueCompilerOptions.nativeTags);
 	const [codes, codeStacks] = codegenStack ? muggle.track([] as Code[]) : [[], []];
 	const [formatCodes, formatCodeStacks] = codegenStack ? muggle.track([] as Code[]) : [[], []];
 	const [cssCodes, cssCodeStacks] = codegenStack ? muggle.track([] as Code[]) : [[], []];
-	const slots = new Map<string, {
-		varName: string,
-		loc: [number, number],
-		nodeLoc: any,
-	}>();
-	const slotExps = new Map<string, {
-		varName: string,
-	}>();
-	const cssScopedClassesSet = new Set(cssScopedClasses);
+	const slots = new Map<string, { varName: string; loc: [number, number]; nodeLoc: any; }>();
+	const slotExps = new Map<string, { varName: string; }>();
 	const tagNames = collectTagOffsets();
 	const localVars: Record<string, number> = {};
 	const tempVars: ReturnType<typeof walkInterpolationFragment>[] = [];
@@ -95,10 +88,15 @@ export function generate(
 
 	let hasSlot = false;
 	let elementIndex = 0;
+	let ignoreStart: undefined | number;
+	let expectedErrorStart: undefined | number;
+	let expectedErrorNode: CompilerDOM.CommentNode | undefined;
 
-	const componentVars = generateComponentVars();
+	generatePreResolveComponents();
 
-	visitNode(templateAst, undefined, undefined);
+	if (sfc.templateAst) {
+		visitNode(sfc.templateAst, undefined, undefined, undefined);
+	}
 
 	generateStyleScopedClasses();
 
@@ -152,6 +150,16 @@ export function generate(
 
 	function generateStyleScopedClasses() {
 
+		const allClasses = new Set<string>();
+
+		for (const block of sfc.styles) {
+			if (block.scoped || vueCompilerOptions.experimentalResolveStyleCssClasses === 'always') {
+				for (const className of block.classNames) {
+					allClasses.add(className.text.substring(1));
+				}
+			}
+		}
+
 		codes.push(`if (typeof __VLS_styleScopedClasses === 'object' && !Array.isArray(__VLS_styleScopedClasses)) {\n`);
 		for (const { className, offset } of scopedClasses) {
 			codes.push(`__VLS_styleScopedClasses[`);
@@ -161,7 +169,7 @@ export function generate(
 				offset,
 				{
 					...capabilitiesPresets.scopedClassName,
-					displayWithLink: cssScopedClassesSet.has(className),
+					displayWithLink: allClasses.has(className),
 				},
 			]));
 			codes.push(`];\n`);
@@ -169,53 +177,54 @@ export function generate(
 		codes.push('}\n');
 	}
 
-	function generateComponentVars() {
+	function toCanonicalComponentName(tagText: string) {
+		return validTsVarReg.test(tagText) ? tagText : capitalize(camelize(tagText.replace(colonReg, '-')));
+	}
 
-		const data: Record<string, string> = {};
+	function getPossibleOriginalComponentName(tagText: string) {
+		return [...new Set([
+			// order is important: https://github.com/vuejs/language-tools/issues/2010
+			capitalize(camelize(tagText)),
+			camelize(tagText),
+			tagText,
+		])];
+	}
 
-		codes.push(`let __VLS_templateComponents!: {}\n`);
+	function generatePreResolveComponents() {
+
+		codes.push(`let __VLS_resolvedLocalAndGlobalComponents!: {}\n`);
 
 		for (const tagName in tagNames) {
+
+			if (nativeTags.has(tagName))
+				continue;
 
 			const isNamespacedTag = tagName.indexOf('.') >= 0;
 			if (isNamespacedTag)
 				continue;
 
-			const varName = validTsVar.test(tagName) ? tagName : capitalize(camelize(tagName.replace(/:/g, '-')));
-
 			codes.push(
-				`& import('${sharedTypesImport}').WithComponent<'${varName}', typeof __VLS_components, `,
+				`& __VLS_WithComponent<'${toCanonicalComponentName(tagName)}', typeof __VLS_localComponents, `,
 				// order is important: https://github.com/vuejs/language-tools/issues/2010
 				`"${capitalize(camelize(tagName))}", `,
 				`"${camelize(tagName)}", `,
 				`"${tagName}"`,
 				'>\n',
 			);
-
-			data[tagName] = varName;
 		}
 
 		codes.push(`;\n`);
 
 		for (const tagName in tagNames) {
 
-			const varName = data[tagName];
-			if (!varName)
-				continue;
-
 			const tagOffsets = tagNames[tagName];
 			const tagRanges: [number, number][] = tagOffsets.map(offset => [offset, offset + tagName.length]);
-			const names = new Set([
-				// order is important: https://github.com/vuejs/language-tools/issues/2010
-				capitalize(camelize(tagName)),
-				camelize(tagName),
-				tagName,
-			]);
+			const names = nativeTags.has(tagName) ? [tagName] : getPossibleOriginalComponentName(tagName);
 
 			for (const name of names) {
 				for (const tagRange of tagRanges) {
 					codes.push(
-						name === tagName ? '__VLS_templateComponents' : '__VLS_components',
+						nativeTags.has(tagName) ? '({} as __VLS_IntrinsicElements)' : '__VLS_components',
 						...createPropertyAccessCode([
 							name,
 							'template',
@@ -234,13 +243,21 @@ export function generate(
 			}
 			codes.push('\n');
 
+			if (nativeTags.has(tagName))
+				continue;
+
+			const isNamespacedTag = tagName.indexOf('.') >= 0;
+			if (isNamespacedTag)
+				continue;
+
 			codes.push(
 				'// @ts-ignore\n', // #2304
 				'[',
 			);
+			const validName = toCanonicalComponentName(tagName);
 			for (const tagRange of tagRanges) {
 				codes.push([
-					varName,
+					validName,
 					'template',
 					tagRange,
 					{
@@ -254,15 +271,17 @@ export function generate(
 			}
 			codes.push(`];\n`);
 		}
-
-		return data;
 	}
 
 	function collectTagOffsets() {
 
 		const tagOffsetsMap: Record<string, number[]> = {};
 
-		walkElementNodes(templateAst, node => {
+		if (!sfc.templateAst) {
+			return tagOffsetsMap;
+		}
+
+		walkElementNodes(sfc.templateAst, node => {
 			if (node.tag === 'slot') {
 				// ignore
 			}
@@ -296,15 +315,92 @@ export function generate(
 		return tagOffsetsMap;
 	}
 
+	function resolveComment() {
+		if (ignoreStart !== undefined) {
+			for (let i = ignoreStart; i < codes.length; i++) {
+				const code = codes[i];
+				if (typeof code === 'string') {
+					continue;
+				}
+				const cap = code[3];
+				if (cap.diagnostic) {
+					code[3] = {
+						...cap,
+						diagnostic: false,
+					};
+				}
+			}
+			ignoreStart = undefined;
+		}
+		if (expectedErrorStart !== undefined && expectedErrorStart !== codes.length && expectedErrorNode) {
+			let errors = 0;
+			const suppressError = () => {
+				errors++;
+				return false;
+			};
+			for (let i = expectedErrorStart; i < codes.length; i++) {
+				const code = codes[i];
+				if (typeof code === 'string') {
+					continue;
+				}
+				const cap = code[3];
+				if (cap.diagnostic) {
+					code[3] = {
+						...cap,
+						diagnostic: {
+							shouldReport: suppressError,
+						},
+					};
+				}
+			}
+			codes.push(
+				[
+					'// @ts-expect-error',
+					'template',
+					[expectedErrorNode.loc.start.offset, expectedErrorNode.loc.end.offset],
+					{
+						diagnostic: {
+							shouldReport: () => errors === 0,
+						},
+					},
+				],
+				'\n;\n',
+			);
+			expectedErrorStart = undefined;
+			expectedErrorNode = undefined;
+		}
+	}
+
 	function visitNode(
-		node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode,
+		node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.InterpolationNode | CompilerDOM.CompoundExpressionNode | CompilerDOM.TextNode | CompilerDOM.SimpleExpressionNode,
 		parentEl: CompilerDOM.ElementNode | undefined,
+		prevNode: CompilerDOM.TemplateChildNode | undefined,
 		componentCtxVar: string | undefined,
 	): void {
-		if (node.type === CompilerDOM.NodeTypes.ROOT) {
-			for (const childNode of node.children) {
-				visitNode(childNode, parentEl, componentCtxVar);
+
+		resolveComment();
+
+		if (prevNode?.type === CompilerDOM.NodeTypes.COMMENT) {
+			const commentText = prevNode.content.trim().split(' ')[0];
+			if (commentText.match(/^@vue-skip\b[\s\S]*/)) {
+				return;
 			}
+			else if (commentText.match(/^@vue-ignore\b[\s\S]*/)) {
+				ignoreStart = codes.length;
+			}
+			else if (commentText.match(/^@vue-expect-error\b[\s\S]*/)) {
+				expectedErrorStart = codes.length;
+				expectedErrorNode = prevNode;
+			}
+		}
+
+		if (node.type === CompilerDOM.NodeTypes.ROOT) {
+			let prev: CompilerDOM.TemplateChildNode | undefined;
+			for (const childNode of node.children) {
+				visitNode(childNode, parentEl, prev, componentCtxVar);
+				prev = childNode;
+			}
+			resolveComment();
 		}
 		else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 			const vForNode = getVForNode(node);
@@ -321,13 +417,13 @@ export function generate(
 		}
 		else if (node.type === CompilerDOM.NodeTypes.TEXT_CALL) {
 			// {{ var }}
-			visitNode(node.content, parentEl, componentCtxVar);
+			visitNode(node.content, parentEl, undefined, componentCtxVar);
 		}
 		else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
 			// {{ ... }} {{ ... }}
 			for (const childNode of node.children) {
 				if (typeof childNode === 'object') {
-					visitNode(childNode as CompilerDOM.TemplateChildNode, parentEl, componentCtxVar);
+					visitNode(childNode, parentEl, undefined, componentCtxVar);
 				}
 			}
 		}
@@ -381,12 +477,6 @@ export function generate(
 		else if (node.type === CompilerDOM.NodeTypes.TEXT) {
 			// not needed progress
 		}
-		else if (node.type === CompilerDOM.NodeTypes.COMMENT) {
-			// not needed progress
-		}
-		else {
-			codes.push(`// Unprocessed node type: ${node.type} json: ${JSON.stringify(node.loc)}\n`);
-		}
 	}
 
 	function visitVIfNode(node: CompilerDOM.IfNode, parentEl: CompilerDOM.ElementNode | undefined, componentCtxVar: string | undefined) {
@@ -434,9 +524,14 @@ export function generate(
 			}
 
 			codes.push(` {\n`);
+
+			let prev: CompilerDOM.TemplateChildNode | undefined;
 			for (const childNode of branch.children) {
-				visitNode(childNode, parentEl, componentCtxVar);
+				visitNode(childNode, parentEl, prev, componentCtxVar);
+				prev = childNode;
 			}
+			resolveComment();
+
 			generateAutoImportCompletionCode();
 			codes.push('}\n');
 
@@ -467,7 +562,7 @@ export function generate(
 			codes.push([leftExpressionText, 'template', leftExpressionRange.start, capabilitiesPresets.all]);
 			formatCodes.push(...createFormatCode(leftExpressionText, leftExpressionRange.start, formatBrackets.normal));
 		}
-		codes.push(`] of (await import('${sharedTypesImport}')).getVForSourceType`);
+		codes.push(`] of __VLS_getVForSourceType`);
 		if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 			codes.push(
 				'(',
@@ -483,9 +578,12 @@ export function generate(
 				') {\n',
 			);
 
+			let prev: CompilerDOM.TemplateChildNode | undefined;
 			for (const childNode of node.children) {
-				visitNode(childNode, parentEl, componentCtxVar);
+				visitNode(childNode, parentEl, prev, componentCtxVar);
+				prev = childNode;
 			}
+			resolveComment();
 
 			generateAutoImportCompletionCode();
 			codes.push('}\n');
@@ -546,7 +644,23 @@ export function generate(
 			}
 		}
 
-		if (isNamespacedTag) {
+		const isIntrinsicElement = nativeTags.has(tag) && tagOffsets.length;
+
+		if (isIntrinsicElement) {
+			codes.push(
+				'const ',
+				var_originalComponent,
+				` = ({} as __VLS_IntrinsicElements)[`,
+				...createStringLiteralKeyCode([
+					tag,
+					'template',
+					tagOffsets[0],
+					capabilitiesPresets.diagnosticOnly,
+				]),
+				'];\n',
+			);
+		}
+		else if (isNamespacedTag) {
 			codes.push(
 				`const ${var_originalComponent} = `,
 				...createInterpolationCode(tag, node.loc, startTagOffset, capabilitiesPresets.all, '', ''),
@@ -556,39 +670,59 @@ export function generate(
 		else if (dynamicTagExp) {
 			codes.push(
 				`const ${var_originalComponent} = `,
-				...createInterpolationCode(dynamicTagExp.loc.source, dynamicTagExp.loc, dynamicTagExp.loc.start.offset, capabilitiesPresets.all, '', ''),
+				...createInterpolationCode(dynamicTagExp.loc.source, dynamicTagExp.loc, dynamicTagExp.loc.start.offset, capabilitiesPresets.all, '(', ')'),
 				';\n',
 			);
 		}
-		else if (componentVars[tag]) {
-			codes.push(`const ${var_originalComponent} = __VLS_templateComponents['${componentVars[tag]}'];\n`);
-		}
 		else {
-			codes.push(`const ${var_originalComponent} = {} as any;\n`);
+			codes.push(`let ${var_originalComponent}!: `);
+			for (const componentName of getPossibleOriginalComponentName(tag)) {
+				codes.push(`'${componentName}' extends keyof typeof __VLS_ctx ? typeof __VLS_ctx${validTsVarReg.test(componentName) ? `.${componentName}` : `['${componentName}']`} : `);
+			}
+			codes.push(`typeof __VLS_resolvedLocalAndGlobalComponents['${toCanonicalComponentName(tag)}'];\n`);
 		}
 
 		codes.push(
-			`const ${var_functionalComponent} = (await import('${sharedTypesImport}')).asFunctionalComponent(`,
+			`const ${var_functionalComponent} = __VLS_asFunctionalComponent(`,
 			`${var_originalComponent}, `,
-			`new ${var_originalComponent}({`,
-			...createPropsCode(node, props, 'extraReferences'),
-			'}));\n',
 		);
+		if (isIntrinsicElement) {
+			codes.push('{}');
+		}
+		else {
+			codes.push(
+				`new ${var_originalComponent}({`,
+				...createPropsCode(node, props, 'extraReferences'),
+				'})',
+			);
+		}
+		codes.push(');\n');
 
 		for (const offset of tagOffsets) {
-			if (isNamespacedTag) {
+			if (isNamespacedTag || dynamicTagExp) {
 				continue;
 			}
-			else if (dynamicTagExp) {
-				continue;
-			}
-			else {
-				if (componentVars[tag]) {
-					codes.push(`__VLS_templateComponents.`);
-				}
+			else if (isIntrinsicElement) {
+				codes.push(`({} as __VLS_IntrinsicElements).`);
 				codes.push(
 					[
-						componentVars[tag] ?? tag,
+						tag,
+						'template',
+						[offset, offset + tag.length],
+						{
+							...capabilitiesPresets.tagHover,
+							...capabilitiesPresets.diagnosticOnly,
+						},
+					],
+					';\n',
+				);
+			}
+			else {
+				const key = toCanonicalComponentName(tag);
+				codes.push(`({} as { ${key}: typeof ${var_originalComponent} }).`);
+				codes.push(
+					[
+						key,
 						'template',
 						[offset, offset + tag.length],
 						{
@@ -614,12 +748,12 @@ export function generate(
 			tagOffsets.length ? ['', 'template', tagOffsets[0] + tag.length, capabilitiesPresets.diagnosticOnly]
 				: dynamicTagExp ? ['', 'template', startTagOffset + tag.length, capabilitiesPresets.diagnosticOnly]
 					: '',
-			`, ...(await import('${sharedTypesImport}')).functionalComponentArgsRest(${var_functionalComponent}));\n`,
+			`, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}));\n`,
 		);
 
 		if (tag !== 'template' && tag !== 'slot') {
 			componentCtxVar = `__VLS_${elementIndex++}`;
-			codes.push(`const ${componentCtxVar} = (await import('${sharedTypesImport}')).pickFunctionalComponentCtx(${var_originalComponent}, ${var_componentInstance})!;\n`);
+			codes.push(`const ${componentCtxVar} = __VLS_pickFunctionalComponentCtx(${var_originalComponent}, ${var_componentInstance})!;\n`);
 			parentEl = node;
 		}
 
@@ -658,7 +792,7 @@ export function generate(
 		if (vScope?.type === CompilerDOM.NodeTypes.DIRECTIVE && vScope.exp) {
 
 			const scopeVar = `__VLS_${elementIndex++}`;
-			const condition = `(await import('${sharedTypesImport}')).withScope(__VLS_ctx, ${scopeVar})`;
+			const condition = `__VLS_withScope(__VLS_ctx, ${scopeVar})`;
 
 			codes.push(`const ${scopeVar} = `);
 			codes.push([
@@ -673,9 +807,9 @@ export function generate(
 			inScope = true;
 		}
 
-		generateDirectives(node, var_originalComponent);
+		generateDirectives(node);
 		generateElReferences(node); // <el ref="foo" />
-		if (cssScopedClasses.length) {
+		if (sfc.styles.some(s => s.scoped || vueCompilerOptions.experimentalResolveStyleCssClasses === 'always')) {
 			generateClassScoped(node);
 		}
 		if (componentCtxVar) {
@@ -718,7 +852,7 @@ export function generate(
 							slotDir.exp.loc.start.offset,
 							capabilitiesPresets.all,
 						],
-						`] = (await import('${sharedTypesImport}')).getSlotParams(`,
+						`] = __VLS_getSlotParams(`,
 					);
 				}
 				else {
@@ -730,13 +864,13 @@ export function generate(
 							slotDir.exp.loc.start.offset,
 							capabilitiesPresets.all,
 						],
-						` = (await import('${sharedTypesImport}')).getSlotParam(`,
+						` = __VLS_getSlotParam(`,
 					);
 				}
 			}
 			codes.push(
 				['', 'template', (slotDir.arg ?? slotDir).loc.start.offset, capabilitiesPresets.diagnosticOnly],
-				`${componentCtxVar}.slots!`,
+				`(${componentCtxVar}.slots!)`,
 				...(
 					(slotDir?.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content)
 						? createPropertyAccessCode([
@@ -749,7 +883,7 @@ export function generate(
 							'default',
 							'template',
 							[slotDir.loc.start.offset, slotDir.loc.start.offset + (slotDir.loc.source.startsWith('#') ? '#'.length : slotDir.loc.source.startsWith('v-slot:') ? 'v-slot:'.length : 0)],
-							capabilitiesPresets.slotName,
+							{ ...capabilitiesPresets.slotName, completion: false },
 						])
 				),
 				['', 'template', (slotDir.arg ?? slotDir).loc.end.offset, capabilitiesPresets.diagnosticOnly],
@@ -763,9 +897,14 @@ export function generate(
 				localVars[varName] ??= 0;
 				localVars[varName]++;
 			});
+
+			let prev: CompilerDOM.TemplateChildNode | undefined;
 			for (const childNode of node.children) {
-				visitNode(childNode, parentEl, componentCtxVar);
+				visitNode(childNode, parentEl, prev, componentCtxVar);
+				prev = childNode;
 			}
+			resolveComment();
+
 			slotBlockVars.forEach(varName => {
 				localVars[varName]--;
 			});
@@ -788,9 +927,12 @@ export function generate(
 			codes.push(`}\n`);
 		}
 		else {
+			let prev: CompilerDOM.TemplateChildNode | undefined;
 			for (const childNode of node.children) {
-				visitNode(childNode, parentEl, componentCtxVar);
+				visitNode(childNode, parentEl, prev, componentCtxVar);
+				prev = childNode;
 			}
+			resolveComment();
 		}
 
 		codes.push(`}\n`);
@@ -807,7 +949,7 @@ export function generate(
 				const eventVar = `__VLS_${elementIndex++}`;
 				codes.push(
 					`let ${eventVar} = { '${prop.arg.loc.source}': `,
-					`(await import('${sharedTypesImport}')).pickEvent(${componentCtxVar}.emit!, '${prop.arg.loc.source}' as const, (await import('${sharedTypesImport}')).componentProps(${componentVar}, ${componentInstanceVar})`,
+					`__VLS_pickEvent(${componentCtxVar}.emit!, '${prop.arg.loc.source}' as const, __VLS_componentProps(${componentVar}, ${componentInstanceVar})`,
 					...createPropertyAccessCode([
 						camelize('on-' + prop.arg.loc.source), // onClickOutside
 						'template',
@@ -815,9 +957,11 @@ export function generate(
 						{
 							...capabilitiesPresets.attrReference,
 							rename: {
+								// @click-outside -> onClickOutside
 								normalize(newName) {
 									return camelize('on-' + newName);
 								},
+								// onClickOutside -> @click-outside
 								apply(newName) {
 									const hName = hyphenate(newName);
 									if (hyphenate(newName).startsWith('on-')) {
@@ -1040,15 +1184,15 @@ export function generate(
 					continue;
 				}
 
-				const isStatic = !prop.arg || (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic);
-				const propName = isStatic
+				let camelized = false;
+
+				if (
+					(!prop.arg || (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)) // isStatic
 					&& hyphenate(attrNameText) === attrNameText
 					&& !vueCompilerOptions.htmlAttributes.some(pattern => minimatch(attrNameText!, pattern))
-					? camelize(attrNameText)
-					: attrNameText;
-
-				if (vueCompilerOptions.strictTemplates) {
-					attrNameText = propName;
+				) {
+					attrNameText = camelize(attrNameText);
+					camelized = true;
 				}
 
 				// camelize name
@@ -1071,14 +1215,14 @@ export function generate(
 				else if (prop.exp?.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
 					codes.push(
 						...createObjectPropertyCode([
-							propName,
+							attrNameText,
 							'template',
 							[prop.arg.loc.start.offset, prop.arg.loc.start.offset + attrNameText.length], // patch style attr,
 							{
 								...caps_attr,
 								rename: {
 									normalize: camelize,
-									apply: getRenameApply(attrNameText),
+									apply: camelized ? hyphenate : noEditApply,
 								},
 							},
 						], (prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {})),
@@ -1087,14 +1231,14 @@ export function generate(
 				else {
 					codes.push(
 						...createObjectPropertyCode([
-							propName,
+							attrNameText,
 							'template',
 							[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
 							{
 								...caps_attr,
 								rename: {
 									normalize: camelize,
-									apply: getRenameApply(attrNameText),
+									apply: camelized ? hyphenate : noEditApply,
 								},
 							},
 						], (prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {})),
@@ -1133,41 +1277,6 @@ export function generate(
 					caps_diagnosticOnly,
 				]);
 				codes.push(', ');
-				// original name
-				if (prop.arg && attrNameText !== propName) {
-					codes.push(
-						...createObjectPropertyCode([
-							attrNameText,
-							'template',
-							[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
-							{
-								...caps_attr,
-								rename: {
-									normalize: camelize,
-									apply: getRenameApply(attrNameText),
-								},
-							},
-						], (prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}))
-					);
-					codes.push(': (');
-					if (prop.exp) {
-						codes.push(
-							...createInterpolationCode(
-								prop.exp.loc.source,
-								prop.exp.loc,
-								undefined,
-								undefined,
-								'(',
-								')',
-							),
-						);
-					}
-					else {
-						codes.push('undefined');
-					}
-					codes.push(')');
-					codes.push(', ');
-				}
 			}
 			else if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
 
@@ -1182,13 +1291,14 @@ export function generate(
 					continue;
 				}
 
-				const propName = hyphenate(prop.name) === prop.name
-					&& !vueCompilerOptions.htmlAttributes.some(pattern => minimatch(attrNameText, pattern))
-					? camelize(prop.name)
-					: prop.name;
+				let camelized = false;
 
-				if (vueCompilerOptions.strictTemplates) {
-					attrNameText = propName;
+				if (
+					hyphenate(prop.name) === prop.name
+					&& !vueCompilerOptions.htmlAttributes.some(pattern => minimatch(attrNameText!, pattern))
+				) {
+					attrNameText = camelize(prop.name);
+					camelized = true;
 				}
 
 				// camelize name
@@ -1200,14 +1310,14 @@ export function generate(
 				]);
 				codes.push(
 					...createObjectPropertyCode([
-						propName,
+						attrNameText,
 						'template',
 						[prop.loc.start.offset, prop.loc.start.offset + prop.name.length],
 						{
 							...caps_attr,
 							rename: {
 								normalize: camelize,
-								apply: getRenameApply(prop.name),
+								apply: camelized ? hyphenate : noEditApply,
 							},
 						},
 					], (prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}))
@@ -1227,32 +1337,6 @@ export function generate(
 					caps_diagnosticOnly,
 				]);
 				codes.push(', ');
-				// original name
-				if (attrNameText !== propName) {
-					codes.push(
-						...createObjectPropertyCode([
-							attrNameText,
-							'template',
-							prop.loc.start.offset,
-							{
-								...caps_attr,
-								rename: {
-									normalize: camelize,
-									apply: getRenameApply(prop.name),
-								},
-							},
-						], (prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}))
-					);
-					codes.push(': (');
-					if (prop.value) {
-						generateAttrValue(prop.value);
-					}
-					else {
-						codes.push('true');
-					}
-					codes.push(')');
-					codes.push(', ');
-				}
 			}
 			else if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -1341,7 +1425,7 @@ export function generate(
 		}
 	}
 
-	function generateDirectives(node: CompilerDOM.ElementNode, componentVar: string) {
+	function generateDirectives(node: CompilerDOM.ElementNode) {
 		for (const prop of node.props) {
 			if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -1382,7 +1466,7 @@ export function generate(
 						prop.loc.start.offset,
 						capabilitiesPresets.diagnosticOnly,
 					],
-					`(await import('${sharedTypesImport}')).directiveFunction(__VLS_ctx.`,
+					`__VLS_directiveFunction(__VLS_ctx.`,
 					[
 						camelize('v-' + prop.name),
 						'template',
@@ -1401,11 +1485,6 @@ export function generate(
 					],
 					')',
 					'(',
-					['', 'template', prop.loc.start.offset, capabilitiesPresets.diagnosticOnly],
-					componentVar,
-					vueCompilerOptions.strictTemplates ? '' : ' as any',
-					['', 'template', prop.loc.start.offset + 'v-'.length + prop.name.length, capabilitiesPresets.diagnosticOnly],
-					', ',
 				);
 				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					codes.push(
@@ -1513,6 +1592,7 @@ export function generate(
 
 		if (hasScriptSetupSlots) {
 			codes.push(
+				'__VLS_normalizeSlot(',
 				['', 'template', node.loc.start.offset, capabilitiesPresets.diagnosticOnly],
 				'__VLS_slots[',
 				['', 'template', node.loc.start.offset, capabilitiesPresets.diagnosticOnly],
@@ -1520,7 +1600,7 @@ export function generate(
 				['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly],
 				']',
 				['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly],
-				'?.(',
+				')?.(',
 				['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly],
 				'{\n',
 			);
@@ -1685,7 +1765,7 @@ export function generate(
 	function createFormatCode(mapCode: string, sourceOffset: number, formatWrapper: [string, string]): Code[] {
 		return [
 			formatWrapper[0],
-			[mapCode, 'template', sourceOffset, {}],
+			[mapCode, 'template', sourceOffset, { completion: true /* fix vue-autoinsert-parentheses not working */ }],
 			formatWrapper[1],
 			'\n',
 		];
@@ -1693,7 +1773,7 @@ export function generate(
 
 	function createObjectPropertyCode(a: Code, astHolder?: any): Code[] {
 		const aStr = typeof a === 'string' ? a : a[0];
-		if (validTsVar.test(aStr)) {
+		if (validTsVarReg.test(aStr)) {
 			return [a];
 		}
 		else if (aStr.startsWith('[') && aStr.endsWith(']') && astHolder) {
@@ -1714,23 +1794,24 @@ export function generate(
 	}
 
 	function createInterpolationCode(
-		code: string,
+		_code: string,
 		astHolder: any,
 		start: number | undefined,
 		data: FileRangeCapabilities | (() => FileRangeCapabilities) | undefined,
 		prefix: string,
 		suffix: string,
 	): Code[] {
-		const ast = createTsAst(astHolder, prefix + code + suffix);
+		const code = prefix + _code + suffix;
+		const ast = createTsAst(astHolder, code);
 		const codes: Code[] = [];
-		const vars = walkInterpolationFragment(ts, prefix + code + suffix, ast, (frag, fragOffset, isJustForErrorMapping) => {
+		const vars = walkInterpolationFragment(ts, code, ast, (frag, fragOffset, isJustForErrorMapping) => {
 			if (fragOffset === undefined) {
 				codes.push(frag);
 			}
 			else {
 				fragOffset -= prefix.length;
 				let addSuffix = '';
-				const overLength = fragOffset + frag.length - code.length;
+				const overLength = fragOffset + frag.length - _code.length;
 				if (overLength > 0) {
 					addSuffix = frag.substring(frag.length - overLength);
 					frag = frag.substring(0, frag.length - overLength);
@@ -1777,7 +1858,7 @@ export function generate(
 
 	function createPropertyAccessCode(a: Code, astHolder?: any): Code[] {
 		const aStr = typeof a === 'string' ? a : a[0];
-		if (!compilerOptions.noPropertyAccessFromIndexSignature && validTsVar.test(aStr)) {
+		if (!compilerOptions.noPropertyAccessFromIndexSignature && validTsVarReg.test(aStr)) {
 			return ['.', a];
 		}
 		else if (aStr.startsWith('[') && aStr.endsWith(']')) {

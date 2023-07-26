@@ -18,6 +18,7 @@ export interface VueCompilerOptions {
 	jsxSlots: boolean;
 	strictTemplates: boolean;
 	skipTemplateCodegen: boolean;
+	nativeTags: string[];
 	dataAttributes: string[];
 	htmlAttributes: string[];
 	optionsWrapper: [string, string] | [];
@@ -85,6 +86,14 @@ export interface Sfc {
 	styles: (SfcBlock & {
 		module: string | undefined;
 		scoped: boolean;
+		cssVars: {
+			text: string;
+			offset: number;
+		}[];
+		classNames: {
+			text: string;
+			offset: number;
+		}[];
 	})[];
 	customBlocks: (SfcBlock & {
 		type: string;

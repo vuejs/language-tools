@@ -1,49 +1,31 @@
-import { resolveConfig, LanguageServiceHost } from '../..';
-import * as ts from 'typescript';
+import { FileType, TypeScriptLanguageHost, createLanguageService } from '@volar/language-service';
+import * as fs from 'fs';
 import * as path from 'path';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import { URI } from 'vscode-uri';
-import { createLanguageService } from '@volar/language-service';
+import { resolveConfig } from '../..';
 
 const uriToFileName = (uri: string) => URI.parse(uri).fsPath.replace(/\\/g, '/');
 const fileNameToUri = (fileName: string) => URI.file(fileName).toString();
-const testRoot = path.resolve(__dirname, '../../../vue-test-workspace');
+const testRoot = path.resolve(__dirname, '../../../vue-test-workspace').replace(/\\/g, '/');
 
 export const rootUri = URI.file(testRoot);
 export const tester = createTester(testRoot);
 
 function createTester(root: string) {
 
-	const parseConfigHost: ts.ParseConfigHost = {
-		...ts.sys,
-		readDirectory: (path, extensions, exclude, include, depth) => {
-			return ts.sys.readDirectory(path, [...extensions, '.vue'], exclude, include, depth);
-		},
-	};
-
+	const ts = require('typescript') as typeof import('typescript/lib/tsserverlibrary');
 	const realTsConfig = path.join(root, 'tsconfig.json').replace(/\\/g, '/');
 	const config = ts.readJsonConfigFile(realTsConfig, ts.sys.readFile);
-	const parsedCommandLine = ts.parseJsonSourceFileConfigFileContent(config, parseConfigHost, path.dirname(realTsConfig), {}, realTsConfig);
+	const parsedCommandLine = ts.parseJsonSourceFileConfigFileContent(config, ts.sys, path.dirname(realTsConfig), {}, realTsConfig, undefined, [{ extension: 'vue', isMixedContent: true, scriptKind: ts.ScriptKind.Deferred }]);
 	parsedCommandLine.fileNames = parsedCommandLine.fileNames.map(fileName => fileName.replace(/\\/g, '/'));
-	const scriptVersions = new Map<string, string>();
-	const scriptSnapshots = new Map<string, [string, ts.IScriptSnapshot]>();
-	const host: LanguageServiceHost = {
-		// ts
-		getNewLine: () => ts.sys.newLine,
-		useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,
-		readFile: ts.sys.readFile,
-		writeFile: ts.sys.writeFile,
-		fileExists: ts.sys.fileExists,
-		directoryExists: ts.sys.directoryExists,
-		getDirectories: ts.sys.getDirectories,
-		readDirectory: ts.sys.readDirectory,
-		realpath: ts.sys.realpath,
-		// custom
-		getDefaultLibFileName: options => ts.getDefaultLibFilePath(options),
+	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
+	const host: TypeScriptLanguageHost = {
+		workspacePath: root,
+		rootPath: root,
 		getProjectVersion: () => '0',
 		getScriptFileNames: () => parsedCommandLine.fileNames,
-		getCurrentDirectory: () => root,
 		getCompilationSettings: () => parsedCommandLine.options,
-		getScriptVersion,
 		getScriptSnapshot,
 	};
 	const defaultVSCodeSettings: any = {
@@ -54,6 +36,7 @@ function createTester(root: string) {
 	const languageService = createLanguageService(
 		{ typescript: ts as any },
 		{
+			workspaceUri: rootUri,
 			rootUri,
 			uriToFileName,
 			fileNameToUri,
@@ -72,12 +55,57 @@ function createTester(root: string) {
 				}
 				return result;
 			},
-			onDidChangeConfiguration() { },
-			documentContext: {
-				resolveReference: (ref, _base) => {
-					return ref;
+			fs: {
+				stat(uri) {
+					if (uri.startsWith('file://')) {
+						try {
+							const stats = fs.statSync(uriToFileName(uri), { throwIfNoEntry: false });
+							if (stats) {
+								return {
+									type: stats.isFile() ? FileType.File
+										: stats.isDirectory() ? FileType.Directory
+											: stats.isSymbolicLink() ? FileType.SymbolicLink
+												: FileType.Unknown,
+									ctime: stats.ctimeMs,
+									mtime: stats.mtimeMs,
+									size: stats.size,
+								};
+							}
+						}
+						catch {
+							return undefined;
+						}
+					}
 				},
-			},
+				readFile(uri, encoding) {
+					if (uri.startsWith('file://')) {
+						try {
+							return fs.readFileSync(uriToFileName(uri), { encoding: encoding as 'utf-8' ?? 'utf-8' });
+						}
+						catch {
+							return undefined;
+						}
+					}
+				},
+				readDirectory(uri) {
+					if (uri.startsWith('file://')) {
+						try {
+							const dirName = uriToFileName(uri);
+							const files = fs.readdirSync(dirName, { withFileTypes: true });
+							return files.map<[string, FileType]>(file => {
+								return [file.name, file.isFile() ? FileType.File
+									: file.isDirectory() ? FileType.Directory
+										: file.isSymbolicLink() ? FileType.SymbolicLink
+											: FileType.Unknown];
+							});
+						}
+						catch {
+							return [];
+						}
+					}
+					return [];
+				},
+			}
 		},
 		resolveConfig({}),
 		host,
@@ -94,19 +122,15 @@ function createTester(root: string) {
 	function setVSCodeSettings(settings: any = undefined) {
 		currentVSCodeSettings = settings;
 	}
-	function getScriptVersion(fileName: string) {
-		return scriptVersions.get(fileName) ?? '';
-	}
 	function getScriptSnapshot(fileName: string) {
-		const version = getScriptVersion(fileName);
-		const cache = scriptSnapshots.get(fileName);
-		if (cache && cache[0] === version) {
-			return cache[1];
+		const snapshot = scriptSnapshots.get(fileName);
+		if (snapshot) {
+			return snapshot;
 		}
 		const text = getScriptText(fileName);
 		if (text !== undefined) {
 			const snapshot = ts.ScriptSnapshot.fromString(text);
-			scriptSnapshots.set(fileName, [version.toString(), snapshot]);
+			scriptSnapshots.set(fileName, snapshot);
 			return snapshot;
 		}
 	}

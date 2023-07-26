@@ -22,14 +22,13 @@
 	},
 	"devDependencies": {
 		"@types/node": "latest",
-		"@volar/language-service": "1.6.0",
+		"@volar/language-service": "~1.9.0",
 		"typescript": "latest",
 		"vite": "latest",
 		"vitest": "latest"
 	},
 	"optionalDependencies": {
 		"@lerna-lite/cli": "latest",
-		"@lerna-lite/publish": "latest",
-		"opencc": "latest"
+		"@lerna-lite/publish": "latest"
 	}
 }
