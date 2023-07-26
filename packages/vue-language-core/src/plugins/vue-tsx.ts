@@ -19,6 +19,11 @@ const plugin: VueLanguagePlugin = (ctx) => {
 
 		version: 1,
 
+		requiredCompilerOptions: [
+			'noPropertyAccessFromIndexSignature',
+			'exactOptionalPropertyTypes',
+		],
+
 		getEmbeddedFileNames(fileName, sfc) {
 
 			const tsx = useTsx(fileName, sfc);
