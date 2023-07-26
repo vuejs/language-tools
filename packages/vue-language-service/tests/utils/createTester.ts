@@ -1,28 +1,30 @@
-import { resolveConfig } from '../..';
-import * as ts from 'typescript';
+import { FileType, TypeScriptLanguageHost, createLanguageService } from '@volar/language-service';
 import * as fs from 'fs';
 import * as path from 'path';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import { URI } from 'vscode-uri';
-import { FileType, TypeScriptLanguageHost, createLanguageService } from '@volar/language-service';
+import { resolveConfig } from '../..';
 
 const uriToFileName = (uri: string) => URI.parse(uri).fsPath.replace(/\\/g, '/');
 const fileNameToUri = (fileName: string) => URI.file(fileName).toString();
-const testRoot = path.resolve(__dirname, '../../../vue-test-workspace');
+const testRoot = path.resolve(__dirname, '../../../vue-test-workspace').replace(/\\/g, '/');
 
 export const rootUri = URI.file(testRoot);
 export const tester = createTester(testRoot);
 
 function createTester(root: string) {
 
+	const ts = require('typescript') as typeof import('typescript/lib/tsserverlibrary');
 	const realTsConfig = path.join(root, 'tsconfig.json').replace(/\\/g, '/');
 	const config = ts.readJsonConfigFile(realTsConfig, ts.sys.readFile);
 	const parsedCommandLine = ts.parseJsonSourceFileConfigFileContent(config, ts.sys, path.dirname(realTsConfig), {}, realTsConfig, undefined, [{ extension: 'vue', isMixedContent: true, scriptKind: ts.ScriptKind.Deferred }]);
 	parsedCommandLine.fileNames = parsedCommandLine.fileNames.map(fileName => fileName.replace(/\\/g, '/'));
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
 	const host: TypeScriptLanguageHost = {
+		workspacePath: root,
+		rootPath: root,
 		getProjectVersion: () => '0',
 		getScriptFileNames: () => parsedCommandLine.fileNames,
-		getCurrentDirectory: () => root.replace(/\\/g, '/'),
 		getCompilationSettings: () => parsedCommandLine.options,
 		getScriptSnapshot,
 	};
@@ -34,6 +36,7 @@ function createTester(root: string) {
 	const languageService = createLanguageService(
 		{ typescript: ts as any },
 		{
+			workspaceUri: rootUri,
 			rootUri,
 			uriToFileName,
 			fileNameToUri,

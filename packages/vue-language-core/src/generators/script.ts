@@ -56,6 +56,7 @@ export function generate(
 			emitsTypeArg: undefined,
 			emitsTypeNums: 0,
 			exposeRuntimeArg: undefined,
+			leadingCommentEndOffset: 0,
 			importSectionEndOffset: 0,
 			defineProps: undefined,
 			propsAssignName: undefined,
@@ -267,7 +268,7 @@ export function generate(
 			return;
 
 		codes.push([
-			sfc.scriptSetup.content.substring(0, scriptSetupRanges.importSectionEndOffset),
+			sfc.scriptSetup.content.substring(0, Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset)),
 			'scriptSetup',
 			0,
 			FileRangeCapabilities.full,
@@ -387,6 +388,7 @@ export function generate(
 				usedHelperTypes.PropsChildren = true;
 				codes.push(` & __VLS_PropsChildren<`);
 				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end);
+				codes.push('>');
 			}
 			codes.push(`;\n`);
 			//#endregion
@@ -734,7 +736,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 					const templateStart = getLength(codes);
 					codes.push(varName);
 					const templateEnd = getLength(codes);
-					codes.push(`: {} as typeof `);
+					codes.push(`: ${varName} as typeof `);
 
 					const scriptStart = getLength(codes);
 					codes.push(varName);
@@ -819,6 +821,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 					{ start: className.offset, end: className.offset + className.text.length },
 					'string',
 					false,
+					true,
 				);
 			}
 			codes.push('>;\n');
@@ -837,7 +840,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		codes.push('type __VLS_StyleScopedClasses = {}');
 		for (let i = 0; i < _sfc.styles.length; i++) {
 			const style = _sfc.styles[i];
-			if (!style.scoped) continue;
+			if (!style.scoped && vueCompilerOptions.experimentalResolveStyleCssClasses !== 'always') continue;
 			for (const className of style.classNames) {
 				generateCssClassProperty(
 					i,
@@ -845,6 +848,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 					{ start: className.offset, end: className.offset + className.text.length },
 					'boolean',
 					true,
+					!style.module,
 				);
 			}
 		}
@@ -882,7 +886,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 		return { cssIds };
 
-		function generateCssClassProperty(styleIndex: number, className: string, classRange: TextRange, propertyType: string, optional: boolean) {
+		function generateCssClassProperty(styleIndex: number, className: string, classRange: TextRange, propertyType: string, optional: boolean, referencesCodeLens: boolean) {
 			codes.push(`\n & { `);
 			codes.push([
 				'',
@@ -890,7 +894,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				classRange.start,
 				{
 					references: true,
-					referencesCodeLens: true,
+					referencesCodeLens,
 				},
 			]);
 			codes.push(`'`);

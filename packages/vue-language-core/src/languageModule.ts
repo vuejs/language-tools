@@ -24,14 +24,20 @@ export function createLanguage(
 		vueCompilerOptions,
 		codegenStack,
 	);
+	const allowLanguageIds = new Set(['vue']);
+
+	if (vueCompilerOptions.extensions.includes('.md')) {
+		allowLanguageIds.add('markdown');
+	}
+	if (vueCompilerOptions.extensions.includes('.html')) {
+		allowLanguageIds.add('html');
+	}
+
 	const languageModule: Language<VueFile> = {
 		createVirtualFile(fileName, snapshot, languageId) {
 			if (
-				languageId === 'vue'
-				|| (
-					!languageId
-					&& vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))
-				)
+				(languageId && allowLanguageIds.has(languageId))
+				|| (!languageId && vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext)))
 			) {
 				return new VueFile(fileName, snapshot, vueCompilerOptions, vueLanguagePlugin, ts, codegenStack);
 			}
@@ -41,7 +47,7 @@ export function createLanguage(
 		},
 		resolveHost(host) {
 			const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(sharedTypes.getTypesCode(vueCompilerOptions));
-			const sharedTypesFileName = path.join(host.getCurrentDirectory(), sharedTypes.baseName);
+			const sharedTypesFileName = path.join(host.rootPath, sharedTypes.baseName);
 			return {
 				...host,
 				getScriptFileNames() {

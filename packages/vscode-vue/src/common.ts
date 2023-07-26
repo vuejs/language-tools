@@ -28,6 +28,7 @@ type CreateLanguageClient = (
 	langs: lsp.DocumentFilter[],
 	initOptions: VueServerInitializationOptions,
 	port: number,
+	outputChannel: vscode.OutputChannel,
 ) => lsp.BaseLanguageClient;
 
 export async function activate(context: vscode.ExtensionContext, createLc: CreateLanguageClient) {
@@ -62,6 +63,9 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 	vscode.commands.executeCommand('setContext', 'volar.activated', true);
 
+	const semanticOutputChannel = vscode.window.createOutputChannel('Vue Semantic Server');
+	const syntacticOutputChannel = vscode.window.createOutputChannel('Vue Syntactic Server');
+
 	[semanticClient, syntacticClient] = await Promise.all([
 		createLc(
 			'vue-semantic-server',
@@ -69,6 +73,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			getDocumentSelector(context, ServerMode.PartialSemantic),
 			await getInitializationOptions(ServerMode.PartialSemantic, context),
 			6009,
+			semanticOutputChannel
 		),
 		createLc(
 			'vue-syntactic-server',
@@ -76,6 +81,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			getDocumentSelector(context, ServerMode.Syntactic),
 			await getInitializationOptions(ServerMode.Syntactic, context),
 			6011,
+			syntacticOutputChannel
 		)
 	]);
 
@@ -137,31 +143,31 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		activateServerSys(client);
 	}
 
-	async function requestReloadVscode() {
-		const reload = await vscode.window.showInformationMessage(
-			'Please reload VSCode to restart language servers.',
-			'Reload Window'
-		);
-		if (reload === undefined) return; // cancel
-		vscode.commands.executeCommand('workbench.action.reloadWindow');
-	}
 	function activateServerMaxOldSpaceSizeChange() {
 		vscode.workspace.onDidChangeConfiguration((e) => {
-			if (e.affectsConfiguration('vue.server')) {
-				requestReloadVscode();
-			}
-			else if (e.affectsConfiguration('vue')) {
+			if (e.affectsConfiguration('vue')) {
 				vscode.commands.executeCommand('volar.action.restartServer');
 			}
 		});
 	}
+
 	async function activateRestartRequest() {
 		context.subscriptions.push(vscode.commands.registerCommand('volar.action.restartServer', async () => {
+
 			await Promise.all(clients.map(client => client.stop()));
+
+			semanticOutputChannel.clear();
+			syntacticOutputChannel.clear();
+
+			semanticClient.clientOptions.initializationOptions = await getInitializationOptions(ServerMode.PartialSemantic, context, semanticClient.clientOptions.initializationOptions);
+			syntacticClient.clientOptions.initializationOptions = await getInitializationOptions(ServerMode.Syntactic, context, syntacticClient.clientOptions.initializationOptions);
+
 			await Promise.all(clients.map(client => client.start()));
+
 			activateClientRequests();
 		}));
 	}
+
 	function activateClientRequests() {
 		nameCasing.activate(context, semanticClient);
 	}
@@ -204,29 +210,24 @@ export function getDocumentSelector(context: vscode.ExtensionContext, serverMode
 async function getInitializationOptions(
 	serverMode: ServerMode,
 	context: vscode.ExtensionContext,
+	options: VueServerInitializationOptions = {},
 ) {
-	const initializationOptions: VueServerInitializationOptions = {
-		// volar
-		configFilePath: config.server.configFilePath,
-		serverMode,
-		diagnosticModel: config.server.diagnosticModel === 'pull' ? DiagnosticModel.Pull : DiagnosticModel.Push,
-		typescript: { tsdk: (await getTsdk(context)).tsdk },
-		reverseConfigFilePriority: config.server.reverseConfigFilePriority,
-		maxFileSize: config.server.maxFileSize,
-		semanticTokensLegend: {
+	// volar
+	options.configFilePath = config.server.configFilePath;
+	options.serverMode = serverMode,
+		options.diagnosticModel = config.server.diagnosticModel === 'pull' ? DiagnosticModel.Pull : DiagnosticModel.Push,
+		options.typescript = { tsdk: (await getTsdk(context)).tsdk },
+		options.reverseConfigFilePriority = config.server.reverseConfigFilePriority,
+		options.maxFileSize = config.server.maxFileSize,
+		options.semanticTokensLegend = {
 			tokenTypes: ['component'],
 			tokenModifiers: [],
-		},
-		fullCompletionList: config.server.fullCompletionList,
-		// vue
-		json: {
-			customBlockSchemaUrls: config.server.json.customBlockSchemaUrls,
-		},
-		additionalExtensions: [
-			...config.server.additionalExtensions,
-			...!config.server.petiteVue.supportHtmlFile ? [] : ['html'],
-			...!config.server.vitePress.supportMdFile ? [] : ['md'],
-		],
-	};
-	return initializationOptions;
+		};
+	options.fullCompletionList = config.server.fullCompletionList;
+	options.additionalExtensions = [
+		...config.server.additionalExtensions,
+		...!config.server.petiteVue.supportHtmlFile ? [] : ['html'],
+		...!config.server.vitePress.supportMdFile ? [] : ['md'],
+	];
+	return options;
 }

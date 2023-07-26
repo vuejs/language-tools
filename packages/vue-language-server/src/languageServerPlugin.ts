@@ -35,7 +35,6 @@ export function createServerPlugin(connection: Connection) {
 			async resolveConfig(config, ctx) {
 
 				const vueOptions = await getVueCompilerOptions();
-				const vueLanguageServiceSettings = getVueLanguageServiceSettings();
 
 				if (ctx) {
 					hostToVueOptions.set(ctx.host, vue.resolveVueCompilerOptions(vueOptions));
@@ -46,7 +45,6 @@ export function createServerPlugin(connection: Connection) {
 					ctx?.host.getCompilationSettings() ?? {},
 					vueOptions,
 					ts,
-					vueLanguageServiceSettings,
 					initOptions.codegenStack,
 				);
 
@@ -67,7 +65,7 @@ export function createServerPlugin(connection: Connection) {
 								vueOptions = vue2.createParsedCommandLine(ts, sys, ctx.project.tsConfig).vueOptions;
 							}
 							else if (typeof ctx?.project.tsConfig === 'object' && ts) {
-								vueOptions = vue2.createParsedCommandLineByJson(ts, sys, ctx.host.getCurrentDirectory(), ctx.project.tsConfig).vueOptions;
+								vueOptions = vue2.createParsedCommandLineByJson(ts, sys, ctx.host.rootPath, ctx.project.tsConfig).vueOptions;
 							}
 							newSysVersion = await sys.sync();
 						}
@@ -80,24 +78,6 @@ export function createServerPlugin(connection: Connection) {
 					vueOptions.extensions = [...new Set(vueOptions.extensions)];
 
 					return vueOptions;
-				}
-
-				function getVueLanguageServiceSettings() {
-
-					const settings: vue.Settings = {};
-
-					if (initOptions.json && ctx) {
-						settings.json = { schemas: [] };
-						for (const blockType in initOptions.json.customBlockSchemaUrls) {
-							const url = initOptions.json.customBlockSchemaUrls[blockType];
-							settings.json.schemas?.push({
-								fileMatch: [`*.customBlock_${blockType}_*.json*`],
-								uri: new URL(url, ctx.project.rootUri.toString() + '/').toString(),
-							});
-						}
-					}
-
-					return settings;
 				}
 			},
 			onInitialized(getService, env) {
@@ -146,7 +126,7 @@ export function createServerPlugin(connection: Connection) {
 							host,
 							hostToVueOptions.get(host)!,
 							{},
-							host.getCurrentDirectory() + '/tsconfig.json.global.vue',
+							host.rootPath + '/tsconfig.json.global.vue',
 							ts,
 						);
 						checkers.set(host, checker);

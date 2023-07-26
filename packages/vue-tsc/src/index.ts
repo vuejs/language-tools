@@ -1,4 +1,4 @@
-import * as ts from 'typescript';
+import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vue from '@vue/language-core';
 import * as vueTs from '@vue/typescript';
 import { state } from './shared';
@@ -15,6 +15,8 @@ interface ProgramContext {
 	languageService: ReturnType<typeof vueTs.createLanguageService>,
 }
 
+const windowsPathReg = /\\/g;
+
 export function createProgram(options: ts.CreateProgramOptions) {
 
 	if (!options.options.noEmit && !options.options.emitDeclarationOnly)
@@ -28,6 +30,8 @@ export function createProgram(options: ts.CreateProgramOptions) {
 
 	if (!options.host)
 		throw toThrow('!options.host');
+
+	const ts = require('typescript') as typeof import('typescript/lib/tsserverlibrary');
 
 	let program = options.oldProgram as _Program | undefined;
 
@@ -57,6 +61,8 @@ export function createProgram(options: ts.CreateProgramOptions) {
 			scriptSnapshot: ts.IScriptSnapshot,
 		}>();
 		const languageHost: vue.TypeScriptLanguageHost = {
+			workspacePath: ctx.options.host!.getCurrentDirectory().replace(windowsPathReg, '/'),
+			rootPath: ctx.options.host!.getCurrentDirectory().replace(windowsPathReg, '/'),
 			getCompilationSettings: () => ctx.options.options,
 			getScriptFileNames: () => {
 				return ctx.options.rootNames as string[];
@@ -66,7 +72,6 @@ export function createProgram(options: ts.CreateProgramOptions) {
 				return ctx.projectVersion.toString();
 			},
 			getProjectReferences: () => ctx.options.projectReferences,
-			getCurrentDirectory: () => ctx.options.host!.getCurrentDirectory().replace(/\\/g, '/'),
 			getCancellationToken: ctx.options.host!.getCancellationToken ? () => ctx.options.host!.getCancellationToken!() : undefined,
 		};
 		const vueTsLs = vueTs.createLanguageService(languageHost, vueCompilerOptions, ts as any, ts.sys);

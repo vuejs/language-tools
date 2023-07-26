@@ -1,8 +1,12 @@
 // https://github.com/vuejs/core/blob/main/packages/compiler-sfc/src/cssVars.ts#L47-L61
+
+const vBindCssVarReg = /\bv-bind\(\s*(?:'([^']+)'|"([^"]+)"|([^'"][^)]*))\s*\)/g;
+const commentReg1 = /\/\*([\s\S]*?)\*\//g;
+const commentReg2 = /\/\/([\s\S]*?)\n/g;
+
 export function* parseCssVars(styleContent: string) {
 	styleContent = clearComments(styleContent);
-	const reg = /\bv-bind\(\s*(?:'([^']+)'|"([^"]+)"|([^'"][^)]*))\s*\)/g;
-	const matchs = styleContent.matchAll(reg);
+	const matchs = styleContent.matchAll(vBindCssVarReg);
 	for (const match of matchs) {
 		if (match.index !== undefined) {
 			const matchText = match[1] ?? match[2] ?? match[3];
@@ -16,6 +20,6 @@ export function* parseCssVars(styleContent: string) {
 
 export function clearComments(css: string) {
 	return css
-		.replace(/\/\*([\s\S]*?)\*\//g, match => `/*${' '.repeat(match.length - 4)}*/`)
-		.replace(/\/\/([\s\S]*?)\n/g, match => `//${' '.repeat(match.length - 3)}\n`);
+		.replace(commentReg1, match => `/*${' '.repeat(match.length - 4)}*/`)
+		.replace(commentReg2, match => `//${' '.repeat(match.length - 3)}\n`);
 }

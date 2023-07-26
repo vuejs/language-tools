@@ -19,7 +19,7 @@ export function createLanguageService(
 		),
 	);
 	const languageServiceHost = createLanguageServiceHost(languageContext, ts, sys);
-	const languageService = ts.createLanguageService(languageServiceHost, getDocumentRegistry(ts, sys.useCaseSensitiveFileNames, host.getCurrentDirectory()));
+	const languageService = ts.createLanguageService(languageServiceHost, getDocumentRegistry(ts, sys.useCaseSensitiveFileNames, host.workspacePath));
 	decorateLanguageService(languageContext.virtualFiles, languageService, false);
 	return {
 		...languageService,

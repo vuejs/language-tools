@@ -23,6 +23,8 @@ import createVueTemplateLanguageService from './plugins/vue-template';
 import createVueTqService from './plugins/vue-twoslash-queries';
 import createVisualizeHiddenCallbackParamService from './plugins/vue-visualize-hidden-callback-param';
 import createDirectiveCommentsService from './plugins/vue-directive-comments';
+import createExtractComponentService from './plugins/vue-extract-file';
+import createToggleVBindService from './plugins/vue-toggle-v-bind-codeaction';
 import { TagNameCasing, VueCompilerOptions } from './types';
 
 export interface Settings {
@@ -34,7 +36,6 @@ export function resolveConfig(
 	compilerOptions: ts.CompilerOptions = {},
 	vueCompilerOptions: Partial<vue.VueCompilerOptions> = {},
 	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
-	settings?: Settings,
 	codegenStack: boolean = false,
 ) {
 
@@ -42,15 +43,16 @@ export function resolveConfig(
 	const vueLanguageModules = vue.createLanguages(compilerOptions, resolvedVueCompilerOptions, ts, codegenStack);
 
 	config.languages = Object.assign({}, vueLanguageModules, config.languages);
-	config.services = resolvePlugins(config.services, resolvedVueCompilerOptions, settings);
+	config.services = resolvePlugins(config.services, resolvedVueCompilerOptions);
 
 	return config;
 }
 
+const unicodeReg = /\\u/g;
+
 function resolvePlugins(
 	services: Config['services'],
 	vueCompilerOptions: VueCompilerOptions,
-	settings?: Settings,
 ) {
 
 	const originalTsPlugin: Service = services?.typescript ?? createTsService();
@@ -193,7 +195,7 @@ function resolvePlugins(
 										transformed = true;
 										item.additionalTextEdits.push({
 											range: editRange,
-											newText: unescape(printText.replace(/\\u/g, '%u')),
+											newText: unescape(printText.replace(unicodeReg, '%u')),
 										});
 									}
 									else if (exportDefault.args && exportDefault.argsNode) {
@@ -212,7 +214,7 @@ function resolvePlugins(
 										transformed = true;
 										item.additionalTextEdits.push({
 											range: editRange,
-											newText: unescape(printText.replace(/\\u/g, '%u')),
+											newText: unescape(printText.replace(unicodeReg, '%u')),
 										});
 									}
 								}
@@ -282,7 +284,7 @@ function resolvePlugins(
 	services.vue ??= createVueService();
 	services.css ??= createCssService();
 	services['pug-beautify'] ??= createPugFormatService();
-	services.json ??= createJsonService(settings?.json);
+	services.json ??= createJsonService();
 	services['typescript/twoslash-queries'] ??= createTsTqService();
 	services['vue/referencesCodeLens'] ??= createReferencesCodeLensService();
 	services['vue/autoInsertDotValue'] ??= createAutoDotValueService();
@@ -291,6 +293,8 @@ function resolvePlugins(
 	services['vue/autoInsertSpaces'] ??= createAutoAddSpaceService();
 	services['vue/visualizeHiddenCallbackParam'] ??= createVisualizeHiddenCallbackParamService();
 	services['vue/directiveComments'] ??= createDirectiveCommentsService();
+	services['vue/extractComponent'] ??= createExtractComponentService();
+	services['vue/toggleVBind'] ??= createToggleVBindService();
 	services.emmet ??= createEmmetService();
 
 	return services;

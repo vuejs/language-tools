@@ -7,7 +7,7 @@ import { activate as commonActivate, deactivate as commonDeactivate, getDocument
 import { middleware } from './middleware';
 import * as serverLib from '@vue/language-server';
 import { config } from './config';
-import type { ExportsInfoForLabs } from '@volar/vscode';
+import { ExportsInfoForLabs, supportLabsVersion } from '@volar/vscode';
 
 export async function activate(context: vscode.ExtensionContext) {
 
@@ -35,6 +35,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		documentSelector,
 		initOptions,
 		port,
+		outputChannel
 	) => {
 
 		initOptions.cancellationPipeName = cancellationPipeName;
@@ -75,7 +76,7 @@ export async function activate(context: vscode.ExtensionContext) {
 					},
 					options: runOptions,
 					command: bunPath,
-					args: ['run', serverModule.fsPath],
+					args: ['--bun', 'run', serverModule.fsPath],
 				},
 				debug: {
 					transport: {
@@ -84,7 +85,7 @@ export async function activate(context: vscode.ExtensionContext) {
 					},
 					options: debugOptions,
 					command: bunPath,
-					args: ['run', serverModule.fsPath],
+					args: ['--bun', 'run', serverModule.fsPath],
 				},
 			};
 		}
@@ -92,6 +93,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			middleware,
 			documentSelector: documentSelector,
 			initializationOptions: initOptions,
+			outputChannel
 		};
 		const client = new _LanguageClient(
 			id,
@@ -110,7 +112,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	return {
 		volarLabs: {
-			version: '1.6.2',
+			version: supportLabsVersion,
 			codegenStackSupport: true,
 			languageClients,
 			languageServerProtocol: serverLib,

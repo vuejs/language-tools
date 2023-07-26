@@ -29,9 +29,6 @@ export const config = {
 		petiteVue: {
 			supportHtmlFile: boolean;
 		};
-		json: {
-			customBlockSchemaUrls: Record<string, string>;
-		};
 	}> {
 		return _config().get('server')!;
 	},
