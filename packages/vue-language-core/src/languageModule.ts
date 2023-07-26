@@ -77,7 +77,9 @@ export function createVueLanguage(
 				|| (!languageId && vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext)))
 			) {
 				if (fileRegistry.has(fileName)) {
-					return fileRegistry.get(fileName);
+					const reusedVueFile = fileRegistry.get(fileName)!;
+					reusedVueFile.update(snapshot);
+					return reusedVueFile;
 				}
 				const vueFile = new VueFile(fileName, snapshot, vueCompilerOptions, plugins, ts, codegenStack);
 				fileRegistry.set(fileName, vueFile);
