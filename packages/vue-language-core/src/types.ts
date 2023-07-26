@@ -52,6 +52,7 @@ export type VueLanguagePlugin = (ctx: {
 	version: 1;
 	name?: string;
 	order?: number;
+	requiredCompilerOptions?: string[];
 	parseSFC?(fileName: string, content: string): SFCParseResult | undefined;
 	updateSFC?(oldResult: SFCParseResult, textChange: { start: number, end: number, newText: string; }): SFCParseResult | undefined;
 	resolveTemplateCompilerOptions?(options: CompilerDom.CompilerOptions): CompilerDom.CompilerOptions;
