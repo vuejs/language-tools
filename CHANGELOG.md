@@ -1,15 +1,17 @@
 # Changelog
 
-## 1.8.6 (2023/7/22)
+## 1.8.7 (2023/7/27)
 
-- feat: add support for extract component code action ([#2496](https://github.com/vuejs/language-tools/issues/2496)) - thanks @zardoy
-- feat: add support for `v-bind` toggle code action ([#2524](https://github.com/vuejs/language-tools/issues/2524)) - thanks @zardoy
-- feat: more dull "Saving time is too long" popup
-- fix: `vue.server.petiteVue.supportHtmlFile`, `vue.server.vitePress.supportMdFile` settings not working ([#3238](https://github.com/vuejs/language-tools/issues/3238))
-- fix: don't check element type for directives ([#3140](https://github.com/vuejs/language-tools/issues/3140))
-- fix: `@ts-nocheck` cannot work from script setup ([#3420](https://github.com/vuejs/language-tools/issues/3420)) - thanks @so1ve
-- fix(ts-plugin): module resolving should be able to fallback to `.d.ts` ([#3419](https://github.com/vuejs/language-tools/issues/3419))
-- fix(language-plugin-pug): `@vue-ignore`, `@vue-skip`, `@vue-expected-error` not working for pug template
+- feat: support auto-complete for directives ([#2559](https://github.com/vuejs/language-tools/issues/2559))
+- feat: support extract component for options api
+- feat: re-support external component parsing ([#3328](https://github.com/vuejs/language-tools/issues/3328))
+- feat: support function expression emit event ([#3445](https://github.com/vuejs/language-tools/issues/3445))
+- perf: reuse VueFile instances between monorepo packages ([#3450](https://github.com/vuejs/language-tools/issues/3450))
+- fix: handle node next module resolution ([#3159](https://github.com/vuejs/language-tools/issues/3159)) - thanks @kalvenschraut
+- fix: generate valid code when using `__VLS_PropsChildren` ([#3442](https://github.com/vuejs/language-tools/issues/3442)) - thanks @so1ve
+- fix: component auto-import cannot insert import statement
+- fix: extract component cannot extract interpolations
+- fix: allow top-level await in script setup blocks with generics ([#3441](https://github.com/vuejs/language-tools/issues/3441))
 
 ### Full-time Support by
 
@@ -64,6 +66,17 @@ JavaScript Framework</td>
 	or
 	<a href="https://opencollective.com/volarjs">Open Collective</a>
 </h5>
+
+## 1.8.6 (2023/7/22)
+
+- feat: add support for extract component code action ([#2496](https://github.com/vuejs/language-tools/issues/2496)) - thanks @zardoy
+- feat: add support for `v-bind` toggle code action ([#2524](https://github.com/vuejs/language-tools/issues/2524)) - thanks @zardoy
+- feat: more dull "Saving time is too long" popup
+- fix: `vue.server.petiteVue.supportHtmlFile`, `vue.server.vitePress.supportMdFile` settings not working ([#3238](https://github.com/vuejs/language-tools/issues/3238))
+- fix: don't check element type for directives ([#3140](https://github.com/vuejs/language-tools/issues/3140))
+- fix: `@ts-nocheck` cannot work from script setup ([#3420](https://github.com/vuejs/language-tools/issues/3420)) - thanks @so1ve
+- fix(ts-plugin): module resolving should be able to fallback to `.d.ts` ([#3419](https://github.com/vuejs/language-tools/issues/3419))
+- fix(language-plugin-pug): `@vue-ignore`, `@vue-skip`, `@vue-expected-error` not working for pug template
 
 ## 1.8.5 (2023/7/14)
 
