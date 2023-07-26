@@ -41,9 +41,6 @@ export function createVueLanguage(
 ): Language<VueFile> {
 
 	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);
-
-	patchResolveModuleNames(ts, vueCompilerOptions);
-
 	const plugins = getDefaultVueLanguagePlugins(
 		ts,
 		compilerOptions,
@@ -94,6 +91,12 @@ export function createVueLanguage(
 			const sharedTypesFileName = path.join(host.rootPath, sharedTypes.baseName);
 			return {
 				...host,
+				resolveModuleName(moduleName, impliedNodeFormat) {
+					if (impliedNodeFormat === ts.ModuleKind.ESNext && vueCompilerOptions.extensions.some(ext => moduleName.endsWith(ext))) {
+						return `${moduleName}.js`;
+					}
+					return host.resolveModuleName?.(moduleName, impliedNodeFormat) ?? moduleName;
+				},
 				getScriptFileNames() {
 					return [
 						sharedTypesFileName,
@@ -124,26 +127,4 @@ export function createLanguages(
 		createVueLanguage(ts, compilerOptions, vueCompilerOptions, codegenStack),
 		...vueCompilerOptions.experimentalAdditionalLanguageModules?.map(module => require(module)) ?? [],
 	];
-}
-
-function patchResolveModuleNames(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
-	vueCompilerOptions: VueCompilerOptions,
-) {
-	try {
-		// from https://github.com/vuejs/language-tools/pull/1543
-		if (!((ts as any).__vuePatchResolveModuleNames)) {
-			(ts as any).__vuePatchResolveModuleNames = true;
-			const resolveModuleNames = ts.resolveModuleName;
-			ts.resolveModuleName = (...args) => {
-				if (args[6] === ts.ModuleKind.ESNext && vueCompilerOptions.extensions.some(ext => args[0].endsWith(ext))) {
-					args[6] = ts.ModuleKind.CommonJS;
-				}
-				return resolveModuleNames(...args);
-			};
-		}
-	}
-	catch (e) {
-		// console.warn('[volar] patchResolveModuleNames failed', e);
-	}
 }
