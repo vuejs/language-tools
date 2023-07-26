@@ -6,14 +6,14 @@ import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { Sfc, VueLanguagePlugin } from '../types';
 import { FileCapabilities, FileKind } from '@volar/language-core';
 import * as muggle from 'muggle-string';
+import * as ts from 'typescript/lib/tsserverlibrary';
 
 const templateFormatReg = /^\.template_format\.ts$/;
 const templateStyleCssReg = /^\.template_style\.css$/;
 
-const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOptions, codegenStack }) => {
+export const tsCodegen = new WeakMap<Sfc, ReturnType<typeof createTsx>>();
 
-	const ts = modules.typescript;
-	const instances = new WeakMap<Sfc, ReturnType<typeof createTsx>>();
+const plugin: VueLanguagePlugin = (ctx) => {
 
 	return {
 
@@ -51,7 +51,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				};
 				const tsx = _tsx.tsxGen.value;
 				if (tsx) {
-					const [content, contentStacks] = codegenStack ? muggle.track([...tsx.codes], [...tsx.codeStacks]) : [[...tsx.codes], [...tsx.codeStacks]];
+					const [content, contentStacks] = ctx.codegenStack ? muggle.track([...tsx.codes], [...tsx.codeStacks]) : [[...tsx.codes], [...tsx.codeStacks]];
 					embeddedFile.content = content;
 					embeddedFile.contentStacks = contentStacks;
 					embeddedFile.mirrorBehaviorMappings = [...tsx.mirrorBehaviorMappings];
@@ -70,7 +70,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				};
 
 				if (_tsx.htmlGen.value) {
-					const [content, contentStacks] = codegenStack ? muggle.track([..._tsx.htmlGen.value.formatCodes], [..._tsx.htmlGen.value.formatCodeStacks]) : [[..._tsx.htmlGen.value.formatCodes], [..._tsx.htmlGen.value.formatCodeStacks]];
+					const [content, contentStacks] = ctx.codegenStack ? muggle.track([..._tsx.htmlGen.value.formatCodes], [..._tsx.htmlGen.value.formatCodeStacks]) : [[..._tsx.htmlGen.value.formatCodes], [..._tsx.htmlGen.value.formatCodeStacks]];
 					embeddedFile.content = content;
 					embeddedFile.contentStacks = contentStacks;
 				}
@@ -94,7 +94,7 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 				embeddedFile.parentFileName = fileName + '.template.' + sfc.template?.lang;
 
 				if (_tsx.htmlGen.value) {
-					const [content, contentStacks] = codegenStack ? muggle.track([..._tsx.htmlGen.value.cssCodes], [..._tsx.htmlGen.value.cssCodeStacks]) : [[..._tsx.htmlGen.value.cssCodes], [..._tsx.htmlGen.value.cssCodeStacks]];
+					const [content, contentStacks] = ctx.codegenStack ? muggle.track([..._tsx.htmlGen.value.cssCodes], [..._tsx.htmlGen.value.cssCodeStacks]) : [[..._tsx.htmlGen.value.cssCodes], [..._tsx.htmlGen.value.cssCodeStacks]];
 					embeddedFile.content = content;
 					embeddedFile.contentStacks = contentStacks;
 				}
@@ -106,68 +106,70 @@ const plugin: VueLanguagePlugin = ({ modules, vueCompilerOptions, compilerOption
 	};
 
 	function useTsx(fileName: string, sfc: Sfc) {
-		if (!instances.has(sfc)) {
-			instances.set(sfc, createTsx(fileName, sfc));
+		if (!tsCodegen.has(sfc)) {
+			tsCodegen.set(sfc, createTsx(fileName, sfc, ctx));
 		}
-		return instances.get(sfc)!;
-	}
-
-	function createTsx(fileName: string, _sfc: Sfc) {
-
-		const lang = computed(() => {
-			return !_sfc.script && !_sfc.scriptSetup ? 'ts'
-				: _sfc.scriptSetup && _sfc.scriptSetup.lang !== 'js' ? _sfc.scriptSetup.lang
-					: _sfc.script && _sfc.script.lang !== 'js' ? _sfc.script.lang
-						: 'js';
-		});
-		const scriptRanges = computed(() =>
-			_sfc.scriptAst
-				? parseScriptRanges(ts, _sfc.scriptAst, !!_sfc.scriptSetup, false)
-				: undefined
-		);
-		const scriptSetupRanges = computed(() =>
-			_sfc.scriptSetupAst
-				? parseScriptSetupRanges(ts, _sfc.scriptSetupAst, vueCompilerOptions)
-				: undefined
-		);
-		const htmlGen = computed(() => {
-
-			if (!_sfc.templateAst)
-				return;
-
-			return templateGen.generate(
-				ts,
-				compilerOptions,
-				vueCompilerOptions,
-				_sfc.template?.content ?? '',
-				_sfc.template?.lang ?? 'html',
-				_sfc,
-				hasScriptSetupSlots.value,
-				codegenStack,
-			);
-		});
-		const hasScriptSetupSlots = ref(false); // remove when https://github.com/vuejs/core/pull/5912 merged
-		const tsxGen = computed(() => {
-			hasScriptSetupSlots.value = !!scriptSetupRanges.value?.slotsTypeArg;
-			return genScript(
-				ts,
-				fileName,
-				_sfc,
-				lang.value,
-				scriptRanges.value,
-				scriptSetupRanges.value,
-				htmlGen.value,
-				compilerOptions,
-				vueCompilerOptions,
-				codegenStack,
-			);
-		});
-
-		return {
-			lang,
-			tsxGen,
-			htmlGen,
-		};
+		return tsCodegen.get(sfc)!;
 	}
 };
 export default plugin;
+
+function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOptions, codegenStack }: Parameters<VueLanguagePlugin>[0]) {
+
+	const lang = computed(() => {
+		return !_sfc.script && !_sfc.scriptSetup ? 'ts'
+			: _sfc.scriptSetup && _sfc.scriptSetup.lang !== 'js' ? _sfc.scriptSetup.lang
+				: _sfc.script && _sfc.script.lang !== 'js' ? _sfc.script.lang
+					: 'js';
+	});
+	const scriptRanges = computed(() =>
+		_sfc.scriptAst
+			? parseScriptRanges(ts, _sfc.scriptAst, !!_sfc.scriptSetup, false)
+			: undefined
+	);
+	const scriptSetupRanges = computed(() =>
+		_sfc.scriptSetupAst
+			? parseScriptSetupRanges(ts, _sfc.scriptSetupAst, vueCompilerOptions)
+			: undefined
+	);
+	const htmlGen = computed(() => {
+
+		if (!_sfc.templateAst)
+			return;
+
+		return templateGen.generate(
+			ts,
+			compilerOptions,
+			vueCompilerOptions,
+			_sfc.template?.content ?? '',
+			_sfc.template?.lang ?? 'html',
+			_sfc,
+			hasScriptSetupSlots.value,
+			codegenStack,
+		);
+	});
+	const hasScriptSetupSlots = ref(false); // remove when https://github.com/vuejs/core/pull/5912 merged
+	const tsxGen = computed(() => {
+		hasScriptSetupSlots.value = !!scriptSetupRanges.value?.slotsTypeArg;
+		return genScript(
+			ts,
+			fileName,
+			_sfc,
+			lang.value,
+			scriptRanges.value,
+			scriptSetupRanges.value,
+			htmlGen.value,
+			compilerOptions,
+			vueCompilerOptions,
+			codegenStack,
+		);
+	});
+
+	return {
+		scriptRanges,
+		scriptSetupRanges,
+		lang,
+		tsxGen,
+		htmlGen,
+	};
+}
