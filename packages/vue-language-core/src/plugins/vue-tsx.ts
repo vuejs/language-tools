@@ -6,7 +6,6 @@ import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { Sfc, VueLanguagePlugin } from '../types';
 import { FileCapabilities, FileKind } from '@volar/language-core';
 import * as muggle from 'muggle-string';
-import * as ts from 'typescript/lib/tsserverlibrary';
 
 const templateFormatReg = /^\.template_format\.ts$/;
 const templateStyleCssReg = /^\.template_style\.css$/;
@@ -119,8 +118,9 @@ const plugin: VueLanguagePlugin = (ctx) => {
 };
 export default plugin;
 
-function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOptions, codegenStack }: Parameters<VueLanguagePlugin>[0]) {
+function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOptions, codegenStack, modules }: Parameters<VueLanguagePlugin>[0]) {
 
+	const ts = modules.typescript;
 	const lang = computed(() => {
 		return !_sfc.script && !_sfc.scriptSetup ? 'ts'
 			: _sfc.scriptSetup && _sfc.scriptSetup.lang !== 'js' ? _sfc.scriptSetup.lang
