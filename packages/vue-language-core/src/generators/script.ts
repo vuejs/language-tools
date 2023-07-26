@@ -8,12 +8,11 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import type * as templateGen from '../generators/template';
 import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
-import { collectCssVars, collectStyleCssClasses } from '../plugins/vue-tsx';
 import { Sfc } from '../types';
 import type { VueCompilerOptions } from '../types';
-import { getSlotsPropertyName, getVueLibraryName } from '../utils/shared';
+import { getSlotsPropertyName } from '../utils/shared';
 import { walkInterpolationFragment } from '../utils/transform';
-import { genConstructorOverloads } from '../utils/localTypes';
+import * as sharedTypes from '../utils/globalTypes';
 import * as muggle from 'muggle-string';
 
 export function generate(
@@ -23,17 +22,16 @@ export function generate(
 	lang: string,
 	scriptRanges: ScriptRanges | undefined,
 	scriptSetupRanges: ScriptSetupRanges | undefined,
-	cssVars: ReturnType<typeof collectCssVars>,
-	cssModuleClasses: ReturnType<typeof collectStyleCssClasses>,
-	cssScopedClasses: ReturnType<typeof collectStyleCssClasses>,
 	htmlGen: ReturnType<typeof templateGen['generate']> | undefined,
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
-	codes: Segment<FileRangeCapabilities>[] = [],
-	mirrorBehaviorMappings: SourceMaps.Mapping<[MirrorBehaviorCapabilities, MirrorBehaviorCapabilities]>[] = [],
+	codegenStack: boolean,
 ) {
 
-	//#region monkey fix: https://github.com/johnsoncodehk/volar/pull/2113
+	const [codes, codeStacks] = codegenStack ? muggle.track([] as Segment<FileRangeCapabilities>[]) : [[], []];
+	const mirrorBehaviorMappings: SourceMaps.Mapping<[MirrorBehaviorCapabilities, MirrorBehaviorCapabilities]>[] = [];
+
+	//#region monkey fix: https://github.com/vuejs/language-tools/pull/2113
 	const sfc = {
 		script: _sfc.script,
 		scriptSetup: _sfc.scriptSetup,
@@ -49,6 +47,7 @@ export function generate(
 			endTagStart: 0,
 			generic: undefined,
 			genericOffset: 0,
+			attrs: {},
 		};
 		scriptSetupRanges = {
 			bindings: [],
@@ -57,6 +56,7 @@ export function generate(
 			emitsTypeArg: undefined,
 			emitsTypeNums: 0,
 			exposeRuntimeArg: undefined,
+			leadingCommentEndOffset: 0,
 			importSectionEndOffset: 0,
 			defineProps: undefined,
 			propsAssignName: undefined,
@@ -70,22 +70,15 @@ export function generate(
 	//#endregion
 
 	const bypassDefineComponent = lang === 'js' || lang === 'jsx';
-	const vueLibName = getVueLibraryName(vueCompilerOptions.target);
 	const usedHelperTypes = {
 		DefinePropsToOptions: false,
 		mergePropDefaults: false,
-		ConstructorOverloads: false,
+		EmitsTypeHelpers: false,
 		WithTemplateSlots: false,
-		ToTemplateSlots: false,
 		PropsChildren: false,
 	};
 
-	if (vueCompilerOptions.jsxTemplates && vueCompilerOptions.target >= 3.3) {
-		codes.push(`/** @jsxImportSource vue */\n`);
-	}
-	else {
-		codes.push('/** __vue_virtual_code_placeholder */\n');
-	}
+	codes.push(`/* ${Object.entries(vueCompilerOptions).map(([key, value]) => `${key}: ${JSON.stringify(value)}`).join(', ')} */\n`);
 
 	let generatedTemplate = false;
 
@@ -112,6 +105,7 @@ export function generate(
 
 	return {
 		codes,
+		codeStacks,
 		mirrorBehaviorMappings,
 	};
 
@@ -119,11 +113,11 @@ export function generate(
 		let usedPrettify = false;
 		if (usedHelperTypes.DefinePropsToOptions) {
 			if (compilerOptions.exactOptionalPropertyTypes) {
-				codes.push(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueLibName}').PropType<T[K]> } : { type: import('${vueLibName}').PropType<T[K]>, required: true } };\n`);
+				codes.push(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueCompilerOptions.lib}').PropType<T[K]> } : { type: import('${vueCompilerOptions.lib}').PropType<T[K]>, required: true } };\n`);
 			}
 			else {
 				codes.push(`type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;\n`);
-				codes.push(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueLibName}').PropType<__VLS_NonUndefinedable<T[K]>> } : { type: import('${vueLibName}').PropType<T[K]>, required: true } };\n`);
+				codes.push(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueCompilerOptions.lib}').PropType<__VLS_NonUndefinedable<T[K]>> } : { type: import('${vueCompilerOptions.lib}').PropType<T[K]>, required: true } };\n`);
 			}
 		}
 		if (usedHelperTypes.mergePropDefaults) {
@@ -135,26 +129,32 @@ export function generate(
 				};\n`);
 			usedPrettify = true;
 		}
-		if (usedHelperTypes.ConstructorOverloads) {
-			// fix https://github.com/johnsoncodehk/volar/issues/926
+		if (usedHelperTypes.EmitsTypeHelpers) {
+			// fix https://github.com/vuejs/language-tools/issues/926
 			codes.push('type __VLS_UnionToIntersection<U> = __VLS_Prettify<(U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never>;\n');
 			usedPrettify = true;
 			if (scriptSetupRanges && scriptSetupRanges.emitsTypeNums !== -1) {
-				codes.push(genConstructorOverloads('__VLS_ConstructorOverloads', scriptSetupRanges.emitsTypeNums));
+				codes.push(sharedTypes.genConstructorOverloads('__VLS_ConstructorOverloads', scriptSetupRanges.emitsTypeNums));
 			}
 			else {
-				codes.push(genConstructorOverloads('__VLS_ConstructorOverloads'));
+				codes.push(sharedTypes.genConstructorOverloads('__VLS_ConstructorOverloads'));
 			}
+			codes.push(`type __VLS_NormalizeEmits<T> = __VLS_ConstructorOverloads<T> & {
+				[K in keyof T]: T[K] extends any[] ? { (...args: T[K]): void } : never
+			}\n`);;
 		}
 		if (usedHelperTypes.WithTemplateSlots) {
-			usedHelperTypes.PropsChildren = true;
-			codes.push(`type __VLS_WithTemplateSlots<T, S> = T & { new(): {
-				$slots: S;
-				$props: __VLS_PropsChildren<S>;
-			} };\n`);
-		}
-		if (usedHelperTypes.ToTemplateSlots) {
-			codes.push(`type __VLS_ToTemplateSlots<T> = { [K in keyof T]: NonNullable<T[K]> extends (...args: any[]) => any ? T[K] : (props: T[K]) => any };\n`);
+			codes.push(
+				`type __VLS_WithTemplateSlots<T, S> = T & { new(): {\n`,
+				`$slots: S;\n`,
+			);
+			if (vueCompilerOptions.jsxSlots) {
+				usedHelperTypes.PropsChildren = true;
+				codes.push(`$props: __VLS_PropsChildren<S>;\n`);
+			}
+			codes.push(
+				`} };\n`,
+			);
 		}
 		if (usedHelperTypes.PropsChildren) {
 			codes.push(`type __VLS_PropsChildren<S> = { [K in keyof (boolean extends (JSX.ElementChildrenAttribute extends never ? true : false) ? never : JSX.ElementChildrenAttribute)]?: S; };\n`);
@@ -220,10 +220,29 @@ export function generate(
 			if (scriptRanges?.exportDefault) {
 				isExportRawObject = sfc.script.content.substring(scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end).startsWith('{');
 			}
-			if (isExportRawObject && vueCompilerOptions.optionsWrapper.length && scriptRanges?.exportDefault) {
+			if (isExportRawObject && vueCompilerOptions.optionsWrapper.length === 2 && scriptRanges?.exportDefault) {
 				addVirtualCode('script', 0, scriptRanges.exportDefault.expression.start);
 				codes.push(vueCompilerOptions.optionsWrapper[0]);
-				addVirtualCode('script', scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end);
+				{
+					codes.push(['', 'script', scriptRanges.exportDefault.expression.start, {
+						__hint: {
+							setting: 'vue.inlayHints.optionsWrapper',
+							label: vueCompilerOptions.optionsWrapper[0],
+							tooltip: [
+								'This is virtual code that is automatically wrapped for type support, it does not affect your runtime behavior, you can customize it via `vueCompilerOptions.optionsWrapper` option in tsconfig / jsconfig.',
+								'To hide it, you can set `"vue.inlayHints.optionsWrapper": false` in IDE settings.',
+							].join('\n\n'),
+						}
+					} as any]);
+					addVirtualCode('script', scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end);
+					codes.push(['', 'script', scriptRanges.exportDefault.expression.end, {
+						__hint: {
+							setting: 'vue.inlayHints.optionsWrapper',
+							label: vueCompilerOptions.optionsWrapper[1],
+							tooltip: '',
+						}
+					} as any]);
+				}
 				codes.push(vueCompilerOptions.optionsWrapper[1]);
 				addVirtualCode('script', scriptRanges.exportDefault.expression.end, sfc.script.content.length);
 			}
@@ -249,7 +268,7 @@ export function generate(
 			return;
 
 		codes.push([
-			sfc.scriptSetup.content.substring(0, scriptSetupRanges.importSectionEndOffset),
+			sfc.scriptSetup.content.substring(0, Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset)),
 			'scriptSetup',
 			0,
 			FileRangeCapabilities.full,
@@ -259,7 +278,7 @@ export function generate(
 		if (!sfc.scriptSetup) {
 			return;
 		}
-		// fix https://github.com/johnsoncodehk/volar/issues/1127
+		// fix https://github.com/vuejs/language-tools/issues/1127
 		codes.push([
 			'',
 			'scriptSetup',
@@ -293,8 +312,13 @@ export function generate(
 			}
 			codes.push(`>`);
 			codes.push('(\n');
-			codes.push(`__VLS_props: typeof __VLS_setup['props'] & import('vue').VNodeProps,\n`);
-			codes.push(`__VLS_ctx: Pick<typeof __VLS_setup, 'expose' | 'attrs' | 'emit' | 'slots'>,\n`);
+			codes.push(
+				`__VLS_props: typeof __VLS_setup['props']`,
+				`& import('${vueCompilerOptions.lib}').VNodeProps`,
+				`& import('${vueCompilerOptions.lib}').AllowedComponentProps`,
+				`& import('${vueCompilerOptions.lib}').ComponentCustomProps,\n`,
+			);
+			codes.push(`__VLS_ctx?: Pick<typeof __VLS_setup, 'attrs' | 'emit' | 'slots'>,\n`);
 			codes.push('__VLS_setup = (() => {\n');
 			scriptSetupGeneratedOffset = generateSetupFunction(true, 'none', definePropMirrors);
 
@@ -310,79 +334,63 @@ export function generate(
 			//#endregion
 
 			//#region props
-			if (
-				(scriptSetupRanges.propsRuntimeArg && scriptSetupRanges.defineProps)
-				|| scriptSetupRanges.defineProp.length
-			) {
-				if (scriptSetupRanges.propsRuntimeArg && scriptSetupRanges.defineProps) {
-					codes.push(`const __VLS_props = `);
-					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.defineProps.start, scriptSetupRanges.defineProps.end);
-					codes.push(`;\n`);
-				}
-				else if (scriptSetupRanges.defineProp.length) {
-					codes.push(`const __VLS_defaults = {\n`);
-					for (const defineProp of scriptSetupRanges.defineProp) {
-						if (defineProp.defaultValue) {
-							if (defineProp.name) {
-								codes.push(sfc.scriptSetup.content.substring(defineProp.name.start, defineProp.name.end));
-							}
-							else {
-								codes.push('modelValue');
-							}
-							codes.push(`: `);
-							codes.push(sfc.scriptSetup.content.substring(defineProp.defaultValue.start, defineProp.defaultValue.end));
-							codes.push(`,\n`);
-						}
-					}
-					codes.push(`};\n`);
-					codes.push(`let __VLS_props!: {\n`);
-					for (const defineProp of scriptSetupRanges.defineProp) {
-						let propName = 'modelValue';
+			if (scriptSetupRanges.defineProp.length) {
+				codes.push(`const __VLS_defaults = {\n`);
+				for (const defineProp of scriptSetupRanges.defineProp) {
+					if (defineProp.defaultValue) {
 						if (defineProp.name) {
-							propName = sfc.scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
-							const propMirrorStart = muggle.getLength(codes);
-							definePropMirrors[propName] = [propMirrorStart, propMirrorStart + propName.length];
-						}
-						codes.push(`${propName}${defineProp.required ? '' : '?'}: `);
-						if (defineProp.type) {
-							codes.push(sfc.scriptSetup.content.substring(defineProp.type.start, defineProp.type.end));
-						}
-						else if (defineProp.defaultValue) {
-							codes.push(`typeof __VLS_defaults['`);
-							codes.push(propName);
-							codes.push(`']`);
+							codes.push(sfc.scriptSetup.content.substring(defineProp.name.start, defineProp.name.end));
 						}
 						else {
-							codes.push(`any`);
+							codes.push('modelValue');
 						}
-						codes.push(',\n');
+						codes.push(`: `);
+						codes.push(sfc.scriptSetup.content.substring(defineProp.defaultValue.start, defineProp.defaultValue.end));
+						codes.push(`,\n`);
 					}
-					codes.push(`};\n`);
 				}
-				if (scriptSetupRanges.slotsTypeArg) {
-					usedHelperTypes.ToTemplateSlots = true;
-					usedHelperTypes.PropsChildren = true;
-					codes.push(` & __VLS_PropsChildren<__VLS_ToTemplateSlots<`);
-					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end);
-					codes.push(`>>`);
-				}
-				codes.push(`;\n`);
+				codes.push(`};\n`);
 			}
-			else {
-				codes.push(`const __VLS_props: {}`);
-				if (scriptSetupRanges.slotsTypeArg) {
-					usedHelperTypes.ToTemplateSlots = true;
-					usedHelperTypes.PropsChildren = true;
-					codes.push(` & __VLS_PropsChildren<__VLS_ToTemplateSlots<`);
-					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end);
-					codes.push(`>>`);
-				}
-				if (scriptSetupRanges.propsTypeArg) {
-					codes.push(' & ');
-					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
-				}
-				codes.push(`;\n`);
+			codes.push(`let __VLS_props!: {}`);
+			if (scriptSetupRanges.propsRuntimeArg) {
+				codes.push(` & InstanceType<typeof __VLS_publicComponent>['$props']`);
 			}
+			if (scriptSetupRanges.propsTypeArg) {
+				codes.push(` & `);
+				addVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
+			}
+			if (scriptSetupRanges.defineProp.length) {
+				codes.push(` & {\n`);
+				for (const defineProp of scriptSetupRanges.defineProp) {
+					let propName = 'modelValue';
+					if (defineProp.name) {
+						propName = sfc.scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
+						const propMirrorStart = muggle.getLength(codes);
+						definePropMirrors[propName] = [propMirrorStart, propMirrorStart + propName.length];
+					}
+					codes.push(`${propName}${defineProp.required ? '' : '?'}: `);
+					if (defineProp.type) {
+						codes.push(sfc.scriptSetup.content.substring(defineProp.type.start, defineProp.type.end));
+					}
+					else if (defineProp.defaultValue) {
+						codes.push(`typeof __VLS_defaults['`);
+						codes.push(propName);
+						codes.push(`']`);
+					}
+					else {
+						codes.push(`any`);
+					}
+					codes.push(',\n');
+				}
+				codes.push(`}`);
+			}
+			if (scriptSetupRanges.slotsTypeArg && vueCompilerOptions.jsxSlots) {
+				usedHelperTypes.PropsChildren = true;
+				codes.push(` & __VLS_PropsChildren<`);
+				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end);
+				codes.push('>');
+			}
+			codes.push(`;\n`);
 			//#endregion
 
 			//#region emits
@@ -393,7 +401,7 @@ export function generate(
 				codes.push(';\n');
 			}
 			else if (scriptSetupRanges.emitsRuntimeArg) {
-				codes.push(`(await import('vue')).defineEmits(`);
+				codes.push(`defineEmits(`);
 				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end);
 				codes.push(');\n');
 			}
@@ -410,7 +418,7 @@ export function generate(
 			codes.push('emit: typeof __VLS_emit');
 			codes.push('};\n');
 			codes.push('})(),\n');
-			codes.push(') => ({} as any))');
+			codes.push(`) => ({} as import('${vueCompilerOptions.lib}').VNode & { __ctx?: typeof __VLS_setup }))`);
 		}
 		else if (!sfc.script) {
 			// no script block, generate script setup code at root
@@ -420,7 +428,7 @@ export function generate(
 			if (!scriptRanges?.exportDefault) {
 				codes.push('export default ');
 			}
-			codes.push('(() => {\n');
+			codes.push('await (async () => {\n');
 			scriptSetupGeneratedOffset = generateSetupFunction(false, 'return', definePropMirrors);
 			codes.push(`})()`);
 		}
@@ -457,20 +465,20 @@ export function generate(
 		const definePropProposalB = sfc.scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition') || vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
 
 		if (vueCompilerOptions.target >= 3.3) {
-			codes.push(`const { defineProps, defineEmits, defineSlots, defineModel, defineOptions, withDefaults } = await import('vue');\n`);
+			codes.push(`const { defineProps, defineEmits, defineExpose, defineOptions, defineSlots, defineModel, withDefaults } = await import('${vueCompilerOptions.lib}');\n`);
 		}
 		if (definePropProposalA) {
 			codes.push(`
-declare function defineProp<T>(name: string, options: { required: true } & Record<string, unknown>): import('vue').ComputedRef<T>;
-declare function defineProp<T>(name: string, options: { default: any } & Record<string, unknown>): import('vue').ComputedRef<T>;
-declare function defineProp<T>(name?: string, options?: any): import('vue').ComputedRef<T | undefined>;
+declare function defineProp<T>(name: string, options: { required: true } & Record<string, unknown>): import('${vueCompilerOptions.lib}').ComputedRef<T>;
+declare function defineProp<T>(name: string, options: { default: any } & Record<string, unknown>): import('${vueCompilerOptions.lib}').ComputedRef<T>;
+declare function defineProp<T>(name?: string, options?: any): import('${vueCompilerOptions.lib}').ComputedRef<T | undefined>;
 `.trim() + '\n');
 		}
 		if (definePropProposalB) {
 			codes.push(`
-declare function defineProp<T>(value: T | (() => T), required?: boolean, rest?: any): import('vue').ComputedRef<T>;
-declare function defineProp<T>(value: T | (() => T) | undefined, required: true, rest?: any): import('vue').ComputedRef<T>;
-declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?: any): import('vue').ComputedRef<T | undefined>;
+declare function defineProp<T>(value: T | (() => T), required?: boolean, rest?: any): import('${vueCompilerOptions.lib}').ComputedRef<T>;
+declare function defineProp<T>(value: T | (() => T) | undefined, required: true, rest?: any): import('${vueCompilerOptions.lib}').ComputedRef<T>;
+declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?: any): import('${vueCompilerOptions.lib}').ComputedRef<T | undefined>;
 `.trim() + '\n');
 		}
 
@@ -479,24 +487,14 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		addVirtualCode('scriptSetup', scriptSetupRanges.importSectionEndOffset);
 
 		if (scriptSetupRanges.propsTypeArg && scriptSetupRanges.withDefaultsArg) {
-			// fix https://github.com/johnsoncodehk/volar/issues/1187
+			// fix https://github.com/vuejs/language-tools/issues/1187
 			codes.push(`const __VLS_withDefaultsArg = (function <T>(t: T) { return t })(`);
 			addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.withDefaultsArg.start, scriptSetupRanges.withDefaultsArg.end);
 			codes.push(`);\n`);
 		}
 
-		if (scriptRanges?.exportDefault && scriptRanges.exportDefault.expression.start !== scriptRanges.exportDefault.args.start) {
-			// use defineComponent() from user space code if it exist
-			codes.push(`const __VLS_publicComponent = `);
-			addVirtualCode('script', scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.args.start);
-			codes.push(`{\n`);
-		}
-		else {
-			codes.push(`const __VLS_publicComponent = (await import('${vueLibName}')).defineComponent({\n`);
-		}
-
-		if (scriptSetupRanges.defineProp.length) {
-			codes.push(`props: {} as {\n`);
+		if (!functional && scriptSetupRanges.defineProp.length) {
+			codes.push(`let __VLS_propsOption_defineProp!: {\n`);
 			for (const defineProp of scriptSetupRanges.defineProp) {
 
 				let propName = 'modelValue';
@@ -525,22 +523,36 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				}
 
 				if (defineProp.required) {
-					codes.push(`{ required: true, type: import('vue').PropType<${type}> },\n`);
+					codes.push(`{ required: true, type: import('${vueCompilerOptions.lib}').PropType<${type}> },\n`);
 				}
 				else {
-					codes.push(`import('vue').PropType<${type}>,\n`);
+					codes.push(`import('${vueCompilerOptions.lib}').PropType<${type}>,\n`);
 				}
 			}
-			codes.push(`},\n`);
+			codes.push(`};\n`);
+		}
+
+		if (scriptRanges?.exportDefault && scriptRanges.exportDefault.expression.start !== scriptRanges.exportDefault.args.start) {
+			// use defineComponent() from user space code if it exist
+			codes.push(`const __VLS_publicComponent = `);
+			addVirtualCode('script', scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.args.start);
+			codes.push(`{\n`);
+		}
+		else {
+			codes.push(`const __VLS_publicComponent = (await import('${vueCompilerOptions.lib}')).defineComponent({\n`);
 		}
 
 		if (!bypassDefineComponent) {
-			if (scriptSetupRanges.propsRuntimeArg || scriptSetupRanges.propsTypeArg) {
-				codes.push(`props: (`);
+			if (scriptSetupRanges.propsRuntimeArg || scriptSetupRanges.propsTypeArg || (!functional && scriptSetupRanges.defineProp.length)) {
+				codes.push(`props: {\n`);
+				if (scriptSetupRanges.propsRuntimeArg) {
+					codes.push('...');
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
+					codes.push(',\n');
+				}
 				if (scriptSetupRanges.propsTypeArg) {
-
 					usedHelperTypes.DefinePropsToOptions = true;
-					codes.push(`{} as `);
+					codes.push('...{} as ');
 
 					if (scriptSetupRanges.withDefaultsArg) {
 						usedHelperTypes.mergePropDefaults = true;
@@ -560,15 +572,16 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 						codes.push(`, typeof __VLS_withDefaultsArg`);
 						codes.push(`>`);
 					}
+					codes.push(',\n');
 				}
-				else if (scriptSetupRanges.propsRuntimeArg) {
-					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
+				if (!functional && scriptSetupRanges.defineProp.length) {
+					codes.push(`...__VLS_propsOption_defineProp,\n`);
 				}
-				codes.push(`),\n`);
+				codes.push(`},\n`);
 			}
 			if (scriptSetupRanges.emitsTypeArg) {
-				usedHelperTypes.ConstructorOverloads = true;
-				codes.push(`emits: ({} as __VLS_UnionToIntersection<__VLS_ConstructorOverloads<`);
+				usedHelperTypes.EmitsTypeHelpers = true;
+				codes.push(`emits: ({} as __VLS_UnionToIntersection<__VLS_NormalizeEmits<`);
 				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
 				codes.push(`>>),\n`);
 			}
@@ -586,13 +599,13 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			// fill $props
 			if (scriptSetupRanges.propsTypeArg) {
 				// NOTE: defineProps is inaccurate for $props
-				codes.push(`$props: (await import('./__VLS_types')).makeOptional(defineProps<`);
+				codes.push(`$props: __VLS_makeOptional(defineProps<`);
 				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
 				codes.push(`>()),\n`);
 			}
 			else if (scriptSetupRanges.propsRuntimeArg) {
 				// NOTE: defineProps is inaccurate for $props
-				codes.push(`$props: (await import('./__VLS_types')).makeOptional(defineProps(`);
+				codes.push(`$props: __VLS_makeOptional(defineProps(`);
 				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
 				codes.push(`)),\n`);
 			}
@@ -660,10 +673,9 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			generateConstNameOption();
 
 			if (scriptSetupRanges?.slotsTypeArg && sfc.scriptSetup) {
-				usedHelperTypes.ToTemplateSlots = true;
-				codes.push(`var __VLS_slots!: __VLS_ToTemplateSlots<`);
+				codes.push(`var __VLS_slots!: `);
 				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end);
-				codes.push('>;\n');
+				codes.push(';\n');
 			};
 
 			codes.push(`function __VLS_template() {\n`);
@@ -687,7 +699,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 		if (sfc.scriptSetup && scriptSetupRanges) {
 
-			codes.push(`const __VLS_internalComponent = (await import('${vueLibName}')).defineComponent({\n`);
+			codes.push(`const __VLS_internalComponent = (await import('${vueCompilerOptions.lib}')).defineComponent({\n`);
 			codes.push(`setup() {\n`);
 			codes.push(`return {\n`);
 			// fill ctx from props
@@ -724,7 +736,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 					const templateStart = getLength(codes);
 					codes.push(varName);
 					const templateEnd = getLength(codes);
-					codes.push(`: `);
+					codes.push(`: ${varName} as typeof `);
 
 					const scriptStart = getLength(codes);
 					codes.push(varName);
@@ -749,7 +761,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			codes.push(`let __VLS_internalComponent!: typeof import('./${path.basename(fileName)}')['default'];\n`);
 		}
 		else {
-			codes.push(`const __VLS_internalComponent = (await import('${vueLibName}')).defineComponent({});\n`);
+			codes.push(`const __VLS_internalComponent = (await import('${vueCompilerOptions.lib}')).defineComponent({});\n`);
 		}
 	}
 	function generateExportOptions() {
@@ -793,20 +805,23 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 		codes.push(`let __VLS_ctx!: ${useGlobalThisTypeInCtx ? 'typeof globalThis &' : ''}`);
 		if (sfc.scriptSetup) {
-			codes.push(`InstanceType<import('./__VLS_types').PickNotAny<typeof __VLS_publicComponent, new () => {}>> & `);
+			codes.push(`InstanceType<__VLS_PickNotAny<typeof __VLS_publicComponent, new () => {}>> & `);
 		}
-		codes.push(`InstanceType<import('./__VLS_types').PickNotAny<typeof __VLS_internalComponent, new () => {}>> & {\n`);
+		codes.push(`InstanceType<__VLS_PickNotAny<typeof __VLS_internalComponent, new () => {}>> & {\n`);
 
 		/* CSS Module */
-		for (const cssModule of cssModuleClasses) {
-			codes.push(`${cssModule.style.module}: Record<string, string> & import('./__VLS_types').Prettify<{}`);
-			for (const classNameRange of cssModule.classNameRanges) {
+		for (let i = 0; i < _sfc.styles.length; i++) {
+			const style = _sfc.styles[i];
+			if (!style.module) continue;
+			codes.push(`${style.module}: Record<string, string> & __VLS_Prettify<{}`);
+			for (const className of style.classNames) {
 				generateCssClassProperty(
-					cssModule.index,
-					cssModule.style.content.substring(classNameRange.start + 1, classNameRange.end),
-					classNameRange,
+					i,
+					className.text.substring(1),
+					{ start: className.offset, end: className.offset + className.text.length },
 					'string',
 					false,
+					true,
 				);
 			}
 			codes.push('>;\n');
@@ -815,22 +830,25 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 		/* Components */
 		codes.push('/* Components */\n');
-		codes.push(`let __VLS_localComponents!: NonNullable<typeof __VLS_internalComponent extends { components: infer C } ? C : {}> & typeof __VLS_componentsOption & typeof __VLS_ctx;\n`);
-		codes.push(`let __VLS_otherComponents!: typeof __VLS_localComponents & import('./__VLS_types').GlobalComponents;\n`);
-		codes.push(`let __VLS_own!: import('./__VLS_types').SelfComponent<typeof __VLS_name, typeof __VLS_internalComponent & typeof __VLS_publicComponent & (new () => { ${getSlotsPropertyName(vueCompilerOptions.target ?? 3)}: typeof __VLS_slots })>;\n`);
-		codes.push(`let __VLS_components!: typeof __VLS_otherComponents & Omit<typeof __VLS_own, keyof typeof __VLS_otherComponents>;\n`);
+		codes.push(`let __VLS_otherComponents!: NonNullable<typeof __VLS_internalComponent extends { components: infer C } ? C : {}> & typeof __VLS_componentsOption;\n`);
+		codes.push(`let __VLS_own!: __VLS_SelfComponent<typeof __VLS_name, typeof __VLS_internalComponent & typeof __VLS_publicComponent & (new () => { ${getSlotsPropertyName(vueCompilerOptions.target)}: typeof __VLS_slots })>;\n`);
+		codes.push(`let __VLS_localComponents!: typeof __VLS_otherComponents & Omit<typeof __VLS_own, keyof typeof __VLS_otherComponents>;\n`);
+		codes.push(`let __VLS_components!: typeof __VLS_localComponents & __VLS_GlobalComponents & typeof __VLS_ctx;\n`); // for html completion, TS references...
 
 		/* Style Scoped */
 		codes.push('/* Style Scoped */\n');
 		codes.push('type __VLS_StyleScopedClasses = {}');
-		for (const scopedCss of cssScopedClasses) {
-			for (const classNameRange of scopedCss.classNameRanges) {
+		for (let i = 0; i < _sfc.styles.length; i++) {
+			const style = _sfc.styles[i];
+			if (!style.scoped && vueCompilerOptions.experimentalResolveStyleCssClasses !== 'always') continue;
+			for (const className of style.classNames) {
 				generateCssClassProperty(
-					scopedCss.index,
-					scopedCss.style.content.substring(classNameRange.start + 1, classNameRange.end),
-					classNameRange,
+					i,
+					className.text.substring(1),
+					{ start: className.offset, end: className.offset + className.text.length },
 					'boolean',
 					true,
+					!style.module,
 				);
 			}
 		}
@@ -842,18 +860,22 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		codes.push(`/* CSS variable injection end */\n`);
 
 		if (htmlGen) {
+			muggle.setTracking(false);
 			for (const s of htmlGen.codes) {
 				codes.push(s);
+			}
+			muggle.setTracking(true);
+			for (const s of htmlGen.codeStacks) {
+				codeStacks.push(s);
 			}
 		}
 
 		if (!htmlGen) {
 			codes.push(`// no template\n`);
 			if (scriptSetupRanges?.slotsTypeArg && sfc.scriptSetup) {
-				usedHelperTypes.ToTemplateSlots = true;
-				codes.push(`let __VLS_slots!: __VLS_ToTemplateSlots<`);
+				codes.push(`let __VLS_slots!: `);
 				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end);
-				codes.push(`>;\n`);
+				codes.push(`;\n`);
 			}
 			else {
 				codes.push(`const __VLS_slots = {};\n`);
@@ -864,7 +886,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 		return { cssIds };
 
-		function generateCssClassProperty(styleIndex: number, className: string, classRange: TextRange, propertyType: string, optional: boolean) {
+		function generateCssClassProperty(styleIndex: number, className: string, classRange: TextRange, propertyType: string, optional: boolean, referencesCodeLens: boolean) {
 			codes.push(`\n & { `);
 			codes.push([
 				'',
@@ -872,7 +894,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				classRange.start,
 				{
 					references: true,
-					referencesCodeLens: true,
+					referencesCodeLens,
 				},
 			]);
 			codes.push(`'`);
@@ -903,13 +925,12 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			const emptyLocalVars: Record<string, number> = {};
 			const identifiers = new Set<string>();
 
-			for (const cssVar of cssVars) {
-				for (const cssBind of cssVar.ranges) {
-					const code = cssVar.style.content.substring(cssBind.start, cssBind.end);
+			for (const style of _sfc.styles) {
+				for (const cssBind of style.cssVars) {
 					walkInterpolationFragment(
 						ts,
-						code,
-						ts.createSourceFile('/a.txt', code, ts.ScriptTarget.ESNext),
+						cssBind.text,
+						ts.createSourceFile('/a.txt', cssBind.text, ts.ScriptTarget.ESNext),
 						(frag, fragOffset, onlyForErrorMapping) => {
 							if (fragOffset === undefined) {
 								codes.push(frag);
@@ -917,8 +938,8 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 							else {
 								codes.push([
 									frag,
-									cssVar.style.name,
-									cssBind.start + fragOffset,
+									style.name,
+									cssBind.offset + fragOffset,
 									onlyForErrorMapping
 										? { diagnostic: true }
 										: FileRangeCapabilities.full,
@@ -970,14 +991,17 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		return usageVars;
 	}
 	function addVirtualCode(vueTag: 'script' | 'scriptSetup', start: number, end?: number) {
+		muggle.offsetStack();
 		codes.push([
 			sfc[vueTag]!.content.substring(start, end),
 			vueTag,
 			start,
 			FileRangeCapabilities.full, // diagnostic also working for setup() returns unused in template checking
 		]);
+		muggle.resetOffsetStack();
 	}
 	function addExtraReferenceVirtualCode(vueTag: 'script' | 'scriptSetup', start: number, end: number) {
+		muggle.offsetStack();
 		codes.push([
 			sfc[vueTag]!.content.substring(start, end),
 			vueTag,
@@ -988,6 +1012,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				rename: true,
 			},
 		]);
+		muggle.resetOffsetStack();
 	}
 }
 

@@ -1,15 +1,15 @@
-import { AutoInsertionContext, LanguageServicePlugin } from '@volar/language-service';
+import { AutoInsertionContext, Service, ServiceContext } from '@volar/language-service';
 import { hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import * as vscode from 'vscode-languageserver-protocol';
+import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 
-const plugin: LanguageServicePlugin = (context) => {
+const plugin: Service = (context: ServiceContext<import('volar-service-typescript').Provide> | undefined, modules) => {
 
-	if (!context?.typescript)
+	if (!modules?.typescript)
 		return {};
 
-	const _ts = context.typescript;
+	const ts = modules.typescript;
 
 	return {
 
@@ -21,28 +21,28 @@ const plugin: LanguageServicePlugin = (context) => {
 			if (!isCharacterTyping(document, insertContext))
 				return;
 
-			const enabled = await context.configurationHost?.getConfiguration<boolean>('volar.features.autoInsert.dotValue') ?? true;
+			const enabled = await context!.env.getConfiguration?.<boolean>('vue.autoInsert.dotValue') ?? true;
 			if (!enabled)
 				return;
 
-			const program = _ts.languageService.getProgram();
+			const program = context!.inject('typescript/languageService').getProgram();
 			if (!program)
 				return;
 
-			const sourceFile = program.getSourceFile(context.uriToFileName(document.uri));
+			const sourceFile = program.getSourceFile(context!.env.uriToFileName(document.uri));
 			if (!sourceFile)
 				return;
 
-			if (isBlacklistNode(_ts.module, sourceFile, document.offsetAt(position), false))
+			if (isBlacklistNode(ts, sourceFile, document.offsetAt(position), false))
 				return;
 
 			const node = findPositionIdentifier(sourceFile, sourceFile, document.offsetAt(position));
 			if (!node)
 				return;
 
-			const token = _ts.languageServiceHost.getCancellationToken?.();
+			const token = context!.inject('typescript/languageServiceHost').getCancellationToken?.();
 			if (token) {
-				_ts.languageService.getQuickInfoAtPosition(context.uriToFileName(document.uri), node.end);
+				context!.inject('typescript/languageService').getQuickInfoAtPosition(context!.env.uriToFileName(document.uri), node.end);
 				if (token?.isCancellationRequested()) {
 					return; // check cancel here because type checker do not use cancel token
 				}
@@ -62,7 +62,7 @@ const plugin: LanguageServicePlugin = (context) => {
 
 				node.forEachChild(child => {
 					if (!result) {
-						if (child.end === offset && _ts.module.isIdentifier(child)) {
+						if (child.end === offset && ts.isIdentifier(child)) {
 							result = child;
 						}
 						else if (child.end >= offset && child.getStart(sourceFile) < offset) {
@@ -86,12 +86,20 @@ function isTsDocument(document: TextDocument) {
 		document.languageId === 'typescriptreact';
 }
 
+const charReg = /\w/;
+
 export function isCharacterTyping(document: TextDocument, options: AutoInsertionContext) {
 
 	const lastCharacter = options.lastChange.text[options.lastChange.text.length - 1];
 	const rangeStart = options.lastChange.range.start;
-	const position = vscode.Position.create(rangeStart.line, rangeStart.character + options.lastChange.text.length);
-	const nextCharacter = document.getText(vscode.Range.create(position, document.positionAt(document.offsetAt(position) + 1)));
+	const position: vscode.Position = {
+		line: rangeStart.line,
+		character: rangeStart.character + options.lastChange.text.length,
+	};
+	const nextCharacter = document.getText({
+		start: position,
+		end: { line: position.line, character: position.character + 1 },
+	});
 
 	if (lastCharacter === undefined) { // delete text
 		return false;
@@ -100,7 +108,7 @@ export function isCharacterTyping(document: TextDocument, options: AutoInsertion
 		return false;
 	}
 
-	return /\w/.test(lastCharacter) && !/\w/.test(nextCharacter);
+	return charReg.test(lastCharacter) && !charReg.test(nextCharacter);
 }
 
 export function isBlacklistNode(ts: typeof import('typescript/lib/tsserverlibrary'), node: ts.Node, pos: number, allowAccessDotValue: boolean) {

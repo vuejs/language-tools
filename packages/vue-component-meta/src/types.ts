@@ -6,10 +6,17 @@ export interface Declaration {
 }
 
 export interface ComponentMeta {
+	type: TypeMeta;
 	props: PropertyMeta[];
 	events: EventMeta[];
 	slots: SlotMeta[];
 	exposed: ExposeMeta[];
+}
+
+export enum TypeMeta {
+	Unknown = 0,
+	Class = 1,
+	Function = 2,
 }
 
 export interface PropertyMeta {

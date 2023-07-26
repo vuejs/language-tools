@@ -30,7 +30,7 @@
 			]
 		},
 		// javascript
-		// commented to fix https://github.com/johnsoncodehk/volar/issues/1428
+		// commented to fix https://github.com/vuejs/language-tools/issues/1428
 		// {
 		// 	"open": "`",
 		// 	"close": "`",

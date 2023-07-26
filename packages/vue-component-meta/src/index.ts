@@ -1,7 +1,8 @@
-import * as vue from '@volar/vue-language-core';
-import { createLanguageContext } from '@volar/language-core';
+import * as vue from '@vue/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'typesafe-path/posix';
+import typeHelpersCode from 'vue-component-type-helpers';
+import { createLanguageServiceHost, decorateLanguageService } from '@volar/typescript';
 
 import type {
 	MetaCheckerOptions,
@@ -16,13 +17,9 @@ import type {
 
 export * from './types';
 
-const extraFileExtensions: ts.FileExtensionInfo[] = [{
-	extension: 'vue',
-	isMixedContent: true,
-	scriptKind: 7 /* ts.ScriptKind.Deferred */,
-}];
-
 export type ComponentMetaChecker = ReturnType<typeof baseCreate>;
+
+const windowsPathReg = /\\/g;
 
 export function createComponentMetaCheckerByJsonConfig(
 	root: string,
@@ -30,10 +27,12 @@ export function createComponentMetaCheckerByJsonConfig(
 	checkerOptions: MetaCheckerOptions = {},
 	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
 ) {
+	const rootPath = (root as path.OsPath).replace(windowsPathReg, '/') as path.PosixPath;
 	return createComponentMetaCheckerWorker(
-		() => vue.createParsedCommandLineByJson(ts, ts.sys, root, json, extraFileExtensions),
+		() => vue.createParsedCommandLineByJson(ts, ts.sys, root, json),
 		checkerOptions,
-		path.join((root as path.OsPath).replace(/\\/g, '/') as path.PosixPath, 'jsconfig.json.global.vue' as path.PosixPath),
+		rootPath,
+		path.join(rootPath, 'jsconfig.json.global.vue' as path.PosixPath),
 		ts,
 	);
 }
@@ -43,10 +42,12 @@ export function createComponentMetaChecker(
 	checkerOptions: MetaCheckerOptions = {},
 	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
 ) {
+	const tsconfig = (tsconfigPath as path.OsPath).replace(windowsPathReg, '/') as path.PosixPath;
 	return createComponentMetaCheckerWorker(
-		() => vue.createParsedCommandLine(ts, ts.sys, tsconfigPath, extraFileExtensions),
+		() => vue.createParsedCommandLine(ts, ts.sys, tsconfigPath),
 		checkerOptions,
-		(tsconfigPath as path.OsPath).replace(/\\/g, '/') as path.PosixPath + '.global.vue',
+		path.dirname(tsconfig),
+		tsconfig + '.global.vue',
 		ts,
 	);
 }
@@ -54,6 +55,7 @@ export function createComponentMetaChecker(
 function createComponentMetaCheckerWorker(
 	loadParsedCommandLine: () => vue.ParsedCommandLine,
 	checkerOptions: MetaCheckerOptions,
+	rootPath: string,
 	globalComponentName: string,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 ) {
@@ -63,20 +65,17 @@ function createComponentMetaCheckerWorker(
 	 */
 
 	let parsedCommandLine = loadParsedCommandLine();
-	let fileNames = (parsedCommandLine.fileNames as path.OsPath[]).map<path.PosixPath>(path => path.replace(/\\/g, '/') as path.PosixPath);
+	let fileNames = (parsedCommandLine.fileNames as path.OsPath[]).map<path.PosixPath>(path => path.replace(windowsPathReg, '/') as path.PosixPath);
 	let projectVersion = 0;
 
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
-	const scriptVersions = new Map<string, number>();
-	const _host: vue.VueLanguageServiceHost = {
-		...ts.sys,
+	const _host: vue.TypeScriptLanguageHost = {
+		workspacePath: rootPath,
+		rootPath: rootPath,
 		getProjectVersion: () => projectVersion.toString(),
-		getDefaultLibFileName: (options) => ts.getDefaultLibFilePath(options), // should use ts.getDefaultLibFilePath not ts.getDefaultLibFileName
-		useCaseSensitiveFileNames: () => ts.sys.useCaseSensitiveFileNames,
 		getCompilationSettings: () => parsedCommandLine.options,
 		getScriptFileNames: () => fileNames,
 		getProjectReferences: () => parsedCommandLine.projectReferences,
-		getScriptVersion: (fileName) => scriptVersions.get(fileName)?.toString() ?? '',
 		getScriptSnapshot: (fileName) => {
 			if (!scriptSnapshots.has(fileName)) {
 				const fileText = ts.sys.readFile(fileName);
@@ -86,45 +85,42 @@ function createComponentMetaCheckerWorker(
 			}
 			return scriptSnapshots.get(fileName);
 		},
-		getVueCompilationSettings: () => parsedCommandLine.vueOptions,
 	};
 
 	return {
-		...baseCreate(_host, checkerOptions, globalComponentName, ts, false),
+		...baseCreate(_host, vue.resolveVueCompilerOptions(parsedCommandLine.vueOptions), checkerOptions, globalComponentName, ts),
 		updateFile(fileName: string, text: string) {
-			fileName = (fileName as path.OsPath).replace(/\\/g, '/') as path.PosixPath;
+			fileName = (fileName as path.OsPath).replace(windowsPathReg, '/') as path.PosixPath;
 			scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(text));
-			scriptVersions.set(fileName, scriptVersions.has(fileName) ? scriptVersions.get(fileName)! + 1 : 1);
 			projectVersion++;
 		},
 		deleteFile(fileName: string) {
-			fileName = (fileName as path.OsPath).replace(/\\/g, '/') as path.PosixPath;
+			fileName = (fileName as path.OsPath).replace(windowsPathReg, '/') as path.PosixPath;
 			fileNames = fileNames.filter(f => f !== fileName);
 			projectVersion++;
 		},
 		reload() {
 			parsedCommandLine = loadParsedCommandLine();
-			fileNames = (parsedCommandLine.fileNames as path.OsPath[]).map<path.PosixPath>(path => path.replace(/\\/g, '/') as path.PosixPath);
+			fileNames = (parsedCommandLine.fileNames as path.OsPath[]).map<path.PosixPath>(path => path.replace(windowsPathReg, '/') as path.PosixPath);
 			this.clearCache();
 		},
 		clearCache() {
 			scriptSnapshots.clear();
-			scriptVersions.clear();
 			projectVersion++;
 		},
 	};
 }
 
 export function baseCreate(
-	_host: vue.VueLanguageServiceHost,
+	_host: vue.TypeScriptLanguageHost,
+	vueCompilerOptions: vue.VueCompilerOptions,
 	checkerOptions: MetaCheckerOptions,
 	globalComponentName: string,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	embeddedTypes: boolean,
 ) {
 	const globalComponentSnapshot = ts.ScriptSnapshot.fromString('<script setup lang="ts"></script>');
 	const metaSnapshots: Record<string, ts.IScriptSnapshot> = {};
-	const host = new Proxy<Partial<vue.VueLanguageServiceHost>>({
+	const host = new Proxy<Partial<vue.TypeScriptLanguageHost>>({
 		getScriptFileNames: () => {
 			const names = _host.getScriptFileNames();
 			return [
@@ -137,7 +133,7 @@ export function baseCreate(
 		getScriptSnapshot: fileName => {
 			if (isMetaFileName(fileName)) {
 				if (!metaSnapshots[fileName]) {
-					metaSnapshots[fileName] = ts.ScriptSnapshot.fromString(getMetaScriptContent(fileName, embeddedTypes));
+					metaSnapshots[fileName] = ts.ScriptSnapshot.fromString(getMetaScriptContent(fileName));
 				}
 				return metaSnapshots[fileName];
 			}
@@ -155,34 +151,31 @@ export function baseCreate(
 			}
 			return _host[prop as keyof typeof _host];
 		},
-	}) as vue.VueLanguageServiceHost;
-	const vueCompilerOptions = vue.resolveVueCompilerOptions(host.getVueCompilationSettings());
-	const vueLanguageModules = ts ? vue.createLanguageModules(
-		ts,
+	}) as vue.TypeScriptLanguageHost;
+	const vueLanguages = ts ? vue.createLanguages(
 		host.getCompilationSettings(),
 		vueCompilerOptions,
+		ts,
 	) : [];
-	const core = createLanguageContext(host, { typescript: ts }, vueLanguageModules);
-	const proxyApis: Partial<ts.LanguageServiceHost> = checkerOptions.forceUseTs ? {
-		getScriptKind: (fileName) => {
+	const core = vue.createLanguageContext(host, vueLanguages);
+	const tsLsHost = createLanguageServiceHost(core, ts, ts.sys);
+	const tsLs = ts.createLanguageService(tsLsHost);
+
+	decorateLanguageService(core.virtualFiles, tsLs, false);
+
+	if (checkerOptions.forceUseTs) {
+		const getScriptKind = tsLsHost.getScriptKind;
+		tsLsHost.getScriptKind = (fileName) => {
 			if (fileName.endsWith('.vue.js')) {
 				return ts.ScriptKind.TS;
 			}
 			if (fileName.endsWith('.vue.jsx')) {
 				return ts.ScriptKind.TSX;
 			}
-			return core.typescript.languageServiceHost.getScriptKind!(fileName);
-		},
-	} : {};
-	const proxyHost = new Proxy(core.typescript.languageServiceHost, {
-		get(target, propKey: keyof ts.LanguageServiceHost) {
-			if (propKey in proxyApis) {
-				return proxyApis[propKey];
-			}
-			return target[propKey];
-		}
-	});
-	const tsLs = ts.createLanguageService(proxyHost);
+			return getScriptKind!(fileName);
+		};
+	}
+
 	let globalPropNames: string[] | undefined;
 
 	return {
@@ -201,49 +194,21 @@ export function baseCreate(
 		return (fileName.endsWith('.vue') ? fileName : fileName.substring(0, fileName.lastIndexOf('.'))) + '.meta.ts';
 	}
 
-	function getMetaScriptContent(fileName: string, embeddedTypes: boolean) {
-		const importCode = embeddedTypes ? '' : `import('vue-component-type-helpers').`;
+	function getMetaScriptContent(fileName: string) {
 		let code = `
 import * as Components from '${fileName.substring(0, fileName.length - '.meta.ts'.length)}';
 export default {} as { [K in keyof typeof Components]: ComponentMeta<typeof Components[K]>; };
 
 interface ComponentMeta<T> {
-	props: ${importCode}ComponentProps<T>;
-	emit: ${importCode}ComponentEmit<T>;
-	slots: ${importCode}${vueCompilerOptions.target < 3 ? 'Vue2ComponentSlots' : 'ComponentSlots'}<T>;
-	exposed: ${importCode}ComponentExposed<T>;
-};`.trim();
-		if (embeddedTypes) {
-			code += `
-type ComponentProps<T> =
-T extends (props: infer P, ...args: any) => any ? P :
-T extends new () => { $props: infer P } ? NonNullable<P> :
-{};
+	type: ComponentType<T>;
+	props: ComponentProps<T>;
+	emit: ComponentEmit<T>;
+	slots: ${vueCompilerOptions.target < 3 ? 'Vue2ComponentSlots' : 'ComponentSlots'}<T>;
+	exposed: ComponentExposed<T>;
+};
 
-type ComponentSlots<T> =
-T extends (props: any, ctx: { slots: infer S }, ...args: any) => any ? NonNullable<S> :
-T extends new () => { $slots: infer S } ? NonNullable<S> :
-{};
-
-type ComponentEmit<T> =
-T extends (props: any, ctx: { emit: infer E }, ...args: any) => any ? NonNullable<E> :
-T extends new () => { $emit: infer E } ? NonNullable<E> :
-{};
-
-type ComponentExposed<T> =
-T extends (props: any, ctx: { expose(exposed: infer E): any }, ...args: any) => any ? NonNullable<E> :
-T extends new () => infer E ? E :
-{};
-
-/**
-* Vue 2.x
-*/
-
-type Vue2ComponentSlots<T> =
-T extends (props: any, ctx: { slots: infer S }, ...args: any) => any ? NonNullable<S> :
-T extends new () => { $scopedSlots: infer S } ? NonNullable<S> :
-{};`;
-		}
+${typeHelpersCode}
+`.trim();
 		return code;
 	}
 
@@ -267,12 +232,16 @@ T extends new () => { $scopedSlots: infer S } ? NonNullable<S> :
 		const componentType = typeChecker.getTypeOfSymbolAtLocation(_export, symbolNode!);
 		const symbolProperties = componentType.getProperties() ?? [];
 
+		let _type: ReturnType<typeof getType> | undefined;
 		let _props: ReturnType<typeof getProps> | undefined;
 		let _events: ReturnType<typeof getEvents> | undefined;
 		let _slots: ReturnType<typeof getSlots> | undefined;
 		let _exposed: ReturnType<typeof getExposed> | undefined;
 
 		return {
+			get type() {
+				return _type ?? (_type = getType());
+			},
 			get props() {
 				return _props ?? (_props = getProps());
 			},
@@ -286,6 +255,18 @@ T extends new () => { $scopedSlots: infer S } ? NonNullable<S> :
 				return _exposed ?? (_exposed = getExposed());
 			},
 		};
+
+		function getType() {
+
+			const $type = symbolProperties.find(prop => prop.escapedName === 'type');
+
+			if ($type) {
+				const type = typeChecker.getTypeOfSymbolAtLocation($type, symbolNode!);
+				return Number(typeChecker.typeToString(type));
+			}
+
+			return 0;
+		}
 
 		function getProps() {
 
@@ -467,7 +448,7 @@ function createSchemaResolvers(
 	symbolNode: ts.Expression,
 	{ rawType, schema: options, noDeclarations }: MetaCheckerOptions,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	core: ReturnType<typeof createLanguageContext>,
+	core: vue.LanguageContext,
 ) {
 	const visited = new Set<ts.Type>();;
 
@@ -661,7 +642,7 @@ function createSchemaResolvers(
 		const [virtualFile] = core.virtualFiles.getVirtualFile(fileName);
 		if (virtualFile) {
 			const maps = core.virtualFiles.getMaps(virtualFile);
-			for (const [source, map] of maps) {
+			for (const [source, [_, map]] of maps) {
 				const start = map.toSourceOffset(declaration.getStart());
 				const end = map.toSourceOffset(declaration.getEnd());
 				if (start && end) {

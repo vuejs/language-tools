@@ -1,25 +1,44 @@
-import * as base from '@volar/typescript';
-import * as vue from '@volar/vue-language-core';
+import { createLanguageServiceHost, getDocumentRegistry, decorateLanguageService as _decorateLanguageService } from '@volar/typescript';
+import * as vue from '@vue/language-core';
+import type * as ts from 'typescript/lib/tsserverlibrary';
+
+export { getProgram, decorateLanguageServiceHost, getExternalFiles } from '@volar/typescript';
 
 export function createLanguageService(
-	host: vue.VueLanguageServiceHost,
-	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
+	host: vue.TypeScriptLanguageHost,
+	vueCompilerOptions: Partial<vue.VueCompilerOptions>,
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	sys: ts.System,
 ) {
-	const languageService = base.createLanguageService(
+	const languageContext = vue.createLanguageContext(
 		host,
-		vue.createLanguageModules(
-			ts,
+		vue.createLanguages(
 			host.getCompilationSettings(),
-			vue.resolveVueCompilerOptions(host.getVueCompilationSettings()),
+			vueCompilerOptions,
+			ts,
 		),
 	);
-	const getCompletionsAtPosition = languageService.getCompletionsAtPosition;
-	languageService.getCompletionsAtPosition = (fileName, position, options) => {
+	const languageServiceHost = createLanguageServiceHost(languageContext, ts, sys);
+	const languageService = ts.createLanguageService(languageServiceHost, getDocumentRegistry(ts, sys.useCaseSensitiveFileNames, host.workspacePath));
+	decorateLanguageService(languageContext.virtualFiles, languageService, false);
+	return {
+		...languageService,
+		__internal__: {
+			context: languageContext,
+		},
+	};
+}
+
+export function decorateLanguageService(virtualFiles: vue.VirtualFiles, ls: ts.LanguageService, isTsPlugin: boolean) {
+
+	_decorateLanguageService(virtualFiles, ls, isTsPlugin);
+
+	const getCompletionsAtPosition = ls.getCompletionsAtPosition.bind(ls);
+	ls.getCompletionsAtPosition = (fileName, position, options) => {
 		const result = getCompletionsAtPosition(fileName, position, options);
 		if (result) {
 			result.entries = result.entries.filter(entry => entry.name.indexOf('__VLS_') === -1);
 		}
 		return result;
 	};
-	return languageService;
 }

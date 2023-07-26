@@ -1,6 +1,6 @@
-import * as ts from 'typescript';
-import * as vue from '@volar/vue-language-core';
-import * as vueTs from '@volar/vue-typescript';
+import type * as ts from 'typescript/lib/tsserverlibrary';
+import * as vue from '@vue/language-core';
+import * as vueTs from '@vue/typescript';
 import { state } from './shared';
 
 export type Hook = (program: _Program) => void;
@@ -10,9 +10,12 @@ export type _Program = ts.Program & { __vue: ProgramContext; };
 interface ProgramContext {
 	projectVersion: number,
 	options: ts.CreateProgramOptions,
-	languageServiceHost: vue.VueLanguageServiceHost,
+	languageHost: vue.TypeScriptLanguageHost,
+	vueCompilerOptions: Partial<vue.VueCompilerOptions>,
 	languageService: ReturnType<typeof vueTs.createLanguageService>,
 }
+
+const windowsPathReg = /\\/g;
 
 export function createProgram(options: ts.CreateProgramOptions) {
 
@@ -22,14 +25,13 @@ export function createProgram(options: ts.CreateProgramOptions) {
 	if (!options.options.noEmit && options.options.noEmitOnError)
 		throw toThrow('noEmitOnError is not supported');
 
-	if (options.options.composite || options.options.incremental)
-		throw toThrow('composite / incremental is not supported');
-
 	if (options.options.extendedDiagnostics || options.options.generateTrace)
 		throw toThrow('--extendedDiagnostics / --generateTrace is not supported, please run `Write Virtual Files` in VSCode to write virtual files and use `--extendedDiagnostics` / `--generateTrace` via tsc instead of vue-tsc to debug.');
 
 	if (!options.host)
 		throw toThrow('!options.host');
+
+	const ts = require('typescript') as typeof import('typescript/lib/tsserverlibrary');
 
 	let program = options.oldProgram as _Program | undefined;
 
@@ -42,8 +44,11 @@ export function createProgram(options: ts.CreateProgramOptions) {
 		const ctx: ProgramContext = {
 			projectVersion: 0,
 			options,
-			get languageServiceHost() {
-				return vueLsHost;
+			get languageHost() {
+				return languageHost;
+			},
+			get vueCompilerOptions() {
+				return vueCompilerOptions;
 			},
 			get languageService() {
 				return vueTsLs;
@@ -54,52 +59,32 @@ export function createProgram(options: ts.CreateProgramOptions) {
 			projectVersion: number,
 			modifiedTime: number,
 			scriptSnapshot: ts.IScriptSnapshot,
-			version: string,
 		}>();
-		const vueLsHost = new Proxy(<vue.VueLanguageServiceHost>{
-			// avoid failed with tsc built-in fileExists
-			resolveModuleNames: undefined,
-			resolveModuleNameLiterals: undefined,
-
-			writeFile: (fileName, content) => {
-				if (fileName.indexOf('__VLS_') === -1) {
-					ctx.options.host!.writeFile(fileName, content, false);
-				}
-			},
+		const languageHost: vue.TypeScriptLanguageHost = {
+			workspacePath: ctx.options.host!.getCurrentDirectory().replace(windowsPathReg, '/'),
+			rootPath: ctx.options.host!.getCurrentDirectory().replace(windowsPathReg, '/'),
 			getCompilationSettings: () => ctx.options.options,
-			getVueCompilationSettings: () => vueCompilerOptions,
 			getScriptFileNames: () => {
 				return ctx.options.rootNames as string[];
 			},
-			getScriptVersion,
 			getScriptSnapshot,
 			getProjectVersion: () => {
 				return ctx.projectVersion.toString();
 			},
 			getProjectReferences: () => ctx.options.projectReferences,
-			isTsc: true,
-		}, {
-			get: (target, property) => {
-				if (property in target) {
-					return target[property as keyof vue.VueLanguageServiceHost];
-				}
-				return ctx.options.host![property as keyof ts.CompilerHost];
-			},
-		});
-		const vueTsLs = vueTs.createLanguageService(vueLsHost);
+			getCancellationToken: ctx.options.host!.getCancellationToken ? () => ctx.options.host!.getCancellationToken!() : undefined,
+		};
+		const vueTsLs = vueTs.createLanguageService(languageHost, vueCompilerOptions, ts as any, ts.sys);
 
-		program = vueTsLs.getProgram() as (ts.Program & { __vue: ProgramContext; });
+		program = vueTs.getProgram(ts as any, vueTsLs.__internal__.context, vueTsLs, ts.sys) as (ts.Program & { __vue: ProgramContext; });
 		program.__vue = ctx;
 
 		function getVueCompilerOptions(): Partial<vue.VueCompilerOptions> {
 			const tsConfig = ctx.options.options.configFilePath;
 			if (typeof tsConfig === 'string') {
-				return vue.createParsedCommandLine(ts as any, ts.sys, tsConfig, []).vueOptions;
+				return vue.createParsedCommandLine(ts as any, ts.sys, tsConfig).vueOptions;
 			}
 			return {};
-		}
-		function getScriptVersion(fileName: string) {
-			return getScript(fileName)?.version ?? '';
 		}
 		function getScriptSnapshot(fileName: string) {
 			return getScript(fileName)?.scriptSnapshot;
@@ -137,8 +122,8 @@ export function createProgram(options: ts.CreateProgramOptions) {
 		ctx.projectVersion++;
 	}
 
-	const vueCompilerOptions = program.__vue.languageServiceHost.getVueCompilationSettings();
-	if (vueCompilerOptions.hooks) {
+	const vueCompilerOptions = program.__vue.vueCompilerOptions;
+	if (vueCompilerOptions?.hooks) {
 		const index = (state.hook?.index ?? -1) + 1;
 		if (index < vueCompilerOptions.hooks.length) {
 			const hookPath = vueCompilerOptions.hooks[index];

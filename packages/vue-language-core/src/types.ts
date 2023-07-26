@@ -1,15 +1,10 @@
-import * as embedded from '@volar/language-core';
-import { SFCParseResult } from '@vue/compiler-sfc';
+import type { SFCParseResult } from '@vue/compiler-sfc';
 
 import * as CompilerDom from '@vue/compiler-dom';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { VueEmbeddedFile } from './sourceFile';
 
 export type { SFCParseResult } from '@vue/compiler-sfc';
-
-export type VueLanguageServiceHost = embedded.LanguageServiceHost & {
-	getVueCompilationSettings(): Partial<VueCompilerOptions>,
-};
 
 export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 'plugins'>> & {
 	target?: 'auto' | 2 | 2.7 | 3 | 3.3;
@@ -18,8 +13,9 @@ export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 
 
 export interface VueCompilerOptions {
 	target: number;
+	lib: string;
 	extensions: string[];
-	jsxTemplates: boolean;
+	jsxSlots: boolean;
 	strictTemplates: boolean;
 	skipTemplateCodegen: boolean;
 	nativeTags: string[];
@@ -48,9 +44,10 @@ export type VueLanguagePlugin = (ctx: {
 	modules: {
 		typescript: typeof import('typescript/lib/tsserverlibrary');
 		'@vue/compiler-dom': typeof import('@vue/compiler-dom');
-	},
-	compilerOptions: ts.CompilerOptions,
-	vueCompilerOptions: VueCompilerOptions,
+	};
+	compilerOptions: ts.CompilerOptions;
+	vueCompilerOptions: VueCompilerOptions;
+	codegenStack: boolean;
 }) => {
 	version: 1;
 	name?: string;
@@ -72,6 +69,7 @@ export interface SfcBlock {
 	endTagStart: number;
 	lang: string;
 	content: string;
+	attrs: Record<string, string | true>;
 }
 
 export interface Sfc {
@@ -88,6 +86,14 @@ export interface Sfc {
 	styles: (SfcBlock & {
 		module: string | undefined;
 		scoped: boolean;
+		cssVars: {
+			text: string;
+			offset: number;
+		}[];
+		classNames: {
+			text: string;
+			offset: number;
+		}[];
 	})[];
 	customBlocks: (SfcBlock & {
 		type: string;

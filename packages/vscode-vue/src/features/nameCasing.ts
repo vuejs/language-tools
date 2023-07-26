@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { quickPick } from '@volar/vscode/out/common';
 import { BaseLanguageClient, State } from 'vscode-languageclient';
-import { AttrNameCasing, TagNameCasing, DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest } from '@volar/vue-language-server';
+import { AttrNameCasing, TagNameCasing, DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest } from '@vue/language-server';
 import { config } from '../config';
 
 export const attrNameCasings = new Map<string, AttrNameCasing>();
@@ -134,16 +134,19 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 
 	async function update(document: vscode.TextDocument | undefined) {
 		if (
-			document?.languageId === 'vue'
-			|| (config.vueserver.vitePress.processMdFile && document?.languageId === 'markdown')
-			|| (config.vueserver.petiteVue.processHtmlFile && document?.languageId === 'html')
+			config.complete.casing.status
+			&& (
+				document?.languageId === 'vue'
+				|| (config.server.vitePress.supportMdFile && document?.languageId === 'markdown')
+				|| (config.server.petiteVue.supportHtmlFile && document?.languageId === 'html')
+			)
 		) {
 			let detected: Awaited<ReturnType<typeof detect>> | undefined;
 			let attrNameCasing = attrNameCasings.get(document.uri.toString());
 			let tagNameCasing = tagNameCasings.get(document.uri.toString());
 
 			if (!attrNameCasing) {
-				const attrNameCasingSetting = config.features.complete.attrNameCasing;
+				const attrNameCasingSetting = config.complete.casing.props;
 				if (attrNameCasingSetting === 'kebab') {
 					attrNameCasing = AttrNameCasing.Kebab;
 				}
@@ -166,7 +169,7 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 			}
 
 			if (!tagNameCasing) {
-				const tagMode = config.features.complete.tagNameCasing;
+				const tagMode = config.complete.casing.tags;
 				if (tagMode === 'kebab') {
 					tagNameCasing = TagNameCasing.Kebab;
 				}

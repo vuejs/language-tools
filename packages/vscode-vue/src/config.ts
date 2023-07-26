@@ -1,86 +1,60 @@
 import * as vscode from 'vscode';
 
-const volarConfigs = () => vscode.workspace.getConfiguration('volar');
-const vueConfigs = () => vscode.workspace.getConfiguration('vue');
+const _config = () => vscode.workspace.getConfiguration('vue');
 
 export const config = {
-	splitEditors: {
-		get layout() {
-			return volarConfigs().get<{ left: string[], right: string[]; }>('splitEditors.layout') ?? { left: [], right: [] };
-		}
+	update: (section: string, value: any) => _config().update(section, value),
+	get splitEditors(): Readonly<{
+		icon: boolean;
+		layout: { left: string[], right: string[]; };
+	}> {
+		return _config().get('splitEditors')!;
 	},
-	features: {
-		updateImportsOnFileMove: {
-			get enable() {
-				return vueConfigs().get<boolean>('features.updateImportsOnFileMove.enable');
-			},
-		},
-		codeActions: {
-			get enable() {
-				return vueConfigs().get<boolean>('features.codeActions.enable');
-			},
-			set enable(value) {
-				vueConfigs().update('features.codeActions.enable', value);
-			},
-			get savingTimeLimit() {
-				return vueConfigs().get<number>('features.codeActions.savingTimeLimit') ?? -1;
-			},
-		},
-		codeLens: {
-			get enable() {
-				return vueConfigs().get<boolean>('features.codeLens.enable');
-			},
-		},
-		complete: {
-			get attrNameCasing() {
-				return vueConfigs().get<'autoKebab' | 'autoCamel' | 'kebab' | 'camel'>('features.complete.propNameCasing');
-			},
-			get tagNameCasing() {
-				return vueConfigs().get<'autoKebab' | 'autoPascal' | 'kebab' | 'pascal'>('features.complete.tagNameCasing');
-			},
-		},
+	get doctor(): Readonly<{
+		status: boolean;
+	}> {
+		return _config().get('doctor')!;
 	},
-	json: {
-		get customBlockSchemaUrls() {
-			return volarConfigs().get<Record<string, string>>('json.customBlockSchemaUrls');
-		}
-	},
-	vueserver: {
-		get maxOldSpaceSize() {
-			return volarConfigs().get<number>('vueserver.maxOldSpaceSize');
-		},
-		get maxFileSize() {
-			return volarConfigs().get<number>('vueserver.maxFileSize');
-		},
-		get reverseConfigFilePriority() {
-			return volarConfigs().get<boolean>('vueserver.reverseConfigFilePriority');
-		},
-		get diagnosticModel() {
-			return volarConfigs().get<'push' | 'pull'>('vueserver.diagnosticModel');
-		},
-		get additionalExtensions() {
-			return volarConfigs().get<string[]>('vueserver.additionalExtensions') ?? [];
-		},
-		get fullCompletionList() {
-			return volarConfigs().get<boolean>('vueserver.fullCompletionList');
-		},
-		get configFilePath() {
-			return volarConfigs().get<string>('vueserver.configFilePath');
-		},
-		petiteVue: {
-			get processHtmlFile() {
-				return volarConfigs().get<boolean>('vueserver.petiteVue.processHtmlFile');
-			},
-		},
+	get server(): Readonly<{
+		maxOldSpaceSize: number;
+		maxFileSize: number;
+		reverseConfigFilePriority: boolean;
+		diagnosticModel: 'push' | 'pull';
+		additionalExtensions: string[];
+		fullCompletionList: boolean;
+		configFilePath: string;
 		vitePress: {
-			get processMdFile() {
-				return volarConfigs().get<boolean>('vueserver.vitePress.processMdFile');
-			},
-		},
+			supportMdFile: boolean;
+		};
+		petiteVue: {
+			supportHtmlFile: boolean;
+		};
+	}> {
+		return _config().get('server')!;
 	},
-	doctor: {
-		get status() {
-			return volarConfigs().get<boolean>('doctor.status');
-		}
-	}
+	get updateImportsOnFileMove(): Readonly<{
+		enabled: boolean;
+	}> {
+		return _config().get('updateImportsOnFileMove')!;
+	},
+	get codeActions(): Readonly<{
+		enabled: boolean;
+		savingTimeLimit: number;
+	}> {
+		return _config().get('codeActions')!;
+	},
+	get codeLens(): Readonly<{
+		enabled: boolean;
+	}> {
+		return _config().get('codeLens')!;
+	},
+	get complete(): Readonly<{
+		casing: {
+			status: boolean;
+			props: 'autoKebab' | 'autoCamel' | 'kebab' | 'camel';
+			tags: 'autoKebab' | 'autoPascal' | 'kebab' | 'pascal';
+		};
+	}> {
+		return _config().get('complete')!;
+	},
 };

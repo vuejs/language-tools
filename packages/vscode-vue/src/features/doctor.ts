@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 import * as semver from 'semver';
 import { BaseLanguageClient } from 'vscode-languageclient';
-import { ParseSFCRequest } from '@volar/vue-language-server';
+import { ParseSFCRequest } from '@vue/language-server';
+import { getTsdk } from '@volar/vscode';
 import { config } from '../config';
 
 const scheme = 'vue-doctor';
@@ -129,7 +130,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 					'You can update `@types/node` to `18.11.1` or later to resolve.',
 					'',
 					'- @types/node: ' + typesNodeMod.path,
-					'- Issue: https://github.com/johnsoncodehk/volar/issues/1985',
+					'- Issue: https://github.com/vuejs/language-tools/issues/1985',
 				].join('\n'),
 			});
 		}
@@ -138,29 +139,29 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		const vetur = vscode.extensions.getExtension('octref.vetur');
 		if (vetur?.isActive) {
 			problems.push({
-				title: 'Use @volar-plugins/vetur instead of Vetur',
-				message: 'Detected Vetur enabled. Consider disabling Vetur and use [@volar-plugins/vetur](https://github.com/johnsoncodehk/volar-plugins/tree/master/packages/vetur) instead.',
+				title: 'Use volar-service-vetur instead of Vetur',
+				message: 'Detected Vetur enabled. Consider disabling Vetur and use [volar-service-vetur](https://github.com/volarjs/services/tree/master/packages/vetur) instead.',
 			});
 		}
 
-		// check using pug but don't install @volar/vue-language-plugin-pug
+		// check using pug but don't install @vue/language-plugin-pug
 		if (
 			sfc?.descriptor.template?.lang === 'pug'
-			&& !await getPackageJsonOfWorkspacePackage(fileUri.fsPath, '@volar/vue-language-plugin-pug')
+			&& !await getPackageJsonOfWorkspacePackage(fileUri.fsPath, '@vue/language-plugin-pug')
 		) {
 			problems.push({
-				title: '`@volar/vue-language-plugin-pug` missing',
+				title: '`@vue/language-plugin-pug` missing',
 				message: [
-					'For `<template lang="pug">`, the `@volar/vue-language-plugin-pug` plugin is required. Install it using `$ npm install -D @volar/vue-language-plugin-pug` and add it to `vueCompilerOptions.plugins` to support TypeScript intellisense in Pug templates.',
+					'For `<template lang="pug">`, the `@vue/language-plugin-pug` plugin is required. Install it using `$ npm install -D @vue/language-plugin-pug` and add it to `vueCompilerOptions.plugins` to support TypeScript intellisense in Pug templates.',
 					'',
 					'- package.json',
 					'```json',
-					JSON.stringify({ devDependencies: { "@volar/vue-language-plugin-pug": "latest" } }, undefined, 2),
+					JSON.stringify({ devDependencies: { "@vue/language-plugin-pug": "latest" } }, undefined, 2),
 					'```',
 					'',
 					'- tsconfig.json / jsconfig.json',
 					'```jsonc',
-					JSON.stringify({ vueCompilerOptions: { plugins: ["@volar/vue-language-plugin-pug"] } }, undefined, 2),
+					JSON.stringify({ vueCompilerOptions: { plugins: ["@vue/language-plugin-pug"] } }, undefined, 2),
 					'```',
 				].join('\n'),
 			});
@@ -209,6 +210,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			});
 		}
 
+		/*
 		// check outdated language services plugins
 		const knownPlugins = [
 			// '@volar-plugins/css',
@@ -240,6 +242,20 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 					].join('\n'),
 				});
 			}
+		}
+		*/
+
+		// check tsdk version should not be 4.9
+		const tsdk = await getTsdk(context);
+		if (tsdk?.version?.startsWith('4.9')) {
+			problems.push({
+				title: 'Bad TypeScript version',
+				message: [
+					'TS 4.9 has a bug that will cause auto import to fail. Please downgrade to TS 4.8 or upgrade to TS 5.0+.',
+					'',
+					'Issue: https://github.com/vuejs/language-tools/issues/2190',
+				].join('\n'),
+			});
 		}
 
 		// check outdated vue language plugins

@@ -5,14 +5,17 @@ import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient/node';
 import { activate as commonActivate, deactivate as commonDeactivate, getDocumentSelector } from './common';
 import { middleware } from './middleware';
-import { ServerMode } from '@volar/vue-language-server';
+import * as serverLib from '@vue/language-server';
 import { config } from './config';
+import { ExportsInfoForLabs, supportLabsVersion } from '@volar/vscode';
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
 
 	const cancellationPipeName = path.join(os.tmpdir(), `vscode-${context.extension.id}-cancellation-pipe.tmp`);
-	const documentSelector = getDocumentSelector(context, ServerMode.Semantic);
+	const documentSelector = getDocumentSelector(context, serverLib.ServerMode.Semantic);
 	let cancellationPipeUpdateKey: string | undefined;
+
+	const languageClients: lsp.LanguageClient[] = [];
 
 	vscode.workspace.onDidChangeTextDocument((e) => {
 		let key = e.document.uri.toString() + '|' + e.document.version;
@@ -26,49 +29,29 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	let start = Date.now();
-	vscode.workspace.onWillSaveTextDocument(() => {
-		start = Date.now();
-	});
-	vscode.workspace.onDidSaveTextDocument(async () => {
-		if (config.features.codeActions.enable && Date.now() - start > config.features.codeActions.savingTimeLimit) {
-			const result = await vscode.window.showInformationMessage(
-				`Saving time is too long. (> ${config.features.codeActions.savingTimeLimit} ms), `,
-				'Disable codeActions',
-				'Increase saveTimeLimit',
-			);
-			if (result === 'Disable codeActions') {
-				config.features.codeActions.enable = false;
-				vscode.window.showInformationMessage('Code Actions is disabled. (You can enable it in .vscode/settings.json)');
-			}
-			else if (result === 'Increase saveTimeLimit') {
-				vscode.commands.executeCommand('workbench.action.openSettings2', { query: 'vue.features.codeActions.savingTimeLimit' });
-			}
-		}
-	});
-
-	return commonActivate(context, (
+	await commonActivate(context, (
 		id,
 		name,
 		documentSelector,
 		initOptions,
 		port,
+		outputChannel
 	) => {
 
 		initOptions.cancellationPipeName = cancellationPipeName;
 
 		class _LanguageClient extends lsp.LanguageClient {
 			fillInitializeParams(params: lsp.InitializeParams) {
-				// fix https://github.com/johnsoncodehk/volar/issues/1959
+				// fix https://github.com/vuejs/language-tools/issues/1959
 				params.locale = vscode.env.language;
 			}
 		}
 
 		const serverModule = vscode.Uri.joinPath(context.extensionUri, 'server.js');
 		const runOptions: lsp.ForkOptions = {};
-		if (config.vueserver.maxOldSpaceSize) {
+		if (config.server.maxOldSpaceSize) {
 			runOptions.execArgv ??= [];
-			runOptions.execArgv.push("--max-old-space-size=" + config.vueserver.maxOldSpaceSize);
+			runOptions.execArgv.push("--max-old-space-size=" + config.server.maxOldSpaceSize);
 		}
 		const debugOptions: lsp.ForkOptions = { execArgv: ['--nolazy', '--inspect=' + port] };
 		let serverOptions: lsp.ServerOptions = {
@@ -93,7 +76,7 @@ export function activate(context: vscode.ExtensionContext) {
 					},
 					options: runOptions,
 					command: bunPath,
-					args: ['run', serverModule.fsPath],
+					args: ['--bun', 'run', serverModule.fsPath],
 				},
 				debug: {
 					transport: {
@@ -102,7 +85,7 @@ export function activate(context: vscode.ExtensionContext) {
 					},
 					options: debugOptions,
 					command: bunPath,
-					args: ['run', serverModule.fsPath],
+					args: ['--bun', 'run', serverModule.fsPath],
 				},
 			};
 		}
@@ -110,6 +93,7 @@ export function activate(context: vscode.ExtensionContext) {
 			middleware,
 			documentSelector: documentSelector,
 			initializationOptions: initOptions,
+			outputChannel
 		};
 		const client = new _LanguageClient(
 			id,
@@ -119,10 +103,21 @@ export function activate(context: vscode.ExtensionContext) {
 		);
 		client.start();
 
+		languageClients.push(client);
+
 		updateProviders(client);
 
 		return client;
 	});
+
+	return {
+		volarLabs: {
+			version: supportLabsVersion,
+			codegenStackSupport: true,
+			languageClients,
+			languageServerProtocol: serverLib,
+		},
+	} satisfies ExportsInfoForLabs;
 }
 
 export function deactivate(): Thenable<any> | undefined {
@@ -136,13 +131,13 @@ function updateProviders(client: lsp.LanguageClient) {
 	(client as any).initializeFeatures = (...args: any) => {
 		const capabilities = (client as any)._capabilities as lsp.ServerCapabilities;
 
-		if (!config.features.codeActions.enable) {
+		if (!config.codeActions.enabled) {
 			capabilities.codeActionProvider = undefined;
 		}
-		if (!config.features.codeLens.enable) {
+		if (!config.codeLens.enabled) {
 			capabilities.codeLensProvider = undefined;
 		}
-		if (!config.features.updateImportsOnFileMove.enable && capabilities.workspace?.fileOperations?.willRename) {
+		if (!config.updateImportsOnFileMove.enabled && capabilities.workspace?.fileOperations?.willRename) {
 			capabilities.workspace.fileOperations.willRename = undefined;
 		}
 

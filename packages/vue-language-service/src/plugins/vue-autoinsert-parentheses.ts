@@ -1,50 +1,39 @@
-import * as embedded from '@volar/language-core';
-import { VirtualFile } from '@volar/language-core';
-import { LanguageServicePlugin } from '@volar/language-service';
-import { VueFile } from '@volar/vue-language-core';
-import * as vscode from 'vscode-languageserver-protocol';
+import { Service } from '@volar/language-service';
 import { isCharacterTyping } from './vue-autoinsert-dotvalue';
 
-const plugin: LanguageServicePlugin = (context) => {
+const plugin: Service = (context, modules) => {
 
-	if (!context?.typescript) {
+	if (!context) {
 		return {};
 	}
 
-	const ts = context.typescript.module;
+	if (!modules?.typescript) {
+		return {};
+	}
+
+	const ts = modules.typescript;
 
 	return {
 
 		async provideAutoInsertionEdit(document, position, options_2) {
 
-			const enabled = await context.configurationHost?.getConfiguration<boolean>('volar.features.autoInsert.parentheses') ?? false;
+			const enabled = await context.env.getConfiguration?.<boolean>('vue.autoInsert.parentheses') ?? false;
 			if (!enabled)
 				return;
 
 			if (!isCharacterTyping(document, options_2))
 				return;
 
-			const [vueFile] = context.documents.getVirtualFileByUri(document.uri);
-			if (!(vueFile instanceof VueFile))
-				return;
-
-			let templateFormatScript: VirtualFile | undefined;
-
-			embedded.forEachEmbeddedFile(vueFile, embedded => {
-				if (embedded.fileName.endsWith('.template_format.ts')) {
-					templateFormatScript = embedded;
-				}
-			});
-
-			if (!templateFormatScript)
+			const [virtualFile] = context.documents.getVirtualFileByUri(document.uri);
+			if (!virtualFile?.fileName.endsWith('.template_format.ts'))
 				return;
 
 			const offset = document.offsetAt(position);
 
-			for (const mappedRange of templateFormatScript.mappings) {
-				if (mappedRange.sourceRange[1] === offset) {
-					const text = document.getText().substring(mappedRange.sourceRange[0], mappedRange.sourceRange[1]);
-					const ast = ts.createSourceFile(templateFormatScript.fileName, text, ts.ScriptTarget.Latest);
+			for (const mappedRange of virtualFile.mappings) {
+				if (mappedRange.generatedRange[1] === offset) {
+					const text = document.getText().substring(mappedRange.generatedRange[0], mappedRange.generatedRange[1]);
+					const ast = ts.createSourceFile(virtualFile.fileName, text, ts.ScriptTarget.Latest);
 					if (ast.statements.length === 1) {
 						const statement = ast.statements[0];
 						if (
@@ -72,13 +61,13 @@ const plugin: LanguageServicePlugin = (context) => {
 								.replaceAll('\\', '\\\\')
 								.replaceAll('$', '\\$')
 								.replaceAll('}', '\\}');
-							return vscode.TextEdit.replace(
-								{
-									start: document.positionAt(mappedRange.sourceRange[0]),
-									end: document.positionAt(mappedRange.sourceRange[1]),
+							return {
+								range: {
+									start: document.positionAt(mappedRange.generatedRange[0]),
+									end: document.positionAt(mappedRange.generatedRange[1]),
 								},
-								'(' + escapedText + '$0' + ')',
-							);
+								newText: '(' + escapedText + '$0' + ')',
+							};
 						}
 					}
 				}
