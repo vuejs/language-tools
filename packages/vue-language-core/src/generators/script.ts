@@ -313,13 +313,13 @@ export function generate(
 			codes.push(`>`);
 			codes.push('(\n');
 			codes.push(
-				`__VLS_props: typeof __VLS_setup['props']`,
+				`__VLS_props: Awaited<typeof __VLS_setup>['props']`,
 				`& import('${vueCompilerOptions.lib}').VNodeProps`,
 				`& import('${vueCompilerOptions.lib}').AllowedComponentProps`,
 				`& import('${vueCompilerOptions.lib}').ComponentCustomProps,\n`,
 			);
-			codes.push(`__VLS_ctx?: Pick<typeof __VLS_setup, 'attrs' | 'emit' | 'slots'>,\n`);
-			codes.push('__VLS_setup = (() => {\n');
+			codes.push(`__VLS_ctx?: Pick<Awaited<typeof __VLS_setup>, 'attrs' | 'emit' | 'slots'>,\n`);
+			codes.push('__VLS_setup = (async () => {\n');
 			scriptSetupGeneratedOffset = generateSetupFunction(true, 'none', definePropMirrors);
 
 			//#region exposed
@@ -418,7 +418,7 @@ export function generate(
 			codes.push('emit: typeof __VLS_emit');
 			codes.push('};\n');
 			codes.push('})(),\n');
-			codes.push(`) => ({} as import('${vueCompilerOptions.lib}').VNode & { __ctx?: typeof __VLS_setup }))`);
+			codes.push(`) => ({} as import('${vueCompilerOptions.lib}').VNode & { __ctx?: Awaited<typeof __VLS_setup> }))`);
 		}
 		else if (!sfc.script) {
 			// no script block, generate script setup code at root

@@ -19,9 +19,9 @@ const ScriptSetupExact = defineComponent({
 	},
 });
 declare const ScriptSetupGenericExact: <T, >(
-	_props: NonNullable<typeof _setup>['props'] & import('vue').VNodeProps & import('vue').AllowedComponentProps & import('vue').ComponentCustomProps,
-	_ctx?: Pick<NonNullable<typeof _setup>, 'attrs' | 'emit' | 'slots'>,
-	_setup?: {
+	_props: NonNullable<Awaited<typeof _setup>>['props'] & import('vue').VNodeProps & import('vue').AllowedComponentProps & import('vue').ComponentCustomProps,
+	_ctx?: Pick<NonNullable<Awaited<typeof _setup>>, 'attrs' | 'emit' | 'slots'>,
+	_setup?: Promise<{
 		props: {
 			a?: T | undefined;
 			b?: T | undefined;
@@ -32,8 +32,8 @@ declare const ScriptSetupGenericExact: <T, >(
 		slots: {},
 		emit: any,
 		expose(_exposed: {}): void,
-	}
-) => import('vue').VNode & { __ctx?: typeof _setup };
+	}>
+) => import('vue').VNode & { __ctx?: Awaited<typeof _setup> };
 
 exactType(ScriptSetup, ScriptSetupExact);
 exactType(ScriptSetupGeneric, ScriptSetupGenericExact);
