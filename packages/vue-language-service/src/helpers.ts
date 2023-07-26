@@ -7,7 +7,7 @@ import { camelize, capitalize } from '@vue/shared';
 
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
-export function checkPropsOfTag(
+export function getPropsByTag(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
 	sourceFile: embedded.VirtualFile,
@@ -17,28 +17,28 @@ export function checkPropsOfTag(
 ) {
 
 	const checker = tsLs.getProgram()!.getTypeChecker();
-	const components = getComponentsType(ts, tsLs, sourceFile);
+	const components = getVariableType(ts, tsLs, sourceFile, '__VLS_components');
 	if (!components)
 		return [];
 
 	const name = tag.split('.');
 
-	let componentSymbol = components.componentsType.getProperty(name[0]);
+	let componentSymbol = components.type.getProperty(name[0]);
 
 	if (!componentSymbol && !vueCompilerOptions.nativeTags.includes(name[0])) {
-		componentSymbol = components.componentsType.getProperty(camelize(name[0]))
-			?? components.componentsType.getProperty(capitalize(camelize(name[0])));
+		componentSymbol = components.type.getProperty(camelize(name[0]))
+			?? components.type.getProperty(capitalize(camelize(name[0])));
 	}
 
 	if (!componentSymbol)
 		return [];
 
-	let componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.componentsNode);
+	let componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.node);
 
 	for (let i = 1; i < name.length; i++) {
 		componentSymbol = componentType.getProperty(name[i]);
 		if (componentSymbol) {
-			componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.componentsNode);
+			componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.node);
 		}
 		else {
 			return [];
@@ -50,7 +50,7 @@ export function checkPropsOfTag(
 	for (const sig of componentType.getCallSignatures()) {
 		const propParam = sig.parameters[0];
 		if (propParam) {
-			const propsType = checker.getTypeOfSymbolAtLocation(propParam, components.componentsNode);
+			const propsType = checker.getTypeOfSymbolAtLocation(propParam, components.node);
 			const props = propsType.getProperties();
 			for (const prop of props) {
 				if (!requiredOnly || !(prop.flags & ts.SymbolFlags.Optional)) {
@@ -64,7 +64,7 @@ export function checkPropsOfTag(
 		const instanceType = sig.getReturnType();
 		const propsSymbol = instanceType.getProperty('$props');
 		if (propsSymbol) {
-			const propsType = checker.getTypeOfSymbolAtLocation(propsSymbol, components.componentsNode);
+			const propsType = checker.getTypeOfSymbolAtLocation(propsSymbol, components.node);
 			const props = propsType.getProperties();
 			for (const prop of props) {
 				if (prop.flags & ts.SymbolFlags.Method) { // #2443
@@ -80,7 +80,7 @@ export function checkPropsOfTag(
 	return [...result];
 }
 
-export function checkEventsOfTag(
+export function getEventsOfTag(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
 	sourceFile: embedded.VirtualFile,
@@ -89,28 +89,28 @@ export function checkEventsOfTag(
 ) {
 
 	const checker = tsLs.getProgram()!.getTypeChecker();
-	const components = getComponentsType(ts, tsLs, sourceFile);
+	const components = getVariableType(ts, tsLs, sourceFile, '__VLS_components');
 	if (!components)
 		return [];
 
 	const name = tag.split('.');
 
-	let componentSymbol = components.componentsType.getProperty(name[0]);
+	let componentSymbol = components.type.getProperty(name[0]);
 
 	if (!componentSymbol && !vueCompilerOptions.nativeTags.includes(name[0])) {
-		componentSymbol = components.componentsType.getProperty(camelize(name[0]))
-			?? components.componentsType.getProperty(capitalize(camelize(name[0])));
+		componentSymbol = components.type.getProperty(camelize(name[0]))
+			?? components.type.getProperty(capitalize(camelize(name[0])));
 	}
 
 	if (!componentSymbol)
 		return [];
 
-	let componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.componentsNode);
+	let componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.node);
 
 	for (let i = 1; i < name.length; i++) {
 		componentSymbol = componentType.getProperty(name[i]);
 		if (componentSymbol) {
-			componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.componentsNode);
+			componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.node);
 		}
 		else {
 			return [];
@@ -130,11 +130,11 @@ export function checkEventsOfTag(
 		const instanceType = sig.getReturnType();
 		const emitSymbol = instanceType.getProperty('$emit');
 		if (emitSymbol) {
-			const emitType = checker.getTypeOfSymbolAtLocation(emitSymbol, components.componentsNode);
+			const emitType = checker.getTypeOfSymbolAtLocation(emitSymbol, components.node);
 			for (const call of emitType.getCallSignatures()) {
 				const eventNameParamSymbol = call.parameters[0];
 				if (eventNameParamSymbol) {
-					const eventNameParamType = checker.getTypeOfSymbolAtLocation(eventNameParamSymbol, components.componentsNode);
+					const eventNameParamType = checker.getTypeOfSymbolAtLocation(eventNameParamSymbol, components.node);
 					if (eventNameParamType.isStringLiteral()) {
 						result.add(eventNameParamType.value);
 					}
@@ -146,14 +146,25 @@ export function checkEventsOfTag(
 	return [...result];
 }
 
-export function checkComponentNames(
+export function getTemplateCtx(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	tsLs: ts.LanguageService,
+	sourceFile: embedded.VirtualFile,
+) {
+	return getVariableType(ts, tsLs, sourceFile, '__VLS_ctx')
+		?.type
+		?.getProperties()
+		.map(c => c.name);
+}
+
+export function getComponentNames(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
 	sourceFile: embedded.VirtualFile,
 	vueCompilerOptions: vue.VueCompilerOptions,
 ) {
-	return getComponentsType(ts, tsLs, sourceFile)
-		?.componentsType
+	return getVariableType(ts, tsLs, sourceFile, '__VLS_components')
+		?.type
 		?.getProperties()
 		.map(c => c.name)
 		.filter(entry => entry.indexOf('$') === -1 && !entry.startsWith('_'))
@@ -193,10 +204,11 @@ export function getElementAttrs(
 	return [];
 }
 
-function getComponentsType(
+function getVariableType(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
 	sourceFile: embedded.VirtualFile,
+	name: string,
 ) {
 
 	if (!(sourceFile instanceof vue.VueFile)) {
@@ -214,38 +226,39 @@ function getComponentsType(
 
 	if (file && (tsSourceFile = tsLs.getProgram()?.getSourceFile(file.fileName))) {
 
-		const componentsNode = getComponentsNode(ts, tsSourceFile);
+		const node = searchVariableDeclarationNode(ts, tsSourceFile, name);
 		const checker = tsLs.getProgram()?.getTypeChecker();
 
-		if (checker && componentsNode) {
+		if (checker && node) {
 			return {
-				componentsNode,
-				componentsType: checker.getTypeAtLocation(componentsNode),
+				node: node,
+				type: checker.getTypeAtLocation(node),
 			};
 		}
 	}
+}
 
-	function getComponentsNode(
-		ts: typeof import('typescript/lib/tsserverlibrary'),
-		sourceFile: ts.SourceFile,
-	) {
+function searchVariableDeclarationNode(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	sourceFile: ts.SourceFile,
+	name: string,
+) {
 
-		let componentsNode: ts.Node | undefined;
+	let componentsNode: ts.Node | undefined;
 
-		walk(sourceFile);
+	walk(sourceFile);
 
-		return componentsNode;
+	return componentsNode;
 
-		function walk(node: ts.Node) {
-			if (componentsNode) {
-				return;
-			}
-			else if (ts.isVariableDeclaration(node) && node.name.getText() === '__VLS_components') {
-				componentsNode = node;
-			}
-			else {
-				node.forEachChild(walk);
-			}
+	function walk(node: ts.Node) {
+		if (componentsNode) {
+			return;
+		}
+		else if (ts.isVariableDeclaration(node) && node.name.getText() === name) {
+			componentsNode = node;
+		}
+		else {
+			node.forEachChild(walk);
 		}
 	}
 }
