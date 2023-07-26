@@ -76,7 +76,7 @@ export async function activate(context: vscode.ExtensionContext) {
 					},
 					options: runOptions,
 					command: bunPath,
-					args: ['run', serverModule.fsPath],
+					args: ['--bun', 'run', serverModule.fsPath],
 				},
 				debug: {
 					transport: {
@@ -85,7 +85,7 @@ export async function activate(context: vscode.ExtensionContext) {
 					},
 					options: debugOptions,
 					command: bunPath,
-					args: ['run', serverModule.fsPath],
+					args: ['--bun', 'run', serverModule.fsPath],
 				},
 			};
 		}

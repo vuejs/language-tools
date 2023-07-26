@@ -395,12 +395,19 @@ export class VueFile implements VirtualFile {
 		public ts: typeof import('typescript/lib/tsserverlibrary'),
 		public codegenStack: boolean,
 	) {
-		this.update(snapshot);
+		this.onUpdate();
 	}
 
 	update(newScriptSnapshot: ts.IScriptSnapshot) {
 
+		if (newScriptSnapshot === this.snapshot)
+			return;
+
 		this.snapshot = newScriptSnapshot;
+		this.onUpdate();
+	}
+
+	onUpdate() {
 
 		const parsedSfc = this.parseSfc();
 

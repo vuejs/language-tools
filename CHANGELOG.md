@@ -2,8 +2,8 @@
 
 ## 1.8.6 (2023/7/22)
 
-- feat: add support for extract component code action ([#2496](https://github.com/vuejs/language-tools/issues/2496))
-- feat: add support for `v-bind` toggle code action ([#2524](https://github.com/vuejs/language-tools/issues/2524))
+- feat: add support for extract component code action ([#2496](https://github.com/vuejs/language-tools/issues/2496)) - thanks @zardoy
+- feat: add support for `v-bind` toggle code action ([#2524](https://github.com/vuejs/language-tools/issues/2524)) - thanks @zardoy
 - feat: more dull "Saving time is too long" popup
 - fix: `vue.server.petiteVue.supportHtmlFile`, `vue.server.vitePress.supportMdFile` settings not working ([#3238](https://github.com/vuejs/language-tools/issues/3238))
 - fix: don't check element type for directives ([#3140](https://github.com/vuejs/language-tools/issues/3140))
