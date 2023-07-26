@@ -1,6 +1,6 @@
 import { hyphenate } from '@vue/shared';
 import { ServiceContext, VirtualFile } from '@volar/language-service';
-import { checkComponentNames, getTemplateTagsAndAttrs, checkPropsOfTag } from '../helpers';
+import { getComponentNames, getTemplateTagsAndAttrs, getPropsByTag } from '../helpers';
 import * as vue from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { AttrNameCasing, TagNameCasing } from '../types';
@@ -26,7 +26,7 @@ export async function convertTagName(
 	const template = desc.template;
 	const document = context.documents.getDocumentByFileName(rootFile.snapshot, rootFile.fileName);
 	const edits: vscode.TextEdit[] = [];
-	const components = checkComponentNames(ts, languageService, rootFile, vueCompilerOptions);
+	const components = getComponentNames(ts, languageService, rootFile, vueCompilerOptions);
 	const tags = getTemplateTagsAndAttrs(rootFile);
 
 	for (const [tagName, { offsets }] of tags) {
@@ -69,13 +69,13 @@ export async function convertAttrName(
 	const template = desc.template;
 	const document = context.documents.getDocumentByFileName(rootFile.snapshot, rootFile.fileName);
 	const edits: vscode.TextEdit[] = [];
-	const components = checkComponentNames(ts, languageService, rootFile, vueCompilerOptions);
+	const components = getComponentNames(ts, languageService, rootFile, vueCompilerOptions);
 	const tags = getTemplateTagsAndAttrs(rootFile);
 
 	for (const [tagName, { attrs }] of tags) {
 		const componentName = components.find(component => component === tagName || hyphenate(component) === tagName);
 		if (componentName) {
-			const props = checkPropsOfTag(ts, languageService, rootFile, componentName, vueCompilerOptions);
+			const props = getPropsByTag(ts, languageService, rootFile, componentName, vueCompilerOptions);
 			for (const [attrName, { offsets }] of attrs) {
 				const propName = props.find(prop => prop === attrName || hyphenate(prop) === attrName);
 				if (propName) {
@@ -170,7 +170,7 @@ export function detect(
 	}
 	function getTagNameCase(file: VirtualFile): TagNameCasing[] {
 
-		const components = checkComponentNames(ts, languageService, file, vueCompilerOptions);
+		const components = getComponentNames(ts, languageService, file, vueCompilerOptions);
 		const tagNames = getTemplateTagsAndAttrs(file);
 		const result: TagNameCasing[] = [];
 

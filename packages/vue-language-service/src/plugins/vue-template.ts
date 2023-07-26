@@ -4,7 +4,7 @@ import { hyphenate, capitalize, camelize } from '@vue/shared';
 import * as html from 'vscode-html-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { checkComponentNames, checkEventsOfTag, checkPropsOfTag, getElementAttrs } from '../helpers';
+import { getComponentNames, getEventsOfTag, getPropsByTag, getElementAttrs, getTemplateCtx } from '../helpers';
 import { getNameCasing } from '../ideFeatures/nameCasing';
 import { AttrNameCasing, VueCompilerOptions, TagNameCasing } from '../types';
 import { loadTemplateData, loadModelModifiersData } from './data';
@@ -115,7 +115,7 @@ export default <S extends Service>(options: {
 
 					// visualize missing required props
 					const casing = await getNameCasing(ts, _context, map.sourceFileDocument.uri, options.vueCompilerOptions);
-					const components = checkComponentNames(ts, languageService, virtualFile, options.vueCompilerOptions);
+					const components = getComponentNames(ts, languageService, virtualFile, options.vueCompilerOptions);
 					const componentProps: Record<string, string[]> = {};
 					let token: html.TokenType;
 					let current: {
@@ -132,7 +132,7 @@ export default <S extends Service>(options: {
 									: components.find(component => component === tagName || hyphenate(component) === tagName);
 							const checkTag = tagName.indexOf('.') >= 0 ? tagName : component;
 							if (checkTag) {
-								componentProps[checkTag] ??= checkPropsOfTag(ts, languageService, virtualFile, checkTag, options.vueCompilerOptions, true);
+								componentProps[checkTag] ??= getPropsByTag(ts, languageService, virtualFile, checkTag, options.vueCompilerOptions, true);
 								current = {
 									unburnedRequiredProps: [...componentProps[checkTag]],
 									labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
@@ -291,7 +291,7 @@ export default <S extends Service>(options: {
 				if (!virtualFile || !(virtualFile instanceof vue.VueFile))
 					continue;
 
-				const templateScriptData = checkComponentNames(ts, languageService, virtualFile, options.vueCompilerOptions);
+				const templateScriptData = getComponentNames(ts, languageService, virtualFile, options.vueCompilerOptions);
 				const components = new Set([
 					...templateScriptData,
 					...templateScriptData.map(hyphenate),
@@ -367,7 +367,7 @@ export default <S extends Service>(options: {
 				isApplicable: () => true,
 				provideTags: () => {
 
-					const components = checkComponentNames(ts, languageService, vueSourceFile, options.vueCompilerOptions)
+					const components = getComponentNames(ts, languageService, vueSourceFile, options.vueCompilerOptions)
 						.filter(name =>
 							name !== 'Transition'
 							&& name !== 'TransitionGroup'
@@ -410,9 +410,27 @@ export default <S extends Service>(options: {
 				provideAttributes: (tag) => {
 
 					const attrs = getElementAttrs(ts, languageService, languageServiceHost, tag);
-					const props = new Set(checkPropsOfTag(ts, languageService, vueSourceFile, tag, options.vueCompilerOptions));
-					const events = checkEventsOfTag(ts, languageService, vueSourceFile, tag, options.vueCompilerOptions);
+					const props = new Set(getPropsByTag(ts, languageService, vueSourceFile, tag, options.vueCompilerOptions));
+					const events = getEventsOfTag(ts, languageService, vueSourceFile, tag, options.vueCompilerOptions);
 					const attributes: html.IAttributeData[] = [];
+					const tsCodegen = vue.tsCodegen.get(vueSourceFile.sfc);
+
+					if (tsCodegen) {
+						let ctxVars = [
+							...tsCodegen.scriptRanges.value?.bindings.map(binding => vueSourceFile.sfc.script!.content.substring(binding.start, binding.end)) ?? [],
+							...tsCodegen.scriptSetupRanges.value?.bindings.map(binding => vueSourceFile.sfc.scriptSetup!.content.substring(binding.start, binding.end)) ?? [],
+							...getTemplateCtx(ts, languageService, vueSourceFile) ?? [],
+						];
+						ctxVars = [...new Set(ctxVars)];
+						const dirs = ctxVars.map(hyphenate).filter(v => v.startsWith('v-'));
+						for (const dir of dirs) {
+							attributes.push(
+								{
+									name: dir,
+								},
+							);
+						}
+					}
 
 					for (const prop of [...props, ...attrs]) {
 
@@ -517,7 +535,7 @@ export default <S extends Service>(options: {
 
 		const languageService = _context!.inject('typescript/languageService');
 		const replacement = getReplacement(completionList, map.sourceFileDocument);
-		const componentNames = new Set(checkComponentNames(ts, languageService, vueSourceFile, options.vueCompilerOptions).map(hyphenate));
+		const componentNames = new Set(getComponentNames(ts, languageService, vueSourceFile, options.vueCompilerOptions).map(hyphenate));
 
 		if (replacement) {
 
@@ -595,45 +613,42 @@ export default <S extends Service>(options: {
 				item.documentation = undefined;
 			}
 
-			if (itemIdKey && itemId) {
-
-				if (itemId.type === 'componentProp' || itemId.type === 'componentEvent') {
-
-					const [componentName] = itemId.args;
-
-					if (componentName !== '*') {
-						item.sortText = '\u0000' + (item.sortText ?? item.label);
-					}
-
-					if (itemId.type === 'componentProp') {
-						if (componentName !== '*') {
-							item.kind = 5 satisfies typeof vscode.CompletionItemKind.Field;
-						}
-					}
-					else {
-						item.kind = componentName !== '*' ? 3 satisfies typeof vscode.CompletionItemKind.Function : 23 satisfies typeof vscode.CompletionItemKind.Event;
-					}
-				}
-				else if (
-					item.label === 'v-if'
-					|| item.label === 'v-else-if'
-					|| item.label === 'v-else'
-					|| item.label === 'v-for'
-				) {
-					item.kind = 2 satisfies typeof vscode.CompletionItemKind.Method;
-					item.sortText = '\u0003' + (item.sortText ?? item.label);
-				}
-				else if (item.label.startsWith('v-')) {
-					item.kind = 3 satisfies typeof vscode.CompletionItemKind.Function;
-					item.sortText = '\u0002' + (item.sortText ?? item.label);
-				}
-				else {
-					item.sortText = '\u0001' + (item.sortText ?? item.label);
-				}
-			}
-			else if (item.kind === 10 satisfies typeof vscode.CompletionItemKind.Property && componentNames.has(hyphenate(item.label))) {
+			if (item.kind === 10 satisfies typeof vscode.CompletionItemKind.Property && componentNames.has(hyphenate(item.label))) {
 				item.kind = 6 satisfies typeof vscode.CompletionItemKind.Variable;
 				item.sortText = '\u0000' + (item.sortText ?? item.label);
+			}
+			else if (itemId && (itemId.type === 'componentProp' || itemId.type === 'componentEvent')) {
+
+				const [componentName] = itemId.args;
+
+				if (componentName !== '*') {
+					item.sortText = '\u0000' + (item.sortText ?? item.label);
+				}
+
+				if (itemId.type === 'componentProp') {
+					if (componentName !== '*') {
+						item.kind = 5 satisfies typeof vscode.CompletionItemKind.Field;
+					}
+				}
+				else {
+					item.kind = componentName !== '*' ? 3 satisfies typeof vscode.CompletionItemKind.Function : 23 satisfies typeof vscode.CompletionItemKind.Event;
+				}
+			}
+			else if (
+				item.label === 'v-if'
+				|| item.label === 'v-else-if'
+				|| item.label === 'v-else'
+				|| item.label === 'v-for'
+			) {
+				item.kind = 14 satisfies typeof vscode.CompletionItemKind.Keyword;
+				item.sortText = '\u0003' + (item.sortText ?? item.label);
+			}
+			else if (item.label.startsWith('v-')) {
+				item.kind = 3 satisfies typeof vscode.CompletionItemKind.Function;
+				item.sortText = '\u0002' + (item.sortText ?? item.label);
+			}
+			else {
+				item.sortText = '\u0001' + (item.sortText ?? item.label);
 			}
 		}
 
@@ -641,7 +656,7 @@ export default <S extends Service>(options: {
 	}
 };
 
-function createInternalItemId(type: 'vueDirective' | 'componentEvent' | 'componentProp', args: string[]) {
+function createInternalItemId(type: 'componentEvent' | 'componentProp', args: string[]) {
 	return '__VLS_::' + type + '::' + args.join(',');
 }
 
@@ -649,7 +664,7 @@ function readInternalItemId(key: string) {
 	if (key.startsWith('__VLS_::')) {
 		const strs = key.split('::');
 		return {
-			type: strs[1] as 'vueDirective' | 'componentEvent' | 'componentProp',
+			type: strs[1] as 'componentEvent' | 'componentProp',
 			args: strs[2].split(','),
 		};
 	}
