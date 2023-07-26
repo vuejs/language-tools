@@ -1,4 +1,4 @@
-import { Config, Service } from '@volar/language-service';
+import { Config, Service, ServiceContext } from '@volar/language-service';
 import * as vue from '@vue/language-core';
 import { capitalize, hyphenate } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -8,7 +8,7 @@ import createHtmlService from 'volar-service-html';
 import createJsonService from 'volar-service-json';
 import createPugService from 'volar-service-pug';
 import createPugFormatService from 'volar-service-pug-beautify';
-import createTsService from 'volar-service-typescript';
+import createTsService, { Provide } from 'volar-service-typescript';
 import createTsTqService from 'volar-service-typescript-twoslash-queries';
 import type { Data } from 'volar-service-typescript/out/features/completions/basic';
 import type * as html from 'vscode-html-languageservice';
@@ -58,23 +58,17 @@ function resolvePlugins(
 	const originalTsPlugin: Service = services?.typescript ?? createTsService();
 
 	services ??= {};
-	services.typescript = (_context, modules): ReturnType<Service> => {
+	services.typescript = (ctx: ServiceContext<Provide> | undefined, modules): ReturnType<Service> => {
 
-		const base = typeof originalTsPlugin === 'function' ? originalTsPlugin(_context, modules) : originalTsPlugin;
+		const base = typeof originalTsPlugin === 'function' ? originalTsPlugin(ctx, modules) : originalTsPlugin;
 
-		if (!_context || !modules?.typescript)
+		if (!ctx || !modules?.typescript)
 			return base;
 
 		const ts = modules.typescript;
-		const transformedItem = new WeakSet<vscode.CompletionItem>();
 
 		return {
 			...base,
-			transformCompletionItem(item) {
-				if (transformedItem.has(item)) {
-					return item;
-				}
-			},
 			async provideCompletionItems(document, position, context, item) {
 				const result = await base.provideCompletionItems?.(document, position, context, item);
 				if (result) {
@@ -88,19 +82,19 @@ function resolvePlugins(
 					// handle component auto-import patch
 					let casing: Awaited<ReturnType<typeof getNameCasing>> | undefined;
 
-					for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
-						const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
+					for (const [_, map] of ctx.documents.getMapsByVirtualFileUri(document.uri)) {
+						const virtualFile = ctx.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
 						if (virtualFile instanceof vue.VueFile) {
 							const isAutoImport = !!map.toSourcePosition(position, data => typeof data.completion === 'object' && !!data.completion.autoImportOnly);
 							if (isAutoImport) {
-								const source = _context.documents.getVirtualFileByUri(document.uri)[1];
+								const source = ctx.documents.getVirtualFileByUri(document.uri)[1];
 								for (const item of result.items) {
 									item.data.__isComponentAutoImport = true;
 								}
 
 								// fix #2458
 								if (source) {
-									casing ??= await getNameCasing(ts, _context, _context.env.fileNameToUri(source.fileName), vueCompilerOptions);
+									casing ??= await getNameCasing(ts, ctx, ctx.env.fileNameToUri(source.fileName), vueCompilerOptions);
 									if (casing.tag === TagNameCasing.Kebab) {
 										for (const item of result.items) {
 											item.filterText = hyphenate(item.filterText ?? item.label);
@@ -131,7 +125,7 @@ function resolvePlugins(
 						itemData?.uri
 						&& item.textEdit?.newText.endsWith(suffix)
 						&& item.additionalTextEdits?.length === 1 && item.additionalTextEdits[0].newText.indexOf('import ' + item.textEdit.newText + ' from ') >= 0
-						&& (await _context.env.getConfiguration?.<boolean>('vue.complete.normalizeComponentImportName') ?? true)
+						&& (await ctx.env.getConfiguration?.<boolean>('vue.complete.normalizeComponentImportName') ?? true)
 					) {
 						newName = item.textEdit.newText.slice(0, -suffix.length);
 						newName = newName[0].toUpperCase() + newName.substring(1);
@@ -150,9 +144,9 @@ function resolvePlugins(
 							'import ' + newName + ' from ',
 						);
 						item.textEdit.newText = newName;
-						const source = _context.documents.getVirtualFileByUri(itemData.uri)[1];
+						const source = ctx.documents.getVirtualFileByUri(itemData.uri)[1];
 						if (source) {
-							const casing = await getNameCasing(ts, _context, _context.env.fileNameToUri(source.fileName), vueCompilerOptions);
+							const casing = await getNameCasing(ts, ctx, ctx.env.fileNameToUri(source.fileName), vueCompilerOptions);
 							if (casing.tag === TagNameCasing.Kebab) {
 								item.textEdit.newText = hyphenate(item.textEdit.newText);
 							}
@@ -165,64 +159,51 @@ function resolvePlugins(
 				}
 
 				const data: Data = item.data;
-				if (item.data?.__isComponentAutoImport && data && item.additionalTextEdits?.length && item.textEdit) {
-					let transformed = false;
-					for (const [_, map] of _context.documents.getMapsByVirtualFileUri(data.uri)) {
-						const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
-						if (virtualFile instanceof vue.VueFile) {
-							const sfc = virtualFile.sfc;
-							const componentName = newName ?? item.textEdit.newText;
-							const textDoc = _context.documents.getDocumentByFileName(virtualFile.snapshot, virtualFile.fileName);
-							if (sfc.scriptAst && sfc.script) {
-								const _scriptRanges = vue.scriptRanges.parseScriptRanges(ts, sfc.scriptAst, !!sfc.scriptSetup, true);
-								const exportDefault = _scriptRanges.exportDefault;
-								if (exportDefault) {
-									// https://github.com/microsoft/TypeScript/issues/36174
-									const printer = ts.createPrinter();
-									if (exportDefault.componentsOption && exportDefault.componentsOptionNode) {
-										const newNode: typeof exportDefault.componentsOptionNode = {
-											...exportDefault.componentsOptionNode,
-											properties: [
-												...exportDefault.componentsOptionNode.properties,
-												ts.factory.createShorthandPropertyAssignment(componentName),
-											] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
-										};
-										const printText = printer.printNode(ts.EmitHint.Expression, newNode, sfc.scriptAst);
-										const editRange: vscode.Range = {
-											start: textDoc.positionAt(sfc.script.startTagEnd + exportDefault.componentsOption.start),
-											end: textDoc.positionAt(sfc.script.startTagEnd + exportDefault.componentsOption.end),
-										};
-										transformed = true;
-										item.additionalTextEdits.push({
-											range: editRange,
-											newText: unescape(printText.replace(unicodeReg, '%u')),
-										});
-									}
-									else if (exportDefault.args && exportDefault.argsNode) {
-										const newNode: typeof exportDefault.argsNode = {
-											...exportDefault.argsNode,
-											properties: [
-												...exportDefault.argsNode.properties,
-												ts.factory.createShorthandPropertyAssignment(`components: { ${componentName} }`),
-											] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
-										};
-										const printText = printer.printNode(ts.EmitHint.Expression, newNode, sfc.scriptAst);
-										const editRange: vscode.Range = {
-											start: textDoc.positionAt(sfc.script.startTagEnd + exportDefault.args.start),
-											end: textDoc.positionAt(sfc.script.startTagEnd + exportDefault.args.end),
-										};
-										transformed = true;
-										item.additionalTextEdits.push({
-											range: editRange,
-											newText: unescape(printText.replace(unicodeReg, '%u')),
-										});
-									}
-								}
-							}
+				if (item.data?.__isComponentAutoImport && data && item.additionalTextEdits?.length && item.textEdit && itemData?.uri) {
+					const fileName = ctx.env.uriToFileName(itemData.uri);
+					const langaugeService = ctx.inject('typescript/languageService');
+					const [virtualFile] = ctx.virtualFiles.getVirtualFile(fileName);
+					const ast = langaugeService.getProgram()?.getSourceFile(fileName);
+					const exportDefault = ast ? vue.scriptRanges.parseScriptRanges(ts, ast, false, true).exportDefault : undefined;
+					if (virtualFile && ast && exportDefault) {
+						const componentName = newName ?? item.textEdit.newText;
+						const textDoc = ctx.documents.getDocumentByFileName(virtualFile.snapshot, virtualFile.fileName);
+						// https://github.com/microsoft/TypeScript/issues/36174
+						const printer = ts.createPrinter();
+						if (exportDefault.componentsOption && exportDefault.componentsOptionNode) {
+							const newNode: typeof exportDefault.componentsOptionNode = {
+								...exportDefault.componentsOptionNode,
+								properties: [
+									...exportDefault.componentsOptionNode.properties,
+									ts.factory.createShorthandPropertyAssignment(componentName),
+								] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
+							};
+							const printText = printer.printNode(ts.EmitHint.Expression, newNode, ast);
+							item.additionalTextEdits.push({
+								range: {
+									start: textDoc.positionAt(exportDefault.componentsOption.start),
+									end: textDoc.positionAt(exportDefault.componentsOption.end),
+								},
+								newText: unescape(printText.replace(unicodeReg, '%u')),
+							});
 						}
-					}
-					if (transformed) {
-						transformedItem.add(item);
+						else if (exportDefault.args && exportDefault.argsNode) {
+							const newNode: typeof exportDefault.argsNode = {
+								...exportDefault.argsNode,
+								properties: [
+									...exportDefault.argsNode.properties,
+									ts.factory.createShorthandPropertyAssignment(`components: { ${componentName} }`),
+								] as any as ts.NodeArray<ts.ObjectLiteralElementLike>,
+							};
+							const printText = printer.printNode(ts.EmitHint.Expression, newNode, ast);
+							item.additionalTextEdits.push({
+								range: {
+									start: textDoc.positionAt(exportDefault.args.start),
+									end: textDoc.positionAt(exportDefault.args.end),
+								},
+								newText: unescape(printText.replace(unicodeReg, '%u')),
+							});
+						}
 					}
 				}
 
