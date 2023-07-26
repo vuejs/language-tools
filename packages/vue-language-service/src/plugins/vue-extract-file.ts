@@ -1,6 +1,6 @@
 import { CreateFile, Service, ServiceContext, TextDocumentEdit, TextEdit } from '@volar/language-service';
-import type { ElementNode, RootNode } from '@vue/compiler-dom';
-import { SfcBlock, VueFile, walkElementNodes } from '@vue/language-core';
+import { ExpressionNode, type RootNode, type TemplateChildNode } from '@vue/compiler-dom';
+import { SfcBlock, VueFile } from '@vue/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { Provide } from 'volar-service-typescript';
 
@@ -250,14 +250,29 @@ function selectTemplateCode(startOffset: number, endOffset: number, templateBloc
 	if (startOffset < templateBlock.startTagEnd || endOffset > templateBlock.endTagStart)
 		return;
 
-	const insideNodes: ElementNode[] = [];
+	const insideNodes: (TemplateChildNode | ExpressionNode)[] = [];
 
-	walkElementNodes(templateAst, (node) => {
+	templateAst.children.forEach(function visit(node: TemplateChildNode | ExpressionNode) {
 		if (
 			node.loc.start.offset + templateBlock.startTagEnd >= startOffset
 			&& node.loc.end.offset + templateBlock.startTagEnd <= endOffset
 		) {
 			insideNodes.push(node);
+		}
+		if ('children' in node) {
+			node.children.forEach(node => {
+				if (typeof node === 'object') {
+					visit(node);
+				}
+			});
+		}
+		else if ('branches' in node) {
+			node.branches.forEach(visit);
+		}
+		else if ('content' in node) {
+			if (typeof node.content === 'object') {
+				visit(node.content);
+			}
 		}
 	});
 
