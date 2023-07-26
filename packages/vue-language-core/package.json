@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-core",
-	"version": "1.8.7",
+	"version": "1.8.8",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
