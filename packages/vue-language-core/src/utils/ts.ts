@@ -33,7 +33,7 @@ export function createParsedCommandLineByJson(
 		proxyHost.host,
 		rootDir,
 		{},
-		rootDir + '/jsconfig.json',
+		configPath,
 		undefined,
 		(vueOptions.extensions ?? ['.vue']).map(extension => ({
 			extension: extension.slice(1),
