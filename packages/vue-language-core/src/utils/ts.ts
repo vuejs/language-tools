@@ -11,10 +11,11 @@ export function createParsedCommandLineByJson(
 	parseConfigHost: ts.ParseConfigHost,
 	rootDir: string,
 	json: any,
+	configPath = rootDir + '/jsconfig.json'
 ): ParsedCommandLine {
 
 	const proxyHost = proxyParseConfigHostForExtendConfigPaths(parseConfigHost);
-	ts.parseJsonConfigFileContent(json, proxyHost.host, rootDir, {}, rootDir + '/jsconfig.json');
+	ts.parseJsonConfigFileContent(json, proxyHost.host, rootDir, {}, configPath);
 
 	let vueOptions: Partial<VueCompilerOptions> = {};
 
