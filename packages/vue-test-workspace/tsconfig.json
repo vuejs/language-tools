@@ -1,5 +1,6 @@
 {
 	"compilerOptions": {
+		"checkJs": true,
 		"lib": [
 			"esnext",
 			"dom"
