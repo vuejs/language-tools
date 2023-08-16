@@ -408,11 +408,10 @@ export function generate(
 			else {
 				codes.push('{} as any;\n');
 			}
-			codes.push('const __VLS_constructedPublicComponent = new __VLS_publicComponent();');
 			//#endregion
 
 			codes.push('return {} as {\n');
-			codes.push(`props: typeof __VLS_props & typeof __VLS_constructedPublicComponent['$props'],\n`);
+			codes.push(`props: typeof __VLS_props & InstanceType<typeof __VLS_publicComponent>['$props'],\n`);
 			codes.push('expose(exposed: typeof __VLS_exposed): void,\n');
 			codes.push('attrs: any,\n');
 			codes.push('slots: ReturnType<typeof __VLS_template>,\n');
