@@ -18,6 +18,7 @@ import * as doctor from './features/doctor';
 import * as nameCasing from './features/nameCasing';
 import * as savingTime from './features/savingTime';
 import * as splitEditors from './features/splitEditors';
+import * as statusBarRestartServer from './features/statusBarRestartServer';
 
 let semanticClient: lsp.BaseLanguageClient;
 let syntacticClient: lsp.BaseLanguageClient;
@@ -170,6 +171,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 	function activateClientRequests() {
 		nameCasing.activate(context, semanticClient);
+		statusBarRestartServer.register(context, semanticClient);
 	}
 }
 
