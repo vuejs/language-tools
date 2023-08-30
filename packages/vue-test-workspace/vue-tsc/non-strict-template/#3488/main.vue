@@ -7,5 +7,5 @@ defineExpose({ x: 3 });
 </script>
 
 <template>
-  {{ exactType(x, '' as const) }}
+	{{ exactType(x, '' as const) }}
 </template>
