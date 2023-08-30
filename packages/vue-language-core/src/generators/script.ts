@@ -803,9 +803,10 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 		const useGlobalThisTypeInCtx = fileName.endsWith('.html');
 
+		codes.push(`const __VLS_emptyComponent = (await import('${vueCompilerOptions.lib}')).defineComponent({});\n`)
 		codes.push(`let __VLS_ctx!: ${useGlobalThisTypeInCtx ? 'typeof globalThis &' : ''}`);
 		if (sfc.scriptSetup) {
-			codes.push(`InstanceType<__VLS_PickNotAny<typeof __VLS_publicComponent, new () => {}>> & `);
+			codes.push(`Omit<InstanceType<__VLS_PickNotAny<typeof __VLS_publicComponent, new () => {}>>, Exclude<keyof InstanceType<__VLS_PickNotAny<typeof __VLS_internalComponent, new () => {}>>, keyof InstanceType<typeof __VLS_emptyComponent>>> &`);
 		}
 		codes.push(`InstanceType<__VLS_PickNotAny<typeof __VLS_internalComponent, new () => {}>> & {\n`);
 
