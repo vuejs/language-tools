@@ -493,6 +493,12 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			codes.push(`);\n`);
 		}
 
+		if (scriptSetupRanges.exposeRuntimeArg) {
+			codes.push(`const __VLS_exposeRuntimeArg = `);
+			addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.exposeRuntimeArg.start, scriptSetupRanges.exposeRuntimeArg.end);
+			codes.push(`;\n`);
+		}
+
 		if (!functional && scriptSetupRanges.defineProp.length) {
 			codes.push(`let __VLS_propsOption_defineProp!: {\n`);
 			for (const defineProp of scriptSetupRanges.defineProp) {
@@ -626,9 +632,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		}
 
 		if (scriptSetupRanges.exposeRuntimeArg) {
-			codes.push(`...(`);
-			addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.exposeRuntimeArg.start, scriptSetupRanges.exposeRuntimeArg.end);
-			codes.push(`),\n`);
+			codes.push(`...__VLS_exposeRuntimeArg,\n`);
 		}
 
 		codes.push(`};\n`);
@@ -803,10 +807,15 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 		const useGlobalThisTypeInCtx = fileName.endsWith('.html');
 
-		codes.push(`const __VLS_emptyComponent = (await import('${vueCompilerOptions.lib}')).defineComponent({});\n`)
+		codes.push(`const __VLS_emptyComponent = (await import('${vueCompilerOptions.lib}')).defineComponent({});\n`);
+
 		codes.push(`let __VLS_ctx!: ${useGlobalThisTypeInCtx ? 'typeof globalThis &' : ''}`);
 		if (sfc.scriptSetup) {
-			codes.push(`Omit<InstanceType<__VLS_PickNotAny<typeof __VLS_publicComponent, new () => {}>>, Exclude<keyof InstanceType<__VLS_PickNotAny<typeof __VLS_internalComponent, new () => {}>>, keyof InstanceType<typeof __VLS_emptyComponent>>> &`);
+			codes.push(`MappedOmit<InstanceType<__VLS_PickNotAny<typeof __VLS_publicComponent, new () => {}>>, Exclude<keyof InstanceType<__VLS_PickNotAny<typeof __VLS_internalComponent, new () => {}>>, keyof InstanceType<typeof __VLS_emptyComponent>>`);
+			if (scriptSetupRanges?.exposeRuntimeArg) {
+				codes.push(` | Exclude<keyof typeof __VLS_exposeRuntimeArg, keyof InstanceType<__VLS_PickNotAny<typeof __VLS_internalComponent, new () => {}>>>`);
+			}
+			codes.push('> & ');
 		}
 		codes.push(`InstanceType<__VLS_PickNotAny<typeof __VLS_internalComponent, new () => {}>> & {\n`);
 

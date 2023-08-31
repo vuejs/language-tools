@@ -13,6 +13,8 @@ type __VLS_Element = __VLS_PickNotAny<import('vue/jsx-runtime').JSX.Element, JSX
 type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
 type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
 
+type MappedOmit<T, K> = { [P in keyof T as P extends K ? never : P]: T[P] };
+
 type __VLS_Prettify<T> = {
 	[K in keyof T]: T[K];
 } & {};

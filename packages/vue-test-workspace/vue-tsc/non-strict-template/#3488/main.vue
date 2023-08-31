@@ -4,7 +4,7 @@ defineExpose({ x: 3 });
 
 <template>
 	{{ 
-		// @ts-ignore
+		// @ts-expect-error
 		x
 	}}
 </template>
