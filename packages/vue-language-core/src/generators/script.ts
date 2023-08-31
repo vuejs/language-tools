@@ -811,7 +811,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 		codes.push(`let __VLS_ctx!: ${useGlobalThisTypeInCtx ? 'typeof globalThis &' : ''}`);
 		if (sfc.scriptSetup) {
-			codes.push(`MappedOmit<InstanceType<__VLS_PickNotAny<typeof __VLS_publicComponent, new () => {}>>, Exclude<keyof InstanceType<__VLS_PickNotAny<typeof __VLS_internalComponent, new () => {}>>, keyof InstanceType<typeof __VLS_emptyComponent>>`);
+			codes.push(`__VLS_MappedOmit<InstanceType<__VLS_PickNotAny<typeof __VLS_publicComponent, new () => {}>>, Exclude<keyof InstanceType<__VLS_PickNotAny<typeof __VLS_internalComponent, new () => {}>>, keyof InstanceType<typeof __VLS_emptyComponent>>`);
 			if (scriptSetupRanges?.exposeRuntimeArg) {
 				codes.push(` | Exclude<keyof typeof __VLS_exposeRuntimeArg, keyof InstanceType<__VLS_PickNotAny<typeof __VLS_internalComponent, new () => {}>>>`);
 			}
