@@ -1,10 +1,10 @@
 <script setup lang="ts">
-const foo = true;
+const fooooooooooooooooo = true;
 </script>
 
 <template>
   <Comp>
-    <template v-if="true" #foo />
-    <template v-else-if="foo" #bar />
+    <template v-if="1" #foo />
+    <template v-else-if="fooooooooooooooooo" #bar />
   </Comp>
 </template>
