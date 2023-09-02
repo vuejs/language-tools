@@ -158,7 +158,7 @@ function getPartialVueCompilerOptions(
 	}
 	if (rawOptions.plugins) {
 		const plugins = rawOptions.plugins
-			.map<VueLanguagePlugin | undefined>((pluginPath: string) => {
+			.map<VueLanguagePlugin[] | VueLanguagePlugin | undefined>((pluginPath: string) => {
 				try {
 					const resolvedPath = resolvePath(pluginPath);
 					if (resolvedPath) {
@@ -169,6 +169,7 @@ function getPartialVueCompilerOptions(
 					console.warn('Load plugin failed', pluginPath, error);
 				}
 			})
+			.flat()
 			.filter((plugin): plugin is NonNullable<typeof plugin> => !!plugin);
 
 		result.plugins = plugins;
