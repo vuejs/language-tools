@@ -62,7 +62,7 @@ export type VueLanguagePlugin = (ctx: {
 	resolveEmbeddedFile?(fileName: string, sfc: Sfc, embeddedFile: VueEmbeddedFile): void;
 };
 
-export type VueLanguagePluginOption = VueLanguagePluginOption[] | VueLanguagePlugin | undefined；
+export type VueLanguagePluginOption = VueLanguagePluginOption[] | VueLanguagePlugin | undefined;
 
 export interface SfcBlock {
 	name: string,
