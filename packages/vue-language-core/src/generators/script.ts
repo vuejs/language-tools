@@ -411,11 +411,11 @@ export function generate(
 			//#endregion
 
 			codes.push('return {} as {\n');
-			codes.push(`props: typeof __VLS_props,\n`);
+			codes.push(`props: InstanceType<typeof __VLS_publicComponent>['$props'] & typeof __VLS_props,\n`);
 			codes.push('expose(exposed: typeof __VLS_exposed): void,\n');
 			codes.push('attrs: any,\n');
 			codes.push('slots: ReturnType<typeof __VLS_template>,\n');
-			codes.push('emit: typeof __VLS_emit');
+			codes.push(`emit: typeof __VLS_emit,\n`);
 			codes.push('};\n');
 			codes.push('})(),\n');
 			codes.push(`) => ({} as import('${vueCompilerOptions.lib}').VNode & { __ctx?: Awaited<typeof __VLS_setup> }))`);
