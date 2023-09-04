@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "vscode-typescript-vue-plugin",
-	"version": "1.8.7",
+	"version": "1.8.8",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
@@ -37,7 +37,7 @@
 	},
 	"devDependencies": {
 		"esbuild": "0.15.18",
-		"typescript-vue-plugin": "1.8.7",
+		"typescript-vue-plugin": "1.8.8",
 		"vsce": "latest"
 	}
 }
