@@ -76,4 +76,4 @@ const plugin: Service = (context, modules) => {
 	};
 };
 
-export default () => plugin;
+export const create = () => plugin;

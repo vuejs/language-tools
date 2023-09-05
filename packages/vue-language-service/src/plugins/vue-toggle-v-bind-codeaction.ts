@@ -2,7 +2,7 @@ import { Service } from '@volar/language-service';
 import { VueFile, walkElementNodes, type CompilerDOM } from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 
-export default function (): Service {
+export const create = function (): Service {
 
 	return (ctx, modules): ReturnType<Service> => {
 
@@ -144,4 +144,4 @@ export default function (): Service {
 			},
 		};
 	};
-}
+};

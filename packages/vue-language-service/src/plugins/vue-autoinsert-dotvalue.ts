@@ -77,7 +77,7 @@ const plugin: Service = (context: ServiceContext<import('volar-service-typescrip
 	};
 };
 
-export default () => plugin;
+export const create = () => plugin;
 
 function isTsDocument(document: TextDocument) {
 	return document.languageId === 'javascript' ||

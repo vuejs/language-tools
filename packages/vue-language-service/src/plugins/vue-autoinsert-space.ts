@@ -35,4 +35,4 @@ const plugin: Service = (context): ReturnType<Service> => {
 	};
 };
 
-export default () => plugin;
+export const create = () => plugin;

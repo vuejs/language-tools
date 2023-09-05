@@ -12,7 +12,7 @@ import { loadTemplateData, loadModelModifiersData } from './data';
 let builtInData: html.HTMLDataV1;
 let modelData: html.HTMLDataV1;
 
-export default <S extends Service>(options: {
+export const create = <S extends Service>(options: {
 	getScanner(service: ReturnType<S>, document: TextDocument): html.Scanner | undefined,
 	updateCustomData(service: ReturnType<S>, extraData: html.IHTMLDataProvider[]): void,
 	baseService: S,
