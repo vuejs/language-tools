@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import * as kit from '@volar/kit';
-import { resolveConfig } from '../..';
+import { resolveConfig } from '../../src';
 
 const formatter = kit.createFormatter(resolveConfig({}));
 

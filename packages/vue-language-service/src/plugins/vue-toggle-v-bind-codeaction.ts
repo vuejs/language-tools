@@ -1,6 +1,5 @@
 import { Service } from '@volar/language-service';
-import { VueFile, walkElementNodes } from '@vue/language-core';
-import { NodeTypes } from 'packages/vue-language-core/out/utils/vue2TemplateCompiler';
+import { VueFile, walkElementNodes, type CompilerDOM } from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 
 export default function (): Service {
@@ -39,7 +38,7 @@ export default function (): Service {
 							startOffset - templateStartOffset >= prop.loc.start.offset
 							&& endOffset - templateStartOffset <= prop.loc.end.offset
 						) {
-							if (prop.type === NodeTypes.DIRECTIVE && prop.exp) {
+							if (prop.type === 7 satisfies CompilerDOM.NodeTypes.DIRECTIVE && prop.exp) {
 
 								const sourceFile = ts.createSourceFile('/a.ts', prop.exp.loc.source, ts.ScriptTarget.Latest, true);
 								const firstStatement = sourceFile.statements[0];
@@ -69,7 +68,7 @@ export default function (): Service {
 									});
 								}
 							}
-							if (prop.type === NodeTypes.ATTRIBUTE) {
+							if (prop.type === 6 satisfies CompilerDOM.NodeTypes.ATTRIBUTE) {
 
 								const edits: vscode.TextEdit[] = [];
 								const addVBindPos = document.positionAt(templateStartOffset + prop.loc.start.offset);

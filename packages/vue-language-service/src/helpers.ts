@@ -1,6 +1,6 @@
 import * as vue from '@vue/language-core';
+import type { CompilerDOM } from '@vue/language-core';
 import * as embedded from '@volar/language-core';
-import * as CompilerDOM from '@vue/compiler-dom';
 import { computed, ComputedRef } from '@vue/reactivity';
 import { sharedTypes } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
@@ -302,15 +302,15 @@ export function getTemplateTagsAndAttrs(sourceFile: embedded.VirtualFile): Tags 
 						let offset: number | undefined;
 
 						if (
-							prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-							&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+							prop.type === 7 satisfies CompilerDOM.NodeTypes.DIRECTIVE
+							&& prop.arg?.type === 4 satisfies CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 							&& prop.arg.isStatic
 						) {
 							name = prop.arg.content;
 							offset = prop.arg.loc.start.offset;
 						}
 						else if (
-							prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
+							prop.type === 6 satisfies CompilerDOM.NodeTypes.ATTRIBUTE
 						) {
 							name = prop.name;
 							offset = prop.loc.start.offset;
