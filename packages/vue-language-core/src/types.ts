@@ -2,7 +2,7 @@ import type { SFCParseResult } from '@vue/compiler-sfc';
 
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { VueEmbeddedFile } from './sourceFile';
+import { VueEmbeddedFile, VueFile } from './sourceFile';
 
 export type { SFCParseResult } from '@vue/compiler-sfc';
 
@@ -58,8 +58,8 @@ export type VueLanguagePlugin = (ctx: {
 	resolveTemplateCompilerOptions?(options: CompilerDOM.CompilerOptions): CompilerDOM.CompilerOptions;
 	compileSFCTemplate?(lang: string, template: string, options: CompilerDOM.CompilerOptions): CompilerDOM.CodegenResult | undefined;
 	updateSFCTemplate?(oldResult: CompilerDOM.CodegenResult, textChange: { start: number, end: number, newText: string; }): CompilerDOM.CodegenResult | undefined;
-	getEmbeddedFileNames?(fileName: string, sfc: Sfc): string[];
-	resolveEmbeddedFile?(fileName: string, sfc: Sfc, embeddedFile: VueEmbeddedFile): void;
+	getEmbeddedFileNames?(fileName: string, sfc: Sfc, vueFile: VueFile): string[];
+	resolveEmbeddedFile?(fileName: string, sfc: Sfc, embeddedFile: VueEmbeddedFile, vueFile: VueFile): void;
 };
 
 export interface SfcBlock {

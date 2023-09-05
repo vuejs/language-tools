@@ -47,7 +47,7 @@ export function resolveConfig(
 	const vueLanguageModules = vue.createLanguages(compilerOptions, resolvedVueCompilerOptions, ts, codegenStack);
 
 	config.languages = Object.assign({}, vueLanguageModules, config.languages);
-	config.services = resolvePlugins(config.services, resolvedVueCompilerOptions);
+	config.services = resolvePlugins(config.services, resolvedVueCompilerOptions, vueLanguageModules[0] as vue.VueLanguage);
 
 	return config;
 }
@@ -55,6 +55,7 @@ export function resolveConfig(
 function resolvePlugins(
 	services: Config['services'],
 	vueCompilerOptions: VueCompilerOptions,
+	vueLanguage: vue.VueLanguage,
 ) {
 
 	const originalTsPlugin: Service = services?.typescript ?? TsService.create();
@@ -223,6 +224,7 @@ function resolvePlugins(
 		},
 		isSupportedDocument: (document) => document.languageId === 'html',
 		vueCompilerOptions,
+		vueLanguage,
 	});
 	services.pug ??= VueTemplateLanguageService.create({
 		baseService: PugService.create(),
@@ -237,6 +239,7 @@ function resolvePlugins(
 		},
 		isSupportedDocument: (document) => document.languageId === 'jade',
 		vueCompilerOptions,
+		vueLanguage,
 	});
 	services.vue ??= VueService.create();
 	services.css ??= CssService.create();

@@ -201,7 +201,7 @@ export class VueFile implements VirtualFile {
 		const files = computed(() => {
 			try {
 				if (plugin.getEmbeddedFileNames) {
-					const embeddedFileNames = plugin.getEmbeddedFileNames(this.fileName, this.sfc);
+					const embeddedFileNames = plugin.getEmbeddedFileNames(this.fileName, this.sfc, this);
 					for (const oldFileName of Object.keys(embeddedFiles)) {
 						if (!embeddedFileNames.includes(oldFileName)) {
 							delete embeddedFiles[oldFileName];
@@ -215,7 +215,7 @@ export class VueFile implements VirtualFile {
 								for (const plugin of this.plugins) {
 									if (plugin.resolveEmbeddedFile) {
 										try {
-											plugin.resolveEmbeddedFile(this.fileName, this.sfc, file);
+											plugin.resolveEmbeddedFile(this.fileName, this.sfc, file, this);
 										}
 										catch (e) {
 											console.error(e);
@@ -394,6 +394,7 @@ export class VueFile implements VirtualFile {
 		public plugins: ReturnType<VueLanguagePlugin>[],
 		public ts: typeof import('typescript/lib/tsserverlibrary'),
 		public codegenStack: boolean,
+		public withGlobalTypes: boolean,
 	) {
 		this.onUpdate();
 	}

@@ -2,7 +2,6 @@ import * as vue from '@vue/language-core';
 import type { CompilerDOM } from '@vue/language-core';
 import * as embedded from '@volar/language-core';
 import { computed, ComputedRef } from '@vue/reactivity';
-import { sharedTypes } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -175,15 +174,18 @@ export function getComponentNames(
 export function getElementAttrs(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
-	tsLsHost: ts.LanguageServiceHost,
+	vueLanguage: vue.VueLanguage,
 	tagName: string,
 ) {
 
-	const sharedTypesFileName = tsLsHost.getCurrentDirectory() + '/' + sharedTypes.baseName;
+	const globalTypesFile = vueLanguage.getGlobalTypesFile();
+	if (!globalTypesFile) {
+		return [];
+	}
 
 	let tsSourceFile: ts.SourceFile | undefined;
 
-	if (tsSourceFile = tsLs.getProgram()?.getSourceFile(sharedTypesFileName)) {
+	if (tsSourceFile = tsLs.getProgram()?.getSourceFile(globalTypesFile.mainScriptName)) {
 
 		const typeNode = tsSourceFile.statements.find((node): node is ts.TypeAliasDeclaration => ts.isTypeAliasDeclaration(node) && node.name.getText() === '__VLS_IntrinsicElements');
 		const checker = tsLs.getProgram()?.getTypeChecker();

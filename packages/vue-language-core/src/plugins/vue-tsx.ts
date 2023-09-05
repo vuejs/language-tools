@@ -23,9 +23,9 @@ const plugin: VueLanguagePlugin = (ctx) => {
 			'exactOptionalPropertyTypes',
 		],
 
-		getEmbeddedFileNames(fileName, sfc) {
+		getEmbeddedFileNames(fileName, sfc, vueFile) {
 
-			const tsx = useTsx(fileName, sfc);
+			const tsx = useTsx(fileName, sfc, vueFile.withGlobalTypes);
 			const fileNames: string[] = [];
 
 			if (['js', 'ts', 'jsx', 'tsx'].includes(tsx.lang.value)) {
@@ -40,9 +40,9 @@ const plugin: VueLanguagePlugin = (ctx) => {
 			return fileNames;
 		},
 
-		resolveEmbeddedFile(fileName, sfc, embeddedFile) {
+		resolveEmbeddedFile(fileName, sfc, embeddedFile, vueFile) {
 
-			const _tsx = useTsx(fileName, sfc);
+			const _tsx = useTsx(fileName, sfc, vueFile.withGlobalTypes);
 			const suffix = embeddedFile.fileName.replace(fileName, '');
 
 			if (suffix === '.' + _tsx.lang.value) {
@@ -109,9 +109,9 @@ const plugin: VueLanguagePlugin = (ctx) => {
 		},
 	};
 
-	function useTsx(fileName: string, sfc: Sfc) {
+	function useTsx(fileName: string, sfc: Sfc, withGlobalTypes: boolean) {
 		if (!tsCodegen.has(sfc)) {
-			tsCodegen.set(sfc, createTsx(fileName, sfc, ctx));
+			tsCodegen.set(sfc, createTsx(fileName, sfc, ctx, withGlobalTypes));
 		}
 		return tsCodegen.get(sfc)!;
 	}
@@ -119,7 +119,12 @@ const plugin: VueLanguagePlugin = (ctx) => {
 
 export default plugin;
 
-function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOptions, codegenStack, modules }: Parameters<VueLanguagePlugin>[0]) {
+function createTsx(
+	fileName: string,
+	_sfc: Sfc,
+	{ vueCompilerOptions, compilerOptions, codegenStack, modules }: Parameters<VueLanguagePlugin>[0],
+	withGlobalTypes: boolean
+) {
 
 	const ts = modules.typescript;
 	const lang = computed(() => {
@@ -168,6 +173,7 @@ function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOp
 			compilerOptions,
 			vueCompilerOptions,
 			codegenStack,
+			withGlobalTypes,
 		);
 	});
 

@@ -18,6 +18,7 @@ export const create = <S extends Service>(options: {
 	baseService: S,
 	isSupportedDocument: (document: TextDocument) => boolean,
 	vueCompilerOptions: VueCompilerOptions,
+	vueLanguage: vue.VueLanguage,
 }): Service => (_context: ServiceContext<import('volar-service-typescript').Provide> | undefined, modules): ReturnType<Service> => {
 
 	const htmlOrPugService = options.baseService(_context, modules) as ReturnType<S>;
@@ -340,7 +341,6 @@ export const create = <S extends Service>(options: {
 	async function provideHtmlData(map: SourceMapWithDocuments<FileRangeCapabilities>, vueSourceFile: vue.VueFile) {
 
 		const languageService = _context!.inject('typescript/languageService');
-		const languageServiceHost = _context!.inject('typescript/languageServiceHost');
 		const casing = await getNameCasing(ts, _context!, map.sourceFileDocument.uri, options.vueCompilerOptions);
 
 		if (builtInData.tags) {
@@ -409,7 +409,7 @@ export const create = <S extends Service>(options: {
 				},
 				provideAttributes: (tag) => {
 
-					const attrs = getElementAttrs(ts, languageService, languageServiceHost, tag);
+					const attrs = getElementAttrs(ts, languageService, options.vueLanguage, tag);
 					const props = new Set(getPropsByTag(ts, languageService, vueSourceFile, tag, options.vueCompilerOptions));
 					const events = getEventsOfTag(ts, languageService, vueSourceFile, tag, options.vueCompilerOptions);
 					const attributes: html.IAttributeData[] = [];

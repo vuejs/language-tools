@@ -14,6 +14,7 @@ import { getSlotsPropertyName } from '../utils/shared';
 import { walkInterpolationFragment } from '../utils/transform';
 import * as sharedTypes from '../utils/globalTypes';
 import * as muggle from 'muggle-string';
+import { geneateGlobalTypes } from '../utils/globalTypes';
 
 export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -26,6 +27,7 @@ export function generate(
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
 	codegenStack: boolean,
+	withGlobalTypes: boolean,
 ) {
 
 	const [codes, codeStacks] = codegenStack ? muggle.track([] as Segment<FileRangeCapabilities>[]) : [[], []];
@@ -110,6 +112,11 @@ export function generate(
 	};
 
 	function generateHelperTypes() {
+		// global types
+		if (withGlobalTypes) {
+			codes.push(geneateGlobalTypes(vueCompilerOptions));
+		}
+		// local types
 		let usedPrettify = false;
 		if (usedHelperTypes.DefinePropsToOptions) {
 			if (compilerOptions.exactOptionalPropertyTypes) {
@@ -134,10 +141,10 @@ export function generate(
 			codes.push('type __VLS_UnionToIntersection<U> = __VLS_Prettify<(U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never>;\n');
 			usedPrettify = true;
 			if (scriptSetupRanges && scriptSetupRanges.emitsTypeNums !== -1) {
-				codes.push(sharedTypes.genConstructorOverloads('__VLS_ConstructorOverloads', scriptSetupRanges.emitsTypeNums));
+				codes.push(sharedTypes.generateConstructorOverloads('__VLS_ConstructorOverloads', scriptSetupRanges.emitsTypeNums));
 			}
 			else {
-				codes.push(sharedTypes.genConstructorOverloads('__VLS_ConstructorOverloads'));
+				codes.push(sharedTypes.generateConstructorOverloads('__VLS_ConstructorOverloads'));
 			}
 			codes.push(`type __VLS_NormalizeEmits<T> = __VLS_ConstructorOverloads<T> & {
 				[K in keyof T]: T[K] extends any[] ? { (...args: T[K]): void } : never

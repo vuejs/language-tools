@@ -24,7 +24,6 @@ fs.readFileSync = (...args) => {
 			tryReplace(
 				`for (const existingRoot of buildInfoVersionMap.roots) {`,
 				`for (const existingRoot of buildInfoVersionMap.roots
-					.filter(file => !file.toLowerCase().includes('__vls_'))
 					.map(file => file.replace(/\.vue\.(j|t)sx?$/i, '.vue'))
 				) {`
 			);
@@ -33,7 +32,6 @@ fs.readFileSync = (...args) => {
 			tryReplace(
 				`return createBuilderProgramUsingProgramBuildInfo(buildInfo, buildInfoPath, host);`,
 				s => `buildInfo.program.fileNames = buildInfo.program.fileNames
-					.filter(file => !file.toLowerCase().includes('__vls_'))
 					.map(file => file.replace(/\.vue\.(j|t)sx?$/i, '.vue'));\n` + s
 			);
 		}
