@@ -1,59 +1,18 @@
 {
+	"extends": "./tsconfig.base.json",
 	"compilerOptions": {
-		"target": "ES2021",
-		"lib": [
-			"ES2021",
-		],
-		"module": "commonjs",
-		"moduleResolution": "node",
-		"sourceMap": true,
-		"composite": true,
-		"declaration": true,
-		"strict": true,
-		"alwaysStrict": false,
-		"resolveJsonModule": true,
-		"skipLibCheck": true,
-		"noUnusedLocals": true,
-		"noUnusedParameters": true,
-		"baseUrl": "./",
-		"paths": {
-			"typescript-vue-plugin": [
-				"packages/typescript-vue-plugin/src"
-			],
-			"vue-component-meta": [
-				"packages/vue-component-meta/src"
-			],
-			"vue-component-type-helpers": [
-				"packages/vue-component-type-helpers/src"
-			],
-			"@vue/language-core": [
-				"packages/vue-language-core/src"
-			],
-			"@vue/language-plugin-pug": [
-				"packages/vue-language-plugin-pug/src"
-			],
-			"@vue/language-server": [
-				"packages/vue-language-server/src"
-			],
-			"@vue/language-service": [
-				"packages/vue-language-service/src"
-			],
-			"@vue/typescript": [
-				"packages/vue-typescript/src"
-			],
-			"vue-tsc": [
-				"packages/vue-tsc/src"
-			],
-		},
 		"noEmit": true,
 	},
-	"include": [
-		"*/*/rules.d.ts",
-		"*/*/src",
-		"*/*/src/**/*.json",
-		"*/*/tests",
-	],
-	"exclude": [
-		"node_modules",
+	"include": [ "packages/*/tests" ],
+	"references": [
+		// VSCode Extensions
+		{ "path": "./packages/vscode-vue/tsconfig.json" },
+		{ "path": "./packages/vscode-typescript-vue-plugin/tsconfig.json" },
+		// Libraries
+		{ "path": "./packages/vue-language-plugin-pug/tsconfig.json" },
+		{ "path": "./packages/typescript-vue-plugin/tsconfig.json" },
+		{ "path": "./packages/vue-tsc/tsconfig.json" },
+		{ "path": "./packages/vue-tsc-eslint-hook/tsconfig.json" },
+		{ "path": "./packages/vue-component-meta/tsconfig.json" },
 	],
 }

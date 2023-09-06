@@ -1,6 +1,9 @@
 <template>
 	<div @click="exactType($event, {} as MouseEvent)"></div>
 
+	<!-- #3445 -->
+	<div @click="function (e) { exactType(e, {} as MouseEvent) }"></div>
+
 	<C1 @foo-bar="exactType($event, {} as number)" @bar-baz="exactType($event, {} as number)" />
 	<C2 @foo-bar="exactType($event, {} as number)" />
 	<C3 @foo-bar="exactType($event, {} as any)" />

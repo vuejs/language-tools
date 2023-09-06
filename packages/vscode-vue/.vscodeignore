@@ -1,7 +1,6 @@
 out
 scripts
 src
-tsconfig.build.json
-tsconfig.build.tsbuildinfo
+tsconfig.*
 meta.json
 stats.html

@@ -1,22 +1,21 @@
 # Changelog
 
-## 1.8.5 (2023/7/14)
+## 1.8.8 (2023/7/27)
 
-- 🔥 feat(labs): support for TS memory usage treemap
-- 🔥 perf: properly support TS DocumentRegistry to drastically reduce memory usage in monorepo projects
-- feat(ts-plugin): re-support auto-import
-- fix: remove invalid `volar.action.serverStats` command ([#3366](https://github.com/vuejs/language-tools/issues/3366)) - thanks @yaegassy
-- fix: don't remove comments when comment is in the first line ([#3365](https://github.com/vuejs/language-tools/issues/3365)) - thanks @so1ve
-- fix: allow slots to have no arguments ([#3376](https://github.com/vuejs/language-tools/issues/3376)) - thanks @so1ve
-- fix: camel case components is not recognized as used ([#3377](https://github.com/vuejs/language-tools/issues/3377)) - thanks @so1ve
-- perf: hoist regexp if possible ([#3378](https://github.com/vuejs/language-tools/issues/3378)) - thanks @so1ve
-- fix: non scoped classes resolution regression ([#3381](https://github.com/vuejs/language-tools/issues/3381)) - thanks @maIIady
-- feat: don't to request reload editor when server options changed ([#3393](https://github.com/vuejs/language-tools/issues/3393)) - thanks @zardoy
-- feat: don't hide output channel on server restart ([#3401](https://github.com/vuejs/language-tools/issues/3401)) - thanks @zardoy
+- fix: language server crashed due to importing unexist library ([#3453](https://github.com/vuejs/language-tools/issues/3453)) ([#3454](https://github.com/vuejs/language-tools/issues/3454))
 
-**Breaking changes**
+## 1.8.7 (2023/7/27)
 
-- Deprecate language server `json.customBlockSchemaUrls` option ([#3398](https://github.com/vuejs/language-tools/issues/3398))
+- feat: support auto-complete for directives ([#2559](https://github.com/vuejs/language-tools/issues/2559))
+- feat: support extract component for options api
+- feat: re-support external component parsing ([#3328](https://github.com/vuejs/language-tools/issues/3328))
+- feat: support function expression emit event ([#3445](https://github.com/vuejs/language-tools/issues/3445)) - thanks @lvjiaxuan
+- perf: reuse VueFile instances between monorepo packages ([#3450](https://github.com/vuejs/language-tools/issues/3450))
+- fix: handle node next module resolution ([#3159](https://github.com/vuejs/language-tools/issues/3159)) - thanks @kalvenschraut
+- fix: generate valid code when using `__VLS_PropsChildren` ([#3442](https://github.com/vuejs/language-tools/issues/3442)) - thanks @so1ve
+- fix: component auto-import cannot insert import statement
+- fix: extract component cannot extract interpolations
+- fix: allow top-level await in script setup blocks with generics ([#3441](https://github.com/vuejs/language-tools/issues/3441)) - thanks @so1ve
 
 ### Full-time Support by
 
@@ -37,9 +36,9 @@
 <tbody>
   <tr>
     <td>
-		<a href="https://volta.net/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/volta.svg" height="60" /></a>
+		<a href="https://nuxt.com/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/nuxt.svg" height="60" /></a>
 	</td>
-    <td>Supercharged GitHub experience</td>
+    <td>The Intuitive Web Framework</td>
   </tr>
   <tr>
     <td>
@@ -71,6 +70,35 @@ JavaScript Framework</td>
 	or
 	<a href="https://opencollective.com/volarjs">Open Collective</a>
 </h5>
+
+## 1.8.6 (2023/7/22)
+
+- feat: add support for extract component code action ([#2496](https://github.com/vuejs/language-tools/issues/2496)) - thanks @zardoy
+- feat: add support for `v-bind` toggle code action ([#2524](https://github.com/vuejs/language-tools/issues/2524)) - thanks @zardoy
+- feat: more dull "Saving time is too long" popup
+- fix: `vue.server.petiteVue.supportHtmlFile`, `vue.server.vitePress.supportMdFile` settings not working ([#3238](https://github.com/vuejs/language-tools/issues/3238))
+- fix: don't check element type for directives ([#3140](https://github.com/vuejs/language-tools/issues/3140))
+- fix: `@ts-nocheck` cannot work from script setup ([#3420](https://github.com/vuejs/language-tools/issues/3420)) - thanks @so1ve
+- fix(ts-plugin): module resolving should be able to fallback to `.d.ts` ([#3419](https://github.com/vuejs/language-tools/issues/3419))
+- fix(language-plugin-pug): `@vue-ignore`, `@vue-skip`, `@vue-expected-error` not working for pug template
+
+## 1.8.5 (2023/7/14)
+
+- 🔥 feat(labs): support for TS memory usage treemap
+- 🔥 perf: properly support TS DocumentRegistry to drastically reduce memory usage in monorepo projects
+- feat(ts-plugin): re-support auto-import
+- fix: remove invalid `volar.action.serverStats` command ([#3366](https://github.com/vuejs/language-tools/issues/3366)) - thanks @yaegassy
+- fix: don't remove comments when comment is in the first line ([#3365](https://github.com/vuejs/language-tools/issues/3365)) - thanks @so1ve
+- fix: allow slots to have no arguments ([#3376](https://github.com/vuejs/language-tools/issues/3376)) - thanks @so1ve
+- fix: camel case components is not recognized as used ([#3377](https://github.com/vuejs/language-tools/issues/3377)) - thanks @so1ve
+- perf: hoist regexp if possible ([#3378](https://github.com/vuejs/language-tools/issues/3378)) - thanks @so1ve
+- fix: non scoped classes resolution regression ([#3381](https://github.com/vuejs/language-tools/issues/3381)) - thanks @maIIady
+- feat: don't to request reload editor when server options changed ([#3393](https://github.com/vuejs/language-tools/issues/3393)) - thanks @zardoy
+- feat: don't hide output channel on server restart ([#3401](https://github.com/vuejs/language-tools/issues/3401)) - thanks @zardoy
+
+**Breaking changes**
+
+- Deprecate language server `json.customBlockSchemaUrls` option ([#3398](https://github.com/vuejs/language-tools/issues/3398))
 
 ## 1.8.4 (2023/7/5)
 

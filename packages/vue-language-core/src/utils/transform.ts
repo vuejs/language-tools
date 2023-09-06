@@ -140,7 +140,7 @@ function walkIdentifiers(
 		if (node.initializer)
 			walkIdentifiers(ts, node.initializer, cb, localVars, blockVars, false);
 	}
-	else if (ts.isArrowFunction(node)) {
+	else if (ts.isArrowFunction(node) || ts.isFunctionExpression(node)) {
 
 		const functionArgs: string[] = [];
 

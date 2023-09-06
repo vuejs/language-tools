@@ -3,4 +3,3 @@ try {
 } catch {
 	module.exports = require('./dist/server');
 }
-
