@@ -356,7 +356,7 @@ export function generate(
 			}
 			codes.push(
 				[
-					'// @ts-expect-error',
+					'// @ts-expect-error __VLS_TS_EXPECT_ERROR',
 					'template',
 					[expectedErrorNode.loc.start.offset, expectedErrorNode.loc.end.offset],
 					{
