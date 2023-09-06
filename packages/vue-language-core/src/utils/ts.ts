@@ -165,11 +165,14 @@ function getPartialVueCompilerOptions(
 					if (resolvedPath) {
 						return require(resolvedPath);
 					}
+					else {
+						console.warn('Load plugin failed:', pluginPath);
+					}
 				}
 				catch (error) {
-					console.warn('Load plugin failed', pluginPath, error);
-					return [];
+					console.warn('Load plugin failed:', pluginPath, error);
 				}
+				return [];
 			})
 			.flat(Infinity as 1);
 

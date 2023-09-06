@@ -18,5 +18,6 @@
 	},
 	"[vue]": {
 		"editor.defaultFormatter": "Vue.volar"
-	}
+	},
+	"vue.server.path": "./packages/vue-language-server/bin/vue-language-server.js",
 }

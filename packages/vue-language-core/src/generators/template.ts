@@ -743,7 +743,16 @@ export function generate(
 				: dynamicTagExp ? ['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]
 					: '',
 			'{ ',
-			...createPropsCode(node, props, 'normal', propsFailedExps),
+		);
+		if (!vueCompilerOptions.strictTemplates) {
+			// fix https://github.com/vuejs/language-tools/issues/3318
+			codes.push('...{ ');
+		}
+		codes.push(...createPropsCode(node, props, 'normal', propsFailedExps));
+		if (!vueCompilerOptions.strictTemplates) {
+			codes.push('}, ');
+		}
+		codes.push(
 			'}',
 			// diagnostic end
 			tagOffsets.length ? ['', 'template', tagOffsets[0] + tag.length, capabilitiesPresets.diagnosticOnly]
