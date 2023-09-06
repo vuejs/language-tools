@@ -316,8 +316,7 @@ export function generate(
 				`__VLS_props: Awaited<typeof __VLS_setup>['props']`,
 				`& import('${vueCompilerOptions.lib}').VNodeProps`,
 				`& import('${vueCompilerOptions.lib}').AllowedComponentProps`,
-				`& import('${vueCompilerOptions.lib}').ComponentCustomProps`,
-				vueCompilerOptions.strictTemplates ? ',\n' : `& Record<string, unknown>,\n`
+				`& import('${vueCompilerOptions.lib}').ComponentCustomProps,\n`,
 			);
 			codes.push(`__VLS_ctx?: Pick<Awaited<typeof __VLS_setup>, 'attrs' | 'emit' | 'slots'>,\n`);
 			codes.push('__VLS_setup = (async () => {\n');
