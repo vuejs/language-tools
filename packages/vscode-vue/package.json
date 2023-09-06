@@ -408,6 +408,15 @@
 					"default": "off",
 					"description": "Traces the communication between VS Code and the language server."
 				},
+				"vue.server.runtime": {
+					"type": "string",
+					"enum": [
+						"node",
+						"bun"
+					],
+					"default": "node",
+					"description": "Vue Language Server runtime."
+				},
 				"vue.server.configFilePath": {
 					"type": "string",
 					"default": "./volar.config.js",
@@ -416,7 +425,7 @@
 				"vue.server.maxFileSize": {
 					"type": "number",
 					"default": 20971520,
-					"description": "Maximum file size for Vue Server to load. (default: 20MB)"
+					"description": "Maximum file size for Vue Language Server to load. (default: 20MB)"
 				},
 				"vue.server.petiteVue.supportHtmlFile": {
 					"type": "boolean",

@@ -16,6 +16,7 @@ export const config = {
 		return _config().get('doctor')!;
 	},
 	get server(): Readonly<{
+		runtime: 'node' | 'bun';
 		maxOldSpaceSize: number;
 		maxFileSize: number;
 		reverseConfigFilePriority: boolean;

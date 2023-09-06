@@ -66,8 +66,8 @@ export async function activate(context: vscode.ExtensionContext) {
 				options: debugOptions
 			},
 		};
-		const bunPath: string | undefined = undefined; // path to .bun/bin/bun
-		if (bunPath) {
+		if (config.server.runtime === 'bun') {
+			vscode.window.showInformationMessage('Using experimental Bun runtime.');
 			serverOptions = {
 				run: {
 					transport: {
@@ -75,7 +75,7 @@ export async function activate(context: vscode.ExtensionContext) {
 						port: port + 10,
 					},
 					options: runOptions,
-					command: bunPath,
+					command: 'bun',
 					args: ['--bun', 'run', serverModule.fsPath],
 				},
 				debug: {
@@ -84,7 +84,7 @@ export async function activate(context: vscode.ExtensionContext) {
 						port: port + 10,
 					},
 					options: debugOptions,
-					command: bunPath,
+					command: 'bun',
 					args: ['--bun', 'run', serverModule.fsPath],
 				},
 			};
