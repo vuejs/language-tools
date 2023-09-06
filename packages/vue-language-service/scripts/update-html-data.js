@@ -38,6 +38,12 @@ const langs = [
 		repoUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-ko/',
 		supported: true,
 	},
+	{
+		name: 'pt',
+		url: 'https://pt.vuejs.org/',
+		repoUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-pt/',
+		supported: true,
+	},
 ];
 
 for (const lang of langs) {

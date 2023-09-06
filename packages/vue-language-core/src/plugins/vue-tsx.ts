@@ -116,6 +116,7 @@ const plugin: VueLanguagePlugin = (ctx) => {
 		return tsCodegen.get(sfc)!;
 	}
 };
+
 export default plugin;
 
 function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOptions, codegenStack, modules }: Parameters<VueLanguagePlugin>[0]) {

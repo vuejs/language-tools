@@ -36,9 +36,9 @@
 <tbody>
   <tr>
     <td>
-		<a href="https://volta.net/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/volta.svg" height="60" /></a>
+		<a href="https://nuxt.com/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/nuxt.svg" height="60" /></a>
 	</td>
-    <td>Supercharged GitHub experience</td>
+    <td>The Intuitive Web Framework</td>
   </tr>
   <tr>
     <td>

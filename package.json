@@ -1,10 +1,10 @@
 {
 	"private": true,
 	"scripts": {
-		"build": "tsc -b tsconfig.build.json",
-		"build-ci": "tsc -b tsconfig.build-ci.json",
+		"build": "tsc -b",
+		"build-ci": "tsc -b tsconfig.ci.json",
 		"watch": "npm run build && (npm run watch:base & npm run watch:vue & npm run watch:typescript-vue-plugin)",
-		"watch:base": "tsc -b tsconfig.build.json -w",
+		"watch:base": "tsc -b -w",
 		"watch:vue": "cd ./packages/vscode-vue && npm run watch",
 		"watch:typescript-vue-plugin": "cd ./packages/vscode-typescript-vue-plugin && npm run watch",
 		"prerelease": "npm run build && npm run test",

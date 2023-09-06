@@ -67,4 +67,4 @@ const plugin: Service = (context: ServiceContext<import('volar-service-typescrip
 	}
 };
 
-export default () => plugin;
+export const create = () => plugin;
