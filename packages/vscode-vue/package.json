@@ -729,7 +729,7 @@
 		"pack:next": "npm run build && vsce package",
 		"release": "npm run build:minify && vsce publish",
 		"release:next": "npm run build && vsce publish --pre-release",
-		"bundle-size": "npm run build:minify --metafile && esbuild-visualizer --metadata ./meta.json && open ./stats.html"
+		"size": "npm run build:minify -- --metafile && esbuild-visualizer --metadata ./meta.json && open ./stats.html"
 	},
 	"devDependencies": {
 		"@types/semver": "^7.3.13",
