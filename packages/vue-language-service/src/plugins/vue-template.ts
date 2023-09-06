@@ -1,13 +1,13 @@
 import { FileRangeCapabilities, Service, ServiceContext, SourceMapWithDocuments } from '@volar/language-service';
-import * as vue from '@vue/language-core';
-import { hyphenate, capitalize, camelize } from '@vue/shared';
+import { VueFile, hyphenateAttr, hyphenateTag, parseScriptSetupRanges, tsCodegen } from '@vue/language-core';
+import { camelize, capitalize } from '@vue/shared';
 import * as html from 'vscode-html-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { getComponentNames, getEventsOfTag, getPropsByTag, getElementAttrs, getTemplateCtx } from '../helpers';
+import { getComponentNames, getElementAttrs, getEventsOfTag, getPropsByTag, getTemplateCtx } from '../helpers';
 import { getNameCasing } from '../ideFeatures/nameCasing';
-import { AttrNameCasing, VueCompilerOptions, TagNameCasing } from '../types';
-import { loadTemplateData, loadModelModifiersData } from './data';
+import { AttrNameCasing, TagNameCasing, VueCompilerOptions } from '../types';
+import { loadModelModifiersData, loadTemplateData } from './data';
 
 let builtInData: html.HTMLDataV1;
 let modelData: html.HTMLDataV1;
@@ -77,7 +77,7 @@ export const create = <S extends Service>(options: {
 
 			for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
 				const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
-				if (virtualFile && virtualFile instanceof vue.VueFile) {
+				if (virtualFile && virtualFile instanceof VueFile) {
 					await provideHtmlData(map, virtualFile);
 				}
 			}
@@ -88,7 +88,7 @@ export const create = <S extends Service>(options: {
 
 			for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
 				const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
-				if (virtualFile && virtualFile instanceof vue.VueFile) {
+				if (virtualFile && virtualFile instanceof VueFile) {
 					afterHtmlCompletion(htmlComplete, map, virtualFile);
 				}
 			}
@@ -111,7 +111,7 @@ export const create = <S extends Service>(options: {
 			for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
 				const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
 				const scanner = options.getScanner(htmlOrPugService, document);
-				if (virtualFile && virtualFile instanceof vue.VueFile && scanner) {
+				if (virtualFile && virtualFile instanceof VueFile && scanner) {
 
 					// visualize missing required props
 					const casing = await getNameCasing(ts, _context, map.sourceFileDocument.uri, options.vueCompilerOptions);
@@ -129,7 +129,7 @@ export const create = <S extends Service>(options: {
 							const component =
 								tagName.indexOf('.') >= 0
 									? components.find(component => component === tagName.split('.')[0])
-									: components.find(component => component === tagName || hyphenate(component) === tagName);
+									: components.find(component => component === tagName || hyphenateTag(component) === tagName);
 							const checkTag = tagName.indexOf('.') >= 0 ? tagName : component;
 							if (checkTag) {
 								componentProps[checkTag] ??= getPropsByTag(ts, languageService, virtualFile, checkTag, options.vueCompilerOptions, true);
@@ -166,12 +166,12 @@ export const create = <S extends Service>(options: {
 										attrText = options.vueCompilerOptions.target >= 3 ? 'modelValue' : 'value'; // TODO: support for experimentalModelPropName?
 									}
 									else if (attrText.startsWith('@')) {
-										attrText = 'on-' + hyphenate(attrText.substring('@'.length));
+										attrText = 'on-' + hyphenateAttr(attrText.substring('@'.length));
 									}
 
 									current.unburnedRequiredProps = current.unburnedRequiredProps.filter(propName => {
 										return attrText !== propName
-											&& attrText !== hyphenate(propName);
+											&& attrText !== hyphenateAttr(propName);
 									});
 								}
 							}
@@ -189,7 +189,7 @@ export const create = <S extends Service>(options: {
 												start: document.positionAt(current.insertOffset),
 												end: document.positionAt(current.insertOffset),
 											},
-											newText: ` :${casing.attr === AttrNameCasing.Kebab ? hyphenate(requiredProp) : requiredProp}=`,
+											newText: ` :${casing.attr === AttrNameCasing.Kebab ? hyphenateAttr(requiredProp) : requiredProp}=`,
 										}],
 									});
 								}
@@ -229,7 +229,7 @@ export const create = <S extends Service>(options: {
 			for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
 
 				const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
-				if (!virtualFile || !(virtualFile instanceof vue.VueFile))
+				if (!virtualFile || !(virtualFile instanceof VueFile))
 					continue;
 
 				const templateErrors: vscode.Diagnostic[] = [];
@@ -288,13 +288,13 @@ export const create = <S extends Service>(options: {
 			for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
 
 				const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
-				if (!virtualFile || !(virtualFile instanceof vue.VueFile))
+				if (!virtualFile || !(virtualFile instanceof VueFile))
 					continue;
 
 				const templateScriptData = getComponentNames(ts, languageService, virtualFile, options.vueCompilerOptions);
 				const components = new Set([
 					...templateScriptData,
-					...templateScriptData.map(hyphenate),
+					...templateScriptData.map(hyphenateTag),
 				]);
 				const offsetRange = {
 					start: document.offsetAt(range.start),
@@ -337,7 +337,7 @@ export const create = <S extends Service>(options: {
 		},
 	};
 
-	async function provideHtmlData(map: SourceMapWithDocuments<FileRangeCapabilities>, vueSourceFile: vue.VueFile) {
+	async function provideHtmlData(map: SourceMapWithDocuments<FileRangeCapabilities>, vueSourceFile: VueFile) {
 
 		const languageService = _context!.inject('typescript/languageService');
 		const languageServiceHost = _context!.inject('typescript/languageServiceHost');
@@ -352,7 +352,7 @@ export const create = <S extends Service>(options: {
 				if (tag.name === 'template')
 					continue;
 				if (casing.tag === TagNameCasing.Kebab) {
-					tag.name = hyphenate(tag.name);
+					tag.name = hyphenateTag(tag.name);
 				}
 				else {
 					tag.name = camelize(capitalize(tag.name));
@@ -375,13 +375,13 @@ export const create = <S extends Service>(options: {
 							&& name !== 'Suspense'
 							&& name !== 'Teleport'
 						);
-					const scriptSetupRanges = vueSourceFile.sfc.scriptSetupAst ? vue.parseScriptSetupRanges(ts, vueSourceFile.sfc.scriptSetupAst, options.vueCompilerOptions) : undefined;
+					const scriptSetupRanges = vueSourceFile.sfc.scriptSetupAst ? parseScriptSetupRanges(ts, vueSourceFile.sfc.scriptSetupAst, options.vueCompilerOptions) : undefined;
 					const names = new Set<string>();
 					const tags: html.ITagData[] = [];
 
 					for (const tag of components) {
 						if (casing.tag === TagNameCasing.Kebab) {
-							names.add(hyphenate(tag));
+							names.add(hyphenateTag(tag));
 						}
 						else if (casing.tag === TagNameCasing.Pascal) {
 							names.add(tag);
@@ -391,7 +391,7 @@ export const create = <S extends Service>(options: {
 					for (const binding of scriptSetupRanges?.bindings ?? []) {
 						const name = vueSourceFile.sfc.scriptSetup!.content.substring(binding.start, binding.end);
 						if (casing.tag === TagNameCasing.Kebab) {
-							names.add(hyphenate(name));
+							names.add(hyphenateTag(name));
 						}
 						else if (casing.tag === TagNameCasing.Pascal) {
 							names.add(name);
@@ -413,16 +413,16 @@ export const create = <S extends Service>(options: {
 					const props = new Set(getPropsByTag(ts, languageService, vueSourceFile, tag, options.vueCompilerOptions));
 					const events = getEventsOfTag(ts, languageService, vueSourceFile, tag, options.vueCompilerOptions);
 					const attributes: html.IAttributeData[] = [];
-					const tsCodegen = vue.tsCodegen.get(vueSourceFile.sfc);
+					const _tsCodegen = tsCodegen.get(vueSourceFile.sfc);
 
-					if (tsCodegen) {
+					if (_tsCodegen) {
 						let ctxVars = [
-							...tsCodegen.scriptRanges.value?.bindings.map(binding => vueSourceFile.sfc.script!.content.substring(binding.start, binding.end)) ?? [],
-							...tsCodegen.scriptSetupRanges.value?.bindings.map(binding => vueSourceFile.sfc.scriptSetup!.content.substring(binding.start, binding.end)) ?? [],
+							..._tsCodegen.scriptRanges.value?.bindings.map(binding => vueSourceFile.sfc.script!.content.substring(binding.start, binding.end)) ?? [],
+							..._tsCodegen.scriptSetupRanges.value?.bindings.map(binding => vueSourceFile.sfc.scriptSetup!.content.substring(binding.start, binding.end)) ?? [],
 							...getTemplateCtx(ts, languageService, vueSourceFile) ?? [],
 						];
 						ctxVars = [...new Set(ctxVars)];
-						const dirs = ctxVars.map(hyphenate).filter(v => v.startsWith('v-'));
+						const dirs = ctxVars.map(hyphenateAttr).filter(v => v.startsWith('v-'));
 						for (const dir of dirs) {
 							attributes.push(
 								{
@@ -435,9 +435,9 @@ export const create = <S extends Service>(options: {
 					for (const prop of [...props, ...attrs]) {
 
 						const isGlobal = !props.has(prop);
-						const name = casing.attr === AttrNameCasing.Camel ? prop : hyphenate(prop);
+						const name = casing.attr === AttrNameCasing.Camel ? prop : hyphenateAttr(prop);
 
-						if (hyphenate(name).startsWith('on-')) {
+						if (hyphenateAttr(name).startsWith('on-')) {
 
 							const propNameBase = name.startsWith('on-')
 								? name.slice('on-'.length)
@@ -479,7 +479,7 @@ export const create = <S extends Service>(options: {
 
 					for (const event of events) {
 
-						const name = casing.attr === AttrNameCasing.Camel ? event : hyphenate(event);
+						const name = casing.attr === AttrNameCasing.Camel ? event : hyphenateAttr(event);
 						const propKey = createInternalItemId('componentEvent', [tag, name]);
 
 						attributes.push({
@@ -508,7 +508,7 @@ export const create = <S extends Service>(options: {
 
 					for (const [isGlobal, model] of models) {
 
-						const name = casing.attr === AttrNameCasing.Camel ? model : hyphenate(model);
+						const name = casing.attr === AttrNameCasing.Camel ? model : hyphenateAttr(model);
 						const propKey = createInternalItemId('componentProp', [isGlobal ? '*' : tag, name]);
 
 						attributes.push({
@@ -531,11 +531,11 @@ export const create = <S extends Service>(options: {
 		]);
 	}
 
-	function afterHtmlCompletion(completionList: vscode.CompletionList, map: SourceMapWithDocuments<FileRangeCapabilities>, vueSourceFile: vue.VueFile) {
+	function afterHtmlCompletion(completionList: vscode.CompletionList, map: SourceMapWithDocuments<FileRangeCapabilities>, vueSourceFile: VueFile) {
 
 		const languageService = _context!.inject('typescript/languageService');
 		const replacement = getReplacement(completionList, map.sourceFileDocument);
-		const componentNames = new Set(getComponentNames(ts, languageService, vueSourceFile, options.vueCompilerOptions).map(hyphenate));
+		const componentNames = new Set(getComponentNames(ts, languageService, vueSourceFile, options.vueCompilerOptions).map(hyphenateTag));
 
 		if (replacement) {
 
@@ -613,7 +613,7 @@ export const create = <S extends Service>(options: {
 				item.documentation = undefined;
 			}
 
-			if (item.kind === 10 satisfies typeof vscode.CompletionItemKind.Property && componentNames.has(hyphenate(item.label))) {
+			if (item.kind === 10 satisfies typeof vscode.CompletionItemKind.Property && componentNames.has(hyphenateTag(item.label))) {
 				item.kind = 6 satisfies typeof vscode.CompletionItemKind.Variable;
 				item.sortText = '\u0000' + (item.sortText ?? item.label);
 			}

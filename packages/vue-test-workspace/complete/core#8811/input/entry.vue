@@ -8,5 +8,5 @@ declare const Foo: new () => {
 
 <template>
   <Foo :- ></Foo>
-    <!-- ^complete: -foo-bar -->
+    <!-- ^complete: :-foo-bar -->
 </template>

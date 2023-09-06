@@ -7,6 +7,6 @@ declare const Foo: new () => {
 </script>
 
 <template>
-  <Foo :-foo-bar ></Foo>
-    <!-- ^complete: -foo-bar -->
+  <Foo :-foo-bar="" ></Foo>
+    <!-- ^complete: :-foo-bar -->
 </template>
