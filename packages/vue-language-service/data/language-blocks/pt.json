@@ -8,7 +8,7 @@
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "\n如果你更喜欢将 `*.vue` 组件分散到多个文件中，可以为一个语块使用 `src` 这个 attribute 来导入一个外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n请注意 `src` 导入和 JS 模块导入遵循相同的路径解析规则，这意味着：\n\n- 相对路径需要以 `./` 开头\n- 你也可以从 npm 依赖中导入资源\n\n```vue\n<!-- 从所安装的 \"todomvc-app-css\" npm 包中导入一个文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 导入对自定义语块也同样适用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+            "value": "\nSe você prefere dividir seu componente `*.vue` em multiplos arquivos, você pode usar o atributo `src` para importar um arquivo externo para o bloco de linguagem:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nEsteja ciente de que as importações `src` seguem as mesmas regras de resolução de caminho que as solicitações do módulo webpack, o que significa:\n\n- Caminhos relativos precisam começar com `./`\n- Você pode importar recursos de dependências do npm:\n\n```vue\n<!-- importa um arquivo do pacote de npm \"todomvc-app-css\" -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nAs importações com `src` também funcionam com blocos personalizados, por exemplo:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
           },
           "references": [
             {
@@ -45,7 +45,7 @@
           "name": "lang",
           "description": {
             "kind": "markdown",
-            "value": "\n代码块可以使用 `lang` 这个 attribute 来声明预处理器语言，最常见的用例就是在 `<script>` 中使用 TypeScript：\n\n```html\n<script lang=\"ts\">\n  // use TypeScript\n</script>\n```\n\n`lang` 在任意块上都能使用，比如我们可以在 `<style>` 标签中使用 [Sass](https://sass-lang.com/) 或是 `<template>` 中使用 [Pug](https://pugjs.org/api/getting-started.html)：\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n注意对不同预处理器的集成会根据你所使用的工具链而有所不同，具体细节请查看相应的工具链文档来确认：\n\n- [Vite](https://cn.vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/zh/guide/css.html#%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/zh/guide/pre-processors.html#%E4%BD%BF%E7%94%A8%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)\n"
+            "value": "\nBlocos pode declarar linguagens de pré-processadores usando o atributo `lang`. A caso mais comum é usando TypeScript para o bloco `<script>`:\n```html\n<script lang=\"ts\">\n  // usa TypeScript\n</script>\n```\n\n`lang` pode ser aplicado a qualquer bloco - por exemplo, nós podemos usar `<style>` com [Sass](https://sass-lang.com/) e `<template>` com [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nNote que a integração com vários pré-processadores pode diferir por conjunto de ferramentas. Confira a respectiva documentação para exemplos:\n\n- [Vite](https://vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
           },
           "values": [
             {
@@ -89,7 +89,7 @@
       ],
       "description": {
         "kind": "markdown",
-        "value": "\n- 每个 `*.vue` 文件最多可以包含一个顶层 `<template>` 块。\n\n- 语块包裹的内容将会被提取、传递给 `@vue/compiler-dom`，预编译为 JavaScript 渲染函数，并附在导出的组件上作为其 `render` 选项。\n"
+        "value": "\n- Cada arquivo `*.vue` pode conter no máximo um bloco `<template>` de alto nível por vez.\n\n- O conteúdo será extraído e passado para `@vue/compiler-dom`, pré-compilado em funções de renderização JavaScript e anexado ao componente exportado como sua opção `render`.\n"
       },
       "references": [
         {
@@ -129,7 +129,7 @@
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "\n如果你更喜欢将 `*.vue` 组件分散到多个文件中，可以为一个语块使用 `src` 这个 attribute 来导入一个外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n请注意 `src` 导入和 JS 模块导入遵循相同的路径解析规则，这意味着：\n\n- 相对路径需要以 `./` 开头\n- 你也可以从 npm 依赖中导入资源\n\n```vue\n<!-- 从所安装的 \"todomvc-app-css\" npm 包中导入一个文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 导入对自定义语块也同样适用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+            "value": "\nSe você prefere dividir seu componente `*.vue` em multiplos arquivos, você pode usar o atributo `src` para importar um arquivo externo para o bloco de linguagem:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nEsteja ciente de que as importações `src` seguem as mesmas regras de resolução de caminho que as solicitações do módulo webpack, o que significa:\n\n- Caminhos relativos precisam começar com `./`\n- Você pode importar recursos de dependências do npm:\n\n```vue\n<!-- importa um arquivo do pacote de npm \"todomvc-app-css\" -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nAs importações com `src` também funcionam com blocos personalizados, por exemplo:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
           },
           "references": [
             {
@@ -166,7 +166,7 @@
           "name": "lang",
           "description": {
             "kind": "markdown",
-            "value": "\n代码块可以使用 `lang` 这个 attribute 来声明预处理器语言，最常见的用例就是在 `<script>` 中使用 TypeScript：\n\n```html\n<script lang=\"ts\">\n  // use TypeScript\n</script>\n```\n\n`lang` 在任意块上都能使用，比如我们可以在 `<style>` 标签中使用 [Sass](https://sass-lang.com/) 或是 `<template>` 中使用 [Pug](https://pugjs.org/api/getting-started.html)：\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n注意对不同预处理器的集成会根据你所使用的工具链而有所不同，具体细节请查看相应的工具链文档来确认：\n\n- [Vite](https://cn.vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/zh/guide/css.html#%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/zh/guide/pre-processors.html#%E4%BD%BF%E7%94%A8%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)\n"
+            "value": "\nBlocos pode declarar linguagens de pré-processadores usando o atributo `lang`. A caso mais comum é usando TypeScript para o bloco `<script>`:\n```html\n<script lang=\"ts\">\n  // usa TypeScript\n</script>\n```\n\n`lang` pode ser aplicado a qualquer bloco - por exemplo, nós podemos usar `<style>` com [Sass](https://sass-lang.com/) e `<template>` com [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nNote que a integração com vários pré-processadores pode diferir por conjunto de ferramentas. Confira a respectiva documentação para exemplos:\n\n- [Vite](https://vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
           },
           "values": [
             {
@@ -221,7 +221,7 @@
           "valueSet": "v",
           "description": {
             "kind": "markdown",
-            "value": "\n- 每个 `*.vue` 文件最多可以包含一个 `<script setup>`。(不包括一般的 `<script>`)\n\n- 这个脚本块将被预处理为组件的 `setup()` 函数，这意味着它将**为每一个组件实例**都执行。`<script setup>` 中的顶层绑定都将自动暴露给模板。要了解更多细节，请看 [`<script setup>` 的专门文档](https://cn.vuejs.org/api/sfc-script-setup.html)。\n"
+            "value": "\n- Cada arquivo `*.vue` pode conter no máximo um bloco `<script setup>` de alto nível por vez (excluíndo `<script>` normal).\n\n- O script é pré-processado e usado como a função `setup()` do componente, o que significa que será executado **para cada instância do componente**. Ligações de nível superior em `<script setup>` são automaticamente expostas ao template. Para obter mais detalhes, consulte [documentação dedicada a `<script setup>`](https://pt.vuejs.org/api/sfc-script-setup.html).\n"
           },
           "references": [
             {
@@ -257,7 +257,7 @@
       ],
       "description": {
         "kind": "markdown",
-        "value": "\n- 每个 `*.vue` 文件最多可以包含一个 `<script>` 块。(使用 [`<script setup>`](https://cn.vuejs.org/api/sfc-script-setup.html) 的情况除外)\n\n- 这个脚本代码块将作为 ES 模块执行。\n\n- **默认导出**应该是 Vue 的组件选项对象，可以是一个对象字面量或是 [defineComponent](https://cn.vuejs.org/api/general.html#definecomponent) 函数的返回值。\n"
+        "value": "\n- Cada arquivo `*.vue` pode conter no máximo um bloco `<script>` de alto nível por vez (excluíndo [`<script setup>`](https://pt.vuejs.org/api/sfc-script-setup.html)).\n\n- O escript é executado como um módulo ES.\n\n- A **exportação padrão** `default export` deve ser um objeto de opções do componente Vue, seja como um objeto simples ou como o valor de retorno de [defineComponent](https://pt.vuejs.org/api/general.html#definecomponent)\n"
       },
       "references": [
         {
@@ -295,7 +295,7 @@
       "attributes": [],
       "description": {
         "kind": "markdown",
-        "value": "\n- 每个 `*.vue` 文件最多可以包含一个 `<script setup>`。(不包括一般的 `<script>`)\n\n- 这个脚本块将被预处理为组件的 `setup()` 函数，这意味着它将**为每一个组件实例**都执行。`<script setup>` 中的顶层绑定都将自动暴露给模板。要了解更多细节，请看 [`<script setup>` 的专门文档](https://cn.vuejs.org/api/sfc-script-setup.html)。\n"
+        "value": "\n- Cada arquivo `*.vue` pode conter no máximo um bloco `<script setup>` de alto nível por vez (excluíndo `<script>` normal).\n\n- O script é pré-processado e usado como a função `setup()` do componente, o que significa que será executado **para cada instância do componente**. Ligações de nível superior em `<script setup>` são automaticamente expostas ao template. Para obter mais detalhes, consulte [documentação dedicada a `<script setup>`](https://pt.vuejs.org/api/sfc-script-setup.html).\n"
       },
       "references": [
         {
@@ -335,7 +335,7 @@
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "\n如果你更喜欢将 `*.vue` 组件分散到多个文件中，可以为一个语块使用 `src` 这个 attribute 来导入一个外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n请注意 `src` 导入和 JS 模块导入遵循相同的路径解析规则，这意味着：\n\n- 相对路径需要以 `./` 开头\n- 你也可以从 npm 依赖中导入资源\n\n```vue\n<!-- 从所安装的 \"todomvc-app-css\" npm 包中导入一个文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 导入对自定义语块也同样适用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+            "value": "\nSe você prefere dividir seu componente `*.vue` em multiplos arquivos, você pode usar o atributo `src` para importar um arquivo externo para o bloco de linguagem:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nEsteja ciente de que as importações `src` seguem as mesmas regras de resolução de caminho que as solicitações do módulo webpack, o que significa:\n\n- Caminhos relativos precisam começar com `./`\n- Você pode importar recursos de dependências do npm:\n\n```vue\n<!-- importa um arquivo do pacote de npm \"todomvc-app-css\" -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nAs importações com `src` também funcionam com blocos personalizados, por exemplo:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
           },
           "references": [
             {
@@ -372,7 +372,7 @@
           "name": "lang",
           "description": {
             "kind": "markdown",
-            "value": "\n代码块可以使用 `lang` 这个 attribute 来声明预处理器语言，最常见的用例就是在 `<script>` 中使用 TypeScript：\n\n```html\n<script lang=\"ts\">\n  // use TypeScript\n</script>\n```\n\n`lang` 在任意块上都能使用，比如我们可以在 `<style>` 标签中使用 [Sass](https://sass-lang.com/) 或是 `<template>` 中使用 [Pug](https://pugjs.org/api/getting-started.html)：\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n注意对不同预处理器的集成会根据你所使用的工具链而有所不同，具体细节请查看相应的工具链文档来确认：\n\n- [Vite](https://cn.vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/zh/guide/css.html#%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/zh/guide/pre-processors.html#%E4%BD%BF%E7%94%A8%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)\n"
+            "value": "\nBlocos pode declarar linguagens de pré-processadores usando o atributo `lang`. A caso mais comum é usando TypeScript para o bloco `<script>`:\n```html\n<script lang=\"ts\">\n  // usa TypeScript\n</script>\n```\n\n`lang` pode ser aplicado a qualquer bloco - por exemplo, nós podemos usar `<style>` com [Sass](https://sass-lang.com/) e `<template>` com [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nNote que a integração com vários pré-processadores pode diferir por conjunto de ferramentas. Confira a respectiva documentação para exemplos:\n\n- [Vite](https://vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
           },
           "values": [
             {
@@ -430,7 +430,7 @@
           "valueSet": "v",
           "description": {
             "kind": "markdown",
-            "value": "\n当 `<style>` 标签带有 `scoped` attribute 的时候，它的 CSS 只会影响当前组件的元素，和 Shadow DOM 中的样式封装类似。使用时有一些注意事项，不过好处是不需要任何的 polyfill。它的实现方式是通过 PostCSS 将以下内容：\n\n```vue\n<style scoped>\n.example {\n  color: red;\n}\n</style>\n\n<template>\n  <div class=\"example\">hi</div>\n</template>\n```\n\n转换为：\n\n```vue\n<style>\n.example[data-v-f3f3eg9] {\n  color: red;\n}\n</style>\n\n<template>\n  <div class=\"example\" data-v-f3f3eg9>hi</div>\n</template>\n```\n\n### 子组件的根元素 \n\n使用 `scoped` 后，父组件的样式将不会渗透到子组件中。不过，子组件的根节点会同时被父组件的作用域样式和子组件的作用域样式影响。这样设计是为了让父组件可以从布局的角度出发，调整其子组件根元素的样式。\n\n### 深度选择器 \n\n处于 `scoped` 样式中的选择器如果想要做更“深度”的选择，也即：影响到子组件，可以使用 `:deep()` 这个伪类：\n\n```vue\n<style scoped>\n.a :deep(.b) {\n  /* ... */\n}\n</style>\n```\n\n上面的代码会被编译成：\n\n```css\n.a[data-v-f3f3eg9] .b {\n  /* ... */\n}\n```\n\n:::tip\n通过 `v-html` 创建的 DOM 内容不会被作用域样式影响，但你仍然可以使用深度选择器来设置其样式。\n:::\n\n### 插槽选择器 \n\n默认情况下，作用域样式不会影响到 `<slot/>` 渲染出来的内容，因为它们被认为是父组件所持有并传递进来的。使用 `:slotted` 伪类以明确地将插槽内容作为选择器的目标：\n\n```vue\n<style scoped>\n:slotted(div) {\n  color: red;\n}\n</style>\n```\n\n### 全局选择器 \n\n如果想让其中一个样式规则应用到全局，比起另外创建一个 `<style>`，可以使用 `:global` 伪类来实现 (看下面的代码)：\n\n```vue\n<style scoped>\n:global(.red) {\n  color: red;\n}\n</style>\n```\n\n### 混合使用局部与全局样式 \n\n你也可以在同一个组件中同时包含作用域样式和非作用域样式：\n\n```vue\n<style>\n/* 全局样式 */\n</style>\n\n<style scoped>\n/* 局部样式 */\n</style>\n```\n\n### 作用域样式须知 \n\n- **作用域样式并没有消除对 class 的需求**。由于浏览器渲染各种各样 CSS 选择器的方式，`p { color: red }` 结合作用域样式使用时 (即当与 attribute 选择器组合的时候) 会慢很多倍。如果你使用 class 或者 id 来替代，例如 `.example { color: red }`，那你几乎就可以避免性能的损失。\n\n- **小心递归组件中的后代选择器**！对于一个使用了 `.a .b` 选择器的样式规则来说，如果匹配到 `.a` 的元素包含了一个递归的子组件，那么所有的在那个子组件中的 `.b` 都会匹配到这条样式规则。\n"
+            "value": "\nQuando uma tag `<style>` tem o atributo `scoped`, seu CSS se aplica apenas aos elementos do componente atual. Isso é semelhante ao encapsulamento de estilo encontrado no Shadow DOM. Por mais que tenha algumas ressalvas, não requer nenhum polyfill. É alcançado usando o PostCSS para transformar o seguinte código:\n\n```vue\n<style scoped>\n.example {\n  color: red;\n}\n</style>\n\n<template>\n  <div class=\"example\">olá</div>\n</template>\n```\n\nNesse outro código:\n\n```vue\n<style>\n.example[data-v-f3f3eg9] {\n  color: red;\n}\n</style>\n\n<template>\n  <div class=\"example\" data-v-f3f3eg9>olá</div>\n</template>\n```\n\n### Elementos raiz de componentes filhos \n\nCom `scoped`, os estilos do componente pai não vazam para os componentes filhos. No entanto, o nó raiz de um componente filho será afetado pelo CSS do componente pai e pelo CSS do componente filho. Isso é feito de propósito para que o pai possa estilizar o elemento raiz do filho para fins de layout.\n\n### Seletores profundos \n\nSe você deseja que um seletor em estilos `scoped` seja \"profundo\", ou seja, afetando componentes filhos, você pode usar a pseudo-classe `:deep()`:\n\n```vue\n<style scoped>\n.a :deep(.b) {\n  /* ... */\n}\n</style>\n```\n\nO código acima será compilado para:\n\n```css\n.a[data-v-f3f3eg9] .b {\n  /* ... */\n}\n```\n\n:::tip\nOs nós DOM criados com `v-html` não são afetados pelos estilos delimitados, mas você ainda pode estilizá-los usando seletores profundos.\n:::\n\n### Seletores de slot \n\nPor padrão, os estilos delimitados não afetam o conteúdo renderizado por `<slot/>`, pois eles são considerados de propriedade do componente pai que os passa. Para estilizar explicitamente o conteúdo do slot, use a pseudo-classe `:slotted`:\n\n```vue\n<style scoped>\n:slotted(div) {\n  color: red;\n}\n</style>\n```\n\n### Seletores globais \n\nSe você deseja que um seletor aplique-se globalmente, mas ainda esteja em um bloco de estilo `scoped`, você pode usar a pseudo-classe `:global` em vez de criar outro `<style>` (veja abaixo):\n\n```vue\n<style scoped>\n:global(.red) {\n  color: red;\n}\n</style>\n```\n\n### Misturando estilos locais e globais \n\nVocê também pode incluir estilos com e sem escopo no mesmo componente:\n\n```vue\n<style>\n/* estilos globais */\n</style>\n\n<style scoped>\n/* estilos locais */\n</style>\n```\n\n### Dicas de estilo delimitado \n\n- **Estilos delimitados não eliminam a necessidade de classes**. Devido a forma que os navegadores renderizam vários seletores CSS, `p { color: red }` será muito mais lento quando delimitado (isto é, quando combinado com um seletor de atributo). Se você usar classes ou ids, como em `.example { color: red }`, então você virtualmente elimina esse impacto de desempenho.\n\n- **Tenha cuidado com seletores descendentes em componentes recursivos!** Para uma regra CSS com o seletor `.a .b`, se o elemento que corresponde a `.a` contém um componente filho recursivo, então todos os `.b` nesse componente filho serão correspondidos pela regra.\n"
           },
           "references": [
             {
@@ -468,7 +468,7 @@
           "valueSet": "v",
           "description": {
             "kind": "markdown",
-            "value": "\n一个 `<style module>` 标签会被编译为 [CSS Modules](https://github.com/css-modules/css-modules) 并且将生成的 CSS class 作为 `$style` 对象暴露给组件：\n\n```vue\n<template>\n  <p :class=\"$style.red\">This should be red</p>\n</template>\n\n<style module>\n.red {\n  color: red;\n}\n</style>\n```\n\n得出的 class 将被哈希化以避免冲突，实现了同样的将 CSS 仅作用于当前组件的效果。\n\n参考 [CSS Modules spec](https://github.com/css-modules/css-modules) 以查看更多详情，例如 [global exceptions](https://github.com/css-modules/css-modules#exceptions) 和 [composition](https://github.com/css-modules/css-modules#composition)。\n\n### 自定义注入名称 \n\n你可以通过给 `module` attribute 一个值来自定义注入 class 对象的属性名：\n\n```vue\n<template>\n  <p :class=\"classes.red\">red</p>\n</template>\n\n<style module=\"classes\">\n.red {\n  color: red;\n}\n</style>\n```\n\n### 与组合式 API 一同使用 \n\n可以通过 `useCssModule` API 在 `setup()` 和 `<script setup>` 中访问注入的 class。对于使用了自定义注入名称的 `<style module>` 块，`useCssModule` 接收一个匹配的 `module` attribute 值作为第一个参数：\n\n```js\nimport { useCssModule } from 'vue'\n\n// 在 setup() 作用域中...\n// 默认情况下, 返回 <style module> 的 class\nuseCssModule()\n\n// 具名情况下, 返回 <style module=\"classes\"> 的 class\nuseCssModule('classes')\n```\n"
+            "value": "\nUma tag `<style module>` é compilada como um [Módulo CSS](https://github.com/css-modules/css-modules) e expõe as classes CSS resultantes para o componente como um objeto sob a chave `$style`:\n\n```vue\n<template>\n  <p :class=\"$style.red\">Isto deveria ser vermelho</p>\n</template>\n\n<style module>\n.red {\n  color: red;\n}\n</style>\n```\n\nAs classes resultantes tem um hash aplicado para evitar colisões, alcançando o mesmo efeito de delimitar o CSS apenas ao componente atual.\n\nRecorra à [Especificação de Módulos CSS](https://github.com/css-modules/css-modules) para mais detalhes como [exceções globais](https://github.com/css-modules/css-modules#exceptions) e [composição](https://github.com/css-modules/css-modules#composition).\n\n### Nome de injeção personalizado \n\nVocê pode personalizar a propriedade chave do objeto de classes injetadas dando ao atributo `module` um valor:\n\n```vue\n<template>\n  <p :class=\"classes.red\">vermelho</p>\n</template>\n\n<style module=\"classes\">\n.red {\n  color: red;\n}\n</style>\n```\n\n### Uso com API de Composição \n\nAs classes injetadas podem ser acessadas em `setup()` e `<script setup>` por meio da API `useCssModule`. Para blocos `<style module>` com nomes de injeção personalizados, `useCssModule` aceita o valor do atributo `module` correspondente como primeiro argumento:\n\n```js\nimport { useCssModule } from 'vue'\n\n// dentro do escopo de setup()...\n// padrão, retorna as classes da tag <style module>\nuseCssModule()\n\n// personalizado, retorna as classes da tag <style module=\"classes\">\nuseCssModule('classes')\n```\n"
           },
           "references": [
             {
@@ -504,7 +504,7 @@
       ],
       "description": {
         "kind": "markdown",
-        "value": "\n- 每个 `*.vue` 文件可以包含多个 `<style>` 标签。\n\n- 一个 `<style>` 标签可以使用 `scoped` 或 `module` attribute (查看 [SFC 样式功能](https://cn.vuejs.org/api/sfc-css-features.html)了解更多细节) 来帮助封装当前组件的样式。使用了不同封装模式的多个 `<style>` 标签可以被混合入同一个组件。\n"
+        "value": "\n- Um único arquivo `*.vue` pode conter multiplas tags `<style>`.\n\n- Uma tag `<style>` pode ter atributos `scoped` ou `module` (consulte [Recursos de estilo SFC](https://pt.vuejs.org/api/sfc-css-features.html) para obter mais detalhes) para ajudar a encapsular os estilos no componente atual. Múltiplas tags `<style>` com diferentes modos de encapsulamento podem ser misturados no mesmo componente.\n"
       },
       "references": [
         {
@@ -538,13 +538,13 @@
       ]
     },
     {
-      "name": "自定义块",
+      "name": "Blocos Customizados",
       "attributes": [
         {
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "\n如果你更喜欢将 `*.vue` 组件分散到多个文件中，可以为一个语块使用 `src` 这个 attribute 来导入一个外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n请注意 `src` 导入和 JS 模块导入遵循相同的路径解析规则，这意味着：\n\n- 相对路径需要以 `./` 开头\n- 你也可以从 npm 依赖中导入资源\n\n```vue\n<!-- 从所安装的 \"todomvc-app-css\" npm 包中导入一个文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 导入对自定义语块也同样适用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+            "value": "\nSe você prefere dividir seu componente `*.vue` em multiplos arquivos, você pode usar o atributo `src` para importar um arquivo externo para o bloco de linguagem:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nEsteja ciente de que as importações `src` seguem as mesmas regras de resolução de caminho que as solicitações do módulo webpack, o que significa:\n\n- Caminhos relativos precisam começar com `./`\n- Você pode importar recursos de dependências do npm:\n\n```vue\n<!-- importa um arquivo do pacote de npm \"todomvc-app-css\" -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nAs importações com `src` também funcionam com blocos personalizados, por exemplo:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
           },
           "references": [
             {
@@ -580,36 +580,36 @@
       ],
       "description": {
         "kind": "markdown",
-        "value": "\n在一个 `*.vue` 文件中可以为任何项目特定需求使用额外的自定义块。举例来说，一个用作写文档的 `<docs>` 块。这里是一些自定义块的真实用例：\n\n- [Gridsome：`<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql：`<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n：`<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\n自定义块的处理需要依赖工具链。如果你想要在构建中集成你的自定义语块，请参见 [SFC 自定义块集成工具链指南](https://cn.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations)获取更多细节。\n"
+        "value": "\nBlocos customizados adicionas podem ser incluídos em um arquivo `*.vue` para qualquer necessidade específica do projeto, por exemplo um bloco `<docs>`. Alguns exemplos do mundo real de blocos customizados incluem:\n\n- [Gridsome: `<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql: `<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n: `<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\nO manuseio de blocos personalizados dependerá de Ferramental - se você deseja criar suas próprias integrações de blocos personalizados, veja a [seção relevante de ferramental](https://pt.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations) para obter mais detalhes.\n"
       },
       "references": [
         {
           "name": "en",
-          "url": "https://vuejs.org/api/sfc-spec.html#自定义块"
+          "url": "https://vuejs.org/api/sfc-spec.html#blocos-customizados"
         },
         {
           "name": "zh-cn",
-          "url": "https://cn.vuejs.org/api/sfc-spec.html#自定义块"
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#blocos-customizados"
         },
         {
           "name": "ja",
-          "url": "https://ja.vuejs.org/api/sfc-spec.html#自定义块"
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#blocos-customizados"
         },
         {
           "name": "ua",
-          "url": "https://ua.vuejs.org/api/sfc-spec.html#自定义块"
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#blocos-customizados"
         },
         {
           "name": "fr",
-          "url": "https://fr.vuejs.org/api/sfc-spec.html#自定义块"
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#blocos-customizados"
         },
         {
           "name": "ko",
-          "url": "https://ko.vuejs.org/api/sfc-spec.html#自定义块"
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#blocos-customizados"
         },
         {
           "name": "pt",
-          "url": "https://pt.vuejs.org/api/sfc-spec.html#自定义块"
+          "url": "https://pt.vuejs.org/api/sfc-spec.html#blocos-customizados"
         }
       ]
     }
@@ -619,7 +619,7 @@
       "name": "lang",
       "description": {
         "kind": "markdown",
-        "value": "\n代码块可以使用 `lang` 这个 attribute 来声明预处理器语言，最常见的用例就是在 `<script>` 中使用 TypeScript：\n\n```html\n<script lang=\"ts\">\n  // use TypeScript\n</script>\n```\n\n`lang` 在任意块上都能使用，比如我们可以在 `<style>` 标签中使用 [Sass](https://sass-lang.com/) 或是 `<template>` 中使用 [Pug](https://pugjs.org/api/getting-started.html)：\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n注意对不同预处理器的集成会根据你所使用的工具链而有所不同，具体细节请查看相应的工具链文档来确认：\n\n- [Vite](https://cn.vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/zh/guide/css.html#%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/zh/guide/pre-processors.html#%E4%BD%BF%E7%94%A8%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)\n"
+        "value": "\nBlocos pode declarar linguagens de pré-processadores usando o atributo `lang`. A caso mais comum é usando TypeScript para o bloco `<script>`:\n```html\n<script lang=\"ts\">\n  // usa TypeScript\n</script>\n```\n\n`lang` pode ser aplicado a qualquer bloco - por exemplo, nós podemos usar `<style>` com [Sass](https://sass-lang.com/) e `<template>` com [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nNote que a integração com vários pré-processadores pode diferir por conjunto de ferramentas. Confira a respectiva documentação para exemplos:\n\n- [Vite](https://vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
       },
       "values": [],
       "references": [
@@ -657,7 +657,7 @@
       "name": "src",
       "description": {
         "kind": "markdown",
-        "value": "\n如果你更喜欢将 `*.vue` 组件分散到多个文件中，可以为一个语块使用 `src` 这个 attribute 来导入一个外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n请注意 `src` 导入和 JS 模块导入遵循相同的路径解析规则，这意味着：\n\n- 相对路径需要以 `./` 开头\n- 你也可以从 npm 依赖中导入资源\n\n```vue\n<!-- 从所安装的 \"todomvc-app-css\" npm 包中导入一个文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 导入对自定义语块也同样适用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+        "value": "\nSe você prefere dividir seu componente `*.vue` em multiplos arquivos, você pode usar o atributo `src` para importar um arquivo externo para o bloco de linguagem:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nEsteja ciente de que as importações `src` seguem as mesmas regras de resolução de caminho que as solicitações do módulo webpack, o que significa:\n\n- Caminhos relativos precisam começar com `./`\n- Você pode importar recursos de dependências do npm:\n\n```vue\n<!-- importa um arquivo do pacote de npm \"todomvc-app-css\" -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nAs importações com `src` também funcionam com blocos personalizados, por exemplo:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
       },
       "references": [
         {
