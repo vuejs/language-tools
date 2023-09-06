@@ -317,6 +317,7 @@ export function generate(
 				`& import('${vueCompilerOptions.lib}').ComponentCustomProps,\n`,
 			);
 			codes.push(`__VLS_ctx?: Pick<Awaited<typeof __VLS_setup>, 'attrs' | 'emit' | 'slots'>,\n`);
+			codes.push(`__VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>['expose'],\n`);
 			codes.push('__VLS_setup = (async () => {\n');
 			scriptSetupGeneratedOffset = generateSetupFunction(true, 'none', definePropMirrors);
 
