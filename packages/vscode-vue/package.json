@@ -408,6 +408,14 @@
 					"default": "off",
 					"description": "Traces the communication between VS Code and the language server."
 				},
+				"vue.server.path": {
+					"type": [
+						"string",
+						"null"
+					],
+					"default": null,
+					"description": "Path to node_modules/vue-language-server/bin/vue-language-server.js."
+				},
 				"vue.server.runtime": {
 					"type": "string",
 					"enum": [
