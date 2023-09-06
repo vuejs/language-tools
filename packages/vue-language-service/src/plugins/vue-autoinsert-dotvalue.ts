@@ -1,5 +1,5 @@
 import { AutoInsertionContext, Service, ServiceContext } from '@volar/language-service';
-import { hyphenate } from '@vue/shared';
+import { hyphenateAttr } from '@vue/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
@@ -165,7 +165,7 @@ export function isBlacklistNode(ts: typeof import('typescript/lib/tsserverlibrar
 			|| fnName === 'unref'
 			|| fnName === 'triggerRef'
 			|| fnName === 'isRef'
-			|| hyphenate(fnName).startsWith('use-');
+			|| hyphenateAttr(fnName).startsWith('use-');
 	}
 	function isTopLevelArgOrArrayTopLevelItemItem(node: ts.CallExpression) {
 		for (const arg of node.arguments) {
