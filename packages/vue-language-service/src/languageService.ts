@@ -220,7 +220,6 @@ function resolvePlugins(
 						&& diagnostic.code === 2578 /* Unused '@ts-expect-error' directive. */
 						&& text === '// @ts-expect-error __VLS_TS_EXPECT_ERROR'
 					) {
-
 						diagnostic.message = diagnostic.message.replace(/@ts-expect-error/g, '@vue-expect-error');
 					}
 					return diagnostic;
