@@ -56,4 +56,4 @@ const plugin: Service = (context) => {
 	};
 };
 
-export default () => plugin;
+export const create = () => plugin;

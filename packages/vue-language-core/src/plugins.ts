@@ -1,12 +1,12 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import * as useHtmlFilePlugin from './plugins/file-html';
-import * as useMdFilePlugin from './plugins/file-md';
-import * as useVueFilePlugin from './plugins/file-vue';
-import * as useVueSfcCustomBlocks from './plugins/vue-sfc-customblocks';
-import * as useVueSfcScriptsFormat from './plugins/vue-sfc-scripts';
-import * as useVueSfcStyles from './plugins/vue-sfc-styles';
-import * as useVueSfcTemplate from './plugins/vue-sfc-template';
-import * as useHtmlTemplatePlugin from './plugins/vue-template-html';
+import useHtmlFilePlugin from './plugins/file-html';
+import useMdFilePlugin from './plugins/file-md';
+import useVueFilePlugin from './plugins/file-vue';
+import useVueSfcCustomBlocks from './plugins/vue-sfc-customblocks';
+import useVueSfcScriptsFormat from './plugins/vue-sfc-scripts';
+import useVueSfcStyles from './plugins/vue-sfc-styles';
+import useVueSfcTemplate from './plugins/vue-sfc-template';
+import useHtmlTemplatePlugin from './plugins/vue-template-html';
 import useVueTsx from './plugins/vue-tsx';
 import { VueCompilerOptions, VueLanguagePlugin } from './types';
 import * as CompilerDOM from '@vue/compiler-dom';
@@ -33,7 +33,12 @@ export function getDefaultVueLanguagePlugins(
 	];
 	const pluginCtx: Parameters<VueLanguagePlugin>[0] = {
 		modules: {
-			'@vue/compiler-dom': vueCompilerOptions.target < 3 ? CompilerVue2 : CompilerDOM,
+			'@vue/compiler-dom': vueCompilerOptions.target < 3
+				? {
+					...CompilerDOM,
+					compile: CompilerVue2.compile,
+				}
+				: CompilerDOM,
 			typescript: ts,
 		},
 		compilerOptions,
