@@ -5,7 +5,7 @@
       "name": "lazy",
       "description": {
         "kind": "markdown",
-        "value": "\nデフォルトでは、 `v-model` は各 `input` イベントの後に、入力とデータを同期します ([上記](#vmodel-ime-tip) の IME による入力は例外とします)。 代わりに `change` イベント後に同期する `lazy` 修飾子を追加することができます。\n\n```html\n<!-- \"input\" の代わりに \"change\" イベント後に同期されます -->\n<input v-model.lazy=\"msg\" />\n```\n"
+        "value": "\nPor padrão, a `v-model` sincroniza a entrada com o dado depois de cada evento de `input` (com a exceção da composição de IME como [especificada acima](#vmodel-ime-tip)). Tu podes adicionar o modificador `lazy` no lugar de sincronizar depois dos eventos `change`:\n\n```html\n<!-- sincronizado depois de \"change\" no lugar de \"input\" -->\n<input v-model.lazy=\"msg\" />\n```\n"
       },
       "references": [
         {
@@ -42,7 +42,7 @@
       "name": "number",
       "description": {
         "kind": "markdown",
-        "value": "\nユーザー入力を自動で数値として型変換したい場合、 `v-model` で管理している入力に `number` 修飾子を追加することができます。\n\n```html\n<input v-model.number=\"age\" />\n```\n\nもし値が `parseFloat()` で解析できない場合は、代わりに元の値が使用されます。\n\ninput が `type=\"number\"` を持つ場合は `number` 修飾子が自動で適用されます。\n"
+        "value": "\nSe quiseres que a entrada do utilizador seja automaticamente tratada como um número, podes adicionar o modificador `number` as tuas entradas geridas pela `v-model`:\n\n```html\n<input v-model.number=\"age\" />\n```\n\nSe o valor não puder ser analisado com `parseFloat()`, então o valor original é utilizado no lugar.\n\nO modificador `number` é aplicado automaticamente se a entrada tiver o `type=\"number\"`.\n"
       },
       "references": [
         {
@@ -79,7 +79,7 @@
       "name": "trim",
       "description": {
         "kind": "markdown",
-        "value": "\nユーザー入力から自動で空白を取り除きたい場合、 `v-model` で管理している入力に `trim` 修飾子を追加することができます。\n\n```html\n<input v-model.trim=\"msg\" />\n```\n"
+        "value": "\nSe quiseres que espaços em branco da entrada do utilizador sejam cortados automaticamente, podes adicionar o modificador `trim` as tuas entradas geridas pela `v-model`:\n\n```html\n<input v-model.trim=\"msg\" />\n```\n"
       },
       "references": [
         {

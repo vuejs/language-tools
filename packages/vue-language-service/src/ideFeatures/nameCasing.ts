@@ -1,21 +1,20 @@
-import { hyphenate } from '@vue/shared';
 import { ServiceContext, VirtualFile } from '@volar/language-service';
-import { getComponentNames, getTemplateTagsAndAttrs, getPropsByTag } from '../helpers';
-import * as vue from '@vue/language-core';
-import type * as vscode from 'vscode-languageserver-protocol';
-import { AttrNameCasing, TagNameCasing } from '../types';
+import { VueCompilerOptions, VueFile, hyphenateAttr, hyphenateTag } from '@vue/language-core';
 import type { Provide } from 'volar-service-typescript';
+import type * as vscode from 'vscode-languageserver-protocol';
+import { getComponentNames, getPropsByTag, getTemplateTagsAndAttrs } from '../helpers';
+import { AttrNameCasing, TagNameCasing } from '../types';
 
 export async function convertTagName(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	context: ServiceContext<Provide>,
 	uri: string,
 	casing: TagNameCasing,
-	vueCompilerOptions: vue.VueCompilerOptions,
+	vueCompilerOptions: VueCompilerOptions,
 ) {
 
 	const rootFile = context.documents.getSourceByUri(uri)?.root;
-	if (!(rootFile instanceof vue.VueFile))
+	if (!(rootFile instanceof VueFile))
 		return;
 
 	const desc = rootFile.sfc;
@@ -30,14 +29,14 @@ export async function convertTagName(
 	const tags = getTemplateTagsAndAttrs(rootFile);
 
 	for (const [tagName, { offsets }] of tags) {
-		const componentName = components.find(component => component === tagName || hyphenate(component) === tagName);
+		const componentName = components.find(component => component === tagName || hyphenateTag(component) === tagName);
 		if (componentName) {
 			for (const offset of offsets) {
 				const start = document.positionAt(template.startTagEnd + offset);
 				const end = document.positionAt(template.startTagEnd + offset + tagName.length);
 				const range: vscode.Range = { start, end };
-				if (casing === TagNameCasing.Kebab && tagName !== hyphenate(componentName)) {
-					edits.push({ range, newText: hyphenate(componentName) });
+				if (casing === TagNameCasing.Kebab && tagName !== hyphenateTag(componentName)) {
+					edits.push({ range, newText: hyphenateTag(componentName) });
 				}
 				if (casing === TagNameCasing.Pascal && tagName !== componentName) {
 					edits.push({ range, newText: componentName });
@@ -54,11 +53,11 @@ export async function convertAttrName(
 	context: ServiceContext,
 	uri: string,
 	casing: AttrNameCasing,
-	vueCompilerOptions: vue.VueCompilerOptions,
+	vueCompilerOptions: VueCompilerOptions,
 ) {
 
 	const rootFile = context.documents.getSourceByUri(uri)?.root;
-	if (!(rootFile instanceof vue.VueFile))
+	if (!(rootFile instanceof VueFile))
 		return;
 
 	const desc = rootFile.sfc;
@@ -73,18 +72,18 @@ export async function convertAttrName(
 	const tags = getTemplateTagsAndAttrs(rootFile);
 
 	for (const [tagName, { attrs }] of tags) {
-		const componentName = components.find(component => component === tagName || hyphenate(component) === tagName);
+		const componentName = components.find(component => component === tagName || hyphenateTag(component) === tagName);
 		if (componentName) {
 			const props = getPropsByTag(ts, languageService, rootFile, componentName, vueCompilerOptions);
 			for (const [attrName, { offsets }] of attrs) {
-				const propName = props.find(prop => prop === attrName || hyphenate(prop) === attrName);
+				const propName = props.find(prop => prop === attrName || hyphenateAttr(prop) === attrName);
 				if (propName) {
 					for (const offset of offsets) {
 						const start = document.positionAt(template.startTagEnd + offset);
 						const end = document.positionAt(template.startTagEnd + offset + attrName.length);
 						const range: vscode.Range = { start, end };
-						if (casing === AttrNameCasing.Kebab && attrName !== hyphenate(propName)) {
-							edits.push({ range, newText: hyphenate(propName) });
+						if (casing === AttrNameCasing.Kebab && attrName !== hyphenateAttr(propName)) {
+							edits.push({ range, newText: hyphenateAttr(propName) });
 						}
 						if (casing === AttrNameCasing.Camel && attrName !== propName) {
 							edits.push({ range, newText: propName });
@@ -102,7 +101,7 @@ export async function getNameCasing(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	context: ServiceContext,
 	uri: string,
-	vueCompilerOptions: vue.VueCompilerOptions,
+	vueCompilerOptions: VueCompilerOptions,
 ) {
 
 	const detected = detect(ts, context, uri, vueCompilerOptions);
@@ -123,14 +122,14 @@ export function detect(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	context: ServiceContext,
 	uri: string,
-	vueCompilerOptions: vue.VueCompilerOptions,
+	vueCompilerOptions: VueCompilerOptions,
 ): {
 	tag: TagNameCasing[],
 	attr: AttrNameCasing[],
 } {
 
 	const rootFile = context.documents.getSourceByUri(uri)?.root;
-	if (!(rootFile instanceof vue.VueFile)) {
+	if (!(rootFile instanceof VueFile)) {
 		return {
 			tag: [],
 			attr: [],
@@ -152,7 +151,7 @@ export function detect(
 		for (const [_, { attrs }] of tags) {
 			for (const [tagName] of attrs) {
 				// attrName
-				if (tagName !== hyphenate(tagName)) {
+				if (tagName !== hyphenateTag(tagName)) {
 					result.push(AttrNameCasing.Camel);
 					break;
 				}
@@ -177,7 +176,7 @@ export function detect(
 		let anyComponentUsed = false;
 
 		for (const component of components) {
-			if (tagNames.has(component) || tagNames.has(hyphenate(component))) {
+			if (tagNames.has(component) || tagNames.has(hyphenateTag(component))) {
 				anyComponentUsed = true;
 				break;
 			}
@@ -188,7 +187,7 @@ export function detect(
 
 		for (const [tagName] of tagNames) {
 			// TagName
-			if (tagName !== hyphenate(tagName)) {
+			if (tagName !== hyphenateTag(tagName)) {
 				result.push(TagNameCasing.Pascal);
 				break;
 			}
@@ -196,7 +195,7 @@ export function detect(
 		for (const component of components) {
 			// Tagname -> tagname
 			// TagName -> tag-name
-			if (component !== hyphenate(component) && tagNames.has(hyphenate(component))) {
+			if (component !== hyphenateTag(component) && tagNames.has(hyphenateTag(component))) {
 				result.push(TagNameCasing.Kebab);
 				break;
 			}

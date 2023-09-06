@@ -115,7 +115,7 @@ export function createVueLanguage(
 }
 
 /**
- * @deprecated planed to remove in 2.0, please use getOrCreateVueLanguage instead of
+ * @deprecated planed to remove in 2.0, please use createVueLanguage instead of
  */
 export function createLanguages(
 	compilerOptions: ts.CompilerOptions = {},

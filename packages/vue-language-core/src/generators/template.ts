@@ -1,12 +1,13 @@
-import { Segment } from '@volar/source-map';
 import { FileRangeCapabilities } from '@volar/language-core';
+import { Segment } from '@volar/source-map';
 import * as CompilerDOM from '@vue/compiler-dom';
-import { camelize, capitalize, hyphenate } from '@vue/shared';
-import type * as ts from 'typescript/lib/tsserverlibrary';
-import { Sfc, VueCompilerOptions } from '../types';
-import { colletVars, walkInterpolationFragment } from '../utils/transform';
+import { camelize, capitalize } from '@vue/shared';
 import { minimatch } from 'minimatch';
 import * as muggle from 'muggle-string';
+import type * as ts from 'typescript/lib/tsserverlibrary';
+import { Sfc, VueCompilerOptions } from '../types';
+import { hyphenateAttr, hyphenateTag } from '../utils/shared';
+import { colletVars, walkInterpolationFragment } from '../utils/transform';
 
 const capabilitiesPresets = {
 	all: FileRangeCapabilities.full,
@@ -233,7 +234,7 @@ export function generate(
 								...capabilitiesPresets.tagReference,
 								rename: {
 									normalize: tagName === name ? capabilitiesPresets.tagReference.rename.normalize : camelizeComponentName,
-									apply: getRenameApply(tagName),
+									apply: getTagRenameApply(tagName),
 								},
 							},
 						]),
@@ -963,8 +964,8 @@ export function generate(
 								},
 								// onClickOutside -> @click-outside
 								apply(newName) {
-									const hName = hyphenate(newName);
-									if (hyphenate(newName).startsWith('on-')) {
+									const hName = hyphenateAttr(newName);
+									if (hyphenateAttr(newName).startsWith('on-')) {
 										return camelize(hName.slice('on-'.length));
 									}
 									return newName;
@@ -1188,7 +1189,7 @@ export function generate(
 
 				if (
 					(!prop.arg || (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)) // isStatic
-					&& hyphenate(attrNameText) === attrNameText
+					&& hyphenateAttr(attrNameText) === attrNameText
 					&& !vueCompilerOptions.htmlAttributes.some(pattern => minimatch(attrNameText!, pattern))
 				) {
 					attrNameText = camelize(attrNameText);
@@ -1222,7 +1223,7 @@ export function generate(
 								...caps_attr,
 								rename: {
 									normalize: camelize,
-									apply: camelized ? hyphenate : noEditApply,
+									apply: camelized ? hyphenateAttr : noEditApply,
 								},
 							},
 						], (prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {})),
@@ -1238,7 +1239,7 @@ export function generate(
 								...caps_attr,
 								rename: {
 									normalize: camelize,
-									apply: camelized ? hyphenate : noEditApply,
+									apply: camelized ? hyphenateAttr : noEditApply,
 								},
 							},
 						], (prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {})),
@@ -1294,7 +1295,7 @@ export function generate(
 				let camelized = false;
 
 				if (
-					hyphenate(prop.name) === prop.name
+					hyphenateAttr(prop.name) === prop.name
 					&& !vueCompilerOptions.htmlAttributes.some(pattern => minimatch(attrNameText!, pattern))
 				) {
 					attrNameText = camelize(prop.name);
@@ -1317,7 +1318,7 @@ export function generate(
 							...caps_attr,
 							rename: {
 								normalize: camelize,
-								apply: camelized ? hyphenate : noEditApply,
+								apply: camelized ? hyphenateAttr : noEditApply,
 							},
 						},
 					], (prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}))
@@ -1479,7 +1480,7 @@ export function generate(
 							},
 							rename: {
 								normalize: camelize,
-								apply: getRenameApply(prop.name),
+								apply: getPropRenameApply(prop.name),
 							},
 						},
 					],
@@ -1642,7 +1643,7 @@ export function generate(
 							...capabilitiesPresets.slotProp,
 							rename: {
 								normalize: camelize,
-								apply: getRenameApply(prop.arg.content),
+								apply: getPropRenameApply(prop.arg.content),
 							},
 						},
 					], prop.arg.loc),
@@ -1671,7 +1672,7 @@ export function generate(
 							...capabilitiesPresets.attr,
 							rename: {
 								normalize: camelize,
-								apply: getRenameApply(prop.name),
+								apply: getPropRenameApply(prop.name),
 							},
 						},
 					], prop.loc),
@@ -1952,8 +1953,12 @@ function camelizeComponentName(newName: string) {
 	return camelize('-' + newName);
 }
 
-function getRenameApply(oldName: string) {
-	return oldName === hyphenate(oldName) ? hyphenate : noEditApply;
+function getTagRenameApply(oldName: string) {
+	return oldName === hyphenateTag(oldName) ? hyphenateTag : noEditApply;
+}
+
+function getPropRenameApply(oldName: string) {
+	return oldName === hyphenateAttr(oldName) ? hyphenateAttr : noEditApply;
 }
 
 function noEditApply(n: string) {
@@ -1965,7 +1970,7 @@ function getModelValuePropName(node: CompilerDOM.ElementNode, vueVersion: number
 	for (const modelName in vueCompilerOptions.experimentalModelPropName) {
 		const tags = vueCompilerOptions.experimentalModelPropName[modelName];
 		for (const tag in tags) {
-			if (node.tag === tag || node.tag === hyphenate(tag)) {
+			if (node.tag === tag || node.tag === hyphenateTag(tag)) {
 				const v = tags[tag];
 				if (typeof v === 'object') {
 					const arr = Array.isArray(v) ? v : [v];
@@ -1991,7 +1996,7 @@ function getModelValuePropName(node: CompilerDOM.ElementNode, vueVersion: number
 	for (const modelName in vueCompilerOptions.experimentalModelPropName) {
 		const tags = vueCompilerOptions.experimentalModelPropName[modelName];
 		for (const tag in tags) {
-			if (node.tag === tag || node.tag === hyphenate(tag)) {
+			if (node.tag === tag || node.tag === hyphenateTag(tag)) {
 				const attrs = tags[tag];
 				if (attrs === true) {
 					return modelName || undefined;

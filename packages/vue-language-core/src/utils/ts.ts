@@ -11,10 +11,11 @@ export function createParsedCommandLineByJson(
 	parseConfigHost: ts.ParseConfigHost,
 	rootDir: string,
 	json: any,
+	configFileName = rootDir + '/jsconfig.json'
 ): ParsedCommandLine {
 
 	const proxyHost = proxyParseConfigHostForExtendConfigPaths(parseConfigHost);
-	ts.parseJsonConfigFileContent(json, proxyHost.host, rootDir, {}, rootDir + '/jsconfig.json');
+	ts.parseJsonConfigFileContent(json, proxyHost.host, rootDir, {}, configFileName);
 
 	let vueOptions: Partial<VueCompilerOptions> = {};
 
@@ -32,7 +33,7 @@ export function createParsedCommandLineByJson(
 		proxyHost.host,
 		rootDir,
 		{},
-		rootDir + '/jsconfig.json',
+		configFileName,
 		undefined,
 		(vueOptions.extensions ?? ['.vue']).map(extension => ({
 			extension: extension.slice(1),
@@ -158,7 +159,7 @@ function getPartialVueCompilerOptions(
 	}
 	if (rawOptions.plugins) {
 		const plugins = rawOptions.plugins
-			.map<VueLanguagePlugin | undefined>((pluginPath: string) => {
+			.map<VueLanguagePlugin[] | VueLanguagePlugin>((pluginPath: string) => {
 				try {
 					const resolvedPath = resolvePath(pluginPath);
 					if (resolvedPath) {
@@ -167,9 +168,10 @@ function getPartialVueCompilerOptions(
 				}
 				catch (error) {
 					console.warn('Load plugin failed', pluginPath, error);
+					return [];
 				}
 			})
-			.filter((plugin): plugin is NonNullable<typeof plugin> => !!plugin);
+			.flat(Infinity as 1);
 
 		result.plugins = plugins;
 	}
