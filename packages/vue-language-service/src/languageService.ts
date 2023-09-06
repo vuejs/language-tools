@@ -217,7 +217,7 @@ function resolvePlugins(
 					const text = document.getText(diagnostic.range);
 					if (
 						diagnostic.source === 'ts'
-						&& diagnostic.code === 2578 /* No Unused @ts-expect-error */
+						&& diagnostic.code === 2578 /* Unused '@ts-expect-error' directive. */
 						&& text === '// @ts-expect-error __VLS_TS_EXPECT_ERROR'
 					) {
 
