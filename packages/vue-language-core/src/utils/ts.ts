@@ -1,6 +1,6 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path';
-import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin, VueLanguagePluginOption } from '../types';
+import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
 
 export type ParsedCommandLine = ts.ParsedCommandLine & {
 	vueOptions: Partial<VueCompilerOptions>;
@@ -157,8 +157,8 @@ function getPartialVueCompilerOptions(
 		result.target = target;
 	}
 	if (rawOptions.plugins) {
-		const plugins = ((rawOptions.plugins
-			.map<VueLanguagePluginOption>((pluginPath: string) => {
+		const plugins = rawOptions.plugins
+			.map<VueLanguagePlugin[] | VueLanguagePlugin>((pluginPath: string) => {
 				try {
 					const resolvedPath = resolvePath(pluginPath);
 					if (resolvedPath) {
@@ -167,11 +167,10 @@ function getPartialVueCompilerOptions(
 				}
 				catch (error) {
 					console.warn('Load plugin failed', pluginPath, error);
+					return [];
 				}
-				// Fix type error
-			}) as any)
-			.flat(Infinity) as (VueLanguagePlugin | undefined)[])
-			.filter((plugin): plugin is NonNullable<typeof plugin> => !!plugin);
+			})
+			.flat(Infinity as 1);
 
 		result.plugins = plugins;
 	}
