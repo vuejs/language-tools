@@ -1,19 +1,17 @@
-import { getLength, Segment } from '@volar/source-map';
 import { FileRangeCapabilities, MirrorBehaviorCapabilities } from '@volar/language-core';
-import type { TextRange } from '../types';
 import * as SourceMaps from '@volar/source-map';
-import { hyphenate } from '@vue/shared';
+import { Segment, getLength } from '@volar/source-map';
+import * as muggle from 'muggle-string';
 import { posix as path } from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type * as templateGen from '../generators/template';
 import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
+import type { TextRange, VueCompilerOptions } from '../types';
 import { Sfc } from '../types';
-import type { VueCompilerOptions } from '../types';
-import { getSlotsPropertyName } from '../utils/shared';
-import { walkInterpolationFragment } from '../utils/transform';
 import * as sharedTypes from '../utils/globalTypes';
-import * as muggle from 'muggle-string';
+import { getSlotsPropertyName, hyphenateTag } from '../utils/shared';
+import { walkInterpolationFragment } from '../utils/transform';
 
 export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -974,7 +972,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 			// fix import components unused report
 			for (const varName of bindingNames) {
-				if (!!htmlGen.tagNames[varName] || !!htmlGen.tagNames[hyphenate(varName)]) {
+				if (!!htmlGen.tagNames[varName] || !!htmlGen.tagNames[hyphenateTag(varName)]) {
 					usageVars.add(varName);
 				}
 			}

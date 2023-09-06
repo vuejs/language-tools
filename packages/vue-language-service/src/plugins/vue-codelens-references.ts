@@ -2,7 +2,7 @@ import { Service } from '@volar/language-service';
 import { VueFile } from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 
-export default function (): Service {
+export const create = function (): Service {
 
 	return (context): ReturnType<Service> => {
 
@@ -67,4 +67,4 @@ export default function (): Service {
 			return callback(virtualFile);
 		}
 	};
-}
+};

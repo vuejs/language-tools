@@ -1,0 +1,978 @@
+{
+  "version": 1.1,
+  "tags": [
+    {
+      "name": "Transition",
+      "description": {
+        "kind": "markdown",
+        "value": "\nFornece efeitos de transição animados para um **único** elemento ou componente.\n\n- **Propriedades**\n\n  ```ts\n  interface TransitionProps {\n    /**\n     * Usado para gerar automaticamente nomes de classes CSS de transição.\n     * exemplo `name: 'fade'` expandirá automaticamente para `.fade-enter`,\n     * `.fade-enter-active`, etc.\n     */\n    name?: string\n    /**\n     * Decide aplicar classes CSS de transição.\n     * Padrão: true\n     */\n    css?: boolean\n    /**\n     * Especifica o tipo de eventos de transição à aguardar\n     * para determinar a transição e o tempo.\n     * O comportamento padrão é detetar automaticamente o tipo\n     * que tiver a maior duração.\n     */\n    type?: 'transition' | 'animation'\n    /**\n     * Especifica durações explícitas para as transições.\n     * O comportamento padrão é esperar pelo primeiro evento `transitionend`\n     * ou `animationend` no elemento de transição raiz.\n     */\n    duration?: number | { enter: number; leave: number }\n    /**\n     * Controla a sequência de tempo das transições que entram ou saem.\n     * O comportamento padrão é simultâneo.\n     */\n    mode?: 'in-out' | 'out-in' | 'default'\n    /**\n     * Define aplicar a transição na interpretação inicial.\n     * Padrão: false\n     */\n    appear?: boolean\n\n    /**\n     * Propriedades para personalizar as classes de transição.\n     * Use kebab-case nos modelos de marcação, exemplo enter-from-class=\"xxx\"\n     */\n    enterFromClass?: string\n    enterActiveClass?: string\n    enterToClass?: string\n    appearFromClass?: string\n    appearActiveClass?: string\n    appearToClass?: string\n    leaveFromClass?: string\n    leaveActiveClass?: string\n    leaveToClass?: string\n  }\n  ```\n\n- **Eventos**\n\n  - `@before-enter`\n  - `@before-leave`\n  - `@enter`\n  - `@leave`\n  - `@appear`\n  - `@after-enter`\n  - `@after-leave`\n  - `@after-appear`\n  - `@enter-cancelled`\n  - `@leave-cancelled` (apenas `v-show`)\n  - `@appear-cancelled`\n\n- **Exemplo**\n\n  Elemento simples:\n\n  ```html\n  <Transition>\n    <div v-if=\"ok\">conteúdo alternado</div>\n  </Transition>\n  ```\n\n  Forçar uma transição mudando o atributo `key`:\n\n  ```html\n  <Transition>\n    <div :key=\"text\">{{ text }}</div>\n  </Transition>\n  ```\n\n  Componente dinâmico, com o modo de transição + animação ao aparecer:\n\n  ```html\n  <Transition name=\"fade\" mode=\"out-in\" appear>\n    <component :is=\"view\"></component>\n  </Transition>\n  ```\n\n  Ouvir eventos de transição:\n\n  ```html\n  <Transition @after-enter=\"onTransitionComplete\">\n    <div v-show=\"ok\">conteúdo ativado</div>\n  </Transition>\n  ```\n\n- **Consulte também:** [Guia de `<Transition>`](https://pt.vuejs.org/guide/built-ins/transition.html)\n"
+      },
+      "attributes": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-components.html#transition"
+        }
+      ]
+    },
+    {
+      "name": "TransitionGroup",
+      "description": {
+        "kind": "markdown",
+        "value": "\nFornece efeitos de transição para **múltiplos** elementos ou componentes numa lista.\n\n- **Propriedades**\n\n  `<TransitionGroup>` aceita as mesmas propriedades que o `<Transition>` exceto `mode`, e mais duas propriedades adicionais:\n\n  ```ts\n  interface TransitionGroupProps extends Omit<TransitionProps, 'mode'> {\n    /**\n     * Se não definido, desenha um fragmento.\n     */\n    tag?: string\n    /**\n     * Para personalizar as classes CSS aplicadas durante as transições de movimento.\n     * Use kebab-case em modelos de marcação, exemplo move-class=\"xxx\"\n     */\n    moveClass?: string\n  }\n  ```\n\n- **Eventos**\n\n  `<TransitionGroup>` emite os mesmos eventos que `<Transition>`.\n\n- **Detalhes**\n\n  Por padrão, `<TransitionGroup>` não desenha um elemento de DOM que envolve, mas pode ser definido através da propriedade `tag`.\n\n  Note que todo filho num `<transition-group>` deve ser [**identificado unicamente**](https://pt.vuejs.org/guide/essentials/list.html#maintaining-state-with-key) para que as animações funcionem apropriadamente.\n\n  `<TransitionGroup>` suporta transições de movimento através de transformações de CSS. Quando a posição dum filho na tela é mudada após uma atualização, será aplicada uma classe de movimento CSS (gerada automaticamente pelo atributo `name` ou configurada pela propriedade `move-class`). Se a propriedade de CSS `transform` é passível de transição quando a classe de movimento é aplicada, o elemento será suavemente animado até o seu destino usando a [técnica FLIP](https://aerotwist.com/blog/flip-your-animations/).\n\n- **Exemplo**\n\n  ```html\n  <TransitionGroup tag=\"ul\" name=\"slide\">\n    <li v-for=\"item in items\" :key=\"item.id\">\n      {{ item.text }}\n    </li>\n  </TransitionGroup>\n  ```\n\n- **Consulte também:** [Guia - `TransitionGroup`](https://pt.vuejs.org/guide/built-ins/transition-group.html)\n"
+      },
+      "attributes": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-components.html#transitiongroup"
+        }
+      ]
+    },
+    {
+      "name": "KeepAlive",
+      "description": {
+        "kind": "markdown",
+        "value": "\nArmazena para consulta imediata os componentes alternados dinamicamente envolvidos dentro.\n\n- **Propriedades**\n\n  ```ts\n  interface KeepAliveProps {\n    /**\n     * Se especificado, apenas componentes com nomes correspondidos\n     * pelo `include` estarão na memória de consulta imediata.\n     */\n    include?: MatchPattern\n    /**\n     * Qualquer componente com um nome correspondidos pelo `exclude`\n     * não estarão na memória de consulta imediata.\n     */\n    exclude?: MatchPattern\n    /**\n     * O número máximo de instâncias de componente à armazenar\n     * na memória de consulta imediata.\n     */\n    max?: number | string\n  }\n\n  type MatchPattern = string | RegExp | (string | RegExp)[]\n  ```\n\n- **Detalhes**\n\n  Quando envolvido em torno dum componente dinâmico, `<KeepAlive>` armazena para consulta imediata as instâncias de componente inativo sem destruí-las.\n\n  Só pode existir uma instância de componente como filho direto de `<KeepAlive>` em qualquer momento.\n\n  Quando um componente é alternado dentro de `<KeepAlive>`, seus gatilhos de ciclo de vida `activated` e `deactivated` são invocados de acordo, fornecendo uma alternativa ao `mounted` e `unmounted`, que não são chamados. Isto aplica-se ao filho direto de `<KeepAlive>` e também a todos os seus descendentes.\n\n- **Exemplo**\n\n  Uso básico:\n\n  ```html\n  <KeepAlive>\n    <component :is=\"view\"></component>\n  </KeepAlive>\n  ```\n\n  Quando usado com os ramos `v-if` / `v-else`, só deve existir um componente desenhado de cada vez:\n\n  ```html\n  <KeepAlive>\n    <comp-a v-if=\"a > 1\"></comp-a>\n    <comp-b v-else></comp-b>\n  </KeepAlive>\n  ```\n\n  Usado em conjunto com `<Transition>`:\n\n  ```html\n  <Transition>\n    <KeepAlive>\n      <component :is=\"view\"></component>\n    </KeepAlive>\n  </Transition>\n  ```\n\n  Usando `include` / `exclude`:\n\n  ```html\n  <!-- sequência de caracteres delimitada por vírgula -->\n  <KeepAlive include=\"a,b\">\n    <component :is=\"view\"></component>\n  </KeepAlive>\n\n  <!-- regex (use `v-bind`) -->\n  <KeepAlive :include=\"/a|b/\">\n    <component :is=\"view\"></component>\n  </KeepAlive>\n\n  <!-- vetor (use `v-bind`) -->\n  <KeepAlive :include=\"['a', 'b']\">\n    <component :is=\"view\"></component>\n  </KeepAlive>\n  ```\n\n  Uso com `max`:\n\n  ```html\n  <KeepAlive :max=\"10\">\n    <component :is=\"view\"></component>\n  </KeepAlive>\n  ```\n\n- **Consulte também:** [Guia - `KeepAlive`](https://pt.vuejs.org/guide/built-ins/keep-alive.html)\n"
+      },
+      "attributes": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-components.html#keepalive"
+        }
+      ]
+    },
+    {
+      "name": "Teleport",
+      "description": {
+        "kind": "markdown",
+        "value": "\nDesenha o conteúdo da sua ranhura numa outra parte do DOM.\n\n- **Propriedades**\n\n  ```ts\n  interface TeleportProps {\n    /**\n     * Obrigatório. Específica o contentor alvo.\n     * Pode ser ou um seletor ou um elemento verdadeiro.\n     */\n    to: string | HTMLElement\n    /**\n     * Quando `true`, o conteúdo continuará na sua localização\n     * original ao invés de ser movido para o contentor alvo.\n     * Pode ser mudado dinamicamente.\n     */\n    disabled?: boolean\n  }\n  ```\n\n- **Exemplo**\n\n  Especificando o contentor alvo:\n\n  ```html\n  <teleport to=\"#some-id\" />\n  <teleport to=\".some-class\" />\n  <teleport to=\"[data-teleport]\" />\n  ```\n\n  Desativar condicionalmente:\n\n  ```html\n  <teleport to=\"#popup\" :disabled=\"displayVideoInline\">\n    <video src=\"./my-movie.mp4\">\n  </teleport>\n  ```\n\n- **Consulte também:** [Guia - `Teleport`](https://pt.vuejs.org/guide/built-ins/teleport.html)\n"
+      },
+      "attributes": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-components.html#teleport"
+        }
+      ]
+    },
+    {
+      "name": "Suspense",
+      "description": {
+        "kind": "markdown",
+        "value": "\nUsado para orquestrar dependências assíncronas encaixadas numa árvore de componente.\n\n- **Propriedades**\n\n  ```ts\n  interface SuspenseProps {\n    timeout?: string | number\n  }\n  ```\n\n- **Eventos**\n\n  - `@resolve`\n  - `@pending`\n  - `@fallback`\n\n- **Detalhes**\n\n  `<Suspense>` aceita duas ranhuras: a ranhura `#default` e a ranhura `#fallback`. Ele exibirá o conteúdo da ranhura de retorno (`#fallback`) enquanto desenha a ranhura padrão (`#default`) na memória.\n\n  Se encontrar dependências assíncronas ([Componentes Assíncronos](https://pt.vuejs.org/guide/components/async.html) e componentes com [`async setup()`](https://pt.vuejs.org/guide/built-ins/suspense.html#async-setup)) enquanto desenha a ranhura padrão, aguardará até todos serem resolvidos antes de exibir a ranhura padrão.\n\n- **Consulte também:** [Guia - `Suspense`](https://pt.vuejs.org/guide/built-ins/suspense.html)\n"
+      },
+      "attributes": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-components.html#suspense"
+        }
+      ]
+    },
+    {
+      "name": "component",
+      "description": {
+        "kind": "markdown",
+        "value": "\nUm \"meta componente\" para renderizar dinâmicamente componentes ou elementos.\n\n- **Propriedades**\n\n  ```ts\n  interface DynamicComponentProps {\n    is: string | Component\n  }\n  ```\n\n- **Detalhes**\n\n  O atual componente a ser renderizado é determinado pela propriedade `is`.\n\n  - Quando `is` é uma string, pode ser um nome de tag HTML ou o nome registrado de um componente\n\n  - Alternativamente, `is` também pode ser vinculado diretamente à definição de um componente.\n\n- **Exemplo**\n\n  Renderizando componentes por nome registrado (API de Opções):\n\n  ```vue\n  <script>\n  import Foo from './Foo.vue'\n  import Bar from './Bar.vue'\n\n  export default {\n    components: { Foo, Bar },\n    data() {\n      return {\n        view: 'Foo'\n      }\n    }\n  }\n  </script>\n\n  <template>\n    <component :is=\"view\" />\n  </template>\n  ```\n\n  Renderizando componentes por definição (API de Composição com `<script setup>`):\n\n  ```vue\n  <script setup>\n  import Foo from './Foo.vue'\n  import Bar from './Bar.vue'\n  </script>\n\n  <template>\n    <component :is=\"Math.random() > 0.5 ? Foo : Bar\" />\n  </template>\n  ```\n\n  Renderizando elementos HTML:\n\n  ```html\n  <component :is=\"href ? 'a' : 'span'\"></component>\n  ```\n\n  Os [componentes embutidos](./built-in-components.html) podem ser todos passados por `is`, mas você deve registrá-los se quiser passá-los por nome. Por exemplo:\n\n  ```vue\n  <script>\n  import { Transition, TransitionGroup } from 'vue'\n\n  export default {\n    components: {\n      Transition,\n      TransitionGroup\n    }\n  }\n  </script>\n\n  <template>\n    <component :is=\"isGroup ? 'TransitionGroup' : 'Transition'\">\n      ...\n    </component>\n  </template>\n  ```\n\n  O registro não é necessário se você passar o próprio componente para `is` em vez de seu nome, por exemplo em `<script setup>`.\n\n  Se `v-model` for usado em uma tag `<component>`, o compilador de template irá expandi-lo para suporte com a propriedade `modelValue` e um event listener `update:modelValue`, assim como faria para qualquer outro componente. No entanto, isso não será compatível com elementos HTML nativos, como `<input>` ou `<select>`. Como resultado, usar `v-model` com um elemento nativo criado dinamicamente não funcionará:\n\n  ```vue\n  <script setup>\n  import { ref } from 'vue'\n  \n  const tag = ref('input')\n  const username = ref('')\n  </script>\n\n  <template>\n    <!-- Isso não funcionará porque 'input' é um elemento HTML nativo -->\n    <component :is=\"tag\" v-model=\"username\" />\n  </template>\n  ```\n\n  Na prática, esse caso extremo não é comum, pois os campos de formulário nativos geralmente são agrupados em componentes em aplicativos reais. Se você precisar usar um elemento nativo diretamente, poderá dividir o `v-model` em um atributo e evento manualmente.\n\n- **Veja também:** [Componentes Dinâmicos](https://pt.vuejs.org/guide/essentials/component-basics.html#dynamic-components)\n"
+      },
+      "attributes": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-special-elements.html#component"
+        }
+      ]
+    },
+    {
+      "name": "slot",
+      "description": {
+        "kind": "markdown",
+        "value": "\nIndica saídas de conteúdo de slot em templates.\n\n- **Propriedades**\n\n  ```ts\n  interface SlotProps {\n    /**\n     * Qualquer propriedade passada para <slot> para passar como argumentos\n     * para slots com escopo\n     */\n    [key: string]: any\n    /**\n     * Reservado para especificar o nome do slot.\n     */\n    name?: string\n  }\n  ```\n\n- **Detalhes**\n\n  O elemento `<slot>` pode usar o atributo `name` para especificar um nome de slot. Quando nenhum `name` for especificado, ele renderizará o slot padrão. Atributos adicionais passados ​​para o elemento slot serão passados ​​como propriedades de slot para o slot com escopo definido no pai.\n\n  O próprio elemento será substituído por seu conteúdo de slot correspondente.\n\n  `<slot>` elementos em templates Vue são compilados em JavaScript, então eles não devem ser confundidos com [elementos `<slot>` nativos](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/slot).\n\n- **Veja também:** [Componentes - Slots](https://pt.vuejs.org/guide/components/slots.html)\n"
+      },
+      "attributes": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-special-elements.html#slot"
+        }
+      ]
+    },
+    {
+      "name": "template",
+      "description": {
+        "kind": "markdown",
+        "value": "\nA tag `<template>` é usada como espaço reservado quando queremos usar uma diretiva interna sem renderizar um elemento no DOM.\n\n- **Detalhes:**\n\n  O tratamento especial para `<template>` só é acionado se for usado com uma destas diretivas:\n\n  - `v-if`, `v-else-if`, or `v-else`\n  - `v-for`\n  - `v-slot`\n  \n  Se nenhuma dessas diretivas estiver presente, ela será renderizada como um [elemento `<template>` nativo](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).\n\n  Um `<template>` com um `v-for` também pode ter um atributo [`key`](https://pt.vuejs.org/api/built-in-special-attributes.html#key). Todos os outros atributos e diretivas serão descartados, pois não são significativos sem um elemento correspondente.\n\n  Componentes de arquivo único (SFC) usam uma [tag `<template>` de alto nível](https://pt.vuejs.org/api/sfc-spec.html#language-blocks) para agrupar todo o template. Esse uso é separado do uso de `<template>` descrito acima. Essa tag de nível superior não faz parte do próprio modelo e não oferece suporte à sintaxe do modelo, tais como diretivas.\n\n- **Veja também:**\n  - [Guia - `v-if` on `<template>`](https://pt.vuejs.org/guide/essentials/conditional.html#v-if-on-template) \n  - [Guia - `v-for` on `<template>`](https://pt.vuejs.org/guide/essentials/list.html#v-for-on-template) \n  - [Guia - Slots nomeados](https://pt.vuejs.org/guide/components/slots.html#named-slots) \n"
+      },
+      "attributes": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-special-elements.html#template"
+        }
+      ]
+    }
+  ],
+  "globalAttributes": [
+    {
+      "name": "v-text",
+      "description": {
+        "kind": "markdown",
+        "value": "\nAtualiza o conteúdo de texto do elemento.\n\n- **Espera:** `string`\n\n- **Detalhes**\n\n  `v-text` funciona por definir a propriedade [textContent](https://developer.mozilla.org/pt-BR/docs/Web/API/Node/textContent) do elemento, ela irá sobrescrever qualquer conteúdo dentro do elemento. Se você precisar atualizar parte do `textContent`, você deve usar [interpolações mustache](https://pt.vuejs.org/guide/essentials/template-syntax.html#text-interpolation).\n\n- **Exemplo**\n\n  ```html\n  <span v-text=\"msg\"></span>\n  <!-- é o mesmo que -->\n  <span>{{msg}}</span>\n  ```\n\n- **Veja também:** [Sintaxe do Modelo - Interpolação de Texto](https://pt.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-text"
+        }
+      ]
+    },
+    {
+      "name": "v-html",
+      "description": {
+        "kind": "markdown",
+        "value": "\nAtualiza o [innerHTML](https://developer.mozilla.org/pt-BR/docs/Web/API/Element/innerHTML) do elemento.\n\n- **Espera:** `string`\n\n- **Detalhes:**\n\n  O conteúdo do `v-html` será inserido como HTML puro - a sintaxe de modelos Vue não será processada. Se você está tentando compor templates usando `v-html`, repense a solução tentando usar componentes.\n\n  ::: warning Nota de Segurança\n  Interpretar HTML arbitrário de forma dinâmica em seu website pode ser muito perigoso porque isso pode facilmente levar a [ataques XSS](https://en.wikipedia.org/wiki/Cross-site_scripting). Apenas use `v-html` em conteúdo confiável e **nunca** em conteúdo fornecido pelo usuário.\n  :::\n\n  Em [Componentes de Arquivo Único](https://pt.vuejs.org/guide/scaling-up/sfc.html), estilos `scoped` não serão aplicados ao conteúdo dentro do `v-html`, porque este HTML não é processado pelo compilador de modelos do Vue. Se você quer atingir o conteúdo de `v-html` com CSS escopado, você pode usar então [módulos CSS](./sfc-css-features.html#css-modules) ou um elemento `<style>` global adicional com uma estratégia de escopagem manual como o BEM.\n\n- **Exemplo:**\n\n  ```html\n  <div v-html=\"html\"></div>\n  ```\n\n- **Veja também:** [Sintaxe do Modelo - HTML Bruto](https://pt.vuejs.org/guide/essentials/template-syntax.html#raw-html)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-html"
+        }
+      ]
+    },
+    {
+      "name": "v-show",
+      "description": {
+        "kind": "markdown",
+        "value": "\nAlterna a visibilidade do elemento baseado na veracidade do valor da expressão.\n\n- **Espera:** `any`\n\n- **Detalhes**\n\n  `v-show` funciona ao definir a propriedade CSS `display` através de estilos em linha, e tentará respeitar o valor inicial de `display` quando o elemento está visível. Ele também aciona transições quando as suas condições mudam.\n\n- **Veja também:** [Interpretação Condicional - v-show](https://pt.vuejs.org/guide/essentials/conditional.html#v-show)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-show"
+        }
+      ]
+    },
+    {
+      "name": "v-if",
+      "description": {
+        "kind": "markdown",
+        "value": "\nApresenta um elemento ou fragmento de um modelo condicionalmente baseado na veracidade do valor da expressão.\n\n- **Espera:** `any`\n\n- **Detalhes**\n\n  Quando um elemento `v-if` é alternado, o elemento e seus componentes/diretivas contidas são destruídas e reconstruídas. Se a condição inicial for falsa, então o conteúdo interno não será interpretado de qualquer forma.\n\n  Pode ser usado no `<template>` para denotar um bloco condicional contando apenas texto ou múltiplos elementos.\n  Esta diretiva aciona transições quando sua condição muda.\n\n  Ao usar conjuntamente, o `v-if` tem maior prioridade que o `v-for`. Não recomendamos usar essas duas diretivas juntas no mesmo elemento - veja o [guia de interpretação de lista](https://pt.vuejs.org/guide/essentials/list.html#v-for-with-v-if) para mais detalhes.\n\n- **Veja também:** [Interpretação Condicional - v-if](https://pt.vuejs.org/guide/essentials/conditional.html#v-if)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-if"
+        }
+      ]
+    },
+    {
+      "name": "v-else",
+      "valueSet": "v",
+      "description": {
+        "kind": "markdown",
+        "value": "\nDenota um \"bloco else\" para o `v-if` ou para uma cadeia `v-if` / `v-else-if`.\n\n- **Não espera expressões**\n\n- **Detalhes**\n\n  - Restrição: o elemento irmão anterior precisa ter `v-if` ou `v-else-if`.\n\n  - Pode ser usado no `<template>` para denotar um bloco condicional contendo apenas texto ou múltiplos elementos.\n\n- **Exemplo**\n\n  ```html\n  <div v-if=\"Math.random() > 0.5\">\n    Agora você me vê\n  </div>\n  <div v-else>\n    Agora não\n  </div>\n  ```\n\n- **Veja também:** [Interpretação Condicional - v-else](https://pt.vuejs.org/guide/essentials/conditional.html#v-else)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-else"
+        }
+      ]
+    },
+    {
+      "name": "v-else-if",
+      "description": {
+        "kind": "markdown",
+        "value": "\nDenota o \"bloco else if\" para o `v-if`. Pode ser encadeado.\n\n- **Espera:** `any`\n\n- **Detalhes**\n\n  - Restrição: o elemento irmão anterior precisa ter `v-if` ou `v-else-if`.\n\n  - Pode ser usado no `<template>` para denotar um bloco condicional contendo apenas texto ou múltiplos elementos.\n\n- **Exemplo**\n\n  ```html\n  <div v-if=\"type === 'A'\">\n    A\n  </div>\n  <div v-else-if=\"type === 'B'\">\n    B\n  </div>\n  <div v-else-if=\"type === 'C'\">\n    C\n  </div>\n  <div v-else>\n    Não A/B/C\n  </div>\n  ```\n\n- **Veja também:** [Interpretação Condicional - v-else-if](https://pt.vuejs.org/guide/essentials/conditional.html#v-else-if)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-else-if"
+        }
+      ]
+    },
+    {
+      "name": "v-for",
+      "description": {
+        "kind": "markdown",
+        "value": "\nApresenta o elemento ou bloco de modelo múltiplas vezes baseado na fonte de dados.\n\n- **Espera:** `Array | Object | number | string | Iterable`\n\n- **Detalhes**\n\n  O valor da diretiva deve usar a sintaxe espcial `variável in expressão` para fornecer uma variável para o atual elemento que está sendo iterado:\n\n  ```html\n  <div v-for=\"item in items\">\n    {{ item.text }}\n  </div>\n  ```\n\n  Alternativamente, você pode também especificar uma variável para o índice (ou a chave se for usada em um Objeto):\n\n  ```html\n  <div v-for=\"(item, index) in items\"></div>\n  <div v-for=\"(value, key) in object\"></div>\n  <div v-for=\"(value, name, index) in object\"></div>\n  ```\n\n  O comportamento padrão de `v-for` tentará corrigir os elementos existentes sem movê-los. Para forçar a reordenação de elementos, você deve fornecer uma dica de ordenação com o atributo especial `key`:\n\n  ```html\n  <div v-for=\"item in items\" :key=\"item.id\">\n    {{ item.text }}\n  </div>\n  ```\n\n  `v-for` também pode trabalhar com valores que implementam o [Protocolo Iterável](https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Reference/Iteration_protocols#o_protocolo_iter%C3%A1vel_iterable_protocol), incluindo os nativos `Map` e `Set`.\n\n- **Veja também:**\n  - [Interpretação de Lista](https://pt.vuejs.org/guide/essentials/list.html)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-for"
+        }
+      ]
+    },
+    {
+      "name": "v-on",
+      "description": {
+        "kind": "markdown",
+        "value": "\nAnexa um _event listener_ ao elemento.\n\n- **Atalho:** `@`\n\n- **Espera:** `Function | Inline Statement | Object (sem argumento)`\n\n- **Argumento:** `event` (opcional se estiver usando a sintaxe de Objeto)\n\n- **Modificadores:**\n\n  - `.stop` - chama `event.stopPropagation()`.\n  - `.prevent` - chama `event.preventDefault()`.\n  - `.capture` - adiciona um _event listener_ no modo de captura.\n  - `.self` - dispara o manipulador apenas se o evento foi despachado por este elemento.\n  - `.{keyAlias}` - dispara o manipulador apenas com certas teclas.\n  - `.once` - dispara o manipulador apenas uma vez.\n  - `.left` - dispara o manipulador apenas para eventos com o botão esquerdo do mouse.\n  - `.right` - dispara o manipulador apenas para eventos com o botão direito do mouse.\n  - `.middle` - dispara o manipulador apenas para eventos com o botão do meio do mouse.\n  - `.passive` - anexa um evento DOM com `{ passive: true }`.\n\n- **Detalhes**\n\n  O tipo de evento é denotado pelo argumento. A expressão pode ser o nome de um método, uma declaração em linha, ou omitido se os modificadores estiverem presentes.\n\n  Ao ser usado em um elemento normal, ele escuta apenas à [**eventos nativos do DOM**](https://developer.mozilla.org/pt-BR/docs/Web/Events). Quando usado em um elemento que é um componente personalizado, ele escuta aos **eventos personalizados** emitidos pelo componente filho.\n\n  Ao escutar eventos nativos do DOM, o método recebe o evento nativo como único argumento. Se usar uma declaração alinhada, a declaração tem acesso a propriedade especial `$event`: `v-on:click=\"handle('ok', $event)\"`.\n\n  `v-on` também suporta vincular a pares de _event/listener_ sem um argumento. Note que ao usar a sintaxe de objeto, ele não suporta qualquer modificador.\n\n- **Exemplo:**\n\n  ```html\n  <!-- manipulador de método -->\n  <button v-on:click=\"doThis\"></button>\n\n  <!-- evento dinâmico -->\n  <button v-on:[event]=\"doThis\"></button>\n\n  <!-- declaração em linha -->\n  <button v-on:click=\"doThat('hello', $event)\"></button>\n\n  <!-- atalho -->\n  <button @click=\"doThis\"></button>\n\n  <!-- atalho de evento dinâmico -->\n  <button @[event]=\"doThis\"></button>\n\n  <!-- parar propagação -->\n  <button @click.stop=\"doThis\"></button>\n\n  <!-- prevenir o padrão -->\n  <button @click.prevent=\"doThis\"></button>\n\n  <!-- prevenir o padrão sem expressão -->\n  <form @submit.prevent></form>\n\n  <!-- modificadores em cadeia -->\n  <button @click.stop.prevent=\"doThis\"></button>\n\n  <!-- modificador de tecla usando keyAlias -->\n  <input @keyup.enter=\"onEnter\" />\n\n  <!-- o evento click será disparado apenas uma vez -->\n  <button v-on:click.once=\"doThis\"></button>\n\n  <!-- sintaxe de objeto -->\n  <button v-on=\"{ mousedown: doThis, mouseup: doThat }\"></button>\n  ```\n\n  Escutar a eventos personalizados de um componente filho (o manipulador é chamado quando \"my-event\" é emitido pelo filho):\n\n  ```html\n  <MyComponent @my-event=\"handleThis\" />\n\n  <!-- declaração em linha -->\n  <MyComponent @my-event=\"handleThis(123, $event)\" />\n  ```\n\n- **Veja também:**\n  - [Manipulação de Eventos](https://pt.vuejs.org/guide/essentials/event-handling.html)\n  - [Componentes - Eventos Personalizados](https://pt.vuejs.org/guide/essentials/component-basics.html#listening-to-events)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-on"
+        }
+      ]
+    },
+    {
+      "name": "v-bind",
+      "description": {
+        "kind": "markdown",
+        "value": "\nVincula um ou mais atributos dinamicamente, ou uma propriedade de componente a uma expressão.\n\n- **Atalho:** `:` ou `.` (ao usar o modificador `.prop`)\n\n- **Espera:** `any (com argumento) | Object (sem argumento)`\n\n- **Argumento:** `attrOrProp (opcional)`\n\n- **Modificadores:**\n\n  - `.camel` - transforma o nome de atributo kebab-case em camelCase.\n  - `.prop` - força que a vinculação aconteça como uma propriedade no DOM. <sup class=\"vt-badge\">3.2+</sup>\n  - `.attr` - força que a vinculação aconteça como um atributo no DOM. <sup class=\"vt-badge\">3.2+</sup>\n\n- **Uso:**\n\n  Ao usar para vincular os atributos `class` ou `style`, `v-bind` suporta tipos de valores adicionais como Array ou Object. Veja a seção guia mencionada abaixo para mais detalhes.\n\n  Quando configurar uma vinculação em um elemento, o Vue por padrão irá conferir se o elemento tem a chave definida como propriedade usando o operador `in` para realizar a conferência. Se a propriedade for definida, Vue irá definir o valor como uma propriedade DOM ao invés de um atributo. Isto deve acontecer na maioria dos casos, mas você pode sobrepor esse comportamento ao usar explicitamente os modificadores `.prop` ou `.attr`. Isto às vezes é necessário, especialmente ao [trabalhar com elementos personalizados](https://pt.vuejs.org/guide/extras/web-components.html#passing-dom-properties).\n\n  Ao usar para vincular propriedades aos componentes, a propriedade deve ser adequadamente declarada no componente filho.\n\n  Ao ser usada sem um argumento, pode vincular um objeto contendo pares de atributo nome-valor.\n\n- **Exemplo:**\n\n  ```html\n  <!-- vincular um atributo -->\n  <img v-bind:src=\"imageSrc\" />\n\n  <!-- nome de atributo dinâmico -->\n  <button v-bind:[key]=\"value\"></button>\n\n  <!-- atalho -->\n  <img :src=\"imageSrc\" />\n\n  <!-- atalho de nome de atributo dinâmico -->\n  <button :[key]=\"value\"></button>\n\n  <!-- com concatenação de string em linha -->\n  <img :src=\"'/path/to/images/' + fileName\" />\n\n  <!-- vincular classes -->\n  <div :class=\"{ red: isRed }\"></div>\n  <div :class=\"[classA, classB]\"></div>\n  <div :class=\"[classA, { classB: isB, classC: isC }]\"></div>\n\n  <!-- vincular estilo -->\n  <div :style=\"{ fontSize: size + 'px' }\"></div>\n  <div :style=\"[styleObjectA, styleObjectB]\"></div>\n\n  <!-- vincular um objeto de atributos -->\n  <div v-bind=\"{ id: someProp, 'other-attr': otherProp }\"></div>\n\n  <!-- vincular propriedades. \"prop\" deve ser declarada no componente filho. -->\n  <MyComponent :prop=\"someThing\" />\n\n  <!-- passar propriedades em comum do pai ao componente -->\n  <MyComponent v-bind=\"$props\" />\n\n  <!-- XLink -->\n  <svg><a :xlink:special=\"foo\"></a></svg>\n  ```\n\n  O modificador `.prop` também tem um atalho dedicado `.`:\n\n  ```html\n  <div :someProperty.prop=\"someObject\"></div>\n\n  <!-- equivalente a -->\n  <div .someProperty=\"someObject\"></div>\n  ```\n\n  O modificador `.camel` permite 'camelizar' um nome de atributo `v-bind` ao usar _templates in-DOM_, e.g. o atributo `viewBox` do SVG:\n\n  ```html\n  <svg :view-box.camel=\"viewBox\"></svg>\n  ```\n\n  `.camel` não é necessário se você está usando _templates string_, ou pré-compilando o modelo com uma fase de build.\n\n- **Veja também:**\n  - [Vinculações de Classe e Estilo](https://pt.vuejs.org/guide/essentials/class-and-style.html)\n  - [Componentes - Detalhes ao Passar Proriedades](https://pt.vuejs.org/guide/components/props.html#prop-passing-details)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-bind"
+        }
+      ]
+    },
+    {
+      "name": "v-model",
+      "description": {
+        "kind": "markdown",
+        "value": "\nCria uma vinculação de dois caminhos em uma entrada de formulário ou em um componente.\n\n- **Espera:** varia de acordo com o valor que as entradas do formulário ou com a saída dos componentes\n\n- **Limitado a:**\n\n  - `<input>`\n  - `<select>`\n  - `<textarea>`\n  - componentes\n\n- **Modificadores:**\n\n  - [`.lazy`](https://pt.vuejs.org/guide/essentials/forms.html#lazy) - escuta a eventos `change` ao invés de `input`\n  - [`.number`](https://pt.vuejs.org/guide/essentials/forms.html#number) - lança entradas de string válidas para números\n  - [`.trim`](https://pt.vuejs.org/guide/essentials/forms.html#trim) - apara a entrada\n\n- **Veja também:**\n\n  - [Vinculações de Entrada de Formulário](https://pt.vuejs.org/guide/essentials/forms.html)\n  - [Eventos de Componente - Uso com `v-model`](https://pt.vuejs.org/guide/components/v-model.html)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-model"
+        }
+      ]
+    },
+    {
+      "name": "v-slot",
+      "description": {
+        "kind": "markdown",
+        "value": "\nDenota encaixes nomeados ou encaixes escopados que esperam receber propriedades.\n\n- **Atalho:** `#`\n\n- **Espera:** Expressão JavaScript que é valida em uma posição de argumento de função, incluindo suporte para desestruturação. Opcional - apenas necessário ao esperar que propriedades sejam passadas ao encaixe.\n\n- **Argumento:** nome do encaixe (opcional, o padrão é `default`)\n\n- **Limitado a:**\n\n  - `<template>`\n  - [componentes](https://pt.vuejs.org/guide/components/slots.html#scoped-slots) (para um encaixe solitário padrão com propriedades)\n\n- **Exemplo:**\n\n  ```html\n  <!-- Encaixes nomeados -->\n  <BaseLayout>\n    <template v-slot:header>\n      Conteúdo do Header\n    </template>\n\n    <template v-slot:default>\n      Conteúdo padrão do encaixe\n    </template>\n\n    <template v-slot:footer>\n      Conteúdo do Footer\n    </template>\n  </BaseLayout>\n\n  <!-- Encaixe nomeado que recebe propriedades -->\n  <InfiniteScroll>\n    <template v-slot:item=\"slotProps\">\n      <div class=\"item\">\n        {{ slotProps.item.text }}\n      </div>\n    </template>\n  </InfiniteScroll>\n\n  <!-- Encaixe padrão que recebe propriedades, com desestruturação -->\n  <Mouse v-slot=\"{ x, y }\">\n    Mouse position: {{ x }}, {{ y }}\n  </Mouse>\n  ```\n\n- **Veja também:**\n  - [Componentes - Encaixes](https://pt.vuejs.org/guide/components/slots.html)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-slot"
+        }
+      ]
+    },
+    {
+      "name": "v-pre",
+      "description": {
+        "kind": "markdown",
+        "value": "\nOmite a compilação para este elemento e todos os seus filhos.\n\n- **Não espera expressão**\n\n- **Detalhes**\n\n  Dentro do elemento com `v-pre`, toda a sintaxe de modelo do Vue será preservada e apresentada como está. O caso de uso mais comum para isso é mostrar identificadores mustache.\n\n- **Exemplo:**\n\n  ```html\n  <span v-pre>{{ isto não será compilado }}</span>\n  ```\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-pre"
+        }
+      ]
+    },
+    {
+      "name": "v-once",
+      "description": {
+        "kind": "markdown",
+        "value": "\nApresenta o elemento e componente apenas uma única vez, e omite futuras atualizações.\n\n- **Não espera expressão**\n\n- **Detalhes**\n\n  Em reintepretações subsequentes, o elemento/componente e todos os seus filhos serão tratados como conteúdo estático. Isto pode ser usado para otimizar o desempenho de atualização.\n\n  ```html\n  <!-- elemento único -->\n  <span v-once>Isso nunca irá mudar: {{msg}}</span>\n  <!-- o elemento possui filhos -->\n  <div v-once>\n    <h1>comentário</h1>\n    <p>{{msg}}</p>\n  </div>\n  <!-- componente -->\n  <MyComponent v-once :comment=\"msg\"></MyComponent>\n  <!-- diretiva `v-for` -->\n  <ul>\n    <li v-for=\"i in list\" v-once>{{i}}</li>\n  </ul>\n  ```\n\n  Desde a versão 3.2, você também pode 'memoizar' parte do template com condições de invalidação usando o [`v-memo`](#v-memo).\n\n- **Veja também:**\n  - [Sintaxe de Vinculação de Dados - Interpolações](https://pt.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n  - [v-memo](#v-memo)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-once"
+        }
+      ]
+    },
+    {
+      "name": "v-memo",
+      "description": {
+        "kind": "markdown",
+        "value": "\n- **Espera:** `any[]`\n\n- **Detalhes**\n\n  'Memoiza' uma sub-árvore do modelo. Pode ser usado em elementos e componentes. A diretiva espera um _array_ de tamanho fixo com valores de dependência para comparar durante a 'memoização'. Se todo valor no _array_ for o mesmo do da última interpretação, então as atualizações para toda a sub-árvore serão omitidas. Por exemplo:\n\n  ```html\n  <div v-memo=\"[valueA, valueB]\">\n    ...\n  </div>\n  ```\n\n  Quando o componente é reinterpretado, se ambos os valores `valueA` e `valueB` permanecerem os mesmos, todos as atualizações para este `<div>` e seus filhos serão omitidas. Na verdade, até mesmo a criação do VNode do DOM Virtual será omitida, visto que a cópia 'memoizada' da sub-árvore pode ser reutilizada.\n\n  É importante especificar o _array_ de 'memoização' corretamente, caso contrário nós podemos omitir atualizações que deveriam ser de fato aplicadas. `v-memo` com uma dependência de _array_ vazia (`v-memo=\"[]\"`) deve ser funcionalmente equivalente a `v-once`.\n\n  **Uso com `v-for`**\n\n  `v-memo` é fornecido exclusivamente para micro-otimizações em cenários críticos de desempenho, e raramente devem ser necessários. O caso de uso mais comum onde pode ser útil é ao apresentar grandes listas `v-for` (onde `length > 1000`):\n\n  ```html\n  <div v-for=\"item in list\" :key=\"item.id\" v-memo=\"[item.id === selected]\">\n    <p>ID: {{ item.id }} - selecionado: {{ item.id === selected }}</p>\n    <p>...mais nódulos filhos</p>\n  </div>\n  ```\n\n  Quando o estado `selected` do componente muda, uma grande quantidade de VNodes será criada mesmo que a maioria dos itens tenha permanecido exatamente o mesmo. O uso de `v-memo` aqui é essencialmente para dizer \"apenas atualize este item se ele for de não selecionado para selecionado, ou o contrário\". Isto permite que todo item inalterado reuse seu VNode anterior e pule a comparação inteiramente. Note que não precisamos incluir o `item.id` nas dependências de _array_ memo aqui visto que o Vue automaticamente infere pela `:key` do item.\n\n  :::warning\n  Ao usar `v-memo` com `v-for`, tenha certeza que eles são usados no mesmo elemento. **`v-memo` não funciona dentro de `v-for`.**\n  :::\n\n  `v-memo` também pode ser usado em componentes para manualmente prevenir atualizações indesejadas em certos casos extremos onde a atualização de um componente filho foi deteriorada. Mas novamente, é responsabilidade do desenvolvedor especificar a dependência de _arrays_ correta para evitar omitir atualizações necessárias.\n\n- **Veja também:**\n  - [v-once](#v-once)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-memo"
+        }
+      ]
+    },
+    {
+      "name": "v-cloak",
+      "description": {
+        "kind": "markdown",
+        "value": "\nUsado para esconder modelo não compilado até que esteja pronto.\n\n- **Não espera expressão**\n\n- **Detalhes**\n\n  **Esta diretiva só é necessária em ambientes sem a fase de build.**\n\n  Ao usar _in-DOM templates_, pode haver um \"instante de modelos não compilados\": o usuário pode ver identificadores mustache até que o componente montado substitua-os com o conteúdo interpretado.\n\n  `v-cloak` permanecerá no elemento até que a instância do componente associado seja montada. Ao combinar com regras CSS como `[v-cloak] { display: none }`, pode esconder modelos brutos até que o componente esteja pronto.\n\n- **Exemplo:**\n\n  ```css\n  [v-cloak] {\n    display: none;\n  }\n  ```\n\n  ```html\n  <div v-cloak>\n    {{ message }}\n  </div>\n  ```\n\n  O `<div>` não será visível até que a compilação esteja concluída.\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-cloak"
+        }
+      ]
+    },
+    {
+      "name": "key",
+      "description": {
+        "kind": "markdown",
+        "value": "\nO atributo especial `key` é usado principalmente como uma dica para o algoritmo de DOM virtual do Vue identificar vnodes ao comparar a nova lista de nós com a velha lista.\n\n- **Espera:** `number | string | symbol`\n\n- **Detalhes**\n\n  Sem as chaves, Vue usa um algoritmo que minimiza a movimentação de elementos e tenta corrigir/reusar elementos do mesmo tipo no local, tanto quanto possível. Com chaves, ele reordenará elementos com base na alteração da ordem das chaves, e os elementos com chaves que não estão mais presentes sempre serão removidos/destruídos.\n\n  Filhos do mesmo pai comum devem ter **chaves únicas**. Chaves duplicadas causarão erros de apresentação.\n\n  O caso de uso mais comum é combinado com `v-for`:\n\n  ```html\n  <ul>\n    <li v-for=\"item in items\" :key=\"item.id\">...</li>\n  </ul>\n  ```\n\n  Também pode ser usado para forçar a substituição de um elemento/componente em vez de reutilizá-lo. Isso pode ser útil quando você deseja:\n\n  - Acionar corretamente gatilhos de ciclo de vida de um componente\n  - Acionar transições\n\n  Por exemplo:\n\n  ```html\n  <transition>\n    <span :key=\"text\">{{ text }}</span>\n  </transition>\n  ```\n\n  Quando `text` mudar, o `<span>` sempre será substituído ao invés de alterado, então uma transição será acionada.\n\n- **Veja também:** [Guia - Interpretação de Lista - Mantendo o Estado com `key`](https://pt.vuejs.org/guide/essentials/list.html#maintaining-state-with-key)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-special-attributes.html#key"
+        }
+      ]
+    },
+    {
+      "name": "ref",
+      "description": {
+        "kind": "markdown",
+        "value": "\nDenota uma [referência do modelo de marcação](https://pt.vuejs.org/guide/essentials/template-refs.html).\n\n- **Espera:** `string | Function`\n\n- **Detalhes**\n\n  `ref` é usado para registrar uma referência a um elemento ou a um componente filho.\n\n  Na API de Opções, a referência será registrada sob o objeto `this.$refs` do componente:\n\n  ```html\n  <!-- armazenado como this.$refs.p -->\n  <p ref=\"p\">hello</p>\n  ```\n\n  Na API de Composição, a referência será armazenada em uma ref com o nome compatível:\n\n  ```vue\n  <script setup>\n  import { ref } from 'vue'\n\n  const p = ref()\n  </script>\n\n  <template>\n    <p ref=\"p\">hello</p>\n  </template>\n  ```\n\n  Se usado em um elemento DOM simples, a referência será aquele elemento; se usado em um componente filho, a referência será a instância do componente filho.\n\n  Alternativamente `ref` pode aceitar um valor de função que fornece controle total de onde armazenar a referência:\n\n  ```html\n  <ChildComponent :ref=\"(el) => child = el\" />\n  ```\n\n  Uma nota importante sobre o tempo de registro de ref: como refs são criadas pelo resultado de uma função _render_, você deve aguardar até que o componente seja montado antes de acessá-las.\n\n  `this.$refs` não é reativo, portanto você não deve tentar usar em modelos para vincular dados.\n\n- **Veja também:**\n  - [Guia - Referências do Modelo de Marcação](https://pt.vuejs.org/guide/essentials/template-refs.html)\n  - [Guia - Atribuindo Tipos as Referências do Modelo de Marcação](https://pt.vuejs.org/guide/typescript/composition-api.html#typing-template-refs) <sup class=\"vt-badge ts\" />\n  - [Guia - Tipos as Referências do Modelo de Marcação de Componente](https://pt.vuejs.org/guide/typescript/composition-api.html#typing-component-template-refs) <sup class=\"vt-badge ts\" />\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-special-attributes.html#ref"
+        }
+      ]
+    },
+    {
+      "name": "is",
+      "description": {
+        "kind": "markdown",
+        "value": "\nUsado para vincular [componentes dinâmicos](https://pt.vuejs.org/guide/essentials/component-basics.html#dynamic-components).\n\n- **Espera:** `string | Component`\n\n- **Uso em elementos nativos** <sup class=\"vt-badge\">3.1+</sup>\n\n  Quando o atributo `is` é usado em um elemento HTML nativo, ele será interpretado como um [Elemento embutido personalizado](https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-customized-builtin-example), que é um recurso nativo da plataforma web.\n\n  Há, no entanto, um caso de uso em que você pode precisar do Vue para substituir um elemento nativo por um componente Vue, conforme explicado em [Advertências de Analise de Modelo de Marcação de DOM](https://pt.vuejs.org/guide/essentials/component-basics.html#dom-template-parsing-caveats). Você pode prefixar o valor do atributo `is` com o atributo `vue:` para que o Vue apresente o elemento como um componente Vue:\n\n  ```html\n  <table>\n    <tr is=\"vue:my-row-component\"></tr>\n  </table>\n  ```\n\n- **Veja também:**\n\n  - [Elementos Especiais Embutidos - `<component>`](https://pt.vuejs.org/api/built-in-special-elements.html#component)\n  - [Componentes Dinâmicos](https://pt.vuejs.org/guide/essentials/component-basics.html#dynamic-components)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-special-attributes.html#is"
+        }
+      ]
+    }
+  ]
+}
