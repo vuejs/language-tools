@@ -67,7 +67,6 @@ export async function activate(context: vscode.ExtensionContext) {
 			},
 		};
 		if (config.server.runtime === 'bun') {
-			vscode.window.showInformationMessage('Using experimental Bun runtime.');
 			serverOptions = {
 				run: {
 					transport: {
