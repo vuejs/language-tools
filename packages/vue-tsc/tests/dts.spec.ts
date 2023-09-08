@@ -5,34 +5,52 @@ import { describe, expect, it } from 'vitest';
 import { createProgram } from '../src';
 
 const workspace = path.resolve(__dirname, '../../vue-test-workspace/vue-tsc-dts');
-const testDirs = fs.readdirSync(workspace);
+const testFiles = readFilesRecursive(workspace);
 const ensureTs = (filename: string) => filename.endsWith('.ts') ? filename : filename + '.ts';
 const normalizePath = (filename: string) => filename.replace(/\\/g, '/');
 
-const compilerOptions: ts.CompilerOptions = {
-	rootDir: workspace,
-	declaration: true,
-	emitDeclarationOnly: true,
-};
-const host = ts.createCompilerHost(compilerOptions);
-
 describe('vue-tsc-dts', () => {
-	for (const dirName of testDirs) {
-		const dir = path.join(workspace, dirName);
-		const files = fs.readdirSync(dir).map(file => path.join(dir, file));
-		const program = createProgram({
-			host,
-			rootNames: files,
-			options: compilerOptions
-		});
-		const service = program.__vue.languageService;
-		for (const file of files) {
-			const output = service.getEmitOutput(ensureTs(file), true);
-			for (const outputFile of output.outputFiles) {
-				it(`Input: ${normalizePath(path.join(dirName, path.basename(file)))}, Output: ${normalizePath(path.join(dirName, path.basename(outputFile.name)))}`, () => {
-					expect(outputFile.text).toMatchSnapshot();
-				});
-			}
+	const compilerOptions: ts.CompilerOptions = {
+		rootDir: workspace,
+		declaration: true,
+		emitDeclarationOnly: true,
+	};
+	const host = ts.createCompilerHost(compilerOptions);
+	const program = createProgram({
+		host,
+		rootNames: testFiles,
+		options: compilerOptions
+	});
+	const service = program.__vue.languageService;
+
+	for (const file of testFiles) {
+		const output = service.getEmitOutput(ensureTs(file), true);
+		for (const outputFile of output.outputFiles) {
+			it(`Input: ${prettyPath(file)}, Output: ${prettyPath(outputFile.name)}`, () => {
+				expect(outputFile.text).toMatchSnapshot();
+			});
 		}
 	}
 });
+
+function readFilesRecursive(dir: string) {
+	const result: string[] = [];
+
+	for (const file of fs.readdirSync(dir)) {
+		const filepath = path.join(dir, file);
+		const stat = fs.statSync(filepath);
+		if (stat.isDirectory()) {
+			result.push(...readFilesRecursive(filepath));
+		} else {
+			result.push(filepath);
+		}
+	}
+
+	return result;
+}
+
+function prettyPath(path: string): string {
+	path = normalizePath(path);
+	const segments = path.split('/');
+	return segments.slice(-2).join('/');
+}
