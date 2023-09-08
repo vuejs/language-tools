@@ -7,6 +7,7 @@ import { createProgram } from '../src';
 const workspace = path.resolve(__dirname, '../../vue-test-workspace/vue-tsc-dts');
 const testDirs = fs.readdirSync(workspace);
 const ensureTs = (filename: string) => filename.endsWith('.ts') ? filename : filename + '.ts';
+const normalizePath = (filename: string) => filename.replace(/\\/g, '/');
 
 const compilerOptions: ts.CompilerOptions = {
 	rootDir: workspace,
@@ -28,7 +29,7 @@ describe('vue-tsc-dts', () => {
 		for (const file of files) {
 			const output = service.getEmitOutput(ensureTs(file), true);
 			for (const outputFile of output.outputFiles) {
-				it(`Input: ${path.join(dirName, path.basename(file))}, Output: ${path.join(dirName, path.basename(outputFile.name))}`, () => {
+				it(`Input: ${normalizePath(path.join(dirName, path.basename(file)))}, Output: ${normalizePath(path.join(dirName, path.basename(outputFile.name)))}`, () => {
 					expect(outputFile.text).toMatchSnapshot();
 				});
 			}

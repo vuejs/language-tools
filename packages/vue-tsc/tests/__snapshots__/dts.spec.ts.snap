@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`vue-tsc-dts > Input: base\\main.vue, Output: base\\main.vue.d.ts 1`] = `
+exports[`vue-tsc-dts > Input: basic/main.vue, Output: basic/main.vue.d.ts 1`] = `
 "declare const _default: import(\\"vue\\").DefineComponent<{
     name: {
         type: import(\\"vue\\").PropType<string>;
