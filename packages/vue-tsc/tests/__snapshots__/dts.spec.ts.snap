@@ -1,0 +1,17 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`vue-tsc-dts > Input: base\\main.vue, Output: base\\main.vue.d.ts 1`] = `
+"declare const _default: import(\\"vue\\").DefineComponent<{
+    name: {
+        type: import(\\"vue\\").PropType<string>;
+        required: true;
+    };
+}, {}, unknown, {}, {}, import(\\"vue\\").ComponentOptionsMixin, import(\\"vue\\").ComponentOptionsMixin, {}, string, import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps, Readonly<import(\\"vue\\").ExtractPropTypes<{
+    name: {
+        type: import(\\"vue\\").PropType<string>;
+        required: true;
+    };
+}>>, {}, {}>;
+export default _default;
+"
+`;
