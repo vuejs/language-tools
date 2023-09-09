@@ -91,17 +91,9 @@ export function parseScriptSetupRanges(
 		return getStartEnd(node, ast);
 	}
 	function visitNode(node: ts.Node, parent: ts.Node) {
-		if (ts.isVariableDeclaration(node) || ts.isFunctionDeclaration(node)) {
+		if (ts.isVariableDeclaration(node) || ts.isFunctionDeclaration(node) || ts.isImportSpecifier(node)) {
 			const name = node.name?.getText(ast);
 			if (name && name in macrosToBeImported) {
-				for (const key in macrosToBeImported) {
-					macrosToBeImported[key as keyof VueCompilerOptions['macros']] = macrosToBeImported[key as keyof VueCompilerOptions['macros']].filter(macro => macro !== name);
-				}
-			}
-		}
-		else if (ts.isImportSpecifier(node)) {
-			const name = node.name.getText(ast);
-			if (name in macrosToBeImported) {
 				for (const key in macrosToBeImported) {
 					macrosToBeImported[key as keyof VueCompilerOptions['macros']] = macrosToBeImported[key as keyof VueCompilerOptions['macros']].filter(macro => macro !== name);
 				}
