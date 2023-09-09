@@ -35,7 +35,15 @@ export function parseScriptSetupRanges(
 	const bindings = parseBindingRanges(ts, ast, false);
 	const text = ast.getFullText();
 	const leadingCommentEndOffset = ts.getLeadingCommentRanges(text, 0)?.reverse()[0].end ?? 0;
-	const macrosToBeImported = vueCompilerOptions.macros;
+	const macrosToBeImported: VueCompilerOptions['macros'] = {
+		defineProps: [...vueCompilerOptions.macros.defineProps],
+		defineEmits: [...vueCompilerOptions.macros.defineEmits],
+		defineExpose: [...vueCompilerOptions.macros.defineExpose],
+		defineSlots: [...vueCompilerOptions.macros.defineSlots],
+		defineModel: [...vueCompilerOptions.macros.defineModel],
+		defineOptions: [...vueCompilerOptions.macros.defineOptions],
+		withDefaults: [...vueCompilerOptions.macros.withDefaults],
+	};
 
 	ast.forEachChild(node => {
 		const isTypeExport = (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) && node.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword);
