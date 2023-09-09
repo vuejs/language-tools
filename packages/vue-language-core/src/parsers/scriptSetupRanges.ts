@@ -1,5 +1,6 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { VueCompilerOptions, TextRange } from '../types';
+import { defaultMacros } from '../utils/ts';
 
 export interface ScriptSetupRanges extends ReturnType<typeof parseScriptSetupRanges> { }
 
@@ -35,15 +36,7 @@ export function parseScriptSetupRanges(
 	const bindings = parseBindingRanges(ts, ast, false);
 	const text = ast.getFullText();
 	const leadingCommentEndOffset = ts.getLeadingCommentRanges(text, 0)?.reverse()[0].end ?? 0;
-	const macrosToBeImported: VueCompilerOptions['macros'] = {
-		defineProps: vueCompilerOptions.macros.defineProps,
-		defineSlots: vueCompilerOptions.macros.defineSlots,
-		defineEmits: vueCompilerOptions.macros.defineEmits,
-		defineExpose: vueCompilerOptions.macros.defineExpose,
-		defineModel: vueCompilerOptions.macros.defineModel,
-		defineOptions: vueCompilerOptions.macros.defineOptions,
-		withDefaults: vueCompilerOptions.macros.withDefaults,
-	};
+	const macrosToBeImported = defaultMacros;
 
 	ast.forEachChild(node => {
 		const isTypeExport = (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) && node.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword);
