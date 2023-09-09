@@ -267,7 +267,7 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 				? [`(await import('${lib}')).defineComponent(`, `)`]
 				: [`(await import('vue')).default.extend(`, `)`]
 		),
-		macros: vueOptions.macros ?? defaultMacros,
+		macros: Object.assign({}, defaultMacros, vueOptions.macros),
 		plugins: vueOptions.plugins ?? [],
 		hooks: vueOptions.hooks ?? [],
 
