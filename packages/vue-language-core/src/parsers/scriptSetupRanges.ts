@@ -35,6 +35,15 @@ export function parseScriptSetupRanges(
 	const bindings = parseBindingRanges(ts, ast, false);
 	const text = ast.getFullText();
 	const leadingCommentEndOffset = ts.getLeadingCommentRanges(text, 0)?.reverse()[0].end ?? 0;
+	const macrosToBeImported: VueCompilerOptions['macros'] = {
+		defineProps: vueCompilerOptions.macros.defineProps,
+		defineSlots: vueCompilerOptions.macros.defineSlots,
+		defineEmits: vueCompilerOptions.macros.defineEmits,
+		defineExpose: vueCompilerOptions.macros.defineExpose,
+		defineModel: vueCompilerOptions.macros.defineModel,
+		defineOptions: vueCompilerOptions.macros.defineOptions,
+		withDefaults: vueCompilerOptions.macros.withDefaults,
+	};
 
 	ast.forEachChild(node => {
 		const isTypeExport = (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) && node.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword);
@@ -75,18 +84,35 @@ export function parseScriptSetupRanges(
 		emitsTypeNums,
 		exposeRuntimeArg,
 		defineProp,
+		macrosToBeImported,
 	};
 
 	function _getStartEnd(node: ts.Node) {
 		return getStartEnd(node, ast);
 	}
 	function visitNode(node: ts.Node, parent: ts.Node) {
-		if (
+		if (ts.isVariableDeclaration(node) || ts.isFunctionDeclaration(node)) {
+			const name = node.name?.getText(ast);
+			if (name && name in macrosToBeImported) {
+				for (const key in macrosToBeImported) {
+					macrosToBeImported[key as keyof VueCompilerOptions['macros']] = macrosToBeImported[key as keyof VueCompilerOptions['macros']].filter(macro => macro !== name);
+				}
+			}
+		}
+		else if (ts.isImportSpecifier(node)) {
+			const name = node.name.getText(ast);
+			if (name in macrosToBeImported) {
+				for (const key in macrosToBeImported) {
+					macrosToBeImported[key as keyof VueCompilerOptions['macros']] = macrosToBeImported[key as keyof VueCompilerOptions['macros']].filter(macro => macro !== name);
+				}
+			}
+		}
+		else if (
 			ts.isCallExpression(node)
 			&& ts.isIdentifier(node.expression)
 		) {
 			const callText = node.expression.getText(ast);
-			if (callText === 'defineModel') {
+			if (vueCompilerOptions.macros.defineModel.includes(callText)) {
 				let name: TextRange | undefined;
 				let options: ts.Node | undefined;
 				if (node.arguments.length >= 2) {
