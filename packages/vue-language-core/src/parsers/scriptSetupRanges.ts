@@ -1,6 +1,5 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { VueCompilerOptions, TextRange } from '../types';
-import { defaultMacros } from '../utils/ts';
 
 export interface ScriptSetupRanges extends ReturnType<typeof parseScriptSetupRanges> { }
 
