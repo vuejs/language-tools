@@ -473,7 +473,7 @@ export function generate(
 					codes.push(`${macro}: ${alias}, `);
 				}
 			}
-			codes.push(` } = await import('${vueCompilerOptions.lib}');\n`);
+			codes.push(`} = await import('${vueCompilerOptions.lib}');\n`);
 		}
 		if (definePropProposalA) {
 			codes.push(`
