@@ -1,17 +1,132 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`vue-tsc-dts > Input: basic/main.vue, Output: basic/main.vue.d.ts 1`] = `
+exports[`vue-tsc-dts > Input: vue-tsc-dts/script-setup.vue, Output: vue-tsc-dts/script-setup.vue.d.ts 1`] = `
 "declare const _default: import(\\"vue\\").DefineComponent<{
-    name: {
+    foo: StringConstructor;
+}, {}, unknown, {}, {}, import(\\"vue\\").ComponentOptionsMixin, import(\\"vue\\").ComponentOptionsMixin, (\\"change\\" | \\"delete\\")[], \\"change\\" | \\"delete\\", import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps, Readonly<import(\\"vue\\").ExtractPropTypes<{
+    foo: StringConstructor;
+}>> & {
+    onChange?: (...args: any[]) => any;
+    onDelete?: (...args: any[]) => any;
+}, {}, {}>;
+export default _default;
+"
+`;
+
+exports[`vue-tsc-dts > Input: vue-tsc-dts/script-setup-default-props.vue, Output: vue-tsc-dts/script-setup-default-props.vue.d.ts 1`] = `
+"export interface Props {
+    msg?: string;
+    labels?: string[];
+}
+declare const _default: import(\\"vue\\").DefineComponent<{
+    msg: {
         type: import(\\"vue\\").PropType<string>;
-        required: true;
+        default: string;
+    };
+    labels: {
+        type: import(\\"vue\\").PropType<string[]>;
+        default: () => string[];
     };
 }, {}, unknown, {}, {}, import(\\"vue\\").ComponentOptionsMixin, import(\\"vue\\").ComponentOptionsMixin, {}, string, import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps, Readonly<import(\\"vue\\").ExtractPropTypes<{
-    name: {
+    msg: {
+        type: import(\\"vue\\").PropType<string>;
+        default: string;
+    };
+    labels: {
+        type: import(\\"vue\\").PropType<string[]>;
+        default: () => string[];
+    };
+}>>, {
+    msg: string;
+    labels: string[];
+}, {}>;
+export default _default;
+"
+`;
+
+exports[`vue-tsc-dts > Input: vue-tsc-dts/script-setup-expose.vue, Output: vue-tsc-dts/script-setup-expose.vue.d.ts 1`] = `
+"declare const _default: import(\\"vue\\").DefineComponent<{}, {
+    a: number;
+    b: import(\\"vue\\").Ref<number>;
+}, {}, {}, {}, import(\\"vue\\").ComponentOptionsMixin, import(\\"vue\\").ComponentOptionsMixin, {}, string, import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps, Readonly<import(\\"vue\\").ExtractPropTypes<{}>>, {}, {}>;
+export default _default;
+"
+`;
+
+exports[`vue-tsc-dts > Input: vue-tsc-dts/script-setup-generic.vue, Output: vue-tsc-dts/script-setup-generic.vue.d.ts 1`] = `
+"declare const _default: <T>(__VLS_props: {
+    foo: T;
+} & import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps, __VLS_ctx?: Pick<{
+    props: {
+        foo: T;
+    };
+    expose(exposed: {
+        baz: T;
+    }): void;
+    attrs: any;
+    slots: {
+        default?(data: T): any;
+    };
+    emit: (e: 'bar', data: T) => void;
+}, \\"slots\\" | \\"attrs\\" | \\"emit\\">, __VLS_expose?: (exposed: {
+    baz: T;
+}) => void, __VLS_setup?: Promise<{
+    props: {
+        foo: T;
+    };
+    expose(exposed: {
+        baz: T;
+    }): void;
+    attrs: any;
+    slots: {
+        default?(data: T): any;
+    };
+    emit: (e: 'bar', data: T) => void;
+}>) => import(\\"vue\\").VNode<import(\\"vue\\").RendererNode, import(\\"vue\\").RendererElement, {
+    [key: string]: any;
+}> & {
+    __ctx?: {
+        props: {
+            foo: T;
+        };
+        expose(exposed: {
+            baz: T;
+        }): void;
+        attrs: any;
+        slots: {
+            default?(data: T): any;
+        };
+        emit: (e: 'bar', data: T) => void;
+    };
+};
+export default _default;
+"
+`;
+
+exports[`vue-tsc-dts > Input: vue-tsc-dts/script-setup-type-only.vue, Output: vue-tsc-dts/script-setup-type-only.vue.d.ts 1`] = `
+"declare const _default: import(\\"vue\\").DefineComponent<{
+    foo: {
         type: import(\\"vue\\").PropType<string>;
         required: true;
     };
-}>>, {}, {}>;
+    bar: {
+        type: import(\\"vue\\").PropType<number>;
+    };
+}, {}, unknown, {}, {}, import(\\"vue\\").ComponentOptionsMixin, import(\\"vue\\").ComponentOptionsMixin, {
+    change: (id: number) => void;
+    update: (value: string) => void;
+}, string, import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps, Readonly<import(\\"vue\\").ExtractPropTypes<{
+    foo: {
+        type: import(\\"vue\\").PropType<string>;
+        required: true;
+    };
+    bar: {
+        type: import(\\"vue\\").PropType<number>;
+    };
+}>> & {
+    onChange?: (id: number) => any;
+    onUpdate?: (value: string) => any;
+}, {}, {}>;
 export default _default;
 "
 `;

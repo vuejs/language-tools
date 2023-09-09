@@ -26,7 +26,7 @@ describe('vue-tsc-dts', () => {
 	for (const file of testFiles) {
 		const output = service.getEmitOutput(ensureTs(file), true);
 		for (const outputFile of output.outputFiles) {
-			it(`Input: ${prettyPath(file)}, Output: ${prettyPath(outputFile.name)}`, () => {
+			it(`Input: ${shortenPath(file)}, Output: ${shortenPath(outputFile.name)}`, () => {
 				expect(outputFile.text).toMatchSnapshot();
 			});
 		}
@@ -49,7 +49,7 @@ function readFilesRecursive(dir: string) {
 	return result;
 }
 
-function prettyPath(path: string): string {
+function shortenPath(path: string): string {
 	path = normalizePath(path);
 	const segments = path.split('/');
 	return segments.slice(-2).join('/');
