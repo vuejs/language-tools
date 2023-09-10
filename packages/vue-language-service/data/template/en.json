@@ -770,6 +770,105 @@
           "url": "https://ko.vuejs.org/api/built-in-directives.html#v-cloak"
         }
       ]
+    },
+    {
+      "name": "key",
+      "description": {
+        "kind": "markdown",
+        "value": "\nThe `key` special attribute is primarily used as a hint for Vue's virtual DOM algorithm to identify vnodes when diffing the new list of nodes against the old list.\n\n- **Expects:** `number | string | symbol`\n\n- **Details**\n\n  Without keys, Vue uses an algorithm that minimizes element movement and tries to patch/reuse elements of the same type in-place as much as possible. With keys, it will reorder elements based on the order change of keys, and elements with keys that are no longer present will always be removed / destroyed.\n\n  Children of the same common parent must have **unique keys**. Duplicate keys will cause render errors.\n\n  The most common use case is combined with `v-for`:\n\n  ```html\n  <ul>\n    <li v-for=\"item in items\" :key=\"item.id\">...</li>\n  </ul>\n  ```\n\n  It can also be used to force replacement of an element/component instead of reusing it. This can be useful when you want to:\n\n  - Properly trigger lifecycle hooks of a component\n  - Trigger transitions\n\n  For example:\n\n  ```html\n  <transition>\n    <span :key=\"text\">{{ text }}</span>\n  </transition>\n  ```\n\n  When `text` changes, the `<span>` will always be replaced instead of patched, so a transition will be triggered.\n\n- **See also** [Guide - List Rendering - Maintaining State with `key`](https://vuejs.org/guide/essentials/list.html#maintaining-state-with-key)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-attributes.html#key"
+        }
+      ]
+    },
+    {
+      "name": "ref",
+      "description": {
+        "kind": "markdown",
+        "value": "\nDenotes a [template ref](https://vuejs.org/guide/essentials/template-refs.html).\n\n- **Expects:** `string | Function`\n\n- **Details**\n\n  `ref` is used to register a reference to an element or a child component.\n\n  In Options API, the reference will be registered under the component's `this.$refs` object:\n\n  ```html\n  <!-- stored as this.$refs.p -->\n  <p ref=\"p\">hello</p>\n  ```\n\n  In Composition API, the reference will be stored in a ref with matching name:\n\n  ```vue\n  <script setup>\n  import { ref } from 'vue'\n\n  const p = ref()\n  </script>\n\n  <template>\n    <p ref=\"p\">hello</p>\n  </template>\n  ```\n\n  If used on a plain DOM element, the reference will be that element; if used on a child component, the reference will be the child component instance.\n\n  Alternatively `ref` can accept a function value which provides full control over where to store the reference:\n\n  ```html\n  <ChildComponent :ref=\"(el) => child = el\" />\n  ```\n\n  An important note about the ref registration timing: because the refs themselves are created as a result of the render function, you must wait until the component is mounted before accessing them.\n\n  `this.$refs` is also non-reactive, therefore you should not attempt to use it in templates for data-binding.\n\n- **See also**\n  - [Guide - Template Refs](https://vuejs.org/guide/essentials/template-refs.html)\n  - [Guide - Typing Template Refs](https://vuejs.org/guide/typescript/composition-api.html#typing-template-refs) <sup class=\"vt-badge ts\" />\n  - [Guide - Typing Component Template Refs](https://vuejs.org/guide/typescript/composition-api.html#typing-component-template-refs) <sup class=\"vt-badge ts\" />\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-attributes.html#ref"
+        }
+      ]
+    },
+    {
+      "name": "is",
+      "description": {
+        "kind": "markdown",
+        "value": "\nUsed for binding [dynamic components](https://vuejs.org/guide/essentials/component-basics.html#dynamic-components).\n\n- **Expects:** `string | Component`\n\n- **Usage on native elements** <sup class=\"vt-badge\">3.1+</sup>\n\n  When the `is` attribute is used on a native HTML element, it will be interpreted as a [Customized built-in element](https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-customized-builtin-example), which is a native web platform feature.\n\n  There is, however, a use case where you may need Vue to replace a native element with a Vue component, as explained in [DOM Template Parsing Caveats](https://vuejs.org/guide/essentials/component-basics.html#dom-template-parsing-caveats). You can prefix the value of the `is` attribute with `vue:` so that Vue will render the element as a Vue component instead:\n\n  ```html\n  <table>\n    <tr is=\"vue:my-row-component\"></tr>\n  </table>\n  ```\n\n- **See also**\n\n  - [Built-in Special Element - `<component>`](https://vuejs.org/api/built-in-special-elements.html#component)\n  - [Dynamic Components](https://vuejs.org/guide/essentials/component-basics.html#dynamic-components)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-attributes.html#is"
+        }
+      ]
     }
   ]
 }
