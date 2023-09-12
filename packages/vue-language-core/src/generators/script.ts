@@ -266,7 +266,7 @@ export function generate(
 			return;
 
 		codes.push([
-			sfc.scriptSetup.content.substring(0, Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset)),
+			sfc.scriptSetup.content.substring(0, Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset)) + '\n',
 			'scriptSetup',
 			0,
 			FileRangeCapabilities.full,
@@ -465,7 +465,6 @@ export function generate(
 
 		if (vueCompilerOptions.target >= 3.3) {
 			const bindings = new Set(scriptSetupRanges.bindings.map(range => sfc.scriptSetup!.content.substring(range.start, range.end)));
-			codes.push('\n');
 			codes.push('const { ');
 			for (const [macro, aliases] of Object.entries(vueCompilerOptions.macros)) {
 				for (const alias of aliases) {
