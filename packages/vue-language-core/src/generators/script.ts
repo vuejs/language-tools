@@ -464,7 +464,21 @@ export function generate(
 		const definePropProposalB = sfc.scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition') || vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
 
 		if (vueCompilerOptions.target >= 3.3) {
-			codes.push(`const { defineProps, defineEmits, defineExpose, defineOptions, defineSlots, defineModel, withDefaults } = await import('${vueCompilerOptions.lib}');\n`);
+			const bindings = new Set(scriptSetupRanges.bindings.map(range => sfc.scriptSetup!.content.substring(range.start, range.end)));
+			codes.push('\n');
+			codes.push('const { ');
+			for (const [macro, aliases] of Object.entries(vueCompilerOptions.macros)) {
+				for (const alias of aliases) {
+					if (!bindings.has(alias)) {
+						codes.push(macro);
+						if (alias !== macro) {
+							codes.push(` : ${alias}`);
+						}
+						codes.push(`, `);
+					}
+				}
+			}
+			codes.push(`} = await import('${vueCompilerOptions.lib}');\n`);
 		}
 		if (definePropProposalA) {
 			codes.push(`

@@ -82,7 +82,7 @@ export async function activate(context: vscode.ExtensionContext) {
 				run: {
 					transport: {
 						kind: lsp.TransportKind.socket,
-						port: port + 10,
+						port,
 					},
 					options: runOptions,
 					command: 'bun',
@@ -91,7 +91,7 @@ export async function activate(context: vscode.ExtensionContext) {
 				debug: {
 					transport: {
 						kind: lsp.TransportKind.socket,
-						port: port + 10,
+						port,
 					},
 					options: debugOptions,
 					command: 'bun',
