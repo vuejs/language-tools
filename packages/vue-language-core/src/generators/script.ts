@@ -12,7 +12,6 @@ import { Sfc } from '../types';
 import * as sharedTypes from '../utils/globalTypes';
 import { getSlotsPropertyName, hyphenateTag } from '../utils/shared';
 import { walkInterpolationFragment } from '../utils/transform';
-import { defaultMacros } from '../utils/ts';
 
 export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -64,7 +63,6 @@ export function generate(
 			slotsTypeArg: undefined,
 			withDefaultsArg: undefined,
 			defineProp: [],
-			macrosToBeImported: defaultMacros,
 		};
 	}
 	//#endregion
@@ -466,11 +464,18 @@ export function generate(
 		const definePropProposalB = sfc.scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition') || vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
 
 		if (vueCompilerOptions.target >= 3.3) {
+			const bindings = new Set(scriptSetupRanges.bindings.map(range => sfc.scriptSetup!.content.substring(range.start, range.end)));
+			codes.push('\n');
 			codes.push('const { ');
-			for (const [macro, aliases] of Object.entries(scriptSetupRanges.macrosToBeImported)) {
-				if (!aliases.length) continue;
+			for (const [macro, aliases] of Object.entries(vueCompilerOptions.macros)) {
 				for (const alias of aliases) {
-					codes.push(`${macro}: ${alias}, `);
+					if (!bindings.has(alias)) {
+						codes.push(macro);
+						if (alias !== macro) {
+							codes.push(` : ${alias}`);
+						}
+						codes.push(`, `);
+					}
 				}
 			}
 			codes.push(`} = await import('${vueCompilerOptions.lib}');\n`);

@@ -35,15 +35,6 @@ export function parseScriptSetupRanges(
 	const bindings = parseBindingRanges(ts, ast, false);
 	const text = ast.getFullText();
 	const leadingCommentEndOffset = ts.getLeadingCommentRanges(text, 0)?.reverse()[0].end ?? 0;
-	const macrosToBeImported: VueCompilerOptions['macros'] = {
-		defineProps: [...vueCompilerOptions.macros.defineProps],
-		defineEmits: [...vueCompilerOptions.macros.defineEmits],
-		defineExpose: [...vueCompilerOptions.macros.defineExpose],
-		defineSlots: [...vueCompilerOptions.macros.defineSlots],
-		defineModel: [...vueCompilerOptions.macros.defineModel],
-		defineOptions: [...vueCompilerOptions.macros.defineOptions],
-		withDefaults: [...vueCompilerOptions.macros.withDefaults],
-	};
 
 	ast.forEachChild(node => {
 		const isTypeExport = (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) && node.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword);
@@ -84,22 +75,13 @@ export function parseScriptSetupRanges(
 		emitsTypeNums,
 		exposeRuntimeArg,
 		defineProp,
-		macrosToBeImported,
 	};
 
 	function _getStartEnd(node: ts.Node) {
 		return getStartEnd(node, ast);
 	}
 	function visitNode(node: ts.Node, parent: ts.Node) {
-		if (ts.isVariableDeclaration(node) || ts.isFunctionDeclaration(node) || ts.isImportSpecifier(node)) {
-			const name = node.name?.getText(ast);
-			if (name && name in macrosToBeImported) {
-				for (const key in macrosToBeImported) {
-					macrosToBeImported[key as keyof VueCompilerOptions['macros']] = macrosToBeImported[key as keyof VueCompilerOptions['macros']].filter(macro => macro !== name);
-				}
-			}
-		}
-		else if (
+		if (
 			ts.isCallExpression(node)
 			&& ts.isIdentifier(node.expression)
 		) {

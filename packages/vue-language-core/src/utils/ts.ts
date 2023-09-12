@@ -231,16 +231,6 @@ const SVG_TAGS =
 	'polygon,polyline,radialGradient,rect,set,solidcolor,stop,switch,symbol,' +
 	'text,textPath,title,tspan,unknown,use,view';
 
-export const defaultMacros: VueCompilerOptions['macros'] = {
-	defineProps: ['defineProps'],
-	defineSlots: ['defineSlots'],
-	defineEmits: ['defineEmits'],
-	defineExpose: ['defineExpose'],
-	defineModel: ['defineModel'],
-	defineOptions: ['defineOptions'],
-	withDefaults: ['withDefaults'],
-};
-
 export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions>): VueCompilerOptions {
 	const target = vueOptions.target ?? 3.3;
 	const lib = vueOptions.lib || (target < 2.7 ? '@vue/runtime-dom' : 'vue');
@@ -267,7 +257,16 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 				? [`(await import('${lib}')).defineComponent(`, `)`]
 				: [`(await import('vue')).default.extend(`, `)`]
 		),
-		macros: Object.assign({}, defaultMacros, vueOptions.macros),
+		macros: {
+			defineProps: ['defineProps'],
+			defineSlots: ['defineSlots'],
+			defineEmits: ['defineEmits'],
+			defineExpose: ['defineExpose'],
+			defineModel: ['defineModel'],
+			defineOptions: ['defineOptions'],
+			withDefaults: ['withDefaults'],
+			...vueOptions.macros,
+		},
 		plugins: vueOptions.plugins ?? [],
 		hooks: vueOptions.hooks ?? [],
 
