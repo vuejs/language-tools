@@ -1,4 +1,4 @@
 <template>
-      <slot></slot>
-  <!-- ^reference: 1 -->
+	<slot></slot>
+	<!-- ^reference: 1 -->
 </template>

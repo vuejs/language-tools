@@ -3,5 +3,7 @@ import Entry from './entry.vue';
 </script>
 
 <template>
-	<Entry></Entry>
+	<Entry>
+		<div></div>
+	</Entry>
 </template>
