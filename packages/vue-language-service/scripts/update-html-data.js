@@ -184,6 +184,10 @@ async function sfcWorker(lang) {
 	const scriptBlock = languageBlocks.find(b => b.name === 'script');
 	const scriptSetupBlock = languageBlocks.find(b => b.name === 'script setup');
 
+	if (!scriptBlock || !scriptSetupBlock) {
+		throw new Error('script or script setup block not found');
+	}
+
 	scriptBlock.attributes.push({
 		name: 'setup',
 		valueSet: 'v',
