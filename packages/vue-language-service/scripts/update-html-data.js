@@ -104,10 +104,7 @@ async function sfcWorker(lang) {
 		.slice(1)
 		.map((section) => {
 			const lines = section.split('\n');
-			let name = lines[0].trim();
-			if (name.startsWith('`<')) {
-				name = name.split('`<')[1].split('>`')[0];
-			}
+			const name = normalizeTagName(lines[0]);
 			/**
 			 * @type {import('vscode-html-languageservice').ITagData}
 			 */
@@ -217,8 +214,8 @@ async function modelWorker(lang) {
 		.slice(1)
 		.map((section) => {
 			const lines = section.split('\n');
-			let name = lines[0].trim();
-			name = name.split('`.')[1].split('`')[0];
+			let name = normalizeAttrName(lines[0]);
+			name = name.split('.')[1];
 			/**
 			 * @type {import('vscode-html-languageservice').IAttributeData}
 			 */
@@ -261,7 +258,7 @@ async function templateWorker(lang) {
 		.slice(1)
 		.map((section) => {
 			const lines = section.split('\n');
-			const name = lines[0].trim().split(' ')[0];
+			const name = normalizeAttrName(lines[0]);
 			/**
 			 * @type {import('vscode-html-languageservice').IAttributeData}
 			 */
@@ -284,7 +281,7 @@ async function templateWorker(lang) {
 		.slice(1)
 		.map((section) => {
 			const lines = section.split('\n');
-			const name = lines[0].trim().split(' ')[0];
+			const name = normalizeAttrName(lines[0]);
 			/**
 			 * @type {import('vscode-html-languageservice').IAttributeData}
 			 */
@@ -306,10 +303,7 @@ async function templateWorker(lang) {
 		.slice(1)
 		.map((section) => {
 			const lines = section.split('\n');
-			let name = lines[0].trim();
-			if (name.startsWith('`<')) {
-				name = name.split('`<')[1].split('>`')[0];
-			}
+			const name = normalizeTagName(lines[0]);
 			/**
 			 * @type {import('vscode-html-languageservice').ITagData}
 			 */
@@ -332,10 +326,7 @@ async function templateWorker(lang) {
 		.slice(1)
 		.map((section) => {
 			const lines = section.split('\n');
-			let name = lines[0].trim();
-			if (name.startsWith('`<')) {
-				name = name.split('`<')[1].split('>`')[0];
-			}
+			const name = normalizeTagName(lines[0]);
 			/**
 			 * @type {import('vscode-html-languageservice').ITagData}
 			 */
@@ -391,6 +382,27 @@ function resolveMarkdownLinks(text, url) {
 		p2 = p2Parts.join('#');
 		return `[${p1}](${url}${p2})`;
 	});
+}
+
+function normalizeTagName(name) {
+	name = name.trim();
+	return _normalizeName(name);
+}
+
+function normalizeAttrName(name) {
+	name = name.trim();
+	name = name.split(' ')[0];
+	return _normalizeName(name);
+}
+
+function _normalizeName(name) {
+	if (name.startsWith('`')) {
+		name = name.split('`')[1].split('`')[0];
+	}
+	if (name.startsWith('<')) {
+		name = name.split('<')[1].split('>')[0];
+	}
+	return name;
 }
 
 function normalizeHash(str) {
