@@ -86,6 +86,7 @@ export function generate(
 	const identifiers = new Set<string>();
 	const scopedClasses: { className: string, offset: number; }[] = [];
 	const blockConditions: string[] = [];
+	const hasSlotElements = new Set<CompilerDOM.ElementNode>();
 
 	let hasSlot = false;
 	let elementIndex = 0;
@@ -837,6 +838,9 @@ export function generate(
 
 		const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
 		if (slotDir && componentCtxVar) {
+			if (parentEl) {
+				hasSlotElements.add(parentEl);
+			}
 			const slotBlockVars: string[] = [];
 			codes.push(`{\n`);
 			let hasProps = false;
@@ -943,6 +947,23 @@ export function generate(
 				prev = childNode;
 			}
 			resolveComment();
+
+			// fix https://github.com/vuejs/language-tools/issues/932
+			if (!hasSlotElements.has(node) && node.children.length) {
+				codes.push(
+					`(${componentCtxVar}.slots!)`,
+					...createPropertyAccessCode([
+						'default',
+						'template',
+						[
+							node.children[0].loc.start.offset,
+							node.children[node.children.length - 1].loc.end.offset,
+						],
+						{ references: true },
+					]),
+					';\n',
+				);
+			}
 		}
 
 		codes.push(`}\n`);
