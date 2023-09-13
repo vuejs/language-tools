@@ -214,11 +214,10 @@ function resolvePlugins(
 			async provideSemanticDiagnostics(document, token) {
 				const result = await base.provideSemanticDiagnostics?.(document, token);
 				return result?.map(diagnostic => {
-					const text = document.getText(diagnostic.range);
 					if (
 						diagnostic.source === 'ts'
 						&& diagnostic.code === 2578 /* Unused '@ts-expect-error' directive. */
-						&& text === '// @ts-expect-error __VLS_TS_EXPECT_ERROR'
+						&& document.getText(diagnostic.range) === '// @ts-expect-error __VLS_TS_EXPECT_ERROR'
 					) {
 						diagnostic.source = 'vue';
 						diagnostic.code = 'ts-2578';
