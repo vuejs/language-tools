@@ -1,5 +1,5 @@
 import { FileRangeCapabilities, Service, ServiceContext, SourceMapWithDocuments } from '@volar/language-service';
-import { VueFile, hyphenateAttr, hyphenateTag, parseScriptSetupRanges, tsCodegen } from '@vue/language-core';
+import { VueFile, VueLanguage, hyphenateAttr, hyphenateTag, parseScriptSetupRanges, tsCodegen } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import * as html from 'vscode-html-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
@@ -18,7 +18,7 @@ export const create = <S extends Service>(options: {
 	baseService: S,
 	isSupportedDocument: (document: TextDocument) => boolean,
 	vueCompilerOptions: VueCompilerOptions,
-	vueLanguage: vue.VueLanguage,
+	vueLanguage: VueLanguage,
 }): Service => (_context: ServiceContext<import('volar-service-typescript').Provide> | undefined, modules): ReturnType<Service> => {
 
 	const htmlOrPugService = options.baseService(_context, modules) as ReturnType<S>;

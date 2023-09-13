@@ -1,5 +1,5 @@
 import { Config, Service, ServiceContext } from '@volar/language-service';
-import { VueFile, createLanguages, hyphenateTag, resolveVueCompilerOptions, scriptRanges } from '@vue/language-core';
+import { VueFile, VueLanguage, createLanguages, hyphenateTag, resolveVueCompilerOptions, scriptRanges } from '@vue/language-core';
 import { capitalize } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { Data } from 'volar-service-typescript/out/features/completions/basic';
@@ -47,7 +47,7 @@ export function resolveConfig(
 	const vueLanguageModules = createLanguages(compilerOptions, resolvedVueCompilerOptions, ts, codegenStack);
 
 	config.languages = Object.assign({}, vueLanguageModules, config.languages);
-	config.services = resolvePlugins(config.services, resolvedVueCompilerOptions, vueLanguageModules[0] as vue.VueLanguage);
+	config.services = resolvePlugins(config.services, resolvedVueCompilerOptions, vueLanguageModules[0] as VueLanguage);
 
 	return config;
 }
@@ -55,7 +55,7 @@ export function resolveConfig(
 function resolvePlugins(
 	services: Config['services'],
 	vueCompilerOptions: VueCompilerOptions,
-	vueLanguage: vue.VueLanguage,
+	vueLanguage: VueLanguage,
 ) {
 
 	const originalTsPlugin: Service = services?.typescript ?? TsService.create();
