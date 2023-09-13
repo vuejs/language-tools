@@ -1,6 +1,6 @@
 import { Config, Service, ServiceContext } from '@volar/language-service';
-import * as vue from '@vue/language-core';
-import { capitalize, hyphenate } from '@vue/shared';
+import { VueFile, createLanguages, hyphenateTag, resolveVueCompilerOptions, scriptRanges } from '@vue/language-core';
+import { capitalize } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { Data } from 'volar-service-typescript/out/features/completions/basic';
 import type * as html from 'vscode-html-languageservice';
@@ -24,12 +24,12 @@ import * as AutoDotValueService from './plugins/vue-autoinsert-dotvalue';
 import * as AutoWrapParenthesesService from './plugins/vue-autoinsert-parentheses';
 import * as AutoAddSpaceService from './plugins/vue-autoinsert-space';
 import * as ReferencesCodeLensService from './plugins/vue-codelens-references';
-import * as VueTemplateLanguageService from './plugins/vue-template';
-import * as VueTqService from './plugins/vue-twoslash-queries';
-import * as VisualizeHiddenCallbackParamService from './plugins/vue-visualize-hidden-callback-param';
 import * as DirectiveCommentsService from './plugins/vue-directive-comments';
 import * as ExtractComponentService from './plugins/vue-extract-file';
+import * as VueTemplateLanguageService from './plugins/vue-template';
 import * as ToggleVBindService from './plugins/vue-toggle-v-bind-codeaction';
+import * as VueTqService from './plugins/vue-twoslash-queries';
+import * as VisualizeHiddenCallbackParamService from './plugins/vue-visualize-hidden-callback-param';
 
 export interface Settings {
 	json?: Parameters<typeof JsonService['create']>[0];
@@ -38,13 +38,13 @@ export interface Settings {
 export function resolveConfig(
 	config: Config,
 	compilerOptions: ts.CompilerOptions = {},
-	vueCompilerOptions: Partial<vue.VueCompilerOptions> = {},
+	vueCompilerOptions: Partial<VueCompilerOptions> = {},
 	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
 	codegenStack: boolean = false,
 ) {
 
-	const resolvedVueCompilerOptions = vue.resolveVueCompilerOptions(vueCompilerOptions);
-	const vueLanguageModules = vue.createLanguages(compilerOptions, resolvedVueCompilerOptions, ts, codegenStack);
+	const resolvedVueCompilerOptions = resolveVueCompilerOptions(vueCompilerOptions);
+	const vueLanguageModules = createLanguages(compilerOptions, resolvedVueCompilerOptions, ts, codegenStack);
 
 	config.languages = Object.assign({}, vueLanguageModules, config.languages);
 	config.services = resolvePlugins(config.services, resolvedVueCompilerOptions, vueLanguageModules[0] as vue.VueLanguage);
@@ -87,7 +87,7 @@ function resolvePlugins(
 
 					for (const [_, map] of ctx.documents.getMapsByVirtualFileUri(document.uri)) {
 						const virtualFile = ctx.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
-						if (virtualFile instanceof vue.VueFile) {
+						if (virtualFile instanceof VueFile) {
 							const isAutoImport = !!map.toSourcePosition(position, data => typeof data.completion === 'object' && !!data.completion.autoImportOnly);
 							if (isAutoImport) {
 								const source = ctx.documents.getVirtualFileByUri(document.uri)[1];
@@ -100,7 +100,7 @@ function resolvePlugins(
 									casing ??= await getNameCasing(ts, ctx, ctx.env.fileNameToUri(source.fileName), vueCompilerOptions);
 									if (casing.tag === TagNameCasing.Kebab) {
 										for (const item of result.items) {
-											item.filterText = hyphenate(item.filterText ?? item.label);
+											item.filterText = hyphenateTag(item.filterText ?? item.label);
 										}
 									}
 								}
@@ -151,7 +151,7 @@ function resolvePlugins(
 						if (source) {
 							const casing = await getNameCasing(ts, ctx, ctx.env.fileNameToUri(source.fileName), vueCompilerOptions);
 							if (casing.tag === TagNameCasing.Kebab) {
-								item.textEdit.newText = hyphenate(item.textEdit.newText);
+								item.textEdit.newText = hyphenateTag(item.textEdit.newText);
 							}
 						}
 					}
@@ -167,7 +167,7 @@ function resolvePlugins(
 					const langaugeService = ctx.inject('typescript/languageService');
 					const [virtualFile] = ctx.virtualFiles.getVirtualFile(fileName);
 					const ast = langaugeService.getProgram()?.getSourceFile(fileName);
-					const exportDefault = ast ? vue.scriptRanges.parseScriptRanges(ts, ast, false, true).exportDefault : undefined;
+					const exportDefault = ast ? scriptRanges.parseScriptRanges(ts, ast, false, true).exportDefault : undefined;
 					if (virtualFile && ast && exportDefault) {
 						const componentName = newName ?? item.textEdit.newText;
 						const optionEdit = ExtractComponentService.createAddComponentToOptionEdit(ts, ast, componentName);
@@ -211,6 +211,22 @@ function resolvePlugins(
 				}
 
 				return result;
+			},
+			async provideSemanticDiagnostics(document, token) {
+				const result = await base.provideSemanticDiagnostics?.(document, token);
+				return result?.map(diagnostic => {
+					const text = document.getText(diagnostic.range);
+					if (
+						diagnostic.source === 'ts'
+						&& diagnostic.code === 2578 /* Unused '@ts-expect-error' directive. */
+						&& text === '// @ts-expect-error __VLS_TS_EXPECT_ERROR'
+					) {
+						diagnostic.source = 'vue';
+						diagnostic.code = 'ts-2578';
+						diagnostic.message = diagnostic.message.replace(/@ts-expect-error/g, '@vue-expect-error');
+					}
+					return diagnostic;
+				});
 			},
 		};
 	};

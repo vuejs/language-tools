@@ -1,6 +1,5 @@
-import type { SFCParseResult } from '@vue/compiler-sfc';
-
 import type * as CompilerDOM from '@vue/compiler-dom';
+import type { SFCParseResult } from '@vue/compiler-sfc';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { VueEmbeddedFile, VueFile } from './sourceFile';
 
@@ -23,11 +22,13 @@ export interface VueCompilerOptions {
 	htmlAttributes: string[];
 	optionsWrapper: [string, string] | [];
 	macros: {
-		defineProps: string[],
-		defineSlots: string[],
-		defineEmits: string[],
-		defineExpose: string[],
-		withDefaults: string[],
+		defineProps: string[];
+		defineSlots: string[];
+		defineEmits: string[];
+		defineExpose: string[];
+		defineModel: string[];
+		defineOptions: string[];
+		withDefaults: string[];
 	};
 	plugins: VueLanguagePlugin[];
 	hooks: string[];
@@ -107,6 +108,6 @@ export interface Sfc {
 }
 
 export interface TextRange {
-	start: number,
-	end: number,
+	start: number;
+	end: number;
 }
