@@ -8,6 +8,7 @@ const workspace = path.resolve(__dirname, '../../vue-test-workspace/vue-tsc-dts'
 const testFiles = readFilesRecursive(workspace);
 const ensureTs = (filename: string) => filename.endsWith('.ts') ? filename : filename + '.ts';
 const normalizePath = (filename: string) => filename.replace(/\\/g, '/');
+const normalizeNewline = (text: string) => text.replace(/\r\n/g, '\n');
 
 describe('vue-tsc-dts', () => {
 	const compilerOptions: ts.CompilerOptions = {
@@ -27,7 +28,7 @@ describe('vue-tsc-dts', () => {
 		const output = service.getEmitOutput(ensureTs(file), true);
 		for (const outputFile of output.outputFiles) {
 			it(`Input: ${shortenPath(file)}, Output: ${shortenPath(outputFile.name)}`, () => {
-				expect(outputFile.text).toMatchSnapshot();
+				expect(normalizeNewline(outputFile.text)).toMatchSnapshot();
 			});
 		}
 	}
