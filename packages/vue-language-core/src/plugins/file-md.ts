@@ -9,7 +9,7 @@ const scriptSetupReg = /\\\<[\s\S]+?\>\n?/g;
 const sfcBlockReg = /\<(script|style)\b[\s\S]*?\>([\s\S]*?)\<\/\1\>/g;
 const angleBracketReg = /\<\S*\:\S*\>/g;
 const linkReg = /\[[\s\S]*?\]\([\s\S]*?\)/g;
-const codeSnippetImportReg = /^<<<\s*.+/gm;
+const codeSnippetImportReg = /^\s*<<<\s*.+/gm;
 
 const plugin: VueLanguagePlugin = () => {
 
