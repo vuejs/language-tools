@@ -9,6 +9,7 @@ const scriptSetupReg = /\\\<[\s\S]+?\>\n?/g;
 const sfcBlockReg = /\<(script|style)\b[\s\S]*?\>([\s\S]*?)\<\/\1\>/g;
 const angleBracketReg = /\<\S*\:\S*\>/g;
 const linkReg = /\[[\s\S]*?\]\([\s\S]*?\)/g;
+const codeSnippetImportReg = /^\s*<<<\s*.+/gm;
 
 const plugin: VueLanguagePlugin = () => {
 
@@ -26,7 +27,9 @@ const plugin: VueLanguagePlugin = () => {
 					// inline code block
 					.replace(inlineCodeblockReg, match => `\`${' '.repeat(match.length - 2)}\``)
 					// # \<script setup>
-					.replace(scriptSetupReg, match => ' '.repeat(match.length));
+					.replace(scriptSetupReg, match => ' '.repeat(match.length))
+					// <<< https://vitepress.dev/guide/markdown#import-code-snippets
+					.replace(codeSnippetImportReg, match => ' '.repeat(match.length));
 
 				const codes: Segment[] = [];
 
