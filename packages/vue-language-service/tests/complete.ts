@@ -7,6 +7,7 @@ import type * as vscode from 'vscode-languageserver-protocol';
 
 const baseDir = path.resolve(__dirname, '../../vue-test-workspace/complete');
 const testDirs = fs.readdirSync(baseDir);
+const normalizeNewline = (text: string) => text.replace(/\r\n/g, '\n');
 
 for (const dirName of testDirs) {
 
@@ -74,7 +75,7 @@ for (const dirName of testDirs) {
 
 					result = result.replaceAll('$0', '').replaceAll('$1', '');
 
-					expect(result.replace(/\r\n/g, '\n')).toBe(expectedFileText.replace(/\r\n/g, '\n'));
+					expect(normalizeNewline(result)).toBe(normalizeNewline(expectedFileText));
 				});
 			}
 		}
