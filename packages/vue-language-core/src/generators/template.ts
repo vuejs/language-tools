@@ -622,6 +622,7 @@ export function generate(
 		const isNamespacedTag = tag.indexOf('.') >= 0;
 		const var_originalComponent = `__VLS_${elementIndex++}`;
 		const var_functionalComponent = `__VLS_${elementIndex++}`;
+		const var_componentPropsInstance = `__VLS_${elementIndex++}`;
 		const var_componentInstance = `__VLS_${elementIndex++}`;
 
 		let dynamicTagExp: CompilerDOM.ExpressionNode | undefined;
@@ -737,6 +738,21 @@ export function generate(
 			}
 		}
 
+		if (!vueCompilerOptions.strictTemplates) {
+			codes.push(
+				`const ${var_componentPropsInstance} = ${var_functionalComponent}(`,
+				'{ ',
+				...createPropsCode(node, props, 'noFormat', propsFailedExps).map(code => typeof code === 'string' ? code : code[0]),
+				'}',
+				`, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}));\n`,
+			);
+
+			codes.push(
+				`type ${var_componentPropsInstance}_props = NonNullable<typeof ${var_componentPropsInstance}.__ctx>['props'];\n`,
+				`type ${var_componentInstance}_propsType = Omit<Parameters<typeof ${var_functionalComponent}>[0], __VLS_IsAny<${var_componentPropsInstance}_props> extends true ? never : keyof ${var_componentPropsInstance}_props> & __VLS_PickNotAny<${var_componentPropsInstance}_props, {}>;\n`,
+			);
+		}
+
 		codes.push(
 			`const ${var_componentInstance} = ${var_functionalComponent}(`,
 			// diagnostic start
@@ -744,17 +760,9 @@ export function generate(
 				: dynamicTagExp ? ['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]
 					: '',
 			'{ ',
-		);
-		if (!vueCompilerOptions.strictTemplates) {
-			// fix https://github.com/vuejs/language-tools/issues/3318
-			codes.push('...{ ');
-		}
-		codes.push(...createPropsCode(node, props, 'normal', propsFailedExps));
-		if (!vueCompilerOptions.strictTemplates) {
-			codes.push('}, ');
-		}
-		codes.push(
-			'}',
+			...createPropsCode(node, props, 'normal', propsFailedExps),
+			`}`,
+			vueCompilerOptions.strictTemplates ? '' : ` as ${var_componentInstance}_propsType`,
 			// diagnostic end
 			tagOffsets.length ? ['', 'template', tagOffsets[0] + tag.length, capabilitiesPresets.diagnosticOnly]
 				: dynamicTagExp ? ['', 'template', startTagOffset + tag.length, capabilitiesPresets.diagnosticOnly]
@@ -1130,7 +1138,7 @@ export function generate(
 		}
 	}
 
-	function createPropsCode(node: CompilerDOM.ElementNode, props: CompilerDOM.ElementNode['props'], mode: 'normal' | 'extraReferences', propsFailedExps?: CompilerDOM.SimpleExpressionNode[]): Code[] {
+	function createPropsCode(node: CompilerDOM.ElementNode, props: CompilerDOM.ElementNode['props'], mode: 'noFormat' | 'normal' | 'extraReferences', propsFailedExps?: CompilerDOM.SimpleExpressionNode[]): Code[] {
 
 		let styleAttrNum = 0;
 		let classAttrNum = 0;

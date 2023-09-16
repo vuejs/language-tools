@@ -19,6 +19,6 @@ const componentState = {
 		}"
 		class="mb-3"
 	>
-		{{ exactType(item, null) }}
+		{{ exactType(item, '' as string) }}
 	</Comp>
 </template>

@@ -6,7 +6,7 @@ defineProps<{
 }>();
 
 defineSlots<{
-	default: { item: T },
+	default(props: { item: string }): any;
 }>();
 //...
 </script>
