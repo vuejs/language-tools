@@ -8,5 +8,4 @@ defineProps<{
 defineSlots<{
 	default(props: { item: string }): any;
 }>();
-//...
 </script>
