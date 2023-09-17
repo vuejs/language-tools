@@ -15,7 +15,7 @@ const componentState = {
 		:items="componentState.items"
 		:get-key="(item) => {
 			exactType(item, null);
-			return ''
+			return '';
 		}"
 		class="mb-3"
 	>
