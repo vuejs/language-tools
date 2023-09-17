@@ -17,7 +17,6 @@ const componentState = {
 			exactType(item, null);
 			return '';
 		}"
-		class="mb-3"
 	>
 		{{ exactType(item, null) }}
 	</Comp>
