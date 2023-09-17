@@ -748,8 +748,8 @@ export function generate(
 			);
 
 			codes.push(
-				`type ${var_componentPropsInstance}_props = NonNullable<typeof ${var_componentPropsInstance}.__ctx>['props'];\n`,
-				`type ${var_componentInstance}_propsType = Omit<Parameters<typeof ${var_functionalComponent}>[0], (__VLS_IsAny<${var_componentPropsInstance}_props> extends true ? never : keyof ${var_componentPropsInstance}_props) | JSX.ElementChildrenAttribute> & __VLS_PickNotAny<${var_componentPropsInstance}_props, {}>;\n`,
+				`type ${var_componentPropsInstance}_props = NonNullable<NonNullable<typeof ${var_componentPropsInstance}.__ctx>['props']>;\n`,
+				`type ${var_componentInstance}_propsType = __VLS_MappedOmit<Parameters<typeof ${var_functionalComponent}>[0], (__VLS_IsAny<${var_componentPropsInstance}_props> extends true ? never : keyof ${var_componentPropsInstance}_props) | keyof JSX.ElementChildrenAttribute> & __VLS_MappedOmit<__VLS_PickNotAny<${var_componentPropsInstance}_props, {}>, keyof JSX.ElementChildrenAttribute>;\n`,
 			);
 		}
 
