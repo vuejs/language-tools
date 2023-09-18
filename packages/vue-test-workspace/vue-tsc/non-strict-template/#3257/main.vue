@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script lang="ts">
 import { defineComponent } from 'vue';
 import Comp from './Comp.vue';
 
