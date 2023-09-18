@@ -1,19 +1,17 @@
-import { getLength, Segment } from '@volar/source-map';
 import { FileRangeCapabilities, MirrorBehaviorCapabilities } from '@volar/language-core';
-import type { TextRange } from '../types';
 import * as SourceMaps from '@volar/source-map';
-import { hyphenate } from '@vue/shared';
+import { Segment, getLength } from '@volar/source-map';
+import * as muggle from 'muggle-string';
 import { posix as path } from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type * as templateGen from '../generators/template';
 import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
+import type { TextRange, VueCompilerOptions } from '../types';
 import { Sfc } from '../types';
-import type { VueCompilerOptions } from '../types';
-import { getSlotsPropertyName } from '../utils/shared';
-import { walkInterpolationFragment } from '../utils/transform';
 import * as sharedTypes from '../utils/globalTypes';
-import * as muggle from 'muggle-string';
+import { getSlotsPropertyName, hyphenateTag } from '../utils/shared';
+import { walkInterpolationFragment } from '../utils/transform';
 
 export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -268,7 +266,7 @@ export function generate(
 			return;
 
 		codes.push([
-			sfc.scriptSetup.content.substring(0, Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset)),
+			sfc.scriptSetup.content.substring(0, Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset)) + '\n',
 			'scriptSetup',
 			0,
 			FileRangeCapabilities.full,
@@ -319,6 +317,7 @@ export function generate(
 				`& import('${vueCompilerOptions.lib}').ComponentCustomProps,\n`,
 			);
 			codes.push(`__VLS_ctx?: Pick<Awaited<typeof __VLS_setup>, 'attrs' | 'emit' | 'slots'>,\n`);
+			codes.push(`__VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>['expose'],\n`);
 			codes.push('__VLS_setup = (async () => {\n');
 			scriptSetupGeneratedOffset = generateSetupFunction(true, 'none', definePropMirrors);
 
@@ -465,7 +464,20 @@ export function generate(
 		const definePropProposalB = sfc.scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition') || vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
 
 		if (vueCompilerOptions.target >= 3.3) {
-			codes.push(`const { defineProps, defineEmits, defineExpose, defineOptions, defineSlots, defineModel, withDefaults } = await import('${vueCompilerOptions.lib}');\n`);
+			const bindings = new Set(scriptSetupRanges.bindings.map(range => sfc.scriptSetup!.content.substring(range.start, range.end)));
+			codes.push('const { ');
+			for (const [macro, aliases] of Object.entries(vueCompilerOptions.macros)) {
+				for (const alias of aliases) {
+					if (!bindings.has(alias)) {
+						codes.push(macro);
+						if (alias !== macro) {
+							codes.push(` : ${alias}`);
+						}
+						codes.push(`, `);
+					}
+				}
+			}
+			codes.push(`} = await import('${vueCompilerOptions.lib}');\n`);
 		}
 		if (definePropProposalA) {
 			codes.push(`
@@ -974,7 +986,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 			// fix import components unused report
 			for (const varName of bindingNames) {
-				if (!!htmlGen.tagNames[varName] || !!htmlGen.tagNames[hyphenate(varName)]) {
+				if (!!htmlGen.tagNames[varName] || !!htmlGen.tagNames[hyphenateTag(varName)]) {
 					usageVars.add(varName);
 				}
 			}

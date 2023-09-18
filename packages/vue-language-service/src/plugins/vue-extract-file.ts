@@ -13,7 +13,7 @@ interface ActionData {
 
 const unicodeReg = /\\u/g;
 
-export default function (): Service {
+export const create = function (): Service {
 
 	return (ctx: ServiceContext<Provide> | undefined, modules): ReturnType<Service> => {
 
@@ -261,7 +261,7 @@ export default function (): Service {
 			},
 		};
 	};
-}
+};
 
 function selectTemplateCode(startOffset: number, endOffset: number, templateBlock: SfcBlock, templateAst: RootNode) {
 

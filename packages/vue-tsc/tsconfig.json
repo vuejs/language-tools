@@ -1,0 +1,12 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"outDir": "out",
+		"rootDir": "src",
+	},
+	"include": [ "src" ],
+	"references": [
+		{ "path": "../vue-language-core/tsconfig.json" },
+		{ "path": "../vue-typescript/tsconfig.json" },
+	],
+}

@@ -15,5 +15,6 @@
 	},
 	"[jsonc]": {
 		"editor.defaultFormatter": "vscode.json-language-features"
-	}
+	},
+	"vue.server.path": "./packages/vue-language-server/bin/vue-language-server.js",
 }

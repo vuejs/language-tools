@@ -86,7 +86,7 @@ export function parseScriptSetupRanges(
 			&& ts.isIdentifier(node.expression)
 		) {
 			const callText = node.expression.getText(ast);
-			if (callText === 'defineModel') {
+			if (vueCompilerOptions.macros.defineModel.includes(callText)) {
 				let name: TextRange | undefined;
 				let options: ts.Node | undefined;
 				if (node.arguments.length >= 2) {

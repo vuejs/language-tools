@@ -1,8 +1,7 @@
+import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCParseResult } from '@vue/compiler-sfc';
-
-import * as CompilerDom from '@vue/compiler-dom';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { VueEmbeddedFile } from './sourceFile';
+import type { VueEmbeddedFile } from './sourceFile';
 
 export type { SFCParseResult } from '@vue/compiler-sfc';
 
@@ -23,11 +22,13 @@ export interface VueCompilerOptions {
 	htmlAttributes: string[];
 	optionsWrapper: [string, string] | [];
 	macros: {
-		defineProps: string[],
-		defineSlots: string[],
-		defineEmits: string[],
-		defineExpose: string[],
-		withDefaults: string[],
+		defineProps: string[];
+		defineSlots: string[];
+		defineEmits: string[];
+		defineExpose: string[];
+		defineModel: string[];
+		defineOptions: string[];
+		withDefaults: string[];
 	};
 	plugins: VueLanguagePlugin[];
 	hooks: string[];
@@ -55,9 +56,9 @@ export type VueLanguagePlugin = (ctx: {
 	requiredCompilerOptions?: string[];
 	parseSFC?(fileName: string, content: string): SFCParseResult | undefined;
 	updateSFC?(oldResult: SFCParseResult, textChange: { start: number, end: number, newText: string; }): SFCParseResult | undefined;
-	resolveTemplateCompilerOptions?(options: CompilerDom.CompilerOptions): CompilerDom.CompilerOptions;
-	compileSFCTemplate?(lang: string, template: string, options: CompilerDom.CompilerOptions): CompilerDom.CodegenResult | undefined;
-	updateSFCTemplate?(oldResult: CompilerDom.CodegenResult, textChange: { start: number, end: number, newText: string; }): CompilerDom.CodegenResult | undefined;
+	resolveTemplateCompilerOptions?(options: CompilerDOM.CompilerOptions): CompilerDOM.CompilerOptions;
+	compileSFCTemplate?(lang: string, template: string, options: CompilerDOM.CompilerOptions): CompilerDOM.CodegenResult | undefined;
+	updateSFCTemplate?(oldResult: CompilerDOM.CodegenResult, textChange: { start: number, end: number, newText: string; }): CompilerDOM.CodegenResult | undefined;
 	getEmbeddedFileNames?(fileName: string, sfc: Sfc): string[];
 	resolveEmbeddedFile?(fileName: string, sfc: Sfc, embeddedFile: VueEmbeddedFile): void;
 };
@@ -101,12 +102,12 @@ export interface Sfc {
 	})[];
 
 	// ast
-	templateAst: CompilerDom.RootNode | undefined;
+	templateAst: CompilerDOM.RootNode | undefined;
 	scriptAst: ts.SourceFile | undefined;
 	scriptSetupAst: ts.SourceFile | undefined;
 }
 
 export interface TextRange {
-	start: number,
-	end: number,
+	start: number;
+	end: number;
 }

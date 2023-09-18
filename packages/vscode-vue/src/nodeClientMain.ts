@@ -47,7 +47,18 @@ export async function activate(context: vscode.ExtensionContext) {
 			}
 		}
 
-		const serverModule = vscode.Uri.joinPath(context.extensionUri, 'server.js');
+		let serverModule = vscode.Uri.joinPath(context.extensionUri, 'server.js');
+
+		if (config.server.path) {
+			try {
+				const roots = (vscode.workspace.workspaceFolders ?? []).map(folder => folder.uri.fsPath);
+				const serverPath = require.resolve(config.server.path, { paths: roots });
+				serverModule = vscode.Uri.file(serverPath);
+			} catch (err) {
+				vscode.window.showWarningMessage(`Cannot find vue language server path: ${config.server.path}`);
+			}
+		}
+
 		const runOptions: lsp.ForkOptions = {};
 		if (config.server.maxOldSpaceSize) {
 			runOptions.execArgv ??= [];
@@ -66,25 +77,24 @@ export async function activate(context: vscode.ExtensionContext) {
 				options: debugOptions
 			},
 		};
-		const bunPath: string | undefined = undefined; // path to .bun/bin/bun
-		if (bunPath) {
+		if (config.server.runtime === 'bun') {
 			serverOptions = {
 				run: {
 					transport: {
 						kind: lsp.TransportKind.socket,
-						port: port + 10,
+						port,
 					},
 					options: runOptions,
-					command: bunPath,
+					command: 'bun',
 					args: ['--bun', 'run', serverModule.fsPath],
 				},
 				debug: {
 					transport: {
 						kind: lsp.TransportKind.socket,
-						port: port + 10,
+						port,
 					},
 					options: debugOptions,
-					command: bunPath,
+					command: 'bun',
 					args: ['--bun', 'run', serverModule.fsPath],
 				},
 			};

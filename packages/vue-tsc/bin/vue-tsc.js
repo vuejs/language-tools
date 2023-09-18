@@ -28,6 +28,10 @@ fs.readFileSync = (...args) => {
 					.map(file => file.replace(/\.vue\.(j|t)sx?$/i, '.vue'))
 				) {`
 			);
+			tryReplace(
+				`return [toFileId(key), toFileIdListId(state.exportedModulesMap.getValues(key))];`, 
+				`return [toFileId(key), toFileIdListId(new Set(arrayFrom(state.exportedModulesMap.getValues(key)).filter(file => file !== void 0)))];`
+			);
 		}
 		if (semver.gte(tsPkg.version, '5.0.4')) {
 			tryReplace(

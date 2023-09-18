@@ -2,7 +2,7 @@
 import { FunctionDirective } from 'vue';
 import { exactType } from '../../shared';
 
-let Foo: (_: { foo?: string }) => void;
+let Foo: (_: { foo?: string; }) => void;
 
 let vFoo: FunctionDirective<typeof Foo, (_: number) => void>;
 </script>

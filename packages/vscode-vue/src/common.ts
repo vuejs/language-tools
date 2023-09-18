@@ -143,8 +143,20 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		activateServerSys(client);
 	}
 
+	async function requestReloadVscode() {
+		const reload = await vscode.window.showInformationMessage(
+			'Please reload VSCode to restart language servers.',
+			'Reload Window'
+		);
+		if (reload === undefined) return; // cancel
+		vscode.commands.executeCommand('workbench.action.reloadWindow');
+	}
+
 	function activateServerMaxOldSpaceSizeChange() {
 		vscode.workspace.onDidChangeConfiguration((e) => {
+			if (e.affectsConfiguration('vue.server.runtime') || e.affectsConfiguration('vue.server.path')) {
+				requestReloadVscode();
+			}
 			if (e.affectsConfiguration('vue')) {
 				vscode.commands.executeCommand('volar.action.restartServer');
 			}

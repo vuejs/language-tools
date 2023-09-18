@@ -1,6 +1,6 @@
 import { FileCapabilities, VirtualFile, FileKind, FileRangeCapabilities, MirrorBehaviorCapabilities } from '@volar/language-core';
 import { buildMappings, buildStacks, Mapping, Segment, toString, StackNode, Stack } from '@volar/source-map';
-import * as CompilerDom from '@vue/compiler-dom';
+import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCBlock, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
 import { computed, ComputedRef, reactive, pauseTracking, resetTracking } from '@vue/reactivity';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -37,7 +37,7 @@ export class VueFile implements VirtualFile {
 	compiledSFCTemplateCache: {
 		template: string,
 		snapshot: ts.IScriptSnapshot,
-		result: CompilerDom.CodegenResult,
+		result: CompilerDOM.CodegenResult,
 		plugin: ReturnType<VueLanguagePlugin>,
 	} | undefined;
 
@@ -146,11 +146,11 @@ export class VueFile implements VirtualFile {
 				}
 			}
 
-			const errors: CompilerDom.CompilerError[] = [];
-			const warnings: CompilerDom.CompilerError[] = [];
-			let options: CompilerDom.CompilerOptions = {
-				onError: (err: CompilerDom.CompilerError) => errors.push(err),
-				onWarn: (err: CompilerDom.CompilerError) => warnings.push(err),
+			const errors: CompilerDOM.CompilerError[] = [];
+			const warnings: CompilerDOM.CompilerError[] = [];
+			let options: CompilerDOM.CompilerOptions = {
+				onError: (err: CompilerDOM.CompilerError) => errors.push(err),
+				onWarn: (err: CompilerDOM.CompilerError) => warnings.push(err),
 				expressionPlugins: ['typescript'],
 			};
 
@@ -162,13 +162,13 @@ export class VueFile implements VirtualFile {
 
 			for (const plugin of this.plugins) {
 
-				let result: CompilerDom.CodegenResult | undefined;
+				let result: CompilerDOM.CodegenResult | undefined;
 
 				try {
 					result = plugin.compileSFCTemplate?.(this.sfc.template.lang, this.sfc.template.content, options);
 				}
 				catch (e) {
-					const err = e as CompilerDom.CompilerError;
+					const err = e as CompilerDOM.CompilerError;
 					errors.push(err);
 				}
 

@@ -12,7 +12,7 @@ export interface Provide {
 	'vue/vueFile': (document: TextDocument) => vue.VueFile | undefined;
 }
 
-export default (): Service<Provide> => (context: ServiceContext<import('volar-service-typescript').Provide> | undefined, modules): ReturnType<Service<Provide>> => {
+export const create = (): Service<Provide> => (context: ServiceContext<import('volar-service-typescript').Provide> | undefined, modules): ReturnType<Service<Provide>> => {
 
 	const htmlPlugin = createHtmlPlugin({ validLang: 'vue', disableCustomData: true })(context, modules);
 
