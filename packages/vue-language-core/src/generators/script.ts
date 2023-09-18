@@ -131,6 +131,7 @@ export function generate(
 			// fix https://github.com/vuejs/language-tools/issues/926
 			codes.push(
 				'type __VLS_UnionToIntersection<U> = ',
+				// Prettify doesn't work well with generics
 				sfc.scriptSetup?.generic ? '' : '__VLS_Prettify<',
 				'(U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never',
 				sfc.scriptSetup?.generic ? '' : '>',
