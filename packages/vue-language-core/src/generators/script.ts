@@ -70,7 +70,7 @@ export function generate(
 	const bypassDefineComponent = lang === 'js' || lang === 'jsx';
 	const usedHelperTypes = {
 		DefinePropsToOptions: false,
-		mergePropDefaults: false,
+		MergePropDefaults: false,
 		EmitsTypeHelpers: false,
 		WithTemplateSlots: false,
 		PropsChildren: false,
@@ -118,7 +118,7 @@ export function generate(
 				codes.push(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueCompilerOptions.lib}').PropType<__VLS_NonUndefinedable<T[K]>> } : { type: import('${vueCompilerOptions.lib}').PropType<T[K]>, required: true } };\n`);
 			}
 		}
-		if (usedHelperTypes.mergePropDefaults) {
+		if (usedHelperTypes.MergePropDefaults) {
 			codes.push(`type __VLS_WithDefaults<P, D> = {
 					// use 'keyof Pick<P, keyof P>' instead of 'keyof P' to keep props jsdoc
 					[K in keyof Pick<P, keyof P>]: K extends keyof D ? __VLS_Prettify<P[K] & {
@@ -351,8 +351,8 @@ export function generate(
 				codes.push(`};\n`);
 			}
 			codes.push(`let __VLS_props!: {}`);
-			if (scriptSetupRanges.propsRuntimeArg) {
-				codes.push(` & InstanceType<typeof __VLS_publicComponent>['$props']`);
+			if (scriptSetupRanges.emitsTypeArg || scriptSetupRanges.emitsRuntimeArg) {
+				codes.push(` & __VLS_PickEmitProps<InstanceType<typeof __VLS_emitsComponent>['$props']>`);
 			}
 			if (scriptSetupRanges.propsTypeArg) {
 				codes.push(` & `);
@@ -410,7 +410,7 @@ export function generate(
 			//#endregion
 
 			codes.push('return {} as {\n');
-			codes.push(`props: InstanceType<typeof __VLS_publicComponent>['$props'] & typeof __VLS_props,\n`);
+			codes.push(`props: typeof __VLS_props,\n`);
 			codes.push('expose(exposed: typeof __VLS_exposed): void,\n');
 			codes.push('attrs: any,\n');
 			codes.push('slots: ReturnType<typeof __VLS_template>,\n');
@@ -567,7 +567,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 					codes.push('...{} as ');
 
 					if (scriptSetupRanges.withDefaultsArg) {
-						usedHelperTypes.mergePropDefaults = true;
+						usedHelperTypes.MergePropDefaults = true;
 						codes.push(`__VLS_WithDefaults<`);
 					}
 
@@ -651,6 +651,25 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		}
 
 		codes.push(`});\n`);
+
+		if (scriptSetupRanges.emitsTypeArg || scriptSetupRanges.emitsRuntimeArg) {
+			codes.push(
+				`type __VLS_PickEmitProps<T> = { [P in keyof T as P extends \`on\${string}\` ? P : never]: T[P]; };\n`,
+				`const __VLS_emitsComponent = (await import('${vueCompilerOptions.lib}')).defineComponent({\n`,
+			);
+			if (scriptSetupRanges.emitsTypeArg) {
+				usedHelperTypes.EmitsTypeHelpers = true;
+				codes.push(`emits: ({} as __VLS_UnionToIntersection<__VLS_NormalizeEmits<`);
+				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
+				codes.push(`>>),\n`);
+			}
+			else if (scriptSetupRanges.emitsRuntimeArg) {
+				codes.push(`emits: (`);
+				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end);
+				codes.push(`),\n`);
+			}
+			codes.push(`});\n`);
+		}
 
 		generateTemplate();
 
