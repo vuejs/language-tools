@@ -147,11 +147,11 @@ export function generate(
 			codes.push(`type __VLS_NormalizeEmits<T> = __VLS_ConstructorOverloads<T> & {
 				[K in keyof T]: T[K] extends any[] ? { (...args: T[K]): void } : never
 			}\n`);
-			codes.push(`type __VLS_EmitFn<T, E extends keyof T = keyof T> = __VLS_UnionToIntersection<{
-				[key in E]: T[key] extends (...args: infer Args) => any
+			codes.push(`type __VLS_EmitFn<T> = __VLS_UnionToIntersection<{
+				[key in keyof T]: T[key] extends (...args: infer Args) => any
 					? (e: key, ...args: Args) => void
 					: (e: key, ...args: any[]) => void;
-			}[E]>;\n`);
+			}[keyof T]>;\n`);
 		}
 		if (usedHelperTypes.WithTemplateSlots) {
 			codes.push(
