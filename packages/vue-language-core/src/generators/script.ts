@@ -129,7 +129,13 @@ export function generate(
 		}
 		if (usedHelperTypes.EmitsTypeHelpers) {
 			// fix https://github.com/vuejs/language-tools/issues/926
-			codes.push('type __VLS_UnionToIntersection<U> = __VLS_Prettify<(U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never>;\n');
+			codes.push(
+				'type __VLS_UnionToIntersection<U> = ',
+				sfc.scriptSetup?.generic ? '' : '__VLS_Prettify<',
+				'(U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never',
+				sfc.scriptSetup?.generic ? '' : '>',
+				';\n'
+			);
 			usedPrettify = true;
 			if (scriptSetupRanges && scriptSetupRanges.emitsTypeNums !== -1) {
 				codes.push(sharedTypes.genConstructorOverloads('__VLS_ConstructorOverloads', scriptSetupRanges.emitsTypeNums));
@@ -139,7 +145,12 @@ export function generate(
 			}
 			codes.push(`type __VLS_NormalizeEmits<T> = __VLS_ConstructorOverloads<T> & {
 				[K in keyof T]: T[K] extends any[] ? { (...args: T[K]): void } : never
-			}\n`);;
+			}\n`);
+			codes.push(`type __VLS_EmitFn<T, E extends keyof T = keyof T> = __VLS_UnionToIntersection<{
+				[key in E]: T[key] extends (...args: infer Args) => any
+					? (e: key, ...args: Args) => void
+					: (e: key, ...args: any[]) => void;
+			}[E]>;\n`);
 		}
 		if (usedHelperTypes.WithTemplateSlots) {
 			codes.push(
@@ -395,9 +406,9 @@ export function generate(
 			//#region emits
 			codes.push(`const __VLS_emit = `);
 			if (scriptSetupRanges.emitsTypeArg) {
-				codes.push('{} as ');
+				codes.push('{} as __VLS_EmitFn<__VLS_UnionToIntersection<__VLS_NormalizeEmits<');
 				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
-				codes.push(';\n');
+				codes.push('>>>;\n');
 			}
 			else if (scriptSetupRanges.emitsRuntimeArg) {
 				codes.push(`defineEmits(`);
