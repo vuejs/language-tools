@@ -137,7 +137,7 @@ export function generate(
 				sfc.scriptSetup?.generic ? '' : '>',
 				';\n'
 			);
-			usedPrettify = true;
+			usedPrettify ||= !sfc.scriptSetup?.generic;
 			if (scriptSetupRanges && scriptSetupRanges.emitsTypeNums !== -1) {
 				codes.push(sharedTypes.genConstructorOverloads('__VLS_ConstructorOverloads', scriptSetupRanges.emitsTypeNums));
 			}
