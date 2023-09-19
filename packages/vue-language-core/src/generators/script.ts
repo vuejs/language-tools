@@ -159,7 +159,6 @@ export function generate(
 			codes.push(`type __VLS_PropsChildren<S> = { [K in keyof (boolean extends (JSX.ElementChildrenAttribute extends never ? true : false) ? never : JSX.ElementChildrenAttribute)]?: S; };\n`);
 		}
 		if (usedHelperTypes.PickUserEmitProps) {
-			usedHelperTypes.Prettify = true;
 			codes.push(`type __VLS_PickUserEmitProps<T> = { [P in keyof T as P extends \`on\${string}\` ? P extends keyof import('${vueCompilerOptions.lib}').VNodeProps ? never : P : never]: T[P]; };\n`,);
 		}
 		if (usedHelperTypes.Prettify) {
