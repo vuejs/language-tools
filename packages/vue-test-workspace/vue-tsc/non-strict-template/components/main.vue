@@ -63,7 +63,7 @@ const ScriptSetupDefaultPropsExact = defineComponent({
 });
 // vue 3.3 generic
 declare const ScriptSetupGenericExact: <T, >(
-	_props: NonNullable<Awaited<typeof _setup>>['props'] & import('vue').AllowedComponentProps & import('vue').ComponentCustomProps,
+	_props: NonNullable<Awaited<typeof _setup>>['props'] & import('vue').VNodeProps & import('vue').AllowedComponentProps & import('vue').ComponentCustomProps,
 	_ctx?: Pick<NonNullable<Awaited<typeof _setup>>, 'attrs' | 'emit' | 'slots'>,
 	_expose?: NonNullable<Awaited<typeof _setup>>['expose'],
 	_setup?: Promise<{
@@ -74,8 +74,6 @@ declare const ScriptSetupGenericExact: <T, >(
 		expose(_exposed: { baz: T }): void,
 	}>
 ) => import('vue').VNode & { __ctx?: Awaited<typeof _setup> };
-type a = typeof ScriptSetupGeneric
-type b = typeof ScriptSetupGenericExact
 
 exactType(ScriptSetup, ScriptSetupExact);
 exactType(ScriptSetupExpose, ScriptSetupExposeExact);
