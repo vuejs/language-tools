@@ -1176,7 +1176,6 @@ export function generate(
 			};
 		}
 
-
 		codes.push(`...{ `);
 		for (const prop of props) {
 			if (
@@ -1790,8 +1789,14 @@ export function generate(
 
 		codes.push('// @ts-ignore\n'); // #2304
 		codes.push('[');
+
+		const usedVars = new Set<string>();
+
 		for (const _vars of tempVars) {
 			for (const v of _vars) {
+				if (usedVars.has(v.text)) continue;
+
+				usedVars.add(v.text);
 				codes.push([v.text, 'template', v.offset, { completion: { additional: true } }]);
 				codes.push(',');
 			}
