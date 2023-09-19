@@ -119,6 +119,8 @@ declare function __VLS_componentProps<T, K>(comp: T, fnReturn: K):
 	: T extends (props: infer P, ...args: any) => any ? NonNullable<P> :
 	{};
 
+type __VLS_GetComponentProps<T> = NonNullable<NonNullable<T['__ctx']>['props']>;
+type __VLS_GetComponentPropsType<C, P> = __VLS_MappedOmit<Parameters<C>[0], (__VLS_IsAny<P> extends true ? never : keyof P) | keyof JSX.ElementChildrenAttribute> & __VLS_MappedOmit<__VLS_PickNotAny<P, {}>, keyof JSX.ElementChildrenAttribute> & Record<string, unknown>;
 declare function __VLS_cast<T>(x: T): T;
 `.trim();
 }
