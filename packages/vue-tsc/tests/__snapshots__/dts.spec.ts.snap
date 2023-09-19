@@ -55,9 +55,11 @@ export default _default;
 
 exports[`vue-tsc-dts > Input: components/script-setup-generic.vue, Output: components/script-setup-generic.vue.d.ts 1`] = `
 "declare const _default: <T>(__VLS_props: {
+    onBar?: (data: T) => any;
     foo: T;
 } & import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps, __VLS_ctx?: Pick<{
     props: {
+        onBar?: (data: T) => any;
         foo: T;
     };
     expose(exposed: {
@@ -72,6 +74,7 @@ exports[`vue-tsc-dts > Input: components/script-setup-generic.vue, Output: compo
     baz: T;
 }) => void, __VLS_setup?: Promise<{
     props: {
+        onBar?: (data: T) => any;
         foo: T;
     };
     expose(exposed: {
@@ -87,6 +90,7 @@ exports[`vue-tsc-dts > Input: components/script-setup-generic.vue, Output: compo
 }> & {
     __ctx?: {
         props: {
+            onBar?: (data: T) => any;
             foo: T;
         };
         expose(exposed: {
@@ -100,6 +104,9 @@ exports[`vue-tsc-dts > Input: components/script-setup-generic.vue, Output: compo
     };
 };
 export default _default;
+type __VLS_Prettify<T> = {
+    [K in keyof T]: T[K];
+} & {};
 "
 `;
 
@@ -301,6 +308,9 @@ exports[`vue-tsc-dts > Input: defineProp_B/script-setup-generic.vue, Output: def
     };
 };
 export default _default;
+type __VLS_Prettify<T> = {
+    [K in keyof T]: T[K];
+} & {};
 "
 `;
 
@@ -349,6 +359,9 @@ exports[`vue-tsc-dts > Input: generic-interface/main.vue, Output: generic-interf
     };
 };
 export default _default;
+type __VLS_Prettify<T> = {
+    [K in keyof T]: T[K];
+} & {};
 "
 `;
 
