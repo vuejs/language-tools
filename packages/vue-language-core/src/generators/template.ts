@@ -747,10 +747,7 @@ export function generate(
 				`, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}));\n`,
 			);
 
-			codes.push(
-				`type ${var_componentPropsInstance}_props = __VLS_GetComponentProps<typeof ${var_componentPropsInstance}>;\n`,
-				`type ${var_componentInstance}_propsType = __VLS_GetComponentPropsType<typeof ${var_functionalComponent}, ${var_componentPropsInstance}_props>;\n`,
-			);
+			codes.push(`type ${var_componentInstance}_propsType = __VLS_GetComponentPropsType<typeof ${var_functionalComponent}, __VLS_GetComponentProps<typeof ${var_componentPropsInstance}>>;\n`);
 		}
 
 		codes.push(
