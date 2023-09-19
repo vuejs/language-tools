@@ -622,7 +622,6 @@ export function generate(
 		const isNamespacedTag = tag.indexOf('.') >= 0;
 		const var_originalComponent = `__VLS_${elementIndex++}`;
 		const var_functionalComponent = `__VLS_${elementIndex++}`;
-		const var_componentPropsInstance = `__VLS_${elementIndex++}`;
 		const var_componentInstance = `__VLS_${elementIndex++}`;
 
 		let dynamicTagExp: CompilerDOM.ExpressionNode | undefined;
@@ -738,35 +737,50 @@ export function generate(
 			}
 		}
 
-		if (!vueCompilerOptions.strictTemplates) {
+		if (vueCompilerOptions.strictTemplates) {
+			// with strictTemplates, generate once for props type-checking + instance type
 			codes.push(
-				`const ${var_componentPropsInstance} = ${var_functionalComponent}(`,
+				`const ${var_componentInstance} = ${var_functionalComponent}(`,
+				// diagnostic start
+				tagOffsets.length ? ['', 'template', tagOffsets[0], capabilitiesPresets.diagnosticOnly]
+					: dynamicTagExp ? ['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]
+						: '',
 				'{ ',
-				...createPropsCode(node, props, 'noFormat', propsFailedExps).map(code => typeof code === 'string' ? code : code[0]),
+				...createPropsCode(node, props, 'normal', propsFailedExps),
+				'}',
+				// diagnostic end
+				tagOffsets.length ? ['', 'template', tagOffsets[0] + tag.length, capabilitiesPresets.diagnosticOnly]
+					: dynamicTagExp ? ['', 'template', startTagOffset + tag.length, capabilitiesPresets.diagnosticOnly]
+						: '',
+				`, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}));\n`,
+			);
+		}
+		else {
+			// without strictTemplates, this only for instacne type
+			codes.push(
+				`const ${var_componentInstance} = ${var_functionalComponent}(`,
+				'{ ',
+				...createPropsCode(node, props, 'extraReferences'),
 				'}',
 				`, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}));\n`,
 			);
-
-			codes.push(`type ${var_componentInstance}_propsType = __VLS_GetComponentPropsType<typeof ${var_functionalComponent}, __VLS_GetComponentProps<typeof ${var_componentPropsInstance}>>;\n`);
+			// and this for props type-checking
+			codes.push(
+				`({} as (props: __VLS_FunctionalComponentProps<typeof ${var_originalComponent}, typeof ${var_componentInstance}> & Record<string, unknown>) => void)(`,
+				// diagnostic start
+				tagOffsets.length ? ['', 'template', tagOffsets[0], capabilitiesPresets.diagnosticOnly]
+					: dynamicTagExp ? ['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]
+						: '',
+				'{ ',
+				...createPropsCode(node, props, 'normal', propsFailedExps),
+				'}',
+				// diagnostic end
+				tagOffsets.length ? ['', 'template', tagOffsets[0] + tag.length, capabilitiesPresets.diagnosticOnly]
+					: dynamicTagExp ? ['', 'template', startTagOffset + tag.length, capabilitiesPresets.diagnosticOnly]
+						: '',
+				`);\n`,
+			);
 		}
-
-		codes.push(
-			`const ${var_componentInstance} = ${var_functionalComponent}(`,
-			// diagnostic start
-			tagOffsets.length ? ['', 'template', tagOffsets[0], capabilitiesPresets.diagnosticOnly]
-				: dynamicTagExp ? ['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]
-					: '',
-			vueCompilerOptions.strictTemplates ? '' : `__VLS_cast<__VLS_Prettify<${var_componentInstance}_propsType>>(`,
-			'{ ',
-			...createPropsCode(node, props, 'normal', propsFailedExps),
-			`}`,
-			vueCompilerOptions.strictTemplates ? '' : `)`,
-			// diagnostic end
-			tagOffsets.length ? ['', 'template', tagOffsets[0] + tag.length, capabilitiesPresets.diagnosticOnly]
-				: dynamicTagExp ? ['', 'template', startTagOffset + tag.length, capabilitiesPresets.diagnosticOnly]
-					: '',
-			`, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}));\n`,
-		);
 
 		if (tag !== 'template' && tag !== 'slot') {
 			componentCtxVar = `__VLS_${elementIndex++}`;
@@ -986,7 +1000,7 @@ export function generate(
 				const eventVar = `__VLS_${elementIndex++}`;
 				codes.push(
 					`let ${eventVar} = { '${prop.arg.loc.source}': `,
-					`__VLS_pickEvent(${componentCtxVar}.emit!, '${prop.arg.loc.source}' as const, __VLS_componentProps(${componentVar}, ${componentInstanceVar})`,
+					`__VLS_pickEvent(${componentCtxVar}.emit!, '${prop.arg.loc.source}' as const, {} as __VLS_FunctionalComponentProps<typeof ${componentVar}, typeof ${componentInstanceVar}>`,
 					...createPropertyAccessCode([
 						camelize('on-' + prop.arg.loc.source), // onClickOutside
 						'template',
@@ -1136,7 +1150,7 @@ export function generate(
 		}
 	}
 
-	function createPropsCode(node: CompilerDOM.ElementNode, props: CompilerDOM.ElementNode['props'], mode: 'noFormat' | 'normal' | 'extraReferences', propsFailedExps?: CompilerDOM.SimpleExpressionNode[]): Code[] {
+	function createPropsCode(node: CompilerDOM.ElementNode, props: CompilerDOM.ElementNode['props'], mode: 'normal' | 'extraReferences', propsFailedExps?: CompilerDOM.SimpleExpressionNode[]): Code[] {
 
 		let styleAttrNum = 0;
 		let classAttrNum = 0;
@@ -1786,14 +1800,8 @@ export function generate(
 
 		codes.push('// @ts-ignore\n'); // #2304
 		codes.push('[');
-
-		const usedVars = new Set<string>();
-
 		for (const _vars of tempVars) {
 			for (const v of _vars) {
-				if (usedVars.has(v.text)) continue;
-
-				usedVars.add(v.text);
 				codes.push([v.text, 'template', v.offset, { completion: { additional: true } }]);
 				codes.push(',');
 			}
