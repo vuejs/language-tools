@@ -74,6 +74,8 @@ export function generate(
 		EmitsTypeHelpers: false,
 		WithTemplateSlots: false,
 		PropsChildren: false,
+		PickUserEmitProps: false,
+		Prettify: false,
 	};
 
 	codes.push(`/* ${Object.entries(vueCompilerOptions).map(([key, value]) => `${key}: ${JSON.stringify(value)}`).join(', ')} */\n`);
@@ -108,7 +110,6 @@ export function generate(
 	};
 
 	function generateHelperTypes() {
-		let usedPrettify = false;
 		if (usedHelperTypes.DefinePropsToOptions) {
 			if (compilerOptions.exactOptionalPropertyTypes) {
 				codes.push(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueCompilerOptions.lib}').PropType<T[K]> } : { type: import('${vueCompilerOptions.lib}').PropType<T[K]>, required: true } };\n`);
@@ -125,12 +126,12 @@ export function generate(
 						default: D[K]
 					}> : P[K]
 				};\n`);
-			usedPrettify = true;
+			usedHelperTypes.Prettify = true;
 		}
 		if (usedHelperTypes.EmitsTypeHelpers) {
 			// fix https://github.com/vuejs/language-tools/issues/926
 			codes.push('type __VLS_UnionToIntersection<U> = __VLS_Prettify<(U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never>;\n');
-			usedPrettify = true;
+			usedHelperTypes.Prettify = true;
 			if (scriptSetupRanges && scriptSetupRanges.emitsTypeNums !== -1) {
 				codes.push(sharedTypes.genConstructorOverloads('__VLS_ConstructorOverloads', scriptSetupRanges.emitsTypeNums));
 			}
@@ -157,7 +158,11 @@ export function generate(
 		if (usedHelperTypes.PropsChildren) {
 			codes.push(`type __VLS_PropsChildren<S> = { [K in keyof (boolean extends (JSX.ElementChildrenAttribute extends never ? true : false) ? never : JSX.ElementChildrenAttribute)]?: S; };\n`);
 		}
-		if (usedPrettify) {
+		if (usedHelperTypes.PickUserEmitProps) {
+			usedHelperTypes.Prettify = true;
+			codes.push(`type __VLS_PickUserEmitProps<T> = { [P in keyof T as P extends \`on\${string}\` ? P extends keyof import('${vueCompilerOptions.lib}').VNodeProps ? never : P : never]: T[P]; };\n`,);
+		}
+		if (usedHelperTypes.Prettify) {
 			codes.push(`type __VLS_Prettify<T> = { [K in keyof T]: T[K]; } & {};\n`);
 		}
 	}
@@ -310,11 +315,12 @@ export function generate(
 			}
 			codes.push(`>`);
 			codes.push('(\n');
+			usedHelperTypes.Prettify = true;
 			codes.push(
-				`__VLS_props: Awaited<typeof __VLS_setup>['props']`,
-				`& import('${vueCompilerOptions.lib}').VNodeProps`,
-				`& import('${vueCompilerOptions.lib}').AllowedComponentProps`,
-				`& import('${vueCompilerOptions.lib}').ComponentCustomProps,\n`,
+				`__VLS_props: __VLS_Prettify<Awaited<typeof __VLS_setup>['props']>`,
+				` & import('${vueCompilerOptions.lib}').VNodeProps`,
+				` & import('${vueCompilerOptions.lib}').AllowedComponentProps`,
+				` & import('${vueCompilerOptions.lib}').ComponentCustomProps,\n`,
 			);
 			codes.push(`__VLS_ctx?: Pick<Awaited<typeof __VLS_setup>, 'attrs' | 'emit' | 'slots'>,\n`);
 			codes.push(`__VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>['expose'],\n`);
@@ -350,9 +356,11 @@ export function generate(
 				}
 				codes.push(`};\n`);
 			}
-			codes.push(`let __VLS_props!: {}`);
+			codes.push(`let __VLS_props!: __VLS_Prettify<{}`);
+			usedHelperTypes.Prettify = true;
 			if (scriptSetupRanges.emitsTypeArg || scriptSetupRanges.emitsRuntimeArg) {
-				codes.push(` & __VLS_PickEmitProps<InstanceType<typeof __VLS_emitsComponent>['$props']>`);
+				usedHelperTypes.PickUserEmitProps = true;
+				codes.push(` & __VLS_PickUserEmitProps<InstanceType<typeof __VLS_emitsComponent>['$props']>`);
 			}
 			if (scriptSetupRanges.propsTypeArg) {
 				codes.push(` & `);
@@ -389,7 +397,7 @@ export function generate(
 				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end);
 				codes.push('>');
 			}
-			codes.push(`;\n`);
+			codes.push(`>;\n`);
 			//#endregion
 
 			//#region emits
@@ -653,10 +661,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		codes.push(`});\n`);
 
 		if (scriptSetupRanges.emitsTypeArg || scriptSetupRanges.emitsRuntimeArg) {
-			codes.push(
-				`type __VLS_PickEmitProps<T> = { [P in keyof T as P extends \`on\${string}\` ? P : never]: T[P]; };\n`,
-				`const __VLS_emitsComponent = (await import('${vueCompilerOptions.lib}')).defineComponent({\n`,
-			);
+			codes.push(`const __VLS_emitsComponent = (await import('${vueCompilerOptions.lib}')).defineComponent({\n`,);
 			if (scriptSetupRanges.emitsTypeArg) {
 				usedHelperTypes.EmitsTypeHelpers = true;
 				codes.push(`emits: ({} as __VLS_UnionToIntersection<__VLS_NormalizeEmits<`);

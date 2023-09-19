@@ -316,6 +316,42 @@ export default _default;
 "
 `;
 
+exports[`vue-tsc-dts > Input: generic-interface/main.vue, Output: generic-interface/main.vue.d.ts 1`] = `
+"declare const _default: <T>(__VLS_props: {
+    foo: T;
+} & import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps, __VLS_ctx?: Pick<{
+    props: {
+        foo: T;
+    };
+    expose(exposed: {}): void;
+    attrs: any;
+    slots: {};
+    emit: any;
+}, \\"slots\\" | \\"attrs\\" | \\"emit\\">, __VLS_expose?: (exposed: {}) => void, __VLS_setup?: Promise<{
+    props: {
+        foo: T;
+    };
+    expose(exposed: {}): void;
+    attrs: any;
+    slots: {};
+    emit: any;
+}>) => import(\\"vue\\").VNode<import(\\"vue\\").RendererNode, import(\\"vue\\").RendererElement, {
+    [key: string]: any;
+}> & {
+    __ctx?: {
+        props: {
+            foo: T;
+        };
+        expose(exposed: {}): void;
+        attrs: any;
+        slots: {};
+        emit: any;
+    };
+};
+export default _default;
+"
+`;
+
 exports[`vue-tsc-dts > Input: slots/main.vue, Output: slots/main.vue.d.ts 1`] = `
 "declare const _default: __VLS_WithTemplateSlots<import(\\"vue\\").DefineComponent<{}, {}, {}, {}, {}, import(\\"vue\\").ComponentOptionsMixin, import(\\"vue\\").ComponentOptionsMixin, {}, string, import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps, Readonly<import(\\"vue\\").ExtractPropTypes<{}>>, {}, {}>, Partial<Record<\\"baz\\", (_: {
     str: string;

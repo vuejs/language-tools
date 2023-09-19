@@ -67,13 +67,15 @@ declare const ScriptSetupGenericExact: <T, >(
 	_ctx?: Pick<NonNullable<Awaited<typeof _setup>>, 'attrs' | 'emit' | 'slots'>,
 	_expose?: NonNullable<Awaited<typeof _setup>>['expose'],
 	_setup?: Promise<{
-		props: { foo: T, onBar?: (data: T) => any } & import('vue').VNodeProps & { [K in keyof JSX.ElementChildrenAttribute]?: { default?(data: T): any } },
+		props: { onBar?: (data: T) => any, foo: T, $children?: { default?(data: T): any } },
 		attrs: any,
 		slots: { default?(data: T): any },
 		emit: { (e: 'bar', data: T): void },
 		expose(_exposed: { baz: T }): void,
 	}>
 ) => import('vue').VNode & { __ctx?: Awaited<typeof _setup> };
+type a = typeof ScriptSetupGeneric
+type b = typeof ScriptSetupGenericExact
 
 exactType(ScriptSetup, ScriptSetupExact);
 exactType(ScriptSetupExpose, ScriptSetupExposeExact);
