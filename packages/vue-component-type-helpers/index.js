@@ -1,4 +1,4 @@
-exports.default = `
+const code = `
 export type ComponentType<T> =
 	T extends new () => {} ? 1 :
 	T extends (...args: any) => any ? 2 :
@@ -33,3 +33,6 @@ export type Vue2ComponentSlots<T> =
 	T extends (props: any, ctx: { slots: infer S; }, ...args: any) => any ? NonNullable<S> :
 	{};
 `.trim();
+
+exports.code = code;
+exports.default = code;
