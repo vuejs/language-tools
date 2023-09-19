@@ -315,9 +315,8 @@ export function generate(
 			}
 			codes.push(`>`);
 			codes.push('(\n');
-			usedHelperTypes.Prettify = true;
 			codes.push(
-				`__VLS_props: __VLS_Prettify<Awaited<typeof __VLS_setup>['props']>`,
+				`__VLS_props: Awaited<typeof __VLS_setup>['props']`,
 				` & import('${vueCompilerOptions.lib}').VNodeProps`,
 				` & import('${vueCompilerOptions.lib}').AllowedComponentProps`,
 				` & import('${vueCompilerOptions.lib}').ComponentCustomProps,\n`,

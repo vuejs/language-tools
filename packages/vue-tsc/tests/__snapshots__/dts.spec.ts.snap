@@ -104,9 +104,6 @@ exports[`vue-tsc-dts > Input: components/script-setup-generic.vue, Output: compo
     };
 };
 export default _default;
-type __VLS_Prettify<T> = {
-    [K in keyof T]: T[K];
-} & {};
 "
 `;
 
@@ -308,9 +305,6 @@ exports[`vue-tsc-dts > Input: defineProp_B/script-setup-generic.vue, Output: def
     };
 };
 export default _default;
-type __VLS_Prettify<T> = {
-    [K in keyof T]: T[K];
-} & {};
 "
 `;
 
@@ -359,9 +353,6 @@ exports[`vue-tsc-dts > Input: generic-interface/main.vue, Output: generic-interf
     };
 };
 export default _default;
-type __VLS_Prettify<T> = {
-    [K in keyof T]: T[K];
-} & {};
 "
 `;
 
