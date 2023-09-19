@@ -749,7 +749,7 @@ export function generate(
 
 			codes.push(
 				`type ${var_componentPropsInstance}_props = NonNullable<NonNullable<typeof ${var_componentPropsInstance}.__ctx>['props']>;\n`,
-				`type ${var_componentInstance}_propsType = __VLS_MappedOmit<Parameters<typeof ${var_functionalComponent}>[0], (__VLS_IsAny<${var_componentPropsInstance}_props> extends true ? never : keyof ${var_componentPropsInstance}_props) | keyof JSX.ElementChildrenAttribute> & __VLS_MappedOmit<__VLS_PickNotAny<${var_componentPropsInstance}_props, {}>, keyof JSX.ElementChildrenAttribute>;\n`,
+				`type ${var_componentInstance}_propsType = __VLS_MappedOmit<Parameters<typeof ${var_functionalComponent}>[0], (__VLS_IsAny<${var_componentPropsInstance}_props> extends true ? never : keyof ${var_componentPropsInstance}_props) | keyof JSX.ElementChildrenAttribute> & __VLS_MappedOmit<__VLS_PickNotAny<${var_componentPropsInstance}_props, {}>, keyof JSX.ElementChildrenAttribute> & Record<string, unknown>;\n`,
 			);
 		}
 
@@ -759,10 +759,11 @@ export function generate(
 			tagOffsets.length ? ['', 'template', tagOffsets[0], capabilitiesPresets.diagnosticOnly]
 				: dynamicTagExp ? ['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]
 					: '',
+			vueCompilerOptions.strictTemplates ? '' : `__VLS_cast<__VLS_Prettify<${var_componentInstance}_propsType>>(`,
 			'{ ',
 			...createPropsCode(node, props, 'normal', propsFailedExps),
 			`}`,
-			vueCompilerOptions.strictTemplates ? '' : ` as ${var_componentInstance}_propsType`,
+			vueCompilerOptions.strictTemplates ? '' : `)`,
 			// diagnostic end
 			tagOffsets.length ? ['', 'template', tagOffsets[0] + tag.length, capabilitiesPresets.diagnosticOnly]
 				: dynamicTagExp ? ['', 'template', startTagOffset + tag.length, capabilitiesPresets.diagnosticOnly]

@@ -118,6 +118,8 @@ declare function __VLS_componentProps<T, K>(comp: T, fnReturn: K):
 	__VLS_PickNotAny<K, {}> extends { __ctx: { props: infer P } } ? NonNullable<P>
 	: T extends (props: infer P, ...args: any) => any ? NonNullable<P> :
 	{};
+
+declare function __VLS_cast<T>(x: T): T;
 `.trim();
 }
 
