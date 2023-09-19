@@ -737,30 +737,50 @@ export function generate(
 			}
 		}
 
-		codes.push(
-			`const ${var_componentInstance} = ${var_functionalComponent}(`,
-			// diagnostic start
-			tagOffsets.length ? ['', 'template', tagOffsets[0], capabilitiesPresets.diagnosticOnly]
-				: dynamicTagExp ? ['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]
-					: '',
-			'{ ',
-		);
-		if (!vueCompilerOptions.strictTemplates) {
-			// fix https://github.com/vuejs/language-tools/issues/3318
-			codes.push('...{ ');
+		if (vueCompilerOptions.strictTemplates) {
+			// with strictTemplates, generate once for props type-checking + instance type
+			codes.push(
+				`const ${var_componentInstance} = ${var_functionalComponent}(`,
+				// diagnostic start
+				tagOffsets.length ? ['', 'template', tagOffsets[0], capabilitiesPresets.diagnosticOnly]
+					: dynamicTagExp ? ['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]
+						: '',
+				'{ ',
+				...createPropsCode(node, props, 'normal', propsFailedExps),
+				'}',
+				// diagnostic end
+				tagOffsets.length ? ['', 'template', tagOffsets[0] + tag.length, capabilitiesPresets.diagnosticOnly]
+					: dynamicTagExp ? ['', 'template', startTagOffset + tag.length, capabilitiesPresets.diagnosticOnly]
+						: '',
+				`, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}));\n`,
+			);
 		}
-		codes.push(...createPropsCode(node, props, 'normal', propsFailedExps));
-		if (!vueCompilerOptions.strictTemplates) {
-			codes.push('}, ');
+		else {
+			// without strictTemplates, this only for instacne type
+			codes.push(
+				`const ${var_componentInstance} = ${var_functionalComponent}(`,
+				'{ ',
+				...createPropsCode(node, props, 'extraReferences'),
+				'}',
+				`, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}));\n`,
+			);
+			// and this for props type-checking
+			codes.push(
+				`({} as (props: __VLS_FunctionalComponentProps<typeof ${var_originalComponent}, typeof ${var_componentInstance}> & Record<string, unknown>) => void)(`,
+				// diagnostic start
+				tagOffsets.length ? ['', 'template', tagOffsets[0], capabilitiesPresets.diagnosticOnly]
+					: dynamicTagExp ? ['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]
+						: '',
+				'{ ',
+				...createPropsCode(node, props, 'normal', propsFailedExps),
+				'}',
+				// diagnostic end
+				tagOffsets.length ? ['', 'template', tagOffsets[0] + tag.length, capabilitiesPresets.diagnosticOnly]
+					: dynamicTagExp ? ['', 'template', startTagOffset + tag.length, capabilitiesPresets.diagnosticOnly]
+						: '',
+				`);\n`,
+			);
 		}
-		codes.push(
-			'}',
-			// diagnostic end
-			tagOffsets.length ? ['', 'template', tagOffsets[0] + tag.length, capabilitiesPresets.diagnosticOnly]
-				: dynamicTagExp ? ['', 'template', startTagOffset + tag.length, capabilitiesPresets.diagnosticOnly]
-					: '',
-			`, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}));\n`,
-		);
 
 		if (tag !== 'template' && tag !== 'slot') {
 			componentCtxVar = `__VLS_${elementIndex++}`;
@@ -980,7 +1000,7 @@ export function generate(
 				const eventVar = `__VLS_${elementIndex++}`;
 				codes.push(
 					`let ${eventVar} = { '${prop.arg.loc.source}': `,
-					`__VLS_pickEvent(${componentCtxVar}.emit!, '${prop.arg.loc.source}' as const, __VLS_componentProps(${componentVar}, ${componentInstanceVar})`,
+					`__VLS_pickEvent(${componentCtxVar}.emit!, '${prop.arg.loc.source}' as const, {} as __VLS_FunctionalComponentProps<typeof ${componentVar}, typeof ${componentInstanceVar}>`,
 					...createPropertyAccessCode([
 						camelize('on-' + prop.arg.loc.source), // onClickOutside
 						'template',
@@ -1166,7 +1186,6 @@ export function generate(
 				rename: caps_attr.rename,
 			};
 		}
-
 
 		codes.push(`...{ `);
 		for (const prop of props) {

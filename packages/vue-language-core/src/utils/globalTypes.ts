@@ -97,7 +97,7 @@ declare function __VLS_asFunctionalComponent<T, K = T extends new (...args: any)
 	}) => JSX.Element & { __ctx?: typeof ctx & { props?: typeof props; expose?(exposed: K): void; } }
 	: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 	: T extends (...args: any) => any ? T
-	: (_: T extends import('${vueCompilerOptions.lib}').VNode | import('${vueCompilerOptions.lib}').VNode[] | string ? {}: T${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}, ctx?: any) => { __ctx?: { attrs?: any, expose?: any, slots?: any, emit?: any, props?: T${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'} } }; // IntrinsicElement
+	: (_: T extends import('${vueCompilerOptions.lib}').VNode | import('${vueCompilerOptions.lib}').VNode[] | string ? {}: T${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}, ctx?: any) => { __ctx?: { attrs?: any, expose?: any, slots?: any, emit?: any, props?: (T extends import('${vueCompilerOptions.lib}').VNode ? {} : T extends object ? T : {})${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'} } }; // IntrinsicElement
 declare function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(t: T): Parameters<T>['length'] extends 2 ? [any] : [];
 declare function __VLS_pickEvent<Emit, K, E>(emit: Emit, emitKey: K, event: E): __VLS_FillingEventArg<
 	__VLS_PickNotAny<
@@ -106,16 +106,16 @@ declare function __VLS_pickEvent<Emit, K, E>(emit: Emit, emitKey: K, event: E): 
 	>
 > | undefined;
 declare function __VLS_pickFunctionalComponentCtx<T, K>(comp: T, compInstance: K): __VLS_PickNotAny<
-	K extends { __ctx?: infer Ctx } ? Ctx : any,
-	T extends (props: any, ctx: infer Ctx) => any ? Ctx : any
+	'__ctx' extends keyof __VLS_PickNotAny<K, {}> ? K extends { __ctx?: infer Ctx } ? Ctx : never : any
+	, T extends (props: any, ctx: infer Ctx) => any ? Ctx : any
 >;
+type __VLS_FunctionalComponentProps<T, K> =
+	'__ctx' extends keyof __VLS_PickNotAny<K, {}> ? K extends { __ctx?: { props?: infer P } } ? NonNullable<P> : never
+	: T extends (props: infer P, ...args: any) => any ? P :
+	{};
 type __VLS_AsFunctionOrAny<F> = unknown extends F ? any : ((...args: any) => any) extends F ? F : any;
 
 declare function __VLS_normalizeSlot<S>(s: S): S extends () => infer R ? (props: {}) => R : S;
-declare function __VLS_componentProps<T, K>(comp: T, fnReturn: K):
-	__VLS_PickNotAny<K, {}> extends { __ctx: { props: infer P } } ? NonNullable<P>
-	: T extends (props: infer P, ...args: any) => any ? NonNullable<P> :
-	{};
 `.trim();
 }
 
