@@ -39,7 +39,7 @@ const capabilitiesPresets = {
 const formatBrackets = {
 	normal: ['`${', '}`;'] as [string, string],
 	// fix https://github.com/vuejs/language-tools/issues/3572
-	typeAnnotation: ['(', ') => {}'] as [string, string],
+	params: ['(', ') => {}'] as [string, string],
 	// fix https://github.com/vuejs/language-tools/issues/1210
 	// fix https://github.com/vuejs/language-tools/issues/2305
 	curly: ['0 +', '+ 0;'] as [string, string],
@@ -866,23 +866,15 @@ export function generate(
 			let hasProps = false;
 			if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 
-				const slotAst = createTsAst(slotDir, `(${slotDir.exp.content}) => {}`);
-
-				const slotExp = slotAst.statements[0];
-				const hasTypeAnnotation = ts.isExpressionStatement(slotExp)
-					&& ts.isArrowFunction(slotExp.expression)
-					&& !!slotExp.expression.parameters[0].type;
-
-				const fb = hasTypeAnnotation ? formatBrackets.typeAnnotation : formatBrackets.normal;
-
 				formatCodes.push(
 					...createFormatCode(
 						slotDir.exp.content,
 						slotDir.exp.loc.start.offset,
-						fb,
+						formatBrackets.params,
 					),
 				);
 
+				const slotAst = createTsAst(slotDir, `(${slotDir.exp.content}) => {}`);
 				colletVars(ts, slotAst, slotBlockVars);
 				hasProps = true;
 				if (slotDir.exp.content.indexOf(':') === -1) {
