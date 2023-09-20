@@ -1,12 +1,11 @@
 # Changelog
 
-## 1.8.11 (2023/9/13)
+## 1.8.12 (2023/9/20)
 
-- feat: slot references codeLens counting fragment default slot ([#932](https://github.com/vuejs/language-tools/issues/932))
-- fix: correct message for `@vue-expect-error` ([#3541](https://github.com/vuejs/language-tools/issues/3541)) - thanks @so1ve
-- fix: avoid global macros conflicts with local variables ([#3550](https://github.com/vuejs/language-tools/issues/3550)) - thanks @so1ve
-- fix: script setup comments at top breaks global macros ([#3549](https://github.com/vuejs/language-tools/issues/3549)) - thanks @so1ve
-- fix(vue-tsc): prevent rebuild in incremental mode throwing error ([#3556](https://github.com/vuejs/language-tools/issues/3556)) - thanks @blake-newman
+- feat: support vitepress's code snippet import ([#3559](https://github.com/vuejs/language-tools/issues/3559)) - thanks @so1ve
+- fix(component-meta): fix modules interoperability with `vue-component-type-helper`
+- fix: avoid losing generic types with `strictTemplates: false` ([#3565](https://github.com/vuejs/language-tools/issues/3565)) - thanks @so1ve
+- fix: format slots with typeannotation correctly ([#3573](https://github.com/vuejs/language-tools/issues/3573)) - thanks @so1ve
 
 ### Full-time Support by
 
@@ -60,6 +59,14 @@
 	or
 	<a href="https://opencollective.com/volarjs">Open Collective</a>
 </h5>
+
+## 1.8.11 (2023/9/13)
+
+- feat: slot references codeLens counting fragment default slot ([#932](https://github.com/vuejs/language-tools/issues/932))
+- fix: correct message for `@vue-expect-error` ([#3541](https://github.com/vuejs/language-tools/issues/3541)) - thanks @so1ve
+- fix: avoid global macros conflicts with local variables ([#3550](https://github.com/vuejs/language-tools/issues/3550)) - thanks @so1ve
+- fix: script setup comments at top breaks global macros ([#3549](https://github.com/vuejs/language-tools/issues/3549)) - thanks @so1ve
+- fix(vue-tsc): prevent rebuild in incremental mode throwing error ([#3556](https://github.com/vuejs/language-tools/issues/3556)) - thanks @blake-newman
 
 ## 1.8.10 (2023/9/6)
 
