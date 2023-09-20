@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-plugin-pug",
-	"version": "1.8.12",
+	"version": "1.8.13",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -13,7 +13,7 @@
 		"directory": "packages/vue-language-plugin-pug"
 	},
 	"devDependencies": {
-		"@vue/language-core": "1.8.12"
+		"@vue/language-core": "1.8.13"
 	},
 	"dependencies": {
 		"@volar/source-map": "~1.10.0",
