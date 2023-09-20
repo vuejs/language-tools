@@ -38,6 +38,8 @@ const capabilitiesPresets = {
 };
 const formatBrackets = {
 	normal: ['`${', '}`;'] as [string, string],
+	// fix https://github.com/vuejs/language-tools/issues/3572
+	params: ['(', ') => {}'] as [string, string],
 	// fix https://github.com/vuejs/language-tools/issues/1210
 	// fix https://github.com/vuejs/language-tools/issues/2305
 	curly: ['0 +', '+ 0;'] as [string, string],
@@ -868,12 +870,12 @@ export function generate(
 					...createFormatCode(
 						slotDir.exp.content,
 						slotDir.exp.loc.start.offset,
-						formatBrackets.normal,
+						formatBrackets.params,
 					),
 				);
 
-				const collectAst = createTsAst(slotDir, `(${slotDir.exp.content}) => {}`);
-				colletVars(ts, collectAst, slotBlockVars);
+				const slotAst = createTsAst(slotDir, `(${slotDir.exp.content}) => {}`);
+				colletVars(ts, slotAst, slotBlockVars);
 				hasProps = true;
 				if (slotDir.exp.content.indexOf(':') === -1) {
 					codes.push(
