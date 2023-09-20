@@ -684,21 +684,19 @@ export function generate(
 			codes.push(`typeof __VLS_resolvedLocalAndGlobalComponents['${toCanonicalComponentName(tag)}'];\n`);
 		}
 
-		codes.push(
-			`const ${var_functionalComponent} = __VLS_asFunctionalComponent(`,
-			`${var_originalComponent}, `,
-		);
 		if (isIntrinsicElement) {
-			codes.push('{}');
+			codes.push(`const ${var_functionalComponent} = __VLS_elementAsFunctionalComponent(${var_originalComponent});\n`,);
 		}
 		else {
 			codes.push(
+				`const ${var_functionalComponent} = __VLS_asFunctionalComponent(`,
+				`${var_originalComponent}, `,
 				`new ${var_originalComponent}({`,
 				...createPropsCode(node, props, 'extraReferences'),
 				'})',
+				');\n',
 			);
 		}
-		codes.push(');\n');
 
 		for (const offset of tagOffsets) {
 			if (isNamespacedTag || dynamicTagExp) {
