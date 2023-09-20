@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.8.13 (2023/9/20)
+
+- fix: generate valid syntax when `noPropertyAccessFromIndexSignature` is not enabled ([#3575](https://github.com/vuejs/language-tools/issues/3575)) - thanks @so1ve
+
 ## 1.8.12 (2023/9/20)
 
 - feat: support vitepress's code snippet import ([#3559](https://github.com/vuejs/language-tools/issues/3559)) - thanks @so1ve
