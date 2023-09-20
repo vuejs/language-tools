@@ -912,7 +912,7 @@ export function generate(
 							'template',
 							slotDir.arg.loc.start.offset,
 							slotDir.arg.isStatic ? capabilitiesPresets.slotName : capabilitiesPresets.all
-						], slotDir.arg.loc)
+						], false, slotDir.arg.loc)
 						: createPropertyAccessCode([
 							'default',
 							'template',
@@ -1022,7 +1022,7 @@ export function generate(
 								},
 							},
 						},
-					]),
+					], true),
 					`) };\n`,
 					`${eventVar} = {\n`,
 				);
@@ -1906,8 +1906,11 @@ export function generate(
 		return astHolder.__volar_ast as ts.SourceFile;
 	}
 
-	function createPropertyAccessCode(a: Code, astHolder?: any): Code[] {
+	function createPropertyAccessCode(a: Code, forceIndexSignature = false, astHolder?: any): Code[] {
 		const aStr = typeof a === 'string' ? a : a[0];
+		if (forceIndexSignature) {
+			return ['[', ...createStringLiteralKeyCode(a), ']'];
+		}
 		if (!compilerOptions.noPropertyAccessFromIndexSignature && validTsVarReg.test(aStr)) {
 			return ['.', a];
 		}
