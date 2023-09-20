@@ -1000,7 +1000,7 @@ export function generate(
 				const eventVar = `__VLS_${elementIndex++}`;
 				codes.push(
 					`let ${eventVar} = { '${prop.arg.loc.source}': `,
-					`__VLS_pickEvent(${componentCtxVar}.emit!, '${prop.arg.loc.source}' as const, {} as __VLS_FunctionalComponentProps<typeof ${componentVar}, typeof ${componentInstanceVar}>`,
+					`__VLS_pickEvent(${componentCtxVar}.emit!, '${prop.arg.loc.source}' as const, ({} as __VLS_FunctionalComponentProps<typeof ${componentVar}, typeof ${componentInstanceVar}>)`,
 					...createPropertyAccessCode([
 						camelize('on-' + prop.arg.loc.source), // onClickOutside
 						'template',
