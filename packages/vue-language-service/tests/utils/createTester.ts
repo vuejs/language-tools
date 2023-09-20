@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { URI } from 'vscode-uri';
-import { resolveConfig } from '../../src';
+import { resolveConfig } from '../../out';
 
 const uriToFileName = (uri: string) => URI.parse(uri).fsPath.replace(/\\/g, '/');
 const fileNameToUri = (fileName: string) => URI.file(fileName).toString();

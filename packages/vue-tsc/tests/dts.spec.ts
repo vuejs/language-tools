@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
-import { createProgram } from '../src';
+import { createProgram } from '../out';
 
 const workspace = path.resolve(__dirname, '../../vue-test-workspace/vue-tsc-dts');
 const testFiles = readFilesRecursive(workspace);
