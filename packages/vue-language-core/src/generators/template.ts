@@ -38,6 +38,8 @@ const capabilitiesPresets = {
 };
 const formatBrackets = {
 	normal: ['`${', '}`;'] as [string, string],
+	// fix https://github.com/vuejs/language-tools/issues/3572
+	params: ['(', ') => {}'] as [string, string],
 	// fix https://github.com/vuejs/language-tools/issues/1210
 	// fix https://github.com/vuejs/language-tools/issues/2305
 	curly: ['0 +', '+ 0;'] as [string, string],
@@ -684,21 +686,19 @@ export function generate(
 			codes.push(`typeof __VLS_resolvedLocalAndGlobalComponents['${toCanonicalComponentName(tag)}'];\n`);
 		}
 
-		codes.push(
-			`const ${var_functionalComponent} = __VLS_asFunctionalComponent(`,
-			`${var_originalComponent}, `,
-		);
 		if (isIntrinsicElement) {
-			codes.push('{}');
+			codes.push(`const ${var_functionalComponent} = __VLS_elementAsFunctionalComponent(${var_originalComponent});\n`,);
 		}
 		else {
 			codes.push(
+				`const ${var_functionalComponent} = __VLS_asFunctionalComponent(`,
+				`${var_originalComponent}, `,
 				`new ${var_originalComponent}({`,
 				...createPropsCode(node, props, 'extraReferences'),
 				'})',
+				');\n',
 			);
 		}
-		codes.push(');\n');
 
 		for (const offset of tagOffsets) {
 			if (isNamespacedTag || dynamicTagExp) {
@@ -870,12 +870,12 @@ export function generate(
 					...createFormatCode(
 						slotDir.exp.content,
 						slotDir.exp.loc.start.offset,
-						formatBrackets.normal,
+						formatBrackets.params,
 					),
 				);
 
-				const collectAst = createTsAst(slotDir, `(${slotDir.exp.content}) => {}`);
-				colletVars(ts, collectAst, slotBlockVars);
+				const slotAst = createTsAst(slotDir, `(${slotDir.exp.content}) => {}`);
+				colletVars(ts, slotAst, slotBlockVars);
 				hasProps = true;
 				if (slotDir.exp.content.indexOf(':') === -1) {
 					codes.push(
@@ -1000,7 +1000,7 @@ export function generate(
 				const eventVar = `__VLS_${elementIndex++}`;
 				codes.push(
 					`let ${eventVar} = { '${prop.arg.loc.source}': `,
-					`__VLS_pickEvent(${componentCtxVar}.emit!, '${prop.arg.loc.source}' as const, {} as __VLS_FunctionalComponentProps<typeof ${componentVar}, typeof ${componentInstanceVar}>`,
+					`__VLS_pickEvent(${componentCtxVar}.emit!, '${prop.arg.loc.source}' as const, ({} as __VLS_FunctionalComponentProps<typeof ${componentVar}, typeof ${componentInstanceVar}>)`,
 					...createPropertyAccessCode([
 						camelize('on-' + prop.arg.loc.source), // onClickOutside
 						'template',
