@@ -64,9 +64,9 @@ exports[`vue-tsc-dts > Input: components/script-setup-generic.vue, Output: compo
         baz: T;
     }): void;
     attrs: any;
-    slots: {
+    slots: Readonly<{
         default?(data: T): any;
-    };
+    }>;
     emit: (e: 'bar', data: T) => void;
 }, \\"slots\\" | \\"attrs\\" | \\"emit\\">, __VLS_expose?: (exposed: {
     baz: T;
@@ -78,9 +78,9 @@ exports[`vue-tsc-dts > Input: components/script-setup-generic.vue, Output: compo
         baz: T;
     }): void;
     attrs: any;
-    slots: {
+    slots: Readonly<{
         default?(data: T): any;
-    };
+    }>;
     emit: (e: 'bar', data: T) => void;
 }>) => import(\\"vue\\").VNode<import(\\"vue\\").RendererNode, import(\\"vue\\").RendererElement, {
     [key: string]: any;
@@ -93,9 +93,9 @@ exports[`vue-tsc-dts > Input: components/script-setup-generic.vue, Output: compo
             baz: T;
         }): void;
         attrs: any;
-        slots: {
+        slots: Readonly<{
             default?(data: T): any;
-        };
+        }>;
         emit: (e: 'bar', data: T) => void;
     };
 };
