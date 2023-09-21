@@ -8,7 +8,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [16.x]
+        node-version: [18]
         os: [macos-latest, windows-latest, ubuntu-latest]
 
     steps:
@@ -16,7 +16,7 @@ jobs:
 
       # install node
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
 
