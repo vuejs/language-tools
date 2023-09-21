@@ -57,10 +57,11 @@ export function generate(
 			leadingCommentEndOffset: 0,
 			importSectionEndOffset: 0,
 			defineProps: undefined,
+			defineSlots: undefined,
+			slotsAssignName: undefined,
 			propsAssignName: undefined,
 			propsRuntimeArg: undefined,
 			propsTypeArg: undefined,
-			slotsTypeArg: undefined,
 			withDefaultsArg: undefined,
 			defineProp: [],
 		};
@@ -383,11 +384,9 @@ export function generate(
 				}
 				codes.push(`}`);
 			}
-			if (scriptSetupRanges.slotsTypeArg && vueCompilerOptions.jsxSlots) {
+			if (scriptSetupRanges.defineSlots && vueCompilerOptions.jsxSlots) {
 				usedHelperTypes.PropsChildren = true;
-				codes.push(` & __VLS_PropsChildren<`);
-				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end);
-				codes.push('>');
+				codes.push(` & __VLS_PropsChildren<typeof __VLS_slots>`);
 			}
 			codes.push(`;\n`);
 			//#endregion
@@ -490,7 +489,14 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 		const scriptSetupGeneratedOffset = muggle.getLength(codes) - scriptSetupRanges.importSectionEndOffset;
 
-		addVirtualCode('scriptSetup', scriptSetupRanges.importSectionEndOffset);
+		if (scriptSetupRanges.defineSlots && !scriptSetupRanges.slotsAssignName) {
+			addVirtualCode('scriptSetup', scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.defineSlots.start);
+			codes.push(`const __VLS_slots = `);
+			addVirtualCode('scriptSetup', scriptSetupRanges.defineSlots.start);
+		}
+		else {
+			addVirtualCode('scriptSetup', scriptSetupRanges.importSectionEndOffset);
+		}
 
 		if (scriptSetupRanges.propsTypeArg && scriptSetupRanges.withDefaultsArg) {
 			// fix https://github.com/vuejs/language-tools/issues/1187
@@ -655,7 +661,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			codes.push('export default ');
 		}
 		if (mode === 'return' || mode === 'export') {
-			if (!vueCompilerOptions.skipTemplateCodegen && (htmlGen?.hasSlot || scriptSetupRanges?.slotsTypeArg)) {
+			if (!vueCompilerOptions.skipTemplateCodegen && (htmlGen?.hasSlot || scriptSetupRanges?.defineSlots)) {
 				usedHelperTypes.WithTemplateSlots = true;
 				codes.push(`{} as __VLS_WithTemplateSlots<typeof __VLS_publicComponent, ReturnType<typeof __VLS_template>>;`);
 			}
@@ -677,12 +683,6 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 			generateExportOptions();
 			generateConstNameOption();
-
-			if (scriptSetupRanges?.slotsTypeArg && sfc.scriptSetup) {
-				codes.push(`var __VLS_slots!: `);
-				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end);
-				codes.push(';\n');
-			};
 
 			codes.push(`function __VLS_template() {\n`);
 
@@ -837,7 +837,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		/* Components */
 		codes.push('/* Components */\n');
 		codes.push(`let __VLS_otherComponents!: NonNullable<typeof __VLS_internalComponent extends { components: infer C } ? C : {}> & typeof __VLS_componentsOption;\n`);
-		codes.push(`let __VLS_own!: __VLS_SelfComponent<typeof __VLS_name, typeof __VLS_internalComponent & typeof __VLS_publicComponent & (new () => { ${getSlotsPropertyName(vueCompilerOptions.target)}: typeof __VLS_slots })>;\n`);
+		codes.push(`let __VLS_own!: __VLS_SelfComponent<typeof __VLS_name, typeof __VLS_internalComponent & typeof __VLS_publicComponent & (new () => { ${getSlotsPropertyName(vueCompilerOptions.target)}: typeof ${scriptSetupRanges?.slotsAssignName ?? '__VLS_slots'} })>;\n`);
 		codes.push(`let __VLS_localComponents!: typeof __VLS_otherComponents & Omit<typeof __VLS_own, keyof typeof __VLS_otherComponents>;\n`);
 		codes.push(`let __VLS_components!: typeof __VLS_localComponents & __VLS_GlobalComponents & typeof __VLS_ctx;\n`); // for html completion, TS references...
 
@@ -878,17 +878,12 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 		if (!htmlGen) {
 			codes.push(`// no template\n`);
-			if (scriptSetupRanges?.slotsTypeArg && sfc.scriptSetup) {
-				codes.push(`let __VLS_slots!: `);
-				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.slotsTypeArg.start, scriptSetupRanges.slotsTypeArg.end);
-				codes.push(`;\n`);
-			}
-			else {
+			if (!scriptSetupRanges?.defineSlots) {
 				codes.push(`const __VLS_slots = {};\n`);
 			}
 		}
 
-		codes.push(`return __VLS_slots;\n`);
+		codes.push(`return ${scriptSetupRanges?.slotsAssignName ?? '__VLS_slots'};\n`);
 
 		return { cssIds };
 

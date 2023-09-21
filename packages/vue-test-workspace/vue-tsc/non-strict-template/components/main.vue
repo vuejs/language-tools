@@ -20,8 +20,8 @@ const ScriptSetupExact = defineComponent({
 // https://vuejs.org/api/sfc-script-setup.html#defineexpose
 const ScriptSetupExposeExact = defineComponent({
 	setup() {
-		const a = 1
-		const b = ref(2)
+		const a = 1;
+		const b = ref(2);
 		return {
 			a,
 			b
@@ -67,13 +67,13 @@ declare const ScriptSetupGenericExact: <T, >(
 	_ctx?: Pick<NonNullable<Awaited<typeof _setup>>, 'attrs' | 'emit' | 'slots'>,
 	_expose?: NonNullable<Awaited<typeof _setup>>['expose'],
 	_setup?: Promise<{
-		props: { foo: T } & { [K in keyof JSX.ElementChildrenAttribute]?: { default?(data: T): any } },
+		props: { foo: T; } & { [K in keyof JSX.ElementChildrenAttribute]?: Readonly<{ default?(data: T): any; }> },
 		attrs: any,
-		slots: { default?(data: T): any },
-		emit: { (e: 'bar', data: T): void },
-		expose(_exposed: { baz: T }): void,
+		slots: Readonly<{ default?(data: T): any; }>,
+		emit: { (e: 'bar', data: T): void; },
+		expose(_exposed: { baz: T; }): void,
 	}>
-) => import('vue').VNode & { __ctx?: Awaited<typeof _setup> };
+) => import('vue').VNode & { __ctx?: Awaited<typeof _setup>; };
 
 exactType(ScriptSetup, ScriptSetupExact);
 exactType(ScriptSetupExpose, ScriptSetupExposeExact);
