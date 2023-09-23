@@ -22,6 +22,7 @@ export function parseScriptSetupRanges(
 	let emitsRuntimeArg: TextRange | undefined;
 	let emitsTypeArg: TextRange | undefined;
 	let exposeRuntimeArg: TextRange | undefined;
+	let emitsTypeNums = -1;
 
 	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition' || ast.getFullText().trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition');
 	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' || ast.getFullText().trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition');
@@ -73,6 +74,7 @@ export function parseScriptSetupRanges(
 		emitsAssignName,
 		emitsRuntimeArg,
 		emitsTypeArg,
+		emitsTypeNums,
 		exposeRuntimeArg,
 		defineProp,
 	};
@@ -204,6 +206,9 @@ export function parseScriptSetupRanges(
 					}
 					if (vueCompilerOptions.macros.defineEmits.includes(callText)) {
 						emitsTypeArg = _getStartEnd(typeArg);
+						if (ts.isTypeLiteralNode(typeArg)) {
+							emitsTypeNums = typeArg.members.length;
+						}
 						if (ts.isVariableDeclaration(parent)) {
 							emitsAssignName = parent.name.getText(ast);
 						}

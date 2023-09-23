@@ -51,6 +51,7 @@ export function generate(
 			emitsAssignName: undefined,
 			emitsRuntimeArg: undefined,
 			emitsTypeArg: undefined,
+			emitsTypeNums: 0,
 			exposeRuntimeArg: undefined,
 			leadingCommentEndOffset: 0,
 			importSectionEndOffset: 0,
