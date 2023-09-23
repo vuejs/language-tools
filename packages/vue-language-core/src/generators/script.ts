@@ -130,21 +130,12 @@ export function generate(
 			// fix https://github.com/vuejs/language-tools/issues/926
 			codes.push(`
 			type __VLS_UnionToIntersection<U> = (U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never;
-			type __VLS_IsUnknown<T> = __VLS_IsAny<T> extends true
-				? false
-				: unknown extends T
-				? true
-				: false;
+			type __VLS_IsUnknown<T> = __VLS_IsAny<T> extends true ? false : unknown extends T ? true : false;
 			type __VLS_PopIntersectionFuncs<I> = I extends (...args: infer A) => infer R ? (...args: A) => R : never;
 			type __VLS_GetIntersectionFuncsLastOneFirstArg<I> = I extends (firstArg: infer F, ...rest: infer P) => void ? F : never;
 			type __VLS_GetIntersectionFuncsLastOneRestArg<I> = I extends (firstArg: infer F, ...rest: infer P) => void ? P : never;
-			type __VLS_NarrowIntersection<I, T> = I extends (T & infer R)
-				? __VLS_IsUnknown<R> extends true
-				? never
-				: R
-				: never;
-			type __VLS_Prepend<U, T extends any[]> =
-				((a: U, ...r: T) => void) extends (...r: infer R) => void ? R : never;
+			type __VLS_NarrowIntersection<I, T> = I extends (T & infer R) ? __VLS_IsUnknown<R> extends true ? never : R : never;
+			type __VLS_Prepend<U, T extends any[]> = ((a: U, ...r: T) => void) extends (...r: infer R) => void ? R : never;
 			type __VLS_ExtractFirstArgRecursively<I, Result extends any[]> = {
 				1: Result;
 				0: __VLS_ExtractFirstArgRecursively<
@@ -159,17 +150,15 @@ export function generate(
 					__VLS_Prepend<__VLS_GetIntersectionFuncsLastOneRestArg<I>, Result>
 				>;
 			}[[I] extends [never] ? 1 : 0];
-			type __VLS_RemoveLabels<Tuple, Result extends any[]> = Tuple extends [infer E, ...infer Rest]
-				? __VLS_RemoveLabels<Rest, [...Result, E]>
-				: Result;
+			type __VLS_RemoveLabels<Tuple, Result extends any[]> = Tuple extends [infer E, ...infer Rest] ? __VLS_RemoveLabels<Rest, [...Result, E]> : Result;
 			type __VLS_GetAllOverloadsFirstArg<I> = __VLS_RemoveLabels<__VLS_ExtractFirstArgRecursively<I, []>, []>;
 			type __VLS_GetAllOverloadsRestArg<I> = __VLS_RemoveLabels<__VLS_ExtractRestArgRecursively<I, []>, []>;
 			type __VLS_IndexOf<T extends unknown[], U extends unknown, Count extends 1[] = []> =
 				T extends [infer First, ...infer Rest] ? (
 					(<V>() => V extends First ? 1 : 0) extends
-					(<V>() => V extends U ? 1 : 0) ? (
-						Count['length']
-					) : __VLS_IndexOf<Rest, U, [...Count, 1]>
+					(<V>() => V extends U ? 1 : 0)
+					? Count['length']
+					: __VLS_IndexOf<Rest, U, [...Count, 1]>
 				) : -1;
 			type __VLS_Zip<Keys extends any[], Values extends any[]> = {
 				[K in Keys[number]]: Values[__VLS_IndexOf<Keys, K>]
@@ -184,11 +173,11 @@ export function generate(
 				| __VLS_OverloadUnion<T, Pick<T, keyof T> & U & ((...args: TArgs) => TReturn)>
 				| ((...args: TArgs) => TReturn)
 				: never;
-			type __VLS_OverloadToIntersection<TOverload> = __VLS_UnionToIntersection<Exclude<
+			type __VLS_OverloadToIntersection<T> = __VLS_UnionToIntersection<Exclude<
 				__VLS_OverloadUnion<
-					(() => never) & TOverload
+					(() => never) & T
 				>,
-				TOverload extends () => never ? never : () => never
+				T extends () => never ? never : () => never
 			>>;
 			type __VLS_ConstructorOverloads<T, I = __VLS_OverloadToIntersection<T>, Z = __VLS_Zip<__VLS_GetAllOverloadsFirstArg<I>, __VLS_GetAllOverloadsRestArg<I>>> = {
 				[K in keyof Z]: (...args: Z[K]) => void;
