@@ -129,6 +129,7 @@ export function generate(
 			codes.push(`
 				// fix https://github.com/vuejs/language-tools/issues/926
 				type __VLS_UnionToIntersection<U> = (U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never;
+				type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
 				type __VLS_IsUnknown<T> = __VLS_IsAny<T> extends true ? false : unknown extends T ? true : false;
 				type __VLS_PopIntersectionFuncs<I> = I extends (...args: infer A) => infer R ? (...args: A) => R : never;
 				type __VLS_GetIntersectionFuncsLastOneFirstArg<I> = I extends (firstArg: infer F, ...rest: infer P) => void ? F : never;
