@@ -640,6 +640,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			}
 			if (scriptSetupRanges.defineEmits) {
 				usedHelperTypes.EmitsTypeHelpers = true;
+				usedHelperTypes.Prettify = true;
 				codes.push(
 					`emits: ({} as __VLS_Prettify<__VLS_UnionToIntersection<__VLS_NormalizeEmits<typeof `,
 					scriptSetupRanges.emitsAssignName ?? '__VLS_emit',
