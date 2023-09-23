@@ -1,11 +1,39 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`vue-tsc-dts > Input: #3542/main.vue, Output: #3542/main.vue.d.ts 1`] = `
+"declare const _default: import(\\"vue\\").DefineComponent<{}, {}, {}, {}, {}, import(\\"vue\\").ComponentOptionsMixin, import(\\"vue\\").ComponentOptionsMixin, {
+    a1: (value: number) => void;
+    a2: (value: number) => void;
+    a3: (value: number) => void;
+    a4: (value: number) => void;
+    a5: (value: number) => void;
+    a6: (value: number) => void;
+    a7: (value: number) => void;
+    a8: (value: number) => void;
+    a9: (value: number) => void;
+    a10: (value: number) => void;
+}, string, import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps, Readonly<import(\\"vue\\").ExtractPropTypes<{}>> & {
+    onA1?: (value: number) => any;
+    onA2?: (value: number) => any;
+    onA3?: (value: number) => any;
+    onA4?: (value: number) => any;
+    onA5?: (value: number) => any;
+    onA6?: (value: number) => any;
+    onA7?: (value: number) => any;
+    onA8?: (value: number) => any;
+    onA9?: (value: number) => any;
+    onA10?: (value: number) => any;
+}, {}, {}>;
+export default _default;
+"
+`;
+
 exports[`vue-tsc-dts > Input: components/script-setup.vue, Output: components/script-setup.vue.d.ts 1`] = `
 "declare const _default: import(\\"vue\\").DefineComponent<{
     foo: StringConstructor;
 }, {}, unknown, {}, {}, import(\\"vue\\").ComponentOptionsMixin, import(\\"vue\\").ComponentOptionsMixin, {
-    change: (...payload: any[]) => void;
-    delete: (...payload: any[]) => void;
+    change: (...args: any[]) => void;
+    delete: (...args: any[]) => void;
 }, string, import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps, Readonly<import(\\"vue\\").ExtractPropTypes<{
     foo: StringConstructor;
 }>> & {
@@ -136,7 +164,7 @@ export default _default;
 
 exports[`vue-tsc-dts > Input: defineEmits-new-syntax/main.vue, Output: defineEmits-new-syntax/main.vue.d.ts 1`] = `
 "declare const _default: import(\\"vue\\").DefineComponent<{}, {}, {}, {}, {}, import(\\"vue\\").ComponentOptionsMixin, import(\\"vue\\").ComponentOptionsMixin, {
-    foo: (payload_0: string) => void;
+    foo: (args_0: string) => void;
 }, string, import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps, Readonly<import(\\"vue\\").ExtractPropTypes<{}>> & {
     onFoo?: (args_0: string) => any;
 }, {}, {}>;

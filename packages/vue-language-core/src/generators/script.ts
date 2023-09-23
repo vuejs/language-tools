@@ -9,7 +9,6 @@ import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import type { TextRange, VueCompilerOptions } from '../types';
 import { Sfc } from '../types';
-import * as sharedTypes from '../utils/globalTypes';
 import { getSlotsPropertyName, hyphenateTag } from '../utils/shared';
 import { walkInterpolationFragment } from '../utils/transform';
 
@@ -50,7 +49,6 @@ export function generate(
 		scriptSetupRanges = {
 			bindings: [],
 			emitsAssignName: undefined,
-			emitsTypeNums: 0,
 			exposeRuntimeArg: undefined,
 			leadingCommentEndOffset: 0,
 			importSectionEndOffset: 0,
@@ -74,6 +72,7 @@ export function generate(
 		EmitsTypeHelpers: false,
 		WithTemplateSlots: false,
 		PropsChildren: false,
+		Prettify: false,
 	};
 
 	codes.push(`/* ${Object.entries(vueCompilerOptions).map(([key, value]) => `${key}: ${JSON.stringify(value)}`).join(', ')} */\n`);
@@ -108,7 +107,6 @@ export function generate(
 	};
 
 	function generateHelperTypes() {
-		let usedPrettify = false;
 		if (usedHelperTypes.DefinePropsToOptions) {
 			if (compilerOptions.exactOptionalPropertyTypes) {
 				codes.push(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueCompilerOptions.lib}').PropType<T[K]> } : { type: import('${vueCompilerOptions.lib}').PropType<T[K]>, required: true } };\n`);
@@ -125,21 +123,64 @@ export function generate(
 						default: D[K]
 					}> : P[K]
 				};\n`);
-			usedPrettify = true;
+			usedHelperTypes.Prettify = true;
 		}
 		if (usedHelperTypes.EmitsTypeHelpers) {
-			// fix https://github.com/vuejs/language-tools/issues/926
-			codes.push('type __VLS_UnionToIntersection<U> = __VLS_Prettify<(U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never>;\n');
-			usedPrettify = true;
-			if (scriptSetupRanges && scriptSetupRanges.emitsTypeNums !== -1) {
-				codes.push(sharedTypes.genConstructorOverloads('__VLS_ConstructorOverloads', scriptSetupRanges.emitsTypeNums));
-			}
-			else {
-				codes.push(sharedTypes.genConstructorOverloads('__VLS_ConstructorOverloads'));
-			}
+			codes.push(`
+				// fix https://github.com/vuejs/language-tools/issues/926
+				type __VLS_UnionToIntersection<U> = (U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never;
+				type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
+				type __VLS_IsUnknown<T> = __VLS_IsAny<T> extends true ? false : unknown extends T ? true : false;
+				type __VLS_PopIntersectionFuncs<I> = I extends (...args: infer A) => infer R ? (...args: A) => R : never;
+				type __VLS_GetIntersectionFuncsLastOneFirstArg<I> = I extends (firstArg: infer F, ...rest: infer P) => void ? F : never;
+				type __VLS_GetIntersectionFuncsLastOneRestArg<I> = I extends (firstArg: infer F, ...rest: infer P) => void ? P : never;
+				type __VLS_NarrowIntersection<I, T> = I extends (T & infer R) ? __VLS_IsUnknown<R> extends true ? never : R : never;
+				type __VLS_Prepend<U, T extends any[]> = ((a: U, ...r: T) => void) extends (...r: infer R) => void ? R : never;
+				type __VLS_ExtractFirstArgRecursively<I, Result extends any[]> = {
+					1: Result;
+					0: __VLS_ExtractFirstArgRecursively<
+						__VLS_NarrowIntersection<I, __VLS_PopIntersectionFuncs<I>>,
+						__VLS_Prepend<__VLS_GetIntersectionFuncsLastOneFirstArg<I>, Result>
+					>;
+				}[[I] extends [never] ? 1 : 0];
+				type __VLS_ExtractRestArgRecursively<I, Result extends any[]> = {
+					1: Result;
+					0: __VLS_ExtractRestArgRecursively<
+						__VLS_NarrowIntersection<I, __VLS_PopIntersectionFuncs<I>>,
+						__VLS_Prepend<__VLS_GetIntersectionFuncsLastOneRestArg<I>, Result>
+					>;
+				}[[I] extends [never] ? 1 : 0];
+				type __VLS_RemoveLabels<Tuple, Result extends any[]> = Tuple extends [infer E, ...infer Rest] ? __VLS_RemoveLabels<Rest, [...Result, E]> : Result;
+				type __VLS_GetAllOverloadsFirstArg<I> = __VLS_RemoveLabels<__VLS_ExtractFirstArgRecursively<I, []>, []>;
+				type __VLS_GetAllOverloadsRestArg<I> = __VLS_RemoveLabels<__VLS_ExtractRestArgRecursively<I, []>, []>;
+				type __VLS_IndexOf<T extends unknown[], U extends unknown, Count extends 1[] = []> =
+					T extends [infer First, ...infer Rest] ? (
+						(<V>() => V extends First ? 1 : 0) extends
+						(<V>() => V extends U ? 1 : 0)
+						? Count['length']
+						: __VLS_IndexOf<Rest, U, [...Count, 1]>
+					) : -1;
+				type __VLS_Zip<Keys extends any[], Values extends any[]> = {
+					[K in Keys[number]]: Values[__VLS_IndexOf<Keys, K>]
+				};
+				type __VLS_OverloadUnion<T, U = unknown> = U & T extends (...args: infer A) => infer R
+					? U extends T
+						? never
+						: __VLS_OverloadUnion<T, Pick<T, keyof T> & U & ((...args: A) => R)> | ((...args: A) => R)
+					: never;
+				type __VLS_OverloadToIntersection<T> = __VLS_UnionToIntersection<Exclude<
+					__VLS_OverloadUnion<
+						(() => never) & T
+					>,
+					T extends () => never ? never : () => never
+				>>;
+				type __VLS_ConstructorOverloads<T, I = __VLS_OverloadToIntersection<T>, Z = __VLS_Zip<__VLS_GetAllOverloadsFirstArg<I>, __VLS_GetAllOverloadsRestArg<I>>> = {
+					[K in keyof Z]: (...args: Z[K]) => void;
+				};
+`);
 			codes.push(`type __VLS_NormalizeEmits<T> = __VLS_ConstructorOverloads<T> & {
 				[K in keyof T]: T[K] extends any[] ? { (...args: T[K]): void } : never
-			}\n`);;
+			}\n`);
 		}
 		if (usedHelperTypes.WithTemplateSlots) {
 			codes.push(
@@ -157,7 +198,7 @@ export function generate(
 		if (usedHelperTypes.PropsChildren) {
 			codes.push(`type __VLS_PropsChildren<S> = { [K in keyof (boolean extends (JSX.ElementChildrenAttribute extends never ? true : false) ? never : JSX.ElementChildrenAttribute)]?: S; };\n`);
 		}
-		if (usedPrettify) {
+		if (usedHelperTypes.Prettify) {
 			codes.push(`type __VLS_Prettify<T> = { [K in keyof T]: T[K]; } & {};\n`);
 		}
 	}
@@ -592,10 +633,11 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			}
 			if (scriptSetupRanges.defineEmits) {
 				usedHelperTypes.EmitsTypeHelpers = true;
+				usedHelperTypes.Prettify = true;
 				codes.push(
-					`emits: ({} as __VLS_UnionToIntersection<__VLS_NormalizeEmits<typeof `,
+					`emits: ({} as __VLS_Prettify<__VLS_UnionToIntersection<__VLS_NormalizeEmits<typeof `,
 					scriptSetupRanges.emitsAssignName ?? '__VLS_emit',
-					`>>),\n`,
+					`>>>),\n`,
 				);
 			}
 		}

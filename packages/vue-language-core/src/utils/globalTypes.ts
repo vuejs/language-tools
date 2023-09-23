@@ -119,35 +119,3 @@ type __VLS_AsFunctionOrAny<F> = unknown extends F ? any : ((...args: any) => any
 declare function __VLS_normalizeSlot<S>(s: S): S extends () => infer R ? (props: {}) => R : S;
 `.trim();
 }
-
-// TODO: not working for overloads > n (n = 8)
-// see: https://github.com/vuejs/language-tools/issues/60
-export function genConstructorOverloads(name = 'ConstructorOverloads', nums?: number) {
-	let code = '';
-	code += `type ${name}<T> =\n`;
-	if (nums === undefined) {
-		for (let i = 8; i >= 1; i--) {
-			gen(i);
-		}
-	}
-	else if (nums > 0) {
-		gen(nums);
-	}
-	code += `// 0\n`;
-	code += `{};\n`;
-	return code;
-
-	function gen(i: number) {
-		code += `// ${i}\n`;
-		code += `T extends {\n`;
-		for (let j = 1; j <= i; j++) {
-			code += `(event: infer E${j}, ...payload: infer P${j}): void;\n`;
-		}
-		code += `} ? (\n`;
-		for (let j = 1; j <= i; j++) {
-			if (j > 1) code += '& ';
-			code += `(E${j} extends string ? { [K${j} in E${j}]: (...payload: P${j}) => void } : {})\n`;
-		}
-		code += `) :\n`;
-	}
-}
