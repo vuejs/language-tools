@@ -126,7 +126,6 @@ export function generate(
 			usedHelperTypes.Prettify = true;
 		}
 		if (usedHelperTypes.EmitsTypeHelpers) {
-			usedHelperTypes.Prettify = true;
 			codes.push(`
 				type __VLS_UnionToIntersection<U> = (U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never;
 				type __VLS_IsUnknown<T> = __VLS_IsAny<T> extends true ? false : unknown extends T ? true : false;
