@@ -9,7 +9,6 @@ import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import type { TextRange, VueCompilerOptions } from '../types';
 import { Sfc } from '../types';
-import * as sharedTypes from '../utils/globalTypes';
 import { getSlotsPropertyName, hyphenateTag } from '../utils/shared';
 import { walkInterpolationFragment } from '../utils/transform';
 
@@ -129,12 +128,7 @@ export function generate(
 		}
 		if (usedHelperTypes.EmitsTypeHelpers) {
 			usedHelperTypes.Prettify = true;
-			if (scriptSetupRanges && scriptSetupRanges.emitsTypeNums !== -1) {
-				codes.push('type __VLS_UnionToIntersection<U> = __VLS_Prettify<(U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never>;\n');
-				codes.push(sharedTypes.genConstructorOverloads('__VLS_ConstructorOverloads', scriptSetupRanges.emitsTypeNums));
-			}
-			else {
-				codes.push(`
+			codes.push(`
 				type __VLS_UnionToIntersection<U> = (U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never;
 				type __VLS_IsUnknown<T> = __VLS_IsAny<T> extends true ? false : unknown extends T ? true : false;
 				type __VLS_PopIntersectionFuncs<I> = I extends (...args: infer A) => infer R ? (...args: A) => R : never;
@@ -184,7 +178,6 @@ export function generate(
 					[K in keyof Z]: (...args: Z[K]) => void;
 				};
 `);
-			}
 			codes.push(`type __VLS_NormalizeEmits<T> = __VLS_ConstructorOverloads<T> & {
 				[K in keyof T]: T[K] extends any[] ? { (...args: T[K]): void } : never
 			}\n`);
