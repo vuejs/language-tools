@@ -73,6 +73,7 @@ export function generate(
 	sourceLang: string,
 	sfc: Sfc,
 	hasScriptSetupSlots: boolean,
+	slotsAssignName: string | undefined,
 	codegenStack: boolean,
 ) {
 
@@ -1644,7 +1645,7 @@ export function generate(
 			codes.push(
 				'__VLS_normalizeSlot(',
 				['', 'template', node.loc.start.offset, capabilitiesPresets.diagnosticOnly],
-				'__VLS_slots[',
+				`${slotsAssignName ?? '__VLS_slots'}[`,
 				['', 'template', node.loc.start.offset, capabilitiesPresets.diagnosticOnly],
 				slotNameExpNode?.content ?? `('${getSlotName()}' as const)`,
 				['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly],
