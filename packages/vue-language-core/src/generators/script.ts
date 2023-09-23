@@ -49,7 +49,6 @@ export function generate(
 		scriptSetupRanges = {
 			bindings: [],
 			emitsAssignName: undefined,
-			emitsTypeNums: 0,
 			exposeRuntimeArg: undefined,
 			leadingCommentEndOffset: 0,
 			importSectionEndOffset: 0,
