@@ -13,9 +13,7 @@ type __VLS_Element = __VLS_PickNotAny<import('vue/jsx-runtime').JSX.Element, JSX
 type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
 type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
 
-type __VLS_Prettify<T> = {
-	[K in keyof T]: T[K];
-} & {};
+type __VLS_Prettify<T> = { [K in keyof T]: T[K]; } & {};
 
 type __VLS_GlobalComponents =
 	__VLS_PickNotAny<import('vue').GlobalComponents, {}>
@@ -117,5 +115,61 @@ type __VLS_FunctionalComponentProps<T, K> =
 type __VLS_AsFunctionOrAny<F> = unknown extends F ? any : ((...args: any) => any) extends F ? F : any;
 
 declare function __VLS_normalizeSlot<S>(s: S): S extends () => infer R ? (props: {}) => R : S;
+
+/**
+ * emit
+ */
+// fix https://github.com/vuejs/language-tools/issues/926
+type __VLS_UnionToIntersection<U> = (U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never;
+type __VLS_IsUnknown<T> = __VLS_IsAny<T> extends true ? false : unknown extends T ? true : false;
+type __VLS_PopIntersectionFuncs<I> = I extends (...args: infer A) => infer R ? (...args: A) => R : never;
+type __VLS_GetIntersectionFuncsLastOneFirstArg<I> = I extends (firstArg: infer F, ...rest: infer P) => void ? F : never;
+type __VLS_GetIntersectionFuncsLastOneRestArg<I> = I extends (firstArg: infer F, ...rest: infer P) => void ? P : never;
+type __VLS_NarrowIntersection<I, T> = I extends (T & infer R) ? __VLS_IsUnknown<R> extends true ? never : R : never;
+type __VLS_Prepend<U, T extends any[]> = ((a: U, ...r: T) => void) extends (...r: infer R) => void ? R : never;
+type __VLS_ExtractFirstArgRecursively<I, Result extends any[]> = {
+	1: Result;
+	0: __VLS_ExtractFirstArgRecursively<
+		__VLS_NarrowIntersection<I, __VLS_PopIntersectionFuncs<I>>,
+		__VLS_Prepend<__VLS_GetIntersectionFuncsLastOneFirstArg<I>, Result>
+	>;
+}[[I] extends [never] ? 1 : 0];
+type __VLS_ExtractRestArgRecursively<I, Result extends any[]> = {
+	1: Result;
+	0: __VLS_ExtractRestArgRecursively<
+		__VLS_NarrowIntersection<I, __VLS_PopIntersectionFuncs<I>>,
+		__VLS_Prepend<__VLS_GetIntersectionFuncsLastOneRestArg<I>, Result>
+	>;
+}[[I] extends [never] ? 1 : 0];
+type __VLS_RemoveLabels<Tuple, Result extends any[]> = Tuple extends [infer E, ...infer Rest] ? __VLS_RemoveLabels<Rest, [...Result, E]> : Result;
+type __VLS_GetAllOverloadsFirstArg<I> = __VLS_RemoveLabels<__VLS_ExtractFirstArgRecursively<I, []>, []>;
+type __VLS_GetAllOverloadsRestArg<I> = __VLS_RemoveLabels<__VLS_ExtractRestArgRecursively<I, []>, []>;
+type __VLS_IndexOf<T extends unknown[], U extends unknown, Count extends 1[] = []> =
+	T extends [infer First, ...infer Rest] ? (
+		(<V>() => V extends First ? 1 : 0) extends
+		(<V>() => V extends U ? 1 : 0)
+		? Count['length']
+		: __VLS_IndexOf<Rest, U, [...Count, 1]>
+	) : -1;
+type __VLS_Zip<Keys extends any[], Values extends any[]> = {
+	[K in Keys[number]]: Values[__VLS_IndexOf<Keys, K>]
+};
+type __VLS_OverloadUnion<T, U = unknown> = U & T extends (...args: infer A) => infer R
+	? U extends T
+		? never
+		: __VLS_OverloadUnion<T, Pick<T, keyof T> & U & ((...args: A) => R)> | ((...args: A) => R)
+	: never;
+type __VLS_OverloadToIntersection<T> = __VLS_UnionToIntersection<Exclude<
+	__VLS_OverloadUnion<
+		(() => never) & T
+	>,
+	T extends () => never ? never : () => never
+>>;
+type __VLS_ConstructorOverloads<T, I = __VLS_OverloadToIntersection<T>, Z = __VLS_Zip<__VLS_GetAllOverloadsFirstArg<I>, __VLS_GetAllOverloadsRestArg<I>>> = {
+	[K in keyof Z]: (...args: Z[K]) => void;
+};
+type __VLS_NormalizeEmits<T> = __VLS_ConstructorOverloads<T> & {
+	[K in keyof T]: T[K] extends any[] ? { (...args: T[K]): void } : never
+};
 `.trim();
 }
