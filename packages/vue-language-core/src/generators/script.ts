@@ -71,7 +71,6 @@ export function generate(
 		mergePropDefaults: false,
 		WithTemplateSlots: false,
 		PropsChildren: false,
-		Prettify: false,
 	};
 
 	codes.push(`/* ${Object.entries(vueCompilerOptions).map(([key, value]) => `${key}: ${JSON.stringify(value)}`).join(', ')} */\n`);
@@ -122,7 +121,6 @@ export function generate(
 						default: D[K]
 					}> : P[K]
 				};\n`);
-			usedHelperTypes.Prettify = true;
 		}
 		if (usedHelperTypes.WithTemplateSlots) {
 			codes.push(
@@ -571,7 +569,6 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				codes.push(`},\n`);
 			}
 			if (scriptSetupRanges.defineEmits) {
-				usedHelperTypes.Prettify = true;
 				codes.push(
 					`emits: ({} as __VLS_Prettify<__VLS_UnionToIntersection<__VLS_NormalizeEmits<typeof `,
 					scriptSetupRanges.emitsAssignName ?? '__VLS_emit',
