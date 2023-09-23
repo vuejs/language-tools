@@ -32,8 +32,8 @@ exports[`vue-tsc-dts > Input: components/script-setup.vue, Output: components/sc
 "declare const _default: import(\\"vue\\").DefineComponent<{
     foo: StringConstructor;
 }, {}, unknown, {}, {}, import(\\"vue\\").ComponentOptionsMixin, import(\\"vue\\").ComponentOptionsMixin, {
-    change: (...payload: any[]) => void;
-    delete: (...payload: any[]) => void;
+    change: (...args: any[]) => void;
+    delete: (...args: any[]) => void;
 }, string, import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps, Readonly<import(\\"vue\\").ExtractPropTypes<{
     foo: StringConstructor;
 }>> & {
@@ -164,7 +164,7 @@ export default _default;
 
 exports[`vue-tsc-dts > Input: defineEmits-new-syntax/main.vue, Output: defineEmits-new-syntax/main.vue.d.ts 1`] = `
 "declare const _default: import(\\"vue\\").DefineComponent<{}, {}, {}, {}, {}, import(\\"vue\\").ComponentOptionsMixin, import(\\"vue\\").ComponentOptionsMixin, {
-    foo: (payload_0: string) => void;
+    foo: (args_0: string) => void;
 }, string, import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps, Readonly<import(\\"vue\\").ExtractPropTypes<{}>> & {
     onFoo?: (args_0: string) => any;
 }, {}, {}>;
