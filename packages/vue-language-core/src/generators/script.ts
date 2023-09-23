@@ -75,6 +75,7 @@ export function generate(
 		EmitsTypeHelpers: false,
 		WithTemplateSlots: false,
 		PropsChildren: false,
+		Prettify: false,
 	};
 
 	codes.push(`/* ${Object.entries(vueCompilerOptions).map(([key, value]) => `${key}: ${JSON.stringify(value)}`).join(', ')} */\n`);
@@ -109,7 +110,6 @@ export function generate(
 	};
 
 	function generateHelperTypes() {
-		let usedPrettify = false;
 		if (usedHelperTypes.DefinePropsToOptions) {
 			if (compilerOptions.exactOptionalPropertyTypes) {
 				codes.push(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueCompilerOptions.lib}').PropType<T[K]> } : { type: import('${vueCompilerOptions.lib}').PropType<T[K]>, required: true } };\n`);
@@ -126,10 +126,10 @@ export function generate(
 						default: D[K]
 					}> : P[K]
 				};\n`);
-			usedPrettify = true;
+			usedHelperTypes.Prettify = true;
 		}
 		if (usedHelperTypes.EmitsTypeHelpers) {
-			usedPrettify = true;
+			usedHelperTypes.Prettify = true;
 			if (scriptSetupRanges && scriptSetupRanges.emitsTypeNums !== -1) {
 				codes.push('type __VLS_UnionToIntersection<U> = __VLS_Prettify<(U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never>;\n');
 				codes.push(sharedTypes.genConstructorOverloads('__VLS_ConstructorOverloads', scriptSetupRanges.emitsTypeNums));
@@ -186,7 +186,6 @@ export function generate(
 				};
 `);
 			}
-
 			codes.push(`type __VLS_NormalizeEmits<T> = __VLS_ConstructorOverloads<T> & {
 				[K in keyof T]: T[K] extends any[] ? { (...args: T[K]): void } : never
 			}\n`);
@@ -207,7 +206,7 @@ export function generate(
 		if (usedHelperTypes.PropsChildren) {
 			codes.push(`type __VLS_PropsChildren<S> = { [K in keyof (boolean extends (JSX.ElementChildrenAttribute extends never ? true : false) ? never : JSX.ElementChildrenAttribute)]?: S; };\n`);
 		}
-		if (usedPrettify) {
+		if (usedHelperTypes.Prettify) {
 			codes.push(`type __VLS_Prettify<T> = { [K in keyof T]: T[K]; } & {};\n`);
 		}
 	}
