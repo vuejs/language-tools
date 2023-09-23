@@ -74,6 +74,7 @@ export function generate(
 		EmitsTypeHelpers: false,
 		WithTemplateSlots: false,
 		PropsChildren: false,
+		Prettify: false,
 	};
 
 	codes.push(`/* ${Object.entries(vueCompilerOptions).map(([key, value]) => `${key}: ${JSON.stringify(value)}`).join(', ')} */\n`);
@@ -108,7 +109,6 @@ export function generate(
 	};
 
 	function generateHelperTypes() {
-		let usedPrettify = false;
 		if (usedHelperTypes.DefinePropsToOptions) {
 			if (compilerOptions.exactOptionalPropertyTypes) {
 				codes.push(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueCompilerOptions.lib}').PropType<T[K]> } : { type: import('${vueCompilerOptions.lib}').PropType<T[K]>, required: true } };\n`);
@@ -125,7 +125,7 @@ export function generate(
 						default: D[K]
 					}> : P[K]
 				};\n`);
-			usedPrettify = true;
+			usedHelperTypes.Prettify = true;
 		}
 		if (usedHelperTypes.EmitsTypeHelpers) {
 			// fix https://github.com/vuejs/language-tools/issues/926
@@ -215,7 +215,7 @@ export function generate(
 		if (usedHelperTypes.PropsChildren) {
 			codes.push(`type __VLS_PropsChildren<S> = { [K in keyof (boolean extends (JSX.ElementChildrenAttribute extends never ? true : false) ? never : JSX.ElementChildrenAttribute)]?: S; };\n`);
 		}
-		if (usedPrettify) {
+		if (usedHelperTypes.Prettify) {
 			codes.push(`type __VLS_Prettify<T> = { [K in keyof T]: T[K]; } & {};\n`);
 		}
 	}
@@ -650,6 +650,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			}
 			if (scriptSetupRanges.emitsTypeArg) {
 				usedHelperTypes.EmitsTypeHelpers = true;
+				usedHelperTypes.Prettify = true;
 				codes.push(`emits: ({} as __VLS_Prettify<__VLS_UnionToIntersection<__VLS_NormalizeEmits<`);
 				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
 				codes.push(`>>>),\n`);
