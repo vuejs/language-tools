@@ -163,15 +163,10 @@ export function generate(
 			type __VLS_Zip<Keys extends any[], Values extends any[]> = {
 				[K in Keys[number]]: Values[__VLS_IndexOf<Keys, K>]
 			};
-			type __VLS_OverloadUnion<T, U = unknown> = U & T extends (
-				...args: infer TArgs
-			) => infer TReturn
-				?
-				U extends T
-				? never
-				:
-				| __VLS_OverloadUnion<T, Pick<T, keyof T> & U & ((...args: TArgs) => TReturn)>
-				| ((...args: TArgs) => TReturn)
+			type __VLS_OverloadUnion<T, U = unknown> = U & T extends (...args: infer A) => infer R
+				? U extends T
+					? never
+					: __VLS_OverloadUnion<T, Pick<T, keyof T> & U & ((...args: A) => R)> | ((...args: A) => R)
 				: never;
 			type __VLS_OverloadToIntersection<T> = __VLS_UnionToIntersection<Exclude<
 				__VLS_OverloadUnion<
