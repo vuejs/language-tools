@@ -12,7 +12,10 @@ const ScriptSetupExact = defineComponent({
 	props: {
 		foo: String,
 	},
-	emits: ['change', 'delete'],
+	emits: {
+		change: (..._payload: any[]) => { },
+		delete: (..._payload: any[]) => { },
+	},
 	setup() {
 		return {};
 	},

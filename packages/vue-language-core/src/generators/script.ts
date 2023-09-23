@@ -50,14 +50,13 @@ export function generate(
 		scriptSetupRanges = {
 			bindings: [],
 			emitsAssignName: undefined,
-			emitsRuntimeArg: undefined,
-			emitsTypeArg: undefined,
 			emitsTypeNums: 0,
 			exposeRuntimeArg: undefined,
 			leadingCommentEndOffset: 0,
 			importSectionEndOffset: 0,
 			defineProps: undefined,
 			defineSlots: undefined,
+			defineEmits: undefined,
 			slotsAssignName: undefined,
 			propsAssignName: undefined,
 			propsRuntimeArg: undefined,
@@ -391,23 +390,6 @@ export function generate(
 			codes.push(`;\n`);
 			//#endregion
 
-			//#region emits
-			codes.push(`const __VLS_emit = `);
-			if (scriptSetupRanges.emitsTypeArg) {
-				codes.push('{} as ');
-				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
-				codes.push(';\n');
-			}
-			else if (scriptSetupRanges.emitsRuntimeArg) {
-				codes.push(`defineEmits(`);
-				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end);
-				codes.push(');\n');
-			}
-			else {
-				codes.push('{} as any;\n');
-			}
-			//#endregion
-
 			codes.push('return {} as {\n');
 			codes.push(`props: typeof __VLS_props,\n`);
 			codes.push('expose(exposed: typeof __VLS_exposed): void,\n');
@@ -489,10 +471,27 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 		const scriptSetupGeneratedOffset = muggle.getLength(codes) - scriptSetupRanges.importSectionEndOffset;
 
+		let setupCodeModifies: [string, number][] = [];
 		if (scriptSetupRanges.defineSlots && !scriptSetupRanges.slotsAssignName) {
-			addVirtualCode('scriptSetup', scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.defineSlots.start);
-			codes.push(`const __VLS_slots = `);
-			addVirtualCode('scriptSetup', scriptSetupRanges.defineSlots.start);
+			setupCodeModifies.push([`const __VLS_slots = `, scriptSetupRanges.defineSlots.start]);
+		}
+		if (scriptSetupRanges.defineEmits && !scriptSetupRanges.emitsAssignName) {
+			setupCodeModifies.push([`const __VLS_emit = `, scriptSetupRanges.defineEmits.start]);
+		}
+		setupCodeModifies = setupCodeModifies.sort((a, b) => a[1] - b[1]);
+
+		if (setupCodeModifies.length) {
+			addVirtualCode('scriptSetup', scriptSetupRanges.importSectionEndOffset, setupCodeModifies[0][1]);
+			while (setupCodeModifies.length) {
+				const [code, start] = setupCodeModifies.shift()!;
+				codes.push(code);
+				if (setupCodeModifies.length) {
+					addVirtualCode('scriptSetup', start, setupCodeModifies[0][1]);
+				}
+				else {
+					addVirtualCode('scriptSetup', start);
+				}
+			}
 		}
 		else {
 			addVirtualCode('scriptSetup', scriptSetupRanges.importSectionEndOffset);
@@ -591,16 +590,13 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				}
 				codes.push(`},\n`);
 			}
-			if (scriptSetupRanges.emitsTypeArg) {
+			if (scriptSetupRanges.defineEmits) {
 				usedHelperTypes.EmitsTypeHelpers = true;
-				codes.push(`emits: ({} as __VLS_UnionToIntersection<__VLS_NormalizeEmits<`);
-				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
-				codes.push(`>>),\n`);
-			}
-			else if (scriptSetupRanges.emitsRuntimeArg) {
-				codes.push(`emits: (`);
-				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end);
-				codes.push(`),\n`);
+				codes.push(
+					`emits: ({} as __VLS_UnionToIntersection<__VLS_NormalizeEmits<typeof `,
+					scriptSetupRanges.emitsAssignName ?? '__VLS_emit',
+					`>>),\n`,
+				);
 			}
 		}
 
@@ -622,18 +618,8 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				codes.push(`)),\n`);
 			}
 			// fill $emit
-			if (scriptSetupRanges.emitsAssignName) {
-				codes.push(`$emit: ${scriptSetupRanges.emitsAssignName},\n`);
-			}
-			else if (scriptSetupRanges.emitsTypeArg) {
-				codes.push(`$emit: defineEmits<`);
-				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsTypeArg.start, scriptSetupRanges.emitsTypeArg.end);
-				codes.push(`>(),\n`);
-			}
-			else if (scriptSetupRanges.emitsRuntimeArg) {
-				codes.push(`$emit: defineEmits(`);
-				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.emitsRuntimeArg.start, scriptSetupRanges.emitsRuntimeArg.end);
-				codes.push(`),\n`);
+			if (scriptSetupRanges.defineEmits) {
+				codes.push(`$emit: ${scriptSetupRanges.emitsAssignName ?? '__VLS_emit'},\n`);
 			}
 		}
 
