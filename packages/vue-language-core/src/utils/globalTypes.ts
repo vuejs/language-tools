@@ -66,26 +66,6 @@ type __VLS_WithComponent<N0 extends string, LocalComponents, N1 extends string, 
 
 type __VLS_FillingEventArg_ParametersLength<E extends (...args: any) => any> = __VLS_IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];
 type __VLS_FillingEventArg<E> = E extends (...args: any) => any ? __VLS_FillingEventArg_ParametersLength<E> extends 0 ? ($event?: undefined) => ReturnType<E> : E : E;
-type __VLS_EmitEvent<F, E> =
-	F extends {
-		(event: E, ...payload: infer P): any
-	} ? (...payload: P) => void
-	: F extends {
-		(event: E, ...payload: infer P): any
-		(...args: any): any
-	} ? (...payload: P) => void
-	: F extends {
-		(event: E, ...payload: infer P): any
-		(...args: any): any
-		(...args: any): any
-	} ? (...payload: P) => void
-	: F extends {
-		(event: E, ...payload: infer P): any
-		(...args: any): any
-		(...args: any): any
-		(...args: any): any
-	} ? (...payload: P) => void
-	: unknown | '[Type Warning] Volar could not infer $emit event more than 4 overloads without DefineComponent. see https://github.com/vuejs/language-tools/issues/60';
 declare function __VLS_asFunctionalComponent<T, K = T extends new (...args: any) => any ? InstanceType<T> : unknown>(t: T, instance?: K):
 	T extends new (...args: any) => any
 	? (props: (K extends { $props: infer Props } ? Props : any)${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}, ctx?: {
@@ -98,10 +78,10 @@ declare function __VLS_asFunctionalComponent<T, K = T extends new (...args: any)
 	: (_: {}${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}, ctx?: any) => { __ctx?: { attrs?: any, expose?: any, slots?: any, emit?: any, props?: {}${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'} } };
 declare function __VLS_elementAsFunctionalComponent<T>(t: T): (_: T${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}, ctx?: any) => { __ctx?: { attrs?: any, expose?: any, slots?: any, emit?: any, props?: T${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'} } };
 declare function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(t: T): Parameters<T>['length'] extends 2 ? [any] : [];
-declare function __VLS_pickEvent<Emit, K, E>(emit: Emit, emitKey: K, event: E): __VLS_FillingEventArg<
+declare function __VLS_pickEvent<E1, E2>(emitEvent: E1, propEvent: E2): __VLS_FillingEventArg<
 	__VLS_PickNotAny<
-		__VLS_AsFunctionOrAny<E>,
-		__VLS_AsFunctionOrAny<__VLS_EmitEvent<Emit, K>>
+		__VLS_AsFunctionOrAny<E2>,
+		__VLS_AsFunctionOrAny<E1>
 	>
 > | undefined;
 declare function __VLS_pickFunctionalComponentCtx<T, K>(comp: T, compInstance: K): __VLS_PickNotAny<

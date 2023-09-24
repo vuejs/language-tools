@@ -90,6 +90,7 @@ export function generate(
 	const scopedClasses: { className: string, offset: number; }[] = [];
 	const blockConditions: string[] = [];
 	const hasSlotElements = new Set<CompilerDOM.ElementNode>();
+	const componentCtxVar2EmitEventsVar = new Map<string, string>();
 
 	let hasSlot = false;
 	let elementIndex = 0;
@@ -785,7 +786,10 @@ export function generate(
 
 		if (tag !== 'template' && tag !== 'slot') {
 			componentCtxVar = `__VLS_${elementIndex++}`;
+			const componentEventsVar = `__VLS_${elementIndex++}`;
 			codes.push(`const ${componentCtxVar} = __VLS_pickFunctionalComponentCtx(${var_originalComponent}, ${var_componentInstance})!;\n`);
+			codes.push(`let ${componentEventsVar}!: __VLS_Prettify<__VLS_UnionToIntersection<__VLS_NormalizeEmits<typeof ${componentCtxVar}.emit>>>;\n`);
+			componentCtxVar2EmitEventsVar.set(componentCtxVar, componentEventsVar);
 			parentEl = node;
 		}
 
@@ -998,10 +1002,11 @@ export function generate(
 				&& prop.name === 'on'
 				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
+				const eventsVar = componentCtxVar2EmitEventsVar.get(componentCtxVar);
 				const eventVar = `__VLS_${elementIndex++}`;
 				codes.push(
 					`let ${eventVar} = { '${prop.arg.loc.source}': `,
-					`__VLS_pickEvent(${componentCtxVar}.emit!, '${prop.arg.loc.source}' as const, ({} as __VLS_FunctionalComponentProps<typeof ${componentVar}, typeof ${componentInstanceVar}>)`,
+					`__VLS_pickEvent(${eventsVar}['${prop.arg.loc.source}'], ({} as __VLS_FunctionalComponentProps<typeof ${componentVar}, typeof ${componentInstanceVar}>)`,
 					...createPropertyAccessCode([
 						camelize('on-' + prop.arg.loc.source), // onClickOutside
 						'template',
