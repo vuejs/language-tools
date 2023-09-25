@@ -1,7 +1,7 @@
 import * as vue from '@vue/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'typesafe-path/posix';
-import typeHelpersCode from 'vue-component-type-helpers';
+import { code as typeHelpersCode } from 'vue-component-type-helpers';
 import { createLanguageServiceHost, decorateLanguageService } from '@volar/typescript';
 
 import type {

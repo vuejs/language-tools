@@ -1,6 +1,6 @@
-declare const text: string;
+export declare const code: string;
 
-export default text;
+export default code;
 
 export type ComponentType<T> =
 	T extends new () => {} ? 1 :
