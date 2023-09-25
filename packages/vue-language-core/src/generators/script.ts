@@ -66,6 +66,10 @@ export function generate(
 	}
 	//#endregion
 
+	const bindingNames = new Set([
+		...scriptRanges?.bindings.map(range => sfc.script!.content.substring(range.start, range.end)) ?? [],
+		...scriptSetupRanges?.bindings.map(range => sfc.scriptSetup!.content.substring(range.start, range.end)) ?? [],
+	]);
 	const bypassDefineComponent = lang === 'js' || lang === 'jsx';
 	const usedHelperTypes = {
 		DefinePropsToOptions: false,
@@ -413,10 +417,9 @@ export function generate(
 		const definePropProposalB = sfc.scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition') || vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
 
 		if (vueCompilerOptions.target >= 3.3) {
-			const bindings = new Set(scriptSetupRanges.bindings.map(range => sfc.scriptSetup!.content.substring(range.start, range.end)));
 			codes.push('const { ');
 			for (const macro of Object.keys(vueCompilerOptions.macros)) {
-				if (!bindings.has(macro)) {
+				if (!bindingNames.has(macro)) {
 					codes.push(macro, ', ');
 				}
 			}
@@ -925,16 +928,6 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		const usageVars = new Set<string>();
 
 		if (htmlGen) {
-
-			let bindingNames: string[] = [];
-
-			if (scriptSetupRanges) {
-				bindingNames = bindingNames.concat(scriptSetupRanges.bindings.map(range => sfc.scriptSetup?.content.substring(range.start, range.end) ?? ''));
-			}
-			if (scriptRanges) {
-				bindingNames = bindingNames.concat(scriptRanges.bindings.map(range => sfc.script?.content.substring(range.start, range.end) ?? ''));
-			}
-
 			// fix import components unused report
 			for (const varName of bindingNames) {
 				if (!!htmlGen.tagNames[varName] || !!htmlGen.tagNames[hyphenateTag(varName)]) {
