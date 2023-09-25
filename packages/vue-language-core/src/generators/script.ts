@@ -333,7 +333,7 @@ export function generate(
 				}
 				codes.push(`};\n`);
 			}
-			codes.push(`let __VLS_fnPropsTypeOnly!: {}`);
+			codes.push(`let __VLS_fnPropsTypeOnly!: {}`); // TODO: reuse __VLS_fnPropsTypeOnly even without generic, and remove __VLS_propsOption_defineProp
 			if (scriptSetupRanges.propsTypeArg) {
 				codes.push(` & `);
 				addVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
