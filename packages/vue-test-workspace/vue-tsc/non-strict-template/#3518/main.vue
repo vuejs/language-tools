@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import { exactType } from 'vue-tsc/shared';
 
-const foo = '';
+const foo: string = '';
 
-defineProps<{ foo: number }>();
+defineProps<{ foo: number; }>();
 
-const bar = '';
+const bar: string = '';
 
 defineExpose({ bar: 1 });
 </script>
 
 <template>
-  {{ exactType(foo, '' as const) }}
-	{{ exactType(bar, '' as const) }}
+	<!-- @vue-expect-error here is a bug of DefineComponent -->
+	{{ exactType(foo, {} as string) }}
+	{{ exactType(bar, {} as string) }}
 </template>
