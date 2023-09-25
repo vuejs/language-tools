@@ -107,9 +107,7 @@ type __VLS_OverloadUnionInner<T, U = unknown> = U & T extends (...args: infer A)
 	: __VLS_OverloadUnionInner<T, Pick<T, keyof T> & U & ((...args: A) => R)> | ((...args: A) => R)
 	: never;
 type __VLS_OverloadUnion<T> = Exclude<
-	__VLS_OverloadUnionInner<
-		(() => never) & T
-	>,
+	__VLS_OverloadUnionInner<(() => never) & T>,
 	T extends () => never ? never : () => never
 >;
 type __VLS_ConstructorOverloads<T> = __VLS_UnionToIntersection<
