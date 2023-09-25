@@ -90,7 +90,7 @@ export function generate(
 	generateScriptContentAfterExportDefault();
 
 	if (!generatedTemplate) {
-		generateTemplate();
+		generateTemplate(false);
 	}
 
 	if (sfc.scriptSetup) {
@@ -324,7 +324,7 @@ export function generate(
 			}
 			codes.push(`let __VLS_props!: {}`);
 			if (scriptSetupRanges.propsRuntimeArg) {
-				codes.push(` & InstanceType<typeof __VLS_publicComponent>['$props']`);
+				codes.push(` & InstanceType<typeof __VLS_internalComponent>['$props']`);
 			}
 			if (scriptSetupRanges.propsTypeArg) {
 				codes.push(` & `);
@@ -525,17 +525,65 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			codes.push(`};\n`);
 		}
 
+		generateTemplate(functional);
+
+		if (mode === 'return' || mode === 'export') {
+			if (!vueCompilerOptions.skipTemplateCodegen && (htmlGen?.hasSlot || scriptSetupRanges?.defineSlots)) {
+				usedHelperTypes.WithTemplateSlots = true;
+				codes.push(`const __VLS_component = `);
+				generateComponent(functional);
+				codes.push(`;\n`);
+				codes.push(mode === 'return' ? 'return ' : 'export default ');
+				codes.push(`{} as __VLS_WithTemplateSlots<typeof __VLS_component, ReturnType<typeof __VLS_template>>;\n`);
+			}
+			else {
+				codes.push(mode === 'return' ? 'return ' : 'export default ');
+				generateComponent(functional);
+				codes.push(`;\n`);
+			}
+		}
+		if (mode === 'export') {
+			generateExportDefaultEndMapping();
+		}
+
+		return scriptSetupGeneratedOffset;
+	}
+	function generateComponent(functional: boolean) {
+
+		if (!scriptSetupRanges)
+			return;
+
 		if (scriptRanges?.exportDefault && scriptRanges.exportDefault.expression.start !== scriptRanges.exportDefault.args.start) {
 			// use defineComponent() from user space code if it exist
-			codes.push(`const __VLS_publicComponent = `);
 			addVirtualCode('script', scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.args.start);
 			codes.push(`{\n`);
 		}
 		else {
-			codes.push(`const __VLS_publicComponent = (await import('${vueCompilerOptions.lib}')).defineComponent({\n`);
+			codes.push(`(await import('${vueCompilerOptions.lib}')).defineComponent({\n`);
 		}
 
-		if (!bypassDefineComponent) {
+		generateComponentOptions(functional);
+
+		codes.push(`setup() {\n`);
+		codes.push(`return {\n`);
+
+		generateSetupReturns();
+
+		if (scriptSetupRanges.exposeRuntimeArg) {
+			codes.push(`...__VLS_exposed,\n`);
+		}
+
+		codes.push(`};\n`);
+		codes.push(`},\n`);
+
+		if (scriptRanges?.exportDefault?.args) {
+			addVirtualCode('script', scriptRanges.exportDefault.args.start + 1, scriptRanges.exportDefault.args.end - 1);
+		}
+
+		codes.push(`})`);
+	}
+	function generateComponentOptions(functional: boolean) {
+		if (scriptSetupRanges && !bypassDefineComponent) {
 			if (scriptSetupRanges.propsRuntimeArg || scriptSetupRanges.propsTypeArg || (!functional && scriptSetupRanges.defineProp.length)) {
 				codes.push(`props: {\n`);
 				if (scriptSetupRanges.propsRuntimeArg) {
@@ -580,11 +628,9 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				);
 			}
 		}
-
-		codes.push(`setup() {\n`);
-		codes.push(`return {\n`);
-
-		if (bypassDefineComponent) {
+	}
+	function generateSetupReturns() {
+		if (scriptSetupRanges && bypassDefineComponent) {
 			// fill $props
 			if (scriptSetupRanges.propsTypeArg) {
 				// NOTE: defineProps is inaccurate for $props
@@ -603,44 +649,8 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				codes.push(`$emit: ${scriptSetupRanges.emitsAssignName ?? '__VLS_emit'},\n`);
 			}
 		}
-
-		if (scriptSetupRanges.exposeRuntimeArg) {
-			codes.push(`...__VLS_exposed,\n`);
-		}
-
-		codes.push(`};\n`);
-		codes.push(`},\n`);
-
-		if (scriptRanges?.exportDefault?.args) {
-			addVirtualCode('script', scriptRanges.exportDefault.args.start + 1, scriptRanges.exportDefault.args.end - 1);
-		}
-
-		codes.push(`});\n`);
-
-		generateTemplate();
-
-		if (mode === 'return') {
-			codes.push(`return `);
-		}
-		else if (mode === 'export') {
-			codes.push('export default ');
-		}
-		if (mode === 'return' || mode === 'export') {
-			if (!vueCompilerOptions.skipTemplateCodegen && (htmlGen?.hasSlot || scriptSetupRanges?.defineSlots)) {
-				usedHelperTypes.WithTemplateSlots = true;
-				codes.push(`{} as __VLS_WithTemplateSlots<typeof __VLS_publicComponent, ReturnType<typeof __VLS_template>>;`);
-			}
-			else {
-				codes.push(`{} as typeof __VLS_publicComponent;`);
-			}
-		}
-		if (mode === 'export') {
-			generateExportDefaultEndMapping();
-		}
-
-		return scriptSetupGeneratedOffset;
 	}
-	function generateTemplate() {
+	function generateTemplate(functional: boolean) {
 
 		generatedTemplate = true;
 
@@ -655,7 +665,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 			codes.push(`}\n`);
 
-			generateComponentForTemplateUsage(templateGened.cssIds);
+			generateComponentForTemplateUsage(functional, templateGened.cssIds);
 		}
 		else {
 			codes.push(`function __VLS_template() {\n`);
@@ -666,31 +676,15 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			codes.push(`}\n`);
 		}
 	}
-	function generateComponentForTemplateUsage(cssIds: Set<string>) {
+	function generateComponentForTemplateUsage(functional: boolean, cssIds: Set<string>) {
 
 		if (sfc.scriptSetup && scriptSetupRanges) {
 
 			codes.push(`const __VLS_internalComponent = (await import('${vueCompilerOptions.lib}')).defineComponent({\n`);
+			generateComponentOptions(functional);
 			codes.push(`setup() {\n`);
 			codes.push(`return {\n`);
-			// fill ctx from props
-			if (bypassDefineComponent) {
-				if (scriptSetupRanges.propsAssignName) {
-					codes.push(`...${scriptSetupRanges.propsAssignName},\n`);
-				}
-				else if (scriptSetupRanges.withDefaultsArg && scriptSetupRanges.propsTypeArg) {
-					codes.push(`...withDefaults(defineProps<`);
-					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
-					codes.push(`>(), `);
-					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.withDefaultsArg.start, scriptSetupRanges.withDefaultsArg.end);
-					codes.push(`),\n`);
-				}
-				else if (scriptSetupRanges.propsRuntimeArg) {
-					codes.push(`...defineProps(`);
-					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
-					codes.push(`),\n`);
-				}
-			}
+			generateSetupReturns();
 			// bindings
 			const templateUsageVars = getTemplateUsageVars();
 			for (const [content, bindings] of [
@@ -775,9 +769,6 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		const useGlobalThisTypeInCtx = fileName.endsWith('.html');
 
 		codes.push(`let __VLS_ctx!: ${useGlobalThisTypeInCtx ? 'typeof globalThis &' : ''}`);
-		if (sfc.scriptSetup) {
-			codes.push(`InstanceType<__VLS_PickNotAny<typeof __VLS_publicComponent, new () => {}>> & `);
-		}
 		codes.push(`InstanceType<__VLS_PickNotAny<typeof __VLS_internalComponent, new () => {}>> & {\n`);
 
 		/* CSS Module */
@@ -802,7 +793,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		/* Components */
 		codes.push('/* Components */\n');
 		codes.push(`let __VLS_otherComponents!: NonNullable<typeof __VLS_internalComponent extends { components: infer C } ? C : {}> & typeof __VLS_componentsOption;\n`);
-		codes.push(`let __VLS_own!: __VLS_SelfComponent<typeof __VLS_name, typeof __VLS_internalComponent & typeof __VLS_publicComponent & (new () => { ${getSlotsPropertyName(vueCompilerOptions.target)}: typeof ${scriptSetupRanges?.slotsAssignName ?? '__VLS_slots'} })>;\n`);
+		codes.push(`let __VLS_own!: __VLS_SelfComponent<typeof __VLS_name, typeof __VLS_internalComponent & (new () => { ${getSlotsPropertyName(vueCompilerOptions.target)}: typeof ${scriptSetupRanges?.slotsAssignName ?? '__VLS_slots'} })>;\n`);
 		codes.push(`let __VLS_localComponents!: typeof __VLS_otherComponents & Omit<typeof __VLS_own, keyof typeof __VLS_otherComponents>;\n`);
 		codes.push(`let __VLS_components!: typeof __VLS_localComponents & __VLS_GlobalComponents & typeof __VLS_ctx;\n`); // for html completion, TS references...
 
