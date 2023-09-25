@@ -73,7 +73,7 @@ export function generate(
 	const bypassDefineComponent = lang === 'js' || lang === 'jsx';
 	const usedHelperTypes = {
 		DefinePropsToOptions: false,
-		mergePropDefaults: false,
+		MergePropDefaults: false,
 		WithTemplateSlots: false,
 		PropsChildren: false,
 	};
@@ -119,7 +119,7 @@ export function generate(
 				codes.push(`type __VLS_TypePropsToRuntimeProps<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? { type: import('${vueCompilerOptions.lib}').PropType<__VLS_NonUndefinedable<T[K]>> } : { type: import('${vueCompilerOptions.lib}').PropType<T[K]>, required: true } };\n`);
 			}
 		}
-		if (usedHelperTypes.mergePropDefaults) {
+		if (usedHelperTypes.MergePropDefaults) {
 			codes.push(`type __VLS_WithDefaults<P, D> = {
 					// use 'keyof Pick<P, keyof P>' instead of 'keyof P' to keep props jsdoc
 					[K in keyof Pick<P, keyof P>]: K extends keyof D ? __VLS_Prettify<P[K] & {
@@ -293,18 +293,29 @@ export function generate(
 			}
 			codes.push(`>`);
 			codes.push('(\n');
-			codes.push(
-				`__VLS_props: Awaited<typeof __VLS_setup>['props']`,
-				`& import('${vueCompilerOptions.lib}').VNodeProps`,
-				`& import('${vueCompilerOptions.lib}').AllowedComponentProps`,
-				`& import('${vueCompilerOptions.lib}').ComponentCustomProps,\n`,
-			);
-			codes.push(`__VLS_ctx?: Pick<Awaited<typeof __VLS_setup>, 'attrs' | 'emit' | 'slots'>,\n`);
+			codes.push(`__VLS_props: Awaited<typeof __VLS_setup>['props'],\n`);
+			codes.push(`__VLS_ctx?: __VLS_Prettify<Pick<Awaited<typeof __VLS_setup>, 'attrs' | 'emit' | 'slots'>>,\n`); // use __VLS_Prettify for less dts code
 			codes.push(`__VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>['expose'],\n`);
 			codes.push('__VLS_setup = (async () => {\n');
 			scriptSetupGeneratedOffset = generateSetupFunction(true, 'none', definePropMirrors);
 
 			//#region props
+			codes.push(`const __VLS_fnComponent = `);
+			codes.push(`(await import('${vueCompilerOptions.lib}')).defineComponent({\n`);
+			if (scriptSetupRanges.propsRuntimeArg) {
+				codes.push(`props: `);
+				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
+				codes.push(`,\n`);
+
+			}
+			if (scriptSetupRanges.defineEmits) {
+				codes.push(
+					`emits: ({} as __VLS_NormalizeEmits<typeof `,
+					scriptSetupRanges.emitsAssignName ?? '__VLS_emit',
+					`>),\n`,
+				);
+			}
+			codes.push(`});\n`);
 			if (scriptSetupRanges.defineProp.length) {
 				codes.push(`const __VLS_defaults = {\n`);
 				for (const defineProp of scriptSetupRanges.defineProp) {
@@ -322,10 +333,7 @@ export function generate(
 				}
 				codes.push(`};\n`);
 			}
-			codes.push(`let __VLS_props!: {}`);
-			if (scriptSetupRanges.propsRuntimeArg) {
-				codes.push(` & InstanceType<typeof __VLS_internalComponent>['$props']`);
-			}
+			codes.push(`let __VLS_fnPropsTypeOnly!: {}`); // TODO: reuse __VLS_fnPropsTypeOnly even without generic, and remove __VLS_propsOption_defineProp
 			if (scriptSetupRanges.propsTypeArg) {
 				codes.push(` & `);
 				addVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
@@ -355,15 +363,29 @@ export function generate(
 				}
 				codes.push(`}`);
 			}
+			codes.push(`;\n`);
+			codes.push(`let __VLS_fnPropsDefineComponent!: InstanceType<typeof __VLS_fnComponent>['$props']`);
+			codes.push(`;\n`);
+			codes.push(`let __VLS_fnPropsSlots!: `);
 			if (scriptSetupRanges.defineSlots && vueCompilerOptions.jsxSlots) {
 				usedHelperTypes.PropsChildren = true;
-				codes.push(` & __VLS_PropsChildren<typeof __VLS_slots>`);
+				codes.push(`__VLS_PropsChildren<typeof __VLS_slots>`);
+			}
+			else {
+				codes.push(`{}`);
 			}
 			codes.push(`;\n`);
+			codes.push(
+				`let __VLS_defaultProps!: `,
+				`import('${vueCompilerOptions.lib}').VNodeProps`,
+				`& import('${vueCompilerOptions.lib}').AllowedComponentProps`,
+				`& import('${vueCompilerOptions.lib}').ComponentCustomProps`,
+				`;\n`,
+			);
 			//#endregion
 
 			codes.push('return {} as {\n');
-			codes.push(`props: typeof __VLS_props,\n`);
+			codes.push(`props: __VLS_Prettify<Omit<typeof __VLS_fnPropsDefineComponent & typeof __VLS_fnPropsTypeOnly, keyof typeof __VLS_defaultProps>> & typeof __VLS_fnPropsSlots & typeof __VLS_defaultProps,\n`);
 			codes.push(`expose(exposed: ${scriptSetupRanges.exposeRuntimeArg ? 'typeof __VLS_exposed' : '{}'}): void,\n`);
 			codes.push('attrs: any,\n');
 			codes.push('slots: ReturnType<typeof __VLS_template>,\n');
@@ -596,13 +618,13 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 					codes.push('...{} as ');
 
 					if (scriptSetupRanges.withDefaultsArg) {
-						usedHelperTypes.mergePropDefaults = true;
+						usedHelperTypes.MergePropDefaults = true;
 						codes.push(`__VLS_WithDefaults<`);
 					}
 
 					codes.push(`__VLS_TypePropsToRuntimeProps<`);
 					if (functional) {
-						codes.push(`typeof __VLS_props`);
+						codes.push(`typeof __VLS_fnPropsTypeOnly`);
 					}
 					else {
 						addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
