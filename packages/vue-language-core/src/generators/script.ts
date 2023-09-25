@@ -570,9 +570,9 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			}
 			if (scriptSetupRanges.defineEmits) {
 				codes.push(
-					`emits: ({} as __VLS_Prettify<__VLS_UnionToIntersection<__VLS_NormalizeEmits<typeof `,
+					`emits: ({} as __VLS_NormalizeEmits<typeof `,
 					scriptSetupRanges.emitsAssignName ?? '__VLS_emit',
-					`>>>),\n`,
+					`>),\n`,
 				);
 			}
 		}

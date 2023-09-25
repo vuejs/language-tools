@@ -788,7 +788,7 @@ export function generate(
 			componentCtxVar = `__VLS_${elementIndex++}`;
 			const componentEventsVar = `__VLS_${elementIndex++}`;
 			codes.push(`const ${componentCtxVar} = __VLS_pickFunctionalComponentCtx(${var_originalComponent}, ${var_componentInstance})!;\n`);
-			codes.push(`let ${componentEventsVar}!: __VLS_Prettify<__VLS_UnionToIntersection<__VLS_NormalizeEmits<typeof ${componentCtxVar}.emit>>>;\n`);
+			codes.push(`let ${componentEventsVar}!: __VLS_NormalizeEmits<typeof ${componentCtxVar}.emit>;\n`);
 			componentCtxVar2EmitEventsVar.set(componentCtxVar, componentEventsVar);
 			parentEl = node;
 		}
