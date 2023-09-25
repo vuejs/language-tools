@@ -66,11 +66,14 @@ const ScriptSetupDefaultPropsExact = defineComponent({
 });
 // vue 3.3 generic
 declare const ScriptSetupGenericExact: <T, >(
-	_props: NonNullable<Awaited<typeof _setup>>['props'] & import('vue').VNodeProps & import('vue').AllowedComponentProps & import('vue').ComponentCustomProps,
+	_props: NonNullable<Awaited<typeof _setup>>['props'],
 	_ctx?: Pick<NonNullable<Awaited<typeof _setup>>, 'attrs' | 'emit' | 'slots'>,
 	_expose?: NonNullable<Awaited<typeof _setup>>['expose'],
 	_setup?: Promise<{
-		props: { foo: T; } & { [K in keyof JSX.ElementChildrenAttribute]?: Readonly<{ default?(data: T): any; }> },
+		props: { $children?: Readonly<{ default?(data: T): any; }>; } & {
+			onBar?: ((data: T) => any) | undefined;
+			foo: T;
+		} & import('vue').VNodeProps & import('vue').AllowedComponentProps & import('vue').ComponentCustomProps,
 		attrs: any,
 		slots: Readonly<{ default?(data: T): any; }>,
 		emit: { (e: 'bar', data: T): void; },
