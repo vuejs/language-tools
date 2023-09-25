@@ -78,7 +78,7 @@ export function generate(
 		PropsChildren: false,
 	};
 
-	codes.push(`/* ${Object.entries(vueCompilerOptions).map(([key, value]) => `${key}: ${JSON.stringify(value)}`).join(', ')} */\n`);
+	codes.push(`/* __placeholder__ */\n`);
 
 	let generatedTemplate = false;
 
