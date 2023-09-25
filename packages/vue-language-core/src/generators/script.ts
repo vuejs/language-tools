@@ -55,6 +55,7 @@ export function generate(
 			defineProps: undefined,
 			defineSlots: undefined,
 			defineEmits: undefined,
+			defineExpose: undefined,
 			slotsAssignName: undefined,
 			propsAssignName: undefined,
 			propsRuntimeArg: undefined,
@@ -299,17 +300,6 @@ export function generate(
 			codes.push('__VLS_setup = (async () => {\n');
 			scriptSetupGeneratedOffset = generateSetupFunction(true, 'none', definePropMirrors);
 
-			//#region exposed
-			codes.push(`const __VLS_exposed = `);
-			if (scriptSetupRanges.exposeRuntimeArg) {
-				addVirtualCode('scriptSetup', scriptSetupRanges.exposeRuntimeArg.start, scriptSetupRanges.exposeRuntimeArg.end);
-			}
-			else {
-				codes.push(`{}`);
-			}
-			codes.push(';\n');
-			//#endregion
-
 			//#region props
 			if (scriptSetupRanges.defineProp.length) {
 				codes.push(`const __VLS_defaults = {\n`);
@@ -370,7 +360,7 @@ export function generate(
 
 			codes.push('return {} as {\n');
 			codes.push(`props: typeof __VLS_props,\n`);
-			codes.push('expose(exposed: typeof __VLS_exposed): void,\n');
+			codes.push(`expose(exposed: ${scriptSetupRanges.exposeRuntimeArg ? 'typeof __VLS_exposed' : '{}'}): void,\n`);
 			codes.push('attrs: any,\n');
 			codes.push('slots: ReturnType<typeof __VLS_template>,\n');
 			codes.push('emit: typeof __VLS_emit');
@@ -449,25 +439,36 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 		const scriptSetupGeneratedOffset = muggle.getLength(codes) - scriptSetupRanges.importSectionEndOffset;
 
-		let setupCodeModifies: [string, number][] = [];
+		let setupCodeModifies: [() => void, number, number][] = [];
 		if (scriptSetupRanges.defineSlots && !scriptSetupRanges.slotsAssignName) {
-			setupCodeModifies.push([`const __VLS_slots = `, scriptSetupRanges.defineSlots.start]);
+			setupCodeModifies.push([() => codes.push(`const __VLS_slots = `), scriptSetupRanges.defineSlots.start, scriptSetupRanges.defineSlots.start]);
 		}
 		if (scriptSetupRanges.defineEmits && !scriptSetupRanges.emitsAssignName) {
-			setupCodeModifies.push([`const __VLS_emit = `, scriptSetupRanges.defineEmits.start]);
+			setupCodeModifies.push([() => codes.push(`const __VLS_emit = `), scriptSetupRanges.defineEmits.start, scriptSetupRanges.defineEmits.start]);
+		}
+		if (scriptSetupRanges.defineExpose && scriptSetupRanges.exposeRuntimeArg) {
+			setupCodeModifies.push([() => {
+				codes.push(`const __VLS_exposed = `);
+				addVirtualCode('scriptSetup', scriptSetupRanges!.exposeRuntimeArg!.start, scriptSetupRanges!.exposeRuntimeArg!.end);
+				codes.push(`;`);
+				addVirtualCode('scriptSetup', scriptSetupRanges!.defineExpose!.start, scriptSetupRanges!.exposeRuntimeArg!.start);
+				codes.push(`__VLS_exposed`);
+				addVirtualCode('scriptSetup', scriptSetupRanges!.exposeRuntimeArg!.end, scriptSetupRanges!.defineExpose!.end);
+			}, scriptSetupRanges.defineExpose.start, scriptSetupRanges.defineExpose.end]);
 		}
 		setupCodeModifies = setupCodeModifies.sort((a, b) => a[1] - b[1]);
 
 		if (setupCodeModifies.length) {
 			addVirtualCode('scriptSetup', scriptSetupRanges.importSectionEndOffset, setupCodeModifies[0][1]);
 			while (setupCodeModifies.length) {
-				const [code, start] = setupCodeModifies.shift()!;
-				codes.push(code);
+				const [generate, _, end] = setupCodeModifies.shift()!;
+				generate();
 				if (setupCodeModifies.length) {
-					addVirtualCode('scriptSetup', start, setupCodeModifies[0][1]);
+					const nextStart = setupCodeModifies[0][1];
+					addVirtualCode('scriptSetup', end, nextStart);
 				}
 				else {
-					addVirtualCode('scriptSetup', start);
+					addVirtualCode('scriptSetup', end);
 				}
 			}
 		}
@@ -601,9 +602,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		}
 
 		if (scriptSetupRanges.exposeRuntimeArg) {
-			codes.push(`...(`);
-			addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.exposeRuntimeArg.start, scriptSetupRanges.exposeRuntimeArg.end);
-			codes.push(`),\n`);
+			codes.push(`...__VLS_exposed,\n`);
 		}
 
 		codes.push(`};\n`);
