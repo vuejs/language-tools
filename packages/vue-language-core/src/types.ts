@@ -26,6 +26,8 @@ export interface VueCompilerOptions {
 		defineSlots: string[];
 		defineEmits: string[];
 		defineExpose: string[];
+		defineModel: string[];
+		defineOptions: string[];
 		withDefaults: string[];
 	};
 	plugins: VueLanguagePlugin[];

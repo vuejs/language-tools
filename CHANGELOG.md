@@ -1,21 +1,15 @@
 # Changelog
 
-## 1.8.8 (2023/7/27)
+## 1.8.13 (2023/9/20)
 
-- fix: language server crashed due to importing unexist library ([#3453](https://github.com/vuejs/language-tools/issues/3453)) ([#3454](https://github.com/vuejs/language-tools/issues/3454))
+- fix: generate valid syntax when `noPropertyAccessFromIndexSignature` is not enabled ([#3575](https://github.com/vuejs/language-tools/issues/3575)) - thanks @so1ve
 
-## 1.8.7 (2023/7/27)
+## 1.8.12 (2023/9/20)
 
-- feat: support auto-complete for directives ([#2559](https://github.com/vuejs/language-tools/issues/2559))
-- feat: support extract component for options api
-- feat: re-support external component parsing ([#3328](https://github.com/vuejs/language-tools/issues/3328))
-- feat: support function expression emit event ([#3445](https://github.com/vuejs/language-tools/issues/3445)) - thanks @lvjiaxuan
-- perf: reuse VueFile instances between monorepo packages ([#3450](https://github.com/vuejs/language-tools/issues/3450))
-- fix: handle node next module resolution ([#3159](https://github.com/vuejs/language-tools/issues/3159)) - thanks @kalvenschraut
-- fix: generate valid code when using `__VLS_PropsChildren` ([#3442](https://github.com/vuejs/language-tools/issues/3442)) - thanks @so1ve
-- fix: component auto-import cannot insert import statement
-- fix: extract component cannot extract interpolations
-- fix: allow top-level await in script setup blocks with generics ([#3441](https://github.com/vuejs/language-tools/issues/3441)) - thanks @so1ve
+- feat: support vitepress's code snippet import ([#3559](https://github.com/vuejs/language-tools/issues/3559)) - thanks @so1ve
+- fix(component-meta): fix modules interoperability with `vue-component-type-helper`
+- fix: avoid losing generic types with `strictTemplates: false` ([#3565](https://github.com/vuejs/language-tools/issues/3565)) - thanks @so1ve
+- fix: format slots with typeannotation correctly ([#3573](https://github.com/vuejs/language-tools/issues/3573)) - thanks @so1ve
 
 ### Full-time Support by
 
@@ -44,8 +38,7 @@
     <td>
 		<a href="https://vuejs.org/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/vue.png" height="80" /></a>
 	</td>
-    <td>The Progressive
-JavaScript Framework</td>
+    <td>The Progressive JavaScript Framework</td>
   </tr>
 </tbody>
 </table>
@@ -70,6 +63,42 @@ JavaScript Framework</td>
 	or
 	<a href="https://opencollective.com/volarjs">Open Collective</a>
 </h5>
+
+## 1.8.11 (2023/9/13)
+
+- feat: slot references codeLens counting fragment default slot ([#932](https://github.com/vuejs/language-tools/issues/932))
+- fix: correct message for `@vue-expect-error` ([#3541](https://github.com/vuejs/language-tools/issues/3541)) - thanks @so1ve
+- fix: avoid global macros conflicts with local variables ([#3550](https://github.com/vuejs/language-tools/issues/3550)) - thanks @so1ve
+- fix: script setup comments at top breaks global macros ([#3549](https://github.com/vuejs/language-tools/issues/3549)) - thanks @so1ve
+- fix(vue-tsc): prevent rebuild in incremental mode throwing error ([#3556](https://github.com/vuejs/language-tools/issues/3556)) - thanks @blake-newman
+
+## 1.8.10 (2023/9/6)
+
+- feat: added Portuguese integration documentation ([#3535](https://github.com/vuejs/language-tools/issues/3535))
+- feat: exposed `configFileName` for `createParsedCommandLineByJson()` function ([#3456](https://github.com/vuejs/language-tools/issues/3456)) - thanks @qmhc
+- feat: support nested plugins ([#3530](https://github.com/vuejs/language-tools/issues/3530)) - thanks @so1ve
+- feat(vscode): add `vue.server.runtime` setting and support for Bun runtime
+- feat(vscode): add `vue.server.path` setting for customize server module path
+- fix: correctly hyphen-case props ([#3424](https://github.com/vuejs/language-tools/issues/3424)) - thanks @so1ve
+- fix: generic components should respect `strictTemplates` ([#3487](https://github.com/vuejs/language-tools/issues/3487)) - thanks @so1ve
+- fix(vue-component-type-helpers): correctly handle generic components when using `ComponentExposed` ([#3536](https://github.com/vuejs/language-tools/issues/3536)) - thanks @so1ve
+
+## 1.8.8 (2023/7/27)
+
+- fix: language server crashed due to importing unexist library ([#3453](https://github.com/vuejs/language-tools/issues/3453)) ([#3454](https://github.com/vuejs/language-tools/issues/3454))
+
+## 1.8.7 (2023/7/27)
+
+- feat: support auto-complete for directives ([#2559](https://github.com/vuejs/language-tools/issues/2559))
+- feat: support extract component for options api
+- feat: re-support external component parsing ([#3328](https://github.com/vuejs/language-tools/issues/3328))
+- feat: support function expression emit event ([#3445](https://github.com/vuejs/language-tools/issues/3445)) - thanks @lvjiaxuan
+- perf: reuse VueFile instances between monorepo packages ([#3450](https://github.com/vuejs/language-tools/issues/3450))
+- fix: handle node next module resolution ([#3159](https://github.com/vuejs/language-tools/issues/3159)) - thanks @kalvenschraut
+- fix: generate valid code when using `__VLS_PropsChildren` ([#3442](https://github.com/vuejs/language-tools/issues/3442)) - thanks @so1ve
+- fix: component auto-import cannot insert import statement
+- fix: extract component cannot extract interpolations
+- fix: allow top-level await in script setup blocks with generics ([#3441](https://github.com/vuejs/language-tools/issues/3441)) - thanks @so1ve
 
 ## 1.8.6 (2023/7/22)
 

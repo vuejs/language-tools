@@ -16,12 +16,11 @@ export function parseScriptSetupRanges(
 	let defineProps: TextRange | undefined;
 	let propsRuntimeArg: TextRange | undefined;
 	let propsTypeArg: TextRange | undefined;
-	let slotsTypeArg: TextRange | undefined;
+	let defineSlots: TextRange | undefined;
+	let defineEmits: TextRange | undefined;
+	let slotsAssignName: string | undefined;
 	let emitsAssignName: string | undefined;
-	let emitsRuntimeArg: TextRange | undefined;
-	let emitsTypeArg: TextRange | undefined;
 	let exposeRuntimeArg: TextRange | undefined;
-	let emitsTypeNums = -1;
 
 	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition' || ast.getFullText().trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition');
 	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' || ast.getFullText().trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition');
@@ -65,14 +64,13 @@ export function parseScriptSetupRanges(
 		bindings,
 		withDefaultsArg,
 		defineProps,
+		defineSlots,
+		defineEmits,
 		propsAssignName,
 		propsRuntimeArg,
 		propsTypeArg,
-		slotsTypeArg,
+		slotsAssignName,
 		emitsAssignName,
-		emitsRuntimeArg,
-		emitsTypeArg,
-		emitsTypeNums,
 		exposeRuntimeArg,
 		defineProp,
 	};
@@ -86,7 +84,7 @@ export function parseScriptSetupRanges(
 			&& ts.isIdentifier(node.expression)
 		) {
 			const callText = node.expression.getText(ast);
-			if (callText === 'defineModel') {
+			if (vueCompilerOptions.macros.defineModel.includes(callText)) {
 				let name: TextRange | undefined;
 				let options: ts.Node | undefined;
 				if (node.arguments.length >= 2) {
@@ -170,18 +168,24 @@ export function parseScriptSetupRanges(
 				if (vueCompilerOptions.macros.defineProps.includes(callText)) {
 					defineProps = _getStartEnd(node);
 				}
+				if (vueCompilerOptions.macros.defineSlots.includes(callText)) {
+					defineSlots = _getStartEnd(node);
+					if (ts.isVariableDeclaration(parent)) {
+						slotsAssignName = parent.name.getText(ast);
+					}
+				}
+				if (vueCompilerOptions.macros.defineEmits.includes(callText)) {
+					defineEmits = _getStartEnd(node);
+					if (ts.isVariableDeclaration(parent)) {
+						emitsAssignName = parent.name.getText(ast);
+					}
+				}
 				if (node.arguments.length) {
 					const runtimeArg = node.arguments[0];
 					if (vueCompilerOptions.macros.defineProps.includes(callText)) {
 						propsRuntimeArg = _getStartEnd(runtimeArg);
 						if (ts.isVariableDeclaration(parent)) {
 							propsAssignName = parent.name.getText(ast);
-						}
-					}
-					else if (vueCompilerOptions.macros.defineEmits.includes(callText)) {
-						emitsRuntimeArg = _getStartEnd(runtimeArg);
-						if (ts.isVariableDeclaration(parent)) {
-							emitsAssignName = parent.name.getText(ast);
 						}
 					}
 					else if (vueCompilerOptions.macros.defineExpose.includes(callText)) {
@@ -194,18 +198,6 @@ export function parseScriptSetupRanges(
 						propsTypeArg = _getStartEnd(typeArg);
 						if (ts.isVariableDeclaration(parent)) {
 							propsAssignName = parent.name.getText(ast);
-						}
-					}
-					if (vueCompilerOptions.macros.defineSlots.includes(callText)) {
-						slotsTypeArg = _getStartEnd(typeArg);
-					}
-					else if (vueCompilerOptions.macros.defineEmits.includes(callText)) {
-						emitsTypeArg = _getStartEnd(typeArg);
-						if (ts.isTypeLiteralNode(typeArg)) {
-							emitsTypeNums = typeArg.members.length;
-						}
-						if (ts.isVariableDeclaration(parent)) {
-							emitsAssignName = parent.name.getText(ast);
 						}
 					}
 				}

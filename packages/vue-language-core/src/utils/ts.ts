@@ -159,18 +159,22 @@ function getPartialVueCompilerOptions(
 	}
 	if (rawOptions.plugins) {
 		const plugins = rawOptions.plugins
-			.map<VueLanguagePlugin | undefined>((pluginPath: string) => {
+			.map<VueLanguagePlugin[] | VueLanguagePlugin>((pluginPath: string) => {
 				try {
 					const resolvedPath = resolvePath(pluginPath);
 					if (resolvedPath) {
 						return require(resolvedPath);
 					}
+					else {
+						console.warn('Load plugin failed:', pluginPath);
+					}
 				}
 				catch (error) {
-					console.warn('Load plugin failed', pluginPath, error);
+					console.warn('Load plugin failed:', pluginPath, error);
 				}
+				return [];
 			})
-			.filter((plugin): plugin is NonNullable<typeof plugin> => !!plugin);
+			.flat(Infinity as 1);
 
 		result.plugins = plugins;
 	}
@@ -253,12 +257,15 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 				? [`(await import('${lib}')).defineComponent(`, `)`]
 				: [`(await import('vue')).default.extend(`, `)`]
 		),
-		macros: vueOptions.macros ?? {
+		macros: {
 			defineProps: ['defineProps'],
 			defineSlots: ['defineSlots'],
 			defineEmits: ['defineEmits'],
 			defineExpose: ['defineExpose'],
+			defineModel: ['defineModel'],
+			defineOptions: ['defineOptions'],
 			withDefaults: ['withDefaults'],
+			...vueOptions.macros,
 		},
 		plugins: vueOptions.plugins ?? [],
 		hooks: vueOptions.hooks ?? [],

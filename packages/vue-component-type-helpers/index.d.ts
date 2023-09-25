@@ -1,6 +1,6 @@
-declare const text: string;
+export declare const code: string;
 
-export default text;
+export default code;
 
 export type ComponentType<T> =
 	T extends new () => {} ? 1 :
@@ -24,7 +24,7 @@ export type ComponentEmit<T> =
 
 export type ComponentExposed<T> =
 	T extends new () => infer E ? E :
-	T extends (props: any, ctx: { expose(exposed: infer E): any; }, ...args: any) => any ? NonNullable<E> :
+	T extends (props: any, ctx: any, expose: (exposed: infer E) => any, ...args: any) => any ? NonNullable<E> :
 	{};
 
 /**

@@ -211,6 +211,21 @@ function resolvePlugins(
 
 				return result;
 			},
+			async provideSemanticDiagnostics(document, token) {
+				const result = await base.provideSemanticDiagnostics?.(document, token);
+				return result?.map(diagnostic => {
+					if (
+						diagnostic.source === 'ts'
+						&& diagnostic.code === 2578 /* Unused '@ts-expect-error' directive. */
+						&& document.getText(diagnostic.range) === '// @ts-expect-error __VLS_TS_EXPECT_ERROR'
+					) {
+						diagnostic.source = 'vue';
+						diagnostic.code = 'ts-2578';
+						diagnostic.message = diagnostic.message.replace(/@ts-expect-error/g, '@vue-expect-error');
+					}
+					return diagnostic;
+				});
+			},
 		};
 	};
 	services.html ??= VueTemplateLanguageService.create({

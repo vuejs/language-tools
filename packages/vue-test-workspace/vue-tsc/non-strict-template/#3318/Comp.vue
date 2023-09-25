@@ -1,0 +1,1 @@
+<script setup lang="ts" generic="T"></script>

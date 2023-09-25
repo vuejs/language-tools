@@ -15,9 +15,7 @@ type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
 
 type __VLS_MappedOmit<T, K> = { [P in keyof T as P extends K ? never : P]: T[P] };
 
-type __VLS_Prettify<T> = {
-	[K in keyof T]: T[K];
-} & {};
+type __VLS_Prettify<T> = { [K in keyof T]: T[K]; } & {};
 
 type __VLS_GlobalComponents =
 	__VLS_PickNotAny<import('vue').GlobalComponents, {}>
@@ -70,26 +68,6 @@ type __VLS_WithComponent<N0 extends string, LocalComponents, N1 extends string, 
 
 type __VLS_FillingEventArg_ParametersLength<E extends (...args: any) => any> = __VLS_IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];
 type __VLS_FillingEventArg<E> = E extends (...args: any) => any ? __VLS_FillingEventArg_ParametersLength<E> extends 0 ? ($event?: undefined) => ReturnType<E> : E : E;
-type __VLS_EmitEvent<F, E> =
-	F extends {
-		(event: E, ...payload: infer P): any
-	} ? (...payload: P) => void
-	: F extends {
-		(event: E, ...payload: infer P): any
-		(...args: any): any
-	} ? (...payload: P) => void
-	: F extends {
-		(event: E, ...payload: infer P): any
-		(...args: any): any
-		(...args: any): any
-	} ? (...payload: P) => void
-	: F extends {
-		(event: E, ...payload: infer P): any
-		(...args: any): any
-		(...args: any): any
-		(...args: any): any
-	} ? (...payload: P) => void
-	: unknown | '[Type Warning] Volar could not infer $emit event more than 4 overloads without DefineComponent. see https://github.com/vuejs/language-tools/issues/60';
 declare function __VLS_asFunctionalComponent<T, K = T extends new (...args: any) => any ? InstanceType<T> : unknown>(t: T, instance?: K):
 	T extends new (...args: any) => any
 	? (props: (K extends { $props: infer Props } ? Props : any)${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}, ctx?: {
@@ -99,56 +77,52 @@ declare function __VLS_asFunctionalComponent<T, K = T extends new (...args: any)
 	}) => JSX.Element & { __ctx?: typeof ctx & { props?: typeof props; expose?(exposed: K): void; } }
 	: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 	: T extends (...args: any) => any ? T
-	: (_: T extends import('${vueCompilerOptions.lib}').VNode | import('${vueCompilerOptions.lib}').VNode[] | string ? {}: T${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}, ctx?: any) => { __ctx?: { attrs?: any, expose?: any, slots?: any, emit?: any, props?: T${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'} } }; // IntrinsicElement
+	: (_: {}${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}, ctx?: any) => { __ctx?: { attrs?: any, expose?: any, slots?: any, emit?: any, props?: {}${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'} } };
+declare function __VLS_elementAsFunctionalComponent<T>(t: T): (_: T${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}, ctx?: any) => { __ctx?: { attrs?: any, expose?: any, slots?: any, emit?: any, props?: T${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'} } };
 declare function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(t: T): Parameters<T>['length'] extends 2 ? [any] : [];
-declare function __VLS_pickEvent<Emit, K, E>(emit: Emit, emitKey: K, event: E): __VLS_FillingEventArg<
+declare function __VLS_pickEvent<E1, E2>(emitEvent: E1, propEvent: E2): __VLS_FillingEventArg<
 	__VLS_PickNotAny<
-		__VLS_AsFunctionOrAny<E>,
-		__VLS_AsFunctionOrAny<__VLS_EmitEvent<Emit, K>>
+		__VLS_AsFunctionOrAny<E2>,
+		__VLS_AsFunctionOrAny<E1>
 	>
 > | undefined;
 declare function __VLS_pickFunctionalComponentCtx<T, K>(comp: T, compInstance: K): __VLS_PickNotAny<
-	K extends { __ctx?: infer Ctx } ? Ctx : any,
-	T extends (props: any, ctx: infer Ctx) => any ? Ctx : any
+	'__ctx' extends keyof __VLS_PickNotAny<K, {}> ? K extends { __ctx?: infer Ctx } ? Ctx : never : any
+	, T extends (props: any, ctx: infer Ctx) => any ? Ctx : any
 >;
+type __VLS_FunctionalComponentProps<T, K> =
+	'__ctx' extends keyof __VLS_PickNotAny<K, {}> ? K extends { __ctx?: { props?: infer P } } ? NonNullable<P> : never
+	: T extends (props: infer P, ...args: any) => any ? P :
+	{};
 type __VLS_AsFunctionOrAny<F> = unknown extends F ? any : ((...args: any) => any) extends F ? F : any;
 
 declare function __VLS_normalizeSlot<S>(s: S): S extends () => infer R ? (props: {}) => R : S;
-declare function __VLS_componentProps<T, K>(comp: T, fnReturn: K):
-	__VLS_PickNotAny<K, {}> extends { __ctx: { props: infer P } } ? NonNullable<P>
-	: T extends (props: infer P, ...args: any) => any ? NonNullable<P> :
-	{};
+
+/**
+ * emit
+ */
+// fix https://github.com/vuejs/language-tools/issues/926
+type __VLS_UnionToIntersection<U> = (U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never;
+type __VLS_OverloadUnionInner<T, U = unknown> = U & T extends (...args: infer A) => infer R
+	? U extends T
+	? never
+	: __VLS_OverloadUnionInner<T, Pick<T, keyof T> & U & ((...args: A) => R)> | ((...args: A) => R)
+	: never;
+type __VLS_OverloadUnion<T> = Exclude<
+	__VLS_OverloadUnionInner<(() => never) & T>,
+	T extends () => never ? never : () => never
+>;
+type __VLS_ConstructorOverloads<T> = __VLS_OverloadUnion<T> extends infer F
+	? F extends (event: infer E, ...args: infer A) => infer R
+	? { [K in E as K extends string ? K : never]: (...args: A) => R; }
+	: never
+	: never;
+type __VLS_NormalizeEmits<T> = __VLS_Prettify<
+	__VLS_UnionToIntersection<
+		__VLS_ConstructorOverloads<T> & {
+			[K in keyof T]: T[K] extends any[] ? { (...args: T[K]): void } : never
+		}
+	>
+>;
 `.trim();
-}
-
-// TODO: not working for overloads > n (n = 8)
-// see: https://github.com/vuejs/language-tools/issues/60
-export function genConstructorOverloads(name = 'ConstructorOverloads', nums?: number) {
-	let code = '';
-	code += `type ${name}<T> =\n`;
-	if (nums === undefined) {
-		for (let i = 8; i >= 1; i--) {
-			gen(i);
-		}
-	}
-	else if (nums > 0) {
-		gen(nums);
-	}
-	code += `// 0\n`;
-	code += `{};\n`;
-	return code;
-
-	function gen(i: number) {
-		code += `// ${i}\n`;
-		code += `T extends {\n`;
-		for (let j = 1; j <= i; j++) {
-			code += `(event: infer E${j}, ...payload: infer P${j}): void;\n`;
-		}
-		code += `} ? (\n`;
-		for (let j = 1; j <= i; j++) {
-			if (j > 1) code += '& ';
-			code += `(E${j} extends string ? { [K${j} in E${j}]: (...payload: P${j}) => void } : {})\n`;
-		}
-		code += `) :\n`;
-	}
 }

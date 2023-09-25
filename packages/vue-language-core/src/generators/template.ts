@@ -38,6 +38,8 @@ const capabilitiesPresets = {
 };
 const formatBrackets = {
 	normal: ['`${', '}`;'] as [string, string],
+	// fix https://github.com/vuejs/language-tools/issues/3572
+	params: ['(', ') => {}'] as [string, string],
 	// fix https://github.com/vuejs/language-tools/issues/1210
 	// fix https://github.com/vuejs/language-tools/issues/2305
 	curly: ['0 +', '+ 0;'] as [string, string],
@@ -71,6 +73,7 @@ export function generate(
 	sourceLang: string,
 	sfc: Sfc,
 	hasScriptSetupSlots: boolean,
+	slotsAssignName: string | undefined,
 	codegenStack: boolean,
 ) {
 
@@ -86,6 +89,8 @@ export function generate(
 	const identifiers = new Set<string>();
 	const scopedClasses: { className: string, offset: number; }[] = [];
 	const blockConditions: string[] = [];
+	const hasSlotElements = new Set<CompilerDOM.ElementNode>();
+	const componentCtxVar2EmitEventsVar = new Map<string, string>();
 
 	let hasSlot = false;
 	let elementIndex = 0;
@@ -356,7 +361,7 @@ export function generate(
 			}
 			codes.push(
 				[
-					'// @ts-expect-error',
+					'// @ts-expect-error __VLS_TS_EXPECT_ERROR',
 					'template',
 					[expectedErrorNode.loc.start.offset, expectedErrorNode.loc.end.offset],
 					{
@@ -683,21 +688,19 @@ export function generate(
 			codes.push(`typeof __VLS_resolvedLocalAndGlobalComponents['${toCanonicalComponentName(tag)}'];\n`);
 		}
 
-		codes.push(
-			`const ${var_functionalComponent} = __VLS_asFunctionalComponent(`,
-			`${var_originalComponent}, `,
-		);
 		if (isIntrinsicElement) {
-			codes.push('{}');
+			codes.push(`const ${var_functionalComponent} = __VLS_elementAsFunctionalComponent(${var_originalComponent});\n`,);
 		}
 		else {
 			codes.push(
+				`const ${var_functionalComponent} = __VLS_asFunctionalComponent(`,
+				`${var_originalComponent}, `,
 				`new ${var_originalComponent}({`,
 				...createPropsCode(node, props, 'extraReferences'),
 				'})',
+				');\n',
 			);
 		}
-		codes.push(');\n');
 
 		for (const offset of tagOffsets) {
 			if (isNamespacedTag || dynamicTagExp) {
@@ -736,25 +739,57 @@ export function generate(
 			}
 		}
 
-		codes.push(
-			`const ${var_componentInstance} = ${var_functionalComponent}(`,
-			// diagnostic start
-			tagOffsets.length ? ['', 'template', tagOffsets[0], capabilitiesPresets.diagnosticOnly]
-				: dynamicTagExp ? ['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]
-					: '',
-			'{ ',
-			...createPropsCode(node, props, 'normal', propsFailedExps),
-			'}',
-			// diagnostic end
-			tagOffsets.length ? ['', 'template', tagOffsets[0] + tag.length, capabilitiesPresets.diagnosticOnly]
-				: dynamicTagExp ? ['', 'template', startTagOffset + tag.length, capabilitiesPresets.diagnosticOnly]
-					: '',
-			`, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}));\n`,
-		);
+		if (vueCompilerOptions.strictTemplates) {
+			// with strictTemplates, generate once for props type-checking + instance type
+			codes.push(
+				`const ${var_componentInstance} = ${var_functionalComponent}(`,
+				// diagnostic start
+				tagOffsets.length ? ['', 'template', tagOffsets[0], capabilitiesPresets.diagnosticOnly]
+					: dynamicTagExp ? ['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]
+						: '',
+				'{ ',
+				...createPropsCode(node, props, 'normal', propsFailedExps),
+				'}',
+				// diagnostic end
+				tagOffsets.length ? ['', 'template', tagOffsets[0] + tag.length, capabilitiesPresets.diagnosticOnly]
+					: dynamicTagExp ? ['', 'template', startTagOffset + tag.length, capabilitiesPresets.diagnosticOnly]
+						: '',
+				`, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}));\n`,
+			);
+		}
+		else {
+			// without strictTemplates, this only for instacne type
+			codes.push(
+				`const ${var_componentInstance} = ${var_functionalComponent}(`,
+				'{ ',
+				...createPropsCode(node, props, 'extraReferences'),
+				'}',
+				`, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}));\n`,
+			);
+			// and this for props type-checking
+			codes.push(
+				`({} as (props: __VLS_FunctionalComponentProps<typeof ${var_originalComponent}, typeof ${var_componentInstance}> & Record<string, unknown>) => void)(`,
+				// diagnostic start
+				tagOffsets.length ? ['', 'template', tagOffsets[0], capabilitiesPresets.diagnosticOnly]
+					: dynamicTagExp ? ['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]
+						: '',
+				'{ ',
+				...createPropsCode(node, props, 'normal', propsFailedExps),
+				'}',
+				// diagnostic end
+				tagOffsets.length ? ['', 'template', tagOffsets[0] + tag.length, capabilitiesPresets.diagnosticOnly]
+					: dynamicTagExp ? ['', 'template', startTagOffset + tag.length, capabilitiesPresets.diagnosticOnly]
+						: '',
+				`);\n`,
+			);
+		}
 
 		if (tag !== 'template' && tag !== 'slot') {
 			componentCtxVar = `__VLS_${elementIndex++}`;
+			const componentEventsVar = `__VLS_${elementIndex++}`;
 			codes.push(`const ${componentCtxVar} = __VLS_pickFunctionalComponentCtx(${var_originalComponent}, ${var_componentInstance})!;\n`);
+			codes.push(`let ${componentEventsVar}!: __VLS_NormalizeEmits<typeof ${componentCtxVar}.emit>;\n`);
+			componentCtxVar2EmitEventsVar.set(componentCtxVar, componentEventsVar);
 			parentEl = node;
 		}
 
@@ -828,6 +863,9 @@ export function generate(
 
 		const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
 		if (slotDir && componentCtxVar) {
+			if (parentEl) {
+				hasSlotElements.add(parentEl);
+			}
 			const slotBlockVars: string[] = [];
 			codes.push(`{\n`);
 			let hasProps = false;
@@ -837,12 +875,12 @@ export function generate(
 					...createFormatCode(
 						slotDir.exp.content,
 						slotDir.exp.loc.start.offset,
-						formatBrackets.normal,
+						formatBrackets.params,
 					),
 				);
 
-				const collectAst = createTsAst(slotDir, `(${slotDir.exp.content}) => {}`);
-				colletVars(ts, collectAst, slotBlockVars);
+				const slotAst = createTsAst(slotDir, `(${slotDir.exp.content}) => {}`);
+				colletVars(ts, slotAst, slotBlockVars);
 				hasProps = true;
 				if (slotDir.exp.content.indexOf(':') === -1) {
 					codes.push(
@@ -934,6 +972,23 @@ export function generate(
 				prev = childNode;
 			}
 			resolveComment();
+
+			// fix https://github.com/vuejs/language-tools/issues/932
+			if (!hasSlotElements.has(node) && node.children.length) {
+				codes.push(
+					`(${componentCtxVar}.slots!)`,
+					...createPropertyAccessCode([
+						'default',
+						'template',
+						[
+							node.children[0].loc.start.offset,
+							node.children[node.children.length - 1].loc.end.offset,
+						],
+						{ references: true },
+					]),
+					';\n',
+				);
+			}
 		}
 
 		codes.push(`}\n`);
@@ -947,10 +1002,11 @@ export function generate(
 				&& prop.name === 'on'
 				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
+				const eventsVar = componentCtxVar2EmitEventsVar.get(componentCtxVar);
 				const eventVar = `__VLS_${elementIndex++}`;
 				codes.push(
 					`let ${eventVar} = { '${prop.arg.loc.source}': `,
-					`__VLS_pickEvent(${componentCtxVar}.emit!, '${prop.arg.loc.source}' as const, __VLS_componentProps(${componentVar}, ${componentInstanceVar})`,
+					`__VLS_pickEvent(${eventsVar}['${prop.arg.loc.source}'], ({} as __VLS_FunctionalComponentProps<typeof ${componentVar}, typeof ${componentInstanceVar}>)`,
 					...createPropertyAccessCode([
 						camelize('on-' + prop.arg.loc.source), // onClickOutside
 						'template',
@@ -1136,7 +1192,6 @@ export function generate(
 				rename: caps_attr.rename,
 			};
 		}
-
 
 		codes.push(`...{ `);
 		for (const prop of props) {
@@ -1595,7 +1650,7 @@ export function generate(
 			codes.push(
 				'__VLS_normalizeSlot(',
 				['', 'template', node.loc.start.offset, capabilitiesPresets.diagnosticOnly],
-				'__VLS_slots[',
+				`${slotsAssignName ?? '__VLS_slots'}[`,
 				['', 'template', node.loc.start.offset, capabilitiesPresets.diagnosticOnly],
 				slotNameExpNode?.content ?? `('${getSlotName()}' as const)`,
 				['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly],
