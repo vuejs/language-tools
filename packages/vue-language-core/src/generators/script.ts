@@ -670,24 +670,6 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			if (scriptSetupRanges.defineEmits) {
 				codes.push(`$emit: ${scriptSetupRanges.emitsAssignName ?? '__VLS_emit'},\n`);
 			}
-			// fill ctx from props
-			if (bypassDefineComponent) {
-				if (scriptSetupRanges.propsAssignName) {
-					codes.push(`...${scriptSetupRanges.propsAssignName},\n`);
-				}
-				else if (scriptSetupRanges.withDefaultsArg && scriptSetupRanges.propsTypeArg) {
-					codes.push(`...withDefaults(defineProps<`);
-					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
-					codes.push(`>(), `);
-					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.withDefaultsArg.start, scriptSetupRanges.withDefaultsArg.end);
-					codes.push(`),\n`);
-				}
-				else if (scriptSetupRanges.propsRuntimeArg) {
-					codes.push(`...defineProps(`);
-					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
-					codes.push(`),\n`);
-				}
-			}
 		}
 	}
 	function generateTemplate(functional: boolean) {
