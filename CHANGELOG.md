@@ -1,15 +1,14 @@
 # Changelog
 
-## 1.8.13 (2023/9/20)
+## 1.8.14 (2023/9/26)
 
-- fix: generate valid syntax when `noPropertyAccessFromIndexSignature` is not enabled ([#3575](https://github.com/vuejs/language-tools/issues/3575)) - thanks @so1ve
-
-## 1.8.12 (2023/9/20)
-
-- feat: support vitepress's code snippet import ([#3559](https://github.com/vuejs/language-tools/issues/3559)) - thanks @so1ve
-- fix(component-meta): fix modules interoperability with `vue-component-type-helper`
-- fix: avoid losing generic types with `strictTemplates: false` ([#3565](https://github.com/vuejs/language-tools/issues/3565)) - thanks @so1ve
-- fix: format slots with typeannotation correctly ([#3573](https://github.com/vuejs/language-tools/issues/3573)) - thanks @so1ve
+- feat: `defineEmit` now able to infer event types with more than 4 overloads ([#3379](https://github.com/vuejs/language-tools/issues/3379)) ([#1855](https://github.com/vuejs/language-tools/issues/1855))
+- feat: more accurately distinguish component internal context and external context types ([#3591](https://github.com/vuejs/language-tools/issues/3591)) ([#3517](https://github.com/vuejs/language-tools/issues/3517)) - thanks @so1ve
+- fix: don't import alias macros ([#3576](https://github.com/vuejs/language-tools/issues/3576)) - thanks @sxzz
+- fix: make generic components' emit type compactible with Vue core types ([#3569](https://github.com/vuejs/language-tools/issues/3569)) ([#3257](https://github.com/vuejs/language-tools/issues/3257)) - thanks @so1ve
+- fix: use universal `__VLS_ConstructorOverloads` when emits type is not inlined ([#3585](https://github.com/vuejs/language-tools/issues/3585)) - thanks @so1ve
+- fix: inherit emits props and supports generic component emit type for JSX ([#3533](https://github.com/vuejs/language-tools/issues/3533)) ([#3289](https://github.com/vuejs/language-tools/issues/3289)) ([#3476](https://github.com/vuejs/language-tools/issues/3476)) - thanks @so1ve
+- perf: generate less TS virtual code for TS performance ([#3581](https://github.com/vuejs/language-tools/issues/3581))
 
 ### Full-time Support by
 
@@ -63,6 +62,17 @@
 	or
 	<a href="https://opencollective.com/volarjs">Open Collective</a>
 </h5>
+
+## 1.8.13 (2023/9/20)
+
+- fix: generate valid syntax when `noPropertyAccessFromIndexSignature` is not enabled ([#3575](https://github.com/vuejs/language-tools/issues/3575)) - thanks @so1ve
+
+## 1.8.12 (2023/9/20)
+
+- feat: support vitepress's code snippet import ([#3559](https://github.com/vuejs/language-tools/issues/3559)) - thanks @so1ve
+- fix(component-meta): fix modules interoperability with `vue-component-type-helper`
+- fix: avoid losing generic types with `strictTemplates: false` ([#3565](https://github.com/vuejs/language-tools/issues/3565)) - thanks @so1ve
+- fix: format slots with typeannotation correctly ([#3573](https://github.com/vuejs/language-tools/issues/3573)) - thanks @so1ve
 
 ## 1.8.11 (2023/9/13)
 

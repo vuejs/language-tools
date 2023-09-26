@@ -86,25 +86,21 @@ export default _default;
 
 exports[`vue-tsc-dts > Input: components/script-setup-generic.vue, Output: components/script-setup-generic.vue.d.ts 1`] = `
 "declare const _default: <T>(__VLS_props: {
+    onBar?: (data: T) => any;
     foo: T;
-} & import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps, __VLS_ctx?: Pick<{
-    props: {
-        foo: T;
-    };
-    expose(exposed: {
-        baz: T;
-    }): void;
-    attrs: any;
+} & import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps, __VLS_ctx?: {
     slots: Readonly<{
         default?(data: T): any;
     }>;
+    attrs: any;
     emit: (e: 'bar', data: T) => void;
-}, \\"slots\\" | \\"attrs\\" | \\"emit\\">, __VLS_expose?: (exposed: {
+}, __VLS_expose?: (exposed: {
     baz: T;
 }) => void, __VLS_setup?: Promise<{
     props: {
+        onBar?: (data: T) => any;
         foo: T;
-    };
+    } & import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps;
     expose(exposed: {
         baz: T;
     }): void;
@@ -118,8 +114,9 @@ exports[`vue-tsc-dts > Input: components/script-setup-generic.vue, Output: compo
 }> & {
     __ctx?: {
         props: {
+            onBar?: (data: T) => any;
             foo: T;
-        };
+        } & import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps;
         expose(exposed: {
             baz: T;
         }): void;
@@ -289,28 +286,21 @@ export default _default;
 
 exports[`vue-tsc-dts > Input: defineProp_B/script-setup-generic.vue, Output: defineProp_B/script-setup-generic.vue.d.ts 1`] = `
 "declare const _default: <T>(__VLS_props: {
-    a?: T;
-    b?: T;
     c?: T;
     d: T;
-} & import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps, __VLS_ctx?: Pick<{
-    props: {
-        a?: T;
-        b?: T;
-        c?: T;
-        d: T;
-    };
-    expose(exposed: {}): void;
-    attrs: any;
+    a?: T;
+    b?: T;
+} & import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps, __VLS_ctx?: {
     slots: {};
+    attrs: any;
     emit: any;
-}, \\"slots\\" | \\"attrs\\" | \\"emit\\">, __VLS_expose?: (exposed: {}) => void, __VLS_setup?: Promise<{
+}, __VLS_expose?: (exposed: {}) => void, __VLS_setup?: Promise<{
     props: {
-        a?: T;
-        b?: T;
         c?: T;
         d: T;
-    };
+        a?: T;
+        b?: T;
+    } & import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps;
     expose(exposed: {}): void;
     attrs: any;
     slots: {};
@@ -320,11 +310,11 @@ exports[`vue-tsc-dts > Input: defineProp_B/script-setup-generic.vue, Output: def
 }> & {
     __ctx?: {
         props: {
-            a?: T;
-            b?: T;
             c?: T;
             d: T;
-        };
+            a?: T;
+            b?: T;
+        } & import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps;
         expose(exposed: {}): void;
         attrs: any;
         slots: {};
@@ -343,6 +333,38 @@ exports[`vue-tsc-dts > Input: events/union_type.vue, Output: events/union_type.v
     onB?: (a: string) => any;
     onA?: (a: string) => any;
 }, {}, {}>;
+export default _default;
+"
+`;
+
+exports[`vue-tsc-dts > Input: generic-interface/main.vue, Output: generic-interface/main.vue.d.ts 1`] = `
+"declare const _default: <T>(__VLS_props: {
+    foo: T;
+} & import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps, __VLS_ctx?: {
+    slots: {};
+    attrs: any;
+    emit: any;
+}, __VLS_expose?: (exposed: {}) => void, __VLS_setup?: Promise<{
+    props: {
+        foo: T;
+    } & import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps;
+    expose(exposed: {}): void;
+    attrs: any;
+    slots: {};
+    emit: any;
+}>) => import(\\"vue\\").VNode<import(\\"vue\\").RendererNode, import(\\"vue\\").RendererElement, {
+    [key: string]: any;
+}> & {
+    __ctx?: {
+        props: {
+            foo: T;
+        } & import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps;
+        expose(exposed: {}): void;
+        attrs: any;
+        slots: {};
+        emit: any;
+    };
+};
 export default _default;
 "
 `;
