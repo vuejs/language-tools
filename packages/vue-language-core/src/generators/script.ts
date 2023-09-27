@@ -597,11 +597,6 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 		codes.push(`};\n`);
 		codes.push(`},\n`);
-
-		if (scriptRanges?.exportDefault?.args) {
-			addVirtualCode('script', scriptRanges.exportDefault.args.start + 1, scriptRanges.exportDefault.args.end - 1);
-		}
-
 		codes.push(`})`);
 	}
 	function generateComponentOptions(functional: boolean) {
@@ -649,6 +644,9 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 					`>),\n`,
 				);
 			}
+		}
+		if (scriptRanges?.exportDefault?.args) {
+			addVirtualCode('script', scriptRanges.exportDefault.args.start + 1, scriptRanges.exportDefault.args.end - 1);
 		}
 	}
 	function generateSetupReturns() {
