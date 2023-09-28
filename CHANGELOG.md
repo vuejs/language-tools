@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.8.15 (2023/9/26)
+
+- fix: props type missing in JS component context ([#3592](https://github.com/vuejs/language-tools/issues/3592))
+- fix: ignore `$emit` return type for Vue 2 ([#3596](https://github.com/vuejs/language-tools/issues/3596))
+
 ## 1.8.14 (2023/9/26)
 
 - feat: `defineEmit` now able to infer event types with more than 4 overloads ([#3379](https://github.com/vuejs/language-tools/issues/3379)) ([#1855](https://github.com/vuejs/language-tools/issues/1855))

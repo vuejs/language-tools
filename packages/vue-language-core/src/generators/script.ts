@@ -52,6 +52,7 @@ export function generate(
 			exposeRuntimeArg: undefined,
 			leadingCommentEndOffset: 0,
 			importSectionEndOffset: 0,
+			withDefaults: undefined,
 			defineProps: undefined,
 			defineSlots: undefined,
 			defineEmits: undefined,
@@ -465,6 +466,14 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		const scriptSetupGeneratedOffset = muggle.getLength(codes) - scriptSetupRanges.importSectionEndOffset;
 
 		let setupCodeModifies: [() => void, number, number][] = [];
+		if (scriptSetupRanges.defineProps && !scriptSetupRanges.propsAssignName) {
+			if (scriptSetupRanges.withDefaults) {
+				setupCodeModifies.push([() => codes.push(`const __VLS_props = `), scriptSetupRanges.withDefaults.start, scriptSetupRanges.withDefaults.start]);
+			}
+			else {
+				setupCodeModifies.push([() => codes.push(`const __VLS_props = `), scriptSetupRanges.defineProps.start, scriptSetupRanges.defineProps.start]);
+			}
+		}
 		if (scriptSetupRanges.defineSlots && !scriptSetupRanges.slotsAssignName) {
 			setupCodeModifies.push([() => codes.push(`const __VLS_slots = `), scriptSetupRanges.defineSlots.start, scriptSetupRanges.defineSlots.start]);
 		}
@@ -654,17 +663,10 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 	function generateSetupReturns() {
 		if (scriptSetupRanges && bypassDefineComponent) {
 			// fill $props
-			if (scriptSetupRanges.propsTypeArg) {
+			if (scriptSetupRanges.defineProps) {
 				// NOTE: defineProps is inaccurate for $props
-				codes.push(`$props: __VLS_makeOptional(defineProps<`);
-				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsTypeArg.start, scriptSetupRanges.propsTypeArg.end);
-				codes.push(`>()),\n`);
-			}
-			else if (scriptSetupRanges.propsRuntimeArg) {
-				// NOTE: defineProps is inaccurate for $props
-				codes.push(`$props: __VLS_makeOptional(defineProps(`);
-				addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
-				codes.push(`)),\n`);
+				codes.push(`$props: __VLS_makeOptional(${scriptSetupRanges.propsAssignName ?? `__VLS_props`}),\n`);
+				codes.push(`...${scriptSetupRanges.propsAssignName ?? `__VLS_props`},\n`);
 			}
 			// fill $emit
 			if (scriptSetupRanges.defineEmits) {
