@@ -8,7 +8,7 @@
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "\nSe você prefere dividir seu componente `*.vue` em multiplos arquivos, você pode usar o atributo `src` para importar um arquivo externo para o bloco de linguagem:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nEsteja ciente de que as importações `src` seguem as mesmas regras de resolução de caminho que as solicitações do módulo webpack, o que significa:\n\n- Caminhos relativos precisam começar com `./`\n- Você pode importar recursos de dependências do npm:\n\n```vue\n<!-- importa um arquivo do pacote de npm \"todomvc-app-css\" -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nAs importações com `src` também funcionam com blocos personalizados, por exemplo:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+            "value": "\nSe preferirmos separar os nossos componentes `*.vue` em vários ficheiros, podemos usar o atributo `src` para importar um ficheiro externo para um bloco de linguagem:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nDevemos estar ciente de que as importações de `src` seguem as mesmas regras de resolução de caminho que as requisições de módulo da Webpack, o que significa que:\n\n- Os caminhos relativos precisam começar com `./`\n- Nós podemos importar recursos a partir das dependências do npm:\n\n```vue\n<!-- importar um ficheiro dum pacote \"todomvc-app-css\" instalado -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nAs importações de `src` também funcionam com os blocos personalizados, por exemplo:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
           },
           "references": [
             {
@@ -45,7 +45,7 @@
           "name": "lang",
           "description": {
             "kind": "markdown",
-            "value": "\nBlocos pode declarar linguagens de pré-processadores usando o atributo `lang`. A caso mais comum é usando TypeScript para o bloco `<script>`:\n```html\n<script lang=\"ts\">\n  // usa TypeScript\n</script>\n```\n\n`lang` pode ser aplicado a qualquer bloco - por exemplo, nós podemos usar `<style>` com [Sass](https://sass-lang.com/) e `<template>` com [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nNote que a integração com vários pré-processadores pode diferir por conjunto de ferramentas. Confira a respectiva documentação para exemplos:\n\n- [Vite](https://vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
+            "value": "\nOs blocos podem declarar linguagens pré-processadoras usando o atributo `lang`. O caso mais comum é usar TypeScript para o bloco `<script>`:\n\n\n```html\n<script lang=\"ts\">\n  // usar TypeScript\n</script>\n```\n\n`lang` pode ser aplicado à qualquer bloco - por exemplo, podemos usar o `<style>` com  a [Sass](https://sass-docs-pt.netlify.app/) e o `<template>` com a [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nNota que a integração com os vários pré-processadores pode diferir conforme a cadeia de ferramenta. Consulte a respetiva documentação por exemplos:\n\n- [Vite](https://pt.vitejs.dev/guide/features#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
           },
           "values": [
             {
@@ -89,7 +89,7 @@
       ],
       "description": {
         "kind": "markdown",
-        "value": "\n- Cada arquivo `*.vue` pode conter no máximo um bloco `<template>` de alto nível por vez.\n\n- O conteúdo será extraído e passado para `@vue/compiler-dom`, pré-compilado em funções de renderização JavaScript e anexado ao componente exportado como sua opção `render`.\n"
+        "value": "\n- Cada ficheiro `*.vue` pode conter no máximo um bloco `<template>` de alto nível.\n\n- O conteúdo será extraído e passado ao `@vuw/compiler-dom`, pré-compilado dentro de funções de interpretação de JavaScript, e anexado ao componente exportado como sua opção `render`.\n"
       },
       "references": [
         {
@@ -129,7 +129,7 @@
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "\nSe você prefere dividir seu componente `*.vue` em multiplos arquivos, você pode usar o atributo `src` para importar um arquivo externo para o bloco de linguagem:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nEsteja ciente de que as importações `src` seguem as mesmas regras de resolução de caminho que as solicitações do módulo webpack, o que significa:\n\n- Caminhos relativos precisam começar com `./`\n- Você pode importar recursos de dependências do npm:\n\n```vue\n<!-- importa um arquivo do pacote de npm \"todomvc-app-css\" -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nAs importações com `src` também funcionam com blocos personalizados, por exemplo:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+            "value": "\nSe preferirmos separar os nossos componentes `*.vue` em vários ficheiros, podemos usar o atributo `src` para importar um ficheiro externo para um bloco de linguagem:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nDevemos estar ciente de que as importações de `src` seguem as mesmas regras de resolução de caminho que as requisições de módulo da Webpack, o que significa que:\n\n- Os caminhos relativos precisam começar com `./`\n- Nós podemos importar recursos a partir das dependências do npm:\n\n```vue\n<!-- importar um ficheiro dum pacote \"todomvc-app-css\" instalado -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nAs importações de `src` também funcionam com os blocos personalizados, por exemplo:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
           },
           "references": [
             {
@@ -166,7 +166,7 @@
           "name": "lang",
           "description": {
             "kind": "markdown",
-            "value": "\nBlocos pode declarar linguagens de pré-processadores usando o atributo `lang`. A caso mais comum é usando TypeScript para o bloco `<script>`:\n```html\n<script lang=\"ts\">\n  // usa TypeScript\n</script>\n```\n\n`lang` pode ser aplicado a qualquer bloco - por exemplo, nós podemos usar `<style>` com [Sass](https://sass-lang.com/) e `<template>` com [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nNote que a integração com vários pré-processadores pode diferir por conjunto de ferramentas. Confira a respectiva documentação para exemplos:\n\n- [Vite](https://vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
+            "value": "\nOs blocos podem declarar linguagens pré-processadoras usando o atributo `lang`. O caso mais comum é usar TypeScript para o bloco `<script>`:\n\n\n```html\n<script lang=\"ts\">\n  // usar TypeScript\n</script>\n```\n\n`lang` pode ser aplicado à qualquer bloco - por exemplo, podemos usar o `<style>` com  a [Sass](https://sass-docs-pt.netlify.app/) e o `<template>` com a [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nNota que a integração com os vários pré-processadores pode diferir conforme a cadeia de ferramenta. Consulte a respetiva documentação por exemplos:\n\n- [Vite](https://pt.vitejs.dev/guide/features#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
           },
           "values": [
             {
@@ -221,7 +221,7 @@
           "valueSet": "v",
           "description": {
             "kind": "markdown",
-            "value": "\n- Cada arquivo `*.vue` pode conter no máximo um bloco `<script setup>` de alto nível por vez (excluíndo `<script>` normal).\n\n- O script é pré-processado e usado como a função `setup()` do componente, o que significa que será executado **para cada instância do componente**. Ligações de nível superior em `<script setup>` são automaticamente expostas ao template. Para obter mais detalhes, consulte [documentação dedicada a `<script setup>`](https://pt.vuejs.org/api/sfc-script-setup.html).\n"
+            "value": "\n- Cada ficheiro `*.vue` pode conter no máximo um bloco `<script setup>` (excluindo o `<script>` normal).\n\n- O programa é pré-processado e usado como a função `setup()` do componente, o que significa que será executado **para cada instância do componente**. Os vínculos de alto nível no `<script setup>` são automaticamente expostos ao modelo de marcação. Para mais detalhes, consulte a [documentação dedicada ao `<script setup>`](https://pt.vuejs.org/api/sfc-script-setup.html).\n"
           },
           "references": [
             {
@@ -257,7 +257,7 @@
       ],
       "description": {
         "kind": "markdown",
-        "value": "\n- Cada arquivo `*.vue` pode conter no máximo um bloco `<script>` de alto nível por vez (excluíndo [`<script setup>`](https://pt.vuejs.org/api/sfc-script-setup.html)).\n\n- O escript é executado como um módulo ES.\n\n- A **exportação padrão** `default export` deve ser um objeto de opções do componente Vue, seja como um objeto simples ou como o valor de retorno de [defineComponent](https://pt.vuejs.org/api/general.html#definecomponent)\n"
+        "value": "\n- Cada ficheiro `*.vue` poder conter no máximo um bloco `<script>` de alto nível (excluindo [`<script setup>`](https://pt.vuejs.org/api/sfc-script-setup.html)).\n\n- O programa é executado como um módulo de ECMAScript.\n\n- A **exportação padrão** deve ser um objeto de opções de componente da Vue, ou como um objeto simples ou como valor de retorno da [`defineComponent`](https://pt.vuejs.org/api/general.html#definecomponent).\n"
       },
       "references": [
         {
@@ -295,7 +295,7 @@
       "attributes": [],
       "description": {
         "kind": "markdown",
-        "value": "\n- Cada arquivo `*.vue` pode conter no máximo um bloco `<script setup>` de alto nível por vez (excluíndo `<script>` normal).\n\n- O script é pré-processado e usado como a função `setup()` do componente, o que significa que será executado **para cada instância do componente**. Ligações de nível superior em `<script setup>` são automaticamente expostas ao template. Para obter mais detalhes, consulte [documentação dedicada a `<script setup>`](https://pt.vuejs.org/api/sfc-script-setup.html).\n"
+        "value": "\n- Cada ficheiro `*.vue` pode conter no máximo um bloco `<script setup>` (excluindo o `<script>` normal).\n\n- O programa é pré-processado e usado como a função `setup()` do componente, o que significa que será executado **para cada instância do componente**. Os vínculos de alto nível no `<script setup>` são automaticamente expostos ao modelo de marcação. Para mais detalhes, consulte a [documentação dedicada ao `<script setup>`](https://pt.vuejs.org/api/sfc-script-setup.html).\n"
       },
       "references": [
         {
@@ -335,7 +335,7 @@
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "\nSe você prefere dividir seu componente `*.vue` em multiplos arquivos, você pode usar o atributo `src` para importar um arquivo externo para o bloco de linguagem:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nEsteja ciente de que as importações `src` seguem as mesmas regras de resolução de caminho que as solicitações do módulo webpack, o que significa:\n\n- Caminhos relativos precisam começar com `./`\n- Você pode importar recursos de dependências do npm:\n\n```vue\n<!-- importa um arquivo do pacote de npm \"todomvc-app-css\" -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nAs importações com `src` também funcionam com blocos personalizados, por exemplo:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+            "value": "\nSe preferirmos separar os nossos componentes `*.vue` em vários ficheiros, podemos usar o atributo `src` para importar um ficheiro externo para um bloco de linguagem:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nDevemos estar ciente de que as importações de `src` seguem as mesmas regras de resolução de caminho que as requisições de módulo da Webpack, o que significa que:\n\n- Os caminhos relativos precisam começar com `./`\n- Nós podemos importar recursos a partir das dependências do npm:\n\n```vue\n<!-- importar um ficheiro dum pacote \"todomvc-app-css\" instalado -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nAs importações de `src` também funcionam com os blocos personalizados, por exemplo:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
           },
           "references": [
             {
@@ -372,7 +372,7 @@
           "name": "lang",
           "description": {
             "kind": "markdown",
-            "value": "\nBlocos pode declarar linguagens de pré-processadores usando o atributo `lang`. A caso mais comum é usando TypeScript para o bloco `<script>`:\n```html\n<script lang=\"ts\">\n  // usa TypeScript\n</script>\n```\n\n`lang` pode ser aplicado a qualquer bloco - por exemplo, nós podemos usar `<style>` com [Sass](https://sass-lang.com/) e `<template>` com [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nNote que a integração com vários pré-processadores pode diferir por conjunto de ferramentas. Confira a respectiva documentação para exemplos:\n\n- [Vite](https://vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
+            "value": "\nOs blocos podem declarar linguagens pré-processadoras usando o atributo `lang`. O caso mais comum é usar TypeScript para o bloco `<script>`:\n\n\n```html\n<script lang=\"ts\">\n  // usar TypeScript\n</script>\n```\n\n`lang` pode ser aplicado à qualquer bloco - por exemplo, podemos usar o `<style>` com  a [Sass](https://sass-docs-pt.netlify.app/) e o `<template>` com a [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nNota que a integração com os vários pré-processadores pode diferir conforme a cadeia de ferramenta. Consulte a respetiva documentação por exemplos:\n\n- [Vite](https://pt.vitejs.dev/guide/features#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
           },
           "values": [
             {
@@ -430,7 +430,7 @@
           "valueSet": "v",
           "description": {
             "kind": "markdown",
-            "value": "\nQuando uma tag `<style>` tem o atributo `scoped`, seu CSS se aplica apenas aos elementos do componente atual. Isso é semelhante ao encapsulamento de estilo encontrado no Shadow DOM. Por mais que tenha algumas ressalvas, não requer nenhum polyfill. É alcançado usando o PostCSS para transformar o seguinte código:\n\n```vue\n<style scoped>\n.example {\n  color: red;\n}\n</style>\n\n<template>\n  <div class=\"example\">olá</div>\n</template>\n```\n\nNesse outro código:\n\n```vue\n<style>\n.example[data-v-f3f3eg9] {\n  color: red;\n}\n</style>\n\n<template>\n  <div class=\"example\" data-v-f3f3eg9>olá</div>\n</template>\n```\n\n### Elementos raiz de componentes filhos \n\nCom `scoped`, os estilos do componente pai não vazam para os componentes filhos. No entanto, o nó raiz de um componente filho será afetado pelo CSS do componente pai e pelo CSS do componente filho. Isso é feito de propósito para que o pai possa estilizar o elemento raiz do filho para fins de layout.\n\n### Seletores profundos \n\nSe você deseja que um seletor em estilos `scoped` seja \"profundo\", ou seja, afetando componentes filhos, você pode usar a pseudo-classe `:deep()`:\n\n```vue\n<style scoped>\n.a :deep(.b) {\n  /* ... */\n}\n</style>\n```\n\nO código acima será compilado para:\n\n```css\n.a[data-v-f3f3eg9] .b {\n  /* ... */\n}\n```\n\n:::tip\nOs nós DOM criados com `v-html` não são afetados pelos estilos delimitados, mas você ainda pode estilizá-los usando seletores profundos.\n:::\n\n### Seletores de slot \n\nPor padrão, os estilos delimitados não afetam o conteúdo renderizado por `<slot/>`, pois eles são considerados de propriedade do componente pai que os passa. Para estilizar explicitamente o conteúdo do slot, use a pseudo-classe `:slotted`:\n\n```vue\n<style scoped>\n:slotted(div) {\n  color: red;\n}\n</style>\n```\n\n### Seletores globais \n\nSe você deseja que um seletor aplique-se globalmente, mas ainda esteja em um bloco de estilo `scoped`, você pode usar a pseudo-classe `:global` em vez de criar outro `<style>` (veja abaixo):\n\n```vue\n<style scoped>\n:global(.red) {\n  color: red;\n}\n</style>\n```\n\n### Misturando estilos locais e globais \n\nVocê também pode incluir estilos com e sem escopo no mesmo componente:\n\n```vue\n<style>\n/* estilos globais */\n</style>\n\n<style scoped>\n/* estilos locais */\n</style>\n```\n\n### Dicas de estilo delimitado \n\n- **Estilos delimitados não eliminam a necessidade de classes**. Devido a forma que os navegadores renderizam vários seletores CSS, `p { color: red }` será muito mais lento quando delimitado (isto é, quando combinado com um seletor de atributo). Se você usar classes ou ids, como em `.example { color: red }`, então você virtualmente elimina esse impacto de desempenho.\n\n- **Tenha cuidado com seletores descendentes em componentes recursivos!** Para uma regra CSS com o seletor `.a .b`, se o elemento que corresponde a `.a` contém um componente filho recursivo, então todos os `.b` nesse componente filho serão correspondidos pela regra.\n"
+            "value": "\nQuando um marcador `<style>` tiver o atributo `scoped`, o seu CSS apenas aplicar-se-á aos elementos do componente atual. Isto é semelhante ao encapsulamento de estilo encontrado no DOM de Sombra. Ele vem com algumas advertências, mas não exige quaisquer preenchimento de funcionalidade. Ele é alcançado usando PostCSS para transformar o seguinte:\n\n```vue\n<style scoped>\n.example {\n  color: red;\n}\n</style>\n\n<template>\n  <div class=\"example\">hi</div>\n</template>\n```\n\nNo seguinte:\n\n```vue\n<style>\n.example[data-v-f3f3eg9] {\n  color: red;\n}\n</style>\n\n<template>\n  <div class=\"example\" data-v-f3f3eg9>hi</div>\n</template>\n```\n\n### Elementos de Raiz do Componente Filho \n\nCom `scoped`, os estilos do componente pai não passarão para os componentes filhos. No entanto, um nó de raiz do componente filho será afetado por ambas CSS isolada do pai e a CSS isolada do filho. Isto é de propósito para que o pai possa estilizar o elemento de raiz filho para fins de disposição.\n\n### Seletores Profundos \n\nSe quisermos que um seletor nos estilos `scoped` torne-se \"profundo\", ou seja, afete componentes filho, podemos usar a pseudo-classe `:deep()`:\n\n```vue\n<style scoped>\n.a :deep(.b) {\n  /* ... */\n}\n</style>\n```\n\nO código acima será compilado para:\n\n```css\n.a[data-v-f3f3eg9] .b {\n  /* ... */\n}\n```\n\n:::tip DICA\nOs conteúdos do DOM criados com `v-html` não são afetados pelos estilos isolados, mas ainda podemos estilizá-los usando seletores profundos.\n:::\n\n### Seletores Inseridos \n\nPor padrão, os estilos isolados não afetam os conteúdos interpretados pelo `<slot/>`, uma vez que são considerados ser propriedade do componente pai que está a passá-los. Para explicitamente atingir o conteúdo da ranhura, usamos a pseudo-classe `:slotted`:\n\n```vue\n<style scoped>\n:slotted(div) {\n  color: red;\n}\n</style>\n```\n\n### Seletores Globais \n\nSe quisermos que apenas uma regra aplique-se globalmente, podemos usar a pseudo-classe `:global` ao invés de criar um outro `<style>` (consulte o exemplo abaixo):\n\n```vue\n<style scoped>\n:global(.red) {\n  color: red;\n}\n</style>\n```\n\n### Misturando Estilos Locais e Globais \n\nNós também podemos incluir ambos estilos isolados e não isolados no mesmo componente:\n\n```vue\n<style>\n/* estilos globais */\n</style>\n\n<style scoped>\n/* estilos locais */\n</style>\n```\n\n### Dicas de Estilo Isolado \n\n- **Os estilos isolados não eliminam a necessidade de classes**. Por causa da maneira que os navegadores interpretam os vários seletores de CSS, `p { color: red }` será muitas vezes mais lento quando isolado (ou seja, quando combinado com um seletor de atributo). Se usarmos as classes (por exemplo, `.class-name`) ou identificadores (por exemplo, `#id-name`), tal como em `.example { color: red }`, então eliminamos virtualmente este impacto de desempenho.\n\n- **Temos que ter cuidado com os seletores de descendentes nos componentes recursivos!** Para um regara de CSS com o seletor `.a .b`, se o elemento que corresponde `.a` contiver um componente filho recursivo, então todos os `.b` neste componente filho serão correspondidos pela regra.\n"
           },
           "references": [
             {
@@ -468,7 +468,7 @@
           "valueSet": "v",
           "description": {
             "kind": "markdown",
-            "value": "\nUma tag `<style module>` é compilada como um [Módulo CSS](https://github.com/css-modules/css-modules) e expõe as classes CSS resultantes para o componente como um objeto sob a chave `$style`:\n\n```vue\n<template>\n  <p :class=\"$style.red\">Isto deveria ser vermelho</p>\n</template>\n\n<style module>\n.red {\n  color: red;\n}\n</style>\n```\n\nAs classes resultantes tem um hash aplicado para evitar colisões, alcançando o mesmo efeito de delimitar o CSS apenas ao componente atual.\n\nRecorra à [Especificação de Módulos CSS](https://github.com/css-modules/css-modules) para mais detalhes como [exceções globais](https://github.com/css-modules/css-modules#exceptions) e [composição](https://github.com/css-modules/css-modules#composition).\n\n### Nome de injeção personalizado \n\nVocê pode personalizar a propriedade chave do objeto de classes injetadas dando ao atributo `module` um valor:\n\n```vue\n<template>\n  <p :class=\"classes.red\">vermelho</p>\n</template>\n\n<style module=\"classes\">\n.red {\n  color: red;\n}\n</style>\n```\n\n### Uso com API de Composição \n\nAs classes injetadas podem ser acessadas em `setup()` e `<script setup>` por meio da API `useCssModule`. Para blocos `<style module>` com nomes de injeção personalizados, `useCssModule` aceita o valor do atributo `module` correspondente como primeiro argumento:\n\n```js\nimport { useCssModule } from 'vue'\n\n// dentro do escopo de setup()...\n// padrão, retorna as classes da tag <style module>\nuseCssModule()\n\n// personalizado, retorna as classes da tag <style module=\"classes\">\nuseCssModule('classes')\n```\n"
+            "value": "\nUm marcador `<style module>` é compilado como [Módulos de CSS](https://github.com/css-modules/css-modules) e expõe as classes de CSS resultantes ao componente como um objeto sob a chave de `$style`:\n\n```vue\n<template>\n  <p :class=\"$style.red\">This should be red</p>\n</template>\n\n<style module>\n.red {\n  color: red;\n}\n</style>\n```\n\nAs classes resultantes têm o seu nome gerados com caracteres embaralhados para evitar colisões, alcançando o mesmo efeito de isolar o CSS apenas ao componente atual.\n\nConsulte a [especificação dos Módulos de CSS](https://github.com/css-modules/css-modules) por mais detalhes, tais como [exceções globais](https://github.com/css-modules/css-modules#exceptions) e [composição](https://github.com/css-modules/css-modules#composition).\n\n### Nome de Injeção Personalizado \n\nNós podemos personalizar a chave da propriedade do objeto de classes injetadas dando ao atributo `module` um valor:\n\n```vue\n<template>\n  <p :class=\"classes.red\">red</p>\n</template>\n\n<style module=\"classes\">\n.red {\n  color: red;\n}\n</style>\n```\n\n### Uso com API de Composição \n\nAs classes injetadas podem ser acessadas na `setup()` e no `<script setup>` através da API `useCssModule`. Para os blocos `<style module>` com nomes de injeção personalizados, `useCssModule` aceita o valor do atributo `module` correspondente como primeiro argumento:\n\n```js\nimport { useCssModule } from 'vue'\n\n// dentro do âmbito de setup()...\n// padrão, retorna as classes do marcador `<style module>`\nuseCssModule()\n\n// personalizado, retorna as classes do marcador `<style module=\"classes\">`\nuseCssModule('classes')\n```\n"
           },
           "references": [
             {
@@ -504,7 +504,7 @@
       ],
       "description": {
         "kind": "markdown",
-        "value": "\n- Um único arquivo `*.vue` pode conter multiplas tags `<style>`.\n\n- Uma tag `<style>` pode ter atributos `scoped` ou `module` (consulte [Recursos de estilo SFC](https://pt.vuejs.org/api/sfc-css-features.html) para obter mais detalhes) para ajudar a encapsular os estilos no componente atual. Múltiplas tags `<style>` com diferentes modos de encapsulamento podem ser misturados no mesmo componente.\n"
+        "value": "\n- Um único ficheiro `*.vue` pode conter vários marcadores de `<style>`.\n\n- Um marcador `<style>` pode ter os atributos `scoped` ou `module` (consulte [Funcionalidades de Estilo do Componente de Ficheiro Único](https://pt.vuejs.org/api/sfc-css-features.html) por mais detalhes) para ajudar a encapsular os estilos ao componente atual. Vários marcadores de `<style>` com diferentes modos de encapsulamento podem ser misturados no mesmo componente.\n"
       },
       "references": [
         {
@@ -538,13 +538,13 @@
       ]
     },
     {
-      "name": "Blocos Customizados",
+      "name": "Blocos Personalizados",
       "attributes": [
         {
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "\nSe você prefere dividir seu componente `*.vue` em multiplos arquivos, você pode usar o atributo `src` para importar um arquivo externo para o bloco de linguagem:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nEsteja ciente de que as importações `src` seguem as mesmas regras de resolução de caminho que as solicitações do módulo webpack, o que significa:\n\n- Caminhos relativos precisam começar com `./`\n- Você pode importar recursos de dependências do npm:\n\n```vue\n<!-- importa um arquivo do pacote de npm \"todomvc-app-css\" -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nAs importações com `src` também funcionam com blocos personalizados, por exemplo:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+            "value": "\nSe preferirmos separar os nossos componentes `*.vue` em vários ficheiros, podemos usar o atributo `src` para importar um ficheiro externo para um bloco de linguagem:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nDevemos estar ciente de que as importações de `src` seguem as mesmas regras de resolução de caminho que as requisições de módulo da Webpack, o que significa que:\n\n- Os caminhos relativos precisam começar com `./`\n- Nós podemos importar recursos a partir das dependências do npm:\n\n```vue\n<!-- importar um ficheiro dum pacote \"todomvc-app-css\" instalado -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nAs importações de `src` também funcionam com os blocos personalizados, por exemplo:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
           },
           "references": [
             {
@@ -580,36 +580,36 @@
       ],
       "description": {
         "kind": "markdown",
-        "value": "\nBlocos customizados adicionas podem ser incluídos em um arquivo `*.vue` para qualquer necessidade específica do projeto, por exemplo um bloco `<docs>`. Alguns exemplos do mundo real de blocos customizados incluem:\n\n- [Gridsome: `<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql: `<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n: `<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\nO manuseio de blocos personalizados dependerá de Ferramental - se você deseja criar suas próprias integrações de blocos personalizados, veja a [seção relevante de ferramental](https://pt.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations) para obter mais detalhes.\n"
+        "value": "\nOs blocos personalizados podem ser incluídos num ficheiro `*.vue` por qualquer necessidade específica do projeto, por exemplo um bloco `<docs>`. Alguns exemplos do mundo real de blocos personalizados incluem:\n\n- [Gridsome: `<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql: `<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n: `<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\nA manipulação dos blocos personalizados dependerá do ferramental - se quisermos construir as nossas próprias integrações de bloco personalizado, podemos consultar a [seção de ferramental de integrações de bloco personalizado do Componente de Ficheiro Único](https://pt.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations) por mais detalhes.\n"
       },
       "references": [
         {
           "name": "en",
-          "url": "https://vuejs.org/api/sfc-spec.html#blocos-customizados"
+          "url": "https://vuejs.org/api/sfc-spec.html#blocos-personalizados"
         },
         {
           "name": "zh-cn",
-          "url": "https://cn.vuejs.org/api/sfc-spec.html#blocos-customizados"
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#blocos-personalizados"
         },
         {
           "name": "ja",
-          "url": "https://ja.vuejs.org/api/sfc-spec.html#blocos-customizados"
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#blocos-personalizados"
         },
         {
           "name": "ua",
-          "url": "https://ua.vuejs.org/api/sfc-spec.html#blocos-customizados"
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#blocos-personalizados"
         },
         {
           "name": "fr",
-          "url": "https://fr.vuejs.org/api/sfc-spec.html#blocos-customizados"
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#blocos-personalizados"
         },
         {
           "name": "ko",
-          "url": "https://ko.vuejs.org/api/sfc-spec.html#blocos-customizados"
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#blocos-personalizados"
         },
         {
           "name": "pt",
-          "url": "https://pt.vuejs.org/api/sfc-spec.html#blocos-customizados"
+          "url": "https://pt.vuejs.org/api/sfc-spec.html#blocos-personalizados"
         }
       ]
     }
@@ -619,7 +619,7 @@
       "name": "lang",
       "description": {
         "kind": "markdown",
-        "value": "\nBlocos pode declarar linguagens de pré-processadores usando o atributo `lang`. A caso mais comum é usando TypeScript para o bloco `<script>`:\n```html\n<script lang=\"ts\">\n  // usa TypeScript\n</script>\n```\n\n`lang` pode ser aplicado a qualquer bloco - por exemplo, nós podemos usar `<style>` com [Sass](https://sass-lang.com/) e `<template>` com [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nNote que a integração com vários pré-processadores pode diferir por conjunto de ferramentas. Confira a respectiva documentação para exemplos:\n\n- [Vite](https://vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
+        "value": "\nOs blocos podem declarar linguagens pré-processadoras usando o atributo `lang`. O caso mais comum é usar TypeScript para o bloco `<script>`:\n\n\n```html\n<script lang=\"ts\">\n  // usar TypeScript\n</script>\n```\n\n`lang` pode ser aplicado à qualquer bloco - por exemplo, podemos usar o `<style>` com  a [Sass](https://sass-docs-pt.netlify.app/) e o `<template>` com a [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nNota que a integração com os vários pré-processadores pode diferir conforme a cadeia de ferramenta. Consulte a respetiva documentação por exemplos:\n\n- [Vite](https://pt.vitejs.dev/guide/features#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
       },
       "values": [],
       "references": [
@@ -657,7 +657,7 @@
       "name": "src",
       "description": {
         "kind": "markdown",
-        "value": "\nSe você prefere dividir seu componente `*.vue` em multiplos arquivos, você pode usar o atributo `src` para importar um arquivo externo para o bloco de linguagem:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nEsteja ciente de que as importações `src` seguem as mesmas regras de resolução de caminho que as solicitações do módulo webpack, o que significa:\n\n- Caminhos relativos precisam começar com `./`\n- Você pode importar recursos de dependências do npm:\n\n```vue\n<!-- importa um arquivo do pacote de npm \"todomvc-app-css\" -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nAs importações com `src` também funcionam com blocos personalizados, por exemplo:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+        "value": "\nSe preferirmos separar os nossos componentes `*.vue` em vários ficheiros, podemos usar o atributo `src` para importar um ficheiro externo para um bloco de linguagem:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nDevemos estar ciente de que as importações de `src` seguem as mesmas regras de resolução de caminho que as requisições de módulo da Webpack, o que significa que:\n\n- Os caminhos relativos precisam começar com `./`\n- Nós podemos importar recursos a partir das dependências do npm:\n\n```vue\n<!-- importar um ficheiro dum pacote \"todomvc-app-css\" instalado -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nAs importações de `src` também funcionam com os blocos personalizados, por exemplo:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
       },
       "references": [
         {
