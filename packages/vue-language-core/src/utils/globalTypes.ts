@@ -111,8 +111,8 @@ type __VLS_OverloadUnion<T> = Exclude<
 	T extends () => never ? never : () => never
 >;
 type __VLS_ConstructorOverloads<T> = __VLS_OverloadUnion<T> extends infer F
-	? F extends (event: infer E, ...args: infer A) => infer R
-	? { [K in E as K extends string ? K : never]: (...args: A) => void; }
+	? F extends (event: infer E, ...args: infer A) => any
+	? { [K in E & string]: (...args: A) => void; }
 	: never
 	: never;
 type __VLS_NormalizeEmits<T> = __VLS_Prettify<
