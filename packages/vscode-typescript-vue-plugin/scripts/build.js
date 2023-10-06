@@ -14,14 +14,9 @@ require('esbuild').build({
 	plugins: [{
 		name: 'umd2esm',
 		setup(build) {
-			build.onResolve({ filter: /(vscode-.*|estree-walker|jsonc-parser)/ }, args => {
+			build.onResolve({ filter: /^(vscode-.*-languageservice|jsonc-parser)/ }, args => {
 				const pathUmdMay = require.resolve(args.path, { paths: [args.resolveDir] })
 				const pathEsm = pathUmdMay.replace('/umd/', '/esm/')
-				return { path: pathEsm }
-			})
-			build.onResolve({ filter: /\@vue\/compiler-sfc/ }, args => {
-				const pathUmdMay = require.resolve(args.path, { paths: [args.resolveDir] })
-				const pathEsm = pathUmdMay.replace('compiler-sfc.cjs.js', 'compiler-sfc.esm-browser.js')
 				return { path: pathEsm }
 			})
 		},
