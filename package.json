@@ -10,7 +10,7 @@
 		"prerelease": "npm run build && npm run test",
 		"version:test": "lerna version --exact --force-publish --yes --sync-workspace-lock --no-push --no-git-tag-version",
 		"release": "npm run release:base && npm run release:vue && npm run release:typescript-vue-plugin",
-		"release:base": "lerna publish --exact --force-publish --yes --sync-workspace-lock",
+		"release:base": "lerna publish --exact --force-publish --yes --sync-workspace-lock --no-push",
 		"release:vue": "cd ./packages/vscode-vue && npm run release",
 		"release:typescript-vue-plugin": "cd ./packages/vscode-typescript-vue-plugin && npm run release",
 		"release:next": "npm run release:next-base && npm run release:next-vue && npm run release:next-typescript-vue-plugin",
