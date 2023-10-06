@@ -6,7 +6,7 @@
 - fix: accurate exposed type with refs in generic component ([#3604](https://github.com/vuejs/language-tools/issues/3604)) - thanks @so1ve
 - fix: make emits type correct when user assigns emit function a custom name ([#3624](https://github.com/vuejs/language-tools/issues/3624)) - thanks @so1ve
 
-Volar.js 1.10.3 updates:
+#### Volar.js 1.10.3 updates:
 
 - fix: performance issue with o(n^2) complexity of `directoryExists()` (https://github.com/volarjs/volar.js/issues/66) - thanks @Akryum
 - fix: directory named "constructor" could crash (https://github.com/volarjs/volar.js/issues/65) - thanks @Dmitrigar, @franz-bendezu
