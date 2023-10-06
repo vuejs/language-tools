@@ -94,16 +94,16 @@ exports[`vue-tsc-dts > Input: components/script-setup-generic.vue, Output: compo
     }>;
     attrs: any;
     emit: (e: 'bar', data: T) => void;
-}, __VLS_expose?: (exposed: {
+}, __VLS_expose?: (exposed: import(\\"vue\\").ShallowUnwrapRef<{
     baz: T;
-}) => void, __VLS_setup?: Promise<{
+}>) => void, __VLS_setup?: Promise<{
     props: {
         onBar?: (data: T) => any;
         foo: T;
     } & import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps;
-    expose(exposed: {
+    expose(exposed: import(\\"vue\\").ShallowUnwrapRef<{
         baz: T;
-    }): void;
+    }>): void;
     attrs: any;
     slots: Readonly<{
         default?(data: T): any;
@@ -117,9 +117,9 @@ exports[`vue-tsc-dts > Input: components/script-setup-generic.vue, Output: compo
             onBar?: (data: T) => any;
             foo: T;
         } & import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps;
-        expose(exposed: {
+        expose(exposed: import(\\"vue\\").ShallowUnwrapRef<{
             baz: T;
-        }): void;
+        }>): void;
         attrs: any;
         slots: Readonly<{
             default?(data: T): any;
@@ -294,14 +294,14 @@ exports[`vue-tsc-dts > Input: defineProp_B/script-setup-generic.vue, Output: def
     slots: {};
     attrs: any;
     emit: any;
-}, __VLS_expose?: (exposed: {}) => void, __VLS_setup?: Promise<{
+}, __VLS_expose?: (exposed: import('vue').ShallowUnwrapRef<{}>) => void, __VLS_setup?: Promise<{
     props: {
         c?: T;
         d: T;
         a?: T;
         b?: T;
     } & import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps;
-    expose(exposed: {}): void;
+    expose(exposed: import('vue').ShallowUnwrapRef<{}>): void;
     attrs: any;
     slots: {};
     emit: any;
@@ -315,7 +315,7 @@ exports[`vue-tsc-dts > Input: defineProp_B/script-setup-generic.vue, Output: def
             a?: T;
             b?: T;
         } & import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps;
-        expose(exposed: {}): void;
+        expose(exposed: import('vue').ShallowUnwrapRef<{}>): void;
         attrs: any;
         slots: {};
         emit: any;
@@ -344,11 +344,11 @@ exports[`vue-tsc-dts > Input: generic-interface/main.vue, Output: generic-interf
     slots: {};
     attrs: any;
     emit: any;
-}, __VLS_expose?: (exposed: {}) => void, __VLS_setup?: Promise<{
+}, __VLS_expose?: (exposed: import('vue').ShallowUnwrapRef<{}>) => void, __VLS_setup?: Promise<{
     props: {
         foo: T;
     } & import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps;
-    expose(exposed: {}): void;
+    expose(exposed: import('vue').ShallowUnwrapRef<{}>): void;
     attrs: any;
     slots: {};
     emit: any;
@@ -359,7 +359,7 @@ exports[`vue-tsc-dts > Input: generic-interface/main.vue, Output: generic-interf
         props: {
             foo: T;
         } & import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps;
-        expose(exposed: {}): void;
+        expose(exposed: import('vue').ShallowUnwrapRef<{}>): void;
         attrs: any;
         slots: {};
         emit: any;

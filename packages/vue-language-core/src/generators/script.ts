@@ -387,7 +387,7 @@ export function generate(
 
 			codes.push('return {} as {\n');
 			codes.push(`props: __VLS_Prettify<Omit<typeof __VLS_fnPropsDefineComponent & typeof __VLS_fnPropsTypeOnly, keyof typeof __VLS_defaultProps>> & typeof __VLS_fnPropsSlots & typeof __VLS_defaultProps,\n`);
-			codes.push(`expose(exposed: ${scriptSetupRanges.exposeRuntimeArg ? 'typeof __VLS_exposed' : '{}'}): void,\n`);
+			codes.push(`expose(exposed: import('${vueCompilerOptions.lib}').ShallowUnwrapRef<${scriptSetupRanges.exposeRuntimeArg ? 'typeof __VLS_exposed' : '{}'}>): void,\n`);
 			codes.push('attrs: any,\n');
 			codes.push('slots: ReturnType<typeof __VLS_template>,\n');
 			codes.push('emit: typeof __VLS_emit');
