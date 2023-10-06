@@ -19,7 +19,7 @@
 	"dependencies": {
 		"@vue/language-core": "1.8.15",
 		"@vue/typescript": "1.8.15",
-		"semver": "^7.3.8"
+		"semver": "^7.5.4"
 	},
 	"peerDependencies": {
 		"typescript": "*"

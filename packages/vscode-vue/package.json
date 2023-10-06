@@ -740,16 +740,16 @@
 		"size": "npm run build:minify -- --metafile && esbuild-visualizer --metadata ./meta.json && open ./stats.html"
 	},
 	"devDependencies": {
-		"@types/semver": "^7.3.13",
+		"@types/semver": "^7.5.3",
 		"@types/vscode": "1.67.0",
-		"@volar/vscode": "~1.10.0",
+		"@volar/vscode": "~1.10.3",
 		"@vue/language-core": "1.8.15",
 		"@vue/language-server": "1.8.15",
 		"esbuild": "0.15.18",
 		"esbuild-plugin-copy": "latest",
 		"esbuild-visualizer": "latest",
-		"semver": "^7.3.8",
+		"semver": "^7.5.4",
 		"vsce": "latest",
-		"vscode-languageclient": "^8.1.0"
+		"vscode-languageclient": "^9.0.1"
 	}
 }
