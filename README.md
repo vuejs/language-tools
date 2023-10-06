@@ -1,6 +1,6 @@
 # Vue Language Tools
 
-> ⚡ High-performance Vue language tooling based-on [Volar.js](https://volarjs.github.io/)
+> ⚡ High-performance Vue language tooling based-on [Volar.js](https://volarjs.dev/)
 
 Discord: https://discord.gg/5bnSSSSBbK
 
