@@ -1,19 +1,15 @@
 # Changelog
 
-## 1.8.15 (2023/9/26)
+## 1.8.16 (2023/10/7)
 
-- fix: props type missing in JS component context ([#3592](https://github.com/vuejs/language-tools/issues/3592))
-- fix: ignore `$emit` return type for Vue 2 ([#3596](https://github.com/vuejs/language-tools/issues/3596))
+- fix: merge default export's properties properly ([#3600](https://github.com/vuejs/language-tools/issues/3600)) - thanks @so1ve
+- fix: accurate exposed type with refs in generic component ([#3604](https://github.com/vuejs/language-tools/issues/3604)) - thanks @so1ve
+- fix: make emits type correct when user assigns emit function a custom name ([#3624](https://github.com/vuejs/language-tools/issues/3624)) - thanks @so1ve
 
-## 1.8.14 (2023/9/26)
+Volar.js 1.10.3 updates:
 
-- feat: `defineEmit` now able to infer event types with more than 4 overloads ([#3379](https://github.com/vuejs/language-tools/issues/3379)) ([#1855](https://github.com/vuejs/language-tools/issues/1855))
-- feat: more accurately distinguish component internal context and external context types ([#3591](https://github.com/vuejs/language-tools/issues/3591)) ([#3517](https://github.com/vuejs/language-tools/issues/3517)) - thanks @so1ve
-- fix: don't import alias macros ([#3576](https://github.com/vuejs/language-tools/issues/3576)) - thanks @sxzz
-- fix: make generic components' emit type compactible with Vue core types ([#3569](https://github.com/vuejs/language-tools/issues/3569)) ([#3257](https://github.com/vuejs/language-tools/issues/3257)) - thanks @so1ve
-- fix: use universal `__VLS_ConstructorOverloads` when emits type is not inlined ([#3585](https://github.com/vuejs/language-tools/issues/3585)) - thanks @so1ve
-- fix: inherit emits props and supports generic component emit type for JSX ([#3533](https://github.com/vuejs/language-tools/issues/3533)) ([#3289](https://github.com/vuejs/language-tools/issues/3289)) ([#3476](https://github.com/vuejs/language-tools/issues/3476)) - thanks @so1ve
-- perf: generate less TS virtual code for TS performance ([#3581](https://github.com/vuejs/language-tools/issues/3581))
+- fix: performance issue with o(n^2) complexity of `directoryExists()` (https://github.com/volarjs/volar.js/issues/66) - thanks @Akryum
+- fix: directory named "constructor" could crash (https://github.com/volarjs/volar.js/issues/65) - thanks @Dmitrigar, @franz-bendezu
 
 ### Full-time Support by
 
@@ -67,6 +63,21 @@
 	or
 	<a href="https://opencollective.com/volarjs">Open Collective</a>
 </h5>
+
+## 1.8.15 (2023/9/26)
+
+- fix: props type missing in JS component context ([#3592](https://github.com/vuejs/language-tools/issues/3592))
+- fix: ignore `$emit` return type for Vue 2 ([#3596](https://github.com/vuejs/language-tools/issues/3596))
+
+## 1.8.14 (2023/9/26)
+
+- feat: `defineEmit` now able to infer event types with more than 4 overloads ([#3379](https://github.com/vuejs/language-tools/issues/3379)) ([#1855](https://github.com/vuejs/language-tools/issues/1855))
+- feat: more accurately distinguish component internal context and external context types ([#3591](https://github.com/vuejs/language-tools/issues/3591)) ([#3517](https://github.com/vuejs/language-tools/issues/3517)) - thanks @so1ve
+- fix: don't import alias macros ([#3576](https://github.com/vuejs/language-tools/issues/3576)) - thanks @sxzz
+- fix: make generic components' emit type compactible with Vue core types ([#3569](https://github.com/vuejs/language-tools/issues/3569)) ([#3257](https://github.com/vuejs/language-tools/issues/3257)) - thanks @so1ve
+- fix: use universal `__VLS_ConstructorOverloads` when emits type is not inlined ([#3585](https://github.com/vuejs/language-tools/issues/3585)) - thanks @so1ve
+- fix: inherit emits props and supports generic component emit type for JSX ([#3533](https://github.com/vuejs/language-tools/issues/3533)) ([#3289](https://github.com/vuejs/language-tools/issues/3289)) ([#3476](https://github.com/vuejs/language-tools/issues/3476)) - thanks @so1ve
+- perf: generate less TS virtual code for TS performance ([#3581](https://github.com/vuejs/language-tools/issues/3581))
 
 ## 1.8.13 (2023/9/20)
 
