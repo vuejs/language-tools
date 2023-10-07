@@ -286,20 +286,20 @@ export default _default;
 
 exports[`vue-tsc-dts > Input: defineProp_B/script-setup-generic.vue, Output: defineProp_B/script-setup-generic.vue.d.ts 1`] = `
 "declare const _default: <T>(__VLS_props: {
-    c?: T;
-    d: T;
     a?: T;
     b?: T;
+    c?: T;
+    d: T;
 } & import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps, __VLS_ctx?: {
     slots: {};
     attrs: any;
     emit: any;
 }, __VLS_expose?: (exposed: import('vue').ShallowUnwrapRef<{}>) => void, __VLS_setup?: Promise<{
     props: {
-        c?: T;
-        d: T;
         a?: T;
         b?: T;
+        c?: T;
+        d: T;
     } & import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps;
     expose(exposed: import('vue').ShallowUnwrapRef<{}>): void;
     attrs: any;
@@ -310,10 +310,10 @@ exports[`vue-tsc-dts > Input: defineProp_B/script-setup-generic.vue, Output: def
 }> & {
     __ctx?: {
         props: {
-            c?: T;
-            d: T;
             a?: T;
             b?: T;
+            c?: T;
+            d: T;
         } & import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps;
         expose(exposed: import('vue').ShallowUnwrapRef<{}>): void;
         attrs: any;
