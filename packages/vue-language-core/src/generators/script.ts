@@ -484,11 +484,8 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			setupCodeModifies.push([() => {
 				codes.push(`const __VLS_exposed = `);
 				addVirtualCode('scriptSetup', scriptSetupRanges!.exposeRuntimeArg!.start, scriptSetupRanges!.exposeRuntimeArg!.end);
-				codes.push(`;`);
-				addVirtualCode('scriptSetup', scriptSetupRanges!.defineExpose!.start, scriptSetupRanges!.exposeRuntimeArg!.start);
-				codes.push(`__VLS_exposed`);
-				addVirtualCode('scriptSetup', scriptSetupRanges!.exposeRuntimeArg!.end, scriptSetupRanges!.defineExpose!.end);
-			}, scriptSetupRanges.defineExpose.start, scriptSetupRanges.defineExpose.end]);
+				codes.push(`;\n`);
+			}, scriptSetupRanges.defineExpose.start, scriptSetupRanges.defineExpose.start]);
 		}
 		setupCodeModifies = setupCodeModifies.sort((a, b) => a[1] - b[1]);
 
