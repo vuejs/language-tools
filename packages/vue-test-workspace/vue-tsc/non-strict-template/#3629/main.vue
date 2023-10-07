@@ -1,4 +1,7 @@
 <script setup lang="ts">
-// @ts-expect-error
-const props = defineProps().foo;
+import { exactType } from 'vue-tsc/shared';
+
+const foo = defineProps<{ foo: string }>().foo;
+
+exactType(foo, '' as string);
 </script>
