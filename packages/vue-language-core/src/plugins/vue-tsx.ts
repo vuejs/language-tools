@@ -152,6 +152,7 @@ function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOp
 			_sfc,
 			hasScriptSetupSlots.value,
 			slotsAssignName.value,
+			propsAssignName.value,
 			codegenStack,
 		);
 	});
@@ -159,11 +160,13 @@ function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOp
 	//#region remove when https://github.com/vuejs/core/pull/5912 merged
 	const hasScriptSetupSlots = ref(false);
 	const slotsAssignName = ref<string>();
+	const propsAssignName = ref<string>();
 	//#endregion
 
 	const tsxGen = computed(() => {
 		hasScriptSetupSlots.value = !!scriptSetupRanges.value?.defineSlots;
 		slotsAssignName.value = scriptSetupRanges.value?.slotsAssignName;
+		propsAssignName.value = scriptSetupRanges.value?.propsAssignName;
 		return genScript(
 			ts,
 			fileName,

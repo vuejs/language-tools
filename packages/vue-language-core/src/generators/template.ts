@@ -74,6 +74,7 @@ export function generate(
 	sfc: Sfc,
 	hasScriptSetupSlots: boolean,
 	slotsAssignName: string | undefined,
+	propsAssignName: string | undefined,
 	codegenStack: boolean,
 ) {
 
@@ -1892,7 +1893,7 @@ export function generate(
 				}
 				codes.push(addSuffix);
 			}
-		}, localVars, identifiers, vueCompilerOptions);
+		}, localVars, identifiers, new Set([propsAssignName ?? '']), vueCompilerOptions);
 		if (start !== undefined) {
 			for (const v of vars) {
 				v.offset = start + v.offset - prefix.length;
