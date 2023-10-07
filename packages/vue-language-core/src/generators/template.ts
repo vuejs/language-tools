@@ -1893,7 +1893,7 @@ export function generate(
 				}
 				codes.push(addSuffix);
 			}
-		}, localVars, identifiers, new Set([propsAssignName ?? '']), vueCompilerOptions);
+		}, localVars, identifiers, [propsAssignName ?? ''], vueCompilerOptions);
 		if (start !== undefined) {
 			for (const v of vars) {
 				v.offset = start + v.offset - prefix.length;

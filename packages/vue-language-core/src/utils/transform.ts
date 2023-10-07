@@ -9,9 +9,11 @@ export function walkInterpolationFragment(
 	cb: (fragment: string, offset: number | undefined, isJustForErrorMapping?: boolean) => void,
 	localVars: Record<string, number>,
 	identifiers: Set<string>,
-	skipVars: Set<string>,
+	_skipVars: string[],
 	vueOptions: VueCompilerOptions,
 ) {
+
+	const skipVars = new Set(['require', ..._skipVars]);
 
 	let ctxVars: {
 		text: string,
@@ -25,7 +27,6 @@ export function walkInterpolationFragment(
 			skipVars.has(id.text) ||
 			// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/compiler-core/src/transforms/transformExpression.ts#L342-L352
 			isGloballyWhitelisted(id.text) ||
-			id.text === 'require' ||
 			id.text.startsWith('__VLS_')
 		) {
 			// localVarOffsets.push(localVar.getStart(ast));

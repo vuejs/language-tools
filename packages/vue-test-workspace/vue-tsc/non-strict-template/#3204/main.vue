@@ -10,7 +10,13 @@ const props = withDefaults(defineProps<{
 </script>
 
 <template>
+	<div v-for="item of list">
+		{{ exactType(item, {} as T) }}
+	</div>
 	<div v-for="item of props.list">
 		{{ exactType(item, {} as T) }}
 	</div>
-</template>
+	<div v-for="item of $props.list">
+		{{ exactType(item, {} as T) }}
+	</div>
+</templat>
