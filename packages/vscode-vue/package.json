@@ -741,7 +741,7 @@
 	},
 	"devDependencies": {
 		"@types/semver": "^7.5.3",
-		"@types/vscode": "1.67.0",
+		"@types/vscode": "^1.67.0",
 		"@volar/vscode": "~1.10.3",
 		"@vue/language-core": "1.8.16",
 		"@vue/language-server": "1.8.16",
@@ -750,6 +750,6 @@
 		"esbuild-visualizer": "latest",
 		"semver": "^7.5.4",
 		"vsce": "latest",
-		"vscode-languageclient": "^9.0.1"
+		"vscode-languageclient": "^8.1.0"
 	}
 }

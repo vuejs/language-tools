@@ -1,9 +1,43 @@
 import * as path from 'path';
+import * as fs from 'fs';
 import { describe, it } from 'vitest';
 import { fork } from 'child_process';
 
 const binPath = require.resolve('../bin/vue-tsc.js');
-const workspace = path.resolve(__dirname, '../../vue-test-workspace/vue-tsc')
+const workspace = path.resolve(__dirname, '../../vue-test-workspace/vue-tsc');
+
+function prettyPath(path: string, isRoot: boolean) {
+	const segments = path.split('/');
+	return !isRoot ? segments.slice(segments.length - 2, segments.length).join('/') : segments[segments.length - 1];
+}
+
+function collectTests(dir: string, depth = 2, isRoot: boolean = true): [string, boolean][] {
+	const tests: [string, boolean][] = [];
+
+	if (depth <= 0) {
+		return tests;
+	}
+
+	const files = fs.readdirSync(dir);
+	for (const file of files) {
+		const filePath = path.join(dir, file);
+		const stat = fs.statSync(filePath);
+		if (stat.isDirectory()) {
+			const tsconfigPath = path.join(filePath, 'tsconfig.json');
+			if (fs.existsSync(tsconfigPath)) {
+				tests.push([
+					filePath.replace(/\\/g, '/'),
+					isRoot,
+				]);
+			}
+			tests.push(...collectTests(filePath, depth - 1, false));
+		}
+	}
+
+	return tests;
+}
+
+const tests = collectTests(workspace);
 
 function runVueTsc(cwd: string) {
 	return new Promise((resolve, reject) => {
@@ -32,11 +66,11 @@ function runVueTsc(cwd: string) {
 				reject(new Error(`Exited with code ${code}`));
 			}
 		});
-	})
+	});
 }
 
 describe(`vue-tsc`, () => {
-	it(`vue-tsc no errors (non-strict-template)`, () => runVueTsc(path.resolve(workspace, './non-strict-template')), 40_000);
-	it(`vue-tsc no errors (strict-template)`, () => runVueTsc(path.resolve(workspace, './strict-template')), 40_000);
-	it(`vue-tsc no errors (#3373)`, () => runVueTsc(path.resolve(workspace, './#3373')), 40_000);
+	for (const [path, isRoot] of tests) {
+		it(`vue-tsc no errors (${prettyPath(path, isRoot)})`, () => runVueTsc(path), 40_000);
+	}
 });
