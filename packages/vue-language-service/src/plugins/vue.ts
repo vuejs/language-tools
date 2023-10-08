@@ -14,7 +14,7 @@ export interface Provide {
 
 export const create = (): Service<Provide> => (context: ServiceContext<import('volar-service-typescript').Provide> | undefined, modules): ReturnType<Service<Provide>> => {
 
-	const htmlPlugin = createHtmlPlugin({ validLang: 'vue', disableCustomData: true })(context, modules);
+	const htmlPlugin = createHtmlPlugin({ languageId: 'vue', useCustomDataProviders: false })(context, modules);
 
 	if (!context)
 		return htmlPlugin as any;
