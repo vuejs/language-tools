@@ -467,12 +467,11 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 		let setupCodeModifies: [() => void, number, number][] = [];
 		if (scriptSetupRanges.defineProps && !scriptSetupRanges.propsAssignName) {
-			if (scriptSetupRanges.withDefaults) {
-				setupCodeModifies.push([() => codes.push(`const __VLS_props = `), scriptSetupRanges.withDefaults.start, scriptSetupRanges.withDefaults.start]);
-			}
-			else {
-				setupCodeModifies.push([() => codes.push(`const __VLS_props = `), scriptSetupRanges.defineProps.start, scriptSetupRanges.defineProps.start]);
-			}
+			const ranges = scriptSetupRanges.withDefaults ?? scriptSetupRanges.defineProps;
+			codes.push(`const __VLS_props = `);
+			addVirtualCode('scriptSetup', ranges.start, ranges.end);
+			codes.push(`;\n`);
+			setupCodeModifies.push([() => codes.push(`__VLS_props`), ranges.start, ranges.end]);
 		}
 		if (scriptSetupRanges.defineSlots && !scriptSetupRanges.slotsAssignName) {
 			setupCodeModifies.push([() => codes.push(`const __VLS_slots = `), scriptSetupRanges.defineSlots.start, scriptSetupRanges.defineSlots.start]);
