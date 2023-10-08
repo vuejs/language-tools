@@ -23,6 +23,7 @@ export function parseScriptSetupRanges(
 	let slotsAssignName: string | undefined;
 	let emitsAssignName: string | undefined;
 	let exposeRuntimeArg: TextRange | undefined;
+	let exposeTypeArg: TextRange | undefined;
 
 	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition' || ast.getFullText().trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition');
 	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' || ast.getFullText().trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition');
@@ -76,6 +77,7 @@ export function parseScriptSetupRanges(
 		slotsAssignName,
 		emitsAssignName,
 		exposeRuntimeArg,
+		exposeTypeArg,
 		defineProp,
 	};
 
@@ -179,6 +181,9 @@ export function parseScriptSetupRanges(
 				defineExpose = _getStartEnd(node);
 				if (node.arguments.length) {
 					exposeRuntimeArg = _getStartEnd(node.arguments[0]);
+				}
+				if (node.typeArguments?.length) {
+					exposeTypeArg = _getStartEnd(node.typeArguments[0]);
 				}
 			}
 			else if (vueCompilerOptions.macros.defineProps.includes(callText)) {
