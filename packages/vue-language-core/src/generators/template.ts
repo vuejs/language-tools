@@ -99,6 +99,10 @@ export function generate(
 	let expectedErrorStart: undefined | number;
 	let expectedErrorNode: CompilerDOM.CommentNode | undefined;
 
+	if (propsAssignName) {
+		localVars[propsAssignName] = 1;
+	}
+
 	generatePreResolveComponents();
 
 	if (sfc.templateAst) {
@@ -1893,7 +1897,7 @@ export function generate(
 				}
 				codes.push(addSuffix);
 			}
-		}, localVars, identifiers, [propsAssignName ?? ''], vueCompilerOptions);
+		}, localVars, identifiers, vueCompilerOptions);
 		if (start !== undefined) {
 			for (const v of vars) {
 				v.offset = start + v.offset - prefix.length;

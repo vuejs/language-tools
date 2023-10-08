@@ -927,7 +927,6 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 						},
 						emptyLocalVars,
 						identifiers,
-						[],
 						vueCompilerOptions,
 					);
 					codes.push(';\n');
