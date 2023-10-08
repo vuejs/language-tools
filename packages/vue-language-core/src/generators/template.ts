@@ -74,6 +74,7 @@ export function generate(
 	sfc: Sfc,
 	hasScriptSetupSlots: boolean,
 	slotsAssignName: string | undefined,
+	propsAssignName: string | undefined,
 	codegenStack: boolean,
 ) {
 
@@ -97,6 +98,10 @@ export function generate(
 	let ignoreStart: undefined | number;
 	let expectedErrorStart: undefined | number;
 	let expectedErrorNode: CompilerDOM.CommentNode | undefined;
+
+	if (propsAssignName) {
+		localVars[propsAssignName] = 1;
+	}
 
 	generatePreResolveComponents();
 
