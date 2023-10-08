@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.8.18 (2023/10/9)
+
+#### Upgrade required VSCode version to 1.82.0 ([#3642](https://github.com/vuejs/language-tools/issues/3642))
+
 ## 1.8.17 (2023/10/9)
 
 - fix: extension cannot run on vscode versions lower than 1.82.0 ([#3631](https://github.com/vuejs/language-tools/issues/3631)) ([#3635](https://github.com/vuejs/language-tools/issues/3635))
