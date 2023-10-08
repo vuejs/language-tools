@@ -50,6 +50,7 @@ export function generate(
 			bindings: [],
 			emitsAssignName: undefined,
 			exposeRuntimeArg: undefined,
+			exposeTypeArg: undefined,
 			leadingCommentEndOffset: 0,
 			importSectionEndOffset: 0,
 			withDefaults: undefined,
@@ -387,7 +388,7 @@ export function generate(
 
 			codes.push('return {} as {\n');
 			codes.push(`props: __VLS_Prettify<Omit<typeof __VLS_fnPropsDefineComponent & typeof __VLS_fnPropsTypeOnly, keyof typeof __VLS_defaultProps>> & typeof __VLS_fnPropsSlots & typeof __VLS_defaultProps,\n`);
-			codes.push(`expose(exposed: import('${vueCompilerOptions.lib}').ShallowUnwrapRef<${scriptSetupRanges.exposeRuntimeArg ? 'typeof __VLS_exposed' : '{}'}>): void,\n`);
+			codes.push(`expose(exposed: import('${vueCompilerOptions.lib}').ShallowUnwrapRef<${scriptSetupRanges.defineExpose ? 'typeof __VLS_exposed' : '{}'}>): void,\n`);
 			codes.push('attrs: any,\n');
 			codes.push('slots: ReturnType<typeof __VLS_template>,\n');
 			codes.push(`emit: typeof ${scriptSetupRanges.emitsAssignName ?? '__VLS_emit'},\n`);
@@ -479,15 +480,22 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		if (scriptSetupRanges.defineEmits && !scriptSetupRanges.emitsAssignName) {
 			setupCodeModifies.push([() => codes.push(`const __VLS_emit = `), scriptSetupRanges.defineEmits.start, scriptSetupRanges.defineEmits.start]);
 		}
-		if (scriptSetupRanges.defineExpose && scriptSetupRanges.exposeRuntimeArg) {
+		if (scriptSetupRanges.defineExpose) {
 			setupCodeModifies.push([() => {
-				codes.push(`const __VLS_exposed = `);
-				addVirtualCode('scriptSetup', scriptSetupRanges!.exposeRuntimeArg!.start, scriptSetupRanges!.exposeRuntimeArg!.end);
-				codes.push(`;`);
-				addVirtualCode('scriptSetup', scriptSetupRanges!.defineExpose!.start, scriptSetupRanges!.exposeRuntimeArg!.start);
-				codes.push(`__VLS_exposed`);
-				addVirtualCode('scriptSetup', scriptSetupRanges!.exposeRuntimeArg!.end, scriptSetupRanges!.defineExpose!.end);
-			}, scriptSetupRanges.defineExpose.start, scriptSetupRanges.defineExpose.end]);
+				if (scriptSetupRanges?.exposeTypeArg) {
+					codes.push(`let __VLS_exposed!: `);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.exposeTypeArg.start, scriptSetupRanges.exposeTypeArg.end);
+					codes.push(`;\n`);
+				}
+				else if (scriptSetupRanges?.exposeRuntimeArg) {
+					codes.push(`const __VLS_exposed = `);
+					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.exposeRuntimeArg.start, scriptSetupRanges.exposeRuntimeArg.end);
+					codes.push(`;\n`);
+				}
+				else {
+					codes.push(`const __VLS_exposed = {};\n`);
+				}
+			}, scriptSetupRanges.defineExpose.start, scriptSetupRanges.defineExpose.start]);
 		}
 		setupCodeModifies = setupCodeModifies.sort((a, b) => a[1] - b[1]);
 
@@ -599,7 +607,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 		generateSetupReturns();
 
-		if (scriptSetupRanges.exposeRuntimeArg) {
+		if (scriptSetupRanges.defineExpose) {
 			codes.push(`...__VLS_exposed,\n`);
 		}
 
