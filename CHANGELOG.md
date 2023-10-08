@@ -1,15 +1,11 @@
 # Changelog
 
-## 1.8.16 (2023/10/7)
+## 1.8.17 (2023/10/9)
 
-- fix: merge default export's properties properly ([#3600](https://github.com/vuejs/language-tools/issues/3600)) - thanks @so1ve
-- fix: accurate exposed type with refs in generic component ([#3604](https://github.com/vuejs/language-tools/issues/3604)) - thanks @so1ve
-- fix: make emits type correct when user assigns emit function a custom name ([#3624](https://github.com/vuejs/language-tools/issues/3624)) - thanks @so1ve
-
-#### Volar.js 1.10.3 updates:
-
-- fix: performance issue with o(n^2) complexity of `directoryExists()` (https://github.com/volarjs/volar.js/issues/66) - thanks @Akryum
-- fix: directory named "constructor" could crash (https://github.com/volarjs/volar.js/issues/65) - thanks @Dmitrigar, @franz-bendezu
+- fix: extension cannot run on vscode versions lower than 1.82.0 ([#3631](https://github.com/vuejs/language-tools/issues/3631)) ([#3635](https://github.com/vuejs/language-tools/issues/3635))
+- fix: make `defineProps` work when reading a property from `defineProps()` ([#3633](https://github.com/vuejs/language-tools/issues/3633)) - thanks @so1ve
+- fix: avoid reading `props` from `__VLS_ctx` ([#3636](https://github.com/vuejs/language-tools/issues/3636)) - thanks @so1ve
+- fix: regression with `defineExpose` ([#3639](https://github.com/vuejs/language-tools/issues/3639)) - thanks @so1ve
 
 ### Full-time Support by
 
@@ -63,6 +59,17 @@
 	or
 	<a href="https://opencollective.com/volarjs">Open Collective</a>
 </h5>
+
+## 1.8.16 (2023/10/7)
+
+- fix: merge default export's properties properly ([#3600](https://github.com/vuejs/language-tools/issues/3600)) - thanks @so1ve
+- fix: accurate exposed type with refs in generic component ([#3604](https://github.com/vuejs/language-tools/issues/3604)) - thanks @so1ve
+- fix: make emits type correct when user assigns emit function a custom name ([#3624](https://github.com/vuejs/language-tools/issues/3624)) - thanks @so1ve
+
+#### Volar.js 1.10.3 updates:
+
+- fix: performance issue with o(n^2) complexity of `directoryExists()` (https://github.com/volarjs/volar.js/issues/66) - thanks @Akryum
+- fix: directory named "constructor" could crash (https://github.com/volarjs/volar.js/issues/65) - thanks @Dmitrigar, @franz-bendezu
 
 ## 1.8.15 (2023/9/26)
 
