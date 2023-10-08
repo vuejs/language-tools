@@ -61,7 +61,7 @@ importers:
         specifier: ^7.5.3
         version: 7.5.3
       '@types/vscode':
-        specifier: ^1.67.0
+        specifier: ^1.82.0
         version: 1.83.0
       '@volar/vscode':
         specifier: ~1.10.3
