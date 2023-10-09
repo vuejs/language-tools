@@ -470,9 +470,8 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		if (scriptSetupRanges.defineProps && !scriptSetupRanges.propsAssignName) {
 			const ranges = scriptSetupRanges.withDefaults ?? scriptSetupRanges.defineProps;
 			codes.push(`const __VLS_props = `);
-			addVirtualCode('scriptSetup', ranges.start, ranges.end);
+			addExtraReferenceVirtualCode('scriptSetup', ranges.start, ranges.end);
 			codes.push(`;\n`);
-			setupCodeModifies.push([() => codes.push(`__VLS_props`), ranges.start, ranges.end]);
 		}
 		if (scriptSetupRanges.defineSlots && !scriptSetupRanges.slotsAssignName) {
 			setupCodeModifies.push([() => codes.push(`const __VLS_slots = `), scriptSetupRanges.defineSlots.start, scriptSetupRanges.defineSlots.start]);
