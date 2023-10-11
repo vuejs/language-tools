@@ -32,8 +32,12 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 				}
 			}
 		},
-		getExternalFiles(project) {
-			if (!externalFiles.has(project)) {
+		getExternalFiles(project, updateLevel = -1) {
+			if (
+				// @ts-expect-error wait for TS 5.3
+				updateLevel >= 1 satisfies ts.ProgramUpdateLevel.RootNamesAndUpdate
+				|| !externalFiles.has(project)
+			) {
 				externalFiles.set(project, getExternalFiles(ts, project, ['.vue']));
 			}
 			return externalFiles.get(project)!;
