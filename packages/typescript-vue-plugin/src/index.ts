@@ -1,5 +1,5 @@
 import * as vue from '@vue/language-core';
-import { decorateLanguageService, decorateLanguageServiceHost, getExternalFiles } from '@vue/typescript';
+import { decorateLanguageService, decorateLanguageServiceHost, searchExternalFiles } from '@vue/typescript';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
 const externalFiles = new WeakMap<ts.server.Project, string[]>();
@@ -32,9 +32,18 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 				}
 			}
 		},
-		getExternalFiles(project) {
-			if (!externalFiles.has(project)) {
-				externalFiles.set(project, getExternalFiles(ts, project, ['.vue']));
+		getExternalFiles(project, updateLevel = -1) {
+			if (
+				// @ts-expect-error wait for TS 5.3
+				updateLevel >= 1 satisfies ts.ProgramUpdateLevel.RootNamesAndUpdate
+				|| !externalFiles.has(project)
+			) {
+				const oldFiles = externalFiles.get(project);
+				const newFiles = searchExternalFiles(ts, project, ['.vue']);
+				externalFiles.set(project, newFiles);
+				if (oldFiles) {
+					refreshDiagnosticsIfNeeded(project, oldFiles, newFiles);
+				}
 			}
 			return externalFiles.get(project)!;
 		},
@@ -43,3 +52,19 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 };
 
 export = init;
+
+function refreshDiagnosticsIfNeeded(project: ts.server.Project, oldExternalFiles: string[], newExternalFiles: string[]) {
+	let dirty = oldExternalFiles.length !== newExternalFiles.length;
+	if (!dirty) {
+		const set = new Set(oldExternalFiles);
+		for (const file of newExternalFiles) {
+			if (!set.has(file)) {
+				dirty = true;
+				break;
+			}
+		}
+	}
+	if (dirty) {
+		project.refreshDiagnostics();
+	}
+}
