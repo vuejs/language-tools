@@ -85,9 +85,9 @@ export function generate(
 	const slots = new Map<string, { varName: string; loc: [number, number]; nodeLoc: any; }>();
 	const slotExps = new Map<string, { varName: string; }>();
 	const tagNames = collectTagOffsets();
-	const localVars: Record<string, number> = {};
+	const localVars = new Map<string, number>();
 	const tempVars: ReturnType<typeof walkInterpolationFragment>[] = [];
-	const identifiers = new Set<string>();
+	const accessedGlobalVariables = new Set<string>();
 	const scopedClasses: { className: string, offset: number; }[] = [];
 	const blockConditions: string[] = [];
 	const hasSlotElements = new Set<CompilerDOM.ElementNode>();
@@ -100,7 +100,7 @@ export function generate(
 	let expectedErrorNode: CompilerDOM.CommentNode | undefined;
 
 	if (propsAssignName) {
-		localVars[propsAssignName] = 1;
+		localVars.set(propsAssignName, 1);
 	}
 
 	generatePreResolveComponents();
@@ -129,7 +129,7 @@ export function generate(
 		cssCodes,
 		cssCodeStacks,
 		tagNames,
-		identifiers,
+		accessedGlobalVariables,
 		hasSlot,
 	};
 
@@ -568,7 +568,7 @@ export function generate(
 			colletVars(ts, collectAst, forBlockVars);
 
 			for (const varName of forBlockVars)
-				localVars[varName] = (localVars[varName] ?? 0) + 1;
+				localVars.set(varName, (localVars.get(varName) ?? 0) + 1);
 
 			codes.push([leftExpressionText, 'template', leftExpressionRange.start, capabilitiesPresets.all]);
 			formatCodes.push(...createFormatCode(leftExpressionText, leftExpressionRange.start, formatBrackets.normal));
@@ -609,7 +609,7 @@ export function generate(
 		}
 
 		for (const varName of forBlockVars)
-			localVars[varName]--;
+			localVars.set(varName, localVars.get(varName)! - 1);
 	}
 
 	function visitElementNode(node: CompilerDOM.ElementNode, parentEl: CompilerDOM.ElementNode | undefined, componentCtxVar: string | undefined) {
@@ -938,8 +938,7 @@ export function generate(
 			codes.push(';\n');
 
 			slotBlockVars.forEach(varName => {
-				localVars[varName] ??= 0;
-				localVars[varName]++;
+				localVars.set(varName, (localVars.get(varName) ?? 0) + 1);
 			});
 
 			let prev: CompilerDOM.TemplateChildNode | undefined;
@@ -950,7 +949,7 @@ export function generate(
 			resolveComment();
 
 			slotBlockVars.forEach(varName => {
-				localVars[varName]--;
+				localVars.set(varName, localVars.get(varName)! - 1);
 			});
 			let isStatic = true;
 			if (slotDir?.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
@@ -1497,7 +1496,7 @@ export function generate(
 				&& (prop.name !== 'scope' && prop.name !== 'data')
 			) {
 
-				identifiers.add(camelize('v-' + prop.name));
+				accessedGlobalVariables.add(camelize('v-' + prop.name));
 
 				if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && !prop.arg.isStatic) {
 					codes.push(
@@ -1897,7 +1896,7 @@ export function generate(
 				}
 				codes.push(addSuffix);
 			}
-		}, localVars, identifiers, vueCompilerOptions);
+		}, localVars, accessedGlobalVariables, vueCompilerOptions);
 		if (start !== undefined) {
 			for (const v of vars) {
 				v.offset = start + v.offset - prefix.length;

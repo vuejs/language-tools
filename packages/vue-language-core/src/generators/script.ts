@@ -908,7 +908,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		}
 		function generateCssVars() {
 
-			const emptyLocalVars: Record<string, number> = {};
+			const emptyLocalVars = new Map<string, number>();
 			const identifiers = new Set<string>();
 
 			for (const style of _sfc.styles) {
@@ -959,7 +959,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 					usageVars.add(tag.split('.')[0]);
 				}
 			}
-			for (const _id of htmlGen.identifiers) {
+			for (const _id of htmlGen.accessedGlobalVariables) {
 				usageVars.add(_id);
 			}
 		}

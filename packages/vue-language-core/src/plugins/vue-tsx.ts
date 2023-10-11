@@ -1,6 +1,6 @@
 import { computed, shallowRef as ref } from '@vue/reactivity';
-import { generate as genScript } from '../generators/script';
-import * as templateGen from '../generators/template';
+import { generate as generateScript } from '../generators/script';
+import { generate as generateTemplate } from '../generators/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { Sfc, VueLanguagePlugin } from '../types';
@@ -53,7 +53,7 @@ const plugin: VueLanguagePlugin = (ctx) => {
 					documentFormatting: false,
 					documentSymbol: false,
 				};
-				const tsx = _tsx.tsxGen.value;
+				const tsx = _tsx.generatedScript.value;
 				if (tsx) {
 					const [content, contentStacks] = ctx.codegenStack ? muggle.track([...tsx.codes], [...tsx.codeStacks]) : [[...tsx.codes], [...tsx.codeStacks]];
 					embeddedFile.content = content;
@@ -73,8 +73,8 @@ const plugin: VueLanguagePlugin = (ctx) => {
 					inlayHint: false,
 				};
 
-				if (_tsx.htmlGen.value) {
-					const [content, contentStacks] = ctx.codegenStack ? muggle.track([..._tsx.htmlGen.value.formatCodes], [..._tsx.htmlGen.value.formatCodeStacks]) : [[..._tsx.htmlGen.value.formatCodes], [..._tsx.htmlGen.value.formatCodeStacks]];
+				if (_tsx.generatedTemplate.value) {
+					const [content, contentStacks] = ctx.codegenStack ? muggle.track([..._tsx.generatedTemplate.value.formatCodes], [..._tsx.generatedTemplate.value.formatCodeStacks]) : [[..._tsx.generatedTemplate.value.formatCodes], [..._tsx.generatedTemplate.value.formatCodeStacks]];
 					embeddedFile.content = content;
 					embeddedFile.contentStacks = contentStacks;
 				}
@@ -97,8 +97,8 @@ const plugin: VueLanguagePlugin = (ctx) => {
 
 				embeddedFile.parentFileName = fileName + '.template.' + sfc.template?.lang;
 
-				if (_tsx.htmlGen.value) {
-					const [content, contentStacks] = ctx.codegenStack ? muggle.track([..._tsx.htmlGen.value.cssCodes], [..._tsx.htmlGen.value.cssCodeStacks]) : [[..._tsx.htmlGen.value.cssCodes], [..._tsx.htmlGen.value.cssCodeStacks]];
+				if (_tsx.generatedTemplate.value) {
+					const [content, contentStacks] = ctx.codegenStack ? muggle.track([..._tsx.generatedTemplate.value.cssCodes], [..._tsx.generatedTemplate.value.cssCodeStacks]) : [[..._tsx.generatedTemplate.value.cssCodes], [..._tsx.generatedTemplate.value.cssCodeStacks]];
 					embeddedFile.content = content;
 					embeddedFile.contentStacks = contentStacks;
 				}
@@ -138,12 +138,12 @@ function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOp
 			? parseScriptSetupRanges(ts, _sfc.scriptSetupAst, vueCompilerOptions)
 			: undefined
 	);
-	const htmlGen = computed(() => {
+	const generatedTemplate = computed(() => {
 
 		if (!_sfc.templateAst)
 			return;
 
-		return templateGen.generate(
+		return generateTemplate(
 			ts,
 			compilerOptions,
 			vueCompilerOptions,
@@ -163,18 +163,18 @@ function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOp
 	const propsAssignName = ref<string>();
 	//#endregion
 
-	const tsxGen = computed(() => {
+	const generatedScript = computed(() => {
 		hasScriptSetupSlots.value = !!scriptSetupRanges.value?.defineSlots;
 		slotsAssignName.value = scriptSetupRanges.value?.slotsAssignName;
 		propsAssignName.value = scriptSetupRanges.value?.propsAssignName;
-		return genScript(
+		return generateScript(
 			ts,
 			fileName,
 			_sfc,
 			lang.value,
 			scriptRanges.value,
 			scriptSetupRanges.value,
-			htmlGen.value,
+			generatedTemplate.value,
 			compilerOptions,
 			vueCompilerOptions,
 			codegenStack,
@@ -185,7 +185,7 @@ function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOp
 		scriptRanges,
 		scriptSetupRanges,
 		lang,
-		tsxGen,
-		htmlGen,
+		generatedScript,
+		generatedTemplate,
 	};
 }
