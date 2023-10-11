@@ -164,9 +164,9 @@ function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOp
 	//#endregion
 
 	const generatedScript = computed(() => {
-		hasScriptSetupSlots.value = !!scriptSetupRanges.value?.defineSlots;
-		slotsAssignName.value = scriptSetupRanges.value?.slotsAssignName;
-		propsAssignName.value = scriptSetupRanges.value?.propsAssignName;
+		hasScriptSetupSlots.value = !!scriptSetupRanges.value?.slots.define;
+		slotsAssignName.value = scriptSetupRanges.value?.slots.name;
+		propsAssignName.value = scriptSetupRanges.value?.props.name;
 		return generateScript(
 			ts,
 			fileName,
