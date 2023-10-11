@@ -16,7 +16,6 @@ import { config } from './config';
 import * as componentMeta from './features/componentMeta';
 import * as doctor from './features/doctor';
 import * as nameCasing from './features/nameCasing';
-import * as savingTime from './features/savingTime';
 import * as splitEditors from './features/splitEditors';
 
 let semanticClient: lsp.BaseLanguageClient;
@@ -90,7 +89,6 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	activateServerMaxOldSpaceSizeChange();
 	activateRestartRequest();
 	activateClientRequests();
-	context.subscriptions.push(...savingTime.register());
 
 	splitEditors.register(context, syntacticClient);
 	doctor.register(context, semanticClient);
