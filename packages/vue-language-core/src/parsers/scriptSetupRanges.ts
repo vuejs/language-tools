@@ -34,7 +34,7 @@ export function parseScriptSetupRanges(
 		defaultValue: TextRange | undefined;
 		required: boolean;
 	}[] = [];
-	const bindings = parseBindingRanges(ts, ast, false);
+	const bindings = parseBindingRanges(ts, ast);
 	const text = ast.getFullText();
 	const leadingCommentEndOffset = ts.getLeadingCommentRanges(text, 0)?.reverse()[0].end ?? 0;
 
@@ -213,44 +213,34 @@ export function parseScriptSetupRanges(
 	}
 }
 
-export function parseBindingRanges(ts: typeof import('typescript/lib/tsserverlibrary'), sourceFile: ts.SourceFile, isType: boolean) {
+export function parseBindingRanges(ts: typeof import('typescript/lib/tsserverlibrary'), sourceFile: ts.SourceFile) {
 	const bindings: TextRange[] = [];
 	sourceFile.forEachChild(node => {
-		if (!isType) {
-			if (ts.isVariableStatement(node)) {
-				for (const node_2 of node.declarationList.declarations) {
-					const vars = _findBindingVars(node_2.name);
-					for (const _var of vars) {
-						bindings.push(_var);
-					}
+		if (ts.isVariableStatement(node)) {
+			for (const node_2 of node.declarationList.declarations) {
+				const vars = _findBindingVars(node_2.name);
+				for (const _var of vars) {
+					bindings.push(_var);
 				}
 			}
-			else if (ts.isFunctionDeclaration(node)) {
-				if (node.name && ts.isIdentifier(node.name)) {
-					bindings.push(_getStartEnd(node.name));
-				}
-			}
-			else if (ts.isClassDeclaration(node)) {
-				if (node.name) {
-					bindings.push(_getStartEnd(node.name));
-				}
-			}
-			else if (ts.isEnumDeclaration(node)) {
+		}
+		else if (ts.isFunctionDeclaration(node)) {
+			if (node.name && ts.isIdentifier(node.name)) {
 				bindings.push(_getStartEnd(node.name));
 			}
 		}
-		else {
-			if (ts.isTypeAliasDeclaration(node)) {
+		else if (ts.isClassDeclaration(node)) {
+			if (node.name) {
 				bindings.push(_getStartEnd(node.name));
 			}
-			else if (ts.isInterfaceDeclaration(node)) {
-				bindings.push(_getStartEnd(node.name));
-			}
+		}
+		else if (ts.isEnumDeclaration(node)) {
+			bindings.push(_getStartEnd(node.name));
 		}
 
 		if (ts.isImportDeclaration(node)) {
-			if (node.importClause && (isType || !node.importClause.isTypeOnly)) {
-				if (node.importClause.name && !isType) {
+			if (node.importClause && !node.importClause.isTypeOnly) {
+				if (node.importClause.name) {
 					bindings.push(_getStartEnd(node.importClause.name));
 				}
 				if (node.importClause.namedBindings) {

@@ -15,7 +15,7 @@ export function parseScriptRanges(ts: typeof import('typescript/lib/tsserverlibr
 		nameOption: TextRange | undefined,
 	}) | undefined;
 
-	const bindings = hasScriptSetup ? parseBindingRanges(ts, ast, false) : [];
+	const bindings = hasScriptSetup ? parseBindingRanges(ts, ast) : [];
 
 	ast.forEachChild(raw => {
 
