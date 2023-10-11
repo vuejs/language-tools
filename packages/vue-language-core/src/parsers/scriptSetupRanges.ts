@@ -11,19 +11,32 @@ export function parseScriptSetupRanges(
 
 	let foundNonImportExportNode = false;
 	let importSectionEndOffset = 0;
-	let withDefaultsArg: TextRange | undefined;
-	let propsAssignName: string | undefined;
-	let withDefaults: TextRange | undefined;
-	let defineProps: TextRange | undefined;
-	let propsRuntimeArg: TextRange | undefined;
-	let propsTypeArg: TextRange | undefined;
-	let defineSlots: TextRange | undefined;
-	let defineEmits: TextRange | undefined;
-	let defineExpose: TextRange | undefined;
-	let slotsAssignName: string | undefined;
-	let emitsAssignName: string | undefined;
-	let exposeRuntimeArg: TextRange | undefined;
-	let exposeTypeArg: TextRange | undefined;
+
+	const props: {
+		name?: string;
+		define?: TextRange & {
+			arg?: TextRange;
+			typeArg?: TextRange;
+		};
+		withDefaults?: TextRange & {
+			arg?: TextRange;
+		};
+	} = {};
+	const slots: {
+		name?: string;
+		define?: TextRange;
+	} = {};
+	const emits: {
+		name?: string;
+		define?: TextRange;
+	} = {};
+	const expose: {
+		name?: string;
+		define?: TextRange & {
+			arg?: TextRange;
+			typeArg?: TextRange;
+		};
+	} = {};
 
 	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition' || ast.getFullText().trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition');
 	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' || ast.getFullText().trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition');
@@ -65,19 +78,10 @@ export function parseScriptSetupRanges(
 		leadingCommentEndOffset,
 		importSectionEndOffset,
 		bindings,
-		withDefaultsArg,
-		withDefaults,
-		defineProps,
-		defineSlots,
-		defineEmits,
-		defineExpose,
-		propsAssignName,
-		propsRuntimeArg,
-		propsTypeArg,
-		slotsAssignName,
-		emitsAssignName,
-		exposeRuntimeArg,
-		exposeTypeArg,
+		props,
+		slots,
+		emits,
+		expose,
 		defineProp,
 	};
 
@@ -166,46 +170,46 @@ export function parseScriptSetupRanges(
 				}
 			}
 			else if (vueCompilerOptions.macros.defineSlots.includes(callText)) {
-				defineSlots = _getStartEnd(node);
+				slots.define = _getStartEnd(node);
 				if (ts.isVariableDeclaration(parent)) {
-					slotsAssignName = parent.name.getText(ast);
+					slots.name = parent.name.getText(ast);
 				}
 			}
 			else if (vueCompilerOptions.macros.defineEmits.includes(callText)) {
-				defineEmits = _getStartEnd(node);
+				emits.define = _getStartEnd(node);
 				if (ts.isVariableDeclaration(parent)) {
-					emitsAssignName = parent.name.getText(ast);
+					emits.name = parent.name.getText(ast);
 				}
 			}
 			else if (vueCompilerOptions.macros.defineExpose.includes(callText)) {
-				defineExpose = _getStartEnd(node);
+				expose.define = _getStartEnd(node);
 				if (node.arguments.length) {
-					exposeRuntimeArg = _getStartEnd(node.arguments[0]);
+					expose.define.arg = _getStartEnd(node.arguments[0]);
 				}
 				if (node.typeArguments?.length) {
-					exposeTypeArg = _getStartEnd(node.typeArguments[0]);
+					expose.define.typeArg = _getStartEnd(node.typeArguments[0]);
 				}
 			}
 			else if (vueCompilerOptions.macros.defineProps.includes(callText)) {
-				defineProps = _getStartEnd(node);
+				props.define = _getStartEnd(node);
 				if (ts.isVariableDeclaration(parent)) {
-					propsAssignName = parent.name.getText(ast);
+					props.name = parent.name.getText(ast);
 				}
 				if (node.arguments.length) {
-					propsRuntimeArg = _getStartEnd(node.arguments[0]);
+					props.define.arg = _getStartEnd(node.arguments[0]);
 				}
 				if (node.typeArguments?.length) {
-					propsTypeArg = _getStartEnd(node.typeArguments[0]);
+					props.define.typeArg = _getStartEnd(node.typeArguments[0]);
 				}
 			}
 			else if (vueCompilerOptions.macros.withDefaults.includes(callText)) {
-				withDefaults = _getStartEnd(node);
+				props.withDefaults = _getStartEnd(node);
 				if (node.arguments.length >= 2) {
 					const arg = node.arguments[1];
-					withDefaultsArg = _getStartEnd(arg);
+					props.withDefaults.arg = _getStartEnd(arg);
 				}
 				if (ts.isVariableDeclaration(parent)) {
-					propsAssignName = parent.name.getText(ast);
+					props.name = parent.name.getText(ast);
 				}
 			}
 		}
