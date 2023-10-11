@@ -459,11 +459,20 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 		let setupCodeModifies: [() => void, number, number][] = [];
 		if (scriptSetupRanges.props.define && !scriptSetupRanges.props.name) {
-			const ranges = scriptSetupRanges.props.withDefaults ?? scriptSetupRanges.props.define;
-			codes.push(`const __VLS_props = `);
-			addVirtualCode('scriptSetup', ranges.start, ranges.end);
-			codes.push(`;\n`);
-			setupCodeModifies.push([() => codes.push(`__VLS_props`), ranges.start, ranges.end]);
+			const range = scriptSetupRanges.props.withDefaults ?? scriptSetupRanges.props.define;
+			const statement = scriptSetupRanges.props.define.statement;
+			if (statement.start === range.start && statement.end === range.end) {
+				setupCodeModifies.push([() => codes.push(`const __VLS_props = `), range.start, range.start]);
+			}
+			else {
+				setupCodeModifies.push([() => {
+					codes.push(`const __VLS_props = `);
+					addVirtualCode('scriptSetup', range.start, range.end);
+					codes.push(`;\n`);
+					addVirtualCode('scriptSetup', statement.start, range.start);
+					codes.push(`__VLS_props`);
+				}, statement.start, range.end]);
+			}
 		}
 		if (scriptSetupRanges.slots.define && !scriptSetupRanges.slots.name) {
 			setupCodeModifies.push([() => codes.push(`const __VLS_slots = `), scriptSetupRanges.slots.define.start, scriptSetupRanges.slots.define.start]);

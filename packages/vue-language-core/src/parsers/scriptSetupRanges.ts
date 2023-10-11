@@ -15,6 +15,7 @@ export function parseScriptSetupRanges(
 	const props: {
 		name?: string;
 		define?: TextRange & {
+			statement: TextRange;
 			arg?: TextRange;
 			typeArg?: TextRange;
 		};
@@ -72,7 +73,7 @@ export function parseScriptSetupRanges(
 			foundNonImportExportNode = true;
 		}
 	});
-	ast.forEachChild(child => visitNode(child, ast));
+	ast.forEachChild(child => visitNode(child, [ast]));
 
 	return {
 		leadingCommentEndOffset,
@@ -88,7 +89,8 @@ export function parseScriptSetupRanges(
 	function _getStartEnd(node: ts.Node) {
 		return getStartEnd(node, ast);
 	}
-	function visitNode(node: ts.Node, parent: ts.Node) {
+	function visitNode(node: ts.Node, parents: ts.Node[]) {
+		const parent = parents[parents.length - 1];
 		if (
 			ts.isCallExpression(node)
 			&& ts.isIdentifier(node.expression)
@@ -191,7 +193,28 @@ export function parseScriptSetupRanges(
 				}
 			}
 			else if (vueCompilerOptions.macros.defineProps.includes(callText)) {
-				props.define = _getStartEnd(node);
+
+				let statementRange: TextRange | undefined;
+				for (let i = parents.length - 1; i >= 0; i--) {
+					if (ts.isStatement(parents[i])) {
+						const statement = parents[i];
+						statement.forEachChild(child => {
+							const range = _getStartEnd(child);
+							statementRange ??= range;
+							statementRange.end = range.end;
+						});
+						break;
+					}
+				}
+				if (!statementRange) {
+					statementRange = _getStartEnd(node);
+				}
+
+				props.define = {
+					..._getStartEnd(node),
+					statement: statementRange,
+				};
+
 				if (ts.isVariableDeclaration(parent)) {
 					props.name = parent.name.getText(ast);
 				}
@@ -213,7 +236,11 @@ export function parseScriptSetupRanges(
 				}
 			}
 		}
-		node.forEachChild(child => visitNode(child, node));
+		node.forEachChild(child => {
+			parents.push(node);
+			visitNode(child, parents);
+			parents.pop();
+		});
 	}
 }
 
