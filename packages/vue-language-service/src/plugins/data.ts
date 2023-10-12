@@ -21,6 +21,9 @@ export function loadTemplateData(lang: string) {
 	else if (lang === 'zh-cn') {
 		data = require('../../data/template/zh-cn.json');
 	}
+	else if (lang === 'it') {
+		data = require('../../data/template/it.json');
+	}
 	else {
 		data = require('../../data/template/en.json');
 	}
@@ -42,58 +45,54 @@ export function loadTemplateData(lang: string) {
 	return data;
 }
 
-export function loadLanguageBlocks(lang: string) {
+export function loadLanguageBlocks(lang: string): html.HTMLDataV1 {
 
 	lang = lang.toLowerCase();
 
-	let data: html.HTMLDataV1;
-
 	if (lang === 'ja') {
-		data = require('../../data/language-blocks/ja.json');
+		return require('../../data/language-blocks/ja.json');
 	}
 	else if (lang === 'fr') {
-		data = require('../../data/language-blocks/fr.json');
+		return require('../../data/language-blocks/fr.json');
 	}
 	else if (lang === 'ko') {
-		data = require('../../data/language-blocks/ko.json');
+		return require('../../data/language-blocks/ko.json');
 	}
 	else if (lang === 'pt-br') {
-		data = require('../../data/language-blocks/pt.json');
+		return require('../../data/language-blocks/pt.json');
 	}
 	else if (lang === 'zh-cn') {
-		data = require('../../data/language-blocks/zh-cn.json');
+		return require('../../data/language-blocks/zh-cn.json');
 	}
-	else {
-		data = require('../../data/language-blocks/en.json');
+	else if (lang === 'it') {
+		return require('../../data/language-blocks/it.json');
 	}
 
-	return data;
+	return require('../../data/language-blocks/en.json');
 }
 
-export function loadModelModifiersData(lang: string) {
+export function loadModelModifiersData(lang: string): html.HTMLDataV1 {
 
 	lang = lang.toLowerCase();
 
-	let data: html.HTMLDataV1;
-
 	if (lang === 'ja') {
-		data = require('../../data/model-modifiers/ja.json');
+		return require('../../data/model-modifiers/ja.json');
 	}
 	else if (lang === 'fr') {
-		data = require('../../data/model-modifiers/fr.json');
+		return require('../../data/model-modifiers/fr.json');
 	}
 	else if (lang === 'ko') {
-		data = require('../../data/model-modifiers/ko.json');
+		return require('../../data/model-modifiers/ko.json');
 	}
 	else if (lang === 'pt-br') {
-		data = require('../../data/model-modifiers/pt.json');
+		return require('../../data/model-modifiers/pt.json');
 	}
 	else if (lang === 'zh-cn') {
-		data = require('../../data/model-modifiers/zh-cn.json');
+		return require('../../data/model-modifiers/zh-cn.json');
 	}
-	else {
-		data = require('../../data/model-modifiers/en.json');
+	else if (lang === 'it') {
+		return require('../../data/model-modifiers/it.json');
 	}
 
-	return data;
+	return require('../../data/model-modifiers/en.json');
 }

@@ -5,7 +5,7 @@
       "name": "lazy",
       "description": {
         "kind": "markdown",
-        "value": "\nPar défaut, `v-model` synchronise l'entrée avec les données après chaque événement `input` (à l'exception de la composition IME comme [indiqué ci-dessus](#vmodel-ime-tip)). Vous pouvez ajouter le modificateur `lazy` pour enclencher la synchronisation après les événements `change` :\n\n```html\n<!-- synchronisé après \"change\" au lieu de \"input\" -->\n<input v-model.lazy=\"msg\" />\n```\n"
+        "value": "\nDi default, `v-model` sincronizza l'input con i dati dopo ogni evento `input` (con l'eccezione della composizione IME come [indicato sopra](#vmodel-ime-tip)). Aggiungendo il modificatore `lazy`, la sincronizzazione avviene dopo gli eventi `change`, anziché dopo ogni evento `input`:\n\n```html\n<!-- Sincronizzati dopo \"change\" al posto di \"input\" -->\n<input v-model.lazy=\"msg\" />\n```\n"
       },
       "references": [
         {
@@ -50,7 +50,7 @@
       "name": "number",
       "description": {
         "kind": "markdown",
-        "value": "\nSi vous voulez que l'entrée de l'utilisateur soit automatiquement typée comme un nombre, vous pouvez ajouter le modificateur `number` à vos entrées gérées par `v-model` :\n\n```html\n<input v-model.number=\"age\" />\n```\n\nSi la valeur ne peut pas être analysée avec `parseFloat()`, alors la valeur originale est utilisée à la place.\n\nLe modificateur `number` est appliqué automatiquement si l'entrée possède `type=\"number\"`.\n"
+        "value": "\nSe desideri che l'input dell'utente venga automaticamente convertito in un numero, puoi aggiungere il modificatore `number` agli input gestiti da `v-model`:\n\n```html\n<input v-model.number=\"age\" />\n```\n\nSe il valore non può essere interpretato con `parseFloat()`, verrà allora utilizzato il valore originale.\n\nIl modificatore `number` viene applicato automaticamente se l'input ha `type=\"number\"`.\n"
       },
       "references": [
         {
@@ -95,7 +95,7 @@
       "name": "trim",
       "description": {
         "kind": "markdown",
-        "value": "\nSi vous voulez que les espaces blancs des entrées utilisateur soient automatiquement supprimés, vous pouvez ajouter le modificateur `trim` à vos entrées gérées par `v-model` :\n\n```html\n<input v-model.trim=\"msg\" />\n```\n"
+        "value": "\nSe vuoi che gli spazi bianchi inseriti dall'utente vengano rimossi automaticamente, puoi aggiungere il modificatore `trim` agli input gestiti da `v-model`:\n\n```html\n<input v-model.trim=\"msg\" />\n```\n"
       },
       "references": [
         {
