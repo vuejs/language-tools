@@ -617,18 +617,25 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 	}
 	function generateComponentOptions(functional: boolean) {
 		if (scriptSetupRanges && !bypassDefineComponent) {
-			if (scriptSetupRanges.props.define?.arg || scriptSetupRanges.props.define?.typeArg || (!functional && scriptSetupRanges.defineProp.length)) {
-				codes.push(`props: {\n`);
-				if (scriptSetupRanges.props.define?.arg) {
-					codes.push('...');
-					addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.props.define.arg.start, scriptSetupRanges.props.define.arg.end);
-					codes.push(',\n');
-				}
-				if (scriptSetupRanges.props.define?.typeArg) {
-					usedHelperTypes.DefinePropsToOptions = true;
-					codes.push('...{} as ');
 
-					if (scriptSetupRanges.props.withDefaults?.arg) {
+			const ranges = scriptSetupRanges;
+			const propsCodegens: (() => void)[] = [];
+
+			if (ranges.props.define?.arg) {
+				const arg = ranges.props.define.arg;
+				propsCodegens.push(() => {
+					addExtraReferenceVirtualCode('scriptSetup', arg.start, arg.end);
+				});
+			}
+			if (ranges.props.define?.typeArg) {
+				const typeArg = ranges.props.define.typeArg;
+				propsCodegens.push(() => {
+
+					usedHelperTypes.DefinePropsToOptions = true;
+
+					codes.push(`{} as `);
+
+					if (ranges.props.withDefaults?.arg) {
 						usedHelperTypes.MergePropDefaults = true;
 						codes.push(`__VLS_WithDefaults<`);
 					}
@@ -638,25 +645,42 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 						codes.push(`typeof __VLS_fnPropsTypeOnly`);
 					}
 					else {
-						addExtraReferenceVirtualCode('scriptSetup', scriptSetupRanges.props.define.typeArg.start, scriptSetupRanges.props.define.typeArg.end);
+						addExtraReferenceVirtualCode('scriptSetup', typeArg.start, typeArg.end);
 					}
 					codes.push(`>`);
 
-					if (scriptSetupRanges.props.withDefaults?.arg) {
+					if (ranges.props.withDefaults?.arg) {
 						codes.push(`, typeof __VLS_withDefaultsArg`);
 						codes.push(`>`);
 					}
-					codes.push(',\n');
+				});
+			}
+			if (!functional && ranges.defineProp.length) {
+				propsCodegens.push(() => {
+					codes.push(`__VLS_propsOption_defineProp`);
+				});
+			}
+
+			if (propsCodegens.length === 1) {
+				codes.push(`props: `);
+				for (const generate of propsCodegens) {
+					generate();
 				}
-				if (!functional && scriptSetupRanges.defineProp.length) {
-					codes.push(`...__VLS_propsOption_defineProp,\n`);
+				codes.push(`,\n`);
+			}
+			else if (propsCodegens.length >= 2) {
+				codes.push(`props: {\n`);
+				for (const generate of propsCodegens) {
+					codes.push('...');
+					generate();
+					codes.push(',\n');
 				}
 				codes.push(`},\n`);
 			}
-			if (scriptSetupRanges.emits.define) {
+			if (ranges.emits.define) {
 				codes.push(
 					`emits: ({} as __VLS_NormalizeEmits<typeof `,
-					scriptSetupRanges.emits.name ?? '__VLS_emit',
+					ranges.emits.name ?? '__VLS_emit',
 					`>),\n`,
 				);
 			}
