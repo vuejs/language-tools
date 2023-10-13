@@ -18,7 +18,6 @@ defineProps<Props>();
 		<thead>
 			<tr>
 				<th v-for="(col, index) in columns" :key="index">
-					<!-- Pay attention to type of `col` here -->
 					<slot :name="`col(${col.key})`" v-bind="col">
 						<template v-if="col.title">{{ col.title }}</template>
 					</slot>
@@ -29,7 +28,6 @@ defineProps<Props>();
 		<tbody>
 			<tr v-for="(row, rowIndex) in rows" :key="rowIndex">
 				<td v-for="(item, key) in row" :key="`${row}${key.toString()}`">
-					<!-- And look at the type of `row` here -->
 					<slot :name="`row(${key.toString()})`" v-bind="row">
 						{{ item }}
 					</slot>
