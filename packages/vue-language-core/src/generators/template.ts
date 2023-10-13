@@ -1401,7 +1401,7 @@ export function generate(
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
 				codes.push(
-					'...',
+					'...__VLS_mustBeObject(',
 					...createInterpolationCode(
 						prop.exp.content,
 						prop.exp.loc,
@@ -1410,7 +1410,7 @@ export function generate(
 						'(',
 						')',
 					),
-					', ',
+					'), ',
 				);
 				if (mode === 'normal') {
 					formatCodes.push(
