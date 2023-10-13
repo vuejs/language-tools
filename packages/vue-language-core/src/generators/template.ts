@@ -1656,7 +1656,7 @@ export function generate(
 				['', 'template', node.loc.start.offset, capabilitiesPresets.diagnosticOnly],
 				`${slotsAssignName ?? '__VLS_slots'}[`,
 				['', 'template', node.loc.start.offset, capabilitiesPresets.diagnosticOnly],
-				slotNameExpNode?.content ?? `('${getSlotName()}' as const)`,
+				slotNameExpNode?.content ?? `('${getSlotName()}' )`,
 				['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly],
 				']',
 				['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly],
@@ -1768,7 +1768,7 @@ export function generate(
 					),
 				);
 			}
-			codes.push(`as const;\n`);
+			codes.push(` as const;\n`);
 			slotExps.set(varSlotExp, {
 				varName: varSlot,
 			});
