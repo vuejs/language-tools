@@ -1656,7 +1656,7 @@ export function generate(
 				['', 'template', node.loc.start.offset, capabilitiesPresets.diagnosticOnly],
 				`${slotsAssignName ?? '__VLS_slots'}[`,
 				['', 'template', node.loc.start.offset, capabilitiesPresets.diagnosticOnly],
-				slotNameExpNode?.content ?? `('${getSlotName()}' )`,
+				slotNameExpNode?.content ?? `('${getSlotName()}' as const)`,
 				['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly],
 				']',
 				['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly],
