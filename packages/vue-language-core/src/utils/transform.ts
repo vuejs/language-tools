@@ -7,7 +7,7 @@ export function walkInterpolationFragment(
 	code: string,
 	ast: ts.SourceFile,
 	cb: (fragment: string, offset: number | undefined, isJustForErrorMapping?: boolean) => void,
-	localVars: Record<string, number>,
+	localVars: Map<string, number>,
 	identifiers: Set<string>,
 	vueOptions: VueCompilerOptions,
 ) {
@@ -20,7 +20,7 @@ export function walkInterpolationFragment(
 
 	const varCb = (id: ts.Identifier, isShorthand: boolean) => {
 		if (
-			!!localVars[id.text] ||
+			localVars.get(id.text) ||
 			// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/compiler-core/src/transforms/transformExpression.ts#L342-L352
 			isGloballyWhitelisted(id.text) ||
 			id.text === 'require' ||
@@ -115,7 +115,7 @@ function walkIdentifiers(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	node: ts.Node,
 	cb: (varNode: ts.Identifier, isShorthand: boolean) => void,
-	localVars: Record<string, number>,
+	localVars: Map<string, number>,
 	blockVars: string[] = [],
 	isRoot: boolean = true,
 ) {
@@ -134,7 +134,7 @@ function walkIdentifiers(
 		colletVars(ts, node.name, blockVars);
 
 		for (const varName of blockVars) {
-			localVars[varName] = (localVars[varName] ?? 0) + 1;
+			localVars.set(varName, (localVars.get(varName) ?? 0) + 1);
 		}
 
 		if (node.initializer)
@@ -152,12 +152,12 @@ function walkIdentifiers(
 		}
 
 		for (const varName of functionArgs)
-			localVars[varName] = (localVars[varName] ?? 0) + 1;
+			localVars.set(varName, (localVars.get(varName) ?? 0) + 1);
 
 		walkIdentifiers(ts, node.body, cb, localVars, blockVars, false);
 
 		for (const varName of functionArgs)
-			localVars[varName]--;
+			localVars.set(varName, localVars.get(varName)! - 1);
 	}
 	else if (ts.isObjectLiteralExpression(node)) {
 		for (const prop of node.properties) {
@@ -191,7 +191,7 @@ function walkIdentifiers(
 		node.forEachChild(node => walkIdentifiers(ts, node, cb, localVars, blockVars, false));
 		if (ts.isBlock(node)) {
 			for (const varName of blockVars) {
-				localVars[varName]--;
+				localVars.set(varName, localVars.get(varName)! - 1);
 			}
 		}
 		blockVars = _blockVars;
@@ -199,7 +199,7 @@ function walkIdentifiers(
 
 	if (isRoot) {
 		for (const varName of blockVars) {
-			localVars[varName]--;
+			localVars.set(varName, localVars.get(varName)! - 1);
 		}
 	}
 }

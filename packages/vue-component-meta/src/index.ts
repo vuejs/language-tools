@@ -687,9 +687,9 @@ function readVueComponentDefaultProps(
 		const descriptor = vueSourceFile.sfc;
 		const scriptSetupRanges = descriptor.scriptSetupAst ? vue.parseScriptSetupRanges(ts, descriptor.scriptSetupAst, vueCompilerOptions) : undefined;
 
-		if (descriptor.scriptSetup && scriptSetupRanges?.withDefaultsArg) {
+		if (descriptor.scriptSetup && scriptSetupRanges?.props.withDefaults?.arg) {
 
-			const defaultsText = descriptor.scriptSetup.content.substring(scriptSetupRanges.withDefaultsArg.start, scriptSetupRanges.withDefaultsArg.end);
+			const defaultsText = descriptor.scriptSetup.content.substring(scriptSetupRanges.props.withDefaults.arg.start, scriptSetupRanges.props.withDefaults.arg.end);
 			const ast = ts.createSourceFile('/tmp.' + descriptor.scriptSetup.lang, '(' + defaultsText + ')', ts.ScriptTarget.Latest);
 			const obj = findObjectLiteralExpression(ast);
 
@@ -706,8 +706,8 @@ function readVueComponentDefaultProps(
 					}
 				}
 			}
-		} else if (descriptor.scriptSetup && scriptSetupRanges?.propsRuntimeArg) {
-			const defaultsText = descriptor.scriptSetup.content.substring(scriptSetupRanges.propsRuntimeArg.start, scriptSetupRanges.propsRuntimeArg.end);
+		} else if (descriptor.scriptSetup && scriptSetupRanges?.props.define?.arg) {
+			const defaultsText = descriptor.scriptSetup.content.substring(scriptSetupRanges.props.define.arg.start, scriptSetupRanges.props.define.arg.end);
 			const ast = ts.createSourceFile('/tmp.' + descriptor.scriptSetup.lang, '(' + defaultsText + ')', ts.ScriptTarget.Latest);
 			const obj = findObjectLiteralExpression(ast);
 

@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "1.8.18",
+	"version": "1.8.19",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
@@ -474,7 +474,7 @@
 					"items": {
 						"type": "string"
 					},
-					"default": [],
+					"default": [ ],
 					"description": "List any additional file extensions that should be processed as Vue files (requires restart)."
 				},
 				"vue.server.fullCompletionList": {
@@ -516,11 +516,6 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Enabled code actions."
-				},
-				"vue.codeActions.savingTimeLimit": {
-					"type": "number",
-					"default": 1000,
-					"description": "Time limit for code actions on save (ms)."
 				},
 				"vue.codeLens.enabled": {
 					"type": "boolean",
@@ -742,9 +737,9 @@
 	"devDependencies": {
 		"@types/semver": "^7.5.3",
 		"@types/vscode": "^1.82.0",
-		"@volar/vscode": "~1.10.3",
-		"@vue/language-core": "1.8.18",
-		"@vue/language-server": "1.8.18",
+		"@volar/vscode": "~1.10.4",
+		"@vue/language-core": "1.8.19",
+		"@vue/language-server": "1.8.19",
 		"esbuild": "0.15.18",
 		"esbuild-plugin-copy": "latest",
 		"esbuild-visualizer": "latest",

@@ -1,15 +1,10 @@
 # Changelog
 
-## 1.8.18 (2023/10/9)
+## 1.8.19 (2023/10/11)
 
-#### Upgrade required VSCode version to 1.82.0 ([#3642](https://github.com/vuejs/language-tools/issues/3642))
-
-## 1.8.17 (2023/10/9)
-
-- fix: extension cannot run on vscode versions lower than 1.82.0 ([#3631](https://github.com/vuejs/language-tools/issues/3631)) ([#3635](https://github.com/vuejs/language-tools/issues/3635))
-- fix: make `defineProps` work when reading a property from `defineProps()` ([#3633](https://github.com/vuejs/language-tools/issues/3633)) - thanks @so1ve
-- fix: avoid reading `props` from `__VLS_ctx` ([#3636](https://github.com/vuejs/language-tools/issues/3636)) - thanks @so1ve
-- fix: regression with `defineExpose` ([#3639](https://github.com/vuejs/language-tools/issues/3639)) - thanks @so1ve
+- feat: no longer checking save time ([#3650](https://github.com/vuejs/language-tools/issues/3650))
+- fix(ts-plugin): tsserver doesnt have updated list of external files when new vue files are added (required TS 5.3) ([#3555](https://github.com/vuejs/language-tools/issues/3555)) ([#3649](https://github.com/vuejs/language-tools/issues/3649))
+- fix: false positive error when accessing local variables in defineProps parameter ([#3643](https://github.com/vuejs/language-tools/issues/3643)) ([#3644](https://github.com/vuejs/language-tools/issues/3644)) - thanks @so1ve
 
 ### Full-time Support by
 
@@ -63,6 +58,17 @@
 	or
 	<a href="https://opencollective.com/volarjs">Open Collective</a>
 </h5>
+
+## 1.8.18 (2023/10/9)
+
+#### Upgrade required VSCode version to 1.82.0 ([#3642](https://github.com/vuejs/language-tools/issues/3642))
+
+## 1.8.17 (2023/10/9)
+
+- fix: extension cannot run on vscode versions lower than 1.82.0 ([#3631](https://github.com/vuejs/language-tools/issues/3631)) ([#3635](https://github.com/vuejs/language-tools/issues/3635))
+- fix: make `defineProps` work when reading a property from `defineProps()` ([#3633](https://github.com/vuejs/language-tools/issues/3633)) - thanks @so1ve
+- fix: avoid reading `props` from `__VLS_ctx` ([#3636](https://github.com/vuejs/language-tools/issues/3636)) - thanks @so1ve
+- fix: regression with `defineExpose` ([#3639](https://github.com/vuejs/language-tools/issues/3639)) - thanks @so1ve
 
 ## 1.8.16 (2023/10/7)
 

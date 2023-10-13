@@ -11,19 +11,33 @@ export function parseScriptSetupRanges(
 
 	let foundNonImportExportNode = false;
 	let importSectionEndOffset = 0;
-	let withDefaultsArg: TextRange | undefined;
-	let propsAssignName: string | undefined;
-	let withDefaults: TextRange | undefined;
-	let defineProps: TextRange | undefined;
-	let propsRuntimeArg: TextRange | undefined;
-	let propsTypeArg: TextRange | undefined;
-	let defineSlots: TextRange | undefined;
-	let defineEmits: TextRange | undefined;
-	let defineExpose: TextRange | undefined;
-	let slotsAssignName: string | undefined;
-	let emitsAssignName: string | undefined;
-	let exposeRuntimeArg: TextRange | undefined;
-	let exposeTypeArg: TextRange | undefined;
+
+	const props: {
+		name?: string;
+		define?: TextRange & {
+			statement: TextRange;
+			arg?: TextRange;
+			typeArg?: TextRange;
+		};
+		withDefaults?: TextRange & {
+			arg?: TextRange;
+		};
+	} = {};
+	const slots: {
+		name?: string;
+		define?: TextRange;
+	} = {};
+	const emits: {
+		name?: string;
+		define?: TextRange;
+	} = {};
+	const expose: {
+		name?: string;
+		define?: TextRange & {
+			arg?: TextRange;
+			typeArg?: TextRange;
+		};
+	} = {};
 
 	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition' || ast.getFullText().trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition');
 	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' || ast.getFullText().trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition');
@@ -34,7 +48,7 @@ export function parseScriptSetupRanges(
 		defaultValue: TextRange | undefined;
 		required: boolean;
 	}[] = [];
-	const bindings = parseBindingRanges(ts, ast, false);
+	const bindings = parseBindingRanges(ts, ast);
 	const text = ast.getFullText();
 	const leadingCommentEndOffset = ts.getLeadingCommentRanges(text, 0)?.reverse()[0].end ?? 0;
 
@@ -59,32 +73,24 @@ export function parseScriptSetupRanges(
 			foundNonImportExportNode = true;
 		}
 	});
-	ast.forEachChild(child => visitNode(child, ast));
+	ast.forEachChild(child => visitNode(child, [ast]));
 
 	return {
 		leadingCommentEndOffset,
 		importSectionEndOffset,
 		bindings,
-		withDefaultsArg,
-		withDefaults,
-		defineProps,
-		defineSlots,
-		defineEmits,
-		defineExpose,
-		propsAssignName,
-		propsRuntimeArg,
-		propsTypeArg,
-		slotsAssignName,
-		emitsAssignName,
-		exposeRuntimeArg,
-		exposeTypeArg,
+		props,
+		slots,
+		emits,
+		expose,
 		defineProp,
 	};
 
 	function _getStartEnd(node: ts.Node) {
 		return getStartEnd(node, ast);
 	}
-	function visitNode(node: ts.Node, parent: ts.Node) {
+	function visitNode(node: ts.Node, parents: ts.Node[]) {
+		const parent = parents[parents.length - 1];
 		if (
 			ts.isCallExpression(node)
 			&& ts.isIdentifier(node.expression)
@@ -166,91 +172,106 @@ export function parseScriptSetupRanges(
 				}
 			}
 			else if (vueCompilerOptions.macros.defineSlots.includes(callText)) {
-				defineSlots = _getStartEnd(node);
+				slots.define = _getStartEnd(node);
 				if (ts.isVariableDeclaration(parent)) {
-					slotsAssignName = parent.name.getText(ast);
+					slots.name = parent.name.getText(ast);
 				}
 			}
 			else if (vueCompilerOptions.macros.defineEmits.includes(callText)) {
-				defineEmits = _getStartEnd(node);
+				emits.define = _getStartEnd(node);
 				if (ts.isVariableDeclaration(parent)) {
-					emitsAssignName = parent.name.getText(ast);
+					emits.name = parent.name.getText(ast);
 				}
 			}
 			else if (vueCompilerOptions.macros.defineExpose.includes(callText)) {
-				defineExpose = _getStartEnd(node);
+				expose.define = _getStartEnd(node);
 				if (node.arguments.length) {
-					exposeRuntimeArg = _getStartEnd(node.arguments[0]);
+					expose.define.arg = _getStartEnd(node.arguments[0]);
 				}
 				if (node.typeArguments?.length) {
-					exposeTypeArg = _getStartEnd(node.typeArguments[0]);
+					expose.define.typeArg = _getStartEnd(node.typeArguments[0]);
 				}
 			}
 			else if (vueCompilerOptions.macros.defineProps.includes(callText)) {
-				defineProps = _getStartEnd(node);
+
+				let statementRange: TextRange | undefined;
+				for (let i = parents.length - 1; i >= 0; i--) {
+					if (ts.isStatement(parents[i])) {
+						const statement = parents[i];
+						statement.forEachChild(child => {
+							const range = _getStartEnd(child);
+							statementRange ??= range;
+							statementRange.end = range.end;
+						});
+						break;
+					}
+				}
+				if (!statementRange) {
+					statementRange = _getStartEnd(node);
+				}
+
+				props.define = {
+					..._getStartEnd(node),
+					statement: statementRange,
+				};
+
 				if (ts.isVariableDeclaration(parent)) {
-					propsAssignName = parent.name.getText(ast);
+					props.name = parent.name.getText(ast);
 				}
 				if (node.arguments.length) {
-					propsRuntimeArg = _getStartEnd(node.arguments[0]);
+					props.define.arg = _getStartEnd(node.arguments[0]);
 				}
 				if (node.typeArguments?.length) {
-					propsTypeArg = _getStartEnd(node.typeArguments[0]);
+					props.define.typeArg = _getStartEnd(node.typeArguments[0]);
 				}
 			}
 			else if (vueCompilerOptions.macros.withDefaults.includes(callText)) {
-				withDefaults = _getStartEnd(node);
+				props.withDefaults = _getStartEnd(node);
 				if (node.arguments.length >= 2) {
 					const arg = node.arguments[1];
-					withDefaultsArg = _getStartEnd(arg);
+					props.withDefaults.arg = _getStartEnd(arg);
 				}
 				if (ts.isVariableDeclaration(parent)) {
-					propsAssignName = parent.name.getText(ast);
+					props.name = parent.name.getText(ast);
 				}
 			}
 		}
-		node.forEachChild(child => visitNode(child, node));
+		node.forEachChild(child => {
+			parents.push(node);
+			visitNode(child, parents);
+			parents.pop();
+		});
 	}
 }
 
-export function parseBindingRanges(ts: typeof import('typescript/lib/tsserverlibrary'), sourceFile: ts.SourceFile, isType: boolean) {
+export function parseBindingRanges(ts: typeof import('typescript/lib/tsserverlibrary'), sourceFile: ts.SourceFile) {
 	const bindings: TextRange[] = [];
 	sourceFile.forEachChild(node => {
-		if (!isType) {
-			if (ts.isVariableStatement(node)) {
-				for (const node_2 of node.declarationList.declarations) {
-					const vars = _findBindingVars(node_2.name);
-					for (const _var of vars) {
-						bindings.push(_var);
-					}
+		if (ts.isVariableStatement(node)) {
+			for (const node_2 of node.declarationList.declarations) {
+				const vars = _findBindingVars(node_2.name);
+				for (const _var of vars) {
+					bindings.push(_var);
 				}
 			}
-			else if (ts.isFunctionDeclaration(node)) {
-				if (node.name && ts.isIdentifier(node.name)) {
-					bindings.push(_getStartEnd(node.name));
-				}
-			}
-			else if (ts.isClassDeclaration(node)) {
-				if (node.name) {
-					bindings.push(_getStartEnd(node.name));
-				}
-			}
-			else if (ts.isEnumDeclaration(node)) {
+		}
+		else if (ts.isFunctionDeclaration(node)) {
+			if (node.name && ts.isIdentifier(node.name)) {
 				bindings.push(_getStartEnd(node.name));
 			}
 		}
-		else {
-			if (ts.isTypeAliasDeclaration(node)) {
+		else if (ts.isClassDeclaration(node)) {
+			if (node.name) {
 				bindings.push(_getStartEnd(node.name));
 			}
-			else if (ts.isInterfaceDeclaration(node)) {
-				bindings.push(_getStartEnd(node.name));
-			}
+		}
+		else if (ts.isEnumDeclaration(node)) {
+			bindings.push(_getStartEnd(node.name));
 		}
 
 		if (ts.isImportDeclaration(node)) {
-			if (node.importClause && (isType || !node.importClause.isTypeOnly)) {
-				if (node.importClause.name && !isType) {
+			if (node.importClause && !node.importClause.isTypeOnly) {
+				if (node.importClause.name) {
 					bindings.push(_getStartEnd(node.importClause.name));
 				}
 				if (node.importClause.namedBindings) {
