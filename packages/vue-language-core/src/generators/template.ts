@@ -947,6 +947,7 @@ export function generate(
 				prev = childNode;
 			}
 			resolveComment();
+			generateAutoImportCompletionCode()
 
 			slotBlockVars.forEach(varName => {
 				localVars.set(varName, localVars.get(varName)! - 1);
