@@ -131,7 +131,7 @@ function walkIdentifiers(
 	}
 	else if (ts.isVariableDeclaration(node)) {
 
-		colletVars(ts, node.name, blockVars);
+		collectVars(ts, node.name, blockVars);
 
 		for (const varName of blockVars) {
 			localVars.set(varName, (localVars.get(varName) ?? 0) + 1);
@@ -145,7 +145,7 @@ function walkIdentifiers(
 		const functionArgs: string[] = [];
 
 		for (const param of node.parameters) {
-			colletVars(ts, param.name, functionArgs);
+			collectVars(ts, param.name, functionArgs);
 			if (param.type) {
 				walkIdentifiers(ts, param.type, cb, localVars, blockVars, false);
 			}
@@ -217,7 +217,7 @@ function walkIdentifiersInTypeReference(
 	}
 }
 
-export function colletVars(
+export function collectVars(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	node: ts.Node,
 	result: string[],
@@ -227,17 +227,17 @@ export function colletVars(
 	}
 	else if (ts.isObjectBindingPattern(node)) {
 		for (const el of node.elements) {
-			colletVars(ts, el.name, result);
+			collectVars(ts, el.name, result);
 		}
 	}
 	else if (ts.isArrayBindingPattern(node)) {
 		for (const el of node.elements) {
 			if (ts.isBindingElement(el)) {
-				colletVars(ts, el.name, result);
+				collectVars(ts, el.name, result);
 			}
 		}
 	}
 	else {
-		node.forEachChild(node => colletVars(ts, node, result));
+		node.forEachChild(node => collectVars(ts, node, result));
 	}
 }
