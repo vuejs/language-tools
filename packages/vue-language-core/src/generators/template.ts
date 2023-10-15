@@ -1129,22 +1129,24 @@ export function generate(
 
 					let isFirstMapping = true;
 
-					codes.push(
-						...createInterpolationCode(
-							prop.exp.content,
-							prop.exp.loc,
-							prop.exp.loc.start.offset,
-							() => {
-								if (isCompoundExpression && isFirstMapping) {
-									isFirstMapping = false;
-									return capabilitiesPresets.allWithHiddenParam;
-								}
-								return capabilitiesPresets.all;
-							},
-							prefix,
-							suffix,
-						),
+					const interpolationCodes = createInterpolationCode(
+						prop.exp.content,
+						prop.exp.loc,
+						prop.exp.loc.start.offset,
+						() => {
+							if (isCompoundExpression && isFirstMapping) {
+								isFirstMapping = false;
+								return capabilitiesPresets.allWithHiddenParam;
+							}
+							return capabilitiesPresets.all;
+						},
+						prefix,
+						suffix,
 					);
+					codes.push(...interpolationCodes.slice(0, -1), ';\n');
+					generateAutoImportCompletionCode();
+					codes.push(interpolationCodes[interpolationCodes.length - 1]);
+
 					formatCodes.push(
 						...createFormatCode(
 							prop.exp.content,
