@@ -7,7 +7,7 @@ import * as muggle from 'muggle-string';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { Sfc, VueCompilerOptions } from '../types';
 import { hyphenateAttr, hyphenateTag } from '../utils/shared';
-import { colletVars, walkInterpolationFragment } from '../utils/transform';
+import { collectVars, walkInterpolationFragment } from '../utils/transform';
 
 const capabilitiesPresets = {
 	all: FileRangeCapabilities.full,
@@ -565,7 +565,7 @@ export function generate(
 		if (leftExpressionRange && leftExpressionText) {
 
 			const collectAst = createTsAst(node.parseResult, `const [${leftExpressionText}]`);
-			colletVars(ts, collectAst, forBlockVars);
+			collectVars(ts, collectAst, forBlockVars);
 
 			for (const varName of forBlockVars)
 				localVars.set(varName, (localVars.get(varName) ?? 0) + 1);
@@ -885,7 +885,7 @@ export function generate(
 				);
 
 				const slotAst = createTsAst(slotDir, `(${slotDir.exp.content}) => {}`);
-				colletVars(ts, slotAst, slotBlockVars);
+				collectVars(ts, slotAst, slotBlockVars);
 				hasProps = true;
 				if (slotDir.exp.content.indexOf(':') === -1) {
 					codes.push(
@@ -947,6 +947,7 @@ export function generate(
 				prev = childNode;
 			}
 			resolveComment();
+			generateAutoImportCompletionCode();
 
 			slotBlockVars.forEach(varName => {
 				localVars.set(varName, localVars.get(varName)! - 1);
