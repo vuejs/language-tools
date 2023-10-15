@@ -123,7 +123,7 @@ export function generate(
 		if (usedHelperTypes.WithTemplateSlots) {
 			codes.push(
 				`type __VLS_WithTemplateSlots<T, S> = T & { new(): {\n`,
-				`$slots: S;\n`,
+				`${getSlotsPropertyName(vueCompilerOptions.target)}: S;\n`,
 			);
 			if (vueCompilerOptions.jsxSlots) {
 				usedHelperTypes.PropsChildren = true;
