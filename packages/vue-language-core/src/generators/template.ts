@@ -248,7 +248,7 @@ export function generate(
 								},
 							},
 						]),
-						';',
+						';\n',
 					);
 				}
 			}
