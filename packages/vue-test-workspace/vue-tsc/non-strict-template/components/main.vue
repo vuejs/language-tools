@@ -87,3 +87,7 @@ exactType(ScriptSetupTypeOnly, ScriptSetupTypeOnlyExact);
 exactType(ScriptSetupDefaultProps, ScriptSetupDefaultPropsExact);
 exactType(ScriptSetupGeneric, ScriptSetupGenericExact);
 </script>
+
+<template>
+	<div v-if="1" @click="console.log($event)">	</div>
+</template>

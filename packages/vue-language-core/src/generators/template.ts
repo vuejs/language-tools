@@ -1124,7 +1124,7 @@ export function generate(
 						for (const blockCondition of blockConditions) {
 							prefix += `if (!(${blockCondition})) return;\n`;
 						}
-						suffix = '\n}';
+						suffix = '\n}\n';
 					}
 
 					let isFirstMapping = true;
