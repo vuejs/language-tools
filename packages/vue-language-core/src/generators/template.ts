@@ -246,6 +246,10 @@ export function generate(
 									normalize: tagName === name ? capabilitiesPresets.tagReference.rename.normalize : camelizeComponentName,
 									apply: getTagRenameApply(tagName),
 								},
+								...nativeTags.has(tagName) ? {
+									...capabilitiesPresets.tagHover,
+									...capabilitiesPresets.diagnosticOnly,
+								} : {},
 							},
 						]),
 						';',
@@ -708,40 +712,23 @@ export function generate(
 		}
 
 		for (const offset of tagOffsets) {
-			if (isNamespacedTag || dynamicTagExp) {
+			if (isNamespacedTag || dynamicTagExp || isIntrinsicElement) {
 				continue;
 			}
-			else if (isIntrinsicElement) {
-				codes.push(`({} as __VLS_IntrinsicElements).`);
-				codes.push(
-					[
-						tag,
-						'template',
-						[offset, offset + tag.length],
-						{
-							...capabilitiesPresets.tagHover,
-							...capabilitiesPresets.diagnosticOnly,
-						},
-					],
-					';\n',
-				);
-			}
-			else {
-				const key = toCanonicalComponentName(tag);
-				codes.push(`({} as { ${key}: typeof ${var_originalComponent} }).`);
-				codes.push(
-					[
-						key,
-						'template',
-						[offset, offset + tag.length],
-						{
-							...capabilitiesPresets.tagHover,
-							...capabilitiesPresets.diagnosticOnly,
-						},
-					],
-					';\n',
-				);
-			}
+			const key = toCanonicalComponentName(tag);
+			codes.push(`({} as { ${key}: typeof ${var_originalComponent} }).`);
+			codes.push(
+				[
+					key,
+					'template',
+					[offset, offset + tag.length],
+					{
+						...capabilitiesPresets.tagHover,
+						...capabilitiesPresets.diagnosticOnly,
+					},
+				],
+				';\n',
+			);
 		}
 
 		if (vueCompilerOptions.strictTemplates) {
