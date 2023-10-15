@@ -1406,6 +1406,7 @@ export function generate(
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
 				codes.push(
+					['', 'template', prop.exp.loc.start.offset, capabilitiesPresets.diagnosticOnly],
 					'...',
 					...createInterpolationCode(
 						prop.exp.content,
@@ -1415,6 +1416,7 @@ export function generate(
 						'(',
 						')',
 					),
+					['', 'template', prop.exp.loc.end.offset, capabilitiesPresets.diagnosticOnly],
 					', ',
 				);
 				if (mode === 'normal') {
