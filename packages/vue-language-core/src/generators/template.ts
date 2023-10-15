@@ -1406,6 +1406,7 @@ export function generate(
 			) {
 				codes.push(
 					'...__VLS_mustBeObject(',
+					['', 'template', prop.exp.loc.start.offset, capabilitiesPresets.diagnosticOnly],
 					...createInterpolationCode(
 						prop.exp.content,
 						prop.exp.loc,
@@ -1414,6 +1415,7 @@ export function generate(
 						'(',
 						')',
 					),
+					['', 'template', prop.exp.loc.end.offset, capabilitiesPresets.diagnosticOnly],
 					'), ',
 				);
 				if (mode === 'normal') {
