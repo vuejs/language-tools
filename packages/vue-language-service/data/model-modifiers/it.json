@@ -1,0 +1,140 @@
+{
+  "version": 1.1,
+  "globalAttributes": [
+    {
+      "name": "lazy",
+      "description": {
+        "kind": "markdown",
+        "value": "\nDi default, `v-model` sincronizza l'input con i dati dopo ogni evento `input` (con l'eccezione della composizione IME come [indicato sopra](#vmodel-ime-tip)). Aggiungendo il modificatore `lazy`, la sincronizzazione avviene dopo gli eventi `change`, anziché dopo ogni evento `input`:\n\n```html\n<!-- Sincronizzati dopo \"change\" al posto di \"input\" -->\n<input v-model.lazy=\"msg\" />\n```\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/guide/essentials/forms.html#lazy"
+        }
+      ]
+    },
+    {
+      "name": "number",
+      "description": {
+        "kind": "markdown",
+        "value": "\nSe desideri che l'input dell'utente venga automaticamente convertito in un numero, puoi aggiungere il modificatore `number` agli input gestiti da `v-model`:\n\n```html\n<input v-model.number=\"age\" />\n```\n\nSe il valore non può essere interpretato con `parseFloat()`, verrà allora utilizzato il valore originale.\n\nIl modificatore `number` viene applicato automaticamente se l'input ha `type=\"number\"`.\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/guide/essentials/forms.html#number"
+        }
+      ]
+    },
+    {
+      "name": "trim",
+      "description": {
+        "kind": "markdown",
+        "value": "\nSe vuoi che gli spazi bianchi inseriti dall'utente vengano rimossi automaticamente, puoi aggiungere il modificatore `trim` agli input gestiti da `v-model`:\n\n```html\n<input v-model.trim=\"msg\" />\n```\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/guide/essentials/forms.html#trim"
+        }
+      ]
+    }
+  ]
+}

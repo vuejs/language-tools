@@ -36,6 +36,14 @@
         {
           "name": "pt",
           "url": "https://pt.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-components.html#transition"
         }
       ]
     },
@@ -74,6 +82,14 @@
         {
           "name": "pt",
           "url": "https://pt.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-components.html#transitiongroup"
         }
       ]
     },
@@ -112,6 +128,14 @@
         {
           "name": "pt",
           "url": "https://pt.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-components.html#keepalive"
         }
       ]
     },
@@ -150,6 +174,14 @@
         {
           "name": "pt",
           "url": "https://pt.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-components.html#teleport"
         }
       ]
     },
@@ -188,6 +220,14 @@
         {
           "name": "pt",
           "url": "https://pt.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-components.html#suspense"
         }
       ]
     },
@@ -226,6 +266,14 @@
         {
           "name": "pt",
           "url": "https://pt.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-special-elements.html#component"
         }
       ]
     },
@@ -264,6 +312,14 @@
         {
           "name": "pt",
           "url": "https://pt.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-special-elements.html#slot"
         }
       ]
     },
@@ -302,6 +358,14 @@
         {
           "name": "pt",
           "url": "https://pt.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-special-elements.html#template"
         }
       ]
     }
@@ -341,6 +405,14 @@
         {
           "name": "pt",
           "url": "https://pt.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-text"
         }
       ]
     },
@@ -378,6 +450,14 @@
         {
           "name": "pt",
           "url": "https://pt.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-html"
         }
       ]
     },
@@ -415,6 +495,14 @@
         {
           "name": "pt",
           "url": "https://pt.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-show"
         }
       ]
     },
@@ -452,6 +540,14 @@
         {
           "name": "pt",
           "url": "https://pt.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-if"
         }
       ]
     },
@@ -490,6 +586,14 @@
         {
           "name": "pt",
           "url": "https://pt.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-else"
         }
       ]
     },
@@ -527,6 +631,14 @@
         {
           "name": "pt",
           "url": "https://pt.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-else-if"
         }
       ]
     },
@@ -564,6 +676,14 @@
         {
           "name": "pt",
           "url": "https://pt.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-for"
         }
       ]
     },
@@ -601,6 +721,14 @@
         {
           "name": "pt",
           "url": "https://pt.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-on"
         }
       ]
     },
@@ -638,6 +766,14 @@
         {
           "name": "pt",
           "url": "https://pt.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-bind"
         }
       ]
     },
@@ -675,6 +811,14 @@
         {
           "name": "pt",
           "url": "https://pt.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-model"
         }
       ]
     },
@@ -712,6 +856,14 @@
         {
           "name": "pt",
           "url": "https://pt.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-slot"
         }
       ]
     },
@@ -749,6 +901,14 @@
         {
           "name": "pt",
           "url": "https://pt.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-pre"
         }
       ]
     },
@@ -786,6 +946,14 @@
         {
           "name": "pt",
           "url": "https://pt.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-once"
         }
       ]
     },
@@ -823,6 +991,14 @@
         {
           "name": "pt",
           "url": "https://pt.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-memo"
         }
       ]
     },
@@ -860,6 +1036,14 @@
         {
           "name": "pt",
           "url": "https://pt.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-cloak"
         }
       ]
     },
@@ -897,6 +1081,14 @@
         {
           "name": "pt",
           "url": "https://pt.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-special-attributes.html#key"
         }
       ]
     },
@@ -934,6 +1126,14 @@
         {
           "name": "pt",
           "url": "https://pt.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-special-attributes.html#ref"
         }
       ]
     },
@@ -971,6 +1171,14 @@
         {
           "name": "pt",
           "url": "https://pt.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-special-attributes.html#is"
         }
       ]
     }

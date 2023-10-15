@@ -1,6 +1,6 @@
 # Vue Language Tools
 
-> ⚡ High-performance Vue language tooling based-on [Volar.js](https://volarjs.github.io/)
+> ⚡ High-performance Vue language tooling based-on [Volar.js](https://volarjs.dev/)
 
 Discord: https://discord.gg/5bnSSSSBbK
 
@@ -49,6 +49,9 @@ Discord: https://discord.gg/5bnSSSSBbK
 
 [WebStorm](https://www.jetbrains.com/webstorm/) \
 *Built-in integration for `@vue/language-server`*
+
+[Eclipse WildWebDeveloper](https://github.com/eclipse-wildwebdeveloper/wildwebdeveloper) \
+*Vue language server configuration for Eclipse*
 
 \* ⚡ support [multiple servers](https://github.com/vuejs/language-tools/discussions/393#discussioncomment-1213736) \
 \* 🤝 support [take over mode](https://github.com/vuejs/language-tools/discussions/471) \

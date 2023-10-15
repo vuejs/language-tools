@@ -77,7 +77,7 @@ declare const ScriptSetupGenericExact: <T, >(
 		attrs: any,
 		slots: Readonly<{ default?(data: T): any; }>,
 		emit: { (e: 'bar', data: T): void; },
-		expose(_exposed: { baz: T; }): void,
+		expose(_exposed: import('vue').ShallowUnwrapRef<{ baz: T; buz: import('vue').Ref<1> }>): void,
 	}>
 ) => import('vue').VNode & { __ctx?: Awaited<typeof _setup>; };
 
