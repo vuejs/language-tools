@@ -96,8 +96,6 @@ type __VLS_AsFunctionOrAny<F> = unknown extends F ? any : ((...args: any) => any
 
 declare function __VLS_normalizeSlot<S>(s: S): S extends () => infer R ? (props: {}) => R : S;
 
-declare function __VLS_mustBeObject<T extends object>(t: T): T;
-
 /**
  * emit
  */
