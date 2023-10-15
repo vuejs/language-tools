@@ -1768,7 +1768,7 @@ export function generate(
 					),
 				);
 			}
-			codes.push(`;\n`);
+			codes.push(` as const;\n`);
 			slotExps.set(varSlotExp, {
 				varName: varSlot,
 			});
