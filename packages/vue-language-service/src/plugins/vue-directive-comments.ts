@@ -6,7 +6,7 @@ const cmds = [
 	'vue-expect-error',
 ];
 
-const directiveCommentReg = /<!--\s+@/;
+const directiveCommentReg = /<!--\s*@/;
 
 const plugin: Service = (): ReturnType<Service> => {
 
