@@ -235,7 +235,7 @@ export function generate(
 			for (const name of names) {
 				for (const tagRange of tagRanges) {
 					codes.push(
-						nativeTags.has(tagName) ? '({} as __VLS_IntrinsicElements)' : '__VLS_components',
+						nativeTags.has(tagName) ? '__VLS_intrinsicElements' : '__VLS_components',
 						...createPropertyAccessCode([
 							name,
 							'template',
@@ -665,7 +665,7 @@ export function generate(
 			codes.push(
 				'const ',
 				var_originalComponent,
-				` = ({} as __VLS_IntrinsicElements)[`,
+				` = __VLS_intrinsicElements[`,
 				...createStringLiteralKeyCode([
 					tag,
 					'template',
