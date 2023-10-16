@@ -99,6 +99,10 @@ export function generate(
 	let expectedErrorStart: undefined | number;
 	let expectedErrorNode: CompilerDOM.CommentNode | undefined;
 
+	if (slotsAssignName) {
+		localVars.set(slotsAssignName, 1);
+	}
+
 	if (propsAssignName) {
 		localVars.set(propsAssignName, 1);
 	}
