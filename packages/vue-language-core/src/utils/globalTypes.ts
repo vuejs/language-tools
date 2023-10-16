@@ -17,8 +17,8 @@ type __VLS_Prettify<T> = { [K in keyof T]: T[K]; } & {};
 
 type __VLS_OmitKeepDiscriminatedUnion<T, K extends keyof any> =
 	T extends any
-    ? Pick<T, Exclude<keyof T, K>>
-  	: never;
+		? Pick<T, Exclude<keyof T, K>>
+		: never;
 
 type __VLS_GlobalComponents =
 	__VLS_PickNotAny<import('vue').GlobalComponents, {}>
