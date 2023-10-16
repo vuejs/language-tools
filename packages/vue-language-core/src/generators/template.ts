@@ -7,7 +7,7 @@ import * as muggle from 'muggle-string';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { Sfc, VueCompilerOptions } from '../types';
 import { hyphenateAttr, hyphenateTag } from '../utils/shared';
-import { colletVars, walkInterpolationFragment } from '../utils/transform';
+import { collectVars, walkInterpolationFragment } from '../utils/transform';
 
 const capabilitiesPresets = {
 	all: FileRangeCapabilities.full,
@@ -239,7 +239,7 @@ export function generate(
 			for (const name of names) {
 				for (const tagRange of tagRanges) {
 					codes.push(
-						nativeTags.has(tagName) ? '({} as __VLS_IntrinsicElements)' : '__VLS_components',
+						nativeTags.has(tagName) ? '__VLS_intrinsicElements' : '__VLS_components',
 						...createPropertyAccessCode([
 							name,
 							'template',
@@ -250,6 +250,10 @@ export function generate(
 									normalize: tagName === name ? capabilitiesPresets.tagReference.rename.normalize : camelizeComponentName,
 									apply: getTagRenameApply(tagName),
 								},
+								...nativeTags.has(tagName) ? {
+									...capabilitiesPresets.tagHover,
+									...capabilitiesPresets.diagnosticOnly,
+								} : {},
 							},
 						]),
 						';',
@@ -569,7 +573,7 @@ export function generate(
 		if (leftExpressionRange && leftExpressionText) {
 
 			const collectAst = createTsAst(node.parseResult, `const [${leftExpressionText}]`);
-			colletVars(ts, collectAst, forBlockVars);
+			collectVars(ts, collectAst, forBlockVars);
 
 			for (const varName of forBlockVars)
 				localVars.set(varName, (localVars.get(varName) ?? 0) + 1);
@@ -665,7 +669,7 @@ export function generate(
 			codes.push(
 				'const ',
 				var_originalComponent,
-				` = ({} as __VLS_IntrinsicElements)[`,
+				` = __VLS_intrinsicElements[`,
 				...createStringLiteralKeyCode([
 					tag,
 					'template',
@@ -712,40 +716,23 @@ export function generate(
 		}
 
 		for (const offset of tagOffsets) {
-			if (isNamespacedTag || dynamicTagExp) {
+			if (isNamespacedTag || dynamicTagExp || isIntrinsicElement) {
 				continue;
 			}
-			else if (isIntrinsicElement) {
-				codes.push(`({} as __VLS_IntrinsicElements).`);
-				codes.push(
-					[
-						tag,
-						'template',
-						[offset, offset + tag.length],
-						{
-							...capabilitiesPresets.tagHover,
-							...capabilitiesPresets.diagnosticOnly,
-						},
-					],
-					';\n',
-				);
-			}
-			else {
-				const key = toCanonicalComponentName(tag);
-				codes.push(`({} as { ${key}: typeof ${var_originalComponent} }).`);
-				codes.push(
-					[
-						key,
-						'template',
-						[offset, offset + tag.length],
-						{
-							...capabilitiesPresets.tagHover,
-							...capabilitiesPresets.diagnosticOnly,
-						},
-					],
-					';\n',
-				);
-			}
+			const key = toCanonicalComponentName(tag);
+			codes.push(`({} as { ${key}: typeof ${var_originalComponent} }).`);
+			codes.push(
+				[
+					key,
+					'template',
+					[offset, offset + tag.length],
+					{
+						...capabilitiesPresets.tagHover,
+						...capabilitiesPresets.diagnosticOnly,
+					},
+				],
+				';\n',
+			);
 		}
 
 		if (vueCompilerOptions.strictTemplates) {
@@ -889,7 +876,7 @@ export function generate(
 				);
 
 				const slotAst = createTsAst(slotDir, `(${slotDir.exp.content}) => {}`);
-				colletVars(ts, slotAst, slotBlockVars);
+				collectVars(ts, slotAst, slotBlockVars);
 				hasProps = true;
 				if (slotDir.exp.content.indexOf(':') === -1) {
 					codes.push(
@@ -951,6 +938,7 @@ export function generate(
 				prev = childNode;
 			}
 			resolveComment();
+			generateAutoImportCompletionCode();
 
 			slotBlockVars.forEach(varName => {
 				localVars.set(varName, localVars.get(varName)! - 1);
@@ -1409,6 +1397,7 @@ export function generate(
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
 				codes.push(
+					['', 'template', prop.exp.loc.start.offset, capabilitiesPresets.diagnosticOnly],
 					'...',
 					...createInterpolationCode(
 						prop.exp.content,
@@ -1418,6 +1407,7 @@ export function generate(
 						'(',
 						')',
 					),
+					['', 'template', prop.exp.loc.end.offset, capabilitiesPresets.diagnosticOnly],
 					', ',
 				);
 				if (mode === 'normal') {
@@ -1772,7 +1762,7 @@ export function generate(
 					),
 				);
 			}
-			codes.push(`;\n`);
+			codes.push(` as const;\n`);
 			slotExps.set(varSlotExp, {
 				varName: varSlot,
 			});

@@ -27,6 +27,8 @@ type __VLS_GlobalComponents =
 		| 'Teleport'
 	>;
 
+declare const __VLS_intrinsicElements: __VLS_IntrinsicElements;
+
 // v-for
 declare function __VLS_getVForSourceType(source: number): [number, number, number][];
 declare function __VLS_getVForSourceType(source: string): [string, number, number][];
