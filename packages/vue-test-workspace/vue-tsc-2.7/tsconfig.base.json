@@ -1,0 +1,13 @@
+{
+	"extends": "../tsconfig.json",
+	"compilerOptions": {
+		"noPropertyAccessFromIndexSignature": true,
+	},
+	"vueCompilerOptions": {
+		"target": 2.7,
+		"lib": "vue2.7",
+		"jsxSlots": true,
+		"plugins": ["../../vue-language-plugin-pug"]
+	},
+	"include": []
+}
