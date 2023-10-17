@@ -252,6 +252,15 @@ importers:
         specifier: 1.8.19
         version: link:../vue-component-type-helpers
 
+  packages/vue-test-workspace-vue-2:
+    devDependencies:
+      vue:
+        specifier: ^2.7.14
+        version: 2.7.14
+      vue-component-type-helpers:
+        specifier: 1.8.19
+        version: link:../vue-component-type-helpers
+
   packages/vue-tsc:
     dependencies:
       '@vue/language-core':
@@ -285,15 +294,6 @@ importers:
       '@vue/language-core':
         specifier: 1.8.19
         version: link:../vue-language-core
-
-  packages/vue2-test-workspace:
-    devDependencies:
-      vue:
-        specifier: ^2.7.14
-        version: 2.7.14
-      vue-component-type-helpers:
-        specifier: 1.8.19
-        version: link:../vue-component-type-helpers
 
 packages:
 
