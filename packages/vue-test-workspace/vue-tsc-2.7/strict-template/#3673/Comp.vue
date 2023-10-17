@@ -3,6 +3,6 @@ defineProps<{
 	border?: boolean; 
 }>();
 defineEmits<{
-	(event: 'click'): void;
+	(event: 'click', s: string): void;
 }>();
 </script>
