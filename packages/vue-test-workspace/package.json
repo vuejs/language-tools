@@ -1,6 +1,6 @@
 {
 	"private": true,
-	"name": "@volar/vue-test-workspace",
+	"name": "@vue/vue-test-workspace",
 	"version": "1.8.19",
 	"license": "MIT",
 	"devDependencies": {
