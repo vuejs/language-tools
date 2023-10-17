@@ -1,0 +1,18 @@
+<template>
+	<div>
+		<!-- @vue-expect-error -->
+		<Foo bar="123"></Foo>
+
+		<!-- @vue-expect-error -->
+		<div foo="123"></div>
+	</div>
+</template>
+
+<script setup lang="ts">
+import { defineComponent } from 'vue2.7';
+const Foo = defineComponent({
+	props: {
+		foo: String
+	}
+});
+</script>
