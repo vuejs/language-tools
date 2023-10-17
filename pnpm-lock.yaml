@@ -251,9 +251,6 @@ importers:
       vue-component-type-helpers:
         specifier: 1.8.19
         version: link:../vue-component-type-helpers
-      vue2.7:
-        specifier: npm:vue@^2.7.0
-        version: /vue@2.7.14
 
   packages/vue-tsc:
     dependencies:
@@ -288,6 +285,15 @@ importers:
       '@vue/language-core':
         specifier: 1.8.19
         version: link:../vue-language-core
+
+  packages/vue2-test-workspace:
+    devDependencies:
+      vue:
+        specifier: ^2.7.14
+        version: 2.7.14
+      vue-component-type-helpers:
+        specifier: 1.8.19
+        version: link:../vue-component-type-helpers
 
 packages:
 

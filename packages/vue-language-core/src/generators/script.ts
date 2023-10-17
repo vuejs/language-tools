@@ -69,7 +69,12 @@ export function generate(
 		MergePropDefaults: false,
 		WithTemplateSlots: false,
 		PropsChildren: false,
+		EmitsToProps: false,
 	};
+	const isVue27 = vueCompilerOptions.target < 3 && vueCompilerOptions.target >= 2.7;
+
+	if (isVue27)
+		usedHelperTypes.EmitsToProps = true;
 
 	codes.push(`/* __placeholder__ */\n`);
 
@@ -135,6 +140,17 @@ export function generate(
 		}
 		if (usedHelperTypes.PropsChildren) {
 			codes.push(`type __VLS_PropsChildren<S> = { [K in keyof (boolean extends (JSX.ElementChildrenAttribute extends never ? true : false) ? never : JSX.ElementChildrenAttribute)]?: S; };\n`);
+		}
+		if (usedHelperTypes.EmitsToProps) {
+			codes.push(
+				`type __VLS_ObjectEmitsOptions = Record<string, ((...args: any[]) => any) | null>;
+				type __VLS_EmitsOptions = __VLS_ObjectEmitsOptions | string[];
+				type __VLS_EmitsToProps<T extends __VLS_EmitsOptions> = T extends string[] ? {
+					[K in string & \`on\${Capitalize<T[number]>}\`]?: (...args: any[]) => any;
+				} : T extends __VLS_ObjectEmitsOptions ? {
+					[K in string & \`on\${Capitalize<string & keyof T>}\`]?: K extends \`on\${infer C}\` ? T[Uncapitalize<C>] extends null ? (...args: any[]) => any : (...args: T[Uncapitalize<C>] extends (...args: infer P) => any ? P : never) => any : never;
+				} : {};`,
+			);
 		}
 	}
 	function generateSrc() {
@@ -646,6 +662,9 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 					}
 					else {
 						addExtraReferenceVirtualCode('scriptSetup', typeArg.start, typeArg.end);
+					}
+					if (isVue27 && ranges.emits.define) {
+						codes.push(`& __VLS_EmitsToProps<__VLS_NormalizeEmits<typeof __VLS_emit>>`);
 					}
 					codes.push(`>`);
 

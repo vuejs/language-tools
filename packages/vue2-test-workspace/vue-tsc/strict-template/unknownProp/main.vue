@@ -9,7 +9,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineComponent } from 'vue2.7';
+import { defineComponent } from 'vue';
 const Foo = defineComponent({
 	props: {
 		foo: String

@@ -5,11 +5,15 @@ import { fork } from 'child_process';
 
 const binPath = require.resolve('../bin/vue-tsc.js');
 const workspace = path.resolve(__dirname, '../../vue-test-workspace/vue-tsc');
-const workspace27 = path.resolve(__dirname, '../../vue-test-workspace/vue-tsc-2.7');
+const workspace2 = path.resolve(__dirname, '../../vue2-test-workspace/vue-tsc');
 
 function prettyPath(path: string, isRoot: boolean) {
 	const segments = path.split('/');
-	return !isRoot ? segments.slice(segments.length - 3, segments.length).join('/') : segments[segments.length - 1];
+	const slicePath = (seg: number) => segments
+		.slice(segments.length - seg, segments.length)
+		.join('/')
+		.replace('/vue-tsc', '');
+	return !isRoot ? slicePath(4) : slicePath(3);
 }
 
 function collectTests(dirs: string[], depth = 2, isRoot: boolean = true): [string, boolean][] {
@@ -40,7 +44,7 @@ function collectTests(dirs: string[], depth = 2, isRoot: boolean = true): [strin
 	return tests;
 }
 
-const tests = collectTests([workspace, workspace27]);
+const tests = collectTests([workspace, workspace2]);
 
 function runVueTsc(cwd: string) {
 	return new Promise((resolve, reject) => {

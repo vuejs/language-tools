@@ -4,7 +4,7 @@
 	"version": "1.8.19",
 	"license": "MIT",
 	"devDependencies": {
-		"vue": "^3.3.0",
+		"vue": "^2.7.14",
 		"vue-component-type-helpers": "1.8.19"
 	}
 }
