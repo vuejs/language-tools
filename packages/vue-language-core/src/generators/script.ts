@@ -664,7 +664,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 						addExtraReferenceVirtualCode('scriptSetup', typeArg.start, typeArg.end);
 					}
 					if (isVue27 && ranges.emits.define) {
-						codes.push(`& __VLS_EmitsToProps<__VLS_NormalizeEmits<typeof __VLS_emit>>`);
+						codes.push(` & __VLS_EmitsToProps<__VLS_NormalizeEmits<typeof __VLS_emit>>`);
 					}
 					codes.push(`>`);
 
