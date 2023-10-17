@@ -144,8 +144,7 @@ export function generate(
 		if (usedHelperTypes.EmitsToProps) {
 			codes.push(
 				`type __VLS_ObjectEmitsOptions = Record<string, ((...args: any[]) => any) | null>;
-				type __VLS_EmitsOptions = __VLS_ObjectEmitsOptions | string[];
-				type __VLS_EmitsToProps<T extends __VLS_EmitsOptions> = T extends string[] ? {
+				type __VLS_EmitsToProps<T> = T extends string[] ? {
 					[K in string & \`on\${Capitalize<T[number]>}\`]?: (...args: any[]) => any;
 				} : T extends __VLS_ObjectEmitsOptions ? {
 					[K in string & \`on\${Capitalize<string & keyof T>}\`]?: K extends \`on\${infer C}\` ? T[Uncapitalize<C>] extends null ? (...args: any[]) => any : (...args: T[Uncapitalize<C>] extends (...args: infer P) => any ? P : never) => any : never;
