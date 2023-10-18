@@ -107,7 +107,7 @@
       "name": "Teleport",
       "description": {
         "kind": "markdown",
-        "value": "\nスロットの内容を DOM の別の場所にレンダリングします。\n\n- **props**\n\n  ```ts\n  interface TeleportProps {\n    /**\n     * 必須。ターゲットコンテナーを指定します。\n     * セレクターまたは実際の要素のいずれかを指定できます。\n     */\n    to: string | HTMLElement\n    /**\n     * `true` の場合、コンテンツはターゲットコンテナーに\n     * 移動せずに元の場所に残ります。\n     * 動的に変更できます。\n     */\n    disabled?: boolean\n  }\n  ```\n\n- **例**\n\n  ターゲットコンテナーの指定:\n\n  ```html\n  <teleport to=\"#some-id\" />\n  <teleport to=\".some-class\" />\n  <teleport to=\"[data-teleport]\" />\n  ```\n\n  条件によって無効化:\n\n  ```html\n  <teleport to=\"#popup\" :disabled=\"displayVideoInline\">\n    <video src=\"./my-movie.mp4\">\n  </teleport>\n  ```\n\n- **参照** [ガイド - Teleport](https://ja.vuejs.org/guide/built-ins/teleport.html)\n"
+        "value": "\nスロットの内容を DOM の別の場所にレンダリングします。\n\n- **props**\n\n  ```ts\n  interface TeleportProps {\n    /**\n     * 必須。ターゲットコンテナーを指定します。\n     * セレクターまたは実際の要素のいずれかを指定できます。\n     */\n    to: string | HTMLElement\n    /**\n     * `true` の場合、コンテンツはターゲットコンテナーに\n     * 移動せずに元の場所に残ります。\n     * 動的に変更できます。\n     */\n    disabled?: boolean\n  }\n  ```\n\n- **例**\n\n  ターゲットコンテナーの指定:\n\n  ```html\n  <Teleport to=\"#some-id\" />\n  <Teleport to=\".some-class\" />\n  <Teleport to=\"[data-teleport]\" />\n  ```\n\n  条件によって無効化:\n\n  ```html\n  <Teleport to=\"#popup\" :disabled=\"displayVideoInline\">\n    <video src=\"./my-movie.mp4\">\n  </Teleport>\n  ```\n\n- **参照** [ガイド - Teleport](https://ja.vuejs.org/guide/built-ins/teleport.html)\n"
       },
       "attributes": [],
       "references": [
