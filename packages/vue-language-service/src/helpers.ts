@@ -1,7 +1,7 @@
 import * as vue from '@vue/language-core';
 import type { CompilerDOM } from '@vue/language-core';
 import * as embedded from '@volar/language-core';
-import { computed, ComputedRef } from '@vue/reactivity';
+import { computed } from 'computeds';
 import { sharedTypes } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 
@@ -270,7 +270,7 @@ type Tags = Map<string, {
 	}>,
 }>;
 
-const map = new WeakMap<embedded.VirtualFile, ComputedRef<Tags | undefined>>();
+const map = new WeakMap<embedded.VirtualFile, () => Tags | undefined>();
 
 export function getTemplateTagsAndAttrs(sourceFile: embedded.VirtualFile): Tags {
 
@@ -278,7 +278,7 @@ export function getTemplateTagsAndAttrs(sourceFile: embedded.VirtualFile): Tags 
 		const getter = computed(() => {
 			if (!(sourceFile instanceof vue.VueFile))
 				return;
-			const ast = sourceFile.compiledSFCTemplate?.ast;
+			const ast = sourceFile.sfc.template?.ast;
 			const tags: Tags = new Map();
 			if (ast) {
 				vue.walkElementNodes(ast, node => {
@@ -330,5 +330,5 @@ export function getTemplateTagsAndAttrs(sourceFile: embedded.VirtualFile): Tags 
 		map.set(sourceFile, getter);
 	}
 
-	return map.get(sourceFile)!.value ?? new Map();
+	return map.get(sourceFile)!() ?? new Map();
 }
