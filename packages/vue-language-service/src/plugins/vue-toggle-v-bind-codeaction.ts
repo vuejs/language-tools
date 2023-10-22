@@ -22,14 +22,14 @@ export const create = function (): Service {
 					return;
 				}
 
-				const { templateAst, template } = vueFile.sfc;
+				const { template } = vueFile.sfc;
 
-				if (!templateAst) return;
+				if (!template?.ast) return;
 
 				const templateStartOffset = template!.startTagEnd;
 				const result: vscode.CodeAction[] = [];
 
-				walkElementNodes(templateAst, node => {
+				walkElementNodes(template.ast, node => {
 					if (startOffset > templateStartOffset + node.loc.end.offset || endOffset < templateStartOffset + node.loc.start.offset) {
 						return;
 					}

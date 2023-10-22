@@ -69,9 +69,9 @@ export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
-	sourceTemplate: string,
-	sourceLang: string,
-	sfc: Sfc,
+	template: NonNullable<Sfc['template']>,
+	shouldGenerateScopedClasses: boolean,
+	stylesScopedClasses: Set<string>,
 	hasScriptSetupSlots: boolean,
 	slotsAssignName: string | undefined,
 	propsAssignName: string | undefined,
@@ -105,8 +105,8 @@ export function generate(
 
 	generatePreResolveComponents();
 
-	if (sfc.templateAst) {
-		visitNode(sfc.templateAst, undefined, undefined, undefined);
+	if (template.ast) {
+		visitNode(template.ast, undefined, undefined, undefined);
 	}
 
 	generateStyleScopedClasses();
@@ -160,17 +160,6 @@ export function generate(
 	}
 
 	function generateStyleScopedClasses() {
-
-		const allClasses = new Set<string>();
-
-		for (const block of sfc.styles) {
-			if (block.scoped || vueCompilerOptions.experimentalResolveStyleCssClasses === 'always') {
-				for (const className of block.classNames) {
-					allClasses.add(className.text.substring(1));
-				}
-			}
-		}
-
 		codes.push(`if (typeof __VLS_styleScopedClasses === 'object' && !Array.isArray(__VLS_styleScopedClasses)) {\n`);
 		for (const { className, offset } of scopedClasses) {
 			codes.push(`__VLS_styleScopedClasses[`);
@@ -180,7 +169,7 @@ export function generate(
 				offset,
 				{
 					...capabilitiesPresets.scopedClassName,
-					displayWithLink: allClasses.has(className),
+					displayWithLink: stylesScopedClasses.has(className),
 				},
 			]));
 			codes.push(`];\n`);
@@ -292,11 +281,11 @@ export function generate(
 
 		const tagOffsetsMap: Record<string, number[]> = {};
 
-		if (!sfc.templateAst) {
+		if (!template.ast) {
 			return tagOffsetsMap;
 		}
 
-		walkElementNodes(sfc.templateAst, node => {
+		walkElementNodes(template.ast, node => {
 			if (node.tag === 'slot') {
 				// ignore
 			}
@@ -314,11 +303,11 @@ export function generate(
 				tagOffsetsMap[node.tag] ??= [];
 
 				const offsets = tagOffsetsMap[node.tag];
-				const source = sourceTemplate.substring(node.loc.start.offset);
+				const source = template.content.substring(node.loc.start.offset);
 				const startTagOffset = node.loc.start.offset + source.indexOf(node.tag);
 
 				offsets.push(startTagOffset); // start tag
-				if (!node.isSelfClosing && sourceLang === 'html') {
+				if (!node.isSelfClosing && template.lang === 'html') {
 					const endTagOffset = node.loc.start.offset + node.loc.source.lastIndexOf(node.tag);
 					if (endTagOffset !== startTagOffset) {
 						offsets.push(endTagOffset); // end tag
@@ -451,11 +440,11 @@ export function generate(
 			let rightCharacter: string;
 
 			// fix https://github.com/vuejs/language-tools/issues/1787
-			while ((leftCharacter = sourceTemplate.substring(start - 1, start)).trim() === '' && leftCharacter.length) {
+			while ((leftCharacter = template.content.substring(start - 1, start)).trim() === '' && leftCharacter.length) {
 				start--;
 				content = leftCharacter + content;
 			}
-			while ((rightCharacter = sourceTemplate.substring(start + content.length, start + content.length + 1)).trim() === '' && rightCharacter.length) {
+			while ((rightCharacter = template.content.substring(start + content.length, start + content.length + 1)).trim() === '' && rightCharacter.length) {
 				content = content + rightCharacter;
 			}
 
@@ -620,8 +609,8 @@ export function generate(
 
 		codes.push(`{\n`);
 
-		const startTagOffset = node.loc.start.offset + sourceTemplate.substring(node.loc.start.offset).indexOf(node.tag);
-		let endTagOffset = !node.isSelfClosing && sourceLang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
+		const startTagOffset = node.loc.start.offset + template.content.substring(node.loc.start.offset).indexOf(node.tag);
+		let endTagOffset = !node.isSelfClosing && template.lang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
 
 		if (endTagOffset === startTagOffset) {
 			endTagOffset = undefined;
@@ -837,7 +826,7 @@ export function generate(
 
 		generateDirectives(node);
 		generateElReferences(node); // <el ref="foo" />
-		if (sfc.styles.some(s => s.scoped || vueCompilerOptions.experimentalResolveStyleCssClasses === 'always')) {
+		if (shouldGenerateScopedClasses) {
 			generateClassScoped(node);
 		}
 		if (componentCtxVar) {

@@ -1,4 +1,4 @@
-import { computed, shallowRef as ref } from '@vue/reactivity';
+import { computed, computedSet } from 'computeds';
 import { generate as generateScript } from '../generators/script';
 import { generate as generateTemplate } from '../generators/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
@@ -28,8 +28,8 @@ const plugin: VueLanguagePlugin = (ctx) => {
 			const tsx = useTsx(fileName, sfc);
 			const fileNames: string[] = [];
 
-			if (['js', 'ts', 'jsx', 'tsx'].includes(tsx.lang.value)) {
-				fileNames.push(fileName + '.' + tsx.lang.value);
+			if (['js', 'ts', 'jsx', 'tsx'].includes(tsx.lang())) {
+				fileNames.push(fileName + '.' + tsx.lang());
 			}
 
 			if (sfc.template) {
@@ -45,7 +45,7 @@ const plugin: VueLanguagePlugin = (ctx) => {
 			const _tsx = useTsx(fileName, sfc);
 			const suffix = embeddedFile.fileName.replace(fileName, '');
 
-			if (suffix === '.' + _tsx.lang.value) {
+			if (suffix === '.' + _tsx.lang()) {
 				embeddedFile.kind = FileKind.TypeScriptHostFile;
 				embeddedFile.capabilities = {
 					...FileCapabilities.full,
@@ -53,7 +53,7 @@ const plugin: VueLanguagePlugin = (ctx) => {
 					documentFormatting: false,
 					documentSymbol: false,
 				};
-				const tsx = _tsx.generatedScript.value;
+				const tsx = _tsx.generatedScript();
 				if (tsx) {
 					const [content, contentStacks] = ctx.codegenStack ? muggle.track([...tsx.codes], [...tsx.codeStacks]) : [[...tsx.codes], [...tsx.codeStacks]];
 					embeddedFile.content = content;
@@ -73,8 +73,11 @@ const plugin: VueLanguagePlugin = (ctx) => {
 					inlayHint: false,
 				};
 
-				if (_tsx.generatedTemplate.value) {
-					const [content, contentStacks] = ctx.codegenStack ? muggle.track([..._tsx.generatedTemplate.value.formatCodes], [..._tsx.generatedTemplate.value.formatCodeStacks]) : [[..._tsx.generatedTemplate.value.formatCodes], [..._tsx.generatedTemplate.value.formatCodeStacks]];
+				const template = _tsx.generatedTemplate();
+				if (template) {
+					const [content, contentStacks] = ctx.codegenStack
+						? muggle.track([...template.formatCodes], [...template.formatCodeStacks])
+						: [[...template.formatCodes], [...template.formatCodeStacks]];
 					embeddedFile.content = content;
 					embeddedFile.contentStacks = contentStacks;
 				}
@@ -97,8 +100,11 @@ const plugin: VueLanguagePlugin = (ctx) => {
 
 				embeddedFile.parentFileName = fileName + '.template.' + sfc.template?.lang;
 
-				if (_tsx.generatedTemplate.value) {
-					const [content, contentStacks] = ctx.codegenStack ? muggle.track([..._tsx.generatedTemplate.value.cssCodes], [..._tsx.generatedTemplate.value.cssCodeStacks]) : [[..._tsx.generatedTemplate.value.cssCodes], [..._tsx.generatedTemplate.value.cssCodeStacks]];
+				const template = _tsx.generatedTemplate();
+				if (template) {
+					const [content, contentStacks] = ctx.codegenStack
+						? muggle.track([...template.cssCodes], [...template.cssCodeStacks])
+						: [[...template.cssCodes], [...template.cssCodeStacks]];
 					embeddedFile.content = content;
 					embeddedFile.contentStacks = contentStacks;
 				}
@@ -129,57 +135,75 @@ function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOp
 					: 'js';
 	});
 	const scriptRanges = computed(() =>
-		_sfc.scriptAst
-			? parseScriptRanges(ts, _sfc.scriptAst, !!_sfc.scriptSetup, false)
+		_sfc.script
+			? parseScriptRanges(ts, _sfc.script.ast, !!_sfc.scriptSetup, false)
 			: undefined
 	);
 	const scriptSetupRanges = computed(() =>
-		_sfc.scriptSetupAst
-			? parseScriptSetupRanges(ts, _sfc.scriptSetupAst, vueCompilerOptions)
+		_sfc.scriptSetup
+			? parseScriptSetupRanges(ts, _sfc.scriptSetup.ast, vueCompilerOptions)
 			: undefined
 	);
+	const shouldGenerateScopedClasses = computed(() => {
+		const option = vueCompilerOptions.experimentalResolveStyleCssClasses;
+		return _sfc.styles.some(s => {
+			return option === 'always' || (option === 'scoped' && s.scoped);
+		});
+	});
+	const stylesScopedClasses = computedSet(() => {
+
+		const classes = new Set<string>();
+
+		if (!shouldGenerateScopedClasses()) {
+			return classes;
+		}
+
+		for (const style of _sfc.styles) {
+			const option = vueCompilerOptions.experimentalResolveStyleCssClasses;
+			if ((option === 'always' || option === 'scoped') && style.scoped) {
+				for (const className of style.classNames) {
+					classes.add(className.text.substring(1));
+				}
+			}
+		}
+
+		return classes;
+	});
 	const generatedTemplate = computed(() => {
 
-		if (!_sfc.templateAst)
+		if (!_sfc.template)
 			return;
 
 		return generateTemplate(
 			ts,
 			compilerOptions,
 			vueCompilerOptions,
-			_sfc.template?.content ?? '',
-			_sfc.template?.lang ?? 'html',
-			_sfc,
-			hasScriptSetupSlots.value,
-			slotsAssignName.value,
-			propsAssignName.value,
+			_sfc.template,
+			shouldGenerateScopedClasses(),
+			stylesScopedClasses(),
+			hasScriptSetupSlots(),
+			slotsAssignName(),
+			propsAssignName(),
 			codegenStack,
 		);
 	});
-
-	//#region remove when https://github.com/vuejs/core/pull/5912 merged
-	const hasScriptSetupSlots = ref(false);
-	const slotsAssignName = ref<string>();
-	const propsAssignName = ref<string>();
-	//#endregion
-
-	const generatedScript = computed(() => {
-		hasScriptSetupSlots.value = !!scriptSetupRanges.value?.slots.define;
-		slotsAssignName.value = scriptSetupRanges.value?.slots.name;
-		propsAssignName.value = scriptSetupRanges.value?.props.name;
-		return generateScript(
-			ts,
-			fileName,
-			_sfc,
-			lang.value,
-			scriptRanges.value,
-			scriptSetupRanges.value,
-			generatedTemplate.value,
-			compilerOptions,
-			vueCompilerOptions,
-			codegenStack,
-		);
-	});
+	const hasScriptSetupSlots = computed(() => !!scriptSetupRanges()?.slots.define);
+	const slotsAssignName = computed(() => scriptSetupRanges()?.slots.name);
+	const propsAssignName = computed(() => scriptSetupRanges()?.props.name);
+	const generatedScript = computed(() => generateScript(
+		ts,
+		fileName,
+		_sfc.script,
+		_sfc.scriptSetup,
+		_sfc.styles,
+		lang(),
+		scriptRanges(),
+		scriptSetupRanges(),
+		generatedTemplate(),
+		compilerOptions,
+		vueCompilerOptions,
+		codegenStack,
+	));
 
 	return {
 		scriptRanges,
