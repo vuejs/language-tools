@@ -1,7 +1,7 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCParseResult } from '@vue/compiler-sfc';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import type { VueEmbeddedFile } from './sourceFile';
+import type { VueEmbeddedFile } from './file/embeddedFile';
 
 export type { SFCParseResult } from '@vue/compiler-sfc';
 
@@ -75,17 +75,23 @@ export interface SfcBlock {
 }
 
 export interface Sfc {
-	template: SfcBlock | null;
+	template: SfcBlock & {
+		ast: CompilerDOM.RootNode | undefined;
+		errors: CompilerDOM.CompilerError[];
+		warnings: CompilerDOM.CompilerError[];
+	} | undefined;
 	script: (SfcBlock & {
 		src: string | undefined;
 		srcOffset: number;
-	}) | null;
+		ast: ts.SourceFile;
+	}) | undefined;
 	scriptSetup: SfcBlock & {
 		// https://github.com/vuejs/rfcs/discussions/436
 		generic: string | undefined;
 		genericOffset: number;
-	} | null;
-	styles: (SfcBlock & {
+		ast: ts.SourceFile;
+	} | undefined;
+	styles: readonly (SfcBlock & {
 		module: string | undefined;
 		scoped: boolean;
 		cssVars: {
@@ -97,13 +103,21 @@ export interface Sfc {
 			offset: number;
 		}[];
 	})[];
-	customBlocks: (SfcBlock & {
+	customBlocks: readonly (SfcBlock & {
 		type: string;
 	})[];
 
-	// ast
+	/**
+	 * @deprecated use `template.ast` instead
+	 */
 	templateAst: CompilerDOM.RootNode | undefined;
+	/**
+	 * @deprecated use `script.ast` instead
+	 */
 	scriptAst: ts.SourceFile | undefined;
+	/**
+	 * @deprecated use `scriptSetup.ast` instead
+	 */
 	scriptSetupAst: ts.SourceFile | undefined;
 }
 

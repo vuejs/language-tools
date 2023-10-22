@@ -233,19 +233,19 @@ export const create = <S extends Service>(options: {
 					continue;
 
 				const templateErrors: vscode.Diagnostic[] = [];
-				const sfcVueTemplateCompiled = virtualFile.compiledSFCTemplate;
+				const { template } = virtualFile.sfc;
 
-				if (sfcVueTemplateCompiled) {
+				if (template) {
 
-					for (const error of sfcVueTemplateCompiled.errors) {
+					for (const error of template.errors) {
 						onCompilerError(error, 1 satisfies typeof vscode.DiagnosticSeverity.Error);
 					}
 
-					for (const warning of sfcVueTemplateCompiled.warnings) {
+					for (const warning of template.warnings) {
 						onCompilerError(warning, 2 satisfies typeof vscode.DiagnosticSeverity.Warning);
 					}
 
-					function onCompilerError(error: NonNullable<typeof sfcVueTemplateCompiled>['errors'][number], severity: vscode.DiagnosticSeverity) {
+					function onCompilerError(error: NonNullable<typeof template>['errors'][number], severity: vscode.DiagnosticSeverity) {
 
 						const templateHtmlRange = {
 							start: error.loc?.start.offset ?? 0,
@@ -375,7 +375,7 @@ export const create = <S extends Service>(options: {
 							&& name !== 'Suspense'
 							&& name !== 'Teleport'
 						);
-					const scriptSetupRanges = vueSourceFile.sfc.scriptSetupAst ? parseScriptSetupRanges(ts, vueSourceFile.sfc.scriptSetupAst, options.vueCompilerOptions) : undefined;
+					const scriptSetupRanges = vueSourceFile.sfc.scriptSetup ? parseScriptSetupRanges(ts, vueSourceFile.sfc.scriptSetup.ast, options.vueCompilerOptions) : undefined;
 					const names = new Set<string>();
 					const tags: html.ITagData[] = [];
 
@@ -417,8 +417,8 @@ export const create = <S extends Service>(options: {
 
 					if (_tsCodegen) {
 						let ctxVars = [
-							..._tsCodegen.scriptRanges.value?.bindings.map(binding => vueSourceFile.sfc.script!.content.substring(binding.start, binding.end)) ?? [],
-							..._tsCodegen.scriptSetupRanges.value?.bindings.map(binding => vueSourceFile.sfc.scriptSetup!.content.substring(binding.start, binding.end)) ?? [],
+							..._tsCodegen.scriptRanges()?.bindings.map(binding => vueSourceFile.sfc.script!.content.substring(binding.start, binding.end)) ?? [],
+							..._tsCodegen.scriptSetupRanges()?.bindings.map(binding => vueSourceFile.sfc.scriptSetup!.content.substring(binding.start, binding.end)) ?? [],
 							...getTemplateCtx(ts, languageService, vueSourceFile) ?? [],
 						];
 						ctxVars = [...new Set(ctxVars)];
