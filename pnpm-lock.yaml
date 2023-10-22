@@ -258,8 +258,8 @@ importers:
         specifier: ^2.7.14
         version: 2.7.14
       vue-component-type-helpers:
-        specifier: 1.8.3
-        version: 1.8.3
+        specifier: 1.8.19
+        version: link:../vue-component-type-helpers
 
   packages/vue-tsc:
     dependencies:
@@ -6459,10 +6459,6 @@ packages:
 
   /vscode-uri@3.0.8:
     resolution: {integrity: sha512-AyFQ0EVmsOZOlAnxoFOGOq1SQDWAB7C6aqMGS23svWAllfOaxbuFvcT8D1i8z3Gyn8fraVeZNNmN6e9bxxXkKw==}
-
-  /vue-component-type-helpers@1.8.3:
-    resolution: {integrity: sha512-+/nC0Ra571Jqe7QuZObo1WJbHcdHo8d1rcF8EDSuFAl+dQGlMB6zbM4dsrofJY1wIeky/rGkFE6pCmtHaEf/zw==}
-    dev: true
 
   /vue-template-compiler@2.7.14:
     resolution: {integrity: sha512-zyA5Y3ArvVG0NacJDkkzJuPQDF8RFeRlzV2vLeSnhSpieO6LK2OVbdLPi5MPPs09Ii+gMO8nY4S3iKQxBxDmWQ==}
