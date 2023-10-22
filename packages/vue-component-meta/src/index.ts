@@ -450,7 +450,7 @@ function createSchemaResolvers(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	core: vue.LanguageContext,
 ) {
-	const visited = new Set<ts.Type>();;
+	const visited = new Set<ts.Type>();
 
 	function shouldIgnore(subtype: ts.Type) {
 		const name = typeChecker.typeToString(subtype);
@@ -685,7 +685,7 @@ function readVueComponentDefaultProps(
 	function scriptSetupWorker() {
 
 		const descriptor = vueSourceFile.sfc;
-		const scriptSetupRanges = descriptor.scriptSetupAst ? vue.parseScriptSetupRanges(ts, descriptor.scriptSetupAst, vueCompilerOptions) : undefined;
+		const scriptSetupRanges = descriptor.scriptSetup ? vue.parseScriptSetupRanges(ts, descriptor.scriptSetup.ast, vueCompilerOptions) : undefined;
 
 		if (descriptor.scriptSetup && scriptSetupRanges?.props.withDefaults?.arg) {
 

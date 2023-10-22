@@ -10,14 +10,14 @@ importers:
     optionalDependencies:
       '@lerna-lite/cli':
         specifier: latest
-        version: 2.5.1(@lerna-lite/publish@2.5.1)(@lerna-lite/version@2.5.1)(typescript@5.2.2)
+        version: 2.6.0(@lerna-lite/publish@2.6.0)(@lerna-lite/version@2.6.0)(typescript@5.2.2)
       '@lerna-lite/publish':
         specifier: latest
-        version: 2.5.1(typescript@5.2.2)
+        version: 2.6.0(typescript@5.2.2)
     devDependencies:
       '@types/node':
         specifier: latest
-        version: 20.8.4
+        version: 20.8.7
       '@volar/language-service':
         specifier: ~1.10.4
         version: 1.10.4
@@ -26,7 +26,7 @@ importers:
         version: 5.2.2
       vite:
         specifier: latest
-        version: 4.4.11(@types/node@20.8.4)
+        version: 4.5.0(@types/node@20.8.7)
       vitest:
         specifier: latest
         version: 0.34.6
@@ -119,12 +119,12 @@ importers:
       '@vue/compiler-dom':
         specifier: ^3.3.0
         version: 3.3.4
-      '@vue/reactivity':
-        specifier: ^3.3.0
-        version: 3.3.4
       '@vue/shared':
         specifier: ^3.3.0
         version: 3.3.4
+      computeds:
+        specifier: ^0.0.1
+        version: 0.0.1
       minimatch:
         specifier: ^9.0.3
         version: 9.0.3
@@ -196,12 +196,12 @@ importers:
       '@vue/language-core':
         specifier: 1.8.19
         version: link:../vue-language-core
-      '@vue/reactivity':
-        specifier: ^3.3.0
-        version: 3.3.4
       '@vue/shared':
         specifier: ^3.3.0
         version: 3.3.4
+      computeds:
+        specifier: ^0.0.1
+        version: 0.0.1
       volar-service-css:
         specifier: 0.0.14
         version: 0.0.14(@volar/language-service@1.10.4)
@@ -272,7 +272,7 @@ importers:
     devDependencies:
       '@types/eslint':
         specifier: latest
-        version: 8.44.4
+        version: 8.44.6
       vue-tsc:
         specifier: 1.8.19
         version: link:../vue-tsc
@@ -606,8 +606,8 @@ packages:
     resolution: {integrity: sha512-eF2rxCRulEKXHTRiDrDy6erMYWqNw4LPdQ8UQA4huuxaQsVeRPFl2oM8oDGxMFhJUWZf9McpLtJasDDZb/Bpeg==}
     dev: true
 
-  /@lerna-lite/cli@2.5.1(@lerna-lite/publish@2.5.1)(@lerna-lite/version@2.5.1)(typescript@5.2.2):
-    resolution: {integrity: sha512-6Bs/w4rB/SVbiwbHfahm2W9wfUcvKcA34VBkVE8UrYOmwxOqODNdBUOUiZj76OTl5n5yByBf6MHWZN2MREPECw==}
+  /@lerna-lite/cli@2.6.0(@lerna-lite/publish@2.6.0)(@lerna-lite/version@2.6.0)(typescript@5.2.2):
+    resolution: {integrity: sha512-sxJmgGt/zQ4rYfdl5OSp5/TToLB16RVxsoVsUsg/qTl5F5C+P35evYBuXRuFNWr50+MdfHqLisbf0qEJgGAk9g==}
     engines: {node: '>=16.15.0', npm: '>=8.5.0'}
     hasBin: true
     requiresBuild: true
@@ -632,10 +632,10 @@ packages:
       '@lerna-lite/watch':
         optional: true
     dependencies:
-      '@lerna-lite/core': 2.5.1(typescript@5.2.2)
-      '@lerna-lite/init': 2.5.1(typescript@5.2.2)
-      '@lerna-lite/publish': 2.5.1(typescript@5.2.2)
-      '@lerna-lite/version': 2.5.1(@lerna-lite/publish@2.5.1)(typescript@5.2.2)
+      '@lerna-lite/core': 2.6.0(typescript@5.2.2)
+      '@lerna-lite/init': 2.6.0(typescript@5.2.2)
+      '@lerna-lite/publish': 2.6.0(typescript@5.2.2)
+      '@lerna-lite/version': 2.6.0(@lerna-lite/publish@2.6.0)(typescript@5.2.2)
       dedent: 1.5.1
       dotenv: 16.3.1
       import-local: 3.1.0
@@ -649,8 +649,8 @@ packages:
     dev: false
     optional: true
 
-  /@lerna-lite/core@2.5.1(typescript@5.2.2):
-    resolution: {integrity: sha512-Bqx5e7/QiK1NzX8qfQyW3WP63Cw5mByCS0ZvrMUioQFJKw7BgXytOmg1OrcB2A7+hYwkZOiz25GWIUzHMvxVAA==}
+  /@lerna-lite/core@2.6.0(typescript@5.2.2):
+    resolution: {integrity: sha512-WFyDgjuHHj5dC8WYA4w1hoMyUL8pnb7eFNMVYgPYzXi1L8yoQPpvJr02wOWl464XJbhhfr8Q8tMdMHI7YUSbMQ==}
     engines: {node: '>=16.15.0', npm: '>=8.5.0'}
     requiresBuild: true
     dependencies:
@@ -687,12 +687,12 @@ packages:
     dev: false
     optional: true
 
-  /@lerna-lite/init@2.5.1(typescript@5.2.2):
-    resolution: {integrity: sha512-6deyLNCt2w3xS4oAho/B24LXeUBH6h3PE+D0BmX/vxvfq1UXDTXyBs+Ch2/H+oi6CMlWIQvYP/+oH7VZ9daVyQ==}
+  /@lerna-lite/init@2.6.0(typescript@5.2.2):
+    resolution: {integrity: sha512-K8lxcQXgGrTfl3YyvKSl+uiAT287vd1awouvme7m+3j32H6DTI31u35t7mR6mBY7GhkDLX/iJzjaHpv2qBb3NQ==}
     engines: {node: '>=16.15.0', npm: '>=8.5.0'}
     requiresBuild: true
     dependencies:
-      '@lerna-lite/core': 2.5.1(typescript@5.2.2)
+      '@lerna-lite/core': 2.6.0(typescript@5.2.2)
       fs-extra: 11.1.1
       p-map: 6.0.0
       write-json-file: 5.0.0
@@ -703,14 +703,14 @@ packages:
     dev: false
     optional: true
 
-  /@lerna-lite/publish@2.5.1(typescript@5.2.2):
-    resolution: {integrity: sha512-bxvaaFUcQ1wiOLc1xWtekmsyobd7kqUoehzZ8HIStDIASMo+DZGVNyM+OZirI1F3Fz3PM/JbyRz+yo7Qp6kEVA==}
+  /@lerna-lite/publish@2.6.0(typescript@5.2.2):
+    resolution: {integrity: sha512-Xa7MT1nZ8Q6vY0vwLMZgdoX8Lz2PHZ6tEMWx54qgWiK0HYOfZjW+NNXGV9hKu6PpaRBq+N5PIKOptJSjQCjEew==}
     engines: {node: '>=16.15.0', npm: '>=8.5.0'}
     requiresBuild: true
     dependencies:
-      '@lerna-lite/cli': 2.5.1(@lerna-lite/publish@2.5.1)(@lerna-lite/version@2.5.1)(typescript@5.2.2)
-      '@lerna-lite/core': 2.5.1(typescript@5.2.2)
-      '@lerna-lite/version': 2.5.1(@lerna-lite/publish@2.5.1)(typescript@5.2.2)
+      '@lerna-lite/cli': 2.6.0(@lerna-lite/publish@2.6.0)(@lerna-lite/version@2.6.0)(typescript@5.2.2)
+      '@lerna-lite/core': 2.6.0(typescript@5.2.2)
+      '@lerna-lite/version': 2.6.0(@lerna-lite/publish@2.6.0)(typescript@5.2.2)
       '@npmcli/arborist': 7.2.0
       byte-size: 8.1.1
       chalk: 5.3.0
@@ -747,13 +747,13 @@ packages:
     dev: false
     optional: true
 
-  /@lerna-lite/version@2.5.1(@lerna-lite/publish@2.5.1)(typescript@5.2.2):
-    resolution: {integrity: sha512-d7b2ZiCwTGbxE5LPkt43kRNSCBCgAEMYKVGMhpabm6YXOs9J5Si7gmcSQ9eTYctUjwY+QBUimRr/KFT4PvBfEw==}
+  /@lerna-lite/version@2.6.0(@lerna-lite/publish@2.6.0)(typescript@5.2.2):
+    resolution: {integrity: sha512-OEdSV6SwYqspXls2Nthd6itw7XJaWGAr65rDVrgcQajQ0dAngateYtsq/zmRMaJnSYNX6u5gUV5y+6WISQaGMA==}
     engines: {node: '>=16.15.0', npm: '>=8.5.0'}
     requiresBuild: true
     dependencies:
-      '@lerna-lite/cli': 2.5.1(@lerna-lite/publish@2.5.1)(@lerna-lite/version@2.5.1)(typescript@5.2.2)
-      '@lerna-lite/core': 2.5.1(typescript@5.2.2)
+      '@lerna-lite/cli': 2.6.0(@lerna-lite/publish@2.6.0)(@lerna-lite/version@2.6.0)(typescript@5.2.2)
+      '@lerna-lite/core': 2.6.0(typescript@5.2.2)
       '@octokit/plugin-enterprise-rest': 6.0.1
       '@octokit/rest': 19.0.13
       chalk: 5.3.0
@@ -1255,8 +1255,8 @@ packages:
     resolution: {integrity: sha512-/k+vesl92vMvMygmQrFe9Aimxi6oQXFUX9mA5HanTrKUSAMoLauSi6PNFOdRw0oeqilaW600GNx2vSaT2f8aIQ==}
     dev: true
 
-  /@types/eslint@8.44.4:
-    resolution: {integrity: sha512-lOzjyfY/D9QR4hY9oblZ76B90MYTB3RrQ4z2vBIJKj9ROCRqdkYl2gSUx1x1a4IWPjKJZLL4Aw1Zfay7eMnmnA==}
+  /@types/eslint@8.44.6:
+    resolution: {integrity: sha512-P6bY56TVmX8y9J87jHNgQh43h6VVU+6H7oN7hgvivV81K2XY8qJZ5vqPy/HdUoVIelii2kChYVzQanlswPWVFw==}
     dependencies:
       '@types/estree': 1.0.2
       '@types/json-schema': 7.0.13
@@ -1280,8 +1280,8 @@ packages:
     dev: false
     optional: true
 
-  /@types/node@20.8.4:
-    resolution: {integrity: sha512-ZVPnqU58giiCjSxjVUESDtdPk4QR5WQhhINbc9UBrKLU68MX5BF6kbQzTrkwbolyr0X8ChBpXfavr5mZFKZQ5A==}
+  /@types/node@20.8.7:
+    resolution: {integrity: sha512-21TKHHh3eUHIi2MloeptJWALuCu5H7HQTdTrWIFReA8ad+aggoX+lRes3ex7/FtpC+sVUpFMQ+QTfYr74mruiQ==}
     dependencies:
       undici-types: 5.25.3
     dev: true
@@ -1465,6 +1465,7 @@ packages:
     resolution: {integrity: sha512-kLTDLwd0B1jG08NBF3R5rqULtv/f8x3rOFByTDz4J53ttIQEDmALqKqXY0J+XQeN0aV2FBxY8nJDf88yvOPAqQ==}
     dependencies:
       '@vue/shared': 3.3.4
+    dev: true
 
   /@vue/runtime-core@3.3.4:
     resolution: {integrity: sha512-R+bqxMN6pWO7zGI4OMlmvePOdP2c93GsHFM/siJI7O2nxFRzj55pLwkpCedEY+bTMgp5miZ8CxfIZo3S+gFqvA==}
@@ -2112,6 +2113,10 @@ packages:
       dot-prop: 5.3.0
     dev: false
     optional: true
+
+  /computeds@0.0.1:
+    resolution: {integrity: sha512-7CEBgcMjVmitjYo5q8JTJVra6X5mQ20uTThdK+0kR7UEaDrAWEQcRiBtWJzga4eRpP6afNwwLsX2SET2JhVB1Q==}
+    dev: false
 
   /concat-map@0.0.1:
     resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
@@ -6114,7 +6119,7 @@ packages:
     dev: false
     optional: true
 
-  /vite-node@0.34.6(@types/node@20.8.4):
+  /vite-node@0.34.6(@types/node@20.8.7):
     resolution: {integrity: sha512-nlBMJ9x6n7/Amaz6F3zJ97EBwR2FkzhBRxF5e+jE6LA3yi6Wtc2lyTij1OnDMIr34v5g/tVQtsVAzhT0jc5ygA==}
     engines: {node: '>=v14.18.0'}
     hasBin: true
@@ -6124,7 +6129,7 @@ packages:
       mlly: 1.4.2
       pathe: 1.1.1
       picocolors: 1.0.0
-      vite: 4.4.11(@types/node@20.8.4)
+      vite: 4.5.0(@types/node@20.8.7)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -6136,8 +6141,8 @@ packages:
       - terser
     dev: true
 
-  /vite@4.4.11(@types/node@20.8.4):
-    resolution: {integrity: sha512-ksNZJlkcU9b0lBwAGZGGaZHCMqHsc8OpgtoYhsQ4/I2v5cnpmmmqe5pM4nv/4Hn6G/2GhTdj0DhZh2e+Er1q5A==}
+  /vite@4.5.0(@types/node@20.8.7):
+    resolution: {integrity: sha512-ulr8rNLA6rkyFAlVWw2q5YJ91v098AFQ2R0PRFwPzREXOUJQPtFUG0t+/ZikhaOCDqFoDhN6/v8Sq0o4araFAw==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
     peerDependencies:
@@ -6164,7 +6169,7 @@ packages:
       terser:
         optional: true
     dependencies:
-      '@types/node': 20.8.4
+      '@types/node': 20.8.7
       esbuild: 0.18.20
       postcss: 8.4.31
       rollup: 3.29.4
@@ -6205,7 +6210,7 @@ packages:
     dependencies:
       '@types/chai': 4.3.7
       '@types/chai-subset': 1.3.3
-      '@types/node': 20.8.4
+      '@types/node': 20.8.7
       '@vitest/expect': 0.34.6
       '@vitest/runner': 0.34.6
       '@vitest/snapshot': 0.34.6
@@ -6224,8 +6229,8 @@ packages:
       strip-literal: 1.3.0
       tinybench: 2.5.1
       tinypool: 0.7.0
-      vite: 4.4.11(@types/node@20.8.4)
-      vite-node: 0.34.6(@types/node@20.8.4)
+      vite: 4.5.0(@types/node@20.8.7)
+      vite-node: 0.34.6(@types/node@20.8.7)
       why-is-node-running: 2.2.2
     transitivePeerDependencies:
       - less
