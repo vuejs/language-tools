@@ -1,7 +1,7 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCParseResult } from '@vue/compiler-sfc';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import type { VueEmbeddedFile } from './file/embeddedFile';
+import type { VueEmbeddedFile } from './virtualFile/embeddedFile';
 
 export type { SFCParseResult } from '@vue/compiler-sfc';
 
