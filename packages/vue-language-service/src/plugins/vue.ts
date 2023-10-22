@@ -55,7 +55,7 @@ export const create = (): Service<Provide> => (context: ServiceContext<import('v
 							},
 							message: `Virtual script ${JSON.stringify(vueSourceFile.mainScriptName)} not found, may missing <script lang="ts"> / "allowJs": true / jsconfig.json.`,
 							severity: 3 satisfies typeof vscode.DiagnosticSeverity.Information,
-							source: 'volar',
+							source: 'vue',
 						};
 						result.push(error);
 					}
