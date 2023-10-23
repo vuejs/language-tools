@@ -1,0 +1,14 @@
+{
+	"exclude": "../tsconfig.json",
+	"compilerOptions": {
+		"paths": {
+			"__COMPLETE_ROOT__/*": [
+				"./complete/*"
+			],
+			"__FIND_DEFINITION_ROOT__/*": [
+				"./find-definition/*"
+			]
+		},
+	},
+	"include": [ "**/*" ],
+}
