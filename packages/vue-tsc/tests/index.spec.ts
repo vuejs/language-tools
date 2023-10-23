@@ -10,11 +10,15 @@ const workspaceVue2 = path.resolve(__dirname, '../../vue-test-workspace-vue-2/vu
 
 function prettyPath(path: string, isRoot: boolean) {
 	const segments = path.split('/');
-	return !isRoot ? segments.slice(segments.length - 2, segments.length).join('/') : segments[segments.length - 1];
+	const slicePath = (seg: number) => segments
+		.slice(segments.length - seg, segments.length)
+		.join('/')
+		.replace('/vue-tsc', '');
+	return !isRoot ? slicePath(4) : slicePath(3);
 }
 
 function collectTests(dir: string, depth = 2, isRoot: boolean = true): [filePath: string, isRoot: boolean][] {
-	const tests: [filePath: string, isRoot: boolean][]  = [];
+	const tests: [filePath: string, isRoot: boolean][] = [];
 
 	if (depth <= 0) {
 		return tests;

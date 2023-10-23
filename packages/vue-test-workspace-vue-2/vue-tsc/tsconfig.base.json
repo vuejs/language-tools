@@ -6,7 +6,7 @@
 	"vueCompilerOptions": {
 		"target": 2.7,
 		"jsxSlots": true,
-		"plugins": ["../../vue-language-plugin-pug"]
+		"plugins": [ "../../vue-language-plugin-pug" ]
 	},
-	"include": []
+	"include": [ ]
 }

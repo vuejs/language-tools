@@ -1,18 +1,19 @@
 {
-    "compilerOptions": {
-        "lib": [
-            "esnext",
-            "dom"
-        ],
-        "strict": true,
-        "noUncheckedIndexedAccess": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
-        "skipLibCheck": true,
-        "allowJs": true,
-        "jsx": "preserve",
-    },
-    "include": [
-        "**/*"
-    ]
+	"compilerOptions": {
+		"lib": [
+			"esnext",
+			"dom"
+		],
+		"strict": true,
+		"noUncheckedIndexedAccess": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"skipLibCheck": true,
+		"allowJs": true,
+		"jsx": "preserve",
+		"baseUrl": ".",
+	},
+	"include": [
+		"**/*"
+	]
 }
