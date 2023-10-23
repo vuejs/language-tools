@@ -5,14 +5,12 @@
 	},
 	"include": [ "packages/*/tests" ],
 	"references": [
-		// VSCode Extensions
-		{ "path": "./packages/vscode-vue/tsconfig.json" },
-		{ "path": "./packages/vscode-typescript-vue-plugin/tsconfig.json" },
-		// Libraries
-		{ "path": "./packages/vue-language-plugin-pug/tsconfig.json" },
-		{ "path": "./packages/typescript-vue-plugin/tsconfig.json" },
-		{ "path": "./packages/vue-tsc/tsconfig.json" },
-		{ "path": "./packages/vue-tsc-eslint-hook/tsconfig.json" },
-		{ "path": "./packages/vue-component-meta/tsconfig.json" },
+		{ "path": "./extensions/vscode/tsconfig.json" },
+		{ "path": "./extensions/vscode-typescript-plugin/tsconfig.json" },
+		{ "path": "./packages/language-plugin-pug/tsconfig.json" },
+		{ "path": "./packages/typescript-plugin/tsconfig.json" },
+		{ "path": "./packages/tsc/tsconfig.json" },
+		{ "path": "./packages/tsc-eslint-hook/tsconfig.json" },
+		{ "path": "./packages/component-meta/tsconfig.json" },
 	],
 }

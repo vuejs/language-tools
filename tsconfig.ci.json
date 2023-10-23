@@ -1,9 +1,9 @@
 {
 	"include": [ ],
 	"references": [
-		{ "path": "./packages/vue-language-server/tsconfig.json" },
-		{ "path": "./packages/vue-tsc/tsconfig.json" },
-		{ "path": "./packages/vue-component-meta/tsconfig.json" },
-		{ "path": "./packages/vue-language-plugin-pug/tsconfig.json" },
+		{ "path": "./packages/language-server/tsconfig.json" },
+		{ "path": "./packages/tsc/tsconfig.json" },
+		{ "path": "./packages/component-meta/tsconfig.json" },
+		{ "path": "./packages/language-plugin-pug/tsconfig.json" },
 	],
 }

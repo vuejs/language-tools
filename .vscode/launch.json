@@ -9,7 +9,7 @@
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				// "--disable-extensions",
-				"--extensionDevelopmentPath=${workspaceRoot}/packages/vscode-vue"
+				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode"
 			],
 			"outFiles": [
 				"${workspaceRoot}/*/*/out/**/*.js"
@@ -26,7 +26,7 @@
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"--disable-extensions",
-				"--extensionDevelopmentPath=${workspaceRoot}/packages/vscode-typescript-vue-plugin"
+				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode-typescript-plugin"
 			],
 			"outFiles": [
 				"${workspaceRoot}/*/*/out/**/*.js"
@@ -43,7 +43,7 @@
 			"request": "launch",
 			"args": [
 				"--disable-extensions",
-				"--extensionDevelopmentPath=${workspaceFolder}/packages/vscode-vue",
+				"--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode",
 				"--extensionDevelopmentKind=web"
 			],
 			"outFiles": [

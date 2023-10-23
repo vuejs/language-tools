@@ -16,5 +16,5 @@
 	"[jsonc]": {
 		"editor.defaultFormatter": "vscode.json-language-features"
 	},
-	"vue.server.path": "./packages/vscode-vue/server.js",
+	"vue.server.path": "./extensions/vscode/server.js",
 }

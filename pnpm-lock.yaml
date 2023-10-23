@@ -31,31 +31,7 @@ importers:
         specifier: latest
         version: 0.34.6
 
-  packages/typescript-vue-plugin:
-    dependencies:
-      '@vue/language-core':
-        specifier: 1.8.20
-        version: link:../vue-language-core
-      '@vue/typescript':
-        specifier: 1.8.20
-        version: link:../vue-typescript
-      vscode-uri:
-        specifier: ^3.0.8
-        version: 3.0.8
-
-  packages/vscode-typescript-vue-plugin:
-    devDependencies:
-      esbuild:
-        specifier: 0.15.18
-        version: 0.15.18
-      typescript-vue-plugin:
-        specifier: 1.8.20
-        version: link:../typescript-vue-plugin
-      vsce:
-        specifier: latest
-        version: 2.15.0
-
-  packages/vscode-vue:
+  extensions/vscode:
     devDependencies:
       '@types/semver':
         specifier: ^7.5.3
@@ -68,10 +44,10 @@ importers:
         version: 1.10.4(vscode-languageclient@9.0.1)
       '@vue/language-core':
         specifier: 1.8.20
-        version: link:../vue-language-core
+        version: link:../../packages/language-core
       '@vue/language-server':
         specifier: 1.8.20
-        version: link:../vue-language-server
+        version: link:../../packages/language-server
       esbuild:
         specifier: 0.15.18
         version: 0.15.18
@@ -91,24 +67,36 @@ importers:
         specifier: ^9.0.1
         version: 9.0.1
 
-  packages/vue-component-meta:
+  extensions/vscode-typescript-plugin:
+    devDependencies:
+      esbuild:
+        specifier: 0.15.18
+        version: 0.15.18
+      typescript-vue-plugin:
+        specifier: 1.8.20
+        version: link:../../packages/typescript-plugin
+      vsce:
+        specifier: latest
+        version: 2.15.0
+
+  packages/component-meta:
     dependencies:
       '@volar/typescript':
         specifier: ~1.10.4
         version: 1.10.4
       '@vue/language-core':
         specifier: 1.8.20
-        version: link:../vue-language-core
+        version: link:../language-core
       typesafe-path:
         specifier: ^0.2.2
         version: 0.2.2
       vue-component-type-helpers:
         specifier: 1.8.20
-        version: link:../vue-component-type-helpers
+        version: link:../component-type-helpers
 
-  packages/vue-component-type-helpers: {}
+  packages/component-type-helpers: {}
 
-  packages/vue-language-core:
+  packages/language-core:
     dependencies:
       '@volar/language-core':
         specifier: ~1.10.4
@@ -142,7 +130,7 @@ importers:
         specifier: ^3.3.0
         version: 3.3.4
 
-  packages/vue-language-plugin-pug:
+  packages/language-plugin-pug:
     dependencies:
       '@volar/source-map':
         specifier: ~1.10.4
@@ -153,9 +141,9 @@ importers:
     devDependencies:
       '@vue/language-core':
         specifier: 1.8.20
-        version: link:../vue-language-core
+        version: link:../language-core
 
-  packages/vue-language-server:
+  packages/language-server:
     dependencies:
       '@volar/language-core':
         specifier: ~1.10.4
@@ -168,18 +156,18 @@ importers:
         version: 1.10.4
       '@vue/language-core':
         specifier: 1.8.20
-        version: link:../vue-language-core
+        version: link:../language-core
       '@vue/language-service':
         specifier: 1.8.20
-        version: link:../vue-language-service
+        version: link:../language-service
       vscode-languageserver-protocol:
         specifier: ^3.17.5
         version: 3.17.5
       vue-component-meta:
         specifier: 1.8.20
-        version: link:../vue-component-meta
+        version: link:../component-meta
 
-  packages/vue-language-service:
+  packages/language-service:
     dependencies:
       '@volar/language-core':
         specifier: ~1.10.4
@@ -195,7 +183,7 @@ importers:
         version: 3.3.4
       '@vue/language-core':
         specifier: 1.8.20
-        version: link:../vue-language-core
+        version: link:../language-core
       '@vue/shared':
         specifier: ^3.3.0
         version: 3.3.4
@@ -243,19 +231,19 @@ importers:
         specifier: ^3.0.8
         version: 3.0.8
 
-  packages/vue-tsc:
+  packages/tsc:
     dependencies:
+      '@volar/typescript':
+        specifier: ~1.10.4
+        version: 1.10.4
       '@vue/language-core':
         specifier: 1.8.20
-        version: link:../vue-language-core
-      '@vue/typescript':
-        specifier: 1.8.20
-        version: link:../vue-typescript
+        version: link:../language-core
       semver:
         specifier: ^7.5.4
         version: 7.5.4
 
-  packages/vue-tsc-eslint-hook:
+  packages/tsc-eslint-hook:
     dependencies:
       vscode-languageserver-textdocument:
         specifier: ^1.0.11
@@ -266,16 +254,16 @@ importers:
         version: 8.44.6
       vue-tsc:
         specifier: 1.8.20
-        version: link:../vue-tsc
+        version: link:../tsc
 
-  packages/vue-typescript:
+  packages/typescript-plugin:
     dependencies:
       '@volar/typescript':
         specifier: ~1.10.4
         version: 1.10.4
       '@vue/language-core':
         specifier: 1.8.20
-        version: link:../vue-language-core
+        version: link:../language-core
 
   test-workspace:
     devDependencies:
