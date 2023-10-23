@@ -1,6 +1,6 @@
 import { CreateFile, Service, ServiceContext, TextDocumentEdit, TextEdit } from '@volar/language-service';
-import { ExpressionNode, type RootNode, type TemplateChildNode } from '@vue/compiler-dom';
-import { SfcBlock, VueFile, scriptRanges } from '@vue/language-core';
+import { ExpressionNode, type TemplateChildNode } from '@vue/compiler-dom';
+import { Sfc, VueFile, scriptRanges } from '@vue/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { Provide } from 'volar-service-typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
@@ -38,12 +38,11 @@ export const create = function (): Service {
 
 				const { sfc } = vueFile;
 				const script = sfc.scriptSetup ?? sfc.script;
-				const scriptAst = sfc.scriptSetupAst ?? sfc.scriptAst;
 
-				if (!sfc.template || !sfc.templateAst || !script || !scriptAst)
+				if (!sfc.template || !script)
 					return;
 
-				const templateCodeRange = selectTemplateCode(startOffset, endOffset, sfc.template, sfc.templateAst);
+				const templateCodeRange = selectTemplateCode(startOffset, endOffset, sfc.template);
 				if (!templateCodeRange)
 					return;
 
@@ -68,12 +67,11 @@ export const create = function (): Service {
 				const [vueFile] = ctx!.documents.getVirtualFileByUri(document.uri) as [VueFile, any];
 				const { sfc } = vueFile;
 				const script = sfc.scriptSetup ?? sfc.script;
-				const scriptAst = sfc.scriptSetupAst ?? sfc.scriptAst;
 
-				if (!sfc.template || !sfc.templateAst || !script || !scriptAst)
+				if (!sfc.template || !script)
 					return codeAction;
 
-				const templateCodeRange = selectTemplateCode(startOffset, endOffset, sfc.template, sfc.templateAst);
+				const templateCodeRange = selectTemplateCode(startOffset, endOffset, sfc.template);
 				if (!templateCodeRange)
 					return codeAction;
 
@@ -84,7 +82,7 @@ export const create = function (): Service {
 				const toExtract = collectExtractProps();
 				const initialIndentSetting = await ctx!.env.getConfiguration!('volar.format.initialIndent') as Record<string, boolean>;
 				const newUri = document.uri.substring(0, document.uri.lastIndexOf('/') + 1) + `${newName}.vue`;
-				const lastImportNode = getLastImportNode(scriptAst);
+				const lastImportNode = getLastImportNode(script.ast);
 
 				let newFileTags = [];
 
@@ -121,8 +119,8 @@ export const create = function (): Service {
 					},
 				];
 
-				if (sfc.script && sfc.scriptAst) {
-					const edit = createAddComponentToOptionEdit(ts, sfc.scriptAst, newName);
+				if (sfc.script) {
+					const edit = createAddComponentToOptionEdit(ts, sfc.script.ast, newName);
 					if (edit) {
 						currentFileEdits.push({
 							range: {
@@ -263,14 +261,14 @@ export const create = function (): Service {
 	};
 };
 
-function selectTemplateCode(startOffset: number, endOffset: number, templateBlock: SfcBlock, templateAst: RootNode) {
+function selectTemplateCode(startOffset: number, endOffset: number, templateBlock: NonNullable<Sfc['template']>) {
 
 	if (startOffset < templateBlock.startTagEnd || endOffset > templateBlock.endTagStart)
 		return;
 
 	const insideNodes: (TemplateChildNode | ExpressionNode)[] = [];
 
-	templateAst.children.forEach(function visit(node: TemplateChildNode | ExpressionNode) {
+	templateBlock.ast?.children.forEach(function visit(node: TemplateChildNode | ExpressionNode) {
 		if (
 			node.loc.start.offset + templateBlock.startTagEnd >= startOffset
 			&& node.loc.end.offset + templateBlock.startTagEnd <= endOffset

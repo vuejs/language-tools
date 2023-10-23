@@ -22,3 +22,7 @@ jobs:
         working-directory: packages/vscode-vue
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
+      - run: pnpm ovsx publish
+        working-directory: packages/vscode-typescript-vue-plugin
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
