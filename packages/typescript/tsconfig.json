@@ -6,6 +6,6 @@
 	},
 	"include": [ "src" ],
 	"references": [
-		{ "path": "../vue-language-core/tsconfig.json" },
+		{ "path": "../language-core/tsconfig.json" },
 	],
 }

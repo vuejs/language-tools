@@ -6,6 +6,6 @@
 	},
 	"include": [ "src" ],
 	"references": [
-		{ "path": "../vue-tsc/tsconfig.json" },
+		{ "path": "../tsc/tsconfig.json" },
 	],
 }

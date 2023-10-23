@@ -137,7 +137,7 @@ flowchart LR
 	click VOLAR_VUE_SERVICE "https://github.com/vuejs/language-tools/tree/master/packages/language-service"
 	click VUE_TSC "https://github.com/vuejs/language-tools/tree/master/packages/tsc"
 	click VUE_COMPONENT_META "https://github.com/vuejs/language-tools/tree/master/packages/component-meta"
-	click TS_VUE_PLUGIN "https://github.com/vuejs/language-tools/tree/master/packages/typescript-vue-plugin"
+	click TS_VUE_PLUGIN "https://github.com/vuejs/language-tools/tree/master/packages/typescript-plugin"
 	click VOLAR_PUG_SERVICE "https://github.com/vuejs/language-tools/tree/master/packages/pug-language-service"
 	click VOLAR_TS_SERVICE "https://github.com/vuejs/language-tools/tree/master/packages/typescript-language-service"
 

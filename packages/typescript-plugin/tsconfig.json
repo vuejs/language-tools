@@ -6,7 +6,7 @@
 	},
 	"include": [ "src" ],
 	"references": [
-		{ "path": "../vue-language-core/tsconfig.json" },
-		{ "path": "../vue-typescript/tsconfig.json" },
+		{ "path": "../language-core/tsconfig.json" },
+		{ "path": "../typescript/tsconfig.json" },
 	],
 }

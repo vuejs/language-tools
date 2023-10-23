@@ -6,6 +6,6 @@
 	},
 	"include": [ "src" ],
 	"references": [
-		{ "path": "../typescript-vue-plugin/tsconfig.json" },
+		{ "path": "../../packages/typescript-plugin/tsconfig.json" },
 	]
 }
