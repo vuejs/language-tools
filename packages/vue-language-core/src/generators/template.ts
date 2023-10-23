@@ -1130,7 +1130,7 @@ export function generate(
 					if (isCompoundExpression) {
 						localVars.set('$event', localVars.get('$event')! - 1);
 
-						codes.push('\n');
+						codes.push(';\n');
 						generateAutoImportCompletionCode();
 						codes.push('}\n');
 					}
