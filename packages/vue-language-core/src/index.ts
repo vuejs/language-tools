@@ -2,7 +2,7 @@ export * from './generators/template';
 export * from './languageModule';
 export * from './parsers/scriptSetupRanges';
 export * from './plugins';
-export * from './sourceFile';
+export * from './virtualFile/vueFile';
 export * from './types';
 export * from './utils/ts';
 export * from './utils/parseSfc';

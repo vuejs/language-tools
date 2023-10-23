@@ -4,8 +4,9 @@ import { describe, it } from 'vitest';
 import { fork } from 'child_process';
 
 const binPath = require.resolve('../bin/vue-tsc.js');
-const workspace = path.resolve(__dirname, '../../vue-test-workspace/vue-tsc');
-const workspace2 = path.resolve(__dirname, '../../vue-test-workspace-vue-2/vue-tsc');
+
+const workspaceVue3 = path.resolve(__dirname, '../../vue-test-workspace/vue-tsc');
+const workspaceVue2 = path.resolve(__dirname, '../../vue-test-workspace-vue-2/vue-tsc');
 
 function prettyPath(path: string, isRoot: boolean) {
 	const segments = path.split('/');
@@ -16,35 +17,34 @@ function prettyPath(path: string, isRoot: boolean) {
 	return !isRoot ? slicePath(4) : slicePath(3);
 }
 
-function collectTests(dirs: string[], depth = 2, isRoot: boolean = true): [string, boolean][] {
-	const tests: [string, boolean][] = [];
+function collectTests(dir: string, depth = 2, isRoot: boolean = true): [filePath: string, isRoot: boolean][] {
+	const tests: [filePath: string, isRoot: boolean][] = [];
 
 	if (depth <= 0) {
 		return tests;
 	}
 
-	for (const dir of dirs) {
-		const files = fs.readdirSync(dir);
-		for (const file of files) {
-			const filePath = path.join(dir, file);
-			const stat = fs.statSync(filePath);
-			if (stat.isDirectory()) {
-				const tsconfigPath = path.join(filePath, 'tsconfig.json');
-				if (fs.existsSync(tsconfigPath)) {
-					tests.push([
-						filePath.replace(/\\/g, '/'),
-						isRoot,
-					]);
-				}
-				tests.push(...collectTests([filePath], depth - 1, false));
+	const files = fs.readdirSync(dir);
+	for (const file of files) {
+		const filePath = path.join(dir, file);
+		const stat = fs.statSync(filePath);
+		if (stat.isDirectory()) {
+			const tsconfigPath = path.join(filePath, 'tsconfig.json');
+			if (fs.existsSync(tsconfigPath)) {
+				tests.push([
+					filePath.replace(/\\/g, '/'),
+					isRoot,
+				]);
 			}
+			tests.push(...collectTests(filePath, depth - 1, false));
 		}
 	}
 
 	return tests;
 }
 
-const tests = collectTests([workspace, workspace2]);
+const testsVue3 = collectTests(workspaceVue3);
+const testsVue2 = collectTests(workspaceVue2);
 
 function runVueTsc(cwd: string) {
 	return new Promise((resolve, reject) => {
@@ -77,7 +77,13 @@ function runVueTsc(cwd: string) {
 }
 
 describe(`vue-tsc`, () => {
-	for (const [path, isRoot] of tests) {
+	for (const [path, isRoot] of testsVue3) {
+		it(`vue-tsc no errors (${prettyPath(path, isRoot)})`, () => runVueTsc(path), 40_000);
+	}
+});
+
+describe(`vue-tsc (vue 2)`, () => {
+	for (const [path, isRoot] of testsVue2) {
 		it(`vue-tsc no errors (${prettyPath(path, isRoot)})`, () => runVueTsc(path), 40_000);
 	}
 });

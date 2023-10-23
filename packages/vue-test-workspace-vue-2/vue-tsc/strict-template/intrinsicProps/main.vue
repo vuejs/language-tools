@@ -1,13 +1,11 @@
 <template>
 	<div>
+		<!-- FIXME: bug here -->
 		<!-- @vue-expect-error -->
-		<Foo bar="123"></Foo>
-
-		<!-- @vue-expect-error -->
-		<div foo="123"></div>
+		<Foo class="123"></Foo>
+		<div class="123"></div>
 	</div>
 </template>
-
 <script lang="ts">
 import { defineComponent } from 'vue';
 

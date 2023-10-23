@@ -15,7 +15,9 @@ import { walkInterpolationFragment } from '../utils/transform';
 export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	fileName: string,
-	_sfc: Sfc,
+	script: Sfc['script'],
+	scriptSetup: Sfc['scriptSetup'],
+	styles: Sfc['styles'], // TODO: computed it
 	lang: string,
 	scriptRanges: ScriptRanges | undefined,
 	scriptSetupRanges: ScriptSetupRanges | undefined,
@@ -29,12 +31,8 @@ export function generate(
 	const mirrorBehaviorMappings: SourceMaps.Mapping<[MirrorBehaviorCapabilities, MirrorBehaviorCapabilities]>[] = [];
 
 	//#region monkey fix: https://github.com/vuejs/language-tools/pull/2113
-	const sfc = {
-		script: _sfc.script,
-		scriptSetup: _sfc.scriptSetup,
-	};
-	if (!sfc.script && !sfc.scriptSetup) {
-		sfc.scriptSetup = {
+	if (!script && !scriptSetup) {
+		scriptSetup = {
 			content: '',
 			lang: 'ts',
 			name: '',
@@ -45,6 +43,7 @@ export function generate(
 			generic: undefined,
 			genericOffset: 0,
 			attrs: {},
+			ast: ts.createSourceFile('', '', ts.ScriptTarget.Latest, false, ts.ScriptKind.TS),
 		};
 		scriptSetupRanges = {
 			bindings: [],
@@ -60,8 +59,8 @@ export function generate(
 	//#endregion
 
 	const bindingNames = new Set([
-		...scriptRanges?.bindings.map(range => sfc.script!.content.substring(range.start, range.end)) ?? [],
-		...scriptSetupRanges?.bindings.map(range => sfc.scriptSetup!.content.substring(range.start, range.end)) ?? [],
+		...scriptRanges?.bindings.map(range => script!.content.substring(range.start, range.end)) ?? [],
+		...scriptSetupRanges?.bindings.map(range => scriptSetup!.content.substring(range.start, range.end)) ?? [],
 	]);
 	const bypassDefineComponent = lang === 'js' || lang === 'jsx';
 	const usedHelperTypes = {
@@ -91,12 +90,12 @@ export function generate(
 		generateTemplate(false);
 	}
 
-	if (sfc.scriptSetup) {
+	if (scriptSetup) {
 		// for code action edits
 		codes.push([
 			'',
 			'scriptSetup',
-			sfc.scriptSetup.content.length,
+			scriptSetup.content.length,
 			{},
 		]);
 	}
@@ -153,10 +152,10 @@ export function generate(
 		}
 	}
 	function generateSrc() {
-		if (!sfc.script?.src)
+		if (!script?.src)
 			return;
 
-		let src = sfc.script.src;
+		let src = script.src;
 
 		if (src.endsWith('.d.ts')) src = src.substring(0, src.length - '.d.ts'.length);
 		else if (src.endsWith('.ts')) src = src.substring(0, src.length - '.ts'.length);
@@ -168,10 +167,10 @@ export function generate(
 		codes.push([
 			`'${src}'`,
 			'script',
-			[sfc.script.srcOffset - 1, sfc.script.srcOffset + sfc.script.src.length + 1],
+			[script.srcOffset - 1, script.srcOffset + script.src.length + 1],
 			{
 				...FileRangeCapabilities.full,
-				rename: src === sfc.script.src ? true : {
+				rename: src === script.src ? true : {
 					normalize: undefined,
 					apply(newName) {
 						if (
@@ -180,13 +179,13 @@ export function generate(
 						) {
 							newName = newName.split('.').slice(0, -1).join('.');
 						}
-						if (sfc.script?.src?.endsWith('.d.ts')) {
+						if (script?.src?.endsWith('.d.ts')) {
 							newName = newName + '.d.ts';
 						}
-						else if (sfc.script?.src?.endsWith('.ts')) {
+						else if (script?.src?.endsWith('.ts')) {
 							newName = newName + '.ts';
 						}
-						else if (sfc.script?.src?.endsWith('.tsx')) {
+						else if (script?.src?.endsWith('.tsx')) {
 							newName = newName + '.tsx';
 						}
 						return newName;
@@ -198,16 +197,16 @@ export function generate(
 		codes.push(`export { default } from '${src}';\n`);
 	}
 	function generateScriptContentBeforeExportDefault() {
-		if (!sfc.script)
+		if (!script)
 			return;
 
-		if (!!sfc.scriptSetup && scriptRanges?.exportDefault) {
+		if (!!scriptSetup && scriptRanges?.exportDefault) {
 			addVirtualCode('script', 0, scriptRanges.exportDefault.expression.start);
 		}
 		else {
 			let isExportRawObject = false;
 			if (scriptRanges?.exportDefault) {
-				isExportRawObject = sfc.script.content.substring(scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end).startsWith('{');
+				isExportRawObject = script.content.substring(scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end).startsWith('{');
 			}
 			if (isExportRawObject && vueCompilerOptions.optionsWrapper.length === 2 && scriptRanges?.exportDefault) {
 				addVirtualCode('script', 0, scriptRanges.exportDefault.expression.start);
@@ -233,70 +232,70 @@ export function generate(
 					} as any]);
 				}
 				codes.push(vueCompilerOptions.optionsWrapper[1]);
-				addVirtualCode('script', scriptRanges.exportDefault.expression.end, sfc.script.content.length);
+				addVirtualCode('script', scriptRanges.exportDefault.expression.end, script.content.length);
 			}
 			else {
-				addVirtualCode('script', 0, sfc.script.content.length);
+				addVirtualCode('script', 0, script.content.length);
 			}
 		}
 	}
 	function generateScriptContentAfterExportDefault() {
-		if (!sfc.script)
+		if (!script)
 			return;
 
-		if (!!sfc.scriptSetup && scriptRanges?.exportDefault) {
-			addVirtualCode('script', scriptRanges.exportDefault.end, sfc.script.content.length);
+		if (!!scriptSetup && scriptRanges?.exportDefault) {
+			addVirtualCode('script', scriptRanges.exportDefault.end, script.content.length);
 		}
 	}
 	function generateScriptSetupImports() {
 
-		if (!sfc.scriptSetup)
+		if (!scriptSetup)
 			return;
 
 		if (!scriptSetupRanges)
 			return;
 
 		codes.push([
-			sfc.scriptSetup.content.substring(0, Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset)) + '\n',
+			scriptSetup.content.substring(0, Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset)) + '\n',
 			'scriptSetup',
 			0,
 			FileRangeCapabilities.full,
 		]);
 	}
 	function generateExportDefaultEndMapping() {
-		if (!sfc.scriptSetup) {
+		if (!scriptSetup) {
 			return;
 		}
 		// fix https://github.com/vuejs/language-tools/issues/1127
 		codes.push([
 			'',
 			'scriptSetup',
-			sfc.scriptSetup.content.length,
+			scriptSetup.content.length,
 			{ diagnostic: true },
 		]);
 		codes.push(`\n`);
 	}
 	function generateScriptSetupAndTemplate() {
 
-		if (!sfc.scriptSetup || !scriptSetupRanges) {
+		if (!scriptSetup || !scriptSetupRanges) {
 			return;
 		}
 
 		const definePropMirrors: Record<string, [number, number]> = {};
 		let scriptSetupGeneratedOffset: number | undefined;
 
-		if (sfc.scriptSetup.generic) {
+		if (scriptSetup.generic) {
 			if (!scriptRanges?.exportDefault) {
 				codes.push('export default ');
 			}
 			codes.push(`(<`);
 			codes.push([
-				sfc.scriptSetup.generic,
-				sfc.scriptSetup.name,
-				sfc.scriptSetup.genericOffset,
+				scriptSetup.generic,
+				scriptSetup.name,
+				scriptSetup.genericOffset,
 				FileRangeCapabilities.full,
 			]);
-			if (!sfc.scriptSetup.generic.endsWith(',')) {
+			if (!scriptSetup.generic.endsWith(',')) {
 				codes.push(`,`);
 			}
 			codes.push(`>`);
@@ -329,13 +328,13 @@ export function generate(
 				for (const defineProp of scriptSetupRanges.defineProp) {
 					if (defineProp.defaultValue) {
 						if (defineProp.name) {
-							codes.push(sfc.scriptSetup.content.substring(defineProp.name.start, defineProp.name.end));
+							codes.push(scriptSetup.content.substring(defineProp.name.start, defineProp.name.end));
 						}
 						else {
 							codes.push('modelValue');
 						}
 						codes.push(`: `);
-						codes.push(sfc.scriptSetup.content.substring(defineProp.defaultValue.start, defineProp.defaultValue.end));
+						codes.push(scriptSetup.content.substring(defineProp.defaultValue.start, defineProp.defaultValue.end));
 						codes.push(`,\n`);
 					}
 				}
@@ -351,13 +350,13 @@ export function generate(
 				for (const defineProp of scriptSetupRanges.defineProp) {
 					let propName = 'modelValue';
 					if (defineProp.name) {
-						propName = sfc.scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
+						propName = scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
 						const propMirrorStart = muggle.getLength(codes);
 						definePropMirrors[propName] = [propMirrorStart, propMirrorStart + propName.length];
 					}
 					codes.push(`${propName}${defineProp.required ? '' : '?'}: `);
 					if (defineProp.type) {
-						codes.push(sfc.scriptSetup.content.substring(defineProp.type.start, defineProp.type.end));
+						codes.push(scriptSetup.content.substring(defineProp.type.start, defineProp.type.end));
 					}
 					else if (defineProp.defaultValue) {
 						codes.push(`typeof __VLS_defaults['`);
@@ -393,7 +392,7 @@ export function generate(
 			//#endregion
 
 			codes.push('return {} as {\n');
-			codes.push(`props: __VLS_Prettify<Omit<typeof __VLS_fnPropsDefineComponent & typeof __VLS_fnPropsTypeOnly, keyof typeof __VLS_defaultProps>> & typeof __VLS_fnPropsSlots & typeof __VLS_defaultProps,\n`);
+			codes.push(`props: __VLS_Prettify<__VLS_OmitKeepDiscriminatedUnion<typeof __VLS_fnPropsDefineComponent & typeof __VLS_fnPropsTypeOnly, keyof typeof __VLS_defaultProps>> & typeof __VLS_fnPropsSlots & typeof __VLS_defaultProps,\n`);
 			codes.push(`expose(exposed: import('${vueCompilerOptions.lib}').ShallowUnwrapRef<${scriptSetupRanges.expose.define ? 'typeof __VLS_exposed' : '{}'}>): void,\n`);
 			codes.push('attrs: any,\n');
 			codes.push('slots: ReturnType<typeof __VLS_template>,\n');
@@ -402,7 +401,7 @@ export function generate(
 			codes.push('})(),\n');
 			codes.push(`) => ({} as import('${vueCompilerOptions.lib}').VNode & { __ctx?: Awaited<typeof __VLS_setup> }))`);
 		}
-		else if (!sfc.script) {
+		else if (!script) {
 			// no script block, generate script setup code at root
 			scriptSetupGeneratedOffset = generateSetupFunction(false, 'export', definePropMirrors);
 		}
@@ -422,7 +421,7 @@ export function generate(
 				if (!defineProp.name) {
 					continue;
 				}
-				const propName = sfc.scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
+				const propName = scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
 				const propMirror = definePropMirrors[propName];
 				if (propMirror) {
 					mirrorBehaviorMappings.push({
@@ -439,12 +438,12 @@ export function generate(
 	}
 	function generateSetupFunction(functional: boolean, mode: 'return' | 'export' | 'none', definePropMirrors: Record<string, [number, number]>) {
 
-		if (!scriptSetupRanges || !sfc.scriptSetup) {
+		if (!scriptSetupRanges || !scriptSetup) {
 			return;
 		}
 
-		const definePropProposalA = sfc.scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition') || vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition';
-		const definePropProposalB = sfc.scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition') || vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
+		const definePropProposalA = scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition') || vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition';
+		const definePropProposalB = scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition') || vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
 
 		if (vueCompilerOptions.target >= 3.3) {
 			codes.push('const { ');
@@ -550,7 +549,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 					addExtraReferenceVirtualCode('scriptSetup', defineProp.name.start, defineProp.name.end);
 				}
 				else if (defineProp.name) {
-					propName = sfc.scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
+					propName = scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
 					const start = muggle.getLength(codes);
 					definePropMirrors[propName] = [start, start + propName.length];
 					codes.push(propName);
@@ -565,7 +564,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 					type = `NonNullable<typeof ${propName}['value']>`;
 				}
 				else if (defineProp.type) {
-					type = sfc.scriptSetup.content.substring(defineProp.type.start, defineProp.type.end);
+					type = scriptSetup.content.substring(defineProp.type.start, defineProp.type.end);
 				}
 
 				if (defineProp.required) {
@@ -749,7 +748,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 	}
 	function generateComponentForTemplateUsage(functional: boolean, cssIds: Set<string>) {
 
-		if (sfc.scriptSetup && scriptSetupRanges) {
+		if (scriptSetup && scriptSetupRanges) {
 
 			codes.push(`const __VLS_internalComponent = (await import('${vueCompilerOptions.lib}')).defineComponent({\n`);
 			generateComponentOptions(functional);
@@ -759,9 +758,9 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			// bindings
 			const templateUsageVars = getTemplateUsageVars();
 			for (const [content, bindings] of [
-				[sfc.scriptSetup.content, scriptSetupRanges.bindings] as const,
-				scriptRanges && sfc.script
-					? [sfc.script.content, scriptRanges.bindings] as const
+				[scriptSetup.content, scriptSetupRanges.bindings] as const,
+				scriptRanges && script
+					? [script.content, scriptRanges.bindings] as const
 					: ['', []] as const,
 			]) {
 				for (const expose of bindings) {
@@ -793,7 +792,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			codes.push(`},\n`); // setup() {
 			codes.push(`});\n`); // defineComponent({
 		}
-		else if (sfc.script) {
+		else if (script) {
 			codes.push(`let __VLS_internalComponent!: typeof import('./${path.basename(fileName)}')['default'];\n`);
 		}
 		else {
@@ -803,10 +802,10 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 	function generateExportOptions() {
 		codes.push(`\n`);
 		codes.push(`const __VLS_componentsOption = `);
-		if (sfc.script && scriptRanges?.exportDefault?.componentsOption) {
+		if (script && scriptRanges?.exportDefault?.componentsOption) {
 			const componentsOption = scriptRanges.exportDefault.componentsOption;
 			codes.push([
-				sfc.script.content.substring(componentsOption.start, componentsOption.end),
+				script.content.substring(componentsOption.start, componentsOption.end),
 				'script',
 				componentsOption.start,
 				{
@@ -822,13 +821,13 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 	}
 	function generateConstNameOption() {
 		codes.push(`\n`);
-		if (sfc.script && scriptRanges?.exportDefault?.nameOption) {
+		if (script && scriptRanges?.exportDefault?.nameOption) {
 			const nameOption = scriptRanges.exportDefault.nameOption;
 			codes.push(`const __VLS_name = `);
-			codes.push(`${sfc.script.content.substring(nameOption.start, nameOption.end)} as const`);
+			codes.push(`${script.content.substring(nameOption.start, nameOption.end)} as const`);
 			codes.push(`;\n`);
 		}
-		else if (sfc.scriptSetup) {
+		else if (scriptSetup) {
 			codes.push(`let __VLS_name!: '${path.basename(fileName.substring(0, fileName.lastIndexOf('.')))}';\n`);
 		}
 		else {
@@ -843,21 +842,22 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		codes.push(`InstanceType<__VLS_PickNotAny<typeof __VLS_internalComponent, new () => {}>> & {\n`);
 
 		/* CSS Module */
-		for (let i = 0; i < _sfc.styles.length; i++) {
-			const style = _sfc.styles[i];
-			if (!style.module) continue;
-			codes.push(`${style.module}: Record<string, string> & __VLS_Prettify<{}`);
-			for (const className of style.classNames) {
-				generateCssClassProperty(
-					i,
-					className.text.substring(1),
-					{ start: className.offset, end: className.offset + className.text.length },
-					'string',
-					false,
-					true,
-				);
+		for (let i = 0; i < styles.length; i++) {
+			const style = styles[i];
+			if (style.module) {
+				codes.push(`${style.module}: Record<string, string> & __VLS_Prettify<{}`);
+				for (const className of style.classNames) {
+					generateCssClassProperty(
+						i,
+						className.text.substring(1),
+						{ start: className.offset, end: className.offset + className.text.length },
+						'string',
+						false,
+						true,
+					);
+				}
+				codes.push('>;\n');
 			}
-			codes.push('>;\n');
 		}
 		codes.push(`};\n`);
 
@@ -871,18 +871,20 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		/* Style Scoped */
 		codes.push('/* Style Scoped */\n');
 		codes.push('type __VLS_StyleScopedClasses = {}');
-		for (let i = 0; i < _sfc.styles.length; i++) {
-			const style = _sfc.styles[i];
-			if (!style.scoped && vueCompilerOptions.experimentalResolveStyleCssClasses !== 'always') continue;
-			for (const className of style.classNames) {
-				generateCssClassProperty(
-					i,
-					className.text.substring(1),
-					{ start: className.offset, end: className.offset + className.text.length },
-					'boolean',
-					true,
-					!style.module,
-				);
+		for (let i = 0; i < styles.length; i++) {
+			const style = styles[i];
+			const option = vueCompilerOptions.experimentalResolveStyleCssClasses;
+			if ((option === 'always' || option === 'scoped') && style.scoped) {
+				for (const className of style.classNames) {
+					generateCssClassProperty(
+						i,
+						className.text.substring(1),
+						{ start: className.offset, end: className.offset + className.text.length },
+						'boolean',
+						true,
+						!style.module,
+					);
+				}
 			}
 		}
 		codes.push(';\n');
@@ -953,7 +955,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			const emptyLocalVars = new Map<string, number>();
 			const identifiers = new Set<string>();
 
-			for (const style of _sfc.styles) {
+			for (const style of styles) {
 				for (const cssBind of style.cssVars) {
 					walkInterpolationFragment(
 						ts,
@@ -1011,7 +1013,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 	function addVirtualCode(vueTag: 'script' | 'scriptSetup', start: number, end?: number) {
 		muggle.offsetStack();
 		codes.push([
-			sfc[vueTag]!.content.substring(start, end),
+			(vueTag === 'script' ? script : scriptSetup)!.content.substring(start, end),
 			vueTag,
 			start,
 			FileRangeCapabilities.full, // diagnostic also working for setup() returns unused in template checking
@@ -1021,7 +1023,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 	function addExtraReferenceVirtualCode(vueTag: 'script' | 'scriptSetup', start: number, end: number) {
 		muggle.offsetStack();
 		codes.push([
-			sfc[vueTag]!.content.substring(start, end),
+			(vueTag === 'script' ? script : scriptSetup)!.content.substring(start, end),
 			vueTag,
 			start,
 			{
