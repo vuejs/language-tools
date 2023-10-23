@@ -1,11 +1,11 @@
 <script setup lang="ts">
 declare module 'vue' {
 	export interface GlobalComponents {
-		TransitionForIssue2157: typeof import('vue')['Transition'];
+		Foo: typeof import('vue')['Transition'];
 	}
 };
 </script>
 
 <template>
-	<TransitionForIssue2157 enter-active-class="" />
+	<Foo enter-active-class="" />
 </template>
