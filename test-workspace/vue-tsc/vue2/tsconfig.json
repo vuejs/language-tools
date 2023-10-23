@@ -2,7 +2,6 @@
 	"extends": "../../tsconfig.json",
 	"vueCompilerOptions": {
 		"target": 2.7,
-		"lib": "vue2",
 	},
 	"include": [
 		"env.d.ts",
