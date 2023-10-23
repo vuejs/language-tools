@@ -4,7 +4,7 @@ import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import { createProgram } from '../out';
 
-const workspace = path.resolve(__dirname, '../../vue-test-workspace/vue-tsc-dts');
+const workspace = path.resolve(__dirname, '../../../test-workspace/vue-tsc-dts');
 const testFiles = readFilesRecursive(workspace);
 const ensureTs = (filename: string) => filename.endsWith('.ts') ? filename : filename + '.ts';
 const normalizePath = (filename: string) => filename.replace(/\\/g, '/');

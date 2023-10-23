@@ -1,8 +1,5 @@
 {
 	"private": true,
-	"name": "@vue/vue-test-workspace",
-	"version": "1.8.19",
-	"license": "MIT",
 	"devDependencies": {
 		"vue": "^3.3.0",
 		"vue2": "npm:vue@2.7",

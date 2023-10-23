@@ -4,7 +4,7 @@ import { describe, it } from 'vitest';
 import { fork } from 'child_process';
 
 const binPath = require.resolve('../bin/vue-tsc.js');
-const workspace = path.resolve(__dirname, '../../vue-test-workspace/vue-tsc');
+const workspace = path.resolve(__dirname, '../../../test-workspace/vue-tsc');
 
 function prettyPath(path: string, isRoot: boolean) {
 	const segments = path.split('/');
