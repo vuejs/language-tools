@@ -6,7 +6,7 @@ import { computedFiles } from './computedFiles';
 import { computedMappings } from './computedMappings';
 import { computedSfc } from './computedSfc';
 import { computedVueSfc } from './computedVueSfc';
-import { Signal, computed, signal } from 'computeds';
+import { Signal, signal } from 'computeds';
 
 const jsxReg = /^\.(js|ts)x?$/;
 
@@ -14,15 +14,14 @@ export class VueFile implements VirtualFile {
 
 	// sources
 
-	__snapshot: Signal<ts.IScriptSnapshot>;
+	_snapshot: Signal<ts.IScriptSnapshot>;
 
 	// computeds
 
-	_snapshot = computed(() => this.__snapshot());
-	vueSfc = computedVueSfc(this.plugins, this.fileName, this._snapshot);
-	sfc = computedSfc(this.ts, this.plugins, this.fileName, this._snapshot, this.vueSfc);
-	_mappings = computedMappings(this._snapshot, this.sfc);
-	_embeddedFiles = computedFiles(this.plugins, this.fileName, this.sfc, this.codegenStack);
+	getVueSfc = computedVueSfc(this.plugins, this.fileName, () => this._snapshot());
+	sfc = computedSfc(this.ts, this.plugins, this.fileName, () => this._snapshot(), this.getVueSfc);
+	getMappings = computedMappings(() => this._snapshot(), this.sfc);
+	getMmbeddedFiles = computedFiles(this.plugins, this.fileName, this.sfc, this.codegenStack);
 
 	// others
 
@@ -30,7 +29,7 @@ export class VueFile implements VirtualFile {
 	kind = FileKind.TextFile;
 	codegenStacks: Stack[] = [];
 	get embeddedFiles() {
-		return this._embeddedFiles();
+		return this.getMmbeddedFiles();
 	}
 	get mainScriptName() {
 		let res: string = '';
@@ -45,7 +44,7 @@ export class VueFile implements VirtualFile {
 		return this._snapshot();
 	}
 	get mappings() {
-		return this._mappings();
+		return this.getMappings();
 	}
 
 	constructor(
@@ -56,10 +55,10 @@ export class VueFile implements VirtualFile {
 		public ts: typeof import('typescript/lib/tsserverlibrary'),
 		public codegenStack: boolean,
 	) {
-		this.__snapshot = signal(initSnapshot);
+		this._snapshot = signal(initSnapshot);
 	}
 
 	update(newSnapshot: ts.IScriptSnapshot) {
-		this.__snapshot.set(newSnapshot);
+		this._snapshot.set(newSnapshot);
 	}
 }
