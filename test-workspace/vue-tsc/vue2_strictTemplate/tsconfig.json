@@ -3,5 +3,5 @@
 	"vueCompilerOptions": {
 		"strictTemplates": true
 	},
-	"include": [ "../strictTemplate" ],
+	"include": [ "../vue3_strictTemplate" ],
 }
