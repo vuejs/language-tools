@@ -1112,20 +1112,22 @@ export function generate(
 						}
 					}
 
-					codes.push(...createInterpolationCode(
-						prop.exp.content,
-						prop.exp.loc,
-						prop.exp.loc.start.offset,
-						() => {
-							if (isCompoundExpression && isFirstMapping) {
-								isFirstMapping = false;
-								return capabilitiesPresets.allWithHiddenParam;
-							}
-							return capabilitiesPresets.all;
-						},
-						prefix,
-						suffix,
-					));
+					codes.push(
+						...createInterpolationCode(
+							prop.exp.content,
+							prop.exp.loc,
+							prop.exp.loc.start.offset,
+							() => {
+								if (isCompoundExpression && isFirstMapping) {
+									isFirstMapping = false;
+									return capabilitiesPresets.allWithHiddenParam;
+								}
+								return capabilitiesPresets.all;
+							},
+							prefix,
+							suffix,
+						)
+					);
 
 					if (isCompoundExpression) {
 						localVars.set('$event', localVars.get('$event')! - 1);
