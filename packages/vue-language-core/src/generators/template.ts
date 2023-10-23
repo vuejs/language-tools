@@ -1015,7 +1015,7 @@ export function generate(
 						},
 					]),
 					`) };\n`,
-					`${eventVar} = {\n`,
+					`${eventVar} = { `,
 				);
 				if (prop.arg.loc.source.startsWith('[') && prop.arg.loc.source.endsWith(']')) {
 					codes.push(
@@ -1043,7 +1043,7 @@ export function generate(
 				}
 				codes.push(`: `);
 				appendExpressionNode(prop);
-				codes.push(`};\n`);
+				codes.push(` };\n`);
 			}
 			else if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
