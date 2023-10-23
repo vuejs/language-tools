@@ -9,6 +9,6 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
-		"directory": "packages/vue-component-type-helpers"
+		"directory": "packages/component-type-helpers"
 	}
 }

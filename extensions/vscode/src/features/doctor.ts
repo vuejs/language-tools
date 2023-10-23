@@ -43,7 +43,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 				}
 
 				content += '---\n\n';
-				content += `> Have any questions about the report message? You can see how it is composed by inspecting the [source code](https://github.com/vuejs/language-tools/blob/master/packages/vscode-vue/src/features/doctor.ts).\n\n`;
+				content += `> Have any questions about the report message? You can see how it is composed by inspecting the [source code](https://github.com/vuejs/language-tools/blob/master/extensions/vscode/src/features/doctor.ts).\n\n`;
 
 				return content.trim();
 			}

@@ -17,7 +17,7 @@
 				"extensions": {
 					"type": "array",
 					"default": [ ".vue" ],
-					"markdownDescription": "Valid file extensions that should be considered as regular Vue SFC, please note that you should not use this option separately for additional file extensions IDE support, see https://github.com/vuejs/language-tools/tree/master/packages/vscode-vue/README.md#custom-file-extensions."
+					"markdownDescription": "Valid file extensions that should be considered as regular Vue SFC, please note that you should not use this option separately for additional file extensions IDE support, see https://github.com/vuejs/language-tools/tree/master/extensions/vscode/README.md#custom-file-extensions."
 				},
 				"lib": {
 					"default": "",

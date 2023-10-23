@@ -2089,7 +2089,7 @@ do not force config `compatConfig: { Mode: 2 }` to template compiler with `"expe
 
 ## 0.28.6 (2021/10/16)
 
-- feat: support for emit SFC dts by vue-tsc (See https://github.com/vuejs/language-tools/tree/master/packages/vue-tsc#using)
+- feat: support for emit SFC dts by vue-tsc (See https://github.com/vuejs/language-tools/tree/master/packages/tsc#using)
 
 ## 0.28.5 (2021/10/16)
 

@@ -11,7 +11,7 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
-		"directory": "packages/vue-language-service"
+		"directory": "packages/language-service"
 	},
 	"scripts": {
 		"update-html-data": "node ./scripts/update-html-data.js"

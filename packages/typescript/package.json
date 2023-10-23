@@ -10,7 +10,7 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
-		"directory": "packages/vue-typescript"
+		"directory": "packages/typescript"
 	},
 	"dependencies": {
 		"@volar/typescript": "~1.10.4",
