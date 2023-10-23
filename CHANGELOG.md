@@ -1,10 +1,20 @@
 # Changelog
 
-## 1.8.19 (2023/10/11)
+## 1.8.20 (2023/10/23)
 
-- feat: no longer checking save time ([#3650](https://github.com/vuejs/language-tools/issues/3650))
-- fix(ts-plugin): tsserver doesnt have updated list of external files when new vue files are added (required TS 5.3) ([#3555](https://github.com/vuejs/language-tools/issues/3555)) ([#3649](https://github.com/vuejs/language-tools/issues/3649))
-- fix: false positive error when accessing local variables in defineProps parameter ([#3643](https://github.com/vuejs/language-tools/issues/3643)) ([#3644](https://github.com/vuejs/language-tools/issues/3644)) - thanks @so1ve
+- feat: added Italian integration documentation
+- feat: enforce `v-bind` argument to be an object ([#3666](https://github.com/vuejs/language-tools/issues/3666)) - thanks @so1ve
+- fix: JSDoc comments not emitted when using type-only defineProps macro ([#3645](https://github.com/vuejs/language-tools/issues/3645))
+- fix: autocomplete for directive comments without a space ([#3665](https://github.com/vuejs/language-tools/issues/3665)) - thanks @so1ve
+- fix: fix slot type when using a interpolation in template string ([#3657](https://github.com/vuejs/language-tools/issues/3657)) - thanks @so1ve
+- fix: add autocomplete for v-slot parameters ([#3661](https://github.com/vuejs/language-tools/issues/3661)) - thanks @so1ve
+- fix: export correct SlotsPropertyName for vue2 ([#3669](https://github.com/vuejs/language-tools/issues/3669)) - thanks @zhiyuanzmj
+- fix(types): infer discriminated unions in child component props ([#3672](https://github.com/vuejs/language-tools/issues/3669)) - thanks @davidmatter
+- fix: access to slots directly ([#3671](https://github.com/vuejs/language-tools/issues/3671)) - thanks @so1ve
+- fix: autocomplete not working for `$event` ([#3668](https://github.com/vuejs/language-tools/issues/3668)) - thanks @so1ve
+- perf: remove duplicate virtual code for native tags
+- chore: rename `volar` to `vue` in diagnostics ([#3667](https://github.com/vuejs/language-tools/issues/3667)) - thanks @so1ve
+- chore: publish ts plugin to open-vsx ([#3589](https://github.com/vuejs/language-tools/issues/3589)) - thanks @brc-dd
 
 ### Full-time Support by
 
@@ -58,6 +68,12 @@
 	or
 	<a href="https://opencollective.com/volarjs">Open Collective</a>
 </h5>
+
+## 1.8.19 (2023/10/11)
+
+- feat: no longer checking save time ([#3650](https://github.com/vuejs/language-tools/issues/3650))
+- fix(ts-plugin): tsserver doesnt have updated list of external files when new vue files are added (required TS 5.3) ([#3555](https://github.com/vuejs/language-tools/issues/3555)) ([#3649](https://github.com/vuejs/language-tools/issues/3649))
+- fix: false positive error when accessing local variables in defineProps parameter ([#3643](https://github.com/vuejs/language-tools/issues/3643)) ([#3644](https://github.com/vuejs/language-tools/issues/3644)) - thanks @so1ve
 
 ## 1.8.18 (2023/10/9)
 
