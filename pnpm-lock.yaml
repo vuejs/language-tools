@@ -243,24 +243,6 @@ importers:
         specifier: ^3.0.8
         version: 3.0.8
 
-  packages/vue-test-workspace:
-    devDependencies:
-      vue:
-        specifier: ^3.3.0
-        version: 3.3.4
-      vue-component-type-helpers:
-        specifier: 1.8.19
-        version: link:../vue-component-type-helpers
-
-  packages/vue-test-workspace-vue-2:
-    devDependencies:
-      vue:
-        specifier: ^2.7.14
-        version: 2.7.14
-      vue-component-type-helpers:
-        specifier: 1.8.19
-        version: link:../vue-component-type-helpers
-
   packages/vue-tsc:
     dependencies:
       '@vue/language-core':
@@ -294,6 +276,18 @@ importers:
       '@vue/language-core':
         specifier: 1.8.19
         version: link:../vue-language-core
+
+  test-workspace:
+    devDependencies:
+      vue:
+        specifier: ^3.3.0
+        version: 3.3.4
+      vue-component-type-helpers:
+        specifier: 1.8.19
+        version: link:../packages/vue-component-type-helpers
+      vue2:
+        specifier: npm:vue@2.7
+        version: /vue@2.7.14
 
 packages:
 

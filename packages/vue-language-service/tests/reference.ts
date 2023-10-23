@@ -4,7 +4,7 @@ import { tester } from './utils/createTester';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as fs from 'fs';
 
-const baseDir = path.resolve(__dirname, '../../vue-test-workspace/reference');
+const baseDir = path.resolve(__dirname, '../../../test-workspace/language-service/reference');
 const testDirs = fs.readdirSync(baseDir);
 
 for (const dirName of testDirs) {

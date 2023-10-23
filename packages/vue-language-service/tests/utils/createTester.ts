@@ -7,7 +7,7 @@ import { resolveConfig } from '../../out';
 
 const uriToFileName = (uri: string) => URI.parse(uri).fsPath.replace(/\\/g, '/');
 const fileNameToUri = (fileName: string) => URI.file(fileName).toString();
-const testRoot = path.resolve(__dirname, '../../../vue-test-workspace').replace(/\\/g, '/');
+const testRoot = path.resolve(__dirname, '../../../../test-workspace/language-service').replace(/\\/g, '/');
 
 export const rootUri = URI.file(testRoot);
 export const tester = createTester(testRoot);

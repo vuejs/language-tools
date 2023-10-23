@@ -4,9 +4,7 @@ import { describe, it } from 'vitest';
 import { fork } from 'child_process';
 
 const binPath = require.resolve('../bin/vue-tsc.js');
-
-const workspaceVue3 = path.resolve(__dirname, '../../vue-test-workspace/vue-tsc');
-const workspaceVue2 = path.resolve(__dirname, '../../vue-test-workspace-vue-2/vue-tsc');
+const workspace = path.resolve(__dirname, '../../../test-workspace/vue-tsc');
 
 function prettyPath(path: string, isRoot: boolean) {
 	const segments = path.split('/');
@@ -43,8 +41,7 @@ function collectTests(dir: string, depth = 2, isRoot: boolean = true): [filePath
 	return tests;
 }
 
-const testsVue3 = collectTests(workspaceVue3);
-const testsVue2 = collectTests(workspaceVue2);
+const tests = collectTests(workspace);
 
 function runVueTsc(cwd: string) {
 	return new Promise((resolve, reject) => {
@@ -77,13 +74,7 @@ function runVueTsc(cwd: string) {
 }
 
 describe(`vue-tsc`, () => {
-	for (const [path, isRoot] of testsVue3) {
-		it(`vue-tsc no errors (${prettyPath(path, isRoot)})`, () => runVueTsc(path), 40_000);
-	}
-});
-
-describe(`vue-tsc (vue 2)`, () => {
-	for (const [path, isRoot] of testsVue2) {
+	for (const [path, isRoot] of tests) {
 		it(`vue-tsc no errors (${prettyPath(path, isRoot)})`, () => runVueTsc(path), 40_000);
 	}
 });

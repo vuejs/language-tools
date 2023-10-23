@@ -5,7 +5,7 @@ import { createComponentMetaChecker, createComponentMetaCheckerByJsonConfig, Met
 const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describe(`vue-component-meta ${withTsconfig ? 'with tsconfig' : 'without tsconfig'}`, () => {
 
 	test('empty-component', () => {
-		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/empty-component/component.vue');
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/vue-component-meta/empty-component/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
 
 		expect(meta.props.map(prop => prop.name)).toEqual([
@@ -20,7 +20,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 	});
 
 	test('reference-type-props', () => {
-		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-props/component.vue');
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/vue-component-meta/reference-type-props/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
 
 		expect(meta.type).toEqual(TypeMeta.Class);
@@ -341,7 +341,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 	});
 
 	test('reference-type-props-js', () => {
-		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-props/component-js.vue');
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/vue-component-meta/reference-type-props/component-js.vue');
 		const meta = checker.getComponentMeta(componentPath);
 
 		expect(meta.type).toEqual(TypeMeta.Class);
@@ -385,7 +385,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 	});
 
 	test('reference-type-props-js-setup', () => {
-		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-props/component-js-setup.vue');
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/vue-component-meta/reference-type-props/component-js-setup.vue');
 		const meta = checker.getComponentMeta(componentPath);
 
 		expect(meta.type).toEqual(TypeMeta.Class);
@@ -459,7 +459,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 	});
 
 	test('reference-type-events', () => {
-		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-events/component.vue');
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/vue-component-meta/reference-type-events/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
 
 		expect(meta.type).toEqual(TypeMeta.Class);
@@ -536,7 +536,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 	});
 
 	test('template-slots', () => {
-		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/template-slots/component.vue');
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/vue-component-meta/template-slots/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
 
 		expect(meta.type).toEqual(TypeMeta.Class);
@@ -564,7 +564,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 	});
 
 	test('template-slots without a script block', () => {
-		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/template-slots/component-no-script.vue');
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/vue-component-meta/template-slots/component-no-script.vue');
 		const meta = checker.getComponentMeta(componentPath);
 
 		expect(meta.type).toEqual(TypeMeta.Class);
@@ -592,7 +592,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 	});
 
 	test('class-slots', () => {
-		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/class-slots/component.vue');
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/vue-component-meta/class-slots/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
 
 		expect(meta.type).toEqual(TypeMeta.Class);
@@ -611,7 +611,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 	});
 
 	test('exposed', () => {
-		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/reference-type-exposed/component.vue');
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/vue-component-meta/reference-type-exposed/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
 
 		expect(meta.type).toEqual(TypeMeta.Class);
@@ -626,7 +626,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 	});
 
 	test('ts-component', () => {
-		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/ts-component/component.ts');
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/vue-component-meta/ts-component/component.ts');
 		const meta = checker.getComponentMeta(componentPath);
 
 		expect(meta.type).toEqual(TypeMeta.Function);
@@ -647,7 +647,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 	});
 
 	test('ts-named-exports', () => {
-		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/ts-named-export/component.ts');
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/vue-component-meta/ts-named-export/component.ts');
 		const exportNames = checker.getExportNames(componentPath);
 		const Foo = checker.getComponentMeta(componentPath, 'Foo');
 		const Bar = checker.getComponentMeta(componentPath, 'Bar');
@@ -673,7 +673,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 
 	test('options-api', () => {
 
-		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/options-api/component.ts');
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/vue-component-meta/options-api/component.ts');
 		const meta = checker.getComponentMeta(componentPath);
 
 		expect(meta.type).toEqual(TypeMeta.Class);
@@ -727,14 +727,14 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 	});
 
 	test('non-component', () => {
-		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/non-component/component.ts');
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/vue-component-meta/non-component/component.ts');
 		const meta = checker.getComponentMeta(componentPath);
 
 		expect(meta.type).toEqual(TypeMeta.Unknown);
 	});
 
 	test('ts-component.tsx', () => {
-		const componentPath = path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/ts-component/component.tsx');
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/vue-component-meta/ts-component/component.tsx');
 		const meta = checker.getComponentMeta(componentPath);
 
 		expect(meta.type).toEqual(TypeMeta.Function);
@@ -762,11 +762,11 @@ const checkerOptions: MetaCheckerOptions = {
 	printer: { newLine: 1 },
 };
 const tsconfigChecker = createComponentMetaChecker(
-	path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta/tsconfig.json'),
+	path.resolve(__dirname, '../../../test-workspace/vue-component-meta/tsconfig.json'),
 	checkerOptions,
 );
 const noTsConfigChecker = createComponentMetaCheckerByJsonConfig(
-	path.resolve(__dirname, '../../vue-test-workspace/vue-component-meta'),
+	path.resolve(__dirname, '../../../test-workspace/vue-component-meta'),
 	{
 		"extends": "../tsconfig.json",
 		"include": [

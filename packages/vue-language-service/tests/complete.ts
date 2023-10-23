@@ -5,7 +5,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as fs from 'fs';
 import type * as vscode from 'vscode-languageserver-protocol';
 
-const baseDir = path.resolve(__dirname, '../../vue-test-workspace/complete');
+const baseDir = path.resolve(__dirname, '../../../test-workspace/language-service/complete');
 const testDirs = fs.readdirSync(baseDir);
 const normalizeNewline = (text: string) => text.replace(/\r\n/g, '\n');
 
