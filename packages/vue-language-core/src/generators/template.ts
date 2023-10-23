@@ -1098,19 +1098,21 @@ export function generate(
 
 					let prefix = '(';
 					let suffix = ')';
+					let isFirstMapping = true;
 
 					if (isCompoundExpression) {
 
-						prefix = '$event => {\n';
+						codes.push('$event => {\n');
+						localVars.set('$event', (localVars.get('$event') ?? 0) + 1);
+
+						prefix = '';
+						suffix = '';
 						for (const blockCondition of blockConditions) {
 							prefix += `if (!(${blockCondition})) return;\n`;
 						}
-						suffix = '\n}\n';
 					}
 
-					let isFirstMapping = true;
-
-					const interpolationCodes = createInterpolationCode(
+					codes.push(...createInterpolationCode(
 						prop.exp.content,
 						prop.exp.loc,
 						prop.exp.loc.start.offset,
@@ -1123,10 +1125,15 @@ export function generate(
 						},
 						prefix,
 						suffix,
-					);
-					codes.push(...interpolationCodes.slice(0, -1), ';\n');
-					generateAutoImportCompletionCode();
-					codes.push(interpolationCodes[interpolationCodes.length - 1]);
+					));
+
+					if (isCompoundExpression) {
+						localVars.set('$event', localVars.get('$event')! - 1);
+
+						codes.push('\n');
+						generateAutoImportCompletionCode();
+						codes.push('}\n');
+					}
 
 					formatCodes.push(
 						...createFormatCode(
