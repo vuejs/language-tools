@@ -233,12 +233,12 @@ importers:
 
   packages/tsc:
     dependencies:
+      '@volar/typescript':
+        specifier: ~1.10.4
+        version: 1.10.4
       '@vue/language-core':
         specifier: 1.8.20
         version: link:../language-core
-      '@vue/typescript':
-        specifier: 1.8.20
-        version: link:../typescript
       semver:
         specifier: ^7.5.4
         version: 7.5.4
@@ -256,7 +256,7 @@ importers:
         specifier: 1.8.20
         version: link:../tsc
 
-  packages/typescript:
+  packages/typescript-plugin:
     dependencies:
       '@volar/typescript':
         specifier: ~1.10.4
@@ -264,18 +264,6 @@ importers:
       '@vue/language-core':
         specifier: 1.8.20
         version: link:../language-core
-
-  packages/typescript-plugin:
-    dependencies:
-      '@vue/language-core':
-        specifier: 1.8.20
-        version: link:../language-core
-      '@vue/typescript':
-        specifier: 1.8.20
-        version: link:../typescript
-      vscode-uri:
-        specifier: ^3.0.8
-        version: 3.0.8
 
   test-workspace:
     devDependencies:

@@ -1,5 +1,5 @@
+import { decorateLanguageService, decorateLanguageServiceHost, searchExternalFiles } from '@volar/typescript';
 import * as vue from '@vue/language-core';
-import { decorateLanguageService, decorateLanguageServiceHost, searchExternalFiles } from '@vue/typescript';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
 const externalFiles = new WeakMap<ts.server.Project, string[]>();
@@ -19,6 +19,16 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 
 			decorateLanguageService(virtualFiles, info.languageService, true);
 			decorateLanguageServiceHost(virtualFiles, info.languageServiceHost, ts, ['.vue']);
+
+			const getCompletionsAtPosition = info.languageService.getCompletionsAtPosition.bind(info.languageService);
+
+			info.languageService.getCompletionsAtPosition = (fileName, position, options) => {
+				const result = getCompletionsAtPosition(fileName, position, options);
+				if (result) {
+					result.entries = result.entries.filter(entry => entry.name.indexOf('__VLS_') === -1);
+				}
+				return result;
+			};
 
 			return info.languageService;
 

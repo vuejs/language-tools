@@ -1,6 +1,6 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vue from '@vue/language-core';
-import * as vueTs from '@vue/typescript';
+import * as volarTs from '@volar/typescript';
 import { state } from './shared';
 
 export type Hook = (program: _Program) => void;
@@ -8,11 +8,12 @@ export type Hook = (program: _Program) => void;
 export type _Program = ts.Program & { __vue: ProgramContext; };
 
 interface ProgramContext {
-	projectVersion: number,
-	options: ts.CreateProgramOptions,
-	languageHost: vue.TypeScriptLanguageHost,
-	vueCompilerOptions: Partial<vue.VueCompilerOptions>,
-	languageService: ReturnType<typeof vueTs.createLanguageService>,
+	projectVersion: number;
+	options: ts.CreateProgramOptions;
+	languageHost: vue.TypeScriptLanguageHost;
+	vueCompilerOptions: Partial<vue.VueCompilerOptions>;
+	langaugeContext: vue.LanguageContext;
+	languageService: ts.LanguageService;
 }
 
 const windowsPathReg = /\\/g;
@@ -53,6 +54,9 @@ export function createProgram(options: ts.CreateProgramOptions) {
 			get languageService() {
 				return vueTsLs;
 			},
+			get langaugeContext() {
+				return languageContext;
+			},
 		};
 		const vueCompilerOptions = getVueCompilerOptions();
 		const scripts = new Map<string, {
@@ -74,9 +78,20 @@ export function createProgram(options: ts.CreateProgramOptions) {
 			getProjectReferences: () => ctx.options.projectReferences,
 			getCancellationToken: ctx.options.host!.getCancellationToken ? () => ctx.options.host!.getCancellationToken!() : undefined,
 		};
-		const vueTsLs = vueTs.createLanguageService(languageHost, vueCompilerOptions, ts as any, ts.sys);
+		const languageContext = vue.createLanguageContext(
+			languageHost,
+			vue.createLanguages(
+				languageHost.getCompilationSettings(),
+				vueCompilerOptions,
+				ts,
+			),
+		);
+		const languageServiceHost = volarTs.createLanguageServiceHost(languageContext, ts, ts.sys, undefined);
+		const vueTsLs = ts.createLanguageService(languageServiceHost, volarTs.getDocumentRegistry(ts, ts.sys.useCaseSensitiveFileNames, languageHost.workspacePath));
 
-		program = vueTs.getProgram(ts as any, vueTsLs.__internal__.context, vueTsLs, ts.sys) as (ts.Program & { __vue: ProgramContext; });
+		volarTs.decorateLanguageService(languageContext.virtualFiles, vueTsLs, false);
+
+		program = volarTs.getProgram(ts as any, languageContext, vueTsLs, ts.sys) as (ts.Program & { __vue: ProgramContext; });
 		program.__vue = ctx;
 
 		function getVueCompilerOptions(): Partial<vue.VueCompilerOptions> {
