@@ -4,14 +4,14 @@ import { describe, it } from 'vitest';
 import { fork } from 'child_process';
 
 const binPath = require.resolve('../bin/vue-tsc.js');
-const workspace = path.resolve(__dirname, '../../../test-workspace/vue-tsc');
+const workspace = path.resolve(__dirname, '../../../test-workspace/tsc');
 
 function prettyPath(path: string, isRoot: boolean) {
 	const segments = path.split('/');
 	const slicePath = (seg: number) => segments
 		.slice(segments.length - seg, segments.length)
 		.join('/')
-		.replace('/vue-tsc', '');
+		.replace('test-workspace/tsc/', '');
 	return !isRoot ? slicePath(4) : slicePath(3);
 }
 
