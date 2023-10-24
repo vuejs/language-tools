@@ -21,7 +21,7 @@ export class VueFile implements VirtualFile {
 	getVueSfc = computedVueSfc(this.plugins, this.fileName, () => this._snapshot());
 	sfc = computedSfc(this.ts, this.plugins, this.fileName, () => this._snapshot(), this.getVueSfc);
 	getMappings = computedMappings(() => this._snapshot(), this.sfc);
-	getMmbeddedFiles = computedFiles(this.plugins, this.fileName, this.sfc, this.codegenStack);
+	getEmbeddedFiles = computedFiles(this.plugins, this.fileName, this.sfc, this.codegenStack);
 
 	// others
 
@@ -29,7 +29,7 @@ export class VueFile implements VirtualFile {
 	kind = FileKind.TextFile;
 	codegenStacks: Stack[] = [];
 	get embeddedFiles() {
-		return this.getMmbeddedFiles();
+		return this.getEmbeddedFiles();
 	}
 	get mainScriptName() {
 		let res: string = '';
