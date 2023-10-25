@@ -10,10 +10,10 @@
 		"composite": true,
 		"declarationMap": true,
 		"strict": true,
-		"alwaysStrict": false,
 		"skipLibCheck": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
+		"esModuleInterop": false,
 	},
 	"include": [ ],
 }
