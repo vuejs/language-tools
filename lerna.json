@@ -2,7 +2,9 @@
 	"$schema": "https://raw.githubusercontent.com/lerna-lite/lerna-lite/main/packages/cli/schemas/lerna-schema.json",
 	"npmClient": "pnpm",
 	"packages": [
-		"packages/*"
+		"extensions/*",
+		"packages/*",
+		"test-workspace"
 	],
 	"version": "1.8.20"
 }
