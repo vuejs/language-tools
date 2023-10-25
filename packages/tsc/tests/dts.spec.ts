@@ -4,9 +4,9 @@ import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import { createProgram } from '../out';
 
-const workspace = path.resolve(__dirname, '../../../test-workspace/tsc-dts');
+const workspace = path.resolve(__dirname, '../../../test-workspace/component-meta');
 const testFiles = readFilesRecursive(workspace);
-const ensureTs = (filename: string) => filename.endsWith('.ts') ? filename : filename + '.ts';
+const ensureTs = (filename: string) => filename.endsWith('.ts') || filename.endsWith('.tsx') ? filename : filename + '.ts';
 const normalizePath = (filename: string) => filename.replace(/\\/g, '/');
 const normalizeNewline = (text: string) => text.replace(/\r\n/g, '\n');
 
@@ -38,6 +38,9 @@ function readFilesRecursive(dir: string) {
 	const result: string[] = [];
 
 	for (const file of fs.readdirSync(dir)) {
+		if (file === 'tsconfig.json') {
+			continue;
+		}
 		const filepath = path.join(dir, file);
 		const stat = fs.statSync(filepath);
 		if (stat.isDirectory()) {
