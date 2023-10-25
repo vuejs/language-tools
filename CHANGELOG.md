@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.8.21 (2023/10/25)
+
+#### Volar.js 1.10.5 updates:
+
+- fix(monaco): completion cannot insert text starting with `$` (https://github.com/volarjs/volar.js/issues/69)
+- fix(typescript): automatic type acquisition not working since v1.10.0
+
 ## 1.8.20 (2023/10/23)
 
 - feat: added Italian integration documentation
