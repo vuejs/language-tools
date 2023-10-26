@@ -22,7 +22,7 @@ jobs:
         working-directory: extensions/vscode
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
-      - run: pnpm ovsx publish
-        working-directory: extensions/vscode-typescript-plugin
-        env:
-          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+    #   - run: pnpm ovsx publish
+    #     working-directory: extensions/vscode-typescript-plugin
+    #     env:
+    #       OVSX_PAT: ${{ secrets.OVSX_PAT }}
