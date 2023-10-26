@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.8.22 (2023/10/27)
+
+- fix: `experimentalResolveStyleCssClasses: "always"` not working ([#3689](https://github.com/vuejs/language-tools/issues/3689)) - thanks @maIIady
+- fix: `__VLS_Prettify` missing for dts build when uses `withDefaults()` ([#3691](https://github.com/vuejs/language-tools/issues/3691))
+
 ## 1.8.21 (2023/10/25)
 
 #### Volar.js 1.10.5 updates:
