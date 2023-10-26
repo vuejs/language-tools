@@ -160,7 +160,7 @@ function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOp
 
 		for (const style of _sfc.styles) {
 			const option = vueCompilerOptions.experimentalResolveStyleCssClasses;
-			if ((option === 'always' || option === 'scoped') && style.scoped) {
+			if (option === 'always' || (option === 'scoped' && style.scoped)) {
 				for (const className of style.classNames) {
 					classes.add(className.text.substring(1));
 				}
