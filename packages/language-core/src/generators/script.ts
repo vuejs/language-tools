@@ -118,6 +118,7 @@ export function generate(
 						default: D[K]
 					}> : P[K]
 				};\n`);
+			codes.push(`type __VLS_Prettify<T> = { [K in keyof T]: T[K]; } & {};\n`);
 		}
 		if (usedHelperTypes.WithTemplateSlots) {
 			codes.push(
