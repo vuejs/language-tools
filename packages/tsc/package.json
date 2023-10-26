@@ -1,6 +1,6 @@
 {
 	"name": "vue-tsc",
-	"version": "1.8.21",
+	"version": "1.8.22",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -18,7 +18,7 @@
 	},
 	"dependencies": {
 		"@volar/typescript": "~1.10.5",
-		"@vue/language-core": "1.8.21",
+		"@vue/language-core": "1.8.22",
 		"semver": "^7.5.4"
 	},
 	"peerDependencies": {
