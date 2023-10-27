@@ -16,6 +16,7 @@ import { config } from './config';
 import * as componentMeta from './features/componentMeta';
 import * as doctor from './features/doctor';
 import * as nameCasing from './features/nameCasing';
+import * as dragImport from './features/dragImport';
 import * as splitEditors from './features/splitEditors';
 
 let semanticClient: lsp.BaseLanguageClient;
@@ -93,6 +94,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	splitEditors.register(context, syntacticClient);
 	doctor.register(context, semanticClient);
 	componentMeta.register(context, semanticClient);
+	dragImport.register(context, semanticClient);
 
 	const supportedLanguages: Record<string, boolean> = {
 		vue: true,
