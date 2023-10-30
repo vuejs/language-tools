@@ -10,10 +10,10 @@ importers:
     optionalDependencies:
       '@lerna-lite/cli':
         specifier: latest
-        version: 2.6.0(@lerna-lite/publish@2.6.0)(@lerna-lite/version@2.6.0)(typescript@5.2.2)
+        version: 2.6.0(@lerna-lite/publish@2.6.0)(@lerna-lite/version@2.6.0)(typescript@5.3.0-dev.20231030)
       '@lerna-lite/publish':
         specifier: latest
-        version: 2.6.0(typescript@5.2.2)
+        version: 2.6.0(typescript@5.3.0-dev.20231030)
     devDependencies:
       '@types/node':
         specifier: latest
@@ -22,8 +22,8 @@ importers:
         specifier: ~1.10.5
         version: 1.10.5
       typescript:
-        specifier: latest
-        version: 5.2.2
+        specifier: next
+        version: 5.3.0-dev.20231030
       vite:
         specifier: latest
         version: 4.5.0(@types/node@20.8.9)
@@ -223,7 +223,7 @@ importers:
     devDependencies:
       '@volar/kit':
         specifier: ~1.10.5
-        version: 1.10.5(typescript@5.2.2)
+        version: 1.10.5(typescript@5.3.0-dev.20231030)
       vscode-languageserver-protocol:
         specifier: ^3.17.5
         version: 3.17.5
@@ -597,7 +597,7 @@ packages:
     resolution: {integrity: sha512-eF2rxCRulEKXHTRiDrDy6erMYWqNw4LPdQ8UQA4huuxaQsVeRPFl2oM8oDGxMFhJUWZf9McpLtJasDDZb/Bpeg==}
     dev: true
 
-  /@lerna-lite/cli@2.6.0(@lerna-lite/publish@2.6.0)(@lerna-lite/version@2.6.0)(typescript@5.2.2):
+  /@lerna-lite/cli@2.6.0(@lerna-lite/publish@2.6.0)(@lerna-lite/version@2.6.0)(typescript@5.3.0-dev.20231030):
     resolution: {integrity: sha512-sxJmgGt/zQ4rYfdl5OSp5/TToLB16RVxsoVsUsg/qTl5F5C+P35evYBuXRuFNWr50+MdfHqLisbf0qEJgGAk9g==}
     engines: {node: '>=16.15.0', npm: '>=8.5.0'}
     hasBin: true
@@ -623,10 +623,10 @@ packages:
       '@lerna-lite/watch':
         optional: true
     dependencies:
-      '@lerna-lite/core': 2.6.0(typescript@5.2.2)
-      '@lerna-lite/init': 2.6.0(typescript@5.2.2)
-      '@lerna-lite/publish': 2.6.0(typescript@5.2.2)
-      '@lerna-lite/version': 2.6.0(@lerna-lite/publish@2.6.0)(typescript@5.2.2)
+      '@lerna-lite/core': 2.6.0(typescript@5.3.0-dev.20231030)
+      '@lerna-lite/init': 2.6.0(typescript@5.3.0-dev.20231030)
+      '@lerna-lite/publish': 2.6.0(typescript@5.3.0-dev.20231030)
+      '@lerna-lite/version': 2.6.0(@lerna-lite/publish@2.6.0)(typescript@5.3.0-dev.20231030)
       dedent: 1.5.1
       dotenv: 16.3.1
       import-local: 3.1.0
@@ -640,7 +640,7 @@ packages:
     dev: false
     optional: true
 
-  /@lerna-lite/core@2.6.0(typescript@5.2.2):
+  /@lerna-lite/core@2.6.0(typescript@5.3.0-dev.20231030):
     resolution: {integrity: sha512-WFyDgjuHHj5dC8WYA4w1hoMyUL8pnb7eFNMVYgPYzXi1L8yoQPpvJr02wOWl464XJbhhfr8Q8tMdMHI7YUSbMQ==}
     engines: {node: '>=16.15.0', npm: '>=8.5.0'}
     requiresBuild: true
@@ -649,7 +649,7 @@ packages:
       chalk: 5.3.0
       clone-deep: 4.0.1
       config-chain: 1.1.13
-      cosmiconfig: 8.3.6(typescript@5.2.2)
+      cosmiconfig: 8.3.6(typescript@5.3.0-dev.20231030)
       dedent: 1.5.1
       execa: 8.0.1
       fs-extra: 11.1.1
@@ -678,12 +678,12 @@ packages:
     dev: false
     optional: true
 
-  /@lerna-lite/init@2.6.0(typescript@5.2.2):
+  /@lerna-lite/init@2.6.0(typescript@5.3.0-dev.20231030):
     resolution: {integrity: sha512-K8lxcQXgGrTfl3YyvKSl+uiAT287vd1awouvme7m+3j32H6DTI31u35t7mR6mBY7GhkDLX/iJzjaHpv2qBb3NQ==}
     engines: {node: '>=16.15.0', npm: '>=8.5.0'}
     requiresBuild: true
     dependencies:
-      '@lerna-lite/core': 2.6.0(typescript@5.2.2)
+      '@lerna-lite/core': 2.6.0(typescript@5.3.0-dev.20231030)
       fs-extra: 11.1.1
       p-map: 6.0.0
       write-json-file: 5.0.0
@@ -694,14 +694,14 @@ packages:
     dev: false
     optional: true
 
-  /@lerna-lite/publish@2.6.0(typescript@5.2.2):
+  /@lerna-lite/publish@2.6.0(typescript@5.3.0-dev.20231030):
     resolution: {integrity: sha512-Xa7MT1nZ8Q6vY0vwLMZgdoX8Lz2PHZ6tEMWx54qgWiK0HYOfZjW+NNXGV9hKu6PpaRBq+N5PIKOptJSjQCjEew==}
     engines: {node: '>=16.15.0', npm: '>=8.5.0'}
     requiresBuild: true
     dependencies:
-      '@lerna-lite/cli': 2.6.0(@lerna-lite/publish@2.6.0)(@lerna-lite/version@2.6.0)(typescript@5.2.2)
-      '@lerna-lite/core': 2.6.0(typescript@5.2.2)
-      '@lerna-lite/version': 2.6.0(@lerna-lite/publish@2.6.0)(typescript@5.2.2)
+      '@lerna-lite/cli': 2.6.0(@lerna-lite/publish@2.6.0)(@lerna-lite/version@2.6.0)(typescript@5.3.0-dev.20231030)
+      '@lerna-lite/core': 2.6.0(typescript@5.3.0-dev.20231030)
+      '@lerna-lite/version': 2.6.0(@lerna-lite/publish@2.6.0)(typescript@5.3.0-dev.20231030)
       '@npmcli/arborist': 7.2.0
       byte-size: 8.1.1
       chalk: 5.3.0
@@ -738,13 +738,13 @@ packages:
     dev: false
     optional: true
 
-  /@lerna-lite/version@2.6.0(@lerna-lite/publish@2.6.0)(typescript@5.2.2):
+  /@lerna-lite/version@2.6.0(@lerna-lite/publish@2.6.0)(typescript@5.3.0-dev.20231030):
     resolution: {integrity: sha512-OEdSV6SwYqspXls2Nthd6itw7XJaWGAr65rDVrgcQajQ0dAngateYtsq/zmRMaJnSYNX6u5gUV5y+6WISQaGMA==}
     engines: {node: '>=16.15.0', npm: '>=8.5.0'}
     requiresBuild: true
     dependencies:
-      '@lerna-lite/cli': 2.6.0(@lerna-lite/publish@2.6.0)(@lerna-lite/version@2.6.0)(typescript@5.2.2)
-      '@lerna-lite/core': 2.6.0(typescript@5.2.2)
+      '@lerna-lite/cli': 2.6.0(@lerna-lite/publish@2.6.0)(@lerna-lite/version@2.6.0)(typescript@5.3.0-dev.20231030)
+      '@lerna-lite/core': 2.6.0(typescript@5.3.0-dev.20231030)
       '@octokit/plugin-enterprise-rest': 6.0.1
       '@octokit/rest': 19.0.13
       chalk: 5.3.0
@@ -1329,14 +1329,14 @@ packages:
       pretty-format: 29.7.0
     dev: true
 
-  /@volar/kit@1.10.5(typescript@5.2.2):
+  /@volar/kit@1.10.5(typescript@5.3.0-dev.20231030):
     resolution: {integrity: sha512-sK3w8bXBgqjUWfju8HYAiYwCp+sdm1TseF3ULjaqJoC8zWR0uU9hfBASfZDPFB2p6ealRFwkjWOp2kCnWaYxBA==}
     peerDependencies:
       typescript: '*'
     dependencies:
       '@volar/language-service': 1.10.5
       typesafe-path: 0.2.2
-      typescript: 5.2.2
+      typescript: 5.3.0-dev.20231030
       vscode-languageserver-textdocument: 1.0.11
       vscode-uri: 3.0.8
     dev: true
@@ -2256,7 +2256,7 @@ packages:
     dev: false
     optional: true
 
-  /cosmiconfig@8.3.6(typescript@5.2.2):
+  /cosmiconfig@8.3.6(typescript@5.3.0-dev.20231030):
     resolution: {integrity: sha512-kcZ6+W5QzcJ3P1Mt+83OUv/oHFqZHIx8DuxG6eZ5RGMERoLqp4BuGjhHLYGK+Kf5XVkQvqBSmAy/nGWN3qDgEA==}
     engines: {node: '>=14'}
     requiresBuild: true
@@ -2270,7 +2270,7 @@ packages:
       js-yaml: 4.1.0
       parse-json: 5.2.0
       path-type: 4.0.0
-      typescript: 5.2.2
+      typescript: 5.3.0-dev.20231030
     dev: false
     optional: true
 
@@ -6026,8 +6026,8 @@ packages:
       semver: 7.5.4
     dev: false
 
-  /typescript@5.2.2:
-    resolution: {integrity: sha512-mI4WrpHsbCIcwT9cF4FZvr80QUeKvsUsUvKDoR+X/7XHQH98xYD8YHZg7ANtz2GtZt/CBq2QJ0thkGJMHfqc1w==}
+  /typescript@5.3.0-dev.20231030:
+    resolution: {integrity: sha512-azWrF0lAiu8cBHNr6yq3RDkU/DtQScvT48ea3Ngq6oXJ/GPO0n96wCFSRQA5UbZlVVf3fAAqsUfvOdohRbrPVg==}
     engines: {node: '>=14.17'}
     hasBin: true
 

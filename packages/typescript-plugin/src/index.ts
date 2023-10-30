@@ -42,10 +42,9 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 				}
 			}
 		},
-		getExternalFiles(project, updateLevel = -1) {
+		getExternalFiles(project, updateLevel = 0) {
 			if (
-				// @ts-expect-error wait for TS 5.3
-				updateLevel >= 1 satisfies ts.ProgramUpdateLevel.RootNamesAndUpdate
+				updateLevel >= (1 satisfies ts.ProgramUpdateLevel.RootNamesAndUpdate)
 				|| !externalFiles.has(project)
 			) {
 				const oldFiles = externalFiles.get(project);
