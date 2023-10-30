@@ -1,7 +1,9 @@
+// @ts-check
+
 const path = require('path');
 const fs = require('fs');
 
-require('esbuild').build({
+require('esbuild').context({
 	entryPoints: {
 		client: './out/nodeClientMain.js',
 		server: './node_modules/@vue/language-server/out/nodeServer.js',
@@ -18,7 +20,6 @@ require('esbuild').build({
 	tsconfig: './tsconfig.json',
 	define: { 'process.env.NODE_ENV': '"production"' },
 	minify: process.argv.includes('--minify'),
-	watch: process.argv.includes('--watch'),
 	plugins: [
 		{
 			name: 'umd2esm',
@@ -37,6 +38,7 @@ require('esbuild').build({
 				from: ['./node_modules/@vue/language-core/schemas/**/*'],
 				to: ['./dist/schemas'],
 			},
+			// @ts-expect-error
 			keepStructure: true,
 		}),
 		{
@@ -53,4 +55,14 @@ require('esbuild').build({
 			},
 		},
 	],
-}).catch(() => process.exit(1))
+}).then(async ctx => {
+	console.log('building...');
+	if (process.argv.includes('--watch')) {
+		await ctx.watch();
+		console.log('watching...');
+	} else {
+		await ctx.rebuild();
+		await ctx.dispose();
+		console.log('finished.');
+	}
+})

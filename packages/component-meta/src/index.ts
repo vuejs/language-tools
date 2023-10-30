@@ -158,7 +158,7 @@ export function baseCreate(
 		ts,
 	) : [];
 	const core = vue.createLanguageContext(host, vueLanguages);
-	const tsLsHost = createLanguageServiceHost(core, ts, ts.sys, undefined);
+	const tsLsHost = createLanguageServiceHost(core, ts, ts.sys);
 	const tsLs = ts.createLanguageService(tsLsHost);
 
 	decorateLanguageService(core.virtualFiles, tsLs, false);

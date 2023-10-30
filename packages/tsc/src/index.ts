@@ -86,7 +86,7 @@ export function createProgram(options: ts.CreateProgramOptions) {
 				ts,
 			),
 		);
-		const languageServiceHost = volarTs.createLanguageServiceHost(languageContext, ts, ts.sys, undefined);
+		const languageServiceHost = volarTs.createLanguageServiceHost(languageContext, ts, ts.sys);
 		const vueTsLs = ts.createLanguageService(languageServiceHost, volarTs.getDocumentRegistry(ts, ts.sys.useCaseSensitiveFileNames, languageHost.workspacePath));
 
 		volarTs.decorateLanguageService(languageContext.virtualFiles, vueTsLs, false);

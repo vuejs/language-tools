@@ -740,7 +740,7 @@
 		"@volar/vscode": "~1.10.5",
 		"@vue/language-core": "1.8.22",
 		"@vue/language-server": "1.8.22",
-		"esbuild": "0.15.18",
+		"esbuild": "latest",
 		"esbuild-plugin-copy": "latest",
 		"esbuild-visualizer": "latest",
 		"semver": "^7.5.4",
