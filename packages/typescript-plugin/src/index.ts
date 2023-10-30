@@ -50,8 +50,8 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 				const oldFiles = externalFiles.get(project);
 				const newFiles = searchExternalFiles(ts, project, ['.vue']);
 				externalFiles.set(project, newFiles);
-				if (oldFiles) {
-					refreshDiagnosticsIfNeeded(project, oldFiles, newFiles);
+				if (oldFiles && !arrayItemsEqual(oldFiles, newFiles)) {
+					project.refreshDiagnostics();
 				}
 			}
 			return externalFiles.get(project)!;
@@ -60,20 +60,17 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 	return pluginModule;
 };
 
-export = init;
-
-function refreshDiagnosticsIfNeeded(project: ts.server.Project, oldExternalFiles: string[], newExternalFiles: string[]) {
-	let dirty = oldExternalFiles.length !== newExternalFiles.length;
-	if (!dirty) {
-		const set = new Set(oldExternalFiles);
-		for (const file of newExternalFiles) {
-			if (!set.has(file)) {
-				dirty = true;
-				break;
-			}
+function arrayItemsEqual(a: string[], b: string[]) {
+	if (a.length !== b.length) {
+		return false;
+	}
+	const set = new Set(a);
+	for (const file of b) {
+		if (!set.has(file)) {
+			return false;
 		}
 	}
-	if (dirty) {
-		project.refreshDiagnostics();
-	}
+	return true;
 }
+
+export = init;
