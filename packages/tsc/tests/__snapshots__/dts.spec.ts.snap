@@ -126,12 +126,12 @@ exports[`vue-tsc-dts > Input: reference-type-events/component.vue, Output: refer
     }) => void;
     baz: () => void;
 }, string, import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps, Readonly<import(\\"vue\\").ExtractPropTypes<{}>> & {
-    onFoo?: (data?: {
-        foo: string;
-    }) => any;
     onBar?: (value: {
         arg1: number;
         arg2?: any;
+    }) => any;
+    onFoo?: (data?: {
+        foo: string;
     }) => any;
     onBaz?: () => any;
 }, {}, {}>;

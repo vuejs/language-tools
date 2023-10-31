@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import * as kit from '@volar/kit';
 import { resolveConfig } from '../../out';
+import * as ts from 'typescript';
 
-const formatter = kit.createFormatter(resolveConfig({}));
+const formatter = kit.createFormatter(resolveConfig(ts as any, {}));
 
 export function defineFormatTest(options: {
 	title: string;

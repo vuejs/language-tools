@@ -81,12 +81,12 @@ export function createProgram(options: ts.CreateProgramOptions) {
 		const languageContext = vue.createLanguageContext(
 			languageHost,
 			vue.createLanguages(
+				ts,
 				languageHost.getCompilationSettings(),
 				vueCompilerOptions,
-				ts,
 			),
 		);
-		const languageServiceHost = volarTs.createLanguageServiceHost(languageContext, ts, ts.sys, undefined);
+		const languageServiceHost = volarTs.createLanguageServiceHost(languageContext, ts, ts.sys);
 		const vueTsLs = ts.createLanguageService(languageServiceHost, volarTs.getDocumentRegistry(ts, ts.sys.useCaseSensitiveFileNames, languageHost.workspacePath));
 
 		volarTs.decorateLanguageService(languageContext.virtualFiles, vueTsLs, false);
@@ -97,7 +97,7 @@ export function createProgram(options: ts.CreateProgramOptions) {
 		function getVueCompilerOptions(): Partial<vue.VueCompilerOptions> {
 			const tsConfig = ctx.options.options.configFilePath;
 			if (typeof tsConfig === 'string') {
-				return vue.createParsedCommandLine(ts as any, ts.sys, tsConfig).vueOptions;
+				return vue.createParsedCommandLine(ts as any, ts.sys, tsConfig.replace(windowsPathReg, '/')).vueOptions;
 			}
 			return {};
 		}

@@ -2,7 +2,7 @@ import { FileRangeCapabilities, MirrorBehaviorCapabilities } from '@volar/langua
 import * as SourceMaps from '@volar/source-map';
 import { Segment, getLength } from '@volar/source-map';
 import * as muggle from 'muggle-string';
-import { posix as path } from 'path';
+import * as path from 'path-browserify';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type * as templateGen from '../generators/template';
 import type { ScriptRanges } from '../parsers/scriptRanges';

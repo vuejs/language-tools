@@ -1,4 +1,6 @@
-require('esbuild').build({
+// @ts-check
+
+require('esbuild').context({
 	entryPoints: ['./node_modules/typescript-vue-plugin/out/index.js'],
 	bundle: true,
 	outfile: './node_modules/typescript-vue-plugin-bundle/index.js',
@@ -10,7 +12,6 @@ require('esbuild').build({
 	platform: 'node',
 	tsconfig: './tsconfig.json',
 	minify: process.argv.includes('--minify'),
-	watch: process.argv.includes('--watch'),
 	plugins: [{
 		name: 'umd2esm',
 		setup(build) {
@@ -21,4 +22,14 @@ require('esbuild').build({
 			})
 		},
 	}],
-}).catch(() => process.exit(1))
+}).then(async ctx => {
+	console.log('building...');
+	if (process.argv.includes('--watch')) {
+		await ctx.watch();
+		console.log('watching...');
+	} else {
+		await ctx.rebuild();
+		await ctx.dispose();
+		console.log('finished.');
+	}
+})
