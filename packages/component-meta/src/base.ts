@@ -2,6 +2,7 @@ import * as vue from '@vue/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path-browserify';
 import { code as typeHelpersCode } from 'vue-component-type-helpers';
+import { code as vue2TypeHelpersCode } from 'vue-component-type-helpers/vue2';
 import { createLanguageServiceHost, decorateLanguageService } from '@volar/typescript';
 
 import type {
@@ -201,11 +202,11 @@ interface ComponentMeta<T> {
 	type: ComponentType<T>;
 	props: ComponentProps<T>;
 	emit: ComponentEmit<T>;
-	slots: ${vueCompilerOptions.target < 3 ? 'Vue2ComponentSlots' : 'ComponentSlots'}<T>;
+	slots: ComponentSlots<T>;
 	exposed: ComponentExposed<T>;
 };
 
-${typeHelpersCode}
+${vueCompilerOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 `.trim();
 		return code;
 	}
