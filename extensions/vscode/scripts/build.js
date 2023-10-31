@@ -11,10 +11,7 @@ require('esbuild').context({
 	bundle: true,
 	metafile: process.argv.includes('--metafile'),
 	outdir: './dist',
-	external: [
-		'vscode',
-		'typescript', // vue-component-meta
-	],
+	external: ['vscode'],
 	format: 'cjs',
 	platform: 'node',
 	tsconfig: './tsconfig.json',

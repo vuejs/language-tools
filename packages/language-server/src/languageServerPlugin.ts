@@ -6,7 +6,7 @@ import * as nameCasing from '@vue/language-service';
 import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest, GetComponentMeta } from './protocol';
 import { VueServerInitializationOptions } from './types';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import * as componentMeta from 'vue-component-meta';
+import * as componentMeta from 'vue-component-meta/out/base';
 import { VueCompilerOptions } from '@vue/language-core';
 import { createSys } from '@volar/typescript';
 
@@ -110,7 +110,7 @@ export function createServerPlugin(connection: Connection) {
 					}
 				});
 
-				const checkers = new WeakMap<embedded.TypeScriptLanguageHost, componentMeta.ComponentMetaChecker>();
+				const checkers = new WeakMap<embedded.TypeScriptLanguageHost, componentMeta.Checker>();
 
 				connection.onRequest(GetComponentMeta.type, async params => {
 
@@ -123,11 +123,11 @@ export function createServerPlugin(connection: Connection) {
 					let checker = checkers.get(host);
 					if (!checker) {
 						checker = componentMeta.baseCreate(
+							ts,
 							host,
 							hostToVueOptions.get(host)!,
 							{},
 							host.rootPath + '/tsconfig.json.global.vue',
-							ts,
 						);
 						checkers.set(host, checker);
 					}
