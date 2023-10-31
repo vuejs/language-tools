@@ -36,6 +36,7 @@
 		"vscode-languageserver-textdocument": "^1.0.11"
 	},
 	"devDependencies": {
+		"@types/node": "latest",
 		"@volar/kit": "~1.10.9",
 		"vscode-languageserver-protocol": "^3.17.5",
 		"vscode-uri": "^3.0.8"

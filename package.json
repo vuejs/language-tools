@@ -21,7 +21,6 @@
 		"chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=./extensions/vscode ../volar-starter"
 	},
 	"devDependencies": {
-		"@types/node": "latest",
 		"@volar/language-service": "~1.10.9",
 		"typescript": "latest",
 		"vite": "latest",

@@ -22,14 +22,14 @@ export type ComponentMetaChecker = ReturnType<typeof baseCreate>;
 const windowsPathReg = /\\/g;
 
 export function createComponentMetaCheckerByJsonConfig(
-	root: string,
+	_rootPath: string,
 	json: any,
 	checkerOptions: MetaCheckerOptions = {},
 	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
 ) {
-	const rootPath = (root as path.OsPath).replace(windowsPathReg, '/') as path.PosixPath;
+	const rootPath = _rootPath.replace(windowsPathReg, '/') as path.PosixPath;
 	return createComponentMetaCheckerWorker(
-		() => vue.createParsedCommandLineByJson(ts, ts.sys, root, json),
+		() => vue.createParsedCommandLineByJson(ts, ts.sys, rootPath, json),
 		checkerOptions,
 		rootPath,
 		path.join(rootPath, 'jsconfig.json.global.vue' as path.PosixPath),
@@ -38,13 +38,13 @@ export function createComponentMetaCheckerByJsonConfig(
 }
 
 export function createComponentMetaChecker(
-	tsconfigPath: string,
+	_tsconfig: string,
 	checkerOptions: MetaCheckerOptions = {},
 	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
 ) {
-	const tsconfig = (tsconfigPath as path.OsPath).replace(windowsPathReg, '/') as path.PosixPath;
+	const tsconfig = _tsconfig.replace(windowsPathReg, '/') as path.PosixPath;
 	return createComponentMetaCheckerWorker(
-		() => vue.createParsedCommandLine(ts, ts.sys, tsconfigPath),
+		() => vue.createParsedCommandLine(ts, ts.sys, tsconfig),
 		checkerOptions,
 		path.dirname(tsconfig),
 		tsconfig + '.global.vue',
@@ -152,11 +152,11 @@ export function baseCreate(
 			return _host[prop as keyof typeof _host];
 		},
 	}) as vue.TypeScriptLanguageHost;
-	const vueLanguages = ts ? vue.createLanguages(
+	const vueLanguages = vue.createLanguages(
+		ts,
 		host.getCompilationSettings(),
 		vueCompilerOptions,
-		ts,
-	) : [];
+	);
 	const core = vue.createLanguageContext(host, vueLanguages);
 	const tsLsHost = createLanguageServiceHost(core, ts, ts.sys);
 	const tsLs = ts.createLanguageService(tsLsHost);

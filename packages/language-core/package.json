@@ -20,10 +20,13 @@
 		"computeds": "^0.0.1",
 		"minimatch": "^9.0.3",
 		"muggle-string": "^0.3.1",
+		"path-browserify": "^1.0.1",
 		"vue-template-compiler": "^2.7.14"
 	},
 	"devDependencies": {
 		"@types/minimatch": "^5.1.2",
+		"@types/node": "latest",
+		"@types/path-browserify": "^1.0.1",
 		"@vue/compiler-sfc": "^3.3.0"
 	},
 	"peerDependencies": {

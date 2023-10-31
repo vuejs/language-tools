@@ -107,7 +107,7 @@ function createTester(root: string) {
 				},
 			}
 		},
-		resolveConfig({}),
+		resolveConfig(ts, {}),
 		host,
 	);
 

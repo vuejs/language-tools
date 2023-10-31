@@ -3,6 +3,7 @@ import * as vue from '@vue/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
 const externalFiles = new WeakMap<ts.server.Project, string[]>();
+const windowsPathReg = /\\/g;
 
 const init: ts.server.PluginModuleFactory = (modules) => {
 	const { typescript: ts } = modules;
@@ -11,9 +12,9 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 
 			const virtualFiles = vue.createVirtualFiles(
 				vue.createLanguages(
+					ts,
 					info.languageServiceHost.getCompilationSettings(),
 					getVueCompilerOptions(),
-					ts,
 				),
 			);
 
@@ -35,7 +36,7 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 			function getVueCompilerOptions() {
 				if (info.project.projectKind === ts.server.ProjectKind.Configured) {
 					const tsconfig = info.project.getProjectName();
-					return vue.createParsedCommandLine(ts, ts.sys, tsconfig).vueOptions;
+					return vue.createParsedCommandLine(ts, ts.sys, tsconfig.replace(windowsPathReg, '/')).vueOptions;
 				}
 				else {
 					return vue.createParsedCommandLineByJson(ts, ts.sys, info.languageServiceHost.getCurrentDirectory(), {}).vueOptions;

@@ -25,5 +25,8 @@
 		"typescript": {
 			"optional": true
 		}
+	},
+	"devDependencies": {
+		"@types/node": "latest"
 	}
 }
