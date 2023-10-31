@@ -41,10 +41,10 @@ export function createServerPlugin(connection: Connection) {
 				}
 
 				return vue.resolveConfig(
+					ts,
 					config,
 					ctx?.host.getCompilationSettings() ?? {},
 					vueOptions,
-					ts,
 					initOptions.codegenStack,
 				);
 

@@ -23,5 +23,8 @@
 	},
 	"peerDependencies": {
 		"typescript": "*"
+	},
+	"devDependencies": {
+		"@types/node": "latest"
 	}
 }
