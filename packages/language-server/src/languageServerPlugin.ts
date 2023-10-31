@@ -3,7 +3,7 @@ import { LanguageServerPlugin, Connection } from '@volar/language-server';
 import * as vue from '@vue/language-service';
 import * as vue2 from '@vue/language-core';
 import * as nameCasing from '@vue/language-service';
-import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest, GetComponentMeta, GetDragImportEditsRequest } from './protocol';
+import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest, GetComponentMeta, GetDragAndDragImportEditsRequest } from './protocol';
 import { VueServerInitializationOptions } from './types';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as componentMeta from 'vue-component-meta/out/base';
@@ -100,7 +100,7 @@ export function createServerPlugin(connection: Connection) {
 					}
 				});
 
-				connection.onRequest(GetDragImportEditsRequest.type, async params => {
+				connection.onRequest(GetDragAndDragImportEditsRequest.type, async params => {
 					const languageService = await getService(params.uri);
 					if (languageService) {
 						return nameCasing.getDragImportEdits(ts, languageService.context, params.uri, params.importUri, params.tagName);

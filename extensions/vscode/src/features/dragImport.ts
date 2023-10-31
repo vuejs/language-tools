@@ -1,4 +1,4 @@
-import { GetDragImportEditsRequest } from '@vue/language-server';
+import { GetDragAndDragImportEditsRequest } from '@vue/language-server';
 import * as vscode from 'vscode';
 import type { BaseLanguageClient } from 'vscode-languageclient';
 
@@ -13,7 +13,7 @@ export async function register(_context: vscode.ExtensionContext, client: BaseLa
 						if (uri.endsWith('.vue')) {
 							let tagName = uri.substring(uri.lastIndexOf('/') + 1);
 							tagName = tagName.substring(0, tagName.lastIndexOf('.'));
-							const edits = await client.sendRequest(GetDragImportEditsRequest.type, {
+							const edits = await client.sendRequest(GetDragAndDragImportEditsRequest.type, {
 								uri: document.uri.toString(),
 								importUri: uri,
 								tagName,

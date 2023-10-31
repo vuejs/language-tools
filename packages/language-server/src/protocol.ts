@@ -31,7 +31,7 @@ export namespace GetConvertTagCasingEditsRequest {
 	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('vue/convertTagNameCasing');
 }
 
-export namespace GetDragImportEditsRequest {
+export namespace GetDragAndDragImportEditsRequest {
 	export type ParamsType = {
 		uri: string,
 		importUri: string,
