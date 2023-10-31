@@ -1,8 +1,8 @@
 import * as path from 'path';
 import { describe, expect, test } from 'vitest';
-import { createComponentMetaChecker, createComponentMetaCheckerByJsonConfig, MetaCheckerOptions, ComponentMetaChecker, TypeMeta } from '../out';
+import { createChecker, createCheckerByJson, MetaCheckerOptions, Checker, TypeMeta } from '../out';
 
-const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describe(`vue-component-meta ${withTsconfig ? 'with tsconfig' : 'without tsconfig'}`, () => {
+const worker = (checker: Checker, withTsconfig: boolean) => describe(`vue-component-meta ${withTsconfig ? 'with tsconfig' : 'without tsconfig'}`, () => {
 
 	test('empty-component', () => {
 		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/empty-component/component.vue');
@@ -761,11 +761,11 @@ const checkerOptions: MetaCheckerOptions = {
 	schema: { ignore: ['MyIgnoredNestedProps'] },
 	printer: { newLine: 1 },
 };
-const tsconfigChecker = createComponentMetaChecker(
+const tsconfigChecker = createChecker(
 	path.resolve(__dirname, '../../../test-workspace/component-meta/tsconfig.json'),
 	checkerOptions,
 );
-const noTsConfigChecker = createComponentMetaCheckerByJsonConfig(
+const noTsConfigChecker = createCheckerByJson(
 	path.resolve(__dirname, '../../../test-workspace/component-meta'),
 	{
 		"extends": "../tsconfig.json",

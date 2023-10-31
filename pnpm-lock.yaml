@@ -84,9 +84,9 @@ importers:
       '@vue/language-core':
         specifier: 1.8.22
         version: link:../language-core
-      typesafe-path:
-        specifier: ^0.2.2
-        version: 0.2.2
+      path-browserify:
+        specifier: ^1.0.1
+        version: 1.0.1
       typescript:
         specifier: '*'
         version: 5.2.2
@@ -97,6 +97,9 @@ importers:
       '@types/node':
         specifier: latest
         version: 20.8.9
+      '@types/path-browserify':
+        specifier: latest
+        version: 1.0.1
 
   packages/component-type-helpers: {}
 
