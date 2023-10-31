@@ -35,9 +35,13 @@ export namespace GetDragAndDragImportEditsRequest {
 	export type ParamsType = {
 		uri: string,
 		importUri: string,
-		tagName: string,
+		casing: TagNameCasing,
 	};
-	export type ResponseType = vscode.TextEdit[] | null | undefined;
+	export type ResponseType = {
+		insertText: string;
+		insertTextFormat: vscode.InsertTextFormat;
+		additionalEdits: vscode.TextEdit[];
+	} | null | undefined;
 	export type ErrorType = never;
 	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('vue/dragImportEdits');
 }

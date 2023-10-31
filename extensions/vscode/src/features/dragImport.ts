@@ -1,6 +1,7 @@
-import { GetDragAndDragImportEditsRequest } from '@vue/language-server';
+import { GetDragAndDragImportEditsRequest, TagNameCasing } from '@vue/language-server';
 import * as vscode from 'vscode';
-import type { BaseLanguageClient } from 'vscode-languageclient';
+import type { BaseLanguageClient, InsertTextFormat } from 'vscode-languageclient';
+import { tagNameCasings } from './nameCasing';
 
 export async function register(_context: vscode.ExtensionContext, client: BaseLanguageClient) {
 	vscode.languages.registerDocumentDropEditProvider(
@@ -11,15 +12,16 @@ export async function register(_context: vscode.ExtensionContext, client: BaseLa
 					if (mimeType === 'text/uri-list') {
 						const uri = item.value as string;
 						if (uri.endsWith('.vue')) {
-							let tagName = uri.substring(uri.lastIndexOf('/') + 1);
-							tagName = tagName.substring(0, tagName.lastIndexOf('.'));
-							const edits = await client.sendRequest(GetDragAndDragImportEditsRequest.type, {
+							const response = await client.sendRequest(GetDragAndDragImportEditsRequest.type, {
 								uri: document.uri.toString(),
 								importUri: uri,
-								tagName,
+								casing: tagNameCasings.get(document.uri.toString()) ?? TagNameCasing.Pascal,
 							});
+							if (!response) {
+								return;
+							}
 							const additionalEdit = new vscode.WorkspaceEdit();
-							for (const edit of edits ?? []) {
+							for (const edit of response.additionalEdits) {
 								additionalEdit.replace(
 									document.uri,
 									new vscode.Range(
@@ -32,7 +34,9 @@ export async function register(_context: vscode.ExtensionContext, client: BaseLa
 								);
 							}
 							return {
-								insertText: new vscode.SnippetString(`<${tagName}$0 />`),
+								insertText: response.insertTextFormat === 2 satisfies typeof InsertTextFormat.Snippet
+									? new vscode.SnippetString(response.insertText)
+									: response.insertText,
 								additionalEdit,
 							};
 						}

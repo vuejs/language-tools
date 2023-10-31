@@ -103,7 +103,7 @@ export function createServerPlugin(connection: Connection) {
 				connection.onRequest(GetDragAndDragImportEditsRequest.type, async params => {
 					const languageService = await getService(params.uri);
 					if (languageService) {
-						return nameCasing.getDragImportEdits(ts, languageService.context, params.uri, params.importUri, params.tagName);
+						return nameCasing.getDragImportEdits(ts, languageService.context, params.uri, params.importUri, params.casing);
 					}
 				});
 

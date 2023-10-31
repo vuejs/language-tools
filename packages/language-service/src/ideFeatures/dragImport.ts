@@ -1,26 +1,34 @@
 import { ServiceContext } from '@volar/language-service';
 import { VueFile } from '@vue/language-core';
-import { camelize, capitalize } from '@vue/shared';
+import { camelize, capitalize, hyphenate } from '@vue/shared';
 import { posix as path } from 'path';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vue-extract-file';
+import { TagNameCasing } from '../types';
 
 export function getDragImportEdits(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	ctx: ServiceContext,
 	uri: string,
 	importUri: string,
-	tagName: string
-) {
+	casing: TagNameCasing
+): {
+	insertText: string;
+	insertTextFormat: vscode.InsertTextFormat;
+	additionalEdits: vscode.TextEdit[];
+} | undefined {
 
-	const newName = capitalize(camelize(tagName));
+	let baseName = importUri.substring(importUri.lastIndexOf('/') + 1);
+	baseName = baseName.substring(0, baseName.lastIndexOf('.'));
+
+	const newName = capitalize(camelize(baseName));
 	const document = ctx!.getTextDocument(uri)!;
 	const [vueFile] = ctx!.documents.getVirtualFileByUri(document.uri) as [VueFile, any];
 	const { sfc } = vueFile;
 	const script = sfc.scriptSetup ?? sfc.script;
 
 	if (!sfc.template || !script)
-		return [];
+		return;
 
 	const lastImportNode = getLastImportNode(ts, script.ast);
 	const edits: vscode.TextEdit[] = [
@@ -49,5 +57,9 @@ export function getDragImportEdits(
 		}
 	}
 
-	return edits;
+	return {
+		insertText: `<${casing === TagNameCasing.Kebab ? hyphenate(newName) : newName}$0 />`,
+		insertTextFormat: 2 satisfies typeof vscode.InsertTextFormat.Snippet,
+		additionalEdits: edits,
+	};
 }
