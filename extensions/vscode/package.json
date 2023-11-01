@@ -737,7 +737,7 @@
 	"devDependencies": {
 		"@types/semver": "^7.5.3",
 		"@types/vscode": "^1.82.0",
-		"@volar/vscode": "~1.10.9",
+		"@volar/vscode": "~1.10.10",
 		"@vue/language-core": "1.8.22",
 		"@vue/language-server": "1.8.22",
 		"esbuild": "latest",
