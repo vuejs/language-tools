@@ -1,7 +1,7 @@
 import { ServiceContext } from '@volar/language-service';
 import { VueFile } from '@vue/language-core';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
-import { posix as path } from 'path';
+import * as path from 'path-browserify';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vue-extract-file';
 import { TagNameCasing } from '../types';

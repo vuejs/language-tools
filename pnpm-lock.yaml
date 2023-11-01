@@ -23,7 +23,7 @@ importers:
         version: 5.2.2
       vite:
         specifier: latest
-        version: 4.5.0(@types/node@20.8.9)
+        version: 4.5.0(@types/node@20.8.10)
       vitest:
         specifier: latest
         version: 0.34.6
@@ -96,7 +96,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: latest
-        version: 20.8.9
+        version: 20.8.10
       '@types/path-browserify':
         specifier: latest
         version: 1.0.1
@@ -141,7 +141,7 @@ importers:
         version: 5.1.2
       '@types/node':
         specifier: latest
-        version: 20.8.9
+        version: 20.8.10
       '@types/path-browserify':
         specifier: ^1.0.1
         version: 1.0.1
@@ -160,7 +160,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: latest
-        version: 20.8.9
+        version: 20.8.10
       '@vue/language-core':
         specifier: 1.8.22
         version: link:../language-core
@@ -212,6 +212,9 @@ importers:
       computeds:
         specifier: ^0.0.1
         version: 0.0.1
+      path-browserify:
+        specifier: ^1.0.1
+        version: 1.0.1
       volar-service-css:
         specifier: 0.0.16
         version: 0.0.16(@volar/language-service@1.10.9)
@@ -245,7 +248,10 @@ importers:
     devDependencies:
       '@types/node':
         specifier: latest
-        version: 20.8.9
+        version: 20.8.10
+      '@types/path-browserify':
+        specifier: latest
+        version: 1.0.1
       '@volar/kit':
         specifier: ~1.10.9
         version: 1.10.9(typescript@5.2.2)
@@ -273,7 +279,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: latest
-        version: 20.8.9
+        version: 20.8.10
 
   packages/tsc-eslint-hook:
     dependencies:
@@ -1543,8 +1549,8 @@ packages:
     dev: false
     optional: true
 
-  /@types/node@20.8.9:
-    resolution: {integrity: sha512-UzykFsT3FhHb1h7yD4CA4YhBHq545JC0YnEz41xkipN88eKQtL6rSgocL5tbAP6Ola9Izm/Aw4Ora8He4x0BHg==}
+  /@types/node@20.8.10:
+    resolution: {integrity: sha512-TlgT8JntpcbmKUFzjhsyhGfP2fsiz1Mv56im6enJ905xG1DAYesxJaeSbGqQmAw8OWPdhyJGhGSQGKRNJ45u9w==}
     dependencies:
       undici-types: 5.26.5
     dev: true
@@ -6327,7 +6333,7 @@ packages:
     dev: false
     optional: true
 
-  /vite-node@0.34.6(@types/node@20.8.9):
+  /vite-node@0.34.6(@types/node@20.8.10):
     resolution: {integrity: sha512-nlBMJ9x6n7/Amaz6F3zJ97EBwR2FkzhBRxF5e+jE6LA3yi6Wtc2lyTij1OnDMIr34v5g/tVQtsVAzhT0jc5ygA==}
     engines: {node: '>=v14.18.0'}
     hasBin: true
@@ -6337,7 +6343,7 @@ packages:
       mlly: 1.4.2
       pathe: 1.1.1
       picocolors: 1.0.0
-      vite: 4.5.0(@types/node@20.8.9)
+      vite: 4.5.0(@types/node@20.8.10)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -6349,7 +6355,7 @@ packages:
       - terser
     dev: true
 
-  /vite@4.5.0(@types/node@20.8.9):
+  /vite@4.5.0(@types/node@20.8.10):
     resolution: {integrity: sha512-ulr8rNLA6rkyFAlVWw2q5YJ91v098AFQ2R0PRFwPzREXOUJQPtFUG0t+/ZikhaOCDqFoDhN6/v8Sq0o4araFAw==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
@@ -6377,7 +6383,7 @@ packages:
       terser:
         optional: true
     dependencies:
-      '@types/node': 20.8.9
+      '@types/node': 20.8.10
       esbuild: 0.18.20
       postcss: 8.4.31
       rollup: 3.29.4
@@ -6418,7 +6424,7 @@ packages:
     dependencies:
       '@types/chai': 4.3.9
       '@types/chai-subset': 1.3.4
-      '@types/node': 20.8.9
+      '@types/node': 20.8.10
       '@vitest/expect': 0.34.6
       '@vitest/runner': 0.34.6
       '@vitest/snapshot': 0.34.6
@@ -6437,8 +6443,8 @@ packages:
       strip-literal: 1.3.0
       tinybench: 2.5.1
       tinypool: 0.7.0
-      vite: 4.5.0(@types/node@20.8.9)
-      vite-node: 0.34.6(@types/node@20.8.9)
+      vite: 4.5.0(@types/node@20.8.10)
+      vite-node: 0.34.6(@types/node@20.8.10)
       why-is-node-running: 2.2.2
     transitivePeerDependencies:
       - less
