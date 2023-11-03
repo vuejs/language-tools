@@ -143,7 +143,7 @@
       "name": "Teleport",
       "description": {
         "kind": "markdown",
-        "value": "\n将其插槽内容渲染到 DOM 中的另一个位置。\n\n- **Props**\n\n  ```ts\n  interface TeleportProps {\n    /**\n     * 必填项。指定目标容器。\n     * 可以是选择器或实际元素。\n     */\n    to: string | HTMLElement\n    /**\n     * 当值为 `true` 时，内容将保留在其原始位置\n     * 而不是移动到目标容器中。\n     * 可以动态更改。\n     */\n    disabled?: boolean\n  }\n  ```\n\n- **示例**\n\n  指定目标容器：\n\n  ```html\n  <teleport to=\"#some-id\" />\n  <teleport to=\".some-class\" />\n  <teleport to=\"[data-teleport]\" />\n  ```\n\n  有条件地禁用：\n\n  ```html\n  <teleport to=\"#popup\" :disabled=\"displayVideoInline\">\n    <video src=\"./my-movie.mp4\">\n  </teleport>\n  ```\n\n- **参考**[指南 - Teleport](https://cn.vuejs.org/guide/built-ins/teleport.html)\n"
+        "value": "\n将其插槽内容渲染到 DOM 中的另一个位置。\n\n- **Props**\n\n  ```ts\n  interface TeleportProps {\n    /**\n     * 必填项。指定目标容器。\n     * 可以是选择器或实际元素。\n     */\n    to: string | HTMLElement\n    /**\n     * 当值为 `true` 时，内容将保留在其原始位置\n     * 而不是移动到目标容器中。\n     * 可以动态更改。\n     */\n    disabled?: boolean\n  }\n  ```\n\n- **示例**\n\n  指定目标容器：\n\n  ```html\n  <Teleport to=\"#some-id\" />\n  <Teleport to=\".some-class\" />\n  <Teleport to=\"[data-teleport]\" />\n  ```\n\n  有条件地禁用：\n\n  ```html\n  <Teleport to=\"#popup\" :disabled=\"displayVideoInline\">\n    <video src=\"./my-movie.mp4\">\n  </Teleport>\n  ```\n\n- **参考**[指南 - Teleport](https://cn.vuejs.org/guide/built-ins/teleport.html)\n"
       },
       "attributes": [],
       "references": [
