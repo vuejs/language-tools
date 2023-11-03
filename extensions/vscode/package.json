@@ -474,7 +474,7 @@
 					"items": {
 						"type": "string"
 					},
-					"default": [],
+					"default": [ ],
 					"description": "List any additional file extensions that should be processed as Vue files (requires restart)."
 				},
 				"vue.server.fullCompletionList": {
@@ -595,6 +595,11 @@
 					"type": "boolean",
 					"default": false,
 					"description": "Show inlay hints for component options wrapper for type support."
+				},
+				"vue.inlayHints.vbindShorthand": {
+					"type": "boolean",
+					"default": false,
+					"description": "Show inlay hints for v-bind shorthand."
 				}
 			}
 		},
