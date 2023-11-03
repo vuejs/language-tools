@@ -36,7 +36,7 @@
 		"release:next": "vsce publish --pre-release"
 	},
 	"devDependencies": {
-		"esbuild": "0.15.18",
+		"esbuild": "latest",
 		"typescript-vue-plugin": "1.8.22",
 		"vsce": "latest"
 	}

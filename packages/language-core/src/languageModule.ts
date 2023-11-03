@@ -1,5 +1,5 @@
 import type { Language } from '@volar/language-core';
-import { posix as path } from 'path';
+import * as path from 'path-browserify';
 import { getDefaultVueLanguagePlugins } from './plugins';
 import { VueFile } from './virtualFile/vueFile';
 import { VueCompilerOptions, VueLanguagePlugin } from './types';
@@ -118,9 +118,9 @@ export function createVueLanguage(
  * @deprecated planed to remove in 2.0, please use createVueLanguage instead of
  */
 export function createLanguages(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
 	compilerOptions: ts.CompilerOptions = {},
 	vueCompilerOptions: Partial<VueCompilerOptions> = {},
-	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
 	codegenStack: boolean = false,
 ): Language[] {
 	return [

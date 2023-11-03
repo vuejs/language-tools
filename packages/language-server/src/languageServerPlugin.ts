@@ -3,10 +3,10 @@ import { LanguageServerPlugin, Connection } from '@volar/language-server';
 import * as vue from '@vue/language-service';
 import * as vue2 from '@vue/language-core';
 import * as nameCasing from '@vue/language-service';
-import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest, GetComponentMeta } from './protocol';
+import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest, GetComponentMeta, GetDragAndDragImportEditsRequest } from './protocol';
 import { VueServerInitializationOptions } from './types';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import * as componentMeta from 'vue-component-meta';
+import * as componentMeta from 'vue-component-meta/out/base';
 import { VueCompilerOptions } from '@vue/language-core';
 import { createSys } from '@volar/typescript';
 
@@ -41,10 +41,10 @@ export function createServerPlugin(connection: Connection) {
 				}
 
 				return vue.resolveConfig(
+					ts,
 					config,
 					ctx?.host.getCompilationSettings() ?? {},
 					vueOptions,
-					ts,
 					initOptions.codegenStack,
 				);
 
@@ -100,6 +100,13 @@ export function createServerPlugin(connection: Connection) {
 					}
 				});
 
+				connection.onRequest(GetDragAndDragImportEditsRequest.type, async params => {
+					const languageService = await getService(params.uri);
+					if (languageService) {
+						return nameCasing.getDragImportEdits(ts, languageService.context, params.uri, params.importUri, params.casing);
+					}
+				});
+
 				connection.onRequest(GetConvertAttrCasingEditsRequest.type, async params => {
 					const languageService = await getService(params.textDocument.uri);
 					if (languageService) {
@@ -110,7 +117,7 @@ export function createServerPlugin(connection: Connection) {
 					}
 				});
 
-				const checkers = new WeakMap<embedded.TypeScriptLanguageHost, componentMeta.ComponentMetaChecker>();
+				const checkers = new WeakMap<embedded.TypeScriptLanguageHost, componentMeta.Checker>();
 
 				connection.onRequest(GetComponentMeta.type, async params => {
 
@@ -123,11 +130,11 @@ export function createServerPlugin(connection: Connection) {
 					let checker = checkers.get(host);
 					if (!checker) {
 						checker = componentMeta.baseCreate(
+							ts,
 							host,
 							hostToVueOptions.get(host)!,
 							{},
 							host.rootPath + '/tsconfig.json.global.vue',
-							ts,
 						);
 						checkers.set(host, checker);
 					}

@@ -36,15 +36,15 @@ export interface Settings {
 }
 
 export function resolveConfig(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
 	config: Config,
 	compilerOptions: ts.CompilerOptions = {},
 	vueCompilerOptions: Partial<VueCompilerOptions> = {},
-	ts: typeof import('typescript/lib/tsserverlibrary') = require('typescript'),
 	codegenStack: boolean = false,
 ) {
 
 	const resolvedVueCompilerOptions = resolveVueCompilerOptions(vueCompilerOptions);
-	const vueLanguageModules = createLanguages(compilerOptions, resolvedVueCompilerOptions, ts, codegenStack);
+	const vueLanguageModules = createLanguages(ts, compilerOptions, resolvedVueCompilerOptions, codegenStack);
 
 	config.languages = Object.assign({}, vueLanguageModules, config.languages);
 	config.services = resolvePlugins(config.services, resolvedVueCompilerOptions);

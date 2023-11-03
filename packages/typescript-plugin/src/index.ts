@@ -3,6 +3,7 @@ import * as vue from '@vue/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
 const externalFiles = new WeakMap<ts.server.Project, string[]>();
+const windowsPathReg = /\\/g;
 
 const init: ts.server.PluginModuleFactory = (modules) => {
 	const { typescript: ts } = modules;
@@ -11,9 +12,9 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 
 			const virtualFiles = vue.createVirtualFiles(
 				vue.createLanguages(
+					ts,
 					info.languageServiceHost.getCompilationSettings(),
 					getVueCompilerOptions(),
-					ts,
 				),
 			);
 
@@ -35,24 +36,24 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 			function getVueCompilerOptions() {
 				if (info.project.projectKind === ts.server.ProjectKind.Configured) {
 					const tsconfig = info.project.getProjectName();
-					return vue.createParsedCommandLine(ts, ts.sys, tsconfig).vueOptions;
+					return vue.createParsedCommandLine(ts, ts.sys, tsconfig.replace(windowsPathReg, '/')).vueOptions;
 				}
 				else {
 					return vue.createParsedCommandLineByJson(ts, ts.sys, info.languageServiceHost.getCurrentDirectory(), {}).vueOptions;
 				}
 			}
 		},
-		getExternalFiles(project, updateLevel = -1) {
+		getExternalFiles(project, updateLevel = 0) {
 			if (
 				// @ts-expect-error wait for TS 5.3
-				updateLevel >= 1 satisfies ts.ProgramUpdateLevel.RootNamesAndUpdate
+				updateLevel >= (1 satisfies ts.ProgramUpdateLevel.RootNamesAndUpdate)
 				|| !externalFiles.has(project)
 			) {
 				const oldFiles = externalFiles.get(project);
 				const newFiles = searchExternalFiles(ts, project, ['.vue']);
 				externalFiles.set(project, newFiles);
-				if (oldFiles) {
-					refreshDiagnosticsIfNeeded(project, oldFiles, newFiles);
+				if (oldFiles && !arrayItemsEqual(oldFiles, newFiles)) {
+					project.refreshDiagnostics();
 				}
 			}
 			return externalFiles.get(project)!;
@@ -61,20 +62,17 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 	return pluginModule;
 };
 
-export = init;
-
-function refreshDiagnosticsIfNeeded(project: ts.server.Project, oldExternalFiles: string[], newExternalFiles: string[]) {
-	let dirty = oldExternalFiles.length !== newExternalFiles.length;
-	if (!dirty) {
-		const set = new Set(oldExternalFiles);
-		for (const file of newExternalFiles) {
-			if (!set.has(file)) {
-				dirty = true;
-				break;
-			}
+function arrayItemsEqual(a: string[], b: string[]) {
+	if (a.length !== b.length) {
+		return false;
+	}
+	const set = new Set(a);
+	for (const file of b) {
+		if (!set.has(file)) {
+			return false;
 		}
 	}
-	if (dirty) {
-		project.refreshDiagnostics();
-	}
+	return true;
 }
+
+export = init;

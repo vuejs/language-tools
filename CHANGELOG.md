@@ -1,5 +1,64 @@
 # Changelog
 
+<table>
+	<tbody>
+		<tr>
+			<td align="center" colspan="6">
+				<br><a href="https://stackblitz.com/"><img
+						src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/StackBlitz.png"
+						height="80" /></a>
+				<br><a href="https://blog.stackblitz.com/posts/webcontainer-api-is-here/">WebContainer API is here.</a>
+				<br>In 2021 <a href="https://blog.stackblitz.com/posts/introducing-webcontainers/">we announced
+					WebContainers</a>, a novel WebAssembly-based operating system which enables Node.js to run entirely
+				inside the browser. Over the last two years, millions of developers have used WebContainers each month
+				as it powers, among others, the StackBlitz editor.
+			</td>
+		</tr>
+		<tr>
+			<td align="center" colspan="6"><b>Sponsors</b></td>
+		</tr>
+		<tr>
+			<td align="center"><a href="https://www.prefect.io/"><img
+						src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/prefect.svg"
+						height="40" /></a></td>
+			<td align="center" colspan="5">
+				<a href="https://nuxt.com/"><img
+						src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/nuxt.svg"
+						height="60" /></a>
+				<br>The Intuitive Vue Framework
+			</td>
+		</tr>
+		<tr>
+			<td align="center" colspan="5">
+				<a href="https://vuejs.org/"><img
+						src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/vue.png"
+						height="80" /></a>
+				<br>The Progressive JavaScript Framework
+			</td>
+			<td align="center"><a href="https://www.programmier.bar/"><img src="https://github.com/programmierbar.png"
+						height="60" /></a></td>
+		</tr>
+		<tr>
+			<td align="center"><a href="https://www.leniolabs.com/"><img src="https://github.com/leniolabs.png"
+						height="60" /></a></td>
+			<td align="center" colspan="5">
+				Support us via
+				<a href="https://github.com/sponsors/johnsoncodehk">GitHub Sponsors</a>
+				or
+				<a href="https://opencollective.com/volarjs">Open Collective</a>
+			</td>
+		</tr>
+		<tr>
+			<td></td>
+			<td></td>
+			<td></td>
+			<td></td>
+			<td></td>
+			<td></td>
+		</tr>
+	</tbody>
+</table>
+
 ## 1.8.22 (2023/10/27)
 
 - fix: `experimentalResolveStyleCssClasses: "always"` not working ([#3689](https://github.com/vuejs/language-tools/issues/3689)) - thanks @maIIady
@@ -27,59 +86,6 @@
 - perf: remove duplicate virtual code for native tags
 - chore: rename `volar` to `vue` in diagnostics ([#3667](https://github.com/vuejs/language-tools/issues/3667)) - thanks @so1ve
 - chore: publish ts plugin to open-vsx ([#3589](https://github.com/vuejs/language-tools/issues/3589)) - thanks @brc-dd
-
-### Full-time Support by
-
-<table>
-<tbody>
-  <tr>
-    <td>
-		<a href="https://stackblitz.com/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/StackBlitz.png" height="80" /></a>
-	</td>
-    <td><h4><a href="https://blog.stackblitz.com/posts/webcontainer-api-is-here/">WebContainer API is here.</a></h4></td>
-  </tr>
-</tbody>
-</table>
-
-### Our Platinum Sponsors
-
-<table>
-<tbody>
-  <tr>
-    <td>
-		<a href="https://nuxt.com/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/nuxt.svg" height="60" /></a>
-	</td>
-    <td>The Intuitive Web Framework</td>
-  </tr>
-  <tr>
-    <td>
-		<a href="https://vuejs.org/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/vue.png" height="80" /></a>
-	</td>
-    <td>The Progressive JavaScript Framework</td>
-  </tr>
-</tbody>
-</table>
-
-### Our Silver Sponsors
-
-<table>
-<tbody>
-  <tr>
-    <td>
-		<p align="center">
-    <a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/prefect.svg" height="40" /></a>
-</p>
-	</td>
-  </tr>
-</tbody>
-</table>
-
-<h5>
-	Add you via
-	<a href="https://github.com/sponsors/johnsoncodehk">GitHub Sponsors</a>
-	or
-	<a href="https://opencollective.com/volarjs">Open Collective</a>
-</h5>
 
 ## 1.8.19 (2023/10/11)
 
