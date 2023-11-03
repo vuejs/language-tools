@@ -7,6 +7,7 @@ import { Range } from 'vscode-languageserver-protocol';
 
 const baseDir = path.resolve(__dirname, '../../../test-workspace/language-service/inlay-hint');
 const testDirs = fs.readdirSync(baseDir);
+const normalizeNewline = (text: string) => text.replace(/\r\n/g, '\n');
 
 for (const dirName of testDirs) {
 
@@ -40,7 +41,7 @@ for (const dirName of testDirs) {
 						range,
 					);
 
-					const inlayHint = inlayHints[0];
+					const inlayHint = normalizeNewline(inlayHints[0].label as string);
 
 					expect(inlayHint).toBeDefined();
 					expect(inlayHint).toMatchSnapshot();
