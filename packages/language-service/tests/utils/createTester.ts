@@ -31,6 +31,9 @@ function createTester(root: string) {
 	const defaultVSCodeSettings: any = {
 		'typescript.preferences.quoteStyle': 'single',
 		'javascript.preferences.quoteStyle': 'single',
+		'vue.inlayHints.missingProps': true,
+		'vue.inlayHints.optionsWrapper': true,
+		'vue.inlayHints.inlineHandlerLeading': true,
 	};
 	let currentVSCodeSettings: any;
 	const languageService = createLanguageService(

@@ -29,20 +29,21 @@ for (const dirName of testDirs) {
 
 				position.line--;
 
-				const range = Range.create(position, position);
+				const range = Range.create(position, { ...position, character: position.character + 1 });
 
 				const location = `${filePath}:${position.line + 1}:${position.character + 1}`;
 
-				it(`${location} => ${action.label}`, async () => {
+				it(`${location}`, async () => {
 
 					const inlayHints = await tester.languageService.getInlayHints(
 						uri,
 						range,
 					);
 
-					expect(inlayHints).toBeDefined();
+					const inlayHint = inlayHints[0];
 
-					expect(inlayHints?.length).toBe(action.label);
+					expect(inlayHint).toBeDefined();
+					expect(inlayHint).toMatchSnapshot();
 				});
 			}
 		}
@@ -62,18 +63,16 @@ function readFiles(dir: string) {
 	return filesText;
 }
 
-const inlayHintReg = /(\^*)inlayHint:\s*([\S]*)/g;
+const inlayHintReg = /inlayHint:\s*(\^*)/g;
 
 function findActions(text: string) {
 
 	return [...text.matchAll(inlayHintReg)].map(flag => {
 
-		const offset = flag.index!;
-		const label = flag[2];
+		const offset = flag.index! + flag[0].length - 1;
 
 		return {
 			offset,
-			label,
 		};
 	});
 }
