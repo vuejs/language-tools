@@ -7,5 +7,6 @@ const bar = 1;
 
 <template>
 	<Comp :foo></Comp>
+	<!-- @vue-expect-error should typecheck -->
 	<Comp :bar></Comp>
 </template>
