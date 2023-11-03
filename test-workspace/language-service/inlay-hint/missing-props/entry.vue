@@ -3,6 +3,6 @@ import Comp from './Comp.vue';
 </script>
 
 <template>
-            <Comp></Comp>
-  <!-- inlayHint: ^ -->
+  <Comp></Comp>
+  <!--  ^inlayHint: "foo!" -->
 </template>

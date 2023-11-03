@@ -3,6 +3,6 @@ let a = 0;
 </script>
 
 <template>
-     <div @click="a = 1"></div>
-  <!-- inlayHint: ^ -->
+  <div @click="a = 1"></div>
+  <!--         ^inlayHint: "$event =>" -->
 </template>

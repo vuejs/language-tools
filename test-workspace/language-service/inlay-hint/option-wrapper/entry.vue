@@ -1,4 +1,4 @@
 <script>
 export default {};
-// inlayHint:  ^
+//             ^inlayHint: "(await import('vue')).defineComponent("
 </script>

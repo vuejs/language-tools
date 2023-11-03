@@ -40,12 +40,9 @@ for (const dirName of testDirs) {
 						range,
 					);
 
-					const inlayHint = inlayHints[0].label;
-
-					console.log(inlayHint);
+					const inlayHint = inlayHints?.find(inlayHint => inlayHint.label === action.label);
 
 					expect(inlayHint).toBeDefined();
-					expect(inlayHint).toMatchSnapshot();
 				});
 			}
 		}
@@ -65,16 +62,18 @@ function readFiles(dir: string) {
 	return filesText;
 }
 
-const inlayHintReg = /inlayHint:\s*(\^*)/g;
+const inlayHintReg = /(\^*)inlayHint:\s*"(.+)"/g;
 
 function findActions(text: string) {
 
 	return [...text.matchAll(inlayHintReg)].map(flag => {
 
-		const offset = flag.index! + flag[0].length - 1;
+		const offset = flag.index!;
+		const label = flag[2];
 
 		return {
 			offset,
+			label
 		};
 	});
 }

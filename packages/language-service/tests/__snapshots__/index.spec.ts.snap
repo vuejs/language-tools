@@ -1,7 +1,0 @@
-// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
-
-exports[`inlay hint: inline-handler-leading > C:\\Data\\Workspace\\volar\\test-workspace\\language-service\\inlay-hint\\inline-handler-leading\\entry.vue:6:19 1`] = `"$event =>"`;
-
-exports[`inlay hint: missing-props > C:\\Data\\Workspace\\volar\\test-workspace\\language-service\\inlay-hint\\missing-props\\entry.vue:6:19 1`] = `"foo!"`;
-
-exports[`inlay hint: option-wrapper > C:\\Data\\Workspace\\volar\\test-workspace\\language-service\\inlay-hint\\option-wrapper\\entry.vue:2:16 1`] = `"(await import('vue')).defineComponent("`;
