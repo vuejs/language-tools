@@ -82,7 +82,7 @@ export const create = function (): Service {
 				const toExtract = collectExtractProps();
 				const initialIndentSetting = await ctx!.env.getConfiguration!('volar.format.initialIndent') as Record<string, boolean>;
 				const newUri = document.uri.substring(0, document.uri.lastIndexOf('/') + 1) + `${newName}.vue`;
-				const lastImportNode = getLastImportNode(script.ast);
+				const lastImportNode = getLastImportNode(ts, script.ast);
 
 				let newFileTags = [];
 
@@ -168,22 +168,6 @@ export const create = function (): Service {
 						],
 					},
 				};
-
-				function getLastImportNode(sourceFile: ts.SourceFile) {
-
-					let lastImportNode: ts.Node | undefined;
-
-					for (const statement of sourceFile.statements) {
-						if (ts.isImportDeclaration(statement)) {
-							lastImportNode = statement;
-						}
-						else {
-							break;
-						}
-					}
-
-					return lastImportNode;
-				}
 
 				function collectExtractProps() {
 
@@ -313,6 +297,22 @@ function isInitialIndentNeeded(ts: typeof import("typescript/lib/tsserverlibrary
 		[ts.ScriptKind.TSX]: 'typescriptreact',
 	} as Record<ts.ScriptKind, string>;
 	return initialIndentSetting[languageKindIdMap[languageKind]] ?? false;
+}
+
+export function getLastImportNode(ts: typeof import('typescript/lib/tsserverlibrary'), sourceFile: ts.SourceFile) {
+
+	let lastImportNode: ts.Node | undefined;
+
+	for (const statement of sourceFile.statements) {
+		if (ts.isImportDeclaration(statement)) {
+			lastImportNode = statement;
+		}
+		else {
+			break;
+		}
+	}
+
+	return lastImportNode;
 }
 
 export function createAddComponentToOptionEdit(ts: typeof import('typescript/lib/tsserverlibrary'), ast: ts.SourceFile, componentName: string) {

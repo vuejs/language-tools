@@ -1,3 +1,5 @@
+// @ts-check
+
 const code = `
 export type ComponentType<T> =
 	T extends new () => {} ? 1 :

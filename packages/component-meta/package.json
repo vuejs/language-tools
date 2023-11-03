@@ -13,9 +13,9 @@
 		"directory": "packages/component-meta"
 	},
 	"dependencies": {
-		"@volar/typescript": "~1.10.5",
+		"@volar/typescript": "~1.10.10",
 		"@vue/language-core": "1.8.22",
-		"typesafe-path": "^0.2.2",
+		"path-browserify": "^1.0.1",
 		"vue-component-type-helpers": "1.8.22"
 	},
 	"peerDependencies": {
@@ -25,5 +25,9 @@
 		"typescript": {
 			"optional": true
 		}
+	},
+	"devDependencies": {
+		"@types/node": "latest",
+		"@types/path-browserify": "latest"
 	}
 }
