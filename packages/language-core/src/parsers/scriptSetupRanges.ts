@@ -29,7 +29,10 @@ export function parseScriptSetupRanges(
 	} = {};
 	const emits: {
 		name?: string;
-		define?: TextRange;
+		define?: TextRange & {
+			arg?: TextRange;
+			typeArg?: TextRange;
+		};
 	} = {};
 	const expose: {
 		name?: string;
@@ -181,6 +184,12 @@ export function parseScriptSetupRanges(
 				emits.define = _getStartEnd(node);
 				if (ts.isVariableDeclaration(parent)) {
 					emits.name = parent.name.getText(ast);
+				}
+				if (node.arguments.length) {
+					emits.define.arg = _getStartEnd(node.arguments[0]);
+				}
+				if (node.typeArguments?.length) {
+					emits.define.typeArg = _getStartEnd(node.typeArguments[0]);
 				}
 			}
 			else if (vueCompilerOptions.macros.defineExpose.includes(callText)) {
