@@ -20,7 +20,7 @@
 		"@volar/language-core": "~1.10.10",
 		"@volar/language-service": "~1.10.10",
 		"@volar/typescript": "~1.10.10",
-		"@vue/compiler-dom": "^3.3.0",
+		"@vue/compiler-dom": "npm:@vue/compiler-dom-canary@3.20231106.0",
 		"@vue/language-core": "1.8.22",
 		"@vue/shared": "^3.3.0",
 		"computeds": "^0.0.1",
