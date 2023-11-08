@@ -115,8 +115,8 @@ importers:
         specifier: npm:@vue/compiler-dom-canary@3.20231106.0
         version: /@vue/compiler-dom-canary@3.20231106.0
       '@vue/shared':
-        specifier: ^3.3.0
-        version: 3.3.7
+        specifier: npm:@vue/shared-canary@3.20231106.0
+        version: /@vue/shared-canary@3.20231106.0
       computeds:
         specifier: ^0.0.1
         version: 0.0.1
@@ -146,8 +146,8 @@ importers:
         specifier: ^1.0.1
         version: 1.0.1
       '@vue/compiler-sfc':
-        specifier: ^3.3.0
-        version: 3.3.7
+        specifier: npm:@vue/compiler-sfc-canary@3.20231106.0
+        version: /@vue/compiler-sfc-canary@3.20231106.0
 
   packages/language-plugin-pug:
     dependencies:
@@ -1704,7 +1704,6 @@ packages:
       '@vue/shared': /@vue/shared-canary@3.20231106.0
       estree-walker: 2.0.2
       source-map-js: 1.0.2
-    dev: false
 
   /@vue/compiler-core@3.3.7:
     resolution: {integrity: sha512-pACdY6YnTNVLXsB86YD8OF9ihwpolzhhtdLVHhBL6do/ykr6kKXNYABRtNMGrsQXpEXXyAdwvWWkuTbs4MFtPQ==}
@@ -1720,13 +1719,27 @@ packages:
     dependencies:
       '@vue/compiler-core': /@vue/compiler-core-canary@3.20231106.0
       '@vue/shared': /@vue/shared-canary@3.20231106.0
-    dev: false
 
   /@vue/compiler-dom@3.3.7:
     resolution: {integrity: sha512-0LwkyJjnUPssXv/d1vNJ0PKfBlDoQs7n81CbO6Q0zdL7H1EzqYRrTVXDqdBVqro0aJjo/FOa1qBAPVI4PGSHBw==}
     dependencies:
       '@vue/compiler-core': 3.3.7
       '@vue/shared': 3.3.7
+    dev: true
+
+  /@vue/compiler-sfc-canary@3.20231106.0:
+    resolution: {integrity: sha512-SSR0z3dViS3mc0xyzBBoWLwOsiSyHCtNs2cu5dVLSyLoHVjzbzDsZsOHAgUbkFWkkUphiPqWpxxgxFPx4mG6ng==}
+    dependencies:
+      '@babel/parser': 7.23.0
+      '@vue/compiler-core': /@vue/compiler-core-canary@3.20231106.0
+      '@vue/compiler-dom': /@vue/compiler-dom-canary@3.20231106.0
+      '@vue/compiler-ssr': /@vue/compiler-ssr-canary@3.20231106.0
+      '@vue/reactivity-transform': /@vue/reactivity-transform-canary@3.20231106.0
+      '@vue/shared': /@vue/shared-canary@3.20231106.0
+      estree-walker: 2.0.2
+      magic-string: 0.30.5
+      postcss: 8.4.31
+      source-map-js: 1.0.2
     dev: true
 
   /@vue/compiler-sfc@2.7.15:
@@ -1752,11 +1765,28 @@ packages:
       source-map-js: 1.0.2
     dev: true
 
+  /@vue/compiler-ssr-canary@3.20231106.0:
+    resolution: {integrity: sha512-mOmwbMx9d7HV+DXB2Iz2aBdzyOJKFQoapqy6AwWAUOt/eqlWDwF8imUILWCy8lHyIx1aJnpsBQZ3x2IDhEbezQ==}
+    dependencies:
+      '@vue/compiler-dom': /@vue/compiler-dom-canary@3.20231106.0
+      '@vue/shared': /@vue/shared-canary@3.20231106.0
+    dev: true
+
   /@vue/compiler-ssr@3.3.7:
     resolution: {integrity: sha512-TxOfNVVeH3zgBc82kcUv+emNHo+vKnlRrkv8YvQU5+Y5LJGJwSNzcmLUoxD/dNzv0bhQ/F0s+InlgV0NrApJZg==}
     dependencies:
       '@vue/compiler-dom': 3.3.7
       '@vue/shared': 3.3.7
+    dev: true
+
+  /@vue/reactivity-transform-canary@3.20231106.0:
+    resolution: {integrity: sha512-dMVwO71gYUIvwHPCCuG/73YFlHxUQhrt9L04dDfWaBQNu+fkmeJ3uv30qPHp9ZEX8KoKxfdIFmiLwIr9mDdWng==}
+    dependencies:
+      '@babel/parser': 7.23.0
+      '@vue/compiler-core': /@vue/compiler-core-canary@3.20231106.0
+      '@vue/shared': /@vue/shared-canary@3.20231106.0
+      estree-walker: 2.0.2
+      magic-string: 0.30.5
     dev: true
 
   /@vue/reactivity-transform@3.3.7:
@@ -1802,7 +1832,6 @@ packages:
 
   /@vue/shared-canary@3.20231106.0:
     resolution: {integrity: sha512-WBLfaIN24mb9+rzD2kN7PrPXLyPC9k3fSOxW79oUKo5M+Hk2+atUPlFlNpkSFBaVySyRTJ6V7NkPiSlCkrvJzg==}
-    dev: false
 
   /@vue/shared@3.3.7:
     resolution: {integrity: sha512-N/tbkINRUDExgcPTBvxNkvHGu504k8lzlNQRITVnm6YjOjwa4r0nnbd4Jb01sNpur5hAllyRJzSK5PvB9PPwRg==}
