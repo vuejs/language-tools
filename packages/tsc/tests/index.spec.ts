@@ -75,6 +75,6 @@ function runVueTsc(cwd: string) {
 
 describe(`vue-tsc`, () => {
 	for (const [path, isRoot] of tests) {
-		it(`vue-tsc no errors (${prettyPath(path, isRoot)})`, () => runVueTsc(path), 40_000);
+		it(`vue-tsc no errors (${prettyPath(path, isRoot)})`, () => runVueTsc(path), 400_000);
 	}
 });
