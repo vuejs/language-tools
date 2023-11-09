@@ -1301,7 +1301,7 @@ export function generate(
 				if (
 					prop.exp
 					&& !isShorthand
-					&& !(prop.exp.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY)
+					&& prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY
 				) { // style='z-index: 2' will compile to {'z-index':'2'}
 					codes.push(
 						...createInterpolationCode(
