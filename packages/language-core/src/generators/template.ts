@@ -1321,16 +1321,18 @@ export function generate(
 				}
 				else if (prop.arg && isShorthand && prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					const propVariableName = camelize(prop.arg.content);
-					codes.push(
-						...createInterpolationCode(
-							propVariableName,
-							prop.arg.loc,
-							prop.arg.loc.start.offset,
-							caps_all,
-							'(',
-							')',
-						),
-					);
+					if (validTsVarReg.test(propVariableName)) {
+						codes.push(
+							...createInterpolationCode(
+								propVariableName,
+								prop.arg.loc,
+								prop.arg.loc.start.offset,
+								caps_all,
+								'(',
+								')',
+							),
+						);
+					}
 				}
 				else {
 					codes.push('{}');
