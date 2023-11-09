@@ -9,5 +9,4 @@ const bar = '';
 	<Comp :foo></Comp>
 	<!-- @vue-expect-error should typecheck -->
 	<Comp :bar></Comp>
-	<Comp :bar="1"></Comp>
 </template>
