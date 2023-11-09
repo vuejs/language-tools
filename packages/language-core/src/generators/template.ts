@@ -1297,7 +1297,8 @@ export function generate(
 					);
 				}
 				codes.push(': (');
-				if (prop.exp && !(prop.exp.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY)) { // style='z-index: 2' will compile to {'z-index':'2'}
+				const isShorthand = prop.exp?.loc.start.offset === prop.exp?.loc.end.offset;
+				if (prop.exp && !isShorthand && !(prop.exp.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY)) { // style='z-index: 2' will compile to {'z-index':'2'}
 					codes.push(
 						...createInterpolationCode(
 							prop.exp.loc.source,
@@ -1318,7 +1319,7 @@ export function generate(
 						);
 					}
 				}
-				else if (prop.arg && !prop.exp && prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+				else if (prop.arg && isShorthand && prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					const propVariableName = camelize(prop.arg.content);
 					codes.push(
 						...createInterpolationCode(
