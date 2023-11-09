@@ -1318,6 +1318,18 @@ export function generate(
 						);
 					}
 				}
+				else if (prop.arg && !prop.exp && prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+					codes.push(
+						...createInterpolationCode(
+							camelize(prop.arg.content),
+							prop.arg.loc,
+							prop.arg.loc.start.offset,
+							caps_diagnosticOnly,
+							'(',
+							')',
+						),
+					);
+				}
 				else {
 					codes.push('{}');
 				}

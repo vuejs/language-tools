@@ -20,7 +20,7 @@ const plugin: Service = (context) => {
 
 					const hint: {
 						setting: string;
-						label: string;
+						label: string | vscode.InlayHintLabelPart[];
 						tooltip: string;
 						paddingRight?: boolean;
 						paddingLeft?: boolean;
