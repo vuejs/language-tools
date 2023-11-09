@@ -1297,7 +1297,9 @@ export function generate(
 					);
 				}
 				codes.push(': (');
-				const isShorthand = prop.exp?.loc.start.offset === prop.exp?.loc.end.offset && prop.exp?.content;
+				const isShorthand = prop.exp
+					&& prop.exp.loc.start.offset === prop.exp.loc.end.offset
+					&& prop.exp.content;
 				if (
 					prop.exp
 					&& !isShorthand
