@@ -1320,35 +1320,12 @@ export function generate(
 				}
 				else if (prop.arg && !prop.exp && prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					const propVariableName = camelize(prop.arg.content);
-					const label = [
-						{
-							value: '="'
-						},
-						{
-							value: propVariableName,
-							// TODO
-							// command: vscode.Command | undefined;
-						},
-						{
-							value: '"'
-						},
-					];
 					codes.push(
 						...createInterpolationCode(
 							propVariableName,
 							prop.arg.loc,
 							prop.arg.loc.start.offset,
-							{
-								...caps_diagnosticOnly,
-								__hint: {
-									setting: 'vue.inlayHints.vbindShorthand',
-									label,
-									tooltip: [
-										// TODO
-									].join('\n\n'),
-									paddingRight: true,
-								}
-							} as FileRangeCapabilities,
+							caps_all,
 							'(',
 							')',
 						),
