@@ -23,7 +23,7 @@ export async function convertTagName(
 
 	const languageService = context.inject('typescript/languageService');
 	const template = desc.template;
-	const document = context.documents.getDocumentByFileName(rootFile.snapshot, rootFile.fileName);
+	const document = context.documents.getDocumentByFileName(rootFile.snapshot, rootFile.fileName, rootFile.languageId);
 	const edits: vscode.TextEdit[] = [];
 	const components = getComponentNames(ts, languageService, rootFile, vueCompilerOptions);
 	const tags = getTemplateTagsAndAttrs(rootFile);
@@ -66,7 +66,7 @@ export async function convertAttrName(
 
 	const languageService = context.inject('typescript/languageService');
 	const template = desc.template;
-	const document = context.documents.getDocumentByFileName(rootFile.snapshot, rootFile.fileName);
+	const document = context.documents.getDocumentByFileName(rootFile.snapshot, rootFile.fileName, rootFile.languageId);
 	const edits: vscode.TextEdit[] = [];
 	const components = getComponentNames(ts, languageService, rootFile, vueCompilerOptions);
 	const tags = getTemplateTagsAndAttrs(rootFile);

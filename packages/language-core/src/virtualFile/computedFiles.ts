@@ -1,4 +1,4 @@
-import { VirtualFile } from '@volar/language-core';
+import { VirtualFile, resolveCommonLanguageId } from '@volar/language-core';
 import { buildMappings, buildStacks, toString } from '@volar/source-map';
 import * as muggle from 'muggle-string';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -51,6 +51,7 @@ export function computedFiles(
 		for (const { file, snapshot, mappings, codegenStacks } of remain) {
 			embeddedFiles.push({
 				...file,
+				languageId: resolveCommonLanguageId(file.fileName),
 				snapshot,
 				mappings,
 				codegenStacks,
@@ -67,6 +68,7 @@ export function computedFiles(
 				if (!file.parentFileName) {
 					embeddedFiles.push({
 						...file,
+						languageId: resolveCommonLanguageId(file.fileName),
 						snapshot,
 						mappings,
 						codegenStacks,
@@ -79,6 +81,7 @@ export function computedFiles(
 					if (parent) {
 						parent.embeddedFiles.push({
 							...file,
+							languageId: resolveCommonLanguageId(file.fileName),
 							snapshot,
 							mappings,
 							codegenStacks,

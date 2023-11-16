@@ -10,16 +10,17 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 	const pluginModule: ts.server.PluginModule = {
 		create(info) {
 
-			const virtualFiles = vue.createVirtualFiles(
+			const fileProvider = vue.createFileProvider(
 				vue.createLanguages(
 					ts,
 					info.languageServiceHost.getCompilationSettings(),
 					getVueCompilerOptions(),
 				),
+				() => { }
 			);
 
-			decorateLanguageService(virtualFiles, info.languageService, true);
-			decorateLanguageServiceHost(virtualFiles, info.languageServiceHost, ts, ['.vue']);
+			decorateLanguageService(fileProvider, info.languageService, true);
+			decorateLanguageServiceHost(fileProvider, info.languageServiceHost, ts, ['.vue']);
 
 			const getCompletionsAtPosition = info.languageService.getCompletionsAtPosition.bind(info.languageService);
 

@@ -49,6 +49,7 @@ export class VueFile implements VirtualFile {
 
 	constructor(
 		public fileName: string,
+		public languageId: string,
 		public initSnapshot: ts.IScriptSnapshot,
 		public vueCompilerOptions: VueCompilerOptions,
 		public plugins: ReturnType<VueLanguagePlugin>[],

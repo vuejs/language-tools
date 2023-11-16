@@ -1,9 +1,10 @@
-import { describe, expect, it } from 'vitest';
 import * as kit from '@volar/kit';
-import { resolveConfig } from '../../out';
 import * as ts from 'typescript';
+import { describe, expect, it } from 'vitest';
+import { resolveLanguages, resolveServices } from '../../out';
 
-const formatter = kit.createFormatter(resolveConfig(ts as any, {}));
+const languages = resolveLanguages(ts as any);
+const services = resolveServices();
 
 export function defineFormatTest(options: {
 	title: string;
@@ -16,8 +17,7 @@ export function defineFormatTest(options: {
 
 		it(`format`, async () => {
 
-			formatter.settings = options.settings ?? {};
-
+			const formatter = kit.createFormatter(Object.values(languages), Object.values(services), options.settings);
 			const formatted = await formatter.formatCode(
 				options.input,
 				options.languageId,

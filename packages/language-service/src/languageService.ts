@@ -1,5 +1,5 @@
-import { Config, Service, ServiceContext } from '@volar/language-service';
-import { VueFile, createLanguages, hyphenateTag, resolveVueCompilerOptions, scriptRanges } from '@vue/language-core';
+import { Service, ServiceContext } from '@volar/language-service';
+import { Language, VueFile, createLanguages, hyphenateTag, resolveVueCompilerOptions, scriptRanges } from '@vue/language-core';
 import { capitalize } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { Data } from 'volar-service-typescript/out/features/completions/basic';
@@ -35,34 +35,39 @@ export interface Settings {
 	json?: Parameters<typeof JsonService['create']>[0];
 }
 
-export function resolveConfig(
+export function resolveLanguages(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	config: Config,
+	languages: Record<string, Language> = {},
 	compilerOptions: ts.CompilerOptions = {},
-	vueCompilerOptions: Partial<VueCompilerOptions> = {},
+	_vueCompilerOptions: Partial<VueCompilerOptions> = {},
 	codegenStack: boolean = false,
-) {
+): Record<string, Language> {
 
-	const resolvedVueCompilerOptions = resolveVueCompilerOptions(vueCompilerOptions);
-	const vueLanguageModules = createLanguages(ts, compilerOptions, resolvedVueCompilerOptions, codegenStack);
+	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);
+	const vueLanguageModules = createLanguages(ts, compilerOptions, vueCompilerOptions, codegenStack);
 
-	config.languages = Object.assign({}, vueLanguageModules, config.languages);
-	config.services = resolvePlugins(config.services, resolvedVueCompilerOptions);
-
-	return config;
+	return {
+		...languages,
+		...vueLanguageModules.reduce((obj, module, i) => {
+			obj['vue_' + i] = module;
+			return obj;
+		}, {} as Record<string, Language>),
+	};
 }
 
-function resolvePlugins(
-	services: Config['services'],
-	vueCompilerOptions: VueCompilerOptions,
+export function resolveServices(
+	services: Record<string, Service> = {},
+	_vueCompilerOptions: Partial<VueCompilerOptions> = {},
 ) {
 
-	const originalTsPlugin: Service = services?.typescript ?? TsService.create();
+	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);
+
+	const _tsPlugin: Service = services?.typescript ?? TsService.create();
 
 	services ??= {};
 	services.typescript = (ctx: ServiceContext<TsService.Provide> | undefined, modules): ReturnType<Service> => {
 
-		const base = typeof originalTsPlugin === 'function' ? originalTsPlugin(ctx, modules) : originalTsPlugin;
+		const base = typeof _tsPlugin === 'function' ? _tsPlugin(ctx, modules) : _tsPlugin;
 
 		if (!ctx || !modules?.typescript)
 			return base;
@@ -164,14 +169,14 @@ function resolvePlugins(
 				if (item.data?.__isComponentAutoImport && data && item.additionalTextEdits?.length && item.textEdit && itemData?.uri) {
 					const fileName = ctx.env.uriToFileName(itemData.uri);
 					const langaugeService = ctx.inject('typescript/languageService');
-					const [virtualFile] = ctx.virtualFiles.getVirtualFile(fileName);
+					const [virtualFile] = ctx.project.fileProvider.getVirtualFile(fileName);
 					const ast = langaugeService.getProgram()?.getSourceFile(fileName);
 					const exportDefault = ast ? scriptRanges.parseScriptRanges(ts, ast, false, true).exportDefault : undefined;
 					if (virtualFile && ast && exportDefault) {
 						const componentName = newName ?? item.textEdit.newText;
 						const optionEdit = ExtractComponentService.createAddComponentToOptionEdit(ts, ast, componentName);
 						if (optionEdit) {
-							const textDoc = ctx.documents.getDocumentByFileName(virtualFile.snapshot, virtualFile.fileName);
+							const textDoc = ctx.documents.getDocumentByFileName(virtualFile.snapshot, virtualFile.fileName, virtualFile.languageId);
 							item.additionalTextEdits.push({
 								range: {
 									start: textDoc.positionAt(optionEdit.range.start),

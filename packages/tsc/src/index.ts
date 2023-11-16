@@ -10,9 +10,8 @@ export type _Program = ts.Program & { __vue: ProgramContext; };
 interface ProgramContext {
 	projectVersion: number;
 	options: ts.CreateProgramOptions;
-	languageHost: vue.TypeScriptLanguageHost;
 	vueCompilerOptions: Partial<vue.VueCompilerOptions>;
-	langaugeContext: vue.LanguageContext;
+	project: vue.Project;
 	languageService: ts.LanguageService;
 }
 
@@ -45,17 +44,14 @@ export function createProgram(options: ts.CreateProgramOptions) {
 		const ctx: ProgramContext = {
 			projectVersion: 0,
 			options,
-			get languageHost() {
-				return languageHost;
-			},
 			get vueCompilerOptions() {
 				return vueCompilerOptions;
 			},
 			get languageService() {
 				return vueTsLs;
 			},
-			get langaugeContext() {
-				return languageContext;
+			get project() {
+				return project;
 			},
 		};
 		const vueCompilerOptions = getVueCompilerOptions();
@@ -64,9 +60,11 @@ export function createProgram(options: ts.CreateProgramOptions) {
 			modifiedTime: number,
 			scriptSnapshot: ts.IScriptSnapshot,
 		}>();
-		const languageHost: vue.TypeScriptLanguageHost = {
-			workspacePath: ctx.options.host!.getCurrentDirectory().replace(windowsPathReg, '/'),
-			rootPath: ctx.options.host!.getCurrentDirectory().replace(windowsPathReg, '/'),
+		const projectHost: vue.TypeScriptProjectHost = {
+			configFileName: undefined,
+			getCurrentDirectory() {
+				return ctx.options.host!.getCurrentDirectory().replace(windowsPathReg, '/');
+			},
 			getCompilationSettings: () => ctx.options.options,
 			getScriptFileNames: () => {
 				return ctx.options.rootNames as string[];
@@ -78,20 +76,21 @@ export function createProgram(options: ts.CreateProgramOptions) {
 			getProjectReferences: () => ctx.options.projectReferences,
 			getCancellationToken: ctx.options.host!.getCancellationToken ? () => ctx.options.host!.getCancellationToken!() : undefined,
 		};
-		const languageContext = vue.createLanguageContext(
-			languageHost,
+		const project = vue.createTypeScriptProject(
+			projectHost,
 			vue.createLanguages(
 				ts,
-				languageHost.getCompilationSettings(),
+				projectHost.getCompilationSettings(),
 				vueCompilerOptions,
 			),
+			vue.resolveCommonLanguageId
 		);
-		const languageServiceHost = volarTs.createLanguageServiceHost(languageContext, ts, ts.sys);
-		const vueTsLs = ts.createLanguageService(languageServiceHost, volarTs.getDocumentRegistry(ts, ts.sys.useCaseSensitiveFileNames, languageHost.workspacePath));
+		const languageServiceHost = volarTs.createLanguageServiceHost(project.typescript!.projectHost, project.fileProvider, ts, ts.sys);
+		const vueTsLs = ts.createLanguageService(languageServiceHost, volarTs.getDocumentRegistry(ts, ts.sys.useCaseSensitiveFileNames, projectHost.getCurrentDirectory()));
 
-		volarTs.decorateLanguageService(languageContext.virtualFiles, vueTsLs, false);
+		volarTs.decorateLanguageService(project.fileProvider, vueTsLs, false);
 
-		program = volarTs.getProgram(ts as any, languageContext, vueTsLs, ts.sys) as (ts.Program & { __vue: ProgramContext; });
+		program = volarTs.getProgram(ts as any, project.fileProvider, vueTsLs, ts.sys) as (ts.Program & { __vue: ProgramContext; });
 		program.__vue = ctx;
 
 		function getVueCompilerOptions(): Partial<vue.VueCompilerOptions> {

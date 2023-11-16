@@ -38,7 +38,7 @@ export const create = function (): Service {
 
 				await worker(document.uri, async (vueFile) => {
 
-					const document = context.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName);
+					const document = context.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName, vueFile.languageId);
 					const offset = document.offsetAt(range.start);
 					const blocks = [
 						vueFile.sfc.script,

@@ -78,7 +78,7 @@ export function createVueLanguage(
 					reusedVueFile.update(snapshot);
 					return reusedVueFile;
 				}
-				const vueFile = new VueFile(fileName, snapshot, vueCompilerOptions, plugins, ts, codegenStack);
+				const vueFile = new VueFile(fileName, languageId, snapshot, vueCompilerOptions, plugins, ts, codegenStack);
 				fileRegistry.set(fileName, vueFile);
 				return vueFile;
 			}
@@ -86,9 +86,9 @@ export function createVueLanguage(
 		updateVirtualFile(sourceFile, snapshot) {
 			sourceFile.update(snapshot);
 		},
-		resolveHost(host) {
+		resolveTypeScriptProjectHost(host) {
 			const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(sharedTypes.getTypesCode(vueCompilerOptions));
-			const sharedTypesFileName = path.join(host.rootPath, sharedTypes.baseName);
+			const sharedTypesFileName = path.join(host.getCurrentDirectory(), sharedTypes.baseName);
 			return {
 				...host,
 				resolveModuleName(moduleName, impliedNodeFormat) {

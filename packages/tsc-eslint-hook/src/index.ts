@@ -13,13 +13,13 @@ export = async function (
 		baseConfig: resolveConfig(tsProgram),
 		useEslintrc: false,
 	});
-	const fileNames = program.__vue.languageHost.getScriptFileNames();
-	const mapper = program.__vue.langaugeContext.virtualFiles;
+	const fileNames = program.__vue.project.typescript!.projectHost.getScriptFileNames();
+	const fileProvider = program.__vue.project.fileProvider;
 	const formatter = await eslint.loadFormatter();
 
 	for (const fileName of fileNames) {
 
-		const vueFile = mapper.getSource(fileName)?.root;
+		const vueFile = fileProvider.getSource(fileName)?.root;
 
 		if (vueFile) {
 
@@ -66,7 +66,7 @@ export = async function (
 							character: (message.endColumn ?? message.column) - 1,
 						});
 
-						for (const [_, [sourceSnapshot, map]] of mapper.getMaps(embeddedFile)) {
+						for (const [_, [sourceSnapshot, map]] of fileProvider.getMaps(embeddedFile)) {
 
 							if (sourceSnapshot !== vueFile.snapshot)
 								continue;
