@@ -157,7 +157,7 @@ export function baseCreate(
 		fileNameToId: (fileName: string) => fileName,
 		idToFileName: (id: string) => id,
 	};
-	const project = vue.createTypeScriptProject(host, vueLanguages, fileNameResolutionHost.fileNameToId, vue.resolveCommonLanguageId);
+	const project = vue.createTypeScriptProject(vueLanguages, host, fileNameResolutionHost.fileNameToId, vue.resolveCommonLanguageId);
 	const tsLsHost = createLanguageServiceHost(project.typescript!.projectHost, project.fileProvider, fileNameResolutionHost, ts, ts.sys);
 	const tsLs = ts.createLanguageService(tsLsHost);
 

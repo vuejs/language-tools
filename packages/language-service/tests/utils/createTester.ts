@@ -34,10 +34,10 @@ function createTester(root: string) {
 	let currentVSCodeSettings: any;
 	const serviceEnv = createMockServiceEnv(rootUri, () => currentVSCodeSettings ?? defaultVSCodeSettings);
 	const project = createTypeScriptProject(
-		projectHost,
 		Object.values(languages),
-		resolveCommonLanguageId,
-		serviceEnv.fileNameToUri
+		projectHost,
+		serviceEnv.fileNameToUri,
+		resolveCommonLanguageId
 	);
 	const languageService = createLanguageService({ typescript: ts as any }, Object.values(services), serviceEnv, project);
 

@@ -83,30 +83,32 @@ export function createVueLanguage(
 		updateVirtualFile(sourceFile, snapshot) {
 			sourceFile.update(snapshot);
 		},
-		resolveTypeScriptProjectHost(host) {
-			const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(sharedTypes.getTypesCode(vueCompilerOptions));
-			const sharedTypesFileName = path.join(host.getCurrentDirectory(), sharedTypes.baseName);
-			return {
-				...host,
-				resolveModuleName(moduleName, impliedNodeFormat) {
-					if (impliedNodeFormat === ts.ModuleKind.ESNext && vueCompilerOptions.extensions.some(ext => moduleName.endsWith(ext))) {
-						return `${moduleName}.js`;
-					}
-					return host.resolveModuleName?.(moduleName, impliedNodeFormat) ?? moduleName;
-				},
-				getScriptFileNames() {
-					return [
-						sharedTypesFileName,
-						...host.getScriptFileNames(),
-					];
-				},
-				getScriptSnapshot(fileName) {
-					if (fileName === sharedTypesFileName) {
-						return sharedTypesSnapshot;
-					}
-					return host.getScriptSnapshot(fileName);
-				},
-			};
+		typescript: {
+			resolveProjectHost(host) {
+				const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(sharedTypes.getTypesCode(vueCompilerOptions));
+				const sharedTypesFileName = path.join(host.getCurrentDirectory(), sharedTypes.baseName);
+				return {
+					...host,
+					resolveModuleName(moduleName, impliedNodeFormat) {
+						if (impliedNodeFormat === ts.ModuleKind.ESNext && vueCompilerOptions.extensions.some(ext => moduleName.endsWith(ext))) {
+							return `${moduleName}.js`;
+						}
+						return host.resolveModuleName?.(moduleName, impliedNodeFormat) ?? moduleName;
+					},
+					getScriptFileNames() {
+						return [
+							sharedTypesFileName,
+							...host.getScriptFileNames(),
+						];
+					},
+					getScriptSnapshot(fileName) {
+						if (fileName === sharedTypesFileName) {
+							return sharedTypesSnapshot;
+						}
+						return host.getScriptSnapshot(fileName);
+					},
+				};
+			},
 		},
 	};
 }

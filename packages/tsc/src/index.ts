@@ -81,14 +81,14 @@ export function createProgram(options: ts.CreateProgramOptions) {
 			idToFileName: (id: string) => id,
 		};
 		const project = vue.createTypeScriptProject(
-			projectHost,
 			vue.createLanguages(
 				ts,
 				projectHost.getCompilationSettings(),
 				vueCompilerOptions,
 			),
+			projectHost,
+			fileNameResolutionHost.fileNameToId,
 			vue.resolveCommonLanguageId,
-			fileNameResolutionHost.fileNameToId
 		);
 		const languageServiceHost = volarTs.createLanguageServiceHost(
 			project.typescript!.projectHost,
