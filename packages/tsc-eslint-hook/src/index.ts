@@ -19,7 +19,7 @@ export = async function (
 
 	for (const fileName of fileNames) {
 
-		const vueFile = fileProvider.getSource(fileName)?.root;
+		const vueFile = fileProvider.getSourceFile(fileName)?.root;
 
 		if (vueFile) {
 
@@ -37,13 +37,13 @@ export = async function (
 
 				const lintResult = await eslint.lintText(
 					embeddedFile.snapshot.getText(0, embeddedFile.snapshot.getLength()),
-					{ filePath: embeddedFile.fileName },
+					{ filePath: embeddedFile.id },
 				);
 				const embeddedDocument = TextDocument.create('', '', 0, embeddedFile.snapshot.getText(0, embeddedFile.snapshot.getLength()));
 
 				for (const result of lintResult) {
 
-					result.filePath = vueFile.fileName;
+					result.filePath = vueFile.id;
 					result.errorCount = 0;
 					result.warningCount = 0;
 					result.fixableErrorCount = 0;

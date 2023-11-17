@@ -68,18 +68,15 @@ export function createVueLanguage(
 	}
 
 	return {
-		createVirtualFile(fileName, snapshot, languageId) {
-			if (
-				(languageId && allowLanguageIds.has(languageId))
-				|| (!languageId && vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext)))
-			) {
-				if (fileRegistry.has(fileName)) {
-					const reusedVueFile = fileRegistry.get(fileName)!;
+		createVirtualFile(id, languageId, snapshot) {
+			if (allowLanguageIds.has(languageId)) {
+				if (fileRegistry.has(id)) {
+					const reusedVueFile = fileRegistry.get(id)!;
 					reusedVueFile.update(snapshot);
 					return reusedVueFile;
 				}
-				const vueFile = new VueFile(fileName, languageId, snapshot, vueCompilerOptions, plugins, ts, codegenStack);
-				fileRegistry.set(fileName, vueFile);
+				const vueFile = new VueFile(id, languageId, snapshot, vueCompilerOptions, plugins, ts, codegenStack);
+				fileRegistry.set(id, vueFile);
 				return vueFile;
 			}
 		},

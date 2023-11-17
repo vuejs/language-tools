@@ -76,6 +76,10 @@ export function createProgram(options: ts.CreateProgramOptions) {
 			getProjectReferences: () => ctx.options.projectReferences,
 			getCancellationToken: ctx.options.host!.getCancellationToken ? () => ctx.options.host!.getCancellationToken!() : undefined,
 		};
+		const fileNameResolutionHost = {
+			fileNameToId: (fileName: string) => fileName,
+			idToFileName: (id: string) => id,
+		};
 		const project = vue.createTypeScriptProject(
 			projectHost,
 			vue.createLanguages(
@@ -83,14 +87,27 @@ export function createProgram(options: ts.CreateProgramOptions) {
 				projectHost.getCompilationSettings(),
 				vueCompilerOptions,
 			),
-			vue.resolveCommonLanguageId
+			vue.resolveCommonLanguageId,
+			fileNameResolutionHost.fileNameToId
 		);
-		const languageServiceHost = volarTs.createLanguageServiceHost(project.typescript!.projectHost, project.fileProvider, ts, ts.sys);
+		const languageServiceHost = volarTs.createLanguageServiceHost(
+			project.typescript!.projectHost,
+			project.fileProvider,
+			fileNameResolutionHost,
+			ts,
+			ts.sys
+		);
 		const vueTsLs = ts.createLanguageService(languageServiceHost, volarTs.getDocumentRegistry(ts, ts.sys.useCaseSensitiveFileNames, projectHost.getCurrentDirectory()));
 
 		volarTs.decorateLanguageService(project.fileProvider, vueTsLs, false);
 
-		program = volarTs.getProgram(ts as any, project.fileProvider, vueTsLs, ts.sys) as (ts.Program & { __vue: ProgramContext; });
+		program = volarTs.getProgram(
+			ts as any,
+			project.fileProvider,
+			fileNameResolutionHost,
+			vueTsLs,
+			ts.sys
+		) as (ts.Program & { __vue: ProgramContext; });
 		program.__vue = ctx;
 
 		function getVueCompilerOptions(): Partial<vue.VueCompilerOptions> {

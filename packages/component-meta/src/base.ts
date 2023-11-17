@@ -153,8 +153,12 @@ export function baseCreate(
 		host.getCompilationSettings(),
 		vueCompilerOptions,
 	);
-	const project = vue.createTypeScriptProject(host, vueLanguages, vue.resolveCommonLanguageId);
-	const tsLsHost = createLanguageServiceHost(project.typescript!.projectHost, project.fileProvider, ts, ts.sys);
+	const fileNameResolutionHost = {
+		fileNameToId: (fileName: string) => fileName,
+		idToFileName: (id: string) => id,
+	};
+	const project = vue.createTypeScriptProject(host, vueLanguages, fileNameResolutionHost.fileNameToId, vue.resolveCommonLanguageId);
+	const tsLsHost = createLanguageServiceHost(project.typescript!.projectHost, project.fileProvider, fileNameResolutionHost, ts, ts.sys);
 	const tsLs = ts.createLanguageService(tsLsHost);
 
 	decorateLanguageService(project.fileProvider, tsLs, false);
@@ -297,7 +301,7 @@ ${vueCompilerOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 			const printer = ts.createPrinter(checkerOptions.printer);
 			const snapshot = host.getScriptSnapshot(componentPath)!;
 
-			const vueSourceFile = project.fileProvider.getSource(componentPath)?.root;
+			const vueSourceFile = project.fileProvider.getSourceFile(componentPath)?.root;
 			const vueDefaults = vueSourceFile && exportName === 'default'
 				? (vueSourceFile instanceof vue.VueFile ? readVueComponentDefaultProps(vueSourceFile, printer, ts, vueCompilerOptions) : {})
 				: {};

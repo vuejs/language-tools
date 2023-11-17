@@ -89,19 +89,26 @@ export function resolveServices(
 					// handle component auto-import patch
 					let casing: Awaited<ReturnType<typeof getNameCasing>> | undefined;
 
-					for (const [_, map] of ctx.documents.getMapsByVirtualFileUri(document.uri)) {
-						const virtualFile = ctx.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
-						if (virtualFile instanceof VueFile) {
-							const isAutoImport = !!map.toSourcePosition(position, data => typeof data.completion === 'object' && !!data.completion.autoImportOnly);
-							if (isAutoImport) {
-								const source = ctx.documents.getVirtualFileByUri(document.uri)[1];
-								for (const item of result.items) {
-									item.data.__isComponentAutoImport = true;
-								}
+					const [virtualFile, sourceFile] = ctx.project.fileProvider.getVirtualFile(document.uri);
 
-								// fix #2458
-								if (source) {
-									casing ??= await getNameCasing(ts, ctx, ctx.env.fileNameToUri(source.fileName), vueCompilerOptions);
+					if (virtualFile && sourceFile) {
+
+						for (const map of ctx.documents.getMapsByVirtualFile(virtualFile)) {
+
+							const sourceVirtualFile = ctx.project.fileProvider.getSourceFile(map.sourceFileDocument.uri)?.root;
+
+							if (sourceVirtualFile instanceof VueFile) {
+
+								const isAutoImport = !!map.toSourcePosition(position, data => typeof data.completion === 'object' && !!data.completion.autoImportOnly);
+								if (isAutoImport) {
+
+									for (const item of result.items) {
+										item.data.__isComponentAutoImport = true;
+									}
+
+									// fix #2458
+									casing ??= await getNameCasing(ts, ctx, sourceFile.id, vueCompilerOptions);
+
 									if (casing.tag === TagNameCasing.Kebab) {
 										for (const item of result.items) {
 											item.filterText = hyphenateTag(item.filterText ?? item.label);
@@ -151,9 +158,9 @@ export function resolveServices(
 							'import ' + newName + ' from ',
 						);
 						item.textEdit.newText = newName;
-						const source = ctx.documents.getVirtualFileByUri(itemData.uri)[1];
-						if (source) {
-							const casing = await getNameCasing(ts, ctx, ctx.env.fileNameToUri(source.fileName), vueCompilerOptions);
+						const [_, sourceFile] = ctx.project.fileProvider.getVirtualFile(itemData.uri);
+						if (sourceFile) {
+							const casing = await getNameCasing(ts, ctx, sourceFile.id, vueCompilerOptions);
 							if (casing.tag === TagNameCasing.Kebab) {
 								item.textEdit.newText = hyphenateTag(item.textEdit.newText);
 							}
@@ -176,7 +183,7 @@ export function resolveServices(
 						const componentName = newName ?? item.textEdit.newText;
 						const optionEdit = ExtractComponentService.createAddComponentToOptionEdit(ts, ast, componentName);
 						if (optionEdit) {
-							const textDoc = ctx.documents.getDocumentByFileName(virtualFile.snapshot, virtualFile.fileName, virtualFile.languageId);
+							const textDoc = ctx.documents.getDocumentByUri(virtualFile.id, virtualFile.languageId, virtualFile.snapshot);
 							item.additionalTextEdits.push({
 								range: {
 									start: textDoc.positionAt(optionEdit.range.start),

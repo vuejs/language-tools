@@ -29,13 +29,13 @@ const plugin: Service = (context: ServiceContext<import('volar-service-typescrip
 					})]);
 				}
 
-				forEachEmbeddedFile(vueFile, (embedded) => {
-					if (embedded.kind === FileKind.TypeScriptHostFile) {
-						for (const [_, map] of context.documents.getMapsByVirtualFileName(embedded.fileName)) {
+				forEachEmbeddedFile(vueFile, (virtualFile) => {
+					if (virtualFile.kind === FileKind.TypeScriptHostFile) {
+						for (const map of context.documents.getMapsByVirtualFile(virtualFile)) {
 							for (const [pointerPosition, hoverOffset] of hoverOffsets) {
 								for (const [tsOffset, mapping] of map.map.toGeneratedOffsets(hoverOffset)) {
 									if (mapping.data.hover) {
-										const quickInfo = languageService.getQuickInfoAtPosition(embedded.fileName, tsOffset);
+										const quickInfo = languageService.getQuickInfoAtPosition(context.env.uriToFileName(virtualFile.id), tsOffset);
 										if (quickInfo) {
 											inlayHints.push({
 												position: { line: pointerPosition.line, character: pointerPosition.character + 2 },
@@ -59,7 +59,7 @@ const plugin: Service = (context: ServiceContext<import('volar-service-typescrip
 
 	function worker<T>(uri: string, callback: (vueSourceFile: vue.VueFile) => T) {
 
-		const [virtualFile] = context!.documents.getVirtualFileByUri(uri);
+		const [virtualFile] = context!.project.fileProvider.getVirtualFile(uri);
 		if (!(virtualFile instanceof vue.VueFile))
 			return;
 

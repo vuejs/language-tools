@@ -38,11 +38,16 @@ export const create = (): Service<Provide> => (context: ServiceContext<import('v
 		provideSemanticDiagnostics(document) {
 			return worker(document, (vueSourceFile) => {
 
+				if (!vueSourceFile.mainTsFile) {
+					return;
+				}
+
 				const result: vscode.Diagnostic[] = [];
 				const sfc = vueSourceFile.sfc;
 				const program = context.inject('typescript/languageService').getProgram();
+				const tsFileName = context.env.uriToFileName(vueSourceFile.mainTsFile.id);
 
-				if (program && !program.getSourceFile(vueSourceFile.mainScriptName)) {
+				if (program && !program.getSourceFile(tsFileName)) {
 					for (const script of [sfc.script, sfc.scriptSetup]) {
 
 						if (!script || script.content === '')
@@ -53,7 +58,7 @@ export const create = (): Service<Provide> => (context: ServiceContext<import('v
 								start: document.positionAt(script.start),
 								end: document.positionAt(script.startTagEnd),
 							},
-							message: `Virtual script ${JSON.stringify(vueSourceFile.mainScriptName)} not found, may missing <script lang="ts"> / "allowJs": true / jsconfig.json.`,
+							message: `Virtual script ${JSON.stringify(tsFileName)} not found, may missing <script lang="ts"> / "allowJs": true / jsconfig.json.`,
 							severity: 3 satisfies typeof vscode.DiagnosticSeverity.Information,
 							source: 'vue',
 						};
@@ -189,7 +194,7 @@ export const create = (): Service<Provide> => (context: ServiceContext<import('v
 	};
 
 	function worker<T>(document: TextDocument, callback: (vueSourceFile: vue.VueFile) => T) {
-		const [vueFile] = context!.documents.getVirtualFileByUri(document.uri);
+		const [vueFile] = context!.project.fileProvider.getVirtualFile(document.uri);
 		if (vueFile instanceof vue.VueFile) {
 			return callback(vueFile);
 		}

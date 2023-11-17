@@ -12,11 +12,14 @@ const plugin: Service = (context) => {
 
 			const settings: Record<string, boolean> = {};
 			const result: vscode.InlayHint[] = [];
-			const [file] = context.documents.getVirtualFileByUri(document.uri);
-			if (file) {
+			const [vitualFile] = context.project.fileProvider.getVirtualFile(document.uri);
+
+			if (vitualFile) {
+
 				const start = document.offsetAt(range.start);
 				const end = document.offsetAt(range.end);
-				for (const mapping of file.mappings) {
+
+				for (const mapping of vitualFile.mappings) {
 
 					const hint: {
 						setting: string;

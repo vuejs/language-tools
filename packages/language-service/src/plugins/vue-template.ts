@@ -75,10 +75,14 @@ export const create = <S extends Service>(options: {
 			if (!options.isSupportedDocument(document))
 				return;
 
-			for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
-				const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
-				if (virtualFile && virtualFile instanceof VueFile) {
-					await provideHtmlData(map, virtualFile);
+			const [virtualFile] = _context.project.fileProvider.getVirtualFile(document.uri);
+
+			if (virtualFile) {
+				for (const map of _context.documents.getMapsByVirtualFile(virtualFile)) {
+					const sourceVirtualFile = _context.project.fileProvider.getSourceFile(map.sourceFileDocument.uri)?.root;
+					if (sourceVirtualFile instanceof VueFile) {
+						await provideHtmlData(map, sourceVirtualFile);
+					}
 				}
 			}
 
@@ -86,10 +90,12 @@ export const create = <S extends Service>(options: {
 			if (!htmlComplete)
 				return;
 
-			for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
-				const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
-				if (virtualFile && virtualFile instanceof VueFile) {
-					afterHtmlCompletion(htmlComplete, map, virtualFile);
+			if (virtualFile) {
+				for (const map of _context.documents.getMapsByVirtualFile(virtualFile)) {
+					const sourceVirtualFile = _context.project.fileProvider.getSourceFile(map.sourceFileDocument.uri)?.root;
+					if (sourceVirtualFile instanceof VueFile) {
+						afterHtmlCompletion(htmlComplete, map, sourceVirtualFile);
+					}
 				}
 			}
 
@@ -107,15 +113,20 @@ export const create = <S extends Service>(options: {
 
 			const languageService = _context.inject('typescript/languageService');
 			const result: vscode.InlayHint[] = [];
+			const [virtualFile] = _context.project.fileProvider.getVirtualFile(document.uri);
+			if (!virtualFile)
+				return;
 
-			for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
-				const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
+			for (const map of _context.documents.getMapsByVirtualFile(virtualFile)) {
+
+				const sourceVirtualFile = _context.project.fileProvider.getSourceFile(map.sourceFileDocument.uri)?.root;
 				const scanner = options.getScanner(htmlOrPugService, document);
-				if (virtualFile && virtualFile instanceof VueFile && scanner) {
+
+				if (sourceVirtualFile instanceof VueFile && scanner) {
 
 					// visualize missing required props
 					const casing = await getNameCasing(ts, _context, map.sourceFileDocument.uri, options.vueCompilerOptions);
-					const components = getComponentNames(ts, languageService, virtualFile, options.vueCompilerOptions);
+					const components = getComponentNames(ts, languageService, _context!.env, sourceVirtualFile, options.vueCompilerOptions);
 					const componentProps: Record<string, string[]> = {};
 					let token: html.TokenType;
 					let current: {
@@ -132,7 +143,7 @@ export const create = <S extends Service>(options: {
 									: components.find(component => component === tagName || hyphenateTag(component) === tagName);
 							const checkTag = tagName.indexOf('.') >= 0 ? tagName : component;
 							if (checkTag) {
-								componentProps[checkTag] ??= getPropsByTag(ts, languageService, virtualFile, checkTag, options.vueCompilerOptions, true);
+								componentProps[checkTag] ??= getPropsByTag(ts, languageService, _context!.env, sourceVirtualFile, checkTag, options.vueCompilerOptions, true);
 								current = {
 									unburnedRequiredProps: [...componentProps[checkTag]],
 									labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
@@ -213,7 +224,7 @@ export const create = <S extends Service>(options: {
 			if (!options.isSupportedDocument(document))
 				return;
 
-			if (_context.documents.isVirtualFileUri(document.uri))
+			if (_context.project.fileProvider.getVirtualFile(document.uri)[0])
 				options.updateCustomData(htmlOrPugService, []);
 
 			return htmlOrPugService.provideHover?.(document, position, token);
@@ -225,15 +236,19 @@ export const create = <S extends Service>(options: {
 				return;
 
 			const originalResult = await htmlOrPugService.provideDiagnostics?.(document, token);
+			const [virtualFile] = _context.project.fileProvider.getVirtualFile(document.uri);
 
-			for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
+			if (!virtualFile)
+				return;
 
-				const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
-				if (!virtualFile || !(virtualFile instanceof VueFile))
+			for (const map of _context.documents.getMapsByVirtualFile(virtualFile)) {
+
+				const sourceVirtualFile = _context.project.fileProvider.getSourceFile(map.sourceFileDocument.uri)?.root;
+				if (!(sourceVirtualFile instanceof VueFile))
 					continue;
 
 				const templateErrors: vscode.Diagnostic[] = [];
-				const { template } = virtualFile.sfc;
+				const { template } = sourceVirtualFile.sfc;
 
 				if (template) {
 
@@ -284,14 +299,17 @@ export const create = <S extends Service>(options: {
 				return;
 
 			const languageService = _context.inject('typescript/languageService');
+			const [virtualFile] = _context.project.fileProvider.getVirtualFile(document.uri);
+			if (!virtualFile)
+				return;
 
-			for (const [_, map] of _context.documents.getMapsByVirtualFileUri(document.uri)) {
+			for (const map of _context.documents.getMapsByVirtualFile(virtualFile)) {
 
-				const virtualFile = _context.documents.getSourceByUri(map.sourceFileDocument.uri)?.root;
-				if (!virtualFile || !(virtualFile instanceof VueFile))
+				const sourceFile = _context.project.fileProvider.getSourceFile(map.sourceFileDocument.uri)?.root;
+				if (!(sourceFile instanceof VueFile))
 					continue;
 
-				const templateScriptData = getComponentNames(ts, languageService, virtualFile, options.vueCompilerOptions);
+				const templateScriptData = getComponentNames(ts, languageService, _context!.env, sourceFile, options.vueCompilerOptions);
 				const components = new Set([
 					...templateScriptData,
 					...templateScriptData.map(hyphenateTag),
@@ -367,7 +385,7 @@ export const create = <S extends Service>(options: {
 				isApplicable: () => true,
 				provideTags: () => {
 
-					const components = getComponentNames(ts, languageService, vueSourceFile, options.vueCompilerOptions)
+					const components = getComponentNames(ts, languageService, _context!.env, vueSourceFile, options.vueCompilerOptions)
 						.filter(name =>
 							name !== 'Transition'
 							&& name !== 'TransitionGroup'
@@ -410,8 +428,8 @@ export const create = <S extends Service>(options: {
 				provideAttributes: (tag) => {
 
 					const attrs = getElementAttrs(ts, languageService, languageServiceHost, tag);
-					const props = new Set(getPropsByTag(ts, languageService, vueSourceFile, tag, options.vueCompilerOptions));
-					const events = getEventsOfTag(ts, languageService, vueSourceFile, tag, options.vueCompilerOptions);
+					const props = new Set(getPropsByTag(ts, languageService, _context!.env, vueSourceFile, tag, options.vueCompilerOptions));
+					const events = getEventsOfTag(ts, languageService, _context!.env, vueSourceFile, tag, options.vueCompilerOptions);
 					const attributes: html.IAttributeData[] = [];
 					const _tsCodegen = tsCodegen.get(vueSourceFile.sfc);
 
@@ -419,7 +437,7 @@ export const create = <S extends Service>(options: {
 						let ctxVars = [
 							..._tsCodegen.scriptRanges()?.bindings.map(binding => vueSourceFile.sfc.script!.content.substring(binding.start, binding.end)) ?? [],
 							..._tsCodegen.scriptSetupRanges()?.bindings.map(binding => vueSourceFile.sfc.scriptSetup!.content.substring(binding.start, binding.end)) ?? [],
-							...getTemplateCtx(ts, languageService, vueSourceFile) ?? [],
+							...getTemplateCtx(ts, languageService, _context!.env, vueSourceFile) ?? [],
 						];
 						ctxVars = [...new Set(ctxVars)];
 						const dirs = ctxVars.map(hyphenateAttr).filter(v => v.startsWith('v-'));
@@ -535,7 +553,7 @@ export const create = <S extends Service>(options: {
 
 		const languageService = _context!.inject('typescript/languageService');
 		const replacement = getReplacement(completionList, map.sourceFileDocument);
-		const componentNames = new Set(getComponentNames(ts, languageService, vueSourceFile, options.vueCompilerOptions).map(hyphenateTag));
+		const componentNames = new Set(getComponentNames(ts, languageService, _context!.env, vueSourceFile, options.vueCompilerOptions).map(hyphenateTag));
 
 		if (replacement) {
 

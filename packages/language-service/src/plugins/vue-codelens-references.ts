@@ -1,5 +1,5 @@
 import { Service } from '@volar/language-service';
-import { VueFile } from '@vue/language-core';
+import { SourceFile, VueFile } from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 
 export const create = function (): Service {
@@ -13,11 +13,11 @@ export const create = function (): Service {
 
 			provideReferencesCodeLensRanges(document) {
 
-				return worker(document.uri, async () => {
+				return worker(document.uri, async (_, sourceFile) => {
 
 					const result: vscode.Range[] = [];
 
-					for (const [_, map] of context.documents.getMapsBySourceFileUri(document.uri)?.maps ?? []) {
+					for (const [_, map] of context.documents.getMapsBySourceFile(sourceFile) ?? []) {
 						for (const mapping of map.map.mappings) {
 
 							if (!mapping.data.referencesCodeLens)
@@ -38,7 +38,7 @@ export const create = function (): Service {
 
 				await worker(document.uri, async (vueFile) => {
 
-					const document = context.documents.getDocumentByFileName(vueFile.snapshot, vueFile.fileName, vueFile.languageId);
+					const document = context.documents.getDocumentByUri(vueFile.id, vueFile.languageId, vueFile.snapshot);
 					const offset = document.offsetAt(range.start);
 					const blocks = [
 						vueFile.sfc.script,
@@ -58,13 +58,13 @@ export const create = function (): Service {
 			},
 		};
 
-		function worker<T>(uri: string, callback: (vueSourceFile: VueFile) => T) {
+		function worker<T>(uri: string, callback: (vueFile: VueFile, sourceFile: SourceFile) => T) {
 
-			const [virtualFile] = context!.documents.getVirtualFileByUri(uri);
-			if (!(virtualFile instanceof VueFile))
+			const [virtualFile, sourceFile] = context!.project.fileProvider.getVirtualFile(uri);
+			if (!(virtualFile instanceof VueFile) || !sourceFile)
 				return;
 
-			return callback(virtualFile);
+			return callback(virtualFile, sourceFile);
 		}
 	};
 };

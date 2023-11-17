@@ -24,8 +24,8 @@ const plugin: Service = (context, modules) => {
 			if (!isCharacterTyping(document, options_2))
 				return;
 
-			const [virtualFile] = context.documents.getVirtualFileByUri(document.uri);
-			if (!virtualFile?.fileName.endsWith('.template_format.ts'))
+			const [virtualFile] = context.project.fileProvider.getVirtualFile(document.uri);
+			if (!virtualFile?.id.endsWith('.template_format.ts'))
 				return;
 
 			const offset = document.offsetAt(position);
@@ -33,7 +33,7 @@ const plugin: Service = (context, modules) => {
 			for (const mappedRange of virtualFile.mappings) {
 				if (mappedRange.generatedRange[1] === offset) {
 					const text = document.getText().substring(mappedRange.generatedRange[0], mappedRange.generatedRange[1]);
-					const ast = ts.createSourceFile(virtualFile.fileName, text, ts.ScriptTarget.Latest);
+					const ast = ts.createSourceFile(context.env.uriToFileName(virtualFile.id), text, ts.ScriptTarget.Latest);
 					if (ast.statements.length === 1) {
 						const statement = ast.statements[0];
 						if (

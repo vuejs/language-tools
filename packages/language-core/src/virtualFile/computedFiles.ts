@@ -1,10 +1,10 @@
 import { VirtualFile, resolveCommonLanguageId } from '@volar/language-core';
 import { buildMappings, buildStacks, toString } from '@volar/source-map';
+import { computed } from 'computeds';
 import * as muggle from 'muggle-string';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { Sfc, SfcBlock, VueLanguagePlugin } from '../types';
 import { VueEmbeddedFile } from './embeddedFile';
-import { computed } from 'computeds';
 
 export function computedFiles(
 	plugins: ReturnType<VueLanguagePlugin>[],
@@ -50,8 +50,11 @@ export function computedFiles(
 
 		for (const { file, snapshot, mappings, codegenStacks } of remain) {
 			embeddedFiles.push({
-				...file,
+				id: file.fileName,
 				languageId: resolveCommonLanguageId(file.fileName),
+				kind: file.kind,
+				capabilities: file.capabilities,
+				mirrorBehaviorMappings: file.mirrorBehaviorMappings,
 				snapshot,
 				mappings,
 				codegenStacks,
@@ -67,8 +70,11 @@ export function computedFiles(
 				const { file, snapshot, mappings, codegenStacks } = remain[i];
 				if (!file.parentFileName) {
 					embeddedFiles.push({
-						...file,
+						id: file.fileName,
 						languageId: resolveCommonLanguageId(file.fileName),
+						kind: file.kind,
+						capabilities: file.capabilities,
+						mirrorBehaviorMappings: file.mirrorBehaviorMappings,
 						snapshot,
 						mappings,
 						codegenStacks,
@@ -80,8 +86,11 @@ export function computedFiles(
 					const parent = findParentStructure(file.parentFileName, embeddedFiles);
 					if (parent) {
 						parent.embeddedFiles.push({
-							...file,
+							id: file.fileName,
 							languageId: resolveCommonLanguageId(file.fileName),
+							kind: file.kind,
+							capabilities: file.capabilities,
+							mirrorBehaviorMappings: file.mirrorBehaviorMappings,
 							snapshot,
 							mappings,
 							codegenStacks,
@@ -92,12 +101,12 @@ export function computedFiles(
 				}
 			}
 		}
-		function findParentStructure(fileName: string, current: VirtualFile[]): VirtualFile | undefined {
+		function findParentStructure(id: string, current: VirtualFile[]): VirtualFile | undefined {
 			for (const child of current) {
-				if (child.fileName === fileName) {
+				if (child.id === id) {
 					return child;
 				}
-				let parent = findParentStructure(fileName, child.embeddedFiles);
+				let parent = findParentStructure(id, child.embeddedFiles);
 				if (parent) {
 					return parent;
 				}

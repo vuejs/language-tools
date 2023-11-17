@@ -1,15 +1,16 @@
-import * as vue from '@vue/language-core';
-import type { CompilerDOM } from '@vue/language-core';
 import * as embedded from '@volar/language-core';
-import { computed } from 'computeds';
+import type { CompilerDOM } from '@vue/language-core';
+import * as vue from '@vue/language-core';
 import { sharedTypes } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
-
+import { computed } from 'computeds';
 import type * as ts from 'typescript/lib/tsserverlibrary';
+import type { ServiceEnvironment } from './types';
 
 export function getPropsByTag(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
+	env: ServiceEnvironment,
 	sourceFile: embedded.VirtualFile,
 	tag: string,
 	vueCompilerOptions: vue.VueCompilerOptions,
@@ -17,7 +18,7 @@ export function getPropsByTag(
 ) {
 
 	const checker = tsLs.getProgram()!.getTypeChecker();
-	const components = getVariableType(ts, tsLs, sourceFile, '__VLS_components');
+	const components = getVariableType(ts, tsLs, env, sourceFile, '__VLS_components');
 	if (!components)
 		return [];
 
@@ -83,13 +84,14 @@ export function getPropsByTag(
 export function getEventsOfTag(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
+	env: ServiceEnvironment,
 	sourceFile: embedded.VirtualFile,
 	tag: string,
 	vueCompilerOptions: vue.VueCompilerOptions,
 ) {
 
 	const checker = tsLs.getProgram()!.getTypeChecker();
-	const components = getVariableType(ts, tsLs, sourceFile, '__VLS_components');
+	const components = getVariableType(ts, tsLs, env, sourceFile, '__VLS_components');
 	if (!components)
 		return [];
 
@@ -149,9 +151,10 @@ export function getEventsOfTag(
 export function getTemplateCtx(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
+	env: ServiceEnvironment,
 	sourceFile: embedded.VirtualFile,
 ) {
-	return getVariableType(ts, tsLs, sourceFile, '__VLS_ctx')
+	return getVariableType(ts, tsLs, env, sourceFile, '__VLS_ctx')
 		?.type
 		?.getProperties()
 		.map(c => c.name);
@@ -160,10 +163,11 @@ export function getTemplateCtx(
 export function getComponentNames(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
+	env: ServiceEnvironment,
 	sourceFile: embedded.VirtualFile,
 	vueCompilerOptions: vue.VueCompilerOptions,
 ) {
-	return getVariableType(ts, tsLs, sourceFile, '__VLS_components')
+	return getVariableType(ts, tsLs, env, sourceFile, '__VLS_components')
 		?.type
 		?.getProperties()
 		.map(c => c.name)
@@ -207,6 +211,7 @@ export function getElementAttrs(
 function getVariableType(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	tsLs: ts.LanguageService,
+	env: ServiceEnvironment,
 	sourceFile: embedded.VirtualFile,
 	name: string,
 ) {
@@ -215,16 +220,11 @@ function getVariableType(
 		return;
 	}
 
-	let file: embedded.VirtualFile | undefined;
+	const file = sourceFile.mainTsFile;
+
 	let tsSourceFile: ts.SourceFile | undefined;
 
-	embedded.forEachEmbeddedFile(sourceFile, embedded => {
-		if (embedded.fileName === sourceFile.mainScriptName) {
-			file = embedded;
-		}
-	});
-
-	if (file && (tsSourceFile = tsLs.getProgram()?.getSourceFile(file.fileName))) {
+	if (file && (tsSourceFile = tsLs.getProgram()?.getSourceFile(env.uriToFileName(file.id)))) {
 
 		const node = searchVariableDeclarationNode(ts, tsSourceFile, name);
 		const checker = tsLs.getProgram()?.getTypeChecker();

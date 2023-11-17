@@ -14,15 +14,16 @@ export const create = function (): Service {
 		return {
 
 			provideCodeActions(document, range, _context) {
+
 				const startOffset = document.offsetAt(range.start);
 				const endOffset = document.offsetAt(range.end);
+				const [virtualFile] = ctx!.project.fileProvider.getVirtualFile(document.uri);
 
-				const [vueFile] = ctx!.documents.getVirtualFileByUri(document.uri);
-				if (!vueFile || !(vueFile instanceof VueFile)) {
+				if (!(virtualFile instanceof VueFile)) {
 					return;
 				}
 
-				const { template } = vueFile.sfc;
+				const { template } = virtualFile.sfc;
 
 				if (!template?.ast) return;
 

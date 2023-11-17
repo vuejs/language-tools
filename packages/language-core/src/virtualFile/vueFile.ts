@@ -18,10 +18,10 @@ export class VueFile implements VirtualFile {
 
 	// computeds
 
-	getVueSfc = computedVueSfc(this.plugins, this.fileName, () => this._snapshot());
-	sfc = computedSfc(this.ts, this.plugins, this.fileName, () => this._snapshot(), this.getVueSfc);
+	getVueSfc = computedVueSfc(this.plugins, this.id, () => this._snapshot());
+	sfc = computedSfc(this.ts, this.plugins, this.id, () => this._snapshot(), this.getVueSfc);
 	getMappings = computedMappings(() => this._snapshot(), this.sfc);
-	getEmbeddedFiles = computedFiles(this.plugins, this.fileName, this.sfc, this.codegenStack);
+	getEmbeddedFiles = computedFiles(this.plugins, this.id, this.sfc, this.codegenStack);
 
 	// others
 
@@ -31,14 +31,14 @@ export class VueFile implements VirtualFile {
 	get embeddedFiles() {
 		return this.getEmbeddedFiles();
 	}
-	get mainScriptName() {
-		let res: string = '';
+	get mainTsFile() {
+		let result: VirtualFile | undefined;
 		forEachEmbeddedFile(this, file => {
-			if (file.kind === FileKind.TypeScriptHostFile && file.fileName.replace(this.fileName, '').match(jsxReg)) {
-				res = file.fileName;
+			if (file.kind === FileKind.TypeScriptHostFile && file.id.substring(this.id.length).match(jsxReg)) {
+				result = file;
 			}
 		});
-		return res;
+		return result;
 	}
 	get snapshot() {
 		return this._snapshot();
@@ -48,7 +48,7 @@ export class VueFile implements VirtualFile {
 	}
 
 	constructor(
-		public fileName: string,
+		public id: string,
 		public languageId: string,
 		public initSnapshot: ts.IScriptSnapshot,
 		public vueCompilerOptions: VueCompilerOptions,

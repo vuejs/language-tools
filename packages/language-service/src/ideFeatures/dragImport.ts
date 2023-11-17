@@ -23,7 +23,7 @@ export function getDragImportEdits(
 
 	const newName = capitalize(camelize(baseName));
 	const document = ctx!.getTextDocument(uri)!;
-	const [vueFile] = ctx!.documents.getVirtualFileByUri(document.uri) as [VueFile, any];
+	const [vueFile] = ctx!.project.fileProvider.getVirtualFile(document.uri) as [VueFile, any];
 	const { sfc } = vueFile;
 	const script = sfc.scriptSetup ?? sfc.script;
 

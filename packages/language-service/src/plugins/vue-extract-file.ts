@@ -32,7 +32,7 @@ export const create = function (): Service {
 					return;
 				}
 
-				const [vueFile] = ctx!.documents.getVirtualFileByUri(document.uri);
+				const [vueFile] = ctx!.project.fileProvider.getVirtualFile(document.uri);
 				if (!vueFile || !(vueFile instanceof VueFile))
 					return;
 
@@ -64,7 +64,7 @@ export const create = function (): Service {
 				const { uri, range, newName } = codeAction.data as ActionData;
 				const document = ctx!.getTextDocument(uri)!;
 				const [startOffset, endOffset]: [number, number] = range;
-				const [vueFile] = ctx!.documents.getVirtualFileByUri(document.uri) as [VueFile, any];
+				const [vueFile] = ctx!.project.fileProvider.getVirtualFile(document.uri) as [VueFile, any];
 				const { sfc } = vueFile;
 				const script = sfc.scriptSetup ?? sfc.script;
 
@@ -77,8 +77,10 @@ export const create = function (): Service {
 
 				const languageService = ctx!.inject('typescript/languageService');
 				const languageServiceHost = ctx!.inject('typescript/languageServiceHost');
-				const sourceFile = languageService.getProgram()!.getSourceFile(vueFile.mainScriptName)!;
-				const sourceFileKind = languageServiceHost.getScriptKind?.(vueFile.mainScriptName);
+				const tsScriptUri = vueFile.mainTsFile!.id;
+				const tsScriptName = ctx!.env.uriToFileName(tsScriptUri);
+				const sourceFile = languageService.getProgram()!.getSourceFile(tsScriptName)!;
+				const sourceFileKind = languageServiceHost.getScriptKind?.(tsScriptName);
 				const toExtract = collectExtractProps();
 				const initialIndentSetting = await ctx!.env.getConfiguration!('volar.format.initialIndent') as Record<string, boolean>;
 				const newUri = document.uri.substring(0, document.uri.lastIndexOf('/') + 1) + `${newName}.vue`;
@@ -177,7 +179,8 @@ export const create = function (): Service {
 						model: boolean;
 					}>();
 					const checker = languageService.getProgram()!.getTypeChecker();
-					const maps = [...ctx!.documents.getMapsByVirtualFileName(vueFile.mainScriptName)];
+					const [virtualFile] = ctx!.project.fileProvider.getVirtualFile(tsScriptUri);
+					const maps = virtualFile ? [...ctx!.documents.getMapsByVirtualFile(virtualFile)] : [];
 
 					sourceFile.forEachChild(function visit(node) {
 						if (
@@ -187,7 +190,7 @@ export const create = function (): Service {
 							&& ts.isIdentifier(node.name)
 						) {
 							const { name } = node;
-							for (const [_, map] of maps) {
+							for (const map of maps) {
 								const source = map.map.toSourceOffset(name.getEnd());
 								if (source && source[0] >= sfc.template!.startTagEnd + templateCodeRange![0] && source[0] <= sfc.template!.startTagEnd + templateCodeRange![1] && source[1].data.semanticTokens) {
 									if (!result.has(name.text)) {

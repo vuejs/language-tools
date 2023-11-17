@@ -27,13 +27,18 @@ function createTester(root: string) {
 	};
 	const languages = resolveLanguages(ts, {}, parsedCommandLine.options, parsedCommandLine.vueOptions);
 	const services = resolveServices({}, parsedCommandLine.vueOptions);
-	const project = createTypeScriptProject(projectHost, Object.values(languages), resolveCommonLanguageId);
 	const defaultVSCodeSettings: any = {
 		'typescript.preferences.quoteStyle': 'single',
 		'javascript.preferences.quoteStyle': 'single',
 	};
 	let currentVSCodeSettings: any;
 	const serviceEnv = createMockServiceEnv(rootUri, () => currentVSCodeSettings ?? defaultVSCodeSettings);
+	const project = createTypeScriptProject(
+		projectHost,
+		Object.values(languages),
+		resolveCommonLanguageId,
+		serviceEnv.fileNameToUri
+	);
 	const languageService = createLanguageService({ typescript: ts as any }, Object.values(services), serviceEnv, project);
 
 	return {
