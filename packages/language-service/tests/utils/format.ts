@@ -5,6 +5,7 @@ import { resolveLanguages, resolveServices } from '../../out';
 
 const languages = resolveLanguages(ts as any);
 const services = resolveServices();
+const formatter = kit.createFormatter(Object.values(languages), Object.values(services));
 
 export function defineFormatTest(options: {
 	title: string;
@@ -17,8 +18,9 @@ export function defineFormatTest(options: {
 
 		it(`format`, async () => {
 
-			const formatter = kit.createFormatter(Object.values(languages), Object.values(services), options.settings);
-			const formatted = await formatter.formatCode(
+			formatter.settings = options.settings ?? {};
+
+			const formatted = await formatter.format(
 				options.input,
 				options.languageId,
 				{ insertSpaces: false, tabSize: 4 },
