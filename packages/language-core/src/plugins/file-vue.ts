@@ -23,8 +23,6 @@ const plugin: VueLanguagePlugin = (_ctx) => {
 
 			const hitBlock = blocks.find(block => change.start > block.loc.start.offset && change.end <= block.loc.end.offset);
 
-			console.log({ hitBlock: JSON.stringify(hitBlock, null, 2) });
-
 			if (!hitBlock) {
 				return;
 			}
