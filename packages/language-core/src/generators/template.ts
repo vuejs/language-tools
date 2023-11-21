@@ -685,7 +685,7 @@ export function generate(
 		else {
 			codes.push(`let ${var_originalComponent}!: `);
 			for (const componentName of getPossibleOriginalComponentName(tag)) {
-				codes.push(`'${componentName}' extends keyof typeof __VLS_ctx ? typeof __VLS_ctx${validTsVarReg.test(componentName) ? `.${componentName}` : `['${componentName}']`} : `);
+				codes.push(`'${componentName}' extends keyof typeof __VLS_components ? typeof __VLS_components${validTsVarReg.test(componentName) ? `.${componentName}` : `['${componentName}']`} : `);
 			}
 			codes.push(`typeof __VLS_resolvedLocalAndGlobalComponents['${toCanonicalComponentName(tag)}'];\n`);
 		}
