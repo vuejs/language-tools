@@ -21,7 +21,9 @@ const plugin: VueLanguagePlugin = (_ctx) => {
 				...sfc.descriptor.customBlocks,
 			].filter((block): block is NonNullable<typeof block> => !!block);
 
-			const hitBlock = blocks.find(block => change.start >= block.loc.start.offset && change.end <= block.loc.end.offset);
+			const hitBlock = blocks.find(block => change.start > block.loc.start.offset && change.end <= block.loc.end.offset);
+
+			console.log({ hitBlock: JSON.stringify(hitBlock, null, 2) });
 
 			if (!hitBlock) {
 				return;
