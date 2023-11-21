@@ -616,7 +616,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		codes.push(`})`);
 
 		if (scriptRanges?.exportDefault) {
-			addVirtualCode('script', scriptRanges.exportDefault.args.end, scriptRanges.exportDefault.end);
+			addVirtualCode('script', scriptRanges.exportDefault.expression.end, scriptRanges.exportDefault.end);
 		}
 	}
 	function generateComponentOptions(functional: boolean) {
