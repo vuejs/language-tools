@@ -1348,6 +1348,7 @@ export function generate(
 				if (
 					hyphenateAttr(prop.name) === prop.name
 					&& !vueCompilerOptions.htmlAttributes.some(pattern => minimatch(attrNameText!, pattern))
+					&& node.tagType !== CompilerDOM.ElementTypes.ELEMENT
 				) {
 					attrNameText = camelize(prop.name);
 					camelized = true;
