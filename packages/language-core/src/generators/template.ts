@@ -8,31 +8,68 @@ import { Sfc, VueCodeInformation, VueCompilerOptions } from '../types';
 import { hyphenateAttr, hyphenateTag } from '../utils/shared';
 import { collectVars, walkInterpolationFragment } from '../utils/transform';
 
-const capabilitiesPresets = {
-	disabledAll: {
-		diagnostics: false,
-		renameEdits: false,
-		formattingEdits: false,
-		completionItems: false,
-		definitions: false,
-		references: false,
-		foldingRanges: false,
-		inlayHints: false,
-		codeActions: false,
-		symbols: false,
-		selectionRanges: false,
-		linkedEditingRanges: false,
-		colors: false,
-		autoInserts: false,
-		codeLenses: false,
-		highlights: false,
-		links: false,
-		semanticTokens: false,
-		hover: false,
-		signatureHelps: false,
-	} satisfies VueCodeInformation,
-	all: {} satisfies VueCodeInformation,
-	allWithHiddenParam: {
+const withAllDisabled = (override: VueCodeInformation): VueCodeInformation => ({
+	diagnostics: false,
+	renameEdits: false,
+	formattingEdits: false,
+	completionItems: false,
+	definitions: false,
+	references: false,
+	foldingRanges: false,
+	inlayHints: false,
+	codeActions: false,
+	symbols: false,
+	selectionRanges: false,
+	linkedEditingRanges: false,
+	colors: false,
+	autoInserts: false,
+	codeLenses: false,
+	highlights: false,
+	links: false,
+	semanticTokens: false,
+	hover: false,
+	signatureHelps: false,
+	...override,
+});
+const withAllEnabled = (override: VueCodeInformation): VueCodeInformation => ({
+	diagnostics: true,
+	renameEdits: true,
+	formattingEdits: true,
+	completionItems: true,
+	definitions: true,
+	references: true,
+	foldingRanges: true,
+	inlayHints: true,
+	codeActions: true,
+	symbols: true,
+	selectionRanges: true,
+	linkedEditingRanges: true,
+	colors: true,
+	autoInserts: true,
+	codeLenses: true,
+	highlights: true,
+	links: true,
+	semanticTokens: true,
+	hover: true,
+	signatureHelps: true,
+	...override,
+});
+const combineEnabled = (...infos: VueCodeInformation[]): VueCodeInformation => {
+	const result: VueCodeInformation = { ...infos[0] };
+	for (const info of infos) {
+		for (const key in info) {
+			const value = info[key as keyof VueCodeInformation];
+			if (value) {
+				result[key as keyof VueCodeInformation] = value as any;
+			}
+		}
+	}
+	return result;
+};
+const presetInfos = {
+	disabledAll: withAllDisabled({}),
+	all: withAllEnabled({}),
+	allWithHiddenParam: withAllEnabled({
 		__hint: {
 			setting: 'vue.inlayHints.inlineHandlerLeading',
 			label: '$event =>',
@@ -43,19 +80,19 @@ const capabilitiesPresets = {
 			].join('\n\n'),
 			paddingRight: true,
 		}
-	} as VueCodeInformation,
-	noDiagnostics: { diagnostics: false } satisfies VueCodeInformation,
-	diagnosticOnly: { diagnostics: true } satisfies VueCodeInformation,
-	tagHover: { hover: true } satisfies VueCodeInformation,
-	event: { hover: true, diagnostics: true } satisfies VueCodeInformation,
-	tagReference: { references: true, definitions: true, renameEdits: { shouldRename: false, shouldEdit: true } } satisfies VueCodeInformation,
-	attr: { hover: true, diagnostics: true, references: true, definitions: true, renameEdits: true } satisfies VueCodeInformation,
-	attrReference: { references: true, definitions: true, renameEdits: true } satisfies VueCodeInformation,
-	slotProp: { references: true, definitions: true, renameEdits: true, diagnostics: true } satisfies VueCodeInformation,
-	scopedClassName: { references: true, definitions: true, renameEdits: true, completionItems: true } satisfies VueCodeInformation,
-	slotName: { hover: true, diagnostics: true, references: true, definitions: true, completionItems: true } satisfies VueCodeInformation,
-	slotNameExport: { hover: true, diagnostics: true, references: true, definitions: true, /* __referencesCodeLens: true */ } satisfies VueCodeInformation,
-	refAttr: { references: true, definitions: true, renameEdits: true } satisfies VueCodeInformation,
+	}),
+	noDiagnostics: withAllEnabled({ diagnostics: false }),
+	diagnosticOnly: withAllDisabled({ diagnostics: true }),
+	tagHover: withAllDisabled({ hover: true }),
+	event: withAllDisabled({ hover: true, diagnostics: true }),
+	tagReference: withAllDisabled({ references: true, definitions: true, renameEdits: { shouldRename: false, shouldEdit: true } }),
+	attr: withAllDisabled({ hover: true, diagnostics: true, references: true, definitions: true, renameEdits: true }),
+	attrReference: withAllDisabled({ references: true, definitions: true, renameEdits: true }),
+	slotProp: withAllDisabled({ references: true, definitions: true, renameEdits: true, diagnostics: true }),
+	scopedClassName: withAllDisabled({ references: true, definitions: true, renameEdits: true, completionItems: true }),
+	slotName: withAllDisabled({ hover: true, diagnostics: true, references: true, definitions: true, completionItems: true }),
+	slotNameExport: withAllDisabled({ hover: true, diagnostics: true, references: true, definitions: true, /* __referencesCodeLens: true */ }),
+	refAttr: withAllDisabled({ references: true, definitions: true, renameEdits: true }),
 };
 const formatBrackets = {
 	normal: ['`${', '}`;'] as [string, string],
@@ -172,10 +209,10 @@ export function generate(
 					name,
 					'template',
 					slot.loc,
-					{
-						...capabilitiesPresets.slotNameExport,
-						__referencesCodeLens: true,
-					},
+					combineEnabled(
+						presetInfos.slotNameExport,
+						{ __referencesCodeLens: true },
+					),
 				], slot.nodeLoc),
 			);
 			codes.push(`?(_: typeof ${slot.varName}): any,\n`);
@@ -192,10 +229,10 @@ export function generate(
 				className,
 				'template',
 				offset,
-				{
-					...capabilitiesPresets.scopedClassName,
-					__displayWithLink: stylesScopedClasses.has(className),
-				} satisfies VueCodeInformation,
+				combineEnabled(
+					presetInfos.scopedClassName,
+					{ __displayWithLink: stylesScopedClasses.has(className) },
+				),
 			]));
 			codes.push(`];\n`);
 		}
@@ -254,19 +291,21 @@ export function generate(
 							name,
 							'template',
 							tagRange,
-							{
-								...capabilitiesPresets.tagReference,
-								renameEdits: {
-									shouldEdit: true,
-									shouldRename: true,
-									resolveNewName: tagName !== name ? camelizeComponentName : undefined,
-									resolveEditText: getTagRenameApply(tagName),
+							combineEnabled(
+								presetInfos.tagReference,
+								{
+									renameEdits: {
+										shouldEdit: true,
+										shouldRename: true,
+										resolveNewName: tagName !== name ? camelizeComponentName : undefined,
+										resolveEditText: getTagRenameApply(tagName),
+									}
 								},
-								...nativeTags.has(tagName) ? {
-									...capabilitiesPresets.tagHover,
-									...capabilitiesPresets.diagnosticOnly,
-								} : {},
-							},
+								...(nativeTags.has(tagName) ? [
+									presetInfos.tagHover,
+									presetInfos.diagnosticOnly,
+								] : []),
+							),
 						]),
 						';',
 					);
@@ -480,7 +519,7 @@ export function generate(
 					content,
 					node.content.loc,
 					start,
-					capabilitiesPresets.all,
+					presetInfos.all,
 					'(',
 					');\n',
 				),
@@ -535,7 +574,7 @@ export function generate(
 						branch.condition.content,
 						branch.condition.loc,
 						branch.condition.loc.start.offset,
-						capabilitiesPresets.all,
+						presetInfos.all,
 						'(',
 						')',
 					),
@@ -590,7 +629,7 @@ export function generate(
 			for (const varName of forBlockVars)
 				localVars.set(varName, (localVars.get(varName) ?? 0) + 1);
 
-			codes.push([leftExpressionText, 'template', leftExpressionRange.start, capabilitiesPresets.all]);
+			codes.push([leftExpressionText, 'template', leftExpressionRange.start, presetInfos.all]);
 			formatCodes.push(...createFormatCode(leftExpressionText, leftExpressionRange.start, formatBrackets.normal));
 		}
 		codes.push(`] of __VLS_getVForSourceType`);
@@ -601,7 +640,7 @@ export function generate(
 					source.content,
 					source.loc,
 					source.loc.start.offset,
-					capabilitiesPresets.all,
+					presetInfos.all,
 					'(',
 					')',
 				),
@@ -686,7 +725,7 @@ export function generate(
 					tag,
 					'template',
 					tagOffsets[0],
-					capabilitiesPresets.diagnosticOnly,
+					presetInfos.diagnosticOnly,
 				]),
 				'];\n',
 			);
@@ -694,14 +733,14 @@ export function generate(
 		else if (isNamespacedTag) {
 			codes.push(
 				`const ${var_originalComponent} = `,
-				...createInterpolationCode(tag, node.loc, startTagOffset, capabilitiesPresets.all, '', ''),
+				...createInterpolationCode(tag, node.loc, startTagOffset, presetInfos.all, '', ''),
 				';\n',
 			);
 		}
 		else if (dynamicTagExp) {
 			codes.push(
 				`const ${var_originalComponent} = `,
-				...createInterpolationCode(dynamicTagExp.loc.source, dynamicTagExp.loc, dynamicTagExp.loc.start.offset, capabilitiesPresets.all, '(', ')'),
+				...createInterpolationCode(dynamicTagExp.loc.source, dynamicTagExp.loc, dynamicTagExp.loc.start.offset, presetInfos.all, '(', ')'),
 				';\n',
 			);
 		}
@@ -738,10 +777,10 @@ export function generate(
 					key,
 					'template',
 					[offset, offset + tag.length],
-					{
-						...capabilitiesPresets.tagHover,
-						...capabilitiesPresets.diagnosticOnly,
-					},
+					combineEnabled(
+						presetInfos.tagHover,
+						presetInfos.diagnosticOnly,
+					),
 				],
 				';\n',
 			);
@@ -752,15 +791,15 @@ export function generate(
 			codes.push(
 				`const ${var_componentInstance} = ${var_functionalComponent}(`,
 				// diagnostic start
-				tagOffsets.length ? ['', 'template', tagOffsets[0], capabilitiesPresets.diagnosticOnly]
-					: dynamicTagExp ? ['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]
+				tagOffsets.length ? ['', 'template', tagOffsets[0], presetInfos.diagnosticOnly]
+					: dynamicTagExp ? ['', 'template', startTagOffset, presetInfos.diagnosticOnly]
 						: '',
 				'{ ',
 				...createPropsCode(node, props, 'normal', propsFailedExps),
 				'}',
 				// diagnostic end
-				tagOffsets.length ? ['', 'template', tagOffsets[0] + tag.length, capabilitiesPresets.diagnosticOnly]
-					: dynamicTagExp ? ['', 'template', startTagOffset + tag.length, capabilitiesPresets.diagnosticOnly]
+				tagOffsets.length ? ['', 'template', tagOffsets[0] + tag.length, presetInfos.diagnosticOnly]
+					: dynamicTagExp ? ['', 'template', startTagOffset + tag.length, presetInfos.diagnosticOnly]
 						: '',
 				`, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}));\n`,
 			);
@@ -778,15 +817,15 @@ export function generate(
 			codes.push(
 				`({} as (props: __VLS_FunctionalComponentProps<typeof ${var_originalComponent}, typeof ${var_componentInstance}> & Record<string, unknown>) => void)(`,
 				// diagnostic start
-				tagOffsets.length ? ['', 'template', tagOffsets[0], capabilitiesPresets.diagnosticOnly]
-					: dynamicTagExp ? ['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly]
+				tagOffsets.length ? ['', 'template', tagOffsets[0], presetInfos.diagnosticOnly]
+					: dynamicTagExp ? ['', 'template', startTagOffset, presetInfos.diagnosticOnly]
 						: '',
 				'{ ',
 				...createPropsCode(node, props, 'normal', propsFailedExps),
 				'}',
 				// diagnostic end
-				tagOffsets.length ? ['', 'template', tagOffsets[0] + tag.length, capabilitiesPresets.diagnosticOnly]
-					: dynamicTagExp ? ['', 'template', startTagOffset + tag.length, capabilitiesPresets.diagnosticOnly]
+				tagOffsets.length ? ['', 'template', tagOffsets[0] + tag.length, presetInfos.diagnosticOnly]
+					: dynamicTagExp ? ['', 'template', startTagOffset + tag.length, presetInfos.diagnosticOnly]
 						: '',
 				`);\n`,
 			);
@@ -809,7 +848,7 @@ export function generate(
 					failedExp.loc.source,
 					failedExp.loc,
 					failedExp.loc.start.offset,
-					capabilitiesPresets.all,
+					presetInfos.all,
 					'(',
 					')',
 				),
@@ -843,7 +882,7 @@ export function generate(
 				vScope.exp.loc.source,
 				'template',
 				vScope.exp.loc.start.offset,
-				capabilitiesPresets.all,
+				presetInfos.all,
 			]);
 			codes.push(';\n');
 			codes.push(`if (${condition}) {\n`);
@@ -897,7 +936,7 @@ export function generate(
 							slotDir.exp.content,
 							'template',
 							slotDir.exp.loc.start.offset,
-							capabilitiesPresets.all,
+							presetInfos.all,
 						],
 						`] = __VLS_getSlotParams(`,
 					);
@@ -909,14 +948,14 @@ export function generate(
 							slotDir.exp.content,
 							'template',
 							slotDir.exp.loc.start.offset,
-							capabilitiesPresets.all,
+							presetInfos.all,
 						],
 						` = __VLS_getSlotParam(`,
 					);
 				}
 			}
 			codes.push(
-				['', 'template', (slotDir.arg ?? slotDir).loc.start.offset, capabilitiesPresets.diagnosticOnly],
+				['', 'template', (slotDir.arg ?? slotDir).loc.start.offset, presetInfos.diagnosticOnly],
 				`(${componentCtxVar}.slots!)`,
 				...(
 					(slotDir?.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content)
@@ -924,16 +963,19 @@ export function generate(
 							slotDir.arg.loc.source,
 							'template',
 							slotDir.arg.loc.start.offset,
-							slotDir.arg.isStatic ? capabilitiesPresets.slotName : capabilitiesPresets.all
+							slotDir.arg.isStatic ? presetInfos.slotName : presetInfos.all
 						], slotDir.arg.loc)
 						: createPropertyAccessCode([
 							'default',
 							'template',
 							[slotDir.loc.start.offset, slotDir.loc.start.offset + (slotDir.loc.source.startsWith('#') ? '#'.length : slotDir.loc.source.startsWith('v-slot:') ? 'v-slot:'.length : 0)],
-							{ ...capabilitiesPresets.slotName, completionItems: false },
+							combineEnabled(
+								presetInfos.slotName,
+								{ completionItems: false },
+							),
 						])
 				),
-				['', 'template', (slotDir.arg ?? slotDir).loc.end.offset, capabilitiesPresets.diagnosticOnly],
+				['', 'template', (slotDir.arg ?? slotDir).loc.end.offset, presetInfos.diagnosticOnly],
 			);
 			if (hasProps) {
 				codes.push(')');
@@ -1019,25 +1061,27 @@ export function generate(
 						camelize('on-' + prop.arg.loc.source), // onClickOutside
 						'template',
 						[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
-						{
-							...capabilitiesPresets.attrReference,
-							renameEdits: {
-								shouldRename: true,
-								shouldEdit: true,
-								// @click-outside -> onClickOutside
-								resolveNewName(newName) {
-									return camelize('on-' + newName);
-								},
-								// onClickOutside -> @click-outside
-								resolveEditText(newName) {
-									const hName = hyphenateAttr(newName);
-									if (hyphenateAttr(newName).startsWith('on-')) {
-										return camelize(hName.slice('on-'.length));
-									}
-									return newName;
+						combineEnabled(
+							presetInfos.attrReference,
+							{
+								renameEdits: {
+									shouldRename: true,
+									shouldEdit: true,
+									// @click-outside -> onClickOutside
+									resolveNewName(newName) {
+										return camelize('on-' + newName);
+									},
+									// onClickOutside -> @click-outside
+									resolveEditText(newName) {
+										const hName = hyphenateAttr(newName);
+										if (hyphenateAttr(newName).startsWith('on-')) {
+											return camelize(hName.slice('on-'.length));
+										}
+										return newName;
+									},
 								},
 							},
-						},
+						),
 					]),
 					`) };\n`,
 					`${eventVar} = { `,
@@ -1049,7 +1093,7 @@ export function generate(
 							prop.arg.loc.source.slice(1, -1),
 							prop.arg.loc,
 							prop.arg.loc.start.offset + 1,
-							capabilitiesPresets.all,
+							presetInfos.all,
 							'',
 							'',
 						),
@@ -1062,7 +1106,7 @@ export function generate(
 							prop.arg.loc.source,
 							'template',
 							prop.arg.loc.start.offset,
-							capabilitiesPresets.event,
+							presetInfos.event,
 						], prop.arg.loc)
 					);
 				}
@@ -1082,7 +1126,7 @@ export function generate(
 						prop.exp.content,
 						prop.exp.loc,
 						prop.exp.loc.start.offset,
-						capabilitiesPresets.all,
+						presetInfos.all,
 						'$event => {(',
 						')}',
 					),
@@ -1145,9 +1189,9 @@ export function generate(
 							() => {
 								if (isCompoundExpression && isFirstMapping) {
 									isFirstMapping = false;
-									return capabilitiesPresets.allWithHiddenParam;
+									return presetInfos.allWithHiddenParam;
 								}
-								return capabilitiesPresets.all;
+								return presetInfos.all;
 							},
 							prefix,
 							suffix,
@@ -1195,9 +1239,9 @@ export function generate(
 
 		const codes: Code[] = [];
 
-		let caps_all: VueCodeInformation = capabilitiesPresets.all;
-		let caps_diagnosticOnly: VueCodeInformation = capabilitiesPresets.diagnosticOnly;
-		let caps_attr: VueCodeInformation = capabilitiesPresets.attr;
+		let caps_all: VueCodeInformation = presetInfos.all;
+		let caps_diagnosticOnly: VueCodeInformation = presetInfos.diagnosticOnly;
+		let caps_attr: VueCodeInformation = presetInfos.attr;
 
 		if (mode === 'extraReferences') {
 			caps_all = {
@@ -1428,7 +1472,7 @@ export function generate(
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
 				codes.push(
-					['', 'template', prop.exp.loc.start.offset, capabilitiesPresets.diagnosticOnly],
+					['', 'template', prop.exp.loc.start.offset, presetInfos.diagnosticOnly],
 					'...',
 					...createInterpolationCode(
 						prop.exp.content,
@@ -1438,7 +1482,7 @@ export function generate(
 						'(',
 						')',
 					),
-					['', 'template', prop.exp.loc.end.offset, capabilitiesPresets.diagnosticOnly],
+					['', 'template', prop.exp.loc.end.offset, presetInfos.diagnosticOnly],
 					', ',
 				);
 				if (mode === 'normal') {
@@ -1533,7 +1577,7 @@ export function generate(
 							prop.arg.content,
 							prop.arg.loc,
 							prop.arg.loc.start.offset + prop.arg.loc.source.indexOf(prop.arg.content),
-							capabilitiesPresets.all,
+							presetInfos.all,
 							'(',
 							')',
 						),
@@ -1553,42 +1597,44 @@ export function generate(
 						'',
 						'template',
 						prop.loc.start.offset,
-						capabilitiesPresets.diagnosticOnly,
+						presetInfos.diagnosticOnly,
 					],
 					`__VLS_directiveFunction(__VLS_ctx.`,
 					[
 						camelize('v-' + prop.name),
 						'template',
 						[prop.loc.start.offset, prop.loc.start.offset + 'v-'.length + prop.name.length],
-						{
-							...capabilitiesPresets.noDiagnostics,
-							completionItems: {
-								// fix https://github.com/vuejs/language-tools/issues/1905
-								isAdditional: true,
+						combineEnabled(
+							presetInfos.noDiagnostics,
+							{
+								completionItems: {
+									// fix https://github.com/vuejs/language-tools/issues/1905
+									isAdditional: true,
+								},
+								renameEdits: {
+									shouldRename: true,
+									shouldEdit: true,
+									resolveNewName: camelize,
+									resolveEditText: getPropRenameApply(prop.name),
+								},
 							},
-							renameEdits: {
-								shouldRename: true,
-								shouldEdit: true,
-								resolveNewName: camelize,
-								resolveEditText: getPropRenameApply(prop.name),
-							},
-						},
+						),
 					],
 					')',
 					'(',
 				);
 				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					codes.push(
-						['', 'template', prop.exp.loc.start.offset, capabilitiesPresets.diagnosticOnly],
+						['', 'template', prop.exp.loc.start.offset, presetInfos.diagnosticOnly],
 						...createInterpolationCode(
 							prop.exp.content,
 							prop.exp.loc,
 							prop.exp.loc.start.offset,
-							capabilitiesPresets.all,
+							presetInfos.all,
 							'(',
 							')',
 						),
-						['', 'template', prop.exp.loc.end.offset, capabilitiesPresets.diagnosticOnly],
+						['', 'template', prop.exp.loc.end.offset, presetInfos.diagnosticOnly],
 					);
 					formatCodes.push(
 						...createFormatCode(
@@ -1603,7 +1649,7 @@ export function generate(
 				}
 				codes.push(
 					')',
-					['', 'template', prop.loc.end.offset, capabilitiesPresets.diagnosticOnly],
+					['', 'template', prop.loc.end.offset, presetInfos.diagnosticOnly],
 					';\n',
 				);
 			}
@@ -1623,7 +1669,7 @@ export function generate(
 						prop.value.content,
 						prop.value.loc,
 						prop.value.loc.start.offset + 1,
-						capabilitiesPresets.refAttr,
+						presetInfos.refAttr,
 						'(',
 						')',
 					),
@@ -1669,7 +1715,7 @@ export function generate(
 					prop.exp.content,
 					'template',
 					prop.exp.loc.start.offset,
-					capabilitiesPresets.scopedClassName,
+					presetInfos.scopedClassName,
 				]);
 				codes.push(`);\n`);
 			}
@@ -1684,15 +1730,15 @@ export function generate(
 		if (hasScriptSetupSlots) {
 			codes.push(
 				'__VLS_normalizeSlot(',
-				['', 'template', node.loc.start.offset, capabilitiesPresets.diagnosticOnly],
+				['', 'template', node.loc.start.offset, presetInfos.diagnosticOnly],
 				`${slotsAssignName ?? '__VLS_slots'}[`,
-				['', 'template', node.loc.start.offset, capabilitiesPresets.diagnosticOnly],
+				['', 'template', node.loc.start.offset, presetInfos.diagnosticOnly],
 				slotNameExpNode?.content ?? `('${getSlotName()}' as const)`,
-				['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly],
+				['', 'template', node.loc.end.offset, presetInfos.diagnosticOnly],
 				']',
-				['', 'template', node.loc.end.offset, capabilitiesPresets.diagnosticOnly],
+				['', 'template', node.loc.end.offset, presetInfos.diagnosticOnly],
 				')?.(',
-				['', 'template', startTagOffset, capabilitiesPresets.diagnosticOnly],
+				['', 'template', startTagOffset, presetInfos.diagnosticOnly],
 				'{\n',
 			);
 		}
@@ -1711,7 +1757,7 @@ export function generate(
 						prop.exp.content,
 						prop.exp.loc,
 						prop.exp.loc.start.offset,
-						capabilitiesPresets.attrReference,
+						presetInfos.attrReference,
 						'(',
 						')',
 					),
@@ -1729,22 +1775,24 @@ export function generate(
 						prop.arg.content,
 						'template',
 						[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
-						{
-							...capabilitiesPresets.slotProp,
-							renameEdits: {
-								shouldRename: true,
-								shouldEdit: true,
-								resolveNewName: camelize,
-								resolveEditText: getPropRenameApply(prop.arg.content),
+						combineEnabled(
+							presetInfos.slotProp,
+							{
+								renameEdits: {
+									shouldRename: true,
+									shouldEdit: true,
+									resolveNewName: camelize,
+									resolveEditText: getPropRenameApply(prop.arg.content),
+								},
 							},
-						},
+						),
 					], prop.arg.loc),
 					': ',
 					...createInterpolationCode(
 						prop.exp.content,
 						prop.exp.loc,
 						prop.exp.loc.start.offset,
-						capabilitiesPresets.attrReference,
+						presetInfos.attrReference,
 						'(',
 						')',
 					),
@@ -1760,15 +1808,17 @@ export function generate(
 						prop.name,
 						'template',
 						prop.loc.start.offset,
-						{
-							...capabilitiesPresets.attr,
-							renameEdits: {
-								shouldRename: true,
-								shouldEdit: true,
-								resolveNewName: camelize,
-								resolveEditText: getPropRenameApply(prop.name),
+						combineEnabled(
+							presetInfos.attr,
+							{
+								renameEdits: {
+									shouldRename: true,
+									shouldEdit: true,
+									resolveNewName: camelize,
+									resolveEditText: getPropRenameApply(prop.name),
+								},
 							},
-						},
+						),
 					], prop.loc),
 					': (',
 					prop.value !== undefined ? `"${toUnicodeIfNeed(prop.value.content)}"` : 'true',
@@ -1778,7 +1828,7 @@ export function generate(
 		}
 		codes.push(
 			'}',
-			hasScriptSetupSlots ? ['', 'template', startTagOffset + node.tag.length, capabilitiesPresets.diagnosticOnly] : '',
+			hasScriptSetupSlots ? ['', 'template', startTagOffset + node.tag.length, presetInfos.diagnosticOnly] : '',
 			hasScriptSetupSlots ? `);\n` : `;\n`
 		);
 
@@ -1851,10 +1901,10 @@ export function generate(
 					v.text,
 					'template',
 					v.offset,
-					{
-						...capabilitiesPresets,
-						completionItems: { isAdditional: true },
-					},
+					combineEnabled(
+						presetInfos.disabledAll,
+						{ completionItems: { isAdditional: true }, },
+					),
 				]);
 				codes.push(',');
 			}
@@ -1872,11 +1922,13 @@ export function generate(
 				mapCode,
 				'template',
 				sourceOffset,
-				{
-					...capabilitiesPresets,
-					formattingEdits: true,
-					linkedEditingRanges: true, // support vue-autoinsert-parentheses
-				},
+				combineEnabled(
+					presetInfos.disabledAll,
+					{
+						formattingEdits: true,
+						autoInserts: true, // support vue-autoinsert-parentheses
+					},
+				),
 			],
 			formatWrapper[1],
 			'\n',
@@ -1939,7 +1991,7 @@ export function generate(
 						'template',
 						start + fragOffset,
 						isJustForErrorMapping
-							? capabilitiesPresets.diagnosticOnly
+							? presetInfos.diagnosticOnly
 							: typeof data === 'function' ? data() : data,
 					]);
 				}
