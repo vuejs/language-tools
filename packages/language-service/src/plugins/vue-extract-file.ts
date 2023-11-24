@@ -1,6 +1,6 @@
 import { CreateFile, Service, ServiceContext, TextDocumentEdit, TextEdit } from '@volar/language-service';
 import { ExpressionNode, type TemplateChildNode } from '@vue/compiler-dom';
-import { Sfc, VueFile, scriptRanges } from '@vue/language-core';
+import { MappingKey, Sfc, VueFile, scriptRanges } from '@vue/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { Provide } from 'volar-service-typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
@@ -62,9 +62,9 @@ export const create = function (): Service {
 			async resolveCodeAction(codeAction) {
 
 				const { uri, range, newName } = codeAction.data as ActionData;
-				const document = ctx!.getTextDocument(uri)!;
 				const [startOffset, endOffset]: [number, number] = range;
-				const [vueFile] = ctx!.project.fileProvider.getVirtualFile(document.uri) as [VueFile, any];
+				const [vueFile] = ctx!.project.fileProvider.getVirtualFile(uri) as [VueFile, any];
+				const document = ctx!.documents.get(uri, vueFile.languageId, vueFile.snapshot)!;
 				const { sfc } = vueFile;
 				const script = sfc.scriptSetup ?? sfc.script;
 
@@ -180,7 +180,7 @@ export const create = function (): Service {
 					}>();
 					const checker = languageService.getProgram()!.getTypeChecker();
 					const [virtualFile] = ctx!.project.fileProvider.getVirtualFile(tsScriptUri);
-					const maps = virtualFile ? [...ctx!.documents.getMapsByVirtualFile(virtualFile)] : [];
+					const maps = virtualFile ? [...ctx!.documents.getMaps(virtualFile)] : [];
 
 					sourceFile.forEachChild(function visit(node) {
 						if (
@@ -191,8 +191,8 @@ export const create = function (): Service {
 						) {
 							const { name } = node;
 							for (const map of maps) {
-								const source = map.map.toSourceOffset(name.getEnd());
-								if (source && source[0] >= sfc.template!.startTagEnd + templateCodeRange![0] && source[0] <= sfc.template!.startTagEnd + templateCodeRange![1] && source[1].data.semanticTokens) {
+								const source = map.map.getSourceOffset(name.getEnd());
+								if (source && source[0] >= sfc.template!.startTagEnd + templateCodeRange![0] && source[0] <= sfc.template!.startTagEnd + templateCodeRange![1] && source[1][MappingKey.DATA].semanticTokens) {
 									if (!result.has(name.text)) {
 										const type = checker.getTypeAtLocation(node);
 										const typeString = checker.typeToString(type, node, ts.TypeFormatFlags.NoTruncation);

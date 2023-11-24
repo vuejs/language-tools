@@ -16,6 +16,7 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 					info.languageServiceHost.getCompilationSettings(),
 					getVueCompilerOptions(),
 				),
+				ts.sys.useCaseSensitiveFileNames,
 				() => { }
 			);
 

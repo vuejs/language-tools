@@ -1,4 +1,4 @@
-import { FileRangeCapabilities, Service, ServiceContext, SourceMapWithDocuments } from '@volar/language-service';
+import { CodeInformation, Service, ServiceContext, SourceMapWithDocuments } from '@volar/language-service';
 import { VueFile, hyphenateAttr, hyphenateTag, parseScriptSetupRanges, tsCodegen } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import * as html from 'vscode-html-languageservice';
@@ -78,8 +78,8 @@ export const create = <S extends Service>(options: {
 			const [virtualFile] = _context.project.fileProvider.getVirtualFile(document.uri);
 
 			if (virtualFile) {
-				for (const map of _context.documents.getMapsByVirtualFile(virtualFile)) {
-					const sourceVirtualFile = _context.project.fileProvider.getSourceFile(map.sourceFileDocument.uri)?.root;
+				for (const map of _context.documents.getMaps(virtualFile)) {
+					const sourceVirtualFile = _context.project.fileProvider.getSourceFile(map.sourceFileDocument.uri)?.virtualFile?.[0];
 					if (sourceVirtualFile instanceof VueFile) {
 						await provideHtmlData(map, sourceVirtualFile);
 					}
@@ -91,8 +91,8 @@ export const create = <S extends Service>(options: {
 				return;
 
 			if (virtualFile) {
-				for (const map of _context.documents.getMapsByVirtualFile(virtualFile)) {
-					const sourceVirtualFile = _context.project.fileProvider.getSourceFile(map.sourceFileDocument.uri)?.root;
+				for (const map of _context.documents.getMaps(virtualFile)) {
+					const sourceVirtualFile = _context.project.fileProvider.getSourceFile(map.sourceFileDocument.uri)?.virtualFile?.[0];
 					if (sourceVirtualFile instanceof VueFile) {
 						afterHtmlCompletion(htmlComplete, map, sourceVirtualFile);
 					}
@@ -117,9 +117,9 @@ export const create = <S extends Service>(options: {
 			if (!virtualFile)
 				return;
 
-			for (const map of _context.documents.getMapsByVirtualFile(virtualFile)) {
+			for (const map of _context.documents.getMaps(virtualFile)) {
 
-				const sourceVirtualFile = _context.project.fileProvider.getSourceFile(map.sourceFileDocument.uri)?.root;
+				const sourceVirtualFile = _context.project.fileProvider.getSourceFile(map.sourceFileDocument.uri)?.virtualFile?.[0];
 				const scanner = options.getScanner(htmlOrPugService, document);
 
 				if (sourceVirtualFile instanceof VueFile && scanner) {
@@ -241,9 +241,9 @@ export const create = <S extends Service>(options: {
 			if (!virtualFile)
 				return;
 
-			for (const map of _context.documents.getMapsByVirtualFile(virtualFile)) {
+			for (const map of _context.documents.getMaps(virtualFile)) {
 
-				const sourceVirtualFile = _context.project.fileProvider.getSourceFile(map.sourceFileDocument.uri)?.root;
+				const sourceVirtualFile = _context.project.fileProvider.getSourceFile(map.sourceFileDocument.uri)?.virtualFile?.[0];
 				if (!(sourceVirtualFile instanceof VueFile))
 					continue;
 
@@ -303,9 +303,9 @@ export const create = <S extends Service>(options: {
 			if (!virtualFile)
 				return;
 
-			for (const map of _context.documents.getMapsByVirtualFile(virtualFile)) {
+			for (const map of _context.documents.getMaps(virtualFile)) {
 
-				const sourceFile = _context.project.fileProvider.getSourceFile(map.sourceFileDocument.uri)?.root;
+				const sourceFile = _context.project.fileProvider.getSourceFile(map.sourceFileDocument.uri)?.virtualFile?.[0];
 				if (!(sourceFile instanceof VueFile))
 					continue;
 
@@ -355,7 +355,7 @@ export const create = <S extends Service>(options: {
 		},
 	};
 
-	async function provideHtmlData(map: SourceMapWithDocuments<FileRangeCapabilities>, vueSourceFile: VueFile) {
+	async function provideHtmlData(map: SourceMapWithDocuments<CodeInformation>, vueSourceFile: VueFile) {
 
 		const languageService = _context!.inject('typescript/languageService');
 		const languageServiceHost = _context!.inject('typescript/languageServiceHost');
@@ -549,7 +549,7 @@ export const create = <S extends Service>(options: {
 		]);
 	}
 
-	function afterHtmlCompletion(completionList: vscode.CompletionList, map: SourceMapWithDocuments<FileRangeCapabilities>, vueSourceFile: VueFile) {
+	function afterHtmlCompletion(completionList: vscode.CompletionList, map: SourceMapWithDocuments<CodeInformation>, vueSourceFile: VueFile) {
 
 		const languageService = _context!.inject('typescript/languageService');
 		const replacement = getReplacement(completionList, map.sourceFileDocument);

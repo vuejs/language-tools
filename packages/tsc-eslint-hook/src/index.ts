@@ -13,13 +13,13 @@ export = async function (
 		baseConfig: resolveConfig(tsProgram),
 		useEslintrc: false,
 	});
-	const fileNames = program.__vue.project.typescript!.projectHost.getScriptFileNames();
+	const fileNames = program.__vue.project.typescript!.languageServiceHost.getScriptFileNames();
 	const fileProvider = program.__vue.project.fileProvider;
 	const formatter = await eslint.loadFormatter();
 
 	for (const fileName of fileNames) {
 
-		const vueFile = fileProvider.getSourceFile(fileName)?.root;
+		const vueFile = fileProvider.getSourceFile(fileName)?.virtualFile?.[0];
 
 		if (vueFile) {
 
@@ -27,7 +27,7 @@ export = async function (
 			const all: typeof vueFile.embeddedFiles = [];
 
 			vueFile.embeddedFiles.forEach(async function visit(embeddedFile) {
-				if (embeddedFile.capabilities.diagnostic) {
+				if (embeddedFile.mappings.some(mapping => mapping[3].diagnostics ?? true)) {
 					all.push(embeddedFile);
 				}
 				embeddedFile.embeddedFiles.forEach(visit);
@@ -71,15 +71,19 @@ export = async function (
 							if (sourceSnapshot !== vueFile.snapshot)
 								continue;
 
-							for (const start of map.toSourceOffsets(msgStart)) {
+							for (const start of map.getSourceOffsets(msgStart)) {
 
-								const reportStart = typeof start[1].data.diagnostic === 'object' ? typeof start[1].data.diagnostic.shouldReport() : !!start[1].data.diagnostic;
+								const reportStart = typeof start[1][3].diagnostics === 'object'
+									? typeof start[1][3].diagnostics.shouldReport()
+									: (start[1][3].diagnostics ?? true);
 								if (!reportStart)
 									continue;
 
-								for (const end of map.toSourceOffsets(msgEnd, true)) {
+								for (const end of map.getSourceOffsets(msgEnd, true)) {
 
-									const reportEnd = typeof end[1].data.diagnostic === 'object' ? typeof end[1].data.diagnostic.shouldReport() : !!end[1].data.diagnostic;
+									const reportEnd = typeof end[1][3].diagnostics === 'object'
+										? typeof end[1][3].diagnostics.shouldReport()
+										: (end[1][3].diagnostics ?? true);
 									if (!reportEnd)
 										continue;
 

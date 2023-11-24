@@ -32,7 +32,7 @@ export function createServerPlugin(connection: Connection) {
 		return {
 			extraFileExtensions: vueFileExtensions.map<ts.FileExtensionInfo>(ext => ({ extension: ext, isMixedContent: true, scriptKind: ts.ScriptKind.Deferred })),
 			watchFileExtensions: ['js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json', ...vueFileExtensions],
-			async resolveConfig(config, env, projectHost) {
+			async resolveConfig(config, env, info) {
 
 				const vueOptions = await getVueCompilerOptions();
 
@@ -40,7 +40,7 @@ export function createServerPlugin(connection: Connection) {
 					envToVueOptions.set(env, vue.resolveVueCompilerOptions(vueOptions));
 				}
 
-				config.languages = vue.resolveLanguages(ts, config.languages ?? {}, projectHost?.getCompilationSettings() ?? {}, vueOptions, options.codegenStack);
+				config.languages = vue.resolveLanguages(ts, config.languages ?? {}, info?.parsedCommandLine.options ?? {}, vueOptions, options.codegenStack);
 				config.services = vue.resolveServices(config.services ?? {}, vueOptions);
 
 				return config;
@@ -49,18 +49,18 @@ export function createServerPlugin(connection: Connection) {
 
 					let vueOptions: Partial<vue.VueCompilerOptions> = {};
 
-					if (env && projectHost) {
+					if (env && info) {
 						const sys = createSys(ts, env, env.uriToFileName(env.workspaceFolder.uri.toString()));
 						let sysVersion: number | undefined;
 						let newSysVersion = await sys.sync();
 
 						while (sysVersion !== newSysVersion) {
 							sysVersion = newSysVersion;
-							if (projectHost.configFileName) {
-								vueOptions = vue2.createParsedCommandLine(ts, sys, projectHost.configFileName).vueOptions;
+							if (info.configFileName) {
+								vueOptions = vue2.createParsedCommandLine(ts, sys, info.configFileName).vueOptions;
 							}
 							else {
-								vueOptions = vue2.createParsedCommandLineByJson(ts, sys, projectHost.getCurrentDirectory(), projectHost.getCompilationSettings()).vueOptions;
+								vueOptions = vue2.createParsedCommandLineByJson(ts, sys, env.uriToFileName(env.workspaceFolder.uri.toString()), info.parsedCommandLine.options).vueOptions;
 							}
 							newSysVersion = await sys.sync();
 						}
@@ -120,17 +120,18 @@ export function createServerPlugin(connection: Connection) {
 					const langaugeService = project.getLanguageService();
 
 					let checker = checkers.get(project);
-					if (!checker) {
-						checker = componentMeta.baseCreate(
-							ts,
-							langaugeService.context.project.typescript!.projectHost,
-							envToVueOptions.get(langaugeService.context.env)!,
-							{},
-							langaugeService.context.project.typescript!.projectHost.getCurrentDirectory() + '/tsconfig.json.global.vue',
-						);
-						checkers.set(project, checker);
-					}
-					return checker.getComponentMeta(langaugeService.context.env.uriToFileName(params.uri));
+					// if (!checker) {
+					// 	checker = componentMeta.baseCreate(
+					// 		ts,
+					// 		langaugeService.context.project.typescript?.configFileName,
+					// 		langaugeService.context.project.typescript!.projectHost,
+					// 		envToVueOptions.get(langaugeService.context.env)!,
+					// 		{},
+					// 		langaugeService.context.project.typescript!.projectHost.getCurrentDirectory() + '/tsconfig.json.global.vue',
+					// 	);
+					// 	checkers.set(project, checker);
+					// }
+					return checker?.getComponentMeta(langaugeService.context.env.uriToFileName(params.uri));
 				});
 
 				async function getService(uri: string) {

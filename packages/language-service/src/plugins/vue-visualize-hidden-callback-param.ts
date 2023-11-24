@@ -1,5 +1,6 @@
-import { Service } from '@volar/language-service';
+import { MappingKey, Service } from '@volar/language-service';
 import type * as vscode from 'vscode-languageserver-protocol';
+import type { VueCodeInformation } from '../types';
 
 const plugin: Service = (context) => {
 
@@ -21,17 +22,11 @@ const plugin: Service = (context) => {
 
 				for (const mapping of vitualFile.mappings) {
 
-					const hint: {
-						setting: string;
-						label: string;
-						tooltip: string;
-						paddingRight?: boolean;
-						paddingLeft?: boolean;
-					} | undefined = (mapping.data as any).__hint;
+					const hint = (mapping[MappingKey.DATA] as VueCodeInformation).__hint;
 
 					if (
-						mapping.generatedRange[0] >= start
-						&& mapping.generatedRange[1] <= end
+						mapping[MappingKey.GENERATED_CODE_RANGE][0] >= start
+						&& mapping[MappingKey.GENERATED_CODE_RANGE][1] <= end
 						&& hint
 					) {
 
@@ -44,7 +39,7 @@ const plugin: Service = (context) => {
 							label: hint.label,
 							paddingRight: hint.paddingRight,
 							paddingLeft: hint.paddingLeft,
-							position: document.positionAt(mapping.generatedRange[0]),
+							position: document.positionAt(mapping[MappingKey.GENERATED_CODE_RANGE][0]),
 							kind: 2 satisfies typeof vscode.InlayHintKind.Parameter,
 							tooltip: {
 								kind: 'markdown',

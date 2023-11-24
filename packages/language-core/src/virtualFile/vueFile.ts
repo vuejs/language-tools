@@ -1,4 +1,4 @@
-import { FileCapabilities, FileKind, VirtualFile, forEachEmbeddedFile } from '@volar/language-core';
+import { VirtualFile, forEachEmbeddedFile } from '@volar/language-core';
 import { Stack } from '@volar/source-map';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { VueCompilerOptions, VueLanguagePlugin } from '../types';
@@ -25,20 +25,16 @@ export class VueFile implements VirtualFile {
 
 	// others
 
-	capabilities = FileCapabilities.full;
-	kind = FileKind.TextFile;
 	codegenStacks: Stack[] = [];
 	get embeddedFiles() {
 		return this.getEmbeddedFiles();
 	}
 	get mainTsFile() {
-		let result: VirtualFile | undefined;
-		forEachEmbeddedFile(this, file => {
-			if (file.kind === FileKind.TypeScriptHostFile && file.id.substring(this.id.length).match(jsxReg)) {
-				result = file;
+		for (const file of forEachEmbeddedFile(this)) {
+			if (file.typescript && file.id.substring(this.id.length).match(jsxReg)) {
+				return file;
 			}
-		});
-		return result;
+		}
 	}
 	get snapshot() {
 		return this._snapshot();

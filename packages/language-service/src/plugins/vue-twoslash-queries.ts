@@ -1,4 +1,4 @@
-import { FileKind, forEachEmbeddedFile, Service, ServiceContext } from '@volar/language-service';
+import { forEachEmbeddedFile, Service, ServiceContext } from '@volar/language-service';
 import * as vue from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 
@@ -29,12 +29,12 @@ const plugin: Service = (context: ServiceContext<import('volar-service-typescrip
 					})]);
 				}
 
-				forEachEmbeddedFile(vueFile, (virtualFile) => {
-					if (virtualFile.kind === FileKind.TypeScriptHostFile) {
-						for (const map of context.documents.getMapsByVirtualFile(virtualFile)) {
+				for (const virtualFile of forEachEmbeddedFile(vueFile)) {
+					if (virtualFile.typescript) {
+						for (const map of context.documents.getMaps(virtualFile)) {
 							for (const [pointerPosition, hoverOffset] of hoverOffsets) {
-								for (const [tsOffset, mapping] of map.map.toGeneratedOffsets(hoverOffset)) {
-									if (mapping.data.hover) {
+								for (const [tsOffset, mapping] of map.map.getGeneratedOffsets(hoverOffset)) {
+									if (mapping[vue.MappingKey.DATA].hover) {
 										const quickInfo = languageService.getQuickInfoAtPosition(context.env.uriToFileName(virtualFile.id), tsOffset);
 										if (quickInfo) {
 											inlayHints.push({
@@ -50,7 +50,7 @@ const plugin: Service = (context: ServiceContext<import('volar-service-typescrip
 							}
 						}
 					}
-				});
+				}
 
 				return inlayHints;
 			});

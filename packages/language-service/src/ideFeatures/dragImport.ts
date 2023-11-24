@@ -18,12 +18,16 @@ export function getDragImportEdits(
 	additionalEdits: vscode.TextEdit[];
 } | undefined {
 
+	const sourceFile = ctx.project.fileProvider.getSourceFile(uri);
+	if (!sourceFile)
+		return;
+
 	let baseName = importUri.substring(importUri.lastIndexOf('/') + 1);
 	baseName = baseName.substring(0, baseName.lastIndexOf('.'));
 
 	const newName = capitalize(camelize(baseName));
-	const document = ctx!.getTextDocument(uri)!;
-	const [vueFile] = ctx!.project.fileProvider.getVirtualFile(document.uri) as [VueFile, any];
+	const document = ctx.documents.get(uri, sourceFile.languageId, sourceFile.snapshot);
+	const [vueFile] = ctx.project.fileProvider.getVirtualFile(document.uri) as [VueFile, any];
 	const { sfc } = vueFile;
 	const script = sfc.scriptSetup ?? sfc.script;
 

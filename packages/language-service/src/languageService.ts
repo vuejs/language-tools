@@ -93,13 +93,13 @@ export function resolveServices(
 
 					if (virtualFile && sourceFile) {
 
-						for (const map of ctx.documents.getMapsByVirtualFile(virtualFile)) {
+						for (const map of ctx.documents.getMaps(virtualFile)) {
 
-							const sourceVirtualFile = ctx.project.fileProvider.getSourceFile(map.sourceFileDocument.uri)?.root;
+							const sourceVirtualFile = ctx.project.fileProvider.getSourceFile(map.sourceFileDocument.uri)?.virtualFile?.[0];
 
 							if (sourceVirtualFile instanceof VueFile) {
 
-								const isAutoImport = !!map.toSourcePosition(position, data => typeof data.completion === 'object' && !!data.completion.autoImportOnly);
+								const isAutoImport = !!map.toSourcePosition(position, data => typeof data.completionItems === 'object' && !!data.completionItems.onlyImport);
 								if (isAutoImport) {
 
 									for (const item of result.items) {
@@ -183,7 +183,7 @@ export function resolveServices(
 						const componentName = newName ?? item.textEdit.newText;
 						const optionEdit = ExtractComponentService.createAddComponentToOptionEdit(ts, ast, componentName);
 						if (optionEdit) {
-							const textDoc = ctx.documents.getDocumentByUri(virtualFile.id, virtualFile.languageId, virtualFile.snapshot);
+							const textDoc = ctx.documents.get(virtualFile.id, virtualFile.languageId, virtualFile.snapshot);
 							item.additionalTextEdits.push({
 								range: {
 									start: textDoc.positionAt(optionEdit.range.start),

@@ -13,7 +13,7 @@ export async function convertTagName(
 	vueCompilerOptions: VueCompilerOptions,
 ) {
 
-	const rootFile = context.project.fileProvider.getSourceFile(uri)?.root;
+	const rootFile = context.project.fileProvider.getSourceFile(uri)?.virtualFile?.[0];
 	if (!(rootFile instanceof VueFile))
 		return;
 
@@ -23,7 +23,7 @@ export async function convertTagName(
 
 	const languageService = context.inject('typescript/languageService');
 	const template = desc.template;
-	const document = context.documents.getDocumentByUri(rootFile.id, rootFile.languageId, rootFile.snapshot);
+	const document = context.documents.get(rootFile.id, rootFile.languageId, rootFile.snapshot);
 	const edits: vscode.TextEdit[] = [];
 	const components = getComponentNames(ts, languageService, context.env, rootFile, vueCompilerOptions);
 	const tags = getTemplateTagsAndAttrs(rootFile);
@@ -56,7 +56,7 @@ export async function convertAttrName(
 	vueCompilerOptions: VueCompilerOptions,
 ) {
 
-	const rootFile = context.project.fileProvider.getSourceFile(uri)?.root;
+	const rootFile = context.project.fileProvider.getSourceFile(uri)?.virtualFile?.[0];
 	if (!(rootFile instanceof VueFile))
 		return;
 
@@ -66,7 +66,7 @@ export async function convertAttrName(
 
 	const languageService = context.inject('typescript/languageService');
 	const template = desc.template;
-	const document = context.documents.getDocumentByUri(rootFile.id, rootFile.languageId, rootFile.snapshot);
+	const document = context.documents.get(rootFile.id, rootFile.languageId, rootFile.snapshot);
 	const edits: vscode.TextEdit[] = [];
 	const components = getComponentNames(ts, languageService, context.env, rootFile, vueCompilerOptions);
 	const tags = getTemplateTagsAndAttrs(rootFile);
@@ -128,7 +128,7 @@ export function detect(
 	attr: AttrNameCasing[],
 } {
 
-	const rootFile = context.project.fileProvider.getSourceFile(uri)?.root;
+	const rootFile = context.project.fileProvider.getSourceFile(uri)?.virtualFile?.[0];
 	if (!(rootFile instanceof VueFile)) {
 		return {
 			tag: [],

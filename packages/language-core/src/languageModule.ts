@@ -84,17 +84,22 @@ export function createVueLanguage(
 			sourceFile.update(snapshot);
 		},
 		typescript: {
-			resolveProjectHost(host) {
+			resolveSourceFileName(tsFileName) {
+				const baseName = path.basename(tsFileName);
+				if (baseName.indexOf('.vue.')) { // .vue.ts .vue.d.ts .vue.js .vue.jsx .vue.tsx
+					return tsFileName.substring(0, tsFileName.lastIndexOf('.vue.') + '.vue'.length);
+				}
+			},
+			resolveModuleName(moduleName, impliedNodeFormat) {
+				if (impliedNodeFormat === 99 satisfies ts.ModuleKind.ESNext && vueCompilerOptions.extensions.some(ext => moduleName.endsWith(ext))) {
+					return `${moduleName}.js`;
+				}
+			},
+			resolveLanguageServiceHost(host) {
 				const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(sharedTypes.getTypesCode(vueCompilerOptions));
 				const sharedTypesFileName = path.join(host.getCurrentDirectory(), sharedTypes.baseName);
 				return {
 					...host,
-					resolveModuleName(moduleName, impliedNodeFormat) {
-						if (impliedNodeFormat === ts.ModuleKind.ESNext && vueCompilerOptions.extensions.some(ext => moduleName.endsWith(ext))) {
-							return `${moduleName}.js`;
-						}
-						return host.resolveModuleName?.(moduleName, impliedNodeFormat) ?? moduleName;
-					},
 					getScriptFileNames() {
 						return [
 							sharedTypesFileName,

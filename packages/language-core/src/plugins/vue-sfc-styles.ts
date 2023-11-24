@@ -1,4 +1,3 @@
-import { FileCapabilities, FileRangeCapabilities } from '@volar/language-core';
 import { VueLanguagePlugin } from '../types';
 
 const styleReg = /^(.*)\.style_(\d+)\.([^.]+)$/;
@@ -24,12 +23,11 @@ const plugin: VueLanguagePlugin = () => {
 				const index = parseInt(match[2]);
 				const style = sfc.styles[index];
 
-				embeddedFile.capabilities = FileCapabilities.full;
 				embeddedFile.content.push([
 					style.content,
 					style.name,
 					0,
-					FileRangeCapabilities.full,
+					{},
 				]);
 			}
 		},

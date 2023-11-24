@@ -1,4 +1,5 @@
-import { TypeScriptProjectHost, createLanguageService, createTypeScriptProject, resolveCommonLanguageId } from '@volar/language-service';
+import { createLanguageService, resolveCommonLanguageId } from '@volar/language-service';
+import { createProject, ProjectHost } from '@volar/typescript';
 import * as path from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { URI } from 'vscode-uri';
@@ -17,13 +18,16 @@ function createTester(root: string) {
 	const parsedCommandLine = createParsedCommandLine(ts, ts.sys, realTsConfig);
 	parsedCommandLine.fileNames = parsedCommandLine.fileNames.map(fileName => fileName.replace(/\\/g, '/'));
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
-	const projectHost: TypeScriptProjectHost = {
-		configFileName: realTsConfig,
+	const serviceEnv = createMockServiceEnv(rootUri, () => currentVSCodeSettings ?? defaultVSCodeSettings);
+	const projectHost: ProjectHost = {
 		getCurrentDirectory: () => root,
 		getProjectVersion: () => '0',
 		getScriptFileNames: () => parsedCommandLine.fileNames,
 		getCompilationSettings: () => parsedCommandLine.options,
 		getScriptSnapshot,
+		getFileName: serviceEnv.uriToFileName,
+		getFileId: serviceEnv.fileNameToUri,
+		getLanguageId: resolveCommonLanguageId,
 	};
 	const languages = resolveLanguages(ts, {}, parsedCommandLine.options, parsedCommandLine.vueOptions);
 	const services = resolveServices({}, parsedCommandLine.vueOptions);
@@ -32,12 +36,12 @@ function createTester(root: string) {
 		'javascript.preferences.quoteStyle': 'single',
 	};
 	let currentVSCodeSettings: any;
-	const serviceEnv = createMockServiceEnv(rootUri, () => currentVSCodeSettings ?? defaultVSCodeSettings);
-	const project = createTypeScriptProject(
+	const project = createProject(
+		ts,
+		ts.sys,
 		Object.values(languages),
+		realTsConfig,
 		projectHost,
-		serviceEnv.fileNameToUri,
-		resolveCommonLanguageId
 	);
 	const languageService = createLanguageService({ typescript: ts as any }, Object.values(services), serviceEnv, project);
 

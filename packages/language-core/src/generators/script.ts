@@ -1,4 +1,4 @@
-import { FileRangeCapabilities, MirrorBehaviorCapabilities } from '@volar/language-core';
+import { LinkedCodeTrigger } from '@volar/language-core';
 import * as SourceMaps from '@volar/source-map';
 import { Segment, getLength } from '@volar/source-map';
 import * as muggle from 'muggle-string';
@@ -7,7 +7,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import type * as templateGen from '../generators/template';
 import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
-import type { TextRange, VueCompilerOptions } from '../types';
+import type { TextRange, VueCodeInformation, VueCompilerOptions } from '../types';
 import { Sfc } from '../types';
 import { getSlotsPropertyName, hyphenateTag } from '../utils/shared';
 import { walkInterpolationFragment } from '../utils/transform';
@@ -27,8 +27,8 @@ export function generate(
 	codegenStack: boolean,
 ) {
 
-	const [codes, codeStacks] = codegenStack ? muggle.track([] as Segment<FileRangeCapabilities>[]) : [[], []];
-	const mirrorBehaviorMappings: SourceMaps.Mapping<[MirrorBehaviorCapabilities, MirrorBehaviorCapabilities]>[] = [];
+	const [codes, codeStacks] = codegenStack ? muggle.track([] as Segment<VueCodeInformation>[]) : [[], []];
+	const mirrorBehaviorMappings: SourceMaps.Mapping<[LinkedCodeTrigger, LinkedCodeTrigger]>[] = [];
 
 	//#region monkey fix: https://github.com/vuejs/language-tools/pull/2113
 	if (!script && !scriptSetup) {
@@ -155,10 +155,10 @@ export function generate(
 			'script',
 			[script.srcOffset - 1, script.srcOffset + script.src.length + 1],
 			{
-				...FileRangeCapabilities.full,
-				rename: src === script.src ? true : {
-					normalize: undefined,
-					apply(newName) {
+				renameEdits: src === script.src ? true : {
+					shouldRename: false,
+					shouldEdit: true,
+					resolveEditText(newName) {
 						if (
 							newName.endsWith('.jsx')
 							|| newName.endsWith('.js')
@@ -245,7 +245,7 @@ export function generate(
 			scriptSetup.content.substring(0, Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset)) + '\n',
 			'scriptSetup',
 			0,
-			FileRangeCapabilities.full,
+			{},
 		]);
 	}
 	function generateExportDefaultEndMapping() {
@@ -257,7 +257,7 @@ export function generate(
 			'',
 			'scriptSetup',
 			scriptSetup.content.length,
-			{ diagnostic: true },
+			{ diagnostics: true },
 		]);
 		codes.push(`\n`);
 	}
@@ -279,7 +279,7 @@ export function generate(
 				scriptSetup.generic,
 				scriptSetup.name,
 				scriptSetup.genericOffset,
-				FileRangeCapabilities.full,
+				{},
 			]);
 			if (!scriptSetup.generic.endsWith(',')) {
 				codes.push(`,`);
@@ -410,14 +410,12 @@ export function generate(
 				const propName = scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
 				const propMirror = definePropMirrors[propName];
 				if (propMirror) {
-					mirrorBehaviorMappings.push({
-						sourceRange: [defineProp.name.start + scriptSetupGeneratedOffset, defineProp.name.end + scriptSetupGeneratedOffset],
-						generatedRange: propMirror,
-						data: [
-							MirrorBehaviorCapabilities.full,
-							MirrorBehaviorCapabilities.full,
-						],
-					});
+					mirrorBehaviorMappings.push([
+						undefined,
+						[defineProp.name.start + scriptSetupGeneratedOffset, defineProp.name.end + scriptSetupGeneratedOffset],
+						propMirror,
+						[{}, {}],
+					]);
 				}
 			}
 		}
@@ -761,14 +759,12 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 					const scriptEnd = getLength(codes);
 					codes.push(',\n');
 
-					mirrorBehaviorMappings.push({
-						sourceRange: [scriptStart, scriptEnd],
-						generatedRange: [templateStart, templateEnd],
-						data: [
-							MirrorBehaviorCapabilities.full,
-							MirrorBehaviorCapabilities.full,
-						],
-					});
+					mirrorBehaviorMappings.push([
+						undefined,
+						[scriptStart, scriptEnd],
+						[templateStart, templateEnd],
+						[{}, {}],
+					]);
 				}
 			}
 			codes.push(`};\n`); // return {
@@ -793,7 +789,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				componentsOption.start,
 				{
 					references: true,
-					rename: true,
+					renameEdits: true,
 				},
 			]);
 		}
@@ -907,7 +903,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				classRange.start,
 				{
 					references: true,
-					referencesCodeLens,
+					__referencesCodeLens: referencesCodeLens,
 				},
 			]);
 			codes.push(`'`);
@@ -917,9 +913,11 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				[classRange.start, classRange.end],
 				{
 					references: true,
-					rename: {
-						normalize: normalizeCssRename,
-						apply: applyCssRename,
+					renameEdits: {
+						shouldRename: true,
+						shouldEdit: true,
+						resolveNewName: normalizeCssRename,
+						resolveEditText: applyCssRename,
 					},
 				},
 			]);
@@ -954,8 +952,8 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 									style.name,
 									cssBind.offset + fragOffset,
 									onlyForErrorMapping
-										? { diagnostic: true }
-										: FileRangeCapabilities.full,
+										? { diagnostics: true }
+										: {},
 								]);
 							}
 						},
@@ -999,7 +997,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			(vueTag === 'script' ? script : scriptSetup)!.content.substring(start, end),
 			vueTag,
 			start,
-			FileRangeCapabilities.full, // diagnostic also working for setup() returns unused in template checking
+			{}, // diagnostic also working for setup() returns unused in template checking
 		]);
 		muggle.resetOffsetStack();
 	}
@@ -1011,8 +1009,8 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			start,
 			{
 				references: true,
-				definition: true,
-				rename: true,
+				definitions: true,
+				renameEdits: true,
 			},
 		]);
 		muggle.resetOffsetStack();

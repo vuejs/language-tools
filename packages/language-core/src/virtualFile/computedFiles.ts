@@ -1,5 +1,5 @@
 import { VirtualFile, resolveCommonLanguageId } from '@volar/language-core';
-import { buildMappings, buildStacks, toString } from '@volar/source-map';
+import { MappingKey, buildMappings, buildStacks, toString } from '@volar/source-map';
 import { computed } from 'computeds';
 import * as muggle from 'muggle-string';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -52,9 +52,8 @@ export function computedFiles(
 			embeddedFiles.push({
 				id: file.fileName,
 				languageId: resolveCommonLanguageId(file.fileName),
-				kind: file.kind,
-				capabilities: file.capabilities,
-				mirrorBehaviorMappings: file.mirrorBehaviorMappings,
+				typescript: file.typescript,
+				linkedCodeMappings: file.linkedCodeMappings,
 				snapshot,
 				mappings,
 				codegenStacks,
@@ -72,9 +71,8 @@ export function computedFiles(
 					embeddedFiles.push({
 						id: file.fileName,
 						languageId: resolveCommonLanguageId(file.fileName),
-						kind: file.kind,
-						capabilities: file.capabilities,
-						mirrorBehaviorMappings: file.mirrorBehaviorMappings,
+						typescript: file.typescript,
+						linkedCodeMappings: file.linkedCodeMappings,
 						snapshot,
 						mappings,
 						codegenStacks,
@@ -88,9 +86,8 @@ export function computedFiles(
 						parent.embeddedFiles.push({
 							id: file.fileName,
 							languageId: resolveCommonLanguageId(file.fileName),
-							kind: file.kind,
-							capabilities: file.capabilities,
-							mirrorBehaviorMappings: file.mirrorBehaviorMappings,
+							typescript: file.typescript,
+							linkedCodeMappings: file.linkedCodeMappings,
 							snapshot,
 							mappings,
 							codegenStacks,
@@ -189,18 +186,19 @@ function compiledPluginFiles(
 			const { file, snapshot } = _file();
 			const mappings = buildMappings(file.content);
 			for (const mapping of mappings) {
-				if (mapping.source !== undefined) {
-					const block = nameToBlock()[mapping.source];
+				const source = mapping[MappingKey.SOURCE_FILE];
+				if (source !== undefined) {
+					const block = nameToBlock()[source];
 					if (block) {
-						mapping.sourceRange = [
-							mapping.sourceRange[0] + block.startTagEnd,
-							mapping.sourceRange[1] + block.startTagEnd,
+						mapping[MappingKey.SOURCE_CODE_RANGE] = [
+							mapping[MappingKey.SOURCE_CODE_RANGE][0] + block.startTagEnd,
+							mapping[MappingKey.SOURCE_CODE_RANGE][1] + block.startTagEnd,
 						];
 					}
 					else {
 						// ignore
 					}
-					mapping.source = undefined;
+					mapping[MappingKey.SOURCE_FILE] = undefined;
 				}
 			}
 			return {

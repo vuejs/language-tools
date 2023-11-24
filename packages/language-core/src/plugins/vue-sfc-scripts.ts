@@ -1,4 +1,3 @@
-import { FileCapabilities, FileKind } from '@volar/language-core';
 import { VueLanguagePlugin } from '../types';
 
 const scriptFormatReg = /^(.*)\.script_format\.([^.]+)$/;
@@ -26,19 +25,19 @@ const plugin: VueLanguagePlugin = () => {
 			const scriptSetupMatch = embeddedFile.fileName.match(scriptSetupFormatReg);
 			const script = scriptMatch ? sfc.script : scriptSetupMatch ? sfc.scriptSetup : undefined;
 			if (script) {
-				embeddedFile.kind = FileKind.TextFile;
-				embeddedFile.capabilities = {
-					...FileCapabilities.full,
-					diagnostic: false,
-					codeAction: false,
-					inlayHint: false,
-				};
 				embeddedFile.content.push([
 					script.content,
 					script.name,
 					0,
 					{},
 				]);
+				embeddedFile.content.forEach(code => {
+					if (typeof code !== 'string') {
+						code[3].diagnostics = false;
+						code[3].codeActions = false;
+						code[3].inlayHints = false;
+					}
+				});
 			}
 		},
 	};

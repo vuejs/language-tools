@@ -1,4 +1,4 @@
-import { Service } from '@volar/language-service';
+import { MappingKey, Service } from '@volar/language-service';
 import { isCharacterTyping } from './vue-autoinsert-dotvalue';
 
 const plugin: Service = (context, modules) => {
@@ -31,8 +31,8 @@ const plugin: Service = (context, modules) => {
 			const offset = document.offsetAt(position);
 
 			for (const mappedRange of virtualFile.mappings) {
-				if (mappedRange.generatedRange[1] === offset) {
-					const text = document.getText().substring(mappedRange.generatedRange[0], mappedRange.generatedRange[1]);
+				if (mappedRange[MappingKey.GENERATED_CODE_RANGE][1] === offset) {
+					const text = document.getText().substring(mappedRange[MappingKey.GENERATED_CODE_RANGE][0], mappedRange[MappingKey.GENERATED_CODE_RANGE][1]);
 					const ast = ts.createSourceFile(context.env.uriToFileName(virtualFile.id), text, ts.ScriptTarget.Latest);
 					if (ast.statements.length === 1) {
 						const statement = ast.statements[0];
@@ -63,8 +63,8 @@ const plugin: Service = (context, modules) => {
 								.replaceAll('}', '\\}');
 							return {
 								range: {
-									start: document.positionAt(mappedRange.generatedRange[0]),
-									end: document.positionAt(mappedRange.generatedRange[1]),
+									start: document.positionAt(mappedRange[MappingKey.GENERATED_CODE_RANGE][0]),
+									end: document.positionAt(mappedRange[MappingKey.GENERATED_CODE_RANGE][1]),
 								},
 								newText: '(' + escapedText + '$0' + ')',
 							};

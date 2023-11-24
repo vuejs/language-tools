@@ -1,5 +1,5 @@
 import { Service } from '@volar/language-service';
-import { SourceFile, VueFile } from '@vue/language-core';
+import { MappingKey, SourceFile, VueCodeInformation, VueFile } from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 
 export const create = function (): Service {
@@ -13,19 +13,19 @@ export const create = function (): Service {
 
 			provideReferencesCodeLensRanges(document) {
 
-				return worker(document.uri, async (_, sourceFile) => {
+				return worker(document.uri, async (vueFile) => {
 
 					const result: vscode.Range[] = [];
 
-					for (const [_, map] of context.documents.getMapsBySourceFile(sourceFile) ?? []) {
-						for (const mapping of map.map.mappings) {
+					for (const map of context.documents.getMaps(vueFile) ?? []) {
+						for (const mapping of map.map.codeMappings) {
 
-							if (!mapping.data.referencesCodeLens)
+							if (!(mapping[MappingKey.DATA] as VueCodeInformation).__referencesCodeLens)
 								continue;
 
 							result.push({
-								start: document.positionAt(mapping.sourceRange[0]),
-								end: document.positionAt(mapping.sourceRange[1]),
+								start: document.positionAt(mapping[MappingKey.SOURCE_CODE_RANGE][0]),
+								end: document.positionAt(mapping[MappingKey.SOURCE_CODE_RANGE][1]),
 							});
 						}
 					}
@@ -38,7 +38,7 @@ export const create = function (): Service {
 
 				await worker(document.uri, async (vueFile) => {
 
-					const document = context.documents.getDocumentByUri(vueFile.id, vueFile.languageId, vueFile.snapshot);
+					const document = context.documents.get(vueFile.id, vueFile.languageId, vueFile.snapshot);
 					const offset = document.offsetAt(range.start);
 					const blocks = [
 						vueFile.sfc.script,

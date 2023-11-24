@@ -1,18 +1,39 @@
-import { FileRangeCapabilities } from '@volar/language-core';
 import { Segment } from '@volar/source-map';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import { minimatch } from 'minimatch';
 import * as muggle from 'muggle-string';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { Sfc, VueCompilerOptions } from '../types';
+import { Sfc, VueCodeInformation, VueCompilerOptions } from '../types';
 import { hyphenateAttr, hyphenateTag } from '../utils/shared';
 import { collectVars, walkInterpolationFragment } from '../utils/transform';
 
 const capabilitiesPresets = {
-	all: FileRangeCapabilities.full,
+	disabledAll: {
+		diagnostics: false,
+		renameEdits: false,
+		formattingEdits: false,
+		completionItems: false,
+		definitions: false,
+		references: false,
+		foldingRanges: false,
+		inlayHints: false,
+		codeActions: false,
+		symbols: false,
+		selectionRanges: false,
+		linkedEditingRanges: false,
+		colors: false,
+		autoInserts: false,
+		codeLenses: false,
+		highlights: false,
+		links: false,
+		semanticTokens: false,
+		hover: false,
+		signatureHelps: false,
+	} satisfies VueCodeInformation,
+	all: {} satisfies VueCodeInformation,
 	allWithHiddenParam: {
-		...FileRangeCapabilities.full, __hint: {
+		__hint: {
 			setting: 'vue.inlayHints.inlineHandlerLeading',
 			label: '$event =>',
 			tooltip: [
@@ -21,20 +42,20 @@ const capabilitiesPresets = {
 				'[More info](https://github.com/vuejs/language-tools/issues/2445#issuecomment-1444771420)',
 			].join('\n\n'),
 			paddingRight: true,
-		} /* TODO */
-	} as FileRangeCapabilities,
-	noDiagnostic: { ...FileRangeCapabilities.full, diagnostic: false } satisfies FileRangeCapabilities,
-	diagnosticOnly: { diagnostic: true } satisfies FileRangeCapabilities,
-	tagHover: { hover: true } satisfies FileRangeCapabilities,
-	event: { hover: true, diagnostic: true } satisfies FileRangeCapabilities,
-	tagReference: { references: true, definition: true, rename: { normalize: undefined, apply: noEditApply } } satisfies FileRangeCapabilities,
-	attr: { hover: true, diagnostic: true, references: true, definition: true, rename: true } satisfies FileRangeCapabilities,
-	attrReference: { references: true, definition: true, rename: true } satisfies FileRangeCapabilities,
-	slotProp: { references: true, definition: true, rename: true, diagnostic: true } satisfies FileRangeCapabilities,
-	scopedClassName: { references: true, definition: true, rename: true, completion: true } satisfies FileRangeCapabilities,
-	slotName: { hover: true, diagnostic: true, references: true, definition: true, completion: true } satisfies FileRangeCapabilities,
-	slotNameExport: { hover: true, diagnostic: true, references: true, definition: true, /* referencesCodeLens: true */ } satisfies FileRangeCapabilities,
-	refAttr: { references: true, definition: true, rename: true } satisfies FileRangeCapabilities,
+		}
+	} as VueCodeInformation,
+	noDiagnostics: { diagnostics: false } satisfies VueCodeInformation,
+	diagnosticOnly: { diagnostics: true } satisfies VueCodeInformation,
+	tagHover: { hover: true } satisfies VueCodeInformation,
+	event: { hover: true, diagnostics: true } satisfies VueCodeInformation,
+	tagReference: { references: true, definitions: true, renameEdits: { shouldRename: false, shouldEdit: true } } satisfies VueCodeInformation,
+	attr: { hover: true, diagnostics: true, references: true, definitions: true, renameEdits: true } satisfies VueCodeInformation,
+	attrReference: { references: true, definitions: true, renameEdits: true } satisfies VueCodeInformation,
+	slotProp: { references: true, definitions: true, renameEdits: true, diagnostics: true } satisfies VueCodeInformation,
+	scopedClassName: { references: true, definitions: true, renameEdits: true, completionItems: true } satisfies VueCodeInformation,
+	slotName: { hover: true, diagnostics: true, references: true, definitions: true, completionItems: true } satisfies VueCodeInformation,
+	slotNameExport: { hover: true, diagnostics: true, references: true, definitions: true, /* __referencesCodeLens: true */ } satisfies VueCodeInformation,
+	refAttr: { references: true, definitions: true, renameEdits: true } satisfies VueCodeInformation,
 };
 const formatBrackets = {
 	normal: ['`${', '}`;'] as [string, string],
@@ -63,7 +84,7 @@ const transformContext: CompilerDOM.TransformContext = {
 	expressionPlugins: ['typescript'],
 };
 
-type Code = Segment<FileRangeCapabilities>;
+type Code = Segment<VueCodeInformation>;
 
 export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -153,7 +174,7 @@ export function generate(
 					slot.loc,
 					{
 						...capabilitiesPresets.slotNameExport,
-						referencesCodeLens: true,
+						__referencesCodeLens: true,
 					},
 				], slot.nodeLoc),
 			);
@@ -173,8 +194,8 @@ export function generate(
 				offset,
 				{
 					...capabilitiesPresets.scopedClassName,
-					displayWithLink: stylesScopedClasses.has(className),
-				},
+					__displayWithLink: stylesScopedClasses.has(className),
+				} satisfies VueCodeInformation,
 			]));
 			codes.push(`];\n`);
 		}
@@ -235,9 +256,11 @@ export function generate(
 							tagRange,
 							{
 								...capabilitiesPresets.tagReference,
-								rename: {
-									normalize: tagName === name ? capabilitiesPresets.tagReference.rename.normalize : camelizeComponentName,
-									apply: getTagRenameApply(tagName),
+								renameEdits: {
+									shouldEdit: true,
+									shouldRename: true,
+									resolveNewName: tagName !== name ? camelizeComponentName : undefined,
+									resolveEditText: getTagRenameApply(tagName),
 								},
 								...nativeTags.has(tagName) ? {
 									...capabilitiesPresets.tagHover,
@@ -269,9 +292,9 @@ export function generate(
 					'template',
 					tagRange,
 					{
-						completion: {
-							additional: true,
-							autoImportOnly: true,
+						completionItems: {
+							isAdditional: true,
+							onlyImport: true,
 						},
 					},
 				]);
@@ -331,10 +354,10 @@ export function generate(
 					continue;
 				}
 				const cap = code[3];
-				if (cap.diagnostic) {
+				if (cap.diagnostics) {
 					code[3] = {
 						...cap,
-						diagnostic: false,
+						diagnostics: false,
 					};
 				}
 			}
@@ -352,10 +375,10 @@ export function generate(
 					continue;
 				}
 				const cap = code[3];
-				if (cap.diagnostic) {
+				if (cap.diagnostics) {
 					code[3] = {
 						...cap,
-						diagnostic: {
+						diagnostics: {
 							shouldReport: suppressError,
 						},
 					};
@@ -367,7 +390,7 @@ export function generate(
 					'template',
 					[expectedErrorNode.loc.start.offset, expectedErrorNode.loc.end.offset],
 					{
-						diagnostic: {
+						diagnostics: {
 							shouldReport: () => errors === 0,
 						},
 					},
@@ -907,7 +930,7 @@ export function generate(
 							'default',
 							'template',
 							[slotDir.loc.start.offset, slotDir.loc.start.offset + (slotDir.loc.source.startsWith('#') ? '#'.length : slotDir.loc.source.startsWith('v-slot:') ? 'v-slot:'.length : 0)],
-							{ ...capabilitiesPresets.slotName, completion: false },
+							{ ...capabilitiesPresets.slotName, completionItems: false },
 						])
 				),
 				['', 'template', (slotDir.arg ?? slotDir).loc.end.offset, capabilitiesPresets.diagnosticOnly],
@@ -943,7 +966,7 @@ export function generate(
 						'',
 						'template',
 						slotDir.loc.start.offset + (slotDir.loc.source.startsWith('#') ? '#'.length : slotDir.loc.source.startsWith('v-slot:') ? 'v-slot:'.length : 0),
-						{ completion: true },
+						{ completionItems: true },
 					],
 					`'/* empty slot name completion */]\n`,
 				);
@@ -998,13 +1021,15 @@ export function generate(
 						[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
 						{
 							...capabilitiesPresets.attrReference,
-							rename: {
+							renameEdits: {
+								shouldRename: true,
+								shouldEdit: true,
 								// @click-outside -> onClickOutside
-								normalize(newName) {
+								resolveNewName(newName) {
 									return camelize('on-' + newName);
 								},
 								// onClickOutside -> @click-outside
-								apply(newName) {
+								resolveEditText(newName) {
 									const hName = hyphenateAttr(newName);
 									if (hyphenateAttr(newName).startsWith('on-')) {
 										return camelize(hName.slice('on-'.length));
@@ -1170,22 +1195,22 @@ export function generate(
 
 		const codes: Code[] = [];
 
-		let caps_all: FileRangeCapabilities = capabilitiesPresets.all;
-		let caps_diagnosticOnly: FileRangeCapabilities = capabilitiesPresets.diagnosticOnly;
-		let caps_attr: FileRangeCapabilities = capabilitiesPresets.attr;
+		let caps_all: VueCodeInformation = capabilitiesPresets.all;
+		let caps_diagnosticOnly: VueCodeInformation = capabilitiesPresets.diagnosticOnly;
+		let caps_attr: VueCodeInformation = capabilitiesPresets.attr;
 
 		if (mode === 'extraReferences') {
 			caps_all = {
 				references: caps_all.references,
-				rename: caps_all.rename,
+				renameEdits: caps_all.renameEdits,
 			};
 			caps_diagnosticOnly = {
 				references: caps_diagnosticOnly.references,
-				rename: caps_diagnosticOnly.rename,
+				renameEdits: caps_diagnosticOnly.renameEdits,
 			};
 			caps_attr = {
 				references: caps_attr.references,
-				rename: caps_attr.rename,
+				renameEdits: caps_attr.renameEdits,
 			};
 		}
 
@@ -1272,9 +1297,11 @@ export function generate(
 							[prop.arg.loc.start.offset, prop.arg.loc.start.offset + attrNameText.length], // patch style attr,
 							{
 								...caps_attr,
-								rename: {
-									normalize: camelize,
-									apply: camelized ? hyphenateAttr : noEditApply,
+								renameEdits: {
+									shouldRename: true,
+									shouldEdit: true,
+									resolveNewName: camelize,
+									resolveEditText: camelized ? hyphenateAttr : undefined,
 								},
 							},
 						], (prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {})),
@@ -1288,9 +1315,11 @@ export function generate(
 							[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
 							{
 								...caps_attr,
-								rename: {
-									normalize: camelize,
-									apply: camelized ? hyphenateAttr : noEditApply,
+								renameEdits: {
+									shouldRename: true,
+									shouldEdit: true,
+									resolveNewName: camelize,
+									resolveEditText: camelized ? hyphenateAttr : undefined,
 								},
 							},
 						], (prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {})),
@@ -1367,9 +1396,11 @@ export function generate(
 						[prop.loc.start.offset, prop.loc.start.offset + prop.name.length],
 						{
 							...caps_attr,
-							rename: {
-								normalize: camelize,
-								apply: camelized ? hyphenateAttr : noEditApply,
+							renameEdits: {
+								shouldRename: true,
+								shouldEdit: true,
+								resolveNewName: camelize,
+								resolveEditText: camelized ? hyphenateAttr : undefined,
 							},
 						},
 					], (prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}))
@@ -1472,7 +1503,11 @@ export function generate(
 					content,
 					'template',
 					prop.arg.loc.start.offset + start,
-					capabilitiesPresets.all,
+					{
+						formattingEdits: false,
+						foldingRanges: false,
+						symbols: false,
+					},
 				]);
 				cssCodes.push(` }\n`);
 			}
@@ -1526,14 +1561,16 @@ export function generate(
 						'template',
 						[prop.loc.start.offset, prop.loc.start.offset + 'v-'.length + prop.name.length],
 						{
-							...capabilitiesPresets.noDiagnostic,
-							completion: {
+							...capabilitiesPresets.noDiagnostics,
+							completionItems: {
 								// fix https://github.com/vuejs/language-tools/issues/1905
-								additional: true,
+								isAdditional: true,
 							},
-							rename: {
-								normalize: camelize,
-								apply: getPropRenameApply(prop.name),
+							renameEdits: {
+								shouldRename: true,
+								shouldEdit: true,
+								resolveNewName: camelize,
+								resolveEditText: getPropRenameApply(prop.name),
 							},
 						},
 					],
@@ -1694,9 +1731,11 @@ export function generate(
 						[prop.arg.loc.start.offset, prop.arg.loc.end.offset],
 						{
 							...capabilitiesPresets.slotProp,
-							rename: {
-								normalize: camelize,
-								apply: getPropRenameApply(prop.arg.content),
+							renameEdits: {
+								shouldRename: true,
+								shouldEdit: true,
+								resolveNewName: camelize,
+								resolveEditText: getPropRenameApply(prop.arg.content),
 							},
 						},
 					], prop.arg.loc),
@@ -1723,9 +1762,11 @@ export function generate(
 						prop.loc.start.offset,
 						{
 							...capabilitiesPresets.attr,
-							rename: {
-								normalize: camelize,
-								apply: getPropRenameApply(prop.name),
+							renameEdits: {
+								shouldRename: true,
+								shouldEdit: true,
+								resolveNewName: camelize,
+								resolveEditText: getPropRenameApply(prop.name),
 							},
 						},
 					], prop.loc),
@@ -1806,7 +1847,15 @@ export function generate(
 		codes.push('[');
 		for (const _vars of tempVars) {
 			for (const v of _vars) {
-				codes.push([v.text, 'template', v.offset, { completion: { additional: true } }]);
+				codes.push([
+					v.text,
+					'template',
+					v.offset,
+					{
+						...capabilitiesPresets,
+						completionItems: { isAdditional: true },
+					},
+				]);
 				codes.push(',');
 			}
 		}
@@ -1819,7 +1868,16 @@ export function generate(
 	function createFormatCode(mapCode: string, sourceOffset: number, formatWrapper: [string, string]): Code[] {
 		return [
 			formatWrapper[0],
-			[mapCode, 'template', sourceOffset, { completion: true /* fix vue-autoinsert-parentheses not working */ }],
+			[
+				mapCode,
+				'template',
+				sourceOffset,
+				{
+					...capabilitiesPresets,
+					formattingEdits: true,
+					linkedEditingRanges: true, // support vue-autoinsert-parentheses
+				},
+			],
 			formatWrapper[1],
 			'\n',
 		];
@@ -1851,7 +1909,7 @@ export function generate(
 		_code: string,
 		astHolder: any,
 		start: number | undefined,
-		data: FileRangeCapabilities | (() => FileRangeCapabilities) | undefined,
+		data: VueCodeInformation | (() => VueCodeInformation) | undefined,
 		prefix: string,
 		suffix: string,
 	): Code[] {
@@ -2007,15 +2065,11 @@ function camelizeComponentName(newName: string) {
 }
 
 function getTagRenameApply(oldName: string) {
-	return oldName === hyphenateTag(oldName) ? hyphenateTag : noEditApply;
+	return oldName === hyphenateTag(oldName) ? hyphenateTag : undefined;
 }
 
 function getPropRenameApply(oldName: string) {
-	return oldName === hyphenateAttr(oldName) ? hyphenateAttr : noEditApply;
-}
-
-function noEditApply(n: string) {
-	return n;
+	return oldName === hyphenateAttr(oldName) ? hyphenateAttr : undefined;
 }
 
 function getModelValuePropName(node: CompilerDOM.ElementNode, vueVersion: number, vueCompilerOptions: VueCompilerOptions) {
