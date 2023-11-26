@@ -1,5 +1,4 @@
-import { Mapping, Segment } from '@volar/source-map';
-import * as muggle from 'muggle-string';
+import { Mapping, Segment, replaceSourceRange } from '@volar/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { Sfc, VueCodeInformation } from '../types';
 import { computed } from 'computeds';
@@ -18,27 +17,20 @@ export function computedMappings(
 			...sfc.customBlocks,
 		]) {
 			if (block) {
-				muggle.replaceSourceRange(
-					str, undefined, block.startTagEnd, block.endTagStart,
-					[
-						block.content,
-						undefined,
-						block.startTagEnd,
-						{},
-					],
-				);
+				replaceSourceRange(str, undefined, block.startTagEnd, block.endTagStart, '\n\n');
 			}
 		}
-		return str.map<Mapping<VueCodeInformation>>((m) => {
-			const text = m[0];
-			const start = m[2] as number;
-			const end = start + text.length;
-			return [
-				undefined,
-				[start, end],
-				[start, end],
-				m[3] as VueCodeInformation,
-			];
-		});
+		return str
+			.filter(s => typeof s !== 'string')
+			.map<Mapping<VueCodeInformation>>((m) => {
+				const text = m[0];
+				const start = m[2] as number;
+				return {
+					sourceOffsets: [start],
+					generatedOffsets: [start],
+					lengths: [text.length],
+					data: m[3] as VueCodeInformation,
+				};
+			});
 	});
 }

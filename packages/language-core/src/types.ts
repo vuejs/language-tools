@@ -2,7 +2,7 @@ import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCParseResult } from '@vue/compiler-sfc';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { VueEmbeddedFile } from './virtualFile/embeddedFile';
-import type { CodeInformation } from '@volar/language-core';
+import type { CodeInformation, Segment } from '@volar/language-core';
 
 export type { SFCParseResult } from '@vue/compiler-sfc';
 
@@ -21,7 +21,10 @@ export interface VueCodeInformation extends CodeInformation {
 		paddingRight?: boolean;
 		paddingLeft?: boolean;
 	};
+	__combineLastMappping?: boolean;
 }
+
+export type Code = Segment<VueCodeInformation>;
 
 export interface VueCompilerOptions {
 	target: number;

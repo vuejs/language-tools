@@ -1,5 +1,5 @@
-import { CodeInformation, LinkedCodeTrigger, VirtualFile } from '@volar/language-core';
-import { Mapping, Segment, StackNode } from '@volar/source-map';
+import { LinkedCodeTrigger, Mapping, StackNode, VirtualFile } from '@volar/language-core';
+import { Code } from '../types';
 
 export class VueEmbeddedFile {
 
@@ -9,7 +9,7 @@ export class VueEmbeddedFile {
 
 	constructor(
 		public fileName: string,
-		public content: Segment<CodeInformation>[],
+		public content: Code[],
 		public contentStacks: StackNode[],
 	) { }
 }

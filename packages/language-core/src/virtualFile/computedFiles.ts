@@ -1,7 +1,5 @@
-import { VirtualFile, resolveCommonLanguageId } from '@volar/language-core';
-import { MappingKey, buildMappings, buildStacks, toString } from '@volar/source-map';
+import { VirtualFile, buildMappings, buildStacks, resolveCommonLanguageId, toString, track } from '@volar/language-core';
 import { computed } from 'computeds';
-import * as muggle from 'muggle-string';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { Sfc, SfcBlock, VueLanguagePlugin } from '../types';
 import { VueEmbeddedFile } from './embeddedFile';
@@ -137,7 +135,7 @@ function compiledPluginFiles(
 			for (const embeddedFileName of embeddedFileNames) {
 				if (!embeddedFiles[embeddedFileName]) {
 					embeddedFiles[embeddedFileName] = computed(() => {
-						const [content, stacks] = codegenStack ? muggle.track([]) : [[], []];
+						const [content, stacks] = codegenStack ? track([]) : [[], []];
 						const file = new VueEmbeddedFile(embeddedFileName, content, stacks);
 						for (const plugin of plugins) {
 							if (!plugin.resolveEmbeddedFile) {
@@ -183,28 +181,37 @@ function compiledPluginFiles(
 
 	return computed(() => {
 		return files().map(_file => {
+
 			const { file, snapshot } = _file();
 			const mappings = buildMappings(file.content);
+			let lastValidMapping: typeof mappings[number];
+
 			for (const mapping of mappings) {
-				const source = mapping[MappingKey.SOURCE_FILE];
-				if (source !== undefined) {
-					const block = nameToBlock()[source];
+				if (mapping.source !== undefined) {
+					const block = nameToBlock()[mapping.source];
 					if (block) {
-						mapping[MappingKey.SOURCE_CODE_RANGE] = [
-							mapping[MappingKey.SOURCE_CODE_RANGE][0] + block.startTagEnd,
-							mapping[MappingKey.SOURCE_CODE_RANGE][1] + block.startTagEnd,
-						];
+						mapping.sourceOffsets = mapping.sourceOffsets.map(offset => offset + block.startTagEnd);
 					}
 					else {
 						// ignore
 					}
-					mapping[MappingKey.SOURCE_FILE] = undefined;
+					mapping.source = undefined;
+				}
+				if (mapping.data.__combineLastMappping) {
+					lastValidMapping!.sourceOffsets.push(...mapping.sourceOffsets);
+					lastValidMapping!.generatedOffsets.push(...mapping.generatedOffsets);
+					lastValidMapping!.lengths.push(...mapping.lengths);
+					continue;
+				}
+				else {
+					lastValidMapping = mapping;
 				}
 			}
+
 			return {
 				file,
 				snapshot,
-				mappings,
+				mappings: mappings.filter(mapping => !mapping.data.__combineLastMappping),
 				codegenStacks: buildStacks(file.content, file.contentStacks),
 			};
 		});

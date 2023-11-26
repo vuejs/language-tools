@@ -1,6 +1,5 @@
-import type { CodeInformation } from '@volar/language-core';
+import { CodeInformation, Segment, track } from '@volar/language-core';
 import { computed, computedSet } from 'computeds';
-import * as muggle from 'muggle-string';
 import { generate as generateScript } from '../generators/script';
 import { generate as generateTemplate } from '../generators/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
@@ -55,7 +54,7 @@ const plugin: VueLanguagePlugin = (ctx) => {
 				};
 				const tsx = _tsx.generatedScript();
 				if (tsx) {
-					const [content, contentStacks] = ctx.codegenStack ? muggle.track([...tsx.codes], [...tsx.codeStacks]) : [[...tsx.codes], [...tsx.codeStacks]];
+					const [content, contentStacks] = ctx.codegenStack ? track([...tsx.codes], [...tsx.codeStacks]) : [[...tsx.codes], [...tsx.codeStacks]];
 					content.forEach(code => {
 						if (typeof code !== 'string') {
 							code[3].foldingRanges = false;
@@ -75,7 +74,7 @@ const plugin: VueLanguagePlugin = (ctx) => {
 				const template = _tsx.generatedTemplate();
 				if (template) {
 					const [content, contentStacks] = ctx.codegenStack
-						? muggle.track([...template.formatCodes], [...template.formatCodeStacks])
+						? track([...template.formatCodes], [...template.formatCodeStacks])
 						: [[...template.formatCodes], [...template.formatCodeStacks]];
 					embeddedFile.content = content;
 					embeddedFile.contentStacks = contentStacks;
@@ -102,9 +101,9 @@ const plugin: VueLanguagePlugin = (ctx) => {
 				const template = _tsx.generatedTemplate();
 				if (template) {
 					const [content, contentStacks] = ctx.codegenStack
-						? muggle.track([...template.cssCodes], [...template.cssCodeStacks])
+						? track([...template.cssCodes], [...template.cssCodeStacks])
 						: [[...template.cssCodes], [...template.cssCodeStacks]];
-					embeddedFile.content = content as muggle.Segment<CodeInformation>[];
+					embeddedFile.content = content as Segment<CodeInformation>[];
 					embeddedFile.contentStacks = contentStacks;
 				}
 			}

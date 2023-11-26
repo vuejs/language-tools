@@ -1,13 +1,10 @@
-import { LinkedCodeTrigger } from '@volar/language-core';
-import * as SourceMaps from '@volar/source-map';
-import { Segment, getLength } from '@volar/source-map';
-import * as muggle from 'muggle-string';
+import { LinkedCodeTrigger, Mapping, getLength, offsetStack, resetOffsetStack, setTracking, track } from '@volar/language-core';
 import * as path from 'path-browserify';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type * as templateGen from '../generators/template';
 import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
-import type { TextRange, VueCodeInformation, VueCompilerOptions } from '../types';
+import type { Code, VueCompilerOptions } from '../types';
 import { Sfc } from '../types';
 import { getSlotsPropertyName, hyphenateTag } from '../utils/shared';
 import { walkInterpolationFragment } from '../utils/transform';
@@ -27,8 +24,8 @@ export function generate(
 	codegenStack: boolean,
 ) {
 
-	const [codes, codeStacks] = codegenStack ? muggle.track([] as Segment<VueCodeInformation>[]) : [[], []];
-	const mirrorBehaviorMappings: SourceMaps.Mapping<[LinkedCodeTrigger, LinkedCodeTrigger]>[] = [];
+	const [codes, codeStacks] = codegenStack ? track([] as Code[]) : [[], []];
+	const mirrorBehaviorMappings: Mapping<[LinkedCodeTrigger, LinkedCodeTrigger]>[] = [];
 
 	//#region monkey fix: https://github.com/vuejs/language-tools/pull/2113
 	if (!script && !scriptSetup) {
@@ -153,7 +150,7 @@ export function generate(
 		codes.push([
 			`'${src}'`,
 			'script',
-			[script.srcOffset - 1, script.srcOffset + script.src.length + 1],
+			script.srcOffset - 1,
 			{
 				renameEdits: src === script.src ? true : {
 					shouldRename: false,
@@ -267,7 +264,7 @@ export function generate(
 			return;
 		}
 
-		const definePropMirrors: Record<string, [number, number]> = {};
+		const definePropMirrors = new Map<string, number>();
 		let scriptSetupGeneratedOffset: number | undefined;
 
 		if (scriptSetup.generic) {
@@ -337,8 +334,7 @@ export function generate(
 					let propName = 'modelValue';
 					if (defineProp.name) {
 						propName = scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
-						const propMirrorStart = muggle.getLength(codes);
-						definePropMirrors[propName] = [propMirrorStart, propMirrorStart + propName.length];
+						definePropMirrors.set(propName, getLength(codes));
 					}
 					codes.push(`${propName}${defineProp.required ? '' : '?'}: `);
 					if (defineProp.type) {
@@ -408,19 +404,19 @@ export function generate(
 					continue;
 				}
 				const propName = scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
-				const propMirror = definePropMirrors[propName];
-				if (propMirror) {
-					mirrorBehaviorMappings.push([
-						undefined,
-						[defineProp.name.start + scriptSetupGeneratedOffset, defineProp.name.end + scriptSetupGeneratedOffset],
-						propMirror,
-						[{}, {}],
-					]);
+				const propMirror = definePropMirrors.get(propName);
+				if (propMirror !== undefined) {
+					mirrorBehaviorMappings.push({
+						sourceOffsets: [defineProp.name.start + scriptSetupGeneratedOffset],
+						generatedOffsets: [propMirror],
+						lengths: [defineProp.name.end - defineProp.name.start],
+						data: [{}, {}],
+					});
 				}
 			}
 		}
 	}
-	function generateSetupFunction(functional: boolean, mode: 'return' | 'export' | 'none', definePropMirrors: Record<string, [number, number]>) {
+	function generateSetupFunction(functional: boolean, mode: 'return' | 'export' | 'none', definePropMirrors: Map<string, number>) {
 
 		if (!scriptSetupRanges || !scriptSetup) {
 			return;
@@ -453,7 +449,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 `.trim() + '\n');
 		}
 
-		const scriptSetupGeneratedOffset = muggle.getLength(codes) - scriptSetupRanges.importSectionEndOffset;
+		const scriptSetupGeneratedOffset = getLength(codes) - scriptSetupRanges.importSectionEndOffset;
 
 		let setupCodeModifies: [() => void, number, number][] = [];
 		if (scriptSetupRanges.props.define && !scriptSetupRanges.props.name) {
@@ -534,8 +530,8 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				}
 				else if (defineProp.name) {
 					propName = scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
-					const start = muggle.getLength(codes);
-					definePropMirrors[propName] = [start, start + propName.length];
+					const start = getLength(codes);
+					definePropMirrors.set(propName, start);
 					codes.push(propName);
 				}
 				else {
@@ -749,22 +745,20 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 					if (!templateUsageVars.has(varName) && !cssIds.has(varName)) {
 						continue;
 					}
-					const templateStart = getLength(codes);
+					const templateOffset = getLength(codes);
 					codes.push(varName);
-					const templateEnd = getLength(codes);
 					codes.push(`: ${varName} as typeof `);
 
-					const scriptStart = getLength(codes);
+					const scriptOffset = getLength(codes);
 					codes.push(varName);
-					const scriptEnd = getLength(codes);
 					codes.push(',\n');
 
-					mirrorBehaviorMappings.push([
-						undefined,
-						[scriptStart, scriptEnd],
-						[templateStart, templateEnd],
-						[{}, {}],
-					]);
+					mirrorBehaviorMappings.push({
+						sourceOffsets: [scriptOffset],
+						generatedOffsets: [templateOffset],
+						lengths: [varName.length],
+						data: [{}, {}],
+					});
 				}
 			}
 			codes.push(`};\n`); // return {
@@ -828,8 +822,8 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				for (const className of style.classNames) {
 					generateCssClassProperty(
 						i,
-						className.text.substring(1),
-						{ start: className.offset, end: className.offset + className.text.length },
+						className.text,
+						className.offset,
 						'string',
 						false,
 						true,
@@ -857,8 +851,8 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				for (const className of style.classNames) {
 					generateCssClassProperty(
 						i,
-						className.text.substring(1),
-						{ start: className.offset, end: className.offset + className.text.length },
+						className.text,
+						className.offset,
 						'boolean',
 						true,
 						!style.module,
@@ -874,11 +868,11 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		codes.push(`/* CSS variable injection end */\n`);
 
 		if (htmlGen) {
-			muggle.setTracking(false);
+			setTracking(false);
 			for (const s of htmlGen.codes) {
 				codes.push(s);
 			}
-			muggle.setTracking(true);
+			setTracking(true);
 			for (const s of htmlGen.codeStacks) {
 				codeStacks.push(s);
 			}
@@ -895,12 +889,12 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 
 		return { cssIds };
 
-		function generateCssClassProperty(styleIndex: number, className: string, classRange: TextRange, propertyType: string, optional: boolean, referencesCodeLens: boolean) {
+		function generateCssClassProperty(styleIndex: number, classNameWithDot: string, offset: number, propertyType: string, optional: boolean, referencesCodeLens: boolean) {
 			codes.push(`\n & { `);
 			codes.push([
 				'',
 				'style_' + styleIndex,
-				classRange.start,
+				offset,
 				{
 					references: true,
 					__referencesCodeLens: referencesCodeLens,
@@ -908,9 +902,9 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			]);
 			codes.push(`'`);
 			codes.push([
-				className,
+				'',
 				'style_' + styleIndex,
-				[classRange.start, classRange.end],
+				offset,
 				{
 					references: true,
 					renameEdits: {
@@ -921,11 +915,17 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 					},
 				},
 			]);
+			codes.push([
+				classNameWithDot.substring(1),
+				'style_' + styleIndex,
+				offset + 1,
+				{ __combineLastMappping: true },
+			]);
 			codes.push(`'`);
 			codes.push([
 				'',
 				'style_' + styleIndex,
-				classRange.end,
+				offset + classNameWithDot.length,
 				{},
 			]);
 			codes.push(`${optional ? '?' : ''}: ${propertyType}`);
@@ -992,17 +992,17 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		return usageVars;
 	}
 	function addVirtualCode(vueTag: 'script' | 'scriptSetup', start: number, end?: number) {
-		muggle.offsetStack();
+		offsetStack();
 		codes.push([
 			(vueTag === 'script' ? script : scriptSetup)!.content.substring(start, end),
 			vueTag,
 			start,
 			{}, // diagnostic also working for setup() returns unused in template checking
 		]);
-		muggle.resetOffsetStack();
+		resetOffsetStack();
 	}
 	function addExtraReferenceVirtualCode(vueTag: 'script' | 'scriptSetup', start: number, end: number) {
-		muggle.offsetStack();
+		offsetStack();
 		codes.push([
 			(vueTag === 'script' ? script : scriptSetup)!.content.substring(start, end),
 			vueTag,
@@ -1013,7 +1013,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				renameEdits: true,
 			},
 		]);
-		muggle.resetOffsetStack();
+		resetOffsetStack();
 	}
 }
 

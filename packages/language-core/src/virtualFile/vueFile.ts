@@ -1,5 +1,4 @@
-import { VirtualFile, forEachEmbeddedFile } from '@volar/language-core';
-import { Stack } from '@volar/source-map';
+import { Stack, VirtualFile, forEachEmbeddedFile } from '@volar/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { VueCompilerOptions, VueLanguagePlugin } from '../types';
 import { computedFiles } from './computedFiles';

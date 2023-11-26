@@ -1,6 +1,6 @@
 import { CreateFile, Service, ServiceContext, TextDocumentEdit, TextEdit } from '@volar/language-service';
 import { ExpressionNode, type TemplateChildNode } from '@vue/compiler-dom';
-import { MappingKey, Sfc, VueFile, scriptRanges } from '@vue/language-core';
+import { Sfc, VueFile, scriptRanges } from '@vue/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { Provide } from 'volar-service-typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
@@ -192,7 +192,7 @@ export const create = function (): Service {
 							const { name } = node;
 							for (const map of maps) {
 								const source = map.map.getSourceOffset(name.getEnd());
-								if (source && source[0] >= sfc.template!.startTagEnd + templateCodeRange![0] && source[0] <= sfc.template!.startTagEnd + templateCodeRange![1] && source[1][MappingKey.DATA].semanticTokens) {
+								if (source && source[0] >= sfc.template!.startTagEnd + templateCodeRange![0] && source[0] <= sfc.template!.startTagEnd + templateCodeRange![1] && source[1].data.semanticTokens) {
 									if (!result.has(name.text)) {
 										const type = checker.getTypeAtLocation(node);
 										const typeString = checker.typeToString(type, node, ts.TypeFormatFlags.NoTruncation);

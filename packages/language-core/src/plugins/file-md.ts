@@ -1,4 +1,4 @@
-import { buildMappings, Segment, SourceMap, toString } from '@volar/source-map';
+import { buildMappings, Segment, SourceMap, toString } from '@volar/language-core';
 import type { SFCBlock } from '@vue/compiler-sfc';
 import { VueLanguagePlugin } from '../types';
 import { parse } from '../utils/parseSfc';
