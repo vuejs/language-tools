@@ -891,17 +891,17 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				'',
 				'style_' + styleIndex,
 				offset,
-				{
+				disableAllFeatures({
 					references: true,
 					__referencesCodeLens: referencesCodeLens,
-				},
+				}),
 			]);
 			codes.push(`'`);
 			codes.push([
 				'',
 				'style_' + styleIndex,
 				offset,
-				{
+				disableAllFeatures({
 					references: true,
 					renameEdits: {
 						shouldRename: true,
@@ -909,7 +909,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 						resolveNewName: normalizeCssRename,
 						resolveEditText: applyCssRename,
 					},
-				},
+				}),
 			]);
 			codes.push([
 				classNameWithDot.substring(1),
@@ -922,7 +922,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				'',
 				'style_' + styleIndex,
 				offset + classNameWithDot.length,
-				{},
+				disableAllFeatures({}),
 			]);
 			codes.push(`${optional ? '?' : ''}: ${propertyType}`);
 			codes.push(` }`);
