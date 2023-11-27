@@ -1008,7 +1008,7 @@ export function generate(
 						)
 						: [
 							'.',
-							['', 'template', slotDir.loc.start.offset, combineEnabled(presetInfos.slotName, { completionItems: false })] satisfies Code,
+							['', 'template', slotDir.loc.start.offset, { ...presetInfos.slotName, completionItems: false }] satisfies Code,
 							'default',
 							['', 'template', slotDir.loc.start.offset + (slotDir.loc.source.startsWith('#') ? '#'.length : slotDir.loc.source.startsWith('v-slot:') ? 'v-slot:'.length : 0), { __combineLastMappping: true }] satisfies Code,
 						]
@@ -1045,8 +1045,13 @@ export function generate(
 					[
 						'',
 						'template',
-						slotDir.loc.start.offset + (slotDir.loc.source.startsWith('#') ? '#'.length : slotDir.loc.source.startsWith('v-slot:') ? 'v-slot:'.length : 0),
-						{ completionItems: true },
+						slotDir.loc.start.offset + (
+							slotDir.loc.source.startsWith('#')
+								? '#'.length : slotDir.loc.source.startsWith('v-slot:')
+									? 'v-slot:'.length
+									: 0
+						),
+						withAllDisabled({ completionItems: true }),
 					],
 					`'/* empty slot name completion */]\n`,
 				);
@@ -1711,13 +1716,13 @@ export function generate(
 				'__VLS_normalizeSlot(',
 				['', 'template', node.loc.start.offset, presetInfos.diagnosticOnly],
 				`${slotsAssignName ?? '__VLS_slots'}[`,
-				['', 'template', node.loc.start.offset, presetInfos.diagnosticOnly],
+				['', 'template', node.loc.start.offset, { __combineLastMappping: true }],
 				slotNameExpNode?.content ?? `('${getSlotName()?.[0] ?? 'default'}' as const)`,
-				['', 'template', node.loc.end.offset, presetInfos.diagnosticOnly],
+				['', 'template', node.loc.end.offset, { __combineLastMappping: true }],
 				']',
-				['', 'template', node.loc.end.offset, presetInfos.diagnosticOnly],
+				['', 'template', node.loc.end.offset, { __combineLastMappping: true }],
 				')?.(',
-				['', 'template', startTagOffset, presetInfos.diagnosticOnly],
+				['', 'template', startTagOffset, { __combineLastMappping: true }],
 				'{\n',
 			);
 		}
