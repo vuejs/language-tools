@@ -1314,18 +1314,18 @@ export function generate(
 		let caps_attr: VueCodeInformation = presetInfos.attr;
 
 		if (mode === 'extraReferences') {
-			caps_all = {
+			caps_all = withAllDisabled({
 				references: caps_all.references,
 				renameEdits: caps_all.renameEdits,
-			};
-			caps_diagnosticOnly = {
+			});
+			caps_diagnosticOnly = withAllDisabled({
 				references: caps_diagnosticOnly.references,
 				renameEdits: caps_diagnosticOnly.renameEdits,
-			};
-			caps_attr = {
+			});
+			caps_attr = withAllDisabled({
 				references: caps_attr.references,
 				renameEdits: caps_attr.renameEdits,
-			};
+			});
 		}
 
 		codes.push(`...{ `);
