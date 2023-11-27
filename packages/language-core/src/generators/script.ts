@@ -8,6 +8,7 @@ import type { Code, VueCompilerOptions } from '../types';
 import { Sfc } from '../types';
 import { getSlotsPropertyName, hyphenateTag } from '../utils/shared';
 import { walkInterpolationFragment } from '../utils/transform';
+import { disableAllFeatures, enableAllFeatures } from './utils';
 
 export function generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -88,7 +89,7 @@ export function generate(
 			'',
 			'scriptSetup',
 			scriptSetup.content.length,
-			{},
+			disableAllFeatures({}),
 		]);
 	}
 
@@ -126,9 +127,7 @@ export function generate(
 				usedHelperTypes.PropsChildren = true;
 				codes.push(`$props: __VLS_PropsChildren<S>;\n`);
 			}
-			codes.push(
-				`} };\n`,
-			);
+			codes.push(`} };\n`);
 		}
 		if (usedHelperTypes.PropsChildren) {
 			codes.push(`type __VLS_PropsChildren<S> = { [K in keyof (boolean extends (JSX.ElementChildrenAttribute extends never ? true : false) ? never : JSX.ElementChildrenAttribute)]?: S; };\n`);
@@ -151,15 +150,12 @@ export function generate(
 			`'${src}'`,
 			'script',
 			script.srcOffset - 1,
-			{
+			enableAllFeatures({
 				renameEdits: src === script.src ? true : {
 					shouldRename: false,
 					shouldEdit: true,
 					resolveEditText(newName) {
-						if (
-							newName.endsWith('.jsx')
-							|| newName.endsWith('.js')
-						) {
+						if (newName.endsWith('.jsx') || newName.endsWith('.js')) {
 							newName = newName.split('.').slice(0, -1).join('.');
 						}
 						if (script?.src?.endsWith('.d.ts')) {
@@ -174,7 +170,7 @@ export function generate(
 						return newName;
 					},
 				},
-			},
+			}),
 		]);
 		codes.push(`;\n`);
 		codes.push(`export { default } from '${src}';\n`);
@@ -195,7 +191,7 @@ export function generate(
 				addVirtualCode('script', 0, scriptRanges.exportDefault.expression.start);
 				codes.push(vueCompilerOptions.optionsWrapper[0]);
 				{
-					codes.push(['', 'script', scriptRanges.exportDefault.expression.start, {
+					codes.push(['', 'script', scriptRanges.exportDefault.expression.start, disableAllFeatures({
 						__hint: {
 							setting: 'vue.inlayHints.optionsWrapper',
 							label: vueCompilerOptions.optionsWrapper[0],
@@ -204,15 +200,15 @@ export function generate(
 								'To hide it, you can set `"vue.inlayHints.optionsWrapper": false` in IDE settings.',
 							].join('\n\n'),
 						}
-					} as any]);
+					})]);
 					addVirtualCode('script', scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end);
-					codes.push(['', 'script', scriptRanges.exportDefault.expression.end, {
+					codes.push(['', 'script', scriptRanges.exportDefault.expression.end, disableAllFeatures({
 						__hint: {
 							setting: 'vue.inlayHints.optionsWrapper',
 							label: vueCompilerOptions.optionsWrapper[1],
 							tooltip: '',
 						}
-					} as any]);
+					})]);
 				}
 				codes.push(vueCompilerOptions.optionsWrapper[1]);
 				addVirtualCode('script', scriptRanges.exportDefault.expression.end, script.content.length);
@@ -242,7 +238,7 @@ export function generate(
 			scriptSetup.content.substring(0, Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset)) + '\n',
 			'scriptSetup',
 			0,
-			{},
+			enableAllFeatures({}),
 		]);
 	}
 	function generateExportDefaultEndMapping() {
@@ -254,7 +250,7 @@ export function generate(
 			'',
 			'scriptSetup',
 			scriptSetup.content.length,
-			{ diagnostics: true },
+			disableAllFeatures({ diagnostics: true }),
 		]);
 		codes.push(`\n`);
 	}
@@ -276,7 +272,7 @@ export function generate(
 				scriptSetup.generic,
 				scriptSetup.name,
 				scriptSetup.genericOffset,
-				{},
+				enableAllFeatures({}),
 			]);
 			if (!scriptSetup.generic.endsWith(',')) {
 				codes.push(`,`);
@@ -781,10 +777,10 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				script.content.substring(componentsOption.start, componentsOption.end),
 				'script',
 				componentsOption.start,
-				{
+				disableAllFeatures({
 					references: true,
 					renameEdits: true,
-				},
+				}),
 			]);
 		}
 		else {
@@ -952,8 +948,8 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 									style.name,
 									cssBind.offset + fragOffset,
 									onlyForErrorMapping
-										? { diagnostics: true }
-										: {},
+										? disableAllFeatures({ diagnostics: true })
+										: enableAllFeatures({}),
 								]);
 							}
 						},
@@ -997,7 +993,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			(vueTag === 'script' ? script : scriptSetup)!.content.substring(start, end),
 			vueTag,
 			start,
-			{}, // diagnostic also working for setup() returns unused in template checking
+			enableAllFeatures({}), // diagnostic also working for setup() returns unused in template checking
 		]);
 		resetOffsetStack();
 	}
@@ -1007,11 +1003,11 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			(vueTag === 'script' ? script : scriptSetup)!.content.substring(start, end),
 			vueTag,
 			start,
-			{
+			disableAllFeatures({
 				references: true,
 				definitions: true,
 				renameEdits: true,
-			},
+			}),
 		]);
 		resetOffsetStack();
 	}

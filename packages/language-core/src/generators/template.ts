@@ -6,69 +6,12 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import { Code, Sfc, VueCodeInformation, VueCompilerOptions } from '../types';
 import { hyphenateAttr, hyphenateTag } from '../utils/shared';
 import { collectVars, walkInterpolationFragment } from '../utils/transform';
+import { mergeFeatureSettings, disableAllFeatures, enableAllFeatures } from './utils';
 
-const withAllDisabled = (override: VueCodeInformation): VueCodeInformation => ({
-	diagnostics: false,
-	renameEdits: false,
-	formattingEdits: false,
-	completionItems: false,
-	definitions: false,
-	references: false,
-	foldingRanges: false,
-	inlayHints: false,
-	codeActions: false,
-	symbols: false,
-	selectionRanges: false,
-	linkedEditingRanges: false,
-	colors: false,
-	autoInserts: false,
-	codeLenses: false,
-	highlights: false,
-	links: false,
-	semanticTokens: false,
-	hover: false,
-	signatureHelps: false,
-	...override,
-});
-const withAllEnabled = (override: VueCodeInformation): VueCodeInformation => ({
-	diagnostics: true,
-	renameEdits: true,
-	formattingEdits: true,
-	completionItems: true,
-	definitions: true,
-	references: true,
-	foldingRanges: true,
-	inlayHints: true,
-	codeActions: true,
-	symbols: true,
-	selectionRanges: true,
-	linkedEditingRanges: true,
-	colors: true,
-	autoInserts: true,
-	codeLenses: true,
-	highlights: true,
-	links: true,
-	semanticTokens: true,
-	hover: true,
-	signatureHelps: true,
-	...override,
-});
-const combineEnabled = (...infos: VueCodeInformation[]): VueCodeInformation => {
-	const result: VueCodeInformation = { ...infos[0] };
-	for (const info of infos) {
-		for (const key in info) {
-			const value = info[key as keyof VueCodeInformation];
-			if (value) {
-				result[key as keyof VueCodeInformation] = value as any;
-			}
-		}
-	}
-	return result;
-};
 const presetInfos = {
-	disabledAll: withAllDisabled({}),
-	all: withAllEnabled({}),
-	allWithHiddenParam: withAllEnabled({
+	disabledAll: disableAllFeatures({}),
+	all: enableAllFeatures({}),
+	allWithHiddenParam: enableAllFeatures({
 		__hint: {
 			setting: 'vue.inlayHints.inlineHandlerLeading',
 			label: '$event =>',
@@ -80,18 +23,18 @@ const presetInfos = {
 			paddingRight: true,
 		}
 	}),
-	noDiagnostics: withAllEnabled({ diagnostics: false }),
-	diagnosticOnly: withAllDisabled({ diagnostics: true }),
-	tagHover: withAllDisabled({ hover: true }),
-	event: withAllDisabled({ hover: true, diagnostics: true }),
-	tagReference: withAllDisabled({ references: true, definitions: true, renameEdits: { shouldRename: false, shouldEdit: true } }),
-	attr: withAllDisabled({ hover: true, diagnostics: true, references: true, definitions: true, renameEdits: true }),
-	attrReference: withAllDisabled({ references: true, definitions: true, renameEdits: true }),
-	slotProp: withAllDisabled({ references: true, definitions: true, renameEdits: true, diagnostics: true }),
-	scopedClassName: withAllDisabled({ references: true, definitions: true, renameEdits: true, completionItems: true }),
-	slotName: withAllDisabled({ hover: true, diagnostics: true, references: true, definitions: true, completionItems: true }),
-	slotNameExport: withAllDisabled({ hover: true, diagnostics: true, references: true, definitions: true, /* __referencesCodeLens: true */ }),
-	refAttr: withAllDisabled({ references: true, definitions: true, renameEdits: true }),
+	noDiagnostics: enableAllFeatures({ diagnostics: false }),
+	diagnosticOnly: disableAllFeatures({ diagnostics: true }),
+	tagHover: disableAllFeatures({ hover: true }),
+	event: disableAllFeatures({ hover: true, diagnostics: true }),
+	tagReference: disableAllFeatures({ references: true, definitions: true, renameEdits: { shouldRename: false, shouldEdit: true } }),
+	attr: disableAllFeatures({ hover: true, diagnostics: true, references: true, definitions: true, renameEdits: true }),
+	attrReference: disableAllFeatures({ references: true, definitions: true, renameEdits: true }),
+	slotProp: disableAllFeatures({ references: true, definitions: true, renameEdits: true, diagnostics: true }),
+	scopedClassName: disableAllFeatures({ references: true, definitions: true, renameEdits: true, completionItems: true }),
+	slotName: disableAllFeatures({ hover: true, diagnostics: true, references: true, definitions: true, completionItems: true }),
+	slotNameExport: disableAllFeatures({ hover: true, diagnostics: true, references: true, definitions: true, /* __referencesCodeLens: true */ }),
+	refAttr: disableAllFeatures({ references: true, definitions: true, renameEdits: true }),
 };
 const formatBrackets = {
 	normal: ['`${', '}`;'] as [string, string],
@@ -210,12 +153,12 @@ export function generate(
 				yield* createObjectPropertyCode(
 					slot.name,
 					slot.loc,
-					combineEnabled(presetInfos.slotNameExport, { __referencesCodeLens: true }),
+					mergeFeatureSettings(presetInfos.slotNameExport, { __referencesCodeLens: true }),
 					slot.nodeLoc
 				);
 			}
 			else {
-				yield ['', 'template', slot.tagRange[0], combineEnabled(presetInfos.slotNameExport, { __referencesCodeLens: true })];
+				yield ['', 'template', slot.tagRange[0], mergeFeatureSettings(presetInfos.slotNameExport, { __referencesCodeLens: true })];
 				yield 'default';
 				yield ['', 'template', slot.tagRange[1], { __combineLastMappping: true }];
 			}
@@ -232,7 +175,7 @@ export function generate(
 				...createStringLiteralKeyCode(
 					className,
 					offset,
-					combineEnabled(
+					mergeFeatureSettings(
 						presetInfos.scopedClassName,
 						{ __displayWithLink: stylesScopedClasses.has(className) },
 					),
@@ -307,7 +250,7 @@ export function generate(
 						...createPropertyAccessCode(
 							tagName,
 							tagOffset,
-							combineEnabled(
+							mergeFeatureSettings(
 								presetInfos.tagReference,
 								{
 									renameEdits: true
@@ -329,7 +272,7 @@ export function generate(
 							...createCamelizeCode(
 								shouldCapitalize ? capitalize(tagName) : tagName,
 								tagOffset,
-								combineEnabled(
+								mergeFeatureSettings(
 									presetInfos.tagReference,
 									{
 										renameEdits: {
@@ -365,7 +308,7 @@ export function generate(
 						...createCamelizeCode(
 							capitalize(tagName),
 							tagOffset,
-							withAllDisabled({
+							disableAllFeatures({
 								completionItems: {
 									isAdditional: true,
 									onlyImport: true,
@@ -818,7 +761,7 @@ export function generate(
 				...createCanonicalComponentNameCode(
 					tag,
 					offset,
-					combineEnabled(
+					mergeFeatureSettings(
 						presetInfos.tagHover,
 						presetInfos.diagnosticOnly,
 					),
@@ -1051,7 +994,7 @@ export function generate(
 									? 'v-slot:'.length
 									: 0
 						),
-						withAllDisabled({ completionItems: true }),
+						disableAllFeatures({ completionItems: true }),
 					],
 					`'/* empty slot name completion */]\n`,
 				);
@@ -1070,7 +1013,7 @@ export function generate(
 			if (!hasSlotElements.has(node) && node.children.length) {
 				codes.push(
 					`(${componentCtxVar}.slots!).`,
-					['', 'template', node.children[0].loc.start.offset, withAllDisabled({ references: true })],
+					['', 'template', node.children[0].loc.start.offset, disableAllFeatures({ references: true })],
 					'default',
 					['', 'template', node.children[node.children.length - 1].loc.end.offset, { __combineLastMappping: true }],
 					';\n',
@@ -1101,7 +1044,7 @@ export function generate(
 					'',
 					'template',
 					prop.arg.loc.start.offset,
-					combineEnabled(
+					mergeFeatureSettings(
 						presetInfos.attrReference,
 						{
 							renameEdits: {
@@ -1314,15 +1257,15 @@ export function generate(
 		let caps_attr: VueCodeInformation = presetInfos.attr;
 
 		if (mode === 'extraReferences') {
-			caps_all = withAllDisabled({
+			caps_all = disableAllFeatures({
 				references: caps_all.references,
 				renameEdits: caps_all.renameEdits,
 			});
-			caps_diagnosticOnly = withAllDisabled({
+			caps_diagnosticOnly = disableAllFeatures({
 				references: caps_diagnosticOnly.references,
 				renameEdits: caps_diagnosticOnly.renameEdits,
 			});
-			caps_attr = withAllDisabled({
+			caps_attr = disableAllFeatures({
 				references: caps_attr.references,
 				renameEdits: caps_attr.renameEdits,
 			});
@@ -1384,7 +1327,7 @@ export function generate(
 							? prop.arg.loc.start.offset
 							: prop.loc.start.offset,
 						prop.arg
-							? combineEnabled(
+							? mergeFeatureSettings(
 								caps_attr,
 								{
 									renameEdits: {
@@ -1452,7 +1395,7 @@ export function generate(
 						prop.name,
 						prop.loc.start.offset,
 						shouldCamelize
-							? combineEnabled(caps_attr, {
+							? mergeFeatureSettings(caps_attr, {
 								renameEdits: {
 									shouldRename: true,
 									shouldEdit: true,
@@ -1588,7 +1531,7 @@ export function generate(
 					...createCamelizeCode(
 						'v-' + prop.name,
 						prop.loc.start.offset,
-						combineEnabled(
+						mergeFeatureSettings(
 							presetInfos.noDiagnostics,
 							{
 								completionItems: {
@@ -1758,7 +1701,7 @@ export function generate(
 					...createObjectPropertyCode(
 						prop.arg.content,
 						prop.arg.loc.start.offset,
-						combineEnabled(
+						mergeFeatureSettings(
 							presetInfos.slotProp,
 							{
 								renameEdits: {
@@ -1791,7 +1734,7 @@ export function generate(
 					...createObjectPropertyCode(
 						prop.name,
 						prop.loc.start.offset,
-						combineEnabled(
+						mergeFeatureSettings(
 							presetInfos.attr,
 							{
 								renameEdits: {
@@ -1891,7 +1834,7 @@ export function generate(
 					v.text,
 					'template',
 					v.offset,
-					withAllDisabled({ completionItems: { isAdditional: true }, }),
+					disableAllFeatures({ completionItems: { isAdditional: true }, }),
 				]);
 				codes.push(',');
 			}
@@ -1953,7 +1896,7 @@ export function generate(
 			code,
 			'template',
 			offset,
-			combineEnabled(
+			mergeFeatureSettings(
 				presetInfos.disabledAll,
 				{
 					formattingEdits: true,
