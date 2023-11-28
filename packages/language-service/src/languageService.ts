@@ -20,6 +20,7 @@ import * as TsTqService from 'volar-service-typescript-twoslash-queries';
 
 // our services
 import * as VueService from './plugins/vue';
+import * as DocumentDropService from './plugins/vue-document-drop';
 import * as AutoDotValueService from './plugins/vue-autoinsert-dotvalue';
 import * as AutoWrapParenthesesService from './plugins/vue-autoinsert-parentheses';
 import * as AutoAddSpaceService from './plugins/vue-autoinsert-space';
@@ -271,6 +272,7 @@ export function resolveServices(
 	services.json ??= JsonService.create();
 	services['typescript/twoslash-queries'] ??= TsTqService.create();
 	services['vue/referencesCodeLens'] ??= ReferencesCodeLensService.create();
+	services['vue/documentDrop'] ??= DocumentDropService.create();
 	services['vue/autoInsertDotValue'] ??= AutoDotValueService.create();
 	services['vue/twoslash-queries'] ??= VueTqService.create();
 	services['vue/autoInsertParentheses'] ??= AutoWrapParenthesesService.create();

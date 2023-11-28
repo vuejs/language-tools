@@ -1,5 +1,6 @@
 import {
 	activateAutoInsertion,
+	activateDocumentDropEdit,
 	activateFindFileReferences,
 	activateReloadProjects,
 	activateServerSys,
@@ -16,7 +17,6 @@ import { config } from './config';
 import * as componentMeta from './features/componentMeta';
 import * as doctor from './features/doctor';
 import * as nameCasing from './features/nameCasing';
-import * as dragImport from './features/dragImport';
 import * as splitEditors from './features/splitEditors';
 
 let semanticClient: lsp.BaseLanguageClient;
@@ -94,7 +94,6 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	splitEditors.register(context, syntacticClient);
 	doctor.register(context, semanticClient);
 	componentMeta.register(context, semanticClient);
-	dragImport.register(context, semanticClient);
 
 	const supportedLanguages: Record<string, boolean> = {
 		vue: true,
@@ -104,8 +103,17 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		javascriptreact: true,
 		typescriptreact: true,
 	};
+	const selectors: vscode.DocumentFilter[] = [{ language: 'vue' }];
+
+	if (config.server.petiteVue.supportHtmlFile) {
+		selectors.push({ language: 'html' });
+	}
+	if (config.server.vitePress.supportMdFile) {
+		selectors.push({ language: 'markdown' });
+	}
 
 	activateAutoInsertion([syntacticClient, semanticClient], document => supportedLanguages[document.languageId]);
+	activateDocumentDropEdit(selectors, semanticClient);
 	activateWriteVirtualFiles('volar.action.writeVirtualFiles', semanticClient);
 	activateFindFileReferences('volar.vue.findAllFileReferences', semanticClient);
 	activateTsConfigStatusItem('volar.openTsconfig', semanticClient,
