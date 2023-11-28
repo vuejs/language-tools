@@ -1,11 +1,11 @@
-import { LinkedCodeTrigger, Mapping, StackNode, VirtualFile } from '@volar/language-core';
+import { Mapping, StackNode, VirtualFile } from '@volar/language-core';
 import { Code } from '../types';
 
 export class VueEmbeddedFile {
 
 	public parentFileName?: string;
 	public typescript: VirtualFile['typescript'];
-	public linkedCodeMappings: Mapping<[LinkedCodeTrigger, LinkedCodeTrigger]>[] = [];
+	public linkedNavigationMappings: Mapping[] = [];
 
 	constructor(
 		public fileName: string,

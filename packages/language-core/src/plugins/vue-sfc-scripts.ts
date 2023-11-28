@@ -1,3 +1,4 @@
+import { disableAllFeatures } from '../generators/utils';
 import { VueLanguagePlugin } from '../types';
 
 const scriptFormatReg = /^(.*)\.script_format\.([^.]+)$/;
@@ -29,15 +30,11 @@ const plugin: VueLanguagePlugin = () => {
 					script.content,
 					script.name,
 					0,
-					{},
+					disableAllFeatures({
+						structure: true,
+						format: true,
+					}),
 				]);
-				embeddedFile.content.forEach(code => {
-					if (typeof code !== 'string') {
-						code[3].diagnostics = false;
-						code[3].codeActions = false;
-						code[3].inlayHints = false;
-					}
-				});
 			}
 		},
 	};

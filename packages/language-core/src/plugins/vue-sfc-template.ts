@@ -1,3 +1,4 @@
+import { enableAllFeatures } from '../generators/utils';
 import { VueLanguagePlugin } from '../types';
 
 const templateReg = /^(.*)\.template\.([^.]+)$/;
@@ -22,7 +23,7 @@ const plugin: VueLanguagePlugin = () => {
 					sfc.template.content,
 					sfc.template.name,
 					0,
-					{},
+					enableAllFeatures({}),
 				]);
 			}
 		},

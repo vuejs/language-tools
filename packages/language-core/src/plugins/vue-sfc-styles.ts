@@ -1,3 +1,4 @@
+import { enableAllFeatures } from '../generators/utils';
 import { VueLanguagePlugin } from '../types';
 
 const styleReg = /^(.*)\.style_(\d+)\.([^.]+)$/;
@@ -27,7 +28,7 @@ const plugin: VueLanguagePlugin = () => {
 					style.content,
 					style.name,
 					0,
-					{},
+					enableAllFeatures({}),
 				]);
 			}
 		},

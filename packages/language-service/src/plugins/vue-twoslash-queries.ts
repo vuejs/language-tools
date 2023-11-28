@@ -34,7 +34,7 @@ const plugin: Service = (context: ServiceContext<import('volar-service-typescrip
 						for (const map of context.documents.getMaps(virtualFile)) {
 							for (const [pointerPosition, hoverOffset] of hoverOffsets) {
 								for (const [tsOffset, mapping] of map.map.getGeneratedOffsets(hoverOffset)) {
-									if (mapping.data.hover) {
+									if (vue.isHoverEnabled(mapping.data)) {
 										const quickInfo = languageService.getQuickInfoAtPosition(context.env.uriToFileName(virtualFile.id), tsOffset);
 										if (quickInfo) {
 											inlayHints.push({

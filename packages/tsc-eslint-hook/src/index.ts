@@ -1,3 +1,4 @@
+import { isDiagnosticsEnabled } from '@vue/language-core';
 import { ESLint, Linter } from 'eslint';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -27,7 +28,7 @@ export = async function (
 			const all: typeof vueFile.embeddedFiles = [];
 
 			vueFile.embeddedFiles.forEach(async function visit(embeddedFile) {
-				if (embeddedFile.mappings.some(mapping => mapping.data.diagnostics ?? true)) {
+				if (embeddedFile.mappings.some(mapping => isDiagnosticsEnabled(mapping.data))) {
 					all.push(embeddedFile);
 				}
 				embeddedFile.embeddedFiles.forEach(visit);
@@ -73,17 +74,17 @@ export = async function (
 
 							for (const start of map.getSourceOffsets(msgStart)) {
 
-								const reportStart = typeof start[1].data.diagnostics === 'object'
-									? typeof start[1].data.diagnostics.shouldReport()
-									: (start[1].data.diagnostics ?? true);
+								const reportStart = typeof start[1].data.verification === 'object'
+									? start[1].data.verification.shouldReport?.() ?? true
+									: isDiagnosticsEnabled(start[1].data);
 								if (!reportStart)
 									continue;
 
 								for (const end of map.getSourceOffsets(msgEnd)) {
 
-									const reportEnd = typeof end[1].data.diagnostics === 'object'
-										? typeof end[1].data.diagnostics.shouldReport()
-										: (end[1].data.diagnostics ?? true);
+									const reportEnd = typeof end[1].data.verification === 'object'
+										? end[1].data.verification.shouldReport?.() ?? true
+										: isDiagnosticsEnabled(end[1].data);
 									if (!reportEnd)
 										continue;
 

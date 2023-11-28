@@ -1,14 +1,15 @@
 import { Mapping, Segment, replaceSourceRange } from '@volar/language-core';
-import type * as ts from 'typescript/lib/tsserverlibrary';
-import { Sfc, VueCodeInformation } from '../types';
 import { computed } from 'computeds';
+import type * as ts from 'typescript/lib/tsserverlibrary';
+import { enableAllFeatures } from '../generators/utils';
+import { Sfc, VueCodeInformation } from '../types';
 
 export function computedMappings(
 	snapshot: () => ts.IScriptSnapshot,
 	sfc: Sfc
 ) {
 	return computed(() => {
-		const str: Segment<VueCodeInformation>[] = [[snapshot().getText(0, snapshot().getLength()), undefined, 0, {}]];
+		const str: Segment<VueCodeInformation>[] = [[snapshot().getText(0, snapshot().getLength()), undefined, 0, enableAllFeatures({})]];
 		for (const block of [
 			sfc.script,
 			sfc.scriptSetup,

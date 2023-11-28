@@ -1,3 +1,4 @@
+import { enableAllFeatures } from '../generators/utils';
 import { VueLanguagePlugin } from '../types';
 
 const customBlockReg = /^(.*)\.customBlock_([^_]+)_(\d+)\.([^.]+)$/;
@@ -27,7 +28,7 @@ const plugin: VueLanguagePlugin = () => {
 					customBlock.content,
 					customBlock.name,
 					0,
-					{},
+					enableAllFeatures({}),
 				]);
 			}
 		},

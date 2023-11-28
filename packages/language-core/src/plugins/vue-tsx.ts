@@ -5,6 +5,7 @@ import { generate as generateTemplate } from '../generators/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { Sfc, VueLanguagePlugin } from '../types';
+import { enableAllFeatures } from '../generators/utils';
 
 const templateFormatReg = /^\.template_format\.ts$/;
 const templateStyleCssReg = /^\.template_style\.css$/;
@@ -57,14 +58,13 @@ const plugin: VueLanguagePlugin = (ctx) => {
 					const [content, contentStacks] = ctx.codegenStack ? track([...tsx.codes], [...tsx.codeStacks]) : [[...tsx.codes], [...tsx.codeStacks]];
 					content.forEach(code => {
 						if (typeof code !== 'string') {
-							code[3].foldingRanges = false;
-							code[3].formattingEdits = false;
-							code[3].symbols = false;
+							code[3].structure = false;
+							code[3].format = false;
 						}
 					});
 					embeddedFile.content = content;
 					embeddedFile.contentStacks = contentStacks;
-					embeddedFile.linkedCodeMappings = [...tsx.mirrorBehaviorMappings];
+					embeddedFile.linkedNavigationMappings = [...tsx.mirrorBehaviorMappings];
 				}
 			}
 			else if (suffix.match(templateFormatReg)) {
@@ -88,7 +88,7 @@ const plugin: VueLanguagePlugin = (ctx) => {
 							cssVar.text,
 							style.name,
 							cssVar.offset,
-							{},
+							enableAllFeatures({}),
 						]);
 						embeddedFile.content.push(');\n');
 					}

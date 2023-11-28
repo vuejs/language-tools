@@ -99,7 +99,7 @@ export function resolveServices(
 
 							if (sourceVirtualFile instanceof VueFile) {
 
-								const isAutoImport = !!map.toSourcePosition(position, data => typeof data.completionItems === 'object' && !!data.completionItems.onlyImport);
+								const isAutoImport = !!map.toSourcePosition(position, data => typeof data.completion === 'object' && !!data.completion.onlyImport);
 								if (isAutoImport) {
 
 									for (const item of result.items) {

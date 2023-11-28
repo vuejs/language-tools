@@ -23,18 +23,18 @@ const presetInfos = {
 			paddingRight: true,
 		}
 	}),
-	noDiagnostics: enableAllFeatures({ diagnostics: false }),
-	diagnosticOnly: disableAllFeatures({ diagnostics: true }),
-	tagHover: disableAllFeatures({ hover: true }),
-	event: disableAllFeatures({ hover: true, diagnostics: true }),
-	tagReference: disableAllFeatures({ references: true, definitions: true, renameEdits: { shouldRename: false, shouldEdit: true } }),
-	attr: disableAllFeatures({ hover: true, diagnostics: true, references: true, definitions: true, renameEdits: true }),
-	attrReference: disableAllFeatures({ references: true, definitions: true, renameEdits: true }),
-	slotProp: disableAllFeatures({ references: true, definitions: true, renameEdits: true, diagnostics: true }),
-	scopedClassName: disableAllFeatures({ references: true, definitions: true, renameEdits: true, completionItems: true }),
-	slotName: disableAllFeatures({ hover: true, diagnostics: true, references: true, definitions: true, completionItems: true }),
-	slotNameExport: disableAllFeatures({ hover: true, diagnostics: true, references: true, definitions: true, /* __referencesCodeLens: true */ }),
-	refAttr: disableAllFeatures({ references: true, definitions: true, renameEdits: true }),
+	noDiagnostics: enableAllFeatures({ verification: false }),
+	diagnosticOnly: disableAllFeatures({ verification: true }),
+	tagHover: disableAllFeatures({ semantic: true }),
+	event: disableAllFeatures({ semantic: true, verification: true }),
+	tagReference: disableAllFeatures({ navigation: { shouldRename: () => false } }),
+	attr: disableAllFeatures({ semantic: true, verification: true, navigation: true }),
+	attrReference: disableAllFeatures({ navigation: true }),
+	slotProp: disableAllFeatures({ navigation: true, verification: true }),
+	scopedClassName: disableAllFeatures({ navigation: true, completion: true }),
+	slotName: disableAllFeatures({ semantic: true, verification: true, navigation: true, completion: true }),
+	slotNameExport: disableAllFeatures({ semantic: true, verification: true, navigation: true, /* __navigationCodeLens: true */ }),
+	refAttr: disableAllFeatures({ navigation: true }),
 };
 const formatBrackets = {
 	normal: ['`${', '}`;'] as [string, string],
@@ -153,14 +153,14 @@ export function generate(
 				yield* createObjectPropertyCode(
 					slot.name,
 					slot.loc,
-					mergeFeatureSettings(presetInfos.slotNameExport, { __referencesCodeLens: true }),
+					mergeFeatureSettings(presetInfos.slotNameExport, disableAllFeatures({ __referencesCodeLens: true })),
 					slot.nodeLoc
 				);
 			}
 			else {
-				yield ['', 'template', slot.tagRange[0], mergeFeatureSettings(presetInfos.slotNameExport, { __referencesCodeLens: true })];
+				yield ['', 'template', slot.tagRange[0], mergeFeatureSettings(presetInfos.slotNameExport, disableAllFeatures({ __referencesCodeLens: true }))];
 				yield 'default';
-				yield ['', 'template', slot.tagRange[1], { __combineLastMappping: true }];
+				yield ['', 'template', slot.tagRange[1], disableAllFeatures({ __combineLastMappping: true })];
 			}
 			yield `?(_: typeof ${slot.varName}): any,\n`;
 		}
@@ -177,7 +177,7 @@ export function generate(
 					offset,
 					mergeFeatureSettings(
 						presetInfos.scopedClassName,
-						{ __displayWithLink: stylesScopedClasses.has(className) },
+						disableAllFeatures({ __displayWithLink: stylesScopedClasses.has(className) }),
 					),
 				),
 				`];\n`,
@@ -253,7 +253,7 @@ export function generate(
 							mergeFeatureSettings(
 								presetInfos.tagReference,
 								{
-									renameEdits: true
+									navigation: true
 								},
 								...(nativeTags.has(tagName) ? [
 									presetInfos.tagHover,
@@ -275,11 +275,9 @@ export function generate(
 								mergeFeatureSettings(
 									presetInfos.tagReference,
 									{
-										renameEdits: {
-											shouldEdit: true,
-											shouldRename: true,
-											resolveNewName: tagName !== expectName ? camelizeComponentName : undefined,
-											resolveEditText: getTagRenameApply(tagName),
+										navigation: {
+											resolveRenameNewName: tagName !== expectName ? camelizeComponentName : undefined,
+											resolveRenameEditText: getTagRenameApply(tagName),
 										}
 									},
 									...(nativeTags.has(tagName) ? [
@@ -309,7 +307,7 @@ export function generate(
 							capitalize(tagName),
 							tagOffset,
 							disableAllFeatures({
-								completionItems: {
+								completion: {
 									isAdditional: true,
 									onlyImport: true,
 								},
@@ -373,10 +371,10 @@ export function generate(
 					continue;
 				}
 				const data = code[3];
-				if (data.diagnostics) {
+				if (data.verification) {
 					code[3] = {
 						...data,
-						diagnostics: false,
+						verification: false,
 					};
 				}
 			}
@@ -394,10 +392,10 @@ export function generate(
 					continue;
 				}
 				const data = code[3];
-				if (data.diagnostics) {
+				if (data.verification) {
 					code[3] = {
 						...data,
-						diagnostics: {
+						verification: {
 							shouldReport: suppressError,
 						},
 					};
@@ -408,18 +406,18 @@ export function generate(
 					'',
 					'template',
 					expectedErrorNode.loc.start.offset,
-					{
-						diagnostics: {
+					disableAllFeatures({
+						verification: {
 							shouldReport: () => errors === 0,
 						},
-					},
+					}),
 				],
 				'// @ts-expect-error __VLS_TS_EXPECT_ERROR',
 				[
 					'',
 					'template',
 					expectedErrorNode.loc.end.offset,
-					{ __combineLastMappping: true },
+					disableAllFeatures({ __combineLastMappping: true }),
 				],
 				'\n;\n',
 			);
@@ -951,9 +949,9 @@ export function generate(
 						)
 						: [
 							'.',
-							['', 'template', slotDir.loc.start.offset, { ...presetInfos.slotName, completionItems: false }] satisfies Code,
+							['', 'template', slotDir.loc.start.offset, { ...presetInfos.slotName, completion: false }] satisfies Code,
 							'default',
-							['', 'template', slotDir.loc.start.offset + (slotDir.loc.source.startsWith('#') ? '#'.length : slotDir.loc.source.startsWith('v-slot:') ? 'v-slot:'.length : 0), { __combineLastMappping: true }] satisfies Code,
+							['', 'template', slotDir.loc.start.offset + (slotDir.loc.source.startsWith('#') ? '#'.length : slotDir.loc.source.startsWith('v-slot:') ? 'v-slot:'.length : 0), disableAllFeatures({ __combineLastMappping: true })] satisfies Code,
 						]
 				),
 				['', 'template', (slotDir.arg ?? slotDir).loc.end.offset, presetInfos.diagnosticOnly],
@@ -994,7 +992,7 @@ export function generate(
 									? 'v-slot:'.length
 									: 0
 						),
-						disableAllFeatures({ completionItems: true }),
+						disableAllFeatures({ completion: true }),
 					],
 					`'/* empty slot name completion */]\n`,
 				);
@@ -1013,9 +1011,9 @@ export function generate(
 			if (!hasSlotElements.has(node) && node.children.length) {
 				codes.push(
 					`(${componentCtxVar}.slots!).`,
-					['', 'template', node.children[0].loc.start.offset, disableAllFeatures({ references: true })],
+					['', 'template', node.children[0].loc.start.offset, disableAllFeatures({ navigation: true })],
 					'default',
-					['', 'template', node.children[node.children.length - 1].loc.end.offset, { __combineLastMappping: true }],
+					['', 'template', node.children[node.children.length - 1].loc.end.offset, disableAllFeatures({ __combineLastMappping: true })],
 					';\n',
 				);
 			}
@@ -1047,15 +1045,13 @@ export function generate(
 					mergeFeatureSettings(
 						presetInfos.attrReference,
 						{
-							renameEdits: {
-								shouldRename: true,
-								shouldEdit: true,
+							navigation: {
 								// @click-outside -> onClickOutside
-								resolveNewName(newName) {
+								resolveRenameNewName(newName) {
 									return camelize('on-' + newName);
 								},
 								// onClickOutside -> @click-outside
-								resolveEditText(newName) {
+								resolveRenameEditText(newName) {
 									const hName = hyphenateAttr(newName);
 									if (hyphenateAttr(newName).startsWith('on-')) {
 										return camelize(hName.slice('on-'.length));
@@ -1074,7 +1070,7 @@ export function generate(
 						...createCamelizeCode(
 							capitalize(prop.arg.loc.source),
 							prop.arg.loc.start.offset,
-							{ __combineLastMappping: true },
+							disableAllFeatures({ __combineLastMappping: true }),
 						),
 					);
 				}
@@ -1083,15 +1079,15 @@ export function generate(
 						`[`,
 						startCode,
 						`'`,
-						['', 'template', prop.arg.loc.start.offset, { __combineLastMappping: true }],
+						['', 'template', prop.arg.loc.start.offset, disableAllFeatures({ __combineLastMappping: true })],
 						'on',
 						...createCamelizeCode(
 							capitalize(prop.arg.loc.source),
 							prop.arg.loc.start.offset,
-							{ __combineLastMappping: true },
+							disableAllFeatures({ __combineLastMappping: true }),
 						),
 						`'`,
-						['', 'template', prop.arg.loc.end.offset, { __combineLastMappping: true }],
+						['', 'template', prop.arg.loc.end.offset, disableAllFeatures({ __combineLastMappping: true })],
 						`]`,
 					);
 				}
@@ -1257,18 +1253,9 @@ export function generate(
 		let caps_attr: VueCodeInformation = presetInfos.attr;
 
 		if (mode === 'extraReferences') {
-			caps_all = disableAllFeatures({
-				references: caps_all.references,
-				renameEdits: caps_all.renameEdits,
-			});
-			caps_diagnosticOnly = disableAllFeatures({
-				references: caps_diagnosticOnly.references,
-				renameEdits: caps_diagnosticOnly.renameEdits,
-			});
-			caps_attr = disableAllFeatures({
-				references: caps_attr.references,
-				renameEdits: caps_attr.renameEdits,
-			});
+			caps_all = disableAllFeatures({ navigation: caps_all.navigation });
+			caps_diagnosticOnly = disableAllFeatures({ navigation: caps_diagnosticOnly.navigation });
+			caps_attr = disableAllFeatures({ navigation: caps_attr.navigation });
 		}
 
 		codes.push(`...{ `);
@@ -1330,11 +1317,9 @@ export function generate(
 							? mergeFeatureSettings(
 								caps_attr,
 								{
-									renameEdits: {
-										shouldRename: true,
-										shouldEdit: true,
-										resolveNewName: camelize,
-										resolveEditText: shouldCamelize ? hyphenateAttr : undefined,
+									navigation: {
+										resolveRenameNewName: camelize,
+										resolveRenameEditText: shouldCamelize ? hyphenateAttr : undefined,
 									},
 								},
 							)
@@ -1396,11 +1381,9 @@ export function generate(
 						prop.loc.start.offset,
 						shouldCamelize
 							? mergeFeatureSettings(caps_attr, {
-								renameEdits: {
-									shouldRename: true,
-									shouldEdit: true,
-									resolveNewName: camelize,
-									resolveEditText: hyphenateAttr,
+								navigation: {
+									resolveRenameNewName: camelize,
+									resolveRenameEditText: hyphenateAttr,
 								},
 							})
 							: caps_attr,
@@ -1480,11 +1463,10 @@ export function generate(
 					content,
 					'template',
 					prop.arg.loc.start.offset + start,
-					{
-						formattingEdits: false,
-						foldingRanges: false,
-						symbols: false,
-					},
+					enableAllFeatures({
+						format: false,
+						structure: false,
+					}),
 				]);
 				cssCodes.push(` }\n`);
 			}
@@ -1534,15 +1516,13 @@ export function generate(
 						mergeFeatureSettings(
 							presetInfos.noDiagnostics,
 							{
-								completionItems: {
+								completion: {
 									// fix https://github.com/vuejs/language-tools/issues/1905
 									isAdditional: true,
 								},
-								renameEdits: {
-									shouldRename: true,
-									shouldEdit: true,
-									resolveNewName: camelize,
-									resolveEditText: getPropRenameApply(prop.name),
+								navigation: {
+									resolveRenameNewName: camelize,
+									resolveRenameEditText: getPropRenameApply(prop.name),
 								},
 							},
 						),
@@ -1659,13 +1639,13 @@ export function generate(
 				'__VLS_normalizeSlot(',
 				['', 'template', node.loc.start.offset, presetInfos.diagnosticOnly],
 				`${slotsAssignName ?? '__VLS_slots'}[`,
-				['', 'template', node.loc.start.offset, { __combineLastMappping: true }],
+				['', 'template', node.loc.start.offset, disableAllFeatures({ __combineLastMappping: true })],
 				slotNameExpNode?.content ?? `('${getSlotName()?.[0] ?? 'default'}' as const)`,
-				['', 'template', node.loc.end.offset, { __combineLastMappping: true }],
+				['', 'template', node.loc.end.offset, disableAllFeatures({ __combineLastMappping: true })],
 				']',
-				['', 'template', node.loc.end.offset, { __combineLastMappping: true }],
+				['', 'template', node.loc.end.offset, disableAllFeatures({ __combineLastMappping: true })],
 				')?.(',
-				['', 'template', startTagOffset, { __combineLastMappping: true }],
+				['', 'template', startTagOffset, disableAllFeatures({ __combineLastMappping: true })],
 				'{\n',
 			);
 		}
@@ -1704,11 +1684,9 @@ export function generate(
 						mergeFeatureSettings(
 							presetInfos.slotProp,
 							{
-								renameEdits: {
-									shouldRename: true,
-									shouldEdit: true,
-									resolveNewName: camelize,
-									resolveEditText: getPropRenameApply(prop.arg.content),
+								navigation: {
+									resolveRenameNewName: camelize,
+									resolveRenameEditText: getPropRenameApply(prop.arg.content),
 								},
 							},
 						),
@@ -1737,11 +1715,9 @@ export function generate(
 						mergeFeatureSettings(
 							presetInfos.attr,
 							{
-								renameEdits: {
-									shouldRename: true,
-									shouldEdit: true,
-									resolveNewName: camelize,
-									resolveEditText: getPropRenameApply(prop.name),
+								navigation: {
+									resolveRenameNewName: camelize,
+									resolveRenameEditText: getPropRenameApply(prop.name),
 								},
 							},
 						),
@@ -1834,7 +1810,7 @@ export function generate(
 					v.text,
 					'template',
 					v.offset,
-					disableAllFeatures({ completionItems: { isAdditional: true }, }),
+					disableAllFeatures({ completion: { isAdditional: true }, }),
 				]);
 				codes.push(',');
 			}
@@ -1862,7 +1838,7 @@ export function generate(
 		if (needToUnicode(content)) {
 			yield ['', 'template', start, info];
 			yield toUnicode(content);
-			yield ['', 'template', end, { __combineLastMappping: true }];
+			yield ['', 'template', end, disableAllFeatures({ __combineLastMappping: true })];
 		}
 		else {
 			yield [content, 'template', start, info];
@@ -1883,7 +1859,7 @@ export function generate(
 					offset,
 					i === 0
 						? info
-						: { __combineLastMappping: true },
+						: disableAllFeatures({ __combineLastMappping: true }),
 				];
 			}
 			offset += part.length + 1;
@@ -1899,8 +1875,8 @@ export function generate(
 			mergeFeatureSettings(
 				presetInfos.disabledAll,
 				{
-					formattingEdits: true,
-					autoInserts: true, // support vue-autoinsert-parentheses
+					format: true,
+					// autoInserts: true, // TODO: support vue-autoinsert-parentheses
 				},
 			),
 		];
@@ -1922,9 +1898,9 @@ export function generate(
 			else {
 				yield ['', 'template', offset, info];
 				yield '"';
-				yield* createCamelizeCode(code, offset, { __combineLastMappping: true });
+				yield* createCamelizeCode(code, offset, disableAllFeatures({ __combineLastMappping: true }));
 				yield '"';
-				yield ['', 'template', offset + code.length, { __combineLastMappping: true }];
+				yield ['', 'template', offset + code.length, disableAllFeatures({ __combineLastMappping: true })];
 			}
 		}
 		else {
@@ -2027,9 +2003,9 @@ export function generate(
 	function* createStringLiteralKeyCode(code: string, offset: number, info: VueCodeInformation): Generator<Code> {
 		yield ['', 'template', offset, info];
 		yield '"';
-		yield [code, 'template', offset, { __combineLastMappping: true }];
+		yield [code, 'template', offset, disableAllFeatures({ __combineLastMappping: true })];
 		yield '"';
-		yield ['', 'template', offset + code.length, { __combineLastMappping: true }];
+		yield ['', 'template', offset + code.length, disableAllFeatures({ __combineLastMappping: true })];
 	}
 }
 

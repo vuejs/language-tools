@@ -1,4 +1,4 @@
-import { LinkedCodeTrigger, Mapping, getLength, offsetStack, resetOffsetStack, setTracking, track } from '@volar/language-core';
+import { Mapping, getLength, offsetStack, resetOffsetStack, setTracking, track } from '@volar/language-core';
 import * as path from 'path-browserify';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type * as templateGen from '../generators/template';
@@ -26,7 +26,7 @@ export function generate(
 ) {
 
 	const [codes, codeStacks] = codegenStack ? track([] as Code[]) : [[], []];
-	const mirrorBehaviorMappings: Mapping<[LinkedCodeTrigger, LinkedCodeTrigger]>[] = [];
+	const mirrorBehaviorMappings: Mapping[] = [];
 
 	//#region monkey fix: https://github.com/vuejs/language-tools/pull/2113
 	if (!script && !scriptSetup) {
@@ -151,10 +151,9 @@ export function generate(
 			'script',
 			script.srcOffset - 1,
 			enableAllFeatures({
-				renameEdits: src === script.src ? true : {
-					shouldRename: false,
-					shouldEdit: true,
-					resolveEditText(newName) {
+				navigation: src === script.src ? true : {
+					shouldRename: () => false,
+					resolveRenameEditText(newName) {
 						if (newName.endsWith('.jsx') || newName.endsWith('.js')) {
 							newName = newName.split('.').slice(0, -1).join('.');
 						}
@@ -250,7 +249,7 @@ export function generate(
 			'',
 			'scriptSetup',
 			scriptSetup.content.length,
-			disableAllFeatures({ diagnostics: true }),
+			disableAllFeatures({ verification: true }),
 		]);
 		codes.push(`\n`);
 	}
@@ -406,7 +405,7 @@ export function generate(
 						sourceOffsets: [defineProp.name.start + scriptSetupGeneratedOffset],
 						generatedOffsets: [propMirror],
 						lengths: [defineProp.name.end - defineProp.name.start],
-						data: [{}, {}],
+						data: undefined,
 					});
 				}
 			}
@@ -753,7 +752,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 						sourceOffsets: [scriptOffset],
 						generatedOffsets: [templateOffset],
 						lengths: [varName.length],
-						data: [{}, {}],
+						data: undefined,
 					});
 				}
 			}
@@ -778,8 +777,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				'script',
 				componentsOption.start,
 				disableAllFeatures({
-					references: true,
-					renameEdits: true,
+					navigation: true,
 				}),
 			]);
 		}
@@ -892,7 +890,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				'style_' + styleIndex,
 				offset,
 				disableAllFeatures({
-					references: true,
+					navigation: true,
 					__referencesCodeLens: referencesCodeLens,
 				}),
 			]);
@@ -902,12 +900,9 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				'style_' + styleIndex,
 				offset,
 				disableAllFeatures({
-					references: true,
-					renameEdits: {
-						shouldRename: true,
-						shouldEdit: true,
-						resolveNewName: normalizeCssRename,
-						resolveEditText: applyCssRename,
+					navigation: {
+						resolveRenameNewName: normalizeCssRename,
+						resolveRenameEditText: applyCssRename,
 					},
 				}),
 			]);
@@ -915,7 +910,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				classNameWithDot.substring(1),
 				'style_' + styleIndex,
 				offset + 1,
-				{ __combineLastMappping: true },
+				disableAllFeatures({ __combineLastMappping: true }),
 			]);
 			codes.push(`'`);
 			codes.push([
@@ -948,7 +943,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 									style.name,
 									cssBind.offset + fragOffset,
 									onlyForErrorMapping
-										? disableAllFeatures({ diagnostics: true })
+										? disableAllFeatures({ verification: true })
 										: enableAllFeatures({}),
 								]);
 							}
@@ -1003,11 +998,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			(vueTag === 'script' ? script : scriptSetup)!.content.substring(start, end),
 			vueTag,
 			start,
-			disableAllFeatures({
-				references: true,
-				definitions: true,
-				renameEdits: true,
-			}),
+			disableAllFeatures({ navigation: true }),
 		]);
 		resetOffsetStack();
 	}
