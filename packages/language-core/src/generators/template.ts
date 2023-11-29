@@ -243,7 +243,6 @@ export function generate(
 									...capabilitiesPresets.tagHover,
 									...capabilitiesPresets.diagnosticOnly,
 								} : {},
-								...vueCompilerOptions.strictTemplates ? capabilitiesPresets.diagnosticOnly : {},
 							},
 						]),
 						';',
