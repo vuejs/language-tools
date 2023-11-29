@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { defineAsyncComponent } from 'vue';
+import { exactType } from 'tsc/shared';
 
-const ReloadPrompt =
-	typeof window !== 'undefined'
-		? defineAsyncComponent(() => Promise.resolve({}))
-		: undefined;
+declare const Child: undefined | (new () => {
+	$props: {
+		foo?(num: number): void;
+	};
+});
 </script>
 
 <template>
-	<template v-if="ReloadPrompt">
-		<ReloadPrompt />
+	<template v-if="Child">
+		<Child :foo="num => exactType(num, {} as number)" />
 	</template>
 </template>

@@ -685,16 +685,14 @@ export function generate(
 		else {
 			codes.push(
 				`const ${var_originalComponent} = ({} as `,
-				`'${tag}' extends keyof typeof __VLS_ctx ? typeof __VLS_ctx : `,
 			);
 			for (const componentName of getPossibleOriginalComponentName(tag)) {
-				codes.push(`'${componentName}' extends keyof typeof __VLS_ctx ? `);
-				if (componentName === toCanonicalComponentName(tag)) {
-					codes.push(`typeof __VLS_ctx : `);
-				}
-				else {
-					codes.push(`{ [K in '${toCanonicalComponentName(tag)}']: typeof __VLS_ctx['${componentName}'] }: `);
-				}
+				codes.push(
+					`'${componentName}' extends keyof typeof __VLS_ctx ? `,
+					`{ '${toCanonicalComponentName(tag)}': typeof __VLS_ctx`,
+					...createPropertyAccessCode(componentName),
+					` }: `,
+				);
 			}
 			codes.push(
 				`typeof __VLS_resolvedLocalAndGlobalComponents)`,
