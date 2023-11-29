@@ -1,6 +1,6 @@
 {
 	"name": "vue-component-type-helpers",
-	"version": "1.8.22",
+	"version": "1.8.24",
 	"license": "MIT",
 	"files": [
 		"*.js",
