@@ -230,7 +230,7 @@ export function generate(
 			return;
 
 		if (!!scriptSetup && scriptRanges?.exportDefault) {
-			addVirtualCode('script', scriptRanges.exportDefault.end, script.content.length);
+			addVirtualCode('script', scriptRanges.exportDefault.expression.end, script.content.length);
 		}
 	}
 	function generateScriptSetupImports() {
