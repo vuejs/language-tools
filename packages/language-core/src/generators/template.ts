@@ -1260,6 +1260,7 @@ export function generate(
 				if (
 					(!prop.arg || (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)) // isStatic
 					&& hyphenateAttr(attrNameText) === attrNameText
+					&& !nativeTags.has(node.tag)
 					&& !vueCompilerOptions.htmlAttributes.some(pattern => minimatch(attrNameText!, pattern))
 				) {
 					attrNameText = camelize(attrNameText);
@@ -1366,6 +1367,7 @@ export function generate(
 
 				if (
 					hyphenateAttr(prop.name) === prop.name
+					&& !nativeTags.has(node.tag)
 					&& !vueCompilerOptions.htmlAttributes.some(pattern => minimatch(attrNameText!, pattern))
 				) {
 					attrNameText = camelize(prop.name);
