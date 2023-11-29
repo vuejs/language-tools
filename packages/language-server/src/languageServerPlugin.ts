@@ -105,7 +105,7 @@ export function createServerPlugin(connection: Connection) {
 					}
 				});
 
-				const checkers = new WeakMap<ServerProject, componentMeta.Checker>();
+				const checkers = new WeakMap<ServerProject, componentMeta.ComponentMetaChecker>();
 
 				connection.onRequest(GetComponentMeta.type, async params => {
 

@@ -222,7 +222,7 @@ export function generate(
 			return;
 
 		if (!!scriptSetup && scriptRanges?.exportDefault) {
-			addVirtualCode('script', scriptRanges.exportDefault.end, script.content.length);
+			addVirtualCode('script', scriptRanges.exportDefault.expression.end, script.content.length);
 		}
 	}
 	function generateScriptSetupImports() {
@@ -239,19 +239,6 @@ export function generate(
 			0,
 			enableAllFeatures({}),
 		]);
-	}
-	function generateExportDefaultEndMapping() {
-		if (!scriptSetup) {
-			return;
-		}
-		// fix https://github.com/vuejs/language-tools/issues/1127
-		codes.push([
-			'',
-			'scriptSetup',
-			scriptSetup.content.length,
-			disableAllFeatures({ verification: true }),
-		]);
-		codes.push(`\n`);
 	}
 	function generateScriptSetupAndTemplate() {
 
@@ -390,8 +377,6 @@ export function generate(
 			scriptSetupGeneratedOffset = generateSetupFunction(false, 'return', definePropMirrors);
 			codes.push(`})()`);
 		}
-
-		generateExportDefaultEndMapping();
 
 		if (scriptSetupGeneratedOffset !== undefined) {
 			for (const defineProp of scriptSetupRanges.defineProp) {
@@ -569,9 +554,6 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				codes.push(`;\n`);
 			}
 		}
-		if (mode === 'export') {
-			generateExportDefaultEndMapping();
-		}
 
 		return scriptSetupGeneratedOffset;
 	}
@@ -589,19 +571,15 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			codes.push(`(await import('${vueCompilerOptions.lib}')).defineComponent({\n`);
 		}
 
-		generateComponentOptions(functional);
-
 		codes.push(`setup() {\n`);
 		codes.push(`return {\n`);
-
 		generateSetupReturns();
-
 		if (scriptSetupRanges.expose.define) {
 			codes.push(`...__VLS_exposed,\n`);
 		}
-
 		codes.push(`};\n`);
 		codes.push(`},\n`);
+		generateComponentOptions(functional);
 		codes.push(`})`);
 	}
 	function generateComponentOptions(functional: boolean) {
@@ -723,7 +701,6 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		if (scriptSetup && scriptSetupRanges) {
 
 			codes.push(`const __VLS_internalComponent = (await import('${vueCompilerOptions.lib}')).defineComponent({\n`);
-			generateComponentOptions(functional);
 			codes.push(`setup() {\n`);
 			codes.push(`return {\n`);
 			generateSetupReturns();
@@ -758,6 +735,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			}
 			codes.push(`};\n`); // return {
 			codes.push(`},\n`); // setup() {
+			generateComponentOptions(functional);
 			codes.push(`});\n`); // defineComponent({
 		}
 		else if (script) {

@@ -20,20 +20,20 @@ export * from './types';
 
 const windowsPathReg = /\\/g;
 
-export function createCheckerByJsonBase(
+export function createCheckerByJsonConfigBase(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	rootPath: string,
+	rootDir: string,
 	json: any,
 	checkerOptions: MetaCheckerOptions = {},
 ) {
-	rootPath = rootPath.replace(windowsPathReg, '/');
+	rootDir = rootDir.replace(windowsPathReg, '/');
 	return createCheckerWorker(
 		ts,
-		() => vue.createParsedCommandLineByJson(ts, ts.sys, rootPath, json),
+		() => vue.createParsedCommandLineByJson(ts, ts.sys, rootDir, json),
 		checkerOptions,
-		rootPath,
-		path.join(rootPath, 'jsconfig.json.global.vue'),
-		undefined,
+		rootDir,
+		path.join(rootDir, 'jsconfig.json.global.vue'),
+		undefined
 	);
 }
 

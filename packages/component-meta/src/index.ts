@@ -1,15 +1,15 @@
 import * as ts from 'typescript';
-import { createCheckerByJsonBase, createCheckerBase } from './base';
+import { createCheckerByJsonConfigBase, createCheckerBase } from './base';
 import type { MetaCheckerOptions } from './types';
 
 export * from './types';
 
-export function createCheckerByJson(
+export function createComponentMetaCheckerByJsonConfig(
 	rootPath: string,
 	json: any,
 	checkerOptions: MetaCheckerOptions = {},
 ) {
-	return createCheckerByJsonBase(
+	return createCheckerByJsonConfigBase(
 		ts as any,
 		rootPath,
 		json,
@@ -17,7 +17,7 @@ export function createCheckerByJson(
 	);
 }
 
-export function createChecker(
+export function createComponentMetaChecker(
 	tsconfig: string,
 	checkerOptions: MetaCheckerOptions = {},
 ) {

@@ -10,14 +10,19 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v3
+      - uses: pnpm/action-setup@v2
         with:
-          node-version: 18
+          version: latest
 
-      - run: npm i -g pnpm ovsx
-      - run: pnpm install --frozen-lockfile --no-optional
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install -g ovsx
+      - run: pnpm install --frozen-lockfile
       - run: pnpm run build:minify && pnpm ovsx publish
         working-directory: extensions/vscode
         env:

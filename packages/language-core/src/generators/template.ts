@@ -729,11 +729,29 @@ export function generate(
 			);
 		}
 		else {
-			codes.push(`let ${var_originalComponent}!: `);
+			codes.push(
+				`const ${var_originalComponent} = ({} as `,
+			);
 			for (const componentName of getPossibleOriginalComponentNames(tag)) {
-				codes.push(`'${componentName}' extends keyof typeof __VLS_ctx ? typeof __VLS_ctx${validTsVarReg.test(componentName) ? `.${componentName}` : `['${componentName}']`} : `);
+				codes.push(
+					`'${componentName}' extends keyof typeof __VLS_ctx ? `,
+					`{ '${toCanonicalComponentName(tag)}': typeof __VLS_ctx`,
+					...createPropertyAccessCode(componentName),
+					` }: `,
+				);
 			}
-			codes.push(`typeof __VLS_resolvedLocalAndGlobalComponents['${toCanonicalComponentName(tag)}'];\n`);
+			codes.push(
+				`typeof __VLS_resolvedLocalAndGlobalComponents)`,
+				...(tagOffsets.length
+					? createPropertyAccessCode(
+						toCanonicalComponentName(tag),
+						tagOffsets[0],
+						presetInfos.diagnosticOnly,
+					)
+					: createPropertyAccessCode(toCanonicalComponentName(tag))
+				),
+				';\n',
+			);
 		}
 
 		if (isIntrinsicElement) {
@@ -1303,6 +1321,7 @@ export function generate(
 				}
 
 				const shouldCamelize = (!prop.arg || (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)) // isStatic
+					&& !nativeTags.has(node.tag)
 					&& hyphenateAttr(propName) === propName
 					&& !vueCompilerOptions.htmlAttributes.some(pattern => minimatch(propName!, pattern));
 
@@ -1372,6 +1391,7 @@ export function generate(
 				) continue;
 
 				const shouldCamelize = hyphenateAttr(prop.name) === prop.name
+					&& !nativeTags.has(node.tag)
 					&& !vueCompilerOptions.htmlAttributes.some(pattern => minimatch(prop.name, pattern));
 
 				codes.push(
@@ -1978,10 +1998,12 @@ export function generate(
 		return astHolder.__volar_ast as ts.SourceFile;
 	}
 
-	function* createPropertyAccessCode(code: string, offset: number, info: VueCodeInformation, astHolder?: any): Generator<Code> {
+	function* createPropertyAccessCode(code: string, offset?: number, info?: VueCodeInformation, astHolder?: any): Generator<Code> {
 		if (!compilerOptions.noPropertyAccessFromIndexSignature && validTsVarReg.test(code)) {
 			yield '.';
-			yield [code, 'template', offset, info];
+			yield offset !== undefined && info
+				? code
+				: [code, 'template', offset, info];
 		}
 		else if (code.startsWith('[') && code.endsWith(']')) {
 			yield* createInterpolationCode(
@@ -2000,7 +2022,11 @@ export function generate(
 		}
 	}
 
-	function* createStringLiteralKeyCode(code: string, offset: number, info: VueCodeInformation): Generator<Code> {
+	function* createStringLiteralKeyCode(code: string, offset?: number, info?: VueCodeInformation): Generator<Code> {
+		if (offset === undefined || !info) {
+			yield `"${code}"`;
+			return;
+		}
 		yield ['', 'template', offset, info];
 		yield '"';
 		yield [code, 'template', offset, disableAllFeatures({ __combineLastMappping: true })];
