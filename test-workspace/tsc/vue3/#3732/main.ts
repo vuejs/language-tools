@@ -1,4 +1,6 @@
 import { exactType } from '../../shared';
-import Comp from './Comp.vue';
+import child from './child.vue';
+import child2 from './child2.vue';
 
-exactType(Comp, 1);
+exactType(child, 1);
+exactType(child2, 1);
