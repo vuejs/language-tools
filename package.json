@@ -2,7 +2,6 @@
 	"private": true,
 	"scripts": {
 		"build": "tsc -b",
-		"build-ci": "tsc -b tsconfig.ci.json",
 		"watch": "npm run build && (npm run watch:base & npm run watch:vue & npm run watch:ts-plugin)",
 		"watch:base": "tsc -b -w",
 		"watch:vue": "cd ./extensions/vscode && npm run watch",
