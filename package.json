@@ -22,7 +22,7 @@
 	"devDependencies": {
 		"@lerna-lite/cli": "latest",
 		"@lerna-lite/publish": "latest",
-		"@volar/language-service": "~1.11.0",
+		"@volar/language-service": "~1.11.1",
 		"typescript": "latest",
 		"vite": "latest",
 		"vitest": "latest"
