@@ -1,6 +1,9 @@
 <template>
 	<div>
-		<svg><path stroke="#efefef" stroke-width="123" pathLength="10" /></svg>
+		<svg>
+			<path stroke="#efefef" stroke-width="123" pathLength="10" />
+			<path stroke="#efefef" :stroke-width="123" :pathLength="10" />
+		</svg>
 		<foo stroke-width="123" />
 	</div>
 </template>
