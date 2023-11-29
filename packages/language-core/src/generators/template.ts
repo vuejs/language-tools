@@ -683,11 +683,32 @@ export function generate(
 			);
 		}
 		else {
-			codes.push(`let ${var_originalComponent}!: `);
+			codes.push(
+				`const ${var_originalComponent} = ({} as `,
+				`'${tag}' extends keyof typeof __VLS_ctx ? typeof __VLS_ctx : `,
+			);
 			for (const componentName of getPossibleOriginalComponentName(tag)) {
-				codes.push(`'${componentName}' extends keyof typeof __VLS_ctx ? typeof __VLS_ctx${validTsVarReg.test(componentName) ? `.${componentName}` : `['${componentName}']`} : `);
+				codes.push(`'${componentName}' extends keyof typeof __VLS_ctx ? `);
+				if (componentName === toCanonicalComponentName(tag)) {
+					codes.push(`typeof __VLS_ctx : `);
+				}
+				else {
+					codes.push(`{ [K in '${toCanonicalComponentName(tag)}']: typeof __VLS_ctx['${componentName}'] }: `);
+				}
 			}
-			codes.push(`typeof __VLS_resolvedLocalAndGlobalComponents['${toCanonicalComponentName(tag)}'];\n`);
+			codes.push(
+				`typeof __VLS_resolvedLocalAndGlobalComponents)`,
+				...(tagOffsets.length
+					? createPropertyAccessCode([
+						toCanonicalComponentName(tag),
+						'template',
+						[tagOffsets[0], tagOffsets[0] + tag.length],
+						capabilitiesPresets.diagnosticOnly,
+					])
+					: createPropertyAccessCode(toCanonicalComponentName(tag))
+				),
+				';\n',
+			);
 		}
 
 		if (isIntrinsicElement) {
