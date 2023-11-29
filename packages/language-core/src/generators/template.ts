@@ -2002,8 +2002,8 @@ export function generate(
 		if (!compilerOptions.noPropertyAccessFromIndexSignature && validTsVarReg.test(code)) {
 			yield '.';
 			yield offset !== undefined && info
-				? code
-				: [code, 'template', offset, info];
+				? [code, 'template', offset, info]
+				: code;
 		}
 		else if (code.startsWith('[') && code.endsWith(']')) {
 			yield* createInterpolationCode(
