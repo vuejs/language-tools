@@ -600,19 +600,15 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			codes.push(`(await import('${vueCompilerOptions.lib}')).defineComponent({\n`);
 		}
 
-		generateComponentOptions(functional);
-
 		codes.push(`setup() {\n`);
 		codes.push(`return {\n`);
-
 		generateSetupReturns();
-
 		if (scriptSetupRanges.expose.define) {
 			codes.push(`...__VLS_exposed,\n`);
 		}
-
 		codes.push(`};\n`);
 		codes.push(`},\n`);
+		generateComponentOptions(functional);
 		codes.push(`})`);
 	}
 	function generateComponentOptions(functional: boolean) {
@@ -734,7 +730,6 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 		if (scriptSetup && scriptSetupRanges) {
 
 			codes.push(`const __VLS_internalComponent = (await import('${vueCompilerOptions.lib}')).defineComponent({\n`);
-			generateComponentOptions(functional);
 			codes.push(`setup() {\n`);
 			codes.push(`return {\n`);
 			generateSetupReturns();
@@ -773,6 +768,7 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 			}
 			codes.push(`};\n`); // return {
 			codes.push(`},\n`); // setup() {
+			generateComponentOptions(functional);
 			codes.push(`});\n`); // defineComponent({
 		}
 		else if (script) {
