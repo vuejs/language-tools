@@ -14,6 +14,7 @@
 	<div v-if="true" v-else-if="true" v-else></div>
 	<div :foo="':foo=123'"></div>
 	<div :foo="[{ bar: []}]"></div>
+	<div .prop="[1, 2]"></div>
 	<div style="width: 100%; height: auto;"></div>
 </template>
 
@@ -33,6 +34,7 @@ div(v-for="n in []")
 div(v-if="true" v-else-if="true" v-else)
 div(:foo="':foo=123'")
 div(:foo="[{ bar: []}]")
+div(.prop="[1, 2]")
 div(style="width: 100%; height: auto;")
 </template>
 
@@ -59,5 +61,6 @@ h1#myId(class="text-right") hello
 	<div v-if="true" v-else-if="true" v-else></div>
 	<div :foo="':foo=123'"></div>
 	<div :foo="[{ bar: []}]"></div>
+	<div .prop="[1, 2]"></div>
 	<div style="width: 100%; height: auto;"></div>
 </template>
