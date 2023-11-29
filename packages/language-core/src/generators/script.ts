@@ -248,19 +248,6 @@ export function generate(
 			FileRangeCapabilities.full,
 		]);
 	}
-	function generateExportDefaultEndMapping() {
-		if (!scriptSetup) {
-			return;
-		}
-		// fix https://github.com/vuejs/language-tools/issues/1127
-		codes.push([
-			'',
-			'scriptSetup',
-			scriptSetup.content.length,
-			{ diagnostic: true },
-		]);
-		codes.push(`\n`);
-	}
 	function generateScriptSetupAndTemplate() {
 
 		if (!scriptSetup || !scriptSetupRanges) {
@@ -399,8 +386,6 @@ export function generate(
 			scriptSetupGeneratedOffset = generateSetupFunction(false, 'return', definePropMirrors);
 			codes.push(`})()`);
 		}
-
-		generateExportDefaultEndMapping();
 
 		if (scriptSetupGeneratedOffset !== undefined) {
 			for (const defineProp of scriptSetupRanges.defineProp) {
@@ -579,9 +564,6 @@ declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?:
 				generateComponent(functional);
 				codes.push(`;\n`);
 			}
-		}
-		if (mode === 'export') {
-			generateExportDefaultEndMapping();
 		}
 
 		return scriptSetupGeneratedOffset;
