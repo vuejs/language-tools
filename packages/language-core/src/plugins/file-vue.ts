@@ -31,6 +31,8 @@ const plugin: VueLanguagePlugin = (_ctx) => {
 				hitBlock.content.substring(0, change.start - hitBlock.loc.start.offset)
 				+ change.newText
 				+ hitBlock.content.substring(change.end - hitBlock.loc.start.offset);
+
+			// #3449
 			const endTagRegex = new RegExp(`</\\s*${hitBlock.type}\\s*>`);
 			const insertedEndTag = !!oldContent.match(endTagRegex) !== !!newContent.match(endTagRegex);
 			if (insertedEndTag) {
