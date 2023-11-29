@@ -22,7 +22,7 @@ jobs:
           cache: pnpm
 
       - run: pnpm install -g ovsx
-      - run: pnpm install --frozen-lockfile --no-optional
+      - run: pnpm install --frozen-lockfile
       - run: pnpm run build:minify && pnpm ovsx publish
         working-directory: extensions/vscode
         env:
