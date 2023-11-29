@@ -59,6 +59,24 @@
 	</tbody>
 </table>
 
+## 1.8.24 (2023/11/29)
+
+- refactor(component-type-helpers): vue 2 types now move to `vue-component-type-helpers/vue2` ([#3404](https://github.com/vuejs/language-tools/issues/3404))
+- feat(language-core): expose `defineEmits`'s `arg` and `typeArg` in `parseScriptSetupRanges` ([#3710](https://github.com/vuejs/language-tools/issues/3710)) - thanks @so1ve
+- fix(language-core): `strictTemplates` fails to report unknown components ([#3539](https://github.com/vuejs/language-tools/issues/3539))
+- fix(language-core): script syntax breaks if script options does not have trailing comma ([#3755](https://github.com/vuejs/language-tools/issues/3755))
+- fix(language-core): script syntax breaks if options are enclosed in parentheses ([#3756](https://github.com/vuejs/language-tools/issues/3756))
+- fix(language-core): allow using `as` with multiple `<script>` blocks ([#3733](https://github.com/vuejs/language-tools/issues/3733)) - thanks @so1ve
+- fix(language-core): component type narrowing not working in template
+- fix(language-core): incremental insertion incorrect if input `<script setup>` tag above `<script>` tag ([#3743](https://github.com/vuejs/language-tools/issues/3743)) - thanks @so1ve
+- fix(language-core): don't camelize attributes for plain elements ([#3750](https://github.com/vuejs/language-tools/issues/3750)) - thanks @rchl
+- fix(vscode): syntax highlighting for `.prop` shorthand ([#3729](https://github.com/vuejs/language-tools/issues/3729)) - thanks @so1ve
+
+#### Volar.js 1.11.1 updates:
+
+- fix: browser integration no longer requires node polyfill (https://github.com/volarjs/volar.js/pull/70)
+- fix: document continuous change merge results are incorrect in WebStorm (https://github.com/volarjs/volar.js/pull/77) - thanks @browsnet
+
 ## 1.8.22 (2023/10/27)
 
 - fix: `experimentalResolveStyleCssClasses: "always"` not working ([#3689](https://github.com/vuejs/language-tools/issues/3689)) - thanks @maIIady
