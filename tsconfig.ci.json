@@ -1,9 +1,0 @@
-{
-	"include": [ ],
-	"references": [
-		{ "path": "./packages/language-server/tsconfig.json" },
-		{ "path": "./packages/tsc/tsconfig.json" },
-		{ "path": "./packages/component-meta/tsconfig.json" },
-		{ "path": "./packages/language-plugin-pug/tsconfig.json" },
-	],
-}
