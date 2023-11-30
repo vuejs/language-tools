@@ -41,13 +41,14 @@ export function resolveConfig(
 	compilerOptions: ts.CompilerOptions = {},
 	vueCompilerOptions: Partial<VueCompilerOptions> = {},
 	codegenStack: boolean = false,
+	clientInfo: vscode._InitializeParams['clientInfo'] | undefined,
 ) {
 
 	const resolvedVueCompilerOptions = resolveVueCompilerOptions(vueCompilerOptions);
 	const vueLanguageModules = createLanguages(ts, compilerOptions, resolvedVueCompilerOptions, codegenStack);
 
 	config.languages = Object.assign({}, vueLanguageModules, config.languages);
-	config.services = resolvePlugins(config.services, resolvedVueCompilerOptions);
+	config.services = resolvePlugins(config.services, resolvedVueCompilerOptions, clientInfo);
 
 	return config;
 }
@@ -55,6 +56,7 @@ export function resolveConfig(
 function resolvePlugins(
 	services: Config['services'],
 	vueCompilerOptions: VueCompilerOptions,
+	clientInfo: vscode._InitializeParams['clientInfo'] | undefined,
 ) {
 
 	const originalTsPlugin: Service = services?.typescript ?? TsService.create();
@@ -71,6 +73,33 @@ function resolvePlugins(
 
 		return {
 			...base,
+			async provideDefinition(document, position, token) {
+				const result = await base.provideDefinition?.(document, position, token);
+
+				if (!result) {
+				    return result;
+				}
+
+				for (const item of result) {
+					const target = item.targetUri;
+					if (/\.zip/.test(target)) {
+						const decodedTarget = decodeURIComponent(target);
+						const fileStrippedTarget = decodedTarget.replace(/^file:\/\//, '');
+
+						if (clientInfo?.name === 'Neovim') {
+							const zipPatchedTarget = fileStrippedTarget.replace(/\.zip\//, '.zip::');
+							const zipPrefixedTarget = `zipfile${zipPatchedTarget}`;
+							item.targetUri = zipPrefixedTarget;
+						}
+
+						if (/Visual Studio Code/.test(clientInfo?.name ?? '')) {
+							item.targetUri = `zip:${fileStrippedTarget}`;
+						}
+					}
+				}
+
+				return result;
+			},
 			async provideCompletionItems(document, position, context, item) {
 				const result = await base.provideCompletionItems?.(document, position, context, item);
 				if (result) {

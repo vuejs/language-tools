@@ -46,6 +46,7 @@ export function createServerPlugin(connection: Connection) {
 					ctx?.host.getCompilationSettings() ?? {},
 					vueOptions,
 					initOptions.codegenStack,
+					ctx?.server.initializeParams.clientInfo
 				);
 
 				async function getVueCompilerOptions() {
