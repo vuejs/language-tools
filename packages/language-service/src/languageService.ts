@@ -41,7 +41,7 @@ export function resolveConfig(
 	compilerOptions: ts.CompilerOptions = {},
 	vueCompilerOptions: Partial<VueCompilerOptions> = {},
 	codegenStack: boolean = false,
-	clientInfo: vscode._InitializeParams['clientInfo'] | undefined,
+	clientInfo: vscode._InitializeParams['clientInfo'] = {} as any,
 ) {
 
 	const resolvedVueCompilerOptions = resolveVueCompilerOptions(vueCompilerOptions);
