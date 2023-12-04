@@ -1260,9 +1260,9 @@ export function generate(
 				let camelized = false;
 
 				if (
-					(!prop.arg || (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)) // isStatic
+					canCamelize
+					&& (!prop.arg || (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)) // isStatic
 					&& hyphenateAttr(attrNameText) === attrNameText
-					&& canCamelize
 					&& !vueCompilerOptions.htmlAttributes.some(pattern => minimatch(attrNameText!, pattern))
 				) {
 					attrNameText = camelize(attrNameText);
@@ -1368,8 +1368,8 @@ export function generate(
 				let camelized = false;
 
 				if (
-					hyphenateAttr(prop.name) === prop.name
-					&& canCamelize
+					canCamelize
+					&& hyphenateAttr(prop.name) === prop.name
 					&& !vueCompilerOptions.htmlAttributes.some(pattern => minimatch(attrNameText!, pattern))
 				) {
 					attrNameText = camelize(prop.name);
