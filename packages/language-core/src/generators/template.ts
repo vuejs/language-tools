@@ -1224,7 +1224,7 @@ export function generate(
 		codes.push(`}, `);
 
 		for (const prop of props) {
-			const shouldCamelize = !nativeTags.has(node.tag) || node.tag === 'component' || node.tag === 'Component';
+			const shouldCamelize = !nativeTags.has(node.tag) || node.tagType === CompilerDOM.ElementTypes.COMPONENT;
 			if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 				&& (prop.name === 'bind' || prop.name === 'model')
