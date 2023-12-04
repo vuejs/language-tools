@@ -5,6 +5,7 @@
 			<path stroke="#efefef" :stroke-width="123" :pathLength="10" />
 		</svg>
 		<foo stroke-width="123" />
+		<component :is="Foo" stroke-width="test"></component>
 	</div>
 </template>
 
