@@ -1,4 +1,4 @@
-import type { Language } from '@volar/language-core';
+import type { LanguagePlugin } from '@volar/language-core';
 import * as path from 'path-browserify';
 import { getDefaultVueLanguagePlugins } from './plugins';
 import { VueFile } from './virtualFile/vueFile';
@@ -38,7 +38,7 @@ export function createVueLanguage(
 	compilerOptions: ts.CompilerOptions = {},
 	_vueCompilerOptions: Partial<VueCompilerOptions> = {},
 	codegenStack: boolean = false,
-): Language<VueFile> {
+): LanguagePlugin<VueFile> {
 
 	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);
 	const plugins = getDefaultVueLanguagePlugins(
@@ -126,7 +126,7 @@ export function createLanguages(
 	compilerOptions: ts.CompilerOptions = {},
 	vueCompilerOptions: Partial<VueCompilerOptions> = {},
 	codegenStack: boolean = false,
-): Language[] {
+): LanguagePlugin[] {
 	return [
 		createVueLanguage(ts, compilerOptions, vueCompilerOptions, codegenStack),
 		...vueCompilerOptions.experimentalAdditionalLanguageModules?.map(module => require(module)) ?? [],

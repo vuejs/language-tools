@@ -7,13 +7,13 @@ import { AttrNameCasing, TagNameCasing } from '../types';
 
 export async function convertTagName(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	context: ServiceContext<Provide>,
+	context: ServiceContext,
 	uri: string,
 	casing: TagNameCasing,
 	vueCompilerOptions: VueCompilerOptions,
 ) {
 
-	const rootFile = context.project.fileProvider.getSourceFile(uri)?.virtualFile?.[0];
+	const rootFile = context.language.files.getSourceFile(uri)?.virtualFile?.[0];
 	if (!(rootFile instanceof VueFile))
 		return;
 
@@ -21,7 +21,7 @@ export async function convertTagName(
 	if (!desc.template)
 		return;
 
-	const languageService = context.inject('typescript/languageService');
+	const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
 	const template = desc.template;
 	const document = context.documents.get(rootFile.id, rootFile.languageId, rootFile.snapshot);
 	const edits: vscode.TextEdit[] = [];
@@ -56,7 +56,7 @@ export async function convertAttrName(
 	vueCompilerOptions: VueCompilerOptions,
 ) {
 
-	const rootFile = context.project.fileProvider.getSourceFile(uri)?.virtualFile?.[0];
+	const rootFile = context.language.files.getSourceFile(uri)?.virtualFile?.[0];
 	if (!(rootFile instanceof VueFile))
 		return;
 
@@ -64,7 +64,7 @@ export async function convertAttrName(
 	if (!desc.template)
 		return;
 
-	const languageService = context.inject('typescript/languageService');
+	const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
 	const template = desc.template;
 	const document = context.documents.get(rootFile.id, rootFile.languageId, rootFile.snapshot);
 	const edits: vscode.TextEdit[] = [];
@@ -128,7 +128,7 @@ export function detect(
 	attr: AttrNameCasing[],
 } {
 
-	const rootFile = context.project.fileProvider.getSourceFile(uri)?.virtualFile?.[0];
+	const rootFile = context.language.files.getSourceFile(uri)?.virtualFile?.[0];
 	if (!(rootFile instanceof VueFile)) {
 		return {
 			tag: [],
@@ -136,7 +136,7 @@ export function detect(
 		};
 	}
 
-	const languageService = context.inject('typescript/languageService');
+	const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
 
 	return {
 		tag: getTagNameCase(rootFile),

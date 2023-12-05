@@ -3,7 +3,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path-browserify';
 import { code as typeHelpersCode } from 'vue-component-type-helpers';
 import { code as vue2TypeHelpersCode } from 'vue-component-type-helpers/vue2';
-import { createProject, decorateLanguageService, ProjectHost } from '@volar/typescript';
+import { createLanguage, decorateLanguageService } from '@volar/typescript';
 
 import type {
 	MetaCheckerOptions,
@@ -71,7 +71,7 @@ function createCheckerWorker(
 	let projectVersion = 0;
 
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
-	const _host: ProjectHost = {
+	const _host: vue.TypeScriptProjectHost = {
 		getCurrentDirectory: () => rootPath,
 		getProjectVersion: () => projectVersion.toString(),
 		getCompilationSettings: () => parsedCommandLine.options,
@@ -118,16 +118,16 @@ function createCheckerWorker(
 export function baseCreate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	configFileName: string | undefined,
-	projectHost: ProjectHost,
+	host: vue.TypeScriptProjectHost,
 	vueCompilerOptions: vue.VueCompilerOptions,
 	checkerOptions: MetaCheckerOptions,
 	globalComponentName: string,
 ) {
 	const globalComponentSnapshot = ts.ScriptSnapshot.fromString('<script setup lang="ts"></script>');
 	const metaSnapshots: Record<string, ts.IScriptSnapshot> = {};
-	const getScriptFileNames = projectHost.getScriptFileNames;
-	const getScriptSnapshot = projectHost.getScriptSnapshot;
-	projectHost.getScriptFileNames = () => {
+	const getScriptFileNames = host.getScriptFileNames;
+	const getScriptSnapshot = host.getScriptSnapshot;
+	host.getScriptFileNames = () => {
 		const names = getScriptFileNames();
 		return [
 			...names,
@@ -136,7 +136,7 @@ export function baseCreate(
 			getMetaFileName(globalComponentName),
 		];
 	};
-	projectHost.getScriptSnapshot = (fileName) => {
+	host.getScriptSnapshot = (fileName) => {
 		if (isMetaFileName(fileName)) {
 			if (!metaSnapshots[fileName]) {
 				metaSnapshots[fileName] = ts.ScriptSnapshot.fromString(getMetaScriptContent(fileName));
@@ -151,22 +151,22 @@ export function baseCreate(
 		}
 	};
 
-	const vueLanguages = vue.createLanguages(
+	const vueLanguagePlugins = vue.createLanguages(
 		ts,
-		projectHost.getCompilationSettings(),
+		host.getCompilationSettings(),
 		vueCompilerOptions,
 	);
-	const project = createProject(
+	const language = createLanguage(
 		ts,
 		ts.sys,
-		vueLanguages,
+		vueLanguagePlugins,
 		configFileName,
-		projectHost,
+		host,
 	);
-	const { languageServiceHost } = project.typescript!;
+	const { languageServiceHost } = language.typescript!;
 	const tsLs = ts.createLanguageService(languageServiceHost);
 
-	decorateLanguageService(project.fileProvider, tsLs, false);
+	decorateLanguageService(language.files, tsLs, false);
 
 	if (checkerOptions.forceUseTs) {
 		const getScriptKind = languageServiceHost.getScriptKind?.bind(languageServiceHost);
@@ -287,7 +287,7 @@ ${vueCompilerOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 					.map((prop) => {
 						const {
 							resolveNestedProperties,
-						} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts, project);
+						} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts, language);
 
 						return resolveNestedProperties(prop);
 					})
@@ -304,9 +304,9 @@ ${vueCompilerOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 
 			// fill defaults
 			const printer = ts.createPrinter(checkerOptions.printer);
-			const snapshot = projectHost.getScriptSnapshot(componentPath)!;
+			const snapshot = host.getScriptSnapshot(componentPath)!;
 
-			const vueSourceFile = project.fileProvider.getSourceFile(componentPath)?.virtualFile?.[0];
+			const vueSourceFile = language.files.getSourceFile(componentPath)?.virtualFile?.[0];
 			const vueDefaults = vueSourceFile && exportName === 'default'
 				? (vueSourceFile instanceof vue.VueFile ? readVueComponentDefaultProps(vueSourceFile, printer, ts, vueCompilerOptions) : {})
 				: {};
@@ -351,7 +351,7 @@ ${vueCompilerOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 
 					const {
 						resolveEventSignature,
-					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts, project);
+					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts, language);
 
 					return resolveEventSignature(call);
 				}).filter(event => event.name);
@@ -371,7 +371,7 @@ ${vueCompilerOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 				return properties.map((prop) => {
 					const {
 						resolveSlotProperties,
-					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts, project);
+					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts, language);
 
 					return resolveSlotProperties(prop);
 				});
@@ -394,7 +394,7 @@ ${vueCompilerOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 				return properties.map((prop) => {
 					const {
 						resolveExposedProperties,
-					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts, project);
+					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts, language);
 
 					return resolveExposedProperties(prop);
 				});
@@ -453,7 +453,7 @@ function createSchemaResolvers(
 	symbolNode: ts.Expression,
 	{ rawType, schema: options, noDeclarations }: MetaCheckerOptions,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	core: vue.Project,
+	core: vue.Language,
 ) {
 	const visited = new Set<ts.Type>();
 
@@ -644,9 +644,9 @@ function createSchemaResolvers(
 	}
 	function getDeclaration(declaration: ts.Declaration): Declaration | undefined {
 		const fileName = declaration.getSourceFile().fileName;
-		const [virtualFile] = core.fileProvider.getVirtualFile(fileName);
+		const [virtualFile] = core.files.getVirtualFile(fileName);
 		if (virtualFile) {
-			const maps = core.fileProvider.getMaps(virtualFile);
+			const maps = core.files.getMaps(virtualFile);
 			for (const [source, [_, map]] of maps) {
 				const start = map.getSourceOffset(declaration.getStart());
 				const end = map.getSourceOffset(declaration.getEnd());

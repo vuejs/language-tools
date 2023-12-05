@@ -25,15 +25,15 @@ const presetInfos = {
 	}),
 	noDiagnostics: enableAllFeatures({ verification: false }),
 	diagnosticOnly: disableAllFeatures({ verification: true }),
-	tagHover: disableAllFeatures({ semantic: true }),
-	event: disableAllFeatures({ semantic: true, verification: true }),
+	tagHover: disableAllFeatures({ semantic: { shouldHighlight: () => false } }),
+	event: disableAllFeatures({ semantic: { shouldHighlight: () => false }, verification: true }),
 	tagReference: disableAllFeatures({ navigation: { shouldRename: () => false } }),
-	attr: disableAllFeatures({ semantic: true, verification: true, navigation: true }),
+	attr: disableAllFeatures({ semantic: { shouldHighlight: () => false }, verification: true, navigation: true }),
 	attrReference: disableAllFeatures({ navigation: true }),
 	slotProp: disableAllFeatures({ navigation: true, verification: true }),
 	scopedClassName: disableAllFeatures({ navigation: true, completion: true }),
-	slotName: disableAllFeatures({ semantic: true, verification: true, navigation: true, completion: true }),
-	slotNameExport: disableAllFeatures({ semantic: true, verification: true, navigation: true, /* __navigationCodeLens: true */ }),
+	slotName: disableAllFeatures({ semantic: { shouldHighlight: () => false }, verification: true, navigation: true, completion: true }),
+	slotNameExport: disableAllFeatures({ semantic: { shouldHighlight: () => false }, verification: true, navigation: true, /* __navigationCodeLens: true */ }),
 	refAttr: disableAllFeatures({ navigation: true }),
 };
 const formatBrackets = {
@@ -90,7 +90,11 @@ export function generate(
 	const slotExps = new Map<string, { varName: string; }>();
 	const tagNames = collectTagOffsets();
 	const localVars = new Map<string, number>();
-	const tempVars: ReturnType<typeof walkInterpolationFragment>[] = [];
+	const tempVars: {
+		text: string,
+		isShorthand: boolean,
+		offset: number,
+	}[][] = [];
 	const accessedGlobalVariables = new Set<string>();
 	const scopedClasses: { className: string, offset: number; }[] = [];
 	const blockConditions: string[] = [];
@@ -1336,10 +1340,10 @@ export function generate(
 							? mergeFeatureSettings(
 								caps_attr,
 								{
-									navigation: {
+									navigation: caps_attr.navigation ? {
 										resolveRenameNewName: camelize,
 										resolveRenameEditText: shouldCamelize ? hyphenateAttr : undefined,
-									},
+									} : undefined,
 								},
 							)
 							: caps_attr,
@@ -1401,10 +1405,10 @@ export function generate(
 						prop.loc.start.offset,
 						shouldCamelize
 							? mergeFeatureSettings(caps_attr, {
-								navigation: {
+								navigation: caps_attr.navigation ? {
 									resolveRenameNewName: camelize,
 									resolveRenameEditText: hyphenateAttr,
-								},
+								} : undefined,
 							})
 							: caps_attr,
 						(prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}),
@@ -1944,39 +1948,52 @@ export function generate(
 		const code = prefix + _code + suffix;
 		const ast = createTsAst(astHolder, code);
 		const codes: Code[] = [];
-		const vars = walkInterpolationFragment(ts, code, ast, (frag, fragOffset, isJustForErrorMapping) => {
-			if (fragOffset === undefined) {
-				codes.push(frag);
-			}
-			else {
-				fragOffset -= prefix.length;
-				let addSuffix = '';
-				const overLength = fragOffset + frag.length - _code.length;
-				if (overLength > 0) {
-					addSuffix = frag.substring(frag.length - overLength);
-					frag = frag.substring(0, frag.length - overLength);
-				}
-				if (fragOffset < 0) {
-					codes.push(frag.substring(0, -fragOffset));
-					frag = frag.substring(-fragOffset);
-					fragOffset = 0;
-				}
-				if (start !== undefined && data !== undefined) {
-					codes.push([
-						frag,
-						'template',
-						start + fragOffset,
-						isJustForErrorMapping
-							? presetInfos.diagnosticOnly
-							: typeof data === 'function' ? data() : data,
-					]);
+		const vars: {
+			text: string,
+			isShorthand: boolean,
+			offset: number,
+		}[] = [];
+		walkInterpolationFragment(
+			ts,
+			code,
+			ast,
+			(section, offset, onlyError) => {
+				if (offset === undefined) {
+					codes.push(section);
 				}
 				else {
-					codes.push(frag);
+					offset -= prefix.length;
+					let addSuffix = '';
+					const overLength = offset + section.length - _code.length;
+					if (overLength > 0) {
+						addSuffix = section.substring(section.length - overLength);
+						section = section.substring(0, section.length - overLength);
+					}
+					if (offset < 0) {
+						codes.push(section.substring(0, -offset));
+						section = section.substring(-offset);
+						offset = 0;
+					}
+					if (start !== undefined && data !== undefined) {
+						codes.push([
+							section,
+							'template',
+							start + offset,
+							onlyError
+								? presetInfos.diagnosticOnly
+								: typeof data === 'function' ? data() : data,
+						]);
+					}
+					else {
+						codes.push(section);
+					}
+					codes.push(addSuffix);
 				}
-				codes.push(addSuffix);
-			}
-		}, localVars, accessedGlobalVariables, vueCompilerOptions);
+			},
+			localVars,
+			accessedGlobalVariables,
+			vueCompilerOptions,
+		);
 		if (start !== undefined) {
 			for (const v of vars) {
 				v.offset = start + v.offset - prefix.length;

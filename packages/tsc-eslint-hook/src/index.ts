@@ -14,8 +14,8 @@ export = async function (
 		baseConfig: resolveConfig(tsProgram),
 		useEslintrc: false,
 	});
-	const fileNames = program.__vue.project.typescript!.languageServiceHost.getScriptFileNames();
-	const fileProvider = program.__vue.project.fileProvider;
+	const fileNames = program.__vue.language.typescript!.languageServiceHost.getScriptFileNames();
+	const fileProvider = program.__vue.language.files;
 	const formatter = await eslint.loadFormatter();
 
 	for (const fileName of fileNames) {

@@ -1,5 +1,5 @@
-import { createLanguageService, resolveCommonLanguageId } from '@volar/language-service';
-import { createProject, ProjectHost } from '@volar/typescript';
+import { TypeScriptProjectHost, createLanguageService, resolveCommonLanguageId } from '@volar/language-service';
+import { createLanguage } from '@volar/typescript';
 import * as path from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { URI } from 'vscode-uri';
@@ -19,7 +19,7 @@ function createTester(root: string) {
 	parsedCommandLine.fileNames = parsedCommandLine.fileNames.map(fileName => fileName.replace(/\\/g, '/'));
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
 	const serviceEnv = createMockServiceEnv(rootUri, () => currentVSCodeSettings ?? defaultVSCodeSettings);
-	const projectHost: ProjectHost = {
+	const languageHost: TypeScriptProjectHost = {
 		getCurrentDirectory: () => root,
 		getProjectVersion: () => '0',
 		getScriptFileNames: () => parsedCommandLine.fileNames,
@@ -30,7 +30,7 @@ function createTester(root: string) {
 		getLanguageId: resolveCommonLanguageId,
 	};
 	const languages = resolveLanguages(ts, {}, parsedCommandLine.options, parsedCommandLine.vueOptions);
-	const services = resolveServices({}, parsedCommandLine.vueOptions);
+	const services = resolveServices(ts, {}, parsedCommandLine.vueOptions);
 	const defaultVSCodeSettings: any = {
 		'typescript.preferences.quoteStyle': 'single',
 		'javascript.preferences.quoteStyle': 'single',
@@ -39,18 +39,18 @@ function createTester(root: string) {
 		'vue.inlayHints.inlineHandlerLeading': true,
 	};
 	let currentVSCodeSettings: any;
-	const project = createProject(
+	const language = createLanguage(
 		ts,
 		ts.sys,
 		Object.values(languages),
 		realTsConfig,
-		projectHost,
+		languageHost,
 	);
-	const languageService = createLanguageService({ typescript: ts as any }, Object.values(services), serviceEnv, project);
+	const languageService = createLanguageService(language, Object.values(services), serviceEnv);
 
 	return {
 		serviceEnv,
-		projectHost,
+		languageHost,
 		languageService,
 		setVSCodeSettings,
 	};

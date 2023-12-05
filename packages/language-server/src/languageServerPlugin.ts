@@ -1,13 +1,13 @@
-import { TypeScriptServerPlugin, Connection, ServerProject } from '@volar/language-server';
-import * as vue from '@vue/language-service';
+import { Connection, ServerProject, TypeScriptServerPlugin } from '@volar/language-server';
+import { createSys } from '@volar/typescript';
 import * as vue2 from '@vue/language-core';
+import { VueCompilerOptions } from '@vue/language-core';
 import * as nameCasing from '@vue/language-service';
-import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest, GetComponentMeta } from './protocol';
-import { VueServerInitializationOptions } from './types';
+import * as vue from '@vue/language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as componentMeta from 'vue-component-meta/out/base';
-import { VueCompilerOptions } from '@vue/language-core';
-import { createSys } from '@volar/typescript';
+import { DetectNameCasingRequest, GetComponentMeta, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest } from './protocol';
+import { VueServerInitializationOptions } from './types';
 
 export function createServerPlugin(connection: Connection) {
 
@@ -41,7 +41,7 @@ export function createServerPlugin(connection: Connection) {
 				}
 
 				config.languages = vue.resolveLanguages(ts, config.languages ?? {}, info?.parsedCommandLine.options ?? {}, vueOptions, options.codegenStack);
-				config.services = vue.resolveServices(config.services ?? {}, vueOptions);
+				config.services = vue.resolveServices(ts, config.services ?? {}, vueOptions);
 
 				return config;
 
@@ -113,17 +113,17 @@ export function createServerPlugin(connection: Connection) {
 					const langaugeService = project.getLanguageService();
 
 					let checker = checkers.get(project);
-					// if (!checker) {
-					// 	checker = componentMeta.baseCreate(
-					// 		ts,
-					// 		langaugeService.context.project.typescript?.configFileName,
-					// 		langaugeService.context.project.typescript!.projectHost,
-					// 		envToVueOptions.get(langaugeService.context.env)!,
-					// 		{},
-					// 		langaugeService.context.project.typescript!.projectHost.getCurrentDirectory() + '/tsconfig.json.global.vue',
-					// 	);
-					// 	checkers.set(project, checker);
-					// }
+					if (!checker) {
+						checker = componentMeta.baseCreate(
+							ts,
+							langaugeService.context.language.typescript!.configFileName,
+							langaugeService.context.language.typescript!.projectHost,
+							envToVueOptions.get(langaugeService.context.env)!,
+							{},
+							langaugeService.context.language.typescript!.languageServiceHost.getCurrentDirectory() + '/tsconfig.json.global.vue',
+						);
+						checkers.set(project, checker);
+					}
 					return checker?.getComponentMeta(langaugeService.context.env.uriToFileName(params.uri));
 				});
 

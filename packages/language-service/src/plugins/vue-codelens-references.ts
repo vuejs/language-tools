@@ -1,83 +1,79 @@
-import { Service } from '@volar/language-service';
+import { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
 import { SourceFile, VirtualFile, VueCodeInformation, VueFile } from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 
-export const create = function (): Service {
+export function create(): ServicePlugin {
+	return {
+		create(context): ServicePluginInstance {
+			return {
+				provideReferencesCodeLensRanges(document) {
 
-	return (context): ReturnType<Service> => {
+					return worker(document.uri, async virtualFile => {
 
-		if (!context)
-			return {};
+						const result: vscode.Range[] = [];
 
-		return {
+						for (const map of context.documents.getMaps(virtualFile) ?? []) {
+							for (const mapping of map.map.mappings) {
 
-			provideReferencesCodeLensRanges(document) {
+								if (!(mapping.data as VueCodeInformation).__referencesCodeLens)
+									continue;
 
-				return worker(document.uri, async virtualFile => {
+								result.push({
+									start: document.positionAt(mapping.generatedOffsets[0]),
+									end: document.positionAt(
+										mapping.generatedOffsets[mapping.generatedOffsets.length - 1]
+										+ mapping.lengths[mapping.lengths.length - 1]
+									),
+								});
+							}
+						}
 
-					const result: vscode.Range[] = [];
+						return result;
+					});
+				},
 
-					for (const map of context.documents.getMaps(virtualFile) ?? []) {
-						for (const mapping of map.map.codeMappings) {
+				async resolveReferencesCodeLensLocations(document, range, references) {
 
-							if (!(mapping.data as VueCodeInformation).__referencesCodeLens)
-								continue;
-
-							result.push({
-								start: document.positionAt(mapping.generatedOffsets[0]),
-								end: document.positionAt(
-									mapping.generatedOffsets[mapping.generatedOffsets.length - 1]
-									+ mapping.lengths[mapping.lengths.length - 1]
-								),
-							});
+					const [virtualFile, sourceFile] = context.language.files.getVirtualFile(document.uri);
+					if (virtualFile && sourceFile?.virtualFile?.[0] instanceof VueFile) {
+						const vueFile = sourceFile.virtualFile[0];
+						const blocks = [
+							vueFile.sfc.script,
+							vueFile.sfc.scriptSetup,
+							vueFile.sfc.template,
+							...vueFile.sfc.styles,
+							...vueFile.sfc.customBlocks,
+						];
+						for (const map of context.documents.getMaps(virtualFile)) {
+							const sourceOffset = map.map.getSourceOffset(document.offsetAt(range.start));
+							if (sourceOffset !== undefined) {
+								const sourceBlock = blocks.find(block => block && sourceOffset[0] >= block.startTagEnd && sourceOffset[0] <= block.endTagStart);
+								const sourceDocument = context.documents.get(sourceFile.id, sourceFile.languageId, sourceFile.snapshot);
+								references = references.filter(reference =>
+									reference.uri !== sourceDocument.uri // different file
+									|| sourceBlock !== blocks.find(block =>
+										block
+										&& sourceDocument.offsetAt(reference.range.start) >= block.startTagEnd
+										&& sourceDocument.offsetAt(reference.range.end) <= block.endTagStart
+									) // different block
+								);
+								break;
+							}
 						}
 					}
 
-					return result;
-				});
-			},
+					return references;
+				},
+			};
 
-			async resolveReferencesCodeLensLocations(document, range, references) {
+			function worker<T>(uri: string, callback: (vueFile: VirtualFile, sourceFile: SourceFile) => T) {
 
-				const [virtualFile, sourceFile] = context.project.fileProvider.getVirtualFile(document.uri);
-				if (virtualFile && sourceFile?.virtualFile?.[0] instanceof VueFile) {
-					const vueFile = sourceFile.virtualFile[0];
-					const blocks = [
-						vueFile.sfc.script,
-						vueFile.sfc.scriptSetup,
-						vueFile.sfc.template,
-						...vueFile.sfc.styles,
-						...vueFile.sfc.customBlocks,
-					];
-					for (const map of context.documents.getMaps(virtualFile)) {
-						const sourceOffset = map.map.getSourceOffset(document.offsetAt(range.start));
-						if (sourceOffset !== undefined) {
-							const sourceBlock = blocks.find(block => block && sourceOffset[0] >= block.startTagEnd && sourceOffset[0] <= block.endTagStart);
-							const sourceDocument = context.documents.get(sourceFile.id, sourceFile.languageId, sourceFile.snapshot);
-							references = references.filter(reference =>
-								reference.uri !== sourceDocument.uri // different file
-								|| sourceBlock !== blocks.find(block =>
-									block
-									&& sourceDocument.offsetAt(reference.range.start) >= block.startTagEnd
-									&& sourceDocument.offsetAt(reference.range.end) <= block.endTagStart
-								) // different block
-							);
-							break;
-						}
-					}
-				}
+				const [virtualFile, sourceFile] = context.language.files.getVirtualFile(uri);
+				if (!(sourceFile?.virtualFile?.[0] instanceof VueFile) || !sourceFile)
+					return;
 
-				return references;
-			},
-		};
-
-		function worker<T>(uri: string, callback: (vueFile: VirtualFile, sourceFile: SourceFile) => T) {
-
-			const [virtualFile, sourceFile] = context!.project.fileProvider.getVirtualFile(uri);
-			if (!(sourceFile?.virtualFile?.[0] instanceof VueFile) || !sourceFile)
-				return;
-
-			return callback(virtualFile, sourceFile);
-		}
+				return callback(virtualFile, sourceFile);
+			}
+		},
 	};
-};
+}

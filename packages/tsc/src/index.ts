@@ -1,6 +1,6 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vue from '@vue/language-core';
-import { createProject, decorateLanguageService, getDocumentRegistry, getProgram, ProjectHost } from '@volar/typescript';
+import { createLanguage, decorateLanguageService, getDocumentRegistry, getProgram } from '@volar/typescript';
 import { state } from './shared';
 
 export type Hook = (program: _Program) => void;
@@ -11,7 +11,7 @@ interface ProgramContext {
 	projectVersion: number;
 	options: ts.CreateProgramOptions;
 	vueCompilerOptions: Partial<vue.VueCompilerOptions>;
-	project: vue.Project;
+	language: vue.Language;
 	languageService: ts.LanguageService;
 }
 
@@ -43,8 +43,8 @@ export function createProgram(options: ts.CreateProgramOptions) {
 			get languageService() {
 				return vueTsLs;
 			},
-			get project() {
-				return project;
+			get language() {
+				return language;
 			},
 		};
 		const vueCompilerOptions = getVueCompilerOptions();
@@ -53,7 +53,7 @@ export function createProgram(options: ts.CreateProgramOptions) {
 			modifiedTime: number,
 			scriptSnapshot: ts.IScriptSnapshot,
 		}>();
-		const projectHost: ProjectHost = {
+		const host: vue.TypeScriptProjectHost = {
 			getCurrentDirectory() {
 				return ctx.options.host!.getCurrentDirectory().replace(windowsPathReg, '/');
 			},
@@ -71,32 +71,32 @@ export function createProgram(options: ts.CreateProgramOptions) {
 			getFileName: id => id,
 			getLanguageId: vue.resolveCommonLanguageId,
 		};
-		const project = createProject(
+		const language = createLanguage(
 			ts,
 			ts.sys,
 			vue.createLanguages(
 				ts,
-				projectHost.getCompilationSettings(),
+				host.getCompilationSettings(),
 				vueCompilerOptions,
 			),
 			undefined,
-			projectHost,
+			host,
 		);
 		const vueTsLs = ts.createLanguageService(
-			project.typescript!.languageServiceHost,
+			language.typescript!.languageServiceHost,
 			getDocumentRegistry(
 				ts,
 				ts.sys.useCaseSensitiveFileNames,
-				projectHost.getCurrentDirectory()
+				host.getCurrentDirectory()
 			)
 		);
 
-		decorateLanguageService(project.fileProvider, vueTsLs, false);
+		decorateLanguageService(language.files, vueTsLs, false);
 
 		program = getProgram(
-			ts as any,
-			project.fileProvider,
-			projectHost,
+			ts,
+			language.files,
+			host,
 			vueTsLs,
 			ts.sys
 		) as (ts.Program & { __vue: ProgramContext; });
@@ -105,7 +105,7 @@ export function createProgram(options: ts.CreateProgramOptions) {
 		function getVueCompilerOptions(): Partial<vue.VueCompilerOptions> {
 			const tsConfig = ctx.options.options.configFilePath;
 			if (typeof tsConfig === 'string') {
-				return vue.createParsedCommandLine(ts as any, ts.sys, tsConfig.replace(windowsPathReg, '/')).vueOptions;
+				return vue.createParsedCommandLine(ts, ts.sys, tsConfig.replace(windowsPathReg, '/')).vueOptions;
 			}
 			return {};
 		}

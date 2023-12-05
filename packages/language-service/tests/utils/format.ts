@@ -3,8 +3,8 @@ import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import { resolveLanguages, resolveServices } from '../../out';
 
-const languages = resolveLanguages(ts as any);
-const services = resolveServices();
+const languages = resolveLanguages(ts);
+const services = resolveServices(ts);
 const formatter = kit.createFormatter(Object.values(languages), Object.values(services));
 
 export function defineFormatTest(options: {
