@@ -64,7 +64,7 @@ export function createProgram(options: ts.CreateProgramOptions) {
 			modifiedTime: number,
 			scriptSnapshot: ts.IScriptSnapshot,
 		}>();
-		const languageHost: vue.TypeScriptLanguageHost = {
+		const languageHost: vue.TypeScriptLanguageHost & Partial<ts.LanguageServiceHost> = {
 			workspacePath: ctx.options.host!.getCurrentDirectory().replace(windowsPathReg, '/'),
 			rootPath: ctx.options.host!.getCurrentDirectory().replace(windowsPathReg, '/'),
 			getCompilationSettings: () => ctx.options.options,
@@ -77,6 +77,20 @@ export function createProgram(options: ts.CreateProgramOptions) {
 			},
 			getProjectReferences: () => ctx.options.projectReferences,
 			getCancellationToken: ctx.options.host!.getCancellationToken ? () => ctx.options.host!.getCancellationToken!() : undefined,
+			realpath(path) {
+				const realpath = ctx.options.host!.realpath! ?? ts.sys.realpath
+				const match = /^(?<path>.+\.vue)\.(?<extension>.+)$/.exec(path)
+				return match?.groups ? `${realpath(match.groups.path)}.${match.groups.extension}` : realpath(path)
+			},
+			getParsedCommandLine: (path) => {
+				const possibleExtensions = ['ts', 'tsx']
+				const { fileNames, ...commandLineCustom } = vue.createParsedCommandLine(ts, ts.sys, path)
+				return { 
+					// need to outDir to be defined
+					...ts.getParsedCommandLineOfConfigFile(path, undefined, ts.sys as any) ?? commandLineCustom, 
+					fileNames: fileNames.flatMap(name => name.endsWith('.vue') ? possibleExtensions.map(ext => `${name}.${ext}`) : [name])
+				}
+			},
 		};
 		const languageContext = vue.createLanguageContext(
 			languageHost,
