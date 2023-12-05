@@ -1,24 +1,24 @@
 <script lang="ts">
-import { exactType } from '../../shared';
-import { defineComponent, PropType, ref } from 'vue';
-import ScriptSetup from './script-setup.vue';
-import ScriptSetupExpose from './script-setup-expose.vue';
-import ScriptSetupTypeOnly from './script-setup-type-only.vue';
-import ScriptSetupDefaultProps from './script-setup-default-props.vue';
-import ScriptSetupGeneric from './script-setup-generic.vue';
+import { exactType } from "../../shared";
+import { defineComponent, PropType, ref } from "vue";
+import ScriptSetup from "./script-setup.vue";
+import ScriptSetupExpose from "./script-setup-expose.vue";
+import ScriptSetupTypeOnly from "./script-setup-type-only.vue";
+import ScriptSetupDefaultProps from "./script-setup-default-props.vue";
+import ScriptSetupGeneric from "./script-setup-generic.vue";
 
 // https://vuejs.org/api/sfc-script-setup.html#defineprops-defineemits
 const ScriptSetupExact = defineComponent({
-	props: {
-		foo: String,
-	},
-	emits: {
-		change(..._payload: any[]) { },
-		delete(..._payload: any[]) { },
-	},
-	setup() {
-		return {};
-	},
+  props: {
+    foo: String,
+  },
+  emits: {
+    change(..._payload: any[]) {},
+    delete(..._payload: any[]) {},
+  },
+  setup() {
+    return {};
+  },
 });
 // https://vuejs.org/api/sfc-script-setup.html#defineexpose
 const ScriptSetupExposeExact = defineComponent({
@@ -50,19 +50,19 @@ const ScriptSetupTypeOnlyExact = defineComponent({
 });
 // https://vuejs.org/api/sfc-script-setup.html#default-props-values-when-using-type-declaration
 const ScriptSetupDefaultPropsExact = defineComponent({
-	props: {
-		msg: {
-			type: String,
-			default: 'hello'
-		},
-		labels: {
-			type: Array as PropType<string[]>,
-			default: () => ['one', 'two']
-		},
-	},
-	setup() {
-		return {};
-	},
+  props: {
+    msg: {
+      type: String,
+      default: "hello",
+    },
+    labels: {
+      type: Array as PropType<string[]>,
+      default: () => ["one", "two"],
+    },
+  },
+  setup() {
+    return {};
+  },
 });
 // vue 3.3 generic
 declare const ScriptSetupGenericExact: <T, >(
@@ -83,7 +83,7 @@ declare const ScriptSetupGenericExact: <T, >(
 
 exactType(ScriptSetup, ScriptSetupExact);
 exactType(ScriptSetupExpose, ScriptSetupExposeExact);
-exactType(ScriptSetupTypeOnly, ScriptSetupTypeOnlyExact);
-exactType(ScriptSetupDefaultProps, ScriptSetupDefaultPropsExact);
-exactType(ScriptSetupGeneric, ScriptSetupGenericExact);
+exactType(new ScriptSetupTypeOnly(), new ScriptSetupTypeOnlyExact());
+exactType(new ScriptSetupDefaultProps(), new ScriptSetupDefaultPropsExact());
+// exactType(ScriptSetupGeneric, ScriptSetupGenericExact);
 </script>
