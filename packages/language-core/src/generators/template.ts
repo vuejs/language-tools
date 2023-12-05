@@ -1328,7 +1328,6 @@ export function generate(
 
 				const shouldCamelize = canCamelize
 					&& (!prop.arg || (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)) // isStatic
-					&& !nativeTags.has(node.tag)
 					&& hyphenateAttr(propName) === propName
 					&& !vueCompilerOptions.htmlAttributes.some(pattern => minimatch(propName!, pattern));
 
@@ -1399,7 +1398,6 @@ export function generate(
 
 				const shouldCamelize = canCamelize
 					&& hyphenateAttr(prop.name) === prop.name
-					&& !nativeTags.has(node.tag)
 					&& !vueCompilerOptions.htmlAttributes.some(pattern => minimatch(prop.name, pattern));
 
 				codes.push(
@@ -1952,12 +1950,7 @@ export function generate(
 		const code = prefix + _code + suffix;
 		const ast = createTsAst(astHolder, code);
 		const codes: Code[] = [];
-		const vars: {
-			text: string,
-			isShorthand: boolean,
-			offset: number,
-		}[] = [];
-		walkInterpolationFragment(
+		const vars = walkInterpolationFragment(
 			ts,
 			code,
 			ast,
