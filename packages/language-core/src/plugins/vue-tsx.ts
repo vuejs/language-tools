@@ -1,10 +1,10 @@
-import { CodeInformation, Segment, track } from '@volar/language-core';
+import { CodeInformation, Mapping, Segment, track } from '@volar/language-core';
 import { computed, computedSet } from 'computeds';
 import { generate as generateScript } from '../generators/script';
 import { generate as generateTemplate } from '../generators/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
-import { Sfc, VueLanguagePlugin } from '../types';
+import { Code, Sfc, VueLanguagePlugin } from '../types';
 import { enableAllFeatures } from '../generators/utils';
 
 const templateFormatReg = /^\.template_format\.ts$/;
@@ -64,7 +64,7 @@ const plugin: VueLanguagePlugin = (ctx) => {
 					});
 					embeddedFile.content = content;
 					embeddedFile.contentStacks = contentStacks;
-					embeddedFile.linkedNavigationMappings = [...tsx.mirrorBehaviorMappings];
+					embeddedFile.linkedNavigationMappings = [...tsx.linkedCodeMappings];
 				}
 			}
 			else if (suffix.match(templateFormatReg)) {
@@ -185,20 +185,36 @@ function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOp
 	const hasScriptSetupSlots = computed(() => !!scriptSetupRanges()?.slots.define);
 	const slotsAssignName = computed(() => scriptSetupRanges()?.slots.name);
 	const propsAssignName = computed(() => scriptSetupRanges()?.props.name);
-	const generatedScript = computed(() => generateScript(
-		ts,
-		fileName,
-		_sfc.script,
-		_sfc.scriptSetup,
-		_sfc.styles,
-		lang(),
-		scriptRanges(),
-		scriptSetupRanges(),
-		generatedTemplate(),
-		compilerOptions,
-		vueCompilerOptions,
-		codegenStack,
-	));
+	const generatedScript = computed(() => {
+		const [codes, codeStacks] = codegenStack ? track([] as Code[]) : [[], []];
+		const linkedCodeMappings: Mapping[] = [];
+		let generatedLength = 0;
+		for (const code of generateScript(
+			ts,
+			fileName,
+			_sfc.script,
+			_sfc.scriptSetup,
+			_sfc.styles,
+			lang(),
+			scriptRanges(),
+			scriptSetupRanges(),
+			generatedTemplate(),
+			compilerOptions,
+			vueCompilerOptions,
+			() => generatedLength,
+			linkedCodeMappings,
+		)) {
+			codes.push(code);
+			generatedLength += typeof code === 'string'
+				? code.length
+				: code[0].length;
+		};
+		return {
+			codes,
+			codeStacks,
+			linkedCodeMappings,
+		};
+	});
 
 	return {
 		scriptRanges,

@@ -5,7 +5,7 @@ import { minimatch } from 'minimatch';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { Code, Sfc, VueCodeInformation, VueCompilerOptions } from '../types';
 import { hyphenateAttr, hyphenateTag } from '../utils/shared';
-import { collectVars, walkInterpolationFragment } from '../utils/transform';
+import { collectVars, eachInterpolationSegment } from '../utils/transform';
 import { mergeFeatureSettings, disableAllFeatures, enableAllFeatures } from './utils';
 
 const presetInfos = {
@@ -1950,47 +1950,52 @@ export function generate(
 		const code = prefix + _code + suffix;
 		const ast = createTsAst(astHolder, code);
 		const codes: Code[] = [];
-		const vars = walkInterpolationFragment(
+		const vars: {
+			text: string,
+			isShorthand: boolean,
+			offset: number,
+		}[] = [];
+		for (let [section, offset, onlyError] of eachInterpolationSegment(
 			ts,
 			code,
 			ast,
-			(section, offset, onlyError) => {
-				if (offset === undefined) {
-					codes.push(section);
-				}
-				else {
-					offset -= prefix.length;
-					let addSuffix = '';
-					const overLength = offset + section.length - _code.length;
-					if (overLength > 0) {
-						addSuffix = section.substring(section.length - overLength);
-						section = section.substring(0, section.length - overLength);
-					}
-					if (offset < 0) {
-						codes.push(section.substring(0, -offset));
-						section = section.substring(-offset);
-						offset = 0;
-					}
-					if (start !== undefined && data !== undefined) {
-						codes.push([
-							section,
-							'template',
-							start + offset,
-							onlyError
-								? presetInfos.diagnosticOnly
-								: typeof data === 'function' ? data() : data,
-						]);
-					}
-					else {
-						codes.push(section);
-					}
-					codes.push(addSuffix);
-				}
-			},
 			localVars,
 			accessedGlobalVariables,
 			vueCompilerOptions,
-		);
+			vars,
+		)) {
+			if (offset === undefined) {
+				codes.push(section);
+			}
+			else {
+				offset -= prefix.length;
+				let addSuffix = '';
+				const overLength = offset + section.length - _code.length;
+				if (overLength > 0) {
+					addSuffix = section.substring(section.length - overLength);
+					section = section.substring(0, section.length - overLength);
+				}
+				if (offset < 0) {
+					codes.push(section.substring(0, -offset));
+					section = section.substring(-offset);
+					offset = 0;
+				}
+				if (start !== undefined && data !== undefined) {
+					codes.push([
+						section,
+						'template',
+						start + offset,
+						onlyError
+							? presetInfos.diagnosticOnly
+							: typeof data === 'function' ? data() : data,
+					]);
+				}
+				else {
+					codes.push(section);
+				}
+				codes.push(addSuffix);
+			}
+		}
 		if (start !== undefined) {
 			for (const v of vars) {
 				v.offset = start + v.offset - prefix.length;
