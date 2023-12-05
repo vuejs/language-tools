@@ -1223,6 +1223,8 @@ export function generate(
 		}
 		codes.push(`}, `);
 
+		const canCamelize = !nativeTags.has(node.tag) || node.tagType === CompilerDOM.ElementTypes.COMPONENT;
+
 		for (const prop of props) {
 			if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -1258,9 +1260,9 @@ export function generate(
 				let camelized = false;
 
 				if (
-					(!prop.arg || (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)) // isStatic
+					canCamelize
+					&& (!prop.arg || (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)) // isStatic
 					&& hyphenateAttr(attrNameText) === attrNameText
-					&& !nativeTags.has(node.tag)
 					&& !vueCompilerOptions.htmlAttributes.some(pattern => minimatch(attrNameText!, pattern))
 				) {
 					attrNameText = camelize(attrNameText);
@@ -1366,8 +1368,8 @@ export function generate(
 				let camelized = false;
 
 				if (
-					hyphenateAttr(prop.name) === prop.name
-					&& !nativeTags.has(node.tag)
+					canCamelize
+					&& hyphenateAttr(prop.name) === prop.name
 					&& !vueCompilerOptions.htmlAttributes.some(pattern => minimatch(attrNameText!, pattern))
 				) {
 					attrNameText = camelize(prop.name);
