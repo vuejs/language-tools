@@ -15,8 +15,8 @@
 	"dependencies": {
 		"@volar/language-core": "~1.11.1",
 		"@volar/source-map": "~1.11.1",
-		"@vue/compiler-dom": "^3.3.10",
-		"@vue/shared": "^3.3.10",
+		"@vue/compiler-dom": "^3.3.0",
+		"@vue/shared": "^3.3.0",
 		"computeds": "^0.0.1",
 		"minimatch": "^9.0.3",
 		"muggle-string": "^0.3.1",
@@ -27,7 +27,7 @@
 		"@types/minimatch": "^5.1.2",
 		"@types/node": "latest",
 		"@types/path-browserify": "^1.0.1",
-		"@vue/compiler-sfc": "^3.3.10"
+		"@vue/compiler-sfc": "^3.3.0"
 	},
 	"peerDependencies": {
 		"typescript": "*"
