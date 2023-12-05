@@ -59,6 +59,11 @@
 	</tbody>
 </table>
 
+## 1.8.25 (2023/12/6)
+
+- fix(component-type-helpers): correct type inference for FunctionalComponent ([#3766](https://github.com/vuejs/language-tools/issues/3766)) - thanks @pinguet62
+- fix(language-core): camelize props for dynamic component ([#3774](https://github.com/vuejs/language-tools/issues/3774)) - thanks @so1ve
+
 ## 1.8.24 (2023/11/29)
 
 - refactor(component-type-helpers): vue 2 types now move to `vue-component-type-helpers/vue2` ([#3404](https://github.com/vuejs/language-tools/issues/3404))
