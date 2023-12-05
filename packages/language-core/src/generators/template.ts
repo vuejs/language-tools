@@ -1292,6 +1292,8 @@ export function generate(
 		}
 		codes.push(`}, `);
 
+		const canCamelize = !nativeTags.has(node.tag) || node.tagType === CompilerDOM.ElementTypes.COMPONENT;
+
 		for (const prop of props) {
 			if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -1324,7 +1326,8 @@ export function generate(
 					continue;
 				}
 
-				const shouldCamelize = (!prop.arg || (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)) // isStatic
+				const shouldCamelize = canCamelize
+					&& (!prop.arg || (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)) // isStatic
 					&& !nativeTags.has(node.tag)
 					&& hyphenateAttr(propName) === propName
 					&& !vueCompilerOptions.htmlAttributes.some(pattern => minimatch(propName!, pattern));
@@ -1394,7 +1397,8 @@ export function generate(
 					|| (prop.name === 'name' && node.tag === 'slot') // #2308
 				) continue;
 
-				const shouldCamelize = hyphenateAttr(prop.name) === prop.name
+				const shouldCamelize = canCamelize
+					&& hyphenateAttr(prop.name) === prop.name
 					&& !nativeTags.has(node.tag)
 					&& !vueCompilerOptions.htmlAttributes.some(pattern => minimatch(prop.name, pattern));
 
