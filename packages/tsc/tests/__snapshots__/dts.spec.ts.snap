@@ -26,7 +26,7 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
 "declare const _default: <T>(__VLS_props: {
     onBar?: (data: number) => any;
     foo: number;
-} & import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps, __VLS_ctx?: {
+} & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, __VLS_ctx?: {
     attrs: any;
     emit: (e: 'bar', data: number) => void;
     slots: Readonly<{
@@ -34,14 +34,14 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
             foo: number;
         }): any;
     }>;
-}, __VLS_expose?: (exposed: import(\\"vue\\").ShallowUnwrapRef<{
+}, __VLS_expose?: (exposed: import("vue").ShallowUnwrapRef<{
     baz: number;
 }>) => void, __VLS_setup?: Promise<{
     props: {
         onBar?: (data: number) => any;
         foo: number;
-    } & import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps;
-    expose(exposed: import(\\"vue\\").ShallowUnwrapRef<{
+    } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps;
+    expose(exposed: import("vue").ShallowUnwrapRef<{
         baz: number;
     }>): void;
     attrs: any;
@@ -51,15 +51,15 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
         }): any;
     }>;
     emit: (e: 'bar', data: number) => void;
-}>) => import(\\"vue\\").VNode<import(\\"vue\\").RendererNode, import(\\"vue\\").RendererElement, {
+}>) => import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
     [key: string]: any;
 }> & {
     __ctx?: {
         props: {
             onBar?: (data: number) => any;
             foo: number;
-        } & import(\\"vue\\").VNodeProps & import(\\"vue\\").AllowedComponentProps & import(\\"vue\\").ComponentCustomProps;
-        expose(exposed: import(\\"vue\\").ShallowUnwrapRef<{
+        } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps;
+        expose(exposed: import("vue").ShallowUnwrapRef<{
             baz: number;
         }>): void;
         attrs: any;
