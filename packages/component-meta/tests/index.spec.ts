@@ -535,6 +535,19 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		expect(onBaz?.schema).toEqual([]);
 	});
 
+	test('reference-type-events for generic', () => {
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/generic/component.vue');
+		const meta = checker.getComponentMeta(componentPath);
+
+		expect(meta.type).toEqual(TypeMeta.Function);
+
+		const onBar = meta.events.find(event => event.name === 'bar');
+
+		expect(onBar).toBeDefined();
+		expect(onBar?.type).toEqual('number');
+		expect(onBar?.signature).toEqual('(e: "bar", data: number): void');
+	});
+
 	test('template-slots', () => {
 		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/template-slots/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
@@ -561,6 +574,18 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		expect(b).toBeDefined();
 		expect(c).toBeDefined();
 		expect(d).toBeDefined();
+	});
+
+	test('template-slots for generic', () => {
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/generic/component.vue');
+		const meta = checker.getComponentMeta(componentPath);
+
+		expect(meta.type).toEqual(TypeMeta.Function);
+
+		expect(meta.slots.find(slot =>
+			slot.name === 'default'
+			&& slot.type === '{ foo: number; }'
+		)).toBeDefined();
 	});
 
 	test('template-slots without a script block', () => {

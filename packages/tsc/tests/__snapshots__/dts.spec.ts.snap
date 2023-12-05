@@ -22,6 +22,59 @@ export default _default;
 "
 `;
 
+exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.vue.d.ts 1`] = `
+"declare const _default: <T>(__VLS_props: {
+    onBar?: (data: number) => any;
+    foo: number;
+} & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, __VLS_ctx?: {
+    attrs: any;
+    emit: (e: 'bar', data: number) => void;
+    slots: Readonly<{
+        default?(data: {
+            foo: number;
+        }): any;
+    }>;
+}, __VLS_expose?: (exposed: import("vue").ShallowUnwrapRef<{
+    baz: number;
+}>) => void, __VLS_setup?: Promise<{
+    props: {
+        onBar?: (data: number) => any;
+        foo: number;
+    } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps;
+    expose(exposed: import("vue").ShallowUnwrapRef<{
+        baz: number;
+    }>): void;
+    attrs: any;
+    slots: Readonly<{
+        default?(data: {
+            foo: number;
+        }): any;
+    }>;
+    emit: (e: 'bar', data: number) => void;
+}>) => import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+    [key: string]: any;
+}> & {
+    __ctx?: {
+        props: {
+            onBar?: (data: number) => any;
+            foo: number;
+        } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps;
+        expose(exposed: import("vue").ShallowUnwrapRef<{
+            baz: number;
+        }>): void;
+        attrs: any;
+        slots: Readonly<{
+            default?(data: {
+                foo: number;
+            }): any;
+        }>;
+        emit: (e: 'bar', data: number) => void;
+    };
+};
+export default _default;
+"
+`;
+
 exports[`vue-tsc-dts > Input: non-component/component.ts, Output: non-component/component.d.ts 1`] = `
 "declare const _default: {};
 export default _default;
