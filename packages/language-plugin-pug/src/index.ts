@@ -38,7 +38,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 							get(target, prop) {
 								if (prop === 'offset') {
 									const htmlOffset = target.offset;
-									for (const mapped of map.toSourceOffsets(htmlOffset)) {
+									for (const mapped of map.getSourceOffsets(htmlOffset)) {
 										return mapped[0];
 									}
 									return -1;

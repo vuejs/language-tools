@@ -2,6 +2,7 @@ import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCParseResult } from '@vue/compiler-sfc';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { VueEmbeddedFile } from './virtualFile/embeddedFile';
+import type { CodeInformation, Segment } from '@volar/language-core';
 
 export type { SFCParseResult } from '@vue/compiler-sfc';
 
@@ -9,6 +10,21 @@ export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 
 	target?: 'auto' | 2 | 2.7 | 3 | 3.3;
 	plugins?: string[];
 };
+
+export interface VueCodeInformation extends CodeInformation {
+	__referencesCodeLens?: boolean;
+	__displayWithLink?: boolean;
+	__hint?: {
+		setting: string;
+		label: string;
+		tooltip: string;
+		paddingRight?: boolean;
+		paddingLeft?: boolean;
+	};
+	__combineLastMappping?: boolean;
+}
+
+export type Code = Segment<VueCodeInformation>;
 
 export interface VueCompilerOptions {
 	target: number;

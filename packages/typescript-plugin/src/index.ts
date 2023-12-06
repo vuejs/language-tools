@@ -3,6 +3,7 @@ import * as vue from '@vue/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
 const externalFiles = new WeakMap<ts.server.Project, string[]>();
+const projectVueOptions = new WeakMap<ts.server.Project, vue.VueCompilerOptions>();
 const windowsPathReg = /\\/g;
 
 const init: ts.server.PluginModuleFactory = (modules) => {
@@ -10,18 +11,31 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 	const pluginModule: ts.server.PluginModule = {
 		create(info) {
 
-			const virtualFiles = vue.createVirtualFiles(
+			const getScriptSnapshot = info.languageServiceHost.getScriptSnapshot.bind(info.languageServiceHost);
+			const vueOptions = vue.resolveVueCompilerOptions(getVueCompilerOptions());
+			const files = vue.createFileProvider(
 				vue.createLanguages(
 					ts,
 					info.languageServiceHost.getCompilationSettings(),
-					getVueCompilerOptions(),
+					vueOptions,
 				),
+				ts.sys.useCaseSensitiveFileNames,
+				fileName => {
+					const snapshot = getScriptSnapshot(fileName);
+					if (snapshot) {
+						files.updateSourceFile(fileName, snapshot, vue.resolveCommonLanguageId(fileName));
+					}
+					else {
+						files.deleteSourceFile(fileName);
+					}
+				}
 			);
+			projectVueOptions.set(info.project, vueOptions);
 
-			decorateLanguageService(virtualFiles, info.languageService, true);
-			decorateLanguageServiceHost(virtualFiles, info.languageServiceHost, ts, ['.vue']);
+			decorateLanguageService(files, info.languageService, true);
+			decorateLanguageServiceHost(files, info.languageServiceHost, ts, vueOptions.extensions);
 
-			const getCompletionsAtPosition = info.languageService.getCompletionsAtPosition.bind(info.languageService);
+			const getCompletionsAtPosition = info.languageService.getCompletionsAtPosition;
 
 			info.languageService.getCompletionsAtPosition = (fileName, position, options) => {
 				const result = getCompletionsAtPosition(fileName, position, options);
@@ -49,7 +63,7 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 				|| !externalFiles.has(project)
 			) {
 				const oldFiles = externalFiles.get(project);
-				const newFiles = searchExternalFiles(ts, project, ['.vue']);
+				const newFiles = searchExternalFiles(ts, project, projectVueOptions.get(project)!.extensions);
 				externalFiles.set(project, newFiles);
 				if (oldFiles && !arrayItemsEqual(oldFiles, newFiles)) {
 					project.refreshDiagnostics();

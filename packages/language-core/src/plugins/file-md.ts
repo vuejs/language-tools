@@ -1,4 +1,4 @@
-import { buildMappings, Segment, SourceMap, toString } from '@volar/source-map';
+import { buildMappings, Segment, SourceMap, toString } from '@volar/language-core';
 import type { SFCBlock } from '@vue/compiler-sfc';
 import { VueLanguagePlugin } from '../types';
 import { parse } from '../utils/parseSfc';
@@ -74,8 +74,8 @@ const plugin: VueLanguagePlugin = () => {
 				return sfc;
 
 				function transformRange(block: SFCBlock) {
-					block.loc.start.offset = file2VueSourceMap.toSourceOffset(block.loc.start.offset)?.[0] ?? -1;
-					block.loc.end.offset = file2VueSourceMap.toSourceOffset(block.loc.end.offset)?.[0] ?? -1;
+					block.loc.start.offset = file2VueSourceMap.getSourceOffset(block.loc.start.offset)?.[0] ?? -1;
+					block.loc.end.offset = file2VueSourceMap.getSourceOffset(block.loc.end.offset)?.[0] ?? -1;
 				}
 			};
 		}

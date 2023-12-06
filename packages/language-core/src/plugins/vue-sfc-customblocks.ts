@@ -1,4 +1,4 @@
-import { FileCapabilities, FileRangeCapabilities } from '@volar/language-core';
+import { enableAllFeatures } from '../generators/utils';
 import { VueLanguagePlugin } from '../types';
 
 const customBlockReg = /^(.*)\.customBlock_([^_]+)_(\d+)\.([^.]+)$/;
@@ -24,12 +24,11 @@ const plugin: VueLanguagePlugin = () => {
 				const index = parseInt(match[3]);
 				const customBlock = sfc.customBlocks[index];
 
-				embeddedFile.capabilities = FileCapabilities.full;
 				embeddedFile.content.push([
 					customBlock.content,
 					customBlock.name,
 					0,
-					FileRangeCapabilities.full,
+					enableAllFeatures({}),
 				]);
 			}
 		},

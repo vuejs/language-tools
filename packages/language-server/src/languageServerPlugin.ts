@@ -1,30 +1,30 @@
-import * as embedded from '@volar/language-core';
-import { LanguageServerPlugin, Connection } from '@volar/language-server';
-import * as vue from '@vue/language-service';
+import { Connection, ServerProject, TypeScriptServerPlugin } from '@volar/language-server';
+import { createSys } from '@volar/typescript';
 import * as vue2 from '@vue/language-core';
+import { VueCompilerOptions } from '@vue/language-core';
 import * as nameCasing from '@vue/language-service';
-import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest, GetComponentMeta, GetDragAndDragImportEditsRequest } from './protocol';
-import { VueServerInitializationOptions } from './types';
+import * as vue from '@vue/language-service';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as componentMeta from 'vue-component-meta/out/base';
-import { VueCompilerOptions } from '@vue/language-core';
-import { createSys } from '@volar/typescript';
+import { DetectNameCasingRequest, GetComponentMeta, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest } from './protocol';
+import { VueServerInitializationOptions } from './types';
 
 export function createServerPlugin(connection: Connection) {
 
-	const plugin: LanguageServerPlugin = (initOptions: VueServerInitializationOptions, modules): ReturnType<LanguageServerPlugin> => {
+	const plugin: TypeScriptServerPlugin = ({ initializationOptions, modules }): ReturnType<TypeScriptServerPlugin> => {
 
 		if (!modules.typescript) {
 			console.warn('No typescript found, vue-language-server will not work.');
 			return {};
 		}
 
+		const options: VueServerInitializationOptions = initializationOptions;
 		const ts = modules.typescript;
 		const vueFileExtensions: string[] = ['vue'];
-		const hostToVueOptions = new WeakMap<embedded.TypeScriptLanguageHost, VueCompilerOptions>();
+		const envToVueOptions = new WeakMap<vue.ServiceEnvironment, VueCompilerOptions>();
 
-		if (initOptions.additionalExtensions) {
-			for (const additionalExtension of initOptions.additionalExtensions) {
+		if (options.additionalExtensions) {
+			for (const additionalExtension of options.additionalExtensions) {
 				vueFileExtensions.push(additionalExtension);
 			}
 		}
@@ -32,40 +32,35 @@ export function createServerPlugin(connection: Connection) {
 		return {
 			extraFileExtensions: vueFileExtensions.map<ts.FileExtensionInfo>(ext => ({ extension: ext, isMixedContent: true, scriptKind: ts.ScriptKind.Deferred })),
 			watchFileExtensions: ['js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json', ...vueFileExtensions],
-			async resolveConfig(config, ctx) {
+			async resolveConfig(config, env, info) {
 
 				const vueOptions = await getVueCompilerOptions();
 
-				if (ctx) {
-					hostToVueOptions.set(ctx.host, vue.resolveVueCompilerOptions(vueOptions));
+				if (env) {
+					envToVueOptions.set(env, vue.resolveVueCompilerOptions(vueOptions));
 				}
 
-				return vue.resolveConfig(
-					ts,
-					config,
-					ctx?.host.getCompilationSettings() ?? {},
-					vueOptions,
-					initOptions.codegenStack,
-				);
+				config.languages = vue.resolveLanguages(ts, config.languages ?? {}, info?.parsedCommandLine.options ?? {}, vueOptions, options.codegenStack);
+				config.services = vue.resolveServices(ts, config.services ?? {}, vueOptions);
+
+				return config;
 
 				async function getVueCompilerOptions() {
 
-					const ts = modules.typescript;
-
 					let vueOptions: Partial<vue.VueCompilerOptions> = {};
 
-					if (ts && ctx) {
-						const sys = createSys(ts, ctx.env);
+					if (env && info) {
+						const sys = createSys(ts, env, env.uriToFileName(env.workspaceFolder.uri.toString()));
 						let sysVersion: number | undefined;
 						let newSysVersion = await sys.sync();
 
 						while (sysVersion !== newSysVersion) {
 							sysVersion = newSysVersion;
-							if (typeof ctx?.project.tsConfig === 'string' && ts) {
-								vueOptions = vue2.createParsedCommandLine(ts, sys, ctx.project.tsConfig).vueOptions;
+							if (info.configFileName) {
+								vueOptions = vue2.createParsedCommandLine(ts, sys, info.configFileName).vueOptions;
 							}
-							else if (typeof ctx?.project.tsConfig === 'object' && ts) {
-								vueOptions = vue2.createParsedCommandLineByJson(ts, sys, ctx.host.rootPath, ctx.project.tsConfig).vueOptions;
+							else {
+								vueOptions = vue2.createParsedCommandLineByJson(ts, sys, env.uriToFileName(env.workspaceFolder.uri.toString()), info.parsedCommandLine.options).vueOptions;
 							}
 							newSysVersion = await sys.sync();
 						}
@@ -80,7 +75,7 @@ export function createServerPlugin(connection: Connection) {
 					return vueOptions;
 				}
 			},
-			onInitialized(getService, env) {
+			onInitialized(projects) {
 
 				connection.onRequest(ParseSFCRequest.type, params => {
 					return vue2.parse(params);
@@ -89,57 +84,52 @@ export function createServerPlugin(connection: Connection) {
 				connection.onRequest(DetectNameCasingRequest.type, async params => {
 					const languageService = await getService(params.textDocument.uri);
 					if (languageService) {
-						return nameCasing.detect(ts, languageService.context, params.textDocument.uri, hostToVueOptions.get(languageService.context.rawHost)!);
+						return nameCasing.detect(ts, languageService.context, params.textDocument.uri, envToVueOptions.get(languageService.context.env)!);
 					}
 				});
 
 				connection.onRequest(GetConvertTagCasingEditsRequest.type, async params => {
 					const languageService = await getService(params.textDocument.uri);
 					if (languageService) {
-						return nameCasing.convertTagName(ts, languageService.context, params.textDocument.uri, params.casing, hostToVueOptions.get(languageService.context.rawHost)!);
-					}
-				});
-
-				connection.onRequest(GetDragAndDragImportEditsRequest.type, async params => {
-					const languageService = await getService(params.uri);
-					if (languageService) {
-						return nameCasing.getDragImportEdits(ts, languageService.context, params.uri, params.importUri, params.casing);
+						return nameCasing.convertTagName(ts, languageService.context, params.textDocument.uri, params.casing, envToVueOptions.get(languageService.context.env)!);
 					}
 				});
 
 				connection.onRequest(GetConvertAttrCasingEditsRequest.type, async params => {
 					const languageService = await getService(params.textDocument.uri);
 					if (languageService) {
-						const vueOptions = hostToVueOptions.get(languageService.context.host);
+						const vueOptions = envToVueOptions.get(languageService.context.env);
 						if (vueOptions) {
-							return nameCasing.convertAttrName(ts, languageService.context, params.textDocument.uri, params.casing, hostToVueOptions.get(languageService.context.rawHost)!);
+							return nameCasing.convertAttrName(ts, languageService.context, params.textDocument.uri, params.casing, envToVueOptions.get(languageService.context.env)!);
 						}
 					}
 				});
 
-				const checkers = new WeakMap<embedded.TypeScriptLanguageHost, componentMeta.ComponentMetaChecker>();
+				const checkers = new WeakMap<ServerProject, componentMeta.ComponentMetaChecker>();
 
 				connection.onRequest(GetComponentMeta.type, async params => {
 
-					const languageService = await getService(params.uri);
-					if (!languageService)
-						return;
+					const project = await projects.getProject(params.uri);
+					const langaugeService = project.getLanguageService();
 
-					const host = languageService.context.rawHost;
-
-					let checker = checkers.get(host);
+					let checker = checkers.get(project);
 					if (!checker) {
 						checker = componentMeta.baseCreate(
 							ts,
-							host,
-							hostToVueOptions.get(host)!,
+							langaugeService.context.language.typescript!.configFileName,
+							langaugeService.context.language.typescript!.projectHost,
+							envToVueOptions.get(langaugeService.context.env)!,
 							{},
-							host.rootPath + '/tsconfig.json.global.vue',
+							langaugeService.context.language.typescript!.languageServiceHost.getCurrentDirectory() + '/tsconfig.json.global.vue',
 						);
-						checkers.set(host, checker);
+						checkers.set(project, checker);
 					}
-					return checker.getComponentMeta(env.uriToFileName(params.uri));
+					return checker?.getComponentMeta(langaugeService.context.env.uriToFileName(params.uri));
 				});
+
+				async function getService(uri: string) {
+					return (await projects.getProject(uri)).getLanguageService();
+				}
 			},
 		};
 	};

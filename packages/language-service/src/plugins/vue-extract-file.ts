@@ -1,6 +1,6 @@
-import { CreateFile, Service, ServiceContext, TextDocumentEdit, TextEdit } from '@volar/language-service';
+import { CreateFile, ServicePlugin, TextDocumentEdit, TextEdit } from '@volar/language-service';
 import { ExpressionNode, type TemplateChildNode } from '@vue/compiler-dom';
-import { Sfc, VueFile, scriptRanges } from '@vue/language-core';
+import { Sfc, VueFile, isSemanticTokensEnabled, scriptRanges } from '@vue/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { Provide } from 'volar-service-typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
@@ -13,237 +13,239 @@ interface ActionData {
 
 const unicodeReg = /\\u/g;
 
-export const create = function (): Service {
+export function create(ts: typeof import('typescript/lib/tsserverlibrary')): ServicePlugin {
+	return {
+		create(context) {
+			return {
+				async provideCodeActions(document, range, _context) {
 
-	return (ctx: ServiceContext<Provide> | undefined, modules): ReturnType<Service> => {
-
-		if (!modules?.typescript)
-			return {};
-
-		const ts = modules.typescript;
-
-		return {
-
-			async provideCodeActions(document, range, _context) {
-
-				const startOffset = document.offsetAt(range.start);
-				const endOffset = document.offsetAt(range.end);
-				if (startOffset === endOffset) {
-					return;
-				}
-
-				const [vueFile] = ctx!.documents.getVirtualFileByUri(document.uri);
-				if (!vueFile || !(vueFile instanceof VueFile))
-					return;
-
-				const { sfc } = vueFile;
-				const script = sfc.scriptSetup ?? sfc.script;
-
-				if (!sfc.template || !script)
-					return;
-
-				const templateCodeRange = selectTemplateCode(startOffset, endOffset, sfc.template);
-				if (!templateCodeRange)
-					return;
-
-				return [
-					{
-						title: 'Extract into new dumb component',
-						kind: 'refactor.move.newFile.dumb',
-						data: {
-							uri: document.uri,
-							range: [startOffset, endOffset],
-							newName: 'NewComponent',
-						} satisfies ActionData,
-					},
-				];
-			},
-
-			async resolveCodeAction(codeAction) {
-
-				const { uri, range, newName } = codeAction.data as ActionData;
-				const document = ctx!.getTextDocument(uri)!;
-				const [startOffset, endOffset]: [number, number] = range;
-				const [vueFile] = ctx!.documents.getVirtualFileByUri(document.uri) as [VueFile, any];
-				const { sfc } = vueFile;
-				const script = sfc.scriptSetup ?? sfc.script;
-
-				if (!sfc.template || !script)
-					return codeAction;
-
-				const templateCodeRange = selectTemplateCode(startOffset, endOffset, sfc.template);
-				if (!templateCodeRange)
-					return codeAction;
-
-				const languageService = ctx!.inject('typescript/languageService');
-				const languageServiceHost = ctx!.inject('typescript/languageServiceHost');
-				const sourceFile = languageService.getProgram()!.getSourceFile(vueFile.mainScriptName)!;
-				const sourceFileKind = languageServiceHost.getScriptKind?.(vueFile.mainScriptName);
-				const toExtract = collectExtractProps();
-				const initialIndentSetting = await ctx!.env.getConfiguration!('volar.format.initialIndent') as Record<string, boolean>;
-				const newUri = document.uri.substring(0, document.uri.lastIndexOf('/') + 1) + `${newName}.vue`;
-				const lastImportNode = getLastImportNode(ts, script.ast);
-
-				let newFileTags = [];
-
-				newFileTags.push(
-					constructTag('template', [], initialIndentSetting.html, sfc.template.content.substring(templateCodeRange[0], templateCodeRange[1]))
-				);
-
-				if (toExtract.length) {
-					newFileTags.push(
-						constructTag('script', ['setup', 'lang="ts"'], isInitialIndentNeeded(ts, sourceFileKind!, initialIndentSetting), generateNewScriptContents())
-					);
-				}
-				if (sfc.template.startTagEnd > script.startTagEnd) {
-					newFileTags = newFileTags.reverse();
-				}
-
-				const currentFileEdits: vscode.TextEdit[] = [
-					{
-						range: {
-							start: document.positionAt(sfc.template.startTagEnd + templateCodeRange[0]),
-							end: document.positionAt(sfc.template.startTagEnd + templateCodeRange[1]),
-						},
-						newText: generateReplaceTemplate(),
-					},
-					{
-						range: lastImportNode ? {
-							start: document.positionAt(script.startTagEnd + lastImportNode.end),
-							end: document.positionAt(script.startTagEnd + lastImportNode.end),
-						} : {
-							start: document.positionAt(script.startTagEnd),
-							end: document.positionAt(script.startTagEnd),
-						},
-						newText: `\nimport ${newName} from './${newName}.vue'`,
-					},
-				];
-
-				if (sfc.script) {
-					const edit = createAddComponentToOptionEdit(ts, sfc.script.ast, newName);
-					if (edit) {
-						currentFileEdits.push({
-							range: {
-								start: document.positionAt(sfc.script.startTagEnd + edit.range.start),
-								end: document.positionAt(sfc.script.startTagEnd + edit.range.end),
-							},
-							newText: edit.newText,
-						});
+					const startOffset = document.offsetAt(range.start);
+					const endOffset = document.offsetAt(range.end);
+					if (startOffset === endOffset) {
+						return;
 					}
-				}
 
-				return {
-					...codeAction,
-					edit: {
-						documentChanges: [
-							// editing current file
-							{
-								textDocument: {
-									uri: document.uri,
-									version: null,
+					const [vueFile] = context.language.files.getVirtualFile(document.uri);
+					if (!vueFile || !(vueFile instanceof VueFile))
+						return;
+
+					const { sfc } = vueFile;
+					const script = sfc.scriptSetup ?? sfc.script;
+
+					if (!sfc.template || !script)
+						return;
+
+					const templateCodeRange = selectTemplateCode(startOffset, endOffset, sfc.template);
+					if (!templateCodeRange)
+						return;
+
+					return [
+						{
+							title: 'Extract into new dumb component',
+							kind: 'refactor.move.newFile.dumb',
+							data: {
+								uri: document.uri,
+								range: [startOffset, endOffset],
+								newName: 'NewComponent',
+							} satisfies ActionData,
+						},
+					];
+				},
+
+				async resolveCodeAction(codeAction) {
+
+					const { uri, range, newName } = codeAction.data as ActionData;
+					const [startOffset, endOffset]: [number, number] = range;
+					const [vueFile] = context.language.files.getVirtualFile(uri) as [VueFile, any];
+					const document = context.documents.get(uri, vueFile.languageId, vueFile.snapshot)!;
+					const { sfc } = vueFile;
+					const script = sfc.scriptSetup ?? sfc.script;
+
+					if (!sfc.template || !script)
+						return codeAction;
+
+					const templateCodeRange = selectTemplateCode(startOffset, endOffset, sfc.template);
+					if (!templateCodeRange)
+						return codeAction;
+
+					const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
+					const languageServiceHost = context.inject<Provide, 'typescript/languageServiceHost'>('typescript/languageServiceHost');
+					const tsScriptUri = vueFile.mainTsFile!.id;
+					const tsScriptName = context.env.uriToFileName(tsScriptUri);
+					const sourceFile = languageService.getProgram()!.getSourceFile(tsScriptName)!;
+					const sourceFileKind = languageServiceHost.getScriptKind?.(tsScriptName);
+					const toExtract = collectExtractProps();
+					const initialIndentSetting = await context.env.getConfiguration!('volar.format.initialIndent') as Record<string, boolean>;
+					const newUri = document.uri.substring(0, document.uri.lastIndexOf('/') + 1) + `${newName}.vue`;
+					const lastImportNode = getLastImportNode(ts, script.ast);
+
+					let newFileTags = [];
+
+					newFileTags.push(
+						constructTag('template', [], initialIndentSetting.html, sfc.template.content.substring(templateCodeRange[0], templateCodeRange[1]))
+					);
+
+					if (toExtract.length) {
+						newFileTags.push(
+							constructTag('script', ['setup', 'lang="ts"'], isInitialIndentNeeded(ts, sourceFileKind!, initialIndentSetting), generateNewScriptContents())
+						);
+					}
+					if (sfc.template.startTagEnd > script.startTagEnd) {
+						newFileTags = newFileTags.reverse();
+					}
+
+					const currentFileEdits: vscode.TextEdit[] = [
+						{
+							range: {
+								start: document.positionAt(sfc.template.startTagEnd + templateCodeRange[0]),
+								end: document.positionAt(sfc.template.startTagEnd + templateCodeRange[1]),
+							},
+							newText: generateReplaceTemplate(),
+						},
+						{
+							range: lastImportNode ? {
+								start: document.positionAt(script.startTagEnd + lastImportNode.end),
+								end: document.positionAt(script.startTagEnd + lastImportNode.end),
+							} : {
+								start: document.positionAt(script.startTagEnd),
+								end: document.positionAt(script.startTagEnd),
+							},
+							newText: `\nimport ${newName} from './${newName}.vue'`,
+						},
+					];
+
+					if (sfc.script) {
+						const edit = createAddComponentToOptionEdit(ts, sfc.script.ast, newName);
+						if (edit) {
+							currentFileEdits.push({
+								range: {
+									start: document.positionAt(sfc.script.startTagEnd + edit.range.start),
+									end: document.positionAt(sfc.script.startTagEnd + edit.range.end),
 								},
-								edits: currentFileEdits,
-							} satisfies TextDocumentEdit,
+								newText: edit.newText,
+							});
+						}
+					}
 
-							// creating new file with content
-							{
-								uri: newUri,
-								kind: 'create',
-							} satisfies CreateFile,
-							{
-								textDocument: {
+					return {
+						...codeAction,
+						edit: {
+							documentChanges: [
+								// editing current file
+								{
+									textDocument: {
+										uri: document.uri,
+										version: null,
+									},
+									edits: currentFileEdits,
+								} satisfies TextDocumentEdit,
+
+								// creating new file with content
+								{
 									uri: newUri,
-									version: null,
-								},
-								edits: [
-									{
-										range: {
-											start: { line: 0, character: 0 },
-											end: { line: 0, character: 0 },
-										},
-										newText: newFileTags.join('\n'),
-									} satisfies TextEdit,
-								],
-							} satisfies TextDocumentEdit,
-						],
-					},
-				};
+									kind: 'create',
+								} satisfies CreateFile,
+								{
+									textDocument: {
+										uri: newUri,
+										version: null,
+									},
+									edits: [
+										{
+											range: {
+												start: { line: 0, character: 0 },
+												end: { line: 0, character: 0 },
+											},
+											newText: newFileTags.join('\n'),
+										} satisfies TextEdit,
+									],
+								} satisfies TextDocumentEdit,
+							],
+						},
+					};
 
-				function collectExtractProps() {
+					function collectExtractProps() {
 
-					const result = new Map<string, {
-						name: string;
-						type: string;
-						model: boolean;
-					}>();
-					const checker = languageService.getProgram()!.getTypeChecker();
-					const maps = [...ctx!.documents.getMapsByVirtualFileName(vueFile.mainScriptName)];
+						const result = new Map<string, {
+							name: string;
+							type: string;
+							model: boolean;
+						}>();
+						const checker = languageService.getProgram()!.getTypeChecker();
+						const [virtualFile] = context.language.files.getVirtualFile(tsScriptUri);
+						const maps = virtualFile ? [...context.documents.getMaps(virtualFile)] : [];
 
-					sourceFile.forEachChild(function visit(node) {
-						if (
-							ts.isPropertyAccessExpression(node)
-							&& ts.isIdentifier(node.expression)
-							&& node.expression.text === '__VLS_ctx'
-							&& ts.isIdentifier(node.name)
-						) {
-							const { name } = node;
-							for (const [_, map] of maps) {
-								const source = map.map.toSourceOffset(name.getEnd());
-								if (source && source[0] >= sfc.template!.startTagEnd + templateCodeRange![0] && source[0] <= sfc.template!.startTagEnd + templateCodeRange![1] && source[1].data.semanticTokens) {
-									if (!result.has(name.text)) {
-										const type = checker.getTypeAtLocation(node);
-										const typeString = checker.typeToString(type, node, ts.TypeFormatFlags.NoTruncation);
-										result.set(name.text, {
-											name: name.text,
-											type: typeString.includes('__VLS_') ? 'any' : typeString,
-											model: false,
-										});
+						sourceFile.forEachChild(function visit(node) {
+							if (
+								ts.isPropertyAccessExpression(node)
+								&& ts.isIdentifier(node.expression)
+								&& node.expression.text === '__VLS_ctx'
+								&& ts.isIdentifier(node.name)
+							) {
+								const { name } = node;
+								for (const map of maps) {
+									const source = map.map.getSourceOffset(name.getEnd());
+									if (
+										source
+										&& source[0] >= sfc.template!.startTagEnd + templateCodeRange![0]
+										&& source[0] <= sfc.template!.startTagEnd + templateCodeRange![1]
+										&& isSemanticTokensEnabled(source[1].data)
+									) {
+										if (!result.has(name.text)) {
+											const type = checker.getTypeAtLocation(node);
+											const typeString = checker.typeToString(type, node, ts.TypeFormatFlags.NoTruncation);
+											result.set(name.text, {
+												name: name.text,
+												type: typeString.includes('__VLS_') ? 'any' : typeString,
+												model: false,
+											});
+										}
+										const isModel = ts.isPostfixUnaryExpression(node.parent) || ts.isBinaryExpression(node.parent);
+										if (isModel) {
+											result.get(name.text)!.model = true;
+										}
+										break;
 									}
-									const isModel = ts.isPostfixUnaryExpression(node.parent) || ts.isBinaryExpression(node.parent);
-									if (isModel) {
-										result.get(name.text)!.model = true;
-									}
-									break;
 								}
 							}
+							node.forEachChild(visit);
+						});
+
+						return [...result.values()];
+					}
+
+					function generateNewScriptContents() {
+						const lines = [];
+						const props = [...toExtract.values()].filter(p => !p.model);
+						const models = [...toExtract.values()].filter(p => p.model);
+						if (props.length) {
+							lines.push(`defineProps<{ \n\t${props.map(p => `${p.name}: ${p.type};`).join('\n\t')}\n}>()`);
 						}
-						node.forEachChild(visit);
-					});
-
-					return [...result.values()];
-				}
-
-				function generateNewScriptContents() {
-					const lines = [];
-					const props = [...toExtract.values()].filter(p => !p.model);
-					const models = [...toExtract.values()].filter(p => p.model);
-					if (props.length) {
-						lines.push(`defineProps<{ \n\t${props.map(p => `${p.name}: ${p.type};`).join('\n\t')}\n}>()`);
+						for (const model of models) {
+							lines.push(`const ${model.name} = defineModel<${model.type}>('${model.name}', { required: true })`);
+						}
+						return lines.join('\n');
 					}
-					for (const model of models) {
-						lines.push(`const ${model.name} = defineModel<${model.type}>('${model.name}', { required: true })`);
+
+					function generateReplaceTemplate() {
+						const props = [...toExtract.values()].filter(p => !p.model);
+						const models = [...toExtract.values()].filter(p => p.model);
+						return [
+							`<${newName}`,
+							...props.map(p => `:${p.name}="${p.name}"`),
+							...models.map(p => `v-model:${p.name}="${p.name}"`),
+							`/>`,
+						].join(' ');
 					}
-					return lines.join('\n');
-				}
+				},
 
-				function generateReplaceTemplate() {
-					const props = [...toExtract.values()].filter(p => !p.model);
-					const models = [...toExtract.values()].filter(p => p.model);
-					return [
-						`<${newName}`,
-						...props.map(p => `:${p.name}="${p.name}"`),
-						...models.map(p => `v-model:${p.name}="${p.name}"`),
-						`/>`,
-					].join(' ');
-				}
-			},
-
-			transformCodeAction(item) {
-				return item; // ignore mapping
-			},
-		};
+				transformCodeAction(item) {
+					return item; // ignore mapping
+				},
+			};
+		},
 	};
-};
+}
 
 function selectTemplateCode(startOffset: number, endOffset: number, templateBlock: NonNullable<Sfc['template']>) {
 
