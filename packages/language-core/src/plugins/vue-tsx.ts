@@ -1,11 +1,11 @@
+import { CodeInformation, Segment, track } from '@volar/language-core';
 import { computed, computedSet } from 'computeds';
 import { generate as generateScript } from '../generators/script';
 import { generate as generateTemplate } from '../generators/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { Sfc, VueLanguagePlugin } from '../types';
-import { FileCapabilities, FileKind } from '@volar/language-core';
-import * as muggle from 'muggle-string';
+import { enableAllFeatures } from '../generators/utils';
 
 const templateFormatReg = /^\.template_format\.ts$/;
 const templateStyleCssReg = /^\.template_style\.css$/;
@@ -43,40 +43,38 @@ const plugin: VueLanguagePlugin = (ctx) => {
 		resolveEmbeddedFile(fileName, sfc, embeddedFile) {
 
 			const _tsx = useTsx(fileName, sfc);
+			const lang = _tsx.lang();
 			const suffix = embeddedFile.fileName.replace(fileName, '');
 
-			if (suffix === '.' + _tsx.lang()) {
-				embeddedFile.kind = FileKind.TypeScriptHostFile;
-				embeddedFile.capabilities = {
-					...FileCapabilities.full,
-					foldingRange: false,
-					documentFormatting: false,
-					documentSymbol: false,
+			if (suffix === '.' + lang) {
+				embeddedFile.typescript = {
+					scriptKind: lang === 'js' ? ctx.modules.typescript.ScriptKind.JS
+						: lang === 'jsx' ? ctx.modules.typescript.ScriptKind.JSX
+							: lang === 'tsx' ? ctx.modules.typescript.ScriptKind.TSX
+								: ctx.modules.typescript.ScriptKind.TS
 				};
 				const tsx = _tsx.generatedScript();
 				if (tsx) {
-					const [content, contentStacks] = ctx.codegenStack ? muggle.track([...tsx.codes], [...tsx.codeStacks]) : [[...tsx.codes], [...tsx.codeStacks]];
+					const [content, contentStacks] = ctx.codegenStack ? track([...tsx.codes], [...tsx.codeStacks]) : [[...tsx.codes], [...tsx.codeStacks]];
+					content.forEach(code => {
+						if (typeof code !== 'string') {
+							code[3].structure = false;
+							code[3].format = false;
+						}
+					});
 					embeddedFile.content = content;
 					embeddedFile.contentStacks = contentStacks;
-					embeddedFile.mirrorBehaviorMappings = [...tsx.mirrorBehaviorMappings];
+					embeddedFile.linkedNavigationMappings = [...tsx.mirrorBehaviorMappings];
 				}
 			}
 			else if (suffix.match(templateFormatReg)) {
 
 				embeddedFile.parentFileName = fileName + '.template.' + sfc.template?.lang;
-				embeddedFile.kind = FileKind.TextFile;
-				embeddedFile.capabilities = {
-					...FileCapabilities.full,
-					diagnostic: false,
-					foldingRange: false,
-					codeAction: false,
-					inlayHint: false,
-				};
 
 				const template = _tsx.generatedTemplate();
 				if (template) {
 					const [content, contentStacks] = ctx.codegenStack
-						? muggle.track([...template.formatCodes], [...template.formatCodeStacks])
+						? track([...template.formatCodes], [...template.formatCodeStacks])
 						: [[...template.formatCodes], [...template.formatCodeStacks]];
 					embeddedFile.content = content;
 					embeddedFile.contentStacks = contentStacks;
@@ -90,7 +88,7 @@ const plugin: VueLanguagePlugin = (ctx) => {
 							cssVar.text,
 							style.name,
 							cssVar.offset,
-							{},
+							enableAllFeatures({}),
 						]);
 						embeddedFile.content.push(');\n');
 					}
@@ -103,14 +101,11 @@ const plugin: VueLanguagePlugin = (ctx) => {
 				const template = _tsx.generatedTemplate();
 				if (template) {
 					const [content, contentStacks] = ctx.codegenStack
-						? muggle.track([...template.cssCodes], [...template.cssCodeStacks])
+						? track([...template.cssCodes], [...template.cssCodeStacks])
 						: [[...template.cssCodes], [...template.cssCodeStacks]];
-					embeddedFile.content = content;
+					embeddedFile.content = content as Segment<CodeInformation>[];
 					embeddedFile.contentStacks = contentStacks;
 				}
-
-				// for color pickers support
-				embeddedFile.capabilities.documentSymbol = true;
 			}
 		},
 	};

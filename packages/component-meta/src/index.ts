@@ -10,7 +10,7 @@ export function createComponentMetaCheckerByJsonConfig(
 	checkerOptions: MetaCheckerOptions = {},
 ) {
 	return createCheckerByJsonConfigBase(
-		ts as any,
+		ts,
 		rootPath,
 		json,
 		checkerOptions,
@@ -22,7 +22,7 @@ export function createComponentMetaChecker(
 	checkerOptions: MetaCheckerOptions = {},
 ) {
 	return createCheckerBase(
-		ts as any,
+		ts,
 		tsconfig,
 		checkerOptions,
 	);

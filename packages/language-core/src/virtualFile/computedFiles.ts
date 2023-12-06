@@ -1,10 +1,8 @@
-import { VirtualFile } from '@volar/language-core';
-import { buildMappings, buildStacks, toString } from '@volar/source-map';
-import * as muggle from 'muggle-string';
+import { VirtualFile, buildMappings, buildStacks, resolveCommonLanguageId, toString, track } from '@volar/language-core';
+import { computed } from 'computeds';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { Sfc, SfcBlock, VueLanguagePlugin } from '../types';
 import { VueEmbeddedFile } from './embeddedFile';
-import { computed } from 'computeds';
 
 export function computedFiles(
 	plugins: ReturnType<VueLanguagePlugin>[],
@@ -50,7 +48,10 @@ export function computedFiles(
 
 		for (const { file, snapshot, mappings, codegenStacks } of remain) {
 			embeddedFiles.push({
-				...file,
+				id: file.fileName,
+				languageId: resolveCommonLanguageId(file.fileName),
+				typescript: file.typescript,
+				linkedNavigationMappings: file.linkedNavigationMappings,
 				snapshot,
 				mappings,
 				codegenStacks,
@@ -66,7 +67,10 @@ export function computedFiles(
 				const { file, snapshot, mappings, codegenStacks } = remain[i];
 				if (!file.parentFileName) {
 					embeddedFiles.push({
-						...file,
+						id: file.fileName,
+						languageId: resolveCommonLanguageId(file.fileName),
+						typescript: file.typescript,
+						linkedNavigationMappings: file.linkedNavigationMappings,
 						snapshot,
 						mappings,
 						codegenStacks,
@@ -78,7 +82,10 @@ export function computedFiles(
 					const parent = findParentStructure(file.parentFileName, embeddedFiles);
 					if (parent) {
 						parent.embeddedFiles.push({
-							...file,
+							id: file.fileName,
+							languageId: resolveCommonLanguageId(file.fileName),
+							typescript: file.typescript,
+							linkedNavigationMappings: file.linkedNavigationMappings,
 							snapshot,
 							mappings,
 							codegenStacks,
@@ -89,12 +96,12 @@ export function computedFiles(
 				}
 			}
 		}
-		function findParentStructure(fileName: string, current: VirtualFile[]): VirtualFile | undefined {
+		function findParentStructure(id: string, current: VirtualFile[]): VirtualFile | undefined {
 			for (const child of current) {
-				if (child.fileName === fileName) {
+				if (child.id === id) {
 					return child;
 				}
-				let parent = findParentStructure(fileName, child.embeddedFiles);
+				let parent = findParentStructure(id, child.embeddedFiles);
 				if (parent) {
 					return parent;
 				}
@@ -128,7 +135,7 @@ function compiledPluginFiles(
 			for (const embeddedFileName of embeddedFileNames) {
 				if (!embeddedFiles[embeddedFileName]) {
 					embeddedFiles[embeddedFileName] = computed(() => {
-						const [content, stacks] = codegenStack ? muggle.track([]) : [[], []];
+						const [content, stacks] = codegenStack ? track([]) : [[], []];
 						const file = new VueEmbeddedFile(embeddedFileName, content, stacks);
 						for (const plugin of plugins) {
 							if (!plugin.resolveEmbeddedFile) {
@@ -174,27 +181,37 @@ function compiledPluginFiles(
 
 	return computed(() => {
 		return files().map(_file => {
+
 			const { file, snapshot } = _file();
 			const mappings = buildMappings(file.content);
+			let lastValidMapping: typeof mappings[number];
+
 			for (const mapping of mappings) {
 				if (mapping.source !== undefined) {
 					const block = nameToBlock()[mapping.source];
 					if (block) {
-						mapping.sourceRange = [
-							mapping.sourceRange[0] + block.startTagEnd,
-							mapping.sourceRange[1] + block.startTagEnd,
-						];
+						mapping.sourceOffsets = mapping.sourceOffsets.map(offset => offset + block.startTagEnd);
 					}
 					else {
 						// ignore
 					}
 					mapping.source = undefined;
 				}
+				if (mapping.data.__combineLastMappping) {
+					lastValidMapping!.sourceOffsets.push(...mapping.sourceOffsets);
+					lastValidMapping!.generatedOffsets.push(...mapping.generatedOffsets);
+					lastValidMapping!.lengths.push(...mapping.lengths);
+					continue;
+				}
+				else {
+					lastValidMapping = mapping;
+				}
 			}
+
 			return {
 				file,
 				snapshot,
-				mappings,
+				mappings: mappings.filter(mapping => !mapping.data.__combineLastMappping),
 				codegenStacks: buildStacks(file.content, file.contentStacks),
 			};
 		});

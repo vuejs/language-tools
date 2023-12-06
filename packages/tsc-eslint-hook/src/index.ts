@@ -1,3 +1,4 @@
+import { isDiagnosticsEnabled } from '@vue/language-core';
 import { ESLint, Linter } from 'eslint';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -13,13 +14,13 @@ export = async function (
 		baseConfig: resolveConfig(tsProgram),
 		useEslintrc: false,
 	});
-	const fileNames = program.__vue.languageHost.getScriptFileNames();
-	const mapper = program.__vue.langaugeContext.virtualFiles;
+	const fileNames = program.__vue.language.typescript!.languageServiceHost.getScriptFileNames();
+	const fileProvider = program.__vue.language.files;
 	const formatter = await eslint.loadFormatter();
 
 	for (const fileName of fileNames) {
 
-		const vueFile = mapper.getSource(fileName)?.root;
+		const vueFile = fileProvider.getSourceFile(fileName)?.virtualFile?.[0];
 
 		if (vueFile) {
 
@@ -27,7 +28,7 @@ export = async function (
 			const all: typeof vueFile.embeddedFiles = [];
 
 			vueFile.embeddedFiles.forEach(async function visit(embeddedFile) {
-				if (embeddedFile.capabilities.diagnostic) {
+				if (embeddedFile.mappings.some(mapping => isDiagnosticsEnabled(mapping.data))) {
 					all.push(embeddedFile);
 				}
 				embeddedFile.embeddedFiles.forEach(visit);
@@ -37,13 +38,13 @@ export = async function (
 
 				const lintResult = await eslint.lintText(
 					embeddedFile.snapshot.getText(0, embeddedFile.snapshot.getLength()),
-					{ filePath: embeddedFile.fileName },
+					{ filePath: embeddedFile.id },
 				);
 				const embeddedDocument = TextDocument.create('', '', 0, embeddedFile.snapshot.getText(0, embeddedFile.snapshot.getLength()));
 
 				for (const result of lintResult) {
 
-					result.filePath = vueFile.fileName;
+					result.filePath = vueFile.id;
 					result.errorCount = 0;
 					result.warningCount = 0;
 					result.fixableErrorCount = 0;
@@ -66,20 +67,24 @@ export = async function (
 							character: (message.endColumn ?? message.column) - 1,
 						});
 
-						for (const [_, [sourceSnapshot, map]] of mapper.getMaps(embeddedFile)) {
+						for (const [_, [sourceSnapshot, map]] of fileProvider.getMaps(embeddedFile)) {
 
 							if (sourceSnapshot !== vueFile.snapshot)
 								continue;
 
-							for (const start of map.toSourceOffsets(msgStart)) {
+							for (const start of map.getSourceOffsets(msgStart)) {
 
-								const reportStart = typeof start[1].data.diagnostic === 'object' ? typeof start[1].data.diagnostic.shouldReport() : !!start[1].data.diagnostic;
+								const reportStart = typeof start[1].data.verification === 'object'
+									? start[1].data.verification.shouldReport?.() ?? true
+									: isDiagnosticsEnabled(start[1].data);
 								if (!reportStart)
 									continue;
 
-								for (const end of map.toSourceOffsets(msgEnd, true)) {
+								for (const end of map.getSourceOffsets(msgEnd)) {
 
-									const reportEnd = typeof end[1].data.diagnostic === 'object' ? typeof end[1].data.diagnostic.shouldReport() : !!end[1].data.diagnostic;
+									const reportEnd = typeof end[1].data.verification === 'object'
+										? end[1].data.verification.shouldReport?.() ?? true
+										: isDiagnosticsEnabled(end[1].data);
 									if (!reportEnd)
 										continue;
 

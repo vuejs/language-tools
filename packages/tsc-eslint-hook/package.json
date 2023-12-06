@@ -21,6 +21,7 @@
 		"eslint": "*"
 	},
 	"dependencies": {
+		"@vue/language-core": "1.8.27",
 		"vscode-languageserver-textdocument": "^1.0.11"
 	}
 }

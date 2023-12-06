@@ -1,7 +1,7 @@
-import { createConnection, startLanguageServer } from '@volar/language-server/node';
+import { createConnection, startTypeScriptServer } from '@volar/language-server/node';
 import { createServerPlugin } from './languageServerPlugin';
 
 const connection = createConnection();
 const plugin = createServerPlugin(connection);
 
-startLanguageServer(connection, plugin);
+startTypeScriptServer(connection, plugin);

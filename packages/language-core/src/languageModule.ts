@@ -1,4 +1,4 @@
-import type { Language } from '@volar/language-core';
+import type { LanguagePlugin } from '@volar/language-core';
 import * as path from 'path-browserify';
 import { getDefaultVueLanguagePlugins } from './plugins';
 import { VueFile } from './virtualFile/vueFile';
@@ -38,7 +38,7 @@ export function createVueLanguage(
 	compilerOptions: ts.CompilerOptions = {},
 	_vueCompilerOptions: Partial<VueCompilerOptions> = {},
 	codegenStack: boolean = false,
-): Language<VueFile> {
+): LanguagePlugin<VueFile> {
 
 	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);
 	const plugins = getDefaultVueLanguagePlugins(
@@ -68,48 +68,52 @@ export function createVueLanguage(
 	}
 
 	return {
-		createVirtualFile(fileName, snapshot, languageId) {
-			if (
-				(languageId && allowLanguageIds.has(languageId))
-				|| (!languageId && vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext)))
-			) {
-				if (fileRegistry.has(fileName)) {
-					const reusedVueFile = fileRegistry.get(fileName)!;
+		createVirtualFile(id, languageId, snapshot) {
+			if (allowLanguageIds.has(languageId)) {
+				if (fileRegistry.has(id)) {
+					const reusedVueFile = fileRegistry.get(id)!;
 					reusedVueFile.update(snapshot);
 					return reusedVueFile;
 				}
-				const vueFile = new VueFile(fileName, snapshot, vueCompilerOptions, plugins, ts, codegenStack);
-				fileRegistry.set(fileName, vueFile);
+				const vueFile = new VueFile(id, languageId, snapshot, vueCompilerOptions, plugins, ts, codegenStack);
+				fileRegistry.set(id, vueFile);
 				return vueFile;
 			}
 		},
 		updateVirtualFile(sourceFile, snapshot) {
 			sourceFile.update(snapshot);
 		},
-		resolveHost(host) {
-			const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(sharedTypes.getTypesCode(vueCompilerOptions));
-			const sharedTypesFileName = path.join(host.rootPath, sharedTypes.baseName);
-			return {
-				...host,
-				resolveModuleName(moduleName, impliedNodeFormat) {
-					if (impliedNodeFormat === ts.ModuleKind.ESNext && vueCompilerOptions.extensions.some(ext => moduleName.endsWith(ext))) {
-						return `${moduleName}.js`;
-					}
-					return host.resolveModuleName?.(moduleName, impliedNodeFormat) ?? moduleName;
-				},
-				getScriptFileNames() {
-					return [
-						sharedTypesFileName,
-						...host.getScriptFileNames(),
-					];
-				},
-				getScriptSnapshot(fileName) {
-					if (fileName === sharedTypesFileName) {
-						return sharedTypesSnapshot;
-					}
-					return host.getScriptSnapshot(fileName);
-				},
-			};
+		typescript: {
+			resolveSourceFileName(tsFileName) {
+				const baseName = path.basename(tsFileName);
+				if (baseName.indexOf('.vue.')) { // .vue.ts .vue.d.ts .vue.js .vue.jsx .vue.tsx
+					return tsFileName.substring(0, tsFileName.lastIndexOf('.vue.') + '.vue'.length);
+				}
+			},
+			resolveModuleName(moduleName, impliedNodeFormat) {
+				if (impliedNodeFormat === 99 satisfies ts.ModuleKind.ESNext && vueCompilerOptions.extensions.some(ext => moduleName.endsWith(ext))) {
+					return `${moduleName}.js`;
+				}
+			},
+			resolveLanguageServiceHost(host) {
+				const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(sharedTypes.getTypesCode(vueCompilerOptions));
+				const sharedTypesFileName = path.join(host.getCurrentDirectory(), sharedTypes.baseName);
+				return {
+					...host,
+					getScriptFileNames() {
+						return [
+							sharedTypesFileName,
+							...host.getScriptFileNames(),
+						];
+					},
+					getScriptSnapshot(fileName) {
+						if (fileName === sharedTypesFileName) {
+							return sharedTypesSnapshot;
+						}
+						return host.getScriptSnapshot(fileName);
+					},
+				};
+			},
 		},
 	};
 }
@@ -122,7 +126,7 @@ export function createLanguages(
 	compilerOptions: ts.CompilerOptions = {},
 	vueCompilerOptions: Partial<VueCompilerOptions> = {},
 	codegenStack: boolean = false,
-): Language[] {
+): LanguagePlugin[] {
 	return [
 		createVueLanguage(ts, compilerOptions, vueCompilerOptions, codegenStack),
 		...vueCompilerOptions.experimentalAdditionalLanguageModules?.map(module => require(module)) ?? [],
