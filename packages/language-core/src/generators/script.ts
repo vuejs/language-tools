@@ -1,7 +1,6 @@
 import { Mapping } from '@volar/language-core';
 import * as path from 'path-browserify';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import type * as templateGen from '../generators/template';
 import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import type { Code, CodeAndStack, SfcBlock, VueCompilerOptions } from '../types';
@@ -19,7 +18,13 @@ export function* generate(
 	lang: string,
 	scriptRanges: ScriptRanges | undefined,
 	scriptSetupRanges: ScriptSetupRanges | undefined,
-	htmlGen: ReturnType<typeof templateGen['generate']> | undefined,
+	templateCodegen: {
+		tsCodes: Code[];
+		tsCodegenStacks: string[];
+		tagNames: Set<string>;
+		accessedGlobalVariables: Set<string>;
+		hasSlot: boolean;
+	} | undefined,
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
 	getGeneratedLength: () => number,
@@ -544,7 +549,7 @@ export function* generate(
 		yield* generateTemplate(functional);
 
 		if (mode === 'return' || mode === 'export') {
-			if (!vueCompilerOptions.skipTemplateCodegen && (htmlGen?.hasSlot || scriptSetupRanges?.slots.define)) {
+			if (!vueCompilerOptions.skipTemplateCodegen && (templateCodegen?.hasSlot || scriptSetupRanges?.slots.define)) {
 				usedHelperTypes.WithTemplateSlots = true;
 				yield _(`const __VLS_component = `);
 				yield* generateComponent(functional);
@@ -834,13 +839,15 @@ export function* generate(
 		yield* generateCssVars(cssIds);
 		yield _(`/* CSS variable injection end */\n`);
 
-		if (htmlGen) {
-			for (const s of htmlGen.codes) {
-				yield _(s); // TODO: make codegen stack work
+		if (templateCodegen) {
+			for (let i = 0; i < templateCodegen.tsCodes.length; i++) {
+				yield [
+					templateCodegen.tsCodes[i],
+					templateCodegen.tsCodegenStacks[i],
+				];
 			}
 		}
-
-		if (!htmlGen) {
+		else {
 			yield _(`// no template\n`);
 			if (!scriptSetupRanges?.slots.define) {
 				yield _(`const __VLS_slots = {};\n`);
@@ -932,19 +939,19 @@ export function* generate(
 
 		const usageVars = new Set<string>();
 
-		if (htmlGen) {
+		if (templateCodegen) {
 			// fix import components unused report
 			for (const varName of bindingNames) {
-				if (!!htmlGen.tagNames[varName] || !!htmlGen.tagNames[hyphenateTag(varName)]) {
+				if (templateCodegen.tagNames.has(varName) || templateCodegen.tagNames.has(hyphenateTag(varName))) {
 					usageVars.add(varName);
 				}
 			}
-			for (const tag of Object.keys(htmlGen.tagNames)) {
+			for (const tag of Object.keys(templateCodegen.tagNames)) {
 				if (tag.indexOf('.') >= 0) {
 					usageVars.add(tag.split('.')[0]);
 				}
 			}
-			for (const _id of htmlGen.accessedGlobalVariables) {
+			for (const _id of templateCodegen.accessedGlobalVariables) {
 				usageVars.add(_id);
 			}
 		}
