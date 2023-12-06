@@ -1,4 +1,4 @@
-import { CodeInformation, Mapping, Segment, track } from '@volar/language-core';
+import { CodeInformation, Mapping, Segment, StackNode, track } from '@volar/language-core';
 import { computed, computedSet } from 'computeds';
 import { generate as generateScript } from '../generators/script';
 import { generate as generateTemplate } from '../generators/template';
@@ -186,10 +186,11 @@ function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOp
 	const slotsAssignName = computed(() => scriptSetupRanges()?.slots.name);
 	const propsAssignName = computed(() => scriptSetupRanges()?.props.name);
 	const generatedScript = computed(() => {
-		const [codes, codeStacks] = codegenStack ? track([] as Code[]) : [[], []];
+		const codes: Code[] = [];
+		const codeStacks: StackNode[] = [];
 		const linkedCodeMappings: Mapping[] = [];
 		let generatedLength = 0;
-		for (const code of generateScript(
+		for (const [code, stack] of generateScript(
 			ts,
 			fileName,
 			_sfc.script,
@@ -203,8 +204,12 @@ function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOp
 			vueCompilerOptions,
 			() => generatedLength,
 			linkedCodeMappings,
+			codegenStack,
 		)) {
 			codes.push(code);
+			if (codegenStack) {
+				codeStacks.push({ stack, length: 1 });
+			}
 			generatedLength += typeof code === 'string'
 				? code.length
 				: code[0].length;
