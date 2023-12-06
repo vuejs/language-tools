@@ -1,5 +1,5 @@
 import { TypeScriptProjectHost, createLanguageService, resolveCommonLanguageId } from '@volar/language-service';
-import { createLanguage, createSys } from '@volar/typescript';
+import { createLanguage } from '@volar/typescript';
 import * as path from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { URI } from 'vscode-uri';
@@ -9,18 +9,19 @@ import { createMockServiceEnv } from './mockEnv';
 const testRoot = path.resolve(__dirname, '../../../../test-workspace/language-service').replace(/\\/g, '/');
 
 export const rootUri = URI.file(testRoot);
-export const tester = createTester(testRoot);
+export const tester = createTester(rootUri);
 
-function createTester(root: string) {
+function createTester(rootUri: URI) {
 
 	const ts = require('typescript') as typeof import('typescript/lib/tsserverlibrary');
-	const realTsConfig = path.join(root, 'tsconfig.json').replace(/\\/g, '/');
+	const serviceEnv = createMockServiceEnv(rootUri, () => currentVSCodeSettings ?? defaultVSCodeSettings);
+	const rootPath = serviceEnv.uriToFileName(rootUri.toString());
+	const realTsConfig = path.join(rootPath, 'tsconfig.json').replace(/\\/g, '/');
 	const parsedCommandLine = createParsedCommandLine(ts, ts.sys, realTsConfig);
 	parsedCommandLine.fileNames = parsedCommandLine.fileNames.map(fileName => fileName.replace(/\\/g, '/'));
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
-	const serviceEnv = createMockServiceEnv(rootUri, () => currentVSCodeSettings ?? defaultVSCodeSettings);
 	const languageHost: TypeScriptProjectHost = {
-		getCurrentDirectory: () => root,
+		getCurrentDirectory: () => rootPath,
 		getProjectVersion: () => '0',
 		getScriptFileNames: () => parsedCommandLine.fileNames,
 		getCompilationSettings: () => parsedCommandLine.options,
@@ -41,7 +42,7 @@ function createTester(root: string) {
 	let currentVSCodeSettings: any;
 	const language = createLanguage(
 		ts,
-		createSys(ts, serviceEnv, root),
+		ts.sys,
 		Object.values(languages),
 		realTsConfig,
 		languageHost,
