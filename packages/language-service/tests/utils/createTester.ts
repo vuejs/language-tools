@@ -1,5 +1,5 @@
 import { TypeScriptProjectHost, createLanguageService, resolveCommonLanguageId } from '@volar/language-service';
-import { createLanguage } from '@volar/typescript';
+import { createLanguage, createSys } from '@volar/typescript';
 import * as path from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { URI } from 'vscode-uri';
@@ -41,7 +41,7 @@ function createTester(root: string) {
 	let currentVSCodeSettings: any;
 	const language = createLanguage(
 		ts,
-		ts.sys,
+		createSys(ts, serviceEnv, root),
 		Object.values(languages),
 		realTsConfig,
 		languageHost,
