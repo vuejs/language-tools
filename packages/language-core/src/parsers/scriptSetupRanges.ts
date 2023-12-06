@@ -14,10 +14,8 @@ export function parseScriptSetupRanges(
 
 	const props: {
 		name?: string;
-		define?: TextRange & {
+		define?: ReturnType<typeof parseDefineFunction> & {
 			statement: TextRange;
-			arg?: TextRange;
-			typeArg?: TextRange;
 		};
 		withDefaults?: TextRange & {
 			arg?: TextRange;
@@ -25,18 +23,15 @@ export function parseScriptSetupRanges(
 	} = {};
 	const slots: {
 		name?: string;
-		define?: TextRange;
+		define?: ReturnType<typeof parseDefineFunction>;
 	} = {};
 	const emits: {
 		name?: string;
-		define?: TextRange;
+		define?: ReturnType<typeof parseDefineFunction>;
 	} = {};
 	const expose: {
 		name?: string;
-		define?: TextRange & {
-			arg?: TextRange;
-			typeArg?: TextRange;
-		};
+		define?: ReturnType<typeof parseDefineFunction>;
 	} = {};
 
 	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition' || ast.getFullText().trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition');
@@ -89,6 +84,18 @@ export function parseScriptSetupRanges(
 	function _getStartEnd(node: ts.Node) {
 		return getStartEnd(node, ast);
 	}
+
+	function parseDefineFunction(node: ts.CallExpression): TextRange & {
+		arg?: TextRange;
+		typeArg?: TextRange;
+	} {
+		return {
+			..._getStartEnd(node),
+			arg: node.arguments.length ? _getStartEnd(node.arguments[0]) : undefined,
+			typeArg: node.typeArguments?.length ? _getStartEnd(node.typeArguments[0]) : undefined,
+		};
+	}
+
 	function visitNode(node: ts.Node, parents: ts.Node[]) {
 		const parent = parents[parents.length - 1];
 		if (
@@ -172,25 +179,19 @@ export function parseScriptSetupRanges(
 				}
 			}
 			else if (vueCompilerOptions.macros.defineSlots.includes(callText)) {
-				slots.define = _getStartEnd(node);
+				slots.define = parseDefineFunction(node);
 				if (ts.isVariableDeclaration(parent)) {
 					slots.name = parent.name.getText(ast);
 				}
 			}
 			else if (vueCompilerOptions.macros.defineEmits.includes(callText)) {
-				emits.define = _getStartEnd(node);
+				emits.define = parseDefineFunction(node);
 				if (ts.isVariableDeclaration(parent)) {
 					emits.name = parent.name.getText(ast);
 				}
 			}
 			else if (vueCompilerOptions.macros.defineExpose.includes(callText)) {
-				expose.define = _getStartEnd(node);
-				if (node.arguments.length) {
-					expose.define.arg = _getStartEnd(node.arguments[0]);
-				}
-				if (node.typeArguments?.length) {
-					expose.define.typeArg = _getStartEnd(node.typeArguments[0]);
-				}
+				expose.define = parseDefineFunction(node);
 			}
 			else if (vueCompilerOptions.macros.defineProps.includes(callText)) {
 
@@ -211,7 +212,7 @@ export function parseScriptSetupRanges(
 				}
 
 				props.define = {
-					..._getStartEnd(node),
+					...parseDefineFunction(node),
 					statement: statementRange,
 				};
 

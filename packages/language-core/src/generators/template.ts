@@ -683,11 +683,30 @@ export function generate(
 			);
 		}
 		else {
-			codes.push(`let ${var_originalComponent}!: `);
+			codes.push(
+				`const ${var_originalComponent} = ({} as `,
+			);
 			for (const componentName of getPossibleOriginalComponentName(tag)) {
-				codes.push(`'${componentName}' extends keyof typeof __VLS_components ? typeof __VLS_components${validTsVarReg.test(componentName) ? `.${componentName}` : `['${componentName}']`} : `);
+				codes.push(
+					`'${componentName}' extends keyof typeof __VLS_ctx ? `,
+					`{ '${toCanonicalComponentName(tag)}': typeof __VLS_ctx`,
+					...createPropertyAccessCode(componentName),
+					` }: `,
+				);
 			}
-			codes.push(`typeof __VLS_resolvedLocalAndGlobalComponents['${toCanonicalComponentName(tag)}'];\n`);
+			codes.push(
+				`typeof __VLS_resolvedLocalAndGlobalComponents)`,
+				...(tagOffsets.length
+					? createPropertyAccessCode([
+						toCanonicalComponentName(tag),
+						'template',
+						[tagOffsets[0], tagOffsets[0] + tag.length],
+						capabilitiesPresets.diagnosticOnly,
+					])
+					: createPropertyAccessCode(toCanonicalComponentName(tag))
+				),
+				';\n',
+			);
 		}
 
 		if (isIntrinsicElement) {
@@ -1204,6 +1223,8 @@ export function generate(
 		}
 		codes.push(`}, `);
 
+		const canCamelize = !nativeTags.has(node.tag) || node.tagType === CompilerDOM.ElementTypes.COMPONENT;
+
 		for (const prop of props) {
 			if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -1239,7 +1260,8 @@ export function generate(
 				let camelized = false;
 
 				if (
-					(!prop.arg || (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)) // isStatic
+					canCamelize
+					&& (!prop.arg || (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)) // isStatic
 					&& hyphenateAttr(attrNameText) === attrNameText
 					&& !vueCompilerOptions.htmlAttributes.some(pattern => minimatch(attrNameText!, pattern))
 				) {
@@ -1346,7 +1368,8 @@ export function generate(
 				let camelized = false;
 
 				if (
-					hyphenateAttr(prop.name) === prop.name
+					canCamelize
+					&& hyphenateAttr(prop.name) === prop.name
 					&& !vueCompilerOptions.htmlAttributes.some(pattern => minimatch(attrNameText!, pattern))
 				) {
 					attrNameText = camelize(prop.name);

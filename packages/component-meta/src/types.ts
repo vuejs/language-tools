@@ -1,6 +1,6 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
-export type Checker = ReturnType<typeof import('./base')['baseCreate']>;
+export type ComponentMetaChecker = ReturnType<typeof import('./base')['baseCreate']>;
 
 export interface Declaration {
 	file: string;

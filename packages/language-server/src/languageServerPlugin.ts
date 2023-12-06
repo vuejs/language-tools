@@ -117,7 +117,7 @@ export function createServerPlugin(connection: Connection) {
 					}
 				});
 
-				const checkers = new WeakMap<embedded.TypeScriptLanguageHost, componentMeta.Checker>();
+				const checkers = new WeakMap<embedded.TypeScriptLanguageHost, componentMeta.ComponentMetaChecker>();
 
 				connection.onRequest(GetComponentMeta.type, async params => {
 
