@@ -1,4 +1,21 @@
-import { VueCodeInformation } from '../types';
+import { Code, CodeAndStack, VueCodeInformation } from '../types';
+
+export function withStack(code: Code): CodeAndStack {
+	return [code, getStack()];
+}
+
+// TODO: import from muggle-string
+export function getStack() {
+	const stack = new Error().stack!;
+	let source = stack.split('\n')[3].trim();
+	if (source.endsWith(')')) {
+		source = source.slice(source.lastIndexOf('(') + 1, -1);
+	}
+	else {
+		source = source.slice(source.lastIndexOf(' ') + 1);
+	}
+	return source;
+}
 
 export function disableAllFeatures(override: Partial<VueCodeInformation>): VueCodeInformation {
 	return {

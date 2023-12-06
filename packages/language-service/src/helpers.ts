@@ -281,7 +281,7 @@ export function getTemplateTagsAndAttrs(sourceFile: embedded.VirtualFile): Tags 
 			const ast = sourceFile.sfc.template?.ast;
 			const tags: Tags = new Map();
 			if (ast) {
-				vue.walkElementNodes(ast, node => {
+				for (const node of vue.eachElementNode(ast)) {
 
 					if (!tags.has(node.tag)) {
 						tags.set(node.tag, { offsets: [], attrs: new Map() });
@@ -323,7 +323,7 @@ export function getTemplateTagsAndAttrs(sourceFile: embedded.VirtualFile): Tags 
 							tag.attrs.get(name)!.offsets.push(offset);
 						}
 					}
-				});
+				}
 			}
 			return tags;
 		});
