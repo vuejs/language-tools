@@ -505,7 +505,7 @@ export function generate(
 			let addedBlockCondition = false;
 
 			if (branch.condition?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-				codes.push(` `);
+				codes.push(` (`);
 				const beforeCodeLength = codes.length;
 				codes.push(
 					...createInterpolationCode(
@@ -518,6 +518,11 @@ export function generate(
 					),
 				);
 				const afterCodeLength = codes.length;
+				codes.push(
+					` && __VLS_components`,
+					...createPropertyAccessCode(branch.condition.content),
+				)
+				codes.push(')');
 
 				formatCodes.push(
 					...createFormatCode(
@@ -688,14 +693,14 @@ export function generate(
 			);
 			for (const componentName of getPossibleOriginalComponentName(tag)) {
 				codes.push(
-					`'${componentName}' extends keyof typeof __VLS_ctx ? `,
-					`{ '${toCanonicalComponentName(tag)}': typeof __VLS_ctx`,
+					`'${componentName}' extends keyof typeof __VLS_components ? `,
+					`{ '${toCanonicalComponentName(tag)}': typeof __VLS_components`,
 					...createPropertyAccessCode(componentName),
 					` }: `,
 				);
 			}
 			codes.push(
-				`typeof __VLS_resolvedLocalAndGlobalComponents)`,
+				`typeof __VLS_ctx)`,
 				...(tagOffsets.length
 					? createPropertyAccessCode([
 						toCanonicalComponentName(tag),
