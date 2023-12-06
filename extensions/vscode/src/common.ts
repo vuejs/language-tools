@@ -1,5 +1,6 @@
 import {
 	activateAutoInsertion,
+	activateDocumentDropEdit,
 	activateFindFileReferences,
 	activateReloadProjects,
 	activateServerSys,
@@ -102,8 +103,17 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		javascriptreact: true,
 		typescriptreact: true,
 	};
+	const selectors: vscode.DocumentFilter[] = [{ language: 'vue' }];
+
+	if (config.server.petiteVue.supportHtmlFile) {
+		selectors.push({ language: 'html' });
+	}
+	if (config.server.vitePress.supportMdFile) {
+		selectors.push({ language: 'markdown' });
+	}
 
 	activateAutoInsertion([syntacticClient, semanticClient], document => supportedLanguages[document.languageId]);
+	activateDocumentDropEdit(selectors, semanticClient);
 	activateWriteVirtualFiles('volar.action.writeVirtualFiles', semanticClient);
 	activateFindFileReferences('volar.vue.findAllFileReferences', semanticClient);
 	activateTsConfigStatusItem('volar.openTsconfig', semanticClient,

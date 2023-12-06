@@ -1,83 +1,79 @@
-import { AutoInsertionContext, Service, ServiceContext } from '@volar/language-service';
+import { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
 import { hyphenateAttr } from '@vue/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
+import { Provide } from 'volar-service-typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 
-const plugin: Service = (context: ServiceContext<import('volar-service-typescript').Provide> | undefined, modules) => {
-
-	if (!modules?.typescript)
-		return {};
-
-	const ts = modules.typescript;
-
+export function create(ts: typeof import('typescript/lib/tsserverlibrary')): ServicePlugin {
 	return {
+		create(context): ServicePluginInstance {
+			return {
+				async provideAutoInsertionEdit(document, position, lastChange) {
 
-		async provideAutoInsertionEdit(document, position, insertContext) {
+					if (!isTsDocument(document))
+						return;
 
-			if (!isTsDocument(document))
-				return;
+					if (!isCharacterTyping(document, lastChange))
+						return;
 
-			if (!isCharacterTyping(document, insertContext))
-				return;
+					const enabled = await context.env.getConfiguration?.<boolean>('vue.autoInsert.dotValue') ?? true;
+					if (!enabled)
+						return;
 
-			const enabled = await context!.env.getConfiguration?.<boolean>('vue.autoInsert.dotValue') ?? true;
-			if (!enabled)
-				return;
+					const program = context.inject<Provide, 'typescript/languageService'>('typescript/languageService').getProgram();
+					if (!program)
+						return;
 
-			const program = context!.inject('typescript/languageService').getProgram();
-			if (!program)
-				return;
+					const sourceFile = program.getSourceFile(context.env.uriToFileName(document.uri));
+					if (!sourceFile)
+						return;
 
-			const sourceFile = program.getSourceFile(context!.env.uriToFileName(document.uri));
-			if (!sourceFile)
-				return;
+					if (isBlacklistNode(ts, sourceFile, document.offsetAt(position), false))
+						return;
 
-			if (isBlacklistNode(ts, sourceFile, document.offsetAt(position), false))
-				return;
+					const node = findPositionIdentifier(sourceFile, sourceFile, document.offsetAt(position));
+					if (!node)
+						return;
 
-			const node = findPositionIdentifier(sourceFile, sourceFile, document.offsetAt(position));
-			if (!node)
-				return;
-
-			const token = context!.inject('typescript/languageServiceHost').getCancellationToken?.();
-			if (token) {
-				context!.inject('typescript/languageService').getQuickInfoAtPosition(context!.env.uriToFileName(document.uri), node.end);
-				if (token?.isCancellationRequested()) {
-					return; // check cancel here because type checker do not use cancel token
-				}
-			}
-
-			const checker = program.getTypeChecker();
-			const type = checker.getTypeAtLocation(node);
-			const props = type.getProperties();
-
-			if (props.some(prop => prop.name === 'value')) {
-				return '${1:.value}';
-			}
-
-			function findPositionIdentifier(sourceFile: ts.SourceFile, node: ts.Node, offset: number) {
-
-				let result: ts.Node | undefined;
-
-				node.forEachChild(child => {
-					if (!result) {
-						if (child.end === offset && ts.isIdentifier(child)) {
-							result = child;
-						}
-						else if (child.end >= offset && child.getStart(sourceFile) < offset) {
-							result = findPositionIdentifier(sourceFile, child, offset);
+					const token = context.inject<Provide, 'typescript/languageServiceHost'>('typescript/languageServiceHost').getCancellationToken?.();
+					if (token) {
+						context.inject<Provide, 'typescript/languageService'>('typescript/languageService').getQuickInfoAtPosition(context.env.uriToFileName(document.uri), node.end);
+						if (token?.isCancellationRequested()) {
+							return; // check cancel here because type checker do not use cancel token
 						}
 					}
-				});
 
-				return result;
-			}
+					const checker = program.getTypeChecker();
+					const type = checker.getTypeAtLocation(node);
+					const props = type.getProperties();
+
+					if (props.some(prop => prop.name === 'value')) {
+						return '${1:.value}';
+					}
+
+					function findPositionIdentifier(sourceFile: ts.SourceFile, node: ts.Node, offset: number) {
+
+						let result: ts.Node | undefined;
+
+						node.forEachChild(child => {
+							if (!result) {
+								if (child.end === offset && ts.isIdentifier(child)) {
+									result = child;
+								}
+								else if (child.end >= offset && child.getStart(sourceFile) < offset) {
+									result = findPositionIdentifier(sourceFile, child, offset);
+								}
+							}
+						});
+
+						return result;
+					}
+				},
+			};
 		},
 	};
-};
-
-export const create = () => plugin;
+}
 
 function isTsDocument(document: TextDocument) {
 	return document.languageId === 'javascript' ||
@@ -88,13 +84,13 @@ function isTsDocument(document: TextDocument) {
 
 const charReg = /\w/;
 
-export function isCharacterTyping(document: TextDocument, options: AutoInsertionContext) {
+export function isCharacterTyping(document: TextDocument, lastChange: { range: vscode.Range; text: string; }) {
 
-	const lastCharacter = options.lastChange.text[options.lastChange.text.length - 1];
-	const rangeStart = options.lastChange.range.start;
+	const lastCharacter = lastChange.text[lastChange.text.length - 1];
+	const rangeStart = lastChange.range.start;
 	const position: vscode.Position = {
 		line: rangeStart.line,
-		character: rangeStart.character + options.lastChange.text.length,
+		character: rangeStart.character + lastChange.text.length,
 	};
 	const nextCharacter = document.getText({
 		start: position,
@@ -104,7 +100,7 @@ export function isCharacterTyping(document: TextDocument, options: AutoInsertion
 	if (lastCharacter === undefined) { // delete text
 		return false;
 	}
-	if (options.lastChange.text.indexOf('\n') >= 0) { // multi-line change
+	if (lastChange.text.indexOf('\n') >= 0) { // multi-line change
 		return false;
 	}
 
