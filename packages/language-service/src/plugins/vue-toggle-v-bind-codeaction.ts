@@ -1,5 +1,5 @@
 import { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
-import { VueFile, walkElementNodes, type CompilerDOM } from '@vue/language-core';
+import { VueFile, eachElementNode, type CompilerDOM } from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 
 export function create(ts: typeof import('typescript/lib/tsserverlibrary')): ServicePlugin {
@@ -23,7 +23,7 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 					const templateStartOffset = template!.startTagEnd;
 					const result: vscode.CodeAction[] = [];
 
-					walkElementNodes(template.ast, node => {
+					for (const node of eachElementNode(template.ast)) {
 						if (startOffset > templateStartOffset + node.loc.end.offset || endOffset < templateStartOffset + node.loc.start.offset) {
 							return;
 						}
@@ -128,7 +128,7 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 								}
 							}
 						}
-					});
+					}
 
 					return result;
 				},

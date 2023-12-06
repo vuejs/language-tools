@@ -24,6 +24,8 @@ export interface VueCodeInformation extends CodeInformation {
 	__combineLastMappping?: boolean;
 }
 
+export type CodeAndStack = [code: Code, stack: string];
+
 export type Code = Segment<VueCodeInformation>;
 
 export interface VueCompilerOptions {
