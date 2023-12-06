@@ -1,10 +1,10 @@
-import { CodeInformation, Segment, track } from '@volar/language-core';
+import { CodeInformation, Mapping, Segment, StackNode, track } from '@volar/language-core';
 import { computed, computedSet } from 'computeds';
 import { generate as generateScript } from '../generators/script';
 import { generate as generateTemplate } from '../generators/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
-import { Sfc, VueLanguagePlugin } from '../types';
+import { Code, Sfc, VueLanguagePlugin } from '../types';
 import { enableAllFeatures } from '../generators/utils';
 
 const templateFormatReg = /^\.template_format\.ts$/;
@@ -64,7 +64,7 @@ const plugin: VueLanguagePlugin = (ctx) => {
 					});
 					embeddedFile.content = content;
 					embeddedFile.contentStacks = contentStacks;
-					embeddedFile.linkedNavigationMappings = [...tsx.mirrorBehaviorMappings];
+					embeddedFile.linkedNavigationMappings = [...tsx.linkedCodeMappings];
 				}
 			}
 			else if (suffix.match(templateFormatReg)) {
@@ -74,8 +74,8 @@ const plugin: VueLanguagePlugin = (ctx) => {
 				const template = _tsx.generatedTemplate();
 				if (template) {
 					const [content, contentStacks] = ctx.codegenStack
-						? track([...template.formatCodes], [...template.formatCodeStacks])
-						: [[...template.formatCodes], [...template.formatCodeStacks]];
+						? track([...template.formatCodes], template.formatCodeStacks.map(stack => ({ stack, length: 1 })))
+						: [[...template.formatCodes], template.formatCodeStacks.map(stack => ({ stack, length: 1 }))];
 					embeddedFile.content = content;
 					embeddedFile.contentStacks = contentStacks;
 				}
@@ -101,8 +101,8 @@ const plugin: VueLanguagePlugin = (ctx) => {
 				const template = _tsx.generatedTemplate();
 				if (template) {
 					const [content, contentStacks] = ctx.codegenStack
-						? track([...template.cssCodes], [...template.cssCodeStacks])
-						: [[...template.cssCodes], [...template.cssCodeStacks]];
+						? track([...template.cssCodes], template.cssCodeStacks.map(stack => ({ stack, length: 1 })))
+						: [[...template.cssCodes], template.cssCodeStacks.map(stack => ({ stack, length: 1 }))];
 					embeddedFile.content = content as Segment<CodeInformation>[];
 					embeddedFile.contentStacks = contentStacks;
 				}
@@ -169,7 +169,13 @@ function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOp
 		if (!_sfc.template)
 			return;
 
-		return generateTemplate(
+		const tsCodes: Code[] = [];
+		const tsFormatCodes: Code[] = [];
+		const inlineCssCodes: Code[] = [];
+		const tsCodegenStacks: string[] = [];
+		const tsFormatCodegenStacks: string[] = [];
+		const inlineCssCodegenStacks: string[] = [];
+		const codegen = generateTemplate(
 			ts,
 			compilerOptions,
 			vueCompilerOptions,
@@ -181,24 +187,89 @@ function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOp
 			propsAssignName(),
 			codegenStack,
 		);
+
+		let current = codegen.next();
+
+		while (!current.done) {
+			const [type, code, stack] = current.value;
+			if (type === 'ts') {
+				tsCodes.push(code);
+			}
+			else if (type === 'tsFormat') {
+				tsFormatCodes.push(code);
+			}
+			else if (type === 'inlineCss') {
+				inlineCssCodes.push(code);
+			}
+			if (codegenStack) {
+				if (type === 'ts') {
+					tsCodegenStacks.push(stack);
+				}
+				else if (type === 'tsFormat') {
+					tsFormatCodegenStacks.push(stack);
+				}
+				else if (type === 'inlineCss') {
+					inlineCssCodegenStacks.push(stack);
+				}
+			}
+			current = codegen.next();
+		}
+
+		return {
+			...current.value,
+			codes: tsCodes,
+			codeStacks: tsCodegenStacks,
+			formatCodes: tsFormatCodes,
+			formatCodeStacks: tsFormatCodegenStacks,
+			cssCodes: inlineCssCodes,
+			cssCodeStacks: inlineCssCodegenStacks,
+		};
 	});
 	const hasScriptSetupSlots = computed(() => !!scriptSetupRanges()?.slots.define);
 	const slotsAssignName = computed(() => scriptSetupRanges()?.slots.name);
 	const propsAssignName = computed(() => scriptSetupRanges()?.props.name);
-	const generatedScript = computed(() => generateScript(
-		ts,
-		fileName,
-		_sfc.script,
-		_sfc.scriptSetup,
-		_sfc.styles,
-		lang(),
-		scriptRanges(),
-		scriptSetupRanges(),
-		generatedTemplate(),
-		compilerOptions,
-		vueCompilerOptions,
-		codegenStack,
-	));
+	const generatedScript = computed(() => {
+		const codes: Code[] = [];
+		const codeStacks: StackNode[] = [];
+		const linkedCodeMappings: Mapping[] = [];
+		const _template = generatedTemplate();
+		let generatedLength = 0;
+		for (const [code, stack] of generateScript(
+			ts,
+			fileName,
+			_sfc.script,
+			_sfc.scriptSetup,
+			_sfc.styles,
+			lang(),
+			scriptRanges(),
+			scriptSetupRanges(),
+			_template ? {
+				tsCodes: _template.codes,
+				tsCodegenStacks: _template.codeStacks,
+				accessedGlobalVariables: _template.accessedGlobalVariables,
+				hasSlot: _template.hasSlot,
+				tagNames: new Set(_template.tagOffsetsMap.keys()),
+			} : undefined,
+			compilerOptions,
+			vueCompilerOptions,
+			() => generatedLength,
+			linkedCodeMappings,
+			codegenStack,
+		)) {
+			codes.push(code);
+			if (codegenStack) {
+				codeStacks.push({ stack, length: 1 });
+			}
+			generatedLength += typeof code === 'string'
+				? code.length
+				: code[0].length;
+		};
+		return {
+			codes,
+			codeStacks,
+			linkedCodeMappings,
+		};
+	});
 
 	return {
 		scriptRanges,
