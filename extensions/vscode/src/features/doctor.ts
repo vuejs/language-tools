@@ -94,8 +94,8 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			message: string;
 		}[] = [];
 
-		// check vue version < 2.7 but @vue/runtime-dom missing
 		if (vueMod && semver.lt(vueMod.json.version, '2.7.0') && !domMod) {
+			// check vue version < 2.7 but @vue/runtime-dom missing
 			problems.push({
 				title: '`@vue/runtime-dom` missing for Vue 2',
 				message: [
@@ -105,9 +105,8 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 				].join('\n'),
 			});
 		}
-
-		// check vue version >= 2.7 and < 3 but installed @vue/runtime-dom
-		if (vueMod && semver.gte(vueMod.json.version, '2.7.0') && semver.lt(vueMod.json.version, '3.0.0') && domMod) {
+		else if (vueMod && semver.gte(vueMod.json.version, '2.7.0') && semver.lt(vueMod.json.version, '3.0.0') && domMod) {
+			// check vue version >= 2.7 and < 3 but installed @vue/runtime-dom
 			problems.push({
 				title: 'Unnecessary `@vue/runtime-dom`',
 				message: [
