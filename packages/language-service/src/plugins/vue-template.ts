@@ -357,7 +357,6 @@ export function create(
 			async function provideHtmlData(map: SourceMapWithDocuments<CodeInformation>, vueSourceFile: VueFile) {
 
 				const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
-				const languageServiceHost = context.inject<Provide, 'typescript/languageServiceHost'>('typescript/languageServiceHost');
 				const casing = await getNameCasing(ts, context, map.sourceFileDocument.uri, options.vueCompilerOptions);
 
 				if (builtInData.tags) {
@@ -426,7 +425,10 @@ export function create(
 						},
 						provideAttributes: (tag) => {
 
-							const attrs = getElementAttrs(ts, languageService, languageServiceHost, tag);
+							if (!vueSourceFile.mainTsFile)
+								return [];
+
+							const attrs = getElementAttrs(ts, languageService, context.env.uriToFileName(vueSourceFile.mainTsFile.id), tag);
 							const props = new Set(getPropsByTag(ts, languageService, context.env, vueSourceFile, tag, options.vueCompilerOptions));
 							const events = getEventsOfTag(ts, languageService, context.env, vueSourceFile, tag, options.vueCompilerOptions);
 							const attributes: html.IAttributeData[] = [];
