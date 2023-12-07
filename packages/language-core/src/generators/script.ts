@@ -804,7 +804,13 @@ export function* generate(
 				yield _(`>;\n`);
 			}
 		}
-		yield _(`};\n`);
+		yield _(`}`);
+
+		if (bindingNames.size !== 0) {
+			yield _(` & Omit<__VLS_PickNotAny<typeof __VLS_props, {}>, ${[...bindingNames].map(name => `'${name}'`).join(' | ')}>`)
+		}
+
+		yield _(`;\n`);
 
 		/* Components */
 		yield _(`/* Components */\n`);
