@@ -10,7 +10,7 @@ export function create(): ServicePlugin {
 
 					const settings: Record<string, boolean> = {};
 					const result: vscode.InlayHint[] = [];
-					const [vitualFile] = context.language.files.getVirtualFile(document.uri);
+					const [vitualFile] = context.language.files.getVirtualFile(context.env.uriToFileName(document.uri));
 
 					if (vitualFile) {
 

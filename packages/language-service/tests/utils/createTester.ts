@@ -24,8 +24,6 @@ function createTester(rootUri: URI) {
 		getScriptFileNames: () => parsedCommandLine.fileNames,
 		getCompilationSettings: () => parsedCommandLine.options,
 		getScriptSnapshot,
-		getFileName: serviceEnv.uriToFileName,
-		getFileId: serviceEnv.fileNameToUri,
 		getLanguageId: resolveCommonLanguageId,
 	};
 	const languages = resolveLanguages(ts, {}, parsedCommandLine.options, parsedCommandLine.vueOptions);

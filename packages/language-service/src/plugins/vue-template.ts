@@ -74,11 +74,11 @@ export function create(
 					if (!options.isSupportedDocument(document))
 						return;
 
-					const [virtualFile] = context.language.files.getVirtualFile(document.uri);
+					const [virtualFile] = context.language.files.getVirtualFile(context.env.uriToFileName(document.uri));
 
 					if (virtualFile) {
 						for (const map of context.documents.getMaps(virtualFile)) {
-							const sourceVirtualFile = context.language.files.getSourceFile(map.sourceFileDocument.uri)?.virtualFile?.[0];
+							const sourceVirtualFile = context.language.files.getSourceFile(context.env.uriToFileName(map.sourceFileDocument.uri))?.virtualFile?.[0];
 							if (sourceVirtualFile instanceof VueFile) {
 								await provideHtmlData(map, sourceVirtualFile);
 							}
@@ -91,7 +91,7 @@ export function create(
 
 					if (virtualFile) {
 						for (const map of context.documents.getMaps(virtualFile)) {
-							const sourceVirtualFile = context.language.files.getSourceFile(map.sourceFileDocument.uri)?.virtualFile?.[0];
+							const sourceVirtualFile = context.language.files.getSourceFile(context.env.uriToFileName(map.sourceFileDocument.uri))?.virtualFile?.[0];
 							if (sourceVirtualFile instanceof VueFile) {
 								afterHtmlCompletion(htmlComplete, map, sourceVirtualFile);
 							}
@@ -112,20 +112,20 @@ export function create(
 
 					const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
 					const result: vscode.InlayHint[] = [];
-					const [virtualFile] = context.language.files.getVirtualFile(document.uri);
+					const [virtualFile] = context.language.files.getVirtualFile(context.env.uriToFileName(document.uri));
 					if (!virtualFile)
 						return;
 
 					for (const map of context.documents.getMaps(virtualFile)) {
 
-						const sourceVirtualFile = context.language.files.getSourceFile(map.sourceFileDocument.uri)?.virtualFile?.[0];
+						const sourceVirtualFile = context.language.files.getSourceFile(context.env.uriToFileName(map.sourceFileDocument.uri))?.virtualFile?.[0];
 						const scanner = options.getScanner(baseServiceInstance, document);
 
 						if (sourceVirtualFile instanceof VueFile && scanner) {
 
 							// visualize missing required props
 							const casing = await getNameCasing(ts, context, map.sourceFileDocument.uri, options.vueCompilerOptions);
-							const components = getComponentNames(ts, languageService, context.env, sourceVirtualFile, options.vueCompilerOptions);
+							const components = getComponentNames(ts, languageService, sourceVirtualFile, options.vueCompilerOptions);
 							const componentProps: Record<string, string[]> = {};
 							let token: html.TokenType;
 							let current: {
@@ -142,7 +142,7 @@ export function create(
 											: components.find(component => component === tagName || hyphenateTag(component) === tagName);
 									const checkTag = tagName.indexOf('.') >= 0 ? tagName : component;
 									if (checkTag) {
-										componentProps[checkTag] ??= getPropsByTag(ts, languageService, context.env, sourceVirtualFile, checkTag, options.vueCompilerOptions, true);
+										componentProps[checkTag] ??= getPropsByTag(ts, languageService, sourceVirtualFile, checkTag, options.vueCompilerOptions, true);
 										current = {
 											unburnedRequiredProps: [...componentProps[checkTag]],
 											labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
@@ -223,7 +223,7 @@ export function create(
 					if (!options.isSupportedDocument(document))
 						return;
 
-					if (context.language.files.getVirtualFile(document.uri)[0])
+					if (context.language.files.getVirtualFile(context.env.uriToFileName(document.uri))[0])
 						options.updateCustomData(baseServiceInstance, []);
 
 					return baseServiceInstance.provideHover?.(document, position, token);
@@ -235,14 +235,14 @@ export function create(
 						return;
 
 					const originalResult = await baseServiceInstance.provideDiagnostics?.(document, token);
-					const [virtualFile] = context.language.files.getVirtualFile(document.uri);
+					const [virtualFile] = context.language.files.getVirtualFile(context.env.uriToFileName(document.uri));
 
 					if (!virtualFile)
 						return;
 
 					for (const map of context.documents.getMaps(virtualFile)) {
 
-						const sourceVirtualFile = context.language.files.getSourceFile(map.sourceFileDocument.uri)?.virtualFile?.[0];
+						const sourceVirtualFile = context.language.files.getSourceFile(context.env.uriToFileName(map.sourceFileDocument.uri))?.virtualFile?.[0];
 						if (!(sourceVirtualFile instanceof VueFile))
 							continue;
 
@@ -298,17 +298,17 @@ export function create(
 						return;
 
 					const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
-					const [virtualFile] = context.language.files.getVirtualFile(document.uri);
+					const [virtualFile] = context.language.files.getVirtualFile(context.env.uriToFileName(document.uri));
 					if (!virtualFile)
 						return;
 
 					for (const map of context.documents.getMaps(virtualFile)) {
 
-						const sourceFile = context.language.files.getSourceFile(map.sourceFileDocument.uri)?.virtualFile?.[0];
+						const sourceFile = context.language.files.getSourceFile(context.env.uriToFileName(map.sourceFileDocument.uri))?.virtualFile?.[0];
 						if (!(sourceFile instanceof VueFile))
 							continue;
 
-						const templateScriptData = getComponentNames(ts, languageService, context.env, sourceFile, options.vueCompilerOptions);
+						const templateScriptData = getComponentNames(ts, languageService, sourceFile, options.vueCompilerOptions);
 						const components = new Set([
 							...templateScriptData,
 							...templateScriptData.map(hyphenateTag),
@@ -383,7 +383,7 @@ export function create(
 						isApplicable: () => true,
 						provideTags: () => {
 
-							const components = getComponentNames(ts, languageService, context.env, vueSourceFile, options.vueCompilerOptions)
+							const components = getComponentNames(ts, languageService, vueSourceFile, options.vueCompilerOptions)
 								.filter(name =>
 									name !== 'Transition'
 									&& name !== 'TransitionGroup'
@@ -428,9 +428,9 @@ export function create(
 							if (!vueSourceFile.mainTsFile)
 								return [];
 
-							const attrs = getElementAttrs(ts, languageService, context.env.uriToFileName(vueSourceFile.mainTsFile.id), tag);
-							const props = new Set(getPropsByTag(ts, languageService, context.env, vueSourceFile, tag, options.vueCompilerOptions));
-							const events = getEventsOfTag(ts, languageService, context.env, vueSourceFile, tag, options.vueCompilerOptions);
+							const attrs = getElementAttrs(ts, languageService, vueSourceFile.mainTsFile.fileName, tag);
+							const props = new Set(getPropsByTag(ts, languageService, vueSourceFile, tag, options.vueCompilerOptions));
+							const events = getEventsOfTag(ts, languageService, vueSourceFile, tag, options.vueCompilerOptions);
 							const attributes: html.IAttributeData[] = [];
 							const _tsCodegen = tsCodegen.get(vueSourceFile.sfc);
 
@@ -438,7 +438,7 @@ export function create(
 								let ctxVars = [
 									..._tsCodegen.scriptRanges()?.bindings.map(binding => vueSourceFile.sfc.script!.content.substring(binding.start, binding.end)) ?? [],
 									..._tsCodegen.scriptSetupRanges()?.bindings.map(binding => vueSourceFile.sfc.scriptSetup!.content.substring(binding.start, binding.end)) ?? [],
-									...getTemplateCtx(ts, languageService, context.env, vueSourceFile) ?? [],
+									...getTemplateCtx(ts, languageService, vueSourceFile) ?? [],
 								];
 								ctxVars = [...new Set(ctxVars)];
 								const dirs = ctxVars.map(hyphenateAttr).filter(v => v.startsWith('v-'));
@@ -554,7 +554,7 @@ export function create(
 
 				const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
 				const replacement = getReplacement(completionList, map.sourceFileDocument);
-				const componentNames = new Set(getComponentNames(ts, languageService, context.env, vueSourceFile, options.vueCompilerOptions).map(hyphenateTag));
+				const componentNames = new Set(getComponentNames(ts, languageService, vueSourceFile, options.vueCompilerOptions).map(hyphenateTag));
 
 				if (replacement) {
 
