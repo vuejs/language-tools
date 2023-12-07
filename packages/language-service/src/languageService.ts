@@ -68,12 +68,12 @@ export function resolveServices(
 	services ??= {};
 	services.typescript = {
 		...tsService,
-		create(ctx) {
-			const base = tsService.create(ctx);
+		create(context) {
+			const base = tsService.create(context);
 			return {
 				...base,
-				async provideCompletionItems(document, position, context, item) {
-					const result = await base.provideCompletionItems?.(document, position, context, item);
+				async provideCompletionItems(document, position, completeContext, item) {
+					const result = await base.provideCompletionItems?.(document, position, completeContext, item);
 					if (result) {
 
 						// filter __VLS_
@@ -85,13 +85,13 @@ export function resolveServices(
 						// handle component auto-import patch
 						let casing: Awaited<ReturnType<typeof getNameCasing>> | undefined;
 
-						const [virtualFile, sourceFile] = ctx.language.files.getVirtualFile(document.uri);
+						const [virtualFile, sourceFile] = context.language.files.getVirtualFile(context.env.uriToFileName(document.uri));
 
 						if (virtualFile && sourceFile) {
 
-							for (const map of ctx.documents.getMaps(virtualFile)) {
+							for (const map of context.documents.getMaps(virtualFile)) {
 
-								const sourceVirtualFile = ctx.language.files.getSourceFile(map.sourceFileDocument.uri)?.virtualFile?.[0];
+								const sourceVirtualFile = context.language.files.getSourceFile(context.env.uriToFileName(map.sourceFileDocument.uri))?.virtualFile?.[0];
 
 								if (sourceVirtualFile instanceof VueFile) {
 
@@ -103,7 +103,7 @@ export function resolveServices(
 										}
 
 										// fix #2458
-										casing ??= await getNameCasing(ts, ctx, sourceFile.id, vueCompilerOptions);
+										casing ??= await getNameCasing(ts, context, sourceFile.fileName, vueCompilerOptions);
 
 										if (casing.tag === TagNameCasing.Kebab) {
 											for (const item of result.items) {
@@ -135,7 +135,7 @@ export function resolveServices(
 							itemData?.uri
 							&& item.textEdit?.newText.endsWith(suffix)
 							&& item.additionalTextEdits?.length === 1 && item.additionalTextEdits[0].newText.indexOf('import ' + item.textEdit.newText + ' from ') >= 0
-							&& (await ctx.env.getConfiguration?.<boolean>('vue.complete.normalizeComponentImportName') ?? true)
+							&& (await context.env.getConfiguration?.<boolean>('vue.complete.normalizeComponentImportName') ?? true)
 						) {
 							newName = item.textEdit.newText.slice(0, -suffix.length);
 							newName = newName[0].toUpperCase() + newName.substring(1);
@@ -154,9 +154,9 @@ export function resolveServices(
 								'import ' + newName + ' from ',
 							);
 							item.textEdit.newText = newName;
-							const [_, sourceFile] = ctx.language.files.getVirtualFile(itemData.uri);
+							const [_, sourceFile] = context.language.files.getVirtualFile(context.env.uriToFileName(itemData.uri));
 							if (sourceFile) {
-								const casing = await getNameCasing(ts, ctx, sourceFile.id, vueCompilerOptions);
+								const casing = await getNameCasing(ts, context, sourceFile.fileName, vueCompilerOptions);
 								if (casing.tag === TagNameCasing.Kebab) {
 									item.textEdit.newText = hyphenateTag(item.textEdit.newText);
 								}
@@ -170,16 +170,16 @@ export function resolveServices(
 
 					const data: Data = item.data;
 					if (item.data?.__isComponentAutoImport && data && item.additionalTextEdits?.length && item.textEdit && itemData?.uri) {
-						const fileName = ctx.env.uriToFileName(itemData.uri);
-						const langaugeService = ctx.inject<TSProvide, 'typescript/languageService'>('typescript/languageService');
-						const [virtualFile] = ctx.language.files.getVirtualFile(fileName);
+						const fileName = context.env.uriToFileName(itemData.uri);
+						const langaugeService = context.inject<TSProvide, 'typescript/languageService'>('typescript/languageService');
+						const [virtualFile] = context.language.files.getVirtualFile(fileName);
 						const ast = langaugeService.getProgram()?.getSourceFile(fileName);
 						const exportDefault = ast ? scriptRanges.parseScriptRanges(ts, ast, false, true).exportDefault : undefined;
 						if (virtualFile && ast && exportDefault) {
 							const componentName = newName ?? item.textEdit.newText;
 							const optionEdit = createAddComponentToOptionEdit(ts, ast, componentName);
 							if (optionEdit) {
-								const textDoc = ctx.documents.get(virtualFile.id, virtualFile.languageId, virtualFile.snapshot);
+								const textDoc = context.documents.get(context.env.fileNameToUri(virtualFile.fileName), virtualFile.languageId, virtualFile.snapshot);
 								item.additionalTextEdits.push({
 									range: {
 										start: textDoc.positionAt(optionEdit.range.start),

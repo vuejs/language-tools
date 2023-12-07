@@ -86,8 +86,6 @@ function createCheckerWorker(
 			}
 			return scriptSnapshots.get(fileName);
 		},
-		getFileId: fileName => fileName,
-		getFileName: id => id,
 		getLanguageId: vue.resolveCommonLanguageId,
 	};
 

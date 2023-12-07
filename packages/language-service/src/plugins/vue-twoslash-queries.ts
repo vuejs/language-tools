@@ -31,7 +31,7 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 									for (const [pointerPosition, hoverOffset] of hoverOffsets) {
 										for (const [tsOffset, mapping] of map.map.getGeneratedOffsets(hoverOffset)) {
 											if (vue.isHoverEnabled(mapping.data)) {
-												const quickInfo = languageService.getQuickInfoAtPosition(context.env.uriToFileName(virtualFile.id), tsOffset);
+												const quickInfo = languageService.getQuickInfoAtPosition(virtualFile.fileName, tsOffset);
 												if (quickInfo) {
 													inlayHints.push({
 														position: { line: pointerPosition.line, character: pointerPosition.character + 2 },
@@ -55,7 +55,7 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 
 			function worker<T>(uri: string, callback: (vueSourceFile: vue.VueFile) => T) {
 
-				const [virtualFile] = context.language.files.getVirtualFile(uri);
+				const [virtualFile] = context.language.files.getVirtualFile(context.env.uriToFileName(uri));
 				if (!(virtualFile instanceof vue.VueFile))
 					return;
 

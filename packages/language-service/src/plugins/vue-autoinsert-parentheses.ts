@@ -14,8 +14,8 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 					if (!isCharacterTyping(document, lastChange))
 						return;
 
-					const [virtualFile] = context.language.files.getVirtualFile(document.uri);
-					if (!virtualFile?.id.endsWith('.template_format.ts'))
+					const [virtualFile] = context.language.files.getVirtualFile(context.env.uriToFileName(document.uri));
+					if (!virtualFile?.fileName.endsWith('.template_format.ts'))
 						return;
 
 					const offset = document.offsetAt(position);
@@ -25,7 +25,7 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 							+ mappedRange.lengths[mappedRange.lengths.length - 1];
 						if (generatedCodeEnd === offset) {
 							const text = document.getText().substring(mappedRange.generatedOffsets[0], generatedCodeEnd);
-							const ast = ts.createSourceFile(context.env.uriToFileName(virtualFile.id), text, ts.ScriptTarget.Latest);
+							const ast = ts.createSourceFile(virtualFile.fileName, text, ts.ScriptTarget.Latest);
 							if (ast.statements.length === 1) {
 								const statement = ast.statements[0];
 								if (

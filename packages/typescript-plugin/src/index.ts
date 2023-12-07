@@ -23,7 +23,7 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 				fileName => {
 					const snapshot = getScriptSnapshot(fileName);
 					if (snapshot) {
-						files.updateSourceFile(fileName, snapshot, vue.resolveCommonLanguageId(fileName));
+						files.updateSourceFile(fileName, vue.resolveCommonLanguageId(fileName), snapshot);
 					}
 					else {
 						files.deleteSourceFile(fileName);
