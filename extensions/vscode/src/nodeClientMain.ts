@@ -1,34 +1,16 @@
-import * as fs from 'fs';
-import * as os from 'os';
-import * as path from 'path';
+import { ExportsInfoForLabs, supportLabsVersion } from '@volar/vscode';
+import * as serverLib from '@vue/language-server';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient/node';
-import { activate as commonActivate, deactivate as commonDeactivate, getDocumentSelector } from './common';
-import { middleware } from './middleware';
-import * as serverLib from '@vue/language-server';
+import { activate as commonActivate, deactivate as commonDeactivate } from './common';
 import { config } from './config';
-import { ExportsInfoForLabs, supportLabsVersion } from '@volar/vscode';
+import { middleware } from './middleware';
 
 export async function activate(context: vscode.ExtensionContext) {
 
-	const cancellationPipeName = path.join(os.tmpdir(), `vscode-${context.extension.id}-cancellation-pipe.tmp`);
-	const documentSelector = getDocumentSelector(context, serverLib.ServerMode.Semantic);
 	const languageClients: lsp.LanguageClient[] = [];
 
-	let cancellationPipeUpdateKey: string | undefined;
 	let serverPathStatusItem: vscode.StatusBarItem | undefined;
-
-	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((e) => {
-		let key = e.document.uri.toString() + '|' + e.document.version;
-		if (cancellationPipeUpdateKey === undefined) {
-			cancellationPipeUpdateKey = key;
-			return;
-		}
-		if (documentSelector.some(filter => filter.language === e.document.languageId) && cancellationPipeUpdateKey !== key) {
-			cancellationPipeUpdateKey = key;
-			fs.writeFileSync(cancellationPipeName, '');
-		}
-	}));
 
 	await commonActivate(context, (
 		id,
@@ -38,8 +20,6 @@ export async function activate(context: vscode.ExtensionContext) {
 		port,
 		outputChannel
 	) => {
-
-		initOptions.cancellationPipeName = cancellationPipeName;
 
 		class _LanguageClient extends lsp.LanguageClient {
 			fillInitializeParams(params: lsp.InitializeParams) {
