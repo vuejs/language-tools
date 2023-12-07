@@ -112,6 +112,34 @@ export async function activate(context: vscode.ExtensionContext) {
 		return client;
 	});
 
+	const tsExtension = vscode.extensions.getExtension('vscode.typescript-language-features');
+	const vueTsPluginExtension = vscode.extensions.getExtension('Vue.vscode-typescript-vue-plugin');
+
+	if (tsExtension) {
+		await tsExtension.activate();
+	}
+	else {
+		vscode.window.showWarningMessage(
+			`Takeover mode is not longer needed in 2.0, please enable the "TypeScript and JavaScript Language Features" extension.`,
+			`Show Extension`
+		).then((selected) => {
+			if (selected) {
+				vscode.commands.executeCommand('workbench.extensions.search', '@builtin TypeScript and JavaScript Language Features');
+			}
+		});
+	}
+
+	if (vueTsPluginExtension) {
+		vscode.window.showWarningMessage(
+			`The "${vueTsPluginExtension.packageJSON.displayName}" extension is no longer needed in 2.0, please uninstall it.`,
+			`Show Extension`
+		).then((selected) => {
+			if (selected) {
+				vscode.commands.executeCommand('workbench.extensions.search', vueTsPluginExtension.id);
+			}
+		});
+	}
+
 	return {
 		volarLabs: {
 			version: supportLabsVersion,
