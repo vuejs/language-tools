@@ -84,6 +84,10 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
     };
 };
 export default _default;
+type __VLS_Prettify<T> = {
+    [K in keyof T]: T[K];
+} & {};
+type __VLS_OmitKeepDiscriminatedUnion<T, K extends keyof any> = T extends any ? Pick<T, Exclude<keyof T, K>> : never;
 "
 `;
 
@@ -247,6 +251,9 @@ declare const _default: import("vue").DefineComponent<__VLS_WithDefaults<__VLS_T
     baz: string[];
 }, {}>;
 export default _default;
+type __VLS_Prettify<T> = {
+    [K in keyof T]: T[K];
+} & {};
 type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;
 type __VLS_TypePropsToRuntimeProps<T> = {
     [K in keyof T]-?: {} extends Pick<T, K> ? {
@@ -261,9 +268,6 @@ type __VLS_WithDefaults<P, D> = {
         default: D[K];
     }> : P[K];
 };
-type __VLS_Prettify<T> = {
-    [K in keyof T]: T[K];
-} & {};
 "
 `;
 
