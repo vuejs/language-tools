@@ -205,6 +205,7 @@
 			{
 				"name": "typescript-vue-plugin-bundle",
 				"enableForWorkspaceTypeScriptVersions": true,
+				"configNamespace": "typescript",
 				"languages": [
 					"vue"
 				]
@@ -483,7 +484,7 @@
 					"items": {
 						"type": "string"
 					},
-					"default": [],
+					"default": [ ],
 					"description": "List any additional file extensions that should be processed as Vue files (requires restart)."
 				},
 				"vue.server.fullCompletionList": {
