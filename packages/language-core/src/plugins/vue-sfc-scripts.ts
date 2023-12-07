@@ -1,4 +1,4 @@
-import { FileCapabilities, FileKind } from '@volar/language-core';
+import { disableAllFeatures } from '../generators/utils';
 import { VueLanguagePlugin } from '../types';
 
 const scriptFormatReg = /^(.*)\.script_format\.([^.]+)$/;
@@ -26,18 +26,14 @@ const plugin: VueLanguagePlugin = () => {
 			const scriptSetupMatch = embeddedFile.fileName.match(scriptSetupFormatReg);
 			const script = scriptMatch ? sfc.script : scriptSetupMatch ? sfc.scriptSetup : undefined;
 			if (script) {
-				embeddedFile.kind = FileKind.TextFile;
-				embeddedFile.capabilities = {
-					...FileCapabilities.full,
-					diagnostic: false,
-					codeAction: false,
-					inlayHint: false,
-				};
 				embeddedFile.content.push([
 					script.content,
 					script.name,
 					0,
-					{},
+					disableAllFeatures({
+						structure: true,
+						format: true,
+					}),
 				]);
 			}
 		},

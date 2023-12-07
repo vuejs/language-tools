@@ -1,6 +1,6 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vue from '@vue/language-core';
-import * as volarTs from '@volar/typescript';
+import { createLanguage, decorateLanguageService, getDocumentRegistry, getProgram } from '@volar/typescript';
 import { state } from './shared';
 
 export type Hook = (program: _Program) => void;
@@ -10,9 +10,8 @@ export type _Program = ts.Program & { __vue: ProgramContext; };
 interface ProgramContext {
 	projectVersion: number;
 	options: ts.CreateProgramOptions;
-	languageHost: vue.TypeScriptLanguageHost;
 	vueCompilerOptions: Partial<vue.VueCompilerOptions>;
-	langaugeContext: vue.LanguageContext;
+	language: vue.Language;
 	languageService: ts.LanguageService;
 }
 
@@ -20,17 +19,10 @@ const windowsPathReg = /\\/g;
 
 export function createProgram(options: ts.CreateProgramOptions) {
 
-	if (!options.options.noEmit && !options.options.emitDeclarationOnly)
-		throw toThrow('js emit is not supported');
-
-	if (!options.options.noEmit && options.options.noEmitOnError)
-		throw toThrow('noEmitOnError is not supported');
-
-	if (options.options.extendedDiagnostics || options.options.generateTrace)
-		throw toThrow('--extendedDiagnostics / --generateTrace is not supported, please run `Write Virtual Files` in VSCode to write virtual files and use `--extendedDiagnostics` / `--generateTrace` via tsc instead of vue-tsc to debug.');
-
-	if (!options.host)
-		throw toThrow('!options.host');
+	assert(options.options.noEmit || options.options.emitDeclarationOnly, 'js emit is not supported');
+	assert(options.options.noEmit || !options.options.noEmitOnError, 'noEmitOnError is not supported');
+	assert(!options.options.extendedDiagnostics && !options.options.generateTrace, '--extendedDiagnostics / --generateTrace is not supported, please run `Write Virtual Files` in VSCode to write virtual files and use `--extendedDiagnostics` / `--generateTrace` via tsc instead of vue-tsc to debug.');
+	assert(options.host, '!options.host');
 
 	const ts = require('typescript') as typeof import('typescript/lib/tsserverlibrary');
 
@@ -45,17 +37,14 @@ export function createProgram(options: ts.CreateProgramOptions) {
 		const ctx: ProgramContext = {
 			projectVersion: 0,
 			options,
-			get languageHost() {
-				return languageHost;
-			},
 			get vueCompilerOptions() {
 				return vueCompilerOptions;
 			},
 			get languageService() {
 				return vueTsLs;
 			},
-			get langaugeContext() {
-				return languageContext;
+			get language() {
+				return language;
 			},
 		};
 		const vueCompilerOptions = getVueCompilerOptions();
@@ -64,9 +53,10 @@ export function createProgram(options: ts.CreateProgramOptions) {
 			modifiedTime: number,
 			scriptSnapshot: ts.IScriptSnapshot,
 		}>();
-		const languageHost: vue.TypeScriptLanguageHost = {
-			workspacePath: ctx.options.host!.getCurrentDirectory().replace(windowsPathReg, '/'),
-			rootPath: ctx.options.host!.getCurrentDirectory().replace(windowsPathReg, '/'),
+		const host: vue.TypeScriptProjectHost = {
+			getCurrentDirectory() {
+				return ctx.options.host!.getCurrentDirectory().replace(windowsPathReg, '/');
+			},
 			getCompilationSettings: () => ctx.options.options,
 			getScriptFileNames: () => {
 				return ctx.options.rootNames as string[];
@@ -77,27 +67,45 @@ export function createProgram(options: ts.CreateProgramOptions) {
 			},
 			getProjectReferences: () => ctx.options.projectReferences,
 			getCancellationToken: ctx.options.host!.getCancellationToken ? () => ctx.options.host!.getCancellationToken!() : undefined,
+			getFileId: fileName => fileName,
+			getFileName: id => id,
+			getLanguageId: vue.resolveCommonLanguageId,
 		};
-		const languageContext = vue.createLanguageContext(
-			languageHost,
+		const language = createLanguage(
+			ts,
+			ts.sys,
 			vue.createLanguages(
 				ts,
-				languageHost.getCompilationSettings(),
+				host.getCompilationSettings(),
 				vueCompilerOptions,
 			),
+			undefined,
+			host,
 		);
-		const languageServiceHost = volarTs.createLanguageServiceHost(languageContext, ts, ts.sys);
-		const vueTsLs = ts.createLanguageService(languageServiceHost, volarTs.getDocumentRegistry(ts, ts.sys.useCaseSensitiveFileNames, languageHost.workspacePath));
+		const vueTsLs = ts.createLanguageService(
+			language.typescript!.languageServiceHost,
+			getDocumentRegistry(
+				ts,
+				ts.sys.useCaseSensitiveFileNames,
+				host.getCurrentDirectory()
+			)
+		);
 
-		volarTs.decorateLanguageService(languageContext.virtualFiles, vueTsLs, false);
+		decorateLanguageService(language.files, vueTsLs, false);
 
-		program = volarTs.getProgram(ts as any, languageContext, vueTsLs, ts.sys) as (ts.Program & { __vue: ProgramContext; });
+		program = getProgram(
+			ts,
+			language.files,
+			host,
+			vueTsLs,
+			ts.sys
+		) as (ts.Program & { __vue: ProgramContext; });
 		program.__vue = ctx;
 
 		function getVueCompilerOptions(): Partial<vue.VueCompilerOptions> {
 			const tsConfig = ctx.options.options.configFilePath;
 			if (typeof tsConfig === 'string') {
-				return vue.createParsedCommandLine(ts as any, ts.sys, tsConfig.replace(windowsPathReg, '/')).vueOptions;
+				return vue.createParsedCommandLine(ts, ts.sys, tsConfig.replace(windowsPathReg, '/')).vueOptions;
 			}
 			return {};
 		}
@@ -160,7 +168,9 @@ export function createProgram(options: ts.CreateProgramOptions) {
 	return program;
 }
 
-function toThrow(msg: string) {
-	console.error(msg);
-	return msg;
+function assert(condition: unknown, message: string): asserts condition {
+	if (!condition) {
+		console.error(message);
+		throw new Error(message);
+	}
 }

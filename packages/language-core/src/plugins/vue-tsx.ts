@@ -1,11 +1,11 @@
+import { CodeInformation, Mapping, Segment, StackNode, track } from '@volar/language-core';
 import { computed, computedSet } from 'computeds';
 import { generate as generateScript } from '../generators/script';
 import { generate as generateTemplate } from '../generators/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
-import { Sfc, VueLanguagePlugin } from '../types';
-import { FileCapabilities, FileKind } from '@volar/language-core';
-import * as muggle from 'muggle-string';
+import { Code, Sfc, VueLanguagePlugin } from '../types';
+import { enableAllFeatures } from '../generators/utils';
 
 const templateFormatReg = /^\.template_format\.ts$/;
 const templateStyleCssReg = /^\.template_style\.css$/;
@@ -43,41 +43,39 @@ const plugin: VueLanguagePlugin = (ctx) => {
 		resolveEmbeddedFile(fileName, sfc, embeddedFile) {
 
 			const _tsx = useTsx(fileName, sfc);
+			const lang = _tsx.lang();
 			const suffix = embeddedFile.fileName.replace(fileName, '');
 
-			if (suffix === '.' + _tsx.lang()) {
-				embeddedFile.kind = FileKind.TypeScriptHostFile;
-				embeddedFile.capabilities = {
-					...FileCapabilities.full,
-					foldingRange: false,
-					documentFormatting: false,
-					documentSymbol: false,
+			if (suffix === '.' + lang) {
+				embeddedFile.typescript = {
+					scriptKind: lang === 'js' ? ctx.modules.typescript.ScriptKind.JS
+						: lang === 'jsx' ? ctx.modules.typescript.ScriptKind.JSX
+							: lang === 'tsx' ? ctx.modules.typescript.ScriptKind.TSX
+								: ctx.modules.typescript.ScriptKind.TS
 				};
 				const tsx = _tsx.generatedScript();
 				if (tsx) {
-					const [content, contentStacks] = ctx.codegenStack ? muggle.track([...tsx.codes], [...tsx.codeStacks]) : [[...tsx.codes], [...tsx.codeStacks]];
+					const [content, contentStacks] = ctx.codegenStack ? track([...tsx.codes], [...tsx.codeStacks]) : [[...tsx.codes], [...tsx.codeStacks]];
+					content.forEach(code => {
+						if (typeof code !== 'string') {
+							code[3].structure = false;
+							code[3].format = false;
+						}
+					});
 					embeddedFile.content = content;
 					embeddedFile.contentStacks = contentStacks;
-					embeddedFile.mirrorBehaviorMappings = [...tsx.mirrorBehaviorMappings];
+					embeddedFile.linkedNavigationMappings = [...tsx.linkedCodeMappings];
 				}
 			}
 			else if (suffix.match(templateFormatReg)) {
 
 				embeddedFile.parentFileName = fileName + '.template.' + sfc.template?.lang;
-				embeddedFile.kind = FileKind.TextFile;
-				embeddedFile.capabilities = {
-					...FileCapabilities.full,
-					diagnostic: false,
-					foldingRange: false,
-					codeAction: false,
-					inlayHint: false,
-				};
 
 				const template = _tsx.generatedTemplate();
 				if (template) {
 					const [content, contentStacks] = ctx.codegenStack
-						? muggle.track([...template.formatCodes], [...template.formatCodeStacks])
-						: [[...template.formatCodes], [...template.formatCodeStacks]];
+						? track([...template.formatCodes], template.formatCodeStacks.map(stack => ({ stack, length: 1 })))
+						: [[...template.formatCodes], template.formatCodeStacks.map(stack => ({ stack, length: 1 }))];
 					embeddedFile.content = content;
 					embeddedFile.contentStacks = contentStacks;
 				}
@@ -90,7 +88,7 @@ const plugin: VueLanguagePlugin = (ctx) => {
 							cssVar.text,
 							style.name,
 							cssVar.offset,
-							{},
+							enableAllFeatures({}),
 						]);
 						embeddedFile.content.push(');\n');
 					}
@@ -103,14 +101,11 @@ const plugin: VueLanguagePlugin = (ctx) => {
 				const template = _tsx.generatedTemplate();
 				if (template) {
 					const [content, contentStacks] = ctx.codegenStack
-						? muggle.track([...template.cssCodes], [...template.cssCodeStacks])
-						: [[...template.cssCodes], [...template.cssCodeStacks]];
-					embeddedFile.content = content;
+						? track([...template.cssCodes], template.cssCodeStacks.map(stack => ({ stack, length: 1 })))
+						: [[...template.cssCodes], template.cssCodeStacks.map(stack => ({ stack, length: 1 }))];
+					embeddedFile.content = content as Segment<CodeInformation>[];
 					embeddedFile.contentStacks = contentStacks;
 				}
-
-				// for color pickers support
-				embeddedFile.capabilities.documentSymbol = true;
 			}
 		},
 	};
@@ -174,7 +169,13 @@ function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOp
 		if (!_sfc.template)
 			return;
 
-		return generateTemplate(
+		const tsCodes: Code[] = [];
+		const tsFormatCodes: Code[] = [];
+		const inlineCssCodes: Code[] = [];
+		const tsCodegenStacks: string[] = [];
+		const tsFormatCodegenStacks: string[] = [];
+		const inlineCssCodegenStacks: string[] = [];
+		const codegen = generateTemplate(
 			ts,
 			compilerOptions,
 			vueCompilerOptions,
@@ -186,24 +187,89 @@ function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOp
 			propsAssignName(),
 			codegenStack,
 		);
+
+		let current = codegen.next();
+
+		while (!current.done) {
+			const [type, code, stack] = current.value;
+			if (type === 'ts') {
+				tsCodes.push(code);
+			}
+			else if (type === 'tsFormat') {
+				tsFormatCodes.push(code);
+			}
+			else if (type === 'inlineCss') {
+				inlineCssCodes.push(code);
+			}
+			if (codegenStack) {
+				if (type === 'ts') {
+					tsCodegenStacks.push(stack);
+				}
+				else if (type === 'tsFormat') {
+					tsFormatCodegenStacks.push(stack);
+				}
+				else if (type === 'inlineCss') {
+					inlineCssCodegenStacks.push(stack);
+				}
+			}
+			current = codegen.next();
+		}
+
+		return {
+			...current.value,
+			codes: tsCodes,
+			codeStacks: tsCodegenStacks,
+			formatCodes: tsFormatCodes,
+			formatCodeStacks: tsFormatCodegenStacks,
+			cssCodes: inlineCssCodes,
+			cssCodeStacks: inlineCssCodegenStacks,
+		};
 	});
 	const hasScriptSetupSlots = computed(() => !!scriptSetupRanges()?.slots.define);
 	const slotsAssignName = computed(() => scriptSetupRanges()?.slots.name);
 	const propsAssignName = computed(() => scriptSetupRanges()?.props.name);
-	const generatedScript = computed(() => generateScript(
-		ts,
-		fileName,
-		_sfc.script,
-		_sfc.scriptSetup,
-		_sfc.styles,
-		lang(),
-		scriptRanges(),
-		scriptSetupRanges(),
-		generatedTemplate(),
-		compilerOptions,
-		vueCompilerOptions,
-		codegenStack,
-	));
+	const generatedScript = computed(() => {
+		const codes: Code[] = [];
+		const codeStacks: StackNode[] = [];
+		const linkedCodeMappings: Mapping[] = [];
+		const _template = generatedTemplate();
+		let generatedLength = 0;
+		for (const [code, stack] of generateScript(
+			ts,
+			fileName,
+			_sfc.script,
+			_sfc.scriptSetup,
+			_sfc.styles,
+			lang(),
+			scriptRanges(),
+			scriptSetupRanges(),
+			_template ? {
+				tsCodes: _template.codes,
+				tsCodegenStacks: _template.codeStacks,
+				accessedGlobalVariables: _template.accessedGlobalVariables,
+				hasSlot: _template.hasSlot,
+				tagNames: new Set(_template.tagOffsetsMap.keys()),
+			} : undefined,
+			compilerOptions,
+			vueCompilerOptions,
+			() => generatedLength,
+			linkedCodeMappings,
+			codegenStack,
+		)) {
+			codes.push(code);
+			if (codegenStack) {
+				codeStacks.push({ stack, length: 1 });
+			}
+			generatedLength += typeof code === 'string'
+				? code.length
+				: code[0].length;
+		};
+		return {
+			codes,
+			codeStacks,
+			linkedCodeMappings,
+		};
+	});
 
 	return {
 		scriptRanges,

@@ -1,16 +1,15 @@
-import { FileCapabilities, FileKind, FileRangeCapabilities, MirrorBehaviorCapabilities } from '@volar/language-core';
-import { Mapping, Segment, StackNode } from '@volar/source-map';
+import { Mapping, StackNode, VirtualFile } from '@volar/language-core';
+import { Code } from '../types';
 
 export class VueEmbeddedFile {
 
 	public parentFileName?: string;
-	public kind = FileKind.TextFile;
-	public capabilities: FileCapabilities = {};
-	public mirrorBehaviorMappings: Mapping<[MirrorBehaviorCapabilities, MirrorBehaviorCapabilities]>[] = [];
+	public typescript: VirtualFile['typescript'];
+	public linkedNavigationMappings: Mapping[] = [];
 
 	constructor(
 		public fileName: string,
-		public content: Segment<FileRangeCapabilities>[],
+		public content: Code[],
 		public contentStacks: StackNode[],
 	) { }
 }

@@ -3,7 +3,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path-browserify';
 import { code as typeHelpersCode } from 'vue-component-type-helpers';
 import { code as vue2TypeHelpersCode } from 'vue-component-type-helpers/vue2';
-import { createLanguageServiceHost, decorateLanguageService } from '@volar/typescript';
+import { createLanguage, decorateLanguageService } from '@volar/typescript';
 
 import type {
 	MetaCheckerOptions,
@@ -33,6 +33,7 @@ export function createCheckerByJsonConfigBase(
 		checkerOptions,
 		rootDir,
 		path.join(rootDir, 'jsconfig.json.global.vue'),
+		undefined
 	);
 }
 
@@ -48,6 +49,7 @@ export function createCheckerBase(
 		checkerOptions,
 		path.dirname(tsconfig),
 		tsconfig + '.global.vue',
+		tsconfig,
 	);
 }
 
@@ -57,6 +59,7 @@ function createCheckerWorker(
 	checkerOptions: MetaCheckerOptions,
 	rootPath: string,
 	globalComponentName: string,
+	configFileName: string | undefined,
 ) {
 
 	/**
@@ -68,9 +71,8 @@ function createCheckerWorker(
 	let projectVersion = 0;
 
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
-	const _host: vue.TypeScriptLanguageHost = {
-		workspacePath: rootPath,
-		rootPath: rootPath,
+	const _host: vue.TypeScriptProjectHost = {
+		getCurrentDirectory: () => rootPath,
 		getProjectVersion: () => projectVersion.toString(),
 		getCompilationSettings: () => parsedCommandLine.options,
 		getScriptFileNames: () => fileNames,
@@ -84,10 +86,13 @@ function createCheckerWorker(
 			}
 			return scriptSnapshots.get(fileName);
 		},
+		getFileId: fileName => fileName,
+		getFileName: id => id,
+		getLanguageId: vue.resolveCommonLanguageId,
 	};
 
 	return {
-		...baseCreate(ts, _host, vue.resolveVueCompilerOptions(parsedCommandLine.vueOptions), checkerOptions, globalComponentName),
+		...baseCreate(ts, configFileName, _host, vue.resolveVueCompilerOptions(parsedCommandLine.vueOptions), checkerOptions, globalComponentName),
 		updateFile(fileName: string, text: string) {
 			fileName = fileName.replace(windowsPathReg, '/');
 			scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(text));
@@ -112,59 +117,60 @@ function createCheckerWorker(
 
 export function baseCreate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	_host: vue.TypeScriptLanguageHost,
+	configFileName: string | undefined,
+	host: vue.TypeScriptProjectHost,
 	vueCompilerOptions: vue.VueCompilerOptions,
 	checkerOptions: MetaCheckerOptions,
 	globalComponentName: string,
 ) {
 	const globalComponentSnapshot = ts.ScriptSnapshot.fromString('<script setup lang="ts"></script>');
 	const metaSnapshots: Record<string, ts.IScriptSnapshot> = {};
-	const host = new Proxy<Partial<vue.TypeScriptLanguageHost>>({
-		getScriptFileNames: () => {
-			const names = _host.getScriptFileNames();
-			return [
-				...names,
-				...names.map(getMetaFileName),
-				globalComponentName,
-				getMetaFileName(globalComponentName),
-			];
-		},
-		getScriptSnapshot: fileName => {
-			if (isMetaFileName(fileName)) {
-				if (!metaSnapshots[fileName]) {
-					metaSnapshots[fileName] = ts.ScriptSnapshot.fromString(getMetaScriptContent(fileName));
-				}
-				return metaSnapshots[fileName];
+	const getScriptFileNames = host.getScriptFileNames;
+	const getScriptSnapshot = host.getScriptSnapshot;
+	host.getScriptFileNames = () => {
+		const names = getScriptFileNames();
+		return [
+			...names,
+			...names.map(getMetaFileName),
+			globalComponentName,
+			getMetaFileName(globalComponentName),
+		];
+	};
+	host.getScriptSnapshot = (fileName) => {
+		if (isMetaFileName(fileName)) {
+			if (!metaSnapshots[fileName]) {
+				metaSnapshots[fileName] = ts.ScriptSnapshot.fromString(getMetaScriptContent(fileName));
 			}
-			else if (fileName === globalComponentName) {
-				return globalComponentSnapshot;
-			}
-			else {
-				return _host.getScriptSnapshot(fileName);
-			}
-		},
-	}, {
-		get(target, prop) {
-			if (prop in target) {
-				return target[prop as keyof typeof target];
-			}
-			return _host[prop as keyof typeof _host];
-		},
-	}) as vue.TypeScriptLanguageHost;
-	const vueLanguages = vue.createLanguages(
+			return metaSnapshots[fileName];
+		}
+		else if (fileName === globalComponentName) {
+			return globalComponentSnapshot;
+		}
+		else {
+			return getScriptSnapshot(fileName);
+		}
+	};
+
+	const vueLanguagePlugins = vue.createLanguages(
 		ts,
 		host.getCompilationSettings(),
 		vueCompilerOptions,
 	);
-	const core = vue.createLanguageContext(host, vueLanguages);
-	const tsLsHost = createLanguageServiceHost(core, ts, ts.sys);
-	const tsLs = ts.createLanguageService(tsLsHost);
+	const language = createLanguage(
+		ts,
+		ts.sys,
+		vueLanguagePlugins,
+		configFileName,
+		host,
+	);
+	const { languageServiceHost } = language.typescript!;
+	const tsLs = ts.createLanguageService(languageServiceHost);
 
-	decorateLanguageService(core.virtualFiles, tsLs, false);
+	decorateLanguageService(language.files, tsLs, false);
 
 	if (checkerOptions.forceUseTs) {
-		const getScriptKind = tsLsHost.getScriptKind;
-		tsLsHost.getScriptKind = (fileName) => {
+		const getScriptKind = languageServiceHost.getScriptKind?.bind(languageServiceHost);
+		languageServiceHost.getScriptKind = (fileName) => {
 			if (fileName.endsWith('.vue.js')) {
 				return ts.ScriptKind.TS;
 			}
@@ -281,7 +287,7 @@ ${vueCompilerOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 					.map((prop) => {
 						const {
 							resolveNestedProperties,
-						} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts, core);
+						} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts, language);
 
 						return resolveNestedProperties(prop);
 					})
@@ -300,7 +306,7 @@ ${vueCompilerOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 			const printer = ts.createPrinter(checkerOptions.printer);
 			const snapshot = host.getScriptSnapshot(componentPath)!;
 
-			const vueSourceFile = core.virtualFiles.getSource(componentPath)?.root;
+			const vueSourceFile = language.files.getSourceFile(componentPath)?.virtualFile?.[0];
 			const vueDefaults = vueSourceFile && exportName === 'default'
 				? (vueSourceFile instanceof vue.VueFile ? readVueComponentDefaultProps(vueSourceFile, printer, ts, vueCompilerOptions) : {})
 				: {};
@@ -345,7 +351,7 @@ ${vueCompilerOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 
 					const {
 						resolveEventSignature,
-					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts, core);
+					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts, language);
 
 					return resolveEventSignature(call);
 				}).filter(event => event.name);
@@ -365,7 +371,7 @@ ${vueCompilerOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 				return properties.map((prop) => {
 					const {
 						resolveSlotProperties,
-					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts, core);
+					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts, language);
 
 					return resolveSlotProperties(prop);
 				});
@@ -388,7 +394,7 @@ ${vueCompilerOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 				return properties.map((prop) => {
 					const {
 						resolveExposedProperties,
-					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts, core);
+					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts, language);
 
 					return resolveExposedProperties(prop);
 				});
@@ -447,7 +453,7 @@ function createSchemaResolvers(
 	symbolNode: ts.Expression,
 	{ rawType, schema: options, noDeclarations }: MetaCheckerOptions,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	core: vue.LanguageContext,
+	core: vue.Language,
 ) {
 	const visited = new Set<ts.Type>();
 
@@ -638,12 +644,12 @@ function createSchemaResolvers(
 	}
 	function getDeclaration(declaration: ts.Declaration): Declaration | undefined {
 		const fileName = declaration.getSourceFile().fileName;
-		const [virtualFile] = core.virtualFiles.getVirtualFile(fileName);
+		const [virtualFile] = core.files.getVirtualFile(fileName);
 		if (virtualFile) {
-			const maps = core.virtualFiles.getMaps(virtualFile);
+			const maps = core.files.getMaps(virtualFile);
 			for (const [source, [_, map]] of maps) {
-				const start = map.toSourceOffset(declaration.getStart());
-				const end = map.toSourceOffset(declaration.getEnd());
+				const start = map.getSourceOffset(declaration.getStart());
+				const end = map.getSourceOffset(declaration.getEnd());
 				if (start && end) {
 					return {
 						file: source,
