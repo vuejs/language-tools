@@ -1,12 +1,12 @@
 import {
-	activateAutoInsertion,
-	activateDocumentDropEdit,
-	activateFindFileReferences,
-	activateReloadProjects,
+	// activateAutoInsertion,
+	// activateDocumentDropEdit,
+	// activateFindFileReferences,
+	// activateReloadProjects,
 	activateServerSys,
-	activateTsConfigStatusItem,
-	activateTsVersionStatusItem,
-	activateWriteVirtualFiles,
+	// activateTsConfigStatusItem,
+	// activateTsVersionStatusItem,
+	// activateWriteVirtualFiles,
 	getTsdk,
 	takeOverModeActive
 } from '@volar/vscode';
@@ -14,13 +14,12 @@ import { DiagnosticModel, ServerMode, VueServerInitializationOptions } from '@vu
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient';
 import { config } from './config';
-import * as componentMeta from './features/componentMeta';
-import * as doctor from './features/doctor';
-import * as nameCasing from './features/nameCasing';
+// import * as componentMeta from './features/componentMeta';
+// import * as doctor from './features/doctor';
+// import * as nameCasing from './features/nameCasing';
 import * as splitEditors from './features/splitEditors';
 
-let semanticClient: lsp.BaseLanguageClient;
-let syntacticClient: lsp.BaseLanguageClient;
+let client: lsp.BaseLanguageClient;
 
 type CreateLanguageClient = (
 	id: string,
@@ -63,46 +62,33 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 	vscode.commands.executeCommand('setContext', 'volar.activated', true);
 
-	const semanticOutputChannel = vscode.window.createOutputChannel('Vue Semantic Server');
-	const syntacticOutputChannel = vscode.window.createOutputChannel('Vue Syntactic Server');
+	const outputChannel = vscode.window.createOutputChannel('Vue Language Server');
 
-	[semanticClient, syntacticClient] = await Promise.all([
-		createLc(
-			'vue-semantic-server',
-			'Vue Semantic Server',
-			getDocumentSelector(context, ServerMode.PartialSemantic),
-			await getInitializationOptions(ServerMode.PartialSemantic, context),
-			6009,
-			semanticOutputChannel
-		),
-		createLc(
-			'vue-syntactic-server',
-			'Vue Syntactic Server',
-			getDocumentSelector(context, ServerMode.Syntactic),
-			await getInitializationOptions(ServerMode.Syntactic, context),
-			6011,
-			syntacticOutputChannel
-		)
-	]);
-
-	const clients = [semanticClient, syntacticClient];
+	client = createLc(
+		'vue-server',
+		'Vue Server',
+		getDocumentSelector(context, ServerMode.Semantic),
+		await getInitializationOptions(ServerMode.Semantic, context),
+		6009,
+		outputChannel
+	);
 
 	activateServerMaxOldSpaceSizeChange();
 	activateRestartRequest();
 	activateClientRequests();
 
-	splitEditors.register(context, syntacticClient);
-	doctor.register(context, semanticClient);
-	componentMeta.register(context, semanticClient);
+	splitEditors.register(context, client);
+	// doctor.register(context, client);
+	// componentMeta.register(context, client);
 
-	const supportedLanguages: Record<string, boolean> = {
-		vue: true,
-		markdown: true,
-		javascript: true,
-		typescript: true,
-		javascriptreact: true,
-		typescriptreact: true,
-	};
+	// const supportedLanguages: Record<string, boolean> = {
+	// 	vue: true,
+	// 	markdown: true,
+	// 	javascript: true,
+	// 	typescript: true,
+	// 	javascriptreact: true,
+	// 	typescriptreact: true,
+	// };
 	const selectors: vscode.DocumentFilter[] = [{ language: 'vue' }];
 
 	if (config.server.petiteVue.supportHtmlFile) {
@@ -112,44 +98,42 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		selectors.push({ language: 'markdown' });
 	}
 
-	activateAutoInsertion([syntacticClient, semanticClient], document => supportedLanguages[document.languageId]);
-	activateDocumentDropEdit(selectors, semanticClient);
-	activateWriteVirtualFiles('volar.action.writeVirtualFiles', semanticClient);
-	activateFindFileReferences('volar.vue.findAllFileReferences', semanticClient);
-	activateTsConfigStatusItem('volar.openTsconfig', semanticClient,
-		document => {
-			return document.languageId === 'vue'
-				|| (config.server.vitePress.supportMdFile && document.languageId === 'markdown')
-				|| (config.server.petiteVue.supportHtmlFile && document.languageId === 'html')
-				|| (
-					takeOverModeActive(context)
-					&& ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(document.languageId)
-				);
-		},
-	);
-	activateReloadProjects('volar.action.reloadProject', [semanticClient]);
-	activateTsVersionStatusItem('volar.selectTypeScriptVersion', context, semanticClient,
-		document => {
-			return document.languageId === 'vue'
-				|| (config.server.vitePress.supportMdFile && document.languageId === 'markdown')
-				|| (config.server.petiteVue.supportHtmlFile && document.languageId === 'html')
-				|| (
-					takeOverModeActive(context)
-					&& ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(document.languageId)
-				);
-		},
-		text => {
-			if (takeOverModeActive(context)) {
-				text += ' (takeover)';
-			}
-			return text;
-		},
-		false,
-	);
+	// activateAutoInsertion([client], document => supportedLanguages[document.languageId]);
+	// activateDocumentDropEdit(selectors, client);
+	// activateWriteVirtualFiles('volar.action.writeVirtualFiles', client);
+	// activateFindFileReferences('volar.vue.findAllFileReferences', client);
+	// activateTsConfigStatusItem('volar.openTsconfig', client,
+	// 	document => {
+	// 		return document.languageId === 'vue'
+	// 			|| (config.server.vitePress.supportMdFile && document.languageId === 'markdown')
+	// 			|| (config.server.petiteVue.supportHtmlFile && document.languageId === 'html')
+	// 			|| (
+	// 				takeOverModeActive(context)
+	// 				&& ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(document.languageId)
+	// 			);
+	// 	},
+	// );
+	// activateReloadProjects('volar.action.reloadProject', [client]);
+	// activateTsVersionStatusItem('volar.selectTypeScriptVersion', context, client,
+	// 	document => {
+	// 		return document.languageId === 'vue'
+	// 			|| (config.server.vitePress.supportMdFile && document.languageId === 'markdown')
+	// 			|| (config.server.petiteVue.supportHtmlFile && document.languageId === 'html')
+	// 			|| (
+	// 				takeOverModeActive(context)
+	// 				&& ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(document.languageId)
+	// 			);
+	// 	},
+	// 	text => {
+	// 		if (takeOverModeActive(context)) {
+	// 			text += ' (takeover)';
+	// 		}
+	// 		return text;
+	// 	},
+	// 	false,
+	// );
 
-	for (const client of clients) {
-		activateServerSys(client);
-	}
+	activateServerSys(client);
 
 	async function requestReloadVscode() {
 		const reload = await vscode.window.showInformationMessage(
@@ -174,30 +158,25 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	async function activateRestartRequest() {
 		context.subscriptions.push(vscode.commands.registerCommand('volar.action.restartServer', async () => {
 
-			await Promise.all(clients.map(client => client.stop()));
+			await client.stop();
 
-			semanticOutputChannel.clear();
-			syntacticOutputChannel.clear();
+			outputChannel.clear();
 
-			semanticClient.clientOptions.initializationOptions = await getInitializationOptions(ServerMode.PartialSemantic, context, semanticClient.clientOptions.initializationOptions);
-			syntacticClient.clientOptions.initializationOptions = await getInitializationOptions(ServerMode.Syntactic, context, syntacticClient.clientOptions.initializationOptions);
+			client.clientOptions.initializationOptions = await getInitializationOptions(ServerMode.Semantic, context, client.clientOptions.initializationOptions);
 
-			await Promise.all(clients.map(client => client.start()));
+			await client.start();
 
 			activateClientRequests();
 		}));
 	}
 
 	function activateClientRequests() {
-		nameCasing.activate(context, semanticClient);
+		// nameCasing.activate(context, client);
 	}
 }
 
 export function deactivate(): Thenable<any> | undefined {
-	return Promise.all([
-		semanticClient?.stop(),
-		syntacticClient?.stop(),
-	]);
+	return client?.stop();
 }
 
 export function getDocumentSelector(context: vscode.ExtensionContext, serverMode: ServerMode): lsp.DocumentFilter[] {
