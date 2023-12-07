@@ -3,7 +3,6 @@ import * as path from 'path-browserify';
 import { getDefaultVueLanguagePlugins } from './plugins';
 import { VueFile } from './virtualFile/vueFile';
 import { VueCompilerOptions, VueLanguagePlugin } from './types';
-import * as sharedTypes from './utils/globalTypes';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { resolveVueCompilerOptions } from './utils/ts';
 
@@ -94,25 +93,6 @@ export function createVueLanguage(
 				if (impliedNodeFormat === 99 satisfies ts.ModuleKind.ESNext && vueCompilerOptions.extensions.some(ext => moduleName.endsWith(ext))) {
 					return `${moduleName}.js`;
 				}
-			},
-			resolveLanguageServiceHost(host) {
-				const sharedTypesSnapshot = ts.ScriptSnapshot.fromString(sharedTypes.getTypesCode(vueCompilerOptions));
-				const sharedTypesFileName = path.join(host.getCurrentDirectory(), sharedTypes.baseName);
-				return {
-					...host,
-					getScriptFileNames() {
-						return [
-							sharedTypesFileName,
-							...host.getScriptFileNames(),
-						];
-					},
-					getScriptSnapshot(fileName) {
-						if (fileName === sharedTypesFileName) {
-							return sharedTypesSnapshot;
-						}
-						return host.getScriptSnapshot(fileName);
-					},
-				};
 			},
 		},
 	};
