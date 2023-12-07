@@ -20,23 +20,6 @@
 			}
 		},
 		{
-			"type": "extensionHost",
-			"request": "launch",
-			"name": "Launch TypeScript Plugin",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-				"--disable-extensions",
-				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode-typescript-plugin"
-			],
-			"outFiles": [
-				"${workspaceRoot}/*/*/out/**/*.js"
-			],
-			"preLaunchTask": {
-				"type": "npm",
-				"script": "watch"
-			}
-		},
-		{
 			"name": "Launch Web Client",
 			"type": "pwa-extensionHost",
 			"debugWebWorkerHost": true,
