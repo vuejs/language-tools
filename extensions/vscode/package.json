@@ -201,6 +201,15 @@
 				"id": "vue-sfc-style-variable-injection"
 			}
 		],
+		"typescriptServerPlugins": [
+			{
+				"name": "typescript-vue-plugin-bundle",
+				"enableForWorkspaceTypeScriptVersions": true,
+				"languages": [
+					"vue"
+				]
+			}
+		],
 		"grammars": [
 			{
 				"language": "vue",
@@ -744,6 +753,7 @@
 		"esbuild-plugin-copy": "latest",
 		"esbuild-visualizer": "latest",
 		"semver": "^7.5.4",
+		"typescript-vue-plugin": "1.8.25",
 		"vsce": "latest",
 		"vscode-languageclient": "^9.0.1"
 	}
