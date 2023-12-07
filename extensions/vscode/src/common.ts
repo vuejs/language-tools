@@ -212,7 +212,7 @@ async function getInitializationOptions(
 	options: VueServerInitializationOptions = {},
 ) {
 	// volar
-	options.configFilePath = config.server.configFilePath;
+	options.configFilePath = './__ignore__.config.js'; // config.server.configFilePath
 	options.serverMode = serverMode,
 		options.diagnosticModel = config.server.diagnosticModel === 'pull' ? DiagnosticModel.Pull : DiagnosticModel.Push,
 		options.typescript = { tsdk: (await getTsdk(context)).tsdk },
