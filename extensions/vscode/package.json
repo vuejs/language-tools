@@ -327,9 +327,6 @@
 			"type": "object",
 			"title": "Volar",
 			"properties": {
-				"typescript.tsdk": {
-					"type": "string"
-				},
 				"volar.format.initialIndent": {
 					"type": "object",
 					"description": "Whether to have initial indent.",
