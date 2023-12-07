@@ -1,4 +1,4 @@
-import { Connection, ServerProject, TypeScriptServerPlugin } from '@volar/language-server';
+import { Connection, ServerProject, SimpleServerPlugin, TypeScriptServerPlugin } from '@volar/language-server';
 import { createSys } from '@volar/typescript';
 import * as vue2 from '@vue/language-core';
 import { VueCompilerOptions } from '@vue/language-core';
@@ -11,7 +11,7 @@ import { VueServerInitializationOptions } from './types';
 
 export function createServerPlugin(connection: Connection) {
 
-	const plugin: TypeScriptServerPlugin = ({ initializationOptions, modules }): ReturnType<TypeScriptServerPlugin> => {
+	const plugin: TypeScriptServerPlugin | SimpleServerPlugin = ({ initializationOptions, modules }): ReturnType<TypeScriptServerPlugin> => {
 
 		if (!modules.typescript) {
 			console.warn('No typescript found, vue-language-server will not work.');
