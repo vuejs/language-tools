@@ -48,7 +48,7 @@ export function create(): ServicePlugin {
 						const result: vscode.Diagnostic[] = [];
 						const sfc = vueSourceFile.sfc;
 						const program = context.inject<TSProvide, 'typescript/languageService'>('typescript/languageService').getProgram();
-						const tsFileName = context.env.uriToFileName(vueSourceFile.mainTsFile.id);
+						const tsFileName = vueSourceFile.mainTsFile.fileName;
 
 						if (program && !program.getSourceFile(tsFileName)) {
 							for (const script of [sfc.script, sfc.scriptSetup]) {
@@ -197,7 +197,7 @@ export function create(): ServicePlugin {
 			};
 
 			function worker<T>(document: TextDocument, callback: (vueSourceFile: vue.VueFile) => T) {
-				const [vueFile] = context.language.files.getVirtualFile(document.uri);
+				const [vueFile] = context.language.files.getVirtualFile(context.env.uriToFileName(document.uri));
 				if (vueFile instanceof vue.VueFile) {
 					return callback(vueFile);
 				}

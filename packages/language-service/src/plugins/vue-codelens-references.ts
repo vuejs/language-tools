@@ -34,7 +34,7 @@ export function create(): ServicePlugin {
 
 				async resolveReferencesCodeLensLocations(document, range, references) {
 
-					const [virtualFile, sourceFile] = context.language.files.getVirtualFile(document.uri);
+					const [virtualFile, sourceFile] = context.language.files.getVirtualFile(context.env.uriToFileName(document.uri));
 					if (virtualFile && sourceFile?.virtualFile?.[0] instanceof VueFile) {
 						const vueFile = sourceFile.virtualFile[0];
 						const blocks = [
@@ -48,7 +48,7 @@ export function create(): ServicePlugin {
 							const sourceOffset = map.map.getSourceOffset(document.offsetAt(range.start));
 							if (sourceOffset !== undefined) {
 								const sourceBlock = blocks.find(block => block && sourceOffset[0] >= block.startTagEnd && sourceOffset[0] <= block.endTagStart);
-								const sourceDocument = context.documents.get(sourceFile.id, sourceFile.languageId, sourceFile.snapshot);
+								const sourceDocument = context.documents.get(context.env.fileNameToUri(sourceFile.fileName), sourceFile.languageId, sourceFile.snapshot);
 								references = references.filter(reference =>
 									reference.uri !== sourceDocument.uri // different file
 									|| sourceBlock !== blocks.find(block =>
@@ -68,7 +68,7 @@ export function create(): ServicePlugin {
 
 			function worker<T>(uri: string, callback: (vueFile: VirtualFile, sourceFile: SourceFile) => T) {
 
-				const [virtualFile, sourceFile] = context.language.files.getVirtualFile(uri);
+				const [virtualFile, sourceFile] = context.language.files.getVirtualFile(context.env.uriToFileName(uri));
 				if (!(sourceFile?.virtualFile?.[0] instanceof VueFile) || !sourceFile)
 					return;
 
