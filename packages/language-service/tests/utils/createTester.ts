@@ -6,9 +6,7 @@ import { URI } from 'vscode-uri';
 import { createParsedCommandLine, resolveLanguages, resolveServices } from '../../out';
 import { createMockServiceEnv } from './mockEnv';
 
-const testRoot = path.resolve(__dirname, '../../../../test-workspace/language-service').replace(/\\/g, '/');
-
-export const rootUri = URI.file(testRoot);
+export const rootUri = URI.file(path.resolve(__dirname, '../../../../test-workspace/language-service'));
 export const tester = createTester(rootUri);
 
 function createTester(rootUri: URI) {
