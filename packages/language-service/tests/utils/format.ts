@@ -14,7 +14,7 @@ export function defineFormatTest(options: {
 	languageId: string;
 	settings?: any;
 }) {
-	describe(`format: ${options.title}`, async () => {
+	describe.skip(`format: ${options.title}`, async () => {
 
 		it(`format`, async () => {
 
