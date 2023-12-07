@@ -143,6 +143,9 @@ function updateProviders(client: lsp.LanguageClient) {
 			capabilities.workspace.fileOperations.willRename = undefined;
 		}
 
+		// TODO: disalbe for now because this break ts plugin semantic tokens
+		capabilities.semanticTokensProvider = undefined;
+
 		return initializeFeatures.call(client, ...args);
 	};
 }
