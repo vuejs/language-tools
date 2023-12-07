@@ -60,8 +60,6 @@ export function createProgram(options: ts.CreateProgramOptions) {
 			},
 			getProjectReferences: () => ctx.options.projectReferences,
 			getCancellationToken: ctx.options.host!.getCancellationToken ? () => ctx.options.host!.getCancellationToken!() : undefined,
-			getFileId: fileName => fileName,
-			getFileName: id => id,
 			getLanguageId: vue.resolveCommonLanguageId,
 		};
 		const language = createLanguage(
@@ -89,7 +87,6 @@ export function createProgram(options: ts.CreateProgramOptions) {
 		program = getProgram(
 			ts,
 			language.files,
-			host,
 			vueTsLs,
 			ts.sys
 		) as (ts.Program & { __vue: ProgramContext; });
