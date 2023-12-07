@@ -56,24 +56,15 @@ importers:
       semver:
         specifier: ^7.5.4
         version: 7.5.4
-      vsce:
-        specifier: latest
-        version: 2.15.0
-      vscode-languageclient:
-        specifier: ^9.0.1
-        version: 9.0.1
-
-  extensions/vscode-typescript-plugin:
-    devDependencies:
-      esbuild:
-        specifier: latest
-        version: 0.19.8
       typescript-vue-plugin:
         specifier: 1.8.26
         version: link:../../packages/typescript-plugin
       vsce:
         specifier: latest
         version: 2.15.0
+      vscode-languageclient:
+        specifier: ^9.0.1
+        version: 9.0.1
 
   packages/component-meta:
     dependencies:

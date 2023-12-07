@@ -6,7 +6,6 @@
 	"include": [ "packages/*/tests" ],
 	"references": [
 		{ "path": "./extensions/vscode/tsconfig.json" },
-		{ "path": "./extensions/vscode-typescript-plugin/tsconfig.json" },
 		{ "path": "./packages/language-plugin-pug/tsconfig.json" },
 		{ "path": "./packages/typescript-plugin/tsconfig.json" },
 		{ "path": "./packages/tsc/tsconfig.json" },
