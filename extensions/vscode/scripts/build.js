@@ -5,7 +5,7 @@ const fs = require('fs');
 require('esbuild').context({
 	entryPoints: {
 		client: './out/nodeClientMain.js',
-		server: './node_modules/@vue/language-server/out/nodeServer.js',
+		server: './node_modules/@vue/language-server/bin/vue-simple-language-server.js',
 	},
 	bundle: true,
 	metafile: process.argv.includes('--metafile'),
