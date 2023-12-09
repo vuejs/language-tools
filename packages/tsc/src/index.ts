@@ -59,7 +59,6 @@ export function createProgram(options: ts.CreateProgramOptions) {
 				return ctx.projectVersion.toString();
 			},
 			getProjectReferences: () => ctx.options.projectReferences,
-			getCancellationToken: ctx.options.host!.getCancellationToken ? () => ctx.options.host!.getCancellationToken!() : undefined,
 			getLanguageId: vue.resolveCommonLanguageId,
 		};
 		const language = createLanguage(

@@ -1,4 +1,4 @@
-import { Connection, ServerProject, SimpleServerPlugin, TypeScriptServerPlugin } from '@volar/language-server';
+import { Connection, ServerProject, ServerPlugin } from '@volar/language-server';
 import { createSys } from '@volar/typescript';
 import * as vue2 from '@vue/language-core';
 import { VueCompilerOptions } from '@vue/language-core';
@@ -11,7 +11,7 @@ import { VueServerInitializationOptions } from './types';
 
 export function createServerPlugin(connection: Connection) {
 
-	const plugin: TypeScriptServerPlugin | SimpleServerPlugin = ({ initializationOptions, modules }): ReturnType<TypeScriptServerPlugin> => {
+	const plugin: ServerPlugin = ({ initializationOptions, modules }): ReturnType<ServerPlugin> => {
 
 		if (!modules.typescript) {
 			console.warn('No typescript found, vue-language-server will not work.');
@@ -30,9 +30,11 @@ export function createServerPlugin(connection: Connection) {
 		}
 
 		return {
-			extraFileExtensions: vueFileExtensions.map<ts.FileExtensionInfo>(ext => ({ extension: ext, isMixedContent: true, scriptKind: ts.ScriptKind.Deferred })),
+			typescript: {
+				extraFileExtensions: vueFileExtensions.map<ts.FileExtensionInfo>(ext => ({ extension: ext, isMixedContent: true, scriptKind: ts.ScriptKind.Deferred })),
+			},
 			watchFileExtensions: ['js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json', ...vueFileExtensions],
-			async resolveConfig(config, env, info) {
+			async resolveConfig(config, env, project) {
 
 				const vueOptions = await getVueCompilerOptions();
 
@@ -40,7 +42,7 @@ export function createServerPlugin(connection: Connection) {
 					envToVueOptions.set(env, vue.resolveVueCompilerOptions(vueOptions));
 				}
 
-				config.languages = vue.resolveLanguages(ts, config.languages ?? {}, info?.parsedCommandLine.options ?? {}, vueOptions, options.codegenStack);
+				config.languages = vue.resolveLanguages(ts, config.languages ?? {}, project?.typescript?.parsedCommandLine.options ?? {}, vueOptions, options.codegenStack);
 				config.services = vue.resolveServices(ts, config.services ?? {}, vueOptions);
 
 				return config;
@@ -49,18 +51,18 @@ export function createServerPlugin(connection: Connection) {
 
 					let vueOptions: Partial<vue.VueCompilerOptions> = {};
 
-					if (env && info) {
+					if (env && project?.typescript) {
 						const sys = createSys(ts, env, env.uriToFileName(env.workspaceFolder.uri.toString()));
 						let sysVersion: number | undefined;
 						let newSysVersion = await sys.sync();
 
 						while (sysVersion !== newSysVersion) {
 							sysVersion = newSysVersion;
-							if (info.configFileName) {
-								vueOptions = vue2.createParsedCommandLine(ts, sys, info.configFileName).vueOptions;
+							if (project.typescript.configFileName) {
+								vueOptions = vue2.createParsedCommandLine(ts, sys, project.typescript.configFileName).vueOptions;
 							}
 							else {
-								vueOptions = vue2.createParsedCommandLineByJson(ts, sys, env.uriToFileName(env.workspaceFolder.uri.toString()), info.parsedCommandLine.options).vueOptions;
+								vueOptions = vue2.createParsedCommandLineByJson(ts, sys, env.uriToFileName(env.workspaceFolder.uri.toString()), project.typescript.parsedCommandLine.options).vueOptions;
 							}
 							newSysVersion = await sys.sync();
 						}
