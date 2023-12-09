@@ -8,9 +8,8 @@ import {
 	// activateTsVersionStatusItem,
 	// activateWriteVirtualFiles,
 	getTsdk,
-	takeOverModeActive
 } from '@volar/vscode';
-import { DiagnosticModel, ServerMode, VueServerInitializationOptions } from '@vue/language-server';
+import { DiagnosticModel, VueServerInitializationOptions } from '@vue/language-server';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient';
 import { config } from './config';
@@ -49,12 +48,6 @@ export async function activate(context: vscode.ExtensionContext, createLc: Creat
 			doActivate(context, createLc);
 			stopCheck.dispose();
 		}
-
-		const takeOverMode = takeOverModeActive(context);
-		if (takeOverMode && ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(currentLangId)) {
-			doActivate(context, createLc);
-			stopCheck.dispose();
-		}
 	}
 }
 
@@ -67,8 +60,8 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	client = createLc(
 		'vue-server',
 		'Vue Server',
-		getDocumentSelector(context, ServerMode.Semantic),
-		await getInitializationOptions(ServerMode.Semantic, context),
+		getDocumentSelector(),
+		await getInitializationOptions(context),
 		6009,
 		outputChannel
 	);
@@ -162,7 +155,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 			outputChannel.clear();
 
-			client.clientOptions.initializationOptions = await getInitializationOptions(ServerMode.Semantic, context, client.clientOptions.initializationOptions);
+			client.clientOptions.initializationOptions = await getInitializationOptions(context);
 
 			await client.start();
 
@@ -179,24 +172,9 @@ export function deactivate(): Thenable<any> | undefined {
 	return client?.stop();
 }
 
-export function getDocumentSelector(context: vscode.ExtensionContext, serverMode: ServerMode): lsp.DocumentFilter[] {
-	const takeOverMode = takeOverModeActive(context);
+export function getDocumentSelector(): lsp.DocumentFilter[] {
 	const selectors: lsp.DocumentFilter[] = [];
 	selectors.push({ language: 'vue' });
-	if (takeOverMode) {
-		selectors.push({ language: 'javascript' });
-		selectors.push({ language: 'typescript' });
-		selectors.push({ language: 'javascriptreact' });
-		selectors.push({ language: 'typescriptreact' });
-		if (serverMode === ServerMode.Semantic || serverMode === ServerMode.PartialSemantic) { // #2573
-			// support find references for .json files
-			selectors.push({ language: 'json' });
-			// comment out to avoid #2648 for now
-			// // support document links for tsconfig.json
-			// selectors.push({ language: 'jsonc', pattern: '**/[jt]sconfig.json' });
-			// selectors.push({ language: 'jsonc', pattern: '**/[jt]sconfig.*.json' });
-		}
-	}
 	if (config.server.petiteVue.supportHtmlFile) {
 		selectors.push({ language: 'html' });
 	}
@@ -207,21 +185,19 @@ export function getDocumentSelector(context: vscode.ExtensionContext, serverMode
 }
 
 async function getInitializationOptions(
-	serverMode: ServerMode,
 	context: vscode.ExtensionContext,
 	options: VueServerInitializationOptions = {},
 ) {
 	// volar
 	options.configFilePath = './__ignore__.config.js'; // config.server.configFilePath
-	options.serverMode = serverMode,
-		options.diagnosticModel = config.server.diagnosticModel === 'pull' ? DiagnosticModel.Pull : DiagnosticModel.Push,
-		options.typescript = { tsdk: (await getTsdk(context)).tsdk },
-		options.reverseConfigFilePriority = config.server.reverseConfigFilePriority,
-		options.maxFileSize = config.server.maxFileSize,
-		options.semanticTokensLegend = {
-			tokenTypes: ['component'],
-			tokenModifiers: [],
-		};
+	options.diagnosticModel = config.server.diagnosticModel === 'pull' ? DiagnosticModel.Pull : DiagnosticModel.Push;
+	options.typescript = { tsdk: (await getTsdk(context)).tsdk };
+	options.reverseConfigFilePriority = config.server.reverseConfigFilePriority;
+	options.maxFileSize = config.server.maxFileSize;
+	options.semanticTokensLegend = {
+		tokenTypes: ['component'],
+		tokenModifiers: [],
+	};
 	options.fullCompletionList = config.server.fullCompletionList;
 	options.additionalExtensions = [
 		...config.server.additionalExtensions,

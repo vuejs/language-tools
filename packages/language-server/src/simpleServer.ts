@@ -1,7 +1,7 @@
-import { SimpleServerPlugin, createConnection, startSimpleServer } from '@volar/language-server/node';
+import { createConnection, startSimpleServer } from '@volar/language-server/node';
 import { createServerPlugin } from './languageServerPlugin';
 
 const connection = createConnection();
 const plugin = createServerPlugin(connection);
 
-startSimpleServer(connection, plugin as SimpleServerPlugin);
+startSimpleServer(connection, plugin);
