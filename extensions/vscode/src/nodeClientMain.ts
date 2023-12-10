@@ -95,6 +95,10 @@ export async function activate(context: vscode.ExtensionContext) {
 			middleware,
 			documentSelector: documentSelector,
 			initializationOptions: initOptions,
+			markdown: {
+				isTrusted: true,
+				supportHtml: true,
+			},
 			outputChannel
 		};
 		const client = new _LanguageClient(
