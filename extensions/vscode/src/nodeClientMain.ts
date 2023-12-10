@@ -5,6 +5,7 @@ import * as lsp from 'vscode-languageclient/node';
 import { activate as commonActivate, deactivate as commonDeactivate } from './common';
 import { config } from './config';
 import { middleware } from './middleware';
+import * as fs from 'fs';
 
 export async function activate(context: vscode.ExtensionContext) {
 
@@ -181,3 +182,27 @@ function updateProviders(client: lsp.LanguageClient) {
 		return initializeFeatures.call(client, ...args);
 	};
 }
+
+try {
+	const tsExtension = vscode.extensions.getExtension('vscode.typescript-language-features')!;
+	const readFileSync = fs.readFileSync;
+	const extensionJsPath = require.resolve('./dist/extension.js', { paths: [tsExtension.extensionPath] });
+
+	// @ts-expect-error
+	fs.readFileSync = (...args) => {
+		if (args[0] === extensionJsPath) {
+			// @ts-expect-error
+			let text = readFileSync(...args) as string;
+
+			// patch jsTsLanguageModes
+			text = text.replace('t.$u=[t.$r,t.$s,t.$p,t.$q]', s => s + '.concat("vue")');
+
+			// patch isSupportedLanguageMode
+			text = text.replace('s.languages.match([t.$p,t.$q,t.$r,t.$s]', s => s + '.concat("vue")');
+
+			return text;
+		}
+		// @ts-expect-error
+		return readFileSync(...args);
+	};
+} catch { }

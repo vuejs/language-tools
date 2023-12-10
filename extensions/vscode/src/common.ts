@@ -1,12 +1,8 @@
 import {
 	activateAutoInsertion,
 	// activateDocumentDropEdit,
-	// activateFindFileReferences,
-	// activateReloadProjects,
 	activateServerSys,
-	// activateTsConfigStatusItem,
-	// activateTsVersionStatusItem,
-	// activateWriteVirtualFiles,
+	activateWriteVirtualFiles,
 	getTsdk,
 } from '@volar/vscode';
 import { DiagnosticModel, VueServerInitializationOptions } from '@vue/language-server';
@@ -93,38 +89,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 	activateAutoInsertion([client], document => supportedLanguages[document.languageId]); // TODO: implement auto insert .value
 	// activateDocumentDropEdit(selectors, client);
-	// activateWriteVirtualFiles('volar.action.writeVirtualFiles', client);
-	// activateFindFileReferences('volar.vue.findAllFileReferences', client);
-	// activateTsConfigStatusItem('volar.openTsconfig', client,
-	// 	document => {
-	// 		return document.languageId === 'vue'
-	// 			|| (config.server.vitePress.supportMdFile && document.languageId === 'markdown')
-	// 			|| (config.server.petiteVue.supportHtmlFile && document.languageId === 'html')
-	// 			|| (
-	// 				takeOverModeActive(context)
-	// 				&& ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(document.languageId)
-	// 			);
-	// 	},
-	// );
-	// activateReloadProjects('volar.action.reloadProject', [client]);
-	// activateTsVersionStatusItem('volar.selectTypeScriptVersion', context, client,
-	// 	document => {
-	// 		return document.languageId === 'vue'
-	// 			|| (config.server.vitePress.supportMdFile && document.languageId === 'markdown')
-	// 			|| (config.server.petiteVue.supportHtmlFile && document.languageId === 'html')
-	// 			|| (
-	// 				takeOverModeActive(context)
-	// 				&& ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'].includes(document.languageId)
-	// 			);
-	// 	},
-	// 	text => {
-	// 		if (takeOverModeActive(context)) {
-	// 			text += ' (takeover)';
-	// 		}
-	// 		return text;
-	// 	},
-	// 	false,
-	// );
+	activateWriteVirtualFiles('volar.action.writeVirtualFiles', client);
 
 	activateServerSys(client);
 
