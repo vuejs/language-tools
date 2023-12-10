@@ -607,16 +607,6 @@
 		},
 		"commands": [
 			{
-				"command": "volar.action.restartServer",
-				"title": "Restart Vue server",
-				"category": "Volar"
-			},
-			{
-				"command": "volar.action.reloadProject",
-				"title": "Reload Project",
-				"category": "Volar"
-			},
-			{
 				"command": "volar.action.doctor",
 				"title": "Doctor",
 				"category": "Volar"
@@ -636,27 +626,37 @@
 				"title": "Split <script>, <template>, <style> Editors",
 				"category": "Volar",
 				"icon": "images/split-editors.png"
-			},
-			{
-				"command": "volar.selectTypeScriptVersion",
-				"title": "Select TypeScript Version...",
-				"category": "Volar"
-			},
-			{
-				"command": "volar.vue.findAllFileReferences",
-				"title": "Vue: Find File References",
-				"category": "Volar"
 			}
 		],
 		"menus": {
+			"editor/context": [
+				{
+					"command": "typescript.goToSourceDefinition",
+					"when": "tsSupportsSourceDefinition && resourceLangId == vue",
+					"group": "navigation@9"
+				}
+			],
+			"explorer/context": [
+				{
+					"command": "typescript.findAllFileReferences",
+					"when": "tsSupportsFileReferences && resourceLangId == vue",
+					"group": "4_search"
+				}
+			],
+			"editor/title/context": [
+				{
+					"command": "typescript.findAllFileReferences",
+					"when": "tsSupportsFileReferences && resourceLangId == vue"
+				}
+			],
 			"commandPalette": [
 				{
-					"command": "volar.action.restartServer",
-					"when": "volar.activated"
+					"command": "typescript.reloadProjects",
+					"when": "editorLangId == vue && typescript.isManagedFile"
 				},
 				{
-					"command": "volar.action.reloadProject",
-					"when": "volar.activated"
+					"command": "typescript.goToProjectConfig",
+					"when": "editorLangId == vue"
 				},
 				{
 					"command": "volar.action.doctor",
@@ -669,10 +669,6 @@
 				{
 					"command": "volar.action.splitEditors",
 					"when": "editorLangId == vue"
-				},
-				{
-					"command": "volar.selectTypeScriptVersion",
-					"when": "volar.activated"
 				}
 			],
 			"editor/title": [
@@ -680,38 +676,6 @@
 					"command": "volar.action.splitEditors",
 					"when": "resourceLangId == vue && config.vue.splitEditors.icon",
 					"group": "navigation"
-				}
-			],
-			"explorer/context": [
-				{
-					"command": "volar.vue.findAllFileReferences",
-					"when": "resourceLangId == typescript",
-					"group": "4_search"
-				},
-				{
-					"command": "volar.vue.findAllFileReferences",
-					"when": "resourceLangId == typescriptreact",
-					"group": "4_search"
-				},
-				{
-					"command": "volar.vue.findAllFileReferences",
-					"when": "resourceLangId == javascript",
-					"group": "4_search"
-				},
-				{
-					"command": "volar.vue.findAllFileReferences",
-					"when": "resourceLangId == javascriptreact",
-					"group": "4_search"
-				},
-				{
-					"command": "volar.vue.findAllFileReferences",
-					"when": "resourceLangId == vue",
-					"group": "4_search"
-				},
-				{
-					"command": "volar.vue.findAllFileReferences",
-					"when": "resourceLangId == html",
-					"group": "4_search"
 				}
 			]
 		},
