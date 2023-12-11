@@ -1,6 +1,6 @@
 import {
 	activateAutoInsertion,
-	// activateDocumentDropEdit,
+	activateDocumentDropEdit,
 	activateServerSys,
 	activateWriteVirtualFiles,
 	getTsdk,
@@ -88,7 +88,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	}
 
 	activateAutoInsertion([client], document => supportedLanguages[document.languageId]); // TODO: implement auto insert .value
-	// activateDocumentDropEdit(selectors, client);
+	activateDocumentDropEdit(selectors, client);
 	activateWriteVirtualFiles('volar.action.writeVirtualFiles', client);
 
 	activateServerSys(client);
