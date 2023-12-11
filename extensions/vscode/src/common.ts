@@ -54,8 +54,8 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	const outputChannel = vscode.window.createOutputChannel('Vue Language Server');
 
 	client = createLc(
-		'vue-server',
-		'Vue Server',
+		'vue',
+		'Vue',
 		getDocumentSelector(),
 		await getInitializationOptions(context),
 		6009,
