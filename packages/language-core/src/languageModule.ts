@@ -86,7 +86,7 @@ export function createVueLanguage(
 		typescript: {
 			resolveSourceFileName(tsFileName) {
 				const baseName = path.basename(tsFileName);
-				if (baseName.indexOf('.vue.')) { // .vue.ts .vue.d.ts .vue.js .vue.jsx .vue.tsx
+				if (baseName.indexOf('.vue.') >= 0) { // .vue.ts .vue.d.ts .vue.js .vue.jsx .vue.tsx
 					return tsFileName.substring(0, tsFileName.lastIndexOf('.vue.') + '.vue'.length);
 				}
 			},
