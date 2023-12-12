@@ -35,6 +35,7 @@ for (const dirName of testDirs) {
 					const locations = await tester.languageService.findReferences(
 						uri,
 						position,
+						{ includeDeclaration: true },
 					);
 
 					expect(locations).toBeDefined();

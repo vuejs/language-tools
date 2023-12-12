@@ -45,7 +45,7 @@ export function* generate(
 			generic: undefined,
 			genericOffset: 0,
 			attrs: {},
-			ast: ts.createSourceFile('', '', ts.ScriptTarget.Latest, false, ts.ScriptKind.TS),
+			ast: ts.createSourceFile('', '', 99 satisfies ts.ScriptTarget.Latest, false, ts.ScriptKind.TS),
 		};
 		scriptSetupRanges = {
 			bindings: [],
@@ -1013,7 +1013,7 @@ type __VLS_NormalizeEmits<T> = __VLS_Prettify<
 				for (const [segment, offset, onlyError] of eachInterpolationSegment(
 					ts,
 					cssBind.text,
-					ts.createSourceFile('/a.txt', cssBind.text, ts.ScriptTarget.ESNext),
+					ts.createSourceFile('/a.txt', cssBind.text, 99 satisfies ts.ScriptTarget.ESNext),
 					emptyLocalVars,
 					cssIds,
 					vueCompilerOptions,

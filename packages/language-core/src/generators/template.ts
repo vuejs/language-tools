@@ -575,7 +575,7 @@ export function* generate(
 		if (leftExpressionRange && leftExpressionText) {
 
 			const collectAst = createTsAst(node.parseResult, `const [${leftExpressionText}]`);
-			collectVars(ts, collectAst, forBlockVars);
+			collectVars(ts, collectAst, collectAst, forBlockVars);
 
 			for (const varName of forBlockVars)
 				localVars.set(varName, (localVars.get(varName) ?? 0) + 1);
@@ -871,7 +871,7 @@ export function* generate(
 				);
 
 				const slotAst = createTsAst(slotDir, `(${slotDir.exp.content}) => {}`);
-				collectVars(ts, slotAst, slotBlockVars);
+				collectVars(ts, slotAst, slotAst, slotBlockVars);
 				hasProps = true;
 				if (slotDir.exp.content.indexOf(':') === -1) {
 					yield _ts('const [');
@@ -1093,10 +1093,10 @@ export function* generate(
 			const ast = createTsAst(prop.exp, prop.exp.content);
 			let isCompoundExpression = true;
 
-			if (ast.getChildCount() === 2) { // with EOF 
-				ast.forEachChild(child_1 => {
+			if (ast.statements.length === 1) {
+				ts.forEachChild(ast, child_1 => {
 					if (ts.isExpressionStatement(child_1)) {
-						child_1.forEachChild(child_2 => {
+						ts.forEachChild(child_1, child_2 => {
 							if (ts.isArrowFunction(child_2)) {
 								isCompoundExpression = false;
 							}
@@ -1902,7 +1902,7 @@ export function* generate(
 	function createTsAst(astHolder: any, text: string) {
 		if (astHolder.__volar_ast_text !== text) {
 			astHolder.__volar_ast_text = text;
-			astHolder.__volar_ast = ts.createSourceFile('/a.ts', text, ts.ScriptTarget.ESNext);
+			astHolder.__volar_ast = ts.createSourceFile('/a.ts', text, 99 satisfies ts.ScriptTarget.ESNext);
 		}
 		return astHolder.__volar_ast as ts.SourceFile;
 	}
