@@ -178,11 +178,6 @@ function getPartialVueCompilerOptions(
 
 		result.plugins = plugins;
 	}
-	if (rawOptions.hooks) {
-		result.hooks = rawOptions.hooks
-			.map(resolvePath)
-			.filter((hook): hook is NonNullable<typeof hook> => !!hook);
-	}
 	if (rawOptions.experimentalAdditionalLanguageModules) {
 		result.experimentalAdditionalLanguageModules = rawOptions.experimentalAdditionalLanguageModules
 			.map(resolvePath)
@@ -268,7 +263,6 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 			...vueOptions.macros,
 		},
 		plugins: vueOptions.plugins ?? [],
-		hooks: vueOptions.hooks ?? [],
 
 		// experimental
 		experimentalDefinePropProposal: vueOptions.experimentalDefinePropProposal ?? false,
