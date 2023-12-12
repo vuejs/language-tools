@@ -61,10 +61,6 @@
 					"default": [ ],
 					"markdownDescription": "Plugins to be used in the SFC compiler."
 				},
-				"hooks": {
-					"type": "array",
-					"markdownDescription": "https://github.com/vuejs/language-tools/pull/2217"
-				},
 				"optionsWrapper": {
 					"type": "array",
 					"default": [
