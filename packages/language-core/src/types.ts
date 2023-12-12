@@ -49,7 +49,6 @@ export interface VueCompilerOptions {
 		withDefaults: string[];
 	};
 	plugins: VueLanguagePlugin[];
-	hooks: string[];
 
 	// experimental
 	experimentalDefinePropProposal: 'kevinEdition' | 'johnsonEdition' | false;

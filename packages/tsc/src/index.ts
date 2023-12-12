@@ -1,9 +1,6 @@
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as vue from '@vue/language-core';
 import { createLanguage, decorateLanguageService, getDocumentRegistry, getProgram } from '@volar/typescript';
-import { state } from './shared';
-
-export type Hook = (program: _Program) => void;
 
 export type _Program = ts.Program & { __vue: ProgramContext; };
 
@@ -28,11 +25,7 @@ export function createProgram(options: ts.CreateProgramOptions) {
 
 	let program = options.oldProgram as _Program | undefined;
 
-	if (state.hook) {
-		program = state.hook.program;
-		program.__vue.options = options;
-	}
-	else if (!program) {
+	if (!program) {
 
 		const ctx: ProgramContext = {
 			projectVersion: 0,
@@ -143,21 +136,6 @@ export function createProgram(options: ts.CreateProgramOptions) {
 		const ctx: ProgramContext = program.__vue;
 		ctx.options = options;
 		ctx.projectVersion++;
-	}
-
-	const vueCompilerOptions = program.__vue.vueCompilerOptions;
-	if (vueCompilerOptions?.hooks) {
-		const index = (state.hook?.index ?? -1) + 1;
-		if (index < vueCompilerOptions.hooks.length) {
-			const hookPath = vueCompilerOptions.hooks[index];
-			const hook: Hook = require(hookPath);
-			state.hook = {
-				program,
-				index,
-				worker: (async () => await hook(program))(),
-			};
-			throw 'hook';
-		}
 	}
 
 	for (const rootName of options.rootNames) {
