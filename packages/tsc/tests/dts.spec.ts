@@ -2,35 +2,52 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
-import { createProgram } from '../out';
+import { proxyCreateProgram } from '@volar/typescript';
+import * as vue from '@vue/language-core';
 
 const workspace = path.resolve(__dirname, '../../../test-workspace/component-meta');
-const testFiles = readFilesRecursive(workspace);
-const ensureTs = (filename: string) => filename.endsWith('.ts') || filename.endsWith('.tsx') ? filename : filename + '.ts';
+const intputFiles = readFilesRecursive(workspace);
 const normalizePath = (filename: string) => filename.replace(/\\/g, '/');
 const normalizeNewline = (text: string) => text.replace(/\r\n/g, '\n');
+const windowsPathReg = /\\/g;
 
 describe('vue-tsc-dts', () => {
 	const compilerOptions: ts.CompilerOptions = {
 		rootDir: workspace,
 		declaration: true,
 		emitDeclarationOnly: true,
+		allowNonTsExtensions: true,
 	};
 	const host = ts.createCompilerHost(compilerOptions);
+	const createProgram = proxyCreateProgram(ts, ts.createProgram, ['.vue'], (ts, options) => {
+		const { configFilePath } = options.options;
+		const vueOptions = typeof configFilePath === 'string'
+			? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
+			: {};
+		return vue.createLanguages(
+			ts,
+			options.options,
+			vueOptions,
+		);
+	});
 	const program = createProgram({
 		host,
-		rootNames: testFiles,
+		rootNames: intputFiles,
 		options: compilerOptions
 	});
-	const service = program.__vue.languageService;
 
-	for (const file of testFiles) {
-		const output = service.getEmitOutput(ensureTs(file), true);
-		for (const outputFile of output.outputFiles) {
-			it(`Input: ${shortenPath(file)}, Output: ${shortenPath(outputFile.name)}`, () => {
-				expect(normalizeNewline(outputFile.text)).toMatchSnapshot();
-			});
-		}
+	for (const intputFile of intputFiles) {
+		const sourceFile = program.getSourceFile(intputFile);
+		program.emit(
+			sourceFile,
+			(outputFile, text) => {
+				it(`Input: ${shortenPath(intputFile)}, Output: ${shortenPath(outputFile)}`, () => {
+					expect(normalizeNewline(text)).toMatchSnapshot();
+				});
+			},
+			undefined,
+			true,
+		);
 	}
 });
 
