@@ -37,18 +37,13 @@ describe('vue-tsc-dts', () => {
 	});
 
 	for (const intputFile of intputFiles) {
-		const expectedFile = intputFile.endsWith('.vue')
-			? intputFile + '.d.ts'
-			: path.join(path.dirname(intputFile), path.basename(intputFile, '.ts')) + '.d.ts';
 		const sourceFile = program.getSourceFile(intputFile);
 		program.emit(
 			sourceFile,
 			(outputFile, text) => {
-				if (outputFile === expectedFile) {
-					it(`Input: ${shortenPath(intputFile)}, Output: ${shortenPath(outputFile)}`, () => {
-						expect(normalizeNewline(text)).toMatchSnapshot();
-					});
-				}
+				it(`Input: ${shortenPath(intputFile)}, Output: ${shortenPath(outputFile)}`, () => {
+					expect(normalizeNewline(text)).toMatchSnapshot();
+				});
 			},
 			undefined,
 			true,
