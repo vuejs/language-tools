@@ -9,8 +9,7 @@ import * as fs from 'fs';
 
 export async function activate(context: vscode.ExtensionContext) {
 
-	const languageClients: lsp.LanguageClient[] = [];
-
+	let languageClient: lsp.LanguageClient;
 	let serverPathStatusItem: vscode.StatusBarItem | undefined;
 
 	await commonActivate(context, (
@@ -110,7 +109,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		);
 		client.start();
 
-		languageClients.push(client);
+		languageClient = client;
 
 		updateProviders(client);
 
@@ -149,7 +148,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		volarLabs: {
 			version: supportLabsVersion,
 			codegenStackSupport: true,
-			languageClients,
+			languageClient: languageClient!,
 			languageServerProtocol: serverLib,
 		},
 	} satisfies ExportsInfoForLabs;

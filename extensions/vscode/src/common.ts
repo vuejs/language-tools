@@ -70,14 +70,6 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	// doctor.register(context, client);
 	// componentMeta.register(context, client);
 
-	const supportedLanguages: Record<string, boolean> = {
-		vue: true,
-		markdown: true,
-		javascript: true,
-		typescript: true,
-		javascriptreact: true,
-		typescriptreact: true,
-	};
 	const selectors: vscode.DocumentFilter[] = [{ language: 'vue' }];
 
 	if (config.server.petiteVue.supportHtmlFile) {
@@ -87,7 +79,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		selectors.push({ language: 'markdown' });
 	}
 
-	activateAutoInsertion([client], document => supportedLanguages[document.languageId]); // TODO: implement auto insert .value
+	activateAutoInsertion(selectors, client); // TODO: implement auto insert .value
 	activateDocumentDropEdit(selectors, client);
 	activateWriteVirtualFiles('volar.action.writeVirtualFiles', client);
 

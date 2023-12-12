@@ -1,6 +1,7 @@
 import { isGloballyWhitelisted } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { VueCompilerOptions } from '../types';
+import { getNodeText, getStartEnd } from '../parsers/scriptSetupRanges';
 
 export function* eachInterpolationSegment(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
@@ -17,25 +18,26 @@ export function* eachInterpolationSegment(
 ): Generator<[fragment: string, offset: number | undefined, isJustForErrorMapping?: boolean]> {
 
 	const varCb = (id: ts.Identifier, isShorthand: boolean) => {
+		const text = getNodeText(ts, id, ast);
 		if (
-			localVars.get(id.text) ||
+			localVars.get(text) ||
 			// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/compiler-core/src/transforms/transformExpression.ts#L342-L352
-			isGloballyWhitelisted(id.text) ||
-			id.text === 'require' ||
-			id.text.startsWith('__VLS_')
+			isGloballyWhitelisted(text) ||
+			text === 'require' ||
+			text.startsWith('__VLS_')
 		) {
 			// localVarOffsets.push(localVar.getStart(ast));
 		}
 		else {
 			ctxVars.push({
-				text: id.text,
+				text,
 				isShorthand: isShorthand,
-				offset: id.getStart(ast),
+				offset: getStartEnd(ts, id, ast).start,
 			});
-			identifiers.add(id.text);
+			identifiers.add(text);
 		}
 	};
-	ast.forEachChild(node => walkIdentifiers(ts, node, varCb, localVars));
+	ts.forEachChild(ast, node => walkIdentifiers(ts, node, ast, varCb, localVars));
 
 	ctxVars = ctxVars.sort((a, b) => a.offset - b.offset);
 
@@ -110,6 +112,7 @@ export function* eachInterpolationSegment(
 function walkIdentifiers(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	node: ts.Node,
+	ast: ts.SourceFile,
 	cb: (varNode: ts.Identifier, isShorthand: boolean) => void,
 	localVars: Map<string, number>,
 	blockVars: string[] = [],
@@ -123,34 +126,34 @@ function walkIdentifiers(
 		cb(node.name, true);
 	}
 	else if (ts.isPropertyAccessExpression(node)) {
-		walkIdentifiers(ts, node.expression, cb, localVars, blockVars, false);
+		walkIdentifiers(ts, node.expression, ast, cb, localVars, blockVars, false);
 	}
 	else if (ts.isVariableDeclaration(node)) {
 
-		collectVars(ts, node.name, blockVars);
+		collectVars(ts, node.name, ast, blockVars);
 
 		for (const varName of blockVars) {
 			localVars.set(varName, (localVars.get(varName) ?? 0) + 1);
 		}
 
 		if (node.initializer)
-			walkIdentifiers(ts, node.initializer, cb, localVars, blockVars, false);
+			walkIdentifiers(ts, node.initializer, ast, cb, localVars, blockVars, false);
 	}
 	else if (ts.isArrowFunction(node) || ts.isFunctionExpression(node)) {
 
 		const functionArgs: string[] = [];
 
 		for (const param of node.parameters) {
-			collectVars(ts, param.name, functionArgs);
+			collectVars(ts, param.name, ast, functionArgs);
 			if (param.type) {
-				walkIdentifiers(ts, param.type, cb, localVars, blockVars, false);
+				walkIdentifiers(ts, param.type, ast, cb, localVars, blockVars, false);
 			}
 		}
 
 		for (const varName of functionArgs)
 			localVars.set(varName, (localVars.get(varName) ?? 0) + 1);
 
-		walkIdentifiers(ts, node.body, cb, localVars, blockVars, false);
+		walkIdentifiers(ts, node.body, ast, cb, localVars, blockVars, false);
 
 		for (const varName of functionArgs)
 			localVars.set(varName, localVars.get(varName)! - 1);
@@ -160,31 +163,31 @@ function walkIdentifiers(
 			if (ts.isPropertyAssignment(prop)) {
 				// fix https://github.com/vuejs/language-tools/issues/1176
 				if (ts.isComputedPropertyName(prop.name)) {
-					walkIdentifiers(ts, prop.name.expression, cb, localVars, blockVars, false);
+					walkIdentifiers(ts, prop.name.expression, ast, cb, localVars, blockVars, false);
 				}
-				walkIdentifiers(ts, prop.initializer, cb, localVars, blockVars, false);
+				walkIdentifiers(ts, prop.initializer, ast, cb, localVars, blockVars, false);
 			}
 			// fix https://github.com/vuejs/language-tools/issues/1156
 			else if (ts.isShorthandPropertyAssignment(prop)) {
-				walkIdentifiers(ts, prop, cb, localVars, blockVars, false);
+				walkIdentifiers(ts, prop, ast, cb, localVars, blockVars, false);
 			}
 			// fix https://github.com/vuejs/language-tools/issues/1148#issuecomment-1094378126
 			else if (ts.isSpreadAssignment(prop)) {
 				// TODO: cannot report "Spread types may only be created from object types.ts(2698)"
-				walkIdentifiers(ts, prop.expression, cb, localVars, blockVars, false);
+				walkIdentifiers(ts, prop.expression, ast, cb, localVars, blockVars, false);
 			}
 		}
 	}
 	else if (ts.isTypeReferenceNode(node)) {
 		// fix https://github.com/vuejs/language-tools/issues/1422
-		node.forEachChild(node => walkIdentifiersInTypeReference(ts, node, cb));
+		ts.forEachChild(node, node => walkIdentifiersInTypeReference(ts, node, cb));
 	}
 	else {
 		const _blockVars = blockVars;
 		if (ts.isBlock(node)) {
 			blockVars = [];
 		}
-		node.forEachChild(node => walkIdentifiers(ts, node, cb, localVars, blockVars, false));
+		ts.forEachChild(node, node => walkIdentifiers(ts, node, ast, cb, localVars, blockVars, false));
 		if (ts.isBlock(node)) {
 			for (const varName of blockVars) {
 				localVars.set(varName, localVars.get(varName)! - 1);
@@ -209,31 +212,32 @@ function walkIdentifiersInTypeReference(
 		cb(node.exprName, false);
 	}
 	else {
-		node.forEachChild(node => walkIdentifiersInTypeReference(ts, node, cb));
+		ts.forEachChild(node, node => walkIdentifiersInTypeReference(ts, node, cb));
 	}
 }
 
 export function collectVars(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	node: ts.Node,
+	ast: ts.SourceFile,
 	result: string[],
 ) {
 	if (ts.isIdentifier(node)) {
-		result.push(node.text);
+		result.push(getNodeText(ts, node, ast));
 	}
 	else if (ts.isObjectBindingPattern(node)) {
 		for (const el of node.elements) {
-			collectVars(ts, el.name, result);
+			collectVars(ts, el.name, ast, result);
 		}
 	}
 	else if (ts.isArrayBindingPattern(node)) {
 		for (const el of node.elements) {
 			if (ts.isBindingElement(el)) {
-				collectVars(ts, el.name, result);
+				collectVars(ts, el.name, ast, result);
 			}
 		}
 	}
 	else {
-		node.forEachChild(node => collectVars(ts, node, result));
+		ts.forEachChild(node, node => collectVars(ts, node, ast, result));
 	}
 }
