@@ -1,6 +1,6 @@
 import type { TextRange } from '../types';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import { getStartEnd, parseBindingRanges } from './scriptSetupRanges';
+import { getNodeText, getStartEnd, parseBindingRanges } from './scriptSetupRanges';
 
 export interface ScriptRanges extends ReturnType<typeof parseScriptRanges> { }
 
@@ -17,12 +17,12 @@ export function parseScriptRanges(ts: typeof import('typescript/lib/tsserverlibr
 
 	const bindings = hasScriptSetup ? parseBindingRanges(ts, ast) : [];
 
-	ast.forEachChild(raw => {
+	ts.forEachChild(ast, raw => {
 
 		if (ts.isExportAssignment(raw)) {
 
 			let node: ts.AsExpression | ts.ExportAssignment | ts.ParenthesizedExpression = raw;
-			while (ts.isAsExpression(node.expression) || ts.isParenthesizedExpression(node.expression)) { // fix https://github.com/vuejs/language-tools/issues/1882
+			while (isAsExpression(node.expression) || ts.isParenthesizedExpression(node.expression)) { // fix https://github.com/vuejs/language-tools/issues/1882
 				node = node.expression;
 			}
 
@@ -39,12 +39,13 @@ export function parseScriptRanges(ts: typeof import('typescript/lib/tsserverlibr
 			if (obj) {
 				let componentsOptionNode: ts.ObjectLiteralExpression | undefined;
 				let nameOptionNode: ts.Expression | undefined;
-				obj.forEachChild(node => {
+				ts.forEachChild(obj, node => {
 					if (ts.isPropertyAssignment(node) && ts.isIdentifier(node.name)) {
-						if (node.name.escapedText === 'components' && ts.isObjectLiteralExpression(node.initializer)) {
+						const name = getNodeText(ts, node.name, ast);
+						if (name === 'components' && ts.isObjectLiteralExpression(node.initializer)) {
 							componentsOptionNode = node.initializer;
 						}
-						if (node.name.escapedText === 'name') {
+						if (name === 'name') {
 							nameOptionNode = node.initializer;
 						}
 					}
@@ -68,6 +69,11 @@ export function parseScriptRanges(ts: typeof import('typescript/lib/tsserverlibr
 	};
 
 	function _getStartEnd(node: ts.Node) {
-		return getStartEnd(node, ast);
+		return getStartEnd(ts, node, ast);
+	}
+
+	// isAsExpression is missing in tsc
+	function isAsExpression(node: ts.Node): node is ts.AsExpression {
+		return node.kind === ts.SyntaxKind.AsExpression;
 	}
 }

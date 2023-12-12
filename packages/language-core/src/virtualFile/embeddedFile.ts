@@ -5,7 +5,7 @@ export class VueEmbeddedFile {
 
 	public parentFileName?: string;
 	public typescript: VirtualFile['typescript'];
-	public linkedNavigationMappings: Mapping[] = [];
+	public linkedCodeMappings: Mapping[] = [];
 
 	constructor(
 		public fileName: string,
