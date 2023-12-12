@@ -31,39 +31,6 @@ export function create(): ServicePlugin {
 						return result;
 					});
 				},
-
-				async resolveReferencesCodeLensLocations(document, range, references) {
-
-					const [virtualFile, sourceFile] = context.language.files.getVirtualFile(context.env.uriToFileName(document.uri));
-					if (virtualFile && sourceFile?.virtualFile?.[0] instanceof VueFile) {
-						const vueFile = sourceFile.virtualFile[0];
-						const blocks = [
-							vueFile.sfc.script,
-							vueFile.sfc.scriptSetup,
-							vueFile.sfc.template,
-							...vueFile.sfc.styles,
-							...vueFile.sfc.customBlocks,
-						];
-						for (const map of context.documents.getMaps(virtualFile)) {
-							const sourceOffset = map.map.getSourceOffset(document.offsetAt(range.start));
-							if (sourceOffset !== undefined) {
-								const sourceBlock = blocks.find(block => block && sourceOffset[0] >= block.startTagEnd && sourceOffset[0] <= block.endTagStart);
-								const sourceDocument = context.documents.get(context.env.fileNameToUri(sourceFile.fileName), sourceFile.languageId, sourceFile.snapshot);
-								references = references.filter(reference =>
-									reference.uri !== sourceDocument.uri // different file
-									|| sourceBlock !== blocks.find(block =>
-										block
-										&& sourceDocument.offsetAt(reference.range.start) >= block.startTagEnd
-										&& sourceDocument.offsetAt(reference.range.end) <= block.endTagStart
-									) // different block
-								);
-								break;
-							}
-						}
-					}
-
-					return references;
-				},
 			};
 
 			function worker<T>(uri: string, callback: (vueFile: VirtualFile, sourceFile: SourceFile) => T) {

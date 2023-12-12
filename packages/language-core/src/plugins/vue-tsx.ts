@@ -64,7 +64,7 @@ const plugin: VueLanguagePlugin = (ctx) => {
 					});
 					embeddedFile.content = content;
 					embeddedFile.contentStacks = contentStacks;
-					embeddedFile.linkedNavigationMappings = [...tsx.linkedCodeMappings];
+					embeddedFile.linkedCodeMappings = [...tsx.linkedCodeMappings];
 				}
 			}
 			else if (suffix.match(templateFormatReg)) {
