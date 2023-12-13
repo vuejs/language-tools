@@ -320,8 +320,8 @@ export function* generate(
 			// order is important: https://github.com/vuejs/language-tools/issues/2010
 			yield _ts(`"${capitalize(camelize(tagName))}", `);
 			yield _ts(`"${camelize(tagName)}", `);
-			yield _ts(`"${tagName}"`);
-			yield _ts('>\n');
+			yield _ts(`"${tagName}", `);
+			yield _ts('__VLS_GlobalComponents>\n');
 		}
 
 		yield _ts(`;\n`);

@@ -20,18 +20,6 @@ type __VLS_OmitKeepDiscriminatedUnion<T, K extends keyof any> =
 		? Pick<T, Exclude<keyof T, K>>
 		: never;
 
-type __VLS_GlobalComponents =
-	__VLS_PickNotAny<import('vue').GlobalComponents, {}>
-	& __VLS_PickNotAny<import('@vue/runtime-core').GlobalComponents, {}>
-	& __VLS_PickNotAny<import('@vue/runtime-dom').GlobalComponents, {}>
-	& Pick<typeof import('${vueCompilerOptions.lib}'),
-		'Transition'
-		| 'TransitionGroup'
-		| 'KeepAlive'
-		| 'Suspense'
-		| 'Teleport'
-	>;
-
 declare const __VLS_intrinsicElements: __VLS_IntrinsicElements;
 
 // v-for
@@ -62,13 +50,13 @@ declare function __VLS_withScope<T, K>(ctx: T, scope: K): ctx is T & K;
 declare function __VLS_makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
 
 type __VLS_SelfComponent<N, C> = string extends N ? {} : N extends string ? { [P in N]: C } : {};
-type __VLS_WithComponent<N0 extends string, LocalComponents, N1 extends string, N2 extends string, N3 extends string> =
+type __VLS_WithComponent<N0 extends string, LocalComponents, N1 extends string, N2 extends string, N3 extends string, G extends Record<string, unknown>> =
 	N1 extends keyof LocalComponents ? N1 extends N0 ? Pick<LocalComponents, N0> : { [K in N0]: LocalComponents[N1] } :
 	N2 extends keyof LocalComponents ? N2 extends N0 ? Pick<LocalComponents, N0> : { [K in N0]: LocalComponents[N2] } :
 	N3 extends keyof LocalComponents ? N3 extends N0 ? Pick<LocalComponents, N0> : { [K in N0]: LocalComponents[N3] } :
-	N1 extends keyof __VLS_GlobalComponents ? N1 extends N0 ? Pick<__VLS_GlobalComponents, N0> : { [K in N0]: __VLS_GlobalComponents[N1] } :
-	N2 extends keyof __VLS_GlobalComponents ? N2 extends N0 ? Pick<__VLS_GlobalComponents, N0> : { [K in N0]: __VLS_GlobalComponents[N2] } :
-	N3 extends keyof __VLS_GlobalComponents ? N3 extends N0 ? Pick<__VLS_GlobalComponents, N0> : { [K in N0]: __VLS_GlobalComponents[N3] } :
+	N1 extends keyof G ? N1 extends N0 ? Pick<G, N0> : { [K in N0]: G[N1] } :
+	N2 extends keyof G ? N2 extends N0 ? Pick<G, N0> : { [K in N0]: G[N2] } :
+	N3 extends keyof G ? N3 extends N0 ? Pick<G, N0> : { [K in N0]: G[N3] } :
 	${vueCompilerOptions.strictTemplates ? '{}' : '{ [K in N0]: unknown }'}
 
 type __VLS_FillingEventArg_ParametersLength<E extends (...args: any) => any> = __VLS_IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];

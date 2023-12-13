@@ -808,6 +808,19 @@ export function* generate(
 
 		/* Components */
 		yield _(`/* Components */\n`);
+		yield _(`
+			type __VLS_GlobalComponents =
+				__VLS_PickNotAny<import('vue').GlobalComponents, {}>
+				& __VLS_PickNotAny<import('@vue/runtime-core').GlobalComponents, {}>
+				& __VLS_PickNotAny<import('@vue/runtime-dom').GlobalComponents, {}>
+				& Pick<typeof import('${vueCompilerOptions.lib}'),
+					'Transition'
+					| 'TransitionGroup'
+					| 'KeepAlive'
+					| 'Suspense'
+					| 'Teleport'
+				>;
+		`);
 		yield _(`let __VLS_otherComponents!: NonNullable<typeof __VLS_internalComponent extends { components: infer C } ? C : {}> & typeof __VLS_componentsOption;\n`);
 		yield _(`let __VLS_own!: __VLS_SelfComponent<typeof __VLS_name, typeof __VLS_internalComponent & (new () => { ${getSlotsPropertyName(vueCompilerOptions.target)}: typeof ${scriptSetupRanges?.slots?.name ?? '__VLS_slots'} })>;\n`);
 		yield _(`let __VLS_localComponents!: typeof __VLS_otherComponents & Omit<typeof __VLS_own, keyof typeof __VLS_otherComponents>;\n`);
