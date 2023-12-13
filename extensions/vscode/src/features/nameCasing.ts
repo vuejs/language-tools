@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import type { Disposable } from 'vscode';
 import { quickPick } from '@volar/vscode/lib/common';
 import { BaseLanguageClient, State } from 'vscode-languageclient';
 import { AttrNameCasing, TagNameCasing, DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest } from '@vue/language-server';
@@ -12,7 +11,7 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 
 	await client.start();
 
-	const disposes: Disposable[] = [];
+	const disposes: vscode.Disposable[] = [];
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	statusBar.command = 'volar.action.nameCasing';
 
