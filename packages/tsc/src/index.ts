@@ -1,16 +1,36 @@
-import * as vue from '@vue/language-core';
 import { runTsc } from '@volar/typescript/lib/starters/runTsc';
+import * as vue from '@vue/language-core';
+
+let runExtensions = ['.vue'];
 
 const windowsPathReg = /\\/g;
-
-runTsc(require.resolve('typescript/lib/tsc'), ['.vue'], (ts, options) => {
+const extensionsChangedException = new Error('extensions changed');
+const main = () => runTsc(require.resolve('typescript/lib/tsc'), runExtensions, (ts, options) => {
 	const { configFilePath } = options.options;
 	const vueOptions = typeof configFilePath === 'string'
 		? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
 		: {};
-	return vue.createLanguages(
-		ts,
-		options.options,
-		vueOptions,
-	);
+	const extensions = vueOptions.extensions ?? ['.vue'];
+	if (
+		runExtensions.length === extensions.length
+		&& runExtensions.every(ext => extensions.includes(ext))
+	) {
+		return vue.createLanguages(
+			ts,
+			options.options,
+			vueOptions,
+		);
+	}
+	else {
+		runExtensions = extensions;
+		throw extensionsChangedException;
+	}
 });
+
+try {
+	main();
+} catch (err) {
+	if (err === extensionsChangedException) {
+		main();
+	}
+}
