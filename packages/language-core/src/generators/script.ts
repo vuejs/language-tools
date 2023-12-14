@@ -34,7 +34,7 @@ export function* generate(
 	} | undefined,
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
-	globalTypesHolder: string,
+	globalTypesHolder: string | undefined,
 	getGeneratedLength: () => number,
 	linkedCodeMappings: Mapping[] = [],
 	codegenStack: boolean,

@@ -1,6 +1,6 @@
 import type { LanguagePlugin } from '@volar/language-core';
 import * as path from 'path-browserify';
-import { getDefaultVueLanguagePlugins } from './plugins';
+import { getDefaultVueLanguagePlugins, createPluginContext } from './plugins';
 import { VueFile } from './virtualFile/vueFile';
 import { VueCompilerOptions, VueLanguagePlugin } from './types';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -32,6 +32,25 @@ function getVueFileRegistry(key: string, plugins: VueLanguagePlugin[]) {
 	return fileRegistry;
 }
 
+function getFileRegistryKey(
+	compilerOptions: ts.CompilerOptions,
+	vueCompilerOptions: VueCompilerOptions,
+	plugins: ReturnType<VueLanguagePlugin>[],
+	globalTypesHolder: string | undefined,
+) {
+	const values = [
+		globalTypesHolder,
+		...Object.keys(vueCompilerOptions)
+			.sort()
+			.filter(key => key !== 'plugins')
+			.map(key => [key, vueCompilerOptions[key as keyof VueCompilerOptions]]),
+		[...new Set(plugins.map(plugin => plugin.requiredCompilerOptions ?? []).flat())]
+			.sort()
+			.map(key => [key, compilerOptions[key as keyof ts.CompilerOptions]]),
+	];
+	return JSON.stringify(values);
+}
+
 export function createVueLanguage(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	compilerOptions: ts.CompilerOptions = {},
@@ -42,6 +61,14 @@ export function createVueLanguage(
 
 	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);
 	const allowLanguageIds = new Set(['vue']);
+	const pluginContext = createPluginContext(
+		ts,
+		compilerOptions,
+		vueCompilerOptions,
+		codegenStack,
+		globalTypesHolder,
+	);
+	const plugins = getDefaultVueLanguagePlugins(pluginContext);
 
 	if (vueCompilerOptions.extensions.includes('.md')) {
 		allowLanguageIds.add('markdown');
@@ -51,7 +78,6 @@ export function createVueLanguage(
 	}
 
 	let fileRegistry: Map<string, VueFile> | undefined;
-	let plugins: ReturnType<VueLanguagePlugin>[] = [];
 
 	return {
 		createVirtualFile(fileName, languageId, snapshot) {
@@ -59,29 +85,11 @@ export function createVueLanguage(
 
 				if (!fileRegistry) {
 
-					globalTypesHolder ??= fileName;
-
-					const keys = [
-						globalTypesHolder,
-						...Object.keys(vueCompilerOptions)
-							.sort()
-							.filter(key => key !== 'plugins')
-							.map(key => [key, vueCompilerOptions[key as keyof VueCompilerOptions]]),
-						[...new Set(plugins.map(plugin => plugin.requiredCompilerOptions ?? []).flat())]
-							.sort()
-							.map(key => [key, compilerOptions[key as keyof ts.CompilerOptions]]),
-					];
+					pluginContext.globalTypesHolder ??= fileName;
 
 					fileRegistry = getVueFileRegistry(
-						JSON.stringify(keys),
+						getFileRegistryKey(compilerOptions, vueCompilerOptions, plugins, pluginContext.globalTypesHolder),
 						vueCompilerOptions.plugins,
-					);
-					plugins = getDefaultVueLanguagePlugins(
-						ts,
-						compilerOptions,
-						vueCompilerOptions,
-						codegenStack,
-						globalTypesHolder,
 					);
 				}
 
@@ -95,8 +103,35 @@ export function createVueLanguage(
 				return vueFile;
 			}
 		},
-		updateVirtualFile(sourceFile, snapshot) {
-			sourceFile.update(snapshot);
+		updateVirtualFile(vueFile, snapshot) {
+			vueFile.update(snapshot);
+		},
+		disposeVirtualFile(vueFile, files) {
+			fileRegistry?.delete(vueFile.fileName);
+			if (vueFile.fileName === pluginContext.globalTypesHolder) {
+				if (fileRegistry?.size) {
+					for (const [fileName, file] of fileRegistry!) {
+						pluginContext.globalTypesHolder = fileName;
+
+						fileRegistry = getVueFileRegistry(
+							getFileRegistryKey(compilerOptions, vueCompilerOptions, plugins, pluginContext.globalTypesHolder),
+							vueCompilerOptions.plugins,
+						);
+
+						files.updateSourceFile(
+							file.fileName,
+							file.languageId,
+							// force dirty
+							{ ...file.snapshot },
+						);
+						break;
+					}
+				}
+				else {
+					fileRegistry = undefined;
+					pluginContext.globalTypesHolder = undefined;
+				}
+			}
 		},
 		typescript: {
 			resolveSourceFileName(tsFileName) {

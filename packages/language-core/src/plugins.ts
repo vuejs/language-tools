@@ -12,26 +12,13 @@ import { VueCompilerOptions, VueLanguagePlugin } from './types';
 import * as CompilerDOM from '@vue/compiler-dom';
 import * as CompilerVue2 from './utils/vue2TemplateCompiler';
 
-export function getDefaultVueLanguagePlugins(
+export function createPluginContext(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
 	codegenStack: boolean,
-	globalTypesHolder: string,
+	globalTypesHolder: string | undefined,
 ) {
-
-	const plugins: VueLanguagePlugin[] = [
-		useMdFilePlugin, // .md for VitePress
-		useHtmlFilePlugin, // .html for PetiteVue
-		useVueFilePlugin, // .vue and others for Vue
-		useHtmlTemplatePlugin,
-		useVueSfcStyles,
-		useVueSfcCustomBlocks,
-		useVueSfcScriptsFormat,
-		useVueSfcTemplate,
-		useVueTsx,
-		...vueCompilerOptions.plugins,
-	];
 	const pluginCtx: Parameters<VueLanguagePlugin>[0] = {
 		modules: {
 			'@vue/compiler-dom': vueCompilerOptions.target < 3
@@ -47,8 +34,26 @@ export function getDefaultVueLanguagePlugins(
 		codegenStack,
 		globalTypesHolder,
 	};
+	return pluginCtx;
+}
+
+export function getDefaultVueLanguagePlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
+
+	const plugins: VueLanguagePlugin[] = [
+		useMdFilePlugin, // .md for VitePress
+		useHtmlFilePlugin, // .html for PetiteVue
+		useVueFilePlugin, // .vue and others for Vue
+		useHtmlTemplatePlugin,
+		useVueSfcStyles,
+		useVueSfcCustomBlocks,
+		useVueSfcScriptsFormat,
+		useVueSfcTemplate,
+		useVueTsx,
+		...pluginContext.vueCompilerOptions.plugins,
+	];
+	;
 	const pluginInstances = plugins
-		.map(plugin => plugin(pluginCtx))
+		.map(plugin => plugin(pluginContext))
 		.sort((a, b) => {
 			const aOrder = a.order ?? 0;
 			const bOrder = b.order ?? 0;
