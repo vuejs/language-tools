@@ -134,7 +134,7 @@ export function* generate(
 	const scopedClasses: { className: string, offset: number; }[] = [];
 	const blockConditions: string[] = [];
 	const hasSlotElements = new Set<CompilerDOM.ElementNode>();
-	const componentCtxVar2EmitEventsVar = new Map<string, string>();
+	const usedComponentCtxVars = new Set<string>();
 
 	let hasSlot = false;
 	let ignoreError = false;
@@ -330,7 +330,7 @@ export function* generate(
 
 			for (const tagOffset of tagOffsets) {
 				if (nativeTags.has(tagName)) {
-					yield _ts('__VLS_intrinsicElements');
+					yield _ts(`__VLS_intrinsicElements`);
 					yield* generatePropertyAccess(
 						tagName,
 						tagOffset,
@@ -339,10 +339,10 @@ export function* generate(
 							{
 								navigation: true
 							},
-							...(nativeTags.has(tagName) ? [
+							...[
 								presetInfos.tagHover,
 								presetInfos.diagnosticOnly,
-							] : []),
+							],
 						),
 					);
 					yield _ts(';');
@@ -362,10 +362,6 @@ export function* generate(
 										resolveRenameEditText: getTagRenameApply(tagName),
 									}
 								},
-								...(nativeTags.has(tagName) ? [
-									presetInfos.tagHover,
-									presetInfos.diagnosticOnly,
-								] : []),
 							),
 						);
 						yield _ts(';');
@@ -781,14 +777,17 @@ export function* generate(
 			yield _ts(`);\n`);
 		}
 
+		let defineComponentCtxVar: string | undefined;
+
 		if (tag !== 'template' && tag !== 'slot') {
-			componentCtxVar = `__VLS_${elementIndex++}`;
-			const componentEventsVar = `__VLS_${elementIndex++}`;
-			yield _ts(`const ${componentCtxVar} = __VLS_pickFunctionalComponentCtx(${var_originalComponent}, ${var_componentInstance})!;\n`);
-			yield _ts(`let ${componentEventsVar}!: __VLS_NormalizeEmits<typeof ${componentCtxVar}.emit>;\n`);
-			componentCtxVar2EmitEventsVar.set(componentCtxVar, componentEventsVar);
+			defineComponentCtxVar = `__VLS_${elementIndex++}`;
+			componentCtxVar = defineComponentCtxVar;
 			parentEl = node;
 		}
+
+		const componentEventsVar = `__VLS_${elementIndex++}`;
+
+		let usedComponentEventsVar = false;
 
 		//#region
 		// fix https://github.com/vuejs/language-tools/issues/1775
@@ -842,7 +841,8 @@ export function* generate(
 			yield* generateReferencesForScopedCssClasses(node);
 		}
 		if (componentCtxVar) {
-			yield* generateEvents(node, var_functionalComponent, var_componentInstance, componentCtxVar);
+			usedComponentCtxVars.add(componentCtxVar);
+			yield* generateEvents(node, var_functionalComponent, var_componentInstance, componentEventsVar, () => usedComponentEventsVar = true);
 		}
 		if (node.tag === 'slot') {
 			yield* generateSlot(node, startTagOffset);
@@ -856,6 +856,7 @@ export function* generate(
 
 		const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
 		if (slotDir && componentCtxVar) {
+			usedComponentCtxVars.add(componentCtxVar);
 			if (parentEl) {
 				hasSlotElements.add(parentEl);
 			}
@@ -970,10 +971,17 @@ export function* generate(
 			}
 		}
 
+		if (defineComponentCtxVar && usedComponentCtxVars.has(defineComponentCtxVar)) {
+			yield _ts(`const ${componentCtxVar} = __VLS_pickFunctionalComponentCtx(${var_originalComponent}, ${var_componentInstance})!;\n`);
+		}
+		if (usedComponentEventsVar) {
+			yield _ts(`let ${componentEventsVar}!: __VLS_NormalizeEmits<typeof ${componentCtxVar}.emit>;\n`);
+		}
+
 		yield _ts(`}\n`);
 	}
 
-	function* generateEvents(node: CompilerDOM.ElementNode, componentVar: string, componentInstanceVar: string, componentCtxVar: string): Generator<_CodeAndStack> {
+	function* generateEvents(node: CompilerDOM.ElementNode, componentVar: string, componentInstanceVar: string, eventsVar: string, used: () => void): Generator<_CodeAndStack> {
 
 		for (const prop of node.props) {
 			if (
@@ -981,7 +989,7 @@ export function* generate(
 				&& prop.name === 'on'
 				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
-				const eventsVar = componentCtxVar2EmitEventsVar.get(componentCtxVar);
+				used();
 				const eventVar = `__VLS_${elementIndex++}`;
 				yield _ts(`let ${eventVar} = { '${prop.arg.loc.source}': `);
 				yield _ts(`__VLS_pickEvent(`);

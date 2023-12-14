@@ -84,10 +84,10 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
     };
 };
 export default _default;
+type __VLS_OmitKeepDiscriminatedUnion<T, K extends keyof any> = T extends any ? Pick<T, Exclude<keyof T, K>> : never;
 type __VLS_Prettify<T> = {
     [K in keyof T]: T[K];
 } & {};
-type __VLS_OmitKeepDiscriminatedUnion<T, K extends keyof any> = T extends any ? Pick<T, Exclude<keyof T, K>> : never;
 "
 `;
 
@@ -240,10 +240,10 @@ export default _default;
 
 exports[`vue-tsc-dts > Input: reference-type-props/component.vue, Output: reference-type-props/component.vue.d.ts 1`] = `
 "import { MyProps } from './my-props';
-declare const _default: import("vue").DefineComponent<__VLS_WithDefaults<__VLS_TypePropsToRuntimeProps<MyProps>, {
+declare const _default: import("vue").DefineComponent<__VLS_WithDefaults<__VLS_TypePropsToOption<MyProps>, {
     bar: number;
     baz: () => string[];
-}>, {}, unknown, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, Readonly<import("vue").ExtractPropTypes<__VLS_WithDefaults<__VLS_TypePropsToRuntimeProps<MyProps>, {
+}>, {}, unknown, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, Readonly<import("vue").ExtractPropTypes<__VLS_WithDefaults<__VLS_TypePropsToOption<MyProps>, {
     bar: number;
     baz: () => string[];
 }>>>, {
@@ -251,22 +251,22 @@ declare const _default: import("vue").DefineComponent<__VLS_WithDefaults<__VLS_T
     baz: string[];
 }, {}>;
 export default _default;
+type __VLS_WithDefaults<P, D> = {
+    [K in keyof Pick<P, keyof P>]: K extends keyof D ? __VLS_Prettify<P[K] & {
+        default: D[K];
+    }> : P[K];
+};
 type __VLS_Prettify<T> = {
     [K in keyof T]: T[K];
 } & {};
 type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;
-type __VLS_TypePropsToRuntimeProps<T> = {
+type __VLS_TypePropsToOption<T> = {
     [K in keyof T]-?: {} extends Pick<T, K> ? {
         type: import('vue').PropType<__VLS_NonUndefinedable<T[K]>>;
     } : {
         type: import('vue').PropType<T[K]>;
         required: true;
     };
-};
-type __VLS_WithDefaults<P, D> = {
-    [K in keyof Pick<P, keyof P>]: K extends keyof D ? __VLS_Prettify<P[K] & {
-        default: D[K];
-    }> : P[K];
 };
 "
 `;
@@ -579,6 +579,10 @@ exports[`vue-tsc-dts > Input: ts-component/PropDefinitions.ts, Output: ts-compon
 }
 "
 `;
+
+exports[`vue-tsc-dts > Input: ts-component/component.ts, Output: ts-component/component.d.ts 1`] = `undefined`;
+
+exports[`vue-tsc-dts > Input: ts-component/component.tsx, Output: ts-component/component.d.ts 1`] = `undefined`;
 
 exports[`vue-tsc-dts > Input: ts-named-export/component.ts, Output: ts-named-export/component.d.ts 1`] = `
 "export declare const Foo: (props: {
