@@ -37,26 +37,10 @@ export function createVueLanguage(
 	compilerOptions: ts.CompilerOptions = {},
 	_vueCompilerOptions: Partial<VueCompilerOptions> = {},
 	codegenStack: boolean = false,
+	globalTypesHolder?: string
 ): LanguagePlugin<VueFile> {
 
 	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);
-	const plugins = getDefaultVueLanguagePlugins(
-		ts,
-		compilerOptions,
-		vueCompilerOptions,
-		codegenStack,
-	);
-	const keys = [
-		...Object.keys(vueCompilerOptions)
-			.sort()
-			.filter(key => key !== 'plugins')
-			.map(key => [key, vueCompilerOptions[key as keyof VueCompilerOptions]]),
-		[...new Set(plugins.map(plugin => plugin.requiredCompilerOptions ?? []).flat())]
-			.sort()
-			.map(key => [key, compilerOptions[key as keyof ts.CompilerOptions]]),
-	];
-	const fileRegistry = getVueFileRegistry(JSON.stringify(keys), _vueCompilerOptions.plugins ?? []);
-
 	const allowLanguageIds = new Set(['vue']);
 
 	if (vueCompilerOptions.extensions.includes('.md')) {
@@ -66,16 +50,48 @@ export function createVueLanguage(
 		allowLanguageIds.add('html');
 	}
 
+	let fileRegistry: Map<string, VueFile> | undefined;
+	let plugins: ReturnType<VueLanguagePlugin>[] = [];
+
 	return {
-		createVirtualFile(id, languageId, snapshot) {
+		createVirtualFile(fileName, languageId, snapshot) {
 			if (allowLanguageIds.has(languageId)) {
-				if (fileRegistry.has(id)) {
-					const reusedVueFile = fileRegistry.get(id)!;
+
+				if (!fileRegistry) {
+
+					globalTypesHolder ??= fileName;
+
+					const keys = [
+						globalTypesHolder,
+						...Object.keys(vueCompilerOptions)
+							.sort()
+							.filter(key => key !== 'plugins')
+							.map(key => [key, vueCompilerOptions[key as keyof VueCompilerOptions]]),
+						[...new Set(plugins.map(plugin => plugin.requiredCompilerOptions ?? []).flat())]
+							.sort()
+							.map(key => [key, compilerOptions[key as keyof ts.CompilerOptions]]),
+					];
+
+					fileRegistry = getVueFileRegistry(
+						JSON.stringify(keys),
+						vueCompilerOptions.plugins,
+					);
+					plugins = getDefaultVueLanguagePlugins(
+						ts,
+						compilerOptions,
+						vueCompilerOptions,
+						codegenStack,
+						globalTypesHolder,
+					);
+				}
+
+				if (fileRegistry.has(fileName)) {
+					const reusedVueFile = fileRegistry.get(fileName)!;
 					reusedVueFile.update(snapshot);
 					return reusedVueFile;
 				}
-				const vueFile = new VueFile(id, languageId, snapshot, vueCompilerOptions, plugins, ts, codegenStack);
-				fileRegistry.set(id, vueFile);
+				const vueFile = new VueFile(fileName, languageId, snapshot, vueCompilerOptions, plugins, ts, codegenStack);
+				fileRegistry.set(fileName, vueFile);
 				return vueFile;
 			}
 		},
@@ -106,9 +122,10 @@ export function createLanguages(
 	compilerOptions: ts.CompilerOptions = {},
 	vueCompilerOptions: Partial<VueCompilerOptions> = {},
 	codegenStack: boolean = false,
+	globalTypesHolder?: string
 ): LanguagePlugin[] {
 	return [
-		createVueLanguage(ts, compilerOptions, vueCompilerOptions, codegenStack),
+		createVueLanguage(ts, compilerOptions, vueCompilerOptions, codegenStack, globalTypesHolder),
 		...vueCompilerOptions.experimentalAdditionalLanguageModules?.map(module => require(module)) ?? [],
 	];
 }

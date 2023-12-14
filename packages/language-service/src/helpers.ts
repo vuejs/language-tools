@@ -181,7 +181,7 @@ export function getElementAttrs(
 
 	if (tsSourceFile = tsLs.getProgram()?.getSourceFile(fileName)) {
 
-		const typeNode = tsSourceFile.statements.find((node): node is ts.TypeAliasDeclaration => ts.isTypeAliasDeclaration(node) && node.name.getText() === '__VLS_IntrinsicElements');
+		const typeNode = tsSourceFile.statements.find((node): node is ts.TypeAliasDeclaration => ts.isTypeAliasDeclaration(node) && node.name.getText() === '__VLS_IntrinsicElementsCompletion');
 		const checker = tsLs.getProgram()?.getTypeChecker();
 
 		if (checker && typeNode) {

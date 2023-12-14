@@ -120,7 +120,11 @@ const plugin: VueLanguagePlugin = (ctx) => {
 
 export default plugin;
 
-function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOptions, codegenStack, modules }: Parameters<VueLanguagePlugin>[0]) {
+function createTsx(
+	fileName: string,
+	_sfc: Sfc,
+	{ vueCompilerOptions, compilerOptions, codegenStack, modules, globalTypesHolder }: Parameters<VueLanguagePlugin>[0],
+) {
 
 	const ts = modules.typescript;
 	const lang = computed(() => {
@@ -252,6 +256,7 @@ function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOp
 			} : undefined,
 			compilerOptions,
 			vueCompilerOptions,
+			globalTypesHolder,
 			() => generatedLength,
 			linkedCodeMappings,
 			codegenStack,
