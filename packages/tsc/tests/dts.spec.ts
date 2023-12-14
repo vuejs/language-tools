@@ -56,7 +56,7 @@ describe('vue-tsc-dts', () => {
 			program.emit(
 				sourceFile,
 				(outputFile, text) => {
-					expect(outputFile).toBe(expectedOutputFile);
+					expect(outputFile.replace(windowsPathReg, '/')).toBe(expectedOutputFile);
 					outputText = text;
 				},
 				undefined,
