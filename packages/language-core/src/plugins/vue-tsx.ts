@@ -120,9 +120,13 @@ const plugin: VueLanguagePlugin = (ctx) => {
 
 export default plugin;
 
-function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOptions, codegenStack, modules }: Parameters<VueLanguagePlugin>[0]) {
+function createTsx(
+	fileName: string,
+	_sfc: Sfc,
+	ctx: Parameters<VueLanguagePlugin>[0],
+) {
 
-	const ts = modules.typescript;
+	const ts = ctx.modules.typescript;
 	const lang = computed(() => {
 		return !_sfc.script && !_sfc.scriptSetup ? 'ts'
 			: _sfc.scriptSetup && _sfc.scriptSetup.lang !== 'js' ? _sfc.scriptSetup.lang
@@ -136,11 +140,11 @@ function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOp
 	);
 	const scriptSetupRanges = computed(() =>
 		_sfc.scriptSetup
-			? parseScriptSetupRanges(ts, _sfc.scriptSetup.ast, vueCompilerOptions)
+			? parseScriptSetupRanges(ts, _sfc.scriptSetup.ast, ctx.vueCompilerOptions)
 			: undefined
 	);
 	const shouldGenerateScopedClasses = computed(() => {
-		const option = vueCompilerOptions.experimentalResolveStyleCssClasses;
+		const option = ctx.vueCompilerOptions.experimentalResolveStyleCssClasses;
 		return _sfc.styles.some(s => {
 			return option === 'always' || (option === 'scoped' && s.scoped);
 		});
@@ -154,7 +158,7 @@ function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOp
 		}
 
 		for (const style of _sfc.styles) {
-			const option = vueCompilerOptions.experimentalResolveStyleCssClasses;
+			const option = ctx.vueCompilerOptions.experimentalResolveStyleCssClasses;
 			if (option === 'always' || (option === 'scoped' && style.scoped)) {
 				for (const className of style.classNames) {
 					classes.add(className.text.substring(1));
@@ -177,15 +181,15 @@ function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOp
 		const inlineCssCodegenStacks: string[] = [];
 		const codegen = generateTemplate(
 			ts,
-			compilerOptions,
-			vueCompilerOptions,
+			ctx.compilerOptions,
+			ctx.vueCompilerOptions,
 			_sfc.template,
 			shouldGenerateScopedClasses(),
 			stylesScopedClasses(),
 			hasScriptSetupSlots(),
 			slotsAssignName(),
 			propsAssignName(),
-			codegenStack,
+			ctx.codegenStack,
 		);
 
 		let current = codegen.next();
@@ -201,7 +205,7 @@ function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOp
 			else if (type === 'inlineCss') {
 				inlineCssCodes.push(code);
 			}
-			if (codegenStack) {
+			if (ctx.codegenStack) {
 				if (type === 'ts') {
 					tsCodegenStacks.push(stack);
 				}
@@ -250,14 +254,15 @@ function createTsx(fileName: string, _sfc: Sfc, { vueCompilerOptions, compilerOp
 				hasSlot: _template.hasSlot,
 				tagNames: new Set(_template.tagOffsetsMap.keys()),
 			} : undefined,
-			compilerOptions,
-			vueCompilerOptions,
+			ctx.compilerOptions,
+			ctx.vueCompilerOptions,
+			ctx.globalTypesHolder,
 			() => generatedLength,
 			linkedCodeMappings,
-			codegenStack,
+			ctx.codegenStack,
 		)) {
 			codes.push(code);
-			if (codegenStack) {
+			if (ctx.codegenStack) {
 				codeStacks.push({ stack, length: 1 });
 			}
 			generatedLength += typeof code === 'string'
