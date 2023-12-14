@@ -11,24 +11,25 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 
 	await client.start();
 
+	const disposes: vscode.Disposable[] = [];
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	statusBar.command = 'volar.action.nameCasing';
 
 	update(vscode.window.activeTextEditor?.document);
 
-	const d_1 = vscode.window.onDidChangeActiveTextEditor(e => {
+	disposes.push(vscode.window.onDidChangeActiveTextEditor(e => {
 		update(e?.document);
-	});
-	const d_2 = vscode.workspace.onDidChangeConfiguration(() => {
+	}));
+	disposes.push(vscode.workspace.onDidChangeConfiguration(() => {
 		attrNameCasings.clear();
 		tagNameCasings.clear();
 		update(vscode.window.activeTextEditor?.document);
-	});
-	const d_3 = vscode.workspace.onDidCloseTextDocument((doc) => {
+	}));
+	disposes.push(vscode.workspace.onDidCloseTextDocument((doc) => {
 		attrNameCasings.delete(doc.uri.toString());
 		tagNameCasings.delete(doc.uri.toString());
-	});
-	const d_4 = vscode.commands.registerCommand('volar.action.nameCasing', async () => {
+	}));
+	disposes.push(vscode.commands.registerCommand('volar.action.nameCasing', async () => {
 
 		if (!vscode.window.activeTextEditor?.document) return;
 
@@ -80,14 +81,11 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 			await convertAttr(vscode.window.activeTextEditor, AttrNameCasing.Camel);
 		}
 		updateStatusBarText();
-	});
+	}));
 
 	client.onDidChangeState(e => {
 		if (e.newState === State.Stopped) {
-			d_1.dispose();
-			d_2.dispose();
-			d_3.dispose();
-			d_4.dispose();
+			disposes.forEach(d => d.dispose());
 			statusBar.dispose();
 		}
 	});
