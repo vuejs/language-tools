@@ -18,7 +18,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	let cancellationPipeUpdateKey: string | undefined;
 	let serverPathStatusItem: vscode.StatusBarItem | undefined;
 
-	vscode.workspace.onDidChangeTextDocument((e) => {
+	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((e) => {
 		let key = e.document.uri.toString() + '|' + e.document.version;
 		if (cancellationPipeUpdateKey === undefined) {
 			cancellationPipeUpdateKey = key;
@@ -28,7 +28,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			cancellationPipeUpdateKey = key;
 			fs.writeFileSync(cancellationPipeName, '');
 		}
-	});
+	}));
 
 	await commonActivate(context, (
 		id,
