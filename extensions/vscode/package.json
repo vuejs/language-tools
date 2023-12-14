@@ -47,46 +47,6 @@
 		"jsonValidation": [
 			{
 				"fileMatch": "tsconfig.json",
-				"url": "https://json.schemastore.org/tsconfig"
-			},
-			{
-				"fileMatch": "tsconfig.*.json",
-				"url": "https://json.schemastore.org/tsconfig"
-			},
-			{
-				"fileMatch": "tsconfig-*.json",
-				"url": "https://json.schemastore.org/tsconfig"
-			},
-			{
-				"fileMatch": "typings.json",
-				"url": "https://json.schemastore.org/typings"
-			},
-			{
-				"fileMatch": ".bowerrc",
-				"url": "https://json.schemastore.org/bowerrc"
-			},
-			{
-				"fileMatch": ".babelrc",
-				"url": "https://json.schemastore.org/babelrc"
-			},
-			{
-				"fileMatch": ".babelrc.json",
-				"url": "https://json.schemastore.org/babelrc"
-			},
-			{
-				"fileMatch": "babel.config.json",
-				"url": "https://json.schemastore.org/babelrc"
-			},
-			{
-				"fileMatch": "jsconfig.json",
-				"url": "https://json.schemastore.org/jsconfig"
-			},
-			{
-				"fileMatch": "jsconfig.*.json",
-				"url": "https://json.schemastore.org/jsconfig"
-			},
-			{
-				"fileMatch": "tsconfig.json",
 				"url": "./dist/schemas/vue-tsconfig.schema.json"
 			},
 			{
