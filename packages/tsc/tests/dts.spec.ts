@@ -24,7 +24,7 @@ describe('vue-tsc-dts', () => {
 		rootNames: readFilesRecursive(workspace),
 		options: compilerOptions
 	};
-	const fakeGlobalTypesHolder = createFakeGlobalTypesHolder(options);
+	const fakeGlobalTypesHolder = createFakeGlobalTypesHolder(options)?.replace(windowsPathReg, '/');
 	const createProgram = proxyCreateProgram(ts, ts.createProgram, ['.vue'], (ts, options) => {
 		const { configFilePath } = options.options;
 		const vueOptions = typeof configFilePath === 'string'

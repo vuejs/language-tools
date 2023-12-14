@@ -26,7 +26,7 @@ export function run() {
 					options.options,
 					vueOptions,
 					false,
-					createFakeGlobalTypesHolder(options),
+					createFakeGlobalTypesHolder(options)?.replace(windowsPathReg, '/'),
 				);
 			}
 			else {
@@ -57,19 +57,19 @@ export function createFakeGlobalTypesHolder(options: ts.CreateProgramOptions) {
 		const writeFile = options.host!.writeFile.bind(options.host);
 
 		options.host!.fileExists = fileName => {
-			if (fileName === fakeFileName) {
+			if (fileName.endsWith('__VLS_globalTypes.vue')) {
 				return true;
 			}
 			return fileExists(fileName);
 		};
 		options.host!.readFile = fileName => {
-			if (fileName === fakeFileName) {
+			if (fileName.endsWith('__VLS_globalTypes.vue')) {
 				return '<script setup lang="ts"></script>';
 			}
 			return readFile(fileName);
 		};
 		options.host!.writeFile = (fileName, ...args) => {
-			if (fileName === fakeFileName + '.d.ts') {
+			if (fileName.endsWith('__VLS_globalTypes.vue.d.ts')) {
 				return;
 			}
 			return writeFile(fileName, ...args);
