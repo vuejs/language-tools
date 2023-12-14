@@ -9,6 +9,13 @@ import { getSlotsPropertyName, hyphenateTag } from '../utils/shared';
 import { eachInterpolationSegment } from '../utils/transform';
 import { disableAllFeatures, enableAllFeatures, withStack } from './utils';
 
+interface HelperType {
+	name: string;
+	usage?: boolean;
+	generated?: boolean;
+	code: string;
+}
+
 export function* generate(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	fileName: string,
@@ -27,6 +34,7 @@ export function* generate(
 	} | undefined,
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
+	globalTypesHolder: string | undefined,
 	getGeneratedLength: () => number,
 	linkedCodeMappings: Mapping[] = [],
 	codegenStack: boolean,
@@ -66,6 +74,96 @@ export function* generate(
 	]);
 	const bypassDefineComponent = lang === 'js' || lang === 'jsx';
 	const _ = codegenStack ? withStack : (code: Code): CodeAndStack => [code, ''];
+	const helperTypes = {
+		OmitKeepDiscriminatedUnion: {
+			get name() {
+				this.usage = true;
+				return `__VLS_OmitKeepDiscriminatedUnion`;
+			},
+			get code() {
+				return `type __VLS_OmitKeepDiscriminatedUnion<T, K extends keyof any> = T extends any
+					? Pick<T, Exclude<keyof T, K>>
+					: never;`;
+			},
+		} satisfies HelperType as HelperType,
+		WithDefaults: {
+			get name() {
+				this.usage = true;
+				return `__VLS_WithDefaults`;
+			},
+			get code(): string {
+				return `type __VLS_WithDefaults<P, D> = {
+					[K in keyof Pick<P, keyof P>]: K extends keyof D
+						? ${helperTypes.Prettify.name}<P[K] & { default: D[K]}>
+						: P[K]
+				};`;
+			},
+		} satisfies HelperType as HelperType,
+		Prettify: {
+			get name() {
+				this.usage = true;
+				return `__VLS_Prettify`;
+			},
+			get code() {
+				return `type __VLS_Prettify<T> = { [K in keyof T]: T[K]; } & {};`;
+			},
+		} satisfies HelperType as HelperType,
+		WithTemplateSlots: {
+			get name() {
+				this.usage = true;
+				return `__VLS_WithTemplateSlots`;
+			},
+			get code(): string {
+				return `type __VLS_WithTemplateSlots<T, S> = T & {
+					new(): {
+						${getSlotsPropertyName(vueCompilerOptions.target)}: S;
+						${vueCompilerOptions.jsxSlots ? `$props: ${helperTypes.PropsChildren.name}<S>;` : ''}
+					}
+				};`;
+			},
+		} satisfies HelperType as HelperType,
+		PropsChildren: {
+			get name() {
+				this.usage = true;
+				return `__VLS_PropsChildren`;
+			},
+			get code() {
+				return `type __VLS_PropsChildren<S> = {
+					[K in keyof (
+						boolean extends (
+							// @ts-ignore
+							JSX.ElementChildrenAttribute extends never
+								? true
+								: false
+						)
+							? never
+							// @ts-ignore
+							: JSX.ElementChildrenAttribute
+					)]?: S;
+				};`;
+			},
+		} satisfies HelperType as HelperType,
+		TypePropsToOption: {
+			get name() {
+				this.usage = true;
+				return `__VLS_TypePropsToOption`;
+			},
+			get code() {
+				return compilerOptions.exactOptionalPropertyTypes ?
+					`type __VLS_TypePropsToOption<T> = {
+						[K in keyof T]-?: {} extends Pick<T, K>
+							? { type: import('${vueCompilerOptions.lib}').PropType<T[K]> }
+							: { type: import('${vueCompilerOptions.lib}').PropType<T[K]>, required: true }
+					};` :
+					`type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;
+					type __VLS_TypePropsToOption<T> = {
+						[K in keyof T]-?: {} extends Pick<T, K>
+							? { type: import('${vueCompilerOptions.lib}').PropType<__VLS_NonUndefinedable<T[K]>> }
+							: { type: import('${vueCompilerOptions.lib}').PropType<T[K]>, required: true }
+					};`;
+			},
+		} satisfies HelperType as HelperType,
+	};
 
 	let generatedTemplate = false;
 	let scriptSetupGeneratedOffset: number | undefined;
@@ -76,7 +174,11 @@ export function* generate(
 	yield* generateScriptContentBeforeExportDefault();
 	yield* generateScriptSetupAndTemplate();
 	yield* generateScriptContentAfterExportDefault();
-	yield* generateHelperTypes();
+	if (globalTypesHolder === fileName) {
+		yield* generateGlobalHelperTypes();
+	}
+	yield* generateLocalHelperTypes();
+	yield _(`\ntype __VLS_IntrinsicElementsCompletion = __VLS_IntrinsicElements;\n`);
 
 	if (!generatedTemplate) {
 		yield* generateTemplate(false);
@@ -86,91 +188,86 @@ export function* generate(
 		yield _(['', 'scriptSetup', scriptSetup.content.length, disableAllFeatures({ verification: true })]);
 	}
 
-	function* generateHelperTypes(): Generator<CodeAndStack> {
+	function* generateGlobalHelperTypes(): Generator<CodeAndStack> {
+		const fnPropsType = `(K extends { $props: infer Props } ? Props : any)${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}`;
 		yield _(`
+declare global {
+// @ts-ignore
 type __VLS_IntrinsicElements = __VLS_PickNotAny<import('vue/jsx-runtime').JSX.IntrinsicElements, __VLS_PickNotAny<JSX.IntrinsicElements, Record<string, any>>>;
+// @ts-ignore
 type __VLS_Element = __VLS_PickNotAny<import('vue/jsx-runtime').JSX.Element, JSX.Element>;
+// @ts-ignore
+type __VLS_GlobalComponents = ${[
+				`__VLS_PickNotAny<import('vue').__VLS_GlobalComponents, {}>`,
+				`__VLS_PickNotAny<import('@vue/runtime-core').__VLS_GlobalComponents, {}>`,
+				`__VLS_PickNotAny<import('@vue/runtime-dom').__VLS_GlobalComponents, {}>`,
+				`Pick<typeof import('${vueCompilerOptions.lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>`
+			].join(' & ')};
 type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
 type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
-type __VLS_Prettify<T> = { [K in keyof T]: T[K]; } & {};
 
-type __VLS_OmitKeepDiscriminatedUnion<T, K extends keyof any> =
-	T extends any
-		? Pick<T, Exclude<keyof T, K>>
-		: never;
-
-type __VLS_GlobalComponents =
-	__VLS_PickNotAny<import('vue').GlobalComponents, {}>
-	& __VLS_PickNotAny<import('@vue/runtime-core').GlobalComponents, {}>
-	& __VLS_PickNotAny<import('@vue/runtime-dom').GlobalComponents, {}>
-	& Pick<typeof import('${vueCompilerOptions.lib}'),
-		'Transition'
-		| 'TransitionGroup'
-		| 'KeepAlive'
-		| 'Suspense'
-		| 'Teleport'
-	>;
-
-declare const __VLS_intrinsicElements: __VLS_IntrinsicElements;
+const __VLS_intrinsicElements: __VLS_IntrinsicElements;
 
 // v-for
-declare function __VLS_getVForSourceType(source: number): [number, number, number][];
-declare function __VLS_getVForSourceType(source: string): [string, number, number][];
-declare function __VLS_getVForSourceType<T extends any[]>(source: T): [
+function __VLS_getVForSourceType(source: number): [number, number, number][];
+function __VLS_getVForSourceType(source: string): [string, number, number][];
+function __VLS_getVForSourceType<T extends any[]>(source: T): [
 	T[number], // item
 	number, // key
 	number, // index
 ][];
-declare function __VLS_getVForSourceType<T extends { [Symbol.iterator](): Iterator<any> }>(source: T): [
+function __VLS_getVForSourceType<T extends { [Symbol.iterator](): Iterator<any> }>(source: T): [
 	T extends { [Symbol.iterator](): Iterator<infer T1> } ? T1 : never, // item 
 	number, // key
 	undefined, // index
 ][];
-declare function __VLS_getVForSourceType<T>(source: T): [
+function __VLS_getVForSourceType<T>(source: T): [
 	T[keyof T], // item
 	keyof T, // key
 	number, // index
 ][];
 
-declare function __VLS_getSlotParams<T>(slot: T): Parameters<__VLS_PickNotAny<NonNullable<T>, (...args: any[]) => any>>;
-declare function __VLS_getSlotParam<T>(slot: T): Parameters<__VLS_PickNotAny<NonNullable<T>, (...args: any[]) => any>>[0];
-declare function __VLS_directiveFunction<T>(dir: T):
+// @ts-ignore
+function __VLS_getSlotParams<T>(slot: T): Parameters<__VLS_PickNotAny<NonNullable<T>, (...args: any[]) => any>>;
+// @ts-ignore
+function __VLS_getSlotParam<T>(slot: T): Parameters<__VLS_PickNotAny<NonNullable<T>, (...args: any[]) => any>>[0];
+function __VLS_directiveFunction<T>(dir: T):
 	T extends import('${vueCompilerOptions.lib}').ObjectDirective<infer E, infer V> | import('${vueCompilerOptions.lib}').FunctionDirective<infer E, infer V> ? (value: V) => void
 	: T;
-declare function __VLS_withScope<T, K>(ctx: T, scope: K): ctx is T & K;
-declare function __VLS_makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
+function __VLS_withScope<T, K>(ctx: T, scope: K): ctx is T & K;
+function __VLS_makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
 
 type __VLS_SelfComponent<N, C> = string extends N ? {} : N extends string ? { [P in N]: C } : {};
 type __VLS_WithComponent<N0 extends string, LocalComponents, N1 extends string, N2 extends string, N3 extends string> =
-	N1 extends keyof LocalComponents ? N1 extends N0 ? Pick<LocalComponents, N0> : { [K in N0]: LocalComponents[N1] } :
-	N2 extends keyof LocalComponents ? N2 extends N0 ? Pick<LocalComponents, N0> : { [K in N0]: LocalComponents[N2] } :
-	N3 extends keyof LocalComponents ? N3 extends N0 ? Pick<LocalComponents, N0> : { [K in N0]: LocalComponents[N3] } :
-	N1 extends keyof __VLS_GlobalComponents ? N1 extends N0 ? Pick<__VLS_GlobalComponents, N0> : { [K in N0]: __VLS_GlobalComponents[N1] } :
-	N2 extends keyof __VLS_GlobalComponents ? N2 extends N0 ? Pick<__VLS_GlobalComponents, N0> : { [K in N0]: __VLS_GlobalComponents[N2] } :
-	N3 extends keyof __VLS_GlobalComponents ? N3 extends N0 ? Pick<__VLS_GlobalComponents, N0> : { [K in N0]: __VLS_GlobalComponents[N3] } :
+	N1 extends keyof LocalComponents ? N1 extends N0 ? Pick<LocalComponents, N0 extends keyof LocalComponents ? N0 : never> : { [K in N0]: LocalComponents[N1] } :
+	N2 extends keyof LocalComponents ? N2 extends N0 ? Pick<LocalComponents, N0 extends keyof LocalComponents ? N0 : never> : { [K in N0]: LocalComponents[N2] } :
+	N3 extends keyof LocalComponents ? N3 extends N0 ? Pick<LocalComponents, N0 extends keyof LocalComponents ? N0 : never> : { [K in N0]: LocalComponents[N3] } :
+	N1 extends keyof __VLS_GlobalComponents ? N1 extends N0 ? Pick<__VLS_GlobalComponents, N0 extends keyof __VLS_GlobalComponents ? N0 : never> : { [K in N0]: __VLS_GlobalComponents[N1] } :
+	N2 extends keyof __VLS_GlobalComponents ? N2 extends N0 ? Pick<__VLS_GlobalComponents, N0 extends keyof __VLS_GlobalComponents ? N0 : never> : { [K in N0]: __VLS_GlobalComponents[N2] } :
+	N3 extends keyof __VLS_GlobalComponents ? N3 extends N0 ? Pick<__VLS_GlobalComponents, N0 extends keyof __VLS_GlobalComponents ? N0 : never> : { [K in N0]: __VLS_GlobalComponents[N3] } :
 	${vueCompilerOptions.strictTemplates ? '{}' : '{ [K in N0]: unknown }'}
 
 type __VLS_FillingEventArg_ParametersLength<E extends (...args: any) => any> = __VLS_IsAny<Parameters<E>> extends true ? -1 : Parameters<E>['length'];
 type __VLS_FillingEventArg<E> = E extends (...args: any) => any ? __VLS_FillingEventArg_ParametersLength<E> extends 0 ? ($event?: undefined) => ReturnType<E> : E : E;
-declare function __VLS_asFunctionalComponent<T, K = T extends new (...args: any) => any ? InstanceType<T> : unknown>(t: T, instance?: K):
+function __VLS_asFunctionalComponent<T, K = T extends new (...args: any) => any ? InstanceType<T> : unknown>(t: T, instance?: K):
 	T extends new (...args: any) => any
-	? (props: (K extends { $props: infer Props } ? Props : any)${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}, ctx?: {
+	? (props: ${fnPropsType}, ctx?: any) => JSX.Element & { __ctx?: {
 		attrs?: any,
 		slots?: K extends { ${getSlotsPropertyName(vueCompilerOptions.target)}: infer Slots } ? Slots : any,
 		emit?: K extends { $emit: infer Emit } ? Emit : any
-	}) => JSX.Element & { __ctx?: typeof ctx & { props?: typeof props; expose?(exposed: K): void; } }
+	} & { props?: ${fnPropsType}; expose?(exposed: K): void; } }
 	: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 	: T extends (...args: any) => any ? T
 	: (_: {}${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}, ctx?: any) => { __ctx?: { attrs?: any, expose?: any, slots?: any, emit?: any, props?: {}${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'} } };
-declare function __VLS_elementAsFunctionalComponent<T>(t: T): (_: T${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}, ctx?: any) => { __ctx?: { attrs?: any, expose?: any, slots?: any, emit?: any, props?: T${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'} } };
-declare function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(t: T): Parameters<T>['length'] extends 2 ? [any] : [];
-declare function __VLS_pickEvent<E1, E2>(emitEvent: E1, propEvent: E2): __VLS_FillingEventArg<
+function __VLS_elementAsFunctionalComponent<T>(t: T): (_: T${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}, ctx?: any) => { __ctx?: { attrs?: any, expose?: any, slots?: any, emit?: any, props?: T${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'} } };
+function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(t: T): Parameters<T>['length'] extends 2 ? [any] : [];
+function __VLS_pickEvent<E1, E2>(emitEvent: E1, propEvent: E2): __VLS_FillingEventArg<
 	__VLS_PickNotAny<
 		__VLS_AsFunctionOrAny<E2>,
 		__VLS_AsFunctionOrAny<E1>
 	>
 > | undefined;
-declare function __VLS_pickFunctionalComponentCtx<T, K>(comp: T, compInstance: K): __VLS_PickNotAny<
+function __VLS_pickFunctionalComponentCtx<T, K>(comp: T, compInstance: K): __VLS_PickNotAny<
 	'__ctx' extends keyof __VLS_PickNotAny<K, {}> ? K extends { __ctx?: infer Ctx } ? Ctx : never : any
 	, T extends (props: any, ctx: infer Ctx) => any ? Ctx : any
 >;
@@ -180,7 +277,7 @@ type __VLS_FunctionalComponentProps<T, K> =
 	{};
 type __VLS_AsFunctionOrAny<F> = unknown extends F ? any : ((...args: any) => any) extends F ? F : any;
 
-declare function __VLS_normalizeSlot<S>(s: S): S extends () => infer R ? (props: {}) => R : S;
+function __VLS_normalizeSlot<S>(s: S): S extends () => infer R ? (props: {}) => R : S;
 
 /**
  * emit
@@ -201,54 +298,29 @@ type __VLS_ConstructorOverloads<T> = __VLS_OverloadUnion<T> extends infer F
 	? { [K in E & string]: (...args: A) => void; }
 	: never
 	: never;
-type __VLS_NormalizeEmits<T> = __VLS_Prettify<
+type __VLS_NormalizeEmits<T> = __VLS_PrettifyGlobal<
 	__VLS_UnionToIntersection<
 		__VLS_ConstructorOverloads<T> & {
 			[K in keyof T]: T[K] extends any[] ? { (...args: T[K]): void } : never
 		}
 	>
 >;
+type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
+}
 `);
-		if (compilerOptions.exactOptionalPropertyTypes) {
-			yield _(`type __VLS_TypePropsToRuntimeProps<T> = {\n`
-				+ `	[K in keyof T]-?: {} extends Pick<T, K>\n`
-				+ `		? { type: import('${vueCompilerOptions.lib}').PropType<T[K]> }\n`
-				+ `		: { type: import('${vueCompilerOptions.lib}').PropType<T[K]>, required: true }\n`
-				+ `};\n`);
+	}
+	function* generateLocalHelperTypes(): Generator<CodeAndStack> {
+		let shouldCheck = true;
+		while (shouldCheck) {
+			shouldCheck = false;
+			for (const helperType of Object.values(helperTypes)) {
+				if (helperType.usage && !helperType.generated) {
+					shouldCheck = true;
+					helperType.generated = true;
+					yield _('\n' + helperType.code + '\n');
+				}
+			}
 		}
-		else {
-			yield _(`type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;\n`);
-			yield _(`type __VLS_TypePropsToRuntimeProps<T> = {\n`
-				+ `	[K in keyof T]-?: {} extends Pick<T, K>\n`
-				+ `		? { type: import('${vueCompilerOptions.lib}').PropType<__VLS_NonUndefinedable<T[K]>> }\n`
-				+ `		: { type: import('${vueCompilerOptions.lib}').PropType<T[K]>, required: true }\n`
-				+ `};\n`);
-		}
-		yield _(`type __VLS_WithDefaults<P, D> = {\n`
-			// use 'keyof Pick<P, keyof P>' instead of 'keyof P' to keep props jsdoc
-			+ `	[K in keyof Pick<P, keyof P>]: K extends keyof D\n`
-			+ `		? __VLS_Prettify<P[K] & { default: D[K]}>\n`
-			+ `		: P[K]\n`
-			+ `};\n`);
-		yield _(`type __VLS_WithTemplateSlots<T, S> = T & {\n`
-			+ `	new(): {\n`
-			+ `		${getSlotsPropertyName(vueCompilerOptions.target)}: S;\n`);
-		if (vueCompilerOptions.jsxSlots) {
-			yield _(`		$props: __VLS_PropsChildren<S>;\n`);
-		}
-		yield _(`	}\n`
-			+ `};\n`);
-		yield _(`type __VLS_PropsChildren<S> = {\n`
-			+ `	[K in keyof (\n`
-			+ `		boolean extends (\n`
-			+ `			JSX.ElementChildrenAttribute extends never\n`
-			+ `				? true\n`
-			+ `				: false\n`
-			+ `		)\n`
-			+ `			? never\n`
-			+ `			: JSX.ElementChildrenAttribute\n`
-			+ `	)]?: S;\n`
-			+ `};\n`);
 	}
 	function* generateSrc(): Generator<CodeAndStack> {
 		if (!script?.src)
@@ -373,7 +445,7 @@ type __VLS_NormalizeEmits<T> = __VLS_Prettify<
 			yield _(`>`);
 			yield _(`(\n`
 				+ `	__VLS_props: Awaited<typeof __VLS_setup>['props'],\n`
-				+ `	__VLS_ctx?: __VLS_Prettify<Pick<Awaited<typeof __VLS_setup>, 'attrs' | 'emit' | 'slots'>>,\n` // use __VLS_Prettify for less dts code
+				+ `	__VLS_ctx?: ${helperTypes.Prettify.name}<Pick<Awaited<typeof __VLS_setup>, 'attrs' | 'emit' | 'slots'>>,\n` // use __VLS_Prettify for less dts code
 				+ `	__VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>['expose'],\n`
 				+ `	__VLS_setup = (async () => {\n`);
 
@@ -446,7 +518,7 @@ type __VLS_NormalizeEmits<T> = __VLS_Prettify<
 			yield _(`let __VLS_fnPropsDefineComponent!: InstanceType<typeof __VLS_fnComponent>['$props'];\n`);
 			yield _(`let __VLS_fnPropsSlots!: `);
 			if (scriptSetupRanges.slots.define && vueCompilerOptions.jsxSlots) {
-				yield _(`__VLS_PropsChildren<typeof __VLS_slots>`);
+				yield _(`${helperTypes.PropsChildren.name}<typeof __VLS_slots>`);
 			}
 			else {
 				yield _(`{}`);
@@ -460,7 +532,7 @@ type __VLS_NormalizeEmits<T> = __VLS_Prettify<
 			//#endregion
 
 			yield _(`		return {} as {\n`
-				+ `			props: __VLS_Prettify<__VLS_OmitKeepDiscriminatedUnion<typeof __VLS_fnPropsDefineComponent & typeof __VLS_fnPropsTypeOnly, keyof typeof __VLS_defaultProps>> & typeof __VLS_fnPropsSlots & typeof __VLS_defaultProps,\n`
+				+ `			props: ${helperTypes.Prettify.name}<${helperTypes.OmitKeepDiscriminatedUnion.name}<typeof __VLS_fnPropsDefineComponent & typeof __VLS_fnPropsTypeOnly, keyof typeof __VLS_defaultProps>> & typeof __VLS_fnPropsSlots & typeof __VLS_defaultProps,\n`
 				+ `			expose(exposed: import('${vueCompilerOptions.lib}').ShallowUnwrapRef<${scriptSetupRanges.expose.define ? 'typeof __VLS_exposed' : '{}'}>): void,\n`
 				+ `			attrs: any,\n`
 				+ `			slots: ReturnType<typeof __VLS_template>,\n`
@@ -659,7 +731,7 @@ type __VLS_NormalizeEmits<T> = __VLS_Prettify<
 				yield* generateComponent(functional);
 				yield _(`;\n`);
 				yield _(mode === 'return' ? 'return ' : 'export default ');
-				yield _(`{} as __VLS_WithTemplateSlots<typeof __VLS_component, ReturnType<typeof __VLS_template>>;\n`);
+				yield _(`{} as ${helperTypes.WithTemplateSlots.name}<typeof __VLS_component, ReturnType<typeof __VLS_template>>;\n`);
 			}
 			else {
 				yield _(mode === 'return' ? 'return ' : 'export default ');
@@ -711,10 +783,10 @@ type __VLS_NormalizeEmits<T> = __VLS_Prettify<
 					yield _(`{} as `);
 
 					if (ranges.props.withDefaults?.arg) {
-						yield _(`__VLS_WithDefaults<`);
+						yield _(`${helperTypes.WithDefaults.name}<`);
 					}
 
-					yield _(`__VLS_TypePropsToRuntimeProps<`);
+					yield _(`${helperTypes.TypePropsToOption.name}<`);
 					if (functional) {
 						yield _(`typeof __VLS_fnPropsTypeOnly`);
 					}
@@ -891,7 +963,7 @@ type __VLS_NormalizeEmits<T> = __VLS_Prettify<
 		for (let i = 0; i < styles.length; i++) {
 			const style = styles[i];
 			if (style.module) {
-				yield _(`${style.module}: Record<string, string> & __VLS_Prettify<{}`);
+				yield _(`${style.module}: Record<string, string> & ${helperTypes.Prettify.name}<{}`);
 				for (const className of style.classNames) {
 					yield* generateCssClassProperty(
 						i,

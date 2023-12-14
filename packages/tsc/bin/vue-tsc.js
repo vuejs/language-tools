@@ -1,2 +1,2 @@
 #!/usr/bin/env node
-require('../out/index');
+require('../out/index').run();

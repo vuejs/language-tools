@@ -4,9 +4,9 @@ import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import { proxyCreateProgram } from '@volar/typescript';
 import * as vue from '@vue/language-core';
+import { createFakeGlobalTypesHolder } from '../out';
 
 const workspace = path.resolve(__dirname, '../../../test-workspace/component-meta');
-const intputFiles = readFilesRecursive(workspace);
 const normalizePath = (filename: string) => filename.replace(/\\/g, '/');
 const normalizeNewline = (text: string) => text.replace(/\r\n/g, '\n');
 const windowsPathReg = /\\/g;
@@ -19,6 +19,12 @@ describe('vue-tsc-dts', () => {
 		allowNonTsExtensions: true,
 	};
 	const host = ts.createCompilerHost(compilerOptions);
+	const options: ts.CreateProgramOptions = {
+		host,
+		rootNames: readFilesRecursive(workspace),
+		options: compilerOptions
+	};
+	const fakeGlobalTypesHolder = createFakeGlobalTypesHolder(options);
 	const createProgram = proxyCreateProgram(ts, ts.createProgram, ['.vue'], (ts, options) => {
 		const { configFilePath } = options.options;
 		const vueOptions = typeof configFilePath === 'string'
@@ -28,26 +34,36 @@ describe('vue-tsc-dts', () => {
 			ts,
 			options.options,
 			vueOptions,
+			false,
+			fakeGlobalTypesHolder?.replace(windowsPathReg, '/'),
 		);
 	});
-	const program = createProgram({
-		host,
-		rootNames: intputFiles,
-		options: compilerOptions
-	});
+	const program = createProgram(options);
 
-	for (const intputFile of intputFiles) {
-		const sourceFile = program.getSourceFile(intputFile);
-		program.emit(
-			sourceFile,
-			(outputFile, text) => {
-				it(`Input: ${shortenPath(intputFile)}, Output: ${shortenPath(outputFile)}`, () => {
-					expect(normalizeNewline(text)).toMatchSnapshot();
-				});
-			},
-			undefined,
-			true,
-		);
+	for (const intputFile of options.rootNames) {
+
+		if (intputFile === fakeGlobalTypesHolder)
+			continue;
+
+		const expectedOutputFile = intputFile.endsWith('.ts')
+			? intputFile.slice(0, -'.ts'.length) + '.d.ts'
+			: intputFile.endsWith('.tsx')
+				? intputFile.slice(0, -'.tsx'.length) + '.d.ts'
+				: intputFile + '.d.ts';
+		it(`Input: ${shortenPath(intputFile)}, Output: ${shortenPath(expectedOutputFile)}`, () => {
+			let outputText: string | undefined;
+			const sourceFile = program.getSourceFile(intputFile);
+			program.emit(
+				sourceFile,
+				(outputFile, text) => {
+					expect(outputFile.replace(windowsPathReg, '/')).toBe(expectedOutputFile.replace(windowsPathReg, '/'));
+					outputText = text;
+				},
+				undefined,
+				true,
+			);
+			expect(outputText ? normalizeNewline(outputText) : undefined).toMatchSnapshot();
+		});
 	}
 });
 
