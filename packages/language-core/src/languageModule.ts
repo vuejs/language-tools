@@ -118,7 +118,7 @@ export function createVueLanguage(
 							vueCompilerOptions.plugins,
 						);
 
-						files.updateSourceFile(
+						files?.updateSourceFile(
 							file.fileName,
 							file.languageId,
 							// force dirty

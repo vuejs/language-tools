@@ -2,7 +2,7 @@ import { ServicePlugin } from '@volar/language-service';
 import { LanguagePlugin, VueFile, createLanguages, hyphenateTag, resolveVueCompilerOptions, scriptRanges } from '@vue/language-core';
 import { capitalize } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import type { Data } from 'volar-service-typescript/out/features/completions/basic';
+import type { Data } from 'volar-service-typescript/lib/features/completions/basic';
 import type * as html from 'vscode-html-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { getNameCasing } from './ideFeatures/nameCasing';
