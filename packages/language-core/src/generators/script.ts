@@ -191,7 +191,7 @@ export function* generate(
 	function* generateGlobalHelperTypes(): Generator<CodeAndStack> {
 		const fnPropsType = `(K extends { $props: infer Props } ? Props : any)${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}`;
 		yield _(`
-declare global {
+; declare global {
 // @ts-ignore
 type __VLS_IntrinsicElements = __VLS_PickNotAny<import('vue/jsx-runtime').JSX.IntrinsicElements, __VLS_PickNotAny<JSX.IntrinsicElements, Record<string, any>>>;
 // @ts-ignore
