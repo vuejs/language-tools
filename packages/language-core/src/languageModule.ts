@@ -134,6 +134,11 @@ export function createVueLanguage(
 			}
 		},
 		typescript: {
+			extraFileExtensions: vueCompilerOptions.extensions.map<ts.FileExtensionInfo>(ext => ({
+				extension: ext,
+				isMixedContent: true,
+				scriptKind: 7 satisfies ts.ScriptKind.Deferred,
+			})),
 			resolveSourceFileName(tsFileName) {
 				const baseName = path.basename(tsFileName);
 				if (baseName.indexOf('.vue.') >= 0) { // .vue.ts .vue.d.ts .vue.js .vue.jsx .vue.tsx
