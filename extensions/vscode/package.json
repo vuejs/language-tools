@@ -388,11 +388,6 @@
 					"default": "node",
 					"description": "Vue Language Server runtime."
 				},
-				"vue.server.configFilePath": {
-					"type": "string",
-					"default": "./volar.config.js",
-					"description": "Path to volar.config.js."
-				},
 				"vue.server.maxFileSize": {
 					"type": "number",
 					"default": 20971520,
