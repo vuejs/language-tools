@@ -5,7 +5,7 @@ import {
 	activateWriteVirtualFiles,
 	getTsdk,
 } from '@volar/vscode';
-import { DiagnosticModel, VueServerInitializationOptions } from '@vue/language-server';
+import { DiagnosticModel, VueInitializationOptions } from '@vue/language-server';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient';
 import { config } from './config';
@@ -20,7 +20,7 @@ type CreateLanguageClient = (
 	id: string,
 	name: string,
 	langs: lsp.DocumentFilter[],
-	initOptions: VueServerInitializationOptions,
+	initOptions: VueInitializationOptions,
 	port: number,
 	outputChannel: vscode.OutputChannel,
 ) => lsp.BaseLanguageClient;
@@ -143,10 +143,9 @@ export function getDocumentSelector(): lsp.DocumentFilter[] {
 
 async function getInitializationOptions(
 	context: vscode.ExtensionContext,
-	options: VueServerInitializationOptions = {},
+	options: VueInitializationOptions = {},
 ) {
 	// volar
-	options.configFilePath = './__ignore__.config.js'; // config.server.configFilePath
 	options.diagnosticModel = config.server.diagnosticModel === 'pull' ? DiagnosticModel.Pull : DiagnosticModel.Push;
 	options.typescript = { tsdk: (await getTsdk(context)).tsdk };
 	options.reverseConfigFilePriority = config.server.reverseConfigFilePriority;
@@ -156,10 +155,13 @@ async function getInitializationOptions(
 		tokenModifiers: [],
 	};
 	options.fullCompletionList = config.server.fullCompletionList;
-	options.additionalExtensions = [
-		...config.server.additionalExtensions,
-		...!config.server.petiteVue.supportHtmlFile ? [] : ['html'],
-		...!config.server.vitePress.supportMdFile ? [] : ['md'],
-	];
+	options.vue = {
+		hybridMode: true,
+		additionalExtensions: [
+			...config.server.additionalExtensions,
+			...!config.server.petiteVue.supportHtmlFile ? [] : ['html'],
+			...!config.server.vitePress.supportMdFile ? [] : ['md'],
+		],
+	};
 	return options;
 }
