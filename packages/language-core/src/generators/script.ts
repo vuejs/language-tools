@@ -807,7 +807,7 @@ export function* generate(
 		yield _(`}`);
 
 		if (bindingNames.size !== 0 && scriptSetupRanges?.props.define) {
-			yield _(` & Omit<typeof ${scriptSetupRanges.props.name ?? '__VLS_props'}, ${[...bindingNames].map(name => `'${name}'`).join(' | ')}>`)
+			yield _(` & Omit<typeof ${scriptSetupRanges.props.name ?? '__VLS_props'}, ${[...bindingNames].map(name => `'${name}'`).join(' | ')}>`);
 		}
 
 		yield _(`;\n`);
