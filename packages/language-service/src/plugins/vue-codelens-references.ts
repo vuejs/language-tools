@@ -4,6 +4,7 @@ import type * as vscode from 'vscode-languageserver-protocol';
 
 export function create(): ServicePlugin {
 	return {
+		name: 'vue-codelens-references',
 		create(context): ServicePluginInstance {
 			return {
 				provideReferencesCodeLensRanges(document) {

@@ -1,15 +1,14 @@
-import { ExportsInfoForLabs, supportLabsVersion } from '@volar/vscode';
+import { createLabsInfo } from '@volar/vscode';
 import * as serverLib from '@vue/language-server';
+import * as fs from 'fs';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient/node';
 import { activate as commonActivate, deactivate as commonDeactivate } from './common';
 import { config } from './config';
 import { middleware } from './middleware';
-import * as fs from 'fs';
 
 export async function activate(context: vscode.ExtensionContext) {
 
-	let languageClient: lsp.LanguageClient;
 	let serverPathStatusItem: vscode.StatusBarItem | undefined;
 
 	await commonActivate(context, (
@@ -109,7 +108,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		);
 		client.start();
 
-		languageClient = client;
+		volarLabs.addLanguageClient(client);
 
 		updateProviders(client);
 
@@ -118,6 +117,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	const tsExtension = vscode.extensions.getExtension('vscode.typescript-language-features');
 	const vueTsPluginExtension = vscode.extensions.getExtension('Vue.vscode-typescript-vue-plugin');
+	const volarLabs = createLabsInfo(serverLib);
+
+	volarLabs.extensionExports.volarLabs.codegenStackSupport = true;
 
 	if (tsExtension) {
 		await tsExtension.activate();
@@ -144,14 +146,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		});
 	}
 
-	return {
-		volarLabs: {
-			version: supportLabsVersion,
-			codegenStackSupport: true,
-			languageClient: languageClient!,
-			languageServerProtocol: serverLib,
-		},
-	} satisfies ExportsInfoForLabs;
+	return volarLabs.extensionExports;
 }
 
 export function deactivate(): Thenable<any> | undefined {

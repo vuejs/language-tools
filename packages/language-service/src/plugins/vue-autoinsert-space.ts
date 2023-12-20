@@ -2,6 +2,7 @@ import { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
 
 export function create(): ServicePlugin {
 	return {
+		name: 'vue-autoinsert-space',
 		create(context): ServicePluginInstance {
 			return {
 				async provideAutoInsertionEdit(document, _, lastChange) {

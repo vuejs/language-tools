@@ -4,6 +4,7 @@ import type * as vscode from 'vscode-languageserver-protocol';
 
 export function create(ts: typeof import('typescript/lib/tsserverlibrary')): ServicePlugin {
 	return {
+		name: 'vue-toggle-v-bind-codeaction',
 		create(context): ServicePluginInstance {
 			return {
 				provideCodeActions(document, range, _context) {

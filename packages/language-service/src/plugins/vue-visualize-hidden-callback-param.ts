@@ -4,6 +4,7 @@ import type { ServicePlugin, VueCodeInformation } from '../types';
 
 export function create(): ServicePlugin {
 	return {
+		name: 'vue-inlay-hints-hidden-callback-param',
 		create(context): ServicePluginInstance {
 			return {
 				async provideInlayHints(document, range) {
