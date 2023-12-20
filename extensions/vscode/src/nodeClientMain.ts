@@ -117,17 +117,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	const tsExtension = vscode.extensions.getExtension('vscode.typescript-language-features');
 	const vueTsPluginExtension = vscode.extensions.getExtension('Vue.vscode-typescript-vue-plugin');
-	const volarLabs = createLabsInfo(serverLib);
-
-	volarLabs.extensionExports.volarLabs.codegenStackSupport = true;
 
 	if (tsExtension) {
 		await tsExtension.activate();
 	}
 	else {
 		vscode.window.showWarningMessage(
-			`Takeover mode is not longer needed in 2.0, please enable the "TypeScript and JavaScript Language Features" extension.`,
-			`Show Extension`
+			'Takeover mode is no longer needed in version 2.0. Please enable the "TypeScript and JavaScript Language Features" extension.',
+			'Show Extension'
 		).then((selected) => {
 			if (selected) {
 				vscode.commands.executeCommand('workbench.extensions.search', '@builtin TypeScript and JavaScript Language Features');
@@ -137,8 +134,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	if (vueTsPluginExtension) {
 		vscode.window.showWarningMessage(
-			`The "${vueTsPluginExtension.packageJSON.displayName}" extension is no longer needed in 2.0, please uninstall it.`,
-			`Show Extension`
+			`The "${vueTsPluginExtension.packageJSON.displayName}" extension is no longer needed in version 2.0. Please uninstall it.`,
+			'Show Extension'
 		).then((selected) => {
 			if (selected) {
 				vscode.commands.executeCommand('workbench.extensions.search', vueTsPluginExtension.id);
@@ -146,6 +143,8 @@ export async function activate(context: vscode.ExtensionContext) {
 		});
 	}
 
+	const volarLabs = createLabsInfo(serverLib);
+	volarLabs.extensionExports.volarLabs.codegenStackSupport = true;
 	return volarLabs.extensionExports;
 }
 
