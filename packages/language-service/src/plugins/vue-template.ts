@@ -24,6 +24,7 @@ export function create(
 	}
 ): ServicePlugin {
 	return {
+		name: 'vue-template',
 		triggerCharacters: [
 			...baseServide.triggerCharacters ?? [],
 			'@', // vue event shorthand

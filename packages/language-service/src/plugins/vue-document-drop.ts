@@ -7,6 +7,7 @@ import { ServicePlugin, ServicePluginInstance, TagNameCasing } from '../types';
 
 export function create(ts: typeof import('typescript/lib/tsserverlibrary')): ServicePlugin {
 	return {
+		name: 'vue-document-drop',
 		create(context): ServicePluginInstance {
 
 			let casing: TagNameCasing = TagNameCasing.Pascal; // TODO

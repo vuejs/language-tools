@@ -10,6 +10,7 @@ const directiveCommentReg = /<!--\s*@/;
 
 export function create(): ServicePlugin {
 	return {
+		name: 'vue-directive-comments',
 		triggerCharacters: ['@'],
 		create(): ServicePluginInstance {
 			return {
