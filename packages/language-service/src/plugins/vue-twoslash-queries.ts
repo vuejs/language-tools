@@ -7,6 +7,7 @@ const twoslashReg = /<!--\s*\^\?\s*-->/g;
 
 export function create(ts: typeof import('typescript/lib/tsserverlibrary')): ServicePlugin {
 	return {
+		name: 'vue-twoslash-queries',
 		create(context): ServicePluginInstance {
 			return {
 				provideInlayHints(document, range) {

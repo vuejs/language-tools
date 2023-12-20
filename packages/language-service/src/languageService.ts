@@ -285,6 +285,9 @@ export function resolveServices(
 	services['vue/toggleVBind'] ??= createToggleVBindService(ts);
 	services.emmet ??= createEmmetService();
 
+	services.html.name += ' (html)';
+	services.pug.name += ' (pug)';
+
 	return services;
 }
 

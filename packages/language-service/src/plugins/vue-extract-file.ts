@@ -15,6 +15,7 @@ const unicodeReg = /\\u/g;
 
 export function create(ts: typeof import('typescript/lib/tsserverlibrary')): ServicePlugin {
 	return {
+		name: 'vue-extract-file',
 		create(context) {
 			return {
 				async provideCodeActions(document, range, _context) {
