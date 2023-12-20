@@ -41,17 +41,19 @@ connection.onInitialize(params => {
 			},
 			async getProjectSetup(serviceEnv, projectContext) {
 				const ts = getTsLib();
-				const vueOptions = await getVueCompilerOptions();
+				const [commandLine, vueOptions] = await parseCommandLine();
 				envToVueOptions.set(serviceEnv, vue.resolveVueCompilerOptions(vueOptions));
 				const services = vue.resolveServices(ts, {}, vueOptions);
-				const languages = vue.resolveLanguages(ts, {}, projectContext.typescript?.parsedCommandLine.options ?? {}, vueOptions, options.codegenStack);
+				const languages = vue.resolveLanguages(ts, {}, commandLine?.options ?? {}, vueOptions, options.codegenStack);
+
 				return {
 					languagePlugins: Object.values(languages),
 					servicePlugins: Object.values(services),
 				};
 
-				async function getVueCompilerOptions() {
+				async function parseCommandLine() {
 
+					let commandLine: vue2.ParsedCommandLine | undefined;
 					let vueOptions: Partial<vue.VueCompilerOptions> = {};
 
 					if (projectContext.typescript) {
@@ -62,22 +64,22 @@ connection.onInitialize(params => {
 						while (sysVersion !== newSysVersion) {
 							sysVersion = newSysVersion;
 							if (projectContext.typescript.configFileName) {
-								vueOptions = vue2.createParsedCommandLine(ts, sys, projectContext.typescript.configFileName).vueOptions;
-							}
-							else {
-								vueOptions = vue2.createParsedCommandLineByJson(ts, sys, serviceEnv.uriToFileName(serviceEnv.workspaceFolder.uri.toString()), projectContext.typescript.parsedCommandLine.options).vueOptions;
+								commandLine = vue2.createParsedCommandLine(ts, sys, projectContext.typescript.configFileName);
 							}
 							newSysVersion = await sys.sync();
 						}
 					}
 
+					if (commandLine) {
+						vueOptions = commandLine.vueOptions;
+					}
 					vueOptions.extensions = [
 						...vueOptions.extensions ?? ['.vue'],
 						...vueFileExtensions.map(ext => '.' + ext),
 					];
 					vueOptions.extensions = [...new Set(vueOptions.extensions)];
 
-					return vueOptions;
+					return [commandLine, vueOptions] as const;
 				}
 			},
 		},
