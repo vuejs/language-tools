@@ -57,6 +57,12 @@
 				"experimentalRfc436": {
 					"deprecated": true
 				},
+				"hooks": {
+					"deprecated": true,
+					"type": "array",
+					"description": "Deprecated since v2.0.0.",
+					"markdownDescription": "https://github.com/vuejs/language-tools/pull/2217"
+				},
 				"narrowingTypesInInlineHandlers": {
 					"deprecated": true
 				},

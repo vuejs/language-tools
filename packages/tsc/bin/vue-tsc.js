@@ -5,7 +5,6 @@ const tsPkg = require('typescript/package.json');
 const readFileSync = fs.readFileSync;
 const tscPath = require.resolve('typescript/lib/tsc');
 const proxyApiPath = require.resolve('../out/index');
-const { state } = require('../out/shared');
 
 fs.readFileSync = (...args) => {
 	if (args[0] === tscPath) {
@@ -56,16 +55,4 @@ fs.readFileSync = (...args) => {
 	return readFileSync(...args);
 };
 
-(function main() {
-	try {
-		require(tscPath);
-	}
-	catch (err) {
-		if (err === 'hook') {
-			state.hook.worker.then(main);
-		}
-		else {
-			throw err;
-		}
-	}
-})();
+require(tscPath);
