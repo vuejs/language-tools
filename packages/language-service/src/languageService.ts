@@ -1,5 +1,5 @@
-import { ServicePlugin } from '@volar/language-service';
-import { LanguagePlugin, VueFile, createLanguages, hyphenateTag, resolveVueCompilerOptions, scriptRanges } from '@vue/language-core';
+import { ServiceEnvironment, ServicePlugin } from '@volar/language-service';
+import { LanguagePlugin, VueFile, createLanguages, hyphenateTag, scriptRanges } from '@vue/language-core';
 import { capitalize } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { Data } from 'volar-service-typescript/lib/features/completions/basic';
@@ -37,14 +37,13 @@ export interface Settings {
 }
 
 export function resolveLanguages(
+	languages: Record<string, LanguagePlugin>,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	languages: Record<string, LanguagePlugin> = {},
-	compilerOptions: ts.CompilerOptions = {},
-	_vueCompilerOptions: Partial<VueCompilerOptions> = {},
+	compilerOptions: ts.CompilerOptions,
+	vueCompilerOptions: VueCompilerOptions,
 	codegenStack: boolean = false,
 ): Record<string, LanguagePlugin> {
 
-	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);
 	const vueLanguageModules = createLanguages(ts, compilerOptions, vueCompilerOptions, codegenStack);
 
 	return {
@@ -57,12 +56,11 @@ export function resolveLanguages(
 }
 
 export function resolveServices(
+	services: Record<string, ServicePlugin>,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	services: Record<string, ServicePlugin> = {},
-	_vueCompilerOptions: Partial<VueCompilerOptions> = {},
+	getVueOptions: (env: ServiceEnvironment) => VueCompilerOptions,
 ) {
 
-	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);
 	const tsService: ServicePlugin = services?.typescript ?? createTsService(ts);
 
 	services ??= {};
@@ -103,7 +101,7 @@ export function resolveServices(
 										}
 
 										// fix #2458
-										casing ??= await getNameCasing(ts, context, sourceFile.fileName, vueCompilerOptions);
+										casing ??= await getNameCasing(ts, context, sourceFile.fileName, getVueOptions(context.env));
 
 										if (casing.tag === TagNameCasing.Kebab) {
 											for (const item of result.items) {
@@ -129,7 +127,7 @@ export function resolveServices(
 						patchAdditionalTextEdits(itemData.uri, item.additionalTextEdits);
 					}
 
-					for (const ext of vueCompilerOptions.extensions) {
+					for (const ext of getVueOptions(context.env).extensions) {
 						const suffix = capitalize(ext.substring('.'.length)); // .vue -> Vue
 						if (
 							itemData?.uri
@@ -156,7 +154,7 @@ export function resolveServices(
 							item.textEdit.newText = newName;
 							const [_, sourceFile] = context.language.files.getVirtualFile(context.env.uriToFileName(itemData.uri));
 							if (sourceFile) {
-								const casing = await getNameCasing(ts, context, sourceFile.fileName, vueCompilerOptions);
+								const casing = await getNameCasing(ts, context, sourceFile.fileName, getVueOptions(context.env));
 								if (casing.tag === TagNameCasing.Kebab) {
 									item.textEdit.newText = hyphenateTag(item.textEdit.newText);
 								}
@@ -240,6 +238,7 @@ export function resolveServices(
 	services.html ??= createVueTemplateLanguageService(
 		ts,
 		createHtmlService(),
+		getVueOptions,
 		{
 			getScanner: (htmlService, document): html.Scanner | undefined => {
 				return htmlService.provide['html/languageService']().createScanner(document.getText());
@@ -248,12 +247,12 @@ export function resolveServices(
 				htmlService.provide['html/updateCustomData'](extraData);
 			},
 			isSupportedDocument: (document) => document.languageId === 'html',
-			vueCompilerOptions,
 		}
 	);
 	services.pug ??= createVueTemplateLanguageService(
 		ts,
 		createPugService(),
+		getVueOptions,
 		{
 			getScanner: (pugService, document): html.Scanner | undefined => {
 				const pugDocument = pugService.provide['pug/pugDocument'](document);
@@ -265,7 +264,6 @@ export function resolveServices(
 				pugService.provide['pug/updateCustomData'](extraData);
 			},
 			isSupportedDocument: (document) => document.languageId === 'jade',
-			vueCompilerOptions,
 		}
 	);
 	services.vue ??= createVueService();

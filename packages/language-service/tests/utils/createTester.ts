@@ -3,7 +3,7 @@ import { createLanguage } from '@volar/typescript';
 import * as path from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { URI } from 'vscode-uri';
-import { createParsedCommandLine, resolveLanguages, resolveServices } from '../../out';
+import { createParsedCommandLine, resolveLanguages, resolveServices, resolveVueCompilerOptions } from '../../out';
 import { createMockServiceEnv } from './mockEnv';
 
 export const rootUri = URI.file(path.resolve(__dirname, '../../../../test-workspace/language-service'));
@@ -26,8 +26,9 @@ function createTester(rootUri: URI) {
 		getScriptSnapshot,
 		getLanguageId: resolveCommonLanguageId,
 	};
-	const languages = resolveLanguages(ts, {}, parsedCommandLine.options, parsedCommandLine.vueOptions);
-	const services = resolveServices(ts, {}, parsedCommandLine.vueOptions);
+	const resolvedVueOptions = resolveVueCompilerOptions(parsedCommandLine.vueOptions);
+	const languages = resolveLanguages({}, ts, parsedCommandLine.options, resolvedVueOptions);
+	const services = resolveServices({}, ts, () => resolvedVueOptions);
 	const defaultVSCodeSettings: any = {
 		'typescript.preferences.quoteStyle': 'single',
 		'javascript.preferences.quoteStyle': 'single',
