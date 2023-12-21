@@ -59,6 +59,10 @@
 	</tbody>
 </table>
 
+## 1.8.26 (2023/12/22)
+
+- fix: upgrade typescript-auto-import-cache to v0.3.1 to be compatible with TS 5.3 (https://github.com/volarjs/typescript-auto-import-cache/pull/3) ([#3802](https://github.com/vuejs/language-tools/issues/3802))
+
 ## 1.8.25 (2023/12/6)
 
 - fix(component-type-helpers): correct type inference for FunctionalComponent ([#3766](https://github.com/vuejs/language-tools/issues/3766)) - thanks @pinguet62
