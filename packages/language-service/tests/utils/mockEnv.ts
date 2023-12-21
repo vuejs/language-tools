@@ -11,10 +11,7 @@ export function createMockServiceEnv(
 	getSettings = () => ({} as any)
 ): ServiceEnvironment {
 	return {
-		workspaceFolder: {
-			uri: rootUri,
-			name: 'test-root',
-		},
+		workspaceFolder: rootUri,
 		uriToFileName,
 		fileNameToUri,
 		async getConfiguration(section: string) {
