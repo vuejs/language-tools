@@ -1,4 +1,4 @@
-import { createTSServerPlugin } from '@volar/typescript/lib/starters/createTSServerPlugin';
+import { createTSServerPlugin } from '@volar/typescript/lib/quickstart/createTSServerPlugin';
 import * as vue from '@vue/language-core';
 // @ts-expect-error
 import type * as ts from 'typescript/lib/tsserverlibrary';
