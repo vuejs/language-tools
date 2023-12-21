@@ -1,4 +1,4 @@
-import { CodeInformation, ServicePluginInstance, SourceMapWithDocuments } from '@volar/language-service';
+import { CodeInformation, ServiceEnvironment, ServicePluginInstance, SourceMapWithDocuments } from '@volar/language-service';
 import { VueFile, hyphenateAttr, hyphenateTag, parseScriptSetupRanges, tsCodegen } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import { Provide } from 'volar-service-typescript';
@@ -16,11 +16,11 @@ let modelData: html.HTMLDataV1;
 export function create(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	baseServide: ServicePlugin,
+	getVueOptions: (env: ServiceEnvironment) => VueCompilerOptions,
 	options: {
 		getScanner(service: ServicePluginInstance, document: TextDocument): html.Scanner | undefined,
 		updateCustomData(service: ServicePluginInstance, extraData: html.IHTMLDataProvider[]): void,
 		isSupportedDocument: (document: TextDocument) => boolean,
-		vueCompilerOptions: VueCompilerOptions,
 	}
 ): ServicePlugin {
 	return {
@@ -32,6 +32,7 @@ export function create(
 		create(context): ServicePluginInstance {
 
 			const baseServiceInstance = baseServide.create(context);
+			const vueCompilerOptions = getVueOptions(context.env);
 
 			builtInData ??= loadTemplateData(context.env.locale ?? 'en');
 			modelData ??= loadModelModifiersData(context.env.locale ?? 'en');
@@ -125,8 +126,8 @@ export function create(
 						if (sourceVirtualFile instanceof VueFile && scanner) {
 
 							// visualize missing required props
-							const casing = await getNameCasing(ts, context, map.sourceFileDocument.uri, options.vueCompilerOptions);
-							const components = getComponentNames(ts, languageService, sourceVirtualFile, options.vueCompilerOptions);
+							const casing = await getNameCasing(ts, context, map.sourceFileDocument.uri, vueCompilerOptions);
+							const components = getComponentNames(ts, languageService, sourceVirtualFile, vueCompilerOptions);
 							const componentProps: Record<string, string[]> = {};
 							let token: html.TokenType;
 							let current: {
@@ -143,7 +144,7 @@ export function create(
 											: components.find(component => component === tagName || hyphenateTag(component) === tagName);
 									const checkTag = tagName.indexOf('.') >= 0 ? tagName : component;
 									if (checkTag) {
-										componentProps[checkTag] ??= getPropsByTag(ts, languageService, sourceVirtualFile, checkTag, options.vueCompilerOptions, true);
+										componentProps[checkTag] ??= getPropsByTag(ts, languageService, sourceVirtualFile, checkTag, vueCompilerOptions, true);
 										current = {
 											unburnedRequiredProps: [...componentProps[checkTag]],
 											labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
@@ -174,7 +175,7 @@ export function create(
 												attrText = attrText.substring('v-model:'.length);
 											}
 											else if (attrText === 'v-model') {
-												attrText = options.vueCompilerOptions.target >= 3 ? 'modelValue' : 'value'; // TODO: support for experimentalModelPropName?
+												attrText = vueCompilerOptions.target >= 3 ? 'modelValue' : 'value'; // TODO: support for experimentalModelPropName?
 											}
 											else if (attrText.startsWith('@')) {
 												attrText = 'on-' + hyphenateAttr(attrText.substring('@'.length));
@@ -309,7 +310,7 @@ export function create(
 						if (!(sourceFile instanceof VueFile))
 							continue;
 
-						const templateScriptData = getComponentNames(ts, languageService, sourceFile, options.vueCompilerOptions);
+						const templateScriptData = getComponentNames(ts, languageService, sourceFile, vueCompilerOptions);
 						const components = new Set([
 							...templateScriptData,
 							...templateScriptData.map(hyphenateTag),
@@ -358,7 +359,7 @@ export function create(
 			async function provideHtmlData(map: SourceMapWithDocuments<CodeInformation>, vueSourceFile: VueFile) {
 
 				const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
-				const casing = await getNameCasing(ts, context, map.sourceFileDocument.uri, options.vueCompilerOptions);
+				const casing = await getNameCasing(ts, context, map.sourceFileDocument.uri, vueCompilerOptions);
 
 				if (builtInData.tags) {
 					for (const tag of builtInData.tags) {
@@ -384,7 +385,7 @@ export function create(
 						isApplicable: () => true,
 						provideTags: () => {
 
-							const components = getComponentNames(ts, languageService, vueSourceFile, options.vueCompilerOptions)
+							const components = getComponentNames(ts, languageService, vueSourceFile, vueCompilerOptions)
 								.filter(name =>
 									name !== 'Transition'
 									&& name !== 'TransitionGroup'
@@ -392,7 +393,7 @@ export function create(
 									&& name !== 'Suspense'
 									&& name !== 'Teleport'
 								);
-							const scriptSetupRanges = vueSourceFile.sfc.scriptSetup ? parseScriptSetupRanges(ts, vueSourceFile.sfc.scriptSetup.ast, options.vueCompilerOptions) : undefined;
+							const scriptSetupRanges = vueSourceFile.sfc.scriptSetup ? parseScriptSetupRanges(ts, vueSourceFile.sfc.scriptSetup.ast, vueCompilerOptions) : undefined;
 							const names = new Set<string>();
 							const tags: html.ITagData[] = [];
 
@@ -430,8 +431,8 @@ export function create(
 								return [];
 
 							const attrs = getElementAttrs(ts, languageService, vueSourceFile.mainTsFile.fileName, tag);
-							const props = new Set(getPropsByTag(ts, languageService, vueSourceFile, tag, options.vueCompilerOptions));
-							const events = getEventsOfTag(ts, languageService, vueSourceFile, tag, options.vueCompilerOptions);
+							const props = new Set(getPropsByTag(ts, languageService, vueSourceFile, tag, vueCompilerOptions));
+							const events = getEventsOfTag(ts, languageService, vueSourceFile, tag, vueCompilerOptions);
 							const attributes: html.IAttributeData[] = [];
 							const _tsCodegen = tsCodegen.get(vueSourceFile.sfc);
 
@@ -555,7 +556,7 @@ export function create(
 
 				const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
 				const replacement = getReplacement(completionList, map.sourceFileDocument);
-				const componentNames = new Set(getComponentNames(ts, languageService, vueSourceFile, options.vueCompilerOptions).map(hyphenateTag));
+				const componentNames = new Set(getComponentNames(ts, languageService, vueSourceFile, vueCompilerOptions).map(hyphenateTag));
 
 				if (replacement) {
 

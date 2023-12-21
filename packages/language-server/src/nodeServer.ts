@@ -34,7 +34,7 @@ connection.onInitialize(params => {
 			watchFileExtensions: ['js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json', ...vueFileExtensions],
 			getServerCapabilitiesSetup() {
 				const ts = getTsLib();
-				const services = vue.resolveServices(ts, {}, {});
+				const services = vue.resolveServices({}, ts, env => envToVueOptions.get(env)!);
 				return {
 					servicePlugins: Object.values(services),
 				};
@@ -42,9 +42,10 @@ connection.onInitialize(params => {
 			async getProjectSetup(serviceEnv, projectContext) {
 				const ts = getTsLib();
 				const [commandLine, vueOptions] = await parseCommandLine();
-				envToVueOptions.set(serviceEnv, vue.resolveVueCompilerOptions(vueOptions));
-				const services = vue.resolveServices(ts, {}, vueOptions);
-				const languages = vue.resolveLanguages(ts, {}, commandLine?.options ?? {}, vueOptions, options.codegenStack);
+				const resolvedVueOptions = vue.resolveVueCompilerOptions(vueOptions);
+				envToVueOptions.set(serviceEnv, resolvedVueOptions);
+				const services = vue.resolveServices({}, ts, env => envToVueOptions.get(env)!);
+				const languages = vue.resolveLanguages({}, ts, commandLine?.options ?? {}, resolvedVueOptions, options.codegenStack);
 
 				return {
 					languagePlugins: Object.values(languages),
