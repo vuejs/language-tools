@@ -32,25 +32,21 @@ connection.onInitialize(params => {
 		options.vue?.hybridMode ? createSimpleProjectProvider : createTypeScriptProjectProvider,
 		{
 			watchFileExtensions: ['js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json', ...vueFileExtensions],
-			getServerCapabilitiesSetup() {
+			getServicePlugins() {
 				const ts = getTsLib();
 				const services = vue.resolveServices({}, ts, env => envToVueOptions.get(env)!);
-				return {
-					servicePlugins: Object.values(services),
-				};
+
+				return Object.values(services);
 			},
-			async getProjectSetup(serviceEnv, projectContext) {
+			async getLanguagePlugins(serviceEnv, projectContext) {
 				const ts = getTsLib();
 				const [commandLine, vueOptions] = await parseCommandLine();
 				const resolvedVueOptions = vue.resolveVueCompilerOptions(vueOptions);
-				envToVueOptions.set(serviceEnv, resolvedVueOptions);
-				const services = vue.resolveServices({}, ts, env => envToVueOptions.get(env)!);
 				const languages = vue.resolveLanguages({}, ts, commandLine?.options ?? {}, resolvedVueOptions, options.codegenStack);
 
-				return {
-					languagePlugins: Object.values(languages),
-					servicePlugins: Object.values(services),
-				};
+				envToVueOptions.set(serviceEnv, resolvedVueOptions);
+
+				return Object.values(languages);
 
 				async function parseCommandLine() {
 
@@ -58,7 +54,7 @@ connection.onInitialize(params => {
 					let vueOptions: Partial<vue.VueCompilerOptions> = {};
 
 					if (projectContext.typescript) {
-						const sys = createSys(ts, serviceEnv, serviceEnv.uriToFileName(serviceEnv.workspaceFolder.uri.toString()));
+						const sys = createSys(ts, serviceEnv, serviceEnv.uriToFileName(serviceEnv.workspaceFolder.toString()));
 						let sysVersion: number | undefined;
 						let newSysVersion = await sys.sync();
 

@@ -1,4 +1,4 @@
-import { runTsc } from '@volar/typescript/lib/starters/runTsc';
+import { runTsc } from '@volar/typescript/lib/quickstart/runTsc';
 import * as vue from '@vue/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 
