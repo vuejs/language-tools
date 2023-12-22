@@ -39,10 +39,10 @@ importers:
         specifier: 2.0.0-alpha.0
         version: 2.0.0-alpha.0
       '@vue/language-core':
-        specifier: 1.8.25
+        specifier: 1.8.26
         version: link:../../packages/language-core
       '@vue/language-server':
-        specifier: 1.8.25
+        specifier: 1.8.26
         version: link:../../packages/language-server
       esbuild:
         specifier: latest
@@ -69,7 +69,7 @@ importers:
         specifier: latest
         version: 0.19.8
       typescript-vue-plugin:
-        specifier: 1.8.25
+        specifier: 1.8.26
         version: link:../../packages/typescript-plugin
       vsce:
         specifier: latest
@@ -81,7 +81,7 @@ importers:
         specifier: 2.0.0-alpha.0
         version: 2.0.0-alpha.0
       '@vue/language-core':
-        specifier: 1.8.25
+        specifier: 1.8.26
         version: link:../language-core
       path-browserify:
         specifier: ^1.0.1
@@ -90,7 +90,7 @@ importers:
         specifier: '*'
         version: 5.3.2
       vue-component-type-helpers:
-        specifier: 1.8.25
+        specifier: 1.8.26
         version: link:../component-type-helpers
     devDependencies:
       '@types/node':
@@ -155,7 +155,7 @@ importers:
         specifier: latest
         version: 20.10.3
       '@vue/language-core':
-        specifier: 1.8.25
+        specifier: 1.8.26
         version: link:../language-core
 
   packages/language-server:
@@ -170,16 +170,16 @@ importers:
         specifier: 2.0.0-alpha.0
         version: 2.0.0-alpha.0
       '@vue/language-core':
-        specifier: 1.8.25
+        specifier: 1.8.26
         version: link:../language-core
       '@vue/language-service':
-        specifier: 1.8.25
+        specifier: 1.8.26
         version: link:../language-service
       vscode-languageserver-protocol:
         specifier: ^3.17.5
         version: 3.17.5
       vue-component-meta:
-        specifier: 1.8.25
+        specifier: 1.8.26
         version: link:../component-meta
 
   packages/language-service:
@@ -197,7 +197,7 @@ importers:
         specifier: ^3.3.0
         version: 3.3.10
       '@vue/language-core':
-        specifier: 1.8.25
+        specifier: 1.8.26
         version: link:../language-core
       '@vue/shared':
         specifier: ^3.3.0
@@ -247,7 +247,7 @@ importers:
         version: 1.0.2
       '@volar/kit':
         specifier: 2.0.0-alpha.0
-        version: 2.0.0-alpha.0(typescript@5.3.2)
+        version: 2.0.0-alpha.0(typescript@5.3.3)
       vscode-languageserver-protocol:
         specifier: ^3.17.5
         version: 3.17.5
@@ -261,7 +261,7 @@ importers:
         specifier: 2.0.0-alpha.0
         version: 2.0.0-alpha.0
       '@vue/language-core':
-        specifier: 1.8.25
+        specifier: 1.8.26
         version: link:../language-core
       semver:
         specifier: ^7.5.4
@@ -280,7 +280,7 @@ importers:
         specifier: 2.0.0-alpha.0
         version: 2.0.0-alpha.0
       '@vue/language-core':
-        specifier: 1.8.25
+        specifier: 1.8.26
         version: link:../language-core
 
   test-workspace:
@@ -289,7 +289,7 @@ importers:
         specifier: ^3.3.0
         version: 3.3.10(typescript@5.3.2)
       vue-component-type-helpers:
-        specifier: 1.8.25
+        specifier: 1.8.26
         version: link:../packages/component-type-helpers
       vue2:
         specifier: npm:vue@2.7
@@ -1290,7 +1290,7 @@ packages:
       pretty-format: 29.7.0
     dev: true
 
-  /@volar/kit@2.0.0-alpha.0(typescript@5.3.2):
+  /@volar/kit@2.0.0-alpha.0(typescript@5.3.3):
     resolution: {integrity: sha512-QXIT6VV7JdT7JavMAyjrRCO4fa4saPd8bLedAd958PaTbnJmink8/UPMwUV9wOJHiK+jCrSddnDh9I00zGSQjQ==}
     peerDependencies:
       typescript: '*'
@@ -1298,7 +1298,7 @@ packages:
       '@volar/language-service': 2.0.0-alpha.0
       '@volar/typescript': 2.0.0-alpha.0
       typesafe-path: 0.2.2
-      typescript: 5.3.2
+      typescript: 5.3.3
       vscode-languageserver-textdocument: 1.0.11
       vscode-uri: 3.0.8
     dev: true
@@ -5050,6 +5050,12 @@ packages:
     resolution: {integrity: sha512-6l+RyNy7oAHDfxC4FzSJcz9vnjTKxrLpDG5M2Vu4SHRVNg6xzqZp6LYSR9zjqQTu8DU/f5xwxUdADOkbrIX2gQ==}
     engines: {node: '>=14.17'}
     hasBin: true
+
+  /typescript@5.3.3:
+    resolution: {integrity: sha512-pXWcraxM0uxAS+tN0AG/BF2TyqmHO014Z070UsJ+pFvYuRSq8KH8DmWpnbXe0pEPDHXZV3FcAbJkijJ5oNEnWw==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+    dev: true
 
   /uc.micro@1.0.6:
     resolution: {integrity: sha512-8Y75pvTYkLJW2hWQHXxoqRgV7qb9B+9vFEtidML+7koHUFapnVJAZ6cKs+Qjz5Aw3aZWHMC6u0wJE3At+nSGwA==}
