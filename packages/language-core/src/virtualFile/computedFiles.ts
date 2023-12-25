@@ -30,7 +30,7 @@ export function computedFiles(
 		}
 		return blocks;
 	});
-	const pluginsResult = plugins.map(plugin => compiledPluginFiles(plugins, plugin, fileName, sfc, nameToBlock, codegenStack));
+	const pluginsResult = plugins.map(plugin => computedPluginFiles(plugins, plugin, fileName, sfc, nameToBlock, codegenStack));
 	const flatResult = computed(() => pluginsResult.map(r => r()).flat());
 	const structuredResult = computed(() => {
 
@@ -112,7 +112,7 @@ export function computedFiles(
 	return structuredResult;
 }
 
-function compiledPluginFiles(
+function computedPluginFiles(
 	plugins: ReturnType<VueLanguagePlugin>[],
 	plugin: ReturnType<VueLanguagePlugin>,
 	fileName: string,

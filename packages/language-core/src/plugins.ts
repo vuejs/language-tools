@@ -51,7 +51,7 @@ export function getDefaultVueLanguagePlugins(pluginContext: Parameters<VueLangua
 		useVueTsx,
 		...pluginContext.vueCompilerOptions.plugins,
 	];
-	;
+
 	const pluginInstances = plugins
 		.map(plugin => plugin(pluginContext))
 		.sort((a, b) => {
