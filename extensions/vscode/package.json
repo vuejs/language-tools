@@ -344,23 +344,7 @@
 						}
 					}
 				},
-				"volar.takeOverMode.extension": {
-					"type": "string",
-					"default": "Vue.volar",
-					"description": "The extension that take over language support for *.ts."
-				},
-				"vue-semantic-server.trace.server": {
-					"scope": "window",
-					"type": "string",
-					"enum": [
-						"off",
-						"messages",
-						"verbose"
-					],
-					"default": "off",
-					"description": "Traces the communication between VS Code and the language server."
-				},
-				"vue-syntactic-server.trace.server": {
+				"vue.trace.server": {
 					"scope": "window",
 					"type": "string",
 					"enum": [
