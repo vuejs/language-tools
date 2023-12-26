@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-service",
-	"version": "1.8.26",
+	"version": "1.8.27",
 	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
@@ -21,7 +21,7 @@
 		"@volar/language-service": "~1.11.1",
 		"@volar/typescript": "~1.11.1",
 		"@vue/compiler-dom": "^3.3.0",
-		"@vue/language-core": "1.8.26",
+		"@vue/language-core": "1.8.27",
 		"@vue/shared": "^3.3.0",
 		"computeds": "^0.0.1",
 		"path-browserify": "^1.0.1",

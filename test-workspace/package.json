@@ -1,9 +1,9 @@
 {
 	"private": true,
-	"version": "1.8.26",
+	"version": "1.8.27",
 	"devDependencies": {
 		"vue": "^3.3.0",
-		"vue-component-type-helpers": "1.8.26",
+		"vue-component-type-helpers": "1.8.27",
 		"vue2": "npm:vue@2.7"
 	}
 }
