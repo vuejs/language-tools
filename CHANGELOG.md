@@ -59,6 +59,10 @@
 	</tbody>
 </table>
 
+## 1.8.27 (2023/12/26)
+
+- fix(language-core): remove misuse of `JSX.Element` for compatible with vue 3.4 (https://github.com/vuejs/core/issues/9923)
+
 ## 1.8.26 (2023/12/22)
 
 - fix: upgrade typescript-auto-import-cache to v0.3.1 to be compatible with TS 5.3 (https://github.com/volarjs/typescript-auto-import-cache/pull/3) ([#3802](https://github.com/vuejs/language-tools/issues/3802))
