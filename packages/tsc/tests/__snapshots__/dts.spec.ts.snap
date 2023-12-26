@@ -33,7 +33,11 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
         default?(data: {
             foo: number;
         }): any;
-    }>;
+    }> & {
+        default?(data: {
+            foo: number;
+        }): any;
+    };
 }, __VLS_expose?: (exposed: import("vue").ShallowUnwrapRef<{
     baz: number;
 }>) => void, __VLS_setup?: Promise<{
@@ -49,7 +53,11 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
         default?(data: {
             foo: number;
         }): any;
-    }>;
+    }> & {
+        default?(data: {
+            foo: number;
+        }): any;
+    };
     emit: (e: 'bar', data: number) => void;
 }>) => import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
     [key: string]: any;
@@ -67,7 +75,11 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
             default?(data: {
                 foo: number;
             }): any;
-        }>;
+        }> & {
+            default?(data: {
+                foo: number;
+            }): any;
+        };
         emit: (e: 'bar', data: number) => void;
     };
 };
