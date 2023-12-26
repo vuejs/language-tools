@@ -11,8 +11,8 @@ const props = defineProps<{
 		<!-- correct inference -->
 		<div>{{ props.one.name }}</div>
 		<ul>
-		  <!-- correct inference -->
-		  <li v-for="el in all">{{ el.name }}</li>
+			<!-- correct inference -->
+			<li v-for="el in all">{{ el.name }}</li>
 		</ul>
 	</div>
 </template>
