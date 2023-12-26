@@ -24,7 +24,6 @@ export const config = {
 		diagnosticModel: 'push' | 'pull';
 		additionalExtensions: string[];
 		fullCompletionList: boolean;
-		configFilePath: string;
 		vitePress: {
 			supportMdFile: boolean;
 		};

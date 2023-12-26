@@ -3,7 +3,7 @@ import type * as ts from 'typescript/lib/tsserverlibrary';
 import * as path from 'path-browserify';
 import { code as typeHelpersCode } from 'vue-component-type-helpers';
 import { code as vue2TypeHelpersCode } from 'vue-component-type-helpers/vue2';
-import { createLanguage, decorateLanguageService } from '@volar/typescript';
+import { createLanguage } from '@volar/typescript';
 
 import type {
 	MetaCheckerOptions,
@@ -86,8 +86,6 @@ function createCheckerWorker(
 			}
 			return scriptSnapshots.get(fileName);
 		},
-		getFileId: fileName => fileName,
-		getFileName: id => id,
 		getLanguageId: vue.resolveCommonLanguageId,
 	};
 
@@ -165,8 +163,6 @@ export function baseCreate(
 	);
 	const { languageServiceHost } = language.typescript!;
 	const tsLs = ts.createLanguageService(languageServiceHost);
-
-	decorateLanguageService(language.files, tsLs, false);
 
 	if (checkerOptions.forceUseTs) {
 		const getScriptKind = languageServiceHost.getScriptKind?.bind(languageServiceHost);

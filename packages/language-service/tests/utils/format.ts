@@ -1,10 +1,11 @@
 import * as kit from '@volar/kit';
 import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
-import { resolveLanguages, resolveServices } from '../../out';
+import { resolveLanguages, resolveServices, resolveVueCompilerOptions } from '../../out';
 
-const languages = resolveLanguages(ts);
-const services = resolveServices(ts);
+const resolvedVueOptions = resolveVueCompilerOptions({});
+const languages = resolveLanguages({}, ts, {}, resolvedVueOptions);
+const services = resolveServices({}, ts, () => resolvedVueOptions);
 const formatter = kit.createFormatter(Object.values(languages), Object.values(services));
 
 export function defineFormatTest(options: {

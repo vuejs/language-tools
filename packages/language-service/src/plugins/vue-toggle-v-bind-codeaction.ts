@@ -4,13 +4,14 @@ import type * as vscode from 'vscode-languageserver-protocol';
 
 export function create(ts: typeof import('typescript/lib/tsserverlibrary')): ServicePlugin {
 	return {
+		name: 'vue-toggle-v-bind-codeaction',
 		create(context): ServicePluginInstance {
 			return {
 				provideCodeActions(document, range, _context) {
 
 					const startOffset = document.offsetAt(range.start);
 					const endOffset = document.offsetAt(range.end);
-					const [virtualFile] = context.language.files.getVirtualFile(document.uri);
+					const [virtualFile] = context.language.files.getVirtualFile(context.env.uriToFileName(document.uri));
 
 					if (!(virtualFile instanceof VueFile)) {
 						return;

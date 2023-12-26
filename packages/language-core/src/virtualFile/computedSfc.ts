@@ -43,7 +43,7 @@ export function computedSfc(
 				const _src = src();
 				return _src ? untrackedSnapshot().getText(0, base.startTagEnd).lastIndexOf(_src) - base.startTagEnd : -1;
 			});
-			const ast = computed(() => ts.createSourceFile(fileName + '.' + base.lang, base.content, ts.ScriptTarget.Latest));
+			const ast = computed(() => ts.createSourceFile(fileName + '.' + base.lang, base.content, 99 satisfies ts.ScriptTarget.Latest));
 			return mergeObject(base, {
 				get src() { return src(); },
 				get srcOffset() { return srcOffset(); },
@@ -64,7 +64,7 @@ export function computedSfc(
 				const _generic = generic();
 				return _generic !== undefined ? untrackedSnapshot().getText(0, base.startTagEnd).lastIndexOf(_generic) - base.startTagEnd : -1;
 			});
-			const ast = computed(() => ts.createSourceFile(fileName + '.' + base.lang, base.content, ts.ScriptTarget.Latest));
+			const ast = computed(() => ts.createSourceFile(fileName + '.' + base.lang, base.content, 99 satisfies ts.ScriptTarget.Latest));
 			return mergeObject(base, {
 				get generic() { return generic(); },
 				get genericOffset() { return genericOffset(); },

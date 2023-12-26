@@ -1,34 +1,15 @@
+import { createLabsInfo } from '@volar/vscode';
+import * as serverLib from '@vue/language-server';
 import * as fs from 'fs';
-import * as os from 'os';
-import * as path from 'path';
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient/node';
-import { activate as commonActivate, deactivate as commonDeactivate, getDocumentSelector } from './common';
-import { middleware } from './middleware';
-import * as serverLib from '@vue/language-server';
+import { activate as commonActivate, deactivate as commonDeactivate } from './common';
 import { config } from './config';
-import { ExportsInfoForLabs, supportLabsVersion } from '@volar/vscode';
+import { middleware } from './middleware';
 
 export async function activate(context: vscode.ExtensionContext) {
 
-	const cancellationPipeName = path.join(os.tmpdir(), `vscode-${context.extension.id}-cancellation-pipe.tmp`);
-	const documentSelector = getDocumentSelector(context, serverLib.ServerMode.Semantic);
-	const languageClients: lsp.LanguageClient[] = [];
-
-	let cancellationPipeUpdateKey: string | undefined;
 	let serverPathStatusItem: vscode.StatusBarItem | undefined;
-
-	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((e) => {
-		let key = e.document.uri.toString() + '|' + e.document.version;
-		if (cancellationPipeUpdateKey === undefined) {
-			cancellationPipeUpdateKey = key;
-			return;
-		}
-		if (documentSelector.some(filter => filter.language === e.document.languageId) && cancellationPipeUpdateKey !== key) {
-			cancellationPipeUpdateKey = key;
-			fs.writeFileSync(cancellationPipeName, '');
-		}
-	}));
 
 	await commonActivate(context, (
 		id,
@@ -38,8 +19,6 @@ export async function activate(context: vscode.ExtensionContext) {
 		port,
 		outputChannel
 	) => {
-
-		initOptions.cancellationPipeName = cancellationPipeName;
 
 		class _LanguageClient extends lsp.LanguageClient {
 			fillInitializeParams(params: lsp.InitializeParams) {
@@ -115,6 +94,10 @@ export async function activate(context: vscode.ExtensionContext) {
 			middleware,
 			documentSelector: documentSelector,
 			initializationOptions: initOptions,
+			markdown: {
+				isTrusted: true,
+				supportHtml: true,
+			},
 			outputChannel
 		};
 		const client = new _LanguageClient(
@@ -125,21 +108,44 @@ export async function activate(context: vscode.ExtensionContext) {
 		);
 		client.start();
 
-		languageClients.push(client);
+		volarLabs.addLanguageClient(client);
 
 		updateProviders(client);
 
 		return client;
 	});
 
-	return {
-		volarLabs: {
-			version: supportLabsVersion,
-			codegenStackSupport: true,
-			languageClients,
-			languageServerProtocol: serverLib,
-		},
-	} satisfies ExportsInfoForLabs;
+	const tsExtension = vscode.extensions.getExtension('vscode.typescript-language-features');
+	const vueTsPluginExtension = vscode.extensions.getExtension('Vue.vscode-typescript-vue-plugin');
+
+	if (tsExtension) {
+		await tsExtension.activate();
+	}
+	else {
+		vscode.window.showWarningMessage(
+			'Takeover mode is no longer needed in version 2.0. Please enable the "TypeScript and JavaScript Language Features" extension.',
+			'Show Extension'
+		).then((selected) => {
+			if (selected) {
+				vscode.commands.executeCommand('workbench.extensions.search', '@builtin TypeScript and JavaScript Language Features');
+			}
+		});
+	}
+
+	if (vueTsPluginExtension) {
+		vscode.window.showWarningMessage(
+			`The "${vueTsPluginExtension.packageJSON.displayName}" extension is no longer needed in version 2.0. Please uninstall it.`,
+			'Show Extension'
+		).then((selected) => {
+			if (selected) {
+				vscode.commands.executeCommand('workbench.extensions.search', vueTsPluginExtension.id);
+			}
+		});
+	}
+
+	const volarLabs = createLabsInfo(serverLib);
+	volarLabs.extensionExports.volarLabs.codegenStackSupport = true;
+	return volarLabs.extensionExports;
 }
 
 export function deactivate(): Thenable<any> | undefined {
@@ -163,6 +169,33 @@ function updateProviders(client: lsp.LanguageClient) {
 			capabilities.workspace.fileOperations.willRename = undefined;
 		}
 
+		// TODO: disalbe for now because this break ts plugin semantic tokens
+		capabilities.semanticTokensProvider = undefined;
+
 		return initializeFeatures.call(client, ...args);
 	};
 }
+
+try {
+	const tsExtension = vscode.extensions.getExtension('vscode.typescript-language-features')!;
+	const readFileSync = fs.readFileSync;
+	const extensionJsPath = require.resolve('./dist/extension.js', { paths: [tsExtension.extensionPath] });
+
+	// @ts-expect-error
+	fs.readFileSync = (...args) => {
+		if (args[0] === extensionJsPath) {
+			// @ts-expect-error
+			let text = readFileSync(...args) as string;
+
+			// patch jsTsLanguageModes
+			text = text.replace('t.$u=[t.$r,t.$s,t.$p,t.$q]', s => s + '.concat("vue")');
+
+			// patch isSupportedLanguageMode
+			text = text.replace('s.languages.match([t.$p,t.$q,t.$r,t.$s]', s => s + '.concat("vue")');
+
+			return text;
+		}
+		// @ts-expect-error
+		return readFileSync(...args);
+	};
+} catch { }

@@ -7,6 +7,7 @@ import { ServicePlugin, ServicePluginInstance, TagNameCasing } from '../types';
 
 export function create(ts: typeof import('typescript/lib/tsserverlibrary')): ServicePlugin {
 	return {
+		name: 'vue-document-drop',
 		create(context): ServicePluginInstance {
 
 			let casing: TagNameCasing = TagNameCasing.Pascal; // TODO
@@ -17,7 +18,7 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 					if (document.languageId !== 'html')
 						return;
 
-					const [virtualFile, sourceFile] = context.language.files.getVirtualFile(document.uri);
+					const [virtualFile, sourceFile] = context.language.files.getVirtualFile(context.env.uriToFileName(document.uri));
 					const vueFile = sourceFile?.virtualFile?.[0];
 					if (!virtualFile || !(vueFile instanceof VueFile))
 						return;
@@ -47,9 +48,11 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 							)
 							&& file.mappings.some(mapping => isFoldingRangesEnabled(mapping.data))
 						) {
+							const uri = context.env.fileNameToUri(file.fileName);
+
 							additionalEdit ??= {};
 							additionalEdit.changes ??= {};
-							additionalEdit.changes[file.id] = [];
+							additionalEdit.changes[uri] = [];
 
 							const { sfc } = vueFile;
 							const script = sfc.scriptSetup ?? sfc.script;
@@ -57,7 +60,7 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 								return;
 
 							const lastImportNode = getLastImportNode(ts, script.ast);
-							additionalEdit.changes[file.id].push({
+							additionalEdit.changes[uri].push({
 								range: lastImportNode ? {
 									start: document.positionAt(lastImportNode.end),
 									end: document.positionAt(lastImportNode.end),
@@ -71,7 +74,7 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 							if (sfc.script) {
 								const edit = createAddComponentToOptionEdit(ts, sfc.script.ast, newName);
 								if (edit) {
-									additionalEdit.changes[file.id].push({
+									additionalEdit.changes[uri].push({
 										range: {
 											start: document.positionAt(edit.range.start),
 											end: document.positionAt(edit.range.end),

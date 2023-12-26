@@ -15,6 +15,7 @@ const unicodeReg = /\\u/g;
 
 export function create(ts: typeof import('typescript/lib/tsserverlibrary')): ServicePlugin {
 	return {
+		name: 'vue-extract-file',
 		create(context) {
 			return {
 				async provideCodeActions(document, range, _context) {
@@ -25,7 +26,7 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 						return;
 					}
 
-					const [vueFile] = context.language.files.getVirtualFile(document.uri);
+					const [vueFile] = context.language.files.getVirtualFile(context.env.uriToFileName(document.uri));
 					if (!vueFile || !(vueFile instanceof VueFile))
 						return;
 
@@ -56,7 +57,7 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 
 					const { uri, range, newName } = codeAction.data as ActionData;
 					const [startOffset, endOffset]: [number, number] = range;
-					const [vueFile] = context.language.files.getVirtualFile(uri) as [VueFile, any];
+					const [vueFile] = context.language.files.getVirtualFile(context.env.uriToFileName(uri)) as [VueFile, any];
 					const document = context.documents.get(uri, vueFile.languageId, vueFile.snapshot)!;
 					const { sfc } = vueFile;
 					const script = sfc.scriptSetup ?? sfc.script;
@@ -70,8 +71,7 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 
 					const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
 					const languageServiceHost = context.inject<Provide, 'typescript/languageServiceHost'>('typescript/languageServiceHost');
-					const tsScriptUri = vueFile.mainTsFile!.id;
-					const tsScriptName = context.env.uriToFileName(tsScriptUri);
+					const tsScriptName = vueFile.mainTsFile!.fileName;
 					const sourceFile = languageService.getProgram()!.getSourceFile(tsScriptName)!;
 					const sourceFileKind = languageServiceHost.getScriptKind?.(tsScriptName);
 					const toExtract = collectExtractProps();
@@ -172,7 +172,7 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 							model: boolean;
 						}>();
 						const checker = languageService.getProgram()!.getTypeChecker();
-						const [virtualFile] = context.language.files.getVirtualFile(tsScriptUri);
+						const [virtualFile] = context.language.files.getVirtualFile(tsScriptName);
 						const maps = virtualFile ? [...context.documents.getMaps(virtualFile)] : [];
 
 						sourceFile.forEachChild(function visit(node) {

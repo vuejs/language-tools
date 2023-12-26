@@ -30,7 +30,7 @@ export function computedFiles(
 		}
 		return blocks;
 	});
-	const pluginsResult = plugins.map(plugin => compiledPluginFiles(plugins, plugin, fileName, sfc, nameToBlock, codegenStack));
+	const pluginsResult = plugins.map(plugin => computedPluginFiles(plugins, plugin, fileName, sfc, nameToBlock, codegenStack));
 	const flatResult = computed(() => pluginsResult.map(r => r()).flat());
 	const structuredResult = computed(() => {
 
@@ -48,10 +48,10 @@ export function computedFiles(
 
 		for (const { file, snapshot, mappings, codegenStacks } of remain) {
 			embeddedFiles.push({
-				id: file.fileName,
+				fileName: file.fileName,
 				languageId: resolveCommonLanguageId(file.fileName),
 				typescript: file.typescript,
-				linkedNavigationMappings: file.linkedNavigationMappings,
+				linkedCodeMappings: file.linkedCodeMappings,
 				snapshot,
 				mappings,
 				codegenStacks,
@@ -67,10 +67,10 @@ export function computedFiles(
 				const { file, snapshot, mappings, codegenStacks } = remain[i];
 				if (!file.parentFileName) {
 					embeddedFiles.push({
-						id: file.fileName,
+						fileName: file.fileName,
 						languageId: resolveCommonLanguageId(file.fileName),
 						typescript: file.typescript,
-						linkedNavigationMappings: file.linkedNavigationMappings,
+						linkedCodeMappings: file.linkedCodeMappings,
 						snapshot,
 						mappings,
 						codegenStacks,
@@ -82,10 +82,10 @@ export function computedFiles(
 					const parent = findParentStructure(file.parentFileName, embeddedFiles);
 					if (parent) {
 						parent.embeddedFiles.push({
-							id: file.fileName,
+							fileName: file.fileName,
 							languageId: resolveCommonLanguageId(file.fileName),
 							typescript: file.typescript,
-							linkedNavigationMappings: file.linkedNavigationMappings,
+							linkedCodeMappings: file.linkedCodeMappings,
 							snapshot,
 							mappings,
 							codegenStacks,
@@ -96,12 +96,12 @@ export function computedFiles(
 				}
 			}
 		}
-		function findParentStructure(id: string, current: VirtualFile[]): VirtualFile | undefined {
+		function findParentStructure(fileName: string, current: VirtualFile[]): VirtualFile | undefined {
 			for (const child of current) {
-				if (child.id === id) {
+				if (child.fileName === fileName) {
 					return child;
 				}
-				let parent = findParentStructure(id, child.embeddedFiles);
+				let parent = findParentStructure(fileName, child.embeddedFiles);
 				if (parent) {
 					return parent;
 				}
@@ -112,7 +112,7 @@ export function computedFiles(
 	return structuredResult;
 }
 
-function compiledPluginFiles(
+function computedPluginFiles(
 	plugins: ReturnType<VueLanguagePlugin>[],
 	plugin: ReturnType<VueLanguagePlugin>,
 	fileName: string,

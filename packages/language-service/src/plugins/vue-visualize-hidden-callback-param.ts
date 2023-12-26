@@ -4,13 +4,14 @@ import type { ServicePlugin, VueCodeInformation } from '../types';
 
 export function create(): ServicePlugin {
 	return {
+		name: 'vue-inlay-hints-hidden-callback-param',
 		create(context): ServicePluginInstance {
 			return {
 				async provideInlayHints(document, range) {
 
 					const settings: Record<string, boolean> = {};
 					const result: vscode.InlayHint[] = [];
-					const [vitualFile] = context.language.files.getVirtualFile(document.uri);
+					const [vitualFile] = context.language.files.getVirtualFile(context.env.uriToFileName(document.uri));
 
 					if (vitualFile) {
 

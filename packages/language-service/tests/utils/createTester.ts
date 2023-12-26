@@ -3,12 +3,10 @@ import { createLanguage } from '@volar/typescript';
 import * as path from 'path';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { URI } from 'vscode-uri';
-import { createParsedCommandLine, resolveLanguages, resolveServices } from '../../out';
+import { createParsedCommandLine, resolveLanguages, resolveServices, resolveVueCompilerOptions } from '../../out';
 import { createMockServiceEnv } from './mockEnv';
 
-const testRoot = path.resolve(__dirname, '../../../../test-workspace/language-service').replace(/\\/g, '/');
-
-export const rootUri = URI.file(testRoot);
+export const rootUri = URI.file(path.resolve(__dirname, '../../../../test-workspace/language-service'));
 export const tester = createTester(rootUri);
 
 function createTester(rootUri: URI) {
@@ -26,12 +24,11 @@ function createTester(rootUri: URI) {
 		getScriptFileNames: () => parsedCommandLine.fileNames,
 		getCompilationSettings: () => parsedCommandLine.options,
 		getScriptSnapshot,
-		getFileName: serviceEnv.uriToFileName,
-		getFileId: serviceEnv.fileNameToUri,
 		getLanguageId: resolveCommonLanguageId,
 	};
-	const languages = resolveLanguages(ts, {}, parsedCommandLine.options, parsedCommandLine.vueOptions);
-	const services = resolveServices(ts, {}, parsedCommandLine.vueOptions);
+	const resolvedVueOptions = resolveVueCompilerOptions(parsedCommandLine.vueOptions);
+	const languages = resolveLanguages({}, ts, parsedCommandLine.options, resolvedVueOptions);
+	const services = resolveServices({}, ts, () => resolvedVueOptions);
 	const defaultVSCodeSettings: any = {
 		'typescript.preferences.quoteStyle': 'single',
 		'javascript.preferences.quoteStyle': 'single',

@@ -7,6 +7,7 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 
 export function create(ts: typeof import('typescript/lib/tsserverlibrary')): ServicePlugin {
 	return {
+		name: 'vue-autoinsert-dotvalue',
 		create(context): ServicePluginInstance {
 			return {
 				async provideAutoInsertionEdit(document, position, lastChange) {

@@ -34,8 +34,8 @@ export function parseScriptSetupRanges(
 		define?: ReturnType<typeof parseDefineFunction>;
 	} = {};
 
-	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition' || ast.getFullText().trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition');
-	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' || ast.getFullText().trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition');
+	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition');
+	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition');
 	const defineProp: {
 		name: TextRange | undefined;
 		nameIsString: boolean;
@@ -44,10 +44,10 @@ export function parseScriptSetupRanges(
 		required: boolean;
 	}[] = [];
 	const bindings = parseBindingRanges(ts, ast);
-	const text = ast.getFullText();
+	const text = ast.text;
 	const leadingCommentEndOffset = ts.getLeadingCommentRanges(text, 0)?.reverse()[0].end ?? 0;
 
-	ast.forEachChild(node => {
+	ts.forEachChild(ast, node => {
 		const isTypeExport = (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) && node.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword);
 		if (
 			!foundNonImportExportNode
@@ -57,18 +57,18 @@ export function parseScriptSetupRanges(
 			// fix https://github.com/vuejs/language-tools/issues/1223
 			&& !ts.isImportEqualsDeclaration(node)
 		) {
-			const commentRanges = ts.getLeadingCommentRanges(text, node.getFullStart());
+			const commentRanges = ts.getLeadingCommentRanges(text, node.pos);
 			if (commentRanges?.length) {
 				const commentRange = commentRanges.sort((a, b) => a.pos - b.pos)[0];
 				importSectionEndOffset = commentRange.pos;
 			}
 			else {
-				importSectionEndOffset = node.getStart(ast);
+				importSectionEndOffset = getStartEnd(ts, node, ast).start;
 			}
 			foundNonImportExportNode = true;
 		}
 	});
-	ast.forEachChild(child => visitNode(child, [ast]));
+	ts.forEachChild(ast, child => visitNode(child, [ast]));
 
 	return {
 		leadingCommentEndOffset,
@@ -82,7 +82,7 @@ export function parseScriptSetupRanges(
 	};
 
 	function _getStartEnd(node: ts.Node) {
-		return getStartEnd(node, ast);
+		return getStartEnd(ts, node, ast);
 	}
 
 	function parseDefineFunction(node: ts.CallExpression): TextRange & {
@@ -102,7 +102,7 @@ export function parseScriptSetupRanges(
 			ts.isCallExpression(node)
 			&& ts.isIdentifier(node.expression)
 		) {
-			const callText = node.expression.getText(ast);
+			const callText = getNodeText(ts, node.expression, ast);
 			if (vueCompilerOptions.macros.defineModel.includes(callText)) {
 				let name: TextRange | undefined;
 				let options: ts.Node | undefined;
@@ -121,7 +121,7 @@ export function parseScriptSetupRanges(
 				let required = false;
 				if (options && ts.isObjectLiteralExpression(options)) {
 					for (const property of options.properties) {
-						if (ts.isPropertyAssignment(property) && ts.isIdentifier(property.name) && property.name.getText(ast) === 'required' && property.initializer.kind === ts.SyntaxKind.TrueKeyword) {
+						if (ts.isPropertyAssignment(property) && ts.isIdentifier(property.name) && getNodeText(ts, property.name, ast) === 'required' && property.initializer.kind === ts.SyntaxKind.TrueKeyword) {
 							required = true;
 							break;
 						}
@@ -142,7 +142,7 @@ export function parseScriptSetupRanges(
 						const secondArg = node.arguments[1];
 						if (ts.isObjectLiteralExpression(secondArg)) {
 							for (const property of secondArg.properties) {
-								if (ts.isPropertyAssignment(property) && ts.isIdentifier(property.name) && property.name.getText(ast) === 'required' && property.initializer.kind === ts.SyntaxKind.TrueKeyword) {
+								if (ts.isPropertyAssignment(property) && ts.isIdentifier(property.name) && getNodeText(ts, property.name, ast) === 'required' && property.initializer.kind === ts.SyntaxKind.TrueKeyword) {
 									required = true;
 									break;
 								}
@@ -181,13 +181,13 @@ export function parseScriptSetupRanges(
 			else if (vueCompilerOptions.macros.defineSlots.includes(callText)) {
 				slots.define = parseDefineFunction(node);
 				if (ts.isVariableDeclaration(parent)) {
-					slots.name = parent.name.getText(ast);
+					slots.name = getNodeText(ts, parent.name, ast);
 				}
 			}
 			else if (vueCompilerOptions.macros.defineEmits.includes(callText)) {
 				emits.define = parseDefineFunction(node);
 				if (ts.isVariableDeclaration(parent)) {
-					emits.name = parent.name.getText(ast);
+					emits.name = getNodeText(ts, parent.name, ast);
 				}
 			}
 			else if (vueCompilerOptions.macros.defineExpose.includes(callText)) {
@@ -199,7 +199,7 @@ export function parseScriptSetupRanges(
 				for (let i = parents.length - 1; i >= 0; i--) {
 					if (ts.isStatement(parents[i])) {
 						const statement = parents[i];
-						statement.forEachChild(child => {
+						ts.forEachChild(statement, child => {
 							const range = _getStartEnd(child);
 							statementRange ??= range;
 							statementRange.end = range.end;
@@ -217,7 +217,7 @@ export function parseScriptSetupRanges(
 				};
 
 				if (ts.isVariableDeclaration(parent)) {
-					props.name = parent.name.getText(ast);
+					props.name = getNodeText(ts, parent.name, ast);
 				}
 				if (node.arguments.length) {
 					props.define.arg = _getStartEnd(node.arguments[0]);
@@ -233,11 +233,11 @@ export function parseScriptSetupRanges(
 					props.withDefaults.arg = _getStartEnd(arg);
 				}
 				if (ts.isVariableDeclaration(parent)) {
-					props.name = parent.name.getText(ast);
+					props.name = getNodeText(ts, parent.name, ast);
 				}
 			}
 		}
-		node.forEachChild(child => {
+		ts.forEachChild(node, child => {
 			parents.push(node);
 			visitNode(child, parents);
 			parents.pop();
@@ -247,7 +247,7 @@ export function parseScriptSetupRanges(
 
 export function parseBindingRanges(ts: typeof import('typescript/lib/tsserverlibrary'), sourceFile: ts.SourceFile) {
 	const bindings: TextRange[] = [];
-	sourceFile.forEachChild(node => {
+	ts.forEachChild(sourceFile, node => {
 		if (ts.isVariableStatement(node)) {
 			for (const node_2 of node.declarationList.declarations) {
 				const vars = _findBindingVars(node_2.name);
@@ -290,7 +290,7 @@ export function parseBindingRanges(ts: typeof import('typescript/lib/tsserverlib
 	});
 	return bindings;
 	function _getStartEnd(node: ts.Node) {
-		return getStartEnd(node, sourceFile);
+		return getStartEnd(ts, node, sourceFile);
 	}
 	function _findBindingVars(left: ts.BindingName) {
 		return findBindingVars(ts, left, sourceFile);
@@ -303,7 +303,7 @@ export function findBindingVars(ts: typeof import('typescript/lib/tsserverlibrar
 	return vars;
 	function worker(_node: ts.Node) {
 		if (ts.isIdentifier(_node)) {
-			vars.push(getStartEnd(_node, sourceFile));
+			vars.push(getStartEnd(ts, _node, sourceFile));
 		}
 		// { ? } = ...
 		// [ ? ] = ...
@@ -320,7 +320,7 @@ export function findBindingVars(ts: typeof import('typescript/lib/tsserverlibrar
 		}
 		// { foo } = ...
 		else if (ts.isShorthandPropertyAssignment(_node)) {
-			vars.push(getStartEnd(_node.name, sourceFile));
+			vars.push(getStartEnd(ts, _node.name, sourceFile));
 		}
 		// { ...? } = ...
 		// [ ...? ] = ...
@@ -330,9 +330,22 @@ export function findBindingVars(ts: typeof import('typescript/lib/tsserverlibrar
 	}
 }
 
-export function getStartEnd(node: ts.Node, sourceFile: ts.SourceFile) {
+export function getStartEnd(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	node: ts.Node,
+	sourceFile: ts.SourceFile
+) {
 	return {
-		start: node.getStart(sourceFile),
-		end: node.getEnd(),
+		start: (ts as any).getTokenPosOfNode(node, sourceFile) as number,
+		end: node.end,
 	};
+}
+
+export function getNodeText(
+	ts: typeof import('typescript/lib/tsserverlibrary'),
+	node: ts.Node,
+	sourceFile: ts.SourceFile
+) {
+	const { start, end } = getStartEnd(ts, node, sourceFile);
+	return sourceFile.text.substring(start, end);
 }

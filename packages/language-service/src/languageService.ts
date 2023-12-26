@@ -1,8 +1,8 @@
-import { ServicePlugin } from '@volar/language-service';
-import { LanguagePlugin, VueFile, createLanguages, hyphenateTag, resolveVueCompilerOptions, scriptRanges } from '@vue/language-core';
+import { ServiceEnvironment, ServicePlugin } from '@volar/language-service';
+import { LanguagePlugin, VueFile, createLanguages, hyphenateTag, scriptRanges } from '@vue/language-core';
 import { capitalize } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
-import type { Data } from 'volar-service-typescript/out/features/completions/basic';
+import type { Data } from 'volar-service-typescript/lib/features/completions/basic';
 import type * as html from 'vscode-html-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { getNameCasing } from './ideFeatures/nameCasing';
@@ -37,14 +37,13 @@ export interface Settings {
 }
 
 export function resolveLanguages(
+	languages: Record<string, LanguagePlugin>,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	languages: Record<string, LanguagePlugin> = {},
-	compilerOptions: ts.CompilerOptions = {},
-	_vueCompilerOptions: Partial<VueCompilerOptions> = {},
+	compilerOptions: ts.CompilerOptions,
+	vueCompilerOptions: VueCompilerOptions,
 	codegenStack: boolean = false,
 ): Record<string, LanguagePlugin> {
 
-	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);
 	const vueLanguageModules = createLanguages(ts, compilerOptions, vueCompilerOptions, codegenStack);
 
 	return {
@@ -57,23 +56,22 @@ export function resolveLanguages(
 }
 
 export function resolveServices(
+	services: Record<string, ServicePlugin>,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	services: Record<string, ServicePlugin> = {},
-	_vueCompilerOptions: Partial<VueCompilerOptions> = {},
+	getVueOptions: (env: ServiceEnvironment) => VueCompilerOptions,
 ) {
 
-	const vueCompilerOptions = resolveVueCompilerOptions(_vueCompilerOptions);
 	const tsService: ServicePlugin = services?.typescript ?? createTsService(ts);
 
 	services ??= {};
 	services.typescript = {
 		...tsService,
-		create(ctx) {
-			const base = tsService.create(ctx);
+		create(context) {
+			const base = tsService.create(context);
 			return {
 				...base,
-				async provideCompletionItems(document, position, context, item) {
-					const result = await base.provideCompletionItems?.(document, position, context, item);
+				async provideCompletionItems(document, position, completeContext, item) {
+					const result = await base.provideCompletionItems?.(document, position, completeContext, item);
 					if (result) {
 
 						// filter __VLS_
@@ -85,13 +83,13 @@ export function resolveServices(
 						// handle component auto-import patch
 						let casing: Awaited<ReturnType<typeof getNameCasing>> | undefined;
 
-						const [virtualFile, sourceFile] = ctx.language.files.getVirtualFile(document.uri);
+						const [virtualFile, sourceFile] = context.language.files.getVirtualFile(context.env.uriToFileName(document.uri));
 
 						if (virtualFile && sourceFile) {
 
-							for (const map of ctx.documents.getMaps(virtualFile)) {
+							for (const map of context.documents.getMaps(virtualFile)) {
 
-								const sourceVirtualFile = ctx.language.files.getSourceFile(map.sourceFileDocument.uri)?.virtualFile?.[0];
+								const sourceVirtualFile = context.language.files.getSourceFile(context.env.uriToFileName(map.sourceFileDocument.uri))?.virtualFile?.[0];
 
 								if (sourceVirtualFile instanceof VueFile) {
 
@@ -103,7 +101,7 @@ export function resolveServices(
 										}
 
 										// fix #2458
-										casing ??= await getNameCasing(ts, ctx, sourceFile.id, vueCompilerOptions);
+										casing ??= await getNameCasing(ts, context, sourceFile.fileName, getVueOptions(context.env));
 
 										if (casing.tag === TagNameCasing.Kebab) {
 											for (const item of result.items) {
@@ -129,13 +127,13 @@ export function resolveServices(
 						patchAdditionalTextEdits(itemData.uri, item.additionalTextEdits);
 					}
 
-					for (const ext of vueCompilerOptions.extensions) {
+					for (const ext of getVueOptions(context.env).extensions) {
 						const suffix = capitalize(ext.substring('.'.length)); // .vue -> Vue
 						if (
 							itemData?.uri
 							&& item.textEdit?.newText.endsWith(suffix)
 							&& item.additionalTextEdits?.length === 1 && item.additionalTextEdits[0].newText.indexOf('import ' + item.textEdit.newText + ' from ') >= 0
-							&& (await ctx.env.getConfiguration?.<boolean>('vue.complete.normalizeComponentImportName') ?? true)
+							&& (await context.env.getConfiguration?.<boolean>('vue.complete.normalizeComponentImportName') ?? true)
 						) {
 							newName = item.textEdit.newText.slice(0, -suffix.length);
 							newName = newName[0].toUpperCase() + newName.substring(1);
@@ -154,9 +152,9 @@ export function resolveServices(
 								'import ' + newName + ' from ',
 							);
 							item.textEdit.newText = newName;
-							const [_, sourceFile] = ctx.language.files.getVirtualFile(itemData.uri);
+							const [_, sourceFile] = context.language.files.getVirtualFile(context.env.uriToFileName(itemData.uri));
 							if (sourceFile) {
-								const casing = await getNameCasing(ts, ctx, sourceFile.id, vueCompilerOptions);
+								const casing = await getNameCasing(ts, context, sourceFile.fileName, getVueOptions(context.env));
 								if (casing.tag === TagNameCasing.Kebab) {
 									item.textEdit.newText = hyphenateTag(item.textEdit.newText);
 								}
@@ -170,16 +168,16 @@ export function resolveServices(
 
 					const data: Data = item.data;
 					if (item.data?.__isComponentAutoImport && data && item.additionalTextEdits?.length && item.textEdit && itemData?.uri) {
-						const fileName = ctx.env.uriToFileName(itemData.uri);
-						const langaugeService = ctx.inject<TSProvide, 'typescript/languageService'>('typescript/languageService');
-						const [virtualFile] = ctx.language.files.getVirtualFile(fileName);
+						const fileName = context.env.uriToFileName(itemData.uri);
+						const langaugeService = context.inject<TSProvide, 'typescript/languageService'>('typescript/languageService');
+						const [virtualFile] = context.language.files.getVirtualFile(fileName);
 						const ast = langaugeService.getProgram()?.getSourceFile(fileName);
 						const exportDefault = ast ? scriptRanges.parseScriptRanges(ts, ast, false, true).exportDefault : undefined;
 						if (virtualFile && ast && exportDefault) {
 							const componentName = newName ?? item.textEdit.newText;
 							const optionEdit = createAddComponentToOptionEdit(ts, ast, componentName);
 							if (optionEdit) {
-								const textDoc = ctx.documents.get(virtualFile.id, virtualFile.languageId, virtualFile.snapshot);
+								const textDoc = context.documents.get(context.env.fileNameToUri(virtualFile.fileName), virtualFile.languageId, virtualFile.snapshot);
 								item.additionalTextEdits.push({
 									range: {
 										start: textDoc.positionAt(optionEdit.range.start),
@@ -240,6 +238,7 @@ export function resolveServices(
 	services.html ??= createVueTemplateLanguageService(
 		ts,
 		createHtmlService(),
+		getVueOptions,
 		{
 			getScanner: (htmlService, document): html.Scanner | undefined => {
 				return htmlService.provide['html/languageService']().createScanner(document.getText());
@@ -248,12 +247,12 @@ export function resolveServices(
 				htmlService.provide['html/updateCustomData'](extraData);
 			},
 			isSupportedDocument: (document) => document.languageId === 'html',
-			vueCompilerOptions,
 		}
 	);
 	services.pug ??= createVueTemplateLanguageService(
 		ts,
 		createPugService(),
+		getVueOptions,
 		{
 			getScanner: (pugService, document): html.Scanner | undefined => {
 				const pugDocument = pugService.provide['pug/pugDocument'](document);
@@ -265,7 +264,6 @@ export function resolveServices(
 				pugService.provide['pug/updateCustomData'](extraData);
 			},
 			isSupportedDocument: (document) => document.languageId === 'jade',
-			vueCompilerOptions,
 		}
 	);
 	services.vue ??= createVueService();
@@ -284,6 +282,9 @@ export function resolveServices(
 	services['vue/extractComponent'] ??= createVueExtractFileService(ts);
 	services['vue/toggleVBind'] ??= createToggleVBindService(ts);
 	services.emmet ??= createEmmetService();
+
+	services.html.name += ' (html)';
+	services.pug.name += ' (pug)';
 
 	return services;
 }

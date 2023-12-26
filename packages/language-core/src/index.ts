@@ -8,7 +8,6 @@ export * from './utils/ts';
 export * from './utils/parseSfc';
 
 export * as scriptRanges from './parsers/scriptRanges';
-export * as sharedTypes from './utils/globalTypes';
 export * from './utils/shared';
 export { tsCodegen } from './plugins/vue-tsx';
 

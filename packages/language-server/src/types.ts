@@ -1,8 +1,11 @@
 import { InitializationOptions } from "@volar/language-server";
 
-export type VueServerInitializationOptions = InitializationOptions & {
-	/**
-	 * @example ['vue1', 'vue2']
-	 */
-	additionalExtensions?: string[];
+export type VueInitializationOptions = InitializationOptions & {
+	vue?: {
+		/**
+		 * @example ['vue1', 'vue2']
+		 */
+		additionalExtensions?: string[];
+		hybridMode?: boolean;
+	};
 };
