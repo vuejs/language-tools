@@ -59,6 +59,7 @@ const init: ts.server.PluginModuleFactory = (modules) => {
 		},
 		getExternalFiles(project, updateLevel = 0) {
 			if (
+				// @ts-ignore
 				updateLevel >= (1 satisfies ts.ProgramUpdateLevel.RootNamesAndUpdate)
 				|| !externalFiles.has(project)
 			) {
