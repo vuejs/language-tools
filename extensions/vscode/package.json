@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "1.8.22",
+	"version": "1.8.26",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
@@ -742,9 +742,9 @@
 	"devDependencies": {
 		"@types/semver": "^7.5.3",
 		"@types/vscode": "^1.82.0",
-		"@volar/vscode": "~1.11.0",
-		"@vue/language-core": "1.8.22",
-		"@vue/language-server": "1.8.22",
+		"@volar/vscode": "2.0.0-alpha.0",
+		"@vue/language-core": "1.8.26",
+		"@vue/language-server": "1.8.26",
 		"esbuild": "latest",
 		"esbuild-plugin-copy": "latest",
 		"esbuild-visualizer": "latest",

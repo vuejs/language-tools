@@ -1,8 +1,8 @@
 import * as path from 'path';
 import { describe, expect, test } from 'vitest';
-import { createChecker, createCheckerByJson, MetaCheckerOptions, Checker, TypeMeta } from '../out';
+import { createComponentMetaChecker, createComponentMetaCheckerByJsonConfig, MetaCheckerOptions, ComponentMetaChecker, TypeMeta } from '../out';
 
-const worker = (checker: Checker, withTsconfig: boolean) => describe(`vue-component-meta ${withTsconfig ? 'with tsconfig' : 'without tsconfig'}`, () => {
+const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describe(`vue-component-meta ${withTsconfig ? 'with tsconfig' : 'without tsconfig'}`, () => {
 
 	test('empty-component', () => {
 		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/empty-component/component.vue');
@@ -535,6 +535,19 @@ const worker = (checker: Checker, withTsconfig: boolean) => describe(`vue-compon
 		expect(onBaz?.schema).toEqual([]);
 	});
 
+	test('reference-type-events for generic', () => {
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/generic/component.vue');
+		const meta = checker.getComponentMeta(componentPath);
+
+		expect(meta.type).toEqual(TypeMeta.Function);
+
+		const onBar = meta.events.find(event => event.name === 'bar');
+
+		expect(onBar).toBeDefined();
+		expect(onBar?.type).toEqual('number');
+		expect(onBar?.signature).toEqual('(e: "bar", data: number): void');
+	});
+
 	test('template-slots', () => {
 		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/template-slots/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
@@ -561,6 +574,18 @@ const worker = (checker: Checker, withTsconfig: boolean) => describe(`vue-compon
 		expect(b).toBeDefined();
 		expect(c).toBeDefined();
 		expect(d).toBeDefined();
+	});
+
+	test('template-slots for generic', () => {
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/generic/component.vue');
+		const meta = checker.getComponentMeta(componentPath);
+
+		expect(meta.type).toEqual(TypeMeta.Function);
+
+		expect(meta.slots.find(slot =>
+			slot.name === 'default'
+			&& slot.type === '{ foo: number; }'
+		)).toBeDefined();
 	});
 
 	test('template-slots without a script block', () => {
@@ -761,11 +786,11 @@ const checkerOptions: MetaCheckerOptions = {
 	schema: { ignore: ['MyIgnoredNestedProps'] },
 	printer: { newLine: 1 },
 };
-const tsconfigChecker = createChecker(
+const tsconfigChecker = createComponentMetaChecker(
 	path.resolve(__dirname, '../../../test-workspace/component-meta/tsconfig.json'),
 	checkerOptions,
 );
-const noTsConfigChecker = createCheckerByJson(
+const noTsConfigChecker = createComponentMetaCheckerByJsonConfig(
 	path.resolve(__dirname, '../../../test-workspace/component-meta'),
 	{
 		"extends": "../tsconfig.json",

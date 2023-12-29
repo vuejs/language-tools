@@ -10,7 +10,6 @@
 		{ "path": "./packages/language-plugin-pug/tsconfig.json" },
 		{ "path": "./packages/typescript-plugin/tsconfig.json" },
 		{ "path": "./packages/tsc/tsconfig.json" },
-		{ "path": "./packages/tsc-eslint-hook/tsconfig.json" },
 		{ "path": "./packages/component-meta/tsconfig.json" },
 	],
 }

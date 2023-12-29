@@ -2,21 +2,19 @@ import { isGloballyWhitelisted } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { VueCompilerOptions } from '../types';
 
-export function walkInterpolationFragment(
+export function* eachInterpolationSegment(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	code: string,
 	ast: ts.SourceFile,
-	cb: (fragment: string, offset: number | undefined, isJustForErrorMapping?: boolean) => void,
 	localVars: Map<string, number>,
 	identifiers: Set<string>,
 	vueOptions: VueCompilerOptions,
-) {
-
-	let ctxVars: {
+	ctxVars: {
 		text: string,
 		isShorthand: boolean,
 		offset: number,
-	}[] = [];
+	}[] = []
+): Generator<[fragment: string, offset: number | undefined, isJustForErrorMapping?: boolean]> {
 
 	const varCb = (id: ts.Identifier, isShorthand: boolean) => {
 		if (
@@ -44,44 +42,44 @@ export function walkInterpolationFragment(
 	if (ctxVars.length) {
 
 		if (ctxVars[0].isShorthand) {
-			cb(code.substring(0, ctxVars[0].offset + ctxVars[0].text.length), 0);
-			cb(': ', undefined);
+			yield [code.substring(0, ctxVars[0].offset + ctxVars[0].text.length), 0];
+			yield [': ', undefined];
 		}
 		else {
-			cb(code.substring(0, ctxVars[0].offset), 0);
+			yield [code.substring(0, ctxVars[0].offset), 0];
 		}
 
 		for (let i = 0; i < ctxVars.length - 1; i++) {
 
 			// fix https://github.com/vuejs/language-tools/issues/1205
 			// fix https://github.com/vuejs/language-tools/issues/1264
-			cb('', ctxVars[i + 1].offset, true);
+			yield ['', ctxVars[i + 1].offset, true];
 			if (vueOptions.experimentalUseElementAccessInTemplate) {
 				const varStart = ctxVars[i].offset;
 				const varEnd = ctxVars[i].offset + ctxVars[i].text.length;
-				cb('__VLS_ctx[', undefined);
-				cb('', varStart, true);
-				cb("'", undefined);
-				cb(code.substring(varStart, varEnd), varStart);
-				cb("'", undefined);
-				cb('', varEnd, true);
-				cb(']', undefined);
+				yield ['__VLS_ctx[', undefined];
+				yield ['', varStart, true];
+				yield ["'", undefined];
+				yield [code.substring(varStart, varEnd), varStart];
+				yield ["'", undefined];
+				yield ['', varEnd, true];
+				yield [']', undefined];
 				if (ctxVars[i + 1].isShorthand) {
-					cb(code.substring(varEnd, ctxVars[i + 1].offset + ctxVars[i + 1].text.length), varEnd);
-					cb(': ', undefined);
+					yield [code.substring(varEnd, ctxVars[i + 1].offset + ctxVars[i + 1].text.length), varEnd];
+					yield [': ', undefined];
 				}
 				else {
-					cb(code.substring(varEnd, ctxVars[i + 1].offset), varEnd);
+					yield [code.substring(varEnd, ctxVars[i + 1].offset), varEnd];
 				}
 			}
 			else {
-				cb('__VLS_ctx.', undefined);
+				yield ['__VLS_ctx.', undefined];
 				if (ctxVars[i + 1].isShorthand) {
-					cb(code.substring(ctxVars[i].offset, ctxVars[i + 1].offset + ctxVars[i + 1].text.length), ctxVars[i].offset);
-					cb(': ', undefined);
+					yield [code.substring(ctxVars[i].offset, ctxVars[i + 1].offset + ctxVars[i + 1].text.length), ctxVars[i].offset];
+					yield [': ', undefined];
 				}
 				else {
-					cb(code.substring(ctxVars[i].offset, ctxVars[i + 1].offset), ctxVars[i].offset);
+					yield [code.substring(ctxVars[i].offset, ctxVars[i + 1].offset), ctxVars[i].offset];
 				}
 			}
 		}
@@ -89,26 +87,24 @@ export function walkInterpolationFragment(
 		if (vueOptions.experimentalUseElementAccessInTemplate) {
 			const varStart = ctxVars[ctxVars.length - 1].offset;
 			const varEnd = ctxVars[ctxVars.length - 1].offset + ctxVars[ctxVars.length - 1].text.length;
-			cb('__VLS_ctx[', undefined);
-			cb('', varStart, true);
-			cb("'", undefined);
-			cb(code.substring(varStart, varEnd), varStart);
-			cb("'", undefined);
-			cb('', varEnd, true);
-			cb(']', undefined);
-			cb(code.substring(varEnd), varEnd);
+			yield ['__VLS_ctx[', undefined];
+			yield ['', varStart, true];
+			yield ["'", undefined];
+			yield [code.substring(varStart, varEnd), varStart];
+			yield ["'", undefined];
+			yield ['', varEnd, true];
+			yield [']', undefined];
+			yield [code.substring(varEnd), varEnd];
 		}
 		else {
-			cb('', ctxVars[ctxVars.length - 1].offset, true);
-			cb('__VLS_ctx.', undefined);
-			cb(code.substring(ctxVars[ctxVars.length - 1].offset), ctxVars[ctxVars.length - 1].offset);
+			yield ['', ctxVars[ctxVars.length - 1].offset, true];
+			yield ['__VLS_ctx.', undefined];
+			yield [code.substring(ctxVars[ctxVars.length - 1].offset), ctxVars[ctxVars.length - 1].offset];
 		}
 	}
 	else {
-		cb(code, 0);
+		yield [code, 0];
 	}
-
-	return ctxVars;
 }
 
 function walkIdentifiers(

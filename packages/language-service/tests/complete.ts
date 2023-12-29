@@ -20,7 +20,7 @@ for (const dirName of testDirs) {
 		for (const file in inputFiles) {
 
 			const filePath = path.join(dir, 'input', file);
-			const uri = tester.fileNameToUri(filePath);
+			const uri = tester.serviceEnv.fileNameToUri(filePath);
 			const fileText = inputFiles[file];
 			const document = TextDocument.create('', '', 0, fileText);
 			const actions = findCompleteActions(fileText);
@@ -35,13 +35,20 @@ for (const dirName of testDirs) {
 
 				it(`${location} => ${action.label}`, async () => {
 
-					const complete = await tester.languageService.doComplete(
+					let complete = await tester.languageService.doComplete(
 						uri,
 						position,
 						{ triggerKind: 1 satisfies typeof vscode.CompletionTriggerKind.Invoked },
 					);
 
-					expect(complete).toBeDefined();
+					if (!complete.items.length) {
+						// fix #2511 test case, it's a bug of TS 5.3
+						complete = await tester.languageService.doComplete(
+							uri,
+							position,
+							{ triggerKind: 1 satisfies typeof vscode.CompletionTriggerKind.Invoked },
+						);
+					}
 
 					let item = complete.items.find(item => item.label === action.label)!;
 

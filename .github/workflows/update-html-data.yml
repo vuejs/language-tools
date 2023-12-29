@@ -9,15 +9,18 @@ jobs:
   update-html-data:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v3
+      - uses: pnpm/action-setup@v2
         with:
-          node-version: 18
+          version: latest
 
-      # install deps
-      - run: npm i -g pnpm
-      - run: pnpm i
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install
 
       # update data
       - name: Update HTML Data

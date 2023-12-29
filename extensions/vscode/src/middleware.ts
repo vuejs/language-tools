@@ -30,7 +30,7 @@ export const middleware: lsp.Middleware = {
 								return 'pascal';
 							}
 						}
-						if (item.section === 'vue.complete.casing.props') {
+						else if (item.section === 'vue.complete.casing.props') {
 							const attrCase = attrNameCasings.get(item.scopeUri);
 							if (attrCase === AttrNameCasing.Kebab) {
 								return 'kebab';
