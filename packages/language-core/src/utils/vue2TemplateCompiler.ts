@@ -3,9 +3,11 @@ import * as CompilerDOM from '@vue/compiler-dom';
 const Vue2TemplateCompiler: typeof import('vue-template-compiler') = require('vue-template-compiler/build');
 
 export function compile(
-	template: string,
+	template: string | CompilerDOM.RootNode,
 	options: CompilerDOM.CompilerOptions = {}
 ): CompilerDOM.CodegenResult {
+
+	template = typeof template === 'string' ? template : template.source;
 
 	const onError = options.onError;
 	const onWarn = options.onWarn;

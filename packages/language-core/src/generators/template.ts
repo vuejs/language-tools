@@ -1267,7 +1267,14 @@ export function* generate(
 					shouldCamelize,
 				);
 				yield _ts(': (');
-				if (prop.exp && !(prop.exp.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY)) { // style='z-index: 2' will compile to {'z-index':'2'}
+				const isShorthand = prop.exp
+					&& prop.exp.loc.start.offset === prop.exp.loc.end.offset
+					&& prop.exp.content;
+				if (
+					prop.exp
+					&& !isShorthand
+					&& prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY
+				) { // style='z-index: 2' will compile to {'z-index':'2'}
 					yield* generateInterpolation(
 						prop.exp.loc.source,
 						prop.exp.loc,
@@ -1281,6 +1288,23 @@ export function* generate(
 							prop.exp.loc.source,
 							prop.exp.loc.start.offset,
 							formatBrackets.normal,
+						);
+					}
+				}
+				else if (
+					prop.arg
+					&& isShorthand
+					&& prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+				) {
+					const propVariableName = camelize(prop.arg.content);
+					if (validTsVarReg.test(propVariableName)) {
+						yield* generateInterpolation(
+							propVariableName,
+							prop.arg.loc,
+							prop.arg.loc.start.offset,
+							caps_all,
+							'(',
+							')',
 						);
 					}
 				}
