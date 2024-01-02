@@ -977,7 +977,13 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 				yield _(`>;\n`);
 			}
 		}
-		yield _(`};\n`);
+		yield _(`}`);
+
+		if (bindingNames.size !== 0 && scriptSetupRanges?.props.define) {
+			yield _(` & Omit<typeof ${scriptSetupRanges.props.name ?? '__VLS_props'}, ${[...bindingNames].map(name => `'${name}'`).join(' | ')}>`);
+		}
+
+		yield _(`;\n`);
 
 		/* Components */
 		yield _(`/* Components */\n`);
