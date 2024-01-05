@@ -2,7 +2,7 @@
 
 > ⚡ High-performance Vue language tooling based-on [Volar.js](https://volarjs.dev/)
 
-Discord: https://discord.gg/5bnSSSSBbK
+💬 **#language-tools** on our [Discord Server](https://discord.gg/vue)  
 
 <table>
 	<tbody>
