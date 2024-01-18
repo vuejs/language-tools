@@ -75,7 +75,7 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 					const sourceFile = languageService.getProgram()!.getSourceFile(tsScriptName)!;
 					const sourceFileKind = languageServiceHost.getScriptKind?.(tsScriptName);
 					const toExtract = collectExtractProps();
-					const initialIndentSetting = await context.env.getConfiguration!('volar.format.initialIndent') as Record<string, boolean>;
+					const initialIndentSetting = (await context.env.getConfiguration!('volar.format.initialIndent') ?? { html: true }) as Record<string, boolean>;
 					const newUri = document.uri.substring(0, document.uri.lastIndexOf('/') + 1) + `${newName}.vue`;
 					const lastImportNode = getLastImportNode(ts, script.ast);
 
