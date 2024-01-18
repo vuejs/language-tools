@@ -13,7 +13,8 @@
 		"release:next": "npm run release:next-base && npm run release:next-vue",
 		"release:next-base": "npm run release:base -- --dist-tag next",
 		"release:next-vue": "cd ./extensions/vscode && npm run release:next",
-		"test": "vitest run",
+		"test": "vitest run && npm run test:grammar",
+		"test:grammar": "vscode-tmgrammar-snap --config extensions/vscode/package.json \"test-workspace/grammar/**/*.vue\"",
 		"chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=./extensions/vscode ../volar-starter"
 	},
 	"devDependencies": {
@@ -22,6 +23,7 @@
 		"@volar/language-service": "2.0.0-alpha.13",
 		"typescript": "latest",
 		"vite": "latest",
-		"vitest": "latest"
+		"vitest": "latest",
+		"vscode-tmgrammar-test": "^0.1.2"
 	}
 }
