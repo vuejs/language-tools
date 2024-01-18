@@ -221,6 +221,12 @@ function __VLS_getVForSourceType<T extends { [Symbol.iterator](): Iterator<any> 
 	number, // key
 	undefined, // index
 ][];
+// #3845
+function __VLS_getVForSourceType<T extends number | { [Symbol.iterator](): Iterator<any> }>(source: T): [
+	number | (Exclude<T, number> extends { [Symbol.iterator](): Iterator<infer T1> } ? T1 : never), // item 
+	number, // key
+	undefined, // index
+][];
 function __VLS_getVForSourceType<T>(source: T): [
 	T[keyof T], // item
 	keyof T, // key
