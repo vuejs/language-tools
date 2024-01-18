@@ -251,7 +251,7 @@ type __VLS_FillingEventArg_ParametersLength<E extends (...args: any) => any> = _
 type __VLS_FillingEventArg<E> = E extends (...args: any) => any ? __VLS_FillingEventArg_ParametersLength<E> extends 0 ? ($event?: undefined) => ReturnType<E> : E : E;
 function __VLS_asFunctionalComponent<T, K = T extends new (...args: any) => any ? InstanceType<T> : unknown>(t: T, instance?: K):
 	T extends new (...args: any) => any
-	? (props: ${fnPropsType}, ctx?: any) => JSX.Element & { __ctx?: {
+	? (props: ${fnPropsType}, ctx?: any) => __VLS_Element & { __ctx?: {
 		attrs?: any,
 		slots?: K extends { ${getSlotsPropertyName(vueCompilerOptions.target)}: infer Slots } ? Slots : any,
 		emit?: K extends { $emit: infer Emit } ? Emit : any

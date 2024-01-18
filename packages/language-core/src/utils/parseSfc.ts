@@ -10,26 +10,7 @@ export function parse(source: string): SFCParseResult {
 		isNativeTag: () => true,
 		// preserve all whitespaces
 		isPreTag: () => true,
-		getTextMode: ({ tag, props }, parent) => {
-			if (
-				(!parent && tag !== 'template')
-				|| (
-					tag === 'template'
-					&& props.some(
-						p =>
-							p.type === compiler.NodeTypes.ATTRIBUTE &&
-							p.name === 'lang' &&
-							p.value &&
-							p.value.content &&
-							p.value.content !== 'html'
-					)
-				)) {
-				return compiler.TextModes.RAWTEXT;
-			}
-			else {
-				return compiler.TextModes.DATA;
-			}
-		},
+		parseMode: 'sfc',
 		onError: e => {
 			errors.push(e);
 		},
@@ -53,8 +34,7 @@ export function parse(source: string): SFCParseResult {
 		}
 		switch (node.tag) {
 			case 'template':
-				const templateBlock = (descriptor.template = createBlock(node, source) as SFCTemplateBlock);
-				templateBlock.ast = node;
+				descriptor.template = createBlock(node, source) as SFCTemplateBlock;
 				break;
 			case 'script':
 				const scriptBlock = createBlock(node, source) as SFCScriptBlock;

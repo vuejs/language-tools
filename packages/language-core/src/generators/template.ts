@@ -1268,15 +1268,17 @@ export function* generate(
 				);
 				yield _ts(': (');
 				if (prop.exp && !(prop.exp.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY)) { // style='z-index: 2' will compile to {'z-index':'2'}
+					const isShorthand = prop.arg?.loc.start.offset === prop.exp?.loc.start.offset; // vue 3.4+
 					yield* generateInterpolation(
 						prop.exp.loc.source,
 						prop.exp.loc,
 						prop.exp.loc.start.offset,
-						caps_all,
+						// disable completion for shorthand expression
+						isShorthand ? caps_attr : caps_all,
 						'(',
 						')',
 					);
-					if (mode === 'normal') {
+					if (!isShorthand && mode === 'normal') {
 						yield* generateTsFormat(
 							prop.exp.loc.source,
 							prop.exp.loc.start.offset,
