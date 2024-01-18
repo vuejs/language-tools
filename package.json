@@ -23,5 +23,10 @@
 		"typescript": "latest",
 		"vite": "latest",
 		"vitest": "latest"
+	},
+	"pnpm": {
+		"overrides": {
+			"@volar/language-service": "2.0.0-alpha.13"
+		}
 	}
 }
