@@ -32,6 +32,7 @@ describe('vue-tsc-dts', () => {
 			: {};
 		return vue.createLanguages(
 			ts,
+			id => id,
 			options.options,
 			vueOptions,
 			false,

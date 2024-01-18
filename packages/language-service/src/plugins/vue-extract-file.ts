@@ -1,6 +1,6 @@
 import { CreateFile, ServicePlugin, TextDocumentEdit, TextEdit } from '@volar/language-service';
 import { ExpressionNode, type TemplateChildNode } from '@vue/compiler-dom';
-import { Sfc, VueFile, isSemanticTokensEnabled, scriptRanges } from '@vue/language-core';
+import { Sfc, SourceFile, VueGeneratedCode, isSemanticTokensEnabled, scriptRanges } from '@vue/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { Provide } from 'volar-service-typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
@@ -26,8 +26,8 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 						return;
 					}
 
-					const [vueFile] = context.language.files.getVirtualFile(context.env.uriToFileName(document.uri));
-					if (!vueFile || !(vueFile instanceof VueFile))
+					const [vueFile] = context.documents.getVirtualCodeByUri(document.uri);
+					if (!vueFile || !(vueFile instanceof VueGeneratedCode))
 						return;
 
 					const { sfc } = vueFile;
@@ -57,9 +57,9 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 
 					const { uri, range, newName } = codeAction.data as ActionData;
 					const [startOffset, endOffset]: [number, number] = range;
-					const [vueFile] = context.language.files.getVirtualFile(context.env.uriToFileName(uri)) as [VueFile, any];
-					const document = context.documents.get(uri, vueFile.languageId, vueFile.snapshot)!;
-					const { sfc } = vueFile;
+					const [vueCode, fileSource] = context.documents.getVirtualCodeByUri(uri) as [VueGeneratedCode, SourceFile];
+					const document = context.documents.get(uri, vueCode.languageId, vueCode.snapshot)!;
+					const { sfc } = vueCode;
 					const script = sfc.scriptSetup ?? sfc.script;
 
 					if (!sfc.template || !script)
@@ -71,9 +71,8 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 
 					const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
 					const languageServiceHost = context.inject<Provide, 'typescript/languageServiceHost'>('typescript/languageServiceHost');
-					const tsScriptName = vueFile.mainTsFile!.fileName;
-					const sourceFile = languageService.getProgram()!.getSourceFile(tsScriptName)!;
-					const sourceFileKind = languageServiceHost.getScriptKind?.(tsScriptName);
+					const sourceFile = languageService.getProgram()!.getSourceFile(vueCode.fileName)!;
+					const sourceFileKind = languageServiceHost.getScriptKind?.(vueCode.fileName);
 					const toExtract = collectExtractProps();
 					const initialIndentSetting = (await context.env.getConfiguration!('volar.format.initialIndent') ?? { html: true }) as Record<string, boolean>;
 					const newUri = document.uri.substring(0, document.uri.lastIndexOf('/') + 1) + `${newName}.vue`;
@@ -172,8 +171,8 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 							model: boolean;
 						}>();
 						const checker = languageService.getProgram()!.getTypeChecker();
-						const [virtualFile] = context.language.files.getVirtualFile(tsScriptName);
-						const maps = virtualFile ? [...context.documents.getMaps(virtualFile)] : [];
+						const script = fileSource.generated?.languagePlugin.typescript?.getScript(vueCode);
+						const maps = script ? [...context.documents.getMaps(script.code)] : [];
 
 						sourceFile.forEachChild(function visit(node) {
 							if (

@@ -1,5 +1,5 @@
-import { ServiceContext, VirtualFile } from '@volar/language-service';
-import { VueCompilerOptions, VueFile, hyphenateAttr, hyphenateTag } from '@vue/language-core';
+import { ServiceContext, VirtualCode } from '@volar/language-service';
+import { VueCompilerOptions, VueGeneratedCode, hyphenateAttr, hyphenateTag } from '@vue/language-core';
 import type { Provide } from 'volar-service-typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { getComponentNames, getPropsByTag, getTemplateTagsAndAttrs } from '../helpers';
@@ -13,20 +13,29 @@ export async function convertTagName(
 	vueCompilerOptions: VueCompilerOptions,
 ) {
 
-	const rootFile = context.language.files.getSourceFile(context.env.uriToFileName(uri))?.virtualFile?.[0];
-	if (!(rootFile instanceof VueFile))
+	const sourceFile = context.files.get(uri);
+	if (!sourceFile)
 		return;
 
-	const desc = rootFile.sfc;
+	const rootCode = sourceFile?.generated?.code;
+	if (!(rootCode instanceof VueGeneratedCode))
+		return;
+
+	const desc = rootCode.sfc;
 	if (!desc.template)
 		return;
 
 	const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
 	const template = desc.template;
-	const document = context.documents.get(context.env.fileNameToUri(rootFile.fileName), rootFile.languageId, rootFile.snapshot);
+	const document = context.documents.get(sourceFile.id, sourceFile.languageId, sourceFile.snapshot);
 	const edits: vscode.TextEdit[] = [];
-	const components = getComponentNames(ts, languageService, rootFile, vueCompilerOptions);
-	const tags = getTemplateTagsAndAttrs(rootFile);
+	const components = getComponentNames(
+		ts,
+		languageService,
+		rootCode,
+		vueCompilerOptions,
+	);
+	const tags = getTemplateTagsAndAttrs(rootCode);
 
 	for (const [tagName, { offsets }] of tags) {
 		const componentName = components.find(component => component === tagName || hyphenateTag(component) === tagName);
@@ -56,25 +65,29 @@ export async function convertAttrName(
 	vueCompilerOptions: VueCompilerOptions,
 ) {
 
-	const rootFile = context.language.files.getSourceFile(context.env.uriToFileName(uri))?.virtualFile?.[0];
-	if (!(rootFile instanceof VueFile))
+	const sourceFile = context.files.get(uri);
+	if (!sourceFile)
 		return;
 
-	const desc = rootFile.sfc;
+	const rootCode = sourceFile?.generated?.code;
+	if (!(rootCode instanceof VueGeneratedCode))
+		return;
+
+	const desc = rootCode.sfc;
 	if (!desc.template)
 		return;
 
 	const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
 	const template = desc.template;
-	const document = context.documents.get(context.env.fileNameToUri(rootFile.fileName), rootFile.languageId, rootFile.snapshot);
+	const document = context.documents.get(uri, sourceFile.languageId, sourceFile.snapshot);
 	const edits: vscode.TextEdit[] = [];
-	const components = getComponentNames(ts, languageService, rootFile, vueCompilerOptions);
-	const tags = getTemplateTagsAndAttrs(rootFile);
+	const components = getComponentNames(ts, languageService, rootCode, vueCompilerOptions);
+	const tags = getTemplateTagsAndAttrs(rootCode);
 
 	for (const [tagName, { attrs }] of tags) {
 		const componentName = components.find(component => component === tagName || hyphenateTag(component) === tagName);
 		if (componentName) {
-			const props = getPropsByTag(ts, languageService, rootFile, componentName, vueCompilerOptions);
+			const props = getPropsByTag(ts, languageService, rootCode, componentName, vueCompilerOptions);
 			for (const [attrName, { offsets }] of attrs) {
 				const propName = props.find(prop => prop === attrName || hyphenateAttr(prop) === attrName);
 				if (propName) {
@@ -100,14 +113,14 @@ export async function convertAttrName(
 export async function getNameCasing(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	context: ServiceContext,
-	fileName: string,
+	uri: string,
 	vueCompilerOptions: VueCompilerOptions,
 ) {
 
-	const detected = detect(ts, context, fileName, vueCompilerOptions);
+	const detected = detect(ts, context, uri, vueCompilerOptions);
 	const [attr, tag] = await Promise.all([
-		context.env.getConfiguration?.<'autoKebab' | 'autoCamel' | 'kebab' | 'camel'>('vue.complete.casing.props', context.env.fileNameToUri(fileName)),
-		context.env.getConfiguration?.<'autoKebab' | 'autoPascal' | 'kebab' | 'pascal'>('vue.complete.casing.tags', context.env.fileNameToUri(fileName)),
+		context.env.getConfiguration?.<'autoKebab' | 'autoCamel' | 'kebab' | 'camel'>('vue.complete.casing.props', uri),
+		context.env.getConfiguration?.<'autoKebab' | 'autoPascal' | 'kebab' | 'pascal'>('vue.complete.casing.tags', uri),
 	]);
 	const tagNameCasing = detected.tag.length === 1 && (tag === 'autoPascal' || tag === 'autoKebab') ? detected.tag[0] : (tag === 'autoKebab' || tag === 'kebab') ? TagNameCasing.Kebab : TagNameCasing.Pascal;
 	const attrNameCasing = detected.attr.length === 1 && (attr === 'autoCamel' || attr === 'autoKebab') ? detected.attr[0] : (attr === 'autoCamel' || attr === 'camel') ? AttrNameCasing.Camel : AttrNameCasing.Kebab;
@@ -121,15 +134,15 @@ export async function getNameCasing(
 export function detect(
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	context: ServiceContext,
-	fileName: string,
+	uri: string,
 	vueCompilerOptions: VueCompilerOptions,
 ): {
 	tag: TagNameCasing[],
 	attr: AttrNameCasing[],
 } {
 
-	const rootFile = context.language.files.getSourceFile(fileName)?.virtualFile?.[0];
-	if (!(rootFile instanceof VueFile)) {
+	const rootFile = context.files.get(uri)?.generated?.code;
+	if (!(rootFile instanceof VueGeneratedCode) || !context.typescript) {
 		return {
 			tag: [],
 			attr: [],
@@ -143,7 +156,7 @@ export function detect(
 		attr: getAttrNameCase(rootFile),
 	};
 
-	function getAttrNameCase(file: VirtualFile): AttrNameCasing[] {
+	function getAttrNameCase(file: VirtualCode): AttrNameCasing[] {
 
 		const tags = getTemplateTagsAndAttrs(file);
 		const result: AttrNameCasing[] = [];
@@ -167,7 +180,7 @@ export function detect(
 
 		return result;
 	}
-	function getTagNameCase(file: VirtualFile): TagNameCasing[] {
+	function getTagNameCase(file: VueGeneratedCode): TagNameCasing[] {
 
 		const components = getComponentNames(ts, languageService, file, vueCompilerOptions);
 		const tagNames = getTemplateTagsAndAttrs(file);

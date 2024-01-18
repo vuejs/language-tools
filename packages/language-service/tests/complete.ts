@@ -20,7 +20,7 @@ for (const dirName of testDirs) {
 		for (const file in inputFiles) {
 
 			const filePath = path.join(dir, 'input', file);
-			const uri = tester.serviceEnv.fileNameToUri(filePath);
+			const uri = tester.serviceEnv.typescript.fileNameToUri(filePath);
 			const fileText = inputFiles[file];
 			const document = TextDocument.create('', '', 0, fileText);
 			const actions = findCompleteActions(fileText);
@@ -80,7 +80,7 @@ for (const dirName of testDirs) {
 
 					let result = TextDocument.applyEdits(TextDocument.create('', '', 0, fileText), edits);
 
-					result = result.replaceAll('$0', '').replaceAll('$1', '');
+					result = result.replace(/\$0/g, '').replace(/\$1/g, '');
 
 					expect(normalizeNewline(result)).toBe(normalizeNewline(expectedFileText));
 				});

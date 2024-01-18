@@ -3,17 +3,19 @@ import { URI } from 'vscode-uri';
 import * as fs from 'fs';
 
 const uriToFileName = (uri: string) => URI.parse(uri).fsPath.replace(/\\/g, '/');
-const fileNameToUri = (fileName: string) => URI.file(fileName).toString();
 
+const fileNameToUri = (fileName: string) => URI.file(fileName).toString();
 
 export function createMockServiceEnv(
 	rootUri: URI,
 	getSettings = () => ({} as any)
 ): ServiceEnvironment {
 	return {
+		typescript: {
+			fileNameToUri,
+			uriToFileName,
+		},
 		workspaceFolder: rootUri,
-		uriToFileName,
-		fileNameToUri,
 		async getConfiguration(section: string) {
 			const settings = getSettings();
 			if (settings[section]) {

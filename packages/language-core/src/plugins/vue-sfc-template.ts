@@ -1,24 +1,24 @@
 import { enableAllFeatures } from '../generators/utils';
 import { VueLanguagePlugin } from '../types';
 
-const templateReg = /^(.*)\.template\.([^.]+)$/;
-
 const plugin: VueLanguagePlugin = () => {
 
 	return {
 
-		version: 1,
+		version: 2,
 
-		getEmbeddedFileNames(fileName, sfc) {
+		getEmbeddedFiles(_fileName, sfc) {
 			if (sfc.template) {
-				return [fileName + '.template.' + sfc.template.lang];
+				return [{
+					id: 'template',
+					lang: sfc.template.lang,
+				}];
 			}
 			return [];
 		},
 
 		resolveEmbeddedFile(_fileName, sfc, embeddedFile) {
-			const match = embeddedFile.fileName.match(templateReg);
-			if (match && sfc.template) {
+			if (embeddedFile.id === 'template' && sfc.template) {
 				embeddedFile.content.push([
 					sfc.template.content,
 					sfc.template.name,

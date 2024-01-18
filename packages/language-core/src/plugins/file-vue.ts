@@ -5,7 +5,7 @@ const plugin: VueLanguagePlugin = (_ctx) => {
 
 	return {
 
-		version: 1,
+		version: 2,
 
 		parseSFC(_fileName, content) {
 			return parse(content);
