@@ -67,7 +67,7 @@
 
 - [Vue Language Features](https://github.com/vuejs/language-tools/tree/master/extensions/vscode) \
 *Vue, Vitepress, petite-vue language support extension for VSCode*
-- [TypeScript Vue Plugin](https://github.com/vuejs/language-tools/tree/master/extensions/vscode-typescript-plugin) \
+- [TypeScript Vue Plugin](https://github.com/vuejs/language-tools/tree/master/packages/typescript-plugin) \
 *VSCode extension to support Vue in TS server*
 - [vue-tsc](https://github.com/vuejs/language-tools/tree/master/packages/tsc) \
 *Type-check and dts build command line tool*
