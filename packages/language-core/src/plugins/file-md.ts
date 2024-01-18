@@ -3,7 +3,7 @@ import type { SFCBlock } from '@vue/compiler-sfc';
 import { VueLanguagePlugin } from '../types';
 import { parse } from '../utils/parseSfc';
 
-const codeblockReg = /```[\s\S]+?```/g;
+const codeblockReg = /(`{3,})[\s\S]+?\1/g;
 const inlineCodeblockReg = /`[^\n`]+?`/g;
 const scriptSetupReg = /\\\<[\s\S]+?\>\n?/g;
 const sfcBlockReg = /\<(script|style)\b[\s\S]*?\>([\s\S]*?)\<\/\1\>/g;
@@ -23,7 +23,7 @@ const plugin: VueLanguagePlugin = () => {
 
 				content = content
 					// code block
-					.replace(codeblockReg, match => '```' + ' '.repeat(match.length - 6) + '```')
+					.replace(codeblockReg, (match, quotes) => quotes + ' '.repeat(match.length - quotes.length * 2) + quotes)
 					// inline code block
 					.replace(inlineCodeblockReg, match => `\`${' '.repeat(match.length - 2)}\``)
 					// # \<script setup>
