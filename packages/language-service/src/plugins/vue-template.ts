@@ -1,5 +1,5 @@
 import { CodeInformation, ServiceEnvironment, ServicePluginInstance, SourceMapWithDocuments } from '@volar/language-service';
-import { VueFile, hyphenateAttr, hyphenateTag, parseScriptSetupRanges, tsCodegen } from '@vue/language-core';
+import { VueGeneratedCode, hyphenateAttr, hyphenateTag, parseScriptSetupRanges, tsCodegen } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import { Provide } from 'volar-service-typescript';
 import * as html from 'vscode-html-languageservice';
@@ -76,12 +76,12 @@ export function create(
 					if (!options.isSupportedDocument(document))
 						return;
 
-					const [virtualFile] = context.language.files.getVirtualFile(context.env.uriToFileName(document.uri));
+					const [virtualCode] = context.documents.getVirtualCodeByUri(document.uri);
 
-					if (virtualFile) {
-						for (const map of context.documents.getMaps(virtualFile)) {
-							const sourceVirtualFile = context.language.files.getSourceFile(context.env.uriToFileName(map.sourceFileDocument.uri))?.virtualFile?.[0];
-							if (sourceVirtualFile instanceof VueFile) {
+					if (virtualCode) {
+						for (const map of context.documents.getMaps(virtualCode)) {
+							const sourceVirtualFile = context.files.get(map.sourceFileDocument.uri)?.generated?.code;
+							if (sourceVirtualFile instanceof VueGeneratedCode) {
 								await provideHtmlData(map, sourceVirtualFile);
 							}
 						}
@@ -91,10 +91,10 @@ export function create(
 					if (!htmlComplete)
 						return;
 
-					if (virtualFile) {
-						for (const map of context.documents.getMaps(virtualFile)) {
-							const sourceVirtualFile = context.language.files.getSourceFile(context.env.uriToFileName(map.sourceFileDocument.uri))?.virtualFile?.[0];
-							if (sourceVirtualFile instanceof VueFile) {
+					if (virtualCode) {
+						for (const map of context.documents.getMaps(virtualCode)) {
+							const sourceVirtualFile = context.files.get(map.sourceFileDocument.uri)?.generated?.code;
+							if (sourceVirtualFile instanceof VueGeneratedCode) {
 								afterHtmlCompletion(htmlComplete, map, sourceVirtualFile);
 							}
 						}
@@ -114,16 +114,16 @@ export function create(
 
 					const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
 					const result: vscode.InlayHint[] = [];
-					const [virtualFile] = context.language.files.getVirtualFile(context.env.uriToFileName(document.uri));
-					if (!virtualFile)
+					const [virtualCode] = context.documents.getVirtualCodeByUri(document.uri);
+					if (!virtualCode)
 						return;
 
-					for (const map of context.documents.getMaps(virtualFile)) {
+					for (const map of context.documents.getMaps(virtualCode)) {
 
-						const sourceVirtualFile = context.language.files.getSourceFile(context.env.uriToFileName(map.sourceFileDocument.uri))?.virtualFile?.[0];
+						const sourceVirtualFile = context.files.get(map.sourceFileDocument.uri)?.generated?.code;
 						const scanner = options.getScanner(baseServiceInstance, document);
 
-						if (sourceVirtualFile instanceof VueFile && scanner) {
+						if (sourceVirtualFile instanceof VueGeneratedCode && scanner) {
 
 							// visualize missing required props
 							const casing = await getNameCasing(ts, context, map.sourceFileDocument.uri, vueCompilerOptions);
@@ -225,7 +225,7 @@ export function create(
 					if (!options.isSupportedDocument(document))
 						return;
 
-					if (context.language.files.getVirtualFile(context.env.uriToFileName(document.uri))[0])
+					if (context.documents.getVirtualCodeByUri(document.uri)[0])
 						options.updateCustomData(baseServiceInstance, []);
 
 					return baseServiceInstance.provideHover?.(document, position, token);
@@ -237,15 +237,15 @@ export function create(
 						return;
 
 					const originalResult = await baseServiceInstance.provideDiagnostics?.(document, token);
-					const [virtualFile] = context.language.files.getVirtualFile(context.env.uriToFileName(document.uri));
+					const [virtualCode] = context.documents.getVirtualCodeByUri(document.uri);
 
-					if (!virtualFile)
+					if (!virtualCode)
 						return;
 
-					for (const map of context.documents.getMaps(virtualFile)) {
+					for (const map of context.documents.getMaps(virtualCode)) {
 
-						const sourceVirtualFile = context.language.files.getSourceFile(context.env.uriToFileName(map.sourceFileDocument.uri))?.virtualFile?.[0];
-						if (!(sourceVirtualFile instanceof VueFile))
+						const sourceVirtualFile = context.files.get(map.sourceFileDocument.uri)?.generated?.code;
+						if (!(sourceVirtualFile instanceof VueGeneratedCode))
 							continue;
 
 						const templateErrors: vscode.Diagnostic[] = [];
@@ -300,14 +300,14 @@ export function create(
 						return;
 
 					const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
-					const [virtualFile] = context.language.files.getVirtualFile(context.env.uriToFileName(document.uri));
-					if (!virtualFile)
+					const [virtualCode] = context.documents.getVirtualCodeByUri(document.uri);
+					if (!virtualCode)
 						return;
 
-					for (const map of context.documents.getMaps(virtualFile)) {
+					for (const map of context.documents.getMaps(virtualCode)) {
 
-						const sourceFile = context.language.files.getSourceFile(context.env.uriToFileName(map.sourceFileDocument.uri))?.virtualFile?.[0];
-						if (!(sourceFile instanceof VueFile))
+						const sourceFile = context.files.get(map.sourceFileDocument.uri)?.generated?.code;
+						if (!(sourceFile instanceof VueGeneratedCode))
 							continue;
 
 						const templateScriptData = getComponentNames(ts, languageService, sourceFile, vueCompilerOptions);
@@ -356,7 +356,7 @@ export function create(
 				},
 			};
 
-			async function provideHtmlData(map: SourceMapWithDocuments<CodeInformation>, vueSourceFile: VueFile) {
+			async function provideHtmlData(map: SourceMapWithDocuments<CodeInformation>, vueCode: VueGeneratedCode) {
 
 				const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
 				const casing = await getNameCasing(ts, context, map.sourceFileDocument.uri, vueCompilerOptions);
@@ -385,7 +385,7 @@ export function create(
 						isApplicable: () => true,
 						provideTags: () => {
 
-							const components = getComponentNames(ts, languageService, vueSourceFile, vueCompilerOptions)
+							const components = getComponentNames(ts, languageService, vueCode, vueCompilerOptions)
 								.filter(name =>
 									name !== 'Transition'
 									&& name !== 'TransitionGroup'
@@ -393,7 +393,7 @@ export function create(
 									&& name !== 'Suspense'
 									&& name !== 'Teleport'
 								);
-							const scriptSetupRanges = vueSourceFile.sfc.scriptSetup ? parseScriptSetupRanges(ts, vueSourceFile.sfc.scriptSetup.ast, vueCompilerOptions) : undefined;
+							const scriptSetupRanges = vueCode.sfc.scriptSetup ? parseScriptSetupRanges(ts, vueCode.sfc.scriptSetup.ast, vueCompilerOptions) : undefined;
 							const names = new Set<string>();
 							const tags: html.ITagData[] = [];
 
@@ -407,7 +407,7 @@ export function create(
 							}
 
 							for (const binding of scriptSetupRanges?.bindings ?? []) {
-								const name = vueSourceFile.sfc.scriptSetup!.content.substring(binding.start, binding.end);
+								const name = vueCode.sfc.scriptSetup!.content.substring(binding.start, binding.end);
 								if (casing.tag === TagNameCasing.Kebab) {
 									names.add(hyphenateTag(name));
 								}
@@ -427,20 +427,17 @@ export function create(
 						},
 						provideAttributes: (tag) => {
 
-							if (!vueSourceFile.mainTsFile)
-								return [];
-
-							const attrs = getElementAttrs(ts, languageService, vueSourceFile.mainTsFile.fileName, tag);
-							const props = new Set(getPropsByTag(ts, languageService, vueSourceFile, tag, vueCompilerOptions));
-							const events = getEventsOfTag(ts, languageService, vueSourceFile, tag, vueCompilerOptions);
+							const attrs = getElementAttrs(ts, languageService, vueCode.fileName, tag);
+							const props = new Set(getPropsByTag(ts, languageService, vueCode, tag, vueCompilerOptions));
+							const events = getEventsOfTag(ts, languageService, vueCode, tag, vueCompilerOptions);
 							const attributes: html.IAttributeData[] = [];
-							const _tsCodegen = tsCodegen.get(vueSourceFile.sfc);
+							const _tsCodegen = tsCodegen.get(vueCode.sfc);
 
 							if (_tsCodegen) {
 								let ctxVars = [
-									..._tsCodegen.scriptRanges()?.bindings.map(binding => vueSourceFile.sfc.script!.content.substring(binding.start, binding.end)) ?? [],
-									..._tsCodegen.scriptSetupRanges()?.bindings.map(binding => vueSourceFile.sfc.scriptSetup!.content.substring(binding.start, binding.end)) ?? [],
-									...getTemplateCtx(ts, languageService, vueSourceFile) ?? [],
+									..._tsCodegen.scriptRanges()?.bindings.map(binding => vueCode.sfc.script!.content.substring(binding.start, binding.end)) ?? [],
+									..._tsCodegen.scriptSetupRanges()?.bindings.map(binding => vueCode.sfc.scriptSetup!.content.substring(binding.start, binding.end)) ?? [],
+									...getTemplateCtx(ts, languageService, vueCode) ?? [],
 								];
 								ctxVars = [...new Set(ctxVars)];
 								const dirs = ctxVars.map(hyphenateAttr).filter(v => v.startsWith('v-'));
@@ -552,11 +549,18 @@ export function create(
 				]);
 			}
 
-			function afterHtmlCompletion(completionList: vscode.CompletionList, map: SourceMapWithDocuments<CodeInformation>, vueSourceFile: VueFile) {
+			function afterHtmlCompletion(completionList: vscode.CompletionList, map: SourceMapWithDocuments<CodeInformation>, vueSourceFile: VueGeneratedCode) {
 
 				const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
 				const replacement = getReplacement(completionList, map.sourceFileDocument);
-				const componentNames = new Set(getComponentNames(ts, languageService, vueSourceFile, vueCompilerOptions).map(hyphenateTag));
+				const componentNames = new Set(
+					getComponentNames(
+						ts,
+						languageService,
+						vueSourceFile,
+						vueCompilerOptions
+					).map(hyphenateTag)
+				);
 
 				if (replacement) {
 

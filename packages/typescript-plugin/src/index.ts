@@ -1,7 +1,6 @@
 import { createTSServerPlugin } from '@volar/typescript/lib/quickstart/createTSServerPlugin';
 import * as vue from '@vue/language-core';
-// @ts-expect-error
-import type * as ts from 'typescript/lib/tsserverlibrary';
+import type * as _ from 'typescript';
 
 const windowsPathReg = /\\/g;
 
@@ -9,6 +8,7 @@ export = createTSServerPlugin((ts, info) => {
 	const vueOptions = vue.resolveVueCompilerOptions(getVueCompilerOptions());
 	const languagePlugins = vue.createLanguages(
 		ts,
+		id => id,
 		info.languageServiceHost.getCompilationSettings(),
 		vueOptions,
 	);
@@ -22,10 +22,7 @@ export = createTSServerPlugin((ts, info) => {
 		return result;
 	};
 
-	return {
-		languagePlugins,
-		extensions: vueOptions.extensions,
-	};
+	return languagePlugins;
 
 	function getVueCompilerOptions() {
 		if (info.project.projectKind === ts.server.ProjectKind.Configured) {

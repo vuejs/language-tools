@@ -1,27 +1,22 @@
 import { enableAllFeatures } from '../generators/utils';
 import { VueLanguagePlugin } from '../types';
 
-const styleReg = /^(.*)\.style_(\d+)\.([^.]+)$/;
-
 const plugin: VueLanguagePlugin = () => {
 
 	return {
 
-		version: 1,
+		version: 2,
 
-		getEmbeddedFileNames(fileName, sfc) {
-			const names: string[] = [];
-			for (let i = 0; i < sfc.styles.length; i++) {
-				const style = sfc.styles[i];
-				names.push(fileName + '.style_' + i + '.' + style.lang);
-			}
-			return names;
+		getEmbeddedFiles(_fileName, sfc) {
+			return sfc.styles.map((style, i) => ({
+				id: 'style_' + i,
+				lang: style.lang,
+			}));
 		},
 
 		resolveEmbeddedFile(_fileName, sfc, embeddedFile) {
-			const match = embeddedFile.fileName.match(styleReg);
-			if (match) {
-				const index = parseInt(match[2]);
+			if (embeddedFile.id.startsWith('style_')) {
+				const index = parseInt(embeddedFile.id.slice('style_'.length));
 				const style = sfc.styles[index];
 
 				embeddedFile.content.push([

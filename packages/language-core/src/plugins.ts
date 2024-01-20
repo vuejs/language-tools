@@ -61,9 +61,9 @@ export function getDefaultVueLanguagePlugins(pluginContext: Parameters<VueLangua
 		});
 
 	return pluginInstances.filter((plugin) => {
-		const valid = plugin.version >= 1 && plugin.version < 2;
+		const valid = plugin.version >= 2 && plugin.version < 3;
 		if (!valid) {
-			console.warn(`Plugin ${JSON.stringify(plugin.name)} API version incompatible, expected 1.x but got ${JSON.stringify(plugin.version)}`);
+			console.warn(`Plugin ${JSON.stringify(plugin.name)} API version incompatible, expected 2.x but got ${JSON.stringify(plugin.version)}`);
 		}
 		return valid;
 	});

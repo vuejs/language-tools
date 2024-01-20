@@ -23,6 +23,7 @@ export function run() {
 			) {
 				return vue.createLanguages(
 					ts,
+					id => id,
 					options.options,
 					vueOptions,
 					false,

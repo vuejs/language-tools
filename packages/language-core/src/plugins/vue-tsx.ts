@@ -7,52 +7,44 @@ import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { Code, Sfc, VueLanguagePlugin } from '../types';
 import { enableAllFeatures } from '../generators/utils';
 
-const templateFormatReg = /^\.template_format\.ts$/;
-const templateStyleCssReg = /^\.template_style\.css$/;
-
 export const tsCodegen = new WeakMap<Sfc, ReturnType<typeof createTsx>>();
 
 const plugin: VueLanguagePlugin = (ctx) => {
 
 	return {
 
-		version: 1,
+		version: 2,
 
 		requiredCompilerOptions: [
 			'noPropertyAccessFromIndexSignature',
 			'exactOptionalPropertyTypes',
 		],
 
-		getEmbeddedFileNames(fileName, sfc) {
+		getEmbeddedFiles(fileName, sfc) {
 
 			const tsx = useTsx(fileName, sfc);
-			const fileNames: string[] = [];
+			const files: {
+				id: string;
+				lang: string;
+			}[] = [];
 
 			if (['js', 'ts', 'jsx', 'tsx'].includes(tsx.lang())) {
-				fileNames.push(fileName + '.' + tsx.lang());
+				files.push({ id: 'script_' + tsx.lang(), lang: tsx.lang() });
 			}
 
 			if (sfc.template) {
-				fileNames.push(fileName + '.template_format.ts');
-				fileNames.push(fileName + '.template_style.css');
+				files.push({ id: 'template_format', lang: 'ts' });
+				files.push({ id: 'template_style', lang: 'css' });
 			}
 
-			return fileNames;
+			return files;
 		},
 
 		resolveEmbeddedFile(fileName, sfc, embeddedFile) {
 
 			const _tsx = useTsx(fileName, sfc);
-			const lang = _tsx.lang();
-			const suffix = embeddedFile.fileName.replace(fileName, '');
 
-			if (suffix === '.' + lang) {
-				embeddedFile.typescript = {
-					scriptKind: lang === 'js' ? ctx.modules.typescript.ScriptKind.JS
-						: lang === 'jsx' ? ctx.modules.typescript.ScriptKind.JSX
-							: lang === 'tsx' ? ctx.modules.typescript.ScriptKind.TSX
-								: ctx.modules.typescript.ScriptKind.TS
-				};
+			if (embeddedFile.id.startsWith('script_')) {
 				const tsx = _tsx.generatedScript();
 				if (tsx) {
 					const [content, contentStacks] = ctx.codegenStack ? track([...tsx.codes], [...tsx.codeStacks]) : [[...tsx.codes], [...tsx.codeStacks]];
@@ -67,9 +59,9 @@ const plugin: VueLanguagePlugin = (ctx) => {
 					embeddedFile.linkedCodeMappings = [...tsx.linkedCodeMappings];
 				}
 			}
-			else if (suffix.match(templateFormatReg)) {
+			else if (embeddedFile.id === 'template_format') {
 
-				embeddedFile.parentFileName = fileName + '.template.' + sfc.template?.lang;
+				embeddedFile.parentFileId = 'template';
 
 				const template = _tsx.generatedTemplate();
 				if (template) {
@@ -94,9 +86,9 @@ const plugin: VueLanguagePlugin = (ctx) => {
 					}
 				}
 			}
-			else if (suffix.match(templateStyleCssReg)) {
+			else if (embeddedFile.id === 'template_style') {
 
-				embeddedFile.parentFileName = fileName + '.template.' + sfc.template?.lang;
+				embeddedFile.parentFileId = 'template';
 
 				const template = _tsx.generatedTemplate();
 				if (template) {

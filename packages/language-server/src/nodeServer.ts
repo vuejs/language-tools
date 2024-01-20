@@ -1,4 +1,4 @@
-import { createConnection, createNodeServer, createSimpleProjectProvider, createTypeScriptProjectProvider } from '@volar/language-server/node';
+import { createConnection, createServer, createSimpleProjectProvider, createTypeScriptProjectProvider } from '@volar/language-server/node';
 import { ServerProject } from '@volar/language-server';
 import * as vue2 from '@vue/language-core';
 import { VueCompilerOptions } from '@vue/language-core';
@@ -7,10 +7,9 @@ import * as vue from '@vue/language-service';
 import * as componentMeta from 'vue-component-meta/out/base';
 import { DetectNameCasingRequest, GetComponentMeta, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest } from './protocol';
 import { VueInitializationOptions } from './types';
-import { createSys } from '@volar/typescript';
 
 const connection = createConnection();
-const server = createNodeServer(connection);
+const server = createServer(connection);
 const checkers = new WeakMap<ServerProject, componentMeta.ComponentMetaChecker>();
 const envToVueOptions = new WeakMap<vue.ServiceEnvironment, VueCompilerOptions>();
 
@@ -42,7 +41,7 @@ connection.onInitialize(params => {
 				const ts = getTsLib();
 				const [commandLine, vueOptions] = await parseCommandLine();
 				const resolvedVueOptions = vue.resolveVueCompilerOptions(vueOptions);
-				const languages = vue.resolveLanguages({}, ts, commandLine?.options ?? {}, resolvedVueOptions, options.codegenStack);
+				const languages = vue.resolveLanguages({}, ts, serviceEnv.typescript.uriToFileName, commandLine?.options ?? {}, resolvedVueOptions, options.codegenStack);
 
 				envToVueOptions.set(serviceEnv, resolvedVueOptions);
 
@@ -54,7 +53,9 @@ connection.onInitialize(params => {
 					let vueOptions: Partial<vue.VueCompilerOptions> = {};
 
 					if (projectContext.typescript) {
-						const sys = createSys(ts, serviceEnv, serviceEnv.uriToFileName(serviceEnv.workspaceFolder.toString()));
+
+						const { sys } = projectContext.typescript;
+
 						let sysVersion: number | undefined;
 						let newSysVersion = await sys.sync();
 
@@ -128,15 +129,15 @@ connection.onRequest(GetComponentMeta.type, async params => {
 	if (!checker) {
 		checker = componentMeta.baseCreate(
 			getTsLib(),
-			langaugeService.context.language.typescript!.configFileName,
-			langaugeService.context.language.typescript!.projectHost,
+			langaugeService.context.typescript!.configFileName,
+			langaugeService.context.typescript!.projectHost,
 			envToVueOptions.get(langaugeService.context.env)!,
 			{},
-			langaugeService.context.language.typescript!.languageServiceHost.getCurrentDirectory() + '/tsconfig.json.global.vue',
+			langaugeService.context.typescript!.languageServiceHost.getCurrentDirectory() + '/tsconfig.json.global.vue',
 		);
 		checkers.set(project, checker);
 	}
-	return checker?.getComponentMeta(langaugeService.context.env.uriToFileName(params.uri));
+	return checker?.getComponentMeta(langaugeService.context.env.typescript.uriToFileName(params.uri));
 });
 
 function getTsLib() {

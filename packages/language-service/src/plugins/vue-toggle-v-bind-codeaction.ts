@@ -1,5 +1,5 @@
 import { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
-import { VueFile, eachElementNode, type CompilerDOM } from '@vue/language-core';
+import { VueGeneratedCode, eachElementNode, type CompilerDOM } from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 
 export function create(ts: typeof import('typescript/lib/tsserverlibrary')): ServicePlugin {
@@ -11,13 +11,13 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 
 					const startOffset = document.offsetAt(range.start);
 					const endOffset = document.offsetAt(range.end);
-					const [virtualFile] = context.language.files.getVirtualFile(context.env.uriToFileName(document.uri));
+					const [virtualCode] = context.documents.getVirtualCodeByUri(document.uri);
 
-					if (!(virtualFile instanceof VueFile)) {
+					if (!(virtualCode instanceof VueGeneratedCode)) {
 						return;
 					}
 
-					const { template } = virtualFile.sfc;
+					const { template } = virtualCode.sfc;
 
 					if (!template?.ast) return;
 
