@@ -8,8 +8,6 @@ export const compile: typeof CompilerDOM.compile = (template, options = {}) => {
 		throw new Error(`[@vue/language-core] compile() first argument must be string.`);
 	}
 
-	template = typeof template === 'string' ? template : template.source;
-
 	const onError = options.onError;
 	const onWarn = options.onWarn;
 
