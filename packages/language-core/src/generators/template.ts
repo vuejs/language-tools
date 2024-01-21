@@ -1267,46 +1267,37 @@ export function* generate(
 					shouldCamelize,
 				);
 				yield _ts(': (');
-				const isShorthand = prop.exp
-					&& prop.exp.loc.start.offset === prop.exp.loc.end.offset
-					&& prop.exp.content; // vue 3.4+
-				if (
-					prop.exp
-					&& !isShorthand
-					&& prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY
-				) { // style='z-index: 2' will compile to {'z-index':'2'}
-					yield* generateInterpolation(
-						prop.exp.loc.source,
-						prop.exp.loc,
-						prop.exp.loc.start.offset,
-						// disable completion for shorthand expression
-						isShorthand ? caps_attr : caps_all,
-						'(',
-						')',
-					);
-					if (!isShorthand && mode === 'normal') {
-						yield* generateTsFormat(
-							prop.exp.loc.source,
-							prop.exp.loc.start.offset,
-							formatBrackets.normal,
-						);
-					}
-				}
-				else if (
-					prop.arg
-					&& isShorthand
-					&& prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-				) {
-					const propVariableName = camelize(prop.arg.content);
-					if (validTsVarReg.test(propVariableName)) {
+				if (prop.exp && prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) { // style='z-index: 2' will compile to {'z-index':'2'}
+					const isShorthand = prop.arg?.loc.start.offset === prop.exp?.loc.start.offset; // vue 3.4+
+					if (!isShorthand) {
 						yield* generateInterpolation(
-							propVariableName,
-							prop.arg.loc,
-							prop.arg.loc.start.offset,
+							prop.exp.loc.source,
+							prop.exp.loc,
+							prop.exp.loc.start.offset,
 							caps_all,
 							'(',
 							')',
 						);
+
+						if (mode === 'normal') {
+							yield* generateTsFormat(
+								prop.exp.loc.source,
+								prop.exp.loc.start.offset,
+								formatBrackets.normal,
+							);
+						}
+					} else {
+						const propVariableName = camelize(prop.exp.loc.source);
+						if (validTsVarReg.test(propVariableName)) {
+							yield* generateInterpolation(
+								propVariableName,
+								prop.exp.loc,
+								prop.exp.loc.start.offset,
+								caps_all,
+								'(',
+								')',
+							);
+						}
 					}
 				}
 				else {
