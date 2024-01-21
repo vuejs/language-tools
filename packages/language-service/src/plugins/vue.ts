@@ -10,7 +10,7 @@ import { loadLanguageBlocks } from './data';
 let sfcDataProvider: html.IHTMLDataProvider | undefined;
 
 export interface Provide {
-	'vue/vueFile': (document: TextDocument) => vue.VueFile | undefined;
+	'vue/vueFile': (document: TextDocument) => vue.VueGeneratedCode | undefined;
 }
 
 export function create(): ServicePlugin {
@@ -19,9 +19,6 @@ export function create(): ServicePlugin {
 		create(context): ServicePluginInstance<Provide> {
 
 			const htmlPlugin = createHtmlService({ languageId: 'vue', useCustomDataProviders: false }).create(context);
-
-			if (!context)
-				return htmlPlugin as any;
 
 			sfcDataProvider ??= html.newHTMLDataProvider('vue', loadLanguageBlocks(context.env.locale ?? 'en'));
 
@@ -40,18 +37,13 @@ export function create(): ServicePlugin {
 				},
 
 				provideSemanticDiagnostics(document) {
-					return worker(document, (vueSourceFile) => {
-
-						if (!vueSourceFile.mainTsFile) {
-							return;
-						}
+					return worker(document, (vueCode) => {
 
 						const result: vscode.Diagnostic[] = [];
-						const sfc = vueSourceFile.sfc;
+						const sfc = vueCode.sfc;
 						const program = context.inject<TSProvide, 'typescript/languageService'>('typescript/languageService').getProgram();
-						const tsFileName = vueSourceFile.mainTsFile.fileName;
 
-						if (program && !program.getSourceFile(tsFileName)) {
+						if (program && !program.getSourceFile(vueCode.fileName)) {
 							for (const script of [sfc.script, sfc.scriptSetup]) {
 
 								if (!script || script.content === '')
@@ -62,7 +54,7 @@ export function create(): ServicePlugin {
 										start: document.positionAt(script.start),
 										end: document.positionAt(script.startTagEnd),
 									},
-									message: `Virtual script ${JSON.stringify(tsFileName)} not found, may missing <script lang="ts"> / "allowJs": true / jsconfig.json.`,
+									message: `Virtual script ${JSON.stringify(vueCode.fileName)} not found, may missing <script lang="ts"> / "allowJs": true / jsconfig.json.`,
 									severity: 3 satisfies typeof vscode.DiagnosticSeverity.Information,
 									source: 'vue',
 								};
@@ -197,9 +189,9 @@ export function create(): ServicePlugin {
 				},
 			};
 
-			function worker<T>(document: TextDocument, callback: (vueSourceFile: vue.VueFile) => T) {
-				const [vueFile] = context.language.files.getVirtualFile(context.env.uriToFileName(document.uri));
-				if (vueFile instanceof vue.VueFile) {
+			function worker<T>(document: TextDocument, callback: (vueSourceFile: vue.VueGeneratedCode) => T) {
+				const [vueFile] = context.documents.getVirtualCodeByUri(document.uri);
+				if (vueFile instanceof vue.VueGeneratedCode) {
 					return callback(vueFile);
 				}
 			}

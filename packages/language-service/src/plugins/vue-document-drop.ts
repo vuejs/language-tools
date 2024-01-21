@@ -1,4 +1,4 @@
-import { VueFile, forEachEmbeddedFile, isFoldingRangesEnabled } from '@vue/language-core';
+import { VueGeneratedCode, forEachEmbeddedCode, isFoldingRangesEnabled } from '@vue/language-core';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import * as path from 'path-browserify';
 import type * as vscode from 'vscode-languageserver-protocol';
@@ -18,9 +18,9 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 					if (document.languageId !== 'html')
 						return;
 
-					const [virtualFile, sourceFile] = context.language.files.getVirtualFile(context.env.uriToFileName(document.uri));
-					const vueFile = sourceFile?.virtualFile?.[0];
-					if (!virtualFile || !(vueFile instanceof VueFile))
+					const [virtualCode, sourceFile] = context.documents.getVirtualCodeByUri(document.uri);
+					const vueFile = sourceFile?.generated?.code;
+					if (!virtualCode || !(vueFile instanceof VueGeneratedCode))
 						return;
 
 					let importUri: string | undefined;
@@ -38,7 +38,7 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 
 					let additionalEdit: vscode.WorkspaceEdit | undefined;
 
-					for (const file of forEachEmbeddedFile(vueFile)) {
+					for (const file of forEachEmbeddedCode(vueFile)) {
 						if (
 							(
 								file.languageId === 'typescript'
@@ -48,11 +48,10 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 							)
 							&& file.mappings.some(mapping => isFoldingRangesEnabled(mapping.data))
 						) {
-							const uri = context.env.fileNameToUri(file.fileName);
 
 							additionalEdit ??= {};
 							additionalEdit.changes ??= {};
-							additionalEdit.changes[uri] = [];
+							additionalEdit.changes[context.documents.getVirtualCodeUri(vueFile.id, file.id)] = [];
 
 							const { sfc } = vueFile;
 							const script = sfc.scriptSetup ?? sfc.script;
@@ -60,7 +59,7 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 								return;
 
 							const lastImportNode = getLastImportNode(ts, script.ast);
-							additionalEdit.changes[uri].push({
+							additionalEdit.changes[context.documents.getVirtualCodeUri(vueFile.id, file.id)].push({
 								range: lastImportNode ? {
 									start: document.positionAt(lastImportNode.end),
 									end: document.positionAt(lastImportNode.end),
@@ -74,7 +73,7 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 							if (sfc.script) {
 								const edit = createAddComponentToOptionEdit(ts, sfc.script.ast, newName);
 								if (edit) {
-									additionalEdit.changes[uri].push({
+									additionalEdit.changes[context.documents.getVirtualCodeUri(vueFile.id, file.id)].push({
 										range: {
 											start: document.positionAt(edit.range.start),
 											end: document.positionAt(edit.range.end),

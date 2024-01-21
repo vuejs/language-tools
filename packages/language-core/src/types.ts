@@ -68,7 +68,7 @@ export type VueLanguagePlugin = (ctx: {
 	codegenStack: boolean;
 	globalTypesHolder: string | undefined;
 }) => {
-	version: 1;
+	version: 2;
 	name?: string;
 	order?: number;
 	requiredCompilerOptions?: string[];
@@ -77,7 +77,7 @@ export type VueLanguagePlugin = (ctx: {
 	resolveTemplateCompilerOptions?(options: CompilerDOM.CompilerOptions): CompilerDOM.CompilerOptions;
 	compileSFCTemplate?(lang: string, template: string, options: CompilerDOM.CompilerOptions): CompilerDOM.CodegenResult | undefined;
 	updateSFCTemplate?(oldResult: CompilerDOM.CodegenResult, textChange: { start: number, end: number, newText: string; }): CompilerDOM.CodegenResult | undefined;
-	getEmbeddedFileNames?(fileName: string, sfc: Sfc): string[];
+	getEmbeddedFiles?(fileName: string, sfc: Sfc): { id: string; lang: string; }[];
 	resolveEmbeddedFile?(fileName: string, sfc: Sfc, embeddedFile: VueEmbeddedFile): void;
 };
 

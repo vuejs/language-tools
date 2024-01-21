@@ -1269,7 +1269,7 @@ export function* generate(
 				yield _ts(': (');
 				const isShorthand = prop.exp
 					&& prop.exp.loc.start.offset === prop.exp.loc.end.offset
-					&& prop.exp.content;
+					&& prop.exp.content; // vue 3.4+
 				if (
 					prop.exp
 					&& !isShorthand
@@ -1279,11 +1279,12 @@ export function* generate(
 						prop.exp.loc.source,
 						prop.exp.loc,
 						prop.exp.loc.start.offset,
-						caps_all,
+						// disable completion for shorthand expression
+						isShorthand ? caps_attr : caps_all,
 						'(',
 						')',
 					);
-					if (mode === 'normal') {
+					if (!isShorthand && mode === 'normal') {
 						yield* generateTsFormat(
 							prop.exp.loc.source,
 							prop.exp.loc.start.offset,

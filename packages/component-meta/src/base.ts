@@ -151,6 +151,7 @@ export function baseCreate(
 
 	const vueLanguagePlugins = vue.createLanguages(
 		ts,
+		id => id,
 		host.getCompilationSettings(),
 		vueCompilerOptions,
 	);
@@ -160,6 +161,10 @@ export function baseCreate(
 		vueLanguagePlugins,
 		configFileName,
 		host,
+		{
+			fileIdToFileName: id => id,
+			fileNameToFileId: id => id,
+		},
 	);
 	const { languageServiceHost } = language.typescript!;
 	const tsLs = ts.createLanguageService(languageServiceHost);
@@ -302,11 +307,11 @@ ${vueCompilerOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 			const printer = ts.createPrinter(checkerOptions.printer);
 			const snapshot = host.getScriptSnapshot(componentPath)!;
 
-			const vueSourceFile = language.files.getSourceFile(componentPath)?.virtualFile?.[0];
-			const vueDefaults = vueSourceFile && exportName === 'default'
-				? (vueSourceFile instanceof vue.VueFile ? readVueComponentDefaultProps(vueSourceFile, printer, ts, vueCompilerOptions) : {})
+			const vueFile = language.files.get(componentPath)?.generated?.code;
+			const vueDefaults = vueFile && exportName === 'default'
+				? (vueFile instanceof vue.VueGeneratedCode ? readVueComponentDefaultProps(vueFile, printer, ts, vueCompilerOptions) : {})
 				: {};
-			const tsDefaults = !vueSourceFile ? readTsComponentDefaultProps(
+			const tsDefaults = !vueFile ? readTsComponentDefaultProps(
 				componentPath.substring(componentPath.lastIndexOf('.') + 1), // ts | js | tsx | jsx
 				snapshot.getText(0, snapshot.getLength()),
 				exportName,
@@ -449,7 +454,7 @@ function createSchemaResolvers(
 	symbolNode: ts.Expression,
 	{ rawType, schema: options, noDeclarations }: MetaCheckerOptions,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
-	core: vue.Language,
+	context: vue.LanguageContext,
 ) {
 	const visited = new Set<ts.Type>();
 
@@ -640,18 +645,21 @@ function createSchemaResolvers(
 	}
 	function getDeclaration(declaration: ts.Declaration): Declaration | undefined {
 		const fileName = declaration.getSourceFile().fileName;
-		const [virtualFile] = core.files.getVirtualFile(fileName);
-		if (virtualFile) {
-			const maps = core.files.getMaps(virtualFile);
-			for (const [source, [_, map]] of maps) {
-				const start = map.getSourceOffset(declaration.getStart());
-				const end = map.getSourceOffset(declaration.getEnd());
-				if (start && end) {
-					return {
-						file: source,
-						range: [start[0], end[0]],
+		const sourceFile = context.files.get(fileName);
+		if (sourceFile?.generated) {
+			const script = sourceFile.generated.languagePlugin.typescript?.getScript(sourceFile.generated.code);
+			if (script) {
+				const maps = context.files.getMaps(script.code);
+				for (const [source, [_, map]] of maps) {
+					const start = map.getSourceOffset(declaration.getStart());
+					const end = map.getSourceOffset(declaration.getEnd());
+					if (start && end) {
+						return {
+							file: source,
+							range: [start[0], end[0]],
+						};
 					};
-				};
+				}
 			}
 			return undefined;
 		}
@@ -671,7 +679,7 @@ function createSchemaResolvers(
 }
 
 function readVueComponentDefaultProps(
-	vueSourceFile: vue.VueFile,
+	vueSourceFile: vue.VueGeneratedCode,
 	printer: ts.Printer | undefined,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
 	vueCompilerOptions: vue.VueCompilerOptions,

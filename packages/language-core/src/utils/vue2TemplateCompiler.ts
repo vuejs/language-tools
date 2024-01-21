@@ -2,10 +2,11 @@ import * as CompilerDOM from '@vue/compiler-dom';
 
 const Vue2TemplateCompiler: typeof import('vue-template-compiler') = require('vue-template-compiler/build');
 
-export function compile(
-	template: string | CompilerDOM.RootNode,
-	options: CompilerDOM.CompilerOptions = {}
-): CompilerDOM.CodegenResult {
+export const compile: typeof CompilerDOM.compile = (template, options = {}) => {
+
+	if (typeof template !== 'string') {
+		throw new Error(`[@vue/language-core] compile() first argument must be string.`);
+	}
 
 	template = typeof template === 'string' ? template : template.source;
 
@@ -68,7 +69,7 @@ export function compile(
 			),
 		})
 	);
-}
+};
 
 function baseCompile(
 	template: string,

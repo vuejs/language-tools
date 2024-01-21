@@ -1,4 +1,4 @@
-import { Stack, VirtualFile, forEachEmbeddedFile } from '@volar/language-core';
+import { Stack, VirtualCode } from '@volar/language-core';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import { VueCompilerOptions, VueLanguagePlugin } from '../types';
 import { computedFiles } from './computedFiles';
@@ -7,11 +7,11 @@ import { computedSfc } from './computedSfc';
 import { computedVueSfc } from './computedVueSfc';
 import { Signal, signal } from 'computeds';
 
-const jsxReg = /^\.(js|ts)x?$/;
-
-export class VueFile implements VirtualFile {
+export class VueGeneratedCode implements VirtualCode {
 
 	// sources
+
+	id = 'main';
 
 	_snapshot: Signal<ts.IScriptSnapshot>;
 
@@ -20,20 +20,13 @@ export class VueFile implements VirtualFile {
 	getVueSfc = computedVueSfc(this.plugins, this.fileName, () => this._snapshot());
 	sfc = computedSfc(this.ts, this.plugins, this.fileName, () => this._snapshot(), this.getVueSfc);
 	getMappings = computedMappings(() => this._snapshot(), this.sfc);
-	getEmbeddedFiles = computedFiles(this.plugins, this.fileName, this.sfc, this.codegenStack);
+	getEmbeddedCodes = computedFiles(this.plugins, this.fileName, this.sfc, this.codegenStack);
 
 	// others
 
 	codegenStacks: Stack[] = [];
-	get embeddedFiles() {
-		return this.getEmbeddedFiles();
-	}
-	get mainTsFile() {
-		for (const file of forEachEmbeddedFile(this)) {
-			if (file.typescript && file.fileName.substring(this.fileName.length).match(jsxReg)) {
-				return file;
-			}
-		}
+	get embeddedCodes() {
+		return this.getEmbeddedCodes();
 	}
 	get snapshot() {
 		return this._snapshot();

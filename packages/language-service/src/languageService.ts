@@ -1,5 +1,5 @@
 import { ServiceEnvironment, ServicePlugin } from '@volar/language-service';
-import { LanguagePlugin, VueFile, createLanguages, hyphenateTag, scriptRanges } from '@vue/language-core';
+import { LanguagePlugin, VueGeneratedCode, createLanguages, hyphenateTag, scriptRanges } from '@vue/language-core';
 import { capitalize } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { Data } from 'volar-service-typescript/lib/features/completions/basic';
@@ -39,12 +39,13 @@ export interface Settings {
 export function resolveLanguages(
 	languages: Record<string, LanguagePlugin>,
 	ts: typeof import('typescript/lib/tsserverlibrary'),
+	getFileName: (fileId: string) => string,
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
 	codegenStack: boolean = false,
 ): Record<string, LanguagePlugin> {
 
-	const vueLanguageModules = createLanguages(ts, compilerOptions, vueCompilerOptions, codegenStack);
+	const vueLanguageModules = createLanguages(ts, getFileName, compilerOptions, vueCompilerOptions, codegenStack);
 
 	return {
 		...languages,
@@ -83,15 +84,15 @@ export function resolveServices(
 						// handle component auto-import patch
 						let casing: Awaited<ReturnType<typeof getNameCasing>> | undefined;
 
-						const [virtualFile, sourceFile] = context.language.files.getVirtualFile(context.env.uriToFileName(document.uri));
+						const [virtualCode, sourceFile] = context.documents.getVirtualCodeByUri(document.uri);
 
-						if (virtualFile && sourceFile) {
+						if (virtualCode && sourceFile) {
 
-							for (const map of context.documents.getMaps(virtualFile)) {
+							for (const map of context.documents.getMaps(virtualCode)) {
 
-								const sourceVirtualFile = context.language.files.getSourceFile(context.env.uriToFileName(map.sourceFileDocument.uri))?.virtualFile?.[0];
+								const sourceVirtualFile = context.files.get(map.sourceFileDocument.uri)?.generated?.code;
 
-								if (sourceVirtualFile instanceof VueFile) {
+								if (sourceVirtualFile instanceof VueGeneratedCode) {
 
 									const isAutoImport = !!map.getSourcePosition(position, data => typeof data.completion === 'object' && !!data.completion.onlyImport);
 									if (isAutoImport) {
@@ -101,7 +102,7 @@ export function resolveServices(
 										}
 
 										// fix #2458
-										casing ??= await getNameCasing(ts, context, sourceFile.fileName, getVueOptions(context.env));
+										casing ??= await getNameCasing(ts, context, sourceFile.id, getVueOptions(context.env));
 
 										if (casing.tag === TagNameCasing.Kebab) {
 											for (const item of result.items) {
@@ -152,9 +153,9 @@ export function resolveServices(
 								'import ' + newName + ' from ',
 							);
 							item.textEdit.newText = newName;
-							const [_, sourceFile] = context.language.files.getVirtualFile(context.env.uriToFileName(itemData.uri));
+							const [_, sourceFile] = context.documents.getVirtualCodeByUri(itemData.uri);
 							if (sourceFile) {
-								const casing = await getNameCasing(ts, context, sourceFile.fileName, getVueOptions(context.env));
+								const casing = await getNameCasing(ts, context, sourceFile.id, getVueOptions(context.env));
 								if (casing.tag === TagNameCasing.Kebab) {
 									item.textEdit.newText = hyphenateTag(item.textEdit.newText);
 								}
@@ -168,16 +169,15 @@ export function resolveServices(
 
 					const data: Data = item.data;
 					if (item.data?.__isComponentAutoImport && data && item.additionalTextEdits?.length && item.textEdit && itemData?.uri) {
-						const fileName = context.env.uriToFileName(itemData.uri);
 						const langaugeService = context.inject<TSProvide, 'typescript/languageService'>('typescript/languageService');
-						const [virtualFile] = context.language.files.getVirtualFile(fileName);
-						const ast = langaugeService.getProgram()?.getSourceFile(fileName);
+						const [virtualCode] = context.documents.getVirtualCodeByUri(itemData.uri);
+						const ast = langaugeService.getProgram()?.getSourceFile(itemData.uri);
 						const exportDefault = ast ? scriptRanges.parseScriptRanges(ts, ast, false, true).exportDefault : undefined;
-						if (virtualFile && ast && exportDefault) {
+						if (virtualCode && ast && exportDefault) {
 							const componentName = newName ?? item.textEdit.newText;
 							const optionEdit = createAddComponentToOptionEdit(ts, ast, componentName);
 							if (optionEdit) {
-								const textDoc = context.documents.get(context.env.fileNameToUri(virtualFile.fileName), virtualFile.languageId, virtualFile.snapshot);
+								const textDoc = context.documents.get(context.documents.getVirtualCodeUri(context.files.getByVirtualCode(virtualCode).id, virtualCode.id), virtualCode.languageId, virtualCode.snapshot);
 								item.additionalTextEdits.push({
 									range: {
 										start: textDoc.positionAt(optionEdit.range.start),

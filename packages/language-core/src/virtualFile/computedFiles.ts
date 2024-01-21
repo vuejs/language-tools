@@ -1,4 +1,4 @@
-import { VirtualFile, buildMappings, buildStacks, resolveCommonLanguageId, toString, track } from '@volar/language-core';
+import { VirtualCode, buildMappings, buildStacks, resolveCommonLanguageId, toString, track } from '@volar/language-core';
 import { computed } from 'computeds';
 import type * as ts from 'typescript/lib/tsserverlibrary';
 import type { Sfc, SfcBlock, VueLanguagePlugin } from '../types';
@@ -34,7 +34,7 @@ export function computedFiles(
 	const flatResult = computed(() => pluginsResult.map(r => r()).flat());
 	const structuredResult = computed(() => {
 
-		const embeddedFiles: VirtualFile[] = [];
+		const embeddedCodes: VirtualCode[] = [];
 
 		let remain = [...flatResult()];
 
@@ -47,61 +47,58 @@ export function computedFiles(
 		}
 
 		for (const { file, snapshot, mappings, codegenStacks } of remain) {
-			embeddedFiles.push({
-				fileName: file.fileName,
-				languageId: resolveCommonLanguageId(file.fileName),
-				typescript: file.typescript,
+			embeddedCodes.push({
+				id: file.id,
+				languageId: resolveCommonLanguageId(`/dummy.${file.lang}`),
 				linkedCodeMappings: file.linkedCodeMappings,
 				snapshot,
 				mappings,
 				codegenStacks,
-				embeddedFiles: [],
+				embeddedCodes: [],
 			});
-			console.error('Unable to resolve embedded: ' + file.parentFileName + ' -> ' + file.fileName);
+			console.error('Unable to resolve embedded: ' + file.parentFileId + ' -> ' + file.id);
 		}
 
-		return embeddedFiles;
+		return embeddedCodes;
 
 		function consumeRemain() {
 			for (let i = remain.length - 1; i >= 0; i--) {
 				const { file, snapshot, mappings, codegenStacks } = remain[i];
-				if (!file.parentFileName) {
-					embeddedFiles.push({
-						fileName: file.fileName,
-						languageId: resolveCommonLanguageId(file.fileName),
-						typescript: file.typescript,
+				if (!file.parentFileId) {
+					embeddedCodes.push({
+						id: file.id,
+						languageId: resolveCommonLanguageId(`/dummy.${file.lang}`),
 						linkedCodeMappings: file.linkedCodeMappings,
 						snapshot,
 						mappings,
 						codegenStacks,
-						embeddedFiles: [],
+						embeddedCodes: [],
 					});
 					remain.splice(i, 1);
 				}
 				else {
-					const parent = findParentStructure(file.parentFileName, embeddedFiles);
+					const parent = findParentStructure(file.parentFileId, embeddedCodes);
 					if (parent) {
-						parent.embeddedFiles.push({
-							fileName: file.fileName,
-							languageId: resolveCommonLanguageId(file.fileName),
-							typescript: file.typescript,
+						parent.embeddedCodes.push({
+							id: file.id,
+							languageId: resolveCommonLanguageId(`/dummy.${file.lang}`),
 							linkedCodeMappings: file.linkedCodeMappings,
 							snapshot,
 							mappings,
 							codegenStacks,
-							embeddedFiles: [],
+							embeddedCodes: [],
 						});
 						remain.splice(i, 1);
 					}
 				}
 			}
 		}
-		function findParentStructure(fileName: string, current: VirtualFile[]): VirtualFile | undefined {
+		function findParentStructure(id: string, current: VirtualCode[]): VirtualCode | undefined {
 			for (const child of current) {
-				if (child.fileName === fileName) {
+				if (child.id === id) {
 					return child;
 				}
-				let parent = findParentStructure(fileName, child.embeddedFiles);
+				let parent = findParentStructure(id, child.embeddedCodes);
 				if (parent) {
 					return parent;
 				}
@@ -123,20 +120,20 @@ function computedPluginFiles(
 	const embeddedFiles: Record<string, () => { file: VueEmbeddedFile; snapshot: ts.IScriptSnapshot; }> = {};
 	const files = computed(() => {
 		try {
-			if (!plugin.getEmbeddedFileNames) {
+			if (!plugin.getEmbeddedFiles) {
 				return Object.values(embeddedFiles);
 			}
-			const embeddedFileNames = plugin.getEmbeddedFileNames(fileName, sfc);
-			for (const oldFileName of Object.keys(embeddedFiles)) {
-				if (!embeddedFileNames.includes(oldFileName)) {
-					delete embeddedFiles[oldFileName];
+			const fileInfos = plugin.getEmbeddedFiles(fileName, sfc);
+			for (const oldId of Object.keys(embeddedFiles)) {
+				if (!fileInfos.some(file => file.id === oldId)) {
+					delete embeddedFiles[oldId];
 				}
 			}
-			for (const embeddedFileName of embeddedFileNames) {
-				if (!embeddedFiles[embeddedFileName]) {
-					embeddedFiles[embeddedFileName] = computed(() => {
+			for (const fileInfo of fileInfos) {
+				if (!embeddedFiles[fileInfo.id]) {
+					embeddedFiles[fileInfo.id] = computed(() => {
 						const [content, stacks] = codegenStack ? track([]) : [[], []];
-						const file = new VueEmbeddedFile(embeddedFileName, content, stacks);
+						const file = new VueEmbeddedFile(fileInfo.id, fileInfo.lang, content, stacks);
 						for (const plugin of plugins) {
 							if (!plugin.resolveEmbeddedFile) {
 								continue;

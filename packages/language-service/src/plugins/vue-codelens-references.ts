@@ -1,5 +1,5 @@
 import { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
-import { SourceFile, VirtualFile, VueCodeInformation, VueFile } from '@vue/language-core';
+import { SourceFile, VirtualCode, VueCodeInformation, VueGeneratedCode } from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 
 export function create(): ServicePlugin {
@@ -9,11 +9,11 @@ export function create(): ServicePlugin {
 			return {
 				provideReferencesCodeLensRanges(document) {
 
-					return worker(document.uri, async virtualFile => {
+					return worker(document.uri, virtualCode => {
 
 						const result: vscode.Range[] = [];
 
-						for (const map of context.documents.getMaps(virtualFile) ?? []) {
+						for (const map of context.documents.getMaps(virtualCode) ?? []) {
 							for (const mapping of map.map.mappings) {
 
 								if (!(mapping.data as VueCodeInformation).__referencesCodeLens)
@@ -34,13 +34,13 @@ export function create(): ServicePlugin {
 				},
 			};
 
-			function worker<T>(uri: string, callback: (vueFile: VirtualFile, sourceFile: SourceFile) => T) {
+			function worker<T>(uri: string, callback: (vueFile: VirtualCode, sourceFile: SourceFile) => T) {
 
-				const [virtualFile, sourceFile] = context.language.files.getVirtualFile(context.env.uriToFileName(uri));
-				if (!(sourceFile?.virtualFile?.[0] instanceof VueFile) || !sourceFile)
+				const [virtualCode, sourceFile] = context.documents.getVirtualCodeByUri(uri);
+				if (!(sourceFile?.generated?.code instanceof VueGeneratedCode) || !sourceFile)
 					return;
 
-				return callback(virtualFile, sourceFile);
+				return callback(virtualCode, sourceFile);
 			}
 		},
 	};

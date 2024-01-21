@@ -34,8 +34,7 @@ export function parse(source: string): SFCParseResult {
 		}
 		switch (node.tag) {
 			case 'template':
-				const templateBlock = (descriptor.template = createBlock(node, source) as SFCTemplateBlock);
-				templateBlock.ast = compiler.createRoot(node.children, source);
+				descriptor.template = createBlock(node, source) as SFCTemplateBlock;
 				break;
 			case 'script':
 				const scriptBlock = createBlock(node, source) as SFCScriptBlock;
