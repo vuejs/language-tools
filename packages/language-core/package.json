@@ -13,7 +13,7 @@
 		"directory": "packages/language-core"
 	},
 	"dependencies": {
-		"@volar/language-core": "2.0.0-alpha.14",
+		"@volar/language-core": "~2.0.0",
 		"@vue/compiler-dom": "^3.4.0",
 		"@vue/shared": "^3.4.0",
 		"computeds": "^0.0.1",

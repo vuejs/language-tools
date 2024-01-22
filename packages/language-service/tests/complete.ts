@@ -20,7 +20,7 @@ for (const dirName of testDirs) {
 		for (const file in inputFiles) {
 
 			const filePath = path.join(dir, 'input', file);
-			const uri = tester.serviceEnv.typescript.fileNameToUri(filePath);
+			const uri = tester.serviceEnv.typescript!.fileNameToUri(filePath);
 			const fileText = inputFiles[file];
 			const document = TextDocument.create('', '', 0, fileText);
 			const actions = findCompleteActions(fileText);
