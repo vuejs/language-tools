@@ -80,7 +80,7 @@ export function create(
 
 					if (virtualCode) {
 						for (const map of context.documents.getMaps(virtualCode)) {
-							const sourceVirtualFile = context.files.get(map.sourceFileDocument.uri)?.generated?.code;
+							const sourceVirtualFile = context.language.files.get(map.sourceFileDocument.uri)?.generated?.code;
 							if (sourceVirtualFile instanceof VueGeneratedCode) {
 								await provideHtmlData(map, sourceVirtualFile);
 							}
@@ -93,7 +93,7 @@ export function create(
 
 					if (virtualCode) {
 						for (const map of context.documents.getMaps(virtualCode)) {
-							const sourceVirtualFile = context.files.get(map.sourceFileDocument.uri)?.generated?.code;
+							const sourceVirtualFile = context.language.files.get(map.sourceFileDocument.uri)?.generated?.code;
 							if (sourceVirtualFile instanceof VueGeneratedCode) {
 								afterHtmlCompletion(htmlComplete, map, sourceVirtualFile);
 							}
@@ -120,7 +120,7 @@ export function create(
 
 					for (const map of context.documents.getMaps(virtualCode)) {
 
-						const sourceVirtualFile = context.files.get(map.sourceFileDocument.uri)?.generated?.code;
+						const sourceVirtualFile = context.language.files.get(map.sourceFileDocument.uri)?.generated?.code;
 						const scanner = options.getScanner(baseServiceInstance, document);
 
 						if (sourceVirtualFile instanceof VueGeneratedCode && scanner) {
@@ -244,7 +244,7 @@ export function create(
 
 					for (const map of context.documents.getMaps(virtualCode)) {
 
-						const sourceVirtualFile = context.files.get(map.sourceFileDocument.uri)?.generated?.code;
+						const sourceVirtualFile = context.language.files.get(map.sourceFileDocument.uri)?.generated?.code;
 						if (!(sourceVirtualFile instanceof VueGeneratedCode))
 							continue;
 
@@ -306,7 +306,7 @@ export function create(
 
 					for (const map of context.documents.getMaps(virtualCode)) {
 
-						const sourceFile = context.files.get(map.sourceFileDocument.uri)?.generated?.code;
+						const sourceFile = context.language.files.get(map.sourceFileDocument.uri)?.generated?.code;
 						if (!(sourceFile instanceof VueGeneratedCode))
 							continue;
 

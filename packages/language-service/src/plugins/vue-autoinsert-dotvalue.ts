@@ -26,7 +26,7 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 					if (!program)
 						return;
 
-					const sourceFile = program.getSourceFile(context.env.typescript.uriToFileName(document.uri));
+					const sourceFile = program.getSourceFile(context.env.typescript!.uriToFileName(document.uri));
 					if (!sourceFile)
 						return;
 
@@ -39,7 +39,7 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 
 					const token = context.inject<Provide, 'typescript/languageServiceHost'>('typescript/languageServiceHost').getCancellationToken?.();
 					if (token) {
-						context.inject<Provide, 'typescript/languageService'>('typescript/languageService').getQuickInfoAtPosition(context.env.typescript.uriToFileName(document.uri), node.end);
+						context.inject<Provide, 'typescript/languageService'>('typescript/languageService').getQuickInfoAtPosition(context.env.typescript!.uriToFileName(document.uri), node.end);
 						if (token?.isCancellationRequested()) {
 							return; // check cancel here because type checker do not use cancel token
 						}

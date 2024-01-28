@@ -90,7 +90,7 @@ export function resolveServices(
 
 							for (const map of context.documents.getMaps(virtualCode)) {
 
-								const sourceVirtualFile = context.files.get(map.sourceFileDocument.uri)?.generated?.code;
+								const sourceVirtualFile = context.language.files.get(map.sourceFileDocument.uri)?.generated?.code;
 
 								if (sourceVirtualFile instanceof VueGeneratedCode) {
 
@@ -177,7 +177,7 @@ export function resolveServices(
 							const componentName = newName ?? item.textEdit.newText;
 							const optionEdit = createAddComponentToOptionEdit(ts, ast, componentName);
 							if (optionEdit) {
-								const textDoc = context.documents.get(context.documents.getVirtualCodeUri(context.files.getByVirtualCode(virtualCode).id, virtualCode.id), virtualCode.languageId, virtualCode.snapshot);
+								const textDoc = context.documents.get(context.documents.getVirtualCodeUri(context.language.files.getByVirtualCode(virtualCode).id, virtualCode.id), virtualCode.languageId, virtualCode.snapshot);
 								item.additionalTextEdits.push({
 									range: {
 										start: textDoc.positionAt(optionEdit.range.start),

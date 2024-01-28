@@ -41,7 +41,7 @@ connection.onInitialize(params => {
 				const ts = getTsLib();
 				const [commandLine, vueOptions] = await parseCommandLine();
 				const resolvedVueOptions = vue.resolveVueCompilerOptions(vueOptions);
-				const languages = vue.resolveLanguages({}, ts, serviceEnv.typescript.uriToFileName, commandLine?.options ?? {}, resolvedVueOptions, options.codegenStack);
+				const languages = vue.resolveLanguages({}, ts, serviceEnv.typescript!.uriToFileName, commandLine?.options ?? {}, resolvedVueOptions, options.codegenStack);
 
 				envToVueOptions.set(serviceEnv, resolvedVueOptions);
 
@@ -129,15 +129,15 @@ connection.onRequest(GetComponentMeta.type, async params => {
 	if (!checker) {
 		checker = componentMeta.baseCreate(
 			getTsLib(),
-			langaugeService.context.typescript!.configFileName,
-			langaugeService.context.typescript!.projectHost,
+			langaugeService.context.language.typescript!.configFileName,
+			langaugeService.context.language.typescript!.projectHost,
 			envToVueOptions.get(langaugeService.context.env)!,
 			{},
-			langaugeService.context.typescript!.languageServiceHost.getCurrentDirectory() + '/tsconfig.json.global.vue',
+			langaugeService.context.language.typescript!.languageServiceHost.getCurrentDirectory() + '/tsconfig.json.global.vue',
 		);
 		checkers.set(project, checker);
 	}
-	return checker?.getComponentMeta(langaugeService.context.env.typescript.uriToFileName(params.uri));
+	return checker?.getComponentMeta(langaugeService.context.env.typescript!.uriToFileName(params.uri));
 });
 
 function getTsLib() {

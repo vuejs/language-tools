@@ -13,7 +13,7 @@ export async function convertTagName(
 	vueCompilerOptions: VueCompilerOptions,
 ) {
 
-	const sourceFile = context.files.get(uri);
+	const sourceFile = context.language.files.get(uri);
 	if (!sourceFile)
 		return;
 
@@ -65,7 +65,7 @@ export async function convertAttrName(
 	vueCompilerOptions: VueCompilerOptions,
 ) {
 
-	const sourceFile = context.files.get(uri);
+	const sourceFile = context.language.files.get(uri);
 	if (!sourceFile)
 		return;
 
@@ -141,8 +141,8 @@ export function detect(
 	attr: AttrNameCasing[],
 } {
 
-	const rootFile = context.files.get(uri)?.generated?.code;
-	if (!(rootFile instanceof VueGeneratedCode) || !context.typescript) {
+	const rootFile = context.language.files.get(uri)?.generated?.code;
+	if (!(rootFile instanceof VueGeneratedCode) || !context.language.typescript) {
 		return {
 			tag: [],
 			attr: [],

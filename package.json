@@ -19,14 +19,9 @@
 	"devDependencies": {
 		"@lerna-lite/cli": "latest",
 		"@lerna-lite/publish": "latest",
-		"@volar/language-service": "2.0.0-alpha.14",
+		"@volar/language-service": "~2.0.0",
 		"typescript": "latest",
 		"vite": "latest",
 		"vitest": "latest"
-	},
-	"pnpm": {
-		"overrides": {
-			"@volar/language-service": "2.0.0-alpha.14"
-		}
 	}
 }
