@@ -1,5 +1,10 @@
 <template>
-  <transition>
-    <span v-show="true">Foo</span>
-  </transition>
+  <div>
+    <transition>
+      <span v-show="true">foo</span>
+    </transition>
+    <Transition>
+      <span v-show="true">foo</span>
+    </Transition>
+  </div>
 </template>
