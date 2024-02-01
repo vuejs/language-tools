@@ -1365,6 +1365,11 @@ export function generate(
 					continue;
 				}
 
+				if (vueCompilerOptions.target < 3 && node.tag === 'transition' && prop.name === 'persisted') {
+					// Vue 2 Transition doesn't support "persisted" property but `@vue/compiler-dom always adds it (#3881)
+					continue;
+				}
+
 				let camelized = false;
 
 				if (

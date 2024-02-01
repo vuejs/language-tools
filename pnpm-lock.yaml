@@ -314,8 +314,8 @@ importers:
         specifier: 1.8.27
         version: link:../packages/component-type-helpers
       vue2:
-        specifier: npm:vue@2.7
-        version: /vue@2.7.15
+        specifier: npm:vue@2.7.16
+        version: /vue@2.7.16
 
 packages:
 
@@ -1490,12 +1490,14 @@ packages:
       '@vue/compiler-core': 3.3.13
       '@vue/shared': 3.3.13
 
-  /@vue/compiler-sfc@2.7.15:
-    resolution: {integrity: sha512-FCvIEevPmgCgqFBH7wD+3B97y7u7oj/Wr69zADBf403Tui377bThTjBvekaZvlRr4IwUAu3M6hYZeULZFJbdYg==}
+  /@vue/compiler-sfc@2.7.16:
+    resolution: {integrity: sha512-KWhJ9k5nXuNtygPU7+t1rX6baZeqOYLEforUPjgNDBnLicfHCoi48H87Q8XyLZOrNNsmhuwKqtpDQWjEFe6Ekg==}
     dependencies:
       '@babel/parser': 7.23.6
       postcss: 8.4.32
       source-map: 0.6.1
+    optionalDependencies:
+      prettier: 2.8.8
     dev: true
 
   /@vue/compiler-sfc@3.3.13:
@@ -4283,6 +4285,14 @@ packages:
     engines: {node: '>= 0.8.0'}
     dev: false
 
+  /prettier@2.8.8:
+    resolution: {integrity: sha512-tdN8qQGvNjw4CHbY+XXk0JgCXn9QiF21a55rBe5LJAU+kDyC4WQn4+awm2Xfk2lQMk5fKup9XgzTZtGkjBdP9Q==}
+    engines: {node: '>=10.13.0'}
+    hasBin: true
+    requiresBuild: true
+    dev: true
+    optional: true
+
   /pretty-format@29.7.0:
     resolution: {integrity: sha512-Pdlw/oPxN+aXdmM9R00JVC9WVFoCLTKJvDVLgmJ+qAffBMxsV85l/Lu7sNx4zSzPyoL2euImuEwHhOXdEgNFZQ==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
@@ -5420,10 +5430,11 @@ packages:
       he: 1.2.0
     dev: false
 
-  /vue@2.7.15:
-    resolution: {integrity: sha512-a29fsXd2G0KMRqIFTpRgpSbWaNBK3lpCTOLuGLEDnlHWdjB8fwl6zyYZ8xCrqkJdatwZb4mGHiEfJjnw0Q6AwQ==}
+  /vue@2.7.16:
+    resolution: {integrity: sha512-4gCtFXaAA3zYZdTp5s4Hl2sozuySsgz4jy1EnpBHNfpMa9dK1ZCG7viqBPCwXtmgc8nHqUsAu3G4gtmXkkY3Sw==}
+    deprecated: Vue 2 has reached EOL and is no longer actively maintained. See https://v2.vuejs.org/eol/ for more details.
     dependencies:
-      '@vue/compiler-sfc': 2.7.15
+      '@vue/compiler-sfc': 2.7.16
       csstype: 3.1.3
     dev: true
 
