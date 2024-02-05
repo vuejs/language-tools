@@ -1,4 +1,4 @@
-import { VueGeneratedCode, forEachEmbeddedCode, isFoldingRangesEnabled } from '@vue/language-core';
+import { VueGeneratedCode, forEachEmbeddedCode } from '@vue/language-core';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import * as path from 'path-browserify';
 import type * as vscode from 'vscode-languageserver-protocol';
@@ -19,8 +19,8 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 						return;
 
 					const [virtualCode, sourceFile] = context.documents.getVirtualCodeByUri(document.uri);
-					const vueFile = sourceFile?.generated?.code;
-					if (!virtualCode || !(vueFile instanceof VueGeneratedCode))
+					const vueVirtualCode = sourceFile?.generated?.code;
+					if (!virtualCode || !(vueVirtualCode instanceof VueGeneratedCode))
 						return;
 
 					let importUri: string | undefined;
@@ -34,54 +34,49 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 
 					let baseName = importUri.substring(importUri.lastIndexOf('/') + 1);
 					baseName = baseName.substring(0, baseName.lastIndexOf('.'));
+
 					const newName = capitalize(camelize(baseName));
+					const { sfc } = vueVirtualCode;
+					const script = sfc.scriptSetup ?? sfc.script;
 
-					let additionalEdit: vscode.WorkspaceEdit | undefined;
+					if (!script)
+						return;
 
-					for (const file of forEachEmbeddedCode(vueFile)) {
-						if (
-							(
-								file.languageId === 'typescript'
-								|| file.languageId === 'javascript'
-								|| file.languageId === 'typescriptreact'
-								|| file.languageId === 'javascriptreact'
-							)
-							&& file.mappings.some(mapping => isFoldingRangesEnabled(mapping.data))
-						) {
+					const additionalEdit: vscode.WorkspaceEdit = {};
+					const code = [...forEachEmbeddedCode(vueVirtualCode)].find(code => code.id === (sfc.scriptSetup ? 'scriptSetupFormat' : 'scriptFormat'))!;
+					const lastImportNode = getLastImportNode(ts, script.ast);
 
-							additionalEdit ??= {};
-							additionalEdit.changes ??= {};
-							additionalEdit.changes[context.documents.getVirtualCodeUri(vueFile.id, file.id)] = [];
+					let importPath = path.relative(path.dirname(document.uri), importUri)
+						|| importUri.substring(importUri.lastIndexOf('/') + 1);
 
-							const { sfc } = vueFile;
-							const script = sfc.scriptSetup ?? sfc.script;
-							if (!sfc.template || !script)
-								return;
+					if (!importPath.startsWith('./') && !importPath.startsWith('../')) {
+						importPath = './' + importPath;
+					}
 
-							const lastImportNode = getLastImportNode(ts, script.ast);
-							additionalEdit.changes[context.documents.getVirtualCodeUri(vueFile.id, file.id)].push({
-								range: lastImportNode ? {
-									start: document.positionAt(lastImportNode.end),
-									end: document.positionAt(lastImportNode.end),
-								} : {
-									start: document.positionAt(0),
-									end: document.positionAt(0),
+					additionalEdit.changes ??= {};
+					additionalEdit.changes[context.documents.getVirtualCodeUri(sourceFile.id, code.id)] = [];
+					additionalEdit.changes[context.documents.getVirtualCodeUri(sourceFile.id, code.id)].push({
+						range: lastImportNode ? {
+							start: script.ast.getLineAndCharacterOfPosition(lastImportNode.end),
+							end: script.ast.getLineAndCharacterOfPosition(lastImportNode.end),
+						} : {
+							start: script.ast.getLineAndCharacterOfPosition(0),
+							end: script.ast.getLineAndCharacterOfPosition(0),
+						},
+						newText: `\nimport ${newName} from '${importPath}'`
+							+ (lastImportNode ? '' : '\n'),
+					});
+
+					if (sfc.script) {
+						const edit = createAddComponentToOptionEdit(ts, sfc.script.ast, newName);
+						if (edit) {
+							additionalEdit.changes[context.documents.getVirtualCodeUri(sourceFile.id, code.id)].push({
+								range: {
+									start: document.positionAt(edit.range.start),
+									end: document.positionAt(edit.range.end),
 								},
-								newText: `\nimport ${newName} from './${path.relative(path.dirname(document.uri), importUri) || importUri.substring(importUri.lastIndexOf('/') + 1)}'`
-									+ (lastImportNode ? '' : '\n'),
+								newText: edit.newText,
 							});
-							if (sfc.script) {
-								const edit = createAddComponentToOptionEdit(ts, sfc.script.ast, newName);
-								if (edit) {
-									additionalEdit.changes[context.documents.getVirtualCodeUri(vueFile.id, file.id)].push({
-										range: {
-											start: document.positionAt(edit.range.start),
-											end: document.positionAt(edit.range.end),
-										},
-										newText: edit.newText,
-									});
-								}
-							}
 						}
 					}
 
