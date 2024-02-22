@@ -283,67 +283,6 @@
 			"type": "object",
 			"title": "Volar",
 			"properties": {
-				"volar.format.initialIndent": {
-					"type": "object",
-					"description": "Whether to have initial indent.",
-					"default": {
-						"html": true
-					},
-					"properties": {
-						"html": {
-							"type": "boolean",
-							"default": true
-						},
-						"typescript": {
-							"type": "boolean",
-							"default": false
-						},
-						"javascript": {
-							"type": "boolean",
-							"default": false
-						},
-						"typescriptreact": {
-							"type": "boolean",
-							"default": false
-						},
-						"javascriptreact": {
-							"type": "boolean",
-							"default": false
-						},
-						"css": {
-							"type": "boolean",
-							"default": false
-						},
-						"scss": {
-							"type": "boolean",
-							"default": false
-						},
-						"less": {
-							"type": "boolean",
-							"default": false
-						},
-						"sass": {
-							"type": "boolean",
-							"default": false
-						},
-						"jade": {
-							"type": "boolean",
-							"default": false
-						},
-						"json": {
-							"type": "boolean",
-							"default": false
-						},
-						"jsonc": {
-							"type": "boolean",
-							"default": false
-						},
-						"json5": {
-							"type": "boolean",
-							"default": false
-						}
-					}
-				},
 				"vue.trace.server": {
 					"scope": "window",
 					"type": "string",
@@ -537,6 +476,18 @@
 					"type": "boolean",
 					"default": false,
 					"description": "Show inlay hints for component options wrapper for type support."
+				},
+				"vue.format.initialIndent.template": {
+					"type": "boolean",
+					"default": true
+				},
+				"vue.format.initialIndent.style": {
+					"type": "boolean",
+					"default": false
+				},
+				"vue.format.initialIndent.script": {
+					"type": "boolean",
+					"default": false
 				}
 			}
 		},
