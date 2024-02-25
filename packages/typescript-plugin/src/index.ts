@@ -1,10 +1,10 @@
-import { createTSServerPlugin } from '@volar/typescript/lib/quickstart/createTSServerPlugin';
+import { createLanguageServicePlugin } from '@volar/typescript/lib/quickstart/createLanguageServicePlugin';
 import * as vue from '@vue/language-core';
 import type * as _ from 'typescript';
 
 const windowsPathReg = /\\/g;
 
-export = createTSServerPlugin((ts, info) => {
+export = createLanguageServicePlugin((ts, info) => {
 	const vueOptions = vue.resolveVueCompilerOptions(getVueCompilerOptions());
 	const languagePlugins = vue.createLanguages(
 		ts,
